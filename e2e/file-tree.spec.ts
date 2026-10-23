@@ -141,6 +141,22 @@ test("New Document and New Folder from the right-click menu", async ({
   ).toBeVisible();
 });
 
+test("⌘/Ctrl-click on a file opens it in a new window, this one unchanged (#348)", async ({
+  page,
+}) => {
+  await open(page);
+  await row(page, "b.md").click({ modifiers: ["ControlOrMeta"] });
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __devNewWindows?: string[] }).__devNewWindows,
+      ),
+    )
+    .toEqual(["/work/notes/b.md"]);
+  await expect(page.locator(".window-bar-title-text")).toHaveText("a.md");
+});
+
 test("a row dragged onto a folder moves into it, and its open tab follows", async ({
   page,
 }) => {

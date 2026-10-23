@@ -409,6 +409,8 @@ pub fn run() {
             #[cfg(desktop)]
             open_paths,
             #[cfg(desktop)]
+            open_path_in_new_window,
+            #[cfg(desktop)]
             menu::trigger_menu_item,
             #[cfg(desktop)]
             menu::list_recent_files,

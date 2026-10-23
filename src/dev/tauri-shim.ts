@@ -659,6 +659,14 @@ export function installDevTauriShim(): void {
         files[doc ? target : `${target}/.keep`] = "";
         return Promise.resolve(target);
       }
+      case "open_path_in_new_window": {
+        // No second window in the browser: what would open is recorded.
+        (
+          ((window as unknown as Record<string, unknown>).__devNewWindows ??=
+            []) as string[]
+        ).push(path);
+        return Promise.resolve(null);
+      }
       case "tree_move_entry": {
         const into = String(args.into);
         const target = `${into}/${path.split("/").pop()}`;

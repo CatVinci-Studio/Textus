@@ -16,7 +16,10 @@ import {
   RefreshIcon,
   SortIcon,
 } from "../ui/icons";
-import { fs } from "../platform/ipc";
+import { fs, windowIpc } from "../platform/ipc";
+
+const openInNewWindow = (path: string) =>
+  void windowIpc.openPathInNewWindow(path);
 import { useSettings } from "../settings/SettingsContext";
 import { basename, parentDir } from "../utils/path";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
@@ -131,6 +134,7 @@ export function FileTree({
       dropInto: drag?.into ?? null,
       onRowMenu: desktop ? onRowMenu : null,
       onRowPointerDown: desktop ? onRowPointerDown : null,
+      openInNewWindow: desktop ? openInNewWindow : null,
       takeDragClick,
     }),
     [

@@ -180,6 +180,17 @@ pub(crate) fn open_paths(app: tauri::AppHandle, paths: Vec<String>) {
     queue_paths_to_open(&app, paths);
 }
 
+/// ⌘/Ctrl-click in the sidebar's file tree: the file in a window of its
+/// own, whether new documents open as tabs or windows (#348). The fresh
+/// window drains it from the queue as it mounts, either way.
+#[cfg(desktop)]
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub(crate) fn open_path_in_new_window(app: tauri::AppHandle, path: String) {
+    queue_pending(&app, vec![path]);
+    let _ = open_new_window(&app);
+}
+
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub(crate) fn take_pending_open_path(pending: State<PendingOpenPaths>) -> Option<String> {

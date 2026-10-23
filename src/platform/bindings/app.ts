@@ -24,6 +24,12 @@ export const commands = {
 	 *  manager's open does - a window of its own, or a tab per the setting.
 	 */
 	open_paths: (paths: string[]) => __TAURI_INVOKE<void>("open_paths", { paths }),
+	/**
+	 *  ⌘/Ctrl-click in the sidebar's file tree: the file in a window of its
+	 *  own, whether new documents open as tabs or windows (#348). The fresh
+	 *  window drains it from the queue as it mounts, either way.
+	 */
+	open_path_in_new_window: (path: string) => __TAURI_INVOKE<void>("open_path_in_new_window", { path }),
 	take_detached_tab: () => __TAURI_INVOKE<DetachedTab_Serialize | null>("take_detached_tab"),
 	/**
 	 *  Physical-pixel screen bounds of every open window - lets a single-tab
