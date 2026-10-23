@@ -3,8 +3,9 @@
 //! document list (documents.rs).
 //!
 //! Nothing here overwrites or deletes: a name already taken is refused,
-//! creating uses create-new semantics, and a move is one rename that fails
-//! rather than replaces. A folder can't move into itself.
+//! creating uses create-new semantics, and a move or rename is one rename
+//! that fails rather than replaces. A folder can't move into itself. What
+//! the user removes goes to the system's Trash, where it can be put back.
 
 use std::path::{Path, PathBuf};
 use tokio::fs;
@@ -105,6 +106,64 @@ pub async fn tree_move_entry(path: String, into: String) -> Result<String, Strin
     Ok(to.to_string_lossy().to_string())
 }
 
+/// Gives a file or folder a new name in the folder it is in. A document
+/// renamed without an extension keeps being a document (`.md` added, as
+/// tree_create_document does); a folder takes the name as typed. Returns
+/// its new path.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn tree_rename_entry(path: String, name: String) -> Result<String, String> {
+    let from = PathBuf::from(&path);
+    let is_dir = fs::metadata(&from)
+        .await
+        .map_err(|e| e.to_string())?
+        .is_dir();
+    let name = check_name(&name)?;
+    let was_doc = !is_dir && document_name(&path) == path;
+    let name = if was_doc && !name.contains('.') {
+        document_name(name)
+    } else {
+        name.to_string()
+    };
+    let parent = from.parent().ok_or("No folder")?;
+    let to = parent.join(&name);
+    if to == from {
+        return Ok(path);
+    }
+    // A change of case only (notes.md -> Notes.md) is the same file on
+    // macOS and Windows, so it can't be checked for as taken.
+    let case_only = to.to_string_lossy().to_lowercase() == path.to_lowercase();
+    if !case_only && fs::try_exists(&to).await.unwrap_or(true) {
+        return Err("Already exists".into());
+    }
+    fs::rename(&from, &to).await.map_err(|e| e.to_string())?;
+    Ok(to.to_string_lossy().to_string())
+}
+
+/// Moves a file or folder to the system's Trash (Recycle Bin), never
+/// deleting it, and refuses the folder the tree is showing.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn tree_trash_entry(path: String, root: String) -> Result<(), String> {
+    let target = PathBuf::from(&path)
+        .canonicalize()
+        .map_err(|e| e.to_string())?;
+    if std::fs::canonicalize(&root).is_ok_and(|r| target == r || r.starts_with(&target)) {
+        return Err("The folder the tree shows can't be moved to the Trash".into());
+    }
+    #[cfg(desktop)]
+    return tauri::async_runtime::spawn_blocking(move || {
+        trash::delete(&target).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    #[cfg(not(desktop))]
+    Err(format!(
+        "{} can't be moved to the Trash here.",
+        target.display()
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -164,5 +223,33 @@ mod tests {
             .unwrap();
         assert!(tree_move_entry(again, sub.clone()).await.is_err());
         assert!(tree_move_entry(sub.clone(), sub).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn rename_keeps_documents_documents_and_never_overwrites() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().to_string_lossy().to_string();
+        let doc = tree_create_document(root.clone(), "Draft".into())
+            .await
+            .unwrap();
+        let renamed = tree_rename_entry(doc, "Chapter 1".into()).await.unwrap();
+        assert!(renamed.ends_with("Chapter 1.md"));
+        let other = tree_create_document(root.clone(), "Other".into())
+            .await
+            .unwrap();
+        assert!(tree_rename_entry(other.clone(), "Chapter 1".into())
+            .await
+            .is_err());
+        assert!(tree_rename_entry(other.clone(), "../out".into())
+            .await
+            .is_err());
+        let as_text = tree_rename_entry(other, "notes.txt".into()).await.unwrap();
+        assert!(as_text.ends_with("notes.txt"));
+        let sub = tree_create_folder(root.clone(), "Sub".into())
+            .await
+            .unwrap();
+        let folder = tree_rename_entry(sub, "Part One".into()).await.unwrap();
+        assert!(folder.ends_with("Part One"));
+        assert!(tree_trash_entry(root.clone(), root).await.is_err());
     }
 }

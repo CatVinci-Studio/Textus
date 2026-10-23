@@ -51,6 +51,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::tree_ops::tree_create_document,
                 crate::commands::tree_ops::tree_create_folder,
                 crate::commands::tree_ops::tree_move_entry,
+                crate::commands::tree_ops::tree_rename_entry,
+                crate::commands::tree_ops::tree_trash_entry,
                 crate::commands::vault::resolve_vault_image,
                 crate::commands::vault::resolve_vault_note,
                 crate::commands::word_import::open_word_document,

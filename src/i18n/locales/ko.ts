@@ -375,6 +375,15 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeSort: "정렬",
   treeSortName: "이름순",
   treeSortModified: "수정한 날짜순",
+  treeRenameItem: "이름 바꾸기…",
+  treeRename: "이름 바꾸기",
+  treeRenamePrompt: "새 이름",
+  treeTrashItem: "휴지통으로 옮기기",
+  treeTrash: "휴지통으로 옮기기",
+  treeTrashConfirm:
+    "“{name}”을(를) 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
+  treeTrashFolderConfirm:
+    "폴더 “{name}”와(과) 그 안의 모든 항목을 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
   treeNameTaken: "여기에 이미 “{name}”(이)라는 항목이 있습니다.",
   treeActionFailed: "할 수 없습니다: {reason}",
   shortcutSearchFiles: "파일 이름 검색",

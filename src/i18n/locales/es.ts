@@ -409,6 +409,15 @@ para usar una.
   treeSort: "Ordenar",
   treeSortName: "Por nombre",
   treeSortModified: "Por fecha de modificación",
+  treeRenameItem: "Cambiar nombre…",
+  treeRename: "Cambiar nombre",
+  treeRenamePrompt: "Nombre nuevo",
+  treeTrashItem: "Mover a la papelera",
+  treeTrash: "Mover a la papelera",
+  treeTrashConfirm:
+    "¿Mover «{name}» a la papelera? Podrás recuperarlo desde allí.",
+  treeTrashFolderConfirm:
+    "¿Mover la carpeta «{name}» y todo su contenido a la papelera? Podrás recuperarla desde allí.",
   treeNameTaken: "Ya hay algo llamado «{name}» aquí.",
   treeActionFailed: "No se pudo: {reason}",
   shortcutSearchFiles: "Buscar nombres de archivo",
