@@ -74,6 +74,21 @@ function mathExtensions(
   return [mathBlock, mathInline];
 }
 
+// An Obsidian wikilink, `[[Note]]`, drawn as the editor draws it: its source
+// in the link colour (markdown/wikilink.ts). Without it a note's opening in
+// a hover card showed its links as plain text.
+const wikilink: TokenizerAndRendererExtension = {
+  name: "wikilink",
+  level: "inline",
+  start: (src) => src.indexOf("[["),
+  tokenizer(src) {
+    const match = /^\[\[[^[\]\n]+\]\]/.exec(src);
+    if (match) return { type: "wikilink", raw: match[0] };
+    return undefined;
+  },
+  renderer: (token) => `<span class="wikilink">${escapeHtml(token.raw)}</span>`,
+};
+
 // Its own instance, not the global `marked`: these options and extensions
 // are for short-form conversational content only. A bare newline breaks the
 // line like it visually looks, rather than needing a blank line the way
@@ -81,7 +96,7 @@ function mathExtensions(
 const chatMarked = new Marked({
   gfm: true,
   breaks: true,
-  extensions: mathExtensions(mathHtml),
+  extensions: [...mathExtensions(mathHtml), wikilink],
 });
 
 /**
