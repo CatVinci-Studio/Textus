@@ -161,7 +161,7 @@ export const links = {
     command("open_tutorials_page", clip ?? null, language),
   /** Settings › General › About Textus's links, and the theme gallery's
    *  website (the theme gallery, when it can't be reached), by name. */
-  openAboutLink: (page: "github" | "discord" | "qq" | "themes") =>
+  openAboutLink: (page: "github" | "discord" | "qq" | "themes" | "listing") =>
     command("open_about_link", page),
   /** A web or mail link Ctrl/Cmd+clicked in a document
    *  (editor/markdown/link-click-plugin.ts). */

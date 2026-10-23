@@ -1,14 +1,12 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
-import { Byline, PluginPage, statusText, type Attempt } from "./PluginPage";
-import { GetPluginsPage } from "./GetPluginsPage";
+import { Byline, PluginPage, statusText } from "./PluginPage";
+import { MarketPage } from "./MarketPage";
+import { askForRequirements, usePluginInstall } from "./usePluginInstall";
 import { LinkRow, SettingRow, ToggleRow } from "../sections/controls";
-import { showConfirm, showMessage } from "../../ui/app-dialog";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { isDesktopApp } from "../../platform/capabilities";
-import { useSettings } from "../SettingsContext";
-import { errorText } from "../../utils/error-text";
 import type { Strings } from "../../i18n/strings";
 import {
   installPlugin,
@@ -23,17 +21,10 @@ import {
 } from "../../plugins/manager";
 import {
   catalogSnapshot,
-  installFromCatalog,
   loadCatalog,
   subscribeCatalog,
   updateFor,
-  type CatalogItem,
 } from "../../plugins/catalog";
-import {
-  requirementLabel,
-  requirementMet,
-  turnOnRequirement,
-} from "../../plugins/requirements";
 import { canSwitch } from "../../plugins/lifecycle";
 
 /**
@@ -47,41 +38,19 @@ import { canSwitch } from "../../plugins/lifecycle";
 export function PluginsPage({ t }: SettingsPageProps) {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
-  const { settings, setSettings } = useSettings();
+  const { installing, install, attempt, settings, setSettings } =
+    usePluginInstall(t);
   const [open, setOpen] = useState<string | null>(null);
-  const [installing, setInstalling] = useState<string | null>(null);
   const [getting, setGetting] = useState(false);
   useEffect(() => {
     void loadCatalog();
   }, []);
-
-  const attempt: Attempt = async (work) => {
-    try {
-      await work();
-    } catch (err) {
-      void showMessage(errorText(err), {
-        title: t.pluginsTitle,
-        tone: "error",
-      });
-    }
-  };
 
   /** Turns a plugin on, then offers to turn on what it needs. */
   const enable = (record: PluginRecord, on: boolean) =>
     attempt(async () => {
       await setPluginEnabled(record.id, on);
       if (on) await askForRequirements(record.id, t, settings, setSettings);
-    });
-
-  const install = (item: CatalogItem) =>
-    attempt(async () => {
-      setInstalling(item.id);
-      try {
-        await installFromCatalog(item.id);
-        await askForRequirements(item.id, t, settings, setSettings);
-      } finally {
-        setInstalling(null);
-      }
     });
 
   const installFile = (folder: boolean) =>
@@ -116,15 +85,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
     );
 
   if (getting)
-    return (
-      <GetPluginsPage
-        t={t}
-        catalog={catalog}
-        installing={installing}
-        onBack={() => setGetting(false)}
-        onInstall={(item) => void install(item)}
-      />
-    );
+    return <MarketPage t={t} kind="plugins" onBack={() => setGetting(false)} />;
 
   return (
     <>
@@ -168,7 +129,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
       <section className="settings-group">
         <div className="settings-group-body">
           <LinkRow
-            label={t.pluginsGetGroup}
+            label={t.marketGetMore}
             onOpen={() => setGetting(true)}
             className="plugin-get-entry"
           />
@@ -176,36 +137,6 @@ export function PluginsPage({ t }: SettingsPageProps) {
       </section>
     </>
   );
-}
-
-/** What a plugin needs that is off: asked to turn each on, once, in the
- *  plugin's words. */
-async function askForRequirements(
-  id: string,
-  t: Strings,
-  settings: ReturnType<typeof useSettings>["settings"],
-  setSettings: ReturnType<typeof useSettings>["setSettings"],
-) {
-  const record = pluginsSnapshot().records.find((r) => r.id === id);
-  if (!record?.manifest || record.status !== "on") return;
-  for (const need of record.manifest.requires) {
-    if (requirementMet(need, settings)) continue;
-    const ok = await showConfirm(
-      t.pluginRequiresAsk
-        .replace("{name}", pluginName(record))
-        .replace("{setting}", requirementLabel(need, t))
-        .replace(
-          "{reason}",
-          need.reason ? pluginText(record, need.reason) : "",
-        ),
-      {
-        title: pluginName(record),
-        okLabel: t.pluginRequiresTurnOn,
-        cancelLabel: t.pluginRequiresLater,
-      },
-    );
-    if (ok) setSettings(turnOnRequirement(need));
-  }
 }
 
 /** An installed plugin: opens its page; the switch turns it on or off. */

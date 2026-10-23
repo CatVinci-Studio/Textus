@@ -917,6 +917,17 @@ export function installDevTauriShim(): void {
         );
       case "plugin_install_catalog":
         return installFromDevCatalog(id);
+      // The catalog's skills: `window.__devCatalogSkills` (catalog.rs's
+      // SkillEntry), installed into `window.__devInstalledSkills`.
+      case "skill_catalog":
+        return Promise.resolve(w.__devCatalogSkills ?? []);
+      case "skill_install_catalog": {
+        const had = (w.__devInstalledSkills ??= []) as string[];
+        const name = String(args.name);
+        if (had.includes(name)) return Promise.reject("SKILL_EXISTS");
+        had.push(name);
+        return Promise.resolve(`/config/skills/${name}.md`);
+      }
       case "plugin_file": {
         const plugin = installed.find((p) => p.id === id);
         if (plugin?.catalog)

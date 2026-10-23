@@ -1304,16 +1304,23 @@ utiliser une.
   mcpTried: "{server} : {count} outils - {names}",
   mcpFormSave: "Enregistrer",
   pluginsTitle: "Extensions",
-  pluginsGetGroup: "Obtenir des extensions",
-  pluginsGetHelp:
-    "Depuis le dépôt d’extensions de Textus ; chacune est téléchargée à l’installation.",
   pluginsCatalogLoading: "Chargement de la liste…",
   pluginsCatalogFailed: "Impossible de charger la liste : {reason}",
   pluginsCatalogRetry: "Réessayer",
   pluginsCatalogAllInstalled:
     "Toutes les extensions de la liste sont installées.",
-  pluginsSearch: "Rechercher des extensions",
   pluginsSearchNone: "Aucune extension ne correspond à « {query} ».",
+  marketGetMore: "En obtenir plus",
+  marketTitle: "En obtenir plus",
+  marketHelp:
+    "Les extensions, thèmes et compétences de Textus, au même endroit. Chacun demande avant d’être installé ce qu’il pourra faire.",
+  marketAll: "Tout",
+  marketSearch: "Rechercher extensions, thèmes et compétences",
+  marketListYours: "Vous en avez créé un ?",
+  marketListingRules: "Comment le proposer",
+  marketSkillFailed: "Il n’a pas été installé.",
+  marketSkillInstalled: "Installée",
+  marketSkillsNone: "Aucune compétence n’est encore proposée.",
   pluginsCatalogKept:
     "Voici la liste de la dernière fois - impossible d’en obtenir une plus récente : {reason}",
   pluginInstall: "Installer",

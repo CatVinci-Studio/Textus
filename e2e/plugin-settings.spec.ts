@@ -29,12 +29,12 @@ async function openPluginsPage(page: Page) {
 
 async function openGetPlugins(page: Page) {
   await openPluginsPage(page);
-  await page.getByRole("button", { name: "Get plugins" }).click();
+  await page.getByRole("button", { name: "Get more" }).click();
   await expect(page.locator(".plugin-get-page")).toBeVisible();
 }
 
 const backToPlugins = (page: Page) =>
-  page.getByRole("button", { name: /All plugins/ }).click();
+  page.locator(".market-page .plugin-back").click();
 
 test("nothing comes installed, and the catalog offers the official plugins", async ({
   page,
@@ -45,7 +45,7 @@ test("nothing comes installed, and the catalog offers the official plugins", asy
   await expect(installed).toContainText("None yet.");
   // The catalog is a page of its own, not a list under the installed ones.
   await expect(page.locator(".plugin-card[data-catalog]")).toHaveCount(0);
-  await page.getByRole("button", { name: "Get plugins" }).click();
+  await page.getByRole("button", { name: "Get more" }).click();
   const graph = page.locator('.plugin-card[data-catalog="catvinci.graph"]');
   await expect(graph).toContainText("Graph View");
   await expect(graph.locator(".plugin-official")).toHaveText("Official");
@@ -84,7 +84,9 @@ test("Get plugins searches the catalog by name, what it does and who made it", a
   const cards = page.locator(".plugin-get-page .plugin-card");
   const all = await cards.count();
   expect(all).toBeGreaterThan(3);
-  const search = page.getByRole("searchbox", { name: "Search plugins" });
+  const search = page.getByRole("searchbox", {
+    name: "Search plugins, themes and skills",
+  });
   await search.fill("kanban");
   await expect(cards).toHaveCount(1);
   await expect(cards).toHaveAttribute("data-catalog", "catvinci.kanban");

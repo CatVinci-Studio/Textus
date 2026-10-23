@@ -47,14 +47,42 @@ pub struct CatalogEntry {
     pub size: u64,
 }
 
+/// One skill in the catalog: a skill file (workspace/skills.rs), listed
+/// beside the plugins in the market - generated into
+/// src/platform/bindings/plugins.ts.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SkillEntry {
+    /// What it is called in the `/` menu.
+    pub name: String,
+    pub version: String,
+    pub description: String,
+    #[serde(default)]
+    pub author: String,
+    #[serde(default)]
+    pub official: bool,
+    pub url: String,
+    pub sha256: String,
+    pub size: u64,
+}
+
 #[derive(Deserialize)]
 struct Catalog {
     schema: u32,
     plugins: Vec<CatalogEntry>,
+    /// Skills came into the catalog with 1.3 beta.2; an older catalog has
+    /// none.
+    #[serde(default)]
+    skills: Vec<SkillEntry>,
 }
 
 /// The catalog as last fetched, for an install to take its entry from.
 static FETCHED: Mutex<Vec<CatalogEntry>> = Mutex::new(Vec::new());
+static FETCHED_SKILLS: Mutex<Vec<SkillEntry>> = Mutex::new(Vec::new());
+
+/// A skill file this large is not a skill.
+const MAX_SKILL: u64 = 256 * 1024;
 
 fn client() -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
@@ -82,17 +110,42 @@ fn catalog_url() -> String {
     std::env::var("TEXTUS_PLUGIN_CATALOG").unwrap_or_else(|_| CATALOG_URL.to_string())
 }
 
-fn parse(text: &str) -> Result<Vec<CatalogEntry>, String> {
+fn parse_all(text: &str) -> Result<(Vec<CatalogEntry>, Vec<SkillEntry>), String> {
     let catalog: Catalog =
         serde_json::from_str(text).map_err(|e| format!("The plugin catalog can't be read: {e}"))?;
     if catalog.schema != 1 {
         return Err("The plugin catalog is for a newer Textus - update Textus to see it.".into());
     }
-    Ok(catalog
+    let plugins = catalog
         .plugins
         .into_iter()
         .filter(|p| super::require_id(&p.id).is_ok() && p.url.starts_with(PACKAGE_PREFIX))
-        .collect())
+        .collect();
+    let skills = catalog
+        .skills
+        .into_iter()
+        .filter(|s| {
+            !s.name.trim().is_empty() && s.url.starts_with(PACKAGE_PREFIX) && s.size <= MAX_SKILL
+        })
+        .collect();
+    Ok((plugins, skills))
+}
+
+fn parse(text: &str) -> Result<Vec<CatalogEntry>, String> {
+    let (plugins, skills) = parse_all(text)?;
+    *FETCHED_SKILLS.lock().unwrap_or_else(|e| e.into_inner()) = skills;
+    Ok(plugins)
+}
+
+/// The skills the catalog last fetched (or kept) lists - after
+/// plugin_catalog or plugin_catalog_cached has read it.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn skill_catalog() -> Vec<SkillEntry> {
+    FETCHED_SKILLS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone()
 }
 
 /// The catalog as last fetched, kept in the app's cache folder so Get
@@ -183,6 +236,81 @@ fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
+/// Downloads `url` from the catalog's own address.
+async fn download(url: &str, what: &str) -> Result<Vec<u8>, String> {
+    if let Some(path) = url.strip_prefix("file://") {
+        return std::fs::read(path).map_err(|e| e.to_string());
+    }
+    let response = client()?
+        .get(url)
+        .send()
+        .await
+        .map_err(|e| format!("Couldn't download {what}: {e}"))?;
+    if !response.status().is_success() {
+        return Err(format!(
+            "The download of {what} answered {}.",
+            response.status()
+        ));
+    }
+    Ok(response.bytes().await.map_err(|e| e.to_string())?.to_vec())
+}
+
+/// The error when a skill of that name is there already: the user's own,
+/// or the same one installed before - never overwritten.
+pub const SKILL_EXISTS: &str = "SKILL_EXISTS";
+
+/// Installs skill `name` from the catalog last fetched: downloads its
+/// file, checks it, and puts it in the global config folder's skills/,
+/// where it is in the `/` menu of every document. Its path.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn skill_install_catalog(app: tauri::AppHandle, name: String) -> Result<String, String> {
+    let entry = FETCHED_SKILLS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .iter()
+        .find(|s| s.name == name)
+        .cloned()
+        .ok_or_else(|| format!("{name} isn't in the catalog."))?;
+    let bytes = download(&entry.url, &name).await?;
+    if bytes.len() as u64 != entry.size
+        || !hex(&Sha256::digest(&bytes)).eq_ignore_ascii_case(&entry.sha256)
+    {
+        return Err(format!(
+            "The download of {name} isn't the file the catalog lists - it was not installed."
+        ));
+    }
+    let text = String::from_utf8(bytes).map_err(|_| format!("{name} isn't a skill file."))?;
+    install_skill_in(
+        &crate::ai::workspace::global_agent_dir(&app)?.join("skills"),
+        &entry.name,
+        &text,
+    )
+    .map(|p| p.to_string_lossy().into_owned())
+}
+
+/// Writes a skill file named `name` into `dir`, never over one there.
+fn install_skill_in(
+    dir: &std::path::Path,
+    name: &str,
+    text: &str,
+) -> Result<std::path::PathBuf, String> {
+    let skill = crate::ai::workspace::parse_skill_file(name, text);
+    if skill.prompt.is_empty() {
+        return Err(format!("{name} isn't a skill file."));
+    }
+    std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+    let path = crate::ai::workspace::skill_file_path(dir, name)?;
+    let taken = crate::ai::workspace::read_skill_files(dir)
+        .iter()
+        .any(|(_, s)| s.name.eq_ignore_ascii_case(&skill.name));
+    if path.exists() || taken {
+        return Err(SKILL_EXISTS.into());
+    }
+    std::fs::write(&path, text).map_err(|e| e.to_string())?;
+    Ok(path)
+}
+
 /// Installs `id` from the catalog last fetched: downloads its package,
 /// checks it, and installs it as a package from a file is - marked
 /// Official when the catalog says it is CatVinci's.
@@ -203,22 +331,7 @@ pub async fn plugin_install_catalog(
     if entry.size > MAX_PACKAGE {
         return Err(format!("{id}'s package is too large to install."));
     }
-    let bytes = if let Some(path) = entry.url.strip_prefix("file://") {
-        std::fs::read(path).map_err(|e| e.to_string())?
-    } else {
-        let response = client()?
-            .get(&entry.url)
-            .send()
-            .await
-            .map_err(|e| format!("Couldn't download {id}: {e}"))?;
-        if !response.status().is_success() {
-            return Err(format!(
-                "The download of {id} answered {}.",
-                response.status()
-            ));
-        }
-        response.bytes().await.map_err(|e| e.to_string())?.to_vec()
-    };
+    let bytes = download(&entry.url, &id).await?;
     checked(&entry, &bytes)?;
     let root = super::plugins_root(&app)?;
     std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
@@ -248,6 +361,32 @@ pub async fn plugin_install_catalog(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_catalog_lists_skills_beside_plugins_and_an_older_one_none() {
+        let url = format!("{PACKAGE_PREFIX}catalog/skill-press-release.md");
+        let text = format!(
+            r#"{{"schema": 1, "plugins": [], "skills": [{{"name": "press-release", "version": "1.0.0", "description": "Writes a press release.", "url": "{url}", "sha256": "ab", "size": 10}}, {{"name": "elsewhere", "version": "1", "description": "x", "url": "https://example.com/x.md", "sha256": "ab", "size": 10}}]}}"#
+        );
+        let (_, skills) = parse_all(&text).unwrap();
+        assert_eq!(skills.len(), 1, "only from the catalog's own address");
+        assert_eq!(skills[0].name, "press-release");
+        let (_, none) = parse_all(r#"{"schema": 1, "plugins": []}"#).unwrap();
+        assert!(none.is_empty());
+    }
+
+    #[test]
+    fn a_skill_installs_once_and_never_over_one_there() {
+        let dir = tempfile::tempdir().unwrap();
+        let text = "---\nname: press-release\ndescription: Writes a press release.\n---\n\nWrite it as a press release.";
+        let path = install_skill_in(dir.path(), "press-release", text).unwrap();
+        assert!(path.exists());
+        assert_eq!(
+            install_skill_in(dir.path(), "press-release", text).unwrap_err(),
+            SKILL_EXISTS
+        );
+        assert!(install_skill_in(dir.path(), "empty", "---\nname: empty\n---\n").is_err());
+    }
 
     fn entry(bytes: &[u8]) -> CatalogEntry {
         CatalogEntry {

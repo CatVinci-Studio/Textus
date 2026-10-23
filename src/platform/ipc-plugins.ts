@@ -64,6 +64,12 @@ export const plugins = {
   cachedCatalog: () => command("plugin_catalog_cached"),
   /** Downloads one from the catalog, checks it and installs it. */
   installFromCatalog: (id: string) => command("plugin_install_catalog", id),
+  /** The skills the catalog last read lists (catalog.rs's SkillEntry). */
+  skillCatalog: () => command("skill_catalog"),
+  /** Downloads a skill from the catalog into the global skills/ folder;
+   *  SKILL_EXISTS when one of that name is there already. */
+  installSkillFromCatalog: (name: string) =>
+    command("skill_install_catalog", name),
   /** Install from file… (`folder` false) and Load a plugin folder…'s
    *  picker. Desktop only. */
   pickPackage: (folder: boolean, filterName: string) =>

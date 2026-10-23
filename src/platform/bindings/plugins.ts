@@ -58,6 +58,17 @@ export const commands = {
 	 */
 	plugin_catalog_cached: () => __TAURI_INVOKE<CatalogEntry_Serialize[] | null>("plugin_catalog_cached"),
 	/**
+	 *  The skills the catalog last fetched (or kept) lists - after
+	 *  plugin_catalog or plugin_catalog_cached has read it.
+	 */
+	skill_catalog: () => __TAURI_INVOKE<SkillEntry_Serialize[]>("skill_catalog"),
+	/**
+	 *  Installs skill `name` from the catalog last fetched: downloads its
+	 *  file, checks it, and puts it in the global config folder's skills/,
+	 *  where it is in the `/` menu of every document. Its path.
+	 */
+	skill_install_catalog: (name: string) => __TAURI_INVOKE<string>("skill_install_catalog", { name }),
+	/**
 	 *  Installs `id` from the catalog last fetched: downloads its package,
 	 *  checks it, and installs it as a package from a file is - marked
 	 *  Official when the catalog says it is CatVinci's.
@@ -283,6 +294,47 @@ export type ServerStatus_Serialize = {
 	server: string,
 	tools: McpTool[],
 	error: string | null,
+};
+
+/**
+ *  One skill in the catalog: a skill file (workspace/skills.rs), listed
+ *  beside the plugins in the market - generated into
+ *  src/platform/bindings/plugins.ts.
+ */
+export type SkillEntry = SkillEntry_Serialize | SkillEntry_Deserialize;
+
+/**
+ *  One skill in the catalog: a skill file (workspace/skills.rs), listed
+ *  beside the plugins in the market - generated into
+ *  src/platform/bindings/plugins.ts.
+ */
+export type SkillEntry_Deserialize = {
+	/**  What it is called in the `/` menu. */
+	name: string,
+	version: string,
+	description: string,
+	author?: string,
+	official?: boolean,
+	url: string,
+	sha256: string,
+	size: number,
+};
+
+/**
+ *  One skill in the catalog: a skill file (workspace/skills.rs), listed
+ *  beside the plugins in the market - generated into
+ *  src/platform/bindings/plugins.ts.
+ */
+export type SkillEntry_Serialize = {
+	/**  What it is called in the `/` menu. */
+	name: string,
+	version: string,
+	description: string,
+	author: string,
+	official: boolean,
+	url: string,
+	sha256: string,
+	size: number,
 };
 
 /**  One plugin command in the menu, as the window sends it. */

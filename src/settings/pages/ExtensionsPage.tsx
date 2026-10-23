@@ -5,6 +5,8 @@ import { PluginsPage } from "./PluginsPage";
 import { ThemeLibrarySection } from "../sections/theme";
 import { AgentSkillsSection, BuiltinSkillsSection } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
+import { LinkRow } from "../sections/controls";
+import { MarketPage, type MarketKind } from "./MarketPage";
 
 import {
   extensionsStartTab,
@@ -24,6 +26,9 @@ const TABS = extensionsTabs();
 export function ExtensionsPage(props: SettingsPageProps) {
   const { t, onOpenFile, onFilesDeleted, onClose } = props;
   const [tab, setTabState] = useState<ExtensionsTab>(extensionsStartTab);
+  // Get more (MarketPage), opened on a kind; the Plugins tab opens it
+  // itself, as it did Get plugins.
+  const [market, setMarket] = useState<MarketKind | null>(null);
   const setTab = (next: ExtensionsTab) => {
     openExtensionsTab(next);
     setTabState(next);
@@ -34,6 +39,15 @@ export function ExtensionsPage(props: SettingsPageProps) {
     skills: t.extensionsTabSkills,
     mcp: t.extensionsTabMcp,
   };
+  if (market)
+    return <MarketPage t={t} kind={market} onBack={() => setMarket(null)} />;
+  const getMore = (kind: MarketKind) => (
+    <section className="settings-group">
+      <div className="settings-group-body">
+        <LinkRow label={t.marketGetMore} onOpen={() => setMarket(kind)} />
+      </div>
+    </section>
+  );
   return (
     <>
       <div
@@ -71,6 +85,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
                 onFilesDeleted={onFilesDeleted}
                 onClose={onClose}
               />
+              {getMore("skills")}
             </>
           )}
           {tab === "mcp" && <McpSection t={t} />}

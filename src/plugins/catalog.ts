@@ -2,6 +2,7 @@ import {
   plugins as pluginsIpc,
   type PluginCatalogEntry,
 } from "../platform/ipc";
+import type { SkillEntry_Serialize as SkillEntry } from "../platform/bindings/plugins";
 import {
   parseManifest,
   compareVersions,
@@ -32,11 +33,19 @@ export interface CatalogItem {
   size: number;
 }
 
+export type { SkillEntry };
+
 /** Ready with the list kept from last time while a fresh one is fetched;
- *  `error` when fetching it failed and the kept list is what there is. */
+ *  `error` when fetching it failed and the kept list is what there is.
+ *  `skills`: the skills the same catalog lists, for the market. */
 export type CatalogState =
   | { status: "idle" | "loading" }
-  | { status: "ready"; items: CatalogItem[]; error?: string }
+  | {
+      status: "ready";
+      items: CatalogItem[];
+      skills: SkillEntry[];
+      error?: string;
+    }
   | { status: "failed"; error: string };
 
 let state: CatalogState = { status: "idle" };
@@ -76,6 +85,10 @@ const items = (entries: PluginCatalogEntry[]) =>
 
 let fetching: Promise<void> | null = null;
 
+/** The skills the catalog just read lists; none from an older backend. */
+const skills = (): Promise<SkillEntry[]> =>
+  pluginsIpc.skillCatalog().catch(() => []);
+
 /** Fetches the catalog (again, with `force`). The first time, the list
  *  kept from last time is shown at once while the fresh one comes; when
  *  fetching fails, a list already shown stays. */
@@ -86,15 +99,21 @@ export function loadCatalog(force = false): Promise<void> {
     if (state.status !== "ready") {
       publish({ status: "loading" });
       const kept = await pluginsIpc.cachedCatalog().catch(() => null);
-      if (kept) publish({ status: "ready", items: items(kept) });
+      if (kept)
+        publish({
+          status: "ready",
+          items: items(kept),
+          skills: await skills(),
+        });
     }
     try {
-      publish({ status: "ready", items: items(await pluginsIpc.catalog()) });
+      const fresh = items(await pluginsIpc.catalog());
+      publish({ status: "ready", items: fresh, skills: await skills() });
     } catch (err) {
       const error = errorText(err);
       publish(
         state.status === "ready"
-          ? { status: "ready", items: state.items, error }
+          ? { ...state, error }
           : { status: "failed", error },
       );
     }

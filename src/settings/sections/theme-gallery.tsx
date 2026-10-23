@@ -24,7 +24,27 @@ import { SettingRow } from "./controls";
  * the installed copy and leaves the selection as it is. Removing one is the
  * theme picker's Delete Theme.
  */
-export function ThemeGallerySection({ t }: { t: Strings }) {
+/** The themes whose name, author or description hold every word of
+ *  `query`. */
+function searchThemes(list: GalleryTheme[], query: string): GalleryTheme[] {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return list;
+  return list.filter((theme) => {
+    const text = [theme.name, theme.author, theme.description]
+      .join("\n")
+      .toLowerCase();
+    return words.every((w) => text.includes(w));
+  });
+}
+
+/** `query`: the market's search (MarketPage), over the gallery too. */
+export function ThemeGallerySection({
+  t,
+  query = "",
+}: {
+  t: Strings;
+  query?: string;
+}) {
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
   const [busy, setBusy] = useState(false);
@@ -91,7 +111,12 @@ export function ThemeGallerySection({ t }: { t: Strings }) {
       )}
       <div className="settings-group-body">
         {catalog.length === 0 && <SettingRow label={t.themeGalleryEmpty} />}
-        {catalog.map((theme) => {
+        {catalog.length > 0 && searchThemes(catalog, query).length === 0 && (
+          <p className="plugin-empty">
+            {t.pluginsSearchNone.replace("{query}", query.trim())}
+          </p>
+        )}
+        {searchThemes(catalog, query).map((theme) => {
           const installed = installedCopy(theme, settings.userThemes);
           return (
             <GalleryItem

@@ -360,6 +360,8 @@ pub fn run() {
             plugins::install::plugin_install,
             plugins::catalog::plugin_catalog,
             plugins::catalog::plugin_catalog_cached,
+            plugins::catalog::skill_catalog,
+            plugins::catalog::skill_install_catalog,
             plugins::access::plugin_fs_rename,
             plugins::access::plugin_fs_trash,
             plugins::access::plugin_fs_mkdir,
