@@ -1419,6 +1419,17 @@ pub fn group_of(id: &str) -> &str {
     id.split('/').next().unwrap_or(id)
 }
 
+/// The check a case that can't run on this provider carries (not_run):
+/// finish leaves such cases out of the score and lists them apart.
+const NOT_RUN: &str = "not run";
+
+/// A record for a case this provider can't run - not a failure.
+pub fn not_run(case: &str, model: &str, lang: &str, reason: String, input: Value) -> Record {
+    let mut record = skipped(case, model, lang, reason, input);
+    record.checks.0[0].name = NOT_RUN.into();
+    record
+}
+
 /// A record for a case that never ran (budget exhausted).
 pub fn skipped(case: &str, model: &str, lang: &str, reason: String, input: Value) -> Record {
     let mut checks = Checks::default();
@@ -1461,6 +1472,9 @@ fn run_dir() -> &'static PathBuf {
 /// asserted: they are the quality signal to compare run to run, while the
 /// automatic checks are the contract.
 pub fn finish(suite: &str, records: Vec<Record>) -> Vec<String> {
+    let (not_run, records): (Vec<Record>, Vec<Record>) = records
+        .into_iter()
+        .partition(|r| r.checks.0.iter().any(|c| c.name == NOT_RUN));
     let dir = run_dir();
     let mut jsonl = String::new();
     let mut md = format!(
@@ -1560,6 +1574,17 @@ pub fn finish(suite: &str, records: Vec<Record>) -> Vec<String> {
         records.len(),
         if judged > 0 { sum_mean / judged as f64 } else { 0.0 },
     ));
+    if !not_run.is_empty() {
+        md.push_str(&format!(
+            "\n{} cases not run on this provider, and not counted: {}.\n",
+            not_run.len(),
+            not_run
+                .iter()
+                .map(|r| format!("{} ({})", r.case, r.checks.0[0].detail))
+                .collect::<Vec<_>>()
+                .join("; ")
+        ));
+    }
     if !by_criterion.is_empty() {
         md.push_str("\nJudge means by criterion: ");
         md.push_str(

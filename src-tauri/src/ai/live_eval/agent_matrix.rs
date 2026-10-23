@@ -1337,6 +1337,16 @@ pub fn run_case(auth: &AnthropicAuth, case: &AgentCase, model: &str) -> Record {
     if let Some(reason) = harness::budget_exhausted() {
         return harness::skipped(&case.id, model, case.lang.code(), reason, input);
     }
+    // Learning a style is a completion request, which the harness makes on
+    // Claude only (harness::complete); on another provider it would ask
+    // Claude for that provider's model.
+    if case.learn.is_some() && harness::agent_provider_id() != "anthropic" {
+        let reason = format!(
+            "learning a style runs on Claude, not {}",
+            harness::agent_provider_id()
+        );
+        return harness::not_run(&case.id, model, case.lang.code(), reason, input);
+    }
     let mut checks = Checks::default();
     let mut usage = harness::Usage::default();
     let mut output = serde_json::Map::new();
