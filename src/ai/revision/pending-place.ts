@@ -14,6 +14,7 @@ import {
 } from "../doc-markdown";
 import type { EditProposal } from "../types";
 import { hasGeneratedImage } from "./generated-images";
+import { blockKind } from "../doc-blocks";
 import {
   pendingEditKey,
   type PendingPreview,
@@ -222,7 +223,10 @@ function wholeParagraphs(
   let plain = true;
   const parts: { from: number; to: number }[] = [];
   doc.nodesBetween(from, to, (node, pos) => {
-    if (node.type.name !== "paragraph") plain = false;
+    // A picture is a paragraph too (doc-blocks.ts's blockKind): taken
+    // into the block, its redo proposal lost the node it replaces once the
+    // rewrite was accepted.
+    if (blockKind(node) !== "paragraph") plain = false;
     parts.push({ from: pos, to: pos + node.nodeSize });
     return false;
   });
