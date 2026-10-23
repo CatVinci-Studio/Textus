@@ -206,6 +206,8 @@ pub(crate) fn redraw(id: &str, prompt: String) -> Result<(), String> {
         }),
     );
     Ok(())
+}
+
 /// A made picture's file contents and extension, for keeping it with its
 /// document (ai/kept_proposals.rs). None while it is made, or when it
 /// failed or is gone.
