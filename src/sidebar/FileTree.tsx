@@ -16,7 +16,10 @@ import {
   RefreshIcon,
   SortIcon,
 } from "../ui/icons";
-import { fs } from "../platform/ipc";
+import { fs, windowIpc } from "../platform/ipc";
+
+const openInNewWindow = (path: string) =>
+  void windowIpc.openPathInNewWindow(path);
 import { useSettings } from "../settings/SettingsContext";
 import { basename, parentDir } from "../utils/path";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
@@ -27,7 +30,7 @@ import { FileSearch } from "./FileSearch";
 import { type SearchScope } from "./file-search";
 import { Tooltip } from "../ui/Tooltip";
 import { getUiState, setUiState } from "../storage/ui-state";
-import { showMessage, showPrompt } from "../ui/app-dialog";
+import { showConfirm, showMessage, showPrompt } from "../ui/app-dialog";
 import type { Strings } from "../i18n/strings";
 import {
   canMoveInto,
@@ -116,7 +119,14 @@ export function FileTree({
   const treeKeys = useTreeKeys(treeRef);
   const desktop = !isIOSApp && canOpenFolder;
 
-  const onRowMenu = useRowMenu(root, t, reload, onFileSelect, setMenu);
+  const onRowMenu = useRowMenu(
+    root,
+    t,
+    reload,
+    onFileSelect,
+    onEntryMoved,
+    setMenu,
+  );
   const { drag, onRowPointerDown, takeDragClick } = useRowDrag(
     treeRef,
     reload,
@@ -131,6 +141,7 @@ export function FileTree({
       dropInto: drag?.into ?? null,
       onRowMenu: desktop ? onRowMenu : null,
       onRowPointerDown: desktop ? onRowPointerDown : null,
+      openInNewWindow: desktop ? openInNewWindow : null,
       takeDragClick,
     }),
     [
@@ -351,15 +362,56 @@ type TreeMenu = {
   items: (ContextMenuItem | "separator")[];
 } | null;
 
-/** A row's context menu: open a file, or make a document or folder in the
- *  folder clicked (or the one the file is in). */
+/** A row's context menu: open a file, make a document or folder in the
+ *  folder clicked (or the one the file is in), and rename a row or move it
+ *  to the Trash (#351). */
 function useRowMenu(
   root: string,
   t: Strings,
   reload: (...dirs: string[]) => void,
   onFileSelect: (path: string) => void,
+  onEntryMoved: (from: string, to: string) => void,
   setMenu: (menu: TreeMenu) => void,
 ) {
+  const rename = useCallback(
+    async (path: string) => {
+      const name = await showPrompt(t.treeRenamePrompt, basename(path), {
+        okLabel: t.treeRename,
+        cancelLabel: t.cancel,
+      });
+      if (!name?.trim() || name.trim() === basename(path)) return;
+      try {
+        const to = await fs.renameEntry(path, name);
+        reload(parentDir(path) ?? root);
+        // Open documents follow, as for a move.
+        onEntryMoved(path, to);
+      } catch (err) {
+        await showMessage(failureText(t, err, name.trim()));
+      }
+    },
+    [root, t, reload, onEntryMoved],
+  );
+  const trash = useCallback(
+    async (path: string, isDir: boolean) => {
+      const name = basename(path);
+      const ok = await showConfirm(
+        (isDir ? t.treeTrashFolderConfirm : t.treeTrashConfirm).replace(
+          "{name}",
+          name,
+        ),
+        { okLabel: t.treeTrash, cancelLabel: t.cancel, danger: true },
+      );
+      if (!ok) return;
+      try {
+        await fs.trashEntry(path, root);
+        reload(parentDir(path) ?? root);
+      } catch (err) {
+        await showMessage(failureText(t, err, name));
+      }
+    },
+    [root, t, reload],
+  );
+
   const create = useCallback(
     async (dir: string, kind: "document" | "folder") => {
       const doc = kind === "document";
@@ -401,9 +453,19 @@ function useRowMenu(
         },
         { label: t.treeNewFolder, onSelect: () => void create(dir, "folder") },
       );
+      if (path !== root)
+        items.push(
+          "separator",
+          { label: t.treeRenameItem, onSelect: () => void rename(path) },
+          {
+            label: t.treeTrashItem,
+            onSelect: () => void trash(path, isDir),
+            danger: true,
+          },
+        );
       setMenu({ x: e.clientX, y: e.clientY, items });
     },
-    [root, t, create, onFileSelect, setMenu],
+    [root, t, create, rename, trash, onFileSelect, setMenu],
   );
 }
 

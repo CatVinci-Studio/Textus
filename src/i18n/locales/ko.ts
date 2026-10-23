@@ -112,6 +112,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   proposalAcceptSome: "{n}개 중 {k}개 수락",
   proposalChangeCount: "{n}곳",
   editorLabel: "문서",
+  diagramZoom: "다이어그램 크게 보기",
+  diagramViewerLabel: "다이어그램",
+  diagramViewerClose: "닫기",
+  diagramViewerHint:
+    "스크롤하거나 손가락을 오므려 확대·축소 · 끌어서 이동 · 두 번 클릭하면 맞춤",
   codeBlockLanguage: "코드 언어",
   announceAiWriting: `${AI_NAME}가 쓰는 중…`,
   announceAiDone: `${AI_NAME}가 다 썼습니다.`,
@@ -389,6 +394,15 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeSort: "정렬",
   treeSortName: "이름순",
   treeSortModified: "수정한 날짜순",
+  treeRenameItem: "이름 바꾸기…",
+  treeRename: "이름 바꾸기",
+  treeRenamePrompt: "새 이름",
+  treeTrashItem: "휴지통으로 옮기기",
+  treeTrash: "휴지통으로 옮기기",
+  treeTrashConfirm:
+    "“{name}”을(를) 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
+  treeTrashFolderConfirm:
+    "폴더 “{name}”와(과) 그 안의 모든 항목을 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
   treeNameTaken: "여기에 이미 “{name}”(이)라는 항목이 있습니다.",
   treeActionFailed: "할 수 없습니다: {reason}",
   shortcutSearchFiles: "파일 이름 검색",

@@ -78,6 +78,7 @@ export function useAppUpdate(channel: UpdateChannel) {
       // macOS and Linux: anything changed during the download, then the
       // relaunch (which does flush Rust's files on its way out).
       await flushPendingWrites();
+      await updater.releaseInstance();
       await relaunch();
     } catch (err) {
       setError(errorText(err));

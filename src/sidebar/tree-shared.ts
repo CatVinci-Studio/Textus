@@ -36,6 +36,9 @@ export interface TreeShared {
         isDir: boolean,
       ) => void)
     | null;
+  /** ⌘/Ctrl-click on a file: it opens in a window of its own (#348).
+   *  Desktop only. */
+  openInNewWindow: ((path: string) => void) | null;
   /** True once, for the click that ends a drag. */
   takeDragClick: () => boolean;
 }

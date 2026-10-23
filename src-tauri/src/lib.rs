@@ -406,11 +406,17 @@ pub fn run() {
             #[cfg(desktop)]
             commands::tree_ops::tree_move_entry,
             #[cfg(desktop)]
+            commands::tree_ops::tree_rename_entry,
+            #[cfg(desktop)]
+            commands::tree_ops::tree_trash_entry,
+            #[cfg(desktop)]
             commands::recents::add_recent_folder,
             #[cfg(desktop)]
             menu::list_recent_folders,
             #[cfg(desktop)]
             open_paths,
+            #[cfg(desktop)]
+            open_path_in_new_window,
             #[cfg(desktop)]
             menu::trigger_menu_item,
             #[cfg(desktop)]
@@ -461,6 +467,8 @@ pub fn run() {
             commands::default_editor::set_default_editor,
             #[cfg(desktop)]
             commands::update::check_for_update,
+            #[cfg(desktop)]
+            commands::update::release_instance,
             #[cfg(desktop)]
             detect_pandoc,
             #[cfg(desktop)]

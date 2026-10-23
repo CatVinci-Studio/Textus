@@ -122,6 +122,11 @@ para usar una.
   proposalAcceptSome: "Aceptar {k} de {n}",
   proposalChangeCount: "{n} cambios",
   editorLabel: "Documento",
+  diagramZoom: "Ampliar diagrama",
+  diagramViewerLabel: "Diagrama",
+  diagramViewerClose: "Cerrar",
+  diagramViewerHint:
+    "Desplaza o pellizca para hacer zoom · arrastra para mover · doble clic para ajustar",
   codeBlockLanguage: "Lenguaje del código",
   announceAiWriting: `${AI_NAME} está escribiendo…`,
   announceAiDone: `${AI_NAME} ha terminado.`,
@@ -423,6 +428,15 @@ para usar una.
   treeSort: "Ordenar",
   treeSortName: "Por nombre",
   treeSortModified: "Por fecha de modificación",
+  treeRenameItem: "Cambiar nombre…",
+  treeRename: "Cambiar nombre",
+  treeRenamePrompt: "Nombre nuevo",
+  treeTrashItem: "Mover a la papelera",
+  treeTrash: "Mover a la papelera",
+  treeTrashConfirm:
+    "¿Mover «{name}» a la papelera? Podrás recuperarlo desde allí.",
+  treeTrashFolderConfirm:
+    "¿Mover la carpeta «{name}» y todo su contenido a la papelera? Podrás recuperarla desde allí.",
   treeNameTaken: "Ya hay algo llamado «{name}» aquí.",
   treeActionFailed: "No se pudo: {reason}",
   shortcutSearchFiles: "Buscar nombres de archivo",

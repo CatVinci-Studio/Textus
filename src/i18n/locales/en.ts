@@ -115,6 +115,11 @@ type /name in a conversation to use one.
   proposalAcceptSome: "Accept {k} of {n}",
   proposalChangeCount: "{n} changes",
   editorLabel: "Document",
+  diagramZoom: "Enlarge diagram",
+  diagramViewerLabel: "Diagram",
+  diagramViewerClose: "Close",
+  diagramViewerHint:
+    "Scroll or pinch to zoom · drag to move · double-click to fit",
   codeBlockLanguage: "Code language",
   announceAiWriting: `${AI_NAME} is writing…`,
   announceAiDone: `${AI_NAME} is done.`,
@@ -412,6 +417,15 @@ type /name in a conversation to use one.
   treeSort: "Sort",
   treeSortName: "By name",
   treeSortModified: "By date modified",
+  treeRenameItem: "Rename…",
+  treeRename: "Rename",
+  treeRenamePrompt: "New name",
+  treeTrashItem: "Move to Trash",
+  treeTrash: "Move to Trash",
+  treeTrashConfirm:
+    "Move “{name}” to the Trash? You can put it back from there.",
+  treeTrashFolderConfirm:
+    "Move the folder “{name}” and everything in it to the Trash? You can put it back from there.",
   treeNameTaken: "There is already something named “{name}” here.",
   treeActionFailed: "That didn’t work: {reason}",
   shortcutSearchFiles: "Search file names",

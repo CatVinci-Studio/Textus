@@ -71,6 +71,12 @@ export const fs = {
     desktopActionCommand("tree_create_folder", dir, name),
   moveEntry: (path: string, into: string) =>
     desktopActionCommand("tree_move_entry", path, into),
+  /** A new name in the same folder; returns the new path. */
+  renameEntry: (path: string, name: string) =>
+    desktopActionCommand("tree_rename_entry", path, name),
+  /** To the system's Trash, never deleted; refuses the tree's own root. */
+  trashEntry: (path: string, root: string) =>
+    desktopActionCommand("tree_trash_entry", path, root),
   /** File > Open Folder…'s picker (commands/folder.rs). Rejects with
    *  "TOO_BROAD" for the home folder or a drive root. Desktop only. */
   pickOpenFolder: () => desktopActionCommand("pick_open_folder"),

@@ -116,6 +116,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   proposalAcceptSome: "{k} von {n} annehmen",
   proposalChangeCount: "{n} Änderungen",
   editorLabel: "Dokument",
+  diagramZoom: "Diagramm vergrößern",
+  diagramViewerLabel: "Diagramm",
+  diagramViewerClose: "Schließen",
+  diagramViewerHint:
+    "Scrollen oder Zwei-Finger-Zoom · ziehen zum Verschieben · Doppelklick zum Einpassen",
   codeBlockLanguage: "Sprache des Codes",
   announceAiWriting: `${AI_NAME} schreibt…`,
   announceAiDone: `${AI_NAME} ist fertig.`,
@@ -414,6 +419,15 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeSort: "Sortieren",
   treeSortName: "Nach Name",
   treeSortModified: "Nach Änderungsdatum",
+  treeRenameItem: "Umbenennen…",
+  treeRename: "Umbenennen",
+  treeRenamePrompt: "Neuer Name",
+  treeTrashItem: "In den Papierkorb",
+  treeTrash: "In den Papierkorb",
+  treeTrashConfirm:
+    "„{name}“ in den Papierkorb legen? Von dort lässt es sich zurücklegen.",
+  treeTrashFolderConfirm:
+    "Den Ordner „{name}“ mit allem darin in den Papierkorb legen? Von dort lässt er sich zurücklegen.",
   treeNameTaken: "Hier gibt es schon etwas namens „{name}“.",
   treeActionFailed: "Das hat nicht geklappt: {reason}",
   shortcutSearchFiles: "Dateinamen suchen",
