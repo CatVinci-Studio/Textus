@@ -236,6 +236,8 @@ export const commands = {
 	 *  one ends, and the single-instance plugin lets go of its claim only on a
 	 *  clean exit - so the new process found it, handed its launch to this one
 	 *  and quit, and this one, about to end, opened a window for it (#349).
+	 *  Windows and Linux only, where the plugin is (Cargo.toml): macOS keeps
+	 *  one app running by itself.
 	 */
 	release_instance: () => __TAURI_INVOKE<void>("release_instance"),
 };
