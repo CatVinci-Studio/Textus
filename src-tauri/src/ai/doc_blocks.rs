@@ -23,6 +23,12 @@ use serde_json::{json, Map, Value};
 /// so). Not the model's to write.
 pub const PICTURES_KEPT_KEY: &str = "pictures_kept";
 
+/// An argument resolve_edit_arguments adds to a run's rewrite with
+/// pictures in it: their blocks' ids, which the rewrite keeps as they were
+/// (tools/edits.rs tells the model, which redoes one with generate_image
+/// when the user asked for it to change). Not the model's to write.
+pub const PICTURES_IN_RUN_KEY: &str = "pictures_in_run";
+
 /// One block as the request carries it - `SentBlock` in doc-blocks.ts.
 #[derive(Debug, Clone, Deserialize)]
 pub struct SentBlock {
@@ -429,6 +435,14 @@ pub fn resolve_edit_arguments(document: &Document, arguments: &str) -> String {
             // For the tool's result: the model is told to use generate_image.
             if swapped > 0 {
                 args.insert(PICTURES_KEPT_KEY.into(), json!(swapped));
+            }
+            let pictures: Vec<&str> = document.blocks[first..=last]
+                .iter()
+                .filter(|b| is_picture(document.block_text(b)))
+                .map(|b| b.id.as_str())
+                .collect();
+            if !pictures.is_empty() {
+                args.insert(PICTURES_IN_RUN_KEY.into(), json!(pictures));
             }
         }
     }
