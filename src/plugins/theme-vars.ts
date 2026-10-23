@@ -48,6 +48,7 @@ export const WEBVIEW_THEME_VARS = [
   "--dur-base",
   "--dur-medium",
   "--dur-slow",
+  "--dur-stagger",
   "--ease-out",
   "--ease-in",
   "--ease-in-out",

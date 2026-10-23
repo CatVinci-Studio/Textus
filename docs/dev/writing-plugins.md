@@ -251,9 +251,12 @@ resolveWebviewView: async function (webview) {
   from where `--enter-x`, `--enter-y` and `--enter-scale` say (a fade in
   place when unset); one leaving, `motion-exit var(--dur-fast)
 var(--ease-in) forwards` with `--exit-x`, `--exit-y`, `--exit-scale`.
-  What is about to change can be marked for a moment with the
+  Parts that come in one after another - a list's items, a board's cards -
+  go in an element with the `motion-cascade` class: each child arrives a
+  `--dur-stagger` after the one before, as Textus's own written text comes
+  in. What is about to change can be marked for a moment with the
   `motion-mark` class. The durations (`--dur-fast`, `--dur-base`,
-  `--dur-medium`, `--dur-slow`), curves (`--ease-out`, `--ease-in`,
+  `--dur-medium`, `--dur-slow`, `--dur-stagger`), curves (`--ease-out`, `--ease-in`,
   `--ease-in-out`) and distances (`--motion-distance-sm`, `-md`) are the
   window's, so with the system's Reduce motion a plugin's moves become
   fades with the app's. Animate only `opacity` and `transform`.
