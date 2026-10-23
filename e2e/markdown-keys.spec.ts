@@ -130,6 +130,7 @@ test("Tab and Shift+Tab indent and outdent the selected lines of a code block, k
 }) => {
   await open(page, "Before\n\n```\none\ntwo\nthree\n```");
   await toCodeStart(page);
+  await selectionRead(page);
   // Down to the start of "three", which stays as it is.
   await page.keyboard.press("Shift+ArrowDown");
   await page.keyboard.press("Shift+ArrowDown");
@@ -299,6 +300,9 @@ test("Mod+B and Mod+I on a selection keep it selected, so they add up and come o
 }) => {
   await open(page);
   await page.keyboard.type("hello world");
+  // WebKit reads a selection change a moment late: one Shift+Arrow
+  // pressed before the typed text has settled can be undone by it.
+  await selectionRead(page);
   for (let i = 0; i < 5; i++) await page.keyboard.press("Shift+ArrowLeft");
   const selected = () => page.evaluate(() => getSelection()?.toString());
   await expect.poll(selected).toBe("world");
