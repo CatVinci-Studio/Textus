@@ -646,7 +646,7 @@ describe("ChatComposer suggested next message", () => {
       />,
     );
     const box = screen.getByRole("textbox") as HTMLTextAreaElement;
-    expect(box.placeholder).toBe("Translate the next chapter too  ·  Tab");
+    expect(box.placeholder).toBe("Translate the next chapter too  (Tab)");
     fireEvent.keyDown(box, { key: "Tab" });
     expect(box.value).toBe("Translate the next chapter too");
     // Typed over, the suggestion goes and Tab is Tab again.

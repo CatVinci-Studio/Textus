@@ -404,7 +404,7 @@ export function ChatComposer({
             rows={1}
             placeholder={
               offered
-                ? `${offered}  ·  ${labels.suggestionTab}`
+                ? `${offered}  (${labels.suggestionTab})`
                 : labels.placeholder
             }
             value={input}

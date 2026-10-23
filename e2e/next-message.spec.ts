@@ -44,7 +44,7 @@ test("after a reply, the next message shows grey and Tab takes it", async ({
   await open(page);
   await expect(composer(page)).toHaveAttribute(
     "placeholder",
-    "接着润色第二章  ·  Tab 采用",
+    "接着润色第二章  (Tab 采用)",
   );
   // Fainter than a hint, never like typed text: the theme's muted ink at
   // part strength.
