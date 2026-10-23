@@ -62,8 +62,12 @@ export function useReviewBar({
   // change is what's on screen, scrolled to the first of them; the bar
   // has the way back into the conversation.
   const hadDecidable = useRef(false);
+  // Looked at as edits arrive; the rest is read as it is then.
+  const decidable = pendingEdits.decidable.length;
+  const now = useLatest({ pendingEdits, phone, panelContainer, isActive });
   useEffect(() => {
-    const has = pendingEdits.decidable.length > 0;
+    const { pendingEdits, phone, panelContainer, isActive } = now.current;
+    const has = decidable > 0;
     if (has && !hadDecidable.current && phone && panelContainer && isActive) {
       agentPanel.setOpen(false);
       const first = pendingEdits.reviewStops[0];
@@ -73,8 +77,7 @@ export function useReviewBar({
       }
     }
     hadDecidable.current = has;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingEdits.decidable.length]);
+  }, [decidable, now, agentPanel, run]);
 
   /** ‹ / › in the review bar; F7 / Shift+F7 (`caret`) also put the caret
    *  at the change, in the text, where Ctrl/⌘ + Enter and Ctrl/⌘ +

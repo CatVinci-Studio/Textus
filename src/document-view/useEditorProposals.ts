@@ -184,6 +184,32 @@ export function useEditorProposals({
   // The same, for a request from the detached window: the selection it was
   // shown when it asked for context, not whatever has been pushed since.
   const detachedTargetRef = useRef<SelectionTarget | null>(null);
+  /** The earlier previews `added` stand on: the same spot, of the same
+   *  kind - text in place of text, a picture of a picture. */
+  const supersededBy = useCallback(
+    (added: Set<string>, earlier: Set<string>): string[] =>
+      run((ctx) => {
+        const previews =
+          pendingEditKey.getState(ctx.get(editorViewCtx).state)?.previews ?? [];
+        const now = previews.filter((p) => added.has(p.callId));
+        return previews
+          .filter((old) => earlier.has(old.callId) && !added.has(old.callId))
+          .filter((old) => now.some((p) => sameSpot(old, p)))
+          .map((old) => old.callId);
+      }) ?? [],
+    [run],
+  );
+  // Member functions only - all are stable per editor ([run]), and
+  // depending on the whole `pendingEdits` object (fresh every render)
+  // would destabilize the ProposalStream memo below.
+  const {
+    showPreviews,
+    discard,
+    replace,
+    joinPicture,
+    joinEdit,
+    withdrawPictures,
+  } = pendingEdits;
   const addPreviews = useCallback(
     (
       proposals: {
@@ -215,7 +241,7 @@ export function useEditorProposals({
         const kept = p.streaming ? undefined : stoppedRewrite(p.callId);
         if (kept === undefined) return [p];
         if (kept === null) {
-          pendingEdits.discard(p.callId);
+          discard(p.callId);
           return [];
         }
         return [{ ...p, proposal: { ...p.proposal, text: kept } }];
@@ -227,60 +253,38 @@ export function useEditorProposals({
       // own preview until then.
       const text = shown.filter(
         (p) =>
-          !p.proposal.image &&
-          (p.streaming || !pendingEdits.joinEdit(p.callId, p.proposal)),
+          !p.proposal.image && (p.streaming || !joinEdit(p.callId, p.proposal)),
       );
-      if (text.length > 0) pendingEdits.showPreviews(text, target);
+      if (text.length > 0) showPreviews(text, target);
       const pictures = shown.filter(
         (p) =>
           p.proposal.image &&
-          (p.streaming || !pendingEdits.joinPicture(p.callId, p.proposal)),
+          (p.streaming || !joinPicture(p.callId, p.proposal)),
       );
-      if (pictures.length > 0) pendingEdits.showPreviews(pictures, target);
+      if (pictures.length > 0) showPreviews(pictures, target);
       // A picture text now carries gives way as a proposal of its own.
       const carried = new Set(
         text.flatMap((p) => generatedIdsIn(p.proposal.text ?? "")),
       );
       if (carried.size > 0)
-        pendingEdits.withdrawPictures(
-          carried,
-          new Set(text.map((p) => p.callId)),
-        );
+        withdrawPictures(carried, new Set(text.map((p) => p.callId)));
       // What came before and stands where these now do gives way to them.
       const added = new Set(shown.map((p) => p.callId));
       for (const id of supersededBy(added, earlierPreviews.current)) {
         earlierPreviews.current.delete(id);
-        pendingEdits.replace(id);
+        replace(id);
       }
     },
-    // Member functions only - all are stable per editor ([run]), and
-    // depending on the whole `pendingEdits` object (fresh every render)
-    // would destabilize the ProposalStream memo below.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      pendingEdits.showPreviews,
-      pendingEdits.discard,
-      pendingEdits.replace,
-      pendingEdits.joinPicture,
-      pendingEdits.joinEdit,
-      pendingEdits.withdrawPictures,
+      showPreviews,
+      discard,
+      replace,
+      joinPicture,
+      joinEdit,
+      withdrawPictures,
+      supersededBy,
       run,
     ],
-  );
-  /** The earlier previews `added` stand on: the same spot, of the same
-   *  kind - text in place of text, a picture of a picture. */
-  const supersededBy = useCallback(
-    (added: Set<string>, earlier: Set<string>): string[] =>
-      run((ctx) => {
-        const previews =
-          pendingEditKey.getState(ctx.get(editorViewCtx).state)?.previews ?? [];
-        const now = previews.filter((p) => added.has(p.callId));
-        return previews
-          .filter((old) => earlier.has(old.callId) && !added.has(old.callId))
-          .filter((old) => now.some((p) => sameSpot(old, p)))
-          .map((old) => old.callId);
-      }) ?? [],
-    [run],
   );
   // A streaming propose_edit grows its green preview in the document while
   // the model is still writing it. All lifecycle decisions - when a draft is

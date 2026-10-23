@@ -58,8 +58,9 @@ export function useChatContextBridge({
   } = proposals;
 
   // Quick Ask sends against the selection it captured when it opened.
+  const { sendContext } = inlineChat;
   const quickSendContext = useCallback(async () => {
-    const sent = await inlineChat.sendContext();
+    const sent = await sendContext();
     if (sent) {
       requestTargetRef.current = {
         range: sent.range,
@@ -68,8 +69,7 @@ export function useChatContextBridge({
       };
     }
     return sent;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inlineChat.sendContext]);
+  }, [sendContext, requestTargetRef]);
 
   // The docked panel sends against the document and selection as they read
   // at the moment of sending - it follows the user's work, like the
@@ -216,9 +216,14 @@ export function useChatContextBridge({
     // for staleness against exactly it.
     sentSelection.current = live.selection;
     pushChatContext(live.context);
-    // run is stable per editor; filePathRef/isActiveRef are refs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detachedChatLabel, pushChatContext, run]);
+  }, [
+    detachedChatLabel,
+    pushChatContext,
+    run,
+    filePathRef,
+    docTitleRef,
+    isActiveRef,
+  ]);
 
   /** Re-sends even when nothing the guard tracks has changed - for the two
    *  callers where something ELSE did: the document (a send is imminent) or

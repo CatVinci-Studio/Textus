@@ -45,9 +45,7 @@ export function usePanelSelection(run: EditorRunner, tracking: boolean) {
         ? prev
         : next,
     );
-    // run is stable; trackingRef is a ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [run]);
+  }, [run, trackingRef]);
   useEffect(() => {
     if (tracking) updatePanelSelection();
   }, [tracking, updatePanelSelection]);

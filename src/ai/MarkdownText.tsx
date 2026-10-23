@@ -3,7 +3,7 @@ import {
   renderMarkdownHtml,
   renderMarkdownInlineHtml,
 } from "../editor/markdown/render-html";
-import { useKatexReady } from "../editor/math/katex-loader";
+import { useKatexHtml } from "../editor/math/useKatexHtml";
 
 /**
  * Renders an assistant reply as formatted markdown (bold, lists, code,
@@ -16,12 +16,7 @@ export function MarkdownText({ text }: { text: string }) {
   // A reply's first formula loads KaTeX (and its stylesheet, which the
   // detached chat window, never loading the editor, needs too); the reply
   // renders again once it is here.
-  const katexReady = useKatexReady();
-  const html = useMemo(
-    () => renderMarkdownHtml(text),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- a render key
-    [text, katexReady],
-  );
+  const html = useKatexHtml(text, renderMarkdownHtml);
 
   // Safe at this boundary because the generated HTML is sanitized above.
   return (

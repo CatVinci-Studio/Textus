@@ -12,8 +12,10 @@ import {
 /** What the Plugins menu lists now - the app-drawn menu's (AppMenu.tsx). */
 export function usePluginMenuEntries(language: string): PluginMenuEntry[] {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => pluginMenuEntries(snapshot), [snapshot, language]);
+  return useMemo(
+    () => pluginMenuEntries(snapshot, "app/plugins", language),
+    [snapshot, language],
+  );
 }
 
 /** Keeps the macOS menu bar's Plugins menu (menu.rs) to the same list,

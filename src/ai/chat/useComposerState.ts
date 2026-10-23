@@ -210,12 +210,13 @@ export function useSelectionChip(
   const showSelection = !!selectedText && !selectionDropped;
   const [chipHot, setChipHot] = useState(false);
   const chipHandlers = useLatest(selectionChip);
-  const chip = { shown: showSelection, hot: showSelection && chipHot };
+  const shown = showSelection;
+  const hot = showSelection && chipHot;
+  // Reported by value, and again for each new selection; the handlers are
+  // read through a ref.
   useEffect(() => {
-    chipHandlers.current?.onChange(chip);
-    // Reported by value; the handlers are read through a ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chip.shown, chip.hot, selectedText]);
+    chipHandlers.current?.onChange({ shown, hot });
+  }, [shown, hot, selectedText, chipHandlers]);
   useEffect(
     () => () => chipHandlers.current?.onChange({ shown: false, hot: false }),
     [chipHandlers],

@@ -65,9 +65,7 @@ export function McpSection({ t }: { t: Strings }) {
       stopped = true;
       window.clearTimeout(timer);
     };
-    // enabledIds is part of enabledKey.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabledKey]);
+  }, [enabledKey, enabledIds]);
 
   const save = (server: McpServer) => {
     const rest = servers.filter((s) => s.id !== server.id);

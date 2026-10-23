@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import { useLatest } from "../utils/hooks/useLatest";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
@@ -159,25 +160,27 @@ export function useQuickAskReview({
     }
     hadPendingRef.current = hasPending;
   }, [pendingEdits.decidable.length]);
+  // This render's way to reveal; the pointer moving is what it waits for.
+  const { focusedPreview } = pendingEdits;
+  const reveal = useLatest({ revealPreview, editorHasFocus });
   useEffect(() => {
     if (!revealArmed.current) return;
     revealArmed.current = false;
     const armed = revealArmedFocus.current;
     revealArmedFocus.current = null;
-    if (pendingEdits.focusedPreview)
-      revealPreview(
-        pendingEdits.focusedPreview,
+    if (focusedPreview)
+      reveal.current.revealPreview(
+        focusedPreview,
         // The press that armed it, if it was just now; otherwise (edits
         // arriving, or an arming that never led to a reveal until much
         // later) nobody pressed anything for this reveal - only whether
         // the editor has focus now counts.
         armed && Date.now() - armed.at < PRESS_WINDOW_MS
           ? armed.focused
-          : editorHasFocus(),
+          : reveal.current.editorHasFocus(),
         armed === null,
       );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingEdits.focusedPreview]);
+  }, [focusedPreview, reveal]);
 
   function armReveal() {
     revealArmed.current = true;
