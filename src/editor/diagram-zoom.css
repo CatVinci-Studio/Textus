@@ -28,6 +28,14 @@
 .mermaid-zoom:hover {
   color: var(--editor-text);
 }
+/* Two corner arrows pointing out, in the button's text colour. */
+.mermaid-zoom-icon {
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
 
 /* The viewer over the window: the drawing moves and scales by transform
    only (design-language.md), from its top-left corner. */
