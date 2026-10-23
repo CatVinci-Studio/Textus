@@ -115,6 +115,11 @@ export default {
   proposalAcceptSome: "Принять {k} из {n}",
   proposalChangeCount: "правок: {n}",
   editorLabel: "Документ",
+  diagramZoom: "Увеличить диаграмму",
+  diagramViewerLabel: "Диаграмма",
+  diagramViewerClose: "Закрыть",
+  diagramViewerHint:
+    "Прокрутка или щипок — масштаб · перетаскивание — сдвиг · двойной щелчок — вписать",
   codeBlockLanguage: "Язык кода",
   announceAiWriting: `${AI_NAME} пишет…`,
   announceAiDone: `${AI_NAME} закончил.`,

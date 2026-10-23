@@ -122,6 +122,11 @@ utiliser une.
   proposalAcceptSome: "Accepter {k} sur {n}",
   proposalChangeCount: "{n} modifications",
   editorLabel: "Document",
+  diagramZoom: "Agrandir le diagramme",
+  diagramViewerLabel: "Diagramme",
+  diagramViewerClose: "Fermer",
+  diagramViewerHint:
+    "Faites défiler ou pincez pour zoomer · faites glisser pour déplacer · double-cliquez pour ajuster",
   codeBlockLanguage: "Langage du code",
   announceAiWriting: `${AI_NAME} écrit…`,
   announceAiDone: `${AI_NAME} a terminé.`,

@@ -114,6 +114,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   proposalAcceptSome: "Aceitar {k} de {n}",
   proposalChangeCount: "{n} alterações",
   editorLabel: "Documento",
+  diagramZoom: "Ampliar diagrama",
+  diagramViewerLabel: "Diagrama",
+  diagramViewerClose: "Fechar",
+  diagramViewerHint:
+    "Role ou faça pinça para dar zoom · arraste para mover · clique duas vezes para ajustar",
   codeBlockLanguage: "Linguagem do código",
   announceAiWriting: `${AI_NAME} está escrevendo…`,
   announceAiDone: `${AI_NAME} terminou.`,

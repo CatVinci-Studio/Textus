@@ -11,6 +11,7 @@ import {
   type Touches,
 } from "./reveal-state";
 import { fnv1a } from "../utils/hash";
+import { zoomButton } from "./diagram-zoom";
 import { isLargeDoc, pausesFeatures } from "./large-doc";
 import { registerDrawAll } from "./draw-when-visible";
 import { appearanceIsDark, diagramRenderer } from "./diagram-engine";
@@ -120,6 +121,7 @@ export function createMermaidPreviewPlugin(options: {
             const container = document.createElement("div");
             container.className = "mermaid-preview";
             container.innerHTML = svg;
+            container.append(zoomButton(container));
             container.addEventListener("mousedown", (event) => {
               event.preventDefault();
               // The widget's DOM outlives edits above it (its key leaves

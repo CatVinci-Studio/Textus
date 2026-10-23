@@ -113,6 +113,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   proposalAcceptSome: "{n} 件中 {k} 件を適用",
   proposalChangeCount: "{n} か所",
   editorLabel: "文書",
+  diagramZoom: "図を拡大",
+  diagramViewerLabel: "図",
+  diagramViewerClose: "閉じる",
+  diagramViewerHint:
+    "スクロールかピンチで拡大縮小 · ドラッグで移動 · ダブルクリックで全体表示",
   codeBlockLanguage: "コードの言語",
   announceAiWriting: `${AI_NAME} が書いています…`,
   announceAiDone: `${AI_NAME} が書き終えました。`,
