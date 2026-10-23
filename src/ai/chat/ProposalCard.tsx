@@ -29,13 +29,26 @@ const CROSS = (
   </svg>
 );
 
-/** What a generate_image result says stopped it (ai/images.rs's
- *  `outcome`), without what it tells the model to do about it. */
-export function notGeneratedReason(output: string): string {
-  return output
-    .replace(/^Not generated:\s*/, "")
-    .replace(/\s*Tell the user in plain words;[\s\S]*$/, "")
-    .trim();
+/** What the user is told of a generate_image call that made no picture,
+ *  in their language: the request's limit (`limit_reached`, its number),
+ *  or no image model. Null for a call the model got wrong and sends again
+ *  (a missing prompt, a block that isn't there) - the model's to fix, in
+ *  words meant for it. */
+export function notMadeLine(
+  argumentsJson: string,
+  labels: { imageLimitReached: string; imageNoModel: string },
+): string | null {
+  let args: Record<string, unknown>;
+  try {
+    args = JSON.parse(argumentsJson);
+  } catch {
+    return null;
+  }
+  if (typeof args.limit_reached === "number")
+    return labels.imageLimitReached.replace("{n}", String(args.limit_reached));
+  if (args.not_generated === undefined && args.image === undefined)
+    return labels.imageNoModel;
+  return null;
 }
 
 /** A proposed picture on its card, small: its frame while it is made,

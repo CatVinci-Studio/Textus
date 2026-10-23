@@ -28,7 +28,7 @@ import {
   type MemoryChipLabels,
   type RememberResult,
 } from "./MemoryChip";
-import { ProposalCard, notGeneratedReason } from "./ProposalCard";
+import { ProposalCard, notMadeLine } from "./ProposalCard";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { memoryRunsOf } from "./memory-pass";
 
@@ -101,7 +101,8 @@ export interface ChatMessagesLabels
   /** A generate_image card's kind, and the line for a picture that wasn't
    *  made ("{reason}": the service's words). */
   proposalImage: string;
-  imageNotGenerated: string;
+  imageLimitReached: string;
+  imageNoModel: string;
   /** In place of "Thinking…" while a picture is being made. */
   generatingImage: string;
   /** In place of "Thinking…" while an edit's call streams in. */
@@ -283,10 +284,10 @@ export function ChatMessages({
   const refused = useMemo(() => refusedProposalIds(shown), [shown]);
   const imageCalls = useMemo(
     () =>
-      new Set(
+      new Map(
         shown.flatMap((turn) =>
           turn.kind === "ToolCall" && turn.name === "generate_image"
-            ? [turn.call_id]
+            ? [[turn.call_id, turn.arguments] as const]
             : [],
         ),
       ),
@@ -326,23 +327,22 @@ export function ChatMessages({
               "--reveal-delay": `${Math.min(i - revealFrom.current, 3) * 40}ms`,
             } as CSSProperties)
           : undefined;
-        // A picture that wasn't made: the reason, plainly, in the service's
-        // own words where it gave any.
-        if (
+        // A picture that wasn't made, where the user has something to do
+        // about it: the request's limit, or no image model.
+        const notMade =
           turn.kind === "ToolResult" &&
           refused.has(turn.call_id) &&
           imageCalls.has(turn.call_id)
-        )
+            ? notMadeLine(imageCalls.get(turn.call_id) ?? "", labels)
+            : null;
+        if (notMade)
           return (
             <div
               key={i}
               className={`agent-tool-line agent-image-failed${reveal ? " turn-reveal" : ""}`}
               style={style}
             >
-              {labels.imageNotGenerated.replace(
-                "{reason}",
-                notGeneratedReason(turn.output),
-              )}
+              {notMade}
             </div>
           );
         if (

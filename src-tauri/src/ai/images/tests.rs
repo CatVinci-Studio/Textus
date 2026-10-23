@@ -94,6 +94,7 @@ fn a_block_that_isnt_there_is_said_so() {
         .as_str()
         .unwrap()
         .contains("no block has the id `zzzz`"));
+    assert!(args.get("limit_reached").is_none());
 }
 
 #[test]
@@ -345,6 +346,8 @@ fn a_send_makes_at_most_two_pictures() {
         .as_str()
         .unwrap()
         .contains("already made 2 pictures"));
+    // The limit, by its number, for the chat to say in the user's language.
+    assert_eq!(third["limit_reached"], json!(PER_SEND));
 }
 
 #[test]

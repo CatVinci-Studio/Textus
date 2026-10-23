@@ -232,6 +232,11 @@ impl ImageRun {
             }
             Err(why) => {
                 args.insert("not_generated".into(), json!(why));
+                // The user is told this one in their language, by its
+                // number (ChatMessages' notMadeLine).
+                if why == self.limit_reached() {
+                    args.insert("limit_reached".into(), json!(self.limit));
+                }
             }
         }
         Value::Object(args).to_string()
@@ -271,11 +276,16 @@ impl ImageRun {
 
     /// One of this send's pictures, or why there are none left.
     pub(crate) fn spend(&self) -> Result<(), String> {
-        let limit = self.limit;
-        if self.made.fetch_add(1, Ordering::SeqCst) >= limit {
-            return Err(format!("This request has already made {limit} pictures, the most one request may (the user's setting). Ask the user whether they want more."));
+        if self.made.fetch_add(1, Ordering::SeqCst) >= self.limit {
+            return Err(self.limit_reached());
         }
         Ok(())
+    }
+
+    /// What the model is told once this send has made all its pictures.
+    fn limit_reached(&self) -> String {
+        let limit = self.limit;
+        format!("This request has already made {limit} pictures, the most one request may (the user's setting). Ask the user whether they want more.")
     }
 
     /// The call is fit to spend a picture on: a description, a place that

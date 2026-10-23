@@ -126,22 +126,49 @@ test("rejecting a proposed picture leaves nothing behind", async ({ page }) => {
   expect(await calls(page, "ai_discard_generated_image")).toHaveLength(1);
 });
 
-test("a picture the service refused says why, and proposes nothing", async ({
+test("a picture past the request's limit says so in the user's words, and proposes nothing", async ({
   page,
 }) => {
   await open(page);
   await mockInvoke(page, {
     ai_agent_message: exchange(
-      { ...made, image: undefined },
-      "Not generated: The service refused this description: Your request was rejected by the safety system. Tell the user in plain words; don't change the description and call again unless they ask.",
+      {
+        ...made,
+        image: undefined,
+        not_generated: "This request has already made 2 pictures.",
+        limit_reached: 2,
+      },
+      "Not generated: This request has already made 2 pictures. Tell the user in plain words; don't change the description and call again unless they ask.",
     ),
   });
   await send(page);
   await expect(page.locator(".agent-image-failed")).toHaveText(
-    "No picture made: The service refused this description: Your request was rejected by the safety system.",
+    "No picture made: this request has made 2, the most it may. You can change this in Settings under “Pictures per request”.",
   );
   await expect(page.locator(".agent-proposal")).toHaveCount(0);
   await expect(page.locator(`${editor} img`)).toHaveCount(0);
+});
+
+test("a picture call the model got wrong shows nothing: it is the model's to resend", async ({
+  page,
+}) => {
+  await open(page);
+  await mockInvoke(page, {
+    ai_agent_message: exchange(
+      {
+        ...made,
+        image: undefined,
+        not_generated: "`prompt` is empty - describe the picture.",
+      },
+      "Not generated: `prompt` is empty - describe the picture. Tell the user in plain words; don't change the description and call again unless they ask.",
+    ),
+  });
+  await send(page);
+  await expect(page.locator(".agent-message-assistant")).toContainText(
+    "A harbour at dusk",
+  );
+  await expect(page.locator(".agent-image-failed")).toHaveCount(0);
+  await expect(page.locator(".agent-proposal")).toHaveCount(0);
 });
 
 test("Illustrate this paragraph asks for a picture of the paragraph right-clicked", async ({

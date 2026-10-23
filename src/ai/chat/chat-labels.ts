@@ -34,7 +34,11 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     stoppedAtLimit: t.chatStoppedAtLimit,
     continueAfterLimit: t.chatContinueAfterLimit,
     proposalImage: t.proposalImage,
-    imageNotGenerated: t.imageNotGenerated,
+    imageLimitReached: t.imageLimitReached.replace(
+      "{setting}",
+      t.imagesPerRequestLabel,
+    ),
+    imageNoModel: t.imageNoModel.replace("{setting}", t.imageModelLabel),
     attachFile: t.agentAttachFile,
     attachmentTruncated: t.chatAttachmentTruncated,
     attachmentNoVision: t.chatAttachmentNoVision,
