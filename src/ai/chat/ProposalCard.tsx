@@ -18,12 +18,12 @@ import { InlineMarkdownText } from "../MarkdownText";
 import { blockSummary, type BlockNames } from "../revision/markdown-forms";
 import { inlineSentence } from "../revision/sentence-diff";
 
-const CHECK = (
+export const CHECK = (
   <svg viewBox="0 0 16 16" aria-hidden="true">
     <path d="M3.5 8.5l3 3 6-7" />
   </svg>
 );
-const CROSS = (
+export const CROSS = (
   <svg viewBox="0 0 16 16" aria-hidden="true">
     <path d="M4 4l8 8M12 4l-8 8" />
   </svg>
@@ -380,7 +380,7 @@ export function ProposalCard({
 /** One change's text on the card, drawn as the document draws it (bold,
  *  links, a footnote's mark); a whole block (a table, a picture) by what
  *  it is (blockSummary). */
-function ChangeText({
+export function ChangeText({
   markdown,
   names,
 }: {

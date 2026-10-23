@@ -1,7 +1,6 @@
 import { withoutCitationMarkers } from "../citation-markers";
 import type { BlockNames } from "../revision/markdown-forms";
 import { OUT_OF_STEPS } from "./out-of-steps";
-import { InlineMarkdownText } from "../MarkdownText";
 import {
   Fragment,
   useEffect,
@@ -29,6 +28,8 @@ import {
   type RememberResult,
 } from "./MemoryChip";
 import { ProposalCard, notMadeLine } from "./ProposalCard";
+import { ProposalGroup, proposalRuns } from "./ProposalGroup";
+import { CommentCard, parseComment } from "./CommentCard";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { memoryRunsOf } from "./memory-pass";
 
@@ -38,24 +39,6 @@ const DECIDED: ReadonlySet<PendingStatus> = new Set([
   "rejected",
   "invalid",
 ]);
-
-/** An add_comment call's arguments (src-tauri ai/tools.rs). */
-function parseComment(
-  argumentsJson: string,
-): { anchor: string; comment: string; block?: string } | null {
-  try {
-    const parsed = JSON.parse(argumentsJson);
-    if (typeof parsed.anchor !== "string" || typeof parsed.comment !== "string")
-      return null;
-    return {
-      anchor: parsed.anchor,
-      comment: parsed.comment,
-      block: typeof parsed.block === "string" ? parsed.block : undefined,
-    };
-  } catch {
-    return null;
-  }
-}
 
 export interface ChatMessagesLabels
   extends AgentTurnLabels, MemoryChipLabels, ThoughtRowLabels {
@@ -278,7 +261,13 @@ export function ChatMessages({
   }, [shown]);
   // A call the backend refused (tools.rs) was never a proposal: the model
   // was told and resends it, so it gets no card - nor its result.
-  const refused = useMemo(() => refusedProposalIds(shown), [shown]);
+  // And proposals in a row for the same reason, as one card
+  // (ProposalGroup); the calls after a run's first render nothing.
+  const { refused, runs } = useMemo(() => {
+    const refused = refusedProposalIds(shown);
+    return { refused, runs: proposalRuns(shown, parsedProposals, refused) };
+  }, [shown, parsedProposals]);
+  const inRun = new Set([...runs.values()].flatMap((run) => run.slice(1)));
   const imageCalls = useMemo(
     () =>
       new Map(
@@ -352,12 +341,35 @@ export function ChatMessages({
           const proposal = parsed?.proposal;
           if (!parsed || !proposal)
             return <AgentTurnView key={i} turn={turn} labels={labels} />;
-          const known = proposalStatus(turn.call_id);
           // While a request runs, a card can render a beat before its
           // preview is registered (or, in the detached window, before the
           // editor's status push arrives) - that's still arriving, not
           // expired.
-          const status = known === "expired" && busy ? "streaming" : known;
+          const statusOf = (id: string) => {
+            const known = proposalStatus(id);
+            return known === "expired" && busy ? "streaming" : known;
+          };
+          const status = statusOf(turn.call_id);
+          const run = runs.get(turn.call_id);
+          if (inRun.has(turn.call_id)) return null;
+          if (run)
+            return (
+              <ProposalGroup
+                key={i}
+                items={run.map((id) => ({
+                  callId: id,
+                  proposal: parsedProposals.get(id)!.proposal!,
+                  status: statusOf(id),
+                }))}
+                reveal={reveal}
+                style={style}
+                labels={labels}
+                actions={proposalActions}
+                onAccept={onAcceptProposal}
+                onReject={onRejectProposal}
+                onReveal={onRevealProposal}
+              />
+            );
           return (
             <ProposalCard
               key={i}
@@ -386,47 +398,16 @@ export function ChatMessages({
           const comment = parseComment(turn.arguments);
           if (comment) {
             commentIds.add(turn.call_id);
-            const num = noteNumber?.(turn.call_id) ?? null;
             return (
-              <div
+              <CommentCard
                 key={i}
-                className={`agent-comment${reveal ? " turn-reveal" : ""}`}
+                comment={comment}
+                num={noteNumber?.(turn.call_id) ?? null}
+                reveal={reveal}
                 style={style}
-              >
-                <div className="agent-proposal-head">
-                  {/* Where the text shows the note as a numbered badge,
-                      the card wears the same number in its place. */}
-                  {num !== null ? (
-                    <span className="agent-comment-num">{num}</span>
-                  ) : (
-                    <span className="agent-comment-icon" aria-hidden="true">
-                      <svg viewBox="0 0 16 16">
-                        <path d="M3 3.5h10v7H7l-3 2.5v-2.5H3z" />
-                      </svg>
-                    </span>
-                  )}
-                  <span className="agent-proposal-title">
-                    {labels.commentTitle}
-                  </span>
-                  {onLocateText && (
-                    <button
-                      type="button"
-                      className="agent-proposal-link agent-proposal-show"
-                      onClick={() =>
-                        onLocateText(comment.anchor, comment.block)
-                      }
-                    >
-                      {labels.commentLocate}
-                    </button>
-                  )}
-                </div>
-                <blockquote className="agent-comment-quote">
-                  {comment.anchor}
-                </blockquote>
-                <div className="agent-comment-text">
-                  <InlineMarkdownText text={comment.comment} />
-                </div>
-              </div>
+                labels={labels}
+                onLocateText={onLocateText}
+              />
             );
           }
         }

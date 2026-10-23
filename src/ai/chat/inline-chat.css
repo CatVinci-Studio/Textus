@@ -1601,3 +1601,33 @@ button.chat-queue-action {
 button.chat-queue-action:hover {
   color: var(--editor-text);
 }
+
+/* A run of proposals as one card (ProposalGroup): a row each - its new
+   text's first line, its size, ✓ / ✕ - and a decided one says how. */
+.agent-proposal-group-rows .agent-proposal-sentence-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.agent-proposal-group-rows > li {
+  align-items: center;
+}
+
+.agent-proposal-group-rows .agent-diff-summary {
+  display: inline-flex;
+  gap: 4px;
+  flex: none;
+}
+
+.agent-proposal-group-status {
+  flex: none;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+}
+
+.agent-proposal-group-rows
+  > li:not([data-state="pending"])
+  .agent-proposal-sentence-text {
+  color: var(--editor-muted);
+}
