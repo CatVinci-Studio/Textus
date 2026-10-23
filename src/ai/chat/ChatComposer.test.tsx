@@ -78,7 +78,6 @@ const labels = {
   attachmentNoVision: "This provider can't read images.",
   modeWrite: "Write",
   modeReview: "Review",
-  modeRevise: "Revise",
   modeLabel: "Mode",
   webSearch: "Web search",
   deepThinking: "Deep thinking",
@@ -272,8 +271,8 @@ describe("ChatComposer selection chip", () => {
     const picker = screen.getByRole("combobox", { name: "Mode" });
     expect(onModeChange).toHaveBeenLastCalledWith("review");
     fireEvent.click(picker);
-    fireEvent.click(screen.getByRole("option", { name: "Revise" }));
-    expect(onModeChange).toHaveBeenLastCalledWith("revise");
+    fireEvent.click(screen.getByRole("option", { name: "Write" }));
+    expect(onModeChange).toHaveBeenLastCalledWith("write");
     // The picker is words only: the icons are the empty panel's.
     expect(picker.querySelector("svg")).toBeNull();
   });
@@ -281,10 +280,10 @@ describe("ChatComposer selection chip", () => {
   it("sends the selected interaction mode and web-search choice", () => {
     const { onSend } = renderComposer();
     fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
-    // Write, Review, Revise - the order the owner chose.
+    // Write, then Review - 1.2.0's Revise is part of Write.
     expect(
       screen.getAllByRole("option").map((option) => option.textContent),
-    ).toEqual(["Write", "Review", "Revise"]);
+    ).toEqual(["Write", "Review"]);
     fireEvent.click(screen.getByRole("option", { name: "Write" }));
     // Named for what it picks, not for one of its choices: a screen
     // reader used to hear "Ask" over a picker set to Plan.
@@ -387,8 +386,7 @@ describe("ChatComposer Deep thinking", () => {
         selectedText={null}
         busy={false}
         labels={labels}
-        defaultMode="revise"
-        modes={["revise", "review"]}
+        defaultMode="write"
         compact
         defaultWebSearch={false}
         onSend={onSend}
@@ -403,7 +401,7 @@ describe("ChatComposer Deep thinking", () => {
       [],
       true,
       {
-        mode: "revise",
+        mode: "write",
         webSearch: false,
         thinking: "fast",
       },

@@ -47,7 +47,6 @@ metadata:
 - Change dialogue or narration around the description.
 
 ## Deliver
-- Write mode: insert_after the paragraph the description belongs to. One proposal.
-- Revise mode: the same, or replace an existing description to deepen it. One proposal.
+- Write mode: insert_after the paragraph the description belongs to, or replace an existing description to deepen it. One proposal.
 - Review mode: the text in the reply.
 - Reply in one or two sentences on what was added. If you invented details the user may want to keep (a scar, a room's layout), suggest recording them with New library entry… in the project menu.

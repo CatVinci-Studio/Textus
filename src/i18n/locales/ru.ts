@@ -28,11 +28,9 @@ export default {
   shortcutToggleAgentPanel: "Панель ИИ",
   menuToggleAgentPanel: "Панель ИИ",
   agentPanelEmptyWrite:
-    "ИИ пишет новый текст в документ и не меняет то, что уже написано.",
+    "ИИ пишет в документе: новый текст или правки уже написанного; каждая правка ждёт, пока вы её примете или отклоните.",
   agentPanelEmptyReview:
     "ИИ отвечает и оставляет заметки на полях, не меняя ваш текст.",
-  agentPanelEmptyRevise:
-    "ИИ предлагает правки к тексту; каждая ждёт, пока вы её примете или отклоните.",
   aiWorkingCompletion: "Пишется продолжение…",
   aiWorkingGrammar: "Проверяется абзац…",
   noticeCompletionNeedsCaret:
@@ -605,7 +603,6 @@ export default {
   agentDefaultModeLabel: "Режим по умолчанию",
   agentModeWrite: "Написание",
   agentModeReview: "Разбор",
-  agentModeRevise: "Правка",
   chatModeLabel: "Режим",
   agentPersonalizationGroupLabel: "Инструкции и навыки",
   agentAdvancedGroupLabel: "Дополнительно",
@@ -995,7 +992,7 @@ export default {
   tutorialConnectSkip: "Пропустить пока",
   tutorialConnected: "Подключено.",
   tutorialWriteTitle: "Написание с ИИ",
-  tutorialWriteBody: `В режиме «Написание» ${AI_NAME} только добавляет текст, зелёным, пока вы его не примете.`,
+  tutorialWriteBody: `В режиме «Написание» ${AI_NAME} добавляет и правит текст, зелёным, пока вы его не примете.`,
   tutorialWriteOpen:
     "Откройте панель ИИ: значок пера справа вверху ({shortcut})",
   tutorialWriteOpenPhone: "Откройте панель ИИ: нажмите значок пера вверху",
@@ -1008,7 +1005,7 @@ export default {
     "Отправьте `Прокомментируй мои заметки` и прочитайте замечания на полях",
   tutorialRevisionTitle: "Правка",
   tutorialRevisionBody:
-    "В режиме «Правка» он переписывает, а вы решаете по каждой фразе.",
+    "В режиме «Написание» он и переписывает, а вы решаете по каждой фразе.",
   tutorialRevisionSelect: "Выделите первую фразу ваших заметок",
   tutorialRevisionSend:
     "Отправьте `Сделай короче` и выберите «Принять» или «Отклонить»",

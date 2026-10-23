@@ -46,6 +46,6 @@ metadata:
 - If the requested expansion needs facts you don't have (prices, dates, names, results), expand what is there and ask for the missing facts in your reply. Values marked TBD or similar stay as they are.
 
 ## Deliver
-- Revise mode: one replace per passage (one per paragraph for long passages).
+- Write mode: one replace per passage (one per paragraph for long passages).
 - Review mode: the expanded text in the reply.
 - Reply in one or two sentences on what was developed, plus any question about missing facts.

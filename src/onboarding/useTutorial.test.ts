@@ -138,13 +138,13 @@ describe("the AI panel's mode", () => {
       "review",
     );
     expect(resumeAt("revision", { aiMode: "live" }).current.agentMode).toBe(
-      "revise",
+      "write",
     );
     expect(resumeAt("grammar", { aiMode: "live" }).current.agentMode).toBe(
       null,
     );
     const result = resumeAt("skills", { aiMode: "live" });
-    expect(result.current.agentMode).toBe("revise");
+    expect(result.current.agentMode).toBe("write");
     act(() => result.current.exit());
     expect(result.current.agentMode).toBe(null);
   });

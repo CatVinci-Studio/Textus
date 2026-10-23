@@ -29,11 +29,9 @@ export default {
   shortcutToggleAgentPanel: "AI 패널 보기/숨기기",
   menuToggleAgentPanel: "AI 패널",
   agentPanelEmptyWrite:
-    "AI가 새 글을 써서 문서에 더합니다. 이미 있는 글은 바꾸지 않습니다.",
+    "AI가 문서에 글을 씁니다. 새 글을 더하거나 있는 글을 고치며, 하나하나 수락할지 거절할지 당신이 정합니다.",
   agentPanelEmptyReview:
     "AI가 질문에 답하고 여백에 메모를 남깁니다. 글은 바꾸지 않습니다.",
-  agentPanelEmptyRevise:
-    "AI가 수정을 제안합니다. 각 제안은 수락하거나 거절할 때까지 기다립니다.",
   aiWorkingCompletion: "이어 쓰는 중…",
   aiWorkingGrammar: "이 문단을 검사하는 중…",
   noticeCompletionNeedsCaret: "이어 쓸 위치에 커서를 놓으세요.",
@@ -576,7 +574,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentDefaultModeLabel: "기본 모드",
   agentModeWrite: "쓰기",
   agentModeReview: "검토",
-  agentModeRevise: "수정",
   chatModeLabel: "모드",
   agentPersonalizationGroupLabel: "글쓰기 지침 및 스킬",
   agentAdvancedGroupLabel: "고급",
@@ -939,7 +936,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialConnected: "연결되었습니다.",
   tutorialWriteTitle: "AI 쓰기",
   tutorialWriteBody:
-    "쓰기 모드의 AI는 글을 더하기만 하며, 수락하기 전까지 초록색으로 보입니다.",
+    "쓰기 모드의 AI는 글을 더하고 고치며, 수락하기 전까지 초록색으로 보입니다.",
   tutorialWriteOpen: "오른쪽 위 깃펜 아이콘({shortcut})으로 AI 패널 열기",
   tutorialWriteOpenPhone: "위쪽 깃펜 아이콘을 탭해 AI 패널 열기",
   tutorialWriteSend: "`내 노트를 한 문단 더 이어 써 줘`를 보내고 ‘수락’ 클릭",
@@ -949,7 +946,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialReviewTask: "`내 노트에 의견을 달아 줘`를 보내고 여백의 의견 읽기",
   tutorialRevisionTitle: "고쳐 쓰기",
   tutorialRevisionBody:
-    "수정 모드에서는 AI가 고쳐 쓰고, 당신이 문장마다 결정합니다.",
+    "쓰기 모드에서는 고쳐 쓰기도 하며, 당신이 문장마다 결정합니다.",
   tutorialRevisionSelect: "노트의 첫 문장 선택",
   tutorialRevisionSend:
     "`더 간결하게 고쳐 줘`를 보내고 ‘수락’ 또는 ‘거부’ 선택",

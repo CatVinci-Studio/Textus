@@ -36,29 +36,23 @@ The composer's mode (`AgentMode`, see
 this pipeline, and it is enforced in Rust, not only asked for in the prompt
 (`tools.rs`'s `builtin_tools`):
 
-| Mode   | `propose_edit`                                                     |
-| ------ | ------------------------------------------------------------------ |
-| Write  | `append`, `insert_at_cursor`, `insert_after`, `insert_before` only |
-| Review | not offered                                                        |
-| Revise | every action                                                       |
+| Mode   | `propose_edit` |
+| ------ | -------------- |
+| Write  | every action   |
+| Review | not offered    |
 
-The panel and the detached window offer all three; Quick Ask offers Revise
-and Review only (`COMPOSER_MODES`, [ai-concepts.md](ai-concepts.md#not-a-file-modes)).
-
-Write gets the same propose_edit as Revise (one tool list for both, so a
-switch keeps the provider's cached prefix); the mode section in the
-message says it only adds text, and `propose_insertion` refuses any other
-action a model sends; the refusal is a tool result
-like any validation failure, so its streamed preview is discarded
-(`isRefusal`) and nothing that replaces or deletes text reaches the editor.
-A Write proposal is the same green pending block as any insertion: shown,
-not applied, until Accept. With a selection, Write inserts after it
-(`insert_after`), never over it.
+Every surface offers both, Write first (`COMPOSER_MODES`,
+[ai-concepts.md](ai-concepts.md#not-a-file-modes)). Until 1.2.1 Write only
+added text and a third mode, Revise, changed it; the two did the same work
+from the user's side, so Revise folded into Write, and a stored or sent
+`revise` reads as `write`. With a selection, the request decides: a change
+to it replaces it (`replace_selection`), more text goes right after it
+(`insert_after`).
 
 ### Pictures: `generate_image`
 
 With an image model set (Settings › Textus AI › Image model; none by
-default), Write and Revise also get `generate_image`, whose call is a
+default), Write also gets `generate_image`, whose call is a
 proposal too: an insertion of one Markdown image, or the `replace` of a
 picture already in the document. The tool starts the picture in the
 background (`ai/images.rs`'s `ImageRun::run_call`) and returns at once with

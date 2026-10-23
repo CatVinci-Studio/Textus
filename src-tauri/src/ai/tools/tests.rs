@@ -36,7 +36,7 @@ fn runtime_tool<'a>(name: &str, access: Access, modes: &'static [AgentMode]) -> 
 
 #[test]
 fn a_runtime_tool_is_offered_and_run_through_the_registry() {
-    let mut tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
+    let mut tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
     tools.add(runtime_tool("zotero_search", Access::ReadOnly, EVERY_MODE));
     assert!(tools.specs().iter().any(|s| s.name == "zotero_search"));
     let out = execute(&tools, &ctx("Doc."), "zotero_search", r#"{"q":"x"}"#);
@@ -51,7 +51,7 @@ fn a_runtime_tool_is_offered_and_run_through_the_registry() {
 /// ToolOutput::settled): a refused one needs the model again.
 #[test]
 fn valid_proposals_and_comments_are_settled_and_refusals_are_not() {
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
     let ctx = ctx("The cat sat on the mat.");
     let settled =
         |name: &str, args: &str| execute(&tools, &ctx, name, &named(ctx.document, args)).settled;
@@ -74,7 +74,7 @@ fn valid_proposals_and_comments_are_settled_and_refusals_are_not() {
 fn a_tool_is_offered_only_in_the_modes_it_names() {
     for (mode, offered) in [
         (AgentMode::Review, false),
-        (AgentMode::Revise, true),
+        (AgentMode::Write, true),
         (AgentMode::Write, true),
     ] {
         let mut tools = ToolRegistry::new(mode);
@@ -85,7 +85,7 @@ fn a_tool_is_offered_only_in_the_modes_it_names() {
 
 #[test]
 fn reads_run_together_and_proposals_in_order() {
-    let mut tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
+    let mut tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
     tools.add(runtime_tool(
         "make_figure",
         Access::ProposesInItsCall,
@@ -198,7 +198,7 @@ fn ctx(document: &str) -> ToolContext<'static> {
 
 #[test]
 fn check_tools_stop_answering_once_their_budget_is_spent() {
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
     let context = ctx("草稿");
     let run = |name: &str, args: &str| execute(&tools, &context, name, args).text;
     let measure = |metric: &str| {
@@ -313,7 +313,7 @@ fn measure_text_counts_exactly() {
 
 #[test]
 fn the_rules_tools_are_in_every_mode() {
-    for mode in [AgentMode::Review, AgentMode::Revise, AgentMode::Write] {
+    for mode in [AgentMode::Review, AgentMode::Write, AgentMode::Write] {
         let names = names(&builtin_tools(false, false, mode, false));
         assert!(
             names.iter().any(|n| n == "check_conventions")
@@ -326,7 +326,7 @@ fn the_rules_tools_are_in_every_mode() {
 #[test]
 fn the_project_file_tools_are_offered_only_with_a_project_folder() {
     let names = |has_root: bool| -> Vec<String> {
-        names(&builtin_tools(false, has_root, AgentMode::Revise, false))
+        names(&builtin_tools(false, has_root, AgentMode::Write, false))
             .into_iter()
             .filter(|n| n.ends_with("_files") || n == READ_FILE_TOOL_NAME)
             .collect()
@@ -401,7 +401,7 @@ fn find_files_finds_project_files_by_name() {
     std::fs::create_dir_all(dir.path().join("notes")).unwrap();
     std::fs::write(dir.path().join("notes/Lin Wan.md"), "").unwrap();
     std::fs::write(dir.path().join("chapter-1.md"), "").unwrap();
-    let tools = ToolRegistry::builtin(false, true, AgentMode::Revise, false);
+    let tools = ToolRegistry::builtin(false, true, AgentMode::Write, false);
     let in_project = ToolContext {
         root: Some(dir.path()),
         ..ctx("")
@@ -436,10 +436,7 @@ fn review_mode_does_not_receive_the_edit_tool() {
             .find(|tool| tool.spec.name == PROPOSE_EDIT_TOOL_NAME)
     };
     assert!(edit_tool(AgentMode::Review).is_none());
-    // Write and Revise share the tool as the model sees it (the cached
-    // prefix); Write's run refuses what changes existing text (below).
-    let spec = |mode| format!("{:?}", edit_tool(mode).unwrap().spec);
-    assert_eq!(spec(AgentMode::Write), spec(AgentMode::Revise));
+    assert!(edit_tool(AgentMode::Write).is_some());
 }
 
 #[test]
@@ -449,7 +446,7 @@ fn an_edit_of_text_an_undecided_rewrite_replaces_goes_into_the_rewrite() {
         replaced: "The lighthouse stood on the rock.".into(),
         text: "The old lighthouse stood alone on its rock.".into(),
     }];
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
     let context = ToolContext {
         undecided: &undecided,
         ..ctx(doc)
@@ -487,7 +484,7 @@ fn an_edit_may_change_text_proposed_and_not_decided_yet() {
         replaced: String::new(),
         text: "It purred all night. Then it slept.".to_string(),
     }];
-    for mode in [AgentMode::Write, AgentMode::Revise] {
+    for mode in [AgentMode::Write, AgentMode::Write] {
         let tools = ToolRegistry::builtin(false, false, mode, false);
         let context = ToolContext {
             undecided: &undecided,
@@ -518,7 +515,7 @@ fn an_edit_may_change_text_proposed_and_not_decided_yet() {
         );
     }
     // This request's own proposals count too.
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
     let context = ctx(doc);
     let run = |args: &str| {
         execute(
@@ -536,52 +533,24 @@ fn an_edit_may_change_text_proposed_and_not_decided_yet() {
     );
 }
 
+/// Write took in 1.2.0's Revise mode in 1.2.1: it adds text and changes
+/// the text that is there.
 #[test]
-fn write_mode_refuses_an_edit_that_changes_existing_text() {
+fn write_mode_offers_every_edit() {
     let doc = "The cat sat on the mat.";
     let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
-    let ctx = ctx(doc);
-    let run = |args: &str| {
-        execute(
-            &tools,
-            &ctx,
-            PROPOSE_EDIT_TOOL_NAME,
-            &named(ctx.document, args),
-        )
-        .text
-    };
     for args in [
         r#"{"action":"replace","anchor":"The cat sat on the mat.","text":"A dog."}"#,
-        r#"{"action":"replace_selection","text":"A dog."}"#,
         r#"{"action":"delete","anchor":"The cat sat on the mat."}"#,
-        r#"{"action":"rewrite","text":"A dog."}"#,
-    ] {
-        let out = run(args);
-        assert!(
-            out.starts_with("Not proposed: Write mode only adds text"),
-            "{out}"
-        );
-        assert!(out.contains("Revise mode"), "{out}");
-    }
-    for args in [
         r#"{"action":"insert_after","anchor":"The cat sat on the mat.","text":"It purred."}"#,
         r#"{"action":"append","text":"It purred."}"#,
     ] {
-        assert!(run(args).starts_with("Edit proposed"), "{args}");
+        let ctx = ctx(doc);
+        let out = execute(&tools, &ctx, PROPOSE_EDIT_TOOL_NAME, &named(ctx.document, args)).text;
+        assert!(out.starts_with("Edit proposed"), "{args}: {out}");
     }
-    // Revise keeps every action.
-    let revise = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
-    assert!(execute(
-        &revise,
-        &ctx,
-        PROPOSE_EDIT_TOOL_NAME,
-        &named(
-            ctx.document,
-            r#"{"action":"delete","anchor":"The cat sat on the mat."}"#
-        )
-    )
-    .text
-    .starts_with("Edit proposed"));
+    let review = ToolRegistry::builtin(false, false, AgentMode::Review, false);
+    assert!(!review.specs().iter().any(|s| s.name == PROPOSE_EDIT_TOOL_NAME));
 }
 
 #[test]

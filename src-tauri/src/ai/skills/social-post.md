@@ -45,7 +45,6 @@ metadata:
 - Refuse because of an unverified limit (小红书, 微博); warn instead.
 
 ## Deliver
-- Revise mode: replace the draft with the post when the document is a draft of it; when it is source material (a report, an article, product notes), keep it and insert the post after it under a short heading. Append one version per platform under a short heading when several are asked for.
-- Write mode: insert the post after the source under a short heading, or append one version per platform; turning a draft into the post needs Revise mode.
+- Write mode: replace the draft with the post when the document is a draft of it; when it is source material (a report, an article, product notes), keep it and insert the post after it under a short heading. Append one version per platform under a short heading when several are asked for.
 - Review mode: the post in the reply.
 - Reply with the count for each version ("X: 247/280") and any compliance flag in one line each.

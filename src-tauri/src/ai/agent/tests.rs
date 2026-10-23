@@ -32,7 +32,7 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
     use std::collections::VecDeque;
 
     let document = &md("# Notes\n\n## Methods\n\nWe sampled ten sites.\n\n## Results\n\nAll good.");
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
     let conventions = crate::ai::rules::Conventions::default();
     let ctx = ToolContext {
         document,
@@ -549,12 +549,12 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     );
     // The system prompt carries it, the preference rule and the packs,
     // the same whatever the document.
-    let a = build_instructions(&ws, &md("# One"), true, AgentMode::Revise, "hi", "en");
+    let a = build_instructions(&ws, &md("# One"), true, AgentMode::Write, "hi", "en");
     let b = build_instructions(
         &ws,
         &md("# Two\n\nOther text."),
         true,
-        AgentMode::Revise,
+        AgentMode::Write,
         "other",
         "en",
     );
@@ -565,7 +565,7 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     let mut none = ws.clone();
     none.skills.iter_mut().for_each(|s| s.enabled = false);
     assert!(
-        !build_instructions(&none, &md(""), true, AgentMode::Revise, "", "en")
+        !build_instructions(&none, &md(""), true, AgentMode::Write, "", "en")
             .contains("---available skills---")
     );
 }
@@ -625,14 +625,13 @@ fn the_workspace_section_says_which_folder_and_why() {
     // ones alone, and one the backend doesn't know of the same.
     assert_eq!(workspace_section(&too_broad, "xx"), text);
     // The tool-less fallback doesn't hear about file tools.
-    let prompt = build_instructions(&unsaved, &md("draft"), false, AgentMode::Revise, "", "en");
+    let prompt = build_instructions(&unsaved, &md("draft"), false, AgentMode::Write, "", "en");
     assert!(!prompt.contains("---project---"));
     let review = request_preamble(&doc_folder, AgentMode::Review, "en");
-    assert!(review.contains("Review mode:") && review.contains("Revise mode you"));
+    assert!(review.contains("Review mode:") && review.contains("Write mode you"));
     let review = request_preamble(&doc_folder, AgentMode::Review, "ja");
     assert!(
         review.contains("Review mode (レビュー in their Japanese UI)")
-            && review.contains("Revise mode (推敲)")
             && review.contains("Write mode (執筆)")
     );
 }
@@ -790,14 +789,12 @@ fn interaction_mode_is_explicit_in_every_message() {
             .contains("No document edit tool is available")
     );
 
-    assert!(message(AgentMode::Revise).contains("interaction mode: revise"));
-
-    // Write adds after a selection rather than replacing it, and sends
-    // a request to change what is there to Revise.
+    // Write changes a selection when asked to and adds after it when
+    // asked for more; it never sends the user to another mode.
     let write = message(AgentMode::Write);
     assert!(write.contains("interaction mode: write"));
-    assert!(write.contains("right after the selection") && write.contains("never in place of it"));
-    assert!(write.contains("say it needs Revise mode"));
+    assert!(write.contains("replaces it with replace_selection") && write.contains("right after it"));
+    assert!(!write.contains("Revise"));
     // The mode comes before the document and the user's words.
     assert!(write.find("interaction mode").unwrap() < write.find("---document---").unwrap());
     // Tool-less, it stays in the system prompt with everything else.
@@ -807,11 +804,11 @@ fn interaction_mode_is_explicit_in_every_message() {
     );
 }
 
-/// Switching between Write and Revise, or saving a memory, must not
-/// change the system prompt or the tool list: either rewrote the whole
-/// cached prefix and the history after it (docs/design/ai-tokens.md).
+/// Saving a memory must not change the system prompt or the tool list:
+/// it rewrote the whole cached prefix and the history after it
+/// (docs/design/ai-tokens.md).
 #[test]
-fn the_cached_prefix_survives_a_mode_switch_and_a_new_memory() {
+fn the_cached_prefix_survives_a_new_memory() {
     use crate::ai::memory::{Memories, Memory, MemoryKind, Scope};
     let mut ws = AgentWorkspace {
         remember: true,
@@ -829,8 +826,7 @@ fn the_cached_prefix_survives_a_mode_switch_and_a_new_memory() {
             specs,
         )
     };
-    let revise = prefix(&ws, AgentMode::Revise);
-    assert_eq!(prefix(&ws, AgentMode::Write), revise);
+    let before = prefix(&ws, AgentMode::Write);
     ws.memories = Memories {
         items: vec![Memory {
             id: "personal/memory/x".into(),
@@ -843,8 +839,8 @@ fn the_cached_prefix_survives_a_mode_switch_and_a_new_memory() {
         }],
         ..Default::default()
     };
-    assert_eq!(prefix(&ws, AgentMode::Revise), revise);
-    assert!(request_message(&ws, AgentMode::Revise, "en", "", "Go.").contains("Reply briefly."));
+    assert_eq!(prefix(&ws, AgentMode::Write), before);
+    assert!(request_message(&ws, AgentMode::Write, "en", "", "Go.").contains("Reply briefly."));
 }
 
 #[test]
@@ -856,7 +852,7 @@ fn project_writing_instructions_follow_and_override_the_global_ones() {
         project_instructions: Some(project.into()),
         ..AgentWorkspace::default()
     };
-    let prompt = build_instructions(&both, &md("draft"), true, AgentMode::Revise, "", "en");
+    let prompt = build_instructions(&both, &md("draft"), true, AgentMode::Write, "", "en");
     let global_at = prompt.find(global).unwrap();
     let project_at = prompt.find(project).unwrap();
     assert!(global_at < project_at, "global first, project after");
@@ -875,7 +871,7 @@ fn project_writing_instructions_follow_and_override_the_global_ones() {
             ..AgentWorkspace::default()
         },
     ] {
-        let prompt = build_instructions(&alone, &md("draft"), true, AgentMode::Revise, "", "en");
+        let prompt = build_instructions(&alone, &md("draft"), true, AgentMode::Write, "", "en");
         assert!(prompt.contains("---user instructions---\nAlways reply in English."));
         assert!(!prompt.contains("---user instructions for this project"));
     }
@@ -950,7 +946,7 @@ fn a_selected_picture_in_the_documents_folder_is_seen() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// Runs a scripted Revise request: each step the provider's text and its
+/// Runs a scripted Write request: each step the provider's text and its
 /// calls (comments, edits), through the real tools. Returns the turns and
 /// how many steps ran.
 fn scripted_revise(document: &str, script: Vec<Vec<AgentTurn>>) -> (Vec<AgentTurn>, usize) {
@@ -959,7 +955,7 @@ fn scripted_revise(document: &str, script: Vec<Vec<AgentTurn>>) -> (Vec<AgentTur
     use std::collections::VecDeque;
 
     let document = &md(document);
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
     let conventions = crate::ai::rules::Conventions::default();
     let ctx = ToolContext {
         document,

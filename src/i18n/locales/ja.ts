@@ -28,11 +28,9 @@ export default {
   shortcutToggleAgentPanel: "AIパネルの表示切替",
   menuToggleAgentPanel: "AIパネル",
   agentPanelEmptyWrite:
-    "AI が新しい文章を書き足します。今ある文章は変えません。",
+    "AI が文書に書きます。新しい文章も、今ある文章の書き直しも、一つずつ適用するか却下するかを決められます。",
   agentPanelEmptyReview:
     "AI は質問に答え、余白にコメントを残します。文章は変えません。",
-  agentPanelEmptyRevise:
-    "AI が修正を提案します。どれも採用するか却下するかはあなたが決めます。",
   aiWorkingCompletion: "続きを生成中…",
   aiWorkingGrammar: "この段落をチェック中…",
   noticeCompletionNeedsCaret: "続きを書く位置にカーソルを置いてください。",
@@ -585,7 +583,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentDefaultModeLabel: "デフォルトモード",
   agentModeWrite: "執筆",
   agentModeReview: "レビュー",
-  agentModeRevise: "推敲",
   chatModeLabel: "モード",
   agentPersonalizationGroupLabel: "執筆の指示とスキル",
   agentAdvancedGroupLabel: "詳細設定",
@@ -948,7 +945,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialConnected: "接続しました。",
   tutorialWriteTitle: "AI で執筆",
   tutorialWriteBody:
-    "執筆モードの AI は文章を足すだけで、適用するまで緑色で表示されます。",
+    "執筆モードの AI は文章を足したり書き直したりし、適用するまで緑色で表示されます。",
   tutorialWriteOpen: "右上の羽ペンのアイコン（{shortcut}）で AIパネルを開く",
   tutorialWriteOpenPhone: "上部の羽ペンのアイコンをタップして AIパネルを開く",
   tutorialWriteSend: "`ノートの続きを一段落書いて` と送り、「適用」をクリック",
@@ -957,7 +954,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "レビューモードでは、文章には手を触れず、余白にコメントを残します。",
   tutorialReviewTask: "`ノートにコメントして` と送り、余白のコメントを読む",
   tutorialRevisionTitle: "推敲",
-  tutorialRevisionBody: "推敲モードでは AI が書き直し、一文ずつ決められます。",
+  tutorialRevisionBody: "執筆モードでは書き直しもでき、一文ずつ決められます。",
   tutorialRevisionSelect: "ノートの最初の一文を選択",
   tutorialRevisionSend: "`もっと簡潔にして` と送り、「適用」か「却下」を選ぶ",
   tutorialGrammarTitle: "文法チェック",

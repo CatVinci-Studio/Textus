@@ -651,10 +651,10 @@ export function MilkdownEditor({
             docPath={filePath}
             workspaceRoot={settings.agentWorkspaceRoot || null}
             conversation={quickConversation}
-            // Revise-first: Quick Ask is opened on a passage to change it,
+            // Write first: Quick Ask is opened on a passage to change it,
             // and Review mode (the general default) turned "shorten this"
             // into a chat answer. Review stays one click away in the picker.
-            defaultMode="revise"
+            defaultMode="write"
             selectionChip={quickChipHandlers}
             defaultWebSearch={settings.enableWebSearch}
             onSkillUsed={onSkillUsed}

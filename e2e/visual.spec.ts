@@ -317,14 +317,14 @@ test("a pending replace keeps its strike on its text while the user types above 
   await expect(page.locator(".milkdown")).toContainText("Bravo 2 words here.");
 });
 
-test("Quick Ask opens on a selection in Revise mode", async ({ page }) => {
+test("Quick Ask opens on a selection in Write mode", async ({ page }) => {
   await openApp(page);
   await pasteMarkdown(page, SAMPLE_DOC);
   await page.locator(".milkdown p").nth(1).click({ clickCount: 3 });
   await page.keyboard.press("Control+Shift+K");
   await expect(page.locator(".inline-chat")).toBeVisible();
   await expect(page.locator(".inline-chat .inline-chat-mode")).toHaveText(
-    "修订",
+    "写作",
   );
   await expect(page).toHaveScreenshot("quick-ask.png");
 });
@@ -398,7 +398,9 @@ test("Quick Ask stays under its paragraph when an edit arrives", async ({
   await expect(page.locator(".inline-chat-input")).toBeFocused();
   await page.keyboard.type("精简");
   await page.keyboard.press("Enter");
-  await expect(page.locator(".milkdown .pending-delete").first()).toBeAttached();
+  await expect(
+    page.locator(".milkdown .pending-delete").first(),
+  ).toBeAttached();
   // Right after the edited paragraph - it used to jump to the document's
   // end, out of sight, leaving the edit with no visible controls.
   const quoteTop = (await page.locator(".milkdown blockquote").boundingBox())!
