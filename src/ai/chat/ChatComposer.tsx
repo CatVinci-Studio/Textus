@@ -400,7 +400,7 @@ export function ChatComposer({
           )}
           <textarea
             ref={inputRef}
-            className="inline-chat-input"
+            className={`inline-chat-input${offered ? " inline-chat-input-suggested" : ""}`}
             rows={1}
             placeholder={
               offered

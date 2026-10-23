@@ -547,6 +547,19 @@
   overflow-x: hidden;
 }
 
+/* The hint in the empty field, in the theme's muted ink: left to the
+   engine's own grey, WebKitGTK drew it nearly as dark as typed text. */
+.inline-chat-input::placeholder {
+  color: var(--editor-muted);
+  opacity: 1;
+}
+
+/* A suggested next message (Tab takes it) is fainter still: it read as
+   something the writer had typed themselves. */
+.inline-chat-input-suggested::placeholder {
+  color: color-mix(in srgb, var(--editor-muted) 60%, transparent);
+}
+
 /* The composer is the surface's one field and shows its caret; a ring
    round it only boxed in the header icons above it (Quick Ask) and the
    tool row below. */
