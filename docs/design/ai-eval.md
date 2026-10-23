@@ -304,6 +304,9 @@ node scripts/live-eval.mjs compare src-tauri/src/ai/live_eval/baselines/deepseek
 node scripts/live-eval.mjs baseline tmp/live-eval/deepseek-matrix-… deepseek
 ```
 
+`--set core` runs the 33 agent cases in
+`src-tauri/src/ai/live_eval/baselines/core.txt`, one or two per group, at a
+fifth of a full run's cost - for iterating; a release still runs every case.
 `compare` lists the agent cases that started or stopped passing between two
 runs (or a run and a provider's baseline), leaving out cases that never ran
 there: not run on that provider, skipped by the budget, or never answered.

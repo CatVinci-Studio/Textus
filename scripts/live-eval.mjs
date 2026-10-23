@@ -5,7 +5,7 @@
 // no judge, a budget, the keys from .env.local.
 //
 //   node scripts/live-eval.mjs run --provider deepseek [--suite matrix]
-//        [--filter ids] [--model id] [--budget 1] [--judge] [--jobs 6]
+//        [--set core] [--filter ids] [--model id] [--budget 1] [--judge] [--jobs 6]
 //        [--out dir]
 //   node scripts/live-eval.mjs compare <before> <after>
 //   node scripts/live-eval.mjs baseline <run-dir> <provider>
@@ -84,6 +84,13 @@ function run(opts) {
     TEXTUS_EVAL_OUT: out,
   };
   if (provider !== "anthropic") env.TEXTUS_EVAL_PROVIDER = provider;
+  if (opts.set === "core") {
+    // The core set: a case or two per group, for runs while iterating.
+    const ids = readFileSync(join(baselines, "core.txt"), "utf8")
+      .split("\n")
+      .filter((l) => l.trim() && !l.startsWith("#"));
+    env.TEXTUS_EVAL_FILTER = ids.join(",");
+  } else if (opts.set) fail("--set is core (or leave it out for every case)");
   if (opts.filter) env.TEXTUS_EVAL_FILTER = opts.filter;
   if (opts.model) env.TEXTUS_EVAL_AGENT_MODEL = opts.model;
   if (opts.jobs) env.TEXTUS_EVAL_JOBS = opts.jobs;
