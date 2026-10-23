@@ -68,10 +68,6 @@ test("a run of proposals for one reason is one card, decided row by row or all a
   await expect(rows.nth(1)).toContainText(
     "Gulls argued over the nets (translated).",
   );
-  await page.screenshot({
-    path: "/home/chengao/.claude/jobs/2045e913/tmp/shots/proposal-group.png",
-  });
-
   // One row's ✓ takes that paragraph alone.
   await rows.nth(1).getByRole("button", { name: "Accept" }).click();
   await expect(page.locator(".milkdown")).toContainText(

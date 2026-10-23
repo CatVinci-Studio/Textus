@@ -81,7 +81,9 @@ test("the folder's tasks are listed, and ticking one writes its line", async ({
   await expect(tasks.locator("#summary")).toHaveText("1 open task");
   await expect(tasks.locator(".task")).toHaveCount(1);
   await expect(tasks.locator(".task .where")).toHaveText("Week");
-  await tasks.getByRole("checkbox", { name: "Write the intro" }).check();
+  // click, not check: a ticked task leaves the list (Done is off), and
+  // check() would wait for a box that is gone to read as checked.
+  await tasks.getByRole("checkbox", { name: "Write the intro" }).click();
   await expect(tasks.locator("#summary")).toHaveText("0 open tasks");
   const file = await page.evaluate(
     () =>
