@@ -217,6 +217,9 @@ export function ChatMessages({
   // replace the streaming object many times a second while reusing the
   // same turns array, and none of this depends on the text.
   const streamingTurns = streaming?.turns;
+  // The live thinking row sits under the question; anything past the
+  // question - a step's rows - pushes it up out of the panel's end.
+  const thoughtAbove = (streamingTurns?.length ?? 0) > 1;
   const shown = useMemo(
     () => (streamingTurns ? [...history, ...streamingTurns] : history),
     [history, streamingTurns],
@@ -504,12 +507,15 @@ export function ChatMessages({
           />
         </div>
       )}
-      {/* While the thinking row counts the seconds, it says it all. Under
-          a reply, it shows once the reply has stopped coming for a moment
-          (re-keyed by each delta, it waits again): an edit's call, a
-          picture's description or the next step can take seconds with
-          nothing else moving, and the panel read as stuck (rc.6). */}
-      {busy && streaming?.thought?.since == null && (
+      {/* While the thinking row counts the seconds as the last thing in
+          the panel, it says it all - but once a step's rows stand under
+          it (a skill loaded, a tool's result), it is out of sight up
+          there, and the panel read as stuck: this one shows at the
+          bottom too. Under a reply, it shows once the reply has stopped
+          coming for a moment (re-keyed by each delta, it waits again): an
+          edit's call, a picture's description or the next step can take
+          seconds with nothing else moving (rc.6). */}
+      {busy && (streaming?.thought?.since == null || thoughtAbove) && (
         <ThinkingIndicator
           key={streaming?.tool ? streaming.tool : (streaming?.text.length ?? 0)}
           after={!!streaming?.text && !streaming?.tool}
