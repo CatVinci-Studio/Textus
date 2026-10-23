@@ -1129,6 +1129,10 @@ para usar una.
   privacyDraftRecoveryLabel: "Recuperación de borradores",
   privacyDraftRecoveryToggle:
     "Recuperar lo no guardado tras un cierre inesperado",
+  privacyKeepUnsavedToggle:
+    "Conservar los cambios sin guardar al cerrar, sin preguntar",
+  privacyKeepUnsavedHelp:
+    "Cerrar una ventana con cambios sin guardar ya no pregunta si guardar: los documentos se vuelven a abrir con sus cambios la próxima vez que inicies Textus. Los archivos quedan como estaban hasta que guardes.",
   privacyDraftRecoveryClearHint:
     "Elimina las copias de recuperación que haya en el disco. Esta acción no se puede deshacer.",
   privacyClearButton: "Borrar",

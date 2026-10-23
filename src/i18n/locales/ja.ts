@@ -1067,6 +1067,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "クリップボード履歴の内容をすべて削除します。元に戻せません。",
   privacyDraftRecoveryLabel: "下書きの復元",
   privacyDraftRecoveryToggle: "クラッシュ後に未保存の内容を復元する",
+  privacyKeepUnsavedToggle: "閉じるときに未保存の変更を残す（確認しない）",
+  privacyKeepUnsavedHelp:
+    "未保存の変更があるウィンドウを閉じても保存を確認しません。次に Textus を起動すると、その書類が変更ごと開きます。ファイル自体は保存するまでそのままです。",
   privacyDraftRecoveryClearHint:
     "ディスク上のスナップショットをすべて削除します。元に戻せません。",
   privacyClearButton: "消去",

@@ -333,6 +333,10 @@ export interface Settings {
   enableChatHistory: boolean;
   enableClipboardHistory: boolean;
   enableDraftRecovery: boolean;
+  /** Settings › Privacy: closing a window with unsaved changes keeps them
+   *  as drafts for the next launch instead of asking (close-flow.ts). Off
+   *  by default; needs enableDraftRecovery. */
+  keepUnsavedOnClose: boolean;
   /** Settings › General › App: closing the last window leaves the process
    *  running, with a tray (menu bar) icon. Off by default, desktop only;
    *  Rust reads it (src-tauri/src/background/). */
@@ -406,5 +410,6 @@ export const DEFAULT_SETTINGS: Settings = {
   enableChatHistory: true,
   enableClipboardHistory: true,
   enableDraftRecovery: true,
+  keepUnsavedOnClose: false,
   runInBackground: false,
 };

@@ -1149,6 +1149,10 @@ utiliser une.
   privacyDraftRecoveryLabel: "Récupération des brouillons",
   privacyDraftRecoveryToggle:
     "Récupérer le contenu non enregistré après un plantage",
+  privacyKeepUnsavedToggle:
+    "Garder les modifications non enregistrées à la fermeture, sans demander",
+  privacyKeepUnsavedHelp:
+    "Fermer une fenêtre aux modifications non enregistrées ne demande plus d’enregistrer : les documents se rouvrent avec leurs modifications au prochain lancement de Textus. Les fichiers eux-mêmes restent tels quels jusqu’à ce que vous enregistriez.",
   privacyDraftRecoveryClearHint:
     "Supprime les instantanés présents sur le disque. Cette action est irréversible.",
   privacyClearButton: "Effacer",

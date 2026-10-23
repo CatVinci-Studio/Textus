@@ -1118,6 +1118,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   privacyDraftRecoveryLabel: "Wiederherstellung von Entwürfen",
   privacyDraftRecoveryToggle:
     "Nicht gespeicherte Inhalte nach einem Absturz wiederherstellen",
+  privacyKeepUnsavedToggle:
+    "Ungespeicherte Änderungen beim Schließen behalten, ohne zu fragen",
+  privacyKeepUnsavedHelp:
+    "Ein Fenster mit ungespeicherten Änderungen schließt ohne Nachfrage: Die Dokumente öffnen sich beim nächsten Start von Textus mit ihren Änderungen. Die Dateien selbst bleiben, wie sie waren, bis Sie speichern.",
   privacyDraftRecoveryClearHint:
     "Entfernt alle derzeit gespeicherten Zwischenstände. Das lässt sich nicht rückgängig machen.",
   privacyClearButton: "Löschen",

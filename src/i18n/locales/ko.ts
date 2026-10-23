@@ -1056,6 +1056,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "클립보드 기록에 있는 항목을 모두 삭제합니다. 되돌릴 수 없습니다.",
   privacyDraftRecoveryLabel: "초안 복구",
   privacyDraftRecoveryToggle: "비정상 종료 후 저장하지 않은 내용 복구",
+  privacyKeepUnsavedToggle: "닫을 때 저장하지 않은 변경 사항을 묻지 않고 유지",
+  privacyKeepUnsavedHelp:
+    "저장하지 않은 변경 사항이 있는 창을 닫아도 저장할지 묻지 않습니다. 다음에 Textus를 시작하면 그 문서가 변경 사항과 함께 다시 열립니다. 파일 자체는 저장하기 전까지 그대로입니다.",
   privacyDraftRecoveryClearHint:
     "현재 디스크에 있는 스냅샷을 모두 삭제합니다. 되돌릴 수 없습니다.",
   privacyClearButton: "지우기",

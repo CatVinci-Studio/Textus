@@ -1015,6 +1015,9 @@ export default {
     "移除剪貼簿紀錄中的所有內容。此動作無法復原。",
   privacyDraftRecoveryLabel: "草稿復原",
   privacyDraftRecoveryToggle: "當機後復原未儲存的內容",
+  privacyKeepUnsavedToggle: "關閉時保留未儲存的修改，不再詢問",
+  privacyKeepUnsavedHelp:
+    "關閉有未儲存修改的視窗時不再詢問是否儲存：下次啟動 Textus 時，這些文件會帶著修改重新開啟。檔案本身在你儲存之前保持原樣。",
   privacyDraftRecoveryClearHint:
     "移除目前存放在磁碟上的所有快照。此動作無法復原。",
   privacyClearButton: "清除",
