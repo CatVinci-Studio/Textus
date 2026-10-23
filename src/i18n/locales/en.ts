@@ -115,6 +115,11 @@ type /name in a conversation to use one.
   proposalAcceptSome: "Accept {k} of {n}",
   proposalChangeCount: "{n} changes",
   editorLabel: "Document",
+  diagramZoom: "Enlarge diagram",
+  diagramViewerLabel: "Diagram",
+  diagramViewerClose: "Close",
+  diagramViewerHint:
+    "Scroll or pinch to zoom · drag to move · double-click to fit",
   codeBlockLanguage: "Code language",
   announceAiWriting: `${AI_NAME} is writing…`,
   announceAiDone: `${AI_NAME} is done.`,
