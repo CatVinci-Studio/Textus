@@ -1,6 +1,6 @@
 import { RevisionNoteText } from "./RevisionNoteText";
 import { InlineMarkdownText } from "../MarkdownText";
-import { memo, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { memo, useLayoutEffect, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import type { ReviewNote } from "./review-notes-plugin";
 import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
@@ -8,11 +8,7 @@ import { animate } from "../../ui/motion";
 import { CARD_WIDTH } from "./margin-room";
 import { Tooltip } from "../../ui/Tooltip";
 import "./ReviewMargin.css";
-import {
-  CHIP_HEIGHT,
-  type MarginItem,
-  type ReviewMarginLabels,
-} from "./margin-layout";
+import { type MarginItem, type ReviewMarginLabels } from "./margin-layout";
 import { changeGlimpse } from "./change-glimpse";
 import {
   blockNames,
@@ -56,6 +52,10 @@ export interface CardPlace {
   cut: number | null;
   /** Cut to one line: a chip, its own short form. */
   chip: boolean;
+  /** Opened by a click, or pointed at by a bar: a cut card is whole. */
+  open: boolean;
+  /** A click on a cut card opens it (useOpenedCard). */
+  onOpen: (key: string | null) => void;
   labels: ReviewMarginLabels;
   left: number;
   onHot: (key: string, on: boolean) => void;
@@ -160,6 +160,8 @@ export const RevisionCard = memo(
     item,
     hot,
     focused,
+    open,
+    onOpen,
     cut,
     chip,
     labels,
@@ -176,7 +178,6 @@ export const RevisionCard = memo(
     const ref = useCardBox(item.key, top, onHeight, cut !== null);
     const state =
       item.take === false ? "kept" : item.take === true ? "taken" : "open";
-    const open = hot || focused;
     const closed = chip && !open;
     return (
       <div
@@ -187,6 +188,10 @@ export const RevisionCard = memo(
         style={cardStyle(top, left, cut, open)}
         onMouseEnter={() => onHot(item.key, true)}
         onMouseLeave={() => onHot(item.key, false)}
+        onClick={(e) => {
+          if (cut !== null && !(e.target as HTMLElement).closest("button"))
+            onOpen(item.key);
+        }}
       >
         <div className="review-note-by">
           <span className="revision-note-num" aria-hidden="true">
@@ -283,6 +288,8 @@ export const RevisionCard = memo(
   (a, b) =>
     a.hot === b.hot &&
     a.focused === b.focused &&
+    a.open === b.open &&
+    a.onOpen === b.onOpen &&
     a.cut === b.cut &&
     a.chip === b.chip &&
     a.labels === b.labels &&
@@ -306,7 +313,10 @@ export const NoteCard = memo(function NoteCard({
   itemKey,
   note,
   hot,
+  picked,
+  onPick,
   open,
+  onOpen,
   cut,
   chip,
   labels,
@@ -319,8 +329,9 @@ export const NoteCard = memo(function NoteCard({
 }: CardPlace & {
   itemKey: string;
   note: ReviewNote;
-  /** Hot, or the one the review bar points at: a chip opens. */
-  open: boolean;
+  /** Picked on the notes bar, or null while not picking. */
+  picked: boolean | null;
+  onPick: (id: string) => void;
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
 }) {
@@ -333,7 +344,24 @@ export const NoteCard = memo(function NoteCard({
       data-note={note.id}
       onMouseEnter={() => onHot(itemKey, true)}
       onMouseLeave={() => onHot(itemKey, false)}
+      // Picking, the whole card picks it; else a cut one opens - its own
+      // buttons aside.
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("button")) return;
+        if (picked !== null) onPick(note.id);
+        else if (cut !== null) onOpen(itemKey);
+      }}
     >
+      {picked !== null && (
+        <input
+          type="checkbox"
+          className="review-note-pick"
+          checked={picked}
+          aria-label={labels.reviewNotesPickOne}
+          onChange={() => onPick(note.id)}
+          onClick={(e) => e.stopPropagation()}
+        />
+      )}
       {chip && !open ? (
         <div className="review-note-by">
           <span className="review-note-mark" aria-hidden="true">
@@ -417,115 +445,6 @@ function ChangeGlimpse({
     </span>
   );
 }
-
-/** A group's line: how many notes and changes it holds. */
-function groupLabel(items: MarginItem[], labels: ReviewMarginLabels): string {
-  const notes = items.filter((i) => i.kind === "note").length;
-  const changes = items.length - notes;
-  return [
-    notes > 0 && labels.reviewGroupNotes.replace("{n}", String(notes)),
-    changes > 0 && labels.proposalChangeCount.replace("{n}", String(changes)),
-  ]
-    .filter(Boolean)
-    .join(" · ");
-}
-
-/**
- * A run with more notes than its paragraph has lines (stackCards' group):
- * one chip, "8 notes", which opens - pointed at, or one of its own hot or
- * focused - to the list of its cards over the margin below, none of the
- * other cards moved. Each card in the list lights its passage as one in
- * the margin does.
- */
-export const MarginGroup = memo(function MarginGroup({
-  items,
-  hot,
-  focused,
-  labels,
-  top,
-  left,
-  onHot,
-  onDone,
-  onAsk,
-  onDecide,
-}: {
-  items: MarginItem[];
-  hot: string | null;
-  focused: string | null;
-  labels: ReviewMarginLabels;
-  top: number;
-  left: number;
-  onHot: (key: string, on: boolean) => void;
-  onDone: (id: string) => void;
-  onAsk: (note: ReviewNote) => void;
-  onDecide: (callId: string, index: number, take: boolean | null) => void;
-}) {
-  const [pointed, setPointed] = useState(false);
-  const holds = (key: string | null) => items.some((i) => i.key === key);
-  const open = pointed || holds(hot) || holds(focused);
-  const noHeight = () => {};
-  return (
-    <div
-      className={`review-note review-note-group${open ? " review-note-cut-open review-note-group-open" : " review-note-chip"}`}
-      style={{
-        top,
-        left,
-        width: CARD_WIDTH,
-        height: open ? undefined : CHIP_HEIGHT,
-      }}
-      onMouseEnter={() => setPointed(true)}
-      onMouseLeave={() => setPointed(false)}
-    >
-      <div className="review-note-by">
-        <span className="review-note-mark" aria-hidden="true">
-          AI
-        </span>
-        <span className="review-note-chip-text">
-          {groupLabel(items, labels)}
-        </span>
-      </div>
-      {open && (
-        <div className="review-note-group-list">
-          {items.map((item) =>
-            item.kind === "note" ? (
-              <NoteCard
-                key={item.key}
-                itemKey={item.key}
-                note={item.note}
-                hot={hot === item.key}
-                open
-                cut={null}
-                chip={false}
-                labels={labels}
-                top={null}
-                left={left}
-                onHot={onHot}
-                onDone={onDone}
-                onAsk={onAsk}
-                onHeight={noHeight}
-              />
-            ) : (
-              <RevisionCard
-                key={item.key}
-                item={item}
-                hot={hot === item.key}
-                focused={focused === item.key}
-                cut={null}
-                chip={false}
-                labels={labels}
-                top={null}
-                left={left}
-                onHot={onHot}
-                onDecide={onDecide}
-                onHeight={noHeight}
-              />
-            ),
-          )}
-        </div>
-      )}
-    </div>
-  );
-});
 
 /** Compact mode: a note opened from its badge, as a small floating card
  *  under it. */

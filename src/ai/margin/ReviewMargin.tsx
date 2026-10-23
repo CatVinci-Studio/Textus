@@ -19,7 +19,8 @@ import {
   useCardActions,
   useMarginRoom,
 } from "./margin-layout";
-import { MarginGroup, NoteCard, RevisionCard } from "./MarginCards";
+import { NoteCard, RevisionCard } from "./MarginCards";
+import { MarginGroup } from "./MarginGroup";
 export { type ReviewMarginLabels, type MarginItem } from "./margin-layout";
 export { NotePopover } from "./MarginCards";
 
@@ -60,7 +61,13 @@ export function ReviewMargin({
   onDecide,
   onNoMargin,
   layoutKey,
+  picked = null,
+  onPick,
 }: {
+  /** The notes picked on the notes bar, or null while not picking: each
+   *  note's card then has its box, and a click on it picks it. */
+  picked?: ReadonlySet<string> | null;
+  onPick?: (id: string) => void;
   /** Anything else that moves text without moving the items: a change
    *  re-measures. */
   layoutKey?: unknown;
@@ -188,12 +195,14 @@ export function ReviewMargin({
     [contentEl, scrollEl],
   );
 
-  const { cardHot, cardDone, cardAsk, cardDecide } = useCardActions({
-    onHot,
-    onDone,
-    onAsk,
-    onDecide,
-  });
+  const { cardHot, cardDone, cardAsk, cardDecide, cardPick, cardOpen, opened } =
+    useCardActions({
+      onHot,
+      onDone,
+      onAsk,
+      onDecide,
+      onPick: onPick ?? (() => {}),
+    });
   const onHeight = useCallback((key: string, h: number) => {
     if (heights.current.get(key) !== h) {
       heights.current.set(key, h);
@@ -234,7 +243,16 @@ export function ReviewMargin({
           return (
             <MarginGroup
               key={item.key}
+              groupKey={p.group}
               items={members.map((q) => q.item)}
+              open={
+                opened === p.group ||
+                picked !== null ||
+                members.some((q) => q.item.key === focused)
+              }
+              onOpen={cardOpen}
+              picked={picked}
+              onPick={cardPick}
               hot={hot}
               focused={focused}
               labels={labels}
@@ -253,9 +271,12 @@ export function ReviewMargin({
             itemKey={item.key}
             note={item.note}
             hot={hot === item.key}
+            picked={picked ? picked.has(item.note.id) : null}
+            onPick={cardPick}
             cut={p.cut}
             chip={p.chip}
-            open={hot === item.key || focused === item.key}
+            open={opened === item.key || focused === item.key}
+            onOpen={cardOpen}
             labels={labels}
             top={p.top}
             left={layout.left}
@@ -270,6 +291,8 @@ export function ReviewMargin({
             item={item}
             hot={hot === item.key}
             focused={focused === item.key}
+            open={opened === item.key || focused === item.key}
+            onOpen={cardOpen}
             cut={p.cut}
             chip={p.chip}
             labels={labels}

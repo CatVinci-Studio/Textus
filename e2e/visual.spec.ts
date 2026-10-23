@@ -152,7 +152,11 @@ test("an agent reply shows a reasoned edit, a sentence picker and a comment", as
   await expect(page.locator(".milkdown")).toContainText(
     "一共访谈了四十六位居民，内容涵盖了很多方面。",
   );
-  await expect(page.locator(".review-bar")).toHaveCount(0);
+  // The edit's bar goes; the note's stays while the note does.
+  await expect(page.locator(".review-bar:not(.review-bar-notes)")).toHaveCount(
+    0,
+  );
+  await expect(page.locator(".review-bar-notes")).toHaveCount(1);
 });
 
 test("the last sentence decided in the text applies the edit", async ({

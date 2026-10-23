@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { ReviewNote } from "./review-notes-plugin";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -16,6 +16,8 @@ export interface ReviewMarginLabels {
   reviewNoteBy: string;
   /** "{n} notes": a run of them as one chip (MarginGroup). */
   reviewGroupNotes: string;
+  /** A note's box while picking on the notes bar. */
+  reviewNotesPickOne: string;
   /** "{n} changes", likewise. */
   proposalChangeCount: string;
   reviewNoteAsk: string;
@@ -65,7 +67,7 @@ export const LINE_DRIFT = 20;
 export const CHIP_HEIGHT = 30;
 /** The least room a cut card is given - its heading and a line; with less,
  *  it is a chip. */
-export const MIN_CUT = 60;
+export const MIN_CUT = 88;
 /** How far a run of cards may push one of its own below its passage
  *  before the whole run is cut to fit beside its passages. */
 export const CROWDED_DRIFT = 120;
@@ -256,16 +258,43 @@ export function useMarginRoom(
   return noMargin;
 }
 
+/**
+ * The cut card opened by a click (stackCards), whole over the ones below,
+ * until a click elsewhere or Escape. Opened by the pointer passing over it,
+ * it covered the very cards the pointer went on to, and they could not be
+ * reached.
+ */
+export function useOpenedCard() {
+  const [opened, setOpened] = useState<string | null>(null);
+  useEffect(() => {
+    if (opened === null) return;
+    const away = (e: PointerEvent) => {
+      if (!(e.target as Element).closest?.(".review-note")) setOpened(null);
+    };
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpened(null);
+    window.addEventListener("pointerdown", away, true);
+    window.addEventListener("keydown", esc);
+    return () => {
+      window.removeEventListener("pointerdown", away, true);
+      window.removeEventListener("keydown", esc);
+    };
+  }, [opened]);
+  return [opened, setOpened] as const;
+}
+
 /** The cards' callbacks, the same from one render to the next, so a card
- *  whose own props didn't change isn't drawn again (they are memo'd). */
+ *  whose own props didn't change isn't drawn again (they are memo'd) -
+ *  and the card a click opened (useOpenedCard). */
 export function useCardActions(handlers: {
   onHot: (key: string | null) => void;
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
   onDecide: (callId: string, index: number, take: boolean | null) => void;
+  onPick: (id: string) => void;
 }) {
   const actions = useLatest(handlers);
-  return useMemo(
+  const [opened, setOpened] = useOpenedCard();
+  const callbacks = useMemo(
     () => ({
       cardHot: (key: string, on: boolean) =>
         actions.current.onHot(on ? key : null),
@@ -273,7 +302,10 @@ export function useCardActions(handlers: {
       cardAsk: (note: ReviewNote) => actions.current.onAsk(note),
       cardDecide: (callId: string, index: number, take: boolean | null) =>
         actions.current.onDecide(callId, index, take),
+      cardPick: (id: string) => actions.current.onPick(id),
+      cardOpen: setOpened,
     }),
-    [actions],
+    [actions, setOpened],
   );
+  return { ...callbacks, opened };
 }

@@ -29,6 +29,7 @@ import {
 import type { RevisionDisplay } from "../../settings/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { useLatest } from "../../utils/hooks/useLatest";
+import { useNotesBar } from "./useNotesBar";
 
 /** A proposal shown whole as a margin card's change: what it replaces and
  *  with what. Null for new text alone, which has no original. */
@@ -227,9 +228,32 @@ export function useReviewNotes({
   // "Ask about it": into the AI panel's composer, the note quoted, for the
   // writer to finish the question.
   function askAboutNote(note: ReviewNote) {
+    askInPanel(t.reviewNoteAskPrefix.replace("{comment}", note.comment));
+  }
+
+  // The notes bar's picked notes, asked about together.
+  function askAboutNotes(picked: ReviewNote[]) {
+    if (picked.length === 1) return askAboutNote(picked[0]);
+    askInPanel(
+      t.reviewNotesAskPrefix.replace(
+        "{notes}",
+        picked.map((n) => `“${n.comment}”`).join("\n"),
+      ),
+    );
+  }
+
+  const bar = useNotesBar({
+    notes,
+    run,
+    revisionFocus: pendingEdits.focusedStop,
+    onDone: doneNote,
+    onAsk: askAboutNotes,
+  });
+
+  // `text` into the AI panel's composer, the caret after it.
+  function askInPanel(text: string) {
     setOpenNote(null);
     agentPanel.setOpen(true);
-    const text = t.reviewNoteAskPrefix.replace("{comment}", note.comment);
     window.setTimeout(() => {
       const box = document.querySelector<HTMLTextAreaElement>(
         ".agent-panel-view textarea",
@@ -352,11 +376,12 @@ export function useReviewNotes({
     return items;
   }, [notes, pendingEdits.reviewStops, pendingEdits.reviewed, revisionDisplay]);
 
-  // The margin card of the sentence the review bar points at.
+  // The margin card the notes bar or the review bar points at - whichever
+  // pointed last.
   const { focusedStop } = pendingEdits;
-  const focusedItem = focusedStop
-    ? `rev:${focusedStop.callId}:${focusedStop.index}`
-    : null;
+  const focusedItem =
+    bar.focusedItem ??
+    (focusedStop ? `rev:${focusedStop.callId}:${focusedStop.index}` : null);
 
   const openNoteData = openNote
     ? (notes.find((n) => n.id === openNote.id) ?? null)
@@ -378,5 +403,6 @@ export function useReviewNotes({
     askAboutNote,
     onNoMargin,
     locateText,
+    bar,
   };
 }

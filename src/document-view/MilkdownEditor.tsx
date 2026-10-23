@@ -46,16 +46,12 @@ import { useEditorRunner } from "../editor/useEditorRunner";
 import { useEditorClipboard } from "../editor/useEditorClipboard";
 import { useAiActions } from "../ai/writing/useAiActions";
 import { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
-import { ReviewBar } from "../ai/revision/ReviewBar";
+import { ReviewBars } from "./ReviewBars";
 import { useRevisionAnnouncements } from "../ai/revision/useRevisionAnnouncements";
 import {
   RevisionLearningBar,
   useRevisionLearning,
 } from "../ai/revision/RevisionLearning";
-import {
-  addsTextOnly,
-  revisionDisplayName,
-} from "../ai/revision/revision-display";
 import { ReviewMargin } from "../ai/margin/ReviewMargin";
 import { OpenReviewNote } from "../ai/margin/OpenReviewNote";
 import { useReviewNotes } from "../ai/margin/useReviewNotes";
@@ -116,7 +112,7 @@ export function MilkdownEditor({
   const [quickAskEl, setQuickAskEl] = useState<HTMLElement | null>(null);
   // iPhone: Quick Ask docks at the bottom of the screen instead.
   const phone = usePhoneLayout();
-  const { t, settings, setSettings } = useSettings();
+  const { t, settings } = useSettings();
 
   // The editor plugin chain (useTextusEditor) is only built once, so
   // plugins read these refs to see live settings instead of the value
@@ -500,6 +496,8 @@ export function MilkdownEditor({
           onDecide={pendingEdits.decide}
           onNoMargin={notes.onNoMargin}
           layoutKey={pendingEdits.previews}
+          picked={notes.bar.picked}
+          onPick={notes.bar.togglePick}
         />
       )}
       <OpenReviewNote
@@ -512,35 +510,17 @@ export function MilkdownEditor({
         onAsk={notes.askAboutNote}
         onClose={() => notes.setOpenNote(null)}
       />
-      {paneEl &&
-        createPortal(
-          <Presence show={reviewBarShown} exitMs={200}>
-            {reviewBarShown && (
-              <ReviewBar
-                labels={t}
-                taken={pendingEdits.reviewCount.taken}
-                total={pendingEdits.reviewCount.total}
-                position={pendingEdits.stopIndex}
-                stops={pendingEdits.reviewStops.length}
-                phone={phone}
-                onPrevious={() => stepReview(-1)}
-                onNext={() => stepReview(1)}
-                onAccept={pendingEdits.acceptAll}
-                onReject={pendingEdits.rejectAll}
-                onOpenChat={() => agentPanel.setOpen(true)}
-                display={settings.revisionDisplay}
-                displayName={(mode) => revisionDisplayName(t, mode)}
-                onDisplay={(mode) => setSettings({ revisionDisplay: mode })}
-                newText={pendingEdits.decidable.some((p) =>
-                  addsTextOnly(p.proposal),
-                )}
-                streaming={pendingEdits.reviewStreaming}
-                painting={pendingEdits.picturesPainting}
-              />
-            )}
-          </Presence>,
-          paneEl,
-        )}
+      <ReviewBars
+        paneEl={paneEl}
+        reviewBarShown={reviewBarShown}
+        notesShown={isActive && !phone && notes.notes.length > 0}
+        phone={phone}
+        noMargin={notes.noMargin}
+        pendingEdits={pendingEdits}
+        notes={notes.bar}
+        stepReview={stepReview}
+        onOpenChat={() => agentPanel.setOpen(true)}
+      />
       {/* What revision choices taught, once the review is done. */}
       {paneEl &&
         isActive &&

@@ -260,8 +260,13 @@ a line each, a chip. A chip of a small change shows just that change, the
 words struck and added with a little of the sentence around them; a
 rewrite shows its text. Where even chips run far - more notes than the
 paragraph has lines - the run is one chip, "8 notes", which opens to the
-list of them. Pointed at, or pointed at by the review bar, a cut card opens
-whole over the ones below, which don't move. A card still pushed below its
+list of them. Clicked, or pointed at by a bar, a cut card opens whole over
+the ones below, which don't move, until a click elsewhere or Escape; opened
+by the pointer passing over it, it covered the very cards the pointer went
+on to. While there are notes, the notes bar (`NotesBar`) stands over the
+bottom of the document, above the review bar when both show: it steps
+through the notes in the order of the text, marks them all done, and picks
+some to ask about together in the AI panel. A card still pushed below its
 passage draws a fainter line, at full strength while it is pointed at.
 
 **Streaming in place.** Such a rewrite is laid out sentence by sentence

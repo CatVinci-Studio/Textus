@@ -157,9 +157,9 @@ test("a crowded rewrite's cards are cut to stand by their passages, and open who
   // In order, and never overlapping one another.
   for (let i = 1; i < tops.length; i++)
     expect(tops[i]).toBeGreaterThan(tops[i - 1]);
-  // Pointed at, one opens whole over the ones below, which stay put.
+  // Clicked, one opens whole over the ones below, which stay put.
   const card = page.locator(".revision-note").nth(5);
-  await card.hover();
+  await card.click({ position: { x: 40, y: 12 } });
   await expect(card).toHaveClass(/review-note-cut-open/);
   await expect(page.locator(".review-links path.hot")).toHaveCount(1);
   expect(
@@ -167,9 +167,8 @@ test("a crowded rewrite's cards are cut to stand by their passages, and open who
       .locator(".revision-note")
       .evaluateAll((els: HTMLElement[]) => els.map((e) => e.offsetTop)),
   ).toEqual(tops);
-  // The review bar's pointer opens it too.
-  // Left, it closes again - unless it is the one the review bar points at.
-  await page.mouse.move(10, 10);
+  // Escape closes it; the review bar's pointer opens one too.
+  await page.keyboard.press("Escape");
   await expect(
     page.locator(".review-note-cut-open:not(.revision-note-focus)"),
   ).toHaveCount(0);

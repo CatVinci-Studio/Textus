@@ -203,6 +203,21 @@
   color: var(--editor-accent);
 }
 
+/* Picking on the notes bar (NotesBar): each note's box, top right. */
+.review-note-pick {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  margin: 0;
+  accent-color: var(--review-note-line);
+  cursor: pointer;
+}
+
+.review-note:has(> .review-note-pick) {
+  padding-right: 32px;
+  cursor: pointer;
+}
+
 /* A group (MarginGroup), opened: its cards in a list over the margin,
    scrolling past a screen's worth. */
 .review-note-group-open {
@@ -221,6 +236,22 @@
   position: relative;
   box-shadow: none;
   animation: none;
+}
+
+/* A cut card opens on a click. */
+.review-note:is(.review-note-chip, .review-note-cut) {
+  cursor: pointer;
+}
+
+.review-note-group-head {
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
 }
 
 /* A card of a crowded run cut to the room beside its passage: it fades

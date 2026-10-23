@@ -118,8 +118,11 @@ test("after Write's text is accepted, every view applies to Revise's rewrite acr
   await expect(visible(page, ".pending-insert")).toHaveCount(0);
   await expect(visible(page, ".pending-pick")).toHaveCount(0);
   await expect(page.locator(".revision-note")).toHaveCount(3);
-  // Cut short where they crowd, a card says it all once pointed at.
-  await page.locator(".revision-note").first().hover();
+  // Cut short where they crowd, a card says it all once clicked.
+  await page
+    .locator(".revision-note")
+    .first()
+    .click({ position: { x: 40, y: 12 } });
   await expect(page.locator(".revision-note").first()).toContainText(
     "He climbed the stairs.",
   );
@@ -129,7 +132,10 @@ test("after Write's text is accepted, every view applies to Revise's rewrite acr
   await expect(visible(page, ".pending-delete")).toHaveCount(0);
   await expect(visible(page, ".pending-insert")).toHaveCount(3);
   await expect(page.locator(".revision-note")).toHaveCount(3);
-  await page.locator(".revision-note").first().hover();
+  await page
+    .locator(".revision-note")
+    .first()
+    .click({ position: { x: 40, y: 12 } });
   await expect(
     page.locator(".revision-note").first().locator(".revision-note-original"),
   ).toHaveCount(1);

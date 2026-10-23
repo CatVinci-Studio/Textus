@@ -25,6 +25,11 @@
   animation: review-bar-in var(--dur-slow) var(--ease-spring-bouncy) both;
 }
 
+/* The notes bar (NotesBar), standing above the review bar when both show. */
+.review-bar-raised {
+  bottom: calc(66px + var(--status-bar-height, 0px));
+}
+
 .review-bar[data-state="closing"] {
   animation: review-bar-out var(--dur-fast) var(--ease-in) both;
 }
@@ -249,8 +254,11 @@
   background: color-mix(in srgb, var(--ui-on-primary) 12%, transparent);
 }
 
+/* The bar's main button: Accept, or the notes bar's (NotesBar). */
 .review-bar-accept,
-.review-bar-accept:hover {
+.review-bar-accept:hover,
+.review-bar-primary,
+.review-bar-primary:hover {
   border-color: var(--ui-on-primary);
   background: var(--ui-on-primary);
   color: var(--ui-primary);

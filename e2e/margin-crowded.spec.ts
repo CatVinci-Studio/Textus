@@ -5,8 +5,10 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
  * Review notes where they crowd (rc.6 feedback): many notes on one
  * paragraph stacked down past it as whole cards, beside other paragraphs
  * and below the text's end. Cut to the room beside their lines they stay
- * by their passages - chips - and where there are more notes than lines,
- * the run is one chip, "8 notes", which opens to them all.
+ * by their passages - chips, opened by a click - and where there are more
+ * notes than lines, the run is one chip, "8 notes", which opens to them
+ * all. The notes bar steps through them, marks them all done, and asks
+ * about some together.
  */
 
 const PARA =
@@ -73,9 +75,9 @@ test("notes that crowd a paragraph stand by their lines as chips, and open in pl
   );
   expect(Math.max(...off)).toBeLessThan(100);
   const before = await tops(page);
-  // Pointed at, a chip opens whole, with its actions; the others stay put.
+  // Clicked, a chip opens whole, with its actions; the others stay put.
   const chip = page.locator(".review-note-chip").first();
-  await chip.hover();
+  await chip.click({ position: { x: 40, y: 12 } });
   await expect(page.locator(".review-note-cut-open")).toHaveCount(1);
   await expect(
     page.locator(".review-note-cut-open").getByRole("button", { name: "Done" }),
@@ -101,7 +103,7 @@ test("more notes than lines make one chip, which opens to them all", async ({
   await expect(group).toHaveCount(1);
   await expect(group).toHaveText(/8 notes/);
   await expect(page.locator(".review-links path")).toHaveCount(8);
-  await group.hover();
+  await group.locator(".review-note-group-head").click();
   const listed = group.locator(".review-note-group-list > .review-note");
   await expect(listed).toHaveCount(8);
   // Each lights its own passage, and is done from the list.
@@ -109,4 +111,43 @@ test("more notes than lines make one chip, which opens to them all", async ({
   await expect(page.locator(".review-anchor-hot")).toHaveText("A boy ran");
   await listed.nth(2).getByRole("button", { name: "Done" }).click();
   await expect(page.locator(".review-anchor")).toHaveCount(7);
+});
+
+test("the notes bar steps through the notes, marks them all done, and asks about some together", async ({
+  page,
+}) => {
+  await review(page, ["Gulls argued", "The baker", "Rain was due"]);
+  const bar = page.locator(".review-bar-notes");
+  await expect(bar).toContainText("Notes");
+  await expect(bar.locator(".review-bar-pos")).toHaveText("3 notes");
+  // Next: the first note in the text, its card open.
+  await bar.getByRole("button", { name: "Next note" }).click();
+  await expect(bar.locator(".review-bar-pos")).toHaveText("1 / 3");
+  await bar.getByRole("button", { name: "Next note" }).click();
+  await expect(bar.locator(".review-bar-pos")).toHaveText("2 / 3");
+  await bar.getByRole("button", { name: "Previous note" }).click();
+  await bar.getByRole("button", { name: "Previous note" }).click();
+  await expect(bar.locator(".review-bar-pos")).toHaveText("3 / 3");
+
+  // Pick two and ask about them: both go into the composer.
+  await bar.getByRole("button", { name: "Select" }).click();
+  await expect(bar).toContainText("0 selected");
+  const boxes = page.locator(".review-note-pick");
+  await expect(boxes).toHaveCount(3);
+  await page.locator(".review-margin > .review-note").nth(0).click();
+  await boxes.nth(2).check();
+  await expect(bar).toContainText("2 selected");
+  await bar.getByRole("button", { name: "Ask about it" }).click();
+  const composer = page.locator(".agent-panel-view textarea");
+  await expect(composer).toHaveValue(/About these notes of yours:/);
+  await expect(composer).toHaveValue(/"Gulls argued"/);
+  await expect(composer).toHaveValue(/"Rain was due"/);
+  await expect(composer).not.toHaveValue(/"The baker"/);
+  await expect(page.locator(".review-note-pick")).toHaveCount(0);
+
+  // All done: every note goes, and the bar with them.
+  await page.keyboard.press("Control+Shift+L");
+  await bar.getByRole("button", { name: "All done" }).click();
+  await expect(page.locator(".review-anchor")).toHaveCount(0);
+  await expect(bar).toHaveCount(0);
 });
