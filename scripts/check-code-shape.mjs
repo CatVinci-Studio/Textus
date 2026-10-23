@@ -27,7 +27,6 @@ const LINES_NOW = {};
 
 /** Over the hook limit today: the roots that wire a window together. */
 const HOOKS_NOW = {
-  "src/app/App.tsx App": 54,
   "src/ai/chat/window/ChatWindowApp.tsx ChatWindowApp": 30,
 };
 
