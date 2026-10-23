@@ -305,6 +305,9 @@ export const updater = {
     )) as UpdateMetadata | null;
     return metadata ? new Update(metadata) : null;
   },
+  /** Right before the relaunch that applies an update, so the new
+   *  process is the running Textus (commands/update.rs). */
+  releaseInstance: () => desktopQueryCommand("release_instance", null),
 };
 
 // ---------------------------------------------------------------------------
