@@ -156,6 +156,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   reviewNoteBy: "Revisão",
   reviewNoteAsk: "Perguntar",
   reviewNoteDone: "Resolvido",
+  reviewGroupNotes: "{n} notas",
   reviewNoteAskPrefix: "Sobre a sua nota “{comment}”: ",
   agentTabChat: "Conversa",
   agentTabMemory: "Memória",
@@ -258,8 +259,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentGeneratingImage: "Gerando uma imagem…",
   toolGenerateImage: "Gerando uma imagem",
   proposalImage: "Imagem",
-  imageLimitReached: "Nenhuma imagem criada: este pedido já criou {n}, o máximo. Pode alterar isto nas Definições, em «{setting}».",
-  imageNoModel: "Nenhuma imagem criada: não há nenhum modelo de imagem configurado. Escolha um nas Definições, em «{setting}».",
+  imageLimitReached:
+    "Nenhuma imagem criada: este pedido já criou {n}, o máximo. Pode alterar isto nas Definições, em «{setting}».",
+  imageNoModel:
+    "Nenhuma imagem criada: não há nenhum modelo de imagem configurado. Escolha um nas Definições, em «{setting}».",
   imageSaveFailed: "Não foi possível salvar a imagem.",
   imageServiceLabel: "Serviço de imagens",
   imageServiceFollowChat: "Igual ao chat ({name})",

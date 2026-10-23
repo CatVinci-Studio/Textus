@@ -156,6 +156,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reviewNoteBy: "Durchsicht",
   reviewNoteAsk: "Nachfragen",
   reviewNoteDone: "Erledigt",
+  reviewGroupNotes: "{n} Notizen",
   reviewNoteAskPrefix: "Zu deiner Anmerkung „{comment}“: ",
   agentTabChat: "Chat",
   agentTabMemory: "Gedächtnis",
@@ -259,8 +260,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentGeneratingImage: "Bild wird erstellt…",
   toolGenerateImage: "Bild wird erstellt",
   proposalImage: "Bild",
-  imageLimitReached: "Kein Bild erstellt: Diese Anfrage hat schon {n} erstellt, das Maximum. Du kannst das in den Einstellungen unter „{setting}“ ändern.",
-  imageNoModel: "Kein Bild erstellt: Es ist kein Bildmodell eingerichtet. Wähle eines in den Einstellungen unter „{setting}“.",
+  imageLimitReached:
+    "Kein Bild erstellt: Diese Anfrage hat schon {n} erstellt, das Maximum. Du kannst das in den Einstellungen unter „{setting}“ ändern.",
+  imageNoModel:
+    "Kein Bild erstellt: Es ist kein Bildmodell eingerichtet. Wähle eines in den Einstellungen unter „{setting}“.",
   imageSaveFailed: "Das Bild konnte nicht gespeichert werden.",
   imageServiceLabel: "Bilddienst",
   imageServiceFollowChat: "Wie der Chat ({name})",

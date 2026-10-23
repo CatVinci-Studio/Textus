@@ -165,6 +165,7 @@ para usar una.
   reviewNoteBy: "Revisión",
   reviewNoteAsk: "Preguntar",
   reviewNoteDone: "Hecho",
+  reviewGroupNotes: "{n} notas",
   reviewNoteAskPrefix: "Sobre tu nota «{comment}»: ",
   agentTabChat: "Chat",
   agentTabMemory: "Memoria",
@@ -269,8 +270,10 @@ para usar una.
   agentGeneratingImage: "Generando una imagen…",
   toolGenerateImage: "Generando una imagen",
   proposalImage: "Imagen",
-  imageLimitReached: "No se creó la imagen: esta petición ya creó {n}, el máximo. Puedes cambiarlo en Ajustes, en «{setting}».",
-  imageNoModel: "No se creó la imagen: no hay ningún modelo de imagen configurado. Elige uno en Ajustes, en «{setting}».",
+  imageLimitReached:
+    "No se creó la imagen: esta petición ya creó {n}, el máximo. Puedes cambiarlo en Ajustes, en «{setting}».",
+  imageNoModel:
+    "No se creó la imagen: no hay ningún modelo de imagen configurado. Elige uno en Ajustes, en «{setting}».",
   imageSaveFailed: "No se pudo guardar la imagen.",
   imageServiceLabel: "Servicio de imágenes",
   imageServiceFollowChat: "Igual que el chat ({name})",

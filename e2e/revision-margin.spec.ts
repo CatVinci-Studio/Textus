@@ -136,7 +136,7 @@ test("with many revisions the cards stack and move, the text doesn't", async ({
   expect(await blocks(page)).toEqual(withCards);
 });
 
-test("every card draws its line; one pushed below its passage, fainter until pointed at", async ({
+test("a crowded rewrite's cards are cut to stand by their passages, and open whole", async ({
   page,
 }) => {
   await open(page, LONG, "new", 1100);
@@ -144,19 +144,41 @@ test("every card draws its line; one pushed below its passage, fainter until poi
   await expect(page.locator(".revision-note")).toHaveCount(24);
   // A line for every card from the start, not only once pointed at.
   await expect(page.locator(".review-links path")).toHaveCount(24);
-  // The first card sits level with its passage; most below are pushed
-  // down, and their lines are fainter.
-  const far = page.locator(".review-links path.far");
-  const faint = await far.count();
-  expect(faint).toBeGreaterThan(16);
-  await page.locator(".revision-note").nth(5).hover();
+  // Whole, the cards ran ever further below their sentences; cut to the
+  // room beside each, none is pushed far from its own.
+  await expect(page.locator(".review-links path.far")).toHaveCount(0);
+  const cut = page.locator(
+    ".revision-note:is(.review-note-chip, .review-note-cut)",
+  );
+  expect(await cut.count()).toBeGreaterThan(16);
+  const tops = await page
+    .locator(".revision-note")
+    .evaluateAll((els: HTMLElement[]) => els.map((e) => e.offsetTop));
+  // In order, and never overlapping one another.
+  for (let i = 1; i < tops.length; i++)
+    expect(tops[i]).toBeGreaterThan(tops[i - 1]);
+  // Pointed at, one opens whole over the ones below, which stay put.
+  const card = page.locator(".revision-note").nth(5);
+  await card.hover();
+  await expect(card).toHaveClass(/review-note-cut-open/);
   await expect(page.locator(".review-links path.hot")).toHaveCount(1);
-  await expect(far).toHaveCount(faint - 1);
-  // The review bar's pointer lights it too.
+  expect(
+    await page
+      .locator(".revision-note")
+      .evaluateAll((els: HTMLElement[]) => els.map((e) => e.offsetTop)),
+  ).toEqual(tops);
+  // The review bar's pointer opens it too.
+  // Left, it closes again - unless it is the one the review bar points at.
   await page.mouse.move(10, 10);
-  await expect(far).toHaveCount(faint);
+  await expect(
+    page.locator(".review-note-cut-open:not(.revision-note-focus)"),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "Previous edit" }).click();
   await expect(page.locator(".revision-note-focus")).toContainText("24");
+  // Not a chip: opened, or whole.
+  await expect(page.locator(".revision-note-focus")).not.toHaveClass(
+    /review-note-chip\b/,
+  );
   await expect(page.locator(".review-links path.hot")).toHaveCount(1);
 });
 

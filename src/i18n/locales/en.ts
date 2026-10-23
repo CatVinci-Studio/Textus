@@ -156,6 +156,7 @@ type /name in a conversation to use one.
   reviewNoteBy: "Review",
   reviewNoteAsk: "Ask about it",
   reviewNoteDone: "Done",
+  reviewGroupNotes: "{n} notes",
   reviewNoteAskPrefix: "About your note “{comment}”: ",
   agentTabChat: "Chat",
   agentTabMemory: "Memory",
@@ -258,8 +259,10 @@ type /name in a conversation to use one.
   agentGeneratingImage: "Generating an image…",
   toolGenerateImage: "Generating an image",
   proposalImage: "Picture",
-  imageLimitReached: "No picture made: this request has made {n}, the most it may. You can change this in Settings under “{setting}”.",
-  imageNoModel: "No picture made: no image model is set up. Choose one in Settings under “{setting}”.",
+  imageLimitReached:
+    "No picture made: this request has made {n}, the most it may. You can change this in Settings under “{setting}”.",
+  imageNoModel:
+    "No picture made: no image model is set up. Choose one in Settings under “{setting}”.",
   imageSaveFailed: "Couldn't save the picture.",
   imageServiceLabel: "Image service",
   imageServiceFollowChat: "Same as chat ({name})",

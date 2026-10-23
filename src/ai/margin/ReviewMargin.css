@@ -169,6 +169,73 @@
   border-color: var(--review-note-line);
 }
 
+/* A card of a crowded run, as one line (stackCards): its height is set
+   (CHIP_HEIGHT), the line cut short. */
+.review-note-chip {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding-block: 0;
+}
+
+.review-note-chip > .review-note-by {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--editor-text);
+}
+
+.review-note-chip-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.review-note-chip-text del {
+  color: var(--editor-muted);
+}
+
+.review-note-chip-text ins {
+  text-decoration: none;
+  color: var(--editor-accent);
+}
+
+/* A group (MarginGroup), opened: its cards in a list over the margin,
+   scrolling past a screen's worth. */
+.review-note-group-open {
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+}
+
+.review-note-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.review-note-group-list > .review-note {
+  position: relative;
+  box-shadow: none;
+  animation: none;
+}
+
+/* A card of a crowded run cut to the room beside its passage: it fades
+   out where it is cut. */
+.review-note-cut {
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent);
+}
+
+/* Opened, a cut card is whole, over the cards below: none of them moves. */
+.review-note-cut-open {
+  z-index: 3;
+  box-shadow: var(--shadow-card-hover);
+}
+
 .review-note-popover {
   position: fixed;
   /* A popover, not a modal: at the modal tier, and portaled after the

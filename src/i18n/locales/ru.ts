@@ -161,6 +161,7 @@ export default {
   reviewNoteBy: "Рецензия",
   reviewNoteAsk: "Спросить",
   reviewNoteDone: "Готово",
+  reviewGroupNotes: "заметок: {n}",
   reviewNoteAskPrefix: "По поводу заметки «{comment}»: ",
   agentTabChat: "Диалог",
   agentTabMemory: "Память",
@@ -261,8 +262,10 @@ export default {
   agentGeneratingImage: "Создаю изображение…",
   toolGenerateImage: "Создаю изображение",
   proposalImage: "Изображение",
-  imageLimitReached: "Изображение не создано: этот запрос уже создал {n} — это предел. Его можно изменить в Настройках, в пункте «{setting}».",
-  imageNoModel: "Изображение не создано: модель изображений не настроена. Выберите её в Настройках, в пункте «{setting}».",
+  imageLimitReached:
+    "Изображение не создано: этот запрос уже создал {n} — это предел. Его можно изменить в Настройках, в пункте «{setting}».",
+  imageNoModel:
+    "Изображение не создано: модель изображений не настроена. Выберите её в Настройках, в пункте «{setting}».",
   imageSaveFailed: "Не удалось сохранить изображение.",
   imageServiceLabel: "Сервис изображений",
   imageServiceFollowChat: "Как в чате ({name})",

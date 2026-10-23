@@ -144,6 +144,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   reviewNoteBy: "レビュー",
   reviewNoteAsk: "質問する",
   reviewNoteDone: "対応済み",
+  reviewGroupNotes: "コメント {n} 件",
   reviewNoteAskPrefix: "このコメント「{comment}」について：",
   agentTabChat: "会話",
   agentTabMemory: "記憶",
@@ -243,8 +244,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentGeneratingImage: "画像を生成しています…",
   toolGenerateImage: "画像を生成しています",
   proposalImage: "画像",
-  imageLimitReached: "画像は生成されませんでした：このリクエストで {n} 枚生成し、上限に達しました。設定の「{setting}」で変更できます。",
-  imageNoModel: "画像は生成されませんでした：画像モデルが設定されていません。設定の「{setting}」で選んでください。",
+  imageLimitReached:
+    "画像は生成されませんでした：このリクエストで {n} 枚生成し、上限に達しました。設定の「{setting}」で変更できます。",
+  imageNoModel:
+    "画像は生成されませんでした：画像モデルが設定されていません。設定の「{setting}」で選んでください。",
   imageSaveFailed: "画像を保存できませんでした。",
   imageServiceLabel: "画像サービス",
   imageServiceFollowChat: "チャットと同じ（{name}）",

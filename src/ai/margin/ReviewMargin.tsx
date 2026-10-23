@@ -5,20 +5,21 @@ import type { ReviewNote } from "./review-notes-plugin";
 import { GAP } from "./margin-room";
 import "./ReviewMargin.css";
 import {
+  CHIP_HEIGHT,
   LINE_DRIFT,
   type Layout,
   type MarginItem,
   type Placed,
   type ReviewMarginLabels,
-  STACK_GAP,
   anchorSelector,
   measureRoom,
   placeColumn,
   sameLayout,
+  stackCards,
   useCardActions,
   useMarginRoom,
 } from "./margin-layout";
-import { NoteCard, RevisionCard } from "./MarginCards";
+import { MarginGroup, NoteCard, RevisionCard } from "./MarginCards";
 export { type ReviewMarginLabels, type MarginItem } from "./margin-layout";
 export { NotePopover } from "./MarginCards";
 
@@ -66,7 +67,8 @@ export function ReviewMargin({
   view: EditorView | null;
   items: MarginItem[];
   hot: string | null;
-  /** The revision the review bar points at ("rev:<callId>:<index>"). */
+  /** The item the review bar points at ("rev:<callId>:<index>", or
+   *  "note:<id>"). */
   focused: string | null;
   scrollEl: HTMLElement;
   contentEl: HTMLElement;
@@ -132,6 +134,9 @@ export function ReviewMargin({
           item,
           top: first.top - top0 - 8,
           drift: 0,
+          cut: null,
+          chip: false,
+          group: null,
           // From the column's edge, level with the passage's first line -
           // never from inside the text, where it would cross the words
           // after the passage.
@@ -139,13 +144,7 @@ export function ReviewMargin({
           ay: (first.top + first.bottom) / 2 - top0,
         });
       }
-      placed.sort((a, b) => a.top - b.top);
-      let floor = -Infinity;
-      for (const p of placed) {
-        p.drift = Math.max(0, floor - p.top);
-        p.top += p.drift;
-        floor = p.top + (heights.current.get(p.item.key) ?? 64) + STACK_GAP;
-      }
+      stackCards(placed, (key) => heights.current.get(key) ?? 64);
       const next = { left, placed };
       setLayout((was) => (sameLayout(was, next) ? was : next));
     };
@@ -212,7 +211,7 @@ export function ReviewMargin({
           // gone: with none, the card read as belonging to nothing.
           const far = p.drift > LINE_DRIFT;
           const x2 = layout.left;
-          const y2 = p.top + 16;
+          const y2 = p.top + (p.chip ? CHIP_HEIGHT / 2 : 16);
           const dx = Math.max(16, (x2 - p.ax) / 2);
           return (
             <path
@@ -229,12 +228,34 @@ export function ReviewMargin({
       </svg>
       {layout.placed.map((p) => {
         const item = p.item;
+        if (p.group !== null) {
+          if (p.group !== item.key) return null;
+          const members = layout.placed.filter((q) => q.group === p.group);
+          return (
+            <MarginGroup
+              key={item.key}
+              items={members.map((q) => q.item)}
+              hot={hot}
+              focused={focused}
+              labels={labels}
+              top={p.top}
+              left={layout.left}
+              onHot={cardHot}
+              onDone={cardDone}
+              onAsk={cardAsk}
+              onDecide={cardDecide}
+            />
+          );
+        }
         return item.kind === "note" ? (
           <NoteCard
             key={item.key}
             itemKey={item.key}
             note={item.note}
             hot={hot === item.key}
+            cut={p.cut}
+            chip={p.chip}
+            open={hot === item.key || focused === item.key}
             labels={labels}
             top={p.top}
             left={layout.left}
@@ -249,6 +270,8 @@ export function ReviewMargin({
             item={item}
             hot={hot === item.key}
             focused={focused === item.key}
+            cut={p.cut}
+            chip={p.chip}
             labels={labels}
             top={p.top}
             left={layout.left}

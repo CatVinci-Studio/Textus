@@ -134,6 +134,7 @@ export default {
   reviewNoteBy: "審閱",
   reviewNoteAsk: "追問",
   reviewNoteDone: "已處理",
+  reviewGroupNotes: "{n} 則批註",
   reviewNoteAskPrefix: "關於這則批註「{comment}」：",
   agentTabChat: "對話",
   agentTabMemory: "記憶",
@@ -225,8 +226,10 @@ export default {
   agentGeneratingImage: "正在產生圖片…",
   toolGenerateImage: "正在產生圖片",
   proposalImage: "圖片",
-  imageLimitReached: "沒有產生圖片：這次請求已產生 {n} 張，達到上限。可以在設定的「{setting}」裡調整。",
-  imageNoModel: "沒有產生圖片：還沒有設定圖片模型。請在設定的「{setting}」裡選擇。",
+  imageLimitReached:
+    "沒有產生圖片：這次請求已產生 {n} 張，達到上限。可以在設定的「{setting}」裡調整。",
+  imageNoModel:
+    "沒有產生圖片：還沒有設定圖片模型。請在設定的「{setting}」裡選擇。",
   imageSaveFailed: "無法儲存圖片。",
   imageServiceLabel: "圖片服務",
   imageServiceFollowChat: "跟隨聊天（{name}）",

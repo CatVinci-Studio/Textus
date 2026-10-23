@@ -142,6 +142,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   reviewNoteBy: "검토",
   reviewNoteAsk: "더 묻기",
   reviewNoteDone: "처리함",
+  reviewGroupNotes: "메모 {n}개",
   reviewNoteAskPrefix: "이 댓글 “{comment}”에 대해: ",
   agentTabChat: "대화",
   agentTabMemory: "기억",
@@ -237,8 +238,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentGeneratingImage: "이미지를 생성하는 중…",
   toolGenerateImage: "이미지를 생성하는 중",
   proposalImage: "그림",
-  imageLimitReached: "그림을 만들지 못했습니다: 이번 요청에서 {n}장을 만들어 한도에 도달했습니다. 설정의 \"{setting}\"에서 바꿀 수 있습니다.",
-  imageNoModel: "그림을 만들지 못했습니다: 이미지 모델이 설정되지 않았습니다. 설정의 \"{setting}\"에서 선택하세요.",
+  imageLimitReached:
+    '그림을 만들지 못했습니다: 이번 요청에서 {n}장을 만들어 한도에 도달했습니다. 설정의 "{setting}"에서 바꿀 수 있습니다.',
+  imageNoModel:
+    '그림을 만들지 못했습니다: 이미지 모델이 설정되지 않았습니다. 설정의 "{setting}"에서 선택하세요.',
   imageSaveFailed: "그림을 저장하지 못했습니다.",
   imageServiceLabel: "이미지 서비스",
   imageServiceFollowChat: "채팅과 같게 ({name})",

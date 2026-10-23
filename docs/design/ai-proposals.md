@@ -249,10 +249,20 @@ one before it - goes out of the flow with it (`struckBlocks`,
 `.pending-struck-block`); left standing it was an empty line with a
 paragraph's margins, a blank gap (`1.2.0-rc.1`). One that holds a deleted
 sentence's mark keeps its line in "Changes in the text". The margin never
-moves the text: cards stack downward and move instead, and a card the
-stack pushed below its passage draws its line only while it is under the
-pointer or the review bar's pointer - drawn all the time, those lines ran
-together down the gap between text and cards as stray strokes.
+moves the text: cards stack downward and move instead. A run of cards that
+push each other - many notes, or many changed sentences, in one paragraph -
+ran ever further below their passages as whole cards, beside other
+paragraphs and past the text's end (`1.2.0-rc.6`). Pushed more than about
+a card's height, such a run is cut to fit (`stackCards`): each card gets
+the room beside its own passage down to where the next one's starts - a
+paragraph's rewrite about its paragraph's height, notes on adjacent lines
+a line each, a chip. A chip of a small change shows just that change, the
+words struck and added with a little of the sentence around them; a
+rewrite shows its text. Where even chips run far - more notes than the
+paragraph has lines - the run is one chip, "8 notes", which opens to the
+list of them. Pointed at, or pointed at by the review bar, a cut card opens
+whole over the ones below, which don't move. A card still pushed below its
+passage draws a fainter line, at full strength while it is pointed at.
 
 **Streaming in place.** Such a rewrite is laid out sentence by sentence
 while it is still streaming in, not only once it settles

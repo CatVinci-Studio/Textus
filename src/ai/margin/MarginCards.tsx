@@ -1,6 +1,6 @@
 import { RevisionNoteText } from "./RevisionNoteText";
 import { InlineMarkdownText } from "../MarkdownText";
-import { memo, useLayoutEffect, useRef, type RefObject } from "react";
+import { memo, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import type { ReviewNote } from "./review-notes-plugin";
 import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
@@ -8,7 +8,12 @@ import { animate } from "../../ui/motion";
 import { CARD_WIDTH } from "./margin-room";
 import { Tooltip } from "../../ui/Tooltip";
 import "./ReviewMargin.css";
-import type { MarginItem, ReviewMarginLabels } from "./margin-layout";
+import {
+  CHIP_HEIGHT,
+  type MarginItem,
+  type ReviewMarginLabels,
+} from "./margin-layout";
+import { changeGlimpse } from "./change-glimpse";
 import {
   blockNames,
   blockSummary,
@@ -44,11 +49,45 @@ export const CROSS = (
  *  callbacks, which keep their identity across renders. */
 export interface CardPlace {
   hot: boolean;
+  /** Its place in the margin, or null in a group's list (MarginGroup). */
+  top: CardSpot;
+  /** The height it is cut to beside its passage (stackCards), or null:
+   *  it opens whole over the cards below while hot or focused. */
+  cut: number | null;
+  /** Cut to one line: a chip, its own short form. */
+  chip: boolean;
   labels: ReviewMarginLabels;
-  top: number;
   left: number;
   onHot: (key: string, on: boolean) => void;
   onHeight: (key: string, height: number) => void;
+}
+
+/** A card's place: in the margin, absolute, or in a group's list, where
+ *  it is laid out in turn (`top` null). */
+type CardSpot = number | null;
+
+/** Where a card stands, and the height it is cut to - or, opened, its
+ *  whole height over the cards below, none of them moved. */
+function cardStyle(
+  top: CardSpot,
+  left: number,
+  cut: number | null,
+  open: boolean,
+) {
+  if (top === null) return undefined;
+  return {
+    top,
+    left,
+    width: CARD_WIDTH,
+    height: cut !== null && !open ? cut : undefined,
+  };
+}
+
+/** A cut card's class: a chip, cut short, or opened whole above the rest. */
+function cutClass(cut: number | null, chip: boolean, open: boolean): string {
+  if (cut === null) return "";
+  if (open) return " review-note-cut-open";
+  return chip ? " review-note-chip" : " review-note-cut";
 }
 
 /**
@@ -57,20 +96,24 @@ export interface CardPlace {
  * from where it was, on `translate` - its `transform` is the hover nudge
  * and the entrance - so the margin is laid out once, not on every frame
  * of a `top` transition. Moved again mid-glide, it goes on from where it
- * shows.
+ * shows. A cut card's height isn't reported: the stack wants a card's
+ * whole height, and one opened over the others mustn't restack them.
  */
 export function useCardBox(
   key: string,
-  top: number,
+  top: CardSpot,
   onHeight: CardPlace["onHeight"],
+  cut: boolean,
 ): RefObject<HTMLDivElement | null> {
   const ref = useRef<HTMLDivElement>(null);
-  const latest = useRef(onHeight);
-  latest.current = onHeight;
+  const latest = useRef({ onHeight, cut });
+  latest.current = { onHeight, cut };
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => latest.current(key, el.offsetHeight));
+    const ro = new ResizeObserver(() => {
+      if (!latest.current.cut) latest.current.onHeight(key, el.offsetHeight);
+    });
     ro.observe(el);
     return () => ro.disconnect();
   }, [key]);
@@ -82,6 +125,7 @@ export function useCardBox(
   useLayoutEffect(() => {
     const el = ref.current;
     const last = glide.current;
+    if (top === null) return;
     if (!el || !last) {
       glide.current = { top, from: 0, animation: null };
       return;
@@ -116,6 +160,8 @@ export const RevisionCard = memo(
     item,
     hot,
     focused,
+    cut,
+    chip,
     labels,
     top,
     left,
@@ -127,16 +173,18 @@ export const RevisionCard = memo(
     focused: boolean;
     onDecide: (callId: string, index: number, take: boolean | null) => void;
   }) {
-    const ref = useCardBox(item.key, top, onHeight);
+    const ref = useCardBox(item.key, top, onHeight, cut !== null);
     const state =
       item.take === false ? "kept" : item.take === true ? "taken" : "open";
+    const open = hot || focused;
+    const closed = chip && !open;
     return (
       <div
         ref={ref}
-        className={`review-note revision-note revision-note-${state}${hot ? " review-note-hot" : ""}${focused ? " revision-note-focus" : ""}${item.streaming ? " revision-note-streaming" : ""}`}
+        className={`review-note revision-note revision-note-${state}${hot ? " review-note-hot" : ""}${focused ? " revision-note-focus" : ""}${item.streaming ? " revision-note-streaming" : ""}${cutClass(cut, chip, open)}`}
         role="group"
         aria-label={`${labels.reviewBarLabel} ${item.num}`}
-        style={{ top, left, width: CARD_WIDTH }}
+        style={cardStyle(top, left, cut, open)}
         onMouseEnter={() => onHot(item.key, true)}
         onMouseLeave={() => onHot(item.key, false)}
       >
@@ -144,7 +192,15 @@ export const RevisionCard = memo(
           <span className="revision-note-num" aria-hidden="true">
             {item.num}
           </span>
-          {labels.reviewBarLabel}
+          {closed ? (
+            <ChangeGlimpse
+              before={item.before}
+              after={item.after}
+              shows={item.shows}
+            />
+          ) : (
+            labels.reviewBarLabel
+          )}
           <span className="agent-proposal-pick revision-note-pick">
             <Tooltip text={labels.proposalTakeSentence}>
               <button
@@ -184,7 +240,7 @@ export const RevisionCard = memo(
             </Tooltip>
           </span>
         </div>
-        {item.shows === "new" ? (
+        {closed ? null : item.shows === "new" ? (
           <div className="revision-note-text revision-note-original">
             <span className="revision-note-was">
               {labels.proposalDeletedSentence}
@@ -227,6 +283,8 @@ export const RevisionCard = memo(
   (a, b) =>
     a.hot === b.hot &&
     a.focused === b.focused &&
+    a.cut === b.cut &&
+    a.chip === b.chip &&
     a.labels === b.labels &&
     a.top === b.top &&
     a.left === b.left &&
@@ -248,6 +306,9 @@ export const NoteCard = memo(function NoteCard({
   itemKey,
   note,
   hot,
+  open,
+  cut,
+  chip,
   labels,
   top,
   left,
@@ -258,19 +319,52 @@ export const NoteCard = memo(function NoteCard({
 }: CardPlace & {
   itemKey: string;
   note: ReviewNote;
+  /** Hot, or the one the review bar points at: a chip opens. */
+  open: boolean;
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
 }) {
-  const ref = useCardBox(itemKey, top, onHeight);
+  const ref = useCardBox(itemKey, top, onHeight, cut !== null);
   return (
     <div
       ref={ref}
-      className={`review-note${hot ? " review-note-hot" : ""}`}
-      style={{ top, left, width: CARD_WIDTH }}
+      className={`review-note${hot ? " review-note-hot" : ""}${cutClass(cut, chip, open)}`}
+      style={cardStyle(top, left, cut, open)}
       data-note={note.id}
       onMouseEnter={() => onHot(itemKey, true)}
       onMouseLeave={() => onHot(itemKey, false)}
     >
+      {chip && !open ? (
+        <div className="review-note-by">
+          <span className="review-note-mark" aria-hidden="true">
+            AI
+          </span>
+          <span className="review-note-chip-text">
+            <InlineMarkdownText text={note.comment} />
+          </span>
+        </div>
+      ) : (
+        <NoteBody note={note} labels={labels} onAsk={onAsk} onDone={onDone} />
+      )}
+    </div>
+  );
+});
+
+/** A note's card: who wrote it, the note, and its two actions - in the
+ *  margin and in the popover a phone opens from its badge. */
+function NoteBody({
+  note,
+  labels,
+  onAsk,
+  onDone,
+}: {
+  note: ReviewNote;
+  labels: ReviewMarginLabels;
+  onAsk: (note: ReviewNote) => void;
+  onDone: (id: string) => void;
+}) {
+  return (
+    <>
       <div className="review-note-by">
         <span className="review-note-mark" aria-hidden="true">
           AI
@@ -288,6 +382,147 @@ export const NoteCard = memo(function NoteCard({
           {labels.reviewNoteDone}
         </button>
       </div>
+    </>
+  );
+}
+
+/** A change on its chip. A small one (a comma, a word): the words that
+ *  go, struck, and those that come, with a little of the sentence either
+ *  side - the whole sentence read as the same sentence twice. A rewrite:
+ *  the side of it the margin shows. */
+function ChangeGlimpse({
+  before,
+  after,
+  shows,
+}: {
+  before: string;
+  after: string;
+  shows: RevisionItem["shows"];
+}) {
+  const g = changeGlimpse(before, after);
+  if (!g.partial)
+    return (
+      <span className="review-note-chip-text">
+        {shows === "new" ? <s>{before.trim()}</s> : after.trim()}
+      </span>
+    );
+  return (
+    <span className="review-note-chip-text">
+      {g.cutLead && "…"}
+      {g.lead}
+      {g.removed && <del>{g.removed}</del>}
+      {g.added && <ins>{g.added}</ins>}
+      {g.tail}
+      {g.cutTail && "…"}
+    </span>
+  );
+}
+
+/** A group's line: how many notes and changes it holds. */
+function groupLabel(items: MarginItem[], labels: ReviewMarginLabels): string {
+  const notes = items.filter((i) => i.kind === "note").length;
+  const changes = items.length - notes;
+  return [
+    notes > 0 && labels.reviewGroupNotes.replace("{n}", String(notes)),
+    changes > 0 && labels.proposalChangeCount.replace("{n}", String(changes)),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/**
+ * A run with more notes than its paragraph has lines (stackCards' group):
+ * one chip, "8 notes", which opens - pointed at, or one of its own hot or
+ * focused - to the list of its cards over the margin below, none of the
+ * other cards moved. Each card in the list lights its passage as one in
+ * the margin does.
+ */
+export const MarginGroup = memo(function MarginGroup({
+  items,
+  hot,
+  focused,
+  labels,
+  top,
+  left,
+  onHot,
+  onDone,
+  onAsk,
+  onDecide,
+}: {
+  items: MarginItem[];
+  hot: string | null;
+  focused: string | null;
+  labels: ReviewMarginLabels;
+  top: number;
+  left: number;
+  onHot: (key: string, on: boolean) => void;
+  onDone: (id: string) => void;
+  onAsk: (note: ReviewNote) => void;
+  onDecide: (callId: string, index: number, take: boolean | null) => void;
+}) {
+  const [pointed, setPointed] = useState(false);
+  const holds = (key: string | null) => items.some((i) => i.key === key);
+  const open = pointed || holds(hot) || holds(focused);
+  const noHeight = () => {};
+  return (
+    <div
+      className={`review-note review-note-group${open ? " review-note-cut-open review-note-group-open" : " review-note-chip"}`}
+      style={{
+        top,
+        left,
+        width: CARD_WIDTH,
+        height: open ? undefined : CHIP_HEIGHT,
+      }}
+      onMouseEnter={() => setPointed(true)}
+      onMouseLeave={() => setPointed(false)}
+    >
+      <div className="review-note-by">
+        <span className="review-note-mark" aria-hidden="true">
+          AI
+        </span>
+        <span className="review-note-chip-text">
+          {groupLabel(items, labels)}
+        </span>
+      </div>
+      {open && (
+        <div className="review-note-group-list">
+          {items.map((item) =>
+            item.kind === "note" ? (
+              <NoteCard
+                key={item.key}
+                itemKey={item.key}
+                note={item.note}
+                hot={hot === item.key}
+                open
+                cut={null}
+                chip={false}
+                labels={labels}
+                top={null}
+                left={left}
+                onHot={onHot}
+                onDone={onDone}
+                onAsk={onAsk}
+                onHeight={noHeight}
+              />
+            ) : (
+              <RevisionCard
+                key={item.key}
+                item={item}
+                hot={hot === item.key}
+                focused={focused === item.key}
+                cut={null}
+                chip={false}
+                labels={labels}
+                top={null}
+                left={left}
+                onHot={onHot}
+                onDecide={onDecide}
+                onHeight={noHeight}
+              />
+            ),
+          )}
+        </div>
+      )}
     </div>
   );
 });
@@ -343,23 +578,7 @@ export function NotePopover({
       role="dialog"
       aria-label={labels.reviewNoteBy}
     >
-      <div className="review-note-by">
-        <span className="review-note-mark" aria-hidden="true">
-          AI
-        </span>
-        {labels.reviewNoteBy}
-      </div>
-      <div className="review-note-text">
-        <InlineMarkdownText text={note.comment} />
-      </div>
-      <div className="review-note-actions">
-        <button type="button" onClick={() => onAsk(note)}>
-          {labels.reviewNoteAsk}
-        </button>
-        <button type="button" onClick={() => onDone(note.id)}>
-          {labels.reviewNoteDone}
-        </button>
-      </div>
+      <NoteBody note={note} labels={labels} onAsk={onAsk} onDone={onDone} />
     </div>,
     document.body,
   );

@@ -166,6 +166,7 @@ utiliser une.
   reviewNoteBy: "Relecture",
   reviewNoteAsk: "Demander",
   reviewNoteDone: "Traité",
+  reviewGroupNotes: "{n} notes",
   reviewNoteAskPrefix: "À propos de votre note «\u00a0{comment}\u00a0»\u00a0: ",
   agentTabChat: "Discussion",
   agentTabMemory: "Mémoire",
@@ -271,8 +272,10 @@ utiliser une.
   agentGeneratingImage: "Création d'une image…",
   toolGenerateImage: "Création d'une image",
   proposalImage: "Image",
-  imageLimitReached: "Aucune image créée : cette demande en a déjà créé {n}, le maximum. Vous pouvez le changer dans les Réglages, sous « {setting} ».",
-  imageNoModel: "Aucune image créée : aucun modèle d’image n’est configuré. Choisissez-en un dans les Réglages, sous « {setting} ».",
+  imageLimitReached:
+    "Aucune image créée : cette demande en a déjà créé {n}, le maximum. Vous pouvez le changer dans les Réglages, sous « {setting} ».",
+  imageNoModel:
+    "Aucune image créée : aucun modèle d’image n’est configuré. Choisissez-en un dans les Réglages, sous « {setting} ».",
   imageSaveFailed: "Impossible d'enregistrer l'image.",
   imageServiceLabel: "Service d’images",
   imageServiceFollowChat: "Comme le chat ({name})",

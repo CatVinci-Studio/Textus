@@ -14,6 +14,10 @@ import "./ReviewMargin.css";
 
 export interface ReviewMarginLabels {
   reviewNoteBy: string;
+  /** "{n} notes": a run of them as one chip (MarginGroup). */
+  reviewGroupNotes: string;
+  /** "{n} changes", likewise. */
+  proposalChangeCount: string;
   reviewNoteAsk: string;
   reviewNoteDone: string;
   reviewBarLabel: string;
@@ -57,12 +61,31 @@ export const STACK_GAP = 8;
 /** How far a card can be pushed down by the ones above it and still draw
  *  its line at full strength. */
 export const LINE_DRIFT = 20;
+/** A chip's height (.review-note-chip): one line of the card. */
+export const CHIP_HEIGHT = 30;
+/** The least room a cut card is given - its heading and a line; with less,
+ *  it is a chip. */
+export const MIN_CUT = 60;
+/** How far a run of cards may push one of its own below its passage
+ *  before the whole run is cut to fit beside its passages. */
+export const CROWDED_DRIFT = 120;
+/** How far a run cut to fit may still push one below its passage - more
+ *  notes than lines - before the run is one chip, "8 notes". */
+export const GROUP_DRIFT = 200;
 
 export interface Placed {
   item: MarginItem;
   top: number;
   /** How far the cards above pushed it below its passage. */
   drift: number;
+  /** The height it is cut to beside its passage (stackCards), or null
+   *  for the whole card. */
+  cut: number | null;
+  /** Cut to one line: a chip. */
+  chip: boolean;
+  /** The key of the run's first card when the run shows as one chip (a
+   *  group, MarginGroup), all its cards at the group's place; else null. */
+  group: string | null;
   /** Where the line starts: the end of the passage's first line, in the
    *  layer's coordinates. */
   ax: number;
@@ -98,6 +121,76 @@ export function placeColumn(contentEl: HTMLElement, marginLeft: string) {
   );
 }
 
+/**
+ * Stacks the cards downward, each level with its passage (`top`) or just
+ * below the one above. A run of cards that push each other - many notes,
+ * or many changed sentences, in one paragraph - drifted ever further from
+ * their passages as whole cards, down beside other paragraphs and past the
+ * text's end. In such a run each card is cut to the room beside its own
+ * passage, down to where the next one's starts: a paragraph's rewrite keeps
+ * about its paragraph's height, notes on adjacent lines a line each (a
+ * chip). A cut card opens whole over the ones below (ReviewMargin), so
+ * opening one moves nothing. Where even chips run far below their lines -
+ * more notes than the paragraph has lines - the run is one chip, which
+ * opens to a list of them. `heightOf` is a card's whole height.
+ */
+export function stackCards(
+  placed: Placed[],
+  heightOf: (key: string) => number,
+): void {
+  placed.sort((a, b) => a.top - b.top);
+  const want = placed.map((p) => p.top);
+  let floor = -Infinity;
+  // One run from `start`: the cards that push each other whole - cut, the
+  // same cards (`end`), so a crowded paragraph doesn't end on one whole
+  // card. Where it ends, and the floor under it.
+  const lay = (start: number, end?: number) => {
+    let below = floor;
+    let i = start;
+    do {
+      const p = placed[i];
+      p.top = Math.max(want[i], below);
+      p.drift = p.top - want[i];
+      const whole = heightOf(p.item.key);
+      const next = end === undefined || i + 1 >= end ? Infinity : want[i + 1];
+      const room = next - p.top - STACK_GAP;
+      const height =
+        room >= whole ? whole : room < MIN_CUT ? CHIP_HEIGHT : room;
+      p.cut = height < whole ? height : null;
+      p.chip = p.cut === CHIP_HEIGHT;
+      p.group = null;
+      below = p.top + height + STACK_GAP;
+      i++;
+    } while (
+      i < placed.length &&
+      (end === undefined ? want[i] < below : i < end)
+    );
+    return { end: i, below };
+  };
+  let start = 0;
+  while (start < placed.length) {
+    let run = lay(start);
+    const most = () =>
+      Math.max(...placed.slice(start, run.end).map((p) => p.drift));
+    if (most() > CROWDED_DRIFT) run = lay(start, run.end);
+    if (most() > GROUP_DRIFT) {
+      const top = Math.max(want[start], floor);
+      const key = placed[start].item.key;
+      for (let i = start; i < run.end; i++)
+        Object.assign(placed[i], {
+          top,
+          drift: Math.max(0, top - want[i]),
+          cut: CHIP_HEIGHT,
+          chip: true,
+          group: key,
+        });
+      run = { end: run.end, below: top + CHIP_HEIGHT + STACK_GAP };
+    }
+    floor = run.below;
+    start = run.end;
+  }
+}
+
 export type Layout = { left: number; placed: Placed[] };
 
 /** Whether a measure found everything where it already was: the cards
@@ -114,6 +207,8 @@ export function sameLayout(a: Layout | null, b: Layout): boolean {
         p.item === q.item &&
         p.top === q.top &&
         p.drift === q.drift &&
+        p.cut === q.cut &&
+        p.group === q.group &&
         p.ax === q.ax &&
         p.ay === q.ay
       );
