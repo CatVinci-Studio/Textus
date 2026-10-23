@@ -367,3 +367,54 @@ fn a_remembered_requirement_is_followed_later() {
     // Nothing new to remember about it.
     assert_eq!(memories(&folders).len(), 1, "{:?}", memories(&folders));
 }
+
+/// A session's requests - more to write, a translation, notes on its hard
+/// words - are tasks, and none of them a memory: the pass kept "translate
+/// the whole text into English" as if it were a standing rule.
+#[test]
+#[ignore = "live API - see module docs"]
+fn the_requests_of_a_writing_session_are_not_remembered() {
+    let folders = Folders::new(true);
+    let Some(_) = run(
+        &folders,
+        AgentMode::Write,
+        "zh",
+        PARAGRAPH_ZH,
+        &[
+            UserTurn::new("接着写一段，八百字左右，科幻风格。"),
+            UserTurn::new("把全文翻译成英文，并把主角换成外国人。"),
+            UserTurn::new("把文中比较难的英文单词都批注出来，写上中文意思。"),
+        ],
+    ) else {
+        return;
+    };
+    let kept = memories(&folders);
+    assert!(kept.is_empty(), "{kept:?}");
+    assert!(folders.facts().is_empty(), "{:?}", folders.facts());
+}
+
+/// A memory says what holds - of the user or of the work - as mem0 keeps
+/// facts, not the user's words as an order to the assistant.
+#[test]
+#[ignore = "live API - see module docs"]
+fn a_memory_says_what_holds_not_the_users_command() {
+    let folders = Folders::new(true);
+    let Some(_) = run(
+        &folders,
+        AgentMode::Revise,
+        "zh",
+        PARAGRAPH_EN,
+        &[UserTurn::new("以后写英文都用英式拼写，别用美式的。")],
+    ) else {
+        return;
+    };
+    let kept = memories(&folders);
+    eprintln!("live_eval: kept {kept:?}");
+    assert_eq!(kept.len(), 1, "{kept:?}");
+    let text = &kept[0].2;
+    assert!(text.contains("英式"), "{text}");
+    assert!(
+        !text.contains("以后") && !text.contains("别用"),
+        "the user's command, kept as said: {text}"
+    );
+}
