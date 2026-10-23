@@ -1178,6 +1178,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsCatalogFailed: "一覧を読み込めませんでした: {reason}",
   pluginsCatalogRetry: "再試行",
   pluginsCatalogAllInstalled: "一覧のプラグインはすべてインストール済みです。",
+  pluginsSearch: "プラグインを検索",
+  pluginsSearchNone: "「{query}」に一致するプラグインはありません。",
+  pluginsCatalogKept:
+    "前回の一覧を表示しています。新しい一覧を取得できませんでした：{reason}",
   pluginInstall: "インストール",
   pluginInstalling: "インストール中…",
   pluginUpdate: "{version} に更新",

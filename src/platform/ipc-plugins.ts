@@ -57,8 +57,11 @@ export const plugins = {
   install: (path: string) => command("plugin_install", path),
   loadDev: (path: string) => command("plugin_load_dev", path),
   uninstall: (id: string) => command("plugin_uninstall", id),
-  /** The plugins Textus offers (textus-plugins' catalog), fetched now. */
+  /** The plugins Textus offers (textus-plugins' catalog), fetched now
+   *  and kept for next time. */
   catalog: () => command("plugin_catalog"),
+  /** The catalog as last fetched, if one was kept. */
+  cachedCatalog: () => command("plugin_catalog_cached"),
   /** Downloads one from the catalog, checks it and installs it. */
   installFromCatalog: (id: string) => command("plugin_install_catalog", id),
   /** Install from file… (`folder` false) and Load a plugin folder…'s

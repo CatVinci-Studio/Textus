@@ -5,9 +5,10 @@ import { openWithPlugins } from "./plugin-helpers";
 /**
  * Settings › Plugins with the catalog the dev server serves from the
  * textus-plugins checkout (vite.dev-plugins.ts): nothing comes installed,
- * the catalog's plugins are offered with who made them, installing one
- * turns it on, each installed plugin is a card that opens its own page,
- * and a plugin that needs a setting on asks for it.
+ * Get plugins offers the catalog's plugins with who made them and a search
+ * over them, the list kept from last time shows when a fresh one can't be
+ * had, installing one turns it on, each installed plugin is a card that
+ * opens its own page, and a plugin that needs a setting on asks for it.
  */
 
 const emit = (page: Page, event: string) =>
@@ -26,6 +27,15 @@ async function openPluginsPage(page: Page) {
   ).toHaveAttribute("aria-current", /page|true/);
 }
 
+async function openGetPlugins(page: Page) {
+  await openPluginsPage(page);
+  await page.getByRole("button", { name: "Get plugins" }).click();
+  await expect(page.locator(".plugin-get-page")).toBeVisible();
+}
+
+const backToPlugins = (page: Page) =>
+  page.getByRole("button", { name: /All plugins/ }).click();
+
 test("nothing comes installed, and the catalog offers the official plugins", async ({
   page,
 }) => {
@@ -33,6 +43,9 @@ test("nothing comes installed, and the catalog offers the official plugins", asy
   await openPluginsPage(page);
   const installed = page.locator(".settings-group", { hasText: "Installed" });
   await expect(installed).toContainText("None yet.");
+  // The catalog is a page of its own, not a list under the installed ones.
+  await expect(page.locator(".plugin-card[data-catalog]")).toHaveCount(0);
+  await page.getByRole("button", { name: "Get plugins" }).click();
   const graph = page.locator('.plugin-card[data-catalog="catvinci.graph"]');
   await expect(graph).toContainText("Graph View");
   await expect(graph.locator(".plugin-official")).toHaveText("Official");
@@ -45,7 +58,7 @@ test("installing from the list turns the plugin on, behind its permissions", asy
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
-  await openPluginsPage(page);
+  await openGetPlugins(page);
   await page
     .locator('.plugin-card[data-catalog="catvinci.tasks"]')
     .getByRole("button", { name: "Install" })
@@ -53,13 +66,74 @@ test("installing from the list turns the plugin on, behind its permissions", asy
   const dialog = page.locator(".app-dialog");
   await expect(dialog).toContainText("asks to:");
   await dialog.getByRole("button", { name: "Allow" }).click();
+  await expect(
+    page.locator('.plugin-card[data-catalog="catvinci.tasks"]'),
+  ).toHaveCount(0);
+  await backToPlugins(page);
   const card = page.locator('.plugin-card[data-plugin="catvinci.tasks"]');
   await expect(card).toBeVisible();
   await expect(card.getByRole("checkbox")).toBeChecked();
   await expect(card.locator(".plugin-official")).toHaveText("Official");
+});
+
+test("Get plugins searches the catalog by name, what it does and who made it", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await openGetPlugins(page);
+  const cards = page.locator(".plugin-get-page .plugin-card");
+  const all = await cards.count();
+  expect(all).toBeGreaterThan(3);
+  const search = page.getByRole("searchbox", { name: "Search plugins" });
+  await search.fill("kanban");
+  await expect(cards).toHaveCount(1);
+  await expect(cards).toHaveAttribute("data-catalog", "catvinci.kanban");
+  // Every word has to match, in any field.
+  await search.fill("catvinci graph");
+  await expect(cards).toHaveCount(1);
+  await search.fill("CatVinci Studio");
+  await expect(cards).toHaveCount(all);
+  await search.fill("no such plugin");
+  await expect(cards).toHaveCount(0);
+  await expect(page.locator(".plugin-get-page")).toContainText(
+    "No plugin matches “no such plugin”.",
+  );
+});
+
+test("the list kept from last time shows when a fresh one can't be had", async ({
+  page,
+}) => {
+  // Kept last time: Tasks alone, from the catalog the dev server serves.
+  const index = await (
+    await page.request.get("/dev-plugins/index.json")
+  ).json();
+  const kept = (index.plugins as { id: string }[]).filter(
+    (p) => p.id === "catvinci.tasks",
+  );
+  await page.addInitScript((list) => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devCatalogFails = "offline";
+    w.__devCatalogCache = list;
+  }, kept);
+  await openApp(page, { settings: { language: "en" } });
+  await openGetPlugins(page);
   await expect(
     page.locator('.plugin-card[data-catalog="catvinci.tasks"]'),
-  ).toHaveCount(0);
+  ).toBeVisible();
+  await expect(page.locator(".plugin-get-page .plugin-card")).toHaveCount(1);
+  const problem = page.locator(".plugin-catalog-problem");
+  await expect(problem).toContainText(
+    "Showing the list from last time - couldn’t get a newer one: offline",
+  );
+  // Once the catalog can be had again, Try again brings the fresh one.
+  await page.evaluate(() => {
+    delete (window as unknown as Record<string, unknown>).__devCatalogFails;
+  });
+  await problem.getByRole("button", { name: "Try again" }).click();
+  await expect(problem).toHaveCount(0);
+  await expect(
+    page.locator('.plugin-card[data-catalog="catvinci.graph"]'),
+  ).toBeVisible();
 });
 
 test("a card opens the plugin's own page: its settings, what it adds, its permissions", async ({
@@ -96,7 +170,7 @@ test("Quick Notes asks for background mode, and its page says when it is on", as
   page,
 }) => {
   await openWithPlugins(page, { plugins: {} });
-  await openPluginsPage(page);
+  await openGetPlugins(page);
   await page
     .locator('.plugin-card[data-catalog="catvinci.quick-notes"]')
     .getByRole("button", { name: "Install" })
@@ -107,6 +181,7 @@ test("Quick Notes asks for background mode, and its page says when it is on", as
     "Quick Notes needs “Keep running in the background”",
   );
   await dialog.getByRole("button", { name: "Turn on" }).click();
+  await backToPlugins(page);
   await page
     .locator(
       '.plugin-card[data-plugin="catvinci.quick-notes"] .plugin-card-open',

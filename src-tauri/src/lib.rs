@@ -352,6 +352,7 @@ pub fn run() {
             plugins::install::plugins_installed,
             plugins::install::plugin_install,
             plugins::catalog::plugin_catalog,
+            plugins::catalog::plugin_catalog_cached,
             plugins::access::plugin_fs_rename,
             plugins::access::plugin_fs_trash,
             plugins::access::plugin_fs_mkdir,

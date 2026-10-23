@@ -1165,6 +1165,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsCatalogFailed: "목록을 불러오지 못했습니다: {reason}",
   pluginsCatalogRetry: "다시 시도",
   pluginsCatalogAllInstalled: "목록의 플러그인을 모두 설치했습니다.",
+  pluginsSearch: "플러그인 검색",
+  pluginsSearchNone: "“{query}”와(과) 일치하는 플러그인이 없습니다.",
+  pluginsCatalogKept:
+    "지난번 목록을 보여 주고 있습니다. 새 목록을 가져오지 못했습니다: {reason}",
   pluginInstall: "설치",
   pluginInstalling: "설치 중…",
   pluginUpdate: "{version}(으)로 업데이트",

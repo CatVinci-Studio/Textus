@@ -710,7 +710,9 @@ export function installDevTauriShim(): void {
   // catalog is the textus-plugins checkout the dev server serves at
   // /dev-plugins/ (vite.dev-plugins.ts); installing from it lists the
   // plugin with its files read from there, and `window.__devCatalogInstalled`
-  // ([ids]) has some installed from the start.
+  // ([ids]) has some installed from the start. The catalog last listed is
+  // kept as `window.__devCatalogCache`, which a test can set beforehand;
+  // `window.__devCatalogFails` (a message) makes fetching it fail.
   type DevPluginEntry = {
     enabled: boolean;
     granted: string[];
@@ -816,7 +818,16 @@ export function installDevTauriShim(): void {
           }),
         );
       case "plugin_catalog":
-        return devCatalog();
+        if (typeof w.__devCatalogFails === "string")
+          return Promise.reject(new Error(w.__devCatalogFails));
+        return devCatalog().then((entries) => {
+          w.__devCatalogCache = entries;
+          return entries;
+        });
+      case "plugin_catalog_cached":
+        return Promise.resolve(
+          (w.__devCatalogCache as CatalogEntry[] | undefined) ?? null,
+        );
       case "plugin_install_catalog":
         return installFromDevCatalog(id);
       case "plugin_file": {
