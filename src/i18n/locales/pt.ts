@@ -832,6 +832,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   proposalPicturePainting: "Gerando imagem…",
   proposalAcceptAll: "Aceitar todas",
   proposalRejectAll: "Rejeitar todas",
+  proposalGroupMore: "Mostrar mais {n}",
+  proposalGroupLess: "Mostrar menos",
   proposalRelocate: "Pedir à IA que refaça esta edição",
   diffShow: "Mostrar diferenças",
   diffCollapse: "Mostrar menos",

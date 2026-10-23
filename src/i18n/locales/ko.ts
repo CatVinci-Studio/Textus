@@ -789,6 +789,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   proposalPicturePainting: "이미지 생성 중…",
   proposalAcceptAll: "모두 수락",
   proposalRejectAll: "모두 거부",
+  proposalGroupMore: "나머지 {n}개 보기",
+  proposalGroupLess: "접기",
   proposalRelocate: "AI에게 이 수정 다시 요청",
   diffShow: "변경 사항 보기",
   diffCollapse: "접기",

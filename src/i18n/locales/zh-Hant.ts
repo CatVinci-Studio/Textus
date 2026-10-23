@@ -762,6 +762,8 @@ export default {
   proposalPicturePainting: "圖片生成中…",
   proposalAcceptAll: "全部接受",
   proposalRejectAll: "全部拒絕",
+  proposalGroupMore: "展開其餘 {n} 處",
+  proposalGroupLess: "收起",
   proposalRelocate: "讓 AI 重新提出這項修改",
   diffShow: "顯示差異",
   diffCollapse: "收合",

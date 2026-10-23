@@ -43,7 +43,8 @@ test("a run of proposals for one reason is one card, decided row by row or all a
       ...edit(0, "Translate this paragraph"),
       ...edit(1, "Translate this paragraph"),
       ...edit(2, "Translate this paragraph"),
-      // Another reason: a card of its own.
+      // Words in between end the run; one more alone keeps its card.
+      { kind: "Assistant", text: "And the last line:" },
       ...edit(3, "Tighten the last line"),
       { kind: "Assistant", text: "Done." },
     ],
@@ -90,5 +91,65 @@ test("a run of proposals for one reason is one card, decided row by row or all a
   await expect(page.locator(".milkdown")).toContainText(PARAS[3]);
   await expect(group.getByRole("button", { name: "Accept all" })).toHaveCount(
     0,
+  );
+  // All decided, it folds to its status line, which opens it again.
+  const fold = group.locator(".agent-proposal-group-fold");
+  await expect(fold).toHaveText("Applied 3");
+  await expect(group.locator(".agent-proposal-group-rows")).toHaveCount(0);
+  await fold.click();
+  await expect(group.locator(".agent-proposal-group-rows > li")).toHaveCount(3);
+});
+
+test("many proposals in a row fold to their first rows, each with its own reason", async ({
+  page,
+}) => {
+  const paras = Array.from({ length: 6 }, (_, i) => `Line number ${i + 1}.`);
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(page, paras.join("\n\n"));
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "Polish it" },
+      ...paras.flatMap((para, i) => [
+        {
+          kind: "ToolCall",
+          call_id: `p${i}`,
+          name: "propose_edit",
+          arguments: JSON.stringify({
+            action: "replace",
+            anchor: para,
+            text: para.replace("number", "no."),
+            reason: `Reason ${i + 1}`,
+          }),
+        },
+        { kind: "ToolResult", call_id: `p${i}`, output: "Edit proposed" },
+      ]),
+      { kind: "Assistant", text: "Done." },
+    ],
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Polish it");
+  await composer.press("Enter");
+  // Six reasons, one card.
+  const group = page.locator(".agent-proposal-group");
+  await expect(group).toHaveCount(1);
+  await expect(page.locator(".agent-proposal")).toHaveCount(1);
+  await expect(group.locator(".agent-proposal-reason")).toHaveCount(0);
+  const rows = group.locator(".agent-proposal-group-rows > li");
+  await expect(rows).toHaveCount(3);
+  await expect(rows.nth(0).locator(".agent-proposal-group-reason")).toHaveText(
+    "Reason 1",
+  );
+  // The rest behind "Show 3 more"; Accept all reaches them folded or not.
+  await group.getByRole("button", { name: "Show 3 more" }).click();
+  await expect(rows).toHaveCount(6);
+  await group.getByRole("button", { name: "Show fewer" }).click();
+  await expect(rows).toHaveCount(3);
+  await group.getByRole("button", { name: "Accept all" }).click();
+  await expect(page.locator(".milkdown")).toContainText("Line no. 6.");
+  await expect(group.locator(".agent-proposal-group-fold")).toHaveText(
+    "Applied 6",
   );
 });

@@ -60,6 +60,8 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     proposalReject: t.proposalReject,
     proposalAcceptAll: t.proposalAcceptAll,
     proposalRejectAll: t.proposalRejectAll,
+    proposalGroupMore: t.proposalGroupMore,
+    proposalGroupLess: t.proposalGroupLess,
     proposalRelocate: t.proposalRelocate,
     proposalChangeCount: t.proposalChangeCount,
     proposalTakeSentence: t.proposalTakeSentence,

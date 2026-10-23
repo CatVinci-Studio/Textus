@@ -838,6 +838,8 @@ export default {
   proposalPicturePainting: "Картинка создаётся…",
   proposalAcceptAll: "Принять все",
   proposalRejectAll: "Отклонить все",
+  proposalGroupMore: "Показать ещё {n}",
+  proposalGroupLess: "Свернуть",
   proposalRelocate: "Попросить ИИ переделать правку",
   diffShow: "Показать изменения",
   diffCollapse: "Свернуть",

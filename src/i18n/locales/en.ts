@@ -822,6 +822,8 @@ type /name in a conversation to use one.
   proposalPicturePainting: "Picture coming…",
   proposalAcceptAll: "Accept all",
   proposalRejectAll: "Reject all",
+  proposalGroupMore: "Show {n} more",
+  proposalGroupLess: "Show fewer",
   proposalRelocate: "Ask AI to redo this edit",
   diffShow: "Show diff",
   diffCollapse: "Show less",

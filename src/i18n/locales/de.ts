@@ -828,6 +828,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   proposalPicturePainting: "Bild entsteht…",
   proposalAcceptAll: "Alle annehmen",
   proposalRejectAll: "Alle ablehnen",
+  proposalGroupMore: "{n} weitere anzeigen",
+  proposalGroupLess: "Weniger anzeigen",
   proposalRelocate: "Änderung neu anfordern",
   diffShow: "Unterschiede anzeigen",
   diffCollapse: "Weniger anzeigen",

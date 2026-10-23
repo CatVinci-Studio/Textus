@@ -1,4 +1,4 @@
-import { useMemo, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import type { AgentTurn, EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import { isProposalTool } from "./proposal";
@@ -8,12 +8,13 @@ import { CHECK, CROSS, ChangeText } from "./ProposalCard";
 import type { ChatMessagesLabels } from "./ChatMessages";
 
 /**
- * Proposals one reply made one after another for the same reason - a
- * translation, a paragraph at a time - shown as one card (ProposalGroup):
- * as cards of their own they were a column of the same card, "Translate
- * this paragraph" six times over. By its first call's id, the calls in it;
- * a call in a group but not first renders nothing. A picture keeps its own
- * card, as does a reason said once.
+ * Proposals one reply made one after another, shown as one card
+ * (ProposalGroup): as cards of their own they were a column of the same
+ * card - a translation, a paragraph at a time, "Translate this paragraph"
+ * six times over - and ran on for screens. Three or more in a row are one
+ * card whatever their reasons; two are, if they share theirs. By its first
+ * call's id, the calls in it; a call in a group but not first renders
+ * nothing. A picture keeps its own card.
  */
 export function proposalRuns(
   turns: AgentTurn[],
@@ -22,11 +23,13 @@ export function proposalRuns(
 ): Map<string, string[]> {
   const runs = new Map<string, string[]>();
   let run: string[] = [];
-  let reason: string | null = null;
   const close = () => {
-    if (run.length > 1) runs.set(run[0], run);
+    const reasons = new Set(
+      run.map((id) => parsed.get(id)?.proposal?.reason?.trim() || ""),
+    );
+    const shared = reasons.size === 1 && !reasons.has("");
+    if (run.length > 2 || (run.length === 2 && shared)) runs.set(run[0], run);
     run = [];
-    reason = null;
   };
   for (const turn of turns) {
     // A call's result, and calls refused and sent again, stand between the
@@ -37,18 +40,18 @@ export function proposalRuns(
       turn.kind === "ToolCall" && isProposalTool(turn.name)
         ? parsed.get(turn.call_id)?.proposal
         : null;
-    const why = proposal?.reason?.trim();
-    if (!proposal || !why || proposal.image) {
+    if (!proposal || proposal.image) {
       close();
       continue;
     }
-    if (why !== reason) close();
-    reason = why;
     run.push((turn as { call_id: string }).call_id);
   }
   close();
   return runs;
 }
+
+/** Rows a group shows before "Show N more". */
+const FOLDED_ROWS = 3;
 
 /** One proposal of a group, as a row: its new text's start, its size, and
  *  ✓ / ✕ while it waits. */
@@ -56,6 +59,7 @@ function GroupRow({
   callId,
   proposal,
   status,
+  ownReason,
   labels,
   actions,
   onAccept,
@@ -65,6 +69,8 @@ function GroupRow({
   callId: string;
   proposal: EditProposal;
   status: PendingStatus;
+  /** Its reason, under it - the group's reasons differ. */
+  ownReason: boolean;
   labels: ChatMessagesLabels;
   actions: boolean;
   onAccept: (callId: string) => void;
@@ -85,11 +91,18 @@ function GroupRow({
         disabled={!pending || !onReveal}
         onClick={() => onReveal?.(callId, -1)}
       >
-        <span className="agent-proposal-sentence-text">
-          <ChangeText
-            markdown={(after || before).trim()}
-            names={labels.proposalBlocks}
-          />
+        <span className="agent-proposal-group-row-text">
+          <span className="agent-proposal-sentence-text">
+            <ChangeText
+              markdown={(after || before).trim()}
+              names={labels.proposalBlocks}
+            />
+          </span>
+          {ownReason && proposal.reason && (
+            <span className="agent-proposal-group-reason">
+              {proposal.reason}
+            </span>
+          )}
         </span>
       </button>
       {pending ? (
@@ -164,10 +177,26 @@ export function ProposalGroup({
 }) {
   const waiting = items.filter((item) => item.status === "pending");
   const streaming = items.some((item) => item.status === "streaming");
+  const done = waiting.length === 0 && !streaming;
+  const reasons = new Set(items.map((item) => item.proposal.reason?.trim()));
+  const shared = reasons.size === 1 ? items[0].proposal.reason : null;
+  // Folded: its first rows, the rest behind "Show N more"; decided, all of
+  // it behind its status line. A click opens it either way.
+  const [unfolded, setUnfolded] = useState(false);
+  const rows = unfolded ? items : items.slice(0, FOLDED_ROWS);
+  const hidden = items.length - rows.length;
+  const decidedLine = [...new Set(items.map((item) => item.status))]
+    .map((status) =>
+      status === "pending" || status === "streaming"
+        ? null
+        : `${labels.proposalStatus[status]} ${items.filter((item) => item.status === status).length}`,
+    )
+    .filter(Boolean)
+    .join(" · ");
   return (
     <div
       className={`agent-proposal agent-proposal-group${reveal ? " turn-reveal" : ""}`}
-      data-status={waiting.length > 0 || streaming ? "pending" : "decided"}
+      data-status={done ? "decided" : "pending"}
       style={style}
     >
       <div className="agent-proposal-head">
@@ -182,20 +211,46 @@ export function ProposalGroup({
           </span>
         </span>
       </div>
-      <div className="agent-proposal-reason">{items[0].proposal.reason}</div>
-      <ol className="agent-proposal-sentences agent-proposal-group-rows">
-        {items.map((item) => (
-          <GroupRow
-            key={item.callId}
-            {...item}
-            labels={labels}
-            actions={actions}
-            onAccept={onAccept}
-            onReject={onReject}
-            onReveal={onReveal}
-          />
-        ))}
-      </ol>
+      {done && !unfolded ? (
+        <button
+          type="button"
+          className="agent-proposal-group-fold"
+          aria-expanded={false}
+          onClick={() => setUnfolded(true)}
+        >
+          {decidedLine}
+        </button>
+      ) : (
+        <>
+          {shared && <div className="agent-proposal-reason">{shared}</div>}
+          <ol className="agent-proposal-sentences agent-proposal-group-rows">
+            {rows.map((item) => (
+              <GroupRow
+                key={item.callId}
+                {...item}
+                ownReason={!shared}
+                labels={labels}
+                actions={actions}
+                onAccept={onAccept}
+                onReject={onReject}
+                onReveal={onReveal}
+              />
+            ))}
+          </ol>
+          {(hidden > 0 || unfolded) && items.length > FOLDED_ROWS && (
+            <button
+              type="button"
+              className="agent-proposal-group-fold"
+              aria-expanded={unfolded}
+              onClick={() => setUnfolded(!unfolded)}
+            >
+              {unfolded
+                ? labels.proposalGroupLess
+                : labels.proposalGroupMore.replace("{n}", String(hidden))}
+            </button>
+          )}
+        </>
+      )}
       {actions && waiting.length > 1 && !streaming && (
         <div className="agent-proposal-actions">
           <button

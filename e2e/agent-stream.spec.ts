@@ -107,11 +107,12 @@ test("a streamed edit whose text starts empty still becomes decidable", async ({
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("Capitalise the first two lines");
   await composer.press("Enter");
-  const accept = page.locator(
-    ".agent-proposal-actions .inline-chat-action-primary",
-  );
-  // Every preview finishes typing and gets its Accept - the first one used
-  // to settle while its text was still empty, then stay "Writing…" for good.
+  // Three in a row are one card (ProposalGroup). Every preview finishes
+  // typing and gets its ✓ - the first one used to settle while its text
+  // was still empty, then stay "Writing…" for good.
+  const rows = page.locator(".agent-proposal-group-rows > li");
+  await expect(rows).toHaveCount(3);
+  const accept = rows.getByRole("button", { name: "采纳", exact: true });
   await expect(accept).toHaveCount(3);
   for (const left of [2, 1, 0]) {
     await accept.first().click();

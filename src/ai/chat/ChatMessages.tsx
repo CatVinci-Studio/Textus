@@ -53,6 +53,9 @@ export interface ChatMessagesLabels
   proposalReject: string;
   proposalAcceptAll: string;
   proposalRejectAll: string;
+  /** "Show {n} more" and back, under a group's first rows (ProposalGroup). */
+  proposalGroupMore: string;
+  proposalGroupLess: string;
   /** Offered when an anchor no longer resolves - asks the model to re-issue
    *  the proposal against the document as it now reads. */
   proposalRelocate: string;

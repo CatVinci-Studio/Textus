@@ -856,6 +856,8 @@ utiliser une.
   proposalPicturePainting: "Image en cours…",
   proposalAcceptAll: "Tout accepter",
   proposalRejectAll: "Tout refuser",
+  proposalGroupMore: "Afficher {n} de plus",
+  proposalGroupLess: "Afficher moins",
   proposalRelocate: "Demander à l'IA de refaire cette modification",
   diffShow: "Afficher les différences",
   diffCollapse: "Afficher moins",

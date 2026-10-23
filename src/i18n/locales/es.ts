@@ -846,6 +846,8 @@ para usar una.
   proposalPicturePainting: "Generando imagen…",
   proposalAcceptAll: "Aceptar todo",
   proposalRejectAll: "Rechazar todo",
+  proposalGroupMore: "Mostrar {n} más",
+  proposalGroupLess: "Mostrar menos",
   proposalRelocate: "Pedir a la IA que rehaga este cambio",
   diffShow: "Mostrar diferencias",
   diffCollapse: "Mostrar menos",

@@ -797,6 +797,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   proposalPicturePainting: "画像を生成中…",
   proposalAcceptAll: "すべて適用",
   proposalRejectAll: "すべて却下",
+  proposalGroupMore: "残り {n} 件を表示",
+  proposalGroupLess: "折りたたむ",
   proposalRelocate: "AIに修正をやり直してもらう",
   diffShow: "差分を表示",
   diffCollapse: "折りたたむ",

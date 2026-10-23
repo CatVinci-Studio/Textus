@@ -1631,3 +1631,37 @@ button.chat-queue-action:hover {
   .agent-proposal-sentence-text {
   color: var(--editor-muted);
 }
+
+/* A group's row text, and its own reason under it where the group's
+   reasons differ. */
+.agent-proposal-group-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.agent-proposal-group-reason {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+}
+
+/* "Show N more", and a decided group's status line: quiet text buttons
+   that open it. */
+.agent-proposal-group-fold {
+  align-self: flex-start;
+  border: 0;
+  background: none;
+  padding: 2px 4px;
+  font: inherit;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+  cursor: pointer;
+}
+
+.agent-proposal-group-fold:hover {
+  color: var(--editor-text);
+}
