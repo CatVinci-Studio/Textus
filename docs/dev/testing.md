@@ -20,7 +20,9 @@ request only when the change can reach saving: the save round trip
 (`src/document-view/save-roundtrip*.test.ts`, see
 [saving.md](saving.md#the-round-trip-test)), which tests
 platform-independent code. The native jobs' `npm test` skips it with
-`TEXTUS_SKIP_ROUNDTRIP=1`; locally `npm run check` always runs it. The rest
+`TEXTUS_SKIP_ROUNDTRIP=1`; locally `npm run check` always runs it - on the
+help guides in English, Chinese and Japanese, all ten languages with
+`TEXTUS_ROUNDTRIP_ALL=1`. The rest
 need a display, a desktop session or an API key, and are run by hand before
 a release. The e2e flows need Chromium once: `npm run setup:e2e`.
 `npm run test:visual` adds the screenshot comparison of `e2e/visual.spec.ts`
