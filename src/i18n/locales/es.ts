@@ -664,6 +664,11 @@ para usar una.
   agentSend: "Enviar",
   agentStop: "Detener",
   agentRetry: "Reintentar",
+  pictureRedraw: "Redibujar…",
+  pictureRedrawTitle: "Redibujar la imagen",
+  pictureRedrawPrompt:
+    "Lo que muestra la imagen - cámbialo y Textus la vuelve a dibujar:",
+  pictureRedrawOk: "Redibujar",
   agentThinking: "Pensando…",
   agentWritingEdit: "Escribiendo el cambio…",
   agentWritingNotes: "Escribiendo notas…",

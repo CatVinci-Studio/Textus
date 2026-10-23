@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+} from "react";
 import { usePicturesState } from "../revision/usePicturesState";
 import type { EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
@@ -11,6 +17,7 @@ import {
   loadGeneratedImage,
   generatedImageRatio,
   generatedImageUrl,
+  onPictureSettled,
 } from "../revision/generated-images";
 import { Tooltip } from "../../ui/Tooltip";
 import type { ChatMessagesLabels } from "./ChatMessages";
@@ -54,19 +61,16 @@ export function notMadeLine(
 /** A proposed picture on its card, small: its frame while it is made,
  *  then the picture, or why it wasn't made. */
 export function ProposedPicture({ id, alt }: { id: string; alt: string }) {
-  const [url, setUrl] = useState(() => generatedImageUrl(id));
-  const [failure, setFailure] = useState(() => generatedImageFailure(id));
+  // Read again whenever a picture comes or goes: one redrawn in the
+  // document paints here too until the new one has come.
+  const url = useSyncExternalStore(onPictureSettled, () =>
+    generatedImageUrl(id),
+  );
+  const failure = useSyncExternalStore(onPictureSettled, () =>
+    generatedImageFailure(id),
+  );
   useEffect(() => {
-    let live = true;
-    if (!url && !failure)
-      void loadGeneratedImage(id).then(() => {
-        if (!live) return;
-        setUrl(generatedImageUrl(id));
-        setFailure(generatedImageFailure(id));
-      });
-    return () => {
-      live = false;
-    };
+    if (!url && !failure) void loadGeneratedImage(id);
   }, [id, url, failure]);
   if (url)
     return <img className="agent-proposal-picture" src={url} alt={alt} />;

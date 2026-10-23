@@ -210,6 +210,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::ai::images::list_image_providers,
                     crate::ai::images::ai_generated_image,
                     crate::ai::images::ai_retry_generated_image,
+                    crate::ai::images::ai_generated_image_prompt,
+                    crate::ai::images::ai_redraw_generated_image,
                     crate::ai::images::ai_discard_generated_image,
                 ])
                 // ai_agent_message takes more parameters than specta's

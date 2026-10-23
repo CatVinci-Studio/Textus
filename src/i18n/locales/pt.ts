@@ -650,6 +650,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentSend: "Enviar",
   agentStop: "Parar",
   agentRetry: "Tentar de novo",
+  pictureRedraw: "Redesenhar…",
+  pictureRedrawTitle: "Redesenhar a imagem",
+  pictureRedrawPrompt:
+    "O que a imagem mostra - altere e o Textus a desenha de novo:",
+  pictureRedrawOk: "Redesenhar",
   agentThinking: "Pensando…",
   agentWritingEdit: "Escrevendo a alteração…",
   agentWritingNotes: "Escrevendo notas…",

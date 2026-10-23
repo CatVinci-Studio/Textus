@@ -135,6 +135,12 @@ export const ai = {
   generatedImage: (id: string) => command("ai_generated_image", id),
   /** Asks again for a picture that wasn't made, by itself. */
   retryGeneratedImage: (id: string) => command("ai_retry_generated_image", id),
+  /** The description a waiting picture was drawn from; null once gone. */
+  generatedImagePrompt: (id: string) =>
+    command("ai_generated_image_prompt", id),
+  /** Draws a waiting picture again from the writer's description. */
+  redrawGeneratedImage: (id: string, prompt: string) =>
+    command("ai_redraw_generated_image", id, prompt),
   /** Lets a waiting picture go: rejected, or saved. */
   discardGeneratedImage: (id: string) =>
     command("ai_discard_generated_image", id),

@@ -25,7 +25,12 @@ impl Slot {
 /// frontend says so).
 pub(crate) static PENDING: Mutex<Vec<(String, Slot)>> = Mutex::new(Vec::new());
 
+#[cfg(not(test))]
 pub(crate) const PENDING_COUNT: usize = 16;
+// The tests run side by side and share the list: kept to sixteen, one
+// test's pictures pushed out another's while it was looking at them.
+#[cfg(test)]
+pub(crate) const PENDING_COUNT: usize = 1024;
 
 pub(crate) const PENDING_BYTES: usize = 128 * 1024 * 1024;
 
@@ -128,6 +133,51 @@ pub(crate) fn retry(id: &str) -> Result<(), String> {
         *slot = Slot::Making;
     }
     make(id.to_string(), asked_for);
+    Ok(())
+}
+
+/// The description picture `id` was asked for with, while it is kept.
+pub(crate) fn prompt_of(id: &str) -> Option<String> {
+    asked()
+        .iter()
+        .find(|(i, _)| i == id)
+        .map(|(_, a)| a.prompt.clone())
+}
+
+/// Makes picture `id` again from `prompt` - the writer's change to its
+/// description - with the same service, shape and reference; made or
+/// not, it goes back to being made. Err when it is gone, or still being
+/// made.
+pub(crate) fn redraw(id: &str, prompt: String) -> Result<(), String> {
+    let prompt = prompt.trim().to_string();
+    if prompt.is_empty() {
+        return Err("Describe the picture to draw.".into());
+    }
+    let gone = || "This picture is no longer available - ask for it again.".to_string();
+    let before = asked()
+        .iter()
+        .find(|(i, _)| i == id)
+        .map(|(_, a)| a.clone())
+        .ok_or_else(gone)?;
+    {
+        let mut pending = pending();
+        let Some((_, slot)) = pending.iter_mut().find(|(i, _)| i == id) else {
+            return Err(gone());
+        };
+        if matches!(slot, Slot::Making) {
+            return Err("This picture is still being made.".into());
+        }
+        *slot = Slot::Making;
+    }
+    make(
+        id.to_string(),
+        std::sync::Arc::new(Asked {
+            job: before.job.clone(),
+            prompt,
+            aspect: before.aspect,
+            reference: before.reference.clone(),
+        }),
+    );
     Ok(())
 }
 

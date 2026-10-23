@@ -651,6 +651,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentSend: "Senden",
   agentStop: "Stoppen",
   agentRetry: "Erneut versuchen",
+  pictureRedraw: "Neu zeichnen…",
+  pictureRedrawTitle: "Bild neu zeichnen",
+  pictureRedrawPrompt:
+    "Was das Bild zeigt - ändern Sie es, und Textus zeichnet es neu:",
+  pictureRedrawOk: "Neu zeichnen",
   agentThinking: "Denkt nach…",
   agentWritingEdit: "Änderung wird geschrieben…",
   agentWritingNotes: "Notizen werden geschrieben…",

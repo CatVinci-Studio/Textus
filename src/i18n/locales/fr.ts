@@ -671,6 +671,11 @@ utiliser une.
   agentSend: "Envoyer",
   agentStop: "Arrêter",
   agentRetry: "Réessayer",
+  pictureRedraw: "Redessiner…",
+  pictureRedrawTitle: "Redessiner l’image",
+  pictureRedrawPrompt:
+    "Ce que montre l’image - modifiez-le et Textus la redessine :",
+  pictureRedrawOk: "Redessiner",
   agentThinking: "Réflexion…",
   agentWritingEdit: "Rédaction de la modification…",
   agentWritingNotes: "Rédaction des notes…",

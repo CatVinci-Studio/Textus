@@ -652,6 +652,11 @@ export default {
   agentSend: "Отправить",
   agentStop: "Остановить",
   agentRetry: "Повторить",
+  pictureRedraw: "Перерисовать…",
+  pictureRedrawTitle: "Перерисовать картинку",
+  pictureRedrawPrompt:
+    "Что на картинке - измените описание, и Textus нарисует её заново:",
+  pictureRedrawOk: "Перерисовать",
   agentThinking: "Думает…",
   agentWritingEdit: "Пишу правку…",
   agentWritingNotes: "Пишу заметки…",

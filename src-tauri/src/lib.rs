@@ -303,6 +303,8 @@ pub fn run() {
             crate::ai::images::ai_generated_image,
             crate::ai::images::ai_discard_generated_image,
             crate::ai::images::ai_retry_generated_image,
+            crate::ai::images::ai_generated_image_prompt,
+            crate::ai::images::ai_redraw_generated_image,
             crate::ai::web::web_search_status,
             crate::ai::workspace::load_agent_workspace,
             crate::ai::conventions::writing_conventions_options,

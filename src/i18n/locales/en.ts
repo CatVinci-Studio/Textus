@@ -647,6 +647,11 @@ type /name in a conversation to use one.
   agentSend: "Send",
   agentStop: "Stop",
   agentRetry: "Retry",
+  pictureRedraw: "Redraw…",
+  pictureRedrawTitle: "Redraw the picture",
+  pictureRedrawPrompt:
+    "What the picture shows - change it and Textus draws it again:",
+  pictureRedrawOk: "Redraw",
   agentThinking: "Thinking…",
   agentWritingEdit: "Writing the edit…",
   agentWritingNotes: "Writing notes…",
