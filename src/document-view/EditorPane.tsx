@@ -5,6 +5,7 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
+  useState,
 } from "react";
 import { MilkdownProvider } from "@milkdown/react";
 import { useSettings, type AgentMode } from "../settings/SettingsContext";
@@ -12,6 +13,12 @@ import { KatexFirst } from "../editor/math/KatexFirst";
 import { isIOSApp } from "../platform/capabilities";
 import { isMacPlatform } from "../platform/os";
 import { elasticOverscroll } from "./elastic-overscroll";
+import {
+  keepReadingPlace,
+  placeIn,
+  readingPlace,
+  scrollToPlace,
+} from "./reading-place";
 import type { TourAi } from "../utils/events";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
@@ -63,24 +70,71 @@ function sameProps(prev: EditorPaneProps, next: EditorPaneProps): boolean {
  * (MainPane.tsx); Chromium keeps a hidden scroller's position, WebKit
  * (WebKitGTK, WKWebView) sets it back to the top, and a tab switched
  * away from and back to opened at its first line.
+ *
+ * And where the file was last read (reading-place.ts): kept as it is
+ * scrolled, and gone back to the first time the tab is in front - when
+ * the file was opened again, switched to from the file tree or restored
+ * with the session, it opened at its top (#348). Not when the reader,
+ * or a link into one of its headings, has moved it first.
  */
-function useKeptScroll(isActive: boolean | undefined) {
+function useKeptScroll(isActive: boolean | undefined, filePath: string | null) {
   const el = useRef<HTMLDivElement | null>(null);
   const kept = useRef(0);
+  // The path now, for the scroll handler: a draft saved gets one.
+  const path = useRef(filePath);
+  path.current = filePath;
+  // Read once, as the pane mounts with its document.
+  const [lastRead] = useState(() => (filePath ? readingPlace(filePath) : null));
+  const pending = useRef(lastRead);
   useEffect(() => {
     const scroller = el.current;
     if (!scroller) return;
+    let timer: number | undefined;
+    const save = () => {
+      timer = undefined;
+      const root = scroller.querySelector(".ProseMirror");
+      if (!root || !path.current || scroller.clientHeight === 0) return;
+      const place = placeIn(scroller, root);
+      if (place) keepReadingPlace(path.current, place);
+    };
     // Only while it is shown: a hidden one has nothing to say.
     const keep = () => {
-      if (scroller.clientHeight > 0) kept.current = scroller.scrollTop;
+      if (scroller.clientHeight === 0) return;
+      kept.current = scroller.scrollTop;
+      pending.current = null;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(save, 300);
     };
     scroller.addEventListener("scroll", keep, { passive: true });
-    return () => scroller.removeEventListener("scroll", keep);
+    return () => {
+      scroller.removeEventListener("scroll", keep);
+      // Closed within a moment of scrolling: kept all the same.
+      if (timer !== undefined) {
+        window.clearTimeout(timer);
+        save();
+      }
+    };
   }, []);
   useLayoutEffect(() => {
     const scroller = el.current;
-    if (isActive && scroller && scroller.scrollTop !== kept.current)
-      scroller.scrollTop = kept.current;
+    if (!isActive || !scroller) return;
+    if (scroller.scrollTop !== kept.current) scroller.scrollTop = kept.current;
+    // Its blocks may still be on their way (a long document, the editor
+    // still loading): tried each frame for two seconds.
+    let frame = 0;
+    let tries = 120;
+    const goBack = () => {
+      const place = pending.current;
+      if (!place) return;
+      const root = scroller.querySelector(".ProseMirror");
+      if (scroller.scrollTop > 0 || tries-- <= 0) pending.current = null;
+      else if (root && scrollToPlace(scroller, root, place)) {
+        pending.current = null;
+        kept.current = scroller.scrollTop;
+      } else frame = requestAnimationFrame(goBack);
+    };
+    goBack();
+    return () => cancelAnimationFrame(frame);
   }, [isActive]);
   // A Mac's page gives at either end, short documents too
   // (elastic-overscroll.ts). The iPhone's web view stretches by itself.
@@ -115,7 +169,7 @@ export const EditorPane = memo(function EditorPane({
     (markdown: string) => onChange(tabId, markdown),
     [onChange, tabId],
   );
-  const scrollRef = useKeptScroll(isActive);
+  const scrollRef = useKeptScroll(isActive, filePath);
 
   return (
     <div className="editor-scroll" ref={scrollRef}>
