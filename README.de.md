@@ -132,6 +132,14 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/de/settings.png" alt="Das LLM deiner Wahl." width="860" />
 </p>
 
+## Plugins
+
+Nimm dazu, was du brauchst, und nichts sonst. Ein Graph deiner Notizen und ihrer Links, eine Karte, die zeigt, wohin ein Link führt, zwei Dokumente nebeneinander, Kanban-Boards, Versionsverlauf, PDFs und Word-Dateien im Tab, Zitate aus Zotero – alles unter **Einstellungen › Erweiterungen › Mehr holen**, neben den Themes und Skills. Jedes Plugin fragt, bevor es etwas nutzt.
+
+<p align="center">
+  <img src="docs/images/readme/de/plugins.png" alt="Notizen zur Verwandlung neben dem Graphen ihrer Links, die Notiz, auf die ein Link führt, in einer Karte geöffnet." width="860" />
+</p>
+
 ## Was du schreibst, gehört nur dir
 
 Was du schreibst, gehört dir. Textus ist so gebaut, dass es dabei bleibt – und der Code ist offen, damit jeder das prüfen kann.

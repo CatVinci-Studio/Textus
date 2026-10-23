@@ -132,6 +132,14 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/fr/settings.png" alt="Le LLM de votre choix." width="860" />
 </p>
 
+## Extensions
+
+Ajoutez ce dont vous avez besoin, et rien d’autre. Un graphe de vos notes et des liens entre elles, une carte qui montre où mène un lien, deux documents côte à côte, des tableaux kanban, l’historique des versions, les PDF et fichiers Word dans un onglet, les citations Zotero – tout est dans **Réglages › Extensions › En obtenir plus**, à côté des thèmes et des compétences. Chaque extension demande avant d’utiliser quoi que ce soit.
+
+<p align="center">
+  <img src="docs/images/readme/fr/plugins.png" alt="Des notes sur Les Misérables à côté du graphe de leurs liens, la note vers laquelle mène un lien ouverte dans une carte." width="860" />
+</p>
+
 ## Ce que vous écrivez n’appartient qu’à vous
 
 Ce que vous écrivez vous appartient. Textus est fait pour que cela ne change pas, et son code est ouvert : chacun peut le vérifier.

@@ -133,6 +133,14 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/zh-hant/settings.png" alt="不同 LLM，隨你喜歡" width="860" />
 </p>
 
+## 外掛程式
+
+需要什麼就裝什麼。筆記和連結畫成的知識圖譜、停在連結上就能看到內容的卡片、兩篇文件並排、看板、版本紀錄、在分頁裡看 PDF 和 Word、從 Zotero 插入引用——都在**設定 › 擴充功能 › 取得更多**裡，和主題、技能放在一起。每個外掛程式用到什麼，都會先問你。
+
+<p align="center">
+  <img src="docs/images/readme/zh-hant/plugins.png" alt="《西遊記》的人物筆記和它們的知識圖譜並排，一條連結指向的筆記顯示在卡片裡。" width="860" />
+</p>
+
 ## 你寫的東西，只屬於你
 
 你寫的內容只屬於你。Textus 從⁠設⁠計⁠上⁠確⁠保⁠這⁠一⁠點⁠，程⁠式⁠碼⁠也⁠完⁠全⁠公⁠開⁠，任⁠何⁠人⁠都⁠能⁠查⁠證⁠。
