@@ -459,6 +459,8 @@ pub fn run() {
             #[cfg(desktop)]
             commands::update::check_for_update,
             #[cfg(desktop)]
+            commands::update::release_instance,
+            #[cfg(desktop)]
             detect_pandoc,
             #[cfg(desktop)]
             export_via_pandoc,

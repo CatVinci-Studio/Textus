@@ -224,6 +224,14 @@ export const commands = {
 	set_default_editor: () => __TAURI_INVOKE<null>("set_default_editor"),
 	app_distribution: () => __TAURI_INVOKE<string>("app_distribution"),
 	check_for_update: (channel: string) => __TAURI_INVOKE<UpdateMetadata_Serialize | null>("check_for_update", { channel }),
+	/**
+	 *  Just before the relaunch that applies an update: gives up the claim to
+	 *  be the running Textus. The relaunch starts the new process before this
+	 *  one ends, and the single-instance plugin lets go of its claim only on a
+	 *  clean exit - so the new process found it, handed its launch to this one
+	 *  and quit, and this one, about to end, opened a window for it (#349).
+	 */
+	release_instance: () => __TAURI_INVOKE<void>("release_instance"),
 };
 
 /* Types */

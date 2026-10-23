@@ -131,6 +131,17 @@ pub async fn check_for_update<R: Runtime>(
     }))
 }
 
+/// Just before the relaunch that applies an update: gives up the claim to
+/// be the running Textus. The relaunch starts the new process before this
+/// one ends, and the single-instance plugin lets go of its claim only on a
+/// clean exit - so the new process found it, handed its launch to this one
+/// and quit, and this one, about to end, opened a window for it (#349).
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn release_instance<R: Runtime>(app: tauri::AppHandle<R>) {
+    tauri_plugin_single_instance::destroy(&app);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
