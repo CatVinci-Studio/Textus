@@ -187,6 +187,7 @@ impl<'a> ToolRegistry<'a> {
                         .proposed_any();
                 ToolOutput {
                     settled: settles(&call.name, &text, edited),
+                    settles_with_others: call.name == ADD_COMMENT_TOOL_NAME,
                     text,
                     ..ToolOutput::default()
                 }
