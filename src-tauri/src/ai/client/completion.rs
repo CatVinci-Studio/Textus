@@ -75,9 +75,11 @@ const COMPLETION_LENGTH_SHORT: &str = "Length: only what the text makes near-cer
 const COMPLETION_LENGTH_LONG: &str = "The writer asked for a continuation: carry the current paragraph on by two to four sentences - roughly 40 to 90 words, or 60 to 160 CJK characters - moving it forward with what the text already supports. Stay in this paragraph: no new paragraph, heading or list.";
 
 /// What the frontend knows about the cursor beyond the raw text around it
-/// (ghost-text-plugin.ts's completionHints). Mirrors CompletionHints in
-/// platform/ipc.ts.
+/// (ghost-text-plugin.ts's completionHints) - generated into
+/// src/platform/bindings/ai.ts, which ipc.ts checks the frontend's
+/// narrower CompletionHints against.
 #[derive(Deserialize, Default, Clone)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct CompletionHints {
     #[serde(default)]
     pub(crate) title: Option<String>,
@@ -186,8 +188,10 @@ pub(super) fn completion_user_text(before: &str, after: &str, hints: &Completion
 }
 
 /// ai_complete's inputs, the keys of `ai.complete`'s invoke in
-/// platform/ipc.ts.
+/// platform/ipc.ts - generated into src/platform/bindings/ai.ts, which
+/// types that call with it (the command itself, taking `Args`, can't be).
 #[derive(Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct CompletionRequest {
     provider: String,

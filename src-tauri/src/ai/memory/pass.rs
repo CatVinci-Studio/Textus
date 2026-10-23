@@ -48,6 +48,7 @@ pub(crate) fn pass_instructions() -> &'static str {
 
 /// One exchange, as the pass reads it.
 #[derive(Deserialize, Default, Debug, Clone)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Exchange {
     /// The user's messages in the conversation so far, oldest first; the

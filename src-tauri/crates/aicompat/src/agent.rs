@@ -14,8 +14,10 @@ pub use run::*;
 /// crate's commands/attachment.rs). They have to reach the model as the
 /// provider's own image content part, which is what every `turns_to_*`
 /// function below builds. `data_base64` is the raw file, base64-encoded;
-/// `mime` is what the provider is told it is.
+/// `mime` is what the provider is told it is. Generated into the app's
+/// src/platform/bindings/ai-agent.ts.
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ImageAttachment {
     pub name: String,
@@ -32,8 +34,10 @@ impl ImageAttachment {
 
 /// One entry in an agent conversation. Kept provider-agnostic so the main
 /// crate's loop doesn't need to know about each provider's wire format.
-/// Mirrored by `AgentTurn` in src/ai/types.ts.
+/// Generated into the app's src/platform/bindings/ai-agent.ts; `AgentTurn` in
+/// src/ai/types.ts is the narrower turn the frontend keeps.
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(tag = "kind")]
 pub enum AgentTurn {
     User {
@@ -82,9 +86,11 @@ pub enum AgentTurn {
     },
 }
 
-/// One web page a reply cites as `[n]`. Mirrored by `WebSource` in
-/// src/ai/types.ts.
+/// One web page a reply cites as `[n]`. Generated into the app's
+/// src/platform/bindings/ai-agent.ts as WebSource, its name there (JSON never
+/// carries a struct's name).
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "specta", derive(specta::Type), serde(rename = "WebSource"))]
 pub struct Source {
     pub n: u32,
     pub url: String,

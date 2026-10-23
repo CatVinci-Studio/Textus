@@ -66,6 +66,7 @@ fn project_root(doc_path: Option<&str>, workspace_root: Option<&str>) -> Result<
 
 /// The project's text files, for the composer's @-mention picker.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn list_project_files(
     doc_path: Option<String>,
     workspace_root: Option<String>,
@@ -82,6 +83,7 @@ pub async fn list_project_files(
 /// One project file's text, for an @-mention - the same safety rules as the
 /// agent's read_file tool.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn read_project_file(
     doc_path: Option<String>,
     workspace_root: Option<String>,
@@ -98,6 +100,7 @@ pub async fn read_project_file(
 /// The Memory tab's "used" marks: what the last request for the document
 /// carried, or before one, what the document's text brings in by itself.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn library_use(
     doc_path: Option<String>,
     workspace_root: Option<String>,
@@ -126,6 +129,7 @@ pub async fn library_use(
 /// Creates `.textus/<rel>` with `template` unless it already exists, and
 /// returns its absolute path - "new library entry", "open style profile".
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn ensure_project_file(
     doc_path: Option<String>,
     workspace_root: Option<String>,
@@ -156,6 +160,7 @@ pub async fn ensure_project_file(
 
 /// Multi-select picker for the writing samples "Learn my style" analyses.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn pick_text_files(window: tauri::WebviewWindow) -> Vec<String> {
     tauri::async_runtime::spawn_blocking(move || {
         crate::commands::fs::window_file_dialog(&window)
@@ -175,6 +180,7 @@ pub async fn pick_text_files(window: tauri::WebviewWindow) -> Vec<String> {
 /// the agent and the inline completion then follow. Returns its path, which
 /// the frontend opens for the author to review and edit.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn learn_style(
     app: tauri::AppHandle,
     provider: String,

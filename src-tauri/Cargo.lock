@@ -54,6 +54,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "specta",
  "tauri",
  "tauri-plugin-oauth",
  "tauri-plugin-opener",

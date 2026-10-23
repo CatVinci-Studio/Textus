@@ -64,6 +64,7 @@ pub fn project_file(root: &Path, rel: &str) -> Option<PathBuf> {
 /// `Hidden`: neither; loaded by exact name with use_skill (the reference
 /// packs).
 #[derive(Serialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum Invocation {
     #[default]
@@ -76,6 +77,7 @@ pub enum Invocation {
 /// global config folder's skills/, or the project's .textus/skills/. Each
 /// layer replaces same-named skills of the ones before it.
 #[derive(Serialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum SkillSource {
     Builtin,
@@ -89,6 +91,7 @@ pub enum SkillSource {
 /// `metadata:` (see docs in parse_skill_file). Serialised camelCase for
 /// the frontend's skill list (src/ai/types.ts).
 #[derive(Serialize, Clone, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct AgentSkill {
     pub name: String,
@@ -156,6 +159,7 @@ impl AgentSkill {
 }
 
 #[derive(Serialize, Clone, Default)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct AgentWorkspace {
     /// The global writing instructions (the global config folder's
     /// agent.md, comments stripped), in prompt order.
@@ -204,6 +208,7 @@ impl AgentWorkspace {
 /// Why the workspace root (the project folder, to the user) is the one it
 /// is, or why there is none.
 #[derive(Serialize, Clone, Copy, Default, PartialEq, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum RootSource {
     /// An unsaved document and no folder chosen.
@@ -225,6 +230,7 @@ pub enum RootSource {
 /// style profile and library the project bar shows. Loaded fresh each time
 /// the chat opens so file edits are picked up without restarting.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn load_agent_workspace(
     app: AppHandle,
     doc_path: Option<String>,
@@ -243,6 +249,7 @@ pub async fn load_agent_workspace(
 /// skills are left out. Both arguments None (Settings) gives the built-ins
 /// and the global skills.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn list_skills(
     app: AppHandle,
     doc_path: Option<String>,
@@ -260,6 +267,7 @@ pub async fn list_skills(
 /// plugin has no folder picker on iOS.
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn pick_workspace_root(window: tauri::WebviewWindow) -> Result<Option<String>, String> {
     let picked = tauri::async_runtime::spawn_blocking(move || {
         crate::commands::fs::window_file_dialog(&window).blocking_pick_folder()
@@ -285,6 +293,7 @@ pub async fn pick_workspace_root(window: tauri::WebviewWindow) -> Result<Option<
 /// reveal a folder in (the opener plugin only opens URLs there).
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn open_global_agent_dir(app: AppHandle, template: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
 
@@ -300,6 +309,7 @@ pub async fn open_global_agent_dir(app: AppHandle, template: String) -> Result<(
 /// Instructions > Edit agent.md, which opens that file in the editor itself
 /// - Textus IS a markdown editor, so there's no bespoke textarea for it.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn ensure_global_agent_md(app: AppHandle, template: String) -> Result<String, String> {
     Ok(ensure_global_layer(&app, &template)?
         .join("agent.md")
@@ -312,6 +322,7 @@ pub fn ensure_global_agent_md(app: AppHandle, template: String) -> Result<String
 /// cancelled). The file is stored under the skill's resolved name, so
 /// re-importing an updated copy replaces the old one instead of piling up.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn import_agent_skill(
     app: AppHandle,
     window: tauri::WebviewWindow,
@@ -360,6 +371,7 @@ pub async fn import_agent_skill(
 /// An existing skill of that name - an earlier copy, or the user's own - is
 /// never overwritten: its path is returned instead.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn customize_builtin_skill(app: AppHandle, name: String) -> Result<String, String> {
     let skills_dir = global_agent_dir(&app)?.join("skills");
     tauri::async_runtime::spawn_blocking(move || customize_in(&skills_dir, &name))
@@ -376,6 +388,7 @@ pub async fn customize_builtin_skill(app: AppHandle, name: String) -> Result<Str
 /// paths, so the frontend can close a tab still showing one: saving that
 /// tab would quietly write the copy back.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn reset_builtin_skill(app: AppHandle, name: String) -> Result<Vec<String>, String> {
     let skills_dir = global_agent_dir(&app)?.join("skills");
     tauri::async_runtime::spawn_blocking(move || reset_in(&skills_dir, &name))
@@ -387,6 +400,7 @@ pub async fn reset_builtin_skill(app: AppHandle, name: String) -> Result<Vec<Str
 /// settings.json as `disabledBuiltinSkills`, broadcast to every window like
 /// any settings change. Returns the new list.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn set_builtin_skill_enabled(
     app: AppHandle,
     name: String,

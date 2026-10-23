@@ -53,6 +53,7 @@ use serde::Serialize;
 use text::Text;
 
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "lowercase")]
 pub enum Severity {
     Error,
@@ -62,6 +63,7 @@ pub enum Severity {
 
 /// What can be done with a finding's suggestion.
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "lowercase")]
 pub enum Fix {
     /// Safe to apply without review ("fix all", post-processing).
@@ -73,6 +75,7 @@ pub enum Fix {
 }
 
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(test, derive(specta::Type))]
 pub enum Priority {
     P0,
     P1,
@@ -98,6 +101,7 @@ impl Level {
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct Finding {
     pub rule: &'static str,
     /// Unicode-scalar offsets into the checked text (the paragraph for

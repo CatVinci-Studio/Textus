@@ -9,6 +9,7 @@ pub(crate) const MAX_STYLE_CHARS: usize = 6_000;
 // ------------------------------------------------------------- style + library
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum LibraryInclude {
     Always,
@@ -17,6 +18,7 @@ pub enum LibraryInclude {
 }
 
 #[derive(Serialize, Clone, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct LibraryEntry {
     pub name: String,
     pub aliases: Vec<String>,
@@ -209,11 +211,12 @@ pub fn writing_context_section(style: Option<&str>, entries: &[&LibraryEntry]) -
 }
 
 /// Which library entries reached Textus AI, for the Memory tab's marks
-/// (`LibraryUse` in platform/ipc.ts): the entries' `file`s, those that came
+/// (src/platform/bindings/ai-memory.ts): the entries' `file`s, those that came
 /// up but didn't fit, and whether this is what the last conversation
 /// request for the document carried (`lastRequest`) or what its text alone
 /// would bring in, before any request.
 #[derive(Serialize, Clone, Debug, Default, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct LibraryUse {
     pub included: Vec<String>,

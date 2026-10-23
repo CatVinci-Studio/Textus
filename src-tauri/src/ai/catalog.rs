@@ -12,6 +12,7 @@
 use serde::Serialize;
 
 #[derive(Serialize, Clone, Copy)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ProviderCatalogEntry {
     /// Matches `Settings.aiProvider` on the TS side and the `provider`
@@ -304,6 +305,7 @@ pub fn find(id: &str) -> Option<&'static ProviderCatalogEntry> {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn list_providers() -> Vec<ProviderCatalogEntry> {
     PROVIDER_CATALOG.to_vec()
 }
@@ -313,6 +315,7 @@ pub fn list_providers() -> Vec<ProviderCatalogEntry> {
 /// table decides (`capabilities::can_think_deeper`). Mirrored by
 /// `ai.canThinkDeeper` in platform/ipc.ts.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn ai_can_think_deeper(provider: String, model: Option<String>) -> bool {
     let Some(model) = model
         .filter(|m| !m.is_empty())

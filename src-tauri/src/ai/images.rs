@@ -40,6 +40,7 @@ pub use inline::InlinePictures;
 pub const GENERATE_IMAGE_TOOL_NAME: &str = "generate_image";
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn list_image_providers() -> Vec<ImageProviderEntry> {
     IMAGE_PROVIDERS.to_vec()
 }
@@ -47,6 +48,7 @@ pub fn list_image_providers() -> Vec<ImageProviderEntry> {
 /// A picture, once it is made: the frame in the document waits on this.
 /// Its error is why it wasn't made, in the service's words.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn ai_generated_image(id: String) -> Result<GeneratedImageData, String> {
     let deadline = std::time::Instant::now() + WAIT_FOR_PICTURE;
     loop {
@@ -64,6 +66,7 @@ pub async fn ai_generated_image(id: String) -> Result<GeneratedImageData, String
 /// the same service - leaving the others alone; ai_generated_image then
 /// waits for it as for any picture.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn ai_retry_generated_image(id: String) -> Result<(), String> {
     retry(&id)
 }
@@ -71,6 +74,7 @@ pub fn ai_retry_generated_image(id: String) -> Result<(), String> {
 /// Lets a picture go: its proposal was rejected, or it was saved. One
 /// still being made is let go too; what it makes is thrown away.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn ai_discard_generated_image(id: String) {
     pending().retain(|(i, _)| *i != id);
 }

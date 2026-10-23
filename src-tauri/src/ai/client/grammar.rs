@@ -342,8 +342,10 @@ pub(super) fn validate_issues(issues: Vec<GrammarIssue>, paragraph: &str) -> Vec
 }
 
 /// ai_grammar_check's inputs, the keys of `ai.grammarCheck`'s invoke in
-/// platform/ipc.ts.
+/// platform/ipc.ts - generated into src/platform/bindings/ai.ts, as
+/// CompletionRequest is.
 #[derive(Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct GrammarRequest {
     provider: String,

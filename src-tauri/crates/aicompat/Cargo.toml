@@ -19,3 +19,10 @@ url = "2"
 # already in the tree through reqwest, so no new crates.
 tokio = { version = "1", features = ["net", "time"] }
 tauri-plugin-oauth = "2"
+# The main crate's generated TypeScript bindings (its src/bindings.rs)
+# carry AgentTurn and the types it holds. The main crate turns this on from
+# its dev-dependencies only, so shipped builds never compile specta.
+specta = { version = "=2.0.0-rc.26", features = ["derive", "serde_json"], optional = true }
+
+[features]
+specta = ["dep:specta"]

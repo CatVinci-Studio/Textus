@@ -151,9 +151,10 @@ pub(crate) fn nominal_size(aspect: Aspect) -> (u32, u32) {
     (w.parse().unwrap_or(1024), h.parse().unwrap_or(1024))
 }
 
-/// A pending picture as the frontend takes it. Mirrors `GeneratedImageData`
-/// in src/platform/ipc.ts.
+/// A pending picture as the frontend takes it - generated into
+/// src/platform/bindings/ai-agent.ts.
 #[derive(Serialize, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct GeneratedImageData {
     pub(crate) mime: &'static str,

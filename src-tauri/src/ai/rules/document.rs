@@ -271,6 +271,7 @@ fn doc_sample(lang: Lang) -> String {
 
 /// What check_document found, and under which conventions.
 #[derive(Serialize, Clone, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct DocReport {
     /// The document's language (None: too little prose to tell).

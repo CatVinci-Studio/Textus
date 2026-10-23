@@ -113,8 +113,10 @@ pub const OPTIONS: &[(&str, &[&str])] = &[
     ("ru.yo", &["selective", "always", "never"]),
 ];
 
-/// Where the effective profile came from.
+/// Where the effective profile came from. Generated as ProfileSource (JSON
+/// never carries an enum's name).
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[cfg_attr(test, derive(specta::Type), serde(rename = "ProfileSource"))]
 #[serde(rename_all = "camelCase")]
 pub enum Source {
     #[default]
@@ -125,6 +127,7 @@ pub enum Source {
 
 /// The conventions one document follows, as the rules read them.
 #[derive(Serialize, Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Profile {
     /// The profile value (`zh-Hans-CN/fiction`), or the language key when
@@ -240,6 +243,7 @@ impl Profile {
 
 /// What `.textus/style.md` says about conventions.
 #[derive(Serialize, Clone, Debug, Default, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ProjectConventions {
     /// The `conventions:` values, in order.
@@ -374,6 +378,7 @@ impl Conventions {
 
 /// The allowed values, for the frontend's settings row.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ConventionsOptions {
     pub setting_key: &'static str,
@@ -383,6 +388,7 @@ pub struct ConventionsOptions {
 }
 
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct LanguageOptions {
     pub lang: Lang,
@@ -392,6 +398,7 @@ pub struct LanguageOptions {
 }
 
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct OptionValues {
     pub key: &'static str,
     pub values: &'static [&'static str],

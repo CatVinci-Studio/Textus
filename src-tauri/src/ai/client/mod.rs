@@ -71,6 +71,7 @@ pub(crate) async fn call(
 /// handled here - it already has fetch_custom_models, which also lets the
 /// frontend try before saving a config.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<String>, String> {
     crate::ai::ensure_on(&app)?;
     let entry = catalog::find(&provider).ok_or_else(|| format!("unknown provider: {provider}"))?;
@@ -112,6 +113,7 @@ pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<
 /// mirroring precedent as commands::prefs), so the frontend re-sends this on
 /// startup and on every change. Rejects unparseable proxy URLs.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn set_ai_proxy(proxy: Option<String>) -> Result<(), String> {
     aicompat::http::set_proxy(proxy)
 }

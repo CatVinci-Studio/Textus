@@ -6,6 +6,7 @@ use super::*;
 /// One service Settings › Textus AI › Image model offers. Mirrored by
 /// `ImageProviderEntry` in src/ai/image-models.ts.
 #[derive(Serialize, Clone, Copy)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ImageProviderEntry {
     pub id: &'static str,

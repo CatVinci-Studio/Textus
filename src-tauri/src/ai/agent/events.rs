@@ -9,8 +9,9 @@ use super::*;
 /// additive display data: the command still resolves with the complete turn
 /// list, which remains the authoritative result the frontend appends to its
 /// history - a dropped or ignored event costs liveness, never correctness.
-/// Mirrored by `StreamEvent` in platform/ipc.ts - the two must stay in sync.
+/// Generated into src/platform/bindings/ai-agent.ts.
 #[derive(Clone, Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(
     tag = "type",
     rename_all = "camelCase",
