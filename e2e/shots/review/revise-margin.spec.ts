@@ -15,7 +15,7 @@ test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");
 async function start(
   page: Page,
   colorScheme: "light" | "dark",
-  display: "new" | "original",
+  display: "inline" | "original",
   stories: number,
   halfway: boolean,
 ) {
@@ -45,7 +45,7 @@ async function start(
 }
 
 for (const colorScheme of ["light", "dark"] as const)
-  for (const display of ["new", "original"] as const)
+  for (const display of ["inline", "original"] as const)
     for (const stories of [1, 3]) {
       const name = `${display}-${stories * 8}-${colorScheme}`;
       test(`a classical rewrite, ${name}`, async ({ page }) => {

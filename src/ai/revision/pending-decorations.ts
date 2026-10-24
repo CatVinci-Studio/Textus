@@ -24,9 +24,9 @@ import {
 import {
   type SentencePickLabels,
   sentenceDecorations,
-  streamDecorations,
   textWidget,
 } from "./pending-widgets";
+import { streamDecorations } from "./stream-widgets";
 
 /**
  * Every proposal's decorations, built from the plugin state: which pieces
@@ -140,6 +140,7 @@ export function streamFor(
       partialIndex: null,
       struck: new Set(),
       changes: [],
+      landedAt: 0,
     };
     refreshStream(anim);
   }
@@ -147,6 +148,7 @@ export function streamFor(
 }
 
 export function decorationsFor(
+  doc: ProseNode,
   p: PendingPreview,
   animate: boolean,
   hooks: SentenceHooks,
@@ -154,7 +156,7 @@ export function decorationsFor(
   if (p.sentences && !p.streaming)
     return sentenceDecorations(p, p.sentences.changes, hooks);
   const stream = p.streamSource && streamFor(p, animate);
-  if (stream) return streamDecorations(p, p.streamSource!, stream, hooks);
+  if (stream) return streamDecorations(doc, p, p.streamSource!, stream, hooks);
   // A picture being redone: the old one stays as it is, veiled, until the
   // new one has come - only then the two, the old struck, to decide on.
   const redraw = redrawing(p);
@@ -169,7 +171,6 @@ export function decorationsFor(
     ];
   const decos: Decoration[] = [];
   const removesText = removesTextOf(p);
-  const strikeTo = p.strikeTo ?? p.to;
   const focused = hooks.focused();
   const isFocused = focused?.callId === p.callId && focused.index === -1;
   const strike = wholeStrike(p);
@@ -191,20 +192,32 @@ export function decorationsFor(
   const text = p.proposal.text;
   if (text !== undefined && p.proposal.action !== "delete") {
     const atStart = p.proposal.action === "insert_before";
-    // `replace`'s insert point follows the strike range specifically (not
-    // just "p.to") so the green text lands immediately after the red -
-    // "struck old text, new text right after" - rather than at the very end
-    // of a whole re-parsed block that may extend well past what was struck.
-    const insertPos = atStart
-      ? p.from
-      : p.proposal.action === "replace"
-        ? strikeTo
-        : p.to;
     decos.push(
-      textWidget(p, insertPos, atStart ? -1 : 1, animate, removesText),
+      textWidget(p, insertAt(p), atStart ? -1 : 1, animate, removesText),
     );
   }
   return decos;
+}
+
+/**
+ * Where a proposal shown whole draws its new text. `replace`'s follows the
+ * strike range (not just "p.to") so the green text lands immediately
+ * after the red - "struck old text, new text right after" - rather than at
+ * the very end of a whole re-parsed block that may extend well past what
+ * was struck. An insertion next to words inside a paragraph goes right
+ * by them, as Accept writes it: drawn at the paragraph's edge, it stood
+ * as a paragraph of its own and moved into the text when taken. One next
+ * to a whole block (no strike range, pending-place's resolveAnchored)
+ * goes between blocks - decided by the anchor, not by the text, which
+ * grows while it streams: a first paragraph drawn inside moved out when
+ * a second came.
+ */
+export function insertAt(p: PendingPreview): number {
+  const { action } = p.proposal;
+  if (action === "insert_before") return p.strikeFrom ?? p.from;
+  if (action === "insert_after") return p.strikeTo ?? p.to;
+  if (action === "replace") return p.strikeTo ?? p.to;
+  return p.to;
 }
 
 /** The old picture's node, while the picture that redoes it (a picture
@@ -225,21 +238,21 @@ export function buildDecorations(
   animate: boolean,
   hooks: SentenceHooks,
 ): DecorationSet {
-  const decos = previews.flatMap((p) => decorationsFor(p, animate, hooks));
+  const decos = previews.flatMap((p) => decorationsFor(doc, p, animate, hooks));
   return DecorationSet.create(doc, [...decos, ...struckBlocks(doc, decos)]);
 }
 
 /**
  * The blocks whose text is all struck and that hold no new text: a
  * paragraph a rewrite folds into the one before it, or one it deletes.
- * The views that take the originals out of the text ("new", "final") take
+ * The view that takes the originals out of the text ("final") takes
  * these out of the flow too (`pending-struck-block`): their text hidden,
  * they still stood there as empty lines with a paragraph's margins, and a
  * rewrite that joins paragraphs left blank gaps in the text. One that
- * holds the mark of a deleted sentence (`pending-struck-marked`) keeps
- * its line in "new", where the mark shows. Read off the decorations' own
- * `part`: "struck" for an original those views hide, "text" for new text,
- * "mark" for a deleted sentence's mark.
+ * holds the mark of a deleted sentence (`pending-struck-marked`) keeps its
+ * line, where the mark shows. Read off the decorations' own `part`:
+ * "struck" for an original that view hides, "text" for new text, "mark"
+ * for a deleted sentence's mark.
  */
 export function struckBlocks(
   doc: ProseNode,
@@ -389,12 +402,17 @@ export function syncStreaming(view: EditorView, previews: PendingPreview[]) {
   for (const el of view.dom.querySelectorAll<HTMLElement>(".pending-streaming"))
     if (!streaming.has(el.dataset.call ?? "")) {
       el.classList.remove("pending-streaming");
-      // The faint ✓ / ✕ come up to full as they start taking clicks.
-      if (el.classList.contains("pending-pick"))
+      // The faint ✓ / ✕ come up to full as they start taking clicks - as
+      // their one move: the stylesheet's entrance, set back by its delay,
+      // was still running under it and took over when it ended, the
+      // buttons dipping back to faint (1.2.1).
+      if (el.classList.contains("pending-pick")) {
+        el.style.animation = "none";
         animateElement(el, [{ opacity: 0.35 }, { opacity: 1 }], {
           duration: "--dur-base",
           easing: "--ease-standard",
         });
+      }
     }
 }
 
@@ -414,6 +432,13 @@ export function drawStrikesIn(
   // Every colour is read before any animation starts: an animation started
   // makes the next read recalculate the page's style, once per sentence.
   const strikes: { el: HTMLElement; from: Keyframe; to: Keyframe }[] = [];
+  // A sentence lands from under the reading tint (readingDecoration): its
+  // strike's colour comes from that tint - from none, the tint went and
+  // the red came a frame apart, a flash at each landing (1.2.1).
+  const reading =
+    getComputedStyle(view.dom)
+      .getPropertyValue("--revision-reading-bg")
+      .trim() || "transparent";
   for (const el of view.dom.querySelectorAll<HTMLElement>(
     `.pending-streamed[data-call="${CSS.escape(callId)}"]`,
   )) {
@@ -428,7 +453,7 @@ export function drawStrikesIn(
       el,
       from: {
         color: plain,
-        backgroundColor: "transparent",
+        backgroundColor: reading,
         textDecorationColor: "transparent",
       },
       to: {

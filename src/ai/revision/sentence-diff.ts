@@ -11,6 +11,7 @@
  */
 
 import { formKey } from "./markdown-forms";
+import { MATCH, similarity } from "./sentence-similarity";
 
 export type SentenceHunk =
   | { kind: "same"; text: string }
@@ -21,10 +22,11 @@ export function splitSentences(text: string): string[] {
   // hard break, `\` or `<br>`, too) or the end; elsewhere (3.14, a URL) it
   // is part of the sentence - which used to fail the whole split, and the
   // rewrite was shown whole. A picture's `![` is no exclamation. The break
-  // after a sentence goes with it.
+  // after a sentence goes with it. Arabic's ؟, Devanagari's । and an
+  // ellipsis end one too.
   const parts =
     text.match(
-      /(?:[^。！？!?.;；\n]|\.(?!\s|$|\\\n|<br\s*\/?>)|!(?=\[))*(?:[。！？!?;；]+|\.|\n+|$)[”’"')）」』\]]*(?:\\\n|<br\s*\/?>|\s)*/g,
+      /(?:[^。！？!?.;；؟।…\n]|\.(?!\s|$|\\\n|<br\s*\/?>)|!(?=\[))*(?:[。！？!?;；؟।…]+|\.|\n+|$)[”’"')）」』\]]*(?:\\\n|<br\s*\/?>|\s)*/g,
     ) ?? [];
   const out = parts.filter((p) => p.length > 0);
   // Anything the pattern skipped (shouldn't happen) is kept rather than lost.
@@ -65,11 +67,12 @@ export function diffSentenceLists(
 ): SentenceHunk[] {
   // A rewrite still streaming in regroups only the paragraphs it has
   // finished: a paragraph's shape can't be judged half written.
-  return regroup(sentencePairs(a, b, alignTail ?? alignRun), !alignTail).map(
-    (p) =>
-      p.same
-        ? { kind: "same" as const, text: p.after }
-        : { kind: "change" as const, before: p.before, after: p.after },
+  return mergeShortParagraphs(
+    regroup(sentencePairs(a, b, alignTail ?? alignRun), !alignTail),
+  ).map((p) =>
+    p.same
+      ? { kind: "same" as const, text: p.after }
+      : { kind: "change" as const, before: p.before, after: p.after },
   );
 }
 
@@ -146,6 +149,59 @@ interface Pair {
 const DENSE = 0.5;
 const REWRITTEN = 0.55;
 
+/** A paragraph this short or shorter, changed whole next to another such,
+ *  is decided with it: a run of short lines rewritten (dialogue, a list
+ *  of points) was a card a line, the margin a column of chips. */
+const SHORT_PARAGRAPH = 80;
+/** Short paragraphs taken together up to this much, then a new change. */
+const MERGED_AT_MOST = 320;
+/** Plain text: not a heading, a list item, a quote, a table, a fence, a
+ *  formula, a footnote, a picture or HTML - those keep their own card. */
+const PLAIN =
+  /^(?!\s*(?:#{1,6}\s|[-*+]\s|\d+[.)]\s|>|\||```|~~~|\$\$|!\[|\[\^|<|\[toc\]))/i;
+
+/**
+ * Changes next to each other that are each a whole short paragraph, on
+ * both sides, merged into one change of those paragraphs. A change inside
+ * a paragraph, or of a long one, stays as it was.
+ */
+function mergeShortParagraphs(pairs: Pair[]): Pair[] {
+  const out: Pair[] = [];
+  // Whether the text so far ends a paragraph: a change after that which
+  // ends one too is a whole paragraph. The text's own end ends one.
+  let atParagraph = true;
+  let run: Pair | null = null;
+  pairs.forEach((p, i) => {
+    const last = i === pairs.length - 1;
+    const ends =
+      last || (ENDS_PARAGRAPH.test(p.before) && ENDS_PARAGRAPH.test(p.after));
+    const whole =
+      !p.same &&
+      atParagraph &&
+      ends &&
+      PLAIN.test(p.before) &&
+      PLAIN.test(p.after) &&
+      paragraphCount(p.before) === 1 &&
+      paragraphCount(p.after) === 1 &&
+      p.before.trim().length <= SHORT_PARAGRAPH &&
+      p.after.trim().length <= SHORT_PARAGRAPH;
+    if (
+      whole &&
+      run &&
+      run.before.length + p.before.length <= MERGED_AT_MOST &&
+      run.after.length + p.after.length <= MERGED_AT_MOST
+    ) {
+      run.before += p.before;
+      run.after += p.after;
+    } else {
+      run = whole ? { ...p } : null;
+      out.push(run ?? p);
+    }
+    atParagraph = ends;
+  });
+  return out;
+}
+
 /** A paragraph's end, carried by its last sentence. */
 export const ENDS_PARAGRAPH = /\n[ \t]*\n\s*$/;
 
@@ -179,7 +235,8 @@ function paragraphsOf(text: string): string[] {
  *   the original against the new ones they became (the joined paragraphs
  *   struck in place: pending-edit-plugin's struck blocks).
  *
- * `finished` false: the last run, which may still grow, stays as it is.
+ * `finished` false: the last run, which may still grow, stays as it is -
+ * unless both its sides end a paragraph, and it is whole paragraphs.
  */
 function regroup(pairs: Pair[], finished: boolean): Pair[] {
   const out: Pair[] = [];
@@ -210,7 +267,11 @@ function regroup(pairs: Pair[], finished: boolean): Pair[] {
     const before = run.map((p) => p.before).join("");
     const after = run.map((p) => p.after).join("");
     const ends = (text: string) => !text || ENDS_PARAGRAPH.test(text);
-    if (last ? finished : ends(before) && ends(after)) close();
+    // The last run, still streaming, is whole paragraphs once both sides
+    // end one - as each lands (unit-reveal.ts): shaped then, a translation
+    // landed as one change over every paragraph, drawn inside the title.
+    const whole = ends(before) && ends(after);
+    if (last ? finished || (whole && !!before && !!after) : whole) close();
   }
   // Still streaming, a join just before the text being written may go on
   // into it: shaped already unless that leaves a paragraph struck on its
@@ -229,7 +290,7 @@ function regroup(pairs: Pair[], finished: boolean): Pair[] {
 }
 
 /** How many paragraphs with text `text` holds. */
-function paragraphCount(text: string): number {
+export function paragraphCount(text: string): number {
   return paragraphsOf(text).filter((t) => t.trim()).length;
 }
 
@@ -383,43 +444,6 @@ function dense(run: Pair[]): Pair[] {
   if (similarity(before, after) >= REWRITTEN) return run;
   return [{ same: false, before, after }];
 }
-
-/** Character bigrams (single characters for one-character text), for a
- *  similarity that works the same for CJK and for spaced scripts. */
-function bigrams(text: string): Map<string, number> {
-  const known = bigramCache.get(text);
-  if (known) return known;
-  const chars = [...text.replace(/\s+/g, " ").trim().toLowerCase()];
-  const grams = new Map<string, number>();
-  const add = (g: string) => grams.set(g, (grams.get(g) ?? 0) + 1);
-  if (chars.length < 2) chars.forEach(add);
-  for (let k = 0; k + 1 < chars.length; k++) add(chars[k] + chars[k + 1]);
-  // The alignment compares the same sentences (and pairs of them) many
-  // times over - and again for every sentence a streaming rewrite adds.
-  if (bigramCache.size >= BIGRAM_CACHE) bigramCache.clear();
-  bigramCache.set(text, grams);
-  return grams;
-}
-
-const BIGRAM_CACHE = 4096;
-const bigramCache = new Map<string, Map<string, number>>();
-
-/** Dice similarity of two texts' bigrams, 0..1. */
-export function similarity(a: string, b: string): number {
-  const x = bigrams(a);
-  const y = bigrams(b);
-  let total = 0;
-  let shared = 0;
-  for (const n of x.values()) total += n;
-  for (const [g, n] of y) {
-    total += n;
-    shared += Math.min(n, x.get(g) ?? 0);
-  }
-  return total === 0 ? 0 : (2 * shared) / total;
-}
-
-/** Below this, two sentences are not the same sentence rewritten. */
-export const MATCH = 0.25;
 
 /**
  * Pairs the sentences of a changed run: each original sentence with the

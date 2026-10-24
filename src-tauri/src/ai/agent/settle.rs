@@ -82,6 +82,7 @@ pub(crate) fn settle_step(
     conventions: &Conventions,
     pictures: Option<&InlinePictures<'_>>,
 ) -> (StepResult, Vec<&'static str>) {
+    let result = super::lists::split_calls(result);
     let (result, applied) = postfix_step(edits_before_comments(result), document, conventions);
     let result = match pictures {
         Some(pictures) => pictures.place(result),

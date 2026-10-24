@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
 // The revision views (the review bar's eye menu) after the owner's flow in
-// 1.1.0-rc.6: Write adds a few paragraphs, then Revise rewrites them. The
+// 1.1.0-rc.6: Write adds a few paragraphs, then rewrites them. The
 // rewrite's anchor spans paragraphs, so it used to be shown whole - one
 // struck block and one green block - and no view changed anything. Now it
 // is shown sentence by sentence and every view applies; Write's new text,
@@ -46,7 +46,7 @@ const VIEWS = {
   inline: "All in the text",
   original: "Original in the text, changes in the margin",
   new: "Changes in the text, original in the margin",
-  final: "Result only, no markup",
+  final: "Result only, originals in the margin",
 } as const;
 
 async function view(page: Page, name: keyof typeof VIEWS) {
@@ -77,7 +77,7 @@ async function write(page: Page) {
   await expect(page.locator(".milkdown .pending-insert")).toHaveCount(1);
 }
 
-/** Revise rewrites three sentences across both paragraphs. */
+/** Write rewrites three sentences across both paragraphs. */
 async function revise(page: Page) {
   await mockInvoke(page, {
     ai_agent_message: proposals("r", [
@@ -89,7 +89,7 @@ async function revise(page: Page) {
       },
     ]),
   });
-  await pickMode(page, "Revise");
+  await pickMode(page, "Write");
   await send(page, "Tighten it");
   await expect(page.locator(".review-bar")).toBeVisible();
 }
@@ -97,7 +97,7 @@ async function revise(page: Page) {
 const visible = (page: Page, selector: string) =>
   page.locator(`.milkdown ${selector}:visible`);
 
-test("after Write's text is accepted, every view applies to Revise's rewrite across paragraphs", async ({
+test("after Write's text is accepted, every view applies to its rewrite across paragraphs", async ({
   page,
 }) => {
   await open(page);
@@ -128,24 +128,15 @@ test("after Write's text is accepted, every view applies to Revise's rewrite acr
   );
   await page.mouse.move(10, 10);
 
-  await view(page, "new");
-  await expect(visible(page, ".pending-delete")).toHaveCount(0);
-  await expect(visible(page, ".pending-insert")).toHaveCount(3);
-  await expect(page.locator(".revision-note")).toHaveCount(3);
-  await page
-    .locator(".revision-note")
-    .first()
-    .click({ position: { x: 40, y: 12 } });
-  await expect(
-    page.locator(".revision-note").first().locator(".revision-note-original"),
-  ).toHaveCount(1);
-  await page.mouse.move(10, 10);
-  await expect(page.locator(".milkdown")).toContainText("the sea lay calm.");
-
   await view(page, "final");
   await expect(visible(page, ".pending-delete")).toHaveCount(0);
   await expect(visible(page, ".pending-insert")).toHaveCount(3);
-  await expect(page.locator(".revision-note")).toHaveCount(0);
+  // What each change takes out, in its card.
+  await expect(page.locator(".revision-note")).toHaveCount(3);
+  for (let i = 0; i < 3; i++)
+    await expect(
+      page.locator(".revision-note").nth(i).locator(":is(s, del)").first(),
+    ).toBeAttached();
   expect(
     await visible(page, ".pending-insert")
       .first()
@@ -188,12 +179,10 @@ test("Write's new text has no original: a green block in every view but the resu
   const tint = await green();
   expect(tint).not.toBe("rgba(0, 0, 0, 0)");
 
-  for (const name of ["original", "new"] as const) {
-    await view(page, name);
-    await expect(block).toBeVisible();
-    expect(await green()).toBe(tint);
-    await expect(page.locator(".revision-note")).toHaveCount(0);
-  }
+  await view(page, "original");
+  await expect(block).toBeVisible();
+  expect(await green()).toBe(tint);
+  await expect(page.locator(".revision-note")).toHaveCount(0);
   await page.locator(".review-bar-view-button").click();
   await expect(page.locator(".review-bar-menu-note")).toHaveText(
     "New text has no original: it stays in the text, in green, in these views",
@@ -230,7 +219,7 @@ test("switching views cross-fades: the same elements, no entrance replayed, noth
     );
   }, parts);
 
-  for (const name of ["original", "new", "final", "inline", "new"] as const) {
+  for (const name of ["original", "final", "inline", "original"] as const) {
     // What is shown before the switch and still after it.
     await page.evaluate((sel) => {
       const shown = (el: Element) =>

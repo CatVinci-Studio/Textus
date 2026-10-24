@@ -8,6 +8,7 @@
 // in the document, and an accepted diagram is already drawn.
 
 import { renderMarkdownInlineHtml } from "./markdown/render-html";
+import { animate, duration } from "../ui/motion";
 
 /** A run of Markdown text, or a ```mermaid fence in it. */
 export type DiagramPart =
@@ -207,23 +208,67 @@ function showDrawing(
   idPrefix: string,
 ) {
   const first = state.shown === null;
+  // Where each part stood: drawn again, the layout moves them.
+  const before = new Map<string, DOMRect>();
+  for (const part of outermostParts(el.querySelector("svg")))
+    before.set(partKey(part, idPrefix), part.getBoundingClientRect());
   el.innerHTML = svg;
   el.classList.add("pending-diagram-drawn");
   const root = el.querySelector("svg");
   if (!root) return;
   const keys = new Set<string>();
-  for (const part of root.querySelectorAll("[id], [data-id]")) {
-    const key = partKey(part, idPrefix);
-    keys.add(key);
-    // Only what this drawing added fades in, and only its outermost part:
-    // a fade inside a fading group would compound.
-    if (
-      !first &&
-      !state.keys.has(key) &&
-      !part.parentElement?.closest(".diagram-part-enter")
-    )
-      part.classList.add("diagram-part-enter");
+  for (const part of root.querySelectorAll("[id], [data-id]"))
+    keys.add(partKey(part, idPrefix));
+  // The parts this drawing added come in one after another, its nodes
+  // first and then what joins them - the first drawing too, built up rather
+  // than faded in whole; the parts it had glide from where they stood to
+  // where the new layout puts them (FLIP, by the `translate` property: a
+  // part's own `transform` attribute stays as Mermaid set it).
+  const parts = outermostParts(root);
+  const fresh = parts
+    .filter((part) => first || !state.keys.has(partKey(part, idPrefix)))
+    .sort((a, b) => Number(isNode(b)) - Number(isNode(a)));
+  const gap = Math.min(
+    duration("--dur-stagger") * 3,
+    duration("--dur-cascade") / Math.max(1, fresh.length),
+  );
+  fresh.forEach((part, i) => {
+    part.classList.add("diagram-part-enter");
+    (part as SVGElement).style.animationDelay = `${Math.round(i * gap)}ms`;
+  });
+  const scale = root.getScreenCTM()?.a || 1;
+  for (const part of parts) {
+    const was = before.get(partKey(part, idPrefix));
+    if (!was || fresh.includes(part)) continue;
+    const now = part.getBoundingClientRect();
+    const dx = (was.left - now.left) / scale;
+    const dy = (was.top - now.top) / scale;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
+    animate(part, [{ translate: `${dx}px ${dy}px` }, { translate: "0 0" }], {
+      duration: "--dur-slow",
+      easing: "--ease-out",
+    });
   }
-  if (first) root.classList.add("diagram-part-enter");
   state.keys = keys;
+}
+
+/** A drawing's parts that stand for something - a node, an edge, a label -
+ *  and aren't inside another, nor in its <defs>: a fade inside a fading
+ *  group compounds. */
+function outermostParts(root: Element | null): Element[] {
+  if (!root) return [];
+  const isPart = (e: Element) => e.matches("[id], [data-id]");
+  return [...root.querySelectorAll("[id], [data-id]")].filter((part) => {
+    if (part.closest("defs, style")) return false;
+    for (let up = part.parentElement; up && up !== root; up = up.parentElement)
+      if (isPart(up)) return false;
+    return true;
+  });
+}
+
+/** Whether a part is a node: Mermaid's `.node`, Pele's `.pele-node`. */
+function isNode(part: Element): boolean {
+  return (
+    part.classList.contains("node") || part.classList.contains("pele-node")
+  );
 }

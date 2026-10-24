@@ -17,8 +17,7 @@ import {
 } from "./skill-picker";
 import { errorText } from "../../utils/error-text";
 import { basename } from "../../utils/path";
-import type { AgentMode } from "../../settings/SettingsContext";
-import { COMPOSER_MODES } from "./last-mode";
+import { AGENT_MODES, type AgentMode } from "../../settings/SettingsContext";
 import {
   CloseIcon,
   GenericFileIcon,
@@ -68,7 +67,6 @@ export function ChatComposer({
   busy,
   labels,
   defaultMode,
-  modes: offeredModes = COMPOSER_MODES.full,
   carryMode = false,
   tourMode = null,
   selectionChip,
@@ -96,7 +94,6 @@ export function ChatComposer({
     tourMode,
     carryMode,
     defaultMode,
-    offeredModes,
     onModeChange,
   });
   const options = useRequestOptions(defaultWebSearch, compact);
@@ -308,9 +305,8 @@ export function ChatComposer({
   const modeLabels: Record<AgentMode, string> = {
     write: labels.modeWrite,
     review: labels.modeReview,
-    revise: labels.modeRevise,
   };
-  const modes = offeredModes.map((m) => [m, modeLabels[m]] as const);
+  const modes = AGENT_MODES.map((m) => [m, modeLabels[m]] as const);
 
   // On a phone, the composer's buttons leave focus - and so the keyboard -
   // in the textarea: a tap's default is to blur it, which drops the

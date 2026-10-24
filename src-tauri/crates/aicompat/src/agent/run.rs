@@ -126,7 +126,9 @@ where
                 }
                 let remaining = max_steps - step_index - 1;
                 let count = calls.len();
-                let settled = count > 0 && outputs.iter().all(|output| output.settled);
+                let settled = count > 0
+                    && outputs.iter().all(|output| output.settled)
+                    && !(count == 1 && outputs[0].settles_with_others);
                 for (index, (call, output)) in calls.iter().zip(outputs).enumerate() {
                     let AgentTurn::ToolCall { call_id, .. } = call else {
                         continue;

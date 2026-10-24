@@ -54,5 +54,5 @@ Compare these facts:
 - Invent a fact to compare against; the library describes the canonical state.
 
 ## Deliver
-- One add_comment per conflict, pinned to the passage, naming the library entry or the file and passage where the other version is.
+- One comment per conflict (all in one add_comment call), pinned to the passage, naming the library entry or the file and passage where the other version is.
 - Reply: a count by kind and the most serious conflict, with no rewriting advice unless asked.

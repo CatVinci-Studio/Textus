@@ -784,7 +784,7 @@ async function launch(page: Page, options: Launch) {
       theme: "light",
       themeId: "default",
       aiProvider: "anthropic",
-      agentDefaultMode: "revise",
+      agentDefaultMode: "write",
       enableCompletion: false,
       enableEditAnimation: false,
       ...options.settings,

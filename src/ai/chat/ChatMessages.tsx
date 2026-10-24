@@ -17,7 +17,8 @@ import { ThoughtRow, type ThoughtRowLabels } from "./ThoughtRow";
 import { isProposalTool, parseToolProposal } from "./proposal";
 import { parseUserMessage } from "./user-message";
 import { refusedProposalIds } from "../revision/proposal-status";
-import { classifyAiError, type AiErrorKind } from "../error-messages";
+import type { AiErrorKind } from "../error-messages";
+import { ErrorRow } from "./ErrorRow";
 import type { PendingSentence } from "../revision/pending-edit-plugin";
 import { FlipOnChange } from "../../ui/flip";
 import "../revision/pending-picture.css";
@@ -29,7 +30,7 @@ import {
 } from "./MemoryChip";
 import { ProposalCard, notMadeLine } from "./ProposalCard";
 import { ProposalGroup, proposalRuns } from "./ProposalGroup";
-import { CommentCard, parseComment } from "./CommentCard";
+import { CommentCard, CommentGroup, noteRunsOf } from "./CommentCard";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { memoryRunsOf } from "./memory-pass";
 
@@ -82,6 +83,9 @@ export interface ChatMessagesLabels
   /** An add_comment card's title and jump-to-passage link. */
   commentTitle: string;
   commentLocate: string;
+  /** "{n} notes", heading a reply's notes shown as one card. */
+  commentCount: string;
+  commentGroupMore: string;
   /** Plain-language help per kind of provider failure (ErrorRow). */
   aiErrors: Record<AiErrorKind, string>;
   /** A generate_image card's kind, and the line for a picture that wasn't
@@ -286,6 +290,9 @@ export function ChatMessages({
     return { refused, runs: proposalRuns(shown, parsedProposals, refused) };
   }, [shown, parsedProposals]);
   const inRun = new Set([...runs.values()].flatMap((run) => run.slice(1)));
+  // A reply's notes, one call or several in a row, as one card under its
+  // first call (an empty list under the others).
+  const noteRuns = noteRunsOf(shown, noteNumber);
   const imageCalls = useMemo(
     () =>
       new Map(
@@ -415,14 +422,26 @@ export function ChatMessages({
           );
         }
         if (turn.kind === "ToolCall" && turn.name === "add_comment") {
-          const comment = parseComment(turn.arguments);
-          if (comment) {
+          const run = noteRuns.get(turn.call_id);
+          if (run) {
             commentIds.add(turn.call_id);
+            if (run.length === 0) return null;
+            if (run.length === 1)
+              return (
+                <CommentCard
+                  key={i}
+                  comment={run[0].comment}
+                  num={run[0].num}
+                  reveal={reveal}
+                  style={style}
+                  labels={labels}
+                  onLocateText={onLocateText}
+                />
+              );
             return (
-              <CommentCard
+              <CommentGroup
                 key={i}
-                comment={comment}
-                num={noteNumber?.(turn.call_id) ?? null}
+                items={run}
                 reveal={reveal}
                 style={style}
                 labels={labels}
@@ -505,6 +524,7 @@ export function ChatMessages({
               text: withoutCitationMarkers(streaming.text, true),
             }}
             labels={labels}
+            live
           />
         </div>
       )}
@@ -542,41 +562,5 @@ export function ChatMessages({
         />
       )}
     </>
-  );
-}
-
-/** The error row, with a retry button when the failed send is resendable
- *  (`onRetry` null otherwise). Shared with ChatBody's quick variant. */
-export function ErrorRow({
-  error,
-  retryLabel,
-  onRetry,
-  explanations,
-}: {
-  error: string;
-  retryLabel: string;
-  onRetry: (() => void) | null;
-  /** What to do, per recognized kind of failure (error-messages.ts). */
-  explanations?: Partial<Record<AiErrorKind, string>>;
-}) {
-  const kind = classifyAiError(error);
-  const explanation = kind ? explanations?.[kind] : undefined;
-  return (
-    <div className="agent-error">
-      {explanation && (
-        <div className="agent-error-explanation">{explanation}</div>
-      )}
-      <div className={explanation ? "agent-error-detail" : undefined}>
-        {error}
-      </div>
-      {onRetry && (
-        <button
-          className="inline-chat-action agent-error-retry"
-          onClick={onRetry}
-        >
-          {retryLabel}
-        </button>
-      )}
-    </div>
   );
 }

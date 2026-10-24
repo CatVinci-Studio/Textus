@@ -242,11 +242,11 @@ fn scenarios() -> Vec<Scenario> {
             ui: "zh",
             seed: Vec::new(),
             sessions: vec![
-                rejecting(session(AgentMode::Revise, ESSAY, &["把这段改得更有文采一点。"])),
-                session(AgentMode::Revise, ESSAY, &[
+                rejecting(session(AgentMode::Write, ESSAY, &["把这段改得更有文采一点。"])),
+                session(AgentMode::Write, ESSAY, &[
                     "还是太华丽了，我写东西喜欢朴素一点，不要用那些形容词堆起来的句子。再改一次。",
                 ]),
-                session(AgentMode::Revise, ESSAY, &["帮我把这段扩写一下，多写点老城区的细节。"]),
+                session(AgentMode::Write, ESSAY, &["帮我把这段扩写一下，多写点老城区的细节。"]),
             ],
             checks: vec![
                 ("the plain style is kept", |e| e.remembered(&["朴素", "平实", "华丽", "形容词", "plain"]) >= 1),
@@ -260,7 +260,7 @@ fn scenarios() -> Vec<Scenario> {
             ui: "zh",
             seed: Vec::new(),
             sessions: vec![
-                session(AgentMode::Revise, MEMO, &[
+                session(AgentMode::Write, MEMO, &[
                     "这段改正式一点，要发给老板。",
                     "在最后加一句：有问题可以打我电话 138 1234 5678，或者到徐汇区漕溪北路 88 号找我。",
                 ]),
@@ -277,10 +277,10 @@ fn scenarios() -> Vec<Scenario> {
             ui: "en",
             seed: Vec::new(),
             sessions: vec![
-                session(AgentMode::Revise, MEMO, &[
+                session(AgentMode::Write, MEMO, &[
                     "From now on, never use semicolons in anything you write for me. Tighten this.",
                 ]),
-                session(AgentMode::Revise, MEMO, &[
+                session(AgentMode::Write, MEMO, &[
                     "Actually, forget the no-semicolons thing - semicolons are fine again. Add a sentence about the pricing page.",
                 ]),
             ],
@@ -300,7 +300,7 @@ fn scenarios() -> Vec<Scenario> {
             ui: "en",
             seed: Vec::new(),
             sessions: vec![
-                session(AgentMode::Revise, PRODUCT, &[
+                session(AgentMode::Write, PRODUCT, &[
                     "Add a line saying the app now opens folders. And it's Textus, one word, capital T only - people keep writing TextUs.",
                 ]),
                 session(AgentMode::Write, PRODUCT, &["Add a short paragraph thanking the beta testers."]),
@@ -321,8 +321,8 @@ fn scenarios() -> Vec<Scenario> {
             ui: "zh",
             seed: Vec::new(),
             sessions: vec![
-                session(AgentMode::Revise, NOTICE_ZH, &["把里面的“您”都改成“你”，我们内部发的东西不用“您”。"]),
-                session(AgentMode::Revise, NOTICE_ZH_2, &["这个也是，“您”改成“你”。"]),
+                session(AgentMode::Write, NOTICE_ZH, &["把里面的“您”都改成“你”，我们内部发的东西不用“您”。"]),
+                session(AgentMode::Write, NOTICE_ZH_2, &["这个也是，“您”改成“你”。"]),
                 session(AgentMode::Write, "", &["写一段内部通知：周五下午两点到四点停电，请大家提前保存文件。"]),
             ],
             checks: vec![
@@ -395,7 +395,7 @@ fn scenarios() -> Vec<Scenario> {
             ui: "en",
             seed: Vec::new(),
             sessions: vec![
-                session(AgentMode::Revise, GUIDE_EN, &[
+                session(AgentMode::Write, GUIDE_EN, &[
                     "Fix the typos here. Also our style guide says email, never e-mail, and sign-up with a hyphen when it's a noun.",
                 ]),
                 session(AgentMode::Write, GUIDE_EN, &["Add a paragraph saying people can now sign up with their email address alone, on the new sign-up page."]),

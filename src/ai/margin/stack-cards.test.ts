@@ -97,4 +97,23 @@ describe("stackCards", () => {
     expect(new Set(placed.map((p) => p.top))).toEqual(new Set([0]));
     expect(Math.max(...placed.map((p) => p.drift))).toBeLessThan(GROUP_DRIFT);
   });
+
+  it("groups a crowded run a paragraph at a time, each at its paragraph", () => {
+    // Forty words glossed over three paragraphs, the third with one: as
+    // one run, they were one chip beside the first paragraph.
+    const placed = [
+      ...Array.from({ length: 20 }, (_, i) => ({ top: i * 4, block: 0 })),
+      ...Array.from({ length: 19 }, (_, i) => ({ top: 100 + i * 4, block: 1 })),
+      { top: 200, block: 2 },
+    ].map(({ top, block }, i) => ({ ...card(`n${i}`, top), block }));
+    stackCards(placed, tall);
+    const groups = [...new Set(placed.map((p) => p.group))];
+    expect(groups).toEqual(["n0", "n20", null]);
+    // Each paragraph's chip at its paragraph, the one below it pushed no
+    // further than a chip.
+    expect(placed[0].top).toBe(0);
+    expect(placed[20].top).toBe(100);
+    expect(placed[39].top).toBe(200);
+    expect(placed[39].chip).toBe(true);
+  });
 });

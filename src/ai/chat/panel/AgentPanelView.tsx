@@ -15,7 +15,7 @@ export interface AgentPanelLabels {
   close: string;
   /** The two tabs: the conversation, and what the AI keeps (MemoryView). */
   tabChat: string;
-  tabMemory: string;
+  tabProject: string;
 }
 
 export type AgentPanelTab = "chat" | "memory";
@@ -73,7 +73,7 @@ export function AgentPanelView({
         width: on.offsetWidth,
         transform: `translateX(${on.offsetLeft - 2}px)`,
       });
-  }, [tab, labels.tabChat, labels.tabMemory]);
+  }, [tab, labels.tabChat, labels.tabProject]);
   const tabButton = (id: AgentPanelTab, label: string) => (
     <button
       type="button"
@@ -108,7 +108,7 @@ export function AgentPanelView({
         >
           <span className="agent-panel-tabs-thumb" style={thumb} />
           {tabButton("chat", labels.tabChat)}
-          {memory && tabButton("memory", labels.tabMemory)}
+          {memory && tabButton("memory", labels.tabProject)}
         </div>
         <div className="agent-panel-actions">
           {history}

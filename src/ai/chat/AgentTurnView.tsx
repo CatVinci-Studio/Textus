@@ -67,9 +67,12 @@ export function toolActivityText(
 export function AgentTurnView({
   turn,
   labels,
+  live = false,
 }: {
   turn: AgentTurn;
   labels: AgentTurnLabels;
+  /** An assistant reply still streaming in (MarkdownText's `live`). */
+  live?: boolean;
 }) {
   switch (turn.kind) {
     case "User":
@@ -83,7 +86,7 @@ export function AgentTurnView({
     case "Assistant":
       return (
         <div className="agent-message agent-message-assistant">
-          <MarkdownText text={turn.text} />
+          <MarkdownText text={turn.text} live={live} />
           {turn.sources && turn.sources.length > 0 && (
             <SourceList sources={turn.sources} label={labels.sources} />
           )}

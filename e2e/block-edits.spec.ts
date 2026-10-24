@@ -100,10 +100,16 @@ test("an edit by block shows while it streams, before the call completes", async
     JSON.stringify({ action: "replace", block: ids[1], text }),
   );
   await ask(page);
-  // Not complete yet (held), and already in the document - and the panel
-  // says what is coming, rather than going still.
-  await expect(page.locator(editor)).toContainText("until ten");
+  // Not complete yet (held): the paragraph it rewrites is marked where it
+  // stands, and the panel and the review bar say what is coming, rather
+  // than going still - the paragraph lands once it is written whole.
+  await expect(page.locator(`${editor} .pending-reading`)).toContainText(
+    "opened late",
+  );
   await expect(page.locator(".agent-panel-view .agent-thinking")).toHaveText(
+    /Writing the edit/,
+  );
+  await expect(page.locator(".review-bar-working")).toHaveText(
     /Writing the edit/,
   );
   expect(
@@ -137,13 +143,17 @@ test("a few words named inside a block change in it as they stream", async ({
     }),
   );
   await ask(page);
-  await expect(page.locator(editor)).toContainText("Pupils");
+  // Held after its text is whole, before the step ends: already in.
+  await expect(
+    page.locator(`${editor} .pending-sentence-new`, { hasText: "Pupils" }),
+  ).toBeVisible();
   await page.evaluate(() => {
     (window as { __release?: boolean }).__release = true;
   });
   await expect(page.locator(".agent-panel-view")).toContainText(
     "Tightened it.",
   );
+  await expect(page.locator(editor)).toContainText("Pupils");
 });
 
 // Edit animation off, or the system's Reduce motion: no typewriter, but
@@ -192,7 +202,7 @@ for (const [name, setup] of [
     await expect(page.locator(editor)).not.toContainText("opened late");
   });
 
-test("a light polish shows where it is: the original sentence it has reached is marked as it goes", async ({
+test("a light polish shows where it is: the paragraph it is rewriting is marked until it lands", async ({
   page,
 }) => {
   const doc =
@@ -210,16 +220,18 @@ test("a light polish shows where it is: the original sentence it has reached is 
     JSON.stringify({ action: "replace", block: ids[1], text }),
   );
   await ask(page);
-  // Held on its last sentence, which repeats the original word for word:
-  // nothing new shows for it, but the cursor stands on it.
+  // Held on its last sentence: nothing of the paragraph shows until it is
+  // written whole, but the cursor stands on it, all of it.
   const reading = page.locator(`${editor} .pending-reading`);
-  await expect(reading).toHaveText("Some stayed until ten.");
-  await expect(page.locator(editor)).toContainText("Pupils");
+  await expect(reading).toHaveText(
+    "The library opened late on Wednesdays. Students came most. Some stayed until ten.",
+  );
   await page.evaluate(() => {
     (window as { __release?: boolean }).__release = true;
   });
   await expect(page.locator(".agent-panel-view")).toContainText(
     "Tightened it.",
   );
+  await expect(page.locator(editor)).toContainText("Pupils");
   await expect(reading).toHaveCount(0);
 });

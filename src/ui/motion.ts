@@ -15,7 +15,10 @@ export type DurationToken =
   | "--dur-base"
   | "--dur-medium"
   | "--dur-slow"
-  | "--dur-sheet";
+  | "--dur-sheet"
+  | "--dur-linger"
+  | "--dur-stagger"
+  | "--dur-cascade";
 
 export type EasingToken =
   | "--ease-standard"
@@ -35,6 +38,9 @@ const DURATIONS: Record<DurationToken, number> = {
   "--dur-medium": 250,
   "--dur-slow": 320,
   "--dur-sheet": 450,
+  "--dur-linger": 1600,
+  "--dur-stagger": 18,
+  "--dur-cascade": 700,
 };
 
 /** The cubic fallbacks: what an engine without linear() runs (motion.css
@@ -148,6 +154,16 @@ export function duration(token: DurationToken): number {
   const value = parseFloat(raw);
   if (!Number.isFinite(value)) return DURATIONS[token];
   return raw.endsWith("ms") ? value : value * 1000;
+}
+
+/** A length token in pixels, as the stylesheet currently has it (reduced
+ *  motion sets the distances to 0): --motion-distance-sm / -md. */
+export function length(
+  token: "--motion-distance-sm" | "--motion-distance-md",
+): number {
+  const value = parseFloat(readToken(token));
+  if (Number.isFinite(value)) return value;
+  return token === "--motion-distance-sm" ? 4 : 8;
 }
 
 /** An easing token's current value: the linear() spring where the engine

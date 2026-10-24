@@ -8,6 +8,8 @@ import {
 } from "./editor-extensions";
 import type { DocumentReporting } from "./useDocumentReporting";
 import { effectiveRevisionDisplay } from "../ai/revision/revision-display";
+import { usePhoneLayout } from "../ui/usePhoneLayout";
+import { useLatest } from "../utils/hooks/useLatest";
 import type { ReviewNote } from "../ai/margin/review-notes-plugin";
 import type { Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
@@ -76,6 +78,7 @@ export function useTextusEditor({
   // Whether a rewrite's replacements are drawn in the text (no margin) -
   // ReviewMargin decides, the pending-edit plugin reads it.
   const noMarginRef = useRef(false);
+  const phoneRef = useLatest(usePhoneLayout());
   // The review notes' plugin callbacks, bridged like the pending edits'.
   const reviewNotesRef = useRef<{
     onChange: (notes: ReviewNote[]) => void;
@@ -127,6 +130,7 @@ export function useTextusEditor({
             effectiveRevisionDisplay(
               settingsRef.current.revisionDisplay,
               !noMarginRef.current,
+              phoneRef.current,
             ),
         },
         // setQuickAskEl is a useState setter - always stable, no ref

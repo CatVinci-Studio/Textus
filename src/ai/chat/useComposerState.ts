@@ -11,7 +11,7 @@ import { ai } from "../../platform/ipc";
 import { errorText } from "../../utils/error-text";
 import { useActiveProvider, useWebSearchStatus } from "../provider-catalog";
 import type { AgentMode } from "../../settings/SettingsContext";
-import { fitMode, initialMode, rememberMode } from "./last-mode";
+import { initialMode, rememberMode } from "./last-mode";
 import { deepThinkingOn, useCanThinkDeeper } from "./deep-thinking";
 import { useLatest } from "../../utils/hooks/useLatest";
 import type {
@@ -126,19 +126,15 @@ export function useComposerMode({
   tourMode,
   carryMode,
   defaultMode,
-  offeredModes,
   onModeChange,
 }: {
   tourMode: AgentMode | null;
   carryMode: boolean;
   defaultMode: AgentMode;
-  offeredModes: readonly AgentMode[];
   onModeChange: ChatComposerProps["onModeChange"];
 }) {
   const [mode, setModeState] = useState<AgentMode>(
-    () =>
-      tourMode ??
-      fitMode(carryMode ? initialMode(defaultMode) : defaultMode, offeredModes),
+    () => tourMode ?? (carryMode ? initialMode(defaultMode) : defaultMode),
   );
   useEffect(() => {
     if (tourMode) setModeState(tourMode);

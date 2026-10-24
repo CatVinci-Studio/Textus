@@ -36,7 +36,7 @@ Possible issues get underlined. Hover over one, or move the caret into it, to se
 The full conversation lives in a panel on the right side of the editor. Open or close it with the **Textus AI** button (the quill) at the right end of the window bar or <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **One conversation per document**: each tab has its own conversation, and switching tabs switches the panel with it. **New conversation** in the panel's header starts over (with edits still undecided, it asks first).
-- **Modes**: the composer has three. **Write** drafts new text into the document (a continuation, a new paragraph or section) and only ever adds: with text selected, it writes after the selection. **Review** answers, discusses and leaves comments without changing anything. **Revise** changes the text that is there. Every change Write or Revise makes is a proposal you accept or reject. The panel starts in the mode set under **Settings > Textus AI > Textus AI Chat > Default mode**.
+- **Modes**: the composer has two. **Write** works on the document: it drafts new text (a continuation, a new paragraph or section) and changes the text that is there (a rewrite, a translation, a cut). With text selected, a change to it replaces it and more text goes after it. **Review** answers, discusses and leaves comments without changing anything. Every change Write makes is a proposal you accept or reject. The panel starts in the mode set under **Settings > Textus AI > Textus AI Chat > Default mode**.
 - **@-mentions**: type `@` in the input to pick a text file from the project folder; it is attached to the message.
 - **Attach files**: the **+** button on the left of the input attaches a PDF, Word document, PowerPoint deck, spreadsheet, EPUB e-book, RTF or HTML file, image, or plain text file to that message. Everything except images is extracted to text locally and travels inside the message; images are sent as real images to providers that can see (ones that can't say so up front rather than dropping them silently). A long file is sent only in part, and the chip says "(shortened)" when that happens.
 - **Web search**: the magnifier button next to the input lets Textus AI search the web when a request needs it — see **7. Web search** below.
@@ -48,7 +48,7 @@ The full conversation lives in a panel on the right side of the editor. Open or 
 
 ### 4. Quick Ask
 
-Press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> (or right-click > Ask AI…) to open a small chat bar right below the paragraph you are in. It sits in the document, pushing the text below it down rather than covering it. If text was selected when you opened it, the selection is included. Quick Ask opens in **Revise** mode, because it is usually opened on a passage to change it ("shorten this"); Write and Review are one click away in the mode picker.
+Press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> (or right-click > Ask AI…) to open a small chat bar right below the paragraph you are in. It sits in the document, pushing the text below it down rather than covering it. If text was selected when you opened it, the selection is included. Quick Ask opens in **Write** mode, because it is usually opened on a passage to change it ("shorten this"); Review is one click away in the mode picker.
 
 - **The shortcut again**: pressing <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> while the bar is open moves the cursor to its input; pressing it once more from the input closes it. <kbd>Esc</kbd> anywhere in the bar closes it too, and the cursor goes back to the document. With edits still undecided, closing (or starting a new conversation) asks first.
 - Quick Ask keeps its own short conversation, separate from the panel's and not saved to History. It opens even while the panel is open. **Continue in the full conversation** (the button in its corner) hands the exchange to the AI panel, where it carries on and is saved. Turn on **Settings > Textus AI > Advanced > Open full conversations in a separate window** to send it to a separate window instead.
@@ -67,7 +67,7 @@ The chat never writes to your document directly. When you ask a tool-calling pro
 
 Textus AI can make pictures for your document. **Settings > Textus AI > Image service** follows your chat provider by default: signed in with ChatGPT, pictures come out of your plan's own allowance (marked experimental - it is not a published API); with another provider that makes pictures, its own, with the same key. A provider that makes none offers no pictures until you choose a service - OpenAI, Google Gemini, Doubao (Volcengine), Alibaba Qwen, Zhipu GLM, SiliconFlow, or any OpenAI-compatible endpoint - and then its model.
 
-- Ask in Write or Revise mode ("add a picture of the harbour after the first paragraph"), or right-click a paragraph and choose **Illustrate this paragraph**.
+- Ask in Write mode ("add a picture of the harbour after the first paragraph"), or right-click a paragraph and choose **Illustrate this paragraph**.
 - Writing and pictures come together: the text appears as it is written, and each picture shows as a softly moving frame in its place until it is ready. You can accept it before it is finished; it is saved when it arrives.
 - Nothing is saved until you accept: then the picture is stored the way **Settings > Images** says for a pasted image and inserted as a Markdown image. Reject leaves nothing behind.
 - To change a picture, right-click it and choose **Change this picture with Textus AI…**, then say how. The new one is proposed in its place; once you accept it, you are asked whether the old file should go to the Trash - it stays unless you say so.
@@ -92,7 +92,7 @@ Textus AI learns about you and your work from a few plain Markdown files, not fr
 | **Style profile** | How you write | `.textus/style.md` |
 | **Library** | Facts about people, places and terms | `.textus/library/` |
 | **Writing instructions** | Standing rules for every conversation | `agent.md` — global, and per project |
-| **AI remembered** | What Textus AI keeps from your conversations | `.textus/memory/`, and `memory/` in the global config folder |
+| **Memory** | What Textus AI keeps from your conversations | `.textus/memory/`, and `memory/` in the global config folder |
 | **Skills** | Reusable instructions you call with `/name` | `skills/` — global, and per project |
 | **Global config folder** | What applies to every document | The app's settings folder |
 
@@ -190,14 +190,14 @@ Writing instructions apply to conversations only. Completion doesn't read them; 
 
 ### What Textus AI remembers
 
-**Textus AI remembers what you ask for and how you write**, without you writing a file. When you tell it something that should hold beyond one request — "always use British spelling", "no em dashes", a correction you had to make twice — or a fact about your work, such as who a character is, it keeps it and follows it in later conversations. Each time, a line under its reply says what it remembered and where: **Undo** takes it back, and **Make personal** or **Make project** moves it.
+**Textus AI remembers what you ask for and how you write**, without you writing a file. When you tell it something that should hold beyond one request — "always use British spelling", "no em dashes", a correction you had to make twice — or a fact about your work, such as who a character is, it keeps it and follows it in later conversations. Each time, a line under its reply says what it remembered and where: **Undo** takes it back, and **Make global** or **Make project** moves it.
 
 - **This project**: what is about this work, in `.textus/memory/`; facts about people, places and terms go into the library.
 - **For all projects**: your general habits, in `memory/` in the global config folder. Without a project folder, everything goes here.
 
-The AI panel's **Memory** tab lists it all under **AI remembered**, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and the Memory tab says so. **Settings > Textus AI > Remember automatically** turns it off.
+The AI panel's **Project** tab lists it all under **Memory**, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and the Project tab says so. **Settings > Textus AI > Remember automatically** turns it off.
 
-**It also learns from your revision choices.** When you turn down the same kind of change several times — 「」 made “”, one word swapped for another, sentences split, an Oxford comma added — Textus AI offers, once the review is done, to remember it as a requirement: **Remember** saves it under **AI remembered**, **Not now** waits for more, and **Never ask for this** stops asking about that kind. It asks at most once a day, and only your click saves anything, also with Remember automatically off. What it counts is a short note of the kinds of change you accepted or rejected, kept on this computer beside your memories and never sent.
+**It also learns from your revision choices.** When you turn down the same kind of change several times — 「」 made “”, one word swapped for another, sentences split, an Oxford comma added — Textus AI offers, once the review is done, to remember it as a requirement: **Remember** saves it under **Memory**, **Not now** waits for more, and **Never ask for this** stops asking about that kind. It asks at most once a day, and only your click saves anything, also with Remember automatically off. What it counts is a short note of the kinds of change you accepted or rejected, kept on this computer beside your memories and never sent.
 
 ### Skills (/name)
 

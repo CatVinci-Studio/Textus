@@ -24,6 +24,7 @@ pub(crate) use settle::*;
 
 mod context;
 mod history;
+pub(crate) mod lists;
 mod prompt;
 pub(crate) use context::*;
 pub(crate) use history::*;
@@ -296,7 +297,13 @@ async fn ai_agent_message_inner(
                 let inline = inline.as_ref();
                 let (document, conventions) = (&document, &conventions);
                 async move {
-                    let sink = |e: ProviderEvent<'_>| forward(&channel, web, inline, e);
+                    // Edits and comments as lists to the model, one call
+                    // per item past it (lists.rs).
+                    let lists = lists::ListStream::default();
+                    let sink = |e: ProviderEvent<'_>| {
+                        lists.feed(e, &|e| forward(&channel, web, inline, e))
+                    };
+                    let turns = lists::join_calls(&turns);
                     let result = agent.step(instructions, &turns, tool_specs, &sink).await;
                     // Native search citations numbered (WebPlan::finish_step).
                     result.map(|(step, _)| {

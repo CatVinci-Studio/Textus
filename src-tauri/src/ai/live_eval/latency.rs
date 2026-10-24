@@ -1,7 +1,7 @@
 //! Where a request keeps the user waiting: each case prints the stream's
 //! timeline (harness::Timeline) - when thinking ends, when the edit's
 //! arguments start, how long the anchor takes before the preview can be
-//! placed - for a rewrite in Revise and a continuation in Write, with
+//! placed - for a rewrite and a continuation in Write, with
 //! Deep thinking off and on.
 //!
 //!   TEXTUS_EVAL_TIMELINE=1 cargo test --lib live_eval::latency -- --ignored --nocapture --test-threads=1
@@ -61,6 +61,12 @@ fn run_on(
                 harness::clip(args["anchor"].as_str().unwrap_or(""), 30),
                 harness::clip(args["text"].as_str().unwrap_or(""), 50)
             );
+            eprintln!(
+                "    block {} last_block {} -> {}",
+                args["block"],
+                args["last_block"],
+                harness::clip(call["result"].as_str().unwrap_or(""), 400)
+            );
             // The pictures it carries, as placed (textus-generated:ID).
             for line in args["text"].as_str().unwrap_or("").lines() {
                 if line.trim_start().starts_with("![") {
@@ -76,12 +82,12 @@ fn run_on(
 #[ignore = "live: calls the model"]
 fn revise_whole_document() {
     run(
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Auto,
         "帮我把全文润色一下，语气更像新闻报道",
     );
     run(
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Deep,
         "帮我把全文润色一下，语气更像新闻报道",
     );
@@ -91,12 +97,12 @@ fn revise_whole_document() {
 #[ignore = "live: calls the model"]
 fn revise_one_paragraph() {
     run(
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Auto,
         "第二段写得啰嗦，帮我精简",
     );
     run(
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Deep,
         "第二段写得啰嗦，帮我精简",
     );
@@ -123,7 +129,7 @@ fn redo_a_picture() {
     run_on(
         &doc,
         Some(&pictures),
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Auto,
         "把这张图改成下雨的夜晚，窗户透出暖光",
     );
@@ -141,9 +147,40 @@ fn translate_a_story_with_its_picture() {
     run_on(
         doc,
         Some(&pictures),
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Auto,
         "翻译为英文，并且图片也换外国女孩",
+    );
+}
+
+/// The standard flow's last step (1.2.1), on the story its first two
+/// steps wrote: the hard words of an English story glossed in Chinese, each a comment of its own. Sol pinned one
+/// comment for two words and ended the request there, the rest promised
+/// in its reply.
+#[test]
+#[ignore = "live: calls the model"]
+fn review_glosses_every_hard_word() {
+    run_on(
+        include_str!("fixtures/module-seven.md"),
+        None,
+        AgentMode::Review,
+        ThinkingLevel::Auto,
+        "把文中比较难的英文单词都批注出来，写上中文意思。",
+    );
+}
+
+/// The same story translated alone, with an image model: its picture is
+/// not redone - only a picture the user asks to change is (1.2.1).
+#[test]
+#[ignore = "live: calls the model"]
+fn translate_a_story_keeping_its_picture() {
+    let pictures = crate::ai::images::ImageRun::offline(2);
+    run_on(
+        include_str!("fixtures/borrowing-rain.md"),
+        Some(&pictures),
+        AgentMode::Write,
+        ThinkingLevel::Auto,
+        "翻译为英文",
     );
 }
 
@@ -155,7 +192,7 @@ fn translate_a_story() {
     run_on(
         include_str!("fixtures/borrowing-rain.md"),
         None,
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Auto,
         "翻译为英文",
     );

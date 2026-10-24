@@ -33,6 +33,7 @@ mod settings;
 #[cfg(desktop)]
 mod tab_drag;
 mod walk;
+mod window_frame;
 
 use ai::agent::ai_agent_message;
 use ai::cancel::ai_cancel;
@@ -129,13 +130,14 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                     app.exit(0);
                 }
             }
-            // Nothing else remembers a window's size between launches (the
-            // undecorated Linux window gets no help from the desktop either).
-            // Close, not Destroyed - by then the size can no longer be read.
+            // Nothing else remembers a window's size and place between
+            // launches (the undecorated Linux window gets no help from the
+            // desktop either). Close, not Destroyed - by then they can no
+            // longer be read.
             if matches!(event, tauri::WindowEvent::CloseRequested { .. })
                 && commands::chat_window::is_editor_window(window.label())
             {
-                commands::prefs::remember_editor_window_size(app, window);
+                commands::prefs::remember_editor_window(app, window);
             }
         })
 }
@@ -331,6 +333,8 @@ pub fn run() {
             crate::ai::next_message::suggest_next_message,
             crate::ai::memory::revision_choices_read,
             crate::ai::memory::revision_choices_write,
+            crate::ai::kept_proposals::kept_proposals_read,
+            crate::ai::kept_proposals::kept_proposals_write,
             pick_attachment_file,
             set_provider_api_key,
             provider_api_key_status,
@@ -403,11 +407,17 @@ pub fn run() {
             #[cfg(desktop)]
             commands::tree_ops::tree_move_entry,
             #[cfg(desktop)]
+            commands::tree_ops::tree_rename_entry,
+            #[cfg(desktop)]
+            commands::tree_ops::tree_trash_entry,
+            #[cfg(desktop)]
             commands::recents::add_recent_folder,
             #[cfg(desktop)]
             menu::list_recent_folders,
             #[cfg(desktop)]
             open_paths,
+            #[cfg(desktop)]
+            open_path_in_new_window,
             #[cfg(desktop)]
             menu::trigger_menu_item,
             #[cfg(desktop)]
@@ -458,6 +468,8 @@ pub fn run() {
             commands::default_editor::set_default_editor,
             #[cfg(desktop)]
             commands::update::check_for_update,
+            #[cfg(desktop)]
+            commands::update::release_instance,
             #[cfg(desktop)]
             detect_pandoc,
             #[cfg(desktop)]

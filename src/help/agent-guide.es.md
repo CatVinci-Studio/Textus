@@ -36,7 +36,7 @@ Los posibles problemas aparecen subrayados. Pasa el puntero sobre uno, o coloca 
 La conversación completa está en un panel a la derecha del editor. Ábrelo o ciérralo con el botón **Textus AI** (la pluma) del extremo derecho de la barra de la ventana o con <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **Una conversación por documento**: cada pestaña tiene su propia conversación, y al cambiar de pestaña el panel cambia con ella. **Nueva conversación**, en la cabecera del panel, empieza de cero (si quedan cambios por revisar, pregunta antes).
-- **Modos**: el cuadro de texto ofrece tres. **Escribir** redacta texto nuevo en el documento (una continuación, un párrafo o una sección nuevos) y solo añade: con texto seleccionado, escribe a continuación de la selección. **Revisar** responde, comenta y deja comentarios sin cambiar nada. **Editar** cambia el texto que ya está. Cada cambio de Escribir o Editar es una propuesta que aceptas o rechazas. El panel empieza en el modo elegido en **Ajustes > Textus AI > Chat de Textus AI > Modo predeterminado**.
+- **Modos**: el cuadro de texto ofrece dos. **Escribir** trabaja en el documento: redacta texto nuevo (una continuación, un párrafo o una sección nuevos) y cambia el que ya está (reescribir, traducir, recortar). Con texto seleccionado, un cambio de ese texto lo sustituye y el texto nuevo va a continuación. **Revisar** responde, comenta y deja comentarios sin cambiar nada. Cada cambio de Escribir es una propuesta que aceptas o rechazas. El panel empieza en el modo elegido en **Ajustes > Textus AI > Chat de Textus AI > Modo predeterminado**.
 - **Menciones con @**: escribe `@` en el cuadro de texto para elegir un archivo de texto de la carpeta del proyecto; se adjunta al mensaje.
 - **Adjuntar archivos**: el botón **+**, a la izquierda del cuadro de texto, adjunta a ese mensaje un PDF, un documento de Word, una presentación de PowerPoint, una hoja de cálculo, un libro EPUB, un archivo RTF o HTML, una imagen o un archivo de texto sin formato. Todo salvo las imágenes se convierte en texto en el propio dispositivo y viaja dentro del mensaje; las imágenes se envían como imágenes reales a los proveedores que pueden verlas (los que no pueden lo avisan de antemano en lugar de descartarlas sin decir nada). Un archivo largo solo se envía en parte, y en ese caso su etiqueta indica «(recortado)».
 - **Búsqueda web**: el botón de la lupa junto al campo de texto deja que Textus AI busque en la web cuando una petición lo necesite; consulta **7. Búsqueda web** más abajo.
@@ -48,7 +48,7 @@ La conversación completa está en un panel a la derecha del editor. Ábrelo o c
 
 ### 4. Pregunta rápida
 
-Pulsa <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> (o haz clic con el botón derecho > Preguntar a la IA…) para abrir una pequeña barra de chat justo debajo del párrafo en el que estás. Se coloca dentro del documento y empuja hacia abajo el texto que hay debajo en lugar de taparlo. Si había texto seleccionado al abrirla, la selección se incluye. Pregunta rápida se abre en modo **Editar**, porque normalmente se abre sobre un fragmento para cambiarlo («acorta esto»); Escribir y Revisar están a un clic en el selector de modo.
+Pulsa <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> (o haz clic con el botón derecho > Preguntar a la IA…) para abrir una pequeña barra de chat justo debajo del párrafo en el que estás. Se coloca dentro del documento y empuja hacia abajo el texto que hay debajo en lugar de taparlo. Si había texto seleccionado al abrirla, la selección se incluye. Pregunta rápida se abre en modo **Escribir**, porque normalmente se abre sobre un fragmento para cambiarlo («acorta esto»); Revisar está a un clic en el selector de modo.
 
 - **El atajo otra vez**: si pulsas <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> con la barra abierta, el cursor pasa a su cuadro de texto; si vuelves a pulsarlo desde ahí, la barra se cierra. <kbd>Esc</kbd> en cualquier parte de la barra también la cierra, y el cursor vuelve al documento. Si quedan cambios por revisar, la barra pregunta antes de cerrarse o de empezar una conversación nueva.
 - Pregunta rápida tiene su propia conversación breve, separada de la del panel, que no se guarda en el historial. Se abre aunque el panel esté abierto. **Continuar en la conversación completa** (el botón de su esquina) pasa el intercambio al panel de IA, donde sigue y se guarda. Activa **Ajustes > Textus AI > Avanzado > Abrir las conversaciones completas en una ventana aparte** para enviarlo a una ventana aparte.
@@ -67,7 +67,7 @@ El chat nunca escribe directamente en tu documento. Si usas un proveedor que adm
 
 Textus AI puede crear una imagen para tu documento cuando eliges un **Modelo de imagen** en **Ajustes > Textus AI**. Hasta entonces es **Ninguno**, porque cada imagen cuesta un poco en el servicio. Elige un servicio y un modelo: OpenAI, Google Gemini, Doubao (Volcengine), Alibaba Qwen, Zhipu GLM, SiliconFlow o cualquier endpoint compatible con OpenAI. Si ya usas ese servicio para el chat, se usa su clave; si no, Ajustes te pide una.
 
-- Pídelo en el modo Escribir o Editar («añade una imagen del puerto después del primer párrafo»), o haz clic derecho en un párrafo y elige **Ilustrar este párrafo**.
+- Pídelo en el modo Escribir («añade una imagen del puerto después del primer párrafo»), o haz clic derecho en un párrafo y elige **Ilustrar este párrafo**.
 - La imagen llega como una propuesta en su sitio, como cualquier inserción. No se guarda nada hasta que aceptas: entonces se guarda como dice **Ajustes > Imágenes** para una imagen pegada y se inserta como imagen de Markdown. Rechazar no deja nada.
 - Si el servicio rechaza la descripción, el panel muestra el motivo que dio. Cada petición crea como mucho dos imágenes.
 
@@ -90,7 +90,7 @@ Textus AI aprende sobre ti y tu trabajo a partir de unos pocos archivos Markdown
 | **Perfil de estilo** | Cómo escribes | `.textus/style.md` |
 | **Biblioteca** | Datos sobre personas, lugares y términos | `.textus/library/` |
 | **Instrucciones de escritura** | Normas fijas para todas las conversaciones | `agent.md`, global y por proyecto |
-| **Lo que recuerda la IA** | Lo que Textus AI guarda de tus conversaciones | `.textus/memory/`, y `memory/` en la carpeta de configuración global |
+| **Memoria** | Lo que Textus AI guarda de tus conversaciones | `.textus/memory/`, y `memory/` en la carpeta de configuración global |
 | **Habilidades** | Instrucciones reutilizables que invocas con `/nombre` | `skills/`, global y por proyecto |
 | **Carpeta de configuración global** | Lo que se aplica a todos los documentos | La carpeta de ajustes de la aplicación |
 
@@ -188,14 +188,14 @@ Las instrucciones de escritura solo se aplican a las conversaciones. El autocomp
 
 ### Lo que recuerda Textus AI
 
-**Textus AI recuerda lo que le pides y cómo escribes**, sin que tengas que escribir ningún archivo. Cuando le dices algo que debe valer más allá de una petición («escribe siempre en español de España», «nada de rayas», una corrección que tuviste que hacer dos veces) o un dato sobre tu obra, como quién es un personaje, lo guarda y lo sigue en las conversaciones siguientes. Cada vez, una línea bajo su respuesta indica qué ha recordado y dónde: **Deshacer** lo retira, y **Hacer personal** o **Pasar al proyecto** lo cambia de sitio.
+**Textus AI recuerda lo que le pides y cómo escribes**, sin que tengas que escribir ningún archivo. Cuando le dices algo que debe valer más allá de una petición («escribe siempre en español de España», «nada de rayas», una corrección que tuviste que hacer dos veces) o un dato sobre tu obra, como quién es un personaje, lo guarda y lo sigue en las conversaciones siguientes. Cada vez, una línea bajo su respuesta indica qué ha recordado y dónde: **Deshacer** lo retira, y **Hacer global** o **Pasar al proyecto** lo cambia de sitio.
 
 - **Este proyecto**: lo que trata de esta obra, en `.textus/memory/`; los datos sobre personas, lugares y términos van a la biblioteca.
 - **Para todos los proyectos**: tus hábitos generales, en `memory/` dentro de la carpeta de configuración global. Sin carpeta del proyecto, todo va aquí.
 
-La pestaña **Memoria** del panel de IA lo muestra todo en **Lo que recuerda la IA**, con cuándo y en qué conversación se recordó cada cosa: **Editar** lo abre y **Eliminar** lo borra. Tus propias instrucciones de escritura prevalecen cuando ambas no coinciden, y Textus AI nunca cambia tu `agent.md` ni tu perfil de estilo. Cuando hay demasiados recuerdos para enviarlos, se omiten los más antiguos y la pestaña Memoria lo indica. **Ajustes > Textus AI > Recordar automáticamente** lo desactiva.
+La pestaña **Proyecto** del panel de IA lo muestra todo en **Memoria**, con cuándo y en qué conversación se recordó cada cosa: **Editar** lo abre y **Eliminar** lo borra. Tus propias instrucciones de escritura prevalecen cuando ambas no coinciden, y Textus AI nunca cambia tu `agent.md` ni tu perfil de estilo. Cuando hay demasiados recuerdos para enviarlos, se omiten los más antiguos y la pestaña Proyecto lo indica. **Ajustes > Textus AI > Recordar automáticamente** lo desactiva.
 
-**También aprende de tus decisiones de revisión.** Cuando rechazas varias veces el mismo tipo de cambio —「」 convertidas en “”, una palabra cambiada por otra, frases divididas, una coma de Oxford añadida—, Textus AI te ofrece, al terminar la revisión, recordarlo como requisito: **Recordar** lo guarda en **Lo que recuerda la IA**, **Ahora no** espera a tener más pruebas y **No volver a preguntar** deja de preguntar por ese tipo. Pregunta como mucho una vez al día, y solo se guarda algo cuando haces clic, también con Recordar automáticamente desactivado. Lo que cuenta es una breve nota de los tipos de cambio que aceptaste o rechazaste, guardada en este ordenador junto a tus recuerdos y nunca enviada.
+**También aprende de tus decisiones de revisión.** Cuando rechazas varias veces el mismo tipo de cambio —「」 convertidas en “”, una palabra cambiada por otra, frases divididas, una coma de Oxford añadida—, Textus AI te ofrece, al terminar la revisión, recordarlo como requisito: **Recordar** lo guarda en **Memoria**, **Ahora no** espera a tener más pruebas y **No volver a preguntar** deja de preguntar por ese tipo. Pregunta como mucho una vez al día, y solo se guarda algo cuando haces clic, también con Recordar automáticamente desactivado. Lo que cuenta es una breve nota de los tipos de cambio que aceptaste o rechazaste, guardada en este ordenador junto a tus recuerdos y nunca enviada.
 
 ### Habilidades (/nombre)
 

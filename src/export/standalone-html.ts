@@ -61,6 +61,7 @@ export const EDITOR_CHROME_SELECTOR = [
   ".heading-marker",
   ".enclosure-delimiter",
   ".code-block-header",
+  ".mermaid-zoom",
   ".code-line-gutter",
   `.${COLOR_SWATCH_CLASS}`,
   ".table-add-row-btn",

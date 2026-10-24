@@ -21,6 +21,10 @@
   /* A tint that marks where something was found, fading as it is read
      (Settings' search). Colour only, so reduced motion keeps it. */
   --dur-linger: 1600ms;
+  /* Between one word and the next as written text comes in (cascade.ts),
+     and the most a run of them may take: more words, a shorter step. */
+  --dur-stagger: 18ms;
+  --dur-cascade: 700ms;
   /* The exits of the last two. */
   --dur-slow-exit: calc(var(--dur-slow) * 0.7);
   --dur-sheet-exit: calc(var(--dur-sheet) * 0.7);
@@ -285,6 +289,42 @@
 /* Reduced motion is a crossfade, not nothing: nothing travels or scales,
    springs become the standard curve, slow movements shorten to quick
    fades, and the looping "working" indicators hold still. */
+/* The moves everything else is a case of (ui/moves.ts, docs/dev/motion.md):
+   a part of the page arriving, and leaving. Where it comes from or goes to
+   is the element's own: --enter-x / --enter-y / --enter-scale and
+   --exit-x / --exit-y / --exit-scale, a fade in place when unset. Under
+   reduced motion the distances above are 0 and only the fade is left. */
+@keyframes motion-enter {
+  from {
+    opacity: 0;
+    transform: translate(var(--enter-x, 0), var(--enter-y, 0))
+      scale(var(--enter-scale, 1));
+  }
+}
+
+@keyframes motion-exit {
+  to {
+    opacity: 0;
+    transform: translate(var(--exit-x, 0), var(--exit-y, 0))
+      scale(var(--exit-scale, 1));
+  }
+}
+
+/* What is about to change, for the moment before it does (ui/moves.ts's
+   land): a tint, set and taken off - a colour is never faded. Colour
+   only, so reduced motion keeps it. */
+.motion-mark {
+  background-color: var(--motion-mark-bg);
+  border-radius: 2px;
+}
+
+/* A copy of what a change took away, fading out where it stood (ui/moves.ts's
+   crossfade): it plays none of its own entrances again. */
+.motion-ghost,
+.motion-ghost * {
+  animation: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-distance-sm: 0px;

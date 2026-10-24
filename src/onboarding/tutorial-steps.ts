@@ -243,7 +243,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     tasks: [{ key: "tutorialRevisionSelect" }, { key: "tutorialRevisionSend" }],
     clip: "revision",
     ai: true,
-    agentMode: "revise",
+    agentMode: "write",
   },
   {
     // The slip is in a sentence the learner types, never in the classic.
@@ -287,7 +287,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     tasks: [{ key: "tutorialSkillsTask" }],
     clip: "skills",
     ai: true,
-    agentMode: "revise",
+    agentMode: "write",
   },
   {
     id: "done",

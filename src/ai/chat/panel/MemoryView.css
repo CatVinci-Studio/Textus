@@ -1,5 +1,6 @@
-/* The AI panel's Memory tab (MemoryView.tsx): the project folder row, then
-   one section per thing the AI keeps, each a quiet card. */
+/* The AI panel's Project tab (MemoryView.tsx): the project folder row, then
+   one section per thing the AI keeps - a title, a line saying what it is,
+   its quiet card - each set off from the next by a hairline. */
 .project-bar-memory {
   display: flex;
   flex-direction: column;
@@ -17,18 +18,35 @@
 .memory-sections {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  margin-top: 10px;
+  margin-top: 6px;
+}
+
+.memory-section {
+  padding: 16px 0;
+}
+
+.memory-section + .memory-section {
+  border-top: 1px solid var(--chat-hairline, var(--editor-border));
 }
 
 .memory-section h4 {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 0 8px;
-  font-size: var(--text-xs);
+  margin: 0;
+  font-size: var(--text-sm);
   font-weight: 600;
-  letter-spacing: 0.03em;
+  color: var(--editor-text);
+}
+
+.memory-section h4 button {
+  font-size: var(--text-xs);
+}
+
+.memory-hint {
+  margin: 2px 0 10px;
+  font-size: var(--text-xs);
+  line-height: 1.5;
   color: var(--editor-muted);
 }
 
@@ -53,13 +71,6 @@
   display: block;
   margin: 8px 0 0;
   font-size: var(--text-xs);
-}
-
-.memory-file {
-  font-family: var(--font-mono);
-  font-weight: 400;
-  letter-spacing: 0;
-  opacity: 0.75;
 }
 
 .memory-count {
@@ -168,35 +179,6 @@
   margin-top: 2px;
   font-weight: 600;
   color: var(--editor-accent);
-}
-
-.memory-skills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.memory-skills span {
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--chat-hairline, var(--editor-border));
-  background: var(--chat-card-bg, var(--editor-bg));
-  font-size: var(--text-xs);
-}
-
-.memory-more {
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  border: 1px dashed var(--chat-hairline, var(--editor-border));
-  background: none;
-  color: var(--editor-muted);
-  font: inherit;
-  font-size: var(--text-xs);
-  cursor: pointer;
-}
-
-.memory-more:hover {
-  color: var(--editor-text);
 }
 
 .memory-empty {
@@ -339,7 +321,7 @@
   cursor: pointer;
 }
 
-/* The Memory tab's search, once there is enough to search. */
+/* The Project tab's search, once there is enough to search. */
 .memory-search {
   width: 100%;
   box-sizing: border-box;

@@ -173,7 +173,7 @@ impl AgentCase {
             doc: doc.to_string(),
             script: vec![UserTurn::new(message)],
             expects: vec![expect],
-            mode: AgentMode::Revise,
+            mode: AgentMode::Write,
             workspace: AgentWorkspace::default(),
             disk: None,
             learn: None,
@@ -207,7 +207,7 @@ impl AgentCase {
     }
     /// Quick Ask opened on `selected`: every message of the conversation
     /// goes out with the selection as it reads at send time (see
-    /// UserTurn::follow_selection), in Revise mode (Quick Ask's default).
+    /// UserTurn::follow_selection), in Write mode (Quick Ask's default).
     pub fn quick(mut self, selected: &str) -> Self {
         let start = self.doc.find(selected).expect("selection in document");
         self.script[0].caret = Caret {
@@ -217,7 +217,7 @@ impl AgentCase {
         for turn in &mut self.script {
             turn.follow_selection = true;
         }
-        self.mode = AgentMode::Revise;
+        self.mode = AgentMode::Write;
         self
     }
     /// A follow-up message; `accept_previous` is what the user did with the
@@ -240,7 +240,7 @@ impl AgentCase {
             doc: String::new(),
             script: Vec::new(),
             expects: Vec::new(),
-            mode: AgentMode::Revise,
+            mode: AgentMode::Write,
             workspace: AgentWorkspace::default(),
             disk: None,
             learn: Some(learn),
@@ -1336,6 +1336,16 @@ pub fn run_case(auth: &AnthropicAuth, case: &AgentCase, model: &str) -> Record {
     let mut input = case_input(case);
     if let Some(reason) = harness::budget_exhausted() {
         return harness::skipped(&case.id, model, case.lang.code(), reason, input);
+    }
+    // Learning a style is a completion request, which the harness makes on
+    // Claude only (harness::complete); on another provider it would ask
+    // Claude for that provider's model.
+    if case.learn.is_some() && harness::agent_provider_id() != "anthropic" {
+        let reason = format!(
+            "learning a style runs on Claude, not {}",
+            harness::agent_provider_id()
+        );
+        return harness::not_run(&case.id, model, case.lang.code(), reason, input);
     }
     let mut checks = Checks::default();
     let mut usage = harness::Usage::default();

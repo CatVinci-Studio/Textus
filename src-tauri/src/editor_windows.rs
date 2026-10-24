@@ -187,6 +187,16 @@ pub(crate) fn is_wayland() -> bool {
 #[cfg(target_os = "linux")]
 pub(crate) static WAYLAND: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
 
+/// Whether the system tells an app where its window is and lets it put it
+/// there - everywhere but Wayland.
+#[cfg(desktop)]
+pub(crate) fn window_place_known() -> bool {
+    #[cfg(target_os = "linux")]
+    return !is_wayland();
+    #[cfg(not(target_os = "linux"))]
+    true
+}
+
 /// Main thread only (GDK); see `is_wayland`.
 #[cfg(target_os = "linux")]
 pub(crate) fn detect_wayland() {
@@ -225,7 +235,14 @@ pub(crate) fn build_window(
     label: &str,
     position: Option<(f64, f64)>,
 ) -> tauri::Result<()> {
-    let (width, height) = commands::prefs::read_editor_window_size(app).unwrap_or((800.0, 600.0));
+    // A window more opens where the system puts it, no bigger than the
+    // main screen (window_frame.rs).
+    let (_, (width, height)) = window_frame::place(
+        None,
+        commands::prefs::read_editor_window_size(app).unwrap_or((800.0, 600.0)),
+        &screens(app),
+        EDITOR_MIN_SIZE,
+    );
     let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
         .title(app_identity::APP_NAME)
         .inner_size(width, height)
@@ -239,6 +256,28 @@ pub(crate) fn build_window(
 /// minHeight of the config window in tauri*.conf.json.
 #[cfg(desktop)]
 pub(crate) const EDITOR_MIN_SIZE: (f64, f64) = (480.0, 320.0);
+
+/// The screens' work areas in logical px, the main screen first
+/// (window_frame.rs).
+#[cfg(desktop)]
+fn screens(app: &tauri::AppHandle) -> Vec<window_frame::Screen> {
+    let main = app.primary_monitor().ok().flatten().map(|m| *m.position());
+    let mut monitors = app.available_monitors().unwrap_or_default();
+    monitors.sort_by_key(|m| Some(*m.position()) != main);
+    monitors
+        .iter()
+        .map(|m| {
+            let area = m.work_area();
+            let scale = m.scale_factor();
+            window_frame::Screen {
+                x: f64::from(area.position.x) / scale,
+                y: f64::from(area.position.y) / scale,
+                width: f64::from(area.size.width) / scale,
+                height: f64::from(area.size.height) / scale,
+            }
+        })
+        .collect()
+}
 
 #[cfg(desktop)]
 pub(crate) fn open_new_window(app: &tauri::AppHandle) -> tauri::Result<()> {
@@ -298,9 +337,25 @@ pub(crate) fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
     };
     let builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?;
     #[cfg(desktop)]
-    let builder = match commands::prefs::read_editor_window_size(app.handle()) {
-        Some((width, height)) => builder.inner_size(width, height),
-        None => builder,
+    // Where the last window closed, if that is still on a screen, else
+    // centred on the main one; no bigger than its screen (#356).
+    #[cfg(desktop)]
+    let builder = {
+        let app = app.handle();
+        let saved = if window_place_known() {
+            commands::prefs::read_editor_window_position(app)
+        } else {
+            None
+        };
+        let size =
+            commands::prefs::read_editor_window_size(app).unwrap_or((config.width, config.height));
+        let (at, (width, height)) =
+            window_frame::place(saved, size, &screens(app), EDITOR_MIN_SIZE);
+        let builder = builder.inner_size(width, height);
+        match at {
+            Some((x, y)) if window_place_known() => builder.position(x, y),
+            _ => builder,
+        }
     };
     let window = settings::with_boot(builder, app.handle(), "main").build()?;
     #[cfg(target_os = "linux")]

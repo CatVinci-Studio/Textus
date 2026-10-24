@@ -215,7 +215,7 @@ fn live_agent_caches_across_steps() {
     let ws = crate::ai::workspace::AgentWorkspace::default();
     let setup = harness::AgentSetup {
         model: &model,
-        mode: AgentMode::Revise,
+        mode: AgentMode::Write,
         workspace: &ws,
         focus_heading: None,
         ui_language: "en",
@@ -309,7 +309,7 @@ fn live_thinking_levels() {
     let results = par_map(&jobs, |(model, level)| {
         let setup = harness::AgentSetup {
             model,
-            mode: AgentMode::Revise,
+            mode: AgentMode::Write,
             workspace: &ws,
             focus_heading: None,
             ui_language: "en",

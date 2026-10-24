@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
 import { links, themeGallery } from "../../platform/ipc";
 import {
@@ -12,6 +12,7 @@ import { withUserTheme } from "../../theme/theme-import";
 import { errorText } from "../../utils/error-text";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useSettings } from "../SettingsContext";
+import { SettingsGroup } from "../pages/SettingsGroup";
 import { SettingRow } from "./controls";
 
 /**
@@ -23,7 +24,15 @@ import { SettingRow } from "./controls";
  * the installed copy and leaves the selection as it is. Removing one is the
  * theme picker's Delete Theme.
  */
-export function ThemeGallerySection({ t }: { t: Strings }) {
+/** The gallery's themes, in a group of their own - titled `title` where a
+ *  page shows it among others (Extensions), so no group wraps it twice. */
+export function ThemeGallerySection({
+  t,
+  title,
+}: {
+  t: Strings;
+  title?: string;
+}) {
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
   const [busy, setBusy] = useState(false);
@@ -52,7 +61,7 @@ export function ThemeGallerySection({ t }: { t: Strings }) {
   }
 
   if (unreachable) {
-    return (
+    return framed(
       <div className="theme-gallery-message" role="status">
         <div className="settings-row-hint">{t.themeGalleryUnreachable}</div>
         <div className="theme-gallery-message-actions">
@@ -71,47 +80,65 @@ export function ThemeGallerySection({ t }: { t: Strings }) {
             {t.themeGalleryWebsite}
           </button>
         </div>
-      </div>
+      </div>,
     );
   }
   if (!catalog) {
-    return (
+    return framed(
       <div className="theme-gallery-message settings-row-hint" role="status">
         {t.themeGalleryLoading}
-      </div>
+      </div>,
     );
   }
+  const failed = error && (
+    <div className="settings-error" role="alert">
+      {error}
+    </div>
+  );
+  const rows = (
+    <>
+      {catalog.length === 0 && <SettingRow label={t.themeGalleryEmpty} />}
+      {catalog.map((theme) => {
+        const installed = installedCopy(theme, settings.userThemes);
+        return (
+          <GalleryItem
+            key={theme.id}
+            t={t}
+            theme={theme}
+            status={galleryStatus(theme, installed)}
+            inUse={!!installed && installed.id === settings.themeId}
+            busy={busy}
+            onInstall={() => void install(theme)}
+            onUse={() => installed && setSettings({ themeId: installed.id })}
+          />
+        );
+      })}
+    </>
+  );
+  if (title)
+    return (
+      <SettingsGroup title={title}>
+        {failed}
+        {rows}
+      </SettingsGroup>
+    );
   return (
     <>
-      {error && (
-        <div className="settings-error" role="alert">
-          {error}
-        </div>
-      )}
+      {failed}
       <section className="settings-group">
-        <div className="settings-group-body">
-          {catalog.length === 0 && <SettingRow label={t.themeGalleryEmpty} />}
-          {catalog.map((theme) => {
-            const installed = installedCopy(theme, settings.userThemes);
-            return (
-              <GalleryItem
-                key={theme.id}
-                t={t}
-                theme={theme}
-                status={galleryStatus(theme, installed)}
-                inUse={!!installed && installed.id === settings.themeId}
-                busy={busy}
-                onInstall={() => void install(theme)}
-                onUse={() =>
-                  installed && setSettings({ themeId: installed.id })
-                }
-              />
-            );
-          })}
-        </div>
+        <div className="settings-group-body">{rows}</div>
       </section>
     </>
   );
+
+  /** A message in the place of the themes: in the titled group, or alone. */
+  function framed(message: ReactNode) {
+    return title ? (
+      <SettingsGroup title={title}>{message}</SettingsGroup>
+    ) : (
+      message
+    );
+  }
 }
 
 function GalleryItem({

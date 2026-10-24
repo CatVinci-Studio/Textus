@@ -45,6 +45,6 @@ metadata:
 - Remove a Korean comma after a connective ending; it is correct.
 
 ## Deliver
-- Revise mode: one replace per paragraph.
+- Write mode: one replace per paragraph.
 - Review mode: the tightened text in the reply.
 - Reply in one line with the word or character count before and after, counted with measure_text (`words`, or `cjk_chars` for Chinese and Japanese), not estimated.

@@ -47,6 +47,6 @@ metadata:
 - Change fiction dialogue unless the user asks.
 
 ## Deliver
-- Revise mode: replace proposals, one per paragraph.
+- Write mode: replace proposals, one per paragraph.
 - Review mode: the rewritten text in the reply.
 - Reply in one sentence naming the new tone and anything you kept on purpose.

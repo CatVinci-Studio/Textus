@@ -74,6 +74,7 @@ import { mathAutopairPlugin } from "./math/math-autopair-plugin";
 import { createMathPreviewPlugin } from "./math/math-preview-plugin";
 import { headingMarkerPlugin } from "./marks/heading-marker-plugin";
 import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
+import { dragAutoscrollPlugin } from "./keys/drag-autoscroll-plugin";
 import { editorInputPlugin } from "../plugins/editor-input";
 import {
   cjkTaskInputPlugin,
@@ -202,6 +203,7 @@ export function withEditorCore(
       // before any of the editor's own handlers.
       .use(editorInputPlugin)
       .use(macNavigationPlugin)
+      .use(dragAutoscrollPlugin)
       .use(linuxImeEnterPlugin)
       .use(compositionPruneGuardPlugin)
       // Markdown baseline: commonmark/GFM with bold/italic/strike marks

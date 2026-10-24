@@ -255,6 +255,10 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 .ProseMirror[data-revision-display="final"] .pending-insert.pending-blocks {
+  /* No tint to bleed past the column, so none of the room made for it:
+     with only the padding gone, new blocks stood 12px wider than the
+     column and moved in when taken. */
+  margin-inline: 0;
   padding: 0;
 }
 
@@ -390,13 +394,15 @@ br:is(.pending-delete, .pending-sentence-hot) {
    own, so a switch redraws nothing and replays no entrance.
 
    - inline (and no attribute): both sides in the text, with ✓ / ✕;
-   - original: the original in the text, the new text in the margin;
-   - new: the new text in the text, the original in the margin;
-   - final: the result, unmarked but for a faint dotted line, so a pending
-     change can still be told from settled text.
+   - original: the original in the text, the new text in the margin - from
+     the moment it is written, never first in the text;
+   - final (Result only, the default): the result, unmarked but for a faint
+     dotted line, so a pending change can still be told from settled text;
+     what a change takes out is in the margin, a deleted sentence's place
+     marked by a thin red line.
 
    New text with no original (Write's insertions) has nothing to put in the
-   margin: it stays in the text, green, in "original" and "new" too, and
+   margin: it stays in the text, green, in "original" too, and
    reads as the result in "final".
 
    An original taken out of the text is hidden in the flow, not with
@@ -407,15 +413,13 @@ br:is(.pending-delete, .pending-sentence-hot) {
 .pending-insert-mark,
 .pending-delete-mark,
 .ProseMirror[data-revision-display="original"]
-  :is(.pending-sentence-new, .pending-insert.pending-replaces):not(
-    .pending-whole.pending-insert-typing
-  ),
-.ProseMirror:is([data-revision-display="new"], [data-revision-display="final"])
+  :is(.pending-sentence-new, .pending-insert.pending-replaces),
+.ProseMirror[data-revision-display="final"]
   .pending-sentence-new.pending-sentence-kept {
   display: none;
 }
 
-.ProseMirror:is([data-revision-display="new"], [data-revision-display="final"])
+.ProseMirror[data-revision-display="final"]
   .pending-delete:not(.pending-sentence-kept) {
   font-size: 0;
   padding: 0;
@@ -429,16 +433,15 @@ br:is(.pending-delete, .pending-sentence-hot) {
    blank line with a paragraph's margins. Taken out of the flow rather
    than display: none, for the same reason as its text; out of the flow,
    the margins round it meet as if it weren't there. */
-.ProseMirror[data-revision-display="new"]
-  .pending-struck-block:not(.pending-struck-marked),
-.ProseMirror[data-revision-display="final"] .pending-struck-block {
+.ProseMirror[data-revision-display="final"]
+  .pending-struck-block:not(.pending-struck-marked) {
   position: absolute;
   visibility: hidden;
   pointer-events: none;
 }
 
 /* An inline atom (an image, a formula) in a hidden original. */
-.ProseMirror:is([data-revision-display="new"], [data-revision-display="final"])
+.ProseMirror[data-revision-display="final"]
   .pending-delete:not(span, .pending-sentence-kept) {
   display: none;
 }
@@ -455,25 +458,10 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-underline-offset: 0.2em;
 }
 
-/* A kept sentence whose original card is in the margin: a faint line ties
-   it to the card. */
-.ProseMirror[data-revision-display="new"]
-  .pending-sentence.pending-sentence-kept {
-  text-decoration: underline dotted;
-  text-decoration-color: color-mix(
-    in srgb,
-    var(--editor-muted) 60%,
-    transparent
-  );
-  text-underline-offset: 0.2em;
-}
-
 /* Where a pure insertion goes, or where a deleted sentence was, with its
    card in the margin. */
 .ProseMirror[data-revision-display="original"] .pending-insert-mark,
-.ProseMirror[data-revision-display="new"]
-  .pending-insert-mark.pending-sentence-kept,
-.ProseMirror[data-revision-display="new"]
+.ProseMirror[data-revision-display="final"]
   .pending-delete-mark:not(.pending-sentence-kept) {
   display: inline-block;
 }
@@ -501,7 +489,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   vertical-align: 0.12em;
   white-space: nowrap;
   user-select: none;
-  animation: pending-pick-in var(--dur-base) var(--ease-out) both;
+  --enter-scale: var(--scale-enter);
+  animation: motion-enter var(--dur-base) var(--ease-out) both;
   animation-delay: calc((min(var(--i, 0), 8) + 2) * var(--dur-instant));
 }
 
@@ -590,13 +579,6 @@ br:is(.pending-delete, .pending-sentence-hot) {
 [data-platform="ios"] .pending-pick button svg {
   width: 13px;
   height: 13px;
-}
-
-@keyframes pending-pick-in {
-  from {
-    opacity: 0;
-    transform: scale(var(--scale-enter));
-  }
 }
 
 /* Reduced motion: fades, all at once - no stagger, and the ✓ / ✕ don't
@@ -1333,14 +1315,14 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 /* Line numbers (code-line-numbers-plugin.ts): the gutter floats at the
-   start of the <pre>, one number per line, and the code beside it scrolls
-   sideways on its own (a block that scrolls doesn't flow under a float),
-   so the numbers stay put and nothing has to paint over the code. Its
-   lines don't wrap - a number would sit beside half a line - and take
-   the <pre>'s size and line height, as the numbers do, so each line is
-   as tall as its number: a theme's own size for block code, or the code's
-   font on the <pre>'s baseline, made the lines a pixel taller apiece and
-   the numbers drifted up the block. The <pre>'s start padding moves into
+   start of the <pre>, one number per line, and the code beside it is a
+   block of its own (a block doesn't flow under a float), so the numbers
+   stay put and nothing has to paint over the code. Its lines wrap as
+   they do without numbers (#353); each number is as tall as its line
+   (gutter-fit.ts). The code takes the <pre>'s size and line height, as
+   the numbers do: a theme's own size for block code, or the code's font
+   on the <pre>'s baseline, made the lines a pixel taller apiece and the
+   numbers drifted up the block. The <pre>'s start padding moves into
    the gutter. On screen only: a printed page can't scroll, and the print
    and export drop the gutter. Id-weighted, as Typora themes style
    `#write pre`. */
@@ -1351,10 +1333,9 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
   #write .code-block-numbered pre code {
     display: block;
-    overflow-x: auto;
-    white-space: pre;
-    word-break: normal;
-    overflow-wrap: normal;
+    overflow: hidden;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     font-size: inherit;
     line-height: inherit;
   }

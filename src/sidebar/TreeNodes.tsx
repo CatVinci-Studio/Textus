@@ -180,8 +180,10 @@ function FileNode({
         // Dropped on a file, a drag goes into that file's folder.
         data-drop-dir={parentDir(entry.path) ?? undefined}
         style={{ paddingLeft: depth * 14 + 12 }}
-        onClick={() => {
+        onClick={(e) => {
           if (tree.takeDragClick()) return;
+          if ((e.metaKey || e.ctrlKey) && tree.openInNewWindow)
+            return tree.openInNewWindow(entry.path);
           if (!press.consumeClick()) onSelect(entry.path);
         }}
         onContextMenu={

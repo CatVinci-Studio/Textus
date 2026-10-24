@@ -40,7 +40,6 @@ Enable AI completion
 Completion tone
 Write
 Review
-Revise
 Accept
 Reject
 Editor & Appearance (Settings page)
