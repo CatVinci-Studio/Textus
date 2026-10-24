@@ -433,6 +433,7 @@ utiliser une.
   treeNewFolderDefault: "Nouveau dossier",
   treeSort: "Trier",
   treeSortName: "Par nom",
+  treeShowHidden: "Afficher les fichiers masqués",
   treeSortModified: "Par date de modification",
   treeRenameItem: "Renommer…",
   treeRename: "Renommer",

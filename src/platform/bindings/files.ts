@@ -229,6 +229,12 @@ export type DirEntryInfo_Deserialize = {
 	 *  None where the system doesn't say.
 	 */
 	modified_ms?: number | null,
+	/**
+	 *  Hidden: a name starting with a dot, or, on Windows, a file marked
+	 *  hidden or system (desktop.ini). The tree leaves it out unless the
+	 *  user shows hidden files (#357).
+	 */
+	hidden: boolean,
 };
 
 export type DirEntryInfo_Serialize = {
@@ -240,6 +246,12 @@ export type DirEntryInfo_Serialize = {
 	 *  None where the system doesn't say.
 	 */
 	modified_ms: number | null,
+	/**
+	 *  Hidden: a name starting with a dot, or, on Windows, a file marked
+	 *  hidden or system (desktop.ini). The tree leaves it out unless the
+	 *  user shows hidden files (#357).
+	 */
+	hidden: boolean,
 };
 
 export type DraftSnapshot = DraftSnapshot_Serialize | DraftSnapshot_Deserialize;

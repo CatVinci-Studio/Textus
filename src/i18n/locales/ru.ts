@@ -420,6 +420,7 @@ export default {
   treeNewFolderDefault: "Новая папка",
   treeSort: "Сортировка",
   treeSortName: "По имени",
+  treeShowHidden: "Показывать скрытые файлы",
   treeSortModified: "По дате изменения",
   treeRenameItem: "Переименовать…",
   treeRename: "Переименовать",

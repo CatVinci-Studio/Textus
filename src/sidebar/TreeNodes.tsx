@@ -85,7 +85,8 @@ export function DirNode({
     if (!loaded) return null;
     const shown = loaded.entries.filter(
       (entry) =>
-        entry.is_dir || tree.scope === "all" || isDocumentName(entry.name),
+        (tree.showHidden || !entry.hidden) &&
+        (entry.is_dir || tree.scope === "all" || isDocumentName(entry.name)),
     );
     return shown.sort(
       (a, b) =>
@@ -93,7 +94,7 @@ export function DirNode({
           ? byModified(a, b)
           : 0) || compareEntries(collator, a, b),
     );
-  }, [loaded, collator, tree.scope, tree.sort]);
+  }, [loaded, collator, tree.scope, tree.sort, tree.showHidden]);
 
   return (
     <div className="dir-node">

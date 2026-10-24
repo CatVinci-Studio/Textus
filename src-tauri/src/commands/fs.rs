@@ -14,6 +14,24 @@ pub struct DirEntryInfo {
     /// Last modified, in ms since the epoch, for the tree's sort by date;
     /// None where the system doesn't say.
     modified_ms: Option<f64>,
+    /// Hidden: a name starting with a dot, or, on Windows, a file marked
+    /// hidden or system (desktop.ini). The tree leaves it out unless the
+    /// user shows hidden files (#357).
+    hidden: bool,
+}
+
+/// Whether Windows marks `meta` hidden or system; never elsewhere.
+#[cfg(windows)]
+fn marked_hidden(meta: &std::fs::Metadata) -> bool {
+    use std::os::windows::fs::MetadataExt;
+    const HIDDEN: u32 = 0x2;
+    const SYSTEM: u32 = 0x4;
+    meta.file_attributes() & (HIDDEN | SYSTEM) != 0
+}
+
+#[cfg(not(windows))]
+fn marked_hidden(_meta: &std::fs::Metadata) -> bool {
+    false
 }
 
 /// A native file dialog owned by the window that asked for it. Unowned, a
@@ -198,17 +216,14 @@ pub async fn list_dir(path: String) -> Result<Vec<DirEntryInfo>, String> {
     while let Some(entry) = reader.next_entry().await.map_err(|e| e.to_string())? {
         let file_type = entry.file_type().await.map_err(|e| e.to_string())?;
         let name = entry.file_name().to_string_lossy().to_string();
-        if name.starts_with('.') {
-            continue;
-        }
-        let modified_ms = entry
-            .metadata()
-            .await
-            .ok()
+        let meta = entry.metadata().await.ok();
+        let modified_ms = meta
+            .as_ref()
             .and_then(|m| m.modified().ok())
             .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
             .map(|d| d.as_millis() as f64);
         items.push(DirEntryInfo {
+            hidden: name.starts_with('.') || meta.as_ref().is_some_and(marked_hidden),
             name,
             path: entry.path().to_string_lossy().to_string(),
             is_dir: file_type.is_dir(),

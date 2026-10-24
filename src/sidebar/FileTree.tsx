@@ -109,6 +109,7 @@ export function FileTree({
   const view = useTreeView();
   const { generation, setGeneration, query, setQuery } = view;
   const { sort, setSort, scope, setScope, versions, reload } = view;
+  const { showHidden, setShowHidden } = view;
   const [menu, setMenu] = useState<TreeMenu>(null);
   // Not on iOS: above Documents is the app's private container, and above
   // a folder picked in Files is outside what the user granted. Not above an
@@ -137,6 +138,7 @@ export function FileTree({
     () => ({
       sort,
       scope,
+      showHidden,
       versions,
       dropInto: drag?.into ?? null,
       onRowMenu: desktop ? onRowMenu : null,
@@ -147,6 +149,7 @@ export function FileTree({
     [
       sort,
       scope,
+      showHidden,
       versions,
       drag?.into,
       desktop,
@@ -175,6 +178,15 @@ export function FileTree({
           label: t.treeSortModified,
           checked: sort === "modified",
           onSelect: pick("modified"),
+        },
+        "separator",
+        {
+          label: t.treeShowHidden,
+          checked: showHidden,
+          onSelect: () => {
+            setShowHidden(!showHidden);
+            setUiState("fileTreeHidden", showHidden ? "0" : "1");
+          },
         },
       ],
     });
@@ -334,6 +346,9 @@ function useTreeView() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<TreeSort>(savedSort);
   const [scope, setScope] = useState<SearchScope>(savedScope);
+  const [showHidden, setShowHidden] = useState(
+    () => getUiState("fileTreeHidden") === "1",
+  );
   const [versions, setVersions] = useState<Record<string, number>>({});
   const reload = useCallback((...dirs: string[]) => {
     setVersions((prev) => {
@@ -351,6 +366,8 @@ function useTreeView() {
     setSort,
     scope,
     setScope,
+    showHidden,
+    setShowHidden,
     versions,
     reload,
   };

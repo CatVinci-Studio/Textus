@@ -429,6 +429,7 @@ para usar una.
   treeNewFolderDefault: "Nueva carpeta",
   treeSort: "Ordenar",
   treeSortName: "Por nombre",
+  treeShowHidden: "Mostrar archivos ocultos",
   treeSortModified: "Por fecha de modificación",
   treeRenameItem: "Cambiar nombre…",
   treeRename: "Cambiar nombre",

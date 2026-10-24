@@ -417,6 +417,7 @@ type /name in a conversation to use one.
   treeNewFolderDefault: "New Folder",
   treeSort: "Sort",
   treeSortName: "By name",
+  treeShowHidden: "Show Hidden Files",
   treeSortModified: "By date modified",
   treeRenameItem: "Rename…",
   treeRename: "Rename",

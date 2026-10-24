@@ -377,6 +377,7 @@ export default {
   treeNewFolderDefault: "新增檔案夾",
   treeSort: "排序",
   treeSortName: "依名稱",
+  treeShowHidden: "顯示隱藏檔案",
   treeSortModified: "依修改時間",
   treeRenameItem: "重新命名…",
   treeRename: "重新命名",

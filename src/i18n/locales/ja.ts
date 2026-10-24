@@ -401,6 +401,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeNewFolderDefault: "新規フォルダ",
   treeSort: "並べ替え",
   treeSortName: "名前順",
+  treeShowHidden: "隠しファイルを表示",
   treeSortModified: "変更日順",
   treeRenameItem: "名前を変更…",
   treeRename: "名前を変更",

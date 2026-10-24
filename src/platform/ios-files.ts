@@ -54,7 +54,12 @@ export const iosFiles = {
       await call<{
         entries: { url: string; name: string; folder: boolean }[];
       }>("list_folder", { url })
-    ).entries.map((e) => ({ name: e.name, path: e.url, is_dir: e.folder })),
+    ).entries.map((e) => ({
+      name: e.name,
+      path: e.url,
+      is_dir: e.folder,
+      hidden: e.name.startsWith("."),
+    })),
   /** Picked files and folders that survive a relaunch. */
   remembered: async () =>
     (

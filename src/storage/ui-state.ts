@@ -57,6 +57,8 @@ export interface UiState {
   fileSearchScope: string;
   /** The file tree's order: "name" or "modified" (sidebar/FileTree.tsx). */
   fileTreeSort: string;
+  /** "1" when the file tree shows hidden files (#357). */
+  fileTreeHidden: string;
 }
 
 export interface ThemeChromeCache {
@@ -141,6 +143,11 @@ const LOCAL: {
   },
   fileSearchScope: {
     key: "textus-file-search-scope",
+    decode: (raw) => raw,
+    encode: (value) => value,
+  },
+  fileTreeHidden: {
+    key: "textus-file-tree-hidden",
     decode: (raw) => raw,
     encode: (value) => value,
   },

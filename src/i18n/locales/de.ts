@@ -420,6 +420,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeNewFolderDefault: "Neuer Ordner",
   treeSort: "Sortieren",
   treeSortName: "Nach Name",
+  treeShowHidden: "Versteckte Dateien anzeigen",
   treeSortModified: "Nach Änderungsdatum",
   treeRenameItem: "Umbenennen…",
   treeRename: "Umbenennen",

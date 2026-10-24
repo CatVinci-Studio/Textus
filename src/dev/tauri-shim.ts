@@ -681,7 +681,7 @@ export function installDevTauriShim(): void {
         for (const file of Object.keys(files)) {
           if (!file.startsWith(`${path}/`)) continue;
           const [name, ...rest] = file.slice(path.length + 1).split("/");
-          if (!name.startsWith(".")) entries.set(name, rest.length > 0);
+          entries.set(name, rest.length > 0);
         }
         return Promise.resolve(
           [...entries]
@@ -689,6 +689,7 @@ export function installDevTauriShim(): void {
               name,
               path: `${path}/${name}`,
               is_dir: isDir,
+              hidden: name.startsWith("."),
               modified_ms:
                 (w.__devMtimes as Record<string, number> | undefined)?.[
                   `${path}/${name}`
