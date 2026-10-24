@@ -13,10 +13,11 @@ import { splitUnits } from "./unit-diff";
  * what is shown always ends where the layout of the rewrite does
  * (sentence-stream.ts).
  *
- * New writing (`paragraphs`) lands a block at a time: a paragraph once it
- * is written whole, then all of it at once - landed a sentence at a time,
- * it grew in jerks. A rewrite's sentences still land one by one, each
- * decided on its own.
+ * Text in the document (`paragraphs`) lands a block at a time: a paragraph
+ * once it is written whole, then all of it at once - new writing and a
+ * rewrite alike, whose sentences are still decided one by one. Landed a
+ * sentence at a time, it grew in jerks, and a rewrite and new writing
+ * moved two ways.
  *
  * Each unit lands markTime() after the last - the moment its original is
  * marked (ui/moves.ts, the rewrite's reading cursor) - and a backlog of
@@ -150,15 +151,8 @@ function fenceClosed(unit: string): boolean {
 }
 
 export class UnitReveal {
-  /** New writing: paragraphs land whole (above). */
+  /** Paragraphs land whole (above): new writing and rewrites alike. */
   constructor(private paragraphs = false) {}
-
-  /** Its text is a rewrite laid out sentence by sentence after all: each
-   *  sentence lands on its own. */
-  bySentence() {
-    this.paragraphs = false;
-    this.pendingFor = "";
-  }
 
   private received = "";
   private shown = 0;

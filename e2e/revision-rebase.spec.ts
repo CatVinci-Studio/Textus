@@ -182,7 +182,9 @@ test("an edit while a rewrite streams in is kept, and the rewrite still lands ar
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("Polish this");
   await composer.press("Enter");
-  await expect(page.locator(editor)).toContainText("眼熟");
+  // Held before its end, the paragraph is marked as being rewritten; it
+  // lands once it is whole.
+  await expect(page.locator(".milkdown .pending-reading")).toBeVisible();
   // While it is held, the writer adds to a sentence it keeps.
   await typeAfter(page, "二人从此相识", "，再未分开");
   await page.evaluate(() => {

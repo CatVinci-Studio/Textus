@@ -278,11 +278,15 @@ way the finished rewrite is (`diffSentenceLists`), except for the last run
 of changes, where an original the stream hasn't reached is still to come,
 not deleted. So:
 
-- a changed sentence is struck where it stands with its new text beside it
-  the moment it completes, in every view; a kept one shows nothing of its
-  own, but the progress cursor (`readingDecoration`, a tint in
-  `--revision-reading-bg`) stands on the original the stream has reached,
-  so a light polish moves through the text rather than standing still;
+- a paragraph lands once it is rewritten whole (unit-reveal.ts, as new
+  writing does): each changed sentence of it struck where it stands with
+  its new text beside it, all of them at once and on one beat with their
+  margin cards (ui/moves.ts's beats, `changeBeat`), in every view - landed
+  a sentence at a time, a rewrite grew in jerks and its cards came in
+  after their text (`1.2.1`); until then the progress cursor
+  (`readingDecoration`, a tint in `--revision-reading-bg`) stands on the
+  paragraph the stream has reached, so a light polish moves through the
+  text rather than standing still;
 - the sentence being written types in beside the original it rewrites,
   which is struck while it is written - or, a sentence of its own, where it
   goes. While it still repeats an original word for word, or is too short

@@ -1,8 +1,7 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { prefersReducedMotion } from "../../ui/motion";
-import { enter, glideAfter } from "../../ui/moves";
-import { Cascade, hasWords } from "../../ui/cascade";
+import { enterOnBeat, glideAfter, startBeat } from "../../ui/moves";
 import { inlineSentence, pairedPrefix } from "./sentence-diff";
 import { type StreamLayout } from "./sentence-stream";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
@@ -407,13 +406,20 @@ function blockStrike(
   });
 }
 
+/** The beat a change enters on: its new text in the text and its card in
+ *  the margin (the card's key, useReviewNotes) share it. */
+export function changeBeat(callId: string, index: number): string {
+  return `rev:${callId}:${index}`;
+}
+
 /**
- * How a completed sentence's new text comes in while the rewrite streams.
- * The sentence the partial span was just writing is already on screen as it
+ * How a completed change's new text comes in while the rewrite streams: a
+ * paragraph rewritten whole lands at once, all its changes on one beat
+ * with their cards (`landedAt`) - fading in where they stand, a whole block
+ * rising into place, as new writing does. The sentence the partial span
+ * was just writing (a long one cut at a pause) is already on screen as it
  * is: no entrance. One a re-alignment changed or moved - a sentence the
- * rewrite dropped joins the change before it, whose new text then follows
- * it - or one that appears without having been written in place (it
- * repeated its original until its last word), cross-fades in.
+ * rewrite dropped joins the change before it - comes in again.
  */
 export function streamEntrance(
   span: HTMLElement,
@@ -433,11 +439,15 @@ export function streamEntrance(
       ? s.partialIndex === index
       : before.at === at && after.startsWith(before.after);
   if (written) return;
-  // A sentence written in place of the one its original was marked in
-  // (the reading cursor, ui/moves.ts's mark) comes in where it lands, a
-  // word at a time (ui/cascade.ts); a block with no words, whole.
-  if (hasWords(span)) new Cascade().play(span);
-  else enter(span, { from: "none" });
+  const beat = changeBeat(span.dataset.call ?? "", index);
+  startBeat(beat, s.landedAt);
+  // Inline, a sentence only fades: an inline box takes no transform.
+  const block = span.dataset.blocks === "true";
+  enterOnBeat(span, beat, {
+    from: block ? "up" : "none",
+    distance: "md",
+    duration: "--dur-slow",
+  });
   // A whole block pushes the text below it down: that glides there. Once
   // it is in the document (a widget is drawn after it is made), before the
   // frame is painted.
@@ -522,7 +532,7 @@ export function streamDecorations(
   const { partial } = s.layout;
   s.partialIndex = partial ? index : null;
   s.drawn = layoutSignature(s.layout);
-  const reading = readingDecoration(p.callId, ranges, s.layout);
+  const reading = readingDecoration(doc, p.callId, ranges, s.layout);
   if (reading) decos.push(reading);
   if (!partial) return decos;
   const rewrites = partial.rewrites === null ? null : ranges[partial.rewrites];
@@ -563,15 +573,16 @@ export function streamDecorations(
 }
 
 /**
- * The progress cursor: the original sentence a streaming rewrite is at.
- * While the sentence being written repeats an original word for word (or
- * is too short yet to tell which one it rewrites) nothing else shows - a
- * light polish kept the screen still for seconds, then a sentence popped
- * up (rc.6) - so the sentence it has reached is tinted, the tint moving on
- * as it goes. One being rewritten is struck open instead, with the new
- * text typing beside it; past the last original there is nothing to mark.
+ * The progress cursor: the paragraph a streaming rewrite is at - the
+ * originals it has reached to the end of their paragraph, which is what
+ * lands next, all at once. Nothing else of it shows until then, so it is
+ * tinted (and its card in the margin says it is being written), the tint
+ * moving on as each paragraph lands - a light polish kept the screen still
+ * for seconds, then a sentence popped up (rc.6). Past the last original
+ * there is nothing to mark.
  */
 export function readingDecoration(
+  doc: ProseNode,
   callId: string,
   ranges: { from: number; to: number }[],
   layout: StreamLayout,
@@ -581,8 +592,24 @@ export function readingDecoration(
   if (!range || range.from >= range.to) return null;
   return Decoration.inline(
     range.from,
-    range.to,
+    paragraphEnd(doc, ranges, layout.reached),
     { class: "pending-reading", "data-call": callId },
     { part: "reading" },
   );
+}
+
+/** Where the paragraph of `ranges[at]` ends among the originals: the end
+ *  of the last one in the same block. */
+function paragraphEnd(
+  doc: ProseNode,
+  ranges: { from: number; to: number }[],
+  at: number,
+): number {
+  const start = ranges[at];
+  const $from = doc.resolve(Math.min(start.from + 1, doc.content.size));
+  const end = $from.parent.isTextblock ? $from.end() : start.to;
+  let to = start.to;
+  for (let i = at + 1; i < ranges.length && ranges[i].to <= end; i++)
+    to = ranges[i].to;
+  return to;
 }

@@ -81,6 +81,9 @@ export interface StreamState {
   stopped?: string | null;
   /** The completed changes as last drawn (PendingPreview.streamChanges). */
   changes: PendingSentence[];
+  /** When the text last landed - a paragraph rewritten whole: the beat its
+   *  changes enter on, in the text and in the margin (ui/moves.ts). */
+  landedAt: number;
 }
 
 export const animations = new Map<string, InsertAnimation>();
@@ -90,8 +93,8 @@ export function newAnimation(
   text: string,
   done: boolean,
 ): InsertAnimation {
-  // New writing lands a paragraph at a time; a rewrite laid out sentence by
-  // sentence (StreamState) is switched to its sentences (streamFor).
+  // Text lands a paragraph at a time - new writing, and a rewrite laid out
+  // sentence by sentence (StreamState) too.
   const reveal = new UnitReveal(true);
   reveal.update(text, done, performance.now());
   return {
@@ -160,6 +163,7 @@ export function refreshStream(anim: InsertAnimation) {
       s.reached,
     ));
     s.alignedFor = key;
+    s.landedAt = performance.now();
     // Done reaches every original; a stop's text is laid out against what
     // the stream itself had reached.
     if (!done) s.reached = Math.max(s.reached, reached);

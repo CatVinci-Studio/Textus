@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import type { ReviewNote } from "./review-notes-plugin";
 import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
 import { animate } from "../../ui/motion";
+import { joinBeat } from "../../ui/moves";
 import { CARD_WIDTH } from "./margin-room";
 import { Tooltip } from "../../ui/Tooltip";
 import "./ReviewMargin.css";
@@ -182,6 +183,11 @@ export const RevisionCard = memo(
     onDecide: (callId: string, index: number, take: boolean | null) => void;
   }) {
     const ref = useCardBox(item.key, top, onHeight, cut !== null);
+    // It comes in with its new text, on its change's beat - drawn a frame
+    // or two after it, it came in after it (pending-widgets' changeBeat).
+    useLayoutEffect(() => {
+      if (ref.current) joinBeat(ref.current, item.key);
+    }, [ref, item.key]);
     const state =
       item.take === false ? "kept" : item.take === true ? "taken" : "open";
     const closed = chip && !open;
