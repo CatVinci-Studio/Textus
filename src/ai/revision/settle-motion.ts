@@ -1,4 +1,5 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { motionAllowed } from "../../ui/motion";
 import { crossfade } from "../../ui/moves";
 
 /**
@@ -15,6 +16,11 @@ export function settle(
   callIds: string[] | null,
   change: () => boolean | void,
 ): void {
+  // Where nothing moves, nothing is looked for either.
+  if (!motionAllowed()) {
+    change();
+    return;
+  }
   const root = view.dom as HTMLElement;
   const ofCall =
     callIds === null
