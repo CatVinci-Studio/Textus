@@ -1354,6 +1354,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermClipboard: "Die Zwischenablage lesen und schreiben",
   pluginPermEditorInput:
     "Die Tasten im Editor übernehmen und beim Tippen bearbeiten",
+  pluginPermProjectData:
+    "Eigene Daten im geöffneten Ordner ablegen, unter .textus/plugins",
   pluginPermNetwork: "Mit {host} verbinden",
   pluginPermNetworkAny: "Mit beliebigen Websites verbinden",
   menuPlugins: "Plugins",

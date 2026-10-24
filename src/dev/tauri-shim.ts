@@ -994,6 +994,58 @@ export function installDevTauriShim(): void {
         pluginStorage.set(id, store);
         return Promise.resolve(null);
       }
+      // A plugin's two places (plugins/store.rs), each `{ kv, files }`
+      // in memory: the global one, and the project's per open folder -
+      // `window.__devPluginStore` to look at.
+      case "plugin_store_get":
+      case "plugin_store_set":
+      case "plugin_store_keys":
+      case "plugin_store_read":
+      case "plugin_store_write":
+      case "plugin_store_files":
+      case "plugin_store_delete": {
+        const scope = String(args.scope);
+        if (
+          scope === "project" &&
+          !pluginState.plugins[id]?.granted.includes("project.data")
+        )
+          return Promise.reject(`${id} was not granted project.data.`);
+        if (scope === "project" && !args.root)
+          return Promise.reject("No folder is open.");
+        const stores = (w.__devPluginStore ??= {}) as Record<
+          string,
+          { kv: Record<string, unknown>; files: Record<string, string> }
+        >;
+        const place = (stores[
+          `${id}|${scope}|${scope === "project" ? args.root : ""}`
+        ] ??= { kv: {}, files: {} });
+        const key = String(args.key ?? "");
+        const file = String(args.path ?? "");
+        switch (cmd) {
+          case "plugin_store_get":
+            return Promise.resolve(place.kv[key] ?? null);
+          case "plugin_store_set":
+            if (args.value === null) delete place.kv[key];
+            else place.kv[key] = args.value;
+            return Promise.resolve(null);
+          case "plugin_store_keys":
+            return Promise.resolve(Object.keys(place.kv).sort());
+          case "plugin_store_read":
+            return file in place.files
+              ? Promise.resolve(place.files[file])
+              : Promise.reject(`No file ${file}.`);
+          case "plugin_store_write":
+            place.files[file] = String(args.text);
+            return Promise.resolve(null);
+          case "plugin_store_files":
+            return Promise.resolve(Object.keys(place.files).sort());
+          default:
+            delete place.files[file];
+            return Promise.resolve(null);
+        }
+      }
+      case "plugin_store_usage":
+        return Promise.resolve([0, 0]);
       case "plugin_uninstall":
         w.__devPlugins = installed.filter((p) => p.id !== id);
         delete pluginState.plugins[id];

@@ -7,7 +7,7 @@ import {
   type KeyCapture,
 } from "./editor-input";
 import { outlineOf, removeStatusItem, setStatusItem } from "./status-items";
-import { links, plugins as pluginsIpc } from "../platform/ipc";
+import { links } from "../platform/ipc";
 import { showMessage, showPrompt } from "../ui/app-dialog";
 import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../ai/types";
 import type { Strings } from "../i18n/strings";
@@ -133,7 +133,6 @@ export class PluginHost {
   private disconnect: (() => void) | null = null;
   private pinger: ReturnType<typeof setInterval> | null = null;
   private subscriptions = new Map<string, () => void>();
-  private storage: Promise<Record<string, unknown>> | null = null;
   private errors: number[] = [];
   private stopped = false;
 
@@ -290,11 +289,6 @@ export class PluginHost {
   private readOwnFile = (rel: string) =>
     readPluginFile(this.id, this.info.origin, rel);
 
-  private loadStorage(): Promise<Record<string, unknown>> {
-    this.storage ??= pluginsIpc.storageGet(this.id).catch(() => ({}));
-    return this.storage;
-  }
-
   /** What the workspace, network, storage and clipboard calls
    *  (broker-workspace.ts) need of this plugin. */
   private scope(): PluginScope {
@@ -303,7 +297,6 @@ export class PluginHost {
       need: (permission) => this.need(permission),
       root: () => this.root(),
       ownWebview: (id) => this.ownWebview(id),
-      loadStorage: () => this.loadStorage(),
     };
   }
 

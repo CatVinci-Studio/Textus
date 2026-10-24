@@ -1366,6 +1366,8 @@ para usar una.
   pluginPermClipboard: "Leer y escribir el portapapeles",
   pluginPermEditorInput:
     "Tomar las teclas que pulsas en el editor y editar según las pulsas",
+  pluginPermProjectData:
+    "Guardar sus propios datos en la carpeta abierta, en .textus/plugins",
   pluginPermNetwork: "Conectarse a {host}",
   pluginPermNetworkAny: "Conectarse a cualquier sitio web",
   menuPlugins: "Complementos",

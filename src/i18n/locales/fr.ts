@@ -1389,6 +1389,8 @@ utiliser une.
   pluginPermClipboard: "Lire et écrire le presse-papiers",
   pluginPermEditorInput:
     "Prendre en charge les touches tapées dans l’éditeur, et modifier au fil de la frappe",
+  pluginPermProjectData:
+    "Garder ses propres données dans le dossier ouvert, dans .textus/plugins",
   pluginPermNetwork: "Se connecter à {host}",
   pluginPermNetworkAny: "Se connecter à n’importe quel site web",
   menuPlugins: "Extensions",

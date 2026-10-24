@@ -96,6 +96,25 @@ export const commands = {
 	plugin_http: (id: string, request: HttpRequest_Deserialize) => __TAURI_INVOKE<HttpResponse>("plugin_http", { id, request }),
 	/**  Everything the plugin keeps, as one object. */
 	plugin_storage_get: (id: string) => __TAURI_INVOKE<{ [key in string]: Value }>("plugin_storage_get", { id }),
+	/**  What the plugin kept under `key`, or null. */
+	plugin_store_get: (id: string, scope: StoreScope, root: string | null, key: string) => __TAURI_INVOKE<Value | null>("plugin_store_get", { id, scope, root, key }),
+	/**  Keeps `value` under `key`; null takes the key away. */
+	plugin_store_set: (id: string, scope: StoreScope, root: string | null, key: string, value: Value) => __TAURI_INVOKE<null>("plugin_store_set", { id, scope, root, key, value }),
+	/**  Every key the plugin keeps there, in order. */
+	plugin_store_keys: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<string[]>("plugin_store_keys", { id, scope, root }),
+	/**  One of the plugin's own files there, as text. */
+	plugin_store_read: (id: string, scope: StoreScope, root: string | null, path: string) => __TAURI_INVOKE<string>("plugin_store_read", { id, scope, root, path }),
+	/**  Writes one of the plugin's own files there. */
+	plugin_store_write: (id: string, scope: StoreScope, root: string | null, path: string, text: string) => __TAURI_INVOKE<null>("plugin_store_write", { id, scope, root, path, text }),
+	/**  The plugin's own files there, as paths under its `files/`. */
+	plugin_store_files: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<string[]>("plugin_store_files", { id, scope, root }),
+	/**  Deletes one of the plugin's own files there. */
+	plugin_store_delete: (id: string, scope: StoreScope, root: string | null, path: string) => __TAURI_INVOKE<null>("plugin_store_delete", { id, scope, root, path }),
+	/**
+	 *  How much a plugin keeps in each place - Settings shows it, and empties
+	 *  it on Clear data. `root` is the open folder, for the project's.
+	 */
+	plugin_store_usage: (id: string, root: string | null) => __TAURI_INVOKE<[number, number]>("plugin_store_usage", { id, root }),
 	/**  Keeps `value` under `key`; null takes the key away. */
 	plugin_storage_set: (id: string, key: string, value: Value) => __TAURI_INVOKE<null>("plugin_storage_set", { id, key, value }),
 	/**
@@ -336,6 +355,9 @@ export type SkillEntry_Serialize = {
 	sha256: string,
 	size: number,
 };
+
+/**  Which of a plugin's two places. */
+export type StoreScope = "global" | "project";
 
 /**  One plugin command in the menu, as the window sends it. */
 export type TrayPluginItem = {

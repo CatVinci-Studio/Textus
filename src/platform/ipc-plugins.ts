@@ -21,6 +21,7 @@ export type PluginCatalogEntry = Generated.CatalogEntry_Serialize;
 export type { InstalledPlugin } from "./bindings/plugins";
 export type PluginFsEntry = Generated.FsEntry_Serialize;
 export type PluginHttpResponse = Generated.HttpResponse;
+export type StoreScope = Generated.StoreScope;
 
 /** A raw IPC response's bytes (tauri::ipc::Response) - which specta has no
  *  type for, so the commands answering one go through `call`. */
@@ -111,4 +112,42 @@ export const plugins = {
     command("plugin_storage_get", id) as Promise<Record<string, unknown>>,
   storageSet: (id: string, key: string, value: unknown) =>
     command("plugin_storage_set", id, key, value as Generated.Value),
+  // A plugin's two places (plugins/store.rs): `root` is the open folder,
+  // for the project's.
+  storeGet: (id: string, scope: StoreScope, root: string | null, key: string) =>
+    command("plugin_store_get", id, scope, root, key) as Promise<unknown>,
+  storeSet: (
+    id: string,
+    scope: StoreScope,
+    root: string | null,
+    key: string,
+    value: unknown,
+  ) =>
+    command("plugin_store_set", id, scope, root, key, value as Generated.Value),
+  storeKeys: (id: string, scope: StoreScope, root: string | null) =>
+    command("plugin_store_keys", id, scope, root),
+  storeRead: (
+    id: string,
+    scope: StoreScope,
+    root: string | null,
+    path: string,
+  ) => command("plugin_store_read", id, scope, root, path),
+  storeWrite: (
+    id: string,
+    scope: StoreScope,
+    root: string | null,
+    path: string,
+    text: string,
+  ) => command("plugin_store_write", id, scope, root, path, text),
+  storeFiles: (id: string, scope: StoreScope, root: string | null) =>
+    command("plugin_store_files", id, scope, root),
+  storeDelete: (
+    id: string,
+    scope: StoreScope,
+    root: string | null,
+    path: string,
+  ) => command("plugin_store_delete", id, scope, root, path),
+  /** What a plugin keeps globally and in `root`'s project, in bytes. */
+  storeUsage: (id: string, root: string | null) =>
+    command("plugin_store_usage", id, root),
 };

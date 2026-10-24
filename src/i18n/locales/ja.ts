@@ -1299,6 +1299,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginPermClipboard: "クリップボードを読み書きする",
   pluginPermEditorInput:
     "エディタで押すキーを引き受け、そのキーのとおりに編集する",
+  pluginPermProjectData:
+    "開いているフォルダー（.textus/plugins）に自分のデータを保存する",
   pluginPermNetwork: "{host} に接続する",
   pluginPermNetworkAny: "任意のウェブサイトに接続する",
   menuPlugins: "プラグイン",

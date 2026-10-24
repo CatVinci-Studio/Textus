@@ -1337,6 +1337,8 @@ type /name in a conversation to use one.
   pluginPermClipboard: "Read and write the clipboard",
   pluginPermEditorInput:
     "Take over the keys you type in the editor, and edit as you type",
+  pluginPermProjectData:
+    "Keep its own data in the open folder, in .textus/plugins",
   pluginPermNetwork: "Connect to {host}",
   pluginPermNetworkAny: "Connect to any website",
   menuPlugins: "Plugins",

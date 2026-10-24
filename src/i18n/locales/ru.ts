@@ -1357,6 +1357,8 @@ export default {
   pluginPermClipboard: "Читать и записывать буфер обмена",
   pluginPermEditorInput:
     "Перехватывать клавиши в редакторе и править текст по ним",
+  pluginPermProjectData:
+    "Хранить свои данные в открытой папке, в .textus/plugins",
   pluginPermNetwork: "Подключаться к {host}",
   pluginPermNetworkAny: "Подключаться к любым сайтам",
   menuPlugins: "Плагины",

@@ -1235,6 +1235,7 @@ export default {
   pluginPermWorkspaceWrite: "在打开的文件夹中新建和修改文件",
   pluginPermClipboard: "读取和写入剪贴板",
   pluginPermEditorInput: "接管你在编辑器里的按键，并按你的按键直接编辑",
+  pluginPermProjectData: "在打开的文件夹里（.textus/plugins）保存它自己的数据",
   pluginPermNetwork: "连接 {host}",
   pluginPermNetworkAny: "连接任意网站",
   menuPlugins: "插件",

@@ -410,17 +410,57 @@
         });
       },
     },
-    storage: {
-      get: function (key) {
-        return call("storage.get", { key: String(key) });
-      },
-      set: function (key, value) {
-        return call("storage.set", {
-          key: String(key),
-          value: value === undefined ? null : value,
-        });
-      },
-    },
+    storage: (function () {
+      // One of the plugin's two places: "global" for every document,
+      // "project" in the open folder (with project.data).
+      function place(scope) {
+        return {
+          get: function (key) {
+            return call("store.get", { scope: scope, key: String(key) });
+          },
+          set: function (key, value) {
+            return call("store.set", {
+              scope: scope,
+              key: String(key),
+              value: value === undefined ? null : value,
+            });
+          },
+          delete: function (key) {
+            return call("store.set", {
+              scope: scope,
+              key: String(key),
+              value: null,
+            });
+          },
+          keys: function () {
+            return call("store.keys", { scope: scope });
+          },
+          readText: function (path) {
+            return call("store.read", { scope: scope, path: String(path) });
+          },
+          writeText: function (path, text) {
+            return call("store.write", {
+              scope: scope,
+              path: String(path),
+              text: String(text),
+            });
+          },
+          files: function () {
+            return call("store.files", { scope: scope });
+          },
+          deleteFile: function (path) {
+            return call("store.delete", { scope: scope, path: String(path) });
+          },
+        };
+      }
+      var global = place("global");
+      return {
+        global: global,
+        project: place("project"),
+        get: global.get,
+        set: global.set,
+      };
+    })(),
     settings: {
       get: function (key) {
         return call("settings.get", { key: String(key) });

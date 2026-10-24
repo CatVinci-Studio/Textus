@@ -1348,6 +1348,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermClipboard: "Ler e escrever na área de transferência",
   pluginPermEditorInput:
     "Assumir as teclas que você digita no editor e editar conforme digita",
+  pluginPermProjectData:
+    "Guardar os próprios dados na pasta aberta, em .textus/plugins",
   pluginPermNetwork: "Conectar-se a {host}",
   pluginPermNetworkAny: "Conectar-se a qualquer site",
   menuPlugins: "Plugins",

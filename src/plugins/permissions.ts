@@ -17,6 +17,8 @@ export function permissionLabel(permission: Permission, t: Strings): string {
       return t.pluginPermClipboard;
     case "editor.input":
       return t.pluginPermEditorInput;
+    case "project.data":
+      return t.pluginPermProjectData;
   }
   const host = permission.slice("network:".length);
   return host === "*"

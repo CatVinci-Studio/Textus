@@ -102,6 +102,7 @@ turning it on, or leaves it off, and can take each back later.
 | `workspace.write`  | create and change files in the open folder                                      |
 | `clipboard`        | read and write the clipboard                                                    |
 | `editor.input`     | take the editor's keys and move, select and edit with them (Vim, Emacs)         |
+| `project.data`     | keep its own data in the open folder, in `.textus/plugins/<id>/`                |
 | `network:<host>`   | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for any)     |
 
 A plugin never writes a document by itself: an edit is a proposal. Files
@@ -196,8 +197,20 @@ key }` (`[@key]`); return `{ title, markdown }`, or null to let the next
   `onDidChangeRoot(fn)`.
 - `textus.net` - `fetch(url, { method, headers, body })`: a response with
   `status`, `ok`, `headers`, `text()`, `json()`, `bytes()`.
-- `textus.storage` - `get(key)`, `set(key, value)`: the plugin's own, up to
-  50 MB, `null` deletes.
+- `textus.storage` - the plugin's own data, in two places:
+  - `textus.storage.global` - for every document, in Textus's config folder
+    (`textus/plugins/<id>/`, beside the global agent.md);
+  - `textus.storage.project` (`project.data`) - in the open folder's
+    `.textus/plugins/<id>/`, so it travels with the project; without a
+    folder open its calls fail and say why.
+
+  Each has `get(key)`, `set(key, value)` (`null` deletes), `delete(key)`
+  and `keys()` - a key is a file of its own, so writing one rewrites only
+  it - and files of the plugin's own: `readText(path)`,
+  `writeText(path, text)`, `files()`, `deleteFile(path)`. Each place holds
+  up to 50 MB, and no plugin reaches another's. `textus.storage.get` and
+  `set` are the global place's.
+
 - `textus.settings` - `get(key)` (the user's value or the manifest's
   default), `onDidChange(fn)`.
 - `textus.clipboard` - `readText()`, `writeText(text)`.
