@@ -1,3 +1,4 @@
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { prefersReducedMotion } from "../../ui/motion";
 import { enter, glideAfter } from "../../ui/moves";
@@ -174,6 +175,27 @@ export interface ChangeDraw {
    *  clicks, and it has no sentences to decide yet anyway. */
   decide: SentenceHooks["decide"];
   stream?: StreamState;
+  /** The document, while it streams: where a change's new text goes is
+   *  checked against it (`outOfHeading`). */
+  doc?: ProseNode;
+}
+
+/**
+ * Where a streaming change's new text goes, when that is inside a heading
+ * it isn't one of - a story's first paragraph written where its title
+ * stood: after the heading, as a block. It was drawn in the title's type
+ * until the rewrite settled, then dropped to its own (the standard flow's
+ * translation, 1.2.1); settled, a change is laid out so already.
+ */
+function outOfHeading(
+  doc: ProseNode | undefined,
+  at: number,
+  after: string,
+): number | null {
+  if (!doc) return null;
+  const $at = doc.resolve(Math.min(at, doc.content.size));
+  if ($at.parent.type.name !== "heading") return null;
+  return /^#{1,6}\s/.test(after.trimStart()) ? null : $at.after();
 }
 
 export function changeDecorations(
@@ -206,7 +228,9 @@ export function changeDecorations(
     for (const part of strikeParts(c))
       decos.push(sentenceStrike(callId, index, part, state, focus, stagger));
   // The new text and its ✓ / ✕: after the sentences it replaces.
-  const at = c.at ?? c.to;
+  const below = outOfHeading(draw.doc, c.at ?? c.to, c.after);
+  const block = c.block || below !== null;
+  const at = below ?? c.at ?? c.to;
   // While the rewrite streams in, everything a change will have once it
   // settles is drawn already, so the settle moves nothing: the ✓ / ✕ faint
   // and inert (`pending-streaming`, which syncStreaming takes off).
@@ -229,15 +253,15 @@ export function changeDecorations(
     );
   // The line break a sentence ends with stays the original's, in the text.
   // A whole block (a table, a picture) is drawn as one, between blocks.
-  const after = c.block ? c.after.trim() : inlineSentence(c.after);
+  const after = block ? c.after.trim() : inlineSentence(c.after);
   if (after) {
     const key = `pending-new-${callId}-${index}-${state}-${textKey(after)}`;
     decos.push(
       Decoration.widget(
         at,
         () => {
-          const span = document.createElement(c.block ? "div" : "span");
-          if (c.block) span.dataset.blocks = "true";
+          const span = document.createElement(block ? "div" : "span");
+          if (block) span.dataset.blocks = "true";
           span.className = `pending-insert pending-sentence-new pending-sentence-${state}${focus}`;
           if (state !== "kept") span.setAttribute("role", "insertion");
           span.contentEditable = "false";
@@ -471,6 +495,7 @@ export function streamChanges(
  * decorations then take over the same elements.
  */
 export function streamDecorations(
+  doc: ProseNode,
   p: PendingPreview,
   source: NonNullable<PendingPreview["streamSource"]>,
   s: StreamState,
@@ -489,6 +514,7 @@ export function streamDecorations(
         labels: hooks.labels(),
         decide: hooks.decide,
         stream: s,
+        doc,
       }),
     ),
   );
