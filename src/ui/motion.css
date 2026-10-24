@@ -318,6 +318,13 @@
   border-radius: 2px;
 }
 
+/* A copy of what a change took away, fading out where it stood (ui/moves.ts's
+   crossfade): it plays none of its own entrances again. */
+.motion-ghost,
+.motion-ghost * {
+  animation: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-distance-sm: 0px;

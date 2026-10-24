@@ -84,7 +84,7 @@ describe("MemoryChip", () => {
     );
     expect(screen.getByTitle("已记住：引号用「」。（项目）")).toBeVisible();
     expect(screen.getByRole("button", { name: "撤销" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "改为个人" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "改为全局" })).toBeVisible();
   });
 
   it("undoes a new memory by deleting it", async () => {
@@ -137,7 +137,7 @@ describe("MemoryChip", () => {
     );
     expect(screen.getByTitle("已忘记：引号用「」。（项目）")).toBeVisible();
     // Nowhere to move what is no longer kept.
-    expect(screen.queryByRole("button", { name: "改为个人" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "改为全局" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "撤销" }));
     await waitFor(() => expect(memoryUndo).toHaveBeenCalled());
     expect(memoryUndo.mock.calls[0][3]).toBe(previous);
@@ -154,9 +154,9 @@ describe("MemoryChip", () => {
         labels={labels}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "改为个人" }));
+    fireEvent.click(screen.getByRole("button", { name: "改为全局" }));
     await waitFor(() =>
-      expect(screen.getByTitle("已记住：引号用「」。（个人）")).toBeVisible(),
+      expect(screen.getByTitle("已记住：引号用「」。（全局）")).toBeVisible(),
     );
     expect(memoryMove).toHaveBeenCalledWith(
       "/novel/one.md",
@@ -179,7 +179,7 @@ describe("MemoryChip", () => {
         labels={labels}
       />,
     );
-    expect(screen.queryByRole("button", { name: "改为个人" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "改为全局" })).toBeNull();
   });
 
   it("treats a memory deleted meanwhile as undone", async () => {

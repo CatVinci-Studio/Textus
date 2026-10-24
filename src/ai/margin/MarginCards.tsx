@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import type { ReviewNote } from "./review-notes-plugin";
 import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
 import { animate } from "../../ui/motion";
+import { joinBeat } from "../../ui/moves";
 import { CARD_WIDTH } from "./margin-room";
 import { Tooltip } from "../../ui/Tooltip";
 import "./ReviewMargin.css";
@@ -19,6 +20,12 @@ import {
 
 /** A change's new text on its card: a whole block other than a picture
  *  (which the card shows) by what it is (blockSummary). */
+/** A sentence as a card shows it on a line: a title's text without the
+ *  `# ` that makes it one. */
+function plainLine(text: string): string {
+  return text.trim().replace(/^#{1,6}\s+/, "");
+}
+
 function revisionText(after: string, labels: ReviewMarginLabels): string {
   const text = after.trim();
   if (wholeBlockKind(text) === "picture") return text;
@@ -177,15 +184,31 @@ export const RevisionCard = memo(
     onDecide: (callId: string, index: number, take: boolean | null) => void;
   }) {
     const ref = useCardBox(item.key, top, onHeight, cut !== null);
+    // It comes in with its new text, on its change's beat - drawn a frame
+    // or two after it, it came in after it (pending-widgets' changeBeat).
+    useLayoutEffect(() => {
+      if (ref.current) joinBeat(ref.current, item.key);
+    }, [ref, item.key]);
     const state =
       item.take === false ? "kept" : item.take === true ? "taken" : "open";
     const closed = chip && !open;
+    // What the card's text is, said in its heading beside the number, the
+    // text itself on the line under it - a chip's too, cut to one line:
+    // what Result only keeps out of the document, or a sentence with no
+    // original. A chip had the text in its heading, a card under it.
+    const original = item.shows === "new" && !!item.before.trim();
+    const what = original
+      ? labels.proposalDeletedSentence
+      : !item.before.trim() && item.after.trim()
+        ? labels.proposalAddedSentence
+        : null;
     return (
       <div
         ref={ref}
         className={`review-note revision-note revision-note-${state}${hot ? " review-note-hot" : ""}${focused ? " revision-note-focus" : ""}${item.streaming ? " revision-note-streaming" : ""}${cutClass(cut, chip, open)}`}
         role="group"
         aria-label={`${labels.reviewBarLabel} ${item.num}`}
+        data-call={item.callId}
         style={cardStyle(top, left, cut, open)}
         onMouseEnter={() => onHot(item.key, true)}
         onMouseLeave={() => onHot(item.key, false)}
@@ -210,15 +233,11 @@ export const RevisionCard = memo(
               {item.num}
             </span>
           )}
-          {closed ? (
-            <ChangeGlimpse
-              before={item.before}
-              after={item.after}
-              shows={item.shows}
-            />
-          ) : (
-            labels.reviewBarLabel
-          )}
+          <span className="revision-note-what">
+            {what
+              ? `${labels.reviewBarLabel} · ${what}`
+              : labels.reviewBarLabel}
+          </span>
           <span className="agent-proposal-pick revision-note-pick">
             <Tooltip text={labels.proposalTakeSentence}>
               <button
@@ -258,15 +277,18 @@ export const RevisionCard = memo(
             </Tooltip>
           </span>
         </div>
-        {closed ? null : item.shows === "new" && item.before.trim() ? (
+        {closed ? (
+          <ChangeGlimpse
+            before={item.before}
+            after={item.after}
+            shows={item.shows}
+          />
+        ) : original ? (
           // Result only: the text reads as it will; the card keeps what
           // the change takes out of it.
           <div className="revision-note-text revision-note-original">
-            <span className="revision-note-was">
-              {labels.proposalDeletedSentence}
-            </span>
             <s>
-              <RevisionNoteText text={item.before.trim()} />
+              <RevisionNoteText text={plainLine(item.before)} />
             </s>
             {/* What it becomes is in the text; read out here too, so the
               card says what is replaced by what. */}
@@ -281,14 +303,6 @@ export const RevisionCard = memo(
           </div>
         ) : (
           <div className="revision-note-text">
-            {/* A sentence the rewrite adds has no original beside it in
-              the text, only the mark where it goes: the card says what it
-              is, instead of standing as an entry with nothing replaced. */}
-            {!item.before.trim() && item.after.trim() && (
-              <span className="revision-note-was">
-                {labels.proposalAddedSentence}
-              </span>
-            )}
             {/* The text shows the original; read out here too, so the
               card says what is replaced by what. */}
             {item.before.trim() && (
@@ -395,12 +409,15 @@ export const NoteCard = memo(function NoteCard({
         />
       )}
       {chip && !open ? (
-        <div className="review-note-by">
-          <NoteMark note={note} labels={labels} />
-          <span className="review-note-chip-text">
+        <>
+          <div className="review-note-by">
+            <NoteMark note={note} labels={labels} />
+            {note.by === "me" ? labels.ownNoteBy : labels.reviewNoteBy}
+          </div>
+          <div className="review-note-chip-text">
             <InlineMarkdownText text={note.comment} />
-          </span>
-        </div>
+          </div>
+        </>
       ) : (
         <NoteBody
           note={note}
@@ -414,7 +431,9 @@ export const NoteCard = memo(function NoteCard({
   );
 });
 
-/** Who wrote a note: the writer (an own note, useOwnNotes) or the AI. */
+/** Who wrote a note, at the head of its card: Me for the writer's own
+ *  (useOwnNotes), else the number of the AI's note - its badge's in the
+ *  text, its card's in the chat - as a revision's is. */
 function NoteMark({
   note,
   labels,
@@ -427,8 +446,8 @@ function NoteMark({
       {labels.ownNoteMark}
     </span>
   ) : (
-    <span className="review-note-mark" aria-hidden="true">
-      AI
+    <span className="review-note-num" aria-hidden="true">
+      {note.num}
     </span>
   );
 }
@@ -488,26 +507,26 @@ function ChangeGlimpse({
   after: string;
   shows: RevisionItem["shows"];
 }) {
-  const g = changeGlimpse(before, after);
+  const g = changeGlimpse(plainLine(before), plainLine(after));
   if (!g.partial)
     return (
-      <span className="review-note-chip-text">
+      <div className="review-note-chip-text">
         {shows === "new" && before.trim() ? (
-          <s>{before.trim()}</s>
+          <s>{plainLine(before)}</s>
         ) : (
-          after.trim()
+          plainLine(after)
         )}
-      </span>
+      </div>
     );
   return (
-    <span className="review-note-chip-text">
+    <div className="review-note-chip-text">
       {g.cutLead && "…"}
       {g.lead}
       {g.removed && <del>{g.removed}</del>}
       {g.added && <ins>{g.added}</ins>}
       {g.tail}
       {g.cutTail && "…"}
-    </span>
+    </div>
   );
 }
 

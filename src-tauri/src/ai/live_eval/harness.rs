@@ -936,7 +936,8 @@ pub fn run_conversation(
                     // block_on, which can't be nested.
                     let mut waits = [3u64, 10, 30].into_iter();
                     let (step, used): (StepResult, StepUsage) = loop {
-                        match agent.step(instructions, &h, specs, sink).await {
+                        let joined = crate::ai::agent::lists::join_calls(&h);
+                        match agent.step(instructions, &joined, specs, sink).await {
                             Ok((step, used)) => break (step, used.unwrap_or_default()),
                             Err(e) if transient(&e) => match waits.next() {
                                 Some(w) => std::thread::sleep(std::time::Duration::from_secs(w)),

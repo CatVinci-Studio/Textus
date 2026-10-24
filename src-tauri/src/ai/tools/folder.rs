@@ -8,7 +8,8 @@ pub(super) const COMMENT_ADDED: &str = "Comment added";
 
 /// Feedback pinned to a passage instead of an edit to it - for "what's weak
 /// here", "review this draft". Changes nothing; its block is checked like
-/// propose_edit's so the card's "locate" button lands on it.
+/// propose_edit's so the card's "locate" button lands on it. One of the
+/// call's `comments` (agent/lists.rs).
 pub(super) fn add_comment(ctx: &ToolContext, arguments: &str) -> String {
     let parsed: serde_json::Value = serde_json::from_str(arguments).unwrap_or_default();
     let comment = parsed.get("comment").and_then(|v| v.as_str()).unwrap_or("");

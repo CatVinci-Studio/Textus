@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from "vitest";
-import { UnitReveal, landingEnds } from "./unit-reveal";
+import { HOLD_MS, UnitReveal, landingEnds } from "./unit-reveal";
 
 describe("landingEnds", () => {
   it("lands a sentence once a space follows its stop, not before", () => {
@@ -68,5 +68,44 @@ describe("new writing, a paragraph at a time", () => {
     // The end of the text ends it, as does a heading after it.
     expect(para("One. Two.", true)).toEqual([9]);
     expect(para("One.\n## Next\n\n")).toContain(5);
+  });
+});
+
+describe("a long paragraph, in batches", () => {
+  it("lands the sentences it has finished together once held long enough, then again", () => {
+    const reveal = new UnitReveal(true);
+    reveal.update("One. Two. Thr", false, 0);
+    reveal.tick(10);
+    // Held: its end hasn't come.
+    reveal.tick(HOLD_MS - 1);
+    expect(reveal.text).toBe("");
+    // Held long enough: both finished sentences at once, not the half one.
+    reveal.tick(HOLD_MS + 10);
+    expect(reveal.text).toBe("One. Two. ");
+    expect(reveal.endsOnUnit).toBe(true);
+    // More finished: they wait for the next batch...
+    reveal.update("One. Two. Three. Four. Fi", false, HOLD_MS + 20);
+    reveal.tick(HOLD_MS + 30);
+    expect(reveal.text).toBe("One. Two. ");
+    // ...which comes HOLD_MS after the first.
+    reveal.tick(2 * HOLD_MS + 20);
+    expect(reveal.text).toBe("One. Two. Three. Four. ");
+    // The paragraph's end lands the rest at once.
+    reveal.update(
+      "One. Two. Three. Four. Five.\n\nNext",
+      false,
+      2 * HOLD_MS + 30,
+    );
+    reveal.tick(2 * HOLD_MS + 40);
+    expect(reveal.text).toBe("One. Two. Three. Four. Five.\n\n");
+  });
+
+  it("holds a short paragraph whole", () => {
+    const reveal = new UnitReveal(true);
+    reveal.update("One. Two. Thr", false, 0);
+    reveal.tick(10);
+    reveal.update("One. Two. Three.\n\n", false, 100);
+    reveal.tick(200);
+    expect(reveal.text).toBe("One. Two. Three.\n\n");
   });
 });

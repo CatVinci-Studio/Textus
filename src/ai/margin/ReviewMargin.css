@@ -176,25 +176,41 @@
   border-color: var(--review-note-line);
 }
 
-/* A card of a crowded run, as one line (stackCards): its height is set
-   (CHIP_HEIGHT), the line cut short. */
+/* A card of a crowded run, cut to its heading and a line (stackCards): its
+   height is set (CHIP_HEIGHT), the line cut short. */
 .review-note-chip {
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  padding-block: 0;
+  padding-block: 2px;
 }
 
-.review-note-chip > .review-note-by {
-  flex: 1;
-  min-width: 0;
+/* Its heading a small line over its text, so a chip stands beside a line
+   of the document as one line did. */
+.review-note-chip .review-note-by {
+  height: 12px;
   margin: 0;
-  font-size: var(--text-sm);
-  color: var(--editor-text);
+  font-size: 10.5px;
+  line-height: 12px;
+}
+
+.review-note-chip :is(.revision-note-num, .review-note-num) {
+  min-width: 12px;
+  height: 12px;
+  font-size: 8px;
+}
+
+.review-note-chip .revision-note-pick {
+  margin-block: -4px;
+  transform: scale(0.85);
+  transform-origin: right center;
 }
 
 .review-note-chip-text {
-  flex: 1;
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.review-note-chip-text {
+  display: block;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
@@ -213,8 +229,7 @@
 /* A revision cut to its chip keeps the card's look: its number, then its
    new text in the green box - not plain text, as a note's chip is. */
 .revision-note.review-note-chip .review-note-chip-text {
-  flex: 0 1 auto;
-  padding: 1px 4px;
+  padding: 0 4px;
   border-radius: var(--radius-small);
   background: var(--revision-insert-bg);
 }
@@ -430,7 +445,8 @@
 
 /* A disc for one or two digits, a pill past that: a fixed width ran "100"
    out of its circle. */
-.revision-note-num {
+.revision-note-num,
+.review-note-num {
   display: inline-grid;
   place-items: center;
   box-sizing: border-box;
@@ -477,6 +493,11 @@
   color: var(--editor-muted);
 }
 
+/* A note's number, in its badge's colour. */
+.review-note-num {
+  background: var(--review-note-line);
+}
+
 .revision-note-kept .revision-note-num {
   background: color-mix(in srgb, var(--editor-muted) 70%, transparent);
 }
@@ -494,14 +515,9 @@
 /* Result only: the card holds what the change takes out, struck - in the
    text's own colour, its heading too: muted on the red, neither could be
    read (axe, color-contrast). The strike and the red say it is gone. */
-.revision-note-original,
-.revision-note-original .revision-note-was {
+.revision-note-original {
   background: var(--revision-delete-bg);
   color: var(--editor-text);
-}
-
-.revision-note-original .revision-note-was {
-  background: none;
 }
 
 .revision-note-original s {
@@ -517,15 +533,6 @@
 
 .revision-note-kept .revision-note-original s {
   text-decoration: none;
-}
-
-/* A card's heading over its text: "Original" for what Result only keeps
-   out of the text, "Added" for a sentence with no original. */
-.revision-note-was {
-  display: block;
-  margin-bottom: 1px;
-  font-size: var(--text-xs);
-  color: var(--editor-muted);
 }
 
 /* Its pair under the pointer or the review bar's pointer: the text it

@@ -127,6 +127,23 @@ Who owns each move:
 | pending → accepted / rejected / replaced / joined / invalid, undo         | the table in `ai/revision/proposal-lifecycle.ts` (`recordStatus`); `usePendingEdits.ts` + `pending-edit-plugin.ts` run what goes with each move |
 | what the model is told of each, next request                              | `ai/revision/proposal-status.ts`                                                                                                                |
 
+### One call, a list of items
+
+The model sends all of a reply's edits in one `propose_edit` call
+(`edits`) and all its notes in one `add_comment` call (`comments`).
+ChatGPT's service holds back a step's parallel calls until the step ends,
+with no argument deltas: ten edits, or thirty notes, came at once after
+the model had finished (1.2.1). One call's arguments still stream.
+
+Past the model, nothing changed: the backend (`agent/lists.rs`) streams a
+list call on as one call per item, `<call>#<n>` (`ListStream`), splits
+the step the same way (`split_calls`, in `settle_step`), and joins the
+items back into the call the model made when the history goes back to it
+(`join_calls`). The tools, the history the frontend keeps and the
+frontend itself see one call per edit or note, as before. An edit lands
+as soon as its `text` is whole (`ProposalStream`'s feed with `done`), not
+when the step's turns arrive after the last one.
+
 ### Writing: `ProposalStream`
 
 `toolStart` opens a draft (propose_edit and generate_image; a note is
@@ -250,9 +267,12 @@ paragraphs and past the text's end (`1.2.0-rc.6`). Pushed more than about
 a card's height, such a run is cut to fit (`stackCards`): each card gets
 the room beside its own passage down to where the next one's starts - a
 paragraph's rewrite about its paragraph's height, notes on adjacent lines
-a line each, a chip. A chip of a small change shows just that change, the
-words struck and added with a little of the sentence around them; a
-rewrite shows its text. Where even chips run far - more notes than the
+a line each, a chip. Every card, a chip too, heads with its number and
+what it is ("Revision · Original", "Review"), its text on the line under
+it - a chip had its text in the heading, a card under it, two looks for
+one thing (`1.2.1`). A chip's text is one line: a small change just that
+change, the words struck and added with a little of the sentence around
+them; a rewrite its text, a title's without its `#`. Where even chips run far - more notes than the
 paragraph has lines - the run is one chip, "8 notes", which opens to the
 list of them. Clicked, or pointed at by a bar, a cut card opens whole over
 the ones below, which don't move, until a click elsewhere or Escape; opened
@@ -275,11 +295,16 @@ way the finished rewrite is (`diffSentenceLists`), except for the last run
 of changes, where an original the stream hasn't reached is still to come,
 not deleted. So:
 
-- a changed sentence is struck where it stands with its new text beside it
-  the moment it completes, in every view; a kept one shows nothing of its
-  own, but the progress cursor (`readingDecoration`, a tint in
-  `--revision-reading-bg`) stands on the original the stream has reached,
-  so a light polish moves through the text rather than standing still;
+- a paragraph lands once it is rewritten whole (unit-reveal.ts, as new
+  writing does): each changed sentence of it struck where it stands with
+  its new text beside it, all of them at once and on one beat with their
+  margin cards (ui/moves.ts's beats, `changeBeat`), in every view - landed
+  a sentence at a time, a rewrite grew in jerks and its cards came in
+  after their text (`1.2.1`); until then the progress cursor
+  (`readingDecoration`, a tint in `--revision-reading-bg`) stands on the
+  paragraph the stream has reached, so a light polish moves through the
+  text rather than standing still, and the review bar says it is being
+  written where its name stands, with the "working" dots;
 - the sentence being written types in beside the original it rewrites,
   which is struck while it is written - or, a sentence of its own, where it
   goes. While it still repeats an original word for word, or is too short
@@ -319,6 +344,8 @@ widgets were keyed by the view, so every switch drew them again and the
 text came back from nothing. An original the view takes out of the text is
 hidden in the flow (`font-size: 0`), not `display: none`, which would start
 its entrance over when it came back.
+
+Decided - Accept, Reject, Reject all - a proposal leaves as one move (`settle-motion.ts`, ui/moves.ts's crossfade): the blocks it was drawn in cross-fade from copies of how they looked, laid beside the editor (never in ProseMirror's DOM, which reads any change there as an edit), the text after them glides to its new place, and its cards fade out where they stood (`1.2.1`).
 
 Staleness is the lifecycle's ("The writer's edits stand", above). Accept
 re-checks once more, defensively. Terminal statuses are remembered even

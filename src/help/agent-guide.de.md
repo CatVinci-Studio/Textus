@@ -90,7 +90,7 @@ Was Textus AI über dich und deine Arbeit weiß, steht in ein paar einfachen Mar
 | **Stilprofil** | Wie du schreibst | `.textus/style.md` |
 | **Lexikon** | Fakten zu Personen, Orten und Begriffen | `.textus/library/` |
 | **Schreibanweisungen** | Feste Regeln für jede Unterhaltung | `agent.md` – global und pro Projekt |
-| **Von der KI gemerkt** | Was sich Textus AI aus deinen Unterhaltungen merkt | `.textus/memory/` und `memory/` im globalen Konfigurationsordner |
+| **Gedächtnis** | Was sich Textus AI aus deinen Unterhaltungen merkt | `.textus/memory/` und `memory/` im globalen Konfigurationsordner |
 | **Skills** | Wiederverwendbare Anweisungen, die du mit `/name` aufrufst | `skills/` – global und pro Projekt |
 | **Globaler Konfigurationsordner** | Was für jedes Dokument gilt | Der Einstellungsordner der App |
 
@@ -188,14 +188,14 @@ Schreibanweisungen gelten nur für Unterhaltungen. Die Vervollständigung liest 
 
 ### Was sich Textus AI merkt
 
-**Textus AI merkt sich, worum du bittest und wie du schreibst**, ohne dass du eine Datei schreiben musst. Wenn du etwas sagst, das über eine einzelne Anfrage hinaus gelten soll – „immer Schweizer Rechtschreibung“, „keine Gedankenstriche“, eine Korrektur, die du zweimal machen musstest – oder einen Fakt über dein Werk nennst, etwa wer eine Figur ist, merkt sich Textus AI das und hält sich in späteren Unterhaltungen daran. Jedes Mal zeigt eine Zeile unter der Antwort, was gemerkt wurde und wo: **Rückgängig** nimmt es zurück, **Persönlich machen** oder **Ins Projekt** verschiebt es.
+**Textus AI merkt sich, worum du bittest und wie du schreibst**, ohne dass du eine Datei schreiben musst. Wenn du etwas sagst, das über eine einzelne Anfrage hinaus gelten soll – „immer Schweizer Rechtschreibung“, „keine Gedankenstriche“, eine Korrektur, die du zweimal machen musstest – oder einen Fakt über dein Werk nennst, etwa wer eine Figur ist, merkt sich Textus AI das und hält sich in späteren Unterhaltungen daran. Jedes Mal zeigt eine Zeile unter der Antwort, was gemerkt wurde und wo: **Rückgängig** nimmt es zurück, **Global machen** oder **Ins Projekt** verschiebt es.
 
 - **Dieses Projekt**: was dieses Werk betrifft, in `.textus/memory/`; Fakten zu Personen, Orten und Begriffen kommen ins Lexikon.
 - **Für alle Projekte**: deine allgemeinen Gewohnheiten, in `memory/` im globalen Konfigurationsordner. Ohne Projektordner landet alles hier.
 
-Der Tab **Gedächtnis** im KI-Bereich listet alles unter **Von der KI gemerkt** auf, jeweils mit Zeitpunkt und Unterhaltung: **Bearbeiten** öffnet einen Eintrag, **Löschen** entfernt ihn. Bei einem Widerspruch gelten deine eigenen Schreibanweisungen, und Textus AI ändert nie deine `agent.md` oder dein Stilprofil. Gibt es zu viele Erinnerungen zum Senden, bleiben die ältesten außen vor, und der Tab Gedächtnis weist darauf hin. **Einstellungen > Textus AI > Automatisch merken** schaltet die Funktion aus.
+Der Tab **Projekt** im KI-Bereich listet alles unter **Gedächtnis** auf, jeweils mit Zeitpunkt und Unterhaltung: **Bearbeiten** öffnet einen Eintrag, **Löschen** entfernt ihn. Bei einem Widerspruch gelten deine eigenen Schreibanweisungen, und Textus AI ändert nie deine `agent.md` oder dein Stilprofil. Gibt es zu viele Erinnerungen zum Senden, bleiben die ältesten außen vor, und der Tab Projekt weist darauf hin. **Einstellungen > Textus AI > Automatisch merken** schaltet die Funktion aus.
 
-**Es lernt auch aus deinen Überarbeitungsentscheidungen.** Wenn du dieselbe Art von Änderung mehrmals ablehnst – 「」 zu “” gemacht, ein Wort gegen ein anderes getauscht, Sätze geteilt, ein Oxford-Komma eingefügt –, bietet Textus AI nach der Durchsicht an, sie als Vorgabe zu merken: **Merken** speichert sie unter **Von der KI gemerkt**, **Jetzt nicht** wartet auf mehr, und **Nicht mehr fragen** fragt nach dieser Art nicht mehr. Es fragt höchstens einmal am Tag, und gespeichert wird nur auf deinen Klick, auch wenn Automatisch merken aus ist. Gezählt wird nur eine kurze Notiz, welche Arten von Änderungen du angenommen oder abgelehnt hast – auf diesem Computer neben deinen Erinnerungen gespeichert und nie gesendet.
+**Es lernt auch aus deinen Überarbeitungsentscheidungen.** Wenn du dieselbe Art von Änderung mehrmals ablehnst – 「」 zu “” gemacht, ein Wort gegen ein anderes getauscht, Sätze geteilt, ein Oxford-Komma eingefügt –, bietet Textus AI nach der Durchsicht an, sie als Vorgabe zu merken: **Merken** speichert sie unter **Gedächtnis**, **Jetzt nicht** wartet auf mehr, und **Nicht mehr fragen** fragt nach dieser Art nicht mehr. Es fragt höchstens einmal am Tag, und gespeichert wird nur auf deinen Klick, auch wenn Automatisch merken aus ist. Gezählt wird nur eine kurze Notiz, welche Arten von Änderungen du angenommen oder abgelehnt hast – auf diesem Computer neben deinen Erinnerungen gespeichert und nie gesendet.
 
 ### Skills (/name)
 

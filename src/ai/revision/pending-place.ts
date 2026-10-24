@@ -14,22 +14,17 @@ import {
 } from "../doc-markdown";
 import type { EditProposal } from "../types";
 import { hasGeneratedImage } from "./generated-images";
-import { blockKind } from "../doc-blocks";
 import {
   pendingEditKey,
   type PendingPreview,
   type PendingSentence,
 } from "./pending-edit-plugin";
-import {
-  paragraphCount,
-  pairedPrefix,
-  splitSentences,
-  trimBreaks,
-} from "./sentence-diff";
+import { pairedPrefix, splitSentences, trimBreaks } from "./sentence-diff";
 import { diffSentences, splitUnits } from "./unit-diff";
 import { matchableMarkdown } from "./markdown-forms";
 import { findInOrder, locateHunks } from "./sentence-locate";
 import { locatePlainText } from "./text-locate";
+import { wholeParagraphs } from "./whole-paragraphs";
 
 /**
  * Where a proposal goes in the document: the blocks it names, the
@@ -131,8 +126,15 @@ export function resolveAnchored(
       proposal.action,
       proposal.text ?? "",
     ),
+    // An insertion next to words inside its block has theirs: drawn
+    // there, inside the paragraph, where Accept writes it (insertAt in
+    // pending-decorations.ts). One next to the whole block goes beside it.
     strikeRange:
-      proposal.action === "replace" || proposal.action === "delete"
+      proposal.action === "replace" ||
+      proposal.action === "delete" ||
+      ((proposal.action === "insert_before" ||
+        proposal.action === "insert_after") &&
+        (match.prefix.trim() !== "" || match.suffix.trim() !== ""))
         ? computeStrikeRange(ctx, doc, blocks, match)
         : null,
     lead: match.prefix,
@@ -190,47 +192,6 @@ function sentencesFor(
       : [],
   );
   return { hunks, changes };
-}
-
-/**
- * A change of several whole paragraphs (short ones taken together, or
- * paragraphs joined or split) as a change of blocks: the paragraphs it
- * covers struck whole, the new ones drawn as the paragraphs they will be
- * after them. Drawn in the last one's run of text, they stood as one tall
- * paragraph that moved everything below once taken. Null when the change
- * is inside a paragraph, or covers anything but top-level paragraphs.
- */
-function wholeParagraphs(
-  doc: ProseNode,
-  range: { from: number; to: number },
-  before: string,
-  after: string,
-): {
-  from: number;
-  to: number;
-  block: true;
-  at: number;
-  parts: { from: number; to: number }[];
-} | null {
-  if (paragraphCount(before) < 2 && paragraphCount(after) < 2) return null;
-  const start = doc.resolve(range.from);
-  const end = doc.resolve(range.to);
-  if (start.depth !== 1 || end.depth !== 1) return null;
-  if (start.parentOffset !== 0 || end.parentOffset !== end.parent.content.size)
-    return null;
-  const from = start.before();
-  const to = end.after();
-  let plain = true;
-  const parts: { from: number; to: number }[] = [];
-  doc.nodesBetween(from, to, (node, pos) => {
-    // A picture is a paragraph too (doc-blocks.ts's blockKind): taken
-    // into the block, its redo proposal lost the node it replaces once the
-    // rewrite was accepted.
-    if (blockKind(node) !== "paragraph") plain = false;
-    parts.push({ from: pos, to: pos + node.nodeSize });
-    return false;
-  });
-  return plain ? { from, to, block: true, at: to, parts } : null;
 }
 
 /**

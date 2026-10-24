@@ -227,7 +227,7 @@ test("the Memory tab lists what was remembered, and moves and deletes it", async
   await expect(remembered).toContainText(REMEMBERED.text);
   await expect(remembered).toContainText("from “Always use British spelling”");
 
-  await remembered.getByRole("button", { name: "Make personal" }).click();
+  await remembered.getByRole("button", { name: "Make global" }).click();
   await expect
     .poll(async () => (await calls(page, "memory_move")).length)
     .toBe(1);

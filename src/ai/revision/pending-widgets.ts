@@ -1,15 +1,13 @@
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { prefersReducedMotion } from "../../ui/motion";
-import { enter, glideAfter } from "../../ui/moves";
-import { Cascade, hasWords } from "../../ui/cascade";
-import { inlineSentence, pairedPrefix } from "./sentence-diff";
-import { type StreamLayout } from "./sentence-stream";
+import { enterOnBeat, glideAfter, startBeat } from "../../ui/moves";
+import { inlineSentence } from "./sentence-diff";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
 import {
   type StreamState,
   animations,
   ensureTicking,
-  layoutSignature,
   maybeSettle,
   newAnimation,
   renderAnimation,
@@ -23,8 +21,9 @@ import { type SentenceHooks } from "./pending-decorations";
 
 /**
  * The pieces a proposal is drawn with: the green text widget, a sentence's
- * strike and its ✓ / ✕, a change drawn whole, and a rewrite streaming in
- * sentence by sentence with its reading cursor.
+ * strike and its ✓ / ✕, a change drawn whole, and a completed change
+ * coming in while its rewrite streams (the rest of a streaming rewrite is
+ * stream-widgets.ts's).
  */
 
 export function textWidget(
@@ -174,6 +173,27 @@ export interface ChangeDraw {
    *  clicks, and it has no sentences to decide yet anyway. */
   decide: SentenceHooks["decide"];
   stream?: StreamState;
+  /** The document, while it streams: where a change's new text goes is
+   *  checked against it (`outOfHeading`). */
+  doc?: ProseNode;
+}
+
+/**
+ * Where a streaming change's new text goes, when that is inside a heading
+ * it isn't one of - a story's first paragraph written where its title
+ * stood: after the heading, as a block. It was drawn in the title's type
+ * until the rewrite settled, then dropped to its own (the standard flow's
+ * translation, 1.2.1); settled, a change is laid out so already.
+ */
+function outOfHeading(
+  doc: ProseNode | undefined,
+  at: number,
+  after: string,
+): number | null {
+  if (!doc) return null;
+  const $at = doc.resolve(Math.min(at, doc.content.size));
+  if ($at.parent.type.name !== "heading") return null;
+  return /^#{1,6}\s/.test(after.trimStart()) ? null : $at.after();
 }
 
 export function changeDecorations(
@@ -206,7 +226,9 @@ export function changeDecorations(
     for (const part of strikeParts(c))
       decos.push(sentenceStrike(callId, index, part, state, focus, stagger));
   // The new text and its ✓ / ✕: after the sentences it replaces.
-  const at = c.at ?? c.to;
+  const below = outOfHeading(draw.doc, c.at ?? c.to, c.after);
+  const block = c.block || below !== null;
+  const at = below ?? c.at ?? c.to;
   // While the rewrite streams in, everything a change will have once it
   // settles is drawn already, so the settle moves nothing: the ✓ / ✕ faint
   // and inert (`pending-streaming`, which syncStreaming takes off).
@@ -229,15 +251,15 @@ export function changeDecorations(
     );
   // The line break a sentence ends with stays the original's, in the text.
   // A whole block (a table, a picture) is drawn as one, between blocks.
-  const after = c.block ? c.after.trim() : inlineSentence(c.after);
+  const after = block ? c.after.trim() : inlineSentence(c.after);
   if (after) {
     const key = `pending-new-${callId}-${index}-${state}-${textKey(after)}`;
     decos.push(
       Decoration.widget(
         at,
         () => {
-          const span = document.createElement(c.block ? "div" : "span");
-          if (c.block) span.dataset.blocks = "true";
+          const span = document.createElement(block ? "div" : "span");
+          if (block) span.dataset.blocks = "true";
           span.className = `pending-insert pending-sentence-new pending-sentence-${state}${focus}`;
           if (state !== "kept") span.setAttribute("role", "insertion");
           span.contentEditable = "false";
@@ -383,13 +405,20 @@ function blockStrike(
   });
 }
 
+/** The beat a change enters on: its new text in the text and its card in
+ *  the margin (the card's key, useReviewNotes) share it. */
+export function changeBeat(callId: string, index: number): string {
+  return `rev:${callId}:${index}`;
+}
+
 /**
- * How a completed sentence's new text comes in while the rewrite streams.
- * The sentence the partial span was just writing is already on screen as it
+ * How a completed change's new text comes in while the rewrite streams: a
+ * paragraph rewritten whole lands at once, all its changes on one beat
+ * with their cards (`landedAt`) - fading in where they stand, a whole block
+ * rising into place, as new writing does. The sentence the partial span
+ * was just writing (a long one cut at a pause) is already on screen as it
  * is: no entrance. One a re-alignment changed or moved - a sentence the
- * rewrite dropped joins the change before it, whose new text then follows
- * it - or one that appears without having been written in place (it
- * repeated its original until its last word), cross-fades in.
+ * rewrite dropped joins the change before it - comes in again.
  */
 export function streamEntrance(
   span: HTMLElement,
@@ -409,11 +438,15 @@ export function streamEntrance(
       ? s.partialIndex === index
       : before.at === at && after.startsWith(before.after);
   if (written) return;
-  // A sentence written in place of the one its original was marked in
-  // (the reading cursor, ui/moves.ts's mark) comes in where it lands, a
-  // word at a time (ui/cascade.ts); a block with no words, whole.
-  if (hasWords(span)) new Cascade().play(span);
-  else enter(span, { from: "none" });
+  const beat = changeBeat(span.dataset.call ?? "", index);
+  startBeat(beat, s.landedAt);
+  // Inline, a sentence only fades: an inline box takes no transform.
+  const block = span.dataset.blocks === "true";
+  enterOnBeat(span, beat, {
+    from: block ? "up" : "none",
+    distance: "md",
+    duration: "--dur-slow",
+  });
   // A whole block pushes the text below it down: that glides there. Once
   // it is in the document (a widget is drawn after it is made), before the
   // frame is painted.
@@ -422,141 +455,4 @@ export function streamEntrance(
     const root = span.closest(".ProseMirror");
     if (root) glideAfter(span, span.offsetHeight, root);
   });
-}
-
-/** The completed changes of a streaming rewrite's layout, where they
- *  stand in the document. */
-export function streamChanges(
-  source: NonNullable<PendingPreview["streamSource"]>,
-  s: StreamState,
-): PendingSentence[] {
-  const { ranges } = source;
-  const at = (i: number) => (i > 0 ? ranges[i - 1].to : ranges[0].from);
-  return s.layout.pieces.flatMap((piece): PendingSentence[] => {
-    if (piece.kind === "same") return [];
-    const struck = piece.end > piece.start;
-    const from = struck ? ranges[piece.start].from : at(piece.start);
-    const to = struck ? ranges[piece.end - 1].to : from;
-    const base: PendingSentence = {
-      from,
-      to,
-      before: piece.before,
-      after: piece.after,
-      take: null,
-    };
-    // A block changed whole, drawn as the finished rewrite draws it.
-    if (struck && piece.end - piece.start === 1 && ranges[piece.start].block)
-      return [{ ...base, block: true, at: to }];
-    const paired = pairedPrefix(
-      s.sentences.slice(piece.start, piece.end),
-      piece.after,
-    );
-    return [
-      {
-        ...base,
-        parts: ranges.slice(piece.start, piece.end),
-        at: struck ? ranges[piece.start + paired - 1].to : undefined,
-      },
-    ];
-  });
-}
-
-/**
- * A rewrite still streaming in, laid out sentence by sentence
- * (sentence-stream.ts): each completed changed sentence struck in place
- * with its new text beside it, unchanged ones and those not reached yet
- * plain, and the sentence being written after the original it rewrites
- * (struck) or, a sentence of its own, where it goes. A completed change's
- * ✓ / ✕ come in faint and take clicks once it settles; the settled
- * decorations then take over the same elements.
- */
-export function streamDecorations(
-  p: PendingPreview,
-  source: NonNullable<PendingPreview["streamSource"]>,
-  s: StreamState,
-  hooks: SentenceHooks,
-): Decoration[] {
-  const { ranges } = source;
-  const at = (i: number) => (i > 0 ? ranges[i - 1].to : ranges[0].from);
-  const decos: Decoration[] = [];
-  const focused = hooks.focused();
-  s.changes = streamChanges(source, s);
-  s.changes.forEach((c, index) =>
-    decos.push(
-      ...changeDecorations(p.callId, index, c, {
-        focused: focused?.callId === p.callId && focused.index === index,
-        stagger: 0,
-        labels: hooks.labels(),
-        decide: hooks.decide,
-        stream: s,
-      }),
-    ),
-  );
-  const index = s.changes.length;
-  const { partial } = s.layout;
-  s.partialIndex = partial ? index : null;
-  s.drawn = layoutSignature(s.layout);
-  const reading = readingDecoration(p.callId, ranges, s.layout);
-  if (reading) decos.push(reading);
-  if (!partial) return decos;
-  const rewrites = partial.rewrites === null ? null : ranges[partial.rewrites];
-  if (rewrites)
-    decos.push(sentenceStrike(p.callId, index, rewrites, "open", "", "--i: 0"));
-  decos.push(
-    Decoration.widget(
-      rewrites ? rewrites.to : at(partial.at),
-      (view) => {
-        const span = document.createElement("span");
-        span.className =
-          "pending-insert pending-replaces pending-partial pending-streaming";
-        span.contentEditable = "false";
-        span.dataset.call = p.callId;
-        span.dataset.index = String(index);
-        const anim = animations.get(p.callId);
-        if (anim) {
-          anim.span = span;
-          anim.view = view;
-          renderAnimation(anim);
-          ensureTicking(anim);
-        }
-        return span;
-      },
-      {
-        // After the new text of a change ending at the same place.
-        side: 3,
-        part: "text",
-        key: `pending-insert-${p.callId}-${p.revision ?? 0}`,
-        destroy: (node) => {
-          const anim = animations.get(p.callId);
-          if (anim && anim.span === node) anim.span = null;
-        },
-      },
-    ),
-  );
-  return decos;
-}
-
-/**
- * The progress cursor: the original sentence a streaming rewrite is at.
- * While the sentence being written repeats an original word for word (or
- * is too short yet to tell which one it rewrites) nothing else shows - a
- * light polish kept the screen still for seconds, then a sentence popped
- * up (rc.6) - so the sentence it has reached is tinted, the tint moving on
- * as it goes. One being rewritten is struck open instead, with the new
- * text typing beside it; past the last original there is nothing to mark.
- */
-export function readingDecoration(
-  callId: string,
-  ranges: { from: number; to: number }[],
-  layout: StreamLayout,
-): Decoration | null {
-  if (layout.partial) return null;
-  const range = ranges[layout.reached];
-  if (!range || range.from >= range.to) return null;
-  return Decoration.inline(
-    range.from,
-    range.to,
-    { class: "pending-reading", "data-call": callId },
-    { part: "reading" },
-  );
 }

@@ -143,6 +143,7 @@ export function ReviewMargin({
             continue;
           }
         }
+        const at = item.kind === "note" ? item.note.from : item.from;
         placed.push({
           item,
           top: first.top - top0 - 8,
@@ -150,6 +151,9 @@ export function ReviewMargin({
           cut: null,
           chip: false,
           group: null,
+          block: view.state.doc
+            .resolve(Math.min(at, view.state.doc.content.size))
+            .index(0),
           // From the column's edge, level with the passage's first line -
           // never from inside the text, where it would cross the words
           // after the passage.

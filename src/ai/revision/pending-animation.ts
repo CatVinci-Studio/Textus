@@ -9,6 +9,8 @@ import {
   splitMermaidFences,
 } from "../../editor/pending-diagram";
 import { enter, glideAfter } from "../../ui/moves";
+import { measure, play } from "../../ui/flip";
+import { Cascade } from "../../ui/cascade";
 import { UnitReveal } from "./unit-reveal";
 import { showGeneratedImages, shownGeneratedSrc } from "./generated-images";
 import { framePendingPictures } from "./pending-picture";
@@ -48,10 +50,16 @@ export interface InsertAnimation {
   view: EditorView | null;
   /** The settle meta was dispatched - never dispatch it twice. */
   settled: boolean;
+  /** Its text is whole but the call's own arguments aren't in yet: it
+   *  lands, and stays undecided (ProposalStreamEffects.feed's `final`). */
+  awaitingFinal: boolean;
   /** Set when the text is laid out sentence by sentence as it streams
    *  (PendingPreview.streamSource); `span` is then only the sentence being
    *  written. */
   stream: StreamState | null;
+  /** New text in a line of a paragraph: what of it has come in, for the
+   *  next batch to fade in on its own (renderAnimation). */
+  words: Cascade | null;
 }
 
 /** A rewrite being laid out sentence by sentence while it streams. */
@@ -81,6 +89,9 @@ export interface StreamState {
   stopped?: string | null;
   /** The completed changes as last drawn (PendingPreview.streamChanges). */
   changes: PendingSentence[];
+  /** When the text last landed - a paragraph rewritten whole: the beat its
+   *  changes enter on, in the text and in the margin (ui/moves.ts). */
+  landedAt: number;
 }
 
 export const animations = new Map<string, InsertAnimation>();
@@ -90,8 +101,8 @@ export function newAnimation(
   text: string,
   done: boolean,
 ): InsertAnimation {
-  // New writing lands a paragraph at a time; a rewrite laid out sentence by
-  // sentence (StreamState) is switched to its sentences (streamFor).
+  // Text lands a paragraph at a time - new writing, and a rewrite laid out
+  // sentence by sentence (StreamState) too.
   const reveal = new UnitReveal(true);
   reveal.update(text, done, performance.now());
   return {
@@ -104,7 +115,9 @@ export function newAnimation(
     frame: null,
     view: null,
     settled: false,
+    awaitingFinal: false,
     stream: null,
+    words: null,
   };
 }
 
@@ -160,6 +173,7 @@ export function refreshStream(anim: InsertAnimation) {
       s.reached,
     ));
     s.alignedFor = key;
+    s.landedAt = performance.now();
     // Done reaches every original; a stop's text is laid out against what
     // the stream itself had reached.
     if (!done) s.reached = Math.max(s.reached, reached);
@@ -178,7 +192,8 @@ export function refreshStream(anim: InsertAnimation) {
 
 /** Rebuilds the decorations from the new layout - after the current
  *  dispatch (this is reached from inside a decoration draw too), but before
- *  the frame is painted. */
+ *  the frame is painted. What landed may grow its paragraph: the text below
+ *  glides to its new place rather than jumping there (ui/flip.ts). */
 export function queueRelayout(anim: InsertAnimation) {
   const s = anim.stream;
   const view = anim.view;
@@ -187,12 +202,24 @@ export function queueRelayout(anim: InsertAnimation) {
   queueMicrotask(() => {
     s.relayoutQueued = false;
     if (view.isDestroyed || animations.get(anim.callId) !== anim) return;
+    const before = measure(onScreenBlocks(view.dom));
     view.dispatch(
       view.state.tr.setMeta(pendingEditKey, {
         type: "relayout",
         callId: anim.callId,
       }),
     );
+    play(before, { duration: "--dur-medium", easing: "--ease-out" });
+  });
+}
+
+/** The document's top-level blocks on screen - the ones a landing can move
+ *  where the eye is. */
+function onScreenBlocks(root: HTMLElement): Element[] {
+  const bottom = window.innerHeight;
+  return [...root.children].filter((el) => {
+    const r = el.getBoundingClientRect();
+    return r.bottom > 0 && r.top < bottom;
   });
 }
 
@@ -222,6 +249,7 @@ export function stillRevealing(callId: string): boolean {
   // haven't arrived: a draft placed right after `"text": "` used to settle
   // there and then, became decidable mid-stream, and - settling only once -
   // stayed "Writing…" forever when the final proposal landed mid-reveal.
+  if (anim.awaitingFinal) return true;
   if (anim.target.length === 0) return !anim.done;
   return !anim.done || !anim.reveal.caughtUp;
 }
@@ -281,6 +309,15 @@ export function renderAnimation(anim: InsertAnimation) {
   // time is drawn again in place (its diagram builds itself up). Text
   // replaced rather than added to shows at once.
   if (redrawn || !text.startsWith(shown)) return;
+  // In a line of a paragraph there are no blocks to rise: the batch that
+  // landed fades in as one, what was there before staying as it was (the
+  // widget's first text fades in with the widget, milkdown-theme.css).
+  if (anim.span.dataset.blocks !== "true") {
+    anim.words ??= new Cascade();
+    if (fresh) anim.words.settle(anim.span);
+    else anim.words.play(anim.span, { together: true });
+    return;
+  }
   for (const el of [...anim.span.children].slice(before))
     enter(el, { from: "up", distance: "md", duration: "--dur-slow" });
   // The text below it, pushed down by what landed, glides there - once
@@ -486,12 +523,16 @@ export function streamPendingInsertText(
   callId: string,
   text: string,
   done: boolean,
+  final = done,
 ) {
   const existing = animations.get(callId);
   if (!existing) {
-    animations.set(callId, newAnimation(callId, text, done));
+    const anim = newAnimation(callId, text, done);
+    anim.awaitingFinal = done && !final;
+    animations.set(callId, anim);
     return;
   }
+  existing.awaitingFinal = done && !final;
   // `done` goes both directions: a widget drawn from an early streaming
   // preview creates the entry with done=true (it can't know more text is
   // coming) - the next stream call must be able to reopen it, or the

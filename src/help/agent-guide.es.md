@@ -90,7 +90,7 @@ Textus AI aprende sobre ti y tu trabajo a partir de unos pocos archivos Markdown
 | **Perfil de estilo** | Cómo escribes | `.textus/style.md` |
 | **Biblioteca** | Datos sobre personas, lugares y términos | `.textus/library/` |
 | **Instrucciones de escritura** | Normas fijas para todas las conversaciones | `agent.md`, global y por proyecto |
-| **Lo que recuerda la IA** | Lo que Textus AI guarda de tus conversaciones | `.textus/memory/`, y `memory/` en la carpeta de configuración global |
+| **Memoria** | Lo que Textus AI guarda de tus conversaciones | `.textus/memory/`, y `memory/` en la carpeta de configuración global |
 | **Habilidades** | Instrucciones reutilizables que invocas con `/nombre` | `skills/`, global y por proyecto |
 | **Carpeta de configuración global** | Lo que se aplica a todos los documentos | La carpeta de ajustes de la aplicación |
 
@@ -188,14 +188,14 @@ Las instrucciones de escritura solo se aplican a las conversaciones. El autocomp
 
 ### Lo que recuerda Textus AI
 
-**Textus AI recuerda lo que le pides y cómo escribes**, sin que tengas que escribir ningún archivo. Cuando le dices algo que debe valer más allá de una petición («escribe siempre en español de España», «nada de rayas», una corrección que tuviste que hacer dos veces) o un dato sobre tu obra, como quién es un personaje, lo guarda y lo sigue en las conversaciones siguientes. Cada vez, una línea bajo su respuesta indica qué ha recordado y dónde: **Deshacer** lo retira, y **Hacer personal** o **Pasar al proyecto** lo cambia de sitio.
+**Textus AI recuerda lo que le pides y cómo escribes**, sin que tengas que escribir ningún archivo. Cuando le dices algo que debe valer más allá de una petición («escribe siempre en español de España», «nada de rayas», una corrección que tuviste que hacer dos veces) o un dato sobre tu obra, como quién es un personaje, lo guarda y lo sigue en las conversaciones siguientes. Cada vez, una línea bajo su respuesta indica qué ha recordado y dónde: **Deshacer** lo retira, y **Hacer global** o **Pasar al proyecto** lo cambia de sitio.
 
 - **Este proyecto**: lo que trata de esta obra, en `.textus/memory/`; los datos sobre personas, lugares y términos van a la biblioteca.
 - **Para todos los proyectos**: tus hábitos generales, en `memory/` dentro de la carpeta de configuración global. Sin carpeta del proyecto, todo va aquí.
 
-La pestaña **Memoria** del panel de IA lo muestra todo en **Lo que recuerda la IA**, con cuándo y en qué conversación se recordó cada cosa: **Editar** lo abre y **Eliminar** lo borra. Tus propias instrucciones de escritura prevalecen cuando ambas no coinciden, y Textus AI nunca cambia tu `agent.md` ni tu perfil de estilo. Cuando hay demasiados recuerdos para enviarlos, se omiten los más antiguos y la pestaña Memoria lo indica. **Ajustes > Textus AI > Recordar automáticamente** lo desactiva.
+La pestaña **Proyecto** del panel de IA lo muestra todo en **Memoria**, con cuándo y en qué conversación se recordó cada cosa: **Editar** lo abre y **Eliminar** lo borra. Tus propias instrucciones de escritura prevalecen cuando ambas no coinciden, y Textus AI nunca cambia tu `agent.md` ni tu perfil de estilo. Cuando hay demasiados recuerdos para enviarlos, se omiten los más antiguos y la pestaña Proyecto lo indica. **Ajustes > Textus AI > Recordar automáticamente** lo desactiva.
 
-**También aprende de tus decisiones de revisión.** Cuando rechazas varias veces el mismo tipo de cambio —「」 convertidas en “”, una palabra cambiada por otra, frases divididas, una coma de Oxford añadida—, Textus AI te ofrece, al terminar la revisión, recordarlo como requisito: **Recordar** lo guarda en **Lo que recuerda la IA**, **Ahora no** espera a tener más pruebas y **No volver a preguntar** deja de preguntar por ese tipo. Pregunta como mucho una vez al día, y solo se guarda algo cuando haces clic, también con Recordar automáticamente desactivado. Lo que cuenta es una breve nota de los tipos de cambio que aceptaste o rechazaste, guardada en este ordenador junto a tus recuerdos y nunca enviada.
+**También aprende de tus decisiones de revisión.** Cuando rechazas varias veces el mismo tipo de cambio —「」 convertidas en “”, una palabra cambiada por otra, frases divididas, una coma de Oxford añadida—, Textus AI te ofrece, al terminar la revisión, recordarlo como requisito: **Recordar** lo guarda en **Memoria**, **Ahora no** espera a tener más pruebas y **No volver a preguntar** deja de preguntar por ese tipo. Pregunta como mucho una vez al día, y solo se guarda algo cuando haces clic, también con Recordar automáticamente desactivado. Lo que cuenta es una breve nota de los tipos de cambio que aceptaste o rechazaste, guardada en este ordenador junto a tus recuerdos y nunca enviada.
 
 ### Habilidades (/nombre)
 
