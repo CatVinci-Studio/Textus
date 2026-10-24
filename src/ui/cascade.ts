@@ -37,8 +37,10 @@ export class Cascade {
    * Lets the words of `root` that are new since the last call come in, and
    * those still coming in carry on. `root`'s text must start with what it
    * showed last time: more text, not other text (`settle` otherwise).
+   * `together`: the new words fade in as one, with no step between them -
+   * a batch of whole sentences landing in a line of text.
    */
-  play(root: Element): void {
+  play(root: Element, { together = false }: { together?: boolean } = {}): void {
     if (!motionAllowed()) return;
     const now = performance.now();
     const fade = duration("--dur-medium");
@@ -48,7 +50,7 @@ export class Cascade {
     const fresh = words.length - this.begun.length;
     if (fresh > 0) {
       // A step that fits the new words into the budget.
-      const gap = Math.min(step, budget / fresh);
+      const gap = together ? 0 : Math.min(step, budget / fresh);
       const from = Math.max(now, (this.begun.at(-1) ?? -Infinity) + gap);
       for (let i = 0; i < fresh; i++) this.begun.push(from + i * gap);
     }

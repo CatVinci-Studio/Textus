@@ -17,7 +17,10 @@ import { splitUnits } from "./unit-diff";
  * once it is written whole, then all of it at once - new writing and a
  * rewrite alike, whose sentences are still decided one by one. Landed a
  * sentence at a time, it grew in jerks, and a rewrite and new writing
- * moved two ways.
+ * moved two ways. A long paragraph isn't kept back whole, though: held
+ * HOLD_MS, the sentences it has finished land together, as one batch, and
+ * again each HOLD_MS after that - a paragraph of a few hundred words kept
+ * the screen still for half a minute, then all came at once.
  *
  * Each unit lands markTime() after the last - the moment its original is
  * marked (ui/moves.ts, the rewrite's reading cursor) - and a backlog of
@@ -27,6 +30,10 @@ import { splitUnits } from "./unit-diff";
 
 /** Units waiting past which they all land together. */
 const BACKLOG = 5;
+
+/** How long a paragraph is held for its end before the sentences it has
+ *  finished land as a batch (and between one batch and the next). */
+export const HOLD_MS = 6000;
 
 /** A pause this long after a sentence's stop: the sentence is over, though
  *  nothing follows it yet. Half a sentence never lands on a pause - writing
@@ -164,6 +171,12 @@ export class UnitReveal {
   private cut = false;
   private pendingFor = "";
   private pendingIdle = false;
+  /** The finished sentences after `shown` a held paragraph has, read once
+   *  per update (paragraphs only). */
+  private finished: Landing[] = [];
+  /** Since when a paragraph has been held with sentences of it finished -
+   *  or since its last batch. */
+  private heldSince: number | null = null;
 
   update(text: string, done: boolean, now: number) {
     if (text.length > this.received.length) this.lastArrival = now;
@@ -185,11 +198,29 @@ export class UnitReveal {
         idle,
         this.paragraphs,
       );
+      // Whole sentences only, never cut at a pause: what a batch lands.
+      this.finished = this.paragraphs
+        ? landings(this.received, this.shown, this.done, false, false).filter(
+            (l) => !l.cut,
+          )
+        : [];
       this.pendingFor = key;
       this.pendingIdle = idle;
     }
     this.pending = this.pending.filter((l) => l.end > this.shown);
-    if (this.pending.length === 0) return;
+    this.finished = this.finished.filter((l) => l.end > this.shown);
+    if (this.pending.length === 0) {
+      // A paragraph still being written, with sentences of it finished:
+      // held so long, they land - all of them, as one batch.
+      if (this.finished.length === 0) return;
+      this.heldSince ??= now;
+      if (now - this.heldSince < HOLD_MS) return;
+      this.shown = this.finished.at(-1)!.end;
+      this.cut = false;
+      this.lastLanding = now;
+      this.heldSince = now;
+      return;
+    }
     const next =
       this.pending.length > BACKLOG
         ? this.pending.at(-1)!
@@ -200,6 +231,7 @@ export class UnitReveal {
     this.shown = next.end;
     this.cut = next.cut;
     this.lastLanding = now;
+    this.heldSince = null;
   }
 
   /** What is on screen ends where a unit does - not partway into one, as

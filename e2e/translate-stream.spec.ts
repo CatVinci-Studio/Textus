@@ -140,3 +140,67 @@ test("short lines landed together stand as the paragraphs they will be, and the 
   await expect(reading).toContainText("又过了很久");
   expect((await reading.boundingBox())!.height).toBeGreaterThan(10);
 });
+
+const LONG_ZH =
+  "她在控制台前坐了很久。窗外的月面一片灰白。远处的天线还在转。耳机里只有电流声。她想起父亲的手。那双手修过无数台收音机。她把旧照片放回抽屉。屏幕上的时间跳到零点。她深吸一口气。然后按下了发送键。";
+const LONG_EN =
+  "She sat at the console for a long time. Outside, the lunar surface was a pale grey. The distant antenna was still turning. There was only static in her earphones. She thought of her father's hands. Those hands had mended countless radios. She put the old photograph back in the drawer. The clock on the screen jumped to midnight. She took a deep breath. Then she pressed send.";
+
+test("a long paragraph lands in batches of whole sentences while it is still written", async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openApp(page, {
+    settings: { language: "en", revisionDisplay: "final" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(page, LONG_ZH);
+  // Slow enough that the paragraph is held past HOLD_MS (unit-reveal.ts).
+  await streamRevise(
+    page,
+    [{ id: "b1", args: { action: "replace", anchor: LONG_ZH, text: LONG_EN } }],
+    { chunk: 4, every: 90 },
+  );
+  await page.evaluate(() => {
+    const w = window as unknown as { __n: number[]; __on: boolean };
+    w.__n = [];
+    w.__on = true;
+    const tick = () => {
+      if (!w.__on) return;
+      w.__n.push(
+        document.querySelector(".review-bar-working")
+          ? [...document.querySelectorAll(".milkdown .pending-sentence-new")]
+              .map((el) => el.textContent ?? "")
+              .join(" ")
+              .split(/[.!?](?:\s|$)/)
+              .filter((s) => s.trim()).length
+          : -1,
+      );
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Translate it into English");
+  await composer.press("Enter");
+  await expect(page.locator(".review-bar-accept")).toBeEnabled({
+    timeout: 40_000,
+  });
+  const counts = await page.evaluate(() => {
+    const w = window as unknown as { __n: number[]; __on: boolean };
+    w.__on = false;
+    return w.__n;
+  });
+  const writing = counts.filter((n) => n >= 0);
+  const steps = [...new Set(writing)];
+  console.log("BATCHES", steps.join(" "));
+  // Some of it landed while the rest was still being written...
+  expect(Math.max(...writing)).toBeGreaterThan(0);
+  // ...several sentences at a time, not one by one, and not all of it.
+  const jumps = steps.slice(1).map((n, i) => n - steps[i]);
+  expect(Math.max(...jumps)).toBeGreaterThan(1);
+  expect(Math.max(...writing)).toBeLessThan(10);
+  // Never half a sentence on screen.
+  await expect(page.locator(".milkdown .pending-partial")).toHaveCount(0);
+});

@@ -9,6 +9,7 @@ import {
   splitMermaidFences,
 } from "../../editor/pending-diagram";
 import { enter, glideAfter } from "../../ui/moves";
+import { Cascade } from "../../ui/cascade";
 import { UnitReveal } from "./unit-reveal";
 import { showGeneratedImages, shownGeneratedSrc } from "./generated-images";
 import { framePendingPictures } from "./pending-picture";
@@ -52,6 +53,9 @@ export interface InsertAnimation {
    *  (PendingPreview.streamSource); `span` is then only the sentence being
    *  written. */
   stream: StreamState | null;
+  /** New text in a line of a paragraph: what of it has come in, for the
+   *  next batch to fade in on its own (renderAnimation). */
+  words: Cascade | null;
 }
 
 /** A rewrite being laid out sentence by sentence while it streams. */
@@ -108,6 +112,7 @@ export function newAnimation(
     view: null,
     settled: false,
     stream: null,
+    words: null,
   };
 }
 
@@ -285,6 +290,15 @@ export function renderAnimation(anim: InsertAnimation) {
   // time is drawn again in place (its diagram builds itself up). Text
   // replaced rather than added to shows at once.
   if (redrawn || !text.startsWith(shown)) return;
+  // In a line of a paragraph there are no blocks to rise: the batch that
+  // landed fades in as one, what was there before staying as it was (the
+  // widget's first text fades in with the widget, milkdown-theme.css).
+  if (anim.span.dataset.blocks !== "true") {
+    anim.words ??= new Cascade();
+    if (fresh) anim.words.settle(anim.span);
+    else anim.words.play(anim.span, { together: true });
+    return;
+  }
   for (const el of [...anim.span.children].slice(before))
     enter(el, { from: "up", distance: "md", duration: "--dur-slow" });
   // The text below it, pushed down by what landed, glides there - once
