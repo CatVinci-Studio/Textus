@@ -1,10 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// Written text comes in a word at a time (ui/cascade.ts), as a reply
-// streams in Claude's apps: the AI's text landing in the document, a
-// diagram's parts one after another, its nodes first. A block of words
-// used to fade in at once, and a diagram whole.
+// The AI's writing comes in smoothly: in the document a paragraph at a
+// time, written whole and rising into place (a sentence at a time, it came
+// in jerks); in the chat a word at a time (ui/cascade.ts), as a reply
+// streams in Claude's apps; a diagram a part at a time, its nodes first.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 
@@ -41,40 +41,38 @@ async function propose(page: Page, text: string) {
   await composer.press("Enter");
 }
 
-/** When each element's own animation starts, in ms after now (its delay
- *  less the time it has run), in order. */
-function starts(page: Page, selector: string) {
-  return page.evaluate((sel) => {
-    return [...document.querySelectorAll(sel)].map((el) => {
-      const a = el.getAnimations()[0];
-      if (!a) return null;
-      const t = a.effect?.getComputedTiming();
-      return (Number(t?.delay ?? 0) - Number(a.currentTime ?? 0)) | 0;
-    });
-  }, selector);
-}
-
-test("the words of what lands come in one after another, not at once", async ({
+test("new writing lands a paragraph at a time, the whole paragraph rising into place", async ({
   page,
 }) => {
   await open(page);
   await propose(
     page,
-    "The keeper climbed the stairs one at a time, counting each of them aloud.",
+    "The keeper climbed the stairs one at a time. He counted each of them aloud.\n\nAt the top the lamp was still warm.",
   );
-  const words = `${editor} .pending-insert .cascade-word`;
-  await expect(page.locator(words).first()).toBeAttached();
-  const at = (await starts(page, words)).filter((s): s is number => s !== null);
-  expect(at.length).toBeGreaterThan(8);
-  // Each later than the one before, and the run within the budget.
-  for (let i = 1; i < at.length; i++)
-    expect(at[i]).toBeGreaterThanOrEqual(at[i - 1]);
-  expect(at.at(-1)! - at[0]).toBeGreaterThan(50);
-  expect(at.at(-1)! - at[0]).toBeLessThanOrEqual(750);
-  // And then it is plain text again, all there.
-  await expect(page.locator(`${editor} .pending-insert`)).toContainText(
-    "counting each of them aloud.",
+  const paragraphs = `${editor} .pending-insert p`;
+  await expect(page.locator(paragraphs).first()).toBeAttached();
+  // Never half a paragraph on screen: the first comes with both its
+  // sentences.
+  await expect(page.locator(paragraphs).first()).toContainText(
+    "He counted each of them aloud.",
   );
+  // It rises in whole - an animation on the paragraph, none on its words.
+  const moves = await page
+    .locator(paragraphs)
+    .first()
+    .evaluate((el) =>
+      el.getAnimations().map((a) => {
+        const frames = (a.effect as KeyframeEffect).getKeyframes();
+        return { from: frames[0].transform, opacity: frames[0].opacity };
+      }),
+    );
+  expect(moves.length).toBeGreaterThan(0);
+  expect(String(moves[0].from)).toContain("translateY");
+  expect(Number(moves[0].opacity)).toBe(0);
+  await expect(
+    page.locator(`${editor} .pending-insert .cascade-word`),
+  ).toHaveCount(0);
+  await expect(page.locator(paragraphs)).toHaveCount(2);
 });
 
 test("a diagram is built up a part at a time, its nodes first", async ({
