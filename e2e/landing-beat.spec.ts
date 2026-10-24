@@ -48,13 +48,15 @@ test("a landed paragraph's text and cards enter on one beat", async ({
     w.__pairs = [];
     w.__on = true;
     const seen = new Set<string>();
-    // The entrance's progress, in ms, of an element's running animation.
+    // How far into its entrance an element is, in ms: its effect's time
+    // less the delay it was set back by (a part joining a beat late starts
+    // partway in) - once it is playing, null before.
     const at = (el: Element | null) => {
-      const a = el
-        ?.getAnimations()
-        .find((x) => x.playState === "running" || x.playState === "pending");
-      const t = a?.currentTime;
-      return typeof t === "number" ? t : null;
+      const a = el?.getAnimations().find((x) => x.playState === "running");
+      const effect = a?.effect;
+      const local = effect?.getComputedTiming().localTime;
+      if (!effect || typeof local !== "number" || local <= 0) return null;
+      return local - (effect.getTiming().delay ?? 0);
     };
     const tick = () => {
       if (!w.__on) return;
@@ -62,7 +64,8 @@ test("a landed paragraph's text and cards enter on one beat", async ({
         ".review-margin > .revision-note",
       )) {
         const label = card.getAttribute("aria-label") ?? "";
-        if (seen.has(label)) continue;
+        // Measured the first frame both are playing.
+        if (seen.has(label) || at(card) === null) continue;
         seen.add(label);
         const index = Number(label.replace(/\D+/g, "")) - 1;
         const text = document.querySelector(
@@ -90,8 +93,8 @@ test("a landed paragraph's text and cards enter on one beat", async ({
     return w.__pairs;
   });
   console.log("PAIRS", JSON.stringify(pairs));
-  // Each card came in with its text, not after it: both mid-entrance at
-  // the frame the card first shows, as far into it as one another.
+  // Each card came in with its text, not after it: as far into its
+  // entrance as its text, however late it was drawn.
   const both = pairs.filter((p) => p.text !== null && p.card !== null);
   expect(both.length).toBeGreaterThan(2);
   for (const p of both)

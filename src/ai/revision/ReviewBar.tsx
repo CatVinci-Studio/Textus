@@ -110,7 +110,11 @@ export function ReviewBar({
     : REVISION_DISPLAYS;
   const marginAvailable = useMarginAvailable();
   const noMargin = !phone && !marginAvailable;
-  const shown = effectiveRevisionDisplay(display, !phone && marginAvailable);
+  const shown = effectiveRevisionDisplay(
+    display,
+    !phone && marginAvailable,
+    phone,
+  );
   const waiting = noMargin && shown !== display;
   const noMarginId = useId();
   const newTextId = useId();

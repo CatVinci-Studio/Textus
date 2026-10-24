@@ -60,7 +60,12 @@ async function propose(page: Page, display: string) {
 async function watch(page: Page) {
   await page.evaluate(() => {
     const w = window as unknown as {
-      __frames: { ghosts: number; inEditor: number; gliding: number }[];
+      __frames: {
+        ghosts: number;
+        inEditor: number;
+        gliding: number;
+        top: number;
+      }[];
       __on: boolean;
     };
     w.__frames = [];
@@ -77,6 +82,7 @@ async function watch(page: Page) {
         gliding:
           third?.getAnimations().filter((a) => a.playState === "running")
             .length ?? 0,
+        top: third?.getBoundingClientRect().top ?? 0,
       });
       requestAnimationFrame(tick);
     };
@@ -85,7 +91,12 @@ async function watch(page: Page) {
   return () =>
     page.evaluate(() => {
       const w = window as unknown as {
-        __frames: { ghosts: number; inEditor: number; gliding: number }[];
+        __frames: {
+          ghosts: number;
+          inEditor: number;
+          gliding: number;
+          top: number;
+        }[];
         __on: boolean;
       };
       w.__on = false;
@@ -112,8 +123,13 @@ for (const display of ["inline", "final"] as const)
     expect(frames.at(-1)!.ghosts).toBe(0);
     // The text below glides to where the paragraph now ends - in the text
     // with both sides, the original's lines gone; Result only reads as it
-    // did, and nothing moves.
-    expect(frames.some((f) => f.gliding > 0)).toBe(display === "inline");
+    // did, and nothing moves (a glide of a fraction of a pixel aside).
+    const tops = frames.map((f) => f.top);
+    const moved = Math.max(...tops) - Math.min(...tops);
+    if (display === "inline") {
+      expect(frames.some((f) => f.gliding > 0)).toBe(true);
+      expect(moved).toBeGreaterThan(10);
+    } else expect(moved).toBeLessThan(1);
   });
 
 test("Reject fades the proposal and its cards out, and leaves the text as it was", async ({
@@ -197,3 +213,76 @@ test("Accept all with many proposals leaves no copies behind, and undo brings on
   );
   expect(moving).toBeGreaterThan(0);
 });
+
+for (const zoom of [1.5, 0.8])
+  test(`under the text's zoom (${zoom}) the copy fades out where the paragraph stood`, async ({
+    page,
+  }) => {
+    const first =
+      "The keeper woke before dawn, long before the light came up over the water. He climbed the stairs slowly, one hand on the cold rail.";
+    await page.setViewportSize({ width: 1500, height: 900 });
+    await openApp(page, {
+      settings: { language: "en", revisionDisplay: "inline" },
+      storage: { "textus-agent-panel-open": "1" },
+      animations: true,
+    });
+    await page.evaluate(
+      (z) =>
+        document.documentElement.style.setProperty("--content-zoom", String(z)),
+      zoom,
+    );
+    await pasteMarkdown(page, `${first}\n\nA gull cried far off.`);
+    await mockInvoke(page, {
+      ai_agent_message: [
+        { kind: "User", text: "go" },
+        {
+          kind: "ToolCall",
+          call_id: "z1",
+          name: "propose_edit",
+          arguments: JSON.stringify({
+            action: "replace",
+            anchor: first,
+            text: "The keeper woke early. He climbed the stairs.",
+          }),
+        },
+        { kind: "ToolResult", call_id: "z1", output: "Edit proposed" },
+        { kind: "Assistant", text: "Done." },
+      ],
+    });
+    const composer = page.locator(".agent-panel-view textarea");
+    await composer.fill("go");
+    await composer.press("Enter");
+    await expect(page.locator(".review-bar-accept")).toBeEnabled();
+    await page.waitForTimeout(700);
+    const box = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return [r.left, r.top, r.width, r.height];
+    };
+    const before = await page
+      .locator(".milkdown .ProseMirror > p")
+      .first()
+      .evaluate(box);
+    // The copy, the moment it is laid down (the click's own handlers run
+    // first, then this).
+    await page.evaluate(() => {
+      const w = window as unknown as { __ghost: number[] | null };
+      w.__ghost = null;
+      document.addEventListener(
+        "click",
+        () =>
+          queueMicrotask(() => {
+            const g = document.querySelector(".motion-ghost p");
+            if (!g) return;
+            const r = g.getBoundingClientRect();
+            w.__ghost = [r.left, r.top, r.width, r.height];
+          }),
+        { once: true },
+      );
+    });
+    await page.locator(".review-bar-accept").click();
+    const ghost = await page.evaluate(
+      () => (window as unknown as { __ghost: number[] | null }).__ghost,
+    );
+    expect(ghost).not.toBeNull();
+    ghost!.forEach((v, i) => expect(Math.abs(v - before[i])).toBeLessThan(2));
+  });

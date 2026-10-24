@@ -116,7 +116,7 @@ test("two rewrites in one reply each land in place, the count growing across bot
     .filter((n) => !Number.isNaN(n));
   for (let i = 1; i < counts.length; i++)
     expect(counts[i]).toBeGreaterThanOrEqual(counts[i - 1]);
-  expect(counts.at(-1)).toBe(4);
+  await expect(page.locator(".review-bar-pos")).toHaveText("4 changes");
   // And the end is the layout the finished proposals have.
   const streamed = await layout(page);
   await page.reload();
@@ -187,4 +187,36 @@ test("the view switched while a rewrite streams shows what has landed its own wa
   await expect(page.locator(`${editor} .pending-reading`)).toContainText(
     "A gull cried far off.",
   );
+});
+
+test("Result only with no room for the margin shows everything in the text, and says so", async ({
+  page,
+}) => {
+  // The AI panel open in this window: no room for a margin; closed, room.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openApp(page, {
+    settings: { language: "en", revisionDisplay: "final" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(page, `${FIRST}\n\n${SECOND}`);
+  await streamRevise(page, CALLS);
+  await send(page);
+  await expect(page.locator(".review-bar-accept")).toBeEnabled();
+  // The originals Result only would keep in the margin are in the text,
+  // struck, the new text beside them - not hidden with nowhere to show.
+  await expect(page.locator(".review-margin > .revision-note")).toHaveCount(0);
+  await expect(
+    page.locator(`${editor} .pending-delete`, {
+      hasText: "He climbed the stairs slowly.",
+    }),
+  ).toBeVisible();
+  await expect(page.locator(".review-bar-view-name")).toHaveText(
+    "All in the text",
+  );
+  // Room again: Result only comes back by itself.
+  await page.keyboard.press("Control+Shift+L");
+  await expect(page.locator(".review-margin > .revision-note")).not.toHaveCount(
+    0,
+  );
+  await expect(page.locator(".review-bar-view-name")).toHaveCount(0);
 });

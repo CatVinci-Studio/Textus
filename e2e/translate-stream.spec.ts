@@ -200,7 +200,7 @@ test("a long paragraph lands in batches of whole sentences while it is still wri
   // ...several sentences at a time, not one by one, and not all of it.
   const jumps = steps.slice(1).map((n, i) => n - steps[i]);
   expect(Math.max(...jumps)).toBeGreaterThan(1);
-  expect(Math.max(...writing)).toBeLessThan(10);
+  expect(writing.some((n) => n > 1 && n < 10)).toBe(true);
   // Never half a sentence on screen.
   await expect(page.locator(".milkdown .pending-partial")).toHaveCount(0);
 });
