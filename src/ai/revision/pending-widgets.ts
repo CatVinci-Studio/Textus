@@ -5,6 +5,7 @@ import { enterOnBeat, glideAfter, startBeat } from "../../ui/moves";
 import { inlineSentence, pairedPrefix } from "./sentence-diff";
 import { type StreamLayout } from "./sentence-stream";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
+import { wholeParagraphs } from "./whole-paragraphs";
 import {
   type StreamState,
   animations,
@@ -459,8 +460,12 @@ export function streamEntrance(
 }
 
 /** The completed changes of a streaming rewrite's layout, where they
- *  stand in the document. */
+ *  stand in the document - drawn as the finished rewrite draws them: a
+ *  change of several whole paragraphs (short lines taken together) as the
+ *  blocks it will be. In their run of text, a blank line stood between
+ *  them while they streamed. */
 export function streamChanges(
+  doc: ProseNode,
   source: NonNullable<PendingPreview["streamSource"]>,
   s: StreamState,
 ): PendingSentence[] {
@@ -481,6 +486,10 @@ export function streamChanges(
     // A block changed whole, drawn as the finished rewrite draws it.
     if (struck && piece.end - piece.start === 1 && ranges[piece.start].block)
       return [{ ...base, block: true, at: to }];
+    const blocks = struck
+      ? wholeParagraphs(doc, { from, to }, piece.before, piece.after)
+      : null;
+    if (blocks) return [{ ...base, ...blocks }];
     const paired = pairedPrefix(
       s.sentences.slice(piece.start, piece.end),
       piece.after,
@@ -515,7 +524,7 @@ export function streamDecorations(
   const at = (i: number) => (i > 0 ? ranges[i - 1].to : ranges[0].from);
   const decos: Decoration[] = [];
   const focused = hooks.focused();
-  s.changes = streamChanges(source, s);
+  s.changes = streamChanges(doc, source, s);
   s.changes.forEach((c, index) =>
     decos.push(
       ...changeDecorations(p.callId, index, c, {
@@ -588,11 +597,18 @@ export function readingDecoration(
   layout: StreamLayout,
 ): Decoration | null {
   if (layout.partial) return null;
-  const range = ranges[layout.reached];
+  // Past every original a landed change has taken: one struck (and, in
+  // Result only, hidden) can't show the tint.
+  const at = layout.pieces.reduce(
+    (next, piece) =>
+      piece.kind === "change" ? Math.max(next, piece.end) : next,
+    layout.reached,
+  );
+  const range = ranges[at];
   if (!range || range.from >= range.to) return null;
   return Decoration.inline(
     range.from,
-    paragraphEnd(doc, ranges, layout.reached),
+    paragraphEnd(doc, ranges, at),
     { class: "pending-reading", "data-call": callId },
     { part: "reading" },
   );

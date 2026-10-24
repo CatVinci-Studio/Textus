@@ -69,3 +69,74 @@ test("a translation streaming in lands paragraph by paragraph, each in its own p
     "林禾申请过返乡。公司说，关站前不能缺人。",
   );
 });
+
+const ZH_TALK = [
+  "雨声从收音机里传来。林遥屏住了呼吸。",
+  "“你那里为什么不下雨？”孩子问。",
+  "“我住得有点远。”",
+  "又过了很久，收音机里传来钥匙碰门的声音。孩子喊了声妈妈，跑远了。雨渐渐停下，那滴水落在铜环底部，再没浮起来。",
+  "林遥错过了飞船。",
+];
+const EN_TALK = [
+  "The sound of rain came through the radio. Lin Yao held her breath.",
+  "“Why isn't it raining where you are?” the child asked.",
+  "“I live a little far away.”",
+  "Much later, she heard keys against a door through the radio. The child called out “Mom!” and ran off. The rain slowly stopped. The droplet fell to the bottom of the copper ring and never rose again.",
+  "Lin Yao had missed the ship.",
+];
+
+test("short lines landed together stand as the paragraphs they will be, and the one being written is marked", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openApp(page, {
+    settings: { language: "en", revisionDisplay: "final" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  const doc = ZH_TALK.join("\n\n");
+  await pasteMarkdown(page, doc);
+  const args = { action: "replace", anchor: doc, text: EN_TALK.join("\n\n") };
+  const json = JSON.stringify(args);
+  const hold = Math.ceil((json.indexOf("The child called") + 10) / 6);
+  await streamRevise(page, [{ id: "t2", args }], { hold });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Translate it into English");
+  await composer.press("Enter");
+  await expect(
+    page.locator(`${editor} .pending-sentence-new`, {
+      hasText: "I live a little far away.",
+    }),
+  ).toBeVisible({ timeout: 15_000 });
+  await page.waitForTimeout(500);
+  // The two short lines stand as two paragraphs do, a paragraph apart -
+  // not with a blank line between them in one run of text.
+  const tops = await page.evaluate((sel) => {
+    const root = document.querySelector(sel)!;
+    const top = (needle: string) => {
+      const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+        const at = n.textContent?.indexOf(needle) ?? -1;
+        if (at < 0) continue;
+        const range = document.createRange();
+        range.setStart(n, at);
+        range.setEnd(n, at + needle.length);
+        return range.getBoundingClientRect().top;
+      }
+      return NaN;
+    };
+    return [top("Why isn't it raining"), top("I live a little")];
+  }, editor);
+  const paragraph = await page
+    .locator(`${editor} p`)
+    .last()
+    .evaluate((el) => {
+      const s = getComputedStyle(el);
+      return parseFloat(s.lineHeight) + parseFloat(s.marginBottom);
+    });
+  console.log("TOPS", tops.join(","), "PARAGRAPH", paragraph);
+  expect(tops[1] - tops[0]).toBeLessThan(paragraph + 4);
+  // The paragraph being written is marked, where it shows.
+  const reading = page.locator(`${editor} .pending-reading`);
+  await expect(reading).toContainText("又过了很久");
+  expect((await reading.boundingBox())!.height).toBeGreaterThan(10);
+});
