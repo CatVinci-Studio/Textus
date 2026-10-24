@@ -9,19 +9,19 @@ import type {
 } from "../../../platform/ipc";
 import { localeOf, type Lang, type Strings } from "../../../i18n/strings";
 import { basename } from "../../../utils/path";
-import { listFromWorkspace, pickerSkills } from "../skill-picker";
 import { Tooltip } from "../../../ui/Tooltip";
 import { useMemoryFocus } from "./memory-focus";
 import "./MemoryView.css";
 
 /**
- * What Textus AI keeps for a project, in one place (the AI panel's Memory
- * tab): what it remembered by itself (ai::memory - personal and the
- * project's), the style profile it learned from the writer's own pages,
- * the library of people, places and terms, the writing instructions it
- * always follows, and the skills a slash away. Each is a file of its own,
- * so Edit opens it as a document - nothing here is a second copy to keep in
- * step.
+ * What Textus AI keeps for a project, in one place (the AI panel's Project
+ * tab), in the order a writer sets it up: the writing style it learned
+ * from the writer's own pages, the writing instructions it always follows,
+ * the library of people, places and terms, and last what it remembered by
+ * itself (ai::memory - personal and the project's). Each section opens
+ * with a line saying what it is. Each is a file of its own, so Edit opens
+ * it as a document - nothing here is a second copy to keep in step. Skills
+ * are the slash menu's, not listed here.
  *
  * Library entries the AI was given are marked - by Rust, which picked them
  * (`libraryUse`): those the last request carried, or before one, those the
@@ -68,12 +68,7 @@ export function MemorySections({
     [info.project_instructions],
   );
   const globalRules = info.instructions.flatMap(ruleLines);
-  const [allSkills, setAllSkills] = useState(false);
   const [query, setQuery] = useState("");
-  const skills = useMemo(
-    () => pickerSkills(listFromWorkspace(info.skills), lang),
-    [info.skills, lang],
-  );
   const used = new Set(libraryUse?.included ?? []);
   const leftOut = info.library.filter((entry) =>
     libraryUse?.leftOut.includes(entry.file),
@@ -99,28 +94,20 @@ export function MemorySections({
           onChange={(e) => setQuery(e.target.value)}
         />
       )}
-      <RememberedSection
-        info={info}
-        t={t}
-        lang={lang}
-        query={query}
-        onOpenFile={onOpenFile}
-        onRevealFile={onRevealFile}
-        onRestoreForgotten={onRestoreForgotten}
-        onDeleteMemory={onDeleteMemory}
-        onMoveMemory={onMoveMemory}
-      />
-
       <section className="memory-section">
         <h4>
           {t.memoryStyle}
-          <span className="memory-file">.textus/style.md</span>
           {info.style && (
-            <button type="button" onClick={onOpenStyle}>
+            <button
+              type="button"
+              title=".textus/style.md"
+              onClick={onOpenStyle}
+            >
               {t.memoryEdit}
             </button>
           )}
         </h4>
+        <p className="memory-hint">{t.memoryStyleHint}</p>
         {styleLines.length > 0 ? (
           <ul className="memory-card memory-lines">
             {styleLines.map((line, i) => (
@@ -146,6 +133,44 @@ export function MemorySections({
 
       <section className="memory-section">
         <h4>
+          {t.memoryInstructions}
+          <button
+            type="button"
+            title=".textus/agent.md"
+            onClick={onOpenInstructions}
+          >
+            {t.memoryEdit}
+          </button>
+        </h4>
+        <p className="memory-hint">{t.memoryInstructionsHint}</p>
+        {projectRules.length > 0 || globalRules.length > 0 ? (
+          <ul className="memory-card memory-lines">
+            {projectRules.map((line, i) => (
+              <li key={`p${i}`}>{line}</li>
+            ))}
+            {globalRules.map((line, i) => (
+              <li key={`g${i}`} className="memory-global">
+                {line}
+                <span className="memory-scope">{t.memoryAllProjects}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="memory-empty">
+            <p>{t.memoryInstructionsEmpty}</p>
+          </div>
+        )}
+        <button
+          type="button"
+          className="memory-link"
+          onClick={onOpenGlobalInstructions}
+        >
+          {t.memoryEditGlobal}
+        </button>
+      </section>
+
+      <section className="memory-section">
+        <h4>
           {t.memoryLibrary}
           {info.library.length > 0 && (
             <span className="memory-count">{info.library.length}</span>
@@ -154,6 +179,7 @@ export function MemorySections({
             {t.memoryNew}
           </button>
         </h4>
+        <p className="memory-hint">{t.memoryLibraryHint}</p>
         {info.library.length > 0 && library.length === 0 ? (
           <div className="memory-empty">
             <p>{t.memoryNoMatch}</p>
@@ -231,62 +257,17 @@ export function MemorySections({
         )}
       </section>
 
-      <section className="memory-section">
-        <h4>
-          {t.memoryInstructions}
-          <button type="button" onClick={onOpenInstructions}>
-            {t.memoryEdit}
-          </button>
-        </h4>
-        {projectRules.length > 0 || globalRules.length > 0 ? (
-          <ul className="memory-card memory-lines">
-            {projectRules.map((line, i) => (
-              <li key={`p${i}`}>{line}</li>
-            ))}
-            {globalRules.map((line, i) => (
-              <li key={`g${i}`} className="memory-global">
-                {line}
-                <span className="memory-scope">{t.memoryAllProjects}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="memory-empty">
-            <p>{t.memoryInstructionsEmpty}</p>
-          </div>
-        )}
-        <button
-          type="button"
-          className="memory-link"
-          onClick={onOpenGlobalInstructions}
-        >
-          {t.memoryEditGlobal}
-        </button>
-      </section>
-
-      {skills.length > 0 && (
-        <section className="memory-section">
-          <h4>{t.memorySkills}</h4>
-          <div className="memory-skills">
-            {(allSkills ? skills : skills.slice(0, SKILLS_SHOWN)).map(
-              (skill) => (
-                <span key={skill.name} title={skill.hint}>
-                  /{skill.label ?? skill.name}
-                </span>
-              ),
-            )}
-            {!allSkills && skills.length > SKILLS_SHOWN && (
-              <button
-                type="button"
-                className="memory-more"
-                onClick={() => setAllSkills(true)}
-              >
-                +{skills.length - SKILLS_SHOWN}
-              </button>
-            )}
-          </div>
-        </section>
-      )}
+      <RememberedSection
+        info={info}
+        t={t}
+        lang={lang}
+        query={query}
+        onOpenFile={onOpenFile}
+        onRevealFile={onRevealFile}
+        onRestoreForgotten={onRestoreForgotten}
+        onDeleteMemory={onDeleteMemory}
+        onMoveMemory={onMoveMemory}
+      />
     </div>
   );
 }
@@ -359,6 +340,7 @@ export function RememberedSection({
         {t.memoryRemembered}
         {all.length > 0 && <span className="memory-count">{all.length}</span>}
       </h4>
+      <p className="memory-hint">{t.memoryRememberedHint}</p>
       {all.length === 0 ? (
         <div className="memory-empty">
           <p>{info.remember ? t.memoryRememberedEmpty : t.memoryRememberOff}</p>
@@ -555,9 +537,6 @@ function matches(query: string, ...texts: string[]): boolean {
   const q = query.trim().toLocaleLowerCase();
   return !q || texts.some((text) => text.toLocaleLowerCase().includes(q));
 }
-
-/** Skills shown before "+N" - the slash menu is where they are used. */
-const SKILLS_SHOWN = 8;
 
 /** The style profile's points, for a glance: its list items and plain
  *  lines, without the front matter, headings or comments. */

@@ -90,7 +90,7 @@ Textus AI apprend à vous connaître, vous et votre travail, à partir de quelqu
 | **Profil de style** | Votre façon d'écrire | `.textus/style.md` |
 | **Bibliothèque** | Les faits sur les personnes, les lieux et les termes | `.textus/library/` |
 | **Instructions d'écriture** | Des règles permanentes pour chaque conversation | `agent.md`, global et par projet |
-| **Retenu par l'IA** | Ce que Textus AI retient de vos conversations | `.textus/memory/`, et `memory/` dans le dossier de configuration globale |
+| **Mémoire** | Ce que Textus AI retient de vos conversations | `.textus/memory/`, et `memory/` dans le dossier de configuration globale |
 | **Compétences** | Des instructions réutilisables, appelées avec `/nom` | `skills/`, global et par projet |
 | **Dossier de configuration globale** | Ce qui s'applique à tous les documents | Le dossier des réglages de l'application |
 
@@ -193,9 +193,9 @@ Les instructions d'écriture ne s'appliquent qu'aux conversations. La complétio
 - **Ce projet** : ce qui concerne cette œuvre, dans `.textus/memory/` ; les faits sur les personnes, les lieux et les termes vont dans la bibliothèque.
 - **Pour tous les projets** : vos habitudes générales, dans `memory/` du dossier de configuration globale. Sans dossier du projet, tout va ici.
 
-L'onglet **Mémoire** du panneau IA liste le tout sous **Retenu par l'IA**, avec le moment et la conversation où chaque élément a été retenu : **Modifier** l'ouvre, **Supprimer** l'efface. Vos propres instructions d'écriture l'emportent en cas de désaccord, et Textus AI ne modifie jamais votre `agent.md` ni votre profil de style. Quand il y a trop de souvenirs à envoyer, les plus anciens sont laissés de côté et l'onglet Mémoire le signale. **Réglages > Textus AI > Retenir automatiquement** désactive cette fonction.
+L'onglet **Projet** du panneau IA liste le tout sous **Mémoire**, avec le moment et la conversation où chaque élément a été retenu : **Modifier** l'ouvre, **Supprimer** l'efface. Vos propres instructions d'écriture l'emportent en cas de désaccord, et Textus AI ne modifie jamais votre `agent.md` ni votre profil de style. Quand il y a trop de souvenirs à envoyer, les plus anciens sont laissés de côté et l'onglet Projet le signale. **Réglages > Textus AI > Retenir automatiquement** désactive cette fonction.
 
-**Il apprend aussi de vos choix de révision.** Quand vous refusez plusieurs fois le même genre de modification — des 「」 changés en “”, un mot remplacé par un autre, des phrases coupées, une virgule d'Oxford ajoutée —, Textus AI propose, une fois la relecture terminée, de le retenir comme exigence : **Retenir** l'enregistre sous **Retenu par l'IA**, **Pas maintenant** attend d'en voir davantage et **Ne plus demander** cesse de poser la question pour ce genre. Il ne demande qu'une fois par jour au plus, et rien n'est enregistré sans votre clic, y compris quand Retenir automatiquement est désactivé. Ce qu'il compte n'est qu'une courte note des genres de modification acceptés ou refusés, gardée sur cet ordinateur à côté de vos souvenirs et jamais envoyée.
+**Il apprend aussi de vos choix de révision.** Quand vous refusez plusieurs fois le même genre de modification — des 「」 changés en “”, un mot remplacé par un autre, des phrases coupées, une virgule d'Oxford ajoutée —, Textus AI propose, une fois la relecture terminée, de le retenir comme exigence : **Retenir** l'enregistre sous **Mémoire**, **Pas maintenant** attend d'en voir davantage et **Ne plus demander** cesse de poser la question pour ce genre. Il ne demande qu'une fois par jour au plus, et rien n'est enregistré sans votre clic, y compris quand Retenir automatiquement est désactivé. Ce qu'il compte n'est qu'une courte note des genres de modification acceptés ou refusés, gardée sur cet ordinateur à côté de vos souvenirs et jamais envoyée.
 
 ### Compétences (/nom)
 

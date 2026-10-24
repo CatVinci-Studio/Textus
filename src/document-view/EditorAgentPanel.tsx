@@ -22,7 +22,7 @@ import type { AgentMode, Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /** What this editor draws in the docked AI panel (ai/chat/panel/) while it
- *  is the active tab: the conversation, and Memory. */
+ *  is the active tab: the conversation, and the Project tab. */
 /** The panel's ChatBody always asks for the document as it is now
  *  (refreshContext); this stands until it answers. */
 const NO_DOCUMENT: DocumentSnapshot = { markdown: "", blocks: [] };
@@ -99,7 +99,7 @@ export function EditorAgentPanel({
         popOut: t.agentPanelPopOut,
         close: t.chatClose,
         tabChat: t.agentTabChat,
-        tabMemory: t.agentTabMemory,
+        tabProject: t.agentTabProject,
       }}
       onNewConversation={onNewConversation}
       onPopOut={canDetachChat ? onPopOut : undefined}

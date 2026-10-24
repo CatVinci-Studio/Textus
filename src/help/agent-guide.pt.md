@@ -90,7 +90,7 @@ A Textus AI aprende sobre você e o seu trabalho a partir de alguns arquivos Mar
 | **Perfil de estilo** | Como você escreve | `.textus/style.md` |
 | **Biblioteca** | Fatos sobre pessoas, lugares e termos | `.textus/library/` |
 | **Instruções de escrita** | Regras fixas para toda conversa | `agent.md`, global e por projeto |
-| **O que a IA lembrou** | O que a Textus AI guarda das suas conversas | `.textus/memory/` e `memory/` na pasta de configuração global |
+| **Memória** | O que a Textus AI guarda das suas conversas | `.textus/memory/` e `memory/` na pasta de configuração global |
 | **Habilidades** | Instruções reutilizáveis que você chama com `/nome` | `skills/`, global e por projeto |
 | **Pasta de configuração global** | O que vale para todos os documentos | A pasta de configurações do app |
 
@@ -193,9 +193,9 @@ As instruções de escrita valem só para as conversas. O autocompletar não as 
 - **Este projeto**: o que é sobre esta obra, em `.textus/memory/`; fatos sobre pessoas, lugares e termos vão para a biblioteca.
 - **Para todos os projetos**: os seus hábitos gerais, em `memory/` na pasta de configuração global. Sem pasta do projeto, tudo vai para cá.
 
-A aba **Memória** do painel de IA lista tudo em **O que a IA lembrou**, com quando e em qual conversa cada item foi lembrado: **Editar** abre, **Apagar** remove. As suas próprias instruções de escrita vencem quando as duas discordam, e a Textus AI nunca altera o seu `agent.md` nem o seu perfil de estilo. Quando há memórias demais para enviar, as mais antigas ficam de fora e a aba Memória avisa. **Ajustes > Textus AI > Lembrar automaticamente** desativa o recurso.
+A aba **Projeto** do painel de IA lista tudo em **Memória**, com quando e em qual conversa cada item foi lembrado: **Editar** abre, **Apagar** remove. As suas próprias instruções de escrita vencem quando as duas discordam, e a Textus AI nunca altera o seu `agent.md` nem o seu perfil de estilo. Quando há memórias demais para enviar, as mais antigas ficam de fora e a aba Projeto avisa. **Ajustes > Textus AI > Lembrar automaticamente** desativa o recurso.
 
-**Também aprende com as suas escolhas de revisão.** Quando você recusa várias vezes o mesmo tipo de alteração — 「」 trocadas por “”, uma palavra trocada por outra, frases divididas, uma vírgula de Oxford acrescentada —, a Textus AI oferece, ao fim da revisão, lembrar isso como requisito: **Lembrar** guarda em **O que a IA lembrou**, **Agora não** espera por mais casos e **Não perguntar mais** deixa de perguntar sobre esse tipo. Pergunta no máximo uma vez por dia, e nada é guardado sem o seu clique, também com Lembrar automaticamente desligado. O que conta é só uma nota curta dos tipos de alteração que você aceitou ou recusou, guardada neste computador junto às suas memórias e nunca enviada.
+**Também aprende com as suas escolhas de revisão.** Quando você recusa várias vezes o mesmo tipo de alteração — 「」 trocadas por “”, uma palavra trocada por outra, frases divididas, uma vírgula de Oxford acrescentada —, a Textus AI oferece, ao fim da revisão, lembrar isso como requisito: **Lembrar** guarda em **Memória**, **Agora não** espera por mais casos e **Não perguntar mais** deixa de perguntar sobre esse tipo. Pergunta no máximo uma vez por dia, e nada é guardado sem o seu clique, também com Lembrar automaticamente desligado. O que conta é só uma nota curta dos tipos de alteração que você aceitou ou recusou, guardada neste computador junto às suas memórias e nunca enviada.
 
 ### Habilidades (/nome)
 

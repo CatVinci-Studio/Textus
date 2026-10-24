@@ -33,7 +33,7 @@ const UI = {
     tutorialDoneTitle: "All done",
     tutorialWatchNote: "Connect an AI later in",
     tutorialDoneMemory:
-      "Textus AI remembers your requirements and style over time; see the Memory tab in the AI panel.",
+      "Textus AI remembers your requirements and style over time; see the Project tab in the AI panel.",
   },
   zh: {
     appMenu: "菜单",
@@ -59,7 +59,7 @@ const UI = {
     tutorialDoneTitle: "完成",
     tutorialWatchNote: "之后在",
     tutorialDoneMemory:
-      "Textus AI 会慢慢记住你的要求和风格，可以在 AI 面板的“记忆”里查看。",
+      "Textus AI 会慢慢记住你的要求和风格，可以在 AI 面板的“项目”里查看。",
   },
 };
 

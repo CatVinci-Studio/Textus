@@ -92,7 +92,7 @@ Textus AI learns about you and your work from a few plain Markdown files, not fr
 | **Style profile** | How you write | `.textus/style.md` |
 | **Library** | Facts about people, places and terms | `.textus/library/` |
 | **Writing instructions** | Standing rules for every conversation | `agent.md` — global, and per project |
-| **AI remembered** | What Textus AI keeps from your conversations | `.textus/memory/`, and `memory/` in the global config folder |
+| **Memory** | What Textus AI keeps from your conversations | `.textus/memory/`, and `memory/` in the global config folder |
 | **Skills** | Reusable instructions you call with `/name` | `skills/` — global, and per project |
 | **Global config folder** | What applies to every document | The app's settings folder |
 
@@ -195,9 +195,9 @@ Writing instructions apply to conversations only. Completion doesn't read them; 
 - **This project**: what is about this work, in `.textus/memory/`; facts about people, places and terms go into the library.
 - **For all projects**: your general habits, in `memory/` in the global config folder. Without a project folder, everything goes here.
 
-The AI panel's **Memory** tab lists it all under **AI remembered**, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and the Memory tab says so. **Settings > Textus AI > Remember automatically** turns it off.
+The AI panel's **Project** tab lists it all under **Memory**, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and the Project tab says so. **Settings > Textus AI > Remember automatically** turns it off.
 
-**It also learns from your revision choices.** When you turn down the same kind of change several times — 「」 made “”, one word swapped for another, sentences split, an Oxford comma added — Textus AI offers, once the review is done, to remember it as a requirement: **Remember** saves it under **AI remembered**, **Not now** waits for more, and **Never ask for this** stops asking about that kind. It asks at most once a day, and only your click saves anything, also with Remember automatically off. What it counts is a short note of the kinds of change you accepted or rejected, kept on this computer beside your memories and never sent.
+**It also learns from your revision choices.** When you turn down the same kind of change several times — 「」 made “”, one word swapped for another, sentences split, an Oxford comma added — Textus AI offers, once the review is done, to remember it as a requirement: **Remember** saves it under **Memory**, **Not now** waits for more, and **Never ask for this** stops asking about that kind. It asks at most once a day, and only your click saves anything, also with Remember automatically off. What it counts is a short note of the kinds of change you accepted or rejected, kept on this computer beside your memories and never sent.
 
 ### Skills (/name)
 
