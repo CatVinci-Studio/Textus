@@ -5,6 +5,7 @@ import { $prose } from "@milkdown/kit/utils";
 import { parseMarkdownSource } from "./parse-markdown-source";
 import { joinLinesForTableCell } from "./paste-slice";
 import { wordListsToHtml } from "./word-lists";
+import { keepPastedLines } from "./paste-lines";
 
 /**
  * Milkdown's clipboard plugin only parses pasted text as markdown when the
@@ -19,7 +20,9 @@ import { wordListsToHtml } from "./word-lists";
  * untouched. Must be registered BEFORE the clipboard plugin - handlePaste
  * props run in registration order and the first to return true wins.
  * Every paste also keeps the spans at its ends (keepPastedSpans below),
- * and lines pasted into a table cell stay in it (paste-slice.ts).
+ * and lines pasted into a table cell stay in it (paste-slice.ts); pasted
+ * text keeps its line breaks, and a quote copied with its bars is a quote
+ * (paste-lines.ts).
  */
 
 const RICH_HTML_SELECTOR = [
@@ -145,7 +148,9 @@ export const pasteMarkdownSourcePlugin = $prose(
           const text = data.getData("text/plain");
           if (!text || (html && !htmlIsStyledPlainText(html))) return false;
 
-          const doc = parseMarkdownSource(ctx, text);
+          // Its lines as the writer saw them (paste-lines.ts).
+          const lined = keepPastedLines(text);
+          const doc = parseMarkdownSource(ctx, lined);
           if (!doc || typeof doc === "string" || doc.content.size === 0)
             return false;
           if (mergesAway(doc, view.state.selection.$from)) {
@@ -165,7 +170,7 @@ export const pasteMarkdownSourcePlugin = $prose(
           // Text alone the clipboard plugin's own branch markdown-parses
           // too, but into a slice open through the spans at its ends (and
           // lines it would spread over a table's cells).
-          if (!html && slice === parsed) return false;
+          if (!html && slice === parsed && lined === text) return false;
           view.dispatch(
             view.state.tr
               .replaceSelection(slice)
