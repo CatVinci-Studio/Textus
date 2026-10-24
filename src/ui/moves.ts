@@ -213,13 +213,14 @@ export function joinBeat(el: HTMLElement, key: string) {
  * `leaving` (its cards in the margin) fade out where they stood. The old
  * looks are copies taken before `change` runs, which replaces the
  * elements; `change` runs at once and the motion follows, so nothing
- * waits on it. Changed at once, the text jumped, and the card was gone
- * from one frame to the next.
+ * waits on it - returning false, it changed nothing and nothing moves.
+ * Changed at once, the text jumped, and the card was gone from one frame
+ * to the next.
  */
 export function crossfade(
   root: HTMLElement,
   touched: [first: Element, last: Element] | null,
-  change: () => void,
+  change: () => boolean | void,
   leaving: HTMLElement[] = [],
 ): void {
   if (!motionAllowed()) {
@@ -246,22 +247,33 @@ export function crossfade(
     ...leaving.filter(onScreen).map((el) => ghostBeside(el)),
   ];
   const below = measure(kids.slice(span ? last + 1 : 0).filter(onScreen));
-  change();
+  // Nothing changed after all (an Accept that couldn't be written): no
+  // move either.
+  if (change() === false) {
+    for (const ghost of ghosts) ghost.remove();
+    layer?.remove();
+    return;
+  }
   const now = [...root.children];
   const fresh = span
     ? now.slice(first, last + 1 + now.length - kids.length).filter(onScreen)
     : [];
+  // The old look goes quickly and the new comes half a beat after it:
+  // two different texts over one another for the whole fade read as a
+  // smear.
+  const out = duration("--dur-fast");
   for (const el of fresh)
     animate(el, [{ opacity: 0 }, { opacity: 1 }], {
       duration: "--dur-base",
       easing: "--ease-out",
+      delay: out / 2,
+      fill: "backwards",
     });
   for (const ghost of ghosts)
-    void exit(ghost, { from: "none", duration: "--dur-base" }).then(() =>
+    void exit(ghost, { from: "none", duration: out }).then(() =>
       ghost.remove(),
     );
-  if (layer)
-    window.setTimeout(() => layer.remove(), duration("--dur-base") + 100);
+  if (layer) window.setTimeout(() => layer.remove(), out + 100);
   play(below, { duration: "--dur-slow", easing: "--ease-out" });
 }
 
@@ -284,24 +296,40 @@ function ghostLayer(root: HTMLElement): HTMLElement | null {
   layer.inert = true;
   Object.assign(layer.style, {
     position: "absolute",
-    left: `${root.offsetLeft}px`,
-    top: `${root.offsetTop}px`,
+    left: "0",
+    top: "0",
     width: `${root.offsetWidth}px`,
     height: "0",
     minHeight: "0",
     margin: "0",
+    padding: "0",
     pointerEvents: "none",
   });
   parent.append(layer);
+  // Laid over the editor by where both are on screen - in the editor's
+  // own pixels, which a zoom of the text scales.
+  const at = layer.getBoundingClientRect();
+  const to = root.getBoundingClientRect();
+  const scale = zoomOf(root, to);
+  layer.style.left = `${(to.left - at.left) / scale}px`;
+  layer.style.top = `${(to.top - at.top) / scale}px`;
   return layer;
+}
+
+/** How much larger on screen `root` is than in its own pixels. */
+function zoomOf(root: HTMLElement, box: DOMRect): number {
+  return root.offsetWidth ? box.width / root.offsetWidth : 1;
 }
 
 function ghostIn(el: HTMLElement, layer: HTMLElement, root: HTMLElement) {
   const ghost = el.cloneNode(true) as HTMLElement;
+  const box = el.getBoundingClientRect();
+  const to = root.getBoundingClientRect();
+  const scale = zoomOf(root, to);
   Object.assign(ghost.style, {
     position: "absolute",
-    left: `${el.offsetLeft - root.offsetLeft}px`,
-    top: `${el.offsetTop - root.offsetTop}px`,
+    left: `${(box.left - to.left) / scale}px`,
+    top: `${(box.top - to.top) / scale}px`,
     width: `${el.offsetWidth}px`,
     margin: "0",
   });

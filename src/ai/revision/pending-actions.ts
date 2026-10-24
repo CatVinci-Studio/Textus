@@ -33,6 +33,7 @@ import {
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import type { Dispatch, SetStateAction } from "react";
 import { writeAccept, type AcceptOutcome } from "./pending-accept";
+import { settle } from "./settle-motion";
 import type { PendingEditOptions } from "./usePendingEdits";
 
 /**
@@ -227,12 +228,16 @@ export function makePendingActions(env: PendingEnv) {
     const learn = textOverride === undefined;
     const outcome = { current: null as AcceptOutcome | null };
     env.run((ctx) => {
-      outcome.current = writeAccept(
-        ctx,
-        callId,
-        textOverride,
-        env.options().citationStyle,
-      );
+      settle(ctx.get(editorViewCtx), [callId], () => {
+        const written = writeAccept(
+          ctx,
+          callId,
+          textOverride,
+          env.options().citationStyle,
+        );
+        outcome.current = written;
+        return written.ok || written.rejectedAll;
+      });
     });
     const { ok, stillStreaming, rejectedAll, preview } = outcome.current ?? {
       ok: false,
@@ -287,8 +292,10 @@ export function makePendingActions(env: PendingEnv) {
       // A rejected picture leaves nothing behind.
       for (const id of generatedIdsIn(preview?.proposal.text ?? ""))
         discardGeneratedImage(id);
-      view.dispatch(
-        view.state.tr.setMeta(pendingEditKey, { type: "remove", callId }),
+      settle(view, [callId], () =>
+        view.dispatch(
+          view.state.tr.setMeta(pendingEditKey, { type: "remove", callId }),
+        ),
       );
       if (learn && preview) decided(preview, () => false);
     });
@@ -466,7 +473,9 @@ export function makePendingActions(env: PendingEnv) {
       for (const p of previews)
         for (const id of generatedIdsIn(p.proposal.text ?? ""))
           discardGeneratedImage(id);
-      view.dispatch(view.state.tr.setMeta(pendingEditKey, { type: "clear" }));
+      settle(view, null, () =>
+        view.dispatch(view.state.tr.setMeta(pendingEditKey, { type: "clear" })),
+      );
       if (learn) for (const p of previews) decided(p, () => false);
       env.setStatuses((prev) =>
         recordStatuses(

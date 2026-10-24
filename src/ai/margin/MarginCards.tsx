@@ -241,6 +241,7 @@ export const RevisionCard = memo(
         className={`review-note revision-note revision-note-${state}${hot ? " review-note-hot" : ""}${focused ? " revision-note-focus" : ""}${item.streaming ? " revision-note-streaming" : ""}${cutClass(cut, chip, open)}`}
         role="group"
         aria-label={`${labels.reviewBarLabel} ${item.num}`}
+        data-call={item.callId}
         style={cardStyle(top, left, cut, open)}
         onMouseEnter={() => onHot(item.key, true)}
         onMouseLeave={() => onHot(item.key, false)}

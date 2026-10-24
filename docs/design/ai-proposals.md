@@ -329,6 +329,8 @@ text came back from nothing. An original the view takes out of the text is
 hidden in the flow (`font-size: 0`), not `display: none`, which would start
 its entrance over when it came back.
 
+Decided - Accept, Reject, Reject all - a proposal leaves as one move (`settle-motion.ts`, ui/moves.ts's crossfade): the blocks it was drawn in cross-fade from copies of how they looked, laid beside the editor (never in ProseMirror's DOM, which reads any change there as an edit), the text after them glides to its new place, and its cards fade out where they stood (`1.2.1`).
+
 Staleness is the lifecycle's ("The writer's edits stand", above). Accept
 re-checks once more, defensively. Terminal statuses are remembered even
 after the preview leaves the document, so a chat card never regresses to a
