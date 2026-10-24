@@ -113,7 +113,12 @@ plain HTTP goes only to this computer (`network:localhost:23119`).
 
 ## The `textus` API
 
-`host.js` runs as a CommonJS module, with `textus` in scope:
+`host.js` runs as a CommonJS module, with `textus` in scope. The whole API
+is typed in [textus.d.ts](textus.d.ts) - put
+`/// <reference path="textus.d.ts" />` at the top of host.js for your
+editor to complete it - and the manifest has a
+[JSON Schema](textus-plugin.schema.json):
+`"$schema": "https://raw.githubusercontent.com/CatVinci-Studio/Textus/main/docs/dev/textus-plugin.schema.json"`.
 
 ```js
 exports.activate = function () {
@@ -152,7 +157,9 @@ ratio }`). The app draws the panes and the line between them; a click
     clicked; its `dispose()`, or the plugin stopping, takes it away;
   - `registerWebviewViewProvider(id, { resolveWebviewView(webview, { state }) })`
     for a sidebar tab or a view, `registerCustomEditorProvider(viewType,
-{ resolveCustomEditor(document, webview) })`, `registerSettingsPage({
+{ resolveCustomEditor(document, webview) })` - `document` has `path`,
+    `fileName`, `readBytes()`, `readText()` and `writeText(text)` for the file it
+    was opened on - `registerSettingsPage({
 resolveSettingsPage(webview) })`.
 - `textus.document` - `getText()`, `getPath()`, `getSelection()` (`{ text,
 markdown }`), `getOutline()` (its headings: `[{ level, text, line }]`),
