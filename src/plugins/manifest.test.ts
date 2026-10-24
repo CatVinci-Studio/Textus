@@ -115,6 +115,14 @@ describe("versions", () => {
     expect(engineSatisfied("1.3.x", "1.4.0")).toBe(false);
     expect(engineSatisfied("*", "9.0.0")).toBe(true);
   });
+
+  it("tell the betas apart when the range names one", () => {
+    expect(engineSatisfied(">=1.3.0-beta.2", "1.3.0-beta.1")).toBe(false);
+    expect(engineSatisfied(">=1.3.0-beta.2", "1.3.0-beta.2")).toBe(true);
+    expect(engineSatisfied(">=1.3.0-beta.2", "1.3.0")).toBe(true);
+    expect(engineSatisfied("^1.3.0-beta.2", "1.3.0-beta.1")).toBe(false);
+    expect(engineSatisfied("^1.3.0-beta.2", "1.4.0")).toBe(true);
+  });
 });
 
 it("file name patterns match with * and without regard to case", () => {

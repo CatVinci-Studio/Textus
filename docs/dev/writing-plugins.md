@@ -36,7 +36,9 @@ To share it, zip the folder and name the file `<id>.textusplugin`;
   "author": "Your Name", // shown on its card; the publisher where there is none
   "description": "Counts the words of the selection.",
   "icon": "icon.svg",
-  "engines": { "textus": "^1.2.0" },
+  // The Textus it runs on. A beta counts as its release (^1.3.0 runs on
+  // 1.3.0-beta.1), unless you name one: ">=1.3.0-beta.2" for what it added.
+  "engines": { "textus": "^1.3.0" },
   "main": "host.js", // or ["shared.js", "host.js"], run in order
   "activationEvents": [], // ["onStartupFinished"] to start with Textus
   "permissions": ["document.read"],

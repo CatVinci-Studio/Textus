@@ -470,16 +470,17 @@ export function compareVersions(a: string, b: string): number {
  * Whether Textus `version` satisfies `range`: `^1.3.0` (1.3.0 up to, not
  * including, 2.0.0), `>=1.3.0`, `1.3.x`, or an exact version. Textus's own
  * pre-releases count as their release, so a plugin for `^1.3.0` runs on
- * 1.3.0-beta.1.
+ * 1.3.0-beta.1 - unless the range names a pre-release itself
+ * (`>=1.3.0-beta.2`, for an interface beta.2 brought): then the betas are
+ * told apart, and beta.1 is too early.
  */
 export function engineSatisfied(range: string, version: string): boolean {
-  const release = version.split("-")[0];
   const r = range.trim();
   if (r === "*") return true;
-  if (r.startsWith(">="))
-    return compareVersions(release, r.slice(2).trim()) >= 0;
+  const base = r.replace(/^(>=|\^)/, "").trim();
+  const release = base.includes("-") ? version : version.split("-")[0];
+  if (r.startsWith(">=")) return compareVersions(release, base) >= 0;
   if (r.startsWith("^")) {
-    const base = r.slice(1).trim();
     const [major] = versionParts(base);
     return (
       compareVersions(release, base) >= 0 && versionParts(release)[0] === major
