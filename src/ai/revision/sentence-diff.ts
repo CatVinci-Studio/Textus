@@ -234,7 +234,8 @@ function paragraphsOf(text: string): string[] {
  *   the original against the new ones they became (the joined paragraphs
  *   struck in place: pending-edit-plugin's struck blocks).
  *
- * `finished` false: the last run, which may still grow, stays as it is.
+ * `finished` false: the last run, which may still grow, stays as it is -
+ * unless both its sides end a paragraph, and it is whole paragraphs.
  */
 function regroup(pairs: Pair[], finished: boolean): Pair[] {
   const out: Pair[] = [];
@@ -265,7 +266,11 @@ function regroup(pairs: Pair[], finished: boolean): Pair[] {
     const before = run.map((p) => p.before).join("");
     const after = run.map((p) => p.after).join("");
     const ends = (text: string) => !text || ENDS_PARAGRAPH.test(text);
-    if (last ? finished : ends(before) && ends(after)) close();
+    // The last run, still streaming, is whole paragraphs once both sides
+    // end one - as each lands (unit-reveal.ts): shaped then, a translation
+    // landed as one change over every paragraph, drawn inside the title.
+    const whole = ends(before) && ends(after);
+    if (last ? finished || (whole && !!before && !!after) : whole) close();
   }
   // Still streaming, a join just before the text being written may go on
   // into it: shaped already unless that leaves a paragraph struck on its
