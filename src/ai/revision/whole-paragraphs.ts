@@ -9,7 +9,7 @@ import { paragraphCount } from "./sentence-diff";
  * after them. Drawn in the last one's run of text, they stood as one tall
  * paragraph that moved everything below once taken. Null when the change
  * is inside a paragraph, or covers anything but top-level paragraphs.
- * The same while a rewrite streams in (pending-widgets' streamChanges) as
+ * The same while a rewrite streams in (stream-widgets' streamChanges) as
  * once it is done, so nothing moves when it settles.
  */
 export function wholeParagraphs(

@@ -24,9 +24,9 @@ import {
 import {
   type SentencePickLabels,
   sentenceDecorations,
-  streamDecorations,
   textWidget,
 } from "./pending-widgets";
+import { streamDecorations } from "./stream-widgets";
 
 /**
  * Every proposal's decorations, built from the plugin state: which pieces

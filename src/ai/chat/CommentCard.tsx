@@ -1,6 +1,7 @@
 import { useRef, useState, type CSSProperties } from "react";
 import { FlipOnChange } from "../../ui/flip";
 import { InlineMarkdownText } from "../MarkdownText";
+import type { AgentTurn } from "../types";
 
 export interface Comment {
   anchor: string;
@@ -180,4 +181,43 @@ export function CommentGroup({
       )}
     </div>
   );
+}
+
+/** The notes of each run of add_comment calls in `turns` - calls in a row,
+ *  their results between them - by the run's first call, the others
+ *  mapped to none: all of a reply's notes are one card. */
+export function noteRunsOf(
+  turns: readonly AgentTurn[],
+  noteNumber?: (id: string) => number | null,
+): Map<string, { id: string; comment: Comment; num: number | null }[]> {
+  const runs = new Map<
+    string,
+    { id: string; comment: Comment; num: number | null }[]
+  >();
+  let first: string | null = null;
+  for (const turn of turns) {
+    if (turn.kind === "ToolResult") continue;
+    if (turn.kind !== "ToolCall" || turn.name !== "add_comment") {
+      first = null;
+      continue;
+    }
+    const comment = parseComment(turn.arguments);
+    const notes = comment
+      ? [
+          {
+            id: turn.call_id,
+            comment,
+            num: noteNumber?.(turn.call_id) ?? null,
+          },
+        ]
+      : [];
+    if (first === null) {
+      first = turn.call_id;
+      runs.set(first, notes);
+    } else {
+      runs.get(first)!.push(...notes);
+      runs.set(turn.call_id, []);
+    }
+  }
+  return runs;
 }

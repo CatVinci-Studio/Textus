@@ -17,7 +17,8 @@ import { ThoughtRow, type ThoughtRowLabels } from "./ThoughtRow";
 import { isProposalTool, parseToolProposal } from "./proposal";
 import { parseUserMessage } from "./user-message";
 import { refusedProposalIds } from "../revision/proposal-status";
-import { classifyAiError, type AiErrorKind } from "../error-messages";
+import type { AiErrorKind } from "../error-messages";
+import { ErrorRow } from "./ErrorRow";
 import type { PendingSentence } from "../revision/pending-edit-plugin";
 import { FlipOnChange } from "../../ui/flip";
 import "../revision/pending-picture.css";
@@ -29,12 +30,7 @@ import {
 } from "./MemoryChip";
 import { ProposalCard, notMadeLine } from "./ProposalCard";
 import { ProposalGroup, proposalRuns } from "./ProposalGroup";
-import {
-  CommentCard,
-  CommentGroup,
-  parseComment,
-  type Comment,
-} from "./CommentCard";
+import { CommentCard, CommentGroup, noteRunsOf } from "./CommentCard";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { memoryRunsOf } from "./memory-pass";
 
@@ -567,79 +563,4 @@ export function ChatMessages({
       )}
     </>
   );
-}
-
-/** The error row, with a retry button when the failed send is resendable
- *  (`onRetry` null otherwise). Shared with ChatBody's quick variant. */
-export function ErrorRow({
-  error,
-  retryLabel,
-  onRetry,
-  explanations,
-}: {
-  error: string;
-  retryLabel: string;
-  onRetry: (() => void) | null;
-  /** What to do, per recognized kind of failure (error-messages.ts). */
-  explanations?: Partial<Record<AiErrorKind, string>>;
-}) {
-  const kind = classifyAiError(error);
-  const explanation = kind ? explanations?.[kind] : undefined;
-  return (
-    <div className="agent-error">
-      {explanation && (
-        <div className="agent-error-explanation">{explanation}</div>
-      )}
-      <div className={explanation ? "agent-error-detail" : undefined}>
-        {error}
-      </div>
-      {onRetry && (
-        <button
-          className="inline-chat-action agent-error-retry"
-          onClick={onRetry}
-        >
-          {retryLabel}
-        </button>
-      )}
-    </div>
-  );
-}
-
-/** The notes of each run of add_comment calls in `turns` - calls in a row,
- *  their results between them - by the run's first call, the others
- *  mapped to none: all of a reply's notes are one card. */
-function noteRunsOf(
-  turns: readonly AgentTurn[],
-  noteNumber?: (id: string) => number | null,
-): Map<string, { id: string; comment: Comment; num: number | null }[]> {
-  const runs = new Map<
-    string,
-    { id: string; comment: Comment; num: number | null }[]
-  >();
-  let first: string | null = null;
-  for (const turn of turns) {
-    if (turn.kind === "ToolResult") continue;
-    if (turn.kind !== "ToolCall" || turn.name !== "add_comment") {
-      first = null;
-      continue;
-    }
-    const comment = parseComment(turn.arguments);
-    const notes = comment
-      ? [
-          {
-            id: turn.call_id,
-            comment,
-            num: noteNumber?.(turn.call_id) ?? null,
-          },
-        ]
-      : [];
-    if (first === null) {
-      first = turn.call_id;
-      runs.set(first, notes);
-    } else {
-      runs.get(first)!.push(...notes);
-      runs.set(turn.call_id, []);
-    }
-  }
-  return runs;
 }

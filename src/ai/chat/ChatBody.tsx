@@ -10,7 +10,8 @@ import type {
   EditProposal,
   ImageAttachment,
 } from "../types";
-import { ChatMessages, ErrorRow } from "./ChatMessages";
+import { ChatMessages } from "./ChatMessages";
+import { ErrorRow } from "./ErrorRow";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
 import { MarkdownText } from "../MarkdownText";
