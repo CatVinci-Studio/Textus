@@ -27,9 +27,8 @@ export default {
   agentExpandWindowLabel: "Открывать полные диалоги в отдельном окне",
   shortcutToggleAgentPanel: "Панель ИИ",
   menuToggleAgentPanel: "Панель ИИ",
-  agentPanelEmptyWrite: "ИИ помогает писать: черновики или правки.",
-  agentPanelEmptyReview:
-    "ИИ отвечает и оставляет заметки на полях, не меняя ваш текст.",
+  agentPanelEmptyWrite: "Начните писать",
+  agentPanelEmptyReview: "Больше предложений",
   aiWorkingCompletion: "Пишется продолжение…",
   aiWorkingGrammar: "Проверяется абзац…",
   noticeCompletionNeedsCaret:

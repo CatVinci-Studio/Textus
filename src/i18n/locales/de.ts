@@ -28,10 +28,8 @@ export default {
     "Vollständige Unterhaltungen in einem eigenen Fenster öffnen",
   shortcutToggleAgentPanel: "KI-Bereich ein-/ausblenden",
   menuToggleAgentPanel: "KI-Bereich",
-  agentPanelEmptyWrite:
-    "Die KI hilft beim Schreiben: Entwürfe oder Überarbeitungen.",
-  agentPanelEmptyReview:
-    "Die KI antwortet und hinterlässt Notizen am Rand, ohne Ihren Text zu ändern.",
+  agentPanelEmptyWrite: "Fang an zu schreiben",
+  agentPanelEmptyReview: "Mehr Vorschläge erhalten",
   aiWorkingCompletion: "Fortsetzung wird geschrieben…",
   aiWorkingGrammar: "Absatz wird geprüft…",
   noticeCompletionNeedsCaret:

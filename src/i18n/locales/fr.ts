@@ -30,9 +30,8 @@ export default {
     "Ouvrir les conversations complètes dans une fenêtre séparée",
   shortcutToggleAgentPanel: "Afficher/masquer le panneau IA",
   menuToggleAgentPanel: "Panneau IA",
-  agentPanelEmptyWrite: "L'IA vous aide à écrire : brouillons ou révisions.",
-  agentPanelEmptyReview:
-    "L'IA répond et laisse des notes dans la marge, sans modifier votre texte.",
+  agentPanelEmptyWrite: "Commencez à écrire",
+  agentPanelEmptyReview: "Obtenez plus de suggestions",
   aiWorkingCompletion: "Rédaction de la suite…",
   aiWorkingGrammar: "Vérification du paragraphe…",
   noticeCompletionNeedsCaret:

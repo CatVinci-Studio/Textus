@@ -102,24 +102,24 @@ const MODE_LINES: Record<
     {
       mode: "write",
       name: "Write",
-      line: "Let the AI help you write: drafts or revisions.",
+      line: "Start writing",
     },
     {
       mode: "review",
       name: "Review",
-      line: "The AI answers and leaves notes in the margin, and doesn't change your text.",
+      line: "Get more suggestions",
     },
   ],
   zh: [
     {
       mode: "write",
       name: "写作",
-      line: "让 AI 帮你写：起草，或修改。",
+      line: "开始你的写作",
     },
     {
       mode: "review",
       name: "审阅",
-      line: "AI 只回答问题、在页边留批注，不会改动你的文字。",
+      line: "提出更多建议",
     },
   ],
 };

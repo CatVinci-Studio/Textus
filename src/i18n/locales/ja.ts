@@ -27,9 +27,8 @@ export default {
   agentExpandWindowLabel: "会話全体を別ウィンドウで開く",
   shortcutToggleAgentPanel: "AIパネルの表示切替",
   menuToggleAgentPanel: "AIパネル",
-  agentPanelEmptyWrite: "AI が執筆を手伝います。下書きも、書き直しも。",
-  agentPanelEmptyReview:
-    "AI は質問に答え、余白にコメントを残します。文章は変えません。",
+  agentPanelEmptyWrite: "書きはじめましょう",
+  agentPanelEmptyReview: "もっと提案をもらう",
   aiWorkingCompletion: "続きを生成中…",
   aiWorkingGrammar: "この段落をチェック中…",
   noticeCompletionNeedsCaret: "続きを書く位置にカーソルを置いてください。",
