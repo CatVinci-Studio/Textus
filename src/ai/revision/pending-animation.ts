@@ -9,7 +9,6 @@ import {
   splitMermaidFences,
 } from "../../editor/pending-diagram";
 import { enter, glideAfter } from "../../ui/moves";
-import { Cascade, hasWords } from "../../ui/cascade";
 import { UnitReveal } from "./unit-reveal";
 import { showGeneratedImages, shownGeneratedSrc } from "./generated-images";
 import { framePendingPictures } from "./pending-picture";
@@ -53,8 +52,6 @@ export interface InsertAnimation {
    *  (PendingPreview.streamSource); `span` is then only the sentence being
    *  written. */
   stream: StreamState | null;
-  /** The words of what landed coming in one by one (ui/cascade.ts). */
-  cascade: Cascade;
 }
 
 /** A rewrite being laid out sentence by sentence while it streams. */
@@ -93,7 +90,9 @@ export function newAnimation(
   text: string,
   done: boolean,
 ): InsertAnimation {
-  const reveal = new UnitReveal();
+  // New writing lands a paragraph at a time; a rewrite laid out sentence by
+  // sentence (StreamState) is switched to its sentences (streamFor).
+  const reveal = new UnitReveal(true);
   reveal.update(text, done, performance.now());
   return {
     callId,
@@ -106,7 +105,6 @@ export function newAnimation(
     view: null,
     settled: false,
     stream: null,
-    cascade: new Cascade(),
   };
 }
 
@@ -277,22 +275,14 @@ export function renderAnimation(anim: InsertAnimation) {
   renderPendingHtml(anim.span, text);
   anim.drawn = text;
   anim.span.dataset.drawn = "true";
-  // The words of what landed come in one by one (ui/cascade.ts) - a
-  // sentence joined to the paragraph shown too, its words only; those still
-  // coming in carry on through a redraw. A block with no words (a picture,
-  // a rule) enters whole (ui/moves.ts). Text replaced rather than added to
-  // shows at once.
-  if (redrawn) {
-    anim.cascade.play(anim.span);
-    return;
-  }
-  if (!text.startsWith(shown)) {
-    anim.cascade.settle(anim.span);
-    return;
-  }
-  anim.cascade.play(anim.span);
+  // Each block that landed - a paragraph written whole - fades in rising
+  // from a little below (ui/moves.ts), all of it at once: a sentence or a
+  // word at a time, the writing came in jerks. A fence growing a line at a
+  // time is drawn again in place (its diagram builds itself up). Text
+  // replaced rather than added to shows at once.
+  if (redrawn || !text.startsWith(shown)) return;
   for (const el of [...anim.span.children].slice(before))
-    if (!hasWords(el)) enter(el);
+    enter(el, { from: "up", distance: "md", duration: "--dur-slow" });
   // The text below it, pushed down by what landed, glides there - once
   // the widget is in the document, when it was drawn as it was made: in a
   // microtask, which runs once ProseMirror has put it in and before the

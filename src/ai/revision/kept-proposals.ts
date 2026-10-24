@@ -65,18 +65,18 @@ export function keptFrom(
   const proposals = previews
     .filter((p) => keepable(p, made))
     .map((p): KeptProposal => {
-    const kept: KeptProposal = { callId: p.callId, proposal: p.proposal };
-    if (p.proposal.action === "replace_selection")
-      kept.target = {
-        range: { from: p.from, to: p.to },
-        selectionMarkdown: selectionMarkdown(p.from, p.to),
-      };
-    else if (p.proposal.action === "insert_at_cursor")
-      kept.target = { range: null, selectionMarkdown: null, cursor: p.from };
-    const takes = p.sentences?.changes.map((c) => c.take);
-    if (takes?.some((take) => take !== null)) kept.takes = takes;
-    return kept;
-  });
+      const kept: KeptProposal = { callId: p.callId, proposal: p.proposal };
+      if (p.proposal.action === "replace_selection")
+        kept.target = {
+          range: { from: p.from, to: p.to },
+          selectionMarkdown: selectionMarkdown(p.from, p.to),
+        };
+      else if (p.proposal.action === "insert_at_cursor")
+        kept.target = { range: null, selectionMarkdown: null, cursor: p.from };
+      const takes = p.sentences?.changes.map((c) => c.take);
+      if (takes?.some((take) => take !== null)) kept.takes = takes;
+      return kept;
+    });
   return proposals.length > 0
     ? { version: KEPT_VERSION, document, proposals }
     : null;

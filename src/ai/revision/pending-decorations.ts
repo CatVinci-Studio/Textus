@@ -129,6 +129,7 @@ export function streamFor(
     animations.set(p.callId, anim);
   }
   if (!anim.stream) {
+    anim.reveal.bySentence();
     anim.stream = {
       sentences: p.streamSource!.sentences,
       layout: { pieces: [], reached: 0, partial: null },
