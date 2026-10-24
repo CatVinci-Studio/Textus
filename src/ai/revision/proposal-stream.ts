@@ -46,8 +46,12 @@ export interface ProposalStreamEffects {
    *  (un-decidable) preview at its anchor. */
   place(callId: string, proposal: EditProposal): void;
   /** Text for the callId's typewriter as known so far; `done` promises no
-   *  more will come, which is what lets the reveal settle. */
-  feed(callId: string, text: string, done: boolean): void;
+   *  more will come, which is what lets the reveal settle. `final` (with
+   *  `done`, by default) says the call's own arguments are in too: text
+   *  whole before them lands, and stays undecided until they come - the
+   *  preview is split into its sentences only from them, and decidable
+   *  sooner it was one card for its whole paragraph for a moment. */
+  feed(callId: string, text: string, done: boolean, final?: boolean): void;
   /** A stop froze this draft: re-show it as a final, decidable proposal
    *  carrying the partially streamed text. */
   finalize(callId: string, proposal: EditProposal): void;
@@ -117,7 +121,12 @@ export class ProposalStream {
     // Its text whole - the closing quote in - it lands now, not when the
     // step ends: a reply's edits stream one after another (agent/
     // lists.rs), and the step's turns come only after the last.
-    this.effects.feed(callId, parsed.proposal.text ?? "", parsed.textComplete);
+    this.effects.feed(
+      callId,
+      parsed.proposal.text ?? "",
+      parsed.textComplete,
+      false,
+    );
   }
 
   /** The completed ToolCall turn landed: the authoritative arguments. Closes

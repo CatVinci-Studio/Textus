@@ -50,6 +50,9 @@ export interface InsertAnimation {
   view: EditorView | null;
   /** The settle meta was dispatched - never dispatch it twice. */
   settled: boolean;
+  /** Its text is whole but the call's own arguments aren't in yet: it
+   *  lands, and stays undecided (ProposalStreamEffects.feed's `final`). */
+  awaitingFinal: boolean;
   /** Set when the text is laid out sentence by sentence as it streams
    *  (PendingPreview.streamSource); `span` is then only the sentence being
    *  written. */
@@ -112,6 +115,7 @@ export function newAnimation(
     frame: null,
     view: null,
     settled: false,
+    awaitingFinal: false,
     stream: null,
     words: null,
   };
@@ -245,6 +249,7 @@ export function stillRevealing(callId: string): boolean {
   // haven't arrived: a draft placed right after `"text": "` used to settle
   // there and then, became decidable mid-stream, and - settling only once -
   // stayed "Writing…" forever when the final proposal landed mid-reveal.
+  if (anim.awaitingFinal) return true;
   if (anim.target.length === 0) return !anim.done;
   return !anim.done || !anim.reveal.caughtUp;
 }
@@ -518,12 +523,16 @@ export function streamPendingInsertText(
   callId: string,
   text: string,
   done: boolean,
+  final = done,
 ) {
   const existing = animations.get(callId);
   if (!existing) {
-    animations.set(callId, newAnimation(callId, text, done));
+    const anim = newAnimation(callId, text, done);
+    anim.awaitingFinal = done && !final;
+    animations.set(callId, anim);
     return;
   }
+  existing.awaitingFinal = done && !final;
   // `done` goes both directions: a widget drawn from an early streaming
   // preview creates the entry with done=true (it can't know more text is
   // coming) - the next stream call must be able to reopen it, or the
