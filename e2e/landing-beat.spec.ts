@@ -81,6 +81,8 @@ test("a landed paragraph's text and cards enter on one beat", async ({
   await expect(page.locator(".review-bar-accept")).toBeEnabled({
     timeout: 20_000,
   });
+  // Written whole, nothing is being written any more.
+  await expect(page.locator(".review-note-working")).toHaveCount(0);
   await page.waitForTimeout(400);
   const pairs = await page.evaluate(() => {
     const w = window as unknown as { __pairs: Pair[]; __on: boolean };

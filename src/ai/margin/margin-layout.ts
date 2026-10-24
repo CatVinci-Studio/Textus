@@ -29,6 +29,8 @@ export interface ReviewMarginLabels {
   proposalDeletedSentence: string;
   /** A card's heading for a sentence a rewrite adds, with no original. */
   proposalAddedSentence: string;
+  /** The card standing by the paragraph a rewrite is writing. */
+  agentWritingEdit: string;
   // What a change of a whole block (a table, a code block) is called on
   // its card - a picture is shown.
   proposalBlockPicture: string;
@@ -38,10 +40,12 @@ export interface ReviewMarginLabels {
   proposalBlockOther: string;
 }
 
-/** One thing in the margin: a review note, or one changed sentence of a
- *  pending rewrite (its replacement and ✓ / ✕). */
+/** One thing in the margin: a review note, one changed sentence of a
+ *  pending rewrite (its replacement and ✓ / ✕), or where a rewrite still
+ *  streaming in is writing (`working`, by its progress cursor). */
 export type MarginItem =
   | { kind: "note"; key: string; note: ReviewNote }
+  | { kind: "working"; key: string; callId: string; from: number }
   | {
       kind: "revision";
       key: string;
@@ -224,9 +228,11 @@ export function sameLayout(a: Layout | null, b: Layout): boolean {
 
 /** The marked text an item is about, in the document. */
 export function anchorSelector(item: MarginItem): string {
-  return item.kind === "note"
-    ? `.review-anchor[data-note="${CSS.escape(item.note.id)}"]`
-    : `[data-call="${CSS.escape(item.callId)}"][data-index="${item.index}"]`;
+  if (item.kind === "note")
+    return `.review-anchor[data-note="${CSS.escape(item.note.id)}"]`;
+  if (item.kind === "working")
+    return `.pending-reading[data-call="${CSS.escape(item.callId)}"]`;
+  return `[data-call="${CSS.escape(item.callId)}"][data-index="${item.index}"]`;
 }
 
 /** Whether the window has room for a margin beside the text, cards or no

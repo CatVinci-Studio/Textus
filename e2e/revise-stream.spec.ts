@@ -312,9 +312,20 @@ test("each display mode draws a streaming rewrite's landed paragraphs, with thei
     // is marked as being written.
     await expect(page.locator(".revision-note")).toHaveCount(2);
     await expect(page.locator(".milkdown .pending-partial")).toHaveCount(0);
-    await expect(page.locator(".milkdown .pending-reading")).toContainText(
-      "It was far off.",
-    );
+    const reading = page.locator(".milkdown .pending-reading");
+    await expect(reading).toContainText("It was far off.");
+    // ...and a card by it says so: by it, below the cards of the changes
+    // above it, over none of them.
+    const working = page.locator(".review-note-working");
+    await expect(working).toHaveText(/Writing the edit/);
+    await page.waitForTimeout(400);
+    const w = (await working.boundingBox())!;
+    const r = (await reading.boundingBox())!;
+    expect(w.y).toBeGreaterThan(r.y - 40);
+    for (const box of await page
+      .locator(".revision-note")
+      .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().bottom)))
+      expect(w.y).toBeGreaterThanOrEqual(box);
     const card = page.locator(".revision-note").first();
     if (display === "original") {
       // The new text is the card's; the text keeps the original.

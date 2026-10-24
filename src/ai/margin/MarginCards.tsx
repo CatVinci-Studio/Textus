@@ -8,6 +8,7 @@ import { animate } from "../../ui/motion";
 import { joinBeat } from "../../ui/moves";
 import { CARD_WIDTH } from "./margin-room";
 import { Tooltip } from "../../ui/Tooltip";
+import { ThinkingIndicator } from "../chat/ThinkingIndicator";
 import "./ReviewMargin.css";
 import { type MarginItem, type ReviewMarginLabels } from "./margin-layout";
 import { changeGlimpse } from "./change-glimpse";
@@ -159,6 +160,39 @@ export function useCardBox(
 }
 
 export type RevisionItem = Extract<MarginItem, { kind: "revision" }>;
+
+/**
+ * Where a rewrite still streaming in is writing: a card by the paragraph it
+ * is at - tinted in the text - saying so, with the "working" dots. Nothing
+ * of the paragraph shows until it lands whole, and with nothing in the
+ * margin the rewrite looked stalled. It glides down to each next paragraph
+ * as the last one lands, the changes coming in where it stood.
+ */
+export const WorkingCard = memo(function WorkingCard({
+  itemKey,
+  label,
+  top,
+  left,
+  onHeight,
+}: {
+  itemKey: string;
+  label: string;
+  top: number;
+  left: number;
+  onHeight: CardPlace["onHeight"];
+}) {
+  const ref = useCardBox(itemKey, top, onHeight, false);
+  return (
+    <div
+      ref={ref}
+      className="review-note review-note-working"
+      role="status"
+      style={cardStyle(top, left, null, false)}
+    >
+      <ThinkingIndicator label={label} />
+    </div>
+  );
+});
 
 /** A changed sentence in the margin: what replaces it, and ✓ / ✕ - the same
  *  decision as the AI card's. A kept one dims, its replacement struck. */
