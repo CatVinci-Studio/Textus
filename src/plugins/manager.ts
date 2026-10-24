@@ -1,4 +1,11 @@
 import { createElement } from "react";
+import {
+  forgetPluginSettings,
+  loadProjectPluginSettings,
+  pluginValue,
+  setPluginValue,
+  type SettingScope,
+} from "./plugin-settings";
 import { version as APP_VERSION } from "../../package.json";
 import { plugins as pluginsIpc, type PluginsState } from "../platform/ipc";
 import { isIOSApp } from "../platform/capabilities";
@@ -63,7 +70,6 @@ export {
 
 const hosts = new Map<string, PluginHost>();
 const contributions = new Map<string, (() => void)[]>();
-const settingsCache = new Map<string, Record<string, unknown>>();
 
 function platform(): string {
   if (isIOSApp) return "ios";
@@ -170,13 +176,7 @@ function host(record: PluginRecord): PluginHost {
         dark: () => windowInfo().dark(),
         appVersion: APP_VERSION,
         platform: platform(),
-        // What the user set is read from the plugin's storage the first
-        // time: a plugin asks for its settings as it starts, long before
-        // anyone opens its page in Settings.
-        setting: async (id, key) => {
-          await loadPluginSettings(id);
-          return pluginSetting(id, key);
-        },
+        setting: async (id, key) => pluginSetting(id, key),
         runCommand: async (command, args) => {
           const owner = pluginsSnapshot().records.find(
             (r) => r.status === "on" && command.startsWith(`${r.id}.`),
@@ -399,42 +399,44 @@ export function customEditorFor(
 // Settings
 // ---------------------------------------------------------------------------
 
-/** A plugin's setting: what the user set, or its manifest's default. */
+/** A plugin's setting: the project's value, else the one for every
+ *  document, else its manifest's default (plugin-settings.ts). */
 export function pluginSetting(id: string, key: string): unknown {
-  const stored = settingsCache.get(id)?.[key];
-  if (stored !== undefined) return stored;
+  const { value, from } = pluginValue(id, key);
+  if (from) return value;
   return (
     pluginRecord(id)?.manifest?.contributes.settings.find((s) => s.key === key)
       ?.default ?? null
   );
 }
 
-/** Reads a plugin's settings from its storage (once). */
-export async function loadPluginSettings(id: string): Promise<void> {
-  if (settingsCache.has(id)) return;
-  const stored = await pluginsIpc
-    .storageGet(id)
-    .catch(() => ({}) as Record<string, unknown>);
-  const values = stored.$settings;
-  settingsCache.set(
-    id,
-    values && typeof values === "object"
-      ? (values as Record<string, unknown>)
-      : {},
-  );
-  update(id, {});
-}
-
+/** Sets a plugin's setting for every document, or for the open project. */
 export async function setPluginSetting(
   id: string,
   key: string,
   value: unknown,
+  scope: SettingScope = "global",
 ): Promise<void> {
-  const values = { ...(settingsCache.get(id) ?? {}), [key]: value };
-  settingsCache.set(id, values);
+  await setPluginValue(id, key, value, scope);
   update(id, {});
-  await pluginsIpc.storageSet(id, "$settings", values);
-  hosts.get(id)?.event("settings", { key, value });
+  hosts.get(id)?.event("settings", { key, value: pluginSetting(id, key) });
+}
+
+/** A project opened or closed: its plugins hear the settings it changes. */
+export async function setPluginProject(root: string | null): Promise<void> {
+  const before = new Map<string, unknown>();
+  const running = pluginsSnapshot().records.filter((r) => hosts.has(r.id));
+  for (const r of running)
+    for (const s of r.manifest?.contributes.settings ?? [])
+      before.set(`${r.id}\u0000${s.key}`, pluginSetting(r.id, s.key));
+  await loadProjectPluginSettings(root);
+  for (const r of running)
+    for (const s of r.manifest?.contributes.settings ?? []) {
+      const value = pluginSetting(r.id, s.key);
+      if (before.get(`${r.id}\u0000${s.key}`) !== value)
+        hosts.get(r.id)?.event("settings", { key: s.key, value });
+    }
+  for (const r of running) update(r.id, {});
 }
 
 // ---------------------------------------------------------------------------
@@ -543,7 +545,7 @@ export async function loadDevPlugin(path: string): Promise<string> {
 export async function uninstallPlugin(id: string): Promise<void> {
   stopHost(id);
   withdraw(id);
-  settingsCache.delete(id);
+  await forgetPluginSettings(id);
   await pluginsIpc.uninstall(id);
   await loadPlugins(true);
 }

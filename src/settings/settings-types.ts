@@ -243,6 +243,9 @@ export interface Settings {
   /// The MCP servers Textus AI may use (Settings › Extensions › MCP),
   /// read by Rust from the settings file (src-tauri mcp/mod.rs).
   mcpServers: McpServer[];
+  /// Each plugin's settings, by plugin id (src/plugins/plugin-settings.ts);
+  /// a project's `.textus/settings.json` holds the same, over these.
+  plugins: Record<string, Record<string, unknown>>;
   /// Settings > Textus AI > Suggest your next message: after each reply,
   /// what you will probably say next, grey in the empty message box for
   /// Tab to take (ai/chat/next-message.ts). On by default.
@@ -388,6 +391,7 @@ export const DEFAULT_SETTINGS: Settings = {
   sourcesAsFootnotes: false,
   rememberAutomatically: true,
   mcpServers: [],
+  plugins: {},
   suggestNextMessage: true,
   enableEditAnimation: true,
   agentExpandToWindow: false,

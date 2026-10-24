@@ -211,8 +211,12 @@ key }` (`[@key]`); return `{ title, markdown }`, or null to let the next
   up to 50 MB, and no plugin reaches another's. `textus.storage.get` and
   `set` are the global place's.
 
-- `textus.settings` - `get(key)` (the user's value or the manifest's
-  default), `onDidChange(fn)`.
+- `textus.settings` - `get(key)`, `onDidChange(fn)`: what the user set for
+  the open project, else for every document, else the manifest's default.
+  The values are kept with Textus's own - `plugins.<id>` in settings.json,
+  and the same key in a project's `.textus/settings.json` - and the
+  plugin's page in Settings sets either; `onDidChange` hears a project
+  opened that sets its own.
 - `textus.clipboard` - `readText()`, `writeText(text)`.
 - `textus.plugin` - `id`, `version`, `readFile(path)`, `readText(path)`:
   the plugin's own files.

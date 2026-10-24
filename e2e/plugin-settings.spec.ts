@@ -208,3 +208,64 @@ test("a command picked in the tray with no window open runs in the window opened
     "Note something down",
   );
 });
+
+test("a plugin's setting can be the project's own, over the general one", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: { "catvinci.daily-notes": ["workspace.read", "workspace.write"] },
+    folder: { "/work/notes/a.md": "# A\n" },
+  });
+  await page.evaluate(() =>
+    (
+      window as unknown as {
+        __devEmitTauriEvent: (n: string, p: unknown) => void;
+      }
+    ).__devEmitTauriEvent("menu-open-recent", "/work/notes/a.md"),
+  );
+  await expect(page.locator('[data-active-tab="true"] h1')).toContainText("A");
+  await openPluginsPage(page);
+  await page
+    .locator(
+      '.plugin-card[data-plugin="catvinci.daily-notes"] .plugin-card-open',
+    )
+    .click();
+  const own = page.locator('[data-plugin-page="catvinci.daily-notes"]');
+  const folder = () => own.locator("input.plugin-setting-input").first();
+  const scope = {
+    selectOption: async (value: "global" | "project") => {
+      await own.getByRole("combobox", { name: "Applies to" }).click();
+      await page
+        .getByRole("option", {
+          name: value === "global" ? "Every document" : /This project/,
+        })
+        .click();
+    },
+  };
+  await expect(folder()).toHaveValue("Daily");
+  await scope.selectOption("project");
+  await folder().fill("Journal");
+  await folder().blur();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __devFs: Record<string, string> }).__devFs[
+            "/work/notes/.textus/settings.json"
+          ] ?? "",
+      ),
+    )
+    .toContain('"Journal"');
+  // For every document it is still Daily.
+  await scope.selectOption("global");
+  await expect(folder()).toHaveValue("Daily");
+  await expect(own).toContainText("This project has its own value.");
+  // Back to the general value for the project.
+  await scope.selectOption("project");
+  await expect(folder()).toHaveValue("Journal");
+  await own
+    .getByRole("button", { name: "Use the general value" })
+    .first()
+    .click();
+  await expect(folder()).toHaveValue("Daily");
+});

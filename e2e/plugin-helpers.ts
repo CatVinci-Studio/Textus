@@ -67,12 +67,6 @@ export async function pluginsAtStart(page: Page, options: PluginsAtStart) {
       ),
     };
     w.__devBinaryFiles = o.binary ?? {};
-    w.__devPluginStorage = Object.fromEntries(
-      Object.entries(o.settings ?? {}).map(([id, values]) => [
-        id,
-        { $settings: values },
-      ]),
-    );
     if (o.folder) w.__devFs = o.folder;
     if (o.files) w.__devFiles = o.files;
   }, options);
@@ -83,7 +77,13 @@ export async function openWithPlugins(
   options: PluginsAtStart & { language?: string },
 ) {
   await pluginsAtStart(page, options);
-  await openApp(page, { settings: { language: options.language ?? "en" } });
+  // A plugin's settings are Textus's settings' `plugins` (plugin-settings.ts).
+  await openApp(page, {
+    settings: {
+      language: options.language ?? "en",
+      plugins: options.settings ?? {},
+    },
+  });
 }
 
 /** Opens `path` as Open Recent would. */

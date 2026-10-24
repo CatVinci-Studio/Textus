@@ -1,19 +1,15 @@
-import { useEffect } from "react";
 import { SettingsGroup } from "./SettingsGroup";
-import { SettingRow, ToggleRow, VERBATIM_INPUT } from "../sections/controls";
-import { Select } from "../../ui/Select";
+import { SettingRow } from "../sections/controls";
+import { PluginSettingRows } from "./PluginSettings";
 import { showConfirm } from "../../ui/app-dialog";
 import { links } from "../../platform/ipc";
 import { useSettings } from "../SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import {
-  loadPluginSettings,
   pluginName,
-  pluginSetting,
   pluginText,
   reloadPlugin,
   revokePermission,
-  setPluginSetting,
   uninstallPlugin,
   type PluginRecord,
 } from "../../plugins/manager";
@@ -25,10 +21,7 @@ import {
 import { permissionLabel } from "../../plugins/permissions";
 import { canSwitch } from "../../plugins/lifecycle";
 import { PluginSettingsWebview } from "../../plugins/PluginWebview";
-import type {
-  PluginManifest,
-  SettingContribution,
-} from "../../plugins/manifest";
+import type { PluginManifest } from "../../plugins/manifest";
 
 export type Attempt = (work: () => Promise<unknown>) => Promise<void>;
 
@@ -107,9 +100,6 @@ export function PluginPage({
   const manifest = record.manifest;
   const name = pluginName(record);
   const on = record.status === "on";
-  useEffect(() => {
-    if (on) void loadPluginSettings(record.id);
-  }, [on, record.id]);
   const status = statusText(record, allOn, t);
   const switchable = !!manifest && canSwitch(record.status);
   return (
@@ -185,13 +175,7 @@ export function PluginPage({
             </p>
           ) : (
             <>
-              {manifest.contributes.settings.map((setting) => (
-                <PluginSettingRow
-                  key={setting.key}
-                  record={record}
-                  setting={setting}
-                />
-              ))}
+              <PluginSettingRows record={record} t={t} />
               {manifest.contributes.settingsPage && (
                 <div className="plugin-settings-page">
                   <PluginSettingsWebview plugin={record.id} />
@@ -309,64 +293,5 @@ function PluginAbout({
         hint={manifest.license}
       />
     </SettingsGroup>
-  );
-}
-
-/** One of a plugin's settings, drawn from its schema like Textus's own. */
-function PluginSettingRow({
-  record,
-  setting,
-}: {
-  record: PluginRecord;
-  setting: SettingContribution;
-}) {
-  const value = pluginSetting(record.id, setting.key);
-  const label = pluginText(record, setting.title);
-  const help = setting.description
-    ? pluginText(record, setting.description)
-    : undefined;
-  const save = (next: unknown) =>
-    void setPluginSetting(record.id, setting.key, next);
-  if (setting.type === "boolean")
-    return (
-      <ToggleRow
-        label={label}
-        help={help}
-        checked={value === true}
-        onChange={save}
-      />
-    );
-  return (
-    <SettingRow label={label} help={help}>
-      {setting.type === "enum" ? (
-        <Select
-          className="settings-select"
-          aria-label={label}
-          value={String(value)}
-          onChange={(e) => save(e.target.value)}
-        >
-          {setting.options?.map((option) => (
-            <option key={option.value} value={option.value}>
-              {pluginText(record, option.label)}
-            </option>
-          ))}
-        </Select>
-      ) : (
-        <input
-          className="settings-text-input plugin-setting-input"
-          aria-label={label}
-          type={setting.type === "number" ? "number" : "text"}
-          defaultValue={String(value ?? "")}
-          {...VERBATIM_INPUT}
-          onBlur={(e) =>
-            save(
-              setting.type === "number"
-                ? Number(e.target.value)
-                : e.target.value,
-            )
-          }
-        />
-      )}
-    </SettingRow>
   );
 }

@@ -14,6 +14,7 @@ import {
   configurePlugins,
   loadPlugins,
   pluginsSnapshot,
+  setPluginProject,
   subscribePlugins,
   type PluginsSnapshot,
 } from "./manager";
@@ -114,7 +115,11 @@ export function usePluginWindow({
     [saveRef],
   );
 
-  useEffect(() => emitPluginEvent("root", { path: rootPath }), [rootPath]);
+  useEffect(() => {
+    emitPluginEvent("root", { path: rootPath });
+    // The folder's own plugin settings, over the general ones.
+    void setPluginProject(rootPath);
+  }, [rootPath]);
   useEffect(
     () => emitPluginEvent("activeDocument", { path: activePath }),
     [activePath],
