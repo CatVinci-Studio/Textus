@@ -288,9 +288,18 @@ function ghostLayer(root: HTMLElement): HTMLElement | null {
   const parent = root.parentElement;
   if (!parent) return null;
   const layer = root.cloneNode(false) as HTMLElement;
-  layer.removeAttribute("contenteditable");
-  layer.removeAttribute("id");
-  layer.removeAttribute("role");
+  // Styled as the editor is - its classes, its data- attributes - but no
+  // second textbox named Document: nothing that names it comes along.
+  for (const name of [
+    "contenteditable",
+    "id",
+    "role",
+    "aria-label",
+    "aria-multiline",
+    "aria-describedby",
+    "tabindex",
+  ])
+    layer.removeAttribute(name);
   layer.setAttribute("aria-hidden", "true");
   layer.classList.add(GHOST_CLASS);
   layer.inert = true;

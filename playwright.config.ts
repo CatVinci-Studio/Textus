@@ -33,6 +33,7 @@ const playgroundPort = port + 10;
 const WEBKIT_SPECS = [
   // How AI text lands and leaves (1.2.1): timing differs in WebKit.
   "settle-motion.spec.ts",
+  "motion-edge-cases.spec.ts",
   "landing-beat.spec.ts",
   "translate-stream.spec.ts",
   "insert-in-paragraph.spec.ts",
