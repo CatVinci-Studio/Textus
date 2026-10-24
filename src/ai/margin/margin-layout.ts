@@ -66,8 +66,9 @@ export const STACK_GAP = 8;
 /** How far a card can be pushed down by the ones above it and still draw
  *  its line at full strength. */
 export const LINE_DRIFT = 20;
-/** A chip's height (.review-note-chip): one line of the card. */
-export const CHIP_HEIGHT = 30;
+/** A chip's height (.review-note-chip): the card's heading and one line
+ *  of its text under it. */
+export const CHIP_HEIGHT = 35;
 /** The least room a cut card is given - its heading and a line; with less,
  *  it is a chip. */
 export const MIN_CUT = 88;

@@ -250,9 +250,12 @@ paragraphs and past the text's end (`1.2.0-rc.6`). Pushed more than about
 a card's height, such a run is cut to fit (`stackCards`): each card gets
 the room beside its own passage down to where the next one's starts - a
 paragraph's rewrite about its paragraph's height, notes on adjacent lines
-a line each, a chip. A chip of a small change shows just that change, the
-words struck and added with a little of the sentence around them; a
-rewrite shows its text. Where even chips run far - more notes than the
+a line each, a chip. Every card, a chip too, heads with its number and
+what it is ("Revision · Original", "Review"), its text on the line under
+it - a chip had its text in the heading, a card under it, two looks for
+one thing (`1.2.1`). A chip's text is one line: a small change just that
+change, the words struck and added with a little of the sentence around
+them; a rewrite its text, a title's without its `#`. Where even chips run far - more notes than the
 paragraph has lines - the run is one chip, "8 notes", which opens to the
 list of them. Clicked, or pointed at by a bar, a cut card opens whole over
 the ones below, which don't move, until a click elsewhere or Escape; opened
