@@ -1,4 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
+import { watchDevPlugins } from "./dev-reload";
 import { watchPluginAiTools } from "./ai-tools";
 import { makeBlankTab, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
@@ -117,6 +118,8 @@ export function usePluginWindow({
     [saveRef],
   );
 
+  // A plugin a developer loaded from a folder, loaded again as it changes.
+  useEffect(() => watchDevPlugins(), []);
   // Tools the plugins give Textus AI, told to Rust and run when called.
   useEffect(() => watchPluginAiTools(runPluginAiTool), []);
   useEffect(() => {

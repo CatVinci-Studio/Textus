@@ -175,7 +175,9 @@ async fn run_call(
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .remove(&call.call_id);
-        return "The plugin's window is gone, so the tool couldn't run.".to_string().into();
+        return "The plugin's window is gone, so the tool couldn't run."
+            .to_string()
+            .into();
     }
     let text = match tokio::time::timeout(ANSWER_WITHIN, answer).await {
         Ok(Ok(Ok(text))) => text,

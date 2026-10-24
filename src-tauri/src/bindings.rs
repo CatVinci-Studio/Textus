@@ -179,6 +179,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::plugins::access::plugin_fs_mkdir,
                 crate::plugins::access::plugin_http,
                 crate::plugins::access::plugin_storage_get,
+                crate::plugins::install::plugin_dev_stamp,
                 crate::plugins::ai_tools::plugin_ai_tools_set,
                 crate::plugins::ai_tools::plugin_ai_tool_result,
                 crate::plugins::store::plugin_store_get,

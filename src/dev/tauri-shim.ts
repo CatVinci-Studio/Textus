@@ -1047,6 +1047,14 @@ export function installDevTauriShim(): void {
       }
       case "plugin_store_usage":
         return Promise.resolve([0, 0]);
+      // A developer's folder's last change: `window.__devPluginStamps`;
+      // `__devStampReads` counts the looks.
+      case "plugin_dev_stamp":
+        w.__devStampReads = ((w.__devStampReads as number) ?? 0) + 1;
+        return Promise.resolve(
+          (w.__devPluginStamps as Record<string, number> | undefined)?.[id] ??
+            null,
+        );
       // Tools for Textus AI (plugins/ai_tools.rs): what the window offers,
       // and what each call answered, for a test to read.
       case "plugin_ai_tools_set":

@@ -390,6 +390,7 @@ pub fn run() {
             plugins::access::plugin_fs_write,
             plugins::access::plugin_http,
             plugins::access::plugin_storage_get,
+            plugins::install::plugin_dev_stamp,
             plugins::ai_tools::plugin_ai_tools_set,
             plugins::ai_tools::plugin_ai_tool_result,
             plugins::store::plugin_store_get,

@@ -1,4 +1,5 @@
 import { resolveBlockEdit } from "../ai/doc-blocks";
+import { logPluginError } from "./plugin-log";
 import {
   releaseKeys,
   runEditorOp,
@@ -304,7 +305,8 @@ export class PluginHost {
   private handlers() {
     const t = () => this.deps.strings();
     return {
-      "host.error": () => {
+      "host.error": ({ message }: { message?: string }) => {
+        logPluginError(this.id, String(message ?? "error"));
         const now = Date.now();
         this.errors = [...this.errors.filter((at) => now - at < 60_000), now];
         if (this.errors.length > MAX_ERRORS_PER_MINUTE)

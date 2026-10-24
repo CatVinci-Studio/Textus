@@ -147,6 +147,8 @@ export const plugins = {
     root: string | null,
     path: string,
   ) => command("plugin_store_delete", id, scope, root, path),
+  /** When a developer's plugin folder last changed (ms), or null. */
+  devStamp: (id: string) => command("plugin_dev_stamp", id),
   /** The tools this window's plugins give Textus AI (plugins/ai_tools.rs). */
   aiToolsSet: (tools: Generated.PluginAiTool[]) =>
     command("plugin_ai_tools_set", tools),

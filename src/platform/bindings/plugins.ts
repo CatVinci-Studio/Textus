@@ -97,6 +97,12 @@ export const commands = {
 	/**  Everything the plugin keeps, as one object. */
 	plugin_storage_get: (id: string) => __TAURI_INVOKE<{ [key in string]: Value }>("plugin_storage_get", { id }),
 	/**
+	 *  When a developer's plugin folder last changed: the newest file's time,
+	 *  in ms - the window loads the plugin again when it moves (folders such
+	 *  as node_modules and .git aside). None for a plugin not loaded from one.
+	 */
+	plugin_dev_stamp: (id: string) => __TAURI_INVOKE<number | null>("plugin_dev_stamp", { id }),
+	/**
 	 *  The tools a window's plugins offer now; none when it closes or its
 	 *  plugins are off.
 	 */

@@ -1,6 +1,7 @@
 import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow } from "../sections/controls";
 import { PluginSettingRows } from "./PluginSettings";
+import { PluginErrors } from "./PluginErrors";
 import { showConfirm } from "../../ui/app-dialog";
 import { links } from "../../platform/ipc";
 import { useSettings } from "../SettingsContext";
@@ -185,6 +186,7 @@ export function PluginPage({
           )}
         </SettingsGroup>
       )}
+      <PluginErrors id={record.id} t={t} />
       {manifest && <PluginAbout record={record} t={t} attempt={attempt} />}
       <div className="plugin-detail-actions">
         {update && (

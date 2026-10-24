@@ -250,6 +250,48 @@ pub fn plugin_load_dev(app: tauri::AppHandle, path: String) -> Result<InstalledP
     Ok(installed(head.id, &dir, text, true))
 }
 
+/// When a developer's plugin folder last changed: the newest file's time,
+/// in ms - the window loads the plugin again when it moves (folders such
+/// as node_modules and .git aside). None for a plugin not loaded from one.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn plugin_dev_stamp(app: tauri::AppHandle, id: String) -> Result<Option<f64>, String> {
+    require_id(&id)?;
+    let state = state::read(&app);
+    let Some(path) = state.plugins.get(&id).and_then(|p| p.dev_path.clone()) else {
+        return Ok(None);
+    };
+    Ok(newest_change(&PathBuf::from(path), 0))
+}
+
+fn newest_change(dir: &std::path::Path, depth: usize) -> Option<f64> {
+    if depth > 6 {
+        return None;
+    }
+    let mut newest: Option<f64> = None;
+    for entry in std::fs::read_dir(dir).ok()?.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if name.starts_with('.') || name == "node_modules" || name == "dist" {
+            continue;
+        }
+        let Ok(meta) = entry.metadata() else { continue };
+        let here = if meta.is_dir() {
+            newest_change(&entry.path(), depth + 1)
+        } else {
+            meta.modified()
+                .ok()
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .map(|d| d.as_millis() as f64)
+        };
+        newest = match (newest, here) {
+            (Some(a), Some(b)) => Some(a.max(b)),
+            (a, b) => a.or(b),
+        };
+    }
+    newest
+}
+
 /// Removes a plugin: its entry, its storage and - unless it was loaded from
 /// a developer's folder, which is theirs - its files.
 #[tauri::command]

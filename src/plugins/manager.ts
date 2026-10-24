@@ -1,4 +1,5 @@
 import { createElement } from "react";
+import { logPluginError } from "./plugin-log";
 import { setHoverStarter } from "./hover-providers";
 import {
   forgetPluginSettings,
@@ -220,6 +221,7 @@ function stopHost(id: string) {
 }
 
 async function pluginFailed(id: string, reason: string) {
+  logPluginError(id, reason);
   const record = pluginRecord(id);
   if (!record || record.status !== "on") return;
   stopHost(id);

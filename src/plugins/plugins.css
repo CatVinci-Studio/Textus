@@ -284,6 +284,23 @@ button.plugin-card-open:hover .plugin-card-name {
   color: var(--chrome-muted);
   font-size: var(--text-sm);
 }
+/* A plugin's recent errors (PluginErrors.tsx). */
+.plugin-errors {
+  margin: 0;
+  font-family: var(--font-mono);
+  padding: var(--space-3);
+  max-height: 200px;
+  overflow: auto;
+  font-size: var(--text-xs);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--chrome-muted);
+}
+.plugin-errors-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-3);
+}
 
 /* A web page in a tab (WebPagePane.tsx). */
 .web-page-pane {
