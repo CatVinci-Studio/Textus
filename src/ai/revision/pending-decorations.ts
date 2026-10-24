@@ -148,6 +148,7 @@ export function streamFor(
 }
 
 export function decorationsFor(
+  doc: ProseNode,
   p: PendingPreview,
   animate: boolean,
   hooks: SentenceHooks,
@@ -155,7 +156,7 @@ export function decorationsFor(
   if (p.sentences && !p.streaming)
     return sentenceDecorations(p, p.sentences.changes, hooks);
   const stream = p.streamSource && streamFor(p, animate);
-  if (stream) return streamDecorations(p, p.streamSource!, stream, hooks);
+  if (stream) return streamDecorations(doc, p, p.streamSource!, stream, hooks);
   // A picture being redone: the old one stays as it is, veiled, until the
   // new one has come - only then the two, the old struck, to decide on.
   const redraw = redrawing(p);
@@ -226,7 +227,7 @@ export function buildDecorations(
   animate: boolean,
   hooks: SentenceHooks,
 ): DecorationSet {
-  const decos = previews.flatMap((p) => decorationsFor(p, animate, hooks));
+  const decos = previews.flatMap((p) => decorationsFor(doc, p, animate, hooks));
   return DecorationSet.create(doc, [...decos, ...struckBlocks(doc, decos)]);
 }
 
