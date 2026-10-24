@@ -402,12 +402,17 @@ export function syncStreaming(view: EditorView, previews: PendingPreview[]) {
   for (const el of view.dom.querySelectorAll<HTMLElement>(".pending-streaming"))
     if (!streaming.has(el.dataset.call ?? "")) {
       el.classList.remove("pending-streaming");
-      // The faint ✓ / ✕ come up to full as they start taking clicks.
-      if (el.classList.contains("pending-pick"))
+      // The faint ✓ / ✕ come up to full as they start taking clicks - as
+      // their one move: the stylesheet's entrance, set back by its delay,
+      // was still running under it and took over when it ended, the
+      // buttons dipping back to faint (1.2.1).
+      if (el.classList.contains("pending-pick")) {
+        el.style.animation = "none";
         animateElement(el, [{ opacity: 0.35 }, { opacity: 1 }], {
           duration: "--dur-base",
           easing: "--ease-standard",
         });
+      }
     }
 }
 
@@ -427,6 +432,13 @@ export function drawStrikesIn(
   // Every colour is read before any animation starts: an animation started
   // makes the next read recalculate the page's style, once per sentence.
   const strikes: { el: HTMLElement; from: Keyframe; to: Keyframe }[] = [];
+  // A sentence lands from under the reading tint (readingDecoration): its
+  // strike's colour comes from that tint - from none, the tint went and
+  // the red came a frame apart, a flash at each landing (1.2.1).
+  const reading =
+    getComputedStyle(view.dom)
+      .getPropertyValue("--revision-reading-bg")
+      .trim() || "transparent";
   for (const el of view.dom.querySelectorAll<HTMLElement>(
     `.pending-streamed[data-call="${CSS.escape(callId)}"]`,
   )) {
@@ -441,7 +453,7 @@ export function drawStrikesIn(
       el,
       from: {
         color: plain,
-        backgroundColor: "transparent",
+        backgroundColor: reading,
         textDecorationColor: "transparent",
       },
       to: {

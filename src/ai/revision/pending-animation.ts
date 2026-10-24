@@ -9,6 +9,7 @@ import {
   splitMermaidFences,
 } from "../../editor/pending-diagram";
 import { enter, glideAfter } from "../../ui/moves";
+import { measure, play } from "../../ui/flip";
 import { Cascade } from "../../ui/cascade";
 import { UnitReveal } from "./unit-reveal";
 import { showGeneratedImages, shownGeneratedSrc } from "./generated-images";
@@ -187,7 +188,8 @@ export function refreshStream(anim: InsertAnimation) {
 
 /** Rebuilds the decorations from the new layout - after the current
  *  dispatch (this is reached from inside a decoration draw too), but before
- *  the frame is painted. */
+ *  the frame is painted. What landed may grow its paragraph: the text below
+ *  glides to its new place rather than jumping there (ui/flip.ts). */
 export function queueRelayout(anim: InsertAnimation) {
   const s = anim.stream;
   const view = anim.view;
@@ -196,12 +198,24 @@ export function queueRelayout(anim: InsertAnimation) {
   queueMicrotask(() => {
     s.relayoutQueued = false;
     if (view.isDestroyed || animations.get(anim.callId) !== anim) return;
+    const before = measure(onScreenBlocks(view.dom));
     view.dispatch(
       view.state.tr.setMeta(pendingEditKey, {
         type: "relayout",
         callId: anim.callId,
       }),
     );
+    play(before, { duration: "--dur-medium", easing: "--ease-out" });
+  });
+}
+
+/** The document's top-level blocks on screen - the ones a landing can move
+ *  where the eye is. */
+function onScreenBlocks(root: HTMLElement): Element[] {
+  const bottom = window.innerHeight;
+  return [...root.children].filter((el) => {
+    const r = el.getBoundingClientRect();
+    return r.bottom > 0 && r.top < bottom;
   });
 }
 
