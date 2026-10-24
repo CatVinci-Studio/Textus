@@ -322,6 +322,10 @@ async fn ai_agent_message_inner(
             for tool in crate::mcp::tools_for_request(&app).await {
                 tools.add(tool);
             }
+            // And of the plugins the user gave ai.tools.
+            for tool in crate::plugins::ai_tools::tools_for_request(&app) {
+                tools.add(tool);
+            }
             // Pictures written into the text, begun as their lines stream in.
             let inline = image_run.as_ref().map(|run| run.inline(&tool_ctx.proposed));
             let tool_specs = tools.specs();

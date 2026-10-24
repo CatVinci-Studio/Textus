@@ -1326,6 +1326,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginEnableLabel: "Ativar {name}",
   pluginAddsLabel: "Adiciona",
   pluginAddsSidebarTab: "uma aba lateral, {name}",
+  pluginAddsAiTool: "uma ferramenta para o Textus AI, {name}",
   pluginAddsFileType: "abre {types}",
   pluginPermissionsLabel: "Permissões",
   pluginNoPermissions: "Não pede nenhuma.",
@@ -1356,6 +1357,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Assumir as teclas que você digita no editor e editar conforme digita",
   pluginPermProjectData:
     "Guardar os próprios dados na pasta aberta, em .textus/plugins",
+  pluginPermAiTools: "Dar ao Textus AI ferramentas próprias para usar",
   pluginPermNetwork: "Conectar-se a {host}",
   pluginPermNetworkAny: "Conectar-se a qualquer site",
   menuPlugins: "Plugins",

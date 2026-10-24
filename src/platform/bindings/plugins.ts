@@ -96,6 +96,13 @@ export const commands = {
 	plugin_http: (id: string, request: HttpRequest_Deserialize) => __TAURI_INVOKE<HttpResponse>("plugin_http", { id, request }),
 	/**  Everything the plugin keeps, as one object. */
 	plugin_storage_get: (id: string) => __TAURI_INVOKE<{ [key in string]: Value }>("plugin_storage_get", { id }),
+	/**
+	 *  The tools a window's plugins offer now; none when it closes or its
+	 *  plugins are off.
+	 */
+	plugin_ai_tools_set: (tools: PluginAiTool[]) => __TAURI_INVOKE<void>("plugin_ai_tools_set", { tools }),
+	/**  What a plugin's tool answered (`text`), or why it couldn't (`error`). */
+	plugin_ai_tool_result: (callId: string, text: string | null, error: string | null) => __TAURI_INVOKE<void>("plugin_ai_tool_result", { callId, text, error }),
 	/**  What the plugin kept under `key`, or null. */
 	plugin_store_get: (id: string, scope: StoreScope, root: string | null, key: string) => __TAURI_INVOKE<Value | null>("plugin_store_get", { id, scope, root, key }),
 	/**  Keeps `value` under `key`; null takes the key away. */
@@ -236,6 +243,16 @@ export type McpTool = {
 	name: string,
 	description: string,
 	inputSchema: Value,
+};
+
+/**  One tool, as the window describes it from the plugin's manifest. */
+export type PluginAiTool = {
+	plugin: string,
+	/**  The plugin's name for it. */
+	name: string,
+	description: string,
+	/**  A JSON schema of its arguments. */
+	parameters: Value,
 };
 
 export type PluginEntry = PluginEntry_Serialize | PluginEntry_Deserialize;

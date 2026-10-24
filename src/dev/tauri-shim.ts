@@ -1047,6 +1047,16 @@ export function installDevTauriShim(): void {
       }
       case "plugin_store_usage":
         return Promise.resolve([0, 0]);
+      // Tools for Textus AI (plugins/ai_tools.rs): what the window offers,
+      // and what each call answered, for a test to read.
+      case "plugin_ai_tools_set":
+        w.__devAiTools = args.tools;
+        return Promise.resolve(null);
+      case "plugin_ai_tool_result":
+        ((w.__devAiToolResults ??= {}) as Record<string, unknown>)[
+          String(args.callId)
+        ] = args.error ? { error: args.error } : { text: args.text };
+        return Promise.resolve(null);
       case "plugin_uninstall":
         w.__devPlugins = installed.filter((p) => p.id !== id);
         delete pluginState.plugins[id];

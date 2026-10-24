@@ -23,6 +23,7 @@
 //! folder in developer mode stays where it is: `state.json` names its path.
 
 pub mod access;
+pub mod ai_tools;
 pub mod catalog;
 pub mod install;
 pub mod state;

@@ -248,7 +248,8 @@ function PluginAbout({
   attempt: Attempt;
 }) {
   const manifest = record.manifest!;
-  const { commands, customEditors, sidebarTabs } = manifest.contributes;
+  const { aiTools, commands, customEditors, sidebarTabs } =
+    manifest.contributes;
   const adds = [
     ...commands.map((c) => pluginText(record, c.title)),
     ...sidebarTabs.map((s) =>
@@ -257,6 +258,7 @@ function PluginAbout({
     ...customEditors.map((e) =>
       t.pluginAddsFileType.replace("{types}", e.filenamePatterns.join(", ")),
     ),
+    ...aiTools.map((tool) => t.pluginAddsAiTool.replace("{name}", tool.name)),
   ];
   return (
     <SettingsGroup title={t.pluginAboutGroup}>

@@ -50,6 +50,7 @@ const INTERFACES: Record<string, string> = {
   storage: "Storage",
   settings: "Settings",
   clipboard: "Clipboard",
+  ai: "Ai",
 };
 
 describe("textus.d.ts", () => {

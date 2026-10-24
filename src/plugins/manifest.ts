@@ -19,6 +19,7 @@ export type Permission =
   | "clipboard"
   | "editor.input"
   | "project.data"
+  | "ai.tools"
   | `network:${string}`;
 
 const PLAIN_PERMISSIONS = [
@@ -29,6 +30,7 @@ const PLAIN_PERMISSIONS = [
   "clipboard",
   "editor.input",
   "project.data",
+  "ai.tools",
 ] as const;
 
 export function isPermission(value: unknown): value is Permission {
@@ -124,6 +126,15 @@ export interface ThemeContribution {
   path: string;
 }
 
+/** A tool the plugin gives Textus AI (with ai.tools): what the model is
+ *  told, and the arguments it takes as a JSON schema; the plugin runs it
+ *  with textus.ai.registerTool. */
+export interface AiToolContribution {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+}
+
 export interface Contributes {
   commands: CommandContribution[];
   keybindings: KeybindingContribution[];
@@ -135,6 +146,7 @@ export interface Contributes {
   /** A page of its own in Settings, a webview (registerSettingsPage). */
   settingsPage: { title: string } | null;
   themes: ThemeContribution[];
+  aiTools: AiToolContribution[];
 }
 
 export interface PluginManifest {
@@ -349,7 +361,24 @@ function parseContributes(raw: unknown, id: string): Contributes {
       path: text(o.path, `contributes.themes[${i}].path`),
     };
   });
+  const aiTools = list(c.aiTools, "contributes.aiTools").map((x, i) => {
+    const o = object(x, `contributes.aiTools[${i}]`);
+    const name = text(o.name, `contributes.aiTools[${i}].name`);
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(name))
+      throw new ManifestError(
+        `contributes.aiTools[${i}].name "${name}" must be letters, digits, _ or -.`,
+      );
+    return {
+      name,
+      description: text(o.description, `contributes.aiTools[${i}].description`),
+      parameters:
+        o.parameters === undefined
+          ? { type: "object", properties: {} }
+          : object(o.parameters, `contributes.aiTools[${i}].parameters`),
+    };
+  });
   return {
+    aiTools,
     commands,
     keybindings,
     menus,

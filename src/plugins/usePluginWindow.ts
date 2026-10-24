@@ -1,4 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
+import { watchPluginAiTools } from "./ai-tools";
 import { makeBlankTab, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
@@ -14,6 +15,7 @@ import {
   configurePlugins,
   loadPlugins,
   pluginsSnapshot,
+  runPluginAiTool,
   setPluginProject,
   subscribePlugins,
   type PluginsSnapshot,
@@ -115,6 +117,8 @@ export function usePluginWindow({
     [saveRef],
   );
 
+  // Tools the plugins give Textus AI, told to Rust and run when called.
+  useEffect(() => watchPluginAiTools(runPluginAiTool), []);
   useEffect(() => {
     emitPluginEvent("root", { path: rootPath });
     // The folder's own plugin settings, over the general ones.

@@ -1315,6 +1315,7 @@ type /name in a conversation to use one.
   pluginEnableLabel: "Turn on {name}",
   pluginAddsLabel: "Adds",
   pluginAddsSidebarTab: "a sidebar tab, {name}",
+  pluginAddsAiTool: "a tool for Textus AI, {name}",
   pluginAddsFileType: "opens {types}",
   pluginPermissionsLabel: "Permissions",
   pluginNoPermissions: "Asks for none.",
@@ -1345,6 +1346,7 @@ type /name in a conversation to use one.
     "Take over the keys you type in the editor, and edit as you type",
   pluginPermProjectData:
     "Keep its own data in the open folder, in .textus/plugins",
+  pluginPermAiTools: "Give Textus AI tools of its own to use",
   pluginPermNetwork: "Connect to {host}",
   pluginPermNetworkAny: "Connect to any website",
   menuPlugins: "Plugins",

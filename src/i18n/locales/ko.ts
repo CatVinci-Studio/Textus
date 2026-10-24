@@ -1265,6 +1265,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginEnableLabel: "{name} 켜기",
   pluginAddsLabel: "추가 항목",
   pluginAddsSidebarTab: "사이드바 탭 ‘{name}’",
+  pluginAddsAiTool: "Textus AI용 도구: {name}",
   pluginAddsFileType: "{types} 열기",
   pluginPermissionsLabel: "권한",
   pluginNoPermissions: "권한이 필요 없습니다.",
@@ -1293,6 +1294,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermEditorInput: "편집기에서 누르는 키를 넘겨받아, 누른 대로 편집",
   pluginPermProjectData:
     "열려 있는 폴더(.textus/plugins)에 자체 데이터를 저장하기",
+  pluginPermAiTools: "Textus AI에 자체 도구를 제공하기",
   pluginPermNetwork: "{host}에 연결",
   pluginPermNetworkAny: "모든 웹사이트에 연결",
   menuPlugins: "플러그인",

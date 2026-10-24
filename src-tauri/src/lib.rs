@@ -106,6 +106,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(background::BackgroundStatus::default())
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
+        .manage(plugins::ai_tools::PluginAiTools::default())
         .on_window_event(|window, event| {
             let app = window.app_handle();
             if matches!(event, tauri::WindowEvent::Destroyed) {
@@ -389,6 +390,8 @@ pub fn run() {
             plugins::access::plugin_fs_write,
             plugins::access::plugin_http,
             plugins::access::plugin_storage_get,
+            plugins::ai_tools::plugin_ai_tools_set,
+            plugins::ai_tools::plugin_ai_tool_result,
             plugins::store::plugin_store_get,
             plugins::store::plugin_store_set,
             plugins::store::plugin_store_keys,

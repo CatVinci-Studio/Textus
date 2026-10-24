@@ -147,6 +147,11 @@ export const plugins = {
     root: string | null,
     path: string,
   ) => command("plugin_store_delete", id, scope, root, path),
+  /** The tools this window's plugins give Textus AI (plugins/ai_tools.rs). */
+  aiToolsSet: (tools: Generated.PluginAiTool[]) =>
+    command("plugin_ai_tools_set", tools),
+  aiToolResult: (callId: string, text: string | null, error: string | null) =>
+    command("plugin_ai_tool_result", callId, text, error),
   /** What a plugin keeps globally and in `root`'s project, in bytes. */
   storeUsage: (id: string, root: string | null) =>
     command("plugin_store_usage", id, root),

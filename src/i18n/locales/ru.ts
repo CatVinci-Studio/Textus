@@ -1335,6 +1335,7 @@ export default {
   pluginEnableLabel: "Включить {name}",
   pluginAddsLabel: "Добавляет",
   pluginAddsSidebarTab: "вкладку боковой панели «{name}»",
+  pluginAddsAiTool: "инструмент для Textus AI: {name}",
   pluginAddsFileType: "открывает {types}",
   pluginPermissionsLabel: "Разрешения",
   pluginNoPermissions: "Не требует разрешений.",
@@ -1365,6 +1366,7 @@ export default {
     "Перехватывать клавиши в редакторе и править текст по ним",
   pluginPermProjectData:
     "Хранить свои данные в открытой папке, в .textus/plugins",
+  pluginPermAiTools: "Давать Textus AI свои инструменты",
   pluginPermNetwork: "Подключаться к {host}",
   pluginPermNetworkAny: "Подключаться к любым сайтам",
   menuPlugins: "Плагины",

@@ -1277,6 +1277,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginEnableLabel: "{name} をオンにする",
   pluginAddsLabel: "追加するもの",
   pluginAddsSidebarTab: "サイドバーのタブ「{name}」",
+  pluginAddsAiTool: "Textus AI のツール：{name}",
   pluginAddsFileType: "{types} を開く",
   pluginPermissionsLabel: "権限",
   pluginNoPermissions: "権限は必要ありません。",
@@ -1307,6 +1308,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "エディタで押すキーを引き受け、そのキーのとおりに編集する",
   pluginPermProjectData:
     "開いているフォルダー（.textus/plugins）に自分のデータを保存する",
+  pluginPermAiTools: "Textus AI に独自のツールを提供する",
   pluginPermNetwork: "{host} に接続する",
   pluginPermNetworkAny: "任意のウェブサイトに接続する",
   menuPlugins: "プラグイン",

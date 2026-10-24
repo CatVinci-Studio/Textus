@@ -45,6 +45,7 @@ declare global {
       storage: Storage;
       settings: Settings;
       clipboard: Clipboard;
+      ai: Ai;
     }
 
     interface PluginInfo {
@@ -343,6 +344,17 @@ declare global {
        *  default. */
       get(key: string): Promise<unknown>;
       onDidChange(fn: (e: { key: string; value: unknown }) => void): Disposable;
+    }
+
+    /** Tools for Textus AI (ai.tools): each one named in the manifest's
+     *  contributes.aiTools, run here when the model calls it. */
+    interface Ai {
+      registerTool(
+        name: string,
+        run: (
+          args: Record<string, unknown>,
+        ) => string | Promise<string> | unknown,
+      ): Disposable;
     }
 
     interface Clipboard {

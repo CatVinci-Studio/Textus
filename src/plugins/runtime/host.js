@@ -16,6 +16,7 @@
   var viewProviders = new Map();
   var editorProviders = new Map();
   var hoverProviders = [];
+  var aiTools = new Map();
   var settingsProvider = null;
   var webviews = new Map();
   var listeners = new Map();
@@ -469,6 +470,16 @@
         return on("settings", callback);
       },
     },
+    ai: {
+      // Runs one of the manifest's contributes.aiTools when Textus AI
+      // calls it (ai.tools): `run(args)` answers with text for the model.
+      registerTool: function (name, run) {
+        aiTools.set(String(name), run);
+        return disposable(function () {
+          aiTools.delete(String(name));
+        });
+      },
+    },
     clipboard: {
       readText: function () {
         return call("clipboard.readText");
@@ -521,6 +532,12 @@
           };
       }
       return null;
+    },
+    $callAiTool: async function (params) {
+      var run = aiTools.get(params.name);
+      if (!run) throw new Error("The plugin has no tool " + params.name + ".");
+      var out = await run(params.arguments || {});
+      return typeof out === "string" ? out : JSON.stringify(out);
     },
     $resolveSettingsPage: function (params) {
       if (!settingsProvider) throw new Error("No settings page");

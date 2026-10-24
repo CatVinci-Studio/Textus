@@ -1332,6 +1332,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginEnableLabel: "{name} einschalten",
   pluginAddsLabel: "Fügt hinzu",
   pluginAddsSidebarTab: "einen Seitenleisten-Tab, {name}",
+  pluginAddsAiTool: "ein Werkzeug für Textus AI, {name}",
   pluginAddsFileType: "öffnet {types}",
   pluginPermissionsLabel: "Berechtigungen",
   pluginNoPermissions: "Braucht keine.",
@@ -1362,6 +1363,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Die Tasten im Editor übernehmen und beim Tippen bearbeiten",
   pluginPermProjectData:
     "Eigene Daten im geöffneten Ordner ablegen, unter .textus/plugins",
+  pluginPermAiTools: "Textus AI eigene Werkzeuge geben",
   pluginPermNetwork: "Mit {host} verbinden",
   pluginPermNetworkAny: "Mit beliebigen Websites verbinden",
   menuPlugins: "Plugins",

@@ -6,23 +6,40 @@
   "type": "object",
   "required": ["id", "name", "version", "publisher", "engines", "main"],
   "properties": {
-    "$schema": { "type": "string" },
+    "$schema": {
+      "type": "string"
+    },
     "id": {
       "description": "publisher.name, lowercase.",
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]{0,63}\\.[a-z0-9][a-z0-9-]{0,63}$"
     },
-    "name": { "type": "string", "description": "Or %key% of l10n." },
+    "name": {
+      "type": "string",
+      "description": "Or %key% of l10n."
+    },
     "version": {
       "type": "string",
       "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
     },
-    "publisher": { "type": "string" },
-    "author": { "type": "string" },
-    "description": { "type": "string" },
-    "icon": { "type": "string" },
-    "license": { "type": "string" },
-    "repository": { "type": "string" },
+    "publisher": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "icon": {
+      "type": "string"
+    },
+    "license": {
+      "type": "string"
+    },
+    "repository": {
+      "type": "string"
+    },
     "engines": {
       "type": "object",
       "required": ["textus"],
@@ -36,13 +53,23 @@
     "main": {
       "description": "The host code, or several files run in order.",
       "oneOf": [
-        { "type": "string" },
-        { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
       ]
     },
     "activationEvents": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "description": "Starts on first use of what it contributes; [\"onStartupFinished\"] to start with Textus, [\"onHover\"] on the first hover over a link."
     },
     "permissions": {
@@ -58,10 +85,13 @@
               "workspace.write",
               "clipboard",
               "editor.input",
-              "project.data"
+              "project.data",
+              "ai.tools"
             ]
           },
-          { "pattern": "^network:.+" }
+          {
+            "pattern": "^network:.+"
+          }
         ]
       }
     },
@@ -71,8 +101,12 @@
         "type": "object",
         "required": ["setting"],
         "properties": {
-          "setting": { "enum": ["runInBackground"] },
-          "reason": { "type": "string" }
+          "setting": {
+            "enum": ["runInBackground"]
+          },
+          "reason": {
+            "type": "string"
+          }
         }
       }
     },
@@ -85,8 +119,12 @@
             "type": "object",
             "required": ["command", "title"],
             "properties": {
-              "command": { "type": "string" },
-              "title": { "type": "string" }
+              "command": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
             }
           }
         },
@@ -96,8 +134,13 @@
             "type": "object",
             "required": ["command", "key"],
             "properties": {
-              "command": { "type": "string" },
-              "key": { "type": "string", "description": "mod+alt+w" }
+              "command": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string",
+                "description": "mod+alt+w"
+              }
             }
           }
         },
@@ -112,7 +155,9 @@
               "type": "object",
               "required": ["command"],
               "properties": {
-                "command": { "type": "string" },
+                "command": {
+                  "type": "string"
+                },
                 "when": {
                   "type": "string",
                   "description": "editorHasSelection, fileExtension == .pdf (src/plugins/when.ts)"
@@ -127,9 +172,15 @@
             "type": "object",
             "required": ["id", "title"],
             "properties": {
-              "id": { "type": "string" },
-              "title": { "type": "string" },
-              "icon": { "type": "string" }
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string"
+              }
             }
           }
         },
@@ -139,8 +190,12 @@
             "type": "object",
             "required": ["id", "title"],
             "properties": {
-              "id": { "type": "string" },
-              "title": { "type": "string" }
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
             }
           }
         },
@@ -150,14 +205,22 @@
             "type": "object",
             "required": ["viewType", "displayName", "filenamePatterns"],
             "properties": {
-              "viewType": { "type": "string" },
-              "displayName": { "type": "string" },
+              "viewType": {
+                "type": "string"
+              },
+              "displayName": {
+                "type": "string"
+              },
               "filenamePatterns": {
                 "type": "array",
-                "items": { "type": "string" },
+                "items": {
+                  "type": "string"
+                },
                 "minItems": 1
               },
-              "priority": { "enum": ["default", "option"] }
+              "priority": {
+                "enum": ["default", "option"]
+              }
             }
           }
         },
@@ -167,10 +230,18 @@
             "type": "object",
             "required": ["key", "type", "title", "default"],
             "properties": {
-              "key": { "type": "string" },
-              "type": { "enum": ["boolean", "string", "number", "enum"] },
-              "title": { "type": "string" },
-              "description": { "type": "string" },
+              "key": {
+                "type": "string"
+              },
+              "type": {
+                "enum": ["boolean", "string", "number", "enum"]
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
               "default": {},
               "options": {
                 "type": "array",
@@ -178,8 +249,12 @@
                   "type": "object",
                   "required": ["value", "label"],
                   "properties": {
-                    "value": { "type": "string" },
-                    "label": { "type": "string" }
+                    "value": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -189,7 +264,11 @@
         "settingsPage": {
           "type": "object",
           "required": ["title"],
-          "properties": { "title": { "type": "string" } }
+          "properties": {
+            "title": {
+              "type": "string"
+            }
+          }
         },
         "themes": {
           "type": "array",
@@ -197,9 +276,36 @@
             "type": "object",
             "required": ["id", "label", "path"],
             "properties": {
-              "id": { "type": "string" },
-              "label": { "type": "string" },
-              "path": { "type": "string" }
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "aiTools": {
+          "type": "array",
+          "description": "Tools Textus AI may call (ai.tools), run by textus.ai.registerTool.",
+          "items": {
+            "type": "object",
+            "required": ["name", "description"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,40}$"
+              },
+              "description": {
+                "type": "string"
+              },
+              "parameters": {
+                "type": "object",
+                "description": "A JSON schema of its arguments."
+              }
             }
           }
         }
@@ -210,7 +316,9 @@
       "description": "Strings by language: { \"en\": { \"key\": \"text\" }, \"zh\": {...} }.",
       "additionalProperties": {
         "type": "object",
-        "additionalProperties": { "type": "string" }
+        "additionalProperties": {
+          "type": "string"
+        }
       }
     }
   }

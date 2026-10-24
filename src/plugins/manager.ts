@@ -15,13 +15,11 @@ import { registerCommand, runCommand } from "../app/commands";
 import { registerSidebarTab } from "../app/sidebar-tabs";
 import { registerEditorMenuItems } from "../editor/editor-menu";
 import { showConfirm, showMessage } from "../ui/app-dialog";
-import { basename } from "../utils/path";
 import { PluginHost } from "./broker";
 import { type PluginOrigin } from "./files";
 import {
   engineSatisfied,
   localize,
-  matchesFilename,
   parseManifest,
   type Permission,
 } from "./manifest";
@@ -42,7 +40,6 @@ import {
   update,
   windowInfo,
   type PluginRecord,
-  type PluginsSnapshot,
 } from "./plugin-records";
 
 /**
@@ -256,6 +253,24 @@ export async function runPluginCommand(
   return host(record).request("$executeCommand", { command, args });
 }
 
+/** Runs a tool the plugin gave Textus AI, starting it first. */
+export async function runPluginAiTool(
+  id: string,
+  name: string,
+  args: unknown,
+): Promise<unknown> {
+  const record = pluginRecord(id);
+  if (
+    !record ||
+    !canRun(record.status, pluginsSnapshot().allOn) ||
+    !record.granted.includes("ai.tools")
+  )
+    throw new Error(`${id} is turned off or was not granted ai.tools.`);
+  const running = host(record);
+  await running.start();
+  return running.request("$callAiTool", { name, arguments: args });
+}
+
 /** Asks the plugin to fill a webview (PluginWebview.tsx): a sidebar tab's
  *  or a view's panel, a custom editor, a settings page. */
 export async function resolveWebview(
@@ -407,25 +422,6 @@ function withdraw(id: string) {
   if (hoverWaiting.delete(id)) syncHoverStarter();
   for (const undo of contributions.get(id) ?? []) undo();
   contributions.delete(id);
-}
-
-/** The plugin that opens `path` in a tab of its own, if one is on:
- *  the first whose custom editor matches with priority "default". */
-export function customEditorFor(
-  path: string,
-): { plugin: string; viewType: string; title: string } | null {
-  if (!pluginsSnapshot().allOn) return null;
-  const name = basename(path);
-  for (const record of pluginsSnapshot().records) {
-    if (record.status !== "on" || !record.manifest) continue;
-    for (const editor of record.manifest.contributes.customEditors)
-      if (
-        editor.priority === "default" &&
-        editor.filenamePatterns.some((p) => matchesFilename(p, name))
-      )
-        return { plugin: record.id, viewType: editor.viewType, title: name };
-  }
-  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -581,27 +577,4 @@ export async function uninstallPlugin(id: string): Promise<void> {
   await forgetPluginSettings(id);
   await pluginsIpc.uninstall(id);
   await loadPlugins(true);
-}
-
-/** The commands the plugins that are on put in the Plugins menu
- *  (contributes.menus["app/plugins"]), in the plugins' order. */
-export function pluginMenuEntries(
-  from: PluginsSnapshot = pluginsSnapshot(),
-  menu: "app/plugins" | "app/tray" = "app/plugins",
-  language: string = windowInfo().language(),
-): { command: string; label: string }[] {
-  if (!from.allOn) return [];
-  return from.records.flatMap((record) => {
-    const manifest = record.manifest;
-    if (record.status !== "on" || !manifest) return [];
-    return (manifest.contributes.menus[menu] ?? []).map((item) => {
-      const command = manifest.contributes.commands.find(
-        (c) => c.command === item.command,
-      );
-      return {
-        command: item.command,
-        label: localize(manifest, command?.title ?? item.command, language),
-      };
-    });
-  });
 }

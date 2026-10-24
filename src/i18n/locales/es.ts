@@ -1344,6 +1344,7 @@ para usar una.
   pluginEnableLabel: "Activar {name}",
   pluginAddsLabel: "Añade",
   pluginAddsSidebarTab: "una pestaña lateral, {name}",
+  pluginAddsAiTool: "una herramienta para Textus AI, {name}",
   pluginAddsFileType: "abre {types}",
   pluginPermissionsLabel: "Permisos",
   pluginNoPermissions: "No pide ninguno.",
@@ -1374,6 +1375,7 @@ para usar una.
     "Tomar las teclas que pulsas en el editor y editar según las pulsas",
   pluginPermProjectData:
     "Guardar sus propios datos en la carpeta abierta, en .textus/plugins",
+  pluginPermAiTools: "Dar a Textus AI herramientas propias para usar",
   pluginPermNetwork: "Conectarse a {host}",
   pluginPermNetworkAny: "Conectarse a cualquier sitio web",
   menuPlugins: "Complementos",

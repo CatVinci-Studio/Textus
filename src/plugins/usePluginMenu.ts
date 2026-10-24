@@ -3,11 +3,8 @@ import { menuIpc } from "../platform/ipc";
 import { hasNativeMenuBar, isDesktopApp } from "../platform/capabilities";
 import { runCommand } from "../app/commands";
 import type { PluginMenuEntry } from "../app/app-menu-model";
-import {
-  pluginMenuEntries,
-  pluginsSnapshot,
-  subscribePlugins,
-} from "./manager";
+import { pluginsSnapshot, subscribePlugins } from "./manager";
+import { pluginMenuEntries } from "./plugin-lookup";
 
 /** What the Plugins menu lists now - the app-drawn menu's (AppMenu.tsx). */
 export function usePluginMenuEntries(language: string): PluginMenuEntry[] {
