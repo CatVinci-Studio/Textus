@@ -37,6 +37,7 @@ import {
   setWebviewHtml,
   setWebviewTitle,
   webview,
+  webviewsOf,
 } from "./webviews";
 
 /**
@@ -449,12 +450,17 @@ export class PluginHost {
       "window.openFile": ({
         path,
         heading,
+        asDocument,
       }: {
         path: string;
         heading?: string;
+        asDocument?: boolean;
       }) => {
-        this.need("workspace.read");
-        getWindowAccess()?.openFile(path, heading);
+        // The file a view of its shows it may always open (the Word
+        // reader's "Edit"); any other wants the workspace.
+        if (!webviewsOf(this.id).some((view) => view.resource === path))
+          this.need("workspace.read");
+        getWindowAccess()?.openFile(path, { heading, asDocument });
       },
       "window.openUntitled": ({
         content,

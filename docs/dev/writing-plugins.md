@@ -137,14 +137,14 @@ exports.activate = function () {
 Every call returns a promise. By namespace:
 
 - `textus.commands` - `registerCommand(id, run)`, `executeCommand(id, ...args)`
-  (any command: the app's, or another plugin's). Textus's
-  `textus.openAsDocument(path)` opens a file as a document even where a
-  plugin opens that type; `textus.save` is File › Save.
+  (any command: the app's, or another plugin's). Textus's `textus.save`
+  is File › Save.
 - `textus.window` -
   - `showMessage(text, { tone })`, `showInput({ prompt, value })` (the
     text, or null), `showQuickPick(items, { placeholder })` (the chosen
     item's `value`, or null);
-  - `openFile(path, { heading })`, `openUntitled(text)`, `openView(id,
+  - `openFile(path, { heading, asDocument })` (`asDocument`: as Markdown,
+    even where a plugin's editor takes that type), `openUntitled(text)`, `openView(id,
 { title, state })`, `openWebPage(url)` (a web page in a tab, with its
     own origin and cookies; needs `network:` for its host),
     `openExternal(url)` (the browser);

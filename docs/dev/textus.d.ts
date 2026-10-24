@@ -77,7 +77,7 @@ declare global {
         id: string,
         run: (...args: unknown[]) => unknown,
       ): Disposable;
-      /** A command of Textus's ("textus.save", "textus.openAsDocument") or
+      /** A command of Textus's ("textus.save") or
        *  of a plugin's. */
       executeCommand(id: string, ...args: unknown[]): Promise<unknown>;
     }
@@ -103,7 +103,13 @@ declare global {
         viewId: string,
         options?: Record<string, unknown>,
       ): Promise<void>;
-      openFile(path: string, options?: { heading?: string }): Promise<void>;
+      /** Opens a file in a tab, at `heading` if given. `asDocument` opens
+       *  it as a Markdown document even where a plugin's editor takes its
+       *  type (the Word reader's "Edit"). */
+      openFile(
+        path: string,
+        options?: { heading?: string; asDocument?: boolean },
+      ): Promise<void>;
       /** A new document, not yet saved, holding `content`. */
       openUntitled(
         content: string,

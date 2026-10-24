@@ -229,6 +229,7 @@
         return call("window.openFile", {
           path: String(path),
           heading: options && options.heading,
+          asDocument: Boolean(options && options.asDocument),
         });
       },
       openWebPage: function (url, options) {

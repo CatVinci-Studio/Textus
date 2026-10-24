@@ -74,8 +74,11 @@ export function usePluginWindow({
     };
     setWindowAccess({
       rootPath: () => rootRef.current,
-      openFile: (path, heading) =>
-        void openRef.current(path, heading ? { anchor: heading } : {}),
+      openFile: (path, { heading, asDocument }) =>
+        void openRef.current(path, {
+          ...(heading ? { anchor: heading } : {}),
+          ...(asDocument ? { asDocument } : {}),
+        }),
       openUntitled: (content) => addTab({ content, savedContent: "" }),
       openPluginTab: (view: PluginTabView) => {
         // A view already open in a tab comes to the front.
@@ -92,20 +95,6 @@ export function usePluginWindow({
     return () => setWindowAccess(null);
   }, [rootRef, openRef, tabsRef, setTabs, setActiveTabId]);
 
-  // A file a plugin shows (a Word file in the Word reader), opened to be
-  // edited as a document of ours instead.
-  useEffect(
-    () =>
-      registerCommand({
-        id: "textus.openAsDocument",
-        title: (t) => t.menuOpenFile,
-        run: (path) => {
-          if (typeof path === "string")
-            void openRef.current(path, { asDocument: true });
-        },
-      }),
-    [openRef],
-  );
   // File › Save, for a plugin that has its own key for it (Emacs's C-x
   // C-s).
   useEffect(
