@@ -1153,11 +1153,14 @@ for (const lang of LANGS) {
         file: { path: fileIn(s.folder, s.tourTitle), content: s.tourDoc },
         // View > Zoom Out, so the whole tour is on one screen.
         settings: { zoom: TOUR_ZOOM },
+        // Its outline open in the sidebar, as a long document is written.
+        storage: { "textus-sidebar-open": "1", "textus-sidebar-tab": "outline" },
       });
       const doc = page.locator('[data-active-tab="true"] .milkdown');
       await expect(doc.locator("blockquote.md-alert")).toHaveCount(1);
       await expect(doc.locator('li[data-item-type="task"]')).toHaveCount(2);
       await expect(doc.locator("hr")).toHaveCount(1);
+      await expect(page.locator(".outline-row").first()).toBeVisible();
       await caretAfter(page, s.tourCaret);
       // All of it at once: the last block ends above the window's edge.
       const last = await doc
