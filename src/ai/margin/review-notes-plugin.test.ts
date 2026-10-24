@@ -40,7 +40,28 @@ describe("review notes", () => {
         },
       ]),
     ).toEqual([
-      { id: "a", anchor: "One", comment: "Why?", context: undefined },
+      { id: "a:0", anchor: "One", comment: "Why?", block: undefined },
+    ]);
+  });
+
+  it("reads each of a call's comments, by its place in the call", () => {
+    expect(
+      commentCalls([
+        {
+          kind: "ToolCall",
+          name: "add_comment",
+          call_id: "a",
+          arguments: JSON.stringify({
+            comments: [
+              { block: "b1", anchor: "One", comment: "Why?" },
+              { block: "b2", anchor: "Two", comment: "How?" },
+            ],
+          }),
+        },
+      ]),
+    ).toEqual([
+      { id: "a:0", anchor: "One", comment: "Why?", block: "b1" },
+      { id: "a:1", anchor: "Two", comment: "How?", block: "b2" },
     ]);
   });
 

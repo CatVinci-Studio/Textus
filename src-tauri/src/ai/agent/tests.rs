@@ -1014,7 +1014,7 @@ fn comment(id: &str, document: &str, anchor: &str) -> AgentTurn {
     call(
         id,
         tools::ADD_COMMENT_TOOL_NAME,
-        serde_json::json!({"block": block, "anchor": anchor, "comment": "The title is a pun; this keeps one half."}),
+        serde_json::json!({"comments": [{"block": block, "anchor": anchor, "comment": "The title is a pun; this keeps one half."}]}),
     )
 }
 

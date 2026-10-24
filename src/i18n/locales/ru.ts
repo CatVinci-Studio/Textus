@@ -854,6 +854,7 @@ export default {
   proposalRejectAll: "Отклонить все",
   proposalGroupMore: "Показать ещё {n}",
   proposalGroupLess: "Свернуть",
+  commentGroupMore: "Показать ещё {n}",
   proposalRelocate: "Попросить ИИ переделать правку",
   diffShow: "Показать изменения",
   diffCollapse: "Свернуть",

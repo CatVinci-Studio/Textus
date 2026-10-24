@@ -16,7 +16,7 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { announce } from "../../ui/announce";
 import { useSettings, type AgentMode } from "../../settings/SettingsContext";
 import { imageModelOf } from "../image-models";
-import { parsePartialToolArgs } from "./partial-tool-args";
+import { completeArrayItems } from "./partial-tool-args";
 import { resolveBlockTarget } from "../doc-blocks";
 import type { DocumentSnapshot } from "../doc-markdown";
 import { insertTurns, memoryTurns, passExchange } from "./memory-pass";
@@ -305,34 +305,41 @@ export function useAgentConversation(
           ) {
             const args = (commentArgs.get(event.callId) ?? "") + event.delta;
             commentArgs.set(event.callId, args);
-            const { anchor, block, comment } = parsePartialToolArgs(args);
-            const shown = prev?.comments?.some(
+            // Each comment once it has arrived whole: its passage is the
+            // block it names (resolveBlockTarget), and the words in it it
+            // quotes. The call's draft holds those in so far, in place.
+            const items = completeArrayItems(args, "comments");
+            const drafted = prev?.comments?.find(
               (c) => c.kind === "ToolCall" && c.call_id === event.callId,
             );
-            // Once: the passage and the whole note are in. The passage is
-            // the block it names (resolveBlockTarget), and the words in it
-            // it quotes.
-            if (!prev || shown || !comment?.complete) return;
-            if (block && !block.complete) return;
-            const target = resolveBlockTarget(document.blocks, {
-              block: block?.value,
-              anchor: anchor?.complete ? anchor.value : undefined,
+            const before =
+              drafted?.kind === "ToolCall" ? drafted.arguments : "";
+            if (!prev || items.length === 0) return;
+            const comments = items.flatMap((item) => {
+              const fields = item as Record<string, unknown>;
+              if (typeof fields.comment !== "string") return [];
+              const target = resolveBlockTarget(document.blocks, {
+                block:
+                  typeof fields.block === "string" ? fields.block : undefined,
+                anchor:
+                  typeof fields.anchor === "string" ? fields.anchor : undefined,
+              });
+              return target ? [{ ...target, comment: fields.comment }] : [];
             });
-            if (!target) return;
             const call: AgentTurn = {
               kind: "ToolCall",
               call_id: event.callId,
               name: "add_comment",
-              arguments: JSON.stringify({
-                block: target.block,
-                anchor: target.anchor,
-                comment: comment.value,
-              }),
+              arguments: JSON.stringify({ comments }),
             };
+            if (comments.length === 0 || call.arguments === before) return;
             setStreaming({
               ...prev,
               thought,
-              comments: [...(prev.comments ?? []), call],
+              comments: [
+                ...(prev.comments ?? []).filter((c) => c !== drafted),
+                call,
+              ],
             });
           } else if (event.type === "turn") {
             // Interim prose that streamed before a tool call is dropped,

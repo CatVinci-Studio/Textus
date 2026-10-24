@@ -73,6 +73,14 @@ export function settledArguments(
   } catch {
     return argumentsJson;
   }
+  // A reply's comments, each settled as one target is.
+  if (name === "add_comment" && Array.isArray(args.comments))
+    return JSON.stringify({
+      ...args,
+      comments: args.comments.map((item) =>
+        JSON.parse(settledArguments(blocks, name, JSON.stringify(item))),
+      ),
+    });
   const named = namedCall(blocks, args);
   if (typeof named.block !== "string") return JSON.stringify(named);
   const anchor = typeof named.anchor === "string" ? named.anchor : undefined;

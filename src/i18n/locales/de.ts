@@ -845,6 +845,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   proposalRejectAll: "Alle ablehnen",
   proposalGroupMore: "{n} weitere anzeigen",
   proposalGroupLess: "Weniger anzeigen",
+  commentGroupMore: "{n} weitere anzeigen",
   proposalRelocate: "Änderung neu anfordern",
   diffShow: "Unterschiede anzeigen",
   diffCollapse: "Weniger anzeigen",

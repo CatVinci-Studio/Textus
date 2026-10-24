@@ -6,18 +6,41 @@ use super::*;
 pub(crate) const ADD_COMMENT_TOOL_NAME: &str = "add_comment";
 pub(super) const COMMENT_ADDED: &str = "Comment added";
 
-/// Feedback pinned to a passage instead of an edit to it - for "what's weak
-/// here", "review this draft". Changes nothing; its block is checked like
-/// propose_edit's so the card's "locate" button lands on it.
+/// Feedback pinned to passages instead of edits to them - for "what's weak
+/// here", "review this draft". Changes nothing; each comment's block is
+/// checked like propose_edit's so its card's "locate" button lands on it.
+/// All the points of a reply come in one call's `comments`: a service that
+/// holds back a step's parallel calls until the step ends (ChatGPT,
+/// 2026-10) still streams one call's arguments, so the notes show one by
+/// one as they are written.
 pub(super) fn add_comment(ctx: &ToolContext, arguments: &str) -> String {
     let parsed: serde_json::Value = serde_json::from_str(arguments).unwrap_or_default();
-    let comment = parsed.get("comment").and_then(|v| v.as_str()).unwrap_or("");
-    if comment.trim().is_empty() {
-        return "`comment` is required - the feedback itself.".to_string();
+    let Some(items) = parsed.get("comments").and_then(|v| v.as_array()) else {
+        return "`comments` is required - a list of the points, each with its `block` and `comment`.".to_string();
+    };
+    if items.is_empty() {
+        return "`comments` is empty - give at least one point, with its `block` and `comment`.".to_string();
     }
-    match crate::ai::doc_blocks::check_target(ctx.document, &parsed) {
-        Ok(()) => format!("{COMMENT_ADDED} - the user sees it with a button that jumps to the passage. Don't repeat it in your reply."),
-        Err(problem) => problem,
+    let mut problems = Vec::new();
+    for (i, item) in items.iter().enumerate() {
+        let comment = item.get("comment").and_then(|v| v.as_str()).unwrap_or("");
+        let problem = if comment.trim().is_empty() {
+            Some("`comment` is required - the feedback itself.".to_string())
+        } else {
+            crate::ai::doc_blocks::check_target(ctx.document, item).err()
+        };
+        if let Some(problem) = problem {
+            problems.push(format!("comment {}: {problem}", i + 1));
+        }
+    }
+    let added = items.len() - problems.len();
+    match (added, problems.is_empty()) {
+        (_, true) => format!("{COMMENT_ADDED} ({added}) - the user sees each with a button that jumps to its passage. Don't repeat them in your reply."),
+        (0, false) => format!("No comment added.\n{}", problems.join("\n")),
+        _ => format!(
+            "{COMMENT_ADDED} ({added}); the others weren't - send just those again, fixed, in one add_comment call:\n{}",
+            problems.join("\n")
+        ),
     }
 }
 

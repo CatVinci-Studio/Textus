@@ -1,3 +1,4 @@
+import { commentId, parseComments } from "../chat/CommentCard";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
@@ -11,7 +12,7 @@ import type { FoldAttention } from "../../editor/html/details-fold";
  * no room for a margin - behind a numbered badge after the passage.
  */
 export interface ReviewNote {
-  /** The add_comment call's id. */
+  /** Its comment's id (commentId): its call's, and its place in it. */
   id: string;
   from: number;
   to: number;
@@ -215,19 +216,10 @@ export function commentCalls(
       !turn.call_id
     )
       continue;
-    try {
-      const args = JSON.parse(turn.arguments ?? "");
-      if (typeof args.anchor !== "string" || typeof args.comment !== "string")
-        continue;
-      out.push({
-        id: turn.call_id,
-        anchor: args.anchor,
-        comment: args.comment,
-        block: typeof args.block === "string" ? args.block : undefined,
-      });
-    } catch {
-      // Still streaming in: its arguments aren't JSON yet.
-    }
+    const callId = turn.call_id;
+    parseComments(turn.arguments ?? "").forEach((comment, i) =>
+      out.push({ id: commentId(callId, i), ...comment }),
+    );
   }
   return out;
 }

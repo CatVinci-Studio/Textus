@@ -838,6 +838,7 @@ type /name in a conversation to use one.
   proposalRejectAll: "Reject all",
   proposalGroupMore: "Show {n} more",
   proposalGroupLess: "Show fewer",
+  commentGroupMore: "Show {n} more",
   proposalRelocate: "Ask AI to redo this edit",
   diffShow: "Show diff",
   diffCollapse: "Show less",

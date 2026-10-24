@@ -863,6 +863,7 @@ para usar una.
   proposalRejectAll: "Rechazar todo",
   proposalGroupMore: "Mostrar {n} más",
   proposalGroupLess: "Mostrar menos",
+  commentGroupMore: "Mostrar {n} más",
   proposalRelocate: "Pedir a la IA que rehaga este cambio",
   diffShow: "Mostrar diferencias",
   diffCollapse: "Mostrar menos",

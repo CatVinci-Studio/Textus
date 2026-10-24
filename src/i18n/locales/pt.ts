@@ -847,6 +847,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   proposalRejectAll: "Rejeitar todas",
   proposalGroupMore: "Mostrar mais {n}",
   proposalGroupLess: "Mostrar menos",
+  commentGroupMore: "Mostrar mais {n}",
   proposalRelocate: "Pedir à IA que refaça esta edição",
   diffShow: "Mostrar diferenças",
   diffCollapse: "Mostrar menos",

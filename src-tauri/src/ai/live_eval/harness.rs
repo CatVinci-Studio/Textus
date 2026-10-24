@@ -986,8 +986,10 @@ pub fn run_conversation(
                         }
                     }
                     if name == "add_comment" && result.starts_with("Comment added") {
-                        let s = |k: &str| args[k].as_str().unwrap_or("").to_string();
-                        outcome.comments.push((s("anchor"), s("comment")));
+                        for item in args["comments"].as_array().into_iter().flatten() {
+                            let s = |k: &str| item[k].as_str().unwrap_or("").to_string();
+                            outcome.comments.push((s("anchor"), s("comment")));
+                        }
                     }
                 }
                 AgentTurn::Assistant { text, .. } => outcome.reply = text.clone(),

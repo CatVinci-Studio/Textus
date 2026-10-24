@@ -136,24 +136,34 @@ pub fn builtin_tools<'a>(
     tools.push(Tool {
         spec: ToolSpec {
             name: ADD_COMMENT_TOOL_NAME.into(),
-            description: "Pin a piece of feedback to a passage without changing it - for reviews and critique (\"what's weak here\", \"check this draft\"). One call per point, all of them in the same message; name the block it is about by its id as `block`, and quote `anchor` only for a few words inside that block it is about. The user sees each comment as a card that jumps to its passage, so keep your reply to a short overall summary.".into(),
+            description: "Pin feedback to passages without changing them - for reviews and critique (\"what's weak here\", \"check this draft\"). Every point of the reply goes in this one call's `comments`, in document order: name the block each is about by its id as `block`, and quote `anchor` only for a few words inside that block it is about. The user sees each comment as a card that jumps to its passage, so keep your reply to a short overall summary.".into(),
             parameters: json!({
                 "type": "object",
                 "properties": {
-                    "block": {
-                        "type": "string",
-                        "description": "The id shown before the block the comment is about, like `k3f9` from `[#k3f9]`"
-                    },
-                    "anchor": {
-                        "type": "string",
-                        "description": "Only for a few words inside that block: those words, verbatim. Left out, the comment is about the whole block."
-                    },
-                    "comment": {
-                        "type": "string",
-                        "description": "The feedback, in the user's language - specific and actionable"
+                    "comments": {
+                        "type": "array",
+                        "description": "The points, one per passage (each word, when asked to gloss words), in document order",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "block": {
+                                    "type": "string",
+                                    "description": "The id shown before the block the comment is about, like `k3f9` from `[#k3f9]`"
+                                },
+                                "anchor": {
+                                    "type": "string",
+                                    "description": "Only for a few words inside that block: those words, verbatim. Left out, the comment is about the whole block."
+                                },
+                                "comment": {
+                                    "type": "string",
+                                    "description": "The feedback, in the user's language - specific and actionable"
+                                }
+                            },
+                            "required": ["block", "comment"]
+                        }
                     }
                 },
-                "required": ["block", "comment"],
+                "required": ["comments"],
             }),
         },
         access: Access::Proposes,

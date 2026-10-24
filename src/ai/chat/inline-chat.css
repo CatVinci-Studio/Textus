@@ -1548,6 +1548,61 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   line-height: 1.55;
 }
 
+/* A reply's notes as one card (CommentGroup): a row each - the words it
+   is about, a click taking you to them, then the note - set off by
+   hairlines. */
+.agent-comment-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agent-comment-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+}
+
+.agent-comment-row + .agent-comment-row {
+  border-top: 1px solid var(--chat-hairline, var(--editor-border));
+}
+
+.agent-comment-row:first-child {
+  padding-top: 2px;
+}
+
+.agent-comment-row-quote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 0 0 8px;
+  border: 0;
+  border-left: 2px solid var(--review-note-line);
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--editor-muted);
+  text-align: start;
+  cursor: pointer;
+}
+
+.agent-comment-row-quote:hover:not(:disabled) {
+  color: var(--editor-text);
+}
+
+.agent-comment-row-quote:disabled {
+  cursor: default;
+}
+
+.agent-comment-row-anchor {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .agent-error-explanation {
   font-weight: 600;
 }

@@ -29,7 +29,13 @@ import {
 } from "./MemoryChip";
 import { ProposalCard, notMadeLine } from "./ProposalCard";
 import { ProposalGroup, proposalRuns } from "./ProposalGroup";
-import { CommentCard, parseComment } from "./CommentCard";
+import {
+  CommentCard,
+  CommentGroup,
+  commentId,
+  parseComments,
+  type Comment,
+} from "./CommentCard";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { memoryRunsOf } from "./memory-pass";
 
@@ -82,6 +88,9 @@ export interface ChatMessagesLabels
   /** An add_comment card's title and jump-to-passage link. */
   commentTitle: string;
   commentLocate: string;
+  /** "{n} notes", heading a reply's notes shown as one card. */
+  commentCount: string;
+  commentGroupMore: string;
   /** Plain-language help per kind of provider failure (ErrorRow). */
   aiErrors: Record<AiErrorKind, string>;
   /** A generate_image card's kind, and the line for a picture that wasn't
@@ -286,6 +295,9 @@ export function ChatMessages({
     return { refused, runs: proposalRuns(shown, parsedProposals, refused) };
   }, [shown, parsedProposals]);
   const inRun = new Set([...runs.values()].flatMap((run) => run.slice(1)));
+  // A reply's notes, one call or several in a row, as one card under its
+  // first call (an empty list under the others).
+  const noteRuns = noteRunsOf(shown, noteNumber);
   const imageCalls = useMemo(
     () =>
       new Map(
@@ -415,14 +427,26 @@ export function ChatMessages({
           );
         }
         if (turn.kind === "ToolCall" && turn.name === "add_comment") {
-          const comment = parseComment(turn.arguments);
-          if (comment) {
+          const run = noteRuns.get(turn.call_id);
+          if (run) {
             commentIds.add(turn.call_id);
+            if (run.length === 0) return null;
+            if (run.length === 1)
+              return (
+                <CommentCard
+                  key={i}
+                  comment={run[0].comment}
+                  num={run[0].num}
+                  reveal={reveal}
+                  style={style}
+                  labels={labels}
+                  onLocateText={onLocateText}
+                />
+              );
             return (
-              <CommentCard
+              <CommentGroup
                 key={i}
-                comment={comment}
-                num={noteNumber?.(turn.call_id) ?? null}
+                items={run}
                 reveal={reveal}
                 style={style}
                 labels={labels}
@@ -580,4 +604,37 @@ export function ErrorRow({
       )}
     </div>
   );
+}
+
+/** The notes of each run of add_comment calls in `turns` - calls in a row,
+ *  their results between them - by the run's first call, the others
+ *  mapped to none: all of a reply's notes are one card. */
+function noteRunsOf(
+  turns: readonly AgentTurn[],
+  noteNumber?: (id: string) => number | null,
+): Map<string, { id: string; comment: Comment; num: number | null }[]> {
+  const runs = new Map<
+    string,
+    { id: string; comment: Comment; num: number | null }[]
+  >();
+  let first: string | null = null;
+  for (const turn of turns) {
+    if (turn.kind === "ToolResult") continue;
+    if (turn.kind !== "ToolCall" || turn.name !== "add_comment") {
+      first = null;
+      continue;
+    }
+    const notes = parseComments(turn.arguments).map((comment, i) => {
+      const id = commentId(turn.call_id, i);
+      return { id, comment, num: noteNumber?.(id) ?? null };
+    });
+    if (first === null) {
+      first = turn.call_id;
+      runs.set(first, notes);
+    } else {
+      runs.get(first)!.push(...notes);
+      runs.set(turn.call_id, []);
+    }
+  }
+  return runs;
 }

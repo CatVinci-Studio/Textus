@@ -72,6 +72,8 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     proposalAcceptSome: t.proposalAcceptSome,
     commentTitle: t.reviewNoteBy,
     commentLocate: t.proposalShowInText,
+    commentCount: t.reviewGroupNotes,
+    commentGroupMore: t.commentGroupMore,
     memorySaved: t.memoryChipSaved,
     memoryScopeProject: t.memoryScopeProject,
     memoryScopePersonal: t.memoryScopePersonal,

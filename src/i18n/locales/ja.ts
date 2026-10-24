@@ -812,6 +812,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   proposalRejectAll: "すべて却下",
   proposalGroupMore: "残り {n} 件を表示",
   proposalGroupLess: "折りたたむ",
+  commentGroupMore: "残り {n} 件を表示",
   proposalRelocate: "AIに修正をやり直してもらう",
   diffShow: "差分を表示",
   diffCollapse: "折りたたむ",

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { draftProposal, parsePartialToolArgs } from "./partial-tool-args";
+import {
+  completeArrayItems,
+  draftProposal,
+  parsePartialToolArgs,
+} from "./partial-tool-args";
 
 describe("parsePartialToolArgs", () => {
   it("reads complete flat string fields", () => {
@@ -78,5 +82,27 @@ describe("draftProposal", () => {
       anchor: "stale line",
       text: "",
     });
+  });
+});
+
+describe("completeArrayItems", () => {
+  it("gives the items that have arrived whole, and none that are half in", () => {
+    const whole = '{"comments": [{"block": "a", "comment": "Why \\"so\\"?"}, ';
+    expect(completeArrayItems(whole, "comments")).toEqual([
+      { block: "a", comment: 'Why "so"?' },
+    ]);
+    expect(
+      completeArrayItems(`${whole}{"block": "b", "comment": "Wh`, "comments"),
+    ).toHaveLength(1);
+    expect(
+      completeArrayItems(
+        `${whole}{"block": "b", "comment": "}{"}]}`,
+        "comments",
+      ),
+    ).toEqual([
+      { block: "a", comment: 'Why "so"?' },
+      { block: "b", comment: "}{" },
+    ]);
+    expect(completeArrayItems('{"comm', "comments")).toEqual([]);
   });
 });

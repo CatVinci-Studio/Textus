@@ -778,6 +778,7 @@ export default {
   proposalRejectAll: "全部拒絕",
   proposalGroupMore: "展開其餘 {n} 處",
   proposalGroupLess: "收起",
+  commentGroupMore: "展開其餘 {n} 則",
   proposalRelocate: "讓 AI 重新提出這項修改",
   diffShow: "顯示差異",
   diffCollapse: "收合",

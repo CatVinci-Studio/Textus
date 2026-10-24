@@ -50,15 +50,24 @@ pub(crate) fn postfix_step(
                     reasoning,
                 }
             }
-            // A comment or a picture names its block too.
+            // Comments and a picture name their blocks too.
             AgentTurn::ToolCall {
                 call_id,
                 name,
                 arguments,
                 reasoning,
-            } if name == tools::ADD_COMMENT_TOOL_NAME
-                || name == crate::ai::images::GENERATE_IMAGE_TOOL_NAME =>
-            {
+            } if name == tools::ADD_COMMENT_TOOL_NAME => AgentTurn::ToolCall {
+                arguments: doc_blocks::resolve_comments_arguments(document, &arguments),
+                call_id,
+                name,
+                reasoning,
+            },
+            AgentTurn::ToolCall {
+                call_id,
+                name,
+                arguments,
+                reasoning,
+            } if name == crate::ai::images::GENERATE_IMAGE_TOOL_NAME => {
                 AgentTurn::ToolCall {
                     arguments: doc_blocks::resolve_target_arguments(document, &arguments),
                     call_id,
