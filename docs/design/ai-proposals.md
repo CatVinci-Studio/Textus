@@ -286,7 +286,8 @@ not deleted. So:
   after their text (`1.2.1`); until then the progress cursor
   (`readingDecoration`, a tint in `--revision-reading-bg`) stands on the
   paragraph the stream has reached, so a light polish moves through the
-  text rather than standing still;
+  text rather than standing still, and the review bar says it is being
+  written where its name stands, with the "working" dots;
 - the sentence being written types in beside the original it rewrites,
   which is struck while it is written - or, a sentence of its own, where it
   goes. While it still repeats an original word for word, or is too short

@@ -315,6 +315,10 @@ test("each display mode draws a streaming rewrite's landed paragraphs, with thei
     await expect(page.locator(".milkdown .pending-reading")).toContainText(
       "It was far off.",
     );
+    // ...and the review bar says it is being written.
+    await expect(page.locator(".review-bar-working")).toHaveText(
+      /Writing the edit/,
+    );
     const card = page.locator(".revision-note").first();
     if (display === "original") {
       // The new text is the card's; the text keeps the original.
