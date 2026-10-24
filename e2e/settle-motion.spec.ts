@@ -135,3 +135,65 @@ test("Reject fades the proposal and its cards out, and leaves the text as it was
   expect(frames.every((f) => f.inEditor === 0)).toBe(true);
   expect(frames.at(-1)!.ghosts).toBe(0);
 });
+
+test("Accept all with many proposals leaves no copies behind, and undo brings one back coming in", async ({
+  page,
+}) => {
+  const paras = Array.from(
+    { length: 8 },
+    (_, i) => `Paragraph ${i + 1} opens here. It ends.`,
+  );
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openApp(page, {
+    settings: { language: "en", revisionDisplay: "inline" },
+    storage: { "textus-agent-panel-open": "1" },
+    animations: true,
+  });
+  await pasteMarkdown(page, paras.join("\n\n"));
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "go" },
+      ...paras.flatMap((p, i) => [
+        {
+          kind: "ToolCall",
+          call_id: `c${i}`,
+          name: "propose_edit",
+          arguments: JSON.stringify({
+            action: "replace",
+            anchor: p,
+            text: p.replace("opens here", "begins"),
+          }),
+        },
+        { kind: "ToolResult", call_id: `c${i}`, output: "Edit proposed" },
+      ]),
+      { kind: "Assistant", text: "Done." },
+    ],
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("go");
+  await composer.press("Enter");
+  await expect(page.locator(".review-bar-accept")).toBeEnabled();
+  await page.waitForTimeout(600);
+  await page.locator(".review-bar-accept").click();
+  await expect(page.locator(".milkdown .ProseMirror p").first()).toHaveText(
+    "Paragraph 1 begins. It ends.",
+  );
+  // Every copy faded out is gone.
+  await expect(page.locator(".motion-ghost")).toHaveCount(0, {
+    timeout: 2000,
+  });
+  // Undone, the proposal comes back coming in, not standing there at once.
+  await page.locator(".milkdown .ProseMirror").click();
+  await page.keyboard.press("Control+z");
+  const parts = page.locator(
+    ".milkdown :is(.pending-delete, .pending-sentence-new)",
+  );
+  await expect(parts.first()).toBeVisible();
+  const moving = await parts.evaluateAll(
+    (els) =>
+      els.filter((e) =>
+        e.getAnimations().some((a) => a.playState === "running"),
+      ).length,
+  );
+  expect(moving).toBeGreaterThan(0);
+});
