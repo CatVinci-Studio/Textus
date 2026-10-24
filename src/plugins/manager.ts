@@ -14,7 +14,7 @@ import { isIOSApp } from "../platform/capabilities";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
 import { registerCommand, runCommand } from "../app/commands";
 import { registerSidebarTab } from "../app/sidebar-tabs";
-import { registerEditorMenuItems } from "../editor/editor-menu";
+import { registerEditorMenuItems } from "../editor/editor-menu-items";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import { PluginHost } from "./broker";
 import { type PluginOrigin } from "./files";

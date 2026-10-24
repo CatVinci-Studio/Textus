@@ -82,12 +82,19 @@ export function useSourceModes(tabState: TabState) {
     if (!activeSourceMode) return;
     const caret = takePendingCaret();
     if (!caret) return;
-    requestAnimationFrame(() => {
+    // Split View loads on first use (MainPane.tsx), so its textarea may
+    // come a few frames later: look for it each frame, for a second.
+    let frames = 60;
+    let frame = 0;
+    const place = () => {
       const textarea = document.querySelector<HTMLTextAreaElement>(
         '[data-active-tab="true"] textarea.source-view',
       );
       if (textarea) applyTextareaCaret(textarea, caret);
-    });
+      else if (--frames > 0) frame = requestAnimationFrame(place);
+    };
+    frame = requestAnimationFrame(place);
+    return () => cancelAnimationFrame(frame);
   }, [activeSourceMode, activeTabId]);
 
   return { toggleSourceMode, toggleSplitView };

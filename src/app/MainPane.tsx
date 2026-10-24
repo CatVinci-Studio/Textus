@@ -1,7 +1,8 @@
-import type { ComponentProps } from "react";
+import { Suspense, type ComponentProps } from "react";
 import { EditorPane } from "../document-view/EditorPane";
 import { canDragTabsBetweenWindows } from "../platform/capabilities";
-import { SplitView } from "../editor/modes/SplitView";
+import { lazyModule } from "../lazy/lazy-module";
+import { lazyComponent } from "../lazy/lazy-component";
 import { SourceTextarea } from "../editor/modes/SourceTextarea";
 import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
@@ -15,6 +16,13 @@ import { SplitDivider, splitGridStyles } from "./SplitDivider";
 import "./split-panes.css";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
+
+// Split View renders the page as HTML beside the source: its Markdown
+// renderer loads when a tab first shows it, not with the window.
+const SplitView = lazyComponent(
+  lazyModule("split-view", () => import("../editor/modes/SplitView")),
+  (m) => m.SplitView,
+);
 
 /** The document column: the tab bar (when there is more than one tab to
  *  switch between) over every open tab's editor. */
@@ -132,12 +140,14 @@ export function MainPane({
                 state={tab.view.state}
               />
             ) : tab.sourceMode && tab.splitView ? (
-              <SplitView
-                content={tab.content}
-                filePath={tab.path}
-                typewriter={typewriter}
-                onChange={(markdown) => onChange(tab.id, markdown)}
-              />
+              <Suspense fallback={null}>
+                <SplitView
+                  content={tab.content}
+                  filePath={tab.path}
+                  typewriter={typewriter}
+                  onChange={(markdown) => onChange(tab.id, markdown)}
+                />
+              </Suspense>
             ) : tab.sourceMode ? (
               <SourceTextarea
                 value={tab.content}
