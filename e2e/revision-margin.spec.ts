@@ -357,7 +357,9 @@ test("a sentence the rewrite adds has a card that says Added, not an empty entry
   );
   const card = page.locator(".revision-note");
   await expect(card).toHaveCount(1);
-  await expect(card.locator(".revision-note-was")).toHaveText("Added");
+  await expect(card.locator(".revision-note-what")).toHaveText(
+    "Revision · Added",
+  );
   await expect(card.locator(".revision-note-text")).toContainText(
     "He lit the lamp.",
   );
