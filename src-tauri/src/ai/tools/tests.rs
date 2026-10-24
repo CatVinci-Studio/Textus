@@ -63,15 +63,9 @@ fn valid_proposals_and_comments_are_settled_and_refusals_are_not() {
         PROPOSE_EDIT_TOOL_NAME,
         r#"{"action":"replace","anchor":"not in the document","text":"x"}"#
     ));
-    let block = &ctx.document.blocks[0].id;
-    let comments = |items: serde_json::Value| json!({ "comments": items }).to_string();
     assert!(settled(
         ADD_COMMENT_TOOL_NAME,
-        &comments(json!([{"block": block, "anchor": "The cat sat", "comment": "Name the cat."}]))
-    ));
-    assert!(!settled(
-        ADD_COMMENT_TOOL_NAME,
-        &comments(json!([{"block": "nope", "comment": "Name the cat."}]))
+        r#"{"anchor":"The cat sat","comment":"Name the cat."}"#
     ));
     assert!(!settled(READ_DOCUMENT_TOOL_NAME, "{}"));
 }
@@ -709,50 +703,4 @@ fn words_of_an_undecided_rewrite_quoted_by_its_block_go_into_the_rewrite() {
             .to_string(),
     );
     assert!(out.contains("exactly once"), "{out}");
-}
-
-/// All of a reply's comments come in one call: each is checked, and the
-/// result says which were not added and why, for those to be sent again.
-#[test]
-fn comments_come_in_one_call_and_each_is_checked() {
-    let ctx = ctx("The cat sat on the mat.\n\nThe dog ran.");
-    let (a, b) = (&ctx.document.blocks[0].id, &ctx.document.blocks[1].id);
-    let args = |items: serde_json::Value| json!({ "comments": items }).to_string();
-    let all = add_comment(
-        &ctx,
-        &args(json!([
-            {"block": a, "anchor": "cat", "comment": "Which cat?"},
-            {"block": b, "comment": "Why does it run?"}
-        ])),
-    );
-    assert!(all.starts_with("Comment added (2)"), "{all}");
-    let some = add_comment(
-        &ctx,
-        &args(json!([
-            {"block": a, "comment": "Which cat?"},
-            {"block": b, "anchor": "not there", "comment": "?"},
-            {"block": b, "comment": ""}
-        ])),
-    );
-    assert!(some.starts_with("Comment added (1)"), "{some}");
-    assert!(some.contains("comment 2:") && some.contains("comment 3:"), "{some}");
-    assert!(add_comment(&ctx, &args(json!([]))).contains("empty"));
-    assert!(add_comment(&ctx, r#"{"block":"x","comment":"y"}"#).contains("`comments` is required"));
-}
-
-/// Each comment's anchor is resolved like a single target's: the whole
-/// block when it quotes none.
-#[test]
-fn each_comment_names_its_passage() {
-    let ctx = ctx("The cat sat on the mat.\n\nThe dog ran.");
-    let b = &ctx.document.blocks[1].id;
-    let resolved: serde_json::Value = serde_json::from_str(
-        &crate::ai::doc_blocks::resolve_comments_arguments(
-            ctx.document,
-            &json!({"comments": [{"block": b, "comment": "Why?"}]}).to_string(),
-        ),
-    )
-    .unwrap();
-    assert_eq!(resolved["comments"][0]["anchor"], "The dog ran.");
-    assert_eq!(resolved["comments"][0]["comment"], "Why?");
 }

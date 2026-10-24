@@ -143,7 +143,10 @@ test("a few words named inside a block change in it as they stream", async ({
     }),
   );
   await ask(page);
-  await expect(page.locator(`${editor} .pending-reading`)).toBeVisible();
+  // Held after its text is whole, before the step ends: already in.
+  await expect(
+    page.locator(`${editor} .pending-sentence-new`, { hasText: "Pupils" }),
+  ).toBeVisible();
   await page.evaluate(() => {
     (window as { __release?: boolean }).__release = true;
   });

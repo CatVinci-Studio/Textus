@@ -890,7 +890,8 @@ pub fn run_conversation(
                     // block_on, which can't be nested.
                     let mut waits = [3u64, 10, 30].into_iter();
                     let (step, used): (StepResult, StepUsage) = loop {
-                        match agent.step(instructions, &h, specs, sink).await {
+                        let joined = crate::ai::agent::lists::join_calls(&h);
+                        match agent.step(instructions, &joined, specs, sink).await {
                             Ok((step, used)) => break (step, used.unwrap_or_default()),
                             Err(e) if transient(&e) => match waits.next() {
                                 Some(w) => std::thread::sleep(std::time::Duration::from_secs(w)),
@@ -986,10 +987,8 @@ pub fn run_conversation(
                         }
                     }
                     if name == "add_comment" && result.starts_with("Comment added") {
-                        for item in args["comments"].as_array().into_iter().flatten() {
-                            let s = |k: &str| item[k].as_str().unwrap_or("").to_string();
-                            outcome.comments.push((s("anchor"), s("comment")));
-                        }
+                        let s = |k: &str| args[k].as_str().unwrap_or("").to_string();
+                        outcome.comments.push((s("anchor"), s("comment")));
                     }
                 }
                 AgentTurn::Assistant { text, .. } => outcome.reply = text.clone(),

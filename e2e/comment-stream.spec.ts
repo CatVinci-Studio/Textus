@@ -4,9 +4,10 @@ import { blockIds, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 /**
  * A review note shows in the margin as soon as it has said where it goes
  * and what it says - by its block, as the model names a passage now - one
- * note after another, not all of them once the reply is done (rc.6). All of
- * a reply's notes come in one call (1.2.1): a service that holds a step's
- * calls back until it ends still streams one call's arguments.
+ * note after another, not all of them once the reply is done (rc.6). The
+ * model sends all of a reply's notes in one call (1.2.1), which the backend
+ * streams on as a call per note (agent/lists.rs) - what the scripted model
+ * here sends.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';
@@ -23,16 +24,18 @@ test("each note of a reply shows in the margin as soon as it is written, and the
   });
   await pasteMarkdown(page, DOC);
   const ids = await blockIds(page, DOC);
-  const raw = JSON.stringify({
-    comments: [
-      { block: ids[1], comment: "Say which hours." },
-      { block: ids[2], comment: "Which students?" },
-    ],
-  });
-  // Held here: the first note whole, the second's words half in.
-  const cut = raw.indexOf("Which stu");
+  const notes = [
+    {
+      id: "n1#0",
+      raw: JSON.stringify({ block: ids[1], comment: "Say which hours." }),
+    },
+    {
+      id: "n1#1",
+      raw: JSON.stringify({ block: ids[2], comment: "Which students?" }),
+    },
+  ];
   await page.evaluate(
-    ({ raw, cut }) => {
+    ({ notes }) => {
       const w = window as unknown as Record<string, unknown>;
       const internals = w.__TAURI_INTERNALS__ as {
         invoke: (cmd: string, args?: unknown) => Promise<unknown>;
@@ -52,31 +55,42 @@ test("each note of a reply shows in the margin as soon as it is written, and the
           args: string,
         ) => string;
         const turns = [
-          {
+          ...notes.map((note) => ({
             kind: "ToolCall",
-            call_id: "n1",
+            call_id: note.id,
             name: "add_comment",
             // As the backend hands it on (src/dev/settle-calls.ts).
-            arguments: settle(blocks, "add_comment", raw),
-          },
-          { kind: "ToolResult", call_id: "n1", output: "Comment added" },
+            arguments: settle(blocks, "add_comment", note.raw),
+          })),
+          ...notes.map((note) => ({
+            kind: "ToolResult",
+            call_id: note.id,
+            output: "Comment added",
+          })),
           { kind: "Assistant", text: "Two notes." },
         ];
-        send({ type: "toolStart", callId: "n1", name: "add_comment" });
+        // Each note a call, streamed in turn; held with the second's
+        // words half in.
+        const stream: Record<string, string>[] = notes.flatMap((note) => [
+          { type: "toolStart", callId: note.id, name: "add_comment" },
+          ...Array.from({ length: Math.ceil(note.raw.length / 6) }, (_, k) => ({
+            type: "toolArgsDelta",
+            callId: note.id,
+            delta: note.raw.slice(k * 6, k * 6 + 6),
+          })),
+        ]);
+        const cut = stream.findIndex(
+          (e) => e.callId === "n1#1" && (e.delta ?? "").includes("stu"),
+        );
         return new Promise((resolve) => {
           let i = 0;
           const tick = () => {
-            if (i < raw.length && (i < cut || w.__release)) {
-              send({
-                type: "toolArgsDelta",
-                callId: "n1",
-                delta: raw.slice(i, i + 6),
-              });
-              i += 6;
+            if (i < stream.length && (i < cut || w.__release)) {
+              send(stream[i++]);
               setTimeout(tick, 10);
               return;
             }
-            if (!w.__release || i < raw.length) {
+            if (!w.__release || i < stream.length) {
               setTimeout(tick, 30);
               return;
             }
@@ -87,7 +101,7 @@ test("each note of a reply shows in the margin as soon as it is written, and the
         });
       };
     },
-    { raw, cut },
+    { notes },
   );
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("What's weak here?");
@@ -130,18 +144,20 @@ test("a reply's many notes fold in the chat to their first three", async ({
   await mockInvoke(page, {
     ai_agent_message: [
       { kind: "User", text: "go" },
-      {
+      ...Array.from({ length: 6 }, (_, i) => ({
         kind: "ToolCall",
-        call_id: "c1",
+        call_id: `c1#${i}`,
         name: "add_comment",
         arguments: JSON.stringify({
-          comments: Array.from({ length: 6 }, (_, i) => ({
-            anchor: `Line ${i + 1} here.`,
-            comment: `Note ${i + 1}`,
-          })),
+          anchor: `Line ${i + 1} here.`,
+          comment: `Note ${i + 1}`,
         }),
-      },
-      { kind: "ToolResult", call_id: "c1", output: "Comment added (6)" },
+      })),
+      ...Array.from({ length: 6 }, (_, i) => ({
+        kind: "ToolResult",
+        call_id: `c1#${i}`,
+        output: "Comment added",
+      })),
       { kind: "Assistant", text: "Six notes." },
     ],
   });

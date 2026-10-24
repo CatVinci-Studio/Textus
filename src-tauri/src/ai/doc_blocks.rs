@@ -450,7 +450,7 @@ pub fn resolve_edit_arguments(document: &Document, arguments: &str) -> String {
     reorder(args).to_string()
 }
 
-/// A comment's or a generate_image call's arguments with what its block
+/// An add_comment or generate_image call's arguments with what its block
 /// stands for filled in, as for an insertion by propose_edit: a phrase
 /// quoted in `anchor` that the block holds once stays the anchor (a
 /// comment on a few words, a picture after a sentence); otherwise the
@@ -482,26 +482,6 @@ pub fn resolve_target_arguments(document: &Document, arguments: &str) -> String 
         args.insert("anchor".into(), Value::String(whole));
     }
     reorder(args).to_string()
-}
-
-/// An add_comment call's arguments with each of its `comments` resolved as
-/// [`resolve_target_arguments`] resolves one target.
-pub fn resolve_comments_arguments(document: &Document, arguments: &str) -> String {
-    let Ok(Value::Object(mut args)) = serde_json::from_str::<Value>(arguments) else {
-        return arguments.to_string();
-    };
-    let Some(Value::Array(items)) = args.remove("comments") else {
-        return arguments.to_string();
-    };
-    let items = items
-        .into_iter()
-        .map(|item| {
-            serde_json::from_str(&resolve_target_arguments(document, &item.to_string()))
-                .unwrap_or(item)
-        })
-        .collect();
-    args.insert("comments".into(), Value::Array(items));
-    Value::Object(args).to_string()
 }
 
 /// Whether `block` is a picture and nothing else: `![alt](path)`, or an

@@ -72,8 +72,12 @@ export function drawn(canvas: ProposalCanvas): ProposalStreamEffects {
       draw(callId);
     },
     feed: (callId, text, done) => {
-      if (done) return forget(callId);
       latest.set(callId, text);
+      // Whole: drawn as it is now, the call's own add following.
+      if (done) {
+        draw(callId);
+        return forget(callId);
+      }
       if (!waiting.has(callId))
         waiting.set(
           callId,

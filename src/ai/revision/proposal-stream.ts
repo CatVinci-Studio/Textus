@@ -114,7 +114,10 @@ export class ProposalStream {
       draft.phase = "revealing";
       this.effects.place(callId, parsed.proposal);
     }
-    this.effects.feed(callId, parsed.proposal.text ?? "", false);
+    // Its text whole - the closing quote in - it lands now, not when the
+    // step ends: a reply's edits stream one after another (agent/
+    // lists.rs), and the step's turns come only after the last.
+    this.effects.feed(callId, parsed.proposal.text ?? "", parsed.textComplete);
   }
 
   /** The completed ToolCall turn landed: the authoritative arguments. Closes

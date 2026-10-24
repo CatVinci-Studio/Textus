@@ -32,8 +32,7 @@ import { ProposalGroup, proposalRuns } from "./ProposalGroup";
 import {
   CommentCard,
   CommentGroup,
-  commentId,
-  parseComments,
+  parseComment,
   type Comment,
 } from "./CommentCard";
 import { ThinkingIndicator } from "./ThinkingIndicator";
@@ -624,10 +623,16 @@ function noteRunsOf(
       first = null;
       continue;
     }
-    const notes = parseComments(turn.arguments).map((comment, i) => {
-      const id = commentId(turn.call_id, i);
-      return { id, comment, num: noteNumber?.(id) ?? null };
-    });
+    const comment = parseComment(turn.arguments);
+    const notes = comment
+      ? [
+          {
+            id: turn.call_id,
+            comment,
+            num: noteNumber?.(turn.call_id) ?? null,
+          },
+        ]
+      : [];
     if (first === null) {
       first = turn.call_id;
       runs.set(first, notes);

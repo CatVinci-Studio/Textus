@@ -127,6 +127,23 @@ Who owns each move:
 | pending → accepted / rejected / replaced / joined / invalid, undo         | the table in `ai/revision/proposal-lifecycle.ts` (`recordStatus`); `usePendingEdits.ts` + `pending-edit-plugin.ts` run what goes with each move |
 | what the model is told of each, next request                              | `ai/revision/proposal-status.ts`                                                                                                                |
 
+### One call, a list of items
+
+The model sends all of a reply's edits in one `propose_edit` call
+(`edits`) and all its notes in one `add_comment` call (`comments`).
+ChatGPT's service holds back a step's parallel calls until the step ends,
+with no argument deltas: ten edits, or thirty notes, came at once after
+the model had finished (1.2.1). One call's arguments still stream.
+
+Past the model, nothing changed: the backend (`agent/lists.rs`) streams a
+list call on as one call per item, `<call>#<n>` (`ListStream`), splits
+the step the same way (`split_calls`, in `settle_step`), and joins the
+items back into the call the model made when the history goes back to it
+(`join_calls`). The tools, the history the frontend keeps and the
+frontend itself see one call per edit or note, as before. An edit lands
+as soon as its `text` is whole (`ProposalStream`'s feed with `done`), not
+when the step's turns arrive after the last one.
+
 ### Writing: `ProposalStream`
 
 `toolStart` opens a draft (propose_edit and generate_image; a note is

@@ -8,38 +8,22 @@ export interface Comment {
   block?: string;
 }
 
-/** One of an add_comment call's comments, as Rust resolved it (its
- *  passage's text in `anchor`); null when it isn't one. */
-export function commentOf(item: unknown): Comment | null {
-  if (!item || typeof item !== "object") return null;
-  const { anchor, comment, block } = item as Record<string, unknown>;
-  if (typeof anchor !== "string" || typeof comment !== "string") return null;
-  return {
-    anchor,
-    comment,
-    block: typeof block === "string" ? block : undefined,
-  };
-}
-
-/** An add_comment call's comments (src-tauri ai/tools/folder.rs): all of a
- *  reply's points in its `comments`, or - in a conversation from before
- *  1.2.1 - the one it pinned. */
-export function parseComments(argumentsJson: string): Comment[] {
+/** An add_comment call's arguments (src-tauri ai/tools/folder.rs) - one
+ *  of a reply's comments, each a call of its own past the model
+ *  (agent/lists.rs). */
+export function parseComment(argumentsJson: string): Comment | null {
   try {
     const parsed = JSON.parse(argumentsJson);
-    const items: unknown[] = Array.isArray(parsed.comments)
-      ? parsed.comments
-      : [parsed];
-    return items.flatMap((item) => commentOf(item) ?? []);
+    if (typeof parsed.anchor !== "string" || typeof parsed.comment !== "string")
+      return null;
+    return {
+      anchor: parsed.anchor,
+      comment: parsed.comment,
+      block: typeof parsed.block === "string" ? parsed.block : undefined,
+    };
   } catch {
-    return [];
+    return null;
   }
-}
-
-/** A comment's id - its note's in the text and margin: its call's, and
- *  its place among the call's comments. */
-export function commentId(callId: string, index: number): string {
-  return `${callId}:${index}`;
 }
 
 /** A review note in the conversation: the passage it is about, the note,

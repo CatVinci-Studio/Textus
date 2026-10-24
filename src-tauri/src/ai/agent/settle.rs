@@ -50,24 +50,15 @@ pub(crate) fn postfix_step(
                     reasoning,
                 }
             }
-            // Comments and a picture name their blocks too.
+            // A comment or a picture names its block too.
             AgentTurn::ToolCall {
                 call_id,
                 name,
                 arguments,
                 reasoning,
-            } if name == tools::ADD_COMMENT_TOOL_NAME => AgentTurn::ToolCall {
-                arguments: doc_blocks::resolve_comments_arguments(document, &arguments),
-                call_id,
-                name,
-                reasoning,
-            },
-            AgentTurn::ToolCall {
-                call_id,
-                name,
-                arguments,
-                reasoning,
-            } if name == crate::ai::images::GENERATE_IMAGE_TOOL_NAME => {
+            } if name == tools::ADD_COMMENT_TOOL_NAME
+                || name == crate::ai::images::GENERATE_IMAGE_TOOL_NAME =>
+            {
                 AgentTurn::ToolCall {
                     arguments: doc_blocks::resolve_target_arguments(document, &arguments),
                     call_id,
@@ -91,6 +82,7 @@ pub(crate) fn settle_step(
     conventions: &Conventions,
     pictures: Option<&InlinePictures<'_>>,
 ) -> (StepResult, Vec<&'static str>) {
+    let result = super::lists::split_calls(result);
     let (result, applied) = postfix_step(edits_before_comments(result), document, conventions);
     let result = match pictures {
         Some(pictures) => pictures.place(result),
