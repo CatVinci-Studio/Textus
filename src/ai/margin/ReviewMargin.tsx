@@ -19,8 +19,8 @@ import {
   useCardActions,
   useMarginRoom,
 } from "./margin-layout";
-import { NoteCard, RevisionCard, WorkingCard } from "./MarginCards";
-import { MarginGroup, type GroupItem } from "./MarginGroup";
+import { NoteCard, RevisionCard } from "./MarginCards";
+import { MarginGroup } from "./MarginGroup";
 export { type ReviewMarginLabels, type MarginItem } from "./margin-layout";
 export { NotePopover } from "./MarginCards";
 
@@ -123,7 +123,6 @@ export function ReviewMargin({
       const textEdge =
         pm.getBoundingClientRect().right - column.left + columnLeft;
       const placed: Placed[] = [];
-      const working: Placed[] = [];
       for (const item of items) {
         // The marked passage's own boxes: a position's coordinates are
         // ambiguous where widgets share it.
@@ -134,9 +133,6 @@ export function ReviewMargin({
         let first: { top: number; right: number; bottom: number };
         if (rects.length > 0) {
           first = rects[0];
-        } else if (item.kind === "working") {
-          // Between paragraphs, nothing is being written yet.
-          continue;
         } else {
           const from = item.kind === "note" ? item.note.from : item.from;
           try {
@@ -145,7 +141,7 @@ export function ReviewMargin({
             continue;
           }
         }
-        (item.kind === "working" ? working : placed).push({
+        placed.push({
           item,
           top: first.top - top0 - 8,
           drift: 0,
@@ -159,19 +155,8 @@ export function ReviewMargin({
           ay: (first.top + first.bottom) / 2 - top0,
         });
       }
-      const height = (key: string) => heights.current.get(key) ?? 64;
-      stackCards(placed, height);
-      // Never in a run of its own: below the cards of the passages above
-      // it, wherever the stack put them, as the changes it brings will be.
-      for (const w of working) {
-        const above = placed.filter((p) => p.ay <= w.ay);
-        const floor = Math.max(
-          -Infinity,
-          ...above.map((p) => p.top + (p.cut ?? height(p.item.key)) + 8),
-        );
-        w.top = Math.max(w.top, floor);
-      }
-      const next = { left, placed: [...placed, ...working] };
+      stackCards(placed, (key) => heights.current.get(key) ?? 64);
+      const next = { left, placed };
       setLayout((was) => (sameLayout(was, next) ? was : next));
     };
     measure();
@@ -272,9 +257,7 @@ export function ReviewMargin({
             <MarginGroup
               key={item.key}
               groupKey={p.group}
-              items={members
-                .map((q) => q.item)
-                .filter((i): i is GroupItem => i.kind !== "working")}
+              items={members.map((q) => q.item)}
               open={
                 picked !== null || members.some((q) => q.item.key === focused)
               }
@@ -293,17 +276,6 @@ export function ReviewMargin({
             />
           );
         }
-        if (item.kind === "working")
-          return (
-            <WorkingCard
-              key={item.key}
-              itemKey={item.key}
-              label={labels.agentWritingEdit}
-              top={p.top}
-              left={layout.left}
-              onHeight={onHeight}
-            />
-          );
         return item.kind === "note" ? (
           <NoteCard
             key={item.key}

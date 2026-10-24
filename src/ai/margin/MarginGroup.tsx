@@ -10,13 +10,9 @@ import { NoteCard, RevisionCard } from "./MarginCards";
 import "./ReviewMargin.css";
 
 /** A group's line: how many notes and changes it holds. */
-/** What a run cut to one chip holds: notes and changes - never where a
- *  rewrite is writing, which stands on its own. */
-export type GroupItem = Exclude<MarginItem, { kind: "working" }>;
-
-function groupLabel(items: GroupItem[], labels: ReviewMarginLabels): string {
+function groupLabel(items: MarginItem[], labels: ReviewMarginLabels): string {
   const notes = items.filter((i) => i.kind === "note").length;
-  const changes = items.filter((i) => i.kind === "revision").length;
+  const changes = items.length - notes;
   return [
     notes > 0 && labels.reviewGroupNotes.replace("{n}", String(notes)),
     changes > 0 && labels.proposalChangeCount.replace("{n}", String(changes)),
@@ -27,7 +23,7 @@ function groupLabel(items: GroupItem[], labels: ReviewMarginLabels): string {
 
 /** What a closed group's chip shows under its heading: its first card's
  *  words, as each chip shows its own. */
-function groupGlimpse(items: GroupItem[]): string {
+function groupGlimpse(items: MarginItem[]): string {
   const first = items[0];
   if (!first) return "";
   return first.kind === "note"
@@ -62,7 +58,7 @@ export const MarginGroup = memo(function MarginGroup({
   onDecide,
 }: {
   groupKey: string;
-  items: GroupItem[];
+  items: MarginItem[];
   open: boolean;
   onOpen: (key: string | null) => void;
   picked: ReadonlySet<string> | null;

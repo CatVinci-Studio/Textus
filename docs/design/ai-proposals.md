@@ -286,9 +286,7 @@ not deleted. So:
   after their text (`1.2.1`); until then the progress cursor
   (`readingDecoration`, a tint in `--revision-reading-bg`) stands on the
   paragraph the stream has reached, so a light polish moves through the
-  text rather than standing still, and in the margin views a card by it
-  says it is being written (`WorkingCard`, below the cards of the
-  passages above it), gliding on to each next paragraph;
+  text rather than standing still;
 - the sentence being written types in beside the original it rewrites,
   which is struck while it is written - or, a sentence of its own, where it
   goes. While it still repeats an original word for word, or is too short

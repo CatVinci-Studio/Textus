@@ -358,25 +358,8 @@ export function useReviewNotes({
         streaming: !!preview.streaming,
       });
     });
-    // A rewrite still being written: a card by the paragraph it is at,
-    // until that lands - the changes come in where it stood.
-    if (display !== "inline")
-      for (const preview of pendingEdits.previews)
-        if (preview.streaming && preview.streamSource)
-          items.push({
-            kind: "working",
-            key: `work:${preview.callId}`,
-            callId: preview.callId,
-            from: preview.from,
-          });
     return items;
-  }, [
-    notes,
-    pendingEdits.reviewStops,
-    pendingEdits.reviewed,
-    pendingEdits.previews,
-    revisionDisplay,
-  ]);
+  }, [notes, pendingEdits.reviewStops, pendingEdits.reviewed, revisionDisplay]);
 
   // The item selected: the card clicked last, or the one the notes bar or
   // the review bar points at - whichever came last. A bar's step takes over

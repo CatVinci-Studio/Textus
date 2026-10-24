@@ -431,29 +431,6 @@
   margin-bottom: 4px;
 }
 
-/* Where a rewrite still streaming in is writing (WorkingCard): the
-   revision card's surface, holding only "Writing changes" and its dots,
-   by the paragraph tinted in the text. */
-.review-note-working {
-  background: color-mix(
-    in srgb,
-    var(--editor-text) 3%,
-    var(--editor-bg, var(--bg))
-  );
-  border-style: dashed;
-  box-shadow: none;
-  padding-block: 7px;
-}
-
-.review-note-working .agent-thinking {
-  font-size: var(--text-xs);
-}
-
-.review-links path.working {
-  stroke: var(--editor-muted);
-  opacity: 0.35;
-}
-
 /* A disc for one or two digits, a pill past that: a fixed width ran "100"
    out of its circle. */
 .revision-note-num,
