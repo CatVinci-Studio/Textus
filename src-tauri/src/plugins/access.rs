@@ -44,7 +44,7 @@ fn running(state: &PluginsState, id: &str) -> Result<(), String> {
 /// `path` resolved inside `root`: no `..`, and after following links in
 /// the part that exists, still under `root`. The part that doesn't exist
 /// yet (a file about to be written) is kept as named.
-fn inside(root: &Path, path: &Path) -> Result<PathBuf, String> {
+pub(super) fn inside(root: &Path, path: &Path) -> Result<PathBuf, String> {
     let root = std::fs::canonicalize(root).map_err(|e| format!("{}: {e}", root.display()))?;
     let path = if path.is_absolute() {
         path.to_path_buf()

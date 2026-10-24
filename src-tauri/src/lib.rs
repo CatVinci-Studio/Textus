@@ -389,6 +389,14 @@ pub fn run() {
             plugins::access::plugin_fs_write,
             plugins::access::plugin_http,
             plugins::access::plugin_storage_get,
+            plugins::store::plugin_store_get,
+            plugins::store::plugin_store_set,
+            plugins::store::plugin_store_keys,
+            plugins::store::plugin_store_read,
+            plugins::store::plugin_store_write,
+            plugins::store::plugin_store_files,
+            plugins::store::plugin_store_delete,
+            plugins::store::plugin_store_usage,
             plugins::access::plugin_storage_set,
             // iOS only: rename and delete in the document list.
             #[cfg(mobile)]
