@@ -58,6 +58,26 @@ describe("the Mac's give at a document's end", () => {
     stop();
   });
 
+  it("holds the pull while the finger rests, and lets go once it is lifted", () => {
+    const { scroller, content, springs, stop } = page();
+    swipe(scroller, [-8, -9, -8, -10, -8]);
+    const held = content.style.translate;
+    // The finger stops, still down: nothing comes for a moment.
+    vi.advanceTimersByTime(300);
+    expect(content.style.translate).toBe(held);
+    expect(springs).toHaveLength(0);
+    // It moves on, and the pull goes on from where it was.
+    swipe(scroller, [-8, -9]);
+    expect(parseFloat(content.style.translate.split(" ")[1])).toBeGreaterThan(
+      parseFloat(held.split(" ")[1]),
+    );
+    // Lifted without moving: it springs back.
+    vi.advanceTimersByTime(500);
+    expect(content.style.translate).toBe("");
+    expect(springs).toHaveLength(1);
+    stop();
+  });
+
   it("gives again on the next swipe", () => {
     const { scroller, content, stop } = page();
     swipe(scroller, [-8, -9, -8, -7, -6, -5, -4, -3]);

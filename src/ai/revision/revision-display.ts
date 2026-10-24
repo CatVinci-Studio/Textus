@@ -8,14 +8,24 @@ export function revisionDisplayName(t: Strings, mode: RevisionDisplay): string {
   return {
     inline: t.revisionDisplayInline,
     original: t.revisionDisplayOriginal,
-    new: t.revisionDisplayNew,
     final: t.revisionDisplayFinal,
   }[mode];
 }
 
-/** Whether a display puts one side of each change in the margin. */
+/** Whether a display puts the new side of each change in the margin: a
+ *  phone, which never has one, doesn't offer it. */
 export function needsMargin(mode: RevisionDisplay): boolean {
-  return mode === "original" || mode === "new";
+  return mode === "original";
+}
+
+/** Whether a display shows part of each change in the margin - the new
+ *  side, or the original Result only keeps out of the text - and so has
+ *  to fall back where there is none. On a phone Result only reads as the
+ *  result alone: there is no margin it could have shown them in. Without
+ *  a margin on a computer it showed the result with nothing to tell what
+ *  it changed. */
+export function usesMargin(mode: RevisionDisplay, phone = false): boolean {
+  return needsMargin(mode) || (mode === "final" && !phone);
 }
 
 /**
@@ -26,8 +36,9 @@ export function needsMargin(mode: RevisionDisplay): boolean {
 export function effectiveRevisionDisplay(
   mode: RevisionDisplay,
   marginAvailable: boolean,
+  phone = false,
 ): RevisionDisplay {
-  return !marginAvailable && needsMargin(mode) ? "inline" : mode;
+  return !marginAvailable && usesMargin(mode, phone) ? "inline" : mode;
 }
 
 /**
@@ -41,7 +52,7 @@ export function marginViewBlocked(
   mode: RevisionDisplay,
   { phone, marginAvailable }: { phone: boolean; marginAvailable: boolean },
 ): boolean {
-  return !phone && !marginAvailable && needsMargin(mode);
+  return !phone && !marginAvailable && usesMargin(mode);
 }
 
 /**

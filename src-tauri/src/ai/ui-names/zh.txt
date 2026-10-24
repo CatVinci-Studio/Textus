@@ -31,7 +31,6 @@ Enable AI completion = 开启续写
 Completion tone = 续写语气
 Write = 写作
 Review = 审阅
-Revise = 修订
 Accept = 采纳
 Reject = 拒绝
 Editor & Appearance (Settings page) = 编辑与外观

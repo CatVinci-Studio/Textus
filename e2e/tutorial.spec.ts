@@ -33,7 +33,7 @@ const UI = {
     tutorialDoneTitle: "All done",
     tutorialWatchNote: "Connect an AI later in",
     tutorialDoneMemory:
-      "Textus AI remembers your requirements and style over time; see the Memory tab in the AI panel.",
+      "Textus AI remembers your requirements and style over time; see the Project tab in the AI panel.",
   },
   zh: {
     appMenu: "菜单",
@@ -59,7 +59,7 @@ const UI = {
     tutorialDoneTitle: "完成",
     tutorialWatchNote: "之后在",
     tutorialDoneMemory:
-      "Textus AI 会慢慢记住你的要求和风格，可以在 AI 面板的“记忆”里查看。",
+      "Textus AI 会慢慢记住你的要求和风格，可以在 AI 面板的“项目”里查看。",
   },
 };
 
@@ -342,10 +342,10 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
   const aiLessons: [string, string, string | null, string][] = [
     [t.tutorialWriteTitle, "ai-panel", "Write", "Continue my notes"],
     [t.tutorialReviewTitle, "review", "Review", "Comment on my notes"],
-    [t.tutorialRevisionTitle, "revision", "Revise", "Make it more concise"],
+    [t.tutorialRevisionTitle, "revision", "Write", "Make it more concise"],
     [t.tutorialGrammarTitle, "grammar", null, notes.slip],
     [t.tutorialContinuationTitle, "continuation", null, "What really stops"],
-    [t.tutorialSkillsTitle, "skills", "Revise", "/tighten"],
+    [t.tutorialSkillsTitle, "skills", "Write", "/tighten"],
   ];
   for (const [title, clip, modeName, says] of aiLessons) {
     const card = lesson(page, title);
@@ -417,7 +417,7 @@ test("an AI lesson resumes in the mode it was left in", async ({ page }) => {
 /** What one language's live run types and what the canned AI answers. */
 interface LiveRun {
   lang: Lang;
-  mode: { label: string; write: string; review: string; revise: string };
+  mode: { label: string; write: string; review: string };
   write: { prompt: string; text: string };
   review: { prompt: string; comment: string };
   revise: { prompt: string; text: string };
@@ -429,7 +429,7 @@ interface LiveRun {
 const LIVE: LiveRun[] = [
   {
     lang: "en",
-    mode: { label: "Mode", write: "Write", review: "Review", revise: "Revise" },
+    mode: { label: "Mode", write: "Write", review: "Review" },
     write: {
       prompt: "Continue my notes with one more paragraph",
       text: "Hamlet thinks where others would act; the question itself becomes his way of waiting.",
@@ -456,7 +456,7 @@ const LIVE: LiveRun[] = [
   },
   {
     lang: "zh",
-    mode: { label: "模式", write: "写作", review: "审阅", revise: "修订" },
+    mode: { label: "模式", write: "写作", review: "审阅" },
     write: {
       prompt: "接着我的笔记再写一段",
       text: "黛玉觉得眼熟，宝玉说曾见过，两人一见如故，正是木石前盟在今生的回响。",
@@ -545,7 +545,7 @@ test.describe("connected", () => {
 
       // Revision: the notes' first sentence reworked, then decided.
       const revision = lesson(page, t.tutorialRevisionTitle);
-      await expect(mode).toHaveText(run.mode.revise);
+      await expect(mode).toHaveText(run.mode.write);
       await answer(page, {
         ai_agent_message: agentReply(
           run.revise.prompt,
@@ -614,7 +614,7 @@ test.describe("connected", () => {
 
       // Skills: a note selected, a message sent through the skill.
       const skills = lesson(page, t.tutorialSkillsTitle);
-      await expect(mode).toHaveText(run.mode.revise);
+      await expect(mode).toHaveText(run.mode.write);
       await answer(page, {
         ai_agent_message: [
           { kind: "User", text: run.skill },
@@ -638,8 +638,8 @@ test.describe("connected", () => {
       expect(await sentModes(page)).toEqual([
         "write",
         "review",
-        "revise",
-        "revise",
+        "write",
+        "write",
       ]);
       // And the classic is as it was quoted.
       await expect(editor(page).locator("blockquote").first()).toContainText(

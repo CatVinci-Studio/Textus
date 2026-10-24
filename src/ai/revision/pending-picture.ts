@@ -7,6 +7,7 @@ import {
   retryGeneratedImage,
 } from "./generated-images";
 import { currentStrings } from "../../i18n/current";
+import { enter } from "../../ui/moves";
 import "./pending-picture.css";
 
 /**
@@ -55,7 +56,16 @@ function settle(el: HTMLElement, id: string, alt: string, made: boolean) {
     const img = document.createElement("img");
     img.src = url;
     img.alt = alt;
-    el.replaceWith(img);
+    // In once it can be drawn, fading in where the frame was (ui/moves.ts):
+    // swapped in at once, it stood blank while it decoded, then appeared.
+    void img
+      .decode()
+      .catch(() => undefined)
+      .then(() => {
+        if (!el.isConnected) return;
+        el.replaceWith(img);
+        enter(img, { from: "none" });
+      });
     return;
   }
   el.classList.add("pending-picture-failed");

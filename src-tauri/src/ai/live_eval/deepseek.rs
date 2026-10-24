@@ -214,7 +214,7 @@ const DOCUMENT: &str = "# Field report\n\n## Methods\n\nWe sampeled ten coastal 
 #[ignore = "live API - see module docs"]
 fn live_deepseek_thinks_with_tools_across_steps_and_exchanges() {
     let Some(ds) = deepseek() else { return };
-    let registry = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
+    let registry = ToolRegistry::builtin(false, false, AgentMode::Write, false);
     let conventions = Conventions::default();
     let instructions = "You edit the user's Markdown document with the tools. The document isn't shown to you: read the part you need with read_document first, then propose changes with propose_edit, quoting the exact text. Reply in one sentence.";
     let mut total = 0.0;

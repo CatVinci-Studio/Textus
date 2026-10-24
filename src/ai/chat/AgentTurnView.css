@@ -414,6 +414,23 @@ button.agent-context-chip:hover {
 .agent-memory-chip-line {
   display: inline-flex;
   min-width: 0;
+  /* A button: the memory in the Memory tab (memory-focus.ts). */
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.agent-memory-chip-line:hover:not(:disabled) .agent-memory-chip-text {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.agent-memory-chip-line:disabled {
+  cursor: default;
 }
 
 .agent-memory-chip-scope {

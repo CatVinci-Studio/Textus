@@ -53,7 +53,6 @@ const labels = {
   attachmentNoVision: "No images",
   modeWrite: "Write",
   modeReview: "Review",
-  modeRevise: "Revise",
   modeLabel: "Mode",
   webSearch: "Web search",
   deepThinking: "Deep thinking",
@@ -74,7 +73,7 @@ function renderComposer(
       selectedText={null}
       busy={false}
       labels={labels}
-      defaultMode="revise"
+      defaultMode="write"
       defaultWebSearch={false}
       onSend={onSend}
       onStop={() => {}}
@@ -91,8 +90,8 @@ describe("the composer on a phone", () => {
     const modes = screen.getByRole("radiogroup", { name: "Mode" });
     expect(
       [...modes.querySelectorAll('[role="radio"]')].map((m) => m.textContent),
-    ).toEqual(["Write", "Review", "Revise"]);
-    expect(screen.getByRole("radio", { name: "Revise" })).toHaveAttribute(
+    ).toEqual(["Write", "Review"]);
+    expect(screen.getByRole("radio", { name: "Write" })).toHaveAttribute(
       "aria-checked",
       "true",
     );

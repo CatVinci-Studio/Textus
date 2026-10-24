@@ -61,7 +61,7 @@ describe.each(LANGS)("the tour in %s", (lang) => {
     expect(t.tutorialRevisionSend).toContain(t.proposalReject);
     expect(t.tutorialGrammarApply).toContain(t.grammarApply);
     expect(t.tutorialGrammarApplyPhone).toContain(t.grammarApply);
-    expect(t.tutorialDoneMemory).toContain(t.agentTabMemory);
+    expect(t.tutorialDoneMemory).toContain(t.agentTabProject);
   });
 
   it("has the learner type the practice notes' title and slip", () => {

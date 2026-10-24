@@ -137,23 +137,41 @@ describe("aligning a rewritten run", () => {
 
 describe("a change over several paragraphs", () => {
   it("is one change for each paragraph, when the paragraphs stay as many", () => {
-    // Sentences too unalike to pair: one run across both paragraphs.
+    // Sentences too unalike to pair: one run across both paragraphs, each
+    // long enough to keep its own change.
+    const long = (s: string) => `${s} ${s} ${s}`;
+    const a = long("Rain fell on the harbour all night long.");
+    const b = long("The wind rose before dawn and shook the masts.");
+    const c = long("The sea was flat and grey under the morning sky.");
+    const d = long("Nothing moved on the quay until the gulls came.");
+    const hunks = diffSentences(`${a}\n\n${b}`, `${c}\n\n${d}`);
+    expect(hunks).toEqual([
+      { kind: "change", before: `${a}\n\n`, after: `${c}\n\n` },
+      { kind: "change", before: b, after: d },
+    ]);
+  });
+
+  it("is one change for a run of short paragraphs rewritten", () => {
     const hunks = diffSentences(
-      "Rain fell.\n\nWind rose.",
-      "The sea was flat and grey.\n\nNothing moved on the quay.",
+      "Rain fell.\n\nWind rose.\n\nBoats came in.",
+      "The sea was flat and grey.\n\nNothing moved on the quay.\n\nThe boats returned.",
     );
     expect(hunks).toEqual([
       {
         kind: "change",
-        before: "Rain fell.\n\n",
-        after: "The sea was flat and grey.\n\n",
-      },
-      {
-        kind: "change",
-        before: "Wind rose.",
-        after: "Nothing moved on the quay.",
+        before: "Rain fell.\n\nWind rose.\n\nBoats came in.",
+        after:
+          "The sea was flat and grey.\n\nNothing moved on the quay.\n\nThe boats returned.",
       },
     ]);
+  });
+
+  it("keeps a heading or a list item its own change among short paragraphs", () => {
+    const hunks = diffSentences(
+      "Rain fell.\n\n## The harbour\n\nWind rose.",
+      "The sea was grey.\n\n## The quay\n\nNothing moved.",
+    );
+    expect(hunks.filter((h) => h.kind === "change")).toHaveLength(3);
   });
 
   it("is one change for a paragraph that was rewritten", () => {

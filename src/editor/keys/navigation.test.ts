@@ -193,6 +193,56 @@ describe("block boundary navigation", () => {
     expect(view.state.doc.childCount).toBe(2);
     view.destroy();
   });
+  it.each([
+    ["ArrowUp", 2],
+    ["ArrowDown", 20],
+  ] as const)(
+    "%s off a plain first or last line changes nothing (#350)",
+    (key, head) => {
+      const { view, press } = fixture(undefined, head);
+      vi.spyOn(view, "endOfTextblock").mockReturnValue(true);
+      const doc = view.state.doc;
+      expect(press(createEscapeTrailingBlockPlugin(), key)).toBe(false);
+      expect(view.state.doc).toBe(doc);
+      view.destroy();
+    },
+  );
+  it("takes an escape line away once the caret leaves it empty, and keeps one typed in", () => {
+    const plugin = createEscapeTrailingBlockPlugin();
+    const content = [block("code_block", "code"), block("paragraph", "after")];
+    const view = new EditorView(document.createElement("div"), {
+      state: EditorState.create({
+        doc: schema.node("doc", null, content),
+        plugins: [plugin],
+      }),
+    });
+    const original = view.state.doc;
+    const keydown = (key: string) =>
+      view.someProp("handleKeyDown", (f) =>
+        f(view, new KeyboardEvent("keydown", { key })),
+      );
+    view.dispatch(
+      view.state.tr.setSelection(TextSelection.create(view.state.doc, 1)),
+    );
+    expect(keydown("ArrowLeft")).toBe(true);
+    expect(view.state.doc.childCount).toBe(3);
+    // Back into the code block, nothing typed: as it was.
+    view.dispatch(
+      view.state.tr.setSelection(TextSelection.create(view.state.doc, 3)),
+    );
+    expect(view.state.doc.eq(original)).toBe(true);
+
+    view.dispatch(
+      view.state.tr.setSelection(TextSelection.create(view.state.doc, 1)),
+    );
+    keydown("ArrowLeft");
+    view.dispatch(view.state.tr.insertText("title", 1));
+    view.dispatch(
+      view.state.tr.setSelection(TextSelection.create(view.state.doc, 10)),
+    );
+    expect(view.state.doc.firstChild?.textContent).toBe("title");
+    view.destroy();
+  });
   it.each([true, false])(
     "table escape respects following content: %s",
     (hasFollowing) => {

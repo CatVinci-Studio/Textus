@@ -31,7 +31,6 @@ Enable AI completion = AI補完を有効にする
 Completion tone = 補完のトーン
 Write = 執筆
 Review = レビュー
-Revise = 推敲
 Accept = 適用
 Reject = 却下
 Editor & Appearance (Settings page) = 編集と外観

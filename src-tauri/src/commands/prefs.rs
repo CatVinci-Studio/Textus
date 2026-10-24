@@ -1,4 +1,5 @@
-//! prefs.json: the last editor window size, written by Rust itself on close.
+//! prefs.json: the last editor window's size and place, written by Rust
+//! itself on close.
 //! Settings Rust needs before any webview exists are read from settings.json
 //! (settings.rs), not from here.
 
@@ -67,10 +68,19 @@ pub fn read_editor_window_size(app: &AppHandle) -> Option<(f64, f64)> {
     (width >= 320.0 && height >= 240.0).then_some((width, height))
 }
 
-/// Records `window`'s size for read_editor_window_size, unless it is
-/// maximized, fullscreen or minimized - restoring that size would open a
-/// plain window filling the screen, or a degenerate one.
-pub fn remember_editor_window_size(app: &AppHandle, window: &tauri::Window) {
+/// Where the last closed editor window was (its outer position, logical
+/// px), for the main window to open there again (window_frame.rs).
+pub fn read_editor_window_position(app: &AppHandle) -> Option<(f64, f64)> {
+    let at = read_prefs(app).get("editor_window_position")?.clone();
+    Some((at.get(0)?.as_f64()?, at.get(1)?.as_f64()?))
+}
+
+/// Records `window`'s size and place for read_editor_window_size and
+/// read_editor_window_position, unless it is maximized, fullscreen or
+/// minimized - restoring that size would open a plain window filling the
+/// screen, or a degenerate one. Not the place on Wayland, which tells an
+/// app nothing of where its window is.
+pub fn remember_editor_window(app: &AppHandle, window: &tauri::Window) {
     let unsized_state = window.is_maximized().unwrap_or(true)
         || window.is_fullscreen().unwrap_or(true)
         || window.is_minimized().unwrap_or(true);
@@ -86,4 +96,15 @@ pub fn remember_editor_window_size(app: &AppHandle, window: &tauri::Window) {
         "editor_window_size",
         serde_json::json!([size.width.round(), size.height.round()]),
     );
+    if !crate::window_place_known() {
+        return;
+    }
+    if let Ok(at) = window.outer_position() {
+        let at = at.to_logical::<f64>(scale);
+        let _ = write_pref(
+            app,
+            "editor_window_position",
+            serde_json::json!([at.x.round(), at.y.round()]),
+        );
+    }
 }

@@ -31,7 +31,6 @@ Enable AI completion = KI-Vervollständigung aktivieren
 Completion tone = Tonfall der Vervollständigung
 Write = Schreiben
 Review = Prüfen
-Revise = Überarbeiten
 Accept = Annehmen
 Reject = Ablehnen
 Editor & Appearance (Settings page) = Editor & Design

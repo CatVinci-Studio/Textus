@@ -23,6 +23,8 @@ export const LOCAL_KEYS = {
   /** A provider's last fetched model list, by provider id
    *  (ai/model-info.ts). */
   fetchedModels: (provider: string) => `textus-fetched-models:${provider}`,
+  /** Where each file was last being read (document-view/reading-place.ts). */
+  readingPlaces: "textus-reading-places",
 } as const;
 
 /** The value under `key`, or null when it is absent or can't be read. */

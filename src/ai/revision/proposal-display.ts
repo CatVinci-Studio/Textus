@@ -30,8 +30,8 @@ export interface ProposalCanvas {
 export function typewriter(canvas: ProposalCanvas): ProposalStreamEffects {
   return {
     place: (callId, proposal) => canvas.show(callId, proposal, true),
-    feed: (callId, text, done) =>
-      streamPendingInsertText(callId, canvas.text(callId, text), done),
+    feed: (callId, text, done, final) =>
+      streamPendingInsertText(callId, canvas.text(callId, text), done, final),
     finalize: (callId, proposal) => {
       // A rewrite stopped while it typed in sentence by sentence keeps
       // what it reads as on screen.
@@ -72,8 +72,12 @@ export function drawn(canvas: ProposalCanvas): ProposalStreamEffects {
       draw(callId);
     },
     feed: (callId, text, done) => {
-      if (done) return forget(callId);
       latest.set(callId, text);
+      // Whole: drawn as it is now, the call's own add following.
+      if (done) {
+        draw(callId);
+        return forget(callId);
+      }
       if (!waiting.has(callId))
         waiting.set(
           callId,
@@ -114,7 +118,8 @@ export function perCall(
         chosen.delete(chosen.keys().next().value as string);
       display.place(callId, proposal);
     },
-    feed: (callId, text, done) => of(callId).feed(callId, text, done),
+    feed: (callId, text, done, final) =>
+      of(callId).feed(callId, text, done, final),
     finalize: (callId, proposal) => {
       of(callId).finalize(callId, proposal);
       chosen.delete(callId);

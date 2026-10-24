@@ -27,15 +27,6 @@ pub(crate) const EDIT_ACTIONS: [&str; 7] = [
     "insert_at_cursor",
 ];
 
-/// The actions that only add text - all Write mode's propose_edit offers
-/// (agent::AgentMode).
-pub(crate) const INSERT_ACTIONS: [&str; 4] = [
-    "append",
-    "insert_at_cursor",
-    "insert_after",
-    "insert_before",
-];
-
 pub(super) fn needs_anchor(action: &str) -> bool {
     // replace_selection targets the user's captured selection, so there is
     // no anchor to locate (and the selection may not be unique in the
@@ -198,13 +189,33 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         unmade.push_str(&ledger.pictures_placed(text));
     }
     // A rewrite that swapped a picture keeps the original
-    // (doc_blocks::keep_pictures): the swap is generate_image's.
+    // (doc_blocks::keep_pictures): the swap is generate_image's. One that
+    // kept its pictures says so too, with their ids: told only to redo a
+    // picture with generate_image, a model that rewrote the text around it
+    // said it had changed the picture and stopped (1.2.1, GPT-6.1 Sol).
     if parsed
         .get(crate::ai::doc_blocks::PICTURES_KEPT_KEY)
         .is_some()
     {
         unmade.push_str(PICTURE_KEPT_NOTE);
     }
+    // Said last, after what to reply: said before it, the reply came first
+    // and the turn ended there.
+    let pictures = parsed
+        .get(crate::ai::doc_blocks::PICTURES_IN_RUN_KEY)
+        .and_then(|v| v.as_array())
+        .filter(|ids| !ids.is_empty() && parsed.get(crate::ai::doc_blocks::PICTURES_KEPT_KEY).is_none())
+        .map(|ids| {
+            let ids: Vec<String> = ids
+                .iter()
+                .filter_map(|id| id.as_str().map(|id| format!("[#{id}]")))
+                .collect();
+            format!(
+                " Its pictures ({}) are kept in it as they were. If the user asked for a picture to change too, it hasn't yet: before you reply, redo it with generate_image, `replace` with its block.",
+                ids.join(", ")
+            )
+        })
+        .unwrap_or_default();
     let into = if joins {
         " It changes text you proposed that the user hasn't decided on yet: it goes into that proposal, which now reads with it."
     } else if again {
@@ -212,7 +223,7 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     } else {
         ""
     };
-    format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{into}{size}{unmade} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
+    format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{into}{size}{unmade} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.{pictures}")
 }
 
 /// Whether `anchor` is quoted from exactly one place in text proposed and
@@ -226,31 +237,6 @@ fn quotes_undecided(ctx: &ToolContext, anchor: &str) -> bool {
         .map(|text| text.matches(anchor).count())
         .sum();
     found == 1
-}
-
-/// Write mode's propose_edit. Its schema offers only INSERT_ACTIONS, but a
-/// model may send another action anyway; it is refused here, so nothing
-/// that changes or removes the user's text reaches the editor in this mode.
-pub(super) fn propose_insertion(ctx: &ToolContext, arguments: &str) -> String {
-    let action = serde_json::from_str::<serde_json::Value>(arguments)
-        .ok()
-        .and_then(|v| v.get("action")?.as_str().map(str::to_string))
-        .unwrap_or_default();
-    // Text it proposed and the user hasn't decided on isn't theirs yet:
-    // that it may change.
-    let own = serde_json::from_str::<serde_json::Value>(arguments)
-        .ok()
-        .and_then(|v| v.get("anchor")?.as_str().map(str::to_string))
-        .is_some_and(|anchor| {
-            !anchor.is_empty() && !ctx.document.contains(&anchor) && quotes_undecided(ctx, &anchor)
-        });
-    if !INSERT_ACTIONS.contains(&action.as_str()) && !own {
-        return format!(
-            "Not proposed: Write mode only adds text, with {} - `{action}` would change or remove text that is already there. Add the new text instead, or tell the user that changing existing text needs Revise mode.",
-            INSERT_ACTIONS.join(", ")
-        );
-    }
-    propose_edit(ctx, arguments)
 }
 
 /// How long a stretch of text is, in the unit its language counts in:

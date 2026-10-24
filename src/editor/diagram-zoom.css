@@ -1,0 +1,95 @@
+/* A drawn diagram's enlarge button (diagram-zoom.ts): in its corner, shown
+   while the pointer is over the diagram or the button has focus, as the
+   code block's header is. */
+.mermaid-preview {
+  position: relative;
+}
+.mermaid-zoom {
+  position: absolute;
+  top: 0.4em;
+  right: 0.4em;
+  display: grid;
+  place-items: center;
+  width: 1.8em;
+  height: 1.8em;
+  padding: 0;
+  color: var(--editor-muted);
+  background: var(--editor-bg, var(--bg));
+  border: 1px solid var(--editor-border);
+  border-radius: var(--radius-control);
+  cursor: zoom-in;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.mermaid-preview:hover .mermaid-zoom,
+.mermaid-zoom:focus-visible {
+  opacity: 1;
+}
+.mermaid-zoom:hover {
+  color: var(--editor-text);
+}
+/* Two corner arrows pointing out, in the button's text colour. */
+.mermaid-zoom-icon {
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/* The viewer over the window: the drawing moves and scales by transform
+   only (design-language.md), from its top-left corner. */
+.diagram-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: var(--overlay-bg);
+  animation: motion-fade-in var(--dur-base) var(--ease-out) both;
+}
+.diagram-viewer-leaving {
+  animation: motion-fade-out var(--dur-fast) var(--ease-out) both;
+}
+.diagram-viewer-stage {
+  position: absolute;
+  inset: 3rem;
+  overflow: hidden;
+  border-radius: var(--radius-card, 10px);
+  cursor: grab;
+  touch-action: none;
+}
+.diagram-viewer-dragging {
+  cursor: grabbing;
+}
+.diagram-viewer-drawing {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  transform-origin: 0 0;
+}
+.diagram-viewer-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.diagram-viewer-hint {
+  position: absolute;
+  bottom: 0.9rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
+  color: var(--text-muted, var(--text));
+  background: var(--bg);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-control);
+  pointer-events: none;
+}

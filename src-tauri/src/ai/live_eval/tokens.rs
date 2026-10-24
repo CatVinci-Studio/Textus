@@ -151,13 +151,13 @@ fn live_token_breakdown() {
     for (label, ws, mode, ui) in [
         ("draft, Write, en", &draft, AgentMode::Write, "en"),
         ("draft, Review, en", &draft, AgentMode::Review, "en"),
-        ("draft, Revise, en", &draft, AgentMode::Revise, "en"),
-        ("draft, Revise, zh UI", &draft, AgentMode::Revise, "zh"),
-        ("project, Revise, en", &project, AgentMode::Revise, "en"),
+        ("draft, Write, en", &draft, AgentMode::Write, "en"),
+        ("draft, Write, zh UI", &draft, AgentMode::Write, "zh"),
+        ("project, Write, en", &project, AgentMode::Write, "en"),
         (
-            "project, Revise, remember on",
+            "project, Write, remember on",
             &project,
-            AgentMode::Revise,
+            AgentMode::Write,
             "en",
         ),
     ] {
@@ -179,12 +179,12 @@ fn live_token_breakdown() {
         );
     }
 
-    println!("\n## System prompt by section (project, Revise, en)\n");
+    println!("\n## System prompt by section (project, Write, en)\n");
     let system = build_instructions(
         &project,
         &Default::default(),
         true,
-        AgentMode::Revise,
+        AgentMode::Write,
         "",
         "en",
     );
@@ -202,8 +202,8 @@ fn live_token_breakdown() {
         index.lines().count()
     );
 
-    println!("\n## Each tool's marginal cost (project, Revise, images)\n");
-    let specs = tools::ToolRegistry::builtin(true, true, AgentMode::Revise, true).specs();
+    println!("\n## Each tool's marginal cost (project, Write, images)\n");
+    let specs = tools::ToolRegistry::builtin(true, true, AgentMode::Write, true).specs();
     let all: Vec<Value> = specs.iter().map(tool_json).collect();
     let none = count(key, AGENT_MODEL, None, &[], "x");
     let with_all = count(key, AGENT_MODEL, None, &all, "x");
@@ -379,9 +379,9 @@ fn live_token_usage() {
     let mut total = harness::Usage::default();
     let runs = [
         (
-            "Revise, short doc",
+            "Write, short doc",
             run(
-                AgentMode::Revise,
+                AgentMode::Write,
                 &draft,
                 ThinkingLevel::Auto,
                 en.doc,
@@ -411,7 +411,7 @@ fn live_token_usage() {
         (
             "Quick Ask (Fast)",
             run(
-                AgentMode::Revise,
+                AgentMode::Write,
                 &draft,
                 ThinkingLevel::Fast,
                 en.doc,
@@ -419,9 +419,9 @@ fn live_token_usage() {
             ),
         ),
         (
-            "Revise, 60k doc",
+            "Write, 60k doc",
             run(
-                AgentMode::Revise,
+                AgentMode::Write,
                 &draft,
                 ThinkingLevel::Auto,
                 &super::long_doc(),

@@ -58,34 +58,60 @@ test("line numbers are off by default", async ({ page }) => {
   expect(lines.length).toBeGreaterThan(4);
 });
 
-test("line numbers sit beside their lines, a long line scrolling instead of wrapping", async ({
+test("line numbers sit beside their lines, a long line wrapping as without them (#353)", async ({
   page,
 }) => {
   await openWithCode(page, { codeLineNumbers: true }, LISTING);
   const numbers = page.locator(`${block} .code-line-gutter > span`);
   await expect(numbers).toHaveCount(39);
   await expect(numbers.last()).toHaveText("39");
-  const lines = await codeLineMiddles(page);
-  // One visual line per line, the long one too: no wrapping.
-  expect(lines).toHaveLength(39);
-  const mids = await numbers.evaluateAll((spans) =>
-    spans.map((span) => {
-      const box = span.getBoundingClientRect();
-      return box.top + box.height / 2;
-    }),
-  );
-  for (let i = 0; i < 39; i++)
-    expect(Math.abs(mids[i] - lines[i]), `line ${i + 1}`).toBeLessThan(4);
-  // The code scrolls sideways; the numbers stay where they are.
+  // The long line wraps: more rows than lines, and nothing to scroll.
+  expect((await codeLineMiddles(page)).length).toBeGreaterThan(39);
   const code = page.locator(`${block} code`);
-  expect(await code.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(
+  expect(await code.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
     true,
   );
-  const before = await numbers.first().boundingBox();
-  await code.evaluate((el) => (el.scrollLeft = 200));
-  expect(await code.evaluate((el) => el.scrollLeft)).toBe(200);
-  const after = await numbers.first().boundingBox();
-  expect(after!.x).toBeCloseTo(before!.x, 0);
+  // Each number at the top of its line, the wrapped one's too, and as tall
+  // as all of the line's rows.
+  await expect(async () => {
+    const { tops, boxes } = await code.evaluate((el) => {
+      const starts: number[] = [];
+      const range = document.createRange();
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      let lineStart = true;
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const text = node as Text;
+        for (let i = 0; i < text.data.length; i++) {
+          if (lineStart) {
+            range.setStart(text, i);
+            range.setEnd(text, i + 1);
+            starts.push(range.getClientRects()[0].top);
+            lineStart = false;
+          }
+          if (text.data[i] === "\n") lineStart = true;
+        }
+      }
+      const spans = el.parentElement!.querySelectorAll(
+        ".code-line-gutter > span",
+      );
+      return {
+        tops: starts,
+        boxes: Array.from(spans, (span) => {
+          const box = span.getBoundingClientRect();
+          return { top: box.top, bottom: box.bottom };
+        }),
+      };
+    });
+    expect(tops).toHaveLength(39);
+    for (let i = 0; i < 39; i++) {
+      expect(Math.abs(boxes[i].top - tops[i]), `line ${i + 1}`).toBeLessThan(4);
+      if (i < 38)
+        expect(
+          Math.abs(boxes[i].bottom - tops[i + 1]),
+          `line ${i + 1} ends where line ${i + 2} starts`,
+        ).toBeLessThan(4);
+    }
+  }).toPass();
 });
 
 test("a line typed into the block gets its number", async ({ page }) => {

@@ -51,6 +51,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::tree_ops::tree_create_document,
                 crate::commands::tree_ops::tree_create_folder,
                 crate::commands::tree_ops::tree_move_entry,
+                crate::commands::tree_ops::tree_rename_entry,
+                crate::commands::tree_ops::tree_trash_entry,
                 crate::commands::vault::resolve_vault_image,
                 crate::commands::vault::resolve_vault_note,
                 crate::commands::word_import::open_word_document,
@@ -86,6 +88,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::launch::take_pending_menu_event,
                 crate::launch::take_pending_open_folder,
                 crate::launch::open_paths,
+                crate::launch::open_path_in_new_window,
                 crate::tab_drag::take_detached_tab,
                 crate::tab_drag::list_window_bounds,
                 crate::tab_drag::start_window_drag_tracking,
@@ -123,6 +126,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::default_editor::set_default_editor,
                 crate::distribution::app_distribution,
                 crate::commands::update::check_for_update::<tauri::Wry>,
+                crate::commands::update::release_instance::<tauri::Wry>,
             ]),
         ),
         (
@@ -204,6 +208,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::ai::images::ai_generated_image,
                     crate::ai::images::ai_retry_generated_image,
                     crate::ai::images::ai_discard_generated_image,
+                    crate::ai::kept_proposals::kept_proposals_read,
+                    crate::ai::kept_proposals::kept_proposals_write,
                 ])
                 // ai_agent_message takes more parameters than specta's
                 // function traits go to (ten), so it is not generated

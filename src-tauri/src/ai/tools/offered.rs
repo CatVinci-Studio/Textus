@@ -4,8 +4,8 @@
 
 use super::*;
 
-/// propose_edit as Revise mode offers it: every action.
-pub(crate) const PROPOSE_EDIT_DESCRIPTION: &str = "Propose one edit to the document. Nothing is modified directly: the user reviews the proposal and applies it with one click. Call once per distinct edit. Pick the action that matches the intent: `replace` swaps `anchor` for `text`; `replace_selection` swaps the user's currently selected text (the <selected-text> block in their message; no `anchor` needed) for `text`; `insert_before`/`insert_after` add `text` around an untouched `anchor` - inside the paragraph when the anchor is a phrase or sentence within it (write `text` as words that read on from it - after a paragraph's last sentence, this continues the paragraph), as a new paragraph when the anchor is a whole block or `text` is block content (a heading, list, several paragraphs), and as a new line of the same table or list when the anchor is a whole row or list item line and `text` is another one; `delete` removes `anchor`; `append` adds `text` at the end of the document; `insert_at_cursor` adds `text` exactly where the user's cursor is (only when their message carries a <cursor> block showing it; no `anchor` needed). Name the target by its block: every block of the document (a paragraph, a heading, a whole list, a quote, a table, a code block, a picture) starts with its id, like `[#k3f9]`, and `block` takes that id - write it first, before anything else, so the user sees where the edit goes at once. With `block` alone, `replace` swaps the whole block for `text`, `delete` removes it, and `insert_before`/`insert_after` add `text` as a new block next to it. To change a few words inside a block, give `block` and, as `anchor`, just those words quoted from it - not the whole block; to add text inside a block (after a sentence, or a list item of a list), give `block` and, as `anchor`, the words or the item line it goes next to. To rewrite a run of consecutive blocks in one replace - however long: a section, the whole document - give the first as `block` and the last as `last_block`, and the run rewritten as `text`. The user still decides on each paragraph by itself. Pictures in the run stay as they are, written in `text` as they were: a text edit never changes or removes a picture - generate_image changes one, by its block, and `delete` by its block removes one. The ids aren't part of the text: never write them in `text` or `anchor`. Words quoted in `anchor` must occur exactly once in the block - quote a few more if they repeat. Without `block` is only for text you proposed earlier that the user hasn't decided on, which has no id: then `anchor` quotes it verbatim, once.";
+/// propose_edit as Write mode offers it: every action.
+pub(crate) const PROPOSE_EDIT_DESCRIPTION: &str = "Propose edits to the document. Nothing is modified directly: the user reviews each proposal and applies it with one click. Every edit of the reply goes in this one call's `edits`, one item per distinct edit, in document order. For each, pick the action that matches the intent: `replace` swaps `anchor` for `text`; `replace_selection` swaps the user's currently selected text (the <selected-text> block in their message; no `anchor` needed) for `text`; `insert_before`/`insert_after` add `text` around an untouched `anchor` - inside the paragraph when the anchor is a phrase or sentence within it (write `text` as words that read on from it - after a paragraph's last sentence, this continues the paragraph), as a new paragraph when the anchor is a whole block or `text` is block content (a heading, list, several paragraphs), and as a new line of the same table or list when the anchor is a whole row or list item line and `text` is another one; `delete` removes `anchor`; `append` adds `text` at the end of the document; `insert_at_cursor` adds `text` exactly where the user's cursor is (only when their message carries a <cursor> block showing it; no `anchor` needed). Name the target by its block: every block of the document (a paragraph, a heading, a whole list, a quote, a table, a code block, a picture) starts with its id, like `[#k3f9]`, and `block` takes that id - write it first, before anything else, so the user sees where the edit goes at once. With `block` alone, `replace` swaps the whole block for `text`, `delete` removes it, and `insert_before`/`insert_after` add `text` as a new block next to it. To change a few words inside a block, give `block` and, as `anchor`, just those words quoted from it - not the whole block; to add text inside a block (after a sentence, or a list item of a list), give `block` and, as `anchor`, the words or the item line it goes next to. To rewrite a run of consecutive blocks in one replace - however long: a section, the whole document - give the first as `block` and the last as `last_block`, and the run rewritten as `text`. The user still decides on each paragraph by itself. Pictures in the run stay as they are, written in `text` as they were: a text edit never changes or removes a picture. When the user asks for a picture to change too (its people, its scene, its style), redo it with generate_image by its block first, then propose the text, in the same reply - writing that you changed it is not changing it. `delete` by its block removes one. The ids aren't part of the text: never write them in `text` or `anchor`. Words quoted in `anchor` must occur exactly once in the block - quote a few more if they repeat. Without `block` is only for text you proposed earlier that the user hasn't decided on, which has no id: then `anchor` quotes it verbatim, once.";
 
 pub(crate) const FIND_FILES_DESCRIPTION: &str = "Find files in the project folder by name - text files, and PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files (case-insensitive; every word must appear in the path, so \"chapter 3\" finds drafts/chapter-3.md). Markdown and plain-text documents come first. Leave `name` out to list every file, to see what reference material there is; then read_file.";
 
@@ -136,24 +136,34 @@ pub fn builtin_tools<'a>(
     tools.push(Tool {
         spec: ToolSpec {
             name: ADD_COMMENT_TOOL_NAME.into(),
-            description: "Pin a piece of feedback to a passage without changing it - for reviews and critique (\"what's weak here\", \"check this draft\"). One call per point; name the block it is about by its id as `block`, and quote `anchor` only for a few words inside that block it is about. The user sees each comment as a card that jumps to its passage, so keep your reply to a short overall summary.".into(),
+            description: "Pin feedback to passages without changing them - for reviews and critique (\"what's weak here\", \"check this draft\"). Every point of the reply goes in this one call's `comments`, in document order: name the block each is about by its id as `block`, and quote `anchor` only for a few words inside that block it is about. The user sees each comment as a card that jumps to its passage, so keep your reply to a short overall summary.".into(),
             parameters: json!({
                 "type": "object",
                 "properties": {
-                    "block": {
-                        "type": "string",
-                        "description": "The id shown before the block the comment is about, like `k3f9` from `[#k3f9]`"
-                    },
-                    "anchor": {
-                        "type": "string",
-                        "description": "Only for a few words inside that block: those words, verbatim. Left out, the comment is about the whole block."
-                    },
-                    "comment": {
-                        "type": "string",
-                        "description": "The feedback, in the user's language - specific and actionable"
+                    "comments": {
+                        "type": "array",
+                        "description": "The points, one per passage (each word, when asked to gloss words), in document order",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "block": {
+                                    "type": "string",
+                                    "description": "The id shown before the block the comment is about, like `k3f9` from `[#k3f9]`"
+                                },
+                                "anchor": {
+                                    "type": "string",
+                                    "description": "Only for a few words inside that block: those words, verbatim. Left out, the comment is about the whole block."
+                                },
+                                "comment": {
+                                    "type": "string",
+                                    "description": "The feedback, in the user's language - specific and actionable"
+                                }
+                            },
+                            "required": ["block", "comment"]
+                        }
                     }
                 },
-                "required": ["block", "comment"],
+                "required": ["comments"],
             }),
         },
         access: Access::Proposes,
@@ -163,59 +173,57 @@ pub fn builtin_tools<'a>(
 
     // Review is structurally read-only: the model never receives the edit
     // tool, so a provider cannot accidentally ignore a prompt-only mode
-    // instruction and create a proposal anyway. Write and Revise get the
-    // same tool - one tool list, so switching between them keeps the
-    // provider's cached prefix (docs/design/ai-tokens.md) - and in Write
-    // the mode section says it only adds text, which propose_insertion
-    // holds it to: any other action is refused.
-    for (run, modes) in [
-        (
-            propose_edit as fn(&ToolContext, &str) -> String,
-            &[AgentMode::Revise][..],
-        ),
-        (propose_insertion as _, &[AgentMode::Write][..]),
-    ] {
-        tools.push(Tool {
-            spec: ToolSpec {
-                name: PROPOSE_EDIT_TOOL_NAME.into(),
-                description: PROPOSE_EDIT_DESCRIPTION.into(),
-                parameters: json!({
-                    "type": "object",
-                    "properties": {
-                        "action": {
-                            "type": "string",
-                            "enum": EDIT_ACTIONS,
-                            "description": "What kind of edit this is"
-                        },
-                        "block": {
-                            "type": "string",
-                            "description": "The id of the block the edit targets, as the document shows it before the block (`k3f9` for `[#k3f9]`). Write it first."
-                        },
-                        "last_block": {
-                            "type": "string",
-                            "description": "Only to rewrite a run of consecutive blocks in one replace: the id of the last of them, `block` being the first; `text` is then the run rewritten."
-                        },
-                        "anchor": {
-                            "type": "string",
-                            "description": "With `block`: only the few words inside that block the edit changes, quoted verbatim, once in the block - leave it out to change the whole block. Without `block` (only text you proposed that the user hasn't decided on): that text, quoted verbatim."
-                        },
-                        "text": {
-                            "type": "string",
-                            "description": "The new content (markdown). Required for every action except `delete`."
-                        },
-                        "reason": {
-                            "type": "string",
-                            "description": "One short sentence, in the language of your reply, on why this change - shown on the proposal card so the user can judge it at a glance (e.g. \"Cut the repeated point about cost\")."
+    // instruction and create a proposal anyway.
+    tools.push(Tool {
+        spec: ToolSpec {
+            name: PROPOSE_EDIT_TOOL_NAME.into(),
+            description: PROPOSE_EDIT_DESCRIPTION.into(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "edits": {
+                        "type": "array",
+                        "description": "Every edit of this reply, in document order",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "action": {
+                                    "type": "string",
+                                    "enum": EDIT_ACTIONS,
+                                    "description": "What kind of edit this is"
+                                },
+                                "block": {
+                                    "type": "string",
+                                    "description": "The id of the block the edit targets, as the document shows it before the block (`k3f9` for `[#k3f9]`). Write it first."
+                                },
+                                "last_block": {
+                                    "type": "string",
+                                    "description": "Only to rewrite a run of consecutive blocks in one replace: the id of the last of them, `block` being the first; `text` is then the run rewritten."
+                                },
+                                "anchor": {
+                                    "type": "string",
+                                    "description": "With `block`: only the few words inside that block the edit changes, quoted verbatim, once in the block - leave it out to change the whole block. Without `block` (only text you proposed that the user hasn't decided on): that text, quoted verbatim."
+                                },
+                                "text": {
+                                    "type": "string",
+                                    "description": "The new content (markdown). Required for every action except `delete`."
+                                },
+                                "reason": {
+                                    "type": "string",
+                                    "description": "One short sentence, in the language of your reply, on why this change - shown on the proposal card so the user can judge it at a glance (e.g. \"Cut the repeated point about cost\")."
+                                }
+                            },
+                            "required": ["action"],
                         }
-                    },
-                    "required": ["action"],
-                }),
-            },
-            access: Access::Proposes,
-            modes,
-            run: Run::Text(run),
-        });
-    }
+                    }
+                },
+                "required": ["edits"],
+            }),
+        },
+        access: Access::Proposes,
+        modes: EDITING_MODES,
+        run: Run::Text(propose_edit),
+    });
 
     if has_skills {
         tools.push(Tool {

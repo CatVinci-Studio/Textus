@@ -107,17 +107,11 @@
 .app-menu-flyout {
   position: fixed;
   z-index: 311;
-  animation: app-menu-flyout-in var(--dur-fast) var(--ease-out);
+  --enter-x: calc(var(--motion-distance-sm) * -1);
+  animation: motion-enter var(--dur-fast) var(--ease-out);
 }
 
 /* Another submenu was open a moment ago: this one replaces it at once. */
 .app-menu-flyout-instant {
   animation: none;
-}
-
-@keyframes app-menu-flyout-in {
-  from {
-    opacity: 0;
-    transform: translateX(calc(var(--motion-distance-sm) * -1));
-  }
 }

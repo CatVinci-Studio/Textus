@@ -94,7 +94,40 @@ const section = () =>
 
 afterEach(cleanup);
 
-describe("the Memory tab's AI remembered section", () => {
+describe("the Project tab", () => {
+  it("lists writing style, writing instructions, the library and memory, in that order, each saying what it is", () => {
+    renderTab(workspace({}));
+    const titles = [...document.querySelectorAll(".memory-section > h4")].map(
+      (h) => h.firstChild?.textContent,
+    );
+    expect(titles).toEqual([
+      t.memoryStyle,
+      t.memoryInstructions,
+      t.memoryLibrary,
+      t.memoryRemembered,
+    ]);
+    for (const hint of [
+      t.memoryStyleHint,
+      t.memoryInstructionsHint,
+      t.memoryLibraryHint,
+      t.memoryRememberedHint,
+    ])
+      expect(screen.getByText(hint)).toBeInTheDocument();
+  });
+
+  it("leaves the skills to the slash menu", () => {
+    renderTab(
+      workspace({
+        skills: [
+          { name: "outline", description: "Outline the piece" },
+        ] as never,
+      }),
+    );
+    expect(screen.queryByText("/outline")).not.toBeInTheDocument();
+  });
+});
+
+describe("the Project tab's Memory section", () => {
   it("lists personal memories, then the project's; the facts it wrote stay in the library", () => {
     renderTab(
       workspace({
@@ -285,7 +318,7 @@ describe("the Memory tab's AI remembered section", () => {
   });
 });
 
-describe("the Memory tab's library", () => {
+describe("the Project tab's library", () => {
   it("marks exactly the entries Rust says were sent, and names those left out", () => {
     const lin = entry({});
     const wu = entry({ name: "Wu", file: ".textus/library/Wu.md" });

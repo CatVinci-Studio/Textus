@@ -27,6 +27,8 @@ export interface ReviewMarginLabels {
   proposalKeepSentence: string;
   proposalDeleteSentence: string;
   proposalDeletedSentence: string;
+  /** A card's heading for a sentence a rewrite adds, with no original. */
+  proposalAddedSentence: string;
   // What a change of a whole block (a table, a code block) is called on
   // its card - a picture is shown.
   proposalBlockPicture: string;
@@ -51,8 +53,9 @@ export type MarginItem =
       to: number;
       after: string;
       before: string;
-      /** Which side the margin shows: the replacement ("original": the
-       *  original stays in the text) or the original ("new"). */
+      /** Which side the card shows: the replacement ("original": the
+       *  original stays in the text) or what it replaces ("new": the result
+       *  is in the text - Result only). */
       shows: "original" | "new";
       take: boolean | null;
       /** Its rewrite is still streaming in: shown, not decided yet. */
@@ -63,8 +66,9 @@ export const STACK_GAP = 8;
 /** How far a card can be pushed down by the ones above it and still draw
  *  its line at full strength. */
 export const LINE_DRIFT = 20;
-/** A chip's height (.review-note-chip): one line of the card. */
-export const CHIP_HEIGHT = 30;
+/** A chip's height (.review-note-chip): the card's heading and one line
+ *  of its text under it. */
+export const CHIP_HEIGHT = 35;
 /** The least room a cut card is given - its heading and a line; with less,
  *  it is a chip. */
 export const MIN_CUT = 88;
@@ -88,6 +92,8 @@ export interface Placed {
   /** The key of the run's first card when the run shows as one chip (a
    *  group, MarginGroup), all its cards at the group's place; else null. */
   group: string | null;
+  /** The top-level block its passage is in: a group is a paragraph's. */
+  block?: number;
   /** Where the line starts: the end of the passage's first line, in the
    *  layer's coordinates. */
   ax: number;
@@ -133,8 +139,11 @@ export function placeColumn(contentEl: HTMLElement, marginLeft: string) {
  * about its paragraph's height, notes on adjacent lines a line each (a
  * chip). A cut card opens whole over the ones below (ReviewMargin), so
  * opening one moves nothing. Where even chips run far below their lines -
- * more notes than the paragraph has lines - the run is one chip, which
- * opens to a list of them. `heightOf` is a card's whole height.
+ * more notes than the paragraph has lines - each paragraph's cards in the
+ * run are one chip, which opens to a list of them (a paragraph with one
+ * card, a chip of its own). Grouped as one run, forty notes over a page
+ * were one chip beside the first paragraph (1.2.1). `heightOf` is a card's
+ * whole height.
  */
 export function stackCards(
   placed: Placed[],
@@ -176,17 +185,24 @@ export function stackCards(
       Math.max(...placed.slice(start, run.end).map((p) => p.drift));
     if (most() > CROWDED_DRIFT) run = lay(start, run.end);
     if (most() > GROUP_DRIFT) {
-      const top = Math.max(want[start], floor);
-      const key = placed[start].item.key;
-      for (let i = start; i < run.end; i++)
-        Object.assign(placed[i], {
-          top,
-          drift: Math.max(0, top - want[i]),
-          cut: CHIP_HEIGHT,
-          chip: true,
-          group: key,
-        });
-      run = { end: run.end, below: top + CHIP_HEIGHT + STACK_GAP };
+      let below = floor;
+      for (let from = start; from < run.end;) {
+        let to = from + 1;
+        while (to < run.end && placed[to].block === placed[from].block) to++;
+        const top = Math.max(want[from], below);
+        const key = to - from > 1 ? placed[from].item.key : null;
+        for (let i = from; i < to; i++)
+          Object.assign(placed[i], {
+            top,
+            drift: Math.max(0, top - want[i]),
+            cut: CHIP_HEIGHT,
+            chip: true,
+            group: key,
+          });
+        below = top + CHIP_HEIGHT + STACK_GAP;
+        from = to;
+      }
+      run = { end: run.end, below };
     }
     floor = run.below;
     start = run.end;

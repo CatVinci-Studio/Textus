@@ -85,7 +85,10 @@ test("an agent reply shows a reasoned edit, a sentence picker and a comment", as
 }) => {
   // Wide enough for the margin, where the sentences and the note go.
   await page.setViewportSize({ width: 1440, height: 900 });
-  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
+  await openApp(page, {
+    settings: { revisionDisplay: "original" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
   await pasteMarkdown(page, SAMPLE_DOC);
   const anchor =
     "这项研究在三个街区进行。我们花了整整两个月的时间，和住在这些街区里的居民进行了一对一的、比较深入的访谈。一共访谈了四十六位居民，内容涵盖了很多方面。";
@@ -162,9 +165,13 @@ test("an agent reply shows a reasoned edit, a sentence picker and a comment", as
 test("the last sentence decided in the text applies the edit", async ({
   page,
 }) => {
-  // No room for a margin: the replacements and their ✓ / ✕ are in the text.
+  // No room for a margin: the margin view's replacements and their ✓ / ✕
+  // are in the text.
   await page.setViewportSize({ width: 900, height: 780 });
-  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
+  await openApp(page, {
+    settings: { revisionDisplay: "original" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
   await pasteMarkdown(page, SAMPLE_DOC);
   const anchor =
     "这项研究在三个街区进行。我们花了整整两个月的时间，和住在这些街区里的居民进行了一对一的、比较深入的访谈。一共访谈了四十六位居民，内容涵盖了很多方面。";
@@ -310,14 +317,14 @@ test("a pending replace keeps its strike on its text while the user types above 
   await expect(page.locator(".milkdown")).toContainText("Bravo 2 words here.");
 });
 
-test("Quick Ask opens on a selection in Revise mode", async ({ page }) => {
+test("Quick Ask opens on a selection in Write mode", async ({ page }) => {
   await openApp(page);
   await pasteMarkdown(page, SAMPLE_DOC);
   await page.locator(".milkdown p").nth(1).click({ clickCount: 3 });
   await page.keyboard.press("Control+Shift+K");
   await expect(page.locator(".inline-chat")).toBeVisible();
   await expect(page.locator(".inline-chat .inline-chat-mode")).toHaveText(
-    "修订",
+    "写作",
   );
   await expect(page).toHaveScreenshot("quick-ask.png");
 });
@@ -391,7 +398,9 @@ test("Quick Ask stays under its paragraph when an edit arrives", async ({
   await expect(page.locator(".inline-chat-input")).toBeFocused();
   await page.keyboard.type("精简");
   await page.keyboard.press("Enter");
-  await expect(page.locator(".milkdown .pending-delete").first()).toBeVisible();
+  await expect(
+    page.locator(".milkdown .pending-delete").first(),
+  ).toBeAttached();
   // Right after the edited paragraph - it used to jump to the document's
   // end, out of sight, leaving the edit with no visible controls.
   const quoteTop = (await page.locator(".milkdown blockquote").boundingBox())!
@@ -739,37 +748,39 @@ test("the review bar switches how revisions show, as Word's markup views", async
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("精简");
   await composer.press("Enter");
-  // Default: the original in the text, the replacements in the margin.
-  await expect(page.locator(".revision-note")).toHaveCount(2);
-  const pick = async (name: string) => {
-    await page.locator(".review-bar-view-button").click();
-    await page.getByRole("menuitemradio", { name }).click();
-  };
-  // Changes in the text, the original in the margin.
-  await pick("修改在正文，原文在页边");
-  await expect(page.locator(".revision-note-original")).toHaveCount(2);
-  // The originals stay in the document, out of the flow.
-  await expect(page.locator(".milkdown .pending-sentence")).toHaveCount(2);
-  await expect(page.locator(".milkdown .pending-sentence:visible")).toHaveCount(
-    0,
-  );
-  await expect(page.locator(".milkdown")).toContainText(
-    "这项研究覆盖三个街区。",
-  );
-  // Everything in the text.
-  await pick("全部在正文中");
-  await expect(page.locator(".revision-note")).toHaveCount(0);
-  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(2);
-  // Only the result: no marks, no margin cards; still decided from the bar.
-  await pick("只看修改后的结果");
-  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
+  // Default: the result in the text, what it takes out in the margin.
   await expect(page.locator(".milkdown .ProseMirror")).toHaveAttribute(
     "data-revision-display",
     "final",
   );
+  await expect(page.locator(".revision-note")).toHaveCount(2);
+  await expect(page.locator(".revision-note-original")).toHaveCount(2);
   await expect(
     page.locator(".milkdown .pending-sentence-new:visible"),
   ).toHaveCount(2);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
+  const pick = async (name: string) => {
+    await page.locator(".review-bar-view-button").click();
+    await page.getByRole("menuitemradio", { name }).click();
+  };
+  // Three views, the default first.
+  await page.locator(".review-bar-view-button").click();
+  await expect(page.getByRole("menuitemradio")).toHaveText([
+    "只看结果，原文在页边",
+    "原文在正文，修改在页边",
+    "全部在正文中",
+  ]);
+  await page.locator(".review-bar-view-button").click();
+  // Everything in the text.
+  await pick("全部在正文中");
+  await expect(page.locator(".revision-note")).toHaveCount(0);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(2);
+  // The original in the text, the replacements in the margin.
+  await pick("原文在正文，修改在页边");
+  await expect(page.locator(".revision-note")).toHaveCount(2);
+  await expect(page.locator(".revision-note-original")).toHaveCount(0);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
+  await pick("只看结果，原文在页边");
   await page.locator(".review-bar-accept").click();
   await expect(page.locator(".milkdown")).toContainText("共访谈四十六位居民。");
   await expect(page.locator(".milkdown .pending-sentence-new")).toHaveCount(0);

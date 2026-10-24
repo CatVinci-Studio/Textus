@@ -29,7 +29,8 @@ export interface PendingSentence {
   /** A block changed whole (markdown-forms.ts's wholeBlockKind: a picture,
    *  a table…): [from, to) is its block node, struck as one, and its new
    *  block is drawn as one after it - not as words in the next paragraph.
-   *  Never has `parts`. */
+   *  Several whole paragraphs changed as one (pending-place.ts's
+   *  wholeParagraphs) are a block change too, `parts` their nodes. */
   block?: boolean;
   /** Its original's text (`visibleTextBetween`) when it was found: while
    *  `[from, to)` still reads so, the change stands, whatever the writer

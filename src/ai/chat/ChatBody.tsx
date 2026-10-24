@@ -10,7 +10,8 @@ import type {
   EditProposal,
   ImageAttachment,
 } from "../types";
-import { ChatMessages, ErrorRow } from "./ChatMessages";
+import { ChatMessages } from "./ChatMessages";
+import { ErrorRow } from "./ErrorRow";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
 import { MarkdownText } from "../MarkdownText";
@@ -19,7 +20,6 @@ import { toolActivityText } from "./AgentTurnView";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { Presence, PresenceDiv } from "../../ui/usePresence";
 import { scrollBehavior } from "../../ui/motion";
-import { COMPOSER_MODES } from "./last-mode";
 import {
   attachedFileBlock,
   selectedTextBlock,
@@ -265,7 +265,7 @@ export function ChatBody({
       () => ({
         message: labels.relocateRequest.replace("{text}", proposal.text ?? ""),
       }),
-      { mode: "revise", webSearch: false },
+      { mode: "write", webSearch: false },
     );
   }
 
@@ -274,7 +274,7 @@ export function ChatBody({
   function handleContinue() {
     dispatchSend(
       () => ({ message: labels.continueRequest }),
-      conversation.lastOptions() ?? { mode: "revise", webSearch: false },
+      conversation.lastOptions() ?? { mode: "write", webSearch: false },
     );
   }
 
@@ -517,7 +517,6 @@ export function ChatBody({
         busy={busy}
         labels={labels}
         defaultMode={defaultMode}
-        modes={COMPOSER_MODES[variant]}
         carryMode={variant !== "quick"}
         tourMode={tourMode}
         selectionChip={selectionChip}

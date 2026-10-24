@@ -23,6 +23,12 @@ use serde_json::{json, Map, Value};
 /// so). Not the model's to write.
 pub const PICTURES_KEPT_KEY: &str = "pictures_kept";
 
+/// An argument resolve_edit_arguments adds to a run's rewrite with
+/// pictures in it: their blocks' ids, which the rewrite keeps as they were
+/// (tools/edits.rs tells the model, which redoes one with generate_image
+/// when the user asked for it to change). Not the model's to write.
+pub const PICTURES_IN_RUN_KEY: &str = "pictures_in_run";
+
 /// One block as the request carries it - `SentBlock` in doc-blocks.ts.
 #[derive(Debug, Clone, Deserialize)]
 pub struct SentBlock {
@@ -430,6 +436,14 @@ pub fn resolve_edit_arguments(document: &Document, arguments: &str) -> String {
             if swapped > 0 {
                 args.insert(PICTURES_KEPT_KEY.into(), json!(swapped));
             }
+            let pictures: Vec<&str> = document.blocks[first..=last]
+                .iter()
+                .filter(|b| is_picture(document.block_text(b)))
+                .map(|b| b.id.as_str())
+                .collect();
+            if !pictures.is_empty() {
+                args.insert(PICTURES_IN_RUN_KEY.into(), json!(pictures));
+            }
         }
     }
     args.insert("anchor".into(), Value::String(whole));
@@ -470,109 +484,6 @@ pub fn resolve_target_arguments(document: &Document, arguments: &str) -> String 
     reorder(args).to_string()
 }
 
-/// Whether `block` is a picture and nothing else: `![alt](path)`, or an
-/// `<img>` (a picture given a width) - for text the model wrote, which has
-/// no node to ask. isPicture in src/ai/doc-blocks.ts; both are held to
-/// keep-pictures-cases.json.
-fn is_picture(block: &str) -> bool {
-    let b = block.trim();
-    if b.contains('\n') {
-        return false;
-    }
-    if let Some(rest) = b.strip_prefix("![") {
-        // `![alt](path)`: no `]` in the alt, no `)` in the path.
-        return match rest.find(']') {
-            Some(close) => rest[close + 1..]
-                .strip_prefix('(')
-                .and_then(|r| r.strip_suffix(')'))
-                .is_some_and(|path| !path.contains(')')),
-            None => false,
-        };
-    }
-    b.strip_prefix("<img")
-        .and_then(|r| r.strip_suffix('>'))
-        .is_some_and(|attrs| attrs.starts_with(char::is_whitespace) && !attrs.contains('>'))
-}
-
-/// `text`, a rewrite of the run `run` (its blocks' markdown), with the
-/// run's pictures as they were: a text edit never changes a picture -
-/// generate_image does. A picture the rewrite left out goes back, after as
-/// many of the new text's paragraphs as there were text blocks before it
-/// in the run - by the paragraph it stood by, as the card pairs them. A
-/// new picture the rewrite wrote where one was is taken out first, the
-/// original going back in its place: the swap is the picture tool's to
-/// propose, on a card of its own. Before, a picture dropped from a rewrite
-/// was deleted with nothing said, a swapped one went with the words, and
-/// either way the card had nothing to pair paragraph by paragraph (rc.6).
-/// New pictures with every original kept stay. `complete`: all of `text`
-/// is there; while it streams in, a picture whose place it hasn't reached
-/// is left out for now (keepPictures in src/ai/doc-blocks.ts, held to the
-/// same cases by keep-pictures-cases.json). Returns the text and how many
-/// swapped pictures were taken out.
-pub(crate) fn keep_pictures(run: &[&str], text: &str, complete: bool) -> (String, usize) {
-    let originals: Vec<&str> = run
-        .iter()
-        .map(|b| b.trim())
-        .filter(|t| is_picture(t))
-        .collect();
-    let missing = originals.iter().filter(|p| !text.contains(**p)).count();
-    let mut swapped = 0;
-    let mut out = if missing == 0 {
-        text.to_string()
-    } else {
-        let kept: Vec<&str> = paragraphs(text)
-            .into_iter()
-            .map(|(s, e)| &text[s..e])
-            .filter(|t| {
-                let new = is_picture(t) && !originals.contains(&t.trim());
-                if new && swapped < missing {
-                    swapped += 1;
-                    return false;
-                }
-                true
-            })
-            .collect();
-        if swapped == 0 {
-            text.to_string()
-        } else {
-            kept.join("\n\n")
-        }
-    };
-    let mut words_before = 0;
-    // Pictures in the new text so far: each moves the later places on by one.
-    let mut put = 0;
-    for block in run {
-        let picture = block.trim();
-        if !is_picture(picture) {
-            words_before += 1;
-            continue;
-        }
-        // Kept where the rewrite has it, it takes a place all the same.
-        if out.contains(picture) {
-            put += 1;
-            continue;
-        }
-        let spans = paragraphs(&out);
-        let at = words_before + put;
-        out = if at == 0 {
-            format!("{picture}\n\n{}", out.trim_start())
-        } else if at < spans.len() {
-            let end = spans[at - 1].1;
-            format!(
-                "{}\n\n{picture}\n\n{}",
-                &out[..end],
-                out[end..].trim_start()
-            )
-        } else if complete && !spans.is_empty() {
-            format!("{}\n\n{picture}", out.trim_end())
-        } else {
-            continue;
-        };
-        put += 1;
-    }
-    (out, swapped)
-}
-
 /// Keys in the order the model writes them, so the call reads as before.
 fn reorder(mut args: Map<String, Value>) -> Value {
     let mut out = Map::new();
@@ -584,6 +495,10 @@ fn reorder(mut args: Map<String, Value>) -> Value {
     out.extend(args);
     Value::Object(out)
 }
+
+mod pictures;
+use pictures::is_picture;
+pub(crate) use pictures::keep_pictures;
 
 #[cfg(test)]
 mod tests;

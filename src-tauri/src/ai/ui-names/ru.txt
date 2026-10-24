@@ -31,7 +31,6 @@ Enable AI completion = Включить автодополнение
 Completion tone = Тон автодополнения
 Write = Написание
 Review = Разбор
-Revise = Правка
 Accept = Принять
 Reject = Отклонить
 Editor & Appearance (Settings page) = Редактор и оформление

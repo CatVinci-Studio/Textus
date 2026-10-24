@@ -284,29 +284,27 @@ document language: a profile such as `zh-Hans-CN/fiction`, `en-GB/govuk` or
 ### Not a file: modes
 
 **What a conversation may do to the document, picked in the composer:
-Write (写作) only adds new text, Review (审阅) only reads, answers and
-comments, Revise (修订) changes the text that is there.**
+Write (写作) adds text and changes the text that is there, Review (审阅)
+only reads, answers and comments.**
 
 - **Where:** the mode picker beside the composer (a segmented control on a
-  phone). The panel and the detached chat window offer Write, Review,
-  Revise, in that order; Quick Ask, for a quick change to the passage it
-  was opened on, offers Revise and Review only - no Write
-  (`COMPOSER_MODES` in `ai/chat/last-mode.ts`). The panel starts in
-  **Settings > Textus AI > Textus AI Chat > Default mode** (Review by
-  default) and remembers the last pick; Quick Ask starts in Revise, and a
-  mode it doesn't offer falls back to Revise. The empty AI
-  panel shows the chosen mode's icon (`ai/chat/mode-icons.tsx`: a pen
-  nib, a speech bubble, a pencil) and a line on what it will do; the
-  picker itself is words only.
+  phone). The panel, the detached chat window and Quick Ask offer Write
+  and Review, in that order (`COMPOSER_MODES` in `ai/chat/last-mode.ts`).
+  The panel starts in **Settings > Textus AI > Textus AI Chat > Default
+  mode** (Review by default) and remembers the last pick; Quick Ask, for a
+  quick change to the passage it was opened on, starts in Write. The
+  empty AI panel shows the chosen mode's icon (`ai/chat/mode-icons.tsx`: a
+  pen nib, a speech bubble) and a line on what it will do; the picker
+  itself is words only.
 - **Textus AI uses it:** the `---interaction mode---` section at the top
-  of each message, and the tools: Review gets no `propose_edit`; Write
-  and Revise get the same one, and in Write it accepts the insertion
-  actions only (append, insert_at_cursor, insert_after, insert_before -
-  after a selection, never over it), refusing the rest. Every proposal is decided by the user either way
+  of each message, and the tools: Review gets no `propose_edit`, Write
+  gets every action. Every proposal is decided by the user either way
   ([ai-proposals.md](ai-proposals.md)).
 - In code: `AgentMode` (`settings/SettingsContext.tsx`,
-  `ai/agent.rs`) with the values `write`, `review` and `revise`; a stored
-  value that is none of them is the default (`storedAgentMode`).
+  `ai/agent/prompt.rs`) with the values `write` and `review`. 1.2.0's
+  third mode, Revise (修订), folded into Write in 1.2.1: a stored or sent
+  `revise` reads as `write`, any other unknown value as the default
+  (`storedAgentMode`).
 
 ### Not a file: completion tone
 

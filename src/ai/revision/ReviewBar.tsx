@@ -13,6 +13,7 @@ import {
   needsMargin,
 } from "./revision-display";
 import { Tooltip } from "../../ui/Tooltip";
+import { ThinkingIndicator } from "../chat/ThinkingIndicator";
 import "./ReviewBar.css";
 
 export interface ReviewBarLabels {
@@ -29,6 +30,8 @@ export interface ReviewBarLabels {
   quickAskPosition: string;
   quickAskPrevEdit: string;
   quickAskNextEdit: string;
+  /** In place of the bar's name while a rewrite is still being written. */
+  agentWritingEdit: string;
 }
 
 /**
@@ -107,7 +110,11 @@ export function ReviewBar({
     : REVISION_DISPLAYS;
   const marginAvailable = useMarginAvailable();
   const noMargin = !phone && !marginAvailable;
-  const shown = effectiveRevisionDisplay(display, !phone && marginAvailable);
+  const shown = effectiveRevisionDisplay(
+    display,
+    !phone && marginAvailable,
+    phone,
+  );
   const waiting = noMargin && shown !== display;
   const noMarginId = useId();
   const newTextId = useId();
@@ -241,7 +248,16 @@ export function ReviewBar({
       aria-label={labels.reviewBarLabel}
     >
       <div className="review-bar-top">
-        <span className="review-bar-label">{labels.reviewBarLabel}</span>
+        {/* While a rewrite is still written, the bar says so where its name
+            stands, with the "working" dots - the paragraph being written is
+            tinted in the text, and each one lands with its count here. */}
+        {streaming ? (
+          <span className="review-bar-label review-bar-working" role="status">
+            <ThinkingIndicator label={labels.agentWritingEdit} />
+          </span>
+        ) : (
+          <span className="review-bar-label">{labels.reviewBarLabel}</span>
+        )}
         {nav}
         {view}
         {phone && onOpenChat && (

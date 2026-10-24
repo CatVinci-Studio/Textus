@@ -141,6 +141,81 @@ test("New Document and New Folder from the right-click menu", async ({
   ).toBeVisible();
 });
 
+test("Rename and Move to Trash from the right-click menu (#351)", async ({
+  page,
+}) => {
+  await open(page);
+  // The open document renamed: still a document, and its tab follows.
+  await row(page, "a.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Rename…" }).click();
+  await page.getByRole("dialog").getByRole("textbox").fill("Opening");
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Rename" })
+    .click();
+  await expect(row(page, "Opening.md")).toBeVisible();
+  await expect(page.locator(".window-bar-title-text")).toHaveText("Opening.md");
+  expect(await files(page)).toContain("/work/notes/Opening.md");
+  expect(await files(page)).not.toContain("/work/notes/a.md");
+
+  // A name already taken is refused.
+  await row(page, "Opening.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Rename…" }).click();
+  await page.getByRole("dialog").getByRole("textbox").fill("b");
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Rename" })
+    .click();
+  await expect(
+    page.getByText("There is already something named “b” here."),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  // A folder goes to the Trash once confirmed, everything in it along.
+  await row(page, "drafts").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Move to Trash" }).click();
+  await expect(page.getByRole("dialog")).toContainText(
+    "Move the folder “drafts” and everything in it to the Trash?",
+  );
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Move to Trash" })
+    .click();
+  await expect(row(page, "drafts")).toHaveCount(0);
+  expect(await files(page)).not.toContain("/work/notes/drafts/old.md");
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __devTrashed: string[] }).__devTrashed,
+    ),
+  ).toEqual(["/work/notes/drafts"]);
+
+  // The tree's own folder offers neither.
+  const body = (await page.locator(".sidebar .tree-body").boundingBox())!;
+  await page.mouse.click(body.x + 40, body.y + body.height - 20, {
+    button: "right",
+  });
+  await expect(
+    page.getByRole("menuitem", { name: "New Folder" }),
+  ).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Rename…" })).toHaveCount(0);
+});
+
+test("⌘/Ctrl-click on a file opens it in a new window, this one unchanged (#348)", async ({
+  page,
+}) => {
+  await open(page);
+  await row(page, "b.md").click({ modifiers: ["ControlOrMeta"] });
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __devNewWindows?: string[] }).__devNewWindows,
+      ),
+    )
+    .toEqual(["/work/notes/b.md"]);
+  await expect(page.locator(".window-bar-title-text")).toHaveText("a.md");
+});
+
 test("a row dragged onto a folder moves into it, and its open tab follows", async ({
   page,
 }) => {

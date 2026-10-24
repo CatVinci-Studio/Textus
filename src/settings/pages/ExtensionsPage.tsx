@@ -73,9 +73,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
                 </button>
               </SettingRow>
             </SettingsGroup>
-            <SettingsGroup title={t.extensionsThemesGet}>
-              <ThemeGallerySection t={t} />
-            </SettingsGroup>
+            <ThemeGallerySection t={t} title={t.extensionsThemesGet} />
           </>
         )}
         {tab === "skills" && (

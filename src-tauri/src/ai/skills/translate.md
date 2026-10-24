@@ -39,14 +39,13 @@ metadata:
 - Terms: give the source term in parentheses on first mention only when the target language has no established term; in Chinese publications, gloss necessary foreign words.
 - Remove translationese: Chinese stacked 被, chains of 的, 进行 + verb; Japanese excess 彼/彼女 and needless katakana loanwords; Korean ~에 대해, ~를 통해, ~에 있어, 되어지다; English nominalisations.
 - Simplified ↔ Traditional Chinese is localisation, not character conversion: phrase-level vocabulary (软件 → 軟體, 视频 → 影片/視訊), “” ↔ 「」, 〈〉 for article titles in Taiwan, the Taiwan interpunct ．; flag terms that need a human choice (质量 → 品質 only where it means quality). It changes script and regional vocabulary only: no cutting, rewording or tightening while converting.
-- Keep Markdown structure, code, URLs, link targets and inline formatting exactly.
+- Keep Markdown structure, code, URLs, link targets and inline formatting exactly. Pictures stay in the translation as they are; when the user asks for them to change with it ("and make the girl in the picture foreign"), redo each with generate_image by its block first, then propose the translation, in the same reply.
 
 ## Don't
 - Translate quoted code, identifiers, or text the user marked to keep.
 - Change figures, add explanations the source lacks, or drop sentences.
 
 ## Deliver
-- Revise mode: replace the passage with the translation, one proposal per section. "Bilingual" or "keep the original": insert_after each paragraph instead.
-- Write mode: insert_after each paragraph, as for "bilingual" - the original stays.
+- Write mode: replace the passage with the translation, one proposal per section. "Bilingual" or "keep the original": insert_after each paragraph instead.
 - Review mode: the translation in the reply.
 - Reply in the user's language, not the target's: one sentence, plus at most three terms or names the user should check.

@@ -21,6 +21,18 @@ function groupLabel(items: MarginItem[], labels: ReviewMarginLabels): string {
     .join(" · ");
 }
 
+/** What a closed group's chip shows under its heading: its first card's
+ *  words, as each chip shows its own. */
+function groupGlimpse(items: MarginItem[]): string {
+  const first = items[0];
+  if (!first) return "";
+  return first.kind === "note"
+    ? first.note.comment
+    : (first.shows === "new" ? first.before : first.after)
+        .trim()
+        .replace(/^#{1,6}\s+/, "");
+}
+
 /**
  * A run with more notes than its paragraph has lines (stackCards' group):
  * one chip, "8 notes", which opens - clicked, one of its own pointed at by
@@ -74,17 +86,20 @@ export const MarginGroup = memo(function MarginGroup({
     >
       <button
         type="button"
-        className="review-note-by review-note-group-head"
+        className="review-note-group-head"
         aria-expanded={open}
         onClick={() => onOpen(open ? null : groupKey)}
         data-group={groupKey}
       >
-        <span className="review-note-mark" aria-hidden="true">
-          AI
-        </span>
-        <span className="review-note-chip-text">
+        <span className="review-note-by">
+          <span className="review-note-mark" aria-hidden="true">
+            AI
+          </span>
           {groupLabel(items, labels)}
         </span>
+        {!open && (
+          <span className="review-note-chip-text">{groupGlimpse(items)}</span>
+        )}
       </button>
       {open && (
         <div className="review-note-group-list">

@@ -24,12 +24,6 @@
    make room (TabBar.tsx) - growing its width instead reflowed the whole
    bar on every frame. A closed one shrinks away in its old place while
    the others close the gap. */
-@keyframes tab-pill-leave {
-  to {
-    opacity: 0;
-    transform: scale(var(--scale-enter));
-  }
-}
 
 .tab-pill {
   display: flex;
@@ -70,7 +64,8 @@
 }
 
 .tab-pill-ghost {
-  animation: tab-pill-leave var(--dur-fast) var(--ease-in) forwards;
+  --exit-scale: var(--scale-enter);
+  animation: motion-exit var(--dur-fast) var(--ease-in) forwards;
 }
 
 .tab-pill-active {

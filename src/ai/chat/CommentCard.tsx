@@ -1,5 +1,7 @@
-import type { CSSProperties } from "react";
+import { useRef, useState, type CSSProperties } from "react";
+import { FlipOnChange } from "../../ui/flip";
 import { InlineMarkdownText } from "../MarkdownText";
+import type { AgentTurn } from "../types";
 
 export interface Comment {
   anchor: string;
@@ -7,7 +9,9 @@ export interface Comment {
   block?: string;
 }
 
-/** An add_comment call's arguments (src-tauri ai/tools.rs). */
+/** An add_comment call's arguments (src-tauri ai/tools/folder.rs) - one
+ *  of a reply's comments, each a call of its own past the model
+ *  (agent/lists.rs). */
 export function parseComment(argumentsJson: string): Comment | null {
   try {
     const parsed = JSON.parse(argumentsJson);
@@ -75,4 +79,145 @@ export function CommentCard({
       </div>
     </div>
   );
+}
+
+/** Notes a group shows before "Show N more". */
+const FOLDED_NOTES = 3;
+
+/** What follows `el` in its list - what its growing moves. */
+function following(el: Element | null): Element[] {
+  const out: Element[] = [];
+  for (let next = el?.nextElementSibling; next; next = next.nextElementSibling)
+    out.push(next);
+  return out;
+}
+
+/**
+ * The notes one reply pinned, as one card: as cards of their own, forty
+ * words glossed ran on for screens. Each note a row - the words it is
+ * about, then the note - its first few shown and the rest behind "Show N
+ * more", as a group of proposals folds (ProposalGroup). A row takes you to
+ * its passage. One note alone keeps its own card.
+ */
+export function CommentGroup({
+  items,
+  reveal,
+  style,
+  labels,
+  onLocateText,
+}: {
+  items: { id: string; comment: Comment; num: number | null }[];
+  reveal: boolean;
+  style: CSSProperties | undefined;
+  labels: {
+    commentTitle: string;
+    commentLocate: string;
+    commentCount: string;
+    commentGroupMore: string;
+    proposalGroupLess: string;
+  };
+  onLocateText?: (anchor: string, block?: string) => void;
+}) {
+  const [unfolded, setUnfolded] = useState(false);
+  // A note arriving, or the card opening, slides what is below it to its
+  // new place rather than jumping it (FlipOnChange).
+  const ref = useRef<HTMLDivElement>(null);
+  const rows = unfolded ? items : items.slice(0, FOLDED_NOTES);
+  const hidden = items.length - rows.length;
+  return (
+    <div
+      ref={ref}
+      className={`agent-comment agent-comment-group${reveal ? " turn-reveal" : ""}`}
+      style={style}
+    >
+      <FlipOnChange
+        watch={`${unfolded}:${items.length}`}
+        targets={() => following(ref.current)}
+      />
+      <div className="agent-proposal-head">
+        <span className="agent-comment-icon" aria-hidden="true">
+          <svg viewBox="0 0 16 16">
+            <path d="M3 3.5h10v7H7l-3 2.5v-2.5H3z" />
+          </svg>
+        </span>
+        <span className="agent-proposal-title">
+          {labels.commentTitle}
+          <span className="agent-proposal-kind">
+            {" · "}
+            {labels.commentCount.replace("{n}", String(items.length))}
+          </span>
+        </span>
+      </div>
+      <ol className="agent-comment-rows">
+        {rows.map(({ id, comment, num }) => (
+          <li key={id} className="agent-comment-row">
+            <button
+              type="button"
+              className="agent-comment-row-quote"
+              title={labels.commentLocate}
+              disabled={!onLocateText}
+              onClick={() => onLocateText?.(comment.anchor, comment.block)}
+            >
+              {num !== null && <span className="agent-comment-num">{num}</span>}
+              <span className="agent-comment-row-anchor">{comment.anchor}</span>
+            </button>
+            <div className="agent-comment-text">
+              <InlineMarkdownText text={comment.comment} />
+            </div>
+          </li>
+        ))}
+      </ol>
+      {items.length > FOLDED_NOTES && (
+        <button
+          type="button"
+          className="agent-proposal-group-fold"
+          aria-expanded={unfolded}
+          onClick={() => setUnfolded(!unfolded)}
+        >
+          {unfolded
+            ? labels.proposalGroupLess
+            : labels.commentGroupMore.replace("{n}", String(hidden))}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** The notes of each run of add_comment calls in `turns` - calls in a row,
+ *  their results between them - by the run's first call, the others
+ *  mapped to none: all of a reply's notes are one card. */
+export function noteRunsOf(
+  turns: readonly AgentTurn[],
+  noteNumber?: (id: string) => number | null,
+): Map<string, { id: string; comment: Comment; num: number | null }[]> {
+  const runs = new Map<
+    string,
+    { id: string; comment: Comment; num: number | null }[]
+  >();
+  let first: string | null = null;
+  for (const turn of turns) {
+    if (turn.kind === "ToolResult") continue;
+    if (turn.kind !== "ToolCall" || turn.name !== "add_comment") {
+      first = null;
+      continue;
+    }
+    const comment = parseComment(turn.arguments);
+    const notes = comment
+      ? [
+          {
+            id: turn.call_id,
+            comment,
+            num: noteNumber?.(turn.call_id) ?? null,
+          },
+        ]
+      : [];
+    if (first === null) {
+      first = turn.call_id;
+      runs.set(first, notes);
+    } else {
+      runs.get(first)!.push(...notes);
+      runs.set(turn.call_id, []);
+    }
+  }
+  return runs;
 }

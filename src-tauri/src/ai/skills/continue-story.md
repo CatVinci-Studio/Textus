@@ -50,6 +50,6 @@ metadata:
 - If the user asks for directions or options, write no section: offer two or three candidate next beats of one or two sentences each, all consistent with the text, and wait for a choice.
 
 ## Deliver
-- Write or Revise mode: one proposal that inserts the section after the last paragraph of the scene (insert_after), or at the cursor (insert_at_cursor) when the message carries one.
+- Write mode: one proposal that inserts the section after the last paragraph of the scene (insert_after), or at the cursor (insert_at_cursor) when the message carries one.
 - Review mode: the new section in the reply, and a note that Write mode can insert it.
 - Reply in one or two sentences saying what happens in the new section.

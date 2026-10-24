@@ -232,8 +232,7 @@ const MODES = [
   //  whether the new text is in the text for the review bar to step through]
   ["inline", ["pending-delete", "pending-insert"], false, true],
   ["original", ["pending-delete"], true, false],
-  ["new", ["pending-insert"], true, true],
-  ["final", ["pending-insert"], false, true],
+  ["final", ["pending-insert"], true, true],
 ] as const;
 
 // Every view in light. In dark only the inline view: it draws both sides

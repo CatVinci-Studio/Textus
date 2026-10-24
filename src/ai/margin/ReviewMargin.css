@@ -72,7 +72,8 @@
   /* Moved by the stack, a card glides on `translate` (useCardBox), never
      on `top`: that laid the margin out on every frame. */
   transition: transform var(--dur-fast) var(--ease-out);
-  animation: review-note-in var(--dur-slow) var(--ease-out) both;
+  --enter-x: calc(var(--motion-distance-md) * 1.75);
+  animation: motion-enter var(--dur-slow) var(--ease-out) both;
 }
 
 /* The deeper shadow under the pointer fades in on a layer of its own:
@@ -95,13 +96,6 @@
 
 .review-note-hot::after {
   opacity: 1;
-}
-
-@keyframes review-note-in {
-  from {
-    opacity: 0;
-    transform: translateX(calc(var(--motion-distance-md) * 1.75));
-  }
 }
 
 .review-note-by {
@@ -169,25 +163,41 @@
   border-color: var(--review-note-line);
 }
 
-/* A card of a crowded run, as one line (stackCards): its height is set
-   (CHIP_HEIGHT), the line cut short. */
+/* A card of a crowded run, cut to its heading and a line (stackCards): its
+   height is set (CHIP_HEIGHT), the line cut short. */
 .review-note-chip {
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  padding-block: 0;
+  padding-block: 2px;
 }
 
-.review-note-chip > .review-note-by {
-  flex: 1;
-  min-width: 0;
+/* Its heading a small line over its text, so a chip stands beside a line
+   of the document as one line did. */
+.review-note-chip .review-note-by {
+  height: 12px;
   margin: 0;
-  font-size: var(--text-sm);
-  color: var(--editor-text);
+  font-size: 10.5px;
+  line-height: 12px;
+}
+
+.review-note-chip :is(.revision-note-num, .review-note-num) {
+  min-width: 12px;
+  height: 12px;
+  font-size: 8px;
+}
+
+.review-note-chip .revision-note-pick {
+  margin-block: -4px;
+  transform: scale(0.85);
+  transform-origin: right center;
 }
 
 .review-note-chip-text {
-  flex: 1;
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.review-note-chip-text {
+  display: block;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
@@ -201,6 +211,25 @@
 .review-note-chip-text ins {
   text-decoration: none;
   color: var(--editor-accent);
+}
+
+/* A revision cut to its chip keeps the card's look: its number, then its
+   new text in the green box - not plain text, as a note's chip is. */
+.revision-note.review-note-chip .review-note-chip-text {
+  padding: 0 4px;
+  border-radius: var(--radius-small);
+  background: var(--revision-insert-bg);
+}
+
+.revision-note.review-note-chip .review-note-chip-text:has(> s) {
+  background: var(--revision-delete-bg);
+  color: var(--editor-muted);
+}
+
+.revision-note-kept.review-note-chip .review-note-chip-text {
+  background: none;
+  opacity: 0.5;
+  text-decoration: line-through;
 }
 
 /* Picking on the notes bar (NotesBar): each note's box, top right. */
@@ -292,19 +321,21 @@
 .review-badge {
   display: inline-grid;
   place-items: center;
-  width: 18px;
+  box-sizing: border-box;
+  min-width: 18px;
   height: 18px;
   margin: 0 2px;
-  padding: 0;
+  padding: 0 4px;
   vertical-align: 0.2em;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   background: var(--review-note-line);
   color: var(--on-fill);
   font: 700 10.5px/1 var(--font-ui, sans-serif);
   cursor: pointer;
   box-shadow: 0 0 0 3px var(--review-anchor-bg);
-  animation: pending-pick-in var(--dur-medium) var(--ease-spring-bouncy) both;
+  --enter-scale: var(--scale-enter);
+  animation: motion-enter var(--dur-medium) var(--ease-spring-bouncy) both;
 }
 
 [data-platform="ios"] .review-badge {
@@ -400,12 +431,17 @@
   margin-bottom: 4px;
 }
 
-.revision-note-num {
+/* A disc for one or two digits, a pill past that: a fixed width ran "100"
+   out of its circle. */
+.revision-note-num,
+.review-note-num {
   display: inline-grid;
   place-items: center;
-  width: calc(16px * var(--ui-text-scale, 1));
+  box-sizing: border-box;
+  min-width: calc(16px * var(--ui-text-scale, 1));
   height: calc(16px * var(--ui-text-scale, 1));
-  border-radius: 50%;
+  padding-inline: calc(4px * var(--ui-text-scale, 1));
+  border-radius: var(--radius-pill);
   background: var(--success-color);
   color: var(--on-fill);
   font-size: calc(9.5px * var(--ui-text-scale, 1));
@@ -445,6 +481,11 @@
   color: var(--editor-muted);
 }
 
+/* A note's number, in its badge's colour. */
+.review-note-num {
+  background: var(--review-note-line);
+}
+
 .revision-note-kept .revision-note-num {
   background: color-mix(in srgb, var(--editor-muted) 70%, transparent);
 }
@@ -459,27 +500,32 @@
   stroke: color-mix(in srgb, var(--success-color) 70%, transparent);
 }
 
-/* "Changes in the text": the card holds the original, struck. */
+/* Result only: the card holds what the change takes out, struck - in the
+   text's own colour, its heading too: muted on the red, neither could be
+   read (axe, color-contrast). The strike and the red say it is gone. */
 .revision-note-original {
   background: var(--revision-delete-bg);
-  color: var(--editor-muted);
+  color: var(--editor-text);
 }
 
 .revision-note-original s {
   text-decoration-color: var(--revision-delete-strike);
 }
 
-.revision-note-was {
-  display: block;
-  margin-bottom: 1px;
-  font-size: var(--text-xs);
-  color: var(--editor-muted);
+.revision-note-kept .revision-note-original {
+  background: none;
+  text-decoration: none;
+  color: var(--editor-text);
+  opacity: 1;
 }
 
-/* Its pair under the pointer or the review bar's pointer: the text it
-   holds darkens with the pair's in the document - a darker green for new
-   text, a darker red for the original - as a note's passage does. A kept
-   one stays as it is. */
+.revision-note-kept .revision-note-original s {
+  text-decoration: none;
+}
+
+/* Its pair under the pointer or the review bar's pointer: the new text it
+   holds darkens with the pair's in the document, as a note's passage
+   does. A kept one stays as it is. */
 .revision-note:is(.review-note-hot, .revision-note-focus):not(
     .revision-note-kept
   )
@@ -492,18 +538,6 @@
   )
   .revision-note-original {
   background: var(--revision-delete-hover-bg);
-}
-
-/* Kept: the original is the text again. */
-.revision-note-kept .revision-note-original {
-  background: none;
-  text-decoration: none;
-  color: var(--editor-text);
-  opacity: 1;
-}
-
-.revision-note-kept .revision-note-original s {
-  text-decoration: none;
 }
 
 /* Where a pure insertion would go, with its card in the margin. */

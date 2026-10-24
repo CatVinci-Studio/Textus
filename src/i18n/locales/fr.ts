@@ -30,12 +30,8 @@ export default {
     "Ouvrir les conversations complètes dans une fenêtre séparée",
   shortcutToggleAgentPanel: "Afficher/masquer le panneau IA",
   menuToggleAgentPanel: "Panneau IA",
-  agentPanelEmptyWrite:
-    "L'IA rédige du nouveau texte dans votre document sans modifier ce qui s'y trouve déjà.",
-  agentPanelEmptyReview:
-    "L'IA répond et laisse des notes dans la marge, sans modifier votre texte.",
-  agentPanelEmptyRevise:
-    "L'IA propose des modifications de votre texte ; chacune attend que vous l'acceptiez ou la refusiez.",
+  agentPanelEmptyWrite: "Commencez à écrire",
+  agentPanelEmptyReview: "Obtenez plus de suggestions",
   aiWorkingCompletion: "Rédaction de la suite…",
   aiWorkingGrammar: "Vérification du paragraphe…",
   noticeCompletionNeedsCaret:
@@ -122,6 +118,11 @@ utiliser une.
   proposalAcceptSome: "Accepter {k} sur {n}",
   proposalChangeCount: "{n} modifications",
   editorLabel: "Document",
+  diagramZoom: "Agrandir le diagramme",
+  diagramViewerLabel: "Diagramme",
+  diagramViewerClose: "Fermer",
+  diagramViewerHint:
+    "Faites défiler ou pincez pour zoomer · faites glisser pour déplacer · double-cliquez pour ajuster",
   codeBlockLanguage: "Langage du code",
   announceAiWriting: `${AI_NAME} écrit…`,
   announceAiDone: `${AI_NAME} a terminé.`,
@@ -154,13 +155,13 @@ utiliser une.
   revisionDisplayInline: "Tout dans le texte",
   revisionDisplayOriginal:
     "Original dans le texte, modifications dans la marge",
-  revisionDisplayNew: "Modifications dans le texte, original dans la marge",
-  revisionDisplayFinal: "Résultat seul, sans marques",
+  revisionDisplayFinal: "Résultat seul, original dans la marge",
   revisionDisplayNoRoom:
     "Pas assez de place : fermez la barre latérale ou le panneau IA",
   revisionDisplayNewText:
     "Le nouveau texte n'a pas d'original : dans ces vues, il reste dans le texte, en vert",
   proposalDeletedSentence: "Original",
+  proposalAddedSentence: "Ajout",
   reviewBarLabel: "Révision",
   reviewBarOpenChat: "Ouvrir le panneau IA",
   reviewNoteBy: "Relecture",
@@ -177,11 +178,15 @@ utiliser une.
   reviewNotesAskPrefix: "À propos de ces notes :\n{notes}\n",
   reviewNoteAskPrefix: "À propos de votre note «\u00a0{comment}\u00a0»\u00a0: ",
   agentTabChat: "Discussion",
-  agentTabMemory: "Mémoire",
-  memoryStyle: "Style",
+  agentTabProject: "Projet",
+  memoryStyle: "Style d'écriture",
   memoryLibrary: "Bibliothèque",
   memoryInstructions: "Instructions d'écriture",
-  memorySkills: "Compétences",
+  memoryStyleHint: "Votre façon d'écrire : l'IA écrit de même.",
+  memoryInstructionsHint: "Les règles que l'IA suit à chaque fois.",
+  memoryLibraryHint:
+    "Personnes, lieux et termes, consultés quand ils reviennent.",
+  memoryRememberedHint: "Ce que l'IA a noté de vos conversations.",
   memoryEdit: "Modifier",
   memoryNew: "Nouvelle",
   memoryInThisDocument: "Dans ce document",
@@ -191,7 +196,7 @@ utiliser une.
   memoryLibraryEmpty: `Personnages, lieux, termes\u00a0: ajoutez-les à la bibliothèque et ${AI_NAME} s'en souviendra.`,
   memoryInstructionsEmpty: `Pas encore d'instructions. Écrivez les règles que ${AI_NAME} doit toujours suivre.`,
   memoryNeedsSave: `Enregistrez ce document et ${AI_NAME} gardera votre style, votre bibliothèque et vos instructions dans son dossier.`,
-  memoryRemembered: "Retenu par l'IA",
+  memoryRemembered: "Mémoire",
   memoryRememberedPersonal: "Pour tous les projets",
   memoryRememberedProject: "Ce projet",
   memoryRememberedEmpty: `Rien pour l'instant. Dites à ${AI_NAME} ce que vous voulez toujours, et il s'en souviendra la prochaine fois.`,
@@ -204,7 +209,7 @@ utiliser une.
   memoryShowInFolder: "Afficher dans le dossier",
   memoryWrittenByAi: "Noté par l'IA",
   memoryFactsInLibrary:
-    "{n} personnes, lieux et termes notés sont dans la bibliothèque ci-dessous.",
+    "{n} personnes, lieux et termes notés sont dans la bibliothèque ci-dessus.",
   memoryForgotten: "Oublié récemment",
   memoryRestore: "Restaurer",
   memoryFrom: "de «\u00a0{title}\u00a0»",
@@ -222,14 +227,14 @@ utiliser une.
     "Mentionnés mais non envoyés, au-delà de la limite de la bibliothèque de {cap} caractères\u00a0: {names}.",
   memoryChipSaved: "Retenu\u00a0: {text} ({scope})",
   memoryScopeProject: "projet",
-  memoryScopePersonal: "personnel",
+  memoryScopePersonal: "global",
   memoryChipUndo: "Annuler",
-  memoryMakePersonal: "Rendre personnel",
+  memoryMakePersonal: "Rendre global",
   memoryMakeProject: "Passer au projet",
   memoryChipUndone: "Annulé. Ce n'est plus retenu.",
   memoryChipForgot: "Oublié : {text} ({scope})",
   memoryChipRestored: "Annulé. De nouveau mémorisé.",
-  memoryActionFailed: "Cela n'a pas marché. Réessayez dans l'onglet Mémoire.",
+  memoryActionFailed: "Cela n'a pas marché. Réessayez dans l'onglet Projet.",
   learnSuggestion:
     "Vous avez refusé plusieurs fois {what}. Retenir ceci\u00a0? {rule}",
   learnQuoted: "«\u00a0{text}\u00a0»",
@@ -413,6 +418,15 @@ utiliser une.
   treeSort: "Trier",
   treeSortName: "Par nom",
   treeSortModified: "Par date de modification",
+  treeRenameItem: "Renommer…",
+  treeRename: "Renommer",
+  treeRenamePrompt: "Nouveau nom",
+  treeTrashItem: "Mettre à la corbeille",
+  treeTrash: "Mettre à la corbeille",
+  treeTrashConfirm:
+    "Mettre « {name} » à la corbeille ? Vous pourrez l’en sortir.",
+  treeTrashFolderConfirm:
+    "Mettre le dossier « {name} » et tout son contenu à la corbeille ? Vous pourrez l’en sortir.",
   treeNameTaken: "Il y a déjà un élément nommé « {name} » ici.",
   treeActionFailed: "Impossible : {reason}",
   shortcutSearchFiles: "Rechercher des noms de fichier",
@@ -608,7 +622,6 @@ utiliser une.
   agentDefaultModeLabel: "Mode par défaut",
   agentModeWrite: "Écrire",
   agentModeReview: "Relire",
-  agentModeRevise: "Réviser",
   chatModeLabel: "Mode",
   agentPersonalizationGroupLabel: "Instructions d'écriture et compétences",
   agentAdvancedGroupLabel: "Avancé",
@@ -858,6 +871,7 @@ utiliser une.
   proposalRejectAll: "Tout refuser",
   proposalGroupMore: "Afficher {n} de plus",
   proposalGroupLess: "Afficher moins",
+  commentGroupMore: "Afficher {n} de plus",
   proposalRelocate: "Demander à l'IA de refaire cette modification",
   diffShow: "Afficher les différences",
   diffCollapse: "Afficher moins",
@@ -1005,7 +1019,7 @@ utiliser une.
   tutorialConnectSkip: "Passer pour l'instant",
   tutorialConnected: "Connecté.",
   tutorialWriteTitle: "Écrire avec l'IA",
-  tutorialWriteBody: `En mode Écrire, ${AI_NAME} ne fait qu'ajouter du texte, en vert tant que vous ne l'avez pas accepté.`,
+  tutorialWriteBody: `En mode Écrire, ${AI_NAME} ajoute et modifie du texte, en vert tant que vous ne l'avez pas accepté.`,
   tutorialWriteOpen:
     "Ouvrez le panneau IA : l'icône de la plume, en haut à droite ({shortcut})",
   tutorialWriteOpenPhone:
@@ -1019,7 +1033,7 @@ utiliser une.
     "Envoyez `Commente mes notes`, puis lisez les notes dans la marge",
   tutorialRevisionTitle: "Révision",
   tutorialRevisionBody:
-    "En mode Réviser, il réécrit et vous décidez phrase par phrase.",
+    "En mode Écrire, il réécrit aussi, et vous décidez phrase par phrase.",
   tutorialRevisionSelect: "Sélectionnez la première phrase de vos notes",
   tutorialRevisionSend:
     "Envoyez `Rends-la plus concise`, puis choisissez Accepter ou Refuser",
@@ -1044,7 +1058,7 @@ utiliser une.
     "Sélectionnez une de vos notes, puis envoyez `/raccourcir` ou `/traduire`",
   tutorialDoneTitle: "Terminé",
   tutorialDoneBody: "À vous d'écrire, maintenant.",
-  tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez l'onglet Mémoire du panneau IA.`,
+  tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez l'onglet Projet du panneau IA.`,
   closePromptMessage:
     "Ce document contient des modifications non enregistrées.",
   closePromptSave: "Enregistrer",

@@ -24,6 +24,7 @@ import { diffSentences, splitUnits } from "./unit-diff";
 import { matchableMarkdown } from "./markdown-forms";
 import { findInOrder, locateHunks } from "./sentence-locate";
 import { locatePlainText } from "./text-locate";
+import { wholeParagraphs } from "./whole-paragraphs";
 
 /**
  * Where a proposal goes in the document: the blocks it names, the
@@ -125,8 +126,15 @@ export function resolveAnchored(
       proposal.action,
       proposal.text ?? "",
     ),
+    // An insertion next to words inside its block has theirs: drawn
+    // there, inside the paragraph, where Accept writes it (insertAt in
+    // pending-decorations.ts). One next to the whole block goes beside it.
     strikeRange:
-      proposal.action === "replace" || proposal.action === "delete"
+      proposal.action === "replace" ||
+      proposal.action === "delete" ||
+      ((proposal.action === "insert_before" ||
+        proposal.action === "insert_after") &&
+        (match.prefix.trim() !== "" || match.suffix.trim() !== ""))
         ? computeStrikeRange(ctx, doc, blocks, match)
         : null,
     lead: match.prefix,
@@ -177,7 +185,8 @@ function sentencesFor(
             ),
             ...(ranges[i].block
               ? { block: true, at: ranges[i].to }
-              : changeParts(ctx, doc, ranges[i], h.before, h.after)),
+              : (wholeParagraphs(doc, ranges[i], h.before, h.after) ??
+                changeParts(ctx, doc, ranges[i], h.before, h.after))),
           },
         ]
       : [],

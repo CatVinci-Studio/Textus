@@ -181,14 +181,14 @@ fn more_writing_follows_the_undecided_text() {
     }
 }
 
-/// Revise, three requests on one passage before deciding: rewrite, then
+/// Write, three requests on one passage before deciding: rewrite, then
 /// shorter, then one word changed - each on the last undecided version.
 #[test]
 #[ignore = "live API - see module docs"]
 fn revisions_on_an_undecided_revision_build_on_it() {
     let doc = "港口在清晨显得格外安静。几条渔船靠在码头边上，船身随着海浪轻轻晃动，偶尔有一两只海鸥从水面掠过，发出几声清脆的叫声。远处的灯塔还亮着，光在薄雾里显得有些模糊。\n\n到了中午，码头上开始热闹起来。";
     let Some(conv) = run(
-        AgentMode::Revise,
+        AgentMode::Write,
         "zh",
         doc,
         &[
@@ -239,7 +239,7 @@ fn an_undecided_picture_survives_a_rewrite_of_its_text() {
     );
 }
 
-/// The Revise case in English, two requests: a rewrite of the first
+/// The rewrite case in English, two requests: a rewrite of the first
 /// paragraph left undecided, then one word of it changed - quoted from the
 /// original or from the rewrite, it goes into the rewrite.
 #[test]
@@ -247,7 +247,7 @@ fn an_undecided_picture_survives_a_rewrite_of_its_text() {
 fn a_word_changed_in_an_undecided_rewrite_goes_into_it() {
     let doc = "The harbour was very quiet in the early morning. A few fishing boats were tied up at the quay, rocking gently on the swell, and now and then a gull skimmed the water. Far off, the lighthouse was still lit, its beam blurred in the mist.\n\nBy noon the quay was busy.";
     let Some(conv) = run(
-        AgentMode::Revise,
+        AgentMode::Write,
         "en",
         doc,
         &[
@@ -313,14 +313,14 @@ fn a_title_asked_for_after_undecided_writing_goes_above_it() {
     }
 }
 
-/// Revise one paragraph, then - before deciding - another: the two stand
+/// Rewrite one paragraph, then - before deciding - another: the two stand
 /// side by side and one Accept takes both.
 #[test]
 #[ignore = "live API - see module docs"]
 fn a_revision_elsewhere_stands_beside_an_undecided_one() {
     let doc = "我们今天去了海边，玩得非常非常开心，大家都觉得很好玩。\n\n回来的路上下雨了，我们都淋湿了，但是也没有什么关系。";
     let Some(conv) = run(
-        AgentMode::Revise,
+        AgentMode::Write,
         "zh",
         doc,
         &[
