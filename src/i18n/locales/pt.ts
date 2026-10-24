@@ -27,8 +27,7 @@ export default {
   agentExpandWindowLabel: "Abrir conversas completas em uma janela separada",
   shortcutToggleAgentPanel: "Alternar painel de IA",
   menuToggleAgentPanel: "Painel de IA",
-  agentPanelEmptyWrite:
-    "A IA escreve no seu documento: texto novo ou mudanças no que já está; cada mudança espera você aceitar ou rejeitar.",
+  agentPanelEmptyWrite: "A IA ajuda você a escrever: rascunhos ou revisões.",
   agentPanelEmptyReview:
     "A IA responde e deixa notas na margem, sem alterar o seu texto.",
   aiWorkingCompletion: "Escrevendo uma continuação…",

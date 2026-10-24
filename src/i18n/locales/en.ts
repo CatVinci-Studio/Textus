@@ -29,8 +29,7 @@ const en = {
   agentExpandWindowLabel: "Open full conversations in a separate window",
   shortcutToggleAgentPanel: "Toggle AI panel",
   menuToggleAgentPanel: "AI Panel",
-  agentPanelEmptyWrite:
-    "The AI writes in your document - new text, or changes to what's there; each change waits for you to accept or reject it.",
+  agentPanelEmptyWrite: "Let the AI help you write: drafts or revisions.",
   agentPanelEmptyReview:
     "The AI answers and leaves notes in the margin, and doesn't change your text.",
   aiWorkingCompletion: "Writing a continuation…",

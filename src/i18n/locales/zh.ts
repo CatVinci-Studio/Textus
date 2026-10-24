@@ -27,8 +27,7 @@ export default {
   agentExpandWindowLabel: "在独立窗口中打开完整对话",
   shortcutToggleAgentPanel: "开关 AI 面板",
   menuToggleAgentPanel: "AI 面板",
-  agentPanelEmptyWrite:
-    "AI 在文档里写作：起草新文字，或修改已有的内容，每一处都由你决定接受还是拒绝。",
+  agentPanelEmptyWrite: "让 AI 帮你写：起草，或修改。",
   agentPanelEmptyReview: "AI 只回答问题、在页边留批注，不会改动你的文字。",
   aiWorkingCompletion: "正在续写…",
   aiWorkingGrammar: "正在检查这一段…",

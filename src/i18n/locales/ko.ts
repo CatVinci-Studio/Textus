@@ -28,8 +28,7 @@ export default {
   agentExpandWindowLabel: "전체 대화를 별도 창에서 열기",
   shortcutToggleAgentPanel: "AI 패널 보기/숨기기",
   menuToggleAgentPanel: "AI 패널",
-  agentPanelEmptyWrite:
-    "AI가 문서에 글을 씁니다. 새 글을 더하거나 있는 글을 고치며, 하나하나 수락할지 거절할지 당신이 정합니다.",
+  agentPanelEmptyWrite: "AI가 글쓰기를 돕습니다. 초안도, 수정도.",
   agentPanelEmptyReview:
     "AI가 질문에 답하고 여백에 메모를 남깁니다. 글은 바꾸지 않습니다.",
   aiWorkingCompletion: "이어 쓰는 중…",

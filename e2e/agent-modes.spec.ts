@@ -102,7 +102,7 @@ const MODE_LINES: Record<
     {
       mode: "write",
       name: "Write",
-      line: "The AI writes in your document - new text, or changes to what's there; each change waits for you to accept or reject it.",
+      line: "Let the AI help you write: drafts or revisions.",
     },
     {
       mode: "review",
@@ -114,7 +114,7 @@ const MODE_LINES: Record<
     {
       mode: "write",
       name: "写作",
-      line: "AI 在文档里写作：起草新文字，或修改已有的内容，每一处都由你决定接受还是拒绝。",
+      line: "让 AI 帮你写：起草，或修改。",
     },
     {
       mode: "review",

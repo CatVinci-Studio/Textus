@@ -29,7 +29,7 @@ export default {
   shortcutToggleAgentPanel: "KI-Bereich ein-/ausblenden",
   menuToggleAgentPanel: "KI-Bereich",
   agentPanelEmptyWrite:
-    "Die KI schreibt in Ihrem Dokument - neuen Text oder Änderungen am vorhandenen; jede Änderung wartet, bis Sie sie annehmen oder ablehnen.",
+    "Die KI hilft beim Schreiben: Entwürfe oder Überarbeitungen.",
   agentPanelEmptyReview:
     "Die KI antwortet und hinterlässt Notizen am Rand, ohne Ihren Text zu ändern.",
   aiWorkingCompletion: "Fortsetzung wird geschrieben…",

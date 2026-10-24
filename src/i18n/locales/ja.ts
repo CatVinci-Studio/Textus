@@ -27,8 +27,7 @@ export default {
   agentExpandWindowLabel: "会話全体を別ウィンドウで開く",
   shortcutToggleAgentPanel: "AIパネルの表示切替",
   menuToggleAgentPanel: "AIパネル",
-  agentPanelEmptyWrite:
-    "AI が文書に書きます。新しい文章も、今ある文章の書き直しも、一つずつ適用するか却下するかを決められます。",
+  agentPanelEmptyWrite: "AI が執筆を手伝います。下書きも、書き直しも。",
   agentPanelEmptyReview:
     "AI は質問に答え、余白にコメントを残します。文章は変えません。",
   aiWorkingCompletion: "続きを生成中…",
