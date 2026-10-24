@@ -401,6 +401,7 @@ pub fn run() {
             plugins::store::plugin_store_files,
             plugins::store::plugin_store_delete,
             plugins::store::plugin_store_usage,
+            plugins::store::plugin_store_clear,
             plugins::access::plugin_storage_set,
             // iOS only: rename and delete in the document list.
             #[cfg(mobile)]

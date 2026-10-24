@@ -1245,6 +1245,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginRequiresAsk: "{name}에는 “{setting}”이(가) 필요합니다. {reason}",
   pluginRequiresLater: "나중에",
   pluginAboutGroup: "정보",
+  pluginDataLabel: "저장한 데이터",
+  pluginDataGlobal: "모든 문서 공용 {global}",
+  pluginDataProject: "이 프로젝트에 {project}",
+  pluginDataClear: "지우기",
+  pluginDataClearAsk:
+    "{name}이(가) 저장한 데이터를 지울까요? 되돌릴 수 없습니다.",
   pluginVersionLabel: "버전 {version}",
   pluginsAllLabel: "플러그인",
   pluginsAllHelp:

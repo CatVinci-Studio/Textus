@@ -1312,6 +1312,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginRequiresAsk: "{name} benötigt „{setting}“. {reason}",
   pluginRequiresLater: "Später",
   pluginAboutGroup: "Info",
+  pluginDataLabel: "Seine Daten",
+  pluginDataGlobal: "{global} für alle Dokumente",
+  pluginDataProject: "{project} in diesem Projekt",
+  pluginDataClear: "Leeren",
+  pluginDataClearAsk:
+    "Was {name} speichert, leeren? Das lässt sich nicht rückgängig machen.",
   pluginVersionLabel: "Version {version}",
   pluginsAllLabel: "Plugins",
   pluginsAllHelp:

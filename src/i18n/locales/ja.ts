@@ -1257,6 +1257,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginRequiresAsk: "{name} には「{setting}」が必要です。{reason}",
   pluginRequiresLater: "あとで",
   pluginAboutGroup: "情報",
+  pluginDataLabel: "保存しているデータ",
+  pluginDataGlobal: "すべての文書で {global}",
+  pluginDataProject: "このプロジェクトで {project}",
+  pluginDataClear: "消去",
+  pluginDataClearAsk: "{name} が保存したデータを消去しますか？元に戻せません。",
   pluginVersionLabel: "バージョン {version}",
   pluginsAllLabel: "プラグイン",
   pluginsAllHelp:

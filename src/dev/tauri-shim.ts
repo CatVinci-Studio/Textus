@@ -1045,8 +1045,22 @@ export function installDevTauriShim(): void {
             return Promise.resolve(null);
         }
       }
-      case "plugin_store_usage":
-        return Promise.resolve([0, 0]);
+      case "plugin_store_usage": {
+        const stores = (w.__devPluginStore ?? {}) as Record<string, unknown>;
+        const size = (key: string) =>
+          JSON.stringify(stores[key] ?? "").length - 2;
+        return Promise.resolve([
+          size(`${id}|global|`),
+          args.root ? size(`${id}|project|${args.root}`) : 0,
+        ]);
+      }
+      case "plugin_store_clear": {
+        const stores = (w.__devPluginStore ?? {}) as Record<string, unknown>;
+        delete stores[
+          `${id}|${args.scope}|${args.scope === "project" ? args.root : ""}`
+        ];
+        return Promise.resolve(null);
+      }
       // A developer's folder's last change: `window.__devPluginStamps`;
       // `__devStampReads` counts the looks.
       case "plugin_dev_stamp":

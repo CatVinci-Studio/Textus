@@ -2,6 +2,7 @@ import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow } from "../sections/controls";
 import { PluginSettingRows } from "./PluginSettings";
 import { PluginErrors } from "./PluginErrors";
+import { PluginData } from "./PluginData";
 import { showConfirm } from "../../ui/app-dialog";
 import { links } from "../../platform/ipc";
 import { useSettings } from "../SettingsContext";
@@ -292,6 +293,7 @@ function PluginAbout({
           </SettingRow>
         );
       })}
+      <PluginData id={record.id} name={pluginName(record)} t={t} />
       <SettingRow
         label={t.pluginVersionLabel.replace("{version}", manifest.version)}
         hint={manifest.license}

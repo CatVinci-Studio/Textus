@@ -1201,6 +1201,11 @@ export default {
   pluginRequiresAsk: "「{name}」需要開啟「{setting}」。{reason}",
   pluginRequiresLater: "以後再說",
   pluginAboutGroup: "關於",
+  pluginDataLabel: "它儲存的資料",
+  pluginDataGlobal: "所有文件共用 {global}",
+  pluginDataProject: "這個專案裡 {project}",
+  pluginDataClear: "清除",
+  pluginDataClearAsk: "清除 {name} 儲存的資料？清除後無法復原。",
   pluginVersionLabel: "版本 {version}",
   pluginsAllLabel: "外掛程式",
   pluginsAllHelp:

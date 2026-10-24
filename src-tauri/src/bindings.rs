@@ -190,6 +190,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::plugins::store::plugin_store_files,
                 crate::plugins::store::plugin_store_delete,
                 crate::plugins::store::plugin_store_usage,
+                crate::plugins::store::plugin_store_clear,
                 crate::plugins::access::plugin_storage_set,
                 crate::menu::set_plugin_menu,
                 crate::background::tray::set_tray_plugin_items,

@@ -302,6 +302,32 @@ pub fn plugin_store_usage(
     Ok((size_of(&global), project))
 }
 
+/// Empties one of a plugin's places (Settings › its page › Clear data).
+/// Asked by the user, not the plugin: it may be off.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn plugin_store_clear(
+    app: tauri::AppHandle,
+    id: String,
+    scope: StoreScope,
+    root: Option<String>,
+) -> Result<(), String> {
+    require_id(&id)?;
+    let dir = match scope {
+        StoreScope::Global => crate::ai::workspace::global_agent_dir(&app)?
+            .join("plugins")
+            .join(&id),
+        StoreScope::Project => match root.filter(|r| !r.is_empty()) {
+            Some(root) => project_place(Path::new(&root), &id),
+            None => return Ok(()),
+        },
+    };
+    match std::fs::remove_dir_all(&dir) {
+        Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.to_string()),
+        _ => Ok(()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -157,4 +157,6 @@ export const plugins = {
   /** What a plugin keeps globally and in `root`'s project, in bytes. */
   storeUsage: (id: string, root: string | null) =>
     command("plugin_store_usage", id, root),
+  storeClear: (id: string, scope: StoreScope, root: string | null) =>
+    command("plugin_store_clear", id, scope, root),
 };

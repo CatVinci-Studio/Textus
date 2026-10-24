@@ -1196,6 +1196,11 @@ export default {
   pluginRequiresAsk: "「{name}」需要打开「{setting}」。{reason}",
   pluginRequiresLater: "以后再说",
   pluginAboutGroup: "关于",
+  pluginDataLabel: "它保存的数据",
+  pluginDataGlobal: "所有文档共用 {global}",
+  pluginDataProject: "这个项目里 {project}",
+  pluginDataClear: "清空",
+  pluginDataClearAsk: "清空 {name} 保存的数据？清空后无法恢复。",
   pluginVersionLabel: "版本 {version}",
   pluginsAllLabel: "插件",
   pluginsAllHelp:

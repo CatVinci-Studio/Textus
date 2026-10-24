@@ -117,3 +117,36 @@ test("without project.data a plugin keeps nothing in the folder", async ({
     page.getByText("project refused: test.keep was not granted project.data."),
   ).toBeVisible();
 });
+
+test("its page says what a plugin keeps, and Clear empties it", async ({
+  page,
+}) => {
+  await open(page, ["project.data"]);
+  await save(page);
+  await expect(page.getByText(/^global 1 /)).toBeVisible();
+  await page.getByRole("button", { name: "OK" }).click();
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-manage-plugins"),
+  );
+  await page
+    .locator('.plugin-card[data-plugin="test.keep"] .plugin-card-open')
+    .click();
+  const own = page.locator('[data-plugin-page="test.keep"]');
+  await expect(own).toContainText("for every document");
+  await expect(own).toContainText("in this project");
+  await own.getByRole("button", { name: "Clear", exact: true }).click();
+  await page
+    .locator(".app-dialog")
+    .getByRole("button", { name: "Clear" })
+    .click();
+  await expect(own).not.toContainText("for every document");
+  expect(
+    await page.evaluate(() =>
+      Object.keys(
+        (window as unknown as { __devPluginStore: object }).__devPluginStore,
+      ),
+    ),
+  ).toEqual([]);
+});

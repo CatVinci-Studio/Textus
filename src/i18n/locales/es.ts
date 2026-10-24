@@ -1324,6 +1324,11 @@ para usar una.
   pluginRequiresAsk: "{name} necesita «{setting}». {reason}",
   pluginRequiresLater: "Ahora no",
   pluginAboutGroup: "Acerca de",
+  pluginDataLabel: "Sus datos",
+  pluginDataGlobal: "{global} para todos los documentos",
+  pluginDataProject: "{project} en este proyecto",
+  pluginDataClear: "Borrar",
+  pluginDataClearAsk: "¿Borrar lo que guarda {name}? No se puede recuperar.",
   pluginVersionLabel: "Versión {version}",
   pluginsAllLabel: "Complementos",
   pluginsAllHelp:

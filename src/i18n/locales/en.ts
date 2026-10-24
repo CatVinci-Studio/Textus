@@ -1295,6 +1295,11 @@ type /name in a conversation to use one.
   pluginRequiresAsk: "{name} needs “{setting}”. {reason}",
   pluginRequiresLater: "Not now",
   pluginAboutGroup: "About",
+  pluginDataLabel: "Its data",
+  pluginDataGlobal: "{global} for every document",
+  pluginDataProject: "{project} in this project",
+  pluginDataClear: "Clear",
+  pluginDataClearAsk: "Clear what {name} keeps? It can't be brought back.",
   pluginVersionLabel: "Version {version}",
   pluginsAllLabel: "Plugins",
   pluginsAllHelp:

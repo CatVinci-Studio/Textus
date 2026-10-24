@@ -1315,6 +1315,11 @@ export default {
   pluginRequiresAsk: "Для {name} нужно «{setting}». {reason}",
   pluginRequiresLater: "Не сейчас",
   pluginAboutGroup: "О плагине",
+  pluginDataLabel: "Его данные",
+  pluginDataGlobal: "{global} для всех документов",
+  pluginDataProject: "{project} в этом проекте",
+  pluginDataClear: "Очистить",
+  pluginDataClearAsk: "Очистить то, что хранит {name}? Это нельзя отменить.",
   pluginVersionLabel: "Версия {version}",
   pluginsAllLabel: "Плагины",
   pluginsAllHelp:

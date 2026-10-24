@@ -1306,6 +1306,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginRequiresAsk: "{name} precisa de “{setting}”. {reason}",
   pluginRequiresLater: "Agora não",
   pluginAboutGroup: "Sobre",
+  pluginDataLabel: "Seus dados",
+  pluginDataGlobal: "{global} para todos os documentos",
+  pluginDataProject: "{project} neste projeto",
+  pluginDataClear: "Limpar",
+  pluginDataClearAsk: "Limpar o que {name} guarda? Não dá para desfazer.",
   pluginVersionLabel: "Versão {version}",
   pluginsAllLabel: "Plugins",
   pluginsAllHelp:

@@ -128,6 +128,11 @@ export const commands = {
 	 *  it on Clear data. `root` is the open folder, for the project's.
 	 */
 	plugin_store_usage: (id: string, root: string | null) => __TAURI_INVOKE<[number, number]>("plugin_store_usage", { id, root }),
+	/**
+	 *  Empties one of a plugin's places (Settings › its page › Clear data).
+	 *  Asked by the user, not the plugin: it may be off.
+	 */
+	plugin_store_clear: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<null>("plugin_store_clear", { id, scope, root }),
 	/**  Keeps `value` under `key`; null takes the key away. */
 	plugin_storage_set: (id: string, key: string, value: Value) => __TAURI_INVOKE<null>("plugin_storage_set", { id, key, value }),
 	/**
