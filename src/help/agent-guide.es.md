@@ -188,7 +188,7 @@ Las instrucciones de escritura solo se aplican a las conversaciones. El autocomp
 
 ### Lo que recuerda Textus AI
 
-**Textus AI recuerda lo que le pides y cómo escribes**, sin que tengas que escribir ningún archivo. Cuando le dices algo que debe valer más allá de una petición («escribe siempre en español de España», «nada de rayas», una corrección que tuviste que hacer dos veces) o un dato sobre tu obra, como quién es un personaje, lo guarda y lo sigue en las conversaciones siguientes. Cada vez, una línea bajo su respuesta indica qué ha recordado y dónde: **Deshacer** lo retira, y **Hacer personal** o **Pasar al proyecto** lo cambia de sitio.
+**Textus AI recuerda lo que le pides y cómo escribes**, sin que tengas que escribir ningún archivo. Cuando le dices algo que debe valer más allá de una petición («escribe siempre en español de España», «nada de rayas», una corrección que tuviste que hacer dos veces) o un dato sobre tu obra, como quién es un personaje, lo guarda y lo sigue en las conversaciones siguientes. Cada vez, una línea bajo su respuesta indica qué ha recordado y dónde: **Deshacer** lo retira, y **Hacer global** o **Pasar al proyecto** lo cambia de sitio.
 
 - **Este proyecto**: lo que trata de esta obra, en `.textus/memory/`; los datos sobre personas, lugares y términos van a la biblioteca.
 - **Para todos los proyectos**: tus hábitos generales, en `memory/` dentro de la carpeta de configuración global. Sin carpeta del proyecto, todo va aquí.

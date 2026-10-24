@@ -188,7 +188,7 @@ Schreibanweisungen gelten nur für Unterhaltungen. Die Vervollständigung liest 
 
 ### Was sich Textus AI merkt
 
-**Textus AI merkt sich, worum du bittest und wie du schreibst**, ohne dass du eine Datei schreiben musst. Wenn du etwas sagst, das über eine einzelne Anfrage hinaus gelten soll – „immer Schweizer Rechtschreibung“, „keine Gedankenstriche“, eine Korrektur, die du zweimal machen musstest – oder einen Fakt über dein Werk nennst, etwa wer eine Figur ist, merkt sich Textus AI das und hält sich in späteren Unterhaltungen daran. Jedes Mal zeigt eine Zeile unter der Antwort, was gemerkt wurde und wo: **Rückgängig** nimmt es zurück, **Persönlich machen** oder **Ins Projekt** verschiebt es.
+**Textus AI merkt sich, worum du bittest und wie du schreibst**, ohne dass du eine Datei schreiben musst. Wenn du etwas sagst, das über eine einzelne Anfrage hinaus gelten soll – „immer Schweizer Rechtschreibung“, „keine Gedankenstriche“, eine Korrektur, die du zweimal machen musstest – oder einen Fakt über dein Werk nennst, etwa wer eine Figur ist, merkt sich Textus AI das und hält sich in späteren Unterhaltungen daran. Jedes Mal zeigt eine Zeile unter der Antwort, was gemerkt wurde und wo: **Rückgängig** nimmt es zurück, **Global machen** oder **Ins Projekt** verschiebt es.
 
 - **Dieses Projekt**: was dieses Werk betrifft, in `.textus/memory/`; Fakten zu Personen, Orten und Begriffen kommen ins Lexikon.
 - **Für alle Projekte**: deine allgemeinen Gewohnheiten, in `memory/` im globalen Konfigurationsordner. Ohne Projektordner landet alles hier.

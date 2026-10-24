@@ -188,7 +188,7 @@ As instruções de escrita valem só para as conversas. O autocompletar não as 
 
 ### O que a Textus AI lembra
 
-**A Textus AI lembra o que você pede e como você escreve**, sem que você precise escrever um arquivo. Quando você diz algo que deve valer além de um pedido (“sempre com a grafia de Portugal”, “sem travessões”, uma correção que você teve de fazer duas vezes) ou um fato sobre a sua obra, como quem é um personagem, ela guarda isso e segue nas conversas seguintes. A cada vez, uma linha abaixo da resposta diz o que ela lembrou e onde: **Desfazer** volta atrás, e **Tornar pessoal** ou **Passar para o projeto** muda o lugar.
+**A Textus AI lembra o que você pede e como você escreve**, sem que você precise escrever um arquivo. Quando você diz algo que deve valer além de um pedido (“sempre com a grafia de Portugal”, “sem travessões”, uma correção que você teve de fazer duas vezes) ou um fato sobre a sua obra, como quem é um personagem, ela guarda isso e segue nas conversas seguintes. A cada vez, uma linha abaixo da resposta diz o que ela lembrou e onde: **Desfazer** volta atrás, e **Tornar global** ou **Passar para o projeto** muda o lugar.
 
 - **Este projeto**: o que é sobre esta obra, em `.textus/memory/`; fatos sobre pessoas, lugares e termos vão para a biblioteca.
 - **Para todos os projetos**: os seus hábitos gerais, em `memory/` na pasta de configuração global. Sem pasta do projeto, tudo vai para cá.

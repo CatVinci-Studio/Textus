@@ -188,7 +188,7 @@ Les instructions d'écriture ne s'appliquent qu'aux conversations. La complétio
 
 ### Ce que Textus AI retient
 
-**Textus AI retient ce que vous lui demandez et votre façon d'écrire**, sans que vous ayez à écrire de fichier. Quand vous lui dites une chose qui doit valoir au-delà d'une seule demande (« toujours l'orthographe rectifiée », « pas de tiret cadratin », une correction que vous avez dû faire deux fois) ou un fait sur votre œuvre, comme l'identité d'un personnage, il la retient et la suit dans les conversations suivantes. À chaque fois, une ligne sous sa réponse indique ce qu'il a retenu et où : **Annuler** le retire, et **Rendre personnel** ou **Passer au projet** le déplace.
+**Textus AI retient ce que vous lui demandez et votre façon d'écrire**, sans que vous ayez à écrire de fichier. Quand vous lui dites une chose qui doit valoir au-delà d'une seule demande (« toujours l'orthographe rectifiée », « pas de tiret cadratin », une correction que vous avez dû faire deux fois) ou un fait sur votre œuvre, comme l'identité d'un personnage, il la retient et la suit dans les conversations suivantes. À chaque fois, une ligne sous sa réponse indique ce qu'il a retenu et où : **Annuler** le retire, et **Rendre global** ou **Passer au projet** le déplace.
 
 - **Ce projet** : ce qui concerne cette œuvre, dans `.textus/memory/` ; les faits sur les personnes, les lieux et les termes vont dans la bibliothèque.
 - **Pour tous les projets** : vos habitudes générales, dans `memory/` du dossier de configuration globale. Sans dossier du projet, tout va ici.

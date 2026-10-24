@@ -190,7 +190,7 @@ Writing instructions apply to conversations only. Completion doesn't read them; 
 
 ### What Textus AI remembers
 
-**Textus AI remembers what you ask for and how you write**, without you writing a file. When you tell it something that should hold beyond one request — "always use British spelling", "no em dashes", a correction you had to make twice — or a fact about your work, such as who a character is, it keeps it and follows it in later conversations. Each time, a line under its reply says what it remembered and where: **Undo** takes it back, and **Make personal** or **Make project** moves it.
+**Textus AI remembers what you ask for and how you write**, without you writing a file. When you tell it something that should hold beyond one request — "always use British spelling", "no em dashes", a correction you had to make twice — or a fact about your work, such as who a character is, it keeps it and follows it in later conversations. Each time, a line under its reply says what it remembered and where: **Undo** takes it back, and **Make global** or **Make project** moves it.
 
 - **This project**: what is about this work, in `.textus/memory/`; facts about people, places and terms go into the library.
 - **For all projects**: your general habits, in `memory/` in the global config folder. Without a project folder, everything goes here.
