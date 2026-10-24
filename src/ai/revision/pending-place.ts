@@ -19,11 +19,7 @@ import {
   type PendingPreview,
   type PendingSentence,
 } from "./pending-edit-plugin";
-import {
-  pairedPrefix,
-  splitSentences,
-  trimBreaks,
-} from "./sentence-diff";
+import { pairedPrefix, splitSentences, trimBreaks } from "./sentence-diff";
 import { diffSentences, splitUnits } from "./unit-diff";
 import { matchableMarkdown } from "./markdown-forms";
 import { findInOrder, locateHunks } from "./sentence-locate";
@@ -130,8 +126,15 @@ export function resolveAnchored(
       proposal.action,
       proposal.text ?? "",
     ),
+    // An insertion next to words inside its block has theirs: drawn
+    // there, inside the paragraph, where Accept writes it (insertAt in
+    // pending-decorations.ts). One next to the whole block goes beside it.
     strikeRange:
-      proposal.action === "replace" || proposal.action === "delete"
+      proposal.action === "replace" ||
+      proposal.action === "delete" ||
+      ((proposal.action === "insert_before" ||
+        proposal.action === "insert_after") &&
+        (match.prefix.trim() !== "" || match.suffix.trim() !== ""))
         ? computeStrikeRange(ctx, doc, blocks, match)
         : null,
     lead: match.prefix,

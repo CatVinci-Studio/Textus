@@ -171,7 +171,6 @@ export function decorationsFor(
     ];
   const decos: Decoration[] = [];
   const removesText = removesTextOf(p);
-  const strikeTo = p.strikeTo ?? p.to;
   const focused = hooks.focused();
   const isFocused = focused?.callId === p.callId && focused.index === -1;
   const strike = wholeStrike(p);
@@ -193,20 +192,32 @@ export function decorationsFor(
   const text = p.proposal.text;
   if (text !== undefined && p.proposal.action !== "delete") {
     const atStart = p.proposal.action === "insert_before";
-    // `replace`'s insert point follows the strike range specifically (not
-    // just "p.to") so the green text lands immediately after the red -
-    // "struck old text, new text right after" - rather than at the very end
-    // of a whole re-parsed block that may extend well past what was struck.
-    const insertPos = atStart
-      ? p.from
-      : p.proposal.action === "replace"
-        ? strikeTo
-        : p.to;
     decos.push(
-      textWidget(p, insertPos, atStart ? -1 : 1, animate, removesText),
+      textWidget(p, insertAt(p), atStart ? -1 : 1, animate, removesText),
     );
   }
   return decos;
+}
+
+/**
+ * Where a proposal shown whole draws its new text. `replace`'s follows the
+ * strike range (not just "p.to") so the green text lands immediately
+ * after the red - "struck old text, new text right after" - rather than at
+ * the very end of a whole re-parsed block that may extend well past what
+ * was struck. An insertion next to words inside a paragraph goes right
+ * by them, as Accept writes it: drawn at the paragraph's edge, it stood
+ * as a paragraph of its own and moved into the text when taken. One next
+ * to a whole block (no strike range, pending-place's resolveAnchored)
+ * goes between blocks - decided by the anchor, not by the text, which
+ * grows while it streams: a first paragraph drawn inside moved out when
+ * a second came.
+ */
+export function insertAt(p: PendingPreview): number {
+  const { action } = p.proposal;
+  if (action === "insert_before") return p.strikeFrom ?? p.from;
+  if (action === "insert_after") return p.strikeTo ?? p.to;
+  if (action === "replace") return p.strikeTo ?? p.to;
+  return p.to;
 }
 
 /** The old picture's node, while the picture that redoes it (a picture
