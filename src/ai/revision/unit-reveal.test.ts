@@ -57,3 +57,16 @@ describe("UnitReveal", () => {
     expect(reveal.caughtUp).toBe(true);
   });
 });
+
+describe("new writing, a paragraph at a time", () => {
+  it("lands a paragraph only once it is written whole", () => {
+    const para = (text: string, done = false) =>
+      landingEnds(text, 0, done, false, true);
+    // Its sentences wait for the paragraph's end.
+    expect(para("One. Two. Thr")).toEqual([]);
+    expect(para("One. Two.\n\nThree")).toEqual([11]);
+    // The end of the text ends it, as does a heading after it.
+    expect(para("One. Two.", true)).toEqual([9]);
+    expect(para("One.\n## Next\n\n")).toContain(5);
+  });
+});

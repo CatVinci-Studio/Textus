@@ -13,6 +13,11 @@ import { splitUnits } from "./unit-diff";
  * what is shown always ends where the layout of the rewrite does
  * (sentence-stream.ts).
  *
+ * New writing (`paragraphs`) lands a block at a time: a paragraph once it
+ * is written whole, then all of it at once - landed a sentence at a time,
+ * it grew in jerks. A rewrite's sentences still land one by one, each
+ * decided on its own.
+ *
  * Each unit lands markTime() after the last - the moment its original is
  * marked (ui/moves.ts, the rewrite's reading cursor) - and a backlog of
  * more than BACKLOG lands at once. Display only, like StreamReveal (the
@@ -35,6 +40,10 @@ const LONG_UNIT = 150;
  *  that puts no space after it, an ellipsis. */
 const CLOSED = /[。！？؟।…][”’"')）」』\]]*$/;
 
+/** A line that starts a block of its own, not more of a paragraph: a
+ *  heading, a list item, a quote, a table row, a picture, a fence. */
+const BLOCK_START = /^\s*(#{1,6}\s|[-*+]\s|\d+[.)]\s|>|\||!\[|```|~~~|\$\$)/;
+
 /** Where a unit may be cut when it has gone on too long or stopped. */
 const SOFT_BREAK = /[，,、；;：:\s](?=[^，,、；;：:\s]*$)/;
 
@@ -51,8 +60,9 @@ export function landingEnds(
   shown: number,
   done: boolean,
   idle: boolean,
+  paragraphs = false,
 ): number[] {
-  return landings(text, shown, done, idle).map((l) => l.end);
+  return landings(text, shown, done, idle, paragraphs).map((l) => l.end);
 }
 
 /** A place the text on screen may stop at; `cut` when it is partway into
@@ -67,6 +77,7 @@ function landings(
   shown: number,
   done: boolean,
   idle: boolean,
+  paragraphs: boolean,
 ): Landing[] {
   const units = splitUnits(text);
   const ends: Landing[] = [];
@@ -75,6 +86,20 @@ function landings(
     end += unit.length;
     const last = i === units.length - 1;
     if (end <= shown) return;
+    if (paragraphs && !wholeBlockKind(unit.trim())) {
+      // A paragraph's sentence lands with the paragraph: once a blank line
+      // or a block of another kind follows it, or the text is done.
+      const next = units[i + 1];
+      if (
+        (last && done) ||
+        /\n[ \t]*\n\s*$/.test(unit) ||
+        (next !== undefined &&
+          /\n\s*$/.test(unit) &&
+          (wholeBlockKind(next.trim()) || BLOCK_START.test(next)))
+      )
+        ends.push({ end, cut: false });
+      return;
+    }
     // A pause after a stop that wants a space: the sentence is over.
     const stopped = idle && /[.!?;][”’"')）」』\]]*$/.test(unit);
     if (!last || done || stopped || lastComplete(unit)) {
@@ -125,6 +150,16 @@ function fenceClosed(unit: string): boolean {
 }
 
 export class UnitReveal {
+  /** New writing: paragraphs land whole (above). */
+  constructor(private paragraphs = false) {}
+
+  /** Its text is a rewrite laid out sentence by sentence after all: each
+   *  sentence lands on its own. */
+  bySentence() {
+    this.paragraphs = false;
+    this.pendingFor = "";
+  }
+
   private received = "";
   private shown = 0;
   private done = false;
@@ -149,7 +184,13 @@ export class UnitReveal {
     const idle = !this.done && now - this.lastArrival >= IDLE_MS;
     const key = `${this.received.length}:${this.done}`;
     if (key !== this.pendingFor || idle !== this.pendingIdle) {
-      this.pending = landings(this.received, this.shown, this.done, idle);
+      this.pending = landings(
+        this.received,
+        this.shown,
+        this.done,
+        idle,
+        this.paragraphs,
+      );
       this.pendingFor = key;
       this.pendingIdle = idle;
     }

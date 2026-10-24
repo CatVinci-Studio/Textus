@@ -5,12 +5,7 @@ import { ai } from "../../platform/ipc";
 import { fnv1a } from "../../utils/hash";
 import { cachedDocumentMarkdown, serializeRange } from "../doc-markdown";
 import { onPictureSettled, pictureState } from "./generated-images";
-import {
-  keptFrom,
-  picturesOf,
-  readKept,
-  restorable,
-} from "./kept-proposals";
+import { keptFrom, picturesOf, readKept, restorable } from "./kept-proposals";
 import type { SelectionTarget } from "./pending-place";
 import type { ProposalToPlace } from "./pending-place";
 import type { PendingPreview } from "./pending-types";
