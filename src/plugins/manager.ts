@@ -1,4 +1,5 @@
 import { createElement } from "react";
+import { setHoverStarter } from "./hover-providers";
 import {
   forgetPluginSettings,
   loadProjectPluginSettings,
@@ -368,10 +369,42 @@ function apply(record: PluginRecord) {
     void host(record)
       .start()
       .catch(() => {});
+  else if (manifest.activationEvents.includes("onHover")) {
+    hoverWaiting.add(id);
+    syncHoverStarter();
+  }
+}
+
+/** On plugins that start when the pointer first rests on a link
+ *  (`onHover`) and haven't yet. */
+const hoverWaiting = new Set<string>();
+
+function syncHoverStarter() {
+  setHoverStarter(
+    hoverWaiting.size,
+    hoverWaiting.size === 0
+      ? null
+      : async () => {
+          const ids = [...hoverWaiting];
+          hoverWaiting.clear();
+          syncHoverStarter();
+          await Promise.all(
+            ids.map((id) => {
+              const record = pluginRecord(id);
+              return record?.status === "on"
+                ? host(record)
+                    .start()
+                    .catch(() => {})
+                : undefined;
+            }),
+          );
+        },
+  );
 }
 
 /** Takes back what a plugin added. */
 function withdraw(id: string) {
+  if (hoverWaiting.delete(id)) syncHoverStarter();
   for (const undo of contributions.get(id) ?? []) undo();
   contributions.delete(id);
 }

@@ -32,14 +32,29 @@ export function removeHoverProvider(plugin: string): void {
   providers.delete(plugin);
 }
 
+/** Plugins that start on the first hover (`"activationEvents":
+ *  ["onHover"]`), and what starts them (manager.ts). A plugin that only
+ *  shows cards needs to run no sooner. */
+let waiting = 0;
+let startWaiting: (() => Promise<void>) | null = null;
+
+export function setHoverStarter(
+  count: number,
+  start: (() => Promise<void>) | null,
+): void {
+  waiting = count;
+  startWaiting = start;
+}
+
 export function hasHoverProviders(): boolean {
-  return providers.size > 0;
+  return providers.size > 0 || waiting > 0;
 }
 
 /** The first card a plugin has for `target`, or null. */
 export async function provideHover(
   target: HoverTarget,
 ): Promise<HoverCard | null> {
+  if (waiting > 0 && startWaiting) await startWaiting().catch(() => {});
   for (const provide of [...providers.values()]) {
     const card = await Promise.race([
       provide(target).catch(() => null),

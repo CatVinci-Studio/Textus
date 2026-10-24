@@ -43,7 +43,7 @@
     "activationEvents": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "[\"onStartupFinished\"] to start with Textus; otherwise it starts on first use of what it contributes."
+      "description": "Starts on first use of what it contributes; [\"onStartupFinished\"] to start with Textus, [\"onHover\"] on the first hover over a link."
     },
     "permissions": {
       "type": "array",

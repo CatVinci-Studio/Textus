@@ -40,7 +40,10 @@ To share it, zip the folder and name the file `<id>.textusplugin`;
   // 1.3.0-beta.1), unless you name one: ">=1.3.0-beta.2" for what it added.
   "engines": { "textus": "^1.3.0" },
   "main": "host.js", // or ["shared.js", "host.js"], run in order
-  "activationEvents": [], // ["onStartupFinished"] to start with Textus
+  // Starts on first use of what it contributes; ["onStartupFinished"] to
+  // start with Textus, ["onHover"] when the pointer first rests on a link
+  // (for a plugin that only gives hover cards).
+  "activationEvents": [],
   "permissions": ["document.read"],
   // A Textus setting it needs on to do all it does; turning the plugin on
   // offers to turn it on, and its page says whether it is.
