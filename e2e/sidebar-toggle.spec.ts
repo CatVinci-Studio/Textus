@@ -14,6 +14,24 @@ const sidebar = ".sidebar";
 const left = (page: Page, selector: string) =>
   page.locator(selector).evaluate((el) => el.getBoundingClientRect().left);
 
+/** The things the eye compares between two controls: the box - its size and
+ *  its rounding - how far it is dimmed, what it fills with, and how fast
+ *  that changes. */
+async function look(page: Page, selector: string) {
+  return page.locator(selector).evaluate((el) => {
+    const s = getComputedStyle(el);
+    return {
+      width: s.width,
+      height: s.height,
+      radius: s.borderRadius,
+      cursor: s.cursor,
+      opacity: s.opacity,
+      background: s.backgroundColor,
+      duration: s.transitionDuration,
+    };
+  });
+}
+
 test("the toggle opens and closes the sidebar, beside the menu button", async ({
   page,
 }) => {
@@ -110,6 +128,34 @@ test.describe("on a Mac", () => {
     expect(frames[0]).toBeLessThan(16);
     expect(frames[1]).toBeGreaterThanOrEqual(76);
   });
+});
+
+test("the menu button is the sidebar toggle's twin, hover and all", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  const toggle = ".window-bar-sidebar-toggle";
+  const menu = ".window-menu-button";
+
+  // At rest: the menu button takes the bar's own controls' box, rounding,
+  // dimming and transition, not the caption buttons' full-height, square
+  // one (window-bar.css, window-controls.css).
+  expect(await look(page, toggle)).toEqual(await look(page, menu));
+
+  const lit = [];
+  for (const selector of [toggle, menu]) {
+    await page.locator(selector).hover();
+    // Past the 80ms hover transition, and short of the tooltip's 400ms.
+    await page.waitForTimeout(250);
+    const state = await look(page, selector);
+    expect(Number(state.opacity)).toBe(1);
+    expect(state.background).not.toBe("rgba(0, 0, 0, 0)");
+    lit.push(state);
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(250);
+  }
+  // Lit, they fill with the same colour for the same time.
+  expect(lit[0]).toEqual(lit[1]);
 });
 
 test("the sidebar opens on the tab it was left on, after a restart (#347)", async ({

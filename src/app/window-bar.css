@@ -129,11 +129,13 @@
   pointer-events: none;
 }
 
-/* The bar's two buttons: the sidebar's at the start, Textus AI's in the status
-   group. The sidebar's has a class of its own, so the AI button is the one
-   .window-bar-toggle. */
+/* The bar's own buttons - the app menu's at the start, the sidebar's beside
+   it, Textus AI's in the status group: one size, shape and hover, so none
+   reads as a different kind of thing from its neighbours. The sidebar's has
+   a class of its own, so the AI button is the one .window-bar-toggle. */
 .window-bar-toggle,
-.window-bar-sidebar-toggle {
+.window-bar-sidebar-toggle,
+.window-menu-button {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
@@ -151,6 +153,7 @@
 
 .window-bar-toggle:hover,
 .window-bar-sidebar-toggle:hover,
+.window-menu-button:hover,
 .window-bar-toggle-on {
   opacity: 1;
   background: var(--sidebar-hover);
@@ -158,14 +161,16 @@
 
 /* Hover arrives in 80ms; turning on or off changes in 120ms. */
 .window-bar-toggle,
-.window-bar-sidebar-toggle {
+.window-bar-sidebar-toggle,
+.window-menu-button {
   transition:
     background-color var(--dur-fast) var(--ease-standard),
     opacity var(--dur-fast) var(--ease-standard);
 }
 
 .window-bar-toggle:hover,
-.window-bar-sidebar-toggle:hover {
+.window-bar-sidebar-toggle:hover,
+.window-menu-button:hover {
   transition-duration: var(--dur-instant);
 }
 
