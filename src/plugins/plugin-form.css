@@ -1,0 +1,28 @@
+/* plugin-form.tsx: a plugin's few fields in the app's dialog. */
+.plugin-form {
+  min-width: min(380px, calc(100vw - 32px));
+}
+
+.plugin-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 12px;
+  font-size: var(--text-sm);
+}
+
+.plugin-form-field > label {
+  color: var(--editor-muted);
+}
+
+.plugin-form-field :is(input:not([type="checkbox"]), textarea) {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.plugin-form-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--editor-text);
+}

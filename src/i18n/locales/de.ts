@@ -1402,11 +1402,13 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginStoppedAnswering: "es antwortete nicht mehr",
   pluginTooManyErrors: "es ist zu oft fehlgeschlagen",
   pluginQuickPickEmpty: "Keine Treffer.",
-  pluginPermDocumentRead: "Das angezeigte Dokument und seine Auswahl lesen",
-  pluginPermDocumentPropose:
+  pluginPermEditorRead: "Das angezeigte Dokument und seine Auswahl lesen",
+  pluginPermEditorWrite:
+    "Das geöffnete Dokument direkt ändern (jede Änderung lässt sich rückgängig machen)",
+  pluginPermEditorPropose:
     "Änderungen am Dokument vorschlagen, die du annimmst oder ablehnst",
-  pluginPermWorkspaceRead: "Die Dateien im geöffneten Ordner lesen",
-  pluginPermWorkspaceWrite: "Dateien im geöffneten Ordner anlegen und ändern",
+  pluginPermFilesRead: "Die Dateien im geöffneten Ordner lesen",
+  pluginPermFilesWrite: "Dateien im geöffneten Ordner anlegen und ändern",
   pluginPermClipboard: "Die Zwischenablage lesen und schreiben",
   pluginPermEditorInput:
     "Die Tasten im Editor übernehmen und beim Tippen bearbeiten",

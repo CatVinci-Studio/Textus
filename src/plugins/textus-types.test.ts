@@ -38,19 +38,20 @@ function declared(iface: string): string[] {
 }
 
 const INTERFACES: Record<string, string> = {
-  plugin: "PluginInfo",
   env: "Env",
   l10n: "L10n",
   commands: "Commands",
-  window: "Window",
+  ui: "Ui",
+  layout: "Layout",
+  views: "Views",
   editor: "Editor",
-  document: "Document",
-  workspace: "Workspace",
+  files: "Files",
+  metadata: "Metadata",
   net: "Net",
-  storage: "Storage",
   settings: "Settings",
-  clipboard: "Clipboard",
   ai: "Ai",
+  plugins: "Plugins",
+  uri: "Uri",
 };
 
 describe("textus.d.ts", () => {

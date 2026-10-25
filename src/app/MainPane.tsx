@@ -10,6 +10,7 @@ import type { TourAi } from "../utils/events";
 import type { AgentMode } from "../settings/SettingsContext";
 import { PluginTabPane } from "../plugins/PluginWebview";
 import { WebPagePane } from "../plugins/WebPagePane";
+import { PluginListPane } from "../plugins/PluginListView";
 import { TabBar } from "./TabBar";
 import { useSplitPanes } from "./useSplitPanes";
 import { SplitDivider, splitGridStyles } from "./SplitDivider";
@@ -130,6 +131,12 @@ export function MainPane({
           >
             {tab.view?.kind === "web" && tab.view.resource ? (
               <WebPagePane tabId={tab.id} url={tab.view.resource} t={t} />
+            ) : tab.view?.kind === "list" ? (
+              <PluginListPane
+                plugin={tab.view.plugin}
+                view={tab.view.view}
+                className="plugin-list-tab"
+              />
             ) : tab.view && tab.view.kind !== "web" ? (
               <PluginTabPane
                 tabId={tab.id}
@@ -138,6 +145,7 @@ export function MainPane({
                 kind={tab.view.kind}
                 resource={tab.view.resource}
                 state={tab.view.state}
+                target={tab.view.target}
               />
             ) : tab.sourceMode && tab.splitView ? (
               <Suspense fallback={null}>

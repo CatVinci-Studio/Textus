@@ -5,14 +5,16 @@ import type { Permission } from "./manifest";
  *  in Settings name it. */
 export function permissionLabel(permission: Permission, t: Strings): string {
   switch (permission) {
-    case "document.read":
-      return t.pluginPermDocumentRead;
-    case "document.propose":
-      return t.pluginPermDocumentPropose;
-    case "workspace.read":
-      return t.pluginPermWorkspaceRead;
-    case "workspace.write":
-      return t.pluginPermWorkspaceWrite;
+    case "editor.read":
+      return t.pluginPermEditorRead;
+    case "editor.write":
+      return t.pluginPermEditorWrite;
+    case "editor.propose":
+      return t.pluginPermEditorPropose;
+    case "files.read":
+      return t.pluginPermFilesRead;
+    case "files.write":
+      return t.pluginPermFilesWrite;
     case "clipboard":
       return t.pluginPermClipboard;
     case "editor.input":

@@ -32,8 +32,10 @@ interface Request extends AppDialogOptions {
    *  typed on the way back must not do something that can't be undone. */
   focusCancel?: boolean;
   confirm: boolean;
-  /** Prompt only: the text field's starting value. */
+  /** Prompt only: the text field's starting value, and its hint while
+   *  empty. */
   input?: string;
+  placeholder?: string;
   resolve: (ok: boolean, value?: string) => void;
 }
 
@@ -79,7 +81,11 @@ export function showConfirm(
 export function showPrompt(
   text: string,
   value: string,
-  options: AppDialogOptions & { okLabel: string; cancelLabel: string },
+  options: AppDialogOptions & {
+    okLabel: string;
+    cancelLabel: string;
+    placeholder?: string;
+  },
 ): Promise<string | null> {
   return new Promise((resolve) => {
     queue = [
@@ -160,6 +166,7 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
             ref={inputRef}
             className="app-dialog-input"
             defaultValue={shown.input}
+            placeholder={shown.placeholder}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) ok();
             }}

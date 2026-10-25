@@ -1401,11 +1401,13 @@ export default {
   pluginStoppedAnswering: "он перестал отвечать",
   pluginTooManyErrors: "он слишком часто давал сбой",
   pluginQuickPickEmpty: "Ничего не найдено.",
-  pluginPermDocumentRead: "Читать открытый документ и выделенный текст",
-  pluginPermDocumentPropose:
+  pluginPermEditorRead: "Читать открытый документ и выделенный текст",
+  pluginPermEditorWrite:
+    "Менять открытый документ напрямую (каждое изменение можно отменить)",
+  pluginPermEditorPropose:
     "Предлагать правки документа, которые вы принимаете или отклоняете",
-  pluginPermWorkspaceRead: "Читать файлы в открытой папке",
-  pluginPermWorkspaceWrite: "Создавать и изменять файлы в открытой папке",
+  pluginPermFilesRead: "Читать файлы в открытой папке",
+  pluginPermFilesWrite: "Создавать и изменять файлы в открытой папке",
   pluginPermClipboard: "Читать и записывать буфер обмена",
   pluginPermEditorInput:
     "Перехватывать клавиши в редакторе и править текст по ним",

@@ -57,7 +57,9 @@ export function createLinkHoverPlugin(docPath: () => string | null) {
                     target.type === "document"
                       ? () =>
                           void getWindowAccess()?.openFile(target.path, {
-                            heading: target.heading ?? undefined,
+                            place: target.heading
+                              ? { heading: target.heading }
+                              : undefined,
                           })
                       : undefined;
                   showHoverCard(key, spot.rect, { ...card, open });

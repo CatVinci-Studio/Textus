@@ -44,7 +44,7 @@ impl Default for PluginsState {
 pub struct PluginEntry {
     #[serde(default)]
     pub enabled: bool,
-    /// Permissions as the manifest names them: "workspace.read",
+    /// Permissions as the manifest names them: "files.read",
     /// "network:api.zotero.org".
     #[serde(default)]
     pub granted: Vec<String>,
@@ -151,11 +151,11 @@ mod tests {
 
     #[test]
     fn a_call_is_allowed_only_on_a_running_plugin_with_the_grant() {
-        assert!(state(true, true, &["workspace.read"]).allows("a.b", "workspace.read"));
-        assert!(!state(true, true, &["workspace.read"]).allows("a.b", "workspace.write"));
-        assert!(!state(true, false, &["workspace.read"]).allows("a.b", "workspace.read"));
-        assert!(!state(false, true, &["workspace.read"]).allows("a.b", "workspace.read"));
-        assert!(!state(true, true, &["workspace.read"]).allows("c.d", "workspace.read"));
+        assert!(state(true, true, &["files.read"]).allows("a.b", "files.read"));
+        assert!(!state(true, true, &["files.read"]).allows("a.b", "files.write"));
+        assert!(!state(true, false, &["files.read"]).allows("a.b", "files.read"));
+        assert!(!state(false, true, &["files.read"]).allows("a.b", "files.read"));
+        assert!(!state(true, true, &["files.read"]).allows("c.d", "files.read"));
     }
 
     #[test]
@@ -166,6 +166,6 @@ mod tests {
         let partial: PluginsState =
             serde_json::from_str(r#"{"plugins":{"a.b":{"enabled":true}}}"#).unwrap();
         assert!(partial.runs("a.b"));
-        assert!(!partial.allows("a.b", "workspace.read"));
+        assert!(!partial.allows("a.b", "files.read"));
     }
 }

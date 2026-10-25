@@ -2,7 +2,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { watchDevPlugins } from "./dev-reload";
 import { watchPluginAiTools } from "./ai-tools";
 import { setCompletionAsker } from "./completion-sources";
-import { makeBlankTab, type DocTab } from "../document/doc-tabs";
+import { makeBlankTab, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
 import { registerCommand } from "../app/commands";
@@ -10,9 +10,12 @@ import type { TabState } from "../app/useTabState";
 import type { OpenOptions } from "../app/useFileOpening";
 import {
   emitPluginEvent,
+  openDocumentAt,
   setWindowAccess,
+  type PluginTabInfo,
   type PluginTabView,
 } from "./app-bridge";
+import type { Where } from "./broker-scope";
 import {
   askPlugin,
   configurePlugins,
@@ -25,6 +28,7 @@ import {
 } from "./manager";
 import { watchTheme, windowIsDark } from "./theme-vars";
 import { usePluginMenuSync } from "./usePluginMenu";
+import { openBeside } from "../app/split-layout";
 
 /**
  * A window's side of the plugins: what it tells the manager (its strings,
@@ -62,6 +66,7 @@ export function usePluginWindow({
   const saveRef = useLatest(saveActiveTab);
   const closeRef = useLatest(closeActiveTab);
   const { tabsRef, setTabs, setActiveTabId } = tabState;
+  const activeIdRef = useLatest(tabState.activeTabId);
 
   useEffect(() => {
     configurePlugins({
@@ -73,20 +78,48 @@ export function usePluginWindow({
   }, [tRef, languageRef]);
 
   useEffect(() => {
-    const addTab = (tab: Partial<DocTab>) => {
+    const addTab = (tab: Partial<DocTab>, where: Where = "tab") => {
       const made: DocTab = { ...makeBlankTab(), ...tab };
-      setTabs((prev) => [...prev, made]);
-      setActiveTabId(made.id);
+      placeTab(made, where);
     };
+    // A new tab where a plugin asked: after the others, beside the one in
+    // front (split-layout.ts), or in its place.
+    const placeTab = (made: DocTab, where: Where) => {
+      const from = activeIdRef.current;
+      setTabs((prev) => {
+        if (where !== "current") return [...prev, made];
+        const at = prev.findIndex((tab) => tab.id === activeIdRef.current);
+        return at < 0
+          ? [...prev, made]
+          : prev.map((tab, i) => (i === at ? made : tab));
+      });
+      setActiveTabId(made.id);
+      if (where === "beside")
+        requestAnimationFrame(() => openBeside(made.id, from));
+    };
+    const info = (tab: DocTab): PluginTabInfo => ({
+      id: tab.id,
+      title: tabTitle(tab, tRef.current),
+      kind: tab.view
+        ? tab.view.kind === "web"
+          ? "web"
+          : tab.view.kind === "editor"
+            ? "file"
+            : "view"
+        : "document",
+      path: tab.path ?? tab.view?.resource ?? null,
+      ...(tab.view ? { plugin: tab.view.plugin, view: tab.view.view } : {}),
+    });
     setWindowAccess({
       rootPath: () => rootRef.current,
-      openFile: (path, { heading, asDocument }) =>
+      openFile: (path, { place, asDocument, where }) =>
         void openRef.current(path, {
-          ...(heading ? { anchor: heading } : {}),
+          ...(place ? { place } : {}),
           ...(asDocument ? { asDocument } : {}),
+          ...(where ? { where } : {}),
         }),
-      openUntitled: (content, title) =>
-        addTab({ content, savedContent: "", draftTitle: title }),
+      openUntitled: (content, title, where) =>
+        addTab({ content, savedContent: "", draftTitle: title }, where),
       openGuide: (content, title) => {
         const open = tabsRef.current.find(
           (tab) => !tab.path && tab.content === content,
@@ -94,7 +127,7 @@ export function usePluginWindow({
         if (open) setActiveTabId(open.id);
         else addTab({ content, savedContent: content, draftTitle: title });
       },
-      openPluginTab: (view: PluginTabView) => {
+      openPluginTab: (view: PluginTabView, where?: Where) => {
         // A view already open in a tab comes to the front.
         const open = tabsRef.current.find(
           (tab) =>
@@ -102,12 +135,21 @@ export function usePluginWindow({
             tab.view.view === view.view &&
             tab.view.resource === view.resource,
         );
-        if (open) setActiveTabId(open.id);
-        else addTab({ view });
+        if (open) {
+          const from = activeIdRef.current;
+          setActiveTabId(open.id);
+          if (where === "beside") openBeside(open.id, from);
+        } else addTab({ view }, where);
       },
+      tabs: () => tabsRef.current.map(info),
+      activeTab: () => {
+        const tab = tabsRef.current.find((t) => t.id === activeIdRef.current);
+        return tab ? info(tab) : null;
+      },
+      documentAt: openDocumentAt,
     });
     return () => setWindowAccess(null);
-  }, [rootRef, openRef, tabsRef, setTabs, setActiveTabId]);
+  }, [rootRef, openRef, tabsRef, setTabs, setActiveTabId, activeIdRef, tRef]);
 
   // File › Save and Close Tab, for a plugin that has its own keys for
   // them (Emacs's C-x C-s, Vim's :w and :q). Close Tab with { save: true }
@@ -147,7 +189,7 @@ export function usePluginWindow({
         id,
         "$provideCompletions",
         { id: source, ...context },
-        "document.read",
+        "editor.read",
       ),
     );
     return () => setCompletionAsker(null);

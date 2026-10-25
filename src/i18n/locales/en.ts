@@ -1381,11 +1381,13 @@ type /name in a conversation to use one.
   pluginStoppedAnswering: "it stopped answering",
   pluginTooManyErrors: "it failed too often",
   pluginQuickPickEmpty: "Nothing matches.",
-  pluginPermDocumentRead: "Read the document in front and its selection",
-  pluginPermDocumentPropose:
+  pluginPermEditorRead: "Read the document in front and its selection",
+  pluginPermEditorWrite:
+    "Change the document in front directly (each change can be undone)",
+  pluginPermEditorPropose:
     "Suggest edits to the document, which you accept or reject",
-  pluginPermWorkspaceRead: "Read the files in the open folder",
-  pluginPermWorkspaceWrite: "Create and change files in the open folder",
+  pluginPermFilesRead: "Read the files in the open folder",
+  pluginPermFilesWrite: "Create and change files in the open folder",
   pluginPermClipboard: "Read and write the clipboard",
   pluginPermEditorInput:
     "Take over the keys you type in the editor, and edit as you type",

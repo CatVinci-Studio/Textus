@@ -28,6 +28,8 @@ import {
 } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
 import { QuickPickHost } from "../plugins/quick-pick";
+import { PluginFormHost } from "../plugins/plugin-form";
+import { NoticeHost } from "../ui/notices";
 import "../plugins/plugins.css";
 import "./App.css";
 
@@ -214,7 +216,12 @@ function App() {
           )}
         </Presence>
         <AppDialogHost okLabel={t.dialogOk} />
-        <QuickPickHost emptyLabel={t.pluginQuickPickEmpty} />
+        <QuickPickHost
+          emptyLabel={t.pluginQuickPickEmpty}
+          okLabel={t.pluginOk}
+        />
+        <PluginFormHost />
+        <NoticeHost />
 
         {zenMode && <ZenHint onExit={() => setZenMode(false)} t={t} />}
 

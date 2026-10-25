@@ -25,12 +25,70 @@
 pub mod access;
 pub mod ai_tools;
 pub mod catalog;
+pub mod files;
 pub mod install;
+pub mod metadata;
 pub mod moved_skills;
 pub mod read_tool;
 pub mod state;
 pub mod store;
 pub mod workspace;
+
+/// The app's invoke handler with every plugin command (the shared ones,
+/// desktop and iOS) in front of the commands lib.rs lists: the plugin
+/// API's commands stay beside the code that answers them.
+#[macro_export]
+macro_rules! with_plugin_commands {
+    ($($rest:tt)*) => {
+        tauri::generate_handler![
+            $crate::plugins::state::plugins_state,
+            $crate::plugins::state::plugins_set_all,
+            $crate::plugins::state::plugin_set,
+            $crate::plugins::install::plugins_installed,
+            $crate::plugins::install::plugin_install,
+            $crate::plugins::install::plugin_install_files,
+            $crate::plugins::catalog::plugin_catalog,
+            $crate::plugins::catalog::plugin_catalog_cached,
+            $crate::plugins::catalog::skill_catalog,
+            $crate::plugins::catalog::skill_install_catalog,
+            $crate::plugins::access::plugin_fs_rename,
+            $crate::plugins::access::plugin_fs_trash,
+            $crate::plugins::access::plugin_fs_mkdir,
+            $crate::plugins::files::plugin_fs_stat,
+            $crate::plugins::files::plugin_fs_create,
+            $crate::plugins::files::plugin_fs_read_versioned,
+            $crate::plugins::files::plugin_fs_write_if,
+            $crate::plugins::files::plugin_secret_get,
+            $crate::plugins::files::plugin_secret_set,
+            $crate::plugins::metadata::plugin_metadata_all,
+            $crate::plugins::metadata::plugin_metadata_get,
+            $crate::plugins::catalog::plugin_install_catalog,
+            $crate::plugins::install::plugin_load_dev,
+            $crate::plugins::install::plugin_uninstall,
+            $crate::plugins::access::plugin_file,
+            $crate::plugins::access::plugin_read_resource,
+            $crate::plugins::access::plugin_fs_read,
+            $crate::plugins::access::plugin_fs_list,
+            $crate::plugins::workspace::plugin_fs_documents,
+            $crate::plugins::workspace::plugin_fs_search,
+            $crate::plugins::access::plugin_fs_write,
+            $crate::plugins::access::plugin_http,
+            $crate::plugins::install::plugin_dev_stamp,
+            $crate::plugins::ai_tools::plugin_ai_tools_set,
+            $crate::plugins::ai_tools::plugin_ai_tool_result,
+            $crate::plugins::store::plugin_store_get,
+            $crate::plugins::store::plugin_store_set,
+            $crate::plugins::store::plugin_store_keys,
+            $crate::plugins::store::plugin_store_read,
+            $crate::plugins::store::plugin_store_write,
+            $crate::plugins::store::plugin_store_files,
+            $crate::plugins::store::plugin_store_delete,
+            $crate::plugins::store::plugin_store_usage,
+            $crate::plugins::store::plugin_store_clear,
+            $($rest)*
+        ]
+    };
+}
 
 use std::path::PathBuf;
 use tauri::Manager;

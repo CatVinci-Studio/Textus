@@ -70,7 +70,7 @@
       "items": {
         "type": "string"
       },
-      "description": "Starts on first use of what it contributes; [\"onStartupFinished\"] to start with Textus, [\"onHover\"] on the first hover over a link."
+      "description": "When the plugin starts. Left out, Textus starts it the first time something it adds is used; [\"onStartupFinished\"] starts it with Textus, [\"onHover\"] on the first hover over a link, [\"onEditor\"] once a document is open (a plugin that marks the text)."
     },
     "permissions": {
       "type": "array",
@@ -79,12 +79,13 @@
         "anyOf": [
           {
             "enum": [
-              "document.read",
-              "document.propose",
-              "workspace.read",
-              "workspace.write",
-              "clipboard",
+              "editor.read",
+              "editor.write",
+              "editor.propose",
               "editor.input",
+              "files.read",
+              "files.write",
+              "clipboard",
               "project.data",
               "ai.tools"
             ]
@@ -147,7 +148,14 @@
         "menus": {
           "type": "object",
           "propertyNames": {
-            "enum": ["editor/context", "app/plugins", "app/tray"]
+            "enum": [
+              "editor/context",
+              "file/context",
+              "tab/context",
+              "view/title",
+              "app/plugins",
+              "app/tray"
+            ]
           },
           "additionalProperties": {
             "type": "array",
@@ -160,7 +168,11 @@
                 },
                 "when": {
                   "type": "string",
-                  "description": "editorHasSelection, fileExtension == .pdf (src/plugins/when.ts)"
+                  "description": "editorHasSelection, documentOpen, folderOpen, fileExtension == .pdf, view == <view id>; && || ! and ( ) (src/plugins/when.ts)"
+                },
+                "icon": {
+                  "type": "string",
+                  "description": "view/title: an icon in place of the title"
                 }
               }
             }
@@ -180,6 +192,10 @@
               },
               "icon": {
                 "type": "string"
+              },
+              "type": {
+                "enum": ["webview", "list"],
+                "description": "list: drawn by Textus from views.registerList's items; webview (the default): a page of the plugin's"
               }
             }
           }
@@ -195,6 +211,10 @@
               },
               "title": {
                 "type": "string"
+              },
+              "type": {
+                "enum": ["webview", "list"],
+                "description": "list: drawn by Textus from views.registerList's items; webview (the default): a page of the plugin's"
               }
             }
           }
@@ -345,6 +365,23 @@
               "command": {
                 "type": "string",
                 "description": "One of the plugin's contributes.commands; it is given the URL."
+              }
+            }
+          }
+        },
+        "codeBlocks": {
+          "type": "array",
+          "description": "Code blocks of a language the plugin draws in the document, answered by textus.views.registerCodeBlock(language).",
+          "items": {
+            "type": "object",
+            "required": ["language"],
+            "properties": {
+              "language": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,31}$"
+              },
+              "title": {
+                "type": "string"
               }
             }
           }

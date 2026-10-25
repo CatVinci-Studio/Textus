@@ -1437,12 +1437,13 @@ utiliser une.
   pluginStoppedAnswering: "elle ne répondait plus",
   pluginTooManyErrors: "elle a échoué trop souvent",
   pluginQuickPickEmpty: "Aucun résultat.",
-  pluginPermDocumentRead: "Lire le document affiché et sa sélection",
-  pluginPermDocumentPropose:
+  pluginPermEditorRead: "Lire le document affiché et sa sélection",
+  pluginPermEditorWrite:
+    "Modifier directement le document ouvert (chaque modification peut être annulée)",
+  pluginPermEditorPropose:
     "Proposer des modifications du document, que vous acceptez ou refusez",
-  pluginPermWorkspaceRead: "Lire les fichiers du dossier ouvert",
-  pluginPermWorkspaceWrite:
-    "Créer et modifier des fichiers dans le dossier ouvert",
+  pluginPermFilesRead: "Lire les fichiers du dossier ouvert",
+  pluginPermFilesWrite: "Créer et modifier des fichiers dans le dossier ouvert",
   pluginPermClipboard: "Lire et écrire le presse-papiers",
   pluginPermEditorInput:
     "Prendre en charge les touches tapées dans l’éditeur, et modifier au fil de la frappe",

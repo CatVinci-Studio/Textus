@@ -80,37 +80,6 @@ export const commands = {
 	 *  Official when the catalog says it is CatVinci's.
 	 */
 	plugin_install_catalog: (id: string) => __TAURI_INVOKE<InstalledPlugin>("plugin_install_catalog", { id }),
-	/**  A folder's entries, hidden ones left out. */
-	plugin_fs_list: (id: string, root: string, path: string) => __TAURI_INVOKE<FsEntry_Serialize[]>("plugin_fs_list", { id, root, path }),
-	/**
-	 *  Every Markdown document in the folder, in the sidebar's order, with
-	 *  its text.
-	 */
-	plugin_fs_documents: (id: string, root: string) => __TAURI_INVOKE<WorkspaceDocuments>("plugin_fs_documents", { id, root }),
-	/**
-	 *  The folder's documents' lines holding `query`, ignoring case, in the
-	 *  sidebar's order: at most `limit` of them (and never more than
-	 *  MAX_SEARCH_HITS).
-	 */
-	plugin_fs_search: (id: string, root: string, query: string, limit: number | null) => __TAURI_INVOKE<SearchResult>("plugin_fs_search", { id, root, query, limit }),
-	/**
-	 *  Writes a file in the folder, making the folders it is in. `contents` is
-	 *  text, or base64 with `base64`.
-	 */
-	plugin_fs_write: (id: string, root: string, path: string, contents: string, base64: boolean | null) => __TAURI_INVOKE<null>("plugin_fs_write", { id, root, path, contents, base64 }),
-	/**
-	 *  Renames or moves a file or folder within the folder. Refuses to put it
-	 *  over something that is there.
-	 */
-	plugin_fs_rename: (id: string, root: string, from: string, to: string) => __TAURI_INVOKE<null>("plugin_fs_rename", { id, root, from, to }),
-	/**
-	 *  Moves a file or folder in the folder to the system Trash - never a
-	 *  delete the user can't undo.
-	 */
-	plugin_fs_trash: (id: string, root: string, path: string) => __TAURI_INVOKE<null>("plugin_fs_trash", { id, root, path }),
-	/**  Makes a folder (and the folders it is in) in the folder. */
-	plugin_fs_mkdir: (id: string, root: string, path: string) => __TAURI_INVOKE<null>("plugin_fs_mkdir", { id, root, path }),
-	plugin_http: (id: string, request: HttpRequest_Deserialize) => __TAURI_INVOKE<HttpResponse>("plugin_http", { id, request }),
 	/**
 	 *  When a developer's plugin folder last changed: the newest file's time,
 	 *  in ms - the window loads the plugin again when it moves (folders such
@@ -124,30 +93,6 @@ export const commands = {
 	plugin_ai_tools_set: (tools: PluginAiTool[]) => __TAURI_INVOKE<void>("plugin_ai_tools_set", { tools }),
 	/**  What a plugin's tool answered (`text`), or why it couldn't (`error`). */
 	plugin_ai_tool_result: (callId: string, text: string | null, error: string | null) => __TAURI_INVOKE<void>("plugin_ai_tool_result", { callId, text, error }),
-	/**  What the plugin kept under `key`, or null. */
-	plugin_store_get: (id: string, scope: StoreScope, root: string | null, key: string) => __TAURI_INVOKE<Value | null>("plugin_store_get", { id, scope, root, key }),
-	/**  Keeps `value` under `key`; null takes the key away. */
-	plugin_store_set: (id: string, scope: StoreScope, root: string | null, key: string, value: Value) => __TAURI_INVOKE<null>("plugin_store_set", { id, scope, root, key, value }),
-	/**  Every key the plugin keeps there, in order. */
-	plugin_store_keys: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<string[]>("plugin_store_keys", { id, scope, root }),
-	/**  One of the plugin's own files there, as text. */
-	plugin_store_read: (id: string, scope: StoreScope, root: string | null, path: string) => __TAURI_INVOKE<string>("plugin_store_read", { id, scope, root, path }),
-	/**  Writes one of the plugin's own files there. */
-	plugin_store_write: (id: string, scope: StoreScope, root: string | null, path: string, text: string) => __TAURI_INVOKE<null>("plugin_store_write", { id, scope, root, path, text }),
-	/**  The plugin's own files there, as paths under its `files/`. */
-	plugin_store_files: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<string[]>("plugin_store_files", { id, scope, root }),
-	/**  Deletes one of the plugin's own files there. */
-	plugin_store_delete: (id: string, scope: StoreScope, root: string | null, path: string) => __TAURI_INVOKE<null>("plugin_store_delete", { id, scope, root, path }),
-	/**
-	 *  How much a plugin keeps in each place - Settings shows it, and empties
-	 *  it on Clear data. `root` is the open folder, for the project's.
-	 */
-	plugin_store_usage: (id: string, root: string | null) => __TAURI_INVOKE<[number, number]>("plugin_store_usage", { id, root }),
-	/**
-	 *  Empties one of a plugin's places (Settings › its page › Clear data).
-	 *  Asked by the user, not the plugin: it may be off.
-	 */
-	plugin_store_clear: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<null>("plugin_store_clear", { id, scope, root }),
 	/**
 	 *  The commands the plugins that are on put in the Plugins menu (the
 	 *  frontend's, src/plugins/usePluginMenu.ts), refilled when they change.
@@ -261,54 +206,6 @@ export type CatalogEntry_Serialize = {
 	size: number,
 };
 
-/**  One entry of a folder listing. */
-export type FsEntry = FsEntry_Serialize | FsEntry_Deserialize;
-
-/**  One entry of a folder listing. */
-export type FsEntry_Deserialize = {
-	name: string,
-	path: string,
-	isDir: boolean,
-	size: number,
-	modifiedMs?: number | null,
-};
-
-/**  One entry of a folder listing. */
-export type FsEntry_Serialize = {
-	name: string,
-	path: string,
-	isDir: boolean,
-	size: number,
-	modifiedMs: number | null,
-};
-
-export type HttpRequest = HttpRequest_Serialize | HttpRequest_Deserialize;
-
-export type HttpRequest_Deserialize = {
-	url: string,
-	method?: string | null,
-	headers?: { [key in string]: string },
-	/**  Text, or base64 with `body_base64`. */
-	body?: string | null,
-	bodyBase64?: boolean,
-};
-
-export type HttpRequest_Serialize = {
-	url: string,
-	method: string | null,
-	headers: { [key in string]: string },
-	/**  Text, or base64 with `body_base64`. */
-	body: string | null,
-	bodyBase64: boolean,
-};
-
-export type HttpResponse = {
-	status: number,
-	headers: { [key in string]: string },
-	/**  The body, base64. */
-	body: string,
-};
-
 /**  One installed plugin, as Settings › Plugins lists it. */
 export type InstalledPlugin = {
 	id: string,
@@ -342,7 +239,7 @@ export type PluginEntry = PluginEntry_Serialize | PluginEntry_Deserialize;
 export type PluginEntry_Deserialize = {
 	enabled?: boolean,
 	/**
-	 *  Permissions as the manifest names them: "workspace.read",
+	 *  Permissions as the manifest names them: "files.read",
 	 *  "network:api.zotero.org".
 	 */
 	granted?: string[],
@@ -358,7 +255,7 @@ export type PluginEntry_Deserialize = {
 export type PluginEntry_Serialize = {
 	enabled: boolean,
 	/**
-	 *  Permissions as the manifest names them: "workspace.read",
+	 *  Permissions as the manifest names them: "files.read",
 	 *  "network:api.zotero.org".
 	 */
 	granted: string[],
@@ -398,21 +295,6 @@ export type PluginsState_Serialize = {
 	/**  Settings › Plugins › Plugins: off stops every plugin at once. */
 	allOn: boolean,
 	plugins: { [key in string]: PluginEntry_Serialize },
-};
-
-/**  A line that holds what was searched for. */
-export type SearchHit = {
-	path: string,
-	rel: string,
-	/**  1-based. */
-	line: number,
-	text: string,
-};
-
-export type SearchResult = {
-	hits: SearchHit[],
-	/**  There may be more: the limit or the time was reached first. */
-	truncated: boolean,
 };
 
 /**  A server's state as Settings shows it. */
@@ -505,9 +387,6 @@ export type SkillLabel = {
 	hint: string,
 };
 
-/**  Which of a plugin's two places. */
-export type StoreScope = "global" | "project";
-
 /**  One plugin command in the menu, as the window sends it. */
 export type TrayPluginItem = {
 	command: string,
@@ -524,18 +403,4 @@ export type Tried = {
 };
 
 export type Value = null | boolean | number | string | Value[] | { [key in string]: Value };
-
-/**  One document and its text. */
-export type WorkspaceDocument = {
-	path: string,
-	/**  From the folder, `/`-separated. */
-	rel: string,
-	text: string,
-};
-
-export type WorkspaceDocuments = {
-	documents: WorkspaceDocument[],
-	/**  The folder holds more than was read: a limit was reached. */
-	truncated: boolean,
-};
 

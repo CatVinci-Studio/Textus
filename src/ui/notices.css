@@ -1,0 +1,116 @@
+/* notices.tsx: short notes and progress bars at the bottom of the window,
+   over the editor and clear of the status bar. They come in rising a
+   little and fading; only opacity and transform move. */
+.notice-stack {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(420px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: var(--text-sm);
+  color: var(--editor-text);
+  pointer-events: auto;
+  animation: notice-in var(--dur-base) var(--ease-out) both;
+}
+
+.notice[data-tone="warning"] {
+  border-left: 3px solid var(--warning-color);
+}
+
+.notice[data-tone="error"] {
+  border-left: 3px solid var(--danger);
+}
+
+.notice-text {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  min-width: 0;
+}
+
+.notice-source {
+  color: var(--editor-muted);
+}
+
+.notice-detail {
+  flex-basis: 100%;
+  color: var(--editor-muted);
+  font-size: var(--text-xs);
+}
+
+.notice-bar {
+  flex-basis: 100%;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--editor-text) 10%, transparent);
+}
+
+.notice-bar-fill {
+  height: 100%;
+  background: var(--editor-accent);
+  transform-origin: left center;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.notice-bar-fill.is-indeterminate {
+  width: 40%;
+  animation: notice-indeterminate 1.2s var(--ease-in-out) infinite;
+}
+
+.notice-cancel {
+  font: inherit;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.notice-cancel:hover {
+  color: var(--editor-text);
+}
+
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes notice-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notice,
+  .notice-bar-fill.is-indeterminate {
+    animation: none;
+  }
+}

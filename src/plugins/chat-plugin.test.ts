@@ -9,7 +9,7 @@ const manifest = {
   description: "Counts the words of the selection.",
   engines: { textus: "^1.3.0" },
   main: "host.js",
-  permissions: ["document.read"],
+  permissions: ["editor.read"],
   contributes: {
     commands: [{ command: "local.word-count.count", title: "Count Words" }],
   },

@@ -2,7 +2,7 @@ import { pluginsSnapshot } from "./plugin-records";
 
 /**
  * Completions plugins suggest as you type (manifest `contributes
- * .completions`, with document.read): the editor tells what is before the
+ * .completions`, with editor.read): the editor tells what is before the
  * caret and whether it is in a formula, the manifests say which plugins
  * want it - so a plugin is asked, and started, only when its pattern
  * matches - and the plugin's answer is the list shown at the caret
@@ -60,7 +60,7 @@ function sources(): Source[] {
   cachedFor = snapshot;
   cached = snapshot.allOn
     ? snapshot.records.flatMap((r) =>
-        r.status === "on" && r.manifest && r.granted.includes("document.read")
+        r.status === "on" && r.manifest && r.granted.includes("editor.read")
           ? r.manifest.contributes.completions.map((c) => ({
               plugin: r.id,
               id: c.id,

@@ -1412,11 +1412,13 @@ para usar una.
   pluginStoppedAnswering: "dejó de responder",
   pluginTooManyErrors: "falló demasiadas veces",
   pluginQuickPickEmpty: "Nada coincide.",
-  pluginPermDocumentRead: "Leer el documento abierto y su selección",
-  pluginPermDocumentPropose:
+  pluginPermEditorRead: "Leer el documento abierto y su selección",
+  pluginPermEditorWrite:
+    "Cambiar directamente el documento abierto (cada cambio se puede deshacer)",
+  pluginPermEditorPropose:
     "Sugerir cambios al documento, que tú aceptas o rechazas",
-  pluginPermWorkspaceRead: "Leer los archivos de la carpeta abierta",
-  pluginPermWorkspaceWrite: "Crear y modificar archivos en la carpeta abierta",
+  pluginPermFilesRead: "Leer los archivos de la carpeta abierta",
+  pluginPermFilesWrite: "Crear y modificar archivos en la carpeta abierta",
   pluginPermClipboard: "Leer y escribir el portapapeles",
   pluginPermEditorInput:
     "Tomar las teclas que pulsas en el editor y editar según las pulsas",

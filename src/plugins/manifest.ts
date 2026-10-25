@@ -9,13 +9,25 @@
  * English, as VS Code's package.nls.json does.
  */
 
+import {
+  ManifestError,
+  list,
+  object,
+  parseContributes,
+  parseMain,
+  text,
+} from "./manifest-parse";
+
+export { ManifestError } from "./manifest-parse";
+
 /** A permission, as the manifest names it. `network:<host>` names one
  *  host (`*.domain` for its subdomains, `host:port`, or `*` for any). */
 export type Permission =
-  | "document.read"
-  | "document.propose"
-  | "workspace.read"
-  | "workspace.write"
+  | "editor.read"
+  | "editor.write"
+  | "editor.propose"
+  | "files.read"
+  | "files.write"
   | "clipboard"
   | "editor.input"
   | "project.data"
@@ -23,10 +35,11 @@ export type Permission =
   | `network:${string}`;
 
 const PLAIN_PERMISSIONS = [
-  "document.read",
-  "document.propose",
-  "workspace.read",
-  "workspace.write",
+  "editor.read",
+  "editor.write",
+  "editor.propose",
+  "files.read",
+  "files.write",
   "clipboard",
   "editor.input",
   "project.data",
@@ -51,13 +64,24 @@ export interface KeybindingContribution {
   key: string;
 }
 
-/** Where a command is listed: the editor's right-click menu, the Plugins
- *  menu (the menu bar's on macOS, the app menu's elsewhere), and the menu
- *  of background mode's icon in the tray or menu bar - there with no
- *  window open, which it opens first. */
-export type MenuId = "editor/context" | "app/plugins" | "app/tray";
+/** Where a command is listed: the editor's right-click menu, a file's in
+ *  the sidebar (the command is given its path), a tab's (given its path,
+ *  if it has one), the buttons over a view of the plugin's (`when: "view
+ *  == <id>"`), the Plugins menu (the menu bar's on macOS, the app menu's
+ *  elsewhere), and the menu of background mode's icon in the tray or menu
+ *  bar - there with no window open, which it opens first. */
+export type MenuId =
+  | "editor/context"
+  | "file/context"
+  | "tab/context"
+  | "view/title"
+  | "app/plugins"
+  | "app/tray";
 export const MENU_IDS: readonly MenuId[] = [
   "editor/context",
+  "file/context",
+  "tab/context",
+  "view/title",
   "app/plugins",
   "app/tray",
 ];
@@ -79,21 +103,38 @@ export interface MenuContribution {
   command: string;
   /** "editorHasSelection", "fileExtension == .pdf" - see when.ts. */
   when?: string;
+  /** For "view/title": an icon (one of the app's, or an SVG of the
+   *  plugin's) in place of the title. */
+  icon?: string;
 }
 
-/** A tab in the sidebar, its panel a webview the plugin fills
- *  (registerWebviewViewProvider). */
+/** A view is drawn by Textus from the items the plugin gives
+ *  (views.registerList), or is a page of the plugin's own
+ *  (views.registerWebview). */
+export type ViewType = "list" | "webview";
+
+/** A tab in the sidebar. */
 export interface SidebarTabContribution {
   id: string;
   title: string;
+  type: ViewType;
   /** An SVG in the plugin's folder, drawn in the current text colour. */
   icon?: string;
 }
 
-/** A view the plugin opens in a tab of its own (window.openView). */
+/** A view the plugin opens in a tab of its own (layout.openView). */
 export interface ViewContribution {
   id: string;
   title: string;
+  type: ViewType;
+}
+
+/** Code blocks of a language the plugin draws in the document
+ *  (views.registerCodeBlock): ```tasks. */
+export interface CodeBlockContribution {
+  language: string;
+  /** What the block is called where Textus names it ("Task query"). */
+  title?: string;
 }
 
 /** A file type the plugin opens in a tab (registerCustomEditorProvider). */
@@ -138,7 +179,7 @@ export interface AiToolContribution {
   parameters: Record<string, unknown>;
 }
 
-/** Where a plugin suggests completions as you type (with document.read):
+/** Where a plugin suggests completions as you type (with editor.read):
  *  in a formula, in the text, or both, once the words before the caret
  *  match `pattern` (a regular expression, anchored at the caret). The
  *  plugin answers with textus.editor.registerCompletionProvider(id). */
@@ -170,6 +211,7 @@ export interface Contributes {
   aiTools: AiToolContribution[];
   completions: CompletionContribution[];
   links: LinkContribution[];
+  codeBlocks: CodeBlockContribution[];
 }
 
 export interface PluginManifest {
@@ -197,259 +239,8 @@ export interface PluginManifest {
   l10n: Record<string, Record<string, string>>;
 }
 
-/** Why a manifest was refused, in English: it is shown as is in Settings
- *  under the plugin's name, for its author. */
-export class ManifestError extends Error {}
-
 const ID = /^[a-z0-9][a-z0-9-]{0,63}\.[a-z0-9][a-z0-9-]{0,63}$/;
 const VERSION = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
-/** A contributed id: the plugin's own namespace, then a name. */
-const LOCAL_ID = /^[a-z0-9][a-z0-9.-]*$/i;
-
-type Json = Record<string, unknown>;
-
-function object(value: unknown, what: string): Json {
-  if (!value || typeof value !== "object" || Array.isArray(value))
-    throw new ManifestError(`${what} must be an object.`);
-  return value as Json;
-}
-
-function list(value: unknown, what: string): unknown[] {
-  if (value === undefined) return [];
-  if (!Array.isArray(value)) throw new ManifestError(`${what} must be a list.`);
-  return value;
-}
-
-function text(value: unknown, what: string, optional = false): string {
-  if (optional && value === undefined) return "";
-  if (typeof value !== "string" || !value.trim())
-    throw new ManifestError(`${what} must be a string.`);
-  return value;
-}
-
-/** A contributed id must start with the plugin's id, so two plugins can't
- *  take each other's commands or views. */
-function ownId(value: unknown, pluginId: string, what: string): string {
-  const id = text(value, what);
-  if (!id.startsWith(`${pluginId}.`) || !LOCAL_ID.test(id))
-    throw new ManifestError(`${what} "${id}" must start with "${pluginId}.".`);
-  return id;
-}
-
-/** `main`: one file, or several run in order (a plugin's shared code
- *  first) - the host takes no imports. */
-function parseMain(value: unknown): string[] | undefined {
-  if (value === undefined) return undefined;
-  const files = typeof value === "string" ? [value] : list(value, "main");
-  return files.map((f, i) => text(f, `main[${i}]`));
-}
-
-function parseSetting(raw: unknown, at: string): SettingContribution {
-  const s = object(raw, at);
-  const type = s.type;
-  if (
-    type !== "boolean" &&
-    type !== "string" &&
-    type !== "number" &&
-    type !== "enum"
-  )
-    throw new ManifestError(
-      `${at}.type must be boolean, string, number or enum.`,
-    );
-  const options =
-    type === "enum"
-      ? list(s.options, `${at}.options`).map((o, i) => {
-          const opt = object(o, `${at}.options[${i}]`);
-          return {
-            value: text(opt.value, `${at}.options[${i}].value`),
-            label: text(opt.label, `${at}.options[${i}].label`),
-          };
-        })
-      : undefined;
-  const fallback = s.default;
-  const expected = type === "enum" ? "string" : type;
-  if (typeof fallback !== expected)
-    throw new ManifestError(`${at}.default must be a ${expected}.`);
-  if (options && !options.some((o) => o.value === fallback))
-    throw new ManifestError(`${at}.default must be one of its options.`);
-  return {
-    key: text(s.key, `${at}.key`),
-    type,
-    default: fallback as SettingContribution["default"],
-    title: text(s.title, `${at}.title`),
-    description: text(s.description, `${at}.description`, true) || undefined,
-    options,
-    ...(type === "string" && s.multiline === true ? { multiline: true } : {}),
-  };
-}
-
-function parseContributes(raw: unknown, id: string): Contributes {
-  const c = raw === undefined ? {} : object(raw, "contributes");
-  const commands = list(c.commands, "contributes.commands").map((x, i) => {
-    const o = object(x, `contributes.commands[${i}]`);
-    return {
-      command: ownId(o.command, id, `contributes.commands[${i}].command`),
-      title: text(o.title, `contributes.commands[${i}].title`),
-    };
-  });
-  const declared = new Set(commands.map((x) => x.command));
-  const declaredCommand = (value: unknown, what: string) => {
-    const command = text(value, what);
-    if (!declared.has(command))
-      throw new ManifestError(
-        `${what} "${command}" is not in contributes.commands.`,
-      );
-    return command;
-  };
-  const keybindings = list(c.keybindings, "contributes.keybindings").map(
-    (x, i) => {
-      const o = object(x, `contributes.keybindings[${i}]`);
-      return {
-        command: declaredCommand(
-          o.command,
-          `contributes.keybindings[${i}].command`,
-        ),
-        key: text(o.key, `contributes.keybindings[${i}].key`).toLowerCase(),
-      };
-    },
-  );
-  const menus: Contributes["menus"] = {};
-  const rawMenus =
-    c.menus === undefined ? {} : object(c.menus, "contributes.menus");
-  for (const [where, items] of Object.entries(rawMenus)) {
-    if (!(MENU_IDS as readonly string[]).includes(where))
-      throw new ManifestError(`contributes.menus: no menu "${where}".`);
-    menus[where as MenuId] = list(items, `contributes.menus.${where}`).map(
-      (x, i) => {
-        const o = object(x, `contributes.menus.${where}[${i}]`);
-        return {
-          command: declaredCommand(
-            o.command,
-            `contributes.menus.${where}[${i}].command`,
-          ),
-          when:
-            text(o.when, `contributes.menus.${where}[${i}].when`, true) ||
-            undefined,
-        };
-      },
-    );
-  }
-  const sidebarTabs = list(c.sidebarTabs, "contributes.sidebarTabs").map(
-    (x, i) => {
-      const o = object(x, `contributes.sidebarTabs[${i}]`);
-      return {
-        id: ownId(o.id, id, `contributes.sidebarTabs[${i}].id`),
-        title: text(o.title, `contributes.sidebarTabs[${i}].title`),
-        icon:
-          text(o.icon, `contributes.sidebarTabs[${i}].icon`, true) || undefined,
-      };
-    },
-  );
-  const views = list(c.views, "contributes.views").map((x, i) => {
-    const o = object(x, `contributes.views[${i}]`);
-    return {
-      id: ownId(o.id, id, `contributes.views[${i}].id`),
-      title: text(o.title, `contributes.views[${i}].title`),
-    };
-  });
-  const customEditors = list(c.customEditors, "contributes.customEditors").map(
-    (x, i) => {
-      const at = `contributes.customEditors[${i}]`;
-      const o = object(x, at);
-      const patterns = list(o.filenamePatterns, `${at}.filenamePatterns`).map(
-        (p, j) => text(p, `${at}.filenamePatterns[${j}]`).toLowerCase(),
-      );
-      if (!patterns.length)
-        throw new ManifestError(`${at}.filenamePatterns is empty.`);
-      return {
-        viewType: ownId(o.viewType, id, `${at}.viewType`),
-        displayName: text(o.displayName, `${at}.displayName`),
-        filenamePatterns: patterns,
-        priority:
-          o.priority === "option" ? ("option" as const) : ("default" as const),
-      };
-    },
-  );
-  const settings = list(c.settings, "contributes.settings").map((x, i) =>
-    parseSetting(x, `contributes.settings[${i}]`),
-  );
-  const page =
-    c.settingsPage === undefined
-      ? null
-      : object(c.settingsPage, "contributes.settingsPage");
-  const themes = list(c.themes, "contributes.themes").map((x, i) => {
-    const o = object(x, `contributes.themes[${i}]`);
-    return {
-      id: ownId(o.id, id, `contributes.themes[${i}].id`),
-      label: text(o.label, `contributes.themes[${i}].label`),
-      path: text(o.path, `contributes.themes[${i}].path`),
-    };
-  });
-  const aiTools = list(c.aiTools, "contributes.aiTools").map((x, i) => {
-    const o = object(x, `contributes.aiTools[${i}]`);
-    const name = text(o.name, `contributes.aiTools[${i}].name`);
-    if (!/^[A-Za-z0-9_-]{1,40}$/.test(name))
-      throw new ManifestError(
-        `contributes.aiTools[${i}].name "${name}" must be letters, digits, _ or -.`,
-      );
-    return {
-      name,
-      description: text(o.description, `contributes.aiTools[${i}].description`),
-      parameters:
-        o.parameters === undefined
-          ? { type: "object", properties: {} }
-          : object(o.parameters, `contributes.aiTools[${i}].parameters`),
-    };
-  });
-  const completions = list(c.completions, "contributes.completions").map(
-    (x, i) => {
-      const at = `contributes.completions[${i}]`;
-      const o = object(x, at);
-      const where =
-        o.where === undefined ? "any" : text(o.where, `${at}.where`);
-      if (where !== "math" && where !== "text" && where !== "any")
-        throw new ManifestError(`${at}.where must be "math", "text" or "any".`);
-      const pattern = text(o.pattern, `${at}.pattern`);
-      try {
-        new RegExp(pattern);
-      } catch {
-        throw new ManifestError(`${at}.pattern is not a regular expression.`);
-      }
-      return {
-        id: ownId(o.id, id, `${at}.id`),
-        where: where as CompletionContribution["where"],
-        pattern,
-      };
-    },
-  );
-  const links = list(c.links, "contributes.links").map((x, i) => {
-    const at = `contributes.links[${i}]`;
-    const o = object(x, at);
-    const pattern = text(o.pattern, `${at}.pattern`);
-    try {
-      new RegExp(pattern);
-    } catch {
-      throw new ManifestError(`${at}.pattern is not a regular expression.`);
-    }
-    return { pattern, command: declaredCommand(o.command, `${at}.command`) };
-  });
-  return {
-    aiTools,
-    completions,
-    links,
-    commands,
-    keybindings,
-    menus,
-    sidebarTabs,
-    views,
-    customEditors,
-    settings,
-    settingsPage: page && {
-      title: text(page.title, "contributes.settingsPage.title"),
-    },
-    themes,
-  };
-}
 
 /** The manifest in `raw` (the file's text or its parsed JSON), checked;
  *  throws ManifestError saying what is wrong. */

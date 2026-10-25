@@ -1393,11 +1393,13 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginStoppedAnswering: "parou de responder",
   pluginTooManyErrors: "falhou vezes demais",
   pluginQuickPickEmpty: "Nada corresponde.",
-  pluginPermDocumentRead: "Ler o documento aberto e a seleção",
-  pluginPermDocumentPropose:
+  pluginPermEditorRead: "Ler o documento aberto e a seleção",
+  pluginPermEditorWrite:
+    "Alterar diretamente o documento aberto (cada alteração pode ser desfeita)",
+  pluginPermEditorPropose:
     "Sugerir alterações no documento, que você aceita ou recusa",
-  pluginPermWorkspaceRead: "Ler os arquivos da pasta aberta",
-  pluginPermWorkspaceWrite: "Criar e alterar arquivos na pasta aberta",
+  pluginPermFilesRead: "Ler os arquivos da pasta aberta",
+  pluginPermFilesWrite: "Criar e alterar arquivos na pasta aberta",
   pluginPermClipboard: "Ler e escrever na área de transferência",
   pluginPermEditorInput:
     "Assumir as teclas que você digita no editor e editar conforme digita",

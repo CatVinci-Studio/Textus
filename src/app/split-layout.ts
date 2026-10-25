@@ -69,6 +69,28 @@ export function arrangeSplit(change: { swap?: boolean; ratio?: number }): void {
   });
 }
 
+/**
+ * Shows `tabId` beside `from` (the tab that was in front): splitting the
+ * window side by side if it isn't, or in the pane `from` isn't in if it
+ * is. Called once both tabs are in the window's tabs - the next frame
+ * after a tab is added.
+ */
+export function openBeside(tabId: string, from: string | null): void {
+  if (!from || from === tabId) return;
+  const [first, second] = layout?.panes ?? [];
+  if (layout && second) {
+    const panes: [string, string] =
+      first === from
+        ? [from, tabId]
+        : second === from
+          ? [tabId, from]
+          : [first ?? from, tabId];
+    setSplitLayout({ ...layout, panes });
+    return;
+  }
+  setSplitLayout({ direction: "row", panes: [from, tabId], ratio: 0.5 });
+}
+
 /** Back to one document: the one in front. */
 export function closeSplit(): void {
   request = null;

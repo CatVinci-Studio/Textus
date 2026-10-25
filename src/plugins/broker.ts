@@ -1,51 +1,34 @@
-import { resolveBlockEdit } from "../ai/doc-blocks";
-import { logPluginError } from "./plugin-log";
-import {
-  releaseKeys,
-  runEditorOp,
-  setKeyCapture,
-  type EditorOp,
-  type KeyCapture,
-} from "./editor-input";
-import { outlineOf, removeStatusItem, setStatusItem } from "./status-items";
-import { links } from "../platform/ipc";
-import { showMessage, showPrompt } from "../ui/app-dialog";
-import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../ai/types";
+import { logPluginError, logPluginMessage } from "./plugin-log";
 import type { Strings } from "../i18n/strings";
 import {
-  getActiveDocument,
   getWindowAccess,
   onPluginEvent,
   type PluginEventMap,
 } from "./app-bridge";
 import { connectFrame, sandboxedFrame } from "./frames";
 import { hostDocument } from "./host-document";
-import { readPluginFile, withResources, type PluginOrigin } from "./files";
+import { readPluginFile, type PluginOrigin } from "./files";
 import { localize, type Permission, type PluginManifest } from "./manifest";
-import { showQuickPick, type QuickPickItem } from "./quick-pick";
-import { webPageUrl } from "./WebPagePane";
-import {
-  addHoverProvider,
-  removeHoverProvider,
-  type HoverCard,
-} from "./hover-providers";
-import { workspaceHandlers, type PluginScope } from "./broker-workspace";
+import { fileHandlers } from "./broker-files";
 import { layoutHandlers } from "./broker-layout";
+import { editorHandlers, stopPluginEditor } from "./broker-editor";
+import { metadataHandlers } from "./broker-metadata";
+import { stopPluginUi, uiHandlers } from "./broker-ui";
+import { viewHandlers } from "./broker-views";
+import { forgetListViews } from "./list-views";
+import { forgetWillSave } from "./will-save";
+import { unwatchMetadata, watchMetadata } from "./metadata-cache";
+import { str, type Params, type PluginScope } from "./broker-scope";
 import type { Endpoint } from "./rpc";
 import { lazyModule, type LazyModule } from "../lazy/lazy-module";
-import {
-  postToWebview,
-  setWebviewHtml,
-  setWebviewTitle,
-  webview,
-  webviewsOf,
-} from "./webviews";
+import { webview } from "./webviews";
 
 /**
  * The window's side of one running plugin (docs/design/plugins.md §4):
  * its host frame, and every call its code makes, checked against what the
  * user granted before anything is done - the privileged ones made in Rust,
- * which checks them again (src-tauri/src/plugins/).
+ * which checks them again (src-tauri/src/plugins/). The calls themselves
+ * are the broker-*.ts handlers, one file per part of the API.
  */
 
 /** A running plugin as the broker knows it. */
@@ -62,13 +45,20 @@ export interface BrokerDeps {
   appVersion: string;
   platform: string;
   dark(): boolean;
-  /** A setting's value: the user's, or the manifest's default. */
+  /** A setting's value: the project's, the user's, or the default. */
   setting(id: string, key: string): Promise<unknown>;
+  /** Sets one of the plugin's own settings, for every folder. */
+  setSetting(id: string, key: string, value: unknown): Promise<void>;
   /** Runs any command - the app's, or a plugin's. */
   runCommand(command: string, args: unknown[]): Promise<unknown>;
-  /** A command the plugin registered beyond its manifest's. */
-  addCommand(id: string, command: string): void;
-  removeCommand(command: string): void;
+  /** The plugin's code registered a command (`editor`: only with a
+   *  document open). */
+  commandRegistered(id: string, command: string, editor: boolean): void;
+  commandUnregistered(id: string, command: string): void;
+  /** What another plugin's activate returned: its function names, or
+   *  null when it isn't on. */
+  exportsOf(id: string): Promise<string[] | null>;
+  callExport(id: string, name: string, args: unknown[]): Promise<unknown>;
   /** The plugin failed: stop it, turn it off, say why. */
   failed(id: string, reason: string): void;
 }
@@ -116,18 +106,27 @@ function withTimeout<T>(
   });
 }
 
-/** The events a plugin can listen to, and the permission each needs. */
+/** The events a plugin can listen to, and the permission each needs.
+ *  `settings` and `editorKey` are told to one plugin by the manager and
+ *  the editor; the rest come from the window (app-bridge.ts). */
 const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
-  didSave: "workspace.read",
-  activeDocument: "document.read",
-  root: "workspace.read",
+  didSave: "files.read",
+  activeDocument: "editor.read",
+  documentChange: "editor.read",
+  selection: "editor.read",
+  activeTab: null,
+  layout: null,
+  root: "files.read",
+  fileCreate: "files.read",
+  fileChange: "files.read",
+  fileRename: "files.read",
+  fileDelete: "files.read",
+  metadata: "files.read",
   theme: null,
   language: null,
   settings: null,
   editorKey: "editor.input",
 };
-
-let proposalCounter = 0;
 
 export class PluginHost {
   private frame: HTMLIFrameElement | null = null;
@@ -138,6 +137,8 @@ export class PluginHost {
   private subscriptions = new Map<string, () => void>();
   private errors: number[] = [];
   private stopped = false;
+  /** What its activate returned: the functions other plugins may call. */
+  exports: string[] = [];
 
   constructor(
     readonly info: PluginRuntimeInfo,
@@ -201,9 +202,11 @@ export class PluginHost {
     endpoint?.call("$deactivate").catch(() => {});
     for (const stop of this.subscriptions.values()) stop();
     this.subscriptions.clear();
-    removeStatusItem(this.id);
-    releaseKeys(this.id);
-    removeHoverProvider(this.id);
+    stopPluginUi(this.id);
+    stopPluginEditor(this.id);
+    forgetListViews(this.id);
+    forgetWillSave(this.id);
+    unwatchMetadata(this.id);
     setTimeout(() => {
       this.disconnect?.();
       this.frame?.remove();
@@ -249,11 +252,12 @@ export class PluginHost {
       START_MS,
       `Starting ${this.name}`,
     );
-    await withTimeout(
-      this.endpoint.call("$activate"),
+    const exported = await withTimeout(
+      this.endpoint.call<unknown>("$activate"),
       START_MS,
       `Activating ${this.name}`,
     );
+    this.exports = Array.isArray(exported) ? exported.map(String) : [];
     let missed = 0;
     this.pinger = setInterval(() => {
       if (!this.endpoint) return;
@@ -275,320 +279,90 @@ export class PluginHost {
       throw new Error(`${this.id} was not granted ${permission}.`);
   }
 
-  private root(): string {
-    this.need("workspace.read");
-    const root = getWindowAccess()?.rootPath();
-    if (!root) throw new Error("No folder is open.");
-    return root;
-  }
-
-  private ownWebview(id: string) {
-    const record = webview(id);
-    if (!record || record.plugin !== this.id)
-      throw new Error(`No webview ${id}.`);
-    return record;
-  }
-
-  private readOwnFile = (rel: string) =>
-    readPluginFile(this.id, this.info.origin, rel);
-
-  /** What the workspace, network, storage and clipboard calls
-   *  (broker-workspace.ts) need of this plugin. */
+  /** What the broker-*.ts handlers need of this plugin. */
   private scope(): PluginScope {
     return {
       id: this.id,
+      info: this.info,
+      deps: this.deps,
+      name: () => this.name,
+      t: () => this.deps.strings(),
+      manifest: () => this.info.manifest,
       need: (permission) => this.need(permission),
-      root: () => this.root(),
-      ownWebview: (id) => this.ownWebview(id),
+      root: () => {
+        this.need("files.read");
+        const root = getWindowAccess()?.rootPath();
+        if (!root) throw new Error("No folder is open.");
+        return root;
+      },
+      ownWebview: (id) => {
+        const record = webview(id);
+        if (!record || record.plugin !== this.id)
+          throw new Error(`No webview ${id}.`);
+        return record;
+      },
+      readOwnFile: (rel) => readPluginFile(this.id, this.info.origin, rel),
+      request: (method, params) => this.request(method, params),
+      event: (name, data) => this.event(name, data),
     };
   }
 
   /** The methods the plugin's code calls (runtime/host.js's `textus`). */
   private handlers() {
-    const t = () => this.deps.strings();
+    const scope = this.scope();
     return {
-      "host.error": ({ message }: { message?: string }) => {
+      "host.error": ({ message }: Params) => {
         logPluginError(this.id, String(message ?? "error"));
         const now = Date.now();
         this.errors = [...this.errors.filter((at) => now - at < 60_000), now];
         if (this.errors.length > MAX_ERRORS_PER_MINUTE)
-          this.deps.failed(this.id, t().pluginTooManyErrors);
+          this.deps.failed(this.id, this.deps.strings().pluginTooManyErrors);
       },
-      "events.subscribe": ({ name }: { name: keyof PluginEventMap }) => {
-        if (!(name in PLUGIN_EVENT_NEEDS)) throw new Error(`No event ${name}.`);
-        const needs = PLUGIN_EVENT_NEEDS[name];
+      log: ({ level, message }: Params) => {
+        const kind = level === "error" || level === "warn" ? level : "info";
+        logPluginMessage(this.id, kind, String(message ?? ""));
+      },
+      "events.subscribe": ({ name }: Params) => {
+        const event = str(name, "name") as keyof PluginEventMap;
+        if (!(event in PLUGIN_EVENT_NEEDS))
+          throw new Error(`No event ${event}.`);
+        const needs = PLUGIN_EVENT_NEEDS[event];
         if (needs) this.need(needs);
-        if (this.subscriptions.has(name)) return;
-        // A setting's change is told by the manager, to this plugin only.
+        if (this.subscriptions.has(event)) return;
+        if (event === "metadata") {
+          const root = scope.root();
+          watchMetadata(this.id, root);
+        }
         this.subscriptions.set(
-          name,
-          name === "settings" || name === "editorKey"
+          event,
+          event === "settings" || event === "editorKey"
             ? () => {}
-            : onPluginEvent(name, (data) => this.event(name, data)),
+            : onPluginEvent(event, (data) => this.event(event, data)),
         );
       },
-      "commands.register": ({ command }: { command: string }) => {
-        if (!command.startsWith(`${this.id}.`))
-          throw new Error(`A command must start with "${this.id}.".`);
-        if (
-          !this.info.manifest.contributes.commands.some(
-            (c) => c.command === command,
-          )
-        )
-          this.deps.addCommand(this.id, command);
+      "plugin.readFile": ({ path }: Params) =>
+        scope.readOwnFile(str(path, "path")),
+      "settings.get": ({ key }: Params) =>
+        this.deps.setting(this.id, str(key, "key")),
+      "settings.set": ({ key, value }: Params) => {
+        const k = str(key, "key");
+        if (!this.info.manifest.contributes.settings.some((s) => s.key === k))
+          throw new Error(`No setting ${k} in the manifest.`);
+        return this.deps.setSetting(this.id, k, value);
       },
-      "commands.unregister": ({ command }: { command: string }) => {
-        if (
-          !this.info.manifest.contributes.commands.some(
-            (c) => c.command === command,
-          )
-        )
-          this.deps.removeCommand(command);
-      },
-      "commands.execute": ({
-        command,
-        args,
-      }: {
-        command: string;
-        args: unknown[];
-      }) => this.deps.runCommand(command, args ?? []),
-      "window.setStatusItem": ({
-        id,
-        text,
-        tooltip,
-        command,
-      }: {
-        id: string;
-        text: string;
-        tooltip?: string;
-        command?: string;
-      }) => {
-        setStatusItem(this.id, String(id), { text, tooltip, command });
-      },
-      "window.removeStatusItem": ({ id }: { id: string }) => {
-        removeStatusItem(this.id, String(id));
-      },
-      "window.showMessage": ({ text, tone }: { text: string; tone?: string }) =>
-        showMessage(text, {
-          title: this.name,
-          tone: tone === "warning" || tone === "error" ? tone : "info",
-        }),
-      "window.showInput": (o: {
-        prompt?: string;
-        title?: string;
-        value?: string;
-      }) =>
-        showPrompt(o.prompt ?? o.title ?? "", o.value ?? "", {
-          title: this.name,
-          okLabel: t().pluginOk,
-          cancelLabel: t().pluginCancel,
-        }),
-      "window.showQuickPick": (o: {
-        items: QuickPickItem[];
-        placeholder?: string;
-      }) =>
-        showQuickPick(
-          (o.items ?? []).map((item) =>
-            typeof item === "string" ? { label: item, value: item } : item,
-          ),
-          o.placeholder ?? "",
+      "plugins.exports": ({ id }: Params) => this.deps.exportsOf(str(id, "id")),
+      "plugins.call": ({ id, name, args }: Params) =>
+        this.deps.callExport(
+          str(id, "id"),
+          str(name, "name"),
+          Array.isArray(args) ? args : [],
         ),
-      "window.openView": ({
-        view,
-        options,
-      }: {
-        view: string;
-        options?: { title?: string; state?: unknown };
-      }) => {
-        const declared = this.info.manifest.contributes.views.find(
-          (v) => v.id === view,
-        );
-        if (!declared) throw new Error(`No view ${view} in the manifest.`);
-        getWindowAccess()?.openPluginTab({
-          plugin: this.id,
-          view,
-          kind: "view",
-          title:
-            options?.title ??
-            localize(this.info.manifest, declared.title, this.deps.language()),
-          state: options?.state,
-        });
-      },
-      "window.openWebPage": ({
-        url,
-        title,
-      }: {
-        url: string;
-        title?: string;
-      }) => {
-        const address = webPageUrl(String(url));
-        if (!address) throw new Error("Only an https:// page opens in a tab.");
-        const host = new URL(address).hostname;
-        const granted = this.info.granted;
-        if (
-          !granted.includes("network:*") &&
-          !granted.includes(`network:${host}`) &&
-          !granted.some(
-            (p) =>
-              p.startsWith("network:*.") &&
-              host.endsWith(p.slice("network:*".length)),
-          )
-        )
-          throw new Error(`${this.id} was not granted network:${host}.`);
-        getWindowAccess()?.openPluginTab({
-          plugin: this.id,
-          view: "web",
-          kind: "web",
-          resource: address,
-          title: title ?? host,
-        });
-      },
-      "window.openExternal": ({ url }: { url: string }) => {
-        if (!/^https?:\/\//i.test(url))
-          throw new Error("Only web links open in the browser.");
-        return links.openWebLink(url);
-      },
-      "window.openFile": ({
-        path,
-        heading,
-        asDocument,
-      }: {
-        path: string;
-        heading?: string;
-        asDocument?: boolean;
-      }) => {
-        // The file a view of its shows it may always open (the Word
-        // reader's "Edit"); any other wants the workspace.
-        if (!webviewsOf(this.id).some((view) => view.resource === path))
-          this.need("workspace.read");
-        getWindowAccess()?.openFile(path, { heading, asDocument });
-      },
-      "window.openUntitled": ({
-        content,
-        title,
-      }: {
-        content: string;
-        title?: string;
-      }) => getWindowAccess()?.openUntitled(content, title),
-      "webview.setHtml": async ({
-        webview: id,
-        html,
-      }: {
-        webview: string;
-        html: string;
-      }) => {
-        this.ownWebview(id);
-        setWebviewHtml(id, await withResources(html, this.readOwnFile));
-      },
-      "webview.postMessage": ({
-        webview: id,
-        message,
-      }: {
-        webview: string;
-        message: unknown;
-      }) => {
-        this.ownWebview(id);
-        postToWebview(id, message);
-        return true;
-      },
-      "webview.setTitle": ({
-        webview: id,
-        title,
-      }: {
-        webview: string;
-        title: string;
-      }) => {
-        this.ownWebview(id);
-        setWebviewTitle(id, title);
-      },
-      "document.getText": () => {
-        this.need("document.read");
-        return getActiveDocument()?.text() ?? null;
-      },
-      "document.getPath": () => {
-        this.need("document.read");
-        return getActiveDocument()?.path ?? null;
-      },
-      "document.getSelection": () => {
-        this.need("document.read");
-        return getActiveDocument()?.selection() ?? null;
-      },
-      "editor.registerHoverProvider": () => {
-        this.need("document.read");
-        addHoverProvider(this.id, (target) =>
-          this.request<HoverCard | null>("$provideHover", { target }),
-        );
-      },
-      "editor.captureKeys": (capture: KeyCapture | null) => {
-        this.need("editor.input");
-        setKeyCapture(
-          this.id,
-          capture && {
-            mode: capture.mode === "all" ? "all" : "some",
-            keys: Array.isArray(capture.keys) ? capture.keys.map(String) : [],
-          },
-          (key) => this.event("editorKey", key),
-        );
-      },
-      "editor.exec": (op: EditorOp) => {
-        this.need("editor.input");
-        return runEditorOp(this.id, op);
-      },
-      "document.getBlocks": () => {
-        this.need("document.read");
-        return getActiveDocument()?.blocks() ?? null;
-      },
-      "document.getOutline": () => {
-        this.need("document.read");
-        const text = getActiveDocument()?.text();
-        return text === undefined ? null : outlineOf(text);
-      },
-      "document.proposeEdit": (edit: Partial<EditProposal>) => {
-        this.need("document.propose");
-        const action = (edit.action ?? "insert_at_cursor") as EditAction;
-        if (!EDIT_ACTIONS.includes(action))
-          throw new Error(`No edit action ${action}.`);
-        const doc = getActiveDocument();
-        if (!doc) throw new Error("No document is open.");
-        const text = typeof edit.text === "string" ? edit.text : undefined;
-        const anchor =
-          typeof edit.anchor === "string" ? edit.anchor : undefined;
-        // Named by its blocks (document.getBlocks), as Textus AI names
-        // them: filled in as the backend fills in the model's.
-        const target =
-          typeof edit.block === "string"
-            ? resolveBlockEdit(
-                doc.blocks(),
-                {
-                  action,
-                  block: edit.block,
-                  lastBlock:
-                    typeof edit.lastBlock === "string"
-                      ? edit.lastBlock
-                      : undefined,
-                  anchor,
-                  text: text ?? "",
-                },
-                true,
-              )
-            : null;
-        if (typeof edit.block === "string" && !target)
-          throw new Error(
-            `No block ${edit.block} in the document now, or its words aren't in it once.`,
-          );
-        const proposal: EditProposal = {
-          action,
-          text,
-          ...(target ? { ...target, action: target.action as EditAction } : {}),
-          reason: `${this.name}${typeof edit.reason === "string" ? `: ${edit.reason}` : ""}`,
-        };
-        return doc.propose(`plugin-${this.id}-${++proposalCounter}`, proposal);
-      },
-      "plugin.readFile": ({ path }: { path: string }) => this.readOwnFile(path),
-      "settings.get": ({ key }: { key: string }) =>
-        this.deps.setting(this.id, key),
-      ...workspaceHandlers(this.scope()),
-      ...layoutHandlers(),
+      ...uiHandlers(scope),
+      ...layoutHandlers(scope),
+      ...viewHandlers(scope),
+      ...editorHandlers(scope),
+      ...fileHandlers(scope),
+      ...metadataHandlers(scope),
     };
   }
 }

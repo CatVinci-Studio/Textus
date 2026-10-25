@@ -73,6 +73,11 @@ export function webview(id: string): WebviewRecord | undefined {
   return records.get(id);
 }
 
+/** The webview shown under `key` (a tab's id, a view's), if any. */
+export function webviewForKey(key: string): WebviewRecord | undefined {
+  return [...records.values()].find((r) => r.key === key);
+}
+
 export function webviewsOf(plugin: string): WebviewRecord[] {
   return [...records.values()].filter((r) => r.plugin === plugin);
 }

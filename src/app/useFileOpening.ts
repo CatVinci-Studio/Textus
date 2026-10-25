@@ -26,7 +26,9 @@ import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
 import { isWordDocument, wordDocumentTab } from "../document/word-import";
 import { showMessage } from "../ui/app-dialog";
-import { loadPlugins } from "../plugins/manager";
+import { loadPlugins, revealInPluginTab } from "../plugins/manager";
+import type { DocumentPlace } from "../plugins/app-bridge";
+import type { Where } from "../plugins/broker-scope";
 import { customEditorFor } from "../plugins/plugin-lookup";
 import { basename } from "../utils/path";
 import { errorText } from "../utils/error-text";
@@ -46,6 +48,12 @@ export interface OpenOptions {
   /** As a document of ours even where a plugin opens that file type - a
    *  Word file the Word reader shows, opened to be edited as Markdown. */
   asDocument?: boolean;
+  /** A plugin opened it at a place (textus.layout.open): gone to once the
+   *  tab shows; a plugin's file editor is given it as its target. */
+  place?: DocumentPlace;
+  /** In a tab of its own (the default), beside the tab in front, or in
+   *  its place (textus.layout.open's `where`). */
+  where?: Where;
 }
 
 /** Where a document just read from disk should open, if not at its top. */
@@ -55,6 +63,7 @@ function openingJump(
   diskMtime: number | null,
   restoreCarets: boolean,
 ): TabJump | null {
+  if (open.place) return { kind: "place", place: open.place };
   if (open.anchor) return { kind: "heading", anchor: open.anchor };
   const at =
     open.restoreCaret && restoreCarets ? lastCaret(path, diskMtime) : null;
@@ -65,6 +74,7 @@ function openingJump(
 function pluginTab(
   path: string,
   editor: NonNullable<ReturnType<typeof customEditorFor>>,
+  target?: DocumentPlace,
 ): Partial<DocTab> {
   void session.addRecentFile(path);
   return {
@@ -79,6 +89,7 @@ function pluginTab(
       kind: "editor",
       resource: path,
       title: editor.title,
+      ...(target ? { target: { path, ...target } } : {}),
     },
   };
 }
@@ -120,13 +131,14 @@ export function useFileOpening(opts: {
     async (
       path: string,
       asDocument = false,
+      place?: DocumentPlace,
     ): Promise<Partial<DocTab> | null> => {
       // A file type a plugin opens - a PDF, a board - is its tab, not a
       // document (plugins/manager.ts). The plugins are read first: a file
       // opened as the app starts may come before them.
       if (!asDocument) await loadPlugins().catch(() => {});
       const editor = asDocument ? null : customEditorFor(path);
-      if (editor) return pluginTab(path, editor);
+      if (editor) return pluginTab(path, editor, place);
       if (isWordDocument(path)) {
         try {
           const doc = await wordDocumentTab(path);
@@ -151,7 +163,7 @@ export function useFileOpening(opts: {
         const now = (await offerPluginToOpen(path, t))
           ? customEditorFor(path)
           : null;
-        if (now) return pluginTab(path, now);
+        if (now) return pluginTab(path, now, place);
         throw err;
       }
       const { content, diskMtime } = disk;
@@ -177,8 +189,13 @@ export function useFileOpening(opts: {
           (!open.asDocument && tab.view?.resource === path),
       );
       if (existing) {
+        // A plugin's file editor is asked to show the place itself.
+        if (open.place && existing.view?.kind === "editor")
+          revealInPluginTab(existing.id, { path, ...open.place });
+        else if (open.place && !existing.sourceMode)
+          setTabJump(existing.id, { kind: "place", place: open.place }, true);
         // Source Mode has no headings to scroll to: the tab just comes up.
-        if (open.anchor && !existing.sourceMode)
+        else if (open.anchor && !existing.sourceMode)
           setTabJump(
             existing.id,
             { kind: "heading", anchor: open.anchor },
@@ -187,7 +204,7 @@ export function useFileOpening(opts: {
         setActiveTabId(existing.id);
         return;
       }
-      const doc = await readDocument(path, open.asDocument);
+      const doc = await readDocument(path, open.asDocument, open.place);
       if (!doc) return;
       const newTab: DocTab = { ...makeBlankTab(), ...doc };
       const jump =

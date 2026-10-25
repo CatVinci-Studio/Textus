@@ -23,7 +23,7 @@ describe("a plugin's manifest", () => {
       ...base,
       main: "host.js",
       activationEvents: ["onCommand:catvinci.example.hello"],
-      permissions: ["workspace.read", "network:api.zotero.org"],
+      permissions: ["files.read", "network:api.zotero.org"],
       contributes: {
         commands: [{ command: "catvinci.example.hello", title: "%hello%" }],
         keybindings: [

@@ -1332,10 +1332,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginStoppedAnswering: "응답하지 않음",
   pluginTooManyErrors: "오류가 너무 많음",
   pluginQuickPickEmpty: "일치하는 항목이 없습니다.",
-  pluginPermDocumentRead: "현재 문서와 선택한 내용 읽기",
-  pluginPermDocumentPropose: "문서 수정 제안하기(수락 여부는 사용자가 결정)",
-  pluginPermWorkspaceRead: "열린 폴더의 파일 읽기",
-  pluginPermWorkspaceWrite: "열린 폴더에서 파일 만들기 및 변경",
+  pluginPermEditorRead: "현재 문서와 선택한 내용 읽기",
+  pluginPermEditorWrite:
+    "열려 있는 문서를 바로 고칩니다(고친 내용은 되돌릴 수 있음)",
+  pluginPermEditorPropose: "문서 수정 제안하기(수락 여부는 사용자가 결정)",
+  pluginPermFilesRead: "열린 폴더의 파일 읽기",
+  pluginPermFilesWrite: "열린 폴더에서 파일 만들기 및 변경",
   pluginPermClipboard: "클립보드 읽기 및 쓰기",
   pluginPermEditorInput: "편집기에서 누르는 키를 넘겨받아, 누른 대로 편집",
   pluginPermProjectData:

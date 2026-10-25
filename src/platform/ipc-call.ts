@@ -11,6 +11,7 @@ import { commands as appCommands } from "./bindings/app";
 import { commands as authCommands } from "./bindings/auth";
 import { commands as fileCommands } from "./bindings/files";
 import { commands as pluginCommands } from "./bindings/plugins";
+import { commands as pluginAccessCommands } from "./bindings/plugin-access";
 
 /**
  * How every backend command is called: errors as IpcError, AI commands
@@ -45,6 +46,7 @@ const commands = {
   ...authCommands,
   ...fileCommands,
   ...pluginCommands,
+  ...pluginAccessCommands,
 };
 type Commands = typeof commands;
 /** A backend command with generated types: its name, as Rust registers it. */

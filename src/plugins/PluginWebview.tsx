@@ -100,7 +100,12 @@ function useResolvedWebview(
   plugin: string,
   kind: WebviewKind,
   key: string,
-  target: { view?: string; viewType?: string; state?: unknown },
+  target: {
+    view?: string;
+    viewType?: string;
+    state?: unknown;
+    target?: unknown;
+  },
   resource?: string,
 ): { record: WebviewRecord | null; error: string | null } {
   const [record, setRecord] = useState<WebviewRecord | null>(null);
@@ -108,13 +113,17 @@ function useResolvedWebview(
   const { view, viewType } = target;
   // What the view was opened with counts only when it is made.
   const initialState = useRef(target.state);
+  const initialTarget = useRef(target.target);
   useEffect(() => {
     const made = createWebview(plugin, kind, key, resource);
     setRecord(made);
     setError(null);
-    resolveWebview(made, { view, viewType, state: initialState.current }).catch(
-      (err) => setError(String((err as Error)?.message ?? err)),
-    );
+    resolveWebview(made, {
+      view,
+      viewType,
+      state: initialState.current,
+      target: initialTarget.current,
+    }).catch((err) => setError(String((err as Error)?.message ?? err)));
     return () => disposeWebview(made.id);
   }, [plugin, kind, key, view, viewType, resource]);
   return { record, error };
@@ -185,6 +194,7 @@ export function PluginTabPane({
   kind,
   resource,
   state,
+  target,
 }: {
   tabId: string;
   plugin: string;
@@ -192,12 +202,13 @@ export function PluginTabPane({
   kind: "view" | "editor";
   resource?: string;
   state?: unknown;
+  target?: unknown;
 }) {
   const { record, error } = useResolvedWebview(
     plugin,
     kind,
     `tab:${tabId}`,
-    kind === "editor" ? { viewType: view } : { view, state },
+    kind === "editor" ? { viewType: view, target } : { view, state },
     resource,
   );
   return (

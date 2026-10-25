@@ -16,6 +16,7 @@ import { useGrammarPopover } from "../ai/writing/useGrammarPopover";
 import type { Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
+import { revealPlace } from "./plugin-edits";
 
 /** Where the caret goes as the tab or the view mode changes. */
 export function useEditorCarets({
@@ -33,7 +34,7 @@ export function useEditorCarets({
 }) {
   const { run, reporting } = setup;
   useModeSwitchCaret(run, isActive, initialValue);
-  useTabJump(run, tabId, isActive, initialValue, typewriter);
+  useTabJump(run, tabId, isActive, initialValue, typewriter, revealPlace);
   useTabCaret(
     run,
     tabId,

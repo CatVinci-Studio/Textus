@@ -8,15 +8,24 @@ import {
 } from "../ai/doc-markdown";
 import {
   setActiveDocument,
+  setOpenDocument,
   type ActiveDocumentAccess,
+  type OpenDocumentAccess,
 } from "../plugins/app-bridge";
+import {
+  applyPluginEdits,
+  documentRevision,
+  replaceDocument,
+  revealPlace,
+} from "./plugin-edits";
 import type { useEditorProposals } from "./useEditorProposals";
 
 /**
- * The active tab's editor, as plugins reach it (plugins/app-bridge.ts):
- * its Markdown and selection, and edits shown as proposals the user
- * accepts or rejects - the same previews Textus AI's edits are, aimed at
- * the selection as it is when the plugin asks.
+ * A tab's editor, as plugins reach it (plugins/app-bridge.ts): while it is
+ * the active tab, its Markdown and selection, edits made at once or shown
+ * as proposals the user accepts or rejects - the same previews Textus AI's
+ * edits are - and a place to go to; and, open in any tab, its text to read
+ * and change in place (textus.files.process), so nothing typed is lost.
  */
 export function usePluginDocumentAccess({
   run,
@@ -29,6 +38,23 @@ export function usePluginDocumentAccess({
   filePath: string | null;
   addPreviews: ReturnType<typeof useEditorProposals>["addPreviews"];
 }): void {
+  useEffect(() => {
+    if (!filePath) return;
+    const text = () =>
+      run(
+        (ctx) => cachedDocument(ctx, ctx.get(editorViewCtx).state.doc).markdown,
+      ) ?? "";
+    const access: OpenDocumentAccess = {
+      text,
+      revision: () => documentRevision(text()),
+      replaceText: (next, revision) =>
+        documentRevision(text()) === revision &&
+        (run((ctx) => replaceDocument(ctx, next)) ?? false),
+    };
+    setOpenDocument(filePath, access);
+    return () => setOpenDocument(filePath, null, access);
+  }, [run, filePath]);
+
   useEffect(() => {
     if (!isActive) return;
     const access: ActiveDocumentAccess = {
@@ -65,6 +91,8 @@ export function usePluginDocumentAccess({
         addPreviews([{ callId, proposal }], target);
         return true;
       },
+      edit: (edits) => run((ctx) => applyPluginEdits(ctx, edits)) ?? false,
+      reveal: (place) => run((ctx) => revealPlace(ctx, place)) ?? false,
     };
     setActiveDocument(access);
     return () => setActiveDocument(null, access);

@@ -114,9 +114,21 @@
   font-size: var(--text-md);
   cursor: pointer;
 }
-.quick-pick-item[aria-selected="true"] {
+.quick-pick-item {
+  flex-wrap: wrap;
+}
+.quick-pick-item.is-active {
   background: var(--sidebar-active);
   color: var(--sidebar-active-text);
+}
+.quick-pick-item > input[type="checkbox"] {
+  margin: 0;
+  pointer-events: none;
+}
+.quick-pick-detail {
+  flex-basis: 100%;
+  color: var(--chrome-muted);
+  font-size: var(--text-xs);
 }
 .quick-pick-description {
   color: var(--chrome-muted);

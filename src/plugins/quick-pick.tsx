@@ -2,22 +2,27 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useModalDialog } from "../ui/useModalDialog";
 
 /**
- * textus.window.showQuickPick: a list to choose one item from, filtered by
- * what is typed - the one place a plugin asks for a choice without a
+ * textus.ui.pick: a list to choose an item from - or several, ticked -
+ * filtered by what is typed, so a plugin asks for a choice without a
  * webview of its own. Shown by the QuickPickHost App mounts; requests
  * queue, as app-dialog's do.
  */
 export interface QuickPickItem {
   label: string;
   description?: string;
+  /** A second line under it. */
+  detail?: string;
   /** What the plugin gets back; the label if left out. */
   value?: unknown;
+  /** With `multiple`: ticked to start with. */
+  picked?: boolean;
 }
 
 interface Request {
   id: number;
   items: QuickPickItem[];
   placeholder: string;
+  multiple: boolean;
   resolve: (value: unknown) => void;
 }
 
@@ -29,15 +34,30 @@ function publish() {
   for (const listener of listeners) listener(queue);
 }
 
-/** Resolves the chosen item's value, or null when dismissed. */
+/** Resolves the chosen item's value - with `multiple`, the ticked ones'
+ *  values - or null when dismissed. */
 export function showQuickPick(
   items: QuickPickItem[],
   placeholder: string,
+  options: { multiple?: boolean } = {},
 ): Promise<unknown> {
   return new Promise((resolve) => {
-    queue = [...queue, { id: nextId++, items, placeholder, resolve }];
+    queue = [
+      ...queue,
+      {
+        id: nextId++,
+        items,
+        placeholder,
+        multiple: options.multiple === true,
+        resolve,
+      },
+    ];
     publish();
   });
+}
+
+function valueOf(item: QuickPickItem): unknown {
+  return item.value === undefined ? item.label : item.value;
 }
 
 function answer(request: Request, value: unknown) {
@@ -56,7 +76,13 @@ export function quickPickMatches(item: QuickPickItem, query: string): boolean {
     .every((word) => haystack.includes(word));
 }
 
-export function QuickPickHost({ emptyLabel }: { emptyLabel: string }) {
+export function QuickPickHost({
+  emptyLabel,
+  okLabel,
+}: {
+  emptyLabel: string;
+  okLabel: string;
+}) {
   const [pending, setPending] = useState<Request[]>(queue);
   useEffect(() => {
     listeners.add(setPending);
@@ -67,19 +93,29 @@ export function QuickPickHost({ emptyLabel }: { emptyLabel: string }) {
   const current = pending[0];
   if (!current) return null;
   return (
-    <QuickPick key={current.id} request={current} emptyLabel={emptyLabel} />
+    <QuickPick
+      key={current.id}
+      request={current}
+      emptyLabel={emptyLabel}
+      okLabel={okLabel}
+    />
   );
 }
 
 function QuickPick({
   request,
   emptyLabel,
+  okLabel,
 }: {
   request: Request;
   emptyLabel: string;
+  okLabel: string;
 }) {
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
+  const [ticked, setTicked] = useState(
+    () => new Set(request.items.filter((i) => i.picked)),
+  );
   const listRef = useRef<HTMLUListElement>(null);
   const shown = useMemo(
     () => request.items.filter((item) => quickPickMatches(item, query)),
@@ -90,9 +126,18 @@ function QuickPick({
     true,
     ".quick-pick-input",
   );
+  const toggle = (item: QuickPickItem) =>
+    setTicked((now) => {
+      const next = new Set(now);
+      if (!next.delete(item)) next.add(item);
+      return next;
+    });
+  const done = () =>
+    answer(request, request.items.filter((i) => ticked.has(i)).map(valueOf));
   const choose = (item: QuickPickItem | undefined) => {
-    if (item)
-      answer(request, item.value === undefined ? item.label : item.value);
+    if (!item) return;
+    if (request.multiple) toggle(item);
+    else answer(request, valueOf(item));
   };
   useEffect(() => {
     listRef.current
@@ -137,6 +182,10 @@ function QuickPick({
               setIndex((i) => Math.max(i - 1, 0));
             } else if (e.key === "Enter") {
               e.preventDefault();
+              if (request.multiple) done();
+              else choose(shown[index]);
+            } else if (e.key === " " && request.multiple && !query) {
+              e.preventDefault();
               choose(shown[index]);
             }
           }}
@@ -145,6 +194,7 @@ function QuickPick({
           className="quick-pick-list"
           id="quick-pick-list"
           role="listbox"
+          aria-multiselectable={request.multiple || undefined}
           ref={listRef}
         >
           {shown.length === 0 && (
@@ -156,21 +206,41 @@ function QuickPick({
               id={`quick-pick-${i}`}
               data-index={i}
               role="option"
-              aria-selected={i === index}
-              className="quick-pick-item"
+              aria-selected={request.multiple ? ticked.has(item) : i === index}
+              className={`quick-pick-item${i === index ? " is-active" : ""}`}
               onMouseEnter={() => setIndex(i)}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => choose(item)}
             >
+              {request.multiple && (
+                <input
+                  type="checkbox"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  checked={ticked.has(item)}
+                  readOnly
+                />
+              )}
               <span className="quick-pick-label">{item.label}</span>
               {item.description && (
                 <span className="quick-pick-description">
                   {item.description}
                 </span>
               )}
+              {item.detail && (
+                <span className="quick-pick-detail">{item.detail}</span>
+              )}
             </li>
           ))}
         </ul>
+        {request.multiple && (
+          <div className="close-prompt-buttons">
+            <div className="close-prompt-spacer" />
+            <button className="close-prompt-primary" onClick={done}>
+              {okLabel}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1344,11 +1344,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginStoppedAnswering: "応答しなくなりました",
   pluginTooManyErrors: "エラーが多すぎました",
   pluginQuickPickEmpty: "一致するものがありません。",
-  pluginPermDocumentRead: "表示中の文書と選択範囲を読む",
-  pluginPermDocumentPropose:
+  pluginPermEditorRead: "表示中の文書と選択範囲を読む",
+  pluginPermEditorWrite: "表示中の文書を直接変更する（変更は取り消せます）",
+  pluginPermEditorPropose:
     "文書への編集を提案する（承認するかはあなたが決めます）",
-  pluginPermWorkspaceRead: "開いているフォルダのファイルを読む",
-  pluginPermWorkspaceWrite: "開いているフォルダでファイルを作成・変更する",
+  pluginPermFilesRead: "開いているフォルダのファイルを読む",
+  pluginPermFilesWrite: "開いているフォルダでファイルを作成・変更する",
   pluginPermClipboard: "クリップボードを読み書きする",
   pluginPermEditorInput:
     "エディタで押すキーを引き受け、そのキーのとおりに編集する",
