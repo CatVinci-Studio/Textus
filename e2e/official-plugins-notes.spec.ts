@@ -94,6 +94,30 @@ test("the folder's tasks are listed, and ticking one writes its line", async ({
   expect(file).toContain("- [x] Write the intro");
 });
 
+test("tasks in a file with Windows line endings are listed and ticked", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: { "catvinci.tasks": ["workspace.read", "workspace.write"] },
+    folder: {
+      "/notes/win.md": "# Win\r\n\r\n- [ ] Ship it\r\n- [ ] Tell them\r\n",
+    },
+  });
+  await openPath(page, "/notes/win.md");
+  const tasks = await openSidebarTab(page, "Tasks");
+  await expect(tasks.locator("#summary")).toHaveText("2 open tasks");
+  await expect(tasks.locator(".task .where").first()).toHaveText("Win");
+  await tasks.getByRole("checkbox", { name: "Ship it" }).click();
+  await expect(tasks.locator("#summary")).toHaveText("1 open task");
+  const file = await page.evaluate(
+    () =>
+      (window as unknown as { __devFs: Record<string, string> }).__devFs[
+        "/notes/win.md"
+      ],
+  );
+  expect(file).toBe("# Win\r\n\r\n- [x] Ship it\r\n- [ ] Tell them\r\n");
+});
+
 test("a board opens as lists of cards, and a card moved is written back", async ({
   page,
 }) => {
