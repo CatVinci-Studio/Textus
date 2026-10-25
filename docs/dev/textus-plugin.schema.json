@@ -308,6 +308,28 @@
               }
             }
           }
+        },
+        "completions": {
+          "type": "array",
+          "description": "Completions suggested as you type (document.read), answered by textus.editor.registerCompletionProvider(id).",
+          "items": {
+            "type": "object",
+            "required": ["id", "pattern"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Starts with the plugin's id and a dot."
+              },
+              "where": {
+                "enum": ["math", "text", "any"],
+                "description": "In a formula, in the text, or both (the default)."
+              },
+              "pattern": {
+                "type": "string",
+                "description": "A regular expression the text before the caret must end with, such as \\\\[A-Za-z]*."
+              }
+            }
+          }
         }
       }
     },

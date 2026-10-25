@@ -1,0 +1,47 @@
+/* The completions a plugin suggests, under the caret (completion-list.ts):
+   a small list like the editor's menus, the chosen item lit. */
+.completion-list {
+  position: fixed;
+  z-index: var(--z-popover);
+  min-width: 180px;
+  max-width: min(360px, calc(100vw - 16px));
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--editor-border);
+  border-radius: var(--radius-surface);
+  background: var(--bg);
+  color: var(--editor-text);
+  box-shadow: var(--shadow-popover);
+  font-size: var(--text-sm);
+}
+
+.completion-list[hidden] {
+  display: none;
+}
+
+.completion-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 8px;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.completion-item[aria-selected="true"] {
+  background: var(--sidebar-hover);
+}
+
+.completion-label {
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.completion-detail {
+  color: var(--editor-muted);
+  font-size: var(--text-xs);
+}

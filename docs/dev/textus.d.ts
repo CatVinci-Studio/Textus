@@ -181,6 +181,30 @@ declare global {
       onKey(fn: (key: string) => void): Disposable;
       exec(op: EditorOp): Promise<EditorOpResult>;
       /** Cards for what the pointer rests on (document.read). */
+      /** Completions as you type, for one of the manifest's
+       *  `contributes.completions` (needs document.read): asked when what
+       *  is before the caret matches its `pattern`. `insert` replaces the
+       *  match; `$0` in it marks where the caret goes. */
+      registerCompletionProvider(
+        id: string,
+        provider: {
+          provideCompletions(context: {
+            /** Before the caret, in its paragraph or formula. */
+            text: string;
+            /** The part `pattern` matched, which an item replaces. */
+            match: string;
+            inMath: boolean;
+          }):
+            | { label: string; insert: string; detail?: string }[]
+            | null
+            | undefined
+            | Promise<
+                | { label: string; insert: string; detail?: string }[]
+                | null
+                | undefined
+              >;
+        },
+      ): Disposable;
       registerHoverProvider(provider: {
         provideHover(
           target: HoverTarget,

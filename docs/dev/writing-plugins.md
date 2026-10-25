@@ -183,6 +183,16 @@ key }` (`[@key]`); return `{ title, markdown }`, or null to let the next
   provider answer. The app draws the card beside the link, without
   pictures, and the user can pin it. Quick Preview and Zotero are
   examples.
+- `textus.editor.registerCompletionProvider(id, { provideCompletions(context)
+})` - completions as you type (needs `document.read`), for one of the
+  manifest's `contributes.completions` (`{ id, where, pattern }`: `where`
+  is `"math"` (in a formula), `"text"` or `"any"`; `pattern` a regular
+  expression the text before the caret must end with). Textus asks only
+  when the pattern matches, starting the plugin then; `context` is
+  `{ text, match, inMath }`, and the answer `[{ label, insert, detail }]`
+  - `insert` replaces the match, `$0` in it marks where the caret goes.
+    The list shows under the caret; ↑ ↓ choose, Enter or Tab takes one, Esc
+    puts it away. LaTeX Completion is an example.
 - `textus.editor` (`editor.input`) - `captureKeys({ mode, keys })`: the
   editor's keys come to the plugin instead of typing. `mode: "all"` takes
   every key but the app's shortcuts (⌘ on a Mac, Ctrl elsewhere) unless

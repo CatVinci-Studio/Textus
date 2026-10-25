@@ -135,6 +135,16 @@ export interface AiToolContribution {
   parameters: Record<string, unknown>;
 }
 
+/** Where a plugin suggests completions as you type (with document.read):
+ *  in a formula, in the text, or both, once the words before the caret
+ *  match `pattern` (a regular expression, anchored at the caret). The
+ *  plugin answers with textus.editor.registerCompletionProvider(id). */
+export interface CompletionContribution {
+  id: string;
+  where: "math" | "text" | "any";
+  pattern: string;
+}
+
 export interface Contributes {
   commands: CommandContribution[];
   keybindings: KeybindingContribution[];
@@ -147,6 +157,7 @@ export interface Contributes {
   settingsPage: { title: string } | null;
   themes: ThemeContribution[];
   aiTools: AiToolContribution[];
+  completions: CompletionContribution[];
 }
 
 export interface PluginManifest {
@@ -377,8 +388,30 @@ function parseContributes(raw: unknown, id: string): Contributes {
           : object(o.parameters, `contributes.aiTools[${i}].parameters`),
     };
   });
+  const completions = list(c.completions, "contributes.completions").map(
+    (x, i) => {
+      const at = `contributes.completions[${i}]`;
+      const o = object(x, at);
+      const where =
+        o.where === undefined ? "any" : text(o.where, `${at}.where`);
+      if (where !== "math" && where !== "text" && where !== "any")
+        throw new ManifestError(`${at}.where must be "math", "text" or "any".`);
+      const pattern = text(o.pattern, `${at}.pattern`);
+      try {
+        new RegExp(pattern);
+      } catch {
+        throw new ManifestError(`${at}.pattern is not a regular expression.`);
+      }
+      return {
+        id: ownId(o.id, id, `${at}.id`),
+        where: where as CompletionContribution["where"],
+        pattern,
+      };
+    },
+  );
   return {
     aiTools,
+    completions,
     commands,
     keybindings,
     menus,

@@ -105,6 +105,7 @@ import {
 import { pasteUrlPlugin } from "./markdown/paste-url";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { createLinkHoverPlugin } from "./hover/link-hover-plugin";
+import { createCompletionPlugin } from "./completion/completion-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
 import { plainTextCopyPlugin } from "./markdown/plain-text-copy-plugin";
 import { createImagePlugin } from "./images/image-plugin";
@@ -203,6 +204,9 @@ export function withEditorCore(
       // A plugin holding the keyboard (Vim's normal mode) has its keys
       // before any of the editor's own handlers.
       .use(editorInputPlugin)
+      // A plugin's completions take Enter, Tab and the arrows while their
+      // list is open (completion/), before the editor's own keys.
+      .use(createCompletionPlugin())
       .use(macNavigationPlugin)
       .use(dragAutoscrollPlugin)
       .use(linuxImeEnterPlugin)

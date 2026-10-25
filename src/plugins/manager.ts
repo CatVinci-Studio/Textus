@@ -249,34 +249,38 @@ async function pluginFailed(id: string, reason: string) {
   );
 }
 
-/** Runs one of a plugin's commands in its code, starting it first. */
-export async function runPluginCommand(
+/** Asks a plugin's code, starting it first; `needs` is the permission
+ *  the call is for, if any. */
+export async function askPlugin(
   id: string,
-  command: string,
-  args: unknown[],
+  method: string,
+  params: unknown,
+  needs?: Permission,
 ): Promise<unknown> {
   const record = pluginRecord(id);
   if (!record || !canRun(record.status, pluginsSnapshot().allOn))
     throw new Error(`${id} is turned off.`);
-  return (await host(record)).request("$executeCommand", { command, args });
+  if (needs && !record.granted.includes(needs))
+    throw new Error(`${id} was not granted ${needs}.`);
+  return (await host(record)).request(method, params);
+}
+
+/** Runs one of a plugin's commands in its code, starting it first. */
+export function runPluginCommand(
+  id: string,
+  command: string,
+  args: unknown[],
+): Promise<unknown> {
+  return askPlugin(id, "$executeCommand", { command, args });
 }
 
 /** Runs a tool the plugin gave Textus AI, starting it first. */
-export async function runPluginAiTool(
+export function runPluginAiTool(
   id: string,
   name: string,
   args: unknown,
 ): Promise<unknown> {
-  const record = pluginRecord(id);
-  if (
-    !record ||
-    !canRun(record.status, pluginsSnapshot().allOn) ||
-    !record.granted.includes("ai.tools")
-  )
-    throw new Error(`${id} is turned off or was not granted ai.tools.`);
-  const running = await host(record);
-  await running.start();
-  return running.request("$callAiTool", { name, arguments: args });
+  return askPlugin(id, "$callAiTool", { name, arguments: args }, "ai.tools");
 }
 
 /** Asks the plugin to fill a webview (PluginWebview.tsx): a sidebar tab's

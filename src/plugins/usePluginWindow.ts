@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { watchDevPlugins } from "./dev-reload";
 import { watchPluginAiTools } from "./ai-tools";
+import { setCompletionAsker } from "./completion-sources";
 import { makeBlankTab, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
@@ -13,6 +14,7 @@ import {
   type PluginTabView,
 } from "./app-bridge";
 import {
+  askPlugin,
   configurePlugins,
   loadPlugins,
   pluginsSnapshot,
@@ -111,6 +113,18 @@ export function usePluginWindow({
   useEffect(() => watchDevPlugins(), []);
   // Tools the plugins give Textus AI, told to Rust and run when called.
   useEffect(() => watchPluginAiTools(runPluginAiTool), []);
+  // The completions plugins suggest as you type (completion-sources.ts).
+  useEffect(() => {
+    setCompletionAsker((id, source, context) =>
+      askPlugin(
+        id,
+        "$provideCompletions",
+        { id: source, ...context },
+        "document.read",
+      ),
+    );
+    return () => setCompletionAsker(null);
+  }, []);
   useEffect(() => {
     emitPluginEvent("root", { path: rootPath });
     // The folder's own plugin settings, over the general ones.

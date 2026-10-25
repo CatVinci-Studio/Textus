@@ -16,6 +16,9 @@
   var viewProviders = new Map();
   var editorProviders = new Map();
   var hoverProviders = [];
+  // Completion providers by the id their manifest's contributes
+  // .completions gives.
+  var completionProviders = new Map();
   var aiTools = new Map();
   var settingsProvider = null;
   var webviews = new Map();
@@ -305,6 +308,17 @@
       // other link, or a citation [@key] - shown as a card: provider
       // .provideHover(target) returns { title, markdown }, or null for
       // targets it has nothing for. Needs document.read.
+      // The completions for one of the manifest's contributes.completions:
+      // provider.provideCompletions({ text, match, inMath }) returns
+      // [{ label, insert, detail }] ("$0" in insert marks the caret), or
+      // nothing. Asked only when what is before the caret matches.
+      registerCompletionProvider: function (id, provider) {
+        completionProviders.set(String(id), provider);
+        return disposable(function () {
+          if (completionProviders.get(String(id)) === provider)
+            completionProviders.delete(String(id));
+        });
+      },
       registerHoverProvider: function (provider) {
         hoverProviders.push(provider);
         call("editor.registerHoverProvider", {}).catch(function () {});
@@ -531,6 +545,16 @@
         new CustomDocument(params.webview, params.path),
         webview(params.webview),
       );
+    },
+    $provideCompletions: async function (params) {
+      var provider = completionProviders.get(params.id);
+      if (!provider) return null;
+      var items = await provider.provideCompletions({
+        text: params.text,
+        match: params.match,
+        inMath: params.inMath,
+      });
+      return Array.isArray(items) ? items : null;
     },
     $provideHover: async function (params) {
       for (var i = 0; i < hoverProviders.length; i++) {

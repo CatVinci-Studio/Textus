@@ -88,6 +88,31 @@ describe("a plugin's manifest", () => {
     expect(() => parseManifest("{nope")).toThrow(/not JSON/);
   });
 
+  it("reads where a plugin suggests completions, and refuses a bad pattern", () => {
+    const m = parseManifest({
+      ...base,
+      contributes: {
+        completions: [
+          { id: "catvinci.example.tex", where: "math", pattern: "\\\\[a-z]*" },
+          { id: "catvinci.example.any", pattern: "@\\w*" },
+        ],
+      },
+    });
+    expect(m.contributes.completions).toEqual([
+      { id: "catvinci.example.tex", where: "math", pattern: "\\\\[a-z]*" },
+      { id: "catvinci.example.any", where: "any", pattern: "@\\w*" },
+    ]);
+    const bad = (c: object) => () =>
+      parseManifest({ ...base, contributes: { completions: [c] } });
+    expect(bad({ id: "catvinci.example.x", pattern: "(" })).toThrow(
+      /not a regular expression/,
+    );
+    expect(
+      bad({ id: "catvinci.example.x", where: "code", pattern: "a" }),
+    ).toThrow(/where/);
+    expect(bad({ id: "other.x", pattern: "a" })).toThrow(/must start with/);
+  });
+
   it("names network permissions by host", () => {
     expect(isPermission("network:api.zotero.org")).toBe(true);
     expect(isPermission("network:*.wikipedia.org")).toBe(true);
