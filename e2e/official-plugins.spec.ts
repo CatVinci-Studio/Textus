@@ -78,6 +78,47 @@ test("a PDF opens in the PDF Viewer, its words there to select", async ({
   await expect(frame.locator("#zoom")).not.toHaveText(before);
 });
 
+test("Find in the PDF tints the words and says when there are none; the zoom is kept", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: { "catvinci.pdf-viewer": [] },
+    binary: { "/notes/paper.pdf": minimalPdf("Hello PDF") },
+  });
+  await openPath(page, "/notes/paper.pdf");
+  const frame = tabFrame(page);
+  await expect(frame.locator(".textLayer")).toContainText("Hello PDF", {
+    timeout: 15_000,
+  });
+  await frame.getByRole("button", { name: "Find in the PDF" }).click();
+  const find = frame.getByRole("searchbox", { name: "Find in the PDF" });
+  await find.fill("hello");
+  await find.press("Enter");
+  await expect(frame.locator("#find-count")).toHaveText("1/1");
+  await expect(frame.locator(".textLayer span.hit")).not.toHaveCount(0);
+  await find.fill("nowhere");
+  await find.press("Enter");
+  await expect(frame.locator("#find-count")).toHaveText("Not found");
+  await expect(frame.locator(".textLayer span.hit")).toHaveCount(0);
+  // A zoom chosen is where the PDF opens next time.
+  await frame.getByRole("button", { name: "Zoom in" }).click();
+  const zoom = (await frame.locator("#zoom").textContent()) ?? "";
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const stores = (
+          window as unknown as {
+            __devPluginStore?: Record<string, { kv: Record<string, unknown> }>;
+          }
+        ).__devPluginStore;
+        const kept = stores?.["catvinci.pdf-viewer|global|"]?.kv.positions as
+          Record<string, { page: number; scale: number | null }> | undefined;
+        return kept?.["/notes/paper.pdf"]?.scale ?? null;
+      }),
+    )
+    .toBeCloseTo(Number(zoom.replace("%", "")) / 100, 2);
+});
+
 test("a Chinese PDF whose font isn't in the file draws its characters", async ({
   page,
 }) => {

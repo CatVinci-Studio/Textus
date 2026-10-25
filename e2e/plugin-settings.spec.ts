@@ -167,7 +167,13 @@ test("a card opens the plugin's own page: its settings, what it adds, its permis
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.daily-notes": ["workspace.read", "workspace.write"] },
+    plugins: {
+      "catvinci.daily-notes": [
+        "workspace.read",
+        "workspace.write",
+        "document.read",
+      ],
+    },
   });
   await openPluginsPage(page);
   await page
@@ -240,7 +246,13 @@ test("a plugin's setting can be the project's own, over the general one", async 
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.daily-notes": ["workspace.read", "workspace.write"] },
+    plugins: {
+      "catvinci.daily-notes": [
+        "workspace.read",
+        "workspace.write",
+        "document.read",
+      ],
+    },
     folder: { "/work/notes/a.md": "# A\n" },
   });
   await page.evaluate(() =>
