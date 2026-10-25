@@ -2,6 +2,7 @@ import { plural, type Lang, type Strings } from "../../i18n/strings";
 import { blockNames } from "../revision/markdown-forms";
 import type { InlineChatLabels } from "./quick-ask/InlineChat";
 import { pickerLabels } from "./ComposerPicker";
+import { permissionLabel } from "../../plugins/permissions";
 
 /**
  * The chat's user-facing strings, assembled once here rather than inline at
@@ -89,6 +90,13 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     useTheme: t.chatUseTheme,
     themeInUse: t.themeGalleryInUse,
     themeFallbackName: t.navTheme,
+    installPlugin: t.chatInstallPlugin,
+    updatePlugin: t.chatUpdatePlugin,
+    pluginInstalled: t.themeGalleryInstalled,
+    usageGuide: t.pluginUsageGuide,
+    pluginCantInstall: t.chatPluginCantInstall,
+    permission: (p) => permissionLabel(p, t),
+    language: lang,
     aiErrors: {
       notConfigured: t.aiErrorNotConfigured,
       auth: t.aiErrorAuth,

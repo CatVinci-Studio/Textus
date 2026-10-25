@@ -1,4 +1,7 @@
 import type * as Generated from "./bindings/plugins";
+
+/** A plugin file as text (commands/plugins install.rs PluginFile). */
+export type PluginFile = Generated.PluginFile;
 import { call, command, desktopActionCommand } from "./ipc-call";
 
 /**
@@ -56,6 +59,9 @@ export const plugins = {
     command("plugin_set", id, enabled, granted),
   installed: () => command("plugins_installed"),
   install: (path: string) => command("plugin_install", path),
+  /** A plugin from its files' text (what Textus AI writes), installed as
+   *  a package is. */
+  installFiles: (files: PluginFile[]) => command("plugin_install_files", files),
   loadDev: (path: string) => command("plugin_load_dev", path),
   uninstall: (id: string) => command("plugin_uninstall", id),
   /** The plugins Textus offers (textus-plugins' catalog), fetched now

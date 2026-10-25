@@ -98,4 +98,9 @@ export default {
     hint: "Escribe un tema para el editor según tu descripción, listo para usar",
     aliases: ["tema", "diseñar-tema"],
   },
+  plugin: {
+    label: "Crear un complemento",
+    hint: "Un pequeño complemento de Textus según tu descripción, listo para instalar",
+    aliases: ["complemento", "extensión"],
+  },
 } satisfies SkillTexts;

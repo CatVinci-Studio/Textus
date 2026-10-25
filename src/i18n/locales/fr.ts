@@ -339,6 +339,10 @@ utiliser une.
   commentNotFound: "Ce passage ne figure plus dans le document.",
   toolResult: "Résultat",
   chatUseTheme: "Utiliser ce thème",
+  chatInstallPlugin: "Installer cette extension",
+  chatUpdatePlugin: "Mettre à jour l’extension",
+  chatPluginCantInstall:
+    "Cette extension ne peut pas être installée : {reason}",
   toolSearchDocument: "Recherche de «\u00a0{arg}\u00a0» dans le document",
   toolReadDocument: "Lecture de «\u00a0{arg}\u00a0»",
   toolReadWholeDocument: "Lecture du document",

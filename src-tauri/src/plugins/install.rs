@@ -153,6 +153,85 @@ pub(super) fn install_sync(
     result
 }
 
+/// A plugin's files as text, by path in the plugin: what Textus AI writes
+/// when it makes one (src/ai/chat/ReplyPlugins.tsx).
+#[derive(Deserialize, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
+pub struct PluginFile {
+    pub path: String,
+    pub text: String,
+}
+
+/// The most a plugin made in the conversation may hold, all files together.
+const MAX_WRITTEN_BYTES: usize = 2 * 1024 * 1024;
+
+/// Writes `files` into a folder of their own, then installs it as a package
+/// is installed: the same checks, the same place, replacing an earlier
+/// version of the same plugin - the AI's next draft of it.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn plugin_install_files(
+    app: tauri::AppHandle,
+    files: Vec<PluginFile>,
+) -> Result<InstalledPlugin, String> {
+    tauri::async_runtime::spawn_blocking(move || install_files_sync(&app, &files))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+/// Whether `path` is a plain relative path inside the plugin: no root, no
+/// `..`, no drive, nothing hidden.
+fn plain_relative(path: &str) -> bool {
+    let p = Path::new(path);
+    !path.is_empty()
+        && !path.contains('\\')
+        && p.components().all(|c| match c {
+            std::path::Component::Normal(name) => {
+                !name.to_string_lossy().starts_with('.')
+            }
+            _ => false,
+        })
+}
+
+pub(super) fn install_files_sync(
+    app: &tauri::AppHandle,
+    files: &[PluginFile],
+) -> Result<InstalledPlugin, String> {
+    let total: usize = files.iter().map(|f| f.text.len()).sum();
+    if total > MAX_WRITTEN_BYTES {
+        return Err("The plugin is too big to install from the conversation.".into());
+    }
+    if !files.iter().any(|f| f.path == MANIFEST) {
+        return Err(format!("No {MANIFEST} among the plugin's files."));
+    }
+    let root = plugins_root(app)?;
+    std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
+    let folder = root.join(format!(
+        ".written-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0)
+    ));
+    let result = (|| {
+        for file in files {
+            if !plain_relative(&file.path) {
+                return Err(format!("A plugin file can't be at {}.", file.path));
+            }
+            let target = folder.join(&file.path);
+            if let Some(parent) = target.parent() {
+                std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+            }
+            std::fs::write(&target, &file.text).map_err(|e| e.to_string())?;
+        }
+        install_sync(app, &folder)
+    })();
+    if folder.exists() {
+        let _ = std::fs::remove_dir_all(&folder);
+    }
+    result
+}
+
 /// The folder holding the manifest: `dir` itself, or its one subfolder.
 fn plugin_dir_in(dir: &Path) -> Result<PathBuf, String> {
     if dir.join(MANIFEST).is_file() {
@@ -341,6 +420,17 @@ pub async fn plugin_pick_package(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_written_plugin_file_stays_inside_the_plugin() {
+        assert!(super::plain_relative("host.js"));
+        assert!(super::plain_relative("lib/view.js"));
+        assert!(!super::plain_relative("../host.js"));
+        assert!(!super::plain_relative("/etc/passwd"));
+        assert!(!super::plain_relative(".hidden"));
+        assert!(!super::plain_relative(""));
+        assert!(!super::plain_relative("a\\b.js"));
+    }
+
     use super::*;
     use std::io::Write;
 

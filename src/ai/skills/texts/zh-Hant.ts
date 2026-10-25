@@ -98,4 +98,9 @@ export default {
     hint: "依你的描述寫一份編輯器主題，可直接使用",
     aliases: ["主題", "編輯器主題"],
   },
+  plugin: {
+    label: "做外掛",
+    hint: "依你的描述做一個 Textus 小外掛，一鍵安裝",
+    aliases: ["外掛", "小工具", "擴充"],
+  },
 } satisfies SkillTexts;

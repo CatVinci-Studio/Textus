@@ -164,6 +164,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::plugins::state::plugin_set,
                 crate::plugins::install::plugins_installed,
                 crate::plugins::install::plugin_install,
+                crate::plugins::install::plugin_install_files,
                 crate::plugins::install::plugin_load_dev,
                 crate::plugins::install::plugin_uninstall,
                 crate::plugins::install::plugin_pick_package,

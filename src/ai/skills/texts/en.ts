@@ -97,4 +97,9 @@ export default {
     hint: "Write an editor theme from your description, ready to use",
     aliases: ["theme-css", "stylesheet"],
   },
+  plugin: {
+    label: "Make a plugin",
+    hint: "Build a small Textus plugin from your description, ready to install",
+    aliases: ["make-plugin", "extension", "add-on"],
+  },
 } satisfies SkillTexts;

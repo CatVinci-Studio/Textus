@@ -98,4 +98,9 @@ export default {
     hint: "Schreibt ein Editor-Design nach deiner Beschreibung, sofort nutzbar",
     aliases: ["design", "farbschema"],
   },
+  plugin: {
+    label: "Plugin bauen",
+    hint: "Ein kleines Textus-Plugin nach deiner Beschreibung, bereit zum Installieren",
+    aliases: ["plugin", "erweiterung"],
+  },
 } satisfies SkillTexts;

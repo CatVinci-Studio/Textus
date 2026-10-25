@@ -97,4 +97,9 @@ export default {
     hint: "説明に合わせてエディターのテーマを書き、すぐ使えます",
     aliases: ["テーマ", "テーマ作成"],
   },
+  plugin: {
+    label: "プラグインを作る",
+    hint: "説明どおりの小さな Textus プラグインを作り、すぐ入れられる",
+    aliases: ["プラグイン", "拡張"],
+  },
 } satisfies SkillTexts;

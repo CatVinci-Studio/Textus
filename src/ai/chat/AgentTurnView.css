@@ -486,6 +486,11 @@ button.agent-context-chip:hover {
 }
 
 .agent-memory-chip-actions button,
+/* What a plugin the reply wrote asks to do, before Install. */
+.agent-plugin-permissions {
+  color: var(--editor-muted);
+}
+
 .agent-theme-chip button {
   padding: 0;
   border: 0;
@@ -495,7 +500,8 @@ button.agent-context-chip:hover {
   cursor: pointer;
 }
 
-.agent-memory-chip-actions button + button::before {
+.agent-memory-chip-actions button + button::before,
+.agent-plugin-chip button + button::before {
   content: "·";
   margin-right: 8px;
   color: var(--editor-muted);

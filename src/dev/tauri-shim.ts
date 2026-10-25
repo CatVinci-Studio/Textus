@@ -1104,6 +1104,26 @@ export function installDevTauriShim(): void {
         w.__devPlugins = installed.filter((p) => p.id !== id);
         delete pluginState.plugins[id];
         return Promise.resolve(null);
+      // A plugin Textus AI wrote: listed with its files, over an earlier
+      // version of the same id.
+      case "plugin_install_files": {
+        const files = (args.files ?? []) as { path: string; text: string }[];
+        const manifestFile = files.find((f) => f.path === "textus-plugin.json");
+        if (!manifestFile)
+          return Promise.reject("No textus-plugin.json among the files.");
+        const pid = (JSON.parse(manifestFile.text) as { id: string }).id;
+        const written = {
+          id: pid,
+          dir: `/plugins/${pid}`,
+          manifest: manifestFile.text,
+          dev: false,
+          files: Object.fromEntries(files.map((f) => [f.path, f.text])),
+        };
+        w.__devPlugins = [...installed.filter((p) => p.id !== pid), written];
+        const listed: Record<string, unknown> = { ...written };
+        delete listed.files;
+        return Promise.resolve(listed);
+      }
       case "plugin_install":
       case "plugin_load_dev":
         return Promise.reject("The dev shim installs no plugin from a file.");

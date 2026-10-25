@@ -411,7 +411,7 @@ fn the_skill_list_keeps_turned_off_built_ins_and_drops_hidden_ones() {
         ..Default::default()
     });
     let list = listed(skills);
-    assert_eq!(list.len(), 19);
+    assert_eq!(list.len(), 20);
     let describe = list.iter().find(|s| s.name == "describe").unwrap();
     assert!(!describe.enabled && describe.source == SkillSource::Builtin);
     let json = serde_json::to_value(&list[0]).unwrap();

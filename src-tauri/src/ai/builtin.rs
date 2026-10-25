@@ -64,6 +64,7 @@ pub(crate) const SKILL_FILES: &[(&str, &str)] = bundled!("skills/";
     "headline",
     "summarize",
     "theme",
+    "plugin",
 );
 
 /// The reference packs, by file stem (= the name use_skill loads them by).

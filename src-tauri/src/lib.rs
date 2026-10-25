@@ -363,6 +363,7 @@ pub fn run() {
             plugins::state::plugin_set,
             plugins::install::plugins_installed,
             plugins::install::plugin_install,
+            plugins::install::plugin_install_files,
             plugins::catalog::plugin_catalog,
             plugins::catalog::plugin_catalog_cached,
             plugins::catalog::skill_catalog,

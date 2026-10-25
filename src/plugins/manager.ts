@@ -10,6 +10,7 @@ import {
 } from "./plugin-settings";
 import { version as APP_VERSION } from "../../package.json";
 import { plugins as pluginsIpc, type PluginsState } from "../platform/ipc";
+import type { PluginFile } from "../platform/ipc";
 import { isIOSApp } from "../platform/capabilities";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
 import { registerCommand, runCommand } from "../app/commands";
@@ -571,8 +572,13 @@ export async function reloadPlugin(id: string): Promise<void> {
   await loadPlugins(true);
 }
 
-export async function installPlugin(path: string): Promise<string> {
-  const installed = await pluginsIpc.install(path);
+/** A package or folder at `source`, or files Textus AI wrote, installed. */
+export async function installPlugin(
+  source: string | PluginFile[],
+): Promise<string> {
+  const installed = await (typeof source === "string"
+    ? pluginsIpc.install(source)
+    : pluginsIpc.installFiles(source));
   stopHost(installed.id);
   await loadPlugins(true);
   return installed.id;

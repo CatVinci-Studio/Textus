@@ -97,4 +97,9 @@ export default {
     hint: "설명에 맞춰 편집기 테마를 만들어 바로 쓸 수 있습니다",
     aliases: ["테마"],
   },
+  plugin: {
+    label: "플러그인 만들기",
+    hint: "설명대로 작은 Textus 플러그인을 만들어 바로 설치",
+    aliases: ["플러그인", "확장 기능"],
+  },
 } satisfies SkillTexts;

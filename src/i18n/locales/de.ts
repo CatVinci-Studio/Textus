@@ -327,6 +327,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   commentNotFound: "Diese Stelle steht nicht mehr im Dokument.",
   toolResult: "Ergebnis",
   chatUseTheme: "Dieses Design verwenden",
+  chatInstallPlugin: "Dieses Plugin installieren",
+  chatUpdatePlugin: "Plugin aktualisieren",
+  chatPluginCantInstall:
+    "Dieses Plugin lässt sich nicht installieren: {reason}",
   toolSearchDocument: "Durchsucht das Dokument nach „{arg}“",
   toolReadDocument: "Liest „{arg}“",
   toolReadWholeDocument: "Liest das Dokument",

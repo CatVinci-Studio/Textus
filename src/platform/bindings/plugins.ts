@@ -31,6 +31,12 @@ export const commands = {
 	 */
 	plugin_install: (path: string) => __TAURI_INVOKE<InstalledPlugin>("plugin_install", { path }),
 	/**
+	 *  Writes `files` into a folder of their own, then installs it as a package
+	 *  is installed: the same checks, the same place, replacing an earlier
+	 *  version of the same plugin - the AI's next draft of it.
+	 */
+	plugin_install_files: (files: PluginFile[]) => __TAURI_INVOKE<InstalledPlugin>("plugin_install_files", { files }),
+	/**
 	 *  Settings › Plugins › Load a plugin folder…: the plugin runs from where it
 	 *  is, so a change to its files shows on reload. It starts off, like any
 	 *  new plugin.
@@ -305,6 +311,15 @@ export type PluginEntry_Serialize = {
 	 *  marks it Official. Never set by the window.
 	 */
 	official?: boolean,
+};
+
+/**
+ *  A plugin's files as text, by path in the plugin: what Textus AI writes
+ *  when it makes one (src/ai/chat/ReplyPlugins.tsx).
+ */
+export type PluginFile = {
+	path: string,
+	text: string,
 };
 
 /**  One command in the Plugins menu, as the frontend sends it. */

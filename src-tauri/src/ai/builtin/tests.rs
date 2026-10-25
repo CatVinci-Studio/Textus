@@ -67,7 +67,7 @@ fn every_bundled_file_is_listed() {
     let mut listed: Vec<String> = PACK_FILES.iter().map(|(s, _)| s.to_string()).collect();
     listed.sort();
     assert_eq!(stems(dir.join("packs")), listed);
-    assert_eq!(SKILL_FILES.len(), 19);
+    assert_eq!(SKILL_FILES.len(), 20);
     assert_eq!(PACK_FILES.len(), 12);
 }
 
@@ -140,7 +140,12 @@ fn every_builtin_skill_parses_and_follows_the_format() {
                     .any(|w| w == "MUST"),
                 "{stem}: no MUST"
             );
-            assert!(!text.contains("Textus"), "{stem}: names no product");
+            // The plugin skill's webview code calls acquireTextusApi(): an
+            // API's name, not the product named to the model.
+            assert!(
+                !text.replace("acquireTextusApi", "").contains("Textus"),
+                "{stem}: names no product"
+            );
         }
         for code in UI_CODES {
             assert!(
@@ -225,7 +230,12 @@ fn every_pack_parses_with_named_sections() {
                 !model.contains("(M)") && !model.contains("(S)"),
                 "{stem}#{name}: bookkeeping stripped"
             );
-            assert!(!text.contains("Textus"), "{stem}: names no product");
+            // The plugin skill's webview code calls acquireTextusApi(): an
+            // API's name, not the product named to the model.
+            assert!(
+                !text.replace("acquireTextusApi", "").contains("Textus"),
+                "{stem}: names no product"
+            );
         }
     }
     assert_eq!(pack("contract").unwrap().sections.len(), 1);

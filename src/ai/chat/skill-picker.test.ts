@@ -74,7 +74,7 @@ describe("pickerSkills", () => {
     );
     expect(list.map((s) => s.name)).not.toContain("continue-story");
     expect(list.map((s) => s.name)).not.toContain("standards-en");
-    expect(list).toHaveLength(18);
+    expect(list).toHaveLength(19);
   });
 
   it("shows a built-in by its label and hint in the UI language", () => {
