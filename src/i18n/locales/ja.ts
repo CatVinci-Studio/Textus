@@ -111,6 +111,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   proposalChangeCount: "{n} か所",
   editorLabel: "文書",
   diagramZoom: "図を拡大",
+  codeBlockEditSource: "ソースを編集",
   diagramViewerLabel: "図",
   diagramViewerClose: "閉じる",
   diagramViewerHint:

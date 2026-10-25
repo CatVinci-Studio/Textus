@@ -121,6 +121,21 @@
     });
   });
 
+  // The page's height, for a frame that fits what it shows (a code block
+  // drawn in the document): told when it changes.
+  var told = -1;
+  function tellHeight() {
+    var height = Math.ceil(document.documentElement.scrollHeight);
+    if (height === told) return;
+    told = height;
+    send("height", { height: height });
+  }
+  if (typeof ResizeObserver === "function")
+    window.addEventListener("DOMContentLoaded", function () {
+      new ResizeObserver(tellHeight).observe(document.documentElement);
+      if (document.body) new ResizeObserver(tellHeight).observe(document.body);
+    });
+
   window.textus = api;
   window.acquireTextusApi = function () {
     return api;

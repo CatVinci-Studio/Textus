@@ -1,10 +1,48 @@
 /**
  * The code blocks plugins draw in the document (textus.views.registerCode
- * Block): which plugin draws a language, and - for each block shown - the
- * way to change its source in the editor. The editor's node view
- * (editor/code/plugin-code-block.ts) fills this in as blocks come into
+ * Block): which plugin draws a language (its manifest's
+ * contributes.codeBlocks), and - for each block shown - the way to change
+ * its source in the editor. The editor's side
+ * (document-view/plugin-code-blocks.ts) fills this in as blocks come into
  * sight and go.
  */
+
+/** Language -> the plugin that draws it. */
+const languages = new Map<string, string>();
+const languageListeners = new Set<() => void>();
+
+function languagesChanged() {
+  for (const listener of languageListeners) listener();
+}
+
+/** A plugin draws `language` until the returned function is called. */
+export function addCodeBlockLanguage(
+  language: string,
+  plugin: string,
+): () => void {
+  languages.set(language, plugin);
+  languagesChanged();
+  return () => {
+    if (languages.get(language) !== plugin) return;
+    languages.delete(language);
+    languagesChanged();
+  };
+}
+
+/** The plugin that draws `language`, if one does. */
+export function codeBlockPlugin(language: string): string | null {
+  return languages.get(language.toLowerCase()) ?? null;
+}
+
+export function hasCodeBlockLanguages(): boolean {
+  return languages.size > 0;
+}
+
+/** The editor redraws when a plugin starts or stops drawing a language. */
+export function onCodeBlockLanguages(listener: () => void): () => void {
+  languageListeners.add(listener);
+  return () => languageListeners.delete(listener);
+}
 
 /** A drawn block's way back into the document. */
 export interface DrawnCodeBlock {

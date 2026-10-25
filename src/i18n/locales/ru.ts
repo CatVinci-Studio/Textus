@@ -113,6 +113,7 @@ export default {
   proposalChangeCount: "правок: {n}",
   editorLabel: "Документ",
   diagramZoom: "Увеличить диаграмму",
+  codeBlockEditSource: "Изменить исходный код",
   diagramViewerLabel: "Диаграмма",
   diagramViewerClose: "Закрыть",
   diagramViewerHint:

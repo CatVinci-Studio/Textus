@@ -105,6 +105,7 @@ export default {
   proposalChangeCount: "{n} 处",
   editorLabel: "文档",
   diagramZoom: "放大图表",
+  codeBlockEditSource: "编辑源码",
   diagramViewerLabel: "图表",
   diagramViewerClose: "关闭",
   diagramViewerHint: "滚动或双指缩放 · 拖动移动 · 双击恢复",

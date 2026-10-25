@@ -113,6 +113,7 @@ type /name in a conversation to use one.
   proposalChangeCount: "{n} changes",
   editorLabel: "Document",
   diagramZoom: "Enlarge diagram",
+  codeBlockEditSource: "Edit Source",
   diagramViewerLabel: "Diagram",
   diagramViewerClose: "Close",
   diagramViewerHint:

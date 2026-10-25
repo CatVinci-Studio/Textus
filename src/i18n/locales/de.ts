@@ -114,6 +114,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   proposalChangeCount: "{n} Änderungen",
   editorLabel: "Dokument",
   diagramZoom: "Diagramm vergrößern",
+  codeBlockEditSource: "Quelltext bearbeiten",
   diagramViewerLabel: "Diagramm",
   diagramViewerClose: "Schließen",
   diagramViewerHint:

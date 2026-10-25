@@ -12,6 +12,7 @@ import { PluginTabIcon, PluginWebviewPanel } from "./PluginWebview";
 import { PluginListPane } from "./PluginListView";
 import { pluginRecord, windowInfo, type PluginRecord } from "./plugin-records";
 import { evaluateWhen, type WhenContext } from "./when";
+import { addCodeBlockLanguage } from "./code-blocks";
 
 /**
  * What an on plugin adds to the window, registered from its manifest
@@ -73,7 +74,8 @@ export function applyContributions(
   const text = (value: string) =>
     localize(manifest, value, windowInfo().language());
   const undo: (() => void)[] = [];
-  const { commands, keybindings, menus, sidebarTabs } = manifest.contributes;
+  const { commands, keybindings, menus, sidebarTabs, codeBlocks } =
+    manifest.contributes;
   const titleOf = (command: string) =>
     text(commands.find((c) => c.command === command)?.title ?? command);
   for (const command of commands)
@@ -164,6 +166,8 @@ export function applyContributions(
               }),
       }),
     );
+  for (const block of codeBlocks)
+    undo.push(addCodeBlockLanguage(block.language, id));
   contributions.set(id, undo);
   const events = manifest.activationEvents;
   if (events.includes("onStartupFinished") || events.includes("*"))

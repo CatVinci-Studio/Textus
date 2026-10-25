@@ -8,7 +8,8 @@ import type { Endpoint } from "./rpc";
  * kept by its `key` - the view, or the tab - so a panel closed and opened
  * again finds it.
  */
-export type WebviewKind = "sidebar" | "view" | "editor" | "settings";
+export type WebviewKind =
+  "sidebar" | "view" | "editor" | "settings" | "codeBlock";
 
 export interface WebviewRecord {
   id: string;

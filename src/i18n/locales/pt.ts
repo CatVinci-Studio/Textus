@@ -112,6 +112,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   proposalChangeCount: "{n} alterações",
   editorLabel: "Documento",
   diagramZoom: "Ampliar diagrama",
+  codeBlockEditSource: "Editar o código",
   diagramViewerLabel: "Diagrama",
   diagramViewerClose: "Fechar",
   diagramViewerHint:

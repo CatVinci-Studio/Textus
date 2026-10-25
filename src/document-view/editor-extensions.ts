@@ -1,6 +1,7 @@
 import type { Editor } from "@milkdown/kit/core";
 import { withEditorCore } from "../editor/editor-extensions";
 import { withAiPlugins, type PendingEditCallbacks } from "../ai/editor-plugins";
+import { pluginCodeBlocks } from "./plugin-code-blocks";
 import type { ReviewNote } from "../ai/margin/review-notes-plugin";
 import type { Settings } from "../settings/SettingsContext";
 import type { TourAi } from "../utils/events";
@@ -50,5 +51,5 @@ export function withEditorExtensions(
       requestImageName,
     }),
     { settings, docPath, pendingEdits, quickAskWidget, tour, reviewNotes },
-  );
+  ).use(pluginCodeBlocks(docPath));
 }

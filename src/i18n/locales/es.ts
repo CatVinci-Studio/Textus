@@ -120,6 +120,7 @@ para usar una.
   proposalChangeCount: "{n} cambios",
   editorLabel: "Documento",
   diagramZoom: "Ampliar diagrama",
+  codeBlockEditSource: "Editar el código",
   diagramViewerLabel: "Diagrama",
   diagramViewerClose: "Cerrar",
   diagramViewerHint:

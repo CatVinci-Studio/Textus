@@ -105,6 +105,7 @@ export default {
   proposalChangeCount: "{n} 處",
   editorLabel: "文件",
   diagramZoom: "放大圖表",
+  codeBlockEditSource: "編輯原始碼",
   diagramViewerLabel: "圖表",
   diagramViewerClose: "關閉",
   diagramViewerHint: "捲動或雙指縮放 · 拖曳移動 · 按兩下恢復",

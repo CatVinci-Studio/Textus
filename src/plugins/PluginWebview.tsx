@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { connectFrame, sandboxedFrame, webviewDocument } from "./frames";
 import { dataUrl, readPluginFile, type PluginOrigin } from "./files";
 import {
+  codeBlockChanged,
   disposeWebview,
   pluginName,
   pluginRecord,
@@ -9,6 +10,8 @@ import {
   webviewMessage,
 } from "./manager";
 import { grantedHosts } from "./permissions";
+import { trackCodeBlock, untrackCodeBlock } from "./code-blocks";
+import type { CodeBlockSeen } from "./manager";
 import { windowInfo } from "./plugin-records";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
 import {
@@ -23,6 +26,9 @@ import {
   type WebviewRecord,
 } from "./webviews";
 
+/** The tallest a frame that fits its page grows; past it, it scrolls. */
+const MAX_FIT_HEIGHT = 1200;
+
 /**
  * Where a plugin's webview is drawn: its page in a sandboxed frame
  * (frames.ts), rebuilt whenever the plugin sets new HTML, kept in the
@@ -31,9 +37,12 @@ import {
 export function PluginWebview({
   id,
   className,
+  fitHeight,
 }: {
   id: string;
   className?: string;
+  /** The frame as tall as its page (up to a limit) - a code block's. */
+  fitHeight?: boolean;
 }) {
   useSyncExternalStore(subscribeWebviews, webviewsVersion);
   const record = webview(id);
@@ -64,6 +73,10 @@ export function PluginWebview({
           webviewMessage(id, message),
         state: ({ state }: { state: unknown }) =>
           setWebviewState(current.key, state),
+        height: ({ height }: { height: unknown }) => {
+          if (fitHeight && typeof height === "number")
+            frame.style.height = `${Math.min(Math.max(height, 24), MAX_FIT_HEIGHT)}px`;
+        },
       },
       () => ({
         state: webviewState(current.key) ?? null,
@@ -87,7 +100,7 @@ export function PluginWebview({
       webviewConnected(id, null);
       frame.remove();
     };
-  }, [id, html]);
+  }, [id, html, fitHeight]);
 
   return <div ref={boxRef} className={`plugin-webview ${className ?? ""}`} />;
 }
@@ -105,6 +118,7 @@ function useResolvedWebview(
     viewType?: string;
     state?: unknown;
     target?: unknown;
+    codeBlock?: CodeBlockSeen;
   },
   resource?: string,
 ): { record: WebviewRecord | null; error: string | null } {
@@ -114,6 +128,7 @@ function useResolvedWebview(
   // What the view was opened with counts only when it is made.
   const initialState = useRef(target.state);
   const initialTarget = useRef(target.target);
+  const initialBlock = useRef(target.codeBlock);
   useEffect(() => {
     const made = createWebview(plugin, kind, key, resource);
     setRecord(made);
@@ -123,6 +138,7 @@ function useResolvedWebview(
       viewType,
       state: initialState.current,
       target: initialTarget.current,
+      codeBlock: initialBlock.current,
     }).catch((err) => setError(String((err as Error)?.message ?? err)));
     return () => disposeWebview(made.id);
   }, [plugin, kind, key, view, viewType, resource]);
@@ -252,6 +268,59 @@ export function PluginTabIcon({
           ? { maskImage: `url("${url}")`, WebkitMaskImage: `url("${url}")` }
           : undefined
       }
+    />
+  );
+}
+
+/**
+ * A code block a plugin draws in the document (views.registerCodeBlock):
+ * made once it comes into sight, told when its source changes, and able
+ * to change that source through `setSource`.
+ */
+export function PluginCodeBlock({
+  plugin,
+  widget,
+  seen,
+  setSource,
+}: {
+  plugin: string;
+  /** The editor's widget it is drawn in: the same one while it lives. */
+  widget: string;
+  seen: CodeBlockSeen;
+  setSource: (source: string) => boolean;
+}) {
+  const { record, error } = useResolvedWebview(plugin, "codeBlock", widget, {
+    codeBlock: seen,
+  });
+  const latest = useRef(setSource);
+  latest.current = setSource;
+  useEffect(() => {
+    if (!record) return;
+    trackCodeBlock(record.id, {
+      plugin,
+      setSource: (source) => latest.current(source),
+    });
+    return () => untrackCodeBlock(record.id);
+  }, [record, plugin]);
+  // What it was made with is the plugin's already.
+  const told = useRef({ source: seen.source, block: seen.block });
+  useEffect(() => {
+    if (!record) return;
+    if (
+      told.current.source === seen.source &&
+      told.current.block === seen.block
+    )
+      return;
+    told.current = { source: seen.source, block: seen.block };
+    codeBlockChanged(record, told.current);
+  }, [record, seen.source, seen.block]);
+  if (error) return <div className="plugin-webview-problem">{error}</div>;
+  if (!record) return null;
+  return (
+    <PluginWebview
+      id={record.id}
+      className="plugin-code-block-frame"
+      fitHeight
     />
   );
 }

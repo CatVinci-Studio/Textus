@@ -319,6 +319,7 @@ export async function resolveWebview(
     viewType?: string;
     state?: unknown;
     target?: unknown;
+    codeBlock?: CodeBlockSeen;
   },
 ): Promise<void> {
   const plugin = pluginRecord(record.plugin);
@@ -334,12 +335,35 @@ export async function resolveWebview(
     });
   else if (record.kind === "settings")
     await running.request("$resolveSettingsPage", { webview: record.id });
+  else if (record.kind === "codeBlock")
+    await running.request("$renderCodeBlock", {
+      webview: record.id,
+      ...target.codeBlock,
+    });
   else
     await running.request("$resolveWebview", {
       view: target.view,
       webview: record.id,
       state: webviewState(record.key) ?? target.state ?? null,
     });
+}
+
+/** A code block as its plugin is shown it (textus CodeBlock). */
+export interface CodeBlockSeen {
+  language: string;
+  source: string;
+  path: string | null;
+  block: string;
+}
+
+/** A drawn code block's source changed (CodeBlock.onDidChange). */
+export function codeBlockChanged(
+  record: WebviewRecord,
+  seen: Pick<CodeBlockSeen, "source" | "block">,
+): void {
+  hosts
+    .get(record.plugin)
+    ?.notify("$codeBlockChanged", { webview: record.id, ...seen });
 }
 
 /** A file editor already open in tab `tabId` asked to show a place
