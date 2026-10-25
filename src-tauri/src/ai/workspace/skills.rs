@@ -333,13 +333,22 @@ pub(crate) fn with_metadata(raw: &str, key: &str, value: &str) -> String {
     let prefix = format!("  {META_PREFIX}-{key}:");
     let mut lines: Vec<String> = raw.lines().map(str::to_string).collect();
     let closing = (lines.first().map(|l| l.trim_end()) == Some("---"))
-        .then(|| lines.iter().skip(1).position(|l| l.trim_end() == "---").map(|i| i + 1))
+        .then(|| {
+            lines
+                .iter()
+                .skip(1)
+                .position(|l| l.trim_end() == "---")
+                .map(|i| i + 1)
+        })
         .flatten();
     match closing {
         Some(end) => {
             if let Some(i) = lines[..end].iter().position(|l| l.starts_with(&prefix)) {
                 lines[i] = line;
-            } else if let Some(i) = lines[..end].iter().position(|l| l.trim_end() == "metadata:") {
+            } else if let Some(i) = lines[..end]
+                .iter()
+                .position(|l| l.trim_end() == "metadata:")
+            {
                 lines.insert(i + 1, line);
             } else {
                 lines.insert(end, line);
@@ -401,7 +410,11 @@ pub(crate) fn save_written_in(
 }
 
 /// Rewrites the modes of the skill `name` in `skills_dir`.
-pub(crate) fn set_modes_in(skills_dir: &Path, name: &str, modes: &[AgentMode]) -> Result<(), String> {
+pub(crate) fn set_modes_in(
+    skills_dir: &Path,
+    name: &str,
+    modes: &[AgentMode],
+) -> Result<(), String> {
     let mut modes = modes.to_vec();
     modes.sort();
     modes.dedup();

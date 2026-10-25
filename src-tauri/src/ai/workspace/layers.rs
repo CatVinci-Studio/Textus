@@ -88,7 +88,11 @@ pub fn load(
 ) -> AgentWorkspace {
     AgentWorkspace {
         remember: crate::ai::memory::remember_enabled(app),
-        ..load_layers(global_agent_dir(app).ok().as_deref(), doc_path, root_override)
+        ..load_layers(
+            global_agent_dir(app).ok().as_deref(),
+            doc_path,
+            root_override,
+        )
     }
 }
 

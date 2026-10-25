@@ -56,11 +56,7 @@ pub(crate) fn expand_skill(
 /// A skill the user can call by `token` (what follows `/`): its name, or
 /// one of its aliases in any language. Hidden ones can't be called.
 pub(crate) fn find_invocable<'a>(skills: &'a [AgentSkill], token: &str) -> Option<&'a AgentSkill> {
-    let callable = || {
-        skills
-            .iter()
-            .filter(|s| s.invocation != Invocation::Hidden)
-    };
+    let callable = || skills.iter().filter(|s| s.invocation != Invocation::Hidden);
     callable().find(|s| s.name == token).or_else(|| {
         let token = token.to_lowercase();
         callable().find(|s| {

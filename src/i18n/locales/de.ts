@@ -847,6 +847,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   splitDivider: "Trennlinie zwischen den Dokumenten",
   hoverCard: "Vorschau",
   hoverPin: "Anheften",
+  hoverOpen: "Öffnen",
   hoverClose: "Schließen",
   menuUndo: "Rückgängig",
   menuRedo: "Wiederholen",

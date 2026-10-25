@@ -848,6 +848,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   splitDivider: "Divisória entre os documentos",
   hoverCard: "Pré-visualização",
   hoverPin: "Fixar",
+  hoverOpen: "Abrir",
   hoverClose: "Fechar",
   menuUndo: "Desfazer",
   menuRedo: "Refazer",

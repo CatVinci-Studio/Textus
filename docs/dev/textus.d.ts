@@ -122,6 +122,9 @@ declare global {
        *  other. */
       splitEditor(direction?: "row" | "column"): Promise<void>;
       closeSplit(): Promise<void>;
+      /** Split: swaps the panes' tabs, sets the first one's share (0.2 to
+       *  0.8). Textus 1.3.0-beta.2 and later. */
+      arrangeSplit(change: { swap?: boolean; ratio?: number }): Promise<void>;
       layout(): Promise<{ split: "row" | "column" | null; ratio?: number }>;
       setStatusItem(
         id: string,

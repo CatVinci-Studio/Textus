@@ -152,7 +152,9 @@ Every call returns a promise. By namespace:
   - `splitEditor(direction)`: the document in front beside another tab
     (`"row"`, side by side) or above it (`"column"`); with one tab, a
     blank one is opened for the second pane, and already split, the panes
-    turn that way. `closeSplit()` goes back to one document, and
+    turn that way. `arrangeSplit({ swap?, ratio? })` swaps the two
+    panes' tabs and sets the first one's share (0.2 to 0.8),
+    `closeSplit()` goes back to one document, and
     `layout()` says what is shown (`{ split: "row" | "column" | null,
 ratio }`). The app draws the panes and the line between them; a click
     in a pane brings its tab to the front, and a tab chosen from the tab

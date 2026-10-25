@@ -186,9 +186,7 @@ fn plain_relative(path: &str) -> bool {
     !path.is_empty()
         && !path.contains('\\')
         && p.components().all(|c| match c {
-            std::path::Component::Normal(name) => {
-                !name.to_string_lossy().starts_with('.')
-            }
+            std::path::Component::Normal(name) => !name.to_string_lossy().starts_with('.'),
             _ => false,
         })
 }

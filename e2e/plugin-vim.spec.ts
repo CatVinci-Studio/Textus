@@ -110,3 +110,20 @@ test("counts, cw, ciw, f and visual mode", async ({ page }) => {
   await expect(page.locator(status)).toContainText("NORMAL");
   await expect(firstParagraph(page)).toHaveText(" 2 ");
 });
+
+test("~ flips the case under the caret, and U and u recase a selection", async ({
+  page,
+}) => {
+  await open(page, "hello world");
+  await keys(page, ["~"]);
+  await expect(firstParagraph(page)).toHaveText("Hello world");
+  await keys(page, ["3", "~"]);
+  await expect(firstParagraph(page)).toHaveText("HELLo world");
+  await keys(page, ["u"]);
+  await expect(firstParagraph(page)).toHaveText("Hello world");
+  await keys(page, ["$", "v", "b", "U"]);
+  await expect(page.locator(status)).toContainText("NORMAL");
+  await expect(firstParagraph(page)).toHaveText("Hello WORLD");
+  await keys(page, ["$", "v", "b", "u"]);
+  await expect(firstParagraph(page)).toHaveText("Hello world");
+});

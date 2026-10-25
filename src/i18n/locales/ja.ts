@@ -813,6 +813,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   splitDivider: "文書の間の仕切り",
   hoverCard: "プレビュー",
   hoverPin: "固定",
+  hoverOpen: "開く",
   hoverClose: "閉じる",
   menuUndo: "取り消す",
   menuRedo: "やり直す",

@@ -204,9 +204,16 @@ fn reply_block(
 ) -> impl Fn(&TurnOutcome) -> Result<(), String> + Send + Sync {
     move |o| {
         let open = format!("```{info}");
-        let start = o.reply.find(&open).ok_or_else(|| format!("no ```{info} block"))?;
+        let start = o
+            .reply
+            .find(&open)
+            .ok_or_else(|| format!("no ```{info} block"))?;
         let block = &o.reply[start..];
-        let missing: Vec<&str> = holds.iter().copied().filter(|h| !block.contains(h)).collect();
+        let missing: Vec<&str> = holds
+            .iter()
+            .copied()
+            .filter(|h| !block.contains(h))
+            .collect();
         missing
             .is_empty()
             .then_some(())
@@ -952,31 +959,35 @@ fn route_cases() -> Vec<AgentCase> {
         "translate",
         plain("route-translate", LANG_ES),
     ));
-    c.push(route(
-        "route/proofread/ko",
-        Lang::Ko,
-        Lang::Ko,
-        PROOF_KO,
-        "맞춤법 검사해 줘",
-        "proofread",
-        plain("route-proofread", PROOF_KO),
-    )
-    .mode(AgentMode::Review));
-    c.push(route(
-        "route/continuity/en",
-        Lang::En,
-        Lang::En,
-        NOVEL_EN,
-        "Does this chapter contradict the earlier ones?",
-        "continuity",
-        folder(
-            "route-continuity",
-            "chapter-7.md",
+    c.push(
+        route(
+            "route/proofread/ko",
+            Lang::Ko,
+            Lang::Ko,
+            PROOF_KO,
+            "맞춤법 검사해 줘",
+            "proofread",
+            plain("route-proofread", PROOF_KO),
+        )
+        .mode(AgentMode::Review),
+    );
+    c.push(
+        route(
+            "route/continuity/en",
+            Lang::En,
+            Lang::En,
             NOVEL_EN,
-            &[("chapter-6.md", CHAPTER_6_EN)],
-        ),
-    )
-    .mode(AgentMode::Review));
+            "Does this chapter contradict the earlier ones?",
+            "continuity",
+            folder(
+                "route-continuity",
+                "chapter-7.md",
+                NOVEL_EN,
+                &[("chapter-6.md", CHAPTER_6_EN)],
+            ),
+        )
+        .mode(AgentMode::Review),
+    );
     c.push(route(
         "route/email/fr",
         Lang::Fr,

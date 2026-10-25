@@ -777,6 +777,7 @@ export default {
   splitDivider: "两篇文档之间的分隔线",
   hoverCard: "预览",
   hoverPin: "钉住",
+  hoverOpen: "打开",
   hoverClose: "关闭",
   menuUndo: "撤销",
   menuRedo: "重做",

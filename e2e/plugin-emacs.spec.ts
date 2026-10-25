@@ -97,3 +97,15 @@ test("without the Ctrl setting, Ctrl keys stay the app's on Windows and Linux", 
   // C-e didn't move to the end: the typing went in at the start.
   await expect(firstParagraph(page)).toHaveText("!plain text");
 });
+
+test("M-u, M-c and M-l recase the next word", async ({ page }) => {
+  await open(page, "one two three", { ctrlKeys: true });
+  await keys(page, ["Alt+u"]);
+  await expect(firstParagraph(page)).toHaveText("ONE two three");
+  await keys(page, ["Alt+c"]);
+  await expect(firstParagraph(page)).toHaveText("ONE Two three");
+  await keys(page, ["Alt+l"]);
+  await expect(firstParagraph(page)).toHaveText("ONE Two three");
+  await keys(page, ["Alt+b", "Alt+b", "Alt+l"]);
+  await expect(firstParagraph(page)).toHaveText("ONE two three");
+});

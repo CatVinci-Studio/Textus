@@ -281,3 +281,46 @@ test("the graph draws the folder's notes and links, and the sidebar the ones aro
   await expect(full.locator("#stats")).toHaveText("5 notes · 3 links");
   await expect(full.locator("canvas")).toBeVisible();
 });
+
+test("Insert References List lists the works the document cites", async ({
+  page,
+}) => {
+  const items = [
+    {
+      key: "ABCD1234",
+      data: {
+        title: "On the Origin of Species",
+        creators: [
+          { creatorType: "author", lastName: "Darwin", firstName: "Charles" },
+        ],
+        date: "1859",
+        publisher: "John Murray",
+        citationKey: "darwin1859",
+      },
+    },
+  ];
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.zotero": [
+        "network:localhost:23119",
+        "document.propose",
+        "document.read",
+      ],
+    },
+  });
+  await pasteMarkdown(page, "As shown [@darwin1859], species change.");
+  await mockInvoke(page, {
+    plugin_http: {
+      status: 200,
+      headers: {},
+      body: Buffer.from(JSON.stringify(items)).toString("base64"),
+    },
+  });
+  await runCommand(page, "catvinci.zotero.bibliography");
+  const added = page.locator(`${editor} .pending-insert`);
+  await expect(added.first()).toBeVisible();
+  await expect(page.locator(editor)).toContainText("References");
+  await expect(page.locator(editor)).toContainText(
+    "Darwin, Charles (1859). On the Origin of Species. John Murray.",
+  );
+});

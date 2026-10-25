@@ -157,3 +157,48 @@ test("with one tab, Split Right opens a blank one beside it", async ({
   await expect(page.locator(panes)).toHaveCount(2);
   await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(2);
 });
+
+test("an open split turns, swaps its sides and evens them out", async ({
+  page,
+}) => {
+  await openTwo(page);
+  await command(page, "catvinci.split-panes.toggle");
+  await expect(page.locator(panes)).toHaveCount(2);
+  await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
+
+  // Side by side becomes one above the other.
+  await command(page, "catvinci.split-panes.turn");
+  await expect(async () => {
+    const first = (await page.locator(pane("first")).boundingBox())!;
+    const second = (await page.locator(pane("second")).boundingBox())!;
+    expect(second.y).toBeGreaterThan(first.y + first.height - 2);
+  }).toPass();
+
+  // The two tabs change places.
+  await command(page, "catvinci.split-panes.swap");
+  await expect(page.locator(`${pane("first")} h1`)).toContainText("One");
+  await expect(page.locator(`${pane("second")} h1`)).toContainText("Two");
+
+  // Dragged off-centre, Even puts the line back in the middle.
+  const line = page.getByRole("separator", {
+    name: "Divider between the documents",
+  });
+  const box = (await line.boundingBox())!;
+  const first = (await page.locator(pane("first")).boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, first.y + first.height * 0.6, {
+    steps: 4,
+  });
+  await page.mouse.up();
+  await command(page, "catvinci.split-panes.even");
+  await expect(async () => {
+    const a = (await page.locator(pane("first")).boundingBox())!;
+    const b = (await page.locator(pane("second")).boundingBox())!;
+    expect(Math.abs(a.height - b.height)).toBeLessThan(4);
+  }).toPass();
+
+  // The same key again: one document.
+  await command(page, "catvinci.split-panes.toggle");
+  await expect(page.locator(panes)).toHaveCount(0);
+});
