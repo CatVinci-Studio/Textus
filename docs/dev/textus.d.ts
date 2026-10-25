@@ -727,7 +727,7 @@ declare global {
         query: string,
         options?: { limit?: number },
       ): Promise<{
-        hits: (Location & { line: number; text: string })[];
+        hits: (Location & { rel: string; line: number; text: string })[];
         truncated: boolean;
       }>;
       /** Documents were added, changed or removed. */

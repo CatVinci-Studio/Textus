@@ -90,9 +90,25 @@
     if (data instanceof ArrayBuffer) return new Uint8Array(data);
     return new TextEncoder().encode(String(data));
   }
-  /** What can cross to the window: functions left out. */
+  /** What can cross to the window: functions left out, everything else -
+   *  bytes, dates - as it is (the channel copies it as postMessage does). */
   function plain(value) {
-    return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+    if (typeof value === "function") return undefined;
+    if (value === null || typeof value !== "object") return value;
+    if (
+      ArrayBuffer.isView(value) ||
+      value instanceof ArrayBuffer ||
+      value instanceof Date ||
+      value instanceof Blob
+    )
+      return value;
+    if (Array.isArray(value)) return value.map(plain);
+    const out = {};
+    Object.keys(value).forEach(function (key) {
+      const v = plain(value[key]);
+      if (v !== undefined) out[key] = v;
+    });
+    return out;
   }
   function text(value) {
     return value === undefined || value === null ? "" : String(value);

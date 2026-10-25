@@ -25,6 +25,7 @@ import type { PluginsState_Serialize } from "../platform/bindings/plugins";
 import type { FsEntry_Serialize } from "../platform/bindings/plugin-access";
 import type { SentBlock } from "../ai/doc-blocks";
 import { namedCall, settledArguments, settledTurns } from "./settle-calls";
+import { pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";
 
 /** The built-in skills as `list_skills` reports them: name, `/` menu group,
@@ -838,6 +839,16 @@ export function installDevTauriShim(): void {
       catalog?: boolean;
     }[];
     const path = String(args.path ?? "");
+    const api = pluginApiShim(cmd, args, {
+      id,
+      folder,
+      write: (target, text) => {
+        ((w.__devFs ??= {}) as Record<string, string>)[target] = text;
+      },
+      granted: (permission) =>
+        !!pluginState.plugins[id]?.granted.includes(permission),
+    });
+    if (api) return api;
     const fileText = (p: string) =>
       p in binary
         ? Promise.resolve(

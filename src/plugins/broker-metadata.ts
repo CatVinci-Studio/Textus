@@ -64,6 +64,7 @@ export function metadataHandlers(p: PluginScope) {
         truncated: found.truncated,
         hits: found.hits.map((h) => ({
           path: h.path,
+          rel: h.rel,
           line: h.line,
           text: h.text,
         })),

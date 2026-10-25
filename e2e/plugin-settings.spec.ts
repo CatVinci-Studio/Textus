@@ -166,11 +166,7 @@ test("a card opens the plugin's own page: its settings, what it adds, its permis
 }) => {
   await openWithPlugins(page, {
     plugins: {
-      "catvinci.daily-notes": [
-        "workspace.read",
-        "workspace.write",
-        "document.read",
-      ],
+      "catvinci.daily-notes": ["files.read", "files.write", "editor.read"],
     },
   });
   await openPluginsPage(page);
@@ -233,7 +229,7 @@ test("a command picked in the tray with no window open runs in the window opened
       "catvinci.quick-notes.capture";
   });
   await openWithPlugins(page, {
-    plugins: { "catvinci.quick-notes": ["document.propose"] },
+    plugins: { "catvinci.quick-notes": ["editor.propose"] },
   });
   await expect(page.locator(".app-dialog")).toContainText(
     "Note something down",
@@ -245,11 +241,7 @@ test("a plugin's setting can be the project's own, over the general one", async 
 }) => {
   await openWithPlugins(page, {
     plugins: {
-      "catvinci.daily-notes": [
-        "workspace.read",
-        "workspace.write",
-        "document.read",
-      ],
+      "catvinci.daily-notes": ["files.read", "files.write", "editor.read"],
     },
     folder: { "/work/notes/a.md": "# A\n" },
   });

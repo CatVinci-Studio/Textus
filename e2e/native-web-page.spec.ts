@@ -23,7 +23,7 @@ async function openPage(page: Page) {
     route.fulfill({ contentType: "text/html", body: "<h1>Example page</h1>" }),
   );
   await openWithPlugins(page, {
-    plugins: { "catvinci.web-view": ["network:*", "document.read"] },
+    plugins: { "catvinci.web-view": ["network:*", "editor.read"] },
   });
   await pasteMarkdown(page, "https://example.test/page");
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');

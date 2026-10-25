@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, pasteMarkdown } from "./helpers";
 import {
   openPath,
+  openSidebarList,
   openSidebarTab,
   openWithPlugins,
   tabFrame,
@@ -19,11 +20,11 @@ const today = () => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
-test("a quick note is kept, and goes into the document as a proposal", async ({
+test("a quick note is kept, and Insert writes it into the document", async ({
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.quick-notes": ["document.propose"] },
+    plugins: { "catvinci.quick-notes": ["editor.write"] },
   });
   await pasteMarkdown(page, "The draft.");
   const panel = await openSidebarTab(page, "Quick Notes");
@@ -35,16 +36,16 @@ test("a quick note is kept, and goes into the document as a proposal", async ({
   const again = await openSidebarTab(page, "Quick Notes");
   await expect(again.locator("textarea")).toHaveValue("Call the printer");
   await again.getByRole("button", { name: "Insert" }).click();
-  await expect(page.locator(`${editor} .pending-insert`)).toContainText(
-    "Call the printer",
-  );
+  // Written at once, one undo away - asked for by the click.
+  await expect(page.locator(editor)).toContainText("Call the printer");
+  await expect(page.locator(`${editor} .pending-insert`)).toHaveCount(0);
 });
 
 test("a deleted quick note comes back with Undo, and an empty one goes by itself", async ({
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.quick-notes": ["document.propose"] },
+    plugins: { "catvinci.quick-notes": ["editor.write"] },
   });
   const panel = await openSidebarTab(page, "Quick Notes");
   await panel.getByRole("button", { name: "New" }).click();
@@ -66,11 +67,7 @@ test("a day in the calendar opens its note, made the first time", async ({
 }) => {
   await openWithPlugins(page, {
     plugins: {
-      "catvinci.daily-notes": [
-        "workspace.read",
-        "workspace.write",
-        "document.read",
-      ],
+      "catvinci.daily-notes": ["files.read", "files.write", "editor.read"],
     },
     folder: { "/notes/ideas.md": "# Ideas\n" },
   });
@@ -96,7 +93,7 @@ test("the folder's tasks are listed, and ticking one writes its line", async ({
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.tasks": ["workspace.read", "workspace.write"] },
+    plugins: { "catvinci.tasks": ["files.read", "files.write"] },
     folder: {
       "/notes/plan.md":
         "# Plan\n\n## Week\n\n- [ ] Write the intro\n- [x] Pick a title\n",
@@ -104,14 +101,18 @@ test("the folder's tasks are listed, and ticking one writes its line", async ({
     },
   });
   await openPath(page, "/notes/other.md");
-  const tasks = await openSidebarTab(page, "Tasks");
-  await expect(tasks.locator("#summary")).toHaveText("1 open task");
-  await expect(tasks.locator(".task")).toHaveCount(1);
-  await expect(tasks.locator(".task .where")).toHaveText("Week");
+  // A list Textus draws (views.registerList), in the page itself.
+  const tasks = await openSidebarList(page, "Tasks");
+  await expect(tasks.locator(".plugin-list-message")).toHaveText("1 open task");
+  await expect(tasks.locator(".plugin-list-row")).toHaveCount(1);
+  await expect(tasks.locator(".plugin-list-group")).toHaveText("plan.md");
+  await expect(tasks.locator(".plugin-list-description")).toHaveText("Week");
   // click, not check: a ticked task leaves the list (Done is off), and
   // check() would wait for a box that is gone to read as checked.
   await tasks.getByRole("checkbox", { name: "Write the intro" }).click();
-  await expect(tasks.locator("#summary")).toHaveText("0 open tasks");
+  await expect(tasks.locator(".plugin-list-message")).toHaveText(
+    "0 open tasks",
+  );
   const file = await page.evaluate(
     () =>
       (window as unknown as { __devFs: Record<string, string> }).__devFs[
@@ -130,43 +131,51 @@ test("tasks due soon come first, with their dates, and the filter narrows the li
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   };
   await openWithPlugins(page, {
-    plugins: { "catvinci.tasks": ["workspace.read", "workspace.write"] },
+    plugins: { "catvinci.tasks": ["files.read", "files.write"] },
     folder: {
       "/notes/plan.md": `# Plan\n\n- [ ] Send the draft 📅 ${day(-1)}\n- [ ] Book the hall due:${day(3)}\n- [ ] Someday maybe 📅 ${day(40)}\n- [ ] Read more\n`,
     },
   });
   await openPath(page, "/notes/plan.md");
-  const tasks = await openSidebarTab(page, "Tasks");
-  const soon = tasks.locator(".file.soon");
-  await expect(soon.locator("h3")).toHaveText("Due soon");
-  // Past due and within a week, soonest first; the far one isn't there.
-  await expect(soon.locator(".task .text")).toHaveCount(2);
-  await expect(soon.locator(".task").first()).toContainText("Send the draft");
-  await expect(soon.locator(".due.overdue")).toHaveCount(1);
-  // The date marker is read, not shown as typed.
-  await expect(soon.locator(".task").first()).not.toContainText("📅");
-  await tasks.getByRole("searchbox", { name: "Filter tasks" }).fill("hall");
-  await expect(tasks.locator(".file:not(.soon) .task")).toHaveCount(1);
-  await expect(tasks.locator(".file:not(.soon) .task")).toContainText(
-    "Book the hall",
+  const tasks = await openSidebarList(page, "Tasks");
+  const groups = tasks.locator(".plugin-list-group");
+  await expect(groups.first()).toHaveText("Due soon");
+  // Past due and within a week, soonest first, above the document's own
+  // list of all four; the far one isn't due soon.
+  const rows = tasks.locator(".plugin-list-row");
+  await expect(rows).toHaveCount(6);
+  await expect(rows.first()).toContainText("Send the draft");
+  await expect(rows.nth(1)).toContainText("Book the hall");
+  await expect(rows.first().locator(".plugin-list-badge")).toHaveAttribute(
+    "data-tone",
+    "danger",
   );
+  // The date marker is read, not shown as typed.
+  await expect(rows.first()).not.toContainText("📅");
+  await tasks.getByRole("textbox", { name: "Filter tasks" }).fill("hall");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.last()).toContainText("Book the hall");
 });
 
 test("tasks in a file with Windows line endings are listed and ticked", async ({
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.tasks": ["workspace.read", "workspace.write"] },
+    plugins: { "catvinci.tasks": ["files.read", "files.write"] },
     folder: {
       "/notes/win.md": "# Win\r\n\r\n- [ ] Ship it\r\n- [ ] Tell them\r\n",
     },
   });
   await openPath(page, "/notes/win.md");
-  const tasks = await openSidebarTab(page, "Tasks");
-  await expect(tasks.locator("#summary")).toHaveText("2 open tasks");
-  await expect(tasks.locator(".task .where").first()).toHaveText("Win");
+  const tasks = await openSidebarList(page, "Tasks");
+  await expect(tasks.locator(".plugin-list-message")).toHaveText(
+    "2 open tasks",
+  );
+  await expect(tasks.locator(".plugin-list-description").first()).toHaveText(
+    "Win",
+  );
   await tasks.getByRole("checkbox", { name: "Ship it" }).click();
-  await expect(tasks.locator("#summary")).toHaveText("1 open task");
+  await expect(tasks.locator(".plugin-list-message")).toHaveText("1 open task");
   const file = await page.evaluate(
     () =>
       (window as unknown as { __devFs: Record<string, string> }).__devFs[
@@ -182,7 +191,7 @@ test("a card's [[link]] opens its note, and a list dragged by its head moves", a
   const board =
     "---\nkanban-plugin: basic\n---\n\n## To do\n\n- [ ] Read [[Plan]] first\n\n## Doing\n\n## Done\n";
   await openWithPlugins(page, {
-    plugins: { "catvinci.kanban": ["workspace.read", "workspace.write"] },
+    plugins: { "catvinci.kanban": ["files.read", "files.write"] },
     folder: {
       "/notes/Book.kanban.md": board,
       "/notes/Plan.md": "# The plan\n",
@@ -225,7 +234,7 @@ test("a board opens as lists of cards, and a card moved is written back", async 
   const board =
     "---\nkanban-plugin: basic\n---\n\n## To do\n\n- [ ] Outline\n- [ ] Research\n\n## Done\n";
   await openWithPlugins(page, {
-    plugins: { "catvinci.kanban": ["workspace.read", "workspace.write"] },
+    plugins: { "catvinci.kanban": ["files.read", "files.write"] },
     folder: { "/notes/Book.kanban.md": board },
   });
   await openPath(page, "/notes/Book.kanban.md");
@@ -255,9 +264,9 @@ test("saves close together are one version, listed under Today", async ({
   await openWithPlugins(page, {
     plugins: {
       "catvinci.version-history": [
-        "workspace.read",
-        "document.read",
-        "document.propose",
+        "files.read",
+        "editor.read",
+        "editor.propose",
       ],
     },
     folder: { "/notes/essay.md": "First line\n" },
@@ -290,9 +299,9 @@ test("each save is a version, shown against the text now and restorable", async 
   await openWithPlugins(page, {
     plugins: {
       "catvinci.version-history": [
-        "workspace.read",
-        "document.read",
-        "document.propose",
+        "files.read",
+        "editor.read",
+        "editor.propose",
       ],
     },
     folder: { "/notes/essay.md": "First line\n" },
@@ -345,11 +354,7 @@ test("a new day's note fills in its template, and the day before is a command aw
 }) => {
   await openWithPlugins(page, {
     plugins: {
-      "catvinci.daily-notes": [
-        "workspace.read",
-        "workspace.write",
-        "document.read",
-      ],
+      "catvinci.daily-notes": ["files.read", "files.write", "editor.read"],
     },
     folder: { "/notes/ideas.md": "# Ideas\n" },
     settings: {
@@ -412,8 +417,8 @@ test("a citation searched in Zotero goes in where the caret is", async ({
     plugins: {
       "catvinci.zotero": [
         "network:localhost:23119",
-        "document.propose",
-        "document.read",
+        "editor.write",
+        "editor.read",
       ],
     },
   });
@@ -435,9 +440,8 @@ test("a citation searched in Zotero goes in where the caret is", async ({
   );
   await expect(page.locator(".quick-pick-item")).toContainText("Darwin · 1859");
   await page.keyboard.press("Enter");
-  await expect(page.locator(`${editor} .pending-insert`)).toHaveText(
-    "[@darwin1859]",
-  );
+  // Picked by the user: written at the caret at once.
+  await expect(page.locator(editor)).toHaveText(/As shown\s?\[@darwin1859\]/);
   const asked = await page.evaluate(
     () =>
       (
@@ -455,7 +459,7 @@ test("the graph draws the folder's notes and links, and the sidebar the ones aro
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.graph": ["workspace.read", "document.read"] },
+    plugins: { "catvinci.graph": ["files.read", "editor.read"] },
     folder: {
       "/notes/a.md": "Links to [[b]] and [c](c.md).",
       "/notes/b.md": "An [[unwritten idea]].",
@@ -494,8 +498,8 @@ test("Insert References List lists the works the document cites", async ({
     plugins: {
       "catvinci.zotero": [
         "network:localhost:23119",
-        "document.propose",
-        "document.read",
+        "editor.write",
+        "editor.read",
       ],
     },
   });
@@ -508,8 +512,6 @@ test("Insert References List lists the works the document cites", async ({
     },
   });
   await runCommand(page, "catvinci.zotero.bibliography");
-  const added = page.locator(`${editor} .pending-insert`);
-  await expect(added.first()).toBeVisible();
   await expect(page.locator(editor)).toContainText("References");
   await expect(page.locator(editor)).toContainText(
     "Darwin, Charles (1859). On the Origin of Species. John Murray.",

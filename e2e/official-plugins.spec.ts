@@ -141,7 +141,7 @@ test("a selected link opens in a web page tab of its own", async ({ page }) => {
     route.fulfill({ contentType: "text/html", body: "<h1>Example page</h1>" }),
   );
   await openWithPlugins(page, {
-    plugins: { "catvinci.web-view": ["network:*", "document.read"] },
+    plugins: { "catvinci.web-view": ["network:*", "editor.read"] },
   });
   await pasteMarkdown(page, "https://example.test/page");
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
@@ -166,7 +166,7 @@ test("a web link Ctrl/Cmd+clicked opens in Web View, not the browser", async ({
     route.fulfill({ contentType: "text/html", body: "<h1>Linked page</h1>" }),
   );
   await openWithPlugins(page, {
-    plugins: { "catvinci.web-view": ["network:*", "document.read"] },
+    plugins: { "catvinci.web-view": ["network:*", "editor.read"] },
   });
   await pasteMarkdown(page, "See [the page](https://example.test/linked).");
   const link = page.locator('[data-active-tab="true"] .ProseMirror a');
@@ -273,7 +273,7 @@ test("Web View searches words that aren't an address, and offers pages opened be
     route.fulfill({ contentType: "text/html", body: "<h1>Results</h1>" }),
   );
   await openWithPlugins(page, {
-    plugins: { "catvinci.web-view": ["network:*", "document.read"] },
+    plugins: { "catvinci.web-view": ["network:*", "editor.read"] },
   });
   const run = (command: string) =>
     page.evaluate(

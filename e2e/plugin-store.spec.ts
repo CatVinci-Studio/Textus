@@ -3,18 +3,18 @@ import { openApp } from "./helpers";
 
 /**
  * A plugin's own data (src-tauri plugins/store.rs, through the dev shim):
- * `textus.storage.global` for every document, `textus.storage.project` in
+ * `ctx.storage.global` for every document, `ctx.storage.project` in
  * the open folder's `.textus/plugins/<id>/` - the project's only with
  * project.data, and one plugin never sees another's.
  */
 
 const HOST = `
-exports.activate = function () {
-  textus.commands.registerCommand("test.keep.save", async function () {
-    const g = textus.storage.global;
-    const p = textus.storage.project;
+exports.activate = function (ctx) {
+  textus.commands.register("test.keep.save", async function () {
+    const g = ctx.storage.global;
+    const p = ctx.storage.project;
     await g.set("count", ((await g.get("count")) || 0) + 1);
-    await textus.storage.set("legacy", "same as global");
+    await g.set("legacy", "same as global");
     let project = "refused";
     try {
       await p.set("board", { cards: 2 });
@@ -23,7 +23,7 @@ exports.activate = function () {
     } catch (err) {
       project = "refused: " + err.message;
     }
-    await textus.window.showMessage(
+    await textus.ui.message(
       "global " + (await g.get("count")) + " " + (await g.keys()).join(",") +
         " | project " + project,
     );

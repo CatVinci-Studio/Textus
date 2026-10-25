@@ -100,9 +100,9 @@ export interface WindowAccess {
    *  asking; the same guide open already comes to the front. */
   openGuide(content: string, title: string): void;
   openPluginTab(view: PluginTabView, where?: Where): void;
-  /** A document open in a tab of the window, by its path - what
+  /** A document open in a tab with unsaved changes, by its path - what
    *  textus.files.process changes in the editor rather than on disk, so
-   *  nothing typed is lost. */
+   *  nothing typed is lost. A saved one is changed on disk, and reloads. */
   documentAt(path: string): OpenDocumentAccess | null;
   /** The window's tabs, and the one in front. */
   tabs(): PluginTabInfo[];

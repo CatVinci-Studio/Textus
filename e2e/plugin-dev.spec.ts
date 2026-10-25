@@ -9,8 +9,8 @@ import { openApp } from "./helpers";
 
 const host = (word: string) => `
 exports.activate = function () {
-  textus.commands.registerCommand("test.dev.say", function () {
-    return textus.window.showMessage("${word}");
+  textus.commands.register("test.dev.say", function () {
+    return textus.ui.message("${word}");
   });
   setTimeout(function () { throw new Error("oops from ${word}"); }, 0);
 };

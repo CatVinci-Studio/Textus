@@ -36,6 +36,17 @@ export function useModalDialog(
     const dialog = ref.current;
     if (!dialog) return;
     const previous = document.activeElement;
+    // Where the caret was in the text the focus leaves: focus() alone puts
+    // a contenteditable's caret at its start, and a plugin's dialog then
+    // wrote at the top of the document instead of where the user was.
+    const selection = window.getSelection();
+    const caret =
+      previous instanceof HTMLElement &&
+      previous.isContentEditable &&
+      selection &&
+      selection.rangeCount > 0
+        ? selection.getRangeAt(0).cloneRange()
+        : null;
     let first =
       (initialFocusSelector
         ? dialog.querySelector<HTMLElement>(initialFocusSelector)
@@ -90,7 +101,12 @@ export function useModalDialog(
       // after inserting a table it is where they go on typing, so only the
       // caller can say.
       if (phone && !refocusEditorOnPhone && previous.isContentEditable) return;
-      previous.focus();
+      previous.focus({ preventScroll: true });
+      if (caret && previous.contains(caret.startContainer)) {
+        const now = window.getSelection();
+        now?.removeAllRanges();
+        now?.addRange(caret);
+      }
     };
   }, [active, initialFocusSelector, phone, refocusEditorOnPhone]);
 

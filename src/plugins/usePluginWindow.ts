@@ -146,7 +146,14 @@ export function usePluginWindow({
         const tab = tabsRef.current.find((t) => t.id === activeIdRef.current);
         return tab ? info(tab) : null;
       },
-      documentAt: openDocumentAt,
+      // Only a tab with unsaved changes: one that matches its file is
+      // changed on disk, and reloads (useExternalChangeReload).
+      documentAt: (path) => {
+        const tab = tabsRef.current.find((t) => t.path === path);
+        return tab && tab.content !== tab.savedContent
+          ? openDocumentAt(path)
+          : null;
+      },
     });
     return () => setWindowAccess(null);
   }, [rootRef, openRef, tabsRef, setTabs, setActiveTabId, activeIdRef, tRef]);

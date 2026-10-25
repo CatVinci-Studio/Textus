@@ -21,7 +21,7 @@ const NOTES = {
 
 async function open(page: Page) {
   await openWithPlugins(page, {
-    plugins: { "catvinci.quick-preview": ["document.read", "workspace.read"] },
+    plugins: { "catvinci.quick-preview": ["editor.read", "files.read"] },
     folder: NOTES,
   });
   await openPath(page, "/notes/one.md");
@@ -119,8 +119,8 @@ test("a citation shows what it cites, from Zotero", async ({ page }) => {
     plugins: {
       "catvinci.zotero": [
         "network:localhost:23119",
-        "document.propose",
-        "document.read",
+        "editor.write",
+        "editor.read",
       ],
     },
     folder: {

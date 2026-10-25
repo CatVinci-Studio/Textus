@@ -213,7 +213,8 @@ export function PluginListPane({
           if (depth === 0) lastGroup = item.group;
           const Icon = item.icon ? ICONS[item.icon] : undefined;
           return (
-            <div key={key} className="plugin-list-entry">
+            // The row's place too: two items a plugin gave one id still draw.
+            <div key={`${key}@${index}`} className="plugin-list-entry">
               {heading && <div className="plugin-list-group">{heading}</div>}
               <div
                 role="treeitem"
