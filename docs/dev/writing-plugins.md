@@ -91,7 +91,7 @@ What `contributes` takes:
 | `sidebarTabs`   | `{ id, title, icon }`: a sidebar tab whose panel is a webview. The icon is an SVG, drawn in the text colour.                                                                                                                                              |
 | `views`         | `{ id, title }`: a view the plugin opens in a tab of its own (`textus.window.openView`).                                                                                                                                                                  |
 | `customEditors` | `{ viewType, displayName, filenamePatterns: ["*.pdf"] }`: a file type opened in the plugin's tab instead of as a document.                                                                                                                                |
-| `settings`      | `{ key, type: boolean \| string \| number \| enum, default, title, description?, options? }`: rows on the plugin's page in Settings, drawn as Textus's own.                                                                                               |
+| `settings`      | `{ key, type: boolean \| string \| number \| enum, default, title, description?, options?, multiline? }`: rows on the plugin's page in Settings, drawn as Textus's own (`multiline`: a string's box of several lines).                                    |
 | `settingsPage`  | `{ title }`: a page of the plugin's own under its settings, a webview.                                                                                                                                                                                    |
 | `links`         | `{ pattern, command }`: links the plugin opens. A web link Ctrl/Cmd+clicked in a document whose URL matches `pattern` (a regular expression) runs `command` with the URL, instead of the browser.                                                         |
 
@@ -139,7 +139,8 @@ Every call returns a promise. By namespace:
 
 - `textus.commands` - `registerCommand(id, run)`, `executeCommand(id, ...args)`
   (any command: the app's, or another plugin's). Textus's `textus.save`
-  is File › Save.
+  is File › Save; `textus.closeTab` is File › Close Tab, and with
+  `{ save: true }` it saves first and closes once saved.
 - `textus.window` -
   - `showMessage(text, { tone })`, `showInput({ prompt, value })` (the
     text, or null), `showQuickPick(items, { placeholder })` (the chosen

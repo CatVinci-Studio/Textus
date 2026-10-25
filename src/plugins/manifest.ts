@@ -117,6 +117,9 @@ export interface SettingContribution {
   description?: string;
   /** For "enum": the values, and what each is called. */
   options?: { value: string; label: string }[];
+  /** For "string": several lines, in a box under its title (Vim's key
+   *  mappings). */
+  multiline?: boolean;
 }
 
 export interface ThemeContribution {
@@ -276,6 +279,7 @@ function parseSetting(raw: unknown, at: string): SettingContribution {
     title: text(s.title, `${at}.title`),
     description: text(s.description, `${at}.description`, true) || undefined,
     options,
+    ...(type === "string" && s.multiline === true ? { multiline: true } : {}),
   };
 }
 

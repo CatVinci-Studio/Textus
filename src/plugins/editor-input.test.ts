@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { keyName } from "./editor-input";
+import { keyName } from "./editor-keys";
 
 const press = (init: KeyboardEventInit) => new KeyboardEvent("keydown", init);
 

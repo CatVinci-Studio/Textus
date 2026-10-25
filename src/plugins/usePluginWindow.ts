@@ -42,6 +42,7 @@ export function usePluginWindow({
   tabState,
   openPathInTab,
   saveActiveTab,
+  closeActiveTab,
 }: {
   t: Strings;
   language: string;
@@ -49,14 +50,17 @@ export function usePluginWindow({
   activePath: string | null;
   tabState: TabState;
   openPathInTab: (path: string, open?: OpenOptions) => Promise<void>;
-  /** File › Save, for the active tab. */
-  saveActiveTab: () => void;
+  /** File › Save, for the active tab; whether it was saved. */
+  saveActiveTab: () => Promise<boolean>;
+  /** File › Close Tab, asking first if it has unsaved changes. */
+  closeActiveTab: () => void;
 }): PluginsSnapshot {
   const tRef = useLatest(t);
   const languageRef = useLatest(language);
   const rootRef = useLatest(rootPath);
   const openRef = useLatest(openPathInTab);
   const saveRef = useLatest(saveActiveTab);
+  const closeRef = useLatest(closeActiveTab);
   const { tabsRef, setTabs, setActiveTabId } = tabState;
 
   useEffect(() => {
@@ -105,17 +109,32 @@ export function usePluginWindow({
     return () => setWindowAccess(null);
   }, [rootRef, openRef, tabsRef, setTabs, setActiveTabId]);
 
-  // File › Save, for a plugin that has its own key for it (Emacs's C-x
-  // C-s).
-  useEffect(
-    () =>
-      registerCommand({
-        id: "textus.save",
-        title: (t) => t.menuSave,
-        run: () => saveRef.current(),
-      }),
-    [saveRef],
-  );
+  // File › Save and Close Tab, for a plugin that has its own keys for
+  // them (Emacs's C-x C-s, Vim's :w and :q). Close Tab with { save: true }
+  // saves first (Vim's :wq), and closes only once it is saved.
+  useEffect(() => {
+    const save = registerCommand({
+      id: "textus.save",
+      title: (t) => t.menuSave,
+      run: () => void saveRef.current(),
+    });
+    const close = registerCommand({
+      id: "textus.closeTab",
+      title: (t) => t.menuCloseTab,
+      run: (options) => {
+        const first = (options as { save?: boolean } | undefined)?.save
+          ? saveRef.current()
+          : Promise.resolve(true);
+        void first.then((saved) => {
+          if (saved) closeRef.current();
+        });
+      },
+    });
+    return () => {
+      save();
+      close();
+    };
+  }, [saveRef, closeRef]);
 
   // A plugin a developer loaded from a folder, loaded again as it changes.
   useEffect(() => watchDevPlugins(), []);

@@ -91,7 +91,8 @@ export function useWindowDocuments({
     tabState,
     openPathInTab: opening.openPathInTab,
     // Defined below; read when a plugin asks.
-    saveActiveTab: () => void saving.saveTab(activeTab.id),
+    saveActiveTab: () => saving.saveTab(activeTab.id),
+    closeActiveTab: () => requestCloseTab(activeTab.id),
   });
 
   const { openHelpTab } = useHelpTabs({
