@@ -306,6 +306,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   chatInstallPlugin: "이 플러그인 설치",
   chatUpdatePlugin: "플러그인 업데이트",
   chatPluginCantInstall: "이 플러그인은 설치할 수 없습니다: {reason}",
+  chatSaveSkill: "이 스킬 저장",
+  chatUpdateSkill: "스킬 업데이트",
   toolSearchDocument: "문서에서 “{arg}” 검색 중",
   toolReadDocument: "“{arg}” 읽는 중",
   toolReadWholeDocument: "문서 전체 읽는 중",

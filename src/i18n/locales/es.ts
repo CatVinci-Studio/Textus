@@ -340,6 +340,8 @@ para usar una.
   chatInstallPlugin: "Instalar este complemento",
   chatUpdatePlugin: "Actualizar el complemento",
   chatPluginCantInstall: "Este complemento no se puede instalar: {reason}",
+  chatSaveSkill: "Guardar esta habilidad",
+  chatUpdateSkill: "Actualizar la habilidad",
   toolSearchDocument: "Buscando «{arg}» en el documento",
   toolReadDocument: "Leyendo «{arg}»",
   toolReadWholeDocument: "Leyendo el documento",

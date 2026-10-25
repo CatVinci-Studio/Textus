@@ -351,13 +351,20 @@ export const ai = {
     workspaceRoot: string | null;
     exchange: { messages: string[]; reply: string };
   }) => aiCall<SkillOffer | null>("ai_offer_skill", args),
-  /** An offered skill saved, for every document or this project's. */
+  /** An offered skill saved, for every document or this project's, in
+   *  `modes`. */
   saveOfferedSkill: (
     offer: SkillOffer,
     scope: "personal" | "project",
     docPath: string | null,
     workspaceRoot: string | null,
-  ) => command("save_offered_skill", offer, scope, docPath, workspaceRoot),
+    modes: AgentMode[],
+  ) =>
+    command("save_offered_skill", offer, scope, docPath, workspaceRoot, modes),
+  /** A skill file a reply wrote, saved in the global skills folder in
+   *  `modes` - over an earlier version of it. Its path. */
+  saveWrittenSkill: (text: string, modes: AgentMode[]) =>
+    command("save_written_skill", text, modes),
   /** What the writer will probably say next, after a reply
    *  (ai/next_message.rs); null when there is no clear next step. */
   suggestNextMessage: (args: {

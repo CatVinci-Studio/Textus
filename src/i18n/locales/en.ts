@@ -328,6 +328,8 @@ type /name in a conversation to use one.
   chatInstallPlugin: "Install this plugin",
   chatUpdatePlugin: "Update the plugin",
   chatPluginCantInstall: "This plugin can't be installed: {reason}",
+  chatSaveSkill: "Save this skill",
+  chatUpdateSkill: "Update the skill",
   toolSearchDocument: "Searching the document for “{arg}”",
   toolReadDocument: "Reading “{arg}”",
   toolReadWholeDocument: "Reading the document",

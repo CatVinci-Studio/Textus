@@ -313,6 +313,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   chatInstallPlugin: "このプラグインを入れる",
   chatUpdatePlugin: "プラグインを更新",
   chatPluginCantInstall: "このプラグインは入れられません：{reason}",
+  chatSaveSkill: "このスキルを保存",
+  chatUpdateSkill: "スキルを更新",
   toolSearchDocument: "文書内を「{arg}」で検索",
   toolReadDocument: "「{arg}」を読む",
   toolReadWholeDocument: "文書全体を読む",

@@ -294,6 +294,8 @@ export default {
   chatInstallPlugin: "安装此插件",
   chatUpdatePlugin: "更新插件",
   chatPluginCantInstall: "这个插件无法安装：{reason}",
+  chatSaveSkill: "保存此技能",
+  chatUpdateSkill: "更新技能",
   toolSearchDocument: "在文档中搜索「{arg}」",
   toolReadDocument: "阅读「{arg}」",
   toolReadWholeDocument: "阅读全文",

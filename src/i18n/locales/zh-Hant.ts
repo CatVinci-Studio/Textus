@@ -294,6 +294,8 @@ export default {
   chatInstallPlugin: "安裝此外掛",
   chatUpdatePlugin: "更新外掛",
   chatPluginCantInstall: "這個外掛無法安裝：{reason}",
+  chatSaveSkill: "儲存此技能",
+  chatUpdateSkill: "更新技能",
   toolSearchDocument: "在文件中搜尋「{arg}」",
   toolReadDocument: "閱讀「{arg}」",
   toolReadWholeDocument: "閱讀全文",

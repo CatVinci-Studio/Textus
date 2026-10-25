@@ -438,5 +438,23 @@ pub async fn set_skill_modes(
         .map_err(|e| e.to_string())?
 }
 
+/// Save this skill, under a reply that wrote one (Create mode's `skill`
+/// skill): the file goes into the global config folder's skills/ with
+/// the modes the user picked - over an earlier version of the same skill.
+/// Its path.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn save_written_skill(
+    app: AppHandle,
+    text: String,
+    modes: Vec<AgentMode>,
+) -> Result<String, String> {
+    let dir = global_agent_dir(&app)?.join("skills");
+    tauri::async_runtime::spawn_blocking(move || save_written_in(&dir, &text, &modes))
+        .await
+        .map_err(|e| e.to_string())?
+        .map(|p| p.to_string_lossy().into_owned())
+}
+
 #[cfg(test)]
 mod tests;

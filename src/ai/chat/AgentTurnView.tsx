@@ -7,6 +7,7 @@ import { siteOf } from "../citations";
 import { parseUserMessage } from "./user-message";
 import { ReplyThemes, type ReplyThemeLabels } from "./ReplyThemes";
 import type { ReplyPluginLabels } from "./ReplyPlugins";
+import { ReplySkills } from "./ReplySkills";
 import { ChevronIcon, PaperclipIcon, SearchIcon } from "../../ui/icons";
 import "./AgentTurnView.css";
 
@@ -97,6 +98,7 @@ export function AgentTurnView({
             <SourceList sources={turn.sources} label={labels.sources} />
           )}
           <ReplyThemes text={turn.text} labels={labels} />
+          {/\nname:/.test(turn.text) && <ReplySkills text={turn.text} />}
           {turn.text.includes("textus-plugin.json") && (
             <Suspense fallback={null}>
               <ReplyPlugins text={turn.text} labels={labels} />

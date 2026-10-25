@@ -6,6 +6,7 @@ import { skillText } from "../../ai/skills/texts";
 import { BUILTIN_SKILLS } from "../../ai/skills/builtin";
 import { listFromWorkspace } from "../../ai/chat/skill-picker";
 import { AGENT_MODES, type AgentMode } from "../settings-types";
+import { ModeChoice } from "../../ai/chat/ModeChoice";
 import type { AgentSkill } from "../../ai/types";
 import { ai, type SkillListItem } from "../../platform/ipc";
 import { showConfirm } from "../../ui/app-dialog";
@@ -149,35 +150,12 @@ export function OwnSkillsList({ t }: { t: Strings }) {
             <span className="settings-skill-desc">
               {words ? `/${skill.name} · ${words.hint}` : skill.description}
             </span>
-            <span
-              className="settings-skill-modes"
-              role="group"
-              aria-label={t.agentSkillsModes}
-            >
-              {AGENT_MODES.map((mode) => {
-                const on = modes.includes(mode);
-                return (
-                  <label key={mode} className="settings-skill-mode">
-                    <input
-                      type="checkbox"
-                      checked={on}
-                      // A skill is in one mode at least.
-                      disabled={on && modes.length === 1}
-                      onChange={() =>
-                        void setModes(
-                          skill,
-                          on
-                            ? modes.filter((m) => m !== mode)
-                            : AGENT_MODES.filter(
-                                (m) => m === mode || modes.includes(m),
-                              ),
-                        )
-                      }
-                    />
-                    {t[MODE_LABEL[mode]]}
-                  </label>
-                );
-              })}
+            <span className="settings-skill-modes">
+              <ModeChoice
+                t={t}
+                modes={modes}
+                onChange={(next) => void setModes(skill, next)}
+              />
             </span>
           </div>
         );

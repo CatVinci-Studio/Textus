@@ -356,6 +356,28 @@ fn a_skill_says_its_modes_and_its_names() {
 }
 
 #[test]
+fn a_skill_written_in_a_reply_is_saved_with_its_modes_and_updated_in_place() {
+    use crate::ai::agent::AgentMode;
+    let root = scratch("written");
+    let skills = root.join("skills");
+    let v1 = "---\nname: weekly-report\ndescription: d\nmetadata:\n  textus-version: \"1.0.0\"\n  textus-modes: \"write\"\n---\nTurn the notes into a report.\n";
+    let path = save_written_in(&skills, v1, &[AgentMode::Write, AgentMode::Review]).unwrap();
+    assert_eq!(path, skills.join("weekly-report.md"));
+    let (_, saved) = read_skill_files(&skills).pop().unwrap();
+    assert_eq!(saved.modes, [AgentMode::Review, AgentMode::Write]);
+    // A new version goes over the old file, wherever it is.
+    std::fs::rename(&path, skills.join("mine.md")).unwrap();
+    let v2 = v1.replace("1.0.0", "1.1.0");
+    let path = save_written_in(&skills, &v2, &[AgentMode::Write]).unwrap();
+    assert_eq!(path, skills.join("mine.md"));
+    assert_eq!(read_skill_files(&skills).len(), 1);
+    // Not a skill: nothing written.
+    assert!(save_written_in(&skills, "just text", &[AgentMode::Write]).is_err());
+    assert!(save_written_in(&skills, v1, &[]).is_err());
+    std::fs::remove_dir_all(&root).ok();
+}
+
+#[test]
 fn setting_a_skills_modes_rewrites_its_file() {
     use crate::ai::agent::AgentMode;
     let root = scratch("modes");

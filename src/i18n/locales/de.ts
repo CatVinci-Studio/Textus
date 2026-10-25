@@ -330,6 +330,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatUseTheme: "Dieses Design verwenden",
   chatInstallPlugin: "Dieses Plugin installieren",
   chatUpdatePlugin: "Plugin aktualisieren",
+  chatSaveSkill: "Diese Fähigkeit speichern",
+  chatUpdateSkill: "Fähigkeit aktualisieren",
   chatPluginCantInstall:
     "Dieses Plugin lässt sich nicht installieren: {reason}",
   toolSearchDocument: "Durchsucht das Dokument nach „{arg}“",

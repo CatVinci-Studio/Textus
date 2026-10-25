@@ -500,6 +500,20 @@ button.agent-context-chip:hover {
   cursor: pointer;
 }
 
+/* The modes a skill is saved in, before Save. */
+.skill-mode-choice {
+  display: inline-flex;
+  gap: 8px;
+  margin-right: 8px;
+  color: var(--editor-muted);
+}
+
+.skill-mode-choice label {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
 .agent-memory-chip-actions button + button::before,
 .agent-plugin-chip button + button::before {
   content: "·";

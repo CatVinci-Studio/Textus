@@ -330,6 +330,8 @@ export default {
   chatUseTheme: "Использовать эту тему",
   chatInstallPlugin: "Установить этот плагин",
   chatUpdatePlugin: "Обновить плагин",
+  chatSaveSkill: "Сохранить этот навык",
+  chatUpdateSkill: "Обновить навык",
   chatPluginCantInstall: "Этот плагин нельзя установить: {reason}",
   toolSearchDocument: "Поиск в документе: «{arg}»",
   toolReadDocument: "Чтение: «{arg}»",

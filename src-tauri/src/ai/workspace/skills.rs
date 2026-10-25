@@ -366,6 +366,40 @@ pub(crate) fn with_metadata(raw: &str, key: &str, value: &str) -> String {
     text
 }
 
+/// The most a skill file written in a reply may be.
+const MAX_WRITTEN_SKILL: usize = 64 * 1024;
+
+/// Writes a skill file from a reply into `skills_dir` with `modes`: a new
+/// file, or over the one holding the skill of that name already.
+pub(crate) fn save_written_in(
+    skills_dir: &Path,
+    text: &str,
+    modes: &[AgentMode],
+) -> Result<PathBuf, String> {
+    if text.len() > MAX_WRITTEN_SKILL {
+        return Err("That skill is too long to save.".to_string());
+    }
+    let skill = parse_skill_file("", text);
+    if skill.name.is_empty() || skill.prompt.is_empty() {
+        return Err("That isn't a skill file: it needs a name and instructions.".to_string());
+    }
+    if modes.is_empty() {
+        return Err("A skill needs at least one mode.".to_string());
+    }
+    std::fs::create_dir_all(skills_dir).map_err(|e| e.to_string())?;
+    let path = match read_skill_files(skills_dir)
+        .into_iter()
+        .find(|(_, s)| s.name == skill.name)
+    {
+        Some((path, _)) => path,
+        None => skill_file_path(skills_dir, &skill.name)?,
+    };
+    let words: Vec<String> = modes.iter().map(|m| m.to_string()).collect();
+    crate::atomic::write_sync(&path, with_metadata(text, "modes", &words.join(" ")))
+        .map_err(|e| e.to_string())?;
+    Ok(path)
+}
+
 /// Rewrites the modes of the skill `name` in `skills_dir`.
 pub(crate) fn set_modes_in(skills_dir: &Path, name: &str, modes: &[AgentMode]) -> Result<(), String> {
     let mut modes = modes.to_vec();

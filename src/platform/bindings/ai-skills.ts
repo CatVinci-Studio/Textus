@@ -50,6 +50,13 @@ export const commands = {
 	 *  fixed.
 	 */
 	set_skill_modes: (name: string, source: SkillSource, docPath: string | null, workspaceRoot: string | null, modes: AgentMode_Deserialize[]) => __TAURI_INVOKE<null>("set_skill_modes", { name, source, docPath, workspaceRoot, modes }),
+	/**
+	 *  Save this skill, under a reply that wrote one (Create mode's `skill`
+	 *  skill): the file goes into the global config folder's skills/ with
+	 *  the modes the user picked - over an earlier version of the same skill.
+	 *  Its path.
+	 */
+	save_written_skill: (text: string, modes: AgentMode_Deserialize[]) => __TAURI_INVOKE<string>("save_written_skill", { text, modes }),
 };
 
 /* Types */

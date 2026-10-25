@@ -553,6 +553,11 @@ export function installDevTauriShim(): void {
         } satisfies AgentSkill_Serialize;
         return Promise.resolve([...builtins, own]);
       }
+      // Save this skill (Create mode): the file and its modes, logged.
+      case "save_written_skill":
+        skills.log.push(`${cmd}:${String(args.modes)}`);
+        skills.files.set(skillCopyPath("written"), String(args.text ?? ""));
+        return Promise.resolve(skillCopyPath("written"));
       case "set_skill_modes":
         skills.log.push(`${cmd}:${name}:${String(args.modes)}`);
         skills.ownModes = [...((args.modes as string[]) ?? [])];
