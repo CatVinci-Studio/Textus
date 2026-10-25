@@ -31,7 +31,7 @@ async function openPage(page: Page) {
   await page.keyboard.press("ControlOrMeta+a");
   await editor.click({ button: "right" });
   await page
-    .getByRole("menuitem", { name: "Open the Selected Link in a Tab" })
+    .getByRole("menuitem", { name: "Open or search the selection in a tab" })
     .click();
   await expect(
     page.frameLocator(".dev-native-web-page").locator("h1"),
