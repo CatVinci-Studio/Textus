@@ -42,15 +42,9 @@ test("a backslash in a formula lists LaTeX commands, and Enter writes one", asyn
   await expect(list(page).locator(".completion-item").first()).toContainText(
     "\\frac",
   );
-  // Under the formula's drawn preview, never over it.
-  const preview = page.locator(".math-float-preview");
-  if (await preview.isVisible()) {
-    const previewBox = (await preview.boundingBox())!;
-    const listBox = (await list(page).boundingBox())!;
-    expect(listBox.y).toBeGreaterThanOrEqual(
-      previewBox.y + previewBox.height - 1,
-    );
-  }
+  // The formula's drawn preview, where the list shows, steps aside.
+  for (const preview of await page.locator(".math-float-preview").all())
+    await expect(preview).toHaveCSS("visibility", "hidden");
   await page.keyboard.press("Enter");
   await expect(list(page)).toHaveCount(0);
   // The caret in the first braces: what is typed next is the numerator.

@@ -1,6 +1,10 @@
 import type { CompletionItem } from "../../plugins/completion-sources";
 import "./completion-list.css";
 
+/** On the page while a list is open: a formula's drawn preview, which
+ *  shows where the list does, steps aside (completion-list.css). */
+const OPEN_CLASS = "completion-open";
+
 /** The list of completions under the caret (completion-plugin.ts): one
  *  element in the body, filled again for each list, the chosen item lit.
  *  The editor keeps the focus; a click takes an item. */
@@ -42,6 +46,7 @@ export class CompletionList {
     this.count = items.length;
     this.choose(0);
     el.hidden = false;
+    document.documentElement.classList.add(OPEN_CLASS);
     // Under the caret, or above it where the window ends.
     const margin = 8;
     const width = el.offsetWidth;
@@ -63,9 +68,12 @@ export class CompletionList {
 
   hide(): void {
     if (this.el) this.el.hidden = true;
+    document.documentElement.classList.remove(OPEN_CLASS);
   }
 
   destroy(): void {
+    if (this.el && !this.el.hidden)
+      document.documentElement.classList.remove(OPEN_CLASS);
     this.el?.remove();
     this.el = null;
   }

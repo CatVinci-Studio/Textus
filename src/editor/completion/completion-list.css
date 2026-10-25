@@ -45,3 +45,10 @@
   color: var(--editor-muted);
   font-size: var(--text-xs);
 }
+
+/* A formula's drawn preview shows under it, where the list does: it steps
+   aside while the list is open. */
+.completion-open .math-float-preview {
+  /* Not opacity: its pop-in animation sets that. */
+  visibility: hidden;
+}
