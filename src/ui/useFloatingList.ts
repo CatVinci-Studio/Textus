@@ -20,6 +20,8 @@ export function useFloatingList(
   open: boolean,
   active: number,
   dismiss: () => void,
+  /** How tall the list may grow; a longer one scrolls. */
+  maxHeight = MENU_MAX_HEIGHT,
 ) {
   const [place, setPlace] = useState<CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -35,11 +37,11 @@ export function useFloatingList(
     placedAt.current = rect;
     const below = window.innerHeight - rect.bottom - 8;
     const above = rect.top - 8;
-    const up = below < Math.min(MENU_MAX_HEIGHT, 160) && above > below;
+    const up = below < Math.min(maxHeight, 160) && above > below;
     setPlace({
       left: Math.min(rect.left, window.innerWidth - rect.width - 8),
       minWidth: rect.width,
-      maxHeight: Math.min(MENU_MAX_HEIGHT, up ? above : below),
+      maxHeight: Math.min(maxHeight, up ? above : below),
       ...(up
         ? { bottom: window.innerHeight - rect.top + 4 }
         : { top: rect.bottom + 4 }),
@@ -48,7 +50,7 @@ export function useFloatingList(
         "--transform-origin": up ? "bottom left" : "top left",
       } as CSSProperties),
     });
-  }, [open]);
+  }, [open, maxHeight]);
 
   // Then kept inside the window across: the list is often wider than its
   // trigger (Settings' image models, "OpenAI · gpt-image-…" beside a "None"

@@ -79,7 +79,12 @@ const labels = {
   modeWrite: "Write",
   modeReview: "Review",
   modeCreate: "Create",
+  modeWriteHint: "Writes and changes the document",
+  modeReviewHint: "Reads and leaves notes",
+  modeCreateHint: "Makes themes, plugins and skills",
   modeLabel: "Mode",
+  modelLabel: "Model",
+  modeAndModelLabel: "Mode and model",
   webSearch: "Web search",
   deepThinking: "Deep thinking",
   deepThinkingHint:
@@ -283,8 +288,17 @@ describe("ChatComposer selection chip", () => {
     fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
     // Write, Review, then Create - 1.2.0's Revise is part of Write.
     expect(
-      screen.getAllByRole("option").map((option) => option.textContent),
+      screen
+        .getAllByRole("option")
+        .map(
+          (option) =>
+            option.querySelector(".mode-picker-mode-name")?.textContent,
+        ),
     ).toEqual(["Write", "Review", "Create"]);
+    // Each with a line on what it does.
+    expect(
+      screen.getByRole("option", { name: "Review" }).textContent,
+    ).toContain("Reads and leaves notes");
     fireEvent.click(screen.getByRole("option", { name: "Write" }));
     // Named for what it picks, not for one of its choices: a screen
     // reader used to hear "Ask" over a picker set to Plan.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canSwitchModel, chatModel, modelChoices } from "./ModelSwitcher";
+import { canSwitchModel, chatModel, modelChoices } from "./chat-models";
 import type { ProviderCatalogEntry } from "../provider-catalog";
 
 const entry = {

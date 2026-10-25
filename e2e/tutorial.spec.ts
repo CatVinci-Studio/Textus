@@ -364,7 +364,8 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
       await expect(page.locator(".agent-panel")).toBeVisible();
     }
     // Each lesson puts the panel in the mode it needs.
-    if (modeName) await expect(mode).toHaveText(modeName);
+    if (modeName)
+      await expect(mode.locator(".mode-picker-value")).toHaveText(modeName);
     await card.getByRole("button", { name: "Continue" }).click();
   }
 
@@ -506,7 +507,9 @@ test.describe("connected", () => {
       await expect(next(write)).toBeDisabled();
       await page.keyboard.press("Control+Shift+L");
       await expect(ticked(write)).toHaveCount(1);
-      await expect(mode).toHaveText(run.mode.write);
+      await expect(mode.locator(".mode-picker-value")).toHaveText(
+        run.mode.write,
+      );
       await answer(page, {
         ai_agent_message: agentReply(
           run.write.prompt,
@@ -528,7 +531,9 @@ test.describe("connected", () => {
 
       // Review: a note in the margin, on the learner's notes.
       const review = lesson(page, t.tutorialReviewTitle);
-      await expect(mode).toHaveText(run.mode.review);
+      await expect(mode.locator(".mode-picker-value")).toHaveText(
+        run.mode.review,
+      );
       await answer(page, {
         ai_agent_message: agentReply(
           run.review.prompt,
@@ -545,7 +550,9 @@ test.describe("connected", () => {
 
       // Revision: the notes' first sentence reworked, then decided.
       const revision = lesson(page, t.tutorialRevisionTitle);
-      await expect(mode).toHaveText(run.mode.write);
+      await expect(mode.locator(".mode-picker-value")).toHaveText(
+        run.mode.write,
+      );
       await answer(page, {
         ai_agent_message: agentReply(
           run.revise.prompt,
@@ -614,7 +621,9 @@ test.describe("connected", () => {
 
       // Skills: a note selected, a message sent through the skill.
       const skills = lesson(page, t.tutorialSkillsTitle);
-      await expect(mode).toHaveText(run.mode.write);
+      await expect(mode.locator(".mode-picker-value")).toHaveText(
+        run.mode.write,
+      );
       await answer(page, {
         ai_agent_message: [
           { kind: "User", text: run.skill },

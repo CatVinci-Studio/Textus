@@ -54,7 +54,12 @@ const labels = {
   modeWrite: "Write",
   modeReview: "Review",
   modeCreate: "Create",
+  modeWriteHint: "Writes and changes the document",
+  modeReviewHint: "Reads and leaves notes",
+  modeCreateHint: "Makes themes, plugins and skills",
   modeLabel: "Mode",
+  modelLabel: "Model",
+  modeAndModelLabel: "Mode and model",
   webSearch: "Web search",
   deepThinking: "Deep thinking",
   deepThinkingHint:
