@@ -18,6 +18,7 @@ import type {
   Remembering_Serialize,
 } from "./bindings/ai-memory";
 import type {
+  AgentMode_Serialize as AgentMode,
   AgentSkill_Serialize,
   AgentWorkspace_Serialize,
   Forgotten_Serialize,
@@ -28,6 +29,7 @@ import type {
   ProjectConventions as StyleFrontMatter,
   Remembered_Serialize,
   Scope,
+  SkillLabel,
 } from "./bindings/ai-project";
 
 /**
@@ -228,7 +230,7 @@ export type TextMeasure = Measure_Serialize;
  * the frontend also makes one from a workspace's skills (skill-picker.ts),
  * where the later fields are unknown, and `category` is one of the `/`
  * menu's groups where Rust holds a plain string. Its other fields are
- * AgentSkill's (src/platform/bindings/ai-project.ts).
+ * AgentSkill's (src/platform/bindings/ai-skills.ts).
  */
 export interface SkillListItem {
   /** Canonical, ASCII kebab-case for a built-in; what follows the `/`. */
@@ -246,10 +248,12 @@ export interface SkillListItem {
    *  Customize… (`basedOn` set), or the user's own skill that happens to
    *  share it. */
   overridesBuiltin: boolean;
-  /** False for a built-in turned off in Settings, and for a copy of one
-   *  made by Customize… (it stays listed so Settings can turn it back on;
-   *  the `/` menu leaves it out). */
-  enabled: boolean;
+  /** The panel modes it applies in; only those offer it in the `/` menu.
+   *  Write's for a skill that doesn't say. */
+  modes: AgentMode[];
+  /** What a market or user skill is called, and its one-line hint, by UI
+   *  language code (a built-in's are in src/ai/skills/texts). */
+  labels?: Record<string, SkillLabel>;
   /** Extra words typed after `/` for it, by UI language code. */
   aliases: Record<string, string[]>;
   /** Reference-pack sections Rust appends when it is used. */

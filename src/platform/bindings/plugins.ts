@@ -168,6 +168,64 @@ export const commands = {
 
 /* Types */
 /**
+ *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
+ *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
+ *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
+ *  and what the prompt says the user is here for.
+ */
+export type AgentMode = AgentMode_Serialize | AgentMode_Deserialize;
+
+/**
+ *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
+ *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
+ *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
+ *  and what the prompt says the user is here for.
+ */
+export type AgentMode_Deserialize = 
+/**  Reads, answers and comments: no propose_edit. */
+"review" | 
+/**
+ *  Adds text and changes the text that is there: every propose_edit
+ *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
+ *  this one.
+ */
+"write" | 
+/**
+ *  Adds text and changes the text that is there: every propose_edit
+ *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
+ *  this one.
+ */
+"revise" | 
+/**
+ *  Makes things for the app itself - a theme, a plugin, a skill - as
+ *  files in the reply, which the chat offers to install: no
+ *  propose_edit, no comments.
+ */
+"create";
+
+/**
+ *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
+ *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
+ *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
+ *  and what the prompt says the user is here for.
+ */
+export type AgentMode_Serialize = 
+/**  Reads, answers and comments: no propose_edit. */
+"review" | 
+/**
+ *  Adds text and changes the text that is there: every propose_edit
+ *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
+ *  this one.
+ */
+"write" | 
+/**
+ *  Makes things for the app itself - a theme, a plugin, a skill - as
+ *  files in the reply, which the chat offers to install: no
+ *  propose_edit, no comments.
+ */
+"create";
+
+/**
  *  One plugin in the catalog - generated into
  *  src/platform/bindings/plugins.ts (src/plugins/catalog.ts reads it).
  */
@@ -399,6 +457,16 @@ export type SkillEntry_Deserialize = {
 	description: string,
 	author?: string,
 	official?: boolean,
+	/**
+	 *  The panel modes it works in (its file's `textus-modes`); Write's
+	 *  when the catalog doesn't say.
+	 */
+	modes?: AgentMode_Deserialize[],
+	/**
+	 *  Its name and one-line hint by UI language code, for the market to
+	 *  show (its file's `textus-label-<code>`).
+	 */
+	labels?: { [key in string]: SkillLabel },
 	url: string,
 	sha256: string,
 	size: number,
@@ -416,9 +484,25 @@ export type SkillEntry_Serialize = {
 	description: string,
 	author: string,
 	official: boolean,
+	/**
+	 *  The panel modes it works in (its file's `textus-modes`); Write's
+	 *  when the catalog doesn't say.
+	 */
+	modes: AgentMode_Serialize[],
+	/**
+	 *  Its name and one-line hint by UI language code, for the market to
+	 *  show (its file's `textus-label-<code>`).
+	 */
+	labels: { [key in string]: SkillLabel },
 	url: string,
 	sha256: string,
 	size: number,
+};
+
+/**  A skill's name and one-line hint in one UI language. */
+export type SkillLabel = {
+	label: string,
+	hint: string,
 };
 
 /**  Which of a plugin's two places. */

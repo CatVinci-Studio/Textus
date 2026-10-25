@@ -30,6 +30,7 @@ export default {
   menuToggleAgentPanel: "KI-Bereich",
   agentPanelEmptyWrite: "Fang an zu schreiben",
   agentPanelEmptyReview: "Mehr Vorschläge erhalten",
+  agentPanelEmptyCreate: "Ein Theme, Plugin oder eine Fähigkeit erstellen",
   aiWorkingCompletion: "Fortsetzung wird geschrieben…",
   aiWorkingGrammar: "Absatz wird geprüft…",
   noticeCompletionNeedsCaret:
@@ -531,6 +532,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   skillCategoryRevise: "Überarbeiten",
   skillCategoryCheck: "Prüfen",
   skillCategoryFormat: "Textsorten",
+  skillCategoryCreate: "Erstellen",
   pickerKeysHint: "↑↓ auswählen · Eingabe übernehmen · Esc schließen",
   skillPickerAbout:
     "Mit / rufst du einen Skill auf: eine fertige Anweisung wie „Korrektur lesen“ oder „Zusammenfassen“.",
@@ -542,9 +544,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   mentionPickerNoFiles: "Der Projektordner enthält noch keine Textdateien.",
   mentionPickerNoMatch: "Keine Datei passt zu „{query}“.",
   agentSkillsBuiltin: "Integrierte Skills",
-  agentSkillsOnCount: "{n} von {total} aktiv",
   agentSkillsCustomize: "Anpassen…",
   agentSkillsCustomized: "Angepasst",
+  agentSkillsModes: "Modi, in denen sie gilt",
+  agentSkillsBuiltinTag: "Integriert",
   agentSkillsOpen: "Öffnen",
   agentSkillsReset: "Zurücksetzen",
   agentSkillsResetConfirm:
@@ -623,6 +626,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentDefaultModeLabel: "Standardmodus",
   agentModeWrite: "Schreiben",
   agentModeReview: "Prüfen",
+  agentModeCreate: "Erstellen",
   chatModeLabel: "Modus",
   chatModelLabel: "Modell",
   agentPersonalizationGroupLabel: "Schreibanweisungen & Skills",

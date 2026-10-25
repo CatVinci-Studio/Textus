@@ -37,13 +37,21 @@ fn approx_tokens(text: &str) -> usize {
 }
 
 #[test]
-fn the_core_skills_are_built_in_and_the_rest_optional() {
-    for name in CORE_SKILLS {
-        assert!(find(name).is_some(), "{name}");
+fn every_mode_has_its_built_in_skills() {
+    use crate::ai::agent::AgentMode;
+    let of = |mode| -> Vec<&str> {
+        skills()
+            .iter()
+            .filter(|s| s.modes == [mode])
+            .map(|s| s.name.as_str())
+            .collect()
+    };
+    assert_eq!(of(AgentMode::Write), ["expand", "tighten", "translate", "summarize"]);
+    assert_eq!(of(AgentMode::Review), ["proofread", "continuity"]);
+    assert_eq!(of(AgentMode::Create), ["theme", "plugin", "skill"]);
+    for name in MOVED_TO_MARKET {
+        assert!(find(name).is_none(), "{name} is in the market now");
     }
-    let optional = optional_skill_names();
-    assert_eq!(optional.len() + CORE_SKILLS.len(), skills().len());
-    assert!(!optional.contains(&"proofread"));
 }
 
 #[test]
@@ -67,7 +75,7 @@ fn every_bundled_file_is_listed() {
     let mut listed: Vec<String> = PACK_FILES.iter().map(|(s, _)| s.to_string()).collect();
     listed.sort();
     assert_eq!(stems(dir.join("packs")), listed);
-    assert_eq!(SKILL_FILES.len(), 20);
+    assert_eq!(SKILL_FILES.len(), 9);
     assert_eq!(PACK_FILES.len(), 12);
 }
 
@@ -80,7 +88,6 @@ fn every_builtin_skill_parses_and_follows_the_format() {
         assert_eq!(skill.name, *stem, "name is the file stem");
         assert!(is_kebab(&skill.name), "{stem}: ASCII kebab-case");
         assert_eq!(skill.source, SkillSource::Builtin);
-        assert!(skill.enabled);
         let d = &skill.description;
         assert!(
             !d.is_empty() && d.chars().count() <= 500,
@@ -461,7 +468,11 @@ fn doc_zh() -> &'static str {
 
 #[test]
 fn expansion_appends_the_declared_packs_for_the_documents_language() {
-    let skill = find("continue-story").unwrap();
+    // A market skill's packs, as continue-story declares them.
+    let skill = &parse_skill_file(
+        "continue-story",
+        "---\nname: continue-story\nmetadata:\n  textus-packs: \"contract craft#fiction standards#dialogue standards#ai-tells\"\n---\nContinue the story.",
+    );
     let text = expand_skill(skill, doc_zh(), "en", "", None);
     assert!(text.starts_with(&skill.prompt));
     assert!(text.contains("---references for this skill---"));
@@ -494,7 +505,10 @@ fn expansion_appends_the_declared_packs_for_the_documents_language() {
     // A pack a language lacks is simply left out (Korean has no
     // numbers section; notice still gets the rest).
     let notice = expand_skill(
-        find("notice").unwrap(),
+        &parse_skill_file(
+            "notice",
+            "---\nname: notice\nmetadata:\n  textus-packs: \"contract standards#official standards#numbers\"\n---\nWrite the notice.",
+        ),
         "이번 업데이트에서는 자료를 내보낼 수 있습니다. 몇일 뒤에 다시 안내해 드리겠습니다.",
         "ko",
         "",
@@ -578,7 +592,7 @@ fn messages_expand_by_name_alias_or_block() {
         chosen_profile(&conv, doc_zh()).as_deref(),
         Some("zh-Hans-CN/fiction")
     );
-    // Unknown, turned off, or not a skill call: unchanged.
+    // Unknown, or not a skill call: unchanged.
     assert_eq!(
         expand_message("/nope x", &skills, doc_zh(), "zh"),
         "/nope x"
@@ -588,13 +602,6 @@ fn messages_expand_by_name_alias_or_block() {
         "/home/me/file.md"
     );
     assert_eq!(expand_message("plain", &skills, doc_zh(), "zh"), "plain");
-    let mut off = skills.clone();
-    off.iter_mut()
-        .for_each(|s| s.enabled = s.name != "proofread");
-    assert_eq!(
-        expand_message("/proofread", &off, doc_zh(), "zh"),
-        "/proofread"
-    );
     // A user skill without packs keeps the composer's plain block.
     let user = vec![AgentSkill {
         name: "润色".into(),
@@ -615,7 +622,7 @@ fn messages_expand_by_name_alias_or_block() {
 fn the_theme_skill_answers_to_its_name_in_every_ui_language() {
     let skills: Vec<AgentSkill> = skills().to_vec();
     let theme = find("theme").expect("theme is built in");
-    assert_eq!(theme.category.as_deref(), Some("format"));
+    assert_eq!(theme.category.as_deref(), Some("create"));
     for code in UI_CODES {
         for alias in &theme.aliases[*code] {
             assert_eq!(
@@ -628,45 +635,6 @@ fn the_theme_skill_answers_to_its_name_in_every_ui_language() {
     let message = expand_message("/theme a calm dark page", &skills, "", "en");
     assert!(message.starts_with("<skill name=\"theme\">\n"));
     assert!(message.contains("`--editor-bg`") && message.ends_with("a calm dark page"));
-}
-
-#[test]
-fn academic_polish_covers_grants_with_its_notice_kept_out_of_the_prompt() {
-    let skill = find("academic-polish").expect("academic-polish is built in");
-    assert_eq!(skill.category.as_deref(), Some("format"));
-    assert_eq!(skill.invocation, Invocation::Both, "offered to the model");
-    assert!(skill.packs.contains(&"standards#ai-tells".to_string()));
-    // The MIT notice travels with the file (and a Customize… copy) as
-    // YAML comments, which cost the model nothing.
-    let raw = raw("academic-polish").unwrap();
-    assert!(raw.contains("# Copyright (c) 2026 AIScientists-Dev"));
-    assert!(raw.contains("# Permission is hereby granted"));
-    assert!(!skill.prompt.contains("AIScientists") && !skill.description.contains('#'));
-    // Its rules on what never changes, and that it isn't for hiding
-    // AI use, reach the model.
-    for rule in [
-        "cite key",
-        "Grant proposals",
-        "国自然申请书",
-        "English only: no em dashes",
-        "never change, drop, merge or reorder",
-        "AI-use disclosure",
-    ] {
-        assert!(skill.prompt.contains(rule), "{rule}");
-    }
-    let skills: Vec<AgentSkill> = skills().to_vec();
-    for typed in [
-        "/academic-polish",
-        "/学术润色",
-        "/基金申请书",
-        "/förderantrag",
-    ] {
-        let message = expand_message(&format!("{typed} 立项依据"), &skills, "", "zh");
-        assert!(
-            message.starts_with("<skill name=\"academic-polish\">\n"),
-            "{typed}"
-        );
-    }
 }
 
 #[test]

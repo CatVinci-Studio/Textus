@@ -3,26 +3,6 @@ import type { SkillTexts } from "../builtin";
 /** French. "Complétion" is the UI's word for inline completion: not a
  *  label. */
 export default {
-  "continue-story": {
-    label: "Continuer l'histoire",
-    hint: "Écrit la suite dans votre voix, cohérente avec la bibliothèque",
-    aliases: ["continuer", "suite"],
-  },
-  describe: {
-    label: "Décrire un personnage ou un lieu",
-    hint: "Ajoute des détails concrets et sensoriels à un personnage, un lieu ou une scène",
-    aliases: ["décrire", "decrire"],
-  },
-  dialogue: {
-    label: "Peaufiner les dialogues",
-    hint: "Corrige la ponctuation et les incises des dialogues selon la langue du document",
-    aliases: ["dialogues"],
-  },
-  "imitate-style": {
-    label: "Imiter un style",
-    hint: "Réécrit à la manière d'un extrait ou de votre profil de style",
-    aliases: ["pastiche"],
-  },
   expand: {
     label: "Développer",
     hint: "Étoffe un passage sans ajouter de faits",
@@ -32,16 +12,6 @@ export default {
     label: "Resserrer",
     hint: "Supprime les longueurs et garde tous les faits",
     aliases: ["raccourcir"],
-  },
-  "change-tone": {
-    label: "Changer de ton",
-    hint: "Rend le texte plus soutenu, plus simple, plus chaleureux ou plus ferme",
-    aliases: ["ton"],
-  },
-  "de-ai": {
-    label: "Retirer le ton IA",
-    hint: "Supprime les tournures typiques de l'IA, ou se contente de les signaler",
-    aliases: ["ton-ia"],
   },
   translate: {
     label: "Traduire et peaufiner",
@@ -58,36 +28,6 @@ export default {
     hint: "Repère les contradictions avec la bibliothèque et les autres chapitres",
     aliases: ["cohérence", "coherence"],
   },
-  email: {
-    label: "Rédiger un courriel",
-    hint: "Rédige ou restructure un courriel ou une lettre",
-    aliases: ["courriel", "lettre", "mail"],
-  },
-  notice: {
-    label: "Avis ou document officiel",
-    hint: "Rédige ou corrige un avis, une note ou un courrier officiel",
-    aliases: ["avis", "note"],
-  },
-  minutes: {
-    label: "Compte rendu",
-    hint: "Transforme des notes en décisions et en actions à mener",
-    aliases: ["compte-rendu", "procès-verbal"],
-  },
-  "academic-polish": {
-    label: "Style académique",
-    hint: "Style académique sobre et précis pour articles et demandes de financement, sans formules creuses ; citations intactes",
-    aliases: ["académique", "academique", "financement"],
-  },
-  "social-post": {
-    label: "Publication réseaux sociaux",
-    hint: "Écrit une publication adaptée aux limites et aux règles de la plateforme",
-    aliases: ["publication", "post"],
-  },
-  headline: {
-    label: "Titre",
-    hint: "Propose un titre fidèle, de la bonne longueur",
-    aliases: ["titrer"],
-  },
   summarize: {
     label: "Résumer",
     hint: "Résume fidèlement, à la longueur demandée",
@@ -102,5 +42,10 @@ export default {
     label: "Créer une extension",
     hint: "Une petite extension Textus d’après votre description, prête à installer",
     aliases: ["extension", "module"],
+  },
+  skill: {
+    label: "Créer une compétence",
+    hint: "Enregistre une tâche répétée comme compétence appelée par /",
+    aliases: ["créer-compétence", "nouvelle compétence"],
   },
 } satisfies SkillTexts;

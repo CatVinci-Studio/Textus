@@ -79,8 +79,8 @@ fn run(
         return None;
     };
     let ws = match &folders.project {
-        Some(root) => workspace::load_layers(None, None, Some(root.to_str().unwrap()), &[]),
-        None => workspace::load_layers(None, None, None, &[]),
+        Some(root) => workspace::load_layers(None, None, Some(root.to_str().unwrap())),
+        None => workspace::load_layers(None, None, None),
     };
     let model = harness::agent_model();
     let dirs = folders.dirs();

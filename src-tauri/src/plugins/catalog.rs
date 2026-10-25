@@ -62,9 +62,21 @@ pub struct SkillEntry {
     pub author: String,
     #[serde(default)]
     pub official: bool,
+    /// The panel modes it works in (its file's `textus-modes`); Write's
+    /// when the catalog doesn't say.
+    #[serde(default = "write_mode")]
+    pub modes: Vec<crate::ai::agent::AgentMode>,
+    /// Its name and one-line hint by UI language code, for the market to
+    /// show (its file's `textus-label-<code>`).
+    #[serde(default)]
+    pub labels: std::collections::BTreeMap<String, crate::ai::workspace::SkillLabel>,
     pub url: String,
     pub sha256: String,
     pub size: u64,
+}
+
+fn write_mode() -> Vec<crate::ai::agent::AgentMode> {
+    vec![crate::ai::agent::AgentMode::Write]
 }
 
 #[derive(Deserialize)]

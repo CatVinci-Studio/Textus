@@ -2,15 +2,19 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { openApp, PHONE } from "./helpers";
 
 // The composer's `/` and `@` pickers and Settings' skills, against the dev
-// shim's skill list (dev/tauri-shim.ts: the 19 built-ins and one skill
-// of the user's own).
+// shim's skill list (dev/tauri-shim.ts: the 9 built-ins - Write's,
+// Review's and Create's - and one skill of the user's own, in Write).
 
 const AI_NAME = "Textus AI";
 
-/** Opens the app with the AI panel open, in `language`. */
-async function openWithPanel(page: Page, language: string) {
+/** Opens the app with the AI panel open, in `language` and `mode`. */
+async function openWithPanel(
+  page: Page,
+  language: string,
+  mode: "write" | "review" | "create" = "review",
+) {
   await openApp(page, {
-    settings: { language },
+    settings: { language, agentDefaultMode: mode },
     storage: { "textus-agent-panel-open": "1" },
   });
   const input = page.locator(".agent-panel .inline-chat-input");
@@ -54,19 +58,20 @@ async function openSettings(page: Page) {
 }
 
 test.describe("the / picker", () => {
-  test("opens on / and on what a Chinese or Japanese IME types for it (／、・), with the built-ins, grouped and in Chinese", async ({
+  test("opens on / and on what a Chinese or Japanese IME types for it (／、・), with the mode's skills, grouped and in Chinese", async ({
     page,
   }) => {
-    const input = await openWithPanel(page, "zh");
+    const input = await openWithPanel(page, "zh", "write");
     const menu = page.locator(".composer-picker");
     for (const key of ["/", "／", "、", "・"]) {
       await input.fill(key);
       await expect(menu, key).toBeVisible();
-      await expect(menu.getByRole("option"), key).toHaveCount(20);
+      // Write's four built-ins and the user's own skill.
+      await expect(menu.getByRole("option"), key).toHaveCount(5);
       await expect(
-        menu.getByRole("group", { name: "写作" }),
+        menu.getByRole("group", { name: "修改" }),
         key,
-      ).toContainText("接着写");
+      ).toContainText("扩写");
       await expect(
         menu.getByRole("group", { name: "我的技能" }),
         key,
@@ -100,21 +105,29 @@ test.describe("the / picker", () => {
   test("an alias resolves to the skill, and the bubble shows what was typed", async ({
     page,
   }) => {
-    const input = await openWithPanel(page, "zh");
+    const input = await openWithPanel(page, "zh", "write");
     await captureMessages(page);
-    await input.fill("/续写");
+    await input.fill("/翻译");
     await expect(
       page.locator(".composer-picker").getByRole("option").first(),
-    ).toContainText("/continue-story");
-    await input.fill("/续写 写下一段");
+    ).toContainText("/translate");
+    await input.fill("/翻译 译成英文");
     await input.press("Enter");
     // After the cursor block the composer's caller adds.
     await expect
       .poll(async () => (await sent(page))[0] ?? "")
-      .toMatch(
-        /<skill name="continue-story" typed="\/续写"><\/skill>\n\n写下一段$/,
-      );
-    await expect(page.locator(".agent-panel")).toContainText("/续写 写下一段");
+      .toMatch(/<skill name="translate" typed="\/翻译"><\/skill>\n\n译成英文$/);
+    await expect(page.locator(".agent-panel")).toContainText("/翻译 译成英文");
+  });
+
+  test("each mode offers its own skills", async ({ page }) => {
+    const input = await openWithPanel(page, "en", "create");
+    const menu = page.locator(".composer-picker");
+    await input.fill("/");
+    await expect(menu.getByRole("option")).toHaveCount(3);
+    for (const name of ["/theme", "/plugin", "/skill"])
+      await expect(menu).toContainText(name);
+    await expect(menu).not.toContainText("/proofread");
   });
 
   test("picks with the keyboard; Escape closes only the menu", async ({
@@ -172,26 +185,43 @@ async function openSkillsTab(panel: Locator) {
 }
 
 test.describe("Settings › Extensions › Skills", () => {
-  test("a built-in turned off leaves the / menu", async ({ page }) => {
+  test("built-ins are always on, by mode; the user's own skill picks its modes", async ({
+    page,
+  }) => {
     const input = await openWithPanel(page, "en");
-    const panel = await openSettings(page);
-    await openSkillsTab(panel);
-    const builtins = panel.getByRole("tabpanel");
-    await builtins.getByRole("checkbox", { name: "Proofread" }).click();
-    // Off, it leaves Installed for Get more.
-    await expect(builtins.locator('[data-skill="proofread"]')).toHaveCount(0);
-    expect(
-      await page.evaluate(() =>
-        Array.from(
-          (window as unknown as { __devSkills: { disabled: Set<string> } })
-            .__devSkills.disabled,
-        ),
-      ),
-    ).toEqual(["proofread"]);
-    await page.getByRole("button", { name: "Close" }).first().click();
-    await input.fill("/proof");
+    // Review: the user's skill, in Write, isn't offered.
+    await input.fill("/house");
     await expect(page.locator(".composer-picker [role=status]")).toContainText(
       "No skill matches",
+    );
+    await input.fill("");
+    const panel = await openSettings(page);
+    await openSkillsTab(panel);
+    const tab = panel.getByRole("tabpanel");
+    // No switch on a built-in: it says it is built in, under its mode.
+    const proofread = tab.locator('[data-skill="proofread"]');
+    await expect(proofread).toContainText("Built-in");
+    await expect(proofread.getByRole("checkbox")).toHaveCount(0);
+    await expect(
+      tab.getByRole("group", { name: "Review" }).locator("[data-skill]"),
+    ).toHaveCount(2);
+    // The user's skill: in Write, and the last mode can't be unticked.
+    const own = tab.locator('.settings-skill-item[data-skill="house-style"]');
+    await expect(own.getByRole("checkbox", { name: "Write" })).toBeChecked();
+    await expect(own.getByRole("checkbox", { name: "Write" })).toBeDisabled();
+    await own.getByRole("checkbox", { name: "Review" }).click();
+    await expect(own.getByRole("checkbox", { name: "Review" })).toBeChecked();
+    expect(
+      await page.evaluate(
+        () =>
+          (window as unknown as { __devSkills: { ownModes: string[] } })
+            .__devSkills.ownModes,
+      ),
+    ).toEqual(["write", "review"]);
+    await page.getByRole("button", { name: "Close" }).first().click();
+    await input.fill("/house");
+    await expect(page.locator(".composer-picker")).toContainText(
+      "/house-style",
     );
   });
 
@@ -213,14 +243,10 @@ test.describe("Settings › Extensions › Skills", () => {
     const builtins = panel.getByRole("tabpanel");
     const row = builtins.locator('[data-skill="summarize"]');
     await expect(row).toContainText("Customized");
-    // The copy shows here only, not again among the user's own skills,
-    // and its switch is still the built-in's.
+    // The copy shows here only, not again among the user's own skills.
     await expect(panel.locator(".settings-skill-list")).not.toContainText(
       "/summarize",
     );
-    await expect(
-      row.getByRole("checkbox", { name: "Summarize" }),
-    ).toBeChecked();
     await row.getByRole("button", { name: "Reset: Summarize" }).click();
     const confirm = page.getByRole("dialog", { name: /Delete your copy/ });
     await expect(confirm).toContainText("“Summarize”");
@@ -246,12 +272,12 @@ test.describe("Settings › Extensions › Skills", () => {
           __devSkills: { customized: Set<string>; outdated: Set<string> };
         }
       ).__devSkills;
-      skills.customized.add("email");
-      skills.outdated.add("email");
+      skills.customized.add("translate");
+      skills.outdated.add("translate");
     });
     const panel = await openSettings(page);
     await openSkillsTab(panel);
-    const row = panel.getByRole("tabpanel").locator('[data-skill="email"]');
+    const row = panel.getByRole("tabpanel").locator('[data-skill="translate"]');
     await expect(row.locator(".settings-skill-tag-notice")).toHaveText(
       "Built-in updated",
     );
@@ -334,16 +360,17 @@ test.describe("on a phone", () => {
     );
   });
 
-  test("Settings lists the built-ins with their switches", async ({ page }) => {
+  test("Settings lists the built-ins by mode", async ({ page }) => {
     await openPhoneIn(page, "en");
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: AI_NAME, exact: true }).tap();
     const builtins = panel.locator(".settings-builtin-skills");
     await builtins.locator("summary").tap();
-    const toggle = builtins.getByRole("checkbox", { name: "Tighten" });
-    await expect(toggle).toBeChecked();
-    await toggle.tap();
-    await expect(toggle).not.toBeChecked();
+    for (const mode of ["Write", "Review", "Create"])
+      await expect(builtins.getByRole("group", { name: mode })).toBeVisible();
+    await expect(builtins.locator('[data-skill="tighten"]')).toContainText(
+      "Built-in",
+    );
     // Nothing spills past the screen's edge.
     const overflow = await panel.evaluate(
       (el) => el.scrollWidth - el.clientWidth,

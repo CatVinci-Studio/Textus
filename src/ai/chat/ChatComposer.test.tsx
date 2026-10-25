@@ -78,6 +78,7 @@ const labels = {
   attachmentNoVision: "This provider can't read images.",
   modeWrite: "Write",
   modeReview: "Review",
+  modeCreate: "Create",
   modeLabel: "Mode",
   webSearch: "Web search",
   deepThinking: "Deep thinking",
@@ -280,10 +281,10 @@ describe("ChatComposer selection chip", () => {
   it("sends the selected interaction mode and web-search choice", () => {
     const { onSend } = renderComposer();
     fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
-    // Write, then Review - 1.2.0's Revise is part of Write.
+    // Write, Review, then Create - 1.2.0's Revise is part of Write.
     expect(
       screen.getAllByRole("option").map((option) => option.textContent),
-    ).toEqual(["Write", "Review"]);
+    ).toEqual(["Write", "Review", "Create"]);
     fireEvent.click(screen.getByRole("option", { name: "Write" }));
     // Named for what it picks, not for one of its choices: a screen
     // reader used to hear "Ask" over a picker set to Plan.
@@ -495,7 +496,7 @@ describe("ChatComposer pickers", () => {
     invocation: skill.invocation,
     source: "builtin",
     overridesBuiltin: false,
-    enabled: true,
+    modes: [skill.mode],
     aliases: {},
   }));
 
@@ -511,7 +512,7 @@ describe("ChatComposer pickers", () => {
         selectedText={null}
         busy={false}
         labels={{ ...labels, picker: pickerLabels(resolveStrings("zh"), "zh") }}
-        defaultMode="review"
+        defaultMode="write"
         defaultWebSearch={false}
         onSend={onSend}
         onStop={() => {}}
@@ -525,17 +526,19 @@ describe("ChatComposer pickers", () => {
   }
 
   it.each(["/", "／", "、", "・"])(
-    "%s lists the built-ins by group, with their labels",
+    "%s lists the mode's built-ins by group, with their labels",
     async (key) => {
       listSkills.mockResolvedValue(builtins);
       const { type } = renderZh();
       type(key);
       const list = await screen.findByRole("listbox");
-      expect(list).toHaveTextContent("接着写");
-      expect(list).toHaveTextContent("/continue-story");
-      for (const group of ["写作", "修改", "检查", "文体"])
+      expect(list).toHaveTextContent("扩写");
+      expect(list).toHaveTextContent("/expand");
+      for (const group of ["修改", "文体"])
         expect(screen.getByRole("group", { name: group })).toBeInTheDocument();
-      expect(screen.getAllByRole("option")).toHaveLength(20);
+      // Write's four: Review's and Create's are in their own modes.
+      expect(screen.getAllByRole("option")).toHaveLength(4);
+      expect(list).not.toHaveTextContent("校对");
     },
   );
 
@@ -560,14 +563,12 @@ describe("ChatComposer pickers", () => {
   it("finds a skill by its localized label and alias", async () => {
     listSkills.mockResolvedValue(builtins);
     const { type } = renderZh();
-    type("/校");
+    type("/精");
     const first = (await screen.findAllByRole("option"))[0];
-    expect(first).toHaveTextContent("校对");
-    type("/续写");
+    expect(first).toHaveTextContent("精简");
+    type("/翻译");
     await waitFor(() =>
-      expect(screen.getAllByRole("option")[0]).toHaveTextContent(
-        "/continue-story",
-      ),
+      expect(screen.getAllByRole("option")[0]).toHaveTextContent("/translate"),
     );
   });
 
@@ -576,14 +577,14 @@ describe("ChatComposer pickers", () => {
     const { type, onSend, input } = renderZh();
     type("/");
     await screen.findByRole("listbox");
-    type("、续写 林晚走进书店");
+    type("、翻译 林晚走进书店");
     fireEvent.keyDown(input, { key: "Enter" });
     expect(onSend).toHaveBeenCalledWith(
-      '<skill name="continue-story" typed="/续写"></skill>\n\n林晚走进书店',
+      '<skill name="translate" typed="/翻译"></skill>\n\n林晚走进书店',
       [],
       true,
-      { mode: "review", webSearch: false, thinking: "auto" },
-      "、续写 林晚走进书店",
+      { mode: "write", webSearch: false, thinking: "auto" },
+      "、翻译 林晚走进书店",
     );
   });
 
@@ -594,7 +595,7 @@ describe("ChatComposer pickers", () => {
     await screen.findByRole("listbox");
     fireEvent.keyDown(input, { key: "ArrowDown" });
     fireEvent.keyDown(input, { key: "Enter" });
-    expect(input).toHaveValue("/describe ");
+    expect(input).toHaveValue("/tighten ");
 
     type("/");
     await screen.findByRole("listbox");

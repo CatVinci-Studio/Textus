@@ -95,12 +95,12 @@ test("the mode picker is a segmented control on a phone", async ({ page }) => {
   await expect(dock.locator("select")).toHaveCount(0);
   await page.keyboard.press("Escape");
 
-  // The Textus AI sheet's composer: the same two, and 44pt buttons.
+  // The Textus AI sheet's composer: the two and Create, and 44pt buttons.
   await page.locator(".window-bar-toggle").tap();
   const sheet = page.locator(".agent-panel");
   await expect(
     sheet.getByRole("radiogroup", { name: "Mode" }).getByRole("radio"),
-  ).toHaveText(["Write", "Review"]);
+  ).toHaveText(["Write", "Review", "Create"]);
   await expectTouchTarget(page, ".agent-panel .chat-mode-segments");
   await expectTouchTarget(page, ".agent-panel .inline-chat-attach");
   await expectTouchTarget(page, ".agent-panel .inline-chat-web-search");

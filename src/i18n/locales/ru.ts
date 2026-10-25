@@ -29,6 +29,7 @@ export default {
   menuToggleAgentPanel: "Панель ИИ",
   agentPanelEmptyWrite: "Начните писать",
   agentPanelEmptyReview: "Больше предложений",
+  agentPanelEmptyCreate: "Создайте тему, плагин или навык",
   aiWorkingCompletion: "Пишется продолжение…",
   aiWorkingGrammar: "Проверяется абзац…",
   noticeCompletionNeedsCaret:
@@ -533,6 +534,7 @@ export default {
   skillCategoryRevise: "Переработать",
   skillCategoryCheck: "Проверить",
   skillCategoryFormat: "Форматы",
+  skillCategoryCreate: "Создать",
   pickerKeysHint: "↑↓ — выбор · Enter — применить · Esc — закрыть",
   skillPickerAbout:
     "Введите /, чтобы применить навык — готовую инструкцию вроде «Вычитать» или «Кратко изложить».",
@@ -544,9 +546,10 @@ export default {
   mentionPickerNoFiles: "В папке проекта пока нет текстовых файлов.",
   mentionPickerNoMatch: "Нет файлов по запросу «{query}».",
   agentSkillsBuiltin: "Встроенные навыки",
-  agentSkillsOnCount: "Включено {n} из {total}",
   agentSkillsCustomize: "Настроить…",
   agentSkillsCustomized: "Изменён",
+  agentSkillsModes: "В каких режимах работает",
+  agentSkillsBuiltinTag: "Встроенный",
   agentSkillsOpen: "Открыть",
   agentSkillsReset: "Сбросить",
   agentSkillsResetConfirm:
@@ -625,6 +628,7 @@ export default {
   agentDefaultModeLabel: "Режим по умолчанию",
   agentModeWrite: "Написание",
   agentModeReview: "Разбор",
+  agentModeCreate: "Создание",
   chatModeLabel: "Режим",
   chatModelLabel: "Модель",
   agentPersonalizationGroupLabel: "Инструкции и навыки",

@@ -39,7 +39,7 @@ pub(super) fn use_skill(ctx: &ToolContext, arguments: &str) -> String {
         })
         .unwrap_or_default();
 
-    let skill = ctx.skills.iter().find(|s| s.name == name && s.enabled);
+    let skill = ctx.skills.iter().find(|s| s.name == name);
     match skill {
         Some(skill) if skill.invocation == Invocation::UserOnly => format!(
             "The skill `{name}` runs only when the user types /{name}. Handle this request without it."

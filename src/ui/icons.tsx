@@ -1048,6 +1048,26 @@ export function WriteModeIcon({ className }: IconProps) {
   );
 }
 
+/** Create: a four-point spark - something new for the app itself. */
+export function CreateModeIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M8 1.8C8.4 5.4 10.6 7.6 14.2 8C10.6 8.4 8.4 10.6 8 14.2C7.6 10.6 5.4 8.4 1.8 8C5.4 7.6 7.6 5.4 8 1.8Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /** Review: a speech bubble with a note in it - Review only comments. */
 export function ReviewModeIcon({ className }: IconProps) {
   return (

@@ -26,6 +26,7 @@ pub mod access;
 pub mod ai_tools;
 pub mod catalog;
 pub mod install;
+pub mod moved_skills;
 pub mod state;
 pub mod store;
 pub mod workspace;

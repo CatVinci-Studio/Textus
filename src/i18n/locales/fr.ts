@@ -32,6 +32,7 @@ export default {
   menuToggleAgentPanel: "Panneau IA",
   agentPanelEmptyWrite: "Commencez à écrire",
   agentPanelEmptyReview: "Obtenez plus de suggestions",
+  agentPanelEmptyCreate: "Créez un thème, une extension ou une compétence",
   aiWorkingCompletion: "Rédaction de la suite…",
   aiWorkingGrammar: "Vérification du paragraphe…",
   noticeCompletionNeedsCaret:
@@ -549,6 +550,7 @@ utiliser une.
   skillCategoryRevise: "Retravailler",
   skillCategoryCheck: "Vérifier",
   skillCategoryFormat: "Formats",
+  skillCategoryCreate: "Créer",
   pickerKeysHint: "↑↓ pour naviguer · Entrée pour choisir · Échap pour fermer",
   skillPickerAbout:
     "Tapez / pour utiliser une compétence\u00a0: une consigne toute prête, comme Relire et corriger ou Résumer.",
@@ -562,9 +564,10 @@ utiliser une.
     "Le dossier du projet ne contient encore aucun fichier texte.",
   mentionPickerNoMatch: "Aucun fichier ne correspond à «\u00a0{query}\u00a0».",
   agentSkillsBuiltin: "Compétences intégrées",
-  agentSkillsOnCount: "{n} sur {total} activées",
   agentSkillsCustomize: "Personnaliser…",
   agentSkillsCustomized: "Personnalisée",
+  agentSkillsModes: "Modes où elle s’applique",
+  agentSkillsBuiltinTag: "Intégrée",
   agentSkillsOpen: "Ouvrir",
   agentSkillsReset: "Réinitialiser",
   agentSkillsResetConfirm:
@@ -643,6 +646,7 @@ utiliser une.
   agentDefaultModeLabel: "Mode par défaut",
   agentModeWrite: "Écrire",
   agentModeReview: "Relire",
+  agentModeCreate: "Créer",
   chatModeLabel: "Mode",
   chatModelLabel: "Modèle",
   agentPersonalizationGroupLabel: "Instructions d'écriture et compétences",

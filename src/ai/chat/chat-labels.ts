@@ -154,6 +154,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     collapseInline: t.chatCollapseInline,
     modeWrite: t.agentModeWrite,
     modeReview: t.agentModeReview,
+    modeCreate: t.agentModeCreate,
     modeLabel: t.chatModeLabel,
     webSearch: t.webSearchLabel,
     deepThinking: t.agentDeepThinking,

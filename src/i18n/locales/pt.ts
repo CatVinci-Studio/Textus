@@ -29,6 +29,7 @@ export default {
   menuToggleAgentPanel: "Painel de IA",
   agentPanelEmptyWrite: "Comece a escrever",
   agentPanelEmptyReview: "Receba mais sugestões",
+  agentPanelEmptyCreate: "Crie um tema, um plugin ou uma habilidade",
   aiWorkingCompletion: "Escrevendo uma continuação…",
   aiWorkingGrammar: "Verificando este parágrafo…",
   noticeCompletionNeedsCaret:
@@ -530,6 +531,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   skillCategoryRevise: "Reescrever",
   skillCategoryCheck: "Verificar",
   skillCategoryFormat: "Formatos",
+  skillCategoryCreate: "Criar",
   pickerKeysHint: "↑↓ para navegar · Enter para escolher · Esc para fechar",
   skillPickerAbout:
     "Digite / para usar uma habilidade: uma instrução pronta, como Revisar ou Resumir.",
@@ -541,9 +543,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   mentionPickerNoFiles: "A pasta do projeto ainda não tem arquivos de texto.",
   mentionPickerNoMatch: "Nenhum arquivo corresponde a “{query}”.",
   agentSkillsBuiltin: "Habilidades integradas",
-  agentSkillsOnCount: "{n} de {total} ativadas",
   agentSkillsCustomize: "Personalizar…",
   agentSkillsCustomized: "Personalizada",
+  agentSkillsModes: "Modos em que funciona",
+  agentSkillsBuiltinTag: "Integrada",
   agentSkillsOpen: "Abrir",
   agentSkillsReset: "Restaurar",
   agentSkillsResetConfirm:
@@ -622,6 +625,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentDefaultModeLabel: "Modo padrão",
   agentModeWrite: "Escrever",
   agentModeReview: "Revisar",
+  agentModeCreate: "Criar",
   chatModeLabel: "Modo",
   chatModelLabel: "Modelo",
   agentPersonalizationGroupLabel: "Instruções de escrita e habilidades",

@@ -2,7 +2,7 @@
 //!
 //! ```text
 //! skills/
-//! ├── continue-story.md … theme.md       <- the built-in skills (SKILL_FILES)
+//! ├── expand.md … skill.md               <- the built-in skills (SKILL_FILES)
 //! ├── packs/                             <- the reference packs (PACK_FILES)
 //! │   ├── contract.md                    <- the editing contract every built-in follows
 //! │   ├── craft.md                       <- fiction, plain language, email, platforms
@@ -15,8 +15,9 @@
 //! writes it. A skill is an Agent Skills file (frontmatter + body, parsed
 //! by workspace::parse_skill_file); the user's global skills/ and the
 //! project's .textus/skills/ override a built-in of the same name
-//! (workspace::load_layers), Customize… copies one there, and Settings can
-//! turn one off.
+//! (workspace::load_layers) and Customize… copies one there. Each panel
+//! mode has its own (`textus-modes`), always on; the other skills come from
+//! the market (plugins::catalog) and are the user's own files.
 //!
 //! A pack is split into `## sections` with the same names in every
 //! language's pack (`typography`, `numbers`, `words`, `dialogue`,
@@ -43,29 +44,37 @@ macro_rules! bundled {
     };
 }
 
-/// The built-in skills, by file stem (which is also each skill's name).
+/// The built-in skills, by file stem (which is also each skill's name):
+/// Write's, Review's and Create's, in that order.
 pub(crate) const SKILL_FILES: &[(&str, &str)] = bundled!("skills/";
+    "expand",
+    "tighten",
+    "translate",
+    "summarize",
+    "proofread",
+    "continuity",
+    "theme",
+    "plugin",
+    "skill",
+);
+
+/// The skills that were built in until 1.3 and are in the market now: a
+/// profile from before then gets the ones it had on installed from there
+/// (workspace::moved::install_moved_skills).
+pub(crate) const MOVED_TO_MARKET: &[&str] = &[
     "continue-story",
     "describe",
     "dialogue",
     "imitate-style",
-    "expand",
-    "tighten",
     "change-tone",
     "de-ai",
-    "translate",
-    "proofread",
-    "continuity",
     "email",
     "notice",
     "minutes",
     "academic-polish",
     "social-post",
     "headline",
-    "summarize",
-    "theme",
-    "plugin",
-);
+];
 
 /// The reference packs, by file stem (= the name use_skill loads them by).
 pub(crate) const PACK_FILES: &[(&str, &str)] = bundled!("skills/packs/";
@@ -94,7 +103,7 @@ pub fn builtin_skills_attribution() -> &'static str {
 }
 
 /// The `/` menu's groups, in menu order (`textus-category`).
-pub(crate) const CATEGORY_ORDER: &[&str] = &["write", "revise", "check", "format"];
+pub(crate) const CATEGORY_ORDER: &[&str] = &["write", "revise", "check", "format", "create"];
 
 /// The built-in skills, parsed once.
 pub(crate) fn skills() -> &'static [AgentSkill] {
@@ -108,24 +117,6 @@ pub(crate) fn skills() -> &'static [AgentSkill] {
             })
             .collect()
     })
-}
-
-/// The built-in skills a new profile starts with on; the others are added
-/// in Settings › Extensions › Skills. Mirrors CORE_SKILLS in
-/// src/ai/skills/builtin.ts.
-pub(crate) const CORE_SKILLS: &[&str] =
-    &["proofread", "tighten", "expand", "summarize", "translate"];
-
-/// The built-in skills a new profile starts without (the turned-off list
-/// it is given, settings::Stores::load).
-pub(crate) fn optional_skill_names() -> Vec<&'static str> {
-    let mut names: Vec<&str> = skills()
-        .iter()
-        .map(|s| s.name.as_str())
-        .filter(|name| !CORE_SKILLS.contains(name))
-        .collect();
-    names.sort();
-    names
 }
 
 /// The built-in skill called `name`.

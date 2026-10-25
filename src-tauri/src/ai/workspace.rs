@@ -1,5 +1,6 @@
+use crate::ai::agent::AgentMode;
 use crate::ai::builtin;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
@@ -76,7 +77,7 @@ pub enum Invocation {
 /// Which layer a skill comes from: bundled with the app (ai::builtin), the
 /// global config folder's skills/, or the project's .textus/skills/. Each
 /// layer replaces same-named skills of the ones before it.
-#[derive(Serialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum SkillSource {
@@ -84,6 +85,14 @@ pub enum SkillSource {
     #[default]
     Global,
     Project,
+}
+
+/// A skill's name and one-line hint in one UI language.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
+pub struct SkillLabel {
+    pub label: String,
+    pub hint: String,
 }
 
 /// One skill as the app sees it: the frontmatter's name and description,
@@ -100,14 +109,19 @@ pub struct AgentSkill {
     /// `textus-category`: write, revise, check or format (the `/` menu's
     /// groups). None for a user skill that doesn't say.
     pub category: Option<String>,
+    /// `textus-modes`: the panel modes the skill applies in (write, review,
+    /// create) - only those offer it in the `/` menu and the skill index.
+    /// Write for a skill that doesn't say.
+    pub modes: Vec<AgentMode>,
     pub invocation: Invocation,
     pub source: SkillSource,
     /// A global or project skill with a built-in skill's name, which it
     /// replaces.
     pub overrides_builtin: bool,
-    /// False for a built-in skill the user turned off in Settings
-    /// (`disabledBuiltinSkills`); always true for the user's own skills.
-    pub enabled: bool,
+    /// What people see it called, and its one-line hint, per UI language
+    /// code: `textus-label-<code>` and `textus-hint-<code>` - a market or
+    /// user skill's; a built-in's are in src/ai/skills/texts.
+    pub labels: BTreeMap<String, SkillLabel>,
     /// Extra words the user can type after `/`, per UI language code
     /// (src/i18n/langs.ts): `textus-aliases-<code>`, comma-separated.
     pub aliases: BTreeMap<String, Vec<String>>,
@@ -136,10 +150,11 @@ impl Default for AgentSkill {
             description: String::new(),
             prompt: String::new(),
             category: None,
+            modes: vec![AgentMode::Write],
             invocation: Invocation::Both,
             source: SkillSource::Global,
             overrides_builtin: false,
-            enabled: true,
+            labels: BTreeMap::new(),
             aliases: BTreeMap::new(),
             packs: Vec::new(),
             version: None,
@@ -154,7 +169,7 @@ impl AgentSkill {
     /// Whether the model is told about this skill in the skill index and
     /// may load it by description.
     pub fn offered_to_model(&self) -> bool {
-        self.enabled && self.invocation == Invocation::Both
+        self.invocation == Invocation::Both
     }
 }
 
@@ -201,7 +216,7 @@ impl AgentWorkspace {
     /// Whether any skill can be used at all (use_skill also loads the
     /// reference packs, but only skills ask for those).
     pub fn has_usable_skills(&self) -> bool {
-        self.skills.iter().any(|s| s.enabled)
+        !self.skills.is_empty()
     }
 }
 
@@ -396,27 +411,31 @@ pub async fn reset_builtin_skill(app: AppHandle, name: String) -> Result<Vec<Str
         .map_err(|e| e.to_string())?
 }
 
-/// Turns a built-in skill on or off (Settings > Textus AI > Skills): kept in
-/// settings.json as `disabledBuiltinSkills`, broadcast to every window like
-/// any settings change. Returns the new list.
+/// Sets the panel modes a skill of the user's applies in (Settings ›
+/// Extensions › Skills): rewrites `textus-modes` in its file - the global
+/// folder's, or the project's for a project skill. A built-in's modes are
+/// fixed.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn set_builtin_skill_enabled(
+pub async fn set_skill_modes(
     app: AppHandle,
     name: String,
-    enabled: bool,
-) -> Result<Vec<String>, String> {
-    if builtin::find(&name).is_none() {
-        return Err(UNKNOWN_BUILTIN.to_string());
-    }
-    let list = toggled_builtins(&disabled_builtin_skills(&app), &name, enabled);
-    let mut patch = serde_json::Map::new();
-    patch.insert(
-        DISABLED_BUILTINS_KEY.to_string(),
-        serde_json::Value::from(list.clone()),
-    );
-    crate::settings::patch_from_backend(&app, patch);
-    Ok(list)
+    source: SkillSource,
+    doc_path: Option<String>,
+    workspace_root: Option<String>,
+    modes: Vec<AgentMode>,
+) -> Result<(), String> {
+    let dir = match source {
+        SkillSource::Builtin => return Err(UNKNOWN_BUILTIN.to_string()),
+        SkillSource::Global => global_agent_dir(&app)?,
+        SkillSource::Project => project_dir(
+            &project_root(doc_path.as_deref(), workspace_root.as_deref())
+                .ok_or("No project folder.")?,
+        ),
+    };
+    tauri::async_runtime::spawn_blocking(move || set_modes_in(&dir.join("skills"), &name, &modes))
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 #[cfg(test)]

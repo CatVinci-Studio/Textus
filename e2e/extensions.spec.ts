@@ -85,22 +85,17 @@ test("Extensions has a tab each for plugins, themes, skills and MCP", async ({
   await expect(panel.locator(".theme-gallery-item")).toHaveCount(2);
 });
 
-test("a built-in skill turned off moves to Get more, and comes back from there", async ({
+test("built-in skills stay on; Get more lists the market's, not them", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
   const panel = await openExtensions(page);
   await panel.getByRole("tab", { name: "Skills" }).click();
   const translate = panel.locator('[data-skill="translate"]');
-  await expect(translate).toBeVisible();
-  await translate.getByRole("checkbox").click();
-  await expect(translate).toHaveCount(0);
+  await expect(translate).toContainText("Built-in");
+  await expect(translate.getByRole("checkbox")).toHaveCount(0);
   await panel.getByRole("button", { name: "Get more" }).click();
-  const offered = panel.locator('[data-skill="translate"]');
-  await offered.getByRole("button", { name: /^Install/ }).click();
-  await expect(offered).toHaveCount(0);
-  await panel.locator(".plugin-back").click();
-  await expect(panel.locator('[data-skill="translate"]')).toBeVisible();
+  await expect(panel.locator('[data-skill="translate"]')).toHaveCount(0);
 });
 
 test("Textus AI's Skills row opens Extensions on its Skills tab", async ({

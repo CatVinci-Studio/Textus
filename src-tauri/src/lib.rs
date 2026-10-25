@@ -240,6 +240,9 @@ pub fn run() {
         .setup(|app| {
             // Before any window: every window's boot script is made from it.
             settings::init(app.handle());
+            tauri::async_runtime::spawn(plugins::moved_skills::install_moved_skills(
+                app.handle().clone(),
+            ));
             build_main_window(app)?;
             #[cfg(desktop)]
             desktop_setup(app)?;
@@ -320,7 +323,7 @@ pub fn run() {
             crate::ai::workspace::list_skills,
             crate::ai::workspace::customize_builtin_skill,
             crate::ai::workspace::reset_builtin_skill,
-            crate::ai::workspace::set_builtin_skill_enabled,
+            crate::ai::workspace::set_skill_modes,
             crate::ai::builtin::builtin_skills_attribution,
             crate::ai::project::list_project_files,
             crate::ai::project::read_project_file,

@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useState,
-  useSyncExternalStore,
-  type ReactNode,
-} from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Byline } from "./PluginPage";
 import type { Strings } from "../../i18n/strings";
 import { pluginName, pluginText } from "../../plugins/manager";
@@ -39,15 +34,12 @@ export function MarketPage({
   t,
   kind: initialKind,
   onBack,
-  builtinSkills,
   onAddMcp,
   onInstalled,
 }: {
   t: Strings;
   kind: MarketKind;
   onBack: () => void;
-  /** The built-in skills that are off, as far as the search lets. */
-  builtinSkills: (query: string) => ReactNode;
   /** Takes an MCP server to its tab's form, to fill in and save. */
   onAddMcp: (server: McpServer) => void;
   /** A plugin installed from here. */
@@ -128,7 +120,6 @@ export function MarketPage({
           {kind === "all" && (
             <h3 className="settings-group-title">{label.skills}</h3>
           )}
-          {builtinSkills(query)}
           <MarketSkills t={t} catalog={catalog} query={query} />
         </section>
       )}

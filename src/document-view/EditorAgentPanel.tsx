@@ -90,6 +90,7 @@ export function EditorAgentPanel({
   const emptyText = {
     write: t.agentPanelEmptyWrite,
     review: t.agentPanelEmptyReview,
+    create: t.agentPanelEmptyCreate,
   }[mode];
   return (
     <AgentPanelView

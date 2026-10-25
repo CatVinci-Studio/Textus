@@ -21,7 +21,7 @@ const builtins: SkillListItem[] = BUILTIN_SKILLS.map((skill) => ({
   invocation: skill.invocation,
   source: "builtin",
   overridesBuiltin: false,
-  enabled: true,
+  modes: [skill.mode],
   aliases: {},
 }));
 
@@ -32,8 +32,21 @@ const own: SkillListItem = {
   invocation: "both",
   source: "global",
   overridesBuiltin: false,
-  enabled: true,
+  modes: ["write"],
   aliases: {},
+};
+
+/** A skill from the market, as its file names it. */
+const email: SkillListItem = {
+  ...own,
+  name: "email",
+  description: "Drafts an email.",
+  category: null,
+  labels: {
+    en: { label: "Write an email", hint: "Draft or restructure an email" },
+    zh: { label: "写邮件", hint: "起草或重新组织一封邮件" },
+  },
+  aliases: { zh: ["邮件", "回信"] },
 };
 
 const project: SkillListItem = {
@@ -63,29 +76,37 @@ describe("the triggers", () => {
 });
 
 describe("pickerSkills", () => {
-  it("leaves out turned-off built-ins and hidden packs", () => {
-    const list = pickerSkills(
-      [
-        { ...builtins[0], enabled: false },
-        ...builtins.slice(1),
-        { ...own, name: "standards-en", invocation: "hidden" as never },
-      ],
-      "en",
-    );
-    expect(list.map((s) => s.name)).not.toContain("continue-story");
-    expect(list.map((s) => s.name)).not.toContain("standards-en");
-    expect(list).toHaveLength(19);
+  it("offers only the mode's skills, and no hidden packs", () => {
+    const items = [
+      ...builtins,
+      own,
+      { ...own, name: "standards-en", invocation: "hidden" as never },
+    ];
+    const names = (mode: "write" | "review" | "create") =>
+      pickerSkills(items, "en", mode).map((s) => s.name);
+    expect(names("write")).toEqual([
+      "expand",
+      "tighten",
+      "translate",
+      "summarize",
+      "house-style",
+    ]);
+    expect(names("review")).toEqual(["proofread", "continuity"]);
+    expect(names("create")).toEqual(["theme", "plugin", "skill"]);
+    // A skill in two modes is in both.
+    const both = { ...own, modes: ["write", "review"] } as SkillListItem;
+    expect(pickerSkills([both], "en", "review")).toHaveLength(1);
   });
 
   it("shows a built-in by its label and hint in the UI language", () => {
-    const [first] = pickerSkills(builtins, "ja");
+    const [first] = pickerSkills(builtins, "ja", "review");
     expect(first).toMatchObject({
-      name: "continue-story",
-      label: "続きを書く",
-      category: "write",
+      name: "proofread",
+      label: SKILL_TEXTS.ja.proofread.label,
+      category: "check",
     });
     // A user skill keeps its own name and description.
-    const [mine] = pickerSkills([own], "ja");
+    const [mine] = pickerSkills([own], "ja", "write");
     expect(mine).toMatchObject({
       label: null,
       hint: "Apply the house style",
@@ -93,10 +114,24 @@ describe("pickerSkills", () => {
     });
   });
 
+  it("shows a market skill by the label its file gives", () => {
+    const [zh] = pickerSkills([email], "zh", "write");
+    expect(zh).toMatchObject({
+      label: "写邮件",
+      hint: "起草或重新组织一封邮件",
+    });
+    // No label in the UI's language: the English one.
+    const [ja] = pickerSkills([email], "ja", "write");
+    expect(ja.label).toBe("Write an email");
+    expect(resolveSkillName("写邮件", [ja])).toBe("email");
+    expect(resolveSkillName("回信", [ja])).toBe("email");
+  });
+
   it("adds the backend's aliases to the terms", () => {
     const [skill] = pickerSkills(
       [{ ...own, aliases: { en: ["house"], zh: ["文风手册"] } }],
       "zh",
+      "write",
     );
     expect(skill.terms).toEqual(
       expect.arrayContaining(["house-style", "house", "文风手册"]),
@@ -105,14 +140,18 @@ describe("pickerSkills", () => {
 });
 
 describe.each(LANGS)("the theme skill in %s", (lang) => {
-  const skills = pickerSkills(builtins, lang);
+  const skills = pickerSkills(builtins, lang, "create");
   const text = SKILL_TEXTS[lang].theme;
 
-  it("is in the / list under Formats, by its label", () => {
+  it("is in Create's / list under Make, by its label", () => {
     const theme = skills.find((s) => s.name === "theme");
-    expect(theme).toMatchObject({ label: text.label, category: "format" });
-    const format = groupSkills(skills, []).find((g) => g.id === "format")!;
-    expect(format.skills.map((s) => s.name)).toContain("theme");
+    expect(theme).toMatchObject({ label: text.label, category: "create" });
+    const create = groupSkills(skills, []).find((g) => g.id === "create")!;
+    expect(create.skills.map((s) => s.name)).toEqual([
+      "theme",
+      "plugin",
+      "skill",
+    ]);
   });
 
   it("answers to /theme, its label and its aliases", () => {
@@ -122,84 +161,81 @@ describe.each(LANGS)("the theme skill in %s", (lang) => {
 });
 
 describe("matchSkills", () => {
-  const skills = pickerSkills([...builtins, own], "zh");
+  const skills = pickerSkills([...builtins, own, email], "zh", "write");
 
   it("puts an exact alias first", () => {
-    expect(matchSkills(skills, "校对", [])[0].name).toBe("proofread");
-    expect(matchSkills(skills, "续写", [])[0].name).toBe("continue-story");
+    expect(matchSkills(skills, "翻译", [])[0].name).toBe("translate");
+    expect(matchSkills(skills, "邮件", [])[0].name).toBe("email");
   });
 
   it("matches names, labels and full-width letters, case-blind", () => {
     expect(matchSkills(skills, "ＴＩＧ", [])[0].name).toBe("tighten");
-    expect(matchSkills(skills, "Story", [])[0].name).toBe("continue-story");
+    expect(matchSkills(skills, "House", [])[0].name).toBe("house-style");
     // A CJK label matches inside, not only at its start.
-    expect(matchSkills(skills, "标题", []).map((s) => s.name)).toContain(
-      "headline",
-    );
+    expect(matchSkills(skills, "邮", []).map((s) => s.name)).toContain("email");
   });
 
   it("finds another language's word too", () => {
-    expect(matchSkills(skills, "続き", [])[0].name).toBe("continue-story");
+    const ja = SKILL_TEXTS.ja.summarize.label;
+    expect(matchSkills(skills, ja, [])[0].name).toBe("summarize");
   });
 
   it("breaks ties in favour of the recently used", () => {
-    const names = matchSkills(skills, "c", ["continuity"]).map((s) => s.name);
-    expect(names.indexOf("continuity")).toBeLessThan(
-      names.indexOf("change-tone"),
-    );
+    const names = matchSkills(skills, "t", ["translate"]).map((s) => s.name);
+    expect(names.indexOf("translate")).toBeLessThan(names.indexOf("tighten"));
   });
 });
 
 describe("groupSkills", () => {
-  const skills = pickerSkills([...builtins, own, project], "en");
+  const skills = pickerSkills([...builtins, own, project], "en", "write");
 
   it("lists recent, project, yours, then the built-ins by category", () => {
-    const groups = groupSkills(skills, ["summarize", "proofread"]);
+    const groups = groupSkills(skills, ["summarize", "tighten"]);
     expect(groups.map((g) => g.id)).toEqual([
       "recent",
       "project",
       "global",
-      "write",
       "revise",
-      "check",
-      "format",
     ]);
     expect(groups[0].skills.map((s) => s.name)).toEqual([
       "summarize",
-      "proofread",
+      "tighten",
     ]);
     // Not listed twice.
-    const check = groups.find((g) => g.id === "check")!;
-    expect(check.skills.map((s) => s.name)).toEqual(["continuity"]);
+    const revise = groups.find((g) => g.id === "revise")!;
+    expect(revise.skills.map((s) => s.name)).toEqual(["expand", "translate"]);
   });
 
   it("leaves empty groups out", () => {
-    expect(groupSkills(pickerSkills([own], "en"), []).map((g) => g.id)).toEqual(
-      ["global"],
-    );
+    expect(
+      groupSkills(pickerSkills([own], "en", "write"), []).map((g) => g.id),
+    ).toEqual(["global"]);
   });
 });
 
 describe("resolveSkillName", () => {
-  const skills = pickerSkills([...builtins, project], "en");
+  const skills = pickerSkills([...builtins, project], "en", "write");
 
   it("maps an alias in any language to the canonical name", () => {
-    expect(resolveSkillName("续写", skills)).toBe("continue-story");
-    expect(resolveSkillName("公文", skills)).toBe("notice");
+    expect(resolveSkillName(SKILL_TEXTS.zh.tighten.label, skills)).toBe(
+      "tighten",
+    );
     expect(resolveSkillName("要약", skills)).toBeNull();
     expect(resolveSkillName("요약", skills)).toBe("summarize");
-    expect(resolveSkillName("Proofread", skills)).toBe("proofread");
+    expect(resolveSkillName("Translate", skills)).toBe("translate");
     expect(resolveSkillName("会议纪要", skills)).toBe("会议纪要");
     expect(resolveSkillName("usr/bin", skills)).toBeNull();
   });
 
   it("prefers a skill's own name over another skill's alias", () => {
     // A project skill named like a built-in alias wins.
+    const alias = SKILL_TEXTS.zh.expand.aliases[0];
     const withShadow = pickerSkills(
-      [...builtins, { ...own, name: "续写" }],
+      [...builtins, { ...own, name: alias }],
       "en",
+      "write",
     );
-    expect(resolveSkillName("续写", withShadow)).toBe("续写");
+    expect(resolveSkillName(alias, withShadow)).toBe(alias);
   });
 });
 

@@ -121,11 +121,12 @@ export type ImageHost = "picgo" | "smms" | "imgur" | "custom";
 export const IMAGE_HOSTS: ImageHost[] = ["picgo", "smms", "imgur", "custom"];
 export type ImageNamingMode = "auto" | "original" | "ask";
 /** The AI conversation's mode: Write adds text and changes the text that
- *  is there, Review only reads and comments. Mirrors `AgentMode` in
+ *  is there, Review only reads and comments, Create makes a theme, a
+ *  plugin or a skill for the app. Mirrors `AgentMode` in
  *  src-tauri/src/ai/agent/prompt.rs. In the order the composer offers
  *  them. */
-export type AgentMode = "write" | "review";
-export const AGENT_MODES: readonly AgentMode[] = ["write", "review"];
+export type AgentMode = "write" | "review" | "create";
+export const AGENT_MODES: readonly AgentMode[] = ["write", "review", "create"];
 
 /** A stored mode, or null for anything that isn't one of today's - 1.2.0's
  *  Revise, folded into Write in 1.2.1, reads as Write. */

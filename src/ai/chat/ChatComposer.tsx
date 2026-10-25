@@ -115,6 +115,7 @@ export function ChatComposer({
     input,
     dismissedInput,
     lang: picker.lang,
+    mode,
   });
 
   // @-mention picker: "@" (or the full-width "＠" a CJK IME types) plus a
@@ -306,8 +307,12 @@ export function ChatComposer({
   const modeLabels: Record<AgentMode, string> = {
     write: labels.modeWrite,
     review: labels.modeReview,
+    create: labels.modeCreate,
   };
-  const modes = AGENT_MODES.map((m) => [m, modeLabels[m]] as const);
+  // Quick Ask works on the selection: it writes or reviews, never creates.
+  const modes = AGENT_MODES.filter((m) => !compact || m !== "create").map(
+    (m) => [m, modeLabels[m]] as const,
+  );
 
   // On a phone, the composer's buttons leave focus - and so the keyboard -
   // in the textarea: a tap's default is to blur it, which drops the

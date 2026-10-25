@@ -64,9 +64,6 @@ export function ExtensionsPage(props: SettingsPageProps) {
         t={t}
         kind={market}
         onBack={() => setMarket(null)}
-        builtinSkills={(query) => (
-          <BuiltinSkillsSection {...skillProps} only="off" query={query} />
-        )}
         // A plugin just installed shows how it is used: its guide in a
         // tab, Settings out of the way.
         onInstalled={(id) =>
@@ -130,7 +127,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
               installed={
                 <>
                   <OwnSkillsList t={t} />
-                  <BuiltinSkillsSection {...skillProps} only="on" />
+                  <BuiltinSkillsSection {...skillProps} flat />
                 </>
               }
             />

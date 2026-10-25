@@ -31,111 +31,64 @@ import { webPageCommand } from "./native-web-pages";
 
 /** The built-in skills as `list_skills` reports them: name, `/` menu group,
  *  invocation and the description written for the model (abridged). */
-const DEV_BUILTIN_SKILLS: [string, string, string, string][] = [
-  [
-    "continue-story",
-    "write",
-    "both",
-    "Writes the next scene or section of a story, picking up exactly where the text stops.",
-  ],
-  [
-    "describe",
-    "write",
-    "both",
-    "Adds concrete, sensory description of a person, place or scene.",
-  ],
-  [
-    "dialogue",
-    "write",
-    "both",
-    "Fixes dialogue punctuation, tags and rhythm for the document's language.",
-  ],
-  [
-    "imitate-style",
-    "write",
-    "both",
-    "Rewrites text in the style of a sample or the style profile.",
-  ],
+const DEV_BUILTIN_SKILLS: [string, string, string, string, string][] = [
   [
     "expand",
     "revise",
     "userOnly",
+    "write",
     "Makes a passage fuller without adding facts.",
   ],
-  ["tighten", "revise", "userOnly", "Cuts wordiness and keeps every fact."],
   [
-    "change-tone",
+    "tighten",
     "revise",
     "userOnly",
-    "Makes text more formal, plain, warm or firm.",
-  ],
-  [
-    "de-ai",
-    "revise",
-    "both",
-    "Removes stock AI phrasing and formula, or flags it.",
+    "write",
+    "Cuts a passage down without losing its meaning.",
   ],
   [
     "translate",
     "revise",
     "both",
-    "Translates so the result reads as native writing.",
-  ],
-  [
-    "proofread",
-    "check",
-    "both",
-    "Checks spelling, punctuation and numbers against the language's standards.",
-  ],
-  [
-    "continuity",
-    "check",
-    "both",
-    "Finds contradictions with the library and other chapters.",
-  ],
-  ["email", "format", "both", "Drafts or restructures an email or letter."],
-  [
-    "notice",
-    "format",
-    "both",
-    "Drafts or fixes a notice or official document.",
-  ],
-  [
-    "minutes",
-    "format",
-    "both",
-    "Turns meeting notes into decisions and action items.",
-  ],
-  [
-    "academic-polish",
-    "format",
-    "both",
-    "Formal, calibrated academic wording; citations untouched.",
-  ],
-  [
-    "social-post",
-    "format",
-    "both",
-    "Writes a post that fits the platform's limits and rules.",
-  ],
-  [
-    "headline",
-    "format",
-    "both",
-    "Writes an accurate title or headline of the right length.",
+    "write",
+    "Translates the selection or the document.",
   ],
   [
     "summarize",
     "format",
     "userOnly",
-    "Summarizes faithfully at the length asked for.",
+    "write",
+    "Sums up the document or a passage.",
+  ],
+  [
+    "proofread",
+    "check",
+    "both",
+    "review",
+    "Fixes typos, grammar and punctuation.",
+  ],
+  [
+    "continuity",
+    "check",
+    "both",
+    "review",
+    "Checks names, facts and timelines against the library.",
   ],
   [
     "theme",
-    "format",
+    "create",
     "both",
-    "Designs an editor theme and writes it as one CSS file in the reply.",
+    "create",
+    "Designs an editor theme from a description.",
   ],
+  [
+    "plugin",
+    "create",
+    "both",
+    "create",
+    "Makes a small plugin from a description.",
+  ],
+  ["skill", "create", "both", "create", "Saves a task you repeat as a skill."],
 ];
 
 export function installDevTauriShim(): void {
@@ -525,12 +478,13 @@ export function installDevTauriShim(): void {
     return null;
   }
 
-  // The skill list of ai::workspace and Settings' commands for the
-  // built-ins, in memory: the 19 built-ins, one skill of the user's own,
-  // and what Customize…/Reset/the switches did. `window.__devSkills`
-  // exposes the state for assertions.
+  // The skill list of ai::workspace and Settings' commands for skills, in
+  // memory: the 9 built-ins, one skill of the user's own, and what
+  // Customize…/Reset and its mode boxes did. `window.__devSkills` exposes
+  // the state for assertions.
   const skills = {
-    disabled: new Set<string>(),
+    // The modes of the user's own skill, house-style.
+    ownModes: ["write"] as string[],
     customized: new Set<string>(),
     // Copies made before the bundled built-in last changed.
     outdated: new Set<string>(),
@@ -548,7 +502,7 @@ export function installDevTauriShim(): void {
     switch (cmd) {
       case "list_skills": {
         // As ai::workspace::list_skills: one item per name - a copy made by
-        // Customize… replaces its built-in (and follows its switch).
+        // Customize… replaces its built-in.
         const base = {
           prompt: "",
           packs: [] as string[],
@@ -556,10 +510,11 @@ export function installDevTauriShim(): void {
           basedOn: null as string | null,
           builtinUpdated: false,
           aliases: {},
+          labels: {},
         };
         const builtins = DEV_BUILTIN_SKILLS.map(
-          ([skill, category, invocation, description]) => {
-            const enabled = !skills.disabled.has(skill);
+          ([skill, category, invocation, mode, description]) => {
+            const modes = [mode] as AgentSkill_Serialize["modes"];
             return skills.customized.has(skill)
               ? {
                   ...base,
@@ -569,7 +524,7 @@ export function installDevTauriShim(): void {
                   invocation,
                   source: "global",
                   overridesBuiltin: true,
-                  enabled,
+                  modes,
                   basedOn: `${skill}@${skills.outdated.has(skill) ? 0 : 1}`,
                   builtinUpdated: skills.outdated.has(skill),
                 }
@@ -581,7 +536,7 @@ export function installDevTauriShim(): void {
                   invocation,
                   source: "builtin",
                   overridesBuiltin: false,
-                  enabled,
+                  modes,
                   version: "1",
                 };
           },
@@ -594,15 +549,14 @@ export function installDevTauriShim(): void {
           invocation: "both",
           source: "global",
           overridesBuiltin: false,
-          enabled: true,
+          modes: skills.ownModes as AgentSkill_Serialize["modes"],
         } satisfies AgentSkill_Serialize;
         return Promise.resolve([...builtins, own]);
       }
-      case "set_builtin_skill_enabled":
-        skills.log.push(`${cmd}:${name}:${args.enabled}`);
-        if (args.enabled) skills.disabled.delete(name);
-        else skills.disabled.add(name);
-        return Promise.resolve([...skills.disabled].sort());
+      case "set_skill_modes":
+        skills.log.push(`${cmd}:${name}:${String(args.modes)}`);
+        skills.ownModes = [...((args.modes as string[]) ?? [])];
+        return Promise.resolve(null);
       case "customize_builtin_skill": {
         skills.log.push(`${cmd}:${name}`);
         const path = skillCopyPath(name);

@@ -46,6 +46,7 @@ export interface ChatComposerLabels {
   attachmentNoVision: string;
   modeWrite: string;
   modeReview: string;
+  modeCreate: string;
   /** Accessible name of the phone's segmented mode control. */
   modeLabel: string;
   webSearch: string;

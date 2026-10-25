@@ -204,7 +204,7 @@ fn the_project_is_the_nearest_folder_above_with_a_textus_folder() {
     write(&novel.join("part-1/scenes/one.md"), "# One");
     let doc = novel.join("part-1/scenes/one.md");
     assert_eq!(resolve_root(doc.to_str(), None), Some(novel.clone()));
-    let ws = load_layers(None, doc.to_str(), None, &[]);
+    let ws = load_layers(None, doc.to_str(), None);
     assert_eq!(ws.root_source, RootSource::EnclosingProject);
     assert_eq!(ws.project_instructions.as_deref(), Some("Novel rules."));
     // A nearer .textus/ wins.
@@ -214,7 +214,7 @@ fn the_project_is_the_nearest_folder_above_with_a_textus_folder() {
     let loose = root.join("loose/notes.md");
     write(&loose, "x");
     assert_eq!(resolve_root(loose.to_str(), None), Some(root.join("loose")));
-    let ws = load_layers(None, loose.to_str(), None, &[]);
+    let ws = load_layers(None, loose.to_str(), None);
     assert_eq!(ws.root_source, RootSource::DocumentFolder);
     std::fs::remove_dir_all(&root).ok();
 }
@@ -254,47 +254,30 @@ fn layers_override_built_ins_by_name() {
         "---\nname: tighten\ndescription: Mine\n---\nCut hard.",
     );
     write(
-        &global.join("skills/headline.md"),
-        "---\nname: headline\ndescription: Global headline\n---\nGlobal.",
+        &global.join("skills/summarize.md"),
+        "---\nname: summarize\ndescription: Global summary\n---\nGlobal.",
     );
     write(
-        &project.join(".textus/skills/headline.md"),
-        "---\nname: headline\ndescription: House style\n---\nAt most 6 words.",
+        &project.join(".textus/skills/summarize.md"),
+        "---\nname: summarize\ndescription: House style\n---\nAt most 6 words.",
     );
     write(&project.join("chapter.md"), "# One");
     let doc = project.join("chapter.md");
-    let ws = load_layers(
-        Some(&global),
-        doc.to_str(),
-        None,
-        &["proofread".to_string(), "not-a-skill".to_string()],
-    );
+    let ws = load_layers(Some(&global), doc.to_str(), None);
     let get = |name: &str| ws.skills.iter().find(|s| s.name == name).unwrap();
-    assert_eq!(ws.skills.iter().filter(|s| s.name == "headline").count(), 1);
-    let headline = get("headline");
-    assert_eq!(headline.source, SkillSource::Project);
-    assert!(headline.overrides_builtin && headline.prompt.contains("6 words"));
+    assert_eq!(ws.skills.iter().filter(|s| s.name == "summarize").count(), 1);
+    let summarize = get("summarize");
+    assert_eq!(summarize.source, SkillSource::Project);
+    assert!(summarize.overrides_builtin && summarize.prompt.contains("6 words"));
     let tighten = get("tighten");
     assert_eq!(tighten.source, SkillSource::Global);
-    assert!(tighten.overrides_builtin && tighten.enabled);
-    let proofread = get("proofread");
-    assert_eq!(proofread.source, SkillSource::Builtin);
-    assert!(!proofread.enabled, "turned off, still listed");
-    assert!(get("email").enabled && get("email").source == SkillSource::Builtin);
+    assert!(tighten.overrides_builtin);
+    assert_eq!(get("proofread").source, SkillSource::Builtin);
     assert_eq!(ws.skills.len(), builtin::skills().len());
     assert!(
         !ws.skills.iter().any(|s| s.name.starts_with("standards")),
         "packs aren't skills"
     );
-    // Disabling a built-in leaves a user override alone.
-    let ws = load_layers(Some(&global), doc.to_str(), None, &["tighten".to_string()]);
-    let tighten = ws.skills.iter().find(|s| s.name == "tighten").unwrap();
-    assert!(tighten.enabled && tighten.source == SkillSource::Global);
-    // ...but a copy made by Customize… follows the built-in's switch.
-    customize_in(&global.join("skills"), "email").unwrap();
-    let ws = load_layers(Some(&global), doc.to_str(), None, &["email".to_string()]);
-    let email = ws.skills.iter().find(|s| s.name == "email").unwrap();
-    assert!(email.based_on.is_some() && !email.enabled);
     std::fs::remove_dir_all(&root).ok();
 }
 
@@ -307,7 +290,7 @@ fn customize_copies_and_reset_deletes_only_copies() {
     let copy = std::fs::read_to_string(&path).unwrap();
     assert!(copy.contains("textus-based-on: \"tighten@1\""));
     // The copy now shadows the built-in, marked as such.
-    let ws = load_layers(Some(&root), None, None, &[]);
+    let ws = load_layers(Some(&root), None, None);
     let tighten = ws.skills.iter().find(|s| s.name == "tighten").unwrap();
     assert_eq!(tighten.source, SkillSource::Global);
     assert!(tighten.overrides_builtin && !tighten.builtin_updated);
@@ -320,7 +303,7 @@ fn customize_copies_and_reset_deletes_only_copies() {
         .contains("Cut WORDS"));
     // An older copy is flagged once the built-in moves on.
     std::fs::write(&path, copy.replace("tighten@1", "tighten@0")).unwrap();
-    let ws = load_layers(Some(&root), None, None, &[]);
+    let ws = load_layers(Some(&root), None, None);
     assert!(
         ws.skills
             .iter()
@@ -338,19 +321,19 @@ fn customize_copies_and_reset_deletes_only_copies() {
     // A hand-written skill of the same name is the user's own.
     write(
         &skills.join("mine.md"),
-        "---\nname: email\n---\nMy email rules.",
+        "---\nname: proofread\n---\nMy proofreading rules.",
     );
-    assert_eq!(reset_in(&skills, "email").unwrap_err(), NOT_A_COPY);
+    assert_eq!(reset_in(&skills, "proofread").unwrap_err(), NOT_A_COPY);
     assert!(skills.join("mine.md").exists());
     assert_eq!(
-        customize_in(&skills, "email").unwrap(),
+        customize_in(&skills, "proofread").unwrap(),
         skills.join("mine.md")
     );
     // A file with the stem but another skill inside keeps its name.
-    write(&skills.join("notice.md"), "---\nname: my-notice\n---\nx");
+    write(&skills.join("summarize.md"), "---\nname: my-summary\n---\nx");
     assert_eq!(
-        customize_in(&skills, "notice").unwrap(),
-        skills.join("notice-2.md")
+        customize_in(&skills, "summarize").unwrap(),
+        skills.join("summarize-2.md")
     );
     assert_eq!(customize_in(&skills, "nope").unwrap_err(), UNKNOWN_BUILTIN);
     assert_eq!(reset_in(&skills, "nope").unwrap_err(), UNKNOWN_BUILTIN);
@@ -358,32 +341,63 @@ fn customize_copies_and_reset_deletes_only_copies() {
 }
 
 #[test]
-fn turning_built_ins_off_and_on() {
-    let off = toggled_builtins(&[], "tighten", false);
-    assert_eq!(off, ["tighten"]);
-    let off = toggled_builtins(&off, "email", false);
-    assert_eq!(off, ["email", "tighten"]);
-    let off = toggled_builtins(&off, "email", false);
-    assert_eq!(off, ["email", "tighten"], "no repeats");
-    assert_eq!(toggled_builtins(&off, "tighten", true), ["email"]);
-    assert_eq!(
-        toggled_builtins(&["gone".to_string(), "email".to_string()], "email", true),
-        Vec::<String>::new(),
-        "names that are no longer built-ins drop out"
+fn a_skill_says_its_modes_and_its_names() {
+    use crate::ai::agent::AgentMode;
+    let skill = parse_skill_file(
+        "x",
+        "---\nname: x\nmetadata:\n  textus-modes: \"review, write nope\"\n  textus-label-zh: \"周报\"\n  textus-hint-zh: \"写周报\"\n  textus-label-ja: \"週報\"\n---\nbody",
     );
+    assert_eq!(skill.modes, [AgentMode::Review, AgentMode::Write]);
+    assert_eq!(skill.labels["zh"].label, "周报");
+    assert_eq!(skill.labels["zh"].hint, "写周报");
+    assert_eq!(skill.labels["ja"].hint, "");
+    // Saying none, a skill is Write's.
+    assert_eq!(parse_skill_file("y", "body").modes, [AgentMode::Write]);
+}
+
+#[test]
+fn setting_a_skills_modes_rewrites_its_file() {
+    use crate::ai::agent::AgentMode;
+    let root = scratch("modes");
+    let skills = root.join("skills");
+    write(
+        &skills.join("weekly.md"),
+        "---\nname: weekly\ndescription: d\nmetadata:\n  textus-version: \"1.0.0\"\n---\nBody.\n",
+    );
+    write(&skills.join("bare.md"), "---\nname: bare\n---\nBody.\n");
+    set_modes_in(&skills, "weekly", &[AgentMode::Review, AgentMode::Write]).unwrap();
+    set_modes_in(&skills, "bare", &[AgentMode::Create]).unwrap();
+    let read = |name: &str| {
+        read_skill_files(&skills)
+            .into_iter()
+            .find(|(_, s)| s.name == name)
+            .unwrap()
+    };
+    assert_eq!(read("weekly").1.modes, [AgentMode::Review, AgentMode::Write]);
+    assert_eq!(read("weekly").1.version.as_deref(), Some("1.0.0"));
+    assert_eq!(read("bare").1.modes, [AgentMode::Create]);
+    // Again: the line is replaced, not added.
+    set_modes_in(&skills, "weekly", &[AgentMode::Write]).unwrap();
+    let text = std::fs::read_to_string(read("weekly").0).unwrap();
+    assert_eq!(text.matches("textus-modes").count(), 1);
+    assert!(text.ends_with("Body.\n"));
+    assert!(set_modes_in(&skills, "weekly", &[]).is_err());
+    assert!(set_modes_in(&skills, "nope", &[AgentMode::Write]).is_err());
+    std::fs::remove_dir_all(&root).ok();
 }
 
 #[test]
 fn skill_list_serialises_the_interface_the_frontend_reads() {
-    let skill = builtin::find("continue-story").unwrap();
+    let skill = builtin::find("proofread").unwrap();
     let v = serde_json::to_value(skill).unwrap();
-    assert_eq!(v["name"], "continue-story");
-    assert_eq!(v["category"], "write");
+    assert_eq!(v["name"], "proofread");
+    assert_eq!(v["category"], "check");
+    assert_eq!(v["modes"], serde_json::json!(["review"]));
     assert_eq!(v["invocation"], "both");
     assert_eq!(v["source"], "builtin");
     assert_eq!(v["overridesBuiltin"], false);
-    assert_eq!(v["enabled"], true);
-    assert_eq!(v["aliases"]["zh"][0], "接着写");
+    assert_eq!(v["labels"], serde_json::json!({}));
+    assert_eq!(v["aliases"]["zh"][0], "校对");
     assert_eq!(v["packs"][0], "contract");
     assert_eq!(v["version"], "1");
     assert!(v["basedOn"].is_null());
@@ -402,8 +416,8 @@ fn skill_name_with_spaces_is_slugged() {
 }
 
 #[test]
-fn the_skill_list_keeps_turned_off_built_ins_and_drops_hidden_ones() {
-    let ws = load_layers(None, None, None, &["describe".to_string()]);
+fn the_skill_list_drops_hidden_skills() {
+    let ws = load_layers(None, None, None);
     let mut skills = ws.skills.clone();
     skills.push(AgentSkill {
         name: "secret".into(),
@@ -411,9 +425,7 @@ fn the_skill_list_keeps_turned_off_built_ins_and_drops_hidden_ones() {
         ..Default::default()
     });
     let list = listed(skills);
-    assert_eq!(list.len(), 20);
-    let describe = list.iter().find(|s| s.name == "describe").unwrap();
-    assert!(!describe.enabled && describe.source == SkillSource::Builtin);
+    assert_eq!(list.len(), builtin::skills().len());
     let json = serde_json::to_value(&list[0]).unwrap();
     assert!(json.get("overridesBuiltin").is_some() && json.get("invocation").is_some());
 }

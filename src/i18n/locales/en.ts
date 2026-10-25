@@ -31,6 +31,7 @@ const en = {
   menuToggleAgentPanel: "AI Panel",
   agentPanelEmptyWrite: "Start writing",
   agentPanelEmptyReview: "Get more suggestions",
+  agentPanelEmptyCreate: "Make a theme, plugin or skill",
   aiWorkingCompletion: "Writing a continuation…",
   aiWorkingGrammar: "Checking this paragraph…",
   noticeCompletionNeedsCaret:
@@ -527,6 +528,7 @@ type /name in a conversation to use one.
   skillCategoryRevise: "Revise",
   skillCategoryCheck: "Check",
   skillCategoryFormat: "Formats",
+  skillCategoryCreate: "Make",
   pickerKeysHint: "↑↓ to move · Enter to choose · Esc to close",
   skillPickerAbout:
     "Type / to run a skill: a ready-made instruction such as Proofread or Summarize.",
@@ -538,9 +540,10 @@ type /name in a conversation to use one.
   mentionPickerNoFiles: "The project folder has no text files yet.",
   mentionPickerNoMatch: "No file matches “{query}”.",
   agentSkillsBuiltin: "Built-in skills",
-  agentSkillsOnCount: "{n} of {total} on",
   agentSkillsCustomize: "Customize…",
   agentSkillsCustomized: "Customized",
+  agentSkillsModes: "Modes it works in",
+  agentSkillsBuiltinTag: "Built-in",
   agentSkillsOpen: "Open",
   agentSkillsReset: "Reset",
   agentSkillsResetConfirm:
@@ -619,6 +622,7 @@ type /name in a conversation to use one.
   agentDefaultModeLabel: "Default mode",
   agentModeWrite: "Write",
   agentModeReview: "Review",
+  agentModeCreate: "Create",
   chatModeLabel: "Mode",
   chatModelLabel: "Model",
   agentPersonalizationGroupLabel: "Writing Instructions & Skills",

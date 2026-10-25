@@ -3,13 +3,9 @@ import { errorText } from "../../utils/error-text";
 import { useSettings } from "../SettingsContext";
 import type { Strings, TextKey } from "../../i18n/strings";
 import { skillText } from "../../ai/skills/texts";
-import {
-  BUILTIN_SKILLS,
-  SKILL_CATEGORIES,
-  isBuiltinSkillName,
-  type BuiltinSkillName,
-  type SkillCategory,
-} from "../../ai/skills/builtin";
+import { BUILTIN_SKILLS } from "../../ai/skills/builtin";
+import { listFromWorkspace } from "../../ai/chat/skill-picker";
+import { AGENT_MODES, type AgentMode } from "../settings-types";
 import type { AgentSkill } from "../../ai/types";
 import { ai, type SkillListItem } from "../../platform/ipc";
 import { showConfirm } from "../../ui/app-dialog";
@@ -23,8 +19,9 @@ import {
   isConventionsValue,
 } from "../writing-conventions";
 
-// Settings > Textus AI: skills (the user's own, and the built-ins with their
-// switches, Customize… and Reset) and the Writing conventions row. Skills
+// Settings > Textus AI: skills (the user's own with their modes, and the
+// built-ins by mode with Customize… and Reset) and the Writing conventions
+// row. Skills
 // are files: the rows here mirror them and open them in a tab, they never
 // embed an editor.
 
@@ -93,87 +90,132 @@ export function AgentSkillsSection({ t }: { t: Strings }) {
   );
 }
 
-/// The user's own skills. A skill with a built-in's name says it replaces
-/// it.
+/// The user's own skills - installed from the market, imported or made in
+/// Create mode - each with the modes it applies in, at least one. A skill
+/// with a built-in's name says it replaces it.
 export function OwnSkillsList({ t }: { t: Strings }) {
-  const { list, workspaceSkills } = useSkillList();
-  const own: {
-    name: string;
-    description: string;
-    source: SkillListItem["source"];
-    shadows: boolean;
-  }[] = list
-    ? list
-        // Copies made by Customize… show under Built-in skills instead.
-        .filter((item) => item.source !== "builtin" && !item.basedOn)
-        .map((item) => ({
-          name: item.name,
-          description: item.description,
-          source: item.source,
-          shadows: item.overridesBuiltin,
-        }))
-    : workspaceSkills.map((skill) => ({
-        name: skill.name,
-        description: skill.description || skill.prompt,
-        source: "global",
-        shadows: isBuiltinSkillName(skill.name),
-      }));
+  const { settings } = useSettings();
+  const lang = settings.language;
+  const { list, setList, workspaceSkills } = useSkillList();
+  const [error, setError] = useState<string | null>(null);
+  const own: SkillListItem[] = list
+    ? // Copies made by Customize… show under Built-in skills instead.
+      list.filter((item) => item.source !== "builtin" && !item.basedOn)
+    : listFromWorkspace(workspaceSkills);
 
+  async function setModes(skill: SkillListItem, modes: AgentMode[]) {
+    if (modes.length === 0) return;
+    setError(null);
+    const before = list;
+    // At once on screen; put back if the backend says no.
+    setList(
+      (list ?? []).map((i) => (i.name === skill.name ? { ...i, modes } : i)),
+    );
+    try {
+      await ai.setSkillModes(skill.name, skill.source, null, null, modes);
+      announceChange();
+    } catch (err) {
+      setList(before);
+      setError(errorText(err));
+    }
+  }
+
+  if (own.length === 0) return null;
   return (
-    <>
-      {own.length > 0 && (
-        <div className="settings-skill-list">
-          {own.map((skill) => (
-            <div key={skill.name} className="settings-skill-item">
-              <span className="settings-skill-name">/{skill.name}</span>
-              {(skill.shadows || skill.source === "project") && (
-                <span className="settings-skill-tag">
-                  {skill.shadows ? t.agentSkillsShadows : t.skillGroupProject}
-                </span>
-              )}
-              <span className="settings-skill-desc">{skill.description}</span>
-            </div>
-          ))}
+    <div className="settings-skill-list">
+      {error && (
+        <div className="settings-error" role="alert">
+          {error}
         </div>
       )}
-    </>
+      {own.map((skill) => {
+        const words = skill.labels?.[lang] ?? skill.labels?.en;
+        const shadows = skill.overridesBuiltin;
+        const modes = skill.modes ?? ["write"];
+        return (
+          <div
+            key={skill.name}
+            className="settings-skill-item"
+            data-skill={skill.name}
+          >
+            <span className="settings-skill-name">
+              {words?.label ?? `/${skill.name}`}
+            </span>
+            {(shadows || skill.source === "project") && (
+              <span className="settings-skill-tag">
+                {shadows ? t.agentSkillsShadows : t.skillGroupProject}
+              </span>
+            )}
+            <span className="settings-skill-desc">
+              {words ? `/${skill.name} · ${words.hint}` : skill.description}
+            </span>
+            <span
+              className="settings-skill-modes"
+              role="group"
+              aria-label={t.agentSkillsModes}
+            >
+              {AGENT_MODES.map((mode) => {
+                const on = modes.includes(mode);
+                return (
+                  <label key={mode} className="settings-skill-mode">
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      // A skill is in one mode at least.
+                      disabled={on && modes.length === 1}
+                      onChange={() =>
+                        void setModes(
+                          skill,
+                          on
+                            ? modes.filter((m) => m !== mode)
+                            : AGENT_MODES.filter(
+                                (m) => m === mode || modes.includes(m),
+                              ),
+                        )
+                      }
+                    />
+                    {t[MODE_LABEL[mode]]}
+                  </label>
+                );
+              })}
+            </span>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
-const CATEGORY_LABEL: Record<SkillCategory, TextKey> = {
-  write: "skillCategoryWrite",
-  revise: "skillCategoryRevise",
-  check: "skillCategoryCheck",
-  format: "skillCategoryFormat",
+/** What the UI calls each mode. */
+const MODE_LABEL: Record<AgentMode, TextKey> = {
+  write: "agentModeWrite",
+  review: "agentModeReview",
+  create: "agentModeCreate",
 };
 
-/// The built-in skills, by category, behind a disclosure: each one's label
-/// and what it does, a switch, and Customize… - which copies it into the
-/// global config folder's skills/ and opens the copy in a tab. A customized
-/// one opens its copy instead, and Reset deletes the copy.
+/// The built-in skills, by the mode they belong to - always on: each one's
+/// label and what it does, and Customize… - which copies it into the
+/// global config folder's skills/ and opens the copy in a tab. A
+/// customized one opens its copy instead, and Reset deletes the copy.
 ///
-/// `only` shows one side without the disclosure: "on" the skills in use
-/// (Settings › Extensions › Skills, where the switch turns one off), "off"
-/// the rest, each with Install, which turns it on (Get more).
+/// `flat` shows the rows without the disclosure (Settings › Extensions ›
+/// Skills).
 export function BuiltinSkillsSection({
   t,
-  only,
-  query = "",
+  flat,
   onOpenFile,
   onFilesDeleted,
   onClose,
 }: {
   t: Strings;
-  only?: "on" | "off";
-  /** Get more's search: only the skills whose words hold every one. */
-  query?: string;
+  flat?: boolean;
   onOpenFile: (path: string) => void;
   onFilesDeleted?: (paths: string[]) => void;
   onClose: () => void;
 }) {
   const { settings } = useSettings();
   const lang = settings.language;
-  const { list, setList } = useSkillList();
+  const { list } = useSkillList();
   const [error, setError] = useState<string | null>(null);
   // The backend's error codes (ai::workspace) in the user's words.
   const failed = (err: unknown) => {
@@ -188,33 +230,13 @@ export function BuiltinSkillsSection({
   };
 
   // One item per name (ai::workspace::list_skills): the built-in itself,
-  // a copy made by Customize… (`basedOn`, which follows the switch), or a
-  // skill the user wrote with that name, which replaces it outright.
+  // a copy made by Customize… (`basedOn`), or a skill the user wrote with
+  // that name, which replaces it outright.
   const item = (name: string) => list?.find((i) => i.name === name);
   const isCopy = (i: SkillListItem | undefined) =>
     !!i && i.source !== "builtin" && !!i.basedOn;
   const isOwn = (i: SkillListItem | undefined) =>
     !!i && i.source !== "builtin" && !i.basedOn;
-  const enabled = (name: string) => item(name)?.enabled ?? true;
-  const onCount = BUILTIN_SKILLS.filter((s) => enabled(s.name)).length;
-
-  async function setEnabled(name: string, on: boolean) {
-    setError(null);
-    const before = list;
-    // At once on screen; put back if the backend says no.
-    setList(
-      (list ?? []).map((i) =>
-        i.name === name && !isOwn(i) ? { ...i, enabled: on } : i,
-      ),
-    );
-    try {
-      await ai.setBuiltinSkillEnabled(name, on);
-      announceChange();
-    } catch (err) {
-      setList(before);
-      failed(err);
-    }
-  }
 
   async function openCopy(name: string) {
     setError(null);
@@ -246,13 +268,6 @@ export function BuiltinSkillsSection({
     }
   }
 
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  const shown = (name: BuiltinSkillName) => {
-    if (only && (only === "on") !== enabled(name)) return false;
-    const text = skillText(lang, name);
-    const haystack = `${name}\n${text.label}\n${text.hint}`.toLowerCase();
-    return words.every((w) => haystack.includes(w));
-  };
   const rows = (
     <>
       {error && (
@@ -260,45 +275,40 @@ export function BuiltinSkillsSection({
           {error}
         </div>
       )}
-      {SKILL_CATEGORIES.filter((category) =>
-        BUILTIN_SKILLS.some((s) => s.category === category && shown(s.name)),
-      ).map((category) => (
+      {AGENT_MODES.map((mode) => (
         <div
-          key={category}
+          key={mode}
           className="settings-builtin-category"
           role="group"
-          aria-label={t[CATEGORY_LABEL[category]]}
+          aria-label={t[MODE_LABEL[mode]]}
+          data-mode={mode}
         >
           <div className="settings-builtin-category-title" aria-hidden="true">
-            {t[CATEGORY_LABEL[category]]}
+            {t[MODE_LABEL[mode]]}
           </div>
-          {BUILTIN_SKILLS.filter(
-            (s) => s.category === category && shown(s.name),
-          ).map(({ name }) => {
+          {BUILTIN_SKILLS.filter((s) => s.mode === mode).map(({ name }) => {
             const text = skillText(lang, name);
             const current = item(name);
             const customized = isCopy(current);
             const own = isOwn(current);
             // The copy predates the bundled built-in's latest version.
             const outdated = customized && !!current?.builtinUpdated;
-            const on = enabled(name);
             return (
               <div
                 key={name}
                 className="settings-row settings-builtin-skill"
                 data-skill={name}
-                data-enabled={on}
               >
                 <div className="settings-row-text">
                   <div className="settings-row-label">
                     {text.label}
-                    {(customized || own) && (
-                      <span className="settings-skill-tag" data-search-ignore>
-                        {customized
-                          ? t.agentSkillsCustomized
-                          : t.agentSkillsShadows}
-                      </span>
-                    )}
+                    <span className="settings-skill-tag" data-search-ignore>
+                      {customized
+                        ? t.agentSkillsCustomized
+                        : own
+                          ? t.agentSkillsShadows
+                          : t.agentSkillsBuiltinTag}
+                    </span>
                     {outdated && (
                       <span
                         className="settings-skill-tag settings-skill-tag-notice"
@@ -320,65 +330,34 @@ export function BuiltinSkillsSection({
                   )}
                 </div>
                 <div className="settings-row-control">
-                  {only === "off" ? (
-                    <button
-                      type="button"
-                      className="plugin-install"
-                      aria-label={`${t.pluginInstall}: ${text.label}`}
-                      disabled={own}
-                      onClick={() => setEnabled(name, true)}
-                    >
-                      {t.pluginInstall}
-                    </button>
-                  ) : (
-                    <>
-                      <span className="settings-skill-actions">
-                        {own ? (
-                          <button
-                            className="settings-skill-action"
-                            aria-label={`${t.agentSkillsOpen}: ${text.label}`}
-                            onClick={() => openCopy(name)}
-                          >
-                            {t.agentSkillsOpen}
-                          </button>
-                        ) : customized ? (
-                          <>
-                            <button
-                              className="settings-skill-action"
-                              aria-label={`${t.agentSkillsOpen}: ${text.label}`}
-                              onClick={() => openCopy(name)}
-                            >
-                              {t.agentSkillsOpen}
-                            </button>
-                            <button
-                              className="settings-skill-action"
-                              aria-label={`${t.agentSkillsReset}: ${text.label}`}
-                              onClick={() => reset(name, text.label)}
-                            >
-                              {t.agentSkillsReset}
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            className="settings-skill-action"
-                            aria-label={`${t.agentSkillsCustomize}: ${text.label}`}
-                            onClick={() => openCopy(name)}
-                          >
-                            {t.agentSkillsCustomize}
-                          </button>
-                        )}
-                      </span>
-                      <input
-                        type="checkbox"
-                        aria-label={text.label}
-                        checked={on}
-                        // The user's own skill of this name isn't the
-                        // built-in's to turn off.
-                        disabled={own}
-                        onChange={(e) => setEnabled(name, e.target.checked)}
-                      />
-                    </>
-                  )}
+                  <span className="settings-skill-actions">
+                    {own || customized ? (
+                      <button
+                        className="settings-skill-action"
+                        aria-label={`${t.agentSkillsOpen}: ${text.label}`}
+                        onClick={() => openCopy(name)}
+                      >
+                        {t.agentSkillsOpen}
+                      </button>
+                    ) : (
+                      <button
+                        className="settings-skill-action"
+                        aria-label={`${t.agentSkillsCustomize}: ${text.label}`}
+                        onClick={() => openCopy(name)}
+                      >
+                        {t.agentSkillsCustomize}
+                      </button>
+                    )}
+                    {customized && (
+                      <button
+                        className="settings-skill-action"
+                        aria-label={`${t.agentSkillsReset}: ${text.label}`}
+                        onClick={() => reset(name, text.label)}
+                      >
+                        {t.agentSkillsReset}
+                      </button>
+                    )}
+                  </span>
                 </div>
               </div>
             );
@@ -387,17 +366,12 @@ export function BuiltinSkillsSection({
       ))}
     </>
   );
-  if (only) return rows;
+  if (flat) return rows;
   return (
     <details className="settings-advanced settings-builtin-skills">
       <summary>
         <span className="settings-builtin-skills-title">
           {t.agentSkillsBuiltin}
-        </span>
-        <span className="settings-builtin-skills-count" data-search-ignore>
-          {t.agentSkillsOnCount
-            .replace("{n}", String(onCount))
-            .replace("{total}", String(BUILTIN_SKILLS.length))}
         </span>
       </summary>
       <div className="settings-advanced-body">{rows}</div>

@@ -6,6 +6,7 @@ import { commands as aiAgentCommands } from "./bindings/ai-agent";
 import { commands as aiConventionsCommands } from "./bindings/ai-conventions";
 import { commands as aiMemoryCommands } from "./bindings/ai-memory";
 import { commands as aiProjectCommands } from "./bindings/ai-project";
+import { commands as aiSkillsCommands } from "./bindings/ai-skills";
 import { commands as appCommands } from "./bindings/app";
 import { commands as authCommands } from "./bindings/auth";
 import { commands as fileCommands } from "./bindings/files";
@@ -39,6 +40,7 @@ const commands = {
   ...aiConventionsCommands,
   ...aiMemoryCommands,
   ...aiProjectCommands,
+  ...aiSkillsCommands,
   ...appCommands,
   ...authCommands,
   ...fileCommands,

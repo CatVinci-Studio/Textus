@@ -11,7 +11,8 @@ license: MIT
 metadata:
   textus-version: "1"
   textus-invocation: "both"
-  textus-category: "format"
+  textus-category: "create"
+  textus-modes: "create"
   textus-packs: "contract"
   textus-sources: "Our own text, from docs/dev/writing-plugins.md and docs/dev/textus.d.ts."
   textus-aliases-en: "make-plugin, extension, add-on"
