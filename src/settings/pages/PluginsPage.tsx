@@ -33,8 +33,8 @@ import { openUsageGuide } from "../../plugins/usage-guide";
  * installed: Get more (`onGetMore`) offers the catalog's plugins, "⋯"
  * installs one from a file or loads a folder; the installed plugins are
  * cards - its name, what it does, who made it (Official when it is
- * CatVinci's), its switch - that open the plugin's own page; the switch
- * for them all is under Advanced.
+ * CatVinci's), its switch - that open the plugin's own page; above them,
+ * one switch turns them all on or off.
  */
 export function PluginsPage({
   t,
@@ -143,6 +143,12 @@ export function PluginsPage({
       installed={
         snapshot.records.length ? (
           <>
+            <ToggleRow
+              label={t.pluginsAllLabel}
+              help={t.pluginsAllHelp}
+              checked={snapshot.allOn}
+              onChange={(on) => void attempt(() => setAllPlugins(on))}
+            />
             {others.map(card)}
             {mine.length > 0 && (
               <>
@@ -154,14 +160,6 @@ export function PluginsPage({
         ) : (
           <p className="plugin-empty">{t.pluginsNone}</p>
         )
-      }
-      advanced={
-        <ToggleRow
-          label={t.pluginsAllLabel}
-          help={t.pluginsAllHelp}
-          checked={snapshot.allOn}
-          onChange={(on) => void attempt(() => setAllPlugins(on))}
-        />
       }
     />
   );

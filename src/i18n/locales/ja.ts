@@ -1212,8 +1212,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   mcpServersGroup: "MCP サーバー",
   mcpHelp: `MCP サーバーは ${AI_NAME} に道具を増やします：フォルダ、データベース、検索など。オンのサーバーはバックグラウンドで起動し、${AI_NAME} は手伝う間にそのツールを呼び出せます。呼び出しはすべて会話に表示されます。`,
   mcpNone: "まだサーバーがありません。",
-  mcpAdd: "サーバーを追加…",
-  mcpPresetAdd: "追加",
+  mcpAdd: "MCP サーバーを追加",
   mcpStateOff: "オフ",
   mcpStateStarting: "起動中…",
   mcpStateReady: "準備完了 · ツール {count} 個",
@@ -1250,15 +1249,13 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   marketGetMore: "さらに入手",
   marketTitle: "さらに入手",
   marketHelp:
-    "Textus のプラグイン、テーマ、スキル、MCP サーバーをひとつの場所で。インストールの前に、何ができるかを確認します。",
-  marketAll: "すべて",
-  marketSearch: "プラグイン、テーマ、スキル、サーバーを検索",
+    "Textus のテーマ、プラグイン、スキル。インストールの前に、何ができるかを確認します。",
+  marketSearch: "検索",
   marketListYours: "自分で作りましたか？",
   marketListingRules: "掲載の方法",
   marketSkillFailed: "インストールできませんでした。",
   marketSkillInstalled: "インストール済み",
   marketSkillsNone: "掲載されたスキルはまだありません。",
-  marketMcpAllAdded: "ここにあるサーバーはすべて追加済みです。",
   pluginsCatalogKept:
     "前回の一覧を表示しています。新しい一覧を取得できませんでした：{reason}",
   pluginInstall: "インストール",
@@ -1292,7 +1289,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginEditWithAi: "AI で修正",
   pluginEditWithAiAsk: "プラグイン「{name}」（{id}）を修正：",
   pluginEditWithAiError: "次のエラーで止まりました。直してください：{error}\n",
-  pluginsAllLabel: "プラグイン",
+  pluginsAllLabel: "すべてのプラグイン",
   pluginsAllHelp:
     "オフにすると、プラグインは動作せず、追加した項目も表示されません。プラグインとその設定はそのまま残ります。",
   pluginsInstallHelp:

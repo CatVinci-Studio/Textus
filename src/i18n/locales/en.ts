@@ -1249,8 +1249,7 @@ type /name in a conversation to use one.
   mcpServersGroup: "MCP servers",
   mcpHelp: `An MCP server gives ${AI_NAME} more tools: a folder, a database, a search. Each one on is started in the background, and ${AI_NAME} may call its tools while it helps you; the conversation shows each call.`,
   mcpNone: "No server added yet.",
-  mcpAdd: "Add a server…",
-  mcpPresetAdd: "Add",
+  mcpAdd: "Add MCP server",
   mcpStateOff: "Off",
   mcpStateStarting: "Starting…",
   mcpStateReady: "Ready · {count} tools",
@@ -1287,15 +1286,13 @@ type /name in a conversation to use one.
   marketGetMore: "Get more",
   marketTitle: "Get more",
   marketHelp:
-    "Plugins, themes, skills and MCP servers for Textus, in one place. Each one asks before it is installed what it may do.",
-  marketAll: "All",
-  marketSearch: "Search plugins, themes, skills and servers",
+    "Themes, plugins and skills for Textus. Each one asks before it is installed what it may do.",
+  marketSearch: "Search",
   marketListYours: "Made one of your own?",
   marketListingRules: "How to list it",
   marketSkillFailed: "It wasn't installed.",
   marketSkillInstalled: "Installed",
   marketSkillsNone: "No skills are listed yet.",
-  marketMcpAllAdded: "You have added every server listed here.",
   pluginsCatalogKept:
     "Showing the list from last time - couldn’t get a newer one: {reason}",
   pluginInstall: "Install",
@@ -1329,7 +1326,7 @@ type /name in a conversation to use one.
   pluginEditWithAi: "Edit with AI",
   pluginEditWithAiAsk: "Change the {name} plugin ({id}): ",
   pluginEditWithAiError: "it stopped with this error - fix it: {error}\n",
-  pluginsAllLabel: "Plugins",
+  pluginsAllLabel: "All plugins",
   pluginsAllHelp:
     "Off, no plugin runs and nothing they add is shown. Your plugins and their settings stay as they are.",
   pluginsInstallHelp:

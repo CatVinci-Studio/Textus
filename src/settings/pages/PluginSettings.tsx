@@ -118,6 +118,24 @@ function PluginSettingRow({
         {reset && <div className="plugin-setting-reset">{reset}</div>}
       </>
     );
+  if (setting.multiline)
+    return (
+      <div className="plugin-setting-lines">
+        <SettingRow label={label} help={help}>
+          {reset}
+        </SettingRow>
+        <textarea
+          // A new layer's value, a new field (as below).
+          key={`${scope}:${String(value ?? "")}`}
+          className="settings-text-input plugin-setting-textarea"
+          aria-label={label}
+          rows={5}
+          defaultValue={String(value ?? "")}
+          {...VERBATIM_INPUT}
+          onBlur={(e) => save(e.target.value)}
+        />
+      </div>
+    );
   return (
     <SettingRow label={label} help={help}>
       {setting.type === "enum" ? (

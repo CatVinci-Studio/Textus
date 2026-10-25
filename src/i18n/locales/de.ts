@@ -1268,8 +1268,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   mcpServersGroup: "MCP-Server",
   mcpHelp: `Ein MCP-Server gibt ${AI_NAME} weitere Werkzeuge: einen Ordner, eine Datenbank, eine Suche. Jeder eingeschaltete Server startet im Hintergrund, und ${AI_NAME} darf seine Werkzeuge nutzen, während es dir hilft; das Gespräch zeigt jeden Aufruf.`,
   mcpNone: "Noch kein Server hinzugefügt.",
-  mcpAdd: "Server hinzufügen…",
-  mcpPresetAdd: "Hinzufügen",
+  mcpAdd: "MCP-Server hinzufügen",
   mcpStateOff: "Aus",
   mcpStateStarting: "Startet…",
   mcpStateReady: "Bereit · {count} Werkzeuge",
@@ -1306,15 +1305,13 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   marketGetMore: "Mehr holen",
   marketTitle: "Mehr holen",
   marketHelp:
-    "Plugins, Themes, Skills und MCP-Server für Textus an einem Ort. Jedes fragt vor der Installation, was es tun darf.",
-  marketAll: "Alle",
-  marketSearch: "Plugins, Themes, Skills und Server durchsuchen",
+    "Themes, Plugins und Skills für Textus. Jedes fragt vor der Installation, was es tun darf.",
+  marketSearch: "Suchen",
   marketListYours: "Selbst eins gemacht?",
   marketListingRules: "So wird es aufgenommen",
   marketSkillFailed: "Es wurde nicht installiert.",
   marketSkillInstalled: "Installiert",
   marketSkillsNone: "Noch keine Skills aufgenommen.",
-  marketMcpAllAdded: "Du hast alle hier aufgeführten Server hinzugefügt.",
   pluginsCatalogKept:
     "Die Liste vom letzten Mal - eine neuere ließ sich nicht laden: {reason}",
   pluginInstall: "Installieren",
@@ -1350,7 +1347,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginEditWithAiAsk: "Ändere das Plugin {name} ({id}): ",
   pluginEditWithAiError:
     "es ist mit diesem Fehler stehen geblieben, behebe ihn: {error}\n",
-  pluginsAllLabel: "Plugins",
+  pluginsAllLabel: "Alle Plugins",
   pluginsAllHelp:
     "Aus: Kein Plugin läuft, und nichts, was sie hinzufügen, wird angezeigt. Deine Plugins und ihre Einstellungen bleiben erhalten.",
   pluginsInstallHelp:

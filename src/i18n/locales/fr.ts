@@ -1302,8 +1302,7 @@ utiliser une.
   mcpServersGroup: "Serveurs MCP",
   mcpHelp: `Un serveur MCP donne à ${AI_NAME} d’autres outils : un dossier, une base de données, une recherche. Chaque serveur activé démarre en arrière-plan, et ${AI_NAME} peut appeler ses outils en vous aidant ; la conversation montre chaque appel.`,
   mcpNone: "Aucun serveur pour l’instant.",
-  mcpAdd: "Ajouter un serveur…",
-  mcpPresetAdd: "Ajouter",
+  mcpAdd: "Ajouter un serveur MCP",
   mcpStateOff: "Désactivé",
   mcpStateStarting: "Démarrage…",
   mcpStateReady: "Prêt · {count} outils",
@@ -1341,15 +1340,13 @@ utiliser une.
   marketGetMore: "En obtenir plus",
   marketTitle: "En obtenir plus",
   marketHelp:
-    "Les extensions, thèmes, compétences et serveurs MCP de Textus, au même endroit. Chacun demande avant d’être installé ce qu’il pourra faire.",
-  marketAll: "Tout",
-  marketSearch: "Rechercher extensions, thèmes, compétences et serveurs",
+    "Les thèmes, extensions et compétences de Textus. Chacun demande avant d’être installé ce qu’il pourra faire.",
+  marketSearch: "Rechercher",
   marketListYours: "Vous en avez créé un ?",
   marketListingRules: "Comment le proposer",
   marketSkillFailed: "Il n’a pas été installé.",
   marketSkillInstalled: "Installée",
   marketSkillsNone: "Aucune compétence n’est encore proposée.",
-  marketMcpAllAdded: "Vous avez ajouté tous les serveurs listés ici.",
   pluginsCatalogKept:
     "Voici la liste de la dernière fois - impossible d’en obtenir une plus récente : {reason}",
   pluginInstall: "Installer",
@@ -1384,7 +1381,7 @@ utiliser une.
   pluginEditWithAiAsk: "Modifie l’extension {name} ({id}) : ",
   pluginEditWithAiError:
     "elle s’est arrêtée sur cette erreur, corrige-la : {error}\n",
-  pluginsAllLabel: "Extensions",
+  pluginsAllLabel: "Toutes les extensions",
   pluginsAllHelp:
     "Désactivées, aucune extension ne s’exécute et rien de ce qu’elles ajoutent ne s’affiche. Vos extensions et leurs réglages sont conservés.",
   pluginsInstallHelp:

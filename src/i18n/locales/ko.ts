@@ -1200,8 +1200,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   mcpServersGroup: "MCP 서버",
   mcpHelp: `MCP 서버는 ${AI_NAME}에게 도구를 더해 줍니다: 폴더, 데이터베이스, 검색 등. 켜 둔 서버는 백그라운드에서 시작되고, ${AI_NAME}는 도와주는 동안 그 도구를 호출할 수 있습니다. 호출은 모두 대화에 표시됩니다.`,
   mcpNone: "아직 추가한 서버가 없습니다.",
-  mcpAdd: "서버 추가…",
-  mcpPresetAdd: "추가",
+  mcpAdd: "MCP 서버 추가",
   mcpStateOff: "꺼짐",
   mcpStateStarting: "시작하는 중…",
   mcpStateReady: "준비됨 · 도구 {count}개",
@@ -1237,15 +1236,13 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   marketGetMore: "더 받기",
   marketTitle: "더 받기",
   marketHelp:
-    "Textus의 플러그인, 테마, 스킬, MCP 서버를 한곳에서. 설치하기 전에 무엇을 할 수 있는지 묻습니다.",
-  marketAll: "전체",
-  marketSearch: "플러그인, 테마, 스킬, 서버 검색",
+    "Textus의 테마, 플러그인, 스킬. 설치하기 전에 무엇을 할 수 있는지 묻습니다.",
+  marketSearch: "검색",
   marketListYours: "직접 만들었나요?",
   marketListingRules: "등록하는 방법",
   marketSkillFailed: "설치하지 못했습니다.",
   marketSkillInstalled: "설치됨",
   marketSkillsNone: "아직 등록된 스킬이 없습니다.",
-  marketMcpAllAdded: "여기 있는 서버를 모두 추가했습니다.",
   pluginsCatalogKept:
     "지난번 목록을 보여 주고 있습니다. 새 목록을 가져오지 못했습니다: {reason}",
   pluginInstall: "설치",
@@ -1280,7 +1277,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginEditWithAi: "AI로 수정",
   pluginEditWithAiAsk: "{name} 플러그인({id}) 수정: ",
   pluginEditWithAiError: "다음 오류로 멈췄습니다. 고쳐 주세요: {error}\n",
-  pluginsAllLabel: "플러그인",
+  pluginsAllLabel: "모든 플러그인",
   pluginsAllHelp:
     "끄면 어떤 플러그인도 실행되지 않고, 플러그인이 추가한 항목도 표시되지 않습니다. 설치한 플러그인과 설정은 그대로 남습니다.",
   pluginsInstallHelp:

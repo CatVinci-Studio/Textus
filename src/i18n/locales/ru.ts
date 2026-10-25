@@ -1268,8 +1268,7 @@ export default {
   mcpServersGroup: "MCP-серверы",
   mcpHelp: `MCP-сервер даёт ${AI_NAME} больше инструментов: папку, базу данных, поиск. Каждый включённый сервер запускается в фоне, и ${AI_NAME} может вызывать его инструменты, пока помогает вам; каждый вызов виден в разговоре.`,
   mcpNone: "Серверов пока нет.",
-  mcpAdd: "Добавить сервер…",
-  mcpPresetAdd: "Добавить",
+  mcpAdd: "Добавить MCP-сервер",
   mcpStateOff: "Выключен",
   mcpStateStarting: "Запускается…",
   mcpStateReady: "Готов · инструментов: {count}",
@@ -1307,15 +1306,13 @@ export default {
   marketGetMore: "Получить ещё",
   marketTitle: "Получить ещё",
   marketHelp:
-    "Плагины, темы, навыки и MCP-серверы для Textus в одном месте. Каждый перед установкой спрашивает, что ему можно делать.",
-  marketAll: "Все",
-  marketSearch: "Поиск плагинов, тем, навыков и серверов",
+    "Темы, плагины и навыки для Textus. Каждый перед установкой спрашивает, что ему можно делать.",
+  marketSearch: "Поиск",
   marketListYours: "Сделали свой?",
   marketListingRules: "Как его добавить",
   marketSkillFailed: "Не установлено.",
   marketSkillInstalled: "Установлен",
   marketSkillsNone: "Навыков пока нет.",
-  marketMcpAllAdded: "Вы уже добавили все серверы из этого списка.",
   pluginsCatalogKept:
     "Показан список с прошлого раза - новый получить не удалось: {reason}",
   pluginInstall: "Установить",
@@ -1349,7 +1346,7 @@ export default {
   pluginEditWithAi: "Изменить с ИИ",
   pluginEditWithAiAsk: "Измени плагин «{name}» ({id}): ",
   pluginEditWithAiError: "он остановился с этой ошибкой, исправь её: {error}\n",
-  pluginsAllLabel: "Плагины",
+  pluginsAllLabel: "Все плагины",
   pluginsAllHelp:
     "Если выключено, ни один плагин не работает и ничего из добавленного ими не показывается. Плагины и их настройки сохраняются.",
   pluginsInstallHelp:

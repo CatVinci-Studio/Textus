@@ -13,11 +13,14 @@ export interface Flat {
   pos: number[];
   /** The position after the last character. */
   end: number;
+  /** The index each text block starts at, in order. */
+  starts: number[];
 }
 
 export function flatten(doc: ProseNode, from: number, to: number): Flat {
   let text = "";
   const pos: number[] = [];
+  const starts: number[] = [];
   let end = from;
   let first = true;
   doc.nodesBetween(from, to, (node, at) => {
@@ -27,6 +30,7 @@ export function flatten(doc: ProseNode, from: number, to: number): Flat {
         pos.push(end);
       }
       first = false;
+      starts.push(text.length);
       end = at + 1;
       return true;
     }
@@ -51,7 +55,7 @@ export function flatten(doc: ProseNode, from: number, to: number): Flat {
     }
     return true;
   });
-  return { text, pos, end };
+  return { text, pos, end, starts };
 }
 
 /** The index in `flat` of document position `p` (the character after it). */
@@ -125,6 +129,13 @@ export function motion(
       while (j < t.length && charClass(t[j]) === 0) j++;
       return Math.min(j, t.length);
     }
+    // An operator's w (Vim's dw, yw): to the next word, but not past the
+    // end of this line - the last word's dw doesn't join two blocks.
+    case "wordStartInLine": {
+      const j = motion(flat, i, "wordStart", arg);
+      const end = lineEndIndex(t, i);
+      return end > i && end < j ? end : j;
+    }
     case "wordEnd": {
       let j = i + 1;
       while (j < t.length && charClass(t[j]) === 0) j++;
@@ -152,15 +163,17 @@ export function motion(
     }
     case "lineEndInsert":
       return lineEndIndex(t, i);
-    case "paragraphNext": {
-      let j = lineEndIndex(t, i);
-      while (j < t.length && t[j] === "\n") j++;
-      return Math.min(lineEndIndex(t, j), t.length);
-    }
-    case "paragraphPrev": {
-      const j = lineStartIndex(t, i) - 1;
-      if (j < 0) return 0;
-      return lineStartIndex(t, j);
+    // A Markdown document has no blank lines between its paragraphs: }
+    // goes to the start of the next block, { to the start of this one (or
+    // the one before, from its start), and an operator's } to the end of
+    // this one.
+    case "paragraphNext":
+      return flat.starts.find((s) => s > i) ?? t.length;
+    case "paragraphPrev":
+      return [...flat.starts].reverse().find((s) => s < i) ?? 0;
+    case "paragraphEnd": {
+      const next = flat.starts.find((s) => s > i);
+      return next === undefined ? t.length : next - 1;
     }
     case "findChar": {
       const ch = arg.char ?? "";
@@ -180,19 +193,106 @@ export function motion(
   return i;
 }
 
-/** The line a visual move up or down lands on, keeping the column. */
+/** The text block around `p`: its first and last positions. */
+function textblockAt(doc: ProseNode, p: number): { from: number; to: number } {
+  const $p = doc.resolve(p);
+  let depth = $p.depth;
+  while (depth > 0 && !$p.node(depth).isTextblock) depth--;
+  return depth > 0
+    ? { from: $p.start(depth), to: $p.end(depth) }
+    : { from: p, to: p };
+}
+
+/** The text block after (`dir` 1) or before (-1) the one from `from` to
+ *  `to`, if there is one. */
+function textblockBeside(
+  doc: ProseNode,
+  from: number,
+  to: number,
+  dir: 1 | -1,
+): { from: number; to: number } | null {
+  let found: { from: number; to: number } | null = null;
+  const [a, b] = dir > 0 ? [to, doc.content.size] : [0, from];
+  doc.nodesBetween(a, b, (node, at) => {
+    if (dir > 0 && found) return false;
+    if (!node.isTextblock) return true;
+    const block = { from: at + 1, to: at + 1 + node.content.size };
+    if (dir > 0 ? block.from > to : block.to < from) found = block;
+    return false;
+  });
+  return found;
+}
+
+/** The first position from `lo` to `hi` (both in) whose line starts below
+ *  `y` - the positions are in one text block, their lines in order -, or
+ *  `hi + 1` if none does. */
+function firstBelow(view: EditorView, lo: number, hi: number, y: number) {
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (view.coordsAtPos(mid, 1).top > y) hi = mid - 1;
+    else lo = mid + 1;
+  }
+  return lo;
+}
+
+/** In the line from `from` (its first position) of the text block ending
+ *  at `blockEnd`, the position nearest `x`. */
+function nearestInLine(
+  view: EditorView,
+  from: number,
+  blockEnd: number,
+  x: number,
+): number {
+  const first = view.coordsAtPos(from, 1);
+  const half = Math.max(4, (first.bottom - first.top) / 2);
+  const end = firstBelow(view, from, blockEnd, first.top + half) - 1;
+  let best = from;
+  let gap = Infinity;
+  for (let p = from; p <= end; p++) {
+    const d = Math.abs(view.coordsAtPos(p, 1).left - x);
+    if (d < gap) {
+      gap = d;
+      best = p;
+    }
+  }
+  return best;
+}
+
+/** Where a move a line down (`dir` 1) or up (-1) from `head` lands,
+ *  nearest the column `x`: the next line of the paragraph as it is shown
+ *  (a long one wraps), or of a code block, else the first (last) line of
+ *  the text block after (before) it - whatever is between them, a code
+ *  block's frame, a picture, a rule. Measured from the document, not the
+ *  screen, so off-screen lines are reached too. */
 export function verticalMove(
   view: EditorView,
   head: number,
   dir: 1 | -1,
+  x: number,
 ): number {
-  const at = view.coordsAtPos(head);
-  const lineHeight = Math.max(8, at.bottom - at.top);
-  const target = view.posAtCoords({
-    left: at.left + 1,
-    top: dir > 0 ? at.bottom + lineHeight / 2 : at.top - lineHeight / 2,
-  });
-  return target ? target.pos : head;
+  const { doc } = view.state;
+  const block = textblockAt(doc, head);
+  const at = view.coordsAtPos(head, 1);
+  const half = Math.max(4, (at.bottom - at.top) / 2);
+  if (dir > 0) {
+    const next = firstBelow(view, head, block.to, at.top + half);
+    if (next <= block.to) return nearestInLine(view, next, block.to, x);
+    const after = textblockBeside(doc, block.from, block.to, 1);
+    return after ? nearestInLine(view, after.from, after.to, x) : head;
+  }
+  // Up: the line before this one in the block, else the last line of the
+  // block before.
+  const lineStart = firstBelow(view, block.from, head, at.top - half);
+  if (lineStart > block.from) {
+    const prevTop = view.coordsAtPos(lineStart - 1, 1).top;
+    const start = firstBelow(view, block.from, lineStart - 1, prevTop - half);
+    return nearestInLine(view, start, block.to, x);
+  }
+  const before = textblockBeside(doc, block.from, block.to, -1);
+  if (!before) return head;
+  const lastTop = view.coordsAtPos(before.to, -1).top;
+  const start = firstBelow(view, before.from, before.to, lastTop - half);
+  return nearestInLine(view, start, before.to, x);
 }
 
 /** Lines covering the selection's head, `count` of them: their range and

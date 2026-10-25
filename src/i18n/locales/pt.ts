@@ -1261,8 +1261,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   mcpServersGroup: "Servidores MCP",
   mcpHelp: `Um servidor MCP dá ao ${AI_NAME} mais ferramentas: uma pasta, um banco de dados, uma busca. Cada um ativado é iniciado em segundo plano, e o ${AI_NAME} pode chamar suas ferramentas enquanto ajuda você; a conversa mostra cada chamada.`,
   mcpNone: "Nenhum servidor adicionado ainda.",
-  mcpAdd: "Adicionar um servidor…",
-  mcpPresetAdd: "Adicionar",
+  mcpAdd: "Adicionar servidor MCP",
   mcpStateOff: "Desativado",
   mcpStateStarting: "Iniciando…",
   mcpStateReady: "Pronto · {count} ferramentas",
@@ -1299,15 +1298,13 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   marketGetMore: "Obter mais",
   marketTitle: "Obter mais",
   marketHelp:
-    "Plugins, temas, habilidades e servidores MCP para o Textus num só lugar. Cada um pergunta antes de ser instalado o que poderá fazer.",
-  marketAll: "Tudo",
-  marketSearch: "Pesquisar plugins, temas, habilidades e servidores",
+    "Temas, plugins e habilidades para o Textus. Cada um pergunta antes de ser instalado o que poderá fazer.",
+  marketSearch: "Pesquisar",
   marketListYours: "Criou um seu?",
   marketListingRules: "Como publicar",
   marketSkillFailed: "Não foi instalado.",
   marketSkillInstalled: "Instalada",
   marketSkillsNone: "Ainda não há habilidades publicadas.",
-  marketMcpAllAdded: "Você já adicionou todos os servidores desta lista.",
   pluginsCatalogKept:
     "Mostrando a lista da última vez - não foi possível obter uma mais recente: {reason}",
   pluginInstall: "Instalar",
@@ -1341,7 +1338,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginEditWithAi: "Editar com IA",
   pluginEditWithAiAsk: "Altere o plugin {name} ({id}): ",
   pluginEditWithAiError: "parou com este erro; corrija-o: {error}\n",
-  pluginsAllLabel: "Plugins",
+  pluginsAllLabel: "Todos os plugins",
   pluginsAllHelp:
     "Desativados, nenhum plugin é executado e nada do que adicionam é mostrado. Seus plugins e as configurações deles são mantidos.",
   pluginsInstallHelp:

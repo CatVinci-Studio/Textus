@@ -1279,8 +1279,7 @@ para usar una.
   mcpServersGroup: "Servidores MCP",
   mcpHelp: `Un servidor MCP da a ${AI_NAME} más herramientas: una carpeta, una base de datos, una búsqueda. Cada uno activado se inicia en segundo plano, y ${AI_NAME} puede usar sus herramientas mientras te ayuda; la conversación muestra cada llamada.`,
   mcpNone: "Aún no has añadido ningún servidor.",
-  mcpAdd: "Añadir un servidor…",
-  mcpPresetAdd: "Añadir",
+  mcpAdd: "Añadir servidor MCP",
   mcpStateOff: "Desactivado",
   mcpStateStarting: "Iniciando…",
   mcpStateReady: "Listo · {count} herramientas",
@@ -1318,15 +1317,13 @@ para usar una.
   marketGetMore: "Conseguir más",
   marketTitle: "Conseguir más",
   marketHelp:
-    "Complementos, temas, habilidades y servidores MCP para Textus en un solo lugar. Cada uno pregunta antes de instalarse qué podrá hacer.",
-  marketAll: "Todo",
-  marketSearch: "Buscar complementos, temas, habilidades y servidores",
+    "Temas, complementos y habilidades para Textus. Cada uno pregunta antes de instalarse qué podrá hacer.",
+  marketSearch: "Buscar",
   marketListYours: "¿Has hecho uno propio?",
   marketListingRules: "Cómo publicarlo",
   marketSkillFailed: "No se instaló.",
   marketSkillInstalled: "Instalada",
   marketSkillsNone: "Todavía no hay habilidades publicadas.",
-  marketMcpAllAdded: "Ya has añadido todos los servidores de esta lista.",
   pluginsCatalogKept:
     "Se muestra la lista de la última vez; no se pudo obtener una más reciente: {reason}",
   pluginInstall: "Instalar",
@@ -1360,7 +1357,7 @@ para usar una.
   pluginEditWithAi: "Editar con IA",
   pluginEditWithAiAsk: "Cambia el complemento {name} ({id}): ",
   pluginEditWithAiError: "se detuvo con este error; corrígelo: {error}\n",
-  pluginsAllLabel: "Complementos",
+  pluginsAllLabel: "Todos los complementos",
   pluginsAllHelp:
     "Desactivados, ningún complemento se ejecuta y no se muestra nada de lo que añaden. Tus complementos y sus ajustes se conservan.",
   pluginsInstallHelp:

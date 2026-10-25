@@ -31,23 +31,23 @@ const savedServers = (page: Page) =>
     return local.mcpServers ?? null;
   });
 
-test("Extensions has a tab each for plugins, themes, skills and MCP", async ({
+test("Extensions has a tab each for themes, plugins, skills and MCP", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
   const panel = await openExtensions(page);
   await expect(panel.getByRole("tab")).toHaveText([
-    "Plugins",
     "Themes",
+    "Plugins",
     "Skills",
     "MCP",
   ]);
-  await expect(panel.getByRole("tab", { name: "Plugins" })).toHaveAttribute(
+  await expect(panel.getByRole("tab", { name: "Themes" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
   // Every tab alike: a line of what it holds, Get more, "⋯", Installed.
-  for (const tab of ["Plugins", "Themes", "Skills", "MCP"]) {
+  for (const tab of ["Themes", "Plugins", "Skills"]) {
     await panel.getByRole("tab", { name: tab }).click();
     await expect(panel.locator(".extensions-intro")).toBeVisible();
     await expect(panel.getByRole("button", { name: "Get more" })).toBeVisible();
@@ -56,6 +56,13 @@ test("Extensions has a tab each for plugins, themes, skills and MCP", async ({
     ).toBeVisible();
     await expect(panel.locator(".settings-group-title").first()).toBeVisible();
   }
+  // MCP suggests nothing: one button adds a server.
+  await panel.getByRole("tab", { name: "MCP" }).click();
+  await expect(panel.locator(".extensions-intro")).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Get more" })).toHaveCount(0);
+  await expect(
+    panel.getByRole("button", { name: "Add MCP server" }),
+  ).toBeVisible();
   await panel.getByRole("tab", { name: "Themes" }).click();
   await expect(
     panel.getByText(
@@ -111,41 +118,29 @@ test("Textus AI's Skills row opens Extensions on its Skills tab", async ({
   );
 });
 
-test("an MCP server is added from the list, tried, saved, and shows its tools", async ({
+test("an MCP server is added, tried, saved, and shows its tools", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
   const panel = await openExtensions(page);
   await panel.getByRole("tab", { name: "MCP" }).click();
   await expect(panel.getByText("No server added yet.")).toBeVisible();
-  // The servers most people add are in Get more, on its MCP tab.
-  await panel.getByRole("button", { name: "Get more" }).click();
-  await expect(panel.getByRole("tab", { name: "MCP" })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await panel.getByRole("button", { name: "Add MCP server" }).click();
+  await panel.getByLabel("Name").fill("Context7");
   await panel
-    .locator('[data-mcp-preset="context7"]')
-    .getByRole("button", { name: "Add" })
-    .click();
-  await expect(panel.getByLabel("Command", { exact: true })).toHaveValue(
-    "npx -y @upstash/context7-mcp",
-  );
+    .getByLabel("Command", { exact: true })
+    .fill("npx -y @upstash/context7-mcp");
   await panel.getByRole("button", { name: "Try it" }).click();
   await expect(panel.locator(".mcp-tried")).toHaveText(
     "Context7 1.0: 1 tools - echo",
   );
   await panel.getByRole("button", { name: "Save" }).click();
-  const card = panel.locator('[data-mcp="context7"]');
+  const card = panel.locator(".mcp-card", { hasText: "Context7" });
   await expect(card.locator(".mcp-state")).toHaveText("Ready · 1 tools");
   await expect(card.locator(".mcp-tool")).toHaveText(["echo"]);
-  // The preset is no longer offered: it is added.
-  await panel.getByRole("button", { name: "Get more" }).click();
-  await expect(panel.locator('[data-mcp-preset="context7"]')).toHaveCount(0);
-  await panel.locator(".plugin-back").click();
   expect(await savedServers(page)).toMatchObject([
     {
-      id: "context7",
+      name: "Context7",
       enabled: true,
       command: "npx",
       args: ["-y", "@upstash/context7-mcp"],
@@ -162,8 +157,7 @@ test("a server that can't start says why, and is removed after asking", async ({
   await openApp(page, { settings: { language: "en" } });
   const panel = await openExtensions(page);
   await panel.getByRole("tab", { name: "MCP" }).click();
-  await panel.getByRole("button", { name: "More", exact: true }).click();
-  await panel.getByRole("menuitem", { name: "Add a server…" }).click();
+  await panel.getByRole("button", { name: "Add MCP server" }).click();
   await panel.getByLabel("Name").fill("Broken");
   await panel.getByLabel("Command", { exact: true }).fill("missing --flag");
   await panel.getByRole("button", { name: "Try it" }).click();
