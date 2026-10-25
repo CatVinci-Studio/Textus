@@ -16,3 +16,61 @@
 .window-menu-anchor {
   display: contents;
 }
+
+/* The menu bar (MenuBar.tsx): the menu's titles where the button would be,
+   flush to the window's left edge as the button is, each as tall as the
+   row. */
+.window-menu-bar {
+  display: flex;
+  align-self: stretch;
+  flex-shrink: 0;
+  margin-left: -12px;
+  pointer-events: auto;
+}
+
+.window-menu-bar-title {
+  padding: 0 9px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  opacity: 0.8;
+  cursor: default;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    opacity var(--dur-fast) var(--ease-standard);
+}
+
+.window-menu-bar-title:hover,
+.window-menu-bar-title[aria-expanded="true"] {
+  opacity: 1;
+  background: color-mix(in srgb, var(--editor-text) 12%, transparent);
+}
+
+/* With the titles, the document's name is centred in the room they leave
+   rather than in the window, and gives way first. */
+.window-menu-bar ~ .window-bar-title {
+  position: static;
+  transform: none;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
+  justify-content: center;
+}
+
+/* Too narrow for the titles: the ☰ is back (WindowBar renders both). */
+.window-menu-fallback {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  .window-menu-bar {
+    display: none;
+  }
+
+  .window-menu-fallback {
+    display: contents;
+  }
+}

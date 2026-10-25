@@ -248,7 +248,7 @@ impl ImageRun {
         &self,
         prompt: String,
         aspect: Aspect,
-        reference: Option<ImageAttachment>,
+        reference: Option<Reference>,
     ) -> (String, (u32, u32)) {
         let id = begin();
         make(
@@ -269,9 +269,28 @@ impl ImageRun {
         &self,
         prompt: String,
         aspect: Aspect,
+        like: &str,
     ) -> Result<(String, (u32, u32)), String> {
         self.spend()?;
-        Ok(self.start(prompt, aspect, None))
+        Ok(self.start(prompt, aspect, self.like(like)))
+    }
+
+    /// The picture `like` names, for a new one to keep its people and
+    /// style: one in the document by its src, or one proposed before by
+    /// its `textus-generated:` src. None where the service takes no
+    /// picture, for one not found, and for one still being made - not
+    /// waited for, so a picture drawn like another costs only the time to
+    /// send it.
+    pub(crate) fn like(&self, like: &str) -> Option<Reference> {
+        let like = like.trim();
+        if like.is_empty() || !self.job.api.takes_reference() {
+            return None;
+        }
+        let picture = match like.strip_prefix("textus-generated:") {
+            Some(id) => made_picture(id),
+            None => local_picture(&format!("![](<{like}>)"), self.folder.as_deref()?),
+        };
+        picture.map(Reference::Like)
     }
 
     /// One of this send's pictures, or why there are none left.
@@ -297,7 +316,7 @@ impl ImageRun {
         args: &Value,
         document: &crate::ai::doc_blocks::Document,
         proposed: &ProposedText<'_>,
-    ) -> Result<(String, Aspect, Option<ImageAttachment>), String> {
+    ) -> Result<(String, Aspect, Option<Reference>), String> {
         let text = |key: &str| args.get(key).and_then(Value::as_str).unwrap_or("").trim();
         let prompt = text("prompt");
         if prompt.is_empty() {
@@ -321,7 +340,8 @@ impl ImageRun {
                 .folder
                 .as_deref()
                 .filter(|_| self.job.api.takes_reference())
-                .and_then(|folder| local_picture(anchor, folder));
+                .and_then(|folder| local_picture(anchor, folder))
+                .map(Reference::Change);
         }
         if matches!(action, "insert_after" | "insert_before") {
             let anchor = text("anchor");
@@ -342,6 +362,9 @@ impl ImageRun {
             })?,
         };
         self.spend()?;
+        // A new picture may be drawn like an earlier one; one redone is
+        // drawn from itself.
+        let reference = reference.or_else(|| self.like(text("like")));
         Ok((prompt.to_string(), aspect, reference))
     }
 }
@@ -399,7 +422,7 @@ impl ImageRun {
 /// What the model is told about generate_image, with this request's limit.
 pub(crate) fn description(limit: usize) -> String {
     let (scheme, aspects) = (inline::PICTURE_SCHEME, Aspect::ALL.join(" "));
-    format!("Make a picture with the user's image model and propose it for the document: the user sees it in place, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked.\n\nHow many: each picture costs the user money, and this request may make at most {limit}. When the user says how many, make that many (up to {limit}); when they don't, make one, or - for a longer piece they asked to illustrate - one for each part that gains from a picture.\n\nNew text with pictures (an empty document, a new section, a piece to write and illustrate): don't call generate_image - write each picture into the text you propose with propose_edit, as a line of its own between paragraphs where it goes: `![alt]({scheme}ASPECT description)` - alt a short caption in the document's language, ASPECT one of {aspects}, then the full English description, as for `prompt`. Each picture starts being made the moment its line is written, while you go on writing; the user sees its frame there and accepts the text and its pictures together. These lines count toward the limit, and each describes a different picture.\n\nA picture for text already in the document goes insert_after the block it illustrates, named by its id as `block`; for text you proposed that the user hasn't accepted or rejected yet, quote `anchor` from that text instead. Between paragraphs, never inside a list, a table, a quote or a heading's line, and not two pictures in a row.\n\nRedoing a picture: to change or replace one already in the document, use `replace` with `block` the picture's id, and describe the new picture in full in `prompt` (what to keep, what to change); where the image model can, it is given the old picture to change. The user decides whether the old file goes once they accept. When this request also rewrites the text the picture stands in - a translation, a rewrite of its section or of the whole document - the rewrite's `text` keeps the picture's line as it is (a text edit never changes a picture), and the picture is redone here first, in the same reply: `replace` with its `block`, the new picture described in full; then the rewrite.\n\nIf the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.")
+    format!("Make a picture with the user's image model and propose it for the document: the user sees it in place, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked.\n\nHow many: each picture costs the user money, and this request may make at most {limit}. When the user says how many, make that many (up to {limit}); when they don't, make one, or - for a longer piece they asked to illustrate - one for each part that gains from a picture.\n\nNew text with pictures (an empty document, a new section, a piece to write and illustrate): don't call generate_image - write each picture into the text you propose with propose_edit, as a line of its own between paragraphs where it goes: `![alt]({scheme}ASPECT description)` - alt a short caption in the document's language, ASPECT one of {aspects}, then the full English description, as for `prompt`. Each picture starts being made the moment its line is written, while you go on writing; the user sees its frame there and accepts the text and its pictures together. These lines count toward the limit, and each describes a different picture.\n\nThe same people, the same look: when a person, an animal or a place appears in more than one picture, describe them in the same words each time - age, face, hair, build, clothes, colours - and keep one style for the whole piece. When an earlier picture shows them, name it: `like` its src (in a picture line, `like:SRC` right after ASPECT, as in `![alt]({scheme}16:9 like:assets/lin.png description)`); the image model is then given that picture to keep them as they are. Only when someone recurs - it makes the picture a little slower.\n\nA picture for text already in the document goes insert_after the block it illustrates, named by its id as `block`; for text you proposed that the user hasn't accepted or rejected yet, quote `anchor` from that text instead. Between paragraphs, never inside a list, a table, a quote or a heading's line, and not two pictures in a row.\n\nRedoing a picture: to change or replace one already in the document, use `replace` with `block` the picture's id, and describe the new picture in full in `prompt` (what to keep, what to change); where the image model can, it is given the old picture to change. The user decides whether the old file goes once they accept. When this request also rewrites the text the picture stands in - a translation, a rewrite of its section or of the whole document - the rewrite's `text` keeps the picture's line as it is (a text edit never changes a picture), and the picture is redone here first, in the same reply: `replace` with its `block`, the new picture described in full; then the rewrite.\n\nIf the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.")
 }
 
 /// What the model is told about generate_image.
@@ -435,6 +458,10 @@ pub(crate) fn spec(limit: usize) -> ToolSpec {
                 "anchor": {
                     "type": "string",
                     "description": "Only next to text proposed and not decided yet, which has no id: its last sentence, verbatim."
+                },
+                "like": {
+                    "type": "string",
+                    "description": "Only when someone or something recurs: the src of an earlier picture showing them - a picture in the document, or `textus-generated:ID` proposed before - to keep them and the style as they are there."
                 }
             },
             "required": ["prompt", "alt", "action"],

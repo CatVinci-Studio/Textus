@@ -15,16 +15,20 @@
 //!   plugins/state.json           every plugin's switch and grants, and the
 //!                                switch for all of them
 //!   plugins/<id>/                an installed plugin's files
-//!   plugin-data/<id>/storage.json  what a plugin keeps (textus.storage)
+//!   plugin-data/<id>/storage.json  what an older plugin kept, no longer read
 //!
-//! Official plugins ship with the frontend (public/plugins/official/) and
-//! have only their entry in `state.json` here. A plugin loaded from a
+//! What a plugin keeps now is store.rs's: `<config>/textus/plugins/<id>/`
+//! and a project's `.textus/plugins/<id>/`. Official plugins are installed
+//! from the catalog (catalog.rs) like any other. A plugin loaded from a
 //! folder in developer mode stays where it is: `state.json` names its path.
 
 pub mod access;
+pub mod ai_tools;
 pub mod catalog;
 pub mod install;
 pub mod state;
+pub mod store;
+pub mod workspace;
 
 use std::path::PathBuf;
 use tauri::Manager;

@@ -105,24 +105,9 @@ in the window comes from a variable a theme can set on its `:root`; the
 variables are listed in
 [docs/design/design-language.md](../design/design-language.md).
 
-## What 1.3 adds
+## Plugins
 
-- **Loading.** A plugin is a folder with a manifest: its id, name,
-  version, what it needs, and its entry script. Textus loads it in a frame
-  of its own and hands it this API, never the app's internals.
-- **Permissions.** What a plugin may do is declared in its manifest and
-  asked for on install:
-  - read the document, change it (as proposals the user accepts), or read
-    the folder;
-  - reach the network, and which hosts;
-  - run its own views.
-- **Views.** A plugin can open:
-  - a panel or a tab of its own - a web page, a PDF, a reader for Word or
-    other formats - beside the documents;
-  - a viewer for a file type the editor doesn't open.
-- **The app menu.** Commands in the window's menu. On a Mac that menu is
-  native (src-tauri/src/menu.rs), so it takes a step in Rust; for now,
-  commands reach the right-click menu and shortcuts only.
-- **The market.** One place to find themes, plugins and skills, kept in a
-  repository of its own, with written rules for what is accepted and how
-  it is reviewed.
+The plugin API built on these registries is in
+[writing-plugins.md](writing-plugins.md), typed in
+[textus.d.ts](textus.d.ts), with the manifest's
+[JSON Schema](textus-plugin.schema.json).

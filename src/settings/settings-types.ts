@@ -243,6 +243,9 @@ export interface Settings {
   /// The MCP servers Textus AI may use (Settings › Extensions › MCP),
   /// read by Rust from the settings file (src-tauri mcp/mod.rs).
   mcpServers: McpServer[];
+  /// Each plugin's settings, by plugin id (src/plugins/plugin-settings.ts);
+  /// a project's `.textus/settings.json` holds the same, over these.
+  plugins: Record<string, Record<string, unknown>>;
   /// Settings > Textus AI > Suggest your next message: after each reply,
   /// what you will probably say next, grey in the empty message box for
   /// Tab to take (ai/chat/next-message.ts). On by default.
@@ -273,6 +276,11 @@ export interface Settings {
   proxyPort: string;
   typewriterMode: boolean;
   contentWidth: ContentWidth;
+  /// Windows and Linux, where the app draws the window bar: File, Edit,
+  /// View and the rest along it (app/MenuBar.tsx) instead of behind ☰.
+  /// Off by default; on, the bar has no sidebar button (the sidebar is in
+  /// View and has its shortcut).
+  menuBarShown: boolean;
   /// Typing "*", "**", "~~", "==" or "`" puts the closing mark in at once
   /// (an empty span to type into). Off, the marks are typed by hand and a
   /// complete "**text**" still turns into bold (#136).
@@ -334,6 +342,10 @@ export interface Settings {
   enableChatHistory: boolean;
   enableClipboardHistory: boolean;
   enableDraftRecovery: boolean;
+  /** Settings › Privacy: closing a window with unsaved changes keeps them
+   *  as drafts for the next launch instead of asking (close-flow.ts). Off
+   *  by default; needs enableDraftRecovery. */
+  keepUnsavedOnClose: boolean;
   /** Settings › General › App: closing the last window leaves the process
    *  running, with a tray (menu bar) icon. Off by default, desktop only;
    *  Rust reads it (src-tauri/src/background/). */
@@ -379,6 +391,7 @@ export const DEFAULT_SETTINGS: Settings = {
   sourcesAsFootnotes: false,
   rememberAutomatically: true,
   mcpServers: [],
+  plugins: {},
   suggestNextMessage: true,
   enableEditAnimation: true,
   agentExpandToWindow: false,
@@ -389,6 +402,7 @@ export const DEFAULT_SETTINGS: Settings = {
   proxyPort: "",
   typewriterMode: false,
   contentWidth: "auto",
+  menuBarShown: false,
   autoCloseMarks: true,
   autoCloseBrackets: true,
   customCss: "",
@@ -407,5 +421,6 @@ export const DEFAULT_SETTINGS: Settings = {
   enableChatHistory: true,
   enableClipboardHistory: true,
   enableDraftRecovery: true,
+  keepUnsavedOnClose: false,
   runInBackground: false,
 };

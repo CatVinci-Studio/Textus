@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 dist-playground
+# Live-eval runs (scripts/live-eval.mjs).
+/tmp/
 *.local
 
 # Editor directories and files

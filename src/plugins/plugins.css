@@ -236,6 +236,23 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: 0 0 4px;
   font-size: var(--text-lg);
 }
+/* Get plugins: the search over the catalog, above its cards. */
+.plugin-search {
+  width: 100%;
+  box-sizing: border-box;
+  margin: var(--space-2) 0 var(--space-3);
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+.plugin-search:focus {
+  outline: none;
+  border-color: var(--ui-primary);
+}
 .plugin-page-title-row .plugin-byline {
   margin-top: var(--space-1);
 }
@@ -267,6 +284,23 @@ button.plugin-card-open:hover .plugin-card-name {
   color: var(--chrome-muted);
   font-size: var(--text-sm);
 }
+/* A plugin's recent errors (PluginErrors.tsx). */
+.plugin-errors {
+  margin: 0;
+  font-family: var(--font-mono);
+  padding: var(--space-3);
+  max-height: 200px;
+  overflow: auto;
+  font-size: var(--text-xs);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--chrome-muted);
+}
+.plugin-errors-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-3);
+}
 
 /* A web page in a tab (WebPagePane.tsx). */
 .web-page-pane {
@@ -280,34 +314,87 @@ button.plugin-card-open:hover .plugin-card-name {
 .tab-bar ~ * .web-page-pane {
   padding-top: 0;
 }
+/* The address bar: slim, quiet until used, folded to a handle. */
 .web-page-bar {
   display: flex;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  align-items: center;
+  gap: 2px;
+  height: 34px;
+  padding: 0 var(--space-2);
   border-bottom: 1px solid var(--border-color);
-  background: var(--sidebar-bg);
+  background: var(--bg);
+}
+.web-page-button {
+  width: 26px;
+  height: 26px;
 }
 .web-page-address {
   flex: 1;
   min-width: 0;
+  height: 26px;
+  margin: 0 var(--space-1);
+  padding: 0 var(--space-2);
   font: inherit;
   font-size: var(--text-sm);
-  padding: var(--space-1) var(--space-2);
-  color: var(--editor-text);
-  background: var(--bg);
-  border: 1px solid var(--border-color);
+  color: var(--editor-muted);
+  text-overflow: ellipsis;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-control);
 }
-.web-page-hint {
-  margin: 0;
-  padding: var(--space-1) var(--space-3);
-  color: var(--chrome-muted);
-  font-size: var(--text-xs);
+.web-page-address:hover {
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+.web-page-address:focus {
+  outline: none;
+  color: var(--editor-text);
+  background: var(--bg);
+  border-color: var(--ui-primary);
+}
+.web-page-chevron-up {
+  transform: rotate(-90deg);
+}
+.web-page-chevron-down {
+  transform: rotate(90deg);
+}
+.web-page-bar-folded {
+  justify-content: center;
+  height: 10px;
+  padding: 0;
+  border-bottom: 0;
+}
+.web-page-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 0 0 var(--radius-small) var(--radius-small);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: var(--editor-muted);
+  opacity: 0.6;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.web-page-handle:hover {
+  opacity: 1;
+}
+.web-page-handle svg {
+  width: 8px;
+  height: 8px;
 }
 .web-page-frame {
   flex: 1;
   width: 100%;
   border: 0;
+  background: var(--bg);
+}
+/* Where the native page (useNativeWebPage) is laid: its size and place
+   are the page's. */
+.web-page-native {
+  flex: 1;
+  min-height: 0;
   background: var(--bg);
 }
 
@@ -369,6 +456,58 @@ button.plugin-card-open:hover .plugin-card-name {
 /* Settings › Extensions: its tabs over the page. */
 .extensions-tabs {
   margin: 0 0 var(--space-3);
+}
+
+/* Every Extensions tab (ExtensionsTabLayout.tsx): a line of what it holds
+   with Get more and "…" on the right, the installed items, Advanced. */
+.extensions-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+.extensions-intro {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: 0;
+  color: var(--chrome-muted);
+  font-size: var(--text-sm);
+}
+.extensions-head-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-2);
+}
+.extensions-get-more {
+  border-color: var(--ui-primary);
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+}
+.extensions-more {
+  position: relative;
+}
+.extensions-more-button {
+  min-width: 32px;
+  letter-spacing: 1px;
+}
+.extensions-more-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 4px;
+  transform-origin: top right;
+  animation: motion-pop-in var(--dur-base) var(--ease-out);
+}
+.extensions-advanced {
+  margin-top: var(--space-4);
 }
 
 /* An MCP server's card: where it runs, how it is doing, its tools. */

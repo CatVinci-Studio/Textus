@@ -3,9 +3,9 @@ import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
 import type { MenuChecks } from "../../app/app-menu-model";
 import type { Settings, useSettings } from "../SettingsContext";
 
-/** A page's own page within its category (General › About Textus, Editor
- *  & Appearance › More themes › Browse themes). */
-export type Subpage = "about" | "themes" | "gallery";
+/** A page's own page within its category (General › About Textus; on the
+ *  phone, Editor & Appearance › More themes). */
+export type Subpage = "about" | "themes";
 
 /**
  * What every Settings page is given (settings-pages.tsx): the settings and
@@ -41,4 +41,7 @@ export interface SettingsPageProps {
   viewChecks: Pick<MenuChecks, "sourceMode" | "zen">;
   /** The shortcuts that can't be changed (app/fixed-shortcuts.ts). */
   fixedShortcuts: FixedShortcutGroup[];
+  /** Rendered for the settings search to read, not to be shown: a page
+   *  with tabs leaves them out, as the search reads each on its own. */
+  indexing?: boolean;
 }

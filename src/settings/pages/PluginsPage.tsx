@@ -1,13 +1,11 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { SettingsPageProps } from "./types";
-import { SettingsGroup } from "./SettingsGroup";
-import { Byline, PluginPage, statusText, type Attempt } from "./PluginPage";
-import { SettingRow, ToggleRow } from "../sections/controls";
-import { showConfirm, showMessage } from "../../ui/app-dialog";
+import { Byline, PluginPage, statusText } from "./PluginPage";
+import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
+import { askForRequirements, usePluginInstall } from "./usePluginInstall";
+import { ToggleRow } from "../sections/controls";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { isDesktopApp } from "../../platform/capabilities";
-import { useSettings } from "../SettingsContext";
-import { errorText } from "../../utils/error-text";
 import type { Strings } from "../../i18n/strings";
 import {
   installPlugin,
@@ -22,47 +20,34 @@ import {
 } from "../../plugins/manager";
 import {
   catalogSnapshot,
-  installFromCatalog,
   loadCatalog,
-  notInstalled,
   subscribeCatalog,
   updateFor,
-  type CatalogItem,
 } from "../../plugins/catalog";
-import {
-  requirementLabel,
-  requirementMet,
-  turnOnRequirement,
-} from "../../plugins/requirements";
 import { canSwitch } from "../../plugins/lifecycle";
+import { openUsageGuide } from "../../plugins/usage-guide";
 
 /**
- * Settings › Extensions › Plugins (docs/design/plugins.md §6). Nothing comes installed:
- * the installed plugins, each a card - its name, what it does, who made it
- * (Official when it is CatVinci's), its switch - that opens the plugin's
- * own page; then the plugins the catalog offers, to install; then
- * installing from a file and the switch for them all.
+ * Settings › Extensions › Plugins (docs/design/plugins.md §6). Nothing comes
+ * installed: Get more (`onGetMore`) offers the catalog's plugins, "⋯"
+ * installs one from a file or loads a folder; the installed plugins are
+ * cards - its name, what it does, who made it (Official when it is
+ * CatVinci's), its switch - that open the plugin's own page; the switch
+ * for them all is under Advanced.
  */
-export function PluginsPage({ t }: SettingsPageProps) {
+export function PluginsPage({
+  t,
+  onClose,
+  onGetMore,
+}: SettingsPageProps & { onGetMore: () => void }) {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
-  const { settings, setSettings } = useSettings();
+  const { installing, install, attempt, settings, setSettings } =
+    usePluginInstall(t);
   const [open, setOpen] = useState<string | null>(null);
-  const [installing, setInstalling] = useState<string | null>(null);
   useEffect(() => {
     void loadCatalog();
   }, []);
-
-  const attempt: Attempt = async (work) => {
-    try {
-      await work();
-    } catch (err) {
-      void showMessage(errorText(err), {
-        title: t.pluginsTitle,
-        tone: "error",
-      });
-    }
-  };
 
   /** Turns a plugin on, then offers to turn on what it needs. */
   const enable = (record: PluginRecord, on: boolean) =>
@@ -71,22 +56,16 @@ export function PluginsPage({ t }: SettingsPageProps) {
       if (on) await askForRequirements(record.id, t, settings, setSettings);
     });
 
-  const install = (item: CatalogItem) =>
-    attempt(async () => {
-      setInstalling(item.id);
-      try {
-        await installFromCatalog(item.id);
-        await askForRequirements(item.id, t, settings, setSettings);
-      } finally {
-        setInstalling(null);
-      }
-    });
-
   const installFile = (folder: boolean) =>
     attempt(async () => {
       const path = await pluginsIpc.pickPackage(folder, t.pluginPackageFilter);
       if (!path) return;
-      setOpen(await (folder ? loadDevPlugin(path) : installPlugin(path)));
+      if (folder) return setOpen(await loadDevPlugin(path));
+      const id = await installPlugin(path);
+      // Installed, it shows how it is used, as from Get more; without a
+      // guide, its page.
+      if (await openUsageGuide(id)) onClose();
+      else setOpen(id);
     });
 
   const openRecord = open
@@ -101,6 +80,11 @@ export function PluginsPage({ t }: SettingsPageProps) {
         update={updateFor(openRecord.id, catalog)}
         installing={installing === openRecord.id}
         onBack={() => setOpen(null)}
+        onGuide={() =>
+          void openUsageGuide(openRecord.id).then((opened) => {
+            if (opened) onClose();
+          })
+        }
         onEnable={(on) => void enable(openRecord, on)}
         onUpdate={() => {
           const item =
@@ -113,11 +97,29 @@ export function PluginsPage({ t }: SettingsPageProps) {
       />
     );
 
-  const offered = notInstalled(catalog);
   return (
-    <>
-      <SettingsGroup title={t.pluginsInstalledGroup}>
-        {snapshot.records.length ? (
+    <ExtensionsTabLayout
+      t={t}
+      intro={t.extensionsIntroPlugins}
+      help={t.pluginsInstallHelp}
+      onGetMore={onGetMore}
+      actions={
+        isDesktopApp
+          ? [
+              {
+                label: t.pluginsInstallFile,
+                onSelect: () => void installFile(false),
+              },
+              {
+                label: t.pluginsLoadFolder,
+                onSelect: () => void installFile(true),
+              },
+            ]
+          : []
+      }
+      installedTitle={t.pluginsInstalledGroup}
+      installed={
+        snapshot.records.length ? (
           snapshot.records.map((record) => (
             <PluginCard
               key={record.id}
@@ -131,91 +133,18 @@ export function PluginsPage({ t }: SettingsPageProps) {
           ))
         ) : (
           <p className="plugin-empty">{t.pluginsNone}</p>
-        )}
-      </SettingsGroup>
-      <SettingsGroup title={t.pluginsGetGroup}>
-        <p className="plugin-group-help">{t.pluginsGetHelp}</p>
-        {catalog.status === "failed" ? (
-          <div className="settings-row plugin-catalog-problem">
-            <div className="settings-row-text">
-              <div className="settings-error">
-                {t.pluginsCatalogFailed.replace("{reason}", catalog.error)}
-              </div>
-            </div>
-            <div className="settings-row-control">
-              <button type="button" onClick={() => void loadCatalog(true)}>
-                {t.pluginsCatalogRetry}
-              </button>
-            </div>
-          </div>
-        ) : catalog.status !== "ready" ? (
-          <p className="plugin-empty">{t.pluginsCatalogLoading}</p>
-        ) : offered.length ? (
-          offered.map((item) => (
-            <CatalogCard
-              key={item.id}
-              item={item}
-              t={t}
-              installing={installing === item.id}
-              onInstall={() => void install(item)}
-            />
-          ))
-        ) : (
-          <p className="plugin-empty">{t.pluginsCatalogAllInstalled}</p>
-        )}
-      </SettingsGroup>
-      <SettingsGroup title={t.pluginsTitle}>
+        )
+      }
+      advanced={
         <ToggleRow
           label={t.pluginsAllLabel}
           help={t.pluginsAllHelp}
           checked={snapshot.allOn}
           onChange={(on) => void attempt(() => setAllPlugins(on))}
         />
-        {isDesktopApp && (
-          <SettingRow label={t.pluginsInstallLabel} help={t.pluginsInstallHelp}>
-            <div className="plugin-install-buttons">
-              <button type="button" onClick={() => void installFile(false)}>
-                {t.pluginsInstallFile}
-              </button>
-              <button type="button" onClick={() => void installFile(true)}>
-                {t.pluginsLoadFolder}
-              </button>
-            </div>
-          </SettingRow>
-        )}
-      </SettingsGroup>
-    </>
+      }
+    />
   );
-}
-
-/** What a plugin needs that is off: asked to turn each on, once, in the
- *  plugin's words. */
-async function askForRequirements(
-  id: string,
-  t: Strings,
-  settings: ReturnType<typeof useSettings>["settings"],
-  setSettings: ReturnType<typeof useSettings>["setSettings"],
-) {
-  const record = pluginsSnapshot().records.find((r) => r.id === id);
-  if (!record?.manifest || record.status !== "on") return;
-  for (const need of record.manifest.requires) {
-    if (requirementMet(need, settings)) continue;
-    const ok = await showConfirm(
-      t.pluginRequiresAsk
-        .replace("{name}", pluginName(record))
-        .replace("{setting}", requirementLabel(need, t))
-        .replace(
-          "{reason}",
-          need.reason ? pluginText(record, need.reason) : "",
-        ),
-      {
-        title: pluginName(record),
-        okLabel: t.pluginRequiresTurnOn,
-        cancelLabel: t.pluginRequiresLater,
-      },
-    );
-    if (ok) setSettings(turnOnRequirement(need));
-  }
 }
 
 /** An installed plugin: opens its page; the switch turns it on or off. */
@@ -274,44 +203,6 @@ function PluginCard({
         checked={record.status === "on"}
         onChange={(e) => onEnable(e.target.checked)}
       />
-    </div>
-  );
-}
-
-/** A plugin the catalog offers, with Install. */
-function CatalogCard({
-  item,
-  t,
-  installing,
-  onInstall,
-}: {
-  item: CatalogItem;
-  t: Strings;
-  installing: boolean;
-  onInstall: () => void;
-}) {
-  const record = { manifest: item.manifest };
-  return (
-    <div className="settings-row plugin-card" data-catalog={item.id}>
-      <div className="plugin-card-open">
-        <span className="settings-row-label plugin-card-name">
-          {pluginName({ id: item.id, manifest: item.manifest })}
-        </span>
-        <span className="settings-row-hint plugin-card-description">
-          {pluginText(record, item.manifest.description)}
-        </span>
-        <Byline manifest={item.manifest} official={item.official} t={t} />
-      </div>
-      <div className="settings-row-control">
-        <button
-          type="button"
-          className="plugin-install"
-          disabled={installing}
-          onClick={onInstall}
-        >
-          {installing ? t.pluginInstalling : t.pluginInstall}
-        </button>
-      </div>
     </div>
   );
 }

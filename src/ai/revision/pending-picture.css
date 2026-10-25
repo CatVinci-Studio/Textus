@@ -130,6 +130,49 @@
   color: var(--editor-accent);
 }
 
+/* A made picture, Redraw… over its corner while the pointer is on it. */
+.pending-picture-made {
+  position: relative;
+  display: block;
+}
+
+.pending-picture-made > img {
+  display: block;
+}
+
+.pending-picture-redraw {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 12px;
+  border: 1px solid var(--editor-border);
+  border-radius: var(--radius-pill);
+  background: var(--editor-bg, var(--bg));
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.pending-picture-made:hover .pending-picture-redraw,
+.pending-picture-redraw:focus-visible {
+  opacity: 1;
+}
+
+.pending-picture-redraw:hover {
+  border-color: var(--editor-accent);
+  color: var(--editor-accent);
+}
+
+/* No hover on a touch screen: the button stays. */
+@media (hover: none) {
+  .pending-picture-redraw {
+    opacity: 1;
+  }
+}
+
 /* The chat's proposal card shows it small, as .agent-proposal-picture. */
 /* In the picture's own shape (its aspect-ratio set inline), as tall as the
    picture will be on the card: a fixed 160x120 made every picture 4:3

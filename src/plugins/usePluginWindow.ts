@@ -1,4 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
+import { watchDevPlugins } from "./dev-reload";
+import { watchPluginAiTools } from "./ai-tools";
+import { setCompletionAsker } from "./completion-sources";
 import { makeBlankTab, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
@@ -11,9 +14,12 @@ import {
   type PluginTabView,
 } from "./app-bridge";
 import {
+  askPlugin,
   configurePlugins,
   loadPlugins,
   pluginsSnapshot,
+  runPluginAiTool,
+  setPluginProject,
   subscribePlugins,
   type PluginsSnapshot,
 } from "./manager";
@@ -70,9 +76,20 @@ export function usePluginWindow({
     };
     setWindowAccess({
       rootPath: () => rootRef.current,
-      openFile: (path, heading) =>
-        void openRef.current(path, heading ? { anchor: heading } : {}),
-      openUntitled: (content) => addTab({ content, savedContent: "" }),
+      openFile: (path, { heading, asDocument }) =>
+        void openRef.current(path, {
+          ...(heading ? { anchor: heading } : {}),
+          ...(asDocument ? { asDocument } : {}),
+        }),
+      openUntitled: (content, title) =>
+        addTab({ content, savedContent: "", draftTitle: title }),
+      openGuide: (content, title) => {
+        const open = tabsRef.current.find(
+          (tab) => !tab.path && tab.content === content,
+        );
+        if (open) setActiveTabId(open.id);
+        else addTab({ content, savedContent: content, draftTitle: title });
+      },
       openPluginTab: (view: PluginTabView) => {
         // A view already open in a tab comes to the front.
         const open = tabsRef.current.find(
@@ -88,20 +105,6 @@ export function usePluginWindow({
     return () => setWindowAccess(null);
   }, [rootRef, openRef, tabsRef, setTabs, setActiveTabId]);
 
-  // A file a plugin shows (a Word file in the Word reader), opened to be
-  // edited as a document of ours instead.
-  useEffect(
-    () =>
-      registerCommand({
-        id: "textus.openAsDocument",
-        title: (t) => t.menuOpenFile,
-        run: (path) => {
-          if (typeof path === "string")
-            void openRef.current(path, { asDocument: true });
-        },
-      }),
-    [openRef],
-  );
   // File › Save, for a plugin that has its own key for it (Emacs's C-x
   // C-s).
   useEffect(
@@ -114,7 +117,27 @@ export function usePluginWindow({
     [saveRef],
   );
 
-  useEffect(() => emitPluginEvent("root", { path: rootPath }), [rootPath]);
+  // A plugin a developer loaded from a folder, loaded again as it changes.
+  useEffect(() => watchDevPlugins(), []);
+  // Tools the plugins give Textus AI, told to Rust and run when called.
+  useEffect(() => watchPluginAiTools(runPluginAiTool), []);
+  // The completions plugins suggest as you type (completion-sources.ts).
+  useEffect(() => {
+    setCompletionAsker((id, source, context) =>
+      askPlugin(
+        id,
+        "$provideCompletions",
+        { id: source, ...context },
+        "document.read",
+      ),
+    );
+    return () => setCompletionAsker(null);
+  }, []);
+  useEffect(() => {
+    emitPluginEvent("root", { path: rootPath });
+    // The folder's own plugin settings, over the general ones.
+    void setPluginProject(rootPath);
+  }, [rootPath]);
   useEffect(
     () => emitPluginEvent("activeDocument", { path: activePath }),
     [activePath],

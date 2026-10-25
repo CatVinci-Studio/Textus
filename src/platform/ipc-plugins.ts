@@ -21,6 +21,7 @@ export type PluginCatalogEntry = Generated.CatalogEntry_Serialize;
 export type { InstalledPlugin } from "./bindings/plugins";
 export type PluginFsEntry = Generated.FsEntry_Serialize;
 export type PluginHttpResponse = Generated.HttpResponse;
+export type StoreScope = Generated.StoreScope;
 
 /** A raw IPC response's bytes (tauri::ipc::Response) - which specta has no
  *  type for, so the commands answering one go through `call`. */
@@ -57,10 +58,19 @@ export const plugins = {
   install: (path: string) => command("plugin_install", path),
   loadDev: (path: string) => command("plugin_load_dev", path),
   uninstall: (id: string) => command("plugin_uninstall", id),
-  /** The plugins Textus offers (textus-plugins' catalog), fetched now. */
+  /** The plugins Textus offers (textus-plugins' catalog), fetched now
+   *  and kept for next time. */
   catalog: () => command("plugin_catalog"),
+  /** The catalog as last fetched, if one was kept. */
+  cachedCatalog: () => command("plugin_catalog_cached"),
   /** Downloads one from the catalog, checks it and installs it. */
   installFromCatalog: (id: string) => command("plugin_install_catalog", id),
+  /** The skills the catalog last read lists (catalog.rs's SkillEntry). */
+  skillCatalog: () => command("skill_catalog"),
+  /** Downloads a skill from the catalog into the global skills/ folder;
+   *  SKILL_EXISTS when one of that name is there already. */
+  installSkillFromCatalog: (name: string) =>
+    command("skill_install_catalog", name),
   /** Install from file… (`folder` false) and Load a plugin folder…'s
    *  picker. Desktop only. */
   pickPackage: (folder: boolean, filterName: string) =>
@@ -73,6 +83,11 @@ export const plugins = {
     bytes(call<ArrayBuffer>("plugin_fs_read", { id, root, path })),
   fsList: (id: string, root: string, path: string) =>
     command("plugin_fs_list", id, root, path),
+  /** The folder's Markdown documents with their text, in one call. */
+  fsDocuments: (id: string, root: string) =>
+    command("plugin_fs_documents", id, root),
+  fsSearch: (id: string, root: string, query: string, limit: number | null) =>
+    command("plugin_fs_search", id, root, query, limit),
   fsRename: (id: string, root: string, from: string, to: string) =>
     command("plugin_fs_rename", id, root, from, to),
   /** To the system Trash: nothing a plugin removes is gone for good. */
@@ -97,9 +112,51 @@ export const plugins = {
       bodyBase64?: boolean;
     },
   ) => command("plugin_http", id, request),
-  /** A plugin's storage is its own JSON, opaque to Rust. */
-  storageGet: (id: string) =>
-    command("plugin_storage_get", id) as Promise<Record<string, unknown>>,
-  storageSet: (id: string, key: string, value: unknown) =>
-    command("plugin_storage_set", id, key, value as Generated.Value),
+  // A plugin's two places (plugins/store.rs): `root` is the open folder,
+  // for the project's.
+  storeGet: (id: string, scope: StoreScope, root: string | null, key: string) =>
+    command("plugin_store_get", id, scope, root, key) as Promise<unknown>,
+  storeSet: (
+    id: string,
+    scope: StoreScope,
+    root: string | null,
+    key: string,
+    value: unknown,
+  ) =>
+    command("plugin_store_set", id, scope, root, key, value as Generated.Value),
+  storeKeys: (id: string, scope: StoreScope, root: string | null) =>
+    command("plugin_store_keys", id, scope, root),
+  storeRead: (
+    id: string,
+    scope: StoreScope,
+    root: string | null,
+    path: string,
+  ) => command("plugin_store_read", id, scope, root, path),
+  storeWrite: (
+    id: string,
+    scope: StoreScope,
+    root: string | null,
+    path: string,
+    text: string,
+  ) => command("plugin_store_write", id, scope, root, path, text),
+  storeFiles: (id: string, scope: StoreScope, root: string | null) =>
+    command("plugin_store_files", id, scope, root),
+  storeDelete: (
+    id: string,
+    scope: StoreScope,
+    root: string | null,
+    path: string,
+  ) => command("plugin_store_delete", id, scope, root, path),
+  /** When a developer's plugin folder last changed (ms), or null. */
+  devStamp: (id: string) => command("plugin_dev_stamp", id),
+  /** The tools this window's plugins give Textus AI (plugins/ai_tools.rs). */
+  aiToolsSet: (tools: Generated.PluginAiTool[]) =>
+    command("plugin_ai_tools_set", tools),
+  aiToolResult: (callId: string, text: string | null, error: string | null) =>
+    command("plugin_ai_tool_result", callId, text, error),
+  /** What a plugin keeps globally and in `root`'s project, in bytes. */
+  storeUsage: (id: string, root: string | null) =>
+    command("plugin_store_usage", id, root),
+  storeClear: (id: string, scope: StoreScope, root: string | null) =>
+    command("plugin_store_clear", id, scope, root),
 };

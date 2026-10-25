@@ -152,6 +152,16 @@ export const commands = {
 	take_draft_snapshots: () => __TAURI_INVOKE<DraftSnapshot_Serialize[]>("take_draft_snapshots"),
 	clear_draft_snapshot: (tabId: string) => __TAURI_INVOKE<null>("clear_draft_snapshot", { tabId }),
 	clear_all_drafts: () => __TAURI_INVOKE<null>("clear_all_drafts"),
+	/**
+	 *  What is kept of `part` for the document at `path`, as the JSON it was
+	 *  written as - none when nothing is.
+	 */
+	own_notes_read: (path: string, part: OwnPart) => __TAURI_INVOKE<string | null>("own_notes_read", { path, part }),
+	/**
+	 *  Keeps `value` (JSON: a list of notes, or the revisions' object) as
+	 *  `part` for the document at `path`; an empty one removes its file.
+	 */
+	own_notes_write: (path: string, part: OwnPart, value: string) => __TAURI_INVOKE<null>("own_notes_write", { path, part, value }),
 	/**  The live settings, for a window to correct its boot snapshot with. */
 	settings_get: () => __TAURI_INVOKE<Snapshot>("settings_get"),
 	/**
@@ -196,6 +206,11 @@ export const commands = {
 	/**  How many older conversations sit in the chat history's trash. */
 	chat_history_archived: () => __TAURI_INVOKE<number>("chat_history_archived"),
 	/**
+	 *  The saved conversations with every word of `query` in a message or a
+	 *  reply, newest first (the history list's search).
+	 */
+	chat_history_search: (query: string) => __TAURI_INVOKE<Value[]>("chat_history_search", { query }),
+	/**
 	 *  A document Textus saved under a new path (Save As, a rename): its
 	 *  conversations follow it, and every window lists them again.
 	 */
@@ -214,6 +229,12 @@ export type DirEntryInfo_Deserialize = {
 	 *  None where the system doesn't say.
 	 */
 	modified_ms?: number | null,
+	/**
+	 *  Hidden: a name starting with a dot, or, on Windows, a file marked
+	 *  hidden or system (desktop.ini). The tree leaves it out unless the
+	 *  user shows hidden files (#357).
+	 */
+	hidden: boolean,
 };
 
 export type DirEntryInfo_Serialize = {
@@ -225,6 +246,12 @@ export type DirEntryInfo_Serialize = {
 	 *  None where the system doesn't say.
 	 */
 	modified_ms: number | null,
+	/**
+	 *  Hidden: a name starting with a dot, or, on Windows, a file marked
+	 *  hidden or system (desktop.ini). The tree leaves it out unless the
+	 *  user shows hidden files (#357).
+	 */
+	hidden: boolean,
 };
 
 export type DraftSnapshot = DraftSnapshot_Serialize | DraftSnapshot_Deserialize;
@@ -288,6 +315,12 @@ export type IndexedFile = {
 	/**  From the indexed folder, `/`-separated, to show where it is. */
 	rel: string,
 };
+
+/**
+ *  What is kept for a document: its own notes (a list), or its tracked
+ *  changes (an object: the text they are measured from, useOwnRevisions).
+ */
+export type OwnPart = "notes" | "revisions";
 
 export type SavedImage = {
 	/**

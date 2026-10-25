@@ -46,8 +46,28 @@ export const commands = {
 	 *  `folder`, Load a plugin folder….
 	 */
 	plugin_pick_package: (folder: boolean, filterName: string) => __TAURI_INVOKE<string | null>("plugin_pick_package", { folder, filterName }),
-	/**  The catalog, fetched now. */
+	/**
+	 *  The catalog, fetched now - and kept for the next time
+	 *  (plugin_catalog_cached).
+	 */
 	plugin_catalog: () => __TAURI_INVOKE<CatalogEntry_Serialize[]>("plugin_catalog"),
+	/**
+	 *  The catalog as last fetched, if one was kept - shown while a fresh one
+	 *  is fetched. Installing from it works as from a fresh one: a version's
+	 *  package never changes, so its checksum still holds.
+	 */
+	plugin_catalog_cached: () => __TAURI_INVOKE<CatalogEntry_Serialize[] | null>("plugin_catalog_cached"),
+	/**
+	 *  The skills the catalog last fetched (or kept) lists - after
+	 *  plugin_catalog or plugin_catalog_cached has read it.
+	 */
+	skill_catalog: () => __TAURI_INVOKE<SkillEntry_Serialize[]>("skill_catalog"),
+	/**
+	 *  Installs skill `name` from the catalog last fetched: downloads its
+	 *  file, checks it, and puts it in the global config folder's skills/,
+	 *  where it is in the `/` menu of every document. Its path.
+	 */
+	skill_install_catalog: (name: string) => __TAURI_INVOKE<string>("skill_install_catalog", { name }),
 	/**
 	 *  Installs `id` from the catalog last fetched: downloads its package,
 	 *  checks it, and installs it as a package from a file is - marked
@@ -56,6 +76,17 @@ export const commands = {
 	plugin_install_catalog: (id: string) => __TAURI_INVOKE<InstalledPlugin>("plugin_install_catalog", { id }),
 	/**  A folder's entries, hidden ones left out. */
 	plugin_fs_list: (id: string, root: string, path: string) => __TAURI_INVOKE<FsEntry_Serialize[]>("plugin_fs_list", { id, root, path }),
+	/**
+	 *  Every Markdown document in the folder, in the sidebar's order, with
+	 *  its text.
+	 */
+	plugin_fs_documents: (id: string, root: string) => __TAURI_INVOKE<WorkspaceDocuments>("plugin_fs_documents", { id, root }),
+	/**
+	 *  The folder's documents' lines holding `query`, ignoring case, in the
+	 *  sidebar's order: at most `limit` of them (and never more than
+	 *  MAX_SEARCH_HITS).
+	 */
+	plugin_fs_search: (id: string, root: string, query: string, limit: number | null) => __TAURI_INVOKE<SearchResult>("plugin_fs_search", { id, root, query, limit }),
 	/**
 	 *  Writes a file in the folder, making the folders it is in. `contents` is
 	 *  text, or base64 with `base64`.
@@ -74,10 +105,43 @@ export const commands = {
 	/**  Makes a folder (and the folders it is in) in the folder. */
 	plugin_fs_mkdir: (id: string, root: string, path: string) => __TAURI_INVOKE<null>("plugin_fs_mkdir", { id, root, path }),
 	plugin_http: (id: string, request: HttpRequest_Deserialize) => __TAURI_INVOKE<HttpResponse>("plugin_http", { id, request }),
-	/**  Everything the plugin keeps, as one object. */
-	plugin_storage_get: (id: string) => __TAURI_INVOKE<{ [key in string]: Value }>("plugin_storage_get", { id }),
+	/**
+	 *  When a developer's plugin folder last changed: the newest file's time,
+	 *  in ms - the window loads the plugin again when it moves (folders such
+	 *  as node_modules and .git aside). None for a plugin not loaded from one.
+	 */
+	plugin_dev_stamp: (id: string) => __TAURI_INVOKE<number | null>("plugin_dev_stamp", { id }),
+	/**
+	 *  The tools a window's plugins offer now; none when it closes or its
+	 *  plugins are off.
+	 */
+	plugin_ai_tools_set: (tools: PluginAiTool[]) => __TAURI_INVOKE<void>("plugin_ai_tools_set", { tools }),
+	/**  What a plugin's tool answered (`text`), or why it couldn't (`error`). */
+	plugin_ai_tool_result: (callId: string, text: string | null, error: string | null) => __TAURI_INVOKE<void>("plugin_ai_tool_result", { callId, text, error }),
+	/**  What the plugin kept under `key`, or null. */
+	plugin_store_get: (id: string, scope: StoreScope, root: string | null, key: string) => __TAURI_INVOKE<Value | null>("plugin_store_get", { id, scope, root, key }),
 	/**  Keeps `value` under `key`; null takes the key away. */
-	plugin_storage_set: (id: string, key: string, value: Value) => __TAURI_INVOKE<null>("plugin_storage_set", { id, key, value }),
+	plugin_store_set: (id: string, scope: StoreScope, root: string | null, key: string, value: Value) => __TAURI_INVOKE<null>("plugin_store_set", { id, scope, root, key, value }),
+	/**  Every key the plugin keeps there, in order. */
+	plugin_store_keys: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<string[]>("plugin_store_keys", { id, scope, root }),
+	/**  One of the plugin's own files there, as text. */
+	plugin_store_read: (id: string, scope: StoreScope, root: string | null, path: string) => __TAURI_INVOKE<string>("plugin_store_read", { id, scope, root, path }),
+	/**  Writes one of the plugin's own files there. */
+	plugin_store_write: (id: string, scope: StoreScope, root: string | null, path: string, text: string) => __TAURI_INVOKE<null>("plugin_store_write", { id, scope, root, path, text }),
+	/**  The plugin's own files there, as paths under its `files/`. */
+	plugin_store_files: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<string[]>("plugin_store_files", { id, scope, root }),
+	/**  Deletes one of the plugin's own files there. */
+	plugin_store_delete: (id: string, scope: StoreScope, root: string | null, path: string) => __TAURI_INVOKE<null>("plugin_store_delete", { id, scope, root, path }),
+	/**
+	 *  How much a plugin keeps in each place - Settings shows it, and empties
+	 *  it on Clear data. `root` is the open folder, for the project's.
+	 */
+	plugin_store_usage: (id: string, root: string | null) => __TAURI_INVOKE<[number, number]>("plugin_store_usage", { id, root }),
+	/**
+	 *  Empties one of a plugin's places (Settings › its page › Clear data).
+	 *  Asked by the user, not the plugin: it may be off.
+	 */
+	plugin_store_clear: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<null>("plugin_store_clear", { id, scope, root }),
 	/**
 	 *  The commands the plugins that are on put in the Plugins menu (the
 	 *  frontend's, src/plugins/usePluginMenu.ts), refilled when they change.
@@ -199,6 +263,16 @@ export type McpTool = {
 	inputSchema: Value,
 };
 
+/**  One tool, as the window describes it from the plugin's manifest. */
+export type PluginAiTool = {
+	plugin: string,
+	/**  The plugin's name for it. */
+	name: string,
+	description: string,
+	/**  A JSON schema of its arguments. */
+	parameters: Value,
+};
+
 export type PluginEntry = PluginEntry_Serialize | PluginEntry_Deserialize;
 
 export type PluginEntry_Deserialize = {
@@ -253,6 +327,21 @@ export type PluginsState_Serialize = {
 	plugins: { [key in string]: PluginEntry_Serialize },
 };
 
+/**  A line that holds what was searched for. */
+export type SearchHit = {
+	path: string,
+	rel: string,
+	/**  1-based. */
+	line: number,
+	text: string,
+};
+
+export type SearchResult = {
+	hits: SearchHit[],
+	/**  There may be more: the limit or the time was reached first. */
+	truncated: boolean,
+};
+
 /**  A server's state as Settings shows it. */
 export type ServerStatus = ServerStatus_Serialize | ServerStatus_Deserialize;
 
@@ -276,6 +365,50 @@ export type ServerStatus_Serialize = {
 	error: string | null,
 };
 
+/**
+ *  One skill in the catalog: a skill file (workspace/skills.rs), listed
+ *  beside the plugins in the market - generated into
+ *  src/platform/bindings/plugins.ts.
+ */
+export type SkillEntry = SkillEntry_Serialize | SkillEntry_Deserialize;
+
+/**
+ *  One skill in the catalog: a skill file (workspace/skills.rs), listed
+ *  beside the plugins in the market - generated into
+ *  src/platform/bindings/plugins.ts.
+ */
+export type SkillEntry_Deserialize = {
+	/**  What it is called in the `/` menu. */
+	name: string,
+	version: string,
+	description: string,
+	author?: string,
+	official?: boolean,
+	url: string,
+	sha256: string,
+	size: number,
+};
+
+/**
+ *  One skill in the catalog: a skill file (workspace/skills.rs), listed
+ *  beside the plugins in the market - generated into
+ *  src/platform/bindings/plugins.ts.
+ */
+export type SkillEntry_Serialize = {
+	/**  What it is called in the `/` menu. */
+	name: string,
+	version: string,
+	description: string,
+	author: string,
+	official: boolean,
+	url: string,
+	sha256: string,
+	size: number,
+};
+
+/**  Which of a plugin's two places. */
+export type StoreScope = "global" | "project";
+
 /**  One plugin command in the menu, as the window sends it. */
 export type TrayPluginItem = {
 	command: string,
@@ -292,4 +425,18 @@ export type Tried = {
 };
 
 export type Value = null | boolean | number | string | Value[] | { [key in string]: Value };
+
+/**  One document and its text. */
+export type WorkspaceDocument = {
+	path: string,
+	/**  From the folder, `/`-separated. */
+	rel: string,
+	text: string,
+};
+
+export type WorkspaceDocuments = {
+	documents: WorkspaceDocument[],
+	/**  The folder holds more than was read: a limit was reached. */
+	truncated: boolean,
+};
 

@@ -289,7 +289,7 @@
 /* Reduced motion is a crossfade, not nothing: nothing travels or scales,
    springs become the standard curve, slow movements shorten to quick
    fades, and the looping "working" indicators hold still. */
-/* The moves everything else is a case of (ui/moves.ts, docs/dev/motion.md):
+/* The moves everything else is a case of (ui/moves.ts, docs/design/design-language.md):
    a part of the page arriving, and leaving. Where it comes from or goes to
    is the element's own: --enter-x / --enter-y / --enter-scale and
    --exit-x / --exit-y / --exit-scale, a fade in place when unset. Under

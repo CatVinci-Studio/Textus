@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLatest } from "../utils/hooks/useLatest";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { canOpenFolder } from "../platform/capabilities";
 import { fs, session, windowIpc } from "../platform/ipc";
@@ -167,13 +168,13 @@ export function useOpenFolder({
 
   // A recent folder chosen while no window was open: this window was
   // opened to show it (menu.rs). Asked once - the answer is taken.
+  const open = useLatest(openFolder);
   useEffect(() => {
     void windowIpc
       .takePendingOpenFolder()
-      .then((path) => path && openFolder(path))
+      .then((path) => path && open.current(path))
       .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [open]);
 
   return {
     folder,

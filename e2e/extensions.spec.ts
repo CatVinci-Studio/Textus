@@ -46,24 +46,61 @@ test("Extensions has a tab each for plugins, themes, skills and MCP", async ({
     "aria-selected",
     "true",
   );
+  // Every tab alike: a line of what it holds, Get more, "⋯", Installed.
+  for (const tab of ["Plugins", "Themes", "Skills", "MCP"]) {
+    await panel.getByRole("tab", { name: tab }).click();
+    await expect(panel.locator(".extensions-intro")).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Get more" })).toBeVisible();
+    await expect(
+      panel.getByRole("button", { name: "More", exact: true }),
+    ).toBeVisible();
+    await expect(panel.locator(".settings-group-title").first()).toBeVisible();
+  }
   await panel.getByRole("tab", { name: "Themes" }).click();
-  await expect(panel.getByText("Get themes")).toBeVisible();
-  // The gallery's themes in one box under that title, not a box in a box.
-  await expect(panel.locator(".theme-gallery-item")).toHaveCount(2);
-  await expect(panel.locator(".settings-group .settings-group")).toHaveCount(0);
-  // Your own themes are a page of their own, with a way back here.
-  await panel.getByRole("button", { name: "Manage…" }).click();
-  await expect(panel.getByText("Import CSS…").first()).toBeVisible();
-  await panel.locator(".settings-back-button").click();
+  await expect(
+    panel.getByText(
+      "No themes added yet. The built-in ones are picked in Editor & Appearance.",
+    ),
+  ).toBeVisible();
+  // The gallery is in Get more; importing is behind "⋯"; the user's own
+  // CSS is folded under Advanced.
+  await expect(panel.locator(".theme-gallery-item")).toHaveCount(0);
+  const css = panel.getByRole("textbox", { name: "Custom CSS" });
+  await expect(css).toBeHidden();
+  await panel.getByText("Advanced").click();
+  await expect(css).toBeVisible();
+  await panel.getByRole("button", { name: "More", exact: true }).click();
+  await expect(panel.getByRole("menuitem")).toHaveText([
+    "Import CSS…",
+    "Export as CSS…",
+  ]);
+  // "⋯" again closes it.
+  await panel.getByRole("button", { name: "More", exact: true }).click();
+  await expect(panel.getByRole("menu")).toHaveCount(0);
+  await panel.getByRole("button", { name: "Get more" }).click();
   await expect(panel.getByRole("tab", { name: "Themes" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
+  await expect(panel.locator(".theme-gallery-item")).toHaveCount(2);
+});
+
+test("a built-in skill turned off moves to Get more, and comes back from there", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  const panel = await openExtensions(page);
   await panel.getByRole("tab", { name: "Skills" }).click();
-  await expect(panel.locator(".settings-builtin-skills")).toHaveAttribute(
-    "open",
-    "",
-  );
+  const translate = panel.locator('[data-skill="translate"]');
+  await expect(translate).toBeVisible();
+  await translate.getByRole("checkbox").click();
+  await expect(translate).toHaveCount(0);
+  await panel.getByRole("button", { name: "Get more" }).click();
+  const offered = panel.locator('[data-skill="translate"]');
+  await offered.getByRole("button", { name: /^Install/ }).click();
+  await expect(offered).toHaveCount(0);
+  await panel.locator(".plugin-back").click();
+  await expect(panel.locator('[data-skill="translate"]')).toBeVisible();
 });
 
 test("Textus AI's Skills row opens Extensions on its Skills tab", async ({
@@ -86,6 +123,12 @@ test("an MCP server is added from the list, tried, saved, and shows its tools", 
   const panel = await openExtensions(page);
   await panel.getByRole("tab", { name: "MCP" }).click();
   await expect(panel.getByText("No server added yet.")).toBeVisible();
+  // The servers most people add are in Get more, on its MCP tab.
+  await panel.getByRole("button", { name: "Get more" }).click();
+  await expect(panel.getByRole("tab", { name: "MCP" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
   await panel
     .locator('[data-mcp-preset="context7"]')
     .getByRole("button", { name: "Add" })
@@ -102,7 +145,9 @@ test("an MCP server is added from the list, tried, saved, and shows its tools", 
   await expect(card.locator(".mcp-state")).toHaveText("Ready · 1 tools");
   await expect(card.locator(".mcp-tool")).toHaveText(["echo"]);
   // The preset is no longer offered: it is added.
+  await panel.getByRole("button", { name: "Get more" }).click();
   await expect(panel.locator('[data-mcp-preset="context7"]')).toHaveCount(0);
+  await panel.locator(".plugin-back").click();
   expect(await savedServers(page)).toMatchObject([
     {
       id: "context7",
@@ -122,7 +167,8 @@ test("a server that can't start says why, and is removed after asking", async ({
   await openApp(page, { settings: { language: "en" } });
   const panel = await openExtensions(page);
   await panel.getByRole("tab", { name: "MCP" }).click();
-  await panel.getByRole("button", { name: "Add a server…" }).click();
+  await panel.getByRole("button", { name: "More", exact: true }).click();
+  await panel.getByRole("menuitem", { name: "Add a server…" }).click();
   await panel.getByLabel("Name").fill("Broken");
   await panel.getByLabel("Command", { exact: true }).fill("missing --flag");
   await panel.getByRole("button", { name: "Try it" }).click();

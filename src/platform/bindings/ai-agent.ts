@@ -27,6 +27,17 @@ export const commands = {
 	 */
 	ai_retry_generated_image: (id: string) => __TAURI_INVOKE<null>("ai_retry_generated_image", { id }),
 	/**
+	 *  The description a proposed picture was drawn from, for the writer to
+	 *  change (ai_redraw_generated_image); none once it is gone.
+	 */
+	ai_generated_image_prompt: (id: string) => __TAURI_INVOKE<string | null>("ai_generated_image_prompt", { id }),
+	/**
+	 *  Draws a proposed picture again from the writer's description, leaving
+	 *  the others alone; ai_generated_image then waits for it as for any
+	 *  picture.
+	 */
+	ai_redraw_generated_image: (id: string, prompt: string) => __TAURI_INVOKE<null>("ai_redraw_generated_image", { id, prompt }),
+	/**
 	 *  Lets a picture go: its proposal was rejected, or it was saved. One
 	 *  still being made is let go too; what it makes is thrown away.
 	 */

@@ -130,6 +130,9 @@ export interface ChatComposerProps {
    *  in place of the toolbar's "{n} chars selected" chip, and carries these
    *  controls (new, continue in panel, close) beside it. */
   dockActions?: ReactNode;
+  /** The model button (ModelSwitcher), in the toolbar after the toggles;
+   *  the caller renders it, as it reads Settings and this doesn't. */
+  modelSwitcher?: ReactNode;
   /** The resolved message (skill expanded) plus any attachments - InlineChat
    *  owns tagging it with selected-text/chatInfo and actually sending it. */
   onSend: (

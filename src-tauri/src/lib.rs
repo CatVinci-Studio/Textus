@@ -106,6 +106,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(background::BackgroundStatus::default())
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
+        .manage(plugins::ai_tools::PluginAiTools::default())
         .on_window_event(|window, event| {
             let app = window.app_handle();
             if matches!(event, tauri::WindowEvent::Destroyed) {
@@ -263,6 +264,7 @@ pub fn run() {
             settings::history_clear,
             settings::chat_history_get,
             settings::chat_history_archived,
+            settings::chat_history_search,
             settings::chat_history_move_document,
             commands::recents::add_recent_file,
             open_file_dialog,
@@ -305,6 +307,8 @@ pub fn run() {
             crate::ai::images::ai_generated_image,
             crate::ai::images::ai_discard_generated_image,
             crate::ai::images::ai_retry_generated_image,
+            crate::ai::images::ai_generated_image_prompt,
+            crate::ai::images::ai_redraw_generated_image,
             crate::ai::web::web_search_status,
             crate::ai::workspace::load_agent_workspace,
             crate::ai::conventions::writing_conventions_options,
@@ -330,6 +334,8 @@ pub fn run() {
             crate::ai::memory::memory_remember,
             crate::ai::memory::memory_pass,
             crate::ai::memory::memory_restore,
+            crate::ai::memory::save_offered_skill,
+            crate::ai::memory::ai_offer_skill,
             crate::ai::next_message::suggest_next_message,
             crate::ai::memory::revision_choices_read,
             crate::ai::memory::revision_choices_write,
@@ -349,6 +355,8 @@ pub fn run() {
             take_draft_snapshots,
             clear_draft_snapshot,
             clear_all_drafts,
+            commands::own_notes::own_notes_read,
+            commands::own_notes::own_notes_write,
             distribution::app_distribution,
             plugins::state::plugins_state,
             plugins::state::plugins_set_all,
@@ -356,6 +364,9 @@ pub fn run() {
             plugins::install::plugins_installed,
             plugins::install::plugin_install,
             plugins::catalog::plugin_catalog,
+            plugins::catalog::plugin_catalog_cached,
+            plugins::catalog::skill_catalog,
+            plugins::catalog::skill_install_catalog,
             plugins::access::plugin_fs_rename,
             plugins::access::plugin_fs_trash,
             plugins::access::plugin_fs_mkdir,
@@ -376,10 +387,22 @@ pub fn run() {
             plugins::access::plugin_read_resource,
             plugins::access::plugin_fs_read,
             plugins::access::plugin_fs_list,
+            plugins::workspace::plugin_fs_documents,
+            plugins::workspace::plugin_fs_search,
             plugins::access::plugin_fs_write,
             plugins::access::plugin_http,
-            plugins::access::plugin_storage_get,
-            plugins::access::plugin_storage_set,
+            plugins::install::plugin_dev_stamp,
+            plugins::ai_tools::plugin_ai_tools_set,
+            plugins::ai_tools::plugin_ai_tool_result,
+            plugins::store::plugin_store_get,
+            plugins::store::plugin_store_set,
+            plugins::store::plugin_store_keys,
+            plugins::store::plugin_store_read,
+            plugins::store::plugin_store_write,
+            plugins::store::plugin_store_files,
+            plugins::store::plugin_store_delete,
+            plugins::store::plugin_store_usage,
+            plugins::store::plugin_store_clear,
             // iOS only: rename and delete in the document list.
             #[cfg(mobile)]
             commands::documents::rename_entry,
@@ -442,6 +465,16 @@ pub fn run() {
             commands::chat_window::take_chat_handoff,
             #[cfg(desktop)]
             commands::chat_window::close_chat_window,
+            #[cfg(desktop)]
+            commands::web_page::web_page_show,
+            #[cfg(desktop)]
+            commands::web_page::web_page_hide,
+            #[cfg(desktop)]
+            commands::web_page::web_page_close,
+            #[cfg(desktop)]
+            commands::web_page::web_page_navigate,
+            #[cfg(desktop)]
+            commands::web_page::web_page_reload,
             #[cfg(desktop)]
             commands::chat_window::focus_chat_window,
             #[cfg(desktop)]

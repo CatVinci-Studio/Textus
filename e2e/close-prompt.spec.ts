@@ -89,3 +89,29 @@ test("File › Close Window in the app-drawn menu closes this window (#345)", as
   expect(asked).toContain("plugin:window|close");
   expect(asked).not.toContain("trigger_menu_item");
 });
+
+test("with Keep unsaved changes on, closing keeps them as a draft and asks nothing", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", keepUnsavedOnClose: true },
+  });
+  await pasteMarkdown(page, "kept words");
+  await mockInvoke(page, { save_draft_snapshot: null });
+  await emit(page, "tauri://close-requested", null);
+
+  const saved = () =>
+    page.evaluate(() =>
+      (
+        (
+          window as unknown as {
+            __devInvokeCalls?: { cmd: string; content?: string }[];
+          }
+        ).__devInvokeCalls ?? []
+      )
+        .filter((c) => c.cmd === "save_draft_snapshot")
+        .map((c) => c.content ?? ""),
+    );
+  await expect.poll(saved).toEqual([expect.stringContaining("kept words")]);
+  await expect(page.locator(".close-prompt")).toHaveCount(0);
+});

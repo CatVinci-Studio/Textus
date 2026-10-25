@@ -1,19 +1,27 @@
 import { createElement } from "react";
+import { logPluginError } from "./plugin-log";
+import { setHoverStarter } from "./hover-providers";
+import {
+  forgetPluginSettings,
+  loadProjectPluginSettings,
+  pluginValue,
+  setPluginValue,
+  type SettingScope,
+} from "./plugin-settings";
 import { version as APP_VERSION } from "../../package.json";
 import { plugins as pluginsIpc, type PluginsState } from "../platform/ipc";
 import { isIOSApp } from "../platform/capabilities";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
 import { registerCommand, runCommand } from "../app/commands";
 import { registerSidebarTab } from "../app/sidebar-tabs";
-import { registerEditorMenuItems } from "../editor/editor-menu";
+import { registerEditorMenuItems } from "../editor/editor-menu-items";
 import { showConfirm, showMessage } from "../ui/app-dialog";
-import { basename } from "../utils/path";
-import { PluginHost } from "./broker";
+import type { PluginHost } from "./broker";
+import { lazyModule } from "../lazy/lazy-module";
 import { type PluginOrigin } from "./files";
 import {
   engineSatisfied,
   localize,
-  matchesFilename,
   parseManifest,
   type Permission,
 } from "./manifest";
@@ -34,7 +42,6 @@ import {
   update,
   windowInfo,
   type PluginRecord,
-  type PluginsSnapshot,
 } from "./plugin-records";
 
 /**
@@ -63,7 +70,6 @@ export {
 
 const hosts = new Map<string, PluginHost>();
 const contributions = new Map<string, (() => void)[]>();
-const settingsCache = new Map<string, Record<string, unknown>>();
 
 function platform(): string {
   if (isIOSApp) return "ios";
@@ -155,7 +161,12 @@ export function loadPlugins(reload = false): Promise<void> {
 // Running
 // ---------------------------------------------------------------------------
 
-function host(record: PluginRecord): PluginHost {
+// The broker - the frame a plugin's code runs in and every call it makes -
+// loads when the first plugin starts: a window with none on never does.
+const brokerModule = lazyModule("plugin-broker", () => import("./broker"));
+
+async function host(record: PluginRecord): Promise<PluginHost> {
+  const { PluginHost } = await brokerModule.load();
   let running = hosts.get(record.id);
   if (!running && record.manifest) {
     running = new PluginHost(
@@ -170,13 +181,7 @@ function host(record: PluginRecord): PluginHost {
         dark: () => windowInfo().dark(),
         appVersion: APP_VERSION,
         platform: platform(),
-        // What the user set is read from the plugin's storage the first
-        // time: a plugin asks for its settings as it starts, long before
-        // anyone opens its page in Settings.
-        setting: async (id, key) => {
-          await loadPluginSettings(id);
-          return pluginSetting(id, key);
-        },
+        setting: async (id, key) => pluginSetting(id, key),
         runCommand: async (command, args) => {
           const owner = pluginsSnapshot().records.find(
             (r) => r.status === "on" && command.startsWith(`${r.id}.`),
@@ -222,6 +227,7 @@ function stopHost(id: string) {
 }
 
 async function pluginFailed(id: string, reason: string) {
+  logPluginError(id, reason);
   const record = pluginRecord(id);
   if (!record || record.status !== "on") return;
   stopHost(id);
@@ -243,16 +249,38 @@ async function pluginFailed(id: string, reason: string) {
   );
 }
 
-/** Runs one of a plugin's commands in its code, starting it first. */
-export async function runPluginCommand(
+/** Asks a plugin's code, starting it first; `needs` is the permission
+ *  the call is for, if any. */
+export async function askPlugin(
   id: string,
-  command: string,
-  args: unknown[],
+  method: string,
+  params: unknown,
+  needs?: Permission,
 ): Promise<unknown> {
   const record = pluginRecord(id);
   if (!record || !canRun(record.status, pluginsSnapshot().allOn))
     throw new Error(`${id} is turned off.`);
-  return host(record).request("$executeCommand", { command, args });
+  if (needs && !record.granted.includes(needs))
+    throw new Error(`${id} was not granted ${needs}.`);
+  return (await host(record)).request(method, params);
+}
+
+/** Runs one of a plugin's commands in its code, starting it first. */
+export function runPluginCommand(
+  id: string,
+  command: string,
+  args: unknown[],
+): Promise<unknown> {
+  return askPlugin(id, "$executeCommand", { command, args });
+}
+
+/** Runs a tool the plugin gave Textus AI, starting it first. */
+export function runPluginAiTool(
+  id: string,
+  name: string,
+  args: unknown,
+): Promise<unknown> {
+  return askPlugin(id, "$callAiTool", { name, arguments: args }, "ai.tools");
 }
 
 /** Asks the plugin to fill a webview (PluginWebview.tsx): a sidebar tab's
@@ -264,7 +292,7 @@ export async function resolveWebview(
   const plugin = pluginRecord(record.plugin);
   if (!plugin || plugin.status !== "on")
     throw new Error(`${record.plugin} is turned off.`);
-  const running = host(plugin);
+  const running = await host(plugin);
   if (record.kind === "editor")
     await running.request("$resolveCustomEditor", {
       viewType: target.viewType,
@@ -287,7 +315,9 @@ export function webviewMessage(id: string, message: unknown): void {
   const plugin = record && pluginRecord(record.plugin);
   if (!record || !plugin || plugin.status !== "on") return;
   void host(plugin)
-    .request("$webviewMessage", { webview: id, message })
+    .then((running) =>
+      running.request("$webviewMessage", { webview: id, message }),
+    )
     .catch(() => {});
 }
 
@@ -366,75 +396,90 @@ function apply(record: PluginRecord) {
     manifest.activationEvents.includes("*")
   )
     void host(record)
-      .start()
+      .then((running) => running.start())
       .catch(() => {});
+  else if (manifest.activationEvents.includes("onHover")) {
+    hoverWaiting.add(id);
+    syncHoverStarter();
+  }
+}
+
+/** On plugins that start when the pointer first rests on a link
+ *  (`onHover`) and haven't yet. */
+const hoverWaiting = new Set<string>();
+
+function syncHoverStarter() {
+  setHoverStarter(
+    hoverWaiting.size,
+    hoverWaiting.size === 0
+      ? null
+      : async () => {
+          const ids = [...hoverWaiting];
+          hoverWaiting.clear();
+          syncHoverStarter();
+          await Promise.all(
+            ids.map((id) => {
+              const record = pluginRecord(id);
+              return record?.status === "on"
+                ? host(record)
+                    .then((running) => running.start())
+                    .catch(() => {})
+                : undefined;
+            }),
+          );
+        },
+  );
 }
 
 /** Takes back what a plugin added. */
 function withdraw(id: string) {
+  if (hoverWaiting.delete(id)) syncHoverStarter();
   for (const undo of contributions.get(id) ?? []) undo();
   contributions.delete(id);
-}
-
-/** The plugin that opens `path` in a tab of its own, if one is on:
- *  the first whose custom editor matches with priority "default". */
-export function customEditorFor(
-  path: string,
-): { plugin: string; viewType: string; title: string } | null {
-  if (!pluginsSnapshot().allOn) return null;
-  const name = basename(path);
-  for (const record of pluginsSnapshot().records) {
-    if (record.status !== "on" || !record.manifest) continue;
-    for (const editor of record.manifest.contributes.customEditors)
-      if (
-        editor.priority === "default" &&
-        editor.filenamePatterns.some((p) => matchesFilename(p, name))
-      )
-        return { plugin: record.id, viewType: editor.viewType, title: name };
-  }
-  return null;
 }
 
 // ---------------------------------------------------------------------------
 // Settings
 // ---------------------------------------------------------------------------
 
-/** A plugin's setting: what the user set, or its manifest's default. */
+/** A plugin's setting: the project's value, else the one for every
+ *  document, else its manifest's default (plugin-settings.ts). */
 export function pluginSetting(id: string, key: string): unknown {
-  const stored = settingsCache.get(id)?.[key];
-  if (stored !== undefined) return stored;
+  const { value, from } = pluginValue(id, key);
+  if (from) return value;
   return (
     pluginRecord(id)?.manifest?.contributes.settings.find((s) => s.key === key)
       ?.default ?? null
   );
 }
 
-/** Reads a plugin's settings from its storage (once). */
-export async function loadPluginSettings(id: string): Promise<void> {
-  if (settingsCache.has(id)) return;
-  const stored = await pluginsIpc
-    .storageGet(id)
-    .catch(() => ({}) as Record<string, unknown>);
-  const values = stored.$settings;
-  settingsCache.set(
-    id,
-    values && typeof values === "object"
-      ? (values as Record<string, unknown>)
-      : {},
-  );
-  update(id, {});
-}
-
+/** Sets a plugin's setting for every document, or for the open project. */
 export async function setPluginSetting(
   id: string,
   key: string,
   value: unknown,
+  scope: SettingScope = "global",
 ): Promise<void> {
-  const values = { ...(settingsCache.get(id) ?? {}), [key]: value };
-  settingsCache.set(id, values);
+  await setPluginValue(id, key, value, scope);
   update(id, {});
-  await pluginsIpc.storageSet(id, "$settings", values);
-  hosts.get(id)?.event("settings", { key, value });
+  hosts.get(id)?.event("settings", { key, value: pluginSetting(id, key) });
+}
+
+/** A project opened or closed: its plugins hear the settings it changes. */
+export async function setPluginProject(root: string | null): Promise<void> {
+  const before = new Map<string, unknown>();
+  const running = pluginsSnapshot().records.filter((r) => hosts.has(r.id));
+  for (const r of running)
+    for (const s of r.manifest?.contributes.settings ?? [])
+      before.set(`${r.id}\u0000${s.key}`, pluginSetting(r.id, s.key));
+  await loadProjectPluginSettings(root);
+  for (const r of running)
+    for (const s of r.manifest?.contributes.settings ?? []) {
+      const value = pluginSetting(r.id, s.key);
+      if (before.get(`${r.id}\u0000${s.key}`) !== value)
+        hosts.get(r.id)?.event("settings", { key: s.key, value });
+    }
+  for (const r of running) update(r.id, {});
 }
 
 // ---------------------------------------------------------------------------
@@ -543,33 +588,7 @@ export async function loadDevPlugin(path: string): Promise<string> {
 export async function uninstallPlugin(id: string): Promise<void> {
   stopHost(id);
   withdraw(id);
-  settingsCache.delete(id);
+  await forgetPluginSettings(id);
   await pluginsIpc.uninstall(id);
   await loadPlugins(true);
-}
-
-/** The commands the plugins that are on put in the Plugins menu
- *  (contributes.menus["app/plugins"]), in the plugins' order. */
-export function pluginMenuEntries(
-  from: PluginsSnapshot = pluginsSnapshot(),
-  menu: "app/plugins" | "app/tray" = "app/plugins",
-): { command: string; label: string }[] {
-  if (!from.allOn) return [];
-  return from.records.flatMap((record) => {
-    const manifest = record.manifest;
-    if (record.status !== "on" || !manifest) return [];
-    return (manifest.contributes.menus[menu] ?? []).map((item) => {
-      const command = manifest.contributes.commands.find(
-        (c) => c.command === item.command,
-      );
-      return {
-        command: item.command,
-        label: localize(
-          manifest,
-          command?.title ?? item.command,
-          windowInfo().language(),
-        ),
-      };
-    });
-  });
 }

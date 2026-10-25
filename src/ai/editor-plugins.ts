@@ -14,6 +14,7 @@ import {
   createReviewNotesPlugin,
   type ReviewNote,
 } from "./margin/review-notes-plugin";
+import { ownRevisionPlugin } from "./margin/own-revision-plugin";
 import { resolveStrings } from "../i18n/strings";
 import { sendTourSignal, type TourAi } from "../utils/events";
 import type { RevisionDisplay, Settings } from "../settings/SettingsContext";
@@ -66,56 +67,60 @@ export function withAiPlugins(
 ): Editor {
   const { settings, docPath, pendingEdits, quickAskWidget, tour, reviewNotes } =
     options;
-  return editor
-    .use(blockReader)
-    .use(
-      createGhostTextPlugin({
-        enabled: () =>
-          aiFeatures(settings.current).completion && tour.current !== "muted",
-        provider: () => settings.current.aiProvider,
-        model: () =>
-          settings.current.writingModels[settings.current.aiProvider] || null,
-        style: () => buildCompletionStyle(settings.current.completionTone),
-        uiLanguage: () => settings.current.language,
-        project: () => ({
-          docPath: docPath.current,
-          workspaceRoot: settings.current.agentWorkspaceRoot || null,
+  return (
+    editor
+      .use(blockReader)
+      .use(
+        createGhostTextPlugin({
+          enabled: () =>
+            aiFeatures(settings.current).completion && tour.current !== "muted",
+          provider: () => settings.current.aiProvider,
+          model: () =>
+            settings.current.writingModels[settings.current.aiProvider] || null,
+          style: () => buildCompletionStyle(settings.current.completionTone),
+          uiLanguage: () => settings.current.language,
+          project: () => ({
+            docPath: docPath.current,
+            workspaceRoot: settings.current.agentWorkspaceRoot || null,
+          }),
+          onAccept: () => {
+            if (tour.current) sendTourSignal("completion-accepted");
+          },
         }),
-        onAccept: () => {
-          if (tour.current) sendTourSignal("completion-accepted");
-        },
-      }),
-    )
-    .use(
-      createGrammarCheckPlugin({
-        enabled: () =>
-          aiFeatures(settings.current).grammar && tour.current !== "muted",
-        provider: () => settings.current.aiProvider,
-        model: () =>
-          settings.current.writingModels[settings.current.aiProvider] || null,
-        strictness: () => settings.current.grammarStrictness,
-        uiLanguage: () => settings.current.language,
-        project: () => ({
-          docPath: docPath.current,
-          workspaceRoot: settings.current.agentWorkspaceRoot || null,
+      )
+      .use(
+        createGrammarCheckPlugin({
+          enabled: () =>
+            aiFeatures(settings.current).grammar && tour.current !== "muted",
+          provider: () => settings.current.aiProvider,
+          model: () =>
+            settings.current.writingModels[settings.current.aiProvider] || null,
+          strictness: () => settings.current.grammarStrictness,
+          uiLanguage: () => settings.current.language,
+          project: () => ({
+            docPath: docPath.current,
+            workspaceRoot: settings.current.agentWorkspaceRoot || null,
+          }),
         }),
-      }),
-    )
-    .use(
-      createPendingEditPlugin({
-        ...pendingEdits,
-        animationEnabled: () => settings.current.enableEditAnimation,
-        sentenceLabels: () => {
-          const t = resolveStrings(settings.current.language);
-          return {
-            take: t.proposalTakeSentence,
-            keep: t.proposalKeepSentence,
-          };
-        },
-      }),
-    )
-    .use(streamFollowPlugin)
-    .use(chatSelectionPlugin)
-    .use(createQuickAskWidgetPlugin(quickAskWidget))
-    .use(createReviewNotesPlugin(reviewNotes));
+      )
+      .use(
+        createPendingEditPlugin({
+          ...pendingEdits,
+          animationEnabled: () => settings.current.enableEditAnimation,
+          sentenceLabels: () => {
+            const t = resolveStrings(settings.current.language);
+            return {
+              take: t.proposalTakeSentence,
+              keep: t.proposalKeepSentence,
+            };
+          },
+        }),
+      )
+      .use(streamFollowPlugin)
+      .use(chatSelectionPlugin)
+      .use(createQuickAskWidgetPlugin(quickAskWidget))
+      .use(createReviewNotesPlugin(reviewNotes))
+      // Not AI: the writer's own tracked changes, which share the margin.
+      .use(ownRevisionPlugin)
+  );
 }

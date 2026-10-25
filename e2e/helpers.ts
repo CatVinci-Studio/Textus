@@ -29,6 +29,12 @@ console.log("a fairly long first line of code to see whether the language label 
 /** Opens the app with onboarding done and the given extra localStorage,
  *  and makes rendering deterministic (no animations, no blinking caret).
  *  `animations: true` leaves the motion on, for the specs that test it. */
+/** For the first wait on something KaTeX draws, or a document with maths
+ *  (which opens once KaTeX has loaded): a dev server bundles KaTeX on its
+ *  first request, which on a CI runner can take longer than the default 5
+ *  seconds - such tests failed there and passed on the retry. */
+export const FIRST_LOAD = { timeout: 20_000 };
+
 export async function openApp(
   page: Page,
   options: {

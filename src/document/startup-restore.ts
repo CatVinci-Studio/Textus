@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useLatest } from "../utils/hooks/useLatest";
 import { drafts, windowIpc } from "../platform/ipc";
 import { canUseWindows, hasAppMenu, isIOSApp } from "../platform/capabilities";
 import { lastIOSDocument } from "./ios-recents";
@@ -13,7 +14,8 @@ import type { NewDocumentMode } from "../settings/SettingsContext";
 import { setTabJump } from "../editor/tab-jump";
 import { lastCaret } from "./last-carets";
 import { isWordDocument } from "./word-import";
-import { customEditorFor, loadPlugins } from "../plugins/manager";
+import { loadPlugins } from "../plugins/manager";
+import { customEditorFor } from "../plugins/plugin-lookup";
 
 /** Whether a plugin opens `path` in a tab of its own (a PDF). */
 async function opensInPlugin(path: string): Promise<boolean> {
@@ -65,10 +67,13 @@ export interface StartupRestoreOptions {
  * values it closes over) since a later change to any of them shouldn't
  * re-trigger a second drain.
  */
-export function useStartupRestore(opts: StartupRestoreOptions): void {
+export function useStartupRestore(options: StartupRestoreOptions): void {
+  // Read once, as the window mounts: this runs once per launch.
+  const latest = useLatest(options);
   useEffect(() => {
     if (drained) return;
     drained = true;
+    const opts = latest.current;
     // Puts a document into the initial blank tab. Its editor may well have
     // mounted already (it is lazy-loaded, and everything below awaits IPC
     // first), and an editor reads its content once, at mount - so without
@@ -270,6 +275,5 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
         opts.markOnboardingShown();
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [latest]);
 }

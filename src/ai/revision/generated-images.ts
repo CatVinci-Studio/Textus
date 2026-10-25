@@ -165,6 +165,40 @@ export async function retryGeneratedImage(id: string): Promise<boolean> {
   return loadGeneratedImage(id);
 }
 
+/** The description picture `id` was drawn from, for the writer to change;
+ *  null once the backend has let it go. */
+export function generatedImagePrompt(id: string): Promise<string | null> {
+  return ai.generatedImagePrompt(id).catch(() => null);
+}
+
+/** Draws a made (or not made) picture again from `prompt`, the writer's
+ *  change to its description: its frame paints again, here and on its
+ *  card, until the new one comes; resolves as loadGeneratedImage does. */
+export async function redrawGeneratedImage(
+  id: string,
+  prompt: string,
+): Promise<boolean> {
+  try {
+    await ai.redrawGeneratedImage(id, prompt);
+  } catch (err) {
+    failed.set(id, err instanceof Error ? err.message : String(err));
+    for (const listener of listeners) listener();
+    return false;
+  }
+  const url = loaded.get(id)?.url;
+  if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
+  loaded.delete(id);
+  failed.delete(id);
+  for (const listener of listeners) listener();
+  return loadGeneratedImage(id);
+}
+
+/** The id of the loaded picture drawn by `src` (its blob: URL), or null. */
+export function loadedImageId(src: string): string | null {
+  for (const [id, data] of loaded) if (data.url === src) return id;
+  return null;
+}
+
 /** Fetches a picture from the backend once - which answers when it is
  *  made, so a picture still painting waits here - for the preview to draw
  *  it; false when it wasn't made (generatedImageFailure says why) or is

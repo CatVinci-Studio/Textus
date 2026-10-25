@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// Settings › Editor & Appearance › More themes › Browse themes, against the dev shim's
+// Settings › Extensions › Themes › Get more, against the dev shim's
 // canned gallery (src/dev/tauri-shim.ts, `window.__devThemeGallery`):
 // installing a theme makes it a user theme and applies it, an installed
 // one can be picked again, a newer catalog entry offers an update that
@@ -24,11 +24,9 @@ async function openGallery(page: Page) {
   await dialog
     .locator(".settings-nav-item", { hasText: "Editor & Appearance" })
     .click();
-  await dialog.getByRole("button", { name: "More themes" }).click();
-  await dialog.getByRole("button", { name: "Browse themes" }).click();
-  await expect(
-    dialog.getByRole("region", { name: "Browse themes" }),
-  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Get more themes" }).click();
+  await expect(dialog.getByRole("tabpanel", { name: "Themes" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Get more" }).click();
   return dialog;
 }
 
@@ -81,13 +79,10 @@ test.describe("theme gallery", () => {
     await expect(mint).toContainText("In use");
     await expect.poll(() => injectedTheme(page)).toContain("#eef7f1");
 
-    // An ordinary user theme in the picker, by its gallery name: back is
-    // More themes, then the category with the picker.
-    await dialog.getByRole("button", { name: "More themes" }).click();
-    await expect(
-      dialog.getByRole("region", { name: "More themes" }),
-    ).toBeVisible();
-    await dialog.locator(".settings-back-button").click();
+    // An ordinary user theme in the picker, by its gallery name.
+    await dialog
+      .locator(".settings-nav-item", { hasText: "Editor & Appearance" })
+      .click();
     await expect(dialog.getByLabel("Editor theme")).toContainText("Paper Mint");
   });
 

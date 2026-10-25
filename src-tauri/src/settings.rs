@@ -30,7 +30,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 
-mod chat_history;
+pub(crate) mod chat_history;
 use chat_history::ChatHistory;
 
 mod store;
@@ -268,6 +268,14 @@ pub fn history_clear(
 #[cfg_attr(test, specta::specta)]
 pub fn chat_history_get(stores: tauri::State<Stores>, id: String) -> Option<Value> {
     stores.chat.get(&id)
+}
+
+/// The saved conversations with every word of `query` in a message or a
+/// reply, newest first (the history list's search).
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn chat_history_search(stores: tauri::State<Stores>, query: String) -> Vec<Value> {
+    stores.chat.search(&query, 50)
 }
 
 /// How many older conversations sit in the chat history's trash.

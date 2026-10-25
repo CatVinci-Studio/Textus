@@ -22,12 +22,16 @@ pub(crate) use events::*;
 mod settle;
 pub(crate) use settle::*;
 
+mod chapters;
 mod context;
 mod history;
 pub(crate) mod lists;
+mod past;
 mod prompt;
+pub(crate) use chapters::*;
 pub(crate) use context::*;
 pub(crate) use history::*;
+pub(crate) use past::*;
 pub(crate) use prompt::*;
 
 /// The system prompt with what it says about the web, when search is on.
@@ -257,12 +261,40 @@ async fn ai_agent_message_inner(
                 )),
                 checks: Default::default(),
             };
+            let stores = tauri::Manager::state::<crate::settings::Stores>(&app);
+            // A change through the whole of a long document, chapter by
+            // chapter at once (chapters.rs): each chapter's helper has
+            // propose_edit, and its turns join this request's.
+            let helper_tools = ToolRegistry::builtin(false, false, mode, entry.supports_vision)
+                .only(tools::PROPOSE_EDIT_TOOL_NAME);
+            let helpers = HelperTurns::default();
+            let chapter_run = ChapterRun {
+                agent: &agent,
+                workspace: &workspace,
+                document: &document,
+                mode,
+                ui_language: &ui_language,
+                conventions: &conventions,
+                tools: &helper_tools,
+                tool_ctx: &tool_ctx,
+                channel: &on_event,
+                helpers: &helpers,
+            };
             let mut tools = ToolRegistry::builtin(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 mode,
                 entry.supports_vision,
             );
+            if helper_tools.edits() && offers_chapters(&document) {
+                let run = &chapter_run;
+                tools.add(tools::Tool {
+                    spec: chapters_spec(),
+                    access: tools::Access::Proposes,
+                    modes: tools::EDITING_MODES,
+                    run: tools::Run::Async(Box::new(move |call| Box::pin(run.run(call)))),
+                });
+            }
             // A document shown whole needs no tools to read it: offered,
             // they were read again and again instead of edited (DeepSeek,
             // 1.2.0-rc.6).
@@ -283,9 +315,15 @@ async fn ai_agent_message_inner(
             for tool in web.tools(&focus) {
                 tools.add(tool);
             }
+            // The user's earlier conversations, when they refer to one.
+            tools.add(search_conversations_tool(&stores.chat));
             // The tools of the MCP servers the user turned on.
             #[cfg(desktop)]
             for tool in crate::mcp::tools_for_request(&app).await {
+                tools.add(tool);
+            }
+            // And of the plugins the user gave ai.tools.
+            for tool in crate::plugins::ai_tools::tools_for_request(&app) {
                 tools.add(tool);
             }
             // Pictures written into the text, begun as their lines stream in.
@@ -352,7 +390,7 @@ async fn ai_agent_message_inner(
                     )
                     .await
                 }
-                result => result,
+                result => result.map(|turns| with_helper_turns(turns, &helpers)),
             }
         }
         None => {

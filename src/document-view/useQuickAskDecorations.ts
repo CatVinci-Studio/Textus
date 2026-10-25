@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useLatest } from "../utils/hooks/useLatest";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
@@ -22,18 +23,17 @@ export function useQuickAskDecorations(
   // On a phone there is no widget at all: the panel docks above the
   // keyboard instead (InlineChat's `docked`), since a block in the
   // document ends up under the keyboard with no way to scroll to it.
+  const { visible } = inlineChat;
+  const widgetPos = useLatest(inlineChat.chatInfo?.widgetPos ?? null);
   useEffect(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       view.dispatch(
         setQuickAskWidget(
           view.state.tr,
-          inlineChat.visible && !phone
-            ? (inlineChat.chatInfo?.widgetPos ?? null)
-            : null,
+          visible && !phone ? widgetPos.current : null,
         ),
       );
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inlineChat.visible, phone, run]);
+  }, [visible, phone, run, widgetPos]);
 }

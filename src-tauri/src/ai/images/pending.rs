@@ -25,7 +25,12 @@ impl Slot {
 /// frontend says so).
 pub(crate) static PENDING: Mutex<Vec<(String, Slot)>> = Mutex::new(Vec::new());
 
+#[cfg(not(test))]
 pub(crate) const PENDING_COUNT: usize = 16;
+// The tests run side by side and share the list: kept to sixteen, one
+// test's pictures pushed out another's while it was looking at them.
+#[cfg(test)]
+pub(crate) const PENDING_COUNT: usize = 1024;
 
 pub(crate) const PENDING_BYTES: usize = 128 * 1024 * 1024;
 
@@ -73,7 +78,37 @@ pub(crate) struct Asked {
     pub(crate) job: ImageJob,
     pub(crate) prompt: String,
     pub(crate) aspect: Aspect,
-    pub(crate) reference: Option<ImageAttachment>,
+    pub(crate) reference: Option<Reference>,
+}
+
+/// A picture a new one is drawn from, where the service takes one
+/// (ImageApi::takes_reference).
+#[derive(Clone)]
+pub(crate) enum Reference {
+    /// The picture being redone (`replace`), changed as the description
+    /// says.
+    Change(ImageAttachment),
+    /// An earlier picture (`like`) whose people and style the new one
+    /// keeps - a new scene, not a change to that one.
+    Like(ImageAttachment),
+}
+
+/// What a picture drawn like another is asked for, before its own
+/// description: the services read a picture sent with the description as
+/// one to change.
+pub(crate) const LIKE: &str = "A new picture, not a copy of the attached one: keep the people, animals and places from the attached picture looking as they do there, and keep its style. The new picture: ";
+
+impl Asked {
+    /// The description and picture the service is sent.
+    pub(crate) fn sent(&self) -> (std::borrow::Cow<'_, str>, Option<&ImageAttachment>) {
+        match &self.reference {
+            None => (self.prompt.as_str().into(), None),
+            Some(Reference::Change(picture)) => (self.prompt.as_str().into(), Some(picture)),
+            Some(Reference::Like(picture)) => {
+                (format!("{LIKE}{}", self.prompt).into(), Some(picture))
+            }
+        }
+    }
 }
 
 pub(crate) static ASKED: Mutex<Vec<(String, std::sync::Arc<Asked>)>> = Mutex::new(Vec::new());
@@ -93,13 +128,10 @@ pub(crate) fn make(id: String, asked_for: std::sync::Arc<Asked>) {
         asked.retain(|(i, _)| live.contains(i));
     }
     tauri::async_runtime::spawn(async move {
+        let (prompt, reference) = asked_for.sent();
         let slot = match asked_for
             .job
-            .generate(
-                &asked_for.prompt,
-                asked_for.aspect,
-                asked_for.reference.as_ref(),
-            )
+            .generate(&prompt, asked_for.aspect, reference)
             .await
         {
             Ok(image) => Slot::Ready(image),
@@ -128,6 +160,51 @@ pub(crate) fn retry(id: &str) -> Result<(), String> {
         *slot = Slot::Making;
     }
     make(id.to_string(), asked_for);
+    Ok(())
+}
+
+/// The description picture `id` was asked for with, while it is kept.
+pub(crate) fn prompt_of(id: &str) -> Option<String> {
+    asked()
+        .iter()
+        .find(|(i, _)| i == id)
+        .map(|(_, a)| a.prompt.clone())
+}
+
+/// Makes picture `id` again from `prompt` - the writer's change to its
+/// description - with the same service, shape and reference; made or
+/// not, it goes back to being made. Err when it is gone, or still being
+/// made.
+pub(crate) fn redraw(id: &str, prompt: String) -> Result<(), String> {
+    let prompt = prompt.trim().to_string();
+    if prompt.is_empty() {
+        return Err("Describe the picture to draw.".into());
+    }
+    let gone = || "This picture is no longer available - ask for it again.".to_string();
+    let before = asked()
+        .iter()
+        .find(|(i, _)| i == id)
+        .map(|(_, a)| a.clone())
+        .ok_or_else(gone)?;
+    {
+        let mut pending = pending();
+        let Some((_, slot)) = pending.iter_mut().find(|(i, _)| i == id) else {
+            return Err(gone());
+        };
+        if matches!(slot, Slot::Making) {
+            return Err("This picture is still being made.".into());
+        }
+        *slot = Slot::Making;
+    }
+    make(
+        id.to_string(),
+        std::sync::Arc::new(Asked {
+            job: before.job.clone(),
+            prompt,
+            aspect: before.aspect,
+            reference: before.reference.clone(),
+        }),
+    );
     Ok(())
 }
 
@@ -196,6 +273,22 @@ pub struct GeneratedImageData {
 impl GeneratedImageData {
     pub(crate) fn data_base64_len(&self) -> usize {
         self.data_base64.len()
+    }
+}
+
+/// Picture `id` as a picture to send a service, once it is made - for a
+/// new one drawn like it (Reference::Like). None while it is being made:
+/// a new picture doesn't wait for it.
+pub(crate) fn made_picture(id: &str) -> Option<ImageAttachment> {
+    use base64::{engine::general_purpose::STANDARD, Engine};
+    let pending = pending();
+    match pending.iter().find(|(i, _)| i == id) {
+        Some((_, Slot::Ready(image))) => Some(ImageAttachment {
+            name: format!("{id}.{}", image.ext),
+            mime: image.mime.to_string(),
+            data_base64: STANDARD.encode(&image.bytes),
+        }),
+        _ => None,
     }
 }
 

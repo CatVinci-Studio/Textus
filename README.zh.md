@@ -133,6 +133,14 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/zh/settings.png" alt="不同 LLM，随你喜欢" width="860" />
 </p>
 
+## 插件
+
+需要什么就装什么。笔记和链接画成的知识图谱、停在链接上就能看到内容的卡片、两篇文档并排、看板、版本历史、在标签页里看 PDF 和 Word、从 Zotero 插入引用——都在**设置 › 扩展 › 获取更多**里，和主题、技能放在一起。每个插件用到什么，都会先问你。
+
+<p align="center">
+  <img src="docs/images/readme/zh/plugins.png" alt="《红楼梦》的人物笔记和它们的知识图谱并排，一条链接指向的笔记显示在卡片里。" width="860" />
+</p>
+
 ## 你写的东西，只属于你
 
 你写的东西只属于你。Textus 从设计上保证这一点，代码公开，任何人都能核实。

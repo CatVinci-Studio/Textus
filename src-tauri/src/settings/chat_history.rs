@@ -304,5 +304,7 @@ fn remove_file(path: &Path) {
     }
 }
 
+pub mod search;
+
 #[cfg(test)]
 mod tests;

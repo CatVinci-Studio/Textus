@@ -42,9 +42,16 @@ export interface PluginTabView {
 export interface WindowAccess {
   /** The folder the sidebar shows, if any. */
   rootPath(): string | null;
-  /** Opens a document in a tab, at `heading` if given. */
-  openFile(path: string, heading?: string): void;
+  /** Opens a document in a tab, at `heading` if given; `asDocument`
+   *  opens it as Markdown even where a plugin's editor takes its type. */
+  openFile(
+    path: string,
+    options: { heading?: string; asDocument?: boolean },
+  ): void;
   openUntitled(content: string, title?: string): void;
+  /** A guide to read (a plugin's USAGE.md): a clean draft, closed without
+   *  asking; the same guide open already comes to the front. */
+  openGuide(content: string, title: string): void;
   openPluginTab(view: PluginTabView): void;
 }
 

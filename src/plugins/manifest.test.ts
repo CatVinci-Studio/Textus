@@ -88,6 +88,56 @@ describe("a plugin's manifest", () => {
     expect(() => parseManifest("{nope")).toThrow(/not JSON/);
   });
 
+  it("reads where a plugin suggests completions, and refuses a bad pattern", () => {
+    const m = parseManifest({
+      ...base,
+      contributes: {
+        completions: [
+          { id: "catvinci.example.tex", where: "math", pattern: "\\\\[a-z]*" },
+          { id: "catvinci.example.any", pattern: "@\\w*" },
+        ],
+      },
+    });
+    expect(m.contributes.completions).toEqual([
+      { id: "catvinci.example.tex", where: "math", pattern: "\\\\[a-z]*" },
+      { id: "catvinci.example.any", where: "any", pattern: "@\\w*" },
+    ]);
+    const bad = (c: object) => () =>
+      parseManifest({ ...base, contributes: { completions: [c] } });
+    expect(bad({ id: "catvinci.example.x", pattern: "(" })).toThrow(
+      /not a regular expression/,
+    );
+    expect(
+      bad({ id: "catvinci.example.x", where: "code", pattern: "a" }),
+    ).toThrow(/where/);
+    expect(bad({ id: "other.x", pattern: "a" })).toThrow(/must start with/);
+  });
+
+  it("reads the links a plugin opens, each to one of its commands", () => {
+    const command = { command: "catvinci.example.open", title: "Open" };
+    const m = parseManifest({
+      ...base,
+      contributes: {
+        commands: [command],
+        links: [{ pattern: "^https?://", command: command.command }],
+      },
+    });
+    expect(m.contributes.links).toEqual([
+      { pattern: "^https?://", command: "catvinci.example.open" },
+    ]);
+    const bad = (link: object) => () =>
+      parseManifest({
+        ...base,
+        contributes: { commands: [command], links: [link] },
+      });
+    expect(bad({ pattern: "(", command: command.command })).toThrow(
+      /not a regular expression/,
+    );
+    expect(bad({ pattern: "a", command: "catvinci.example.other" })).toThrow(
+      /not in contributes.commands/,
+    );
+  });
+
   it("names network permissions by host", () => {
     expect(isPermission("network:api.zotero.org")).toBe(true);
     expect(isPermission("network:*.wikipedia.org")).toBe(true);
@@ -114,6 +164,14 @@ describe("versions", () => {
     expect(engineSatisfied("1.3.x", "1.3.7")).toBe(true);
     expect(engineSatisfied("1.3.x", "1.4.0")).toBe(false);
     expect(engineSatisfied("*", "9.0.0")).toBe(true);
+  });
+
+  it("tell the betas apart when the range names one", () => {
+    expect(engineSatisfied(">=1.3.0-beta.2", "1.3.0-beta.1")).toBe(false);
+    expect(engineSatisfied(">=1.3.0-beta.2", "1.3.0-beta.2")).toBe(true);
+    expect(engineSatisfied(">=1.3.0-beta.2", "1.3.0")).toBe(true);
+    expect(engineSatisfied("^1.3.0-beta.2", "1.3.0-beta.1")).toBe(false);
+    expect(engineSatisfied("^1.3.0-beta.2", "1.4.0")).toBe(true);
   });
 });
 

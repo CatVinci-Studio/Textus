@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Strings } from "../../i18n/strings";
 import { links, themeGallery } from "../../platform/ipc";
 import {
@@ -12,11 +12,11 @@ import { withUserTheme } from "../../theme/theme-import";
 import { errorText } from "../../utils/error-text";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useSettings } from "../SettingsContext";
-import { SettingsGroup } from "../pages/SettingsGroup";
 import { SettingRow } from "./controls";
 
 /**
- * Settings › Editor & Appearance › More themes › Browse themes: the public
+ * Settings › Extensions › Themes › Get themes (inside that group, which
+ * ThemeLibrarySection draws): the public
  * theme gallery.
  * The catalog is fetched when this page opens and at no other time - the
  * app makes no gallery requests in the background. Installing a theme makes
@@ -24,14 +24,26 @@ import { SettingRow } from "./controls";
  * the installed copy and leaves the selection as it is. Removing one is the
  * theme picker's Delete Theme.
  */
-/** The gallery's themes, in a group of their own - titled `title` where a
- *  page shows it among others (Extensions), so no group wraps it twice. */
+/** The themes whose name, author or description hold every word of
+ *  `query`. */
+function searchThemes(list: GalleryTheme[], query: string): GalleryTheme[] {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return list;
+  return list.filter((theme) => {
+    const text = [theme.name, theme.author, theme.description]
+      .join("\n")
+      .toLowerCase();
+    return words.every((w) => text.includes(w));
+  });
+}
+
+/** `query`: the market's search (MarketPage), over the gallery too. */
 export function ThemeGallerySection({
   t,
-  title,
+  query = "",
 }: {
   t: Strings;
-  title?: string;
+  query?: string;
 }) {
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
@@ -61,7 +73,7 @@ export function ThemeGallerySection({
   }
 
   if (unreachable) {
-    return framed(
+    return (
       <div className="theme-gallery-message" role="status">
         <div className="settings-row-hint">{t.themeGalleryUnreachable}</div>
         <div className="theme-gallery-message-actions">
@@ -80,65 +92,48 @@ export function ThemeGallerySection({
             {t.themeGalleryWebsite}
           </button>
         </div>
-      </div>,
+      </div>
     );
   }
   if (!catalog) {
-    return framed(
+    return (
       <div className="theme-gallery-message settings-row-hint" role="status">
         {t.themeGalleryLoading}
-      </div>,
+      </div>
     );
   }
-  const failed = error && (
-    <div className="settings-error" role="alert">
-      {error}
-    </div>
-  );
-  const rows = (
-    <>
-      {catalog.length === 0 && <SettingRow label={t.themeGalleryEmpty} />}
-      {catalog.map((theme) => {
-        const installed = installedCopy(theme, settings.userThemes);
-        return (
-          <GalleryItem
-            key={theme.id}
-            t={t}
-            theme={theme}
-            status={galleryStatus(theme, installed)}
-            inUse={!!installed && installed.id === settings.themeId}
-            busy={busy}
-            onInstall={() => void install(theme)}
-            onUse={() => installed && setSettings({ themeId: installed.id })}
-          />
-        );
-      })}
-    </>
-  );
-  if (title)
-    return (
-      <SettingsGroup title={title}>
-        {failed}
-        {rows}
-      </SettingsGroup>
-    );
   return (
     <>
-      {failed}
-      <section className="settings-group">
-        <div className="settings-group-body">{rows}</div>
-      </section>
+      {error && (
+        <div className="settings-error" role="alert">
+          {error}
+        </div>
+      )}
+      <div className="settings-group-body">
+        {catalog.length === 0 && <SettingRow label={t.themeGalleryEmpty} />}
+        {catalog.length > 0 && searchThemes(catalog, query).length === 0 && (
+          <p className="plugin-empty">
+            {t.pluginsSearchNone.replace("{query}", query.trim())}
+          </p>
+        )}
+        {searchThemes(catalog, query).map((theme) => {
+          const installed = installedCopy(theme, settings.userThemes);
+          return (
+            <GalleryItem
+              key={theme.id}
+              t={t}
+              theme={theme}
+              status={galleryStatus(theme, installed)}
+              inUse={!!installed && installed.id === settings.themeId}
+              busy={busy}
+              onInstall={() => void install(theme)}
+              onUse={() => installed && setSettings({ themeId: installed.id })}
+            />
+          );
+        })}
+      </div>
     </>
   );
-
-  /** A message in the place of the themes: in the titled group, or alone. */
-  function framed(message: ReactNode) {
-    return title ? (
-      <SettingsGroup title={title}>{message}</SettingsGroup>
-    ) : (
-      message
-    );
-  }
 }
 
 function GalleryItem({

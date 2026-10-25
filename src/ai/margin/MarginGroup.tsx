@@ -55,6 +55,7 @@ export const MarginGroup = memo(function MarginGroup({
   onHot,
   onDone,
   onAsk,
+  onEdit,
   onDecide,
 }: {
   groupKey: string;
@@ -71,6 +72,7 @@ export const MarginGroup = memo(function MarginGroup({
   onHot: (key: string, on: boolean) => void;
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
+  onEdit: (note: ReviewNote) => void;
   onDecide: (callId: string, index: number, take: boolean | null) => void;
 }) {
   const noHeight = () => {};
@@ -122,6 +124,7 @@ export const MarginGroup = memo(function MarginGroup({
                 onHot={onHot}
                 onDone={onDone}
                 onAsk={onAsk}
+                onEdit={onEdit}
                 onHeight={noHeight}
               />
             ) : (

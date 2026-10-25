@@ -15,6 +15,11 @@
   var commands = new Map();
   var viewProviders = new Map();
   var editorProviders = new Map();
+  var hoverProviders = [];
+  // Completion providers by the id their manifest's contributes
+  // .completions gives.
+  var completionProviders = new Map();
+  var aiTools = new Map();
   var settingsProvider = null;
   var webviews = new Map();
   var listeners = new Map();
@@ -125,6 +130,21 @@
     return new TextEncoder().encode(String(data));
   }
 
+  // A string of the plugin's manifest (`l10n`) in the UI's language: its
+  // own, then its base language's ("zh-Hant" -> "zh"), then English, then
+  // the key. "{0}", "{1}"... are the arguments after it.
+  function localized(l10n, language, key, args) {
+    var base = String(language).split("-")[0];
+    var text =
+      (l10n[language] && l10n[language][key]) ||
+      (l10n[base] && l10n[base][key]) ||
+      (l10n.en && l10n.en[key]) ||
+      key;
+    return text.replace(/\{(\d+)\}/g, function (all, n) {
+      return args[n] === undefined ? all : String(args[n]);
+    });
+  }
+
   var textus = {
     plugin: {
       get id() {
@@ -160,6 +180,16 @@
       },
       onDidChangeLanguage: function (callback) {
         return on("language", callback);
+      },
+    },
+    l10n: {
+      t: function (key) {
+        return localized(
+          env.l10n || {},
+          env.language || "en",
+          String(key),
+          Array.prototype.slice.call(arguments, 1),
+        );
       },
     },
     commands: {
@@ -202,6 +232,7 @@
         return call("window.openFile", {
           path: String(path),
           heading: options && options.heading,
+          asDocument: Boolean(options && options.asDocument),
         });
       },
       openWebPage: function (url, options) {
@@ -226,6 +257,15 @@
       },
       openExternal: function (url) {
         return call("window.openExternal", { url: String(url) });
+      },
+      splitEditor: function (direction) {
+        return call("window.splitEditor", { direction: direction || "row" });
+      },
+      closeSplit: function () {
+        return call("window.closeSplit", {});
+      },
+      layout: function () {
+        return call("window.layout", {});
       },
       openUntitled: function (content, options) {
         return call("window.openUntitled", {
@@ -264,6 +304,30 @@
       exec: function (op) {
         return call("editor.exec", op);
       },
+      // What the pointer rests on in the editor - a link to a document, any
+      // other link, or a citation [@key] - shown as a card: provider
+      // .provideHover(target) returns { title, markdown }, or null for
+      // targets it has nothing for. Needs document.read.
+      // The completions for one of the manifest's contributes.completions:
+      // provider.provideCompletions({ text, match, inMath }) returns
+      // [{ label, insert, detail }] ("$0" in insert marks the caret), or
+      // nothing. Asked only when what is before the caret matches.
+      registerCompletionProvider: function (id, provider) {
+        completionProviders.set(String(id), provider);
+        return disposable(function () {
+          if (completionProviders.get(String(id)) === provider)
+            completionProviders.delete(String(id));
+        });
+      },
+      registerHoverProvider: function (provider) {
+        hoverProviders.push(provider);
+        call("editor.registerHoverProvider", {}).catch(function () {});
+        return disposable(function () {
+          hoverProviders = hoverProviders.filter(function (p) {
+            return p !== provider;
+          });
+        });
+      },
     },
     document: {
       getText: function () {
@@ -297,6 +361,15 @@
       },
       findDocuments: function () {
         return call("workspace.findDocuments");
+      },
+      readDocuments: function () {
+        return call("workspace.readDocuments");
+      },
+      search: function (query, options) {
+        return call("workspace.search", {
+          query: String(query),
+          limit: options && options.limit,
+        });
       },
       readFile: function (path) {
         return call("workspace.readFile", { path: String(path) });
@@ -362,23 +435,73 @@
         });
       },
     },
-    storage: {
-      get: function (key) {
-        return call("storage.get", { key: String(key) });
-      },
-      set: function (key, value) {
-        return call("storage.set", {
-          key: String(key),
-          value: value === undefined ? null : value,
-        });
-      },
-    },
+    storage: (function () {
+      // One of the plugin's two places: "global" for every document,
+      // "project" in the open folder (with project.data).
+      function place(scope) {
+        return {
+          get: function (key) {
+            return call("store.get", { scope: scope, key: String(key) });
+          },
+          set: function (key, value) {
+            return call("store.set", {
+              scope: scope,
+              key: String(key),
+              value: value === undefined ? null : value,
+            });
+          },
+          delete: function (key) {
+            return call("store.set", {
+              scope: scope,
+              key: String(key),
+              value: null,
+            });
+          },
+          keys: function () {
+            return call("store.keys", { scope: scope });
+          },
+          readText: function (path) {
+            return call("store.read", { scope: scope, path: String(path) });
+          },
+          writeText: function (path, text) {
+            return call("store.write", {
+              scope: scope,
+              path: String(path),
+              text: String(text),
+            });
+          },
+          files: function () {
+            return call("store.files", { scope: scope });
+          },
+          deleteFile: function (path) {
+            return call("store.delete", { scope: scope, path: String(path) });
+          },
+        };
+      }
+      var global = place("global");
+      return {
+        global: global,
+        project: place("project"),
+        get: global.get,
+        set: global.set,
+      };
+    })(),
     settings: {
       get: function (key) {
         return call("settings.get", { key: String(key) });
       },
       onDidChange: function (callback) {
         return on("settings", callback);
+      },
+    },
+    ai: {
+      // Runs one of the manifest's contributes.aiTools when Textus AI
+      // calls it (ai.tools): `run(args)` answers with text for the model.
+      registerTool: function (name, run) {
+        aiTools.set(String(name), run);
+        return disposable(function () {
+          aiTools.delete(String(name));
+        });
       },
     },
     clipboard: {
@@ -422,6 +545,33 @@
         new CustomDocument(params.webview, params.path),
         webview(params.webview),
       );
+    },
+    $provideCompletions: async function (params) {
+      var provider = completionProviders.get(params.id);
+      if (!provider) return null;
+      var items = await provider.provideCompletions({
+        text: params.text,
+        match: params.match,
+        inMath: params.inMath,
+      });
+      return Array.isArray(items) ? items : null;
+    },
+    $provideHover: async function (params) {
+      for (var i = 0; i < hoverProviders.length; i++) {
+        var card = await hoverProviders[i].provideHover(params.target);
+        if (card && typeof card.markdown === "string")
+          return {
+            title: card.title == null ? null : String(card.title),
+            markdown: card.markdown,
+          };
+      }
+      return null;
+    },
+    $callAiTool: async function (params) {
+      var run = aiTools.get(params.name);
+      if (!run) throw new Error("The plugin has no tool " + params.name + ".");
+      var out = await run(params.arguments || {});
+      return typeof out === "string" ? out : JSON.stringify(out);
     },
     $resolveSettingsPage: function (params) {
       if (!settingsProvider) throw new Error("No settings page");

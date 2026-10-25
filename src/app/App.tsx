@@ -1,65 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
-import { installClipboardCapture } from "../clipboard/history";
 import { isIOSApp } from "../platform/capabilities";
-import { SettingsLayer, useSettingsOpening } from "./SettingsLayer";
+import { SettingsLayer } from "./SettingsLayer";
 import { DocumentList } from "../mobile/DocumentList";
 import { KeyboardToolbar } from "../mobile/KeyboardToolbar";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { useSettings } from "../settings/SettingsContext";
-import { links } from "../platform/ipc";
-import { useTutorial } from "../onboarding/useTutorial";
-import { useTutorialDocumentEvaluation } from "../onboarding/useTutorialDocumentEvaluation";
 import { formatCombo } from "../utils/shortcuts";
-import { useAppUpdate } from "./useAppUpdate";
-import { useZoom } from "./useZoom";
-import { useTabDragMerge } from "./useTabDragMerge";
-import { useGlobalShortcuts } from "./useGlobalShortcuts";
 import { fixedShortcutGroups } from "./fixed-shortcuts";
 import { platformName } from "../platform/window-chrome";
-import { useExternalChangeReload } from "../document/useExternalChangeReload";
-import { useDraftAutosave } from "../document/draft-autosave";
-import { useAutosave } from "../document/autosave";
-import {
-  useMenuBridge,
-  useNativeMenuAccelerators,
-  useNativeMenuChecks,
-} from "./menu-bridge";
-import { useStartupRestore } from "../document/startup-restore";
-import { useLastCarets } from "../document/last-carets";
 import { Presence } from "../ui/usePresence";
 import { FlipOnChange } from "../ui/flip";
 import { AgentPanelProvider } from "../ai/chat/panel/agent-panel";
-import { useTextusAi, useTextusAiResume } from "../ai/TextusAiSwitch";
 import { aiFeatures } from "../settings/textus-ai";
-import { useTabState } from "./useTabState";
-import { useSidePanels } from "./useSidePanels";
-import { useActiveDocument } from "./useActiveDocument";
-import { useOpenFolder } from "./useOpenFolder";
-import { useSessionPaths, useWindowTitle } from "./useWindowSession";
-import {
-  useFileDrop,
-  useFileOpening,
-  useOpenPathsPush,
-} from "./useFileOpening";
-import { useHelpTabs } from "./useHelpTabs";
-import { useSaveTabs } from "./useSaveTabs";
-import { useZenMode } from "./useZenMode";
-import { useSourceModes } from "./useSourceModes";
-import { useDocumentActions } from "./useDocumentActions";
-import {
-  useClosePrompt,
-  useTabRemoval,
-  useWindowCloseGuard,
-  type PendingClose,
-} from "./close-flow";
-import {
-  usePracticeTab,
-  usePracticeNotes,
-  useTutorialTabRecovery,
-  useWindowLessons,
-} from "./onboarding-wiring";
+import { useWindowShell } from "./useWindowShell";
+import { useWindowDocuments } from "./useWindowDocuments";
+import { useWindowWiring } from "./useWindowWiring";
 import { Sidebar } from "./Sidebar";
 import { MainPane } from "./MainPane";
 import { AgentPanelDock } from "./AgentPanelDock";
@@ -69,344 +25,50 @@ import {
   UpdateToast,
   WordImportNotice,
   ZenHint,
-  useWordImported,
 } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
-import { usePluginWindow } from "../plugins/usePluginWindow";
 import { QuickPickHost } from "../plugins/quick-pick";
 import "../plugins/plugins.css";
-import { tabIsUntouchedDraft } from "../document/doc-tabs";
-import { useLatest } from "../utils/hooks/useLatest";
 import "./App.css";
 
 /**
  * One window: its tabs, the panels around them, and the prompts and
- * notices over them. Each concern lives in its own hook or component in
- * this folder; this is where they meet. The hooks keep the order they had
- * when all of this was one function, so their effects still run in it.
+ * notices over them. Its frame (useWindowShell), its documents
+ * (useWindowDocuments) and what reaches it from outside (useWindowWiring)
+ * are hooks of their own, called in the order their parts had when all of
+ * this was one function, so their effects still run in it; this is where
+ * they meet the components.
  */
 function App() {
   const { t, settings, setSettings } = useSettings();
-  const tabState = useTabState();
-  const { tabs, setTabs, activeTabId, setActiveTabId, tabsRef, liveTabs } =
-    tabState;
-  const { updateTab, reorderTab, addBlankTab } = tabState;
-  // The one save/discard/cancel prompt (close-flow.ts's PendingClose).
-  const [pendingClose, setPendingClose] = useState<PendingClose | null>(null);
-  const textusAi = useTextusAi();
-  useTextusAiResume();
-  const {
-    panelOpen,
-    setPanelOpen,
-    toggleSidebar,
-    sidebarWidth,
-    agentPanel,
-    agentPanelEl,
-    setAgentPanelEl,
-    toggleAgentPanel,
-    sidebarPresence,
-    sidebarClosing,
-    agentPresence,
-    agentClosing,
-    sheetFull,
-    setSheetFull,
-    panelMode,
-    setPanelMode,
-  } = useSidePanels(textusAi.on);
-  const settingsOpening = useSettingsOpening();
-  const appUpdate = useAppUpdate(settings.updateChannel);
-  useZoom(settings.zoom, (zoom) => setSettings({ zoom }));
-  const tutorial = useTutorial(textusAi.on);
-  const startTutorial = tutorial.start;
-  const stopTutorial = tutorial.exit;
-  const evaluateTutorialDocumentChange = useTutorialDocumentEvaluation(
-    tutorial,
-    settings.language,
-  );
-  const cancelDraftFlushes = useDraftAutosave(
-    tabs,
-    settings.enableDraftRecovery,
-  );
-  const [draftsRestoredCount, setDraftsRestoredCount] = useState(0);
-  const wordImported = useWordImported();
-
-  const {
-    activeTab,
-    documentsFolder,
-    wordCount,
-    featuresPaused,
-    activeDirty,
-    activeTitle,
-  } = useActiveDocument(tabs, activeTabId, t);
-  const showFiles = useCallback(() => {
-    setPanelOpen(true);
-    setPanelMode("tree");
-  }, [setPanelOpen, setPanelMode]);
-  const openFolder = useOpenFolder({
-    activePath: activeTab.path,
-    fallback: documentsFolder,
-    onOpened: showFiles,
-    folderTooBroad: t.folderTooBroad,
-  });
-  // The search shortcut's request for the Files tab's search box, taken
-  // (and cleared) by the box once the sidebar shows it.
-  const [searchFocusRequest, setSearchFocusRequest] = useState(false);
-  const clearSearchFocusRequest = useCallback(
-    () => setSearchFocusRequest(false),
-    [],
-  );
-  const hasTree = openFolder.treeRoot !== null;
-  const searchFiles = useCallback(() => {
-    showFiles();
-    // No tree yet (an unsaved draft): nothing to search, and a request
-    // left standing would take the keyboard whenever a tree came.
-    if (hasTree) setSearchFocusRequest(true);
-  }, [showFiles, hasTree]);
-  useWindowTitle(activeTitle);
-  useSessionPaths(tabs);
-
-  const dialogFilters = useMemo(
-    () => ({
-      textFilter: t.openDialogText,
-      wordFilter: t.openDialogWord,
-      allFilter: t.openDialogAll,
-    }),
-    [t],
-  );
-  const {
-    openPathInTab,
-    replaceTabWithFile,
-    openFile,
-    openFileDialog,
-    openRecentFile,
-  } = useFileOpening({
-    tabState,
-    newDocumentMode: settings.newDocumentMode,
-    setPendingClose,
-    dialogFilters,
-    restoreCarets: settings.restoreSessionOnStartup,
-    t,
-    onWordDocumentOpened: wordImported.opened,
-  });
-  useLastCarets(tabs, activeTabId, settings.restoreSessionOnStartup);
-  usePluginWindow({
-    t,
-    language: settings.language,
-    rootPath: openFolder.folder ?? openFolder.treeRoot,
-    activePath: activeTab.path,
-    tabState,
-    openPathInTab,
-    saveActiveTab: () => void saveTab(activeTab.id),
-  });
-
-  const { openHelpTab } = useHelpTabs({
-    tabState,
-    language: settings.language,
-    stopTutorial,
-  });
-
-  const { claimPracticeTab, startWelcomeTutorial } = usePracticeTab(
-    tabState,
-    startTutorial,
-  );
-
-  const handleChange = useCallback(
-    (tabId: string, markdown: string) => {
-      updateTab(tabId, { content: markdown });
-      evaluateTutorialDocumentChange(tabId, markdown);
-    },
-    [updateTab, evaluateTutorialDocumentChange],
-  );
-
-  const { saveTab, saveTabAs, autosaveTab } = useSaveTabs({
-    tabState,
-    t,
-    autoSuggestFilename: settings.autoSuggestFilename,
-    imageFolder: settings.imageFolder,
-  });
-  const flushAutosave = useAutosave({
-    tabs,
-    activeTabId,
-    enabled: settings.autosave,
-    autosaveTab,
-  });
-
-  const { zenMode, setZenMode, toggleZenMode } = useZenMode();
-  const { toggleSourceMode, toggleSplitView } = useSourceModes(tabState);
-
-  const { removeTab, requestCloseTab } = useTabRemoval({
-    tabState,
-    cancelDraftFlushes,
-    flushAutosave,
-    setPendingClose,
-  });
-
-  // Tabs moving BETWEEN windows, in both directions (drag out, drop in,
-  // hover preview) - see useTabDragMerge.ts.
-  const { dragHoverPreview, handleTabDetach } = useTabDragMerge({
-    tabsRef,
-    liveTabs,
-    t,
-    removeTab,
-    setTabs,
-    setActiveTabId,
-  });
-
-  // Nothing to switch between with a single tab, regardless of
-  // newDocumentMode - the setting only decides how NEW documents open, not
-  // whether the bar shows. A single-tab window stays draggable-to-merge via
-  // its native title bar instead (see useTabDragMerge.ts) - but the bar
-  // still needs to appear the moment an incoming-tab preview lands, so the
-  // incoming tab has somewhere to show up before the merge actually happens.
-  const showTabBar = tabs.length > 1 || dragHoverPreview !== null;
-
-  useGlobalShortcuts({
-    tabsRef,
-    activeTabId,
-    setActiveTabId,
-    saveTab,
-    requestCloseTab,
-    toggleSourceMode,
-    toggleSidebar,
-    toggleAgentPanel,
-    toggleSplitView,
-    toggleZenMode,
-    searchFiles,
-    toggleTextusAi: textusAi.toggle,
-  });
-
-  useEffect(() => installClipboardCapture(), []);
-
-  useTutorialTabRecovery(tutorial, tabState, claimPracticeTab);
-  usePracticeNotes({
-    tutorial,
-    tabState,
-    language: settings.language,
-    evaluate: evaluateTutorialDocumentChange,
-  });
-
-  // Files handed over by the OS (Finder "Open With" / double-click, or the
-  // `textus` CLI command) at launch, recovered drafts, a dragged-in tab, or a
-  // Help doc this window was spawned to show - see startup-restore.ts for
-  // the actual priority chain. Deliberately runs only once, at mount.
-  useStartupRestore({
-    activeTabId,
-    enableDraftRecovery: settings.enableDraftRecovery,
-    newDocumentMode: settings.newDocumentMode,
-    language: settings.language,
-    onboardingShown: settings.onboardingShown,
-    setTabs,
-    setDraftsRestoredCount,
-    markOnboardingShown: () => setSettings({ onboardingShown: true }),
-    openPathInTab,
-    openFile,
-    replaceTabWithFile,
-    restoreCarets: settings.restoreSessionOnStartup,
-    startTutorial,
-    stopTutorial,
-  });
-
-  // The same, pushed to an already-running window (useFileOpening.ts).
-  useOpenPathsPush(openPathInTab);
-  const activeTabRef = useLatest(activeTab);
-  const activeIsUntouchedDraft = useCallback(
-    () => tabIsUntouchedDraft(activeTabRef.current),
-    [activeTabRef],
-  );
-  useFileDrop(openFile, openPathInTab, activeIsUntouchedDraft);
-
-  useWindowCloseGuard(liveTabs, flushAutosave, setPendingClose);
-
-  useExternalChangeReload(liveTabs, updateTab);
-
-  const {
-    documentsOpen,
-    setDocumentsOpen,
-    openFromDocuments,
-    documentRenamed,
-    entryMoved,
-    documentDeleted,
-    skillFilesDeleted,
-    shareActiveTab,
-  } = useDocumentActions({ tabState, openFile, removeTab, saveTab });
-
-  // Which View items are on: the check marks in the app-drawn menu and in
-  // the macOS menu bar.
-  const menuChecks = {
-    sidebar: panelOpen,
-    agentPanel: agentPanel.open,
-    textusAi: textusAi.on,
-    sourceMode: !!activeTab.sourceMode && !activeTab.splitView,
-    splitView: !!activeTab.sourceMode && !!activeTab.splitView,
-    typewriter: settings.typewriterMode,
-    zen: zenMode,
-    folderOpen: openFolder.folder !== null,
-  };
-  useNativeMenuChecks(menuChecks);
-  useNativeMenuAccelerators(settings.shortcuts);
-
-  // Menu events from Rust (menu.rs's dispatch) - every File/View/Format/Help
-  // action the frontend owns arrives here as a window event; see
-  // menu-bridge.ts for the actual subscriptions.
-  useMenuBridge({
-    activeTabId,
-    liveTabs,
-    t,
-    pdfPageNumbers: settings.pdfPageNumbers,
-    diagramEngine: settings.diagramEngine,
-    onOpenSettings: settingsOpening.openSettings,
-    onOpenPluginSettings: settingsOpening.openPluginSettings,
-    onToggleTypewriter: () =>
-      setSettings({ typewriterMode: !settings.typewriterMode }),
-    onToggleSidebar: toggleSidebar,
-    onToggleAgentPanel: toggleAgentPanel,
-    onToggleTextusAi: textusAi.toggle,
-    onToggleSplitView: toggleSplitView,
-    onToggleZenMode: toggleZenMode,
-    addBlankTab,
-    openFileDialog,
-    openRecentFile,
-    openFolderDialog: openFolder.openFolderDialog,
-    openFolder: openFolder.openFolder,
-    closeFolder: openFolder.closeFolder,
-    saveTab,
-    saveTabAs,
-    toggleSourceMode,
-    requestCloseTab,
-    openHelpTab,
-    startWelcomeTutorial,
-    openCommunity: () => void links.openCommunityPage(settings.language),
-    openTutorials: () => void links.openTutorialsPage(settings.language),
-    onOpenDocuments: () => setDocumentsOpen(true),
-    shareActiveTab,
-  });
-
-  const sidebarLesson = useWindowLessons({
-    tutorial,
-    languageChosen: settings.languageChosen,
-    panelOpen,
-    panelMode,
-    agentPanelOpen: agentPanel.open,
-    writingMode: [
-      zenMode,
-      settings.typewriterMode,
-      !!activeTab.sourceMode,
-      !!activeTab.splitView,
-    ].join(),
-    look: `${settings.themeId} ${settings.theme}`,
-  });
-
-  const { closeSaving, closeDiscarding, cancelClose, closePrompt } =
-    useClosePrompt({
-      pendingClose,
-      setPendingClose,
-      tabState,
-      cancelDraftFlushes,
-      saveTab,
-      removeTab,
-      replaceTabWithFile,
-    });
+  const shell = useWindowShell({ settings, setSettings });
+  const docs = useWindowDocuments({ shell, settings, t });
+  const wiring = useWindowWiring({ shell, docs, settings, setSettings, t });
   const phone = usePhoneLayout();
+
+  const { textusAi, tutorial, settingsOpening, appUpdate, pendingClose } =
+    shell;
+  const { draftsRestoredCount, setDraftsRestoredCount, wordImported } = shell;
+  const { tabs, activeTabId, setActiveTabId, addBlankTab, reorderTab } =
+    shell.tabState;
+  const { panelOpen, setPanelOpen, toggleSidebar, sidebarWidth } = shell.panels;
+  const { agentPanel, agentPanelEl, setAgentPanelEl, toggleAgentPanel } =
+    shell.panels;
+  const { sidebarPresence, sidebarClosing, agentPresence, agentClosing } =
+    shell.panels;
+  const { sheetFull, setSheetFull, panelMode, setPanelMode } = shell.panels;
+  const { activeTab, activeTitle, activeDirty, featuresPaused, wordCount } =
+    docs;
+  const { openFolder, openFile, openFileDialog, handleChange } = docs;
+  const { searchFocusRequest, clearSearchFocusRequest } = docs;
+  const { showTabBar, requestCloseTab, handleTabDetach, dragHoverPreview } =
+    docs;
+  const { toggleSourceMode, zenMode, setZenMode, toggleZenMode } = docs;
+  const { menuChecks, sidebarLesson, entryMoved, skillFilesDeleted } = wiring;
+  const { documentsOpen, setDocumentsOpen, openFromDocuments } = wiring;
+  const { documentRenamed, documentDeleted } = wiring;
+  const { closeSaving, closeDiscarding, cancelClose, closePrompt } =
+    wiring.close;
 
   return (
     <AgentPanelProvider

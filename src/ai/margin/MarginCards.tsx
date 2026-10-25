@@ -1,4 +1,5 @@
 import { RevisionNoteText } from "./RevisionNoteText";
+import { OWN_CHANGES } from "./own-revision-plugin";
 import { InlineMarkdownText } from "../MarkdownText";
 import { memo, useLayoutEffect, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
@@ -218,9 +219,20 @@ export const RevisionCard = memo(
         }}
       >
         <div className="review-note-by">
-          <span className="revision-note-num" aria-hidden="true">
-            {item.num}
-          </span>
+          {/* The writer's own change (own-revision-plugin): Me, not a
+              number in the AI's review. */}
+          {item.callId === OWN_CHANGES ? (
+            <span
+              className="review-note-mark review-note-mark-me"
+              aria-hidden="true"
+            >
+              {labels.ownNoteMark}
+            </span>
+          ) : (
+            <span className="revision-note-num" aria-hidden="true">
+              {item.num}
+            </span>
+          )}
           <span className="revision-note-what">
             {what
               ? `${labels.reviewBarLabel} · ${what}`
@@ -356,6 +368,7 @@ export const NoteCard = memo(function NoteCard({
   onHot,
   onDone,
   onAsk,
+  onEdit,
   onHeight,
 }: CardPlace & {
   itemKey: string;
@@ -365,6 +378,7 @@ export const NoteCard = memo(function NoteCard({
   onPick: (id: string) => void;
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
+  onEdit: (note: ReviewNote) => void;
 }) {
   const ref = useCardBox(itemKey, top, onHeight, cut !== null);
   return (
@@ -397,48 +411,68 @@ export const NoteCard = memo(function NoteCard({
       {chip && !open ? (
         <>
           <div className="review-note-by">
-            <NoteNum note={note} />
-            {labels.reviewNoteBy}
+            <NoteMark note={note} labels={labels} />
+            {note.by === "me" ? labels.ownNoteBy : labels.reviewNoteBy}
           </div>
           <div className="review-note-chip-text">
             <InlineMarkdownText text={note.comment} />
           </div>
         </>
       ) : (
-        <NoteBody note={note} labels={labels} onAsk={onAsk} onDone={onDone} />
+        <NoteBody
+          note={note}
+          labels={labels}
+          onAsk={onAsk}
+          onEdit={onEdit}
+          onDone={onDone}
+        />
       )}
     </div>
   );
 });
 
-/** A note's number - its badge's in the text, its card's in the chat -
- *  at the head of its card, as a revision's is. */
-function NoteNum({ note }: { note: ReviewNote }) {
-  return (
+/** Who wrote a note, at the head of its card: Me for the writer's own
+ *  (useOwnNotes), else the number of the AI's note - its badge's in the
+ *  text, its card's in the chat - as a revision's is. */
+function NoteMark({
+  note,
+  labels,
+}: {
+  note: ReviewNote;
+  labels: ReviewMarginLabels;
+}) {
+  return note.by === "me" ? (
+    <span className="review-note-mark review-note-mark-me" aria-hidden="true">
+      {labels.ownNoteMark}
+    </span>
+  ) : (
     <span className="review-note-num" aria-hidden="true">
       {note.num}
     </span>
   );
 }
 
-/** A note's card: its number, the note, and its two actions - in the
- *  margin and in the popover a phone opens from its badge. */
+/** A note's card: who wrote it, the note, and its actions - asking the AI
+ *  about it, and marking it done (an own note: editing it, deleting it) -
+ *  in the margin and in the popover its badge opens. */
 function NoteBody({
   note,
   labels,
   onAsk,
+  onEdit,
   onDone,
 }: {
   note: ReviewNote;
   labels: ReviewMarginLabels;
   onAsk: (note: ReviewNote) => void;
+  onEdit: (note: ReviewNote) => void;
   onDone: (id: string) => void;
 }) {
   return (
     <>
       <div className="review-note-by">
-        <NoteNum note={note} />
-        {labels.reviewNoteBy}
+        <NoteMark note={note} labels={labels} />
+        {note.by === "me" ? labels.ownNoteBy : labels.reviewNoteBy}
       </div>
       <div className="review-note-text">
         <InlineMarkdownText text={note.comment} />
@@ -447,8 +481,13 @@ function NoteBody({
         <button type="button" onClick={() => onAsk(note)}>
           {labels.reviewNoteAsk}
         </button>
+        {note.by === "me" && (
+          <button type="button" onClick={() => onEdit(note)}>
+            {labels.ownNoteEdit}
+          </button>
+        )}
         <button type="button" onClick={() => onDone(note.id)}>
-          {labels.reviewNoteDone}
+          {note.by === "me" ? labels.ownNoteDelete : labels.reviewNoteDone}
         </button>
       </div>
     </>
@@ -500,6 +539,7 @@ export function NotePopover({
   labels,
   onDone,
   onAsk,
+  onEdit,
   onClose,
 }: {
   note: ReviewNote;
@@ -508,6 +548,7 @@ export function NotePopover({
   labels: ReviewMarginLabels;
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
+  onEdit: (note: ReviewNote) => void;
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -542,7 +583,13 @@ export function NotePopover({
       role="dialog"
       aria-label={labels.reviewNoteBy}
     >
-      <NoteBody note={note} labels={labels} onAsk={onAsk} onDone={onDone} />
+      <NoteBody
+        note={note}
+        labels={labels}
+        onAsk={onAsk}
+        onEdit={onEdit}
+        onDone={onDone}
+      />
     </div>,
     document.body,
   );

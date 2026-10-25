@@ -22,6 +22,7 @@ pub mod folder;
 pub mod fs;
 pub mod image_host;
 pub mod links;
+pub mod own_notes;
 #[cfg(desktop)]
 pub mod pdf_page_numbers;
 #[cfg(desktop)]
@@ -36,4 +37,6 @@ pub mod tree_ops;
 #[cfg(desktop)]
 pub mod update;
 pub mod vault;
+#[cfg(desktop)]
+pub mod web_page;
 pub mod word_import;

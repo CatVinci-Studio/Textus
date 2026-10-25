@@ -13,6 +13,7 @@ import type { AgentTurn_Deserialize as AgentTurnInput } from "./bindings/ai-agen
 import type {
   PassRequest_Deserialize as PassRequest,
   Value,
+  SkillOffer,
 } from "./bindings/ai-memory";
 import { isIOSApp } from "./capabilities";
 import { iosFiles } from "./ios-files";
@@ -47,6 +48,7 @@ export {
   storage,
   type DraftSnapshot,
   drafts,
+  ownNotes,
 } from "./ipc-files";
 export {
   type FloatingDragArgs,
@@ -54,6 +56,7 @@ export {
   windowIpc,
   menuIpc,
   links,
+  webPages,
   exportDoc,
   themes,
   themeGallery,
@@ -134,6 +137,12 @@ export const ai = {
   generatedImage: (id: string) => command("ai_generated_image", id),
   /** Asks again for a picture that wasn't made, by itself. */
   retryGeneratedImage: (id: string) => command("ai_retry_generated_image", id),
+  /** The description a waiting picture was drawn from; null once gone. */
+  generatedImagePrompt: (id: string) =>
+    command("ai_generated_image_prompt", id),
+  /** Draws a waiting picture again from the writer's description. */
+  redrawGeneratedImage: (id: string, prompt: string) =>
+    command("ai_redraw_generated_image", id, prompt),
   /** Lets a waiting picture go: rejected, or saved. */
   discardGeneratedImage: (id: string) =>
     command("ai_discard_generated_image", id),
@@ -333,6 +342,22 @@ export const ai = {
   }) =>
     // One struct in Rust, as ai_complete's.
     aiCall<RememberedChange[]>("memory_pass", args satisfies PassRequest),
+  /** After an exchange, its request offered as a skill to save
+   *  (ai/memory/skill_offer.rs) - null when it isn't one. */
+  offerSkill: (args: {
+    provider: string;
+    model: string | null;
+    docPath: string | null;
+    workspaceRoot: string | null;
+    exchange: { messages: string[]; reply: string };
+  }) => aiCall<SkillOffer | null>("ai_offer_skill", args),
+  /** An offered skill saved, for every document or this project's. */
+  saveOfferedSkill: (
+    offer: SkillOffer,
+    scope: "personal" | "project",
+    docPath: string | null,
+    workspaceRoot: string | null,
+  ) => command("save_offered_skill", offer, scope, docPath, workspaceRoot),
   /** What the writer will probably say next, after a reply
    *  (ai/next_message.rs); null when there is no clear next step. */
   suggestNextMessage: (args: {

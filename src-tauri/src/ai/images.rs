@@ -71,6 +71,23 @@ pub fn ai_retry_generated_image(id: String) -> Result<(), String> {
     retry(&id)
 }
 
+/// The description a proposed picture was drawn from, for the writer to
+/// change (ai_redraw_generated_image); none once it is gone.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn ai_generated_image_prompt(id: String) -> Option<String> {
+    prompt_of(&id)
+}
+
+/// Draws a proposed picture again from the writer's description, leaving
+/// the others alone; ai_generated_image then waits for it as for any
+/// picture.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn ai_redraw_generated_image(id: String, prompt: String) -> Result<(), String> {
+    redraw(&id, prompt)
+}
+
 /// Lets a picture go: its proposal was rejected, or it was saved. One
 /// still being made is let go too; what it makes is thrown away.
 #[tauri::command]

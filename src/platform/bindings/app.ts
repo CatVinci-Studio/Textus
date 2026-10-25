@@ -81,6 +81,23 @@ export const commands = {
 	 */
 	close_chat_window: () => __TAURI_INVOKE<void>("close_chat_window"),
 	/**
+	 *  Shows tab `id`'s page at `bounds`, making it the first time; a page
+	 *  made already is moved there and shown again, at the address it was
+	 *  left at.
+	 */
+	web_page_show: (id: string, url: string, bounds: PageBounds) => __TAURI_INVOKE<null>("web_page_show", { id, url, bounds }),
+	/**
+	 *  Hides tab `id`'s page: its tab went out of sight, or something is shown
+	 *  over it (a menu, a dialog) that a native page would cover.
+	 */
+	web_page_hide: (id: string) => __TAURI_INVOKE<null>("web_page_hide", { id }),
+	/**  Lets tab `id`'s page go: its tab closed. */
+	web_page_close: (id: string) => __TAURI_INVOKE<null>("web_page_close", { id }),
+	/**  Takes tab `id`'s page to `url`, typed in its address bar. */
+	web_page_navigate: (id: string, url: string) => __TAURI_INVOKE<null>("web_page_navigate", { id, url }),
+	/**  Loads tab `id`'s page again. */
+	web_page_reload: (id: string) => __TAURI_INVOKE<null>("web_page_reload", { id }),
+	/**
 	 *  Brings the detached chat serving this editor to the front, without
 	 *  handing it anything. Opening Ask AI while a chat window exists means "go
 	 *  to the conversation", and the conversation there has moved on since it
@@ -386,6 +403,17 @@ export type GalleryTheme_Serialize = {
 	css: string,
 	/**  Repository-relative screenshots. */
 	previews: string[],
+};
+
+/**
+ *  Where the page goes in its window, in CSS pixels from the window's
+ *  content's top left.
+ */
+export type PageBounds = {
+	x: number | null,
+	y: number | null,
+	width: number | null,
+	height: number | null,
 };
 
 /**  The tray, for Settings - generated into src/platform/bindings/app.ts. */

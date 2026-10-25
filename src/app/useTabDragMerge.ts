@@ -18,6 +18,7 @@ import {
 } from "../document/doc-tabs";
 import { windowIpc, type WindowBounds } from "../platform/ipc";
 import { flushPendingWrites } from "../storage/pending-writes";
+import { useLatest } from "../utils/hooks/useLatest";
 import { canUseWindows } from "../platform/capabilities";
 
 // Everything about moving tabs BETWEEN windows lives here, both directions:
@@ -146,6 +147,8 @@ export function useTabDragMerge(opts: {
   // in open space just means a fresh window there. Release before ever
   // touching a row: it was a plain window move, nothing happens.
   const windowDragRef = useRef<"idle" | "watching" | "handed-off">("idle");
+  // Subscribed once; a tick reads these as they are then.
+  const latest = useLatest({ hitTestWindow, liveTabs, t });
 
   useEffect(() => {
     // One window, never dragged, on iOS.
@@ -158,18 +161,20 @@ export function useTabDragMerge(opts: {
         return;
       }
       if (windowDragRef.current !== "watching") return;
-      const target = await hitTestWindow(x, y);
+      const target = await latest.current.hitTestWindow(x, y);
       // Re-check the phase: a tick may have finished the handoff while
       // this hit test was in flight.
       if (!target || windowDragRef.current !== "watching") return;
-      const tab = liveTabs()[0];
+      const tab = latest.current.liveTabs()[0];
       if (!tab) return;
       windowDragRef.current = "handed-off";
       // Rust destroys this window at once (destroySource), mid-drag, with
       // no time to wait for anything - but whatever storage writes it still
       // holds back are sent first, and land before the drag command does.
       void flushPendingWrites();
-      void windowIpc.startFloatingTabDrag(floatingDragArgs(tab, t, true));
+      void windowIpc.startFloatingTabDrag(
+        floatingDragArgs(tab, latest.current.t, true),
+      );
     }
 
     // Ticks run strictly in order - two interleaved handlers could both
@@ -200,8 +205,7 @@ export function useTabDragMerge(opts: {
     });
 
     return unlistenAll(unlistenTick, unlistenMoved);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [latest, tabsRef]);
 
   // A floating tab dropped onto this window's tab row (Rust's drag thread
   // emits it on release): lands at the slot it was hovering - the
@@ -239,8 +243,7 @@ export function useTabDragMerge(opts: {
       },
     );
     return unlistenAll(unlisten);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setActiveTabId, setTabs, tabsRef]);
 
   // Live "a tab is being dragged along this bar" feedback for this window
   // as a MERGE TARGET - Rust's floating drag emits it every tick with the
@@ -270,7 +273,7 @@ export function useTabDragMerge(opts: {
       },
     );
     return unlistenAll(unlisten);
-  }, []);
+  }, [setActiveTabId, setTabs, tabsRef]);
 
   return { dragHoverPreview, handleTabDetach };
 }

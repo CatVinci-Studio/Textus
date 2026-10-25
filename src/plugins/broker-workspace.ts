@@ -1,4 +1,4 @@
-import { fs, plugins as pluginsIpc } from "../platform/ipc";
+import { fs, plugins as pluginsIpc, type StoreScope } from "../platform/ipc";
 import { dirname } from "../utils/path";
 import { FILE_WRITTEN_EVENT } from "../utils/events";
 import { fromBase64, toBase64 } from "./files";
@@ -16,7 +16,6 @@ export interface PluginScope {
   root(): string;
   /** One of the plugin's own webviews; throws for another's. */
   ownWebview(id: string): NonNullable<ReturnType<typeof webview>>;
-  loadStorage(): Promise<Record<string, unknown>>;
 }
 
 /** A plugin's write, and the window told once it is on disk: a tab of
@@ -24,6 +23,16 @@ export interface PluginScope {
 async function written(path: string, write: Promise<void>): Promise<void> {
   await write;
   window.dispatchEvent(new CustomEvent(FILE_WRITTEN_EVENT, { detail: path }));
+}
+
+/** The folder a plugin's project place is in: the one open in the
+ *  sidebar (null for its global place). */
+function placeRoot(p: PluginScope, scope: StoreScope): string | null {
+  if (scope !== "project") return null;
+  p.need("project.data");
+  const root = getWindowAccess()?.rootPath();
+  if (!root) throw new Error("No folder is open.");
+  return root;
 }
 
 /** The calls a plugin makes outside the window, each checked against
@@ -69,6 +78,9 @@ export function workspaceHandlers(p: PluginScope) {
       const index = await fs.indexFolder(p.root());
       return index.files;
     },
+    "workspace.readDocuments": () => pluginsIpc.fsDocuments(p.id, p.root()),
+    "workspace.search": ({ query, limit }: { query: string; limit?: number }) =>
+      pluginsIpc.fsSearch(p.id, p.root(), query, limit ?? null),
     "workspace.readFile": ({ path }: { path: string }) =>
       pluginsIpc.fsRead(p.id, p.root(), path),
     "workspace.writeText": ({ path, text }: { path: string; text: string }) => {
@@ -117,14 +129,36 @@ export function workspaceHandlers(p: PluginScope) {
       });
       return { ...response, body: fromBase64(response.body) };
     },
-    "storage.get": async ({ key }: { key: string }) =>
-      (await p.loadStorage())[key] ?? null,
-    "storage.set": async ({ key, value }: { key: string; value: unknown }) => {
-      await pluginsIpc.storageSet(p.id, key, value);
-      const store = await p.loadStorage();
-      if (value === null) delete store[key];
-      else store[key] = value;
-    },
+    // Its own places (src-tauri plugins/store.rs): the project's is the
+    // open folder's, which Rust checks project.data for.
+    "store.get": ({ scope, key }: { scope: StoreScope; key: string }) =>
+      pluginsIpc.storeGet(p.id, scope, placeRoot(p, scope), key),
+    "store.set": ({
+      scope,
+      key,
+      value,
+    }: {
+      scope: StoreScope;
+      key: string;
+      value: unknown;
+    }) => pluginsIpc.storeSet(p.id, scope, placeRoot(p, scope), key, value),
+    "store.keys": ({ scope }: { scope: StoreScope }) =>
+      pluginsIpc.storeKeys(p.id, scope, placeRoot(p, scope)),
+    "store.read": ({ scope, path }: { scope: StoreScope; path: string }) =>
+      pluginsIpc.storeRead(p.id, scope, placeRoot(p, scope), path),
+    "store.write": ({
+      scope,
+      path,
+      text,
+    }: {
+      scope: StoreScope;
+      path: string;
+      text: string;
+    }) => pluginsIpc.storeWrite(p.id, scope, placeRoot(p, scope), path, text),
+    "store.files": ({ scope }: { scope: StoreScope }) =>
+      pluginsIpc.storeFiles(p.id, scope, placeRoot(p, scope)),
+    "store.delete": ({ scope, path }: { scope: StoreScope; path: string }) =>
+      pluginsIpc.storeDelete(p.id, scope, placeRoot(p, scope), path),
     "clipboard.readText": () => {
       p.need("clipboard");
       return navigator.clipboard.readText();

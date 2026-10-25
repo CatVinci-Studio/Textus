@@ -4,7 +4,7 @@ import type { UserThemeMeta } from "../settings/SettingsContext";
 import { saveUserTheme } from "./theme-import";
 
 /// The public theme gallery (github.com/CatVinci-Studio/textus-themes):
-/// what Settings › Browse themes lists, and installing one of its themes as
+/// what Settings › Extensions › Themes lists, and installing one of its themes as
 /// a user theme - the same kind Import CSS… makes, remembering which gallery
 /// theme it came from so a newer version shows as an update.
 

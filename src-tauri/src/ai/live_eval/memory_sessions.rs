@@ -587,3 +587,129 @@ fn live_memory_over_sessions() {
     std::fs::write(&path, serde_json::to_string_pretty(&reports).unwrap()).unwrap();
     eprintln!("memory_sessions: report at {path}");
 }
+
+/// The memory tidied (memory::tidy) on the eval's provider: three ways of
+/// saying "reply in English", a rule a later one overturned, and others
+/// that must stay as they are.
+#[test]
+#[ignore = "live API - see module docs"]
+fn live_memory_tidy() {
+    use crate::ai::memory::{tidy_if_due, Source};
+    use aicompat::agent::{AgentTurn, StepResult};
+    use aicompat::providers::AgentProvider;
+    let Some(auth) = auth() else { return };
+    let dir = tempfile::tempdir().unwrap();
+    let dirs = MemoryDirs::new(Some(dir.path()), None);
+    let source = Source::default();
+    let said = [
+        "Reply in English.",
+        "Use short sentences in replies.",
+        "Always answer me in English.",
+        "Write 你, never 您.",
+        "Never use exclamation marks.",
+        "Answer in English, please, even when I write Chinese.",
+        "Use 您 in letters to clients.",
+        "Keep headings in title case.",
+        "Prefer the Oxford comma.",
+    ];
+    for text in said {
+        dirs.keep("preference", "personal", text, &source).unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+    let agent = AgentProvider {
+        id: harness::agent_provider_id().to_string(),
+        model: harness::agent_model(),
+        endpoint: harness::agent_endpoint(&auth),
+        thinking: Default::default(),
+        native_search: None,
+        enforce_binding: true,
+    };
+    let started = std::time::Instant::now();
+    let made = harness::block_on(tidy_if_due(&dirs, &source, |instructions, input| {
+        let agent = &agent;
+        async move {
+            let turn = [AgentTurn::User {
+                text: input,
+                images: Vec::new(),
+            }];
+            let (step, _) = agent.step(&instructions, &turn, &[], &|_| {}).await?;
+            Ok(match step {
+                StepResult::Done(text) => text,
+                _ => String::new(),
+            })
+        }
+    }))
+    .unwrap();
+    let left: Vec<String> = dirs.load().items.into_iter().map(|m| m.text).collect();
+    eprintln!(
+        "memory_tidy: {} changes in {:.1} s; {} memories left:\n{}",
+        made.len(),
+        started.elapsed().as_secs_f64(),
+        left.len(),
+        left.join("\n")
+    );
+    let english = left.iter().filter(|m| m.contains("English")).count();
+    assert_eq!(english, 1, "one English rule left");
+    // The exception to the 你 rule is kept, with the rule or in it.
+    assert!(
+        left.iter().any(|m| m.contains("letters")),
+        "the exception kept"
+    );
+    for kept in ["exclamation", "title case", "Oxford"] {
+        assert!(left.iter().any(|m| m.contains(kept)), "{kept} kept");
+    }
+}
+
+/// Whether a request is offered as a skill (memory::skill_offer), on the
+/// eval's provider: a procedure of the user's own is, a one-off request
+/// about this text and one a skill already does are not.
+#[test]
+#[ignore = "live API - see module docs"]
+fn live_skill_offer() {
+    use crate::ai::memory::{offer_skill, Exchange};
+    use aicompat::agent::{AgentTurn, StepResult};
+    use aicompat::providers::AgentProvider;
+    let Some(auth) = auth() else { return };
+    let agent = AgentProvider {
+        id: harness::agent_provider_id().to_string(),
+        model: harness::agent_model(),
+        endpoint: harness::agent_endpoint(&auth),
+        thinking: Default::default(),
+        native_search: None,
+        enforce_binding: true,
+    };
+    let skills = vec![crate::ai::workspace::parse_skill_file(
+        "translate",
+        "---\nname: translate\ndescription: Translates a passage or document into another language.\n---\n\nTranslate it.",
+    )];
+    let ask = |message: &str| {
+        let exchange = Exchange {
+            messages: vec![message.into()],
+            reply: "Done - the edits are proposed in the document.".into(),
+        };
+        harness::block_on(offer_skill(&exchange, &skills, |instructions, input| {
+            let agent = &agent;
+            async move {
+                let turn = [AgentTurn::User {
+                    text: input,
+                    images: Vec::new(),
+                }];
+                let (step, _) = agent.step(&instructions, &turn, &[], &|_| {}).await?;
+                Ok(match step {
+                    StepResult::Done(text) => text,
+                    _ => String::new(),
+                })
+            }
+        }))
+        .unwrap()
+    };
+    let procedure = ask("把我的会议记录整理成周报：分成「本周完成」「下周计划」「风险」三部分，每条一句话，不写人名，数字保留，最后加一行需要老板决定的事。");
+    eprintln!("skill_offer: procedure -> {procedure:?}");
+    let one_off = ask("把第二段改得更简洁一些，别丢数字，语气保持正式一点就好。");
+    eprintln!("skill_offer: one-off -> {one_off:?}");
+    let covered = ask("Translate this whole document into English, keeping it faithful to the original wording please.");
+    eprintln!("skill_offer: covered by translate -> {covered:?}");
+    assert!(procedure.is_some(), "the procedure is offered");
+    assert!(one_off.is_none(), "a one-off is not");
+    assert!(covered.is_none(), "nor what translate already does");
+}

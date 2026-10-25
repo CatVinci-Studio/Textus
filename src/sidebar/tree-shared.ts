@@ -21,6 +21,8 @@ export const DRAG_START_PX = 5;
 export interface TreeShared {
   sort: TreeSort;
   scope: SearchScope;
+  /** Hidden files shown too (#357): a dot's, or Windows marked hidden. */
+  showHidden: boolean;
   /** Bumped per folder after something was made in it or moved in or out:
    *  that folder reads its entries again and opens. */
   versions: Record<string, number>;

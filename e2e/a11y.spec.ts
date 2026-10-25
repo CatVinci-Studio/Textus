@@ -197,11 +197,11 @@ for (const colorScheme of ["light", "dark"] as const) {
       await scan(page, `about ${colorScheme}`);
 
       await page.locator(".settings-nav-item").nth(1).click();
-      await page.getByRole("button", { name: "More themes" }).click();
+      await page.getByRole("button", { name: "Get more themes" }).click();
       await expect(
-        page.getByRole("region", { name: "More themes" }),
+        page.getByRole("tabpanel", { name: "Themes" }),
       ).toBeVisible();
-      await scan(page, `more themes ${colorScheme}`);
+      await scan(page, `themes ${colorScheme}`);
     });
 
     test("a dialog", async ({ page }) => {

@@ -27,6 +27,7 @@ import type {
 } from "../platform/bindings/plugins";
 import type { SentBlock } from "../ai/doc-blocks";
 import { namedCall, settledArguments, settledTurns } from "./settle-calls";
+import { webPageCommand } from "./native-web-pages";
 
 /** The built-in skills as `list_skills` reports them: name, `/` menu group,
  *  invocation and the description written for the model (abridged). */
@@ -342,6 +343,51 @@ export function installDevTauriShim(): void {
         return answer(cmd, null);
       case "chat_history_get":
         return Promise.resolve(store.conversations[String(args.id)] ?? null);
+      // As settings/chat_history/search.rs: every word in one message or
+      // reply, newest conversation first.
+      case "chat_history_search": {
+        const terms = String(args.query)
+          .toLowerCase()
+          .split(/\s+/)
+          .filter(Boolean);
+        const hits = (
+          store.histories.chat as Record<string, unknown>[]
+        ).flatMap((summary) => {
+          const entry = store.conversations[String(summary.id)] as
+            { turns?: { kind: string; text?: string }[] } | undefined;
+          const turn = entry?.turns?.find(
+            (t) =>
+              (t.kind === "User" || t.kind === "Assistant") &&
+              terms.every((w) => (t.text ?? "").toLowerCase().includes(w)),
+          );
+          return turn
+            ? [
+                {
+                  ...summary,
+                  role: turn.kind === "User" ? "user" : "assistant",
+                  snippet: turn.text,
+                },
+              ]
+            : [];
+        });
+        return Promise.resolve(terms.length ? hits : []);
+      }
+      // commands/own_notes.rs: what the writer keeps on a document, by
+      // "<part>:<path>", in `window.__devOwnNotes` (a test can start it
+      // with some).
+      case "own_notes_read":
+        return Promise.resolve(
+          ((w.__devOwnNotes ??= {}) as Record<string, string>)[
+            `${String(args.part)}:${String(args.path)}`
+          ] ?? null,
+        );
+      case "own_notes_write": {
+        const kept = (w.__devOwnNotes ??= {}) as Record<string, string>;
+        const key = `${String(args.part)}:${String(args.path)}`;
+        if (["[]", "{}"].includes(String(args.value))) delete kept[key];
+        else kept[key] = String(args.value);
+        return Promise.resolve(null);
+      }
       case "chat_history_archived":
         return Promise.resolve(store.archivedChats);
       case "chat_history_move_document": {
@@ -635,7 +681,7 @@ export function installDevTauriShim(): void {
         for (const file of Object.keys(files)) {
           if (!file.startsWith(`${path}/`)) continue;
           const [name, ...rest] = file.slice(path.length + 1).split("/");
-          if (!name.startsWith(".")) entries.set(name, rest.length > 0);
+          entries.set(name, rest.length > 0);
         }
         return Promise.resolve(
           [...entries]
@@ -643,6 +689,7 @@ export function installDevTauriShim(): void {
               name,
               path: `${path}/${name}`,
               is_dir: isDir,
+              hidden: name.startsWith("."),
               modified_ms:
                 (w.__devMtimes as Record<string, number> | undefined)?.[
                   `${path}/${name}`
@@ -767,7 +814,9 @@ export function installDevTauriShim(): void {
   // catalog is the textus-plugins checkout the dev server serves at
   // /dev-plugins/ (vite.dev-plugins.ts); installing from it lists the
   // plugin with its files read from there, and `window.__devCatalogInstalled`
-  // ([ids]) has some installed from the start.
+  // ([ids]) has some installed from the start. The catalog last listed is
+  // kept as `window.__devCatalogCache`, which a test can set beforehand;
+  // `window.__devCatalogFails` (a message) makes fetching it fail.
   type DevPluginEntry = {
     enabled: boolean;
     granted: string[];
@@ -816,13 +865,6 @@ export function installDevTauriShim(): void {
         installFromDevCatalog(id),
       ),
     ));
-  // `window.__devPluginStorage = { id: { key: value } }`: what plugins
-  // have stored, their settings under `$settings`.
-  const pluginStorage = new Map<string, Record<string, unknown>>(
-    Object.entries(
-      (w.__devPluginStorage ?? {}) as Record<string, Record<string, unknown>>,
-    ),
-  );
   const encoded = (text: string) => new TextEncoder().encode(text).buffer;
   function pluginCommand(
     cmd: string,
@@ -873,9 +915,29 @@ export function installDevTauriShim(): void {
           }),
         );
       case "plugin_catalog":
-        return devCatalog();
+        if (typeof w.__devCatalogFails === "string")
+          return Promise.reject(new Error(w.__devCatalogFails));
+        return devCatalog().then((entries) => {
+          w.__devCatalogCache = entries;
+          return entries;
+        });
+      case "plugin_catalog_cached":
+        return Promise.resolve(
+          (w.__devCatalogCache as CatalogEntry[] | undefined) ?? null,
+        );
       case "plugin_install_catalog":
         return installFromDevCatalog(id);
+      // The catalog's skills: `window.__devCatalogSkills` (catalog.rs's
+      // SkillEntry), installed into `window.__devInstalledSkills`.
+      case "skill_catalog":
+        return Promise.resolve(w.__devCatalogSkills ?? []);
+      case "skill_install_catalog": {
+        const had = (w.__devInstalledSkills ??= []) as string[];
+        const name = String(args.name);
+        if (had.includes(name)) return Promise.reject("SKILL_EXISTS");
+        had.push(name);
+        return Promise.resolve(`/config/skills/${name}.md`);
+      }
       case "plugin_file": {
         const plugin = installed.find((p) => p.id === id);
         if (plugin?.catalog)
@@ -910,6 +972,43 @@ export function installDevTauriShim(): void {
           })) satisfies FsEntry_Serialize[],
         );
       }
+      case "plugin_fs_documents":
+      case "plugin_fs_search": {
+        const root = String(args.root).replace(/\/$/, "");
+        const docs = Object.keys(folder)
+          .filter(
+            (p) => p.startsWith(`${root}/`) && /\.(md|markdown)$/i.test(p),
+          )
+          .filter((p) => !p.slice(root.length).includes("/."))
+          .sort()
+          .map((p) => ({
+            path: p,
+            rel: p.slice(root.length + 1),
+            text: folder[p],
+          }));
+        if (cmd === "plugin_fs_documents")
+          return Promise.resolve({ documents: docs, truncated: false });
+        const needle = String(args.query).trim().toLowerCase();
+        const limit = Number(args.limit ?? 200);
+        const hits = docs.flatMap((doc) =>
+          doc.text.split("\n").flatMap((text, at) =>
+            needle && text.toLowerCase().includes(needle)
+              ? [
+                  {
+                    path: doc.path,
+                    rel: doc.rel,
+                    line: at + 1,
+                    text: text.trim(),
+                  },
+                ]
+              : [],
+          ),
+        );
+        return Promise.resolve({
+          hits: hits.slice(0, limit),
+          truncated: hits.length > limit,
+        });
+      }
       case "plugin_fs_write":
         ((w.__devFs ??= {}) as Record<string, string>)[path] = args.base64
           ? atob(String(args.contents))
@@ -917,15 +1016,90 @@ export function installDevTauriShim(): void {
         return Promise.resolve(null);
       case "plugin_http":
         return Promise.reject("The dev shim has no network.");
-      case "plugin_storage_get":
-        return Promise.resolve({ ...(pluginStorage.get(id) ?? {}) });
-      case "plugin_storage_set": {
-        const store = { ...(pluginStorage.get(id) ?? {}) };
-        if (args.value === null) delete store[String(args.key)];
-        else store[String(args.key)] = args.value;
-        pluginStorage.set(id, store);
+      // A plugin's two places (plugins/store.rs), each `{ kv, files }`
+      // in memory: the global one, and the project's per open folder -
+      // `window.__devPluginStore` to look at.
+      case "plugin_store_get":
+      case "plugin_store_set":
+      case "plugin_store_keys":
+      case "plugin_store_read":
+      case "plugin_store_write":
+      case "plugin_store_files":
+      case "plugin_store_delete": {
+        const scope = String(args.scope);
+        if (
+          scope === "project" &&
+          !pluginState.plugins[id]?.granted.includes("project.data")
+        )
+          return Promise.reject(`${id} was not granted project.data.`);
+        if (scope === "project" && !args.root)
+          return Promise.reject("No folder is open.");
+        const stores = (w.__devPluginStore ??= {}) as Record<
+          string,
+          { kv: Record<string, unknown>; files: Record<string, string> }
+        >;
+        const place = (stores[
+          `${id}|${scope}|${scope === "project" ? args.root : ""}`
+        ] ??= { kv: {}, files: {} });
+        const key = String(args.key ?? "");
+        const file = String(args.path ?? "");
+        switch (cmd) {
+          case "plugin_store_get":
+            return Promise.resolve(place.kv[key] ?? null);
+          case "plugin_store_set":
+            if (args.value === null) delete place.kv[key];
+            else place.kv[key] = args.value;
+            return Promise.resolve(null);
+          case "plugin_store_keys":
+            return Promise.resolve(Object.keys(place.kv).sort());
+          case "plugin_store_read":
+            return file in place.files
+              ? Promise.resolve(place.files[file])
+              : Promise.reject(`No file ${file}.`);
+          case "plugin_store_write":
+            place.files[file] = String(args.text);
+            return Promise.resolve(null);
+          case "plugin_store_files":
+            return Promise.resolve(Object.keys(place.files).sort());
+          default:
+            delete place.files[file];
+            return Promise.resolve(null);
+        }
+      }
+      case "plugin_store_usage": {
+        const stores = (w.__devPluginStore ?? {}) as Record<string, unknown>;
+        const size = (key: string) =>
+          JSON.stringify(stores[key] ?? "").length - 2;
+        return Promise.resolve([
+          size(`${id}|global|`),
+          args.root ? size(`${id}|project|${args.root}`) : 0,
+        ]);
+      }
+      case "plugin_store_clear": {
+        const stores = (w.__devPluginStore ?? {}) as Record<string, unknown>;
+        delete stores[
+          `${id}|${args.scope}|${args.scope === "project" ? args.root : ""}`
+        ];
         return Promise.resolve(null);
       }
+      // A developer's folder's last change: `window.__devPluginStamps`;
+      // `__devStampReads` counts the looks.
+      case "plugin_dev_stamp":
+        w.__devStampReads = ((w.__devStampReads as number) ?? 0) + 1;
+        return Promise.resolve(
+          (w.__devPluginStamps as Record<string, number> | undefined)?.[id] ??
+            null,
+        );
+      // Tools for Textus AI (plugins/ai_tools.rs): what the window offers,
+      // and what each call answered, for a test to read.
+      case "plugin_ai_tools_set":
+        w.__devAiTools = args.tools;
+        return Promise.resolve(null);
+      case "plugin_ai_tool_result":
+        ((w.__devAiToolResults ??= {}) as Record<string, unknown>)[
+          String(args.callId)
+        ] = args.error ? { error: args.error } : { text: args.text };
+        return Promise.resolve(null);
       case "plugin_uninstall":
         w.__devPlugins = installed.filter((p) => p.id !== id);
         delete pluginState.plugins[id];
@@ -976,6 +1150,20 @@ export function installDevTauriShim(): void {
               filePath
             ] ?? 1,
           );
+      }
+      // Native web pages, as frames laid where they would be.
+      const page = webPageCommand(
+        cmd,
+        (args ?? {}) as Record<string, unknown>,
+        (event, payload) =>
+          (w.__devEmitTauriEvent as (event: string, payload: unknown) => void)(
+            event,
+            payload,
+          ),
+      );
+      if (page) {
+        ((w.__devInvokeCalls ??= []) as unknown[]).push({ cmd, ...args });
+        return page;
       }
       // `window.__devInvokeResults = { cmd: value }` answers a command with
       // a canned value - e.g. take_chat_handoff, without which the chat

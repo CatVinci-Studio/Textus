@@ -15,6 +15,8 @@ import { exportDoc, fs, themes } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { Select } from "../../ui/Select";
 import { LinkRow, RowHelp, SettingRow } from "./controls";
+import { ThemeGallerySection } from "./theme-gallery";
+import { ExtensionsTabLayout } from "../pages/ExtensionsTabLayout";
 
 const CUSTOM_CSS_PLACEHOLDER = `#write > p {
   text-indent: 2em;
@@ -88,7 +90,7 @@ async function exportThemeCss(t: Strings, customCss: string): Promise<void> {
   ]
     .filter(Boolean)
     .join("\n");
-  const css = `/* Textus theme - exported from Settings > More themes.
+  const css = `/* Textus theme - exported from Settings > Extensions > Themes.
    Edit it, then bring it back with Import CSS… there.
    #write is the document; .milkdown wraps it. */
 
@@ -154,7 +156,8 @@ function useThemeAction() {
 
 /** Settings › Editor & Appearance › Theme: which form (light, dark) and
  *  which theme - a choice and nothing else. Getting themes and changing
- *  them is on the More themes page `onMore` opens (MoreThemesSection). */
+ *  them is in Settings › Extensions › Themes (ThemeLibrarySection), which
+ *  Get more themes (`onMore`) opens. */
 export function ThemeSection({
   t,
   onMore,
@@ -257,7 +260,7 @@ export function ThemeSection({
       </SettingRow>
 
       <LinkRow
-        label={t.themeMoreLabel}
+        label={t.themeGetMore}
         onOpen={onMore}
         className="theme-more-entry"
       />
@@ -266,27 +269,29 @@ export function ThemeSection({
 }
 
 /**
- * Settings › Editor & Appearance › More themes: where themes come from -
- * the gallery (`onBrowse` opens it, a page of its own) and a CSS file -
- * then the user's own CSS on top of whichever is picked. Each action is
- * here once; the theme picker itself stays on the page before.
+ * On the phone, which has no Extensions, Editor & Appearance › More
+ * themes: a CSS file to add, the user's own CSS on top of whichever theme
+ * is picked, and the gallery. The picker stays in Editor & Appearance.
  */
-export function MoreThemesSection({
-  t,
-  onBrowse,
-}: {
-  t: Strings;
-  onBrowse: () => void;
-}) {
+export function ThemeLibrarySection({ t }: { t: Strings }) {
+  return (
+    <>
+      <ThemeSourcesSection t={t} />
+      <section className="settings-group">
+        <h2 className="settings-group-title">{t.extensionsThemesGet}</h2>
+        <ThemeGallerySection t={t} />
+      </section>
+    </>
+  );
+}
+
+/** Picks a CSS file, imports it as a theme named after the file and
+ *  selects it - one step. (A dark variant can still exist in the data
+ *  model for themes that shipped one; imports are single-file.) */
+function useImportTheme(run: (action: () => Promise<void>) => Promise<void>) {
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
-  const { busy, error, run } = useThemeAction();
-  const customCssLabelId = useId();
-
-  // One step: pick a CSS file and it's imported and selected right away,
-  // named after the file. (A dark variant can still exist in the data model
-  // for themes that shipped one; imports are single-file.)
-  const importTheme = () =>
+  return () =>
     run(async () => {
       const picked = await fs.openCssFileDialog();
       if (!picked) return;
@@ -299,6 +304,126 @@ export function MoreThemesSection({
         themeId: meta.id,
       });
     });
+}
+
+/** The user's own CSS, on top of whichever theme is picked. */
+function CustomCssRow({ t }: { t: Strings }) {
+  const { settings, setSettings } = useSettings();
+  const labelId = useId();
+  return (
+    <div className="settings-row settings-row-stacked">
+      <div className="settings-row-label">
+        <span id={labelId}>{t.customCssLabel}</span>
+        <RowHelp label={t.customCssLabel}>{t.customCssHint}</RowHelp>
+      </div>
+      <textarea
+        className="settings-code-input"
+        aria-labelledby={labelId}
+        spellCheck={false}
+        rows={5}
+        placeholder={CUSTOM_CSS_PLACEHOLDER}
+        value={settings.customCss}
+        onChange={(e) => setSettings({ customCss: e.target.value })}
+      />
+    </div>
+  );
+}
+
+/**
+ * Settings › Extensions › Themes: the themes the user added, each one to
+ * use or delete; Get more (`onGetMore`) opens the gallery, "⋯" imports a
+ * CSS file or exports the current theme as one, and the user's own CSS
+ * waits folded under Advanced. The picker stays in Editor & Appearance.
+ */
+export function ThemesTab({
+  t,
+  onGetMore,
+}: {
+  t: Strings;
+  onGetMore: () => void;
+}) {
+  const { settings, setSettings } = useSettings();
+  const latest = useLatest(settings);
+  const { busy, error, run } = useThemeAction();
+  const importTheme = useImportTheme(run);
+  const remove = (id: string) =>
+    run(async () => {
+      await themes.deleteTheme(id);
+      setSettings({
+        userThemes: latest.current.userThemes.filter((th) => th.id !== id),
+        ...(latest.current.themeId === id ? { themeId: "default" } : {}),
+      });
+    });
+  return (
+    <ExtensionsTabLayout
+      t={t}
+      intro={t.extensionsIntroThemes}
+      onGetMore={onGetMore}
+      actions={[
+        { label: t.themeImportButton, onSelect: () => void importTheme() },
+        {
+          label: t.themeExportButton,
+          onSelect: () => void exportThemeCss(t, settings.customCss),
+        },
+      ]}
+      error={error}
+      installedTitle={t.extensionsThemesInstalled}
+      installed={
+        settings.userThemes.length ? (
+          settings.userThemes.map((theme) => (
+            <div
+              key={theme.id}
+              className="settings-row plugin-card"
+              data-user-theme={theme.id}
+            >
+              <div className="plugin-card-open">
+                <span className="settings-row-label plugin-card-name">
+                  {theme.name}
+                </span>
+              </div>
+              <div className="settings-row-control">
+                {settings.themeId === theme.id ? (
+                  <span className="settings-row-value">
+                    {t.themeGalleryInUse}
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="text-button settings-inline-button"
+                    disabled={busy}
+                    onClick={() => setSettings({ themeId: theme.id })}
+                  >
+                    {t.themeGalleryUse}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="text-button settings-inline-button"
+                  disabled={busy}
+                  onClick={() => void remove(theme.id)}
+                >
+                  {t.themeDeleteButton}
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="plugin-empty">
+            {t.extensionsThemesNone.replace("{page}", t.navEditor)}
+          </p>
+        )
+      }
+      advanced={<CustomCssRow t={t} />}
+    />
+  );
+}
+
+/** Your themes: a CSS file to add and the user's own CSS - what the
+ *  phone's More themes page shows above the gallery. */
+function ThemeSourcesSection({ t }: { t: Strings }) {
+  const { settings } = useSettings();
+  const { busy, error, run } = useThemeAction();
+  const importTheme = useImportTheme(run);
 
   return (
     <>
@@ -308,8 +433,8 @@ export function MoreThemesSection({
         </div>
       )}
       <section className="settings-group">
+        <h2 className="settings-group-title">{t.extensionsThemesInstalled}</h2>
         <div className="settings-group-body">
-          <LinkRow label={t.themeGalleryBrowse} onOpen={onBrowse} />
           <SettingRow label={t.themeImportLabel}>
             <button
               className="text-button settings-inline-button"
@@ -319,35 +444,14 @@ export function MoreThemesSection({
               {t.themeImportButton}
             </button>
           </SettingRow>
-        </div>
-      </section>
-
-      {/* A tweak on top of the theme. On a page of its own, so shown open:
-          nothing else here competes with it for room. */}
-      <section className="settings-group">
-        <div className="settings-group-body">
-          <div className="settings-row settings-row-stacked">
-            <div className="settings-row-label">
-              <span id={customCssLabelId}>{t.customCssLabel}</span>
-              <RowHelp label={t.customCssLabel}>{t.customCssHint}</RowHelp>
-            </div>
-            <textarea
-              className="settings-code-input"
-              aria-labelledby={customCssLabelId}
-              spellCheck={false}
-              rows={5}
-              placeholder={CUSTOM_CSS_PLACEHOLDER}
-              value={settings.customCss}
-              onChange={(e) => setSettings({ customCss: e.target.value })}
-            />
-            <div className="shortcut-row-controls">
-              <button
-                className="text-button settings-inline-button"
-                onClick={() => void exportThemeCss(t, settings.customCss)}
-              >
-                {t.themeExportButton}
-              </button>
-            </div>
+          <CustomCssRow t={t} />
+          <div className="shortcut-row-controls">
+            <button
+              className="text-button settings-inline-button"
+              onClick={() => void exportThemeCss(t, settings.customCss)}
+            >
+              {t.themeExportButton}
+            </button>
           </div>
         </div>
       </section>

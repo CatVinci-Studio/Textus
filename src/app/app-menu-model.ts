@@ -44,6 +44,7 @@ export type NativeMenuId =
   | "copy-as-markdown"
   | "toggle-source-mode"
   | "toggle-typewriter-mode"
+  | "track-changes"
   | "toggle-sidebar"
   | "toggle-agent-panel"
   | "toggle-textus-ai"
@@ -108,6 +109,8 @@ export interface MenuChecks {
   splitView?: boolean;
   typewriter?: boolean;
   zen?: boolean;
+  /** The document on screen tracks the writer's changes (Edit). */
+  trackChanges?: boolean;
   fullscreen?: boolean;
   /** Not a check mark: a folder is open, so Close Folder has something to
    *  close. The macOS menu bar keeps it enabled (it is app-wide). */
@@ -130,6 +133,7 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
     "toggle-split-view": !!checks.splitView,
     "toggle-typewriter-mode": !!checks.typewriter,
     "toggle-zen-mode": !!checks.zen,
+    "track-changes": !!checks.trackChanges,
   };
 }
 
@@ -335,6 +339,12 @@ export function buildAppMenu(
           accel: shortcuts.findReplace,
           action: { native: "find-replace" },
         },
+        "separator",
+        {
+          label: t.menuTrackChanges,
+          action: { native: "track-changes" },
+          checked: !!checks.trackChanges,
+        },
       ],
     },
     { label: t.menuFormat, submenu: formatEntries(t, shortcuts) },
@@ -433,6 +443,31 @@ export function buildAppMenu(
     // one closes them all and Alt+F4 closes the front one.
     { label: t.menuExit, accel: "alt+f4", action: { native: "quit" } },
   ];
+}
+
+/** One of the menu bar's titles (app/MenuBar.tsx) and the list it opens. */
+export interface MenuBarSection {
+  label: string;
+  items: MenuNode[];
+}
+
+/**
+ * The menu as a bar of titles: each entry with a submenu is a title of its
+ * own; the ones without (Settings…, Exit) go to the end of the first
+ * list, File, as a Windows app has them.
+ */
+export function menuBarSections(menu: MenuNode[]): MenuBarSection[] {
+  const sections: MenuBarSection[] = [];
+  const loose: MenuNode[] = [];
+  for (const node of menu) {
+    if (node === "separator") continue;
+    if (node.submenu) sections.push({ label: node.label, items: node.submenu });
+    else loose.push(node);
+  }
+  const [first] = sections;
+  if (first && loose.length)
+    first.items = [...first.items, "separator", ...loose];
+  return sections;
 }
 
 /**

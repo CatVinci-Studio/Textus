@@ -18,6 +18,8 @@ export type Permission =
   | "workspace.write"
   | "clipboard"
   | "editor.input"
+  | "project.data"
+  | "ai.tools"
   | `network:${string}`;
 
 const PLAIN_PERMISSIONS = [
@@ -27,6 +29,8 @@ const PLAIN_PERMISSIONS = [
   "workspace.write",
   "clipboard",
   "editor.input",
+  "project.data",
+  "ai.tools",
 ] as const;
 
 export function isPermission(value: unknown): value is Permission {
@@ -122,6 +126,33 @@ export interface ThemeContribution {
   path: string;
 }
 
+/** A tool the plugin gives Textus AI (with ai.tools): what the model is
+ *  told, and the arguments it takes as a JSON schema; the plugin runs it
+ *  with textus.ai.registerTool. */
+export interface AiToolContribution {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+}
+
+/** Where a plugin suggests completions as you type (with document.read):
+ *  in a formula, in the text, or both, once the words before the caret
+ *  match `pattern` (a regular expression, anchored at the caret). The
+ *  plugin answers with textus.editor.registerCompletionProvider(id). */
+export interface CompletionContribution {
+  id: string;
+  where: "math" | "text" | "any";
+  pattern: string;
+}
+
+/** The links a plugin opens when one is Ctrl/Cmd+clicked in a document:
+ *  a URL matching `pattern` (a regular expression) runs `command`, its
+ *  own, with the URL - instead of the system's browser. */
+export interface LinkContribution {
+  pattern: string;
+  command: string;
+}
+
 export interface Contributes {
   commands: CommandContribution[];
   keybindings: KeybindingContribution[];
@@ -133,6 +164,9 @@ export interface Contributes {
   /** A page of its own in Settings, a webview (registerSettingsPage). */
   settingsPage: { title: string } | null;
   themes: ThemeContribution[];
+  aiTools: AiToolContribution[];
+  completions: CompletionContribution[];
+  links: LinkContribution[];
 }
 
 export interface PluginManifest {
@@ -347,7 +381,58 @@ function parseContributes(raw: unknown, id: string): Contributes {
       path: text(o.path, `contributes.themes[${i}].path`),
     };
   });
+  const aiTools = list(c.aiTools, "contributes.aiTools").map((x, i) => {
+    const o = object(x, `contributes.aiTools[${i}]`);
+    const name = text(o.name, `contributes.aiTools[${i}].name`);
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(name))
+      throw new ManifestError(
+        `contributes.aiTools[${i}].name "${name}" must be letters, digits, _ or -.`,
+      );
+    return {
+      name,
+      description: text(o.description, `contributes.aiTools[${i}].description`),
+      parameters:
+        o.parameters === undefined
+          ? { type: "object", properties: {} }
+          : object(o.parameters, `contributes.aiTools[${i}].parameters`),
+    };
+  });
+  const completions = list(c.completions, "contributes.completions").map(
+    (x, i) => {
+      const at = `contributes.completions[${i}]`;
+      const o = object(x, at);
+      const where =
+        o.where === undefined ? "any" : text(o.where, `${at}.where`);
+      if (where !== "math" && where !== "text" && where !== "any")
+        throw new ManifestError(`${at}.where must be "math", "text" or "any".`);
+      const pattern = text(o.pattern, `${at}.pattern`);
+      try {
+        new RegExp(pattern);
+      } catch {
+        throw new ManifestError(`${at}.pattern is not a regular expression.`);
+      }
+      return {
+        id: ownId(o.id, id, `${at}.id`),
+        where: where as CompletionContribution["where"],
+        pattern,
+      };
+    },
+  );
+  const links = list(c.links, "contributes.links").map((x, i) => {
+    const at = `contributes.links[${i}]`;
+    const o = object(x, at);
+    const pattern = text(o.pattern, `${at}.pattern`);
+    try {
+      new RegExp(pattern);
+    } catch {
+      throw new ManifestError(`${at}.pattern is not a regular expression.`);
+    }
+    return { pattern, command: declaredCommand(o.command, `${at}.command`) };
+  });
   return {
+    aiTools,
+    completions,
+    links,
     commands,
     keybindings,
     menus,
@@ -468,16 +553,17 @@ export function compareVersions(a: string, b: string): number {
  * Whether Textus `version` satisfies `range`: `^1.3.0` (1.3.0 up to, not
  * including, 2.0.0), `>=1.3.0`, `1.3.x`, or an exact version. Textus's own
  * pre-releases count as their release, so a plugin for `^1.3.0` runs on
- * 1.3.0-beta.1.
+ * 1.3.0-beta.1 - unless the range names a pre-release itself
+ * (`>=1.3.0-beta.2`, for an interface beta.2 brought): then the betas are
+ * told apart, and beta.1 is too early.
  */
 export function engineSatisfied(range: string, version: string): boolean {
-  const release = version.split("-")[0];
   const r = range.trim();
   if (r === "*") return true;
-  if (r.startsWith(">="))
-    return compareVersions(release, r.slice(2).trim()) >= 0;
+  const base = r.replace(/^(>=|\^)/, "").trim();
+  const release = base.includes("-") ? version : version.split("-")[0];
+  if (r.startsWith(">=")) return compareVersions(release, base) >= 0;
   if (r.startsWith("^")) {
-    const base = r.slice(1).trim();
     const [major] = versionParts(base);
     return (
       compareVersions(release, base) >= 0 && versionParts(release)[0] === major

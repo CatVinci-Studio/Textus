@@ -132,6 +132,14 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/es/settings.png" alt="El LLM que prefieras." width="860" />
 </p>
 
+## Complementos
+
+Añade lo que necesites, y nada más. Un grafo de tus notas y los enlaces entre ellas, una tarjeta que muestra adónde lleva un enlace, dos documentos lado a lado, tableros kanban, historial de versiones, PDF y Word en una pestaña, citas de Zotero: todo en **Ajustes › Extensiones › Conseguir más**, junto a los temas y las habilidades. Cada complemento pregunta antes de usar nada.
+
+<p align="center">
+  <img src="docs/images/readme/es/plugins.png" alt="Notas sobre el Quijote junto al grafo de sus enlaces, con la nota a la que lleva un enlace abierta en una tarjeta." width="860" />
+</p>
+
 ## Lo que escribes es solo tuyo
 
 Lo que escribes es tuyo. Textus está hecho para que siga siéndolo, y su código es abierto para que cualquiera lo compruebe.

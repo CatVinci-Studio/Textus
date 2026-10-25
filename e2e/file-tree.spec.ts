@@ -23,7 +23,7 @@ const MTIMES: Record<string, number> = {
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 
-async function open(page: Page) {
+async function open(page: Page, more: Record<string, string> = {}) {
   await page.addInitScript(
     ([files, mtimes]) => {
       const w = window as unknown as Record<string, unknown>;
@@ -31,7 +31,7 @@ async function open(page: Page) {
       w.__devMtimes = mtimes;
       w.__devPickFolder = "/work/notes";
     },
-    [FILES, MTIMES] as const,
+    [{ ...FILES, ...more }, MTIMES] as const,
   );
   await openApp(page, { settings: { language: "en" } });
   await emit(page, "menu-open-recent", "/work/notes/a.md");
@@ -266,4 +266,27 @@ test("a folder can't be dragged into itself", async ({ page }) => {
   await expect(page.locator(".tree-row-drop")).toHaveCount(0);
   await page.mouse.up();
   expect(await files(page)).toContain("/work/notes/drafts/old.md");
+});
+
+test("hidden files stay out of the tree until it shows them (#357)", async ({
+  page,
+}) => {
+  await open(page, {
+    "/work/notes/.obsidian/app.json": "{}",
+    "/work/notes/.env": "x",
+  });
+  await expect(rows(page)).toHaveText(["drafts", "a.md", "b.md", "chart.png"]);
+  await page.getByRole("button", { name: "Sort" }).click();
+  await page.getByRole("menuitemradio", { name: "Show Hidden Files" }).click();
+  await expect(rows(page)).toHaveText([
+    ".obsidian",
+    "drafts",
+    ".env",
+    "a.md",
+    "b.md",
+    "chart.png",
+  ]);
+  expect(
+    await page.evaluate(() => localStorage.getItem("textus-file-tree-hidden")),
+  ).toBe("1");
 });

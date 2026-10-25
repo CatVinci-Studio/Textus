@@ -53,6 +53,15 @@ describe("renderMarkdownHtml", () => {
     expect(html).not.toContain("$$");
     expect(html).toContain("katex-display");
   });
+
+  it("draws a wikilink as the editor does, its source in the link colour", () => {
+    expect(renderMarkdownHtml("Daughter of [[Polonius]], sister.")).toBe(
+      '<p>Daughter of <span class="wikilink">[[Polonius]]</span>, sister.</p>\n',
+    );
+    expect(renderMarkdownHtml("[[a_b_c|<b>x</b>]]")).toContain(
+      '<span class="wikilink">[[a_b_c|&lt;b&gt;x&lt;/b&gt;]]</span>',
+    );
+  });
 });
 
 describe("renderDocumentHtml", () => {

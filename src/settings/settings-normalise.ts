@@ -4,7 +4,7 @@ import {
   UPDATE_CHANNELS,
   type UpdateChannel,
 } from "../platform/update-channel";
-import type { Raw } from "./settings-sync";
+import { isRecord, type Raw } from "./settings-sync";
 import { storedImageFolder } from "./image-folder";
 import { storedShortcuts } from "./shortcut-defaults";
 import {
@@ -95,6 +95,11 @@ export function normaliseSettings(parsed: Raw | null): Settings {
             : DEFAULT_SETTINGS.revisionDisplay,
       shortcuts: storedShortcuts(parsed.shortcuts),
       mcpServers: normaliseMcpServers(parsed.mcpServers),
+      plugins: isRecord(parsed.plugins)
+        ? (Object.fromEntries(
+            Object.entries(parsed.plugins).filter(([, v]) => isRecord(v)),
+          ) as Settings["plugins"])
+        : {},
       diagramEngine: DIAGRAM_ENGINES.includes(
         parsed.diagramEngine as DiagramEngine,
       )

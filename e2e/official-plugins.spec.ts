@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import { mockInvoke, pasteMarkdown } from "./helpers";
 import {
   minimalDocx,
@@ -28,6 +29,20 @@ test("a picture opens in the Image Viewer's tab", async ({ page }) => {
   await expect(frame.locator("#zoom")).toHaveText("100%");
   await frame.locator("#zoom-in").click();
   await expect(frame.locator("#zoom")).toHaveText("125%");
+});
+
+test("a file that isn't a picture says it can't be opened", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: { "catvinci.image-viewer": [] },
+    binary: {
+      "/notes/broken.png": Buffer.from("not a picture").toString("base64"),
+    },
+    language: "zh",
+  });
+  await openPath(page, "/notes/broken.png");
+  await expect(tabFrame(page).locator("#info")).toHaveText("这张图片打不开。");
 });
 
 test("an SVG shows as a picture, its source a click away", async ({ page }) => {
@@ -63,6 +78,23 @@ test("a PDF opens in the PDF Viewer, its words there to select", async ({
   await expect(frame.locator("#zoom")).not.toHaveText(before);
 });
 
+test("a Chinese PDF whose font isn't in the file draws its characters", async ({
+  page,
+}) => {
+  // Made with ReportLab: STSong-Light, not embedded, with the predefined
+  // CMap UniGB-UCS2-H - PDF.js's cmaps, shipped in the plugin, draw it.
+  const pdf = readFileSync(new URL("./fixtures/cjk-cmap.pdf", import.meta.url));
+  await openWithPlugins(page, {
+    plugins: { "catvinci.pdf-viewer": [] },
+    binary: { "/notes/poem.pdf": pdf.toString("base64") },
+  });
+  await openPath(page, "/notes/poem.pdf");
+  const frame = tabFrame(page);
+  await expect(frame.locator(".textLayer")).toHaveText("春眠不觉晓", {
+    timeout: 15_000,
+  });
+});
+
 test("a selected link opens in a web page tab of its own", async ({ page }) => {
   await page.route("https://example.test/**", (route) =>
     route.fulfill({ contentType: "text/html", body: "<h1>Example page</h1>" }),
@@ -78,11 +110,46 @@ test("a selected link opens in a web page tab of its own", async ({ page }) => {
   await page
     .getByRole("menuitem", { name: "Open the Selected Link in a Tab" })
     .click();
+  // Framed, as on Linux (native-web-page.spec.ts has the native page).
   const web = page.frameLocator('[data-active-tab="true"] .web-page-frame');
   await expect(web.locator("h1")).toHaveText("Example page");
   await expect(page.getByRole("textbox", { name: "Web address" })).toHaveValue(
     "https://example.test/page",
   );
+});
+
+test("a web link Ctrl/Cmd+clicked opens in Web View, not the browser", async ({
+  page,
+}) => {
+  await page.route("https://example.test/**", (route) =>
+    route.fulfill({ contentType: "text/html", body: "<h1>Linked page</h1>" }),
+  );
+  await openWithPlugins(page, {
+    plugins: { "catvinci.web-view": ["network:*", "document.read"] },
+  });
+  await pasteMarkdown(page, "See [the page](https://example.test/linked).");
+  const link = page.locator('[data-active-tab="true"] .ProseMirror a');
+  await link.click({ modifiers: ["ControlOrMeta"] });
+  const web = page.frameLocator('[data-active-tab="true"] .web-page-frame');
+  await expect(web.locator("h1")).toHaveText("Linked page");
+  // The address bar folds to a handle, and stays folded for the next page.
+  const address = page.getByRole("textbox", { name: "Web address" });
+  await expect(address).toHaveValue("https://example.test/linked");
+  await page.getByRole("button", { name: "Hide the address bar" }).click();
+  await expect(address).toHaveCount(0);
+  const show = page.getByRole("button", { name: "Show the address bar" });
+  await expect(show).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("textus.webPageBarHidden")),
+  ).toBe("1");
+  await show.click();
+  await expect(address).toBeVisible();
+  // Not handed to the system's browser (the dev shim's record).
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __devLinks?: unknown[] }).__devLinks ?? [],
+    ),
+  ).toEqual([]);
 });
 
 test("a Word document reads as laid out, and Edit as Markdown converts it", async ({

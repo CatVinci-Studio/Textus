@@ -1,19 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { SettingsGroup } from "./SettingsGroup";
-import { SettingRow, ToggleRow, VERBATIM_INPUT } from "../sections/controls";
-import { Select } from "../../ui/Select";
+import { SettingRow } from "../sections/controls";
+import { PluginSettingRows } from "./PluginSettings";
+import { PluginErrors } from "./PluginErrors";
+import { PluginData } from "./PluginData";
 import { showConfirm } from "../../ui/app-dialog";
 import { links } from "../../platform/ipc";
 import { useSettings } from "../SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import {
-  loadPluginSettings,
   pluginName,
-  pluginSetting,
   pluginText,
   reloadPlugin,
   revokePermission,
-  setPluginSetting,
   uninstallPlugin,
   type PluginRecord,
 } from "../../plugins/manager";
@@ -24,11 +23,9 @@ import {
 } from "../../plugins/requirements";
 import { permissionLabel } from "../../plugins/permissions";
 import { canSwitch } from "../../plugins/lifecycle";
+import { usageGuide } from "../../plugins/usage-guide";
 import { PluginSettingsWebview } from "../../plugins/PluginWebview";
-import type {
-  PluginManifest,
-  SettingContribution,
-} from "../../plugins/manifest";
+import type { PluginManifest } from "../../plugins/manifest";
 
 export type Attempt = (work: () => Promise<unknown>) => Promise<void>;
 
@@ -91,6 +88,7 @@ export function PluginPage({
   onBack,
   onEnable,
   onUpdate,
+  onGuide,
   attempt,
 }: {
   record: PluginRecord;
@@ -101,17 +99,24 @@ export function PluginPage({
   onBack: () => void;
   onEnable: (on: boolean) => void;
   onUpdate: () => void;
+  /** Opens its usage guide (USAGE.md), when it has one. */
+  onGuide: () => void;
   attempt: Attempt;
 }) {
   const { settings, setSettings } = useSettings();
   const manifest = record.manifest;
   const name = pluginName(record);
   const on = record.status === "on";
-  useEffect(() => {
-    if (on) void loadPluginSettings(record.id);
-  }, [on, record.id]);
   const status = statusText(record, allOn, t);
   const switchable = !!manifest && canSwitch(record.status);
+  const [hasGuide, setHasGuide] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void usageGuide(record.id).then((text) => live && setHasGuide(!!text));
+    return () => {
+      live = false;
+    };
+  }, [record.id]);
   return (
     <div className="plugin-page" data-plugin-page={record.id}>
       <button type="button" className="plugin-back" onClick={onBack}>
@@ -144,6 +149,17 @@ export function PluginPage({
             onChange={(e) => onEnable(e.target.checked)}
           />
         </label>
+        {hasGuide && (
+          <div className="settings-row plugin-guide-row">
+            <button
+              type="button"
+              className="text-button settings-inline-button"
+              onClick={onGuide}
+            >
+              {t.pluginUsageGuide}
+            </button>
+          </div>
+        )}
       </div>
       {manifest && manifest.requires.length > 0 && (
         <SettingsGroup title={t.pluginRequiresGroup}>
@@ -185,13 +201,7 @@ export function PluginPage({
             </p>
           ) : (
             <>
-              {manifest.contributes.settings.map((setting) => (
-                <PluginSettingRow
-                  key={setting.key}
-                  record={record}
-                  setting={setting}
-                />
-              ))}
+              <PluginSettingRows record={record} t={t} />
               {manifest.contributes.settingsPage && (
                 <div className="plugin-settings-page">
                   <PluginSettingsWebview plugin={record.id} />
@@ -201,6 +211,7 @@ export function PluginPage({
           )}
         </SettingsGroup>
       )}
+      <PluginErrors id={record.id} t={t} />
       {manifest && <PluginAbout record={record} t={t} attempt={attempt} />}
       <div className="plugin-detail-actions">
         {update && (
@@ -264,7 +275,8 @@ function PluginAbout({
   attempt: Attempt;
 }) {
   const manifest = record.manifest!;
-  const { commands, customEditors, sidebarTabs } = manifest.contributes;
+  const { aiTools, commands, customEditors, sidebarTabs } =
+    manifest.contributes;
   const adds = [
     ...commands.map((c) => pluginText(record, c.title)),
     ...sidebarTabs.map((s) =>
@@ -273,6 +285,7 @@ function PluginAbout({
     ...customEditors.map((e) =>
       t.pluginAddsFileType.replace("{types}", e.filenamePatterns.join(", ")),
     ),
+    ...aiTools.map((tool) => t.pluginAddsAiTool.replace("{name}", tool.name)),
   ];
   return (
     <SettingsGroup title={t.pluginAboutGroup}>
@@ -304,69 +317,11 @@ function PluginAbout({
           </SettingRow>
         );
       })}
+      <PluginData id={record.id} name={pluginName(record)} t={t} />
       <SettingRow
         label={t.pluginVersionLabel.replace("{version}", manifest.version)}
         hint={manifest.license}
       />
     </SettingsGroup>
-  );
-}
-
-/** One of a plugin's settings, drawn from its schema like Textus's own. */
-function PluginSettingRow({
-  record,
-  setting,
-}: {
-  record: PluginRecord;
-  setting: SettingContribution;
-}) {
-  const value = pluginSetting(record.id, setting.key);
-  const label = pluginText(record, setting.title);
-  const help = setting.description
-    ? pluginText(record, setting.description)
-    : undefined;
-  const save = (next: unknown) =>
-    void setPluginSetting(record.id, setting.key, next);
-  if (setting.type === "boolean")
-    return (
-      <ToggleRow
-        label={label}
-        help={help}
-        checked={value === true}
-        onChange={save}
-      />
-    );
-  return (
-    <SettingRow label={label} help={help}>
-      {setting.type === "enum" ? (
-        <Select
-          className="settings-select"
-          aria-label={label}
-          value={String(value)}
-          onChange={(e) => save(e.target.value)}
-        >
-          {setting.options?.map((option) => (
-            <option key={option.value} value={option.value}>
-              {pluginText(record, option.label)}
-            </option>
-          ))}
-        </Select>
-      ) : (
-        <input
-          className="settings-text-input plugin-setting-input"
-          aria-label={label}
-          type={setting.type === "number" ? "number" : "text"}
-          defaultValue={String(value ?? "")}
-          {...VERBATIM_INPUT}
-          onBlur={(e) =>
-            save(
-              setting.type === "number"
-                ? Number(e.target.value)
-                : e.target.value,
-            )
-          }
-        />
-      )}
-    </SettingRow>
   );
 }

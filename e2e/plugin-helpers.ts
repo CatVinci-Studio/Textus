@@ -38,18 +38,19 @@ export async function minimalDocx(text: string): Promise<string> {
 export const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==";
 
-export async function openWithPlugins(
-  page: Page,
-  options: {
-    plugins: Record<string, string[]>;
-    binary?: Record<string, string>;
-    folder?: Record<string, string>;
-    files?: Record<string, string>;
-    language?: string;
-    /** A plugin's settings, by plugin id. */
-    settings?: Record<string, Record<string, unknown>>;
-  },
-) {
+export interface PluginsAtStart {
+  /** The plugins on, by id, with the permissions granted to each. */
+  plugins: Record<string, string[]>;
+  binary?: Record<string, string>;
+  folder?: Record<string, string>;
+  files?: Record<string, string>;
+  /** A plugin's settings, by plugin id. */
+  settings?: Record<string, Record<string, unknown>>;
+}
+
+/** Has the window start with these plugins installed and on, and these
+ *  files on disk; before openApp. */
+export async function pluginsAtStart(page: Page, options: PluginsAtStart) {
   await page.addInitScript((o) => {
     if (window.top !== window) return;
     const w = window as unknown as Record<string, unknown>;
@@ -66,16 +67,23 @@ export async function openWithPlugins(
       ),
     };
     w.__devBinaryFiles = o.binary ?? {};
-    w.__devPluginStorage = Object.fromEntries(
-      Object.entries(o.settings ?? {}).map(([id, values]) => [
-        id,
-        { $settings: values },
-      ]),
-    );
     if (o.folder) w.__devFs = o.folder;
     if (o.files) w.__devFiles = o.files;
   }, options);
-  await openApp(page, { settings: { language: options.language ?? "en" } });
+}
+
+export async function openWithPlugins(
+  page: Page,
+  options: PluginsAtStart & { language?: string },
+) {
+  await pluginsAtStart(page, options);
+  // A plugin's settings are Textus's settings' `plugins` (plugin-settings.ts).
+  await openApp(page, {
+    settings: {
+      language: options.language ?? "en",
+      plugins: options.settings ?? {},
+    },
+  });
 }
 
 /** Opens `path` as Open Recent would. */

@@ -1,4 +1,5 @@
 import { resolveBlockEdit } from "../ai/doc-blocks";
+import { logPluginError } from "./plugin-log";
 import {
   releaseKeys,
   runEditorOp,
@@ -7,7 +8,7 @@ import {
   type KeyCapture,
 } from "./editor-input";
 import { outlineOf, removeStatusItem, setStatusItem } from "./status-items";
-import { links, plugins as pluginsIpc } from "../platform/ipc";
+import { links } from "../platform/ipc";
 import { showMessage, showPrompt } from "../ui/app-dialog";
 import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../ai/types";
 import type { Strings } from "../i18n/strings";
@@ -17,12 +18,19 @@ import {
   onPluginEvent,
   type PluginEventMap,
 } from "./app-bridge";
-import { connectFrame, hostDocument, sandboxedFrame } from "./frames";
+import { connectFrame, sandboxedFrame } from "./frames";
+import { hostDocument } from "./host-document";
 import { readPluginFile, withResources, type PluginOrigin } from "./files";
 import { localize, type Permission, type PluginManifest } from "./manifest";
 import { showQuickPick, type QuickPickItem } from "./quick-pick";
 import { webPageUrl } from "./WebPagePane";
+import {
+  addHoverProvider,
+  removeHoverProvider,
+  type HoverCard,
+} from "./hover-providers";
 import { workspaceHandlers, type PluginScope } from "./broker-workspace";
+import { layoutHandlers } from "./broker-layout";
 import type { Endpoint } from "./rpc";
 import { lazyModule, type LazyModule } from "../lazy/lazy-module";
 import {
@@ -30,6 +38,7 @@ import {
   setWebviewHtml,
   setWebviewTitle,
   webview,
+  webviewsOf,
 } from "./webviews";
 
 /**
@@ -127,7 +136,6 @@ export class PluginHost {
   private disconnect: (() => void) | null = null;
   private pinger: ReturnType<typeof setInterval> | null = null;
   private subscriptions = new Map<string, () => void>();
-  private storage: Promise<Record<string, unknown>> | null = null;
   private errors: number[] = [];
   private stopped = false;
 
@@ -195,6 +203,7 @@ export class PluginHost {
     this.subscriptions.clear();
     removeStatusItem(this.id);
     releaseKeys(this.id);
+    removeHoverProvider(this.id);
     setTimeout(() => {
       this.disconnect?.();
       this.frame?.remove();
@@ -228,6 +237,7 @@ export class PluginHost {
             appVersion: this.deps.appVersion,
             platform: this.deps.platform,
             theme: this.deps.dark() ? "dark" : "light",
+            l10n: manifest.l10n,
           },
         }),
         resolve,
@@ -282,11 +292,6 @@ export class PluginHost {
   private readOwnFile = (rel: string) =>
     readPluginFile(this.id, this.info.origin, rel);
 
-  private loadStorage(): Promise<Record<string, unknown>> {
-    this.storage ??= pluginsIpc.storageGet(this.id).catch(() => ({}));
-    return this.storage;
-  }
-
   /** What the workspace, network, storage and clipboard calls
    *  (broker-workspace.ts) need of this plugin. */
   private scope(): PluginScope {
@@ -295,7 +300,6 @@ export class PluginHost {
       need: (permission) => this.need(permission),
       root: () => this.root(),
       ownWebview: (id) => this.ownWebview(id),
-      loadStorage: () => this.loadStorage(),
     };
   }
 
@@ -303,7 +307,8 @@ export class PluginHost {
   private handlers() {
     const t = () => this.deps.strings();
     return {
-      "host.error": () => {
+      "host.error": ({ message }: { message?: string }) => {
+        logPluginError(this.id, String(message ?? "error"));
         const now = Date.now();
         this.errors = [...this.errors.filter((at) => now - at < 60_000), now];
         if (this.errors.length > MAX_ERRORS_PER_MINUTE)
@@ -446,12 +451,17 @@ export class PluginHost {
       "window.openFile": ({
         path,
         heading,
+        asDocument,
       }: {
         path: string;
         heading?: string;
+        asDocument?: boolean;
       }) => {
-        this.need("workspace.read");
-        getWindowAccess()?.openFile(path, heading);
+        // The file a view of its shows it may always open (the Word
+        // reader's "Edit"); any other wants the workspace.
+        if (!webviewsOf(this.id).some((view) => view.resource === path))
+          this.need("workspace.read");
+        getWindowAccess()?.openFile(path, { heading, asDocument });
       },
       "window.openUntitled": ({
         content,
@@ -502,6 +512,12 @@ export class PluginHost {
       "document.getSelection": () => {
         this.need("document.read");
         return getActiveDocument()?.selection() ?? null;
+      },
+      "editor.registerHoverProvider": () => {
+        this.need("document.read");
+        addHoverProvider(this.id, (target) =>
+          this.request<HoverCard | null>("$provideHover", { target }),
+        );
       },
       "editor.captureKeys": (capture: KeyCapture | null) => {
         this.need("editor.input");
@@ -572,6 +588,7 @@ export class PluginHost {
       "settings.get": ({ key }: { key: string }) =>
         this.deps.setting(this.id, key),
       ...workspaceHandlers(this.scope()),
+      ...layoutHandlers(),
     };
   }
 }

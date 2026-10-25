@@ -946,7 +946,9 @@ test("a picture written into streaming text shows as its frame from the moment i
           const img = root.querySelector(".pending-insert img");
           if (!img) return;
           observer.disconnect();
-          resolve(img.getAnimations().length > 0);
+          // With its Redraw and Edit buttons, the box it comes in.
+          const box = img.closest(".pending-picture-made") ?? img;
+          resolve(box.getAnimations().length > 0);
         }).observe(root, { childList: true, subtree: true });
       }),
     editor,

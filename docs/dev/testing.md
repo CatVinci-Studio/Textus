@@ -20,7 +20,9 @@ request only when the change can reach saving: the save round trip
 (`src/document-view/save-roundtrip*.test.ts`, see
 [saving.md](saving.md#the-round-trip-test)), which tests
 platform-independent code. The native jobs' `npm test` skips it with
-`TEXTUS_SKIP_ROUNDTRIP=1`; locally `npm run check` always runs it. The rest
+`TEXTUS_SKIP_ROUNDTRIP=1`; locally `npm run check` always runs it - on the
+help guides in English, Chinese and Japanese, all ten languages with
+`TEXTUS_ROUNDTRIP_ALL=1`. The rest
 need a display, a desktop session or an API key, and are run by hand before
 a release. The e2e flows need Chromium once: `npm run setup:e2e`.
 `npm run test:visual` adds the screenshot comparison of `e2e/visual.spec.ts`
@@ -249,9 +251,12 @@ Keys live in one env file, `.env.local` at the repository root (git-ignored;
 `ANTHROPIC_API_KEY`, `VOLCENGINE_ARK_API_KEY` and so on - or in the
 environment, which wins. The older `.anthropic-api-key.local` still works.
 Without a key every test passes vacuously. A full run costs
-real money - filter with `TEXTUS_EVAL_FILTER` and skip the judge with
-`TEXTUS_EVAL_JUDGE=0` while iterating. The checking code itself is
-unit-tested and runs with the normal `cargo test`.
+real money: run it through `node scripts/live-eval.mjs run`, which sets a
+budget and leaves the judge off (`TEXTUS_EVAL_JUDGE=1` turns it on), and
+filter with `--filter` while iterating; `compare` then shows what a change
+did against the provider's baseline (docs/design/ai-eval.md, "Running it").
+The checking code itself is unit-tested and runs with the normal
+`cargo test`.
 
 `live_eval::doubao` is separate: three requests against Volcengine Ark (a
 writing call, a tool call, an image) that check Textus's request shapes for

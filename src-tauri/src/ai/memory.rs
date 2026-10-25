@@ -53,7 +53,11 @@ mod forgotten;
 pub use forgotten::Forgotten;
 mod pass;
 mod select;
+mod skill_offer;
+mod tidy;
 pub use pass::*;
+pub use skill_offer::*;
+pub use tidy::*;
 
 /// Most memory text sent with one request, in characters (not bytes, so
 /// Chinese and Japanese get as much as English): about 40 memories of a
@@ -386,10 +390,79 @@ pub async fn memory_pass(
         document: doc_path,
         ..conversation.unwrap_or_default()
     };
-    run_pass(&dirs, &exchange, &source, |instructions, input| async {
+    let call = |instructions, input| async {
+        crate::ai::client::call(&app, &provider, instructions, input, model.as_deref()).await
+    };
+    let mut made = run_pass(&dirs, &exchange, &source, call).await?;
+    // Now and then, the whole memory tidied (memory::tidy). Its failing
+    // takes nothing from the exchange's own changes.
+    made.extend(tidy_if_due(&dirs, &source, call).await.unwrap_or_default());
+    Ok(made)
+}
+
+/// ai_offer_skill's inputs, as memory_pass's.
+#[derive(Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct OfferRequest {
+    provider: String,
+    model: Option<String>,
+    doc_path: Option<String>,
+    workspace_root: Option<String>,
+    exchange: Exchange,
+}
+
+/// After an exchange (memory::skill_offer): its request offered as a skill
+/// to save, when it was a procedure of its own - or none.
+#[tauri::command]
+pub async fn ai_offer_skill(
+    app: tauri::AppHandle,
+    request: Args<OfferRequest>,
+) -> Result<Option<SkillOffer>, String> {
+    let Args(OfferRequest {
+        provider,
+        model,
+        doc_path,
+        workspace_root,
+        exchange,
+    }) = request;
+    crate::ai::ensure_on(&app)?;
+    if !may_offer(&exchange) {
+        return Ok(None);
+    }
+    let skills =
+        crate::ai::workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref()).skills;
+    offer_skill(&exchange, &skills, |instructions, input| async {
         crate::ai::client::call(&app, &provider, instructions, input, model.as_deref()).await
     })
     .await
+}
+
+/// The offered skill saved: for every document (`personal`, the global
+/// config folder's skills/) or this project's (its .textus/skills/). Its
+/// file's path.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn save_offered_skill(
+    app: tauri::AppHandle,
+    offer: SkillOffer,
+    // "personal" or "project".
+    scope: String,
+    doc_path: Option<String>,
+    workspace_root: Option<String>,
+) -> Result<String, String> {
+    let dir = match Scope::parse(&scope).ok_or("Unknown scope.")? {
+        Scope::Personal => global_agent_dir(&app)?.join("skills"),
+        Scope::Project => crate::ai::workspace::project_dir(
+            &project_root(doc_path.as_deref(), workspace_root.as_deref())
+                .ok_or("This document has no project folder.")?,
+        )
+        .join("skills"),
+    };
+    tauri::async_runtime::spawn_blocking(move || save_offer_in(&dir, &offer))
+        .await
+        .map_err(|e| e.to_string())?
+        .map(|p| p.to_string_lossy().into_owned())
 }
 
 /// Restore in the Memory tab's Recently forgotten: puts a forgotten memory

@@ -1,5 +1,6 @@
 import { errorText } from "../../utils/error-text";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useLatest } from "../../utils/hooks/useLatest";
 import type { Strings } from "../../i18n/strings";
 import type { ProviderCatalogEntry } from "../../ai/provider-catalog";
 import { auth, type CustomEndpointConfig } from "../../platform/ipc";
@@ -105,19 +106,22 @@ export function OauthPanel({
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const setConfigured = (ok: boolean) => {
-    setConfiguredState(ok);
-    onStatusChange?.(ok);
-  };
+  // The parent hears each status; its handler is read through a ref.
+  const onStatus = useLatest(onStatusChange);
+  const setConfigured = useCallback(
+    (ok: boolean) => {
+      setConfiguredState(ok);
+      onStatus.current?.(ok);
+    },
+    [onStatus],
+  );
 
   useEffect(() => {
     auth
       .oauthStatus(providerId)
       .then((s) => setConfigured(s.configured))
       .catch(() => {});
-    // onStatusChange identity isn't expected to change per mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [providerId]);
+  }, [providerId, setConfigured]);
 
   async function login() {
     setLoggingIn(true);
@@ -211,15 +215,19 @@ export function ApiKeyProviderPanel({
   const [configured, setConfiguredState] = useState(false);
   const [input, setInput] = useState("");
 
-  const setConfigured = (ok: boolean) => {
-    setConfiguredState(ok);
-    onStatusChange?.(ok);
-  };
+  // The parent hears each status; its handler is read through a ref.
+  const onStatus = useLatest(onStatusChange);
+  const setConfigured = useCallback(
+    (ok: boolean) => {
+      setConfiguredState(ok);
+      onStatus.current?.(ok);
+    },
+    [onStatus],
+  );
 
   useEffect(() => {
     auth.providerApiKeyStatus(providerId).then(setConfigured);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [providerId]);
+  }, [providerId, setConfigured]);
 
   async function save() {
     if (!input.trim()) return;
@@ -284,21 +292,15 @@ export function CustomProviderPanel({
     "idle",
   );
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    auth.customEndpointStatus().then((c) => {
-      if (c) {
-        setConfig(c);
-        setBaseUrl(c.base_url);
-        // The key never comes back (only `has_api_key`): the empty field
-        // says it's saved, in its placeholder.
-        setApiKey("");
-        setSelectedModel(c.model);
-        onStatusChange?.(true);
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useSavedEndpoint((c) => {
+    setConfig(c);
+    setBaseUrl(c.base_url);
+    // The key never comes back (only `has_api_key`): the empty field
+    // says it's saved, in its placeholder.
+    setApiKey("");
+    setSelectedModel(c.model);
+    onStatusChange?.(true);
+  });
 
   async function fetchModels() {
     setStatus("checking");
@@ -455,4 +457,15 @@ export function CustomProviderPanel({
       </div>
     </div>
   );
+}
+
+/** What is saved for the custom endpoint, handed to `onLoaded` once, as
+ *  its section opens. */
+function useSavedEndpoint(onLoaded: (config: CustomEndpointConfig) => void) {
+  const loaded = useLatest(onLoaded);
+  useEffect(() => {
+    void auth.customEndpointStatus().then((c) => {
+      if (c) loaded.current(c);
+    });
+  }, [loaded]);
 }

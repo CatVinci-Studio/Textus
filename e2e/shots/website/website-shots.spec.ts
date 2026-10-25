@@ -22,6 +22,11 @@
  *             highlighted code block and a rule, all rendered at once (the
  *             document zoomed out a step, so it fits one screen)
  *   settings  Settings, the AI page, its list of providers open
+ *   plugins   a folder of linked notes with three official plugins on:
+ *             one note beside the folder's graph (Split Panes, Graph
+ *             View), a link in it showing the note it points to (Quick
+ *             Preview, its card pinned). The plugins come from the
+ *             textus-plugins checkout the dev server serves.
  *
  * Fonts: where a Mac draws San Francisco the shots draw Inter, and code is
  * in JetBrains Mono (second in the app's monospace stack), when their files
@@ -55,6 +60,11 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { openApp } from "../../helpers";
+import {
+  pluginsAtStart,
+  tabFrame,
+  type PluginsAtStart,
+} from "../../plugin-helpers";
 
 /** One language's texts, all Markdown. `anchor`, `commentAnchor`,
  *  `zenFocus` and `tourCaret` are quoted verbatim from their documents. */
@@ -96,6 +106,12 @@ interface Sample {
    *  app's default otherwise): wider where the language's labels need it
    *  to keep the proposal's buttons on one row. */
   panelWidth?: number;
+  /** The notes of the plugins shot, by title (each <title>.md in the
+   *  folder), linked to each other with [[title]]: the first is open. */
+  notes: Record<string, string>;
+  /** The [[link]] whose card is shown: its last time in the first note,
+   *  in the last paragraph, so the card opens below the text. */
+  previewLink: string;
 }
 
 /** What each shot needs from a language's Sample. */
@@ -119,6 +135,7 @@ const NEEDS = {
   "math-live": ["folder", "mathTitle", "mathDoc"],
   markdown: ["folder", "tourTitle", "tourDoc", "tourCaret"],
   settings: ["title", "folder", "doc"],
+  plugins: ["folder", "notes", "previewLink"],
 } satisfies Record<string, (keyof Sample)[]>;
 type Shot = keyof typeof NEEDS;
 
@@ -236,6 +253,47 @@ print(speech.count("?"), "questions")
 ---
 `,
     tourCaret: "The speech turns on",
+    notes: {
+      Hamlet: `# Hamlet
+
+Prince of Denmark, called home from [[Wittenberg]] by his father's death. His uncle [[Claudius]] has taken the throne and married his mother, [[Gertrude]], within the month.
+
+## What drives him
+
+- [[The Ghost]]'s charge to avenge a murder he can't yet prove
+- Doubt: he stages [[The Mousetrap]] to be sure
+- [[Horatio]], the one friend he trusts
+
+He plays mad at [[Elsinore]] and pushes away [[Ophelia]], and he thinks more than he acts - until there is no time left to think.
+`,
+      Ophelia: `# Ophelia
+
+Daughter of [[Polonius]], sister of [[Laertes]]. She loves [[Hamlet]] and is told by her father to return his letters.
+
+After her father's death she sings of flowers and loss, and drowns in a brook.
+`,
+      Claudius: `# Claudius
+
+King of Denmark, [[Hamlet]]'s uncle. He killed his brother - now [[The Ghost]] - with poison in the ear and married [[Gertrude]]. He plots with [[Laertes]] to end it with a poisoned blade. [[The Mousetrap]] shows him his own crime.
+`,
+      Gertrude: `# Gertrude
+
+Queen of Denmark, [[Hamlet]]'s mother, now [[Claudius]]'s wife. She drinks the poisoned cup meant for her son.
+`,
+      Polonius: `# Polonius
+
+Lord Chamberlain, father of [[Ophelia]] and [[Laertes]]. He hides behind the arras to spy on [[Hamlet]] and is stabbed through it.
+`,
+      Elsinore: `# Elsinore
+
+The castle where the play takes place, on the coast of Denmark. [[Hamlet]] and [[Horatio]] meet [[The Ghost]] on its battlements; [[Claudius]] holds court in its halls, and [[Fortinbras]] takes it at the end.
+`,
+      "The Mousetrap": `# The Mousetrap
+
+The play within the play, in Act III. [[Hamlet]] has the players act out a murder like his father's and watches [[Claudius]]'s face.
+`,
+    },
+    previewLink: "Ophelia",
   },
   zh: {
     title: "红楼梦",
@@ -331,6 +389,47 @@ for name, pun in names.items(): print(name, "→", pun)
 ---
 `,
     tourCaret: "开卷先",
+    notes: {
+      贾宝玉: `# 贾宝玉
+
+荣国府的公子，衔着[[通灵宝玉]]出生。那块玉原是[[青埂峰]]下女娲补天剩下的一块石头。
+
+## 身边的人
+
+- [[林黛玉]]，前世是灵河岸上的绛珠仙草
+- [[薛宝钗]]，戴着金锁，与他有“金玉良缘”之说
+- [[贾母]]，最疼他的祖母
+
+他最爱和[[林黛玉]]说话，住在[[大观园]]的怡红院，最怕的是读书做官。
+`,
+      林黛玉: `# 林黛玉
+
+[[贾母]]的外孙女，自幼丧母，进京投奔荣国府。前世是绛珠仙草，受[[神瑛侍者]]浇灌之恩，下凡以一生的眼泪相还。
+
+她住在[[大观园]]的潇湘馆，葬花、作诗，与[[贾宝玉]]最知心。
+`,
+      通灵宝玉: `# 通灵宝玉
+
+[[贾宝玉]]出生时衔在口中的玉，正面刻着“莫失莫忘，仙寿恒昌”。它本是[[青埂峰]]下的顽石，由一僧一道带入红尘。
+`,
+      青埂峰: `# 青埂峰
+
+大荒山无稽崖下的山峰。女娲炼石补天，单剩一块未用，弃在此峰下——后来成了[[通灵宝玉]]。[[甄士隐]]在第一回的梦里听到的，正是这段因缘。
+`,
+      甄士隐: `# 甄士隐
+
+姑苏的乡宦，第一回开场的人物。他资助[[贾雨村]]进京赶考；后来家道败落，听了《好了歌》，随跛足道人出家。
+`,
+      贾雨村: `# 贾雨村
+
+落魄书生，得[[甄士隐]]资助后中了进士。后来在林如海家做西席，教[[林黛玉]]读书，又随她一同进京。
+`,
+      大观园: `# 大观园
+
+为元妃省亲而建的园子。省亲之后，[[贾宝玉]]、[[林黛玉]]、[[薛宝钗]]和姐妹们都搬了进去。
+`,
+    },
+    previewLink: "林黛玉",
   },
   ja: {
     title: "吾輩は猫である",
@@ -428,6 +527,37 @@ for name, role in cast.items(): print(name, role)
 ---
 `,
     tourCaret: "語り手",
+    notes: {
+      吾輩: `# 吾輩
+
+名前はまだない猫。[[苦沙弥]]先生の家に住みつき、そこに集まる人間たちを観察している。
+
+## 家に来る人たち
+
+- [[迷亭]]、口から出まかせばかりの美学者
+- [[寒月]]、ガラス玉を磨いている理学士
+- [[東風]]、新体詩を作る青年
+
+人間の言葉はわかるが、話すことはできない。[[苦沙弥]]の書斎で居眠りをしながら、[[迷亭]]の冗談を聞いては、ひそかにあきれている。
+`,
+      苦沙弥: `# 苦沙弥
+
+中学校の英語教師で、[[吾輩]]の主人。胃が弱く、書斎にこもっては昼寝ばかりしている。[[迷亭]]や[[寒月]]がよく訪ねてくる。
+`,
+      迷亭: `# 迷亭
+
+[[苦沙弥]]の旧友の美学者。ほらを吹いて人をかつぐのが好きで、[[吾輩]]もたびたびあきれている。[[寒月]]の縁談にも口を出す。
+`,
+      寒月: `# 寒月
+
+理学士で、[[苦沙弥]]のもとの教え子。博士論文のためにガラス玉を磨き続けている。[[金田]]家の娘、[[富子]]との縁談が持ち上がる。
+`,
+      金田: `# 金田
+
+近所の実業家。妻の[[鼻子]]が、娘の[[富子]]と[[寒月]]の縁談を探りに[[苦沙弥]]の家へやって来る。
+`,
+    },
+    previewLink: "迷亭",
   },
 };
 
@@ -708,6 +838,9 @@ interface Launch {
   project?: { root: string; library: string[] };
   settings?: Record<string, unknown>;
   storage?: Record<string, string>;
+  /** Plugins on from the start, and the files on disk: the document is
+   *  then read from them. */
+  plugins?: PluginsAtStart;
 }
 
 /** Opens the app on a Mac, in the language's UI, with `file` open. */
@@ -752,9 +885,10 @@ async function launch(page: Page, options: Launch) {
     }, fontFaces);
   }
   const project = options.project;
+  if (options.plugins) await pluginsAtStart(page, options.plugins);
   await cannedFromStart(page, {
     take_pending_open_path: options.file.path,
-    read_text_file: options.file.content,
+    ...(options.plugins ? {} : { read_text_file: options.file.content }),
     file_mtime_ms: 1_760_000_000_000,
     // The canned dev-shim issue would underline every first letter.
     ai_grammar_check: [],
@@ -1184,6 +1318,70 @@ for (const lang of LANGS) {
         PROVIDERS.length,
       );
       await shoot(page, browser, lang, "settings");
+    });
+
+    test("plugins", async ({ page, browser }) => {
+      const s = textsFor("plugins");
+      const titles = Object.keys(s.notes);
+      const folder = Object.fromEntries(
+        titles.map((title) => [fileIn(s.folder, title), s.notes[title]]),
+      );
+      await launch(page, {
+        lang,
+        file: { path: fileIn(s.folder, titles[0]), content: "" },
+        plugins: {
+          plugins: {
+            "catvinci.graph": ["workspace.read", "document.read"],
+            "catvinci.split-panes": [],
+            "catvinci.quick-preview": ["document.read", "workspace.read"],
+          },
+          folder,
+        },
+      });
+      await canned(page, {
+        resolve_vault_note: fileIn(s.folder, s.previewLink),
+      });
+      const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+      await expect(editor.locator("h1")).toContainText(titles[0]);
+      // The whole folder's graph in a tab, then beside the note.
+      await emit(page, "menu-plugin-command", "catvinci.graph.open");
+      await expect(tabFrame(page).locator("canvas")).toBeVisible();
+      await page.locator(".tab-bar [role='tab']").first().click();
+      await emit(page, "menu-plugin-command", "catvinci.split-panes.right");
+      await expect(page.locator(".split-divider")).toBeVisible();
+      const graph = page.frameLocator(".plugin-webview-frame");
+      // Read: the notes and the ones they name but don't have yet.
+      await expect(graph.locator("#stats")).toHaveText(/\d/);
+      // The layout settles, then fills the pane as Fit does.
+      await page.waitForTimeout(5000);
+      await graph.locator("#fit").click();
+      await caretAtEnd(page);
+      // The link's card, pinned and drawn aside, while the pointer is away.
+      const link = editor.locator('[data-type="wikilink"]', {
+        hasText: s.previewLink,
+      });
+      const card = page.locator(".hover-card");
+      await expect(async () => {
+        await page.mouse.move(0, 450);
+        await link.last().hover();
+        await expect(card).toBeVisible({ timeout: 1500 });
+      }).toPass();
+      await card.locator(".hover-card-button").click();
+      await expect(card).toHaveClass(/hover-card-pinned/);
+      // Clear of the text and of the line between the panes.
+      const head = await card.locator(".hover-card-head").boundingBox();
+      const box = await card.boundingBox();
+      const pane = await page.locator(".split-divider").boundingBox();
+      await page.mouse.move(head!.x + 40, head!.y + head!.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(
+        head!.x + 40 - Math.max(0, box!.x + box!.width - pane!.x + 48),
+        head!.y + head!.height / 2 + 24,
+        { steps: 8 },
+      );
+      await page.mouse.up();
+      await page.mouse.move(0, 450);
+      await shoot(page, browser, lang, "plugins");
     });
   });
 }

@@ -5,7 +5,11 @@ import { describe, expect, it, vi } from "vitest";
 import { hashString, roundTripFile } from "./save-roundtrip";
 
 // The save round trip (save-roundtrip.test.ts) on the help guides in
-// `src/help/`, in all ten languages.
+// `src/help/`: in English, Chinese and Japanese - the other languages'
+// guides are the same Markdown in other words, so these three cover the
+// alphabet, CJK and its punctuation. TEXTUS_ROUNDTRIP_ALL=1 runs all ten.
+
+const LANGUAGES = /\.(en|zh|ja)\.md$/;
 
 vi.mock("mermaid", () => ({
   default: { initialize() {}, render: () => new Promise(() => {}) },
@@ -42,7 +46,12 @@ function markdownFiles(dir: string): [string, string][] {
 describe.skipIf(process.env.TEXTUS_SKIP_ROUNDTRIP === "1")(
   "saving after an edit keeps the rest of the help guides and loses nothing",
   () => {
-    it.each(markdownFiles("src/help"))(
+    it.each(
+      markdownFiles("src/help").filter(
+        ([path]) =>
+          process.env.TEXTUS_ROUNDTRIP_ALL === "1" || LANGUAGES.test(path),
+      ),
+    )(
       "%s",
       async (id, markdown) => {
         const report = await roundTripFile(markdown, hashString(id));

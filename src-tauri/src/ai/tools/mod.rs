@@ -136,6 +136,13 @@ impl<'a> ToolRegistry<'a> {
         registry
     }
 
+    /// Only the tool named `name`, if it is offered: what a chapter's
+    /// helper has (agent/chapters.rs).
+    pub fn only(mut self, name: &str) -> Self {
+        self.tools.retain(|t| t.spec.name == name);
+        self
+    }
+
     /// Takes the tool named `name` out, if it is offered.
     pub fn remove(&mut self, name: &str) {
         self.tools.retain(|t| t.spec.name != name);

@@ -68,8 +68,10 @@ export function useNotesBar({
     /** The key of the note's card it points at, for the margin. */
     focusedItem: focused ? `note:${focused}` : null,
     step,
+    /** Every AI note marked done. The writer's own notes stay: each is
+     *  deleted on its card. */
     allDone() {
-      for (const note of ordered) onDone(note.id);
+      for (const note of ordered) if (note.by !== "me") onDone(note.id);
       setPointer(null);
       setPicked(null);
     },

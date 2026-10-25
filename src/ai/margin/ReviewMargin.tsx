@@ -58,6 +58,7 @@ export function ReviewMargin({
   onHot,
   onDone,
   onAsk,
+  onEdit,
   onDecide,
   onNoMargin,
   layoutKey,
@@ -87,6 +88,7 @@ export function ReviewMargin({
   onHot: (key: string | null) => void;
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
+  onEdit: (note: ReviewNote) => void;
   onDecide: (callId: string, index: number, take: boolean | null) => void;
   onNoMargin: (noMargin: boolean) => void;
 }) {
@@ -203,15 +205,23 @@ export function ReviewMargin({
     [contentEl, scrollEl],
   );
 
-  const { cardHot, cardDone, cardAsk, cardDecide, cardPick, cardOpen } =
-    useCardActions({
-      onHot,
-      onDone,
-      onAsk,
-      onDecide,
-      onPick: onPick ?? (() => {}),
-      onOpen: onOpen ?? (() => {}),
-    });
+  const {
+    cardHot,
+    cardDone,
+    cardAsk,
+    cardEdit,
+    cardDecide,
+    cardPick,
+    cardOpen,
+  } = useCardActions({
+    onHot,
+    onDone,
+    onAsk,
+    onEdit,
+    onDecide,
+    onPick: onPick ?? (() => {}),
+    onOpen: onOpen ?? (() => {}),
+  });
   const onHeight = useCallback((key: string, h: number) => {
     if (heights.current.get(key) !== h) {
       heights.current.set(key, h);
@@ -276,6 +286,7 @@ export function ReviewMargin({
               onHot={cardHot}
               onDone={cardDone}
               onAsk={cardAsk}
+              onEdit={cardEdit}
               onDecide={cardDecide}
             />
           );
@@ -298,6 +309,7 @@ export function ReviewMargin({
             onHot={cardHot}
             onDone={cardDone}
             onAsk={cardAsk}
+            onEdit={cardEdit}
             onHeight={onHeight}
           />
         ) : (

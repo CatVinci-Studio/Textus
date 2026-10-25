@@ -75,6 +75,7 @@ export function ChatComposer({
   focusOnOpen = true,
   defaultWebSearch,
   dockActions,
+  modelSwitcher,
   onSend,
   onSkillUsed,
   onStop,
@@ -519,6 +520,7 @@ export function ChatComposer({
                     </button>
                   </Tooltip>
                 )}
+                {modelSwitcher}
               </>
             )}
             {selectedText && !selectionDropped && dockActions === undefined && (

@@ -156,3 +156,96 @@ pre {
 .danger {
   color: var(--danger);
 }
+
+/* The app's moves (src/ui/motion.css), for a plugin's own parts: arriving
+   (animation: motion-enter var(--dur-medium) var(--ease-out) backwards,
+   from --enter-x / --enter-y / --enter-scale) and leaving (motion-exit,
+   --dur-fast, --ease-in, forwards). The durations and distances are the
+   window's own, reduced motion included. */
+@keyframes motion-enter {
+  from {
+    opacity: 0;
+    transform: translate(var(--enter-x, 0), var(--enter-y, 0))
+      scale(var(--enter-scale, 1));
+  }
+}
+
+@keyframes motion-exit {
+  to {
+    opacity: 0;
+    transform: translate(var(--exit-x, 0), var(--exit-y, 0))
+      scale(var(--exit-scale, 1));
+  }
+}
+
+/* Parts that come in one after another, as the app's written text does
+   (src/ui/cascade.ts): each child of .motion-cascade arrives a
+   --dur-stagger after the one before it - a list's items, a board's
+   cards. The first twenty are spaced; any after come with the twentieth. */
+.motion-cascade > * {
+  animation: motion-enter var(--dur-medium) var(--ease-out) backwards;
+}
+.motion-cascade > :nth-child(2) {
+  animation-delay: calc(var(--dur-stagger) * 1);
+}
+.motion-cascade > :nth-child(3) {
+  animation-delay: calc(var(--dur-stagger) * 2);
+}
+.motion-cascade > :nth-child(4) {
+  animation-delay: calc(var(--dur-stagger) * 3);
+}
+.motion-cascade > :nth-child(5) {
+  animation-delay: calc(var(--dur-stagger) * 4);
+}
+.motion-cascade > :nth-child(6) {
+  animation-delay: calc(var(--dur-stagger) * 5);
+}
+.motion-cascade > :nth-child(7) {
+  animation-delay: calc(var(--dur-stagger) * 6);
+}
+.motion-cascade > :nth-child(8) {
+  animation-delay: calc(var(--dur-stagger) * 7);
+}
+.motion-cascade > :nth-child(9) {
+  animation-delay: calc(var(--dur-stagger) * 8);
+}
+.motion-cascade > :nth-child(10) {
+  animation-delay: calc(var(--dur-stagger) * 9);
+}
+.motion-cascade > :nth-child(11) {
+  animation-delay: calc(var(--dur-stagger) * 10);
+}
+.motion-cascade > :nth-child(12) {
+  animation-delay: calc(var(--dur-stagger) * 11);
+}
+.motion-cascade > :nth-child(13) {
+  animation-delay: calc(var(--dur-stagger) * 12);
+}
+.motion-cascade > :nth-child(14) {
+  animation-delay: calc(var(--dur-stagger) * 13);
+}
+.motion-cascade > :nth-child(15) {
+  animation-delay: calc(var(--dur-stagger) * 14);
+}
+.motion-cascade > :nth-child(16) {
+  animation-delay: calc(var(--dur-stagger) * 15);
+}
+.motion-cascade > :nth-child(17) {
+  animation-delay: calc(var(--dur-stagger) * 16);
+}
+.motion-cascade > :nth-child(18) {
+  animation-delay: calc(var(--dur-stagger) * 17);
+}
+.motion-cascade > :nth-child(19) {
+  animation-delay: calc(var(--dur-stagger) * 18);
+}
+.motion-cascade > :nth-child(20) {
+  animation-delay: calc(var(--dur-stagger) * 19);
+}
+
+/* What is about to change, for the moment before it does: a tint, set and
+   taken off, never faded. */
+.motion-mark {
+  background-color: var(--motion-mark-bg);
+  border-radius: 2px;
+}

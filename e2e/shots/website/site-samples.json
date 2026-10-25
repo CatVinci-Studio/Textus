@@ -16,7 +16,15 @@
     "mathDoc": "# 歐拉公式\n\n對任意實數 $x$，\n\n$$\ne^{ix} = \\cos x + i\\sin x\n$$\n\n取 $x = \\pi$，便得到歐拉恆等式 $e^{i\\pi}+1=0$。\n\n數學中最重要的五個數，寫進了同一行。\n\n```mermaid\nmindmap\n  root((歐拉恆等式))\n    e\n      成長\n      複利\n    i\n      旋轉\n      √−1\n    π\n      圓\n      波\n    1 與 0\n      單位\n      空無\n```\n",
     "tourTitle": "西遊記·第一回",
     "tourDoc": "# 西遊記\n\n## 第一回　靈根育孕源流出　心性修持大道生\n\n> 混沌未分天地亂，茫茫渺渺無人見。\\\n> 自從盤古破鴻濛，開闢從茲清濁辨。\n\n### 讀書筆記\n\n開篇寫道：國近大海，海中有一座名山，喚為**花果山**。此山乃*十洲之祖脈*，==三島之來龍==，<u>自開清濁而立</u>，~~鴻濛判後而成~~。真個好山！全文搜尋 `石猴` 可以找到伏筆，原文見[維基文庫](https://zh.wikisource.org/wiki/%E8%A5%BF%E9%81%8A%E8%A8%98/%E7%AC%AC001%E5%9B%9E)。\n\n> [!NOTE]\n> 欲知造化會元功，須看《西遊釋厄傳》。\n\n- 孫悟空：美猴王\n- 須菩提祖師：傳道之師\n\n1. 通讀第一回\n2. 摘出回目對句\n\n- [x] 讀完第一回\n- [ ] 抄錄開篇詩\n\n```python\ntitles = [\"美猴王\", \"齊天大聖\", \"孫行者\"]\nprint(\"、\".join(titles))\n```\n\n---\n",
-    "tourCaret": "開篇寫道"
+    "tourCaret": "開篇寫道",
+    "notes": {
+      "孫悟空": "# 孫悟空\n\n[[花果山]]頂上仙石迸裂所生的石猴，因找到[[水簾洞]]，被群猴拜為美猴王。\n\n## 一路上的人\n\n- [[須菩提祖師]]，傳他七十二變與筋斗雲\n- [[唐僧]]，把他從五行山下救出來的師父\n- [[豬八戒]]，常在師父面前搬弄是非的師弟\n\n他大鬧天宮，被如來壓在五行山下五百年；後來保[[唐僧]]西天取經，一路降妖伏魔，從不服輸。\n",
+      "花果山": "# 花果山\n\n東勝神洲傲來國的名山，[[孫悟空]]的出生地。山上有[[水簾洞]]，是群猴的家。\n",
+      "水簾洞": "# 水簾洞\n\n[[花果山]]上瀑布後面的洞天，石碣上刻著「花果山福地，水簾洞洞天」。[[孫悟空]]第一個跳進瀑布，因此稱王。\n",
+      "須菩提祖師": "# 須菩提祖師\n\n靈臺方寸山、斜月三星洞的祖師。他替石猴取名[[孫悟空]]，傳他七十二般變化與筋斗雲，後來把他逐出師門，不許他說出師父是誰。\n",
+      "唐僧": "# 唐僧\n\n奉唐太宗之命往西天取經的高僧。他在五行山收[[孫悟空]]為徒，又收了[[豬八戒]]和[[沙悟淨]]。\n"
+    },
+    "previewLink": "唐僧"
   },
   "ko": {
     "title": "메밀꽃 필 무렵",
@@ -35,7 +43,14 @@
     "mathDoc": "# 오일러 공식\n\n모든 실수 $x$에 대하여\n\n$$\ne^{ix} = \\cos x + i\\sin x\n$$\n\n$x = \\pi$를 대입하면 오일러 항등식 $e^{i\\pi}+1=0$을 얻는다.\n\n수학에서 가장 중요한 다섯 수가 한 줄에 모였다.\n\n```mermaid\nmindmap\n  root((오일러 항등식))\n    e\n      성장\n      복리\n    i\n      회전\n      √−1\n    π\n      원\n      파동\n    1과 0\n      단위\n      무\n```\n",
     "tourTitle": "메밀꽃 필 무렵 · 읽기 메모",
     "tourDoc": "# 메밀꽃 필 무렵\n\n## 이효석\n\n> 산허리는 온통 메밀 밭이어서 피기 시작한 꽃이 소금을 뿌린 듯이 흐붓한 달빛에 숨이 막힐 지경이다.\n\n### 읽기 메모\n\n첫 문장부터 **여름장이란 애시당초에 글러서**, 해는 아직 *중천*에 있건만 ==장판은 벌써 쓸쓸하고== 더운 햇발이 <u>벌여놓은 전 휘장 밑으로</u> ~~등줄기를~~ 훅훅 볶는다. 본문에서 `왼손잡이`를 찾아보고, 전문은 [위키문헌](https://ko.wikisource.org/wiki/%EB%A9%94%EB%B0%80%EA%BD%83_%ED%95%84_%EB%AC%B4%EB%A0%B5)에서 읽을 수 있다.\n\n> [!NOTE]\n> 내일은 진부와 대화에 장이 선다.\n\n- 허 생원: 드팀전 장돌뱅이\n- 조 선달: 동업자\n\n1. 첫 문단을 소리 내어 읽기\n2. 달빛 묘사에 밑줄 긋기\n\n- [x] 봉평 장\n- [ ] 대화 장\n\n```python\ncast = {\"허 생원\": \"드팀전\", \"조 선달\": \"동업자\"}\nfor name, role in cast.items(): print(name, role)\n```\n\n---\n",
-    "tourCaret": "첫 문장부터"
+    "tourCaret": "첫 문장부터",
+    "notes": {
+      "허 생원": "# 허 생원\n\n왼손잡이 장돌뱅이. 이십 년 넘게 [[봉평]]장을 빼놓지 않고 돌았고, 늙은 [[나귀]]와 함께 늙어 간다.\n\n## 함께 걷는 사람들\n\n- [[조 선달]], 오랜 장돌뱅이 동무\n- [[동이]], 장에서 만난 젊은 장돌뱅이\n- [[성 서방네 처녀]], 물레방앗간에서 하룻밤을 보낸 사람\n\n달밤에 [[대화]]장으로 가는 길, 그는 [[동이]]도 왼손으로 채찍을 쥔다는 것을 알아챈다.\n",
+      "조 선달": "# 조 선달\n\n[[허 생원]]과 함께 장을 도는 동무. 밤길에서 [[성 서방네 처녀]] 이야기를 몇 번이고 다시 들어 준다.\n",
+      "동이": "# 동이\n\n젊은 장돌뱅이. 어머니는 [[제천]]에 산다. 개울을 건너다 물에 빠진 [[허 생원]]을 업어 준다. 그도 왼손잡이다.\n",
+      "봉평": "# 봉평\n\n[[허 생원]]이 [[성 서방네 처녀]]를 만난 장터. 산허리마다 메밀꽃이 소금을 뿌린 듯 핀다.\n"
+    },
+    "previewLink": "동이"
   },
   "es": {
     "title": "Don Quijote",
@@ -59,7 +74,15 @@
     "mathDoc": "# La fórmula de Euler\n\nPara todo número real $x$,\n\n$$\ne^{ix} = \\cos x + i\\sin x\n$$\n\nCon $x = \\pi$ se obtiene la identidad de Euler, $e^{i\\pi}+1=0$.\n\nCinco de los números más importantes de las matemáticas, en una sola línea.\n\n```mermaid\nmindmap\n  root((Identidad de Euler))\n    e\n      Crecimiento\n      Interés compuesto\n    i\n      Rotación\n      √−1\n    π\n      Círculos\n      Ondas\n    1 y 0\n      Unidad\n      Nada\n```\n",
     "tourTitle": "Don Quijote, capítulo I",
     "tourDoc": "# Don Quijote de la Mancha\n\n## Capítulo primero\n\n> En efeto, rematado ya su juicio, vino a dar en el más estraño pensamiento\\\n> que jamás dio loco en el mundo.\n\n### Notas de lectura\n\nEl arranque es célebre: En un lugar de **la Mancha**, *de cuyo nombre no quiero acordarme*, no ha mucho tiempo que vivía un ==hidalgo== de los de <u>lanza en astillero</u>, ~~adarga antigua~~, rocín flaco y galgo corredor. Busca `rocín` en el texto o léelo en [Wikisource](https://es.wikisource.org/wiki/El_ingenioso_hidalgo_don_Quijote_de_la_Mancha).\n\n> [!NOTE]\n> Con estas razones perdía el pobre caballero el juicio.\n\n- salpicón las más noches\n- duelos y quebrantos los sábados\n\n1. Leer el primer párrafo en voz alta\n2. Anotar cada arma y cada animal\n\n- [x] Capítulo primero\n- [ ] Capítulo II\n\n```python\ndieta = [\"salpicón\", \"duelos y quebrantos\", \"lantejas\"]\nprint(len(dieta), \"platos\")\n```\n\n---\n",
-    "tourCaret": "El arranque es célebre"
+    "tourCaret": "El arranque es célebre",
+    "notes": {
+      "Don Quijote": "# Don Quijote\n\nHidalgo de un lugar de [[La Mancha]] que, de tanto leer libros de caballerías, pierde el juicio y sale a deshacer agravios.\n\n## Quién va con él\n\n- [[Sancho Panza]], su escudero, que espera gobernar una ínsula\n- [[Rocinante]], su rocín flaco\n- [[Dulcinea del Toboso]], la dama a quien ofrece sus hazañas\n\nArremete contra los molinos de viento creyéndolos gigantes, y [[Sancho Panza]] le avisa en vano de que no son más que molinos.\n",
+      "Sancho Panza": "# Sancho Panza\n\nLabrador vecino de [[Don Quijote]], que lo sigue como escudero a lomos de su [[rucio]]. Llega a gobernar la [[ínsula Barataria]], y lo hace con más juicio que nadie.\n",
+      "Dulcinea del Toboso": "# Dulcinea del Toboso\n\nEl nombre que [[Don Quijote]] da a Aldonza Lorenzo, una labradora de El Toboso con la que nunca ha hablado. [[Sancho Panza]] la conoce mejor que su señor.\n",
+      "Rocinante": "# Rocinante\n\nEl rocín flaco de [[Don Quijote]], que tardó cuatro días en ponerle nombre. Va con el [[rucio]] de [[Sancho Panza]] en todas las salidas.\n",
+      "La Mancha": "# La Mancha\n\nLa tierra de cuyo lugar el narrador no quiere acordarse. De allí salen [[Don Quijote]] y [[Sancho Panza]].\n"
+    },
+    "previewLink": "Sancho Panza"
   },
   "fr": {
     "title": "Les Misérables",
@@ -78,7 +101,14 @@
     "mathDoc": "# La formule d’Euler\n\nPour tout nombre réel $x$,\n\n$$\ne^{ix} = \\cos x + i\\sin x\n$$\n\nPour $x = \\pi$, on obtient l’identité d’Euler, $e^{i\\pi}+1=0$.\n\nCinq des nombres les plus importants des mathématiques, sur une seule ligne.\n\n```mermaid\nmindmap\n  root((Identité d’Euler))\n    e\n      Croissance\n      Intérêts composés\n    i\n      Rotation\n      √−1\n    π\n      Cercles\n      Ondes\n    1 et 0\n      Unité\n      Néant\n```\n",
     "tourTitle": "Les Misérables, livre I",
     "tourDoc": "# Les Misérables\n\n## Livre premier — Un juste\n\n> Vrai ou faux, ce qu’on dit des hommes tient souvent autant de place\\\n> dans leur vie et surtout dans leur destinée que ce qu’ils font.\n\n### Notes de lecture\n\nTout commence ainsi : En 1815, M. **Charles-François-Bienvenu Myriel** était *évêque de Digne*. C’était ==un vieillard== d’environ <u>soixante-quinze ans</u> ; il occupait ~~le siège de Digne~~ depuis 1806. Cherchez `Bienvenu` dans le texte, ou lisez-le sur [Wikisource](https://fr.wikisource.org/wiki/Les_Misérables).\n\n> [!NOTE]\n> Nul n’aurait pu le dire ; tout ce qu’on savait, c’est que, lorsqu’il revint d’Italie, il était prêtre.\n\n- Mademoiselle Baptistine\n- Madame Magloire\n\n1. Lire le premier chapitre à voix haute\n2. Relever chaque rumeur\n\n- [x] Livre premier\n- [ ] Livre deuxième\n\n```python\nchapitres = {\"I\": 963, \"II\": 1619, \"III\": 730}\nprint(sum(chapitres.values()), \"mots\")\n```\n\n---\n",
-    "tourCaret": "Tout commence ainsi"
+    "tourCaret": "Tout commence ainsi",
+    "notes": {
+      "Jean Valjean": "# Jean Valjean\n\nForçat libéré après dix-neuf ans de bagne pour un pain volé. À [[Digne]], [[Monseigneur Myriel]] lui pardonne le vol de son argenterie et lui donne les chandeliers.\n\n## Ceux qu’il croise\n\n- [[Javert]], l’inspecteur qui le poursuit toute sa vie\n- [[Fantine]], dont il promet de sauver l’enfant\n- [[Cosette]], qu’il élève comme sa fille\n\nDevenu M. Madeleine, il tient sa promesse et va chercher [[Cosette]] chez les Thénardier, à Montfermeil.\n",
+      "Monseigneur Myriel": "# Monseigneur Myriel\n\nÉvêque de [[Digne]], qui vit pauvrement et donne presque tout. Il accueille [[Jean Valjean]] quand toutes les portes se ferment devant lui.\n",
+      "Cosette": "# Cosette\n\nFille de [[Fantine]], placée enfant chez les [[Thénardier]], qui en font leur servante. [[Jean Valjean]] la sauve et l’élève à Paris.\n",
+      "Digne": "# Digne\n\nLa ville où [[Monseigneur Myriel]] est évêque, et où [[Jean Valjean]] arrive en 1815, chassé de partout.\n"
+    },
+    "previewLink": "Cosette"
   },
   "de": {
     "title": "Die Verwandlung",
@@ -97,7 +127,14 @@
     "mathDoc": "# Die eulersche Formel\n\nFür jede reelle Zahl $x$ gilt\n\n$$\ne^{ix} = \\cos x + i\\sin x\n$$\n\nFür $x = \\pi$ ergibt sich die eulersche Identität $e^{i\\pi}+1=0$.\n\nFünf der wichtigsten Zahlen der Mathematik in einer Zeile.\n\n```mermaid\nmindmap\n  root((Eulersche Identität))\n    e\n      Wachstum\n      Zinseszins\n    i\n      Drehung\n      √−1\n    π\n      Kreise\n      Wellen\n    1 und 0\n      Einheit\n      Nichts\n```\n",
     "tourTitle": "Die Verwandlung, Teil I",
     "tourDoc": "# Die Verwandlung\n\n## I.\n\n> »Was ist mit mir geschehen?« dachte er. Es war kein Traum.\n\n### Lesenotizen\n\nDann das Wetter: **Gregors Blick** richtete sich dann *zum Fenster*, und ==das trübe Wetter== – <u>man hörte Regentropfen</u> auf ~~das Fensterblech~~ aufschlagen – machte ihn ganz melancholisch. Im Text nach `Prokurist` suchen oder bei [Project Gutenberg](https://www.gutenberg.org/ebooks/22367) lesen.\n\n> [!NOTE]\n> »Gregor,« rief es – es war die Mutter –, »es ist dreiviertel sieben. Wolltest du nicht wegfahren?«\n\n- die Sorgen um die Zuganschlüsse\n- das unregelmäßige, schlechte Essen\n\n1. Den ersten Absatz laut lesen\n2. Jede Uhrzeit anstreichen\n\n- [x] Teil I\n- [ ] Teil II\n\n```python\nteile = {\"I\": 6105, \"II\": 6664, \"III\": 6382}\nprint(sum(teile.values()), \"Wörter\")\n```\n\n---\n",
-    "tourCaret": "Dann das Wetter"
+    "tourCaret": "Dann das Wetter",
+    "notes": {
+      "Gregor Samsa": "# Gregor Samsa\n\nHandlungsreisender, der eines Morgens als ungeheueres Ungeziefer erwacht. Als er den Zug versäumt, kommt [[Der Prokurist]] selbst in die Wohnung.\n\n## Um ihn herum\n\n- [[Grete Samsa]], die Schwester, die ihm das Essen bringt\n- [[Der Vater]], der ihn mit Äpfeln bewirft\n- [[Die Mutter]], die bei seinem Anblick in Ohnmacht fällt\n\nAm Ende ist es [[Grete Samsa]], die sagt, man müsse versuchen, ihn loszuwerden.\n",
+      "Grete Samsa": "# Grete Samsa\n\nGregors jüngere Schwester, die Geige spielt. Anfangs pflegt sie [[Gregor Samsa]], später erträgt sie ihn nicht mehr. Am Schluss sehen [[Die Mutter]] und [[Der Vater]], dass sie zu einem schönen Mädchen aufgeblüht ist.\n",
+      "Der Prokurist": "# Der Prokurist\n\nGregors Vorgesetzter, der schon am Morgen nachsehen kommt, warum [[Gregor Samsa]] nicht zur Arbeit gefahren ist. Beim Anblick Gregors flieht er die Treppe hinunter.\n",
+      "Die Mutter": "# Die Mutter\n\nGregors Mutter, die an Asthma leidet. Sie will [[Gregor Samsa]] sehen, aber [[Grete Samsa]] hält sie lange zurück.\n"
+    },
+    "previewLink": "Grete Samsa"
   },
   "ru": {
     "title": "Анна Каренина",
@@ -117,7 +154,15 @@
     "mathDoc": "# Формула Эйлера\n\nДля любого действительного числа $x$\n\n$$\ne^{ix} = \\cos x + i\\sin x\n$$\n\nПри $x = \\pi$ получается тождество Эйлера $e^{i\\pi}+1=0$.\n\nПять важнейших чисел математики — в одной строке.\n\n```mermaid\nmindmap\n  root((Тождество Эйлера))\n    e\n      Рост\n      Сложные проценты\n    i\n      Поворот\n      √−1\n    π\n      Окружности\n      Волны\n    1 и 0\n      Единица\n      Ничто\n```\n",
     "tourTitle": "Анна Каренина, часть I",
     "tourDoc": "# Анна Каренина\n\n## Часть первая\n\n> Все счастливые семьи похожи друг на друга,\\\n> каждая несчастливая семья несчастлива по-своему.\n\n### Заметки при чтении\n\nДальше читаем: На третий день после ссоры **князь Степан Аркадьич Облонский** — *Стива, как его звали в свете*, — в обычный час, то есть ==в восемь часов утра==, проснулся <u>не в спальне жены</u>, а ~~в своем кабинете~~, на сафьянном диване. Найдите в тексте `Облонский` или прочитайте роман на [Викитеке](https://ru.wikisource.org/wiki/%D0%90%D0%BD%D0%BD%D0%B0_%D0%9A%D0%B0%D1%80%D0%B5%D0%BD%D0%B8%D0%BD%D0%B0_(%D0%A2%D0%BE%D0%BB%D1%81%D1%82%D0%BE%D0%B9)/%D0%A7%D0%B0%D1%81%D1%82%D1%8C_I/%D0%93%D0%BB%D0%B0%D0%B2%D0%B0_I).\n\n> [!NOTE]\n> «Всему виной эта глупая улыбка», — думал Степан Аркадьич.\n\n- Жена не выходила из своих комнат\n- мужа третий день не было дома\n\n1. Прочитать первую главу вслух\n2. Выписать всех героев\n\n- [x] Глава I\n- [ ] Глава II\n\n```python\nchapters = {\"I\": 703, \"II\": 927, \"III\": 1247}\nprint(sum(chapters.values()), \"слов\")\n```\n\n---\n",
-    "tourCaret": "Дальше читаем"
+    "tourCaret": "Дальше читаем",
+    "notes": {
+      "Анна Каренина": "# Анна Каренина\n\nЖена петербургского сановника. Она приезжает в Москву мирить брата — [[Степан Аркадьич]] — с его женой, [[Долли]].\n\n## Кто рядом\n\n- [[Вронский]] — офицер, которого она встречает на вокзале\n- [[Каренин]] — муж, который думает прежде всего о приличиях\n- [[Серёжа]] — сын, с которым ей придётся расстаться\n\nНа балу от неё не отходит [[Вронский]], и Кити понимает, что предложения от него не будет.\n",
+      "Степан Аркадьич": "# Степан Аркадьич\n\nОблонский; его сестра — [[Анна Каренина]]. Он изменил жене — [[Долли]] — с гувернанткой, и «всё смешалось в доме Облонских». Его старый друг — [[Левин]].\n",
+      "Долли": "# Долли\n\nЖена Облонского — [[Степан Аркадьич]]. Узнав об измене, она хочет уйти от мужа; [[Анна Каренина]] уговаривает её простить. Её младшую сестру Кити любит [[Левин]].\n",
+      "Левин": "# Левин\n\nПомещик, который живёт в деревне и косит траву вместе с мужиками. Друг юности — [[Степан Аркадьич]]. Он делает предложение Кити, сестре [[Долли]], и получает отказ.\n",
+      "Вронский": "# Вронский\n\nГраф, блестящий офицер. Кити ждёт от него предложения, но на балу он не отходит от гостьи из Петербурга — это [[Анна Каренина]]. Скоро он едет за ней в Петербург.\n"
+    },
+    "previewLink": "Вронский"
   },
   "pt": {
     "title": "Dom Casmurro",
@@ -136,6 +181,13 @@
     "mathDoc": "# A fórmula de Euler\n\nPara todo número real $x$,\n\n$$\ne^{ix} = \\cos x + i\\sin x\n$$\n\nCom $x = \\pi$, obtém-se a identidade de Euler, $e^{i\\pi}+1=0$.\n\nCinco dos números mais importantes da matemática, em uma só linha.\n\n```mermaid\nmindmap\n  root((Identidade de Euler))\n    e\n      Crescimento\n      Juros compostos\n    i\n      Rotação\n      √−1\n    π\n      Círculos\n      Ondas\n    1 e 0\n      Unidade\n      Nada\n```\n",
     "tourTitle": "Dom Casmurro, capítulo I",
     "tourDoc": "# Dom Casmurro\n\n## I. Do título\n\n> Uma noite destas, vindo da cidade para o Engenho Novo,\\\n> encontrei no trem da Central um rapaz aqui do bairro\n\n### Notas de leitura\n\nLogo depois: **Não consultes dicionários.** *Casmurro* não está aqui ==no sentido que eles lhe dão==, mas <u>no que lhe pôs o vulgo</u> de ~~homem calado~~ e metido consigo. Procure `Capitu` no texto ou leia o livro no [Wikisource](https://pt.wikisource.org/wiki/Dom_Casmurro).\n\n> [!NOTE]\n> Fiquei tão alegre com esta ideia, que ainda agora me treme a pena na mão.\n\n- Bentinho\n- Capitu\n\n1. Ler o capítulo em voz alta\n2. Anotar cada alcunha\n\n- [x] Capítulo I\n- [ ] Capítulo II\n\n```python\ncapitulos = {\"I\": 336, \"II\": 729, \"III\": 659}\nprint(sum(capitulos.values()), \"palavras\")\n```\n\n---\n",
-    "tourCaret": "Logo depois"
+    "tourCaret": "Logo depois",
+    "notes": {
+      "Bentinho": "# Bentinho\n\nBento Santiago, o narrador, que na velhice ganhou o apelido de Dom Casmurro. A mãe, [[Dona Glória]], prometeu fazê-lo padre.\n\n## Quem o cerca\n\n- [[Capitu]], a vizinha dos “olhos de ressaca”\n- [[José Dias]], o agregado que gosta de superlativos\n- [[Escobar]], o amigo do seminário\n\nNo velório de [[Escobar]], ele vê como Capitu olha o defunto e começa a duvidar de tudo.\n",
+      "Capitu": "# Capitu\n\nVizinha e namorada de infância de [[Bentinho]], com quem se casa. [[José Dias]] diz que ela tem “olhos de cigana oblíqua e dissimulada”.\n",
+      "José Dias": "# José Dias\n\nAgregado da casa de [[Dona Glória]], que fala em superlativos. É ele quem lembra a promessa de mandar [[Bentinho]] para o seminário.\n",
+      "Escobar": "# Escobar\n\nColega de [[Bentinho]] no seminário e seu melhor amigo. Casa-se com [[Sancha]], amiga de [[Capitu]], e morre afogado no mar.\n"
+    },
+    "previewLink": "Escobar"
   }
 }

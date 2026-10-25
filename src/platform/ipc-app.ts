@@ -160,12 +160,27 @@ export const links = {
   openTutorialsPage: (language: Lang, clip?: string) =>
     command("open_tutorials_page", clip ?? null, language),
   /** Settings › General › About Textus's links, and the theme gallery's
-   *  website (Browse themes, when it can't be reached), by name. */
-  openAboutLink: (page: "github" | "discord" | "qq" | "themes") =>
+   *  website (the theme gallery, when it can't be reached), by name. */
+  openAboutLink: (page: "github" | "discord" | "qq" | "themes" | "listing") =>
     command("open_about_link", page),
   /** A web or mail link Ctrl/Cmd+clicked in a document
    *  (editor/markdown/link-click-plugin.ts). */
   openWebLink: (url: string) => command("open_web_link", url),
+};
+
+/** Web pages in tabs as native webviews of their own, laid over each tab's
+ *  area (commands/web_page.rs; plugins/useNativeWebPage.ts). Desktop. */
+export const webPages = {
+  show: (
+    id: string,
+    url: string,
+    bounds: { x: number; y: number; width: number; height: number },
+  ) => desktopActionCommand("web_page_show", id, url, bounds),
+  hide: (id: string) => desktopActionCommand("web_page_hide", id),
+  close: (id: string) => desktopActionCommand("web_page_close", id),
+  navigate: (id: string, url: string) =>
+    desktopActionCommand("web_page_navigate", id, url),
+  reload: (id: string) => desktopActionCommand("web_page_reload", id),
 };
 
 export const exportDoc = {

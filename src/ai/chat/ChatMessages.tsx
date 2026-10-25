@@ -33,6 +33,7 @@ import { ProposalGroup, proposalRuns } from "./ProposalGroup";
 import { CommentCard, CommentGroup, noteRunsOf } from "./CommentCard";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { memoryRunsOf } from "./memory-pass";
+import { OFFER_SKILL, SkillOfferChip, parseSkillOffer } from "./SkillOfferChip";
 
 /** The statuses a card reaches by being decided, which collapse it. */
 const DECIDED: ReadonlySet<PendingStatus> = new Set([
@@ -455,6 +456,23 @@ export function ChatMessages({
           (parsedProposals.has(turn.call_id) || commentIds.has(turn.call_id))
         )
           return null;
+        // A skill offered after the exchange (SkillOfferChip): its result
+        // is the offer.
+        if (turn.kind === "ToolCall" && turn.name === OFFER_SKILL) return null;
+        const offer =
+          turn.kind === "ToolResult" &&
+          turn.call_id.startsWith(`${OFFER_SKILL}-`) &&
+          parseSkillOffer(turn.output);
+        if (offer)
+          return (
+            <div
+              key={i}
+              className={`agent-memory-group${reveal ? " turn-reveal" : ""}`}
+              style={style}
+            >
+              <SkillOfferChip offer={offer} docPath={docPath} />
+            </div>
+          );
         // A remember call shows as its result's chip; one that saved
         // nothing (a duplicate) shows as any other tool result.
         if (turn.kind === "ToolCall" && turn.name === "remember") return null;

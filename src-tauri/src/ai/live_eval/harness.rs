@@ -153,7 +153,7 @@ pub(crate) fn chatgpt_sign_in() -> (String, String) {
 }
 
 /// The endpoint the agent cases run on (see agent_provider_id).
-fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
+pub(crate) fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
     match agent_provider_id() {
         "openai" => {
             let (access_token, account_id) = chatgpt_sign_in();
@@ -208,10 +208,18 @@ pub fn writing_model_arg(model: &str) -> Option<&str> {
     (model != anthropic::COMPLETION_MODEL).then_some(model)
 }
 
-pub const JUDGE_MODEL: &str = "claude-opus-5-5";
+/// The judge's model: Sonnet unless TEXTUS_EVAL_JUDGE_MODEL names another.
+/// Opus judged once, at several times the price of the whole run; asking
+/// for it is now a choice made on purpose.
+pub fn judge_model() -> String {
+    std::env::var("TEXTUS_EVAL_JUDGE_MODEL").unwrap_or_else(|_| "claude-sonnet-5-5".into())
+}
 
+/// TEXTUS_EVAL_JUDGE=1 turns the judge on. Off by default: the automatic
+/// checks decide pass or fail, and a judged run costs about three times
+/// as much.
 fn judge_enabled() -> bool {
-    std::env::var("TEXTUS_EVAL_JUDGE").map_or(true, |v| v != "0")
+    std::env::var("TEXTUS_EVAL_JUDGE").is_ok_and(|v| v == "1")
 }
 
 /// TEXTUS_EVAL_FILTER: run only cases whose id contains this substring.
@@ -370,17 +378,29 @@ pub fn with_retry<T>(mut attempt: impl FnMut() -> Result<T, String>) -> Result<T
 /// output) - Anthropic's first-party prices for the models the eval runs
 /// (Haiku 5.5 at the up-to-100K-token prompt rate, which every completion
 /// and grammar request is under). An unknown model is priced as Opus, so
-/// the budget guard errs on the side of stopping early.
+/// the budget guard errs on the side of stopping early, and says so once.
 pub fn price(model: &str) -> [f64; 4] {
     match model {
         "claude-haiku-5-5" => [0.10, 0.125, 0.01, 0.50],
         "claude-sonnet-5-5" => [2.0, 2.5, 0.20, 10.0],
+        // On the ChatGPT sign-in a request is the plan's, not billed.
+        m if m.starts_with("gpt-") && agent_provider_id() == "openai" => [0.0; 4],
         // Approximate, from Ark's yuan list prices.
         m if m.starts_with("doubao-") => [0.55, 0.0, 0.11, 2.2],
         // The highest rates listed for each (2026), so the guard stops early.
         m if m.starts_with("deepseek-") => [1.74, 0.0, 0.15, 3.96],
         m if m.starts_with("MiniMax-") => [0.375, 0.0, 0.06, 1.5],
-        _ => [4.0, 5.0, 0.20, 20.0],
+        m if m.contains("gemini-") && m.contains("flash") => [0.5, 0.0, 0.05, 3.0],
+        m if m.contains("gemini-") => [2.5, 0.0, 0.25, 15.0],
+        other => {
+            static WARNED: std::sync::Once = std::sync::Once::new();
+            WARNED.call_once(|| {
+                eprintln!(
+                    "live_eval: no price for {other}; priced as Opus, so the budget stops early"
+                )
+            });
+            [4.0, 5.0, 0.20, 20.0]
+        }
     }
 }
 
@@ -818,6 +838,33 @@ pub fn run_conversation(
             proposed: Default::default(),
             checks: Default::default(),
         };
+        // The app's provider path (route::agent_provider), on Claude unless
+        // TEXTUS_EVAL_PROVIDER says otherwise.
+        let agent = AgentProvider {
+            id: agent_provider_id().to_string(),
+            model: setup.model.to_string(),
+            endpoint: agent_endpoint(auth),
+            thinking: setup.thinking,
+            native_search: None,
+            enforce_binding: true,
+        };
+        // A long document's chapters at once, as the app offers it
+        // (agent/chapters.rs).
+        let helper_tools = tools::ToolRegistry::builtin(false, false, setup.mode, sees_images())
+            .only(tools::PROPOSE_EDIT_TOOL_NAME);
+        let helpers = crate::ai::agent::HelperTurns::default();
+        let chapter_run = crate::ai::agent::ChapterRun {
+            agent: &agent,
+            workspace: ws,
+            document: &document,
+            mode: setup.mode,
+            ui_language: setup.ui_language,
+            conventions: &conventions,
+            tools: &helper_tools,
+            tool_ctx: &ctx,
+            channel: &events,
+            helpers: &helpers,
+        };
         // Images as the
         // app offers them to the provider the eval runs on (Anthropic), and
         // generate_image when the case gives it one, on this turn's
@@ -838,21 +885,20 @@ pub fn run_conversation(
                 &events,
             ));
         }
+        if helper_tools.edits() && crate::ai::agent::offers_chapters(&document) {
+            let run = &chapter_run;
+            tool_set.add(tools::Tool {
+                spec: crate::ai::agent::chapters_spec(),
+                access: tools::Access::Proposes,
+                modes: tools::EDITING_MODES,
+                run: tools::Run::Async(Box::new(move |call| Box::pin(run.run(call)))),
+            });
+        }
         let specs = tool_set.specs();
         let usage = RefCell::new(Vec::new());
         let postfix = RefCell::new(Vec::new());
         let thinking_events = AtomicUsize::new(0);
         let thinking_chars = AtomicUsize::new(0);
-        // The app's provider path (route::agent_provider), on Claude unless
-        // TEXTUS_EVAL_PROVIDER says otherwise.
-        let agent = AgentProvider {
-            id: agent_provider_id().to_string(),
-            model: setup.model.to_string(),
-            endpoint: agent_endpoint(auth),
-            thinking: setup.thinking,
-            native_search: None,
-            enforce_binding: true,
-        };
         // Pictures written into the text, begun as the app begins them.
         let inline = setup.pictures.map(|p| p.inline(&ctx.proposed));
         let timeline = Timeline::from_env();
@@ -918,7 +964,7 @@ pub fn run_conversation(
         // generate_image held this turn's document; the next turn's may differ.
         drop(tool_set);
         let mut turns = match result {
-            Ok(turns) => turns,
+            Ok(turns) => crate::ai::agent::with_helper_turns(turns, &helpers),
             Err(e) => {
                 error = Some(format!("turn {}: {e}", outcomes.len() + 1));
                 break;
@@ -1229,7 +1275,7 @@ pub fn judge(
     );
     for _ in 0..2 {
         let Ok(Reply { text: raw, .. }) =
-            complete(auth, JUDGE_INSTRUCTIONS, &user, Some(JUDGE_MODEL))
+            complete(auth, JUDGE_INSTRUCTIONS, &user, Some(&judge_model()))
         else {
             continue;
         };

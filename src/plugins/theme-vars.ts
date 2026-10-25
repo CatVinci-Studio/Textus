@@ -41,6 +41,20 @@ export const WEBVIEW_THEME_VARS = [
   "--space-4",
   "--space-5",
   "--space-6",
+  // Motion (docs/design/design-language.md, Motion), as the window has it
+  // now: under reduced motion the distances are 0, so a plugin's moves
+  // turn into fades with the app's.
+  "--dur-fast",
+  "--dur-base",
+  "--dur-medium",
+  "--dur-slow",
+  "--dur-stagger",
+  "--ease-out",
+  "--ease-in",
+  "--ease-in-out",
+  "--motion-distance-sm",
+  "--motion-distance-md",
+  "--motion-mark-bg",
 ] as const;
 
 /** Whether the window shows its dark appearance now. */

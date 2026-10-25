@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useLatest } from "../../utils/hooks/useLatest";
 import type { EditorRunner } from "../useEditorRunner";
 import {
   applyEditorCaret,
@@ -22,15 +23,17 @@ export function useModeSwitchCaret(
     );
   }, [isActive, run]);
   const runReady = run(() => true) === true;
+  // Once per mount: the caret is handed across a single switch, against the
+  // text the editor mounted with.
+  const mounted = useLatest({ run, initialValue });
   useEffect(() => {
     if (!isActive || !runReady) return;
     const caret = takePendingCaret();
     if (!caret) return;
+    const { run, initialValue } = mounted.current;
     // After layout, so coordinates for the scroll correction exist.
     requestAnimationFrame(() =>
       run((ctx) => applyEditorCaret(ctx, initialValue, caret)),
     );
-    // Once per mount: the caret is handed across a single switch.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, runReady]);
+  }, [isActive, runReady, mounted]);
 }

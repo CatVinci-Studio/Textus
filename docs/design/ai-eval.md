@@ -293,7 +293,28 @@ there for runs that want it.
 
 ## Running it
 
-From `src-tauri/`:
+The usual way in is `scripts/live-eval.mjs`, which sets the variables below
+with the cheap choices as defaults - no judge, a $1 budget, the keys from
+`.env.local` - and writes to `tmp/live-eval/<provider>-<suite>-<time>/`:
+
+```sh
+node scripts/live-eval.mjs run --provider deepseek --suite matrix
+node scripts/live-eval.mjs run --provider chatgpt --suite continuing --model gpt-6-sol
+node scripts/live-eval.mjs compare src-tauri/src/ai/live_eval/baselines/deepseek.json tmp/live-eval/deepseek-matrix-…
+node scripts/live-eval.mjs baseline tmp/live-eval/deepseek-matrix-… deepseek
+```
+
+`--set core` runs the 33 agent cases in
+`src-tauri/src/ai/live_eval/baselines/core.txt`, one or two per group, at a
+fifth of a full run's cost - for iterating; a release still runs every case.
+`compare` lists the agent cases that started or stopped passing between two
+runs (or a run and a provider's baseline), leaving out cases that never ran
+there: not run on that provider, skipped by the budget, or never answered.
+`baseline` keeps a run's result as the provider's baseline in
+`src-tauri/src/ai/live_eval/baselines/`; update it when a change is meant to
+move the numbers.
+
+The same by hand, from `src-tauri/`:
 
 ```sh
 cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
@@ -310,7 +331,9 @@ cases at a time itself. Useful variables:
 | `TEXTUS_EVAL_FILTER`        | Only cases whose id contains one of these comma-separated substrings  |
 | `TEXTUS_EVAL_AGENT_MODEL`   | Run the agent matrix on another model                                 |
 | `TEXTUS_EVAL_WRITING_MODEL` | Run completion and grammar on another model                           |
-| `TEXTUS_EVAL_JUDGE=0`       | Automatic checks only (much cheaper, about a third of the requests)   |
+| `TEXTUS_EVAL_JUDGE=1`       | Also judge each case (off by default; about three times the requests) |
+| `TEXTUS_EVAL_JUDGE_MODEL`   | The judge's model (default Sonnet 5.5)                                |
+| `TEXTUS_EVAL_PROVIDER`      | Run the agent on `chatgpt`, `deepseek`, `minimax`, `doubao`, `vertex` |
 | `TEXTUS_EVAL_JOBS`          | Concurrent cases (default 6)                                          |
 | `TEXTUS_EVAL_OUT`           | Output folder (default: a new folder under the system temp dir)       |
 | `TEXTUS_EVAL_BUDGET_USD`    | Stop starting cases once this run has spent this much (list prices)   |

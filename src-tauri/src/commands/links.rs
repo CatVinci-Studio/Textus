@@ -97,6 +97,8 @@ fn about_url(page: &str) -> Option<&'static str> {
         "qq" => Some("https://textus.catvinci.com/qq"),
         // Settings › Browse themes, when the gallery can't be reached.
         "themes" => Some("https://textus.catvinci.com/themes/"),
+        // The market's How to list yours: what gets listed, and how.
+        "listing" => Some("https://github.com/CatVinci-Studio/textus-plugins/blob/main/LISTING.md"),
         _ => None,
     }
 }

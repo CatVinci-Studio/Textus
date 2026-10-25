@@ -205,9 +205,7 @@ export function useDetachedChat(handlers: DetachedChatHandlers) {
         );
       }),
     );
-    // `latest` is a stable ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [latest]);
 
   useEffect(watchChatWindows, []);
 

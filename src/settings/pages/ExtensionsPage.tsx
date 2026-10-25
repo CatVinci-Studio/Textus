@@ -1,11 +1,18 @@
 import { useState } from "react";
 import type { SettingsPageProps } from "./types";
-import { SettingsGroup } from "./SettingsGroup";
 import { PluginsPage } from "./PluginsPage";
-import { SettingRow } from "../sections/controls";
-import { ThemeGallerySection } from "../sections/theme-gallery";
-import { AgentSkillsSection, BuiltinSkillsSection } from "../sections/skills";
+import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
+import { ThemesTab } from "../sections/theme";
+import {
+  BuiltinSkillsSection,
+  OwnSkillsList,
+  importSkill,
+} from "../sections/skills";
 import { McpSection } from "../sections/mcp";
+import type { McpServer } from "../mcp";
+import { errorText } from "../../utils/error-text";
+import { openUsageGuide } from "../../plugins/usage-guide";
+import { MarketPage, type MarketKind } from "./MarketPage";
 
 import {
   extensionsStartTab,
@@ -17,17 +24,26 @@ import {
 const TABS = extensionsTabs();
 
 /**
- * Settings › Extensions: everything added to Textus, one tab each, every
- * one a card - plugins (the textus-plugins catalog), themes (the theme
- * gallery), skills (the built-ins, five on to start with, and the user's
- * own), and MCP servers. Desktop only, as plugins are.
+ * Settings › Extensions: everything added to Textus, one tab each -
+ * plugins (the textus-plugins catalog), themes (the theme gallery), skills
+ * (the built-ins, five on to start with, and the user's own), and MCP
+ * servers. Every tab is laid out alike (ExtensionsTabLayout): what it
+ * holds in a line, Get more and "⋯", what is installed, Advanced. Get more
+ * (MarketPage) is where everything not installed yet is. Desktop only, as
+ * plugins are.
  */
 export function ExtensionsPage(props: SettingsPageProps) {
-  const { t, setSubpage, onOpenFile, onFilesDeleted, onClose } = props;
+  const { t, onOpenFile, onFilesDeleted, onClose } = props;
   const [tab, setTabState] = useState<ExtensionsTab>(extensionsStartTab);
+  // Get more, opened on a kind.
+  const [market, setMarket] = useState<MarketKind | null>(null);
+  // An MCP server Get more sent to the MCP tab's form.
+  const [adding, setAdding] = useState<McpServer | null>(null);
+  const [skillError, setSkillError] = useState<string | null>(null);
   const setTab = (next: ExtensionsTab) => {
     openExtensionsTab(next);
     setTabState(next);
+    setAdding(null);
   };
   const label: Record<ExtensionsTab, string> = {
     plugins: t.extensionsTabPlugins,
@@ -35,6 +51,36 @@ export function ExtensionsPage(props: SettingsPageProps) {
     skills: t.extensionsTabSkills,
     mcp: t.extensionsTabMcp,
   };
+  // The server taken to the form is filled in once: not again on coming
+  // back from Get more.
+  const openMarket = (kind: MarketKind) => {
+    setAdding(null);
+    setMarket(kind);
+  };
+  const skillProps = { t, onOpenFile, onFilesDeleted, onClose };
+  if (market)
+    return (
+      <MarketPage
+        t={t}
+        kind={market}
+        onBack={() => setMarket(null)}
+        builtinSkills={(query) => (
+          <BuiltinSkillsSection {...skillProps} only="off" query={query} />
+        )}
+        // A plugin just installed shows how it is used: its guide in a
+        // tab, Settings out of the way.
+        onInstalled={(id) =>
+          void openUsageGuide(id).then((opened) => {
+            if (opened) onClose();
+          })
+        }
+        onAddMcp={(server) => {
+          setMarket(null);
+          setTab("mcp");
+          setAdding(server);
+        }}
+      />
+    );
   return (
     <>
       <div
@@ -55,44 +101,50 @@ export function ExtensionsPage(props: SettingsPageProps) {
           </button>
         ))}
       </div>
-      <div role="tabpanel" aria-label={label[tab]}>
-        {tab === "plugins" && <PluginsPage {...props} />}
-        {tab === "themes" && (
-          <>
-            <SettingsGroup title={t.extensionsThemesInstalled}>
-              <SettingRow
-                label={t.themeMoreLabel}
-                hint={t.extensionsThemesManageHint}
-              >
-                <button
-                  type="button"
-                  className="text-button settings-inline-button"
-                  onClick={() => setSubpage("themes")}
-                >
-                  {t.extensionsThemesManage}
-                </button>
-              </SettingRow>
-            </SettingsGroup>
-            <ThemeGallerySection t={t} title={t.extensionsThemesGet} />
-          </>
-        )}
-        {tab === "skills" && (
-          <>
-            <SettingsGroup title={t.extensionsTabSkills}>
-              <p className="plugin-group-help">{t.extensionsSkillsHelp}</p>
-              <AgentSkillsSection t={t} />
-            </SettingsGroup>
-            <BuiltinSkillsSection
+      {!props.indexing && (
+        <div role="tabpanel" aria-label={label[tab]}>
+          {tab === "plugins" && (
+            <PluginsPage {...props} onGetMore={() => openMarket("plugins")} />
+          )}
+          {tab === "themes" && (
+            <ThemesTab t={t} onGetMore={() => openMarket("themes")} />
+          )}
+          {tab === "skills" && (
+            <ExtensionsTabLayout
               t={t}
-              open
-              onOpenFile={onOpenFile}
-              onFilesDeleted={onFilesDeleted}
-              onClose={onClose}
+              intro={t.extensionsIntroSkills}
+              help={t.extensionsSkillsHelp}
+              onGetMore={() => openMarket("skills")}
+              actions={[
+                {
+                  label: t.agentSkillsImport,
+                  onSelect: () =>
+                    void importSkill().then(
+                      () => setSkillError(null),
+                      (err: unknown) => setSkillError(errorText(err)),
+                    ),
+                },
+              ]}
+              error={skillError}
+              installedTitle={t.pluginsInstalledGroup}
+              installed={
+                <>
+                  <OwnSkillsList t={t} />
+                  <BuiltinSkillsSection {...skillProps} only="on" />
+                </>
+              }
             />
-          </>
-        )}
-        {tab === "mcp" && <McpSection t={t} />}
-      </div>
+          )}
+          {tab === "mcp" && (
+            <McpSection
+              key={adding?.id ?? ""}
+              t={t}
+              adding={adding}
+              onGetMore={() => openMarket("mcp")}
+            />
+          )}
+        </div>
+      )}
     </>
   );
 }

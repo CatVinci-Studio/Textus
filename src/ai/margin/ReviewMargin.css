@@ -72,8 +72,7 @@
   /* Moved by the stack, a card glides on `translate` (useCardBox), never
      on `top`: that laid the margin out on every frame. */
   transition: transform var(--dur-fast) var(--ease-out);
-  --enter-x: calc(var(--motion-distance-md) * 1.75);
-  animation: motion-enter var(--dur-slow) var(--ease-out) both;
+  animation: review-note-in var(--dur-slow) var(--ease-out) both;
 }
 
 /* The deeper shadow under the pointer fades in on a layer of its own:
@@ -98,6 +97,13 @@
   opacity: 1;
 }
 
+@keyframes review-note-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--motion-distance-md) * 1.75));
+  }
+}
+
 .review-note-by {
   display: flex;
   align-items: center;
@@ -117,6 +123,13 @@
   color: var(--editor-accent);
   font-size: calc(8.5px * var(--ui-text-scale, 1));
   font-weight: 700;
+}
+
+/* The writer's own note: its mark in the text colour, not the AI's
+   accent, so whose note it is reads at a glance. */
+.review-note-mark-me {
+  background: color-mix(in srgb, var(--editor-text) 12%, transparent);
+  color: var(--editor-text);
 }
 
 .review-note-text {
@@ -334,8 +347,7 @@
   font: 700 10.5px/1 var(--font-ui, sans-serif);
   cursor: pointer;
   box-shadow: 0 0 0 3px var(--review-anchor-bg);
-  --enter-scale: var(--scale-enter);
-  animation: motion-enter var(--dur-medium) var(--ease-spring-bouncy) both;
+  animation: pending-pick-in var(--dur-medium) var(--ease-spring-bouncy) both;
 }
 
 [data-platform="ios"] .review-badge {
@@ -523,9 +535,10 @@
   text-decoration: none;
 }
 
-/* Its pair under the pointer or the review bar's pointer: the new text it
-   holds darkens with the pair's in the document, as a note's passage
-   does. A kept one stays as it is. */
+/* Its pair under the pointer or the review bar's pointer: the text it
+   holds darkens with the pair's in the document - a darker green for new
+   text, a darker red for the original - as a note's passage does. A kept
+   one stays as it is. */
 .revision-note:is(.review-note-hot, .revision-note-focus):not(
     .revision-note-kept
   )
@@ -587,4 +600,30 @@ del .revision-note-picture {
   display: block;
   font-size: var(--text-sm);
   color: var(--editor-muted);
+}
+
+/* The writer's own tracked changes (own-revision-plugin.ts), in the
+   revision colours the AI's use: what went, struck where it was; what
+   came, marked. Lit with their card. */
+.own-insert {
+  background: var(--revision-insert-bg);
+  color: var(--revision-insert-text);
+  border-radius: 2px;
+}
+
+.own-delete {
+  color: var(--revision-delete-text);
+  background: var(--revision-delete-bg);
+  text-decoration: line-through;
+  text-decoration-color: var(--revision-delete-strike);
+  border-radius: 2px;
+  user-select: none;
+}
+
+.own-insert.own-change-hot {
+  background: var(--revision-insert-hover-bg);
+}
+
+.own-delete.own-change-hot {
+  background: var(--revision-delete-hover-bg);
 }

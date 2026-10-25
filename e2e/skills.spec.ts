@@ -165,7 +165,7 @@ test.describe("the @ picker", () => {
   });
 });
 
-/** Settings › Extensions › Skills, where the built-ins are listed open. */
+/** Settings › Extensions › Skills, where the built-ins on are listed. */
 async function openSkillsTab(panel: Locator) {
   await panel.locator(".settings-nav-item", { hasText: "Extensions" }).click();
   await panel.getByRole("tab", { name: "Skills" }).click();
@@ -176,10 +176,10 @@ test.describe("Settings › Extensions › Skills", () => {
     const input = await openWithPanel(page, "en");
     const panel = await openSettings(page);
     await openSkillsTab(panel);
-    const builtins = panel.locator(".settings-builtin-skills");
-    await expect(builtins.locator("summary")).toContainText("19 of 19 on");
+    const builtins = panel.getByRole("tabpanel");
     await builtins.getByRole("checkbox", { name: "Proofread" }).click();
-    await expect(builtins.locator("summary")).toContainText("18 of 19 on");
+    // Off, it leaves Installed for Get more.
+    await expect(builtins.locator('[data-skill="proofread"]')).toHaveCount(0);
     expect(
       await page.evaluate(() =>
         Array.from(
@@ -210,7 +210,7 @@ test.describe("Settings › Extensions › Skills", () => {
 
     panel = await openSettings(page);
     await openSkillsTab(panel);
-    const builtins = panel.locator(".settings-builtin-skills");
+    const builtins = panel.getByRole("tabpanel");
     const row = builtins.locator('[data-skill="summarize"]');
     await expect(row).toContainText("Customized");
     // The copy shows here only, not again among the user's own skills,
@@ -218,9 +218,9 @@ test.describe("Settings › Extensions › Skills", () => {
     await expect(panel.locator(".settings-skill-list")).not.toContainText(
       "/summarize",
     );
-    await row.getByRole("checkbox", { name: "Summarize" }).uncheck();
-    await expect(row).toHaveAttribute("data-enabled", "false");
-    await row.getByRole("checkbox", { name: "Summarize" }).check();
+    await expect(
+      row.getByRole("checkbox", { name: "Summarize" }),
+    ).toBeChecked();
     await row.getByRole("button", { name: "Reset: Summarize" }).click();
     const confirm = page.getByRole("dialog", { name: /Delete your copy/ });
     await expect(confirm).toContainText("“Summarize”");
@@ -251,8 +251,7 @@ test.describe("Settings › Extensions › Skills", () => {
     });
     const panel = await openSettings(page);
     await openSkillsTab(panel);
-    const builtins = panel.locator(".settings-builtin-skills");
-    const row = builtins.locator('[data-skill="email"]');
+    const row = panel.getByRole("tabpanel").locator('[data-skill="email"]');
     await expect(row.locator(".settings-skill-tag-notice")).toHaveText(
       "Built-in updated",
     );

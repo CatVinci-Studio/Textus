@@ -178,6 +178,60 @@ fn chatgpt_redoes_a_picture_from_it() {
     }
 }
 
+/// The ChatGPT sign-in: a person, then a new scene with them drawn like
+/// the first picture (Reference::Like), and the same scene from its
+/// description alone - the two to compare by eye, in
+/// TEXTUS_EVAL_PICTURES_DIR.
+#[test]
+#[ignore = "uses the ChatGPT plan's image allowance; needs the app's sign-in"]
+fn chatgpt_draws_a_person_again_like_the_first_picture() {
+    use aicompat::providers::openai_codex::generate_image;
+    use base64::{engine::general_purpose::STANDARD, Engine};
+    const PERSON: &str = "A young woman with short silver hair, round glasses and a green raincoat stands on a rainy city street at night, warm shop lights behind her, flat illustration, no text";
+    const SCENE: &str = "The young woman with short silver hair, round glasses and a green raincoat sits by a train window reading a book, morning light, flat illustration, no text";
+    let (token, account) = harness::chatgpt_sign_in();
+    let origin = crate::app_identity::ORIGINATOR;
+    let draw = |prompt: &str, reference: Option<&aicompat::agent::ImageAttachment>| {
+        block_on(generate_image(
+            &token,
+            &account,
+            origin,
+            prompt,
+            Aspect::Square,
+            reference,
+        ))
+        .expect("a picture")
+    };
+    let first = draw(PERSON, None);
+    let reference = aicompat::agent::ImageAttachment {
+        name: format!("first.{}", first.ext),
+        mime: first.mime.to_string(),
+        data_base64: STANDARD.encode(&first.bytes),
+    };
+    let started = std::time::Instant::now();
+    let like = draw(
+        &format!("{}{SCENE}", crate::ai::images::LIKE),
+        Some(&reference),
+    );
+    let with_like = started.elapsed().as_secs_f64();
+    let started = std::time::Instant::now();
+    let alone = draw(SCENE, None);
+    eprintln!(
+        "live_eval: ChatGPT drew the scene like the first in {with_like:.1} s, alone in {:.1} s",
+        started.elapsed().as_secs_f64()
+    );
+    if let Ok(dir) = std::env::var("TEXTUS_EVAL_PICTURES_DIR") {
+        let dir = std::path::Path::new(&dir);
+        for (name, picture) in [("person", &first), ("like", &like), ("alone", &alone)] {
+            std::fs::write(
+                dir.join(format!("chatgpt-{name}.{}", picture.ext)),
+                &picture.bytes,
+            )
+            .ok();
+        }
+    }
+}
+
 #[test]
 #[ignore = "spends money; needs VOLCENGINE_ARK_API_KEY"]
 fn seedream_makes_a_picture() {

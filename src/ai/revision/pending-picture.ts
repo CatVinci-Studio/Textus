@@ -3,10 +3,14 @@ import {
   generatedImageId,
   generatedImageSize,
   generatedImageUrl,
+  generatedImagePrompt,
+  loadedImageId,
   loadGeneratedImage,
+  redrawGeneratedImage,
   retryGeneratedImage,
 } from "./generated-images";
 import { currentStrings } from "../../i18n/current";
+import { showPrompt } from "../../ui/app-dialog";
 import { enter } from "../../ui/moves";
 import "./pending-picture.css";
 
@@ -58,13 +62,14 @@ function settle(el: HTMLElement, id: string, alt: string, made: boolean) {
     img.alt = alt;
     // In once it can be drawn, fading in where the frame was (ui/moves.ts):
     // swapped in at once, it stood blank while it decoded, then appeared.
+    const made = madePicture(img, id, alt);
     void img
       .decode()
       .catch(() => undefined)
       .then(() => {
         if (!el.isConnected) return;
-        el.replaceWith(img);
-        enter(img, { from: "none" });
+        el.replaceWith(made);
+        enter(made, { from: "none" });
       });
     return;
   }
@@ -75,19 +80,64 @@ function settle(el: HTMLElement, id: string, alt: string, made: boolean) {
   why.className = "pending-picture-why";
   why.textContent = generatedImageFailure(id) ?? "";
   // This picture alone is asked for again; the frame paints meanwhile.
-  const retry = document.createElement("button");
-  retry.type = "button";
-  retry.className = "pending-picture-retry";
-  retry.textContent = currentStrings().agentRetry;
-  retry.addEventListener("mousedown", (e) => e.preventDefault());
-  retry.addEventListener("click", (e) => {
+  const retry = button(
+    "pending-picture-retry",
+    currentStrings().agentRetry,
+    () => {
+      const again = frame(id, alt);
+      el.replaceWith(again);
+      void retryGeneratedImage(id).then((made) => settle(again, id, alt, made));
+    },
+  );
+  el.append(why, retry);
+}
+
+/** A button in the picture's frame that keeps the editor's selection. */
+function button(className: string, label: string, onClick: () => void) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = className;
+  b.textContent = label;
+  b.addEventListener("mousedown", (e) => e.preventDefault());
+  b.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const again = frame(id, alt);
-    el.replaceWith(again);
-    void retryGeneratedImage(id).then((made) => settle(again, id, alt, made));
+    onClick();
   });
-  el.append(why, retry);
+  return b;
+}
+
+/** A made picture, with Redraw… over it: its description, changed by the
+ *  writer, draws it again - this picture alone, the frame painting
+ *  meanwhile. */
+function madePicture(
+  img: HTMLImageElement,
+  id: string,
+  alt: string,
+): HTMLElement {
+  const box = document.createElement("span");
+  box.className = "pending-picture-made";
+  const t = currentStrings();
+  const redraw = button("pending-picture-redraw", t.pictureRedraw, () => {
+    void (async () => {
+      const before = await generatedImagePrompt(id);
+      if (before === null) return;
+      const prompt = (
+        await showPrompt(t.pictureRedrawPrompt, before, {
+          title: t.pictureRedrawTitle,
+          okLabel: t.pictureRedrawOk,
+          cancelLabel: t.cancel,
+        })
+      )?.trim();
+      if (!prompt || prompt === before.trim() || !box.isConnected) return;
+      const again = frame(id, alt);
+      box.replaceWith(again);
+      const made = await redrawGeneratedImage(id, prompt);
+      settle(again, id, alt, made);
+    })();
+  });
+  box.append(img, redraw);
+  return box;
 }
 
 /**
@@ -96,7 +146,16 @@ function settle(el: HTMLElement, id: string, alt: string, made: boolean) {
  */
 export function framePendingPictures(root: HTMLElement): void {
   for (const img of root.querySelectorAll<HTMLImageElement>("img")) {
-    const id = generatedImageId(img.getAttribute("src") ?? "");
+    const src = img.getAttribute("src") ?? "";
+    // Here already: the picture itself, to redraw.
+    const here = loadedImageId(src);
+    if (here) {
+      img.replaceWith(
+        madePicture(img.cloneNode() as HTMLImageElement, here, img.alt),
+      );
+      continue;
+    }
+    const id = generatedImageId(src);
     if (!id) continue;
     const alt = img.getAttribute("alt") ?? "";
     const el = frame(id, alt);

@@ -54,6 +54,40 @@ async function installDisk(page: Page) {
   }, CHAPTER);
 }
 
+/** The page booted as Rust boots it (src-tauri/src/boot.js), with the
+ *  conversations in the store behind (dev/tauri-shim.ts) and three more in
+ *  its trash. */
+async function bootWithRust(page: Page, saved: unknown[]) {
+  const boot = {
+    settings: { language: "en", languageChosen: true, onboardingShown: true },
+    rev: 1,
+    label: "main",
+    uiState: {},
+  };
+  await page.addInitScript(
+    ({ script, boot, saved }) => {
+      new Function(script)();
+      (
+        window as unknown as {
+          __textusBoot: (boot: unknown, css: unknown) => void;
+        }
+      ).__textusBoot(boot, null);
+      (window as unknown as Record<string, unknown>).__devChatHistory = {
+        saved,
+        archived: 3,
+      };
+    },
+    {
+      script: readFileSync(
+        new URL("../src-tauri/src/boot.js", import.meta.url),
+        "utf8",
+      ),
+      boot,
+      saved,
+    },
+  );
+}
+
 const panel = (page: Page) => page.locator(".agent-panel-view");
 
 /** Opens the AI panel, if it isn't, and its history list. */
@@ -132,36 +166,7 @@ test("a never-saved document's conversation continues in the current one", async
 test("with Rust, the list is the index and older conversations are noted as archived", async ({
   page,
 }) => {
-  const boot = {
-    settings: { language: "en", languageChosen: true, onboardingShown: true },
-    rev: 1,
-    label: "main",
-    uiState: {},
-  };
-  await page.addInitScript(
-    ({ script, boot, saved }) => {
-      new Function(script)();
-      (
-        window as unknown as {
-          __textusBoot: (boot: unknown, css: unknown) => void;
-        }
-      ).__textusBoot(boot, null);
-      // The store behind (dev/tauri-shim.ts): the conversations, listed as
-      // summaries, and three more in the trash.
-      (window as unknown as Record<string, unknown>).__devChatHistory = {
-        saved,
-        archived: 3,
-      };
-    },
-    {
-      script: readFileSync(
-        new URL("../src-tauri/src/boot.js", import.meta.url),
-        "utf8",
-      ),
-      boot,
-      saved: SAVED,
-    },
-  );
+  await bootWithRust(page, SAVED);
   await openApp(page, { settings: { language: "en" } });
   await installDisk(page);
   await openHistory(page);
@@ -209,4 +214,45 @@ test("a conversation deleted from the list is gone for good", async ({
   // Escape closes the list.
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog", { name: "History" })).toHaveCount(0);
+});
+
+test("a search finds the conversations where the words were said", async ({
+  page,
+}) => {
+  const said = (id: string, at: number, user: string, reply: string) => ({
+    ...conversation(id, CHAPTER, user, at),
+    turns: [
+      { kind: "User", text: user },
+      { kind: "Assistant", text: reply },
+    ],
+  });
+  await bootWithRust(page, [
+    said(
+      "n1",
+      3,
+      "Name the ship",
+      "Call it the Albatross - it suits the voyage.",
+    ),
+    said("n2", 2, "Another name?", "The Petrel, or the Albatross again."),
+    said("n3", 1, "Tighten the ending", "Done."),
+  ]);
+  await openApp(page, { settings: { language: "en" } });
+  await installDisk(page);
+  await openHistory(page);
+  const search = page.getByRole("searchbox", { name: "Search conversations" });
+  await search.fill("albatross");
+  await expect(page.locator(".chat-history-hit")).toHaveCount(2);
+  await expect(page.locator(".chat-history-hit").first()).toContainText(
+    "Textus AI: Call it the Albatross",
+  );
+  await search.fill("albatross petrel");
+  await expect(page.locator(".chat-history-entry")).toHaveCount(1);
+  await search.fill("kraken");
+  await expect(page.locator(".chat-history-empty")).toHaveText(
+    "No conversation has these words.",
+  );
+  // A found conversation reopens like a listed one.
+  await search.fill("ending");
+  await page.locator(".chat-history-entry", { hasText: "Tighten" }).click();
+  await expect(panel(page)).toContainText("Tighten the ending");
 });

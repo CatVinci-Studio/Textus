@@ -132,6 +132,14 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/pt/settings.png" alt="O LLM que você preferir." width="860" />
 </p>
 
+## Plugins
+
+Adicione o que precisar, e nada mais. Um grafo das suas notas e dos links entre elas, um cartão que mostra aonde um link leva, dois documentos lado a lado, quadros kanban, histórico de versões, PDFs e arquivos do Word numa aba, citações do Zotero – tudo em **Ajustes › Extensões › Obter mais**, ao lado dos temas e das habilidades. Cada plugin pergunta antes de usar qualquer coisa.
+
+<p align="center">
+  <img src="docs/images/readme/pt/plugins.png" alt="Notas sobre Dom Casmurro ao lado do grafo dos links entre elas, com a nota para onde um link leva aberta num cartão." width="860" />
+</p>
+
 ## O que você escreve é só seu
 
 O que você escreve é seu. O Textus foi feito para que continue assim, e o código é aberto: qualquer pessoa pode conferir.

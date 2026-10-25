@@ -9,6 +9,7 @@ import {
   webviewMessage,
 } from "./manager";
 import { grantedHosts } from "./permissions";
+import { windowInfo } from "./plugin-records";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
 import {
   createWebview,
@@ -49,6 +50,8 @@ export function PluginWebview({
         themeCss: webviewThemeCss(),
         dark: windowIsDark(),
         frameHosts: grantedHosts(plugin?.granted ?? []),
+        language: windowInfo().language(),
+        l10n: plugin?.manifest?.l10n ?? {},
       }),
       plugin ? pluginName(plugin) : current.plugin,
     );
@@ -64,7 +67,7 @@ export function PluginWebview({
       },
       () => ({
         state: webviewState(current.key) ?? null,
-        language: document.documentElement.lang || "en",
+        language: windowInfo().language(),
       }),
       (connected) => {
         endpoint = connected;
