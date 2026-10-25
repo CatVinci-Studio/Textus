@@ -1,6 +1,7 @@
 import { plugins as pluginsIpc } from "../platform/ipc";
 import { getWindowAccess } from "./app-bridge";
-import { windowInfo } from "./plugin-records";
+import { localize } from "./manifest";
+import { pluginsSnapshot, windowInfo } from "./plugin-records";
 
 /**
  * A plugin's usage guide: the USAGE.md in its package - USAGE.<lang>.md in
@@ -29,6 +30,11 @@ export async function openUsageGuide(id: string): Promise<boolean> {
   const text = await usageGuide(id);
   const access = getWindowAccess();
   if (text === null || !access) return false;
-  access.openGuide(text);
+  // The tab is named after the plugin, in the UI's language.
+  const manifest = pluginsSnapshot().records.find((r) => r.id === id)?.manifest;
+  const name = manifest
+    ? localize(manifest, manifest.name, windowInfo().language())
+    : id;
+  access.openGuide(text, name);
   return true;
 }

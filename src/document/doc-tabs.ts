@@ -58,6 +58,9 @@ export interface DocTab {
    *  until it is first saved: a pathless draft named after the Word file,
    *  whose Save As starts beside it. The Word file is never written. */
   importedFrom?: string;
+  /** A pathless draft's own name instead of "Untitled" - a plugin's usage
+   *  guide, a document a plugin opened with a title. */
+  draftTitle?: string;
   /** A plugin's view or custom editor shown in this tab instead of a
    *  document (src/plugins/): no path, nothing to save - a custom editor's
    *  file is its `resource`, which the plugin reads and writes itself. */
@@ -97,6 +100,7 @@ export function tabTitle(tab: DocTab, t: Strings): string {
   if (tab.helpDoc === "agent") return t.agentGuideTab;
   if (tab.importedFrom)
     return basename(tab.importedFrom).replace(/\.docx$/i, "");
+  if (tab.draftTitle) return tab.draftTitle;
   return t.untitledTab;
 }
 

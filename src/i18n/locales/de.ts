@@ -1286,9 +1286,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   marketGetMore: "Mehr holen",
   marketTitle: "Mehr holen",
   marketHelp:
-    "Plugins, Themes und Skills für Textus an einem Ort. Jedes fragt vor der Installation, was es tun darf.",
+    "Plugins, Themes, Skills und MCP-Server für Textus an einem Ort. Jedes fragt vor der Installation, was es tun darf.",
   marketAll: "Alle",
-  marketSearch: "Plugins, Themes und Skills durchsuchen",
+  marketSearch: "Plugins, Themes, Skills und Server durchsuchen",
   marketListYours: "Selbst eins gemacht?",
   marketListingRules: "So wird es aufgenommen",
   marketSkillFailed: "Es wurde nicht installiert.",
@@ -1387,6 +1387,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   webPageAddress: "Webadresse",
   webPageReload: "Neu laden",
   webPageOpenInBrowser: "Im Browser öffnen",
+  webPageHideBar: "Adressleiste ausblenden",
+  webPageShowBar: "Adressleiste einblenden",
   webPageHint:
     "Bleibt die Seite leer, erlaubt die Website keine Anzeige in anderen Apps – öffne sie im Browser.",
 } satisfies Translation;

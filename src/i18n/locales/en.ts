@@ -1269,9 +1269,9 @@ type /name in a conversation to use one.
   marketGetMore: "Get more",
   marketTitle: "Get more",
   marketHelp:
-    "Plugins, themes and skills for Textus, in one place. Each one asks before it is installed what it may do.",
+    "Plugins, themes, skills and MCP servers for Textus, in one place. Each one asks before it is installed what it may do.",
   marketAll: "All",
-  marketSearch: "Search plugins, themes and skills",
+  marketSearch: "Search plugins, themes, skills and servers",
   marketListYours: "Made one of your own?",
   marketListingRules: "How to list it",
   marketSkillFailed: "It wasn't installed.",
@@ -1369,6 +1369,8 @@ type /name in a conversation to use one.
   webPageAddress: "Web address",
   webPageReload: "Reload",
   webPageOpenInBrowser: "Open in Browser",
+  webPageHideBar: "Hide the address bar",
+  webPageShowBar: "Show the address bar",
   webPageHint:
     "A page that stays blank doesn’t allow being shown inside other apps - open it in your browser.",
 } satisfies Record<string, string | Plural>;

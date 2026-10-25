@@ -1170,9 +1170,9 @@ export default {
   marketGetMore: "获取更多",
   marketTitle: "获取更多",
   marketHelp:
-    "Textus 的插件、主题和技能都在这里。每个都会在安装前说明它能做什么。",
+    "Textus 的插件、主题、技能和 MCP 服务器都在这里。每个都会在安装前说明它能做什么。",
   marketAll: "全部",
-  marketSearch: "搜索插件、主题和技能",
+  marketSearch: "搜索插件、主题、技能和服务器",
   marketListYours: "自己做了一个？",
   marketListingRules: "怎样上架",
   marketSkillFailed: "没有装上。",
@@ -1265,6 +1265,8 @@ export default {
   webPageAddress: "网址",
   webPageReload: "重新载入",
   webPageOpenInBrowser: "在浏览器中打开",
+  webPageHideBar: "收起地址栏",
+  webPageShowBar: "展开地址栏",
   webPageHint:
     "如果页面一直是空白，说明这个网站不允许嵌入到其他应用里，请在浏览器中打开。",
 } satisfies Translation;

@@ -81,13 +81,14 @@ export function usePluginWindow({
           ...(heading ? { anchor: heading } : {}),
           ...(asDocument ? { asDocument } : {}),
         }),
-      openUntitled: (content) => addTab({ content, savedContent: "" }),
-      openGuide: (content) => {
+      openUntitled: (content, title) =>
+        addTab({ content, savedContent: "", draftTitle: title }),
+      openGuide: (content, title) => {
         const open = tabsRef.current.find(
           (tab) => !tab.path && tab.content === content,
         );
         if (open) setActiveTabId(open.id);
-        else addTab({ content, savedContent: content });
+        else addTab({ content, savedContent: content, draftTitle: title });
       },
       openPluginTab: (view: PluginTabView) => {
         // A view already open in a tab comes to the front.

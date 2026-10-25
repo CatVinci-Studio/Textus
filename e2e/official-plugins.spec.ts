@@ -132,6 +132,18 @@ test("a web link Ctrl/Cmd+clicked opens in Web View, not the browser", async ({
   await link.click({ modifiers: ["ControlOrMeta"] });
   const web = page.frameLocator('[data-active-tab="true"] .web-page-frame');
   await expect(web.locator("h1")).toHaveText("Linked page");
+  // The address bar folds to a handle, and stays folded for the next page.
+  const address = page.getByRole("textbox", { name: "Web address" });
+  await expect(address).toHaveValue("https://example.test/linked");
+  await page.getByRole("button", { name: "Hide the address bar" }).click();
+  await expect(address).toHaveCount(0);
+  const show = page.getByRole("button", { name: "Show the address bar" });
+  await expect(show).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("textus.webPageBarHidden")),
+  ).toBe("1");
+  await show.click();
+  await expect(address).toBeVisible();
   // Not handed to the system's browser (the dev shim's record).
   expect(
     await page.evaluate(

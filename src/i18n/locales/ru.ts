@@ -1289,9 +1289,9 @@ export default {
   marketGetMore: "Получить ещё",
   marketTitle: "Получить ещё",
   marketHelp:
-    "Плагины, темы и навыки для Textus в одном месте. Каждый перед установкой спрашивает, что ему можно делать.",
+    "Плагины, темы, навыки и MCP-серверы для Textus в одном месте. Каждый перед установкой спрашивает, что ему можно делать.",
   marketAll: "Все",
-  marketSearch: "Поиск плагинов, тем и навыков",
+  marketSearch: "Поиск плагинов, тем, навыков и серверов",
   marketListYours: "Сделали свой?",
   marketListingRules: "Как его добавить",
   marketSkillFailed: "Не установлено.",
@@ -1389,6 +1389,8 @@ export default {
   webPageAddress: "Адрес",
   webPageReload: "Обновить",
   webPageOpenInBrowser: "Открыть в браузере",
+  webPageHideBar: "Скрыть адресную строку",
+  webPageShowBar: "Показать адресную строку",
   webPageHint:
     "Если страница остаётся пустой, сайт не разрешает показывать себя в других приложениях — откройте её в браузере.",
 } satisfies Translation;

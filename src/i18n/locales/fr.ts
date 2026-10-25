@@ -1321,9 +1321,9 @@ utiliser une.
   marketGetMore: "En obtenir plus",
   marketTitle: "En obtenir plus",
   marketHelp:
-    "Les extensions, thèmes et compétences de Textus, au même endroit. Chacun demande avant d’être installé ce qu’il pourra faire.",
+    "Les extensions, thèmes, compétences et serveurs MCP de Textus, au même endroit. Chacun demande avant d’être installé ce qu’il pourra faire.",
   marketAll: "Tout",
-  marketSearch: "Rechercher extensions, thèmes et compétences",
+  marketSearch: "Rechercher extensions, thèmes, compétences et serveurs",
   marketListYours: "Vous en avez créé un ?",
   marketListingRules: "Comment le proposer",
   marketSkillFailed: "Il n’a pas été installé.",
@@ -1423,6 +1423,8 @@ utiliser une.
   webPageAddress: "Adresse web",
   webPageReload: "Recharger",
   webPageOpenInBrowser: "Ouvrir dans le navigateur",
+  webPageHideBar: "Masquer la barre d’adresse",
+  webPageShowBar: "Afficher la barre d’adresse",
   webPageHint:
     "Une page qui reste vide refuse de s’afficher dans d’autres apps : ouvrez-la dans votre navigateur.",
 } satisfies Translation;

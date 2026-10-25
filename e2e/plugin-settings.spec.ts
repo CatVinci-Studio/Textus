@@ -110,7 +110,7 @@ test("Get plugins searches the catalog by name, what it does and who made it", a
   const all = await cards.count();
   expect(all).toBeGreaterThan(3);
   const search = page.getByRole("searchbox", {
-    name: "Search plugins, themes and skills",
+    name: "Search plugins, themes, skills and servers",
   });
   await search.fill("kanban");
   await expect(cards).toHaveCount(1);

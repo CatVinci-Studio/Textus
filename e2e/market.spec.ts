@@ -79,7 +79,7 @@ test("one search goes over plugins, themes and skills, and All shows each kind",
   await expect(page.locator(".theme-gallery-item")).toHaveCount(2);
   await expect(page.locator(".settings-group .settings-group")).toHaveCount(0);
   const search = page.getByRole("searchbox", {
-    name: "Search plugins, themes and skills",
+    name: "Search plugins, themes, skills and servers",
   });
   await search.fill("cover letter");
   await expect(page.locator("[data-skill]")).toHaveCount(1);

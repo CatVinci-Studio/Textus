@@ -1232,9 +1232,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   marketGetMore: "さらに入手",
   marketTitle: "さらに入手",
   marketHelp:
-    "Textus のプラグイン、テーマ、スキルをひとつの場所で。インストールの前に、何ができるかを確認します。",
+    "Textus のプラグイン、テーマ、スキル、MCP サーバーをひとつの場所で。インストールの前に、何ができるかを確認します。",
   marketAll: "すべて",
-  marketSearch: "プラグイン、テーマ、スキルを検索",
+  marketSearch: "プラグイン、テーマ、スキル、サーバーを検索",
   marketListYours: "自分で作りましたか？",
   marketListingRules: "掲載の方法",
   marketSkillFailed: "インストールできませんでした。",
@@ -1332,6 +1332,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   webPageAddress: "アドレス",
   webPageReload: "再読み込み",
   webPageOpenInBrowser: "ブラウザで開く",
+  webPageHideBar: "アドレスバーを隠す",
+  webPageShowBar: "アドレスバーを表示",
   webPageHint:
     "ページが空白のままなら、そのサイトは他のアプリ内での表示を許可していません。ブラウザで開いてください。",
 } satisfies Translation;

@@ -1219,9 +1219,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   marketGetMore: "더 받기",
   marketTitle: "더 받기",
   marketHelp:
-    "Textus의 플러그인, 테마, 스킬을 한곳에서. 설치하기 전에 무엇을 할 수 있는지 묻습니다.",
+    "Textus의 플러그인, 테마, 스킬, MCP 서버를 한곳에서. 설치하기 전에 무엇을 할 수 있는지 묻습니다.",
   marketAll: "전체",
-  marketSearch: "플러그인, 테마, 스킬 검색",
+  marketSearch: "플러그인, 테마, 스킬, 서버 검색",
   marketListYours: "직접 만들었나요?",
   marketListingRules: "등록하는 방법",
   marketSkillFailed: "설치하지 못했습니다.",
@@ -1318,6 +1318,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   webPageAddress: "웹 주소",
   webPageReload: "새로고침",
   webPageOpenInBrowser: "브라우저에서 열기",
+  webPageHideBar: "주소 표시줄 숨기기",
+  webPageShowBar: "주소 표시줄 보기",
   webPageHint:
     "페이지가 계속 비어 있다면 그 사이트는 다른 앱 안에서 표시되는 것을 허용하지 않습니다. 브라우저에서 여세요.",
 } satisfies Translation;

@@ -1300,9 +1300,9 @@ para usar una.
   marketGetMore: "Conseguir más",
   marketTitle: "Conseguir más",
   marketHelp:
-    "Complementos, temas y habilidades para Textus en un solo lugar. Cada uno pregunta antes de instalarse qué podrá hacer.",
+    "Complementos, temas, habilidades y servidores MCP para Textus en un solo lugar. Cada uno pregunta antes de instalarse qué podrá hacer.",
   marketAll: "Todo",
-  marketSearch: "Buscar complementos, temas y habilidades",
+  marketSearch: "Buscar complementos, temas, habilidades y servidores",
   marketListYours: "¿Has hecho uno propio?",
   marketListingRules: "Cómo publicarlo",
   marketSkillFailed: "No se instaló.",
@@ -1400,6 +1400,8 @@ para usar una.
   webPageAddress: "Dirección web",
   webPageReload: "Recargar",
   webPageOpenInBrowser: "Abrir en el navegador",
+  webPageHideBar: "Ocultar la barra de dirección",
+  webPageShowBar: "Mostrar la barra de dirección",
   webPageHint:
     "Si la página sigue en blanco, el sitio no permite mostrarse dentro de otras apps: ábrela en tu navegador.",
 } satisfies Translation;

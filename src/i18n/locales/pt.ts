@@ -1281,9 +1281,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   marketGetMore: "Obter mais",
   marketTitle: "Obter mais",
   marketHelp:
-    "Plugins, temas e habilidades para o Textus num só lugar. Cada um pergunta antes de ser instalado o que poderá fazer.",
+    "Plugins, temas, habilidades e servidores MCP para o Textus num só lugar. Cada um pergunta antes de ser instalado o que poderá fazer.",
   marketAll: "Tudo",
-  marketSearch: "Pesquisar plugins, temas e habilidades",
+  marketSearch: "Pesquisar plugins, temas, habilidades e servidores",
   marketListYours: "Criou um seu?",
   marketListingRules: "Como publicar",
   marketSkillFailed: "Não foi instalado.",
@@ -1381,6 +1381,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   webPageAddress: "Endereço web",
   webPageReload: "Recarregar",
   webPageOpenInBrowser: "Abrir no navegador",
+  webPageHideBar: "Ocultar a barra de endereço",
+  webPageShowBar: "Mostrar a barra de endereço",
   webPageHint:
     "Se a página continuar em branco, o site não permite ser mostrado dentro de outros apps: abra no navegador.",
 } satisfies Translation;

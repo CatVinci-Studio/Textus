@@ -314,29 +314,75 @@ button.plugin-card-open:hover .plugin-card-name {
 .tab-bar ~ * .web-page-pane {
   padding-top: 0;
 }
+/* The address bar: slim, quiet until used, folded to a handle. */
 .web-page-bar {
   display: flex;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  align-items: center;
+  gap: 2px;
+  height: 34px;
+  padding: 0 var(--space-2);
   border-bottom: 1px solid var(--border-color);
-  background: var(--sidebar-bg);
+  background: var(--bg);
+}
+.web-page-button {
+  width: 26px;
+  height: 26px;
 }
 .web-page-address {
   flex: 1;
   min-width: 0;
+  height: 26px;
+  margin: 0 var(--space-1);
+  padding: 0 var(--space-2);
   font: inherit;
   font-size: var(--text-sm);
-  padding: var(--space-1) var(--space-2);
-  color: var(--editor-text);
-  background: var(--bg);
-  border: 1px solid var(--border-color);
+  color: var(--editor-muted);
+  text-overflow: ellipsis;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-control);
 }
-.web-page-hint {
-  margin: 0;
-  padding: var(--space-1) var(--space-3);
-  color: var(--chrome-muted);
-  font-size: var(--text-xs);
+.web-page-address:hover {
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+.web-page-address:focus {
+  outline: none;
+  color: var(--editor-text);
+  background: var(--bg);
+  border-color: var(--ui-primary);
+}
+.web-page-chevron-up {
+  transform: rotate(-90deg);
+}
+.web-page-chevron-down {
+  transform: rotate(90deg);
+}
+.web-page-bar-folded {
+  justify-content: center;
+  height: 10px;
+  padding: 0;
+  border-bottom: 0;
+}
+.web-page-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 0 0 var(--radius-small) var(--radius-small);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: var(--editor-muted);
+  opacity: 0.6;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.web-page-handle:hover {
+  opacity: 1;
+}
+.web-page-handle svg {
+  width: 8px;
+  height: 8px;
 }
 .web-page-frame {
   flex: 1;

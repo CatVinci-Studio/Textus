@@ -1175,9 +1175,9 @@ export default {
   marketGetMore: "取得更多",
   marketTitle: "取得更多",
   marketHelp:
-    "Textus 的外掛、主題和技能都在這裡。每個都會在安裝前說明它能做什麼。",
+    "Textus 的外掛、主題、技能和 MCP 伺服器都在這裡。每個都會在安裝前說明它能做什麼。",
   marketAll: "全部",
-  marketSearch: "搜尋外掛、主題和技能",
+  marketSearch: "搜尋外掛、主題、技能和伺服器",
   marketListYours: "自己做了一個？",
   marketListingRules: "怎樣上架",
   marketSkillFailed: "沒有裝上。",
@@ -1270,6 +1270,8 @@ export default {
   webPageAddress: "網址",
   webPageReload: "重新載入",
   webPageOpenInBrowser: "在瀏覽器中開啟",
+  webPageHideBar: "收起網址列",
+  webPageShowBar: "展開網址列",
   webPageHint:
     "如果頁面一直是空白，表示這個網站不允許嵌入其他應用程式，請在瀏覽器中開啟。",
 } satisfies Translation;

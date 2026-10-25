@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { links, webPages } from "../platform/ipc";
+import { ChevronIcon, DetachIcon, RefreshIcon } from "../ui/icons";
 import { hasNativeWebPages } from "../platform/capabilities";
 import type { Strings } from "../i18n/strings";
 import { useNativeWebPage } from "./useNativeWebPage";
@@ -18,9 +19,35 @@ export function webPageUrl(address: string): string | null {
   }
 }
 
+/** Whether the address bar is folded away - one choice for every web page
+ *  tab, kept in this browser's storage. */
+const BAR_HIDDEN_KEY = "textus.webPageBarHidden";
+
+function useBarHidden(): [boolean, (hidden: boolean) => void] {
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem(BAR_HIDDEN_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  return [
+    hidden,
+    (next) => {
+      setHidden(next);
+      try {
+        localStorage.setItem(BAR_HIDDEN_KEY, next ? "1" : "0");
+      } catch {
+        // Not kept; this tab still folds it.
+      }
+    },
+  ];
+}
+
 /**
  * A web page in a tab (textus.window.openWebPage, for a plugin granted the
- * network for its host): the page under an address row. On macOS and
+ * network for its host): the page under a slim address bar - reload, the
+ * address, open in the browser - that folds away to a small handle. On macOS and
  * Windows the page is a native webview of its own laid over the tab
  * (useNativeWebPage) - every site opens there, with its own cookies, where
  * many refuse to be framed. On Linux and a phone it is a frame. Either way the page
@@ -94,6 +121,7 @@ function AddressBar({
   onGo,
   onReload,
   onOutside,
+  outsideHint,
   t,
 }: {
   typed: string;
@@ -101,8 +129,25 @@ function AddressBar({
   onGo: (address: string) => void;
   onReload: () => void;
   onOutside: () => void;
+  /** More to say on Open in Browser (a frame some sites refuse). */
+  outsideHint?: string;
   t: Strings;
 }) {
+  const [hidden, setHidden] = useBarHidden();
+  if (hidden)
+    return (
+      <div className="web-page-bar web-page-bar-folded">
+        <button
+          type="button"
+          className="web-page-handle"
+          aria-label={t.webPageShowBar}
+          title={t.webPageShowBar}
+          onClick={() => setHidden(false)}
+        >
+          <ChevronIcon className="web-page-chevron-down" />
+        </button>
+      </div>
+    );
   return (
     <form
       className="web-page-bar"
@@ -111,18 +156,44 @@ function AddressBar({
         onGo(typed.trim());
       }}
     >
+      <button
+        type="button"
+        className="icon-button web-page-button"
+        aria-label={t.webPageReload}
+        title={t.webPageReload}
+        onClick={onReload}
+      >
+        <RefreshIcon />
+      </button>
       <input
         className="web-page-address"
         aria-label={t.webPageAddress}
         value={typed}
         spellCheck={false}
+        onFocus={(e) => e.currentTarget.select()}
         onChange={(e) => onType(e.target.value)}
       />
-      <button type="button" onClick={onReload}>
-        {t.webPageReload}
+      <button
+        type="button"
+        className="icon-button web-page-button"
+        aria-label={t.webPageOpenInBrowser}
+        title={
+          outsideHint
+            ? `${t.webPageOpenInBrowser} - ${outsideHint}`
+            : t.webPageOpenInBrowser
+        }
+        onClick={onOutside}
+      >
+        <DetachIcon />
       </button>
-      <button type="button" onClick={onOutside}>
-        {t.webPageOpenInBrowser}
+      <button
+        type="button"
+        className="icon-button web-page-button"
+        aria-label={t.webPageHideBar}
+        title={t.webPageHideBar}
+        onClick={() => setHidden(true)}
+      >
+        <ChevronIcon className="web-page-chevron-up" />
       </button>
     </form>
   );
@@ -148,9 +219,9 @@ function FramedWebPage({ url, t }: { url: string; t: Strings }) {
           if (frameRef.current) frameRef.current.src = shown;
         }}
         onOutside={() => void links.openWebLink(shown)}
+        outsideHint={t.webPageHint}
         t={t}
       />
-      <p className="web-page-hint">{t.webPageHint}</p>
       <iframe
         ref={frameRef}
         className="web-page-frame"
