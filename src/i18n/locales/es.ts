@@ -504,6 +504,14 @@ para usar una.
   updateChannelLabel: "Canal de actualizaciones",
   updateChannelStable: "Estable",
   updateChannelBeta: "Beta",
+  backToStableLabel: "Volver a la versión estable",
+  backToStableHint:
+    "Usas una beta ({version}). La versión estable es más antigua; volver la instala.",
+  backToStableButton: "Volver a la estable",
+  backToStableConfirm:
+    "¿Instalar Textus {version}, la versión estable? Es más antigua que tu beta ({beta}). Tus documentos no cambian; lo que solo tiene la beta (los complementos, por ejemplo) puede no conservarse.",
+  backToStableInstall: "Instalar {version}",
+  backToStableNone: "Ahora mismo no hay una versión estable a la que volver.",
   aiCompletionLabel: "Activar autocompletado con IA",
   completionToneLabel: "Tono del autocompletado",
   completionTone_default: "Según el documento",

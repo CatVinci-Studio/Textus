@@ -491,6 +491,14 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   updateChannelLabel: "Canal de atualização",
   updateChannelStable: "Estável",
   updateChannelBeta: "Beta",
+  backToStableLabel: "Voltar para a versão estável",
+  backToStableHint:
+    "Você está usando uma beta ({version}). A versão estável é mais antiga; voltar a instala.",
+  backToStableButton: "Voltar à estável",
+  backToStableConfirm:
+    "Instalar o Textus {version}, a versão estável? Ela é mais antiga que a sua beta ({beta}). Seus documentos não mudam; o que só a beta tem (os plugins, por exemplo) pode não continuar.",
+  backToStableInstall: "Instalar {version}",
+  backToStableNone: "No momento não há uma versão estável para a qual voltar.",
   aiCompletionLabel: "Ativar autocompletar com IA",
   completionToneLabel: "Tom do autocompletar",
   completionTone_default: "Seguir o documento",

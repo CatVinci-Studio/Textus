@@ -488,6 +488,14 @@ type /name in a conversation to use one.
   updateChannelLabel: "Update channel",
   updateChannelStable: "Stable",
   updateChannelBeta: "Beta",
+  backToStableLabel: "Go back to the stable version",
+  backToStableHint:
+    "You're using a beta ({version}). The stable version is older; going back installs it.",
+  backToStableButton: "Go Back to Stable",
+  backToStableConfirm:
+    "Install Textus {version}, the stable release? It's older than the beta you have ({beta}). Your documents aren't touched; what only the beta has - its plugins, for one - may not come along.",
+  backToStableInstall: "Install {version}",
+  backToStableNone: "There's no stable version to go back to right now.",
   aiCompletionLabel: "Enable AI completion",
   completionToneLabel: "Completion tone",
   completionTone_default: "Match the document",

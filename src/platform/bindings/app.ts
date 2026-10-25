@@ -246,7 +246,7 @@ export const commands = {
 	default_editor_status: () => __TAURI_INVOKE<DefaultEditorStatus>("default_editor_status"),
 	set_default_editor: () => __TAURI_INVOKE<null>("set_default_editor"),
 	app_distribution: () => __TAURI_INVOKE<string>("app_distribution"),
-	check_for_update: (channel: string) => __TAURI_INVOKE<UpdateMetadata_Serialize | null>("check_for_update", { channel }),
+	check_for_update: (channel: string, backToStable: boolean) => __TAURI_INVOKE<UpdateMetadata_Serialize | null>("check_for_update", { channel, backToStable }),
 	/**
 	 *  Just before the relaunch that applies an update: gives up the claim to
 	 *  be the running Textus. The relaunch starts the new process before this

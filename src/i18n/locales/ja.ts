@@ -471,6 +471,14 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   updateChannelLabel: "アップデートチャンネル",
   updateChannelStable: "安定版",
   updateChannelBeta: "ベータ版",
+  backToStableLabel: "安定版に戻す",
+  backToStableHint:
+    "ベータ版（{version}）を使っています。安定版はこれより古く、戻すとそちらをインストールします。",
+  backToStableButton: "安定版に戻す",
+  backToStableConfirm:
+    "安定版の Textus {version} をインストールしますか？今のベータ版（{beta}）より古いバージョンです。文書はそのままです。ベータ版にしかないもの（プラグインなど）は引き継がれないことがあります。",
+  backToStableInstall: "{version} をインストール",
+  backToStableNone: "今は戻れる安定版がありません。",
   aiCompletionLabel: "AI補完を有効にする",
   completionToneLabel: "補完のトーン",
   completionTone_default: "文書に合わせる",

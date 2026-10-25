@@ -314,12 +314,18 @@ export type UpdateMetadata = ConstructorParameters<typeof Update>[0];
 
 export const updater = {
   /** The plugin's `check()` on `channel`'s endpoints; the `Update` it
-   *  answers downloads and installs through the plugin as usual. */
-  check: async (channel: UpdateChannel): Promise<Update | null> => {
+   *  answers downloads and installs through the plugin as usual.
+   *  `backToStable`: a beta install is offered the newest stable release,
+   *  older though it is - only when the user asks to go back. */
+  check: async (
+    channel: UpdateChannel,
+    backToStable = false,
+  ): Promise<Update | null> => {
     const metadata = (await desktopQueryCommand(
       "check_for_update",
       null,
       channel,
+      backToStable,
     )) as UpdateMetadata | null;
     return metadata ? new Update(metadata) : null;
   },

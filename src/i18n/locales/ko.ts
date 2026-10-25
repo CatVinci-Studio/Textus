@@ -465,6 +465,14 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   updateChannelLabel: "업데이트 채널",
   updateChannelStable: "안정 버전",
   updateChannelBeta: "베타",
+  backToStableLabel: "안정 버전으로 되돌리기",
+  backToStableHint:
+    "베타({version})를 쓰고 있습니다. 안정 버전은 더 오래된 버전이며, 되돌리면 그 버전을 설치합니다.",
+  backToStableButton: "안정 버전으로",
+  backToStableConfirm:
+    "안정 버전 Textus {version}을(를) 설치할까요? 지금 쓰는 베타({beta})보다 오래된 버전입니다. 문서는 그대로이며, 베타에만 있는 것(플러그인 등)은 이어지지 않을 수 있습니다.",
+  backToStableInstall: "{version} 설치",
+  backToStableNone: "지금은 되돌아갈 안정 버전이 없습니다.",
   aiCompletionLabel: "AI 이어 쓰기 사용",
   completionToneLabel: "이어 쓰기 어조",
   completionTone_default: "문서에 맞게",

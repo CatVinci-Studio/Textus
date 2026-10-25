@@ -447,6 +447,14 @@ export default {
   updateChannelLabel: "更新通道",
   updateChannelStable: "正式版",
   updateChannelBeta: "测试版",
+  backToStableLabel: "回到稳定版",
+  backToStableHint:
+    "你正在用测试版（{version}）。稳定版的版本号更低，回到稳定版会重新安装它。",
+  backToStableButton: "回到稳定版",
+  backToStableConfirm:
+    "要安装稳定版 Textus {version} 吗？它比你现在的测试版（{beta}）更旧。你的文档不受影响；只有测试版才有的东西（比如插件）可能不会保留。",
+  backToStableInstall: "安装 {version}",
+  backToStableNone: "现在没有可以回到的稳定版。",
   aiCompletionLabel: "开启续写",
   completionToneLabel: "续写语气",
   completionTone_default: "跟随文档",

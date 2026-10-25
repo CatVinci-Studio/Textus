@@ -509,6 +509,15 @@ utiliser une.
   updateChannelLabel: "Canal de mise à jour",
   updateChannelStable: "Stable",
   updateChannelBeta: "Bêta",
+  backToStableLabel: "Revenir à la version stable",
+  backToStableHint:
+    "Vous utilisez une bêta ({version}). La version stable est plus ancienne ; y revenir l’installe.",
+  backToStableButton: "Revenir à la stable",
+  backToStableConfirm:
+    "Installer Textus {version}, la version stable ? Elle est plus ancienne que votre bêta ({beta}). Vos documents ne changent pas ; ce que seule la bêta possède (les extensions, par exemple) peut ne pas suivre.",
+  backToStableInstall: "Installer {version}",
+  backToStableNone:
+    "Il n’y a pas de version stable vers laquelle revenir pour l’instant.",
   aiCompletionLabel: "Activer la complétion IA",
   completionToneLabel: "Ton de la complétion",
   completionTone_default: "Adapté au document",
