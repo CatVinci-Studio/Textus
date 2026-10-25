@@ -1,0 +1,42 @@
+/* Marks plugins put on the text (plugin-decorations.ts). */
+
+.plugin-tone-accent {
+  --plugin-tone: var(--editor-accent);
+}
+.plugin-tone-warning {
+  --plugin-tone: var(--warning-color);
+}
+.plugin-tone-danger {
+  --plugin-tone: var(--danger);
+}
+.plugin-tone-success {
+  --plugin-tone: var(--success-color);
+}
+
+.plugin-mark-highlight {
+  background: color-mix(in srgb, var(--plugin-tone) 18%, transparent);
+  border-radius: 2px;
+}
+
+.plugin-mark-underline {
+  text-decoration: underline wavy var(--plugin-tone);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.plugin-mark-muted {
+  opacity: 0.55;
+}
+
+.plugin-mark-badge {
+  display: inline-block;
+  margin-inline-start: 0.4em;
+  padding: 0 0.45em;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--plugin-tone) 14%, transparent);
+  color: var(--plugin-tone);
+  font-size: 0.75em;
+  line-height: 1.6;
+  vertical-align: 0.1em;
+  user-select: none;
+}
