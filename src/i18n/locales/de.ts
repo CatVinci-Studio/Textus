@@ -498,6 +498,15 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   updateChannelLabel: "Update-Kanal",
   updateChannelStable: "Stabil",
   updateChannelBeta: "Beta",
+  backToStableLabel: "Zur stabilen Version zurück",
+  backToStableHint:
+    "Du nutzt eine Beta ({version}). Die stabile Version ist älter; zurückzugehen installiert sie.",
+  backToStableButton: "Zur stabilen Version",
+  backToStableConfirm:
+    "Textus {version}, die stabile Version, installieren? Sie ist älter als deine Beta ({beta}). Deine Dokumente bleiben unberührt; was nur die Beta hat - etwa Plugins - kommt womöglich nicht mit.",
+  backToStableInstall: "{version} installieren",
+  backToStableNone:
+    "Gerade gibt es keine stabile Version, zu der du zurückkannst.",
   aiCompletionLabel: "KI-Vervollständigung aktivieren",
   completionToneLabel: "Tonfall der Vervollständigung",
   completionTone_default: "Passend zum Dokument",

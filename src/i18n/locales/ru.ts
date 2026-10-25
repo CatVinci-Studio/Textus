@@ -501,6 +501,14 @@ export default {
   updateChannelLabel: "Канал обновлений",
   updateChannelStable: "Стабильный",
   updateChannelBeta: "Бета",
+  backToStableLabel: "Вернуться к стабильной версии",
+  backToStableHint:
+    "Вы используете бету ({version}). Стабильная версия старше; возврат установит её.",
+  backToStableButton: "Вернуться к стабильной",
+  backToStableConfirm:
+    "Установить Textus {version}, стабильную версию? Она старше вашей беты ({beta}). Документы не затрагиваются; то, что есть только в бете (например, плагины), может не сохраниться.",
+  backToStableInstall: "Установить {version}",
+  backToStableNone: "Сейчас нет стабильной версии, к которой можно вернуться.",
   aiCompletionLabel: "Включить автодополнение",
   completionToneLabel: "Тон автодополнения",
   completionTone_default: "Как в документе",

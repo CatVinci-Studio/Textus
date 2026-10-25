@@ -12,8 +12,11 @@
 //!           users the stable updates.
 //!
 //! Either way an update must be newer than what is installed, so a beta
-//! user who switches back to Stable keeps the release candidate until a
-//! newer stable version exists (1.0.5 > 1.0.5-rc.2 in semver).
+//! user who switches back to Stable keeps the beta until a newer stable
+//! version exists (1.0.5 > 1.0.5-rc.2 in semver) - unless they ask to go
+//! back (`back_to_stable`): then a beta install is offered the newest
+//! stable release even though it is older. Only asked for, never by the
+//! background check.
 //!
 //! It replaces the JS `check()` of @tauri-apps/plugin-updater, which can't
 //! choose endpoints: it answers the same metadata, and the JS `Update`
@@ -44,6 +47,13 @@ pub fn endpoints_for(channel: &str, configured: &[Url]) -> Vec<Url> {
 /// manifest older than the installed release candidate is not offered.
 pub fn is_update(current: &Version, remote: &Version) -> bool {
     remote > current
+}
+
+/// Whether `remote` takes a beta install back to stable: `current` is a
+/// pre-release and `remote` a release, of any version. A stable install is
+/// never taken anywhere this way.
+pub fn is_back_to_stable(current: &Version, remote: &Version) -> bool {
+    !current.pre.is_empty() && remote.pre.is_empty()
 }
 
 /// The manifest key an .rpm install updates from (scripts/updater-manifest.mjs):
@@ -102,7 +112,10 @@ fn configured_endpoints<R: Runtime>(webview: &Webview<R>) -> Vec<Url> {
 pub async fn check_for_update<R: Runtime>(
     webview: Webview<R>,
     channel: String,
+    back_to_stable: bool,
 ) -> Result<Option<UpdateMetadata>, String> {
+    // Going back reads the stable manifest only.
+    let channel = if back_to_stable { "stable".to_string() } else { channel };
     let endpoints = endpoints_for(&channel, &configured_endpoints(&webview));
     let rpm_install = is_rpm_install();
     let updater = webview
@@ -110,7 +123,12 @@ pub async fn check_for_update<R: Runtime>(
         .endpoints(endpoints)
         .map_err(|e| e.to_string())?
         .version_comparator(move |current, remote| {
-            is_update(&current, &remote.version) && serves_install(&remote, rpm_install)
+            let wanted = if back_to_stable {
+                is_back_to_stable(&current, &remote.version)
+            } else {
+                is_update(&current, &remote.version)
+            };
+            wanted && serves_install(&remote, rpm_install)
         })
         .build()
         .map_err(|e| e.to_string())?;
@@ -195,6 +213,16 @@ mod tests {
         assert!(is_update(&v("1.0.5-rc.2"), &v("1.0.5")));
         assert!(is_update(&v("1.0.5-rc.1"), &v("1.0.5-rc.2")));
         assert!(is_update(&v("1.0.4"), &v("1.0.5-rc.1")));
+    }
+
+    #[test]
+    fn a_beta_goes_back_to_the_stable_release_only_when_asked() {
+        // Not by the ordinary check: 1.2.1 is older than the beta.
+        assert!(!is_update(&v("1.3.0-beta.1"), &v("1.2.1")));
+        assert!(is_back_to_stable(&v("1.3.0-beta.1"), &v("1.2.1")));
+        // Nor to another beta, nor from a stable install.
+        assert!(!is_back_to_stable(&v("1.3.0-beta.1"), &v("1.3.0-beta.2")));
+        assert!(!is_back_to_stable(&v("1.2.1"), &v("1.2.0")));
     }
 
     fn release(platforms: &[&str]) -> tauri_plugin_updater::RemoteRelease {
