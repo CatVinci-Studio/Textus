@@ -1,4 +1,3 @@
-import hostRuntime from "./runtime/host.js?raw";
 import webviewRuntime from "./runtime/webview.js?raw";
 import pluginUiCss from "./runtime/plugin-ui.css?raw";
 import { createEndpoint, type Endpoint, type Handlers } from "./rpc";
@@ -15,23 +14,11 @@ import { createEndpoint, type Endpoint, type Handlers } from "./rpc";
  */
 
 /** rpc.ts's createEndpoint as source, for the frames' runtimes. */
-const RPC_SOURCE = `var createEndpoint = ${createEndpoint.toString()};`;
+export const RPC_SOURCE = `var createEndpoint = ${createEndpoint.toString()};`;
 
 /** Text inside a `<script>`/`<style>` element can't hold its end tag. */
-function inElement(code: string, tag: "script" | "style"): string {
+export function inElement(code: string, tag: "script" | "style"): string {
   return code.replace(new RegExp(`</(${tag})`, "gi"), "<\\/$1");
-}
-
-/** The host's page: the runtime, then the plugin's code wrapped as a
- *  CommonJS module (runtime/host.js). No network, no other script. */
-export function hostDocument(pluginCode: string): string {
-  return [
-    "<!doctype html><html><head><meta charset='utf-8'>",
-    `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'">`,
-    `<script>${inElement(`${RPC_SOURCE}\n${hostRuntime}`, "script")}</script>`,
-    `<script>__textusDefine(function (module, exports, textus) {\n${inElement(pluginCode, "script")}\n});</script>`,
-    "</head><body></body></html>",
-  ].join("\n");
 }
 
 /** A webview's Content Security Policy: its own inline and `data:`/`blob:`

@@ -1,4 +1,6 @@
-import { TutorialExperience } from "../onboarding/TutorialExperience";
+import { Suspense } from "react";
+import { lazyModule } from "../lazy/lazy-module";
+import { lazyComponent } from "../lazy/lazy-component";
 import { LanguageWelcome } from "../onboarding/LanguageWelcome";
 import type { Tutorial } from "../onboarding/useTutorial";
 import type { Settings } from "../settings/SettingsContext";
@@ -6,6 +8,15 @@ import { formatCombo } from "../utils/shortcuts";
 import { Presence } from "../ui/usePresence";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import type { Strings } from "../i18n/strings";
+
+// The tour runs once, on first launch: it loads when it starts - warm, so
+// it usually has by then - and is no weight on every later start.
+const TutorialExperience = lazyComponent(
+  lazyModule("tutorial", () => import("../onboarding/TutorialExperience"), {
+    warm: true,
+  }),
+  (m) => m.TutorialExperience,
+);
 
 /** The first-run layers over the window: the onboarding tour, and before
  *  it the language welcome. */
@@ -26,17 +37,19 @@ export function OnboardingLayers({
   return (
     <>
       {tutorial.active && settings.languageChosen && (
-        <TutorialExperience
-          tutorial={tutorial}
-          t={t}
-          language={settings.language}
-          phone={phone}
-          shortcuts={{
-            agentPanel: formatCombo(settings.shortcuts.toggleAgentPanel),
-            sidebar: formatCombo(settings.shortcuts.toggleSidebar),
-          }}
-          zen={zen}
-        />
+        <Suspense fallback={null}>
+          <TutorialExperience
+            tutorial={tutorial}
+            t={t}
+            language={settings.language}
+            phone={phone}
+            shortcuts={{
+              agentPanel: formatCombo(settings.shortcuts.toggleAgentPanel),
+              sidebar: formatCombo(settings.shortcuts.toggleSidebar),
+            }}
+            zen={zen}
+          />
+        </Suspense>
       )}
       <Presence show={!settings.languageChosen} exitMs={200}>
         {!settings.languageChosen && (

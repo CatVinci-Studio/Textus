@@ -16,7 +16,8 @@ import { registerCommand, runCommand } from "../app/commands";
 import { registerSidebarTab } from "../app/sidebar-tabs";
 import { registerEditorMenuItems } from "../editor/editor-menu-items";
 import { showConfirm, showMessage } from "../ui/app-dialog";
-import { PluginHost } from "./broker";
+import type { PluginHost } from "./broker";
+import { lazyModule } from "../lazy/lazy-module";
 import { type PluginOrigin } from "./files";
 import {
   engineSatisfied,
@@ -160,7 +161,12 @@ export function loadPlugins(reload = false): Promise<void> {
 // Running
 // ---------------------------------------------------------------------------
 
-function host(record: PluginRecord): PluginHost {
+// The broker - the frame a plugin's code runs in and every call it makes -
+// loads when the first plugin starts: a window with none on never does.
+const brokerModule = lazyModule("plugin-broker", () => import("./broker"));
+
+async function host(record: PluginRecord): Promise<PluginHost> {
+  const { PluginHost } = await brokerModule.load();
   let running = hosts.get(record.id);
   if (!running && record.manifest) {
     running = new PluginHost(
@@ -252,7 +258,7 @@ export async function runPluginCommand(
   const record = pluginRecord(id);
   if (!record || !canRun(record.status, pluginsSnapshot().allOn))
     throw new Error(`${id} is turned off.`);
-  return host(record).request("$executeCommand", { command, args });
+  return (await host(record)).request("$executeCommand", { command, args });
 }
 
 /** Runs a tool the plugin gave Textus AI, starting it first. */
@@ -268,7 +274,7 @@ export async function runPluginAiTool(
     !record.granted.includes("ai.tools")
   )
     throw new Error(`${id} is turned off or was not granted ai.tools.`);
-  const running = host(record);
+  const running = await host(record);
   await running.start();
   return running.request("$callAiTool", { name, arguments: args });
 }
@@ -282,7 +288,7 @@ export async function resolveWebview(
   const plugin = pluginRecord(record.plugin);
   if (!plugin || plugin.status !== "on")
     throw new Error(`${record.plugin} is turned off.`);
-  const running = host(plugin);
+  const running = await host(plugin);
   if (record.kind === "editor")
     await running.request("$resolveCustomEditor", {
       viewType: target.viewType,
@@ -305,7 +311,9 @@ export function webviewMessage(id: string, message: unknown): void {
   const plugin = record && pluginRecord(record.plugin);
   if (!record || !plugin || plugin.status !== "on") return;
   void host(plugin)
-    .request("$webviewMessage", { webview: id, message })
+    .then((running) =>
+      running.request("$webviewMessage", { webview: id, message }),
+    )
     .catch(() => {});
 }
 
@@ -384,7 +392,7 @@ function apply(record: PluginRecord) {
     manifest.activationEvents.includes("*")
   )
     void host(record)
-      .start()
+      .then((running) => running.start())
       .catch(() => {});
   else if (manifest.activationEvents.includes("onHover")) {
     hoverWaiting.add(id);
@@ -410,7 +418,7 @@ function syncHoverStarter() {
               const record = pluginRecord(id);
               return record?.status === "on"
                 ? host(record)
-                    .start()
+                    .then((running) => running.start())
                     .catch(() => {})
                 : undefined;
             }),

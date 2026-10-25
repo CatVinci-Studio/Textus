@@ -18,7 +18,8 @@ import {
   onPluginEvent,
   type PluginEventMap,
 } from "./app-bridge";
-import { connectFrame, hostDocument, sandboxedFrame } from "./frames";
+import { connectFrame, sandboxedFrame } from "./frames";
+import { hostDocument } from "./host-document";
 import { readPluginFile, withResources, type PluginOrigin } from "./files";
 import { localize, type Permission, type PluginManifest } from "./manifest";
 import { showQuickPick, type QuickPickItem } from "./quick-pick";

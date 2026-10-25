@@ -3,8 +3,10 @@ import type { Plugin } from "vite";
 // What every window loads before its first frame: the entry chunk. Heavy
 // parts load on first use instead (src/lazy/lazy-module.ts), and this keeps
 // them from drifting back in - a build whose entry outgrows the budget
-// fails, saying by how much. 1.3 cut it from 2.48 MB to 1.27 MB (minified).
-const BUDGET_BYTES = 1_400_000;
+// fails, saying by how much. 1.2 cut it from 2.48 MB to 1.27 MB (minified),
+// 1.3 to 1.02 MB: Split View, the editor's menu, the tour and the plugin
+// broker load on first use.
+const BUDGET_BYTES = 1_100_000;
 
 export function startupBudget(): Plugin {
   return {
