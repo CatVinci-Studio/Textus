@@ -325,7 +325,8 @@ async function importTheme(page: Page, css: string) {
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.getByRole("button", { name: "Editor & Appearance" }).click();
   await panel.getByRole("button", { name: "Get more themes" }).click();
-  await panel.getByRole("button", { name: "Import CSS…" }).click();
+  await panel.getByRole("button", { name: "More", exact: true }).click();
+  await panel.getByRole("menuitem", { name: "Import CSS…" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-user-theme", "");
   await page.keyboard.press("Escape");
   await expect(panel).toHaveCount(0);

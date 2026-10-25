@@ -1233,6 +1233,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   extensionsTabThemes: "Themes",
   extensionsTabSkills: "Skills",
   extensionsTabMcp: "MCP",
+  extensionsIntroPlugins: "Neue Bereiche, Dateitypen und Werkzeuge für Textus.",
+  extensionsIntroThemes: "Wie Dokumente aussehen, über dem gewählten Theme.",
+  extensionsIntroSkills: `Wege, eine Art Aufgabe gut zu erledigen – für ${AI_NAME} und das /-Menü.`,
+  extensionsIntroMcp: `Server, die ${AI_NAME} mehr Werkzeuge geben.`,
+  extensionsThemesNone:
+    "Noch keine Themes hinzugefügt. Die eingebauten wählst du unter {page}.",
   extensionsThemesInstalled: "Deine Themes",
   extensionsThemesGet: "Themes holen",
   extensionsSkillsHelp: `Ein Skill sagt ${AI_NAME}, wie es eine Art von Aufgabe gut erledigt. Eingeschaltete Skills bekommt ${AI_NAME}, und sie stehen im /-Menü; eine neue Installation beginnt mit fünf, den Rest fügst du hier hinzu.`,
@@ -1243,7 +1249,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   mcpHelp: `Ein MCP-Server gibt ${AI_NAME} weitere Werkzeuge: einen Ordner, eine Datenbank, eine Suche. Jeder eingeschaltete Server startet im Hintergrund, und ${AI_NAME} darf seine Werkzeuge nutzen, während es dir hilft; das Gespräch zeigt jeden Aufruf.`,
   mcpNone: "Noch kein Server hinzugefügt.",
   mcpAdd: "Server hinzufügen…",
-  mcpPresetsGroup: "Bereit zum Hinzufügen",
   mcpPresetAdd: "Hinzufügen",
   mcpStateOff: "Aus",
   mcpStateStarting: "Startet…",
@@ -1289,6 +1294,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   marketSkillFailed: "Es wurde nicht installiert.",
   marketSkillInstalled: "Installiert",
   marketSkillsNone: "Noch keine Skills aufgenommen.",
+  marketMcpAllAdded: "Du hast alle hier aufgeführten Server hinzugefügt.",
   pluginsCatalogKept:
     "Die Liste vom letzten Mal - eine neuere ließ sich nicht laden: {reason}",
   pluginInstall: "Installieren",
@@ -1322,7 +1328,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsAllLabel: "Plugins",
   pluginsAllHelp:
     "Aus: Kein Plugin läuft, und nichts, was sie hinzufügen, wird angezeigt. Deine Plugins und ihre Einstellungen bleiben erhalten.",
-  pluginsInstallLabel: "Plugin installieren",
   pluginsInstallHelp:
     "Ein Plugin-Paket (.textusplugin) wird in Textus kopiert. Ein Plugin-Ordner wird an Ort und Stelle geladen, um ein Plugin auszuprobieren, an dem du schreibst; es wird von dort neu geladen.",
   pluginsInstallFile: "Aus Datei installieren…",

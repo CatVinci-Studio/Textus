@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// Settings › Extensions › Themes › Get themes, against the dev shim's
+// Settings › Extensions › Themes › Get more, against the dev shim's
 // canned gallery (src/dev/tauri-shim.ts, `window.__devThemeGallery`):
 // installing a theme makes it a user theme and applies it, an installed
 // one can be picked again, a newer catalog entry offers an update that
@@ -26,6 +26,7 @@ async function openGallery(page: Page) {
     .click();
   await dialog.getByRole("button", { name: "Get more themes" }).click();
   await expect(dialog.getByRole("tabpanel", { name: "Themes" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Get more" }).click();
   return dialog;
 }
 

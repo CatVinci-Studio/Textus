@@ -1227,6 +1227,13 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   extensionsTabThemes: "Temas",
   extensionsTabSkills: "Habilidades",
   extensionsTabMcp: "MCP",
+  extensionsIntroPlugins:
+    "Novos painéis, tipos de arquivo e ferramentas para o Textus.",
+  extensionsIntroThemes: "A aparência dos documentos, sobre o tema escolhido.",
+  extensionsIntroSkills: `Jeitos de fazer bem um tipo de tarefa, para o ${AI_NAME} e o menu /.`,
+  extensionsIntroMcp: `Servidores que dão mais ferramentas ao ${AI_NAME}.`,
+  extensionsThemesNone:
+    "Nenhum tema adicionado ainda. Os incluídos são escolhidos em {page}.",
   extensionsThemesInstalled: "Seus temas",
   extensionsThemesGet: "Obter temas",
   extensionsSkillsHelp: `Uma habilidade diz ao ${AI_NAME} como fazer bem um tipo de tarefa. As ativadas são oferecidas ao ${AI_NAME} e no menu /; uma instalação nova começa com cinco ativadas, e você adiciona as outras aqui.`,
@@ -1237,7 +1244,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   mcpHelp: `Um servidor MCP dá ao ${AI_NAME} mais ferramentas: uma pasta, um banco de dados, uma busca. Cada um ativado é iniciado em segundo plano, e o ${AI_NAME} pode chamar suas ferramentas enquanto ajuda você; a conversa mostra cada chamada.`,
   mcpNone: "Nenhum servidor adicionado ainda.",
   mcpAdd: "Adicionar um servidor…",
-  mcpPresetsGroup: "Prontos para adicionar",
   mcpPresetAdd: "Adicionar",
   mcpStateOff: "Desativado",
   mcpStateStarting: "Iniciando…",
@@ -1283,6 +1289,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   marketSkillFailed: "Não foi instalado.",
   marketSkillInstalled: "Instalada",
   marketSkillsNone: "Ainda não há habilidades publicadas.",
+  marketMcpAllAdded: "Você já adicionou todos os servidores desta lista.",
   pluginsCatalogKept:
     "Mostrando a lista da última vez - não foi possível obter uma mais recente: {reason}",
   pluginInstall: "Instalar",
@@ -1315,7 +1322,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsAllLabel: "Plugins",
   pluginsAllHelp:
     "Desativados, nenhum plugin é executado e nada do que adicionam é mostrado. Seus plugins e as configurações deles são mantidos.",
-  pluginsInstallLabel: "Instalar um plugin",
   pluginsInstallHelp:
     "Um pacote de plugin (.textusplugin) é copiado para o Textus. Uma pasta de plugin é carregada onde está, para testar um que você esteja escrevendo; ele é recarregado de lá.",
   pluginsInstallFile: "Instalar de um arquivo…",

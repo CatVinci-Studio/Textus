@@ -1178,6 +1178,13 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   extensionsTabThemes: "テーマ",
   extensionsTabSkills: "スキル",
   extensionsTabMcp: "MCP",
+  extensionsIntroPlugins:
+    "Textus に新しいパネル、ファイル形式、ツールを加えます。",
+  extensionsIntroThemes: "選んだテーマの上に重ねる、文書の見た目です。",
+  extensionsIntroSkills: `ある種の作業をうまくこなす方法。${AI_NAME} と / メニューで使えます。`,
+  extensionsIntroMcp: `${AI_NAME} にツールを増やすサーバーです。`,
+  extensionsThemesNone:
+    "追加したテーマはまだありません。内蔵テーマは「{page}」で選べます。",
   extensionsThemesInstalled: "あなたのテーマ",
   extensionsThemesGet: "テーマを入手",
   extensionsSkillsHelp: `スキルは ${AI_NAME} に、ある種類の作業をうまくこなす方法を伝えます。オンのスキルは ${AI_NAME} と / メニューで使えます。新しくインストールすると 5 つがオンで、残りはここで追加します。`,
@@ -1188,7 +1195,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   mcpHelp: `MCP サーバーは ${AI_NAME} に道具を増やします：フォルダ、データベース、検索など。オンのサーバーはバックグラウンドで起動し、${AI_NAME} は手伝う間にそのツールを呼び出せます。呼び出しはすべて会話に表示されます。`,
   mcpNone: "まだサーバーがありません。",
   mcpAdd: "サーバーを追加…",
-  mcpPresetsGroup: "すぐに追加できるもの",
   mcpPresetAdd: "追加",
   mcpStateOff: "オフ",
   mcpStateStarting: "起動中…",
@@ -1234,6 +1240,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   marketSkillFailed: "インストールできませんでした。",
   marketSkillInstalled: "インストール済み",
   marketSkillsNone: "掲載されたスキルはまだありません。",
+  marketMcpAllAdded: "ここにあるサーバーはすべて追加済みです。",
   pluginsCatalogKept:
     "前回の一覧を表示しています。新しい一覧を取得できませんでした：{reason}",
   pluginInstall: "インストール",
@@ -1266,7 +1273,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsAllLabel: "プラグイン",
   pluginsAllHelp:
     "オフにすると、プラグインは動作せず、追加した項目も表示されません。プラグインとその設定はそのまま残ります。",
-  pluginsInstallLabel: "プラグインをインストール",
   pluginsInstallHelp:
     "プラグインパッケージ（.textusplugin）は Textus にコピーされます。プラグインフォルダはその場所から読み込まれ、作成中のプラグインを試せます。再読み込みもその場所から行います。",
   pluginsInstallFile: "ファイルからインストール…",

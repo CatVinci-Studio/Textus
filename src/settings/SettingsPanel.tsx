@@ -14,7 +14,7 @@ import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { localeOf } from "../i18n/strings";
 import type { FixedShortcutGroup } from "../app/fixed-shortcuts";
 import { ChevronIcon, CloseIcon } from "../ui/icons";
-import { ThemeLibrarySection, ThemeSourcesSection } from "./sections/theme";
+import { ThemeLibrarySection, ThemesTab } from "./sections/theme";
 import { openExtensionsTab, type ExtensionsTab } from "./pages/extensions-tab";
 import {
   revealEntry,
@@ -201,7 +201,8 @@ export function SettingsPanel({
     ...(c.id === "extensions" ? SEARCHED_TABS : []).map((tab) => ({
       key: tabKey(tab),
       name: `${c.label} › ${tabTitles[tab]}`,
-      render: () => <ThemeSourcesSection t={t} />,
+      // Read for the index only: Get more is never pressed here.
+      render: () => <ThemesTab t={t} onGetMore={() => {}} />,
     })),
   ]);
   const resultGroups = searchPages

@@ -1,4 +1,9 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { Byline } from "./PluginPage";
 import type { Strings } from "../../i18n/strings";
 import { pluginName, pluginText } from "../../plugins/manager";
@@ -13,17 +18,20 @@ import {
 } from "../../plugins/catalog";
 import { ThemeGallerySection } from "../sections/theme-gallery";
 import { MarketSkills } from "../sections/market-skills";
+import { MarketMcp } from "../sections/mcp";
+import type { McpServer } from "../mcp";
 import { links } from "../../platform/ipc";
 import { usePluginInstall } from "./usePluginInstall";
 
-export type MarketKind = "all" | "plugins" | "themes" | "skills";
+export type MarketKind = "all" | "plugins" | "themes" | "skills" | "mcp";
 
-const KINDS: MarketKind[] = ["all", "plugins", "themes", "skills"];
+const KINDS: MarketKind[] = ["all", "plugins", "themes", "skills", "mcp"];
 
 /**
  * Settings › Extensions › Get more: everything there is to add to Textus
  * in one place - the plugins textus-plugins' catalog offers, the theme
- * gallery's themes and the catalog's skills - with one search over them
+ * gallery's themes, the built-in skills that are off and the catalog's
+ * skills, and the MCP servers most people add - with one search over them
  * and a filter by kind. Each installs as it does on its own tab; nothing
  * is fetched in the background, only when this page opens.
  */
@@ -31,10 +39,16 @@ export function MarketPage({
   t,
   kind: initialKind,
   onBack,
+  builtinSkills,
+  onAddMcp,
 }: {
   t: Strings;
   kind: MarketKind;
   onBack: () => void;
+  /** The built-in skills that are off, as far as the search lets. */
+  builtinSkills: (query: string) => ReactNode;
+  /** Takes an MCP server to its tab's form, to fill in and save. */
+  onAddMcp: (server: McpServer) => void;
 }) {
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
   const { installing, install } = usePluginInstall(t);
@@ -49,6 +63,7 @@ export function MarketPage({
     plugins: t.extensionsTabPlugins,
     themes: t.extensionsTabThemes,
     skills: t.extensionsTabSkills,
+    mcp: t.extensionsTabMcp,
   };
   return (
     <div className="plugin-page plugin-get-page market-page">
@@ -110,7 +125,16 @@ export function MarketPage({
           {kind === "all" && (
             <h3 className="settings-group-title">{label.skills}</h3>
           )}
+          {builtinSkills(query)}
           <MarketSkills t={t} catalog={catalog} query={query} />
+        </section>
+      )}
+      {shows("mcp") && (
+        <section className="settings-group" aria-label={label.mcp}>
+          {kind === "all" && (
+            <h3 className="settings-group-title">{label.mcp}</h3>
+          )}
+          <MarketMcp t={t} query={query} onAdd={onAddMcp} />
         </section>
       )}
       <p className="plugin-group-help market-listing">

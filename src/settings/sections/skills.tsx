@@ -7,6 +7,7 @@ import {
   BUILTIN_SKILLS,
   SKILL_CATEGORIES,
   isBuiltinSkillName,
+  type BuiltinSkillName,
   type SkillCategory,
 } from "../../ai/skills/builtin";
 import type { AgentSkill } from "../../ai/types";
@@ -58,26 +59,44 @@ function useSkillList() {
     return () => window.removeEventListener(SKILLS_CHANGED_EVENT, reload);
   }, [reload]);
 
-  return { list, setList, workspaceSkills, setWorkspaceSkills };
+  return { list, setList, workspaceSkills };
+}
+
+/** Import Skill…: picks a skill file and copies it into the global
+ *  skills folder; every list showing skills reloads. */
+export async function importSkill(): Promise<void> {
+  await ai.importAgentSkill();
+  announceChange();
 }
 
 /// The Skills row - how to use one, and Import Skill… - and the user's own
-/// skills under it. A skill with a built-in's name says it replaces it.
+/// skills under it.
 export function AgentSkillsSection({ t }: { t: Strings }) {
-  const { list, workspaceSkills, setWorkspaceSkills } = useSkillList();
   const [error, setError] = useState<string | null>(null);
+  return (
+    <>
+      <SettingRow label={t.agentSkillsLabel} error={error}>
+        <button
+          className="text-button settings-inline-button"
+          onClick={() =>
+            importSkill().then(
+              () => setError(null),
+              (err: unknown) => setError(errorText(err)),
+            )
+          }
+        >
+          {t.agentSkillsImport}
+        </button>
+      </SettingRow>
+      <OwnSkillsList t={t} />
+    </>
+  );
+}
 
-  async function importSkill() {
-    try {
-      const updated = await ai.importAgentSkill();
-      if (updated) setWorkspaceSkills(updated);
-      setError(null);
-      announceChange();
-    } catch (err) {
-      setError(errorText(err));
-    }
-  }
-
+/// The user's own skills. A skill with a built-in's name says it replaces
+/// it.
+export function OwnSkillsList({ t }: { t: Strings }) {
+  const { list, workspaceSkills } = useSkillList();
   const own: {
     name: string;
     description: string;
@@ -102,14 +121,6 @@ export function AgentSkillsSection({ t }: { t: Strings }) {
 
   return (
     <>
-      <SettingRow label={t.agentSkillsLabel} error={error}>
-        <button
-          className="text-button settings-inline-button"
-          onClick={importSkill}
-        >
-          {t.agentSkillsImport}
-        </button>
-      </SettingRow>
       {own.length > 0 && (
         <div className="settings-skill-list">
           {own.map((skill) => (
@@ -140,16 +151,22 @@ const CATEGORY_LABEL: Record<SkillCategory, TextKey> = {
 /// and what it does, a switch, and Customize… - which copies it into the
 /// global config folder's skills/ and opens the copy in a tab. A customized
 /// one opens its copy instead, and Reset deletes the copy.
+///
+/// `only` shows one side without the disclosure: "on" the skills in use
+/// (Settings › Extensions › Skills, where the switch turns one off), "off"
+/// the rest, each with Install, which turns it on (Get more).
 export function BuiltinSkillsSection({
   t,
-  open = false,
+  only,
+  query = "",
   onOpenFile,
   onFilesDeleted,
   onClose,
 }: {
   t: Strings;
-  /** Shown open (Settings › Extensions › Skills), not behind a disclosure. */
-  open?: boolean;
+  only?: "on" | "off";
+  /** Get more's search: only the skills whose words hold every one. */
+  query?: string;
   onOpenFile: (path: string) => void;
   onFilesDeleted?: (paths: string[]) => void;
   onClose: () => void;
@@ -229,89 +246,92 @@ export function BuiltinSkillsSection({
     }
   }
 
-  return (
-    <details
-      className="settings-advanced settings-builtin-skills"
-      open={open || undefined}
-    >
-      <summary>
-        <span className="settings-builtin-skills-title">
-          {t.agentSkillsBuiltin}
-        </span>
-        <span className="settings-builtin-skills-count" data-search-ignore>
-          {t.agentSkillsOnCount
-            .replace("{n}", String(onCount))
-            .replace("{total}", String(BUILTIN_SKILLS.length))}
-        </span>
-      </summary>
-      <div className="settings-advanced-body">
-        {error && (
-          <div className="settings-error" role="alert">
-            {error}
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const shown = (name: BuiltinSkillName) => {
+    if (only && (only === "on") !== enabled(name)) return false;
+    const text = skillText(lang, name);
+    const haystack = `${name}\n${text.label}\n${text.hint}`.toLowerCase();
+    return words.every((w) => haystack.includes(w));
+  };
+  const rows = (
+    <>
+      {error && (
+        <div className="settings-error" role="alert">
+          {error}
+        </div>
+      )}
+      {SKILL_CATEGORIES.filter((category) =>
+        BUILTIN_SKILLS.some((s) => s.category === category && shown(s.name)),
+      ).map((category) => (
+        <div
+          key={category}
+          className="settings-builtin-category"
+          role="group"
+          aria-label={t[CATEGORY_LABEL[category]]}
+        >
+          <div className="settings-builtin-category-title" aria-hidden="true">
+            {t[CATEGORY_LABEL[category]]}
           </div>
-        )}
-        {SKILL_CATEGORIES.map((category) => (
-          <div
-            key={category}
-            className="settings-builtin-category"
-            role="group"
-            aria-label={t[CATEGORY_LABEL[category]]}
-          >
-            <div className="settings-builtin-category-title" aria-hidden="true">
-              {t[CATEGORY_LABEL[category]]}
-            </div>
-            {BUILTIN_SKILLS.filter((s) => s.category === category).map(
-              ({ name }) => {
-                const text = skillText(lang, name);
-                const current = item(name);
-                const customized = isCopy(current);
-                const own = isOwn(current);
-                // The copy predates the bundled built-in's latest version.
-                const outdated = customized && !!current?.builtinUpdated;
-                const on = enabled(name);
-                return (
-                  <div
-                    key={name}
-                    className="settings-row settings-builtin-skill"
-                    data-skill={name}
-                    data-enabled={on}
-                  >
-                    <div className="settings-row-text">
-                      <div className="settings-row-label">
-                        {text.label}
-                        {(customized || own) && (
-                          <span
-                            className="settings-skill-tag"
-                            data-search-ignore
-                          >
-                            {customized
-                              ? t.agentSkillsCustomized
-                              : t.agentSkillsShadows}
-                          </span>
-                        )}
-                        {outdated && (
-                          <span
-                            className="settings-skill-tag settings-skill-tag-notice"
-                            data-search-ignore
-                          >
-                            {t.agentSkillsBuiltinUpdated}
-                          </span>
-                        )}
-                      </div>
-                      <div className="settings-row-hint">
-                        <span className="settings-builtin-skill-name">
-                          /{name}
-                        </span>
-                        {" · "}
-                        {text.hint}
-                      </div>
-                      {outdated && (
-                        <div className="settings-row-hint settings-skill-update-hint">
-                          {t.agentSkillsBuiltinUpdatedHint}
-                        </div>
-                      )}
+          {BUILTIN_SKILLS.filter(
+            (s) => s.category === category && shown(s.name),
+          ).map(({ name }) => {
+            const text = skillText(lang, name);
+            const current = item(name);
+            const customized = isCopy(current);
+            const own = isOwn(current);
+            // The copy predates the bundled built-in's latest version.
+            const outdated = customized && !!current?.builtinUpdated;
+            const on = enabled(name);
+            return (
+              <div
+                key={name}
+                className="settings-row settings-builtin-skill"
+                data-skill={name}
+                data-enabled={on}
+              >
+                <div className="settings-row-text">
+                  <div className="settings-row-label">
+                    {text.label}
+                    {(customized || own) && (
+                      <span className="settings-skill-tag" data-search-ignore>
+                        {customized
+                          ? t.agentSkillsCustomized
+                          : t.agentSkillsShadows}
+                      </span>
+                    )}
+                    {outdated && (
+                      <span
+                        className="settings-skill-tag settings-skill-tag-notice"
+                        data-search-ignore
+                      >
+                        {t.agentSkillsBuiltinUpdated}
+                      </span>
+                    )}
+                  </div>
+                  <div className="settings-row-hint">
+                    <span className="settings-builtin-skill-name">/{name}</span>
+                    {" · "}
+                    {text.hint}
+                  </div>
+                  {outdated && (
+                    <div className="settings-row-hint settings-skill-update-hint">
+                      {t.agentSkillsBuiltinUpdatedHint}
                     </div>
-                    <div className="settings-row-control">
+                  )}
+                </div>
+                <div className="settings-row-control">
+                  {only === "off" ? (
+                    <button
+                      type="button"
+                      className="plugin-install"
+                      aria-label={`${t.pluginInstall}: ${text.label}`}
+                      disabled={own}
+                      onClick={() => setEnabled(name, true)}
+                    >
+                      {t.pluginInstall}
+                    </button>
+                  ) : (
+                    <>
                       <span className="settings-skill-actions">
                         {own ? (
                           <button
@@ -357,14 +377,30 @@ export function BuiltinSkillsSection({
                         disabled={own}
                         onChange={(e) => setEnabled(name, e.target.checked)}
                       />
-                    </div>
-                  </div>
-                );
-              },
-            )}
-          </div>
-        ))}
-      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </>
+  );
+  if (only) return rows;
+  return (
+    <details className="settings-advanced settings-builtin-skills">
+      <summary>
+        <span className="settings-builtin-skills-title">
+          {t.agentSkillsBuiltin}
+        </span>
+        <span className="settings-builtin-skills-count" data-search-ignore>
+          {t.agentSkillsOnCount
+            .replace("{n}", String(onCount))
+            .replace("{total}", String(BUILTIN_SKILLS.length))}
+        </span>
+      </summary>
+      <div className="settings-advanced-body">{rows}</div>
     </details>
   );
 }

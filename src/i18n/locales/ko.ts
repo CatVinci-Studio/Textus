@@ -1168,6 +1168,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   extensionsTabThemes: "테마",
   extensionsTabSkills: "스킬",
   extensionsTabMcp: "MCP",
+  extensionsIntroPlugins: "Textus에 새 패널, 파일 형식, 도구를 더합니다.",
+  extensionsIntroThemes: "고른 테마 위에 얹는 문서의 모양입니다.",
+  extensionsIntroSkills: `한 가지 일을 잘 해내는 방법으로, ${AI_NAME}와 / 메뉴에서 씁니다.`,
+  extensionsIntroMcp: `${AI_NAME}에게 도구를 더해 주는 서버입니다.`,
+  extensionsThemesNone:
+    "아직 추가한 테마가 없습니다. 내장 테마는 ‘{page}’에서 고릅니다.",
   extensionsThemesInstalled: "내 테마",
   extensionsThemesGet: "테마 받기",
   extensionsSkillsHelp: `스킬은 ${AI_NAME}에게 한 가지 일을 잘하는 방법을 알려 줍니다. 켜 둔 스킬은 ${AI_NAME}와 / 메뉴에서 쓸 수 있고, 새로 설치하면 다섯 개가 켜져 있으며 나머지는 여기서 추가합니다.`,
@@ -1177,7 +1183,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   mcpHelp: `MCP 서버는 ${AI_NAME}에게 도구를 더해 줍니다: 폴더, 데이터베이스, 검색 등. 켜 둔 서버는 백그라운드에서 시작되고, ${AI_NAME}는 도와주는 동안 그 도구를 호출할 수 있습니다. 호출은 모두 대화에 표시됩니다.`,
   mcpNone: "아직 추가한 서버가 없습니다.",
   mcpAdd: "서버 추가…",
-  mcpPresetsGroup: "바로 추가할 수 있는 서버",
   mcpPresetAdd: "추가",
   mcpStateOff: "꺼짐",
   mcpStateStarting: "시작하는 중…",
@@ -1222,6 +1227,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   marketSkillFailed: "설치하지 못했습니다.",
   marketSkillInstalled: "설치됨",
   marketSkillsNone: "아직 등록된 스킬이 없습니다.",
+  marketMcpAllAdded: "여기 있는 서버를 모두 추가했습니다.",
   pluginsCatalogKept:
     "지난번 목록을 보여 주고 있습니다. 새 목록을 가져오지 못했습니다: {reason}",
   pluginInstall: "설치",
@@ -1255,7 +1261,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsAllLabel: "플러그인",
   pluginsAllHelp:
     "끄면 어떤 플러그인도 실행되지 않고, 플러그인이 추가한 항목도 표시되지 않습니다. 설치한 플러그인과 설정은 그대로 남습니다.",
-  pluginsInstallLabel: "플러그인 설치",
   pluginsInstallHelp:
     "플러그인 패키지(.textusplugin)는 Textus에 복사됩니다. 플러그인 폴더는 그 자리에서 불러오므로 작성 중인 플러그인을 시험해 볼 수 있으며, 다시 불러올 때도 그 자리에서 불러옵니다.",
   pluginsInstallFile: "파일에서 설치…",

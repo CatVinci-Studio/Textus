@@ -1244,6 +1244,14 @@ para usar una.
   extensionsTabThemes: "Temas",
   extensionsTabSkills: "Habilidades",
   extensionsTabMcp: "MCP",
+  extensionsIntroPlugins:
+    "Paneles, tipos de archivo y herramientas nuevos para Textus.",
+  extensionsIntroThemes:
+    "El aspecto de los documentos, sobre el tema que elijas.",
+  extensionsIntroSkills: `Formas de hacer bien un tipo de tarea, para ${AI_NAME} y el menú /.`,
+  extensionsIntroMcp: `Servidores que dan más herramientas a ${AI_NAME}.`,
+  extensionsThemesNone:
+    "Aún no has añadido temas. Los incluidos se eligen en {page}.",
   extensionsThemesInstalled: "Tus temas",
   extensionsThemesGet: "Conseguir temas",
   extensionsSkillsHelp: `Una habilidad le dice a ${AI_NAME} cómo hacer bien un tipo de tarea. Las activadas se ofrecen a ${AI_NAME} y en el menú /; una instalación nueva empieza con cinco activadas, y el resto se añade aquí.`,
@@ -1254,7 +1262,6 @@ para usar una.
   mcpHelp: `Un servidor MCP da a ${AI_NAME} más herramientas: una carpeta, una base de datos, una búsqueda. Cada uno activado se inicia en segundo plano, y ${AI_NAME} puede usar sus herramientas mientras te ayuda; la conversación muestra cada llamada.`,
   mcpNone: "Aún no has añadido ningún servidor.",
   mcpAdd: "Añadir un servidor…",
-  mcpPresetsGroup: "Listos para añadir",
   mcpPresetAdd: "Añadir",
   mcpStateOff: "Desactivado",
   mcpStateStarting: "Iniciando…",
@@ -1301,6 +1308,7 @@ para usar una.
   marketSkillFailed: "No se instaló.",
   marketSkillInstalled: "Instalada",
   marketSkillsNone: "Todavía no hay habilidades publicadas.",
+  marketMcpAllAdded: "Ya has añadido todos los servidores de esta lista.",
   pluginsCatalogKept:
     "Se muestra la lista de la última vez; no se pudo obtener una más reciente: {reason}",
   pluginInstall: "Instalar",
@@ -1333,7 +1341,6 @@ para usar una.
   pluginsAllLabel: "Complementos",
   pluginsAllHelp:
     "Desactivados, ningún complemento se ejecuta y no se muestra nada de lo que añaden. Tus complementos y sus ajustes se conservan.",
-  pluginsInstallLabel: "Instalar un complemento",
   pluginsInstallHelp:
     "Un paquete de complemento (.textusplugin) se copia en Textus. Una carpeta de complemento se carga donde está, para probar uno que estés escribiendo; se recarga desde allí.",
   pluginsInstallFile: "Instalar desde archivo…",

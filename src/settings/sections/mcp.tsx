@@ -9,6 +9,7 @@ import {
 import { showConfirm } from "../../ui/app-dialog";
 import { errorText } from "../../utils/error-text";
 import { useSettings } from "../SettingsContext";
+import { ExtensionsTabLayout } from "../pages/ExtensionsTabLayout";
 import { SettingsGroup } from "../pages/SettingsGroup";
 import {
   MCP_PRESETS,
@@ -24,15 +25,25 @@ import {
 /**
  * Settings › Extensions › MCP: the servers Textus AI may use, each a card
  * with its switch and how it is doing (starting, its tools, or why it
- * failed); a form to add or change one, which can try it first; and the
- * servers most people add, ready to fill in. The servers themselves run
- * in the Rust side (src-tauri mcp/), which this asks for their state.
+ * failed), and a form to add or change one, which can try it first ("⋯"
+ * adds one by hand). The servers most people add are in Get more
+ * (MarketMcp), which comes back here with one to fill in (`adding`). The
+ * servers themselves run in the Rust side (src-tauri mcp/), which this
+ * asks for their state.
  */
-export function McpSection({ t }: { t: Strings }) {
+export function McpSection({
+  t,
+  onGetMore,
+  adding = null,
+}: {
+  t: Strings;
+  onGetMore: () => void;
+  adding?: McpServer | null;
+}) {
   const { settings, setSettings } = useSettings();
   const servers = settings.mcpServers;
   const [status, setStatus] = useState<McpServerStatus[]>([]);
-  const [editing, setEditing] = useState<McpServer | null>(null);
+  const [editing, setEditing] = useState<McpServer | null>(adding);
 
   // The state of the servers that are on - again while any is starting,
   // or isn't listed yet (the settings it was just saved in are on their
@@ -95,52 +106,79 @@ export function McpSection({ t }: { t: Strings }) {
       />
     );
 
-  const offered = MCP_PRESETS.filter(
-    (p) => !servers.some((s) => s.id === p.id),
-  );
   return (
-    <>
-      <SettingsGroup title={t.mcpServersGroup}>
-        <p className="plugin-group-help">{t.mcpHelp}</p>
-        {servers.length === 0 && <p className="plugin-empty">{t.mcpNone}</p>}
-        {servers.map((server) => (
-          <ServerCard
-            key={server.id}
-            t={t}
-            server={server}
-            status={status.find((s) => s.id === server.id)}
-            onEnable={(on) => save({ ...server, enabled: on })}
-            onEdit={() => setEditing(server)}
-            onRemove={() => void remove(server)}
-            onRestart={() =>
-              void mcp.restart(server.id).then(setStatus, () => {})
-            }
-          />
-        ))}
-        <div className="settings-row">
-          <button
-            type="button"
-            className="text-button settings-inline-button"
-            onClick={() => setEditing(blankServer())}
-          >
-            {t.mcpAdd}
-          </button>
-        </div>
-      </SettingsGroup>
-      {offered.length > 0 && (
-        <SettingsGroup title={t.mcpPresetsGroup}>
-          {offered.map((preset) => (
-            <PresetCard
-              key={preset.id}
+    <ExtensionsTabLayout
+      t={t}
+      intro={t.extensionsIntroMcp}
+      help={t.mcpHelp}
+      onGetMore={onGetMore}
+      actions={[{ label: t.mcpAdd, onSelect: () => setEditing(blankServer()) }]}
+      installedTitle={t.mcpServersGroup}
+      installed={
+        servers.length ? (
+          servers.map((server) => (
+            <ServerCard
+              key={server.id}
               t={t}
-              preset={preset}
-              lang={settings.language}
-              onAdd={() => setEditing(fromPreset(preset))}
+              server={server}
+              status={status.find((s) => s.id === server.id)}
+              onEnable={(on) => save({ ...server, enabled: on })}
+              onEdit={() => setEditing(server)}
+              onRemove={() => void remove(server)}
+              onRestart={() =>
+                void mcp.restart(server.id).then(setStatus, () => {})
+              }
             />
-          ))}
-        </SettingsGroup>
+          ))
+        ) : (
+          <p className="plugin-empty">{t.mcpNone}</p>
+        )
+      }
+    />
+  );
+}
+
+/** Get more's MCP servers: the ones most people add and the user hasn't,
+ *  as far as `query` lets; Add fills the form in with one. */
+export function MarketMcp({
+  t,
+  query,
+  onAdd,
+}: {
+  t: Strings;
+  query: string;
+  onAdd: (server: McpServer) => void;
+}) {
+  const { settings } = useSettings();
+  const lang = settings.language;
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const offered = MCP_PRESETS.filter(
+    (p) => !settings.mcpServers.some((s) => s.id === p.id),
+  );
+  const shown = offered.filter((p) => {
+    const text = `${p.name}\n${presetDescription(p, lang)}`.toLowerCase();
+    return words.every((w) => text.includes(w));
+  });
+  return (
+    <div className="settings-group-body">
+      {shown.length ? (
+        shown.map((preset) => (
+          <PresetCard
+            key={preset.id}
+            t={t}
+            preset={preset}
+            lang={lang}
+            onAdd={() => onAdd(fromPreset(preset))}
+          />
+        ))
+      ) : (
+        <p className="plugin-empty">
+          {offered.length
+            ? t.pluginsSearchNone.replace("{query}", query.trim())
+            : t.marketMcpAllAdded}
+        </p>
       )}
-    </>
+    </div>
   );
 }
 

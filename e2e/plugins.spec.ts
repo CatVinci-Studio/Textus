@@ -234,6 +234,8 @@ test("turning every plugin off takes its tab away", async ({ page }) => {
     .getByRole("button", { name: "Hello" });
   await expect(tab).toHaveCount(1);
   await openPluginsPage(page);
+  // The switch for them all is under Advanced.
+  await page.locator(".extensions-advanced summary").click();
   await page.getByRole("checkbox", { name: "Plugins" }).uncheck();
   await page.keyboard.press("Escape");
   await expect(tab).toHaveCount(0);

@@ -1,10 +1,9 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { SettingsPageProps } from "./types";
-import { SettingsGroup } from "./SettingsGroup";
 import { Byline, PluginPage, statusText } from "./PluginPage";
-import { MarketPage } from "./MarketPage";
+import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
 import { askForRequirements, usePluginInstall } from "./usePluginInstall";
-import { LinkRow, SettingRow, ToggleRow } from "../sections/controls";
+import { ToggleRow } from "../sections/controls";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { isDesktopApp } from "../../platform/capabilities";
 import type { Strings } from "../../i18n/strings";
@@ -29,19 +28,21 @@ import { canSwitch } from "../../plugins/lifecycle";
 
 /**
  * Settings › Extensions › Plugins (docs/design/plugins.md §6). Nothing comes
- * installed: first the switch for them all and installing from a file;
- * then the installed plugins, each a card - its name, what it does, who
- * made it (Official when it is CatVinci's), its switch - that opens the
- * plugin's own page; last, Get plugins, the catalog's plugins on a page of
- * their own (GetPluginsPage).
+ * installed: Get more (`onGetMore`) offers the catalog's plugins, "⋯"
+ * installs one from a file or loads a folder; the installed plugins are
+ * cards - its name, what it does, who made it (Official when it is
+ * CatVinci's), its switch - that open the plugin's own page; the switch
+ * for them all is under Advanced.
  */
-export function PluginsPage({ t }: SettingsPageProps) {
+export function PluginsPage({
+  t,
+  onGetMore,
+}: SettingsPageProps & { onGetMore: () => void }) {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
   const { installing, install, attempt, settings, setSettings } =
     usePluginInstall(t);
   const [open, setOpen] = useState<string | null>(null);
-  const [getting, setGetting] = useState(false);
   useEffect(() => {
     void loadCatalog();
   }, []);
@@ -84,33 +85,29 @@ export function PluginsPage({ t }: SettingsPageProps) {
       />
     );
 
-  if (getting)
-    return <MarketPage t={t} kind="plugins" onBack={() => setGetting(false)} />;
-
   return (
-    <>
-      <SettingsGroup title={t.pluginsTitle}>
-        <ToggleRow
-          label={t.pluginsAllLabel}
-          help={t.pluginsAllHelp}
-          checked={snapshot.allOn}
-          onChange={(on) => void attempt(() => setAllPlugins(on))}
-        />
-        {isDesktopApp && (
-          <SettingRow label={t.pluginsInstallLabel} help={t.pluginsInstallHelp}>
-            <div className="plugin-install-buttons">
-              <button type="button" onClick={() => void installFile(false)}>
-                {t.pluginsInstallFile}
-              </button>
-              <button type="button" onClick={() => void installFile(true)}>
-                {t.pluginsLoadFolder}
-              </button>
-            </div>
-          </SettingRow>
-        )}
-      </SettingsGroup>
-      <SettingsGroup title={t.pluginsInstalledGroup}>
-        {snapshot.records.length ? (
+    <ExtensionsTabLayout
+      t={t}
+      intro={t.extensionsIntroPlugins}
+      help={t.pluginsInstallHelp}
+      onGetMore={onGetMore}
+      actions={
+        isDesktopApp
+          ? [
+              {
+                label: t.pluginsInstallFile,
+                onSelect: () => void installFile(false),
+              },
+              {
+                label: t.pluginsLoadFolder,
+                onSelect: () => void installFile(true),
+              },
+            ]
+          : []
+      }
+      installedTitle={t.pluginsInstalledGroup}
+      installed={
+        snapshot.records.length ? (
           snapshot.records.map((record) => (
             <PluginCard
               key={record.id}
@@ -124,18 +121,17 @@ export function PluginsPage({ t }: SettingsPageProps) {
           ))
         ) : (
           <p className="plugin-empty">{t.pluginsNone}</p>
-        )}
-      </SettingsGroup>
-      <section className="settings-group">
-        <div className="settings-group-body">
-          <LinkRow
-            label={t.marketGetMore}
-            onOpen={() => setGetting(true)}
-            className="plugin-get-entry"
-          />
-        </div>
-      </section>
-    </>
+        )
+      }
+      advanced={
+        <ToggleRow
+          label={t.pluginsAllLabel}
+          help={t.pluginsAllHelp}
+          checked={snapshot.allOn}
+          onChange={(on) => void attempt(() => setAllPlugins(on))}
+        />
+      }
+    />
   );
 }
 

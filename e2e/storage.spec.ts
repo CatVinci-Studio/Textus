@@ -243,12 +243,13 @@ test("clipboard history is recorded entry by entry in the store", async ({
 /** In English, with Custom CSS empty. */
 const TYPING = { ...SETTINGS, language: "en", customCss: "" };
 
-/** Settings > Extensions > Themes > Custom CSS. */
+/** Settings > Extensions > Themes > Advanced > Custom CSS. */
 async function customCssField(page: Page) {
   await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.getByRole("button", { name: "Editor & Appearance" }).click();
   await panel.getByRole("button", { name: "Get more themes" }).click();
+  await panel.locator(".extensions-advanced summary").click();
   return panel.getByRole("textbox", { name: "Custom CSS" });
 }
 

@@ -271,6 +271,7 @@ test.describe("desktop", () => {
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: t.navEditor }).click();
     await panel.getByRole("button", { name: t.themeGetMore }).click();
+    await panel.locator(".extensions-advanced summary").click();
     const css = panel.getByRole("textbox", { name: t.customCssLabel });
     await css.fill("p { color: red; }");
     await css.press("ControlOrMeta+a");

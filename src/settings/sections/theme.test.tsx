@@ -9,7 +9,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveStrings } from "../../i18n/strings";
-import { ThemeLibrarySection, ThemeSection } from "./theme";
+import { ThemeLibrarySection, ThemeSection, ThemesTab } from "./theme";
 import { fs, themes } from "../../platform/ipc";
 const mock = vi.hoisted(() => ({
   setSettings: vi.fn(),
@@ -70,6 +70,31 @@ describe("theme settings", () => {
       screen.getByRole("heading", { name: t.extensionsThemesGet }),
     ).toBeInTheDocument();
     expect(screen.getByText("gallery")).toBeInTheDocument();
+  });
+  it("lists the user's themes on the Extensions tab, with the rest behind ⋯ and Advanced", () => {
+    const t = resolveStrings("en");
+    const onGetMore = vi.fn();
+    render(<ThemesTab t={t} onGetMore={onGetMore} />);
+    const row = screen.getByText("Test").closest(".plugin-card");
+    expect(row).toHaveTextContent(t.themeGalleryInUse);
+    // Importing and exporting wait behind "⋯"; the gallery is Get more.
+    expect(
+      screen.queryByRole("menuitem", { name: t.themeImportButton }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: t.toolbarMore }));
+    expect(screen.getAllByRole("menuitem").map((m) => m.textContent)).toEqual([
+      t.themeImportButton,
+      t.themeExportButton,
+    ]);
+    expect(screen.queryByText("gallery")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: t.marketGetMore }));
+    expect(onGetMore).toHaveBeenCalled();
+    // The user's own CSS, folded under Advanced.
+    expect(
+      screen
+        .getByRole("textbox", { name: t.customCssLabel, hidden: true })
+        .closest("details"),
+    ).not.toHaveAttribute("open");
   });
   it("shows picker errors and allows retry", async () => {
     vi.mocked(fs.openCssFileDialog).mockRejectedValueOnce(

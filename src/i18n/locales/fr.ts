@@ -1265,6 +1265,14 @@ utiliser une.
   extensionsTabThemes: "Thèmes",
   extensionsTabSkills: "Compétences",
   extensionsTabMcp: "MCP",
+  extensionsIntroPlugins:
+    "De nouveaux panneaux, types de fichiers et outils pour Textus.",
+  extensionsIntroThemes:
+    "L’apparence des documents, par-dessus le thème choisi.",
+  extensionsIntroSkills: `Des façons de bien faire un type de tâche, pour ${AI_NAME} et le menu /.`,
+  extensionsIntroMcp: `Des serveurs qui donnent plus d’outils à ${AI_NAME}.`,
+  extensionsThemesNone:
+    "Aucun thème ajouté pour l’instant. Les thèmes intégrés se choisissent dans {page}.",
   extensionsThemesInstalled: "Vos thèmes",
   extensionsThemesGet: "Obtenir des thèmes",
   extensionsSkillsHelp: `Une compétence indique à ${AI_NAME} comment bien faire un type de tâche. Celles qui sont activées sont proposées à ${AI_NAME} et dans le menu / ; une nouvelle installation en active cinq, et vous ajoutez les autres ici.`,
@@ -1275,7 +1283,6 @@ utiliser une.
   mcpHelp: `Un serveur MCP donne à ${AI_NAME} d’autres outils : un dossier, une base de données, une recherche. Chaque serveur activé démarre en arrière-plan, et ${AI_NAME} peut appeler ses outils en vous aidant ; la conversation montre chaque appel.`,
   mcpNone: "Aucun serveur pour l’instant.",
   mcpAdd: "Ajouter un serveur…",
-  mcpPresetsGroup: "Prêts à ajouter",
   mcpPresetAdd: "Ajouter",
   mcpStateOff: "Désactivé",
   mcpStateStarting: "Démarrage…",
@@ -1322,6 +1329,7 @@ utiliser une.
   marketSkillFailed: "Il n’a pas été installé.",
   marketSkillInstalled: "Installée",
   marketSkillsNone: "Aucune compétence n’est encore proposée.",
+  marketMcpAllAdded: "Vous avez ajouté tous les serveurs listés ici.",
   pluginsCatalogKept:
     "Voici la liste de la dernière fois - impossible d’en obtenir une plus récente : {reason}",
   pluginInstall: "Installer",
@@ -1354,7 +1362,6 @@ utiliser une.
   pluginsAllLabel: "Extensions",
   pluginsAllHelp:
     "Désactivées, aucune extension ne s’exécute et rien de ce qu’elles ajoutent ne s’affiche. Vos extensions et leurs réglages sont conservés.",
-  pluginsInstallLabel: "Installer une extension",
   pluginsInstallHelp:
     "Un paquet d’extension (.textusplugin) est copié dans Textus. Un dossier d’extension est chargé là où il se trouve, pour essayer celle que vous écrivez ; il est rechargé depuis cet endroit.",
   pluginsInstallFile: "Installer depuis un fichier…",

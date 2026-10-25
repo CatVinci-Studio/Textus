@@ -1216,6 +1216,12 @@ type /name in a conversation to use one.
   extensionsTabThemes: "Themes",
   extensionsTabSkills: "Skills",
   extensionsTabMcp: "MCP",
+  extensionsIntroPlugins: "New panels, file types and tools, added to Textus.",
+  extensionsIntroThemes: "How documents look, on top of the theme you pick.",
+  extensionsIntroSkills: `Ways of doing one kind of task well, for ${AI_NAME} and the / menu.`,
+  extensionsIntroMcp: `Servers that give ${AI_NAME} more tools.`,
+  extensionsThemesNone:
+    "No themes added yet. The built-in ones are picked in {page}.",
   extensionsThemesInstalled: "Your themes",
   extensionsThemesGet: "Get themes",
   extensionsSkillsHelp: `A skill tells ${AI_NAME} how to do one kind of task well. Each one on is offered to ${AI_NAME} and in the / menu; a new installation starts with five on, and you add the rest here.`,
@@ -1226,7 +1232,6 @@ type /name in a conversation to use one.
   mcpHelp: `An MCP server gives ${AI_NAME} more tools: a folder, a database, a search. Each one on is started in the background, and ${AI_NAME} may call its tools while it helps you; the conversation shows each call.`,
   mcpNone: "No server added yet.",
   mcpAdd: "Add a server…",
-  mcpPresetsGroup: "Ready to add",
   mcpPresetAdd: "Add",
   mcpStateOff: "Off",
   mcpStateStarting: "Starting…",
@@ -1272,6 +1277,7 @@ type /name in a conversation to use one.
   marketSkillFailed: "It wasn't installed.",
   marketSkillInstalled: "Installed",
   marketSkillsNone: "No skills are listed yet.",
+  marketMcpAllAdded: "You have added every server listed here.",
   pluginsCatalogKept:
     "Showing the list from last time - couldn’t get a newer one: {reason}",
   pluginInstall: "Install",
@@ -1304,7 +1310,6 @@ type /name in a conversation to use one.
   pluginsAllLabel: "Plugins",
   pluginsAllHelp:
     "Off, no plugin runs and nothing they add is shown. Your plugins and their settings stay as they are.",
-  pluginsInstallLabel: "Install a plugin",
   pluginsInstallHelp:
     "A plugin package (.textusplugin) is copied into Textus. A plugin folder is loaded where it is, for trying out one you are writing; it reloads from there.",
   pluginsInstallFile: "Install from file…",

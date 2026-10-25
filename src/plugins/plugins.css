@@ -412,6 +412,58 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: 0 0 var(--space-3);
 }
 
+/* Every Extensions tab (ExtensionsTabLayout.tsx): a line of what it holds
+   with Get more and "…" on the right, the installed items, Advanced. */
+.extensions-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+.extensions-intro {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: 0;
+  color: var(--chrome-muted);
+  font-size: var(--text-sm);
+}
+.extensions-head-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-2);
+}
+.extensions-get-more {
+  border-color: var(--ui-primary);
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+}
+.extensions-more {
+  position: relative;
+}
+.extensions-more-button {
+  min-width: 32px;
+  letter-spacing: 1px;
+}
+.extensions-more-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 4px;
+  transform-origin: top right;
+  animation: motion-pop-in var(--dur-base) var(--ease-out);
+}
+.extensions-advanced {
+  margin-top: var(--space-4);
+}
+
 /* An MCP server's card: where it runs, how it is doing, its tools. */
 .mcp-endpoint {
   font-family: var(--font-mono);

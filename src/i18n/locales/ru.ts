@@ -1235,6 +1235,12 @@ export default {
   extensionsTabThemes: "Темы",
   extensionsTabSkills: "Навыки",
   extensionsTabMcp: "MCP",
+  extensionsIntroPlugins: "Новые панели, типы файлов и инструменты для Textus.",
+  extensionsIntroThemes: "Как выглядят документы — поверх выбранной темы.",
+  extensionsIntroSkills: `Способы хорошо делать определённую работу — для ${AI_NAME} и меню /.`,
+  extensionsIntroMcp: `Серверы, которые дают ${AI_NAME} больше инструментов.`,
+  extensionsThemesNone:
+    "Вы ещё не добавили тем. Встроенные выбираются в разделе «{page}».",
   extensionsThemesInstalled: "Ваши темы",
   extensionsThemesGet: "Получить темы",
   extensionsSkillsHelp: `Навык подсказывает ${AI_NAME}, как хорошо делать определённую работу. Включённые навыки доступны ${AI_NAME} и в меню /; в новой установке включено пять, остальные добавляются здесь.`,
@@ -1245,7 +1251,6 @@ export default {
   mcpHelp: `MCP-сервер даёт ${AI_NAME} больше инструментов: папку, базу данных, поиск. Каждый включённый сервер запускается в фоне, и ${AI_NAME} может вызывать его инструменты, пока помогает вам; каждый вызов виден в разговоре.`,
   mcpNone: "Серверов пока нет.",
   mcpAdd: "Добавить сервер…",
-  mcpPresetsGroup: "Готовы к добавлению",
   mcpPresetAdd: "Добавить",
   mcpStateOff: "Выключен",
   mcpStateStarting: "Запускается…",
@@ -1292,6 +1297,7 @@ export default {
   marketSkillFailed: "Не установлено.",
   marketSkillInstalled: "Установлен",
   marketSkillsNone: "Навыков пока нет.",
+  marketMcpAllAdded: "Вы уже добавили все серверы из этого списка.",
   pluginsCatalogKept:
     "Показан список с прошлого раза - новый получить не удалось: {reason}",
   pluginInstall: "Установить",
@@ -1324,7 +1330,6 @@ export default {
   pluginsAllLabel: "Плагины",
   pluginsAllHelp:
     "Если выключено, ни один плагин не работает и ничего из добавленного ими не показывается. Плагины и их настройки сохраняются.",
-  pluginsInstallLabel: "Установить плагин",
   pluginsInstallHelp:
     "Пакет плагина (.textusplugin) копируется в Textus. Папка плагина загружается на месте — чтобы попробовать плагин, который вы пишете; перезагружается оттуда же.",
   pluginsInstallFile: "Установить из файла…",
