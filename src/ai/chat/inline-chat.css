@@ -1119,12 +1119,12 @@
 /* Under a reply still streaming: it waits, and shows only if the reply
    pauses (ChatMessages re-keys it on every delta, starting the wait over). */
 .agent-thinking-after {
-  animation: agent-thinking-after 200ms var(--ease-out) 1500ms both;
+  animation: agent-thinking-after var(--dur-base) var(--ease-out) 1500ms both;
 }
 
 /* Before anything has come back: a quick answer never flashes the dots. */
 .agent-thinking-soon {
-  animation: agent-thinking-after 200ms var(--ease-out) 400ms both;
+  animation: agent-thinking-after var(--dur-base) var(--ease-out) 400ms both;
 }
 
 @keyframes agent-thinking-after {

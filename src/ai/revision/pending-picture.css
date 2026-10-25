@@ -153,7 +153,7 @@
   font-size: var(--text-sm);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 150ms var(--ease-out);
+  transition: opacity var(--dur-fast) var(--ease-out);
 }
 
 .pending-picture-made:hover .pending-picture-redraw,

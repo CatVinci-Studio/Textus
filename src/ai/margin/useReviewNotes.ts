@@ -34,6 +34,7 @@ import { useOpenedCard } from "./margin-layout";
 import { useOwnNotes } from "./useOwnNotes";
 import { useOwnRevisions } from "./useOwnRevisions";
 import { OWN_CHANGES, ownRevisionKey } from "./own-revision-plugin";
+import { duration } from "../../ui/motion";
 
 /** A proposal shown whole as a margin card's change: what it replaces and
  *  with what. Null for new text alone, which has no original. */
@@ -329,7 +330,7 @@ export function useReviewNotes({
       );
       if (note) {
         setNoteHot(`note:${note.id}`);
-        window.setTimeout(() => setNoteHot(null), 1600);
+        window.setTimeout(() => setNoteHot(null), duration("--dur-linger"));
       }
     });
   }

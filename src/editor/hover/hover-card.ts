@@ -2,6 +2,7 @@ import { currentStrings } from "../../i18n/current";
 import type { HoverCard } from "../../plugins/hover-providers";
 import { renderMarkdownHtml } from "../markdown/render-html";
 import "./hover-card.css";
+import { duration } from "../../ui/motion";
 
 /**
  * The card a plugin's hover provider gives for what the pointer rests on
@@ -57,7 +58,7 @@ export function hideHoverCard(now = false) {
     return;
   }
   el.classList.remove("hover-card-open");
-  setTimeout(() => el.remove(), 150);
+  setTimeout(() => el.remove(), duration("--dur-fast"));
 }
 
 function build(card: HoverCard): HTMLElement {
