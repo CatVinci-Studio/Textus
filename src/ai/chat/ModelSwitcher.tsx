@@ -35,6 +35,17 @@ export function modelChoices(
   ].filter(Boolean);
 }
 
+/** Whether there is anything to switch to: more than one model across
+ *  the providers that are ready. With one, the button isn't shown. */
+export function canSwitchModel(
+  ready: ProviderCatalogEntry[],
+  chosen: Record<string, string>,
+): boolean {
+  return (
+    ready.reduce((n, entry) => n + modelChoices(entry, chosen).length, 0) > 1
+  );
+}
+
 /**
  * The composer's model, switched without going to Settings: the button
  * names the model the next message goes to; its list holds the providers
@@ -83,6 +94,8 @@ export function ModelSwitcher() {
     });
     setOpen(false);
   };
+  // One model to go to and nothing to switch to: no button taking room.
+  if (!canSwitchModel(ready, settings.agentModels)) return null;
 
   return (
     <div className="model-switcher" ref={ref}>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chatModel, modelChoices } from "./ModelSwitcher";
+import { canSwitchModel, chatModel, modelChoices } from "./ModelSwitcher";
 import type { ProviderCatalogEntry } from "../provider-catalog";
 
 const entry = {
@@ -22,5 +22,23 @@ describe("the composer's model", () => {
       "gpt-6-luna",
     ]);
     expect(modelChoices(entry, {})).toEqual(["gpt-6.1-sol", "gpt-6-luna"]);
+  });
+
+  it("is a button only when there is another model to switch to", () => {
+    const single = {
+      id: "local",
+      agentDefaultModel: "llama",
+      knownModels: ["llama"],
+    } as ProviderCatalogEntry;
+    expect(canSwitchModel([single], {})).toBe(false);
+    expect(canSwitchModel([], {})).toBe(false);
+    expect(canSwitchModel([entry], {})).toBe(true);
+    // One model each from two providers is still a choice.
+    expect(
+      canSwitchModel(
+        [single, { ...single, id: "other" } as ProviderCatalogEntry],
+        {},
+      ),
+    ).toBe(true);
   });
 });
