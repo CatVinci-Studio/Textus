@@ -57,6 +57,18 @@ export function splitEditor(direction: SplitDirection): void {
   }
 }
 
+/** The panes as they are, rearranged: their tabs swapped, and the first
+ *  one's share set (clamped). Nothing when not split. */
+export function arrangeSplit(change: { swap?: boolean; ratio?: number }): void {
+  if (!layout) return;
+  const [first, second] = layout.panes;
+  setSplitLayout({
+    ...layout,
+    panes: change.swap && second ? [second, first] : layout.panes,
+    ratio: change.ratio === undefined ? layout.ratio : clampRatio(change.ratio),
+  });
+}
+
 /** Back to one document: the one in front. */
 export function closeSplit(): void {
   request = null;

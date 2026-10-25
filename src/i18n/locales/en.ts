@@ -846,6 +846,7 @@ type /name in a conversation to use one.
   splitDivider: "Divider between the documents",
   hoverCard: "Preview",
   hoverPin: "Pin",
+  hoverOpen: "Open",
   hoverClose: "Close",
   menuUndo: "Undo",
   menuRedo: "Redo",

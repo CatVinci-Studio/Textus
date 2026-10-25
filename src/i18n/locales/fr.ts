@@ -884,6 +884,7 @@ utiliser une.
   splitDivider: "Séparateur entre les documents",
   hoverCard: "Aperçu",
   hoverPin: "Épingler",
+  hoverOpen: "Ouvrir",
   hoverClose: "Fermer",
   menuUndo: "Annuler",
   menuRedo: "Rétablir",

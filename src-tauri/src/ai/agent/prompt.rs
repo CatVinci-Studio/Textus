@@ -356,7 +356,11 @@ pub(super) const INDEX_DESCRIPTION_CHARS: usize = 500;
 /// doesn't exist (round 4, concept/zh/library). Depends only on the
 /// workspace and the UI language, so the system prompt stays byte-identical
 /// across a conversation.
-pub(crate) fn skill_index(workspace: &AgentWorkspace, mode: AgentMode, ui_language: &str) -> String {
+pub(crate) fn skill_index(
+    workspace: &AgentWorkspace,
+    mode: AgentMode,
+    ui_language: &str,
+) -> String {
     use crate::ai::workspace::SkillSource;
     let mut offered: Vec<&crate::ai::workspace::AgentSkill> = workspace
         .skills

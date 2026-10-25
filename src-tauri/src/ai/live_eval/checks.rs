@@ -1688,5 +1688,4 @@ Wait—the instructions say"
         assert_eq!(without_code(reply), "做好了：\n\n\n保存即可。\n");
         assert_eq!(without_code("no fences"), "no fences");
     }
-
 }

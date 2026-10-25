@@ -864,6 +864,7 @@ export default {
   splitDivider: "Разделитель между документами",
   hoverCard: "Предпросмотр",
   hoverPin: "Закрепить",
+  hoverOpen: "Открыть",
   hoverClose: "Закрыть",
   menuUndo: "Отменить",
   menuRedo: "Повторить",

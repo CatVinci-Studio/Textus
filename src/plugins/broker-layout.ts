@@ -1,4 +1,9 @@
-import { closeSplit, splitEditor, splitLayout } from "../app/split-layout";
+import {
+  arrangeSplit,
+  closeSplit,
+  splitEditor,
+  splitLayout,
+} from "../app/split-layout";
 
 /**
  * A plugin's calls about the window's layout: two documents side by side
@@ -18,6 +23,17 @@ export function layoutHandlers() {
       splitEditor(direction ?? "row");
     },
     "window.closeSplit": () => closeSplit(),
+    "window.arrangeSplit": ({
+      swap,
+      ratio,
+    }: {
+      swap?: unknown;
+      ratio?: unknown;
+    }) => {
+      if (ratio !== undefined && typeof ratio !== "number")
+        throw new Error("ratio is a number, 0.2 to 0.8.");
+      arrangeSplit({ swap: swap === true, ratio });
+    },
     "window.layout": () => {
       const layout = splitLayout();
       return layout?.panes[1]

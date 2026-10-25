@@ -872,6 +872,7 @@ para usar una.
   splitDivider: "Separador entre los documentos",
   hoverCard: "Vista previa",
   hoverPin: "Fijar",
+  hoverOpen: "Abrir",
   hoverClose: "Cerrar",
   menuUndo: "Deshacer",
   menuRedo: "Rehacer",

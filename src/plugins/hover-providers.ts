@@ -15,6 +15,9 @@ export interface HoverCard {
   title: string | null;
   /** Shown as Markdown, with no pictures. */
   markdown: string;
+  /** The app's, never a plugin's: Open on a card of a document goes to
+   *  it (link-hover-plugin.ts). */
+  open?: () => void;
 }
 
 type Provide = (target: HoverTarget) => Promise<HoverCard | null>;

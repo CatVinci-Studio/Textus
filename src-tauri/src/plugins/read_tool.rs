@@ -162,7 +162,9 @@ mod tests {
     use super::*;
 
     fn plugin(dir: &Path, id: &str, publisher: &str) -> InstalledPlugin {
-        let manifest = json!({ "id": id, "name": "Tasks", "version": "1.1.0", "publisher": publisher }).to_string();
+        let manifest =
+            json!({ "id": id, "name": "Tasks", "version": "1.1.0", "publisher": publisher })
+                .to_string();
         std::fs::create_dir_all(dir.join("lib")).unwrap();
         std::fs::write(dir.join("textus-plugin.json"), &manifest).unwrap();
         std::fs::write(dir.join("host.js"), "exports.activate = () => {};").unwrap();
@@ -192,8 +194,10 @@ mod tests {
         assert!(file.ends_with("exports.activate = () => {};"));
         // Not text, not its own, not there.
         assert!(answer(&all, r#"{"id":"catvinci.tasks","path":"icon.png"}"#).contains("isn't text"));
-        assert!(answer(&all, r#"{"id":"catvinci.tasks","path":"../mine/host.js"}"#)
-            .contains("isn't a file of this plugin"));
+        assert!(
+            answer(&all, r#"{"id":"catvinci.tasks","path":"../mine/host.js"}"#)
+                .contains("isn't a file of this plugin")
+        );
         assert!(answer(&all, r#"{"id":"x.y"}"#).starts_with("No plugin `x.y`"));
     }
 }

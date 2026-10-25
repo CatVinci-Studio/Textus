@@ -64,6 +64,16 @@ test("a wikilink shows the note's opening, without its front matter", async ({
   await expect(card(page)).not.toContainText("tags:");
 });
 
+test("Open on a card goes to the document, at the section linked to", async ({
+  page,
+}) => {
+  await open(page);
+  await restOn(page, page.locator(`${editor} a`, { hasText: "the harbour" }));
+  await card(page).getByRole("button", { name: "Open" }).click();
+  await expect(card(page)).toHaveCount(0);
+  await expect(page.locator(`${editor} h1`)).toContainText("Two");
+});
+
 test("a pinned card stays while the pointer goes, and closes by its button", async ({
   page,
 }) => {

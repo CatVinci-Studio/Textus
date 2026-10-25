@@ -190,10 +190,8 @@ mod tests {
         let review = [crate::ai::agent::AgentMode::Review];
         let first = save_offer_in(dir.path(), &offer, &review).unwrap();
         let second = save_offer_in(dir.path(), &offer, &review).unwrap();
-        let saved = crate::ai::workspace::parse_skill_file(
-            "x",
-            &std::fs::read_to_string(&first).unwrap(),
-        );
+        let saved =
+            crate::ai::workspace::parse_skill_file("x", &std::fs::read_to_string(&first).unwrap());
         assert_eq!(saved.modes, review);
         assert_ne!(first, second);
         let skills = crate::ai::workspace::read_skill_files(dir.path());

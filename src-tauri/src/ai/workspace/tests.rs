@@ -265,7 +265,10 @@ fn layers_override_built_ins_by_name() {
     let doc = project.join("chapter.md");
     let ws = load_layers(Some(&global), doc.to_str(), None);
     let get = |name: &str| ws.skills.iter().find(|s| s.name == name).unwrap();
-    assert_eq!(ws.skills.iter().filter(|s| s.name == "summarize").count(), 1);
+    assert_eq!(
+        ws.skills.iter().filter(|s| s.name == "summarize").count(),
+        1
+    );
     let summarize = get("summarize");
     assert_eq!(summarize.source, SkillSource::Project);
     assert!(summarize.overrides_builtin && summarize.prompt.contains("6 words"));
@@ -330,7 +333,10 @@ fn customize_copies_and_reset_deletes_only_copies() {
         skills.join("mine.md")
     );
     // A file with the stem but another skill inside keeps its name.
-    write(&skills.join("summarize.md"), "---\nname: my-summary\n---\nx");
+    write(
+        &skills.join("summarize.md"),
+        "---\nname: my-summary\n---\nx",
+    );
     assert_eq!(
         customize_in(&skills, "summarize").unwrap(),
         skills.join("summarize-2.md")
@@ -395,7 +401,10 @@ fn setting_a_skills_modes_rewrites_its_file() {
             .find(|(_, s)| s.name == name)
             .unwrap()
     };
-    assert_eq!(read("weekly").1.modes, [AgentMode::Review, AgentMode::Write]);
+    assert_eq!(
+        read("weekly").1.modes,
+        [AgentMode::Review, AgentMode::Write]
+    );
     assert_eq!(read("weekly").1.version.as_deref(), Some("1.0.0"));
     assert_eq!(read("bare").1.modes, [AgentMode::Create]);
     // Again: the line is replaced, not added.

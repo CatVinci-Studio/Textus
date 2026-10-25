@@ -46,7 +46,10 @@ fn every_mode_has_its_built_in_skills() {
             .map(|s| s.name.as_str())
             .collect()
     };
-    assert_eq!(of(AgentMode::Write), ["expand", "tighten", "translate", "summarize"]);
+    assert_eq!(
+        of(AgentMode::Write),
+        ["expand", "tighten", "translate", "summarize"]
+    );
     assert_eq!(of(AgentMode::Review), ["proofread", "continuity"]);
     assert_eq!(of(AgentMode::Create), ["theme", "plugin", "skill"]);
     for name in MOVED_TO_MARKET {

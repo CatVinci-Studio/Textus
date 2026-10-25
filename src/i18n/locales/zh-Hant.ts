@@ -786,6 +786,7 @@ export default {
   splitDivider: "兩篇文件之間的分隔線",
   hoverCard: "預覽",
   hoverPin: "釘住",
+  hoverOpen: "開啟",
   hoverClose: "關閉",
   menuUndo: "復原",
   menuRedo: "重做",

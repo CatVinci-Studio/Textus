@@ -264,6 +264,9 @@
       closeSplit: function () {
         return call("window.closeSplit", {});
       },
+      arrangeSplit: function (change) {
+        return call("window.arrangeSplit", Object.assign({}, change));
+      },
       layout: function () {
         return call("window.layout", {});
       },

@@ -135,7 +135,9 @@ fn use_skill_expands_skills_and_loads_packs() {
     let call = |name: &str| use_skill(&ctx, &json!({ "name": name }).to_string());
     let proofread = call("proofread");
     assert!(proofread.starts_with("Instructions for skill `proofread`"));
-    assert!(proofread.contains("### contract") && proofread.contains("### standards-ja#typography"));
+    assert!(
+        proofread.contains("### contract") && proofread.contains("### standards-ja#typography")
+    );
     assert!(call("tighten").contains("only when the user types /tighten"));
     assert!(
         call("describe").starts_with("No skill named `describe`"),

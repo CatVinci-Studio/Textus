@@ -813,6 +813,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   splitDivider: "문서 사이 구분선",
   hoverCard: "미리보기",
   hoverPin: "고정",
+  hoverOpen: "열기",
   hoverClose: "닫기",
   menuUndo: "실행 취소",
   menuRedo: "다시 실행",

@@ -70,7 +70,10 @@ mod tests {
 
     #[test]
     fn a_profile_keeps_the_moved_skills_it_had_on() {
-        assert_eq!(had_on(None).len(), crate::ai::builtin::MOVED_TO_MARKET.len());
+        assert_eq!(
+            had_on(None).len(),
+            crate::ai::builtin::MOVED_TO_MARKET.len()
+        );
         let off = json!(["email", "proofread", "headline"]);
         let on = had_on(Some(&off));
         assert!(!on.contains(&"email") && !on.contains(&"headline"));
