@@ -41,6 +41,7 @@ import {
 } from "./tree-shared";
 import { DirNode } from "./TreeNodes";
 import "./FileTree.css";
+import { documentDrop } from "../ui/document-drop";
 export type { TreeSort } from "./tree-shared";
 
 interface FileTreeProps {
@@ -496,8 +497,9 @@ function useRowMenu(
   );
 }
 
-/** A row dragged onto a folder moves into it. A drag: a press on a row that
- *  moves past DRAG_START_PX. Pointer events rather than HTML drag and drop,
+/** A row dragged onto a folder moves into it; a file dragged over the
+ *  documents opens there, beside the one under it (ui/document-drop.ts).
+ *  A drag: a press on a row that moves past DRAG_START_PX. Pointer events rather than HTML drag and drop,
  *  which the window's own file drop (dragging files in from Finder or
  *  Explorer) takes over on Windows. `takeDragClick` reports - once - that
  *  the click a drag's release sends is the drag's, not a row's. */
@@ -548,20 +550,26 @@ function useRowDrag(
         Math.hypot(e.clientX - start.x, e.clientY - start.y) < DRAG_START_PX
       )
         return;
+      const into = targetAt(e.clientX, e.clientY, start.path, start.isDir);
       show({
         path: start.path,
         name: start.name,
         isDir: start.isDir,
         x: e.clientX,
         y: e.clientY,
-        into: targetAt(e.clientX, e.clientY, start.path, start.isDir),
+        into,
       });
+      if (!into && !start.isDir) documentDrop()?.over(e.clientX, e.clientY);
+      else documentDrop()?.leave();
     };
-    const end = () => {
+    const end = (e: PointerEvent) => {
       pressed.current = null;
       const dropped = current;
       if (!dropped) return;
       show(null);
+      documentDrop()?.leave();
+      if (!dropped.into && !dropped.isDir && e.type === "pointerup")
+        documentDrop()?.drop(dropped.path, e.clientX, e.clientY);
       dragClick.current = true;
       // A click may not follow (released outside the row).
       window.setTimeout(() => (dragClick.current = false), 0);
@@ -571,6 +579,7 @@ function useRowDrag(
       if (e.key !== "Escape" || !pressed.current) return;
       pressed.current = null;
       show(null);
+      documentDrop()?.leave();
     };
     const move = async (from: string, into: string) => {
       try {

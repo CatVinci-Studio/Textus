@@ -18,6 +18,7 @@ import { useSplitPanes } from "./useSplitPanes";
 import { SplitDivider, splitGridStyles } from "./SplitDivider";
 import "./split-panes.css";
 import { openBeside, splitEditor } from "./split-layout";
+import { pullTab } from "./split-drop";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 
@@ -51,7 +52,9 @@ export function MainPane({
   onActivate: (tabId: string) => void;
   onClose: (tabId: string) => void;
   onAdd: () => void;
-  onDetach: NonNullable<TabBarProps["onDetach"]>;
+  /** A tab pulled out of the window: it leaves for a window of its own
+   *  (tab_drag.rs, macOS). */
+  onDetach: (tabId: string) => void;
   onReorder: (tabId: string, index: number) => void;
   previewTab: TabBarProps["previewTab"];
   onChange: (tabId: string, markdown: string) => void;
@@ -86,10 +89,16 @@ export function MainPane({
           onActivate={onActivate}
           onClose={onClose}
           onAdd={onAdd}
-          // Tear-off needs global cursor and window positions - macOS
-          // only (tab_drag.rs); on Linux, and above all under Wayland,
-          // the drag could only fail and cancel the reorder with it.
-          onDetach={canDragTabsBetweenWindows ? onDetach : undefined}
+          // Pulled down: over the documents it splits, as in VS Code;
+          // out of the window it tears off - which needs global cursor
+          // and window positions, macOS only (tab_drag.rs).
+          onPullOut={(id, title) =>
+            pullTab(id, title, {
+              tabIds: tabs.map((tab) => tab.id),
+              activate: onActivate,
+              detach: canDragTabsBetweenWindows ? onDetach : undefined,
+            })
+          }
           onReorder={onReorder}
           previewTab={previewTab}
           menuFor={(id) => [
@@ -127,6 +136,7 @@ export function MainPane({
           <div
             key={tab.id}
             data-active-tab={tab.id === activeTabId}
+            data-tab-id={tab.id}
             data-pane={pane ?? undefined}
             className={pane ? "split-pane" : undefined}
             style={

@@ -28,13 +28,11 @@ interface TabBarProps {
   onActivate: (id: string) => void;
   onClose: (id: string) => void;
   onAdd: () => void;
-  // Fired ONCE when a pill is pulled past the detach threshold: the tab
-  // leaves this window at that moment (App.tsx hands its document to
-  // Rust's floating-tab drag and removes it here) - there is no
-  // move/end tracking on this side, the native drag owns the rest.
-  /** Tear-off is macOS-only (tab_drag.rs); elsewhere omitted, and a
-   *  vertical pull stays an ordinary reorder gesture. */
-  onDetach?: (id: string) => void;
+  /** Fired ONCE when a pill is pulled down out of the bar: the rest of
+   *  the drag is the caller's (split-drop.ts - over the documents to
+   *  split, out of the window to tear off). Omitted, a pull down stays a
+   *  reorder. */
+  onPullOut?: (id: string, title: string) => void;
   // Horizontal drag-to-reorder within this bar: move the tab with the
   // given id so it sits at `index` among the OTHER tabs.
   onReorder: (id: string, index: number) => void;
@@ -51,10 +49,10 @@ interface TabBarProps {
 }
 
 // How far a tab must be dragged vertically, away from the bar, before it
-// detaches into a floating tab; and how far horizontally before the same
-// press starts a within-bar reorder instead. dy always wins - pulling down
-// mid-reorder still detaches, like Chrome.
-const DETACH_THRESHOLD_PX = 40;
+// leaves it (to split, or to tear off); and how far horizontally before
+// the same press starts a within-bar reorder instead. dy always wins -
+// pulling down mid-reorder still leaves the bar, like Chrome.
+const PULL_OUT_PX = 40;
 const REORDER_THRESHOLD_PX = 5;
 
 // One slide for every pill making way in the bar (live reorder shifting,
@@ -69,7 +67,7 @@ export function TabBar({
   onActivate,
   onClose,
   onAdd,
-  onDetach,
+  onPullOut,
   onReorder,
   previewTab,
   menuFor,
@@ -177,7 +175,7 @@ export function TabBar({
           labels={labels}
           onActivate={onActivate}
           onClose={onClose}
-          onDetach={onDetach}
+          onPullOut={onPullOut}
           onReorder={onReorder}
           captureFlip={captureFlip}
           onContextMenu={
@@ -381,7 +379,7 @@ function TabPill({
   labels,
   onActivate,
   onClose,
-  onDetach,
+  onPullOut,
   onReorder,
   captureFlip,
   onContextMenu,
@@ -392,7 +390,7 @@ function TabPill({
   labels: TabBarProps["labels"];
   onActivate: (id: string) => void;
   onClose: (id: string) => void;
-  onDetach?: (id: string) => void;
+  onPullOut?: (id: string, title: string) => void;
   onReorder: (id: string, index: number) => void;
   captureFlip: (how: { dropped?: string; gone?: string }) => void;
   onContextMenu?: (e: React.MouseEvent<HTMLDivElement>) => void;
@@ -441,15 +439,12 @@ function TabPill({
     const g = gesture.current;
     if (!g) return;
 
-    if (onDetach && Math.abs(e.clientY - g.startY) > DETACH_THRESHOLD_PX) {
-      // Pulled out of the bar - this pill is about to be removed
-      // entirely, so any live reorder shifting on the neighbors must not
-      // survive it; the FLIP capture right before removal is what makes
-      // the survivors glide into the gap.
+    if (onPullOut && Math.abs(e.clientY - g.startY) > PULL_OUT_PX) {
+      // Pulled out of the bar: no reorder now, so the neighbours slide
+      // home, and the drag is split-drop.ts's from here.
       gesture.current = null;
       clearInlineStyles();
-      captureFlip({ gone: tab.id });
-      onDetach(tab.id);
+      onPullOut(tab.id, title);
       return;
     }
 

@@ -1,0 +1,34 @@
+/* Where a dragged tab or file would open (split-drop.ts). */
+.split-drop-hint {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--chrome-accent) 16%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--chrome-accent) 45%, transparent);
+  outline-offset: -2px;
+}
+
+/* The pulled tab's title, riding the pointer. */
+.tab-pull-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 51;
+  max-width: 220px;
+  padding: 3px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--surface-floating);
+  box-shadow: var(--shadow-floating);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+body.tab-pulling,
+body.tab-pulling * {
+  cursor: grabbing !important;
+}

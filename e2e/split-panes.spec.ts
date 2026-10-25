@@ -213,3 +213,48 @@ test("a tab's right-click menu opens it beside the one in front", async ({
   await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
   await expect(page.locator(`${pane("second")} h1`)).toContainText("One");
 });
+
+test("a tab pulled down onto the document splits it on the side it is let go", async ({
+  page,
+}) => {
+  await openTwo(page);
+  const tab = page.locator('.tab-bar [role="tab"]').first();
+  const box = (await tab.boundingBox())!;
+  const main = (await page.locator(".main-pane").boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  // Down out of the bar, then to the document's right edge.
+  await page.mouse.move(box.x + box.width / 2, box.y + 80, { steps: 4 });
+  await page.mouse.move(main.x + main.width - 20, main.y + main.height / 2, {
+    steps: 6,
+  });
+  await expect(page.locator(".split-drop-hint")).toBeVisible();
+  await expect(page.locator(".tab-pull-ghost")).toHaveText("one.md");
+  await page.mouse.up();
+  await expect(page.locator(".split-drop-hint")).toHaveCount(0);
+  await expect(page.locator(panes)).toHaveCount(2);
+  // One on the right, the other on the left.
+  await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
+  await expect(page.locator(`${pane("second")} h1`)).toContainText("One");
+  await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(2);
+});
+
+test("a tab pulled down and let go in the middle only comes to the front", async ({
+  page,
+}) => {
+  await openTwo(page);
+  const tab = page.locator('.tab-bar [role="tab"]').first();
+  const box = (await tab.boundingBox())!;
+  const main = (await page.locator(".main-pane").boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y + 80, { steps: 4 });
+  await page.mouse.move(main.x + main.width / 2, main.y + main.height / 2, {
+    steps: 6,
+  });
+  await page.mouse.up();
+  await expect(page.locator(panes)).toHaveCount(0);
+  await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
+    "One",
+  );
+});

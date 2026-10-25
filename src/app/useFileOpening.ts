@@ -38,6 +38,7 @@ import type { Strings } from "../i18n/strings";
 import type { NewDocumentMode } from "../settings/SettingsContext";
 import type { PendingClose } from "./close-flow";
 import type { TabState } from "./useTabState";
+import { splitForDrop, type DropTarget } from "./split-drop";
 
 /** How a document opens, beyond which file. */
 export interface OpenOptions {
@@ -56,6 +57,9 @@ export interface OpenOptions {
   /** In a tab of its own (the default), beside the tab in front, or in
    *  its place (textus.layout.open's `where`). */
   where?: Where;
+  /** Dragged over the documents and let go there (split-drop.ts): opens
+   *  on the side it was dropped on. */
+  drop?: DropTarget;
 }
 
 /** Where a document just read from disk should open, if not at its top. */
@@ -190,8 +194,17 @@ export function useFileOpening(opts: {
       const from = activeIdRef.current;
       const show = (id: string) => {
         setActiveTabId(id);
+        const { drop } = open;
         if (open.where === "beside")
           requestAnimationFrame(() => openBeside(id, from));
+        else if (drop)
+          requestAnimationFrame(() =>
+            splitForDrop(
+              id,
+              drop,
+              tabsRef.current.map((tab) => tab.id),
+            ),
+          );
       };
       const existing = tabsRef.current.find(
         (tab) =>
@@ -255,7 +268,7 @@ export function useFileOpening(opts: {
   const openFile = useCallback(
     async (path: string, open: OpenOptions = {}) => {
       // Beside the one in front is a tab of its own in either mode.
-      if (newDocumentMode === "tab" || open.where === "beside") {
+      if (newDocumentMode === "tab" || open.where === "beside" || open.drop) {
         await openPathInTab(path, open);
         return;
       }

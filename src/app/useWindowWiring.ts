@@ -19,6 +19,8 @@ import {
 } from "./onboarding-wiring";
 import { tabIsUntouchedDraft } from "../document/doc-tabs";
 import { useLatest } from "../utils/hooks/useLatest";
+import { setDocumentDrop } from "../ui/document-drop";
+import { fileDropOnDocuments } from "./split-drop";
 import type { WindowShell } from "./useWindowShell";
 import type { WindowDocuments } from "./useWindowDocuments";
 import type { Settings, useSettings } from "../settings/SettingsContext";
@@ -102,6 +104,14 @@ export function useWindowWiring({
     [activeTabRef],
   );
   useFileDrop(openFile, openPathInTab, activeIsUntouchedDraft);
+  // A file from the sidebar dragged over the documents opens where it is
+  // let go (split-drop.ts).
+  useEffect(() => {
+    setDocumentDrop(
+      fileDropOnDocuments((path, drop) => void openPathInTab(path, { drop })),
+    );
+    return () => setDocumentDrop(null);
+  }, [openPathInTab]);
 
   useWindowCloseGuard(
     liveTabs,
