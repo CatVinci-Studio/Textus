@@ -60,7 +60,12 @@ export function PluginsPage({
     attempt(async () => {
       const path = await pluginsIpc.pickPackage(folder, t.pluginPackageFilter);
       if (!path) return;
-      setOpen(await (folder ? loadDevPlugin(path) : installPlugin(path)));
+      if (folder) return setOpen(await loadDevPlugin(path));
+      const id = await installPlugin(path);
+      // Installed, it shows how it is used, as from Get more; without a
+      // guide, its page.
+      if (await openUsageGuide(id)) onClose();
+      else setOpen(id);
     });
 
   const openRecord = open
