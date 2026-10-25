@@ -18,7 +18,11 @@ import type { Attempt } from "./PluginPage";
  * the plugin turned on - asking for its permissions - and what it needs
  * that is off offered to be turned on. A failure is said in a message.
  */
-export function usePluginInstall(t: Strings) {
+export function usePluginInstall(
+  t: Strings,
+  /** After a plugin is installed and on (MarketPage: its usage guide). */
+  onInstalled?: (id: string) => void,
+) {
   const { settings, setSettings } = useSettings();
   const [installing, setInstalling] = useState<string | null>(null);
 
@@ -39,6 +43,7 @@ export function usePluginInstall(t: Strings) {
       try {
         await installFromCatalog(item.id);
         await askForRequirements(item.id, t, settings, setSettings);
+        onInstalled?.(item.id);
       } finally {
         setInstalling(null);
       }

@@ -1325,6 +1325,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginDataClearAsk:
     "Was {name} speichert, leeren? Das lässt sich nicht rückgängig machen.",
   pluginVersionLabel: "Version {version}",
+  pluginUsageGuide: "Anleitung",
   pluginsAllLabel: "Plugins",
   pluginsAllHelp:
     "Aus: Kein Plugin läuft, und nichts, was sie hinzufügen, wird angezeigt. Deine Plugins und ihre Einstellungen bleiben erhalten.",

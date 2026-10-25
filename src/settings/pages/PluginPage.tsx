@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow } from "../sections/controls";
 import { PluginSettingRows } from "./PluginSettings";
@@ -22,6 +23,7 @@ import {
 } from "../../plugins/requirements";
 import { permissionLabel } from "../../plugins/permissions";
 import { canSwitch } from "../../plugins/lifecycle";
+import { usageGuide } from "../../plugins/usage-guide";
 import { PluginSettingsWebview } from "../../plugins/PluginWebview";
 import type { PluginManifest } from "../../plugins/manifest";
 
@@ -86,6 +88,7 @@ export function PluginPage({
   onBack,
   onEnable,
   onUpdate,
+  onGuide,
   attempt,
 }: {
   record: PluginRecord;
@@ -96,6 +99,8 @@ export function PluginPage({
   onBack: () => void;
   onEnable: (on: boolean) => void;
   onUpdate: () => void;
+  /** Opens its usage guide (USAGE.md), when it has one. */
+  onGuide: () => void;
   attempt: Attempt;
 }) {
   const { settings, setSettings } = useSettings();
@@ -104,6 +109,14 @@ export function PluginPage({
   const on = record.status === "on";
   const status = statusText(record, allOn, t);
   const switchable = !!manifest && canSwitch(record.status);
+  const [hasGuide, setHasGuide] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void usageGuide(record.id).then((text) => live && setHasGuide(!!text));
+    return () => {
+      live = false;
+    };
+  }, [record.id]);
   return (
     <div className="plugin-page" data-plugin-page={record.id}>
       <button type="button" className="plugin-back" onClick={onBack}>
@@ -136,6 +149,17 @@ export function PluginPage({
             onChange={(e) => onEnable(e.target.checked)}
           />
         </label>
+        {hasGuide && (
+          <div className="settings-row plugin-guide-row">
+            <button
+              type="button"
+              className="text-button settings-inline-button"
+              onClick={onGuide}
+            >
+              {t.pluginUsageGuide}
+            </button>
+          </div>
+        )}
       </div>
       {manifest && manifest.requires.length > 0 && (
         <SettingsGroup title={t.pluginRequiresGroup}>

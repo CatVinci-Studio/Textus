@@ -1359,6 +1359,7 @@ utiliser une.
   pluginDataClear: "Effacer",
   pluginDataClearAsk: "Effacer ce que {name} garde ? C'est définitif.",
   pluginVersionLabel: "Version {version}",
+  pluginUsageGuide: "Mode d’emploi",
   pluginsAllLabel: "Extensions",
   pluginsAllHelp:
     "Désactivées, aucune extension ne s’exécute et rien de ce qu’elles ajoutent ne s’affiche. Vos extensions et leurs réglages sont conservés.",

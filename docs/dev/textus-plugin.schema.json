@@ -330,6 +330,24 @@
               }
             }
           }
+        },
+        "links": {
+          "type": "array",
+          "description": "Links the plugin opens when one is Ctrl/Cmd+clicked in a document, instead of the browser: the command runs with the URL.",
+          "items": {
+            "type": "object",
+            "required": ["pattern", "command"],
+            "properties": {
+              "pattern": {
+                "type": "string",
+                "description": "A regular expression the link's URL must match, such as ^https?://."
+              },
+              "command": {
+                "type": "string",
+                "description": "One of the plugin's contributes.commands; it is given the URL."
+              }
+            }
+          }
         }
       }
     },

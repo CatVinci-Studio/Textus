@@ -93,6 +93,7 @@ What `contributes` takes:
 | `customEditors` | `{ viewType, displayName, filenamePatterns: ["*.pdf"] }`: a file type opened in the plugin's tab instead of as a document.                                                                                                                                |
 | `settings`      | `{ key, type: boolean \| string \| number \| enum, default, title, description?, options? }`: rows on the plugin's page in Settings, drawn as Textus's own.                                                                                               |
 | `settingsPage`  | `{ title }`: a page of the plugin's own under its settings, a webview.                                                                                                                                                                                    |
+| `links`         | `{ pattern, command }`: links the plugin opens. A web link Ctrl/Cmd+clicked in a document whose URL matches `pattern` (a regular expression) runs `command` with the URL, instead of the browser.                                                         |
 
 ## Permissions
 
@@ -319,6 +320,14 @@ document, read another plugin's data, run native code, or reach the
 network or files beyond what it was granted. A plugin that stops
 answering, or throws more than ten errors a minute, is turned off and the
 user is told.
+
+## A usage guide
+
+Put a `USAGE.md` beside the manifest - and `USAGE.zh.md`, `USAGE.ja.md`
+and so on for the UI's other languages - saying in a few lines what the
+plugin does and how to reach it. Textus opens it in a tab when the plugin
+is installed from Get more, and its page in Settings has **How to use**
+to open it again. A language without its own file gets `USAGE.md`.
 
 ## Publishing
 

@@ -118,6 +118,28 @@ test("a selected link opens in a web page tab of its own", async ({ page }) => {
   );
 });
 
+test("a web link Ctrl/Cmd+clicked opens in Web View, not the browser", async ({
+  page,
+}) => {
+  await page.route("https://example.test/**", (route) =>
+    route.fulfill({ contentType: "text/html", body: "<h1>Linked page</h1>" }),
+  );
+  await openWithPlugins(page, {
+    plugins: { "catvinci.web-view": ["network:*", "document.read"] },
+  });
+  await pasteMarkdown(page, "See [the page](https://example.test/linked).");
+  const link = page.locator('[data-active-tab="true"] .ProseMirror a');
+  await link.click({ modifiers: ["ControlOrMeta"] });
+  const web = page.frameLocator('[data-active-tab="true"] .web-page-frame');
+  await expect(web.locator("h1")).toHaveText("Linked page");
+  // Not handed to the system's browser (the dev shim's record).
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __devLinks?: unknown[] }).__devLinks ?? [],
+    ),
+  ).toEqual([]);
+});
+
 test("a Word document reads as laid out, and Edit as Markdown converts it", async ({
   page,
 }) => {

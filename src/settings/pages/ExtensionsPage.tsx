@@ -11,6 +11,7 @@ import {
 import { McpSection } from "../sections/mcp";
 import type { McpServer } from "../mcp";
 import { errorText } from "../../utils/error-text";
+import { openUsageGuide } from "../../plugins/usage-guide";
 import { MarketPage, type MarketKind } from "./MarketPage";
 
 import {
@@ -66,6 +67,13 @@ export function ExtensionsPage(props: SettingsPageProps) {
         builtinSkills={(query) => (
           <BuiltinSkillsSection {...skillProps} only="off" query={query} />
         )}
+        // A plugin just installed shows how it is used: its guide in a
+        // tab, Settings out of the way.
+        onInstalled={(id) =>
+          void openUsageGuide(id).then((opened) => {
+            if (opened) onClose();
+          })
+        }
         onAddMcp={(server) => {
           setMarket(null);
           setTab("mcp");

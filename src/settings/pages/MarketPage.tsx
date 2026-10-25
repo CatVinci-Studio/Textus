@@ -41,6 +41,7 @@ export function MarketPage({
   onBack,
   builtinSkills,
   onAddMcp,
+  onInstalled,
 }: {
   t: Strings;
   kind: MarketKind;
@@ -49,9 +50,11 @@ export function MarketPage({
   builtinSkills: (query: string) => ReactNode;
   /** Takes an MCP server to its tab's form, to fill in and save. */
   onAddMcp: (server: McpServer) => void;
+  /** A plugin installed from here. */
+  onInstalled: (id: string) => void;
 }) {
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
-  const { installing, install } = usePluginInstall(t);
+  const { installing, install } = usePluginInstall(t, onInstalled);
   const [kind, setKind] = useState<MarketKind>(initialKind);
   const [query, setQuery] = useState("");
   useEffect(() => {

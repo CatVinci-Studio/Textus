@@ -1319,6 +1319,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginDataClear: "Limpar",
   pluginDataClearAsk: "Limpar o que {name} guarda? Não dá para desfazer.",
   pluginVersionLabel: "Versão {version}",
+  pluginUsageGuide: "Como usar",
   pluginsAllLabel: "Plugins",
   pluginsAllHelp:
     "Desativados, nenhum plugin é executado e nada do que adicionam é mostrado. Seus plugins e as configurações deles são mantidos.",

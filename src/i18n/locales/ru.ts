@@ -1327,6 +1327,7 @@ export default {
   pluginDataClear: "Очистить",
   pluginDataClearAsk: "Очистить то, что хранит {name}? Это нельзя отменить.",
   pluginVersionLabel: "Версия {version}",
+  pluginUsageGuide: "Как пользоваться",
   pluginsAllLabel: "Плагины",
   pluginsAllHelp:
     "Если выключено, ни один плагин не работает и ничего из добавленного ими не показывается. Плагины и их настройки сохраняются.",

@@ -1207,6 +1207,7 @@ export default {
   pluginDataClear: "清空",
   pluginDataClearAsk: "清空 {name} 保存的数据？清空后无法恢复。",
   pluginVersionLabel: "版本 {version}",
+  pluginUsageGuide: "使用说明",
   pluginsAllLabel: "插件",
   pluginsAllHelp:
     "关闭后，所有插件都不运行，它们添加的内容也不显示。已装的插件和它们的设置不变。",

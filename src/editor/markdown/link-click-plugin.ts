@@ -3,6 +3,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { exportDoc, fs, links } from "../../platform/ipc";
 import { isScopedUrl } from "../../platform/ios-files";
+import { openLinkInPlugin } from "../../plugins/link-handlers";
 import { modIsMeta } from "../../platform/os";
 import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import { revealHeading } from "./heading-jump";
@@ -37,7 +38,11 @@ async function follow(view: EditorView, target: LinkTarget): Promise<void> {
     revealHeading(view, target.anchor);
     return;
   }
-  if (target.kind === "web") return links.openWebLink(target.url);
+  if (target.kind === "web") {
+    // A plugin that opens such links (Web View) shows it in Textus.
+    if (openLinkInPlugin(target.url)) return;
+    return links.openWebLink(target.url);
+  }
   // A link to a file that isn't there opens nothing.
   if ((await fs.fileMtimeMs(target.path)) === null) return;
   if (target.kind === "document")
@@ -84,7 +89,8 @@ function hrefAt(view: EditorView, event: MouseEvent): string | null {
 }
 
 /**
- * Following links: Ctrl/Cmd+click opens a web link in the browser, a
+ * Following links: Ctrl/Cmd+click opens a web link in the browser - or
+ * in the plugin that opens such links (link-handlers.ts) - a
  * Markdown file in a tab (scrolled to its `#heading`, if the link names
  * one), any other file in the file manager, and scrolls to a `#heading` of
  * this document; on a wikilink it opens the note. A plain click only

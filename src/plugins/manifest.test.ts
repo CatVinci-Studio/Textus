@@ -113,6 +113,31 @@ describe("a plugin's manifest", () => {
     expect(bad({ id: "other.x", pattern: "a" })).toThrow(/must start with/);
   });
 
+  it("reads the links a plugin opens, each to one of its commands", () => {
+    const command = { command: "catvinci.example.open", title: "Open" };
+    const m = parseManifest({
+      ...base,
+      contributes: {
+        commands: [command],
+        links: [{ pattern: "^https?://", command: command.command }],
+      },
+    });
+    expect(m.contributes.links).toEqual([
+      { pattern: "^https?://", command: "catvinci.example.open" },
+    ]);
+    const bad = (link: object) => () =>
+      parseManifest({
+        ...base,
+        contributes: { commands: [command], links: [link] },
+      });
+    expect(bad({ pattern: "(", command: command.command })).toThrow(
+      /not a regular expression/,
+    );
+    expect(bad({ pattern: "a", command: "catvinci.example.other" })).toThrow(
+      /not in contributes.commands/,
+    );
+  });
+
   it("names network permissions by host", () => {
     expect(isPermission("network:api.zotero.org")).toBe(true);
     expect(isPermission("network:*.wikipedia.org")).toBe(true);

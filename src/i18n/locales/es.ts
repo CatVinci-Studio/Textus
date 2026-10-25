@@ -1338,6 +1338,7 @@ para usar una.
   pluginDataClear: "Borrar",
   pluginDataClearAsk: "¿Borrar lo que guarda {name}? No se puede recuperar.",
   pluginVersionLabel: "Versión {version}",
+  pluginUsageGuide: "Cómo se usa",
   pluginsAllLabel: "Complementos",
   pluginsAllHelp:
     "Desactivados, ningún complemento se ejecuta y no se muestra nada de lo que añaden. Tus complementos y sus ajustes se conservan.",

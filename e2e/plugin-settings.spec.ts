@@ -33,9 +33,6 @@ async function openGetPlugins(page: Page) {
   await expect(page.locator(".plugin-get-page")).toBeVisible();
 }
 
-const backToPlugins = (page: Page) =>
-  page.locator(".market-page .plugin-back").click();
-
 test("nothing comes installed, and the catalog offers the official plugins", async ({
   page,
 }) => {
@@ -66,14 +63,42 @@ test("installing from the list turns the plugin on, behind its permissions", asy
   const dialog = page.locator(".app-dialog");
   await expect(dialog).toContainText("asks to:");
   await dialog.getByRole("button", { name: "Allow" }).click();
-  await expect(
-    page.locator('.plugin-card[data-catalog="catvinci.tasks"]'),
-  ).toHaveCount(0);
-  await backToPlugins(page);
+  // Installed, it shows how it is used: its USAGE.md in a tab, a clean
+  // draft, with Settings out of the way.
+  await expect(page.locator(".settings-panel")).toHaveCount(0);
+  const guide = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(guide.locator("h1")).toContainText("Tasks");
+  await expect(guide).toContainText("Every task in your folder");
+  const tabs = page.locator(".tab-bar [role=tab]");
+  const count = await tabs.count();
+  await openPluginsPage(page);
   const card = page.locator('.plugin-card[data-plugin="catvinci.tasks"]');
   await expect(card).toBeVisible();
   await expect(card.getByRole("checkbox")).toBeChecked();
   await expect(card.locator(".plugin-official")).toHaveText("Official");
+  // Its page opens the guide again - the tab already open, not another.
+  await card.locator(".plugin-card-open").click();
+  await page.getByRole("button", { name: "How to use" }).click();
+  await expect(page.locator(".settings-panel")).toHaveCount(0);
+  await expect(guide.locator("h1")).toContainText("Tasks");
+  await expect(tabs).toHaveCount(count);
+});
+
+test("the guide comes in the UI's language", async ({ page }) => {
+  await openApp(page, { settings: { language: "zh" } });
+  await emit(page, "menu-manage-plugins");
+  await page.getByRole("button", { name: "获取更多" }).click();
+  await page
+    .locator('.plugin-card[data-catalog="catvinci.tasks"]')
+    .getByRole("button", { name: "安装" })
+    .click();
+  await page
+    .locator(".app-dialog")
+    .getByRole("button", { name: "允许" })
+    .click();
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror h1'),
+  ).toContainText("任务");
 });
 
 test("Get plugins searches the catalog by name, what it does and who made it", async ({
@@ -183,7 +208,9 @@ test("Quick Notes asks for background mode, and its page says when it is on", as
     "Quick Notes needs “Keep running in the background”",
   );
   await dialog.getByRole("button", { name: "Turn on" }).click();
-  await backToPlugins(page);
+  // Its guide opens over Settings closed; back to its page.
+  await expect(page.locator(".settings-panel")).toHaveCount(0);
+  await openPluginsPage(page);
   await page
     .locator(
       '.plugin-card[data-plugin="catvinci.quick-notes"] .plugin-card-open',

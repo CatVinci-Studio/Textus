@@ -1270,6 +1270,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginDataClear: "消去",
   pluginDataClearAsk: "{name} が保存したデータを消去しますか？元に戻せません。",
   pluginVersionLabel: "バージョン {version}",
+  pluginUsageGuide: "使い方",
   pluginsAllLabel: "プラグイン",
   pluginsAllHelp:
     "オフにすると、プラグインは動作せず、追加した項目も表示されません。プラグインとその設定はそのまま残ります。",

@@ -25,6 +25,7 @@ import {
   updateFor,
 } from "../../plugins/catalog";
 import { canSwitch } from "../../plugins/lifecycle";
+import { openUsageGuide } from "../../plugins/usage-guide";
 
 /**
  * Settings › Extensions › Plugins (docs/design/plugins.md §6). Nothing comes
@@ -36,6 +37,7 @@ import { canSwitch } from "../../plugins/lifecycle";
  */
 export function PluginsPage({
   t,
+  onClose,
   onGetMore,
 }: SettingsPageProps & { onGetMore: () => void }) {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
@@ -73,6 +75,11 @@ export function PluginsPage({
         update={updateFor(openRecord.id, catalog)}
         installing={installing === openRecord.id}
         onBack={() => setOpen(null)}
+        onGuide={() =>
+          void openUsageGuide(openRecord.id).then((opened) => {
+            if (opened) onClose();
+          })
+        }
         onEnable={(on) => void enable(openRecord, on)}
         onUpdate={() => {
           const item =

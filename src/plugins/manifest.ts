@@ -145,6 +145,14 @@ export interface CompletionContribution {
   pattern: string;
 }
 
+/** The links a plugin opens when one is Ctrl/Cmd+clicked in a document:
+ *  a URL matching `pattern` (a regular expression) runs `command`, its
+ *  own, with the URL - instead of the system's browser. */
+export interface LinkContribution {
+  pattern: string;
+  command: string;
+}
+
 export interface Contributes {
   commands: CommandContribution[];
   keybindings: KeybindingContribution[];
@@ -158,6 +166,7 @@ export interface Contributes {
   themes: ThemeContribution[];
   aiTools: AiToolContribution[];
   completions: CompletionContribution[];
+  links: LinkContribution[];
 }
 
 export interface PluginManifest {
@@ -409,9 +418,21 @@ function parseContributes(raw: unknown, id: string): Contributes {
       };
     },
   );
+  const links = list(c.links, "contributes.links").map((x, i) => {
+    const at = `contributes.links[${i}]`;
+    const o = object(x, at);
+    const pattern = text(o.pattern, `${at}.pattern`);
+    try {
+      new RegExp(pattern);
+    } catch {
+      throw new ManifestError(`${at}.pattern is not a regular expression.`);
+    }
+    return { pattern, command: declaredCommand(o.command, `${at}.command`) };
+  });
   return {
     aiTools,
     completions,
+    links,
     commands,
     keybindings,
     menus,

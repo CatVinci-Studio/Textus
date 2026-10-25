@@ -49,6 +49,9 @@ export interface WindowAccess {
     options: { heading?: string; asDocument?: boolean },
   ): void;
   openUntitled(content: string, title?: string): void;
+  /** A guide to read (a plugin's USAGE.md): a clean draft, closed without
+   *  asking; the same guide open already comes to the front. */
+  openGuide(content: string): void;
   openPluginTab(view: PluginTabView): void;
 }
 
