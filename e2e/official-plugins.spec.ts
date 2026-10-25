@@ -30,6 +30,20 @@ test("a picture opens in the Image Viewer's tab", async ({ page }) => {
   await expect(frame.locator("#zoom")).toHaveText("125%");
 });
 
+test("a file that isn't a picture says it can't be opened", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: { "catvinci.image-viewer": [] },
+    binary: {
+      "/notes/broken.png": Buffer.from("not a picture").toString("base64"),
+    },
+    language: "zh",
+  });
+  await openPath(page, "/notes/broken.png");
+  await expect(tabFrame(page).locator("#info")).toHaveText("这张图片打不开。");
+});
+
 test("an SVG shows as a picture, its source a click away", async ({ page }) => {
   const svg =
     '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><rect width="40" height="20" fill="red"/></svg>';
