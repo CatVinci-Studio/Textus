@@ -109,9 +109,7 @@ test("Get plugins searches the catalog by name, what it does and who made it", a
   const cards = page.locator(".plugin-get-page .plugin-card");
   const all = await cards.count();
   expect(all).toBeGreaterThan(3);
-  const search = page.getByRole("searchbox", {
-    name: "Search plugins, themes, skills and servers",
-  });
+  const search = page.getByRole("searchbox", { name: "Search" });
   await search.fill("kanban");
   await expect(cards).toHaveCount(1);
   await expect(cards).toHaveAttribute("data-catalog", "catvinci.kanban");

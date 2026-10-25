@@ -14,35 +14,29 @@ import {
 } from "../../plugins/catalog";
 import { ThemeGallerySection } from "../sections/theme-gallery";
 import { MarketSkills } from "../sections/market-skills";
-import { MarketMcp } from "../sections/mcp";
-import type { McpServer } from "../mcp";
 import { links } from "../../platform/ipc";
 import { usePluginInstall } from "./usePluginInstall";
 
-export type MarketKind = "all" | "plugins" | "themes" | "skills" | "mcp";
+export type MarketKind = "themes" | "plugins" | "skills";
 
-const KINDS: MarketKind[] = ["all", "plugins", "themes", "skills", "mcp"];
+const KINDS: MarketKind[] = ["themes", "plugins", "skills"];
 
 /**
- * Settings › Extensions › Get more: everything there is to add to Textus
- * in one place - the plugins textus-plugins' catalog offers, the theme
- * gallery's themes, the built-in skills that are off and the catalog's
- * skills, and the MCP servers most people add - with one search over them
- * and a filter by kind. Each installs as it does on its own tab; nothing
- * is fetched in the background, only when this page opens.
+ * Settings › Extensions › Get more: what there is to add to Textus, a tab
+ * per kind - the theme gallery's themes, the plugins textus-plugins'
+ * catalog offers, the catalog's skills - each with its search. MCP servers
+ * aren't here: the user adds the ones they want on the MCP tab. Nothing is
+ * fetched in the background, only when this page opens.
  */
 export function MarketPage({
   t,
   kind: initialKind,
   onBack,
-  onAddMcp,
   onInstalled,
 }: {
   t: Strings;
   kind: MarketKind;
   onBack: () => void;
-  /** Takes an MCP server to its tab's form, to fill in and save. */
-  onAddMcp: (server: McpServer) => void;
   /** A plugin installed from here. */
   onInstalled: (id: string) => void;
 }) {
@@ -53,13 +47,10 @@ export function MarketPage({
   useEffect(() => {
     void loadCatalog();
   }, []);
-  const shows = (k: MarketKind) => kind === "all" || kind === k;
   const label: Record<MarketKind, string> = {
-    all: t.marketAll,
-    plugins: t.extensionsTabPlugins,
     themes: t.extensionsTabThemes,
+    plugins: t.extensionsTabPlugins,
     skills: t.extensionsTabSkills,
-    mcp: t.extensionsTabMcp,
   };
   return (
     <div className="plugin-page plugin-get-page market-page">
@@ -94,11 +85,13 @@ export function MarketPage({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      {shows("plugins") && (
+      {kind === "themes" && (
+        <section className="settings-group" aria-label={label.themes}>
+          <ThemeGallerySection t={t} query={query} />
+        </section>
+      )}
+      {kind === "plugins" && (
         <section className="settings-group" aria-label={label.plugins}>
-          {kind === "all" && (
-            <h3 className="settings-group-title">{label.plugins}</h3>
-          )}
           <MarketPlugins
             t={t}
             catalog={catalog}
@@ -108,28 +101,9 @@ export function MarketPage({
           />
         </section>
       )}
-      {shows("themes") && (
-        <section className="settings-group" aria-label={label.themes}>
-          {kind === "all" && (
-            <h3 className="settings-group-title">{label.themes}</h3>
-          )}
-          <ThemeGallerySection t={t} query={query} />
-        </section>
-      )}
-      {shows("skills") && (
+      {kind === "skills" && (
         <section className="settings-group" aria-label={label.skills}>
-          {kind === "all" && (
-            <h3 className="settings-group-title">{label.skills}</h3>
-          )}
           <MarketSkills t={t} catalog={catalog} query={query} />
-        </section>
-      )}
-      {shows("mcp") && (
-        <section className="settings-group" aria-label={label.mcp}>
-          {kind === "all" && (
-            <h3 className="settings-group-title">{label.mcp}</h3>
-          )}
-          <MarketMcp t={t} query={query} onAdd={onAddMcp} />
         </section>
       )}
       <p className="plugin-group-help market-listing">

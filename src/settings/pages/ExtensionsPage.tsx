@@ -9,7 +9,6 @@ import {
   importSkill,
 } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
-import type { McpServer } from "../mcp";
 import { errorText } from "../../utils/error-text";
 import { openUsageGuide } from "../../plugins/usage-guide";
 import { MarketPage, type MarketKind } from "./MarketPage";
@@ -37,13 +36,10 @@ export function ExtensionsPage(props: SettingsPageProps) {
   const [tab, setTabState] = useState<ExtensionsTab>(extensionsStartTab);
   // Get more, opened on a kind.
   const [market, setMarket] = useState<MarketKind | null>(null);
-  // An MCP server Get more sent to the MCP tab's form.
-  const [adding, setAdding] = useState<McpServer | null>(null);
   const [skillError, setSkillError] = useState<string | null>(null);
   const setTab = (next: ExtensionsTab) => {
     openExtensionsTab(next);
     setTabState(next);
-    setAdding(null);
   };
   const label: Record<ExtensionsTab, string> = {
     themes: t.extensionsTabThemes,
@@ -51,12 +47,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
     skills: t.extensionsTabSkills,
     mcp: t.extensionsTabMcp,
   };
-  // The server taken to the form is filled in once: not again on coming
-  // back from Get more.
-  const openMarket = (kind: MarketKind) => {
-    setAdding(null);
-    setMarket(kind);
-  };
+  const openMarket = (kind: MarketKind) => setMarket(kind);
   const skillProps = { t, onOpenFile, onFilesDeleted, onClose };
   if (market)
     return (
@@ -71,11 +62,6 @@ export function ExtensionsPage(props: SettingsPageProps) {
             if (opened) onClose();
           })
         }
-        onAddMcp={(server) => {
-          setMarket(null);
-          setTab("mcp");
-          setAdding(server);
-        }}
       />
     );
   return (
@@ -132,14 +118,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
               }
             />
           )}
-          {tab === "mcp" && (
-            <McpSection
-              key={adding?.id ?? ""}
-              t={t}
-              adding={adding}
-              onGetMore={() => openMarket("mcp")}
-            />
-          )}
+          {tab === "mcp" && <McpSection t={t} />}
         </div>
       )}
     </>

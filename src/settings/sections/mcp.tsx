@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Strings } from "../../i18n/strings";
 import {
-  links,
   mcp,
   type McpServerStatus,
   type McpToolInfo,
@@ -12,38 +11,26 @@ import { useSettings } from "../SettingsContext";
 import { ExtensionsTabLayout } from "../pages/ExtensionsTabLayout";
 import { SettingsGroup } from "../pages/SettingsGroup";
 import {
-  MCP_PRESETS,
   formatPairs,
   joinCommandLine,
   parsePairs,
-  presetDescription,
   splitCommandLine,
-  type McpPreset,
   type McpServer,
 } from "../mcp";
 
 /**
  * Settings › Extensions › MCP: the servers Textus AI may use, each a card
  * with its switch and how it is doing (starting, its tools, or why it
- * failed), and a form to add or change one, which can try it first ("⋯"
- * adds one by hand). The servers most people add are in Get more
- * (MarketMcp), which comes back here with one to fill in (`adding`). The
- * servers themselves run in the Rust side (src-tauri mcp/), which this
- * asks for their state.
+ * failed), and a form to add or change one, which can try it first. None
+ * comes suggested: the user adds the servers they want. The servers
+ * themselves run in the Rust side (src-tauri mcp/), which this asks for
+ * their state.
  */
-export function McpSection({
-  t,
-  onGetMore,
-  adding = null,
-}: {
-  t: Strings;
-  onGetMore: () => void;
-  adding?: McpServer | null;
-}) {
+export function McpSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const servers = settings.mcpServers;
   const [status, setStatus] = useState<McpServerStatus[]>([]);
-  const [editing, setEditing] = useState<McpServer | null>(adding);
+  const [editing, setEditing] = useState<McpServer | null>(null);
 
   // The state of the servers that are on - again while any is starting,
   // or isn't listed yet (the settings it was just saved in are on their
@@ -111,8 +98,7 @@ export function McpSection({
       t={t}
       intro={t.extensionsIntroMcp}
       help={t.mcpHelp}
-      onGetMore={onGetMore}
-      actions={[{ label: t.mcpAdd, onSelect: () => setEditing(blankServer()) }]}
+      primary={{ label: t.mcpAdd, onSelect: () => setEditing(blankServer()) }}
       installedTitle={t.mcpServersGroup}
       installed={
         servers.length ? (
@@ -138,50 +124,6 @@ export function McpSection({
   );
 }
 
-/** Get more's MCP servers: the ones most people add and the user hasn't,
- *  as far as `query` lets; Add fills the form in with one. */
-export function MarketMcp({
-  t,
-  query,
-  onAdd,
-}: {
-  t: Strings;
-  query: string;
-  onAdd: (server: McpServer) => void;
-}) {
-  const { settings } = useSettings();
-  const lang = settings.language;
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  const offered = MCP_PRESETS.filter(
-    (p) => !settings.mcpServers.some((s) => s.id === p.id),
-  );
-  const shown = offered.filter((p) => {
-    const text = `${p.name}\n${presetDescription(p, lang)}`.toLowerCase();
-    return words.every((w) => text.includes(w));
-  });
-  return (
-    <div className="settings-group-body">
-      {shown.length ? (
-        shown.map((preset) => (
-          <PresetCard
-            key={preset.id}
-            t={t}
-            preset={preset}
-            lang={lang}
-            onAdd={() => onAdd(fromPreset(preset))}
-          />
-        ))
-      ) : (
-        <p className="plugin-empty">
-          {offered.length
-            ? t.pluginsSearchNone.replace("{query}", query.trim())
-            : t.marketMcpAllAdded}
-        </p>
-      )}
-    </div>
-  );
-}
-
 function blankServer(): McpServer {
   return {
     id: `mcp-${Date.now().toString(36)}`,
@@ -192,16 +134,6 @@ function blankServer(): McpServer {
     env: {},
     url: "",
     headers: {},
-  };
-}
-
-function fromPreset(preset: McpPreset): McpServer {
-  return {
-    ...blankServer(),
-    id: preset.id,
-    name: preset.name,
-    command: preset.command,
-    args: preset.args,
   };
 }
 
@@ -305,43 +237,6 @@ function ToolList({ tools }: { tools: McpToolInfo[] }) {
   );
 }
 
-function PresetCard({
-  t,
-  preset,
-  lang,
-  onAdd,
-}: {
-  t: Strings;
-  preset: McpPreset;
-  lang: string;
-  onAdd: () => void;
-}) {
-  return (
-    <div className="settings-row plugin-card" data-mcp-preset={preset.id}>
-      <div className="plugin-card-open">
-        <span className="settings-row-label plugin-card-name">
-          {preset.name}
-        </span>
-        <span className="settings-row-hint plugin-card-description">
-          {presetDescription(preset, lang)}
-        </span>
-        <button
-          type="button"
-          className="plugin-byline mcp-homepage"
-          onClick={() => void links.openWebLink(preset.homepage)}
-        >
-          {joinCommandLine([preset.command, ...preset.args])}
-        </button>
-      </div>
-      <div className="settings-row-control">
-        <button type="button" className="plugin-install" onClick={onAdd}>
-          {t.mcpPresetAdd}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /** Adding or changing a server: by a command or a URL, tried before it is
  *  saved if the user wants. */
 /** Try: start a server as the form has it and list its tools, or say why
@@ -384,7 +279,6 @@ function McpForm({
   onSave: (server: McpServer) => void;
   onCancel: () => void;
 }) {
-  const preset = MCP_PRESETS.find((p) => p.id === server.id);
   const [name, setName] = useState(server.name);
   const [kind, setKind] = useState<"command" | "url">(
     server.url ? "url" : "command",
@@ -421,7 +315,6 @@ function McpForm({
             aria-label={t.mcpFormName}
             className="settings-text-input"
             value={name}
-            placeholder={preset?.name ?? ""}
             onChange={(e) => setName(e.target.value)}
           />
         </label>
