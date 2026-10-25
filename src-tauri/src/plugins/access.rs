@@ -13,7 +13,7 @@
 //! Bytes go back as raw IPC responses, not JSON arrays: a PDF is megabytes.
 
 use super::state::{self, PluginsState};
-use super::{data_dir, plugins_root, require_id};
+use super::{plugins_root, require_id};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
@@ -25,8 +25,6 @@ use tauri::Manager;
 const MAX_READ_BYTES: u64 = 256 * 1024 * 1024;
 /// The most a response from the network may be.
 const MAX_HTTP_BYTES: usize = 32 * 1024 * 1024;
-/// The most a plugin keeps in its storage.
-const STORAGE_QUOTA_BYTES: usize = 50 * 1024 * 1024;
 
 pub(super) fn refused(id: &str, permission: &str) -> String {
     format!("{id} was not granted {permission}.")
@@ -468,55 +466,6 @@ pub async fn plugin_http(
         headers,
         body: STANDARD.encode(body),
     })
-}
-
-fn storage_file(app: &tauri::AppHandle, id: &str) -> Result<PathBuf, String> {
-    Ok(data_dir(app, id)?.join("storage.json"))
-}
-
-fn read_storage(path: &Path) -> serde_json::Map<String, serde_json::Value> {
-    std::fs::read(path)
-        .ok()
-        .and_then(|bytes| serde_json::from_slice(&bytes).ok())
-        .unwrap_or_default()
-}
-
-/// Everything the plugin keeps, as one object.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn plugin_storage_get(
-    app: tauri::AppHandle,
-    id: String,
-) -> Result<serde_json::Map<String, serde_json::Value>, String> {
-    running(&state::read(&app), &id)?;
-    Ok(read_storage(&storage_file(&app, &id)?))
-}
-
-/// Keeps `value` under `key`; null takes the key away.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn plugin_storage_set(
-    app: tauri::AppHandle,
-    id: String,
-    key: String,
-    value: serde_json::Value,
-) -> Result<(), String> {
-    running(&state::read(&app), &id)?;
-    let path = storage_file(&app, &id)?;
-    let mut store = read_storage(&path);
-    if value.is_null() {
-        store.remove(&key);
-    } else {
-        store.insert(key, value);
-    }
-    let json = serde_json::to_vec(&store).map_err(|e| e.to_string())?;
-    if json.len() > STORAGE_QUOTA_BYTES {
-        return Err("The plugin's storage is full (50 MB).".to_string());
-    }
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-    }
-    crate::atomic::write_sync(&path, json).map_err(|e| e.to_string())
 }
 
 #[cfg(test)]

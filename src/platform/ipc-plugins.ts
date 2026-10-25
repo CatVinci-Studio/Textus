@@ -112,11 +112,6 @@ export const plugins = {
       bodyBase64?: boolean;
     },
   ) => command("plugin_http", id, request),
-  /** A plugin's storage is its own JSON, opaque to Rust. */
-  storageGet: (id: string) =>
-    command("plugin_storage_get", id) as Promise<Record<string, unknown>>,
-  storageSet: (id: string, key: string, value: unknown) =>
-    command("plugin_storage_set", id, key, value as Generated.Value),
   // A plugin's two places (plugins/store.rs): `root` is the open folder,
   // for the project's.
   storeGet: (id: string, scope: StoreScope, root: string | null, key: string) =>

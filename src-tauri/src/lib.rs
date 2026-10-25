@@ -391,7 +391,6 @@ pub fn run() {
             plugins::workspace::plugin_fs_search,
             plugins::access::plugin_fs_write,
             plugins::access::plugin_http,
-            plugins::access::plugin_storage_get,
             plugins::install::plugin_dev_stamp,
             plugins::ai_tools::plugin_ai_tools_set,
             plugins::ai_tools::plugin_ai_tool_result,
@@ -404,7 +403,6 @@ pub fn run() {
             plugins::store::plugin_store_delete,
             plugins::store::plugin_store_usage,
             plugins::store::plugin_store_clear,
-            plugins::access::plugin_storage_set,
             // iOS only: rename and delete in the document list.
             #[cfg(mobile)]
             commands::documents::rename_entry,

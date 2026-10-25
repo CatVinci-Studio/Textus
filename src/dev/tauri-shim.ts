@@ -865,13 +865,6 @@ export function installDevTauriShim(): void {
         installFromDevCatalog(id),
       ),
     ));
-  // `window.__devPluginStorage = { id: { key: value } }`: what plugins
-  // have stored, their settings under `$settings`.
-  const pluginStorage = new Map<string, Record<string, unknown>>(
-    Object.entries(
-      (w.__devPluginStorage ?? {}) as Record<string, Record<string, unknown>>,
-    ),
-  );
   const encoded = (text: string) => new TextEncoder().encode(text).buffer;
   function pluginCommand(
     cmd: string,
@@ -1023,15 +1016,6 @@ export function installDevTauriShim(): void {
         return Promise.resolve(null);
       case "plugin_http":
         return Promise.reject("The dev shim has no network.");
-      case "plugin_storage_get":
-        return Promise.resolve({ ...(pluginStorage.get(id) ?? {}) });
-      case "plugin_storage_set": {
-        const store = { ...(pluginStorage.get(id) ?? {}) };
-        if (args.value === null) delete store[String(args.key)];
-        else store[String(args.key)] = args.value;
-        pluginStorage.set(id, store);
-        return Promise.resolve(null);
-      }
       // A plugin's two places (plugins/store.rs), each `{ kv, files }`
       // in memory: the global one, and the project's per open folder -
       // `window.__devPluginStore` to look at.
