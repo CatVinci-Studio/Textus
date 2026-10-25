@@ -1346,6 +1346,15 @@ export default {
   pluginsLoadFolder: "Загрузить папку плагина…",
   pluginPackageFilter: "Плагин Textus",
   pluginsInstalledGroup: "Установленные",
+  pluginOpenOffer:
+    "Плагин «{name}» открывает «{file}». Установить его и открыть файл?",
+  pluginOpenInstall: "Установить и открыть",
+  pluginOpenTurnOn:
+    "Плагин «{name}» открывает «{file}», но он выключен. Включить его и открыть файл?",
+  pluginOpenTurnOnButton: "Включить и открыть",
+  pluginsRecommended: "Рекомендуем",
+  pluginsMore: "Другие плагины",
+  pluginsMine: "Созданные вами",
   pluginsNone: "Пока нет.",
   pluginStatusBroken: "Не удаётся прочитать: {reason}",
   pluginStatusIncompatible: "Сделан для другой версии Textus ({range}).",

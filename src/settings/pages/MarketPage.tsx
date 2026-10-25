@@ -6,6 +6,7 @@ import {
   catalogSnapshot,
   loadCatalog,
   notInstalled,
+  RECOMMENDED_PLUGINS,
   searchCatalog,
   subscribeCatalog,
   type CatalogItem,
@@ -170,6 +171,20 @@ function MarketPlugins({
     return <p className="plugin-empty">{t.pluginsCatalogLoading}</p>;
   const offered = notInstalled(catalog);
   const shown = searchCatalog(offered, query);
+  // The recommended ones lead while nothing is searched for.
+  const picks = query.trim()
+    ? []
+    : RECOMMENDED_PLUGINS.flatMap((id) => shown.filter((i) => i.id === id));
+  const rest = shown.filter((i) => !picks.includes(i));
+  const card = (item: CatalogItem) => (
+    <CatalogCard
+      key={item.id}
+      item={item}
+      t={t}
+      installing={installing === item.id}
+      onInstall={() => onInstall(item)}
+    />
+  );
   return (
     <>
       {catalog.error && (
@@ -178,17 +193,20 @@ function MarketPlugins({
           text={t.pluginsCatalogKept.replace("{reason}", catalog.error)}
         />
       )}
+      {picks.length > 0 && (
+        <>
+          <h4 className="plugin-subgroup-title">{t.pluginsRecommended}</h4>
+          <div className="settings-group-body market-recommended">
+            {picks.map(card)}
+          </div>
+          {rest.length > 0 && (
+            <h4 className="plugin-subgroup-title">{t.pluginsMore}</h4>
+          )}
+        </>
+      )}
       <div className="settings-group-body">
         {shown.length ? (
-          shown.map((item) => (
-            <CatalogCard
-              key={item.id}
-              item={item}
-              t={t}
-              installing={installing === item.id}
-              onInstall={() => onInstall(item)}
-            />
-          ))
+          rest.map(card)
         ) : (
           <p className="plugin-empty">
             {offered.length

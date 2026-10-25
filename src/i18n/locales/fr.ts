@@ -1379,6 +1379,15 @@ utiliser une.
   pluginsLoadFolder: "Charger un dossier d’extension…",
   pluginPackageFilter: "Extension Textus",
   pluginsInstalledGroup: "Installées",
+  pluginOpenOffer:
+    "L’extension {name} ouvre « {file} ». L’installer et ouvrir le fichier ?",
+  pluginOpenInstall: "Installer et ouvrir",
+  pluginOpenTurnOn:
+    "L’extension {name} ouvre « {file} », mais elle est désactivée. L’activer et ouvrir le fichier ?",
+  pluginOpenTurnOnButton: "Activer et ouvrir",
+  pluginsRecommended: "Recommandées",
+  pluginsMore: "Autres extensions",
+  pluginsMine: "Créées par vous",
   pluginsNone: "Aucune pour l’instant.",
   pluginStatusBroken: "Illisible : {reason}",
   pluginStatusIncompatible:

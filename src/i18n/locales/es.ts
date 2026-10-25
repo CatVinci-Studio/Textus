@@ -1357,6 +1357,15 @@ para usar una.
   pluginsLoadFolder: "Cargar carpeta de complemento…",
   pluginPackageFilter: "Complemento de Textus",
   pluginsInstalledGroup: "Instalados",
+  pluginOpenOffer:
+    "El complemento {name} abre «{file}». ¿Instalarlo y abrir el archivo?",
+  pluginOpenInstall: "Instalar y abrir",
+  pluginOpenTurnOn:
+    "El complemento {name} abre «{file}», pero está desactivado. ¿Activarlo y abrir el archivo?",
+  pluginOpenTurnOnButton: "Activar y abrir",
+  pluginsRecommended: "Recomendados",
+  pluginsMore: "Más complementos",
+  pluginsMine: "Hechos por ti",
   pluginsNone: "Ninguno todavía.",
   pluginStatusBroken: "No se puede leer: {reason}",
   pluginStatusIncompatible: "Hecho para otra versión de Textus ({range}).",

@@ -1326,6 +1326,15 @@ type /name in a conversation to use one.
   pluginsLoadFolder: "Load a plugin folder…",
   pluginPackageFilter: "Textus plugin",
   pluginsInstalledGroup: "Installed",
+  pluginOpenOffer:
+    "The {name} plugin opens “{file}”. Install it and open the file?",
+  pluginOpenInstall: "Install and open",
+  pluginOpenTurnOn:
+    "The {name} plugin opens “{file}”, but it is off. Turn it on and open the file?",
+  pluginOpenTurnOnButton: "Turn on and open",
+  pluginsRecommended: "Recommended",
+  pluginsMore: "More plugins",
+  pluginsMine: "Made by you",
   pluginsNone: "None yet.",
   pluginStatusBroken: "Can’t be read: {reason}",
   pluginStatusIncompatible: "Made for another version of Textus ({range}).",

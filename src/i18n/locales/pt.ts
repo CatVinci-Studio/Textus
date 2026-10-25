@@ -1338,6 +1338,15 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsLoadFolder: "Carregar pasta de plugin…",
   pluginPackageFilter: "Plugin do Textus",
   pluginsInstalledGroup: "Instalados",
+  pluginOpenOffer:
+    "O plugin {name} abre “{file}”. Instalá-lo e abrir o arquivo?",
+  pluginOpenInstall: "Instalar e abrir",
+  pluginOpenTurnOn:
+    "O plugin {name} abre “{file}”, mas está desligado. Ligá-lo e abrir o arquivo?",
+  pluginOpenTurnOnButton: "Ligar e abrir",
+  pluginsRecommended: "Recomendados",
+  pluginsMore: "Mais plugins",
+  pluginsMine: "Feitos por você",
   pluginsNone: "Nenhum ainda.",
   pluginStatusBroken: "Não foi possível ler: {reason}",
   pluginStatusIncompatible: "Feito para outra versão do Textus ({range}).",

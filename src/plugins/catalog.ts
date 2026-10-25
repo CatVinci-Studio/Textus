@@ -147,6 +147,15 @@ export async function installFromCatalog(id: string): Promise<void> {
   if (!before || wasOn) await setPluginEnabled(id, true);
 }
 
+/** The plugins Get more puts first, while nothing is searched for: the
+ *  ones most people want first. */
+export const RECOMMENDED_PLUGINS = [
+  "catvinci.pdf-viewer",
+  "catvinci.image-viewer",
+  "catvinci.tasks",
+  "catvinci.daily-notes",
+];
+
 /** The catalog's plugins not installed yet. */
 export function notInstalled(from: CatalogState = state): CatalogItem[] {
   if (from.status !== "ready") return [];

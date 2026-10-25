@@ -1277,6 +1277,15 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsLoadFolder: "플러그인 폴더 불러오기…",
   pluginPackageFilter: "Textus 플러그인",
   pluginsInstalledGroup: "설치됨",
+  pluginOpenOffer:
+    "“{file}”은(는) {name} 플러그인으로 열 수 있습니다. 설치하고 열까요?",
+  pluginOpenInstall: "설치하고 열기",
+  pluginOpenTurnOn:
+    "“{file}”은(는) {name} 플러그인으로 열 수 있지만 꺼져 있습니다. 켜고 열까요?",
+  pluginOpenTurnOnButton: "켜고 열기",
+  pluginsRecommended: "추천",
+  pluginsMore: "더 많은 플러그인",
+  pluginsMine: "직접 만든 플러그인",
   pluginsNone: "아직 없습니다.",
   pluginStatusBroken: "읽을 수 없음: {reason}",
   pluginStatusIncompatible: "다른 버전의 Textus용입니다({range}).",

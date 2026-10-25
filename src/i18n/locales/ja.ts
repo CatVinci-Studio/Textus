@@ -1289,6 +1289,15 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsLoadFolder: "プラグインフォルダを読み込む…",
   pluginPackageFilter: "Textus プラグイン",
   pluginsInstalledGroup: "インストール済み",
+  pluginOpenOffer:
+    "「{file}」はプラグイン「{name}」で開けます。インストールして開きますか？",
+  pluginOpenInstall: "インストールして開く",
+  pluginOpenTurnOn:
+    "「{file}」はプラグイン「{name}」で開けますが、オフになっています。オンにして開きますか？",
+  pluginOpenTurnOnButton: "オンにして開く",
+  pluginsRecommended: "おすすめ",
+  pluginsMore: "その他のプラグイン",
+  pluginsMine: "自分で作ったもの",
   pluginsNone: "まだありません。",
   pluginStatusBroken: "読み込めません：{reason}",
   pluginStatusIncompatible: "別のバージョンの Textus 用です（{range}）。",

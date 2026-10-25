@@ -1121,6 +1121,12 @@ export function installDevTauriShim(): void {
       // `window.__devFileMtimes = { path: ms }` their times (default 1).
       const files = w.__devFiles as Record<string, string> | undefined;
       const filePath = String((args as { path?: unknown })?.path ?? "");
+      // A PDF or a picture (`__devBinaryFiles`) isn't text, as on disk.
+      if (
+        cmd === "read_text_file" &&
+        filePath in ((w.__devBinaryFiles ?? {}) as Record<string, string>)
+      )
+        return Promise.reject("stream did not contain valid UTF-8");
       if (files && filePath in files) {
         if (cmd === "read_text_file") return Promise.resolve(files[filePath]);
         if (cmd === "file_mtime_ms")

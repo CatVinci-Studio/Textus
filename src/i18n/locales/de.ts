@@ -1345,6 +1345,15 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsLoadFolder: "Plugin-Ordner laden…",
   pluginPackageFilter: "Textus-Plugin",
   pluginsInstalledGroup: "Installiert",
+  pluginOpenOffer:
+    "Das Plugin {name} öffnet „{file}“. Installieren und die Datei öffnen?",
+  pluginOpenInstall: "Installieren und öffnen",
+  pluginOpenTurnOn:
+    "Das Plugin {name} öffnet „{file}“, ist aber aus. Einschalten und die Datei öffnen?",
+  pluginOpenTurnOnButton: "Einschalten und öffnen",
+  pluginsRecommended: "Empfohlen",
+  pluginsMore: "Weitere Plugins",
+  pluginsMine: "Von dir erstellt",
   pluginsNone: "Noch keine.",
   pluginStatusBroken: "Nicht lesbar: {reason}",
   pluginStatusIncompatible: "Für eine andere Textus-Version gemacht ({range}).",

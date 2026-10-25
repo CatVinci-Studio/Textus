@@ -71,6 +71,23 @@ export function PluginsPage({
   const openRecord = open
     ? snapshot.records.find((r) => r.id === open)
     : undefined;
+  // The plugins made in Create mode (publisher "local") under their own
+  // heading, after the rest.
+  const isMine = (r: (typeof snapshot.records)[number]) =>
+    r.manifest?.publisher === "local";
+  const mine = snapshot.records.filter(isMine);
+  const others = snapshot.records.filter((r) => !isMine(r));
+  const card = (record: (typeof snapshot.records)[number]) => (
+    <PluginCard
+      key={record.id}
+      record={record}
+      t={t}
+      allOn={snapshot.allOn}
+      update={updateFor(record.id, catalog)}
+      onOpen={() => setOpen(record.id)}
+      onEnable={(on) => void enable(record, on)}
+    />
+  );
   if (openRecord)
     return (
       <PluginPage
@@ -120,17 +137,15 @@ export function PluginsPage({
       installedTitle={t.pluginsInstalledGroup}
       installed={
         snapshot.records.length ? (
-          snapshot.records.map((record) => (
-            <PluginCard
-              key={record.id}
-              record={record}
-              t={t}
-              allOn={snapshot.allOn}
-              update={updateFor(record.id, catalog)}
-              onOpen={() => setOpen(record.id)}
-              onEnable={(on) => void enable(record, on)}
-            />
-          ))
+          <>
+            {others.map(card)}
+            {mine.length > 0 && (
+              <>
+                <h4 className="plugin-subgroup-title">{t.pluginsMine}</h4>
+                {mine.map(card)}
+              </>
+            )}
+          </>
         ) : (
           <p className="plugin-empty">{t.pluginsNone}</p>
         )

@@ -61,6 +61,28 @@ function openingJump(
   return at && { kind: "caret", at };
 }
 
+/** The tab a plugin's custom editor opens `path` in (a PDF, a board). */
+function pluginTab(
+  path: string,
+  editor: NonNullable<ReturnType<typeof customEditorFor>>,
+): Partial<DocTab> {
+  void session.addRecentFile(path);
+  return {
+    path: null,
+    content: "",
+    savedContent: "",
+    diskMtime: null,
+    importedFrom: undefined,
+    view: {
+      plugin: editor.plugin,
+      view: editor.viewType,
+      kind: "editor",
+      resource: path,
+      title: editor.title,
+    },
+  };
+}
+
 /**
  * Every way a file on disk becomes an open document in this window: a new
  * tab, or (window mode) the active tab's document replaced in place -
@@ -104,23 +126,7 @@ export function useFileOpening(opts: {
       // opened as the app starts may come before them.
       if (!asDocument) await loadPlugins().catch(() => {});
       const editor = asDocument ? null : customEditorFor(path);
-      if (editor) {
-        void session.addRecentFile(path);
-        return {
-          path: null,
-          content: "",
-          savedContent: "",
-          diskMtime: null,
-          importedFrom: undefined,
-          view: {
-            plugin: editor.plugin,
-            view: editor.viewType,
-            kind: "editor",
-            resource: path,
-            title: editor.title,
-          },
-        };
-      }
+      if (editor) return pluginTab(path, editor);
       if (isWordDocument(path)) {
         try {
           const doc = await wordDocumentTab(path);
@@ -134,7 +140,21 @@ export function useFileOpening(opts: {
           return null;
         }
       }
-      const { content, diskMtime } = await readDocFromDisk(path);
+      let disk: { content: string; diskMtime: number | null };
+      try {
+        disk = await readDocFromDisk(path);
+      } catch (err) {
+        // Not text - a PDF, a picture: a plugin in the market may open it,
+        // offered then and there (plugins/open-offer.ts).
+        if (asDocument) throw err;
+        const { offerPluginToOpen } = await import("../plugins/open-offer");
+        const now = (await offerPluginToOpen(path, t))
+          ? customEditorFor(path)
+          : null;
+        if (now) return pluginTab(path, now);
+        throw err;
+      }
+      const { content, diskMtime } = disk;
       void session.addRecentFile(path); // feeds File > Open Recent
       return {
         path,
