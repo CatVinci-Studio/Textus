@@ -174,6 +174,49 @@
   transition-duration: var(--dur-instant);
 }
 
+/* The sidebar's surface runs up through this strip instead of ending at its
+   underside: the bar floats over the sidebar and is opaque, so the bar
+   carries a copy of the sidebar's fill - the same --sidebar-bg, the same
+   right edge - to the window's top. Drawn under the bar's children (-1), so
+   its buttons and title stay in front; .sidebar-header keeps its 38px inset,
+   so the sidebar's own contents do not move into the bar. It slides on the
+   sidebar's curves, and fades where it rests under reduced motion. Mobile's
+   44pt bar stays one page-coloured surface, and zen hides the sidebar, so
+   the copy goes with it. */
+.window-bar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--sidebar-width, 240px);
+  /* `*` does not reach pseudo-elements: without this the 1px edge would sit
+     outside the sidebar's width and overhang its border by a pixel. */
+  box-sizing: border-box;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  z-index: -1;
+  transform: translateX(calc(-100% * var(--motion-travel)));
+  opacity: var(--motion-travel-fade);
+  visibility: hidden;
+  transition:
+    transform var(--dur-base) var(--ease-in),
+    opacity var(--dur-base) var(--ease-in),
+    visibility 0s linear var(--dur-base);
+}
+
+:root:not([data-window-chrome="mobile"], .zen)
+  .app-shell:has(> .sidebar:not(.sidebar-collapsed))
+  .window-bar::before {
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    transform var(--dur-slow) var(--ease-spring),
+    opacity var(--dur-slow) var(--ease-out),
+    visibility 0s;
+}
+
 .sidebar-header {
   /* Clears the window bar floating over the top of the window. */
   padding: 38px 10px 10px;

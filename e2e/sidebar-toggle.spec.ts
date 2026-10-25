@@ -158,6 +158,98 @@ test("the menu button is the sidebar toggle's twin, hover and all", async ({
   expect(lit[0]).toEqual(lit[1]);
 });
 
+/** The bar's strip for the sidebar's surface (window-bar.css): its fill, its
+ *  edge, and where the box sits once its slide out of the way is counted. */
+async function strip(page: Page) {
+  return page.evaluate(() => {
+    const bar = document.querySelector(".window-bar")!;
+    const s = getComputedStyle(bar, "::before");
+    const left =
+      s.transform === "none" ? 0 : new DOMMatrixReadOnly(s.transform).m41;
+    return {
+      background: s.backgroundColor,
+      border: s.borderRightWidth,
+      borderColor: s.borderRightColor,
+      left,
+      visibility: s.visibility,
+    };
+  });
+}
+
+test("the sidebar's surface reaches the window's top, its own layout does not", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.locator(toggle).click();
+  await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
+
+  // The strip carries the sidebar's fill and edge, so the two read as one
+  // surface from the window's top to its bottom.
+  const side = await page.locator(sidebar).evaluate((el) => {
+    const s = getComputedStyle(el);
+    return {
+      background: s.backgroundColor,
+      border: s.borderRightWidth,
+      borderColor: s.borderRightColor,
+    };
+  });
+  expect(await strip(page)).toEqual({
+    ...side,
+    left: 0,
+    visibility: "visible",
+  });
+
+  // Its contents stay below the bar rather than riding up into it.
+  const bar = (await page.locator(".window-bar").boundingBox())!;
+  const tabs = (await page.locator(".sidebar-tabs").boundingBox())!;
+  expect(tabs.y).toBeGreaterThanOrEqual(bar.y + bar.height);
+
+  // Closed, the surface goes with the sidebar: its right edge lands on the
+  // window's left edge, with no sliver left behind.
+  const width = (await page.locator(sidebar).boundingBox())!.width;
+  await page.locator(toggle).click();
+  await expect(page.locator(sidebar)).toHaveClass(/sidebar-collapsed/);
+  const hidden = await strip(page);
+  expect(hidden.visibility).toBe("hidden");
+  expect(Math.round(hidden.left)).toBe(-Math.round(width));
+});
+
+test("the surface slides with the sidebar, frame for frame", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" }, animations: true });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.locator(toggle).click();
+  await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
+
+  const slide = await page.evaluate(async () => {
+    const bar = document.querySelector(".window-bar")!;
+    const side = document.querySelector(".sidebar")!;
+    document.querySelector<HTMLElement>(".window-bar-sidebar-toggle")!.click();
+    const drift: number[] = [];
+    const lefts: number[] = [];
+    const until = performance.now() + 500;
+    while (performance.now() < until) {
+      await new Promise(requestAnimationFrame);
+      const s = getComputedStyle(bar, "::before");
+      const left =
+        s.transform === "none" ? 0 : new DOMMatrixReadOnly(s.transform).m41;
+      const sideLeft = side.getBoundingClientRect().left;
+      drift.push(Math.abs(left - sideLeft));
+      lefts.push(sideLeft);
+    }
+    return {
+      worst: Math.max(...drift),
+      travelled: Math.max(...lefts) - Math.min(...lefts),
+    };
+  });
+  const { worst, travelled } = slide;
+  // Seen across the slide, not at either end of it.
+  expect(travelled).toBeGreaterThan(50);
+  expect(worst).toBeLessThan(1);
+});
+
 test("the sidebar opens on the tab it was left on, after a restart (#347)", async ({
   page,
 }) => {
