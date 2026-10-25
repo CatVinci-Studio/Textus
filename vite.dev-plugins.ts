@@ -80,9 +80,22 @@ export function devPlugins(): Plugin {
         if (rel === "index.json")
           return send(200, JSON.stringify(catalog(root)), TYPES.json);
         const libs = JSON.parse(readFileSync(join(root, "libs.json"), "utf8"));
+        // A library file, or one in a library folder (its name ends in "/").
+        const folder = Object.keys(libs).find(
+          (target) => target.endsWith("/") && rel.startsWith(target),
+        );
         const file = libs[rel]
           ? join(root, "node_modules", libs[rel])
-          : normalize(join(root, "plugins", rel));
+          : folder
+            ? normalize(
+                join(
+                  root,
+                  "node_modules",
+                  libs[folder],
+                  rel.slice(folder.length),
+                ),
+              )
+            : normalize(join(root, "plugins", rel));
         if (!file.startsWith(join(root, "")) || !existsSync(file))
           return send(404, `${rel}: no such file`, "text/plain");
         if (statSync(file).isDirectory())

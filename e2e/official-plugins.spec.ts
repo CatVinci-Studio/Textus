@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import { mockInvoke, pasteMarkdown } from "./helpers";
 import {
   minimalDocx,
@@ -75,6 +76,23 @@ test("a PDF opens in the PDF Viewer, its words there to select", async ({
   const before = (await frame.locator("#zoom").textContent()) ?? "";
   await frame.locator("#zoom-in").click();
   await expect(frame.locator("#zoom")).not.toHaveText(before);
+});
+
+test("a Chinese PDF whose font isn't in the file draws its characters", async ({
+  page,
+}) => {
+  // Made with ReportLab: STSong-Light, not embedded, with the predefined
+  // CMap UniGB-UCS2-H - PDF.js's cmaps, shipped in the plugin, draw it.
+  const pdf = readFileSync(new URL("./fixtures/cjk-cmap.pdf", import.meta.url));
+  await openWithPlugins(page, {
+    plugins: { "catvinci.pdf-viewer": [] },
+    binary: { "/notes/poem.pdf": pdf.toString("base64") },
+  });
+  await openPath(page, "/notes/poem.pdf");
+  const frame = tabFrame(page);
+  await expect(frame.locator(".textLayer")).toHaveText("春眠不觉晓", {
+    timeout: 15_000,
+  });
 });
 
 test("a selected link opens in a web page tab of its own", async ({ page }) => {
