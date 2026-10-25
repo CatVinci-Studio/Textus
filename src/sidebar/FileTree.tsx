@@ -54,7 +54,8 @@ interface FileTreeProps {
    *  inside it, and the search covers all of it. */
   folder: string | null;
   activePath: string | null;
-  onFileSelect: (path: string) => void;
+  /** `beside`: Open to the Side, in a split beside the one in front. */
+  onFileSelect: (path: string, beside?: boolean) => void;
   /** File > Open Folder… and Close Folder; Open is left out on iOS. */
   onOpenFolder?: () => void;
   onCloseFolder: () => void;
@@ -386,7 +387,7 @@ function useRowMenu(
   root: string,
   t: Strings,
   reload: (...dirs: string[]) => void,
-  onFileSelect: (path: string) => void,
+  onFileSelect: (path: string, beside?: boolean) => void,
   onEntryMoved: (from: string, to: string) => void,
   setMenu: (menu: TreeMenu) => void,
 ) {
@@ -461,6 +462,15 @@ function useRowMenu(
       if (path !== root && !isDir)
         items.push(
           { label: t.treeOpen, onSelect: () => onFileSelect(path) },
+          // Not on a phone: one document fills its screen.
+          ...(isIOSApp
+            ? []
+            : [
+                {
+                  label: t.openBeside,
+                  onSelect: () => onFileSelect(path, true),
+                },
+              ]),
           "separator",
         );
       items.push(

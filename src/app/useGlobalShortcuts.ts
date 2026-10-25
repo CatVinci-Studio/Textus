@@ -22,6 +22,7 @@ import {
   TOGGLE_FIND_REPLACE_EVENT,
   INSERT_BLOCK_EVENT,
 } from "../utils/events";
+import { closeSplit, splitEditor, splitLayout } from "./split-layout";
 
 /** The heading shortcuts, by the Format menu's block kind they apply
  *  (INSERT_BLOCK_EVENT). */
@@ -236,6 +237,11 @@ export function useGlobalShortcuts(opts: {
       } else if (combo === shortcuts.toggleZenMode) {
         e.preventDefault();
         toggleZenMode();
+      } else if (combo === shortcuts.splitEditor) {
+        // Split side by side, and the same keys go back to one.
+        e.preventDefault();
+        if (splitLayout()) closeSplit();
+        else splitEditor("row");
       } else if (canOpenFolder && combo === shortcuts.searchFiles) {
         e.preventDefault();
         searchFiles();

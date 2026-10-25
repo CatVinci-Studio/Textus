@@ -130,7 +130,9 @@ function App() {
           activeContent={activeTab.content}
           onToggle={toggleSidebar}
           onClose={() => setPanelOpen(false)}
-          onOpenFile={(path) => void openFile(path)}
+          onOpenFile={(path, beside) =>
+            void openFile(path, beside ? { where: "beside" } : {})
+          }
           onEntryMoved={entryMoved}
           searchFocusRequest={searchFocusRequest}
           onSearchFocusHandled={clearSearchFocusRequest}

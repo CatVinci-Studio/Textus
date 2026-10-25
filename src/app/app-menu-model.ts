@@ -50,6 +50,9 @@ export type NativeMenuId =
   | "toggle-textus-ai"
   | "toggle-split-view"
   | "toggle-zen-mode"
+  | "split-right"
+  | "split-down"
+  | "close-split"
   | "zoom-in"
   | "zoom-out"
   | "zoom-reset"
@@ -389,6 +392,14 @@ export function buildAppMenu(
           action: { native: "toggle-zen-mode" },
           checked: !!checks.zen,
         },
+        "separator",
+        {
+          label: t.menuSplitRight,
+          accel: shortcuts.splitEditor,
+          action: { native: "split-right" },
+        },
+        { label: t.menuSplitDown, action: { native: "split-down" } },
+        { label: t.menuCloseSplit, action: { native: "close-split" } },
         "separator",
         { label: t.menuZoomIn, accel: "mod+=", action: { native: "zoom-in" } },
         {

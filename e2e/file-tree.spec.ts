@@ -290,3 +290,19 @@ test("hidden files stay out of the tree until it shows them (#357)", async ({
     await page.evaluate(() => localStorage.getItem("textus-file-tree-hidden")),
   ).toBe("1");
 });
+
+test("Open to the Side shows a document beside the one in front", async ({
+  page,
+}) => {
+  await open(page);
+  await row(page, "b.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Open to the Side" }).click();
+  const panes = page.locator(".main-pane-split > .split-pane");
+  await expect(panes).toHaveCount(2);
+  await expect(page.locator('.split-pane[data-pane="first"] h1')).toContainText(
+    "Alpha",
+  );
+  await expect(page.locator('.split-pane[data-pane="second"] h1')).toContainText(
+    "Bravo",
+  );
+});

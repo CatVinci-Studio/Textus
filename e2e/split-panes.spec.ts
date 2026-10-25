@@ -3,26 +3,15 @@ import { pasteMarkdown } from "./helpers";
 import { openPath, openWithPlugins } from "./plugin-helpers";
 
 /**
- * Split Panes (catvinci.split-panes): two documents at once through the
- * app's layout API - the panes and the line between them are the app's,
- * the commands the plugin's.
+ * Split panes (app/split-layout.ts): two documents at once - View > Split
+ * Right / Split Down / Close Split, their shortcut, the line between the
+ * panes (dragged, or its right-click menu) and a tab's right-click menu.
  */
 
 const panes = ".main-pane-split > .split-pane";
 const pane = (which: "first" | "second") => `.split-pane[data-pane="${which}"]`;
 
-async function command(page: Page, id: string) {
-  await page.evaluate(
-    (id) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-plugin-command", id),
-    id,
-  );
-}
-
+/** A View menu item, as the native menu sends it. */
 async function emit(page: Page, name: string) {
   await page.evaluate(
     (name) =>
@@ -33,10 +22,18 @@ async function emit(page: Page, name: string) {
   );
 }
 
+/** An item of the divider's right-click menu. */
+async function dividerMenu(page: Page, item: string) {
+  await page
+    .getByRole("separator", { name: "Divider between the documents" })
+    .click({ button: "right" });
+  await page.getByRole("menuitem", { name: item }).click();
+}
+
 /** Two tabs: one.md, and a new one with "Two" in front. */
 async function openTwo(page: Page) {
   await openWithPlugins(page, {
-    plugins: { "catvinci.split-panes": [] },
+    plugins: {},
     folder: { "/notes/one.md": "# One\n\nThe first.\n" },
   });
   await openPath(page, "/notes/one.md");
@@ -56,7 +53,7 @@ test("Split Right shows the document beside another, and a click brings either t
 }) => {
   await openTwo(page);
   await page.locator('[data-active-tab="true"] .ProseMirror').click();
-  // Its shortcut, once the plugin has started.
+  // Its shortcut.
   await expect(async () => {
     await page.keyboard.press("ControlOrMeta+Alt+s");
     await expect(page.locator(panes)).toHaveCount(2, { timeout: 500 });
@@ -83,7 +80,7 @@ test("Split Right shows the document beside another, and a click brings either t
   await expect(page.locator(`${pane("first")} p`)).not.toContainText("Typed.");
 
   // Close Split: one document, the one in front.
-  await command(page, "catvinci.split-panes.close");
+  await emit(page, "menu-close-split");
   await expect(page.locator(panes)).toHaveCount(0);
   await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
     "One",
@@ -94,7 +91,7 @@ test("Split Down puts one above the other, and the line between them shares the 
   page,
 }) => {
   await openTwo(page);
-  await command(page, "catvinci.split-panes.down");
+  await emit(page, "menu-split-down");
   await expect(page.locator(panes)).toHaveCount(2);
   const first = (await page.locator(pane("first")).boundingBox())!;
   const second = (await page.locator(pane("second")).boundingBox())!;
@@ -128,7 +125,7 @@ test("a tab chosen from the tab bar opens in the pane in front; closing a pane's
     "One",
   );
   await page.locator('[data-active-tab="true"] .ProseMirror').click();
-  // Its shortcut, once the plugin has started.
+  // Its shortcut.
   await expect(async () => {
     await page.keyboard.press("ControlOrMeta+Alt+s");
     await expect(page.locator(panes)).toHaveCount(2, { timeout: 500 });
@@ -150,10 +147,8 @@ test("a tab chosen from the tab bar opens in the pane in front; closing a pane's
 test("with one tab, Split Right opens a blank one beside it", async ({
   page,
 }) => {
-  await openWithPlugins(page, {
-    plugins: { "catvinci.split-panes": [] },
-  });
-  await command(page, "catvinci.split-panes.right");
+  await openWithPlugins(page, { plugins: {} });
+  await emit(page, "menu-split-right");
   await expect(page.locator(panes)).toHaveCount(2);
   await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(2);
 });
@@ -162,12 +157,13 @@ test("an open split turns, swaps its sides and evens them out", async ({
   page,
 }) => {
   await openTwo(page);
-  await command(page, "catvinci.split-panes.toggle");
+  await page.locator('[data-active-tab="true"] .ProseMirror').click();
+  await page.keyboard.press("ControlOrMeta+Alt+s");
   await expect(page.locator(panes)).toHaveCount(2);
   await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
 
   // Side by side becomes one above the other.
-  await command(page, "catvinci.split-panes.turn");
+  await dividerMenu(page, "Side by Side ⇄ One Above the Other");
   await expect(async () => {
     const first = (await page.locator(pane("first")).boundingBox())!;
     const second = (await page.locator(pane("second")).boundingBox())!;
@@ -175,7 +171,7 @@ test("an open split turns, swaps its sides and evens them out", async ({
   }).toPass();
 
   // The two tabs change places.
-  await command(page, "catvinci.split-panes.swap");
+  await dividerMenu(page, "Swap the Two Sides");
   await expect(page.locator(`${pane("first")} h1`)).toContainText("One");
   await expect(page.locator(`${pane("second")} h1`)).toContainText("Two");
 
@@ -191,14 +187,29 @@ test("an open split turns, swaps its sides and evens them out", async ({
     steps: 4,
   });
   await page.mouse.up();
-  await command(page, "catvinci.split-panes.even");
+  await dividerMenu(page, "Make Both Sides Equal");
   await expect(async () => {
     const a = (await page.locator(pane("first")).boundingBox())!;
     const b = (await page.locator(pane("second")).boundingBox())!;
     expect(Math.abs(a.height - b.height)).toBeLessThan(4);
   }).toPass();
 
-  // The same key again: one document.
-  await command(page, "catvinci.split-panes.toggle");
+  // The same keys again: one document.
+  await page.locator(`${pane("first")} .ProseMirror`).click();
+  await page.keyboard.press("ControlOrMeta+Alt+s");
   await expect(page.locator(panes)).toHaveCount(0);
+});
+
+test("a tab's right-click menu opens it beside the one in front", async ({
+  page,
+}) => {
+  await openTwo(page);
+  await page
+    .locator('.tab-bar [role="tab"]')
+    .first()
+    .click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Open to the Side" }).click();
+  await expect(page.locator(panes)).toHaveCount(2);
+  await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
+  await expect(page.locator(`${pane("second")} h1`)).toContainText("One");
 });

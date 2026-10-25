@@ -70,6 +70,11 @@ const TOGGLE_AGENT_PANEL_ID: &str = "toggle-agent-panel";
 const TOGGLE_TEXTUS_AI_ID: &str = "toggle-textus-ai";
 const TOGGLE_SPLIT_VIEW_ID: &str = "toggle-split-view";
 const TOGGLE_ZEN_MODE_ID: &str = "toggle-zen-mode";
+/// Two documents at once (src/app/split-layout.ts): the one in front and
+/// another, side by side or one above the other.
+const SPLIT_RIGHT_ID: &str = "split-right";
+const SPLIT_DOWN_ID: &str = "split-down";
+const CLOSE_SPLIT_ID: &str = "close-split";
 const ZOOM_IN_ID: &str = "zoom-in";
 const ZOOM_OUT_ID: &str = "zoom-out";
 const ZOOM_RESET_ID: &str = "zoom-reset";
@@ -418,6 +423,12 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-toggle-split-view");
     } else if id == TOGGLE_ZEN_MODE_ID {
         emit_to_focused(app_handle, "menu-toggle-zen-mode");
+    } else if id == SPLIT_RIGHT_ID {
+        emit_to_focused(app_handle, "menu-split-right");
+    } else if id == SPLIT_DOWN_ID {
+        emit_to_focused(app_handle, "menu-split-down");
+    } else if id == CLOSE_SPLIT_ID {
+        emit_to_focused(app_handle, "menu-close-split");
     } else if id == COPY_AS_MARKDOWN_ID {
         emit_to_focused(app_handle, "menu-copy-as-markdown");
     } else if cfg!(target_os = "macos") && id == "select-all" {

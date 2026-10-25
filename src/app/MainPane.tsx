@@ -15,6 +15,7 @@ import { TabBar } from "./TabBar";
 import { useSplitPanes } from "./useSplitPanes";
 import { SplitDivider, splitGridStyles } from "./SplitDivider";
 import "./split-panes.css";
+import { openBeside, splitEditor } from "./split-layout";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 
@@ -89,6 +90,19 @@ export function MainPane({
           onDetach={canDragTabsBetweenWindows ? onDetach : undefined}
           onReorder={onReorder}
           previewTab={previewTab}
+          menuFor={(id) => [
+            {
+              label: t.openBeside,
+              // The tab in front splits with its neighbour; another one
+              // opens beside it.
+              onSelect: () =>
+                id === activeTabId
+                  ? splitEditor("row")
+                  : openBeside(id, activeTabId),
+            },
+            "separator",
+            { label: t.menuCloseTab, onSelect: () => onClose(id) },
+          ]}
           labels={{
             tabs: t.menuDocuments,
             close: t.menuCloseTab,
@@ -179,11 +193,7 @@ export function MainPane({
         );
       })}
       {split && grid && (
-        <SplitDivider
-          layout={split}
-          style={grid.divider}
-          label={t.splitDivider}
-        />
+        <SplitDivider layout={split} style={grid.divider} t={t} />
       )}
     </main>
   );

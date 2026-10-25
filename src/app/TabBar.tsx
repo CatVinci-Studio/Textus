@@ -3,6 +3,7 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
+  useState,
   type RefObject,
 } from "react";
 import { CloseIcon } from "../ui/icons";
@@ -10,6 +11,8 @@ import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { animate, scrollBehavior } from "../ui/motion";
 import { ListMotion, measure, play, type PendingFlip } from "../ui/flip";
 import { Tooltip } from "../ui/Tooltip";
+import { ContextMenu, type ContextMenuItem } from "../editor/ContextMenu";
+import { Presence } from "../ui/usePresence";
 
 interface TabInfo {
   id: string;
@@ -41,6 +44,8 @@ interface TabBarProps {
   // tabs sliding out of its way, exactly like a within-bar reorder. On
   // release it becomes the real tab in that same slot.
   previewTab: { title: string; dirty: boolean; x: number } | null;
+  /** A tab's right-click menu (Open to the Side, Close). */
+  menuFor?: (id: string) => (ContextMenuItem | "separator")[];
   /** What the icon-only buttons' tooltips and a screen reader say. */
   labels: { tabs: string; close: string; add: string; unsaved: string };
 }
@@ -67,9 +72,15 @@ export function TabBar({
   onDetach,
   onReorder,
   previewTab,
+  menuFor,
   labels,
 }: TabBarProps) {
   const barRef = useRef<HTMLDivElement>(null);
+  const [menu, setMenu] = useState<{
+    x: number;
+    y: number;
+    items: (ContextMenuItem | "separator")[];
+  } | null>(null);
 
   // A phone shows two or three pills at a time, and the tab that just
   // opened (a new file, a document picked from the list) lands at the end
@@ -169,8 +180,25 @@ export function TabBar({
           onDetach={onDetach}
           onReorder={onReorder}
           captureFlip={captureFlip}
+          onContextMenu={
+            menuFor &&
+            ((e) => {
+              e.preventDefault();
+              setMenu({ x: e.clientX, y: e.clientY, items: menuFor(tab.id) });
+            })
+          }
         />
       ))}
+      <Presence show={menu !== null} exitMs={120}>
+        {menu && (
+          <ContextMenu
+            x={menu.x}
+            y={menu.y}
+            items={menu.items}
+            onClose={() => setMenu(null)}
+          />
+        )}
+      </Presence>
       {previewTab && (
         <div
           className="tab-pill tab-pill-active tab-pill-preview"
@@ -356,6 +384,7 @@ function TabPill({
   onDetach,
   onReorder,
   captureFlip,
+  onContextMenu,
 }: {
   tab: TabInfo;
   tabIds: string[];
@@ -366,6 +395,7 @@ function TabPill({
   onDetach?: (id: string) => void;
   onReorder: (id: string, index: number) => void;
   captureFlip: (how: { dropped?: string; gone?: string }) => void;
+  onContextMenu?: (e: React.MouseEvent<HTMLDivElement>) => void;
 }) {
   const elRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<{
@@ -515,6 +545,7 @@ function TabPill({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onContextMenu={onContextMenu}
       // Without this, WebKit treats the press as the start of a text
       // selection and paints a selection sweep through the editor below
       // once the pill detaches mid-gesture.

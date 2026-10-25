@@ -31,6 +31,8 @@ import type { DocumentPlace } from "../plugins/app-bridge";
 import type { Where } from "../plugins/broker-scope";
 import { customEditorFor } from "../plugins/plugin-lookup";
 import { basename } from "../utils/path";
+import { useLatest } from "../utils/hooks/useLatest";
+import { openBeside } from "./split-layout";
 import { errorText } from "../utils/error-text";
 import type { Strings } from "../i18n/strings";
 import type { NewDocumentMode } from "../settings/SettingsContext";
@@ -180,8 +182,17 @@ export function useFileOpening(opts: {
     [t, onWordDocumentOpened],
   );
 
+  const activeIdRef = useLatest(activeTabId);
   const openPathInTab = useCallback(
     async (path: string, open: OpenOptions = {}) => {
+      // Beside the tab in front when asked (split-layout.ts): once the
+      // tab is among the window's, the next frame.
+      const from = activeIdRef.current;
+      const show = (id: string) => {
+        setActiveTabId(id);
+        if (open.where === "beside")
+          requestAnimationFrame(() => openBeside(id, from));
+      };
       const existing = tabsRef.current.find(
         (tab) =>
           tab.path === path ||
@@ -201,7 +212,7 @@ export function useFileOpening(opts: {
             { kind: "heading", anchor: open.anchor },
             true,
           );
-        setActiveTabId(existing.id);
+        show(existing.id);
         return;
       }
       const doc = await readDocument(path, open.asDocument, open.place);
@@ -211,9 +222,16 @@ export function useFileOpening(opts: {
         newTab.path && openingJump(open, path, newTab.diskMtime, restoreCarets);
       if (jump) setTabJump(newTab.id, jump);
       setTabs((prev) => [...prev, newTab]);
-      setActiveTabId(newTab.id);
+      show(newTab.id);
     },
-    [tabsRef, setTabs, setActiveTabId, restoreCarets, readDocument],
+    [
+      tabsRef,
+      activeIdRef,
+      setTabs,
+      setActiveTabId,
+      restoreCarets,
+      readDocument,
+    ],
   );
 
   // "window" mode's actual replace step, shared between the no-dirty fast
@@ -236,7 +254,8 @@ export function useFileOpening(opts: {
 
   const openFile = useCallback(
     async (path: string, open: OpenOptions = {}) => {
-      if (newDocumentMode === "tab") {
+      // Beside the one in front is a tab of its own in either mode.
+      if (newDocumentMode === "tab" || open.where === "beside") {
         await openPathInTab(path, open);
         return;
       }

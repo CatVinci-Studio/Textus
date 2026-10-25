@@ -25,6 +25,7 @@ import {
 import type { DocTab, HelpDoc } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import type { DiagramEngine, Shortcuts } from "../settings/SettingsContext";
+import { closeSplit, splitEditor } from "./split-layout";
 
 export interface MenuBridgeHandlers {
   activeTabId: string;
@@ -164,6 +165,10 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         h().onToggleSplitView(),
       ),
       listenToThisWindow("menu-toggle-zen-mode", () => h().onToggleZenMode()),
+      // Two documents at once (split-layout.ts).
+      listenToThisWindow("menu-split-right", () => splitEditor("row")),
+      listenToThisWindow("menu-split-down", () => splitEditor("column")),
+      listenToThisWindow("menu-close-split", () => closeSplit()),
       // Edit > Copy as Markdown runs where Copy does, in the editor on
       // screen (useEditorWindowEvents.ts).
       listenToThisWindow("menu-select-all", selectAllInFocus),

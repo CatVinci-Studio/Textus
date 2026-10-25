@@ -16,7 +16,8 @@ export interface SidebarTabProps {
   openFolder: OpenFolder;
   activePath: string | null;
   activeContent: string;
-  onOpenFile: (path: string) => void;
+  /** `beside`: in a split beside the document in front. */
+  onOpenFile: (path: string, beside?: boolean) => void;
   /** Closes the sidebar (the phone's drawer, once a file is opened). */
   onClose: () => void;
   /** A file or folder was dragged into another folder in the tree. */
@@ -61,11 +62,11 @@ function FilesPanel({
       onRootChange={openFolder.setTreeRoot}
       folder={openFolder.folder}
       activePath={activePath}
-      onFileSelect={(path) => {
+      onFileSelect={(path, beside) => {
         // On a phone the drawer covers the page it just opened
         // (mobile/styles); a docked one stays.
         if (isIOSApp && window.matchMedia(PHONE_QUERY).matches) onClose();
-        onOpenFile(path);
+        onOpenFile(path, beside);
       }}
       onOpenFolder={canOpenFolder ? openFolder.openFolderDialog : undefined}
       onCloseFolder={openFolder.closeFolder}

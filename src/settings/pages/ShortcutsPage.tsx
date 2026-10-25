@@ -39,6 +39,7 @@ export function ShortcutsPage({
               ["toggleSourceMode", t.shortcutToggleSourceMode],
               ["toggleTypewriterMode", t.shortcutToggleTypewriterMode],
               ["toggleZenMode", t.shortcutToggleZenMode],
+              ["splitEditor", t.shortcutSplitEditor],
             ],
           ],
           [
