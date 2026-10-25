@@ -1,4 +1,5 @@
 import { useEditorSetup } from "./useEditorSetup";
+import { useAskAi } from "../ai/chat/ask-ai";
 import { useEditorChat } from "./useEditorChat";
 import { useEditorCarets, useEditorPopups } from "./useEditorPopups";
 import { useEditorReview } from "./useEditorReview";
@@ -79,6 +80,8 @@ export function MilkdownEditor({
   const popups = useEditorPopups({ setup, chat, tour, ...context });
   const review = useEditorReview({ setup, chat, popups, tour, ...context });
   const { grammar, lastTouchRef } = popups;
+  // "Edit with AI" on a plugin's page: this panel, in Create mode.
+  const askedMode = useAskAi(isActive, chat.agentPanel.setOpen);
   const { notes } = review;
 
   return (
@@ -128,7 +131,7 @@ export function MilkdownEditor({
         review={review}
         filePath={filePath}
         phone={phone}
-        tourMode={tourMode}
+        tourMode={tourMode ?? askedMode}
         settings={settings}
         t={t}
       />

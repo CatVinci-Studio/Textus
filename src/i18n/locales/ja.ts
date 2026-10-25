@@ -1288,6 +1288,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginDataClearAsk: "{name} が保存したデータを消去しますか？元に戻せません。",
   pluginVersionLabel: "バージョン {version}",
   pluginUsageGuide: "使い方",
+  pluginEditWithAi: "AI で修正",
+  pluginEditWithAiAsk: "プラグイン「{name}」（{id}）を修正：",
+  pluginEditWithAiError: "次のエラーで止まりました。直してください：{error}\n",
   pluginsAllLabel: "プラグイン",
   pluginsAllHelp:
     "オフにすると、プラグインは動作せず、追加した項目も表示されません。プラグインとその設定はそのまま残ります。",

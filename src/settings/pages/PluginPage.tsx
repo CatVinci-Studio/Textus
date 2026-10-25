@@ -89,6 +89,7 @@ export function PluginPage({
   onEnable,
   onUpdate,
   onGuide,
+  onEditWithAi,
   attempt,
 }: {
   record: PluginRecord;
@@ -101,6 +102,8 @@ export function PluginPage({
   onUpdate: () => void;
   /** Opens its usage guide (USAGE.md), when it has one. */
   onGuide: () => void;
+  /** The AI panel in Create mode, asked to change it (ask-ai.ts). */
+  onEditWithAi: () => void;
   attempt: Attempt;
 }) {
   const { settings, setSettings } = useSettings();
@@ -149,8 +152,8 @@ export function PluginPage({
             onChange={(e) => onEnable(e.target.checked)}
           />
         </label>
-        {hasGuide && (
-          <div className="settings-row plugin-guide-row">
+        <div className="settings-row plugin-guide-row">
+          {hasGuide && (
             <button
               type="button"
               className="text-button settings-inline-button"
@@ -158,8 +161,17 @@ export function PluginPage({
             >
               {t.pluginUsageGuide}
             </button>
-          </div>
-        )}
+          )}
+          {manifest && (
+            <button
+              type="button"
+              className="text-button settings-inline-button"
+              onClick={onEditWithAi}
+            >
+              {t.pluginEditWithAi}
+            </button>
+          )}
+        </div>
       </div>
       {manifest && manifest.requires.length > 0 && (
         <SettingsGroup title={t.pluginRequiresGroup}>

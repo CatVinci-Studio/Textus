@@ -1071,6 +1071,11 @@ export function installDevTauriShim(): void {
         if (!manifestFile)
           return Promise.reject("No textus-plugin.json among the files.");
         const pid = (JSON.parse(manifestFile.text) as { id: string }).id;
+        // The user's own, as plugins/install.rs has it.
+        if (!pid.startsWith("local."))
+          return Promise.reject(
+            `A plugin written in the conversation needs an id starting with local. - ${pid} is someone else's.`,
+          );
         const written = {
           id: pid,
           dir: `/plugins/${pid}`,

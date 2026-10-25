@@ -1379,6 +1379,10 @@ utiliser une.
   pluginDataClearAsk: "Effacer ce que {name} garde ? C'est définitif.",
   pluginVersionLabel: "Version {version}",
   pluginUsageGuide: "Mode d’emploi",
+  pluginEditWithAi: "Modifier avec l’IA",
+  pluginEditWithAiAsk: "Modifie l’extension {name} ({id}) : ",
+  pluginEditWithAiError:
+    "elle s’est arrêtée sur cette erreur, corrige-la : {error}\n",
   pluginsAllLabel: "Extensions",
   pluginsAllHelp:
     "Désactivées, aucune extension ne s’exécute et rien de ce qu’elles ajoutent ne s’affiche. Vos extensions et leurs réglages sont conservés.",
