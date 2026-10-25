@@ -83,11 +83,17 @@ export function createCompletionPlugin() {
             shown = { ...result, at };
             // Under the start of what an item replaces, as it reads.
             const rect = view.coordsAtPos(at - result.replace);
-            list.show(
-              result.items,
-              { left: rect.left, top: rect.bottom },
-              take,
-            );
+            // In a formula, its drawn preview shows under it: the list goes
+            // under that, not over it.
+            const preview = context.inMath
+              ? document.querySelector(".math-float-preview")
+              : null;
+            const below = preview?.getBoundingClientRect();
+            const top =
+              below && below.height > 0 && below.top >= rect.top
+                ? Math.max(rect.bottom, below.bottom)
+                : rect.bottom;
+            list.show(result.items, { left: rect.left, top }, take);
           };
           completionViews.set(view, {
             key: (key) => {
