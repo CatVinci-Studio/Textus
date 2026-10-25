@@ -77,6 +77,17 @@ export const commands = {
 	/**  A folder's entries, hidden ones left out. */
 	plugin_fs_list: (id: string, root: string, path: string) => __TAURI_INVOKE<FsEntry_Serialize[]>("plugin_fs_list", { id, root, path }),
 	/**
+	 *  Every Markdown document in the folder, in the sidebar's order, with
+	 *  its text.
+	 */
+	plugin_fs_documents: (id: string, root: string) => __TAURI_INVOKE<WorkspaceDocuments>("plugin_fs_documents", { id, root }),
+	/**
+	 *  The folder's documents' lines holding `query`, ignoring case, in the
+	 *  sidebar's order: at most `limit` of them (and never more than
+	 *  MAX_SEARCH_HITS).
+	 */
+	plugin_fs_search: (id: string, root: string, query: string, limit: number | null) => __TAURI_INVOKE<SearchResult>("plugin_fs_search", { id, root, query, limit }),
+	/**
 	 *  Writes a file in the folder, making the folders it is in. `contents` is
 	 *  text, or base64 with `base64`.
 	 */
@@ -320,6 +331,21 @@ export type PluginsState_Serialize = {
 	plugins: { [key in string]: PluginEntry_Serialize },
 };
 
+/**  A line that holds what was searched for. */
+export type SearchHit = {
+	path: string,
+	rel: string,
+	/**  1-based. */
+	line: number,
+	text: string,
+};
+
+export type SearchResult = {
+	hits: SearchHit[],
+	/**  There may be more: the limit or the time was reached first. */
+	truncated: boolean,
+};
+
 /**  A server's state as Settings shows it. */
 export type ServerStatus = ServerStatus_Serialize | ServerStatus_Deserialize;
 
@@ -403,4 +429,18 @@ export type Tried = {
 };
 
 export type Value = null | boolean | number | string | Value[] | { [key in string]: Value };
+
+/**  One document and its text. */
+export type WorkspaceDocument = {
+	path: string,
+	/**  From the folder, `/`-separated. */
+	rel: string,
+	text: string,
+};
+
+export type WorkspaceDocuments = {
+	documents: WorkspaceDocument[],
+	/**  The folder holds more than was read: a limit was reached. */
+	truncated: boolean,
+};
 

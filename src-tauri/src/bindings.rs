@@ -173,6 +173,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::plugins::catalog::skill_install_catalog,
                 crate::plugins::catalog::plugin_install_catalog,
                 crate::plugins::access::plugin_fs_list,
+                crate::plugins::workspace::plugin_fs_documents,
+                crate::plugins::workspace::plugin_fs_search,
                 crate::plugins::access::plugin_fs_write,
                 crate::plugins::access::plugin_fs_rename,
                 crate::plugins::access::plugin_fs_trash,

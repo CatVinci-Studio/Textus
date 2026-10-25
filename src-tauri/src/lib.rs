@@ -387,6 +387,8 @@ pub fn run() {
             plugins::access::plugin_read_resource,
             plugins::access::plugin_fs_read,
             plugins::access::plugin_fs_list,
+            plugins::workspace::plugin_fs_documents,
+            plugins::workspace::plugin_fs_search,
             plugins::access::plugin_fs_write,
             plugins::access::plugin_http,
             plugins::access::plugin_storage_get,

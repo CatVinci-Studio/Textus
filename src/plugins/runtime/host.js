@@ -348,6 +348,15 @@
       findDocuments: function () {
         return call("workspace.findDocuments");
       },
+      readDocuments: function () {
+        return call("workspace.readDocuments");
+      },
+      search: function (query, options) {
+        return call("workspace.search", {
+          query: String(query),
+          limit: options && options.limit,
+        });
+      },
       readFile: function (path) {
         return call("workspace.readFile", { path: String(path) });
       },

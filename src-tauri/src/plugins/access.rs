@@ -28,7 +28,7 @@ const MAX_HTTP_BYTES: usize = 32 * 1024 * 1024;
 /// The most a plugin keeps in its storage.
 const STORAGE_QUOTA_BYTES: usize = 50 * 1024 * 1024;
 
-fn refused(id: &str, permission: &str) -> String {
+pub(super) fn refused(id: &str, permission: &str) -> String {
     format!("{id} was not granted {permission}.")
 }
 

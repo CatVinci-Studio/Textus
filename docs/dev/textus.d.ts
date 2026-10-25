@@ -286,6 +286,23 @@ declare global {
       /** Every document in the folder: absolute `path`, `/`-separated
        *  `rel`. */
       findDocuments(): Promise<{ path: string; rel: string }[]>;
+      /** Every Markdown document in the folder with its text, in one
+       *  call - what a graph of links or a list of tasks is built from.
+       *  `truncated`: the folder holds more than was read. */
+      readDocuments(): Promise<{
+        documents: { path: string; rel: string; text: string }[];
+        truncated: boolean;
+      }>;
+      /** The documents' lines holding `query`, ignoring case, in the
+       *  sidebar's order; at most `limit` (200 unless given, 1000 at
+       *  most). */
+      search(
+        query: string,
+        options?: { limit?: number },
+      ): Promise<{
+        hits: { path: string; rel: string; line: number; text: string }[];
+        truncated: boolean;
+      }>;
       readFile(path: string): Promise<Uint8Array>;
       readText(path: string): Promise<string>;
       writeText(path: string, text: string): Promise<void>;

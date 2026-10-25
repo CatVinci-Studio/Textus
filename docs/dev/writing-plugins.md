@@ -203,7 +203,9 @@ key }` (`[@key]`); return `{ title, markdown }`, or null to let the next
   step; a delete or copy answers with the `text` it took. The Vim and
   Emacs plugins in textus-plugins use all of it.
 - `textus.workspace` - `rootPath()`, `list(path)`, `findDocuments()`,
-  `readFile(path)` (bytes), `readText(path)`, `writeText(path, text)`,
+  `readDocuments()` (every Markdown document with its text, in one call),
+  `search(query, { limit })` (the lines holding it: `path`, `rel`,
+  `line`, `text`), `readFile(path)` (bytes), `readText(path)`, `writeText(path, text)`,
   `writeFile(path, bytes)`, `rename(from, to)`, `trash(path)` (to the
   system Trash, never deleted for good), `createFolder(path)`,
   `onDidSaveDocument(fn)` (`{ path, text }`),

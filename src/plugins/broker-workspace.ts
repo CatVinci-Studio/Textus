@@ -78,6 +78,9 @@ export function workspaceHandlers(p: PluginScope) {
       const index = await fs.indexFolder(p.root());
       return index.files;
     },
+    "workspace.readDocuments": () => pluginsIpc.fsDocuments(p.id, p.root()),
+    "workspace.search": ({ query, limit }: { query: string; limit?: number }) =>
+      pluginsIpc.fsSearch(p.id, p.root(), query, limit ?? null),
     "workspace.readFile": ({ path }: { path: string }) =>
       pluginsIpc.fsRead(p.id, p.root(), path),
     "workspace.writeText": ({ path, text }: { path: string; text: string }) => {

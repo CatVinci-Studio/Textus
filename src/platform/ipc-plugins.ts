@@ -83,6 +83,11 @@ export const plugins = {
     bytes(call<ArrayBuffer>("plugin_fs_read", { id, root, path })),
   fsList: (id: string, root: string, path: string) =>
     command("plugin_fs_list", id, root, path),
+  /** The folder's Markdown documents with their text, in one call. */
+  fsDocuments: (id: string, root: string) =>
+    command("plugin_fs_documents", id, root),
+  fsSearch: (id: string, root: string, query: string, limit: number | null) =>
+    command("plugin_fs_search", id, root, query, limit),
   fsRename: (id: string, root: string, from: string, to: string) =>
     command("plugin_fs_rename", id, root, from, to),
   /** To the system Trash: nothing a plugin removes is gone for good. */

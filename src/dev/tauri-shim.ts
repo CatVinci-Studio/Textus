@@ -979,6 +979,43 @@ export function installDevTauriShim(): void {
           })) satisfies FsEntry_Serialize[],
         );
       }
+      case "plugin_fs_documents":
+      case "plugin_fs_search": {
+        const root = String(args.root).replace(/\/$/, "");
+        const docs = Object.keys(folder)
+          .filter(
+            (p) => p.startsWith(`${root}/`) && /\.(md|markdown)$/i.test(p),
+          )
+          .filter((p) => !p.slice(root.length).includes("/."))
+          .sort()
+          .map((p) => ({
+            path: p,
+            rel: p.slice(root.length + 1),
+            text: folder[p],
+          }));
+        if (cmd === "plugin_fs_documents")
+          return Promise.resolve({ documents: docs, truncated: false });
+        const needle = String(args.query).trim().toLowerCase();
+        const limit = Number(args.limit ?? 200);
+        const hits = docs.flatMap((doc) =>
+          doc.text.split("\n").flatMap((text, at) =>
+            needle && text.toLowerCase().includes(needle)
+              ? [
+                  {
+                    path: doc.path,
+                    rel: doc.rel,
+                    line: at + 1,
+                    text: text.trim(),
+                  },
+                ]
+              : [],
+          ),
+        );
+        return Promise.resolve({
+          hits: hits.slice(0, limit),
+          truncated: hits.length > limit,
+        });
+      }
       case "plugin_fs_write":
         ((w.__devFs ??= {}) as Record<string, string>)[path] = args.base64
           ? atob(String(args.contents))

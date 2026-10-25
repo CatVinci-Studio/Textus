@@ -28,6 +28,7 @@ pub mod catalog;
 pub mod install;
 pub mod state;
 pub mod store;
+pub mod workspace;
 
 use std::path::PathBuf;
 use tauri::Manager;
