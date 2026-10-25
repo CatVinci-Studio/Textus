@@ -1,4 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { askAi } from "../../ai/chat/ask-ai";
 import type { SettingsPageProps } from "./types";
 import { Byline, PluginPage, statusText } from "./PluginPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
@@ -102,6 +103,10 @@ export function PluginsPage({
             if (opened) onClose();
           })
         }
+        onEditWithAi={() => {
+          onClose();
+          askAi(editRequest(openRecord, t), "create");
+        }}
         onEnable={(on) => void enable(openRecord, on)}
         onUpdate={() => {
           const item =
@@ -220,4 +225,15 @@ function PluginCard({
       />
     </div>
   );
+}
+
+/** What "Edit with AI" puts in the AI panel's box: the plugin, and the
+ *  error it last stopped with, for the user to say what to change. */
+function editRequest(record: PluginRecord, t: Strings): string {
+  const ask = t.pluginEditWithAiAsk
+    .replace("{name}", pluginName(record))
+    .replace("{id}", record.id);
+  return record.problem
+    ? `${ask}${t.pluginEditWithAiError.replace("{error}", record.problem)}`
+    : ask;
 }

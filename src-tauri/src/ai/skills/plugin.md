@@ -33,6 +33,8 @@ metadata:
 - A small, single-purpose plugin that does what the user asked, and nothing more. The document is not the material: the plugin goes in the reply, never into the document.
 - When the request is too vague to build ("a plugin"), ask one question: what it should do and where they'd reach it (a command, a sidebar panel, a right-click item). Otherwise choose and say what you chose.
 - To change a plugin from earlier in the conversation, write every file again with the change, keeping its `id` and raising its `version` - the user installs the new one over the old.
+- To change a plugin the user has installed, read it first with `read_plugin` (the list, then its manifest and every file you change) and build on its code - never rewrite it from memory. Their own (`local.` id) keeps its id and raises its version. Anyone else's - an official one too - becomes a copy of theirs: id `local.` plus the original's name part (`catvinci.tasks` -> `local.tasks`), publisher `local`, its name with "(mine)" in their language, version `1.0.0`; say in the reply that the original stays as it was and they can turn it off in Settings › Plugins to use theirs.
+- A message about an installed plugin's error comes with the error: find its cause in the plugin's code and fix that, not the symptom.
 - A plugin can't change the editor itself, draw over the document, run native code, or reach files outside the open folder. When the request needs one of those, say so and offer what a plugin can do.
 
 ## Files

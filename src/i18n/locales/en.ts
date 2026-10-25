@@ -1317,6 +1317,9 @@ type /name in a conversation to use one.
   pluginDataClearAsk: "Clear what {name} keeps? It can't be brought back.",
   pluginVersionLabel: "Version {version}",
   pluginUsageGuide: "How to use",
+  pluginEditWithAi: "Edit with AI",
+  pluginEditWithAiAsk: "Change the {name} plugin ({id}): ",
+  pluginEditWithAiError: "it stopped with this error - fix it: {error}\n",
   pluginsAllLabel: "Plugins",
   pluginsAllHelp:
     "Off, no plugin runs and nothing they add is shown. Your plugins and their settings stay as they are.",

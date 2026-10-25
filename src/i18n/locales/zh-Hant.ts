@@ -1222,6 +1222,9 @@ export default {
   pluginDataClearAsk: "清除 {name} 儲存的資料？清除後無法復原。",
   pluginVersionLabel: "版本 {version}",
   pluginUsageGuide: "使用說明",
+  pluginEditWithAi: "用 AI 修改",
+  pluginEditWithAiAsk: "修改外掛「{name}」（{id}）：",
+  pluginEditWithAiError: "它報了這個錯，請修好：{error}\n",
   pluginsAllLabel: "外掛程式",
   pluginsAllHelp:
     "關閉後，所有外掛程式都不執行，它們加入的內容也不顯示。已安裝的外掛程式和設定維持不變。",

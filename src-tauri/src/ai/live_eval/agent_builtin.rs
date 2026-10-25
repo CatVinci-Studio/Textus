@@ -144,6 +144,31 @@ fn market_skills(name: &str) -> Option<std::path::PathBuf> {
     Some(global)
 }
 
+/// The checkout's official plugins, as installed ones.
+pub(crate) fn checkout_plugins() -> Vec<crate::plugins::install::InstalledPlugin> {
+    let Some(root) = plugins_checkout() else {
+        return Vec::new();
+    };
+    let Ok(entries) = std::fs::read_dir(root.join("plugins")) else {
+        return Vec::new();
+    };
+    let mut out: Vec<_> = entries
+        .flatten()
+        .filter_map(|e| {
+            let dir = e.path();
+            let manifest = std::fs::read_to_string(dir.join("textus-plugin.json")).ok()?;
+            Some(crate::plugins::install::InstalledPlugin {
+                id: e.file_name().to_string_lossy().into_owned(),
+                dir: dir.to_string_lossy().into_owned(),
+                manifest,
+                dev: false,
+            })
+        })
+        .collect();
+    out.sort_by(|a, b| a.id.cmp(&b.id));
+    out
+}
+
 fn plugins_checkout() -> Option<std::path::PathBuf> {
     if let Some(dir) = std::env::var_os("TEXTUS_PLUGINS_DIR") {
         return Some(dir.into());
@@ -1071,6 +1096,15 @@ fn create_cases() -> Vec<AgentCase> {
             no_edit().check("loads plugin", loads("plugin")).check("a manifest", reply_block("json textus-plugin.json", &["\"id\"", "\"commands\""])).check("its code", reply_block("js host.js", &["registerCommand"])),
             "Create mode: a small plugin - a manifest (local. id, publisher local, the permission to read the document), host.js registering the command, and a short USAGE.md - each in its own fenced block named by its path. No edits.",
         ),
+        create(
+            "create/plugin/zh/change-official",
+            Lang::ZhHans,
+            "改一下任务插件：在列表最上面显示今天到期的任务有几个。",
+            no_edit()
+                .tools(&["read_plugin"])
+                .check("a copy of the user's own", reply_block("json textus-plugin.json", &["local.tasks", "\"local\""])),
+            "Create mode, changing the official Tasks plugin: reads it with read_plugin first and builds on its code; the result is a copy of the user's own (id local.tasks, publisher local, name with (我的)), every file written out, with the count of tasks due today at the top; the reply says the original stays and can be turned off. No edits.",
+        ),
     ]
 }
 
@@ -1136,7 +1170,7 @@ mod tests {
             .collect();
         assert_eq!(skill.len(), 58, "skill cases");
         assert_eq!(route.len(), 21, "routing cases");
-        assert_eq!(cases.len(), 82);
+        assert_eq!(cases.len(), 83);
         let mut ids = HashSet::new();
         let mut per_skill: BTreeMap<&str, usize> = BTreeMap::new();
         for c in &cases {

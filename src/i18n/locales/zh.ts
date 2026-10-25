@@ -1217,6 +1217,9 @@ export default {
   pluginDataClearAsk: "清空 {name} 保存的数据？清空后无法恢复。",
   pluginVersionLabel: "版本 {version}",
   pluginUsageGuide: "使用说明",
+  pluginEditWithAi: "用 AI 修改",
+  pluginEditWithAiAsk: "修改插件「{name}」（{id}）：",
+  pluginEditWithAiError: "它报了这个错，请修好：{error}\n",
   pluginsAllLabel: "插件",
   pluginsAllHelp:
     "关闭后，所有插件都不运行，它们添加的内容也不显示。已装的插件和它们的设置不变。",

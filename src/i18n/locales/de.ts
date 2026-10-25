@@ -1336,6 +1336,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Was {name} speichert, leeren? Das lässt sich nicht rückgängig machen.",
   pluginVersionLabel: "Version {version}",
   pluginUsageGuide: "Anleitung",
+  pluginEditWithAi: "Mit KI bearbeiten",
+  pluginEditWithAiAsk: "Ändere das Plugin {name} ({id}): ",
+  pluginEditWithAiError:
+    "es ist mit diesem Fehler stehen geblieben, behebe ihn: {error}\n",
   pluginsAllLabel: "Plugins",
   pluginsAllHelp:
     "Aus: Kein Plugin läuft, und nichts, was sie hinzufügen, wird angezeigt. Deine Plugins und ihre Einstellungen bleiben erhalten.",

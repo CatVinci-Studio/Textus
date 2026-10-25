@@ -193,6 +193,22 @@ fn plain_relative(path: &str) -> bool {
         })
 }
 
+/// A plugin written in the conversation is the user's own: its id is
+/// `local.…`, so it can never replace an official plugin or anyone
+/// else's - a change to one of those is a copy beside it.
+fn written_id(manifest: &str) -> Result<String, String> {
+    let id = serde_json::from_str::<serde_json::Value>(manifest)
+        .ok()
+        .and_then(|m| m["id"].as_str().map(str::to_string))
+        .ok_or_else(|| format!("{MANIFEST} has no id."))?;
+    if !id.starts_with("local.") {
+        return Err(format!(
+            "A plugin written in the conversation needs an id starting with local. - {id} is someone else's."
+        ));
+    }
+    Ok(id)
+}
+
 pub(super) fn install_files_sync(
     app: &tauri::AppHandle,
     files: &[PluginFile],
@@ -201,9 +217,10 @@ pub(super) fn install_files_sync(
     if total > MAX_WRITTEN_BYTES {
         return Err("The plugin is too big to install from the conversation.".into());
     }
-    if !files.iter().any(|f| f.path == MANIFEST) {
+    let Some(manifest) = files.iter().find(|f| f.path == MANIFEST) else {
         return Err(format!("No {MANIFEST} among the plugin's files."));
-    }
+    };
+    written_id(&manifest.text)?;
     let root = plugins_root(app)?;
     std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
     let folder = root.join(format!(
@@ -420,6 +437,18 @@ pub async fn plugin_pick_package(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_written_plugin_is_the_users_own() {
+        assert_eq!(
+            written_id(r#"{"id":"local.word-count"}"#).unwrap(),
+            "local.word-count"
+        );
+        assert!(written_id(r#"{"id":"catvinci.tasks"}"#)
+            .unwrap_err()
+            .contains("someone else's"));
+        assert!(written_id("{}").is_err());
+    }
+
     #[test]
     fn a_written_plugin_file_stays_inside_the_plugin() {
         assert!(super::plain_relative("host.js"));
