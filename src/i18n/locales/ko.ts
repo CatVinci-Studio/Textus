@@ -1272,7 +1272,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginEditWithAi: "AI로 수정",
   pluginEditWithAiAsk: "{name} 플러그인({id}) 수정: ",
   pluginEditWithAiError: "다음 오류로 멈췄습니다. 고쳐 주세요: {error}\n",
-  pluginsAllLabel: "플러그인",
+  pluginsAllLabel: "모든 플러그인",
   pluginsAllHelp:
     "끄면 어떤 플러그인도 실행되지 않고, 플러그인이 추가한 항목도 표시되지 않습니다. 설치한 플러그인과 설정은 그대로 남습니다.",
   pluginsInstallHelp:

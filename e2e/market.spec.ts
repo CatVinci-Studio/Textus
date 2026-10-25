@@ -96,6 +96,7 @@ test("Get more leads with the recommended plugins, until something is searched f
     ).__devEmitTauriEvent("menu-open-settings"),
   );
   await page.getByRole("button", { name: "Extensions" }).click();
+  await page.getByRole("tab", { name: "Plugins" }).click();
   await page.getByRole("button", { name: "Get more" }).click();
   const picks = page.locator(".market-recommended .plugin-card");
   await expect(picks.first()).toBeVisible();

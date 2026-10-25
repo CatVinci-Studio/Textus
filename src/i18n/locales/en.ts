@@ -1321,7 +1321,7 @@ type /name in a conversation to use one.
   pluginEditWithAi: "Edit with AI",
   pluginEditWithAiAsk: "Change the {name} plugin ({id}): ",
   pluginEditWithAiError: "it stopped with this error - fix it: {error}\n",
-  pluginsAllLabel: "Plugins",
+  pluginsAllLabel: "All plugins",
   pluginsAllHelp:
     "Off, no plugin runs and nothing they add is shown. Your plugins and their settings stay as they are.",
   pluginsInstallHelp:

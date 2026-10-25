@@ -6,10 +6,10 @@ describe("Settings › Extensions' tabs", () => {
     expect(extensionsTabs(false)).toEqual(["themes", "skills", "mcp"]);
   });
 
-  it("start with Plugins where it does (a development build)", () => {
+  it("put Plugins after Themes where it does (a development build)", () => {
     expect(extensionsTabs(true)).toEqual([
-      "plugins",
       "themes",
+      "plugins",
       "skills",
       "mcp",
     ]);

@@ -10,7 +10,7 @@ export type ExtensionsTab = "plugins" | "themes" | "skills" | "mcp";
  *  (plugins/availability.ts). */
 export function extensionsTabs(pluginsShown = PLUGINS_SHOWN): ExtensionsTab[] {
   return pluginsShown
-    ? ["plugins", "themes", "skills", "mcp"]
+    ? ["themes", "plugins", "skills", "mcp"]
     : ["themes", "skills", "mcp"];
 }
 

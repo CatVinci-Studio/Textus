@@ -31,23 +31,23 @@ const savedServers = (page: Page) =>
     return local.mcpServers ?? null;
   });
 
-test("Extensions has a tab each for plugins, themes, skills and MCP", async ({
+test("Extensions has a tab each for themes, plugins, skills and MCP", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
   const panel = await openExtensions(page);
   await expect(panel.getByRole("tab")).toHaveText([
-    "Plugins",
     "Themes",
+    "Plugins",
     "Skills",
     "MCP",
   ]);
-  await expect(panel.getByRole("tab", { name: "Plugins" })).toHaveAttribute(
+  await expect(panel.getByRole("tab", { name: "Themes" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
   // Every tab alike: a line of what it holds, Get more, "⋯", Installed.
-  for (const tab of ["Plugins", "Themes", "Skills", "MCP"]) {
+  for (const tab of ["Themes", "Plugins", "Skills", "MCP"]) {
     await panel.getByRole("tab", { name: tab }).click();
     await expect(panel.locator(".extensions-intro")).toBeVisible();
     await expect(panel.getByRole("button", { name: "Get more" })).toBeVisible();

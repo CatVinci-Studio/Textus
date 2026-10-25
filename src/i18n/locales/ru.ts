@@ -1341,7 +1341,7 @@ export default {
   pluginEditWithAi: "Изменить с ИИ",
   pluginEditWithAiAsk: "Измени плагин «{name}» ({id}): ",
   pluginEditWithAiError: "он остановился с этой ошибкой, исправь её: {error}\n",
-  pluginsAllLabel: "Плагины",
+  pluginsAllLabel: "Все плагины",
   pluginsAllHelp:
     "Если выключено, ни один плагин не работает и ничего из добавленного ими не показывается. Плагины и их настройки сохраняются.",
   pluginsInstallHelp:

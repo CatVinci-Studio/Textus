@@ -1375,7 +1375,7 @@ utiliser une.
   pluginEditWithAiAsk: "Modifie l’extension {name} ({id}) : ",
   pluginEditWithAiError:
     "elle s’est arrêtée sur cette erreur, corrige-la : {error}\n",
-  pluginsAllLabel: "Extensions",
+  pluginsAllLabel: "Toutes les extensions",
   pluginsAllHelp:
     "Désactivées, aucune extension ne s’exécute et rien de ce qu’elles ajoutent ne s’affiche. Vos extensions et leurs réglages sont conservés.",
   pluginsInstallHelp:

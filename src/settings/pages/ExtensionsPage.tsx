@@ -25,7 +25,7 @@ const TABS = extensionsTabs();
 
 /**
  * Settings › Extensions: everything added to Textus, one tab each -
- * plugins (the textus-plugins catalog), themes (the theme gallery), skills
+ * themes (the theme gallery), plugins (the textus-plugins catalog), skills
  * (the built-ins, five on to start with, and the user's own), and MCP
  * servers. Every tab is laid out alike (ExtensionsTabLayout): what it
  * holds in a line, Get more and "⋯", what is installed, Advanced. Get more
@@ -46,8 +46,8 @@ export function ExtensionsPage(props: SettingsPageProps) {
     setAdding(null);
   };
   const label: Record<ExtensionsTab, string> = {
-    plugins: t.extensionsTabPlugins,
     themes: t.extensionsTabThemes,
+    plugins: t.extensionsTabPlugins,
     skills: t.extensionsTabSkills,
     mcp: t.extensionsTabMcp,
   };
@@ -100,11 +100,11 @@ export function ExtensionsPage(props: SettingsPageProps) {
       </div>
       {!props.indexing && (
         <div role="tabpanel" aria-label={label[tab]}>
-          {tab === "plugins" && (
-            <PluginsPage {...props} onGetMore={() => openMarket("plugins")} />
-          )}
           {tab === "themes" && (
             <ThemesTab t={t} onGetMore={() => openMarket("themes")} />
+          )}
+          {tab === "plugins" && (
+            <PluginsPage {...props} onGetMore={() => openMarket("plugins")} />
           )}
           {tab === "skills" && (
             <ExtensionsTabLayout

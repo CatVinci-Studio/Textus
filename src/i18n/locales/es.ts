@@ -1352,7 +1352,7 @@ para usar una.
   pluginEditWithAi: "Editar con IA",
   pluginEditWithAiAsk: "Cambia el complemento {name} ({id}): ",
   pluginEditWithAiError: "se detuvo con este error; corrígelo: {error}\n",
-  pluginsAllLabel: "Complementos",
+  pluginsAllLabel: "Todos los complementos",
   pluginsAllHelp:
     "Desactivados, ningún complemento se ejecuta y no se muestra nada de lo que añaden. Tus complementos y sus ajustes se conservan.",
   pluginsInstallHelp:

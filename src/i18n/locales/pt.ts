@@ -1333,7 +1333,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginEditWithAi: "Editar com IA",
   pluginEditWithAiAsk: "Altere o plugin {name} ({id}): ",
   pluginEditWithAiError: "parou com este erro; corrija-o: {error}\n",
-  pluginsAllLabel: "Plugins",
+  pluginsAllLabel: "Todos os plugins",
   pluginsAllHelp:
     "Desativados, nenhum plugin é executado e nada do que adicionam é mostrado. Seus plugins e as configurações deles são mantidos.",
   pluginsInstallHelp:
