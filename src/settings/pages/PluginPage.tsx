@@ -24,7 +24,7 @@ import {
 import { permissionLabel } from "../../plugins/permissions";
 import { canSwitch } from "../../plugins/lifecycle";
 import { usageGuide } from "../../plugins/usage-guide";
-import { PluginSettingsWebview } from "../../plugins/PluginWebview";
+import { PluginSettingsWebview } from "../../plugins/plugin-views";
 import type { PluginManifest } from "../../plugins/manifest";
 
 export type Attempt = (work: () => Promise<unknown>) => Promise<void>;

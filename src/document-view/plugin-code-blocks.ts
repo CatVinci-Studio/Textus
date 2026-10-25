@@ -23,7 +23,7 @@ import {
   onCodeBlockLanguages,
 } from "../plugins/code-blocks";
 import type { CodeBlockSeen } from "../plugins/manager";
-import { PluginCodeBlock } from "../plugins/PluginWebview";
+import { PluginCodeBlock } from "../plugins/plugin-views";
 import "./plugin-code-blocks.css";
 
 const key = new PluginKey<DecorationSet>("plugin-code-blocks");

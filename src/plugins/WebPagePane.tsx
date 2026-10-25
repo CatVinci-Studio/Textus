@@ -4,20 +4,7 @@ import { ChevronIcon, DetachIcon, RefreshIcon } from "../ui/icons";
 import { hasNativeWebPages } from "../platform/capabilities";
 import type { Strings } from "../i18n/strings";
 import { useNativeWebPage } from "./useNativeWebPage";
-
-/** `address` if a web page may be shown in a tab: HTTPS, and never the
- *  app's own origin - the frame keeps its page's origin, and the app's
- *  would be the app. */
-export function webPageUrl(address: string): string | null {
-  try {
-    const url = new URL(address);
-    if (url.protocol !== "https:") return null;
-    if (url.origin === window.location.origin) return null;
-    return url.href;
-  } catch {
-    return null;
-  }
-}
+import { webPageUrl } from "./web-page-url";
 
 /** Whether the address bar is folded away - one choice for every web page
  *  tab, kept in this browser's storage. */

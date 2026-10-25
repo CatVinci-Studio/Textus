@@ -8,9 +8,11 @@ import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import type { AgentMode } from "../settings/SettingsContext";
-import { PluginTabPane } from "../plugins/PluginWebview";
-import { WebPagePane } from "../plugins/WebPagePane";
-import { PluginListPane } from "../plugins/PluginListView";
+import {
+  PluginListPane,
+  PluginTabPane,
+  WebPagePane,
+} from "../plugins/plugin-views";
 import { TabBar } from "./TabBar";
 import { useSplitPanes } from "./useSplitPanes";
 import { SplitDivider, splitGridStyles } from "./SplitDivider";

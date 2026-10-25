@@ -8,8 +8,11 @@ import { getActiveDocument, getWindowAccess } from "./app-bridge";
 import { registerContextItems, type ContextMenuPlace } from "./context-menus";
 import { setHoverStarter } from "./hover-providers";
 import { localize, type MenuContribution } from "./manifest";
-import { PluginTabIcon, PluginWebviewPanel } from "./PluginWebview";
-import { PluginListPane } from "./PluginListView";
+import {
+  PluginListPane,
+  PluginTabIcon,
+  PluginWebviewPanel,
+} from "./plugin-views";
 import { pluginRecord, windowInfo, type PluginRecord } from "./plugin-records";
 import { evaluateWhen, type WhenContext } from "./when";
 import { addCodeBlockLanguage } from "./code-blocks";

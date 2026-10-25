@@ -3,7 +3,7 @@ import { splitLayout } from "../app/split-layout";
 import { getWindowAccess, type PluginLocation } from "./app-bridge";
 import { localize } from "./manifest";
 import { webviewsOf } from "./webviews";
-import { webPageUrl } from "./WebPagePane";
+import { webPageUrl } from "./web-page-url";
 import {
   optionalStr,
   str,
