@@ -120,7 +120,73 @@ fn folder(name: &str, doc_file: &str, doc: &str, files: &[(&str, &str)]) -> Disk
     for (rel, text) in files {
         put(&dir, rel, text);
     }
-    doc_folder(&dir, doc_file, doc)
+    DiskWorkspace {
+        global: market_skills(name),
+        ..doc_folder(&dir, doc_file, doc)
+    }
+}
+
+/// The skills built in until 1.3, in the market since
+/// (textus-plugins/skills): installed in the case's global folder, as a
+/// user who had them on has them. TEXTUS_PLUGINS_DIR, or a
+/// textus-plugins checkout in a folder above this one; none without.
+fn market_skills(name: &str) -> Option<std::path::PathBuf> {
+    let source = plugins_checkout()?.join("skills");
+    let global = scratch(&format!("{name}-global"));
+    let skills = global.join("skills");
+    std::fs::create_dir_all(&skills).ok()?;
+    for entry in std::fs::read_dir(&source).ok()?.flatten() {
+        let path = entry.path();
+        if path.extension().is_some_and(|e| e == "md") {
+            std::fs::copy(&path, skills.join(entry.file_name())).ok()?;
+        }
+    }
+    Some(global)
+}
+
+fn plugins_checkout() -> Option<std::path::PathBuf> {
+    if let Some(dir) = std::env::var_os("TEXTUS_PLUGINS_DIR") {
+        return Some(dir.into());
+    }
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .map(|d| d.join("textus-plugins"))
+        .find(|d| d.join("libs.json").is_file())
+}
+
+/// Every word of `words` in some comment, with the fix it names.
+fn comments_mention(
+    words: &'static [&'static str],
+) -> impl Fn(&TurnOutcome) -> Result<(), String> + Send + Sync {
+    move |o| {
+        let missing: Vec<&str> = words
+            .iter()
+            .copied()
+            .filter(|w| !o.comments.iter().any(|(_, c)| c.contains(w)))
+            .collect();
+        missing
+            .is_empty()
+            .then_some(())
+            .ok_or_else(|| format!("no comment names {missing:?}"))
+    }
+}
+
+/// A fenced block in the reply whose info string is `info` and whose text
+/// holds every one of `holds`.
+fn reply_block(
+    info: &'static str,
+    holds: &'static [&'static str],
+) -> impl Fn(&TurnOutcome) -> Result<(), String> + Send + Sync {
+    move |o| {
+        let open = format!("```{info}");
+        let start = o.reply.find(&open).ok_or_else(|| format!("no ```{info} block"))?;
+        let block = &o.reply[start..];
+        let missing: Vec<&str> = holds.iter().copied().filter(|h| !block.contains(h)).collect();
+        missing
+            .is_empty()
+            .then_some(())
+            .ok_or_else(|| format!("the ```{info} block lacks {missing:?}"))
+    }
 }
 
 fn plain(name: &str, doc: &str) -> DiskWorkspace {
@@ -614,13 +680,10 @@ fn check_cases() -> Vec<AgentCase> {
 
     // proofread
     let ws = plain("proof-zh", PROOF_ZH);
-    c.push(AgentCase::new("builtin/proofread/zh/errors", Lang::ZhHans, Lang::ZhHans, PROOF_ZH, "/proofread", edit_anywhere().lacks(&["再接再励", "二〇二六年10月", "举行,", "...", "认真的检查", "3、4个", "》、《", "……等", "１２", "！！！！"]).has(&["再接再厉", "认真地检查", "三四个"]).conventions_clean("zh-Hans-CN"), "Fixes the seeded errors (heading 。, mixed year, half-width comma, ..., 的/地, 3、4个, 》、《, ……等, full-width digits, 再接再励, ！！！！) and nothing else; wording otherwise unchanged; reply in Chinese.").disk(ws));
+    c.push(AgentCase::new("builtin/proofread/zh/errors", Lang::ZhHans, Lang::ZhHans, PROOF_ZH, "/proofread", no_edit().comments().check("comments name the fixes", comments_mention(&["再接再厉", "地"])), "Review mode: one comment per seeded error (heading 。, mixed year, half-width comma, ..., 的/地, 3、4个, 》、《, ……等, full-width digits, 再接再励, ！！！！), each giving the fix; no edits; reply in Chinese.").mode(AgentMode::Review).disk(ws));
 
     let ws = plain("proof-en", PROOF_EN);
-    c.push(AgentCase::new("builtin/proofread/en/errors", Lang::En, Lang::En, PROOF_EN, "/proofread", edit_anywhere().lacks(&["Their are", "alot", "the the", "should of", "Friday ,", "1990's", "icons needs", "Its important"]).check("heading without a final period", |o| (!h1(o).ends_with('.')).then_some(()).ok_or_else(|| format!("heading {:?}", h1(o)))).check("at most 15% changed", |o| {
-        let share = cb::changed_share(&o.doc_before, &o.doc_after);
-        (share <= 0.15).then_some(()).ok_or_else(|| format!("{:.0}% of the text changed", share * 100.0))
-    }), "Errors fixed and nothing rewritten; the colour/color mix either made consistent or raised as a comment, not silently half-fixed.").disk(ws));
+    c.push(AgentCase::new("builtin/proofread/en/errors", Lang::En, Lang::En, PROOF_EN, "/proofread", no_edit().comments().check("comments name the fixes", comments_mention(&["There are", "a lot"])), "Review mode: each error a comment with its fix (Their are, alot, the the, should of, Friday ,, 1990's, icons needs, Its important, the heading's final period); the colour/color mix raised once; no edits.").mode(AgentMode::Review).disk(ws));
 
     let ws = folder(
         "proof-fr",
@@ -628,10 +691,10 @@ fn check_cases() -> Vec<AgentCase> {
         PROOF_FR,
         &[(".textus/style.md", STYLE_FR_FR)],
     );
-    c.push(AgentCase::new("builtin/proofread/fr/typography", Lang::Fr, Lang::Fr, PROOF_FR, "/proofread", edit_anywhere().has(&["M. Martin", "1re", "2e", "A-t-il", "\u{202f}!", "\u{202f}?"]).lacks(&["Mr ", "1ère", "2ème", "t'il"]).check("space before %", has_any(&["85\u{a0}%", "85\u{202f}%"])).conventions_clean("fr-FR"), "fr-FR typography: narrow no-break spaces before ! ? ;, a no-break space before : and %, M. not Mr, 1re/2e, a-t-il; nothing else rewritten.").disk(ws));
+    c.push(AgentCase::new("builtin/proofread/fr/typography", Lang::Fr, Lang::Fr, PROOF_FR, "/proofread", no_edit().comments().check("comments name the fixes", comments_mention(&["M. Martin", "1re"])), "Review mode, fr-FR typography as comments with their fixes: narrow no-break spaces before ! ? ;, a no-break space before : and %, M. not Mr, 1re/2e, a-t-il; no edits.").mode(AgentMode::Review).disk(ws));
 
     let ws = plain("proof-ko", PROOF_KO);
-    c.push(AgentCase::new("builtin/proofread/ko/particles", Lang::Ko, Lang::Ko, PROOF_KO, "/proofread", edit_anywhere().has(&["API를", "며칠", "돼요"]).lacks(&["API 를", "。", "몇일", "안되요"]).conventions_clean("ko"), "Fixes the spacing before the particle, the full-width period, 몇일 and 안되요; no space inserted before particles; nothing else rewritten.").disk(ws));
+    c.push(AgentCase::new("builtin/proofread/ko/particles", Lang::Ko, Lang::Ko, PROOF_KO, "/proofread", no_edit().comments().check("comments name the fixes", comments_mention(&["며칠", "돼요"])), "Review mode: comments with the fixes for the spacing before the particle, the full-width period, 몇일 and 안되요; no space proposed before particles; no edits.").mode(AgentMode::Review).disk(ws));
 
     // continuity
     let ws = folder(
@@ -642,7 +705,7 @@ fn check_cases() -> Vec<AgentCase> {
     );
     c.push(AgentCase::new("builtin/continuity/zh/library", Lang::ZhHans, Lang::ZhHans, NOVEL_ZH, "/continuity", no_edit().comments().check("flags the year", |o| {
         o.comments.iter().any(|(a, c)| a.contains("第三年") && c.contains("第五年")).then_some(()).ok_or_else(|| "no comment on 第三年 citing 第五年".into())
-    }), "Finds the conflict with the library (第三年 vs 第五年) as a comment naming the entry; no false alarms about 老周; no edits.").disk(ws));
+    }), "Finds the conflict with the library (第三年 vs 第五年) as a comment naming the entry; no false alarms about 老周; no edits.").mode(AgentMode::Review).disk(ws));
 
     let ws = folder(
         "continuity-en",
@@ -872,7 +935,8 @@ fn route_cases() -> Vec<AgentCase> {
         "맞춤법 검사해 줘",
         "proofread",
         plain("route-proofread", PROOF_KO),
-    ));
+    )
+    .mode(AgentMode::Review));
     c.push(route(
         "route/continuity/en",
         Lang::En,
@@ -886,7 +950,8 @@ fn route_cases() -> Vec<AgentCase> {
             NOVEL_EN,
             &[("chapter-6.md", CHAPTER_6_EN)],
         ),
-    ));
+    )
+    .mode(AgentMode::Review));
     c.push(route(
         "route/email/fr",
         Lang::Fr,
@@ -976,6 +1041,39 @@ fn route_cases() -> Vec<AgentCase> {
     c
 }
 
+/// Create mode: a skill, a theme and a plugin, each as files in the reply
+/// - `create/<skill>/<lang>/<case>`.
+fn create_cases() -> Vec<AgentCase> {
+    let create = |id: &str, lang: Lang, msg: &str, expect: Expect, rubric: &str| {
+        AgentCase::new(id, lang, lang, "", msg, expect, rubric)
+            .mode(AgentMode::Create)
+            .disk(plain(&id.replace('/', "-"), ""))
+    };
+    vec![
+        create(
+            "create/skill/zh/weekly-report",
+            Lang::ZhHans,
+            "做一个写周报的技能：每周五把我的笔记整理成“完成、下周、阻碍”三部分，每条一行，后面写负责人。",
+            no_edit().check("loads skill", loads("skill")).check("a skill file", reply_block("markdown", &["---", "name:", "description:", "textus-modes"])),
+            "Create mode: one skill file in a ```markdown <name>.md block - front matter with a kebab-case name, a description with when to use it, textus-modes write, a 写周报-like zh label - then short instructions in Chinese with the three parts, one line each with the owner. No edits; a one-line reply first.",
+        ),
+        create(
+            "create/theme/en/night",
+            Lang::En,
+            "a calm dark theme for writing at night, warm grey page, amber links",
+            no_edit().check("loads theme", loads("theme")).check("a theme file", reply_block("css", &["--editor-bg"])),
+            "Create mode: one complete CSS theme in a ```css block - a dark warm-grey page, amber links, readable contrast. No edits.",
+        ),
+        create(
+            "create/plugin/en/word-count",
+            Lang::En,
+            "a plugin with a command that shows how many words the selection has",
+            no_edit().check("loads plugin", loads("plugin")).check("a manifest", reply_block("json textus-plugin.json", &["\"id\"", "\"commands\""])).check("its code", reply_block("js host.js", &["registerCommand"])),
+            "Create mode: a small plugin - a manifest (local. id, publisher local, the permission to read the document), host.js registering the command, and a short USAGE.md - each in its own fenced block named by its path. No edits.",
+        ),
+    ]
+}
+
 /// Every case of the suite, unfiltered.
 pub fn cases() -> Vec<AgentCase> {
     let mut c = write_cases();
@@ -983,6 +1081,7 @@ pub fn cases() -> Vec<AgentCase> {
     c.extend(check_cases());
     c.extend(format_cases());
     c.extend(route_cases());
+    c.extend(create_cases());
     // A `/name` message must reach the model expanded into that skill.
     for case in &mut c {
         let first = case.script[0].message.clone();
@@ -1037,7 +1136,7 @@ mod tests {
             .collect();
         assert_eq!(skill.len(), 58, "skill cases");
         assert_eq!(route.len(), 21, "routing cases");
-        assert_eq!(cases.len(), 79);
+        assert_eq!(cases.len(), 82);
         let mut ids = HashSet::new();
         let mut per_skill: BTreeMap<&str, usize> = BTreeMap::new();
         for c in &cases {
@@ -1047,6 +1146,8 @@ mod tests {
                 assert_eq!(parts.len(), 4, "{}", c.id);
                 assert!(SKILLS.contains(&parts[1]), "{}: unknown skill", c.id);
                 *per_skill.entry(parts[1]).or_default() += 1;
+            } else if parts[0] == "create" {
+                assert_eq!(parts.len(), 4, "{}", c.id);
             } else if parts[1] == "none" {
                 assert_eq!(parts.len(), 4, "{}", c.id);
             } else {

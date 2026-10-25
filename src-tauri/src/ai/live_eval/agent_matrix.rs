@@ -1090,7 +1090,10 @@ fn check_turn(case: &AgentCase, expect: &Expect, o: &TurnOutcome, checks: &mut C
     });
     checks.add(
         "reply language",
-        checks::check_lang(&checks::unquoted(&o.reply), case.lang),
+        checks::check_lang(
+            &checks::unquoted(&checks::without_code(&o.reply)),
+            case.lang,
+        ),
     );
     // The reply talks to a writer: no tool names, no line numbers.
     let process = checks::process_talk(&o.reply);
@@ -1098,7 +1101,7 @@ fn check_turn(case: &AgentCase, expect: &Expect, o: &TurnOutcome, checks: &mut C
         format!("reply says {:?}", process.unwrap_or_default())
     });
     if matches!(case.lang, Lang::ZhHans | Lang::ZhHant | Lang::Ja) {
-        let half = checks::half_width_in_cjk(&o.reply);
+        let half = checks::half_width_in_cjk(&checks::without_code(&o.reply));
         checks.expect("full-width punctuation in reply", half.is_none(), || {
             format!("{:?}", half.unwrap_or_default())
         });
