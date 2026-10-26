@@ -157,11 +157,9 @@ export function useAutosave(opts: {
   // Leaving the window (another app, another Textus window) or hiding the
   // page (minimised; on iOS, going to the background) writes everything.
   useEffect(() => {
-    const unlisten = thisWindow().onFocusChanged(
-      ({ payload: focused }) => {
-        if (!focused) void flush();
-      },
-    );
+    const unlisten = thisWindow().onFocusChanged(({ payload: focused }) => {
+      if (!focused) void flush();
+    });
     const onHidden = () => {
       if (document.visibilityState === "hidden") void flush();
     };

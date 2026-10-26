@@ -72,11 +72,9 @@ export function useExternalChangeReload(
         }
       });
     };
-    const unlisten = thisWindow().onFocusChanged(
-      ({ payload: focused }) => {
-        if (focused) check();
-      },
-    );
+    const unlisten = thisWindow().onFocusChanged(({ payload: focused }) => {
+      if (focused) check();
+    });
     window.addEventListener(FILE_WRITTEN_EVENT, check);
     const stopFocus = unlistenAll(unlisten);
     return () => {

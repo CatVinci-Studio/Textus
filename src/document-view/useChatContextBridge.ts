@@ -238,12 +238,7 @@ export function useChatContextBridge({
     // The window opens against the document as it reads NOW, not against the
     // snapshot Quick Ask took when it opened - it is the cross-file surface
     // and starts by following this file, so it must start from the truth.
-    const live = readChatContext(
-      run,
-      filePath,
-      docTitle,
-      thisWindow().label,
-    );
+    const live = readChatContext(run, filePath, docTitle, thisWindow().label);
     if (!live) return;
     sentSelection.current = live.selection;
     void (async () => {
