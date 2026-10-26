@@ -446,6 +446,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeOpen: "열기",
   outlineCollapse: "접기",
   outlineExpand: "펼치기",
+  wordUnit: "단어",
   wordsUnit: "단어",
   alertNote: "참고",
   alertTip: "팁",

@@ -476,6 +476,7 @@ export default {
   treeOpen: "Открыть",
   outlineCollapse: "Свернуть",
   outlineExpand: "Развернуть",
+  wordUnit: "сл.",
   wordsUnit: "сл.",
   alertNote: "Примечание",
   alertTip: "Совет",

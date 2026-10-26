@@ -138,6 +138,9 @@ test("tasks due soon come first, with their dates, and the filter narrows the li
   });
   await openPath(page, "/notes/plan.md");
   const tasks = await openSidebarList(page, "Tasks");
+  // One line high, not stretched down the sidebar.
+  const filter = await tasks.locator(".plugin-list-filter").boundingBox();
+  expect(filter?.height).toBeLessThan(48);
   const groups = tasks.locator(".plugin-list-group");
   await expect(groups.first()).toHaveText("Due soon");
   // Past due and within a week, soonest first, above the document's own
