@@ -39,7 +39,6 @@ const HEADING_KINDS: [HeadingAction, string][] = [
  *  Linux, where the hidden menu bar no longer fires them. Save, Close Tab,
  *  New and Open are handled below on every platform that needs them. */
 const LINUX_MENU_ACCELERATORS: Record<string, string> = {
-  "mod+,": "settings",
   "mod+shift+s": "save-file-as",
   "mod+=": "zoom-in",
   "mod++": "zoom-in",
@@ -53,11 +52,15 @@ const LINUX_MENU_ACCELERATORS: Record<string, string> = {
 
 /** File commands routed through the backend where the app draws the window
  *  frame (Windows, Linux), so they reach the menu dispatch while focus is
- *  inside the webview - see the keydown handler below. */
+ *  inside the webview - see the keydown handler below. Settings too: on
+ *  Windows the hidden menu's Ctrl+, did not reach it from the editor
+ *  (textus-themes#3), and opening Settings twice is harmless should both
+ *  fire. */
 const WEBVIEW_FILE_COMMANDS: Record<string, string> = {
   "mod+n": "new-file",
   "mod+o": "open-file",
   "mod+p": "export-pdf",
+  "mod+,": "settings",
 };
 
 /**

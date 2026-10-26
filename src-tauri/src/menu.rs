@@ -16,6 +16,7 @@
 //! user sees, the frontend sends them in the UI's language once a window
 //! is up (`set_menu_labels`) and the bar is rebuilt with them.
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::menu::{
@@ -135,12 +136,22 @@ fn emit_to_focused_payload<S: serde::Serialize + Clone>(
 /// Find would all quietly do nothing. A focused chat is resolved back to the
 /// editor it belongs to; failing that, any editor window is a better target
 /// than none.
+///
+/// An item run from inside a window (`trigger_menu_item`) names that window
+/// itself: on Windows and Linux a window whose focus is inside its webview
+/// may say it has none, so Settings opened from a second window showed up
+/// in the first.
 pub(crate) fn focused_editor_window(app: &tauri::AppHandle) -> Option<String> {
     let windows = app.webview_windows();
-    let focused = windows
-        .iter()
-        .find(|(_, w)| w.is_focused().unwrap_or(false))
-        .map(|(label, _)| label.clone());
+    let focused = MENU_ORIGIN
+        .with(|origin| origin.borrow().clone())
+        .filter(|label| windows.contains_key(label))
+        .or_else(|| {
+            windows
+                .iter()
+                .find(|(_, w)| w.is_focused().unwrap_or(false))
+                .map(|(label, _)| label.clone())
+        });
 
     match focused {
         Some(label) if crate::commands::chat_window::is_editor_window(&label) => Some(label),
@@ -286,8 +297,17 @@ pub fn set_menu_accelerators(app: AppHandle, accelerators: HashMap<String, Strin
 /// whole app.
 #[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
-pub fn trigger_menu_item(app: tauri::AppHandle, id: String) {
+pub fn trigger_menu_item(app: tauri::AppHandle, window: tauri::WebviewWindow, id: String) {
+    MENU_ORIGIN.with(|origin| *origin.borrow_mut() = Some(window.label().to_string()));
     dispatch(&app, &id);
+    MENU_ORIGIN.with(|origin| *origin.borrow_mut() = None);
+}
+
+thread_local! {
+    /// The window whose app-drawn menu or shortcut is being dispatched, for
+    /// `focused_editor_window` - set only for the length of one
+    /// `trigger_menu_item` call, on the thread running it.
+    static MENU_ORIGIN: RefCell<Option<String>> = const { RefCell::new(None) };
 }
 
 /// The recent-file list behind File > Open Recent, for the app-drawn menu -
