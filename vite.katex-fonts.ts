@@ -1,14 +1,8 @@
 import type { Plugin } from "vite";
 
 /**
- * KaTeX's stylesheet lists every font three times - woff2, woff, ttf - and
- * Vite emits every file a url() names, so the app and the playground shipped
- * ~800 KB of woff/ttf that no webview ever loads: WKWebView, WebView2 and
- * WebKitGTK (and the Chromium the e2e flows run in) all take the woff2 first.
- * This trims each @font-face src list in KaTeX's CSS to its woff2 entry
- * before Vite resolves the urls, so the other two are never bundled.
- * Exports inline the page's CSS rules (src/export/exporters.ts), which
- * carry the same woff2 urls the editor already used.
+ * Trims KaTeX's @font-face src lists to woff2 before Vite resolves them:
+ * every webview takes woff2 first, so woff and ttf were ~800 KB never loaded.
  */
 export function katexWoff2Only(): Plugin {
   return {

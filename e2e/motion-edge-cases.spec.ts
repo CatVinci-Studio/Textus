@@ -3,13 +3,12 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
- * How AI text lands and leaves where the usual case isn't (1.2.1): with
- * the system's Reduce motion, in a list, a quote and a table, from Quick
- * Ask, and in a right-to-left script. Each lands where it will stand once
- * taken, nothing half written shows, and nothing is left behind.
+ * How AI text lands and leaves where the usual case isn't: Reduce motion, a
+ * list, a quote, a table, Quick Ask, a right-to-left script. Each lands where
+ * it will stand, nothing half written shows, and nothing is left behind.
  */
 
-// The editor itself, not a copy fading out beside it (ui/moves.ts).
+// The editor itself, not a copy fading out beside it.
 const editor = '[data-active-tab="true"] .ProseMirror:not(.motion-ghost)';
 
 async function open(page: Page, markdown: string, display = "inline") {

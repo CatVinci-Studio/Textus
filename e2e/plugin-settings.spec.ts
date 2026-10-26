@@ -3,12 +3,8 @@ import { openApp } from "./helpers";
 import { openWithPlugins } from "./plugin-helpers";
 
 /**
- * Settings › Plugins with the catalog the dev server serves from the
- * textus-plugins checkout (vite.dev-plugins.ts): nothing comes installed,
- * Get plugins offers the catalog's plugins with who made them and a search
- * over them, the list kept from last time shows when a fresh one can't be
- * had, installing one turns it on, each installed plugin is a card that
- * opens its own page, and a plugin that needs a setting on asks for it.
+ * Settings › Plugins, with the catalog the dev server serves from the
+ * textus-plugins checkout.
  */
 
 const emit = (page: Page, event: string) =>

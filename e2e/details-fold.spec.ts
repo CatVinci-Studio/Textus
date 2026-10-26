@@ -2,10 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * A <details> written around markdown folds that markdown away
- * (editor/html/details-fold.ts). Whatever points into the
- * folded text - find, the outline, the AI's edits and notes, the caret -
- * opens it, so nothing it points at is hidden.
+ * A <details> around markdown folds it away. Whatever points into the folded
+ * text (find, the outline, the AI's edits and notes, the caret) opens it.
  */
 
 const HIDDEN = "The zebracorn hides in a sentence that could be shorter.";

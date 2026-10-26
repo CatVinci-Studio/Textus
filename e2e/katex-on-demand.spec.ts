@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FIRST_LOAD, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// KaTeX loads on a document's first formula (src/editor/math/katex-loader.ts)
-// instead of with the app. A document that has maths waits for it before
-// it opens (KatexFirst), so its formulas are drawn from the first frame.
+// KaTeX loads on a document's first formula instead of with the app. A
+// document that has maths waits for it before it opens, so its formulas are
+// drawn from the first frame.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 

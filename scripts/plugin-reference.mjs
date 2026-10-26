@@ -1,10 +1,5 @@
-// The plugin API reference (docs/dev/plugin-reference.md), made from
-// docs/dev/textus.d.ts - the one source of truth for the API - so the two
-// never disagree. Every interface and type of the Textus namespace in the
-// order the file has them, each member with its signature and its comment.
-//   node scripts/plugin-reference.mjs          writes the page
-//   node scripts/plugin-reference.mjs --check  fails when it is out of date
-// (src/plugins/plugin-reference.test.ts runs the check with the unit tests.)
+// Writes the plugin API reference page from textus.d.ts, the API's one
+// source of truth. `--check` fails when the page is out of date.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";

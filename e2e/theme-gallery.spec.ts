@@ -1,12 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// Settings › Extensions › Themes › Get more, against the dev shim's
-// canned gallery (src/dev/tauri-shim.ts, `window.__devThemeGallery`):
-// installing a theme makes it a user theme and applies it, an installed
-// one can be picked again, a newer catalog entry offers an update that
-// replaces the installed copy, and an unreachable gallery says so with a
-// way to retry.
+// The theme gallery against the dev shim's canned one: install, pick again,
+// update in place, and an unreachable gallery with a retry.
 
 interface DevGallery {
   offline: boolean;

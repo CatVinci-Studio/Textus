@@ -2,9 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { calls, openDoc } from "./image-disk";
 
 /**
- * A picture's right-click menu (editor/editor-menu.ts) offers its file
- * next to the width items: Show in folder for one on this computer, and
- * Copy image path - the full path, or a web image's address.
+ * A picture's right-click menu offers its file next to the width items: Show
+ * in folder for a local one, and Copy image path (the full path, or a web
+ * image's address).
  */
 
 const menuItems = (page: Page) => page.locator(".context-menu-item");

@@ -1,10 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { blockIds, mockInvoke, openApp } from "./helpers";
 
-// AI proposals not decided yet are kept with their document
-// (ai/revision/kept-proposals.ts): closed and opened again, it offers them
-// again - the dev shim keeps them by path, as ai/kept_proposals.rs does in
-// the project's .textus/pending/.
+// Undecided AI proposals are kept with their document: closed and reopened,
+// it offers them again. The dev shim keeps them by path, as the backend does.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const PATH = "/home/me/story.md";

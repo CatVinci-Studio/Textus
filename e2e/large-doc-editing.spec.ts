@@ -1,11 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// Editing across a large document (over editor/large-doc.ts's threshold,
-// where formulas off screen are drawn only as they come near): selecting
-// and copying all of it, finding text at its end, an outline jump that
-// lands and stays, typing and Enter in the middle, and a tab switched
-// away from and back to.
+// Editing across a large document, where off-screen formulas draw as they
+// come near: select and copy all, find at its end, an outline jump that
+// stays, typing and Enter mid-way, and a tab switched away and back.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const scroller = '[data-active-tab="true"] > .editor-scroll';
@@ -102,7 +100,7 @@ test("typing and Enter in the middle work as anywhere", async ({ page }) => {
   const p = page.locator(`${editor} p`, { hasText: "Paragraph 700 keeps" });
   await p.scrollIntoViewIfNeeded();
   // Drawn once it is in view: the click waits for that frame, as a reader's
-  // does (caret-restore.spec.ts's leaveCaretAt).
+  // does.
   await page.evaluate(
     () =>
       new Promise((resolve) =>

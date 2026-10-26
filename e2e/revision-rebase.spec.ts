@@ -2,12 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * The writer edits the text a rewrite proposes to change, before deciding
- * on it - or while it is still streaming in. Their edit always stands: a
- * change whose original sentence they touched is set aside (and back on
- * undo), every other change stays and is applied as it was; the rest of
- * the paragraph is never written over. It used to drop the whole proposal
- * the moment any character in its paragraph changed.
+ * The writer edits text a pending rewrite would change. Their edit always
+ * stands: only changes whose original they touched are set aside.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';

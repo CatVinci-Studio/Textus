@@ -1,10 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// The composer's mode and model in one control (ai/chat/ModePicker.tsx):
-// "Review · gpt-6.1-sol"; its list holds the modes, each with a line on
-// what it does, and under them the models, which switch the chat provider
-// and model without a trip to Settings.
+// The composer's mode and model in one control: its list holds the modes,
+// then the models, which switch provider and model without a trip to Settings.
 
 test("one control names the mode and the model, and its list switches either", async ({
   page,

@@ -5,25 +5,15 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "../helpers";
 import { mixedDoc, plainDoc, type LargeDoc } from "./large-docs";
 
-// The large-document benchmark (design §6.4): opens each generated
-// document the way a file drop does, then measures opening, typing in the
-// middle, Enter, scrolling end to end, an outline-style jump to the last
-// heading, a save and switching to its tab from another. Not a test - it asserts nothing about the numbers - and not
-// in `npm run test:e2e`: `npm run bench:large-doc` (playwright.perf.config.ts).
-//
-//   PERF_DOCS=zh-5k,en-5k   only these documents
-//   PERF_CHARS=100          characters typed per document (default 200)
-//   PERF_LABEL=before       results under test-results/perf/before/
-//
-// Numbers go to the console and to test-results/perf/<doc>.json; the
-// documents themselves to e2e/perf/fixtures/, for opening in the real app
-// (WebKitGTK, WKWebView, WebView2 aren't reachable from Playwright).
+// The large-document benchmark: measures opening, typing, scrolling, saving
+// and tab switching per generated document. Asserts nothing about the
+// numbers. Env: PERF_DOCS, PERF_CHARS (default 200), PERF_LABEL.
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..", "..");
 
-// zh-1k is about the 50,000-character document of design §6.4; the 5k
-// and 20k ones show what grows with length.
+// zh-1k is about 50,000 characters; the larger ones show what grows with
+// length.
 const ALL: (() => LargeDoc)[] = [
   () => mixedDoc("zh", 1000),
   () => mixedDoc("zh", 5000),
@@ -414,10 +404,8 @@ async function jumpToEnd(page: Page) {
   });
 }
 
-/** A second, small document opened beside it, then Ctrl+Tab back and
- *  forth: the time from the key to the frame after the
- *  large document is in front again. A tab in the back is display: none,
- *  so coming to the front lays it out again. */
+/** Ctrl+Tab between it and a small document: the time until the large one
+ *  is drawn in front again, which lays it out anew (back tabs are hidden). */
 async function switchTabs(page: Page, count: number) {
   await page.evaluate(() => {
     const w = window as unknown as Record<string, unknown> & {

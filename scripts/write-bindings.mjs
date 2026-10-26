@@ -1,9 +1,6 @@
 #!/usr/bin/env node
-// Writes src/platform/bindings/ again from the Rust commands - `npm run
-// bindings`, after changing a command's signature or a type it takes or
-// answers. The generator is a Rust test (src-tauri/src/bindings.rs), which
-// otherwise only checks that the files are current: `cargo test` (and so
-// `npm run check:native` and CI's native jobs) fails while they are not.
+// Regenerates the TypeScript bindings from the Rust commands, through the
+// Rust test that otherwise only checks they are current.
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

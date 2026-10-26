@@ -1,13 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
-/**
- * A plugin's settings of every kind on its page (settings/pages/
- * PluginSettings.tsx): rows under their group's heading, a row shown only
- * while another setting is on (`when`), a colour, a list of lines kept as
- * a list, a number kept within its bounds, and a button that runs one of
- * the plugin's commands.
- */
+/** A plugin's settings of every kind on its page. */
 
 const HOST = `
 exports.activate = function () {

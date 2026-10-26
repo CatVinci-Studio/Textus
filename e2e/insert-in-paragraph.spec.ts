@@ -3,10 +3,8 @@ import { blockIds, openApp, pasteMarkdown } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
- * New text a proposal adds next to a sentence inside a paragraph shows
- * there, in the paragraph, where Accept writes it - in every view. Drawn
- * at the paragraph's edge, it stood as a paragraph of its own and moved
- * into the text when taken (1.2.1).
+ * New text a proposal adds next to a sentence inside a paragraph shows in the
+ * paragraph, where Accept writes it, in every view.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';
@@ -88,7 +86,7 @@ test("a long insertion in a paragraph lands in batches, each fading in as one", 
         },
       },
     ],
-    // Slow enough to be held past HOLD_MS (unit-reveal.ts).
+    // Slow enough to be held past HOLD_MS.
     { chunk: 4, every: 120 },
   );
   await page.evaluate(() => {
@@ -103,7 +101,7 @@ test("a long insertion in a paragraph lands in batches, each fading in as one", 
       const el = document.querySelector(".milkdown .pending-insert");
       // Still being written: the caret at its end.
       if (el?.classList.contains("pending-insert-typing")) {
-        // The words coming in (ui/cascade.ts), not the caret's blink.
+        // The words coming in, not the caret's blink.
         const running = [...el.querySelectorAll(".cascade-word")]
           .flatMap((word) => word.getAnimations())
           .filter((a) => a.playState === "running");

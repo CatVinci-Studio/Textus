@@ -2,10 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * A plugin's tools for Textus AI (contributes.aiTools, with ai.tools;
- * src-tauri plugins/ai_tools.rs through the dev shim): the window offers
- * them from the manifest before the plugin has started, a call starts it
- * and its answer goes back, and without ai.tools nothing is offered.
+ * A plugin's tools for Textus AI: offered from the manifest before the
+ * plugin starts, a call starts it, and without ai.tools nothing is offered.
  */
 
 const HOST = `

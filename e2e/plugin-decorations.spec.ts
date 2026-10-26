@@ -2,10 +2,8 @@ import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * Marks a plugin puts on the text (textus.editor.registerDecorations,
- * document-view/plugins/plugin-decorations.ts): the blocks in sight go to the
- * plugin, and what it answers is drawn - on an anchor's words or a whole
- * block - and drawn again as the text changes.
+ * Marks a plugin puts on the text (textus.editor.registerDecorations),
+ * drawn on words or whole blocks and redrawn as the text changes.
  */
 
 const HOST = `

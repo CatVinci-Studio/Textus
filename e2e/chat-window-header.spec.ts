@@ -1,10 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// The AI panel popped out into its own window (ChatWindowApp) draws its
-// header buttons like the docked panel's. They used to be a 20px class of
-// their own that kept the browser's button padding: each icon was squeezed
-// to 8px wide and drawn at half opacity.
+// The AI panel popped out into its own window draws its header buttons like
+// the docked panel's, not squeezed by the browser's button padding.
 
 type Box = { width: number; height: number; opacity: string };
 

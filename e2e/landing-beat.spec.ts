@@ -3,10 +3,8 @@ import { openApp, pasteMarkdown } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
- * A rewrite's paragraph lands as one move (ui/moves.ts's beats): its new
- * text in the document and its cards in the margin enter together - drawn
- * a frame or two apart, the card came in after its text, as a second
- * event (1.2.1).
+ * A rewrite's paragraph lands as one move: its new text in the document and
+ * its cards in the margin enter together.
  */
 
 const ORIGINAL = [

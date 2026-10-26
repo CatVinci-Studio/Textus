@@ -3,10 +3,8 @@ import { openApp } from "./helpers";
 import { openPath } from "./plugin-helpers";
 
 /**
- * The open folder's documents for a plugin in one call (textus.metadata's
- * all and search; src-tauri plugins/metadata.rs and workspace.rs through
- * the dev shim): a small plugin puts what it found in the window bar, and
- * without files.read it is refused.
+ * textus.metadata's all and search over the open folder; refused without
+ * files.read.
  */
 
 const HOST = `

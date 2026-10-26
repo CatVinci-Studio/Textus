@@ -1,14 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, openPhone, PHONE } from "../../helpers";
 
-// Screenshots of the AI surfaces in the text - a rewrite decided sentence by
-// sentence, the review bar, margin notes, the grammar card, the Memory view
-// - on desktop and phone, light and dark, for review rather than as a
-// baseline. The sample is a reader's own notes on a classic: the AI edits
-// the notes, and the quoted original is never touched. Runs only with
-// TEXTUS_SHOTS_DIR set to where the PNGs go:
-//
-//   TEXTUS_SHOTS_DIR=../assets/working/ai-design/shots npm run screenshots:review -- ai-design
+// Review screenshots of the AI surfaces in the text, desktop and phone,
+// light and dark. The AI edits a reader's notes, never the quoted classic.
+// Runs only with TEXTUS_SHOTS_DIR set to where the PNGs go.
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");
@@ -230,9 +225,8 @@ test.describe("phone", () => {
   });
 });
 
-// The same surfaces under other themes: a built-in one in each appearance,
-// and an imported Typora theme - the margin, the bar and the panel take the
-// theme's colours with the document.
+// The same surfaces under a built-in theme per appearance and an imported
+// Typora theme.
 for (const [themeId, scheme] of [
   ["parchment", "light"],
   ["slate", "dark"],

@@ -1,21 +1,7 @@
 #!/usr/bin/env node
-// Checks that every file carrying the app's version agrees on it:
-// package.json, both version fields of package-lock.json, the [package] of
-// src-tauri/Cargo.toml, the textus entry of src-tauri/Cargo.lock and
-// src-tauri/tauri.conf.json. A bump that misses one ships an app whose
-// About box, updater manifest and installer names disagree - the release
-// workflow names files after tauri.conf.json, the updater compares against
-// Cargo's version.
-//
-//   node scripts/check-versions.mjs                 (exit 1 on a mismatch)
-//   node scripts/check-versions.mjs --tag v1.2.3    (also: the tag, minus
-//                                                    "v" or "ios-v", matches;
-//                                                    for a stable vX.Y.Z, no
-//                                                    release-note fragments
-//                                                    are left unassembled)
-//   node scripts/check-versions.mjs --print         (print the version)
-//   node scripts/check-versions.mjs --root DIR      (check another checkout,
-//                                                    e.g. an old tag's)
+// Checks every file carrying the app's version agrees on it, or the About
+// box, updater and installer names disagree. `--tag` also checks the tag and,
+// for a stable one, that no release-note fragments are left.
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -94,7 +80,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(1);
   }
   // A stable desktop tag also needs its release notes assembled from the
-  // fragments (scripts/release-notes.mjs).
+  // fragments.
   const notesProblems =
     tag && /^v[^-]+$/.test(tag) ? unreleasedProblems(root, tag.slice(1)) : [];
   if (notesProblems.length > 0) {

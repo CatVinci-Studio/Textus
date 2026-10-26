@@ -2,10 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * A plugin's own data (src-tauri plugins/store.rs, through the dev shim):
- * `ctx.storage.global` for every document, `ctx.storage.project` in
- * the open folder's `.textus/plugins/<id>/` - the project's only with
- * project.data, and one plugin never sees another's.
+ * A plugin's own data: `ctx.storage.global`, and `ctx.storage.project`
+ * only with project.data. One plugin never sees another's.
  */
 
 const HOST = `

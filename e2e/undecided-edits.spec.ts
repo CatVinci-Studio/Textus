@@ -2,10 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * A request after one whose proposal is still undecided works on the
- * document as the user sees it: an edit quoted from that proposal goes
- * into it (usePendingEdits's joinEdit), instead of standing apart with
- * nowhere to go.
+ * A request after an undecided proposal works on the document as the user
+ * sees it: an edit quoted from that proposal joins it.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';

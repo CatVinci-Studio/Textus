@@ -2,13 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * Review notes where they crowd (rc.6 feedback): many notes on one
- * paragraph stacked down past it as whole cards, beside other paragraphs
- * and below the text's end. Cut to the room beside their lines they stay
- * by their passages - chips, opened by a click - and where there are more
- * notes than lines, the run is one chip, "8 notes", which opens to them
- * all. The notes bar steps through them, marks them all done, and asks
- * about some together.
+ * Crowded review notes stay by their passages as chips, opened by a click;
+ * with more notes than lines, the run is one chip ("8 notes"). The notes bar
+ * steps through them, marks them all done, and asks about some together.
  */
 
 const PARA =

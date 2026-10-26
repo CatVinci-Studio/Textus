@@ -1,9 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// #218: a document reopened from the last session (or File > Open Recent)
-// comes back with the caret where it was left, not at its top - as long
-// as the file hasn't changed since.
+// A document reopened from the last session or Open Recent comes back with
+// the caret where it was left, as long as the file hasn't changed since.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const scroller = '[data-active-tab="true"] .editor-scroll';
@@ -140,8 +139,8 @@ test("Typewriter Mode puts the restored caret's line in the middle", async ({
   expect(Math.abs(line.y + line.height / 2 - middle)).toBeLessThan(40);
 });
 
-// Over editor/large-doc.ts's threshold the place is kept as a document
-// position: writing out the markdown before the caret took most of a second.
+// Over the large-document threshold the place is kept as a document
+// position: serializing the markdown before the caret is too slow.
 test("a large document comes back at its caret too", async ({ page }) => {
   const big = Array.from(
     { length: 4200 },

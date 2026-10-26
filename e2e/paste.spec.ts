@@ -1,9 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// Issues #59 and #60: what a paste puts in the markdown. The backend is the
-// dev shim, so the image commands answer with canned srcs - the Rust side
-// of storing the file is covered by its own tests.
+// What a paste puts in the markdown. The dev shim answers the image
+// commands with canned srcs.
 
 function emit(page: Page, name: string) {
   return page.evaluate(
@@ -195,9 +194,8 @@ test("a copied non-image file still pastes as a link", async ({ page }) => {
   expect(await sourceOf(page)).toBe("[/home/me/a.pdf](file:///home/me/a.pdf)");
 });
 
-/** A real Ctrl+V of `text` at the caret as it stands, through the system
- *  clipboard (paste() dispatches the event itself, after focusing the
- *  editor, which reads the caret afresh and puts it at the end). */
+/** A real Ctrl+V of `text` at the caret as it stands; paste() would
+ *  refocus the editor and move the caret to the end. */
 async function pasteHere(page: Page, text: string) {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.evaluate((value) => navigator.clipboard.writeText(value), text);
@@ -219,8 +217,8 @@ test("a URL pasted inside a link's text joins it instead of splitting it", async
   page,
 }) => {
   await pasteMarkdown(page, "Before [Textus](https://t.example) after.");
-  // "Before [Tex|tus" - the caret on the link shows its Markdown
-  // (link-reveal.ts), and the URL goes into it as text.
+  // "Before [Tex|tus" - the caret on the link shows its Markdown, and the
+  // URL goes into it as text.
   await caretAt(page, 11);
   await pasteHere(page, "https://inner.example");
   await page.keyboard.press("End");
@@ -286,8 +284,8 @@ test("a copy's plain text reads as words, links with their address", async ({
 test("Copy as Markdown puts the source on the clipboard; an old Markdown copy setting changes nothing", async ({
   page,
 }) => {
-  // The Copy setting is gone (1.2.0): a settings file that still says
-  // "markdown" loads, and Cmd+C gives the readable text as for everyone.
+  // A settings file that still says "markdown" loads, and Cmd+C gives the
+  // readable text.
   await openApp(page, {
     settings: { language: "en", copyTextMode: "markdown" },
   });

@@ -1,12 +1,9 @@
 import type { CDPSession, Page } from "@playwright/test";
 
 /**
- * Frame timing for the motion benchmark (motion.bench.ts): a
- * requestAnimationFrame loop that records every frame's interval, the
- * long tasks and long animation frames Chromium reports (the latter with
- * the time scripts spent forcing style and layout), and the engine's own
- * layout and style counters (CDP Performance.getMetrics) over the same
- * span.
+ * Frame timing for the motion benchmark: every frame's interval, long tasks
+ * and long animation frames (with forced style and layout time), and the
+ * engine's layout and style counters over the same span.
  */
 
 export interface FrameReport {

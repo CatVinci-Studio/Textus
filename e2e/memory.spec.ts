@@ -37,7 +37,7 @@ test("a new library entry opens in a tab with the panel still on Memory, its tem
     settings: { language: "en" },
     storage: { "textus-agent-panel-open": "1" },
   });
-  // What projectLibraryTemplate writes (i18n/locales/en.ts).
+  // What projectLibraryTemplate writes.
   const note =
     "Facts Textus AI should keep consistent whenever Lin or an alias comes up. Comments like this one are never sent.";
   await mockInvoke(page, {
@@ -67,8 +67,7 @@ test("a new library entry opens in a tab with the panel still on Memory, its tem
 
 // ---------------------------------------------------------------- remember
 
-/** What the remember tool returns when it saved something (ai/memory.rs's
- *  Remembering). */
+/** What the remember tool returns when it saved something. */
 const REMEMBERED = {
   remembered: "project/memory/Use-British-spelling",
   scope: "project",
@@ -140,7 +139,7 @@ test("what Textus AI remembers shows under its reply, and Undo takes it back", a
       { kind: "User", text: message },
       { kind: "Assistant", text: "Noted - British spelling from now on." },
     ],
-    // After the reply, apart from it (ai/memory/pass.rs).
+    // After the reply, apart from it.
     memory_pass: [REMEMBERED],
     memory_undo: null,
   });
@@ -283,7 +282,7 @@ test("a request worth doing again is offered as a skill, saved only when asked",
       { kind: "Assistant", text: "Here is the report." },
     ],
     memory_pass: [],
-    // After the reply (ai/memory/skill_offer.rs).
+    // After the reply.
     ai_offer_skill: {
       name: "Weekly-report",
       description: "Turns notes into the weekly report.",

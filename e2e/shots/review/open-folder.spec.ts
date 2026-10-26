@@ -1,11 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "../../helpers";
 
-// Screenshots of the sidebar with a folder opened (File > Open Folder…) and
-// of its file-name search, in English and Chinese, light and dark - for
-// review, not a baseline. Runs only with TEXTUS_SHOTS_DIR set:
-//
-//   TEXTUS_SHOTS_DIR=../assets/working/open-folder npm run screenshots:review -- open-folder
+// Review screenshots of the sidebar with a folder opened and its file-name
+// search. Runs only with TEXTUS_SHOTS_DIR set.
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");

@@ -3,16 +3,13 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 import { STORY, STORY_CLASSICAL, streamRevise } from "./revise-mock";
 
 /**
- * A rewrite in the margin views (1.2.0-rc.1 feedback): the text reads as it
- * will once accepted - a paragraph the rewrite joins to the one before it
- * left a blank gap - the cards stack and move instead of the text, and a
- * rewrite streaming in brings its changes one at a time: the text, the
- * card and the review bar's count together.
+ * A rewrite in the margin views: the text reads as it will once accepted,
+ * the cards move instead of the text, and streamed changes arrive one at a
+ * time.
  */
 
-// A rewrite that keeps a card per paragraph (sentence-diff.ts merges a run
-// of short ones only when both sides are short): the story's lines but its
-// dialogue, each rewritten at length - short passages, tall cards.
+// Each line rewritten at length, so short runs aren't merged: short
+// passages, tall cards.
 const TAIL_CLASSICAL =
   "窗外雨犹未止，室中唯闻螺丝刀触壳之声，一下复一下，若有人于极远之处，耐心叩一扇不复开启之门，久久不绝。灯影摇于壁上，旧物无言，人亦无言，唯夜色渐深。";
 const pick = (text: string, keep: number[], tail: string) =>
@@ -309,7 +306,7 @@ test("mid-stream, ‹ › step through the changes so far; Accept and Reject wai
   const hold = Math.ceil((json.indexOf("儿子说完，") + 4) / 4);
   await streamRevise(page, [{ id: "s1", args }], { chunk: 4, hold });
   await send(page);
-  // One landing at a time (unit-reveal.ts): slower on a loaded machine.
+  // One landing at a time: slower on a loaded machine.
   await expect(page.locator(".revision-note")).toHaveCount(5, {
     timeout: 15_000,
   });

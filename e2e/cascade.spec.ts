@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// The AI's writing comes in smoothly: in the document a paragraph at a
-// time, written whole and rising into place (a sentence at a time, it came
-// in jerks); in the chat a word at a time (ui/cascade.ts), as a reply
-// streams in Claude's apps; a diagram a part at a time, its nodes first.
+// The AI's writing comes in smoothly: in the document a paragraph at a time,
+// rising into place whole; in the chat a word at a time; a diagram a part at
+// a time, its nodes first.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 

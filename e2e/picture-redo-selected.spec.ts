@@ -1,10 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// Redoing a picture the writer selected (rc.6: the new picture was made and
-// showed on its card, but never took the old one's place in the text). The
-// reply is built from what the request carried - the picture's Markdown as
-// the model was shown it - the way a model copies it.
+// Redoing a picture the writer selected: the new one takes the old one's
+// place in the text. The reply copies the picture's Markdown from the request.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const PNG =
@@ -44,10 +42,8 @@ async function open(page: Page, picture: string) {
   await expect(page.locator(`${editor} .image-view img`)).toHaveCount(1);
 }
 
-/** The model's side: generate_image `replace` naming the picture's block
- *  in the document it was sent, the picture made after `delay` ms, the call
- *  settled as the backend settles it (src/dev/settle-calls.ts). Records
- *  each request's blocks and message. */
+/** The model's side: generate_image `replace` on the picture's block, made
+ *  after `delay` ms. Records each request's blocks and message. */
 async function replyWithRedo(page: Page, delay: number) {
   await page.evaluate(
     ({ png, delay }) => {
@@ -158,8 +154,8 @@ async function replyWithRedo(page: Page, delay: number) {
               setTimeout(tick, 10);
               return;
             }
-            // The backend says the call started once more as it runs it
-            // (images.rs' execute), for a provider that didn't stream it.
+            // The backend announces the call again as it runs it, for a
+            // provider that didn't stream it.
             send({ type: "toolStart", callId: "g1", name: "generate_image" });
             for (const turn of turns) send({ type: "turn", turn });
             resolve([{ kind: "User", text: message }, ...turns]);

@@ -1,8 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { PHONE, mockInvoke, openPhone, pasteMarkdown } from "./helpers";
 
-// Quick Ask and the AI composer on an iPhone (mobile/styles/quick-ask-dock.css,
-// mobile/styles/composer.css), in Chromium's phone viewport (see PHONE).
+// Quick Ask and the AI composer in Chromium's phone viewport.
 test.use(PHONE);
 
 const PARAGRAPH = "The survey covered three districts over two months.";

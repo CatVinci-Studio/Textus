@@ -6,20 +6,9 @@ import { STORY, STORY_CLASSICAL, streamRevise } from "../revise-mock";
 import { FrameMeter, formatReports, type FrameReport } from "./frame-meter";
 
 /**
- * The motion benchmark: every animated surface and scroll the app has,
- * played with the animations on, timed frame by frame (frame-meter.ts).
- * Not a test - it asserts nothing about speed, and isn't in CI - but a
- * repeatable measurement, for comparing a change against main:
- *
- *   npm run bench:motion                     CPU slowed 4x, as WebKitGTK
- *   BENCH_CPU=1 npm run bench:motion         full speed
- *   BENCH_OUT=/tmp/a.json npm run bench:motion
- *   npm run bench:motion -- -g "sidebar"     one scenario
- *
- * The table is printed at the end and written to BENCH_OUT
- * (test-results/motion-bench.json by default). BENCH_TRACE=1 also records
- * a Chromium trace per scenario next to it, for chrome://tracing or the
- * Performance panel.
+ * The motion benchmark: every animated surface and scroll, timed frame by
+ * frame. Not a test and not in CI; run `npm run bench:motion` (BENCH_CPU,
+ * BENCH_OUT, BENCH_TRACE=1) to compare a change against main.
  */
 
 const CPU = Number(process.env.BENCH_CPU ?? 4);

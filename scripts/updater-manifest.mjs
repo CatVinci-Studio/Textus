@@ -1,41 +1,7 @@
 #!/usr/bin/env node
 // The in-app updater's manifest, and the guard that keeps Textus releases
-// away from Levis installs.
-//
-// Levis (com.chengaoshen.levis, 0.9.x) polls
-//   github.com/CatVinci-Studio/Levis/releases/latest/download/latest.json
-// and the repository rename to CatVinci-Studio/Textus redirects that URL to
-// this repository. Textus is signed with the same updater key, so a
-// `latest.json` on a Textus release would be downloaded, verified and
-// installed over Levis.app by every Levis install. Textus therefore never
-// publishes a file of that name: its manifest is `textus-latest.json`,
-// written here from the draft release's signed artifacts (tauri-action runs
-// with uploadUpdaterJson: false - `includeUpdaterJson` before tauri-action 1.0).
-//
-// Releases up to 1.1.0 carried one `latest.json`: a copy of the last Levis
-// release's (v0.9.8), so a Levis install updated to that Levis, which told
-// its user about Textus. Levis support ended after 1.1.0, and later releases
-// carry no copy: once one of them is "Latest", a Levis install finds no
-// manifest and so no update. A `latest.json` on a release is now always an
-// error, and the release workflow refuses to publish one.
-//
-//   node scripts/updater-manifest.mjs check [--root DIR]
-//       tauri.conf.json's updater endpoints name textus-latest.json, the
-//       beta channel's names textus-beta.json, and release.yml keeps
-//       tauri-action from uploading latest.json (exit 1 otherwise)
-//   node scripts/updater-manifest.mjs build --version V --base-url URL
-//       --sig-dir DIR [--notes-file F] --out FILE
-//       the manifest for the .sig files downloaded into DIR; each artifact's
-//       URL is BASE-URL/<its name> (the .sig's name minus ".sig")
-//   node scripts/updater-manifest.mjs beta --version V --manifest FILE
-//       [--current FILE]
-//       FILE is a release's textus-latest.json, to become textus-beta.json;
-//       exit 1 unless it is a complete manifest of V, else print "advance"
-//       when it is not older than CURRENT (the beta manifest there now,
-//       none when absent) and "keep" when it is
-//   node scripts/updater-manifest.mjs guard --assets-file FILE
-//       FILE lists a release's asset names, one per line; exit 1 if the
-//       release carries latest.json
+// away from Levis installs: Levis polls `latest.json` through the renamed
+// repository and trusts the same key, so a Textus release never carries one.
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -44,10 +10,8 @@ import { fileURLToPath } from "node:url";
 export const MANIFEST_NAME = "textus-latest.json";
 /** What Levis's updater reads. Never on a Textus release. */
 export const LEVIS_MANIFEST_NAME = "latest.json";
-/** What the beta update channel reads: the newest release of any kind,
- *  release candidates included, kept on the website's download bucket
- *  (scripts/update-beta-manifest.sh) because GitHub's releases/latest
- *  skips pre-releases. Never on a GitHub release. */
+/** What the beta channel reads: the newest release of any kind, kept on the
+ *  download bucket since GitHub's releases/latest skips pre-releases. */
 export const BETA_MANIFEST_NAME = "textus-beta.json";
 /** Where the app finds the beta manifest's URL. */
 const BETA_ENDPOINT_SOURCE = "src-tauri/src/commands/update.rs";
@@ -83,9 +47,8 @@ export function configProblems(readFile) {
       );
   }
   const workflow = readFile(".github/workflows/release.yml");
-  // tauri-action 1.0 renamed the input, and an unknown input is ignored
-  // without a word: with the old name on v1 it would upload latest.json.
-  // Tags from before 1.0 still pin v0 and use the old name.
+  // tauri-action 1.0 renamed the input and silently ignores the old one,
+  // which would then upload latest.json; older tags pin v0.
   const major = Number(
     workflow.match(/tauri-apps\/tauri-action@\S+\s*#\s*v(\d+)/)?.[1] ?? NaN,
   );
@@ -101,22 +64,16 @@ export function configProblems(readFile) {
   return problems;
 }
 
-/** The updater's name (tauri-plugin-updater's `{arch}`: x86_64 or
- *  aarch64) for the architecture in an artifact's name, which
- *  tauri-bundler spells per format: `_x64`/`_aarch64` on the macOS
- *  .app.tar.gz, `_x64`/`_arm64` on the -setup.exe, `_amd64`/`_arm64` on
- *  the .deb, `.x86_64`/`.aarch64` on the .rpm, `_amd64`/`_aarch64` on the
- *  AppImage. */
+/** The updater's `{arch}` (x86_64 or aarch64) for an artifact's name, which
+ *  tauri-bundler spells differently per format. */
 function artifactArch(name) {
   if (/[_.](x64|amd64|x86_64)[-_.]/.test(name)) return "x86_64";
   if (/[_.](arm64|aarch64)[-_.]/.test(name)) return "aarch64";
   return null;
 }
 
-/** The updater platform keys an artifact serves, by its asset name. The
- *  plain `<os>-<arch>` key is the default installer for that platform;
- *  `<os>-<arch>-<installer>` lets an install that came from a .deb or .rpm
- *  stay on that format (tauri-plugin-updater tries the longer key first). */
+/** The updater platform keys an artifact serves. `<os>-<arch>-<installer>`
+ *  keeps a .deb or .rpm install on its format; the updater tries it first. */
 export function platformKeys(name) {
   const arch = artifactArch(name);
   if (arch === null) return [];
@@ -147,10 +104,8 @@ export function buildManifest({ version, notes, pubDate, baseUrl, artifacts }) {
   return { version, notes, pub_date: pubDate, platforms };
 }
 
-/** Platforms every release must serve. ARM64 Windows and Linux since
- *  1.1.0-rc.5; a rebuild of an older tag builds them too, since the build
- *  matrix comes from the workflow's ref. A manifest published before then
- *  lacks them, so `beta` refuses it. */
+/** Platforms every release must serve; `beta` refuses a manifest lacking
+ *  any. */
 export const REQUIRED_PLATFORMS = [
   "darwin-aarch64",
   "darwin-x86_64",
@@ -172,9 +127,7 @@ export function manifestProblems(manifest, version) {
   return problems;
 }
 
-/** Semver precedence of two versions such as "1.0.5" and "1.0.5-rc.2":
- *  negative, zero or positive. A pre-release sorts before its release, and
- *  numeric identifiers compare as numbers (rc.10 after rc.9). Build
+/** Semver precedence of two versions: negative, zero or positive. Build
  *  metadata is ignored. */
 export function compareVersions(a, b) {
   const parse = (v) => {
@@ -206,11 +159,8 @@ export function compareVersions(a, b) {
   return 0;
 }
 
-/** Whether the beta manifest moves to `candidate` (a release's manifest)
- *  from `current` (what the bucket holds now; null when there is none).
- *  Never backwards: rebuilding an old tag leaves it alone. The same version
- *  does replace it, since a rebuild re-signs the release's files and the
- *  old signatures no longer match them. */
+/** Whether the beta manifest moves from `current` (or null) to `candidate`.
+ *  Never backwards; the same version replaces it, since a rebuild re-signs. */
 export function betaAdvances(current, candidate) {
   if (!current?.version) return true;
   return compareVersions(candidate.version, current.version) >= 0;

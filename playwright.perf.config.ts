@@ -1,12 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * The large-document benchmark (e2e/perf/large-doc.perf.ts, design §6.4):
- * `npm run bench:large-doc`. Kept out of `npm run test:e2e` and CI - it
- * measures, it doesn't pass or fail, and one run takes minutes.
- *
- * PLAYWRIGHT_PORT moves its dev server, as in playwright.config.ts (the
- * default here is 1450, clear of the e2e suite's 1430).
+ * The large-document benchmark, kept out of the e2e suite and CI: it
+ * measures rather than passes, and one run takes minutes.
  */
 const port = Number(process.env.PLAYWRIGHT_PORT) || 1450;
 

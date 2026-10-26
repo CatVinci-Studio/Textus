@@ -1,12 +1,11 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
-// Settings > Images (#147): where a pasted image goes, chosen in Settings
-// and handed to the backend with the paste. The backend is the dev shim, so
-// the commands answer with canned srcs; where the file lands and the link
-// it gets are fs.rs's and image_host.rs's own tests.
+// Settings › Images: where a pasted image goes, handed to the backend with
+// the paste. The dev shim answers with canned srcs; where the file really
+// lands is covered by the backend's own tests.
 
-// The English labels, as in src/i18n/locales/en.ts.
+// The English labels.
 const t = {
   settingsTitle: "Settings",
   windowClose: "Close",
@@ -148,9 +147,8 @@ test("a subfolder's name shows its link as it is typed, and a refused one is nev
   expect((await calls(page, "save_pasted_image"))[0].folder).toBe("img");
 });
 
-// Which stored folder becomes which choice (Typora's ${filename}.assets,
-// a folder outside the document's) is loadSettings's, unit-tested in
-// settings/SettingsContext.test.ts; here, that Settings shows the result.
+// How a stored folder (Typora's ${filename}.assets, one outside the
+// document's) maps to a choice is unit-tested; here, Settings shows the result.
 test("an image folder from before shows as the subfolder it names", async ({
   page,
 }) => {

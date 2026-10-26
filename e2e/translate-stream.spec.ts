@@ -3,11 +3,8 @@ import { openApp, pasteMarkdown } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
- * A translation - every sentence different from its original - streaming
- * in: each paragraph lands in its own place once it is written whole. With
- * nothing in common, the stream's last run was taken as one change, and
- * landed a paragraph at a time it covered the title and every paragraph
- * after it, drawn inside the title in its type (1.2.1).
+ * A translation streaming in, with nothing in common with the original:
+ * each paragraph lands in its own place, not as one change over the title.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';
@@ -156,7 +153,7 @@ test("a long paragraph lands in batches of whole sentences while it is still wri
     storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, LONG_ZH);
-  // Slow enough that the paragraph is held past HOLD_MS (unit-reveal.ts).
+  // Slow enough that the paragraph is held past HOLD_MS.
   await streamRevise(
     page,
     [{ id: "b1", args: { action: "replace", anchor: LONG_ZH, text: LONG_EN } }],

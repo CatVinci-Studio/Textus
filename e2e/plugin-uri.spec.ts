@@ -2,10 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * textus:// links (src-tauri plugins/uri.rs, plugins/plugin-uri.ts): one
- * that came before the window did, and one that comes later, each given
- * to the plugin it names - started for it; a link no plugin takes is said
- * so. A textus://command/ link runs its command once the user says so.
+ * textus:// links reach the plugin they name, whether they arrive before
+ * the window or after; a command link asks first.
  */
 
 const HOST = `

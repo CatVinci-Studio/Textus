@@ -1,15 +1,7 @@
 #!/usr/bin/env node
-// Downloads the real-document corpus the save round-trip test runs on
-// (src/document-view/save-roundtrip-corpus.test.ts, docs/dev/saving.md):
-// a few thousand Markdown files of varied style, into .cache/roundtrip-corpus
-// (gitignored). None of it is committed; the sources and their licences are
-// listed below and written to the manifest.
-//
-//   node scripts/roundtrip-corpus/fetch.mjs     (again to refresh)
-//
-// The files are untrusted data. Nothing in them is run: the repositories
-// are shallow clones with LFS and submodules left out, each in its own
-// folder, read as text only, and symbolic links are skipped.
+// Downloads the save round trip's real-document corpus into
+// .cache/roundtrip-corpus. The files are untrusted: shallow clones without
+// LFS or submodules, read as text only, symbolic links skipped.
 import { execFileSync } from "node:child_process";
 import {
   existsSync,

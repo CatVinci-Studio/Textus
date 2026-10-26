@@ -6,8 +6,7 @@ import { pluginsCheckout } from "../vite.dev-plugins";
 import { openApp } from "./helpers";
 
 /** Whether the textus-plugins checkout the dev server serves has plugin
- *  `id`: one not published yet (Vim, Emacs) is only in a local one, so
- *  its tests skip where CI checks out the published repository. */
+ *  `id`; unpublished ones exist only locally, so their tests skip in CI. */
 export function hasPlugin(id: string): boolean {
   const root = pluginsCheckout();
   return root != null && existsSync(join(root, "plugins", id));
@@ -31,8 +30,8 @@ export async function minimalDocx(text: string): Promise<string> {
   return zip.generateAsync({ type: "base64" });
 }
 
-// For the official plugins' flows (official-plugins.spec.ts): the window
-// with plugins already on, files to open, and the frame of a plugin's tab.
+// For the official plugins' flows: the window with plugins already on,
+// files to open, and the frame of a plugin's tab.
 
 /** A 1×1 PNG. */
 export const PNG =
@@ -77,7 +76,7 @@ export async function openWithPlugins(
   options: PluginsAtStart & { language?: string },
 ) {
   await pluginsAtStart(page, options);
-  // A plugin's settings are Textus's settings' `plugins` (plugin-settings.ts).
+  // A plugin's settings live under Textus's settings' `plugins`.
   await openApp(page, {
     settings: {
       language: options.language ?? "en",
