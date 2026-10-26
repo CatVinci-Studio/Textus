@@ -140,6 +140,30 @@ test("Templates inserts one at the caret, its title filled in", async ({
   await expect(page.locator(editor)).toContainText("doc");
 });
 
+test("Templates adds its item to a file's right-click menu", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.templates"), "not in this checkout");
+  await open(
+    page,
+    "catvinci.templates",
+    ["files.read", "files.write", "editor.read", "editor.write"],
+    "# Doc\n",
+  );
+  if (await page.locator(".sidebar.sidebar-collapsed").count())
+    await page.evaluate(() =>
+      (
+        window as unknown as { __devEmitTauriEvent: (n: string) => void }
+      ).__devEmitTauriEvent("menu-toggle-sidebar"),
+    );
+  await page
+    .locator(".sidebar .tree-main .tree-row", { hasText: "doc.md" })
+    .click({ button: "right" });
+  await expect(
+    page.getByRole("menuitem", { name: "New from Template…" }),
+  ).toBeVisible();
+});
+
 test("Bookmarks keeps the words selected, listed in the sidebar", async ({
   page,
 }) => {

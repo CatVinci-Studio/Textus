@@ -269,13 +269,6 @@ pub struct GeneratedImageData {
     pub(crate) height: u32,
 }
 
-#[cfg(test)]
-impl GeneratedImageData {
-    pub(crate) fn data_base64_len(&self) -> usize {
-        self.data_base64.len()
-    }
-}
-
 /// Picture `id` as a picture to send a service, once it is made - for a
 /// new one drawn like it (Reference::Like). None while it is being made:
 /// a new picture doesn't wait for it.

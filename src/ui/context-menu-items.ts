@@ -1,6 +1,6 @@
 /**
- * Items plugins add to the window's other context menus: a file's in the
- * sidebar, a tab's, and a view's title buttons. Asked each time a menu opens.
+ * Items added from outside (plugins) to the file tree's, a tab's and a
+ * view's menus. Each menu asks when it opens.
  */
 export type ContextMenuPlace = "file/context" | "tab/context" | "view/title";
 
@@ -26,6 +26,11 @@ const providers = new Map<ContextMenuPlace, Provider[]>();
 const listeners = new Set<() => void>();
 let version = 0;
 
+function changed() {
+  version++;
+  for (const listener of listeners) listener();
+}
+
 export function registerContextItems(
   place: ContextMenuPlace,
   provider: Provider,
@@ -33,13 +38,11 @@ export function registerContextItems(
   const list = providers.get(place) ?? [];
   list.push(provider);
   providers.set(place, list);
-  version++;
-  for (const listener of listeners) listener();
+  changed();
   return () => {
     const at = list.indexOf(provider);
     if (at >= 0) list.splice(at, 1);
-    version++;
-    for (const listener of listeners) listener();
+    changed();
   };
 }
 
@@ -58,7 +61,7 @@ export function contributedContextItems(
   });
 }
 
-/** For a view's title buttons, which show without a menu being opened. */
+/** For buttons that show without a menu being opened (view/title). */
 export function subscribeContextItems(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);

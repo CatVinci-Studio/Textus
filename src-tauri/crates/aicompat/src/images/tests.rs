@@ -84,7 +84,7 @@ fn run(
     model: &str,
     aspect: Aspect,
 ) -> Result<GeneratedImage, ImageError> {
-    tauri::async_runtime::block_on(generate(
+    crate::block_on(generate(
         &ImageTarget {
             api,
             base_url: base,

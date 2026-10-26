@@ -253,6 +253,23 @@ describe("buildStandaloneHtml", () => {
   });
 });
 
+describe("buildStandaloneHtml image alignment", () => {
+  it("keeps the image alignment the document is shown with", () => {
+    const root = document.documentElement;
+    expect(buildStandaloneHtml("a", "<p>x</p>", "")).not.toContain(
+      "data-image-align",
+    );
+    root.setAttribute("data-image-align", "left");
+    try {
+      expect(buildStandaloneHtml("a", "<p>x</p>", "")).toContain(
+        'data-image-align="left"',
+      );
+    } finally {
+      root.removeAttribute("data-image-align");
+    }
+  });
+});
+
 describe("exportPdf", () => {
   const t = {
     pdfPreparing: "Preparing PDF…",
@@ -291,12 +308,38 @@ describe("exportPdf", () => {
     mocks.exportDoc.revealInDir.mockResolvedValue(undefined);
 
     await exportPdf(tab, t);
-    await exportPdf(tab, t, true);
+    await exportPdf(tab, t, { pageNumbers: true });
 
     const calls = mocks.exportDoc.exportPdfNative.mock.calls;
     expect(calls.map(([args]) => args.pageNumbers)).toEqual([false, true]);
     // The page itself is rendered the same either way.
     expect(calls[0][0].html).toBe(calls[1][0].html);
+  });
+
+  it("prints a dark theme in its light colours on macOS only when asked", async () => {
+    vi.resetModules();
+    vi.doMock("../platform/os", async (original) => ({
+      ...(await original<object>()),
+      isMacPlatform: () => true,
+    }));
+    const mac = await import("./exporters");
+    document.documentElement.setAttribute("data-theme", "dark");
+    document.body.innerHTML =
+      '<div data-active-tab="true"><div class="milkdown"><p>x</p></div></div>';
+    mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/a.pdf");
+    mocks.exportDoc.exportPdfNative.mockReset().mockResolvedValue(undefined);
+    try {
+      await mac.exportPdf(tab, t);
+      await mac.exportPdf(tab, t, { lightColors: true });
+    } finally {
+      document.documentElement.removeAttribute("data-theme");
+      vi.doUnmock("../platform/os");
+    }
+    const [dark, light] = mocks.exportDoc.exportPdfNative.mock.calls.map(
+      ([args]) => args.html as string,
+    );
+    expect(dark).toContain('data-theme="dark"');
+    expect(light).toContain('data-theme="light"');
   });
 
   it("embeds a local image read from the document's folder", async () => {

@@ -24,6 +24,7 @@ export type NewDocumentMode = "window" | "tab";
  *  keeps the classic fixed measure, "full" uses the whole pane. Applied as
  *  `data-content-width` on the root (app/editor-column.css). */
 export type ContentWidth = "auto" | "standard" | "full";
+export type ImageAlign = "center" | "left";
 export type ProxyType = "none" | "http" | "https" | "socks5";
 
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
@@ -277,6 +278,9 @@ export interface Settings {
   proxyPort: string;
   typewriterMode: boolean;
   contentWidth: ContentWidth;
+  /** How an image on a line of its own sits. Display only: the file is
+   *  not changed. */
+  imageAlign: ImageAlign;
   /// Windows and Linux, where the app draws the window bar: File, Edit,
   /// View and the rest along it (app/menu/MenuBar.tsx) instead of behind ☰.
   /// Off by default; on, the bar has no sidebar button (the sidebar is in
@@ -331,6 +335,9 @@ export interface Settings {
   /** File > Export as PDF numbers each page in its bottom margin
    *  (commands/pdf_page_numbers.rs). Off by default (#68). */
   pdfPageNumbers: boolean;
+  /** macOS: export PDFs on white in the theme's light colours. Other
+   *  platforms always do. */
+  pdfLightColors: boolean;
   /** Which releases the in-app updater offers (Settings › General › About
    *  Textus): "stable", or "beta" for release candidates as well. Sent with
    *  each check (src-tauri/src/commands/update.rs). */
@@ -406,6 +413,7 @@ export const DEFAULT_SETTINGS: Settings = {
   proxyPort: "",
   typewriterMode: false,
   contentWidth: "auto",
+  imageAlign: "center",
   menuBarShown: false,
   autoCloseMarks: true,
   autoCloseBrackets: true,
@@ -421,6 +429,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autoSuggestFilename: true,
   autosave: false,
   pdfPageNumbers: false,
+  pdfLightColors: false,
   updateChannel: "stable",
   onboardingShown: false,
   enableChatHistory: true,

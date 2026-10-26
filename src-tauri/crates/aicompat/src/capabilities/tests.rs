@@ -206,21 +206,16 @@ fn a_refused_parameter_is_retried_without_and_not_sent_again() {
     let thinking = plan("custom", "refuses-effort", ThinkingLevel::Deep);
     assert!(thinking.sends_parameters());
     let sent = std::cell::RefCell::new(Vec::new());
-    let result = tauri::async_runtime::block_on(with_fallback(
-        "custom",
-        "refuses-effort",
-        &thinking,
-        |t| {
-            sent.borrow_mut().push(t.sends_parameters());
-            async move {
-                if t.sends_parameters() {
-                    Err("Custom endpoint request failed (400 Bad Request): {\"error\":\"Unrecognized request argument supplied: reasoning_effort\"}".to_string())
-                } else {
-                    Ok("answer")
-                }
+    let result = crate::block_on(with_fallback("custom", "refuses-effort", &thinking, |t| {
+        sent.borrow_mut().push(t.sends_parameters());
+        async move {
+            if t.sends_parameters() {
+                Err("Custom endpoint request failed (400 Bad Request): {\"error\":\"Unrecognized request argument supplied: reasoning_effort\"}".to_string())
+            } else {
+                Ok("answer")
             }
-        },
-    ));
+        }
+    }));
     assert_eq!(result.unwrap(), "answer");
     assert_eq!(*sent.borrow(), [true, false]);
     assert!(!plan("custom", "refuses-effort", ThinkingLevel::Deep).sends_parameters());

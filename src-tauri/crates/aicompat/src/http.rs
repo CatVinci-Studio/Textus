@@ -270,7 +270,7 @@ mod tests {
         );
         let started = std::time::Instant::now();
         let mut seen = Vec::new();
-        let result = tauri::async_runtime::block_on(async {
+        let result = crate::block_on(async {
             let res = reqwest::get(&url).await.unwrap();
             read_sse(res, "Test", |data| seen.push(data.to_string())).await
         });
@@ -286,7 +286,7 @@ mod tests {
     #[test]
     fn a_stream_that_sends_only_keep_alives_gives_up() {
         let url = lingering_server("data: {\"type\":\"response.created\"}\n\n");
-        let result = tauri::async_runtime::block_on(async {
+        let result = crate::block_on(async {
             let res = reqwest::get(&url).await.unwrap();
             read_sse(res, "Test", |_| {}).await
         });

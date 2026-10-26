@@ -1016,6 +1016,10 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-align: center;
 }
 
+:root[data-image-align="left"] .milkdown p.image-paragraph {
+  text-align: left;
+}
+
 /* Drag to resize: a slim grip on the right edge, shown while the image is
    hovered or selected. */
 .image-resize-handle {

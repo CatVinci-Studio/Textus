@@ -1,4 +1,11 @@
-import { Suspense, type ComponentType } from "react";
+import { Suspense, useSyncExternalStore, type ComponentType } from "react";
+import { Tooltip } from "../../ui/Tooltip";
+import {
+  contextItemsVersion,
+  contributedContextItems,
+  subscribeContextItems,
+} from "../../ui/context-menu-items";
+import { pluginRecord } from "../store/plugin-records";
 import { lazyComponent } from "../../lazy/lazy-component";
 import { lazyModule } from "../../lazy/lazy-module";
 
@@ -44,3 +51,36 @@ export const PluginListPane = waiting(
 export const WebPagePane = waiting(
   lazyComponent(webPages, (m) => m.WebPagePane),
 );
+
+/** The buttons plugins add over a sidebar view (menus "view/title"). */
+export function ViewTitleActions({ view }: { view: string }) {
+  useSyncExternalStore(subscribeContextItems, contextItemsVersion);
+  const items = contributedContextItems("view/title", { path: null, view });
+  if (!items.length) return null;
+  return (
+    <div className="sidebar-view-actions">
+      {items.map((item, i) => {
+        const origin = pluginRecord(item.plugin)?.origin;
+        return (
+          <Tooltip key={`${item.plugin}:${i}`} text={item.label}>
+            <button
+              className="sidebar-view-action"
+              aria-label={item.label}
+              onClick={item.onSelect}
+            >
+              {item.icon && origin ? (
+                <PluginTabIcon
+                  plugin={item.plugin}
+                  origin={origin}
+                  icon={item.icon}
+                />
+              ) : (
+                item.label
+              )}
+            </button>
+          </Tooltip>
+        );
+      })}
+    </div>
+  );
+}

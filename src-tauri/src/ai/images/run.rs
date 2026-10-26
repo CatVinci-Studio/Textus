@@ -104,8 +104,7 @@ impl ImageRun {
     /// A request's image model that makes no picture: each one asked for
     /// fails in the background (nothing listens at its address), and
     /// generate_image answers the model as it would for a real one - for
-    /// the live picture cases (live_eval::images), which spend nothing on
-    /// pictures.
+    /// the live cases that ask for pictures, which spend nothing on them.
     #[cfg(test)]
     pub(crate) fn offline(limit: usize) -> Self {
         Self {
@@ -120,26 +119,6 @@ impl ImageRun {
             limit,
             folder: None,
         }
-    }
-
-    /// A request's image model on a real service (`provider` from the
-    /// catalog, its cheapest model) with this key: the live picture cases
-    /// that pay for their pictures.
-    #[cfg(test)]
-    pub(crate) fn live(provider: &str, api_key: String, limit: usize) -> Option<Self> {
-        let entry = find(provider)?;
-        Some(Self {
-            job: ImageJob {
-                app: None,
-                api: entry.api,
-                base_url: entry.base_url?.to_string(),
-                api_key,
-                model: entry.models.last()?.to_string(),
-            },
-            made: AtomicUsize::new(0),
-            limit,
-            folder: None,
-        })
     }
 }
 

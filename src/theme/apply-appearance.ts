@@ -100,6 +100,13 @@ export function useApplyAppearance(
     else root.setAttribute("data-content-width", settings.contentWidth);
   }, [settings.contentWidth]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.imageAlign === "center")
+      root.removeAttribute("data-image-align");
+    else root.setAttribute("data-image-align", settings.imageAlign);
+  }, [settings.imageAlign]);
+
   // The UI's type scale (ui/design-system.css's --text-* tokens) reads this;
   // the document's text doesn't. A factor on font sizes rather than CSS
   // zoom on the panels: WebKit's zoom leaves popovers and pointer

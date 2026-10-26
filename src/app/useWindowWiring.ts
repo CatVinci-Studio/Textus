@@ -152,6 +152,7 @@ export function useWindowWiring({
     liveTabs,
     t,
     pdfPageNumbers: settings.pdfPageNumbers,
+    pdfLightColors: settings.pdfLightColors,
     diagramEngine: settings.diagramEngine,
     onOpenSettings: shell.settingsOpening.openSettings,
     onOpenPluginSettings: shell.settingsOpening.openPluginSettings,

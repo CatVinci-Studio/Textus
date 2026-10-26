@@ -5,8 +5,6 @@ edition = "2021"
 description = "Provider-agnostic OAuth and API client compatibility layer for AI assistant features (OpenAI/Codex, Anthropic/Claude, custom OpenAI-compatible endpoints)"
 
 [dependencies]
-tauri = { version = "2", features = [] }
-tauri-plugin-opener = "2"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "socks", "stream"] }
 futures-util = { version = "0.3", default-features = false, features = ["alloc"] }
 serde = { version = "1", features = ["derive"] }
@@ -18,7 +16,6 @@ url = "2"
 # Image generation (images/): the download resolver and nothing else -
 # already in the tree through reqwest, so no new crates.
 tokio = { version = "1", features = ["net", "time"] }
-tauri-plugin-oauth = "2"
 # The main crate's generated TypeScript bindings (its src/bindings.rs)
 # carry AgentTurn and the types it holds. The main crate turns this on from
 # its dev-dependencies only, so shipped builds never compile specta.
@@ -26,3 +23,6 @@ specta = { version = "=2.0.0-rc.26", features = ["derive", "serde_json"], option
 
 [features]
 specta = ["dep:specta"]
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread"] }
