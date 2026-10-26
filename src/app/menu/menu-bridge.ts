@@ -26,16 +26,14 @@ import { openCommandPalette } from "../command-palette";
 
 export interface MenuBridgeHandlers {
   activeTabId: string;
-  /** useTabState.ts's liveTabs: read inside event handlers, not captured at
-   *  effect-setup time, and with the editors' pending edits flushed so an
-   *  export carries what is on screen. */
+  /** Read inside handlers, with pending edits flushed so an export carries
+   *  what is on screen. */
   liveTabs: () => DocTab[];
   t: Strings;
   pdfPageNumbers: boolean;
   pdfLightColors: boolean;
   diagramEngine: DiagramEngine;
   onOpenSettings: () => void;
-  /** Plugins › Manage Plugins…: Settings at its Plugins page. */
   onOpenPluginSettings: () => void;
   onToggleTypewriter: () => void;
   onToggleSidebar: () => void;
@@ -45,9 +43,7 @@ export interface MenuBridgeHandlers {
   onToggleZenMode: () => void;
   addBlankTab: () => void;
   openFileDialog: () => Promise<void>;
-  /** File > Open Recent (useFileOpening.ts). */
   openRecentFile: (path: string) => Promise<void>;
-  /** File > Open Folder…, a recent folder, Close Folder (useOpenFolder.ts). */
   openFolderDialog: () => Promise<void>;
   openFolder: (path: string) => void;
   closeFolder: () => void;
@@ -61,25 +57,16 @@ export interface MenuBridgeHandlers {
   openCommunity: () => void;
   /** Help > Video Tutorials: the website's page in the UI's language. */
   openTutorials: () => void;
-  /** The phone menu's Documents (mobile/DocumentList.tsx). */
+  /** The phone menu's Documents. */
   onOpenDocuments: () => void;
   /** The phone menu's Share (iOS share sheet). */
   shareActiveTab: () => Promise<void>;
 }
 
-/**
- * Menu events from Rust (menu.rs's dispatch) - every File/View/Format/Help
- * action the frontend owns arrives here as a window event. Pulled out of
- * App.tsx as a pure wiring layer: every handler it calls already lives in
- * App (or a hook App composes), this just subscribes them to the right
- * event names.
- */
+/** Subscribes the frontend's handlers to the menu events from Rust. */
 export function useMenuBridge(handlers: MenuBridgeHandlers): void {
-  // Subscribed ONCE, reading the newest handlers at the moment an event
-  // arrives. Re-subscribing whenever a handler changed (nearly every
-  // render) raced Tauri's asynchronous unlisten: for a moment old and new
-  // listeners were both live, and one menu click ran several times - New
-  // File opened four tabs at once on the iPhone.
+  // Subscribed once: re-subscribing raced Tauri's async unlisten, so one
+  // click could run several times.
   const latest = useRef(handlers);
   useLayoutEffect(() => {
     latest.current = handlers;
@@ -96,12 +83,10 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-manage-plugins", () =>
         h().onOpenPluginSettings(),
       ),
-      // A command a plugin put in the Plugins menu (plugins/manager.ts).
       listenToThisWindow<string>("menu-plugin-command", (event) =>
         runCommand(event.payload),
       ),
-      // Only arrives in tab mode - in window mode the Rust menu handler opens
-      // a fresh window itself instead of emitting this.
+      // Tab mode only: in window mode Rust opens a fresh window itself.
       listenToThisWindow("menu-new-file", () => h().addBlankTab()),
       listenToThisWindow("menu-open-file", () => void h().openFileDialog()),
       listenToThisWindow<string>(
@@ -123,9 +108,6 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         "menu-save-file-as",
         () => void h().saveTabAs(h().activeTabId),
       ),
-      // Dedicated PDF export: shows a progress overlay while the themed,
-      // paginated document is rendered offscreen and written straight to
-      // the chosen file (no print dialog). See exportPdf in export-doc.
       listenToThisWindow("menu-export-pdf", () => {
         const tab = activeTabNow();
         if (tab)
@@ -160,13 +142,10 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         h().onToggleAgentPanel(),
       ),
       listenToThisWindow("menu-toggle-textus-ai", () => h().onToggleTextusAi()),
-      // These two were never subscribed: View > Split View and View > Zen
-      // Mode (and their menu accelerators) did nothing.
       listenToThisWindow("menu-toggle-split-view", () =>
         h().onToggleSplitView(),
       ),
       listenToThisWindow("menu-toggle-zen-mode", () => h().onToggleZenMode()),
-      // Two documents at once (split-layout.ts).
       listenToThisWindow(
         "menu-command-palette",
         () => void openCommandPalette(),
@@ -174,8 +153,6 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-split-right", () => splitEditor("row")),
       listenToThisWindow("menu-split-down", () => splitEditor("column")),
       listenToThisWindow("menu-close-split", () => closeSplit()),
-      // Edit > Copy as Markdown runs where Copy does, in the editor on
-      // screen (useEditorWindowEvents.ts).
       listenToThisWindow("menu-select-all", selectAllInFocus),
       listenToThisWindow("menu-copy-as-markdown", () =>
         window.dispatchEvent(
@@ -188,8 +165,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-close-tab", () =>
         h().requestCloseTab(h().activeTabId),
       ),
-      // Payload is the block kind (h1..h6, bullet-list, ...) from the menu id -
-      // relayed to whichever editor is mounted as active (MilkdownEditor.tsx).
+      // Payload is the block kind (h1..h6, bullet-list, ...) from the menu id.
       listenToThisWindow<string>("menu-insert-block", (event) => {
         window.dispatchEvent(
           new CustomEvent(INSERT_BLOCK_EVENT, { detail: event.payload }),
@@ -205,18 +181,15 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
     );
   }, []);
 
-  // The macOS menu bar is native and built in English: it takes the UI's
-  // language from these labels, sent by each window as it opens and again
-  // when the language changes (Rust rebuilds only on a change).
+  // The native macOS menu bar is built in English; it takes the UI's
+  // language from these labels.
   const { t } = handlers;
   useEffect(() => {
     if (hasNativeMenuBar) void menuIpc.setMenuLabels(nativeMenuLabels(t));
   }, [t]);
 
-  // Settings… or Open… chosen from the macOS menu bar while no window was
-  // open: Rust opened this window to carry it out (menu.rs's
-  // emit_or_open_window). Asked once, on mount - the answer is taken, so no
-  // later window repeats it.
+  // A menu command chosen with no window open: Rust opened this window to
+  // carry it out. Taken once, so no later window repeats it.
   useEffect(() => {
     windowIpc
       .takePendingMenuEvent()
@@ -233,11 +206,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
   }, []);
 }
 
-/**
- * The macOS menu bar's heading keys, from Settings › Shortcuts: sent as the
- * window opens and whenever they change. The settings are every window's,
- * so they all send the same, and Rust rebuilds the bar only on a change.
- */
+/** Sends the macOS menu bar's accelerators from Settings › Shortcuts. */
 export function useNativeMenuAccelerators(shortcuts: Shortcuts) {
   const key = JSON.stringify(nativeMenuAccelerators(shortcuts));
   useEffect(() => {
@@ -248,11 +217,8 @@ export function useNativeMenuAccelerators(shortcuts: Shortcuts) {
   }, [key]);
 }
 
-/**
- * The macOS menu bar's View check marks, from this window's state: sent on
- * every change while the window has focus, and again whenever it gains
- * focus - the bar is one for the whole app, so it shows the front window.
- */
+/** The macOS menu bar's check marks, sent while this window has focus: the
+ *  bar is app-wide, so it shows the front window. */
 export function useNativeMenuChecks(checks: MenuChecks) {
   // Edit › Track My Changes: the document on screen's, not the window's.
   const trackChanges = useSyncExternalStore(subscribeTracking, trackingShown);

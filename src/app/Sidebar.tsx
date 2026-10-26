@@ -9,9 +9,7 @@ import { Tooltip } from "../ui/Tooltip";
 import { sidebarTab, sidebarTabs } from "./sidebar-tabs";
 import { ViewTitleActions } from "../plugins/views/plugin-views";
 
-/** The left sidebar - its tabs (sidebar-tabs.tsx: the file tree, the
- *  outline, the clipboard history) - and, on iPhone, the scrim behind its
- *  drawer. Its open state lives in useSidePanels. */
+/** The left sidebar and its tabs, plus the scrim behind its drawer on iPhone. */
 export function Sidebar({
   open,
   presence,
@@ -39,7 +37,6 @@ export function Sidebar({
   mode: PanelMode;
   onModeChange: (mode: PanelMode) => void;
   width: ReturnType<typeof useSidebarWidth>;
-  /** The tree's root and the opened folder (useOpenFolder.ts). */
   openFolder: OpenFolder;
   activePath: string | null;
   activeContent: string;
@@ -58,8 +55,7 @@ export function Sidebar({
   const shown = sidebarTab(mode);
   return (
     <>
-      {/* iPhone: the sidebar is a drawer over the page (mobile/styles),
-        and a tap beside it closes it. */}
+      {/* iPhone: a tap beside the drawer closes it. */}
       <Presence show={isIOSApp && open} exitMs={250}>
         {isIOSApp && open && (
           <PresenceDiv className="sidebar-scrim" onClick={onToggle} />
@@ -70,11 +66,8 @@ export function Sidebar({
         aria-label={t.menuToggleSidebar}
         className={`sidebar ${open ? "" : "sidebar-collapsed"} ${spotlight ? "tutorial-spotlight" : ""}`}
       >
-        {/* Contents only render while open (and inert while the sidebar
-          slides away) - a collapsed sidebar is just moved out of view,
-          not unmounted, so without this its buttons/tree would stay in
-          the tab order and Tab could land focus on them from the
-          editor. */}
+        {/* Contents render only while open, and are inert while sliding
+          away, so Tab can't land on a collapsed sidebar's buttons. */}
         {presence.mounted && (
           <>
             <div className="sidebar-header" inert={closing || undefined}>
@@ -106,8 +99,7 @@ export function Sidebar({
                 onSearchFocusHandled={onSearchFocusHandled}
               />
             </div>
-            {/* Its width is the user's to drag on a desktop; an iPad's
-              sidebar keeps the one the layout gives it. */}
+            {/* An iPad's sidebar keeps the width the layout gives it. */}
             {!isIOSApp && (
               <ResizeHandle
                 className="sidebar-resizer"

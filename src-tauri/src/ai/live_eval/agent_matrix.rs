@@ -1,9 +1,5 @@
-//! The agent matrix: every kind of request the chat gets - questions,
-//! rewrites in eleven languages, edits inside each Markdown construct,
-//! reviews, agent.md / style / library / skills / project files, multi-turn
-//! follow-ups, the three modes and ambiguous asks - each run through the app's
-//! real prompt, tools and loop, checked automatically and graded by the
-//! judge.
+//! The agent matrix: every kind of request the chat gets, each run through
+//! the app's real prompt, tools and loop, checked automatically and judged.
 
 use super::checks::{self, Caret, Lang, StructureExpect};
 use super::completion_matrix::CompletionCase;
@@ -40,9 +36,8 @@ pub type Check = Arc<dyn Fn(&TurnOutcome) -> Result<(), String> + Send + Sync>;
 /// learned from).
 pub type ProfileCheck = Arc<dyn Fn(&str, &str) -> Result<(), String> + Send + Sync>;
 
-/// A real workspace on disk, loaded through workspace::load_from exactly
-/// as the app loads it: the global config folder (the app config dir's
-/// `textus/`), the open document's path, and the panel's workspace override.
+/// A real workspace on disk, loaded through workspace::load_from exactly as
+/// the app loads it.
 #[derive(Clone, Default)]
 pub struct DiskWorkspace {
     pub global: Option<PathBuf>,
@@ -52,9 +47,8 @@ pub struct DiskWorkspace {
     pub show: Vec<PathBuf>,
 }
 
-/// "Learn my style": the picked sample files, where the profile is
-/// written (the project's .textus/style.md, read back by the workspace
-/// load), and checks on the generated profile.
+/// "Learn my style": the picked samples, where the profile is written, and
+/// checks on the generated profile.
 #[derive(Clone)]
 pub struct LearnStyle {
     pub samples: Vec<PathBuf>,
@@ -205,9 +199,8 @@ impl AgentCase {
         self.script[0].caret = caret;
         self
     }
-    /// Quick Ask opened on `selected`: every message of the conversation
-    /// goes out with the selection as it reads at send time (see
-    /// UserTurn::follow_selection), in Write mode (Quick Ask's default).
+    /// Quick Ask opened on `selected`: every message goes out with the selection
+    /// as it reads at send time, in Write mode.
     pub fn quick(mut self, selected: &str) -> Self {
         let start = self.doc.find(selected).expect("selection in document");
         self.script[0].caret = Caret {
@@ -281,8 +274,8 @@ pub fn either() -> Expect {
     Expect::default()
 }
 
-/// Mirrors src/ai/chat/user-message.ts: the selection block, then the
-/// message - plus where the selection sits, for replace_selection.
+/// The selection block, then the message, as the app sends it - plus where
+/// the selection sits. Keep in step with the frontend.
 pub fn with_selection(doc: &str, selected: &str, message: &str) -> (String, Caret) {
     let start = doc.find(selected).expect("selection in document");
     (
@@ -294,9 +287,8 @@ pub fn with_selection(doc: &str, selected: &str, message: &str) -> (String, Care
     )
 }
 
-/// Mirrors user-message.ts's cursorBlock around doc-markdown.ts's
-/// caretContext: up to 160 characters of the editor's plain text either
-/// side, blocks separated by a newline.
+/// The cursor block as the app sends it: up to 160 characters of plain text
+/// either side of the caret.
 pub fn with_cursor(doc: &str, at: usize, message: &str) -> (String, Caret) {
     let (before, after) = checks::cursor_context(doc, at, 160);
     (
@@ -308,10 +300,7 @@ pub fn with_cursor(doc: &str, at: usize, message: &str) -> (String, Caret) {
     )
 }
 
-/// "/name rest" as the app sends it: the production expansion
-/// (builtin::expand_message) - the skill's instructions, with any reference
-/// packs it declares for the document's language, in a <skill> block, a
-/// blank line, then the rest.
+/// "/name rest" as the app sends it, via the production expansion.
 pub fn resolve_skill_message(
     message: &str,
     skills: &[AgentSkill],
@@ -656,12 +645,8 @@ fn behaviour_cases() -> Vec<AgentCase> {
         edit: EditExpect::Required,
         ..Expect::default()
     };
-    // Judged on the text, not the changed span: a summary that starts
-    // with "The " shares that prefix with the intro, which pushed the
-    // minimal diff's start past it (a false failure in round 2's run1).
-    // The whole intro paragraph marks where the summary must end: one
-    // that opens with the intro's own first words ("The city library
-    // started...") is still the summary (round 4, a false failure).
+    // Judged on the text, not the changed span: a summary starting with "The "
+    // or with the intro's own first words would shift the minimal diff.
     e.custom = Some(|o| {
         let title = o.doc_before.lines().next().unwrap_or("");
         let intro = o
@@ -1341,8 +1326,7 @@ pub fn run_case(auth: &AnthropicAuth, case: &AgentCase, model: &str) -> Record {
         return harness::skipped(&case.id, model, case.lang.code(), reason, input);
     }
     // Learning a style is a completion request, which the harness makes on
-    // Claude only (harness::complete); on another provider it would ask
-    // Claude for that provider's model.
+    // Claude only.
     if case.learn.is_some() && harness::agent_provider_id() != "anthropic" {
         let reason = format!(
             "learning a style runs on Claude, not {}",
@@ -1416,8 +1400,7 @@ pub fn run_case(auth: &AnthropicAuth, case: &AgentCase, model: &str) -> Record {
             .script
             .iter()
             .map(|t| UserTurn {
-                // As ai_agent_message: the packs filtered by the profile the
-                // case's style.md chose (no Settings in the eval).
+                // The packs filtered by the profile the case's style.md chose.
                 message: crate::ai::builtin::expand_message_with(
                     &t.message,
                     &ws.skills,

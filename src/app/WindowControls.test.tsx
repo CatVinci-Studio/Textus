@@ -11,16 +11,11 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * The caption is the only way to close a window that has no OS frame, and it
- * must be absent on the platform that still has one - so both halves of the
- * gate are worth pinning down. A regression either way is invisible in
- * review and total in use: a stranded window on Windows, or a second set of
- * buttons next to the traffic lights on macOS.
+ * The caption is the only way to close a frameless window, and must be absent
+ * where the OS frame remains, so both halves of the gate are pinned.
  */
 
-// jsdom has no ResizeObserver, and the menu is kept inside the window by
-// useViewportClamp, which observes itself. Nothing here resizes, so a stub
-// that never fires is enough.
+// jsdom has no ResizeObserver; nothing here resizes, so a silent stub will do.
 globalThis.ResizeObserver = class {
   observe() {}
   unobserve() {}
@@ -50,9 +45,8 @@ vi.mock("@tauri-apps/api/window", () => ({
   }),
 }));
 
-// The real string table, in Chinese: the menu is drawn in HTML precisely so
-// that it follows the language picked in Settings, and a hand-written stub
-// would pass whether or not it does.
+// The real string table, in Chinese: a hand-written stub would pass whether
+// or not the menu follows the chosen language.
 vi.mock("../settings/SettingsContext", async () => {
   const { resolveStrings } = await import("../i18n/strings");
   return {
@@ -101,8 +95,6 @@ describe("where the platform still draws the frame", () => {
         <WindowCaptionButtons />
       </>,
     );
-    // macOS has its own traffic lights and its own menu bar; drawing ours
-    // next to them would be two of everything.
     expect(container).toBeEmptyDOMElement();
   });
 });
@@ -131,12 +123,8 @@ describe("where the app owns the frame", () => {
     button.getBoundingClientRect = () => ({ left: 12, bottom: 28 }) as DOMRect;
 
     fireEvent.click(button);
-    // The whole point of drawing it here: the native popup this replaced was
-    // labelled from Rust string literals and stayed English in every locale.
     expect(screen.getByRole("menuitem", { name: /文件/ })).toBeInTheDocument();
 
-    // Anchored just under the button it was opened from - a menu that lands
-    // anywhere else reads as a stray context menu.
     const menu = document.querySelector(".app-menu") as HTMLElement;
     expect(menu.style.left).toBe("12px");
     expect(menu.style.top).toBe("30px");
@@ -148,8 +136,7 @@ describe("where the app owns the frame", () => {
     fireEvent.click(screen.getByLabelText("菜单"));
     fireEvent.click(screen.getByRole("menuitem", { name: /设置/ }));
 
-    // By id, so the item cannot drift into doing something other than what
-    // its twin in src-tauri/src/menu.rs does.
+    // By id, so the item can't drift from its native twin.
     expect(triggerMenuItem).toHaveBeenCalledWith("settings");
   });
 
@@ -161,12 +148,8 @@ describe("where the app owns the frame", () => {
     fireEvent.click(button);
     expect(screen.getByRole("menuitem", { name: /文件/ })).toBeInTheDocument();
 
-    // Deliberately mousedown-then-click, and only once the dismiss listener
-    // has actually attached (it does so a tick late, on document, in the
-    // capture phase). A bare click() would not reproduce the sequence that
-    // matters: if the button sits OUTSIDE the dismiss boundary, mousedown
-    // closes the menu and the click that follows reopens it, and the button
-    // appears not to close the menu at all.
+    // Mousedown then click, after the dismiss listener attaches: a button
+    // outside the dismiss boundary would close and then reopen the menu.
     await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
     fireEvent.mouseDown(button);
     fireEvent.click(button);

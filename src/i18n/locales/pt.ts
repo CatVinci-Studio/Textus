@@ -1248,7 +1248,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuWindow: "Janela",
   menuZoomWindow: "Zoom",
   menuBringAllToFront: "Trazer Todas para a Frente",
-  // The browser playground (src/playground/).
+  // The browser playground.
   playgroundName: "Playground",
   playgroundImport: "Importar",
   playgroundExport: "Exportar",

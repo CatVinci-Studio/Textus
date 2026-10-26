@@ -26,14 +26,10 @@ import { addCodeBlockLanguage } from "./code-blocks";
 import { addSlashItems } from "./slash-commands";
 
 /**
- * What an on plugin adds to the window, registered from its manifest
- * alone - its code starts the first time one of them is used (lazy, as
- * the app's heavy parts load): commands and their keys, its items in the
- * right-click menus, its sidebar tabs. A plugin whose manifest asks
- * (`onStartupFinished`, `onHover`, `onEditor`) starts sooner.
+ * What an on plugin adds to the window, registered from its manifest alone;
+ * its code starts the first time one is used, or sooner if the manifest asks.
  */
 
-/** What this needs of the manager (manager.ts). */
 export interface ContributionDeps {
   /** Runs one of the plugin's commands in its code, starting it first. */
   runPluginCommand(
@@ -41,13 +37,11 @@ export interface ContributionDeps {
     command: string,
     args: unknown[],
   ): Promise<unknown>;
-  /** Starts the plugin's code now. */
   start(id: string): Promise<void>;
 }
 
 const contributions = new Map<string, (() => void)[]>();
 
-/** A file name's extension, with its dot: ".pdf". */
 const extname = (path: string) => /\.[^./\\]+$/.exec(path)?.[0] ?? "";
 
 /** Adds an undo to what goes when the plugin is withdrawn. */
@@ -246,7 +240,6 @@ function waitForEditor(id: string, deps: ContributionDeps) {
   });
 }
 
-/** Takes back what a plugin added. */
 export function withdrawContributions(id: string, deps?: ContributionDeps) {
   if (hoverWaiting.delete(id) && deps) syncHoverStarter(deps);
   for (const undo of contributions.get(id) ?? []) undo();

@@ -47,8 +47,10 @@ test("nothing comes installed, and the catalog offers the official plugins", asy
   await expect(graph).toContainText("Graph View");
   await expect(graph.locator(".plugin-official")).toHaveText("Official");
   await expect(graph).toContainText("by CatVinci Studio");
-  // No plugin's artwork among Settings' rows.
-  await expect(page.locator(".settings-panel img")).toHaveCount(0);
+  // No plugin's artwork among Settings' rows, apart from a card's picture.
+  await expect(
+    page.locator(".settings-panel img:not(.plugin-card-shot)"),
+  ).toHaveCount(0);
 });
 
 test("installing from the list turns the plugin on, behind its permissions", async ({

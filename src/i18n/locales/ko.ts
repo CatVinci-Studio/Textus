@@ -1189,7 +1189,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuWindow: "윈도우",
   menuZoomWindow: "확대/축소",
   menuBringAllToFront: "모두 앞으로 가져오기",
-  // The browser playground (src/playground/).
+  // The browser playground.
   playgroundName: "플레이그라운드",
   playgroundImport: "가져오기",
   playgroundExport: "내보내기",

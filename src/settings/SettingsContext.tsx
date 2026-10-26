@@ -81,15 +81,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const renderedVersion = useRef(remoteVersion);
 
   useEffect(() => {
-    // Without Rust, a first launch writes the whole set of defaults out at
-    // once - the OS's language it guessed among them - so the next launch
-    // reads the same, not a partial write's (see normaliseSettings). With
-    // Rust, the store does the same (fileStore).
+    // A first launch writes the whole set of defaults at once, so the next
+    // launch reads the same, not a partial write's.
     if (!readBoot() && readLocalSettings() === null)
       writeLocalSettings({ ...loadSettings() });
-    // Cross-window sync: another window changed something. `zoom` stays
-    // this window's own (see its field comment) - everything else adopts
-    // the incoming value.
+    // Another window changed something. `zoom` stays this window's own.
     const adopt = () => {
       const incoming = loadSettings();
       setSettingsState((prev) => ({ ...incoming, zoom: prev.zoom }));
@@ -104,9 +100,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           .then(adopt);
     };
     const unsubscribe = subscribeRemote(adoptStore);
-    // React runs this effect in a later task than the first render, and the
-    // live re-read or another window's change can land in between - reaching the store while nobody is subscribed.
-    // Catch up on those now.
+    // This effect runs a task after the first render; a change landing in
+    // between reached the store with nobody subscribed. Catch up now.
     if (remoteVersion !== renderedVersion.current) adoptStore();
     return unsubscribe;
   }, []);
@@ -137,9 +132,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setSettingsState((prev) => ({ ...prev, ...patch }));
       persist(patch);
     };
-    // A language switched to takes effect once its strings have loaded
-    // (i18n/strings.ts), so nothing draws in it meanwhile with English.
-    // One that fails to load shows in English.
+    // A language switched to takes effect once its strings have loaded, so
+    // nothing draws in it meanwhile with English. One that fails shows in English.
     if (patch.language && !localeLoaded(patch.language))
       void loadLocale(patch.language)
         .catch(() => {})

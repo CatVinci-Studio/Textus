@@ -79,63 +79,30 @@ export const commands = {
 	 */
 	current_chat_window: () => __TAURI_INVOKE<string | null>("current_chat_window"),
 	/**
-	 *  Runs a menu id exactly as clicking that item in the native menu would.
-	 * 
-	 *  The way in for the app-drawn menu on Windows (src/app/menu/AppMenu.tsx): there
-	 *  the native menu bar is hidden and the menu is redrawn in HTML, so its
-	 *  items have no native click to dispatch - they send their id here instead.
-	 *  The ids are the contract between the two, and `dispatch` below is the one
-	 *  implementation both entry points run, so an HTML item can never drift
-	 *  into doing something different from its native twin.
-	 * 
-	 *  Ids the HTML menu invents (there is no such native item) are simply not
-	 *  matched by `dispatch` and do nothing, so a typo fails quietly rather than
-	 *  firing the wrong command.
-	 * 
-	 *  `command(async)`, like detach_chat_window, and for the same reason: half
-	 *  of what dispatch does is create or close windows, and on Windows doing
-	 *  that from inside the calling webview's own IPC callback - which a plain
-	 *  `command` runs on the main thread - is the re-entrancy that freezes the
-	 *  whole app.
+	 *  Runs a menu id exactly as clicking that native item would; the way in for
+	 *  the app-drawn menu. Unknown ids do nothing. Async because creating or
+	 *  closing windows from the calling webview's IPC callback freezes Windows.
 	 */
 	trigger_menu_item: (id: string) => __TAURI_INVOKE<void>("trigger_menu_item", { id }),
-	/**
-	 *  The recent-file list behind File > Open Recent, for the app-drawn menu -
-	 *  the native submenu is filled by `rebuild_recent_menu`, which the HTML one
-	 *  can't read.
-	 */
+	/**  The recent-file list behind File > Open Recent, for the app-drawn menu. */
 	list_recent_files: () => __TAURI_INVOKE<string[]>("list_recent_files"),
-	/**  The recent folders, listed above the files there - same reason. */
+	/**  The recent folders, listed above the files there. */
 	list_recent_folders: () => __TAURI_INVOKE<string[]>("list_recent_folders"),
 	/**
-	 *  The menu bar in the UI's language: `labels` as `MenuLabels` keys them,
-	 *  from the frontend's string table. Only macOS shows this menu - Windows
-	 *  and Linux draw their own in HTML (app-menu-model.ts) and keep the native
-	 *  one hidden for its accelerators, which rebuilding it would only put at
-	 *  risk - so elsewhere this does nothing. Every window sends its labels as
-	 *  it opens; the bar is rebuilt only when one has changed (the language),
-	 *  with the same ids and accelerators as before. `command(async)` and a hop
-	 *  to the main thread, as menus are only built there.
+	 *  The macOS menu bar in the UI's language, rebuilt only when the labels
+	 *  change. Elsewhere it does nothing. Async with a main-thread hop, as menus
+	 *  are only built there.
 	 */
 	set_menu_labels: (labels: { [key in string]: string }) => __TAURI_INVOKE<void>("set_menu_labels", { labels }),
 	/**
-	 *  The View menu's check marks (Sidebar, AI Panel, Source Code Mode, Split
-	 *  View, Typewriter Mode, Zen Mode), keyed by menu id - from the front
-	 *  window, which sends its state on every change and as it gains focus.
-	 *  The items are named by what they show, never "Toggle ...", and the mark
-	 *  is AppKit's own. Only macOS shows this menu; elsewhere the app-drawn menu
-	 *  draws the same marks (app/menu/AppMenu.tsx) and this does nothing.
+	 *  The View menu's check marks, keyed by menu id, sent by the front window on
+	 *  change and focus. macOS only; elsewhere the app-drawn menu draws them.
 	 */
 	set_menu_checks: (checks: { [key in string]: boolean }) => __TAURI_INVOKE<void>("set_menu_checks", { checks }),
 	/**
-	 *  The Format menu's heading keys (Ctrl/Cmd+1..6 unless rebound), keyed by
-	 *  menu id - mirrors `nativeMenuAccelerators` in src/app/app-menu-model.ts.
-	 *  They follow Settings › Shortcuts, unlike a fixed accelerator: a level
-	 *  rebound or cleared there must not keep a native key that goes on
-	 *  firing. The frontend handles the keys itself and stops them, so the
-	 *  bar's key only acts where the page doesn't (no window, say). Only macOS
-	 *  shows this menu; on Windows a native key would fire twice beside the
-	 *  frontend's, so elsewhere this does nothing.
+	 *  The Format menu's heading keys, keyed by menu id, following Settings ›
+	 *  Shortcuts so a rebound key doesn't keep firing. macOS only: on Windows a
+	 *  native key would fire twice beside the frontend's.
 	 */
 	set_menu_accelerators: (accelerators: { [key in string]: string }) => __TAURI_INVOKE<void>("set_menu_accelerators", { accelerators }),
 	/**  Help > Join the Community, and its row in Settings. */

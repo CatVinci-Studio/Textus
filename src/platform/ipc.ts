@@ -107,30 +107,19 @@ export {
 } from "./ipc-ai-types";
 
 /**
- * Thin, typed wrappers around every Tauri command the frontend calls -
- * command names and their argument/return shapes live here once instead of
- * being repeated (and occasionally drifting) at each call site. This layer
- * intentionally does not change behavior: it's the same `invoke()` calls,
- * just typed and funneled through one error shape.
- *
- * Grouped by domain to match the Rust command modules in src-tauri/src/:
- * files and storage in ipc-files.ts, windows, export, themes and updates in
- * ipc-app.ts, sign-in in ipc-auth.ts, the AI commands here with their types
- * in ipc-ai-types.ts. Everything is re-exported from this file, so callers
- * import from one place.
+ * Typed wrappers around every Tauri command the frontend calls, grouped by
+ * domain across the ipc-*.ts files and all re-exported from here.
  */
 
 export const ai = {
-  // Rust sends the dialect and the auth methods as plain strings, from the
-  // fixed sets ProviderCatalogEntry names.
+  // Rust sends the dialect and auth methods as plain strings from fixed sets.
   listProviders: () =>
     command("list_providers") as Promise<ProviderCatalogEntry[]>,
   /** Whether Deep thinking changes anything for this provider and Agent
-   *  model (null: the provider's default) - ai_can_think_deeper in
-   *  src-tauri/src/ai/catalog.rs. */
+   *  model (null: the provider's default). */
   canThinkDeeper: (provider: string, model: string | null) =>
     command("ai_can_think_deeper", provider, model),
-  /** The services Settings › Textus AI › Image model offers (ai/images.rs). */
+  /** The services Settings › Textus AI › Image model offers. */
   listImageProviders: (): Promise<ImageProviderEntry[]> =>
     command("list_image_providers"),
   /** A picture generate_image made, waiting for Accept or Reject. */
@@ -146,13 +135,11 @@ export const ai = {
   /** Lets a waiting picture go: rejected, or saved. */
   discardGeneratedImage: (id: string) =>
     command("ai_discard_generated_image", id),
-  /** The document's undecided proposals as kept with it
-   *  (ai/revision/kept-proposals.ts), or null when none are. */
+  /** The document's undecided proposals as kept with it, or null. */
   keptProposalsRead: (docPath: string, workspaceRoot: string | null) =>
     command("kept_proposals_read", docPath, workspaceRoot),
-  /** Keeps them, with the made pictures among `pictures` - or, with
-   *  null, removes what was kept. Their shape is the frontend's, opaque
-   *  JSON to Rust. */
+  /** Keeps them, with the made pictures among `pictures`; null removes what
+   *  was kept. Opaque JSON to Rust. */
   keptProposalsWrite: (
     docPath: string,
     workspaceRoot: string | null,
@@ -176,15 +163,13 @@ export const ai = {
     style: string | null,
     model: string | null,
     hints: CompletionHints | null = null,
-    /** Resolve the project folder whose style profile and library the
-     *  completion follows (src-tauri ai::project). */
+    /** The project whose style profile and library the completion follows. */
     project: { docPath: string | null; workspaceRoot: string | null } = {
       docPath: null,
       workspaceRoot: null,
     },
   ) =>
-    // Rust reads these keys as one struct (commands/args.rs), which the
-    // generated bindings can't call; the struct itself is generated.
+    // Rust reads these keys as one struct the generated bindings can't call.
     aiCall<string>("ai_complete", {
       provider,
       before,
@@ -224,14 +209,12 @@ export const ai = {
     ...args
   }: {
     provider: string;
-    /** The document, block by block as the editor has it (doc-blocks.ts):
-     *  the model sees each after its id, and edits name them. */
+    /** The document block by block; the model sees each after its id, and
+     *  edits name them. */
     blocks: SentBlock[];
     docPath: string | null;
-    /** The chosen project folder (Settings > Textus AI > Project Folder, or
-     *  the project bar); null keeps the default, the document's own folder.
-     *  Decides where .textus/ is read from and how far find_files/read_file
-     *  may reach. */
+    /** The chosen project folder; null keeps the document's own. Decides
+     *  where .textus/ is read from and how far file tools may reach. */
     workspaceRoot: string | null;
     history: AgentTurn[];
     message: string;
@@ -241,30 +224,25 @@ export const ai = {
     webSearch: boolean;
     /** How hard the model thinks; left out, the provider's default. */
     thinking?: ThinkingLevel;
-    /** Settings > Search service and the SearXNG address: what web_search
-     *  uses when the model can't search by itself (ai/web/mod.rs). */
+    /** What web_search uses when the model can't search by itself. */
     searchService?: string;
     searxngUrl?: string;
     mode: AgentMode;
     model: string | null;
     requestId: string;
-    /** Heading of the section the cursor/selection is in - embedded in full
-     *  when the document is too long to send whole (agent.rs). */
+    /** Heading of the section the cursor is in, embedded in full when the
+     *  document is too long to send whole. */
     focusHeading?: string | null;
-    /** The UI language: the agent is given that UI's names for the app's
-     *  concepts and controls (agent.rs, UiNames). */
+    /** The UI language, so the agent names the app's controls as the UI does. */
     uiLanguage?: string;
-    /** The image model, or null for none: generate_image is offered
-     *  only with one (ai/images.rs). */
+    /** The image model, or null: generate_image is offered only with one. */
     imageModel?: ImageModel | null;
-    /** Live fragments while the request runs - see StreamEvent. */
+    /** Live fragments while the request runs. */
     onEvent?: (event: StreamEvent) => void;
   }) => {
     const channel = new Channel<StreamEvent>();
     if (onEvent) channel.onmessage = onEvent;
-    // More parameters than the generated bindings take (ten), so typed by
-    // hand; what the channel streams is generated, and the turns the
-    // frontend keeps must still be turns Rust reads.
+    // More parameters than the generated bindings take, so typed by hand.
     return aiCall<AgentTurn[]>("ai_agent_message", {
       ...args,
       history: args.history satisfies AgentTurnInput[],
@@ -272,8 +250,7 @@ export const ai = {
     });
   },
   /** What the Web search button can do with this provider and model: its
-   *  own search, or the search service Textus would use instead (none: it
-   *  needs one set up). */
+   *  own search, or the search service Textus would use (none: needs setup). */
   webSearchStatus: (
     provider: string,
     model: string | null,
@@ -284,7 +261,7 @@ export const ai = {
 
   loadAgentWorkspace: (docPath: string | null, rootOverride: string | null) =>
     command("load_agent_workspace", docPath, rootOverride),
-  /** The writing conventions setting's allowed values (ai::conventions). */
+  /** The writing conventions setting's allowed values. */
   writingConventionsOptions: () => command("writing_conventions_options"),
   /** The profile a document follows, and each language's in its project. */
   writingConventionsEffective: (
@@ -310,7 +287,7 @@ export const ai = {
   /** Exact platform counts: "x_weighted", "bluesky", "wechat_title"... */
   measureText: (text: string, metric: string) =>
     command("measure_text", text, metric),
-  /** The project folder's text files, for @-mentions (ai::project). */
+  /** The project folder's text files, for @-mentions. */
   listProjectFiles: (docPath: string | null, workspaceRoot: string | null) =>
     command("list_project_files", docPath, workspaceRoot),
   readProjectFile: (
@@ -326,8 +303,8 @@ export const ai = {
     template: string,
   ) => command("ensure_project_file", docPath, workspaceRoot, rel, template),
   pickTextFiles: () => command("pick_text_files"),
-  /** Undoes a remember call (ai::memory): deletes what it created, or
-   *  writes back `previous`, the file before it updated it. */
+  /** After an exchange: what to remember, update or forget, decided by the
+   *  conversation's model. Nothing while Remember automatically is off. */
   /** After an exchange: what to remember, update or forget, decided by
    *  the conversation's model and made (ai/memory/pass.rs). Nothing while
    *  Remember automatically is off. */
@@ -336,14 +313,13 @@ export const ai = {
     model: string | null;
     docPath: string | null;
     workspaceRoot: string | null;
-    /** Recorded with what is remembered (`Source` in ai/memory.rs). */
+    /** Recorded with what is remembered. */
     conversation: { id: string; title: string };
     exchange: { messages: string[]; reply: string };
   }) =>
     // One struct in Rust, as ai_complete's.
     aiCall<RememberedChange[]>("memory_pass", args satisfies PassRequest),
-  /** After an exchange, its request offered as a skill to save
-   *  (ai/memory/skill_offer.rs) - null when it isn't one. */
+  /** After an exchange, its request offered as a skill to save, or null. */
   offerSkill: (args: {
     provider: string;
     model: string | null;
@@ -362,11 +338,10 @@ export const ai = {
   ) =>
     command("save_offered_skill", offer, scope, docPath, workspaceRoot, modes),
   /** A skill file a reply wrote, saved in the global skills folder in
-   *  `modes` - over an earlier version of it. Its path. */
+   *  `modes`, over an earlier version. Its path. */
   saveWrittenSkill: (text: string, modes: AgentMode[]) =>
     command("save_written_skill", text, modes),
-  /** What the writer will probably say next, after a reply
-   *  (ai/next_message.rs); null when there is no clear next step. */
+  /** What the writer will probably say next after a reply, or null. */
   suggestNextMessage: (args: {
     provider: string;
     model: string | null;
@@ -398,9 +373,8 @@ export const ai = {
     workspaceRoot: string | null,
     id: string,
   ) => command("memory_delete", docPath, workspaceRoot, id),
-  /** Saves one memory the user asked for with a click (a suggestion
-   *  learned from revision choices); returns its id. Fails with plain
-   *  words on a duplicate. */
+  /** Saves one memory the user asked for with a click; returns its id.
+   *  Fails with plain words on a duplicate. */
   memoryRemember: (
     docPath: string | null,
     workspaceRoot: string | null,
@@ -408,9 +382,8 @@ export const ai = {
     scope: MemoryScope,
     text: string,
   ) => command("memory_remember", docPath, workspaceRoot, kind, scope, text),
-  /** The revision choices log (ai/revision/revision-learning.ts), kept
-   *  beside the personal memories and never sent anywhere; null when
-   *  there is none yet. */
+  /** The revision choices log, kept beside the personal memories and never
+   *  sent anywhere; null when there is none yet. */
   revisionChoicesRead: () => command("revision_choices_read"),
   // The log is the frontend's own shape, opaque JSON to Rust.
   revisionChoicesWrite: (log: object) =>
@@ -438,34 +411,31 @@ export const ai = {
       args.workspaceRoot,
       args.files,
     ),
-  /** Folder picker behind "Choose project folder…" (the project bar's menu
-   *  and Settings > Textus AI > Project Folder). */
+  /** Folder picker behind "Choose project folder…". */
   pickWorkspaceRoot: (): Promise<string | null> =>
     isIOSApp
       ? iosFiles.pickProjectFolder()
       : desktopQueryCommand("pick_workspace_root", null),
-  /** Reveals the global config folder, creating it - with `template` as
-   *  its agent.md - on first use. */
+  /** Reveals the global config folder, creating it with `template` as its
+   *  agent.md on first use. */
   openGlobalAgentDir: (template: string) =>
     desktopActionCommand("open_global_agent_dir", template),
   /** The global agent.md's path, created from `template` if missing. */
   ensureGlobalAgentMd: (template: string) =>
     command("ensure_global_agent_md", template),
   importAgentSkill: () => command("import_agent_skill"),
-  /** Every skill for this document - built-in, global and project - each
-   *  with the modes it applies in. Both null: the built-ins and the global
-   *  ones, as Settings shows them. */
+  /** Every skill for this document with the modes it applies in. Both null:
+   *  the built-ins and the global ones, as Settings shows them. */
   listSkills: (docPath: string | null, workspaceRoot: string | null) =>
     command("list_skills", docPath, workspaceRoot) as Promise<SkillListItem[]>,
-  /** Copies a built-in into the global config folder's skills/ (or finds
-   *  the copy already there) and returns its path, to open in a tab. */
+  /** Copies a built-in into the global skills/ (or finds the copy) and
+   *  returns its path, to open in a tab. */
   customizeBuiltinSkill: (name: string) =>
     command("customize_builtin_skill", name),
-  /** Deletes the copy Customize… made, so the built-in applies again;
-   *  returns the deleted files' paths (a tab showing one is closed). */
+  /** Deletes the Customize… copy so the built-in applies again; returns the
+   *  deleted files' paths. */
   resetBuiltinSkill: (name: string) => command("reset_builtin_skill", name),
-  /** Sets the modes a skill of the user's applies in (its file's
-   *  `textus-modes`); a built-in's are fixed. */
+  /** Sets the modes a user skill applies in; a built-in's are fixed. */
   setSkillModes: (
     name: string,
     source: SkillListItem["source"],
@@ -475,7 +445,3 @@ export const ai = {
   ) => command("set_skill_modes", name, source, docPath, workspaceRoot, modes),
   pickAttachmentFile: () => command("pick_attachment_file"),
 };
-
-// ---------------------------------------------------------------------------
-// cli (src-tauri/src/commands/cli.rs)
-// ---------------------------------------------------------------------------

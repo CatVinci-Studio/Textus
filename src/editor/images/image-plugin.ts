@@ -57,23 +57,8 @@ export {
   pickImageFile,
 } from "./image-store";
 /**
- * Image support, Typora-style, in two halves:
- *
- * - PASTE: a bitmap on the clipboard (screenshot, copied image) is written
- *   to the current document's image folder (Settings > Images, `assets/`
- *   next to it by default) by the save_pasted_image command, and an image
- *   node with the relative src is inserted - so the markdown stays
- *   portable. Unsaved drafts have no folder yet; their images land in the
- *   app data dir with an absolute src instead, moved into the image folder
- *   when the document is first saved (image-migration.ts). An image FILE copied in a file
- *   manager is stored the same way (pasted-files.ts), and so is one
- *   dropped on the window (app/dropped-files.ts).
- *
- * - RENDER: the webview can't load local files directly, so a nodeView
- *   rewrites local srcs through Tauri's asset protocol at display time -
- *   relative paths resolved against the document's folder. The document
- *   itself keeps the original src; only the <img> element sees the
- *   asset: URL.
+ * Image paste (stored in the document's image folder, relative src) and
+ * render (local srcs rewritten to asset: URLs; the document keeps the original).
  */
 
 export function resolveImageSrc(src: string, docPath: string | null): string {
@@ -82,21 +67,15 @@ export function resolveImageSrc(src: string, docPath: string | null): string {
   if (isDrivePath(src)) return fileSrc(decodeUrlPath(src));
   if (!src || hasUrlScheme(src)) return src; // http(s), data:, asset:, file:, ...
   if (src.startsWith("/")) return fileSrc(decodeUrlPath(src));
-  // An unsaved document has no folder to resolve against, so a relative
-  // path is left as written (the image shows as missing) and resolves once
-  // the document is saved and reopened. The sidebar's open folder is not
-  // used as a stand-in: the document may well be saved somewhere else, and
-  // an image that showed before saving would then vanish.
+  // Unsaved: left as written (shows missing). The sidebar folder is no
+  // stand-in, since the document may be saved elsewhere.
   if (!docPath) return src;
   return fileSrc(`${dirname(docPath)}/${decodeUrlPath(src)}`);
 }
 
 /**
- * Points `img` at a document's image: a relative src resolves against the
- * document's folder, read through the iOS plugin beside a document picked
- * in Files. The written src is kept as data-doc-src for exports - the one
- * shown is an asset: URL that only resolves inside this app. Shared by
- * markdown images and the raw-HTML <img> preview.
+ * Points `img` at a document's image. The written src is kept as
+ * data-doc-src for exports, since the shown asset: URL only works in-app.
  */
 export function showDocImage(
   img: HTMLImageElement,
@@ -123,9 +102,8 @@ function cssWidth(width: string): string {
   return /^\d+$/.test(width) ? `${width}px` : width;
 }
 
-/** A paragraph holding nothing but images (and line breaks between them):
- *  the "an image on its own line" case, laid out as a centred figure. An
- *  Obsidian image embed (obsidian-embed.ts) counts as an image. */
+/** A paragraph of only images and line breaks, laid out as a centred figure.
+ *  Obsidian image embeds count. */
 function isImageParagraph(node: ProseNode): boolean {
   if (node.type.name !== "paragraph" || node.childCount === 0) return false;
   let images = 0;
@@ -152,17 +130,8 @@ const imageParagraph = (node: ProseNode, pos: number) =>
 const imageParagraphKey = new PluginKey<DecorationSet>("image-paragraph");
 
 /**
- * The image node view. Commonmark's image is an INLINE node, and it stays
- * one: rendering it as display:block (as this used to) put ProseMirror's
- * trailing caret line box underneath it - a phantom empty line after every
- * image, and a caret that painted in the wrong place. So the image renders
- * inline-block inside a wrapper, the way an inline node can actually
- * behave, and an image standing alone in its paragraph gets the centred
- * figure layout from that paragraph instead (image-paragraph above).
- *
- * The wrapper also carries the resize handle: dragging it sets the width as
- * a share of the paragraph, saved like the context menu's presets
- * (withImageWidth).
+ * The image node view. Inline-block, never display:block: an inline node as
+ * a block gets a phantom caret line after it. The wrapper holds the resize handle.
  */
 function createImageView(
   node: ProseNode,
@@ -191,8 +160,7 @@ function createImageView(
     card = null;
     dom.classList.remove(MISSING_IMAGE_CLASS);
   };
-  // A picture that won't load gets its card instead of the broken-image
-  // icon (missing-image.ts), once the backend has said why.
+  // A picture that won't load gets a card, once the backend has said why.
   const showMissing = async () => {
     const key = shown();
     const src = (current.attrs.src as string) ?? "";
@@ -321,10 +289,8 @@ export function createImagePlugin(options: ImageStore) {
         trs.some((tr) => tr.docChanged)
           ? swapStoredBlobs(state.tr, storedBlobs, changedRanges(trs))
           : null,
-      // Image files dropped on the window: Tauri hands the drop to the app
-      // (app/useFileOpening.ts's useFileDrop), not to this view, so it comes
-      // as a window event. Every tab's editor stays mounted, hidden but the
-      // one on screen - only that one takes them.
+      // Tauri hands drops to the app, so they arrive as a window event. Every
+      // tab's editor stays mounted; only the visible one takes them.
       view: (view) => {
         const onDrop = (e: Event) => {
           if (view.dom.offsetParent === null) return;

@@ -46,9 +46,8 @@ fn load_credential(app: &AppHandle) -> Result<Option<ClaudeCredential>, String> 
         .map_err(|e| e.to_string())
 }
 
-/// Runs the Claude (Anthropic Pro/Max) OAuth login, same shape as the Codex
-/// login but against Anthropic's own OAuth client - see aicompat's
-/// providers::anthropic module for the reference this was verified against.
+/// Runs the Claude (Anthropic Pro/Max) OAuth login against Anthropic's own
+/// OAuth client.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn claude_login(
@@ -105,11 +104,8 @@ pub async fn get_valid_credential(app: &AppHandle) -> Result<String, String> {
         return Ok(cred.access);
     }
 
-    // One refresh at a time. The refresh token rotates: two requests racing
-    // with the same one (a completion and a grammar check starting
-    // together) leave the loser with invalid_grant - and, if it saved
-    // anything, the user logged out. Whoever waited here re-reads the file,
-    // since the winner has usually just stored a fresh token.
+    // One refresh at a time: the refresh token rotates, so two racing requests
+    // leave the loser with invalid_grant. A waiter re-reads the stored token.
     let _refreshing = REFRESH_LOCK.lock().await;
     let cred = load_credential(app)?.ok_or_else(|| "not logged in".to_string())?;
     if !expires_soon(cred.expires) {

@@ -1256,7 +1256,7 @@ export default {
   menuWindow: "Окно",
   menuZoomWindow: "Изменить масштаб",
   menuBringAllToFront: "Все окна — на передний план",
-  // The browser playground (src/playground/).
+  // The browser playground.
   playgroundName: "Песочница",
   playgroundImport: "Импорт",
   playgroundExport: "Экспорт",

@@ -25,8 +25,7 @@ import {
 import { closeSplit, splitEditor, splitLayout } from "./split/split-layout";
 import { openCommandPalette } from "./command-palette";
 
-/** The heading shortcuts, by the Format menu's block kind they apply
- *  (INSERT_BLOCK_EVENT). */
+/** The heading shortcuts, by the block kind they apply. */
 const HEADING_KINDS: [HeadingAction, string][] = [
   ["setHeading1", "h1"],
   ["setHeading2", "h2"],
@@ -37,9 +36,8 @@ const HEADING_KINDS: [HeadingAction, string][] = [
   ["setParagraph", "paragraph"],
 ];
 
-/** The native menu's fixed accelerators (src-tauri/src/menu.rs), for
- *  Linux, where the hidden menu bar no longer fires them. Save, Close Tab,
- *  New and Open are handled below on every platform that needs them. */
+/** The native menu's fixed accelerators, for Linux, where the hidden menu
+ *  bar doesn't fire them. Keep in step with the Rust menu. */
 const LINUX_MENU_ACCELERATORS: Record<string, string> = {
   "mod+shift+s": "save-file-as",
   "mod+=": "zoom-in",
@@ -53,11 +51,7 @@ const LINUX_MENU_ACCELERATORS: Record<string, string> = {
 };
 
 /** File commands routed through the backend where the app draws the window
- *  frame (Windows, Linux), so they reach the menu dispatch while focus is
- *  inside the webview - see the keydown handler below. Settings too: on
- *  Windows the hidden menu's Ctrl+, did not reach it from the editor
- *  (textus-themes#3), and opening Settings twice is harmless should both
- *  fire. */
+ *  frame, so they work while focus is in the webview. */
 const WEBVIEW_FILE_COMMANDS: Record<string, string> = {
   "mod+n": "new-file",
   "mod+o": "open-file",
@@ -65,12 +59,7 @@ const WEBVIEW_FILE_COMMANDS: Record<string, string> = {
   "mod+,": "settings",
 };
 
-/**
- * The window-wide keyboard shortcuts: the fixed OS-convention ones (save,
- * close tab, fullscreen, and the native menu's accelerators where that menu
- * can't fire them) plus the configurable settings.shortcuts entries.
- * Pulled out of App.tsx; every action it triggers is handed in from there.
- */
+/** The window-wide keyboard shortcuts, fixed and configurable. */
 export function useGlobalShortcuts(opts: {
   /** The window's tabs, read when a tab key is pressed. */
   tabsRef: { readonly current: readonly DocTab[] };
@@ -85,7 +74,6 @@ export function useGlobalShortcuts(opts: {
   toggleZenMode: () => void;
   /** Opens the sidebar on its Files tab with the search box focused. */
   searchFiles: () => void;
-  /** Turns Textus AI on or off (ai/TextusAiSwitch.tsx's useTextusAi). */
   toggleTextusAi: () => void;
 }): void {
   const {
@@ -115,11 +103,8 @@ export function useGlobalShortcuts(opts: {
         ([action]) => combo === shortcuts[action],
       );
       const target = e.target instanceof Element ? e.target : null;
-      // Dialogs (including shortcut recording) own their keyboard input.
-      // A heading key is swallowed there, and in a text field outside the
-      // document (the AI panel, Quick Ask, a search box): it means nothing
-      // in either, and left alone it would reach the macOS menu bar's own
-      // key for the level (menu.rs), which changes the document behind.
+      // Dialogs own their keyboard input. A heading key is swallowed there and
+      // in text fields, or the macOS menu bar would change the document behind.
       if (target?.closest('[aria-modal="true"]')) {
         if (heading) e.preventDefault();
         return;
@@ -134,13 +119,8 @@ export function useGlobalShortcuts(opts: {
         return;
       }
 
-      // Windows has no visible native menu bar. Its menu is kept internally
-      // for most accelerators, but Open/New are handled here so they remain
-      // reliable while focus is inside the webview/editor. The backend still
-      // owns their behaviour (including tab-vs-window mode), exactly as if
-      // the corresponding menu item had been clicked. Ctrl+P too: left to
-      // the webview, WebView2 printed the app window itself, with the
-      // browser's date/title header and tauri.localhost footer (#68).
+      // The hidden native menu misses these while focus is in the webview, and
+      // WebView2 would print the window itself on Ctrl+P.
       const fileCommand = WEBVIEW_FILE_COMMANDS[combo];
       if (appDrawsWindowFrame && fileCommand) {
         e.preventDefault();
@@ -148,9 +128,7 @@ export function useGlobalShortcuts(opts: {
         return;
       }
 
-      // Linux: the hidden GTK menu bar's accelerators no longer fire (see
-      // ownsMenuAccelerators), so its fixed shortcuts are routed through the
-      // same dispatch a menu click uses.
+      // Linux: the hidden GTK menu bar's accelerators don't fire.
       if (ownsMenuAccelerators) {
         const menuId = LINUX_MENU_ACCELERATORS[combo];
         if (menuId) {
@@ -160,18 +138,13 @@ export function useGlobalShortcuts(opts: {
         }
       }
 
-      // Fixed OS-convention shortcut like Cmd+S above, not a configurable
-      // settings.shortcuts entry - it mirrors the File > Close Tab menu
-      // accelerator. (Close Window keeps its native Cmd+Shift+W.)
       if (combo === "mod+w") {
         e.preventDefault();
         requestCloseTab(activeTabId);
         return;
       }
 
-      // F6 / Shift+F6: the next or previous region (app/regions.ts) - the
-      // keyboard's way out of the editor, where Tab indents. Not in a
-      // dialog, which keeps the focus (the check above).
+      // F6 / Shift+F6: the keyboard's way out of the editor, where Tab indents.
       if (combo === "f6" || combo === "shift+f6") {
         e.preventDefault();
         e.stopPropagation();
@@ -179,13 +152,8 @@ export function useGlobalShortcuts(opts: {
         return;
       }
 
-      // F11 is THE fullscreen key on Windows, and the only way to reach
-      // fullscreen where the app draws its own frame: macOS has the native
-      // View > Enter Full Screen item (Ctrl+Cmd+F), but muda's predefined
-      // fullscreen item does nothing on Windows, so there is no native
-      // accelerator to register and it has to be caught here. Gated on the
-      // same flag the app-drawn menu is, so macOS's F11 keeps whatever the
-      // system does with it.
+      // The predefined native fullscreen item does nothing on Windows, so F11
+      // is caught here; macOS keeps its own F11.
       if (appDrawsWindowFrame && combo === "f11") {
         e.preventDefault();
         runLocalMenuAction("fullscreen");
@@ -200,8 +168,7 @@ export function useGlobalShortcuts(opts: {
             : null);
       if (tabStep !== null) {
         e.preventDefault();
-        // Kept from the editor too: its Tab handler (tab-extend-plugin)
-        // doesn't look at Ctrl, and would indent the code block left behind.
+        // The editor's Tab handler ignores Ctrl and would indent a code block.
         e.stopPropagation();
         const next = adjacentTabId(tabsRef.current, activeTabId, tabStep);
         if (next) setActiveTabId(next);
@@ -259,8 +226,7 @@ export function useGlobalShortcuts(opts: {
         e.preventDefault();
         setSettings({ typewriterMode: !settings.typewriterMode });
       } else {
-        // A command added from outside (commands.ts), on a combo none of
-        // the app's own has taken.
+        // A command added from outside, on a combo the app hasn't taken.
         const command = commandForCombo(combo, settings.commandShortcuts);
         if (command) {
           e.preventDefault();
@@ -268,8 +234,7 @@ export function useGlobalShortcuts(opts: {
         }
       }
     }
-    // Capture before the editor's keymaps: shortcuts such as Ctrl+F must not
-    // disappear merely because an editor plugin stops the bubbling event.
+    // Capture phase, so an editor plugin stopping the event can't eat Ctrl+F.
     window.addEventListener("keydown", onKeyDown, true);
     const untrack = trackRegionFocus();
     return () => {

@@ -24,8 +24,7 @@ import { contributedContextItems } from "../ui/context-menu-items";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 
-// Split View renders the page as HTML beside the source: its Markdown
-// renderer loads when a tab first shows it, not with the window.
+// Its Markdown renderer loads when a tab first shows it, not with the window.
 const SplitView = lazyComponent(
   lazyModule("split-view", () => import("../editor/modes/SplitView")),
   (m) => m.SplitView,
@@ -38,8 +37,7 @@ function pluginTabItems(
   return added.length ? ["separator", ...added] : [];
 }
 
-/** The document column: the tab bar (when there is more than one tab to
- *  switch between) over every open tab's editor. */
+/** The document column: the tab bar over every open tab's editor. */
 
 export function MainPane({
   tabs,
@@ -62,8 +60,7 @@ export function MainPane({
   onActivate: (tabId: string) => void;
   onClose: (tabId: string) => void;
   onAdd: () => void;
-  /** A tab pulled out of the window: it leaves for a window of its own
-   *  (tab_drag.rs, macOS). */
+  /** A tab pulled out of the window leaves for a window of its own (macOS). */
   onDetach: (tabId: string) => void;
   onReorder: (tabId: string, index: number) => void;
   previewTab: TabBarProps["previewTab"];
@@ -99,9 +96,8 @@ export function MainPane({
           onActivate={onActivate}
           onClose={onClose}
           onAdd={onAdd}
-          // Pulled down: over the documents it splits, as in VS Code;
-          // out of the window it tears off - which needs global cursor
-          // and window positions, macOS only (tab_drag.rs).
+          // Pulled over the documents it splits; out of the window it tears
+          // off, which needs global cursor positions (macOS only).
           onPullOut={(id, title) =>
             pullTab(id, title, {
               tabIds: tabs.map((tab) => tab.id),
@@ -134,13 +130,9 @@ export function MainPane({
         />
       )}
 
-      {/* Every open tab's editor stays mounted (just hidden) so switching
-        tabs preserves undo history, scroll position, and in-flight AI
-        state - only the active one is ever unmounted-on-purpose (via
-        reloadKey, when leaving source mode). */}
-      {/* Split (a plugin's, through split-layout.ts), two tabs show side
-        by side, each in its pane; a click or focus in one brings its tab
-        to the front. */}
+      {/* Every tab's editor stays mounted, just hidden, so switching keeps
+        undo history, scroll position and in-flight AI state. */}
+      {/* In a split, a click or focus in a pane brings its tab to the front. */}
       {tabs.map((tab) => {
         const pane = paneOf(tab.id);
         return (

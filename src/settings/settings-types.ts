@@ -4,56 +4,43 @@ import type { UpdateChannel } from "../platform/update-channel";
 import { DEFAULT_IMAGE_SUBFOLDER } from "./image-folder";
 import { DEFAULT_SHORTCUTS, type Shortcuts } from "./shortcut-defaults";
 
-/**
- * What the settings are: every option's type and choices, and the
- * defaults a new install starts from (SettingsContext.tsx).
- */
+/** Every setting's type and choices, and the defaults a new install starts from. */
 
-/// Light/dark, orthogonal to which content theme is selected: `themeId`
-/// picks the palette, this picks which of its two forms is shown. Every
-/// theme defines BOTH (see content-themes.css) - one that only has a single
-/// design defines the same values twice - so the two axes compose without
-/// any combination being undefined.
+/// Light/dark, orthogonal to `themeId`: every theme defines both forms, so
+/// the two axes always compose.
 export type ThemeMode = "system" | "light" | "dark";
-/// A provider catalog id (src-tauri/src/ai/catalog.rs) - "openai",
-/// "anthropic", "google", "custom", etc. Not a closed union: the catalog is
-/// the source of truth for which providers exist, fetched at runtime.
+/// A provider catalog id ("openai", "anthropic", "custom", ...). Not a closed
+/// union: the catalog, fetched at runtime, decides which exist.
 export type AiProvider = string;
 export type NewDocumentMode = "window" | "tab";
 /** How wide the text column runs: "auto" widens with the window, "standard"
- *  keeps the classic fixed measure, "full" uses the whole pane. Applied as
- *  `data-content-width` on the root (app/editor-column.css). */
+ *  keeps the classic fixed measure, "full" uses the whole pane. */
 export type ContentWidth = "auto" | "standard" | "full";
 export type ImageAlign = "center" | "left";
 export type ProxyType = "none" | "http" | "https" | "socks5";
 
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
 
-/// Settings.uiTextScale's values: Settings › Editor & Appearance ›
 /// Interface Text Size, as a factor on the UI's type scale.
 export const UI_TEXT_SCALES = [0.9, 1, 1.1, 1.25] as const;
 export type UiTextScale = (typeof UI_TEXT_SCALES)[number];
 
-/// Settings.diagramEngine's values: Settings › Editor & Appearance ›
-/// Diagram engine (editor/diagram-engine.ts). Mermaid is the default and
-/// every diagram's fallback; Pele (pele.run) draws the same syntax faster,
-/// in a layout of its own, and is only ever the user's choice.
+/// Mermaid is the default and every diagram's fallback; Pele draws the same
+/// syntax faster, in its own layout, and only by the user's choice.
 export const DIAGRAM_ENGINES = ["mermaid", "pele"] as const;
 export type DiagramEngine = (typeof DIAGRAM_ENGINES)[number];
 
-/// Settings.colorSwatches' values (editor/marks/color-swatch-plugin.ts):
-/// none; in code - inline code that is a colour and colour literals in
-/// code blocks; everywhere - that and colour codes in the text itself.
+/// Colour swatches: none; in code (inline code and code-block literals);
+/// everywhere (that and colour codes in the text).
 export const COLOR_SWATCH_MODES = ["off", "code", "everywhere"] as const;
 export type ColorSwatchMode = (typeof COLOR_SWATCH_MODES)[number];
 
-/// Settings.revisionDisplay's values.
 /// In the order the menus list them, the default first.
 export const REVISION_DISPLAYS = ["final", "original", "inline"] as const;
 export type RevisionDisplay = (typeof REVISION_DISPLAYS)[number];
 
-/// Tone presets for AI completion - resolved to an English style directive
-/// appended to the completion prompt (see ../ai/completion-style).
+/// Tone presets for AI completion, each resolved to an English style
+/// directive appended to the completion prompt.
 export type CompletionTone =
   "default" | "formal" | "casual" | "academic" | "concise";
 
@@ -65,10 +52,8 @@ export const COMPLETION_TONES: CompletionTone[] = [
   "concise",
 ];
 
-/// Settings > Textus AI > Search service: what Textus's own web_search uses
-/// when the chat model can't search by itself. "auto" takes the first of
-/// the DeepSeek, Zhipu and Kimi keys already saved. Mirrors `Backend` in
-/// src-tauri/src/ai/web/search.rs.
+/// What Textus's own web_search uses when the chat model can't search.
+/// "auto" takes the first of the DeepSeek, Zhipu and Kimi keys saved.
 export type SearchService =
   | "auto"
   | "deepseek"
@@ -94,43 +79,36 @@ export const SEARCH_SERVICES: SearchService[] = [
 
 export type GrammarStrictness = "typos" | "standard" | "strict";
 
-/// A user-imported (Typora-style) theme. The actual CSS lives on disk under
-/// the app's theme directory (see ../utils/theme-import and the Rust
-/// save_theme_css/load_theme_css commands) - only small metadata is kept
-/// here in the settings.
+/// A user-imported theme. Its CSS lives on disk in the app's theme
+/// directory; only metadata is kept in the settings.
 export interface UserThemeMeta {
   id: string;
   name: string;
   hasDark: boolean;
-  /// Set when the theme was installed from the theme gallery
-  /// (theme/theme-gallery.ts): which one, and the version installed, so a
-  /// newer one shows as an update. Rust reads only `id` and `hasDark`.
+  /// Set when installed from the theme gallery, so a newer one shows as an
+  /// update. Rust reads only `id` and `hasDark`.
   gallery?: GalleryOrigin;
 }
 
 export interface GalleryOrigin {
-  /// The gallery's theme id (`GalleryTheme.id`).
   id: string;
-  /// `GalleryTheme.updated` of the installed copy.
+  /// The installed copy's `GalleryTheme.updated`.
   updated: string;
   source: string;
 }
 
 export type ImageStorageMode = "local" | "image-host";
-/** Mirrors `ImageHost` in src-tauri/src/commands/image_host.rs. */
+/** Keep in step with the Rust `ImageHost`. */
 export type ImageHost = "picgo" | "smms" | "imgur" | "custom";
 export const IMAGE_HOSTS: ImageHost[] = ["picgo", "smms", "imgur", "custom"];
 export type ImageNamingMode = "auto" | "original" | "ask";
-/** The AI conversation's mode: Write adds text and changes the text that
- *  is there, Review only reads and comments, Create makes a theme, a
- *  plugin or a skill for the app. Mirrors `AgentMode` in
- *  src-tauri/src/ai/agent/prompt.rs. In the order the composer offers
- *  them. */
+/** The AI conversation's mode: Write adds and changes text, Review only
+ *  reads and comments, Create makes a theme, plugin or skill. In composer order. */
 export type AgentMode = "write" | "review" | "create";
 export const AGENT_MODES: readonly AgentMode[] = ["write", "review", "create"];
 
-/** A stored mode, or null for anything that isn't one of today's - 1.2.0's
- *  Revise, folded into Write in 1.2.1, reads as Write. */
+/** A stored mode, or null for anything that isn't one of today's; the old
+ *  Revise mode reads as Write. */
 export function storedAgentMode(value: unknown): AgentMode | null {
   if (value === "revise") return "write";
   return AGENT_MODES.includes(value as AgentMode) ? (value as AgentMode) : null;
@@ -140,45 +118,34 @@ export interface Settings {
   language: Lang;
   /** False until the language welcome screen is confirmed. */
   languageChosen: boolean;
-  /// Appearance: follow the OS, or pin light/dark. Independent of `themeId`.
+  /// Appearance: follow the OS, or pin light/dark.
   theme: ThemeMode;
-  /** Settings › Textus AI › Enable Textus AI, and the window bar's switch
-   *  (#196): off, Textus AI does nothing at all - no completion, grammar
-   *  check, conversation or any other request to an AI service - whatever
-   *  the features below are set to. They keep their own values, and apply
-   *  again once it is back on (textus-ai.ts). Rust reads it too, as
-   *  TEXTUS_AI_SETTING in src-tauri/src/ai/mod.rs. On by default. */
+  /** Off, Textus AI makes no request to any AI service, whatever the
+   *  features below are set to; they keep their values. Rust reads it too. */
   textusAi: boolean;
-  /** When a pause from the window bar's AI button ends (ms since the
-   *  epoch): Textus AI is off until then and comes back on by itself
-   *  (ai/TextusAiSwitch.tsx). Null while it is on, or off until turned
-   *  back on. */
+  /** When a pause from the window bar's AI button ends (ms since the epoch).
+   *  Null while it is on, or off until turned back on. */
   textusAiResumeAt: number | null;
   enableCompletion: boolean;
   enableGrammarCheck: boolean;
-  /// How aggressive the grammar check is - from confident typos only up to
-  /// style and clarity nits. Sent with every ai_grammar_check request.
+  /// How aggressive the grammar check is, from confident typos only up to
+  /// style and clarity nits.
   grammarStrictness: GrammarStrictness;
   enableAskAi: boolean;
   enableMath: boolean;
   enableMermaid: boolean;
   /** Who draws ```mermaid blocks first; Mermaid draws what Pele can't. */
   diagramEngine: DiagramEngine;
-  /** Settings › Editor & Appearance › Line numbers in code blocks: a
-   *  gutter of line numbers beside each code block, whose lines then
-   *  scroll sideways instead of wrapping. Off by default. */
+  /** Line numbers beside each code block, whose lines then scroll sideways
+   *  instead of wrapping. */
   codeLineNumbers: boolean;
-  /** Settings › Editor & Appearance › Colour swatches (#146): where a
-   *  small square of the colour shows before a colour code. Off by
-   *  default. */
+  /** Where a small square of the colour shows before a colour code. */
   colorSwatches: ColorSwatchMode;
   /** Where newly pasted images go. Existing markdown image references are
    *  never migrated when this changes. */
   imageStorageMode: ImageStorageMode;
-  /** The folder a saved document's images go in when they are stored
-   *  locally (#147): "./" for the document's own folder, or the name of a
-   *  subfolder of it ("assets" by default). Resolved by fs.rs's
-   *  ImageFolder; settings/image-folder.ts has the rules. */
+  /** The folder a saved document's local images go in: "./" for its own
+   *  folder, or the name of a subfolder of it. */
   imageFolder: string;
   /** Where uploaded images go: a PicGo or PicList app on this computer
    *  (the services set up in it), SM.MS, Imgur, or the user's endpoint. */
@@ -201,78 +168,57 @@ export interface Settings {
   agentModels: Record<string, string>;
   /** Initial mode shown in a newly mounted Agent composer. */
   agentDefaultMode: AgentMode;
-  /// How a pending rewrite shows in the document, as Word's markup views:
-  /// "final" (the result in the text, what it takes out in the margin -
-  /// the default), "original" (the original struck in the text, the new
-  /// text in the margin) or "inline" (struck original and new text in the
-  /// text). "original" falls back to "inline" where there is no room for a
-  /// margin; "final" shows the result alone. 1.2.0's "new" (the new text in
-  /// the text, the original in the margin) reads as "final", what it is
-  /// now.
+  /// How a pending rewrite shows, as Word's markup views: "final" (result in
+  /// the text, removals in the margin), "original" (struck original, new text
+  /// in the margin; "inline" where no room) or "inline". Legacy "new" reads as "final".
   revisionDisplay: RevisionDisplay;
   /// Tone preset for inline completion suggestions.
   completionTone: CompletionTone;
-  /// Settings > Textus AI > Writing Assistance > Writing conventions:
-  /// "automatic", or a profile such as "zh-Hans-CN/fiction" that the AI
-  /// and the checks follow for documents in that language (Rust reads it;
-  /// settings/writing-conventions.ts lists the values). A project's style
-  /// profile overrides it.
+  /// "automatic", or a profile such as "zh-Hans-CN/fiction" the AI and the
+  /// checks follow for that language. A project's style profile overrides it.
   writingConventions: string;
   /// The composer's Web search button starts on. The provider's own
   /// search where it has one, else Textus's web_search on `searchService`.
   enableWebSearch: boolean;
-  /// Settings > Textus AI > Image model: the service ("" for none, the
-  /// default - a picture costs money), its model ("" for its default) and,
-  /// for an OpenAI-compatible endpoint, its address. What generate_image
-  /// uses (ai/image-models.ts, src-tauri ai/images.rs).
+  /// The image service ("" for none, the default: a picture costs money), its
+  /// model ("" for its default) and, for an OpenAI-compatible endpoint, its address.
   imageModelProvider: string;
   imageModel: string;
-  /** At most this many pictures per request (ai/images.rs per_send). */
+  /** At most this many pictures per request. */
   imagesPerRequest: number;
   imageModelEndpoint: string;
   searchService: SearchService;
   /// The SearXNG server `searchService: "searxng"` sends queries to.
   searxngUrl: string;
-  /// The proposal card's "Add sources as footnotes": a proposal's web
-  /// citations become Markdown footnotes when it is accepted (off: they
-  /// are left out). Remembered from the last card, not set in Settings.
+  /// The proposal card's "Add sources as footnotes": remembered from the last
+  /// card, not set in Settings.
   sourcesAsFootnotes: boolean;
-  /// Settings > Textus AI > Remember automatically: Textus AI may keep
-  /// requirements, preferences, style and facts it learns in a
-  /// conversation (the memory pass, src-tauri ai/memory/pass.rs, which reads
-  /// this field from settings.json as REMEMBER_SETTING). On by default.
+  /// Textus AI may keep requirements, preferences, style and facts it learns
+  /// in a conversation. Rust reads it from settings.json.
   rememberAutomatically: boolean;
-  /// The MCP servers Textus AI may use (Settings › Extensions › MCP),
-  /// read by Rust from the settings file (src-tauri mcp/mod.rs).
+  /// The MCP servers Textus AI may use; Rust reads them from the settings file.
   mcpServers: McpServer[];
-  /// Each plugin's settings, by plugin id (src/plugins/store/plugin-settings.ts);
-  /// a project's `.textus/settings.json` holds the same, over these.
+  /// Each plugin's settings, by plugin id; a project's `.textus/settings.json`
+  /// holds the same, over these.
   plugins: Record<string, Record<string, unknown>>;
-  /// Settings > Textus AI > Suggest your next message: after each reply,
-  /// what you will probably say next, grey in the empty message box for
-  /// Tab to take (ai/chat/next-message.ts). On by default.
+  /// After each reply, a likely next message, grey in the empty box for Tab
+  /// to take.
   suggestNextMessage: boolean;
-  /// Whether an agent edit's green in-document preview streams/types itself
-  /// in (pending-edit-plugin's typewriter) or appears complete at once.
+  /// Whether an agent edit's in-document preview types itself in or appears
+  /// complete at once.
   enableEditAnimation: boolean;
-  /// Where Quick Ask's "open full conversation" goes: the docked panel on
-  /// the right (default), or the detached window - for a second monitor.
-  /// The panel's own header pops out to the window either way.
+  /// Where Quick Ask's "open full conversation" goes: the docked panel
+  /// (default) or the detached window.
   agentExpandToWindow: boolean;
   /// Whether the detached Agent window floats above other windows. Kept
   /// here rather than per-window so the choice survives closing it.
   pinAgentWindow: boolean;
-  /// The chosen project folder (in code, the workspace root), or "" for
-  /// the default: the folder of the document being edited. One setting for
-  /// every document. It is the folder whose `.textus/` (style profile,
-  /// library, agent.md, skills) is read AND the sandbox boundary of the
-  /// agent's find_files/read_file tools, so setting it is what lets the
-  /// agent reach reference material that doesn't live next to the draft.
-  /// See docs/design/ai-concepts.md.
+  /// The project folder, or "" for the document's own folder. Its `.textus/`
+  /// is read and it bounds the agent's file tools, so setting it lets the
+  /// agent reach material that doesn't live next to the draft.
   agentWorkspaceRoot: string;
-  /// Proxy all AI provider requests route through, as type + host + port
-  /// ("none" or an empty host means direct connection). Handed to Rust as a
-  /// URL (see the effect below), which is what sends the requests.
+  /// Proxy all AI provider requests route through ("none" or an empty host
+  /// means direct). Handed to Rust as a URL.
   proxyType: ProxyType;
   proxyHost: string;
   proxyPort: string;
@@ -281,85 +227,61 @@ export interface Settings {
   /** How an image on a line of its own sits. Display only: the file is
    *  not changed. */
   imageAlign: ImageAlign;
-  /// Windows and Linux, where the app draws the window bar: File, Edit,
-  /// View and the rest along it (app/menu/MenuBar.tsx) instead of behind ☰.
-  /// Off by default; on, the bar has no sidebar button (the sidebar is in
-  /// View and has its shortcut).
+  /// Windows and Linux: the menus along the app-drawn window bar instead of
+  /// behind ☰. On, the bar has no sidebar button.
   menuBarShown: boolean;
-  /// Typing "*", "**", "~~", "==" or "`" puts the closing mark in at once
-  /// (an empty span to type into). Off, the marks are typed by hand and a
-  /// complete "**text**" still turns into bold (#136).
+  /// Typing "*", "**", "~~", "==" or "`" puts the closing mark in at once. Off,
+  /// a complete "**text**" still turns into bold.
   autoCloseMarks: boolean;
   /// Typing "(", "[", "{", a quote or a full-width bracket ("（", "【",
   /// "「"...) puts its partner in after the caret, as in Typora.
   autoCloseBrackets: boolean;
-  /// The user's own CSS, applied on top of whichever theme is selected -
-  /// for small changes (indent, line spacing, a font) without writing a
-  /// whole theme. Injected last, so it wins ties with the theme (#13).
+  /// The user's own CSS, injected after the theme so it wins ties.
   customCss: string;
-  /// Whole-page zoom factor (1 = 100%), driven by pinch / mod+wheel / the
-  /// View menu (see ../utils/useZoom). Saved here so it survives restarts;
-  /// each window applies it independently on mount.
+  /// Whole-page zoom factor (1 = 100%). Saved so it survives restarts; each
+  /// window applies it independently on mount.
   zoom: number;
-  /// The size of the app's own text - sidebar, outline, AI panel, tabs,
-  /// menus, Settings - as a factor on the type scale (1 = 100%), for every
-  /// window. Published as `--ui-text-scale` (theme/apply-appearance.ts);
-  /// the document has its own zoom, above.
+  /// The size of the app's own UI text (not the document) as a factor on the
+  /// type scale, for every window.
   uiTextScale: UiTextScale;
   shortcuts: Shortcuts;
   /** The keys of plugins' commands as the user set them, by command id,
    *  over their manifests' keybindings; "" for none. */
   commandShortcuts: Record<string, string>;
-  /// Either a built-in theme id (theme/builtin-themes.ts) or a
-  /// `UserThemeMeta.id`.
+  /// A built-in theme id or a `UserThemeMeta.id`.
   themeId: string;
   userThemes: UserThemeMeta[];
-  /// "window" (default): opening another document spawns a new OS window,
-  /// unchanged from the original behavior. "tab": opening another document
-  /// opens a tab in the current window instead. Read by Rust straight from
-  /// the settings file (commands/prefs.rs), since window-vs-tab is decided
-  /// there, often before any webview exists.
+  /// "window" (default): another document opens a new OS window; "tab": a
+  /// tab in this one. Rust reads it from the settings file, often before any webview exists.
   newDocumentMode: NewDocumentMode;
-  /// Whether startup reopens last session's documents (default) or starts
-  /// blank. Read by Rust straight from the settings file, since the decision
-  /// is made in setup() before any webview exists; this is also what lets an
-  /// app-update relaunch (which starts with no file arguments at all) reopen
-  /// whatever was open before it.
+  /// Whether startup reopens last session's documents. Rust reads it before
+  /// any webview exists; it also lets an update relaunch reopen what was open.
   restoreSessionOnStartup: boolean;
   /** Suggest an H1 or first content line as a draft's Save As filename. */
   autoSuggestFilename: boolean;
-  /** Settings › General › Save Automatically (#133): write a document that
-   *  has a file back to it once typing rests (document/autosave.ts). Off by
-   *  default. */
+  /** Write a document that has a file back to it once typing rests. */
   autosave: boolean;
-  /** File > Export as PDF numbers each page in its bottom margin
-   *  (commands/pdf_page_numbers.rs). Off by default (#68). */
+  /** Export as PDF numbers each page in its bottom margin. */
   pdfPageNumbers: boolean;
   /** macOS: export PDFs on white in the theme's light colours. Other
    *  platforms always do. */
   pdfLightColors: boolean;
-  /** Which releases the in-app updater offers (Settings › General › About
-   *  Textus): "stable", or "beta" for release candidates as well. Sent with
-   *  each check (src-tauri/src/commands/update.rs). */
+  /** Which releases the updater offers: "stable", or "beta" for release
+   *  candidates as well. */
   updateChannel: UpdateChannel;
-  /// Set once the first-run tutorial has been shown (or skipped) - belt and
-  /// suspenders alongside `isFreshInstall` below, in case a window closes
-  /// mid-tutorial before the user reaches the end.
+  /// Set once the first-run tutorial has been shown or skipped, in case a
+  /// window closes mid-tutorial.
   onboardingShown: boolean;
-  /// Privacy toggles (Settings > Privacy) - each independently disables one
-  /// kind of locally-stored history/recovery data going forward. Turning
-  /// one off does not retroactively clear what's already stored; the
-  /// section's own "Clear" button does that explicitly.
+  /// Privacy toggles: each stops one kind of locally stored history going
+  /// forward; turning one off does not clear what's already stored.
   enableChatHistory: boolean;
   enableClipboardHistory: boolean;
   enableDraftRecovery: boolean;
-  /** Settings › Privacy: closing a window with unsaved changes keeps them
-   *  as drafts for the next launch instead of asking (close-flow.ts). Off
-   *  by default; needs enableDraftRecovery. */
+  /** Closing a window with unsaved changes keeps them as drafts for the next
+   *  launch instead of asking. Needs enableDraftRecovery. */
   keepUnsavedOnClose: boolean;
-  /** Settings › General › App: closing the last window leaves the process
-   *  running, with a tray (menu bar) icon. Off by default, desktop only;
-   *  Rust reads it (src-tauri/src/background/). */
+  /** Closing the last window leaves the process running with a tray icon.
+   *  Desktop only; Rust reads it. */
   runInBackground: boolean;
 }
 

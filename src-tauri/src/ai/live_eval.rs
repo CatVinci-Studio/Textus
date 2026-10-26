@@ -1,34 +1,11 @@
-//! Live evaluation against the real Anthropic API: a matrix of writing tasks
-//! run through the app's own prompts, tools and agent loop, each checked
-//! automatically and graded by an LLM judge, so a prompt or model change can
-//! be compared run to run instead of by feel. Every live test here is
-//! `#[ignore]` - it spends money and needs a key, so CI never runs it (the
-//! checking code itself is unit-tested in checks.rs and does run in CI).
+//! Live evaluation against real AI APIs: writing tasks run through the app's
+//! own prompts and agent loop, checked automatically and by an LLM judge.
+//! Every live test is `#[ignore]`: it spends money and needs a key.
 //!
 //! Run from src-tauri/:
 //!   cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
-//! The built-in skills suite alone, automatic checks only:
-//!   TEXTUS_EVAL_JUDGE=0 cargo test --lib live_eval::live_agent_builtin -- --ignored --nocapture
-//!
-//! Knobs, all optional:
-//!   ANTHROPIC_API_KEY          the key; like every key a live run uses, read
-//!                             from the environment or from `.env.local` at the
-//!                             repository root (git-ignored), or the file
-//!                             TEXTUS_ENV_FILE names (harness::secret)
-//!   TEXTUS_ANTHROPIC_KEY_FILE  the older one-key file (default:
-//!                             .anthropic-api-key.local at the repository root)
-//!   TEXTUS_EVAL_FILTER         only cases whose id contains one of these
-//!                             comma-separated substrings
-//!   TEXTUS_EVAL_AGENT_MODEL    run the agent matrix on another model
-//!   TEXTUS_EVAL_WRITING_MODEL  run completion/grammar on another model
-//!   TEXTUS_EVAL_JUDGE=0        skip the judge (automatic checks only)
-//!   TEXTUS_EVAL_JOBS           concurrent cases (default 6)
-//!   TEXTUS_EVAL_OUT            where the per-suite .jsonl/.md results go
-//!                             (default: a fresh folder under the temp dir)
-//!   TEXTUS_EVAL_BUDGET_USD     stop starting cases once the run has spent this
-//!   TEXTUS_EVAL_SPEND_FILE     a {"spent_usd", "runs"} ledger each suite adds to
-//!
-//! Without a key, every test prints a notice and passes vacuously.
+//! Optional knobs: TEXTUS_EVAL_FILTER, _AGENT_MODEL, _WRITING_MODEL, _JUDGE=0,
+//! _JOBS, _OUT, _BUDGET_USD, _SPEND_FILE. Without a key, every test passes vacuously.
 
 mod agent_builtin;
 mod agent_everyday;
@@ -76,7 +53,7 @@ fn long_doc() -> String {
             doc.push_str("\n\n");
         }
     }
-    // The editor's form: no trailing newline (see docs.rs).
+    // The editor's form: no trailing newline.
     doc.trim_end().to_string()
 }
 
@@ -101,9 +78,8 @@ fn live_agent_matrix() {
     assert_clean("agent", records);
 }
 
-/// The built-in skills suite (agent_builtin.rs): 56 skill cases and 20
-/// routing cases, as their own `agent-builtin` suite so the agent matrix's
-/// numbers stay comparable with earlier rounds.
+/// The built-in skills suite, as its own `agent-builtin` suite so the agent
+/// matrix's numbers stay comparable.
 #[test]
 #[ignore = "live API - see module docs"]
 fn live_agent_builtin() {
@@ -166,10 +142,8 @@ fn list_eval_cases() {
     println!("grammar ({}): {}", grammar.len(), grammar.join(" "));
 }
 
-/// Free, no key needed: the built-in skills suite one case per line (id,
-/// mode, the user's language, the message), after TEXTUS_EVAL_FILTER, with
-/// a per-group count and a cost estimate - for choosing a filter before a
-/// paid run.
+/// Free, no key needed: the built-in skills suite one case per line, with a
+/// per-group count and a cost estimate, for choosing a filter before a paid run.
 #[test]
 #[ignore = "prints the case list"]
 fn list_builtin_cases() {
@@ -194,7 +168,7 @@ fn list_builtin_cases() {
             .collect::<Vec<_>>()
             .join(", ")
     );
-    // Round-2 averages: $0.02-0.03 an agent case with TEXTUS_EVAL_JUDGE=0.
+    // About $0.02-0.03 an agent case with TEXTUS_EVAL_JUDGE=0.
     println!(
         "estimated cost without the judge: ${:.2}-{:.2}",
         cases.len() as f64 * 0.02,

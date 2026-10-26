@@ -49,15 +49,9 @@ import {
 } from "./store/plugin-records";
 
 /**
- * Every plugin installed - from the catalog (catalog.ts) or a file - and
- * a developer's loaded folder, with its switch, its grants and what it
- * adds while on
- * (docs/design/plugins.md §5-6).
- *
- * A plugin's contributions (commands, sidebar tabs, menu items, file
- * types) are registered as soon as it is on, from its manifest alone; its
- * code starts the first time one of them is used, or at startup if it
- * asks (`onStartupFinished`).
+ * Every installed plugin and a developer's loaded folder, with its switch,
+ * grants and contributions. Contributions register from the manifest when on;
+ * code starts on first use, or at startup if it asks.
  */
 
 export type { PluginStatus } from "./store/lifecycle";
@@ -136,7 +130,7 @@ let loading: Promise<void> | null = null;
 /** Reads every plugin and turns on those that are on. Once per window;
  *  `reload` reads them again (after an install). */
 export function loadPlugins(reload = false): Promise<void> {
-  // Desktop only for now (settings-pages.tsx says why).
+  // Desktop only for now.
   if (isIOSApp) return Promise.resolve();
   if (loading && !reload) return loading;
   loading = (async () => {
@@ -296,7 +290,6 @@ export async function askPlugin(
   return (await host(record)).request(method, params);
 }
 
-/** Runs one of a plugin's commands in its code, starting it first. */
 export function runPluginCommand(
   id: string,
   command: string,
@@ -314,8 +307,8 @@ export function runPluginAiTool(
   return askPlugin(id, "$callAiTool", { name, arguments: args }, "ai.tools");
 }
 
-/** Asks the plugin to fill a webview (PluginWebview.tsx): a sidebar tab's
- *  or a view's panel, a custom editor, a settings page. */
+/** Asks the plugin to fill a webview: a sidebar tab's or a view's panel,
+ *  a custom editor, a settings page. */
 export async function resolveWebview(
   record: WebviewRecord,
   target: {
@@ -394,7 +387,6 @@ export function webviewMessage(id: string, message: unknown): void {
     .catch(() => {});
 }
 
-/** A webview closed: forgotten here and by its plugin. */
 export function disposeWebview(id: string): void {
   const record = removeWebview(id);
   if (!record) return;
@@ -402,7 +394,7 @@ export function disposeWebview(id: string): void {
 }
 
 // ---------------------------------------------------------------------------
-// Contributions (plugin-contributions.ts)
+// Contributions
 // ---------------------------------------------------------------------------
 
 const contributionDeps: ContributionDeps = {
@@ -413,12 +405,10 @@ const contributionDeps: ContributionDeps = {
   },
 };
 
-/** Registers what an on plugin adds, from its manifest. */
 function apply(record: PluginRecord) {
   applyContributions(record, contributionDeps);
 }
 
-/** Takes back what a plugin added. */
 function withdraw(id: string) {
   withdrawContributions(id, contributionDeps);
 }
@@ -428,7 +418,7 @@ function withdraw(id: string) {
 // ---------------------------------------------------------------------------
 
 /** A plugin's setting: the project's value, else the one for every
- *  document, else its manifest's default (plugin-settings.ts). */
+ *  document, else its manifest's default. */
 export function pluginSetting(id: string, key: string): unknown {
   const { value, from } = pluginValue(id, key);
   if (from) return value;
@@ -521,7 +511,6 @@ export async function setPluginEnabled(id: string, on: boolean): Promise<void> {
   if (canRun(next.status, pluginsSnapshot().allOn)) apply(next);
 }
 
-/** Takes back one permission; the plugin restarts without it. */
 export async function revokePermission(
   id: string,
   permission: Permission,
@@ -549,7 +538,6 @@ export async function setAllPlugins(on: boolean): Promise<void> {
     if (canRun(record.status, on)) apply(record);
 }
 
-/** A developer's folder changed: its code and manifest read again. */
 export async function reloadPlugin(id: string): Promise<void> {
   stopHost(id);
   withdraw(id);

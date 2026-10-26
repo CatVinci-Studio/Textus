@@ -1,8 +1,5 @@
 //! Provider-agnostic OAuth and API client logic for Textus's AI features.
-//!
-//! No Tauri here: the providers' APIs, the agent loop and its events, so
-//! the same code can run outside the desktop app. The main crate adds the
-//! commands, the browser sign-in and where credentials are kept.
+//! No Tauri here, so the same code can run outside the desktop app.
 
 pub mod agent;
 pub mod capabilities;

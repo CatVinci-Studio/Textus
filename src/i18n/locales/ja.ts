@@ -1199,7 +1199,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuWindow: "ウインドウ",
   menuZoomWindow: "拡大/縮小",
   menuBringAllToFront: "すべてを手前に移動",
-  // The browser playground (src/playground/).
+  // The browser playground.
   playgroundName: "プレイグラウンド",
   playgroundImport: "読み込む",
   playgroundExport: "書き出す",
