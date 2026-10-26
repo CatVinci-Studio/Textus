@@ -1104,7 +1104,7 @@ fn create_cases() -> Vec<AgentCase> {
             "create/plugin/en/word-count",
             Lang::En,
             "a plugin with a command that shows how many words the selection has",
-            no_edit().check("loads plugin", loads("plugin")).check("a manifest", reply_block("json textus-plugin.json", &["\"id\"", "\"commands\""])).check("its code", reply_block("js host.js", &["registerCommand"])),
+            no_edit().check("loads plugin", loads("plugin")).check("a manifest", reply_block("json textus-plugin.json", &["\"id\"", "\"commands\"", "editor.read"])).check("its code", reply_block("js host.js", &["commands.register("])),
             "Create mode: a small plugin - a manifest (local. id, publisher local, the permission to read the document), host.js registering the command, and a short USAGE.md - each in its own fenced block named by its path. No edits.",
         ),
         create(
