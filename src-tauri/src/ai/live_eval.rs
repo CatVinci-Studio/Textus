@@ -5,7 +5,7 @@
 //! `#[ignore]` - it spends money and needs a key, so CI never runs it (the
 //! checking code itself is unit-tested in checks.rs and does run in CI).
 //!
-//! Run from src-tauri/ (docs/design/ai-eval.md has the full guide and results):
+//! Run from src-tauri/:
 //!   cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
 //! The built-in skills suite alone, automatic checks only:
 //!   TEXTUS_EVAL_JUDGE=0 cargo test --lib live_eval::live_agent_builtin -- --ignored --nocapture
@@ -29,13 +29,6 @@
 //!   TEXTUS_EVAL_SPEND_FILE     a {"spent_usd", "runs"} ledger each suite adds to
 //!
 //! Without a key, every test prints a notice and passes vacuously.
-//!
-//! doubao.rs and deepseek.rs run on other providers: a few request-shape
-//! checks against Volcengine Ark (VOLCENGINE_ARK_API_KEY) and DeepSeek
-//! (DEEPSEEK_API_KEY).
-//!
-//! tokens.rs measures what each kind of request sends and caches
-//! (docs/design/ai-tokens.md) rather than how good the answers are.
 
 mod agent_builtin;
 mod agent_everyday;
@@ -45,24 +38,15 @@ mod checks;
 mod checks_builtin;
 mod completion_cases;
 mod completion_matrix;
-mod completion_replay;
 mod continuing;
 mod conventions;
-mod deepseek;
 mod docs;
-mod doubao;
-mod gemini;
 mod grammar_cases;
 mod grammar_matrix;
 mod harness;
-mod images;
-mod latency;
 mod memory_eval;
 mod memory_sessions;
-mod tokens;
-mod web_search;
 
-use crate::ai::agent::AgentMode;
 use harness::{auth, finish, par_map, Record};
 
 /// About 60k characters, past the full-document limit, so the model only
@@ -130,28 +114,6 @@ fn live_agent_builtin() {
     assert_clean("agent-builtin", records);
 }
 
-/// The same subset on each current Claude model, so the agent default is
-/// chosen on evidence: pass rate, judge scores and latency side by side.
-/// Reports only - a weaker model failing checks is the point of comparing.
-#[test]
-#[ignore = "live API - see module docs"]
-fn live_agent_model_comparison() {
-    let Some(auth) = auth() else { return };
-    let cases: Vec<_> = agent_matrix::all_cases()
-        .into_iter()
-        .filter(|c| agent_matrix::COMPARISON_CASES.contains(&c.id.as_str()))
-        .collect();
-    let models = ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"];
-    let jobs: Vec<(usize, &str)> = models
-        .iter()
-        .flat_map(|m| (0..cases.len()).map(move |i| (i, *m)))
-        .collect();
-    let records = par_map(&jobs, |(i, model)| {
-        agent_matrix::run_case(&auth, &cases[*i], model)
-    });
-    finish("agent-models", records);
-}
-
 /// Every completion case on the shipped writing model.
 #[test]
 #[ignore = "live API - see module docs"]
@@ -174,200 +136,6 @@ fn live_grammar_matrix() {
     let cases = grammar_matrix::all_cases();
     let records = par_map(&cases, |case| grammar_matrix::run_case(&auth, case, &model));
     assert_clean("grammar", records);
-}
-
-/// Completion and grammar on the default writing model against Sonnet, so
-/// the cheap default is kept (or not) on evidence. Reports only.
-#[test]
-#[ignore = "live API - see module docs"]
-fn live_writing_model_comparison() {
-    let Some(auth) = auth() else { return };
-    let models = ["claude-haiku-5-5", "claude-sonnet-5-5"];
-    let completion = completion_matrix::all_cases();
-    let jobs: Vec<(usize, &str)> = models
-        .iter()
-        .flat_map(|m| (0..completion.len()).map(move |i| (i, *m)))
-        .collect();
-    let records = par_map(&jobs, |(i, model)| {
-        completion_matrix::run_case(&auth, &completion[*i], model)
-    });
-    finish("completion-models", records);
-    let grammar = grammar_matrix::all_cases();
-    let jobs: Vec<(usize, &str)> = models
-        .iter()
-        .flat_map(|m| (0..grammar.len()).map(move |i| (i, *m)))
-        .collect();
-    let records = par_map(&jobs, |(i, model)| {
-        grammar_matrix::run_case(&auth, grammar[*i], model)
-    });
-    finish("grammar-models", records);
-}
-
-/// Prompt caching (docs/design/ai-eval.md, "Prompt caching"): every tool step reads
-/// everything the step before it sent, and every message after the first
-/// reads the system prompt and the history the previous message wrote,
-/// instead of paying for them again.
-#[test]
-#[ignore = "live API - see module docs"]
-fn live_agent_caches_across_steps() {
-    let Some(auth) = auth() else { return };
-    let model = harness::agent_model();
-    let ws = crate::ai::workspace::AgentWorkspace::default();
-    let setup = harness::AgentSetup {
-        model: &model,
-        mode: AgentMode::Write,
-        workspace: &ws,
-        focus_heading: None,
-        ui_language: "en",
-        thinking: aicompat::capabilities::ThinkingLevel::Auto,
-        pictures: None,
-        memory: None,
-    };
-    let conv = harness::run_conversation(
-        &auth,
-        &setup,
-        &long_doc(),
-        &[
-            harness::UserTurn::new(
-                "Tighten the first paragraph of the 'Coding' section: same facts, fewer words.",
-            ),
-            harness::UserTurn::new("Now do the same for the second paragraph of that section."),
-            harness::UserTurn::new(
-                "Which site numbers does the first paragraph of 'Ethics' name? Just list them.",
-            ),
-        ],
-    );
-    assert!(conv.error.is_none(), "{:?}", conv.error);
-    for (t, outcome) in conv.outcomes.iter().enumerate() {
-        for (s, u) in outcome.usage.iter().enumerate() {
-            println!(
-                "[cache] turn {} step {}: read {}, write {}, input {}, output {}",
-                t + 1,
-                s + 1,
-                u.cache_read_input_tokens,
-                u.cache_creation_input_tokens,
-                u.input_tokens,
-                u.output_tokens
-            );
-        }
-    }
-    let first = &conv.outcomes[0].usage;
-    assert!(first.len() > 1, "expected a read step before the edit");
-    // Within a message: a step's prompt is the previous step's plus what
-    // that step added, so it reads all of the previous one from cache.
-    for (t, outcome) in conv.outcomes.iter().enumerate() {
-        for (s, pair) in outcome.usage.windows(2).enumerate() {
-            let sent = pair[0].cache_read_input_tokens + pair[0].cache_creation_input_tokens;
-            assert!(
-                pair[1].cache_read_input_tokens >= sent,
-                "turn {} step {} read {} of the {} cached tokens before it",
-                t + 1,
-                s + 2,
-                pair[1].cache_read_input_tokens,
-                sent
-            );
-        }
-    }
-    // Across messages: the second reads the system prompt (the first
-    // message's history-free prefix); the third also reads the history up
-    // to the end of the first exchange, which the second one wrote.
-    let opening = |t: usize| conv.outcomes[t].usage[0];
-    assert!(
-        opening(1).cache_read_input_tokens > 0,
-        "message 2 read nothing"
-    );
-    assert!(
-        opening(2).cache_read_input_tokens > opening(1).cache_read_input_tokens,
-        "message 3 read {} tokens, no more than message 2's {} - the history wasn't cached",
-        opening(2).cache_read_input_tokens,
-        opening(1).cache_read_input_tokens
-    );
-}
-
-/// Thinking levels (capabilities::plan) on the two shipped Claude models:
-/// each level's request is accepted, a tool step after a thinking step
-/// replays its thinking blocks without tripping the preserved-thinking
-/// check (the harness opts every request into it), the next message - with
-/// the earlier thinking dropped - is accepted too, and Deep shows readable
-/// thinking. Prints each run's steps, thinking, latency and cost.
-#[test]
-#[ignore = "live API - see module docs"]
-fn live_thinking_levels() {
-    use aicompat::capabilities::ThinkingLevel;
-    let Some(auth) = auth() else { return };
-    let ws = crate::ai::workspace::AgentWorkspace::default();
-    let models = ["claude-sonnet-5-5", "claude-haiku-5-5"];
-    let levels = [
-        ThinkingLevel::Fast,
-        ThinkingLevel::Auto,
-        ThinkingLevel::Deep,
-    ];
-    let jobs: Vec<(&str, ThinkingLevel)> = models
-        .iter()
-        .flat_map(|m| levels.iter().map(move |l| (*m, *l)))
-        .collect();
-    let results = par_map(&jobs, |(model, level)| {
-        let setup = harness::AgentSetup {
-            model,
-            mode: AgentMode::Write,
-            workspace: &ws,
-            focus_heading: None,
-            ui_language: "en",
-            thinking: *level,
-            pictures: None,
-            memory: None,
-        };
-        let conv = harness::run_conversation(
-            &auth,
-            &setup,
-            &long_doc(),
-            &[
-                harness::UserTurn::new(
-                    "Tighten the first paragraph of the 'Coding' section: same facts, fewer words.",
-                ),
-                harness::UserTurn::new("Now do the same for the second paragraph of that section."),
-            ],
-        );
-        (*model, *level, conv)
-    });
-    let mut failures = Vec::new();
-    let mut total = harness::Usage::default();
-    for (model, level, conv) in &results {
-        let label = format!("{model} {level:?}");
-        if let Some(e) = &conv.error {
-            failures.push(format!("{label}: {e}"));
-            continue;
-        }
-        for (t, outcome) in conv.outcomes.iter().enumerate() {
-            let mut usage = harness::Usage::default();
-            for step in &outcome.usage {
-                usage.add(model, step);
-            }
-            println!(
-                "[thinking] {label} turn {}: {} steps, {} thinking events / {} chars, {} ms, {} output tokens, ${:.4}",
-                t + 1,
-                outcome.usage.len(),
-                outcome.thinking_events,
-                outcome.thinking_chars,
-                outcome.latency_ms,
-                usage.output,
-                usage.cost_usd
-            );
-            total.merge(&usage);
-            if outcome.proposals.is_empty() {
-                failures.push(format!("{label} turn {}: no proposal", t + 1));
-            }
-        }
-        let first = &conv.outcomes[0];
-        if first.usage.len() < 2 {
-            failures.push(format!("{label}: no tool step after the first"));
-        }
-        if *level == ThinkingLevel::Deep && first.thinking_chars == 0 {
-            failures.push(format!("{label}: Deep showed no thinking"));
-        }
-    }
-    println!("[thinking] total ${:.4}", total.cost_usd);
-    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
 /// Free, no key needed: prints every case id per suite (after
@@ -432,18 +200,4 @@ fn list_builtin_cases() {
         cases.len() as f64 * 0.02,
         cases.len() as f64 * 0.03
     );
-}
-
-/// Free: lists models through the app's own paging and tidying, and checks
-/// both shipped defaults are still served.
-#[test]
-#[ignore = "live API - see module docs"]
-fn live_lists_every_model() {
-    let Some(auth) = auth() else { return };
-    let models = harness::block_on(aicompat::providers::anthropic::list_models(&auth)).unwrap();
-    println!("\n[models] {} listed: {}", models.len(), models.join(", "));
-    assert!(models
-        .iter()
-        .any(|m| m == aicompat::providers::anthropic::COMPLETION_MODEL));
-    assert!(models.iter().any(|m| *m == harness::agent_model()));
 }

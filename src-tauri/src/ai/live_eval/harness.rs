@@ -584,10 +584,6 @@ pub struct TurnOutcome {
     pub apply_error: Option<String>,
     pub latency_ms: u128,
     pub usage: Vec<StepUsage>,
-    /// Thinking the stream reported: events (Claude sends one per thinking
-    /// block even when it shows no text) and characters of readable text.
-    pub thinking_events: usize,
-    pub thinking_chars: usize,
     /// Rules the proposal post-processing applied to this turn's
     /// propose_edit texts (rules::postfix) - a prompt regression shows here
     /// instead of being silently repaired.
@@ -904,8 +900,6 @@ pub fn run_conversation(
         let specs = tool_set.specs();
         let usage = RefCell::new(Vec::new());
         let postfix = RefCell::new(Vec::new());
-        let thinking_events = AtomicUsize::new(0);
-        let thinking_chars = AtomicUsize::new(0);
         // Pictures written into the text, begun as the app begins them.
         let inline = setup.pictures.map(|p| p.inline(&ctx.proposed));
         let timeline = Timeline::from_env();
@@ -913,10 +907,6 @@ pub fn run_conversation(
             timeline.observe(&event);
             if let Some(inline) = &inline {
                 inline.observe(&event);
-            }
-            if let ProviderEvent::Thinking(text) = event {
-                thinking_events.fetch_add(1, Ordering::Relaxed);
-                thinking_chars.fetch_add(text.chars().count(), Ordering::Relaxed);
             }
         };
         let started = Instant::now();
@@ -997,8 +987,6 @@ pub fn run_conversation(
             doc_before: doc.clone(),
             latency_ms,
             usage: usage.into_inner(),
-            thinking_events: thinking_events.into_inner(),
-            thinking_chars: thinking_chars.into_inner(),
             postfix: postfix.into_inner(),
             ..TurnOutcome::default()
         };

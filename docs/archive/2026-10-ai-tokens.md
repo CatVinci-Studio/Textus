@@ -1,3 +1,5 @@
+> Archived: a measurement of AI token use on 1.2.0-rc.2 (2026-10-19), kept for reference and no longer updated. The `live_eval::tokens` suite it describes was removed in 1.3.0-beta.3; it is in git history.
+
 # AI token use
 
 What each kind of AI request sends, what the provider caches, where tokens

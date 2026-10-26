@@ -81,7 +81,8 @@ talking to.
   reasoning goes back with its calls (`replay_reasoning`).
 
 A provider is added as a catalog entry and a row; before a release, the
-edit eval (`live_eval::latency`) runs on every provider in the catalog.
+agent matrix's core set runs on it
+(`node scripts/live-eval.mjs run --provider <id> --set core`).
 
 ## Skills, memory and MCP
 

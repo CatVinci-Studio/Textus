@@ -5,8 +5,8 @@ import { describe, expect, it, vi } from "vitest";
 import { hashString, roundTripFile } from "./save-roundtrip";
 
 // The save round trip (save-roundtrip.test.ts) on the developer and
-// design docs in `docs/`: real Markdown of ours, some of it long - seven
-// loads of ai-eval.md, over 100 KB, take seconds on a CI runner.
+// design docs in `docs/`: real Markdown of ours, some of it long enough
+// to take seconds on a CI runner.
 
 vi.mock("mermaid", () => ({
   default: { initialize() {}, render: () => new Promise(() => {}) },
