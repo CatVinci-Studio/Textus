@@ -133,7 +133,10 @@ fn walk(root: &Path, dir: &Path, out: &mut Vec<String>) {
             walk(root, &path, out);
         } else if let Ok(rel) = path.strip_prefix(root) {
             let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
-            out.push(format!("{} ({size} bytes)", rel.to_string_lossy()));
+            out.push(format!(
+                "{} ({size} bytes)",
+                rel.to_string_lossy().replace('\\', "/")
+            ));
         }
     }
 }
