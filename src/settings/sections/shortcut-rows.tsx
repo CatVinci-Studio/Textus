@@ -31,8 +31,7 @@ export function headingLabels(t: Strings): Record<HeadingAction, string> {
   };
 }
 
-/** The shortcuts that can't be changed (app/fixed-shortcuts.ts), read-only,
- *  by the menu they belong to. */
+/** The shortcuts that can't be changed, read-only, by menu. */
 export function FixedShortcutList({
   groups,
 }: {
@@ -84,9 +83,8 @@ function actionLabels(t: Strings): Record<ShortcutAction, string> {
   };
 }
 
-/** The fixed shortcut (app/fixed-shortcuts.ts) that has `combo`, by its
- *  label: a key one of them owns can't be bound, as it would never fire -
- *  Ctrl+0 for Paragraph is Actual Size. */
+/** The fixed shortcut that has `combo`, by its label. A key one of them owns
+ *  can't be bound, as it would never fire. */
 function fixedOwner(
   fixed: FixedShortcutGroup[],
   combo: string,
@@ -96,7 +94,6 @@ function fixedOwner(
     .find((item) => item.combos.includes(combo))?.label;
 }
 
-/** An app action's shortcut: the app's own row. */
 export function ShortcutRow({
   label,
   action,
@@ -132,9 +129,8 @@ export function ShortcutRow({
   );
 }
 
-/** A plugin command's shortcut (its manifest's `keybindings`, or none):
- *  the user's own over it, in `overrides` by command id - "" for none. A
- *  key an app action has stays the app's. */
+/** A plugin command's shortcut: the user's own over the manifest's, by
+ *  command id ("" for none). A key an app action has stays the app's. */
 export function CommandShortcutRow({
   label,
   command,
@@ -180,9 +176,8 @@ export function CommandShortcutRow({
   );
 }
 
-/** A shortcut's row: its keys, recorded by pressing them (Esc gives up),
- *  cleared, or put back to `fallback`. A combo `ownerOf` names someone
- *  else for is refused, and named. */
+/** A shortcut's row: its keys recorded by pressing them (Esc gives up),
+ *  cleared, or reset. A combo someone else owns is refused, and named. */
 function ShortcutRecorder({
   label,
   combo,

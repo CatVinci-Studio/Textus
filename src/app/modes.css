@@ -1,21 +1,13 @@
 /* Typewriter mode in source mode / split view: room above and below so the
-   first and last lines can reach the middle (as .typewriter-active does
-   for the rich editor). */
+   first and last lines can reach the middle. */
 .source-view.typewriter-source {
   padding-top: 42vh;
   padding-bottom: 42vh;
 }
 
-/* Zen mode (App.tsx): only the text. The window bar stays as an invisible
-   drag strip that shows itself on hover, so the window can still be moved
-   and closed.
-
-   The chrome fades rather than snapping away, and comes back the same way.
-   The tab bar and the docked panel leave the layout at once - lifted out
-   of it, they fade where they were while the text column glides into the
-   room they made (App.tsx's FlipOnChange) - and visibility, switched after
-   the fade, takes them out of clicks and the tab order as display: none
-   did, with no allow-discrete needed. */
+/* Zen mode: only the text. The window bar stays as an invisible drag strip
+   that shows on hover. Chrome leaves the layout at once and fades where it
+   was; visibility, switched after the fade, takes it out of clicks. */
 .tab-bar,
 .agent-panel,
 .window-bar-status,

@@ -6,10 +6,8 @@ import { skillsInReply, type ReplySkill } from "./chat-skill";
 import { ModeChoice } from "./ModeChoice";
 
 /**
- * Save this skill, under a reply that wrote one (Create mode's `skill`
- * skill): the modes it is to apply in - as the file asks, to change here -
- * and the file saved into the global skills folder, in the `/` menu of
- * those modes from then on. A later reply with the same skill offers
+ * Save this skill, under a reply that wrote one: pick its modes and save it
+ * into the global skills folder. A later reply with the same skill offers
  * Update.
  */
 export function ReplySkills({ text }: { text: string }) {

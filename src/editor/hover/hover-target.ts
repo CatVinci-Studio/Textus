@@ -9,8 +9,7 @@ import { parseWikilink } from "../markdown/wikilink";
 const CITATION = /\[[^\]\n]*?@[^\]\n]*\]/g;
 const CITE_KEY = /@([\w:.#$%&+?<>~/-]+)/g;
 
-/** What the pointer is over and where it is on screen: an element (a link,
- *  a wikilink) or a run of text (a citation). */
+/** What the pointer is over and where it is on screen. */
 export interface HoverSpot {
   /** What stays the same while the pointer moves within it. */
   key: string;
@@ -81,8 +80,7 @@ function citationAt(view: EditorView, event: MouseEvent): HoverSpot | null {
     if (offset < start || offset > start + group[0].length) continue;
     const cites = [...group[0].matchAll(CITE_KEY)];
     if (cites.length === 0) continue;
-    // The key the pointer is on; on the brackets or a word around them,
-    // the first.
+    // The key the pointer is on, else the first.
     const cite =
       cites.find(
         (c) =>

@@ -3,13 +3,9 @@
 
 use super::*;
 
-/// How often one request may call each check tool before it stops
-/// answering. Asked for "800 字", a model drafted, measured, rewrote and
-/// measured again until its steps ran out, and never proposed the text at
-/// all; a check that keeps answering invites exactly that loop. Measuring
-/// against a platform's limit is not counted (`measures_a_limit`): text
-/// that must fit is worth trimming until it does, and a budget refused an
-/// X post and headline options still over their limit in the live eval.
+/// How often one request may call each check tool before it stops answering: a
+/// check that keeps answering invites a draft-measure-rewrite loop. Measuring
+/// against a platform's limit is not counted: such text is worth trimming.
 pub(crate) const CHECK_BUDGETS: &[(&str, usize)] = &[
     (MEASURE_TEXT_TOOL_NAME, 3),
     (CHECK_CONVENTIONS_TOOL_NAME, 4),
@@ -28,12 +24,9 @@ pub(crate) fn measures_a_limit(arguments: &str) -> bool {
 /// hidden draft (refuses_a_draft): a sentence or a short paragraph.
 pub(crate) const DRAFT_CHARS: usize = 200;
 
-/// A check of a draft - new text, long, not from the document, and not
-/// measured against a platform's limit - refused. Asked for "1200 字" with
-/// two pictures, a model wrote the whole piece into measure_text three
-/// times before proposing it: over three minutes in which the user saw
-/// nothing. Proposed instead, the text streams in where they watch, and
-/// propose_edit's result gives its size.
+/// A check of a draft (new, long, not from the document, not measured against a
+/// limit) refused: drafted unseen, the user waited minutes. Proposed instead,
+/// the text streams in where they watch.
 pub(crate) fn refuses_a_draft(ctx: &ToolContext, name: &str, arguments: &str) -> Option<String> {
     if name != MEASURE_TEXT_TOOL_NAME && name != CHECK_CONVENTIONS_TOOL_NAME {
         return None;
@@ -49,9 +42,8 @@ pub(crate) fn refuses_a_draft(ctx: &ToolContext, name: &str, arguments: &str) ->
     Some(format!("Not run: {name} doesn't take a draft of new text. Propose the text with propose_edit now - the user sees it come in, its result tells you its size, and conventions are fixed on the way. If it misses a length the user asked for, say so in your reply."))
 }
 
-/// Counts a call to a check tool, and refuses it once the request has used
-/// up that tool's budget - or when it checks a hidden draft
-/// (refuses_a_draft). None for every other call, and within budget.
+/// Counts a call to a check tool, and refuses it once the request has used up
+/// that tool's budget or when it checks a hidden draft. None otherwise.
 pub(crate) fn spend_check(ctx: &ToolContext, name: &str, arguments: &str) -> Option<String> {
     if let Some(refusal) = refuses_a_draft(ctx, name, arguments) {
         return Some(refusal);
@@ -68,12 +60,9 @@ pub(crate) fn spend_check(ctx: &ToolContext, name: &str, arguments: &str) -> Opt
     })
 }
 
-/// Whether `result` is a valid proposal or comment: the user's to decide
-/// now, with nothing in it the model has to answer. A comment settles only
-/// once the request can't change the document or has proposed a change
-/// (`edited`): where it can, comments and a sentence may be the model about
-/// to write its edits next - in 1.2.0-rc.6's live eval DeepSeek ended two
-/// translations of three that way, the translation never written.
+/// Whether `result` is a valid proposal or comment with nothing the model has
+/// to answer. A comment settles only once the request can't edit or has
+/// proposed a change: otherwise the edits may be about to follow.
 pub(crate) fn settles(name: &str, result: &str, edited: bool) -> bool {
     match name {
         PROPOSE_EDIT_TOOL_NAME => result.starts_with(EDIT_PROPOSED),

@@ -2,10 +2,8 @@ import type { AgentMode } from "../../settings/settings-types";
 import { storedAgentMode } from "../../settings/settings-types";
 
 /**
- * A skill Textus AI wrote in a reply (Create mode's `skill` skill): one
- * fenced block whose info string is the language and the file's name
- * (```markdown weekly-report.md) and whose text is a skill file - front
- * matter with a `name`, then the instructions.
+ * A skill Textus AI wrote in a reply: one fenced block such as
+ * ```markdown weekly-report.md whose text is a skill file with a `name`.
  */
 export interface ReplySkill {
   name: string;

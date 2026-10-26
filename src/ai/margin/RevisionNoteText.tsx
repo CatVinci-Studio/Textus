@@ -9,12 +9,8 @@ import {
 import { usePicturesState } from "../revision/usePicturesState";
 import { PICTURES_IN_TEXT } from "../revision/markdown-forms";
 
-/**
- * A revision card's text (ReviewMargin): its words as they are, and each
- * picture in it as the picture, small - not its Markdown, which the user
- * never sees anywhere else. A picture being made is its frame until it
- * comes; one already in the document is the one drawn there.
- */
+/** A revision card's text, each picture shown small rather than as its
+ *  Markdown. A picture being made shows its frame until it comes. */
 export function RevisionNoteText({ text }: { text: string }) {
   const parts: React.ReactNode[] = [];
   let last = 0;

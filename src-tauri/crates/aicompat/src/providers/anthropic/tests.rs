@@ -36,11 +36,8 @@ fn turns_to_messages_skips_empty_assistant_turns() {
     assert!(messages.iter().all(|m| m["role"] == "user"));
 }
 
-/// Two things worth pinning: the base64 source shape Claude requires,
-/// and that a text-only turn keeps its plain-string `content`. The
-/// second matters because it is the shape every request had before
-/// images existed - regressing it would change every conversation, not
-/// just the ones with a picture in them.
+/// The base64 source shape Claude requires, and that a text-only turn keeps its
+/// plain-string `content`, so requests without pictures don't change.
 #[test]
 fn images_use_the_base64_source_block_and_text_only_turns_stay_strings() {
     let with_image = turns_to_messages(&[AgentTurn::User {
@@ -126,11 +123,9 @@ fn tool_result_images_ride_inside_the_tool_result() {
 
 #[test]
 fn turns_to_messages_groups_each_steps_tool_calls_into_one_pair() {
-    // run_agent_loop records a step as Call1, Call2, Result1, Result2:
-    // that step must become exactly one assistant message (both tool_use
-    // blocks) followed by one user message (both tool_result blocks), or
-    // Claude rejects the request for having consecutive assistant
-    // messages. Call3, after a result, is the next step's own pair.
+    // A step recorded as Call1, Call2, Result1, Result2 must become one
+    // assistant message and one user message, or Claude rejects consecutive
+    // assistant messages. Call3, after a result, is the next step's own pair.
     let history = vec![
         user("do it"),
         call("1", "a"),
@@ -169,9 +164,8 @@ fn turns_to_messages_groups_each_steps_tool_calls_into_one_pair() {
     assert_eq!(messages[5]["content"], "done");
 }
 
-/// Saved before the loop recorded calls first: Call1, Result1, Call2,
-/// Result2. Each call becomes its own pair - still one result per call
-/// in the message right after it, so the API accepts it.
+/// Interleaved history (Call1, Result1, Call2, Result2): each call becomes its
+/// own pair, which the API accepts.
 #[test]
 fn interleaved_history_replays_as_one_pair_per_call() {
     let history = vec![
@@ -301,11 +295,9 @@ fn the_request_marks_the_system_prompt_and_the_history_for_caching() {
     assert_eq!(breakpoints(&oauth), ["system/1"]);
 }
 
-/// The property the breakpoints rely on, through a whole conversation:
-/// each tool step's prompt starts with the step before it, and each
-/// exchange's starts with the previous exchange's up to the block that
-/// one marked as the end of its history - so every request reads what
-/// the one before it wrote.
+/// Through a whole conversation, each tool step's prompt starts with the step
+/// before it, and each exchange's with the previous one up to the block it
+/// marked as the end of its history.
 #[test]
 fn every_request_starts_with_what_the_one_before_it_cached() {
     let prompt = |request: &Value| prompt_of(request["messages"].as_array().unwrap());
@@ -339,16 +331,15 @@ fn every_request_starts_with_what_the_one_before_it_cached() {
     // The edit step's pair is its own: the read step's stays as it was.
     assert_eq!(prompt(&first[2]).len(), 5);
 
-    // History keeps each message without its document (agent.rs).
+    // History keeps each message without its document.
     let mut history = vec![user("q1")];
     history.extend(read_then_edit.iter().flat_map(|s| s.iter().cloned()));
     history.push(assistant("a1"));
     let second = &exchange(&history, "doc' + q2", &[])[0];
     history.extend([user("q2"), assistant("a2")]);
     let third = &exchange(&history, "doc'' + q3", &[])[0];
-    // Exchange 2 marks the end of exchange 1; exchange 3 marks that same
-    // block (and the end of exchange 2), so it reads what exchange 2
-    // wrote there without relying on the lookback.
+    // Exchange 2 marks the end of exchange 1; exchange 3 marks that same block
+    // (and the end of exchange 2), so it reads what exchange 2 wrote there.
     assert_eq!(breakpoints(second), ["system/0", "messages/5"]);
     assert_eq!(breakpoints(third), ["system/0", "messages/5", "messages/7"]);
     assert_eq!(prompt(third)[..=5], prompt(second)[..=5]);

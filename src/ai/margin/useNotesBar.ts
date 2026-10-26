@@ -4,13 +4,8 @@ import type { EditorRunner } from "../../editor/useEditorRunner";
 import { revealPosition } from "../../editor/reveal-position";
 import type { ReviewNote } from "./review-notes-plugin";
 
-/**
- * The notes bar's state (NotesBar.tsx): the note it points at, stepped
- * through in the order of the text, and the notes picked to ask about
- * together. The note pointed at holds only until the review bar points at
- * a revision (`revisionFocus` changes): the margin opens one card at a
- * time.
- */
+/** The notes bar's state: the note it points at and the notes picked. The
+ *  pointer yields when the review bar's changes, as one card opens at a time. */
 export function useNotesBar({
   notes,
   run,

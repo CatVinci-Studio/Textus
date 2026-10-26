@@ -1,20 +1,14 @@
-//! Scripts: a plugin in one `.js` file, put in `scripts/` in the global
-//! config folder - no folder, no manifest. What a manifest says is in a
-//! comment at the top of the file, as a userscript's is:
+//! Scripts: a plugin in one `.js` file in the global `scripts/` folder, its
+//! manifest in a header comment:
 //!
 //! ```js
 //! // ==TextusScript==
 //! // @name        Word Count
-//! // @description Counts the words of the document in front.
-//! // @permission  editor.read
 //! // @command     count Count Words
 //! // ==/TextusScript==
 //! ```
 //!
-//! Its id is `local.<file name>` unless `@id` gives one; a command's name
-//! is under the id (`local.word-count.count`). A script is listed with the
-//! installed plugins, starts off like any new plugin, asks for what it
-//! says it needs, and runs as soon as Textus starts once it is on.
+//! Its id is `local.<file name>` unless `@id` gives one.
 
 use std::path::{Path, PathBuf};
 
@@ -25,8 +19,7 @@ use super::{install::InstalledPlugin, require_id};
 const START: &str = "==TextusScript==";
 const END: &str = "==/TextusScript==";
 
-/// `scripts/` in the global config folder (beside `plugins/`, where
-/// plugins keep their data).
+/// `scripts/` in the global config folder.
 pub(super) fn scripts_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     Ok(crate::ai::workspace::global_agent_dir(app)?.join("scripts"))
 }

@@ -3,17 +3,9 @@
 
 use super::*;
 
-/// Up to this much the document is embedded in full; past it, the prompt
-/// gets a line-numbered outline plus a head/tail excerpt (and the section
-/// the user is working in), and the model reads what it needs through
-/// read_document / search_document (tools.rs), which always work on the
-/// full text. Raised from 16k: that cut ordinary chapters down to 3k
-/// characters of visible text, and the Anthropic path now caches the
-/// prompt across tool steps. Counted in characters with Chinese, Japanese
-/// and Korean ones as 3 (project::char_units, as read_file counts) where
-/// the model can read on: by characters, a Chinese chapter of 39,000 was
-/// sent whole, about 40,000 tokens in every message (docs/design/ai-tokens.md,
-/// item 3). Without tools there is no reading on, so characters it stays.
+/// Up to this much the document is embedded in full; past it, an outline and
+/// excerpts, and the model reads on through the document tools. Counted in char
+/// units (CJK as 3) when tools can read on, else in characters.
 pub(super) const FULL_DOCUMENT_LIMIT: usize = 40_000;
 
 /// Whether a request shows the whole document - else an outline and
@@ -30,9 +22,8 @@ pub(super) fn shown_whole(document: &str, with_tools: bool) -> bool {
 pub(super) const EXCERPT_CHARS: usize = 2_000;
 pub(super) const MAX_OUTLINE_HEADINGS: usize = 120;
 
-/// The document's headings with the line each starts on and its block id
-/// (`L12 [#k3f9] ## Methods`) - the map read_document's line ranges and
-/// section names refer to, and an edit's `block`.
+/// The document's headings with their line and block id
+/// (`L12 [#k3f9] ## Methods`), the map read ranges and edits refer to.
 fn heading_outline(document: &Document) -> Vec<String> {
     let lines: Vec<&str> = document.lines().collect();
     let mut starts = Vec::with_capacity(lines.len());
@@ -74,14 +65,11 @@ pub(super) fn char_suffix(s: &str, n: usize) -> &str {
     s.char_indices().nth(total - n).map_or(s, |(i, _)| &s[i..])
 }
 
-/// The `---document---` prompt section: the full text under
-/// `FULL_DOCUMENT_LIMIT`, otherwise an outline plus start/end excerpts.
 /// Most of a focus section embedded alongside a truncated document.
 pub(super) const FOCUS_SECTION_CHARS: usize = 12_000;
 
 /// The section headed `heading` (to the next heading at its level or above)
-/// and the line it starts on - the part of a long document the user is
-/// working in, which the truncated view would otherwise leave out.
+/// and the line it starts on.
 pub(super) fn focus_section(document: &Document, heading: &str) -> Option<(usize, String)> {
     let lines: Vec<&str> = document.lines().collect();
     let (first, last) = crate::ai::tools::section_range(&lines, heading)?;
@@ -95,8 +83,7 @@ pub(super) fn focus_section(document: &Document, heading: &str) -> Option<(usize
     Some((first + 1, doc_blocks::annotate(document, from, to)))
 }
 
-/// The `---document---` section, each block marked with its id
-/// (doc_blocks.rs).
+/// The `---document---` section, each block marked with its id.
 pub(crate) fn document_section(
     document: &Document,
     with_tools: bool,
@@ -136,10 +123,8 @@ pub(crate) fn document_section(
     )
 }
 
-/// The per-request context: the project's style profile and the library
-/// entries this request touches, then the document (in full, or outlined
-/// when long). Prepended to the CURRENT user message only, for the request;
-/// what history keeps is the plain message (see ai_agent_message_inner), so
+/// The per-request context: style profile, the library entries this request
+/// touches, then the document. Prepended to the current user message only, so
 /// earlier turns never repeat an old copy of the document.
 pub(crate) fn request_context(
     workspace: &AgentWorkspace,
@@ -153,8 +138,7 @@ pub(crate) fn request_context(
     request_context_and_library(workspace, document, with_tools, focus, focus_heading).0
 }
 
-/// [`request_context`], and the library entries it carries and leaves out
-/// - which the Memory tab marks (project::record_library_use).
+/// [`request_context`], and the library entries it carries and leaves out.
 pub(super) fn request_context_and_library<'a>(
     workspace: &'a AgentWorkspace,
     document: &Document,
@@ -173,14 +157,9 @@ pub(super) fn request_context_and_library<'a>(
     (parts.join("\n\n"), pick)
 }
 
-/// The current user message as sent: the request context, then what the
-/// user wrote - under a header that names the language they wrote it in,
-/// when that can be told. The rule "reply in the language of the user's
-/// message" alone lost to the document's language whenever a short English
-/// request came with a Chinese or Japanese document: the whole reply came
-/// back in the document's language (round 4: cross/en-asks-ja-doc, and
-/// Haiku replying in English to Chinese requests once a style profile was
-/// in the context). Said right above the message, per turn, it holds.
+/// The current user message as sent: the request context, then what the user
+/// wrote, under a header naming its language. Without that header, a short
+/// English request with a CJK document got its reply in the document's language.
 pub(crate) fn request_user_text(context: &str, message: &str) -> String {
     match message_language(message) {
         Some(language) => format!(
@@ -207,10 +186,8 @@ pub(crate) fn request_message(
     request_user_text(&format!("{preamble}\n\n{context}"), message)
 }
 
-/// Said with a request that asks for a length. Told only in the system
-/// prompt, Doubao still wrote a 1200-character piece out in measure_text,
-/// unseen, before proposing it - the user waited minutes for the first
-/// word; said next to the request, it proposes straight away.
+/// Said with a request that asks for a length: told only in the system prompt,
+/// models wrote the piece out unseen in measure_text before proposing it.
 const LENGTH_TARGET_NOTE: &str = "This request asks for a length: write the text straight into propose_edit, where the user watches it come in - don't write it out first in measure_text or check_conventions. propose_edit's result says how long it came out; if that misses the length, say so in your reply.";
 
 /// Whether the user's own words ask for a length: a number and a unit of
@@ -246,9 +223,8 @@ pub(crate) fn message_language(message: &str) -> Option<&'static str> {
         }
     }
     let lang = crate::ai::rules::detect::guess(&typed)?;
-    // The script is part of the language: asked in Simplified to convert a
-    // report to Traditional, the reply came back in Traditional (round 4,
-    // builtin/translate/hans-hant/report).
+    // The script is part of the language: otherwise a Simplified request to
+    // convert to Traditional got its reply in Traditional.
     if lang == crate::ai::rules::detect::Lang::ZhHans {
         return Some("Simplified Chinese");
     }

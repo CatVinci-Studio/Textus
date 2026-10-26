@@ -3,8 +3,8 @@ import { Presence, PresenceDiv } from "../ui/usePresence";
 import type { useModalDialog } from "../ui/useModalDialog";
 import type { Strings } from "../i18n/strings";
 
-/** The save/discard/cancel prompt (close-flow.ts): a dialog on the
- *  desktop, an action sheet from the bottom of the screen on a phone. */
+/** The save/discard/cancel prompt: a dialog on the desktop, an action sheet
+ *  on a phone. */
 export function ClosePrompt({
   open,
   phone,
@@ -27,11 +27,8 @@ export function ClosePrompt({
     <>
       <Presence show={open && phone} exitMs={250}>
         {open && phone && (
-          // The iPhone asks what to do with an edited document from the
-          // bottom of the screen, as Notes and Pages do. The sheet runs its
-          // onClose before the chosen action: cancelClose's quit-cancel is
-          // a desktop-only call (a no-op here), and the two handlers still
-          // hold the pending close they were rendered with.
+          // The sheet runs its onClose before the chosen action; the
+          // handlers still hold the pending close they were rendered with.
           <ActionSheet
             title={t.closePromptMessage}
             items={[

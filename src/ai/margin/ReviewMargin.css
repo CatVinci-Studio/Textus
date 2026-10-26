@@ -1,7 +1,5 @@
-/* Review notes in the margin (ReviewMargin.tsx). The scroll area becomes
-   their positioning context while there are any; the text column moves
-   over to open a margin (its margin-left, set at once while the column
-   glides there on its transform - placeColumn). */
+/* Review notes in the margin. The text column's margin-left is set at once
+   while the column glides there on its transform. */
 .editor-scroll.review-notes-on {
   position: relative;
 }
@@ -69,8 +67,8 @@
   font-size: var(--text-sm);
   line-height: 1.55;
   box-shadow: var(--shadow-card);
-  /* Moved by the stack, a card glides on `translate` (useCardBox), never
-     on `top`: that laid the margin out on every frame. */
+  /* A card glides on `translate`, never `top`, which would lay the margin
+     out on every frame. */
   transition: transform var(--dur-fast) var(--ease-out);
   animation: review-note-in var(--dur-slow) var(--ease-out) both;
 }
@@ -137,9 +135,8 @@
   overflow-wrap: anywhere;
 }
 
-/* The actions open under the note on hover (always, by touch or focus):
-   their room arrives at once and they settle into it. Growing the card's
-   height frame by frame restacked the whole margin on every frame. */
+/* The actions' room arrives at once and they settle into it: growing the
+   card's height would restack the margin on every frame. */
 .review-note-actions {
   display: flex;
   gap: 6px;
@@ -176,8 +173,8 @@
   border-color: var(--review-note-line);
 }
 
-/* A card of a crowded run, cut to its heading and a line (stackCards): its
-   height is set (CHIP_HEIGHT), the line cut short. */
+/* A card of a crowded run, cut to its heading and a line; keep its height in
+   step with CHIP_HEIGHT. */
 .review-note-chip {
   overflow: hidden;
   padding-block: 2px;
@@ -245,7 +242,7 @@
   text-decoration: line-through;
 }
 
-/* Picking on the notes bar (NotesBar): each note's box, top right. */
+/* Picking on the notes bar: each note's box, top right. */
 .review-note-pick {
   position: absolute;
   top: 8px;
@@ -260,8 +257,8 @@
   cursor: pointer;
 }
 
-/* A group (MarginGroup), opened: its cards in a list over the margin,
-   scrolling past a screen's worth. */
+/* An opened group: its cards in a list over the margin, scrolling past a
+   screen's worth. */
 .review-note-group-open {
   max-height: min(60vh, 520px);
   overflow-y: auto;
@@ -311,9 +308,8 @@
 
 .review-note-popover {
   position: fixed;
-  /* A popover, not a modal: at the modal tier, and portaled after the
-     app, it drew over Settings' backdrop when Settings opened from the
-     menu while it was open. */
+  /* Not the modal tier: portaled after the app, it would draw over
+     Settings' backdrop. */
   z-index: var(--z-popover);
   width: 260px;
   animation: motion-pop-in var(--dur-fast) var(--ease-out);
@@ -422,10 +418,8 @@
   );
 }
 
-/* A rewrite's changed sentence in the margin (RevisionCard): the number the
-   bar counts it by, ✓ / ✕ on the right, the replacement below. Same card as
-   a note, in the editor's own surface tone - a note is the reviewer's
-   paper, a revision is a draft of the text itself. */
+/* A rewrite's changed sentence in the margin, in the editor's own surface
+   tone: a revision is a draft of the text itself. */
 .revision-note {
   background: color-mix(
     in srgb,
@@ -443,8 +437,7 @@
   margin-bottom: 4px;
 }
 
-/* A disc for one or two digits, a pill past that: a fixed width ran "100"
-   out of its circle. */
+/* A disc for one or two digits, a pill past that. */
 .revision-note-num,
 .review-note-num {
   display: inline-grid;
@@ -466,8 +459,7 @@
   transition: opacity var(--dur-base) var(--ease-standard);
 }
 
-/* Its rewrite still streaming in: the ✓ / ✕ wait faint, as they do in the
-   text (.pending-pick.pending-streaming). */
+/* Its rewrite still streaming in: the ✓ / ✕ wait faint, as in the text. */
 .revision-note-streaming .revision-note-pick {
   opacity: 0.35;
 }
@@ -478,8 +470,7 @@
   border-radius: var(--radius-small);
   background: var(--revision-insert-bg);
   overflow-wrap: anywhere;
-  /* A change of whole paragraphs keeps them apart: run together, a
-     translated section read as one block. */
+  /* A change of whole paragraphs keeps them apart. */
   white-space: pre-line;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
@@ -512,9 +503,8 @@
   stroke: color-mix(in srgb, var(--success-color) 70%, transparent);
 }
 
-/* Result only: the card holds what the change takes out, struck - in the
-   text's own colour, its heading too: muted on the red, neither could be
-   read (axe, color-contrast). The strike and the red say it is gone. */
+/* Result only: the card holds what the change takes out, struck, in the
+   text's own colour, since muted text on the red fails contrast. */
 .revision-note-original {
   background: var(--revision-delete-bg);
   color: var(--editor-text);
@@ -535,10 +525,8 @@
   text-decoration: none;
 }
 
-/* Its pair under the pointer or the review bar's pointer: the text it
-   holds darkens with the pair's in the document - a darker green for new
-   text, a darker red for the original - as a note's passage does. A kept
-   one stays as it is. */
+/* Under either pointer, its text darkens with its pair's in the document.
+   A kept one stays as it is. */
 .revision-note:is(.review-note-hot, .revision-note-focus):not(
     .revision-note-kept
   )
@@ -563,11 +551,8 @@
   background: var(--success-color);
 }
 
-/* A picture in a revision card (RevisionNoteText): the picture, small,
-   instead of its Markdown; its frame while it is being made. */
-/* A picture on a margin card keeps its shape: at most the card's width and
-   96px tall, its frame meanwhile the same shape (aspect-ratio set inline) -
-   a frame the card's whole width and 72px tall read as squeezed (rc.6). */
+/* A picture on a margin card keeps its shape, its frame too (aspect-ratio
+   set inline). */
 .revision-note-picture,
 .revision-note-picture-frame {
   display: block;
@@ -602,9 +587,7 @@ del .revision-note-picture {
   color: var(--editor-muted);
 }
 
-/* The writer's own tracked changes (own-revision-plugin.ts), in the
-   revision colours the AI's use: what went, struck where it was; what
-   came, marked. Lit with their card. */
+/* The writer's own tracked changes, in the AI's revision colours. */
 .own-insert {
   background: var(--revision-insert-bg);
   color: var(--revision-insert-text);

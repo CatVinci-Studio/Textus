@@ -24,11 +24,9 @@ const ASK_MS = 400;
 const AROUND = 10;
 
 /**
- * Marks plugins put on the text (textus.editor.registerDecorations): the
- * blocks in sight - with their ids and Markdown - go to each plugin once
- * the document rests, and what they answer is drawn: a highlight, an
- * underline, muted text or a badge after it (or before), on a whole block or the
- * first place its `anchor` words are. Nothing runs while no plugin marks.
+ * Marks plugins put on the text: the blocks in sight go to each plugin once
+ * the document rests, and their answers are drawn. Nothing runs while no
+ * plugin marks.
  */
 export const pluginDecorations = $prose((ctx) => {
   return new Plugin<DecorationSet>({
@@ -139,7 +137,7 @@ function drawMark(
     "data-plugin": mark.plugin,
   };
   if (mark.tooltip) attrs.title = mark.tooltip;
-  // An export keeps neither (export/standalone-html.ts).
+  // An export keeps neither.
   if (mark.style !== "badge")
     return [Decoration.inline(from, to, { ...attrs, "data-editor-mark": "" })];
   return [

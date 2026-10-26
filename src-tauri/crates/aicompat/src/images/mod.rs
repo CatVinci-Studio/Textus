@@ -1,21 +1,6 @@
-//! Text-to-image generation: one request ([`generate`]: a description and
-//! an aspect), the wire format each service speaks ([`ImageApi`]), and the
-//! picture back as checked bytes ([`GeneratedImage`]). Only the protocol and
-//! the HTTP live here; which model the user chose, where the key comes
-//! from, and what happens to the picture (a proposal, saved only on
-//! Accept) is the main crate's business - ai/images.rs.
-//!
-//! Every service is asked for one picture at about a megapixel, the
-//! smallest size it makes at that aspect: the picture goes into a document,
-//! and a bigger one costs more and takes longer. A picture is always
-//! downloaded at once, because the services' links expire (an hour at
-//! SiliconFlow, a day at Ark and DashScope). Watermarks are left at each
-//! service's default.
-//!
-//! Wire formats checked against each service's documentation on
-//! 2026-10-19. The structure - a request builder and a reply reader per
-//! service, a refusal told apart from other failures, a checked download -
-//! follows #221 by Zhuohang Jiang.
+//! Text-to-image generation: the wire format each service speaks and the
+//! picture back as checked bytes. Every service is asked for one picture at
+//! about a megapixel, downloaded at once because the services' links expire.
 
 mod dashscope;
 mod fetch;
@@ -82,27 +67,20 @@ pub enum ImageApi {
     SiliconFlow,
     /// MiniMax's image-01.
     MiniMax,
-    /// The ChatGPT sign-in: the image_generation tool on the backend
-    /// ChatGPT's own apps use (providers::openai_codex::generate_image),
-    /// not an Images API - no address or key, so never through
-    /// [`generate`].
+    /// The ChatGPT sign-in: the image_generation tool on ChatGPT's backend,
+    /// not an Images API, so never through [`generate`].
     ChatGpt,
 }
 
 impl ImageApi {
     /// Whether a picture being redone is sent along with its description,
-    /// for the service to change rather than draw anew: Gemini's image
-    /// models and Seedream take one in the request, the ChatGPT sign-in as
-    /// an input image. OpenAI's Images API edits through a separate
-    /// endpoint, not wired; the others make pictures from text only.
+    /// for the service to change rather than draw anew.
     pub fn takes_reference(self) -> bool {
         matches!(self, Self::Gemini | Self::Seedream | Self::ChatGpt)
     }
 }
 
-/// Where one request goes. `base_url` is the service's API root, as the
-/// main crate's image catalog gives it (or as the user typed it for a
-/// compatible endpoint); `api_key` may be empty only for a local server.
+/// Where one request goes. `api_key` may be empty only for a local server.
 pub struct ImageTarget<'a> {
     pub api: ImageApi,
     pub base_url: &'a str,
@@ -125,8 +103,7 @@ pub struct GeneratedImage {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ImageError {
     /// The service's content checks turned the description, or the picture
-    /// it made, down. Not retried with a rewritten description: the user
-    /// decides what to ask for instead.
+    /// it made, down. Not retried: the user decides what to ask for instead.
     Refused(String),
     /// Out of balance, quota or rate.
     Quota(String),
@@ -157,9 +134,7 @@ enum Reply {
     Url(String),
 }
 
-/// How long a picture may take. The slowest of these models at their
-/// highest quality take about two minutes; a request still waiting after
-/// three is not coming back.
+/// How long a picture may take: the slowest models take about two minutes.
 const GENERATION_TIMEOUT: Duration = Duration::from_secs(180);
 
 /// A local server may speak plain HTTP - nothing leaves the machine - and

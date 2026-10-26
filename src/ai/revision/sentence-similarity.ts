@@ -1,7 +1,4 @@
-/**
- * How alike two sentences are, the same way for CJK and for spaced
- * scripts: the measure sentence-diff.ts aligns a rewrite's sentences by.
- */
+/** How alike two sentences are, the same way for CJK and for spaced scripts. */
 
 /** Character bigrams (single characters for one-character text), for a
  *  similarity that works the same for CJK and for spaced scripts. */

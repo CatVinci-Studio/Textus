@@ -2,8 +2,8 @@ import hostRuntime from "./runtime/host.js?raw";
 import { inElement, RPC_SOURCE } from "./frames";
 
 /** The host's page: the runtime, then the plugin's code wrapped as a
- *  CommonJS module (runtime/host.js). No network, no other script. Apart
- *  from frames.ts, so the runtime loads with the broker, not at startup. */
+ *  CommonJS module. No network, no other script. Kept apart from frames.ts
+ *  so the runtime loads with the broker, not at startup. */
 export function hostDocument(pluginCode: string): string {
   return [
     "<!doctype html><html><head><meta charset='utf-8'>",

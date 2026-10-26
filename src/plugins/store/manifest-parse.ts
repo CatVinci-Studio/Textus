@@ -7,7 +7,7 @@ import type {
   ViewType,
 } from "./manifest";
 
-/** Where a plugin's menu items may go (contributes.menus). */
+/** Where a plugin's menu items may go. */
 export const MENU_IDS: readonly MenuId[] = [
   "editor/context",
   "editor/slash",
@@ -19,13 +19,11 @@ export const MENU_IDS: readonly MenuId[] = [
 ];
 
 /**
- * Reading a manifest's parts (manifest.ts's parseManifest): its
- * contributions above all, each checked and named in the error when it
- * is wrong, for the plugin's author.
+ * Reading a manifest's parts, each checked and named in the error when it is
+ * wrong, for the plugin's author.
  */
 
-/** Why a manifest was refused, in English: it is shown as is in Settings
- *  under the plugin's name, for its author. */
+/** Why a manifest was refused, in English: shown as is in Settings, for its author. */
 export class ManifestError extends Error {}
 
 /** A contributed id: the plugin's own namespace, then a name. */
@@ -70,8 +68,7 @@ function viewType(value: unknown, what: string): ViewType {
 /** Code block languages Textus draws itself: a plugin can't take them. */
 const BUILT_IN_BLOCKS = ["mermaid", "math", "latex", "katex", "tex"];
 
-/** `main`: one file, or several run in order (a plugin's shared code
- *  first) - the host takes no imports. */
+/** `main`: one file, or several run in order; the host takes no imports. */
 export function parseMain(value: unknown): string[] | undefined {
   if (value === undefined) return undefined;
   const files = typeof value === "string" ? [value] : list(value, "main");

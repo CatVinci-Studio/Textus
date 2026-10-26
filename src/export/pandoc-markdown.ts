@@ -1,18 +1,6 @@
-// The Markdown handed to pandoc for File > Export (Word, OpenDocument, ...),
-// rewritten where the editor's own syntax has no pandoc equivalent. Pandoc
-// reads it as commonmark_x (commands/export.rs), which gives bracketed spans
-// and attributes; code (fenced blocks and inline spans) is left untouched.
-//
-// - `==text==` (highlight) becomes `[text]{.mark}`, which Word shows as a
-//   highlight; left alone it would print with its equals signs.
-// - A sized image, saved as `<img width>` (editor/images/image-html.ts),
-//   becomes `![alt](src){width=...}`: pandoc leaves raw HTML out of a Word
-//   file, picture and all. One an older Textus saved with
-//   `{textus-width=N%}` in its title gets `{width=N%}` the same way,
-//   instead of filling the page with the marker as its title.
-// - A GitHub alert (`> [!NOTE]`) becomes a quote led by its label in bold,
-//   in the words the editor shows (备注, Hinweis...); pandoc would title it
-//   "Note" in English whatever the document's language.
+// The Markdown handed to pandoc for export, rewritten where the editor's
+// syntax has no pandoc equivalent: highlights, sized images and GitHub
+// alerts with localized labels. Code is left untouched.
 
 import { parseImageTag } from "../editor/images/image-html";
 
@@ -28,8 +16,8 @@ export type AlertLabels = Record<
   string
 >;
 
-/** An `<img>` tag as a pandoc image, or the tag itself when it isn't one
- *  an image node carries (it then stays HTML, as it always was). */
+/** An `<img>` tag as a pandoc image, or the tag itself when no image node
+ *  carries it. */
 function imageTag(tag: string): string {
   const image = parseImageTag(tag);
   if (!image) return tag;

@@ -1,10 +1,6 @@
-//! Uploads pasted editor images to the image host chosen in Settings >
-//! Images. Each host is a preset - where the request goes, how the image
-//! and the token travel, and where the answer keeps the URL - so they all
-//! share one upload path. "Custom" is the small contract a user's own
-//! endpoint follows: multipart/form-data with a `file` part, an optional
-//! bearer token, and either a plain URL response or JSON with the URL at a
-//! configured dot-separated field path.
+//! Uploads pasted editor images to the image host chosen in Settings. Each
+//! host is a preset sharing one upload path; "Custom" takes multipart `file`,
+//! an optional bearer token, and a plain URL or JSON at a configured field path.
 
 use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::{Deserialize, Serialize};
@@ -29,7 +25,6 @@ const MAX_ANSWER_BYTES: usize = 1024 * 1024;
 /// often a whole HTML document, and the editor shows the message on a line.
 const MAX_ERROR_CHARS: usize = 160;
 
-/// Mirrors `ImageHost` in src/settings/SettingsContext.tsx.
 #[derive(Deserialize, Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "lowercase")]
@@ -45,8 +40,7 @@ pub enum ImageHost {
 enum Body {
     /// A multipart/form-data part with this name.
     Multipart(&'static str),
-    /// `{"list": [path]}` naming a file on this machine - the PicGo server's
-    /// documented upload, which PicList keeps.
+    /// `{"list": [path]}` naming a file on this machine: the PicGo server's upload.
     PathList,
 }
 
@@ -117,15 +111,14 @@ impl ImageHost {
         }
     }
 
-    /// Where its token is kept: the private credential store shared with
-    /// the AI providers' keys, under an id never shown as a provider.
-    /// Mirrors `imageHostAuth` in src/platform/ipc.ts.
+    /// Where its token is kept: the credential store shared with the AI providers'
+    /// keys, under an id never shown as a provider.
     fn credential_id(self) -> &'static str {
         match self {
             ImageHost::Picgo => "__image_host_picgo",
             ImageHost::Smms => "__image_host_smms",
             ImageHost::Imgur => "__image_host_imgur",
-            // Custom was the only host before the presets; its id stays.
+            // Custom's id predates the presets and must stay.
             ImageHost::Custom => "__image_host",
         }
     }
@@ -326,9 +319,8 @@ pub async fn upload_image(
     }
     let token = load_provider_key(&app, host.credential_id())?;
 
-    // PicGo reads the image from a file, named as it will be uploaded: one
-    // in a private folder of its own, removed when `folder` drops - once
-    // PicGo has answered, or when a paste given up on drops this future.
+    // PicGo reads the image from a file named as it will be uploaded, in a
+    // private folder removed when `folder` drops.
     let mut folder = (preset.body == Body::PathList)
         .then(|| TempDir::create("textus-upload-"))
         .transpose()

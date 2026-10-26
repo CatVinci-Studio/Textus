@@ -2,10 +2,8 @@ import { useEffect, useState } from "react";
 import type { AgentMode } from "../../settings/settings-types";
 
 /**
- * The AI panel asked for from outside the editor - a plugin's page in
- * Settings offers "Edit with AI": the document in front opens its panel in
- * `mode` with `text` in the box, the caret after it, for the user to say
- * the rest and send.
+ * The AI panel asked for from outside the editor (a plugin's "Edit with AI"):
+ * the document in front opens its panel in `mode` with `text` in the box.
  */
 
 const ASK_AI_EVENT = "textus-ask-ai";

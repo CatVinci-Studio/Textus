@@ -1,8 +1,6 @@
 // @vitest-environment jsdom
 //
-// Only formatCombo needs it - it reads navigator to decide between "⌘" and
-// "Ctrl". Node 21+ happens to define a global navigator, so without this the
-// file passes locally on a current Node and fails on CI's Node 20.
+// formatCombo reads navigator, which Node 20 doesn't define globally.
 
 import { describe, expect, it } from "vitest";
 import {
@@ -25,15 +23,9 @@ import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";
 import { readFileSync } from "node:fs";
 
 /**
- * The app-drawn menu is the ONLY menu Windows users see, so the combos it
- * advertises are the app's shortcut documentation on that platform. They are
- * pinned here because they diverge from the macOS ones on purpose: the macOS
- * combos live in src-tauri/src/menu.rs and read naturally as "CmdOrCtrl+X",
- * which is exactly the shape that would quietly drag a Windows-wrong combo
- * (Ctrl+Q for Exit, Ctrl+T for New Window) back in.
- *
- * Asserted against the stored combo strings rather than formatCombo's output
- * so the expectations don't depend on which platform runs the suite.
+ * The app-drawn menu is the only menu Windows users see. Its combos diverge
+ * from the macOS ones on purpose; asserted as stored strings so the suite
+ * doesn't depend on the platform.
  */
 
 const t = resolveStrings("en") as Strings;
@@ -72,8 +64,7 @@ function accelOf(label: string): string | undefined {
 
 describe("the Windows app menu", () => {
   it("offers Alt+F4 for Exit, not Ctrl+Q", () => {
-    // Ctrl+Q closes nothing on Windows, and menu.rs no longer registers it
-    // there - advertising it would be a hint for a dead combo.
+    // Ctrl+Q closes nothing on Windows: a hint for a dead combo.
     expect(accelOf(t.menuExit)).toBe("alt+f4");
     expect(entries.map((entry) => entry.accel)).not.toContain("mod+q");
   });
@@ -87,29 +78,25 @@ describe("the Windows app menu", () => {
   });
 
   it("shows Ctrl+Y for Redo", () => {
-    // Milkdown's history keymap binds both Mod-y and Shift-Mod-z; Windows
-    // advertises the former.
+    // The history keymap binds both; Windows advertises Mod-y.
     expect(accelOf(t.menuRedo)).toBe("mod+y");
   });
 
   it("advertises F11 for fullscreen", () => {
-    // Bound in App.tsx's keydown handler - there is no native item to hang
-    // an accelerator on, so this hint and that handler are the whole story.
+    // Bound in a keydown handler: there is no native item to hang it on.
     expect(accelOf(t.menuFullscreen)).toBe("f11");
   });
 
   it("renders function-key combos through formatCombo intact", () => {
-    // "f11"/"f4" have no KEY_LABELS entry and fall through to toUpperCase -
-    // the one step between the combos above and what the user reads.
+    // "f11"/"f4" have no key label and fall through to toUpperCase.
     expect(formatCombo("f11")).toBe("F11");
     expect(formatCombo("alt+f4")).toContain("F4");
   });
 });
 
 describe("the View menu's on/off items", () => {
-  // "Toggle Sidebar" beside "Zen Mode" read as two kinds of item. Each one
-  // is named by the thing it shows, in every language, and the check mark
-  // at the trailing edge says whether it is on.
+  // Each on/off item is named by the thing it shows, in every language, not
+  // "Toggle ...".
   const TOGGLE_WORDS =
     /toggle|切换|切換|切り替え|전환|보기\/숨기기|ein\/aus|ein-\/ausblenden|alternar|basculer|переключ/i;
 
@@ -125,8 +112,6 @@ describe("the View menu's on/off items", () => {
         view === undefined || view === "separator" ? [] : (view.submenu ?? []),
       );
       const onOff = items.filter((item) => item.checked !== undefined);
-      // Sidebar, AI Panel, Source Code Mode, Split View, Typewriter Mode,
-      // Zen Mode, Full Screen.
       expect(onOff).toHaveLength(7);
       for (const item of items) expect(item.label).not.toMatch(TOGGLE_WORDS);
       const phone = flatten(buildMobileMenu(strings));

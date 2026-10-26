@@ -14,23 +14,9 @@ import { useMergedRef, usePresence } from "./usePresence";
 import { useFloatingList } from "./useFloatingList";
 import "./Select.css";
 
-/**
- * A drop-in for `<select>` whose open list is drawn by the app. A native
- * select's list is the platform's own menu - a GTK menu on Linux, square and
- * grey inside the app's rounded, themed surfaces - and can't be styled.
- *
- * Same shape as the element it replaces: `<option>` children, `value`, and
- * an `onChange` that receives `{ target: { value } }`, so call sites only
- * change the tag. The list lives in a portal on <body> (an ancestor's
- * transform - Quick Ask's entrance animation - would trap a fixed box), so
- * it is marked `data-floating-select` for useCloseOnOutsideClick to treat
- * as inside whatever opened it.
- *
- * On iPhone and iPad it IS a native select, laid invisibly over the same
- * closed control: there the platform's list is the iOS picker, which is
- * what a touch user expects, sized for a finger and never closed by the
- * keyboard moving the page (the app-drawn list closed on any scroll).
- */
+/** A drop-in for `<select>` whose list the app draws, in a portal marked
+ *  `data-floating-select` so outside-click code treats it as inside its opener.
+ *  On iOS it is a native select laid invisibly over the control. */
 interface OptionItem {
   value: string;
   label: ReactNode;
@@ -78,9 +64,8 @@ function collectOptions(
   return out;
 }
 
-/** What the closed control shows for an option: inside a group the
- *  option's own label may not say enough ("Fiction" - in which language?),
- *  so the group's name comes first. */
+/** What the closed control shows: inside a group the group's name comes
+ *  first, as the option's own label may not say enough. */
 function closedLabel(option: OptionItem | undefined): ReactNode {
   if (!option) return "";
   return option.group

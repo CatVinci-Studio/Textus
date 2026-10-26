@@ -1,10 +1,7 @@
-/* Only rendered when Settings > General > "Open Documents In" is set to
-   tabs - window-mode users never see this, so it's zero visual change for
-   the default. padding-top clears the floating window bar (28px): its own
-   top strip must stay below that or its clicks would be swallowed by the
-   drag region instead of reaching the tabs. */
+/* padding-top clears the floating window bar, or its drag region would
+   swallow clicks meant for the tabs. */
 .tab-bar {
-  /* The offset parent a closed tab's last look is left in (TabBar.tsx). */
+  /* The offset parent a closed tab's last look is left in. */
   position: relative;
   display: flex;
   align-items: center;
@@ -13,27 +10,20 @@
   overflow-x: auto;
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
-  /* Pill drags must never read as a text selection (see TabBar.tsx's
-     mousedown preventDefault - this is the belt to that suspender). */
+  /* Pill drags must never read as a text selection. */
   user-select: none;
   -webkit-user-select: none;
 }
 
-/* A pill arriving in the bar (a new tab, a merge landing) takes its full
-   width at once and appears there, while its neighbours slide aside to
-   make room (TabBar.tsx) - growing its width instead reflowed the whole
-   bar on every frame. A closed one shrinks away in its old place while
-   the others close the gap. */
+/* An arriving pill takes its full width at once while neighbours slide
+   aside; growing its width reflowed the bar every frame. */
 
 .tab-pill {
   display: flex;
   align-items: center;
   gap: 6px;
-  /* Sized by content (title length) up to max-width, same as before - never
-     stretched to fill leftover space. Adaptive part is the shrink: once
-     tabs stop fitting at their natural width, flex-shrink narrows them
-     together down to min-width, past which the bar scrolls instead
-     (overflow-x: auto on .tab-bar). */
+  /* Sized by content up to max-width; when tabs stop fitting they shrink
+     together to min-width, then the bar scrolls. */
   flex-shrink: 1;
   min-width: 90px;
   max-width: 200px;
@@ -73,20 +63,15 @@
   color: var(--sidebar-active-text);
 }
 
-/* An incoming tab riding this bar mid-drag (TabBar.tsx's previewTab):
-   looks like the real, active tab it's about to become. No pop-in - it
-   appears 1:1 in place of the floating pill it replaces, and a pill still
-   scaling up would skew the clamp/slot math that positions it (visible as
-   wobble when hugging the bar's edges). */
+/* An incoming tab riding this bar mid-drag. No pop-in: a pill still scaling
+   would skew the slot math that positions it. */
 .tab-pill-preview {
   pointer-events: none;
   animation: none;
 }
 
-/* The cursor-following visual while a tab is dragged past the threshold is
-   NOT an element here - it's its own tiny OS window (public/dragpill.html,
-   lib.rs show_drag_pill), since nothing inside this webview can be painted
-   beyond the window's edge. The source pill stays in place, dimmed. */
+/* The pill following the cursor is its own tiny OS window, since nothing in
+   this webview can paint beyond the window's edge. */
 
 .tab-pill-title {
   overflow: hidden;

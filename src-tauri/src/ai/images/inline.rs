@@ -1,20 +1,7 @@
-//! Pictures written into new text: the model puts each one in the text it
-//! proposes, as a line of its own - `![alt](textus-picture:16:9 what it
-//! shows)` - and the picture starts being made the moment that line has
-//! streamed in, while the rest of the text goes on.
-//!
-//! Before, the model asked for each picture first (generate_image's
-//! `in_text`) and wrote the text in a step of its own after: a whole
-//! extra round trip, read and thought through again, before the first
-//! word showed. Now the text and its pictures come in one step, each
-//! picture begun where it stands.
-//!
-//! [`InlinePictures::observe`] watches propose_edit's arguments as they
-//! stream and starts each picture whose line is complete;
-//! [`InlinePictures::place`] turns each line of the finished step into its
-//! picture's Markdown - starting any the stream didn't show (a provider
-//! that sends arguments whole) - so the history, the tool and the
-//! frontend see `![alt](textus-generated:ID)` as for any other picture.
+//! Pictures written into new text: each is a line of its own in the proposed
+//! text, `![alt](textus-picture:16:9 what it shows)`, and starts being made the
+//! moment its line has streamed in. Placed, the lines become
+//! `![alt](textus-generated:ID)` as for any other picture.
 
 use super::{placeholder_src, ImageRun};
 use crate::ai::agent::StreamEvent;
@@ -25,8 +12,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-/// The src of a picture line. Mirrors `PICTURE_LINE` in
-/// src/ai/revision/generated-images.ts.
+/// The src of a picture line. Keep in step with the frontend's `PICTURE_LINE`.
 pub(super) const PICTURE_SCHEME: &str = "textus-picture:";
 
 /// One picture line read: its alt text, the description it is made from,
@@ -90,9 +76,9 @@ pub struct InlinePictures<'a> {
     run: &'a ImageRun,
     ledger: &'a Mutex<ProposalLedger>,
     streams: Mutex<HashMap<String, Streaming>>,
-    /// Each picture line seen, trimmed, and what came of it: the same line
-    /// again - the finished step, or a step asked for again after a
-    /// garbled one - is the same picture, not a second one paid for.
+    /// Each picture line seen, trimmed, and what came of it: the same line again
+    /// (the finished step, or a retried step) is the same picture, not a second
+    /// one paid for.
     started: Mutex<Vec<(String, Started)>>,
 }
 
@@ -189,10 +175,9 @@ impl InlinePictures<'_> {
         outcome
     }
 
-    /// The step as it came back, each propose_edit's picture lines turned
-    /// into their pictures' Markdown. A line whose picture can't be made
-    /// (the request's limit reached) is left out, and propose_edit's
-    /// result says why.
+    /// The step as it came back, each propose_edit's picture lines turned into
+    /// their pictures' Markdown. A line whose picture can't be made is left out,
+    /// and propose_edit's result says why.
     pub fn place(&self, step: StepResult) -> StepResult {
         self.streams
             .lock()

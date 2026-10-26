@@ -1,9 +1,7 @@
 import { random } from "./save-roundtrip";
 
-// Test-only: the Markdown the CI round trip (save-roundtrip.test.ts) is
-// made of. Written for this suite, so nothing third-party is committed:
-// the constructs real files use, in the styles they use them, and the
-// shapes the corpus run (docs/dev/saving.md) found bugs in.
+// Test-only: the Markdown the CI round trip is made of, written for this
+// suite so nothing third-party is committed.
 
 /** One construct each, in the many ways files write them. */
 export const CONSTRUCTS: readonly string[] = [
@@ -45,7 +43,7 @@ export const CONSTRUCTS: readonly string[] = [
   // Obsidian
   "See [[Note]], [[Note|shown]] and [[Note#Heading]].",
   "#tag at the start, and #another in a line.",
-  // Colour codes, drawn with swatches (marks/color-swatch-plugin.ts)
+  // Colour codes, drawn with swatches
   "Orange #ff8800, **bold #00ff00**, `#123456`, rgb(0 128 255) and #add.",
   "| Colour | Code |\n| --- | --- |\n| Blue | hsl(210 100% 50%) |\n| Red | #f00 |",
   "![[embedded.png]]",
@@ -101,7 +99,7 @@ export const CONSTRUCTS: readonly string[] = [
   "Term\n: Pandoc definition",
 ];
 
-/** The shapes the corpus run found bugs in, each as a document. */
+/** Shapes that have broken the round trip, each as a document. */
 export const REGRESSIONS: readonly string[] = [
   "- MAJOR 版本包括不兼容变更<br>\n  `1.0.0` → `2.0.0`\n- MINOR 版本<br>\n  `1.0.0` → `1.1.0`",
   "**[⬆ Back to Index](#index)**\n<br >\n\n<br >\n\nNext",
@@ -125,9 +123,8 @@ export const REGRESSIONS: readonly string[] = [
 ];
 
 /**
- * The documents the CI round trip opens: every construct alone, the
- * regressions, and `count` documents of three to six constructs each,
- * picked by a seeded generator so a failure names a document that exists.
+ * The documents the CI round trip opens, picked by a seeded generator so a
+ * failure names a document that exists.
  */
 export function snippetDocuments(count: number): [string, string][] {
   const docs: [string, string][] = [];

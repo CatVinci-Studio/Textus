@@ -18,10 +18,8 @@ function preview(text: string): string {
 }
 
 /**
- * Sidebar panel over the rolling clipboard history (see
- * clipboard/history.ts for what gets recorded). Clicking an entry
- * inserts it at the cursor like a paste; the copy button puts it back on
- * the system clipboard for use elsewhere.
+ * Sidebar panel over the clipboard history: a click inserts an entry at the
+ * cursor, the copy button puts it back on the system clipboard.
  */
 export function ClipboardHistory() {
   const { t } = useSettings();

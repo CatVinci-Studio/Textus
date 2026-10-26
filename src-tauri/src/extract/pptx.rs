@@ -1,13 +1,6 @@
-//! PowerPoint (.pptx) to Markdown: one `## Slide N: title` per slide, the
-//! body placeholders as lists, text boxes as paragraphs, tables, pictures by
-//! their alt text, and the speaker notes under `### Notes`.
-//!
-//! The approach is MarkItDown's (github.com/microsoft/markitdown, MIT;
-//! converters/_pptx_converter.py): the title placeholder heads the slide,
-//! the other shapes follow top to bottom, then left to right - the order
-//! they are read on the slide, which the order in the file (z-order) is not -
-//! with group members sorted the same way inside their group, and a notes
-//! section only when the notes say something.
+//! PowerPoint (.pptx) to Markdown: one `## Slide N: title` per slide, then its
+//! shapes in reading order (top to bottom, then left to right, not z-order) and
+//! notes under `### Notes`, as MarkItDown (MIT) does.
 
 use super::docx::image_alt;
 use super::markdown::{self, Blocks, Inline, Marks};
@@ -19,8 +12,7 @@ pub(super) fn pptx_markdown(path: &Path) -> Result<String, String> {
     let mut zip = zip::ZipArchive::new(file)
         .map_err(|_| "This .pptx is not a readable PowerPoint file.".to_string())?;
 
-    // Slides are `ppt/slides/slide1.xml`, `slide2.xml`, ... - which sort
-    // wrong as strings (slide10 before slide2), so order by the number.
+    // Slides sort wrong as strings (slide10 before slide2), so order by number.
     let mut slides: Vec<(u32, String)> = zip
         .file_names()
         .filter_map(|name| {
@@ -98,8 +90,7 @@ fn read_slide(xml: &[u8], rels: &Rels, bullets: bool) -> (Option<String>, String
 }
 
 struct Shape {
-    /// Top-left corner in EMU; unknown (a placeholder that inherits its
-    /// place from the layout) sorts first, as in MarkItDown.
+    /// Top-left corner in EMU; unknown (inherited from the layout) sorts first.
     at: (i64, i64),
     title: bool,
     markdown: String,
@@ -361,8 +352,8 @@ impl SlideReader<'_> {
         })
     }
 
-    /// `![alt text](image3.png)`; MarkItDown falls back on the shape's name
-    /// ("Picture 3") when there is no description, and so does this.
+    /// `![alt text](image3.png)`, falling back on the shape's name ("Picture 3")
+    /// without a description.
     fn picture(&self, x: &mut Pull) -> Option<Shape> {
         let mut at = UNPLACED;
         let mut alt = String::new();

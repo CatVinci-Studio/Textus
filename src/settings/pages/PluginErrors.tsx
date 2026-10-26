@@ -8,8 +8,8 @@ import {
   subscribePluginLog,
 } from "../../plugins/store/plugin-log";
 
-/** What went wrong in the plugin lately (plugin-log.ts), newest first;
- *  nothing when nothing has. */
+/** What went wrong in the plugin lately, newest first; nothing when nothing
+ *  has. */
 export function PluginErrors({ id, t }: { id: string; t: Strings }) {
   useSyncExternalStore(subscribePluginLog, pluginLogVersion);
   const entries = pluginLog(id);

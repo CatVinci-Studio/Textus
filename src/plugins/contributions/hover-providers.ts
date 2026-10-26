@@ -1,9 +1,7 @@
 /**
- * What the pointer rests on in the editor, and the plugins that have a
- * card for it (textus.editor.registerHoverProvider): a link to a document
- * (a Markdown link or a wikilink, found where it points), any other link,
- * or a citation, `[@key]`. The editor asks (editor/hover/); the first
- * plugin with an answer is shown.
+ * What the pointer rests on in the editor (a document link, another link, or
+ * a `[@key]` citation), and the plugins with a card for it. The first plugin
+ * that answers is shown.
  */
 
 export type HoverTarget =
@@ -15,8 +13,7 @@ export interface HoverCard {
   title: string | null;
   /** Shown as Markdown, with no pictures. */
   markdown: string;
-  /** The app's, never a plugin's: Open on a card of a document goes to
-   *  it (link-hover-plugin.ts). */
+  /** The app's, never a plugin's: Open on a document's card goes to it. */
   open?: () => void;
 }
 
@@ -35,9 +32,8 @@ export function removeHoverProvider(plugin: string): void {
   providers.delete(plugin);
 }
 
-/** Plugins that start on the first hover (`"activationEvents":
- *  ["onHover"]`), and what starts them (manager.ts). A plugin that only
- *  shows cards needs to run no sooner. */
+/** Plugins that start on the first hover (`"onHover"`), and what starts them.
+ *  A plugin that only shows cards needs to run no sooner. */
 let waiting = 0;
 let startWaiting: (() => Promise<void>) | null = null;
 

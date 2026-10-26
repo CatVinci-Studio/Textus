@@ -44,43 +44,19 @@ export {
   visibleTextBetween,
 } from "./link-runs";
 /**
- * A link shows its Markdown while the caret is on it, as Typora does, and
- * that Markdown is the text to edit: `[text](url)`, `[text](url "title")`,
- * `[text][ref]`, `<https://...>` and a bare URL alike. Bold, code and the
- * other enclosures only show their delimiters (marks/enclosure.ts), as
- * their content is text already; a link's URL is no text in the document,
- * so the link itself turns into its source.
+ * A link shows its Markdown while the caret is on it, as in Typora, and that
+ * Markdown is the text to edit: the linked text is swapped for a link_source
+ * node, and back once the caret leaves. Elsewhere a link stays an ordinary
+ * link mark, so nothing else has a second kind of link to know.
  *
- * While the caret is elsewhere a link is what it always was - text with a
- * link mark - so nothing else in the editor (find, revisions, colour
- * swatches, a screen reader, exports) has a second kind of link to know.
- * When the caret comes onto one (inside it, or right at either end), the
- * linked text is swapped for a link_source node holding the link's
- * Markdown (link-source.ts: as the file has it), with the caret on the
- * same character. When the caret leaves, the node is swapped back: for the
- * link it was, untouched, or for what its text now reads as - a link, or
- * plain text once it no longer is one.
- *
- * The swaps are real edits, made in appendTransaction, so they go into the
- * history with the edit or caret move that caused them, and an undo or
- * redo puts the document back as it was. None is made while there is
- * something to redo: as an edit to the history, the swap would drop it,
- * so after an undo the links stay as they are until the next edit (or the
- * redo). Nor while a mouse button is down
- * (a drag that starts on a link selects its text, and the text must not
- * change under it), nor during an IME composition (any edit then ends it):
- * those settle once the button is up or the composition is over. And a
- * link is shown only while the editor has the focus, so a document opened
- * with its caret on one opens as written, and the find bar or the chat
- * reads it as a link.
- *
- * A save writes a link_source as the link it stands for (toMarkdown
- * below), so the file and the tab's clean state never see a link that is
- * only being looked at; one whose text was edited is written as typed.
+ * The swaps are real edits in appendTransaction, so undo and redo restore
+ * the document. None is made while there is something to redo (it would
+ * drop it), while a mouse button is down, during a composition, or without
+ * the focus. A save writes a link_source as the link it stands for.
  */
 
-/** The linked text, as it was before it was shown as source, as long as
- *  the source still reads as it did. */
+/** The linked text as it was before it was shown as source, while the
+ *  source still reads as it did. */
 const keptCache = new Map<string, Fragment>();
 
 function keptContent(schema: Schema, node: ProseNode): Fragment | null {
@@ -107,8 +83,8 @@ export const linkSourceSchema = $nodeSchema(LINK_SOURCE, (ctx) => ({
   // Source, like raw HTML: "*" typed in a URL is not bold.
   code: true,
   attrs: {
-    /** The source as shown, and the linked text it was shown for (as
-     *  JSON) and that text read as text. */
+    /** The source as shown, the linked text it was shown for (as JSON), and
+     *  that text read as text. */
     source: { default: "", validate: "string" },
     restore: { default: "", validate: "string" },
     text: { default: "", validate: "string" },
@@ -146,8 +122,8 @@ export interface LinkRevealDeps {
 
 export const linkRevealKey = new PluginKey<number[]>("link-reveal");
 
-/** The link_source nodes' positions, carried through `tr`: those mapped,
- *  and any its steps wrote (an undo, a paste). */
+/** The link_source nodes' positions, carried through `tr`, plus any its
+ *  steps wrote (an undo, a paste). */
 function trackSources(tr: Transaction, prev: number[]): number[] {
   if (!tr.docChanged) return prev;
   const found = new Set<number>();
@@ -166,12 +142,9 @@ function trackSources(tr: Transaction, prev: number[]): number[] {
 }
 
 /**
- * The edit that puts `state`'s links right for its selection, or null when
- * they are: every link_source the selection has left collapsed (one
- * emptied too, and all of them once the focus is elsewhere in the
- * window), and - with a caret and none being shown, unless `reveal` is
- * false - the link the caret is on shown as its source, the caret on the
- * same character.
+ * The edit that puts `state`'s links right for its selection, or null:
+ * every link_source the selection left collapsed, and the link the caret is
+ * on shown as its source (unless `reveal` is false).
  */
 export function linkRevealTransaction(
   state: EditorState,
@@ -220,8 +193,8 @@ function revealRun(
     source ? schema.text(source) : null,
   );
   tr.replaceWith(run.from, run.to, node);
-  // At either end of the link, outside its source: typing there adds to
-  // the text around it, as it did beside the link.
+  // At either end of the link, outside its source: typing there adds to the
+  // text around it.
   const at =
     caret <= run.from
       ? run.from
@@ -254,12 +227,10 @@ function syntaxDecorations(state: EditorState): DecorationSet | null {
   return DecorationSet.create(state.doc, decorations);
 }
 
-/** What each editor's link_source nodes turn back into (for
- *  revealedLinkHref). */
+/** What each editor's link_source nodes turn back into. */
 const collapsers = new WeakMap<EditorView, (node: ProseNode) => Fragment>();
 
-/** The URL of the link shown as source at `target`, if it is on one -
- *  Ctrl/Cmd+click opens it as it does a link (link-click-plugin.ts). */
+/** The URL of the link shown as source at `target`, for Ctrl/Cmd+click. */
 export function revealedLinkHref(
   view: EditorView,
   target: EventTarget | null,
@@ -303,8 +274,7 @@ function editorDeps(ctx: Ctx, focused: boolean): LinkRevealDeps {
           ),
         )
         .replace(/\n+$/, "");
-      // A bare URL is saved as `<...>` (markdown-output.ts), but shown as
-      // the file has it.
+      // A bare URL is saved as `<...>`, but shown as the file has it.
       const typed = readLinkSource(run.link.attrs.source)?.source;
       return typed && written === `<${typed}>` ? typed : written;
     },
@@ -317,14 +287,9 @@ function editorDeps(ctx: Ctx, focused: boolean): LinkRevealDeps {
 }
 
 /**
- * A transaction that moves the selection to the caret where the browser
- * has it, when that is on a link the editor's selection isn't: the
- * selectionchange that tells the editor can still be on its way after a
- * click or in a quick run of arrow presses (see stateWithLiveSelection,
- * marks/enclosure.ts), and a Backspace beside the link took the caret's
- * old place. Anywhere else the editor's selection stands - a widget sets
- * one of its own (a fold's summary, a preview), and the browser's caret
- * there can read as another position.
+ * Moves the selection to the browser's caret when that is on a link the
+ * editor's selection isn't: the selectionchange can still be on its way.
+ * Elsewhere the editor's selection stands, since widgets set their own.
  */
 function liveSelection(view: EditorView): Transaction {
   const { state } = view;
@@ -344,11 +309,9 @@ function liveSelection(view: EditorView): Transaction {
 }
 
 /**
- * Where Left or Right takes a caret at an edge of a link's source: one
- * character on, past the edge. Just outside the source and just inside it
- * are one place on the screen, and the browser's own step from one could
- * stop at the other - WebKit's did, after the source was drawn - so a
- * press seemed to do nothing. Null where the browser's step is fine.
+ * Where Left or Right takes a caret at an edge of a link's source: past the
+ * edge. Just outside and just inside are one place on screen, and WebKit's
+ * own step stopped at the other. Null where the browser's step is fine.
  */
 export function arrowPastSourceEdge(
   state: EditorState,
@@ -369,8 +332,8 @@ export function arrowPastSourceEdge(
   const atStart = from === start || from === start + 1;
   const atEnd = from === end || from === end - 1;
   if (dir === 1) {
-    // Before the source or at its start: past its first character; at
-    // its end, past the character after it.
+    // Before the source or at its start: past its first character; at its end,
+    // past the character after it.
     if (atStart) return start + 2;
     if (atEnd && doc.resolve(end).nodeAfter?.isText) return end + 1;
     return null;
@@ -395,9 +358,7 @@ export const linkRevealPlugin = $prose((ctx) => {
     if (!view || view.isDestroyed || view.composing) return;
     const tr = liveSelection(view);
     // The browser's caret is somewhere the editor hasn't read yet, off any
-    // link: drawing now would put the caret back where the editor last had
-    // it, and arrow presses since were lost. The editor's own read of it
-    // settles the links.
+    // link: drawing now would lose arrow presses. The editor's own read settles.
     const live = view.state.selection.empty ? liveCaretPos(view) : null;
     if (!tr.selectionSet && live !== null && live !== view.state.selection.from)
       return;
@@ -421,8 +382,8 @@ export const linkRevealPlugin = $prose((ctx) => {
     appendTransaction(trs, _oldState, state) {
       if (!view || view.composing || mouseDown || redoDepth(state) > 0)
         return null;
-      // A link just typed or pasted, the caret at its end, shows as the
-      // link it now is; the caret moving onto it shows its source.
+      // A link just typed or pasted shows as the link it now is; the caret
+      // moving onto it shows its source.
       const edited = trs.some(
         (tr) => tr.docChanged && tr.getMeta(linkRevealKey) === undefined,
       );
@@ -453,9 +414,8 @@ export const linkRevealPlugin = $prose((ctx) => {
           window.addEventListener("mouseup", onMouseUp, { once: true });
           return false;
         },
-        // Focus moved to another part of the window (the find bar, the
-        // chat) leaves the links as links; back, the caret's shows again.
-        // Another window taking the focus leaves the editor's in place.
+        // Focus moving within the window leaves the links as links; back, the
+        // caret's shows again.
         focus() {
           settle(0);
           return false;
@@ -473,9 +433,8 @@ export const linkRevealPlugin = $prose((ctx) => {
         // A mouseup outside the window can go unseen.
         mouseDown = false;
         if (isImeKeyEvent(editorView, event)) return false;
-        // A key acts on the links as they are for the caret: right after a
-        // click, a focus or a composition, or in a quick run of arrow
-        // presses, they can still be waiting (see liveSelection).
+        // A key acts on the links as they are for the caret, which may still be
+        // waiting to settle.
         if (pending || liveSelection(editorView).selectionSet) settleNow();
         if (
           (event.key === "ArrowLeft" || event.key === "ArrowRight") &&
@@ -502,8 +461,8 @@ export const linkRevealPlugin = $prose((ctx) => {
         const { $from } = selection;
         if (!selection.empty || $from.parent.type.name !== LINK_SOURCE)
           return false;
-        // Enter at either end of a link's source breaks the line beside
-        // the link; inside, the source is split as the text it is.
+        // Enter at either end of a link's source breaks the line beside the link;
+        // inside, the source is split as the text it is.
         const node = $from.parent;
         const start = $from.before();
         const tr = editorView.state.tr;

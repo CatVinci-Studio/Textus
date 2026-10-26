@@ -18,9 +18,8 @@ import {
 interface TutorialProgress {
   active: boolean;
   stepIndex: number;
-  /** The practice tab this run is bound to - orchestration only reacts to
-   *  edits in that tab, so the tour never reads (or looks like it's
-   *  grading) a document the user opened for real work. */
+  /** The practice tab this run is bound to. Only its edits count, so the tour
+   *  never grades a document the user opened for real work. */
   tabId: string | null;
   /** How the AI lessons run, decided on leaving the connect lesson. */
   aiMode: TutorialAiMode | null;
@@ -65,21 +64,11 @@ function loadProgress(): TutorialProgress {
   }
 }
 
-/**
- * The onboarding tour's state machine. Progress - the step, its practice
- * tab and the AI mode - is persisted (UI state, storage/ui-state.ts), so
- * quitting mid-tour resumes at the same lesson, done the same way, on
- * relaunch. `phase` is the current lesson's own progress and deliberately
- * is NOT persisted: a resumed lesson starts over, which is always safe.
- *
- * Every phase advance is something the learner actually did. What
- * advances it lives where its input is: the practice document's text
- * (useTutorialDocumentEvaluation), the window's panels and modes
- * (app/onboarding-wiring.ts), and the AI's results in the practice tab,
- * which arrive here as tour signals (utils/events.ts).
- */
+/** The onboarding tour's state machine. Step, practice tab and AI mode persist
+ *  across relaunches; `phase` does not, as restarting a lesson is safe. Every
+ *  phase advance is something the learner actually did. */
 export function useTutorial(
-  /** Textus AI's switch (Settings.textusAi). */
+  /** Textus AI's switch. */
   aiOn = true,
 ) {
   const [progress, setProgress] = useState<TutorialProgress>(loadProgress);
@@ -152,18 +141,14 @@ export function useTutorial(
     return () => window.removeEventListener(TOUR_SIGNAL_EVENT, handler);
   }, [active, step.id, setPhase]);
 
-  // Rebinds an in-progress tutorial to a different tab id, keeping the
-  // current step - used when the practice tab didn't survive a relaunch
-  // (it's a pathless draft, so it's never part of session restore) so the
-  // tutorial resumes on a live tab instead of pointing at one that no
-  // longer exists.
+  // Rebinds the tour to a new tab, keeping the step: the practice tab is a
+  // pathless draft, so it never survives a relaunch.
   const rebindTab = useCallback((tabId: string) => {
     setProgress((p) => (p.active ? { ...p, tabId } : p));
   }, []);
 
-  /** The practice tab's AI: live from the first AI lesson on for a learner
-   *  who connected one, muted everywhere else in the tour - and while
-   *  Textus AI is turned off, when its lessons are watched instead. */
+  /** The practice tab's AI: live from the first AI lesson for a learner who
+   *  connected one and has Textus AI on, muted everywhere else in the tour. */
   const live = aiMode === "live" && aiOn;
   const practiceAi: TourAi =
     live && progress.stepIndex >= FIRST_AI ? "live" : "muted";

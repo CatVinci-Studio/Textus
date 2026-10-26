@@ -52,15 +52,14 @@ export interface ChatModels {
   /** The model the next message goes to ("" before Settings has one). */
   model: string;
   provider: string;
-  /** The providers set up in Settings › Textus AI (signed in, a key saved,
-   *  or none needed) with their models; empty when there is nothing to
-   *  switch to. */
+  /** The providers ready to use, with their models; empty when there is
+   *  nothing to switch to. */
   groups: ModelGroup[];
   /** Sets the chat provider and its model, as Settings does. */
   choose: (provider: string, model: string) => void;
 }
 
-/** The composer's models, switched without going to Settings (ModePicker). */
+/** The composer's models, switched without going to Settings. */
 export function useChatModels(): ChatModels {
   const { t, settings, setSettings } = useSettings();
   const catalog = useProviderCatalog();

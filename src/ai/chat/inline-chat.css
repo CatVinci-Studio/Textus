@@ -1,15 +1,9 @@
-/* QUICK ASK - the in-document chat bar, modeled on VS Code's inline chat.
-   It renders as a block INSIDE the document flow (quick-ask-widget-plugin's
-   zone widget), right after the block it was opened on - content below gets
-   pushed down, never covered, and the panel is never dragged or resized.
-   Reading the full conversation is what the detached WINDOW is for, opened
-   explicitly (the header's pop-out button). Closing is explicit too (the
-   header X or Escape) - never an outside click, since reading the document
-   the chat is about is the most common reason to click away from it. */
+/* Quick Ask: the in-document chat bar, a block in the document flow after
+   the block it was opened on. Closing is explicit (X or Escape), never an
+   outside click: reading the document is why people click away. */
 
 /* The chat surfaces' own two tones, set where they are drawn (the editor
-   palette can be redefined below :root): a card a shade off the panel,
-   and the hairline round it. */
+   palette can be redefined below :root). */
 :is(.agent-panel-view, .chat-window, .inline-chat) {
   --chat-card-bg: color-mix(
     in srgb,
@@ -24,29 +18,22 @@
 }
 
 .inline-chat {
-  /* A command bar, not a second text column: on a wide adaptive column it
-     stays at a comfortable width, centred under the text it is about,
-     instead of stretching a one-line input and summary past 1000px. */
+  /* A command bar, not a second text column: on a wide column it stays at a
+     comfortable width instead of stretching past 1000px. */
   max-width: min(100%, 720px);
   margin: var(--md-gap-box, 1.1em) auto;
-  /* Room the first text row leaves for the floating header buttons:
-     4px edge + three 22px buttons with 2px gaps, plus 6px of air. Only
-     Quick Ask has them - the detached window shows the same composer with
-     no overlay, so this is scoped to the panel rather than set on the
-     input itself. (It was sized for two buttons after the third, New
-     Conversation, arrived - the input ran under it.) */
+  /* Room the first text row leaves for Quick Ask's floating header buttons:
+     4px edge + three 22px buttons with 2px gaps, plus 6px of air. */
   --quick-ask-actions-width: 80px;
-  /* The panel is portaled INSIDE the editable root, whose base stylesheet
-     sets white-space: pre-wrap; inherited, the newlines between the
-     rendered reply's block elements showed as blank lines. Same fix as
-     .pending-insert. (The textarea and the summary set their own.) */
+  /* The panel sits inside the editable root, whose pre-wrap would show the
+     newlines between the reply's blocks as blank lines. */
   white-space: normal;
   /* Nor is it document text: no editor line height or caret colour. */
   line-height: 1.5;
 }
 
-/* A selection that shows in both palettes without shouting: the dark
-   one's default was a dim blue-grey hardly apart from the panel. */
+/* A selection that shows in both palettes: the dark one's default was hardly
+   apart from the panel. */
 .inline-chat ::selection {
   background: color-mix(
     in srgb,
@@ -63,12 +50,8 @@
   animation: motion-enter var(--dur-base) var(--ease-out);
 }
 
-/* Just the pop-out and close buttons, pinned to the panel's top-right
-   corner. Deliberately slim - this is not a title bar; the panel has no
-   title to show and nothing to grab - and floated rather than given a row
-   of its own, which cost 26px of blank space above the input for the sake
-   of two icons. The input reserves width for them instead (see
-   --quick-ask-actions-width below). */
+/* Just the pop-out and close buttons, floated in the panel's top-right
+   corner rather than given a row of their own. The input reserves width. */
 .inline-chat-header {
   position: absolute;
   top: 0;
@@ -91,9 +74,8 @@
   line-height: 1;
 }
 
-/* Asked before closing while proposals are still undecided - the previews
-   stay decorated in the document, so closing the surface that explains them
-   without a word would strand them. */
+/* Asked before closing while proposals are still undecided: the previews
+   stay in the document, and closing silently would strand them. */
 .inline-chat-confirm {
   display: flex;
   flex-direction: column;
@@ -112,27 +94,22 @@
   gap: 6px;
 }
 
-/* The message list, skill menu and composer all live inside this one
-   bordered/shadowed card - only one .floating-surface for the whole popup,
-   not one per section. Positioned: the header buttons float in its corner. */
+/* The message list, skill menu and composer share this one card.
+   Positioned: the header buttons float in its corner. */
 .inline-chat-shell {
   position: relative;
   display: flex;
   flex-direction: column;
 }
 
-/* One rule frames every section boundary inside the shell (messages/
-   skill-menu/composer, in whatever combination is actually mounted) instead
-   of per-pair divider rules. */
+/* One rule frames every section boundary inside the shell. */
 .inline-chat-shell > * + * {
   border-top: 1px solid var(--editor-border);
 }
 
-/* ...except right below the header, where a rule would just box in two
-   small buttons for no information. Said from the shell: a bare
-   ".inline-chat-header + *" made Chromium restyle every following sibling
-   of an element added anywhere - Enter in a 5k-block document recalculated
-   the style of all its blocks. */
+/* ...except right below the header. Said from the shell: a bare
+   ".inline-chat-header + *" made Chromium restyle every following sibling,
+   so Enter in a large document recalculated all its blocks. */
 .inline-chat-shell > .inline-chat-header + * {
   border-top: none;
 }
@@ -153,9 +130,7 @@
 }
 
 /* In the panel and the detached window the field is one rounded box on the
-   panel's foot - the text and everything that goes with it (attachments,
-   mode, web search, Send) inside it, lit at its edge while it has focus.
-   Quick Ask is already a card of its own and keeps the open layout. */
+   panel's foot, lit at its edge on focus. Quick Ask keeps the open layout. */
 :is(.agent-panel-body, .chat-window-body) .inline-chat-field {
   gap: 6px;
   padding: 6px 6px 6px 8px;
@@ -209,14 +184,9 @@
   background-color: color-mix(in srgb, var(--editor-text) 10%, transparent);
 }
 
-/* Input on top (grows with content via the auto-resize effect), tool row
-   below: attach button, the selection chip when text was selected, send.
-   One row however narrow the panel, whatever the font: the chip gives
-   way first, ellipsized down to its x, and only then the mode's name -
-   wrapped, Send went to a line of its own under the others (1.1.0-rc.6,
-   the panel at its narrowest with text selected). Send, + and search
-   never shrink. Tuned to one font's widths, Russian fitted to the pixel on
-   one machine and pushed Send out by 4px on another. */
+/* Input on top, tool row below, always on one row: the chip gives way
+   first, then the mode's name. Send, + and search never shrink. Not tuned
+   to one font's widths, which differ across machines. */
 .inline-chat-toolbar {
   display: flex;
   align-items: center;
@@ -233,10 +203,8 @@
 }
 
 /* How much text rides along as context, and a way to drop it. Tinted like
-   the passage it stands for, which stays highlighted in the document while
-   the composer has the focus (.chat-selection, milkdown-theme.css): the two
-   read as one thing. Pointing at the chip strengthens both; a click scrolls
-   to the passage. */
+   the passage it stands for, highlighted in the document, so the two read
+   as one. */
 .inline-chat-selection-chip {
   display: inline-flex;
   align-items: center;
@@ -349,9 +317,7 @@
   padding: 0;
 }
 
-/* Document vs image: the two ride to the model in completely different ways
-   (extracted text in the prompt, or a native image part), so the chip says
-   which one this is. */
+/* Document vs image reach the model differently, so the chip says which. */
 .inline-chat-attachment-kind {
   flex-shrink: 0;
   width: 12px;
@@ -359,24 +325,22 @@
   opacity: 0.8;
 }
 
-/* Only part of the file reached the model. Said out loud, because a partial
-   answer otherwise looks like the model misread the whole document. */
+/* Only part of the file reached the model, said so a partial answer doesn't
+   look like a misreading. */
 .inline-chat-attachment-note {
   opacity: 0.75;
   font-style: italic;
 }
 
-/* Why an attachment could not be used. The old code caught and discarded
-   these, which is what made the "+" button look dead on a PDF. */
+/* Why an attachment could not be used. */
 .inline-chat-attach-error {
   padding: 4px 8px;
   font-size: var(--text-xs);
   color: var(--danger);
 }
 
-/* Skill picker: opens while the input holds a /prefix being typed - a flow
-   section between the messages and the composer, framed by the shell's
-   generic divider rule above. */
+/* Skill picker: opens while the input holds a /prefix being typed, between
+   the messages and the composer. */
 .inline-chat-skill-menu {
   padding: 4px;
   max-height: 200px;
@@ -424,7 +388,7 @@
   text-overflow: ellipsis;
 }
 
-/* ComposerPicker: the list scrolls, the key hint under it stays. */
+/* The `/` and `@` picker: the list scrolls, the key hint under it stays. */
 .composer-picker {
   padding: 0;
   max-height: min(320px, 45vh);
@@ -521,23 +485,17 @@
   color: var(--editor-text);
   font: inherit;
   font-size: var(--text-md);
-  /* A WHOLE number of pixels, not a 1.5 ratio: 13 * 1.5 = 19.5px, and the
-     auto-resize effect can only set an integer height, so every line box
-     left the content a half pixel taller than the box it sits in. WebKit
-     took that as a scrollable textarea - permanent scrollbars around an
-     EMPTY input, and a caret painted against a hair of scroll offset.
-     Every Interface Text Size keeps it whole: 18, 20, 22 and 25px. */
+  /* A whole number of pixels, not a 1.5 ratio: the auto-resize sets integer
+     heights, and a half-pixel taller line box makes WebKit show scrollbars
+     around an empty input. */
   line-height: calc(20px * var(--ui-text-scale, 1));
   padding: 4px 6px;
-  /* Grows with content via the auto-resize effect, up to ~6 lines. That
-     effect owns overflow-y too, flipping it to auto only once this
-     max-height actually clamps the box - see ChatComposer. */
+  /* Grows with content up to ~6 lines; the auto-resize effect owns
+     overflow-y, setting it to auto only once this clamps. */
   max-height: calc(120px * var(--ui-text-scale, 1));
   overflow-y: hidden;
-  /* A textarea wraps; it has nothing to scroll sideways to. Explicit
-     because `overflow-y` alone would compute the x axis to `auto`
-     (a non-visible axis drags the other one out of `visible` with it),
-     which is where the full-width bar under the placeholder came from. */
+  /* Explicit: `overflow-y` alone computes the x axis to `auto`, which drew
+     a full-width scrollbar under the placeholder. */
   overflow-x: hidden;
 }
 
@@ -554,18 +512,14 @@
   color: color-mix(in srgb, var(--editor-muted) 60%, transparent);
 }
 
-/* The composer is the surface's one field and shows its caret; a ring
-   round it only boxed in the header icons above it (Quick Ask) and the
-   tool row below. */
+/* The composer shows its caret; a focus ring only boxed in the icons
+   around it. */
 .inline-chat-input:focus-visible {
   outline: none;
 }
 
-/* Whichever section ends up under the floating header buttons keeps clear of
-   them - the composer when the panel is fresh, the reply summary or the
-   pending bar once one of those is on top. Not the composer unconditionally:
-   in the detached window it has no buttons overhead, and here it usually
-   isn't the row they overlap. */
+/* Whichever section ends up under the floating header buttons keeps clear
+   of them: the composer on a fresh panel, else the summary or pending bar. */
 .inline-chat-header + .inline-chat-bar .inline-chat-input,
 .inline-chat-header + .quick-ask-status,
 .inline-chat-header + .quick-ask-pending-bar,
@@ -605,7 +559,7 @@
 }
 
 /* Quick Ask starts as a compact answer preview and can expand in place into
-   the complete transcript. The detached window remains optional. */
+   the complete transcript. */
 .quick-ask-status {
   padding: 10px 12px;
 }
@@ -627,9 +581,8 @@
   min-width: 0;
 }
 
-/* The reply at a glance: rendered markdown, cut to a few lines with a
-   fade rather than a hard ellipsis (a line clamp cannot cut through
-   block elements like lists and code). */
+/* The reply at a glance: rendered markdown, cut to a few lines with a fade
+   (a line clamp cannot cut through lists and code). */
 .quick-ask-summary {
   flex: 1;
   min-width: 0;
@@ -662,11 +615,8 @@
   color: var(--editor-text);
 }
 
-/* One propose_edit tool call from the agent: what it wants to replace (del)
-   and with what (ins). This card is the ONLY place the edit is accepted or
-   rejected, and the only place the before/after is spelled out - the
-   in-document marks show which region changes but carry no detail and no
-   controls of their own. */
+/* One propose_edit tool call from the agent: what it replaces and with what.
+   The only place the before/after is spelled out. */
 .agent-proposal {
   display: flex;
   flex-direction: column;
@@ -750,10 +700,8 @@
   color: var(--editor-muted);
 }
 
-/* Line-by-line diff, read like a code review: a +/- gutter, monospace so
-   markdown syntax lines up, and tinted rows. Monospace matters here - the
-   whole point of showing markdown source is that `##` and `**` are visible,
-   and a proportional font hides how they align. */
+/* Line-by-line diff: a +/- gutter, tinted rows, and monospace so markdown
+   syntax like `##` and `**` lines up. */
 .agent-proposal-diff {
   display: flex;
   flex-direction: column;
@@ -845,18 +793,16 @@
   align-self: flex-start;
 }
 
-/* Once resolved (status !== "pending"), the buttons give way to a compact
-   status line; the diff above stays, so scrolling back through a
-   conversation still shows what each accepted edit actually did. */
+/* Once resolved, the buttons give way to a compact status line; the diff
+   stays, so scrolling back still shows what each edit did. */
 .agent-proposal-status {
   font-size: var(--text-sm);
   color: var(--editor-muted);
   animation: motion-fade-in var(--dur-fast) var(--ease-out);
 }
 
-/* Not decidable yet - arguments still streaming or the typewriter still
-   revealing the text in the document. Upright, as the thinking row: a
-   slanted CJK label is a faked italic. */
+/* Not decidable yet: arguments still streaming or the text still being
+   revealed. Upright: a slanted CJK label is a faked italic. */
 .agent-proposal-status-streaming {
   opacity: 0.85;
 }
@@ -898,12 +844,8 @@
   text-decoration: underline;
 }
 
-/* Pinned above the composer whenever anything is undecided. The cards
-   themselves scroll away in a long conversation, and edits sitting
-   unresolved in the document with nothing on screen saying so is how they
-   get forgotten. It rises out from behind the composer with the first
-   edit and goes back behind it after the last; its count changes in
-   place. */
+/* Pinned above the composer whenever anything is undecided, since the cards
+   scroll away and unresolved edits get forgotten. */
 .inline-chat-pending-bar {
   animation: pending-bar-in var(--dur-base) var(--ease-out);
   display: flex;
@@ -966,9 +908,7 @@
   font-size: var(--text-sm);
 }
 
-/* Quick Ask's review-one-at-a-time bar (QuickAskPendingBar.tsx) - the ONE
-   control surface for edits in this surface, so it gets the same pinned
-   treatment as the full variant's bar above. */
+/* Quick Ask's review-one-at-a-time bar, pinned like the full variant's bar. */
 .quick-ask-pending-bar {
   display: flex;
   align-items: center;
@@ -1006,7 +946,7 @@
 }
 
 /* Split button: a primary action plus a chevron that opens a one-item menu
-   for the bulk variant of the same action ("Accept" -> "Accept all (N)"). */
+   for the bulk variant of the same action. */
 .quick-ask-split-button {
   position: relative;
   display: flex;
@@ -1049,9 +989,8 @@
   width: 100%;
 }
 
-/* Busy indicator: no token streaming (the reply arrives all at once), so
-   this is deliberately honest about that - a label plus three staggered
-   pulsing dots, not a fake progress bar. */
+/* Busy indicator: a label plus three staggered pulsing dots, not a fake
+   progress bar. */
 .agent-thinking {
   display: flex;
   align-items: center;
@@ -1060,8 +999,8 @@
   color: var(--editor-muted);
 }
 
-/* How long the model thought (ThoughtRow): one grey line under the
-   question, which opens to the reasoning when the provider shared it. */
+/* How long the model thought: one grey line under the question, which opens
+   to the reasoning when the provider shared it. */
 .agent-thought {
   font-size: var(--text-sm);
   color: var(--editor-muted);
@@ -1117,7 +1056,7 @@
 }
 
 /* Under a reply still streaming: it waits, and shows only if the reply
-   pauses (ChatMessages re-keys it on every delta, starting the wait over). */
+   pauses (re-keyed on every delta). */
 .agent-thinking-after {
   animation: agent-thinking-after var(--dur-base) var(--ease-out) 1500ms both;
 }
@@ -1184,10 +1123,8 @@
   }
 }
 
-/* Prose still arriving ends in a soft caret, so a pause between tokens
-   reads as "still writing" rather than as the end of the answer. Not after
-   a list, a code block or a table, where it would sit on a line of its
-   own. */
+/* Prose still arriving ends in a soft caret, so a pause reads as "still
+   writing". Not after a list, code block or table. */
 .agent-streaming
   .agent-markdown
   > :last-child:not(ul, ol, pre, table, .agent-math)::after {
@@ -1214,11 +1151,8 @@
   }
 }
 
-/* A reply lands all at once, not token by token - this staggers each new
-   turn's entrance instead of the whole batch appearing as one flat block.
-   --reveal-delay is set per-turn inline (see ChatMessages.tsx). Streamed
-   text itself never animates: each token appearing on its own would make
-   the reply unreadable while it arrives. */
+/* Each new turn's entrance is staggered (--reveal-delay is set inline).
+   Streamed text itself never animates, or it would be unreadable. */
 .turn-reveal {
   animation: turn-reveal-in var(--dur-base) var(--ease-out) both;
   animation-delay: var(--reveal-delay, 0ms);
@@ -1245,13 +1179,9 @@
   }
 }
 
-/* Quick Ask lives inside the editor's .milkdown root, so the DOCUMENT's
-   element styles reach the rendered replies too: drawn list bullets tuned
-   to the document's 1.8 line height, the h2 rule and h3 bar, the h4 dot,
-   tinted quotes, centred block images, full-width tables. A reply is chat
-   text, so they are undone here - prefixed to outrank the .milkdown rules,
-   whatever order the stylesheets load in. (The detached window has no
-   .milkdown around it and never needed this.) */
+/* Quick Ask lives inside the editor's .milkdown root, so the document's
+   element styles reach the replies too. Undone here, prefixed to outrank
+   the .milkdown rules whatever order the stylesheets load in. */
 .inline-chat :is(.agent-message, .quick-ask-summary) .agent-markdown p {
   margin: 0.5em 0;
 }
@@ -1358,10 +1288,8 @@
   font-size: 1.08em;
 }
 
-/* A proposed picture on its card (generate_image), small: the document
-   shows it full size. */
-/* Its own shape within the card: as a flex item a picture shrank in width
-   and kept its height - squeezed (rc.6). */
+/* A proposed picture on its card, small: the document shows it full size.
+   Its own shape, or as a flex item it shrank in width and kept its height. */
 .agent-proposal-picture {
   display: block;
   flex: none;
@@ -1374,7 +1302,7 @@
 }
 
 /* Proposal card: the model's one-line reason, and the per-sentence choice
-   list (ChatMessages' ProposalCard). */
+   list. */
 .agent-proposal-reason {
   font-size: var(--text-md);
   line-height: 1.5;
@@ -1472,9 +1400,8 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   gap: 3px;
 }
 
-/* add_comment: feedback pinned to a passage (ChatMessages). */
-/* The card the proposal is - tone and corners - with the passage it is
-   about quoted at its head, behind the accent's rule. */
+/* add_comment: feedback pinned to a passage, the passage quoted at its head
+   behind the accent's rule. */
 .agent-comment {
   padding: 10px 12px 12px;
   border: 1px solid var(--chat-hairline, var(--editor-border));
@@ -1508,8 +1435,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   stroke-linejoin: round;
 }
 
-/* The note's badge in the text (ReviewMargin.css .review-badge), same
-   number, same disc. */
+/* The note's badge in the text: same number, same disc. */
 .agent-comment-num {
   flex: none;
   display: inline-grid;
@@ -1548,9 +1474,8 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   line-height: 1.55;
 }
 
-/* A reply's notes as one card (CommentGroup): a row each - the words it
-   is about, a click taking you to them, then the note - set off by
-   hairlines. */
+/* A reply's notes as one card: a row each, the words it is about, then the
+   note, set off by hairlines. */
 .agent-comment-rows {
   margin: 0;
   padding: 0;
@@ -1613,8 +1538,8 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   color: var(--editor-muted);
 }
 
-/* Messages sent while a reply is coming (MessageQueue.tsx), over the
-   composer: a line each, the oldest first. */
+/* Messages sent while a reply is coming, over the composer: a line each,
+   the oldest first. */
 .chat-queue {
   display: flex;
   flex-direction: column;
@@ -1656,8 +1581,7 @@ button.chat-queue-action:hover {
   color: var(--editor-text);
 }
 
-/* A run of proposals as one card (ProposalGroup): a row each - its new
-   text's first line, its size, ✓ / ✕ - and a decided one says how. */
+/* A run of proposals as one card: a row each, and a decided one says how. */
 .agent-proposal-group-rows .agent-proposal-sentence-text {
   overflow: hidden;
   white-space: nowrap;

@@ -8,9 +8,8 @@ import {
   takePendingCaret,
 } from "./mode-switch";
 
-/** Source/WYSIWYG switches keep the caret and scroll position
- *  (mode-switch.ts): while on screen this editor can report where its
- *  caret is, and on mounting it takes the caret the source view left. */
+/** Source/WYSIWYG switches keep the caret: on screen this editor reports its
+ *  caret, and on mounting it takes the caret the source view left. */
 export function useModeSwitchCaret(
   run: EditorRunner,
   isActive: boolean,

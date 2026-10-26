@@ -44,19 +44,16 @@ export function useEditorCarets({
   useFocusModeRefresh(run, isActive, typewriter);
 }
 
-/** Portals (Quick Ask, the find bar) bubble React events through here:
- *  their text fields keep the native Cut/Copy/Paste menu instead of the
- *  editor's, whose Paste would have gone into the document. */
+/** Portals' text fields keep the native Cut/Copy/Paste menu, whose Paste
+ *  would otherwise go into the document. */
 const ownsMenu = (target: EventTarget | null) =>
   !(target as HTMLElement | null)?.closest?.(
     ".inline-chat, .find-replace-bar, input, textarea",
   );
 
 /**
- * What opens over one tab's editor: its menu (right-click, Shift+F10, the
- * Menu key), the table dialog, the grammar card, the find bar - and the
- * window events (menu commands, shortcuts, the iPhone toolbar) that reach
- * this editor.
+ * What opens over one tab's editor: its menu, the table dialog, the grammar
+ * card, the find bar, and the window events that reach this editor.
  */
 export function useEditorPopups({
   setup,
@@ -80,12 +77,9 @@ export function useEditorPopups({
   const [tableDialogOpen, setTableDialogOpen] = useState(false);
 
   const grammar = useGrammarPopover(run, () => t.grammarApplyStale);
-  // A phone has no hover and no arrow keys - a tap on an underline is the
-  // way in, so there the caret opens the suggestion only right after a
-  // touch, not whenever typing happens to end against a flagged word (the
-  // ranges include their edges). The listener reports the selection while
-  // the transaction is still being applied, before the view holds it, so
-  // the phone's check waits a frame to see where the tap put the caret.
+  // A phone has no hover or arrow keys, so the caret opens a suggestion only
+  // right after a touch. The check waits a frame: the listener fires before
+  // the view holds the new selection.
   const lastTouchRef = useRef(0);
   const onGrammarCaret = grammar.onCaretMove;
   setup.grammarCaretRef.current = () => {
@@ -144,10 +138,8 @@ export function useEditorPopups({
     });
   }
 
-  // Shift+F10 and the Menu key are taken here rather than left to the
-  // browser: Chromium turns them into a contextmenu event, but WebKit -
-  // every Mac, and WebKitGTK on Linux - never does, so the keyboard's way
-  // to the menu did nothing there.
+  // Taken here: Chromium turns Shift+F10 and the Menu key into contextmenu,
+  // but WebKit never does.
   function onKeyDown(e: KeyboardEvent) {
     if (!((e.key === "F10" && e.shiftKey) || e.key === "ContextMenu")) return;
     if (e.altKey || e.ctrlKey || e.metaKey || !ownsMenu(e.target)) return;

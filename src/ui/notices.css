@@ -1,6 +1,5 @@
-/* notices.tsx: short notes and progress bars at the bottom of the window,
-   over the editor and clear of the status bar. They come in rising a
-   little and fading; only opacity and transform move. */
+/* Short notes and progress bars at the bottom of the window, clear of the
+   status bar. Only opacity and transform move. */
 .notice-stack {
   position: fixed;
   left: 50%;

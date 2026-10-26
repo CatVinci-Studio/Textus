@@ -1,8 +1,5 @@
-/**
- * MCP servers as Settings keeps them (`mcpServers`, read by src-tauri
- * mcp/mod.rs): a program to start, or a URL to reach, each with its own
- * switch. Settings › Extensions › MCP edits them.
- */
+/** MCP servers as Settings keeps them: a program to start, or a URL to
+ *  reach, each with its own switch. */
 
 export interface McpServer {
   /** Stable, made when it is added. */
@@ -90,7 +87,6 @@ function isStringRecord(value: unknown): value is Record<string, string> {
   );
 }
 
-/** Stored servers, as far as they are well formed. */
 export function normaliseMcpServers(value: unknown): McpServer[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((raw): McpServer[] => {

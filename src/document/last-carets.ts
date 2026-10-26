@@ -6,13 +6,9 @@ import { getUiState, updateUiState, type UiState } from "../storage/ui-state";
 import type { DocTab } from "./doc-tabs";
 
 /**
- * Where the caret was in each document left recently, so restoring the
- * last session or picking it from File > Open Recent opens it there
- * instead of at the top (#218). Kept in ui-state.json by path, with the
- * file's modified time: a file changed since - by another app, or saved
- * from another window - opens at its top, since the place no longer
- * points at the same text. Follows Settings › General › Restore Previous
- * Session on Startup: off, nothing is remembered or restored.
+ * Where the caret was in each recently left document, keyed by path with
+ * the file's mtime: a file changed since opens at its top. Off when session
+ * restore is off.
  */
 
 type Stored = UiState["lastCarets"];
@@ -36,7 +32,7 @@ function isEntry(value: unknown): value is Entry {
   return typeof mtime === "number" && (place(offset) || place(pos));
 }
 
-/** A stored map, untrusted (an older build, a hand edit): what is valid. */
+/** A stored map, untrusted: what is valid. */
 function validEntries(stored: unknown): Map<string, Entry> {
   const entries = new Map<string, Entry>();
   if (typeof stored !== "object" || stored === null) return entries;
@@ -95,11 +91,9 @@ export function lastCaret(
 }
 
 /**
- * This window's side: remembers each caret its editors report for a tab
- * with a file, and when the window closes (every close flushes the storage
- * writes first, see pending-writes.ts) asks again of each tab that has
- * been on screen: a tab left with unsaved edits and saved since (Save
- * Automatically) was remembered against the file as it was before.
+ * Remembers each caret this window's editors report, and asks again of each
+ * shown tab on close: a tab autosaved since was remembered against the old
+ * file.
  */
 export function useLastCarets(
   tabs: DocTab[],
@@ -119,8 +113,7 @@ export function useLastCarets(
 
   useEffect(() => {
     if (!enabled) return;
-    // Tabs never shown keep what was stored: a restored tab opened behind
-    // others still sits at its top, its caret not placed yet.
+    // Tabs never shown keep what was stored: their caret isn't placed yet.
     const shown = new Set<string>();
     const remember = (tabId: string, caret: CaretPlace | null) => {
       const tab = known.current.get(tabId);

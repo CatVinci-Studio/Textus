@@ -22,9 +22,8 @@ import {
 } from "./broker-scope";
 
 /**
- * A plugin's calls about what it shows (textus.views and its webviews):
- * a webview's page, title and messages, the file a file editor shows, its
- * list views, the source of a code block it draws.
+ * A plugin's calls about what it shows: a webview's page, title and messages,
+ * a file editor's file, its list views, a drawn code block's source.
  */
 export function viewHandlers(p: PluginScope) {
   const listOf = (view: unknown) => {

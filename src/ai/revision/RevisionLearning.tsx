@@ -28,13 +28,8 @@ export interface RevisionLearningLabels extends LearnLabels {
   memoryActionFailed: string;
 }
 
-/**
- * The writer's revision choices, kept (revision-learning.ts) as they make
- * them, and the one suggestion they may lead to: `record` is
- * usePendingEdits' onDecided; `kind` the kind to offer remembering, until
- * it is answered. One window's reads and writes of the log run one after
- * another.
- */
+/** Records the writer's revision choices and the one suggestion they may
+ *  lead to. One window's reads and writes of the log run in turn. */
 export function useRevisionLearning({
   docPath,
   workspaceRoot,
@@ -119,13 +114,8 @@ export function useRevisionLearning({
 
 export type RevisionLearning = ReturnType<typeof useRevisionLearning>;
 
-/**
- * The suggestion, where the review bar was: "You turned down changing 「」
- * to “” several times. Remember “…”?" with Remember, Not now and Never
- * ask for this. Remember saves the requirement as a personal memory, which
- * the Memory tab lists; a line then says so. Quiet: shown after a review
- * is finished, never during one, and one at a time.
- */
+/** The suggestion to remember a repeated choice as a personal memory, shown
+ *  in the review bar's place only after a review is finished. */
 export function RevisionLearningBar({
   learning,
   labels,
@@ -149,7 +139,7 @@ export function RevisionLearningBar({
     return () => clearTimeout(timer);
   }, [saved, clearSaved]);
   // The line that stands alone once the suggestion is answered, said to a
-  // screen reader as it appears (ui/announce.ts).
+  // screen reader as it appears.
   const savedLine =
     !parsed && saved
       ? saved === "saved"

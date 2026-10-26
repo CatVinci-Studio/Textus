@@ -4,13 +4,8 @@ import type { Lang } from "../../i18n/langs";
 import { plural } from "../../i18n/plural";
 import { announce } from "../../ui/announce";
 
-/**
- * Tells a screen reader what the review bar shows the eye: how many
- * changes Textus AI proposed once a rewrite is in, and which one the
- * review bar points at after ‹ / ›. Only the tab in front speaks. What a
- * decision did is reported by usePendingEdits (`onDecided`), wherever it
- * was made.
- */
+/** Tells a screen reader how many changes a rewrite proposed, and which one
+ *  the review bar points at after ‹ / ›. Only the tab in front speaks. */
 export function useRevisionAnnouncements({
   active,
   stops,

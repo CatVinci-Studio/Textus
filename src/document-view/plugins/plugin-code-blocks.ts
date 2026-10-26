@@ -44,14 +44,10 @@ interface Drawn {
 }
 
 /**
- * Code blocks plugins draw (textus.views.registerCodeBlock): below a
- * fenced block in a language a plugin draws, the plugin's page, made once
- * it comes into sight (draw-when-visible.ts). The source hides while the
- * caret is elsewhere - as a drawn diagram's does - and comes back with the
- * caret, or the drawing's Edit Source button. A widget lives as long as
- * the block - its key is the language and which block of that language it
- * is, not the source - so typing tells the plugin the new source
- * (CodeBlock.onDidChange) rather than making the page again.
+ * Code blocks plugins draw: the plugin's page below the fenced block, made
+ * once in sight. The source hides while the caret is elsewhere. A widget is
+ * keyed by language and index, not source, so typing tells the plugin the
+ * new source instead of remaking the page.
  */
 export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
   setDrawnBlocks(DRAWN_BLOCKS);
@@ -243,8 +239,7 @@ function editButton(
   return button;
 }
 
-/** An export's way to the drawings' pictures (export/drawn-blocks.ts):
- *  each asks its plugin's page (WebviewApi.onExport). */
+/** An export's way to the drawings' pictures: each asks its plugin's page. */
 const DRAWN_BLOCKS = {
   selector: `.${BLOCK_CLASS}`,
   hiddenSource: HIDDEN_SOURCE_CLASS,

@@ -20,11 +20,8 @@ import {
   isConventionsValue,
 } from "../writing-conventions";
 
-// Settings > Textus AI: skills (the user's own with their modes, and the
-// built-ins by mode with Customize… and Reset) and the Writing conventions
-// row. Skills
-// are files: the rows here mirror them and open them in a tab, they never
-// embed an editor.
+// Settings > Textus AI: skills and the Writing conventions row. Skills are
+// files, so these rows mirror and open them rather than embedding an editor.
 
 /** Fired after a skill changes here, so every section showing the list
  *  reloads it. */
@@ -34,9 +31,8 @@ function announceChange() {
   window.dispatchEvent(new Event(SKILLS_CHANGED_EVENT));
 }
 
-/** The skill list as Settings shows it: the built-ins and the global
- *  layer (no document, so no project). `list` is null where the backend
- *  has no list (then only the global skills are known). */
+/** The skill list as Settings shows it: built-ins and the global layer.
+ *  `list` is null where the backend has none. */
 function useSkillList() {
   const [list, setList] = useState<SkillListItem[] | null>(null);
   const [workspaceSkills, setWorkspaceSkills] = useState<AgentSkill[]>([]);
@@ -67,8 +63,7 @@ export async function importSkill(): Promise<void> {
   announceChange();
 }
 
-/// The Skills row - how to use one, and Import Skill… - and the user's own
-/// skills under it.
+/// The Skills row and the user's own skills under it.
 export function AgentSkillsSection({ t }: { t: Strings }) {
   const [error, setError] = useState<string | null>(null);
   return (
@@ -91,9 +86,8 @@ export function AgentSkillsSection({ t }: { t: Strings }) {
   );
 }
 
-/// The user's own skills - installed from the market, imported or made in
-/// Create mode - each with the modes it applies in, at least one. A skill
-/// with a built-in's name says it replaces it.
+/// The user's own skills, each with the modes it applies in (at least one).
+/// A skill with a built-in's name says it replaces it.
 export function OwnSkillsList({ t }: { t: Strings }) {
   const { settings } = useSettings();
   const lang = settings.language;
@@ -164,20 +158,15 @@ export function OwnSkillsList({ t }: { t: Strings }) {
   );
 }
 
-/** What the UI calls each mode. */
 const MODE_LABEL: Record<AgentMode, TextKey> = {
   write: "agentModeWrite",
   review: "agentModeReview",
   create: "agentModeCreate",
 };
 
-/// The built-in skills, by the mode they belong to - always on: each one's
-/// label and what it does, and Customize… - which copies it into the
-/// global config folder's skills/ and opens the copy in a tab. A
-/// customized one opens its copy instead, and Reset deletes the copy.
-///
-/// `flat` shows the rows without the disclosure (Settings › Extensions ›
-/// Skills).
+/// The built-in skills by mode, always on. Customize… copies one into the
+/// global skills folder and opens it; Reset deletes the copy. `flat` drops
+/// the disclosure.
 export function BuiltinSkillsSection({
   t,
   flat,
@@ -195,7 +184,7 @@ export function BuiltinSkillsSection({
   const lang = settings.language;
   const { list } = useSkillList();
   const [error, setError] = useState<string | null>(null);
-  // The backend's error codes (ai::workspace) in the user's words.
+  // The backend's error codes in the user's words.
   const failed = (err: unknown) => {
     const text = errorText(err);
     setError(
@@ -207,9 +196,8 @@ export function BuiltinSkillsSection({
     );
   };
 
-  // One item per name (ai::workspace::list_skills): the built-in itself,
-  // a copy made by Customize… (`basedOn`), or a skill the user wrote with
-  // that name, which replaces it outright.
+  // One item per name: the built-in, a Customize… copy (`basedOn`), or the
+  // user's own skill that replaces it outright.
   const item = (name: string) => list?.find((i) => i.name === name);
   const isCopy = (i: SkillListItem | undefined) =>
     !!i && i.source !== "builtin" && !!i.basedOn;
@@ -357,8 +345,8 @@ export function BuiltinSkillsSection({
   );
 }
 
-/// Writing conventions: Automatic, or one profile - grouped by the
-/// document language it is for.
+/// Writing conventions: Automatic, or one profile, grouped by document
+/// language.
 export function WritingConventionsRow({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const lang = settings.language;

@@ -29,19 +29,16 @@ export const commands = {
 	 */
 	memory_restore: (docPath: string | null, workspaceRoot: string | null, id: string) => __TAURI_INVOKE<string>("memory_restore", { docPath, workspaceRoot, id }),
 	/**
-	 *  The offered skill saved: for every document (`personal`, the global
-	 *  config folder's skills/) or this project's (its .textus/skills/). Its
-	 *  file's path.
+	 *  The offered skill saved, for every document or this project's. Returns
+	 *  its file's path.
 	 */
 	save_offered_skill: (offer: SkillOffer, scope: string, docPath: string | null, workspaceRoot: string | null, modes: AgentMode_Deserialize[]) => __TAURI_INVOKE<string>("save_offered_skill", { offer, scope, docPath, workspaceRoot, modes }),
 	/**  The Memory tab's Delete, for a memory or a library entry. */
 	memory_delete: (docPath: string | null, workspaceRoot: string | null, id: string) => __TAURI_INVOKE<null>("memory_delete", { docPath, workspaceRoot, id }),
 	/**
-	 *  "Remember" on a suggestion learned from revision choices
-	 *  (src/ai/revision/RevisionLearning.tsx): one memory the user asked for
-	 *  with a click, written as memory::pass writes one - so it is listed,
-	 *  moved and deleted in the Memory tab like any other. A click, not the
-	 *  model: it saves whether or not Remember automatically is on.
+	 *  "Remember" on a suggestion learned from revision choices: one memory
+	 *  written as the pass writes one. A click, not the model, so it saves even
+	 *  while Remember automatically is off.
 	 */
 	memory_remember: (docPath: string | null, workspaceRoot: string | null, kind: string, scope: string, text: string) => __TAURI_INVOKE<Remembering_Serialize>("memory_remember", { docPath, workspaceRoot, kind, scope, text }),
 	revision_choices_read: () => __TAURI_INVOKE<Value | null>("revision_choices_read"),
@@ -50,32 +47,26 @@ export const commands = {
 
 /* Types */
 /**
- *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
- *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
- *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
- *  and what the prompt says the user is here for.
+ *  The conversation's mode, picked in the composer. It decides what
+ *  propose_edit may do, which skills apply and what the prompt says.
  */
 export type AgentMode = AgentMode_Serialize | AgentMode_Deserialize;
 
 /**
- *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
- *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
- *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
- *  and what the prompt says the user is here for.
+ *  The conversation's mode, picked in the composer. It decides what
+ *  propose_edit may do, which skills apply and what the prompt says.
  */
 export type AgentMode_Deserialize = 
 /**  Reads, answers and comments: no propose_edit. */
 "review" | 
 /**
- *  Adds text and changes the text that is there: every propose_edit
- *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
- *  this one.
+ *  Adds text and changes the text that is there: every propose_edit action.
+ *  The old Revise mode reads as this one.
  */
 "write" | 
 /**
- *  Adds text and changes the text that is there: every propose_edit
- *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
- *  this one.
+ *  Adds text and changes the text that is there: every propose_edit action.
+ *  The old Revise mode reads as this one.
  */
 "revise" | 
 /**
@@ -86,18 +77,15 @@ export type AgentMode_Deserialize =
 "create";
 
 /**
- *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
- *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
- *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
- *  and what the prompt says the user is here for.
+ *  The conversation's mode, picked in the composer. It decides what
+ *  propose_edit may do, which skills apply and what the prompt says.
  */
 export type AgentMode_Serialize = 
 /**  Reads, answers and comments: no propose_edit. */
 "review" | 
 /**
- *  Adds text and changes the text that is there: every propose_edit
- *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
- *  this one.
+ *  Adds text and changes the text that is there: every propose_edit action.
+ *  The old Revise mode reads as this one.
  */
 "write" | 
 /**
@@ -119,11 +107,9 @@ export type Exchange = {
 };
 
 /**
- *  Which library entries reached Textus AI, for the Memory tab's marks
- *  (src/platform/bindings/ai-memory.ts): the entries' `file`s, those that came
- *  up but didn't fit, and whether this is what the last conversation
- *  request for the document carried (`lastRequest`) or what its text alone
- *  would bring in, before any request.
+ *  Which library entries reached Textus AI, for the Memory tab's marks: sent or
+ *  left out, and whether from the last request (`lastRequest`) or from the
+ *  document's text alone.
  */
 export type LibraryUse = {
 	included: string[],
@@ -134,18 +120,14 @@ export type LibraryUse = {
 };
 
 /**
- *  Where something is remembered from, for the record: the conversation
- *  as ai_agent_message gets it (`conversation: {id, title}` in
- *  platform/ipc.ts) and the document open in it. Generated as
- *  MemorySource (JSON never carries a struct's name).
+ *  Where something is remembered from, for the record: the conversation as
+ *  ai_agent_message gets it and the document open in it.
  */
 export type MemorySource = MemorySource_Serialize | MemorySource_Deserialize;
 
 /**
- *  Where something is remembered from, for the record: the conversation
- *  as ai_agent_message gets it (`conversation: {id, title}` in
- *  platform/ipc.ts) and the document open in it. Generated as
- *  MemorySource (JSON never carries a struct's name).
+ *  Where something is remembered from, for the record: the conversation as
+ *  ai_agent_message gets it and the document open in it.
  */
 export type MemorySource_Deserialize = {
 	id?: string | null,
@@ -153,28 +135,18 @@ export type MemorySource_Deserialize = {
 };
 
 /**
- *  Where something is remembered from, for the record: the conversation
- *  as ai_agent_message gets it (`conversation: {id, title}` in
- *  platform/ipc.ts) and the document open in it. Generated as
- *  MemorySource (JSON never carries a struct's name).
+ *  Where something is remembered from, for the record: the conversation as
+ *  ai_agent_message gets it and the document open in it.
  */
 export type MemorySource_Serialize = {
 	id: string | null,
 	title: string | null,
 };
 
-/**
- *  memory_pass's inputs, the keys of `ai.memoryPass`'s invoke in
- *  platform/ipc.ts - generated into src/platform/bindings/ai-memory.ts, which
- *  types that call with it (the command itself, taking `Args`, can't be).
- */
+/**  memory_pass's inputs, the keys of `ai.memoryPass`'s invoke. */
 export type PassRequest = PassRequest_Serialize | PassRequest_Deserialize;
 
-/**
- *  memory_pass's inputs, the keys of `ai.memoryPass`'s invoke in
- *  platform/ipc.ts - generated into src/platform/bindings/ai-memory.ts, which
- *  types that call with it (the command itself, taking `Args`, can't be).
- */
+/**  memory_pass's inputs, the keys of `ai.memoryPass`'s invoke. */
 export type PassRequest_Deserialize = {
 	provider: string,
 	model?: string | null,
@@ -184,11 +156,7 @@ export type PassRequest_Deserialize = {
 	exchange: Exchange,
 };
 
-/**
- *  memory_pass's inputs, the keys of `ai.memoryPass`'s invoke in
- *  platform/ipc.ts - generated into src/platform/bindings/ai-memory.ts, which
- *  types that call with it (the command itself, taking `Args`, can't be).
- */
+/**  memory_pass's inputs, the keys of `ai.memoryPass`'s invoke. */
 export type PassRequest_Serialize = {
 	provider: string,
 	model: string | null,
@@ -199,18 +167,14 @@ export type PassRequest_Serialize = {
 };
 
 /**
- *  What a remember call did - the tool's result, which the chat's chip
- *  reads to show it and to undo it (`RememberResult` in
- *  src/ai/chat/MemoryChip.tsx). `previous` is the file as it was before an
- *  update, for Undo to put back.
+ *  What a remember call did, which the chat's chip shows and undoes.
+ *  `previous` is the file as it was before an update, for Undo to put back.
  */
 export type Remembering = Remembering_Serialize | Remembering_Deserialize;
 
 /**
- *  What a remember call did - the tool's result, which the chat's chip
- *  reads to show it and to undo it (`RememberResult` in
- *  src/ai/chat/MemoryChip.tsx). `previous` is the file as it was before an
- *  update, for Undo to put back.
+ *  What a remember call did, which the chat's chip shows and undoes.
+ *  `previous` is the file as it was before an update, for Undo to put back.
  */
 export type Remembering_Deserialize = {
 	remembered: string,
@@ -224,17 +188,15 @@ export type Remembering_Deserialize = {
 	 */
 	name?: string | null,
 	/**
-	 *  What was remembered was taken back (memory::pass): `text` is what
-	 *  it said, `previous` the file Undo puts back.
+	 *  What was remembered was taken back: `text` is what it said, `previous` the
+	 *  file Undo puts back.
 	 */
 	forgot: boolean,
 };
 
 /**
- *  What a remember call did - the tool's result, which the chat's chip
- *  reads to show it and to undo it (`RememberResult` in
- *  src/ai/chat/MemoryChip.tsx). `previous` is the file as it was before an
- *  update, for Undo to put back.
+ *  What a remember call did, which the chat's chip shows and undoes.
+ *  `previous` is the file as it was before an update, for Undo to put back.
  */
 export type Remembering_Serialize = {
 	remembered: string,
@@ -248,8 +210,8 @@ export type Remembering_Serialize = {
 	 */
 	name?: string,
 	/**
-	 *  What was remembered was taken back (memory::pass): `text` is what
-	 *  it said, `previous` the file Undo puts back.
+	 *  What was remembered was taken back: `text` is what it said, `previous` the
+	 *  file Undo puts back.
 	 */
 	forgot?: boolean,
 };

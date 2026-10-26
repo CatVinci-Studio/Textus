@@ -17,17 +17,16 @@ interface ChatSelectionState {
 
 const chatSelectionKey = new PluginKey<ChatSelectionState>("chat-selection");
 
-/** The highlighted range as it reads now - mapped through every edit since
- *  it was set. What Quick Ask resolves its captured selection to at send. */
+/** The highlighted range as it reads now, mapped through every edit since it
+ *  was set. */
 export function chatSelectionRange(
   state: EditorState,
 ): { from: number; to: number } | null {
   return chatSelectionKey.getState(state)?.range ?? null;
 }
 
-/** Highlight or clear the chat-context selection - dispatched by
- *  useChatSelectionHighlight for Quick Ask's captured range, or the live
- *  selection the panel's or the chat window's chip refers to. */
+/** Highlight or clear the chat-context selection: Quick Ask's captured range,
+ *  or the live selection a chip refers to. */
 export function setChatSelection(
   tr: Transaction,
   range: { from: number; to: number } | null,
@@ -39,8 +38,7 @@ export function setChatSelection(
 }
 
 /** Strengthen the highlight while the pointer is on the selection chip,
- *  without touching the range (Quick Ask's has been mapped since it was
- *  set). */
+ *  without touching the range. */
 export function setChatSelectionHot(
   tr: Transaction,
   hot: boolean,
@@ -61,10 +59,9 @@ interface Box {
   right: number;
 }
 
-/** The boxes the range's text takes up on screen, one per text fragment:
- *  per textblock, so a whole paragraph inside the range contributes its
- *  lines rather than its full-width block box; a leaf block (an image, a
- *  rule, display math) contributes its own box. */
+/** The boxes the range's text takes up on screen, per text fragment, so a
+ *  paragraph contributes its lines, not its full-width block; a leaf block
+ *  contributes its own box. */
 function rangeBoxes(view: EditorView, from: number, to: number): Box[] {
   const boxes: Box[] = [];
   const add = (rects: Iterable<DOMRect>) => {
@@ -105,13 +102,9 @@ function rangeBoxes(view: EditorView, from: number, to: number): Box[] {
   return boxes;
 }
 
-/** The boxes to draw: one per line, the fragments sharing a line merged,
- *  and between two lines a bridge as wide as both have in common, so the
- *  highlight reads as one continuous passage - no stripes between lines,
- *  paragraphs, list items or table rows, and no blocks of tint sticking out
- *  beside a short line. A gap over twice as tall as the lines around it
- *  isn't bridged: something else sits there (Quick Ask's panel, under the
- *  paragraph it was opened on). */
+/** The boxes to draw: one per line, bridged to the next line so the passage
+ *  reads as one, without stripes. A gap over twice the line height isn't
+ *  bridged: something else (Quick Ask's panel) sits there. */
 export function highlightBoxes(boxes: Box[]): Box[] {
   const sorted = [...boxes].sort((a, b) => a.top - b.top);
   const lines: Box[] = [];
@@ -142,9 +135,8 @@ export function highlightBoxes(boxes: Box[]): Box[] {
   return out;
 }
 
-/** Product of the CSS `zoom` on `el` and its ancestors: the document text
- *  is zoomed (app/editor-column.css), and client rects come back zoomed
- *  while the layer's own coordinates don't. */
+/** Product of the CSS `zoom` on `el` and its ancestors: client rects come
+ *  back zoomed while the layer's own coordinates don't. */
 function effectiveZoom(el: Element | null): number {
   let zoom = 1;
   for (let at = el; at; at = at.parentElement)
@@ -153,13 +145,9 @@ function effectiveZoom(el: Element | null): number {
 }
 
 /**
- * Draws the highlight: a layer beside the editor's DOM with a box per
- * line. Not decorations: a decoration splits the text into spans along the
- * range, and the gaps between those spans' lines and between paragraphs
- * left the passage striped; ProseMirror also redraws a paragraph whose
- * decorations change, which replayed the entrance of every revision in it
- * (docs/design/ai-proposals.md). The layer is ours, so hovering the chip
- * can ease it stronger.
+ * Draws the highlight as a layer beside the editor's DOM, a box per line. Not
+ * decorations: they striped the passage, and changing them redraws the
+ * paragraph, replaying every revision's entrance in it.
  */
 class HighlightLayer {
   private readonly layer: HTMLElement;
@@ -240,14 +228,9 @@ class HighlightLayer {
 }
 
 /**
- * Keeps the passage a chat is about visibly marked while the chat has the
- * focus: Quick Ask's captured selection, and the live selection the AI
- * panel's or the chat window's "{n} chars selected" chip refers to. The
- * native selection paint disappears the moment focus moves to the
- * composer, leaving no trace of what the chip means - this is that trace.
- * Its range is also the live one: mapped through every edit, it is what
- * useInlineChat's sendContext resolves the captured selection to before
- * each send.
+ * Keeps the passage a chat is about marked while the chat has the focus,
+ * since native selection paint vanishes once the composer takes it. Its range
+ * is the live one, mapped through every edit, that a send resolves to.
  */
 export const chatSelectionPlugin = $prose(
   () =>

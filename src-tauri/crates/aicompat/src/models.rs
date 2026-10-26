@@ -34,11 +34,9 @@ fn is_chat_model(id: &str) -> bool {
     !NON_CHAT.iter().any(|fragment| id.contains(fragment))
 }
 
-/// `(id, sort key)` pairs -> the ids a picker should show: the `models/`
-/// prefix Gemini's endpoint adds stripped, non-chat models dropped,
-/// duplicates removed, newest first when the provider says when a model was
-/// created (the key compares as a string: unix seconds zero-padded, or an
-/// RFC 3339 date), otherwise in the provider's own order.
+/// `(id, sort key)` pairs -> the ids a picker should show: Gemini's `models/`
+/// prefix stripped, non-chat models and duplicates dropped, newest first when
+/// the provider gives a creation key, otherwise in the provider's order.
 pub fn tidy(entries: Vec<(String, Option<String>)>) -> Vec<String> {
     let mut seen = std::collections::HashSet::new();
     let mut kept: Vec<(String, Option<String>)> = entries

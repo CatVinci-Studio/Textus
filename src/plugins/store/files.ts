@@ -1,10 +1,8 @@
 import { plugins as pluginsIpc } from "../../platform/ipc";
 
 /**
- * A plugin's own files - its code, its webviews' scripts, styles and
- * images - and how a webview gets them: no URL of the app's reaches a
- * sandboxed frame, so each file is handed in as a `data:` URL in place of
- * the `textus-resource:` the plugin wrote (webview.asWebviewUri).
+ * A plugin's own files, and how a webview gets them: no app URL reaches a
+ * sandboxed frame, so each `textus-resource:` becomes a `data:` URL.
  */
 
 /** Where a plugin's files are: installed (from the catalog or a file),

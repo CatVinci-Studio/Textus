@@ -3,17 +3,14 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { revealOffset } from "./useQuickAskReveal";
 import { useLatest } from "../../../utils/hooks/useLatest";
 
-/** On the root while the docked Quick Ask is up (quick-ask-dock.css): the
- *  keyboard toolbar gives way to it, and the document scrolls clear of it. */
+/** On the root while the docked Quick Ask is up: the keyboard toolbar gives
+ *  way to it, and the document scrolls clear of it. */
 export const QUICK_ASK_DOCK_CLASS = "has-quick-ask-dock";
 
 /**
- * The docked Quick Ask's footprint on the page: while it is mounted the
- * root carries QUICK_ASK_DOCK_CLASS and `--quick-ask-dock-height`, its
- * current height, which the document's scroll padding follows. The panel
- * grows as a reply arrives and the review bar appears; `onResize` hears
- * each change (`first` on the initial layout) so the editor can keep the
- * passage being discussed above it.
+ * The docked Quick Ask's footprint: while mounted the root carries
+ * QUICK_ASK_DOCK_CLASS and `--quick-ask-dock-height`. `onResize` hears each
+ * change so the editor can keep the passage being discussed above it.
  */
 export function useQuickAskDock(
   ref: RefObject<HTMLElement | null>,
@@ -42,15 +39,10 @@ export function useQuickAskDock(
 }
 
 /**
- * Scrolls the editor just enough for document position `pos` to sit
- * between the top of the editor and the top of the docked Quick Ask - the
- * strip of document still visible over the keyboard. ProseMirror's own
- * scrollIntoView counts the whole scroll area as visible, the part behind
- * the panel included.
- *
- * Unless `force`, only while the position is within the editor at all: a
- * reply growing the panel must not drag back a document the user has
- * scrolled away to read elsewhere (the same rule as useQuickAskReveal).
+ * Scrolls `pos` into the strip between the editor's top and the docked panel;
+ * ProseMirror's scrollIntoView counts the area behind the panel as visible.
+ * Unless `force`, only while `pos` is within the editor, so a growing reply
+ * doesn't drag back a document scrolled elsewhere.
  */
 export function keepClearOfDock(
   view: EditorView,

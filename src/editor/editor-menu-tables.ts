@@ -22,11 +22,7 @@ import type { EditorRunner } from "./useEditorRunner";
 import type { Strings } from "../i18n/strings";
 import type { MenuEntry } from "./editor-menu";
 
-/**
- * Tables in the editor's menus: row and column commands, alignment, the
- * caret moved to the cell a right-click lands in, and the menu items
- * (editor-menu.ts).
- */
+/** Tables in the editor's menus. */
 
 export function runTableCommand(
   run: EditorRunner,
@@ -39,8 +35,7 @@ export function runTableCommand(
   });
 }
 
-// Grows the selection to the whole row/column of the current cell - both
-// as its own menu action and as the first step of column alignment.
+// Grows the selection to the whole row/column of the current cell.
 export function selectTableLine(run: EditorRunner, kind: "row" | "column") {
   run((ctx) => {
     const view = ctx.get(editorViewCtx);
@@ -55,9 +50,8 @@ export function selectTableLine(run: EditorRunner, kind: "row" | "column") {
   });
 }
 
-// Markdown table alignment is a per-COLUMN property (the `:---:` marker
-// row), so aligning just the clicked cell serialized to something other
-// than what the editor showed - align the whole column instead.
+// Markdown alignment is per column (the `:---:` row), so a cell alone would
+// serialize to something other than what the editor showed.
 export function alignTableColumn(
   run: EditorRunner,
   alignment: "left" | "center" | "right",
@@ -70,8 +64,6 @@ export function alignTableColumn(
       view.state.tr.setSelection(CellSelection.colSelection($cell)),
     );
     setCellAttr("alignment", alignment)(view.state, view.dispatch);
-    // Back to a caret in the clicked cell rather than leaving the column
-    // selected.
     view.dispatch(
       view.state.tr.setSelection(
         Selection.near(view.state.doc.resolve($cell.pos + 1)),
@@ -81,9 +73,8 @@ export function alignTableColumn(
   });
 }
 
-/** What the iPhone keyboard toolbar's table buttons send
- *  (TABLE_ACTION_EVENT) - the right-click menu's insert and delete items,
- *  by name. */
+/** The right-click menu's insert and delete items by name, for the iPhone
+ *  keyboard toolbar's table buttons. */
 export const TABLE_ACTIONS = {
   "row-above": addRowBefore,
   "row-below": addRowAfter,
@@ -101,12 +92,9 @@ export function runTableAction(run: EditorRunner, action: string) {
 }
 
 /**
- * A right-click on a table cell other than the one being edited moves the
- * caret into it, so the table items act on the cell under the pointer. A
- * cell inside a cell selection keeps the selection, for Delete Row etc. on
- * several rows at once. A right-click outside any table while the caret is
- * in one moves the caret to the pointer: left where it was, the menu
- * offered the table's items for a click on a paragraph.
+ * A right-click on another table cell moves the caret into it, unless it is
+ * inside a cell selection. One outside any table while the caret is in one
+ * moves the caret to the pointer, or the menu offers the table's items.
  */
 export function moveCaretToClickedCell(
   view: EditorView,

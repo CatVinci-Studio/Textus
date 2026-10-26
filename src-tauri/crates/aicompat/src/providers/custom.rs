@@ -16,9 +16,8 @@ mod gemini_thoughts;
 mod stream;
 pub(crate) use stream::*;
 
-/// The key as the server takes it: Google's APIs (Gemini, Vertex AI) in
-/// `x-goog-api-key` - Vertex AI reads a Bearer token as an OAuth one and
-/// refuses a key there (401) - and every other server as a Bearer token.
+/// The key as the server takes it: Google's APIs in `x-goog-api-key`, since
+/// Vertex AI refuses a key sent as a Bearer token, and everyone else Bearer.
 pub(crate) fn with_key(
     req: reqwest::RequestBuilder,
     base_url: &str,
@@ -49,39 +48,27 @@ fn models_url(base_url: &str) -> String {
 pub enum Vendor {
     #[default]
     Generic,
-    /// Volcengine Ark (Doubao). Its Seed models think by default, which
-    /// turns a completion or grammar check into a wait of many seconds, so
-    /// writing calls ask for `reasoning_effort: "minimal"` - "no thinking"
-    /// on Seed, and mapped to the lowest effort, not rejected, on the Ark
-    /// models that can't stop thinking (GLM 5.3 Flash), which
-    /// `thinking: {"type": "disabled"}` would be. And Ark caps the answer
-    /// at 4096 tokens unless `max_tokens` says otherwise - short enough to
-    /// cut a long edit's tool arguments off mid-JSON. On Seed the cap
-    /// leaves the reasoning out.
+    /// Volcengine Ark (Doubao). Its Seed models think by default, so writing
+    /// calls ask for `reasoning_effort: "minimal"`, which models that can't
+    /// stop thinking map to their lowest effort instead of rejecting. Ark also
+    /// caps the answer at 4096 tokens unless `max_tokens` says otherwise.
     Ark,
-    /// DeepSeek. Both its models think by default, at effort `high`: the
-    /// live eval saw a grammar check spend 260-400 reasoning tokens and
-    /// half again the time on one paragraph. Writing calls switch it off
-    /// with `thinking: {"type": "disabled"}`, which both models take.
+    /// DeepSeek. Both its models think by default, at effort `high`; writing
+    /// calls switch it off with `thinking: {"type": "disabled"}`.
     DeepSeek,
     /// MiniMax. Unasked, its models write their thinking into the answer
-    /// itself between `<think>` tags; `reasoning_split: true` moves it to
-    /// `reasoning_content`, where the other thinking models put theirs.
-    /// M3.1 Flash can't stop thinking (`thinking: disabled` is a 400) and
-    /// at its default effort once thought for four minutes before a story,
-    /// so writing calls ask both models for `reasoning_effort: "low"`.
+    /// between `<think>` tags; `reasoning_split: true` moves it to
+    /// `reasoning_content`. M3.1 Flash can't stop thinking, so writing calls
+    /// ask both models for `reasoning_effort: "low"`.
     MiniMax,
 }
 
-/// Ark's answer cap for agent steps - the budget the Anthropic dialect
-/// gives an edit.
+/// Ark's answer cap for agent steps.
 const ARK_AGENT_MAX_TOKENS: u32 = 16384;
 
-/// The streaming twin of [`agent_step`]: same request plus `stream: true`,
-/// consumed incrementally so fragments surface through `on_event`. Kept
-/// separate rather than replacing agent_step because `stream` support
-/// varies across OpenAI-compatible servers even more than `tools` does -
-/// the caller falls back to the non-streaming step when this errors.
+/// The streaming twin of [`agent_step`]: same request plus `stream: true`. Kept
+/// separate because `stream` support varies across compatible servers; the
+/// caller falls back to the non-streaming step when this errors.
 #[allow(clippy::too_many_arguments)]
 pub async fn agent_step_streaming(
     base_url: &str,
@@ -106,9 +93,8 @@ pub async fn agent_step_streaming(
         thinking,
     );
     body["stream"] = json!(true);
-    // The usage (with what was read from the server's prompt cache) comes
-    // in a last chunk only when asked for, where the server takes the ask
-    // (capabilities::ProviderCaps::stream_usage).
+    // The usage comes in a last chunk only when asked for, where the server
+    // takes the ask.
     if stream_usage {
         body["stream_options"] = json!({"include_usage": true});
     }
@@ -132,8 +118,8 @@ pub async fn agent_step_streaming(
     Ok((acc.into_step_result(on_event), usage))
 }
 
-/// Runs one round-trip against a Chat Completions-compatible endpoint with
-/// tool definitions - the generic-dialect twin of `openai_codex::agent_step`.
+/// Runs one round-trip against a Chat Completions-compatible endpoint with tool
+/// definitions.
 #[allow(clippy::too_many_arguments)]
 pub async fn agent_step(
     base_url: &str,

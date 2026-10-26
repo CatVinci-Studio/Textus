@@ -13,11 +13,8 @@ import {
   type PackId,
 } from "../../plugins/store/catalog";
 
-/**
- * Get more › Plugins: the catalog's plugins not installed yet, as far as
- * the search lets - while nothing is searched for, the packs to install
- * at once and the recommended ones first.
- */
+/** Get more › Plugins: the catalog's plugins not installed yet; with no
+ *  search, the packs and the recommended ones first. */
 export function MarketPlugins({
   t,
   catalog,
@@ -43,7 +40,6 @@ export function MarketPlugins({
   const offered = notInstalled(catalog);
   const shown = searchCatalog(offered, query);
   const browsing = !query.trim();
-  // The recommended ones lead while nothing is searched for.
   const picks = browsing
     ? RECOMMENDED_PLUGINS.flatMap((id) => shown.filter((i) => i.id === id))
     : [];
@@ -176,7 +172,6 @@ function PluginPacks({
   );
 }
 
-/** Why the list couldn't be fetched, with Try again. */
 function CatalogProblem({ t, text }: { t: Strings; text: string }) {
   return (
     <div className="settings-row plugin-catalog-problem">

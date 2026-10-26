@@ -1,20 +1,11 @@
-/* The app-wide base every window loads first: the design system (radii,
-   sizes, motion), the font stacks, the light and dark palettes, and the
-   floating-card look. The main window gets it through app/App.css, the
-   detached chat window imports it directly. */
+/* The app-wide base every window loads first: the design system, font
+   stacks, light and dark palettes, and the floating-card look. */
 @import "./design-system.css";
 
-/* Chinese and Japanese punctuation that Unicode shares with Latin text -
-   the curly double quotes, the ellipsis and the dash - is drawn by the
-   first face in the stack that has it. On a Mac that is San Francisco (or
-   Georgia in the Paper theme): slanted Latin quotes, an ellipsis of low
-   dots narrower than a character (…… reads as six dots on the baseline)
-   and a short dash (—— breaks in two). These faces take just those
-   characters from the CJK face, as a Chinese or Japanese Mac draws them:
-   the ellipsis and the dash a full character wide and centred. They lead
-   the stacks when the UI is in Chinese or Japanese (--font-cjk-punct
-   below). Single quotes stay Latin: ’ is the apostrophe of English text
-   too. */
+/* Punctuation Unicode shares with Latin (curly double quotes, ellipsis, dash)
+   is drawn by the first face that has it, so on a Mac it came out Latin. These
+   faces take just those characters from the CJK face, and lead the stacks in a
+   Chinese or Japanese UI. Single quotes stay Latin: ’ is also the apostrophe. */
 @font-face {
   font-family: "Textus Punct SC";
   src:
@@ -61,20 +52,10 @@
 }
 
 :root {
-  /* "Noto Sans CJK SC" / "Source Han Sans SC" are what Linux distributions
-     install (Arch's noto-fonts-cjk, adobe-source-han-sans); "Noto Sans SC"
-     is only the Google Fonts name. Without a CJK family named here, Chinese
-     falls through to fontconfig's per-glyph fallback, which can land on a
-     face with no bold.
-     The CJK faces are their own variables because Han characters are drawn
-     differently in each language: the :lang() rules below swap in the
-     Japanese, Traditional Chinese or Korean faces when <html lang> says so,
-     instead of showing Japanese text in Simplified Chinese glyph shapes.
-     The content themes (content-themes.css) build on them too.
-     The Simplified Chinese faces get names of their own, because every
-     other language's stack ends with them: a Linux machine with only
-     WenQuanYi (or only the SC cut of Noto / Source Han) installed still
-     gets a CJK face it names, rather than fontconfig's per-glyph pick. */
+  /* Name the faces Linux distributions install, or Chinese falls to
+     fontconfig's per-glyph fallback, which may have no bold. Each language gets
+     its own CJK variable for its Han glyph shapes; every stack ends with the
+     Simplified Chinese faces as a last resort. */
   --font-cjk-sans-sc:
     "PingFang SC", "Noto Sans SC", "Noto Sans CJK SC", "Source Han Sans SC",
     "Microsoft YaHei", "WenQuanYi Micro Hei";
@@ -82,11 +63,8 @@
     "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", SimSun;
   --font-cjk-sans: var(--font-cjk-sans-sc);
   --font-cjk-serif: var(--font-cjk-serif-sc);
-  /* Where -apple-system isn't there (Linux, Windows), the CJK face leads
-     for a Chinese, Japanese or Korean UI, so their punctuation is drawn
-     full-width as it should be. For every other language a Latin face
-     comes first: a CJK face draws ’ “ ” full-width too, which put a gap
-     after each apostrophe of French text ("d’ habitants"). */
+  /* Without -apple-system, the CJK face leads for a CJK UI so punctuation is
+     full-width; elsewhere a Latin face leads, or ’ “ ” go full-width too. */
   --font-text-sans: Inter, system-ui, var(--font-cjk-sans);
   /* A family that doesn't exist: outside a Chinese or Japanese UI the
      punctuation faces above stay out of the stacks. */
@@ -95,12 +73,9 @@
   --font-sans:
     var(--font-cjk-punct), -apple-system, "SF Pro Text", var(--font-text-sans),
     sans-serif;
-  /* A mono face every platform has comes before the CJK faces: Menlo
-     (macOS), Cascadia Mono / Consolas (Windows), DejaVu / Noto / Liberation
-     (Linux) - otherwise Latin would be drawn in the proportional CJK face.
-     The CJK faces come before the generic: WebView2 in a Chinese Windows
-     resolves `monospace` to NSimSun, which drew Chinese in source mode as
-     SimSun (#132). */
+  /* A mono face every platform has comes before the CJK faces, or Latin would
+     be drawn proportional; the CJK faces come before the generic, which a
+     Chinese Windows resolves to NSimSun. */
   --font-mono:
     "Fira Code", "JetBrains Mono", "SF Mono", Menlo, "Cascadia Mono", Consolas,
     "DejaVu Sans Mono", "Noto Sans Mono", "Liberation Mono",
@@ -130,23 +105,16 @@
   color: var(--editor-text);
   background-color: var(--bg);
   font-family: var(--font-sans);
-  /* Synthesis only kicks in for a face that lacks the requested style, so
-     fonts with real bold/italics are never faked. `style`: PingFang/Noto
-     CJK ship no italic face, and without it <em> on Chinese/Japanese
-     renders upright. `weight`: plenty of Linux CJK fonts (WenQuanYi, most
-     Kai/Song faces, fontconfig fallback picks) ship a single weight, and
-     without it **bold** Chinese renders regular. */
+  /* Synthesis only applies to a face lacking the style: many CJK fonts ship no
+     italic, and many Linux ones a single weight. */
   font-synthesis: weight style;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Per-language CJK faces (see --font-cjk-sans above): macOS, then Linux
-   (Noto / Source Han), then Windows, then the Simplified Chinese faces as a
-   last resort - wrong glyph shapes for a few characters beat no CJK face at
-   all (WenQuanYi and the SC fonts cover kana, Hangul and Traditional
-   characters too). */
+/* Per-language CJK faces: macOS, then Linux, then Windows, then the
+   Simplified Chinese faces as a last resort, which beat no CJK face at all. */
 :root:lang(ja) {
   --font-cjk-sans:
     "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP",
@@ -175,18 +143,10 @@
     var(--font-cjk-serif-sc);
 }
 
-/* Korean is written with spaces between words, but browsers break it
-   between any two syllables, like Chinese: "아닙니|다". keep-all breaks
-   only at the spaces. It's set on every element because the
-   `word-break: break-word` a few components use (AI messages, inline code)
-   would otherwise put syllable breaks back. A word too long for its line
-   still wraps: overflow-wrap is inherited from the root, and break-word
-   (not anywhere) leaves min-content widths alone, so a label in a flex
-   row isn't squeezed into mid-word breaks. The document is included (a
-   Korean UI mostly writes Korean; a Chinese or Japanese paragraph in it
-   still wraps where it reaches the edge), except table cells: a column is
-   as wide as its longest unbreakable run, and keep-all made a Chinese
-   cell one run, so the table outgrew the page. */
+/* Korean is written with spaces, but browsers break it between any two
+   syllables; keep-all breaks only at spaces. Set on every element, since
+   some components use word-break: break-word. Not in table cells, where it
+   made a Chinese cell one unbreakable run that outgrew the page. */
 :root:lang(ko) {
   overflow-wrap: break-word;
 }
@@ -219,9 +179,8 @@
   --font-cjk-punct-serif: "Textus Punct Serif JP";
 }
 
-/* Dark palette applies when the system prefers dark (and the user hasn't
-   forced light mode in Settings), or when the user has explicitly forced
-   dark mode in Settings regardless of the system preference. */
+/* Dark when the system prefers dark and the user hasn't forced light, or
+   when the user forced dark. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
@@ -274,12 +233,10 @@
   box-sizing: border-box;
 }
 
-/* Shared "floating card" look for transient, position:fixed overlays
-   (context menu, grammar popover, inline chat bar) - kept in one place so
-   they don't drift out of visual sync with each other. */
+/* Shared "floating card" look for transient fixed overlays, so they stay in
+   visual sync. */
 .floating-surface {
-  /* The app's face, not an imported theme's body font (Newsprint set the
-     context menu in PT Serif). */
+  /* The app's face, not an imported theme's body font. */
   font-family: var(--font-sans);
   background: var(--bg);
   border: 1px solid var(--border-color);

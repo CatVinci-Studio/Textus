@@ -6,8 +6,7 @@ import { errorText } from "../../utils/error-text";
 import type { AgentMode } from "../../settings/settings-types";
 import { ModeChoice } from "./ModeChoice";
 
-/** The call an offer stands in the conversation as (memory-pass.ts's
- *  skillOfferTurns). */
+/** The call an offer stands in the conversation as. */
 export const OFFER_SKILL = "offer_skill";
 
 /** The offer a turn's output holds, or null. */
@@ -29,10 +28,8 @@ export function parseSkillOffer(output: string): SkillOffer | null {
 }
 
 /**
- * Under a reply whose request was a procedure of its own
- * (ai/memory/skill_offer.rs): the offer to keep it as a skill - for every
- * document, or this project's, in the modes picked (Write to start with) -
- * and, saved, the /name it goes by.
+ * Under a reply whose request was a procedure of its own: the offer to keep
+ * it as a skill, and once saved, the /name it goes by.
  */
 export function SkillOfferChip({
   offer,

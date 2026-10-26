@@ -1,12 +1,10 @@
-//! One settings file and its copy in memory: read once, patched in
-//! place, written back a moment later in one atomic write, a damaged file
-//! moved aside rather than lost.
+//! One settings file and its copy in memory: read once, patched in place,
+//! written back debounced and atomically; a damaged file is moved aside.
 
 use super::*;
 
 /// Written into every file as `schemaVersion`. Bump it only for a change an
-/// older reader would misread; adding a field never needs it, since every
-/// reader fills in what's missing with its default.
+/// older reader would misread; new fields never need it.
 pub const SCHEMA_VERSION: u64 = 1;
 
 /// How long a change waits before it's written, so a burst (dragging the
@@ -14,8 +12,7 @@ pub const SCHEMA_VERSION: u64 = 1;
 pub(crate) const FLUSH_DELAY: Duration = Duration::from_millis(250);
 
 /// Debug builds get their own files: a dev build shares the installed app's
-/// identifier, hence its config directory, and must not rewrite the real
-/// settings with whatever a development session left behind.
+/// config directory and must not rewrite the real settings.
 pub(crate) fn file_name(stem: &str) -> String {
     if cfg!(debug_assertions) {
         format!("{stem}.dev.json")
@@ -23,10 +20,6 @@ pub(crate) fn file_name(stem: &str) -> String {
         format!("{stem}.json")
     }
 }
-
-// ---------------------------------------------------------------------------
-// One JSON file
-// ---------------------------------------------------------------------------
 
 /// One file: `{"schemaVersion": n, "<key>": payload}`, where the payload is
 /// an object (settings, UI state) or an array (histories).
@@ -38,13 +31,11 @@ pub struct Store {
     pub(crate) pretty: bool,
     pub(crate) inner: Mutex<Inner>,
     pub(crate) flush_scheduled: AtomicBool,
-    /// Whether the file was absent when loaded - for settings.json, what
-    /// decides that this is a new profile (`Stores::seed_new_profile`).
+    /// Whether the file was absent when loaded; for settings.json, that makes this
+    /// a new profile.
     pub(crate) missing_at_load: bool,
-    /// The file exists but couldn't be read (permissions, an I/O error): it
-    /// probably still holds the user's real data, which the first write
-    /// would replace with this session's defaults. So nothing is written
-    /// for the rest of the session - changes live in memory only.
+    /// The file exists but couldn't be read: it probably holds the user's data, so
+    /// nothing is written this session and changes stay in memory.
     pub(crate) unreadable: bool,
 }
 
@@ -58,10 +49,8 @@ pub(crate) struct Inner {
 }
 
 impl Store {
-    /// Loads `path`, or starts from `empty` when it's missing. A file that
-    /// can't be parsed (or holds the wrong shape) is renamed aside rather
-    /// than overwritten, so whatever is in it can still be recovered by
-    /// hand, and the app starts from defaults instead of refusing to start.
+    /// Loads `path`, or starts from `empty` when it's missing. An unparseable file
+    /// is renamed aside for hand recovery, and the app starts from defaults.
     pub fn load(path: PathBuf, key: &'static str, empty: Value, pretty: bool) -> Self {
         let mut missing = false;
         let mut unreadable = false;
@@ -82,10 +71,8 @@ impl Store {
                 move_aside(&path);
                 (empty, SCHEMA_VERSION)
             }
-            // Unreadable for another reason (permissions, an I/O error):
-            // start empty, but neither treat it as a new profile nor write
-            // it at all: it probably still holds the real data (see
-            // `unreadable`).
+            // Unreadable for another reason: start empty, but neither treat it as a new
+            // profile nor write it (see `unreadable`).
             Err(e) => {
                 eprintln!(
                     "textus: cannot read {}: {e}; using defaults for this session and leaving the file alone",
@@ -162,8 +149,7 @@ impl Store {
         });
     }
 
-    /// Writes the file now if anything changed since the last write - never
-    /// over a file that was there but couldn't be read (`unreadable`).
+    /// Writes the file now if anything changed, never over an `unreadable` file.
     pub fn flush(&self) -> std::io::Result<()> {
         let mut inner = self.inner.lock().unwrap();
         if !inner.dirty || self.unreadable {
@@ -180,28 +166,22 @@ impl Store {
         Ok(())
     }
 
-    /// Drops a change still waiting on its debounce and hands back the
-    /// lock, so the caller can move or delete the file without a write
-    /// already on its way bringing it back.
+    /// Drops a change still waiting on its debounce and hands back the lock, so the
+    /// caller can move or delete the file without a write bringing it back.
     pub(crate) fn discard(&self) -> std::sync::MutexGuard<'_, Inner> {
         let mut inner = self.inner.lock().unwrap();
         inner.dirty = false;
         inner
     }
 
-    // -- object payloads ----------------------------------------------------
-
-    /// Merges TOP-LEVEL fields only: each field in `patch` replaces that
-    /// field whole (null removes it), and every other field is left alone -
-    /// which is exactly what lets two windows change different settings at
-    /// once without one undoing the other.
+    /// Merges top-level fields only: each field in `patch` replaces that field
+    /// whole (null removes it), so two windows can change different settings at once.
     pub fn patch(self: &Arc<Self>, patch: &Map<String, Value>) -> u64 {
         self.update(|payload| merge_top_level(payload, patch)).1
     }
 
-    /// Sets the fields of `defaults` that are absent, leaving every present
-    /// one alone. Returns what was added and the new revision, or `None`
-    /// (no new revision, nothing to write) when nothing was missing.
+    /// Sets the fields of `defaults` that are absent. Returns what was added and
+    /// the new revision, or `None` when nothing was missing.
     pub fn fill_missing(
         self: &Arc<Self>,
         defaults: &Map<String, Value>,
@@ -226,8 +206,6 @@ impl Store {
         self.schedule_flush();
         Some((added, rev))
     }
-
-    // -- array payloads -----------------------------------------------------
 
     pub fn upsert(self: &Arc<Self>, kind: HistoryKind, entry: Value) -> u64 {
         self.update(|payload| {
@@ -285,8 +263,7 @@ pub(crate) fn parse(raw: &str, key: &str, empty: &Value) -> Option<(Value, u64)>
     if !same_shape {
         return None;
     }
-    // A file without a marker was written by hand; read it as the current
-    // version rather than rejecting it.
+    // A file without a marker was written by hand; read it as the current version.
     let schema = file
         .get("schemaVersion")
         .and_then(Value::as_u64)

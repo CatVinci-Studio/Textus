@@ -264,9 +264,8 @@ struct WordText {
     table: Vec<Vec<String>>,
 }
 
-/// The text of testdata/word-text.json as Word would hold it, opened:
-/// the Markdown is testdata/word-text.md, which the frontend's test reads
-/// back through the editor itself (src/document-view/word-text.test.ts).
+/// The text of testdata/word-text.json as Word would hold it, opened: the
+/// Markdown is testdata/word-text.md, which a frontend test reads back.
 #[test]
 fn opened_as_a_document_text_reads_back_as_the_same_words() {
     let fixture: WordText =

@@ -1,14 +1,6 @@
-/**
- * Says a short status to a screen reader without moving the focus: Textus
- * AI starting and finishing, a rewrite's changes arriving, a change
- * accepted or rejected. One polite live region for the whole window,
- * made on first use and visually hidden.
- *
- * What is announced within a moment of the last message joins it, in
- * order, so "Textus AI is done" and "3 changes proposed" don't cut each
- * other off. After that the region starts over, emptied first: the same
- * words twice in a row are still read twice.
- */
+/** Says a short status to a screen reader without moving focus. Messages
+ *  within a moment of each other join so they don't cut each other off; after
+ *  that the region empties first, so repeats are still read. */
 
 /** How long a message stays to be joined by the next. */
 const JOIN_MS = 1000;

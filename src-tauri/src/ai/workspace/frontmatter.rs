@@ -60,12 +60,9 @@ pub(crate) enum YamlValue {
     Map(Vec<String>),
 }
 
-/// The small subset of YAML skill frontmatter uses: `key: value` at the
-/// block's left edge; plain, single- and double-quoted scalars (plain ones
-/// may continue on indented lines); block scalars (`|`, `>`, with `-`/`+`
-/// chomping); and nested blocks, returned raw. Comments and anything else
-/// are skipped. Hand-written rather than a YAML dependency: this is all a
-/// skill file needs, and a mistake in one only costs that file's metadata.
+/// The small YAML subset skill frontmatter uses: `key: value`, plain and quoted
+/// scalars, block scalars (`|`, `>`), nested blocks returned raw. Hand-written:
+/// a mistake only costs one file's metadata, not a dependency.
 pub(crate) fn parse_yaml_map(lines: &[String]) -> Vec<(String, YamlValue)> {
     let indented = |l: &str| l.starts_with(' ') || l.starts_with('\t');
     let mut out = Vec::new();

@@ -8,12 +8,8 @@ export interface ExtensionsAction {
   onSelect: () => void;
 }
 
-/**
- * One tab of Settings › Extensions, laid out as every tab is: a line of
- * what the tab holds (its longer story behind "?"), Get more (or the
- * tab's own main action, `primary`) and its other actions on the right;
- * the installed items; then Advanced, folded.
- */
+/** One tab of Settings › Extensions: a line of what it holds, Get more (or
+ *  `primary`) and other actions, the installed items, then Advanced, folded. */
 export function ExtensionsTabLayout({
   t,
   intro,

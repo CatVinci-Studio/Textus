@@ -21,23 +21,15 @@ import { findFlash, type FlashLabel } from "./editor-flash";
 import { keyName } from "./editor-keys";
 
 /**
- * A plugin that takes over the editor's keyboard (permission
- * `editor.input`): the Vim plugin's normal mode, Emacs keys. The plugin
- * says which keys it wants - every key, or a few - and each such key the
- * editor gets is held back and handed to the plugin instead, there and
- * then (a sandboxed plugin can't answer a keydown in time to stop it, so
- * the editor decides, from what the plugin said beforehand). The plugin
- * answers with editing actions (EditorOp below): moving the caret by
- * words and lines, deleting, copying, pasting, undoing - done in the
- * editor as typing is, undoable, never a proposal. They are taken only
- * just after a key the plugin was handed: a plugin can't change the
- * document unprompted. One plugin has the keyboard at a time.
+ * A plugin that takes over the editor's keyboard (Vim, Emacs). A sandboxed
+ * plugin can't answer a keydown in time, so the editor holds back the keys it
+ * asked for beforehand and hands them over. Its editing actions are taken
+ * only just after such a key: a plugin can't change the document unprompted.
  */
 
 export interface KeyCapture {
-  /** "all": every key but the app's shortcuts (⌘ on a Mac, Ctrl
-   *  elsewhere - unless named in `keys`) and an input method's; "some":
-   *  only `keys`. */
+  /** "all": every key but the app's shortcuts (unless named in `keys`) and an
+   *  input method's; "some": only `keys`. */
   mode: "all" | "some";
   keys: string[];
 }
@@ -51,12 +43,10 @@ interface Owner {
 
 let owner: Owner | null = null;
 let lastView: EditorView | null = null;
-/** Visual mode's ends, as characters (Vim's): the one it started on and
- *  the one the cursor is on - both inside the selection, whichever way it
- *  runs. */
+/** Visual mode's ends, as characters: where it started and where the cursor
+ *  is, both inside the selection. */
 let visual: { anchor: number; head: number } | null = null;
-/** The column moves up and down keep (Vim's curswant): set by the first
- *  of them, dropped by anything else. */
+/** The column up/down moves keep: set by the first, dropped by anything else. */
 let goalX: number | null = null;
 
 /** The selection from character `anchor` to character `head`, both in. */
@@ -103,29 +93,22 @@ function captures(event: KeyboardEvent, capture: KeyCapture): string | null {
     return null;
   const name = keyName(event);
   if (capture.mode === "some") return capture.keys.includes(name) ? name : null;
-  // The app's shortcuts stay its own (save, find, new tab), unless named:
-  // ⌘ on a Mac, Ctrl elsewhere.
+  // The app's shortcuts stay its own unless named: ⌘ on a Mac, Ctrl elsewhere.
   const mod = isMacPlatform() ? event.metaKey : event.ctrlKey || event.metaKey;
   if (mod && !capture.keys.includes(name)) return null;
   return name;
 }
 
-/** Whether a plugin holds this key in the editor that has focus: the
- *  window's own shortcuts, which hear keys first, leave it alone - Emacs's
- *  C-/ is undo, not Toggle Source Mode. */
+/** Whether a plugin holds this key in the focused editor, so the window's
+ *  shortcuts leave it alone (Emacs's C-/ is undo, not Toggle Source Mode). */
 export function heldByPlugin(event: KeyboardEvent): boolean {
   const view = lastView;
   if (!owner || !view || view.isDestroyed || !view.hasFocus()) return false;
   return captures(event, owner.capture) !== null;
 }
 
-// ---------------------------------------------------------------------------
-// The editor's side: keys, the block cursor, flash's labels
-// ---------------------------------------------------------------------------
-
 interface InputState {
   cursor: "bar" | "block";
-  /** Flash's labels (editor-flash.ts). */
   labels: FlashLabel[];
   /** What flash found, lit while it waits for a label. */
   matches: { from: number; to: number }[];
@@ -215,8 +198,7 @@ export const editorInputPlugin = $prose(
             decos.push(
               Decoration.inline(from, to, { class: "plugin-flash-match" }),
             );
-          // A label goes over the character after its match - never a
-          // label's letter -, so the match itself stays readable.
+          // A label goes over the character after its match, so the match stays readable.
           for (const { pos, label } of s.labels)
             decos.push(
               Decoration.widget(
@@ -247,10 +229,6 @@ export const editorInputPlugin = $prose(
     }),
 );
 
-// ---------------------------------------------------------------------------
-// The actions
-// ---------------------------------------------------------------------------
-
 export type EditorOp =
   | {
       op: "move";
@@ -258,8 +236,7 @@ export type EditorOp =
       count?: number;
       /** Extend the selection from where it is anchored. */
       select?: boolean;
-      /** Visual mode's: from the character it started on (visualStart)
-       *  to the character the cursor lands on, both in. */
+      /** Visual mode's: from where it started to where the cursor lands, both in. */
       visual?: boolean;
       char?: string;
       forward?: boolean;
@@ -286,8 +263,7 @@ export type EditorOp =
       label: string;
       /** Visual mode's: the selection runs on to the label's place. */
       select?: boolean;
-      /** For an operator: from the caret to the label's place (or back)
-       *  selected. */
+      /** For an operator: from the caret to the label's place selected. */
       extend?: boolean;
     }
   | { op: "flashClear" };
@@ -295,8 +271,7 @@ export type EditorOp =
 export interface EditorOpResult {
   /** What a delete or copy took; a line copy ends with "\n". */
   text?: string;
-  /** For flash: how many places it found (labelled, once two
-   *  characters are typed). */
+  /** For flash: how many places it found. */
   labels?: number;
   /** For flash: the labels' letters, nearest the caret first. */
   letters?: string;
@@ -308,24 +283,21 @@ function copyText(text: string) {
   void navigator.clipboard?.writeText(text).catch(() => {});
 }
 
-/** Runs one action in the editor that last had the keyboard, for
- *  `plugin`; refused when it isn't the plugin holding the keys or no key
- *  of its came just before. */
+/** Runs one action in the editor that last had the keyboard; refused unless
+ *  `plugin` holds the keys and one of its keys came just before. */
 export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
   if (!owner || owner.plugin !== plugin)
     throw new Error(
       "Only the plugin that has the keyboard acts in the editor.",
     );
-  // The cursor's look and flash's labels going change nothing; anything
-  // else follows a key.
+  // Changing the cursor's look or clearing flash needs no key before it.
   const looks = action.op === "cursor" || action.op === "flashClear";
   if (!looks && Date.now() - owner.lastKeyAt > ACT_WITHIN_MS)
     throw new Error("Editor actions follow a key the user pressed.");
   const view = lastView;
   if (!view || view.isDestroyed) throw new Error("No editor.");
   const state = view.state;
-  // Each command its own undo step, as in Vim: never merged with the
-  // one before it however quickly they came.
+  // Each command its own undo step, as in Vim.
   const dispatch = (tr: Transaction) =>
     view.dispatch((tr.docChanged ? closeHistory(tr) : tr).scrollIntoView());
   const result: EditorOpResult = { empty: true };
@@ -350,9 +322,7 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
       } else if (action.unit === "docEnd") {
         to = TextSelection.atEnd(state.doc).from;
       } else if (action.unit === "docLine") {
-        // Line `count` of the document (Vim's :12 and 12G) - a block, or
-        // a code block's line -, at its first character that isn't a
-        // space.
+        // Line `count` of the document (Vim's 12G), at its first non-space character.
         const flat = flatten(state.doc, 0, state.doc.content.size);
         let i = 0;
         for (let n = 1; n < count; n++) {

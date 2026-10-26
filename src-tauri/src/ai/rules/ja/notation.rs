@@ -123,14 +123,12 @@ pub(crate) fn width_alnum(t: &Text, ctx: &Ctx, out: &mut Out) {
     }
 }
 
-/// ja.space.typed: a typed space between Japanese and Latin text -> none
-/// (JTF) - unless the document clearly spaces them throughout. Spaces
-/// inside a Latin phrase (Visual Studio Code) aren't boundaries.
+/// ja.space.typed: a typed space between Japanese and Latin text -> none,
+/// unless the document clearly spaces them throughout.
 pub(crate) fn space_typed(t: &Text, ctx: &Ctx, out: &mut Out) {
     let s = ctx.stats;
-    // A chosen profile (JTF, 公用文, technical, fiction) removes the spaces;
-    // Automatic only where the document's majority is unspaced - many
-    // Japanese technical texts space Latin terms on purpose.
+    // A chosen profile removes the spaces; Automatic only where the document's
+    // majority is unspaced, as many technical texts space Latin terms on purpose.
     if !ctx.profile.explicit && !minority(s.cjk_latin_spaced, s.cjk_latin_tight) {
         return;
     }

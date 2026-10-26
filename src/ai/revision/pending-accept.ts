@@ -27,9 +27,8 @@ import { composeSentences, trimBreaks } from "./sentence-diff";
 import { findInOrder } from "./sentence-locate";
 import type { CitationStyle } from "./usePendingEdits";
 
-/** What an Accept did in the document: written, not yet (still
- *  streaming), or nothing written because every sentence was kept (a
- *  rejection) - and the preview it settled. */
+/** What an Accept did: written, not yet (streaming), or nothing because
+ *  every sentence was kept; and the preview it settled. */
 export interface AcceptOutcome {
   ok: boolean;
   stillStreaming: boolean;
@@ -37,15 +36,8 @@ export interface AcceptOutcome {
   preview?: PendingPreview;
 }
 
-/**
- * Writes `callId`'s proposal into the document - the only path a reply
- * takes into it: the taken sentences, or `textOverride` (the card's
- * picker) composed against the target the preview resolved, its web
- * citations as footnotes or left out, in one transaction that is its own
- * undo step. Another proposal the edit unsettled is found again in the
- * new text. Side effects on the editor only; what was decided is the
- * caller's (pending-actions.ts).
- */
+/** Writes `callId`'s proposal into the document in one undo step: the only
+ *  path a reply takes into it. Only touches the editor; the caller records it. */
 export function writeAccept(
   ctx: Ctx,
   callId: string,
@@ -67,17 +59,14 @@ export function writeAccept(
   const before = pendingEditKey.getState(state)?.previews ?? [];
   const preview = before.find((p) => p.callId === callId);
   if (!preview) return done();
-  // The arguments are still streaming in: `replacement` is incomplete,
-  // so applying now would write a half-generated edit. Not a failure -
-  // the status stays pending and the button works once the final add
-  // (same callId, no flag) lands moments later.
+  // Still streaming: applying now would write a half-generated edit. Not a
+  // failure; the button works once the final add lands.
   if (preview.streaming) {
     stillStreaming = true;
     return done();
   }
-  // Defensive re-check mirroring the plugin's own staleness rule -
-  // not expected to fire (the plugin already drops previews whose
-  // mapped text changed), but a silent no-op here would be worse.
+  // Defensive: the plugin already drops stale previews, but a silent no-op
+  // here would be worse.
   if (
     visibleTextBetween(state.doc, preview.from, preview.to, " ") !==
     preview.expectedText
@@ -101,9 +90,8 @@ export function writeAccept(
     if (!take.every(Boolean))
       textOverride = composeSentences(preview.sentences.hunks, take);
   }
-  // Edited by the writer since it was proposed: each taken change in
-  // its own place, back to front, and nothing else in the range -
-  // composing the whole range would write their edits over.
+  // Edited by the writer since: each taken change in its own place, back to
+  // front, as the whole range would write over their edits.
   if (textOverride === undefined && preview.rebased && take) {
     const taken = preview.sentences!.changes.filter((_, i) => take[i]);
     let tr = state.tr;
@@ -175,12 +163,8 @@ export function writeAccept(
     replacement,
     footnotes,
   );
-  // Same transaction: one undo step restores the document exactly,
-  // and the decoration is gone the instant the edit lands (no orphan
-  // frame where a stale preview paints over the just-applied text).
-  // Where the new text now stands - the taken sentences only, for one
-  // decided by sentence - so its green can fade out there rather than
-  // vanish (the plugin's `landed`).
+  // One transaction, so no frame paints a stale preview over the new text.
+  // Where the new text stands, so its green can fade out there.
   const written =
     preview.sentences && take
       ? preview.sentences.changes.filter((_, i) => take[i])
@@ -202,15 +186,12 @@ export function writeAccept(
     applied: true,
     landed,
   });
-  // Its own undo step, never merged with typing just before it: an
-  // undo then lands exactly on the text it replaced, which is what
-  // brings the proposal back (pending-edit-plugin's `applied`).
+  // Its own undo step, so an undo lands exactly on the replaced text and
+  // brings the proposal back.
   closeHistory(tr);
   view.dispatch(tr.scrollIntoView());
-  // A second proposal in the same paragraph resolved to the same whole
-  // block, so this edit changed the text it was waiting on and the
-  // plugin let it go ("Couldn't locate that text") although its own
-  // words are still there. Find those again in the new text.
+  // Another proposal on the same block lost its text to this edit though
+  // its words are still there: find them again.
   const after = pendingEditKey.getState(view.state)?.previews ?? [];
   const lost = before.filter(
     (p) =>
@@ -264,9 +245,8 @@ export function writeAccept(
         }),
       );
   }
-  // On a phone, focusing the document raises the keyboard over the
-  // AI sheet the Accept was tapped in, and what the user types next
-  // lands in the document instead of the composer.
+  // On a phone, focusing would raise the keyboard over the AI sheet and send
+  // typing to the document instead of the composer.
   if (!isIOSApp) view.focus();
   ok = true;
   return done();

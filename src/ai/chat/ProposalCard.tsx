@@ -36,11 +36,8 @@ export const CROSS = (
   </svg>
 );
 
-/** What the user is told of a generate_image call that made no picture,
- *  in their language: the request's limit (`limit_reached`, its number),
- *  or no image model. Null for a call the model got wrong and sends again
- *  (a missing prompt, a block that isn't there) - the model's to fix, in
- *  words meant for it. */
+/** What the user is told of a generate_image call that made no picture.
+ *  Null for a call the model got wrong and sends again: the model's to fix. */
 export function notMadeLine(
   argumentsJson: string,
   labels: { imageLimitReached: string; imageNoModel: string },
@@ -92,18 +89,9 @@ export function ProposedPicture({ id, alt }: { id: string; alt: string }) {
 }
 
 /**
- * One propose_edit call: what kind of edit it is and how many sentences it
- * changes, the model's reason, and one row of controls.
- *
- * The document is where an edit is read and decided: the text shows each
- * changed sentence struck with its replacement and a ✓ / ✕ (pending-edit-
- * plugin.ts). The card mirrors those sentences as a numbered list with the
- * same ✓ / ✕ - one decision, shown in both places - and its Accept takes
- * whatever wasn't kept ("Accept 1 of 2").
- *
- * The full line diff stays collapsed behind the size chips. The one state
- * that opens it is `invalid`: an anchor that couldn't be located leaves NO
- * in-document preview, so the card is then the only view of the content.
+ * One propose_edit call: its kind and size, the model's reason, and controls.
+ * Its ✓ / ✕ mirror the document's. The line diff opens only when `invalid`,
+ * since an anchor that can't be located leaves no in-document preview.
  */
 export function ProposalCard({
   callId,
@@ -138,11 +126,11 @@ export function ProposalCard({
 }) {
   const [diffOpen, setDiffOpen] = useState(status === "invalid");
   // Its pictures: Accept waits while one is being made, and a picture on
-  // its own that wasn't made has nothing to accept (usePendingEdits).
+  // its own that wasn't made has nothing to accept.
   const pictures = usePicturesState(proposal.text ?? "");
   const nothingToAccept = !!proposal.image && pictures === "failed";
   // The proposal cites the web: Accept writes the sources as footnotes, or
-  // leaves them out (usePendingEdits) - the last card's choice stands.
+  // leaves them out - the last card's choice stands.
   const { settings, setSettings } = useSettings();
   // A proposal that turns invalid after mounting (its preview resolved and
   // failed) must pop open - the card just became the only view of it.
@@ -200,8 +188,8 @@ export function ProposalCard({
                 : labels.actionNames[proposal.action]}
           </span>
         </span>
-        {/* Listed sentence by sentence below, the size chips (the full
-            diff's toggle) only crowd the head - kept for the rest. */}
+        {/* Listed sentence by sentence below, the size chips would only
+            crowd the head. */}
         {!(sentences && sentences.length > 1) && !proposal.image && (
           <Tooltip text={diffOpen ? labels.diffCollapse : labels.diffShow}>
             <button
@@ -349,12 +337,8 @@ export function ProposalCard({
           </div>
         )
       ) : status === "invalid" ? (
-        // The anchor no longer resolves to exactly one place, so there's
-        // nothing to preview and nothing safe to write. The only honest move
-        // is to ask the model again against the document as it now reads -
-        // applying this text blind is what the old direct-apply fallback
-        // did, and it could land an edit somewhere the user never saw
-        // highlighted.
+        // The anchor no longer resolves to exactly one place: nothing to
+        // preview, nothing safe to write. Ask the model again instead.
         <>
           <div className="agent-proposal-status agent-proposal-status-invalid">
             {labels.proposalStatus.invalid}
@@ -381,9 +365,8 @@ export function ProposalCard({
   );
 }
 
-/** One change's text on the card, drawn as the document draws it (bold,
- *  links, a footnote's mark); a whole block (a table, a picture) by what
- *  it is (blockSummary). */
+/** One change's text on the card, drawn as the document draws it; a whole
+ *  block (a table, a picture) by what it is. */
 export function ChangeText({
   markdown,
   names,

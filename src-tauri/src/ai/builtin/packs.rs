@@ -59,7 +59,7 @@ pub(crate) fn split_sections(body: &str) -> Vec<(String, String)> {
 // ------------------------------------------------------------ languages
 
 /// The document languages with a standards pack: (pack code, English name,
-/// UI language code of src/i18n/langs.ts).
+/// UI language code).
 pub(crate) const PACK_LANGUAGES: &[(&str, &str, &str)] = &[
     ("en", "English", "en"),
     ("zh-hans", "Simplified Chinese", "zh"),
@@ -82,9 +82,8 @@ pub(crate) fn language_name(code: &str) -> &'static str {
 
 // ------------------------------------------------- what the model reads
 
-/// A `[tag]` or `[tag, tag]` at the start of a rule line: profile names
-/// (`zh-Hant-TW`, `en-GB/govuk`), profile parts (`fiction`, `gongwen`) or
-/// settings (`quotes=corner`). Anything with spaces inside is not a tag.
+/// A `[tag]` or `[tag, tag]` at the start of a rule line: a profile, a profile
+/// part or a setting (`quotes=corner`). Anything with spaces inside is not a tag.
 pub(crate) fn leading_tags(line: &str) -> Option<Vec<&str>> {
     let rest = line
         .trim_start()
@@ -118,9 +117,8 @@ pub(crate) fn tag_applies(tag: &str, profile: &str) -> bool {
         || (!variant.is_empty() && tag_l == variant.to_ascii_lowercase())
 }
 
-/// Bookkeeping at the end of a rule line that only maintainers need: the
-/// `(M)`/`(S)` marks (enforced in code or only by the model) and the
-/// bracketed source keys.
+/// Maintainer-only bookkeeping at the end of a rule line: the `(M)`/`(S)`
+/// marks and the bracketed source keys.
 pub(crate) fn strip_bookkeeping(line: &str) -> String {
     let mut line = line.trim_end().to_string();
     if line.ends_with(']') {
@@ -189,10 +187,9 @@ pub(crate) fn conventions_header(
     }
 }
 
-/// One pack reference resolved to (label, text): `contract`, `craft#plain`,
-/// `standards#dialogue` (the document language's pack), `standards-fr` (a
-/// whole pack). None when the pack or section doesn't exist - a language's
-/// pack leaves out sections it has nothing for.
+/// One pack reference resolved to (label, text), e.g. `craft#plain` or
+/// `standards#dialogue` (the document language's pack). Empty when the pack or
+/// section doesn't exist.
 pub(crate) fn resolve(reference: &str, language: Option<&str>) -> Vec<(String, String)> {
     let (pack_name, section) = match reference.split_once('#') {
         Some((p, s)) => (p, Some(s)),
@@ -249,10 +246,8 @@ pub(crate) fn render_references(
     out.join("\n\n")
 }
 
-/// What use_skill returns for a pack name instead of a skill's:
-/// `standards-ja`, `standards-fr#dialogue`, `craft#platforms`,
-/// `standards#numbers` (the document's language). None when there is no
-/// such pack or section.
+/// What use_skill returns for a pack name such as `standards-fr#dialogue`.
+/// None when there is no such pack or section.
 pub(crate) fn load_reference(name: &str, document: &str, ui_language: &str) -> Option<String> {
     let language = document_language(document, ui_language);
     let refs = resolve(name.trim(), language.map(|(code, _)| code));

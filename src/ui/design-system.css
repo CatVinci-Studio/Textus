@@ -2,31 +2,8 @@
 @import "./motion.css";
 
 :root {
-  /* Corner radii - one scale, and one rule for which surface takes which.
-     The bigger and further forward a surface, the rounder; anything inside
-     another rounded box is rounder by no more than the box (an inset row
-     takes the box's radius less the inset), so corners nest evenly.
-
-       0        full-bleed panels docked to a window edge (sidebar, AI
-                panel, title row, the phone's find bar and full-screen
-                settings), table cells, rows of a grouped list (the group
-                clips them), the composer bar across the panel's foot.
-       small    marks inside text: inline code, kbd, a match highlight,
-                a page thumbnail; glyph buttons under 20px (a tab's close).
-       control  what is pressed or typed in: buttons, icon buttons, inputs,
-                selects, segmented controls, list rows (file tree, chat
-                history, clipboard), and the rows of a menu or popover
-                (a 10px surface with a 4px inset).
-       block    content shown as a block: code blocks, images, tool output,
-                a quoted selection, a proposal's diff. The document's
-                --md-radius defaults to it (themes may set their own).
-       surface  cards and floating surfaces: menus, popovers, select lists,
-                toasts, the AI panel's cards (proposals, comments, errors),
-                message bubbles, settings groups, document cards.
-       dialog   modal surfaces: dialogs, the settings window, the PDF
-                export card, the tutorial; the phone's sheets (top corners).
-       pill     chips, badges, tags, switch tracks, one-line notices.
-       50%      dots. */
+  /* Corner radii, one scale: the bigger and further forward a surface, the
+     rounder, and anything inside a rounded box is no rounder than the box. */
   --radius-small: 4px;
   --radius-control: 6px;
   --radius-block: 8px;
@@ -41,11 +18,8 @@
   --control-height: 32px;
   /* Buttons inside panels, bars and toasts. */
   --control-height-sm: 26px;
-  /* Type scale for the app's own UI (the document has its own). Times
-     --ui-text-scale, Settings › Editor & Appearance › Interface Text Size
-     (set on <html> by theme/apply-appearance.ts; 1 when unset). A font
-     size in the UI written in px rather than with a token multiplies by it
-     too, so it grows with the rest. */
+  /* Type scale for the app's own UI, times --ui-text-scale (Interface Text
+     Size). A px font size in the UI should multiply by it too. */
   --text-xs: calc(11px * var(--ui-text-scale, 1));
   --text-sm: calc(12px * var(--ui-text-scale, 1));
   --text-md: calc(13px * var(--ui-text-scale, 1));
@@ -70,12 +44,9 @@
   --space-8: 32px;
   --chrome-subtle: #f8f9fb;
   --chrome-primary: #315ed1;
-  /* A primary button is ink on the page's own colours - the document
-     theme's text colour as its fill, the theme's background as its label -
-     so a theme (a built-in one or an imported Typora theme, whose palette
-     theme-chrome.ts derives) recolours it with everything else; a dark
-     theme gets a light button. Accents stay for links, focus and
-     selection. */
+  /* A primary button is ink on the page's own colours (text colour as fill,
+     background as label), so any theme recolours it and a dark theme gets a
+     light button. */
   --ui-primary: var(--editor-text, var(--chrome-text, #24272e));
   --ui-on-primary: var(--editor-bg, var(--bg, #fff));
   --success-color: #24734d;
@@ -117,18 +88,12 @@
   --diff-delete-bg: color-mix(in srgb, var(--danger) 12%, transparent);
   --diff-delete-line: color-mix(in srgb, var(--danger) 60%, transparent);
   --diff-caret: var(--success-color);
-  /* A proposed revision in the document (pending-edit-plugin.ts) and its
-     margin card - what a theme sets to recolour revisions (Settings >
-     Theme > Export writes them out). currentColor is the text's own
-     colour where it is drawn. The hover tints, a shade darker, mark the
-     pair under the pointer and the one the review bar points at - a
-     darker green for new text, a darker red for the original - as a
-     review note's passage darkens under the pointer. */
+  /* A proposed revision in the document and its margin card, what a theme sets
+     to recolour revisions. The hover tints, a shade darker, mark the pair under
+     the pointer or the review bar. */
   --revision-insert-bg: var(--diff-insert-bg);
-  /* The original sentence a rewrite is at while it streams in - the
-     progress cursor, also over sentences it keeps as they were. */
-  /* What a change is about to replace, marked for a moment before the
-     new text comes (ui/moves.ts's land). */
+  /* What a change is about to replace, marked for a moment before the new
+     text comes. */
   --motion-mark-bg: color-mix(in srgb, var(--warning-color) 26%, transparent);
   --revision-reading-bg: var(--motion-mark-bg);
   --revision-insert-text: currentColor;
@@ -177,8 +142,8 @@
   --shadow-drawer: 8px 0 24px rgb(0 0 0 / 40%);
 }
 
-/* Existing component styles use editor aliases. Rebind them at UI boundaries
-   rather than changing document colors or relying on stylesheet load order. */
+/* Existing component styles use editor aliases; rebind them at UI boundaries
+   rather than relying on stylesheet load order. */
 :is(
   .window-bar,
   .sidebar,
@@ -206,9 +171,8 @@
   line-height: 1.5;
 }
 
-/* A control that sets no size of its own (the sidebar's rows, for one)
-   took the browser's, 13.33px, and stayed there whatever Interface Text
-   Size said; the scale's 13px instead. */
+/* A control with no size of its own would take the browser's 13.33px and
+   ignore Interface Text Size. */
 :where(button, input, select, textarea) {
   font-family: inherit;
   font-size: var(--text-md);
@@ -219,8 +183,7 @@
   outline-offset: 3px;
 }
 
-/* Read by a screen reader, not drawn: ui/announce.ts's live region, and
-   names that only make sense to the ear. */
+/* Read by a screen reader, not drawn. */
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -233,16 +196,14 @@
   border: 0;
 }
 
-/* A dialog opened by a click or a shortcut starts on its button without a
-   ring; the first key pressed brings it back (useModalDialog). Important:
-   several surfaces draw their own ring, and this outranks them all. */
+/* A dialog opened by click or shortcut starts on its button without a ring;
+   the first key brings it back. Important, to outrank surfaces' own rings. */
 [data-quiet-focus]:focus-visible {
   outline: none !important;
 }
 
-/* High contrast: a thicker ring (important, over the surfaces that draw
-   their own), and hairlines in the muted text colour. Tripled :root to
-   outrank the light and dark palettes in base.css. */
+/* High contrast: a thicker ring (important, over surfaces' own), and
+   hairlines in the muted text colour. Tripled :root outranks the palettes. */
 @media (prefers-contrast: more) {
   :where(
     button,
@@ -256,10 +217,8 @@
     outline-width: 3px !important;
   }
 
-  /* Secondary text as dark (or light) as the text itself, and revisions
-     marked by line as well as by tint: the system asked for contrast,
-     and following it is the high-contrast variant - no setting of our
-     own. */
+  /* Secondary text as strong as the text, and revisions marked by line as well
+     as tint: the system asked for contrast. */
   :root:root:root {
     --border-color: var(--chrome-muted);
     --chrome-muted: var(--chrome-text);
@@ -269,11 +228,8 @@
   }
 }
 
-/* Windows High Contrast and other forced colours: the system draws every
-   colour, backgrounds and shadows go. What a shadow or a tint showed, a
-   border or a line shows instead - the edge of a card or a bar, the row
-   or tab that is chosen. The revisions' own lines are in
-   milkdown-theme.css. */
+/* Forced colours: the system draws every colour and shadows go, so what a
+   shadow or tint showed, a border or line shows instead. */
 @media (forced-colors: active) {
   :where(
     .review-bar,
@@ -310,7 +266,7 @@
 }
 
 /* Text fields draw the ring on their own edge: 3px out, it ran over the
-   buttons sitting right under the AI composer. */
+   buttons right under the AI composer. */
 :where(
   input:not([type="checkbox"], [type="radio"], [type="range"]),
   textarea,
@@ -347,11 +303,9 @@
   min-height: var(--control-height);
 }
 
-/* Buttons. Size, shape and every state are defined here and nowhere else;
-   a component's own rule keeps only layout (width, margins) and text colour.
-   Two sizes - regular in dialogs, settings and the tutorial, compact in
-   panels, bars and toasts - and three kinds: secondary (light border, the
-   default), primary (solid accent, one per group) and quiet (text only). */
+/* Buttons. Size, shape and every state are defined here only; a component
+   keeps just layout and text colour. Two sizes, three kinds: secondary,
+   primary (one per group) and quiet. */
 :is(
   .close-prompt-buttons button,
   .image-name-buttons button,
@@ -505,9 +459,8 @@
   transition-duration: 0s;
 }
 
-/* A destructive confirm (app-dialog's `danger`): the primary in the
-   danger fill, not the blue that says "go ahead". The fill is its own
-   token: the dark palette's pale --danger carries no white text. */
+/* A destructive confirm: the primary in the danger fill. The fill is its own
+   token, as the dark palette's pale --danger carries no white text. */
 .close-prompt-buttons button.close-prompt-primary.app-dialog-danger {
   border-color: var(--danger-fill);
   background: var(--danger-fill);
@@ -526,9 +479,8 @@
   background: color-mix(in srgb, var(--danger-fill) 80%, #000);
 }
 
-/* Icon buttons: no frame, a muted glyph that darkens on hover. Compact
-   (24px) in headers, rows and bars; the composer's toolbar ones are
-   framed and match its 26px select and Send button. */
+/* Icon buttons: no frame, a muted glyph that darkens on hover; the composer
+   toolbar's are framed to match its 26px controls. */
 :is(
   .inline-chat-header-button,
   .quick-ask-pending-nav-button,
@@ -654,10 +606,8 @@
   );
 }
 
-/* Dialogs, Settings among them: the dimming fades in while the card grows
-   out of the middle; closing, the two go together, a little faster. The
-   phone's alert and its full-screen Settings move their own way
-   (mobile/styles). */
+/* Dialogs: the dimming fades in while the card grows out of the middle;
+   closing, both go together, a little faster. */
 :is(
   .close-prompt-overlay,
   .image-name-overlay,
@@ -736,8 +686,7 @@
   transition: background-color var(--dur-instant) var(--ease-standard);
 }
 
-/* Menus: the app menu, the context menu, the project bar's and Quick
-   Ask's - one panel padding, one item size, one hover. */
+/* Menus: one panel padding, one item size, one hover. */
 :is(.app-menu-list, .context-menu, .project-bar-menu, .quick-ask-split-menu) {
   padding: 4px;
   font-size: var(--text-md);
@@ -878,31 +827,23 @@ input[type="checkbox"].ui-check:checked {
   background: transparent;
 }
 
-/* The document's own bar shows only while it scrolls (ui/scroll-reveal.ts
-   sets .is-scrolling), or under the pointer so it can still be dragged:
-   with the AI panel open, a bar always on screen ran down the middle of
-   the window. */
+/* The document's own bar shows only while it scrolls or under the pointer,
+   so it doesn't run down the middle of the window beside the AI panel. */
 :is(.editor-scroll, .source-view):not(
     .is-scrolling
   )::-webkit-scrollbar-thumb:not(:hover) {
   background-color: transparent;
 }
 
-/* WebKit restyles a scrollbar only when its element's own style changes,
-   and a class that touches nothing but the pseudo-element doesn't count:
-   the thumb stayed as it was. A property with no visible effect here (no
-   columns) makes the change real. */
+/* WebKit restyles a scrollbar only when its element's own style changes; a
+   property with no visible effect here (no columns) makes the change real. */
 :is(.editor-scroll, .source-view).is-scrolling {
   column-rule-color: transparent;
 }
 
-/* Materials: translucent, blurred surfaces only where content scrolls
-   under chrome - menus, popovers, the find bar, the phone's keyboard
-   toolbar and Quick Ask dock - and only on macOS and iOS. WebKitGTK
-   composites a blur on the main thread (slower still without DMABUF), so
-   Linux keeps opaque surfaces, and so does Windows to match the title
-   bar. Never on a large region: scrims only dim. The doubled :root
-   outranks the phone layout's opaque fills. */
+/* Materials: translucent, blurred surfaces only where content scrolls under
+   chrome, and only on macOS and iOS: WebKitGTK blurs on the main thread, and
+   Windows matches its title bar. The doubled :root outranks the phone's fills. */
 @supports (
   (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
 ) {

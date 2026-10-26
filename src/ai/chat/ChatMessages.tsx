@@ -46,7 +46,7 @@ export interface ChatMessagesLabels
   extends AgentTurnLabels, MemoryChipLabels, ThoughtRowLabels {
   thinking: string;
   /** "{n} seconds", after the indicator's label once nothing has moved
-   *  for a while (ThinkingIndicator). */
+   *  for a while. */
   waitedFor: (seconds: number) => string;
   proposalTitle: string;
   proposalStatus: Record<Exclude<PendingStatus, "pending">, string>;
@@ -55,7 +55,7 @@ export interface ChatMessagesLabels
   proposalReject: string;
   proposalAcceptAll: string;
   proposalRejectAll: string;
-  /** "Show {n} more" and back, under a group's first rows (ProposalGroup). */
+  /** "Show {n} more" and back, under a group's first rows. */
   proposalGroupMore: string;
   proposalGroupLess: string;
   /** Offered when an anchor no longer resolves - asks the model to re-issue
@@ -74,8 +74,7 @@ export interface ChatMessagesLabels
   /** The ✓ / ✕ on a sentence (the card's and the text's). */
   proposalTakeSentence: string;
   proposalKeepSentence: string;
-  /** What a change of a whole block (markdown-forms.ts) is called on its
-   *  card, by its kind. */
+  /** What a change of a whole block is called on its card, by its kind. */
   proposalBlocks: BlockNames;
   /** Scrolls the document to the proposal. */
   proposalShowInText: string;
@@ -87,7 +86,7 @@ export interface ChatMessagesLabels
   /** "{n} notes", heading a reply's notes shown as one card. */
   commentCount: string;
   commentGroupMore: string;
-  /** Plain-language help per kind of provider failure (ErrorRow). */
+  /** Plain-language help per kind of provider failure. */
   aiErrors: Record<AiErrorKind, string>;
   /** A generate_image card's kind, and the line for a picture that wasn't
    *  made ("{reason}": the service's words). */
@@ -100,8 +99,8 @@ export interface ChatMessagesLabels
   writingEdit: string;
   /** In place of "Thinking…" while a review note's call streams in. */
   writingNotes: string;
-  /** The reply of an exchange that ran out of steps (OUT_OF_STEPS), and
-   *  the button that asks it to go on. */
+  /** The reply of an exchange that ran out of steps, and the button that
+   *  asks it to go on. */
   stoppedAtLimit: string;
   continueAfterLimit: string;
 }
@@ -113,18 +112,17 @@ export interface ChatMessagesProps {
    *  streaming, where the reply still arrives all at once via `history`. */
   streaming: StreamingState | null;
   /** Finished exchanges' thinking, by their user turn's index in
-   *  `history` (useAgentConversation's `thoughts`). */
+   *  `history`. */
   thoughts?: Record<number, Thought>;
   busy: boolean;
   error: string | null;
   selectedText: string | null;
   labels: ChatMessagesLabels;
   proposalStatus: (callId: string) => PendingStatus;
-  /** `text`: a partial acceptance - see useSentenceChanges. */
+  /** `text`: a partial acceptance. */
   onAcceptProposal: (callId: string, text?: string) => void;
-  /** A pending rewrite's sentences and the writer's call on each
-   *  (usePendingEdits.sentences); absent where the document isn't reachable
-   *  (the detached window), which shows the card without them. */
+  /** A pending rewrite's sentences and the writer's call on each; absent
+   *  where the document isn't reachable (the detached window). */
   proposalSentences?: (callId: string) => PendingSentence[] | null;
   /** A ✓ / ✕ on a card's sentence - the same decision as in the text. */
   onDecideSentence?: (
@@ -157,22 +155,14 @@ export interface ChatMessagesProps {
    *  where nothing can be sent from here. */
   onContinue?: () => void;
   /** The conversation's document, whose project a remembered project
-   *  memory belongs to (MemoryChip). */
+   *  memory belongs to. */
   docPath?: string | null;
 }
 
 /**
  * The turn history: proposal cards, plain turns, and the busy/error states.
- * While a request runs, the streamed turns and the assistant prose being
- * generated render live after the settled history; when the request
- * resolves, the same turns re-enter via `history` at the same list indexes,
- * so React keeps the DOM nodes and nothing flickers or re-animates. Newly
- * arrived turns get a small staggered fade-in on top.
- *
- * The proposal card is the ONLY place an edit is accepted or rejected. The
- * document shows the same edit as red/green marks, but carries no controls of
- * its own - two sets of buttons for one action, on screen simultaneously, is
- * what this replaced.
+ * Streamed turns render at the same list indexes they settle at, so React
+ * keeps the DOM nodes and nothing re-animates.
  */
 export function ChatMessages({
   history,
@@ -212,9 +202,7 @@ export function ChatMessages({
   // question - a step's rows - pushes it up out of the panel's end.
   const thoughtAbove = (streamingTurns?.length ?? 0) > 1;
   // The step the row at the end names: the tool coming in, else the one
-  // whose result came last - between two edits of a run the label held
-  // "Writing the edit…" rather than flicking to "Thinking…" and back, the
-  // row fading in again each time.
+  // whose result came last, so a run of edits doesn't flick to "Thinking…".
   const lastTurn = streamingTurns?.at(-1);
   const step =
     streaming?.tool ??
@@ -231,18 +219,11 @@ export function ChatMessages({
     [history, streamingTurns],
   );
 
-  // propose_edit calls render as proposal cards (parsed here once per
-  // turn-list change, NOT per render - streaming deltas re-render this
-  // component many times a second and JSON.parse of a full edit per card
-  // per delta added up); their paired tool results are backend->model
-  // bookkeeping and would only add noise.
   // Filled while rendering: a comment's tool result renders nothing (the
   // card is the result), and it always follows its call in the list.
   const commentIds = new Set<string>();
-  // With each, the selection its request went out with - what a
-  // replace_selection rewrites. Not the live one: that is gone the moment
-  // the caret moves, as it does after an undo puts the edit back on offer,
-  // and the card then counted the rewrite as all addition ("+1", no "−1").
+  // With each, the selection its request went out with: the live one is
+  // gone once the caret moves, and the card would count all addition.
   const parsedProposals = useMemo(() => {
     const map = new Map<
       string,
@@ -260,9 +241,8 @@ export function ChatMessages({
     }
     return map;
   }, [shown]);
-  // What each remember call saved, parsed once per turn-list change like
-  // the proposals - and the changes of one exchange together, shown as one
-  // list under its first (the others render nothing).
+  // What each remember call saved, and one exchange's changes together as
+  // one list under its first (the others render nothing).
   const { rememberResults, memoryRuns } = useMemo(() => {
     const remembers = new Set(
       shown.flatMap((turn) =>
@@ -282,10 +262,8 @@ export function ChatMessages({
       memoryRuns: memoryRunsOf(shown, results),
     };
   }, [shown]);
-  // A call the backend refused (tools.rs) was never a proposal: the model
-  // was told and resends it, so it gets no card - nor its result.
-  // And proposals in a row for the same reason, as one card
-  // (ProposalGroup); the calls after a run's first render nothing.
+  // A call the backend refused was never a proposal: the model resends it,
+  // so it gets no card. Proposals in a row form one card under the first.
   const { refused, runs } = useMemo(() => {
     const refused = refusedProposalIds(shown);
     return { refused, runs: proposalRuns(shown, parsedProposals, refused) };
@@ -306,11 +284,9 @@ export function ChatMessages({
     [shown],
   );
 
-  // A decided card shrinks to its status line; whatever is under it moves
-  // up to meet it rather than jumping (FlipOnChange). Only decisions count:
-  // a card ARRIVING (streaming -> pending) must not set it off, or the
-  // "Thinking…" row below slides down through the new cards, drawn over
-  // their text and buttons while they fade in.
+  // A decided card shrinks to its status line and what is under it slides
+  // up. Only decisions count: an arriving card must not slide the
+  // "Thinking…" row through the new cards.
   const decisions = shown
     .flatMap((turn) => {
       if (turn.kind !== "ToolCall" || !isProposalTool(turn.name)) return [];
@@ -331,9 +307,8 @@ export function ChatMessages({
       />
       {shown.map((turn, i) => {
         const reveal = i >= revealFrom.current;
-        // A CSS custom property, not a standard style key - CSSProperties
-        // doesn't type these, hence the cast. The stagger stops at the
-        // third turn: a long reply should not take a second to show.
+        // A CSS custom property, which CSSProperties doesn't type. The
+        // stagger stops at the third turn.
         const style: CSSProperties | undefined = reveal
           ? ({
               "--reveal-delay": `${Math.min(i - revealFrom.current, 3) * 40}ms`,
@@ -368,9 +343,7 @@ export function ChatMessages({
           if (!parsed || !proposal)
             return <AgentTurnView key={i} turn={turn} labels={labels} />;
           // While a request runs, a card can render a beat before its
-          // preview is registered (or, in the detached window, before the
-          // editor's status push arrives) - that's still arriving, not
-          // expired.
+          // preview is registered: still arriving, not expired.
           const statusOf = (id: string) => {
             const known = proposalStatus(id);
             return known === "expired" && busy ? "streaming" : known;
@@ -456,8 +429,7 @@ export function ChatMessages({
           (parsedProposals.has(turn.call_id) || commentIds.has(turn.call_id))
         )
           return null;
-        // A skill offered after the exchange (SkillOfferChip): its result
-        // is the offer.
+        // A skill offered after the exchange: its result is the offer.
         if (turn.kind === "ToolCall" && turn.name === OFFER_SKILL) return null;
         const offer =
           turn.kind === "ToolResult" &&
@@ -546,14 +518,9 @@ export function ChatMessages({
           />
         </div>
       )}
-      {/* While the thinking row counts the seconds as the last thing in
-          the panel, it says it all - but once a step's rows stand under
-          it (a skill loaded, a tool's result), it is out of sight up
-          there, and the panel read as stuck: this one shows at the
-          bottom too. Under a reply, it shows once the reply has stopped
-          coming for a moment (re-keyed by each delta, it waits again): an
-          edit's call, a picture's description or the next step can take
-          seconds with nothing else moving (rc.6). */}
+      {/* Shown at the bottom once a step's rows push the thinking row out of
+          sight, and under a reply once it has paused, so the panel never
+          looks stuck. Re-keyed by each delta, it waits again. */}
       {busy && (streaming?.thought?.since == null || thoughtAbove) && (
         <ThinkingIndicator
           key={step ?? streaming?.text.length ?? 0}

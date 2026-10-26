@@ -11,11 +11,9 @@ import "./textus-ai-switch.css";
 /** How long "Pause for an hour" keeps Textus AI off. */
 export const TEXTUS_AI_PAUSE_MS = 60 * 60 * 1000;
 
-/** Textus AI's master switch (Settings.textusAi) and the ways to flip it.
- *  Turning it on or off clears a pause; `pause` turns it off until
- *  Settings.textusAiResumeAt, when useTextusAiResume turns it back on.
- *  `toggle` says the new state aloud: it is for the menu and the
- *  shortcut, where nothing on screen under the focus changes. */
+/** Textus AI's master switch and the ways to flip it. Turning it on or off
+ *  clears a pause. `toggle` announces the new state, since nothing under the
+ *  focus changes when the menu or shortcut flips it. */
 export function useTextusAi() {
   const { t, settings, setSettings } = useSettings();
   const on = settings.textusAi;
@@ -39,8 +37,8 @@ export function useTextusAi() {
   };
 }
 
-/** Ends a pause when its time comes - also one that ran out while Textus
- *  was closed, at launch. Mounted once, in the main window. */
+/** Ends a pause when its time comes, including one that ran out while Textus
+ *  was closed. Mounted once, in the main window. */
 export function useTextusAiResume() {
   const { settings, setSettings } = useSettings();
   const { textusAi, textusAiResumeAt } = settings;
@@ -60,11 +58,9 @@ export function useTextusAiResume() {
 }
 
 /**
- * Textus AI's one button in the window bar (#196): a speech bubble that
- * opens the AI panel, struck through while Textus AI is off. Right-click
- * pauses it for an hour or turns it off; while it is off, a click offers
- * to turn it back on. Settings › Textus AI, View › Textus AI and the
- * shortcut flip the same switch.
+ * Textus AI's button in the window bar: opens the AI panel, struck through
+ * while off. Right-click pauses or turns it off; while off, a click offers to
+ * turn it back on.
  */
 export function TextusAiButton({
   className,
@@ -84,8 +80,7 @@ export function TextusAiButton({
   const { t } = useSettings();
   const ai = useTextusAi();
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
-  // On with chat turned off there is nothing to open, and the switch is
-  // in Settings, as before.
+  // On with chat turned off there is nothing to open; the switch is in Settings.
   if (ai.on && !showPanel) return null;
 
   const openMenu = (e: MouseEvent<HTMLButtonElement>, atPointer: boolean) => {

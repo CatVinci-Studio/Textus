@@ -1,16 +1,7 @@
 import { CJK_SCRIPT } from "../../utils/cjk";
 
-/**
- * What kind of change a revision makes, read off its before and after
- * alone - no model, no request: the evidence revision-learning.ts counts
- * when it notices the writer turning the same kind down again and again.
- *
- * Only kinds narrow enough to become one requirement are named: a quote
- * style or mark traded for another, full- and half-width punctuation, the
- * Oxford comma, contractions, a word swapped for another, sentences split
- * or joined, and a passage made much shorter or longer. A change that is
- * none of these (most rewrites) has no kind and is not recorded.
- */
+/** What kind of change a revision makes, read off its text alone. Only kinds
+ *  narrow enough to become one requirement are named; most rewrites have none. */
 
 export type ChangeKind =
   /** One word, mark or quote style traded for another, e.g. 「」 -> “”. */

@@ -1,10 +1,6 @@
-//! Export for publishing (a plugin's page in Settings, a chat's plugin
-//! card): a plugin you made - Textus AI's `local.` ones, or a folder you
-//! load - copied into a folder of its own, ready to be a GitHub repository.
-//! Its id takes your name (`local.word-count` -> `jane.word-count`), and
-//! the folder gets what the template repository has: a README, an MIT
-//! LICENSE, a .gitignore and the release workflow that publishes a version
-//! when its tag is pushed (template/).
+//! Export for publishing: a plugin you made, copied into a folder ready to be a
+//! GitHub repository, its id under your name (`local.word-count` ->
+//! `jane.word-count`), with a README, MIT LICENSE, .gitignore and release workflow.
 
 use std::path::{Path, PathBuf};
 
@@ -95,8 +91,8 @@ fn write_new(path: &Path, text: &str) -> Result<(), String> {
     std::fs::write(path, text).map_err(|e| e.to_string())
 }
 
-/// Lays out the plugin at `source` for publishing in `folder`, as
-/// `publisher`'s: the new folder's path.
+/// Lays out the plugin at `source` for publishing in `folder` as `publisher`'s;
+/// returns the new folder's path.
 pub(crate) fn export_to(source: &Path, publisher: &str, folder: &Path) -> Result<PathBuf, String> {
     if !valid_publisher(publisher) {
         return Err(format!(
@@ -154,8 +150,7 @@ pub(crate) fn export_to(source: &Path, publisher: &str, folder: &Path) -> Result
     Ok(target)
 }
 
-/// Export for publishing: plugin `id` laid out in `folder` as
-/// `publisher`'s. Answers the new folder's path.
+/// Export for publishing: plugin `id` laid out in `folder` as `publisher`'s.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_export(

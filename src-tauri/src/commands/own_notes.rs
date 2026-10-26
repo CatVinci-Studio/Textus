@@ -1,19 +1,13 @@
-//! What a writer keeps on their own document beside the app's data: their
-//! notes (the margin's "Me" cards, src/ai/margin/useOwnNotes.ts) and the
-//! changes they track (src/ai/margin/useOwnRevisions.ts) - never in the
-//! Markdown or the user's folder. Files under `own-notes/` in the app's
-//! data folder, named by a hash of the document's path. Each note is found
-//! again by its words and the text before them. A document
-//! open in Textus while it is renamed or saved elsewhere keeps its notes
-//! (they are written under the new path); one renamed or moved outside
-//! Textus loses them.
+//! A writer's own notes and tracked changes for a document, kept in the app's
+//! data folder (named by a hash of the path), never in the Markdown. A file
+//! renamed outside Textus loses them.
 
 use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
-/// What is kept for a document: its own notes (a list), or its tracked
-/// changes (an object: the text they are measured from, useOwnRevisions).
+/// What is kept for a document: its own notes (a list), or its tracked changes
+/// (an object).
 #[derive(serde::Deserialize, Clone, Copy, PartialEq)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "lowercase")]

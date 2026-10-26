@@ -1,10 +1,6 @@
-//! Page numbers for PDF export (Settings › Editor › Markdown › "Page numbers
-//! in PDF", #68). Stamped onto the finished file rather than laid out by the
-//! webview: macOS and Windows render each sheet with no margin of its own
-//! (paginate.ts lays the margins out in the page) and WebKit has no @page
-//! margin boxes, so no CSS route numbers pages on all three platforms - but
-//! every platform ends with an A4 PDF whose bottom ~20mm is empty, and a
-//! number drawn there looks the same whichever webview made the file.
+//! Page numbers for PDF export, stamped onto the finished file: no CSS route
+//! numbers pages on every webview, but every export ends with an empty ~20mm
+//! bottom margin to draw in.
 
 use std::path::Path;
 
@@ -15,9 +11,8 @@ use lopdf::{dictionary, Dictionary, Document, Object, ObjectId, Stream};
 const FONT_NAME: &[u8] = b"TextusPageNo";
 /// Small, like a book's folio.
 const FONT_SIZE: f32 = 9.0;
-/// The baseline, above the sheet's bottom edge: ~10mm, the middle of the
-/// ~20mm bottom margin every platform leaves (paginate.ts's MAC_PAGE and
-/// WINDOWS_PAGE margins, the GTK page setup's 20mm in export.rs).
+/// The baseline above the sheet's bottom edge: ~10mm, the middle of the ~20mm
+/// bottom margin every platform leaves.
 const BASELINE: f32 = 28.0;
 /// Neutral grey, legible on white paper and on the macOS export's themed
 /// page colour alike.
@@ -45,9 +40,8 @@ pub fn number_pages(pdf: &[u8]) -> Result<Vec<u8>, String> {
         "BaseFont" => "Helvetica",
         "Encoding" => "WinAnsiEncoding",
     });
-    // The renderer's content goes between these, so whatever graphics state
-    // it leaves behind (a flipped CTM, a fill colour) can't move or tint
-    // the number.
+    // The renderer's content goes between these, so whatever graphics state it
+    // leaves behind can't move or tint the number.
     let save = doc.add_object(Stream::new(Dictionary::new(), b"q\n".to_vec()));
     for (number, page) in doc.get_pages() {
         let [x0, y0, x1, _] = page_box(&doc, page)?;
@@ -96,9 +90,8 @@ fn inherited<'a>(doc: &'a Document, page: ObjectId, key: &[u8]) -> Option<&'a Ob
     None
 }
 
-/// The visible area of a page: its crop box, else its media box. On macOS
-/// these don't start at 0,0 - each sheet is a window onto one tall render
-/// (export.rs's write_pages).
+/// The visible area of a page: its crop box, else its media box. On macOS these
+/// don't start at 0,0 (each sheet is a window onto one tall render).
 fn page_box(doc: &Document, page: ObjectId) -> Result<[f32; 4], String> {
     let rect = inherited(doc, page, b"CropBox")
         .or_else(|| inherited(doc, page, b"MediaBox"))
@@ -115,9 +108,8 @@ fn page_box(doc: &Document, page: ObjectId) -> Result<[f32; 4], String> {
     Ok([a.min(c), b.min(d), a.max(c), b.max(d)])
 }
 
-/// The page's resources with the number's font added: a copy of its own
-/// (or inherited) dictionary, so resources shared with other pages - every
-/// macOS sheet shares the tall render's - are left as they were.
+/// The page's resources with the number's font added, as a copy, so resources
+/// shared with other pages are left as they were.
 fn page_resources(doc: &Document, page: ObjectId, font: ObjectId) -> Dictionary {
     let mut resources = match inherited(doc, page, b"Resources") {
         Some(Object::Dictionary(dict)) => dict.clone(),

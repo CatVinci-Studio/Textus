@@ -123,11 +123,9 @@ import { findReplacePlugin } from "./find/find-replace-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../settings/SettingsContext";
 
-/** Where the editor mounts and what it opens with, plus the two DOM details
- *  the stylesheets rely on - shared by the app's editor and the browser
- *  playground's. Called from `Editor.make().config(...)`. `label` names
- *  the text box for a screen reader in the interface language; it is read
- *  on every update, so a language switch reaches it. */
+/** Where the editor mounts and what it opens with, plus the DOM details the
+ *  stylesheets rely on. `label` is read on every update, so a language
+ *  switch reaches it. */
 export function configureEditorRoot(
   ctx: Ctx,
   root: HTMLElement,
@@ -136,9 +134,7 @@ export function configureEditorRoot(
 ): void {
   ctx.set(rootCtx, root);
   ctx.set(defaultValueCtx, initialValue);
-  // Typora-compatible themes style their content under `#write` - aliasing
-  // it here lets most community Typora themes' CSS apply directly to our
-  // content with no rewriting.
+  // Typora-compatible themes style their content under `#write`.
   ctx.set(editorViewOptionsCtx, {
     attributes: () => ({
       id: "write",
@@ -147,11 +143,9 @@ export function configureEditorRoot(
       "aria-label": label(),
     }),
   });
-  // A list starting somewhere other than 1 ("3. ") is the one thing the DOM
-  // structure alone doesn't tell the counter that numbers ordered lists
-  // (see .milkdown ol in milkdown-theme.css), so the node's `order` rides
-  // along as a custom property. Minus one because counter-reset sets the
-  // value BEFORE the first increment.
+  // A list's start ("3. ") isn't in the DOM structure the CSS counter reads,
+  // so it rides along as a custom property; minus one because counter-reset
+  // sets the value before the first increment.
   ctx.set(orderedListAttr.key, (node) => {
     const order = (node.attrs.order as number) ?? 1;
     return order === 1 ? {} : { style: `--textus-ol-start: ${order - 1}` };
@@ -159,13 +153,8 @@ export function configureEditorRoot(
 }
 
 /**
- * The Markdown editor itself, in load order: parsing and saving, the
- * Typora-style marks, math, diagrams, images, tables, keys and modes. The
- * AI features attach on top of this (ai/editor-plugins.ts), and
- * document-view/editor-extensions.ts puts the two together.
- *
- * `settings` and `docPath` are live refs (see useLatest): the chain is built
- * once at mount while several plugins follow the current values.
+ * The Markdown editor itself, in load order. `settings` and `docPath` are
+ * live refs: the chain is built once at mount.
  */
 export function withEditorCore(
   editor: Editor,
@@ -174,9 +163,8 @@ export function withEditorCore(
     docPath: { readonly current: string | null };
   } & (
     | {
-        /** A pasted image failed to save to disk - the message to show in
-         *  a native alert (localized, since this plugin has no i18n
-         *  access). */
+        /** A pasted image failed to save to disk: the localized message for a
+         *  native alert. */
         onImagePasteError: () => string;
         requestImageName: (
           stem: string,
@@ -184,9 +172,8 @@ export function withEditorCore(
         ) => Promise<string | null>;
       }
     | {
-        /** No disk behind the page (the browser playground,
-         *  src/playground/): pasted images aren't stored and no clipboard
-         *  history is kept - this plugin takes image pastes instead. */
+        /** No disk behind the page (the playground): pasted images aren't stored
+         *  and no clipboard history is kept; this plugin takes image pastes. */
         noDiskImages: MilkdownPlugin;
       }
   ),
@@ -195,65 +182,50 @@ export function withEditorCore(
   const disk = !("noDiskImages" in options);
   return (
     editor
-      // How saved markdown is written (markdown-output.ts).
       .config(configureMarkdownOutput)
-      // Which part of the file each block was read from, so a save writes
-      // the blocks the user didn't touch as they were (source-preserving.ts).
+      // Which part of the file each block was read from, so a save writes the
+      // blocks the user didn't touch as they were.
       .use(openedParseRecorder)
       .use(linksOnSpansSerializer)
-      // A plugin holding the keyboard (Vim's normal mode) has its keys
-      // before any of the editor's own handlers.
+      // A plugin holding the keyboard (Vim's normal mode) has its keys first.
       .use(editorInputPlugin)
-      // A plugin's completions take Enter, Tab and the arrows while their
-      // list is open (completion/), before the editor's own keys.
+      // A plugin's completions take Enter, Tab and the arrows while open.
       .use(createCompletionPlugin())
       .use(macNavigationPlugin)
       .use(dragAutoscrollPlugin)
       .use(linuxImeEnterPlugin)
       .use(compositionPruneGuardPlugin)
-      // Markdown baseline: commonmark/GFM with bold/italic/strike marks
-      // stripped - those are node-based below.
+      // Commonmark/GFM with bold/italic/strike marks stripped: those are nodes.
       .use(commonmarkWithoutMarks)
       .use(headingInputRule)
       .use(ruleInputRule)
       .use(orderedListInputRule)
       .use(headingIdsOnParse)
       .use(headingIdPlugin)
-      // Ahead of gfm's table keys (escape-trailing-block-plugin.ts).
+      // Ahead of gfm's table keys.
       .use(tableEdgeArrowPlugin)
       .use(gfmWithoutStrikethrough)
 
-      // Leading "---\n...\n---" block, parsed before anything else gets a
-      // chance to misread its "---" lines as setext headings.
+      // Before anything else can misread its "---" lines as setext headings.
       .use(remarkFrontmatterPlugin)
       .use(frontmatterSchema)
 
-      // Raw HTML: parses to real text (replacing stock htmlSchema, excluded
-      // in reduced-presets.ts) so it stays editable; a whitelist of common
-      // tags renders while the cursor is elsewhere.
+      // Raw HTML parses to real text so it stays editable; common tags render
+      // while the cursor is elsewhere.
       .use(rawHtmlSchema)
-      // An <img> tag is an image, sized by its width (images/image-html.ts).
       .use(remarkHtmlImages)
       .use(createRawHtmlPreviewPlugin({ docPath: () => docPath.current }))
       .use(brToHardbreakPlugin)
       .use(remarkTableCellBreaks)
 
-      // Reference links, `[text][ref]`, and their `[ref]: url` definitions:
-      // read as links, written back as references.
       .use(remarkReferenceLinksPlugin)
       .use(linkDefinitionSchema)
-      // Each link's Markdown as written, shown and edited while the caret
-      // is on the link (link-reveal.ts).
       .use(remarkLinkSourcePlugin)
       .use(linkSourceSchema)
 
-      // Obsidian's ![[file]] embeds: kept as written, an image one shown as
-      // the picture from the document's vault.
       .use(remarkObsidianEmbedPlugin)
       .use(obsidianEmbedSchema)
       .use(obsidianEmbedInputRule)
-      // And its wikilinks, [[Note]]: kept as written, Ctrl/Cmd+click opens
-      // the note.
       .use(remarkWikilinkPlugin)
       .use(wikilinkSchema)
       .use(wikilinkInputRule)
@@ -264,8 +236,6 @@ export function withEditorCore(
         }),
       )
 
-      // GitHub-style alerts: > [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING]
-      // / [!CAUTION] blockquotes render as colored callouts with a badge.
       .use(
         createGithubAlertPlugin((type) => {
           const t = resolveStrings(settings.current.language);
@@ -279,10 +249,8 @@ export function withEditorCore(
         }),
       )
 
-      // CommonMark's emphasis flanking rules reject "**" next to CJK
-      // punctuation (e.g. 话说**“你好”**了 stays literal), which would also
-      // break reopening files whose bold was created here. This relaxes the
-      // rules for CJK - parse side only; serialization is unchanged.
+      // CommonMark's flanking rules reject "**" next to CJK punctuation, which
+      // would break reopening bold made here. Parse side only.
       .use($remark("remark-cjk-friendly", () => remarkCjkFriendly))
       .use(
         $remark(
@@ -291,8 +259,8 @@ export function withEditorCore(
         ),
       )
 
-      // Inline enclosures: bold/italic/strikethrough/highlight/inline code
-      // as real nodes with synthesized, Typora-style delimiters.
+      // Bold/italic/strikethrough/highlight/inline code as nodes with
+      // synthesized, Typora-style delimiters.
       .use(remarkHighlightPlugin)
       .use(remarkStrikethroughTildesPlugin)
       .use(remarkEmphasisUnderscoresPlugin)
@@ -317,8 +285,6 @@ export function withEditorCore(
         }),
       )
 
-      // Math: $/$$ enclosures sharing the same model, plus KaTeX rendering;
-      // LaTeX's \(...\) / \[...\] are read and kept (latex-math-syntax.ts).
       .use(remarkMathPlugin)
       .use(mathInlineSchema)
       .use(mathBlockSchema)
@@ -328,7 +294,6 @@ export function withEditorCore(
         createMathPreviewPlugin({ enabled: () => settings.current.enableMath }),
       )
 
-      // Block-level niceties.
       .use(headingMarkerPlugin)
       .use(remarkEmptyTaskItems)
       .use(taskListClickPlugin)
@@ -358,9 +323,8 @@ export function withEditorCore(
         }),
       )
 
-      // Editing infrastructure. handlePaste props run in registration
-      // order: images (binary, most specific) first, then a lone URL, then
-      // markdown-source text, then milkdown's own clipboard plugin.
+      // handlePaste props run in registration order: images first, then a lone
+      // URL, then markdown source, then milkdown's own clipboard plugin.
       .use(history)
       .use(
         "noDiskImages" in options
@@ -383,14 +347,11 @@ export function withEditorCore(
       .use(plainTextCopyPlugin)
       .use(clipboard)
       .use(disk ? clipboardHistoryPlugin : [])
-      // Ctrl/Cmd+click follows a link. The playground leaves links to the
-      // browser it runs in.
+      // The playground leaves links to the browser it runs in.
       .use(disk ? createLinkClickPlugin(() => docPath.current) : [])
-      // A plugin's card for what the pointer rests on.
       .use(disk ? createLinkHoverPlugin(() => docPath.current) : [])
       .use(listener)
-      // Enter / Mod+Enter in tables, code blocks and quotes - ahead of the
-      // other key handlers and the preset keymaps.
+      // Ahead of the other key handlers and the preset keymaps.
       .use(blockKeysPlugin)
       .use(tabExtendPlugin)
       .use(tabStaysPlugin)

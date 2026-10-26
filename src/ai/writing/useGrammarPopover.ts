@@ -46,12 +46,8 @@ function popoverFor(
 const CJK_CHAR =
   /^[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]$/u;
 
-/**
- * How a one-character CJK fix reads on the card: the checker narrows the
- * span to what changes (必竟 -> 毕竟 arrives as 必 -> 毕), which alone says
- * little. The card shows it with the character beside it - after it, or
- * before it at a paragraph's end - while Apply still changes only the one.
- */
+/** A one-character CJK fix (必 -> 毕 for 必竟) shown with its neighbour on
+ *  the card, while Apply still changes only the one. */
 function withContext(
   state: EditorState,
   deco: Decoration,
@@ -82,12 +78,8 @@ function siblingsOf(state: EditorState, deco: Decoration): Decoration[] {
     .sort((a, b) => a.from - b.from);
 }
 
-/**
- * Hover behavior for grammar-issue highlights: moving onto a highlighted
- * range looks up its decoration and opens the popover under it; moving off
- * hides it on a short delay so the pointer can travel into the popover
- * itself (cancelHide keeps it open while hovered).
- */
+/** Opens the popover over a hovered grammar underline, hiding it on a short
+ *  delay so the pointer can travel into the popover. */
 export function useGrammarPopover(
   run: EditorRunner,
   getStaleMessage: () => string,
@@ -136,9 +128,8 @@ export function useGrammarPopover(
     hideTimer.current = setTimeout(() => setPopover(null), 150);
   }, []);
 
-  // Keyboard path: the caret entering an underline opens the popover under
-  // it (Alt+Enter applies, see the plugin); leaving closes a popover the
-  // caret opened, never one the pointer is using.
+  // The caret entering an underline opens the popover; leaving closes one
+  // the caret opened, never one the pointer is using.
   const openedByCaret = useRef(false);
   const onCaretMove = useCallback(() => {
     run((ctx) => {
@@ -224,10 +215,8 @@ export function useGrammarPopover(
       const view = ctx.get(editorViewCtx);
       const { state } = view;
 
-      // The hover-time from/to go stale the moment the document is edited,
-      // so re-resolve the target now. First choice: the live decoration for
-      // this issue - the plugin maps decorations through edits and drops the
-      // ones whose text changed, so a surviving one is trustworthy.
+      // The hover-time range goes stale on any edit. A surviving live
+      // decoration is trustworthy: the plugin drops ones whose text changed.
       const live = (grammarKey.getState(state)?.find() ?? []).find(
         (deco: Decoration) => {
           const spec = deco.spec as GrammarDecorationSpec;
@@ -236,8 +225,7 @@ export function useGrammarPopover(
       );
       let range = live ? { from: live.from, to: live.to } : null;
 
-      // No live decoration (e.g. it was cleared with the whole set) - the
-      // text itself is still a valid target if it occurs exactly once.
+      // Else the text itself, if it occurs exactly once.
       if (!range && original) range = findUniqueTextRange(state.doc, original);
 
       // Last line of defense against replacing the wrong text: the range
@@ -257,8 +245,7 @@ export function useGrammarPopover(
       setPopover(null);
       setApplyError(null);
     } else {
-      // Leave the popover up with an explanation - a silently dead Apply
-      // button reads as a broken feature.
+      // A silently dead Apply button would read as broken.
       setApplyError(getStaleMessage());
     }
     return applied;

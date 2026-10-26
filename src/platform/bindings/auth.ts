@@ -32,11 +32,8 @@ export const commands = {
 	provider_api_key_status: (provider: string) => __TAURI_INVOKE<boolean>("provider_api_key_status", { provider }),
 	clear_provider_api_key: (provider: string) => __TAURI_INVOKE<null>("clear_provider_api_key", { provider }),
 	/**
-	 *  Saves the endpoint. A missing key keeps the stored one while the URL
-	 *  stays the same: the settings page no longer gets the key back, so an
-	 *  empty key field on re-save means "unchanged", not "remove it" (clearing
-	 *  the endpoint removes it). Saved for another URL, the old key is dropped
-	 *  rather than sent to the new host with every request (see resolve_key).
+	 *  Saves the endpoint. A missing key keeps the stored one while the URL stays
+	 *  the same; for another URL the old key is dropped rather than sent to the new host.
 	 */
 	set_custom_endpoint: (baseUrl: string, apiKey: string | null, model: string) => __TAURI_INVOKE<null>("set_custom_endpoint", { baseUrl, apiKey, model }),
 	custom_endpoint_status: () => __TAURI_INVOKE<CustomEndpointStatus_Serialize | null>("custom_endpoint_status"),
@@ -63,20 +60,14 @@ export type ClaudeAuthStatus = {
 };
 
 /**
- *  What the settings page is told about the saved endpoint. The key itself
- *  never goes back to the webview - it is a secret like the provider keys,
- *  which only ever report whether one is set. `api_key` stays in the shape
- *  (always null) so the page's existing type still fits; `has_api_key`
- *  says whether one is stored.
+ *  What the settings page is told about the saved endpoint. The key never
+ *  goes back to the webview; `api_key` is always null and `has_api_key` says whether one is stored.
  */
 export type CustomEndpointStatus = CustomEndpointStatus_Serialize | CustomEndpointStatus_Deserialize;
 
 /**
- *  What the settings page is told about the saved endpoint. The key itself
- *  never goes back to the webview - it is a secret like the provider keys,
- *  which only ever report whether one is set. `api_key` stays in the shape
- *  (always null) so the page's existing type still fits; `has_api_key`
- *  says whether one is stored.
+ *  What the settings page is told about the saved endpoint. The key never
+ *  goes back to the webview; `api_key` is always null and `has_api_key` says whether one is stored.
  */
 export type CustomEndpointStatus_Deserialize = {
 	base_url: string,
@@ -86,11 +77,8 @@ export type CustomEndpointStatus_Deserialize = {
 };
 
 /**
- *  What the settings page is told about the saved endpoint. The key itself
- *  never goes back to the webview - it is a secret like the provider keys,
- *  which only ever report whether one is set. `api_key` stays in the shape
- *  (always null) so the page's existing type still fits; `has_api_key`
- *  says whether one is stored.
+ *  What the settings page is told about the saved endpoint. The key never
+ *  goes back to the webview; `api_key` is always null and `has_api_key` says whether one is stored.
  */
 export type CustomEndpointStatus_Serialize = {
 	base_url: string,

@@ -1,9 +1,6 @@
-//! English rules (CATALOGUE.md §3.4). Automatic has no national norm for
-//! English: conventions that style guides disagree on (serial comma, dash
-//! style, quote style, -ize/-ise, clock) are checked for consistency only,
-//! and a preset applies when the user chooses one. Never flagged: split
-//! infinitives, "data is/are", the serial comma in Automatic, "had had",
-//! US/UK vocabulary (suggestions only), anything in code.
+//! English rules. Automatic has no national norm, so conventions style guides
+//! disagree on (serial comma, dashes, quotes, -ize/-ise) are checked for
+//! consistency only unless the user chooses a preset.
 
 use super::stats::{minority, EN_SPELLING};
 use super::text::*;

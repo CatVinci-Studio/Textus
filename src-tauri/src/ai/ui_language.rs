@@ -1,21 +1,10 @@
-//! The app's UI languages as the AI prompts need them. The frontend sends
-//! the user's UI language with an agent request (src/i18n/langs.ts has the
-//! codes); everything per language lives in a file of that language's own -
-//! ui-names/<code>.txt and style-headings/<code>.txt - so translating the
-//! app touches no code here (docs/dev/translating.md).
+//! The app's UI languages as the AI prompts need them. Everything per language
+//! lives in its own files (ui-names/<code>.txt, style-headings/<code>.txt), so
+//! translating the app touches no code here.
 
-/// A UI language (LANGS in src/i18n/langs.ts - a test keeps the two lists
-/// the same), with its name in English and in itself, and:
-/// - `names`: the names its UI gives the app's concepts and controls,
-///   ui-names/<code>.txt, which gives every line of ui-names/en.txt as
-///   "<English name> = <the name in this UI>" - or nothing until that UI
-///   is translated (agent.rs's tests check each name against the UI's
-///   strings and help guide);
-/// - `style_headings`: the headings of a style profile written in this
-///   language, style-headings/<code>.txt - those of its UI's starter
-///   profile (projectStyleTemplate) among them, so "Learn my style" heads
-///   a profile the way "Create style profile" does (project.rs's tests
-///   check it). Empty until translated.
+/// A UI language (keep in step with the frontend's LANGS; a test checks), with
+/// its names for the app's concepts and its style-profile headings, both empty
+/// until translated.
 pub(crate) struct UiLanguage {
     pub code: &'static str,
     pub english: &'static str,
@@ -57,14 +46,8 @@ pub(crate) fn entries(text: &str) -> impl Iterator<Item = &str> {
 }
 
 /// The names the user's UI gives what the prompt describes in English, as
-/// (English, theirs) pairs - None for an English UI (en.txt only lists the
-/// English names), or one whose names aren't translated yet. Only that one
-/// language goes into the prompt, not a table of every language: it stays
-/// short, and for any one user the same from request to request, which the
-/// provider's prompt cache needs. Given inline as "style profile (文风档案
-/// / 文体プロファイル)", the names came back as glosses - "资料库
-/// （library）", "style profile (文风档案)" - in the round-2 integration,
-/// hence a table of their own.
+/// (English, theirs) pairs; None for English or untranslated. One language
+/// only, so the prompt stays short and cacheable; a table, not inline glosses.
 pub(crate) struct UiNames {
     pub language: &'static UiLanguage,
     pub names: Vec<(&'static str, &'static str)>,

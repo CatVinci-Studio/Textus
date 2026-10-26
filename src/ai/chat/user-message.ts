@@ -1,22 +1,7 @@
 /**
- * An outgoing chat message carries more than what the user typed: the
- * selection they had, and any files they attached, wrapped in tags the model
- * reads as context (see InlineChat's send path). That tagged string is also
- * the history replayed to the model on the next turn, so it can't be
- * simplified away at send time - but showing it verbatim in the transcript
- * put a wall of XML and the user's own selected text in place of the one
- * sentence they actually wrote.
- *
- * Parsing it back apart at render time keeps both: the wire format is
- * untouched (and conversations restored from history parse the same way),
- * while the bubble shows the prose and folds the context into chips.
- *
- * WRITING the format lives here too. It used to be written inline in
- * ChatBody's send path and read by two different regexes (here and in
- * chat-history's title cleaner), so three places had to agree on it with
- * nothing checking that they did - and every way of getting it wrong is
- * silent: chips stop appearing, or a wall of raw XML shows up as a
- * conversation's title.
+ * Writes and parses the tagged chat message: the typed prose plus selection,
+ * attachments and skill blocks. The tagged string is what the model sees and
+ * history replays; the transcript parses it back to prose and chips.
  */
 
 import { escapeHtml } from "../../utils/html";
@@ -39,13 +24,8 @@ export function attachedFileBlock(name: string, content: string): string {
 }
 
 /** Wraps a skill the user called with /name: its instructions, marked as
- *  already loaded (agent.rs's skill index tells the model not to load it
- *  again with use_skill). Mirrored by live_eval's resolve_skill_message.
- *
- *  `typed` is what the user typed when it wasn't `/name` itself - an alias
- *  such as `/续写` - so the transcript shows their word, not the canonical
- *  name. With no prompt (a built-in the backend expands itself) the block
- *  is empty. */
+ *  already loaded. `typed` is an alias they typed, shown in the transcript;
+ *  with no prompt (a built-in the backend expands) the block is empty. */
 export function skillBlock(
   name: string,
   prompt: string,

@@ -15,13 +15,8 @@ export type MarketKind = "themes" | "plugins" | "skills";
 
 const KINDS: MarketKind[] = ["themes", "plugins", "skills"];
 
-/**
- * Settings › Extensions › Get more: what there is to add to Textus, a tab
- * per kind - the theme gallery's themes, the plugins textus-plugins'
- * catalog offers, the catalog's skills - each with its search. MCP servers
- * aren't here: the user adds the ones they want on the MCP tab. Nothing is
- * fetched in the background, only when this page opens.
- */
+/** Settings › Extensions › Get more: themes, plugins and skills to add, a
+ *  tab per kind with its search. Fetched only when this page opens. */
 export function MarketPage({
   t,
   kind: initialKind,

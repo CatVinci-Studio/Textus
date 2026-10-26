@@ -13,12 +13,9 @@ import type { useAgentPanel } from "../ai/chat/panel/agent-panel";
 import type { Strings } from "../i18n/strings";
 
 /**
- * The editor menu's "Illustrate this paragraph": asks Textus AI, in the
- * panel's conversation and in Write mode, for one picture for the selected
- * text - or, with nothing selected, the paragraph right-clicked (`at`, the
- * menu's point), else the one the caret is in - which
- * comes back as a proposal after it (generate_image). Offered only while
- * an image model is set (EditorContextMenu).
+ * "Illustrate this paragraph": asks Textus AI in Write mode for one picture
+ * for the selection, else the right-clicked paragraph, else the caret's.
+ * Offered only while an image model is set.
  */
 export function useIllustrateParagraph({
   run,
@@ -69,9 +66,8 @@ export function useIllustrateParagraph({
           webSearch: false,
         })
         .then((turns) => {
-          // The panel shows them as they stream in; this is for a panel
-          // that wasn't mounted yet. Adding the same proposal twice is a
-          // no-op.
+          // For a panel that wasn't mounted yet; adding the same proposal
+          // twice is a no-op.
           const found = proposalsFromTurns(turns ?? []);
           if (found.length > 0) showProposals(found);
         });

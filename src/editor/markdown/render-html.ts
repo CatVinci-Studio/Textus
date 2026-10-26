@@ -8,13 +8,12 @@ import { katexNow, mathSourceHtml } from "../math/katex-loader";
 
 function renderMath(source: string, displayMode: boolean): string {
   const katex = katexNow();
-  // Before KaTeX has loaded, the source - drawn again once it is here
-  // (callers wait on onKatexReady / useKatexReady).
+  // Before KaTeX has loaded, the source; callers redraw once it is here.
   if (!katex) return mathSourceHtml(source.trim());
   return katex.renderToString(source.trim(), {
     displayMode,
-    // A half-typed or invalid formula renders as its source in red rather
-    // than throwing away the whole reply.
+    // A half-typed formula renders as its source in red rather than throwing
+    // away the whole reply.
     throwOnError: false,
     output: "htmlAndMathml",
   });
@@ -26,11 +25,9 @@ function mathHtml(source: string, display: boolean, block: boolean): string {
   return block ? `<div class="agent-math">${html}</div>` : html;
 }
 
-// `$$...$$` on its own lines, and `$...$` inside text - the same two forms
-// the editor's math schema (remark-math) reads, so a formula looks the same
-// in a reply as it will once accepted into the document. Inline `$` needs a
-// non-space just inside each delimiter and no digit right after the closing
-// one, so prices like "$5 and $10" stay text. `render` writes one formula.
+// `$$...$$` on its own lines and `$...$` inside text, as the editor's math
+// schema reads them. Inline `$` needs a non-space just inside each delimiter
+// and no digit after the closing one, so "$5 and $10" stays text.
 function mathExtensions(
   render: (source: string, display: boolean, block: boolean) => string,
 ): TokenizerAndRendererExtension[] {
@@ -74,9 +71,7 @@ function mathExtensions(
   return [mathBlock, mathInline];
 }
 
-// An Obsidian wikilink, `[[Note]]`, drawn as the editor draws it: its source
-// in the link colour (markdown/wikilink.ts). Without it a note's opening in
-// a hover card showed its links as plain text.
+// An Obsidian wikilink, drawn as the editor draws it, in the link colour.
 const wikilink: TokenizerAndRendererExtension = {
   name: "wikilink",
   level: "inline",
@@ -89,25 +84,18 @@ const wikilink: TokenizerAndRendererExtension = {
   renderer: (token) => `<span class="wikilink">${escapeHtml(token.raw)}</span>`,
 };
 
-// Its own instance, not the global `marked`: these options and extensions
-// are for short-form conversational content only. A bare newline breaks the
-// line like it visually looks, rather than needing a blank line the way
-// document-editing markdown does.
+// Its own instance, not the global `marked`: for chat replies, where a bare
+// newline breaks the line.
 const chatMarked = new Marked({
   gfm: true,
   breaks: true,
   extensions: [...mathExtensions(mathHtml), wikilink],
 });
 
-/**
- * Markdown source -> sanitized HTML, block-aware (paragraphs, lists,
- * headings, tables and display math all become their own elements). For
- * content that renders into a genuine block-level container - the chat
- * reply (MarkdownText.tsx).
- */
+/** Markdown source -> sanitized, block-aware HTML, for the chat reply. */
 export function renderMarkdownHtml(markdown: string): string {
-  // `\(`/`\[` are folded to `$`/`$$` first, so either delimiter style
-  // renders (and markdown's backslash escaping can't mangle them).
+  // `\(`/`\[` are folded to `$`/`$$` first, so markdown's backslash escaping
+  // can't mangle them.
   const parsed = chatMarked.parse(normalizeMathDelimiters(markdown), {
     async: false,
   });
@@ -115,10 +103,7 @@ export function renderMarkdownHtml(markdown: string): string {
 }
 
 // Footnotes, which marked has no syntax for: a reference `[^2]` as its
-// raised label, as the editor shows it, and a definition `[^2]: …` (its
-// indented lines with it) as a paragraph opening with that label. Without
-// them a preview of AI text with footnotes (pending-edit-plugin's
-// fillPendingBlocks) showed their Markdown.
+// raised label, and a definition `[^2]: …` as a paragraph opening with it.
 const footnotes: TokenizerAndRendererExtension[] = [
   {
     name: "footnoteDefinition",
@@ -158,9 +143,7 @@ const footnotes: TokenizerAndRendererExtension[] = [
   },
 ];
 
-// The inline flavour (renderMarkdownInlineHtml): the chat's, and a
-// footnote's mark raised as the editor shows it - a rewritten sentence that
-// keeps its `[^1]` showed the Markdown in the text and on its card.
+// The inline flavour: the chat's, plus footnote references raised.
 const inlineMarked = new Marked({
   gfm: true,
   breaks: true,
@@ -170,14 +153,13 @@ const inlineMarked = new Marked({
   ],
 });
 
-// The formulas of the document being rendered, in order: the document
-// flavour leaves a placeholder element for each, so the HTML policy (which
-// would strip KaTeX's classes and styles) never sees them.
+// The document's formulas, in order: a placeholder element stands for each,
+// so the HTML policy (which would strip KaTeX's classes) never sees them.
 let mathSlots: string[] = [];
 const MATH_SLOT_TAG = "textus-math";
 
-// The document flavour: markdown as the editor reads it - a single newline
-// is not a line break - for the split view's preview (editor/modes/SplitView.tsx).
+// The document flavour, for the split view: a single newline is not a line
+// break.
 const documentMarked = new Marked({
   gfm: true,
   breaks: false,
@@ -189,8 +171,8 @@ const documentMarked = new Marked({
     ...footnotes,
   ],
   renderer: {
-    // A width an older Textus kept in the title (images/image-html.ts)
-    // sizes the picture, as in the editor, instead of being its tooltip.
+    // A width an older Textus kept in the title sizes the picture, as in the
+    // editor.
     image(token) {
       const { title, widthPercent } = readImagePresentation(token.title);
       if (widthPercent === null) return false;
@@ -201,8 +183,7 @@ const documentMarked = new Marked({
       return html.replace(/^<img /, `<img width="${widthPercent}%" `);
     },
   },
-  // `[](https://...)` shows its URL, as it does in the editor
-  // (markdown-output.ts) - rendered empty, the link was there but invisible.
+  // `[](https://...)` shows its URL, as in the editor, instead of nothing.
   walkTokens: (token) => {
     if (token.type === "link" && token.tokens?.length === 0)
       token.tokens = [
@@ -211,11 +192,8 @@ const documentMarked = new Marked({
   },
 });
 
-/** A whole document -> sanitized HTML, for the split view's preview. YAML
- *  front matter is dropped (the editor shows it as a block, not prose).
- *  Raw HTML in it follows the same policy as in the editor
- *  (html/html-policy.ts): the same tags, attributes and styles, and an
- *  inline SVG as a picture. */
+/** A whole document -> sanitized HTML, for the split view's preview. Front
+ *  matter is dropped; raw HTML follows the editor's policy. */
 export function renderDocumentHtml(markdown: string): string {
   const body = markdown.replace(/^---\n[\s\S]*?\n---\n?/, "");
   mathSlots = [];
@@ -227,8 +205,8 @@ export function renderDocumentHtml(markdown: string): string {
   const doc = new DOMParser().parseFromString(parsed, "text/html");
   const out = doc.createElement("div");
   sanitizeNodes(Array.from(doc.body.childNodes), out, {
-    // KaTeX's output, already through DOMPurify. A placeholder typed into
-    // the document by hand can only repeat one of its own formulas.
+    // KaTeX's output, already through DOMPurify. A placeholder typed by hand can
+    // only repeat one of the document's own formulas.
     replace: (el) => {
       if (el.localName !== MATH_SLOT_TAG) return undefined;
       const html = slots[Number(el.getAttribute("data-slot"))];
@@ -241,12 +219,8 @@ export function renderDocumentHtml(markdown: string): string {
 }
 
 /**
- * Markdown source -> sanitized HTML, INLINE only (no wrapping `<p>`/`<ul>`/
- * heading elements - bold/italic/code/links/math stay inline, paragraph
- * breaks fold to line breaks via `breaks: true`). For content that renders
- * inside an inline decoration widget (pending-edit-plugin.ts's green insert
- * widget), where a real block element would be invalid HTML nested inside
- * the surrounding paragraph's inline content.
+ * Markdown source -> sanitized inline-only HTML, for an inline decoration
+ * widget where a block element would be invalid inside the paragraph.
  */
 export function renderMarkdownInlineHtml(markdown: string): string {
   const parsed = inlineMarked.parseInline(normalizeMathDelimiters(markdown), {

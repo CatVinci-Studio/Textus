@@ -18,36 +18,16 @@ import { ParserState, type MarkdownNode } from "@milkdown/kit/transformer";
 import { blockMarkdown } from "./block-markdown";
 
 /**
- * Saving a document writes back, byte for byte, every top-level block the
- * user didn't change, and serializes only the ones they did.
- *
- * The serializer writes remark's house style: `_em_` comes out `*em*`, a
- * setext heading ATX, a table re-padded, `snake_case` escaped. That is fine
- * for the block being edited, but a whole-document serialization wrote that
- * style into every block of the file on its first edit, and someone who
- * also keeps the file in Git saw the whole file change.
- *
- * When the file is opened, each top-level block is paired with the stretch
- * of the file it was read from (its mdast `position`). A save then walks
- * the editor's blocks: ProseMirror keeps an untouched block as the same
- * node object through every edit elsewhere, so a block that is still that
- * object - or one equal to it - is written as its original text, with the
- * original blank lines towards a neighbour that is also untouched. Runs of
- * changed blocks are serialized, and joined to the rest by a blank line.
- *
- * A block written as it was read can still mean something else in new
- * company: two lists that end up next to each other merge, a `---` that
- * becomes the first block opens front matter. So every join that isn't the
- * file's own is read back, and where the blocks on either side don't come
- * back as they are in the editor, those blocks are serialized too. Anything
- * that can't be paired - an mdast node without a position, a block a plugin
- * changed on load - is serialized. When in doubt, serialize: a noisier diff
- * is better than a file that reads differently.
+ * Saving writes back, byte for byte, every top-level block the user didn't
+ * change, and serializes only the ones they did, so remark's house style
+ * never rewrites a whole file. Each block is paired on open with the stretch
+ * of the file it was read from; every new join is read back, and where it
+ * reads differently (two lists merging) the blocks around it are serialized
+ * too. When in doubt, serialize.
  */
 
-/** One stretch of the opened file and the top-level blocks it was read
- *  into (nearly always one). `start`/`end` are offsets into the file; null
- *  when this stretch can't be written back as it was. */
+/** One stretch of the opened file and the top-level blocks it was read into.
+ *  `start`/`end` are file offsets; null when it can't be written back. */
 interface SourceUnit {
   nodes: readonly ProseNode[];
   start: number | null;
@@ -60,9 +40,8 @@ export interface SourceBlocks {
   units: SourceUnit[];
   /** Each unit's first block, to its unit's index. */
   byNode: Map<ProseNode, number>;
-  /** What earlier saves worked out, by the blocks they were about: an edit
-   *  touches one block, and the runs changed before it - after a Replace
-   *  All, hundreds - are serialized and checked once, not on every save. */
+  /** What earlier saves worked out, by the blocks they were about, so runs
+   *  changed before (after a Replace All, hundreds) are checked only once. */
   memo: SaveMemo;
 }
 
@@ -93,9 +72,8 @@ interface BlockParse {
   children: { start: number | null; end: number | null; blocks: ProseNode[] }[];
 }
 
-/** `text` read the way the editor's parser reads it (ParserState.run:
- *  the root's children in one pass into the doc), noting which blocks
- *  each child became. */
+/** `text` read the way the editor's parser reads it, noting which blocks
+ *  each root child became. */
 function parseBlocks(ctx: Ctx, text: string): BlockParse {
   const remark = ctx.get(remarkCtx);
   const schema = ctx.get(schemaCtx);
@@ -121,11 +99,9 @@ const openedParseCtx = createSlice<BlockParse | null>(null, "openedParse");
 const OpenedParseRecorded = createTimer("OpenedParseRecorded");
 
 /**
- * Keeps the editor's parse of the document it opens (defaultValueCtx), so
- * pairing its blocks with the file's text costs no second parse: on a long
- * document that parse is most of a second. The parser is wrapped once,
- * before the editor state is made from it; every other parse - a paste,
- * an AI edit - goes to the stock parser.
+ * Keeps the editor's parse of the document it opens, so pairing its blocks
+ * with the file costs no second parse (most of a second on a long one).
+ * Every other parse goes to the stock parser.
  */
 export const openedParseRecorder: MilkdownPlugin = (ctx) => {
   ctx.inject(openedParseCtx, null).record(OpenedParseRecorded);
@@ -149,8 +125,7 @@ export const openedParseRecorder: MilkdownPlugin = (ctx) => {
   };
 };
 
-/** The same block, or one that serializes to the same Markdown: a plugin
- *  that touched an attr on load, or text deleted and typed again. */
+/** The same block, or one that serializes to the same Markdown. */
 function sameBlock(ctx: Ctx, a: ProseNode, b: ProseNode): boolean {
   return a === b || a.eq(b) || blockMarkdown(ctx, a) === blockMarkdown(ctx, b);
 }
@@ -161,9 +136,8 @@ function readBlocks(ctx: Ctx, text: string): ProseNode[] {
 }
 
 /**
- * Pairs `doc` - the editor's document as it was opened - with `text`, the
- * Markdown it was opened from. Null when they don't line up block for
- * block (then every save serializes the whole document).
+ * Pairs `doc`, the editor's document as opened, with `text`, the Markdown it
+ * came from. Null when they don't line up block for block.
  */
 export function readSourceBlocks(
   ctx: Ctx,
@@ -177,8 +151,8 @@ export function readSourceBlocks(
   if (count !== doc.childCount) return null;
   const units: SourceUnit[] = [];
   const byNode = new Map<ProseNode, number>();
-  // A construct that became no block of its own (none does today) goes
-  // with the unit before it, or else the one after.
+  // A construct that became no block of its own goes with the unit before it,
+  // or else the one after.
   let orphanStart: number | null = null;
   let index = 0;
   for (const { start, end, blocks } of children) {
@@ -193,18 +167,16 @@ export function readSourceBlocks(
       start !== null &&
       end !== null &&
       blocks.every((node, k) => sameBlock(ctx, node, nodes[k]));
-    // A setext heading under a definition, `[foo]: /url\nbar\n===`, starts
-    // where the definition does: its stretch begins after the one before,
-    // or deleting the definition left it in the file.
+    // A setext heading under a definition starts where the definition does:
+    // its stretch begins after the one before.
     let from = kept ? Math.min(start, orphanStart ?? start) : null;
     const previousEnd = units.at(-1)?.end ?? null;
     if (from !== null && previousEnd !== null && from < previousEnd) {
       from = previousEnd;
       while (text[from] === "\n") from++;
     }
-    // From the start of its line: ` -    one` and the `     two` under
-    // it are a list and indented code; without the space before the
-    // marker, written after a new first block, they were one list item.
+    // From the start of its line: without the space before ` -    one`, the
+    // indented code under it would join the list item.
     if (from !== null) {
       let lineStart = from;
       while (
@@ -227,16 +199,14 @@ export function readSourceBlocks(
   };
 }
 
-/** One piece of the output: a stretch of the file's own text (units
- *  `from`..`to`, inclusive), or a run of changed blocks (children `from`
- *  to `to`, exclusive) serialized. */
+/** One piece of the output: a stretch of the file's text (units `from`..`to`,
+ *  inclusive), or a run of changed blocks (children `from`..`to`, exclusive). */
 type Piece =
   | { kind: "kept"; from: number; to: number }
   | { kind: "changed"; from: number; to: number };
 
-/** Which unit each block of `doc` is kept as (at a unit's first block),
- *  or null: the same node objects first, then - between two of those -
- *  blocks standing where as many unclaimed units stood, equal to them. */
+/** Which unit each block of `doc` is kept as, or null: the same node objects
+ *  first, then equal blocks standing where as many unclaimed units stood. */
 function matchUnits(
   ctx: Ctx,
   source: SourceBlocks,
@@ -318,9 +288,7 @@ function piecesOf(
 }
 
 /** A run of changed blocks as the serializer writes it, without the final
- *  newline. `offsets` holds each child's position in `doc`. A thematic
- *  break is written "***" only as the document's first block
- *  (markdown-output.ts); first in a run elsewhere, it is "---". */
+ *  newline. A thematic break first in a run (not the document) is "---". */
 function writeRun(
   ctx: Ctx,
   { runs }: SaveMemo,
@@ -350,8 +318,7 @@ function sameObjects(a: readonly ProseNode[], b: readonly ProseNode[]) {
   return a.length === b.length && a.every((node, k) => node === b[k]);
 }
 
-/** Blocks a reference elsewhere needs to read as a link: link and
- *  footnote definitions. A join is read back with them after it. */
+/** Link and footnote definitions, which a join is read back with. */
 function isDefinition(node: ProseNode): boolean {
   if (node.type.name === "footnote_definition") return true;
   return (
@@ -372,9 +339,8 @@ function sameNodes(
 }
 
 /**
- * The Markdown to save for `doc`: the file's own text for every block that
- * is as it was opened, the serializer's for the rest. `source` is what
- * readSourceBlocks paired the opened document with.
+ * The Markdown to save for `doc`: the file's own text for every block as it
+ * was opened, the serializer's for the rest.
  */
 export function writePreservingSource(
   ctx: Ctx,
@@ -382,8 +348,8 @@ export function writePreservingSource(
   doc: ProseNode,
 ): string {
   const forced = new Set<number>();
-  // Each round serializes the blocks beside a join that didn't read back;
-  // a few are enough for any real document. Past them, the whole document.
+  // Each round serializes the blocks beside a join that didn't read back; past
+  // a few, the whole document.
   for (let round = 0; round < 6; round++) {
     const unitAt = matchUnits(ctx, source, doc, forced);
     const pieces = piecesOf(source, doc, unitAt);
@@ -443,15 +409,15 @@ function compose(
     }
     for (let u = piece.from; u <= piece.to; u++)
       if (units[u].nodes.some(isDefinition))
-        // Without its indent: read after a join that ends in a list, an
-        // indented `  [ref]: url` would be part of the list's last item.
+        // Without its indent: after a list, an indented `  [ref]: url` would be part
+        // of the list's last item.
         definitions.push(unitText(source, u).trimStart());
     return text.slice(units[piece.from].start!, units[piece.to].end!);
   });
   const first = pieces[0];
   const last = pieces.at(-1)!;
-  // Before the first block and after the last: the file's own, while the
-  // block there is the file's first or last as it was.
+  // Before the first block and after the last: the file's own, while the block
+  // there is the file's first or last as it was.
   const head =
     first.kind === "kept" && first.from === 0
       ? text.slice(0, units[0].start!)
@@ -470,8 +436,8 @@ function compose(
   };
 }
 
-/** The units on either side of each join the file didn't have, whose
- *  blocks don't read back as the editor holds them. */
+/** The units on either side of each new join whose blocks don't read back
+ *  as the editor holds them. */
 function checkJoins(
   ctx: Ctx,
   source: SourceBlocks,
@@ -484,9 +450,8 @@ function checkJoins(
   let counted: number | null = null;
   const definitionCount = () =>
     (counted ??= definitions ? readBlocks(ctx, definitions).length : 0);
-  /** What changed run `p` should read back as: what the serializer's text
-   *  for it reads as on its own. That isn't always the editor's blocks
-   *  exactly, which is the serializer's business, not this check's. */
+  /** What changed run `p` should read back as: what its serialized text reads
+   *  as on its own. */
   const runs = new Map<number, readonly ProseNode[]>();
   const runNodes = (p: number, from: number, to: number) => {
     const known = runs.get(p);
@@ -499,8 +464,7 @@ function checkJoins(
     runs.set(p, nodes);
     return nodes;
   };
-  /** The end of piece `p` that meets a join: its unit, or the whole run;
-   *  `edge` is its block right at the join. */
+  /** The end of piece `p` that meets a join; `edge` is its block there. */
   const side = (p: number, end: "first" | "last") => {
     const piece = pieces[p];
     if (piece.kind === "changed") {
@@ -513,8 +477,7 @@ function checkJoins(
     const edge = end === "first" ? nodes[0] : nodes[nodes.length - 1];
     return { text: unitText(source, u), nodes: () => nodes, unit: u, edge };
   };
-  /** Whether a join reads back, from an earlier save when the same text
-   *  met there. */
+  /** Whether a join reads back, from an earlier save when the same text met. */
   const { joins } = source.memo;
   const joinReads = (
     left: ReturnType<typeof side>,
@@ -550,14 +513,11 @@ function checkJoins(
     );
   };
   const failed: number[] = [];
-  // The pieces that write something: a run of empty paragraphs writes
-  // nothing, and the blocks on either side of it meet.
+  // A run of empty paragraphs writes nothing; the blocks around it meet.
   const shown = pieces.flatMap((_, p) => (pieceTexts[p] ? [p] : []));
   if (shown.length === 0) return failed;
-  // The first block, when it isn't the file's first: a "---" there opens
-  // front matter, which runs to the next "---" however far down - more
-  // than a join's neighbours can show. Such a block is serialized
-  // (thematicBreak writes the first block's rule "***").
+  // A first block that isn't the file's first: a "---" there opens front
+  // matter, running further than a join's neighbours show, so serialize it.
   const first = pieces[shown[0]];
   if (
     first.kind === "kept" &&

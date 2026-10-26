@@ -10,12 +10,9 @@ import {
 } from "./split-layout";
 
 /**
- * The layout as the window's tabs now stand: a split asked for, paired
- * with the tab after the one in front (or before it); a tab brought to the
- * front from the tab bar shown in the pane it was chosen from, the one in
- * front until then (`focused`, 0 or 1); a pane's tab closed, one document
- * again. "blank" when the window has one tab: a blank one is opened to
- * take the second pane.
+ * The layout as the window's tabs now stand: a requested split pairs with a
+ * neighbour, a closed pane's tab ends the split. "blank" when the window has
+ * one tab and a blank one must be opened.
  */
 export function resolveSplit(
   layout: SplitLayout | null,

@@ -1,10 +1,7 @@
 /**
- * The list views plugins have registered (textus.views.registerList): what
- * PluginListView needs to draw one - whether the plugin answers a click or
- * a tick itself, the field over it, the line it shows - and a version each
- * refresh moves on, so a shown list asks for its items again. The items
- * themselves are asked of the plugin's code each time (manager.ts's
- * askPlugin "$listItems"), never kept here.
+ * The list views plugins have registered: what PluginListView needs to draw
+ * one, and a version each refresh moves on. The items themselves are asked of
+ * the plugin each time, never kept here.
  */
 export interface ListViewInfo {
   plugin: string;

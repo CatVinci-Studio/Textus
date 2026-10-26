@@ -79,11 +79,9 @@ pub(crate) fn heading_lines(lines: &[&str]) -> Vec<(usize, usize)> {
     headings
 }
 
-/// The line range `[start, end)` of the section under `heading`: from the
-/// heading to the next one at its level or above, so "Methods" includes its
-/// subsections. An exact title wins; otherwise the first heading containing
-/// it, ignoring case. Shared by read_document and agent.rs's focus section,
-/// so "section" means the same thing to the model and to the prompt.
+/// The line range `[start, end)` of the section under `heading`, to the next
+/// heading at its level or above. An exact title wins, else the first heading
+/// containing it, ignoring case. Shared with the prompt's focus section.
 pub(crate) fn section_range(lines: &[&str], heading: &str) -> Option<(usize, usize)> {
     let wanted = heading.trim().trim_start_matches('#').trim();
     if wanted.is_empty() {
@@ -108,11 +106,8 @@ pub(crate) fn section_range(lines: &[&str], heading: &str) -> Option<(usize, usi
     Some((first, last))
 }
 
-/// Reads part of the document verbatim - a section by its heading, or a
-/// line range. The embedded document is only an outline plus excerpts once
-/// it is long (agent.rs's document_section), and search_document only ever
-/// shows single lines: without this the model had no way to see a whole
-/// passage it was asked to revise, nor a multi-line anchor to quote.
+/// Reads part of the document verbatim: a section by its heading, or a line
+/// range. A long document is embedded only as an outline and excerpts.
 pub(super) fn read_document(ctx: &ToolContext, arguments: &str) -> String {
     let args: serde_json::Value = serde_json::from_str(arguments).unwrap_or_default();
     let lines: Vec<&str> = ctx.document.lines().collect();
@@ -159,8 +154,7 @@ pub(super) fn read_document(ctx: &ToolContext, arguments: &str) -> String {
             shown_end + 1
         ));
     }
-    // The blocks in it marked with their ids, as the document section is
-    // (doc_blocks.rs), for an edit to name.
+    // The blocks in it marked with their ids, for an edit to name.
     let line_starts: Vec<usize> = std::iter::once(0)
         .chain(ctx.document.split_inclusive('\n').scan(0, |at, line| {
             *at += line.len();

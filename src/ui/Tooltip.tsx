@@ -31,7 +31,6 @@ let lastHiddenAt = -Infinity;
 const markHidden = () => (lastHiddenAt = performance.now());
 const warm = () => performance.now() - lastHiddenAt < WARM_MS;
 
-/** The props Tooltip reads from or adds to its trigger. */
 interface TriggerProps {
   "aria-label"?: string;
   "aria-hidden"?: boolean | "true" | "false";
@@ -44,26 +43,9 @@ interface TriggerProps {
   onKeyDown?: (e: KeyboardEvent<HTMLElement>) => void;
 }
 
-/**
- * The hint over an icon-only button: what the native `title` was for,
- * which WebKitGTK shows late or not at all and every platform draws in
- * its own foreign box.
- *
- * `<Tooltip text="…"><button aria-label="…">…</button></Tooltip>` - the
- * one child is the trigger. The tooltip shows after the mouse has rested
- * on it (TOOLTIP_OPEN_MS) or when the keyboard moves focus onto it, and
- * goes on leave, blur, a press, Esc or a scroll that moves the button.
- * Never on touch: a finger has no hover, and a tap must just press.
- *
- * It never takes focus or the pointer (it is `pointer-events: none`), so
- * a button that keeps the focus in a text field on mousedown (the
- * composer's) keeps doing so. For a screen reader the text is the
- * button's description - unless it only repeats the button's name, which
- * would then be read twice.
- *
- * The tooltip lives in a portal on <body>, as InfoTip's card does: an
- * ancestor with a transform or a scroll clip would trap it.
- */
+/** The hint over an icon-only button, replacing `title`, which WebKitGTK shows
+ *  late or not at all. Never on touch; never takes focus or the pointer. In a
+ *  portal on <body>, so no ancestor's transform or clip traps it. */
 export function Tooltip({
   text,
   description = text,
@@ -71,9 +53,8 @@ export function Tooltip({
   children,
 }: {
   text: string;
-  /** What a screen reader hears instead, when the shown text carries
-   *  something the button already says - its on/off state, which
-   *  aria-pressed announces. Null for nothing. */
+  /** What a screen reader hears instead, when the shown text repeats something
+   *  the button already says (its aria-pressed state). Null for nothing. */
   description?: string | null;
   /** Where it prefers to sit; it moves to the other side when there is
    *  no room. "above" for buttons along the bottom (the composer). */
@@ -99,11 +80,8 @@ export function Tooltip({
     setOpen(false);
   }, [setOpen, timerRef]);
 
-  // Esc hides it wherever the focus is: a hover tooltip over the composer
-  // while the caret stays in the field. The Escape is only taken for
-  // itself when the button has the focus - otherwise it still closes
-  // what it was pressed for. A scroll that moves the button leaves the
-  // tooltip pointing at nothing, so it goes too.
+  // Esc hides it wherever the focus is, but is only taken for itself when the
+  // button has focus. A scroll that moves the button hides it too.
   useEffect(() => {
     if (!open) return;
     const at = anchor.current?.getBoundingClientRect();
@@ -206,9 +184,8 @@ function TooltipBubble({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [at, setAt] = useState({ x: 0, y: 0 });
-  // Centred on the button, on the preferred side if it fits there. The
-  // bubble's own size is known only once it is in the DOM, so it is
-  // placed in a layout effect, before the first paint.
+  // The bubble's size is known only once in the DOM, so it is placed in a
+  // layout effect, before the first paint.
   useLayoutEffect(() => {
     const box = anchor.current?.getBoundingClientRect();
     const el = ref.current;

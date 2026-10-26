@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from "react";
 import { isIOSApp } from "../platform/capabilities";
 
-/** The width at which the iPhone layout takes over (mobile/styles): the
- *  sidebar becomes a drawer and Textus AI a bottom sheet. */
+/** The width at which the iPhone layout takes over: the sidebar becomes a
+ *  drawer and Textus AI a bottom sheet. */
 export const PHONE_QUERY = "(max-width: 760px)";
 
 function subscribe(onChange: () => void) {
@@ -15,10 +15,9 @@ function snapshot() {
   return isIOSApp && (window.matchMedia?.(PHONE_QUERY).matches ?? false);
 }
 
-/** Whether surfaces should take their phone form - an action sheet rather
- *  than a menu at the finger, a full-screen page rather than a dialog. iOS
- *  at phone width only: an iPad keeps the desktop's popovers, as iPadOS
- *  apps do, and a narrow desktop window is still a desktop. */
+/** Whether surfaces should take their phone form. iOS at phone width only:
+ *  an iPad keeps the desktop's popovers, and a narrow desktop window is still
+ *  a desktop. */
 export function usePhoneLayout(): boolean {
   return useSyncExternalStore(subscribe, snapshot, () => false);
 }

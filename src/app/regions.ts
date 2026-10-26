@@ -1,13 +1,7 @@
 /**
- * F6 and Shift+F6 move the focus between the window's regions, as in a
- * browser or Word: the window bar, the sidebar, the tabs, the document,
- * the review bar and the AI panel, the ones on screen, in that order and
- * round again. The way out of the editor where Tab indents (a list, a
- * code block, a table) and back into it.
- *
- * A region gets the focus where it last had it, else at its natural
- * starting point: the caret in the document, the tab in front, the
- * selected row of a tree, else its first control.
+ * F6 and Shift+F6 move the focus between the window's regions on screen,
+ * the way out of an editor where Tab indents. A region gets the focus back
+ * where it last had it, else at its natural start.
  */
 
 const REGIONS: { region: string; start?: string }[] = [

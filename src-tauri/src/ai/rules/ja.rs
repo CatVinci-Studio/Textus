@@ -1,8 +1,6 @@
-//! Japanese rules (CATALOGUE.md §3.5), JTF style by default (ja/jtf),
-//! with the 公用文 (koyobun), fiction and technical-writing profiles.
-//! Never flagged: a missing space between Japanese and Latin text,
-//! 「とんでもございません」 deflecting praise, a single … or ― in 公用文,
-//! ！？ in fiction or headings. Spaces are never inserted.
+//! Japanese rules, JTF style by default, with 公用文, fiction and technical
+//! profiles. Never flagged: no space between Japanese and Latin text, a single
+//! … or ― in 公用文, ！？ in fiction or headings. Spaces are never inserted.
 
 use super::stats::{minority, JA_VARIANTS};
 use super::text::*;

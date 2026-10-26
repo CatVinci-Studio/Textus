@@ -1,7 +1,5 @@
-/// Shared key-combo helpers. Combos are stored/compared as normalized
-/// strings like "mod+shift+g" - "mod" stands for Cmd on macOS (and on an
-/// iPhone/iPad keyboard, see modIsMeta) and Ctrl everywhere else, so the
-/// same stored string works cross-platform.
+/// Key-combo helpers. Combos are normalized strings like "mod+shift+g", where
+/// "mod" is Cmd on Apple platforms and Ctrl elsewhere.
 import { modIsMeta } from "../platform/os";
 const MODIFIER_KEYS = new Set(["control", "meta", "alt", "shift", "altgraph"]);
 
@@ -24,9 +22,8 @@ export function comboFromEvent(e: KeyboardEvent): string | null {
   return parts.join("+");
 }
 
-/// Whether a captured combo is safe to bind - requires at least one
-/// modifier so it can't shadow normal typing. Function keys type nothing,
-/// so they bind on their own (Typora's F8/F9 habits).
+/// Whether a captured combo is safe to bind: it needs a modifier so it can't
+/// shadow typing. Function keys type nothing, so they bind on their own.
 export function isBindableCombo(combo: string): boolean {
   return (
     /^(?:mod|ctrl|meta|alt)\+/.test(combo) ||
@@ -94,7 +91,7 @@ const RESERVED_COMBOS = new Set([
   "mod+shift+arrowup",
   "mod+shift+arrowdown",
   // Fixed AI keys: accept a pending edit, apply a grammar fix, cycle
-  // completion candidates (pending-edit, grammar-check, ghost-text plugins).
+  // completion candidates.
   "mod+enter",
   // Reject a pending edit, or keep the original of the sentence pointed at.
   "mod+backspace",
@@ -109,8 +106,8 @@ const RESERVED_COMBOS = new Set([
   "f7",
   "shift+f7",
 ]);
-// macOS's fixed Next/Previous Tab, Cmd+Shift+] and [ (app/fixed-shortcuts.ts),
-// as a US keyboard records them with Shift held, and as written.
+// macOS's fixed Next/Previous Tab, Cmd+Shift+] and [, as a US keyboard
+// records them with Shift held, and as written.
 const MAC_RESERVED_COMBOS = new Set([
   "mod+shift+]",
   "mod+shift+[",

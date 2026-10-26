@@ -52,7 +52,7 @@ describe("ProposalStream", () => {
       '{"action":"replace","alt":"","anchor":"![](a.png)","aspect":"16:9","prompt":"x',
     );
     expect(calls[0]).toMatchObject({ effect: "place", callId: "g1" });
-    // The backend announces the picture it runs (images.rs' execute).
+    // The backend announces the picture it runs.
     stream.toolStart("g1", "generate_image");
     stream.finalCall("g1", "{}");
     expect(calls[calls.length - 1]).toEqual({

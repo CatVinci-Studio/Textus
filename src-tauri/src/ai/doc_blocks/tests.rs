@@ -1,8 +1,8 @@
 use super::*;
 use serde_json::json;
 
-/// A document as the editor sends it: `(kind, markdown)` per block, ids
-/// made the way doc-blocks.ts makes them.
+/// A document as the editor sends it: `(kind, markdown)` per block, ids made
+/// the way the frontend makes them.
 fn editor(blocks: &[(&str, &str)]) -> Document {
     let ids = block_ids(blocks.iter().map(|(_, m)| *m));
     Document::from_blocks(
@@ -189,8 +189,8 @@ fn a_call_without_a_block_is_left_for_the_tool() {
     assert_eq!(check_target(&doc, &v), Err(NO_BLOCK.to_string()));
 }
 
-/// The cases doc-blocks.test.ts checks too: a rewrite of the whole
-/// document, run through keep_pictures, comes out the same both sides.
+/// The shared cases the frontend checks too: a rewrite run through
+/// keep_pictures comes out the same both sides.
 #[test]
 fn keeps_pictures_as_the_shared_cases_say() {
     let raw = include_str!("../../../../src/ai/keep-pictures-cases.json");

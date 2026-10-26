@@ -14,11 +14,9 @@ function inTableCell($pos: ResolvedPos): boolean {
 }
 
 /**
- * Lines pasted into a table cell, which holds one paragraph, joined into
- * one: their text with a space between, formatting kept. ProseMirror fits
- * several pasted lines to a cell as a row of cells, and those replaced the
- * cell at the caret and the ones after it. A copied table or its rows
- * still paste as cells; anything else pasted outside a cell is unchanged.
+ * Lines pasted into a table cell joined into one paragraph, formatting kept:
+ * ProseMirror fits them as a row of cells, replacing the cells after the
+ * caret. A copied table or its rows still paste as cells.
  */
 export function joinLinesForTableCell(slice: Slice, $pos: ResolvedPos): Slice {
   if (!inTableCell($pos)) return slice;

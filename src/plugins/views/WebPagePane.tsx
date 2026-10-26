@@ -6,8 +6,7 @@ import type { Strings } from "../../i18n/strings";
 import { useNativeWebPage } from "./useNativeWebPage";
 import { webPageUrl } from "./web-page-url";
 
-/** Whether the address bar is folded away - one choice for every web page
- *  tab, kept in this browser's storage. */
+/** Whether the address bar is folded away: one choice for every web page tab. */
 const BAR_HIDDEN_KEY = "textus.webPageBarHidden";
 
 function useBarHidden(): [boolean, (hidden: boolean) => void] {
@@ -32,14 +31,9 @@ function useBarHidden(): [boolean, (hidden: boolean) => void] {
 }
 
 /**
- * A web page in a tab (textus.window.openWebPage, for a plugin granted the
- * network for its host): the page under a slim address bar - reload, the
- * address, open in the browser - that folds away to a small handle. On macOS and
- * Windows the page is a native webview of its own laid over the tab
- * (useNativeWebPage) - every site opens there, with its own cookies, where
- * many refuse to be framed. On Linux and a phone it is a frame. Either way the page
- * keeps its own origin, which is never the app's: it reaches nothing of
- * the window's.
+ * A web page in a tab, under a slim address bar that folds to a handle. On
+ * macOS and Windows it is a native webview laid over the tab, since many sites
+ * refuse to be framed; elsewhere a frame. Its origin is never the app's.
  */
 export function WebPagePane({
   tabId,

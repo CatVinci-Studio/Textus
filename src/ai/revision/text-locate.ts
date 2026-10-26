@@ -1,27 +1,8 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 
-/**
- * Finds `needle`'s single occurrence within the RENDERED PLAIN TEXT of a
- * document range, returning its real ProseMirror position range - or null
- * when absent or ambiguous (more than one occurrence).
- *
- * This is the escape hatch from doc-markdown.ts's "a markdown offset inside
- * a block has no ProseMirror position" constraint: that constraint is about
- * MARKDOWN-SOURCE offsets, which don't map to positions because markdown
- * syntax density varies (a bold span is 4 extra characters in source but 0
- * in rendered text). Plain-text offsets have no such ambiguity - walking a
- * doc's actual text nodes to convert a plain-text offset back into a
- * position is a direct, unambiguous operation, the same one `doc.textBetween`
- * already does in the forward direction.
- *
- * SINGLE BLOCK ONLY: the position walk sums text-node lengths without
- * accounting for the block-separator characters `textBetween`'s search text
- * inserts between sibling block nodes, so a [from, to) spanning more than
- * one top-level block would search correctly but map positions wrong past
- * the first separator it crosses. Callers must confirm the range is within
- * one block first (usePendingEdits.ts does, via the serialized block list
- * it already has); this function does not check.
- */
+/** The position range of `needle`'s single occurrence in a range's rendered
+ *  plain text, or null if absent or repeated. The range must lie within one
+ *  block: block separators aren't counted, and this doesn't check. */
 export function locatePlainText(
   doc: ProseNode,
   from: number,
@@ -40,9 +21,8 @@ export function locatePlainText(
   let posStart: number | null = null;
   let posEnd: number | null = null;
   doc.nodesBetween(from, to, (node, pos) => {
-    // A hard break (or another inline leaf) is text in textBetween - its
-    // leafText, "\n" by default - and has to count here too: skipped, every
-    // strike after one ended a character late (1.1).
+    // An inline leaf such as a hard break is text in textBetween, so it
+    // counts here too.
     const leaf = node.isLeaf && !node.isText && node.isInline;
     if (!node.isText && !leaf) return true;
     const nodeFrom = Math.max(pos, from);

@@ -105,8 +105,8 @@ async fn deepseek_cuts_a_long_query_and_leaves_out_an_empty_question() {
     assert!(body.get("ori_question").is_none(), "{body}");
 }
 
-/// The shape api.deepseek.com/v1/tools/fetch really answers in: every
-/// punctuation mark escaped, code included.
+/// The shape DeepSeek's fetch really answers in: every punctuation mark
+/// escaped, code included.
 #[tokio::test]
 async fn deepseek_fetch_reads_the_page_without_its_escapes() {
     let (url, requests) = serve(

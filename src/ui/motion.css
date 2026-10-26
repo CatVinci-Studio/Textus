@@ -1,8 +1,6 @@
-/* Motion tokens: every duration, curve and distance the UI moves with, in
-   one place (docs/design/design-language.md, 动效). Components name these and
-   never a raw value, so the reduced-motion switch at the end of this file
-   reaches all of them at once. motion.ts reads the same tokens for the few
-   movements CSS cannot express (FLIP, the AI sheet under a finger). */
+/* Motion tokens: every duration, curve and distance the UI moves with.
+   Components name these, never a raw value, so the reduced-motion switch at
+   the end reaches all of them. motion.ts reads the same tokens. */
 :root {
   /* Durations. Exits run at about 70% of their entrance. */
   /* Press feedback, a hover colour arriving. */
@@ -21,8 +19,8 @@
   /* A tint that marks where something was found, fading as it is read
      (Settings' search). Colour only, so reduced motion keeps it. */
   --dur-linger: 1600ms;
-  /* Between one word and the next as written text comes in (cascade.ts),
-     and the most a run of them may take: more words, a shorter step. */
+  /* Between one word and the next as written text comes in, and the most a run
+     may take: more words, a shorter step. */
   --dur-stagger: 18ms;
   --dur-cascade: 700ms;
   /* The exits of the last two. */
@@ -38,8 +36,8 @@
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   /* Moving from A to B while on screen (FLIP). */
   --ease-in-out: cubic-bezier(0.45, 0, 0.25, 1);
-  /* Springs, as cubic fallbacks where linear() is unknown (iOS 16, Safari
-     before 17.2) - the @supports block below swaps in the real curves. */
+  /* Springs, as cubic fallbacks where linear() is unknown; the @supports
+     block below swaps in the real curves. */
   --ease-spring: var(--ease-out);
   /* About 3% overshoot: only where a finger lets go (sheet snap, tab
      drop, switch thumb). Menus and dialogs never bounce. */
@@ -52,10 +50,8 @@
   --scale-enter-dialog: 0.98;
   --scale-exit: 0.98;
   --scale-enter-alert: 1.08;
-  /* A surface that travels in from an edge (sheet, sidebar, AI panel)
-     covers this share of its way, and starts at this opacity. 1 and 1:
-     the whole way, already opaque. Reduced motion sets both to 0, so the
-     same rules fade it in where it rests instead. */
+  /* A surface that travels in from an edge covers this share of its way and
+     starts at this opacity. Reduced motion sets both to 0, leaving a fade. */
   --motion-travel: 1;
   --motion-travel-fade: 1;
 
@@ -268,9 +264,8 @@
   }
 }
 
-/* motion.ts's probe: its animation computes to "none" only where a
-   stylesheet has switched animation off wholesale (the e2e helpers do),
-   and the JS-driven movements then stand still too. */
+/* motion.ts's probe: its animation computes to "none" only where a stylesheet
+   switched animation off wholesale, and JS-driven movement then stops too. */
 .motion-probe {
   position: fixed;
   width: 0;
@@ -286,14 +281,8 @@
   }
 }
 
-/* Reduced motion is a crossfade, not nothing: nothing travels or scales,
-   springs become the standard curve, slow movements shorten to quick
-   fades, and the looping "working" indicators hold still. */
-/* The moves everything else is a case of (ui/moves.ts, docs/design/design-language.md):
-   a part of the page arriving, and leaving. Where it comes from or goes to
-   is the element's own: --enter-x / --enter-y / --enter-scale and
-   --exit-x / --exit-y / --exit-scale, a fade in place when unset. Under
-   reduced motion the distances above are 0 and only the fade is left. */
+/* The base moves: a part of the page arriving and leaving, from
+   --enter-x/-y/-scale and to --exit-x/-y/-scale; a fade in place when unset. */
 @keyframes motion-enter {
   from {
     opacity: 0;
@@ -310,16 +299,15 @@
   }
 }
 
-/* What is about to change, for the moment before it does (ui/moves.ts's
-   land): a tint, set and taken off - a colour is never faded. Colour
-   only, so reduced motion keeps it. */
+/* What is about to change, for a moment before it does: a tint, set and
+   taken off, never faded. Colour only, so reduced motion keeps it. */
 .motion-mark {
   background-color: var(--motion-mark-bg);
   border-radius: 2px;
 }
 
-/* A copy of what a change took away, fading out where it stood (ui/moves.ts's
-   crossfade): it plays none of its own entrances again. */
+/* A copy of what a change took away, fading out where it stood: none of its
+   own entrances replay. */
 .motion-ghost,
 .motion-ghost * {
   animation: none !important;
@@ -346,9 +334,8 @@
     scroll-behavior: auto;
   }
 
-  /* Important: these loops are declared in component stylesheets that
-     load after this one, and a user's setting outranks them all. The
-     dots then sit at full opacity - a "working" state that holds still. */
+  /* Important: these loops are declared in later stylesheets, and a user's
+     setting outranks them. The dots then hold still at full opacity. */
   .agent-thinking-dots span,
   .pending-insert-typing::after,
   .ghost-text::before,

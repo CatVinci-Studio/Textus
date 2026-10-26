@@ -32,32 +32,27 @@ export interface AgentRequestOptions {
   webSearch: boolean;
   /** Left out: the provider's default (Auto). */
   thinking?: ThinkingLevel;
-  /** See ai.agentMessage's focusHeading. */
   focusHeading?: string | null;
 }
 
-/** What has streamed in so far for the in-flight exchange: completed
- *  intermediate turns (the user's own message, tool calls/results as they
- *  land) plus the assistant prose fragment currently being generated.
- *  Display-only - the resolved request's turn list is what enters
- *  `history`; this exists so the UI has something live to show first. */
+/** What has streamed in so far for the in-flight exchange: landed turns plus
+ *  the prose being generated. Display only; the resolved turns enter
+ *  `history`. */
 export interface StreamingState {
   turns: AgentTurn[];
   text: string;
   /** The exchange's thinking so far, once the model has thought. */
   thought: Thought | null;
-  /** A tool whose call is coming in - generate_image ("Generating an
-   *  image…") or propose_edit ("Writing the edit…") - for the row under
-   *  the reply in place of "Thinking…". */
+  /** A tool whose call is coming in, for the row under the reply in place
+   *  of "Thinking…". */
   tool?: string;
-  /** add_comment calls whose passage and note have streamed in, before
-   *  their ToolCall turn lands - the margin shows each as it is written,
-   *  not all of them once the step completes. */
+  /** add_comment calls whose passage and note have streamed in, before their
+   *  ToolCall lands, so the margin shows each as it is written. */
   comments?: AgentTurn[];
 }
 
-/** The (document, message) pair behind the last failed send - lets the
- *  caller offer a "retry" that resends without the user retyping. */
+/** The (document, message) pair behind the last failed send, for a retry
+ *  without retyping. */
 export interface RetryableSend {
   document: DocumentSnapshot;
   message: string;
@@ -67,35 +62,22 @@ export interface RetryableSend {
   options: AgentRequestOptions;
 }
 
-/// Multi-turn agent conversation state/logic backing the inline chat bar
-/// (see ai/chat/quick-ask/InlineChat.tsx) against the `ai_agent_message` backend command -
-/// pulled out on its own so any other agent surface added later can reuse
-/// the same history bookkeeping instead of reimplementing it.
-///
-/// Lives above the chat bar itself (see MilkdownEditor) so a completed
-/// exchange can be saved after the popup closes. Closing and reopening keeps
-/// the current conversation; the header's explicit New Conversation action
-/// calls `reset`, while `restore` resumes a saved conversation. The document
-/// is passed per send, so each message can use the latest captured context.
+/// Multi-turn agent conversation state behind the chat surfaces. Lives above
+/// the chat bar so an exchange can be saved after it closes; `reset` starts
+/// over, `restore` resumes a saved conversation.
 export function useAgentConversation(
   docPath: string | null,
-  /** The chosen project folder, or null for the default (the document's
-   *  folder). Decides where `.textus/` is read from and how far the agent's
-   *  file tools may reach - see ai/workspace.rs. */
+  /** The chosen project folder, or null for the document's folder. Decides
+   *  where `.textus/` is read from and how far file tools may reach. */
   workspaceRoot: string | null,
   provider: string,
   webSearch: boolean,
   model: string | undefined,
-  /** Raw stream events beyond what `streaming` state captures - the editor
-   *  hooks propose_edit argument fragments here to grow the in-document
-   *  preview while the model is still writing it. Read through a ref, so a
-   *  re-render mid-request picks up the newest callback. */
+  /** Raw stream events beyond `streaming`, e.g. propose_edit fragments that
+   *  grow the in-document preview. Read through a ref. */
   onStreamEvent?: (event: StreamEvent) => void,
-  /** Per-callId status of every propose_edit proposal so far
-   *  (usePendingEdits' `allStatuses`, or the copy pushed to the detached
-   *  window). Annotated onto the history at send time - see
-   *  proposal-status.ts - so a follow-up prompt doesn't leave the model
-   *  assuming its still-undecided previous proposal is in the document. */
+  /** Per-callId status of every proposal so far, annotated onto the history
+   *  at send so the model doesn't assume an undecided proposal was applied. */
   proposalStatuses?: Record<string, PendingStatus>,
   /** False for Quick Ask: a one-off exchange that stays out of the History
    *  list unless it is carried over to the full conversation. */
@@ -106,18 +88,16 @@ export function useAgentConversation(
   );
   const [history, setHistory] = useState<AgentTurn[]>([]);
   // Each finished exchange's thinking, by the index of its user turn in
-  // `history` - shown above its reply for the rest of the session, but not
-  // saved with the conversation.
+  // `history`. Session only, not saved.
   const [thoughts, setThoughts] = useState<Record<number, Thought>>({});
   const [streaming, setStreamingState] = useState<StreamingState | null>(null);
   // Mirror of `streaming`, readable synchronously inside `send`'s catch:
   // a stop must fold what already streamed into history, and the state
   // value in that closure is stale by then.
   const streamingRef = useRef<StreamingState | null>(null);
-  // Text deltas can arrive several times a frame, and each state update
-  // re-renders the editor that owns this conversation - so a delta only
-  // marks the state dirty, and one render per frame picks up all of them.
-  // Everything else (a landed turn, the end) renders at once.
+  // Text deltas can arrive several times a frame, so a delta only marks the
+  // state dirty and one render per frame picks them up. Everything else
+  // renders at once.
   const deltaFrame = useRef<number | null>(null);
   const setStreaming = (
     value: StreamingState | null,
@@ -159,8 +139,8 @@ export function useAgentConversation(
   // The in-flight request's id, for stop() to cancel by - null when nothing
   // is running.
   const requestIdRef = useRef<string | null>(null);
-  // Incremented whenever a fresh popup replaces the current conversation.
-  // A late response from the old popup must never leak into the new chat.
+  // Bumped whenever a fresh conversation replaces this one, so a late
+  // response never leaks into the new chat.
   const generationRef = useRef(0);
   /** How the last message was sent - Continue, after an exchange ran out
    *  of steps, sends the same way. */
@@ -184,17 +164,14 @@ export function useAgentConversation(
     });
   }, [history, conversationId, docPath, persist]);
 
-  /** Returns the newly arrived turns - the caller's hook for reacting to
-   *  what came back, e.g. the chat bar turning propose_edit tool calls into
-   *  in-document previews. A stop returns the partial turns it kept (so
-   *  completed proposals still get their afterSend re-show); undefined means
-   *  the send was skipped, failed, or was stopped before anything streamed. */
+  /** Returns the newly arrived turns, e.g. for turning propose_edit calls
+   *  into previews. A stop returns the partial turns it kept; undefined
+   *  means skipped, failed, or stopped before anything streamed. */
   async function send(
     document: DocumentSnapshot,
     message: string,
-    /** Attached images. Text-shaped attachments (PDF, Word, spreadsheets)
-     *  were extracted and inlined into `message` by the caller; images have
-     *  no text to inline and travel as provider image parts instead. */
+    /** Attached images, sent as provider image parts. Text attachments are
+     *  already inlined in `message`. */
     images: ImageAttachment[] = [],
     options: AgentRequestOptions = { mode: "review", webSearch },
   ): Promise<AgentTurn[] | undefined> {
@@ -224,8 +201,7 @@ export function useAgentConversation(
     const requestId = crypto.randomUUID();
     const generation = generationRef.current;
     requestIdRef.current = requestId;
-    // add_comment arguments streaming in, by call id (StreamingState's
-    // comments).
+    // add_comment arguments streaming in, by call id.
     const commentArgs = new Map<string, string>();
     try {
       const newTurns = await ai.agentMessage({
@@ -315,8 +291,7 @@ export function useAgentConversation(
               (c) => c.kind === "ToolCall" && c.call_id === event.callId,
             );
             // Once: the passage and the whole note are in. The passage is
-            // the block it names (resolveBlockTarget), and the words in it
-            // it quotes.
+            // the block it names, and the words in it it quotes.
             if (!prev || shown || !comment?.complete) return;
             if (block && !block.complete) return;
             const target = resolveBlockTarget(document.blocks, {
@@ -340,9 +315,8 @@ export function useAgentConversation(
               comments: [...(prev.comments ?? []), call],
             });
           } else if (event.type === "turn") {
-            // Interim prose that streamed before a tool call is dropped,
-            // mirroring how the backend's step parsers prefer tool calls
-            // over accompanying text - it never enters history either.
+            // Interim prose that streamed before a tool call is dropped, as
+            // the backend prefers tool calls over accompanying text.
             const landed =
               event.turn.kind === "ToolCall" ? event.turn.call_id : null;
             setStreaming({
@@ -367,11 +341,8 @@ export function useAgentConversation(
       return newTurns;
     } catch (err) {
       if (generation !== generationRef.current) return undefined;
-      // A user-initiated stop() isn't a failure - no error, and nothing to
-      // retry (the message wasn't the problem). What already streamed stays:
-      // the user watched that content arrive, and stopping means "that's
-      // enough", not "throw it away" - so it enters history the same way a
-      // completed exchange would (see cancelled-turns.ts for what's kept).
+      // A user-initiated stop() isn't a failure: no error, nothing to retry.
+      // What already streamed enters history as a completed exchange would.
       if (err instanceof IpcError && err.cause === AI_CANCELLED) {
         const partial = streamingRef.current;
         const kept = keepCancelledTurns(
@@ -395,10 +366,8 @@ export function useAgentConversation(
     }
   }
 
-  /** After an exchange, what is remembered is brought up to date
-   *  (ai/memory/pass.rs) - apart from the reply, which is already shown -
-   *  and each change goes in as a chip right after the exchange (`at`).
-   *  A failure only means nothing was remembered this time. */
+  /** After an exchange, what is remembered is brought up to date, each
+   *  change a chip right after the exchange (`at`). A failure is silent. */
   async function rememberAfter(conversation: AgentTurn[], at: number) {
     if (!settings.rememberAutomatically) return;
     const generation = generationRef.current;
@@ -423,7 +392,7 @@ export function useAgentConversation(
   }
 
   /** After an exchange, its request offered as a skill when it was a
-   *  procedure worth keeping (ai/memory/skill_offer.rs), under the reply. */
+   *  procedure worth keeping, under the reply. */
   async function offerSkillAfter(conversation: AgentTurn[], at: number) {
     const generation = generationRef.current;
     try {
@@ -478,10 +447,8 @@ export function useAgentConversation(
   }
 
   /** Replaces the live conversation wholesale: cancels anything in flight,
-   *  fences off late responses (generation bump), and clears every piece of
-   *  per-exchange state. The one teardown `reset` and `restore` share, so a
-   *  new step (say, clearing a future draft field) can't land in only one
-   *  of them. */
+   *  fences off late responses and clears per-exchange state. Shared by
+   *  `reset` and `restore` so neither misses a step. */
   function load(id: string, turns: AgentTurn[]) {
     generationRef.current += 1;
     if (requestIdRef.current) void ai.cancelAgentMessage(requestIdRef.current);
@@ -496,26 +463,20 @@ export function useAgentConversation(
     next.clear();
   }
 
-  // A new, empty conversation: a fresh Quick Ask from the right-click menu
-  // or the shortcut, or "New conversation" in the panel or chat window.
-  // Restoring from History bypasses this and loads that conversation.
+  // A new, empty conversation.
   function reset() {
     load(crypto.randomUUID(), []);
   }
 
-  /** Restores a saved (or handed-over) conversation as the live one -
-   *  sending continues it. Takes the id/turns pair rather than a full
-   *  ChatHistoryEntry because two of the three callers are surface hops
-   *  (detach handoff, window re-embed) that have no entry - they'd have to
-   *  fabricate display-only fields restore never read. */
+  /** Restores a saved (or handed-over) conversation as the live one. Takes
+   *  id/turns, not an entry: the window hops that call it have no entry. */
   function restore(id: string, turns: AgentTurn[]) {
     load(id, turns);
   }
 
   return {
-    // Exposed so a conversation can move between windows (detached chat)
-    // without being re-saved under a new id each hop, which would leave one
-    // exchange scattered across several history entries.
+    // Exposed so a conversation can move between windows without being
+    // re-saved under a new id each hop.
     conversationId,
     history,
     thoughts,
@@ -524,7 +485,7 @@ export function useAgentConversation(
     error,
     retryable,
     lastOptions: () => lastOptionsRef.current,
-    /** What the writer will probably say next (next-message.ts). */
+    /** What the writer will probably say next. */
     suggestion: next.suggestion,
     send,
     stop,
@@ -537,16 +498,9 @@ export function useAgentConversation(
 export type AgentConversation = ReturnType<typeof useAgentConversation>;
 
 /**
- * A turn with its image payloads dropped, keeping only what the transcript
- * displays (name and type).
- *
- * Attached images are REQUEST data: base64 inflates a file by 4/3, and a
- * saved conversation is a JSON file (chat-history/, see docs/dev/storage.md)
- * that Rust rewrites on every exchange. A few screenshots would turn each
- * save into megabytes of writing and IPC. (Under
- * localStorage, where history used to live, one 6 MB screenshot overflowed
- * the quota and silently stopped ALL history from saving.) A retry still has
- * the real payloads; they hang off `RetryableSend`, not off history.
+ * A turn with its image payloads dropped, keeping name and type. Base64
+ * images would make every save of the conversation file megabytes; a retry
+ * still has the real payloads on `RetryableSend`.
  */
 function withoutImageData(turn: AgentTurn): AgentTurn {
   if (turn.kind !== "User" || !turn.images?.length) return turn;

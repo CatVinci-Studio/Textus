@@ -4,17 +4,9 @@ import type { NodeType } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 
 /**
- * The iPhone keyboard toolbar's block buttons, which - having one button
- * each and no shortcut to fall back on - must also undo themselves:
- *
- *   - H steps the caret's block through the heading levels: paragraph,
- *     H1, H2, H3, then back to a paragraph;
- *   - a list or quote button wraps the block, and tapped again inside one
- *     of its own kind takes the block back out (inside the other kind of
- *     list, it switches the list over).
- *
- * The desktop Format menu keeps inserting a given level / wrapping, as it
- * has a submenu for every level and its own shortcuts.
+ * The iPhone keyboard toolbar's block buttons, which must also undo
+ * themselves: H cycles paragraph, H1-H3; a list or quote button tapped again
+ * inside its own kind takes the block back out.
  */
 const LAST_LEVEL = 3;
 
@@ -78,9 +70,7 @@ export function toggleBlockquote(view: EditorView): boolean {
 }
 
 /** The Format menu's list items in a list of the other kind: the list
- *  becomes that kind, every item and its nesting kept. Milkdown's wrap
- *  command did nothing there. False outside a list, or in one of that
- *  kind already, for the caller to wrap the block as before. */
+ *  changes kind, nesting kept. False outside a list, or in one of that kind. */
 export function convertList(
   view: EditorView,
   kind: "bullet_list" | "ordered_list",

@@ -1,13 +1,6 @@
-//! Live checks of what Textus AI remembers by itself (ai::memory): when it
-//! calls `remember`, what it keeps, where (personal or the project's), and
-//! that it doesn't keep what it shouldn't - a one-off request, something
-//! private, what the document already says - or the same thing twice. And
-//! that a memory is followed in a later conversation.
-//!
-//! Each case runs on its own temporary global folder and project folder,
-//! with Remember automatically on, as the app has it by default.
-//!
-//!   cargo test --lib live_eval::memory_eval -- --ignored --nocapture --test-threads=1
+//! Live checks of what Textus AI remembers by itself: what it keeps, where, what
+//! it must not keep, and that a memory is followed later. Run with
+//! `cargo test --lib live_eval::memory_eval -- --ignored --nocapture --test-threads=1`.
 
 use super::harness::{self, auth, AgentSetup, Conversation, UserTurn};
 use crate::ai::agent::AgentMode;
@@ -368,9 +361,8 @@ fn a_remembered_requirement_is_followed_later() {
     assert_eq!(memories(&folders).len(), 1, "{:?}", memories(&folders));
 }
 
-/// A session's requests - more to write, a translation, notes on its hard
-/// words - are tasks, and none of them a memory: the pass kept "translate
-/// the whole text into English" as if it were a standing rule.
+/// A session's requests (more to write, a translation, notes on its hard words)
+/// are tasks, and none of them a memory.
 #[test]
 #[ignore = "live API - see module docs"]
 fn the_requests_of_a_writing_session_are_not_remembered() {
@@ -393,8 +385,8 @@ fn the_requests_of_a_writing_session_are_not_remembered() {
     assert!(folders.facts().is_empty(), "{:?}", folders.facts());
 }
 
-/// A memory says what holds - of the user or of the work - as mem0 keeps
-/// facts, not the user's words as an order to the assistant.
+/// A memory says what holds, of the user or of the work, not the user's words
+/// as an order to the assistant.
 #[test]
 #[ignore = "live API - see module docs"]
 fn a_memory_says_what_holds_not_the_users_command() {

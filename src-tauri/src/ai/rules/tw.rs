@@ -1,7 +1,6 @@
-//! Traditional Chinese rules (CATALOGUE.md §3.3): script purity for any
-//! Traditional text, and the Taiwan (MOE handbook, 文書處理手冊) and Hong
-//! Kong conventions by region. The region-neutral Chinese rules run from
-//! zh.rs.
+//! Traditional Chinese rules: script purity for any Traditional text, and the
+//! Taiwan and Hong Kong conventions by region. The region-neutral Chinese
+//! rules run from zh.rs.
 
 use super::stats::minority;
 use super::text::*;
@@ -27,10 +26,9 @@ pub(crate) fn run(t: &Text, ctx: &Ctx, out: &mut Out) {
     }
 }
 
-/// tw.script.simplified: Simplified characters in Traditional text - a
-/// stray one in clearly Traditional text, never inside a quotation. A
-/// character with several Traditional forms (发: 發/髮) gets no single
-/// suggestion.
+/// tw.script.simplified: a stray Simplified character in clearly Traditional
+/// text, never inside a quotation. One with several Traditional forms (发:
+/// 發/髮) gets no single suggestion.
 fn script_simplified(t: &Text, _ctx: &Ctx, out: &mut Out) {
     let (mut hans, mut hant) = (0, 0);
     for p in zhdata::script_pairs() {

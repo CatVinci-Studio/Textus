@@ -1,10 +1,8 @@
 use super::*;
 use crate::agent::ImageAttachment;
 
-/// The chat-completions image part, plus the guarantee that a text-only
-/// turn still sends a plain string. The second half is what keeps this
-/// dialect working against OpenAI-compatible servers old enough to
-/// reject a content-part array outright.
+/// The chat-completions image part, and that a text-only turn still sends a
+/// plain string, which older compatible servers need.
 #[test]
 fn images_use_image_url_parts_and_text_only_turns_stay_strings() {
     let with_image = turns_to_messages(
@@ -56,8 +54,7 @@ fn result(id: &str, output: &str) -> AgentTurn {
 
 #[test]
 fn turns_to_messages_starts_with_system_and_groups_tool_turns() {
-    // One step that called two tools (calls first, as run_agent_loop
-    // records them).
+    // One step that called two tools, calls first.
     let history = vec![
         AgentTurn::User {
             text: "do it".to_string(),
@@ -126,9 +123,8 @@ fn tool_result_images_follow_the_tool_messages_as_a_user_message() {
     assert_eq!(messages[4]["content"][1]["type"], "text");
 }
 
-/// Servers that cache prompt prefixes automatically (DeepSeek and most
-/// Chinese providers) only help if a new step leaves the messages before
-/// it alone: the next step's call starts a message of its own.
+/// Servers that cache prompt prefixes only help if a new step leaves the
+/// messages before it alone: the next step's call starts its own message.
 #[test]
 fn a_new_step_only_appends_messages() {
     let mut turns = vec![AgentTurn::User {
@@ -709,7 +705,7 @@ fn gemini_thoughts_in_the_text_stream_as_thinking() {
         _ => {}
     };
     let mut acc = ChatStreamAccumulator::default();
-    // As Vertex AI streams them (gemini-3.8-flash, 2026-10-22).
+    // As Vertex AI streams them.
     for delta in [
         json!({"content": "**Weighing**\n\nBoth readings.", "extra_content": {"google": {"thought": true}}}),
         json!({"content": "The second."}),

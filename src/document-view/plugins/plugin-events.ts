@@ -3,10 +3,8 @@ import { emitPluginEvent, pluginsListen } from "../../plugins/app-bridge";
 import { selectionText } from "./plugin-edits";
 
 /**
- * What the document in front tells plugins as the user works
- * (textus.editor.onDidChange / onDidChangeSelection): only for the active
- * tab, only when a plugin listens - nothing is read otherwise - and the
- * selection once it settles, not on every arrow key.
+ * What the document in front tells plugins as the user works: only for the
+ * active tab, only when a plugin listens, and the selection once it settles.
  */
 
 /** The editor's (already debounced) report of an edit. */

@@ -1,10 +1,7 @@
 /**
- * The YAML at the top of a document (textus.files.frontmatter): read into
- * an object and written back, the rest of the file untouched. The YAML a
- * note's front matter holds in practice - `key: value`, strings quoted or
- * not, numbers, true/false, null, `[a, b]` and `- item` lists, and nested
- * keys one level down - is understood; a line it can't read is kept as it
- * was when the matter is written back.
+ * The YAML front matter of a document, read into an object and written back,
+ * the rest untouched. Covers what notes hold in practice; a line it can't
+ * read is kept as it was.
  */
 
 export type FrontmatterValue =

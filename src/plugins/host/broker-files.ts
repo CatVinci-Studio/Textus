@@ -19,9 +19,8 @@ import {
   type PluginScope,
 } from "./broker-scope";
 
-/** A plugin's write, and the window told once it is on disk: a tab of
- *  that file picks it up (useExternalChangeReload), and plugins hear of
- *  it. */
+/** A plugin's write, and the window told once it is on disk: a tab of that
+ *  file picks it up, and plugins hear of it. */
 export async function written(
   path: string,
   write: Promise<unknown>,
@@ -32,8 +31,7 @@ export async function written(
   emitPluginEvent(change, { path });
 }
 
-/** The folder a plugin's project place is in: the one open in the
- *  sidebar (null for its global place). */
+/** The folder of a plugin's project place: the sidebar's (null for global). */
 function placeRoot(p: PluginScope, scope: StoreScope): string | null {
   if (scope !== "project") return null;
   p.need("project.data");
@@ -42,22 +40,21 @@ function placeRoot(p: PluginScope, scope: StoreScope): string | null {
   return root;
 }
 
-/** A token for the version of a document in a tab (files.process). */
+/** A token for the version of a document in a tab. */
 const TAB_TOKEN = "tab:";
 
 /**
- * A plugin's calls on the folder open in the sidebar (textus.files), its
- * own storage and secrets, the clipboard and the network - each checked
- * against what the user granted; Rust checks the file and network ones
- * again (src-tauri/src/plugins/).
+ * A plugin's calls on the open folder, its storage and secrets, the clipboard
+ * and the network, each checked against what the user granted. Rust checks
+ * the file and network ones again.
  */
 export function fileHandlers(p: PluginScope) {
   const write = () => {
     p.need("files.write");
     return p.root();
   };
-  /** Writes `text` to `path` - in its tab if it is open, else on disk -
-   *  if it is still the version `token` names. */
+  /** Writes `text` to `path` (in its tab if open, else on disk) if it is still
+   *  the version `token` names. */
   const writeVersion = async (path: string, text: string, token: string) => {
     const root = write();
     if (token.startsWith(TAB_TOKEN)) {
@@ -210,8 +207,8 @@ export function fileHandlers(p: PluginScope) {
       });
       return { ...response, body: fromBase64(response.body) };
     },
-    // Its own places (src-tauri plugins/store.rs): the project's is the
-    // open folder's, which Rust checks project.data for.
+    // Its own places: the project's is the open folder's, which Rust checks
+    // project.data for.
     "store.get": ({ scope, key }: Params) =>
       pluginsIpc.storeGet(
         p.id,

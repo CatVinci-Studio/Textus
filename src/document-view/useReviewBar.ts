@@ -7,9 +7,8 @@ import { revealPosition } from "../editor/reveal-position";
 import type { PendingEdits } from "./useEditorProposals";
 import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
 
-/** The elements round this editor that its surfaces attach to: the pane
- *  the review bar floats over, and the scroller and content column the
- *  review margin lines up with. */
+/** The elements round this editor its surfaces attach to: the pane the
+ *  review bar floats over, and the scroller the margin lines up with. */
 export function useEditorPane() {
   const rootRef = useRef<HTMLDivElement>(null);
   const [paneEl, setPaneEl] = useState<HTMLElement | null>(null);
@@ -31,11 +30,8 @@ export function useEditorPane() {
   return { rootRef, paneEl, scrollEl, contentEl };
 }
 
-/** The review bar (ai/revision/ReviewBar.tsx) floats over the bottom of the
- *  pane this editor scrolls in, while there is anything to decide, or a
- *  rewrite streaming in whose changes will be (usePendingEdits.reviewed) -
- *  except while Quick Ask, which has its own, is open, and on a phone while
- *  the AI sheet covers the text. */
+/** The review bar floats over the pane while there is anything to decide,
+ *  except while Quick Ask is open, or on a phone under the AI sheet. */
 export function useReviewBar({
   run,
   pendingEdits,
@@ -58,11 +54,9 @@ export function useReviewBar({
     pendingEdits.reviewed.length > 0 &&
     !quickAskVisible &&
     !(phone && panelContainer);
-  // On a phone, the edits arriving fold the AI sheet away so the text they
-  // change is what's on screen, scrolled to the first of them; the bar
-  // has the way back into the conversation.
+  // On a phone, arriving edits fold the AI sheet away and scroll to the
+  // first of them.
   const hadDecidable = useRef(false);
-  // Looked at as edits arrive; the rest is read as it is then.
   const decidable = pendingEdits.decidable.length;
   const now = useLatest({ pendingEdits, phone, panelContainer, isActive });
   useEffect(() => {
@@ -80,8 +74,7 @@ export function useReviewBar({
   }, [decidable, now, agentPanel, run]);
 
   /** ‹ / › in the review bar; F7 / Shift+F7 (`caret`) also put the caret
-   *  at the change, in the text, where Ctrl/⌘ + Enter and Ctrl/⌘ +
-   *  Backspace decide it. */
+   *  at the change, where Ctrl/⌘ + Enter or Backspace decide it. */
   function stepReview(delta: 1 | -1, { caret = false } = {}) {
     const stop = pendingEdits.stepReview(delta);
     if (!stop) return;
@@ -100,8 +93,7 @@ export function useReviewBar({
     });
   }
 
-  // F7 and Shift+F7 step through the changes from anywhere in the window,
-  // as in a word processor's review: the way to them without a mouse.
+  // F7 and Shift+F7 step through the changes from anywhere in the window.
   const stepRef = useLatest(stepReview);
   const stops = pendingEdits.reviewStops.length;
   useEffect(() => {

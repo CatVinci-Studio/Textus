@@ -1,24 +1,22 @@
 import { blockIds } from "../ai/doc-blocks";
 
 /**
- * The dev shim's answers to the plugin API 1.0's file and index commands
- * (src-tauri plugins/files.rs and metadata.rs), over the shim's in-memory
- * folder (`window.__devFs`) - so the browser build and the e2e tests run
- * the official plugins as the app does. The index is read the way
- * metadata.rs reads it, simply: headings, links, tags and tasks by line.
+ * The dev shim's answers to the plugin API's file and index commands, over
+ * `window.__devFs`, so the browser build and e2e run the official plugins.
+ * The index reads headings, links, tags and tasks by line.
  */
 
 interface ShimContext {
   id: string;
   folder: Record<string, string>;
-  /** Writes a file of the folder (as plugin_fs_write does). */
+  /** Writes a file of the folder. */
   write(path: string, text: string): void;
   granted(permission: string): boolean;
 }
 
 const secrets = new Map<string, string>();
 
-/** An uninstalled plugin's secrets go with it (plugins/files.rs). */
+/** An uninstalled plugin's secrets go with it. */
 export function forgetShimSecrets(id: string): void {
   for (const key of [...secrets.keys()])
     if (key.startsWith(`${id}\u0000`)) secrets.delete(key);
@@ -33,7 +31,7 @@ function token(text: string): string {
   return `${text.length}-${(h >>> 0).toString(16)}`;
 }
 
-/** What a document holds, as metadata.rs reads it. */
+/** What a document holds, as the backend's index reads it. */
 export function shimDocumentMeta(path: string, rel: string, text: string) {
   const lines = text.split(/\r?\n/);
   let start = 0;

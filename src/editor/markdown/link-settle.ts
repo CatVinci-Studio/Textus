@@ -11,33 +11,22 @@ import { changedRanges } from "../changed-ranges";
 import { typedImage, typedLink } from "./link-input-rule";
 
 /**
- * A bare URL typed out (`https://...`, `www....`) becomes a link once the
- * caret has gone on past it - as it would on reopening the file, where
- * GFM reads it as one. And a link or an image written out of order - `[]()` first, then its text
- * and its URL filled in, the URL pasted (a link of its own, paste-url.ts) -
- * becomes one once the caret is no longer inside it. The input rule only
- * sees a `)` being typed, and the bracket autopair only the caret moving
- * on past its own `)` (link-input-rule.ts's typedLinkEndingAt); filled in
- * from the inside, the brackets had neither, and stayed text around a
- * link of the URL alone.
- *
- * Only text typed in this editor is looked at - the ranges typing wrote,
- * kept until the caret leaves their block - so `\[a](b)` a file or a paste
- * escaped on purpose stays as it reads (a URL pasted into typed brackets
- * still counts: the brackets were typed). An undo or redo forgets
- * them: the link it took back would be made again at the next caret move.
- * Nor during an input method's composition, which any edit would end.
+ * A bare URL typed out becomes a link once the caret has gone past it, as
+ * GFM would read it on reopening; so does a link or image filled in out of
+ * order (`[]()` first), once the caret leaves it, since neither the input
+ * rule nor the autopair sees that. Only text typed in this editor counts,
+ * so a deliberately escaped `\[a](b)` stays; undo, redo and compositions
+ * are left alone.
  */
 
 const linkSettleKey = new PluginKey<[number, number][]>("link-settle");
 
 const LINK = /(?<!!)\[([^[\]\n\ufffc]+)\]\(([^()\s\ufffc]+)\)/g;
-/** A bare URL as GFM reads one: at the start or after a space (or `*`,
- *  `_`, `~`, `(`), `http(s)://` or `www.`. */
+/** A bare URL as GFM reads one: at the start or after a space (or `*`, `_`,
+ *  `~`, `(`), `http(s)://` or `www.`. */
 const BARE_URL = /(?<=^|[\s*_~(])(?:https?:\/\/|www\.)[^\s<>\ufffc]+/gi;
 
-/** A bare URL without the punctuation GFM leaves after it - a full stop
- *  ending the sentence, a closing bracket the URL didn't open. */
+/** A bare URL without the punctuation GFM leaves after it. */
 function trimUrl(url: string): string {
   let end = url.length;
   for (;;) {
@@ -52,9 +41,7 @@ function trimUrl(url: string): string {
   }
 }
 
-/** `url` at start..end as a link, the way a bare URL in a file reads: an
- *  autolink, written back `<...>` (or bare, for `www.`) as the file
- *  would be after a reopen. */
+/** `url` at start..end as an autolink, the way a bare URL in a file reads. */
 function bareLink(state: EditorState, url: string, start: number, end: number) {
   const link = state.schema.marks.link;
   if (!link || state.doc.rangeHasMark(start, end, link)) return null;
@@ -67,18 +54,17 @@ function bareLink(state: EditorState, url: string, start: number, end: number) {
 }
 const IMAGE = /!\[([^[\]\n\ufffc]*)\]\(([^()\s\ufffc]+)\)/g;
 
-/** Typing, as far as it can be told from the steps: each puts in a few
- *  characters at most (a key, an autopair's pair) or takes some out. A
- *  paste - the app's own handlers mark it no differently - puts in more. */
+/** Typing, as far as the steps tell: each puts in a few characters at most
+ *  or takes some out. A paste puts in more. */
 function typed(tr: Transaction): boolean {
   return tr.steps.every(
     (step) => step instanceof ReplaceStep && step.slice.size <= 4,
   );
 }
 
-/** A textblock's text with one character per position: an inline node
- *  other than text stands as object replacement characters, as many as
- *  its size, which neither pattern takes. */
+/** A textblock's text with one character per position: a non-text inline
+ *  node stands as object replacement characters, which neither pattern
+ *  takes. */
 function blockText(block: ProseNode): string {
   let text = "";
   block.forEach((child) => {
@@ -87,8 +73,8 @@ function blockText(block: ProseNode): string {
   return text;
 }
 
-/** The first link or image written out in the edited ranges that the
- *  caret is not inside, made one. */
+/** The first link or image written out in the edited ranges that the caret
+ *  is not inside, made one. */
 function settle(state: EditorState, ranges: [number, number][]) {
   const { selection, doc } = state;
   const seen = new Set<number>();
@@ -116,9 +102,8 @@ function settle(state: EditorState, ranges: [number, number][]) {
         if (tr) return tr;
       }
     }
-    // A bare URL once the caret has gone on past it (a space typed, Enter)
-    // - not while it may still be being typed: "https://a." is a URL the
-    // writer is still in, though the "." isn't part of it yet.
+    // A bare URL once the caret has gone past it, not while it may still be
+    // typed: "https://a." is one the writer is still in.
     for (const match of text.matchAll(BARE_URL)) {
       const url = trimUrl(match[0]);
       const at = start + match.index!;
@@ -145,12 +130,11 @@ export const linkSettlePlugin = $prose(
             ([a, b]) =>
               [tr.mapping.map(a, -1), tr.mapping.map(b, 1)] as [number, number],
           );
-          // Typed, not pasted or dropped: pasted Markdown already reads as
-          // it was written, escapes and all.
+          // Typed only: pasted Markdown already reads as it was written.
           if (tr.docChanged && !tr.getMeta(linkSettleKey) && typed(tr))
             next.push(...changedRanges(tr));
-          // A range is kept while the caret is in its block: one the caret
-          // has left was looked at as it left.
+          // A range is kept while the caret is in its block; one it left was looked
+          // at as it left.
           const $caret = state.selection.$from;
           next = next.filter(
             ([a]) =>
@@ -170,8 +154,8 @@ export const linkSettlePlugin = $prose(
           return null;
         if (!transactions.some((tr) => tr.docChanged || tr.selectionSet))
           return null;
-        // The ranges as they were before the caret moved, mapped onto the
-        // new document: those of a block just left are looked at now.
+        // The ranges before the caret moved, mapped onto the new document: those of
+        // a block just left are looked at now.
         const before = linkSettleKey.getState(oldState) ?? [];
         const mapped = before.map(([a, b]) => {
           let from = a;
@@ -185,8 +169,7 @@ export const linkSettlePlugin = $prose(
         const ranges = [...mapped, ...(linkSettleKey.getState(state) ?? [])];
         if (ranges.length === 0) return null;
         const tr = settle(state, ranges);
-        // Its own undo step: one undo takes back the link, not the URL
-        // pasted just before it as well.
+        // Its own undo step: one undo takes back the link, not the pasted URL too.
         return tr ? closeHistory(tr.setMeta(linkSettleKey, true)) : null;
       },
     }),

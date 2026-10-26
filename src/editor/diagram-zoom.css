@@ -1,6 +1,5 @@
-/* A drawn diagram's enlarge button (diagram-zoom.ts): in its corner, shown
-   while the pointer is over the diagram or the button has focus, as the
-   code block's header is. */
+/* A drawn diagram's enlarge button, shown while the pointer is over the
+   diagram or the button has focus. */
 .mermaid-preview {
   position: relative;
 }
@@ -38,7 +37,7 @@
 }
 
 /* The viewer over the window: the drawing moves and scales by transform
-   only (design-language.md), from its top-left corner. */
+   only, from its top-left corner. */
 .diagram-viewer {
   position: fixed;
   inset: 0;

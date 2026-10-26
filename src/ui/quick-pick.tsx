@@ -3,13 +3,8 @@ import { formatCombo } from "../utils/shortcuts";
 import { useModalDialog } from "./useModalDialog";
 import "./quick-pick.css";
 
-/**
- * A list to choose an item from - or several, ticked - filtered by what is
- * typed: the command palette's (app/command-palette.ts), and a plugin's
- * textus.ui.pick, so it asks for a choice without a webview of its own.
- * Shown by the QuickPickHost App mounts; requests queue, as app-dialog's
- * do.
- */
+/** A list to choose one item from, or several ticked, filtered by what is
+ *  typed: the command palette's and a plugin's textus.ui.pick. Requests queue. */
 export interface QuickPickItem {
   label: string;
   description?: string;

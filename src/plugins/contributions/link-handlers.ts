@@ -2,10 +2,8 @@ import { runCommand } from "../../app/commands";
 import { pluginsSnapshot } from "../store/plugin-records";
 
 /**
- * Links plugins open (manifest `contributes.links`): a web link
- * Ctrl/Cmd+clicked in a document goes to the first plugin on whose pattern
- * matches its URL - Web View shows it in a tab - and to the system's
- * browser when none does (link-click-plugin.ts).
+ * Links plugins open: a web link Ctrl/Cmd+clicked goes to the first plugin
+ * whose pattern matches it, else to the system's browser.
  */
 
 interface Handler {

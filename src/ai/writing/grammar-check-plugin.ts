@@ -16,7 +16,7 @@ const MIN_PARAGRAPH_CHARS = 12;
 
 export interface GrammarIssue {
   /** The writing-rules engine's rule id, when the issue came from it
-   *  rather than the model (ai::rules). */
+   *  rather than the model. */
   rule?: string;
   /** Unicode-scalar offsets into the checked paragraph (backend-verified). */
   start: number;
@@ -27,13 +27,8 @@ export interface GrammarIssue {
   original?: string;
 }
 
-/**
- * The checked paragraph, as it was at request time. The response is only
- * usable if the paragraph still reads exactly the same - an IME composition
- * (view.composing suppresses rescheduling) or fast typing can change it
- * while the request is in flight, and applying offsets computed against the
- * old text is how fixes used to land beside the text they meant to replace.
- */
+/** Whether the paragraph still reads as at request time; if not, the
+ *  response's offsets would land beside the text they meant. */
 function paragraphUnchanged(
   view: EditorView,
   contentStart: number,
@@ -47,11 +42,8 @@ function paragraphUnchanged(
   }
 }
 
-/// Runs a grammar check right now on the paragraph the cursor is in,
-/// bypassing the debounce/length gating the typing-triggered path uses - for
-/// manual "trigger grammar check" entry points (e.g. a context menu item).
-/// Unlike the silent auto-trigger path, this throws on failure so the caller
-/// can surface the error to the user.
+/// Checks the caret's paragraph now, skipping the debounce. Unlike the
+/// typing-triggered path, it throws on failure.
 export async function triggerGrammarCheckNow(
   view: EditorView,
   provider: string,
@@ -94,9 +86,7 @@ export async function triggerGrammarCheckNow(
   );
 }
 
-/// What grammar meta a transaction can carry. Each check replaces the issues
-/// of the ONE paragraph it checked - checking paragraph B used to replace the
-/// whole set, wiping A's underlines the moment the user typed elsewhere.
+/// Each check replaces the issues of only the paragraph it checked.
 type GrammarMeta =
   | { type: "paragraph"; from: number; to: number; decorations: Decoration[] }
   | { type: "ignore"; original: string; suggestion: string }
@@ -163,15 +153,14 @@ export function grammarIssueAt(
   );
 }
 
-/// The hover popover (rendered in MilkdownEditor) reads `issue`/`suggestion`
-/// back off the decoration's spec rather than a DOM `title` attribute, so it
-/// can render a real "Apply" button instead of relying on the OS tooltip.
+/// The popover reads the issue off the decoration's spec, not a `title`
+/// attribute, so it can offer a real Apply button.
 export interface GrammarDecorationSpec {
   issue: string;
   suggestion: string;
   /** Set when the writing-rules engine found it (labelled as such). */
   rule?: string;
-  /** What the highlighted range must still say for Apply to act (see useGrammarPopover). */
+  /** What the highlighted range must still say for Apply to act. */
   original?: string;
 }
 
@@ -197,9 +186,8 @@ export function issuesToDecorations(
 ): Decoration[] {
   const text = para.textContent;
   const decorations: Decoration[] = [];
-  // Left-to-right with overlaps dropped: stacked highlights on the same text
-  // render as one visual range whose hover popover only ever shows found[0],
-  // so the extra issues would be unreachable noise anyway.
+  // Overlaps dropped: stacked highlights show as one range whose popover
+  // only reaches the first.
   const ordered = [...issues].sort((a, b) => a.start - b.start);
   let lastEnd = -1;
   for (const issue of ordered) {
@@ -220,9 +208,8 @@ export function issuesToDecorations(
     const from = textOffsetToDocPos(para, contentStart, start16);
     const to = textOffsetToDocPos(para, contentStart, end16);
     if (from === null || to === null || from >= to) continue; // range the model made up - drop it
-    // The check sees the paragraph's plain text, where inline code has lost
-    // its backticks - so `npm instal` looks like a typo. Code is never the
-    // checker's to fix, whatever the prompt managed to keep out.
+    // Inline code loses its backticks in the checked text, so `npm instal`
+    // looks like a typo. Code is never the checker's to fix.
     if (touchesCode(para, from - contentStart, to - contentStart)) continue;
     lastEnd = issue.end;
     decorations.push(
@@ -242,8 +229,7 @@ export function createGrammarCheckPlugin(options: {
   provider: () => string;
   model: () => string | null;
   strictness: () => string;
-  /** The document's project folder, for its writing conventions profile
-   *  (style.md front matter) and library names. */
+  /** The document's project folder, for its writing conventions. */
   project?: () => { docPath: string | null; workspaceRoot: string | null };
   /** The app's language, which the explanations are written in. */
   uiLanguage?: () => string;
@@ -289,11 +275,8 @@ export function createGrammarCheckPlugin(options: {
               );
             }
             if (!tr.docChanged) return prev;
-            // Mapping keeps positions in step with the edit; on top of that,
-            // any highlight whose text no longer says what the issue was
-            // about is done - applying a suggestion (or typing inside the
-            // range) must clear its underline, not leave it hanging on the
-            // corrected text.
+            // A highlight whose text no longer says what the issue was about
+            // is done, so applying a fix clears its underline.
             const mapped = prev.map(tr.mapping, tr.doc);
             const stale = mapped.find().filter((deco) => {
               const spec = deco.spec as GrammarDecorationSpec;
@@ -309,8 +292,7 @@ export function createGrammarCheckPlugin(options: {
           decorations(state) {
             return grammarKey.getState(state);
           },
-          // Alt+Enter applies the suggestion under the caret - the keyboard
-          // path the hover-only popover never had.
+          // Alt+Enter applies the suggestion under the caret.
           handleKeyDown(view, event) {
             if (!event.altKey || event.key !== "Enter") return false;
             const { selection } = view.state;
@@ -362,9 +344,7 @@ export function createGrammarCheckPlugin(options: {
                     options.uiLanguage?.() ?? null,
                   );
                 } catch (err) {
-                  // Not logged in, offline, or bad model output - stays quiet in
-                  // the UI (no error popup while you're just typing), but still
-                  // logged so it's diagnosable instead of vanishing entirely.
+                  // Quiet in the UI while typing, but logged.
                   console.error("[grammar-check] request failed:", err);
                   return;
                 }

@@ -56,7 +56,7 @@ describe("StreamReveal", () => {
   });
 
   it("types a paragraph that arrives whole over about a second", () => {
-    // MiniMax: a tool call's arguments in one piece.
+    // A tool call's arguments in one piece.
     const reveal = new StreamReveal();
     const text = "雨".repeat(800);
     reveal.update(text, false, 0);
@@ -117,8 +117,8 @@ describe("StreamReveal", () => {
       reveal.update(received, end >= text.length, at);
       reveal.tick(at);
       const shown = reveal.text.length;
-      // Only the very end of what has arrived may be a cut the rest of the
-      // text will still complete - and only once it is overdue.
+      // Only the very end may be a cut the rest will still complete, and only
+      // once it is overdue.
       if (shown < received.length) expect(ends.has(shown)).toBe(true);
     }
     frames(reveal, 10_000, 10_400);

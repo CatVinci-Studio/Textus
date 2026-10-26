@@ -84,8 +84,8 @@ fn writes_are_debounced_and_flushed() {
     stores.patch_settings(&obj(json!({ "theme": "dark" })));
     // Not yet: the write waits out the debounce.
     assert!(!settings_path(&dir).exists());
-    // Then it lands on its own. Wait for it rather than for a fixed time:
-    // a busy CI runner can take well past the debounce to get there.
+    // Then it lands on its own. Wait for it rather than a fixed time: a busy CI
+    // runner can take well past the debounce.
     let deadline = std::time::Instant::now() + Duration::from_secs(10);
     while !settings_path(&dir).exists() && std::time::Instant::now() < deadline {
         std::thread::sleep(FLUSH_DELAY / 5);
@@ -149,9 +149,8 @@ fn a_settings_file_that_is_not_utf8_counts_as_corrupt() {
     );
 }
 
-/// A settings.json that's there but can't be read (here: no read
-/// permission) is left exactly as it is - never replaced by this
-/// session's defaults - while the app runs on in-memory settings.
+/// A settings.json that can't be read is left exactly as it is, while the app
+/// runs on in-memory settings.
 #[cfg(unix)]
 #[test]
 fn an_unreadable_settings_file_is_never_overwritten() {
@@ -257,10 +256,8 @@ fn only_a_pinned_appearance_overrides_the_system() {
 
 #[test]
 fn a_pinned_appearance_gives_windows_the_page_background() {
-    // Checked against the page itself, not restated here: a window must
-    // open in exactly the colour index.html paints first and ui/base.css's
-    // --bg keeps, or the change is a flash of its own. A failure here
-    // means one of the three moved without the others.
+    // Checked against the page itself: a window must open in exactly the colour
+    // index.html paints first and ui/base.css's --bg keeps.
     let index = include_str!("../../../index.html");
     let app_css = include_str!("../../../src/ui/base.css");
     for (theme, app_css_rule) in [

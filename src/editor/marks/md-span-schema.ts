@@ -17,10 +17,8 @@ import {
   highlightToMarkdown,
 } from "./highlight-syntax";
 
-// Registers "==highlighted==" parsing/serialization with remark, the same
-// way remark-math registers "$...$" (see math-schema.ts) - a unified plugin
-// that pushes a micromark syntax extension plus mdast fromMarkdown/
-// toMarkdown extensions onto the processor's shared `data()` bag.
+// Registers "==highlighted==" with remark the way remark-math registers
+// "$...$": extensions pushed onto the processor's shared `data()`.
 const remarkHighlight: RemarkPluginRaw<unknown> = function (
   this: ThisParameterType<RemarkPluginRaw<unknown>>,
 ) {
@@ -46,11 +44,8 @@ interface MdastNode {
 }
 
 /**
- * How many tildes a strikethrough was written with. remark-gfm reads `~x~`
- * as strikethrough too but keeps no count, and mdast writes "~~" - so a
- * Pandoc subscript, `H~2~O`, was saved as `H~~2~~O`, which reads as
- * strikethrough everywhere. Recorded here as `data.tildes`, read into the
- * node's rung below and written back by markdown-output.ts.
+ * How many tildes a strikethrough was written with: remark-gfm keeps no
+ * count, so a Pandoc subscript `H~2~O` was saved as strikethrough `H~~2~~O`.
  */
 const remarkStrikethroughTildes: RemarkPluginRaw<unknown> = () => {
   return (tree: unknown, file: { value: unknown }) => {
@@ -76,11 +71,8 @@ export const remarkStrikethroughTildesPlugin = $remark(
   () => remarkStrikethroughTildes,
 );
 
-/**
- * Italic written with underscores, `_text_`: recorded as `data.marker`,
- * read into the node's delim below and written back with underscores
- * (markdown-output.ts), where mdast alone would turn it into `*text*`.
- */
+/** Italic written with underscores, `_text_`, recorded so it is written
+ *  back with underscores rather than `*text*`. */
 const remarkEmphasisUnderscores: RemarkPluginRaw<unknown> = () => {
   return (tree: unknown, file: { value: unknown }) => {
     const source = String(file.value);
@@ -106,9 +98,7 @@ export const remarkEmphasisUnderscoresPlugin = $remark(
   () => remarkEmphasisUnderscores,
 );
 
-// The literal markdown delimiter text a node renders from/reverts to -
-// shared by the schema's toDOM (static "data-syntax" attribute) and
-// enclosure.ts (delimiter reveal widgets, delimiter deletion/unwrap).
+// The literal delimiter text a node renders from and reverts to.
 export function spanDelimText(node: {
   type: { name: string };
   attrs: { delim?: string; rung?: number };
@@ -117,16 +107,10 @@ export function spanDelimText(node: {
   return (node.attrs.delim ?? "*").repeat(node.attrs.rung ?? 1);
 }
 
-// A semantic tag Textus's own parseDOM rule below still recognizes via
-// data-type, so pasting this into an EXTERNAL app (which reads only the
-// tag, not the attrs) shows real bold/italic/strikethrough/highlight
-// instead of an unstyled <span>. Bold+italic together (rung 3) has no
-// single tag for it: on the clipboard it is nested strong>em - how remark
-// itself represents "***text***", and what other apps expect to see. In the
-// editor it stays one <strong> (italic comes from content-base.css): the
-// browser types into an empty shell's <strong>, outside an inner <em>, and
-// ProseMirror, reading the content only from the <em>, dropped every
-// character typed after "***".
+// A semantic tag, so an external app pasted into shows real formatting.
+// Bold+italic is nested strong>em on the clipboard, as remark represents
+// "***text***", but one <strong> in the editor: the browser typed outside
+// an inner <em>, and ProseMirror dropped those characters.
 function mdSpanDOM(node: ProseNode, forClipboard: boolean): DOMOutputSpec {
   const delim = node.attrs.delim as string;
   const rung = node.attrs.rung as number;
@@ -145,8 +129,8 @@ function mdSpanDOM(node: ProseNode, forClipboard: boolean): DOMOutputSpec {
   return ["em", attrs, 0];
 }
 
-/** Copies bold+italic as strong>em (see mdSpanDOM); everything else is
- *  serialized as the schema renders it. */
+/** Copies bold+italic as strong>em; everything else as the schema renders
+ *  it. */
 export const mdSpanClipboardPlugin = $prose((ctx) => {
   const base = DOMSerializer.fromSchema(ctx.get(schemaCtx));
   const serializer = new DOMSerializer(
@@ -156,14 +140,9 @@ export const mdSpanClipboardPlugin = $prose((ctx) => {
   return new Plugin({ props: { clipboardSerializer: serializer } });
 });
 
-// One node type covers bold/italic/bold+italic/strikethrough/highlight -
-// they're all "wrap some inline content in a repeated delimiter", differing
-// only in which character and how many of them. `delim`+`rung` together
-// pick the rendered style and the markdown wrapper on save (see toMarkdown
-// below); for "*" the rung is the style (1 = italic, 2 = bold, 3 = both),
-// for "~" only how many tildes the file had (`~x~` is rung 1, though the
-// editor makes "~~"), and "=" is always rung 2. "_" is italic written
-// `_text_`, always rung 1.
+// One node type for every repeated-delimiter wrapper. For "*" the rung is
+// the style (1 italic, 2 bold, 3 both); for "~" how many tildes the file had;
+// "=" is always rung 2; "_" is italic written `_text_`, rung 1.
 export const mdSpanSchema = $nodeSchema("md_span", () => ({
   content: "inline*",
   group: "inline",
@@ -174,18 +153,15 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
   },
   parseDOM: [
     {
-      // Not tag-specific ([data-type=...] alone) because toDOM below picks
-      // the wrapper tag by delim/rung (strong/em/del/mark) rather than
-      // always "span" - this must still recognize Textus's own re-pasted
-      // content regardless of which tag it rendered as.
+      // Not tag-specific: toDOM picks the tag by delim/rung, and Textus's own
+      // re-pasted content must match whichever it rendered as.
       tag: '[data-type="md_span"]',
       getAttrs: (dom) => ({
         delim: (dom as HTMLElement).dataset.delim || "*",
         rung: Number((dom as HTMLElement).dataset.rung) || 1,
       }),
-      // A copied bold+italic span carries an inner <em> (see
-      // mdSpanClipboardPlugin above) that the rung already says - read
-      // past it rather than nesting an italic span inside.
+      // A copied bold+italic span's inner <em> is what the rung already says:
+      // read past it rather than nest an italic span inside.
       contentElement: (dom) => {
         const el = dom as HTMLElement;
         const inner = el.firstElementChild;
@@ -196,12 +172,8 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
           : el;
       },
     },
-    // Standard semantic tags - recognizes bold/italic/strikethrough/highlight
-    // pasted in from anywhere else (a browser, Notion, another editor),
-    // which otherwise carried no formatting this schema could see at all.
-    // Lower priority than the rule above: Textus's own data-type-marked
-    // content must always resolve through its own attrs, never get
-    // re-derived from (and second-guessed via) the tag name.
+    // Standard tags, for formatting pasted from anywhere else. Lower priority,
+    // so Textus's own data-type content resolves through its own attrs.
     { tag: "strong", priority: 40, getAttrs: () => ({ delim: "*", rung: 2 }) },
     { tag: "b", priority: 40, getAttrs: () => ({ delim: "*", rung: 2 }) },
     { tag: "em", priority: 40, getAttrs: () => ({ delim: "*", rung: 1 }) },
@@ -237,18 +209,14 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
     runner: (state, node) => {
       const delim = node.attrs.delim as string;
       const rung = node.attrs.rung as number;
-      // Spaces and line ends at the span's edges go outside it: `*Anno di *`
-      // is no emphasis, and read back as text with two asterisks in it -
-      // what a span became when its last word was deleted. An empty span
-      // (its only word deleted) writes nothing rather than a literal `**`.
+      // Spaces and line ends at the span's edges go outside it: `*Anno di *` is no
+      // emphasis. An empty span writes nothing rather than a literal `**`.
       const { inner, before, after } = withoutEdgeSpaces(node.content);
       if (before) state.addNode("text", undefined, before);
       const children = inner.size ? phrasing(state, inner) : [];
       if (children.length) {
         if (delim === "*" && rung === 3)
-          // Bold+italic together: mdast represents this as nested
-          // strong>emphasis, not a single node - matches how remark itself
-          // parses "***text***".
+          // Bold+italic: nested strong>emphasis, as remark parses "***text***".
           state.addNode("strong", [{ type: "emphasis", children }]);
         else if (delim === "_")
           // Milkdown's emphasis handler writes the node's own marker.
@@ -300,9 +268,7 @@ function withoutEdgeSpaces(content: Fragment): {
 }
 
 /** The white space at one end of `nodes`, taken off them. A span there
- *  gives up its own: bold-italic is italic around bold, and the space
- *  left at the end of the bold when its last word went was written inside
- *  the italic, `***e** *`, which reads back as `*e *`. */
+ *  gives up its own, or `***e** *` would read back as `*e *`. */
 function takeEdgeSpaces(nodes: ProseNode[], atStart: boolean): string {
   let taken = "";
   const add = (spaces: string) => {
@@ -311,7 +277,6 @@ function takeEdgeSpaces(nodes: ProseNode[], atStart: boolean): string {
   while (nodes.length) {
     const index = atStart ? 0 : nodes.length - 1;
     const node = nodes[index];
-    // A line end inside a paragraph (Milkdown's inline hardbreak).
     if (node.type.name === "hardbreak" && node.attrs.isInline) {
       nodes.splice(index, 1);
       add("\n");
@@ -347,13 +312,9 @@ function takeEdgeSpaces(nodes: ProseNode[], atStart: boolean): string {
 }
 
 /**
- * A span's content as mdast, from a serializer of its own. Milkdown's
- * serializer keeps a mark open only while the next node has it, and at the
- * end of a span's content there is no next node: a link the span stood in
- * was closed inside it, so `[a **b** c](u)` was written as three links,
- * `[a](u) **[b](u)** [c](u)`. Written apart, the content can't close what
- * is open around the span, and linksOnSpans (markdown-output.ts) puts the
- * link on the span itself.
+ * A span's content as mdast, from a serializer of its own: Milkdown closes
+ * a link mark at a span's content end, writing `[a](u) **[b](u)** [c](u)`.
+ * Written apart, the content can't close what is open around the span.
  */
 function phrasing(state: SerializerState, content: Fragment): MarkdownNode[] {
   const Serializer = state.constructor as new (
@@ -364,10 +325,8 @@ function phrasing(state: SerializerState, content: Fragment): MarkdownNode[] {
   return (own.build().children ?? []) as MarkdownNode[];
 }
 
-// Inline code is kept as its own, separate node type (rather than another
-// md_span rung) because its content must never contain nested formatting -
-// backtick spans are verbatim text, matching how the stock inlineCode mark
-// and math_inline both already treat their content as plain, unmarked text.
+// Inline code is its own node type, since backtick spans are verbatim text
+// with no nested formatting.
 export const mdCodeSpanSchema = $nodeSchema("md_code_span", () => ({
   content: "text*",
   group: "inline",
@@ -377,12 +336,8 @@ export const mdCodeSpanSchema = $nodeSchema("md_code_span", () => ({
   attrs: {},
   parseDOM: [
     { tag: 'code[data-type="md_code_span"]' },
-    // A bare <code> from anywhere else (a web page, GitHub, another
-    // editor) - excluding one inside <pre> (a fenced code BLOCK), whose own
-    // parseDOM already owns that shape; without this exclusion an entire
-    // pasted code block's content would get misread as one inline code
-    // span. Lower priority so Textus's own data-type-marked rule above wins
-    // when both could match.
+    // A bare <code> from anywhere else, but not one inside <pre>: that is a code
+    // block, which would be misread as one inline span. Lower priority.
     {
       tag: "code",
       priority: 40,
@@ -397,10 +352,8 @@ export const mdCodeSpanSchema = $nodeSchema("md_code_span", () => ({
   ],
   parseMarkdown: {
     match: (node) => node.type === "inlineCode",
-    // Added whole rather than opened and closed: the text stays unmarked
-    // (code is verbatim) while a link around it - `[`code`](url)` - lands
-    // on the node itself and is written back out around the backticks.
-    // closeNode would also drop the link for the text after it.
+    // Added whole: the text stays unmarked while a link around it lands on the
+    // node itself; closeNode would also drop the link for the text after it.
     runner: (state, node, type) => {
       const value = node.value as string | undefined;
       state.addNode(type, undefined, value ? [state.schema.text(value)] : []);

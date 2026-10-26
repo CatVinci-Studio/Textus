@@ -5,8 +5,8 @@ import { getUiState, setUiState } from "../storage/ui-state";
  *  under this the tree's names are cut to a few letters. */
 export const SIDEBAR_DEFAULT_WIDTH = 240;
 export const SIDEBAR_MIN_WIDTH = 180;
-/** The widest it can be dragged to, and the share of the window it may
- *  take on a small one - the document is what the window is for. */
+/** The widest it can be dragged to, and the share of a small window it may
+ *  take. */
 const SIDEBAR_MAX_WIDTH = 480;
 const SIDEBAR_MAX_SHARE = 0.45;
 
@@ -24,8 +24,7 @@ export function clampSidebarWidth(width: number, windowWidth: number): number {
   );
 }
 
-/** The width last chosen (ui-state's sidebarWidth), or the default for
- *  anything an older build or a hand edit left there. */
+/** The width last chosen, or the default for anything invalid there. */
 export function storedSidebarWidth(): number {
   const stored = getUiState("sidebarWidth");
   return typeof stored === "number" && Number.isFinite(stored) && stored > 0
@@ -34,10 +33,8 @@ export function storedSidebarWidth(): number {
 }
 
 /**
- * The sidebar's width, remembered across launches and windows. The
- * remembered value is the one the user chose; a window too small for it
- * shows it narrower (clamped against `windowWidth`) and gives it back
- * when it grows again. A drag remembers where it let go, not each frame.
+ * The sidebar's width, remembered across launches and windows. A window too
+ * small for it shows it narrower, and a drag remembers only where it let go.
  */
 export function useSidebarWidth(windowWidth: number) {
   const [chosen, setChosen] = useState(storedSidebarWidth);

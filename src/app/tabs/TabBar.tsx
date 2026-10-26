@@ -16,8 +16,7 @@ import { Presence } from "../../ui/usePresence";
 
 interface TabInfo {
   id: string;
-  // Display name, computed by App (filename, "Untitled", or a bundled
-  // Help document's localized title).
+  // Display name: filename, "Untitled", or a Help document's title.
   title: string;
   dirty: boolean;
 }
@@ -28,19 +27,13 @@ interface TabBarProps {
   onActivate: (id: string) => void;
   onClose: (id: string) => void;
   onAdd: () => void;
-  /** Fired ONCE when a pill is pulled down out of the bar: the rest of
-   *  the drag is the caller's (split-drop.ts - over the documents to
-   *  split, out of the window to tear off). Omitted, a pull down stays a
-   *  reorder. */
+  /** Fired once when a pill is pulled down out of the bar; the rest of the
+   *  drag is the caller's. Omitted, a pull down stays a reorder. */
   onPullOut?: (id: string, title: string) => void;
-  // Horizontal drag-to-reorder within this bar: move the tab with the
-  // given id so it sits at `index` among the OTHER tabs.
+  // Move the tab so it sits at `index` among the OTHER tabs.
   onReorder: (id: string, index: number) => void;
-  // A tab being dragged INTO (or over) this window's tab row - the
-  // floating drag emits it while hovering, x already window-local - shown
-  // as a real-looking pill riding the cursor along the bar, the existing
-  // tabs sliding out of its way, exactly like a within-bar reorder. On
-  // release it becomes the real tab in that same slot.
+  // A tab dragged in from another window, shown as a pill riding the
+  // cursor; on release it becomes the real tab in that slot.
   previewTab: { title: string; dirty: boolean; x: number } | null;
   /** A tab's right-click menu (Open to the Side, Close). */
   menuFor?: (id: string) => (ContextMenuItem | "separator")[];
@@ -48,16 +41,12 @@ interface TabBarProps {
   labels: { tabs: string; close: string; add: string; unsaved: string };
 }
 
-// How far a tab must be dragged vertically, away from the bar, before it
-// leaves it (to split, or to tear off); and how far horizontally before
-// the same press starts a within-bar reorder instead. dy always wins -
-// pulling down mid-reorder still leaves the bar, like Chrome.
+// Drag distances to leave the bar (vertical) or start a reorder
+// (horizontal). dy always wins, like Chrome.
 const PULL_OUT_PX = 40;
 const REORDER_THRESHOLD_PX = 5;
 
-// One slide for every pill making way in the bar (live reorder shifting,
-// an incoming tab passing over them), so overlapping moves read as one.
-// No travel under reduced motion: the pills step to their places.
+// One slide for every pill making way, so overlapping moves read as one.
 const SLIDE =
   "transform calc(var(--dur-base) * var(--motion-travel)) var(--ease-in-out)";
 
@@ -80,10 +69,8 @@ export function TabBar({
     items: (ContextMenuItem | "separator")[];
   } | null>(null);
 
-  // A phone shows two or three pills at a time, and the tab that just
-  // opened (a new file, a document picked from the list) lands at the end
-  // of the row, out of sight. Bring the active one into view - by scrolling
-  // the bar alone, so the page under it never moves.
+  // A phone shows two or three pills; scroll the bar alone (never the page)
+  // to bring the active tab into view.
   const phone = usePhoneLayout();
   useEffect(() => {
     if (!phone) return;
@@ -102,10 +89,8 @@ export function TabBar({
       bar.scrollBy({ left: pillBox.right - barBox.right + margin, behavior });
   }, [phone, activeTabId, tabs.length]);
 
-  // FLIP (ListMotion, below): a gesture here that is about to change the
-  // bar - a reorder landing, a tab tearing off - captures the CURRENT
-  // on-screen place of every pill first, mid-shift transforms included, so
-  // the commit's slides start from exactly where things were.
+  // FLIP: capture every pill's on-screen place, mid-shift transforms
+  // included, before a gesture changes the bar.
   const pendingFlip = useRef<PendingFlip | null>(null);
 
   const captureFlip = useCallback(
@@ -122,9 +107,8 @@ export function TabBar({
 
   const previewRef = useIncomingTabPreview(barRef, previewTab, tabs);
 
-  // A tab list: ← / → (and Home / End) move between the tabs, Enter or
-  // Space shows the one with the focus, Delete closes it. Only the tab in
-  // front is in the tab order.
+  // Tab-list keys: arrows/Home/End move, Enter/Space shows, Delete closes.
+  // Only the front tab is in the tab order.
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     const pills = Array.from(
       barRef.current?.querySelectorAll<HTMLElement>('[role="tab"]') ?? [],
@@ -140,8 +124,6 @@ export function TabBar({
     else if (e.key === "End") next = pills[pills.length - 1];
     else if (e.key === "Enter" || e.key === " ") onActivate(id);
     else if (e.key === "Delete") {
-      // The focus stays in the strip, on the neighbour that takes the
-      // closed tab's place.
       (pills[at + 1] ?? pills[at - 1])?.focus();
       onClose(id);
     } else return;
@@ -157,8 +139,6 @@ export function TabBar({
       aria-label={labels.tabs}
       onKeyDown={onKeyDown}
     >
-      {/* Pills glide aside for a new tab and close up behind a closed
-          one, which shrinks away in its old place; a new one pops in. */}
       <ListMotion
         ids={tabs.map((tab) => tab.id)}
         container={barRef}
@@ -206,8 +186,7 @@ export function TabBar({
           <span className="tab-pill-title">{previewTab.title}</span>
         </div>
       )}
-      {/* The pointer's File › New File (Ctrl/⌘ + N, the keyboard's): a tab
-        list holds only tabs, so it stays out of the list's tree. */}
+      {/* A tab list holds only tabs, so this stays out of its tree. */}
       <Tooltip text={labels.add} description={null}>
         <button
           className="tab-bar-add"
@@ -224,19 +203,9 @@ export function TabBar({
 }
 
 /**
- * THE INCOMING TAB, riding the bar. The preview pill is laid out at the
- * end of the row but rendered (via transform) wherever the cursor is;
- * every other pill (and the + button) slides one slot right the moment
- * the cursor passes left of its center, and slides home when it passes
- * back - the same give-way behavior as a local reorder drag, driven by
- * Rust's hover events instead of pointer events. Give-way decisions
- * always compare against hoverGeom - each pill's resting layout
- * position, measured ONCE when the hover starts - never against live
- * rects: a rect read mid-slide underestimates/overestimates the layout
- * position, and near a decision boundary (e.g. hugging the bar's left
- * edge, where the clamped cursor parks right at the first pill's
- * center) that misread flips the decision back and forth, visible as
- * pills jittering in and out.
+ * The incoming tab, riding the bar while another window drags it over.
+ * Give-way decisions compare against resting positions measured once at
+ * hover start: live rects mid-slide make pills jitter at a boundary.
  */
 function useIncomingTabPreview(
   barRef: RefObject<HTMLDivElement | null>,
@@ -273,9 +242,8 @@ function useIncomingTabPreview(
 
       const tabsKey = tabs.map((tab) => tab.id).join("\n");
       if (hoverGeom.current?.forTabs !== tabsKey) {
-        // Hover (re)started: settle any leftover animation instantly so
-        // the measurements below read true resting layout, then capture
-        // it once for the whole hover.
+        // Hover (re)started: settle leftover animation so the measurements
+        // read the resting layout.
         for (const node of slidables) {
           node.style.transition = "none";
           node.style.transform = "";
@@ -291,9 +259,8 @@ function useIncomingTabPreview(
       }
       const geom = hoverGeom.current;
 
-      // Center the preview on the cursor, clamped inside the bar. The
-      // preview itself always moves with transition:none, so its rect
-      // minus its own known tx IS its resting layout - no misread risk.
+      // Center on the cursor, clamped. The preview never transitions, so
+      // its rect minus its own tx is its resting layout.
       const rect = el.getBoundingClientRect();
       const prevTx = appliedShift.current.get("__preview__") ?? 0;
       const layoutCenter = rect.left - prevTx + rect.width / 2;
@@ -325,11 +292,8 @@ function useIncomingTabPreview(
     } else if (prev.hadPreview) {
       const landed = tabs.some((tab) => !prev.tabIds.includes(tab.id));
       if (landed) {
-        // The drop: the real tab was inserted at the hovered slot in this
-        // same render, so the shifted pills' new LAYOUT matches where
-        // they already are visually - clear their transforms with no
-        // transition and nothing moves. The arriving pill itself settles
-        // from the preview's last position into its slot.
+        // The real tab was inserted at the hovered slot in this render, so
+        // clearing transforms with no transition moves nothing.
         for (const node of slidables) {
           node.style.transition = "none";
           node.style.transform = "";
@@ -400,9 +364,7 @@ function TabPill({
     startX: number;
     startY: number;
     reordering: boolean;
-    // Layout (untransformed) geometry of every real pill, measured once
-    // when the reorder starts - live shifting compares against these, not
-    // against mid-animation positions.
+    // Resting geometry, measured once; live shifting compares against it.
     rects: PillRect[];
     gap: number;
   } | null>(null);
@@ -440,8 +402,8 @@ function TabPill({
     if (!g) return;
 
     if (onPullOut && Math.abs(e.clientY - g.startY) > PULL_OUT_PX) {
-      // Pulled out of the bar: no reorder now, so the neighbours slide
-      // home, and the drag is split-drop.ts's from here.
+      // Pulled out of the bar: neighbours slide home, and the drag is the
+      // caller's from here.
       gesture.current = null;
       clearInlineStyles();
       onPullOut(tab.id, title);
@@ -456,8 +418,7 @@ function TabPill({
         .map((id) => {
           const node = pillNode(id);
           if (!node) return null;
-          // offsetLeft/offsetWidth are layout values, immune to any
-          // transform already in flight from a previous animation.
+          // Layout values, immune to transforms in flight.
           return {
             id,
             center: node.offsetLeft + node.offsetWidth / 2,
@@ -476,8 +437,6 @@ function TabPill({
     el.style.transform = `translateX(${dx}px)`;
     el.style.zIndex = "10";
 
-    // Everything the dragged pill's center has passed slides out of its
-    // way by exactly one dragged-pill slot; everything else slides home.
     const center = mine.center + dx;
     const slot = mine.width + g.gap;
     for (const r of g.rects) {
@@ -500,19 +459,15 @@ function TabPill({
       onActivate(tab.id);
       return;
     }
-    // Land the reorder: the drop index is however many OTHER pills the
-    // dragged center ended up past. FLIP is captured from the current
-    // VISUAL positions (mid-shift transforms included), so committing the
-    // new order and clearing the inline styles in the same breath lets
-    // every pill glide from exactly where it was to its final slot.
+    // The drop index is how many OTHER pills the center passed. FLIP comes
+    // from the visual positions, so every pill glides to its final slot.
     const mine = g.rects.find((r) => r.id === tab.id);
     const center = (mine?.center ?? 0) + (e.clientX - g.startX);
     const index = g.rects.filter(
       (r) => r.id !== tab.id && r.center < center,
     ).length;
     if (index === tabIds.indexOf(tab.id)) {
-      // Back in its own slot: no commit will follow to play the slides,
-      // so they play here.
+      // Back in its own slot: no commit follows to play the slides.
       const bar = elRef.current?.parentElement;
       const rects = measure(bar?.querySelectorAll("[data-flip-id]") ?? []);
       clearInlineStyles();
@@ -541,13 +496,10 @@ function TabPill({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onContextMenu={onContextMenu}
-      // Without this, WebKit treats the press as the start of a text
-      // selection and paints a selection sweep through the editor below
-      // once the pill detaches mid-gesture.
+      // Otherwise WebKit starts a text selection and paints a sweep through
+      // the editor once the pill detaches.
       onMouseDown={(e) => e.preventDefault()}
-      // Entered once: a reorder moves the pill's node, and a moved node
-      // starts its stylesheet animation over - the dropped tab faded in
-      // from nothing while its neighbour slid under it (TabBar.css).
+      // Entered once: a moved node restarts its stylesheet animation.
       onAnimationEnd={(e) => {
         if (e.target === e.currentTarget) e.currentTarget.dataset.entered = "";
       }}
@@ -560,8 +512,7 @@ function TabPill({
         />
       )}
       <span className="tab-pill-title">{title}</span>
-      {/* The pointer's close; the keyboard's is Delete on the tab (or
-        Ctrl/⌘ + W). Not a button: a tab holds no control of its own. */}
+      {/* Not a button: a tab holds no control of its own. */}
       <Tooltip text={labels.close} description={null}>
         <span
           className="tab-pill-close"

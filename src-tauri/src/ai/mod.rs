@@ -19,18 +19,16 @@ pub(crate) mod ui_language;
 pub mod web;
 pub mod workspace;
 
-/// The settings.json field of the master switch, Settings > Textus AI >
-/// Enable Textus AI (`textusAi` in SettingsContext.tsx). Missing means on.
+/// The settings.json field of the Enable Textus AI master switch. Missing
+/// means on.
 pub(crate) const TEXTUS_AI_SETTING: &str = "textusAi";
 
 /// What a request to an AI service is refused with while Textus AI is off.
-/// Mirrors `AI_OFF` in src/platform/ai-gate.ts.
+/// Keep in step with the frontend's `AI_OFF`.
 pub(crate) const TEXTUS_AI_OFF: &str = "textus-ai-off";
 
-/// Refuses a command that would send something to an AI service while
-/// Textus AI is turned off. The frontend never asks then (it checks the
-/// switch at every entry point, and ipc.ts refuses too); this keeps a
-/// request from going out even if one slipped through.
+/// Refuses a command that would send something to an AI service while Textus
+/// AI is off. The frontend checks too; this is the backstop.
 pub(crate) fn ensure_on(app: &tauri::AppHandle) -> Result<(), String> {
     allows(crate::settings::read_setting(app, TEXTUS_AI_SETTING))
 }

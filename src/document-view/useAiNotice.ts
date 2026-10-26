@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/** Transient, self-dismissing notice for on-demand AI triggers ("no issues
- *  found", "not signed in", ...) - deliberately not a native alert():
- *  those block the whole webview (and freeze automation) over messages
- *  that are often benign. */
+/** Self-dismissing notice for on-demand AI triggers. Not alert(): that
+ *  blocks the whole webview over often benign messages. */
 export function useAiNotice() {
   const [aiNotice, setAiNotice] = useState<string | null>(null);
   const noticeTimer = useRef<number | undefined>(undefined);
-  // When it goes, so a pointer resting on it can hold it (and give back
-  // what was left of its time when it moves off).
+  // When it goes, so a pointer resting on it can hold it.
   const noticeDeadline = useRef(0);
   const showAiNotice = useCallback((message: string | null) => {
     setAiNotice(message);

@@ -1,7 +1,5 @@
-/* Turn hierarchy: the user's own words are the quiet reference point and the
-   agent's reply is the thing being read, so the two are distinguished by
-   weight and alignment rather than by two competing coloured bubbles. A long
-   conversation of uniform tinted blocks is what this replaced. */
+/* The user's words are the quiet reference and the reply is what is read,
+   so the two differ by weight and alignment, not by two coloured bubbles. */
 .agent-message {
   font-size: var(--text-md);
   line-height: 1.55;
@@ -11,8 +9,8 @@
   word-break: break-word;
 }
 
-/* Sent from the trailing edge: the corner nearest the composer it came
-   from stays tight, as a message bubble's does. */
+/* Sent from the trailing edge: the corner nearest the composer stays tight,
+   as a message bubble's does. */
 .agent-message-user {
   align-self: flex-end;
   max-width: 86%;
@@ -25,17 +23,14 @@
   gap: 6px;
 }
 
-/* Plain text, not rendered markdown - literal newlines should still break
-   lines. Scoped to the prose itself so the context chips above it aren't
-   stretched by the same whitespace rule. */
+/* Plain text, not rendered markdown: literal newlines still break lines.
+   Scoped to the prose so the context chips above aren't stretched. */
 .agent-message-body {
   white-space: pre-wrap;
 }
 
-/* Selection / attachments that rode along with the message. They're context
-   the user chose, so they stay visible - but as compact chips, not as the raw
-   <selected-text>/<attached-file> blocks that used to bury the actual
-   sentence they typed. */
+/* Selection / attachments that rode along with the message, as compact
+   chips. */
 .agent-message-context {
   display: flex;
   flex-wrap: wrap;
@@ -65,8 +60,7 @@ button.agent-context-chip:hover {
 }
 
 .agent-context-chip-caret {
-  /* One chevron, rotated - a separate "down" glyph is a second thing to keep
-     in sync, and the rotation animates for free. */
+  /* One chevron, rotated, so the rotation animates for free. */
   flex-shrink: 0;
   transition: transform var(--dur-fast) var(--ease-standard);
 }
@@ -97,10 +91,8 @@ button.agent-context-chip:hover {
   background: color-mix(in srgb, var(--sidebar-active-text) 12%, transparent);
 }
 
-/* No bubble and no rule: the reply is the main content of the panel, read
-   at the panel's full width like any text. The user's tinted bubble on the
-   other side is what tells the two apart - a second mark (the accent rule
-   it had) only added a stripe down every answer. */
+/* No bubble and no rule: the reply is read at the panel's full width. The
+   user's tinted bubble is what tells the two apart. */
 .agent-message-assistant {
   align-self: stretch;
   max-width: 100%;
@@ -110,10 +102,8 @@ button.agent-context-chip:hover {
   line-height: 1.6;
 }
 
-/* The assistant reply rendered as markdown (see MarkdownText) - block
-   elements already carry their own spacing, so children lose the default
-   paragraph margins that would otherwise stack with the bubble's own
-   padding. */
+/* Block elements carry their own spacing, so children lose the default
+   paragraph margins. */
 .agent-markdown > *:first-child {
   margin-top: 0;
 }
@@ -335,10 +325,8 @@ button.agent-context-chip:hover {
   border-radius: var(--radius-block);
   padding: 6px 8px;
   margin: 4px 0 0;
-  /* A long result (a whole skill's text) scrolls in its own box, the
-     summary that closes it just above: laid out in full it ran on for
-     screens, and closing it meant scrolling back up to find the summary.
-     As the thinking row's text does. */
+  /* A long result scrolls in its own box, so the summary that closes it
+     stays close at hand. */
   max-height: min(320px, 45vh);
   overflow-y: auto;
 }
@@ -370,8 +358,8 @@ button.agent-context-chip:hover {
   word-break: break-word;
 }
 
-/* An exchange that ran out of steps (OUT_OF_STEPS): not an error - the
-   work so far stands - with Continue under the last one. */
+/* An exchange that ran out of steps: not an error - the work so far
+   stands - with Continue under the last one. */
 .agent-stopped {
   display: flex;
   flex-direction: column;
@@ -386,10 +374,8 @@ button.agent-context-chip:hover {
   color: var(--editor-muted);
 }
 
-/* A remember call's chip (MemoryChip.tsx): what was remembered, where,
-   and the way back - "Remembered: … (project) · Undo · Make personal".
-   A theme in a reply gets the same chip (ReplyThemes.tsx): its name and
-   "Use this theme". */
+/* A remember chip: what was remembered, where, and the way back. A theme in
+   a reply gets the same chip. */
 /* What one exchange remembered or forgot: one list, a line each. */
 .agent-memory-group {
   align-self: stretch;
@@ -414,7 +400,7 @@ button.agent-context-chip:hover {
 .agent-memory-chip-line {
   display: inline-flex;
   min-width: 0;
-  /* A button: the memory in the Memory tab (memory-focus.ts). */
+  /* A button: the memory in the Memory tab. */
   padding: 0;
   border: 0;
   background: none;

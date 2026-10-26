@@ -1,13 +1,9 @@
 import { ai, type GeneratedImageData } from "../../platform/ipc";
 import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../types";
 
-/**
- * The pictures generate_image proposes (src-tauri ai/images.rs). The
- * picture waits in the backend, in memory, until Accept saves it the way
- * Settings › Images says; until then the proposal's Markdown names it by a
- * placeholder src, and only the preview in the document - never the
- * conversation, which is saved - holds its bytes, as a blob: URL.
- */
+/** Proposed pictures: kept in the backend's memory until Accept saves them.
+ *  Until then the Markdown names each by a placeholder src, and only the
+ *  preview holds its bytes, never the saved conversation. */
 
 const PREFIX = "textus-generated:";
 
@@ -20,12 +16,8 @@ export function generatedImageSrc(id: string): string {
  *  the start of one a stream has typed only so far. */
 const PLACEHOLDER = /textus-generated:([0-9a-z]+)(?=[)>\s"])/g;
 
-/** A picture as a blob: URL - a few dozen characters standing for its
- *  bytes, decoded once - for the preview to draw it by. A data: URL put
- *  the whole picture, megabytes of base64, into the Markdown each frame
- *  of the typewriter parsed again and each <img> it made decoded again:
- *  the window stalled for seconds while a long text with pictures
- *  streamed in. */
+/** A picture as a blob: URL, decoded once. A data: URL would put megabytes
+ *  of base64 into Markdown parsed again on every typewriter frame. */
 function blobUrl(data: GeneratedImageData): string {
   const binary = atob(data.dataBase64);
   const bytes = new Uint8Array(binary.length);
@@ -38,11 +30,8 @@ function cleanAlt(alt: string): string {
   return alt.replace(/[[\]]/g, "").replace(/\s+/g, " ").trim();
 }
 
-/**
- * A generate_image call's arguments as a proposal - once with_images
- * (ai/images.rs) recorded the picture in them; null for one that made
- * none (its result says why).
- */
+/** A generate_image call's arguments as a proposal, once the backend has
+ *  recorded the picture in them; null for one that made none. */
 export function parseImageProposal(argumentsJson: string): EditProposal | null {
   try {
     const parsed = JSON.parse(argumentsJson);
@@ -103,15 +92,8 @@ function isDraftPicture(id: string): boolean {
   return id.startsWith("draft");
 }
 
-/**
- * A generate_image call still streaming, as a proposal - its frame in its
- * place and shape the moment the call says where it goes and how wide it
- * is (fields in schema order: action, alt, anchor, aspect, context,
- * prompt), rather than once the whole description has come and the
- * picture is asked for (live_eval::latency, redo_a_picture: three seconds
- * of nothing on a ChatGPT subscription, more on Claude). The completed
- * call's proposal, with the picture's own id, takes its place.
- */
+/** A streaming generate_image call as a proposal, its frame placed as soon
+ *  as the call says where and how wide, before the description is in. */
 export function draftPictureProposal(
   callId: string,
   fields: Record<string, { value: string; complete: boolean }>,
@@ -171,9 +153,8 @@ export function generatedImagePrompt(id: string): Promise<string | null> {
   return ai.generatedImagePrompt(id).catch(() => null);
 }
 
-/** Draws a made (or not made) picture again from `prompt`, the writer's
- *  change to its description: its frame paints again, here and on its
- *  card, until the new one comes; resolves as loadGeneratedImage does. */
+/** Draws a picture again from the writer's changed `prompt`, its frame
+ *  showing meanwhile; resolves as loadGeneratedImage does. */
 export async function redrawGeneratedImage(
   id: string,
   prompt: string,
@@ -199,13 +180,12 @@ export function loadedImageId(src: string): string | null {
   return null;
 }
 
-/** Fetches a picture from the backend once - which answers when it is
- *  made, so a picture still painting waits here - for the preview to draw
- *  it; false when it wasn't made (generatedImageFailure says why) or is
- *  gone (the backend keeps the newest 16, and nothing across a restart). */
+/** Fetches a picture once, waiting while it is made; false when it wasn't
+ *  made or is gone (the backend keeps only the newest few, not across a
+ *  restart). */
 export function loadGeneratedImage(id: string): Promise<boolean> {
-  // A streaming call's stand-in (draftPictureProposal): nothing to fetch,
-  // it paints until the call's own picture takes its place.
+  // A streaming call's stand-in: nothing to fetch, it paints until the
+  // call's own picture takes its place.
   if (isDraftPicture(id)) return new Promise<boolean>(() => {});
   if (loaded.has(id)) return Promise.resolve(true);
   if (failed.has(id)) return Promise.resolve(false);
@@ -308,14 +288,13 @@ const STUB = (id: string) =>
 const STUB_ID = /^data:image\/gif;textus-generated=([0-9a-z]+);/;
 
 /** The src a waiting picture is drawn by in the preview: its blob: URL
- *  once loaded, else the stand-in framePendingPictures frames. */
+ *  once loaded, else a stand-in. */
 export function shownGeneratedSrc(id: string): string {
   return loaded.get(id)?.url ?? STUB(id);
 }
 
-/** The id of a picture not loaded yet, from its src in the preview - the
- *  stand-in showGeneratedImages put there, or the proposal's own
- *  placeholder - or null. */
+/** The id of a picture not loaded yet, from its stand-in or placeholder
+ *  src, or null. */
 export function generatedImageId(src: string): string | null {
   if (src.startsWith(PREFIX)) return src.slice(PREFIX.length);
   return STUB_ID.exec(src)?.[1] ?? null;
@@ -331,9 +310,8 @@ export function generatedImageUrl(id: string): string | null {
   return loaded.get(id)?.url ?? null;
 }
 
-/** Markdown for the preview: each waiting picture's placeholder src as
- *  its data: URL - or, for one not loaded yet (still being made), a
- *  stand-in that pending-picture.ts turns into its frame. */
+/** Markdown for the preview: each waiting picture's placeholder as its
+ *  loaded URL, or a stand-in that becomes its frame. */
 export function showGeneratedImages(markdown: string): string {
   if (!markdown.includes(PREFIX)) return markdown;
   return markdown.replace(
@@ -365,9 +343,8 @@ export function withSavedSrc(text: string, id: string, src: string): string {
   return text.split(generatedImageSrc(id)).join(safe);
 }
 
-/** Where each accepted picture was saved. An undo brings its proposal
- *  back; accepted again, it writes the same file's src instead of saving
- *  a second copy. */
+/** Where each accepted picture was saved, so accepting again after an undo
+ *  reuses the file instead of saving a copy. */
 const saved = new Map<string, string>();
 
 export function savedSrc(id: string): string | undefined {
@@ -390,10 +367,8 @@ export function discardGeneratedImage(id: string): void {
   void ai.discardGeneratedImage(id).catch(() => {});
 }
 
-/** `text` with `picture` (its Markdown) put next to the paragraph that
- *  quotes `anchor` - after it, or before it - on a line of its own; null
- *  when `anchor` isn't in `text` exactly once. How a picture asked for
- *  next to text proposed and not decided yet joins that proposal. */
+/** `text` with `picture` on a line of its own beside the paragraph quoting
+ *  `anchor`; null when `anchor` isn't there exactly once. */
 export function joinedText(
   text: string,
   anchor: string,
@@ -412,15 +387,12 @@ export function joinedText(
   return `${text.slice(0, start)}\n\n${picture}${text.slice(start)}`;
 }
 
-/** The src of a picture the model writes into new text, on a line of its
- *  own, `![alt](textus-picture:16:9 what it shows)` - begun the moment the
- *  line has streamed in. Mirrors PICTURE_SCHEME in src-tauri
- *  ai/images/inline.rs. */
+/** The src of a picture line the model writes into new text, as in
+ *  `![alt](textus-picture:16:9 what it shows)`. Keep in step with the backend. */
 const PICTURE_LINE = "textus-picture:";
 
-/** The picture begun for each picture line, by call: the backend says so
- *  (the `picture` stream event) before the line itself arrives. Only the
- *  latest calls are kept - a completed call's text names its pictures. */
+/** The picture begun for each picture line, by call, announced before the
+ *  line arrives. Only the latest calls are kept. */
 const begun = new Map<string, Map<string, string>>();
 const BEGUN_CALLS = 32;
 
@@ -444,10 +416,8 @@ export function noteBegunPicture(
   lines.set(line, id);
 }
 
-/** A streaming propose_edit's text as far as it has come, each picture
- *  line as its picture - a frame until it comes. A line no picture was
- *  begun for, or one still being written, is left out: never shown as
- *  text. */
+/** A streaming propose_edit's text so far, each picture line as its
+ *  picture; a line not begun or still being written is left out. */
 export function withBegunPictures(callId: string, text: string): string {
   if (!text.includes("!")) return text;
   const ids = begun.get(callId);

@@ -1,7 +1,5 @@
-/* The detached chat window. Unlike the embedded popup this draws no chrome of
-   its own: the platform supplies the title bar, the drag behaviour, the
-   four-edge resizing and the shadow - which is exactly why detaching uses a
-   real window rather than a simulated one. All this file does is fill it. */
+/* The detached chat window. The platform supplies its title bar, dragging,
+   resizing and shadow; this file only fills it. */
 
 .chat-window {
   display: flex;
@@ -12,18 +10,11 @@
   overflow: hidden;
 }
 
-/* The window's top row: which document this chat is currently about, and the
-   pin. It stands in for the title bar (detach_chat_window hides the native
-   one on macOS), so it is the same 28px the editor's drag region uses and
-   carries no border - a rule under it would read as a second bar on a panel
-   this narrow.
-
-   The document name earns its place because this window follows the active
-   file and is often on another monitor with the editor out of sight. It is
-   right-aligned along with the pin so both clear the traffic lights floating
-   over the top-left, without hardcoding a macOS-only inset. */
+/* The window's top row: the document this chat is about, and the pin. It
+   stands in for the title bar, so it matches the editor's 28px drag region.
+   Right-aligned to clear the macOS traffic lights. */
 .chat-window-header {
-  /* The history list (ChatHistoryMenu) drops down across it. */
+  /* The history list drops down across it. */
   position: relative;
   flex: 0 0 auto;
   display: flex;
@@ -34,8 +25,7 @@
   padding: 0 6px;
 }
 
-/* Level with the traffic lights, as the editor's .window-bar is
-   (app/window-bar.css). */
+/* Level with the traffic lights, as the editor's .window-bar is. */
 :root[data-window-chrome="native"] .chat-window-header {
   padding-top: max(0px, var(--native-titlebar-height, 28px) - 28px);
 }
@@ -58,14 +48,8 @@
   user-select: none;
 }
 
-/* The header's buttons are the AI panel's own (.inline-chat-header-button,
-   ui/design-system.css), so a popped-out panel looks like the docked one.
-   A 20px box of its own here kept the browser's button padding, which
-   squeezed each 13px icon to a sliver (8px wide in Chromium) and drew it
-   at half opacity.
-
-   Pinned has to be obvious at a glance, since the window then behaves
-   differently: colour carries that, so the icon itself never changes. */
+/* The header's buttons are the AI panel's own, so a popped-out panel looks
+   like the docked one. Pinned shows by colour; the icon never changes. */
 .chat-window-pin-on,
 .chat-window-pin-on:not(:disabled):hover {
   color: var(--editor-accent);
@@ -91,15 +75,14 @@
   flex: 0 0 auto;
 }
 
-/* The composer is a box of its own (inline-chat.css); the / and @ lists
-   above it keep their rule. */
+/* The composer is a box of its own; the / and @ lists above it keep their
+   rule. */
 .chat-window-body .inline-chat-skill-menu {
   border-top: 1px solid var(--chat-hairline, var(--editor-border));
 }
 
-/* Both now sit UNDER the header rather than replacing the whole window (the
-   header carries the only close button this window has on Windows), so they
-   take the space left over instead of the full viewport. */
+/* These sit under the header (on Windows it has the only close button), so
+   they take the space left over, not the full viewport. */
 .chat-window-loading,
 .chat-window-lost {
   display: flex;
@@ -114,7 +97,7 @@
   background: var(--editor-bg);
 }
 
-/* Textus AI turned off: its note in the same place (TextusAiOffNote). */
+/* Textus AI turned off: its note in the same place. */
 .chat-window-ai-off {
   flex: 1;
   min-height: 0;

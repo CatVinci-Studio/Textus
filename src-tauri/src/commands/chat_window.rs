@@ -3,41 +3,28 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
 
-/// Label prefix of every detached chat window. Window-enumeration code has
-/// to be able to tell these apart from editor windows: a chat window has no
-/// tab bar and no document, so offering it as a tab-drag drop target or
-/// handing it files to open would silently lose whatever was sent.
+/// Label prefix of every detached chat window. A chat window has no tab bar
+/// or document, so it must never be taken for an editor window.
 pub const CHAT_LABEL_PREFIX: &str = "chat-";
 
-/// Whether `label` names a window that hosts a document (i.e. not the drag
-/// pill and not a detached chat).
+/// Whether `label` names a window that hosts a document (not the drag pill
+/// and not a detached chat).
 pub fn is_editor_window(label: &str) -> bool {
     label != crate::tab_drag::DRAG_PILL_LABEL
         && !label.starts_with(CHAT_LABEL_PREFIX)
         && !label.starts_with(crate::commands::export::PDF_EXPORT_LABEL_PREFIX)
 }
 
-/// One detached chat window.
-///
-/// The Agent has exactly two surfaces, and they differ in what they are ABOUT
-/// (see src/ai/chat/quick-ask/InlineChat.tsx): the in-document Quick Ask bar is scoped
-/// to the one file it was opened in, while a detached window is the
-/// cross-file surface - it follows whatever document the user is editing and
-/// pulls each new selection in. There is therefore at most ONE chat window
-/// per scope: popping the chat out of a second file must reveal the window
-/// already open, never spawn a rival one that would race it for the same
-/// editor's proposals.
+/// One detached chat window. Unlike Quick Ask it follows whatever document the
+/// user edits, so there is at most one per editor window.
 pub struct ChatWindowEntry {
     pub label: String,
-    /// The editor window this chat serves - one chat per editor window,
-    /// shared by all of that window's tabs.
+    /// The editor window this chat serves, shared by all of its tabs.
     pub scope: String,
 }
 
-/// The editor window a detached chat belongs to, if `label` names one.
-/// Menu commands focused on a chat window are routed here - the chat has no
-/// document and no menu handlers, so delivering Save/Export/Find to it would
-/// silently do nothing.
+/// The editor window a detached chat belongs to, if `label` names one. Menu
+/// commands focused on a chat go there, since the chat has no document.
 pub fn editor_for_chat(label: &str, open: &OpenChatWindows) -> Option<String> {
     open.0
         .lock()
@@ -48,24 +35,19 @@ pub fn editor_for_chat(label: &str, open: &OpenChatWindows) -> Option<String> {
 }
 
 /// Everything a detached chat window needs to carry on where the embedded
-/// panel left off. `state` is opaque JSON: the actual shape is defined once,
-/// in TypeScript (src/ai/chat/window/chat-bridge.ts), so the protocol doesn't have
-/// to be kept in sync across two languages for a payload Rust never inspects.
+/// panel left off. `state` is opaque JSON whose shape TypeScript defines.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct ChatHandoff {
-    /// Window label of the editor this chat belongs to. Only the STARTING
-    /// address: once running, the chat re-addresses itself to whichever
-    /// editor last pushed it context (see chat-bridge.ts), which is how one
-    /// window can serve several files.
+    /// Window label of the editor this chat starts with; once running, the chat
+    /// re-addresses itself to whichever editor last pushed it context.
     #[serde(rename = "editorLabel")]
     pub editor_label: String,
     pub state: serde_json::Value,
 }
 
-/// Handoffs waiting for their window's frontend to mount and claim them -
-/// the same pattern as PendingDetachedTabs in tab_drag.rs, and drained the
-/// same way (destructively, by window label).
+/// Handoffs waiting for their window's frontend to mount and claim them,
+/// drained destructively by window label.
 pub struct PendingChatHandoffs(pub Mutex<HashMap<String, ChatHandoff>>);
 
 /// Detached chat windows currently open.
@@ -81,8 +63,7 @@ fn chat_serving(editor_label: &str, open: &OpenChatWindows) -> Option<String> {
         .map(|entry| entry.label.clone())
 }
 
-/// detach_chat_window's inputs, the keys of `detachChatWindow`'s invoke in
-/// platform/ipc-app.ts. `state` is the handoff's opaque JSON (ChatHandoff).
+/// detach_chat_window's inputs. `state` is the handoff's opaque JSON.
 #[derive(serde::Deserialize)]
 pub struct DetachRequest {
     state: serde_json::Value,
@@ -91,27 +72,8 @@ pub struct DetachRequest {
     pinned: bool,
 }
 
-/// Pops this chat out of the editor into a real OS window.
-///
-/// A native window, not a webview-drawn panel, is the whole point: the user
-/// asked to be able to put it outside the main window, and only a real window
-/// gets native edge/corner resizing, cross-monitor placement, and the
-/// platform's own chrome.
-///
-/// `command(async)` is load-bearing, not a style choice. A plain `#[command]`
-/// is a BLOCKING command: Tauri runs it inline on the main thread, inside the
-/// calling webview's IPC callback. On Windows, building a webview from there
-/// deadlocks - wry has to pump a nested message loop waiting for
-/// `CreateCoreWebView2Controller` to call back, and WebView2 will not
-/// re-enter one of its own event handlers to deliver it. Tauri says as much
-/// on `WebviewWindowBuilder::build` ("deadlocks when used in a synchronous
-/// command"). The whole app froze and, because this `invoke` never resolved,
-/// the Quick Ask bar that was waiting on the returned label never hid itself
-/// either. macOS never hit it: WKWebView creation is synchronous.
-///
-/// `async` on a non-async fn runs the body on the async runtime instead, so
-/// window creation reaches the main thread as an ordinary event-loop message.
-/// Nothing in here awaits, so no lock is held across a suspension point.
+/// Pops this chat out of the editor into a real OS window. `command(async)` is
+/// required: a plain `#[command]` runs on the main thread, where WebView2 deadlocks.
 #[tauri::command(async)]
 pub fn detach_chat_window(
     app: tauri::AppHandle,
@@ -128,21 +90,12 @@ pub fn detach_chat_window(
     }) = request;
     let editor_label = window.label().to_string();
 
-    // Already open for this editor: focus what's there rather than spawning
-    // a duplicate that would race the first one for the same proposals. This
-    // is also the path a SECOND file takes - popping its chat out reveals the
-    // one window, which then follows that file.
+    // Already open for this editor: focus it rather than spawning a duplicate
+    // that would race it for the same proposals.
     if let Some(existing) = chat_serving(&editor_label, &open) {
         if let Some(win) = app.get_webview_window(&existing) {
-            // The window mounted long ago and so will never call
-            // take_chat_handoff by itself again - park the new state under its
-            // label and tell it to claim it, the same destructive claim the
-            // mount path uses. Dropping the state here (which is what used to
-            // happen) lost the whole handoff: the window went on showing its
-            // previous exchange, never learned the conversation the user had
-            // just had in Quick Ask, and - because Quick Ask hides itself on
-            // detach - the edits that conversation proposed were left with no
-            // accept/reject surface anywhere.
+            // The mounted window won't call take_chat_handoff again: park the new state
+            // under its label and tell it to claim it, or the handoff would be lost.
             pending.0.lock().unwrap().insert(
                 existing.clone(),
                 ChatHandoff {
@@ -150,8 +103,7 @@ pub fn detach_chat_window(
                     state,
                 },
             );
-            // emit_to, never the broadcasting `emit`: every event in this app
-            // is window-addressed (see src/utils/tauri-events.ts).
+            // emit_to, never the broadcasting `emit`: every event is window-addressed.
             let _ = app.emit_to(
                 tauri::EventTarget::webview_window(&existing),
                 CHAT_ADOPT_HANDOFF,
@@ -160,8 +112,8 @@ pub fn detach_chat_window(
             let _ = win.set_focus();
             return Ok(existing);
         }
-        // Registered but gone (closed without the destroy handler running) -
-        // drop the stale entry and fall through to building a fresh window.
+        // Registered but gone (closed without the destroy handler running): drop the
+        // stale entry and build a fresh window.
         open.0
             .lock()
             .unwrap()
@@ -184,45 +136,33 @@ pub fn detach_chat_window(
     let builder = WebviewWindowBuilder::new(
         &app,
         &label,
-        // One bundle, one entry - the query string picks the chat view. A
-        // second HTML entry point would mean a second build target and a
-        // second copy of the shared providers for no gain.
+        // One bundle; the query string picks the chat view.
         WebviewUrl::App("index.html?view=chat".into()),
     )
     .title(title)
     .inner_size(420.0, 560.0)
     .min_inner_size(320.0, 240.0)
-    // Set at build time as well as from the frontend so a pinned chat never
-    // flashes behind the editor for the frame before its React mounts.
+    // Set at build time as well so a pinned chat never flashes behind the editor
+    // before React mounts.
     .always_on_top(pinned);
-    // Wayland ignores both the position and always_on_top above, so the
-    // chat opened as just another toplevel: a new tiled column on niri and
-    // other tiling compositors, and sinking behind the editor elsewhere. As
-    // a transient of its editor it is a dialog to the compositor - niri
-    // floats windows that have a parent, and stacking compositors keep it
-    // above that editor.
+    // Wayland ignores the position and always_on_top; as a transient of its
+    // editor the chat floats (niri) or stays above it.
     #[cfg(target_os = "linux")]
     let builder = if crate::is_wayland() {
         builder.parent(&window).map_err(|err| err.to_string())?
     } else {
         builder
     };
-    // Same chrome as the editor windows: the app draws its own top row rather
-    // than sitting under a native title bar with a second row of ours beneath
-    // it - on a 420px-wide panel that second row was most of the chrome.
-    // The boot script carries the settings into the chat's first frame, as
-    // for an editor window (settings.rs).
+    // Same chrome as the editor windows: the app draws its own top row. The boot
+    // script carries the settings into the chat's first frame.
     let builder = crate::settings::with_boot(builder, &app, &label);
     crate::build_with_app_chrome(builder, position).map_err(|err| err.to_string())?;
     notify_chat_windows_changed(&app);
     Ok(label)
 }
 
-/// The chat window serving the calling editor window, if any.
-///
-/// Editor windows call this on mount and on focus, so a reloaded webview -
-/// or one whose chat was closed from the chat's own window - learns the
-/// current label instead of trusting a cached one.
+/// The chat window serving the calling editor window, if any. Asked on mount
+/// and focus, so a reloaded webview never trusts a stale label.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn current_chat_window(
@@ -233,10 +173,7 @@ pub fn current_chat_window(
 }
 
 /// Rust -> one chat window: a fresh handoff is waiting under your label, claim
-/// it. Emitted only when `detach_chat_window` reveals a window that already
-/// exists instead of building one; a window being built claims its handoff at
-/// mount without being asked. Mirrors CHAT_ADOPT_HANDOFF in
-/// src/ai/chat/window/chat-bridge.ts.
+/// it. Only sent when an existing window is revealed.
 pub const CHAT_ADOPT_HANDOFF: &str = "chat:adopt-handoff";
 
 /// Claimed by the chat window's frontend at mount, and again whenever
@@ -250,12 +187,8 @@ pub fn take_chat_handoff(
     pending.0.lock().unwrap().remove(window.label())
 }
 
-/// Brings the detached chat serving this editor to the front, without
-/// handing it anything. Opening Ask AI while a chat window exists means "go
-/// to the conversation", and the conversation there has moved on since it
-/// left the editor - re-running `detach_chat_window` would park the editor's
-/// older copy for the window to adopt, overwriting what the user did in it.
-/// Returns whether there was a window to focus.
+/// Brings the detached chat serving this editor to the front without handing
+/// it anything, which would overwrite its newer conversation. Returns whether there was one.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn focus_chat_window(
@@ -274,8 +207,7 @@ pub fn focus_chat_window(
     win.set_focus().is_ok()
 }
 
-/// Closes the detached chat serving this editor, if one is open - what the
-/// editor calls when the user re-embeds the panel.
+/// Closes the detached chat serving this editor, if one is open (re-embedding the panel).
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn close_chat_window(
@@ -293,23 +225,15 @@ pub fn close_chat_window(
     notify_chat_windows_changed(&app);
 }
 
-/// Told to every editor window when the set of open chat windows changes, so
-/// each webview can re-read `current_chat_window` instead of believing a
-/// cache. Without it, a chat closed from its own window leaves the editor
-/// pushing context at a destroyed label - silently, since an `emitTo` a
-/// dead window is not an error.
+/// Told to every editor window when the set of chat windows changes, so none
+/// keeps pushing at a destroyed label (an `emitTo` a dead window fails silently).
 pub const CHAT_WINDOWS_CHANGED: &str = "chat:windows-changed";
 
-/// Drops registrations involving a destroyed window. Called from the global
-/// window-destroyed handler for EVERY window, so it handles both directions:
-/// a closed chat window drops its own entry (letting an editor detach again),
-/// and a closed editor window drops the chat scoped to it.
+/// Drops registrations involving a destroyed window, in both directions: a
+/// closed chat drops its entry, a closed editor drops its chat.
 pub fn forget_chat_window(app: &tauri::AppHandle, label: &str, open: &OpenChatWindows) {
-    // A chat scoped to the editor window that just went away closes with it:
-    // left open it could only push at a dead window - sends timing out,
-    // Accept doing nothing - and on Windows/Linux it kept the process alive
-    // after the last editor was closed. Its conversation is already in the
-    // history list.
+    // A chat scoped to the closed editor closes with it: it could only push at
+    // a dead window, and on Windows/Linux it kept the process alive.
     let orphans: Vec<String> = open
         .0
         .lock()
@@ -328,8 +252,8 @@ pub fn forget_chat_window(app: &tauri::AppHandle, label: &str, open: &OpenChatWi
     }
 }
 
-/// The registry half on its own, so the bookkeeping is testable without an
-/// AppHandle to emit through. Returns whether anything was actually dropped.
+/// The registry half, testable without an AppHandle. Returns whether anything
+/// was dropped.
 fn forget_entries(label: &str, open: &OpenChatWindows) -> bool {
     let mut entries = open.0.lock().unwrap();
     let before = entries.len();
@@ -337,9 +261,8 @@ fn forget_entries(label: &str, open: &OpenChatWindows) -> bool {
     entries.len() != before
 }
 
-/// Announces the registry change to every editor window. Editor windows only:
-/// a chat window has no cache to invalidate, and the drag pill has no
-/// listeners at all.
+/// Announces the registry change to every editor window (the only ones that
+/// listen).
 pub fn notify_chat_windows_changed(app: &tauri::AppHandle) {
     for (label, window) in app.webview_windows() {
         if is_editor_window(&label) {

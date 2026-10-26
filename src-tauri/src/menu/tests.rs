@@ -8,9 +8,8 @@ fn a_recent_folder_ends_in_a_separator_to_set_it_apart_from_files() {
 
 #[test]
 fn every_label_key_is_one_the_frontend_sends() {
-    // Submenus and muda's own items have no menu id to key a label by;
-    // their keys are made up on both sides, so a typo on either would
-    // leave that one label English with nothing to say so.
+    // Submenus and muda's items have made-up keys on both sides, so a typo would
+    // silently leave that label English.
     let source = include_str!("build.rs");
     let frontend = [
         include_str!("../../../src/app/menu/app-menu-model.ts"),

@@ -1,12 +1,7 @@
 /**
- * Motion that CSS cannot express on its own - FLIP (ui/flip.ts), the AI
- * sheet under a finger, smooth scrolling - reads its timing from here, so
- * it follows the same tokens (motion.css) and the same switches as the
- * stylesheet does.
- *
- * Everything degrades to "no movement": reduced motion, an engine without
- * the Web Animations API, a stylesheet that switched animation off (the
- * e2e helpers), or an easing the engine doesn't know.
+ * Timing for motion CSS can't express on its own (FLIP, the AI sheet under a
+ * finger, smooth scrolling), from the same tokens and switches as motion.css.
+ * Everything degrades to no movement.
  */
 
 export type DurationToken =
@@ -43,8 +38,7 @@ const DURATIONS: Record<DurationToken, number> = {
   "--dur-cascade": 700,
 };
 
-/** The cubic fallbacks: what an engine without linear() runs (motion.css
- *  declares the same pairs). */
+/** The cubic fallbacks an engine without linear() runs. */
 const CUBIC: Record<EasingToken, string> = {
   "--ease-standard": "cubic-bezier(0.25, 0.1, 0.25, 1)",
   "--ease-out": "cubic-bezier(0.16, 1, 0.3, 1)",
@@ -66,15 +60,9 @@ export function prefersReducedMotion(): boolean {
 
 let probe: HTMLElement | null = null;
 
-/**
- * What the stylesheets say - the tokens, and whether animation is off -
- * read once and kept until it may have changed: a stylesheet added,
- * removed or rewritten in the document's head (the e2e helpers', a theme,
- * Vite's hot reload) or the reduced-motion setting switched. Each read is
- * a getComputedStyle, which brings the page's style up to date first: read
- * afresh for every animation started, it forced a style recalculation in
- * the middle of every frame of a streaming rewrite.
- */
+/** What the stylesheets say, read once and kept until a stylesheet in the
+ *  head changes or reduced motion switches. Reading per animation forced a
+ *  style recalculation every frame of a streaming rewrite. */
 let sheet: { disabled: boolean; tokens: Map<string, string> } | null = null;
 let watching = false;
 
@@ -98,12 +86,9 @@ function readSheet() {
   return sheet;
 }
 
-/** True where a stylesheet has switched CSS animation off wholesale - the
- *  e2e helpers' `animation: none !important` - read through an element
- *  whose own rule (motion.css) gives it an animation. Movement driven from
- *  script stands still there too, so a test sees the same final states the
- *  stylesheet shows it. An engine that computes no animation at all (jsdom)
- *  counts as off. */
+/** True where a stylesheet has switched CSS animation off wholesale (the e2e
+ *  helpers), read through an element whose own rule animates. Script-driven
+ *  movement stands still there too. jsdom counts as off. */
 function probeDisabled(): boolean {
   if (!probe || !probe.isConnected) {
     probe = document.createElement("div");
@@ -122,7 +107,7 @@ function stylesheetDisablesAnimation(): boolean {
 
 let allowed: boolean | null = null;
 
-/** Whether script-driven movement may run at all. Answered once per task:
+/** Whether script-driven movement may run at all. Answered once per task, as
  *  a FLIP asks for every element it moves. */
 export function motionAllowed(): boolean {
   if (allowed === null) {
@@ -172,12 +157,9 @@ export function easing(token: EasingToken): string {
   return readToken(token) || CUBIC[token];
 }
 
-/**
- * `el.animate`, with the easing named by token. A linear() string makes
- * Safari before 17.2 throw a TypeError, so that retries with the cubic
- * fallback. Returns null where nothing should move (see motionAllowed) or
- * the engine has no Web Animations API.
- */
+/** `el.animate`, with the easing named by token. Safari before 17.2 throws on
+ *  linear(), so that retries with the cubic fallback. Null where nothing
+ *  should move or there is no Web Animations API. */
 export function animate(
   el: Element,
   keyframes: Keyframe[],
@@ -216,13 +198,9 @@ export function animate(
 
 const gliding = new WeakMap<Element, () => void>();
 
-/**
- * Scrolls `el` by `delta` in one eased stroke of a fixed length (a
- * duration token), however far: the browser's own smooth scroll takes
- * longer the further it goes, so a far target jumped instead and a near
- * one crawled. Eased out as --ease-out is; a wheel or a press on the way
- * hands the scroll back to the reader. Under reduced motion it jumps.
- */
+/** Scrolls `el` by `delta` in one eased stroke of fixed length, however far,
+ *  unlike native smooth scroll. A wheel or press on the way hands the scroll
+ *  back; under reduced motion it jumps. */
 export function glideScroll(
   el: HTMLElement,
   delta: number,

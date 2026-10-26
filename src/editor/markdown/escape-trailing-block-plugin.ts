@@ -25,9 +25,7 @@ function isFirstTopLevelNode($from: ResolvedPos): boolean {
   return $from.depth >= 1 && $from.index(0) === 0;
 }
 
-// Nesting-safe version of isFirstTopLevelNode: true only when every
-// ancestor level (list item within its list, list within the doc, etc.) is
-// also the first child of its own parent.
+// True only when every ancestor level is also the first child of its parent.
 function hasNothingBefore($pos: ResolvedPos): boolean {
   for (let d = 0; d < $pos.depth; d++) {
     if ($pos.index(d) > 0) return false;
@@ -36,10 +34,9 @@ function hasNothingBefore($pos: ResolvedPos): boolean {
 }
 
 /**
- * The empty paragraph an escape below adds, while nothing has been typed in
- * it: only somewhere for the caret to stand. Once the caret leaves it still
- * empty it goes again, so moving through a document never changes the file
- * (#350). Neither its coming nor its going is an undo step.
+ * The empty paragraph an escape adds, while nothing is typed in it. Left
+ * empty it goes again, so moving through a document never changes the file.
+ * Neither its coming nor its going is an undo step.
  */
 const escapeLineKey = new PluginKey<number | null>("escape-line");
 
@@ -76,11 +73,8 @@ function emptyEscapeLine(doc: Node, pos: number): Node | null {
 }
 
 /**
- * ProseMirror's default backspace-at-start-of-block handling merges into
- * the previous block, but an empty code block with nothing before it (the
- * very first node in the doc) has nothing to merge into, so backspace does
- * nothing and it's stuck. Fall back to converting it into a paragraph,
- * same as backspacing an empty heading/blockquote normally would.
+ * An empty code block first in the doc has nothing to merge into, so
+ * backspace would do nothing; it becomes a paragraph instead.
  */
 function backspaceOutOfLeadingEmptyCodeBlock(view: EditorView): boolean {
   const { state } = view;
@@ -100,10 +94,7 @@ function backspaceOutOfLeadingEmptyCodeBlock(view: EditorView): boolean {
 
 /**
  * Backspace at the start of a line inside a blockquote takes that line out
- * of the quote, as every editor does. Without this it did nothing at all:
- * the default join has nothing sensible to merge the line into (an empty
- * quote at the top of the document was impossible to remove), so the quote
- * could only be got rid of by selecting around it.
+ * of the quote; the default join has nothing sensible to merge it into.
  */
 function backspaceOutOfBlockquote(view: EditorView): boolean {
   const { state } = view;
@@ -118,15 +109,8 @@ function backspaceOutOfBlockquote(view: EditorView): boolean {
 }
 
 /**
- * A code block or math block (tables: tableEdgeArrowPlugin below) at the
- * very start or end of the
- * document has nothing before/after it to move a cursor into - normal
- * arrow-key navigation can't escape it in that direction, and gets stuck.
- * This adds a trailing/leading empty paragraph on demand so there's always
- * somewhere to land - an escape line, gone again if left empty.
- *
- * A plain first or last line has no such gap: Enter at its start or end
- * makes a new line there, so the arrows only move.
+ * A code or math block at the very start or end of the document traps the
+ * arrow keys, so an escape line is added there on demand.
  */
 export function createEscapeTrailingBlockPlugin() {
   return new Plugin<number | null>({
@@ -170,7 +154,6 @@ export function createEscapeTrailingBlockPlugin() {
           );
         }
 
-        // Enter leaves code/math blocks and tables in block-keys-plugin.ts.
         const isForwardKey =
           event.key === "ArrowDown" || event.key === "ArrowRight";
         const isBackwardKey =
@@ -210,11 +193,8 @@ export function createEscapeTrailingBlockPlugin() {
 
 /**
  * Up off a table's first row, or down off its last, where the table starts
- * or ends the document: a new paragraph there, from any cell, as for code
- * blocks above. prosemirror-tables takes these keys first and, finding no
- * line beyond the table, put the caret back in its first or last cell -
- * the next cell along instead of a line up or down - so this plugin is
- * registered ahead of the table plugin (editor-extensions.ts).
+ * or ends the document: a new paragraph there. prosemirror-tables would put
+ * the caret back in a cell, so this is registered ahead of it.
  */
 export function createTableEdgeArrowPlugin() {
   return new Plugin({
@@ -224,8 +204,6 @@ export function createTableEdgeArrowPlugin() {
         if (isImeKeyEvent(view, event)) return false;
         if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey)
           return false;
-        // The caret a click or fast arrowing has just moved
-        // (enclosure.ts's stateWithLiveSelection).
         const state = stateWithLiveSelection(view);
         const { $from, empty } = state.selection;
         if (!empty || !isInTable(state)) return false;

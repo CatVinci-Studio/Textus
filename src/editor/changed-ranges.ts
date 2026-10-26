@@ -70,14 +70,9 @@ export function redrawBlocks(
 }
 
 /**
- * Keeps decorations drawn per node (a code block, an inline code span) in
- * step with an edit for the cost of what it touched: `set` is mapped
- * through `tr`, and only in the top-level blocks the edit changed are the
- * old decorations dropped and those of each node `match`es drawn again
- * with `decorate` - rather than every such node in the document on every
- * keystroke. Whole blocks, not just the nodes at the edit: a code block
- * turned into a paragraph keeps its text, and its tokens' decorations
- * mapped onto that text would otherwise stay.
+ * Keeps per-node decorations in step with an edit for the cost of what it
+ * touched. Whole top-level blocks are redrawn, so a code block turned into a
+ * paragraph drops its token decorations.
  */
 export function redecorateChanged(
   set: DecorationSet,

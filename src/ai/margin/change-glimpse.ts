@@ -1,6 +1,5 @@
-/** A change as a chip shows it (MarginCards): what goes and what comes,
- *  with a few characters either side - a sentence with one comma changed
- *  read as the same sentence twice. */
+/** A change as a chip shows it: what goes and what comes, with a few
+ *  characters either side. */
 export interface Glimpse {
   /** Before the change; "" at the sentence's start. */
   lead: string;

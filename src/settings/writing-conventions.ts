@@ -1,16 +1,9 @@
 import { localeOf, type Lang, type Strings } from "../i18n/strings";
 
 /**
- * Settings > Textus AI > Writing Assistance > Writing conventions: which
- * house rules the AI and the checks follow for punctuation, spacing,
- * numbers and form (the catalogue's §2.0). "automatic" picks one neutral
- * default per document language, or none where no national norm exists; a
- * profile pins it for documents in that language. A project's style
- * profile (`conventions:` in .textus/style.md) overrides it.
- *
- * The values are machine-read (Rust parses them), so they never change;
- * only their names are localised, built from the language and region names
- * the platform already knows (Intl.DisplayNames) and a few words of ours.
+ * Writing conventions: which house rules the AI and checks follow for
+ * punctuation, spacing, numbers and form. The values are machine-read, so
+ * they never change; only their names are localised.
  */
 
 export const AUTOMATIC_CONVENTIONS = "automatic";

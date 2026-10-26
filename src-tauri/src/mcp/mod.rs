@@ -1,13 +1,6 @@
-//! MCP servers (Settings › Extensions › MCP): programs or web services
-//! that give Textus AI more tools - a folder, a database, a search. Each
-//! one the user turned on is started in the background and kept running;
-//! a request offers the tools of every one that is ready (or becomes ready
-//! within a few seconds), and the model's calls go to it. A server the
-//! user turns off is stopped, its process with it.
-//!
-//! The servers are settings.json's `mcpServers` (McpServer in
-//! src/settings/mcp.ts): an id, a name, whether it is on, and either a
-//! `command` with `args` and `env`, or a `url` with `headers`.
+//! MCP servers: programs or web services that give Textus AI more tools. Each
+//! one turned on runs in the background; a request offers the tools of every
+//! ready one. They come from settings.json's `mcpServers`.
 
 mod client;
 mod path;
@@ -112,9 +105,8 @@ fn configs(app: &AppHandle) -> Vec<ServerConfig> {
 }
 
 impl McpHub {
-    /// Brings the running servers in line with the settings: each one on
-    /// is started (again, if it changed or stopped), each one off or gone
-    /// is stopped.
+    /// Brings the running servers in line with the settings: each one on is
+    /// started (again, if changed or stopped), each one off or gone is stopped.
     async fn sync(&self, app: &AppHandle) {
         let wanted: Vec<(ServerConfig, Endpoint)> = configs(app)
             .into_iter()
@@ -228,8 +220,8 @@ pub async fn mcp_restart(app: AppHandle, id: String) -> Vec<ServerStatus> {
     mcp_status(app).await
 }
 
-/// What a server offers, tried before it is saved: the name it gives and
-/// its tools, or why it can't be reached.
+/// What a server offers, tried before it is saved: its name and tools, or why
+/// it can't be reached.
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct Tried {
@@ -433,9 +425,8 @@ rl.on("line", (line) => {
         let _ = std::fs::remove_file(&script);
     }
 
-    /// The official Memory server, fetched by npx: a real server's
-    /// handshake, tool list and a call. Needs the network.
-    ///   cargo test --lib mcp::tests::a_published_server -- --ignored --nocapture
+    /// The official Memory server, fetched by npx: a real server's handshake, tool
+    /// list and a call. Needs the network.
     #[test]
     #[ignore = "live: downloads @modelcontextprotocol/server-memory"]
     fn a_published_server_answers_as_ours_does() {

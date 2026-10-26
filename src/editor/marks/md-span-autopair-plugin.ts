@@ -35,12 +35,9 @@ import {
 export { convertRunClosedBeforeCaret } from "./md-span-blocks";
 
 /**
- * After a typed delimiter steps the caret out of a filled span, the rest of
- * that span's closing run is still on its way: someone typing "**bold**" by
- * hand presses "*" twice at the end, and the second one must be swallowed
- * too, not open a fresh italic shell (or, for "~~", land as a literal "~").
- * Remembered per view until the next keystroke that isn't that delimiter at
- * that spot in that same document.
+ * After a typed delimiter steps out of a filled span, the rest of its
+ * closing run is still coming: the second "*" of a hand-typed "**bold**"
+ * must be swallowed too. Remembered per view until the next keystroke.
  */
 interface PendingCloser {
   doc: ProseNode;
@@ -74,19 +71,10 @@ function swallowPendingCloser(
 }
 
 /**
- * What typing a delimiter character does for bold/italic/strikethrough/
- * highlight/inline code: open a fresh empty shell, upgrade an empty shell's
- * rung, close/step past the node the cursor is in, or convert an unclosed
- * literal run left in the text (see enclosure.ts's findRunOpen - this is
- * also how a delimiter deleted via Backspace comes back when retyped).
- * Cursor movement, delimiter reveal, and delimiter deletion all live in
- * enclosure.ts; content editing is fully unintercepted.
- *
- * `autoClose` is Settings > Close ** and ` (#136).
- * Off, a delimiter never opens an empty shell - the only step that puts a
- * closing mark in before the user types it - so "*" and "**" stay literal
- * until the user types the closing run, which then converts the pair
- * exactly as it does for literal text today (and as the IME path does).
+ * What typing a delimiter does for bold/italic/strikethrough/highlight/code:
+ * open an empty shell, upgrade its rung, step past the node, or convert an
+ * unclosed literal run. `autoClose` off, no empty shell is opened: "*" stays
+ * literal until the closing run converts the pair.
  */
 export const createMdSpanAutopairPlugin = (options: {
   autoClose: () => boolean;
@@ -113,9 +101,8 @@ export const createMdSpanAutopairPlugin = (options: {
                 view.dispatch(tr);
                 return true;
               }
-              // Where no list can start (a list item's first line), the
-              // star stays what was typed, as a dash does there - not an
-              // italic span around the rest of the line.
+              // Where no list can start, the star stays what was typed, not an italic
+              // span around the rest of the line.
               if (stars?.rung === 1) {
                 const literal = view.state.tr.replaceWith(
                   from - 1,
@@ -167,8 +154,7 @@ export const createMdSpanAutopairPlugin = (options: {
                 return true;
               }
 
-              // Non-empty - already a valid node, just step past it, and
-              // expect the rest of a hand-typed closing run to follow.
+              // Non-empty: step past it, and expect the rest of a hand-typed closing run.
               view.dispatch(caretAt(state.tr, nodeEnd));
               const rung =
                 spec.nodeType === "md_span"
@@ -184,11 +170,8 @@ export const createMdSpanAutopairPlugin = (options: {
               return true;
             }
 
-            // WKWebView can normalize the caret from inside an empty shell to
-            // just after it, so the delimiter that should upgrade/fill the
-            // shell arrives attributed to the paragraph instead. Apply the
-            // same semantics as the isMatchingNode-empty branch above, then
-            // put the caret back inside where the user expects to type.
+            // WKWebView can normalize the caret from inside an empty shell to just after
+            // it; apply the same as the empty branch above, caret back inside.
             const before = $pos.nodeBefore;
             if (
               before &&
@@ -208,8 +191,8 @@ export const createMdSpanAutopairPlugin = (options: {
                 view.dispatch(run);
                 return true;
               }
-              // Code span: the second "`" becomes the shell's literal content
-              // (the "```" fence state - see codeFenceLanguage above).
+              // Code span: the second "`" becomes the shell's literal content (the "```"
+              // fence state).
               const tr = state.tr.insertText(spec.char, nodeStart + 1);
               view.dispatch(caretAt(tr, nodeStart + 2));
               return true;
@@ -225,10 +208,8 @@ export const createMdSpanAutopairPlugin = (options: {
 
             if (closeOpenRun(view, spec, textBefore, runStart, to)) return true;
 
-            // A longer opening run is still waiting for more closing chars
-            // (e.g. "**hello" with only one "*" typed so far) - stay literal
-            // so the multi-character closer can be built up keystroke by
-            // keystroke instead of spawning an unrelated fresh shell.
+            // A longer opening run still waits for closers ("**hello" with one "*"
+            // typed): stay literal so the closer can be built up.
             if (
               hasPendingRunOpen(
                 textBefore,
@@ -239,12 +220,8 @@ export const createMdSpanAutopairPlugin = (options: {
             )
               return false;
 
-            // Complete an opening run typed in FRONT of existing content whose
-            // matching closing run already sits ahead in the literal text -
-            // the forward mirror of the findRunOpen path above ("**" typed
-            // before "hello**" forms bold on the second "*"). The typed run's
-            // length picks the rung; see findRunClose for the exact-length
-            // matching rule.
+            // An opening run typed in front of content whose closing run sits ahead
+            // ("**" before "hello**"): the typed run's length picks the rung.
             let typedRun = 1;
             while (
               typedRun - 1 < textBefore.length &&
@@ -278,12 +255,8 @@ export const createMdSpanAutopairPlugin = (options: {
               }
             }
 
-            // With content still following the caret the character is being
-            // typed into the middle of existing text - never spawn a fresh
-            // empty shell there, keep it literal. (Closing/converting an
-            // opening run above still works mid-line.) Closing brackets and
-            // quotes don't count: "(" puts in its ")" (bracket-autopair-
-            // plugin.ts), and "(**" should open bold inside as at a line end.
+            // With content after the caret, never open an empty shell mid-text. Closers
+            // don't count: "(**" should open bold inside the autopaired ")".
             const rest = parent.textBetween(
               $pos.parentOffset,
               parent.content.size,
@@ -302,18 +275,14 @@ export const createMdSpanAutopairPlugin = (options: {
               return true;
             }
 
-            // "~~" and "==" stay text as typed: an empty strikethrough shown
-            // as "~~|~~" read as four tildes from two keys. They become a
-            // strikethrough or a highlight once their closing pair is typed
-            // (closeOpenRun above), as in Typora.
+            // "~~" and "==" stay text as typed: "~~|~~" read as four tildes from two
+            // keys. Their closing pair converts them, as in Typora.
             return false;
           },
           handleDOMEvents: {
             compositionend(view, event) {
               const committed = event.data ?? "";
-              // prosemirror-view reads the committed text back in a moment
-              // after this event, and enclosure.ts may move it out of an
-              // adjacent node; look once both have happened.
+              // Once the commit is read back in and moved out of any adjacent node.
               setTimeout(() => {
                 if (view.composing || view.isDestroyed) return;
                 convertRunClosedBeforeCaret(view, committed);

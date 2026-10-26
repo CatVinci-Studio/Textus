@@ -6,7 +6,6 @@ export interface CloseConfirmLabels {
   closeConfirmCancel: string;
 }
 
-/** The confirmation bar itself - rendered into ChatBody's `footer` slot. */
 export function CloseConfirmBar({
   labels,
   pendingCount,

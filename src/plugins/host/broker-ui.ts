@@ -20,10 +20,9 @@ function tone(value: unknown): "info" | "warning" | "error" {
 }
 
 /**
- * A plugin's commands and the app's own dialogs and bits it asks for
- * (textus.commands, textus.ui): drawn as Textus draws its own, titled with
- * the plugin's name so the user knows who is asking. They need no
- * permission.
+ * A plugin's commands and the dialogs it asks for, drawn as Textus draws its
+ * own and titled with the plugin's name so the user knows who is asking. No
+ * permission needed.
  */
 export function uiHandlers(p: PluginScope) {
   const progresses = progressesOf(p.id);

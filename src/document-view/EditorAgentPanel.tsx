@@ -21,10 +21,8 @@ import { ModeIcon } from "../ai/chat/mode-icons";
 import type { AgentMode, Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
-/** What this editor draws in the docked AI panel (ai/chat/panel/) while it
- *  is the active tab: the conversation, and the Project tab. */
-/** The panel's ChatBody always asks for the document as it is now
- *  (refreshContext); this stands until it answers. */
+/** The panel always asks for the document as it is now; this stands until
+ *  it answers. */
 const NO_DOCUMENT: DocumentSnapshot = { markdown: "", blocks: [] };
 
 export function EditorAgentPanel({
@@ -63,7 +61,7 @@ export function EditorAgentPanel({
   conversation: AgentConversation;
   pendingEdits: PendingEdits;
   selectedText: string | null;
-  /** The selection is one picture (usePanelSelection). */
+  /** The selection is one picture. */
   selectionIsPicture: boolean;
   /** The chip's part in keeping the selection highlighted. */
   selectionChip: SelectionChipHandlers;
@@ -81,11 +79,10 @@ export function EditorAgentPanel({
   guard: boolean;
   setGuard: (guard: boolean) => void;
 }) {
-  // What the composer is set to: the empty state says what the AI will do
-  // in it.
+  // The composer's mode: the empty state says what the AI will do in it.
   const [mode, setMode] = useState<AgentMode>(settings.agentDefaultMode);
-  // The window bar's Textus AI button opens and closes the panel; only
-  // the iPhone's sheet, over the page, keeps a close button of its own.
+  // The window bar's button opens and closes the panel; only the iPhone's
+  // sheet keeps a close button of its own.
   const phone = usePhoneLayout();
   const emptyText = {
     write: t.agentPanelEmptyWrite,

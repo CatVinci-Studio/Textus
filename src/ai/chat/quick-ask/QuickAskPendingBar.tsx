@@ -19,8 +19,8 @@ export interface QuickAskPendingBarLabels {
 }
 
 interface QuickAskPendingBarProps {
-  /** How many edits are currently decidable (streaming ones excluded - see
-   *  usePendingEdits.decidable). Nothing renders when this is 0. */
+  /** How many edits are currently decidable (streaming ones excluded).
+   *  Nothing renders when this is 0. */
   total: number;
   /** 0-based position of the currently focused edit within the navigable
    *  set, or -1 if none is focused yet. */
@@ -35,11 +35,9 @@ interface QuickAskPendingBarProps {
 }
 
 /**
- * Quick Ask's review-one-at-a-time bar - the ONE control surface for edits
- * in this surface (no proposal cards render alongside it here, unlike the
- * detached window). Accept/Reject act on whichever edit the "i / n"
- * indicator currently points at; each one's small ▾ opens a single-item
- * menu for the bulk action ("Accept all (N)" / "Reject all (N)").
+ * Quick Ask's review-one-at-a-time bar, its only control for edits.
+ * Accept/Reject act on the edit "i / n" points at; each ▾ offers the bulk
+ * action.
  */
 export function QuickAskPendingBar({
   total,
@@ -133,9 +131,7 @@ export function QuickAskPendingBar({
 }
 
 /** A primary action button with a chevron that opens a single-item menu for
- *  the bulk variant of the same action ("Accept" -> chevron -> "Accept all
- *  (N)"). Generic enough to serve both Accept and Reject without knowing
- *  which one it is. */
+ *  the bulk variant of the same action. */
 function SplitButton({
   label,
   menuLabel,

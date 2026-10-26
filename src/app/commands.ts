@@ -1,15 +1,8 @@
 import type { Strings } from "../i18n/strings";
 
 /**
- * Commands other code adds to the app (docs/dev/plugin-api.md): an id, its
- * name, what it does, and optionally the shortcut that runs it. The window's
- * shortcuts (useGlobalShortcuts) run one whose combo no built-in shortcut
- * has taken; the editor's right-click menu lists the ones contributed to it
- * (editor-menu.ts, registerEditorMenuItems).
- *
- * The app's own actions are not commands yet - they keep their menus,
- * shortcuts and Settings rows as they were. This is the door a plugin's
- * actions come in through, and the one list they are found in.
+ * Commands other code adds to the app: an id, its name, what it does, and
+ * optionally a shortcut. The app's own actions are not commands yet.
  */
 export interface CommandDef {
   /** Namespaced by its owner: "example.word-count". */
@@ -52,8 +45,7 @@ export function runCommand(id: string, args: unknown[] = []): boolean {
   return true;
 }
 
-/** A command's key: the user's (Settings › Shortcuts, `overrides` by id,
- *  "" for none), else its own. */
+/** A command's key: the user's override ("" for none), else its own. */
 export function commandShortcut(
   command: CommandDef,
   overrides: Record<string, string>,

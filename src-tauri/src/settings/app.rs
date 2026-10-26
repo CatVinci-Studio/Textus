@@ -4,8 +4,8 @@
 
 use super::*;
 
-/// Loads every store into app state. Called first thing in setup(), before
-/// any window is built - the windows' boot scripts are made from it.
+/// Loads every store into app state, before any window is built (their boot
+/// scripts are made from it).
 pub fn init(app: &AppHandle) {
     let config_dir = app.path().app_config_dir().unwrap_or_default();
     let data_dir = app.path().app_data_dir().unwrap_or_default();
@@ -14,10 +14,9 @@ pub fn init(app: &AppHandle) {
     apply_app_theme(app);
 }
 
-/// The appearance setting changed: brings the native side in line with it, so what a window shows before
-/// (and around) its page matches the page. macOS sets the app's appearance
-/// (`apply_app_theme`), Linux the open windows' background colour
-/// (`apply_window_backgrounds`); Windows and iOS need nothing.
+/// The appearance setting changed: brings the native side in line so what a
+/// window shows around its page matches. macOS sets the app's appearance, Linux
+/// the windows' backgrounds.
 pub(crate) fn theme_changed(app: &AppHandle) {
     #[cfg(target_os = "macos")]
     apply_app_theme(app);
@@ -27,18 +26,9 @@ pub(crate) fn theme_changed(app: &AppHandle) {
     let _ = app;
 }
 
-/// The appearance AppKit gives the app - Light or Dark when Settings pins
-/// one, the system's otherwise. Set here before any window is built, and
-/// again whenever the setting changes.
-///
-/// It decides a new window's first frames: until its page has painted
-/// (some 125 ms), a WKWebView shows a background that follows the app's
-/// appearance, not the page. So with Textus pinned to Dark on a light Mac,
-/// every window opened white for a moment however early the boot script
-/// put the theme on the document. It also gives scrollbars, context menus,
-/// open/save panels and the page's prefers-color-scheme the same appearance
-/// as the app. App-wide on macOS (tao sets NSApp.appearance); left alone
-/// on the other platforms.
+/// The appearance AppKit gives the app: Light or Dark when Settings pins one,
+/// the system's otherwise. A WKWebView shows a background following the app's
+/// appearance until its page paints, so without this a pinned window flashes.
 #[cfg(target_os = "macos")]
 pub(crate) fn apply_app_theme(app: &AppHandle) {
     let Some(stores) = app.try_state::<Stores>() else {
@@ -65,20 +55,16 @@ pub fn flush_all(app: &AppHandle) {
     }
 }
 
-/// A settings field as Rust sees it, for the few decisions made in Rust
-/// before any webview exists (window vs tab, session restore), for the
-/// writing conventions profile (`writingConventions`, ai::conventions) and
-/// for the built-in skills turned off.
+/// A settings field as Rust sees it, for the few decisions Rust makes itself
+/// (some before any webview exists).
 pub fn read_setting(app: &AppHandle, key: &str) -> Option<Value> {
     let stores = app.try_state::<Stores>()?;
     let (settings, _) = stores.settings.snapshot();
     settings.get(key).cloned()
 }
 
-/// Changes settings fields on Rust's own initiative - a command that owns a
-/// setting's logic, like turning a built-in skill off - and tells every
-/// window, the way settings_patch does for a window's change (`from` names
-/// no window, so every one applies it).
+/// Changes settings fields on Rust's own initiative and tells every window,
+/// as settings_patch does (`from` names no window, so every one applies it).
 pub fn patch_from_backend(app: &AppHandle, patch: Map<String, Value>) -> Option<u64> {
     let stores = app.try_state::<Stores>()?;
     let rev = stores.patch_settings(&patch);
@@ -94,9 +80,8 @@ pub fn patch_from_backend(app: &AppHandle, patch: Map<String, Value>) -> Option<
     Some(rev)
 }
 
-/// Delivers an event to every window. Each one individually: every event in
-/// this app is window-addressed (see src/utils/tauri-events.ts), and the
-/// frontend only listens for events sent to its own label.
+/// Delivers an event to every window, one by one: every event is
+/// window-addressed.
 pub(crate) fn emit_to_all<S: Serialize + Clone>(app: &AppHandle, event: &str, payload: S) {
     for label in app.webview_windows().into_keys() {
         let _ = app.emit_to(
@@ -107,15 +92,9 @@ pub(crate) fn emit_to_all<S: Serialize + Clone>(app: &AppHandle, event: &str, pa
     }
 }
 
-// ---------------------------------------------------------------------------
-// Boot snapshot
-// ---------------------------------------------------------------------------
-
-/// The script every app webview runs before the page's own: it publishes
-/// `window.__BOOT__` and applies the appearance settings to the document
-/// (src-tauri/src/boot.js does the applying). Read when the window is BUILT,
-/// so a page reload replays an old snapshot - the frontend treats it as a
-/// first-paint hint and re-reads the live values once mounted.
+/// The script every app webview runs first: it publishes `window.__BOOT__` and
+/// applies the appearance. Read when the window is built, so the frontend treats
+/// it as a first-paint hint and re-reads live values.
 pub fn boot_script(app: &AppHandle, label: &str) -> String {
     let Some(stores) = app.try_state::<Stores>() else {
         return String::new();
@@ -131,9 +110,8 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         "settings": settings,
         "rev": rev,
         "uiState": ui_state,
-        // No settings.json at launch: the frontend writes its defaults out
-        // (src/settings/settings-store.ts) - what the core-skills seed
-        // already put in the settings must not pass for a user's choices.
+        // No settings.json at launch: the frontend writes its defaults, and what the
+        // seed already put there must not pass for the user's choices.
         "newProfile": stores.settings.missing_at_load(),
         "label": label,
         "titlebarHeight": titlebar_height,
@@ -144,14 +122,12 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
     )
 }
 
-/// Above this an imported theme (fonts inlined as data URLs can make them
-/// big) is left to the frontend's own async load rather than copied into
-/// every window's boot script.
+/// Above this an imported theme is left to the frontend's async load rather
+/// than copied into every boot script.
 pub(crate) const MAX_BOOT_THEME_CSS: u64 = 2 * 1024 * 1024;
 
 /// The selected imported theme's stylesheets, as `{light, dark}` JSON (or
-/// `null` for a built-in theme), read from where commands/themes.rs saves
-/// them.
+/// `null` for a built-in theme).
 pub(crate) fn user_theme_css(app: &AppHandle, settings: &Value) -> Value {
     let Some(id) = settings.get("themeId").and_then(Value::as_str) else {
         return Value::Null;
@@ -167,7 +143,7 @@ pub(crate) fn user_theme_css(app: &AppHandle, settings: &Value) -> Value {
     else {
         return Value::Null;
     };
-    // Same rule as commands/themes.rs: the id becomes a path component.
+    // The id becomes a path component.
     let safe = !id.is_empty()
         && id
             .chars()
@@ -197,10 +173,8 @@ pub(crate) fn user_theme_css(app: &AppHandle, settings: &Value) -> Value {
     json!({ "light": light, "dark": dark })
 }
 
-/// Adds the boot script to a webview that shows the app (editor windows,
-/// the detached chat, the iOS webview), and on Linux builds the window in a
-/// pinned appearance's background (`pinned_background`). The PDF-export and
-/// tab-drag windows load other pages and go without either.
+/// Adds the boot script to a webview that shows the app, and on Linux builds the
+/// window in a pinned appearance's background. Other webviews go without.
 pub fn with_boot<'a, R: tauri::Runtime, M: Manager<R>>(
     builder: tauri::WebviewWindowBuilder<'a, R, M>,
     app: &AppHandle,
@@ -219,17 +193,8 @@ pub fn with_boot<'a, R: tauri::Runtime, M: Manager<R>>(
 }
 
 /// The colour a window shows before its page has painted, for a pinned
-/// appearance: the page's own background (ui/base.css's `--bg`, and what
-/// index.html paints before any stylesheet loads).
-///
-/// On Linux the GTK window and the WebKit view start in their own colours -
-/// the GTK theme's window background, then white - until the page's first
-/// paint, so a window pinned to Dark opened with a white frame however early
-/// the boot script put the theme on the document (measured on a release
-/// build: GTK grey, one white frame, then the page). Built with this, the
-/// window is the page's colour from its first frame. "system" is left alone:
-/// what WebKitGTK resolves it to depends on GTK settings and the desktop's
-/// colour-scheme preference, and guessing wrong would flash the other way.
+/// appearance: the page's own `--bg`. On Linux GTK and WebKit otherwise flash
+/// their own colours first. "system" is left alone: guessing wrong would flash.
 #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub(crate) fn pinned_background(settings: &Value) -> Option<tauri::window::Color> {
     match settings.get("theme").and_then(Value::as_str) {
@@ -239,11 +204,8 @@ pub(crate) fn pinned_background(settings: &Value) -> Option<tauri::window::Color
     }
 }
 
-/// Gives every open app window the background `with_boot` would give it now:
-/// after the appearance changes, a window keeps showing its native
-/// background wherever the page hasn't painted yet - the edges of a resize -
-/// which would otherwise stay the old appearance's colour until the window
-/// is reopened.
+/// Gives every open app window the background `with_boot` would give it now,
+/// so unpainted edges (during a resize) don't keep the old appearance's colour.
 #[cfg(target_os = "linux")]
 pub(crate) fn apply_window_backgrounds(app: &AppHandle) {
     let Some(stores) = app.try_state::<Stores>() else {

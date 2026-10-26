@@ -1,24 +1,7 @@
-//! The built-in skills suite (built-in skills catalogue §1.2-§1.20 and
-//! §5.10): 58 skill cases, `builtin/<skill>/<lang>/<case>`, two to four
-//! per skill, and 21 routing cases, `route/<skill>/<lang>` for requests
-//! whose description should load that skill and `route/none/<lang>/<case>`
-//! for requests that should load none.
-//!
-//! Every case builds its workspace on disk and loads it through
-//! workspace::load_from like the app, so the built-in layer, the user's
-//! global and project skills that shadow it, the library and the style
-//! profile (with its `conventions:` front matter) are what the model gets.
-//! A `/name` message goes through the same expansion as the other suites
-//! (agent_matrix::resolve_skill_message today; the production
-//! `skills::expand_message` once it exists), and every such case also
-//! checks that the message really was expanded - a missing built-in fails
-//! loudly instead of quietly testing the base agent.
-//!
-//! Automatic checks are the catalogue's: the existing builders plus
-//! `conventions_clean` (the rules engine, through conventions.rs),
-//! `measured`, `register_consistent`, `max_overlap`,
-//! `changed_chars_only_punct` and word or character ranges
-//! (checks_builtin.rs). The rubric goes to the judge.
+//! The built-in skills suite: skill cases, `builtin/<skill>/<lang>/<case>`, and
+//! routing cases, `route/<skill>/<lang>` or `route/none/<lang>/<case>`. Each
+//! case loads an on-disk workspace like the app, and a `/name` case also
+//! checks that the message really was expanded.
 
 use super::agent_everyday::no_new_numbers;
 use super::agent_matrix::{
@@ -56,7 +39,7 @@ pub const STANDUP_EN: &str = include_str!("docs/standup-en.md");
 pub const ACADEMIC_TELLS_EN: &str = include_str!("docs/academic-tells-en.md");
 pub const GRANT_ZH: &str = include_str!("docs/grant-zh.md");
 
-// The one-report-per-language documents (docs.rs's LANG_DOCS).
+// The one-report-per-language documents.
 const LANG_EN: &str = include_str!("docs/lang-en.md");
 const LANG_ZH_HANS: &str = include_str!("docs/lang-zh-hans.md");
 const LANG_JA: &str = include_str!("docs/lang-ja.md");
@@ -66,8 +49,8 @@ const LANG_FR: &str = include_str!("docs/lang-fr.md");
 const LANG_PT: &str = include_str!("docs/lang-pt.md");
 const LANG_RU: &str = include_str!("docs/lang-ru.md");
 
-/// The 18 writing skills, in the catalogue's order (`theme`, which writes
-/// CSS rather than prose, has no live cases).
+/// The writing skills (`theme`, which writes CSS rather than prose, has no
+/// live cases).
 pub const SKILLS: &[&str] = &[
     "continue-story",
     "describe",
@@ -126,10 +109,9 @@ fn folder(name: &str, doc_file: &str, doc: &str, files: &[(&str, &str)]) -> Disk
     }
 }
 
-/// The skills built in until 1.3, in the market since
-/// (textus-plugins/skills): installed in the case's global folder, as a
-/// user who had them on has them. TEXTUS_PLUGINS_DIR, or a
-/// textus-plugins checkout in a folder above this one; none without.
+/// The skills now in the market, installed in the case's global folder from
+/// TEXTUS_PLUGINS_DIR or a textus-plugins checkout above this one; none
+/// without.
 fn market_skills(name: &str) -> Option<std::path::PathBuf> {
     let source = plugins_checkout()?.join("skills");
     let global = scratch(&format!("{name}-global"));
@@ -257,8 +239,7 @@ fn loads_none(o: &TurnOutcome) -> Result<(), String> {
         .ok_or_else(|| format!("loaded {loaded:?}"))
 }
 
-/// Nothing, or only `skill` (a request where loading it is acceptable but
-/// costs a round trip, which the record's latency shows).
+/// Nothing, or only `skill` (acceptable, but loading it costs a round trip).
 fn loads_at_most(skill: &'static str) -> impl Fn(&TurnOutcome) -> Result<(), String> + Send + Sync {
     move |o| {
         let other: Vec<String> = skills_loaded(o)
@@ -482,7 +463,7 @@ fn new_text(o: &TurnOutcome) -> String {
     proposed_text(o)
 }
 
-/// Extra checks the catalogue names, chained onto the existing builders.
+/// Extra checks, chained onto the existing builders.
 trait BuiltinExpect {
     fn conventions_clean(self, profile: &'static str) -> Self;
     fn no_new_numbers(self) -> Self;

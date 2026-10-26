@@ -14,16 +14,14 @@ pub(crate) const IMAGE_ACTIONS: [&str; 5] = [
     "replace",
 ];
 
-/// The src a picture being made has in a proposal's Markdown, until it is
-/// saved. Mirrors `generatedImageSrc` in src/ai/revision/generated-images.ts.
+/// The src a picture being made has in a proposal's Markdown, until saved.
+/// Keep in step with the frontend's `generatedImageSrc`.
 pub(crate) fn placeholder_src(id: &str) -> String {
     format!("textus-generated:{id}")
 }
 
 /// What a picture may stand next to besides the document: the text of
-/// proposals not decided yet - this request's own (ProposalLedger), and an
-/// earlier request's the user hasn't accepted or rejected - where the
-/// frontend puts the picture into that proposal.
+/// proposals not decided yet, this request's and earlier ones'.
 pub struct ProposedText<'a> {
     pub this_request: &'a std::sync::Mutex<ProposalLedger>,
     pub undecided: &'a [UndecidedEdit],
@@ -53,11 +51,9 @@ pub struct UndecidedEdit {
     pub text: String,
 }
 
-/// Each propose_edit in `history` the user hasn't decided on yet, as its
-/// result's status note says (src/ai/revision/proposal-status.ts), reading
-/// as the user sees it: a later edit that went into one (the "joined" note)
-/// is made in its text. Without that, a third request quoting the joined
-/// text was checked against the first version (live_eval::continuing).
+/// Each propose_edit in `history` the user hasn't decided on yet, as the user
+/// sees it: a later edit joined into one is made in its text, so a quote of
+/// the joined text matches.
 pub fn undecided_edits(history: &[AgentTurn]) -> Vec<UndecidedEdit> {
     const UNDECIDED: &str = "has NOT yet accepted or rejected this proposed edit";
     const JOINED: &str = "this went into the proposed text it changes";
@@ -107,9 +103,9 @@ pub fn undecided_edits(history: &[AgentTurn]) -> Vec<UndecidedEdit> {
     edits
 }
 
-/// `text` with an edit quoted from it made in it - src/ai/revision/
-/// joined-edit.ts's editedText. None when the anchor isn't there exactly
-/// once or the action isn't an anchored edit.
+/// `text` with an edit quoted from it made in it, as the frontend's
+/// editedText. None when the anchor isn't there exactly once or the action
+/// isn't an anchored edit.
 pub fn edited_text(text: &str, action: &str, anchor: &str, add: &str) -> Option<String> {
     if anchor.is_empty() || text.matches(anchor).count() != 1 {
         return None;
@@ -133,9 +129,8 @@ pub fn edited_text(text: &str, action: &str, anchor: &str, add: &str) -> Option<
             )
         }
         "insert_after" => format!("{before}{anchor}{}{add}{after}", gap(anchor, add)),
-        // A paragraph of its own before the anchor's paragraph - a title
-        // asked for above undecided writing was its first line's start, the
-        // whole paragraph read as the heading - or words before the anchor.
+        // A paragraph of its own before the anchor's paragraph (else a title would
+        // make the whole paragraph a heading), or words before the anchor.
         "insert_before"
             if add.contains("\n\n") || before.is_empty() || before.ends_with("\n\n") =>
         {
@@ -152,9 +147,8 @@ pub fn edited_text(text: &str, action: &str, anchor: &str, add: &str) -> Option<
     })
 }
 
-/// The space between `left` and `right` run together, as joined-edit.ts's
-/// `gap`: one between two words of a language that spaces them; none after
-/// CJK, before punctuation, or where either side has one already.
+/// The space between `left` and `right` run together: one between two words of
+/// a spaced language; none after CJK, before punctuation, or if one is there.
 fn gap(left: &str, right: &str) -> &'static str {
     let (Some(last), Some(first)) = (left.chars().last(), right.chars().next()) else {
         return "";
@@ -172,9 +166,8 @@ fn gap(left: &str, right: &str) -> &'static str {
     " "
 }
 
-/// The pictures earlier requests made that the user hasn't accepted or
-/// rejected yet, by id: a rewrite of the text by one may carry it
-/// (ProposalLedger's known pictures).
+/// The pictures earlier requests made that are still undecided, by id: a
+/// rewrite of the text may carry them.
 pub fn undecided_pictures(history: &[AgentTurn]) -> Vec<String> {
     const UNDECIDED: &str = "has NOT yet accepted or rejected this proposed edit";
     history
@@ -199,9 +192,8 @@ pub fn undecided_pictures(history: &[AgentTurn]) -> Vec<String> {
         .collect()
 }
 
-/// Whether `anchor` is the whole Markdown of one picture, `![alt](src)` -
-/// or `<img ...>`, as a picture given a width is written - the only thing a
-/// picture may replace.
+/// Whether `anchor` is the whole Markdown of one picture (`![alt](src)` or
+/// `<img ...>`), the only thing a picture may replace.
 pub(crate) fn is_picture_markdown(anchor: &str) -> bool {
     let anchor = anchor.trim();
     if let Some(tag) = anchor.strip_prefix("<img") {
@@ -218,10 +210,8 @@ pub(crate) fn is_picture_markdown(anchor: &str) -> bool {
     !alt.contains(']') && after.ends_with(')') && !after[..after.len() - 1].contains(')')
 }
 
-/// The file a picture's Markdown (`is_picture_markdown`) shows, read from
-/// `folder` - the document's - as read_file reads pictures. None for a
-/// picture on the web or in a data URL, one outside the folder, or
-/// anything else.
+/// The file a picture's Markdown shows, read from the document's `folder`.
+/// None for a web or data URL, a file outside the folder, or anything else.
 pub(crate) fn local_picture(
     markdown: &str,
     folder: &std::path::Path,

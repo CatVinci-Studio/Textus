@@ -13,17 +13,10 @@ import {
 } from "@milkdown/kit/prose/changeset";
 import { $prose } from "@milkdown/kit/utils";
 
-/**
- * Track My Changes (useOwnRevisions.ts): the writer's own edits shown as
- * changes against the text as it was when tracking began - what was
- * deleted struck through where it was, what was added marked - each to
- * accept or reject. The document always holds the new text, so typing is
- * typing; the original (`base`) is held here, and kept beside the app's
- * data, never in the Markdown.
- */
+/** Track My Changes: the writer's edits shown against the text as tracking
+ *  began. The document holds the new text; the original never enters it. */
 
-/** The margin's name for these changes: a revision card whose callId is
- *  this is the writer's own (useReviewNotes, MarginCards). */
+/** The callId of a revision card that is the writer's own change. */
 export const OWN_CHANGES = "own";
 
 /** One change, as the margin shows it. */
@@ -39,9 +32,8 @@ export interface OwnChange {
 interface OwnRevisionState {
   base: ProseNode | null;
   set: ChangeSet | null;
-  /** The changes as shown - a change inside a word grown to the whole
-   *  word ("quiet" for "still", not "quie" for "stil") - which the margin
-   *  numbers and decides by. */
+  /** The changes as shown, each grown to whole words ("quiet" for "still",
+   *  not "quie" for "stil"). */
   shown: readonly Change[];
   hot: number | null;
   decoration: DecorationSet;
@@ -121,7 +113,7 @@ function build(
   return DecorationSet.create(doc, decos);
 }
 
-/** Who hears of the changes, by editor (useOwnRevisions). */
+/** Who hears of the changes, by editor. */
 const listeners = new WeakMap<
   EditorView,
   (changes: OwnChange[] | null) => void

@@ -5,9 +5,8 @@ import { REQUIRED_SETTINGS, isPermission } from "./manifest";
 import { MENU_IDS } from "./manifest-parse";
 
 /**
- * docs/dev/textus-plugin.schema.json says what manifest.ts reads: the same
- * permissions, menus and required settings, and a field for every one the
- * parser takes.
+ * The manifest JSON schema says what the parser reads: the same permissions,
+ * menus and required settings, and a field for every one it takes.
  */
 
 const SCHEMA = JSON.parse(

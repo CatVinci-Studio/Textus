@@ -8,10 +8,8 @@ import { isInside } from "../utils/path";
 import { notePathMoved } from "../plugins/app-bridge";
 
 /**
- * What happens to open tabs when their files change under them from inside
- * the app - the iPhone's document list (open, rename, delete, share), a
- * drag in the sidebar's tree and Settings > Skills > Reset - and the
- * document list's own open state.
+ * What happens to open tabs when the app itself renames, moves or deletes
+ * their files, and the iPhone document list's open state.
  */
 export function useDocumentActions(opts: {
   tabState: TabState;
@@ -22,8 +20,7 @@ export function useDocumentActions(opts: {
   const { tabState, openFile, removeTab, saveTab } = opts;
   const { tabsRef, setTabs, activeTabId, setActiveTabId, liveTabs } = tabState;
 
-  // iPhone: the document list (menu > Documents). Opening an entry that no
-  // longer exists (moved or deleted in Files) drops it from the list.
+  // iPhone: the document list. An entry that no longer exists is dropped.
   const [documentsOpen, setDocumentsOpen] = useState(false);
   const openFromDocuments = useCallback(
     (path: string) => {
@@ -32,9 +29,8 @@ export function useDocumentActions(opts: {
     },
     [openFile],
   );
-  // A renamed document stays open under its new name, its past
-  // conversations with it; a deleted one keeps its text in the tab, unsaved,
-  // so nothing on screen is lost with it.
+  // A renamed document stays open under its new name; a deleted one keeps
+  // its text in the tab, unsaved.
   const documentRenamed = useCallback(
     (from: string, to: string) => {
       setTabs((prev) =>
@@ -44,8 +40,7 @@ export function useDocumentActions(opts: {
     },
     [setTabs],
   );
-  // The sidebar's tree moved a file or a whole folder into another folder:
-  // every open tab in it follows, with its conversations.
+  // A file or folder moved in the tree: every open tab in it follows.
   const entryMoved = useCallback(
     (from: string, to: string) => {
       const moved = (path: string | null) =>
@@ -80,10 +75,8 @@ export function useDocumentActions(opts: {
     },
     [setTabs],
   );
-  // Settings > Skills > Reset deleted a customized skill's file. A tab
-  // still showing it must not write it back on the next save: an unedited
-  // one closes (the window's only tab becomes a blank one instead of
-  // closing the window), an edited one keeps its text as an unsaved draft.
+  // A reset skill's file was deleted, so a tab showing it must not write it
+  // back: an unedited one closes, an edited one becomes an unsaved draft.
   const skillFilesDeleted = useCallback(
     (paths: string[]) => {
       for (const tab of tabsRef.current) {
@@ -102,8 +95,7 @@ export function useDocumentActions(opts: {
     [documentDeleted, removeTab, tabsRef, setTabs, setActiveTabId],
   );
 
-  // iPhone menu > Share: the share sheet needs a file, so an unsaved or
-  // never-saved document is saved first (into Documents, if it is new).
+  // iPhone Share needs a file, so an unsaved document is saved first.
   const shareActiveTab = useCallback(async () => {
     const tab = liveTabs().find((tb) => tb.id === activeTabId);
     if (!tab) return;

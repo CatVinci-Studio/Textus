@@ -40,10 +40,8 @@ export function GrammarSuggestion({
     <>
       <Presence show={!!grammar.popover && phone} exitMs={250}>
         {grammar.popover && phone && (
-          // The phone's form: a card from the bottom with the fix as its
-          // main button, as iOS offers a spelling replacement. A fix that
-          // no longer fits the text says so in the notice, the card having
-          // closed on the tap.
+          // A fix that no longer fits the text says so in the notice, the
+          // card having closed on the tap.
           <BottomCard
             label={grammarLabels.grammarKinds[grammar.popover.kind]}
             actions={[

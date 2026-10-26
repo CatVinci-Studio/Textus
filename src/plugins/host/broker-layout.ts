@@ -45,11 +45,9 @@ export function hostGranted(p: PluginScope, host: string): boolean {
 }
 
 /**
- * A plugin's calls about tabs and panes (textus.layout): opening a file,
- * a view of its own, a web page or a new document - in a tab, beside the
- * one in front, or in its place - and what the window shows. Opening a
- * file needs files.read, but for the file a view of the plugin's already
- * shows.
+ * A plugin's calls about tabs and panes: opening a file, a view, a web page or
+ * a new document, and what the window shows. Opening a file needs files.read,
+ * except the file a view of the plugin's already shows.
  */
 export function layoutHandlers(p: PluginScope) {
   const access = () => {

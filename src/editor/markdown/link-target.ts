@@ -5,14 +5,13 @@ import {
   isDrivePath,
 } from "../../utils/path";
 
-/** Where a followed link leads (link-click-plugin.ts). */
+/** Where a followed link leads. */
 export type LinkTarget =
   /** `#heading`: a heading in this document. */
   | { kind: "heading"; anchor: string }
   /** http(s) or mailto, for the system browser or mail app. */
   | { kind: "web"; url: string }
-  /** A Markdown file, to open in a tab - at the heading `anchor` names,
-   *  when the link has one (`./other.md#heading`). */
+  /** A Markdown file, to open in a tab, at the heading `anchor` names. */
   | { kind: "document"; path: string; anchor?: string }
   /** Any other local file, to show in the file manager. */
   | { kind: "file"; path: string };
@@ -20,12 +19,9 @@ export type LinkTarget =
 const MARKDOWN_FILE = /\.(md|markdown)$/i;
 
 /**
- * Where `href`, a link in the document at `docPath`, leads - null when it
- * leads nowhere to follow. A relative path resolves against the document's
- * folder, so an unsaved document (no folder yet) follows only web links,
- * absolute paths and its own headings. Of the URL schemes only http(s) and
- * mailto are followed: javascript:, file:, data: and the like would hand
- * the document's author a way to run or open things, not a link.
+ * Where `href`, a link in the document at `docPath`, leads, or null. Of URL
+ * schemes only http(s) and mailto are followed: javascript:, file: and the
+ * like would let a document's author run or open things.
  */
 export function linkTarget(
   href: string,
@@ -36,8 +32,7 @@ export function linkTarget(
     return link.length > 1
       ? { kind: "heading", anchor: decodeUrlPath(link.slice(1)) }
       : null;
-  // A Windows drive path ("C:\..." / "C:/...") would otherwise read as a
-  // single-letter URL scheme to the test below.
+  // A Windows drive path would otherwise read as a one-letter URL scheme.
   const drive = isDrivePath(link);
   if (!drive && hasUrlScheme(link))
     return /^(https?|mailto):/i.test(link) ? { kind: "web", url: link } : null;
@@ -47,8 +42,8 @@ export function linkTarget(
     docPath,
   );
   if (!resolved) return null;
-  // Any other file is only shown in the file manager, where an anchor has
-  // nowhere to lead.
+  // Any other file is only shown in the file manager, where an anchor leads
+  // nowhere.
   if (!MARKDOWN_FILE.test(resolved)) return { kind: "file", path: resolved };
   const anchor = hash < 0 ? "" : decodeUrlPath(link.slice(hash + 1));
   return anchor
@@ -57,11 +52,9 @@ export function linkTarget(
 }
 
 /**
- * A decoded path from the document at `docPath` as a full path: a relative
- * one resolves against the document's folder, so an unsaved document has
- * none (null). Spelled the way the OS spells it, so a document already
- * open in a tab (opened from a dialog, with "\" on Windows) is found by its
- * path. Shared with a missing image's card (images/missing-image.ts).
+ * A decoded path from the document at `docPath` as a full path, or null for
+ * a relative one in an unsaved document. Spelled the way the OS spells it,
+ * so a document already open in a tab is found by its path.
  */
 export function localPath(file: string, docPath: string | null): string | null {
   if (!file) return null;

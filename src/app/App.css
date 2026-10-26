@@ -1,8 +1,5 @@
-/* The main window's stylesheet, as an ordered list. Order is cascade order:
-   later files win ties, so print rules come after everything they hide and
-   the zen and typewriter modes come last. Each piece lives with the feature
-   it styles; components' own CSS (TabBar aside) is imported by the
-   component itself. */
+/* The main window's stylesheet. Order is cascade order: print rules come
+   after what they hide, and the zen and typewriter modes come last. */
 @import "../ui/base.css";
 @import "../document-view/ai-notice.css";
 @import "./sidebar-frame.css";

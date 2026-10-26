@@ -1,10 +1,6 @@
-// Milkdown's listener reports markdown on a 200ms trailing debounce with no
-// maxWait, so a typing burst - an IME session especially - can keep the
-// tab's `content` behind the live document for as long as it lasts. Anything
-// that acts on `content` (save, close prompt, detach, source mode, disk
-// reload) must first pull the live document through here; otherwise Save
-// writes the pre-burst text, and a remount (reloadKey) or unmount cancels
-// the pending debounce, losing the burst outright.
+// Milkdown's listener reports markdown on a 200ms debounce with no maxWait,
+// so a typing burst can leave the tab's `content` behind. Anything acting on
+// `content` must first pull the live document through here.
 
 type Flusher = () => string | null;
 
@@ -19,10 +15,8 @@ export function registerEditorFlush(tabId: string, flush: Flusher) {
 }
 
 /**
- * Pushes any not-yet-reported edit of `tabId`'s editor through its
- * onChange synchronously and returns the live markdown - or null when the
- * tab has no mounted editor or nothing was ever edited, in which case the
- * tab's own `content` is already current.
+ * Pushes any unreported edit of `tabId`'s editor through synchronously and
+ * returns the live markdown, or null when the tab's `content` is current.
  */
 export function flushEditor(tabId: string): string | null {
   return flushers.get(tabId)?.() ?? null;

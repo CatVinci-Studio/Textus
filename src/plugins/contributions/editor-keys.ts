@@ -1,5 +1,4 @@
-// How a key is named to a plugin that holds the keyboard
-// (editor-input.ts): Vim's and Emacs's keys.
+// How a key is named to a plugin that holds the keyboard.
 
 /** A key as a plugin sees it: "a", "A", "$", "Escape", "Enter",
  *  "ctrl+r", "alt+f", "shift+Tab". */

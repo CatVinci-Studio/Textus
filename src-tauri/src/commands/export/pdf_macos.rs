@@ -16,25 +16,20 @@ use objc2_web_kit::{
     WKWebViewConfiguration,
 };
 
-// A4 in PostScript points (1pt = 1/72"); createPDF renders 1 CSS px as 1pt,
-// so this is also the page in CSS px. Mirrored by MAC_PAGE in
-// export/paginate.ts, which lays the document out at this size - change
-// both together.
+// A4 in points; createPDF renders 1 CSS px as 1pt, so this is also the page
+// in CSS px. Keep in step with MAC_PAGE in paginate.ts.
 const PAPER_WIDTH: f64 = 595.0;
 const PAPER_HEIGHT: f64 = 842.0;
 
-// Runs in the loaded page before rendering: fonts and images must have
-// settled, or the PDF captures fallback glyphs and empty boxes. Returns
-// the document height, which decides the page count.
+// Runs before rendering: fonts and images must settle, or the PDF captures
+// fallback glyphs. Returns the document height.
 const SETTLE_JS: &str = "await document.fonts.ready; \
         await Promise.all(Array.from(document.images).map(i => \
           i.complete ? null : i.decode().catch(() => null))); \
         return document.documentElement.scrollHeight;";
 
-// Keeps the offscreen webview and its delegate alive from load until the
-// file is written. navigationDelegate is weak and the dispatch that starts
-// the export returns immediately, so without this the graph would drop
-// mid-flight.
+// Keeps the offscreen webview and its delegate alive until the file is
+// written: navigationDelegate is weak.
 struct Pending {
     _webview: Retained<WKWebView>,
     _delegate: Retained<PdfExporter>,
@@ -49,8 +44,7 @@ struct PdfExporterIvars {
     id: usize,
     output_path: String,
     result_tx: Sender<Result<(), String>>,
-    // The channel is signalled once; `signalled` guards against a second
-    // send (a late navigation callback after a failure, say).
+    // Guards against a second send (a late callback after a failure, say).
     signalled: Cell<bool>,
 }
 
@@ -163,10 +157,8 @@ impl PdfExporter {
         }
     }
 
-    // Cuts the single tall rendered page into A4 sheets. Each sheet is a
-    // copy of the tall page with its media and crop boxes moved to one
-    // window of it (PDF space starts at the bottom left, so sheet i is
-    // counted down from the top).
+    // Cuts the single tall rendered page into A4 sheets by moving each copy's
+    // media and crop boxes (PDF space starts at the bottom left).
     fn write_pages(&self, data: &NSData, pages: usize) -> Result<(), String> {
         let source = unsafe { PDFDocument::initWithData(PDFDocument::alloc(), data) }
             .ok_or("Rendered PDF could not be read")?;
@@ -195,9 +187,7 @@ impl PdfExporter {
     }
 
     // Sends the one-shot result and drops this export's webview + delegate.
-    // Retains self first: the PENDING map holds our only strong reference
-    // (the webview points back weakly), and we may be inside a delegate
-    // method, so removing our own entry would otherwise be a use-after-free.
+    // Retains self first: removing our own PENDING entry would be a use-after-free.
     fn finish(&self, result: Result<(), String>) {
         let _keep = self.retain();
         if !self.ivars().signalled.replace(true) {

@@ -14,13 +14,8 @@ import type { PendingPreview } from "./pending-types";
  *  bar run through them writes once at the end, not at every step. */
 const WRITE_AFTER_MS = 400;
 
-/**
- * Keeps the document's undecided proposals with it (kept-proposals.ts):
- * puts them back when it opens in this editor, and writes them down as
- * they change - removing the file once none is left to decide. Nothing is
- * written for the document before what was kept for it has been offered
- * again, so opening it never wipes them.
- */
+/** Keeps the document's undecided proposals with it, restoring them on open.
+ *  Nothing is written before they are restored, so opening never wipes them. */
 export function useKeptProposals({
   run,
   filePath,

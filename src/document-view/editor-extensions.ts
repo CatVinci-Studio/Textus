@@ -10,35 +10,26 @@ import type { TourAi } from "../utils/events";
 export type { PendingEditCallbacks };
 
 /**
- * The complete feature set the editor is composed of, in load order.
- * `settings` is a live ref (see useLatest) because the chain is built once
- * at mount while several features (AI, math, mermaid, typewriter,
- * placeholder language) follow the current Settings values. `pendingEdits`
- * is similarly built once - its callbacks must be stable, ref-indirected
- * wrappers (see MilkdownEditor) since usePendingEdits itself is created
- * from a `run` that isn't ready yet at this point.
+ * The editor's full feature set, in load order. Built once at mount, so
+ * `settings` is a live ref and `pendingEdits` callbacks are ref-indirected.
  */
 export function withEditorExtensions(
   editor: Editor,
   settings: { readonly current: Settings },
   docPath: { readonly current: string | null },
   pendingEdits: PendingEditCallbacks,
-  /** Hands the Quick Ask widget's DOM container to MilkdownEditor as it
-   *  mounts/unmounts - ref-indirected the same way `pendingEdits` is (this
-   *  is built before the real callback exists). */
+  /** Hands the Quick Ask widget's container over as it mounts and
+   *  unmounts; ref-indirected like `pendingEdits`. */
   quickAskWidget: {
     onMount: (el: HTMLElement) => void;
     onUnmount: (el: HTMLElement) => void;
   },
-  /** The tour's AI while this is its practice tab, else null - see
-   *  withAiPlugins. */
+  /** The tour's AI while this is its practice tab, else null. */
   tour: { readonly current: TourAi | null },
-  /** A pasted image failed to save to disk - the message to show in a
-   *  native alert (localized, since this plugin has no i18n access itself). */
+  /** A pasted image failed to save: the localized message to show. */
   onImagePasteError: () => string,
   requestImageName: (stem: string, extension: string) => Promise<string | null>,
-  /** The review notes' callbacks (review-notes-plugin.ts) - ref-indirected
-   *  like `pendingEdits`. */
+  /** The review notes' callbacks, ref-indirected like `pendingEdits`. */
   reviewNotes: {
     onChange: (notes: ReviewNote[]) => void;
     onBadge: (id: string, el: HTMLElement) => void;

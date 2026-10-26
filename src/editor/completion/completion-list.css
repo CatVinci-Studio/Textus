@@ -1,5 +1,3 @@
-/* The completions a plugin suggests, under the caret (completion-list.ts):
-   a small list like the editor's menus, the chosen item lit. */
 .completion-list {
   position: fixed;
   z-index: var(--z-popover);

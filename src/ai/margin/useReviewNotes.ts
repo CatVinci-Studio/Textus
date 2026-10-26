@@ -55,11 +55,8 @@ function wholeChange(p: PendingPreview): PendingSentence | null {
   };
 }
 
-/** Review notes (review-notes-plugin.ts, ReviewMargin.tsx): every
- *  add_comment of this tab's conversations, pinned to its passage and
- *  drawn in the margin - until it is marked done, or its conversation is
- *  cleared - and the writer's own notes beside them (useOwnNotes). Also
- *  the margin's revision cards, which share its hover. */
+/** Review notes, the AI's and the writer's own, until done or cleared; also
+ *  the margin's revision cards, which share their hover. */
 export function useReviewNotes({
   run,
   reviewNotesRef,
@@ -76,7 +73,7 @@ export function useReviewNotes({
   run: EditorRunner;
   /** The document's file, whose own notes are kept for it. */
   filePath: string | null;
-  /** The plugin's ref-indirected callbacks (see useTextusEditor). */
+  /** The plugin's ref-indirected callbacks. */
   reviewNotesRef: {
     current: {
       onChange: (notes: ReviewNote[]) => void;
@@ -289,10 +286,8 @@ export function useReviewNotes({
           view.state.tr.setMeta(pendingEditKey, { type: "refocus" }),
         );
       };
-      // Sentences moving into or out of the text reflow it: the first
-      // block wholly on screen stays put rather than the page jumping
-      // under the reader as a panel opens or closes. (Not the block the
-      // top edge cuts: that may be the very paragraph that reflows.)
+      // The text reflows: keep the first block wholly on screen still, not
+      // the one the top edge cuts, which may be the one reflowing.
       const scroller = view.dom.closest<HTMLElement>(".editor-scroll");
       const top = scroller?.getBoundingClientRect().top ?? 0;
       const under = blockAt(view.dom, top);
@@ -335,10 +330,8 @@ export function useReviewNotes({
     });
   }
 
-  // The margin's items: the notes, then each pending sentence numbered in
-  // the review bar's order - or a proposal shown whole, as one card (index
-  // -1). New text alone (Write) has no original to set beside it: it stays
-  // in the text, and gets no card.
+  // The notes, then each pending sentence in the review bar's order. New text
+  // alone has no original, so it gets no card.
   const marginItems = useMemo<MarginItem[]>(() => {
     const items: MarginItem[] = notes.map((note) => ({
       kind: "note",
@@ -405,9 +398,7 @@ export function useReviewNotes({
     else pendingEdits.decide(callId, index, take);
   }
 
-  // The item selected: the card clicked last, or the one the notes bar or
-  // the review bar points at - whichever came last. A bar's step takes over
-  // from a click (`over`: what the bars pointed at when it was made).
+  // The item selected: whichever came last of a click or a bar's pointer.
   const { focusedStop } = pendingEdits;
   const pointed =
     bar.focusedItem ??
@@ -428,8 +419,7 @@ export function useReviewNotes({
       const [, callId, index] = lit.split(":");
       sentence = { callId, index: Number(index) };
     }
-    // Through the plugins, never a class written onto the text: see
-    // pending-edit-plugin's hotDecorations.
+    // Through the plugins, never a class written onto the text.
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       view.dispatch(
@@ -477,7 +467,7 @@ export function useReviewNotes({
     editNote: own.editNote,
     decide,
     revisions,
-    /** The editor menu's own items (EditorContextMenu). */
+    /** The editor menu's own items. */
     menu: {
       addNote: () => void own.addNote(),
       ownChanges: revisions.changes?.length ? revisions : undefined,

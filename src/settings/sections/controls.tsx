@@ -4,15 +4,8 @@ import { resolveStrings, type Strings } from "../../i18n/strings";
 import { ChevronIcon } from "../../ui/icons";
 import { InfoTip } from "../../ui/InfoTip";
 
-// Generic row controls shared by the settings categories.
-
-/**
- * For a field that takes a machine-read value - a URL, a host, a model or
- * field name - rather than prose. iOS capitalises the first letter of a
- * text field and autocorrects it, with the software keyboard and a hardware
- * one alike: "Http://..." still connected, but "Mock-model" or "Gpt-..."
- * is a model id the provider rejects. Spread onto the <input>.
- */
+/** For a field that takes a machine-read value rather than prose: iOS would
+ *  capitalise and autocorrect it into an id the provider rejects. */
 export const VERBATIM_INPUT = {
   autoCapitalize: "off",
   autoCorrect: "off",
@@ -20,15 +13,9 @@ export const VERBATIM_INPUT = {
 } as const;
 
 /**
- * One setting: its name on the left, its control on the right - the shape
- * every row in Settings takes, on the desktop and the phone alike.
- *
- * The label says what the setting does, so most rows need nothing else.
- * `help` is the explanation a label can't carry - a trade-off, what
- * happens behind the scenes - behind a "?" after the label, never as grey
- * text on the page. `hint` is for what is live rather than explained: a
- * value (the folder in use, a fetched-on date, the link a pasted image
- * gets) or a status (no room for the margin, a shortcut in use).
+ * One setting: its name on the left, its control on the right. `help` is the
+ * explanation a label can't carry, behind a "?"; `hint` is something live
+ * under the label, a value or a status.
  */
 export function SettingRow({
   label,
@@ -58,7 +45,7 @@ export function SettingRow({
   );
 }
 
-/** A row's "?" (ui/InfoTip.tsx), named after the row: "More about …". */
+/** A row's "?", named after the row: "More about …". */
 export function RowHelp({
   label,
   children,
@@ -104,11 +91,8 @@ export function LinkRow({
   );
 }
 
-/**
- * A switch row; the whole row toggles it. `help` as SettingRow's.
- * The switch is named by the label alone (aria-labelledby): the "?" sits
- * inside the <label>, and would otherwise be read as part of the name.
- */
+/** A switch row; the whole row toggles it. The switch is named by the label
+ *  alone, since the "?" sits inside the <label>. */
 export function ToggleRow({
   label,
   help,
@@ -144,14 +128,8 @@ export function ToggleRow({
   );
 }
 
-/**
- * A key or token kept in the system keychain: a password field and Save
- * until one is stored, then "Configured" and Clear - the stored value is
- * never read back into the page. The caller stores and clears it.
- */
 /** How a key reads in its field: its first six and last four characters
- *  around ***, enough to tell which key was pasted without showing it; a
- *  short one, still being typed, as dots. */
+ *  around ***; a short one, still being typed, as dots. */
 export function maskKey(key: string): string {
   if (key.length <= 12) return "•".repeat(key.length);
   return `${key.slice(0, 6)}***${key.slice(-4)}`;
@@ -164,12 +142,9 @@ function wholeSelected(el: HTMLInputElement): boolean {
 }
 
 /**
- * A key's field, showing it masked (maskKey). A password field drew a
- * pasted key as a row of dots as long as the key, and offered to save it
- * as a password. The field holds the mask, so every edit is taken before
- * the browser makes it: a paste or typing over the whole field replaces
- * the key, typing at its end adds to it, a deletion takes the last
- * character, or all of it when all is selected.
+ * A key's field, showing it masked. A password field would show a row of
+ * dots and offer to save it. The field holds the mask, so every edit is
+ * taken before the browser makes it.
  */
 export function MaskedKeyInput({
   label,
@@ -248,7 +223,6 @@ export function SecretInput({
   saveDisabled,
 }: {
   t: Strings;
-  /** The field's accessible name. */
   label: string;
   saved: boolean;
   value: string;

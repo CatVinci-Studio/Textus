@@ -5,10 +5,8 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { isEnclosure, isEnclosureName } from "./enclosure-runs";
 
 /**
- * What an arrow key, Backspace or Delete does at an enclosure's edge:
- * step over a delimiter, into or out of a nested one, delete a delimiter
- * or the whole shell (enclosure.ts). Pure functions of the editor state;
- * enclosure-caret.ts applies them.
+ * What an arrow key, Backspace or Delete does at an enclosure's edge, as
+ * pure functions of the editor state.
  */
 
 export interface ArrowMove {
@@ -27,9 +25,8 @@ export function isSoleEnclosureChild(node: ProseNode): boolean {
 
 /**
  * Where an arrow step lands, past the spot between the delimiters of two
- * enclosures nested whole (bold-italic is italic around bold): that spot
- * shows the same as the inner span's edge, so stopping there took a press
- * that moved nothing.
+ * enclosures nested whole: it looks the same as the inner edge, so stopping
+ * there took a press that moved nothing.
  */
 export function pastNestedEdge(
   state: EditorState,
@@ -48,12 +45,9 @@ export function pastNestedEdge(
 }
 
 /**
- * Right arrow, one phase at a time (see the phase diagram at the top of
- * this file): inside-at-end -> adjacent-after; adjacent-before ->
- * inside-at-start; and the "pin" case, which forces the single native
- * character-step that would otherwise land adjacent-before to go through
- * us instead (see the module doc comment on why WKWebView can't be trusted
- * to land there on its own).
+ * Right arrow, one phase at a time: inside-at-end -> adjacent-after;
+ * adjacent-before -> inside-at-start; and the "pin" step onto
+ * adjacent-before, which WKWebView can't be trusted to land on itself.
  */
 export function computeArrowRight(state: EditorState): ArrowMove | null {
   const sel = state.selection;
@@ -82,12 +76,8 @@ export function computeArrowRight(state: EditorState): ArrowMove | null {
     }
   }
 
-  // Leaving adjacent-after, moving further away: the position immediately
-  // after an enclosure is exactly as ambiguous for WKWebView as the one
-  // immediately before it (see the module doc comment) - a widget sits
-  // right on the other side of this position too, so this step is taken
-  // over rather than ever handed to native movement, symmetric with the
-  // "entering" and "pin" cases above.
+  // Leaving adjacent-after: that position is as ambiguous for WKWebView as
+  // the one before an enclosure, so this step is taken over too.
   const prev = $pos.nodeBefore;
   if (prev && isEnclosure(prev) && next?.isText) {
     return { pos: pos + 1 };
@@ -96,7 +86,7 @@ export function computeArrowRight(state: EditorState): ArrowMove | null {
   return null;
 }
 
-/** Mirror of computeArrowRight - see its comment for the phase reasoning. */
+/** Mirror of computeArrowRight. */
 export function computeArrowLeft(state: EditorState): ArrowMove | null {
   const sel = state.selection;
   if (!sel.empty) return null;
@@ -124,8 +114,7 @@ export function computeArrowLeft(state: EditorState): ArrowMove | null {
     }
   }
 
-  // Leaving adjacent-before, moving further away - mirror of the
-  // ArrowRight case above.
+  // Leaving adjacent-before: mirror of the ArrowRight case.
   const next = $pos.nodeAfter;
   if (next && isEnclosure(next) && prev?.isText) {
     return { pos: pos - 1 };
@@ -144,12 +133,9 @@ export type DeleteAction =
     };
 
 /**
- * Backspace deletes whichever delimiter is immediately to its left: the
- * opening one if the cursor is at the very start of the content, the
- * closing one if the cursor is adjacent right after the node. An empty
- * shell is removed whole either way. Math blocks are excluded from the
- * "delete opening delimiter" case - their multi-line source doesn't unwrap
- * into a paragraph sensibly, so they keep the block-level default instead.
+ * Backspace deletes the delimiter to its left: the opening one at the start
+ * of the content, the closing one right after the node. An empty shell goes
+ * whole. Math blocks keep the default rather than unwrap their source.
  */
 export function computeBackspace(state: EditorState): DeleteAction | null {
   const sel = state.selection;
@@ -178,7 +164,7 @@ export function computeBackspace(state: EditorState): DeleteAction | null {
   return null;
 }
 
-/** Mirror of computeBackspace, deleting to the right instead of the left. */
+/** Mirror of computeBackspace, deleting to the right. */
 export function computeDelete(state: EditorState): DeleteAction | null {
   const sel = state.selection;
   if (!sel.empty) return null;
@@ -209,14 +195,10 @@ export function computeDelete(state: EditorState): DeleteAction | null {
 }
 
 /**
- * Backspace on the one character that directly follows an inline enclosure
- * ("**3**位|" -> "**3**|"), and Delete on the one that directly precedes
- * one. Left to the browser, the deletion leaves the DOM caret normalized
- * into the neighbouring element - at the end (or start) of the bold text,
- * before the revealed closing "**" - and ProseMirror reads that back as a
- * position inside the node, so the next keystroke went bold. Deleting the
- * character ourselves keeps the caret where it was: outside the node,
- * after (or before) its delimiter. Returns the range to delete, or null.
+ * Backspace on the one character right after an inline enclosure
+ * ("**3**位|"), or Delete on the one right before. Left to the browser, the
+ * caret normalizes into the node and the next keystroke goes bold. Returns
+ * the range to delete, or null.
  */
 export function computeCharDeleteBesideEnclosure(
   state: EditorState,
@@ -240,19 +222,10 @@ export function computeCharDeleteBesideEnclosure(
 }
 
 /**
- * Backspace/Delete on a RANGE selection that exactly spans an enclosure
- * node's content (selecting all of "hello" in "*hello*" and pressing either
- * key) must not remove the wrapper in the same step - erasing the content
- * should leave an empty, still-bold shell with the cursor inside it, exactly
- * like the empty-shell state computeBackspace/computeDelete already produce
- * for the collapsed-cursor case. A second keypress against that now-empty
- * shell hits the ordinary `content.size === 0` branch in those functions and
- * removes the pair. Two shapes both count as "spans the content": a
- * selection resolved strictly inside the node (both ends share it as their
- * .parent), and one taken from just outside it at the node's own outer
- * bounds (double-click "select word" routinely lands here, since the
- * delimiters are synthesized decorations with no real character of their
- * own to anchor a selection endpoint just inside them).
+ * Backspace/Delete on a selection spanning exactly an enclosure's content
+ * leaves an empty shell with the caret inside, as the collapsed-caret case
+ * does; a second press removes it. Selections from the node's outer bounds
+ * count too, which double-click often gives.
  */
 export function computeRangeDeleteInEnclosure(
   state: EditorState,
@@ -287,8 +260,7 @@ export function computeRangeDeleteInEnclosure(
   return null;
 }
 
-/** Apply computeRangeDeleteInEnclosure's result: strip the node's content,
- *  leave the (now empty) node in place, caret inside it. */
+/** Strips the node's content, leaving it empty with the caret inside. */
 export function emptyEnclosureContent(
   view: EditorView,
   node: ProseNode,

@@ -1,11 +1,7 @@
 /**
- * Citation markers OpenAI's models write in their own app's format -
- * `\ue200cite\ue202turn3view0\ue201`, or with the private-use delimiters
- * lost, `citeturn3view0turn8view1` - which nothing here reads. The
- * backend takes them out of the finished text (aicompat's
- * responses_api::strip_citation_markers); this does it for text still
- * streaming in, which is shown before the backend has it whole, and hides
- * a marker that has only begun to arrive.
+ * Citation markers OpenAI's models write in their own app's format
+ * (`\ue200cite\ue202turn3view0\ue201`, or delimiters lost). The backend strips
+ * them from finished text; this does it for text still streaming in.
  */
 
 const DELIMITED = /\s*\ue200[^\ue201]*\ue201/g;

@@ -5,26 +5,21 @@ import {
 } from "../ai/doc-blocks";
 
 /**
- * The dev shim's stand-in for the backend's step settling (agent/settle.rs)
- * - for e2e, whose scripted model writes a call as the words it is about.
- * A real model names the block those words are in (`block`); here the one
- * block that holds them is named for it, and then what the block says is
- * filled in as doc_blocks.rs does. Words in no block (text proposed and
- * not decided yet) stay a quote, as they do from a real model.
+ * The dev shim's stand-in for the backend's step settling, for e2e: a scripted
+ * model quotes words, and the one block holding them is named for it. Words in
+ * no block (an undecided proposal) stay a quote.
  */
 
 const PLACED_CALLS = new Set(["propose_edit", "add_comment", "generate_image"]);
 
-/** `args` as the model would send them: with the block its words are in,
- *  or the run of blocks they cross (`block` to `last_block`), written
- *  first - as the schema orders them, and as a streaming draft needs. */
+/** `args` as the model would send them, with the block (or run of blocks) its
+ *  words are in written first, as the schema orders them. */
 export function namedCall(
   blocks: readonly SentBlock[],
   args: Record<string, unknown>,
 ): Record<string, unknown> {
   const anchor = typeof args.anchor === "string" ? args.anchor : "";
-  // `block: null`: the scripted model quotes text proposed and not decided
-  // yet, which has no block - left a quote.
+  // `block: null`: text of an undecided proposal has no block; left a quote.
   if (args.block === null) {
     const quote = { ...args };
     delete quote.block;
@@ -59,8 +54,7 @@ export function namedCall(
   return named(blocks[first].id, last > first ? blocks[last].id : undefined);
 }
 
-/** A call's arguments as the backend hands them on: named (namedCall),
- *  then resolved. */
+/** A call's arguments as the backend hands them on: named, then resolved. */
 export function settledArguments(
   blocks: readonly SentBlock[],
   name: string,

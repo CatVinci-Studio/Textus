@@ -36,8 +36,8 @@ function stack(heights: number[]): {
 
 describe("paginateDocument", () => {
   it("pushes a block that would cross a seam to the next page's margin", () => {
-    // Page 100, margin 10: usable 10..90. The second block (60..100)
-    // crosses the bottom band, so it must start at 110.
+    // Page 100, margin 10: usable 10..90, so the second block must start
+    // at 110.
     const { root, blocks } = stack([60, 40]);
     paginateDocument(document, root, 100, 10);
     const spacers = root.querySelectorAll(".textus-page-spacer");

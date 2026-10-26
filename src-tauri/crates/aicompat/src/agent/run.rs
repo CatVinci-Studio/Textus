@@ -1,55 +1,24 @@
-//! The loop itself: a step, its tool calls run (side by side where they
-//! may be), their results sent back, until the model replies or the
-//! steps run out.
+//! The agent loop: a step, its tool calls run, their results sent back,
+//! until the model replies or the steps run out.
 
 use super::*;
 
-/// Runs the tool-calling round-trip loop shared by every agent-capable
-/// provider: feed the model the turn history, and if it asks to call tools,
-/// run them and feed the results back, until it produces a final answer or
-/// `max_steps` is hit.
+/// Runs the tool-calling loop shared by every agent-capable provider until
+/// the model gives a final answer or `max_steps` is hit.
 ///
-/// This knows nothing about any specific provider's wire format (that's
-/// `step`'s job) or what tools actually do (that's `execute_tool`'s job) - it
-/// only owns turn bookkeeping. That separation is what lets a new provider or
-/// a new tool source (e.g. an MCP server down the line) plug in without
-/// touching this loop: a provider implements `step`, a tool source
-/// contributes entries that `execute_tool` can dispatch to.
+/// `on_event` gets each ToolCall and ToolResult as it lands, and a
+/// [`LoopEvent::Retry`]; the final Assistant turn is not reported, as its
+/// text already streamed. A step whose calls are all settled and that came
+/// with text ends the exchange, the text as the reply.
 ///
-/// `on_event` gets every intermediate turn as it lands (each ToolCall and
-/// its ToolResult) - the loop-level counterpart of [`ProviderEvent`],
-/// letting a UI show tool activity live - and a [`LoopEvent::Retry`] when a
-/// step is sent again. The final Assistant turn is NOT reported: its text
-/// already streamed out as ProviderEvent::Text, and the returned turn list
-/// is the authoritative ending either way.
+/// A step's turns are recorded as all its calls, then all their results,
+/// so a ToolCall right after a ToolResult always starts a new step; the
+/// providers rely on that to group calls without rewriting cached messages.
 ///
-/// A step whose calls are all settled ([`ToolOutput::settled`]) and that
-/// came with text ends the exchange, the text as the reply: asking again
-/// only for the closing sentence was one request of every two or three an
-/// edit took.
-///
-/// Near the end of `max_steps` the model is told how many steps it has
-/// left, in what it is shown but not in what is recorded (`budget_note`).
-///
-/// A step's turns are recorded as all of its calls, then all of their
-/// results (Call1, Call2, Result1, Result2), so a ToolCall right after a
-/// ToolResult always starts a new step. The providers group a step's calls
-/// into one assistant message by that rule; with the calls and results
-/// interleaved they couldn't tell parallel calls from sequential steps, and
-/// merging every step into one message rewrote the earlier steps' messages
-/// - and their prompt cache - on each new step.
-///
-/// `execute_tool` is async, so a tool waiting on the network (a web search,
-/// a picture being made) holds no thread, and dropping the loop's future -
-/// the chat's Stop (ai::cancel in the main crate) - drops the request in
-/// flight with it. `tool_run` says how each tool's calls are run
-/// ([`ToolRun`]); results are recorded in call order whatever order they
-/// finish in.
+/// Dropping the loop's future drops the request in flight. Results are
+/// recorded in call order whatever order they finish in.
 pub async fn run_agent_loop<Step, StepFut, ExecuteTool, ToolFut, Output, HowToRun, OnEvent>(
     history: Vec<AgentTurn>,
-    // `user_turn` is a whole AgentTurn rather than the bare message string it
-    // used to be, because the turn the user just sent may carry images
-    // alongside its text.
     user_turn: AgentTurn,
     max_steps: usize,
     mut step: Step,
@@ -73,10 +42,8 @@ where
 
     for step_index in 0..max_steps {
         let mut result = step(turns.clone()).await?;
-        // A garbled step is asked for again, once per request: the broken
-        // characters are a sampling accident that a second try almost
-        // always gets through whole, while text that really contains
-        // U+FFFD (quoted from a damaged document) must not cost a retry
+        // A garbled step is retried once per request: it is usually a sampling
+        // accident, but text that really contains U+FFFD must not cost a retry
         // on every step.
         if !retried && garbled(&result) {
             retried = true;
@@ -153,17 +120,14 @@ where
         }
     }
 
-    // Out of steps while the model still wanted tools. Ending on a bare
-    // ToolResult left the exchange with no reply at all - the UI then showed
-    // the PREVIOUS exchange's answer as this one's - so say what happened.
+    // Out of steps while the model still wanted tools: without a reply the UI
+    // would show the previous exchange's answer as this one's.
     new_turns.push(AgentTurn::assistant(OUT_OF_STEPS));
     Ok(new_turns)
 }
 
-/// The reply of an exchange that ran out of steps. The chat shows it in the
-/// user's language with a Continue button (OUT_OF_STEPS in
-/// src/ai/chat/out-of-steps.ts, which must match), and the model reads it
-/// in the history when asked to go on.
+/// The reply of an exchange that ran out of steps; the model reads it when
+/// asked to go on. Keep in step with OUT_OF_STEPS in out-of-steps.ts.
 pub const OUT_OF_STEPS: &str =
     "(Stopped at the step limit before finishing. Ask me to continue, or narrow the request.)";
 
@@ -176,8 +140,7 @@ pub(crate) fn call_name(call: &AgentTurn) -> &str {
 
 /// Runs one step's calls and returns their outputs in call order: a run of
 /// [`ToolRun::Concurrent`] calls together (bounded), every other call on its
-/// own once the calls before it are done - a proposal still lands after
-/// the reads the model sent before it.
+/// own once the calls before it are done.
 pub(crate) async fn run_calls<ExecuteTool, ToolFut, Output, HowToRun>(
     calls: &[AgentTurn],
     execute_tool: &ExecuteTool,
@@ -230,13 +193,10 @@ where
     outputs
 }
 
-/// Whether a step came back with U+FFFD in its text or in a tool call's
-/// arguments. Some servers decode a model's byte-level tokens one at a
-/// time and send a replacement character for each byte of a character
-/// split across tokens - 《百年孤独》 arrived as 《百年孤���》 - and by then
-/// the text is lost: shown, or applied as an edit, it would put the broken
-/// characters in front of the user. The escaped form is what a server that
-/// JSON-encodes with ASCII escapes sends inside tool arguments.
+/// Whether a step came back with U+FFFD in its text or a tool call's
+/// arguments. Some servers decode byte-level tokens one at a time and send a
+/// replacement character for each byte of a split character; the escaped
+/// form comes from servers that JSON-encode with ASCII escapes.
 pub(crate) fn garbled(result: &StepResult) -> bool {
     let broken = |s: &str| s.contains('\u{FFFD}') || s.contains("\\ufffd") || s.contains("\\uFFFD");
     match result {
@@ -250,8 +210,7 @@ pub(crate) fn garbled(result: &StepResult) -> bool {
 }
 
 /// What the model is told after a step with `remaining` steps still to
-/// come, when they are few. One that kept checking its work used to run
-/// out of steps mid-task and leave the user with nothing.
+/// come, when they are few, so it delivers instead of running out mid-task.
 pub(crate) fn budget_note(remaining: usize) -> Option<String> {
     let steps = match remaining {
         1 => "1 step",
@@ -264,8 +223,8 @@ pub(crate) fn budget_note(remaining: usize) -> Option<String> {
 }
 
 /// A tool result with `note` after its output. Added to the step's last
-/// result once, when it is first sent, so the turns before it stay as they
-/// were from step to step (and their prompt cache valid).
+/// result only when first sent, so earlier turns (and their prompt cache)
+/// stay unchanged.
 pub(crate) fn with_note(turn: AgentTurn, note: &str) -> AgentTurn {
     match turn {
         AgentTurn::ToolResult {

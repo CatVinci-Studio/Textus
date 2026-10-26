@@ -20,11 +20,8 @@ import {
 import { basename } from "../../utils/path";
 import type { SettingContribution } from "../../plugins/store/manifest";
 
-/**
- * A plugin's settings from its manifest, drawn like Textus's own: for
- * every document, or - a folder open - for this project alone, over those
- * (plugin-settings.ts).
- */
+/** A plugin's settings from its manifest, drawn like Textus's own: for every
+ *  document, or, with a folder open, for this project over those. */
 export function PluginSettingRows({
   record,
   t,
@@ -163,7 +160,7 @@ function PluginSettingRow({
           {reset}
         </SettingRow>
         <textarea
-          // A new layer's value, a new field (as below).
+          // A new layer's value, a new field.
           key={`${scope}:${JSON.stringify(value ?? "")}`}
           className="settings-text-input plugin-setting-textarea"
           aria-label={label}
@@ -234,7 +231,6 @@ function PluginSettingRow({
   );
 }
 
-/** A number typed, kept within the setting's min and max. */
 function clamp(n: number, setting: SettingContribution): number {
   const low = setting.min ?? -Infinity;
   const high = setting.max ?? Infinity;

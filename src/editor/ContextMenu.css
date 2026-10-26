@@ -3,7 +3,6 @@
   min-width: 170px;
   max-height: min(70vh, 480px);
   overflow-y: auto;
-  /* The Agent lesson intentionally teaches this real entry point. */
   z-index: var(--z-popover);
   transform-origin: var(--transform-origin, top left);
   animation: motion-pop-in var(--dur-base) var(--ease-out);
@@ -18,7 +17,7 @@
   width: 100%;
 }
 
-/* Doubled class: design-system.css's shared menu-item colour loads later. */
+/* Doubled class: the shared menu-item colour loads later. */
 .context-menu-item.context-menu-item-danger {
   color: var(--danger);
 }

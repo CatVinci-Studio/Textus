@@ -1,11 +1,9 @@
 import type { AgentRequestOptions } from "./useAgentConversation";
 import type { ImageAttachment } from "../types";
 
-/** A message sent while a reply was still coming: it waits its turn, and
- *  goes once the replies before it have finished. Its `message` is
- *  composed when it was sent - its selection and attachments as they were
- *  then; the document is read when it goes, so it is written against the
- *  document as it reads by then, earlier proposals included. */
+/** A message sent while a reply was still coming; it goes once the replies
+ *  before it finish. Its selection and attachments are as sent, but the
+ *  document is read when it goes. */
 export interface QueuedMessage {
   id: number;
   /** What the user typed, for Edit to put back. */
@@ -26,9 +24,8 @@ export interface MessageQueueLabels {
 }
 
 /**
- * The messages waiting for the reply in progress, over the composer, as a
- * terminal agent shows them: each in a line, with Edit (back into the
- * composer, out of the queue) and Remove.
+ * The messages waiting for the reply in progress, over the composer, each
+ * with Edit (back into the composer) and Remove.
  */
 export function MessageQueue({
   queue,

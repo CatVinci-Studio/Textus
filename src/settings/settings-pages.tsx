@@ -9,16 +9,8 @@ import { ShortcutsPage } from "./pages/ShortcutsPage";
 import type { SettingsPageProps } from "./pages/types";
 import { PrivacySection } from "./sections/privacy";
 
-/**
- * The pages of Settings, in the order its navigation lists them - the one
- * list the panel (SettingsPanel.tsx), its search and its phone tabs read.
- * A page is an id, its name in the navigation, whether this platform shows
- * it, and the component that draws it from SettingsPageProps.
- *
- * Built in for now. It is the shape a plugin's own page will take
- * (docs/dev/plugin-api.md): registerSettingsPage adds one after the built-in
- * pages, and its rows find their way into the search like any other's.
- */
+/** A Settings page: its id, its name in the navigation, whether this
+ *  platform shows it, and its component. Plugins add theirs the same way. */
 export interface SettingsPageDef {
   id: string;
   label: (t: Strings) => string;
@@ -34,9 +26,8 @@ const BUILT_IN: SettingsPageDef[] = [
   {
     id: "extensions",
     label: (t) => t.navExtensions,
-    // Desktop only for now: a phone has no plugin to install from a file
-    // or a folder, nor a program to start as an MCP server, and its
-    // Settings tabs have room for four (its skills stay in Textus AI).
+    // Desktop only: a phone has no plugin files or MCP programs, and its tabs
+    // have room for four.
     available: () => !isIOSApp,
     Page: ExtensionsPage,
   },
@@ -68,12 +59,10 @@ export function registerSettingsPage(page: SettingsPageDef): () => void {
   };
 }
 
-/** The pages this platform shows, in navigation order. */
 export function settingsPages(): SettingsPageDef[] {
   return [...BUILT_IN, ...added].filter((p) => p.available?.() ?? true);
 }
 
-/** The page with this id, or undefined. */
 export function settingsPage(id: string): SettingsPageDef | undefined {
   return settingsPages().find((p) => p.id === id);
 }

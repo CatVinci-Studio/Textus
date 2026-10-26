@@ -3,15 +3,10 @@ import { $nodeSchema, $remark } from "@milkdown/kit/utils";
 import remarkFrontmatter from "remark-frontmatter";
 
 /**
- * Recognizes a leading "---\n...\n---" block as a single yaml frontmatter
- * mdast node instead of letting commonmark misparse it as a setext heading
- * (a bare "---" line right after text turns the preceding paragraph into an
- * h2). remark-frontmatter's own syntax extension only matches at the very
- * start of the document, so no extra positional enforcement is needed here.
+ * A leading "---\n...\n---" block as yaml frontmatter, not a setext heading.
+ * The explicit "yaml" preset matters: omitted, remark-frontmatter throws on
+ * every parse and blanks the editor.
  */
-// The explicit "yaml" preset matters: $remark defaults omitted options to
-// {}, which remark-frontmatter reads as a matter definition and throws
-// "Missing `type` in matter" on every parse - blanking the whole editor.
 export const remarkFrontmatterPlugin = $remark(
   "remark-frontmatter",
   () => remarkClosedFrontmatter,
@@ -23,12 +18,9 @@ const CLOSED_FRONTMATTER =
   /^---[ \t]*\r?\n(?:[\s\S]*?\r?\n)?---[ \t]*(?:\r?\n|$)/;
 
 /**
- * remark-frontmatter, used only on a file whose front matter is closed.
- * Its syntax reads a first-line `---` as the start of front matter until
- * the end of the file, and fails there when no `---` closes it, but by
- * then the lines it ran over were read without lists or quotes: in a file
- * that opens with a rule, every `1. item`, `- item` and `> quote` came out
- * as a paragraph of text, and was saved escaped as one once edited.
+ * remark-frontmatter, used only on a file whose front matter is closed: an
+ * unclosed first-line `---` made it read the rest of the file without
+ * lists or quotes.
  */
 const remarkClosedFrontmatter: RemarkPluginRaw<string> = function (
   this: ThisParameterType<RemarkPluginRaw<string>>,
@@ -50,12 +42,7 @@ const remarkClosedFrontmatter: RemarkPluginRaw<string> = function (
   };
 };
 
-/**
- * Deliberately plain: raw text content, no language selector or collapse
- * toggle (unlike code-block-language-view.ts / mermaid-plugin.ts) - just a
- * visually distinct box via CSS (see .frontmatter-block in
- * milkdown-theme.css) so it doesn't get mistaken for document body text.
- */
+/** Deliberately plain: raw text in a visually distinct box. */
 export const frontmatterSchema = $nodeSchema("frontmatter", () => ({
   content: "text*",
   group: "block",
@@ -83,9 +70,8 @@ export const frontmatterSchema = $nodeSchema("frontmatter", () => ({
   toMarkdown: {
     match: (node) => node.type.name === "frontmatter",
     runner: (state, node) => {
-      // node.textContent (not content.firstChild?.text) - a paste or edit
-      // can leave the "text*" content as more than one text node, and only
-      // reading the first would silently drop the rest of the YAML on save.
+      // node.textContent: an edit can leave several text nodes, and reading only
+      // the first would drop the rest of the YAML on save.
       state.addNode("yaml", undefined, node.textContent);
     },
   },

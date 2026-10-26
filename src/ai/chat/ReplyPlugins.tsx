@@ -26,11 +26,8 @@ export interface ReplyPluginLabels {
 }
 
 /**
- * Install this plugin, under a reply that wrote one (the `plugin` skill):
- * its files go in as a package's would and it is turned on - asking for
- * its permissions. Its usage guide is a click away, not opened: a new tab
- * would take the conversation with it. A later reply with the same plugin
- * at another version offers Update instead.
+ * Install this plugin, under a reply that wrote one. Its usage guide is a
+ * click away, not opened: a new tab would take the conversation with it.
  */
 export function ReplyPlugins({
   text,

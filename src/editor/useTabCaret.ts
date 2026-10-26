@@ -9,13 +9,9 @@ import { flushDomSelection, readEditorCaret } from "./modes/mode-switch";
 import { registerTabCaret, reportTabCaret, type CaretPlace } from "./tab-caret";
 
 /**
- * Tells where this tab's caret is as the tab leaves the screen - switched
- * away from, closed, the window losing focus - and whenever it is asked
- * (tab-caret.ts). `markdown` is the tab's text, which the offset counts
- * into. Reading it writes out the document up to the caret (a large
- * document gives its position instead, see CaretPlace), so the answer is
- * kept until the document or the caret moves: a tab clicked away from and
- * back costs nothing the second time.
+ * Reports this tab's caret as the tab leaves the screen, and whenever asked.
+ * `markdown` is the text the offset counts into. Reading it serializes up to
+ * the caret, so the answer is kept until the document or caret moves.
  */
 export function useTabCaret(
   run: EditorRunner,
@@ -54,8 +50,8 @@ export function useTabCaret(
     window.addEventListener("blur", onBlur);
     return () => {
       window.removeEventListener("blur", onBlur);
-      // Switched away from, or closed: the editor is still there to ask
-      // (it is torn down after this component's effects).
+      // Switched away from or closed: the editor is still there to ask, torn down
+      // after this component's effects.
       reportTabCaret(tabId, read());
     };
   }, [isActive, runReady, tabId, read]);

@@ -6,11 +6,9 @@ fn responses_url(base_url: &str) -> String {
     format!("{}/responses", base_url.trim_end_matches('/'))
 }
 
-/// Runs an Agent step against a third-party OpenAI-compatible Responses API.
-/// xAI uses this path because its native web search is available on
-/// `/responses`, while its `/chat/completions` endpoint does not expose the
-/// same server-side tool. Not streamed: the page citations come with the
-/// finished output, reported through `on_event`.
+/// Runs an Agent step against a third-party OpenAI-compatible Responses API,
+/// used where native web search exists only on `/responses` (xAI). Not
+/// streamed: the page citations come with the finished output.
 #[allow(clippy::too_many_arguments)]
 pub async fn agent_step(
     base_url: &str,

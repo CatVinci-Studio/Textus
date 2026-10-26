@@ -4,17 +4,11 @@
 
 use super::*;
 
-// --- Agentic tool-calling support, shared by every Responses API dialect
-// (Codex OAuth and the public API-key path) - see `crate::agent` for the
-// provider-agnostic loop this feeds. A new Responses-API-shaped provider
-// only needs its own auth/URL plumbing and can reuse everything below.
-
 pub(crate) fn turn_to_input_item(turn: &AgentTurn) -> Value {
     match turn {
         AgentTurn::User { text, images } => {
-            // Images come first: a request like "what does this chart show?"
-            // reads as a question about the picture above it, and putting the
-            // text last is what both OpenAI and Anthropic recommend.
+            // Images come first, so the text reads as a question about the
+            // picture above it.
             let mut content: Vec<Value> = images
                 .iter()
                 .map(|image| json!({"type": "input_image", "image_url": image.data_url()}))
@@ -53,10 +47,8 @@ pub(crate) fn turn_to_input_item(turn: &AgentTurn) -> Value {
 }
 
 /// One turn's `input` items: its own, and after a tool result that showed
-/// images, a user message carrying them. The public API takes images inside
-/// a `function_call_output`, but the Codex backend and the
-/// Responses-compatible servers (xAI, Qwen) aren't known to, while every
-/// one of them reads an `input_image` in a user message.
+/// images, a user message carrying them, the one place every Responses server
+/// is known to read an `input_image`.
 pub(crate) fn turn_to_input_items(turn: &AgentTurn) -> Vec<Value> {
     let mut items = vec![turn_to_input_item(turn)];
     if let AgentTurn::ToolResult { images, .. } = turn {
@@ -82,11 +74,8 @@ pub(crate) fn tool_to_schema(tool: &ToolSpec) -> Value {
 }
 
 /// Builds a Responses API request body for one agent step: the full turn
-/// history (mapped to `input` items) plus tool definitions. `streaming`
-/// picks `stream: true`/`false` - the Codex backend only serves SSE, the
-/// public API accepts either and non-streaming is simpler for callers that
-/// don't need it. Reasoning items are not sent back: with `store: false`
-/// the API needs only the calls and their outputs, as it always had.
+/// history as `input` items plus tool definitions. Reasoning items are not sent
+/// back: with `store: false` the API needs only the calls and outputs.
 pub fn agent_request_body(
     model: &str,
     instructions: &str,
@@ -98,9 +87,8 @@ pub fn agent_request_body(
 ) -> Value {
     let input: Vec<Value> = history.iter().flat_map(turn_to_input_items).collect();
     let mut tool_schemas: Vec<Value> = tools.iter().map(tool_to_schema).collect();
-    // OpenAI's server-side web search: unlike function tools it runs inside
-    // the response (search calls surface as ignored `web_search_call` output
-    // items), so no loop changes are needed - just offering it is enough.
+    // OpenAI's server-side web search runs inside the response, so just
+    // offering it is enough.
     if web_search {
         tool_schemas.push(json!({"type": "web_search"}));
     }
@@ -122,12 +110,10 @@ pub fn agent_request_body(
     body
 }
 
-/// `text` without the citation markers OpenAI's models write in their own
-/// app's format - `\u{e200}cite\u{e202}turn3view0\u{e201}`, or, its private-use
-/// delimiters lost, `citeturn3view0turn8view1` - which nothing here reads:
-/// they reached documents as garbage after the ChatGPT model searched the
-/// web (1.2.0-rc.5). The pages themselves come as annotations and
-/// `web_search_call` sources. A space left before punctuation goes too.
+/// `text` without the citation markers OpenAI's models write in their own app's
+/// format (`\u{e200}cite\u{e202}turn3view0\u{e201}`, or with its delimiters
+/// lost), which would reach documents as garbage. A space left before
+/// punctuation goes too.
 pub fn strip_citation_markers(text: &str) -> String {
     if !text.contains('\u{e200}') && !text.contains("citeturn") {
         return text.to_string();
@@ -191,9 +177,8 @@ pub(crate) fn bare_marker_len(text: &str) -> usize {
     at
 }
 
-/// Tool arguments without citation markers in what they write - not in an
-/// `anchor` or `context`, which quote the document: one that already has
-/// such markers (written before this) must still be quotable, to clean up.
+/// Tool arguments without citation markers in what they write. Not in an
+/// `anchor` or `context`, which quote the document and must still match it.
 pub(crate) fn strip_markers_in_arguments(arguments: &str) -> String {
     if !arguments.contains("citeturn")
         && !arguments.contains('\u{e200}')
@@ -260,12 +245,9 @@ pub(crate) fn cited_part_text(
     mark_cited_spans(text, spans, citations, on_event)
 }
 
-/// Parses a Responses API `output` item array (streamed or not - both shapes
-/// match) into a [`StepResult`]: any `function_call` items become tool
-/// calls the caller must execute, otherwise the `message` items' text is the
-/// model's final answer. The pages a native web search cited are reported
-/// through `on_event` - in the text's annotations, and the sources a
-/// `web_search_call` lists (Qwen's only way of naming them).
+/// Parses a Responses API `output` item array (streamed or not) into a
+/// [`StepResult`]. The pages a native web search cited are reported from the
+/// text's annotations and the sources a `web_search_call` lists.
 pub fn parse_agent_output(output: &[Value], on_event: EventSink<'_>) -> StepResult {
     let mut tool_calls = Vec::new();
     let mut text_parts = Vec::new();

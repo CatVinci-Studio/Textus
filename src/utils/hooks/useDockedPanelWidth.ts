@@ -1,13 +1,9 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * How wide the docked AI panel is right now - 0 while it is closed, lies
- * over the page or is the phone's sheet - for the few surfaces fixed to
- * the window that keep clear of it (the find bar, the tutorial card); App
- * sets it. They take it as their own `--docked-panel-width`. It used to be
- * a custom property on the app's shell, which every element of the window
- * inherits: setting it, on opening the panel and on every frame of
- * dragging its edge, recalculated the style of the whole document.
+ * How wide the docked AI panel is now (0 while closed, overlaid or a sheet),
+ * for the few window-fixed surfaces that keep clear of it. Not a property on
+ * the shell: setting that on every drag frame restyled the whole document.
  */
 let width = 0;
 const listeners = new Set<() => void>();

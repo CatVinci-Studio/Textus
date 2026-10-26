@@ -34,25 +34,23 @@ function scrollToActive(view: EditorView, behavior = scrollBehavior()) {
   const s = findReplaceKey.getState(view.state);
   const match = s?.matches[s.activeIndex];
   if (!match) return;
-  // A match in a folded <details> opens it, so the counter's "3 / 12"
-  // points at something on screen.
+  // A match in a folded <details> opens it.
   unfoldRange(view, match.from, match.to);
   try {
     const dom = view.domAtPos(match.from).node;
     const el = dom instanceof Element ? dom : dom.parentElement;
     el?.scrollIntoView({ block: "center", behavior });
   } catch {
-    // Position not representable in the DOM right now - not worth failing over.
+    // Not representable in the DOM right now.
   }
 }
 
-/** Owns the find & replace bar's open state and drives find-replace-plugin.ts via meta transactions. */
+/** Owns the find & replace bar's open state and drives the plugin. */
 export function useFindReplace(run: EditorRunner) {
   const [open, setOpenState] = useState(false);
-  // What toggle and dismiss read. The window-event listeners that call them
-  // are re-attached in an effect after each render, so a second Find menu
-  // event right after the first can reach the previous render's callbacks:
-  // reading `open` there, the reopen closed the closing bar again.
+  // The window-event listeners are re-attached after each render, so a quick
+  // second Find event can reach stale callbacks; reading `open` there closed
+  // the reopening bar.
   const openRef = useRef(false);
   const setOpen = useCallback((value: boolean) => {
     openRef.current = value;
@@ -64,9 +62,8 @@ export function useFindReplace(run: EditorRunner) {
   const [useRegex, setUseRegex] = useState(false);
   const [status, setStatus] = useState<FindReplaceStatus>(IDLE_STATUS);
 
-  // The one search-dispatch path: any change to the search inputs while the
-  // bar is open re-runs the plugin search - including re-running a kept
-  // query when the bar reopens.
+  // Any change to the search inputs while open re-runs the search, including
+  // a kept query when the bar reopens.
   useEffect(() => {
     if (!open) return;
     run((ctx) => {
@@ -80,8 +77,7 @@ export function useFindReplace(run: EditorRunner) {
         }),
       );
       setStatus(readStatus(view));
-      // The counter says "1 / 12" - show that match while typing. Instant:
-      // a smooth scroll per keystroke would chase its own tail.
+      // Instant: a smooth scroll per keystroke would chase its own tail.
       if (query) scrollToActive(view, "auto");
     });
   }, [open, query, caseSensitive, useRegex, run]);
@@ -113,11 +109,8 @@ export function useFindReplace(run: EditorRunner) {
   const next = useCallback(() => step(1), [step]);
   const prev = useCallback(() => step(-1), [step]);
 
-  /**
-   * Compiled once per replace action (not per match). Regex mode re-applies
-   * the query's capture groups against the match's own text; plain mode is a
-   * literal swap.
-   */
+  /** Regex mode re-applies the query's capture groups to the match's text;
+   *  plain mode is a literal swap. */
   const makeReplacer = useCallback((): ((matchText: string) => string) => {
     if (!useRegex) return () => replacement;
     const regex = compileQuery(query, caseSensitive, true, false);
@@ -151,7 +144,7 @@ export function useFindReplace(run: EditorRunner) {
       if (!s || s.matches.length === 0) return;
       const replace = makeReplacer();
       let tr = view.state.tr;
-      // Reverse order so replacing one match never shifts the positions of matches still to come.
+      // Reverse order, so a replacement never shifts matches still to come.
       for (let i = s.matches.length - 1; i >= 0; i--) {
         const match = s.matches[i];
         tr = tr.insertText(replace(match.text), match.from, match.to);
@@ -172,9 +165,8 @@ export function useFindReplace(run: EditorRunner) {
     setStatus(IDLE_STATUS);
   }, [run, setOpen]);
 
-  /** Closes the bar without handing focus back to the document: something
-   *  else is taking the screen (the iPhone's sidebar drawer), and focusing
-   *  the page there would bring the keyboard up under it. */
+  /** Closes the bar without focusing the document: something else is taking
+   *  the screen, and focus would bring the iPhone keyboard up under it. */
   const dismiss = useCallback(() => {
     if (!openRef.current) return;
     run((ctx) => {
@@ -186,14 +178,11 @@ export function useFindReplace(run: EditorRunner) {
   }, [run, setOpen]);
 
   const toggle = useCallback(() => {
-    // Opening with a kept query re-searches via the dispatch effect above.
     if (openRef.current) close();
     else setOpen(true);
   }, [close, setOpen]);
 
-  // Escape closes the bar even when focus has moved to the editor (Replace/
-  // Replace All refocus it) - the bar's own Escape handler only fires while
-  // focus is still inside the bar.
+  // Escape closes the bar even once focus has moved to the editor.
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {

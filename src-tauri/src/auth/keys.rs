@@ -21,12 +21,8 @@ fn read_keys(app: &AppHandle) -> Result<HashMap<String, String>, String> {
     Ok(parse_or_set_aside(&path, &text))
 }
 
-/// Parses the keys file; when it doesn't parse, moves it aside and starts
-/// from no keys. Failing instead made every key command fail, including
-/// the "set key" that would have repaired it - one bad byte locked the user
-/// out of every provider until they found and deleted the file by hand.
-/// The bad file is kept (`provider_keys.json.corrupt-<n>`) rather than
-/// deleted, since it may still hold keys worth copying out.
+/// Parses the keys file; when it doesn't parse, moves it aside and starts from
+/// no keys, so one bad byte can't lock out every provider. The bad file is kept as `.corrupt-<n>`.
 fn parse_or_set_aside(path: &Path, text: &str) -> HashMap<String, String> {
     match serde_json::from_str(text) {
         Ok(keys) => keys,

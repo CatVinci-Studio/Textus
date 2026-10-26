@@ -1,4 +1,4 @@
-/* Where a dragged tab or file would open (split-drop.ts). */
+/* Where a dragged tab or file would open. */
 .split-drop-hint {
   position: fixed;
   z-index: 50;

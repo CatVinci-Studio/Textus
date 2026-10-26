@@ -34,12 +34,9 @@ import { migrateOfficialPlugins } from "./store/migrate-official";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
 
 /**
- * A window's side of the plugins: what it tells the manager (its strings,
- * language, theme), what plugins may ask of it (open a file, a tab of
- * theirs, the folder in the sidebar), the events they may listen to, and
- * the native menus they add to.
- * Returns the plugins' current state, so the window draws again when one
- * is turned on or off - its sidebar tabs and menu items come and go.
+ * A window's side of the plugins: what it tells the manager, what plugins
+ * may ask of it, their events and native menus. Returns the plugins' state
+ * so the window redraws when one is turned on or off.
  */
 export function usePluginWindow({
   t,
@@ -77,8 +74,7 @@ export function usePluginWindow({
       language: () => languageRef.current,
       dark: windowIsDark,
     });
-    // Then, once, the official plugins of before the plugin API 1.0 moved
-    // to their rewrites (migrate-official.ts).
+    // Then, once, move the official plugins from before API 1.0 to their rewrites.
     void loadPlugins()
       .then(() => migrateOfficialPlugins())
       .catch(() => {});
@@ -89,8 +85,8 @@ export function usePluginWindow({
       const made: DocTab = { ...makeBlankTab(), ...tab };
       placeTab(made, where);
     };
-    // A new tab where a plugin asked: after the others, beside the one in
-    // front (split-layout.ts), or in its place.
+    // A new tab where a plugin asked: after the others, beside the front one,
+    // or in its place.
     const placeTab = (made: DocTab, where: Where) => {
       const from = activeIdRef.current;
       setTabs((prev) => {
@@ -153,8 +149,7 @@ export function usePluginWindow({
         const tab = tabsRef.current.find((t) => t.id === activeIdRef.current);
         return tab ? info(tab) : null;
       },
-      // Only a tab with unsaved changes: one that matches its file is
-      // changed on disk, and reloads (useExternalChangeReload).
+      // Only a tab with unsaved changes; a clean one is changed on disk and reloads.
       documentAt: (path) => {
         const tab = tabsRef.current.find((t) => t.path === path);
         return tab && tab.content !== tab.savedContent
@@ -165,9 +160,8 @@ export function usePluginWindow({
     return () => setWindowAccess(null);
   }, [rootRef, openRef, tabsRef, setTabs, setActiveTabId, activeIdRef, tRef]);
 
-  // File › Save and Close Tab, for a plugin that has its own keys for
-  // them (Emacs's C-x C-s, Vim's :w and :q). Close Tab with { save: true }
-  // saves first (Vim's :wq), and closes only once it is saved.
+  // File › Save and Close Tab for plugins with their own keys (Vim's :w, :q).
+  // Close Tab with { save: true } closes only once it is saved.
   useEffect(() => {
     const save = registerCommand({
       id: "textus.save",
@@ -194,8 +188,8 @@ export function usePluginWindow({
 
   // A plugin a developer loaded from a folder, loaded again as it changes.
   useEffect(() => watchDevPlugins(), []);
-  // textus:// links from outside (plugins/uri.rs): those that came before
-  // this window did, then each as it comes.
+  // textus:// links from outside: those that came before this window, then
+  // each as it comes.
   useEffect(() => {
     void takePluginUris();
     return unlistenAll(
@@ -204,7 +198,7 @@ export function usePluginWindow({
   }, []);
   // Tools the plugins give Textus AI, told to Rust and run when called.
   useEffect(() => watchPluginAiTools(runPluginAiTool), []);
-  // The completions plugins suggest as you type (completion-sources.ts).
+  // The completions plugins suggest as you type.
   useEffect(() => {
     setCompletionAsker((id, source, context) =>
       askPlugin(

@@ -12,9 +12,8 @@ import { Presence, PresenceDiv } from "../ui/usePresence";
 import type { Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
-/** What opens over one tab's editor (useEditorPopups): the find bar, its
- *  menu, the AI notice, the table and picture-name dialogs, and the
- *  grammar card. */
+/** What opens over one tab's editor: the find bar, its menu, the AI notice,
+ *  dialogs and the grammar card. */
 export function EditorOverlays({
   setup,
   chat,

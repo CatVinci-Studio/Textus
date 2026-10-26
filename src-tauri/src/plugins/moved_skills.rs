@@ -1,20 +1,17 @@
-//! The skills that were built in until 1.3.0-beta.2 and are in the market
-//! now (ai::builtin::MOVED_TO_MARKET): a profile from before then gets the
-//! ones it had on installed from the catalog once, into the global skills/
-//! folder, so nothing it used goes missing. Offline, it tries again at the
-//! next start.
+//! Skills that moved from built-in to the market: an older profile gets the
+//! ones it had on installed once from the catalog, retried at the next start
+//! when offline.
 
 use crate::ai::workspace::{global_agent_dir, read_skill_files, DISABLED_BUILTINS_KEY};
 use serde_json::{json, Map, Value};
 use tauri::AppHandle;
 
-/// The settings.json field saying the moved skills have been seen to - set
-/// from the start in a new profile (settings::Stores::load).
+/// The settings.json field saying the moved skills have been seen to; set from
+/// the start in a new profile.
 pub(crate) const MOVED_KEY: &str = "skillsMovedToMarket";
 
-/// The moved skills a profile had on, given its list of turned-off
-/// built-ins: every one for a profile without the list (1.2 had them all
-/// on), else those not in it.
+/// The moved skills a profile had on, given its list of turned-off built-ins:
+/// all of them without a list, else those not in it.
 pub(crate) fn had_on(disabled: Option<&Value>) -> Vec<&'static str> {
     let off: Vec<&str> = disabled
         .and_then(Value::as_array)
@@ -27,9 +24,8 @@ pub(crate) fn had_on(disabled: Option<&Value>) -> Vec<&'static str> {
         .collect()
 }
 
-/// Installs the moved skills the profile had on and doesn't have yet,
-/// then marks the move done. A catalog that can't be reached, or a skill
-/// that can't be installed, leaves it for the next start.
+/// Installs the moved skills the profile had on and lacks, then marks the move
+/// done. A failure leaves it for the next start.
 pub async fn install_moved_skills(app: AppHandle) {
     let read = |key| crate::settings::read_setting(&app, key);
     if read(MOVED_KEY) == Some(Value::Bool(true)) {

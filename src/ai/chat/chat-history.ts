@@ -15,27 +15,21 @@ import {
 } from "../../platform/documents-path";
 
 /**
- * Persisted agent conversations, so past chats can be reopened and continued
- * (ChatHistoryMenu, in the AI panel's header). Kept by Rust, one file per conversation plus an
- * index of them (src-tauri/src/settings/chat_history.rs), and capped: beyond
- * the cap the oldest move to the folder's trash. A persisted list
- * (storage/persisted-list.ts) of the index, so the history list re-renders
- * live as conversations are saved or deleted, in every window; a
- * conversation's turns are read from its file when it is reopened.
+ * Persisted agent conversations, kept by Rust as one file each plus an index,
+ * capped (the oldest move to the trash). The index is a persisted list, so the
+ * history re-renders live in every window.
  */
 export interface ChatSummary {
   id: string;
-  /** The document the conversation happened in, for the list's context line
-   *  and its project group. On iOS one in the app's Documents folder is
-   *  stored relative to it ("documents:...", platform/documents-path.ts) -
-   *  the folder moves with every reinstall and update - and handed out
-   *  resolved again by useChatHistory. */
+  /** The document the conversation happened in. On iOS one in Documents is
+   *  stored relative to it ("documents:..."), since that folder moves with
+   *  every reinstall and update. */
   docPath: string | null;
   /** First user message, cleaned and truncated - the list's display name. */
   title: string;
   updatedAt: number;
-  /** In the index (`summary` in chat_history.rs, which this mirrors); not
-   *  in the browser fallback, whose list holds whole conversations. */
+  /** In the index; not in the browser fallback, whose list holds whole
+   *  conversations. */
   turnCount?: number;
 }
 
@@ -46,7 +40,7 @@ export interface ChatHistoryEntry extends ChatSummary {
 
 /** Where the browser fallback (no Rust) keeps the list. */
 const CHAT_HISTORY_KEY = "textus-chat-history";
-/** chat_history.rs's MAX_CONVERSATIONS. */
+/** Keep in step with Rust's MAX_CONVERSATIONS. */
 const MAX_ENTRIES = 500;
 const MAX_TITLE_CHARS = 60;
 
@@ -63,9 +57,8 @@ const history = createPersistedList<ChatSummary, ChatHistoryEntry>(
       );
     },
     sort: (a, b) => b.updatedAt - a.updatedAt,
-    // iOS: the document path relative to Documents, on every save - and for
-    // what an earlier version stored absolute, rewritten once when the list
-    // loads, so its conversations join their documents' group again.
+    // iOS: the document path relative to Documents, on every save, and
+    // absolute paths from older saves rewritten once on load.
     normalise: isIOSApp ? storedEntry : undefined,
     listed: ({ turns, ...summary }) => ({
       ...summary,
@@ -188,15 +181,12 @@ export function clearAllConversations() {
 }
 
 /**
- * A display title from the first user turn: the outgoing message carries
- * context wrappers (<selected-text>, <attached-file>) that would drown out
- * what the user actually asked.
+ * A display title from the first user turn, without the context wrappers
+ * that would drown out what the user asked.
  */
 export function conversationTitle(turns: AgentTurn[]): string {
   const first = turns.find((t) => t.kind === "User");
   if (!first || first.kind !== "User") return "";
-  // The context blocks are stripped by the one module that owns their
-  // format (user-message.ts), not by a third copy of the regexes.
   const cleaned = userMessageBody(first.text)
     .replace(/\(If this asks you to rewrite[\s\S]*?\)\s*$/, "")
     .trim();

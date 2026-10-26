@@ -2,9 +2,8 @@ import type { EditorState } from "@milkdown/kit/prose/state";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 
-// The text around the caret, flattened (a line per text block), and where
-// the editing actions of a plugin that has the keyboard (editor-input.ts)
-// move to in it: words, lines, the character found.
+// The text around the caret, flattened (a line per text block), and where a
+// keyboard-holding plugin's motions land in it.
 
 export interface Flat {
   text: string;
@@ -116,8 +115,7 @@ export function motion(
       const end = lineEndIndex(t, i);
       return i < end ? i + 1 : i;
     }
-    // A character on, or back, across the end of a line too (Emacs's C-f
-    // and C-b).
+    // A character on or back, across line ends too (Emacs's C-f and C-b).
     case "charForward":
       return Math.min(i + 1, t.length);
     case "charBack":
@@ -129,8 +127,8 @@ export function motion(
       while (j < t.length && charClass(t[j]) === 0) j++;
       return Math.min(j, t.length);
     }
-    // An operator's w (Vim's dw, yw): to the next word, but not past the
-    // end of this line - the last word's dw doesn't join two blocks.
+    // An operator's w (Vim's dw): to the next word, but not past this line's end,
+    // so the last word's dw doesn't join two blocks.
     case "wordStartInLine": {
       const j = motion(flat, i, "wordStart", arg);
       const end = lineEndIndex(t, i);
@@ -163,10 +161,9 @@ export function motion(
     }
     case "lineEndInsert":
       return lineEndIndex(t, i);
-    // A Markdown document has no blank lines between its paragraphs: }
-    // goes to the start of the next block, { to the start of this one (or
-    // the one before, from its start), and an operator's } to the end of
-    // this one.
+    // A Markdown document has no blank lines between paragraphs: } goes to the
+    // next block's start, { to this one's (or the one before), an operator's }
+    // to this one's end.
     case "paragraphNext":
       return flat.starts.find((s) => s > i) ?? t.length;
     case "paragraphPrev":
@@ -223,9 +220,8 @@ function textblockBeside(
   return found;
 }
 
-/** The first position from `lo` to `hi` (both in) whose line starts below
- *  `y` - the positions are in one text block, their lines in order -, or
- *  `hi + 1` if none does. */
+/** The first position from `lo` to `hi` (both in, in one text block) whose
+ *  line starts below `y`, or `hi + 1` if none does. */
 function firstBelow(view: EditorView, lo: number, hi: number, y: number) {
   while (lo <= hi) {
     const mid = (lo + hi) >> 1;
@@ -258,12 +254,9 @@ function nearestInLine(
   return best;
 }
 
-/** Where a move a line down (`dir` 1) or up (-1) from `head` lands,
- *  nearest the column `x`: the next line of the paragraph as it is shown
- *  (a long one wraps), or of a code block, else the first (last) line of
- *  the text block after (before) it - whatever is between them, a code
- *  block's frame, a picture, a rule. Measured from the document, not the
- *  screen, so off-screen lines are reached too. */
+/** Where a move a line down (`dir` 1) or up (-1) from `head` lands, nearest
+ *  column `x`: the next shown line, else the next text block's first (last)
+ *  line. Measured from the document, so off-screen lines are reached too. */
 export function verticalMove(
   view: EditorView,
   head: number,
@@ -280,8 +273,7 @@ export function verticalMove(
     const after = textblockBeside(doc, block.from, block.to, 1);
     return after ? nearestInLine(view, after.from, after.to, x) : head;
   }
-  // Up: the line before this one in the block, else the last line of the
-  // block before.
+  // Up: the line before in this block, else the last line of the block before.
   const lineStart = firstBelow(view, block.from, head, at.top - half);
   if (lineStart > block.from) {
     const prevTop = view.coordsAtPos(lineStart - 1, 1).top;

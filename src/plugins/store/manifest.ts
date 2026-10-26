@@ -1,12 +1,6 @@
 /**
- * A plugin's manifest, `textus-plugin.json` (docs/design/plugins.md §1-2):
- * who it is, what it adds and what it needs. Read and checked here before
- * any of the plugin runs, so Settings can show what it adds and asks for
- * from the manifest alone.
- *
- * Strings a user sees (a command's title, a setting's description) may be
- * `%key%`, looked up in the manifest's `l10n` for the UI language, then
- * English, as VS Code's package.nls.json does.
+ * A plugin's manifest, `textus-plugin.json`, read and checked before any of
+ * the plugin runs. User-facing strings may be `%key%`, looked up in `l10n`.
  */
 
 import {
@@ -64,12 +58,9 @@ export interface KeybindingContribution {
   key: string;
 }
 
-/** Where a command is listed: the editor's right-click menu, a file's in
- *  the sidebar (the command is given its path), a tab's (given its path,
- *  if it has one), the buttons over a view of the plugin's (`when: "view
- *  == <id>"`), the Plugins menu (the menu bar's on macOS, the app menu's
- *  elsewhere), and the menu of background mode's icon in the tray or menu
- *  bar - there with no window open, which it opens first. */
+/** Where a command is listed: the editor's context menu, a file's or tab's
+ *  (given its path), a view's title buttons, the Plugins menu, or the tray
+ *  menu (with no window open, which it opens first). */
 export type MenuId =
   | "editor/context"
   | "editor/slash"
@@ -79,8 +70,7 @@ export type MenuId =
   | "app/plugins"
   | "app/tray";
 
-/** A Textus setting a plugin needs on to do all it does. Settings › Extensions › Plugins
- *  says which, and offers to turn it on (requirements.ts). */
+/** A Textus setting a plugin needs on to do all it does. */
 export type RequiredSetting = "runInBackground";
 export const REQUIRED_SETTINGS: readonly RequiredSetting[] = [
   "runInBackground",
@@ -94,19 +84,17 @@ export interface Requirement {
 
 export interface MenuContribution {
   command: string;
-  /** "editorHasSelection", "fileExtension == .pdf" - see when.ts. */
+  /** "editorHasSelection", "fileExtension == .pdf". */
   when?: string;
   /** For "view/title": an icon (one of the app's, or an SVG of the
    *  plugin's) in place of the title. */
   icon?: string;
 }
 
-/** A view is drawn by Textus from the items the plugin gives
- *  (views.registerList), or is a page of the plugin's own
- *  (views.registerWebview). */
+/** A view is drawn by Textus from the plugin's items, or is a page of the
+ *  plugin's own. */
 export type ViewType = "list" | "webview";
 
-/** A tab in the sidebar. */
 export interface SidebarTabContribution {
   id: string;
   title: string;
@@ -115,22 +103,21 @@ export interface SidebarTabContribution {
   icon?: string;
 }
 
-/** A view the plugin opens in a tab of its own (layout.openView). */
+/** A view the plugin opens in a tab of its own. */
 export interface ViewContribution {
   id: string;
   title: string;
   type: ViewType;
 }
 
-/** Code blocks of a language the plugin draws in the document
- *  (views.registerCodeBlock): ```tasks. */
+/** Code blocks of a language the plugin draws in the document: ```tasks. */
 export interface CodeBlockContribution {
   language: string;
   /** What the block is called where Textus names it ("Task query"). */
   title?: string;
 }
 
-/** A file type the plugin opens in a tab (registerCustomEditorProvider). */
+/** A file type the plugin opens in a tab. */
 export interface CustomEditorContribution {
   viewType: string;
   displayName: string;
@@ -147,21 +134,19 @@ export type SettingType =
 export interface SettingContribution {
   key: string;
   type: SettingType;
-  /** None for a "button"; a "#rrggbb" for a "color", strings for a
-   *  "list". */
+  /** None for a "button"; a "#rrggbb" for a "color", strings for a "list". */
   default?: boolean | string | number | string[];
   title: string;
   description?: string;
   /** A heading the setting goes under; the ones after it share it until
    *  another is named. */
   group?: string;
-  /** Shown only while another setting is so (settingShown):
-   *  "legend", "!legend", "style == dark", "style != dark". */
+  /** Shown only while another setting is so: "legend", "!legend",
+   *  "style == dark", "style != dark". */
   when?: string;
   /** For "enum": the values, and what each is called. */
   options?: { value: string; label: string }[];
-  /** For "string": several lines, in a box under its title (Vim's key
-   *  mappings). */
+  /** For "string": several lines, in a box under its title. */
   multiline?: boolean;
   /** For "number": the least and most it takes. */
   min?: number;
@@ -173,32 +158,27 @@ export interface SettingContribution {
 export interface ThemeContribution {
   id: string;
   label: string;
-  /** The CSS file in the plugin's folder. */
   path: string;
 }
 
-/** A tool the plugin gives Textus AI (with ai.tools): what the model is
- *  told, and the arguments it takes as a JSON schema; the plugin runs it
- *  with textus.ai.registerTool. */
+/** A tool the plugin gives Textus AI: what the model is told and its
+ *  arguments as a JSON schema. */
 export interface AiToolContribution {
   name: string;
   description: string;
   parameters: Record<string, unknown>;
 }
 
-/** Where a plugin suggests completions as you type (with editor.read):
- *  in a formula, in the text, or both, once the words before the caret
- *  match `pattern` (a regular expression, anchored at the caret). The
- *  plugin answers with textus.editor.registerCompletionProvider(id). */
+/** Where a plugin suggests completions as you type: in a formula, the text or
+ *  both, once the words before the caret match `pattern` (anchored there). */
 export interface CompletionContribution {
   id: string;
   where: "math" | "text" | "any";
   pattern: string;
 }
 
-/** The links a plugin opens when one is Ctrl/Cmd+clicked in a document:
- *  a URL matching `pattern` (a regular expression) runs `command`, its
- *  own, with the URL - instead of the system's browser. */
+/** Links a plugin opens on Ctrl/Cmd+click instead of the browser: a URL
+ *  matching `pattern` runs its `command` with the URL. */
 export interface LinkContribution {
   pattern: string;
   command: string;
@@ -212,7 +192,7 @@ export interface Contributes {
   views: ViewContribution[];
   customEditors: CustomEditorContribution[];
   settings: SettingContribution[];
-  /** A page of its own in Settings, a webview (registerSettingsPage). */
+  /** A page of its own in Settings, a webview. */
   settingsPage: { title: string } | null;
   themes: ThemeContribution[];
   aiTools: AiToolContribution[];
@@ -235,8 +215,7 @@ export interface PluginManifest {
   repository?: string;
   /** The Textus versions it works with: "^1.2.0", ">=1.2.0". */
   engine: string;
-  /** Its code, run in the plugin host; none for a plugin that only adds
-   *  themes. */
+  /** Its code, run in the plugin host; none for a themes-only plugin. */
   main?: string[];
   activationEvents: string[];
   permissions: Permission[];
@@ -352,12 +331,9 @@ export function compareVersions(a: string, b: string): number {
 }
 
 /**
- * Whether Textus `version` satisfies `range`: `^1.3.0` (1.3.0 up to, not
- * including, 2.0.0), `>=1.3.0`, `1.3.x`, or an exact version. Textus's own
- * pre-releases count as their release, so a plugin for `^1.3.0` runs on
- * 1.3.0-beta.1 - unless the range names a pre-release itself
- * (`>=1.3.0-beta.2`, for an interface beta.2 brought): then the betas are
- * told apart, and beta.1 is too early.
+ * Whether Textus `version` satisfies `range`: `^1.3.0`, `>=1.3.0`, `1.3.x`, or
+ * exact. Textus pre-releases count as their release unless the range names a
+ * pre-release itself; then they are told apart.
  */
 export function engineSatisfied(range: string, version: string): boolean {
   const r = range.trim();

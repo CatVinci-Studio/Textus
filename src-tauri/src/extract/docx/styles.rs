@@ -3,10 +3,6 @@
 
 use super::*;
 
-// ---------------------------------------------------------------------------
-// styles.xml and numbering.xml
-// ---------------------------------------------------------------------------
-
 #[derive(Default)]
 pub(crate) struct Style {
     /// Lowercase: the built-in names ("heading 1") are stored in English
@@ -53,9 +49,8 @@ impl Styles {
         .take(8)
     }
 
-    /// A built-in heading style, or one based on it, is a heading of its
-    /// level. "Title" only as itself: pandoc's "Author" and "Date" are based
-    /// on it, and are not titles.
+    /// A built-in heading style, or one based on it, is a heading of its level.
+    /// "Title" only as itself: pandoc's "Author" and "Date" are based on it.
     pub(crate) fn heading(&self, id: &str) -> Option<usize> {
         if self.name(id) == "title" {
             return Some(1);

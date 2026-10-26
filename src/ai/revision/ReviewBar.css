@@ -1,6 +1,4 @@
-/* The pending edits' bar (ReviewBar.tsx): a dark pill floating over the
-   bottom of the document, centred on the text column. It rises in with the
-   first decidable edit and sinks away after the last. */
+/* The pending edits' bar, floating over the bottom of the document. */
 .review-bar {
   position: absolute;
   left: 50%;
@@ -25,7 +23,7 @@
   animation: review-bar-in var(--dur-slow) var(--ease-spring-bouncy) both;
 }
 
-/* The notes bar (NotesBar), standing above the review bar when both show. */
+/* The notes bar, standing above the review bar when both show. */
 .review-bar-raised {
   bottom: calc(66px + var(--status-bar-height, 0px));
 }
@@ -261,7 +259,7 @@
   background: color-mix(in srgb, var(--ui-on-primary) 12%, transparent);
 }
 
-/* The bar's main button: Accept, or the notes bar's (NotesBar). */
+/* The bar's main button: Accept, or the notes bar's. */
 .review-bar-accept,
 .review-bar-accept:hover,
 .review-bar-primary,
@@ -361,9 +359,8 @@
   }
 }
 
-/* A suggestion learned from revision choices (RevisionLearning.tsx), in
-   the bar's place once a review is done: the same pill, its sentence
-   allowed to wrap. */
+/* A suggestion learned from revision choices, in the bar's place once a
+   review is done; its sentence may wrap. */
 .learn-bar {
   width: max-content;
   max-width: min(620px, calc(100% - 32px));

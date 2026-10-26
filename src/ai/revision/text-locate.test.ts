@@ -2,10 +2,8 @@ import { describe, expect, it } from "vitest";
 import { Schema } from "@milkdown/kit/prose/model";
 import { locatePlainText } from "./text-locate";
 
-// A minimal schema (paragraph + text + a "strong" mark) - just enough to
-// build a doc with mixed marked/unmarked inline content, so tests prove the
-// plain-text search and position mapping work across mark boundaries
-// (exactly the case doc-markdown-offset math cannot handle).
+// Just enough schema for marked and unmarked text, so the tests cover
+// position mapping across mark boundaries.
 const schema = new Schema({
   nodes: {
     doc: { content: "block+" },
@@ -39,9 +37,7 @@ describe("locatePlainText", () => {
   });
 
   it("maps positions correctly across a mark boundary", () => {
-    // "important" is bold in the doc's real structure - the search still
-    // works because it operates on RENDERED plain text, and the resulting
-    // position range is still correct despite the mark wrapping it.
+    // The search runs on rendered plain text, so the mark doesn't shift it.
     const d = doc(
       paragraph(
         schema.text("This is "),

@@ -1,11 +1,6 @@
-//! The file calls of the plugin API 1.0 beyond access.rs's reads and
-//! writes - a file's details, a new file that must not overwrite one, a
-//! read and a write that together never lose a change made in between
-//! (textus.files.process) - and the plugin's secrets.
-//!
-//! Each is checked against `state.json` as access.rs's are: `files.read` /
-//! `files.write`, inside the folder the window names, never the app's own
-//! data.
+//! The plugin API's file calls beyond plain reads and writes (details, a
+//! no-overwrite create, a read-then-write that never loses a change), and the
+//! plugin's secrets. Each is checked against `state.json`.
 
 use super::access::{inside, refused, require_not_app_data};
 use super::{require_id, state};
@@ -81,8 +76,8 @@ pub async fn plugin_fs_create(
             .await
             .map_err(|e| e.to_string())?;
     }
-    // create_new: the check and the creation are one step, so two plugins
-    // making the same day's note can't both win.
+    // create_new: the check and the creation are one step, so two plugins making
+    // the same note can't both win.
     use tokio::io::AsyncWriteExt;
     let mut file = tokio::fs::OpenOptions::new()
         .write(true)
@@ -116,8 +111,8 @@ fn token_of(bytes: &[u8]) -> String {
     format!("{:x}", hasher.finalize())
 }
 
-/// A text file and its version (textus.files.process); "" and the empty
-/// file's version when it isn't there yet.
+/// A text file and its version; "" and the empty file's version when it isn't
+/// there yet.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn plugin_fs_read_versioned(
@@ -178,14 +173,9 @@ pub async fn plugin_fs_write_if(
     Ok(true)
 }
 
-// ---------------------------------------------------------------------------
-// Secrets
-// ---------------------------------------------------------------------------
-
 type Secrets = BTreeMap<String, BTreeMap<String, String>>;
 
-/// Every plugin's secrets, in one file only the user can read, apart from
-/// settings and storage - as the providers' API keys are (auth/keys.rs).
+/// Every plugin's secrets, in one owner-only file apart from settings and storage.
 fn secrets_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;

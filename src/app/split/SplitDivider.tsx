@@ -15,11 +15,8 @@ import {
 const KEY_STEP = 0.05;
 
 /**
- * Where the split's parts sit in the document column, a grid: the tab bar
- * (when shown) across the top, then the first pane, the divider and the
- * second - side by side, or one over the other. Every tab's editor stays
- * a child of the column, so a tab moving into a pane keeps its undo and
- * scroll; only its place in the grid changes.
+ * The split's grid in the document column. Every tab's editor stays a child
+ * of the column, so a tab moving into a pane keeps its undo and scroll.
  */
 export function splitGridStyles(
   layout: SplitLayout,
@@ -53,9 +50,8 @@ export function splitGridStyles(
   };
 }
 
-/** The line between the panes, dragged (or moved with the arrow keys)
- *  to share the space differently; a double click halves it again, and
- *  its right-click menu turns, swaps or closes the split. */
+/** The line between the panes: drag or arrow keys resize, double click
+ *  halves, right-click turns, swaps or closes the split. */
 export function SplitDivider({
   layout,
   style,

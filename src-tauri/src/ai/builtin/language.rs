@@ -27,9 +27,8 @@ pub(crate) fn document_language(
         .map(|(code, _, _)| (*code, LanguageSource::UiLanguage))
 }
 
-/// Best guess at a document's pack language, from its prose (code, URLs
-/// and Markdown markup left out); None when there is too little to tell.
-/// The rules engine's detector (rules::detect), as a pack code.
+/// Best guess at a document's pack language, from its prose; None when there
+/// is too little to tell.
 pub(crate) fn detect(text: &str) -> Option<&'static str> {
     use crate::ai::rules::Lang;
     Some(match crate::ai::rules::detect::detect(text)? {
@@ -46,10 +45,8 @@ pub(crate) fn detect(text: &str) -> Option<&'static str> {
     })
 }
 
-/// Names of the pack languages in the ten UI languages, lowercase, for
-/// finding a translation's target in a request. Latin and Cyrillic entries
-/// match at a word start, so inflected forms (Englische, английского)
-/// count; CJK ones anywhere.
+/// Names of the pack languages in the UI languages, lowercase. Latin and
+/// Cyrillic entries match at a word start, so inflected forms count; CJK anywhere.
 pub(crate) const LANGUAGE_NAMES: &[(&str, &[&str])] = &[
     (
         "en",
@@ -216,9 +213,8 @@ pub(crate) const LANGUAGE_NAMES: &[(&str, &[&str])] = &[
     ),
 ];
 
-/// Words that come just before a translation's target ("into", "成", "に",
-/// "로", "al", "en", "auf", "на"…), to pick the target when a request
-/// names two languages ("translate this Chinese text into English").
+/// Words just before a translation's target ("into", "成", "に"…), to pick
+/// it when a request names two languages.
 pub(crate) const TARGET_MARKERS: &[&str] = &[
     "into ", "to ", "成", "为", "為", "到", "に", "로 ", "으로 ", "al ", "a ", "en ", "auf ",
     "ins ", "на ", "para ", "em ", "para o ", "vers ", "in ",

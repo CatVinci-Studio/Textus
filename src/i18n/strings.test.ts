@@ -14,8 +14,8 @@ import {
   type Translation,
 } from "./strings";
 
-// Every language's file against English (docs/dev/translating.md): what a
-// translation may and must contain, whoever wrote it.
+// Every language's file against English: what a translation may and must
+// contain.
 
 /** The files as written, read here at once (the app loads them lazily). */
 const LOCALES = Object.fromEntries(
@@ -35,8 +35,8 @@ const LOCALES = Object.fromEntries(
 
 const english = LOCALES.en.default as Record<string, string | Plural>;
 
-/** The `{name}` tokens a string fills in - a translation has to keep each
- *  one (or the value never shows) and may not invent any. */
+/** The `{name}` tokens a string fills in; a translation must keep each one
+ *  and may not invent any. */
 function tokens(text: string): string[] {
   return [...text.matchAll(/\{[a-zA-Z]+\}/g)].map((m) => m[0]).sort();
 }

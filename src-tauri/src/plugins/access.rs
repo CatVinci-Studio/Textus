@@ -1,16 +1,6 @@
-//! What a running plugin may reach, each checked against `state.json`:
-//!
-//! - its own files (`plugin_file`) - always;
-//! - the file a custom editor of it was opened on (`plugin_read_resource`)
-//!   - always, the window vouching that it is that file;
-//! - the open folder (`plugin_fs_*`) - with `files.read` /
-//!   `files.write`, and only inside the folder the window names, never
-//!   the app's own data;
-//! - the network (`plugin_http`) - only the hosts it was granted, HTTPS
-//!   (plain HTTP to this computer only), no cookies, a size limit;
-//! - its storage (`plugin_storage_*`) - its own, with a quota.
-//!
-//! Bytes go back as raw IPC responses, not JSON arrays: a PDF is megabytes.
+//! What a running plugin may reach, each checked against `state.json`: its own
+//! files, the file its custom editor opened, the open folder (with `files.*`),
+//! granted network hosts, and its own storage. Bytes go back as raw IPC responses.
 
 use super::state::{self, PluginsState};
 use super::{plugins_root, require_id};
@@ -39,9 +29,8 @@ fn running(state: &PluginsState, id: &str) -> Result<(), String> {
     }
 }
 
-/// `path` resolved inside `root`: no `..`, and after following links in
-/// the part that exists, still under `root`. The part that doesn't exist
-/// yet (a file about to be written) is kept as named.
+/// `path` resolved inside `root`: no `..`, and still under `root` after
+/// following links in the part that exists; the rest is kept as named.
 pub(super) fn inside(root: &Path, path: &Path) -> Result<PathBuf, String> {
     let root = std::fs::canonicalize(root).map_err(|e| format!("{}: {e}", root.display()))?;
     let path = if path.is_absolute() {
@@ -74,8 +63,8 @@ pub(super) fn inside(root: &Path, path: &Path) -> Result<PathBuf, String> {
     }
 }
 
-/// The app's own folders, which no plugin reads or writes through the
-/// workspace calls - other plugins' storage, settings, keys.
+/// The app's own folders (other plugins' storage, settings, keys), which no
+/// plugin reaches through the workspace calls.
 pub(super) fn require_not_app_data(app: &tauri::AppHandle, path: &Path) -> Result<(), String> {
     let own = [app.path().app_data_dir(), app.path().app_config_dir()];
     for dir in own.into_iter().flatten() {
@@ -115,8 +104,8 @@ pub(super) async fn read_bytes(path: PathBuf) -> Result<Response, String> {
     Ok(Response::new(bytes))
 }
 
-/// One of the plugin's own files - its code, a stylesheet, an icon. Read
-/// even while it is off, so Settings can show its icon.
+/// One of the plugin's own files. Read even while it is off, so Settings can
+/// show its icon.
 #[tauri::command]
 pub async fn plugin_file(
     app: tauri::AppHandle,
@@ -129,8 +118,7 @@ pub async fn plugin_file(
     read_bytes(path).await
 }
 
-/// The file a custom editor was opened on: the window opened it in the
-/// plugin's tab because the user opened that file.
+/// The file a custom editor was opened on, which the user chose to open.
 #[tauri::command]
 pub async fn plugin_read_resource(
     app: tauri::AppHandle,
@@ -296,8 +284,7 @@ pub async fn plugin_fs_trash(
     if std::fs::canonicalize(&root).is_ok_and(|r| r == path) {
         return Err("The folder itself can't be moved to the Trash.".into());
     }
-    // The trash crate is desktop-only (Cargo.toml); the iPhone has no Trash
-    // to move a file to.
+    // The trash crate is desktop-only; the iPhone has no Trash.
     #[cfg(desktop)]
     return tauri::async_runtime::spawn_blocking(move || {
         trash::delete(&path).map_err(|e| e.to_string())
@@ -360,8 +347,8 @@ fn is_this_computer(host: &str) -> bool {
     matches!(host, "localhost" | "127.0.0.1" | "[::1]" | "::1")
 }
 
-/// Whether the plugin may fetch `url`: a granted host, over HTTPS - or over
-/// plain HTTP to this computer (Zotero's local API).
+/// Whether the plugin may fetch `url`: a granted host over HTTPS, or plain HTTP
+/// to this computer (Zotero's local API).
 fn url_allowed(granted: &[String], url: &reqwest::Url) -> bool {
     let Some(host) = url.host_str() else {
         return false;

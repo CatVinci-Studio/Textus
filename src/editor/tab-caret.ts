@@ -1,17 +1,14 @@
 /**
  * Each tab's caret as it leaves the screen, for reopening a document where
- * it was left (document/last-carets.ts): the editor reports it when its tab
- * is switched away from or closed, or the window loses focus
- * (useTabCaret.ts), and can be asked for it while it is open - a closing
- * window has no other moment to tell.
+ * it was left. It can also be read while open: a closing window has no
+ * other moment to tell.
  */
 
 /**
- * Where a caret is: an offset into the document's markdown, or - in a
- * large document (editor/large-doc.ts), where the markdown before the
- * caret took the better part of a second to write out and read back - its
- * ProseMirror position. Either holds only for the file as it was: whoever
- * keeps one keeps the file's modified time with it.
+ * Where a caret is: an offset into the markdown, or in a large document
+ * (where writing out the markdown before it was slow) its ProseMirror
+ * position. Either holds only for the file as it was, so its modified time
+ * is kept with it.
  */
 export type CaretPlace = { offset: number } | { pos: number };
 

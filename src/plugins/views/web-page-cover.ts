@@ -1,13 +1,10 @@
 /**
- * Whether something of the window's is shown where a native web page
- * might be: a menu, a dialog, a list of choices. A native page is drawn
- * above everything of the window's own, so while one is open the pages go
- * out of sight (useNativeWebPage) and come back once it closes.
+ * Whether a menu, dialog or picker is shown where a native web page might be.
+ * A native page draws above everything, so pages hide while one is open.
  */
 
-/** What covers: the window's menus, dialogs (Settings among them) and
- *  pickers. A hover card or a note's popover sits by its words in a
- *  document, never over a page. */
+/** What covers: menus, dialogs and pickers. A hover card or note popover
+ *  sits by its words in a document, never over a page. */
 const COVERS =
   '[role="dialog"]:not(.hover-card, .review-note-popover), [role="alertdialog"], [role="menu"], [role="listbox"]';
 

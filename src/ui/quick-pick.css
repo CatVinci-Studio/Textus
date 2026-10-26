@@ -1,4 +1,4 @@
-/* A list to choose from, filtered by what is typed (quick-pick.tsx). */
+/* A list to choose from, filtered by what is typed. */
 .quick-pick-overlay {
   align-items: flex-start;
   padding-top: 12vh;

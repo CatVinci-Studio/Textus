@@ -1,8 +1,6 @@
 /**
- * The playground's one document, kept in the browser's localStorage so a
- * reload or a closed tab doesn't lose it. Nothing is sent anywhere. A
- * browser that refuses storage (a private window with it blocked, a full
- * quota) still edits; the document just lasts as long as the page.
+ * The playground's one document, kept in localStorage. A browser that refuses
+ * storage still edits; the document just lasts as long as the page.
  */
 
 export const DOCUMENT_KEY = "textus-playground:document";

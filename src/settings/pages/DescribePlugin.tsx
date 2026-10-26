@@ -3,11 +3,8 @@ import { askAi } from "../../ai/chat/ask-ai";
 import type { Strings } from "../../i18n/strings";
 import { SettingRow, VERBATIM_INPUT } from "../sections/controls";
 
-/**
- * Settings › Plugins › Make your own: what the user wants, in their words,
- * handed to Textus AI's Create mode, which writes the plugin - the way to
- * a plugin of one's own without opening a folder.
- */
+/** Settings › Plugins › Make your own: what the user wants, in their words,
+ *  handed to Textus AI's Create mode, which writes the plugin. */
 export function DescribePlugin({
   t,
   onAsked,

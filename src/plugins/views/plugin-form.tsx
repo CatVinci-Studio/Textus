@@ -4,10 +4,8 @@ import { Select } from "../../ui/Select";
 import "./plugin-form.css";
 
 /**
- * textus.ui.form: a few fields in one dialog - a new board's name and its
- * lists, a citation's style - drawn as Textus draws its own, so a plugin
- * needs no webview to ask for them. Shown by the PluginFormHost App mounts;
- * requests queue, as app-dialog's do.
+ * textus.ui.form: a few fields in one dialog, drawn as Textus draws its own, so
+ * a plugin needs no webview to ask for them. Requests queue.
  */
 export type PluginFormField =
   | {

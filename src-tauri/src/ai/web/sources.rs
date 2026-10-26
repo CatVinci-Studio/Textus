@@ -1,15 +1,12 @@
 //! The web pages a conversation has drawn on, numbered once for the whole
-//! conversation: [3] in a later reply is the same page as [3] in an
-//! earlier one. Textus's own search results and fetched pages get their
-//! numbers as the tools hand them to the model; a provider's native
-//! citations get theirs when its step ends (aicompat's citation markers).
+//! conversation: [3] in a later reply is the same page as in an earlier one.
 
 use aicompat::agent::{replace_citation_markers, AgentTurn, Source};
 use regex::Regex;
 use std::sync::OnceLock;
 
-/// Most sources listed under a reply that cites none by number - one whose
-/// provider searched without marking where (Qwen, Groq).
+/// Most sources listed under a reply that cites none by number (a provider
+/// that searched without marking where).
 const MAX_UNCITED_LISTED: usize = 8;
 
 #[derive(Debug, Default)]
@@ -114,10 +111,9 @@ impl SourceBook {
         self.step.clear();
     }
 
-    /// The sources to list under a reply: the ones `reply` cites as [n] and
-    /// `proposed` (the text of its proposals) cites as [n](url) - a page
-    /// only a proposal names is added - in number order. A reply that cites
-    /// nothing by number lists what this exchange found instead.
+    /// The sources to list under a reply: the ones `reply` cites as [n] and its
+    /// proposals cite as [n](url), in number order. A reply that cites nothing by
+    /// number lists what this exchange found instead.
     pub(crate) fn for_reply(&mut self, reply: &str, proposed: &[String]) -> Vec<Source> {
         let mut cited: Vec<u32> = number_pattern()
             .captures_iter(reply)
@@ -153,10 +149,9 @@ impl SourceBook {
     }
 }
 
-/// History as the model is shown it: each reply followed by the sources it
-/// listed, so a later "open the second source" or "is [2] reliable?" knows
-/// what is meant. The same text every time a reply is replayed, which keeps
-/// the provider's prompt cache.
+/// History as the model is shown it: each reply followed by its sources, so
+/// "is [2] reliable?" knows what is meant. Identical on every replay, for the
+/// prompt cache.
 pub(crate) fn with_sources_in_text(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
     history
         .into_iter()

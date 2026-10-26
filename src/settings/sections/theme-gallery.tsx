@@ -14,16 +14,6 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { useSettings } from "../SettingsContext";
 import { SettingRow } from "./controls";
 
-/**
- * Settings › Extensions › Themes › Get themes (inside that group, which
- * ThemeLibrarySection draws): the public
- * theme gallery.
- * The catalog is fetched when this page opens and at no other time - the
- * app makes no gallery requests in the background. Installing a theme makes
- * it a user theme, as Import CSS… does, and selects it; an update replaces
- * the installed copy and leaves the selection as it is. Removing one is the
- * theme picker's Delete Theme.
- */
 /** The themes whose name, author or description hold every word of
  *  `query`. */
 function searchThemes(list: GalleryTheme[], query: string): GalleryTheme[] {
@@ -37,7 +27,8 @@ function searchThemes(list: GalleryTheme[], query: string): GalleryTheme[] {
   });
 }
 
-/** `query`: the market's search (MarketPage), over the gallery too. */
+/** The public theme gallery, fetched only when this page opens.
+ *  `query` is the market's search. */
 export function ThemeGallerySection({
   t,
   query = "",
@@ -231,9 +222,8 @@ async function inPreviewSlot<T>(task: () => Promise<T>): Promise<T> {
   }
 }
 
-/** A theme's first screenshot, fetched through the backend as a `data:`
- *  URL once its row scrolls into view - only ever shown as an image. An
- *  empty frame until it arrives, or if it can't. */
+/** A theme's first screenshot, fetched through the backend as a `data:` URL
+ *  once its row scrolls into view; an empty frame until then. */
 function GalleryPreview({ path }: { path: string | undefined }) {
   const frame = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);

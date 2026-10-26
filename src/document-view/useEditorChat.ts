@@ -13,10 +13,8 @@ import type { Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /**
- * One tab's editor and Textus AI's chats: the proposals they make and how
- * they are decided, what each chat is told of the document (the docked
- * panel, the detached window, Quick Ask), the selection they quote, and
- * the docked panel's own state.
+ * One tab's editor and Textus AI's chats: their proposals, what each chat
+ * is told of the document, the quoted selection, and the docked panel.
  */
 export function useEditorChat({
   setup,
@@ -74,8 +72,8 @@ export function useEditorChat({
     handleDetachChat,
   } = bridge;
 
-  // The docked panel (ai/chat/panel/agent-panel.tsx): rendered by THIS editor only
-  // while it is the active tab and the panel is open.
+  // The docked panel, rendered by this editor only while it is the active
+  // tab and the panel is open.
   const agentPanel = useAgentPanel();
   const panelContainer = isActive ? agentPanel.container : null;
   // The panel, or the detached window while this is the tab it shows.
@@ -93,13 +91,9 @@ export function useEditorChat({
   });
   windowChipRef.current = panelChipHandlers;
 
-  // A new selection becomes a new chip in the detached window and the
-  // panel - "re-drag to highlight and it goes in" is the behaviour that
-  // separates those surfaces from the in-document Quick Ask bar.
-  // Read once the transaction is in: the listener runs while it is being
-  // applied, before the view holds the new selection, and both read the
-  // view - the chip lagged a selection behind, and stayed away after a
-  // triple-click until the next transaction.
+  // A new selection becomes a new chip in the detached window and the panel.
+  // Read once the transaction is in: the listener runs before the view holds
+  // the new selection, so the chip would lag one behind.
   setup.onSelectionChangeRef.current = () => {
     queueMicrotask(() => {
       pushLiveContext();
@@ -114,9 +108,8 @@ export function useEditorChat({
     forcePushLiveContext();
   }, [forcePushLiveContext, isActive, filePath]);
 
-  // Only the active tab reports statuses, for the same reason it is the only
-  // one that pushes context: otherwise every hidden tab broadcasts its own
-  // and whichever rendered last wins.
+  // Only the active tab reports statuses, or every hidden tab broadcasts
+  // and the last one wins.
   useEffect(() => {
     if (detachedChatLabel && isActive)
       pushChatStatuses(pendingEdits.allStatuses);

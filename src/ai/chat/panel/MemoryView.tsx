@@ -14,18 +14,9 @@ import { useMemoryFocus } from "./memory-focus";
 import "./MemoryView.css";
 
 /**
- * What Textus AI keeps for a project, in one place (the AI panel's Project
- * tab), in the order a writer sets it up: the writing style it learned
- * from the writer's own pages, the writing instructions it always follows,
- * the library of people, places and terms, and last what it remembered by
- * itself (ai::memory - personal and the project's). Each section opens
- * with a line saying what it is. Each is a file of its own, so Edit opens
- * it as a document - nothing here is a second copy to keep in step. Skills
- * are the slash menu's, not listed here.
- *
- * Library entries the AI was given are marked - by Rust, which picked them
- * (`libraryUse`): those the last request carried, or before one, those the
- * open document's text brings in by itself.
+ * What Textus AI keeps for a project: style, instructions, library, then what
+ * it remembered. Each is a file of its own, so Edit opens it as a document.
+ * Library entries the AI was given (`libraryUse`, picked by Rust) are marked.
  */
 export function MemorySections({
   info,
@@ -276,12 +267,9 @@ export function MemorySections({
 const NEAR_CAP = 0.8;
 
 /**
- * "AI remembered": what Textus AI kept after its conversations - personal
- * memories, then the project's - each with its date and the conversation
- * it came from, and Edit, Move and Delete, and where each group's files
- * are. The people, places and terms it wrote are in the library, marked
- * there, not listed twice. Says so when the memories near or pass the
- * prompt's budget, rather than letting the oldest drop out unseen.
+ * "AI remembered": personal memories, then the project's, each with its date,
+ * source and actions. Says so when they near the prompt's budget, rather than
+ * letting the oldest drop out unseen.
  */
 export function RememberedSection({
   info,
@@ -463,7 +451,7 @@ function RememberedItem({
   onMove,
   onDelete,
 }: {
-  /** Its id, for a chip in the chat to point at (memory-focus.ts). */
+  /** Its id, for a chip in the chat to point at. */
   id: string;
   text: string;
   kind: string;
@@ -519,7 +507,7 @@ export function rememberedDate(stamp: string, lang: Lang): string {
   });
 }
 
-/** A library entry's id for the memory commands (ai::memory): its file
+/** A library entry's id for the memory commands: its file
  *  `.textus/library/<stem>.md` as `project/library/<stem>`. */
 export function libraryEntryId(entry: LibraryEntry): string {
   return `project/library/${basename(entry.file).replace(/\.md$/, "")}`;
@@ -573,8 +561,7 @@ function firstLine(body: string): string {
   );
 }
 
-/** A file's name without its folder or extension - its id's last part
- *  (id_of in src-tauri/src/ai/memory/files.rs). */
+/** A file's name without its folder or extension - its id's last part. */
 function stemOf(path: string): string {
   return (path.split(/[\\/]/).pop() ?? "").replace(/\.[^.]*$/, "");
 }

@@ -11,8 +11,8 @@ import {
 import type { EditorRunner } from "../editor/useEditorRunner";
 import { useLatest } from "../utils/hooks/useLatest";
 
-/** How one tab's editor hands its markdown to the tab: the listener's
- *  debounced reports, and the immediate flush App.tsx asks for. */
+/** How one tab's editor hands its markdown to the tab: debounced reports,
+ *  and the immediate flush. */
 export interface DocumentReporting {
   reportedDocRef: { current: ProseNode | null };
   reportedMarkdownRef: { current: string | null };
@@ -26,22 +26,18 @@ export function useDocumentReporting(
   onChange: (markdown: string) => void,
 ): DocumentReporting {
   const onChangeRef = useLatest(onChange);
-  // The doc and markdown last handed to onChange (or the mount-time doc),
-  // for flushing an edit the listener's debounce still holds - see
-  // editor-flush.ts.
+  // The doc and markdown last handed to onChange, for flushing an edit the
+  // debounce still holds.
   const reportedDocRef = useRef<ProseNode | null>(null);
   const reportedMarkdownRef = useRef<string | null>(null);
-  // The file as it was opened, paired block by block with the doc it was
-  // read into: a save writes every block the user didn't change as the
-  // file has it, and serializes only the rest (source-preserving.ts). An
-  // unedited document, or one whose edits were undone, is the file's own
-  // text byte for byte, so the tab stays clean.
+  // The opened file, paired block by block with its doc: a save writes
+  // unchanged blocks as the file has them, so an unedited document stays
+  // byte-identical and clean.
   const openedValueRef = useRef(initialValue);
   const mountDocRef = useRef<ProseNode | null>(null);
   const sourceRef = useRef<SourceBlocks | null>(null);
-  // Without that pairing (the doc didn't line up with the file), what the
-  // editor would write for the doc it opened: a doc that serializes the
-  // same is reported as the file's own text, as before.
+  // Without that pairing: a doc that serializes as it opened is reported as
+  // the file's own text.
   const mountMarkdownRef = useRef<string | null>(null);
   const onMounted = useCallback((ctx: Ctx, doc: ProseNode) => {
     reportedDocRef.current = doc;
@@ -72,14 +68,13 @@ export function useDocumentReporting(
   return { reportedDocRef, reportedMarkdownRef, onMounted, reportDoc };
 }
 
-/** Registers this editor's flush under its tab (see editor-flush.ts). */
+/** Registers this editor's flush under its tab. */
 export function useEditorFlush(
   tabId: string,
   run: EditorRunner,
   { reportedDocRef, reportedMarkdownRef, reportDoc }: DocumentReporting,
 ) {
-  // The listener's debounce reports the same doc again later - a harmless
-  // repeat of the markdown already handed over here.
+  // The debounce reports the same doc again later: a harmless repeat.
   useEffect(
     () =>
       registerEditorFlush(

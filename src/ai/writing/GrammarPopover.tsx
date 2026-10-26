@@ -15,7 +15,7 @@ export interface GrammarPopoverInfo {
   suggestion: string;
   /** Exact text the range must still contain for Apply to act. */
   original?: string;
-  /** What kind of slip it is (grammar-kind.ts), for the label. */
+  /** What kind of slip it is, for the label. */
   kind: GrammarKind;
   /** How the card shows the fix when it differs from what is replaced (a
    *  one-character CJK fix, shown with its neighbour). */
@@ -60,12 +60,8 @@ export function applyLabel(
     : labels.grammarApply;
 }
 
-/**
- * The card under a grammar underline: what kind of slip it is, the wrong
- * words → the fix, the checker's note, then the fix itself as the button
- * (Alt+Enter, written on it) beside Ignore. With more than one underline
- * in the paragraph, ‹ 1/3 › steps between them.
- */
+/** The card under a grammar underline. With several underlines in the
+ *  paragraph, ‹ 1/3 › steps between them. */
 export function GrammarPopover({
   info,
   labels,

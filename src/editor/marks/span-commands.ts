@@ -3,18 +3,10 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { caretAt } from "./enclosure";
 
 /**
- * Bold (rung 2) and italic (rung 1) as commands, for the iPhone keyboard
- * toolbar. They are `md_span` nodes here, not marks (see md-span-schema.ts
- * and enclosure.ts), so ProseMirror's toggleMark does not apply:
- *
- *   - inside a span of this style, with nothing or all of it selected:
- *     unwrap it back to plain text;
- *   - a selection within one paragraph: wrap it in a new span;
- *   - nothing selected: open an empty span at the caret to type into,
- *     exactly as typing the delimiter does (md-span-autopair-plugin.ts).
- *
- * Returns false where none of these apply (a selection across blocks, or
- * inside code), leaving the document as it was.
+ * Bold (rung 2) and italic (rung 1) for the iPhone keyboard toolbar. They
+ * are md_span nodes, not marks, so toggleMark doesn't apply: unwrap a span
+ * of this style, wrap a selection, or open an empty span at the caret.
+ * False where none applies.
  */
 export function toggleSpan(view: EditorView, rung: 1 | 2): boolean {
   const { state } = view;

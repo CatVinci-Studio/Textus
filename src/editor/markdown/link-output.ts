@@ -16,27 +16,13 @@ import { phrasingKey, readLinkSource } from "./link-source";
 import { isEmptySpan } from "../marks/md-span-schema";
 import type { Phrasing } from "./span-output";
 
-/**
- * Links written back as the writer wrote them: the syntax they were typed
- * in (resource, autolink, bare), a link kept whole across bold or code
- * inside it, and one mark per span on the way out (markdown-output.ts).
- */
+/** Links written back as the writer wrote them. */
 
 /**
- * Which markdown syntax a link was written in, kept on the mark so a save
- * writes it back the same way. remark-stringify picks the form from the
- * content alone: any link whose text equals its URL came out as
- * `<https://...>`, so a `[https://x](https://x)` the user typed was
- * rewritten on the first save.
- *
- * - "autolink": `<https://...>` or a bare GFM URL - written `<...>`,
- *   remark's choice, which every Markdown tool reads as a link.
- * - "empty": `[](https://...)`. There is no text to put the mark on, so
- *   Milkdown dropped the link altogether: invisible in the editor, and gone
- *   from the file on the next save. It shows its URL as text instead (as
- *   Typora does) and is written back empty while that text is untouched.
- * - "resource": everything else, and every link made in the editor -
- *   a pasted URL included (paste-url.ts).
+ * Which markdown syntax a link was written in, so a save writes it back the
+ * same way (remark picks the form from the content alone). "autolink" is
+ * `<...>` or a bare URL; "empty" is `[](url)`, shown as its URL since there
+ * is no text to mark; "resource" is everything else.
  */
 export type LinkSyntax = "resource" | "autolink" | "empty";
 
@@ -45,9 +31,7 @@ export interface Positioned {
 }
 
 /** Tells the three apart by source position: an autolink's only child ends
- *  at most one character (the `>`) before the link does, while
- *  `[text](url)` always has `](url)` after its text. Without positions the
- *  link is left to remark's default, which is what it always was. */
+ *  at most one character (the `>`) before the link does. */
 export function linkSyntaxOf(node: MarkdownNode): LinkSyntax {
   const children = (node.children ?? []) as MarkdownNode[];
   if (children.length === 0) return "empty";
@@ -71,31 +55,22 @@ export function textOf(node: {
 
 /**
  * Milkdown's parser forgets every open mark whenever it closes a node, so
- * in `[see **this** here](url)` the link only covered "see " and "this":
- * " here" came back as plain text and the URL fell off it on the next save.
- * Re-opening the link before each child keeps it on all of them, whatever
- * node the previous child closed. (Inline code, which keeps its own text
- * unmarked, carries the link on itself - md-span-schema.ts.)
- *
- * The same override carries the link's syntax (LinkSyntax above) into the
- * mark, and through the DOM too, so a link copied and pasted inside the
- * editor keeps it.
+ * in `[see **this** here](url)` " here" lost the link. Re-opening the link
+ * before each child keeps it on all of them. The same override carries the
+ * link's syntax into the mark and through the DOM.
  */
 export function keepLinkAcrossInlineNodes(ctx: Ctx): void {
   ctx.update(linkSchema.key, (prev) => (innerCtx) => {
     const schema = prev(innerCtx);
     return {
       ...schema,
-      // Typing at a link's end goes on after it, not into it: pasted, a
-      // link took the words typed after it ("Textus now" all linked). A
-      // link's text is edited as its source (link-reveal.ts).
+      // Typing at a link's end goes on after it, not into it. A link's text is
+      // edited as its source.
       inclusive: false,
       attrs: {
         ...schema.attrs,
         syntax: { default: "resource", validate: "string" },
-        // How a reference link was written (reference-links.ts).
         reference: { default: "", validate: "string" },
-        // The Markdown it was written as (link-source.ts).
         source: { default: "", validate: "string" },
       },
       parseDOM: [
@@ -116,10 +91,8 @@ export function keepLinkAcrossInlineNodes(ctx: Ctx): void {
         },
       ],
       toDOM: (mark, inline) => {
-        // The stock toDOM spreads every attr onto the <a>, which would add
-        // a meaningless syntax="resource" attribute to each link. A
-        // reference stays off it too: pasted where its definition isn't, it
-        // would link to nothing, so a copy is an ordinary link.
+        // The stock toDOM spreads every attr onto the <a>. A reference stays off
+        // it too: pasted where its definition isn't, it would link to nothing.
         const attrs: Record<string, unknown> = { ...mark.attrs };
         const { syntax } = mark.attrs;
         delete attrs.syntax;
@@ -141,8 +114,7 @@ export function keepLinkAcrossInlineNodes(ctx: Ctx): void {
         runner: (state, node, markType) => {
           const reference = (node.data as { reference?: LinkReference })
             ?.reference;
-          // `[text]` alone ends one character after its text, as an
-          // autolink does.
+          // `[text]` alone ends one character after its text, as an autolink does.
           const syntax = reference ? "resource" : linkSyntaxOf(node);
           const attrs = {
             href: node.url as string,
@@ -166,8 +138,8 @@ export function keepLinkAcrossInlineNodes(ctx: Ctx): void {
             state.next(child);
             state.closeMark(markType);
           }
-          // Inside a span the marks are forgotten again: in
-          // `[a *b `c`*](u)` the "c" came out unlinked.
+          // Inside a span the marks are forgotten again: in `[a *b `c`*](u)` the "c"
+          // came out unlinked.
           const link = markType.create(attrs);
           for (let i = from; i < content.length; i++)
             content[i] = withLinkInside(content[i], link);
@@ -199,7 +171,6 @@ export function keepLinkAcrossInlineNodes(ctx: Ctx): void {
 export function linked(node: ProseNode, link: Mark): boolean {
   if (link.isInSet(node.marks)) return true;
   if (node.isLeaf) return false;
-  // An emptied span inside holds nothing to be outside the link.
   let all = true;
   node.forEach((child) => {
     all &&= linked(child, link);
@@ -230,13 +201,12 @@ export function withoutMark(content: Fragment, link: Mark): Fragment {
   return Fragment.from(nodes);
 }
 
-/** Inline content with the link moved onto each bold or italic span that
- *  stands inside it; null when there is none. */
+/** Inline content with the link moved onto each bold or italic span inside
+ *  it; null when there is none. */
 export function linksOnSpansIn(content: Fragment): Fragment | null {
   let changed = false;
   const nodes: ProseNode[] = [];
   content.forEach((node, _offset, index) => {
-    // An emptied span writes nothing, and isn't left to end the link.
     if (isEmptySpan(node)) {
       changed = true;
       return;
@@ -287,14 +257,9 @@ export function linksOnSpans(node: ProseNode): ProseNode {
 }
 
 /**
- * Serializes a link around bold or italic as one link. Its marks are on
- * the text only, `[a **b** c](u)` being "a ", a span holding "b", and " c",
- * all linked; Milkdown's serializer closes a mark at a node that doesn't
- * carry it, so the link was written as three, `[a](u) **[b](u)** [c](u)`,
- * once anything in that paragraph was edited. Here a span whose content is
- * all inside a link that goes on beside it carries the link itself, as
- * inline code does (md-span-schema.ts writes the span's content apart).
- * A span that is a whole link of its own, `**[b](u)**`, stays as it is.
+ * Serializes a link around bold or italic as one link: Milkdown closes a
+ * mark at a node that doesn't carry it, writing `[a](u) **[b](u)** [c](u)`.
+ * A span wholly inside a link that goes on beside it carries the link.
  */
 export const linksOnSpansSerializer: MilkdownPlugin = (ctx) => async () => {
   await ctx.wait(SerializerReady);
@@ -302,8 +267,8 @@ export const linksOnSpansSerializer: MilkdownPlugin = (ctx) => async () => {
   ctx.set(serializerCtx, (doc) => serialize(linksOnSpans(doc)));
 };
 
-/** `node` with `link` on all its text: on the text inside a span, and on
- *  a node whose own content takes no marks (inline code), on the node. */
+/** `node` with `link` on all its text, or on the node when its content takes
+ *  no marks (inline code). */
 export function withLinkInside(node: ProseNode, link: Mark): ProseNode {
   if (node.isText || node.isLeaf || node.type.spec.marks === "")
     return node.mark(link.addToSet(node.marks));
@@ -313,9 +278,8 @@ export function withLinkInside(node: ProseNode, link: Mark): ProseNode {
 }
 
 /**
- * Runs one of remark's link functions with its `resourceLink` switch ("never
- * <...>") set the way this link's syntax asks. The option is shared by the
- * whole serialization, so it is set only around the one call.
+ * Runs one of remark's link functions with `resourceLink` set the way this
+ * link's syntax asks; the option is shared, so it is set only around the call.
  */
 export function asWritten<T>(
   node: { data?: unknown },
@@ -337,13 +301,9 @@ export function asWritten<T>(
 export type PeekingHandle = Handle & { peek: Handle };
 export const defaultLink = defaultHandlers.link as PeekingHandle;
 
-/** A bare `www.x.org`, which GFM links with an `http://` URL. It has no
- *  `<...>` form - remark wrote `[www.x.org](http://www.x.org)` - and,
- *  written bare as it was, it reads back the same (see `root` below).
- *  Not with text right after it, which would read as more of the address
- *  (`www.x.orgPasted`), nor with punctuation and then text
- *  (`www.x.org/a.b.Pasted`: GFM leaves out only punctuation at the end):
- *  then it is written `[www.x.org](http://www.x.org)`. */
+/** A bare `www.x.org`, written bare as it was (it has no `<...>` form).
+ *  Not when what follows would read as more of the address; then it is
+ *  `[www.x.org](http://www.x.org)`. */
 export function bareWww(
   node: Link,
   parent: Parents | undefined,
@@ -359,8 +319,8 @@ export function bareWww(
     : null;
 }
 
-/** What is written right after `node` in its paragraph, as far as its
- *  text goes; anything else after it is "\uFFFC". A line break ends it. */
+/** What is written right after `node` in its paragraph as text; anything
+ *  else is "￼". A line break ends it. */
 export function textAfter(node: Link, parent: Parents | undefined): string {
   const siblings = (parent?.children ?? []) as Phrasing[];
   let rest = "";
@@ -375,21 +335,16 @@ export function textAfter(node: Link, parent: Parents | undefined): string {
   return rest;
 }
 
-/** Whether a GFM link literal ends where `rest` starts: at white space
- *  or the line's end, after only the punctuation GFM leaves off the end of
- *  an address. Not at `<`, which also ends one but is written `\<` before
- *  a letter, and the backslash reads as more of the address; nor after
- *  punctuation the text would write escaped. */
+/** Whether a GFM link literal ends where `rest` starts: at white space or
+ *  the line's end, after only trailing punctuation. Not at `<`, written `\<`
+ *  before a letter. */
 export const endsAddress = (rest: string) =>
   /^[.,:;!?"')]*(?:\s|$)/u.test(rest);
 
 /**
- * The link's own Markdown (link-source.ts), when it can be written as it
- * was: the link still says what that text says, and the text reads back
- * the same here - not across lines, whose indent a list or a quote sets,
- * nor with a `|` in a table cell, which would end the cell. A bare URL is
- * left to `bareWww` and remark's `<...>`, which every Markdown tool reads
- * as a link: a bare one is GFM's alone.
+ * The link's own Markdown, when it can be written as it was: unchanged in
+ * meaning, on one line, and without a `|` in a table cell. A bare URL is
+ * left to `bareWww` and remark's `<...>`.
  */
 export function linkAsTyped(node: Link, state: State): string | null {
   const typed = readLinkSource(
@@ -409,8 +364,7 @@ export function linkAsTyped(node: Link, state: State): string | null {
   return source;
 }
 
-/** Writes a link as it was typed, or else in the syntax it was read in
- *  (LinkSyntax above). */
+/** Writes a link as it was typed, or else in the syntax it was read in. */
 export const link = Object.assign(
   ((node, parent, state, info) => {
     const typed = linkAsTyped(node, state);
@@ -439,15 +393,9 @@ export const link = Object.assign(
 );
 
 /**
- * A URL or email address typed as plain text is written as typed. remark-gfm
- * escapes the character that would make GitHub link it - `https\://x.org`,
- * `www\.x.org`, `a\@b.com` - to keep it text, so the address the user
- * typed was no longer a link on GitHub, and read wrongly anywhere the
- * escape isn't understood. Unescaped, it is the autolink GitHub (and
- * Textus, once reopened) makes of it, which is what typing one means;
- * `link` above writes that autolink back the way it was typed.
- * The guards are dropped from this one serialization's own copy of the
- * unsafe list.
+ * A URL or email typed as plain text is written as typed: remark-gfm's
+ * escapes (`https\://x.org`, `a\@b.com`) kept it from linking on GitHub.
+ * The guards are dropped from this serialization's own unsafe list.
  */
 export const isAutolinkLiteralGuard = (pattern: Unsafe) =>
   (pattern.character === "@" && pattern.before === "[+\\-.\\w]") ||

@@ -5,10 +5,8 @@ import "./hover-card.css";
 import { duration } from "../../ui/motion";
 
 /**
- * The card a plugin's hover provider gives for what the pointer rests on
- * (link-hover-plugin.ts): beside the link, until the pointer has left both
- * - or pinned, a small window of its own inside this one, moved by its
- * title and closed by its button, while new cards come and go.
+ * The card a plugin's hover provider gives: beside the link until the
+ * pointer has left both, or pinned, moved by its title while new cards come.
  */
 
 const GAP = 6;
@@ -34,7 +32,6 @@ export function showHoverCard(key: string, rect: DOMRect, card: HoverCard) {
   requestAnimationFrame(() => el.classList.add("hover-card-open"));
 }
 
-/** The pointer is back on the link or the card: it stays. */
 export function keepHoverCard() {
   if (hideTimer) clearTimeout(hideTimer);
   hideTimer = null;
@@ -47,7 +44,6 @@ export function scheduleHide(ms = 250) {
   if (floating) hideTimer = setTimeout(() => hideHoverCard(), ms);
 }
 
-/** The card not pinned goes - at once, or fading out. */
 export function hideHoverCard(now = false) {
   keepHoverCard();
   const el = floating?.el;
@@ -104,8 +100,7 @@ function build(card: HoverCard): HTMLElement {
   const body = document.createElement("div");
   body.className = "hover-card-body milkdown";
   body.innerHTML = renderMarkdownHtml(card.markdown);
-  // No pictures: their addresses are the plugin's, and a card loads
-  // nothing from the network.
+  // No pictures: a card loads nothing from the network.
   for (const img of body.querySelectorAll("img")) img.remove();
   // Links in the card are for reading, not following from here.
   for (const a of body.querySelectorAll("a")) a.removeAttribute("href");
@@ -113,8 +108,7 @@ function build(card: HoverCard): HTMLElement {
   return el;
 }
 
-/** Below the link, or above it when there is no room below; inside the
- *  window either way. */
+/** Below the link, or above it when there is no room; inside the window. */
 function place(el: HTMLElement, rect: DOMRect) {
   const { innerWidth: w, innerHeight: h } = window;
   const box = el.getBoundingClientRect();
@@ -128,7 +122,6 @@ function place(el: HTMLElement, rect: DOMRect) {
   el.style.left = `${Math.max(MARGIN, left)}px`;
 }
 
-/** A pinned card moves by its title row. */
 function movable(el: HTMLElement, handle: HTMLElement) {
   handle.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || (e.target as Element).closest("button")) return;

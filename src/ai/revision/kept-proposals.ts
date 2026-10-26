@@ -3,18 +3,8 @@ import { generatedIdsIn } from "./generated-images";
 import type { SelectionTarget } from "./pending-place";
 import type { PendingPreview } from "./pending-types";
 
-/**
- * The proposals the writer hasn't decided on, as they are kept with the
- * document (ai/kept_proposals.rs: the project's `.textus/pending/`, or the
- * app's data folder) and offered again when it opens. Each is kept as it
- * was proposed: anchored by its blocks' ids (doc-blocks.ts), a hash of
- * their text, it lands where it did while those blocks read as they did,
- * and gives way when they don't. A selection's or the caret's proposal
- * keeps where that was, and comes back only to the document it was made
- * for, unchanged. Its pictures, made and waiting for Accept, are kept
- * beside it by the backend (`picturesOf`); one still being made holds its
- * proposal back until it is made.
- */
+/** Undecided proposals kept with the document and offered again on open.
+ *  Each comes back only while its blocks still read as they did. */
 
 export const KEPT_VERSION = 1;
 
@@ -36,7 +26,7 @@ export interface KeptProposals {
 }
 
 /** Whether a proposal in the document can be kept: decidable, and each of
- *  its pictures made (`made`, generated-images.ts's pictureState). */
+ *  its pictures made. */
 export function keepable(
   preview: PendingPreview,
   made: (id: string) => boolean,

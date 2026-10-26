@@ -8,12 +8,8 @@ import { clearAllConversations } from "../../ai/chat/chat-history";
 import { clearClipboardHistory } from "../../clipboard/history";
 import { drafts } from "../../platform/ipc";
 
-// Settings > Privacy: each kind of locally-stored history/recovery data gets
-// its own on/off switch plus an explicit clear for what's already there -
-// turning a switch off only stops new writes, it never retroactively
-// deletes (see each Settings field's comment in SettingsContext.tsx). A
-// clear can't be undone, so it asks first: the warning is in the question
-// rather than in grey text under every row.
+// Settings > Privacy: a switch per kind of local history, plus a clear. A
+// switch off only stops new writes; a clear can't be undone, so it asks first.
 
 function ClearRow({
   label,
@@ -40,10 +36,8 @@ function ClearRow({
     setCleared(true);
   }
 
-  // The check mark answers the click, but the button stays enabled: it
-  // holds the focus the confirm dialog handed back, and disabling it would
-  // drop that focus to <body>, where Escape no longer closes Settings.
-  // Clearing again is harmless - it asks first.
+  // The button stays enabled: it holds the focus the confirm dialog handed
+  // back, and disabling it would drop focus to <body>, where Escape is lost.
   return (
     <SettingRow label={label}>
       <button

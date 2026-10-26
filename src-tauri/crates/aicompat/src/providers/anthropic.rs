@@ -33,10 +33,9 @@ pub struct ClaudeCredential {
     pub expires: i64,
 }
 
-/// The two ways this dialect authenticates. OAuth (Claude Code) tokens are
-/// only accepted with the Claude Code identity headers and system prompt
-/// they're scoped to; a plain API key uses the standard `x-api-key` header
-/// and must NOT claim that identity.
+/// The two ways this dialect authenticates. OAuth tokens are accepted only
+/// with the Claude Code identity headers and system prompt; a plain API key
+/// must NOT claim that identity.
 #[derive(Clone)]
 pub enum AnthropicAuth {
     Oauth(String),
@@ -79,15 +78,11 @@ const DEEP_MAX_TOKENS: u32 = 32768;
 /// searches) is continued before what it has so far is taken as the step.
 const MAX_PAUSE_CONTINUATIONS: usize = 3;
 
-/// Runs one round-trip against Claude with the full turn history and tool
-/// definitions - the Anthropic twin of `openai_codex::agent_step` - and
-/// returns the step's token usage with it. Streams (`stream: true`) so text
-/// and tool-call fragments surface through `on_event` as they're generated.
+/// Runs one streamed round-trip against Claude with the full turn history
+/// and tool definitions, and returns the step's token usage with it.
 ///
-/// A turn with server searches in it can stop at `pause_turn`, part-way:
-/// taken as the answer, that left a reply that ended mid-research. It is
-/// continued the way the API asks - the same request with what Claude sent
-/// so far as the last, assistant message - and the parts make the step.
+/// A turn with server searches can stop part-way at `pause_turn`; it is
+/// continued with what Claude sent so far as the last assistant message.
 #[allow(clippy::too_many_arguments)]
 pub async fn agent_step(
     auth: &AnthropicAuth,
@@ -132,9 +127,8 @@ pub async fn agent_step(
         if let Some(error) = acc.error {
             return Err(error);
         }
-        // Cut off by the output limit inside a tool call: its arguments are
-        // half a JSON object, which would reach the tool as `{}` and send the
-        // model round in circles retrying the same oversized call.
+        // Cut off by the output limit inside a tool call: its half-JSON arguments
+        // would reach the tool as `{}` and send the model round in circles.
         if acc.stop_reason.as_deref() == Some("max_tokens")
             && matches!(acc.blocks.last(), Some(StreamBlock::ToolUse { .. }))
         {

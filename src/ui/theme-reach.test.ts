@@ -3,11 +3,9 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-// An imported Typora theme recolours the whole window through the colour
-// tokens (ui/design-system.css, ui/base.css), which theme/theme-chrome.ts
-// derives from the theme's page and its own `:root` may set: a colour
-// written straight into a rule is one place no theme reaches. Rules take
-// tokens; a literal is allowed only where it is not a colour on screen.
+// An imported theme recolours the window through the colour tokens, so a
+// colour written straight into a rule is one no theme reaches. A literal is
+// allowed only where it is not a colour on screen.
 
 const SRC = fileURLToPath(new URL("..", import.meta.url));
 

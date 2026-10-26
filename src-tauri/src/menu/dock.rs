@@ -1,7 +1,5 @@
-//! The Dock icon's menu (right-click, or click and hold): New Window, above
-//! the open windows and Quit that AppKit lists by itself. AppKit asks the
-//! app delegate's `applicationDockMenu:` for it; tao's delegate doesn't
-//! answer that, so `install` adds the method to its class once, at setup.
+//! The Dock icon's menu: New Window above what AppKit lists itself. tao's
+//! delegate lacks `applicationDockMenu:`, so `install` adds the method once.
 
 use std::cell::OnceCell;
 use std::ffi::c_char;
@@ -57,9 +55,8 @@ pub(crate) fn install(app: &AppHandle) {
     };
     let delegate: &AnyObject = delegate.as_ref();
     let dock_menu: extern "C-unwind" fn(&AnyObject, Sel, *mut AnyObject) -> *mut NSMenu = dock_menu;
-    // SAFETY: the function matches the method's types, "@@:@" - it returns
-    // an object and takes self, the selector and the sender. Adding a method
-    // the class lacks leaves its others as they are.
+    // SAFETY: the function matches the method's types, "@@:@" (returns an object,
+    // takes self, the selector and the sender); adding a missing method changes no others.
     unsafe {
         let imp: Imp = std::mem::transmute(dock_menu);
         objc2::ffi::class_addMethod(

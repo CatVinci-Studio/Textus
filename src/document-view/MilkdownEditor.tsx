@@ -16,35 +16,27 @@ import "../editor/milkdown-theme.css";
 import "../theme/content-themes.css";
 
 interface MilkdownEditorProps {
-  /** The owning tab - the key App.tsx flushes this editor under (see
-   *  editor-flush.ts). */
+  /** The owning tab, the key this editor is flushed under. */
   tabId: string;
   filePath: string | null;
   initialValue: string;
   onChange: (markdown: string) => void;
-  /** The tab's display name (doc-tabs' `tabTitle`) - what the detached chat
-   *  window puts in its title bar. Passed down rather than derived from
-   *  `filePath`, which is null for the bundled Help documents. */
+  /** The tab's display name, for the detached chat's title. Passed down:
+   *  `filePath` is null for the bundled Help documents. */
   docTitle: string;
-  /** Whether this is the tab the user is looking at. Every open tab stays
-   *  mounted (App.tsx hides the rest with display:none), so the detached
-   *  chat - which follows the ACTIVE document - needs to know which of them
-   *  should be feeding it. */
+  /** Whether this is the tab the user is looking at; every tab stays
+   *  mounted, and the detached chat follows the active one. */
   isActive?: boolean;
-  /** The tour's AI while this is the tour's practice tab, else null
-   *  (utils/events.ts's TourAi): muted, completion and the grammar check
-   *  go quiet; either way the tab reports what its lessons wait for
-   *  (useTourSignals) and the AI panel opens even with Ask AI off. */
+  /** The tour's AI on its practice tab, else null: muted, completion and
+   *  the grammar check go quiet. */
   tour?: TourAi | null;
   /** The AI panel's mode the tour's lesson needs, on its practice tab. */
   tourMode?: AgentMode | null;
 }
 
 /**
- * One tab's document: the editor (useEditorSetup), Textus AI's chats on it
- * (useEditorChat), where the caret goes (useEditorCarets), what opens
- * over it (useEditorPopups) and reviewing it (useEditorReview) - and what
- * each of those draws around the text.
+ * One tab's document: the editor, Textus AI's chats on it, caret handling,
+ * what opens over it and reviewing it.
  */
 export function MilkdownEditor({
   tabId,

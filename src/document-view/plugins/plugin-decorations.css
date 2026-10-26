@@ -1,4 +1,4 @@
-/* Marks plugins put on the text (plugin-decorations.ts). */
+/* Marks plugins put on the text. */
 
 .plugin-tone-accent {
   --plugin-tone: var(--editor-accent);

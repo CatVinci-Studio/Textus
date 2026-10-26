@@ -1,9 +1,5 @@
-// Micromark + mdast support for "==highlighted==" text, which is not part of
-// CommonMark or GFM. Modeled directly on micromark-extension-gfm-strikethrough
-// / mdast-util-gfm-strikethrough (both already in this project's dependency
-// tree via the gfm preset), just simplified to a fixed 2-character delimiter
-// instead of strikethrough's "1 or 2 tildes" ambiguity - "==" has no other
-// meaning in inline markdown, so there's no need for that flexibility here.
+// Micromark + mdast support for "==highlighted==", modeled on
+// gfm-strikethrough but with a fixed 2-character delimiter.
 import { splice } from "micromark-util-chunked";
 import { classifyCharacter } from "micromark-util-classify-character";
 import { resolveAll } from "micromark-util-resolve-all";
@@ -36,7 +32,7 @@ declare module "micromark-util-types" {
   }
 }
 
-/** Markdown "==highlighted==" text - not part of the standard mdast types, registered below. */
+/** Markdown "==highlighted==" text, registered below. */
 export interface Mark extends Parent {
   type: "mark";
   children: PhrasingContent[];
@@ -59,10 +55,8 @@ declare module "mdast-util-to-markdown" {
 
 const EQUALS = 61; // "="
 
-/** Whether a code point is a CJK character (ideographs, kana, hangul, CJK
- *  punctuation/fullwidth forms) - the neighbors that justify relaxing the
- *  flanking rules above. Latin-range and general punctuation (including
- *  curly quotes, which Chinese shares with English) stay strict. */
+/** Whether a code point is CJK (ideographs, kana, hangul, CJK punctuation
+ *  and fullwidth forms). Curly quotes, shared with English, stay strict. */
 function isCjkCode(code: number | null): boolean {
   if (code === null) return false;
   return (
@@ -86,7 +80,8 @@ const CONSTRUCTS_WITHOUT_HIGHLIGHT: ConstructName[] = [
   "titleApostrophe",
 ];
 
-/** micromark syntax extension: tokenizes "==...==" into a "highlight" token, mirroring gfm-strikethrough's flanking-run algorithm. */
+/** micromark syntax: "==...==" as a "highlight" token, by gfm-strikethrough's
+ *  flanking-run algorithm. */
 export function highlightSyntax(): Extension {
   const tokenizer = {
     name: "highlight",
@@ -203,12 +198,9 @@ export function highlightSyntax(): Extension {
       if (size !== 2) return nok(code); // require exactly 2, no "single =" form
       const token = effects.exit("highlightSequenceTemporary");
       const after = classifyCharacter(code);
-      // CJK relaxation, mirroring remark-cjk-friendly's treatment of
-      // emphasis: CommonMark-style flanking treats 中文标点 as punctuation
-      // and rejects "==“高亮”==吗", but a CJK character on either side is a
-      // clear word boundary in CJK prose, where spaces never appear. A
-      // delimiter touching one may open/close as long as it doesn't face
-      // whitespace.
+      // CJK relaxation, as remark-cjk-friendly does for emphasis: flanking rules
+      // reject "==“高亮”==吗", but CJK prose has no spaces. A delimiter touching a
+      // CJK character may open/close unless it faces whitespace.
       const cjkAdjacent = isCjkCode(previous) || isCjkCode(code);
       token._open =
         !after ||
@@ -241,9 +233,8 @@ const exitHighlight: FromMarkdownHandle = function (token) {
 
 export function highlightToMarkdown(): ToMarkdownExtension {
   return {
-    // Only an "=" that, with the next one, could open a highlight - "=="
-    // before a non-space - is escaped. Escaping every "=" wrote "2+2=4" back
-    // as "2+2\\=4" the first time a document was saved.
+    // Only an "=" that could open a highlight with the next one is escaped, or
+    // "2+2=4" saves as "2+2\\=4".
     unsafe: [
       {
         character: "=",

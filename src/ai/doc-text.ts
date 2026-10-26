@@ -1,18 +1,9 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 
 /**
- * Grammar checking exchanges PLAIN TEXT with the model (a paragraph's
- * textContent, character offsets into it, a quoted snippet), but document
- * positions also count node boundaries - a bold span or inline formula shifts
- * everything after it by 2. These helpers translate between the two, walking
- * text leaves so the mapping stays exact no matter what inline nodes the text
- * passes through.
- *
- * Plain text is the right currency HERE: a grammar fix is a within-sentence
- * word swap that carries no formatting of its own. The agent's propose_edit
- * path used to share these helpers and must not - it rewrites whole passages,
- * and a flattened view is what silently destroyed their formatting. It works
- * in markdown source instead; see doc-markdown.ts.
+ * Maps grammar checking's plain-text offsets to document positions, which
+ * also count node boundaries. Plain text suits a within-sentence word swap;
+ * whole-passage edits must work in markdown or they lose formatting.
  */
 
 /** Document position of the `offset`-th character of `parent`'s textContent. */
@@ -35,9 +26,8 @@ export function textOffsetToDocPos(
     seen += len;
     return true;
   });
-  // Text ended before `offset` but the content didn't (trailing inline
-  // non-text node): the block's content end is still a valid "after all the
-  // text" position.
+  // Text ended before `offset` but the content didn't (a trailing inline
+  // non-text node): the content end is still "after all the text".
   if (result === null && offset === parent.textContent.length)
     return contentStart + parent.content.size;
   return result;
@@ -45,9 +35,7 @@ export function textOffsetToDocPos(
 
 /**
  * UTF-16 offset of the `scalars`-th Unicode scalar value in `text`. Model
- * offsets count scalar values (that's what the backend validates against);
- * JS string indexing counts UTF-16 units - identical until an astral char
- * (emoji, rare CJK) shifts everything after it.
+ * offsets count scalar values; JS indexing diverges after an astral char.
  */
 export function scalarToUtf16Offset(text: string, scalars: number): number {
   let units = 0;
@@ -61,11 +49,9 @@ export function scalarToUtf16Offset(text: string, scalars: number): number {
 }
 
 /**
- * The document range of the single occurrence of `snippet`, matched against
- * the same plain-text view of the document the model was shown (textblocks'
- * textContent joined with "\n\n", per textBetween). A snippet containing
- * "\n\n" matches across consecutive textblocks. Null when the snippet is
- * absent or ambiguous (multiple matches).
+ * The document range of the single occurrence of `snippet` in the plain-text
+ * view the model was shown (textblocks joined with "\n\n"). Null when absent
+ * or ambiguous.
  */
 export function findUniqueTextRange(
   doc: ProseNode,
@@ -102,10 +88,8 @@ function findWithinBlock(
 }
 
 /**
- * Multi-block match: `parts` are the snippet's "\n\n"-separated pieces. A
- * match is a run of consecutive textblocks where the first part ends block
- * one, each middle part is a whole block, and the last part starts the final
- * block - the mirror image of how the flattened text was joined.
+ * Multi-block match of the snippet's "\n\n"-separated `parts`: the first ends
+ * a block, middle ones are whole blocks, the last starts the final block.
  */
 function findAcrossBlocks(
   doc: ProseNode,

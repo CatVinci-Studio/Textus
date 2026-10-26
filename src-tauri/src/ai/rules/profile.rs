@@ -1,26 +1,7 @@
-//! Writing conventions profiles: which national norm or house style a
-//! document follows, per document language.
-//!
-//! A profile is a value like `zh-Hans-CN/fiction`, `en-GB/govuk` or
-//! `fr-CA`: language (and script), then region, then an optional preset.
-//! It comes from, in order:
-//!
-//! 1. the project's `.textus/style.md` front matter (`conventions:`, one
-//!    value or several separated by commas, plus option keys such as
-//!    `cjk-latin-space: on`) - [`ProjectConventions::from_style`];
-//! 2. the global setting `writingConventions` in settings.json - either
-//!    `"automatic"` (the default), one profile as a string (what the
-//!    Settings row stores: `"en-GB/govuk"`, for that language only), or an
-//!    object from language key to profile,
-//!    `{ "zh-Hans": "zh-Hans-CN/tech", "en": "en-GB/govuk" }`, optionally with
-//!    an `"options"` object of the same option keys;
-//! 3. Automatic: the national norm for the language where one exists (GB/T
-//!    for Simplified Chinese, the MOE handbook for Traditional, JTF for
-//!    Japanese, the national rules for Korean and Russian, Brazilian
-//!    Portuguese as the UI is), none for English, Spanish, French and
-//!    German. Wherever sources conflict, Automatic follows the document's
-//!    own majority and flags only inconsistency (the rules read
-//!    [`Profile::explicit`] for that).
+//! Writing conventions profiles (`zh-Hans-CN/fiction`, `en-GB/govuk`): which
+//! norm or house style a document follows, per language. From style.md front
+//! matter, then the `writingConventions` setting, then Automatic, which follows
+//! the national norm where there is one and the document's own majority.
 
 use super::detect::Lang;
 use serde::Serialize;
@@ -33,9 +14,8 @@ pub const SETTING_KEY: &str = "writingConventions";
 pub const AUTOMATIC: &str = "automatic";
 
 /// Per language: its key in the setting, the profile Automatic uses (None:
-/// universal rules and consistency checks only) and the profiles a user can
-/// choose. Mirrored by WRITING_CONVENTIONS in platform/ipc.ts (a test keeps the
-/// two the same).
+/// universal rules and consistency checks only) and the choosable profiles.
+/// Keep in step with the frontend's WRITING_CONVENTIONS (a test checks).
 pub const LANGUAGE_PROFILES: &[(Lang, Option<&str>, &[&str])] = &[
     (
         Lang::ZhHans,
@@ -93,8 +73,7 @@ pub const LANGUAGE_PROFILES: &[(Lang, Option<&str>, &[&str])] = &[
 ];
 
 /// Options a profile can override, with their values (the first is the
-/// default). Keys as in `.textus/style.md` front matter and in the
-/// setting's `options` object.
+/// default), keyed as in style.md front matter and the setting's `options`.
 pub const OPTIONS: &[(&str, &[&str])] = &[
     ("cjk-latin-space", &["auto", "on", "off", "layout"]),
     ("stacked-marks", &["auto", "1", "3"]),
@@ -113,8 +92,7 @@ pub const OPTIONS: &[(&str, &[&str])] = &[
     ("ru.yo", &["selective", "always", "never"]),
 ];
 
-/// Where the effective profile came from. Generated as ProfileSource (JSON
-/// never carries an enum's name).
+/// Where the effective profile came from.
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[cfg_attr(test, derive(specta::Type), serde(rename = "ProfileSource"))]
 #[serde(rename_all = "camelCase")]
@@ -137,10 +115,7 @@ pub struct Profile {
     /// `CN`, `TW`, `HK`, `US`, `GB`, `AU`, `ES`, `419`, `FR`, `CA`, `CH`,
     /// `DE`, `AT`, `BR`, `PT`.
     pub region: Option<String>,
-    /// `fiction`, `tech`, `gongwen`, `academic`, `newmedia`, `general`,
-    /// `news`, `tech-google`, `tech-microsoft`, `apa`, `mla`, `govuk`,
-    /// `oxford`, `army`, `jtf`, `koyobun`, `official`, `eu`, `din5008`,
-    /// `gost`.
+    /// The house-style preset, e.g. `fiction`, `govuk`, `jtf`.
     pub preset: Option<String>,
     /// Chosen by the user (settings or project) rather than Automatic.
     pub explicit: bool,
@@ -253,9 +228,8 @@ pub struct ProjectConventions {
 }
 
 impl ProjectConventions {
-    /// Reads the front matter of a style profile: a `---` block at the very
-    /// top, `key: value` lines at column 0. The rest of the file (and any
-    /// key this doesn't know) is the style profile's business.
+    /// Reads the front matter of a style profile: a `---` block at the very top,
+    /// `key: value` lines at column 0. Unknown keys are ignored.
     pub fn from_style(style: &str) -> ProjectConventions {
         let mut pc = ProjectConventions::default();
         let text = style.trim_start_matches('\u{feff}');
@@ -335,9 +309,8 @@ impl Conventions {
     }
 
     fn setting_profile(&self, lang: Lang) -> Option<Profile> {
-        // The Settings row stores one profile as a string ("en-GB/govuk"):
-        // it applies to documents in its own language, and the others stay
-        // Automatic. Several separated by commas work too, as in style.md.
+        // The Settings row stores one profile as a string: it applies to documents in
+        // its own language, the others stay Automatic. Commas work too.
         if let Some(Value::String(s)) = &self.setting {
             return s
                 .split(',')

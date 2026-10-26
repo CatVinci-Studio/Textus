@@ -2,9 +2,7 @@ import { Plugin } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent } from "../marks/enclosure";
 
-/** The leading spaces/tabs of the LAST line in `textBeforeCursor` - what a
- *  code editor's Enter key copies onto the new line. Pure so it's testable
- *  without a real ProseMirror doc. */
+/** The leading spaces/tabs of the last line in `textBeforeCursor`. */
 export function leadingWhitespaceOfLastLine(textBeforeCursor: string): string {
   const lastNewline = textBeforeCursor.lastIndexOf("\n");
   const lastLine = textBeforeCursor.slice(lastNewline + 1);
@@ -13,16 +11,8 @@ export function leadingWhitespaceOfLastLine(textBeforeCursor: string): string {
 
 /**
  * Enter inside a code block carries the current line's indentation onto the
- * new one, like an ordinary code editor - stock ProseMirror's `newlineInCode`
- * (the default ultimately reached via the base keymap) just inserts a bare
- * "\n" with nothing copied.
- *
- * Registered AFTER escape-trailing-block-plugin.ts in the plugin chain: that
- * plugin's own (narrower) Enter handling - escaping out of the very last
- * top-level code block when the cursor sits on an empty trailing line - must
- * get first refusal, since "jump out of the block" and "indent the next
- * line" are different intents for what looks like the same keystroke. This
- * plugin only ever sees an Enter that escape-trailing-block-plugin declined.
+ * new one. Registered after the escape-trailing-block plugin, which gets
+ * first refusal on an Enter that leaves the last code block.
  */
 export const codeBlockIndentPlugin = $prose(
   () =>
@@ -42,7 +32,7 @@ export const codeBlockIndentPlugin = $prose(
             "\n",
           );
           const indent = leadingWhitespaceOfLastLine(textBeforeCursor);
-          if (!indent) return false; // nothing to copy - default newlineInCode is equivalent
+          if (!indent) return false;
 
           view.dispatch(state.tr.insertText("\n" + indent).scrollIntoView());
           return true;

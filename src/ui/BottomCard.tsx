@@ -9,12 +9,9 @@ export interface BottomCardAction {
   primary?: boolean;
 }
 
-/**
- * A phone's card from the bottom edge for one thing in the text - a review
- * note, a grammar suggestion: what it says on top, its actions as two big
- * buttons below. Like the action sheet it dims the page and closes on a tap
- * outside or Escape; unlike it, the content leads, not a list of options.
- */
+/** A phone's card from the bottom edge for one thing in the text (a review
+ *  note, a grammar suggestion): content on top, two big action buttons below.
+ *  Dims the page and closes on a tap outside or Escape. */
 export function BottomCard({
   label,
   children,

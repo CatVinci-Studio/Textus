@@ -99,8 +99,7 @@ describe("stackCards", () => {
   });
 
   it("groups a crowded run a paragraph at a time, each at its paragraph", () => {
-    // Forty words glossed over three paragraphs, the third with one: as
-    // one run, they were one chip beside the first paragraph.
+    // Forty words glossed over three paragraphs, the third with one.
     const placed = [
       ...Array.from({ length: 20 }, (_, i) => ({ top: i * 4, block: 0 })),
       ...Array.from({ length: 19 }, (_, i) => ({ top: 100 + i * 4, block: 1 })),

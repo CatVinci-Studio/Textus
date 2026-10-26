@@ -1,10 +1,6 @@
-//! A web page's main content as Markdown, for web_fetch: what isn't
-//! content (scripts, navigation, page headers and footers, forms, hidden
-//! elements) taken out, the page's <main> or <article> kept when it has
-//! one, and the rest written by the converter attachments use
-//! (extract::html, on html5ever). Readability's Rust port, dom_smoothie,
-//! was measured for this and dropped: +1.39 MB on the Linux x86_64 release
-//! binary, for a model that needs a page's words, headings, lists and links.
+//! A web page's main content as Markdown, for web_fetch: scripts, navigation,
+//! headers, footers, forms and hidden elements taken out, <main> or <article>
+//! kept when there is one. A readability crate cost too much binary size.
 
 use dom_query::Document;
 

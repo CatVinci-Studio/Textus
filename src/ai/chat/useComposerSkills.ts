@@ -12,9 +12,7 @@ import {
 } from "./skill-picker";
 
 /**
- * The skills the composer offers (ChatComposer.tsx): the workspace's, read
- * when the chat opens, and the `/` menu's full list, read each time the
- * menu opens - and whether `input` has the menu open.
+ * The skills the composer offers, and whether `input` has the `/` menu open.
  */
 export function useComposerSkills({
   docPath,
@@ -37,9 +35,8 @@ export function useComposerSkills({
   const [skillList, setSkillList] = useState<SkillListItem[] | null>(null);
   const [recent, setRecent] = useState<string[]>(recentSkills);
 
-  // Skills come from the agent workspace on disk (global dir + the workspace
-  // root's .textus/skills). Loaded fresh each time the chat opens, so editing
-  // a skill file takes effect on the next chat without a restart.
+  // Loaded fresh each time the chat opens, so an edited skill file takes
+  // effect on the next chat without a restart.
   useEffect(() => {
     let cancelled = false;
     ai.loadAgentWorkspace(docPath, workspaceRoot)
@@ -52,9 +49,8 @@ export function useComposerSkills({
     };
   }, [docPath, workspaceRoot]);
 
-  // The `/` menu's list - built-ins included, with their groups and modes
-  // - fetched again each time the menu opens, so a skill installed or moved
-  // to another mode a moment ago is already there.
+  // Fetched again each time the menu opens, so a skill installed or moved a
+  // moment ago is already there.
   const skillTrigger = SKILL_TRIGGER.exec(input);
   const skillMenuOpen = !!skillTrigger && dismissedInput !== input;
   useEffect(() => {
@@ -72,8 +68,7 @@ export function useComposerSkills({
     };
   }, [skillMenuOpen, docPath, workspaceRoot]);
 
-  // The list, plus any workspace skill it lacks (an older backend lists
-  // none): what the menu offers and what a typed /word resolves against.
+  // Plus any workspace skill the list lacks (an older backend lists none).
   const available: PickerSkill[] = useMemo(() => {
     const listed = skillList ?? [];
     const names = new Set(listed.map((s) => s.name));

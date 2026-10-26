@@ -1,12 +1,6 @@
-//! What Textus knows of the open folder's documents, for plugins
-//! (textus.metadata): each one's title, front matter, headings, links,
-//! tags and tasks - read once and kept, read again only when a file's
-//! size or time changes. Built the first time a plugin asks, so a window
-//! whose plugins never do keeps no index.
-//!
-//! Lines are counted from 0, as the editor's outline counts them. A
-//! document's blocks (`plugin_metadata_get` only) are cut and named as
-//! ai/doc_blocks.rs cuts a document no editor stands behind.
+//! What Textus knows of the open folder's documents, for plugins: titles, front
+//! matter, headings, links, tags and tasks, re-read only when a file's size or
+//! time changes. Built on the first request. Lines count from 0.
 
 use super::access::{inside, refused, require_not_app_data};
 use super::state;

@@ -1,28 +1,6 @@
-//! Plugins (docs/design/plugins.md): which are installed, which are on and
-//! what each was granted, and the calls a plugin's code makes that need
-//! more than the window - its own files, the open folder, the network, its
-//! storage.
-//!
-//! A plugin's code never calls these itself: it runs in a sandboxed frame
-//! with no access to Tauri, and asks the app window (src/plugins/host/broker.ts),
-//! which checks the call and makes it here. The checks are made again here
-//! all the same - the grant from `state.json`, the path inside the folder it
-//! was given - so a mistake in the window can't hand a plugin more than the
-//! user granted.
-//!
-//! On disk, in the app's data folder:
-//!
-//!   plugins/state.json           every plugin's switch and grants, and the
-//!                                switch for all of them
-//!   plugins/<id>/                an installed plugin's files
-//!   plugin-data/<id>/storage.json  what an older plugin kept, no longer read
-//!
-//! What a plugin keeps now is store.rs's: `<config>/textus/plugins/<id>/`
-//! and a project's `.textus/plugins/<id>/`. Official plugins are installed
-//! from the catalog (catalog.rs) like any other. A plugin loaded from a
-//! folder in developer mode stays where it is: `state.json` names its path.
-//! A script - a plugin in one file - is in `<config>/textus/scripts/`
-//! (scripts.rs).
+//! Plugins: which are installed, which are on and what each was granted, and
+//! the calls their sandboxed code makes through the app window. Each check is
+//! made again here, so a window bug can't grant more than the user did.
 
 pub mod access;
 pub mod ai_tools;
@@ -39,9 +17,8 @@ pub mod store;
 pub mod uri;
 pub mod workspace;
 
-/// The app's invoke handler with every plugin command (the shared ones,
-/// desktop and iOS) in front of the commands lib.rs lists: the plugin
-/// API's commands stay beside the code that answers them.
+/// The app's invoke handler with every plugin command in front of the commands
+/// lib.rs lists.
 #[macro_export]
 macro_rules! with_plugin_commands {
     ($($rest:tt)*) => {

@@ -7,12 +7,9 @@ import {
 } from "../../settings/settings-store";
 
 /**
- * A plugin's settings, kept with Textus's own (1.3): for every document in
- * settings.json, under `plugins.<id>`; for a project in its folder's
- * `.textus/settings.json`, under the same key, over those. What a plugin
- * reads is the project's value, else the global one, else its manifest's
- * default (manager.ts). Before, they were a key of the plugin's own
- * storage, out of sight and one for every project.
+ * A plugin's settings, kept under `plugins.<id>` in settings.json and, for a
+ * project, in its `.textus/settings.json` over those. A plugin reads the
+ * project's value, else the global one, else its manifest's default.
  */
 
 /** Where a value is kept. */
@@ -94,9 +91,8 @@ export function pluginValue(
   return { value: undefined, from: null };
 }
 
-/** Whether a setting with `when` shows, as the other settings are now
- *  (`value` of a key): "legend" while legend is on (or set), "!legend"
- *  while it isn't, "style == dark" / "style != dark" by its value. */
+/** Whether a setting with `when` shows given the other settings' values:
+ *  "legend", "!legend", "style == dark", "style != dark". */
 export function settingShown(
   when: string | undefined,
   value: (key: string) => unknown,

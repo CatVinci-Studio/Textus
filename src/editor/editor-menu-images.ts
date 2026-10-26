@@ -7,14 +7,10 @@ import type { EditorRunner } from "./useEditorRunner";
 import type { Strings } from "../i18n/strings";
 import type { MenuEntry } from "./editor-menu";
 
-/**
- * Pictures in the editor's menus: the selected one, its width, deleting
- * or replacing it, and the menu items (editor-menu.ts).
- */
+/** Pictures in the editor's menus. */
 
-/** The image the selection is on - a tapped image is node-selected - for
- *  the keyboard toolbar's image buttons: its doc position, as
- *  contextMenuTarget reports the right-clicked one. */
+/** The doc position of the node-selected image, for the keyboard toolbar's
+ *  image buttons. */
 export function selectedImagePos(run: EditorRunner): number | null {
   return (
     run((ctx) => {
@@ -27,8 +23,7 @@ export function selectedImagePos(run: EditorRunner): number | null {
   );
 }
 
-/** Selects the image at `pos` as a whole, for Textus AI to be asked
- *  about it (the selection is what Quick Ask sends). */
+/** Selects the image at `pos` as a whole, so Quick Ask sends it. */
 export function selectImage(run: EditorRunner, pos: number) {
   run((ctx) => {
     const view = ctx.get(editorViewCtx);
@@ -51,9 +46,8 @@ export function deleteImage(run: EditorRunner, pos: number) {
 }
 
 /**
- * `keepSelected`: the image stays selected, as the keyboard toolbar needs
- * it to keep showing the image's buttons - new markup on a leaf node is a
- * replacement, which otherwise maps a node selection on it to a caret.
+ * `keepSelected`: the image stays selected for the keyboard toolbar; new
+ * markup on a leaf node otherwise maps a node selection to a caret.
  */
 export function setImageWidth(
   run: EditorRunner,
@@ -101,10 +95,8 @@ export function imageWidthItems(
 }
 
 /**
- * Show in folder and Copy image path. Show in folder goes where the
- * missing image card's button does (revealNearest): the file selected, or
- * the nearest folder that exists. A web image has only its address to
- * copy; a data: URI, nothing.
+ * Show in folder (the file, or the nearest folder that exists) and Copy
+ * image path. A web image has only its address to copy; a data: URI, nothing.
  */
 export function imageFileItems(
   t: Strings,

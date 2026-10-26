@@ -1,10 +1,7 @@
 /**
- * Word's lists, as it puts them on the clipboard: not <ul>/<ol> but one
- * paragraph per item, styled `mso-list:l0 level2 lfo1`, its bullet ("·",
- * "1.", "a)") written out as text in a span styled `mso-list:Ignore`.
- * Pasted as they come, every item was a paragraph starting with "·   ".
- * This rebuilds them as HTML lists, nested by level, before ProseMirror
- * reads the paste. HTML with no such paragraphs comes back unchanged.
+ * Word's lists come on the clipboard as styled paragraphs (`mso-list:l0
+ * level2`) with the bullet as text. This rebuilds them as nested HTML lists
+ * before ProseMirror reads the paste.
  */
 export function wordListsToHtml(html: string): string {
   if (!/mso-list/i.test(html)) return html;
@@ -44,8 +41,7 @@ export function wordListsToHtml(html: string): string {
       }
     }
     const ordered = /^\s*(\d+|[a-z]|[ivxlc]+)[.)]/i.test(bullet);
-    // Not right after the list before, or another of Word's lists: a new
-    // one.
+    // Not right after the list before, or another Word list: a new one.
     if (p.previousElementSibling !== stack[0]?.list || id !== listId)
       stack = [];
     listId = id;
