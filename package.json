@@ -86,5 +86,8 @@
     "typescript-eslint": "^8.72.0",
     "vite": "^7.3.7",
     "vitest": "^4.1.12"
+  },
+  "overrides": {
+    "katex": "$katex"
   }
 }
