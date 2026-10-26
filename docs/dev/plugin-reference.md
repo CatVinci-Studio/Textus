@@ -53,13 +53,13 @@ type Where = "tab" | "beside" | "current";
 
 What `exports.activate` is given.
 
-| Member                                                              |                                                                                                                                                                                      |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `readonly subscriptions: Disposable[]`                              |                                                                                                                                                                                      |
-| `readonly plugin: PluginInfo`                                       |                                                                                                                                                                                      |
-| `readonly storage: { global: StoragePlace; project: StoragePlace }` | Two places of the plugin's own: `global` for every folder, in Textus's config folder; `project` in the open folder's .textus/plugins/<id>/ (needs project.data).                     |
-| `readonly secrets: Secrets`                                         | Secrets (API tokens): kept as Textus keeps its API keys, in a file only the user can read, apart from settings and storage - never synced, exported or shown. The plugin's own only. |
-| `readonly log: Log`                                                 | Shown in the plugin's page in Settings › Extensions › Plugins.                                                                                                                       |
+| Member                                                                                                      |                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly subscriptions: Disposable[]`                                                                      |                                                                                                                                                                                                                                                                                         |
+| `readonly plugin: PluginInfo`                                                                               |                                                                                                                                                                                                                                                                                         |
+| `readonly storage: { global: StoragePlace; project: StoragePlace; document(path: string): DocumentPlace; }` | Places of the plugin's own: `global` for every folder, in Textus's config folder; `project` in the open folder's .textus/plugins/<id>/ (needs project.data); `document(path)` for one document - a diagram's zoom, a bookmark - which follows the document when it is renamed or moved. |
+| `readonly secrets: Secrets`                                                                                 | Secrets (API tokens): kept as Textus keeps its API keys, in a file only the user can read, apart from settings and storage - never synced, exported or shown. The plugin's own only.                                                                                                    |
+| `readonly log: Log`                                                                                         | Shown in the plugin's page in Settings › Extensions › Plugins.                                                                                                                                                                                                                          |
 
 ## PluginInfo
 
@@ -82,6 +82,17 @@ What `exports.activate` is given.
 | `writeText(path: string, text: string): Promise<void>` |                                |
 | `files(): Promise<string[]>`                           |                                |
 | `deleteFile(path: string): Promise<void>`              |                                |
+
+## DocumentPlace
+
+Values kept for one document.
+
+| Member                                            |                                |
+| ------------------------------------------------- | ------------------------------ |
+| `get(key: string): Promise<unknown>`              |                                |
+| `set(key: string, value: unknown): Promise<void>` | `undefined` or `null` deletes. |
+| `delete(key: string): Promise<void>`              |                                |
+| `keys(): Promise<string[]>`                       |                                |
 
 ## Secrets
 

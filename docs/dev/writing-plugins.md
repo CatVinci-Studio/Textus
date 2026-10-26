@@ -270,6 +270,10 @@ from)`, `tags()`, `tasks()`, `search(query)`, `onDidChange`. Read this
   `delete`, `keys`, and files of the plugin's own - `readText`,
   `writeText`, `files`, `deleteFile`. 50 MB each; no plugin reaches
   another's. Uninstalling a plugin moves its global data to the Trash.
+- `ctx.storage.document(path)`: `get`, `set`, `delete`, `keys` for one
+  document - a diagram's zoom, a bookmark. Kept with the plugin's global
+  data, it follows the document when it is renamed or moved, in the file
+  tree or by a plugin.
 - `ctx.secrets.get(key)` / `set(key, value)`: tokens, kept apart from
   settings, never synced, exported or shown.
 - `textus.settings.get(key)` / `set(key, value)` / `onDidChange`: the

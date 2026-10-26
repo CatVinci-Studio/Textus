@@ -68,10 +68,16 @@ declare global {
     interface PluginContext {
       readonly subscriptions: Disposable[];
       readonly plugin: PluginInfo;
-      /** Two places of the plugin's own: `global` for every folder, in
+      /** Places of the plugin's own: `global` for every folder, in
        *  Textus's config folder; `project` in the open folder's
-       *  .textus/plugins/<id>/ (needs project.data). */
-      readonly storage: { global: StoragePlace; project: StoragePlace };
+       *  .textus/plugins/<id>/ (needs project.data); `document(path)` for
+       *  one document - a diagram's zoom, a bookmark - which follows the
+       *  document when it is renamed or moved. */
+      readonly storage: {
+        global: StoragePlace;
+        project: StoragePlace;
+        document(path: string): DocumentPlace;
+      };
       /** Secrets (API tokens): kept as Textus keeps its API keys, in a
        *  file only the user can read, apart from settings and storage -
        *  never synced, exported or shown. The plugin's own only. */
@@ -98,6 +104,15 @@ declare global {
       writeText(path: string, text: string): Promise<void>;
       files(): Promise<string[]>;
       deleteFile(path: string): Promise<void>;
+    }
+
+    /** Values kept for one document. */
+    interface DocumentPlace {
+      get(key: string): Promise<unknown>;
+      /** `undefined` or `null` deletes. */
+      set(key: string, value: unknown): Promise<void>;
+      delete(key: string): Promise<void>;
+      keys(): Promise<string[]>;
     }
 
     interface Secrets {

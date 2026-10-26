@@ -5,6 +5,7 @@ import { moveConversations } from "../ai/chat/chat-history";
 import { makeBlankTab, tabIsDirty } from "../document/doc-tabs";
 import type { TabState } from "./tabs/useTabState";
 import { isInside } from "../utils/path";
+import { notePathMoved } from "../plugins/app-bridge";
 
 /**
  * What happens to open tabs when their files change under them from inside
@@ -57,6 +58,7 @@ export function useDocumentActions(opts: {
         const next = moved(tab.path);
         if (tab.path && next) moveConversations(tab.path, next);
       }
+      void notePathMoved(from, to);
       setTabs((prev) =>
         prev.map((tab) => {
           const next = moved(tab.path);

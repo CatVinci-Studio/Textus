@@ -271,6 +271,39 @@
     };
   }
 
+  // What the plugin keeps for one document: one value in its global
+  // store, `doc:<path>`, that Textus moves when the document is renamed
+  // (store/document-data.ts).
+  function documentPlace(path) {
+    var key = "doc:" + String(path);
+    var global = storagePlace("global");
+    var all = function () {
+      return global.get(key).then(function (value) {
+        return value && typeof value === "object" ? value : {};
+      });
+    };
+    return {
+      get: function (name) {
+        return all().then(function (values) {
+          return values[String(name)];
+        });
+      },
+      set: function (name, value) {
+        return all().then(function (values) {
+          if (value === undefined || value === null) delete values[name];
+          else values[String(name)] = plain(value);
+          return global.set(key, Object.keys(values).length ? values : null);
+        });
+      },
+      delete: function (name) {
+        return this.set(name, null);
+      },
+      keys: function () {
+        return all().then(Object.keys);
+      },
+    };
+  }
+
   function log(level) {
     return function () {
       var message = Array.prototype.map
@@ -308,6 +341,7 @@
       storage: {
         global: storagePlace("global"),
         project: storagePlace("project"),
+        document: documentPlace,
       },
       secrets: {
         get: function (key) {

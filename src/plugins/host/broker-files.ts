@@ -2,7 +2,7 @@ import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
 import { basename } from "../../utils/path";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import { fromBase64, toBase64 } from "../store/files";
-import { emitPluginEvent, getWindowAccess } from "../app-bridge";
+import { emitPluginEvent, getWindowAccess, notePathMoved } from "../app-bridge";
 import { globToRegExp, isDocumentPath } from "../workspace/glob";
 import {
   parseFrontmatter,
@@ -148,7 +148,7 @@ export function fileHandlers(p: PluginScope) {
       window.dispatchEvent(
         new CustomEvent(FILE_WRITTEN_EVENT, { detail: source }),
       );
-      emitPluginEvent("fileRename", { from: source, to: target });
+      await notePathMoved(source, target);
       if (updateLinks !== true) return;
       const { documents } = await pluginsIpc.fsDocuments(p.id, root);
       for (const doc of documents) {

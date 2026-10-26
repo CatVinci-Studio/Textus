@@ -1,4 +1,5 @@
 import type { SentBlock } from "../ai/doc-blocks";
+import { moveDocumentData } from "./store/document-data";
 import type { EditProposal } from "../ai/types";
 
 /** Where something opens: a tab of its own, beside the tab in front, or
@@ -191,6 +192,14 @@ export function emitPluginEvent<K extends keyof PluginEventMap>(
 ): void {
   for (const listener of listeners.get(name) ?? [])
     (listener as Listener<K>)(data);
+}
+
+/** A document or folder was renamed or moved, by the window or a
+ *  plugin: plugins hear it (files.onDidRename), and what they keep for
+ *  its documents moves with it. */
+export async function notePathMoved(from: string, to: string): Promise<void> {
+  emitPluginEvent("fileRename", { from, to });
+  await moveDocumentData(from, to);
 }
 
 /** Whether any plugin listens to `name`: the window skips reading what
