@@ -7,10 +7,8 @@ const PUBLIC_RESPONSES_URL: &str = "https://api.openai.com/v1/responses";
 /// its stronger default from the provider catalog.
 pub const PUBLIC_API_MODEL: &str = "gpt-6-luna";
 
-/// Standard public OpenAI Responses API, authenticated with a plain user
-/// API key rather than Codex OAuth - the fallback path for users who'd
-/// rather paste a key than sign in with ChatGPT. `model` overrides
-/// PUBLIC_API_MODEL when set.
+/// Standard public OpenAI Responses API, authenticated with a plain API key
+/// rather than Codex OAuth. `model` overrides PUBLIC_API_MODEL when set.
 pub async fn call_completion(
     api_key: &str,
     instructions: String,
@@ -31,11 +29,8 @@ pub async fn call_completion(
     extract_response_text(res, "OpenAI").await
 }
 
-/// Runs one round-trip against the public Responses API with the full turn
-/// history and tool definitions - the API-key twin of
-/// `openai_codex::agent_step`, same wire format (see `responses_api`), just
-/// authenticated with a plain key. Streams (`stream: true`) so text and
-/// tool-call fragments surface through `on_event` as they're generated.
+/// Runs one streamed round-trip against the public Responses API with the full
+/// turn history and tool definitions.
 #[allow(clippy::too_many_arguments)]
 pub async fn agent_step(
     api_key: &str,

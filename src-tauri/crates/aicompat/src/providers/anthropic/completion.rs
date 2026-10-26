@@ -53,14 +53,9 @@ pub(crate) struct MessagesResponse {
     pub(crate) usage: ResponseUsage,
 }
 
-/// The body of a single-call request (completion, grammar check, the
-/// one-off writing calls). The system prompt ends in a cache breakpoint:
-/// completions fire on every typing pause and grammar checks on every
-/// paragraph, each with the same ~1,100 tokens of instructions in front of
-/// a few hundred tokens of text, and Haiku 5.5 caches a prefix from 512
-/// tokens - so every request after the first in five minutes reads the
-/// instructions at a tenth of the price. The user text after the
-/// breakpoint changes every time, so it is never marked.
+/// The body of a single-call request (completion, grammar check, one-off
+/// writing calls). The system prompt ends in a cache breakpoint, since these
+/// fire often with the same instructions in front of changing text.
 pub(crate) fn completion_request(
     auth: &AnthropicAuth,
     instructions: String,
@@ -82,10 +77,8 @@ pub(crate) fn completion_request(
             role: "user",
             content: user_text,
         }],
-        // Haiku 5.5 thinks by default, which is latency an inline
-        // suggestion can't afford; it accepts `disabled` at its default
-        // effort. Only for this model - a user-picked one may reject it
-        // (Opus 5.5 does, at every effort).
+        // Haiku thinks by default, which is latency an inline suggestion can't
+        // afford. Only for this model: a user-picked one may reject `disabled`.
         thinking: (model == COMPLETION_MODEL).then(|| json!({"type": "disabled"})),
     }
 }
@@ -103,8 +96,7 @@ pub async fn call_completion(
         .map(|(text, _)| text)
 }
 
-/// [`call_completion`] plus the request's token usage - what the live eval
-/// adds up to know what a run cost.
+/// [`call_completion`] plus the request's token usage.
 pub async fn call_completion_with_usage(
     auth: &AnthropicAuth,
     instructions: String,
@@ -157,9 +149,7 @@ pub(crate) struct ModelListResponse {
     pub(crate) last_id: Option<String>,
 }
 
-/// Lists available models for the agent model picker in Settings - every
-/// page of them (the endpoint returns 20 at a time by default, which
-/// silently cut the list short).
+/// Lists available models for the agent model picker, every page of them.
 pub async fn list_models(auth: &AnthropicAuth) -> Result<Vec<String>, String> {
     let client = crate::http::client();
     let mut entries = Vec::new();

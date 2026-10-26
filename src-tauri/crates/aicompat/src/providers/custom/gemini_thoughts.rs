@@ -1,9 +1,6 @@
-//! Gemini's OpenAI-compatible layer, asked for its thoughts
-//! (`include_thoughts`), sends them as the reply's text. Streamed, each
-//! thought chunk is marked `extra_content.google.thought`; whole, the text
-//! opens with them between `<think>` tags (Vertex AI, gemini-3.8-flash,
-//! 2026-10-22). Split out here, they go where every other provider's
-//! reasoning goes.
+//! Gemini's OpenAI-compatible layer, asked for its thoughts, sends them as the
+//! reply's text: marked per chunk when streamed, between `<think>` tags when
+//! whole. Split out here, they go where other providers' reasoning goes.
 
 use serde_json::Value;
 

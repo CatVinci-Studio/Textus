@@ -1,23 +1,12 @@
-//! Whether an address is on the public internet - the one check for every
-//! URL a model or a service hands Textus to fetch: web_fetch's pages (the
-//! app's ai/web/fetch.rs) and the pictures an image service leaves at a URL
-//! (images/fetch.rs). Strict: only global unicast passes, so a router's
-//! admin page, a cloud metadata service or a dev server on localhost stays
-//! out of reach whatever form its address is written in.
+//! Whether an address is on the public internet: the one check for every URL a
+//! model or a service hands Textus to fetch. Strict: only global unicast
+//! passes, whatever form the address is written in.
 
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-/// Whether `ip` is on the public internet. IPv4: not unspecified ("this
-/// network", 0/8), private (10/8, 172.16/12, 192.168/16), loopback, link-
-/// local, carrier-grade NAT (100.64/10), IETF assignments (192.0.0/24),
-/// documentation, the old 6to4 relay (192.88.99/24), benchmarking
-/// (198.18/15), multicast, reserved or broadcast. IPv6: an IPv4-mapped
-/// address is judged as the IPv4 address it carries; otherwise only global
-/// unicast (2000::/3) passes, less 6to4 (2002::/16), the special-purpose
-/// 2001::/23 (Teredo, benchmarking and others) and documentation
-/// (2001:db8::/32, 3fff::/20). That leaves out loopback, unspecified,
-/// IPv4-compatible, NAT64 (64:ff9b::/96 and /48), unique local, link-local,
-/// site-local and multicast, which all lie outside 2000::/3.
+/// Whether `ip` is on the public internet. An IPv4-mapped IPv6 address is
+/// judged as the IPv4 address it carries; otherwise only global unicast passes,
+/// less the special-purpose and documentation ranges.
 pub fn is_public(ip: IpAddr) -> bool {
     match ip {
         IpAddr::V4(ip) => is_public_v4(ip),

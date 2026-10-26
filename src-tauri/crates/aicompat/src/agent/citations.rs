@@ -7,10 +7,8 @@ pub(crate) const MARKER_OPEN: char = '\u{E000}';
 
 pub(crate) const MARKER_CLOSE: char = '\u{E001}';
 
-/// Where a step's text cites the `k`th (1-based) [`ProviderEvent::Citation`]
-/// it reported: the number between two private-use characters, which no
-/// model writes, so the caller can swap each for the `[n]` it gives that
-/// page across the conversation (see [`replace_citation_markers`]).
+/// Where a step's text cites its `k`th (1-based) [`ProviderEvent::Citation`]:
+/// the number between two private-use characters, which no model writes.
 pub fn citation_marker(k: usize) -> String {
     format!("{MARKER_OPEN}{k}{MARKER_CLOSE}")
 }
@@ -59,8 +57,7 @@ impl StepCitations {
 }
 
 /// A span of a reply's text that cites a page: character (not byte)
-/// offsets, end exclusive, as OpenAI-style `url_citation` annotations give
-/// them.
+/// offsets, end exclusive.
 pub struct CitedSpan<'a> {
     pub start: usize,
     pub end: usize,
@@ -68,12 +65,9 @@ pub struct CitedSpan<'a> {
     pub title: &'a str,
 }
 
-/// `text` with each cited span marked. Where a span is the inline link the
-/// provider wrote for its citation - OpenAI's "([site](url))", xAI's
-/// "[[1]](url)", OpenRouter's "[site](url)" - the link gives way to the
-/// marker; a span of plain prose keeps its words and gets the marker after
-/// them. A span that doesn't fit the text (a server counting otherwise)
-/// still has its page cited, at the end.
+/// `text` with each cited span marked. A span that is the provider's inline
+/// link for its citation gives way to the marker; plain prose keeps its words
+/// and gets the marker after. A span that doesn't fit is cited at the end.
 pub fn mark_cited_spans(
     text: &str,
     mut spans: Vec<CitedSpan<'_>>,

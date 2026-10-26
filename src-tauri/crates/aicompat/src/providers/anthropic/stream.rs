@@ -36,10 +36,8 @@ pub(crate) enum StreamBlock {
     Ignored,
 }
 
-/// Rebuilds the non-streaming response's `content` array from Messages API
-/// SSE events, reporting fragments through `on_event` as they arrive. Kept
-/// separate from the HTTP read so the event-to-block bookkeeping is unit
-/// testable with plain JSON fixtures.
+/// Rebuilds the non-streaming response's `content` array from Messages API SSE
+/// events, reporting fragments through `on_event` as they arrive.
 #[derive(Default)]
 pub(crate) struct StreamAccumulator {
     pub(crate) blocks: Vec<StreamBlock>,

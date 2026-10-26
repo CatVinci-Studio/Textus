@@ -42,8 +42,7 @@ pub fn is_thinking_refusal(error: &str) -> bool {
 
 /// Runs `step` with `thinking`; when the provider refuses the parameters,
 /// runs it once more without them and stops sending them to this model for
-/// the rest of the session - so a model the table is wrong about costs one
-/// failed request, not a broken chat.
+/// the rest of the session.
 pub async fn with_fallback<T, F, Fut>(
     provider_id: &str,
     model: &str,

@@ -1,7 +1,4 @@
-/// A small dark-themed HTML page shown in the browser after finishing an
-/// OAuth login, styled reasonably rather than a bare text response. Both the
-/// provider name and host app name are caller-supplied so this crate carries
-/// no assumptions about which app is embedding it.
+/// A small HTML page shown in the browser after finishing an OAuth login.
 pub fn success_page_html(provider_name: &str, app_name: &str) -> String {
     format!(
         r#"<!doctype html>

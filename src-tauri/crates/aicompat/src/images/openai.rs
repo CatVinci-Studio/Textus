@@ -1,6 +1,5 @@
 //! OpenAI's Images API, and the servers that copy it. GPT image models
-//! always answer in base64 and refuse `response_format`; other models
-//! behind a compatible server (DALL-E-style proxies, local servers) may
+//! always answer in base64 and refuse `response_format`; other models may
 //! answer with a link unless asked for base64, so they are asked.
 
 use super::{base64, join, malformed, Aspect, ImageApi, ImageTarget, Reply, Request};

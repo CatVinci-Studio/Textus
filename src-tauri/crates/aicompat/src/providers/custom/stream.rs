@@ -3,14 +3,9 @@
 
 use super::*;
 
-/// The ids a step's tool calls go by. OpenAI-compatible servers are free in
-/// what they send: local ones (Ollama, LM Studio) number calls from
-/// `call_0` in every reply, and some send no id at all. The app keys a
-/// proposal by its call's id - its preview, its card, its status in later
-/// requests - so a reused id put a new proposal in an old one's place and
-/// both went (a mock server that did, live stress test of a queue of
-/// requests), and a call with none was dropped. Each call keeps the id it
-/// was sent unless the conversation already has it, or it has none.
+/// The ids a step's tool calls go by. Some servers number calls from `call_0`
+/// in every reply or send no id at all, and the app keys a proposal by its
+/// call's id, so a call keeps its id unless it is taken or missing.
 #[derive(Default)]
 pub(crate) struct CallIds {
     pub(crate) taken: std::collections::HashSet<String>,
@@ -46,28 +41,24 @@ impl CallIds {
     }
 }
 
-/// One tool call under construction while a Chat Completions stream is
-/// being read - OpenAI-compatible servers send the id/name in the first
-/// fragment and the JSON arguments in pieces after it, all addressed by
+/// One tool call under construction while a Chat Completions stream is read: id
+/// and name come first, the JSON arguments in pieces after, all addressed by
 /// array index rather than id.
 #[derive(Default)]
 pub(crate) struct StreamToolCall {
-    /// The id the server sent, then (once started) the one it goes by
-    /// (CallIds).
+    /// The id the server sent, then (once started) the one it goes by.
     pub(crate) id: String,
     pub(crate) name: String,
     pub(crate) args: String,
     /// ToolStart is reported once, when both id and name have arrived.
     pub(crate) started: bool,
     /// What the server sent beside the call for it to have back
-    /// (`extra_content`: Gemini's thought signature), see [`call_extra`].
+    /// (`extra_content`: Gemini's thought signature).
     pub(crate) extra: Option<Value>,
 }
 
-/// Rebuilds the non-streaming `choices[0].message` result from Chat
-/// Completions SSE chunks, reporting fragments through `on_event` as they
-/// arrive. Separate from the HTTP read so the chunk bookkeeping is unit
-/// testable with plain JSON fixtures.
+/// Rebuilds the non-streaming `choices[0].message` result from Chat Completions
+/// SSE chunks, reporting fragments through `on_event`.
 #[derive(Default)]
 pub(crate) struct ChatStreamAccumulator {
     pub(crate) text: String,
@@ -116,7 +107,7 @@ impl ChatStreamAccumulator {
         }
 
         if let Some(text) = delta.get("content").and_then(|c| c.as_str()) {
-            // Gemini's thoughts come as text, marked (gemini_thoughts).
+            // Gemini's thoughts come as text, marked.
             if gemini_thoughts::is_thought(delta) {
                 self.add(text, "", on_event);
             } else {
