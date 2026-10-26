@@ -661,6 +661,7 @@ test("Select Row from the right-click menu highlights the clicked row", async ({
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await editor.locator("td", { hasText: "a" }).click();
   await editor.locator("td", { hasText: "d" }).click({ button: "right" });
+  await page.locator(".context-menu-item", { hasText: /^行$/ }).click();
   await page.locator(".context-menu-item", { hasText: "选中整行" }).click();
   await expect(editor.locator("td.selectedCell")).toHaveText(["c", "d"]);
   const tint = await editor

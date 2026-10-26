@@ -102,36 +102,48 @@ const options = (pos: number | null): ContextMenuOptions => ({
   toggleFindReplace: () => {},
   openTableDialog: () => {},
 });
-const labels = (items: ReturnType<typeof buildContextMenuItems>) =>
-  items.map((item) => (item === "separator" ? "-" : item.label));
+const labels = (items: ReturnType<typeof buildContextMenuItems>): string[] =>
+  items.map((item) =>
+    item === "separator"
+      ? "-"
+      : "items" in item
+        ? `${item.label} › ${labels(item.items).join(" | ")}`
+        : item.label,
+  );
 
 describe("the editor menu", () => {
-  it("keeps the desktop's table menu as it was, with Copy as Markdown", () => {
+  it("puts a table's own actions first and the rest in submenus", () => {
     const { run } = editorAt(caretIn("1"));
     expect(labels(buildContextMenuItems(run, options(null)))).toEqual([
+      t.insertRowBelow,
+      t.insertColumnRight,
+      `${t.tableRowGroup} › ${t.insertRowAbove} | ${t.selectRow} | - | ${t.deleteRow}`,
+      `${t.tableColumnGroup} › ${t.insertColumnLeft} | - | ${t.alignLeft} | ${t.alignCenter} | ${t.alignRight} | - | ${t.selectColumn} | - | ${t.deleteColumn}`,
+      t.deleteTable,
+      "-",
       t.cut,
       t.copy,
       t.copyAsMarkdown,
       t.paste,
-      t.selectAll,
+    ]);
+  });
+
+  it("keeps the text's menu short: Insert and the AI in submenus", () => {
+    const { run } = editorAt(caretIn("text"));
+    const ai = ["Ask", "Continue"].map((label) => ({
+      label,
+      onSelect: () => {},
+    }));
+    expect(
+      labels(buildContextMenuItems(run, { ...options(null), aiItems: ai })),
+    ).toEqual([
+      t.cut,
+      t.copy,
+      t.copyAsMarkdown,
+      t.paste,
       "-",
-      t.findReplace,
-      "-",
-      t.alignLeft,
-      t.alignCenter,
-      t.alignRight,
-      "-",
-      t.selectRow,
-      t.selectColumn,
-      "-",
-      t.insertRowAbove,
-      t.insertRowBelow,
-      t.insertColumnLeft,
-      t.insertColumnRight,
-      "-",
-      t.deleteRow,
-      t.deleteColumn,
-      t.deleteTable,
+      `${t.menuGroupInsert} › ${t.insertBulletList} | ${t.insertOrderedList} | ${t.insertBlockquote} | ${t.insertCodeBlock} | ${t.insertTable}`,
+      `${t.menuTextusAi} › Ask | Continue`,
     ]);
   });
 
