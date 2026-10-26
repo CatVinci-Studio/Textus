@@ -1312,6 +1312,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "プラグインパッケージ（.textusplugin）は Textus にコピーされます。プラグインフォルダはその場所から読み込まれ、作成中のプラグインを試せます。再読み込みもその場所から行います。",
   pluginsInstallFile: "ファイルからインストール…",
   pluginsLoadFolder: "プラグインフォルダを読み込む…",
+  pluginsOpenScripts: "スクリプトフォルダを開く",
+  pluginsDescribeLabel: "自分で作る",
+  pluginsDescribePlaceholder: "やりたいことを説明…",
+  pluginsDescribeMake: "AI で作る",
+  pluginsDescribeAsk: "次のことをするプラグインを作って：",
   pluginPackageFilter: "Textus プラグイン",
   pluginsInstalledGroup: "インストール済み",
   pluginOpenOffer:

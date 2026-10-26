@@ -89,6 +89,11 @@ pub fn plugins_installed(app: tauri::AppHandle) -> Result<Vec<InstalledPlugin>, 
             }
         }
     }
+    for script in super::scripts::scripts(&app) {
+        if !out.iter().any(|p| p.id == script.id) {
+            out.push(script);
+        }
+    }
     out.sort_by(|a, b| a.id.cmp(&b.id));
     Ok(out)
 }
@@ -352,10 +357,14 @@ pub fn plugin_load_dev(app: tauri::AppHandle, path: String) -> Result<InstalledP
 pub fn plugin_dev_stamp(app: tauri::AppHandle, id: String) -> Result<Option<f64>, String> {
     require_id(&id)?;
     let state = state::read(&app);
-    let Some(path) = state.plugins.get(&id).and_then(|p| p.dev_path.clone()) else {
-        return Ok(None);
-    };
-    Ok(newest_change(&PathBuf::from(path), 0))
+    if let Some(path) = state.plugins.get(&id).and_then(|p| p.dev_path.clone()) {
+        return Ok(newest_change(&PathBuf::from(path), 0));
+    }
+    // A script runs from the scripts folder: a change to one of them
+    // reloads it.
+    Ok(super::scripts::script_file(&app, &id)
+        .and_then(|_| super::scripts::scripts_dir(&app).ok())
+        .and_then(|dir| newest_change(&dir, 0)))
 }
 
 fn newest_change(dir: &std::path::Path, depth: usize) -> Option<f64> {
@@ -404,6 +413,11 @@ pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String>
         std::fs::remove_dir_all(&data).map_err(|e| e.to_string())?;
     }
     super::store::forget_global(&app, &id)?;
+    // A script's file goes to the Trash, or it would be found again.
+    #[cfg(desktop)]
+    if let Some(file) = super::scripts::script_file(&app, &id) {
+        trash::delete(&file).map_err(|e| e.to_string())?;
+    }
     super::files::forget_secrets(&app, &id)
 }
 

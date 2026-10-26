@@ -165,6 +165,27 @@ test("a plugin's page asks the AI to change it, in Create mode", async ({
   );
 });
 
+test("Make your own hands what it should do to Create mode", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-manage-plugins"),
+  );
+  const make = page.getByRole("button", { name: "Make with AI" });
+  await expect(make).toBeDisabled();
+  await page
+    .getByRole("textbox", { name: "Make your own" })
+    .fill("count the words of the document");
+  await make.click();
+  await expect(page.locator(".settings-panel")).toHaveCount(0);
+  await expect(page.locator(".agent-panel .inline-chat-input")).toHaveValue(
+    "Make a plugin that does this: count the words of the document",
+  );
+});
+
 test("a plugin written in the conversation can't take someone else's id", async ({
   page,
 }) => {

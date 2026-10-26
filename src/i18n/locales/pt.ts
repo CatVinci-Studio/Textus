@@ -1361,6 +1361,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Um pacote de plugin (.textusplugin) é copiado para o Textus. Uma pasta de plugin é carregada onde está, para testar um que você esteja escrevendo; ele é recarregado de lá.",
   pluginsInstallFile: "Instalar de um arquivo…",
   pluginsLoadFolder: "Carregar pasta de plugin…",
+  pluginsOpenScripts: "Abrir pasta de scripts",
+  pluginsDescribeLabel: "Faça o seu",
+  pluginsDescribePlaceholder: "Descreva o que deve fazer…",
+  pluginsDescribeMake: "Fazer com IA",
+  pluginsDescribeAsk: "Faça um plugin que faça isto: ",
   pluginPackageFilter: "Plugin do Textus",
   pluginsInstalledGroup: "Instalados",
   pluginOpenOffer:

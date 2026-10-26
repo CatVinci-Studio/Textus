@@ -1380,6 +1380,11 @@ para usar una.
     "Un paquete de complemento (.textusplugin) se copia en Textus. Una carpeta de complemento se carga donde está, para probar uno que estés escribiendo; se recarga desde allí.",
   pluginsInstallFile: "Instalar desde archivo…",
   pluginsLoadFolder: "Cargar carpeta de complemento…",
+  pluginsOpenScripts: "Abrir la carpeta de scripts",
+  pluginsDescribeLabel: "Crea el tuyo",
+  pluginsDescribePlaceholder: "Describe lo que debe hacer…",
+  pluginsDescribeMake: "Hacer con IA",
+  pluginsDescribeAsk: "Haz un plugin que haga esto: ",
   pluginPackageFilter: "Complemento de Textus",
   pluginsInstalledGroup: "Instalados",
   pluginOpenOffer:

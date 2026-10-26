@@ -1349,6 +1349,11 @@ type /name in a conversation to use one.
     "A plugin package (.textusplugin) is copied into Textus. A plugin folder is loaded where it is, for trying out one you are writing; it reloads from there.",
   pluginsInstallFile: "Install from file…",
   pluginsLoadFolder: "Load a plugin folder…",
+  pluginsOpenScripts: "Open Scripts Folder",
+  pluginsDescribeLabel: "Make your own",
+  pluginsDescribePlaceholder: "Describe what it should do…",
+  pluginsDescribeMake: "Make with AI",
+  pluginsDescribeAsk: "Make a plugin that does this: ",
   pluginPackageFilter: "Textus plugin",
   pluginsInstalledGroup: "Installed",
   pluginOpenOffer:

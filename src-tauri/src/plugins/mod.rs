@@ -21,6 +21,8 @@
 //! and a project's `.textus/plugins/<id>/`. Official plugins are installed
 //! from the catalog (catalog.rs) like any other. A plugin loaded from a
 //! folder in developer mode stays where it is: `state.json` names its path.
+//! A script - a plugin in one file - is in `<config>/textus/scripts/`
+//! (scripts.rs).
 
 pub mod access;
 pub mod ai_tools;
@@ -31,6 +33,7 @@ pub mod install;
 pub mod metadata;
 pub mod moved_skills;
 pub mod read_tool;
+pub mod scripts;
 pub mod state;
 pub mod store;
 pub mod uri;

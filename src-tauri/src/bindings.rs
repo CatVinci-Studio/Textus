@@ -170,6 +170,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::plugins::install::plugin_load_dev,
                 crate::plugins::install::plugin_uninstall,
                 crate::plugins::install::plugin_pick_package,
+                crate::plugins::scripts::plugin_open_scripts_dir,
                 crate::plugins::catalog::plugin_catalog,
                 crate::plugins::catalog::plugin_catalog_cached,
                 crate::plugins::catalog::skill_catalog,

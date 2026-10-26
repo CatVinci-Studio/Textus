@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { askAi } from "../../ai/chat/ask-ai";
+import { DescribePlugin } from "./DescribePlugin";
 import type { SettingsPageProps } from "./types";
 import { Byline, PluginPage, statusText } from "./PluginPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
@@ -136,6 +137,10 @@ export function PluginsPage({
                 label: t.pluginsLoadFolder,
                 onSelect: () => void installFile(true),
               },
+              {
+                label: t.pluginsOpenScripts,
+                onSelect: () => void attempt(() => pluginsIpc.openScriptsDir()),
+              },
             ]
           : []
       }
@@ -143,6 +148,7 @@ export function PluginsPage({
       installed={
         snapshot.records.length ? (
           <>
+            <DescribePlugin t={t} onAsked={onClose} />
             <ToggleRow
               label={t.pluginsAllLabel}
               help={t.pluginsAllHelp}
@@ -158,7 +164,10 @@ export function PluginsPage({
             )}
           </>
         ) : (
-          <p className="plugin-empty">{t.pluginsNone}</p>
+          <>
+            <DescribePlugin t={t} onAsked={onClose} />
+            <p className="plugin-empty">{t.pluginsNone}</p>
+          </>
         )
       }
     />

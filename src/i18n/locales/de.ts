@@ -1370,6 +1370,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Ein Plugin-Paket (.textusplugin) wird in Textus kopiert. Ein Plugin-Ordner wird an Ort und Stelle geladen, um ein Plugin auszuprobieren, an dem du schreibst; es wird von dort neu geladen.",
   pluginsInstallFile: "Aus Datei installieren…",
   pluginsLoadFolder: "Plugin-Ordner laden…",
+  pluginsOpenScripts: "Skriptordner öffnen",
+  pluginsDescribeLabel: "Selbst machen",
+  pluginsDescribePlaceholder: "Beschreiben, was es tun soll…",
+  pluginsDescribeMake: "Mit KI machen",
+  pluginsDescribeAsk: "Mach ein Plugin, das Folgendes tut: ",
   pluginPackageFilter: "Textus-Plugin",
   pluginsInstalledGroup: "Installiert",
   pluginOpenOffer:

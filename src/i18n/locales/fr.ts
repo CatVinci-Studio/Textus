@@ -1404,6 +1404,11 @@ utiliser une.
     "Un paquet d’extension (.textusplugin) est copié dans Textus. Un dossier d’extension est chargé là où il se trouve, pour essayer celle que vous écrivez ; il est rechargé depuis cet endroit.",
   pluginsInstallFile: "Installer depuis un fichier…",
   pluginsLoadFolder: "Charger un dossier d’extension…",
+  pluginsOpenScripts: "Ouvrir le dossier des scripts",
+  pluginsDescribeLabel: "Créer le vôtre",
+  pluginsDescribePlaceholder: "Décrivez ce qu’il doit faire…",
+  pluginsDescribeMake: "Créer avec l’IA",
+  pluginsDescribeAsk: "Crée un plugin qui fait ceci : ",
   pluginPackageFilter: "Extension Textus",
   pluginsInstalledGroup: "Installées",
   pluginOpenOffer:

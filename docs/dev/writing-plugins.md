@@ -37,8 +37,37 @@ of typing. The design behind the system is
 3. Change `host.js` and save: a folder you loaded is read again as it
    changes. Its page in Settings shows what it logged (`ctx.log`).
 
-Or ask Textus AI: in **Create** mode, "a plugin that …" writes one you can
-install from the reply and change in the next message.
+Or ask Textus AI: **Settings › Extensions › Plugins › Make your own**, or
+"a plugin that …" in **Create** mode, writes one you can install from the
+reply and change in the next message.
+
+### A script: a plugin in one file
+
+For something small, skip the folder and the manifest: put a `.js` file in
+the scripts folder (**Install a plugin › Open Scripts Folder**, in the
+global config folder), with what a manifest would say in a comment at its
+top:
+
+```js
+// ==TextusScript==
+// @name        Word Count
+// @description Counts the words of the document in front.
+// @permission  editor.read
+// @command     count Count Words
+// ==/TextusScript==
+exports.activate = function () {
+  textus.commands.register("local.word-count.count", async function () {
+    const text = (await textus.editor.getText()) ?? "";
+    textus.ui.notice(`${text.split(/\s+/).filter(Boolean).length} words`);
+  });
+};
+```
+
+Its id is `local.<file name>` unless `@id` gives one; `@command <name>
+<title>` adds `<id>.<name>`; `@permission` and `@command` can repeat. A
+script is listed under **Made by you**, starts off, asks for its
+permissions like any plugin, runs once Textus has started, and is read
+again when it changes. Uninstalling it moves the file to the Trash.
 
 ## The manifest
 

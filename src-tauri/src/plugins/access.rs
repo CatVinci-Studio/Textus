@@ -97,7 +97,11 @@ pub(super) fn plugin_home(
     if let Some(path) = state.plugins.get(id).and_then(|p| p.dev_path.clone()) {
         return Ok(PathBuf::from(path));
     }
-    Ok(plugins_root(app)?.join(id))
+    let installed = plugins_root(app)?.join(id);
+    if !installed.is_dir() && super::scripts::script_file(app, id).is_some() {
+        return super::scripts::scripts_dir(app);
+    }
+    Ok(installed)
 }
 
 pub(super) async fn read_bytes(path: PathBuf) -> Result<Response, String> {

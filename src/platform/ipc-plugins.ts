@@ -88,6 +88,9 @@ export const plugins = {
    *  picker. Desktop only. */
   pickPackage: (folder: boolean, filterName: string) =>
     desktopActionCommand("plugin_pick_package", folder, filterName),
+  /** Settings › Plugins › Open Scripts Folder (plugins/scripts.rs).
+   *  Desktop only. */
+  openScriptsDir: () => desktopActionCommand("plugin_open_scripts_dir"),
   file: (id: string, rel: string) =>
     bytes(call<ArrayBuffer>("plugin_file", { id, rel })),
   readResource: (id: string, path: string) =>

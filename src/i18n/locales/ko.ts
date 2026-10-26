@@ -1300,6 +1300,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "플러그인 패키지(.textusplugin)는 Textus에 복사됩니다. 플러그인 폴더는 그 자리에서 불러오므로 작성 중인 플러그인을 시험해 볼 수 있으며, 다시 불러올 때도 그 자리에서 불러옵니다.",
   pluginsInstallFile: "파일에서 설치…",
   pluginsLoadFolder: "플러그인 폴더 불러오기…",
+  pluginsOpenScripts: "스크립트 폴더 열기",
+  pluginsDescribeLabel: "직접 만들기",
+  pluginsDescribePlaceholder: "원하는 기능을 설명…",
+  pluginsDescribeMake: "AI로 만들기",
+  pluginsDescribeAsk: "다음을 하는 플러그인을 만들어 줘: ",
   pluginPackageFilter: "Textus 플러그인",
   pluginsInstalledGroup: "설치됨",
   pluginOpenOffer:
