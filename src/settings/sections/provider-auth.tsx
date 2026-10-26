@@ -160,7 +160,7 @@ export function OauthPanel({
           </div>
           {unofficial && (
             <div className="settings-row-hint settings-signin-unofficial">
-              {t.signInUnofficial.replace("{name}", label)}
+              {t.signInExperimental}
             </div>
           )}
         </div>

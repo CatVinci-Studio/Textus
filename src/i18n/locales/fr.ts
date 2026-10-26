@@ -577,8 +577,7 @@ utiliser une.
   accountNotConnected: "Non connecté",
   accountConnectedAs: "Connecté",
   signInTemplate: "Se connecter avec {name}",
-  signInUnofficial:
-    "Ce n’est pas une connexion officielle : {name} peut la bloquer à tout moment, ou la facturer en usage supplémentaire plutôt que sur votre forfait. Une clé d’API fonctionne toujours.",
+  signInExperimental: "Fonction expérimentale : à utiliser avec prudence.",
   logoutButton: "Se déconnecter",
   loggingIn: "En attente de la connexion dans le navigateur…",
   loginLinkHint:

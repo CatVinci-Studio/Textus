@@ -510,8 +510,7 @@ export default {
   accountNotConnected: "未登入",
   accountConnectedAs: "已登入",
   signInTemplate: "使用 {name} 登入",
-  signInUnofficial:
-    "這不是官方提供的登入方式：{name} 隨時可能讓它失效，或者按額外用量另行計費、不算在訂閱額度內。用 API 金鑰則始終可用。",
+  signInExperimental: "試驗性功能，謹慎使用。",
   logoutButton: "登出",
   loggingIn: "正在等待瀏覽器完成登入…",
   loginLinkHint: "瀏覽器沒有開啟？在這台電腦的瀏覽器裡開啟這個連結：",

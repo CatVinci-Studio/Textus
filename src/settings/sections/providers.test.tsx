@@ -163,9 +163,9 @@ describe("account sign-in", () => {
     auth: ["oauth"],
   } as ProviderCatalogEntry;
 
-  it("says under an unofficial sign-in that it may stop, and only there", () => {
+  it("marks an unofficial sign-in experimental, and only that one", () => {
     const t = resolveStrings("en");
-    const note = t.signInUnofficial.replace("{name}", "Claude");
+    const note = t.signInExperimental;
     const { unmount } = render(
       <ProviderAuthPanel
         t={t}

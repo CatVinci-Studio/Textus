@@ -1,3 +1,3 @@
 ### Improved
 
-- Signing in with a Claude account says that it isn't an official sign-in: Anthropic may stop it working, or bill it apart from your plan. An API key always works.
+- Signing in with a Claude account is marked experimental: it isn't a sign-in Anthropic offers other apps. An API key is the dependable way.
