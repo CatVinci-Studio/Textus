@@ -2,6 +2,7 @@ import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
 import {
   type ContentWidth,
+  type ImageAlign,
   UI_TEXT_SCALES,
   type UiTextScale,
   type ColorSwatchMode,
@@ -62,6 +63,19 @@ export function EditorPage({
             <option value="auto">{t.contentWidthAuto}</option>
             <option value="standard">{t.contentWidthStandard}</option>
             <option value="full">{t.contentWidthFull}</option>
+          </Select>
+        </SettingRow>
+        <SettingRow label={t.imageAlignLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.imageAlignLabel}
+            value={settings.imageAlign}
+            onChange={(e) =>
+              setSettings({ imageAlign: e.target.value as ImageAlign })
+            }
+          >
+            <option value="center">{t.imageAlignCenter}</option>
+            <option value="left">{t.imageAlignLeft}</option>
           </Select>
         </SettingRow>
         {/* A phone's UI is sized by iOS's own text styles instead. */}

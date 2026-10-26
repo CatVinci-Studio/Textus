@@ -253,6 +253,23 @@ describe("buildStandaloneHtml", () => {
   });
 });
 
+describe("buildStandaloneHtml image alignment", () => {
+  it("keeps the image alignment the document is shown with", () => {
+    const root = document.documentElement;
+    expect(buildStandaloneHtml("a", "<p>x</p>", "")).not.toContain(
+      "data-image-align",
+    );
+    root.setAttribute("data-image-align", "left");
+    try {
+      expect(buildStandaloneHtml("a", "<p>x</p>", "")).toContain(
+        'data-image-align="left"',
+      );
+    } finally {
+      root.removeAttribute("data-image-align");
+    }
+  });
+});
+
 describe("exportPdf", () => {
   const t = {
     pdfPreparing: "Preparing PDF…",
