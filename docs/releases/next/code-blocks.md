@@ -5,6 +5,7 @@
 
 ### Fixed
 
+- Line numbers in code blocks stay beside their lines when the document is zoomed in or out.
 - Pasted code keeps its lines: code with Chinese comments or long lines no longer has some of its lines run together.
 - A code block takes its new colours as soon as you pick its language, instead of after the next edit.
 - AI completion no longer pops up while you type in a code block.
