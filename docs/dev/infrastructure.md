@@ -31,7 +31,7 @@ In this repository (`.github/workflows/`):
 | `mirror-downloads.yml`     | after a stable release, or by hand                    | copies the installers to the website's download bucket                             |
 | `update-beta-manifest.yml` | after every release, rc included, or by hand          | points the beta update channel's `textus-beta.json` at the newest release          |
 | `update-arch-repo.yml`     | after a stable release, or by hand                    | asks `arch-repo` to serve the new `textus-bin`                                     |
-| `deploy-playground.yml`    | pushes to `main` that change the playground           | deploys textus.catvinci.com/playground/ ([below](#playground))                     |
+| `deploy-playground.yml`    | `release.yml`, after the newest stable release        | deploys textus.catvinci.com/playground/ at that tag ([below](#playground))         |
 | `ios-release.yml`          | an `ios-vX.Y.Z` tag                                   | builds the iOS app and uploads it to TestFlight ([ios-release.md](ios-release.md)) |
 | `sync-models.yml`          | Mondays 03:00 UTC                                     | refreshes the AI providers' model lists and opens a pull request if they changed   |
 | `audit.yml`                | Mondays 04:00 UTC                                     | checks npm and Rust dependencies for advisories; opens an issue if it finds any    |
@@ -79,12 +79,12 @@ on the route `textus.catvinci.com/playground*` (zone catvinci.com). Its
 configuration is `wrangler.playground.jsonc`; `npm run build:playground`
 writes the page into `dist-playground/playground/`, and the Worker serves
 `dist-playground/` as the site root, so the files keep their `/playground/`
-paths. `deploy-playground.yml` deploys it on every push to `main` that can
-change it (or when run by hand), then checks that the live page names the
-script it just built. The playground therefore follows `main`, not the
-latest release.
+paths. `deploy-playground.yml` builds it at a release tag and deploys it,
+then checks that the live page names the script it just built.
+`release.yml` calls it after publishing the newest stable release, so the
+playground follows the latest stable version, not `main`. Run it by hand
+with a tag to redeploy one.
 
-This replaces the first deploy, which was uploaded by hand on 2026-10-18.
 The route isn't in the configuration: the deploy token can't change routes,
 and a deploy without one leaves it as it is. Change it in the dashboard,
 under **Workers & Pages › textus-playground › Settings › Domains & Routes**.
