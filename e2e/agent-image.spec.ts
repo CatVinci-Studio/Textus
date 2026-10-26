@@ -180,6 +180,7 @@ test("Illustrate this paragraph asks for a picture of the paragraph right-clicke
     ai_generated_image: { mime: "image/png", ext: "png", dataBase64: PNG },
   });
   await page.locator(`${editor} p`).first().click({ button: "right" });
+  await menuItem(page, "Textus AI").click();
   await menuItem(page, "Illustrate this paragraph").click();
   await expect(page.locator(pending)).toHaveCount(1, { timeout: 10_000 });
   const [sent] = (await calls(page, "ai_agent_message")) as unknown as {
@@ -196,6 +197,7 @@ test("Illustrate this paragraph asks for a picture of the paragraph right-clicke
 test("without an image model the menu offers no picture", async ({ page }) => {
   await open(page, "");
   await page.locator(`${editor} p`).first().click({ button: "right" });
+  await menuItem(page, "Textus AI").click();
   await expect(menuItem(page, "Ask AI…")).toBeVisible();
   await expect(menuItem(page, "Illustrate this paragraph")).toHaveCount(0);
 });

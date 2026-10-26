@@ -175,17 +175,49 @@ export function tableLayoutItems(run: EditorRunner, t: Strings): MenuEntry[] {
   ];
 }
 
-/** Inserting and deleting rows and columns. */
-export function tableEditItems(run: EditorRunner, t: Strings): MenuEntry[] {
+/** A table's right-click: the two most used additions at hand, the rest
+ *  of a row's and a column's actions in their submenus. */
+export function tableMenuItems(run: EditorRunner, t: Strings): MenuEntry[] {
   const table = (action: TableAction) => () => runTableAction(run, action);
   return [
-    { label: t.insertRowAbove, onSelect: table("row-above") },
     { label: t.insertRowBelow, onSelect: table("row-below") },
-    { label: t.insertColumnLeft, onSelect: table("column-left") },
     { label: t.insertColumnRight, onSelect: table("column-right") },
-    "separator",
-    { label: t.deleteRow, onSelect: table("delete-row"), danger: true },
-    { label: t.deleteColumn, onSelect: table("delete-column"), danger: true },
+    {
+      label: t.tableRowGroup,
+      items: [
+        { label: t.insertRowAbove, onSelect: table("row-above") },
+        { label: t.selectRow, onSelect: () => selectTableLine(run, "row") },
+        "separator",
+        { label: t.deleteRow, onSelect: table("delete-row"), danger: true },
+      ],
+    },
+    {
+      label: t.tableColumnGroup,
+      items: [
+        { label: t.insertColumnLeft, onSelect: table("column-left") },
+        "separator",
+        { label: t.alignLeft, onSelect: () => alignTableColumn(run, "left") },
+        {
+          label: t.alignCenter,
+          onSelect: () => alignTableColumn(run, "center"),
+        },
+        {
+          label: t.alignRight,
+          onSelect: () => alignTableColumn(run, "right"),
+        },
+        "separator",
+        {
+          label: t.selectColumn,
+          onSelect: () => selectTableLine(run, "column"),
+        },
+        "separator",
+        {
+          label: t.deleteColumn,
+          onSelect: table("delete-column"),
+          danger: true,
+        },
+      ],
+    },
     { label: t.deleteTable, onSelect: table("delete-table"), danger: true },
   ];
 }

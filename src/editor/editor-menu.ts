@@ -7,7 +7,7 @@ import {
   wrapInHeadingCommand,
 } from "@milkdown/kit/preset/commonmark";
 import { insertTableCommand } from "@milkdown/kit/preset/gfm";
-import type { ContextMenuItem } from "./ContextMenu";
+import type { ContextMenuEntry, ContextMenuItem } from "./ContextMenu";
 import { contributedMenuItems } from "./editor-menu-items";
 export {
   registerEditorMenuItems,
@@ -22,8 +22,8 @@ import type { Strings } from "../i18n/strings";
 import {
   inTable,
   moveCaretToClickedCell,
-  tableEditItems,
   tableLayoutItems,
+  tableMenuItems,
 } from "./editor-menu-tables";
 import { imageFileItems, imageWidthItems } from "./editor-menu-images";
 export {
@@ -40,7 +40,7 @@ export {
 // The editor commands behind the right-click, Format and Edit menus, and
 // the right-click menu itself.
 
-export type MenuEntry = ContextMenuItem | "separator";
+export type MenuEntry = ContextMenuEntry;
 
 // CmdKey<any>: the preset command keys vary in payload type (some
 // unknown, some undefined) and all are called here without a payload.
@@ -160,45 +160,46 @@ export function buildContextMenuItems(
     imageFileItems(t, options.imageLocation ?? null),
     imagePos === null ? [] : (options.pictureAiItems ?? []),
   );
-  if (imageItems.length > 0) imageItems.push("separator");
-  const clipboardItems: MenuEntry[] = [
+  const clipboard: MenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
     { label: t.copy, onSelect: () => options.copyOrCut(false) },
     { label: t.copyAsMarkdown, onSelect: options.copyAsMarkdown },
     { label: t.paste, onSelect: options.paste },
-    ...withSeparator(
-      options.addNote && selectedText(run)
-        ? [{ label: t.ownNoteAdd, onSelect: options.addNote }]
-        : [],
-    ),
-    ...withSeparator(
-      options.ownChanges
-        ? [
-            { label: t.trackAcceptAll, onSelect: options.ownChanges.acceptAll },
-            { label: t.trackRejectAll, onSelect: options.ownChanges.rejectAll },
-          ]
-        : [],
-    ),
-    ...withSeparator(contributedMenuItems({ selectedText: selectedText(run) })),
-    ...generalItems(options),
+    ...(options.addNote && selectedText(run)
+      ? [{ label: t.ownNoteAdd, onSelect: options.addNote }]
+      : []),
   ];
+  const ownChanges: MenuEntry[] = options.ownChanges
+    ? [
+        { label: t.trackAcceptAll, onSelect: options.ownChanges.acceptAll },
+        { label: t.trackRejectAll, onSelect: options.ownChanges.rejectAll },
+      ]
+    : [];
+  // What was clicked on comes first; the rest waits in submenus.
+  const first = inTable(run) ? tableMenuItems(run, t) : imageItems;
+  const insert: MenuEntry[] = inTable(run)
+    ? []
+    : [{ label: t.menuGroupInsert, items: insertItems(run, options) }];
+  return joinGroups(
+    first,
+    clipboard,
+    ownChanges,
+    [...insert, ...grouped(t.menuTextusAi, options.aiItems)],
+    grouped(
+      t.menuPlugins,
+      contributedMenuItems({ selectedText: selectedText(run) }),
+      2,
+    ),
+  );
+}
 
-  if (!inTable(run)) {
-    return [
-      ...imageItems,
-      ...clipboardItems,
-      "separator",
-      ...insertItems(run, options),
-    ];
-  }
-  return [
-    ...imageItems,
-    ...clipboardItems,
-    "separator",
-    ...tableLayoutItems(run, t),
-    "separator",
-    ...tableEditItems(run, t),
-  ];
+/** Items as one submenu once there are more than `max`. */
+function grouped(
+  label: string,
+  items: ContextMenuItem[],
+  max = 1,
+): MenuEntry[] {
+  return items.length > max ? [{ label, items }] : items;
 }
 
 /**
@@ -240,11 +241,6 @@ function joinGroups(...groups: MenuEntry[][]): MenuEntry[] {
     .flatMap((group, i) =>
       i === 0 ? group : ["separator" as const, ...group],
     );
-}
-
-/** A group of items with the separator before it, or nothing. */
-function withSeparator(items: ContextMenuItem[]): MenuEntry[] {
-  return items.length > 0 ? ["separator", ...items] : [];
 }
 
 function selectedText(run: EditorRunner): string {
@@ -289,7 +285,7 @@ export function insertList(
 function insertItems(
   run: EditorRunner,
   options: ContextMenuOptions,
-): MenuEntry[] {
+): ContextMenuItem[] {
   const { t } = options;
   return [
     {
