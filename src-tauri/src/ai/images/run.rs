@@ -334,7 +334,7 @@ impl ImageRun {
         &'a self,
         document: &'a crate::ai::doc_blocks::Document,
         proposed: ProposedText<'a>,
-        channel: &'a Channel<StreamEvent>,
+        channel: &'a dyn crate::ai::agent::EventSink,
     ) -> Tool<'a> {
         let proposed = std::sync::Arc::new(proposed);
         Tool {
@@ -355,12 +355,12 @@ impl ImageRun {
         call: ToolCall,
         document: &crate::ai::doc_blocks::Document,
         proposed: &ProposedText<'_>,
-        channel: &Channel<StreamEvent>,
+        channel: &dyn crate::ai::agent::EventSink,
     ) -> ToolOutput {
         // The provider may not have streamed the call's start; the
         // frontend says "Generating an image…" from this.
         let announce = || {
-            let _ = channel.send(StreamEvent::ToolStart {
+            channel.send(StreamEvent::ToolStart {
                 call_id: call.call_id.clone(),
                 name: call.name.clone(),
             });

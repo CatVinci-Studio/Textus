@@ -41,17 +41,29 @@ pub enum StreamEvent {
     },
 }
 
-/// Forwards a provider-level fragment onto the frontend channel. Send failures
-/// are ignored: a closed webview must not fail the agent loop. A native search
+/// Where a request's live events go: the window's channel on the desktop,
+/// a test's or a server's own sink elsewhere.
+pub(crate) trait EventSink: Send + Sync {
+    /// Never fails the request: a closed window only stops the show.
+    fn send(&self, event: StreamEvent);
+}
+
+impl EventSink for Channel<StreamEvent> {
+    fn send(&self, event: StreamEvent) {
+        let _ = Channel::send(self, event);
+    }
+}
+
+/// Forwards a provider-level fragment to `channel`. A native search
 /// citation goes to the request's sources instead.
 pub(crate) fn forward(
-    channel: &Channel<StreamEvent>,
+    channel: &dyn EventSink,
     web: &WebPlan,
     pictures: Option<&InlinePictures<'_>>,
     event: ProviderEvent<'_>,
 ) {
     for picture in pictures.map(|p| p.observe(&event)).unwrap_or_default() {
-        let _ = channel.send(picture);
+        channel.send(picture);
     }
     let event = match event {
         ProviderEvent::Citation { url, title } => {
@@ -73,12 +85,12 @@ pub(crate) fn forward(
             text: text.to_string(),
         },
     };
-    let _ = channel.send(event);
+    channel.send(event);
 }
 
 /// Forwards what the agent loop reports onto the frontend channel, each turn as
 /// the frontend's history keeps it.
-pub(crate) fn report(channel: &Channel<StreamEvent>) -> impl FnMut(LoopEvent<'_>) + '_ {
+pub(crate) fn report(channel: &dyn EventSink) -> impl FnMut(LoopEvent<'_>) + '_ {
     move |event| {
         let event = match event {
             LoopEvent::Turn(turn) => StreamEvent::Turn {
@@ -86,6 +98,6 @@ pub(crate) fn report(channel: &Channel<StreamEvent>) -> impl FnMut(LoopEvent<'_>
             },
             LoopEvent::Retry => StreamEvent::Retry,
         };
-        let _ = channel.send(event);
+        channel.send(event);
     }
 }

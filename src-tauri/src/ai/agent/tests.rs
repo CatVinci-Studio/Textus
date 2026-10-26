@@ -1069,3 +1069,32 @@ fn a_whole_document_rewritten_in_one_replace_ends_in_one_step() {
     assert_eq!(steps, 1);
     assert_eq!(proposed_edits(&turns), 1);
 }
+
+/// A request's events reach any EventSink, not only the window's channel.
+#[test]
+fn events_go_to_any_sink() {
+    struct Recorded(std::sync::Mutex<Vec<String>>);
+    impl EventSink for Recorded {
+        fn send(&self, event: StreamEvent) {
+            let json = serde_json::to_value(&event).unwrap();
+            self.0
+                .lock()
+                .unwrap()
+                .push(json["type"].as_str().unwrap().to_string());
+        }
+    }
+    let sink = Recorded(Default::default());
+    let web = WebPlan::new(false, None, None, &[]);
+    forward(&sink, &web, None, ProviderEvent::Text("Hi"));
+    forward(
+        &sink,
+        &web,
+        None,
+        ProviderEvent::ToolStart {
+            call_id: "c1",
+            name: "propose_edit",
+        },
+    );
+    report(&sink)(LoopEvent::Retry);
+    assert_eq!(*sink.0.lock().unwrap(), ["delta", "toolStart", "retry"]);
+}
