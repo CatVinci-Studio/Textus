@@ -248,6 +248,18 @@ test("no completion is asked for right after a diagram with no prose, and the ap
   expect(call.hints.uiLanguage).toBe("zh");
 });
 
+test("typing in a code block asks for no completion", async ({ page }) => {
+  await openApp(page);
+  await mockInvoke(page, { ai_complete: "x = 1" });
+  await pasteMarkdown(page, "```js\nconst total = count\n```\n\n后面");
+  await page.locator(".milkdown pre code").click();
+  await page.keyboard.press("End");
+  await page.keyboard.type("er");
+  await page.waitForTimeout(1200);
+  expect(await completeCalls(page)).toHaveLength(0);
+  await expect(page.locator(".ghost-text")).toHaveCount(0);
+});
+
 const completeCalls = (page: Page) =>
   page.evaluate(() =>
     (
