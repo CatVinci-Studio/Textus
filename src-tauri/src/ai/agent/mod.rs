@@ -106,7 +106,7 @@ pub async fn ai_agent_message(
             focus_heading,
             ui_language,
             image_model,
-            on_event,
+            &on_event,
         ),
     )
     .await
@@ -131,7 +131,7 @@ async fn ai_agent_message_inner(
     focus_heading: Option<String>,
     ui_language: String,
     image_model: Option<crate::ai::images::ImageModel>,
-    on_event: Channel<StreamEvent>,
+    on_event: &dyn EventSink,
 ) -> Result<Vec<AgentTurn>, String> {
     let mut workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
@@ -242,7 +242,7 @@ async fn ai_agent_message_inner(
                 conventions: &conventions,
                 tools: &helper_tools,
                 tool_ctx: &tool_ctx,
-                channel: &on_event,
+                channel: on_event,
                 helpers: &helpers,
             };
             let mut tools = ToolRegistry::builtin(
@@ -273,7 +273,7 @@ async fn ai_agent_message_inner(
                         this_request: &tool_ctx.proposed,
                         undecided: &undecided,
                     },
-                    &on_event,
+                    on_event,
                 ));
             }
             for tool in web.tools(&focus) {
@@ -299,15 +299,14 @@ async fn ai_agent_message_inner(
             let tool_specs = tools.specs();
             let step = |turns: Vec<AgentTurn>| {
                 let (agent, instructions, tool_specs) = (&agent, &instructions, &tool_specs);
-                let channel = on_event.clone();
+                let channel = on_event;
                 let inline = inline.as_ref();
                 let (document, conventions) = (&document, &conventions);
                 async move {
                     // Edits and comments as lists to the model, one call per item past it.
                     let lists = lists::ListStream::default();
-                    let sink = |e: ProviderEvent<'_>| {
-                        lists.feed(e, &|e| forward(&channel, web, inline, e))
-                    };
+                    let sink =
+                        |e: ProviderEvent<'_>| lists.feed(e, &|e| forward(channel, web, inline, e));
                     let turns = lists::join_calls(&turns);
                     let result = agent.step(instructions, &turns, tool_specs, &sink).await;
                     // Native search citations numbered (WebPlan::finish_step).
@@ -325,7 +324,7 @@ async fn ai_agent_message_inner(
                 step,
                 |call| tools.execute(&tool_ctx, call),
                 |name| tools.how_to_run(name),
-                report(&on_event),
+                report(on_event),
             )
             .await
             {

@@ -756,7 +756,7 @@ pub fn run_conversation(
     let ws = setup.workspace;
     let root = ws.root.as_deref().map(Path::new);
     // What generate_image streams (its start) goes nowhere here.
-    let events = tauri::ipc::Channel::new(|_| Ok(()));
+    let events = NoEvents;
     let mut history: Vec<AgentTurn> = Vec::new();
     let mut doc = document.to_string();
     // Proposals left undecided, by call id, as they now read.
@@ -1812,4 +1812,11 @@ mod env_file_tests {
         assert_eq!(env_file_value(text, "EMPTY"), None);
         assert_eq!(env_file_value(text, "MISSING"), None);
     }
+}
+
+/// A request's live events, dropped: the eval reads the finished turns.
+struct NoEvents;
+
+impl crate::ai::agent::EventSink for NoEvents {
+    fn send(&self, _: crate::ai::agent::StreamEvent) {}
 }

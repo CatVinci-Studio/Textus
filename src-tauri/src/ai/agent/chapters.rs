@@ -203,7 +203,7 @@ pub(crate) struct ChapterRun<'a, 'r> {
     /// propose_edit, the one tool a helper has.
     pub(crate) tools: &'a ToolRegistry<'r>,
     pub(crate) tool_ctx: &'a ToolContext<'r>,
-    pub(crate) channel: &'a Channel<StreamEvent>,
+    pub(crate) channel: &'a dyn EventSink,
     pub(crate) helpers: &'a HelperTurns,
 }
 
@@ -302,7 +302,7 @@ impl ChapterRun<'_, '_> {
                 },
                 _ => return,
             };
-            let _ = channel.send(event);
+            channel.send(event);
         };
         let step = |turns: Vec<AgentTurn>| {
             let (instructions, specs, sink) = (&instructions, &specs, &sink);
@@ -322,7 +322,7 @@ impl ChapterRun<'_, '_> {
                 // A helper's retry stays its own: the window's Retry would
                 // drop every chapter's drafts.
                 if let LoopEvent::Turn(turn) = event {
-                    let _ = channel.send(StreamEvent::Turn {
+                    channel.send(StreamEvent::Turn {
                         turn: for_history(turn.clone()),
                     });
                 }
