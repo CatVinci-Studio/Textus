@@ -8,7 +8,7 @@ import {
   type ChatContext,
 } from "./chat-bridge";
 import { windowIpc } from "../../../platform/ipc";
-import { listenToThisWindow, unlistenAll } from "../../../utils/tauri-events";
+import { listenToThisWindow, unlistenAll } from "../../../platform/events";
 import { selectAllInFocus } from "../../../ui/select-all";
 import { useLatest } from "../../../utils/hooks/useLatest";
 import type { Settings } from "../../../settings/SettingsContext";

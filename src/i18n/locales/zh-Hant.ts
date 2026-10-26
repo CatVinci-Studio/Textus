@@ -428,6 +428,7 @@ export default {
   treeOpen: "開啟",
   outlineCollapse: "收合",
   outlineExpand: "展開",
+  wordUnit: "字",
   wordsUnit: "字",
   alertNote: "備註",
   alertTip: "提示",

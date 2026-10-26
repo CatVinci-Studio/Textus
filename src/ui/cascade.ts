@@ -78,12 +78,6 @@ export class Cascade {
   }
 }
 
-/** Whether `el` has words to come in (else it enters whole: a picture, a
- *  rule, a diagram). */
-export function hasWords(el: Element): boolean {
-  return textWords(el).length > 0;
-}
-
 interface WordAt {
   node: Text;
   start: number;

@@ -485,6 +485,7 @@ para usar una.
   treeOpen: "Abrir",
   outlineCollapse: "Contraer",
   outlineExpand: "Expandir",
+  wordUnit: "palabra",
   wordsUnit: "palabras",
   alertNote: "Nota",
   alertTip: "Consejo",

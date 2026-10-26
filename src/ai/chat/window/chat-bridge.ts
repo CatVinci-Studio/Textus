@@ -1,6 +1,6 @@
 import type { DocumentSnapshot } from "../../doc-markdown";
-import { emitTo } from "@tauri-apps/api/event";
-import { listenToThisWindow } from "../../../utils/tauri-events";
+import { emitToWindow } from "../../../platform/events";
+import { listenToThisWindow } from "../../../platform/events";
 import type { AgentTurn, EditProposal } from "../../types";
 import type { PendingStatus } from "../../revision/usePendingEdits";
 import type { SelectionChip } from "../ChatComposer";
@@ -156,7 +156,7 @@ export function sendToWindow<T>(
   event: string,
   payload?: T,
 ): void {
-  void emitTo(label, event, payload);
+  void emitToWindow(label, event, payload);
 }
 
 /** Typed listen, returning the same unlisten-promise shape callers already

@@ -39,6 +39,8 @@ export default defineConfig({
   plugins: [react(), katexWoff2Only(), servedAsIndex()],
   css: { postcss: { plugins: [colorMixFallback()] } },
   base: "/playground/",
+  // The platform modules' browser stand-ins (src/platform/runtime.ts).
+  define: { "import.meta.env.TEXTUS_BROWSER": "true" },
   // public/ holds the app's files.
   publicDir: false,
   clearScreen: false,

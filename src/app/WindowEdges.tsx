@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../platform/this-window";
 import { drawsWindowEdges } from "../platform/window-chrome";
 import "./window-edges.css";
 
@@ -42,7 +42,7 @@ export function WindowEdges() {
 
   useEffect(() => {
     if (!drawsWindowEdges) return;
-    const win = getCurrentWindow();
+    const win = thisWindow();
     let alive = true;
     const sync = () => {
       void Promise.all([win.isMaximized(), win.isFullscreen()])
@@ -82,7 +82,7 @@ export function WindowEdges() {
           onPointerDown={(e) => {
             if (e.button !== 0) return;
             e.preventDefault();
-            void getCurrentWindow().startResizeDragging(edge);
+            void thisWindow().startResizeDragging(edge);
           }}
         />
       ))}

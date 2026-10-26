@@ -452,6 +452,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeOpen: "開く",
   outlineCollapse: "折りたたむ",
   outlineExpand: "展開",
+  wordUnit: "字",
   wordsUnit: "字",
   alertNote: "メモ",
   alertTip: "ヒント",

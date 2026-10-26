@@ -1,4 +1,4 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../../platform/this-window";
 import { selectAllInFocus } from "../../ui/select-all";
 import { EDIT_ACTION_EVENT } from "../../utils/events";
 import type { LocalMenuAction, MenuAction } from "./app-menu-model";
@@ -37,7 +37,7 @@ export function runLocalMenuAction(action: LocalMenuAction): void {
   if (action === "fullscreen") {
     if (!canToggleFullscreen) return;
     void (async () => {
-      const win = getCurrentWindow();
+      const win = thisWindow();
       await win.setFullscreen(!(await win.isFullscreen()));
     })();
     return;

@@ -3,7 +3,7 @@ import { storage, type HistoryKind } from "../platform/ipc";
 import { readBoot } from "./boot";
 import { readLocalJson } from "./local";
 import { trackWrite } from "./pending-writes";
-import { listenToThisWindow } from "../utils/tauri-events";
+import { listenToThisWindow } from "../platform/events";
 
 /** A small persisted list as an external store, synced across windows. Rust
  *  changes it one entry at a time, so concurrent saves from two windows both

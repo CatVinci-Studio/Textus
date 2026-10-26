@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../platform/this-window";
 
 /**
  * Marks <html> with `data-window-fullscreen` while a Mac window is in full
@@ -21,7 +21,7 @@ export function useFullscreenMark(): void {
       if (on) root.dataset.windowFullscreen = "";
       else delete root.dataset.windowFullscreen;
     };
-    const win = getCurrentWindow();
+    const win = thisWindow();
     let alive = true;
     let stop: (() => void) | undefined;
     // A window opened in full screen (a tab torn off one) starts there.

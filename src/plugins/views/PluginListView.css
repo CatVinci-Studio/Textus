@@ -17,6 +17,8 @@
 }
 
 .plugin-list-filter {
+  /* settings-text-input grows in a row; in this column it would grow tall. */
+  flex: none;
   margin: var(--space-2);
 }
 

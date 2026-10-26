@@ -88,7 +88,7 @@ export function aiCommand<K extends Command>(
     : Promise.reject(new IpcError(name, AI_OFF));
 }
 
-/** `desktopQuery` for a generated command. */
+/** A desktop-only generated command: answers `fallback` on iOS. */
 export function desktopQueryCommand<K extends Command, F>(
   name: K,
   fallback: F,
@@ -133,25 +133,7 @@ export function aiCall<T>(command: string, args?: object): Promise<T> {
     : Promise.reject(new IpcError(command, AI_OFF));
 }
 
-/**
- * Commands that exist on desktop only - registered under `#[cfg(desktop)]`
- * in src-tauri/src/lib.rs, so on iOS there is nothing to call.
- *
- * Call sites already avoid these on iOS through src/platform/capabilities.ts;
- * this is the backstop that keeps a missed call site from reaching Rust.
- * `desktopQuery` answers with what the command would report when there is
- * nothing to report (no pending tab, no chat window, no windows) - safe for
- * reads and fire-and-forget bookkeeping. `desktopAction` rejects, for calls
- * whose caller needs to know nothing happened.
- */
-export function desktopQuery<T>(
-  command: string,
-  fallback: T,
-  args?: object,
-): Promise<T> {
-  return isDesktopApp ? call<T>(command, args) : Promise.resolve(fallback);
-}
-
+/** A desktop-only command: rejects on iOS, where Rust doesn't register it. */
 export function desktopAction<T>(command: string, args?: object): Promise<T> {
   return isDesktopApp
     ? call<T>(command, args)

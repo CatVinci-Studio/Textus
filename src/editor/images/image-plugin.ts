@@ -3,7 +3,7 @@ import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { fileSrc } from "../../platform/file-src";
 import { resolveStrings } from "../../i18n/strings";
 import {
   decodeUrlPath,
@@ -79,16 +79,16 @@ export {
 export function resolveImageSrc(src: string, docPath: string | null): string {
   // A Windows drive path ("C:\..." / "C:/...") would otherwise read as a
   // single-letter URL scheme to the test below.
-  if (isDrivePath(src)) return convertFileSrc(decodeUrlPath(src));
+  if (isDrivePath(src)) return fileSrc(decodeUrlPath(src));
   if (!src || hasUrlScheme(src)) return src; // http(s), data:, asset:, file:, ...
-  if (src.startsWith("/")) return convertFileSrc(decodeUrlPath(src));
+  if (src.startsWith("/")) return fileSrc(decodeUrlPath(src));
   // An unsaved document has no folder to resolve against, so a relative
   // path is left as written (the image shows as missing) and resolves once
   // the document is saved and reopened. The sidebar's open folder is not
   // used as a stand-in: the document may well be saved somewhere else, and
   // an image that showed before saving would then vanish.
   if (!docPath) return src;
-  return convertFileSrc(`${dirname(docPath)}/${decodeUrlPath(src)}`);
+  return fileSrc(`${dirname(docPath)}/${decodeUrlPath(src)}`);
 }
 
 /**

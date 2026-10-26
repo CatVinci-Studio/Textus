@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../../../platform/this-window";
 import { windowIpc } from "../../../platform/ipc";
 import { canDetachChat } from "../../../platform/capabilities";
-import { listenToThisWindow, unlistenAll } from "../../../utils/tauri-events";
+import { listenToThisWindow, unlistenAll } from "../../../platform/events";
 import { useLatest } from "../../../utils/hooks/useLatest";
 import type { AgentTurn, EditProposal } from "../../types";
 import type { PendingStatus } from "../../revision/usePendingEdits";
@@ -219,7 +219,7 @@ export function useDetachedChat(handlers: DetachedChatHandlers) {
        *  always-on-top from the start (the window then reads it itself). */
       pinned: boolean,
     ) => {
-      const win = getCurrentWindow();
+      const win = thisWindow();
       let position: [number, number] | null = null;
       try {
         // Open beside the editor rather than on top of it - the reason to

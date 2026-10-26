@@ -102,7 +102,7 @@ export function WindowBar({
           </span>
         )}
         <span className="word-count">
-          {words > 0 && `${words} ${t.wordsUnit}`}
+          {words > 0 && `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`}
         </span>
         {/* Struck through while Textus AI is off; right-click pauses or
           turns it off. */}

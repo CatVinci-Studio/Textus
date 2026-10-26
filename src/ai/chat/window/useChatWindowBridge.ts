@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../../../platform/this-window";
 import type { PendingStatus } from "../../revision/usePendingEdits";
 import type { ChatRestore } from "../chat-restore";
 import type { ReopenTarget } from "../reopen-conversation";
@@ -10,7 +10,7 @@ import {
   type OpenDocumentMessage,
 } from "./chat-bridge";
 import { flushPendingWrites } from "../../../storage/pending-writes";
-import { unlistenAll } from "../../../utils/tauri-events";
+import { unlistenAll } from "../../../platform/events";
 import type { ChatWindowHandoff } from "./useChatWindowHandoff";
 import type { Strings } from "../../../i18n/strings";
 
@@ -56,7 +56,7 @@ export function useChatWindowBridge({
   // this window still has on their way (the conversation's history entry,
   // the pin setting) - see storage/pending-writes.ts.
   useEffect(() => {
-    const win = getCurrentWindow();
+    const win = thisWindow();
     const unlisten = win.onCloseRequested(async () => {
       if (editorLabel.current)
         sendToWindow(editorLabel.current, CHAT_TO_EDITOR.reembed, {
@@ -74,7 +74,7 @@ export function useChatWindowBridge({
   // disappears behind the editor the moment they click into the document.
   // The setting (not window-local state) so it survives closing the window.
   useEffect(() => {
-    void getCurrentWindow().setAlwaysOnTop(pinned);
+    void thisWindow().setAlwaysOnTop(pinned);
   }, [pinned]);
 
   // The title says which document this is currently about - the one piece of
@@ -82,7 +82,7 @@ export function useChatWindowBridge({
   // monitor with the editor out of sight.
   const docTitle = context?.docTitle;
   useEffect(() => {
-    void getCurrentWindow().setTitle(
+    void thisWindow().setTitle(
       docTitle ? `${t.chatWindowTitle} - ${docTitle}` : t.chatWindowTitle,
     );
   }, [docTitle, t.chatWindowTitle]);

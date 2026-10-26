@@ -10,7 +10,7 @@ import { selectAllInFocus } from "../../ui/select-all";
 import { hasNativeMenuBar } from "../../platform/capabilities";
 import { nativeMenuChecks, type MenuChecks } from "./app-menu-model";
 import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";
-import { listenToThisWindow, unlistenAll } from "../../utils/tauri-events";
+import { listenToThisWindow, unlistenAll } from "../../platform/events";
 import { runCommand } from "../commands";
 import { exportHtml, exportPdf, exportViaPandoc } from "../../export/exporters";
 import {

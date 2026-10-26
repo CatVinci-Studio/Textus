@@ -473,6 +473,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeOpen: "Öffnen",
   outlineCollapse: "Einklappen",
   outlineExpand: "Ausklappen",
+  wordUnit: "Wort",
   wordsUnit: "Wörter",
   alertNote: "Hinweis",
   alertTip: "Tipp",
