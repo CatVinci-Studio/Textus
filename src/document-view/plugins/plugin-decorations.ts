@@ -27,7 +27,7 @@ const AROUND = 10;
  * Marks plugins put on the text (textus.editor.registerDecorations): the
  * blocks in sight - with their ids and Markdown - go to each plugin once
  * the document rests, and what they answer is drawn: a highlight, an
- * underline, muted text or a badge after it, on a whole block or the
+ * underline, muted text or a badge after it (or before), on a whole block or the
  * first place its `anchor` words are. Nothing runs while no plugin marks.
  */
 export const pluginDecorations = $prose((ctx) => {
@@ -139,21 +139,26 @@ function drawMark(
     "data-plugin": mark.plugin,
   };
   if (mark.tooltip) attrs.title = mark.tooltip;
-  if (mark.style !== "badge") return [Decoration.inline(from, to, attrs)];
+  // An export keeps neither (export/standalone-html.ts).
+  if (mark.style !== "badge")
+    return [Decoration.inline(from, to, { ...attrs, "data-editor-mark": "" })];
   return [
     Decoration.widget(
-      to,
+      mark.before ? from : to,
       () => {
         const badge = document.createElement("span");
-        badge.className = attrs.class;
+        badge.className = mark.before
+          ? `${attrs.class} plugin-mark-badge-before`
+          : attrs.class;
         badge.dataset.plugin = mark.plugin;
+        badge.dataset.editorChrome = "";
         badge.textContent = mark.text ?? "";
         if (mark.tooltip) badge.title = mark.tooltip;
         return badge;
       },
       {
-        side: 1,
-        key: `${mark.plugin}:${mark.block}:${mark.text ?? ""}:${tone}`,
+        side: mark.before ? -1 : 1,
+        key: `${mark.plugin}:${mark.block}:${mark.text ?? ""}:${tone}:${mark.before ? "<" : ">"}`,
       },
     ),
   ];

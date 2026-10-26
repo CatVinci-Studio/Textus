@@ -76,7 +76,13 @@ export const EDITOR_CHROME_SELECTOR = [
   // A missing image's card and its buttons: the page keeps the image as
   // written (cloneEditorContent).
   `.${MISSING_IMAGE_CARD_CLASS}`,
+  // Anything drawn for the editor alone (a plugin's badge).
+  "[data-editor-chrome]",
 ].join(", ");
+
+/** Marks over the text drawn for the editor alone (a plugin's highlight
+ *  or underline): the copy keeps their text, not them. */
+export const EDITOR_MARK_SELECTOR = "[data-editor-mark]";
 
 // A resized table carries pixel widths (an inline table width plus one per
 // <col>, see table-hover-view.ts) sized for the editor column. On a page
@@ -172,6 +178,9 @@ export function cloneEditorContent(
     .querySelectorAll("[contenteditable]")
     .forEach((el) => el.removeAttribute("contenteditable"));
   clone.querySelectorAll(EDITOR_CHROME_SELECTOR).forEach((el) => el.remove());
+  clone
+    .querySelectorAll(EDITOR_MARK_SELECTOR)
+    .forEach((el) => el.replaceWith(...el.childNodes));
   placeDrawnPictures(clone);
   // Without its card, a missing image is the <img> it always was.
   clone

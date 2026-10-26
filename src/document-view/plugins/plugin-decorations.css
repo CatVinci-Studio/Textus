@@ -40,3 +40,14 @@
   vertical-align: 0.1em;
   user-select: none;
 }
+/* A badge before the words reads as part of them - a heading's number -
+   in the text's size, quieter. */
+.plugin-mark-badge-before {
+  margin-inline: 0 0.5em;
+  padding: 0;
+  background: none;
+  color: var(--editor-muted);
+  font-size: inherit;
+  line-height: inherit;
+  vertical-align: baseline;
+}

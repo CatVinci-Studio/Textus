@@ -13,6 +13,8 @@ export interface PluginDecoration {
   tone?: "accent" | "warning" | "danger" | "success";
   text?: string;
   tooltip?: string;
+  /** For "badge": before the words rather than after (a number). */
+  before?: boolean;
 }
 
 type Ask = (blocks: SentBlock[]) => Promise<PluginDecoration[]>;

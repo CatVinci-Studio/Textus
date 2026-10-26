@@ -591,6 +591,8 @@ declare global {
       /** For "badge": its text, after the words. */
       text?: string;
       tooltip?: string;
+      /** For "badge": before the words instead - a heading's number. */
+      before?: boolean;
     }
 
     interface EditorKeys {
