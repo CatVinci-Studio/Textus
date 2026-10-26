@@ -20,14 +20,14 @@ frontend changes the model's output, the eval does the same: an accepted
 `propose_edit` is composed as `src/ai/doc-markdown.ts` composes it, and a
 completion is shown after the editor's `stripEcho` and `tidySuggestion`.
 
-| Suite (test)                          | What it covers                                                                                                                                                                |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `agent` (`live_agent_matrix`)         | Edits and answers in ten languages; Markdown structures (tables, lists, code, math, footnotes, front matter); summarise, expand, review, follow-ups; the project folder, writing instructions, style profile, library and skills |
-| `agent-builtin` (`live_agent_builtin`) | The built-in skills (social posts, registers, house styles) and which skill a request is routed to                                                                          |
-| `continuing` (`continuing::*`)        | A request on top of proposals the writer has not yet accepted or rejected                                                                                                    |
-| `completion` (`live_completion_matrix`) | Inline completion: every tone, every language, lists, tables, headings, code, the cursor inside a word                                                                     |
-| `grammar` (`live_grammar_matrix`)     | Each strictness level on real mistakes and on correct text, with the writing-rules engine's findings merged in                                                              |
-| `memory` (`memory_eval::*`, `memory_sessions::*`) | What the memory pass keeps, where it puts it, and what it leaves out, in one exchange and over several conversations                                            |
+| Suite (test)                                      | What it covers                                                                                                                                                                                                                   |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `agent` (`live_agent_matrix`)                     | Edits and answers in ten languages; Markdown structures (tables, lists, code, math, footnotes, front matter); summarise, expand, review, follow-ups; the project folder, writing instructions, style profile, library and skills |
+| `agent-builtin` (`live_agent_builtin`)            | The built-in skills (social posts, registers, house styles) and which skill a request is routed to                                                                                                                               |
+| `continuing` (`continuing::*`)                    | A request on top of proposals the writer has not yet accepted or rejected                                                                                                                                                        |
+| `completion` (`live_completion_matrix`)           | Inline completion: every tone, every language, lists, tables, headings, code, the cursor inside a word                                                                                                                           |
+| `grammar` (`live_grammar_matrix`)                 | Each strictness level on real mistakes and on correct text, with the writing-rules engine's findings merged in                                                                                                                   |
+| `memory` (`memory_eval::*`, `memory_sessions::*`) | What the memory pass keeps, where it puts it, and what it leaves out, in one exchange and over several conversations                                                                                                             |
 
 `list_eval_cases` and `list_builtin_cases` are free and need no key: they
 print the case ids a run would send, for sizing it first.
