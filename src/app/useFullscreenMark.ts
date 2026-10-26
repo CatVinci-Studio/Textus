@@ -3,15 +3,8 @@ import { thisWindow } from "../platform/this-window";
 
 /**
  * Marks <html> with `data-window-fullscreen` while a Mac window is in full
- * screen, where the traffic lights are gone from the window bar's corner
- * and its first control takes their place (window-bar.css). Elsewhere the
- * bar's left end is the same either way, so nothing is asked.
- *
- * AppKit says when (`window-fullscreen`, watch_fullscreen in
- * src-tauri/src/lib.rs): once the window is in, and as it starts out.
- * Guessing from the window's size, and asking the backend after a resize,
- * caught a window still on its way out and left the button under the
- * lights.
+ * screen and the traffic lights are gone. Driven by AppKit's own event:
+ * guessing from the window size caught windows mid-transition.
  */
 export function useFullscreenMark(): void {
   useEffect(() => {

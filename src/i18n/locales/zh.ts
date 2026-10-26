@@ -1142,7 +1142,7 @@ export default {
   menuWindow: "窗口",
   menuZoomWindow: "缩放",
   menuBringAllToFront: "前置全部窗口",
-  // The browser playground (src/playground/).
+  // The browser playground.
   playgroundName: "在线体验",
   playgroundImport: "导入",
   playgroundExport: "导出",

@@ -42,10 +42,8 @@ import "./FileTree.css";
 export type { TreeSort } from "./tree-shared";
 
 interface FileTreeProps {
-  /** Where the tree is rooted (app/useOpenFolder.ts decides when the
-   *  document in front moves it); the parent folder's name in the toolbar
-   *  and double-clicking a folder move it through `onRootChange` without
-   *  touching the open document. */
+  /** Where the tree is rooted; the toolbar's parent folder and double-clicking
+   *  a folder move it through `onRootChange` without touching the open document. */
   root: string;
   onRootChange: (path: string) => void;
   /** The folder opened with File > Open Folder…, or null. The tree stays
@@ -179,8 +177,8 @@ export function FileTree({
   return (
     <TreeContext.Provider value={shared}>
       <div className={`file-tree${drag ? " file-tree-dragging" : ""}`}>
-        {/* Not on iOS (see canOpenFolder): its folders can be Files-app
-          URLs, which the backend can't walk. */}
+        {/* Not on iOS: its folders can be Files-app URLs, which the
+          backend can't walk. */}
         {canOpenFolder && (
           <FileSearch
             root={folder ?? root}
@@ -198,8 +196,8 @@ export function FileTree({
           folders the user had open stay open. */}
         <div className="tree-main" hidden={searching}>
           <div className="tree-toolbar">
-            {/* The way up is the parent folder, by name: one click goes
-              there. An arrow alone read as "collapse" or "scroll up". */}
+            {/* The way up is the parent folder, by name: an arrow alone read
+              as "collapse" or "scroll up". */}
             {parent && (
               <>
                 <Tooltip text={t.treeParentFolder}>
@@ -318,9 +316,8 @@ export function FileTree({
 }
 
 /** What the tree shows: its sort, the search's query and scope, and
- *  `generation`, bumped by Refresh - it remounts every node so each re-reads
- *  its folder, and the search indexes the folder again. `reload` re-reads
- *  only the folders named (`versions`). */
+ *  `generation`, bumped by Refresh to remount every node and re-index.
+ *  `reload` re-reads only the folders named. */
 function useTreeView() {
   const [generation, setGeneration] = useState(0);
   const [query, setQuery] = useState("");
@@ -359,9 +356,7 @@ type TreeMenu = {
   items: (ContextMenuItem | "separator")[];
 } | null;
 
-/** A row's context menu: open a file, make a document or folder in the
- *  folder clicked (or the one the file is in), and rename a row or move it
- *  to the Trash (#351). */
+/** A row's context menu: open, new document or folder, rename, move to Trash. */
 function useRowMenu(
   root: string,
   t: Strings,

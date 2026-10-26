@@ -10,9 +10,7 @@ import { lazyComponent } from "../../lazy/lazy-component";
 import { lazyModule } from "../../lazy/lazy-module";
 
 /**
- * What draws plugins in the window - their webviews (panels, tabs, code
- * blocks, settings pages), their lists and their web pages - loaded the
- * first time one is shown, never with the window (lazy-module.ts). The
+ * What draws plugins in the window, loaded the first time one is shown. The
  * rest of the app imports them from here, not from their modules.
  */
 const webviews = lazyModule("plugin-webviews", () => import("./PluginWebview"));

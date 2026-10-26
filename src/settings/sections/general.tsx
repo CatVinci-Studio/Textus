@@ -19,15 +19,9 @@ import { useSettings } from "../SettingsContext";
 import { Select } from "../../ui/Select";
 import { SettingRow } from "./controls";
 
-// The General category's sections beyond plain settings rows.
-
 /**
- * The manual "Check for Updates" button, beside the links in Settings ›
- * General › About Textus (which shows the version). The background
- * check (useAppUpdate) is silent about being up to date and about errors;
- * a manual check is the opposite - the user asked, so "already latest" and
- * failures both get an explicit answer here. A package-manager build only
- * reports the new version - see platform/distribution.ts.
+ * The manual "Check for Updates" button. Unlike the silent background check,
+ * it answers "already latest" and failures explicitly.
  */
 export function UpdateButton({ t }: { t: Strings }) {
   const [phase, setPhase] = useState<
@@ -112,12 +106,9 @@ export function UpdateButton({ t }: { t: Strings }) {
   );
 }
 
-/** Downloads `update`, installs it and starts the new Textus. Neither way
- *  out of here asks a window to close first. On Windows downloadAndInstall
- *  never returns: it starts the installer and ends the process
- *  (tauri-plugin-updater calls std::process::exit, which also skips Rust's
- *  exit-time flush) - so what's held back goes now, and Rust's own 250 ms
- *  write lands while the download runs. */
+/** Downloads `update`, installs it and starts the new Textus. On Windows
+ *  downloadAndInstall never returns (the updater calls process::exit, skipping
+ *  Rust's exit flush), so pending writes go now, while the download runs. */
 async function installAndRelaunch(update: Update) {
   await flushPendingWrites();
   await update.downloadAndInstall();
@@ -128,10 +119,8 @@ async function installAndRelaunch(update: Update) {
 }
 
 /**
- * On a beta with the channel set back to Stable: Go Back to Stable, which
- * installs the newest stable release even though it is older than the
- * beta - after asking, as it goes back in time. Nothing else ever installs
- * an older version (src-tauri/src/commands/update.rs).
+ * On a beta with the channel set back to Stable: installs the newest stable
+ * release, older than the beta, after asking. Nothing else installs an older version.
  */
 function BackToStable({ t }: { t: Strings }) {
   const [version, setVersion] = useState("");
@@ -204,12 +193,8 @@ function BackToStable({ t }: { t: Strings }) {
 }
 
 /**
- * Stable or Beta, under the update button in About Textus. Beta also gets
- * release candidates, always the newest release of either kind; going back
- * to Stable keeps an installed release candidate until a newer stable
- * version exists (src-tauri/src/commands/update.rs). Hidden where the app
- * doesn't install its own updates: iOS (the App Store) and package-manager
- * builds such as the Arch package, which only report stable versions.
+ * Stable or Beta. Beta also gets release candidates. Hidden where the app
+ * doesn't install its own updates: iOS and package-manager builds.
  */
 export function UpdateChannelRow({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
@@ -253,10 +238,8 @@ function withCommand(label: string) {
 }
 
 /**
- * Startup already tries a silent, non-privileged install (works when
- * /usr/local/bin happens to be user-writable, e.g. via Homebrew). This row
- * is for the common case where that silently failed: it shows current
- * status and, on click, retries through an admin-privileged prompt.
+ * Startup already tries a silent install; this row covers when that failed
+ * and retries through an admin-privileged prompt.
  */
 export function CliCommandSection({ t }: { t: Strings }) {
   const [installed, setInstalled] = useState(false);
@@ -306,10 +289,8 @@ export function CliCommandSection({ t }: { t: Strings }) {
 }
 
 /**
- * Make Textus the app that opens .md files (default_editor.rs). On macOS
- * and Linux the button does it; Windows only lets the user choose, so there
- * it opens Default apps and says what to pick, and the status is read again
- * when the user comes back to the window.
+ * Make Textus the app that opens .md files. Windows only lets the user
+ * choose, so there it opens Default apps and re-reads the status on return.
  */
 export function DefaultEditorSection({ t }: { t: Strings }) {
   const [status, setStatus] = useState<DefaultEditorStatus | null>(null);

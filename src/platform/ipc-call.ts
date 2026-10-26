@@ -15,12 +15,10 @@ import { commands as pluginAccessCommands } from "./bindings/plugin-access";
 
 /**
  * How every backend command is called: errors as IpcError, AI commands
- * refused while AI is off, desktop-only commands answered on mobile
- * (ipc.ts).
+ * refused while AI is off, desktop-only commands answered on mobile.
  */
 
-/** Wraps a rejected `invoke()` with the command name that failed, so a
- *  caught error can be logged/displayed without losing which call it was. */
+/** A rejected `invoke()` with the name of the command that failed. */
 export class IpcError extends Error {
   readonly command: string;
   readonly cause: unknown;
@@ -34,7 +32,7 @@ export class IpcError extends Error {
   }
 }
 
-// The commands whose types are generated from Rust (src-tauri/src/bindings.rs).
+// The commands whose types are generated from Rust.
 const commands = {
   ...aiCommands,
   ...aiAgentCommands,
@@ -61,10 +59,8 @@ type Answer<K extends Command> = [Awaited<ReturnType<Commands[K]>>] extends [
   : Awaited<ReturnType<Commands[K]>>;
 
 /**
- * Calls a generated command: tsc checks its name, its arguments (in the
- * Rust function's order) and its answer against the Rust signature. The
- * commands not generated - those reading their inputs as one struct, the
- * agent message, raw bytes, iOS-only - still go through `call`.
+ * Calls a generated command, type-checked against the Rust signature.
+ * Commands not generated (struct inputs, raw bytes, iOS-only) use `call`.
  */
 export async function command<K extends Command>(
   name: K,
@@ -121,11 +117,8 @@ export async function call<T>(command: string, args?: object): Promise<T> {
 }
 
 /**
- * A command that sends something to an AI service - a completion, a
- * grammar check, a conversation, a model list. While Textus AI is off it
- * is refused here, before it reaches Rust (which refuses it too). Every
- * entry point already checks the switch (settings/textus-ai.ts); this is
- * the backstop that keeps a missed one from making a request.
+ * A command that sends something to an AI service, refused here while
+ * Textus AI is off: the backstop for an entry point that missed the switch.
  */
 export function aiCall<T>(command: string, args?: object): Promise<T> {
   return aiRequestsAllowed()
@@ -141,7 +134,3 @@ export function desktopAction<T>(command: string, args?: object): Promise<T> {
         new IpcError(command, new Error("not available on this platform")),
       );
 }
-
-// ---------------------------------------------------------------------------
-// fs (src-tauri/src/commands/fs.rs)
-// ---------------------------------------------------------------------------

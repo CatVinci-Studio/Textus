@@ -1147,7 +1147,7 @@ export default {
   menuWindow: "視窗",
   menuZoomWindow: "縮放",
   menuBringAllToFront: "將全部移至最前",
-  // The browser playground (src/playground/).
+  // The browser playground.
   playgroundName: "線上體驗",
   playgroundImport: "匯入",
   playgroundExport: "匯出",

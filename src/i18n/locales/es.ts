@@ -1265,7 +1265,7 @@ para usar una.
   menuWindow: "Ventana",
   menuZoomWindow: "Zoom",
   menuBringAllToFront: "Traer todo al frente",
-  // The browser playground (src/playground/).
+  // The browser playground.
   playgroundName: "Zona de pruebas",
   playgroundImport: "Importar",
   playgroundExport: "Exportar",

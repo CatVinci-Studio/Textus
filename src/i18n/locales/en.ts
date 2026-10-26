@@ -2,9 +2,8 @@ import { AI_NAME, APP_NAME } from "../names";
 import type { Plural } from "../plural";
 
 /**
- * English: the source of truth. Every key the UI reads is defined here, and
- * `Strings` (../strings.ts) is this object's shape - another language
- * leaves out what it hasn't translated and falls back to these.
+ * English, the source of truth: `Strings` is this object's shape, and other
+ * languages fall back to it for what they haven't translated.
  */
 const en = {
   agentPanelTitle: AI_NAME,
@@ -829,10 +828,7 @@ type /name in a conversation to use one.
   menuBarLabel: "Show the menu bar",
   menuBarHelp:
     "File, Edit, View and the rest along the title bar, instead of behind ☰. The sidebar button makes room for them: the sidebar is in View, and has its shortcut.",
-  // The app menu itself. Rendered from src/ui/app-menu-model.ts, which
-  // pairs each of these with the menu id its native twin in
-  // src-tauri/src/menu.rs carries - the ids are the contract, these
-  // strings are only what the user reads.
+  // The app menu. The menu ids are the contract; these are only labels.
   menuFile: "File",
   menuEdit: "Edit",
   menuFormat: "Format",
@@ -1098,8 +1094,7 @@ type /name in a conversation to use one.
   cancel: "Cancel",
   draftRestoredMessage: "Recovered unsaved content from the last session.",
   draftRestoredDismiss: "Got it",
-  /** A Word document was opened as a new Markdown one
-   *  (document/word-import.ts). */
+  /** A Word document was opened as a new Markdown one. */
   wordImportNotice:
     "Opened {name} as a new Markdown document. Some formatting may look different than in Word; the Word file itself is unchanged.",
   wordImportDismiss: "Got it",
@@ -1236,7 +1231,7 @@ type /name in a conversation to use one.
   menuWindow: "Window",
   menuZoomWindow: "Zoom",
   menuBringAllToFront: "Bring All to Front",
-  // The browser playground (src/playground/).
+  // The browser playground.
   playgroundName: "Playground",
   playgroundImport: "Import",
   playgroundExport: "Export",
@@ -1249,7 +1244,7 @@ type /name in a conversation to use one.
   backgroundToggle: "Keep running in the background",
   backgroundTrayUnavailable: `This desktop has no tray: libayatana-appindicator isn’t installed. ${APP_NAME} still keeps running; open it again from your launcher.`,
   trayOpenTextus: `Open ${APP_NAME}`,
-  // Plugins (src/plugins/, Settings › Plugins).
+  // Plugins.
   navExtensions: "Extensions",
   extensionsTabPlugins: "Plugins",
   extensionsTabThemes: "Themes",

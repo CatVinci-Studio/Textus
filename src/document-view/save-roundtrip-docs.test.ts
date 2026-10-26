@@ -4,9 +4,8 @@ import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { hashString, roundTripFile } from "./save-roundtrip";
 
-// The save round trip (save-roundtrip.test.ts) on the developer and
-// design docs in `docs/`: real Markdown of ours, some of it long enough
-// to take seconds on a CI runner.
+// The save round trip on this repository's own docs: real Markdown, some long
+// enough to take seconds on a CI runner.
 
 vi.mock("mermaid", () => ({
   default: { initialize() {}, render: () => new Promise(() => {}) },
@@ -38,8 +37,8 @@ function markdownFiles(dir: string): [string, string][] {
   return found;
 }
 
-// CI runs these once, in `check`, and only for a change that can reach
-// saving (scripts/ci-changes.mjs); the native jobs set this to skip them.
+// CI runs these once, only for changes that can reach saving; the native
+// jobs set this to skip them.
 describe.skipIf(process.env.TEXTUS_SKIP_ROUNDTRIP === "1")(
   "saving after an edit keeps the rest of the developer and design docs and loses nothing",
   () => {

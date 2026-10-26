@@ -1287,7 +1287,7 @@ utiliser une.
   menuWindow: "Fenêtre",
   menuZoomWindow: "Réduire/agrandir",
   menuBringAllToFront: "Tout ramener au premier plan",
-  // The browser playground (src/playground/).
+  // The browser playground.
   playgroundName: "Bac à sable",
   playgroundImport: "Importer",
   playgroundExport: "Exporter",

@@ -3,10 +3,9 @@
 
 use super::*;
 
-/// Where a picture is asked for: the image model resolved to an address and
-/// a key - or, for the ChatGPT sign-in, to the app that holds its
-/// credential. Owned, so a picture can be made after the call that asked
-/// for it has returned.
+/// Where a picture is asked for: an address and key, or for the ChatGPT
+/// sign-in, the app holding its credential. Owned, so a picture can be made
+/// after the call that asked for it has returned.
 #[derive(Clone)]
 pub(crate) struct ImageJob {
     /// For the ChatGPT sign-in, whose credential is fetched (and refreshed)
@@ -24,16 +23,13 @@ pub struct ImageRun {
     pub(crate) job: ImageJob,
     pub(crate) made: AtomicUsize,
     pub(crate) limit: usize,
-    /// The document's folder: a picture being redone is read from there,
-    /// for a service that changes it rather than draws anew
-    /// (ImageApi::takes_reference).
+    /// The document's folder, where a picture being redone is read from.
     pub(crate) folder: Option<std::path::PathBuf>,
 }
 
 impl ImageRun {
     /// None - and no generate_image tool - without an image model, or
-    /// without the key it needs. (Review mode, which changes nothing, never
-    /// offers it: ToolRegistry::add.)
+    /// without the key it needs.
     pub fn resolve(
         app: &AppHandle,
         choice: Option<&ImageModel>,
@@ -64,9 +60,8 @@ impl ImageRun {
             });
         }
         let model = Some(choice.model.trim())
-            // One of this service's own (a model kept from another service, as
-            // following the chat provider can leave, is not), or any typed for
-            // the compatible endpoint.
+            // One of this service's own models (one kept from another service is not),
+            // or any typed for the compatible endpoint.
             .filter(|m| !m.is_empty() && (entry.models.is_empty() || entry.models.contains(m)))
             .or_else(|| entry.models.first().copied())?
             .to_string();
@@ -101,10 +96,8 @@ impl ImageRun {
 }
 
 impl ImageRun {
-    /// A request's image model that makes no picture: each one asked for
-    /// fails in the background (nothing listens at its address), and
-    /// generate_image answers the model as it would for a real one - for
-    /// the live cases that ask for pictures, which spend nothing on them.
+    /// An image model that makes no picture: each fails in the background,
+    /// while generate_image answers as for a real one. Spends nothing.
     #[cfg(test)]
     pub(crate) fn offline(limit: usize) -> Self {
         Self {
@@ -173,16 +166,9 @@ impl ImageJob {
 }
 
 impl ImageRun {
-    /// One generate_image call's arguments, with what came of it recorded
-    /// in them: `image` - the picture's id and its size as asked, while it
-    /// is made in the background - or `not_generated` (why not). What the
-    /// model may have put under those names is dropped.
-    ///
-    /// The call returns at once and the reply goes on - its text, and more
-    /// pictures - while the picture is made: one took the whole reply's
-    /// half a minute to a minute before. The document shows the picture's
-    /// frame in place until it comes (ai_generated_image waits for it), or
-    /// why it didn't.
+    /// One generate_image call's arguments, with `image` (id and size) or
+    /// `not_generated` (why not) recorded in them. Returns at once while the
+    /// picture is made in the background, so the reply goes on.
     pub(crate) async fn run_call(
         &self,
         arguments: &str,
@@ -211,8 +197,7 @@ impl ImageRun {
             }
             Err(why) => {
                 args.insert("not_generated".into(), json!(why));
-                // The user is told this one in their language, by its
-                // number (ChatMessages' notMadeLine).
+                // The user is told this one in their language, by its number.
                 if why == self.limit_reached() {
                     args.insert("limit_reached".into(), json!(self.limit));
                 }
@@ -254,12 +239,9 @@ impl ImageRun {
         Ok(self.start(prompt, aspect, self.like(like)))
     }
 
-    /// The picture `like` names, for a new one to keep its people and
-    /// style: one in the document by its src, or one proposed before by
-    /// its `textus-generated:` src. None where the service takes no
-    /// picture, for one not found, and for one still being made - not
-    /// waited for, so a picture drawn like another costs only the time to
-    /// send it.
+    /// The picture `like` names, by its src in the document or a proposed
+    /// `textus-generated:` src. None where the service takes no picture, when
+    /// not found, or while still being made: it is not waited for.
     pub(crate) fn like(&self, like: &str) -> Option<Reference> {
         let like = like.trim();
         if like.is_empty() || !self.job.api.takes_reference() {
@@ -287,9 +269,7 @@ impl ImageRun {
     }
 
     /// The call is fit to spend a picture on: a description, a place that
-    /// exists in the document, and pictures left in this send. With the
-    /// description and aspect, the picture a `replace` redoes, where the
-    /// service takes it.
+    /// exists in the document, and pictures left in this send.
     pub(crate) fn check(
         &self,
         args: &Value,
@@ -324,8 +304,8 @@ impl ImageRun {
         }
         if matches!(action, "insert_after" | "insert_before") {
             let anchor = text("anchor");
-            // Next to text proposed and not decided yet - which has no
-            // block - the picture joins that proposal (useEditorProposals).
+            // Next to text proposed and not decided yet - which has no block - the
+            // picture joins that proposal.
             let joins = args.get("block").is_none() && proposed.quotes(anchor);
             if !joins {
                 crate::ai::doc_blocks::check_target(document, args)?;
@@ -368,10 +348,8 @@ impl ImageRun {
         }
     }
 
-    /// Runs one generate_image call: the picture is made (or why not is
-    /// said) and recorded in the call's arguments, which is where the
-    /// frontend shows the proposal from (ToolRun::Amending). Async like any
-    /// tool, so the chat's Stop drops a picture being made.
+    /// Runs one generate_image call, recording the outcome in its arguments,
+    /// where the frontend reads the proposal. Async so Stop drops a picture.
     pub(crate) async fn execute(
         &self,
         call: ToolCall,
@@ -448,8 +426,7 @@ pub(crate) fn spec(limit: usize) -> ToolSpec {
     }
 }
 
-/// What the model is told came of its call - read off what
-/// ImageRun::execute recorded in the arguments.
+/// What the model is told came of its call, read off its recorded arguments.
 pub(crate) fn outcome(arguments: &str) -> String {
     let args: Value = serde_json::from_str(arguments).unwrap_or_default();
     if let Some(image) = args.get("image") {

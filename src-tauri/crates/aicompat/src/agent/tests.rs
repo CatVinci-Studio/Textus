@@ -421,7 +421,7 @@ fn a_settled_proposal_with_its_reply_ends_the_exchange() {
     let (turns, steps) = propose_then("Tightened the opening.", true);
     assert_eq!(steps, 1, "no request just for the closing sentence");
     assert_eq!(reply_of(&turns), "Tightened the opening.");
-    // user, call, result, reply - the reply after the result, as before.
+    // user, call, result, reply - the reply after the result.
     assert!(matches!(turns[2], AgentTurn::ToolResult { .. }));
 }
 

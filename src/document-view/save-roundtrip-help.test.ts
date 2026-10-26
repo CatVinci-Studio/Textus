@@ -4,10 +4,9 @@ import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { hashString, roundTripFile } from "./save-roundtrip";
 
-// The save round trip (save-roundtrip.test.ts) on the help guides in
-// `src/help/`: in English, Chinese and Japanese - the other languages'
-// guides are the same Markdown in other words, so these three cover the
-// alphabet, CJK and its punctuation. TEXTUS_ROUNDTRIP_ALL=1 runs all ten.
+// The save round trip on the help guides in English, Chinese and Japanese,
+// which cover the alphabet, CJK and its punctuation. TEXTUS_ROUNDTRIP_ALL=1
+// runs every language.
 
 const LANGUAGES = /\.(en|zh|ja)\.md$/;
 
@@ -41,8 +40,8 @@ function markdownFiles(dir: string): [string, string][] {
   return found;
 }
 
-// CI runs these once, in `check`, and only for a change that can reach
-// saving (scripts/ci-changes.mjs); the native jobs set this to skip them.
+// CI runs these once, only for changes that can reach saving; the native
+// jobs set this to skip them.
 describe.skipIf(process.env.TEXTUS_SKIP_ROUNDTRIP === "1")(
   "saving after an edit keeps the rest of the help guides and loses nothing",
   () => {
