@@ -122,7 +122,8 @@ export type AgentWorkspaceInfo = AgentWorkspace_Serialize;
 
 /** The settings.json key of the global writing conventions default. No
  *  frontend code reads it, but keep it: profile.rs's tests check it against
- *  the key the backend uses. */
+ *  the key the backend uses.
+ *  @public */
 export const WRITING_CONVENTIONS_KEY = "writingConventions";
 /** Its default value, and the per-language value meaning "no choice". */
 export const WRITING_CONVENTIONS_AUTOMATIC = "automatic";

@@ -318,39 +318,6 @@ export async function roundTripFile(
   return report;
 }
 
-/** For reproducing a failure: the opened text, what a save writes after
- *  edit `kind` with `seed` (the unedited save without one), and the whole
- *  document serialized. */
-export async function saveAfterEdit(
-  raw: string,
-  kind: EditKind | "none",
-  seed: number,
-): Promise<{
-  text: string;
-  out: string;
-  whole: string;
-  doc: ProseNode;
-} | null> {
-  const opened = await open(raw);
-  try {
-    return opened.editor.action((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      if (kind !== "none" && !makeEdit(view, kind, random(seed), ctx))
-        return null;
-      const { doc } = view.state;
-      const { text, source, mountDoc } = opened;
-      return {
-        text,
-        out: saved(ctx, text, source, mountDoc, doc),
-        whole: ctx.get(serializerCtx)(doc),
-        doc,
-      };
-    });
-  } finally {
-    await opened.editor.destroy();
-  }
-}
-
 async function checkEdit(
   raw: string,
   kind: EditKind,

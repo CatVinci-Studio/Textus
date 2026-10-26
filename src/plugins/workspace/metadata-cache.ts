@@ -247,8 +247,3 @@ export function unwatchMetadata(plugin: string): void {
   stopWatching();
   stopWatching = null;
 }
-
-/** Another folder opened: the old one's index goes. */
-export function forgetFolderIndex(): void {
-  current = null;
-}
