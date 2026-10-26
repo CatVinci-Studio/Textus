@@ -1,0 +1,7 @@
+### Fixed
+
+- Text pasted from a PDF, or from a terminal that wrapped it at its width, comes in as the paragraphs it was, instead of a line break wherever the page or the window ended - Chinese and Japanese joined with no space, a word broken with a hyphen joined to its end, ligatures such as "ﬁ" and look-alike radicals such as "⼀" as the letters they stand for, and a PDF's "•" bullets as a list. An email's or a chat's own short lines stay lines.
+- A terminal's output - a shell prompt, columns lined up with spaces - pastes as a code block, its spacing kept, instead of a paragraph that ran the columns together.
+- A pasted line ending in a web address keeps its line break without the address taking in a stray "\\".
+- Bold, italic and struck-through text pasted from Google Docs or Word for the web stays so, and Word for the web's headings are headings.
+- A message pasted from Outlook or Apple Mail comes in without an empty paragraph between every two, and an Outlook link goes to its address instead of through Outlook's Safe Links.
