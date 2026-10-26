@@ -115,7 +115,11 @@ pub async fn check_for_update<R: Runtime>(
     back_to_stable: bool,
 ) -> Result<Option<UpdateMetadata>, String> {
     // Going back reads the stable manifest only.
-    let channel = if back_to_stable { "stable".to_string() } else { channel };
+    let channel = if back_to_stable {
+        "stable".to_string()
+    } else {
+        channel
+    };
     let endpoints = endpoints_for(&channel, &configured_endpoints(&webview));
     let rpm_install = is_rpm_install();
     let updater = webview

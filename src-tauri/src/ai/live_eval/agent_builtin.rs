@@ -1191,9 +1191,7 @@ mod tests {
                 assert_eq!(parts.len(), 4, "{}", c.id);
                 assert!(SKILLS.contains(&parts[1]), "{}: unknown skill", c.id);
                 *per_skill.entry(parts[1]).or_default() += 1;
-            } else if parts[0] == "create" {
-                assert_eq!(parts.len(), 4, "{}", c.id);
-            } else if parts[1] == "none" {
+            } else if parts[0] == "create" || parts[1] == "none" {
                 assert_eq!(parts.len(), 4, "{}", c.id);
             } else {
                 // route/<skill>/<lang>, or /<case> for a second one.

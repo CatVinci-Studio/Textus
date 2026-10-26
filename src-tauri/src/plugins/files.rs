@@ -219,7 +219,10 @@ pub fn plugin_secret_get(
     if !state::read(&app).runs(&id) {
         return Err(format!("{id} is turned off."));
     }
-    Ok(read_secrets(&app)?.get(&id).and_then(|s| s.get(&key)).cloned())
+    Ok(read_secrets(&app)?
+        .get(&id)
+        .and_then(|s| s.get(&key))
+        .cloned())
 }
 
 /// Keeps a secret of the plugin's; `None` forgets it.

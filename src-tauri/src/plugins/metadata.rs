@@ -104,11 +104,14 @@ fn front_matter(text: &str) -> (Option<String>, usize) {
 }
 
 fn tags_in(text: &str) -> Vec<String> {
-    re(&TAG, r"(?:^|[\s(])#([\p{L}\p{N}_/-]*[\p{L}_/-][\p{L}\p{N}_/-]*)")
-        .captures_iter(text)
-        .map(|c| c[1].trim_end_matches('/').to_string())
-        .filter(|t| !t.is_empty())
-        .collect()
+    re(
+        &TAG,
+        r"(?:^|[\s(])#([\p{L}\p{N}_/-]*[\p{L}_/-][\p{L}\p{N}_/-]*)",
+    )
+    .captures_iter(text)
+    .map(|c| c[1].trim_end_matches('/').to_string())
+    .filter(|t| !t.is_empty())
+    .collect()
 }
 
 /// What `text` (the document at `path`, `rel` in its folder) holds.
@@ -167,7 +170,8 @@ pub fn parse_document(path: &str, rel: &str, text: &str) -> DocumentMeta {
             });
         }
         // A heading's # is not a tag.
-        let tag_text = if plain.trim_start().starts_with('#') && !headings.is_empty()
+        let tag_text = if plain.trim_start().starts_with('#')
+            && !headings.is_empty()
             && headings.last().map(|h| h.line) == Some(line_no)
         {
             headings.last().map(|h| h.text.clone()).unwrap_or_default()
@@ -339,7 +343,7 @@ pub async fn plugin_metadata_all(
         .get(&root)
         .map(|docs| docs.values().map(|c| c.meta.clone()).collect())
         .unwrap_or_default();
-    documents.sort_by(|a, b| a.rel.to_lowercase().cmp(&b.rel.to_lowercase()));
+    documents.sort_by_key(|d| d.rel.to_lowercase());
     Ok(MetadataAll { documents, changed })
 }
 
@@ -383,7 +387,10 @@ mod tests {
         assert_eq!(m.title, "The plan");
         assert_eq!(m.frontmatter.as_deref(), Some("title: Plan\ntags: [a]"));
         assert_eq!(
-            m.headings.iter().map(|h| (h.level, h.text.as_str(), h.line)).collect::<Vec<_>>(),
+            m.headings
+                .iter()
+                .map(|h| (h.level, h.text.as_str(), h.line))
+                .collect::<Vec<_>>(),
             vec![(1, "The plan", 4), (2, "Tasks", 13)]
         );
         assert_eq!(m.links.len(), 2);

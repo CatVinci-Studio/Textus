@@ -77,8 +77,7 @@ pub(crate) fn export_to(source: &Path, publisher: &str, folder: &Path) -> Result
     }
     let text = std::fs::read_to_string(source.join("textus-plugin.json"))
         .map_err(|e| format!("The plugin has no textus-plugin.json: {e}"))?;
-    let mut manifest: serde_json::Value =
-        serde_json::from_str(&text).map_err(|e| e.to_string())?;
+    let mut manifest: serde_json::Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
     let id = manifest["id"].as_str().unwrap_or_default().to_string();
     let (_, name) = id
         .split_once('.')
@@ -172,7 +171,9 @@ mod tests {
         let readme = std::fs::read_to_string(target.join("README.md")).unwrap();
         assert!(readme.starts_with("# Word Count\n\nCounts."));
         assert!(readme.contains("jane.word-count-<version>.zip"));
-        assert!(std::fs::read_to_string(target.join("LICENSE")).unwrap().contains(" jane\n"));
+        assert!(std::fs::read_to_string(target.join("LICENSE"))
+            .unwrap()
+            .contains(" jane\n"));
         assert!(target.join(".github/workflows/release.yml").is_file());
         assert!(target.join(".gitignore").is_file());
         // Not over a folder already there.
