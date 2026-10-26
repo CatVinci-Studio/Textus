@@ -7,6 +7,7 @@ import base from "./playwright.config";
  *
  *   npm run screenshots:readme    the README's images, docs/images/readme/
  *   npm run screenshots:website   the website's app shots (see the spec's header)
+ *   npm run screenshots:plugins   the official plugins' market pictures
  *   npm run screenshots:review    design-review shots; set TEXTUS_SHOTS_DIR
  *                                 to where they go, or they skip
  */
@@ -33,6 +34,15 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
         viewport: { width: 1440, height: 900 },
         deviceScaleFactor: 2,
+        colorScheme: "light",
+      },
+    },
+    {
+      name: "plugins",
+      testDir: "./e2e/shots/plugins",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1200, height: 750 },
         colorScheme: "light",
       },
     },
