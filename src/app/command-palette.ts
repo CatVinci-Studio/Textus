@@ -1,9 +1,9 @@
 import { currentStrings } from "../i18n/current";
 import type { Strings } from "../i18n/strings";
-import type { Shortcuts } from "../settings/SettingsContext";
+import type { Settings } from "../settings/SettingsContext";
 import { loadSettings } from "../settings/settings-store";
 import { showQuickPick, type QuickPickItem } from "../ui/quick-pick";
-import { commands, runCommand } from "./commands";
+import { commands, commandShortcut, runCommand } from "./commands";
 import { runMenuAction } from "./menu/app-menu-actions";
 import {
   buildAppMenu,
@@ -72,19 +72,26 @@ function skipped(action: MenuAction): boolean {
 }
 
 /** The palette's entries as the app is now. */
-function currentEntries(t: Strings, shortcuts: Shortcuts): PaletteEntry[] {
+function currentEntries(
+  t: Strings,
+  { shortcuts, commandShortcuts }: Settings,
+): PaletteEntry[] {
   return paletteEntries(
     buildAppMenu(t, shortcuts, NO_RECENTS),
     commands()
       .filter((c) => c.enabled?.() !== false)
-      .map((c) => ({ id: c.id, title: c.title(t), shortcut: c.shortcut })),
+      .map((c) => ({
+        id: c.id,
+        title: c.title(t),
+        shortcut: commandShortcut(c, commandShortcuts) || undefined,
+      })),
   );
 }
 
 /** Opens the palette; the entry picked runs. */
 export async function openCommandPalette(): Promise<void> {
   const t = currentStrings();
-  const entries = currentEntries(t, loadSettings().shortcuts);
+  const entries = currentEntries(t, loadSettings());
   const items: QuickPickItem[] = entries.map((entry, i) => ({
     label: entry.label,
     description: entry.where,

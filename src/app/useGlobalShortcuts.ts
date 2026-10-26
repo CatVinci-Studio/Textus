@@ -258,7 +258,7 @@ export function useGlobalShortcuts(opts: {
       } else {
         // A command added from outside (commands.ts), on a combo none of
         // the app's own has taken.
-        const command = commandForCombo(combo);
+        const command = commandForCombo(combo, settings.commandShortcuts);
         if (command) {
           e.preventDefault();
           command.run();

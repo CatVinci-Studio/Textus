@@ -303,6 +303,9 @@ export interface Settings {
   /// the document has its own zoom, above.
   uiTextScale: UiTextScale;
   shortcuts: Shortcuts;
+  /** The keys of plugins' commands as the user set them, by command id,
+   *  over their manifests' keybindings; "" for none. */
+  commandShortcuts: Record<string, string>;
   /// Either a built-in theme id (theme/builtin-themes.ts) or a
   /// `UserThemeMeta.id`.
   themeId: string;
@@ -410,6 +413,7 @@ export const DEFAULT_SETTINGS: Settings = {
   zoom: 1,
   uiTextScale: 1,
   shortcuts: DEFAULT_SHORTCUTS,
+  commandShortcuts: {},
   themeId: "default",
   userThemes: [],
   newDocumentMode: "window",

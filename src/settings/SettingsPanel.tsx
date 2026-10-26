@@ -34,7 +34,11 @@ import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import { TOGGLE_FIND_REPLACE_EVENT } from "../utils/events";
 import "./SettingsPanel.css";
 import { settingsPage, settingsPages } from "./settings-pages";
-import type { SettingsPageProps, Subpage } from "./pages/types";
+import type {
+  SettingsPageProps,
+  ShortcutCommand,
+  Subpage,
+} from "./pages/types";
 import { useModalDialog } from "../ui/useModalDialog";
 import { usePresenceProps } from "../ui/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
@@ -64,6 +68,8 @@ export interface SettingsPanelProps {
   /** The shortcuts that can't be changed, listed under the ones that can
    *  (built from the app menu, app/fixed-shortcuts.ts). */
   fixedShortcuts?: FixedShortcutGroup[];
+  /** The commands plugins add, under Shortcuts' own. */
+  pluginCommands?: ShortcutCommand[];
   /** The page to open at; General when left out. */
   initialCategory?: string;
 }
@@ -111,6 +117,7 @@ export function SettingsPanel({
   onFilesDeleted,
   viewChecks = {},
   fixedShortcuts = [],
+  pluginCommands = [],
   initialCategory = "general",
 }: SettingsPanelProps) {
   const { settings, setSettings, t } = useSettings();
@@ -170,6 +177,7 @@ export function SettingsPanel({
     onClose,
     viewChecks,
     fixedShortcuts,
+    pluginCommands,
   };
   const renderCategory = (c: Category, indexing = false) => {
     const page = settingsPage(c);

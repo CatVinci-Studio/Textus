@@ -8,6 +8,7 @@ import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { useSettings } from "../settings/SettingsContext";
 import { formatCombo } from "../utils/shortcuts";
 import { fixedShortcutGroups } from "./fixed-shortcuts";
+import { commands } from "./commands";
 import { platformName } from "../platform/window-chrome";
 import { Presence } from "../ui/usePresence";
 import { FlipOnChange } from "../ui/flip";
@@ -189,6 +190,11 @@ function App() {
             zen: zenMode,
           }}
           fixedShortcuts={fixedShortcutGroups(t, platformName())}
+          pluginCommands={commands().map((c) => ({
+            id: c.id,
+            title: c.title(t),
+            shortcut: c.shortcut,
+          }))}
         />
 
         <ClosePrompt
