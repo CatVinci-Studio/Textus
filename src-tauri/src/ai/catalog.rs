@@ -39,8 +39,7 @@ pub struct ProviderCatalogEntry {
     pub agent_default_model: Option<&'static str>,
     /// True for local servers (Ollama) that work without a key.
     pub key_optional: bool,
-    /// Its "oauth" sign-in isn't one the provider offers other apps: it may
-    /// stop working, or be billed apart from the plan, and Settings says so.
+    /// Its "oauth" sign-in isn't offered to other apps; Settings says so.
     pub oauth_unofficial: bool,
     /// Whether this provider's API accepts image content parts at all, which
     /// is what gates the chat's image attachments (aicompat's per-dialect

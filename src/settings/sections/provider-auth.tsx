@@ -95,7 +95,6 @@ export function OauthPanel({
   t: Strings;
   providerId: string;
   label: string;
-  /** Not a sign-in the provider offers other apps: said under it. */
   unofficial?: boolean;
   onStatusChange?: (configured: boolean) => void;
 }) {
