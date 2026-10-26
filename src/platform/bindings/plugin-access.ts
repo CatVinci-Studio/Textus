@@ -10,15 +10,11 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 export const commands = {
 	/**  A folder's entries, hidden ones left out. */
 	plugin_fs_list: (id: string, root: string, path: string) => __TAURI_INVOKE<FsEntry_Serialize[]>("plugin_fs_list", { id, root, path }),
-	/**
-	 *  Every Markdown document in the folder, in the sidebar's order, with
-	 *  its text.
-	 */
+	/**  Every Markdown document in the folder, in the sidebar's order, with its text. */
 	plugin_fs_documents: (id: string, root: string) => __TAURI_INVOKE<WorkspaceDocuments>("plugin_fs_documents", { id, root }),
 	/**
 	 *  The folder's documents' lines holding `query`, ignoring case, in the
-	 *  sidebar's order: at most `limit` of them (and never more than
-	 *  MAX_SEARCH_HITS).
+	 *  sidebar's order: at most `limit` (and MAX_SEARCH_HITS).
 	 */
 	plugin_fs_search: (id: string, root: string, query: string, limit: number | null) => __TAURI_INVOKE<SearchResult>("plugin_fs_search", { id, root, query, limit }),
 	/**
@@ -46,8 +42,8 @@ export const commands = {
 	 */
 	plugin_fs_create: (id: string, root: string, path: string, text: string) => __TAURI_INVOKE<null>("plugin_fs_create", { id, root, path, text }),
 	/**
-	 *  A text file and its version (textus.files.process); "" and the empty
-	 *  file's version when it isn't there yet.
+	 *  A text file and its version; "" and the empty file's version when it isn't
+	 *  there yet.
 	 */
 	plugin_fs_read_versioned: (id: string, root: string, path: string) => __TAURI_INVOKE<VersionedText>("plugin_fs_read_versioned", { id, root, path }),
 	/**
@@ -81,13 +77,13 @@ export const commands = {
 	/**  Deletes one of the plugin's own files there. */
 	plugin_store_delete: (id: string, scope: StoreScope, root: string | null, path: string) => __TAURI_INVOKE<null>("plugin_store_delete", { id, scope, root, path }),
 	/**
-	 *  How much a plugin keeps in each place - Settings shows it, and empties
-	 *  it on Clear data. `root` is the open folder, for the project's.
+	 *  How much a plugin keeps in each place, for Settings. `root` is the open
+	 *  folder, for the project's.
 	 */
 	plugin_store_usage: (id: string, root: string | null) => __TAURI_INVOKE<[number, number]>("plugin_store_usage", { id, root }),
 	/**
-	 *  Empties one of a plugin's places (Settings › its page › Clear data).
-	 *  Asked by the user, not the plugin: it may be off.
+	 *  Empties one of a plugin's places (Clear data). Asked by the user, not the
+	 *  plugin, which may be off.
 	 */
 	plugin_store_clear: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<null>("plugin_store_clear", { id, scope, root }),
 };

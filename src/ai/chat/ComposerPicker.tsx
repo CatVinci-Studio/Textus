@@ -3,7 +3,7 @@ import type { Lang, Strings } from "../../i18n/strings";
 import { tapKeepingFocus } from "../../ui/tap";
 import type { PickerGroupId } from "./skill-picker";
 
-/** The pickers' words, in the UI language (chat-labels.ts). */
+/** The pickers' words, in the UI language. */
 export interface PickerLabels {
   /** The UI language: picks the built-in skills' labels. */
   lang: Lang;
@@ -63,10 +63,7 @@ export interface PickerSection {
 
 /**
  * The menu above the composer that `/` and `@` open. It always says
- * something: the matches, grouped, with the keys that drive it - or, with
- * nothing to list, what the key is for and how to get something to list.
- * (It used to render only when something matched, so a first `/` or an `@`
- * in an unsaved document looked like a dead key.)
+ * something: the matches, or what the key is for, so it never looks dead.
  */
 export function ComposerPicker({
   kind,
@@ -90,8 +87,8 @@ export function ComposerPicker({
   const listRef = useRef<HTMLDivElement>(null);
   const count = sections.reduce((n, s) => n + s.rows.length, 0);
 
-  // The highlighted row stays in view by scrolling the menu alone (as
-  // ui/Select does): scrollIntoView would move the panel around it too.
+  // The highlighted row stays in view by scrolling the menu alone:
+  // scrollIntoView would move the panel around it too.
   useEffect(() => {
     const list = listRef.current;
     const item = list?.querySelector<HTMLElement>(

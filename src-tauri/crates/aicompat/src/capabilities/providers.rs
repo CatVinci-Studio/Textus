@@ -136,9 +136,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
             image: Some(ImageApi::DashScope),
         },
     ),
-    // MiniMax: M3 switches thinking on and off, M3.1 Flash only takes an
-    // effort (model-capabilities.json); custom::Vendor::MiniMax keeps the
-    // thinking out of the answer.
+    // MiniMax: M3 switches thinking on and off, M3.1 Flash only takes an effort.
     (
         "minimax",
         ProviderCaps {
@@ -161,9 +159,8 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
             image: Some(ImageApi::MiniMax),
         },
     ),
-    // Ark takes `reasoning_effort` (`none` to `max` on Seed) and maps it
-    // onto the models that only switch, where `thinking.type: disabled`
-    // can be refused (custom::Vendor::Ark).
+    // Ark takes `reasoning_effort` and maps it onto the models that only
+    // switch, where `thinking.type: disabled` can be refused.
     (
         "doubao",
         ProviderCaps {
@@ -197,8 +194,7 @@ pub fn provider(id: &str) -> ProviderCaps {
         .unwrap_or(DEFAULT_CAPS)
 }
 
-/// Whether the table has a row of its own for `id` (catalog.rs's tests
-/// require one for every catalog entry).
+/// Whether the table has a row of its own for `id`.
 pub fn has_row(id: &str) -> bool {
     PROVIDERS.iter().any(|(p, _)| *p == id)
 }

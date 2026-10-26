@@ -1,7 +1,6 @@
-//! Spanish rules (CATALOGUE.md §3.7), from the RAE's Ortografía and
-//! Diccionario panhispánico de dudas (summarised). Automatic has no
-//! national profile: es-ES, es-419 and the EU preset differ on grouping
-//! and percent spacing, which are suggestions only.
+//! Spanish rules, after the RAE (summarised). Automatic has no national
+//! profile: es-ES, es-419 and the EU differ on grouping and percent spacing,
+//! which are suggestions only.
 
 use super::stats::minority;
 use super::text::*;

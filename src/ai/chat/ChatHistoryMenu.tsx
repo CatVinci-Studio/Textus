@@ -30,11 +30,8 @@ export function groupByProject(
 }
 
 /**
- * The history button in a chat surface's header (the AI panel's, the
- * detached window's) and the list of saved conversations it opens
- * (ai/chat/chat-history.ts), grouped by project folder. Picking one hands
- * it to `onReopen` (reopen-conversation.ts) and closes the list. The list
- * spans the header it sits in, which is its containing block.
+ * The history button in a chat header and the saved conversations it opens,
+ * grouped by project folder. Picking one hands it to `onReopen`.
  */
 export function ChatHistoryMenu({
   buttonClassName,
@@ -92,8 +89,7 @@ function ChatHistoryList({
   const { t, settings } = useSettings();
   const entries = useChatHistory();
   const archived = useHasArchivedConversations(entries);
-  // In the UI's language, not the OS's: a Chinese UI on an English system
-  // dated its conversations in English.
+  // In the UI's language, not the OS's.
   const locale = localeOf(settings.language);
   const [query, setQuery] = useState("");
   const hits = useHistorySearch(query);

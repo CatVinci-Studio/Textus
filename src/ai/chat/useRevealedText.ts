@@ -3,11 +3,8 @@ import { StreamReveal } from "../stream-reveal";
 import { motionAllowed } from "../../ui/motion";
 
 /**
- * A streamed reply as it is drawn: while `live`, `text` revealed a frame
- * at a time at a steady pace (stream-reveal.ts); otherwise `text` itself,
- * so the end of a stream - finished, stopped or failed - shows everything
- * at once. With motion reduced, whatever has arrived shows on the next
- * render, in the steps it came in.
+ * A streamed reply as it is drawn: while `live`, `text` revealed at a steady
+ * pace; otherwise `text` itself, so a stream's end shows everything at once.
  */
 export function useRevealedText(text: string, live: boolean): string {
   const reveal = useRef<StreamReveal | null>(null);

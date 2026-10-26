@@ -25,11 +25,8 @@ export interface Drag {
 }
 
 /** A row dragged onto a folder moves into it; a file dragged over the
- *  documents opens there, beside the one under it (ui/document-drop.ts).
- *  A drag: a press on a row that moves past DRAG_START_PX. Pointer events rather than HTML drag and drop,
- *  which the window's own file drop (dragging files in from Finder or
- *  Explorer) takes over on Windows. `takeDragClick` reports - once - that
- *  the click a drag's release sends is the drag's, not a row's. */
+ *  documents opens there. Pointer events, not HTML drag and drop, which the
+ *  OS file drop takes over on Windows. */
 export function useRowDrag(
   treeRef: RefObject<HTMLDivElement | null>,
   reload: (...dirs: string[]) => void,

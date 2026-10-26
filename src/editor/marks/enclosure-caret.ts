@@ -12,9 +12,7 @@ import type { DeleteAction } from "./enclosure-moves";
 
 /**
  * The caret where the browser has it, which can run ahead of the editor
- * state, and the moves and deletes of enclosure-moves.ts applied to the
- * view - including text an IME composed next to an enclosure, moved where
- * the writer meant it (enclosure.ts).
+ * state, and the enclosure moves and deletes applied to the view.
  */
 
 export function setCaret(view: EditorView, pos: number): void {
@@ -24,15 +22,10 @@ export function setCaret(view: EditorView, pos: number): void {
 }
 
 /**
- * Collapse the transaction's selection to `pos` (resolved against the
- * transaction's own, post-edit doc). Every enclosure-creating edit places
- * the caret through this, keeping the placement convention in one place:
- *   - opening a fresh empty shell         -> inside, at content start
- *   - completing a pair around content
- *     (forward pairing, Cmd+B on a caret) -> inside, at content start
- *   - closing/converting behind the caret
- *     (findRunOpen, typing the closer)    -> after the node
- *   - wrapping a selection                -> after the node
+ * Collapse the transaction's selection to `pos`. Every enclosure-creating
+ * edit places the caret through this: a new or completed shell puts it
+ * inside at the content start; closing behind the caret or wrapping a
+ * selection puts it after the node.
  */
 export function caretAt(tr: Transaction, pos: number): Transaction {
   return tr.setSelection(TextSelection.create(tr.doc, pos));
@@ -40,8 +33,7 @@ export function caretAt(tr: Transaction, pos: number): Transaction {
 
 /**
  * Where the browser's caret is, as a document position: null when the DOM
- * selection isn't a caret (none, or a range) or isn't at a position the
- * editor knows. See stateWithLiveSelection for why the state's own can lag.
+ * selection isn't a caret or isn't at a position the editor knows.
  */
 export function liveCaretPos(view: EditorView): number | null {
   // ShadowRoot.getSelection is nonstandard (Blink-only), hence the guard.
@@ -57,8 +49,7 @@ export function liveCaretPos(view: EditorView): number | null {
   )
     return null;
   try {
-    // -1 for a caret in DOM the document doesn't own (a revision's
-    // widget): resolving it threw in link-reveal's liveSelection.
+    // -1 for a caret in DOM the document doesn't own (a revision's widget).
     const pos = view.posAtDOM(domSel.anchorNode, domSel.anchorOffset);
     return pos >= 0 && pos <= view.state.doc.content.size ? pos : null;
   } catch {
@@ -94,27 +85,16 @@ export function liveRange(view: EditorView): [number, number] | null {
 }
 
 /**
- * The editor state's selection can lag behind the real DOM caret: native
- * caret movement (the in-content steps deliberately left to the browser)
- * only reaches ProseMirror through an asynchronous selectionchange
- * readback, so a keystroke arriving shortly after one - key repeat, fast
- * arrowing - runs against a state.selection that's one or more steps
- * behind where the caret actually sits. prosemirror-view's own keydown
- * path has the same gap (its forceFlush only runs flushes that are
- * already scheduled). Every decision this plugin makes is position math
- * around the caret, so a stale position makes a boundary crossing that
- * should have been intercepted silently fall through to native movement -
- * which is exactly the movement that misbehaves next to the delimiter
- * widgets. This reads the caret straight out of the DOM and, when it
- * disagrees with the state, returns a state whose selection is corrected
- * to match.
+ * The state's selection can lag behind the DOM caret: native caret moves
+ * reach ProseMirror through an async selectionchange, so a fast keystroke
+ * runs against a stale position and a boundary crossing slips through to
+ * native movement. This returns a state with the selection read from the DOM.
  */
 export function stateWithLiveSelection(view: EditorView): EditorState {
   const { state } = view;
-  // A range the browser has but the state doesn't yet, or not all of -
-  // Shift+Arrow just before Mod+B, the last steps still to be read back:
-  // the shortcut wraps what is on screen selected. A node selection (an
-  // image) is the state's own.
+  // A range the browser has but the state doesn't fully yet (Shift+Arrow just
+  // before Mod+B): the shortcut wraps what is on screen. A node selection is
+  // the state's own.
   const range = liveRange(view);
   const { selection } = state;
   if (
@@ -159,11 +139,9 @@ export function deleteShell(
 }
 
 /**
- * Delete one of a node's delimiters: the wrapper is no longer closed, so
- * the node unwraps into literal text that still carries the delimiter that
- * was NOT deleted ("*hello*" minus its closer -> literal "*hello"). Inner
- * nodes in the content survive as nodes. Retyping the deleted delimiter
- * re-forms the enclosure via the autopair plugins' findRunOpen path.
+ * Delete one of a node's delimiters: the node unwraps into literal text
+ * that keeps the other delimiter ("*hello*" minus its closer -> "*hello").
+ * Retyping the deleted delimiter re-forms the enclosure.
  */
 export function deleteDelimiter(
   view: EditorView,
@@ -197,16 +175,11 @@ export function applyDeleteAction(
 }
 
 /**
- * IME counterpart to redirectMisattributedInput. The same WKWebView caret
- * normalization that pulls plain keystrokes into an adjacent enclosure also
- * pulls IME composition text in - but during composition nothing may
- * dispatch (it would abort the preedit and commit the raw pinyin, see
- * redirectMisattributedInput's guard). So the fix runs bracketed around the
- * composition instead: at compositionstart, snapshot any enclosure the
- * caret sits directly against; after compositionend, if the committed text
- * ended up inside that node, move it back out to where the caret actually
- * was. Every check below bails silently when the doc doesn't match the
- * snapshot exactly - a missed relocation is far better than mangling text.
+ * The IME counterpart of redirecting misattributed input: WKWebView pulls
+ * composed text into an adjacent enclosure, and nothing may dispatch during
+ * composition. So the enclosures beside the caret are snapshotted at
+ * compositionstart and the text moved back out after compositionend; any
+ * mismatch with the snapshot bails rather than mangle text.
  */
 export interface CompositionAnchor {
   side: "before" | "after";
@@ -220,9 +193,8 @@ export function snapshotAdjacentEnclosures(
   const sel = state.selection;
   if (!sel.empty) return [];
   const $pos = sel.$from;
-  // Composing inside code or maths stays there. Inside bold, text pulled
-  // into the code beside the caret goes back out, as in a paragraph:
-  // `**a `b`|**`.
+  // Composing inside code or maths stays there. Inside bold, text pulled into
+  // the code beside the caret goes back out: `**a `b`|**`.
   const { name } = $pos.parent.type;
   if (isEnclosureName(name) && name !== "md_span") return [];
   const anchors: CompositionAnchor[] = [];
@@ -246,16 +218,9 @@ export function snapshotAdjacentEnclosures(
 }
 
 /**
- * First line of defense, before the relocation fallback below: give WKWebView
- * an unambiguous DOM caret position OUTSIDE the enclosure before the IME
- * inserts anything. The normalization that pulls the preedit inside happens
- * because the boundary position (between the delimiter widget and the
- * neighboring text) is ambiguous; collapsing the DOM selection into the
- * adjacent TEXT node at the same document position removes the ambiguity, so
- * the whole composition renders in the paragraph from the first keystroke -
- * no mid-composition bold styling, no post-commit relocation jump. Touching
- * only the DOM selection is composition-safe: nothing is dispatched and no
- * DOM is redrawn.
+ * First line of defense: collapse the DOM selection into the adjacent text
+ * node, so WKWebView's ambiguous boundary position can't pull the preedit
+ * inside. Only the DOM selection is touched, which is composition-safe.
  */
 export function pinDomCaretForComposition(
   view: EditorView,
@@ -329,6 +294,5 @@ export function relocateComposedText(
 }
 
 /** How long after compositionend the committed text is moved out of an
- *  adjacent node (relocateComposedText, in compositionend below).
- *  md-span-autopair-plugin.ts waits a little longer, to look after it. */
+ *  adjacent node. The md-span autopair waits a little longer. */
 export const COMPOSE_RELOCATE_DELAY_MS = 30;

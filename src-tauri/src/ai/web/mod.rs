@@ -1,12 +1,6 @@
-//! Web search for Textus AI, for every provider.
-//!
-//! One button in the composer; behind it, layers. A model whose provider
-//! searches on its own (OpenAI, Claude, xAI, OpenRouter, Groq, Qwen, Zhipu)
-//! uses that. Any other gets Textus's own `web_search` tool, run on the
-//! search service the user picked or, by default, on one their existing
-//! DeepSeek, Zhipu or Kimi key opens. `web_fetch` - one page, read here -
-//! comes with either. Every page cited gets one number for the whole
-//! conversation, [1] [2], listed under the reply.
+//! Web search for Textus AI, for every provider: the provider's own search when
+//! it has one, else Textus's `web_search` on a search service; `web_fetch` with
+//! either. Every page cited gets one number for the whole conversation.
 
 pub(crate) mod extract;
 mod fetch;
@@ -30,34 +24,27 @@ use sources::{host, SourceBook};
 pub(crate) const WEB_SEARCH_TOOL: &str = "web_search";
 pub(crate) const WEB_FETCH_TOOL: &str = "web_fetch";
 
-/// Per request: searches and page reads the model may make before it is
-/// told to answer with what it has - the same five Claude's native search
-/// gets (`max_uses`).
+/// Per request: searches and page reads the model may make before it is told
+/// to answer with what it has.
 const MAX_SEARCHES: usize = 5;
 const MAX_FETCHES: usize = 5;
 const MAX_QUERIES: usize = 3;
 const RESULTS_PER_QUERY: usize = 8;
 const SNIPPET_CHARS: usize = 300;
-/// How long a result is reused in this run of the app - a follow-up
-/// question rarely needs the page fetched again. Memory only, never disk.
+/// How long a result is reused in this run of the app: a follow-up question
+/// rarely needs the page fetched again. Memory only, never disk.
 const SEARCH_CACHE_FOR: Duration = Duration::from_secs(5 * 60);
 const FETCH_CACHE_FOR: Duration = Duration::from_secs(15 * 60);
 
-/// The provider's own search for `model`, if it has one - the capability
-/// table's answer (aicompat::capabilities::search_route). Gemini's
-/// OpenAI-compatible endpoint has none for chat (Google documents search
-/// grounding there only for image generation), Kimi's `$web_search` is shut
-/// down on 2026-10-20, and DeepSeek, Mistral, Doubao, Ollama and custom
-/// endpoints have none either: those use Textus's own web_search.
+/// The provider's own search for `model`, if it has one, per the capability
+/// table. Providers without one use Textus's own web_search.
 pub(crate) fn native_search(provider: &str, model: &str) -> Option<NativeSearch> {
     Some(capabilities::search_route(provider, model)).filter(|s| *s != NativeSearch::None)
 }
 
-/// The search service Textus's own web_search uses: the one chosen in
-/// Settings ("auto" or None: the first of DeepSeek, Zhipu and Kimi whose
-/// key is saved), if it is set up. A chosen service without its key is
-/// None rather than another one in its place - the setting says which
-/// service gets the queries.
+/// The search service Textus's own web_search uses: the one chosen in Settings
+/// ("auto": the first of DeepSeek, Zhipu and Kimi whose key is saved). A
+/// chosen service without its key is None, not a substitute.
 pub(crate) fn resolve_service(
     app: &AppHandle,
     choice: Option<&str>,
@@ -261,8 +248,8 @@ impl WebPlan {
         *sources = self.state.lock().unwrap().book.for_reply(text, &proposed);
     }
 
-    /// For a request that can't call tools (agent.rs's flattened fallback):
-    /// the user's message searched once, as a prompt section.
+    /// For a request that can't call tools: the user's message searched once, as
+    /// a prompt section.
     pub(crate) async fn search_ahead(&self, question: &str) -> Option<String> {
         self.service.as_ref()?;
         let query: String = question.chars().take(128).collect();
@@ -452,8 +439,8 @@ async fn cached_fetch(url: &str) -> Result<fetch::Fetched, String> {
     Ok(page)
 }
 
-/// What the composer's Web search button can do with the provider and
-/// model in use - generated into src/platform/bindings/ai.ts.
+/// What the composer's Web search button can do with the provider and model in
+/// use.
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]

@@ -1,6 +1,5 @@
-/* ui/Select.tsx. The closed control takes its frame, chevron and size from
-   design-system.css's select rules (.settings-select, .inline-chat-mode,
-   .file-search-scope); this adds what a <button> needs to behave like one. */
+/* The closed control takes its frame, chevron and size from the shared
+   select rules; this adds what a <button> needs to behave like one. */
 .ui-select {
   display: inline-flex;
   align-items: center;
@@ -94,10 +93,8 @@
   cursor: default;
 }
 
-/* iOS (Select.tsx's NativeSelect): the closed control is drawn as on the
-   desktop, and a transparent native select over the whole of it takes the
-   tap and opens the system picker. 16px keeps WebKit from zooming in on
-   it. */
+/* iOS: the closed control is drawn as on the desktop, with a transparent
+   native select over it taking the tap. 16px keeps WebKit from zooming in. */
 .ui-select-native-frame {
   position: relative;
 }

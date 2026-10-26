@@ -1,5 +1,5 @@
-/* Plugins in the window (src/plugins/): their hidden hosts, the frames
-   their webviews are drawn in, a sidebar tab's icon, the quick pick. */
+/* Plugins in the window: hidden hosts, webview frames, sidebar tab icons,
+   the quick pick. */
 
 /* Out of sight, still running: a frame left out of the layout keeps its
    timers going, which display: none would not promise. */
@@ -40,8 +40,8 @@
   flex: 1;
   min-height: 0;
   min-width: 0;
-  /* Clear of the window bar floating over the top (window-bar.css), as
-     the editor's page is - unless the tab bar is there to do it. */
+  /* Clear of the floating window bar, as the editor's page is, unless the tab
+     bar is there to do it. */
   padding-top: 28px;
 }
 .tab-bar ~ * .plugin-tab-pane {
@@ -72,10 +72,8 @@
   -webkit-mask-position: center;
 }
 
-/* Settings › Extensions › Plugins (settings/pages/PluginsPage.tsx): a card per plugin
-   - its name, what it does, who made it, its switch - opening its own
-   page. No icons: a list of names reads at a glance, and a plugin's
-   artwork never sat well beside Settings' own rows. */
+/* Settings › Extensions › Plugins: a card per plugin opening its own page.
+   No icons: a list of names reads at a glance. */
 .plugin-install-buttons,
 .plugin-detail-actions {
   display: flex;
@@ -263,7 +261,7 @@ button.plugin-card-open:hover .plugin-card-name {
   color: var(--chrome-muted);
   font-size: var(--text-sm);
 }
-/* A plugin's recent errors (PluginErrors.tsx). */
+/* A plugin's recent errors. */
 .plugin-errors {
   margin: 0;
   font-family: var(--font-mono);
@@ -281,7 +279,7 @@ button.plugin-card-open:hover .plugin-card-name {
   padding: 0 var(--space-3) var(--space-3);
 }
 
-/* A web page in a tab (WebPagePane.tsx). */
+/* A web page in a tab. */
 .web-page-pane {
   display: flex;
   flex-direction: column;
@@ -369,17 +367,15 @@ button.plugin-card-open:hover .plugin-card-name {
   border: 0;
   background: var(--bg);
 }
-/* Where the native page (useNativeWebPage) is laid: its size and place
-   are the page's. */
+/* Where the native page is laid: its size and place are the page's. */
 .web-page-native {
   flex: 1;
   min-height: 0;
   background: var(--bg);
 }
 
-/* A plugin's status in the window bar (WindowBar's PluginStatusItems):
-   read like the word count beside it, a button only when it runs
-   something. */
+/* A plugin's status in the window bar: read like the word count beside it,
+   a button only when it runs something. */
 .plugin-status-item {
   font-size: var(--text-sm);
   color: var(--editor-muted);
@@ -402,9 +398,8 @@ button.plugin-card-open:hover .plugin-card-name {
   color: var(--editor-text);
 }
 
-/* A plugin holding the keyboard (editor-input.ts): Vim's block cursor in
-   normal mode, the native caret hidden, and flash's jump labels laid over
-   the text without moving it. */
+/* A plugin holding the keyboard: Vim's block cursor in normal mode, the
+   native caret hidden, and flash's jump labels over the text. */
 .ProseMirror.plugin-cursor-block {
   caret-color: transparent;
 }
@@ -453,8 +448,8 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: 0 0 var(--space-3);
 }
 
-/* Every Extensions tab (ExtensionsTabLayout.tsx): a line of what it holds
-   with Get more and "…" on the right, the installed items, Advanced. */
+/* Every Extensions tab: a line of what it holds with Get more and "…" on
+   the right, the installed items, Advanced. */
 .extensions-head {
   display: flex;
   align-items: center;

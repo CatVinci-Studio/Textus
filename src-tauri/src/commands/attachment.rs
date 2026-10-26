@@ -4,21 +4,7 @@ use serde::Serialize;
 use std::path::Path;
 
 /// A chat attachment: whatever the user picked, turned into something a model
-/// can actually read.
-///
-/// There are exactly two destinations, and every format has to reach one of
-/// them - which is why this is a tagged union rather than one struct with a
-/// `kind` string. The variants share only a name; as a flat struct every
-/// constructor had to fill the other half with `String::new()`, and both
-/// languages carried "empty for images" / "empty for text" comments enforcing
-/// by convention what the type can enforce itself. Generated into
-/// src/platform/bindings/ai-agent.ts (`ChatAttachment` in src/ai/types.ts), where
-/// `kind` narrows the union the same way.
-///
-/// The old implementation was a plain `read_to_string`, so every binary -
-/// a PDF above all - came back `Err`, and the frontend's `.catch(() => null)`
-/// swallowed it. The button looked dead. Everything here therefore reports a
-/// real reason on failure, and the caller shows it.
+/// can read. Failures carry a real reason for the user to see.
 #[derive(Serialize, Clone)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -27,10 +13,8 @@ pub enum ChatAttachment {
         name: String,
         /// Extracted text, inlined into the prompt by the caller.
         content: String,
-        /// `content` hit MAX_EXTRACTED_CHARS and was cut. The frontend labels
-        /// the chip so the user knows the model isn't seeing the whole thing -
-        /// a silent truncation reads as "the model has my file" when it
-        /// doesn't.
+        /// `content` hit MAX_EXTRACTED_CHARS and was cut; the frontend labels the chip
+        /// so the user knows the model isn't seeing the whole file.
         truncated: bool,
     },
     #[serde(rename_all = "camelCase")]
@@ -65,12 +49,8 @@ impl ChatAttachment {
 /// otherwise evict the document itself from the context window.
 const MAX_EXTRACTED_CHARS: usize = 60_000;
 
-/// Cuts `text` to the cap, in place. `char_indices().nth()` stops as soon as
-/// the cap is reached and hands back a byte index, so this costs O(cap)
-/// rather than the two full UTF-8 walks a count-then-collect would - and the
-/// input here can be a multi-megabyte PDF or spreadsheet dump. Truncating on
-/// a char boundary (not a byte one) is what keeps CJK text from being cut
-/// mid-character.
+/// Cuts `text` to the cap, in place, on a char boundary so CJK text isn't cut
+/// mid-character. O(cap), since the input can be a multi-megabyte dump.
 fn cap_text(mut text: String) -> (String, bool) {
     let Some((cut, _)) = text.char_indices().nth(MAX_EXTRACTED_CHARS) else {
         return (text, false);
@@ -86,9 +66,8 @@ fn file_name_of(path: &Path) -> String {
         .unwrap_or_else(|| path.to_string_lossy().to_string())
 }
 
-/// Extensions the picker offers: the text formats, crate::extract's
-/// DOCUMENT_EXTENSIONS and the image types, kept by hand - a test checks
-/// that each one offered is one `extract` handles.
+/// Extensions the picker offers, kept by hand; a test checks that each one
+/// is handled by `extract`.
 const SUPPORTED_EXTENSIONS: &[&str] = &[
     // Extracted to text
     "md", "markdown", "txt", "csv", "tsv", "json", "yaml", "yml",
@@ -98,14 +77,7 @@ const SUPPORTED_EXTENSIONS: &[&str] = &[
     "png", "jpg", "jpeg", "gif", "webp",
 ];
 
-// ---------------------------------------------------------------------------
-// Dispatch
-// ---------------------------------------------------------------------------
-
-/// Reads and converts one already-picked file. Split from the picker so the
-/// size check, the dialog's format list and the extraction all sit on one
-/// side of a single `spawn_blocking`, and so `bytes` (already known from the
-/// one `stat` the caller does) doesn't have to be looked up a second time.
+/// Reads and converts one already-picked file, all inside one `spawn_blocking`.
 fn extract(path: &Path, bytes: u64) -> Result<ChatAttachment, String> {
     let name = file_name_of(path);
     let ext = extension_of(path);
@@ -135,18 +107,11 @@ fn extract(path: &Path, bytes: u64) -> Result<ChatAttachment, String> {
     Ok(ChatAttachment::text(name, text))
 }
 
-/// Turns a path the user picked into an attachment.
-///
-/// Errors are messages meant for the user - a silent failure here is
-/// indistinguishable from a dead button, which is exactly how the old
-/// text-only version behaved on a PDF.
-///
-/// Not a command: exposed, it let the webview read any path on disk, while
-/// the only caller is the picker below, reading a path the user just chose.
+/// Turns a path the user picked into an attachment; errors are messages for
+/// the user. Not a command: that would let the webview read any path on disk.
 async fn read_attachment_file(path: String) -> Result<ChatAttachment, String> {
-    // One blocking hop for the whole read: the size check is a `stat`, which
-    // is not free on a network volume or a sleeping external disk, and doing
-    // it out here parked an async worker thread for it.
+    // One blocking hop for the whole read: even the size check's `stat` can be
+    // slow on a network volume or a sleeping disk.
     tauri::async_runtime::spawn_blocking(move || {
         let path = Path::new(&path);
         let bytes = std::fs::metadata(path).map_err(|e| e.to_string())?.len();
@@ -214,7 +179,7 @@ mod tests {
     }
 
     /// The picker and the extractor must agree, or the dialog offers files
-    /// `extract` will refuse (or hides ones it handles).
+    /// `extract` will refuse.
     #[test]
     fn every_offered_extension_is_one_the_extractor_handles() {
         const AS_TEXT: &[&str] = &["md", "markdown", "txt", "csv", "tsv", "json", "yaml", "yml"];

@@ -1,11 +1,8 @@
 import { LOCAL_KEYS, readLocalJson, writeLocal } from "../storage/local";
 
 /**
- * Where each file was being read when it was last shown, so it opens
- * there again (#348) - switched to from the file tree, closed and opened,
- * or restored with the session. Kept as the block at the top of the view,
- * by its place among the document's blocks, and how far into it: a
- * scrollTop moves with the window's width, a block doesn't.
+ * Where each file was being read when last shown, so it opens there again.
+ * Kept as a block index and offset: scrollTop moves with window width.
  */
 export interface ReadingPlace {
   block: number;

@@ -10,18 +10,9 @@ export interface PartialString {
 }
 
 /**
- * Best-effort scanner for a propose_edit `arguments` string that is still
- * streaming in. The fragment can end anywhere - mid-key, mid-value, even
- * mid-escape - and the scanner returns every string field whose value has
- * at least started. Callers re-run it on the whole accumulated fragment
- * after each delta (arguments are small; simplicity beats an incremental
- * parser here).
- *
- * Only flat string fields are handled, because that is propose_edit's whole
- * schema (action/anchor/text - see tools.rs); a non-string value is skipped
- * to the next comma. This is display plumbing, not validation: the
- * authoritative parse stays proposal.ts's parseProposal on the COMPLETE
- * arguments, and anything shown from here is replaced by that result.
+ * Best-effort scanner for a propose_edit `arguments` string still streaming
+ * in: returns every flat string field whose value has started, however the
+ * fragment ends. Display only; parseProposal on the complete arguments wins.
  */
 export function parsePartialToolArgs(
   fragment: string,
@@ -114,16 +105,13 @@ export interface DraftProposal {
 }
 
 /**
- * The earliest point a streaming propose_edit can be placed in the
- * document: the action is fully known and, for anchored actions, the anchor
- * is quoted in full (models emit fields in schema order - action, anchor,
- * text - so this is typically reached while the text is still streaming).
- * Returns null until then; the caller keeps feeding it grown fragments.
+ * The earliest point a streaming propose_edit can be placed: the action is
+ * known and any anchor is quoted in full. Null until then.
  */
 export function draftProposal(
   fragment: string,
   /** The document's blocks as they are now, for an edit that names its
-   *  block (doc-blocks.ts). */
+   *  block. */
   blocks?: SentBlock[],
 ): DraftProposal | null {
   const fields = parsePartialToolArgs(fragment);
@@ -169,8 +157,8 @@ export function draftProposal(
     proposal: {
       action: action.value as EditAction,
       anchor: needsAnchor ? anchor?.value : undefined,
-      // What it writes, without the citation markers an OpenAI model may
-      // put in (citation-markers.ts) - the anchor quotes the document.
+      // Without the citation markers an OpenAI model may put in: the anchor
+      // quotes the document.
       text: withoutCitationMarkers(
         fields.text?.value ?? "",
         !fields.text?.complete,

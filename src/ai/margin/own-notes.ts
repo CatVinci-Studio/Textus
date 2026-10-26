@@ -1,12 +1,8 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { ReviewNote } from "./review-notes-plugin";
 
-/**
- * The writer's own notes as they are kept (src-tauri/src/commands/
- * own_notes.rs): each by the words it is on and a little of the text
- * before them in their paragraph, which tells apart the same words said
- * twice. Positions aren't kept: the file can change outside Textus.
- */
+/** A writer's note as kept: its words plus a little text before them, to tell
+ *  repeats apart. No positions, as the file can change outside Textus. */
 export interface StoredOwnNote {
   id: string;
   comment: string;
@@ -79,11 +75,8 @@ function positionsIn(
   return { from, to };
 }
 
-/**
- * Where a kept note is in `doc` now: its words within one paragraph -
- * where the text before them matches most, else the first time they are
- * there. Null when they aren't anywhere.
- */
+/** Where a kept note is in `doc` now: its words where the text before them
+ *  matches most, else their first occurrence; null when absent. */
 export function locateOwnNote(
   doc: ProseNode,
   note: StoredOwnNote,

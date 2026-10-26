@@ -24,26 +24,20 @@ export interface PendingEditCallbacks {
   onAccept: (callId: string) => void;
   onReject: (callId: string) => void;
   onPreviewsChange: (previews: PendingPreview[], applied: string[]) => void;
-  /** Live read of the Quick Ask nav bar's current pointer - see
-   *  createPendingEditPlugin's option of the same name. */
+  /** Live read of the Quick Ask nav bar's current pointer. */
   getFocusedCallId: () => string | null;
-  /** A ✓ / ✕ clicked in the text - see createPendingEditPlugin. */
+  /** A ✓ / ✕ clicked in the text. */
   onDecide: (callId: string, index: number, take: boolean | null) => void;
   /** The sentence the review bar points at. */
   getFocusedSentence: () => { callId: string; index: number } | null;
-  /** How a rewrite is drawn (revision-display.ts). */
+  /** How a rewrite is drawn. */
   revisionDisplay?: () => RevisionDisplay;
 }
 
 /**
- * The AI features that live in the text: completion, grammar marks, a
- * rewrite's sentences, the Quick Ask selection and widget, review notes.
- * Each is independently switched in Settings, all of them under Textus
- * AI's own switch (settings/textus-ai.ts). They go on after the editor
- * core (editor/editor-extensions.ts), as the last plugins in the chain.
- *
- * The callbacks are stable, ref-indirected wrappers (see MilkdownEditor):
- * the chain is built once at mount, before the real handlers exist.
+ * The AI features that live in the text, each switched in Settings under
+ * Textus AI's own switch, as the last plugins in the chain. The callbacks are
+ * ref-indirected: the chain is built at mount, before the handlers exist.
  */
 export function withAiPlugins(
   editor: Editor,
@@ -56,8 +50,8 @@ export function withAiPlugins(
       onMount: (el: HTMLElement) => void;
       onUnmount: (el: HTMLElement) => void;
     };
-    /** The tour's AI while this is its practice tab (utils/events.ts's
-     *  TourAi), else null: muted, the typing-triggered plugins go quiet. */
+    /** The tour's AI while this is its practice tab, else null; muted, the
+     *  typing-triggered plugins go quiet. */
     tour: { readonly current: TourAi | null };
     reviewNotes: {
       onChange: (notes: ReviewNote[]) => void;

@@ -1,11 +1,6 @@
-// A ```mermaid block in text that isn't in the document yet - Textus AI's
-// proposal, drawn as a widget by ai/revision/pending-edit-plugin.ts - drawn
-// as a diagram instead of shown as source. While the proposal streams in,
-// the diagram grows with it: drawn again from each complete line, at most
-// every THROTTLE_MS, with only the parts new since the last drawing fading
-// in. The drawing itself is the editor's own (mermaid-plugin.ts registers
-// it per editor), so the engine, width and appearance match the diagrams
-// in the document, and an accepted diagram is already drawn.
+// A ```mermaid block in an AI proposal not yet in the document, drawn as a
+// diagram that grows as the proposal streams in, new parts fading in. The
+// editor's own drawer draws it, so it matches the document's diagrams.
 
 import { renderMarkdownInlineHtml } from "./markdown/render-html";
 import { animate, duration } from "../ui/motion";
@@ -15,9 +10,8 @@ export type DiagramPart =
   | { kind: "text"; text: string }
   | {
       kind: "diagram";
-      /** What to draw: the fence's body, or while its closing fence hasn't
-       *  arrived, the body's complete lines - a line cut off mid-token
-       *  would only fail to parse or draw a half-typed label. */
+      /** What to draw: the fence's body, or while it is still open, its
+       *  complete lines; a half line would only fail to parse. */
       code: string;
       /** The fence as written so far, shown until a drawing succeeds. */
       raw: string;
@@ -26,8 +20,8 @@ export type DiagramPart =
 const OPENING = /^```mermaid[ \t]*$/m;
 const CLOSING = /^```[ \t]*$/m;
 
-/** `markdown` cut into text and ```mermaid fences, including one still
- *  open at its end. Null when there is no fence in it at all. */
+/** `markdown` cut into text and ```mermaid fences, including one still open
+ *  at its end. Null when there is no fence. */
 export function splitMermaidFences(markdown: string): DiagramPart[] | null {
   if (!OPENING.test(markdown)) return null;
   const parts: DiagramPart[] = [];
@@ -75,8 +69,7 @@ export type PendingDrawer = (
   code: string,
 ) => Promise<{ svg: string; idPrefix: string }>;
 
-// By editor root (view.dom): a widget finds its editor's drawer from where
-// it stands, so the widget code needs no handle on the editor's settings.
+// By editor root: a widget finds its editor's drawer from where it stands.
 const drawers = new WeakMap<Element, PendingDrawer>();
 
 export function registerPendingDrawer(
@@ -87,8 +80,8 @@ export function registerPendingDrawer(
   else drawers.delete(root);
 }
 
-/** At most one drawing of a growing diagram per this many ms: each one
- *  lays the whole diagram out again. */
+/** At most one drawing of a growing diagram per this many ms: each lays the
+ *  whole diagram out again. */
 const THROTTLE_MS = 200;
 
 interface DiagramState {
@@ -109,9 +102,8 @@ interface DiagramState {
 const states = new WeakMap<HTMLElement, DiagramState>();
 
 /**
- * The element showing one fence of a pending insert: `reuse` (the one the
- * same fence had in the widget's last render, so a drawing survives the
- * typewriter's re-render of the text every frame) or a new one. Asks for a
+ * The element showing one fence of a pending insert: `reuse`, so a drawing
+ * survives the widget's re-render every frame, or a new one. Asks for a
  * drawing when the fence's source changed.
  */
 export function pendingDiagram(
@@ -145,8 +137,8 @@ export function pendingDiagram(
   return el;
 }
 
-/** The engine or the appearance changed: the pending diagrams under `root`
- *  are drawn again, as the document's are. */
+/** The engine or appearance changed: the pending diagrams under `root` are
+ *  drawn again. */
 export function redrawPendingDiagrams(root: HTMLElement): void {
   for (const el of root.querySelectorAll<HTMLElement>(".pending-diagram")) {
     const state = states.get(el);
@@ -159,8 +151,8 @@ export function redrawPendingDiagrams(root: HTMLElement): void {
 function schedule(el: HTMLElement, state: DiagramState) {
   // A drawing in flight asks again when it lands.
   if (state.busy || state.timer !== undefined) return;
-  // Never on the typing path: a frame of the typewriter only notes the
-  // source, the drawing comes after it.
+  // Never on the typing path: a frame only notes the source; the drawing
+  // comes after.
   const wait = Math.max(0, state.last + THROTTLE_MS - performance.now());
   state.timer = setTimeout(() => {
     state.timer = undefined;
@@ -194,8 +186,7 @@ async function draw(el: HTMLElement, state: DiagramState) {
 }
 
 /** A part of a drawing by what it stands for, not by the render: Mermaid's
- *  ids carry the render's id first, Pele marks nodes and edges with
- *  data-id. */
+ *  ids carry the render id first; Pele marks parts with data-id. */
 function partKey(el: Element, idPrefix: string): string {
   if (el.id) return `#${el.id.replace(idPrefix, "")}`;
   return `${el.tagName}.${el.getAttribute("class") ?? ""}@${el.getAttribute("data-id")}`;
@@ -219,11 +210,9 @@ function showDrawing(
   const keys = new Set<string>();
   for (const part of root.querySelectorAll("[id], [data-id]"))
     keys.add(partKey(part, idPrefix));
-  // The parts this drawing added come in one after another, its nodes
-  // first and then what joins them - the first drawing too, built up rather
-  // than faded in whole; the parts it had glide from where they stood to
-  // where the new layout puts them (FLIP, by the `translate` property: a
-  // part's own `transform` attribute stays as Mermaid set it).
+  // New parts come in one after another, nodes first; parts it already had
+  // glide to their new place (FLIP via `translate`, leaving the part's own
+  // `transform` attribute as Mermaid set it).
   const parts = outermostParts(root);
   const fresh = parts
     .filter((part) => first || !state.keys.has(partKey(part, idPrefix)))
@@ -252,9 +241,8 @@ function showDrawing(
   state.keys = keys;
 }
 
-/** A drawing's parts that stand for something - a node, an edge, a label -
- *  and aren't inside another, nor in its <defs>: a fade inside a fading
- *  group compounds. */
+/** A drawing's parts that stand for something and aren't inside another or
+ *  in <defs>: a fade inside a fading group compounds. */
 function outermostParts(root: Element | null): Element[] {
   if (!root) return [];
   const isPart = (e: Element) => e.matches("[id], [data-id]");

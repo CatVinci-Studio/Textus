@@ -1,6 +1,5 @@
-/* Two documents at once (MainPane, split-layout.ts): the document column
-   becomes a grid - the tab bar across the top, the panes and the line
-   between them below (SplitDivider's splitGridStyles places each). */
+/* Two documents at once: the document column becomes a grid of the tab
+   bar, the panes and the line between them. */
 .main-pane.main-pane-split {
   display: grid;
 }

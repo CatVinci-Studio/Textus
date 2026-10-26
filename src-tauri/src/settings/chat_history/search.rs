@@ -1,7 +1,5 @@
-//! Finding words in what was said: every saved conversation's messages and
-//! replies searched, newest conversation first - the history list's
-//! search, and what Textus AI looks up when the user refers to an earlier
-//! conversation (search_conversations).
+//! Searching saved conversations' messages and replies, newest first, for the
+//! history list and for Textus AI's search_conversations.
 
 use super::*;
 
@@ -25,8 +23,8 @@ pub fn found(entry: &Value, role: &str, snippet: String) -> Value {
 /// `text` around its first `term`, on one line, with … where it was cut.
 fn snippet(text: &str, lower: &str, term: &str) -> String {
     let at = lower.find(term).unwrap_or(0);
-    // Byte offsets in the lowercased text line up with the original's
-    // only where lowercasing kept lengths; counted in characters instead.
+    // Byte offsets in the lowercased text may not match the original's, so count
+    // characters.
     let at_char = lower[..at].chars().count();
     let chars: Vec<char> = text.chars().collect();
     let start = at_char.saturating_sub(BEFORE);

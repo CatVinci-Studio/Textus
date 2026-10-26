@@ -1,10 +1,6 @@
 /**
- * The code blocks plugins draw in the document (textus.views.registerCode
- * Block): which plugin draws a language (its manifest's
- * contributes.codeBlocks), and - for each block shown - the way to change
- * its source in the editor. The editor's side
- * (document-view/plugins/plugin-code-blocks.ts) fills this in as blocks come into
- * sight and go.
+ * The code blocks plugins draw in the document: which plugin draws a
+ * language, and for each block shown, the way to change its source.
  */
 
 /** Language -> the plugin that draws it. */
@@ -45,10 +41,8 @@ export function onCodeBlockLanguages(listener: () => void): () => void {
 }
 
 /**
- * What follows a fence's language, as a drawn block is given it
- * (CodeBlock.meta): ` ```chart height=300 title="Sales 2026" legend` is
- * { height: "300", title: "Sales 2026", legend: "true" }. Words that are
- * not `key=value` count as `key=true`; a key given twice keeps the last.
+ * The words after a fence's language: ` ```chart height=300 legend` is
+ * { height: "300", legend: "true" }. A key given twice keeps the last.
  */
 export function parseFenceMeta(meta: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -61,8 +55,7 @@ export function parseFenceMeta(meta: string): Record<string, string> {
 /** A drawn block's way back into the document. */
 export interface DrawnCodeBlock {
   plugin: string;
-  /** Replaces the block's source, as one undo step; false when the block
-   *  is gone. */
+  /** Replaces the block's source as one undo step; false when it is gone. */
   setSource(source: string): boolean;
 }
 
@@ -76,7 +69,6 @@ export function untrackCodeBlock(webview: string): void {
   drawn.delete(webview);
 }
 
-/** textus CodeBlock.setSource. */
 export function setCodeBlockSource(webview: string, source: string): boolean {
   return drawn.get(webview)?.setSource(source) ?? false;
 }

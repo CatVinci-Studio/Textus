@@ -1,5 +1,4 @@
-/* See WindowEdges.tsx. Above every overlay in the app (the highest is
-   2000), since an edge has to stay grabbable whatever is open. */
+/* Above every overlay (the highest is 2000): an edge must stay grabbable. */
 .window-edge-outline {
   position: fixed;
   inset: 0;

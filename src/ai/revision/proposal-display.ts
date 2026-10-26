@@ -2,25 +2,11 @@ import type { EditProposal } from "../types";
 import type { ProposalStreamEffects } from "./proposal-stream";
 import { stopRewrite, streamPendingInsertText } from "./pending-edit-plugin";
 
-/**
- * How a proposal streaming in is shown - the ProposalStream machine's
- * effects (proposal-stream.ts decides what happens, these how it looks):
- *
- * - `typewriter`: the draft is placed once and its text typed in as it
- *   arrives (pending-edit-plugin's reveal, a rewrite sentence by sentence
- *   with the progress cursor);
- * - `drawn`: no typewriter - edit animation off, or the system's Reduce
- *   motion - the draft drawn again with what has arrived, at most every
- *   DRAW_EVERY ms. Streaming used to be skipped then: "Thinking…" until
- *   every edit appeared at once (rc.6).
- *
- * Either way the completed call's own add (ChatBody's completed turns)
- * makes it decidable.
- */
+/** How a streaming proposal is shown: typed in as it arrives, or, with motion
+ *  off, redrawn at most every DRAW_EVERY ms. The completed call makes it decidable. */
 
-/** What a display draws with: the editor's preview adds (streaming or
- *  final), its discard, and the text as it is drawn - a picture's line as
- *  its frame (generated-images' withBegunPictures). */
+/** What a display draws with: the editor's preview adds, its discard, and
+ *  the text as it is drawn. */
 export interface ProposalCanvas {
   show(callId: string, proposal: EditProposal, streaming: boolean): void;
   discard(callId: string): void;
@@ -97,17 +83,14 @@ export function drawn(canvas: ProposalCanvas): ProposalStreamEffects {
 
 const KEPT_CALLS = 64;
 
-/**
- * One set of effects that shows each call the way it started: a setting
- * changed mid-stream doesn't switch a draft from one display to the other.
- */
+/** Shows each call the way it started, so a setting changed mid-stream
+ *  doesn't switch a draft's display. */
 export function perCall(
   displays: { typewriter: ProposalStreamEffects; drawn: ProposalStreamEffects },
   animated: () => boolean,
 ): ProposalStreamEffects {
-  // Kept past the done feed: a stop's finalize follows it (proposal-
-  // stream.ts' finish). A completed call never hears more, so the oldest
-  // go once there are many.
+  // Kept past the done feed, as a stop's finalize follows it; the oldest go
+  // once there are many.
   const chosen = new Map<string, ProposalStreamEffects>();
   const of = (callId: string) => chosen.get(callId) ?? displays.drawn;
   return {

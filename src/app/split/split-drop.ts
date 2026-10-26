@@ -7,9 +7,7 @@ import type { DocumentDrop } from "../../ui/document-drop";
 import "./split-drop.css";
 
 /**
- * A tab - or a file from the sidebar - dragged over the documents, as in
- * VS Code: the side of the document under the pointer it would open on
- * lights up, and letting go there splits the window that way. The middle
+ * The side of the document a dragged tab or file would open on; the middle
  * just brings it to the front.
  */
 export type DropZone = "left" | "right" | "top" | "bottom" | "center";
@@ -101,11 +99,9 @@ export function showDropHint(target: DropTarget | null): void {
 }
 
 /**
- * Lays the window out for `tabId` dropped at `target`: beside the
- * document there, on the side dropped on. A tab dropped on its own
- * document pairs with its neighbour (`others`, the window's tabs) - with
- * none, nothing changes. Call once `tabId` is among the window's tabs and
- * in front.
+ * Splits the window for `tabId` dropped at `target`. A tab dropped on its
+ * own document pairs with a neighbour, or nothing changes. Call once
+ * `tabId` is among the window's tabs and in front.
  */
 export function splitForDrop(
   tabId: string,
@@ -131,11 +127,9 @@ export function splitForDrop(
 }
 
 /**
- * A tab pulled down out of the tab bar (TabBar's onPullOut), followed to
- * its drop: its title rides the pointer and the side it would open on
- * lights up; let go over a document, it splits there. Out of the window
- * it tears off into a window of its own, where that is possible
- * (`detach`). Escape cancels.
+ * A tab pulled down out of the tab bar, followed to its drop: over a
+ * document it splits there, out of the window it tears off where possible.
+ * Escape cancels.
  */
 export function pullTab(
   tabId: string,
@@ -193,8 +187,8 @@ export function pullTab(
   window.addEventListener("keydown", key, true);
 }
 
-/** What a file from the sidebar dragged over the documents does
- *  (ui/document-drop.ts): `open` is given where it was let go. */
+/** What a sidebar file dragged over the documents does: `open` gets where
+ *  it was let go. */
 export function fileDropOnDocuments(
   open: (path: string, target: DropTarget) => void,
 ): DocumentDrop {

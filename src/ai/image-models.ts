@@ -2,11 +2,7 @@ import { useEffect, useState } from "react";
 import { ai, auth } from "../platform/ipc";
 import type { Settings } from "../settings/SettingsContext";
 
-/**
- * A service Settings › Textus AI › Image model offers. Mirrors
- * `ImageProviderEntry` in src-tauri/src/ai/images.rs, which the list comes
- * from.
- */
+/** A service Settings offers as the image model, from the backend's list. */
 export interface ImageProviderEntry {
   id: string;
   /** A brand name; "custom" and "doubao" are localized (imageProviderLabel). */
@@ -14,15 +10,14 @@ export interface ImageProviderEntry {
   api: string;
   /** Null for the OpenAI-compatible endpoint, whose address is typed in. */
   baseUrl: string | null;
-  /** Where its key is kept - the chat provider's own id where one key
-   *  serves both, so a provider set up for chat asks for nothing more. */
+  /** Where its key is kept: the chat provider's own id where one key serves
+   *  both, so a provider set up for chat asks for nothing more. */
   keyId: string;
   /** The default first; empty for the compatible endpoint. */
   models: string[];
 }
 
-/** The setting as a request carries it. Mirrors `ImageModel` in
- *  src-tauri/src/ai/images.rs. */
+/** The setting as a request carries it. */
 export interface ImageModel {
   provider: string;
   model: string;
@@ -31,15 +26,12 @@ export interface ImageModel {
   limit: number;
 }
 
-/** The setting that follows the chat provider, the default. Mirrors
- *  FOLLOW_CHAT in src-tauri/src/ai/images.rs, which resolves it. */
+/** The default setting: follow the chat provider. Must match the backend's. */
 export const FOLLOW_CHAT = "chat";
 
-/** The image service that goes with a chat provider, as the backend picks
- *  it (following_chat in ai/images/services.rs): the one its sign-in brings
- *  while there is one (OpenAI's through the ChatGPT sign-in), else the
- *  provider's own pictures on the same key; null for a chat provider that
- *  makes none. */
+/** The image service that goes with a chat provider, as the backend picks it:
+ *  its sign-in's while there is one, else the provider's own on the same key;
+ *  null when it makes none. */
 const SIGN_IN_IMAGES: Partial<Record<string, string>> = {
   openai: "openai-chatgpt",
 };
@@ -80,9 +72,8 @@ export function useChatGptSignedIn(): boolean {
   return signedIn;
 }
 
-/** The image service that makes the pictures under these settings - the
- *  one chosen, or the chat provider's own while following it - or null
- *  for none. */
+/** The image service these settings make pictures with (the chosen one, or
+ *  the chat provider's while following it), or null. */
 export function useImageService(
   settings: Pick<Settings, "imageModelProvider" | "aiProvider">,
 ): string | null {
@@ -112,8 +103,7 @@ export function imageModelOf(
   };
 }
 
-/** The image catalog, fetched once per mount; empty until it arrives (and
- *  in the dev shim, where the command answers null). */
+/** The image catalog, fetched once per mount; empty until it arrives. */
 export function useImageProviders(): ImageProviderEntry[] {
   const [entries, setEntries] = useState<ImageProviderEntry[]>([]);
   useEffect(() => {

@@ -5,9 +5,8 @@ import { errorText } from "../../utils/error-text";
 import { useAgentPanel } from "./panel/agent-panel";
 import { focusMemory } from "./panel/memory-focus";
 
-/** What was remembered - `Remembering` in src-tauri/src/ai/memory.rs.
- *  `previous`: the file before an update or a forget, for Undo to put
- *  back; `forgot`: taken back, `text` being what it said. */
+/** What was remembered. `previous`: the file before an update or a forget,
+ *  for Undo to put back; `forgot`: taken back, `text` being what it said. */
 export interface RememberResult {
   remembered: string;
   scope: MemoryScope;
@@ -19,8 +18,8 @@ export interface RememberResult {
   forgot: boolean;
 }
 
-/** What the memory pass (or, before 1.2.0-rc.6, the remember tool) kept; null when it
- *  didn't (a duplicate, a refusal - plain words for the model). */
+/** What the memory pass (or, in old chats, the remember tool) kept; null when
+ *  it didn't (a duplicate, a refusal - plain words for the model). */
 export function parseRememberResult(output: string): RememberResult | null {
   try {
     const parsed = JSON.parse(output);
@@ -62,10 +61,8 @@ export interface MemoryChipLabels {
 
 /**
  * A remember call under the reply that made it: what was remembered and
- * where, with Undo (deletes a new memory, or puts back what an update
- * replaced) and, for a memory, a move to the other scope. What it does is
- * kept here for the session; after a reload the chip starts from the saved
- * tool result again, and the Memory tab covers the rest.
+ * where, with Undo and, for a memory, a move to the other scope. Its state
+ * lasts the session; after a reload it starts from the saved result.
  */
 export function MemoryChip({
   result,

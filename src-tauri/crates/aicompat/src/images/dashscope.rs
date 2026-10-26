@@ -1,7 +1,6 @@
 //! Alibaba Cloud Model Studio (DashScope) with Qwen-Image, through the
-//! synchronous multimodal-generation route the 2.0 and 3.0 models answer
-//! on (the older text2image route queues a task to poll; no model offered
-//! here needs it). The picture comes back as a link, good for a day.
+//! synchronous multimodal-generation route. The picture comes back as a
+//! link, good for a day.
 
 use super::{join, malformed, Aspect, ImageError, Reply, Request};
 use serde_json::{json, Value};

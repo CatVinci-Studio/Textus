@@ -237,9 +237,8 @@ describe("alignStream", () => {
       reached = l.reached;
     }
     expect(reached).toBe(n);
-    // Run once per completed sentence, not per frame; well under a frame.
-    // The median, not the slowest run: one garbage collection or the first
-    // compile on a busy CI runner can take longer than all the work.
+    // Run once per completed sentence; well under a frame. The median, as one
+    // GC pause on a busy CI runner can outlast all the work.
     times.sort((a, b) => a - b);
     expect(times[Math.floor(n / 2)]).toBeLessThan(16);
   });

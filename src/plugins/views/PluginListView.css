@@ -1,5 +1,4 @@
-/* PluginListView.tsx: a plugin's list, drawn as the sidebar's own lists
-   are - the file tree's rows, its hover and selection, its folding. */
+/* A plugin's list, drawn as the sidebar's own lists are. */
 .plugin-list {
   display: flex;
   flex-direction: column;

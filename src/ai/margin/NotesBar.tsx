@@ -18,13 +18,8 @@ export interface NotesBarLabels {
   cancel: string;
 }
 
-/**
- * The review notes' bar, the review bar's twin (ReviewBar.tsx): over the
- * bottom of the document while there are notes, above the review bar when
- * both show. Step through the notes (‹ 3/24 ›), mark them all done, or
- * pick some and ask about them together - a long review left a column of
- * notes to be dismissed one by one.
- */
+/** The review notes' bar: step through the notes, mark them all done, or
+ *  pick some and ask about them together. Sits above the review bar. */
 export function NotesBar({
   bar,
   labels,

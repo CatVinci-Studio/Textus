@@ -9,17 +9,13 @@ function isDocEmpty(doc: Node): boolean {
   if (doc.childCount > 1) return false;
   const first = doc.firstChild;
   if (!first) return true;
-  // Checking the node is still a plain paragraph (not just "no text yet")
-  // matters because typing "# " converts it into an empty heading via an
-  // input rule - that heading has zero content too, so a content-size-only
-  // check would keep showing the placeholder (in the heading's oversized
-  // font) even though the user clearly started writing.
+  // Still a plain paragraph: "# " makes an empty heading, which would
+  // otherwise keep showing the placeholder.
   return first.type.name === "paragraph" && first.content.size === 0;
 }
 
-/** Whether another plugin draws something into the document - text the AI
- *  is writing or proposing, a completion - which the hint would overlap
- *  although the document itself is still empty. */
+/** Whether another plugin draws into the document (AI text, a completion),
+ *  which the hint would overlap. */
 function othersDecorate(state: EditorState, self: Plugin): boolean {
   return state.plugins.some((plugin) => {
     if (plugin === self) return false;
@@ -30,9 +26,8 @@ function othersDecorate(state: EditorState, self: Plugin): boolean {
   });
 }
 
-/// Shows a grayed-out hint in the first paragraph when the whole document is
-/// empty - otherwise a brand-new/blank document just looks unopened, since
-/// there's nothing on screen to show it's an editable WYSIWYG surface.
+/// A grayed-out hint when the whole document is empty, so a blank document
+/// doesn't look unopened.
 export function createPlaceholderPlugin(getPlaceholder: () => string) {
   return $prose(
     () =>

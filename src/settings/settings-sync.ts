@@ -1,20 +1,7 @@
 /**
- * This window's copy of the settings Rust holds (src-tauri/src/settings.rs),
- * and the bookkeeping that decides, field by field, which value wins when
- * this window's own changes, other windows' changes and full re-reads
- * arrive in whatever order IPC delivers them.
- *
- * Every change in Rust bumps one revision counter, so each field's value
- * here is tagged with the revision it was current at:
- *
- *  - a local change wins until Rust has confirmed it (it's newer than
- *    anything Rust can have sent), then carries the revision Rust gave it;
- *  - another window's change applies to a field only if its revision is
- *    newer than that field's;
- *  - a full snapshot (settings_get, settings_fill_defaults) covers every field
- *    up to its revision, so it replaces only fields not changed since.
- *
- * Plain data, no IPC or React - SettingsContext.tsx wires it up.
+ * This window's copy of the settings Rust holds, and which value wins per
+ * field as local changes, other windows' changes and re-reads arrive. A
+ * local change wins until confirmed; otherwise the newer revision does.
  */
 export type Raw = Record<string, unknown>;
 
@@ -56,8 +43,7 @@ export class SettingsSync {
   }
 
   /** Rust stored the fields in `ticket` at revision `rev`. A field changed
-   *  again since stays pending - that newer change is still on its way. A
-   *  failed send passes no revision: the field just stops being pending. */
+   *  again since stays pending; a failed send passes no revision. */
   confirm(ticket: Map<string, number>, rev?: number): void {
     for (const [key, seq] of ticket) {
       if (this.pending.get(key) !== seq) continue;

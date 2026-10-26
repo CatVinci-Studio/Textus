@@ -30,9 +30,8 @@ import {
 const MAX_FIT_HEIGHT = 1200;
 
 /**
- * Where a plugin's webview is drawn: its page in a sandboxed frame
- * (frames.ts), rebuilt whenever the plugin sets new HTML, kept in the
- * window's theme, its messages passed to the plugin's code and back.
+ * Where a plugin's webview is drawn: a sandboxed frame rebuilt on new HTML,
+ * kept in the window's theme, its messages passed both ways.
  */
 export function PluginWebview({
   id,
@@ -41,7 +40,7 @@ export function PluginWebview({
 }: {
   id: string;
   className?: string;
-  /** The frame as tall as its page (up to a limit) - a code block's. */
+  /** The frame as tall as its page, up to a limit. */
   fitHeight?: boolean;
 }) {
   useSyncExternalStore(subscribeWebviews, webviewsVersion);
@@ -111,10 +110,8 @@ export function PluginWebview({
   );
 }
 
-/**
- * A webview a plugin fills on request - made when this mounts, given to
- * the plugin to fill (resolveWebview), and closed when this unmounts.
- */
+/** A webview made when this mounts, given to the plugin to fill, and closed
+ *  when this unmounts. */
 function useResolvedWebview(
   plugin: string,
   kind: WebviewKind,
@@ -190,8 +187,7 @@ export function PluginWebviewPanel({
   );
 }
 
-/** A plugin's own settings page (contributes.settingsPage), under its
- *  settings in Settings › Extensions › Plugins. */
+/** A plugin's own settings page, under its settings. */
 export function PluginSettingsWebview({ plugin }: { plugin: string }) {
   const { record, error } = useResolvedWebview(
     plugin,
@@ -208,7 +204,7 @@ export function PluginSettingsWebview({ plugin }: { plugin: string }) {
   );
 }
 
-/** A tab showing a plugin's view or custom editor (DocTab.view). */
+/** A tab showing a plugin's view or custom editor. */
 export function PluginTabPane({
   tabId,
   plugin,
@@ -279,9 +275,8 @@ export function PluginTabIcon({
 }
 
 /**
- * A code block a plugin draws in the document (views.registerCodeBlock):
- * made once it comes into sight, told when its source changes, and able
- * to change that source through `setSource`.
+ * A code block a plugin draws in the document: made once in sight, told when
+ * its source changes, and able to change it through `setSource`.
  */
 export function PluginCodeBlock({
   plugin,

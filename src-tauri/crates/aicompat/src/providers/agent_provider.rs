@@ -1,9 +1,6 @@
-//! One agent step against whichever provider a request goes to. Each
-//! dialect module knows its own wire format; this is the one place that
-//! picks the dialect, plans the step's thinking parameters (and drops them
-//! when the provider refuses them), and turns the provider's own web search
-//! on in the shape that dialect takes - so the main crate's agent has a
-//! single path from "the user's provider" to `run_agent_loop`'s `step`.
+//! One agent step against whichever provider a request goes to: picks the
+//! dialect, plans the step's thinking parameters, and turns on the
+//! provider's own web search in that dialect's shape.
 
 use crate::agent::{AgentTurn, EventSink, StepResult, StepUsage, ToolSpec};
 use crate::capabilities::{self, NativeSearch, Thinking, ThinkingLevel};
@@ -43,8 +40,7 @@ pub struct AgentProvider {
     pub id: String,
     pub model: String,
     pub endpoint: Endpoint,
-    /// How hard the model thinks, planned per step (a refusal earlier in the
-    /// session changes the plan).
+    /// How hard the model thinks, planned per step.
     pub thinking: ThinkingLevel,
     /// The provider's own web search, when the request searches with it.
     pub native_search: Option<NativeSearch>,
@@ -55,16 +51,14 @@ pub struct AgentProvider {
 impl AgentProvider {
     /// Whether a request that fails on this provider is answered again
     /// without tools. Not every OpenAI-compatible server implements `tools`
-    /// correctly (some 400 on it, some silently ignore it and never call
-    /// one); the first-party APIs do, and their errors are real ones.
+    /// correctly; the first-party APIs do, and their errors are real ones.
     pub fn falls_back_to_plain_chat(&self) -> bool {
         matches!(self.endpoint, Endpoint::ChatCompletions { .. })
     }
 
     /// One round trip: the model's answer to `history`, streamed through
-    /// `on_event`, and the step's token usage, where the provider reports it
-    /// (Claude always; the OpenAI-style APIs in their `usage`). Thinking parameters the provider refuses are dropped and
-    /// the step sent again (capabilities::with_fallback).
+    /// `on_event`, and the step's token usage where the provider reports it.
+    /// Thinking parameters the provider refuses are dropped and the step resent.
     pub async fn step(
         &self,
         instructions: &str,
@@ -166,14 +160,10 @@ impl AgentProvider {
                         Some(NativeSearch::ChatCompletions(switch)) => Some(switch),
                         _ => None,
                     };
-                    // `stream` support varies across OpenAI-compatible
-                    // servers even more than `tools` does, so a failed
-                    // streamed step is retried once without streaming (and
-                    // without thinking parameters, which some servers take
-                    // only when streaming) before the plain-chat fallback
-                    // gets a say. A genuine model/auth error just fails
-                    // twice cheaply and surfaces the second (identical)
-                    // error.
+                    // `stream` support varies across compatible servers even more than
+                    // `tools` does, so a failed streamed step is retried once without
+                    // streaming (and without thinking parameters, which some servers take
+                    // only when streaming).
                     match custom::agent_step_streaming(
                         base_url,
                         api_key,

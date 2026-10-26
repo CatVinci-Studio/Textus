@@ -1,9 +1,6 @@
-//! read_plugin: Create mode's look at the plugins installed - the list,
-//! one plugin's manifest and files, one file's text - so a plugin is
-//! changed from its own code in any conversation, not written again from
-//! a description. Read-only: what the model changes comes back as files in
-//! its reply, and an official plugin's change is a copy of the user's own
-//! (the `plugin` skill).
+//! read_plugin: Create mode's look at the installed plugins (the list, a
+//! manifest and files, a file's text), so a plugin is changed from its own code.
+//! Read-only.
 
 use super::install::{plugins_installed, InstalledPlugin};
 use crate::ai::agent::AgentMode;
@@ -41,7 +38,7 @@ pub(crate) fn read_plugin_tool<'a>(app: &tauri::AppHandle) -> Option<Tool<'a>> {
     Some(read_plugin_tool_over(plugins_installed(app.clone()).ok()?))
 }
 
-/// The tool over `installed` (the live eval's, from a checkout).
+/// The tool over `installed`.
 pub(crate) fn read_plugin_tool_over<'a>(installed: Vec<InstalledPlugin>) -> Tool<'a> {
     Tool {
         spec: spec(),

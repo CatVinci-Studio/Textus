@@ -1,22 +1,6 @@
-//! Markdown out of the formats a writer keeps next to their drafts that
-//! aren't text files: PDF, Word, PowerPoint, spreadsheets, EPUB, RTF and
-//! HTML. One extraction for chat attachments (commands/attachment.rs, the
-//! composer's "+") and Textus AI's project tools (ai/project.rs), so a file
-//! reads the same whether it was attached or found in the project folder;
-//! web_fetch (ai/web/) reads a fetched page or PDF through it too. A Word
-//! file is also opened as a document of its own (commands/word_import.rs),
-//! through docx.rs's document mode.
-//!
-//! Markdown rather than flat text because structure is what a model reads a
-//! document by: which line is a heading, which lines are one list, which
-//! cells are one row. The conversions follow Microsoft's MarkItDown
-//! (github.com/microsoft/markitdown, MIT), which turns the same formats into
-//! Markdown for LLMs; it is Python, so its rules are ported here rather than
-//! the code bundled, and each module names what it took.
-//!
-//! Every failure is a sentence meant for whoever reads it - the user on an
-//! attachment chip, the model in a tool result - never a silent empty
-//! string: "nothing extracted" and "the file is empty" must not look alike.
+//! Markdown from the non-text formats a writer keeps: PDF, Word, PowerPoint,
+//! spreadsheets, EPUB, RTF and HTML, shared by attachments and the AI's tools.
+//! Rules ported from MarkItDown (MIT); failures are always a readable sentence.
 
 mod docx;
 mod epub;
@@ -33,32 +17,27 @@ pub(crate) use html::html_to_markdown;
 
 pub(crate) use docx::docx_document;
 
-/// The formats converted to Markdown, as lowercase extensions - the arms of
-/// `document_text`. HTML is here for attachments; the project tools read an
-/// .html file as the text file it is (ai/project.rs, TEXT_EXTENSIONS).
+/// The formats converted to Markdown, as lowercase extensions (the arms of
+/// `document_text`).
 pub(crate) const DOCUMENT_EXTENSIONS: &[&str] = &[
     "pdf", "docx", "pptx", "xlsx", "xlsm", "xlsb", "xls", "ods", "epub", "rtf", "html", "htm",
     "xhtml",
 ];
 
-/// Sanity bound on what is read off disk at all. Generous, because a 30 MB
-/// spreadsheet can still extract to a few pages of text - what protects the
-/// prompt is each caller's own cap on the extracted text.
+/// Sanity bound on what is read off disk. Generous: each caller caps the
+/// extracted text itself.
 pub(crate) const MAX_SOURCE_BYTES: u64 = 64 * 1024 * 1024;
 
-/// Images ride to the provider as base64, which inflates by 4/3, and every
-/// provider caps request size well below that. Reject early with a clear
-/// message instead of failing deep inside an HTTP call.
+/// Images go to the provider as base64 (4/3 larger) and providers cap request
+/// size, so reject early with a clear message.
 pub(crate) const MAX_IMAGE_BYTES: u64 = 6 * 1024 * 1024;
 
-/// How many rows of one spreadsheet sheet are rendered. Past this the sheet
-/// is described rather than dumped - a 50k-row export is data, not reading
-/// material.
+/// How many rows of one sheet are rendered; past this the sheet is described,
+/// not dumped.
 const MAX_SHEET_ROWS: usize = 400;
 
-/// Mime type for the image formats every vision-capable provider accepts.
-/// Deliberately a closed list: an unrecognized extension is reported as
-/// unsupported rather than guessed at and rejected by the provider later.
+/// Mime type for the image formats every vision-capable provider accepts. A
+/// closed list: anything else is reported as unsupported.
 pub(crate) fn image_mime(ext: &str) -> Option<&'static str> {
     match ext {
         "png" => Some("image/png"),
@@ -95,21 +74,14 @@ pub(crate) fn document_text(path: &Path, ext: &str) -> Option<Result<String, Str
     Some(text)
 }
 
-/// pdf-extract is known to panic on some malformed files rather than
-/// returning Err. An attachment is read inside spawn_blocking, whose
-/// JoinHandle would turn the unwind into an error, but a project tool runs
-/// inside the agent loop, where the panic would end the whole request - so
-/// it is caught here, for both.
-///
-/// The text stays as pdf-extract lays it out. A PDF has no headings or
-/// lists, only positioned glyphs; guessing them from font sizes (as
-/// MarkItDown's pdfminer path doesn't either) would turn every large
-/// pull quote into a heading.
+/// pdf-extract can panic on malformed files, which would end the agent's whole
+/// request, so the panic is caught here. The text keeps pdf-extract's layout;
+/// guessing headings from font sizes would misfire.
 fn pdf_text(path: &Path) -> Result<String, String> {
     pdf_text_with(|| pdf_extract::extract_text(path))
 }
 
-/// The text of a PDF held in memory - one web_fetch downloaded (ai/web).
+/// The text of a PDF held in memory.
 pub(crate) fn pdf_text_from_bytes(bytes: &[u8]) -> Result<String, String> {
     pdf_text_with(|| pdf_extract::extract_text_from_mem(bytes))
 }
@@ -130,12 +102,8 @@ fn pdf_text_with(
     Ok(tidy_lines(&text))
 }
 
-/// Collapses the runs of blank lines a PDF's text layer produces down to a
-/// readable paragraph break.
-/// Written straight into one buffer rather than collected into a `Vec<&str>`
-/// and joined. The input can be a multi-megabyte PDF dump, and the old shape
-/// meant an index of every line plus a second full copy to join them - on top
-/// of the copy the extractor already made.
+/// Collapses the runs of blank lines a PDF's text layer produces into
+/// paragraph breaks, in one buffer since the input can be megabytes.
 fn tidy_lines(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let mut blank = false;
@@ -159,14 +127,8 @@ fn tidy_lines(text: &str) -> String {
     out
 }
 
-// ---------------------------------------------------------------------------
-// Spreadsheets
-// ---------------------------------------------------------------------------
-
-/// Every sheet as a markdown table under its name, as MarkItDown writes
-/// them. Markdown rather than CSV because the rest of the prompt - the
-/// document, every propose_edit argument - is markdown, so the model reads
-/// one representation throughout.
+/// Every sheet as a Markdown table under its name: the rest of the prompt is
+/// Markdown, so the model reads one representation.
 fn spreadsheet_text(path: &Path) -> Result<String, String> {
     use calamine::{open_workbook_auto, Reader};
 
@@ -191,8 +153,7 @@ fn spreadsheet_text(path: &Path) -> Result<String, String> {
         out.push_str(&format!("## {name}\n\n"));
         out.push_str(&markdown::table(&shown));
         out.push('\n');
-        // Said out loud rather than just stopping: a silently halved sheet
-        // reads as "the model saw my data" when it saw the top of it.
+        // Said out loud: a silently cut sheet reads as "the model saw my data".
         let dropped = rows.count();
         if dropped > 0 {
             out.push_str(&format!("\n[... {dropped} more rows not shown]\n"));
@@ -206,8 +167,8 @@ fn spreadsheet_text(path: &Path) -> Result<String, String> {
     Ok(out.trim_end().to_string())
 }
 
-/// A cell as it reads. A date is stored as a day count, which is what
-/// calamine displays (`45943.5`); it is written as the date it is instead.
+/// A cell as it reads. A date stored as a day count (`45943.5`) is written as
+/// the date it is.
 fn cell_text(cell: &calamine::Data) -> String {
     match cell {
         calamine::Data::DateTime(date) if date.is_datetime() => {
@@ -222,8 +183,8 @@ fn cell_text(cell: &calamine::Data) -> String {
     }
 }
 
-/// A minimal .docx holding `paragraphs`, for tests that need a real Word
-/// file on disk (here, ai/project.rs, the live eval).
+/// A minimal .docx holding `paragraphs`, for tests that need a real Word file
+/// on disk.
 #[cfg(test)]
 pub(crate) use docx::test_docx_with;
 

@@ -1,7 +1,6 @@
 /**
- * What plugins show in the window bar's status area, beside the word
- * count (window.setStatusItem): a short text, its tooltip, and a command
- * a click runs. Gone with the plugin that set it (PluginHost.stop).
+ * What plugins show in the window bar's status area: a short text, its
+ * tooltip, and a command a click runs. Gone with the plugin that set it.
  */
 
 export interface StatusItem {

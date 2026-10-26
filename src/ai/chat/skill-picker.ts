@@ -14,13 +14,9 @@ import { getUiState, setUiState } from "../../storage/ui-state";
 import { CJK_SCRIPT } from "../../utils/cjk";
 
 /**
- * The composer's two pickers, as plain functions: when they open, what they
- * list, and what a typed `/word` means. ChatComposer only renders them.
- *
- * A Chinese IME types the slash key as `、` (Pinyin layouts) or `／`, a
- * Japanese one as `・`, and the at-sign as `＠` - a picker that answered
- * only to the ASCII characters stayed shut for those users, which looked
- * like no skills at all.
+ * The composer's two pickers: when they open, what they list, and what a
+ * typed `/word` means. CJK IMEs type the slash as `、`, `／` or `・` and the
+ * at-sign as `＠`, so those open them too.
  */
 
 /** The input is one `/word` still being typed: the skill picker is open. */

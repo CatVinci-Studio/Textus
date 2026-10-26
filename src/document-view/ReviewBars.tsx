@@ -11,9 +11,8 @@ import type { usePendingEdits } from "../ai/revision/usePendingEdits";
 import type { NotesBarState } from "../ai/margin/useNotesBar";
 
 /**
- * The bars over the bottom of the document (MilkdownEditor): the review
- * bar while there are pending edits, and the notes bar while there are
- * review notes, above it when both show.
+ * The bars over the bottom of the document: the review bar while edits are
+ * pending, and the notes bar above it while there are review notes.
  */
 export function ReviewBars({
   paneEl,

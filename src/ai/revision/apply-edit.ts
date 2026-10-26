@@ -7,25 +7,14 @@ import {
 } from "@milkdown/kit/prose/model";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 
-/**
- * Models routinely bullet lists with typographic dots ("•", "●", "◦", "·")
- * instead of markdown "-" - as plain text those survive the markdown parse
- * and land verbatim in the document. Rewrite them to "-" so lists arrive as
- * lists. Shared by every path that writes an AI reply into the document.
- */
+/** Models often bullet lists with "•" and the like, which Markdown keeps as
+ *  text; turned into "-" so lists arrive as lists. */
 function normalizeAiMarkdown(text: string): string {
   return text.replace(/^(\s*)[•●◦·]\s+/gm, "$1- ");
 }
 
-/**
- * Builds the transaction that replaces `[from, to)` with `rawText`, parsed
- * as markdown so formatted content lands rendered (falling back to a plain
- * text insert if it doesn't parse). The one place every "write an AI reply
- * into the document" flow converges: free-text apply and a propose_edit
- * Apply click (useInlineChat.ts) and accepting an in-document pending edit
- * (usePendingEdits.ts) all build their transaction here, so the three paths
- * can't drift on how markdown gets parsed.
- */
+/** The transaction replacing `[from, to)` with `rawText` parsed as Markdown,
+ *  or plain text if it won't parse. Every AI write goes through here. */
 export function applyEditRange(
   state: EditorState,
   ctx: Ctx,
@@ -63,8 +52,7 @@ export function applyEditRange(
 }
 
 /** `[from, to)` of `tr`'s document replaced by `rawText` parsed as
- *  markdown - one of several writes in one transaction (a rewrite applied
- *  change by change around the writer's own edits). */
+ *  Markdown, as one of several writes in one transaction. */
 export function replaceWithMarkdown(
   tr: Transaction,
   ctx: Ctx,

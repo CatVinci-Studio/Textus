@@ -1,10 +1,7 @@
 /**
- * Image files copied in a file manager. What lands on the clipboard is the
- * files' locations, not their bytes: `text/uri-list` (every desktop),
- * GNOME Files' own `x-special/gnome-copied-files` ("copy" or "cut", then
- * one URI a line), and an HTML or plain-text rendering of the same paths.
- * WebKitGTK turns the latter into a `file://` link, which is what a paste
- * used to insert (issue #59) - `[/home/me/x.png](file:///home/me/x.png)`.
+ * Image files copied in a file manager: the clipboard holds their locations
+ * (`text/uri-list`, GNOME's `x-special/gnome-copied-files`, or HTML that
+ * WebKitGTK turns into `file://` links), not their bytes.
  */
 
 const MIME_BY_EXT: Record<string, string> = {
@@ -19,8 +16,7 @@ const MIME_BY_EXT: Record<string, string> = {
   tiff: "image/tiff",
 };
 
-/** The image files the image store takes (image-plugin.ts's storeImage),
- *  for a file picker's filter. */
+/** The image files the image store takes, for a file picker's filter. */
 export const IMAGE_FILE_EXTENSIONS = Object.keys(MIME_BY_EXT);
 
 /** The image type a file's extension names, or null if it isn't one. */
@@ -53,12 +49,9 @@ function uriLines(list: string): string[] {
 }
 
 /**
- * The image files a paste carries, or [] when it carries anything else as
- * well: a copied PDF beside a screenshot stays a pasted link, as before,
- * rather than having only part of the selection turn into images.
- * `linkHrefs` are the targets of the links the pasted HTML parsed into,
- * when that is all it holds - the fallback for a webview that doesn't
- * expose the URI list itself.
+ * The image files a paste carries, or [] when it carries anything else too.
+ * `linkHrefs` are the pasted HTML's link targets, the fallback for a webview
+ * that doesn't expose the URI list.
  */
 export function imageFilesFromClipboard(clipboard: {
   uriList?: string;

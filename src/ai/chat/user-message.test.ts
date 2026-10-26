@@ -53,8 +53,7 @@ describe("parseUserMessage", () => {
 });
 
 describe("the wire format's writer and reader agree", () => {
-  // The whole reason writing moved into this module: three places used to
-  // hand-roll the same tags, and every way of drifting apart is silent.
+  // Every way the writers and the parser can drift apart is silent.
   it("round-trips a message built from the block writers", () => {
     const text = [
       attachedFileBlock("notes.md", "reference material"),

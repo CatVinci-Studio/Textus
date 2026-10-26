@@ -1,23 +1,13 @@
-//! web_fetch's download: one page from the open web, read as text.
-//!
-//! The model picks the URL, and a URL can point anywhere - a router's admin
-//! page, a cloud metadata service, a dev server on localhost - so the page
-//! is only fetched from an address on the public internet. The host is
-//! resolved here, every address it resolves to is checked, and the
-//! connection is pinned to those addresses, so a second lookup can't
-//! answer differently (DNS rebinding). A redirect is followed only on the
-//! same host, each hop checked again; one to another host comes back to the
-//! model as such, which may fetch it with a call of its own (as DeepSeek
-//! Harness does). No cookies are kept or sent, and every request has a time
-//! and size limit.
+//! web_fetch's download: one page from the open web, read as text. Only public
+//! addresses are fetched, the connection pinned to the checked addresses (no
+//! DNS rebinding); redirects only on the same host; no cookies; time and size limits.
 
 use aicompat::public_address::{all_public, is_local_name, is_public};
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 
-/// Most of a page's text handed to the model. A writing request needs the
-/// facts of a page, not all of a long one; DeepSeek Harness's 200,000 was
-/// too expensive to resend on every step of a conversation.
+/// Most of a page's text handed to the model: a writing request needs a page's
+/// facts, and a long page is too expensive to resend every step.
 pub(crate) const MAX_PAGE_CHARS: usize = 30_000;
 /// Most bytes downloaded for one page, before any of it is read as text.
 const MAX_BODY_BYTES: usize = 8 * 1024 * 1024;
@@ -56,10 +46,8 @@ pub(crate) struct Reach {
 pub(crate) const REFUSED: &str =
     "That address is on this computer or a private network; web_fetch only reads public web pages.";
 
-/// The URL web_fetch is asked for, as it will be fetched: http(s) only,
-/// with no user name or password in it, and plain http upgraded to https -
-/// most sites serve both, and the page then can't be read or changed on
-/// the way.
+/// The URL web_fetch is asked for, as it will be fetched: http(s) only, no
+/// credentials, and plain http upgraded to https.
 pub(crate) fn target(raw: &str, reach: Reach) -> Result<reqwest::Url, String> {
     let mut url = reqwest::Url::parse(raw.trim())
         .map_err(|_| format!("Not a web address: {}", raw.trim()))?;
@@ -81,13 +69,10 @@ pub(crate) fn target(raw: &str, reach: Reach) -> Result<reqwest::Url, String> {
     Ok(url)
 }
 
-/// A client for one request to `url`, refusing it when the host isn't on
-/// the public internet. Direct: the host's addresses are looked up and
-/// checked here, and the connection is pinned to them. Through the app's
-/// proxy (Settings > Privacy), which looks the name up itself and is how
-/// many users reach foreign sites at all: only literal private addresses
-/// and local names can be refused - a concession, since the proxy may still
-/// reach what a public-looking name resolves to on its side.
+/// A client for one request to `url`, refusing a host not on the public
+/// internet: checked and pinned when direct. Through the app's proxy, which
+/// resolves names itself, only literal private addresses and local names can
+/// be refused.
 async fn client_for(url: &reqwest::Url, reach: Reach) -> Result<reqwest::Client, String> {
     let host = url.host_str().ok_or_else(|| REFUSED.to_string())?;
     let port = url.port_or_known_default().unwrap_or(443);
@@ -125,8 +110,7 @@ async fn client_for(url: &reqwest::Url, reach: Reach) -> Result<reqwest::Client,
         .map_err(|e| e.to_string())
 }
 
-/// One site for following a redirect: the same host and port, `www.` or
-/// not - rust-lang.org's own www. address redirects there.
+/// One site for following a redirect: the same host and port, `www.` or not.
 fn same_site(a: &reqwest::Url, b: &reqwest::Url) -> bool {
     let host = |u: &reqwest::Url| {
         u.host_str()

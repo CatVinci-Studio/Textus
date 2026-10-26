@@ -3,9 +3,8 @@
 
 use super::*;
 
-/// Which list levels are bullets, and what number each numbered item
-/// shows: numId -> abstractNumId -> each level's numFmt and start, with the
-/// numId's own start overrides on top.
+/// Which list levels are bullets, and what number each numbered item shows,
+/// with the numId's own start overrides on top.
 #[derive(Default)]
 pub(crate) struct Numbering {
     pub(crate) abstract_of: HashMap<String, String>,
@@ -92,12 +91,9 @@ impl Numbering {
         !matches!(format.map(String::as_str), Some(f) if f != "bullet" && f != "none")
     }
 
-    /// The number the next item at `level` of list `num_id` shows, counted
-    /// as Word counts: on from the item before it at that level, and from
-    /// the level's start again after an item of a higher level. Markdown
-    /// keeps a list's first number, so this is what makes a list that starts
-    /// at 5, or goes on after a paragraph, read as it does in Word. Letters
-    /// and Roman numerals are written as the numbers they count.
+    /// The number the next item at `level` of list `num_id` shows, counted as Word
+    /// counts, so a list starting at 5 or resuming reads as in Word. Letters and
+    /// Roman numerals become the numbers they count.
     pub(crate) fn next_number(&mut self, num_id: &str, level: usize) -> usize {
         let start = self
             .start_overrides

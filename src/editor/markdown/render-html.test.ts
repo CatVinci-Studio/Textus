@@ -3,8 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { renderDocumentHtml, renderMarkdownHtml } from "./render-html";
 import { loadKatex } from "../math/katex-loader";
 
-// The app loads KaTeX on the first formula (katex-loader.test.ts); these
-// render with it there.
+// The app loads KaTeX on the first formula; these render with it there.
 beforeAll(() => loadKatex());
 
 describe("renderMarkdownHtml", () => {
@@ -85,8 +84,8 @@ describe("renderDocumentHtml", () => {
     );
   });
 
-  // The numbers themselves are CSS counters (milkdown-theme.css); what the
-  // preview has to keep is the element each one is drawn on.
+  // The numbers are CSS counters; the preview has to keep the element each
+  // one is drawn on.
   it("keeps a number slot on every row of gather and align, but not of their starred forms", () => {
     const slots = (source: string) =>
       renderDocumentHtml(`$$\n${source}\n$$`).match(/class="eqn-num"/g)

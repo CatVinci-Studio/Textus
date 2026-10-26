@@ -1,30 +1,14 @@
-/* An outline jump lands the heading clear of the 28px window bar the page
-   scrolls under, with a little air - not behind it. */
+/* An outline jump lands the heading clear of the window bar. */
 .editor-content .ProseMirror > :is(h1, h2, h3, h4, h5, h6) {
   scroll-margin-top: 44px;
 }
 
-/* --content-zoom (set by app/useZoom.ts) scales ONLY the document text,
-   never the window chrome. The column's max-width grows by the same factor
-   while the zoomed node's layout width divides by it, so the visual result
-   is the 100% column scaled geometrically - same words per line, everything
-   proportionally bigger - exactly like page zoom scoped to the content.
-   CSS `zoom` (not transform) so the text truly reflows and scrolls. The
-   fixed-position overlays (find bar, popovers) live OUTSIDE the zoomed
-   nodes and keep their unzoomed viewport coordinates. */
-/* The column's unzoomed width (Settings > Editor > Text Width). "auto"
-   holds at least a 680px column - about 80 Latin characters a line at
-   16.5px, 38 Chinese; the classic 760px ran English to 95 - and takes 62%
-   of a pane wider than about 1100px, up to 960px, where a fixed column
-   left two thirds of the window empty. At 56% it stayed at the floor up to
-   a 1214px pane, narrower than Standard on a 1280-1340px laptop (#211).
-   The floor is what keeps a pane narrowed by the sidebar and the AI panel
-   from crowding them, and the margin views of a revision available
-   (ai/margin/margin-room.ts wants 244px beside the column), so it stays
-   at 680px. "Standard" keeps the classic 760px. Percentages resolve
-   against the scroll pane, so an open sidebar narrows it too. An imported
-   theme that sizes #write itself (theme-chrome.ts's --theme-content-width)
-   takes over "auto". */
+/* --content-zoom scales only the document text: the column's max-width
+   grows by the factor, so it scales like page zoom. CSS `zoom`, not
+   transform, so the text truly reflows. */
+/* The column's unzoomed width. "auto" keeps a 680px floor (room for the
+   margin views) and takes 62% of a wide pane, up to 960px; "Standard" is
+   760px. An imported theme that sizes #write itself takes over "auto". */
 :root {
   --content-width: var(--theme-content-width, max(680px, min(960px, 62%)));
 }
@@ -42,15 +26,12 @@
   margin: 0 auto;
   /* The text size follows this column's width (milkdown-theme.css). */
   container-type: inline-size;
-  /* Enough to clear the floating window bar (28px) and still leave the text
-     air beneath it, so nothing sits under the glass until you scroll. */
+  /* Clears the floating window bar with air to spare. */
   padding: 3rem 1.5rem 6rem;
 }
 
-/* An engine whose containers trap position: fixed (ui/engine-quirks.ts)
-   gets no container here, or the editor's menus and dialogs were placed
-   against the column. The document's type then keeps the standard
-   measure's 16.5px instead of following the column (content-base.css). */
+/* An engine whose containers trap position: fixed gets no container here,
+   or menus are placed against the column. */
 :root[data-early-containers] .editor-content {
   container-type: normal;
 }
@@ -81,21 +62,15 @@
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
   font-family: var(--font-mono);
-  /* The rich editor's size at the standard column (content-base.css), so
-     switching modes doesn't drop the text to UI size. rem, so an imported
-     theme's `html { font-size }` reaches it; zoom scales it as above. */
+  /* The rich editor's size at the standard column. rem, so an imported
+     theme's `html { font-size }` reaches it. */
   font-size: 1.03125rem;
   line-height: 1.7;
 }
 
-/* Centred on a whole pixel. `auto` splits an odd leftover into two half
-   pixels, and WebKitGTK composites a focused textarea's scroller as a
-   layer of its own: at x.5 that layer is resampled and the text goes soft
-   the moment you click in (#61). The step is in the node's own zoomed px,
-   hence the divide, so the edge lands whole on screen at any zoom. Behind
-   @supports: the value names a var(), so an engine without round()
-   (WebView2 before Chromium 125) would keep it and compute it to 0, not
-   fall back to the auto above - the source text sat against the left. */
+/* Centred on a whole pixel: WebKitGTK resamples a focused textarea's layer
+   at x.5 and the text goes soft. Behind @supports, since an engine without
+   round() would compute it to 0. */
 @supports (margin-left: round(down, 1px, 1px)) {
   .source-view {
     margin-left: round(
@@ -106,13 +81,8 @@
   }
 }
 
-/* No focus ring: the pane is the field. design-system.css's ring for
-   textarea:focus-visible ties with the plain class above and loads later,
-   so a click drew a 2px accent outline round the whole pane - the blue
-   line at its edge in #61 - and on WebKitGTK the text went soft with it,
-   most likely because the ring overhangs the opaque background of the
-   textarea's composited layer, so its text is no longer drawn as on an
-   opaque one. */
+/* No focus ring: the pane is the field, and on WebKitGTK the ring made the
+   text go soft. */
 .source-view:focus-visible {
   outline: none;
 }

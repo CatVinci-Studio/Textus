@@ -6,9 +6,7 @@ import { recordClipboardEntry } from "../../clipboard/history";
 import { LINE_NUMBERS_SPEC } from "./code-line-numbers-plugin";
 import { fitGutter } from "./gutter-fit";
 
-// A curated common subset rather than refractor's full ~40-language list -
-// enough to cover what people actually fence code with, in a menu that
-// still fits on screen.
+// A common subset, so the menu still fits on screen.
 const LANGUAGES = [
   "",
   "javascript",
@@ -41,8 +39,8 @@ const LANGUAGES = [
 /** How long the copy button says it copied. */
 const COPIED_MS = 1500;
 
-/** The block's line count as the gutter numbers it: a trailing newline
- *  starts a line of its own, which the block shows. */
+/** The line count as the gutter numbers it: a trailing newline starts a
+ *  line of its own. */
 function lineCount(node: ProseNode): number {
   let lines = 1;
   for (const char of node.textContent) if (char === "\n") lines++;
@@ -50,16 +48,9 @@ function lineCount(node: ProseNode): number {
 }
 
 /**
- * Code blocks otherwise render via codeBlockSchema's plain toDOM (a bare
- * <pre><code>), which has no way to change the fence's language after the
- * fact. This NodeView wraps that same <pre><code> (still the real
- * contentDOM, so typing/highlighting decorations work exactly as before)
- * with a small header beside it: a button that copies the code and the
- * language picker. A Mermaid block's source, and with it this header, is
- * hidden while its diagram shows; the button copies the source once the
- * block is opened for editing. With line numbers on
- * (code-line-numbers-plugin.ts) a gutter sits inside the <pre>, before
- * the code.
+ * Wraps the code block's own <pre><code> (still the contentDOM) with a
+ * header holding a copy button and a language picker, and with line numbers
+ * on, a gutter inside the <pre>.
  */
 export function createCodeBlockView(
   labels: () => {
@@ -73,8 +64,8 @@ export function createCodeBlockView(
     () => (initialNode, view, getPos, decorations) => {
       let node = initialNode;
       const wrapper = document.createElement("div");
-      // md-fences: Typora's class for a code block, so imported Typora
-      // themes' code-block rules reach it (see theme/typora-compat.ts).
+      // md-fences: Typora's class, so imported Typora themes' code-block rules
+      // reach it.
       wrapper.className = "code-block-wrapper md-fences";
 
       const header = document.createElement("div");
@@ -95,8 +86,8 @@ export function createCodeBlockView(
         const text = node.textContent;
         void navigator.clipboard.writeText(text).then(
           () => {
-            // navigator.clipboard bypasses the copy event the clipboard
-            // history listens for (as useEditorClipboard's Copy does).
+            // navigator.clipboard bypasses the copy event the clipboard history
+            // listens for.
             recordClipboardEntry(text);
             copy.textContent = labels().copied;
             copy.classList.add("is-copied");
@@ -124,10 +115,8 @@ export function createCodeBlockView(
 
       function syncSelectValue(currentNode: ProseNode) {
         const lang = (currentNode.attrs.language as string) ?? "";
-        // A fence's own spelling (`js`, `sh`, `mermaid`, ...) outside the
-        // curated list gets an option of its own: falling back to "plain
-        // text" mislabelled a block that is in fact highlighted, and
-        // picking from the menu would then have rewritten its fence.
+        // A fence's own spelling outside the list gets an option of its own;
+        // "plain text" would mislabel it and rewrite its fence on a pick.
         if (lang && !Array.from(select.options).some((o) => o.value === lang)) {
           const opt = document.createElement("option");
           opt.value = lang;
@@ -158,9 +147,8 @@ export function createCodeBlockView(
       const code = document.createElement("code");
       pre.appendChild(code);
 
-      // Line numbers: one per line of the block, redrawn only when the
-      // count changes, each as tall as its line - which wraps - after any
-      // change to the text or the block's width (gutter-fit.ts).
+      // Line numbers: redrawn only when the count changes, each as tall as its
+      // (wrapping) line after any change to the text or width.
       const gutter = document.createElement("span");
       gutter.className = "code-line-gutter";
       gutter.contentEditable = "false";
@@ -171,8 +159,6 @@ export function createCodeBlockView(
         cancelAnimationFrame(fitting);
         fitting = requestAnimationFrame(() => fitGutter(gutter, code));
       };
-      // Made when the numbers are first shown: a block without them has
-      // nothing to fit.
       let resized: ResizeObserver | null = null;
       function syncGutter(
         currentNode: ProseNode,

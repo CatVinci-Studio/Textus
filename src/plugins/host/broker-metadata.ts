@@ -15,9 +15,8 @@ import {
 } from "./broker-scope";
 
 /**
- * A plugin's questions about the open folder's documents
- * (textus.metadata), answered from the index (metadata-cache.ts). They
- * need files.read, which `p.root()` checks.
+ * A plugin's questions about the open folder's documents, answered from the
+ * index. They need files.read, which `p.root()` checks.
  */
 export function metadataHandlers(p: PluginScope) {
   const index = () => folderIndex(p.id, p.root());

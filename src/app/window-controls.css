@@ -1,7 +1,5 @@
-/* The menu button sits at the LEFT end of the same row, where the traffic
-   lights would be on macOS - so the inset that row reserves for them is not
-   wasted, it just holds something else. Narrower than a caption button: it
-   is one of ours, not one of the system's. */
+/* The menu button sits where the macOS traffic lights would be, narrower
+   than a caption button. */
 .window-menu-button {
   width: 34px;
   margin-left: -8px;
@@ -9,17 +7,14 @@
   pointer-events: auto;
 }
 
-/* Wraps the menu button together with its open menu, so a click on the
-   button counts as inside the popover (AppMenuButton explains why that
-   matters). `contents` because the button has to stay a direct flex item of
-   the title row - a real box here would break its stretch and its inset. */
+/* Wraps the button with its open menu, so a click on the button counts as
+   inside. `contents` keeps the button a direct flex item of the row. */
 .window-menu-anchor {
   display: contents;
 }
 
-/* The menu bar (MenuBar.tsx): the menu's titles where the button would be,
-   flush to the window's left edge as the button is, each as tall as the
-   row. */
+/* The menu bar's titles, flush to the window's left edge, each as tall as
+   the row. */
 .window-menu-bar {
   display: flex;
   align-self: stretch;
@@ -60,7 +55,7 @@
   justify-content: center;
 }
 
-/* Too narrow for the titles: the ☰ is back (WindowBar renders both). */
+/* Too narrow for the titles: the ☰ is back. */
 .window-menu-fallback {
   display: none;
 }

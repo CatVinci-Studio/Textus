@@ -1,19 +1,9 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 
 /**
- * The document's blocks as the model sees them: the editor's own top-level
- * nodes, each with an id and a kind. The request carries this list
- * (doc-markdown.ts's serializeBlocks makes it); the backend shows each
- * block after its `[#k3f9]` and never splits the document itself, so the
- * blocks the model names are the nodes the editor has - a loose list or a
- * quote of several paragraphs is one block, as it is one node.
- *
- * An edit names its block (`block`, and `last_block` for a run of them)
- * instead of quoting it, and keeps the ids: the proposal is placed by them
- * (doc-markdown.ts's matchTarget), not by searching the document for its
- * text. An id is a hash of the block's markdown, so a block keeps its id
- * while it is unchanged, and an id from before a change names nothing
- * rather than the wrong block.
+ * The document's blocks as the model sees them: the editor's top-level nodes,
+ * each with an id and a kind. An id hashes the block's markdown, so a stale id
+ * names nothing rather than the wrong block.
  */
 
 /** What a block is, read from its node. */
@@ -32,7 +22,7 @@ export type BlockKind =
   | "definition"
   | "other";
 
-/** One block as the request carries it - `DocBlock` in doc_blocks.rs. */
+/** One block as the request carries it. */
 export interface SentBlock {
   id: string;
   markdown: string;
@@ -53,9 +43,8 @@ const NODE_KINDS: Record<string, BlockKind> = {
   footnote_definition: "footnote",
 };
 
-/** What `node`, a top-level node, is. A paragraph with no text of its own
- *  is a picture's, an HTML block's (`paragraph > html`) or a link's
- *  definition (`paragraph > link_definition`). */
+/** What a top-level node is. A paragraph with no text of its own is a
+ *  picture, an HTML block or a link definition. */
 export function blockKind(node: ProseNode): BlockKind {
   const kind = NODE_KINDS[node.type.name] ?? "other";
   if (kind !== "paragraph" || node.childCount === 0) return kind;
@@ -99,8 +88,7 @@ export function blockIds(markdowns: readonly string[]): string[] {
   });
 }
 
-/** An id as the model may write it - `k3f9`, `#k3f9`, or the whole
- *  marker `[#k3f9]` it was shown - as the id. clean_id in doc_blocks.rs. */
+/** An id as the model may write it (`k3f9`, `#k3f9`, `[#k3f9]`) as the id. */
 export function cleanId(id: string): string {
   return id
     .trim()
@@ -110,9 +98,8 @@ export function cleanId(id: string): string {
     .trim();
 }
 
-/** Where `block` (and `lastBlock`) are among `blocks`: the run's first and
- *  last index, or null when an id names none of them or the run is
- *  backwards. */
+/** The run's first and last index among `blocks`, or null when an id names
+ *  none of them or the run is backwards. */
 export function runOf(
   blocks: readonly { id: string }[],
   block: string,
@@ -136,14 +123,9 @@ export interface BlockEditFields {
 }
 
 /**
- * An edit named by its block as it is applied - what the backend's
- * resolve_edit_arguments writes into the call, done here for a call still
- * streaming in: the run's text is the anchor; a few words quoted inside it
- * that a `replace` or `delete` changes are changed in the whole run (one
- * edit per block, as the card shows it); an insertion next to quoted words
- * keeps them as its anchor. A run's rewrite keeps the run's pictures
- * (keepPictures). Null when the ids name no run of `blocks` (the document
- * changed since the request) or the quote isn't in the run once.
+ * A block-named edit as the backend applies it, for a call still streaming.
+ * Quoted words a `replace`/`delete` changes are changed in the whole run; an
+ * insertion keeps them as anchor. Null when the ids or quote don't resolve.
  */
 export function resolveBlockEdit(
   blocks: readonly SentBlock[],
@@ -195,10 +177,8 @@ export function resolveBlockEdit(
   };
 }
 
-/** Whether `block` is a picture and nothing else: `![alt](path)`, or an
- *  `<img>` (a picture given a width) - for text the model wrote, which has
- *  no node to ask. doc_blocks.rs's is_picture; both are held to
- *  keep-pictures-cases.json. */
+/** Whether `block` is a picture and nothing else: `![alt](path)` or an
+ *  `<img>`. Must match the backend's; keep-pictures-cases.json holds both. */
 export function isPicture(block: string): boolean {
   return /^(?:!\[[^\]\n]*\]\([^)\n]*\)|<img\s[^>\n]*>)$/.test(block.trim());
 }
@@ -211,9 +191,8 @@ function fenceOpening(line: string): string | null {
   return null;
 }
 
-/** Text the model wrote, in its paragraphs: runs of lines between blank
- *  lines, a fenced code or maths block whole, with where each is. Only for
- *  the model's text - the document's blocks are the editor's nodes. */
+/** The model's text in paragraphs: runs of lines between blank lines, a
+ *  fenced block whole, with where each is. */
 export function textParagraphs(
   text: string,
 ): { text: string; from: number; to: number }[] {
@@ -249,12 +228,9 @@ export function textParagraphs(
 }
 
 /**
- * `text`, a rewrite of the run `run`, with the run's pictures as they were
- * - doc_blocks.rs's keep_pictures, which the finished call goes through: a
- * new picture written where one was is taken out, and each picture left
- * out goes back by the paragraph it stood by. `complete`: all of `text` is
- * there; while it streams in, a picture whose place it hasn't reached is
- * left out for now. With how many swapped pictures were taken out.
+ * `text`, a rewrite of `run`, with the run's pictures as they were: a new
+ * picture where one was is taken out, and each one left out goes back by its
+ * paragraph. While streaming (`!complete`), pictures not yet reached wait.
  */
 export function keepPictures(
   run: readonly { markdown: string }[],
@@ -302,10 +278,8 @@ export function keepPictures(
 }
 
 /**
- * Where an add_comment or generate_image call named by its block points,
- * as doc_blocks.rs's resolve_target_arguments makes it: a phrase quoted in
- * `anchor` that the block holds once stays the anchor, else the anchor is
- * the whole block. Without a block, the anchor as quoted. Null while
+ * Where a block-named add_comment or generate_image points: a phrase the
+ * block holds once stays the anchor, else the whole block. Null while
  * neither names anything in `blocks`.
  */
 export function resolveBlockTarget(

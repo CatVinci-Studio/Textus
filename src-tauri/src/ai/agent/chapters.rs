@@ -1,14 +1,6 @@
-//! A long document changed the same way throughout - translated, put into
-//! another register - chapter by chapter, at once: the request's model
-//! calls edit_chapters with the change and a glossary of the names and
-//! terms that recur, and a helper per chapter, seeing only its chapter,
-//! proposes that chapter's edits while the others do theirs. Done one
-//! after another, a three-chapter translation took two and a half minutes
-//! (live_eval, rc.6); the chapters now take about as long as the longest.
-//!
-//! The helpers' proposals are the request's own: they stream to the
-//! window as any propose_edit does, and their turns go into the
-//! request's history after edit_chapters' result.
+//! A long document changed the same way throughout (translated, put into
+//! another register), with a helper per chapter working on all of them at once.
+//! The helpers' proposals stream and enter history as the request's own.
 
 use super::*;
 use aicompat::agent::{ToolCall, ToolOutput, ToolSpec};
@@ -22,8 +14,8 @@ pub(crate) const EDIT_CHAPTERS_TOOL_NAME: &str = "edit_chapters";
 const AT_ONCE: usize = 4;
 /// A helper's steps: its chapter's edits, a few blocks a call.
 const CHAPTER_STEPS: usize = 8;
-/// How long a document is, in char units (project::char_units), before a
-/// change through all of it goes chapter by chapter.
+/// How long a document is, in char units, before a change through all of it
+/// goes chapter by chapter.
 const LONG_DOCUMENT: usize = 8_000;
 /// At most this many chapters: more are joined, neighbours together.
 const MAX_CHAPTERS: usize = 16;
@@ -262,9 +254,8 @@ impl ChapterRun<'_, '_> {
         .into()
     }
 
-    /// One chapter's helper: the chapter as the document it sees, its
-    /// propose_edit calls streamed to the window. Its turns, without its
-    /// message and its closing line.
+    /// One chapter's helper: the chapter as the document it sees. Returns its
+    /// turns, without its message and its closing line.
     async fn chapter(&self, chapter: &Chapter, message: String) -> Result<Vec<AgentTurn>, String> {
         let part = Document::from_blocks(
             self.document.blocks[chapter.first..=chapter.last]

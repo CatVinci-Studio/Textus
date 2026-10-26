@@ -50,8 +50,8 @@ export function toolActivityText(
         .join("”, “")
     : undefined;
   const site = typeof args.url === "string" ? siteOf(args.url) : undefined;
-  // An MCP server's tool (src-tauri mcp/): named as the model knows it,
-  // mcp_<server>_<tool>, which says whose tool it is.
+  // An MCP server's tool, named as the model knows it (mcp_<server>_<tool>),
+  // which says whose tool it is.
   if (name.startsWith("mcp_") && labels.toolActivity.mcp)
     return labels.toolActivity.mcp.replace("{arg}", name.slice(4));
   const arg =
@@ -78,7 +78,7 @@ export function AgentTurnView({
 }: {
   turn: AgentTurn;
   labels: AgentTurnLabels;
-  /** An assistant reply still streaming in (MarkdownText's `live`). */
+  /** An assistant reply still streaming in. */
   live?: boolean;
 }) {
   switch (turn.kind) {
@@ -127,9 +127,7 @@ export function AgentTurnView({
 
 /**
  * The user's own turn: their prose, with the selection and attachments that
- * rode along shown as chips rather than as the raw tagged blocks. The
- * selection chip expands - it's context the user chose, so it should be
- * checkable, just not occupying the transcript by default.
+ * rode along shown as chips. The selection chip expands to be checked.
  */
 function UserMessage({
   text,
@@ -142,10 +140,8 @@ function UserMessage({
 }) {
   const { body, selection, attachments } = parseUserMessage(text);
   const [expanded, setExpanded] = useState(false);
-  // Text attachments are recovered by re-parsing the <attached-file> blocks
-  // out of the prompt; images never had one to parse (they travel as provider
-  // image parts, not as text), so they come straight off the turn. Without
-  // this a message with a picture attached showed no chip at all.
+  // Text attachments come from the <attached-file> blocks in the prompt;
+  // images travel as provider image parts, so they come off the turn.
   const attachmentNames = [
     ...attachments,
     ...images.map((image) => image.name),
@@ -189,10 +185,8 @@ function UserMessage({
 }
 
 /**
- * The web pages a reply cites, by the numbers its text gives them: one
- * chip each - number, site, title - that opens the page in the system
- * browser. The same list whether the provider searched or Textus did
- * (src-tauri ai/web).
+ * The web pages a reply cites, by the numbers its text gives them: one chip
+ * each that opens the page in the system browser.
  */
 function SourceList({
   sources,

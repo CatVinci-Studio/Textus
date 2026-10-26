@@ -8,55 +8,9 @@ pub(crate) use cursor::*;
 mod reply;
 pub(crate) use reply::*;
 
-// The completion contract, end to end:
-//   - context: the frontend sends the text around the CURSOR - up to the
-//     last 1500 chars before it and the first 300 after (ghost-text-plugin's
-//     MAX_CONTEXT_CHARS / MAX_AFTER_CONTEXT_CHARS), and outside code only
-//     when some of it is prose (not after a diagram alone). Cursor-
-//     anchored, not document-anchored: completing mid-document must
-//     continue from the cursor, not from wherever the document happens to
-//     end.
-//   - where: CompletionHints adds the document title, the heading path to
-//     the cursor and the block type, so a list item gets an item and a
-//     section gets text about that section.
-//   - language: the language of the prose around the cursor, told
-//     outright (completion_language) - from the prose alone, with code
-//     blocks and diagram source left out, else the app's language. Left to
-//     the model, a document opening with a Mermaid diagram (Latin keywords,
-//     no prose) got continuations in a language nobody wrote (Russian, in
-//     a Chinese app).
-//   - length: as the writer types, only the near-certain next words, cut
-//     at the first clause (finish_suggestion), and asked for mid-clause
-//     only - not right after punctuation or in an empty paragraph, where
-//     what comes next is the writer's own choice (ghost-text-plugin); two
-//     to four sentences when the writer explicitly triggers a continuation.
-//   - the join: a word the cursor is in or right after travels in its own
-//     <word-at-cursor> tag - in Chinese and Japanese the clause typed so
-//     far, <clause-at-cursor> - the model writes it out in full, and
-//     fit_to_cursor cuts the typed part off again (see there for why).
-//
-// The live eval (live_eval/completion_matrix.rs) found the rules below
-// that earlier prompts lacked: models never start a reply with a space, so
-// "it quickly" + "grew" landed as "quicklygrew" in every space-separated
-// language; "the next concrete detail" read as licence to invent figures
-// and findings the writer never gave. Round 2 found that asking the model
-// to "repeat the last word when the text ends in a letter" made Haiku,
-// which runs with thinking off here, reason about that rule in the visible
-// reply ("Wait - the instructions say...", a stray </reasoning_effort>) -
-// and it skipped the repeat for most words, so a cut-off word was split
-// ("docu ment"). Handing the model the word in a tag of its own leaves it
-// nothing to decide.
-//
-// 1.2.0-rc.6 measured what a writer meets, with a typing replay
-// (live_eval/completion_replay.rs: whole documents typed out, a completion
-// at each pause, judged against what the writer wrote next). Half of the
-// one-sentence suggestions were ignored: past the first clause they made up
-// what only the writer knew. They are now the near-certain next words, cut
-// at the first clause, and asked for mid-clause only, where they were
-// useful seven times in ten (after a full stop, three). A short prompt
-// without these rules, and a ✓/? mark of the model's own confidence, were
-// tried and dropped: the first made Haiku skip the word at the cursor and
-// think out loud about format, and it hardly ever marked a guess.
+// Continues from the cursor, not the document's end. The word at the cursor
+// travels in its own tag for the model to write out, and is cut off again
+// (fit_to_cursor): models never begin a reply with a space.
 pub(super) const COMPLETION_INSTRUCTIONS: &str = "You are the inline autocomplete of a markdown writing app. When the writer pauses, you propose the words they would most plausibly write next; they see it as grey text and accept it with Tab.
 
 The input marks the insertion point: <text-before-cursor> ends exactly at the cursor and <text-after-cursor> starts exactly there (it may be empty). When the cursor is inside a word or right after one, that word is not in <text-before-cursor> but in <word-at-cursor>, which comes right after it: the letters typed so far, with the cursor at their end. In Chinese and Japanese the same goes for <clause-at-cursor>. When present, <document-title>, <section> (the headings around the cursor, outermost first) and <block> (what the cursor is in) say where in the document this is. The text is plain text with its formatting removed, and what you write is inserted as plain text.
@@ -74,10 +28,7 @@ const COMPLETION_LENGTH_SHORT: &str = "Length: only what the text makes near-cer
 
 const COMPLETION_LENGTH_LONG: &str = "The writer asked for a continuation: carry the current paragraph on by two to four sentences - roughly 40 to 90 words, or 60 to 160 CJK characters - moving it forward with what the text already supports. Stay in this paragraph: no new paragraph, heading or list.";
 
-/// What the frontend knows about the cursor beyond the raw text around it
-/// (ghost-text-plugin.ts's completionHints) - generated into
-/// src/platform/bindings/ai.ts, which ipc.ts checks the frontend's
-/// narrower CompletionHints against.
+/// What the frontend knows about the cursor beyond the raw text around it.
 #[derive(Deserialize, Default, Clone)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct CompletionHints {
@@ -97,8 +48,8 @@ pub struct CompletionHints {
     /// and math source - what the language is read from.
     #[serde(default)]
     pub(crate) prose: Option<String>,
-    /// The app's UI language (src/i18n/langs.ts), the fallback when the
-    /// prose is too short to tell its language.
+    /// The app's UI language, the fallback when the prose is too short to tell
+    /// its language.
     #[serde(default, rename = "uiLanguage")]
     pub(crate) ui_language: Option<String>,
 }
@@ -107,11 +58,8 @@ pub struct CompletionHints {
 pub(crate) const CANDIDATE_SEPARATOR: &str = "<<<>>>";
 
 /// The language the completion is written in, and whether it was read from
-/// the prose (true) or is the app's (false): the prose's when it tells
-/// (rules::detect), else the one its script alone gives - unless that is
-/// Chinese in a Chinese app, whose script variant then decides - else the
-/// UI language. None in a code block, or with neither prose nor UI
-/// language (the live eval's bare cases).
+/// the prose (true) or is the UI's (false). None in a code block, or with
+/// neither prose nor UI language.
 pub(crate) fn completion_language(
     before: &str,
     after: &str,
@@ -149,12 +97,9 @@ pub(crate) fn completion_language(
     ui.map(|l| (l.english, false))
 }
 
-/// The completion request's user turn: the optional where-am-I tags, then
-/// the text split at the cursor, with the word the cursor is in or right
-/// after (word_at_cursor) in a tag of its own. No whitespace between the
-/// cursor tags and the text - the before-text must end exactly where the
-/// typed word starts (or at the cursor) for "start right at the last
-/// character" to mean anything.
+/// The completion request's user turn: the optional where-am-I tags, then the
+/// text split at the cursor. No whitespace between the cursor tags and the
+/// text: the before-text must end exactly where the typed word starts.
 pub(super) fn completion_user_text(before: &str, after: &str, hints: &CompletionHints) -> String {
     let mut text = String::new();
     if let Some(title) = hints.title.as_deref().filter(|t| !t.trim().is_empty()) {
@@ -187,9 +132,8 @@ pub(super) fn completion_user_text(before: &str, after: &str, hints: &Completion
     text
 }
 
-/// ai_complete's inputs, the keys of `ai.complete`'s invoke in
-/// platform/ipc.ts - generated into src/platform/bindings/ai.ts, which
-/// types that call with it (the command itself, taking `Args`, can't be).
+/// ai_complete's inputs, the keys of `ai.complete`'s invoke, generated into
+/// the bindings to type that call.
 #[derive(Deserialize)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -223,28 +167,21 @@ pub async fn ai_complete(
     let hints = hints.unwrap_or_default();
     let (mut instructions, user_text) =
         completion_prompt(&before, &after, &hints, style.as_deref());
-    // The project's style profile and the library entries the surrounding
-    // text mentions - the same writing context the agent gets, so a
-    // continuation uses the right names and the author's voice.
+    // The project's style profile and the library entries the text mentions,
+    // as the agent gets them.
     let workspace = cached_workspace(&app, doc_path, workspace_root);
     add_writing_context(&mut instructions, &workspace, &before, &after);
     let raw = call(&app, &provider, instructions, user_text, model.as_deref()).await?;
     Ok(finish_suggestion(&before, &after, &raw, &hints))
 }
 
-/// The block hint ghost-text-plugin.ts sends for a code block - the one
-/// block where a completion may run over several lines.
+/// The block hint the frontend sends for a code block, the one block where a
+/// completion may run over several lines.
 pub(crate) const CODE_BLOCK_HINT: &str = "code block";
 
-/// Appends the project's style profile and the library entries the text
-/// around the cursor mentions to the completion instructions - shared with
-/// the live eval, so a completion under a style profile is measured exactly
-/// as it is sent. The profile comes last in the prompt, so the output rule
-/// is said once more after it: placed before it, Haiku (thinking off)
-/// restated the profile's rules in the suggestion itself. And a profile's
-/// sentence-length limit counts the whole sentence, of which the writer
-/// may already have typed most - the live eval saw a 32-character sentence
-/// under a 20-character limit.
+/// Appends the style profile and the library entries the text mentions to the
+/// completion instructions. The output rule is repeated after the profile, or
+/// the model restated the profile's rules in the suggestion.
 pub(crate) fn add_writing_context(
     instructions: &mut String,
     workspace: &crate::ai::workspace::AgentWorkspace,
@@ -267,9 +204,7 @@ pub(crate) fn add_writing_context(
 }
 
 /// The workspace for a completion, re-read at most every few seconds:
-/// completions fire on every typing pause, and the style profile and
-/// library only change when the user edits those files. One entry - typing
-/// happens in one document at a time.
+/// completions fire on every typing pause. One entry: one document at a time.
 pub(super) fn cached_workspace(
     app: &AppHandle,
     doc_path: Option<String>,
@@ -292,9 +227,8 @@ pub(super) fn cached_workspace(
     ws
 }
 
-/// The completion request as (system instructions, user turn) - shared by
-/// the command and the live eval (live_eval.rs), so what the eval measures
-/// is exactly what the app sends.
+/// The completion request as (system instructions, user turn), shared by the
+/// command and the live eval so both send the same.
 pub(crate) fn completion_prompt(
     before: &str,
     after: &str,
@@ -316,20 +250,15 @@ pub(crate) fn completion_prompt(
         )),
         None => {}
     }
-    // The tone preset the user picked in Settings rides along after the base
-    // contract. It decides the register - picking "Formal" means formal even
-    // where the draft is plainer, which "write as this writer writes" used
-    // to win in short completions while long ones overshot - but it can't
-    // override the format, length and no-invention rules.
+    // The tone preset the user picked decides the register, but can't override
+    // the format, length and no-invention rules.
     if let Some(style) = style.map(str::trim).filter(|s| !s.is_empty()) {
         instructions.push_str(&format!(
             "\n\nTone the user chose in Settings: {style} It sets the register of your text in place of the writer's own; every other rule above still applies."
         ));
     }
-    // One request for all alternatives: cheaper than N calls, and the model
-    // can make them genuinely different rather than N near-copies. The
-    // length is repeated per alternative: said once, the model shortened
-    // each to a single sentence.
+    // One request for all alternatives: cheaper, and they come out genuinely
+    // different. The length is repeated per alternative, or each got shortened.
     if let Some(n) = hints.candidates.filter(|n| *n > 1) {
         instructions.push_str(&format!(
             "\n\nWrite {n} alternative continuations that take the text in clearly different directions (different next point, angle or wording) - each one a full continuation of the length above, following every rule above. Output them one after another, separated by a line containing only {CANDIDATE_SEPARATOR}. Nothing else."

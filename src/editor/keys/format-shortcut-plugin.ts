@@ -18,8 +18,7 @@ interface FormatSpec {
   rung: number;
 }
 
-// Mod+B = bold, Mod+I = italic - the same md_span shells the autopair
-// plugin opens when the delimiters are typed by hand.
+// The same md_span shells the autopair plugin opens for typed delimiters.
 const SHORTCUTS: Record<string, FormatSpec> = {
   b: { delim: "*", rung: 2 },
   i: { delim: "*", rung: 1 },
@@ -30,11 +29,9 @@ const SHORTCUTS: Record<string, FormatSpec> = {
 const WRAPPABLE = new Set(["md_code_span", "math_inline"]);
 
 /**
- * The shortcut pressed again on its own formatting takes it off, as in
- * every editor: with the caret or the selection inside a bold span (or
- * the selection covering one), Cmd/Ctrl+B unwraps it back to text.
- * Bold-italic typed as one `***` span keeps the other half. Null when the
- * selection isn't in or on such a span.
+ * The shortcut pressed again on its own formatting takes it off; a `***`
+ * span keeps the other half. Null when the selection isn't in or on such a
+ * span.
  */
 function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
   const { $from, $to, from, to, empty } = state.selection;
@@ -49,8 +46,6 @@ function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
         rung: 3 - spec.rung,
       });
     const tr = state.tr.replaceWith(start, start + node.nodeSize, node.content);
-    // What was selected stays selected: the span's opening is gone from
-    // before it.
     return tr.setSelection(
       TextSelection.create(tr.doc, from - shift, Math.max(from, to) - shift),
     );
@@ -59,8 +54,8 @@ function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
     const node = $from.node(d);
     if ($to.depth < d || $to.node(d) !== node) break;
     if (!matches(node)) continue;
-    // The caret at the end of what was just typed bold: the press ends
-    // the bold and the text goes on after it, as in Typora - not undo it.
+    // The caret at the end of what was just typed bold: the press ends the bold
+    // and typing goes on after it, as in Typora.
     if (empty && node.content.size > 0 && from === $from.end(d))
       return state.tr.setSelection(
         TextSelection.create(state.doc, $from.after(d)),
@@ -79,9 +74,8 @@ function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
   return null;
 }
 
-/** The `*` span the selection covers all of - its text from end to end,
- *  or the span itself from just before to just after it - with its
- *  position; null otherwise. */
+/** The `*` span the selection covers all of, and its position; null
+ *  otherwise. */
 function wholeSpan(
   state: EditorState,
 ): { node: ProseNode; pos: number } | null {
@@ -101,20 +95,10 @@ function wholeSpan(
 }
 
 /**
- * Cmd/Ctrl+B and Cmd/Ctrl+I, built on the same md_span nodes as typing the
- * delimiters (there are no strong/em marks in this schema - see
- * reduced-presets.ts, which strips the stock keymaps along with the marks):
- *
- * - With no selection: open an empty shell, cursor inside, exactly like
- *   typing "**" - and pressing the shortcut again while that shell is still
- *   empty removes it (toggleOff), so an accidental press undoes itself.
- * - With a selection of text (code and maths in it too) inside one
- *   textblock: wrap it in the shell (whitespace at the edges stays
- *   outside - delimiters hugging spaces wouldn't serialize to valid
- *   markdown).
- * - In or on a span of the same style: take it off (toggleOff).
- * - Inside code/math or another shell: do nothing, matching the
- *   autopair plugins' no-nesting rule.
+ * Cmd/Ctrl+B and Cmd/Ctrl+I on md_span nodes (the schema has no strong/em
+ * marks). No selection opens an empty shell, as typing "**" does; a
+ * selection in one textblock is wrapped, edge whitespace left outside so it
+ * serializes; inside code/math or another shell, nothing.
  */
 export const formatShortcutPlugin = $prose(
   () =>
@@ -131,8 +115,8 @@ export const formatShortcutPlugin = $prose(
           if (!spec) return false;
           if (isImeKeyEvent(view, event)) return false;
 
-          // Live selection: Cmd+B right after fast caret movement must not
-          // act on a position one step behind (see stateWithLiveSelection).
+          // Live selection: Cmd+B right after fast caret movement must not act on a
+          // position one step behind.
           const state = stateWithLiveSelection(view);
           const off = toggleOff(state, spec);
           if (off) {
@@ -160,12 +144,11 @@ export const formatShortcutPlugin = $prose(
             return true;
           }
 
-          // Selection: wrap plain text within a single textblock.
           if (!(state.selection instanceof TextSelection)) return false;
           if (!$from.sameParent($to)) return false;
 
-          // All of a bold span selected, Mod+I makes it bold-italic (one
-          // `***` span), and the other way round; the selection stays.
+          // All of a bold span selected, Mod+I makes it one `***` span, and the
+          // other way round.
           const whole = wholeSpan(state);
           if (
             whole &&
@@ -188,8 +171,7 @@ export const formatShortcutPlugin = $prose(
           )
             return false;
 
-          // Keep edge whitespace outside the shell - only a text node's:
-          // spaces inside code at an edge belong to the code.
+          // Only a text node's edge whitespace stays outside: spaces in code are code.
           const selected = parent.content.cut(
             $from.parentOffset,
             $to.parentOffset,
@@ -200,9 +182,8 @@ export const formatShortcutPlugin = $prose(
           const to = $to.pos - edgeSpaces(selected.lastChild, /\s*$/);
           if (from >= to) return false;
 
-          // Text, code and maths may move inside: `**a `b` c**` is bold
-          // around code. A span already in the selection is left alone -
-          // bold in bold, or italic split by the new bold's edges.
+          // Text, code and maths may move inside; a span already in the selection
+          // leaves it alone.
           const fragment = parent.content.cut(
             from - $from.start(),
             to - $from.start(),
@@ -216,8 +197,7 @@ export const formatShortcutPlugin = $prose(
             { delim: spec.delim, rung: spec.rung },
             fragment,
           );
-          // The text stays selected, as in Typora: Mod+I next makes it
-          // bold-italic, Mod+B again takes the bold off.
+          // The text stays selected, as in Typora.
           const tr = state.tr.replaceWith(from, to, node);
           tr.setSelection(
             TextSelection.create(tr.doc, from + 1, from + 1 + fragment.size),

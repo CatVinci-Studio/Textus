@@ -3,17 +3,15 @@ import { MARK_CLASS } from "../../../ui/moves";
 import { duration, scrollBehavior } from "../../../ui/motion";
 
 /**
- * The memory a "Remembered" chip in the chat points the Memory tab at: a
- * click on the chip opens the tab there, its memory scrolled to and marked
- * for a moment - the chip could only be read cut short, and finding the
- * memory meant searching the tab for it.
+ * The memory a "Remembered" chip points the Memory tab at: a click opens the
+ * tab scrolled to that memory, marked for a moment.
  */
 
 let focused: string | null = null;
 const listeners = new Set<() => void>();
 
 /** Points the Memory tab at memory `id` (`scope/memory/name`, or
- *  `project/library/name` for a fact) - as RememberResult names it. */
+ *  `project/library/name` for a fact). */
 export function focusMemory(id: string) {
   focused = id;
   for (const listener of listeners) listener();

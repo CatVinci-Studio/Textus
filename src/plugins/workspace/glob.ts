@@ -1,7 +1,6 @@
 /**
- * A glob over paths in the folder (textus.files.find), `/`-separated:
- * `*` any run within one folder's name, `**` any run of folders, `?` one
- * character, `{a,b}` either. Case is ignored, as file systems mostly do.
+ * A glob over `/`-separated paths in the folder: `*` within one name, `**`
+ * across folders, `?` one character, `{a,b}` either. Case is ignored.
  */
 export function globToRegExp(glob: string): RegExp {
   let out = "";

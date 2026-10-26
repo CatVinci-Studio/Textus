@@ -6,18 +6,16 @@ import "./diagram-zoom.css";
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 8;
 
-/** The zoom a wheel notch gives; a trackpad pinch (a wheel with ctrlKey,
- *  in small steps) takes the same rule per pixel. */
+/** The zoom a wheel notch gives; a trackpad pinch takes the same rule per
+ *  pixel. */
 export function nextScale(scale: number, deltaY: number): number {
   const factor = Math.exp(-deltaY * 0.0015);
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * factor));
 }
 
 /**
- * A diagram's drawing in a viewer over the window, to look at closely: the
- * wheel or a pinch zooms where the pointer is, a drag moves it, a double
- * click fits it again, and Escape, the close button or a click beside it
- * closes it. The drawing is a copy: nothing here touches the document.
+ * A diagram's drawing in a zoomable, draggable viewer over the window. The
+ * drawing is a copy: nothing here touches the document.
  */
 export function openDiagramViewer(
   svg: SVGSVGElement,
@@ -35,8 +33,8 @@ export function openDiagramViewer(
   drawing.removeAttribute("style");
   drawing.classList.add("diagram-viewer-drawing");
   stage.append(drawing);
-  // A Pele drawing takes its colours from its frame's variables
-  // (milkdown-theme.css's .mermaid-preview), Mermaid's from its own style.
+  // A Pele drawing takes its colours from its frame's variables, Mermaid's
+  // from its own style.
   const look = getComputedStyle(frame);
   for (const name of ["color", "background-color"])
     stage.style.setProperty(name, look.getPropertyValue(name));
@@ -59,7 +57,6 @@ export function openDiagramViewer(
   const apply = () => {
     drawing.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
   };
-  // Fitted to the window, centred.
   const fit = () => {
     const box = svg.getBoundingClientRect();
     const room = stage.getBoundingClientRect();
@@ -160,7 +157,7 @@ export function zoomButton(frame: HTMLElement): HTMLButtonElement {
   button.setAttribute("aria-label", label);
   button.title = label;
   // Drawn by CSS, not an <svg>: the frame's one svg is the diagram, which
-  // export and the editor look for (".mermaid-preview svg").
+  // export and the editor look for.
   const icon = document.createElement("span");
   icon.className = "mermaid-zoom-icon";
   icon.setAttribute("aria-hidden", "true");

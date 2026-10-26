@@ -1,8 +1,5 @@
-// A file's line endings and byte-order mark, kept through an edit. The
-// editor works in "\n" (ProseMirror normalises every line break), so a
-// document is read in as "\n" without a BOM, and written back the way the
-// file on disk already is: a Windows file saved from Textus stays CRLF, and
-// a git diff shows the lines that changed instead of every line.
+// A file's line endings and BOM, kept through an edit: the editor works in
+// "\n", and a file is written back the way it is on disk.
 
 export interface FileFormat {
   crlf: boolean;

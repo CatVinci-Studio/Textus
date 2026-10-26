@@ -18,7 +18,6 @@ function resumeAt(stepId: TutorialStepId, extra: object = {}) {
   return renderHook(() => useTutorial()).result;
 }
 
-/** Steps forward until `id` is the current step. */
 function goTo(result: { current: ReturnType<typeof useTutorial> }, id: string) {
   while (result.current.step.id !== id) act(() => result.current.next());
 }

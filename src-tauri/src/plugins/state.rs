@@ -1,17 +1,13 @@
-//! `plugins/state.json`: the switch for every plugin, and per plugin
-//! whether it is on, the permissions the user granted it and, for one
-//! loaded from a folder in developer mode, that folder.
-//!
-//! Only the app's own Settings writes it (Settings › Plugins and the
-//! permission dialog, src/plugins/); a plugin can't reach these commands.
+//! `plugins/state.json`: the switch for every plugin, and per plugin whether it
+//! is on, its granted permissions and any developer folder. Only Settings
+//! writes it; a plugin can't reach these commands.
 
 use super::{plugins_root, require_id};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-/// One write at a time: two windows turning plugins on at once would
-/// otherwise each write the file from what it read before the other.
+/// One write at a time, so two windows can't each overwrite the other's change.
 static WRITING: Mutex<()> = Mutex::new(());
 
 fn on() -> bool {
@@ -51,8 +47,8 @@ pub struct PluginEntry {
     /// A plugin loaded from a folder in developer mode: that folder.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dev_path: Option<String>,
-    /// Installed from the catalog as CatVinci's own (catalog.rs): Settings
-    /// marks it Official. Never set by the window.
+    /// Installed from the catalog as CatVinci's own: Settings marks it Official.
+    /// Never set by the window.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub official: bool,
 }
@@ -112,9 +108,8 @@ pub fn plugins_set_all(app: tauri::AppHandle, on: bool) -> Result<(), String> {
     update(&app, |state| state.all_on = on)
 }
 
-/// Turns a plugin on or off with the permissions the user granted it -
-/// Settings' switch and the permission dialog. A developer-mode folder is
-/// kept.
+/// Turns a plugin on or off with the permissions the user granted it. A
+/// developer-mode folder is kept.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_set(

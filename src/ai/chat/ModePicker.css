@@ -1,7 +1,5 @@
-/* The composer's mode and model (ModePicker.tsx): the mode select's frame
-   (design-system.css, .inline-chat-mode) holding "Write · gpt-6.1-sol".
-   When the row is narrow the model's name gives way first, cut short; the
-   mode's never does. */
+/* The composer's mode and model. When the row is narrow the model's name
+   gives way first, cut short; the mode's never does. */
 .mode-picker {
   gap: 0;
   min-width: 0;
@@ -23,8 +21,8 @@
   padding: 0 0.4em;
 }
 
-/* Beside the composer's tools, it is what gives way (inline-chat.css keeps
-   the others at their size) - but never below the mode's name. */
+/* Beside the composer's tools, it is what gives way - but never below the
+   mode's name. */
 .inline-chat-toolbar > .mode-picker {
   flex: 0 1 auto;
   min-width: 64px;

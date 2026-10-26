@@ -1,9 +1,8 @@
 import { LOCAL_KEYS, readLocalJson, writeLocal } from "../storage/local";
 import snapshot from "./models-snapshot.json";
 
-/** What models.dev says about one model (scripts/sync-models.mjs keeps the
- *  bundled snapshot current). Absent for models it doesn't list - those
- *  show as a bare id. */
+/** What models.dev says about one model, from a bundled snapshot. Absent for
+ *  models it doesn't list, which show as a bare id. */
 export interface ModelInfo {
   name: string;
   released: string | null;

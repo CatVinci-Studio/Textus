@@ -1,10 +1,6 @@
-//! Now and then, the memory tidied: what was remembered over many
-//! exchanges, one at a time, gathers repeats ("Reply in English." three
-//! ways), rules a later one overturned, and wordy entries. After an
-//! exchange's own pass, once enough has been added since the last tidy -
-//! or a week has gone by - one more small request sees every memory and
-//! answers with merges and removals, made by the same writer: a removed
-//! memory goes to Recently forgotten, to bring back from the Memory tab.
+//! Now and then, the memory tidied: repeats merged and overturned rules removed,
+//! by one small request once enough was added or a week has passed. A removed
+//! memory goes to Recently forgotten.
 
 use super::*;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -101,11 +97,9 @@ fn tidy_input(memories: &Memories) -> String {
         .join("\n")
 }
 
-/// The tidy's changes: only updates and removals of memories it was
-/// shown - never an addition, never a library entry. A removal names the
-/// memory it goes into, which stays: one updated in the same answer (a
-/// merge), or a newer one (it overturns the older) - so a newer memory,
-/// an exception to an older rule, is never lost to the rule.
+/// The tidy's changes: only updates and removals of memories it was shown. A
+/// removal names the memory it goes into, which stays (a merge, or a newer one
+/// overturning it), so a newer exception is never lost to an older rule.
 fn tidy_changes(answer: &str, memories: &Memories) -> Vec<pass::Change> {
     let changes = parse_changes(answer);
     let shown = |id: &str| memories.items.iter().find(|m| m.id == id);

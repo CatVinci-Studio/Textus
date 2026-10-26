@@ -1,7 +1,5 @@
-/* The docked Agent panel (agent-panel.tsx): a column on the right of the
-   editor window, the full conversation's default home. Same body layout as
-   the detached window (chat-window.css): the message list flexes, the
-   composer sits on the bottom edge. */
+/* The docked Agent panel on the right of the editor window: the message
+   list flexes, the composer sits on the bottom edge. */
 
 .agent-panel {
   position: relative;
@@ -13,19 +11,14 @@
   background: var(--editor-bg, var(--bg));
   border-left: 1px solid var(--border-color);
   color: var(--editor-text);
-  /* It takes its full width at once - the editor glides aside (App.tsx's
-     FlipOnChange) - and slides into it from just beside it. Never a width
-     animation: that reflowed the whole document on every frame. The slide
-     starts past the window's right edge; .app-shell is overflow: clip, so
-     the composer taking the focus can't scroll the window to it - in
-     1.2.0-rc.4 that shifted the sidebar and the text aside and snapped them
-     back as the slide ended. */
+  /* Full width at once, sliding in from beside it: a width animation
+     reflowed the document every frame. .app-shell is overflow: clip, so
+     focusing the composer can't scroll the window mid-slide. */
   animation: motion-nudge-in-end var(--dur-slow) var(--ease-out);
 }
 
-/* It leaves the way it came, in its own place; the editor takes the room
-   back once it has gone, rather than sliding in under it while it still
-   shows. */
+/* It leaves the way it came; the editor takes the room back once it has
+   gone. */
 .agent-panel[data-state="closing"] {
   animation: motion-nudge-out-end var(--dur-base) var(--ease-in) forwards;
 }
@@ -41,8 +34,7 @@
   flex-direction: column;
 }
 
-/* Its resize handle (ui/ResizeHandle.tsx), astride the left edge below
-   the window bar. */
+/* Its resize handle, astride the left edge below the window bar. */
 .agent-panel-resizer {
   top: 28px;
   left: -3px;
@@ -57,7 +49,7 @@
 }
 
 .agent-panel-header {
-  /* The history list (ChatHistoryMenu) drops down across it. */
+  /* The history list drops down across it. */
   position: relative;
   display: flex;
   align-items: center;
@@ -144,16 +136,14 @@
   max-height: none;
 }
 
-/* The composer is a box of its own on the panel's foot (inline-chat.css's
-   .inline-chat-field), so no rule across the panel above it; the / and @
-   lists, which open in the flow above it, keep theirs. */
+/* The composer is a box of its own on the panel's foot, so no rule above
+   it; the / and @ lists keep theirs. */
 .agent-panel-body .inline-chat-bar {
   flex: 0 0 auto;
 }
 
-/* Short of room - the keyboard up under a phone's half sheet - the list
-   gives way and scrolls inside, after the empty state below has gone: it
-   ran up over the sheet's handle, its close button and its first row. */
+/* Short of room (a phone's keyboard under a half sheet) the list scrolls
+   inside, after the empty state has gone, rather than cover the sheet's top. */
 .agent-panel-body .inline-chat-skill-menu {
   flex: 0 1 auto;
   min-height: 0;
@@ -192,14 +182,12 @@
 }
 
 /* An early container-query engine restarted the fade of everything inside
-   it every few frames (ui/engine-quirks.ts); there the spark and hint
-   simply stay when room is short. */
+   it every few frames; there the spark and hint simply stay. */
 :root[data-early-containers] .agent-panel-empty {
   container-type: normal;
 }
 
-/* The (empty) message list after it gives it the room - its padding too,
-   over the panel's (inline-chat.css), which held 30px of nothing there. */
+/* The (empty) message list after it gives it the room, padding included. */
 .agent-panel-body .agent-panel-empty + .inline-chat-messages {
   flex: 0 0 auto;
   padding-top: 0;
@@ -271,8 +259,8 @@
   }
 }
 
-/* The project bar (ProjectBar.tsx): which folder the agent works in, and
-   the style profile / library kept in it. */
+/* The project bar: which folder the agent works in, and the style profile /
+   library kept in it. */
 .project-bar {
   padding: 5px 10px;
   border-bottom: 1px solid var(--chat-hairline, var(--border-color));

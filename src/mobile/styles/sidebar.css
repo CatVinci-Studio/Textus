@@ -7,10 +7,8 @@
 }
 
 @media (max-width: 760px) {
-  /* The sidebar slides over the page instead of narrowing it; the scrim
-     behind it closes it on a tap. Both cover the title row (45) too, as a
-     drawer covers the whole screen: the dimming then reaches the status
-     bar strip (base.css) in one piece. */
+  /* The sidebar slides over the page; the scrim behind closes it on a tap. Both
+     cover the title row (45) too, so the dimming reaches the status bar strip. */
   :root[data-window-chrome="mobile"] .sidebar {
     position: fixed;
     z-index: 47;
@@ -18,8 +16,8 @@
     box-shadow: var(--shadow-drawer);
   }
 
-  /* A drawer: the page keeps its width under it (app/sidebar-frame.css's chain, with
-     the prefix on top to outrank it). */
+  /* A drawer: the page keeps its width under it (the prefix outranks the
+     desktop's chain). */
   :root[data-window-chrome="mobile"]:not(.zen)
     .sidebar:not(.sidebar-collapsed)
     ~ .main-pane {
@@ -53,8 +51,8 @@
   background: none;
 }
 
-/* A long press on a file opens Textus's own menu (FileTree.tsx), not the
-   system's link callout, and doesn't select the label. */
+/* A long press on a file opens Textus's own menu, not the system's link
+   callout, and doesn't select the label. */
 :root[data-window-chrome="mobile"] .tree-row {
   -webkit-touch-callout: none;
   -webkit-user-select: none;

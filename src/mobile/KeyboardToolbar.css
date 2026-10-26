@@ -1,6 +1,5 @@
-/* The strip above the iPhone keyboard (KeyboardToolbar.tsx). The web view
-   ends at the keyboard (KeyboardFit.swift), so the bottom of the page is
-   the top of the keyboard. */
+/* The strip above the iPhone keyboard. The web view ends at the keyboard, so
+   the bottom of the page is its top. */
 
 .keyboard-toolbar {
   position: fixed;
@@ -114,11 +113,8 @@
   white-space: nowrap;
 }
 
-/* The document's scroller ends at the strip rather than running on under
-   it: the editor keeps the caret inside its scroller, so a line being
-   typed (and the one Return makes) stopped behind the strip, as far up as
-   the keyboard but not the 44pt above it. The end of the document scrolls
-   clear of it the same way. */
+/* The document's scroller ends at the strip: the editor keeps the caret inside
+   its scroller, so a line being typed would otherwise stop behind the strip. */
 :root.has-keyboard-toolbar .editor-scroll {
   margin-bottom: 45px;
 }

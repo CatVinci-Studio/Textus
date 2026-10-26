@@ -49,17 +49,10 @@ export function libraryFileName(name: string): string {
 
 /**
  * The project the conversation works in, under the AI panel's header: the
- * project folder Textus AI may read (and search, and @-mention), and the
- * project-level files kept in its .textus/ folder - the style profile, the
- * library of people, places and terms (src-tauri ai::project) and the
- * project's writing instructions (.textus/agent.md). The names follow
- * docs/design/ai-concepts.md. The folder used to be a setting three screens deep;
- * this is where it actually matters.
+ * folder Textus AI may read, and the files kept in its .textus/ folder.
  */
-/** The folder row's menu, open or not. Not closed by an outside click on a
- *  phone: the action sheet is portalled outside this row, so a tap on one
- *  of its items would count as "outside" and close the menu before the
- *  item's click arrived. The sheet dismisses itself. */
+/** The folder row's menu. Not closed by an outside click on a phone: a tap
+ *  on the portalled action sheet would count as outside. */
 function useProjectMenu() {
   const [menuOpen, setMenuOpen] = useState(false);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
@@ -72,11 +65,8 @@ function useProjectMenu() {
   return { menuOpen, setMenuOpen, closeMenu, menuRef, phone };
 }
 
-/** The project the document belongs to (`info`): undefined until the
- *  first load answers - "no root" means unsaved or too broad, which mustn't
- *  be said before anyone has looked. Loaded again by `reload`, whenever the
- *  window regains focus (files under .textus/ change outside this
- *  component, edited in a tab). */
+/** The project the document belongs to: undefined until the first load
+ *  answers, so "no root" is never said before anyone has looked. */
 function useProjectWorkspace(
   docPath: string | null,
   workspaceRoot: string | null,
@@ -144,7 +134,7 @@ export function ProjectBar({
 }: {
   docPath: string | null;
   /** The AI panel's Memory tab: the folder row without its chips, then
-   *  everything the project keeps (MemoryView.tsx). */
+   *  everything the project keeps. */
   memory?: boolean;
   /** The open document's text, to mark the library entries it mentions. */
   documentText?: string;
@@ -257,9 +247,8 @@ export function ProjectBar({
       );
     });
 
-  // Still loading: say nothing. The answer takes one IPC round trip, long
-  // enough on an iPhone for "too broad" to flash every time the panel
-  // opened, or the app started with it open.
+  // Still loading: say nothing, or "too broad" flashes on a slow device each
+  // time the panel opens.
   const openGlobalInstructions = () =>
     run(t.projectOpening, async () => {
       openInTab(await ai.ensureGlobalAgentMd(t.agentInstructionsTemplate));
@@ -301,9 +290,8 @@ export function ProjectBar({
   };
 
   if (info === undefined) return null;
-  // An unsaved draft simply has no project yet - nothing to say about it
-  // up front (the Memory tab says why it is empty, and still lists the
-  // personal memories). A folder too broad to read is worth saying, once.
+  // An unsaved draft simply has no project yet: nothing to say up front. A
+  // folder too broad to read is worth saying, once.
   if (!root) {
     if (memory)
       return (

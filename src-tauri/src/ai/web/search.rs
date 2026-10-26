@@ -1,11 +1,6 @@
-//! The search services Textus's own web_search can use when the model has
-//! no search of its own (Settings > Textus AI > Search service). Each is a
-//! request and a parse, kept apart so the tests can run both against a
-//! local server and canned answers - no test calls a real service.
-//!
-//! DeepSeek, Zhipu and Kimi use the key the user already has for that AI
-//! provider; Bocha, Tavily, Brave and Exa a key of their own; SearXNG the
-//! address of a server the user runs.
+//! The search services Textus's own web_search can use when the model has no
+//! search of its own. Each is a request and a parse, tested against a local
+//! server and canned answers.
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -13,13 +8,10 @@ use std::time::Duration;
 
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 const TOTAL_TIMEOUT: Duration = Duration::from_secs(30);
-/// The longest `query` and `ori_question` DeepSeek's Search API takes
-/// (api-docs.deepseek.com/guides/search).
+/// The longest `query` and `ori_question` DeepSeek's Search API takes.
 const DEEPSEEK_FIELD_CHARS: usize = 128;
 
-/// One search service. The ids are what Settings stores
-/// (`aiSearchService` in src/settings/SettingsContext.tsx, which lists the
-/// same ones).
+/// One search service. The ids are what Settings stores.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "lowercase")]
@@ -53,9 +45,8 @@ impl Backend {
         }
     }
 
-    /// Where its key is kept in provider_keys.json (auth/keys.rs): the AI
-    /// provider's own for the three that share it, `search-<id>` for the
-    /// rest. SearXNG takes an address instead, from Settings.
+    /// Where its key is kept: the AI provider's own for the three that share it,
+    /// `search-<id>` for the rest. SearXNG takes an address instead.
     pub(crate) fn key_id(self) -> Option<&'static str> {
         Some(match self {
             Backend::Deepseek => "deepseek",
@@ -161,9 +152,8 @@ impl Service {
         let key = self.credential.as_str();
         match self.backend {
             Backend::Deepseek => {
-                // Each field takes 1-128 characters, and DeepSeek answers 400
-                // to an empty or longer one: a model's long query is cut to
-                // fit, and no question (a message of only images) is left out.
+                // Each field takes 1-128 characters, and DeepSeek answers 400 otherwise: a
+                // long query is cut to fit, and an empty question left out.
                 let fit = |s: &str| {
                     s.trim()
                         .chars()
@@ -171,8 +161,7 @@ impl Service {
                         .collect::<String>()
                 };
                 let mut body = json!({ "query": fit(query), "count": count });
-                // What the user asked, for ranking: DeepSeek Harness sends
-                // the same.
+                // What the user asked, for ranking.
                 let question = fit(question);
                 if !question.is_empty() {
                     body["ori_question"] = json!(question);
@@ -303,10 +292,8 @@ fn optional(value: &Value, key: &str) -> Option<String> {
     Some(text(value, key)).filter(|s| !s.is_empty())
 }
 
-/// DeepSeek's page reader escapes every ASCII punctuation mark in the
-/// Markdown it returns, code included (`Rust 1\.99\.1`, `fn main\(\)`): a
-/// twentieth of a page in backslashes, and quotes that match nothing. The
-/// marks as written, the way a Markdown reader shows them.
+/// DeepSeek's page reader escapes every ASCII punctuation mark in its Markdown
+/// (`fn main\(\)`): the marks as written.
 fn without_escapes(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     let mut chars = s.chars().peekable();

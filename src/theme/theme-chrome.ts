@@ -70,13 +70,9 @@ export function chromePalette(background: RGB, foreground: RGB, accent: RGB) {
   };
 }
 
-/**
- * The text column a theme's `#write { max-width }` asks for, or null when
- * it sets none. A length becomes the column's width plus the column's own
- * side padding (3rem, app/editor-column.css), so #write gets exactly what it asked for;
- * a percentage is relative to the pane, so the column spans the pane and
- * #write narrows itself.
- */
+/** The text column a theme's `#write { max-width }` asks for, or null. A
+ *  length gets the column's side padding added; a percentage spans the pane
+ *  and #write narrows itself. */
 export function themeColumnWidth(maxWidth: string): string | null {
   const value = maxWidth.trim();
   if (!value || value === "none") return null;
@@ -85,17 +81,15 @@ export function themeColumnWidth(maxWidth: string): string | null {
   return null;
 }
 
-/** Also the id the boot script (src-tauri/src/boot.js) gives the copy it
- *  paints the first frame with, so applying here replaces that one. */
+/** Also the id of the boot script's first-frame copy, so applying here
+ *  replaces that one. */
 const STYLE_ID = "textus-imported-chrome";
 export function clearThemeChrome() {
   document.getElementById(STYLE_ID)?.remove();
 }
 
-/** An isolated document avoids sampling our own derived palette on reapply.
- * Local imports have already been inlined by theme-import.ts. Returns the
- * stylesheet it applied (null when it couldn't derive one), which the
- * settings store remembers for the next window's first frame. */
+/** Derived in an isolated document, so a reapply doesn't sample our own
+ *  palette. Returns the stylesheet applied, or null when it couldn't derive one. */
 export function applyThemeChrome(css: string, dark: boolean): string | null {
   const frame = document.createElement("iframe");
   frame.hidden = true;
@@ -163,11 +157,9 @@ export function applyThemeChrome(css: string, dark: boolean): string | null {
     })) {
       palette[key] = documentStyle.getPropertyValue(key).trim() || fallback;
     }
-    // Typora themes size the text column with `#write { max-width }`. Our
-    // column (.editor-content) caps the width first, so a theme asking for
-    // a wider page was silently ignored (#14). Publish the theme's own
-    // width for the column to use - app/editor-column.css honours it while Text Width is
-    // "Adaptive"; picking Standard or Full Width still overrides it.
+    // Typora themes size the text column with `#write { max-width }`, which our
+    // column would otherwise cap. Published for the column while Text Width is
+    // "Adaptive".
     const themeWidth = themeColumnWidth(documentStyle.maxWidth);
     if (themeWidth) palette["--theme-content-width"] = themeWidth;
     // A theme may name its own interface colours on :root; only the theme

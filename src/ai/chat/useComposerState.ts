@@ -20,16 +20,11 @@ import type {
   SelectionChipHandlers,
 } from "./composer-types";
 
-/**
- * The composer's state, a concern each (ChatComposer.tsx): what is typed
- * and the picker over it, the attachments, the mode, the request's
- * options, the selection riding along, and the project files a "@" lists.
- */
+/** The composer's state, one hook per concern. */
 
-/** What is typed, and the picker over it. The input grows with its
- *  content (Shift+Enter newlines) up to the CSS max-height, then scrolls -
- *  a fixed single row just scrolled horizontally out of view. `handle`
- *  lets the chat give back what was waiting in the queue (`restore`). */
+/** What is typed, and the picker over it. The input grows with its content
+ *  up to the CSS max-height, then scrolls. `handle` lets the chat give back
+ *  queued messages (`restore`). */
 export function useComposerInput(handle?: Ref<ChatComposerHandle | null>) {
   const [input, setInput] = useState("");
   const [pickerIndex, setPickerIndex] = useState(0);
@@ -53,17 +48,15 @@ export function useComposerInput(handle?: Ref<ChatComposerHandle | null>) {
     el.style.height = "auto";
     let needed = el.scrollHeight;
     el.style.height = `${needed}px`;
-    // scrollHeight is an integer, so the height just written can land a
-    // fraction of a pixel short of the line box it was measured from -
-    // WebKit then treats the textarea as scrolled by that hair, which clips
-    // the caret (most visible with CJK text, whose glyph box fills the line
-    // completely). One correction pass, and it fits whatever the font does.
+    // scrollHeight is an integer, so the height can land a hair short of the
+    // line box and WebKit then clips the caret (worst with CJK). One
+    // correction pass fits whatever the font does.
     if (el.scrollHeight > el.clientHeight) {
       needed += el.scrollHeight - el.clientHeight;
       el.style.height = `${needed}px`;
     }
-    // Scrolling is enabled only once the content genuinely outgrows the box;
-    // leaving it permanently on is what drew scrollbars around an EMPTY input.
+    // Scrolling only once the content outgrows the box, or an empty input
+    // draws scrollbars.
     const max = parseFloat(getComputedStyle(el).maxHeight);
     el.style.overflowY = needed > max ? "auto" : "hidden";
   }, [input]);
@@ -79,16 +72,9 @@ export function useComposerInput(handle?: Ref<ChatComposerHandle | null>) {
   };
 }
 
-/** The files staged to go with the message, and why one couldn't be
- *  ("this PDF has no text layer", "too large", ...). Shown, never
- *  swallowed: the previous version caught and discarded every failure, so
- *  picking a PDF - which could not work at all, the reader being
- *  read_to_string - looked exactly like a dead "+" button. Whether the
- *  provider reads pictures is derived here rather than passed in: this is
- *  the only place an image can be staged, so deriving it at the gate makes
- *  it impossible for a caller to forget - which is exactly what happened
- *  when it was a prop, leaving Quick Ask happy to attach an image to a
- *  provider that can't read one. */
+/** The files staged to go with the message, and why one couldn't be, shown
+ *  rather than swallowed. Vision support is derived here, the only place an
+ *  image is staged, so no caller can forget it. */
 export function useAttachments(noVisionMessage: string) {
   const supportsVision = useActiveProvider()?.supportsVision ?? true;
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
@@ -148,14 +134,9 @@ export function useComposerMode({
   return { mode, setMode };
 }
 
-/** The request's options: the web, and how hard the model thinks. With
- *  search on but nothing to search with - a model that can't search by
- *  itself and no search service set up - the button says so
- *  (`searchUnavailable`), rather than the request quietly going out
- *  without the web. Deep is shown only where it changes something: a model
- *  that doesn't think, or thinks one fixed way, has no button - and no
- *  Deep, even if it was left on for another model. Quick Ask (`compact`)
- *  always asks fast. */
+/** The request's options: the web, and how hard the model thinks. With search
+ *  on but nothing to search with, the button says so (`searchUnavailable`).
+ *  Deep shows only where it changes something; Quick Ask always asks fast. */
 export function useRequestOptions(defaultWebSearch: boolean, compact: boolean) {
   const searchStatus = useWebSearchStatus();
   const searchUnavailable =
@@ -180,21 +161,8 @@ export function useRequestOptions(defaultWebSearch: boolean, compact: boolean) {
 }
 
 /**
- * The selection riding along as context. It does by default, but a
- * question about the document as a whole shouldn't be forced to carry
- * whatever happened to be highlighted - dropping it is a click, not a
- * re-selection.
- *
- * Dropping applies to THAT selection, not to the chat forever: in the
- * detached window the user goes on highlighting new passages, and each one
- * is a fresh request to talk about it. Remembering which text was dismissed
- * (rather than a bare flag) gets both halves right - the chip stays gone
- * while that selection is current, and a genuinely new selection brings it
- * back without the user having to reopen anything.
- *
- * Whether the chip shows, and is pointed at, goes to `selectionChip`; and,
- * gone with the composer (the panel closed, another tab came forward), that
- * it shows no more.
+ * The selection riding along as context, droppable with a click. Dropping
+ * remembers that text, not a flag, so a new selection brings the chip back.
  */
 export function useSelectionChip(
   selectedText: string | null,
@@ -221,8 +189,7 @@ export function useSelectionChip(
 }
 
 /** The project's files for the @-mention picker: fetched on the first "@"
- *  (`open`), not on mount - most messages never mention a file - and again
- *  for another document or project. */
+ *  (`open`), and again for another document or project. */
 export function useProjectFiles(
   open: boolean,
   docPath: string | null,

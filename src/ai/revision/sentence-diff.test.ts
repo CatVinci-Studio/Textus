@@ -5,8 +5,8 @@ import { createTestEditor } from "../../document-view/editor-test-harness";
 import { composeSentences, splitSentences, trimBreaks } from "./sentence-diff";
 import { diffSentences, splitUnits } from "./unit-diff";
 
-// Blocks are read by the editor's parser (block-reader.ts), which an
-// editor registers as it starts.
+// Blocks are read by the editor's parser, which an editor registers as it
+// starts.
 let reader: Editor | null = null;
 beforeAll(async () => {
   reader = await createTestEditor("");
@@ -28,8 +28,7 @@ describe("splitSentences", () => {
   });
 
   it("keeps a full stop inside a sentence in it", () => {
-    // A decimal or a URL used to fail the split, and the rewrite was
-    // shown whole.
+    // A decimal or a URL doesn't end a sentence.
     expect(splitSentences("Pi is 3.14 or so. See example.com today.")).toEqual([
       "Pi is 3.14 or so. ",
       "See example.com today.",
@@ -216,8 +215,7 @@ describe("a change over several paragraphs", () => {
 
   it("sets a translation against its original paragraph by paragraph", () => {
     // Nothing pairs Chinese with English sentence by sentence; two lines of
-    // dialogue became one paragraph, and the picture's alt was translated
-    // (rc.6: two changes for the whole text, split at the picture).
+    // dialogue became one paragraph, and the picture's alt was translated.
     const before = [
       "# 借雨",
       "许小满承母之修伞肆，初至之客，乃一老者。是日暴雨，老者入门，衣履皆燥。",
@@ -246,8 +244,8 @@ describe("a change over several paragraphs", () => {
   });
 
   it("joins three lines of dialogue as one change, none struck alone", () => {
-    // Every paragraph rewritten: the sentence pairing put the first line
-    // with the narration before it, which cut the join in two.
+    // Every paragraph rewritten: the first line must not pair with the
+    // narration before it, which would cut the join in two.
     const changes = diffSentences(
       "她没有回头，只是用手按住了螺丝刀。\n\n“别打开后盖。”\n\n“里面全是灰。”\n\n“小心会触电的。”\n\n儿子说完这些，又觉得自己说多了，就回房间去了。",
       "妇不回头，以手按其螺丝刀。\n\n“勿开后盖，里面全是灰，小心触电。”\n\n儿子说完，自觉说多，遂回房间。",

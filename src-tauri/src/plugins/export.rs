@@ -1,10 +1,6 @@
-//! Export for publishing (a plugin's page in Settings, a chat's plugin
-//! card): a plugin you made - Textus AI's `local.` ones, or a folder you
-//! load - copied into a folder of its own, ready to be a GitHub repository.
-//! Its id takes your name (`local.word-count` -> `jane.word-count`), and
-//! the folder gets what the template repository has: a README, an MIT
-//! LICENSE, a .gitignore and the release workflow that publishes a version
-//! when its tag is pushed (template/).
+//! Export for publishing: a plugin you made, copied into a folder ready to be a
+//! GitHub repository, its id under your name (`local.word-count` ->
+//! `jane.word-count`), with a README, MIT LICENSE, .gitignore and release workflow.
 
 use std::path::{Path, PathBuf};
 
@@ -56,6 +52,34 @@ fn copy_files(from: &Path, to: &Path) -> Result<(), String> {
     Ok(())
 }
 
+/// The plugin's own ids (its commands, views, settings) all start with its
+/// id, and Textus refuses a manifest whose ones don't: renamed in every
+/// text file with it.
+fn rename_id(dir: &Path, from: &str, to: &str) -> Result<(), String> {
+    const TEXT: [&str; 7] = ["json", "js", "mjs", "html", "css", "md", "txt"];
+    for entry in std::fs::read_dir(dir).map_err(|e| e.to_string())? {
+        let path = entry.map_err(|e| e.to_string())?.path();
+        if path.is_dir() {
+            rename_id(&path, from, to)?;
+            continue;
+        }
+        let text_file = path
+            .extension()
+            .and_then(|e| e.to_str())
+            .is_some_and(|e| TEXT.contains(&e));
+        if !text_file {
+            continue;
+        }
+        let Ok(text) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        if text.contains(from) {
+            std::fs::write(&path, text.replace(from, to)).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+
 /// Writes `text` at `path` unless the plugin brought its own.
 fn write_new(path: &Path, text: &str) -> Result<(), String> {
     if path.exists() {
@@ -67,8 +91,8 @@ fn write_new(path: &Path, text: &str) -> Result<(), String> {
     std::fs::write(path, text).map_err(|e| e.to_string())
 }
 
-/// Lays out the plugin at `source` for publishing in `folder`, as
-/// `publisher`'s: the new folder's path.
+/// Lays out the plugin at `source` for publishing in `folder` as `publisher`'s;
+/// returns the new folder's path.
 pub(crate) fn export_to(source: &Path, publisher: &str, folder: &Path) -> Result<PathBuf, String> {
     if !valid_publisher(publisher) {
         return Err(format!(
@@ -88,6 +112,12 @@ pub(crate) fn export_to(source: &Path, publisher: &str, folder: &Path) -> Result
         return Err(format!("{} is already there.", target.display()));
     }
     copy_files(source, &target)?;
+    if new_id != id {
+        rename_id(&target, &id, &new_id)?;
+        let renamed = std::fs::read_to_string(target.join("textus-plugin.json"))
+            .map_err(|e| e.to_string())?;
+        manifest = serde_json::from_str(&renamed).map_err(|e| e.to_string())?;
+    }
     manifest["id"] = new_id.clone().into();
     manifest["publisher"] = publisher.into();
     let pretty = serde_json::to_string_pretty(&manifest).map_err(|e| e.to_string())?;
@@ -120,8 +150,7 @@ pub(crate) fn export_to(source: &Path, publisher: &str, folder: &Path) -> Result
     Ok(target)
 }
 
-/// Export for publishing: plugin `id` laid out in `folder` as
-/// `publisher`'s. Answers the new folder's path.
+/// Export for publishing: plugin `id` laid out in `folder` as `publisher`'s.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_export(
@@ -143,10 +172,14 @@ mod tests {
         std::fs::create_dir_all(dir.join("lib")).unwrap();
         std::fs::write(
             dir.join("textus-plugin.json"),
-            r#"{"id":"local.word-count","name":"%name%","publisher":"local","description":"Counts.","version":"0.1.0","l10n":{"en":{"name":"Word Count"}}}"#,
+            r#"{"id":"local.word-count","name":"%name%","publisher":"local","description":"Counts.","version":"0.1.0","l10n":{"en":{"name":"Word Count"}},"contributes":{"commands":[{"command":"local.word-count.count","title":"Count"}]}}"#,
         )
         .unwrap();
-        std::fs::write(dir.join("host.js"), "exports.activate = () => {};").unwrap();
+        std::fs::write(
+            dir.join("host.js"),
+            r#"textus.commands.register("local.word-count.count", () => {});"#,
+        )
+        .unwrap();
         std::fs::write(dir.join("lib/x.js"), "1").unwrap();
         std::fs::write(dir.join(".DS_Store"), "junk").unwrap();
     }
@@ -165,7 +198,14 @@ mod tests {
         .unwrap();
         assert_eq!(manifest["id"], "jane.word-count");
         assert_eq!(manifest["publisher"], "jane");
-        assert!(target.join("host.js").is_file());
+        // Its own ids follow the new one, or Textus wouldn't load it.
+        assert_eq!(
+            manifest["contributes"]["commands"][0]["command"],
+            "jane.word-count.count"
+        );
+        assert!(std::fs::read_to_string(target.join("host.js"))
+            .unwrap()
+            .contains(r#""jane.word-count.count""#));
         assert!(target.join("lib/x.js").is_file());
         assert!(!target.join(".DS_Store").exists());
         let readme = std::fs::read_to_string(target.join("README.md")).unwrap();

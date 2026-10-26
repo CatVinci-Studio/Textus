@@ -1,21 +1,13 @@
 //! Finds the file an Obsidian image embed (`![[name.png]]`) or wikilink
-//! (`[[Note]]`) points at. The frontend half is in src/editor/images/
-//! (obsidian-embed.ts parses the embed, obsidian-embed-preview.ts shows it)
-//! and src/editor/markdown/wikilink.ts; this side owns the filesystem.
-//!
-//! Obsidian resolves a link inside its vault: the folder holding `.obsidian/`.
-//! A link with a folder in it (`attachments/a.png`) is a path from the vault
-//! root; a bare name (`a.png`) is found anywhere in the vault ("shortest path
-//! when possible", Obsidian's default link format). Outside a vault the
-//! document's own folder stands in for one.
+//! (`[[Note]]`) points at, inside the vault (the folder holding `.obsidian/`, or
+//! the document's own folder). A link with a folder is from the vault root.
 
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-/// Image types a vault embed shows - the frontend's IMAGE_EXTENSIONS in
-/// src/editor/images/obsidian-embed.ts. Anything else (a note, a PDF) stays
-/// text.
+/// Image types a vault embed shows; keep in step with the frontend's
+/// IMAGE_EXTENSIONS.
 const IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "svg", "avif", "bmp"];
 
 /// The walk that indexes a vault stops here: a vault this size is rare, and a
@@ -24,9 +16,8 @@ const MAX_INDEXED_FILES: usize = 20_000;
 const MAX_VISITED_ENTRIES: usize = 200_000;
 const MAX_DEPTH: usize = 24;
 
-/// How long an index is trusted. A file looked up and not found rebuilds it
-/// sooner (MISS_REBUILD_AFTER), so an image saved into the vault a moment
-/// ago shows on the next render.
+/// How long an index is trusted. A miss rebuilds it sooner (MISS_REBUILD_AFTER),
+/// so a just-saved image shows.
 const INDEX_TTL: Duration = Duration::from_secs(60);
 const MISS_REBUILD_AFTER: Duration = Duration::from_secs(2);
 
@@ -67,9 +58,8 @@ enum LinkKind {
     Note,
 }
 
-/// `base` joined with a link's relative path, `.` and `..` folded away by
-/// hand (the file may not exist, so no canonicalize). None when the path is
-/// absolute or climbs above `root` - a link never reaches outside its vault.
+/// `base` joined with a link's relative path, `.` and `..` folded by hand (the
+/// file may not exist). None when absolute or above `root`.
 fn join_within(root: &Path, base: &Path, link: &str) -> Option<PathBuf> {
     let link = Path::new(link);
     let mut out = base.to_path_buf();
@@ -88,9 +78,8 @@ fn join_within(root: &Path, base: &Path, link: &str) -> Option<PathBuf> {
     out.starts_with(root).then_some(out)
 }
 
-/// The vault's image and note files, as paths relative to its root with `/`
-/// separators. Hidden folders (`.obsidian`, `.git`, `.trash`) are skipped as
-/// Obsidian skips them, and so is `node_modules`; symlinks are not followed.
+/// The vault's image and note files, relative to its root with `/`. Hidden
+/// folders and `node_modules` are skipped; symlinks are not followed.
 fn index_vault(root: &Path) -> Vec<String> {
     let mut found = Vec::new();
     let mut visited = 0usize;
@@ -134,10 +123,8 @@ fn folder_distance(from: &[&str], to: &[&str]) -> usize {
     (from.len() - common) + (to.len() - common)
 }
 
-/// Picks the indexed file a link means. A link names a file by its tail -
-/// `a.png`, or `sub/a.png` - compared without case, as Obsidian does. Of
-/// several, the one nearest the document wins, then the shorter path, then
-/// the alphabetically first, so the same vault always gives the same answer.
+/// Picks the indexed file a link means, by its tail compared without case, as
+/// Obsidian does. Ties go to the nearest, then shortest, then alphabetical path.
 fn pick_from_index<'a>(index: &'a [String], link: &str, doc_dir: &[&str]) -> Option<&'a str> {
     let link = link.trim_start_matches("./").to_lowercase();
     if link.is_empty() {
@@ -158,9 +145,8 @@ fn pick_from_index<'a>(index: &'a [String], link: &str, doc_dir: &[&str]) -> Opt
         .map(String::as_str)
 }
 
-/// The file of `kind` that `link` names for the document at `doc_path`, if
-/// it exists inside the vault. `index` is asked only when a direct path
-/// misses. A note's link may leave out the `.md`, as Obsidian writes it.
+/// The file of `kind` that `link` names for the document, if it is inside the
+/// vault. `index` is asked only when a direct path misses; a note may omit `.md`.
 fn resolve_with(
     doc_path: &Path,
     link: &str,
@@ -193,10 +179,8 @@ fn resolve_with(
     };
 
     let relative = link.starts_with("./") || link.starts_with("../");
-    // A path from the vault root first (Obsidian's "absolute path in
-    // vault"), then from the document's folder ("relative path to file").
-    // A bare name skips the root: the search below prefers the copy nearest
-    // the document, which the root's may not be.
+    // A path from the vault root first, then from the document's folder. A bare
+    // name skips the root: the search prefers the copy nearest the document.
     if !relative && link.contains('/') {
         if let Some(found) = join_within(&root, &root, link).and_then(inside) {
             return Some(found);
@@ -230,8 +214,7 @@ struct CachedIndex {
     files: Arc<Vec<String>>,
 }
 
-/// The vaults indexed lately, most recently used first. A writer keeps a
-/// vault or two open; the rest are dropped, not kept for the whole session.
+/// The vaults indexed lately, most recently used first.
 const MAX_CACHED_VAULTS: usize = 4;
 
 static INDEXES: Mutex<Vec<CachedIndex>> = Mutex::new(Vec::new());
@@ -280,9 +263,8 @@ fn cached_index(root: &Path, fresh: bool) -> Arc<Vec<String>> {
     files
 }
 
-/// Where an Obsidian image embed's file is, as an absolute path for the
-/// asset protocol; None when it isn't an image or isn't in the vault.
-/// Shape shared with fs.resolveVaultImage in src/platform/ipc.ts.
+/// Where an Obsidian image embed's file is, as an absolute path for the asset
+/// protocol; None when it isn't an image or isn't in the vault.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn resolve_vault_image(doc_path: String, link: String) -> Result<Option<String>, String> {
@@ -300,9 +282,8 @@ pub async fn resolve_vault_image(doc_path: String, link: String) -> Result<Optio
     .map_err(|e| e.to_string())
 }
 
-/// The note an Obsidian wikilink (`[[Note]]`, `[[folder/Note]]`) names, as
-/// an absolute path; None when it isn't in the vault. Shape shared with
-/// fs.resolveVaultNote in src/platform/ipc.ts.
+/// The note an Obsidian wikilink names, as an absolute path; None when it isn't
+/// in the vault.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn resolve_vault_note(doc_path: String, link: String) -> Result<Option<String>, String> {

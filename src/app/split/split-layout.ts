@@ -1,9 +1,6 @@
 /**
- * The window's editor layout: one document, or two side by side (a row)
- * or one over the other (a column). The app draws the panes (MainPane,
- * useSplitPanes); what splits them is a plugin's, through the layout API
- * (window.splitEditor in the plugin broker) - kept here, outside React, so
- * the broker and the menus reach it without the window's tree.
+ * The window's editor layout: one document, or two in a row or column. Kept
+ * outside React so the plugin broker and menus reach it.
  */
 
 export type SplitDirection = "row" | "column";
@@ -11,15 +8,13 @@ export type SplitDirection = "row" | "column";
 export interface SplitLayout {
   direction: SplitDirection;
   /** The two tabs shown, first (left or top) and second. The second is
-   *  null for a moment when the window had one tab: the blank tab opened
-   *  for it takes the place. */
+   *  briefly null while a blank tab opens to take the place. */
   panes: [string, string | null];
   /** The first pane's share of the space, 0.2 to 0.8. */
   ratio: number;
 }
 
-/** A split asked for, resolved against the window's tabs by
- *  useSplitPanes. */
+/** A split asked for, resolved against the window's tabs. */
 export interface SplitRequest {
   direction: SplitDirection;
 }
@@ -70,10 +65,8 @@ export function arrangeSplit(change: { swap?: boolean; ratio?: number }): void {
 }
 
 /**
- * Shows `tabId` beside `from` (the tab that was in front): splitting the
- * window side by side if it isn't, or in the pane `from` isn't in if it
- * is. Called once both tabs are in the window's tabs - the next frame
- * after a tab is added.
+ * Shows `tabId` beside `from`: splitting the window if it isn't, or in the
+ * other pane if it is. Call once both tabs are in the window's tabs.
  */
 export function openBeside(tabId: string, from: string | null): void {
   if (!from || from === tabId) return;

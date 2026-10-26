@@ -179,9 +179,8 @@ fn search_skips_files_too_large_or_not_text() {
         .contains("isn't a readable text file"));
 }
 
-/// A book in one file: past MAX_FILE_BYTES, which an @-mention still
-/// keeps to, read_file shows it in parts and search_files points into
-/// it by line, the way read_file numbers lines.
+/// A book in one file, past MAX_FILE_BYTES: read_file shows it in parts and
+/// search_files points into it by line, numbered as read_file numbers them.
 #[test]
 fn a_big_file_reads_in_parts_and_search_points_into_it() {
     let book: String = (1..=6_000)
@@ -480,9 +479,7 @@ fn the_library_cap_counts_characters_and_names_what_it_left_out() {
 }
 
 /// How long the project tools take on a real folder:
-/// `TEXTUS_PROJECT_BENCH=<dir> cargo test --release
-/// project_tools_benchmark -- --ignored --nocapture`, with
-/// `TEXTUS_PROJECT_BENCH_WORDS=<rare>,<common>,<name>` for that folder.
+/// `TEXTUS_PROJECT_BENCH=<dir> cargo test --release project_tools_benchmark -- --ignored --nocapture`.
 #[test]
 #[ignore]
 fn project_tools_benchmark() {

@@ -3,10 +3,8 @@ import type { Strings } from "../../i18n/strings";
 import type { RequiredSetting, Requirement } from "./manifest";
 
 /**
- * The Textus settings a plugin may say it needs (manifest `requires`):
- * what each is called in Settings, whether it is on, and how to turn it
- * on. Quick Notes, for one, needs background mode for its capture to be
- * at hand in the tray or menu bar with every window closed.
+ * The Textus settings a plugin may say it needs: what each is called in
+ * Settings, whether it is on, and how to turn it on.
  */
 const SETTINGS: Record<
   RequiredSetting,

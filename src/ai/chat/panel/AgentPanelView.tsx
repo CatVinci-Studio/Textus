@@ -13,7 +13,7 @@ export interface AgentPanelLabels {
   newConversation: string;
   popOut: string;
   close: string;
-  /** The two tabs: the conversation, and what the AI keeps (MemoryView). */
+  /** The two tabs: the conversation, and what the AI keeps. */
   tabChat: string;
   tabProject: string;
 }
@@ -21,14 +21,9 @@ export interface AgentPanelLabels {
 export type AgentPanelTab = "chat" | "memory";
 
 /**
- * The docked panel's chrome: one header row - the Conversation / Memory
- * switch on the left, history / new / pop out / close on the right - over
- * the chat body (ChatBody, variant "full") its editor renders into
- * `children`, or the Memory view. The conversation stays mounted while
- * Memory shows, so its scroll, draft and any reply still arriving are where
- * they were.
- * Purely presentational - the editor owns the conversation and wires the
- * actions.
+ * The docked panel's chrome: a header row over the chat body or the Memory
+ * view. The conversation stays mounted while Memory shows, so its scroll,
+ * draft and any arriving reply stay put.
  */
 export function AgentPanelView({
   labels,
@@ -46,16 +41,15 @@ export function AgentPanelView({
   /** Absent where the chat cannot be detached into its own window (iOS):
    *  the button is not drawn. */
   onPopOut?: () => void;
-  /** Absent on the desktop, where the window bar's Textus AI button opens
-   *  and closes the panel (and its menu has Close the panel): only the
-   *  iPhone's sheet draws a close button. */
+  /** Absent on the desktop, where the window bar's button opens and closes
+   *  the panel: only the iPhone's sheet draws a close button. */
   onClose?: () => void;
-  /** The history button and its list (ChatHistoryMenu). */
+  /** The history button and its list. */
   history: ReactNode;
   /** The Memory tab's content, drawn only while it shows. */
   memory?: () => ReactNode;
-  /** The tab showing - kept by the panel's frame (agent-panel.tsx), so it
-   *  survives the switch to another document's editor. */
+  /** The tab showing, kept by the panel's frame so it survives the switch to
+   *  another document's editor. */
   tab: AgentPanelTab;
   onTabChange: (tab: AgentPanelTab) => void;
   children: ReactNode;

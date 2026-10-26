@@ -4,20 +4,6 @@
 
 use super::*;
 
-/// Parses a skill file. A file without frontmatter is still a valid skill:
-/// the file stem becomes its name and the whole file its prompt. Only the
-/// top-level `name` names the skill (a `name:` nested under `metadata:`
-/// doesn't), spaces in it become `-` so `/name` stays one token, and
-/// `<!-- -->` comments in the body are stripped like those in agent.md.
-///
-/// The Textus keys under `metadata:` (all optional; built-in skills set them
-/// all): `textus-version`, `textus-invocation` (both, user-only, hidden),
-/// `textus-category`, `textus-modes` (space- or comma-separated modes),
-/// `textus-packs` and `textus-target-packs` (space-separated
-/// pack references), `textus-aliases-<ui language>` (comma-separated),
-/// `textus-based-on` (a Customize… copy) and `textus-sources` (credits, not
-/// read). Claude Code's top-level `disable-model-invocation: true` also makes a
-/// skill /name-only.
 /// The prefix of the app's own keys under a skill's `metadata:`.
 pub(crate) const META_PREFIX: &str = "textus";
 
@@ -116,11 +102,8 @@ pub(crate) fn parse_skill_file(file_stem: &str, content: &str) -> AgentSkill {
 }
 
 /// Strips `<!-- -->` comments from a `.textus/` file or the global agent.md
-/// before it goes anywhere near a prompt: the starter templates explain
-/// themselves in comments, and users get a natural way to annotate their
-/// files ("comments are never sent" holds for every one of them). An
-/// unterminated comment swallows the rest of the file, matching how HTML
-/// would parse it.
+/// before it reaches a prompt. An unterminated comment swallows the rest, as
+/// HTML would.
 pub(crate) fn strip_html_comments(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let mut rest = text;
@@ -135,10 +118,8 @@ pub(crate) fn strip_html_comments(text: &str) -> String {
     out
 }
 
-/// Reads one layer (the global config folder or a project's .textus dir):
-/// its agent.md and every skill under skills/, marked as coming from
-/// `source`. Missing files/dirs are just empty layers, never errors - most
-/// folders won't have any configuration.
+/// Reads one layer: its agent.md and every skill under skills/, marked as from
+/// `source`. Missing files or folders are empty layers, never errors.
 pub(crate) fn read_layer(dir: &Path, source: SkillSource) -> (Option<String>, Vec<AgentSkill>) {
     let instructions = std::fs::read_to_string(dir.join("agent.md"))
         .ok()
@@ -178,9 +159,8 @@ pub(crate) fn read_skill_files(skills_dir: &Path) -> Vec<(PathBuf, AgentSkill)> 
         .collect()
 }
 
-/// Notes on a user skill that it replaces the built-in skill of its name,
-/// and whether that built-in has changed since the skill was copied from
-/// it (Customize… writes `textus-based-on: "<name>@<version>"`).
+/// Notes on a user skill that it replaces the built-in of its name, and whether
+/// that built-in has changed since the copy was made.
 pub(crate) fn mark_override(skill: &mut AgentSkill) {
     let Some(builtin) = builtin::find(&skill.name) else {
         return;
@@ -205,9 +185,8 @@ pub(crate) fn push_layer_skill(skills: &mut Vec<AgentSkill>, skill: AgentSkill) 
     skills.push(skill);
 }
 
-/// The settings.json field where a profile from before 1.3.0-beta.2 listed
-/// the built-in skills it had turned off - read only to know which of the
-/// skills moved to the market it had on (plugins::moved_skills).
+/// The settings.json field where older profiles listed the built-ins turned off,
+/// read only to know which market skills to install.
 pub(crate) const DISABLED_BUILTINS_KEY: &str = "disabledBuiltinSkills";
 
 /// Windows refuses these as file names whatever the extension ("con.md").
@@ -216,21 +195,15 @@ pub(crate) const WINDOWS_RESERVED_NAMES: &[&str] = &[
     "com9", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9",
 ];
 
-/// A file stem for a skill named `name`. The name comes from the imported
-/// file's frontmatter, i.e. from whoever wrote that file: `name: ../../x`
-/// must not become a path - see safe_file_stem.
+/// A file stem for a skill named `name`, which comes from whoever wrote the
+/// file: `name: ../../x` must not become a path.
 pub(crate) fn skill_file_stem(name: &str) -> String {
     safe_file_stem(name, "skill", 120)
 }
 
-/// A file stem made from text someone else chose (a skill's name, what
-/// Textus AI remembered): keeps letters (any script), digits, `-` and `_`,
-/// turns everything else - separators, dots, control characters - into
-/// `-`, and caps the length at `max_bytes`, well under any filesystem's
-/// limit - counted in bytes, which is what that limit counts (255 on
-/// most): a Chinese or Japanese character takes three, and the atomic
-/// writer's temp name adds about 35 more. `fallback` stands in for an
-/// empty stem, and is appended to a name Windows refuses.
+/// A file stem from text someone else chose: letters, digits, `-` and `_` kept,
+/// all else `-`, capped at `max_bytes` (filesystems count bytes, CJK takes 3).
+/// `fallback` stands in for an empty stem, and is appended to a name Windows refuses.
 pub(crate) fn safe_file_stem(name: &str, fallback: &str, max_bytes: usize) -> String {
     let mut stem = String::new();
     for c in name.chars() {
@@ -254,9 +227,8 @@ pub(crate) fn safe_file_stem(name: &str, fallback: &str, max_bytes: usize) -> St
     }
 }
 
-/// Where the skill `name` is stored in `skills_dir` - checked to really be
-/// a file directly inside it, as a second line of defence behind
-/// skill_file_stem.
+/// Where the skill `name` is stored in `skills_dir`, checked to be a file
+/// directly inside it as a second line of defence.
 pub(crate) fn skill_file_path(skills_dir: &Path, name: &str) -> Result<PathBuf, String> {
     let path = skills_dir.join(format!("{}.md", skill_file_stem(name)));
     if path.parent() != Some(skills_dir) {
@@ -324,10 +296,8 @@ pub(crate) fn reset_in(skills_dir: &Path, name: &str) -> Result<Vec<String>, Str
     Ok(deleted)
 }
 
-/// `raw` (a skill file) with its `metadata:` key `textus-<key>` set to
-/// `value`: the line replaced where there is one, else added under
-/// `metadata:`, which is added to the front matter - or the front matter
-/// to the file - when it has none.
+/// `raw` with its `metadata:` key `textus-<key>` set to `value`: replaced, or
+/// added under `metadata:`, adding that or the front matter when missing.
 pub(crate) fn with_metadata(raw: &str, key: &str, value: &str) -> String {
     let line = format!("  {META_PREFIX}-{key}: \"{value}\"");
     let prefix = format!("  {META_PREFIX}-{key}:");

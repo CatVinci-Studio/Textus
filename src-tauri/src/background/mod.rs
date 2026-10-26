@@ -1,21 +1,6 @@
-//! Background mode, Settings › General › App: with it on, closing the last
-//! window leaves Textus running (as macOS always does) with a tray icon to
-//! come back from - the notification area on Windows, the
-//! StatusNotifier/AppIndicator tray on Linux, the menu bar on macOS. Off by
-//! default; desktop only.
-//!
-//! What a windowless process costs is the point of the design:
-//! - No webview: every window is destroyed when it closes, and none is kept
-//!   hidden for later.
-//! - No timer, poll or watcher in Rust. The update check runs in an editor
-//!   window's frontend (app/useAppUpdate.ts), so it stops with the last
-//!   window and runs again, at once, when one opens.
-//! - The tray is built only while the setting is on.
-//!
-//! - here: the lifecycle decisions (pure, tested) and applying the setting;
-//! - tray.rs: the icon and its menu.
-//!
-//! docs/dev/lifecycle.md tells the whole story: launch, close, quit, update.
+//! Background mode: with it on, closing the last window leaves Textus running
+//! with a tray icon. Off by default; desktop only. A windowless process keeps
+//! no webview, timer or watcher, and the tray exists only while the setting is on.
 
 pub mod tray;
 
@@ -23,11 +8,9 @@ use serde::Serialize;
 use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager};
 
-/// The settings field (src/settings/SettingsContext.tsx).
 pub const ENABLED_SETTING: &str = "runInBackground";
 
-/// Rust -> every window: the tray changed. Payload: Status. Mirrors
-/// BACKGROUND_STATUS in src/platform/ipc.ts.
+/// Rust -> every window: the tray changed. Payload: Status.
 pub const STATUS_EVENT: &str = "background-status";
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -49,13 +32,9 @@ impl Os {
     }
 }
 
-/// Whether Tauri's request to exit is turned down. Tauri asks with no code
-/// when the last window has been destroyed; that leaves the process on
-/// macOS, as Mac apps stay, and elsewhere while background mode is on.
-/// Every exit with a code goes ahead on every platform: File › Quit, the
-/// tray's Quit and ⌘Q (`app.exit(0)` once their windows have closed,
-/// lib.rs), and the updater's restart - a lingering process must never
-/// hold an update up.
+/// Whether Tauri's request to exit is turned down. A codeless request (last
+/// window destroyed) keeps the process on macOS or in background mode; every
+/// exit with a code goes ahead, so a lingering process never holds an update up.
 pub fn keeps_running(exit_code: Option<i32>, os: Os, background_on: bool) -> bool {
     exit_code.is_none() && (os == Os::Mac || background_on)
 }
@@ -72,7 +51,7 @@ pub fn enabled(app: &AppHandle) -> bool {
         .unwrap_or(false)
 }
 
-/// The tray, for Settings - generated into src/platform/bindings/app.ts.
+/// The tray, for Settings.
 #[derive(Clone, Serialize, Debug, PartialEq)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -90,7 +69,6 @@ impl Default for BackgroundStatus {
     }
 }
 
-/// What changed, for `apply`.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Change {
     /// Startup, with background mode on.
@@ -101,9 +79,8 @@ pub enum Change {
     Language,
 }
 
-/// Brings the tray in line with Settings and tells every window how that
-/// went. The tray is built and dropped on the main thread (AppKit's and
-/// GTK's rule).
+/// Brings the tray in line with Settings and tells every window how that went.
+/// The tray is built and dropped on the main thread (AppKit's and GTK's rule).
 pub fn apply(app: &AppHandle, change: Change) {
     let handle = app.clone();
     let _ = app.run_on_main_thread(move || {
@@ -140,8 +117,7 @@ fn update(app: &AppHandle, change: impl FnOnce(&mut Status)) {
     }
 }
 
-/// The tray now, for Settings as it opens; the event keeps it current
-/// after that.
+/// The tray now, for Settings as it opens.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn background_status(state: tauri::State<BackgroundStatus>) -> Status {

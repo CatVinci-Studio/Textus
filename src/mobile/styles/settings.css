@@ -1,12 +1,8 @@
-/* Settings on a phone: the same panel as the desktop's (SettingsPanel),
-   filling the screen. Only its frame and sizes change here - the rows,
-   the categories and their order are the desktop's own, so there is no
-   second settings page to keep in step. The categories become a row of
-   tabs along the top (SettingsPanel.css's narrow layout). */
+/* Settings on a phone: the desktop's panel filling the screen, so there is
+   no second settings page to keep in step. Only its frame and sizes change. */
 
-/* Done, as iOS writes it: a word in the accent colour, on the iPad's
-   dialog too. It is also a .text-button, whose sidebar rule (app/sidebar-frame.css)
-   stretches it across the whole header with a border and a bottom margin. */
+/* Done, as iOS writes it: a word in the accent colour. As a .text-button its
+   sidebar rule would stretch it across the header. */
 :root[data-window-chrome="mobile"] .settings-done-button {
   width: auto;
   margin: 0;
@@ -18,15 +14,13 @@
 }
 
 @media (max-width: 760px) {
-  /* The whole screen, title row included. It comes up from the bottom
-     edge as an iOS modal sheet does, over a page that dims behind it, and
-     goes back down when it closes. */
+  /* The whole screen, title row included, coming up from the bottom as an iOS
+     modal sheet over a dimming page. */
   :root[data-window-chrome="mobile"] .settings-backdrop {
     top: 0;
     z-index: var(--z-phone-page);
-    /* The dimming is a layer of its own (below), so it fades while the
-       sheet in front of it stays opaque - faded together, the page showed
-       through the rising sheet. */
+    /* The dimming is its own layer so it fades while the sheet stays opaque;
+       faded together, the page showed through the rising sheet. */
     background: none;
     animation: none;
   }
@@ -88,8 +82,7 @@
     min-height: 44px;
   }
 
-  /* Four tabs across one screen, English's "Editor & Appearance" and
-     "Textus AI" included: the tightest spacing that still fits them on a
+  /* Four tabs across one screen: the tightest spacing that still fits them on a
      375pt iPhone. */
   :root[data-window-chrome="mobile"] .settings-nav {
     padding: 8px 8px;
@@ -138,8 +131,7 @@
     hyphens: auto;
   }
 
-  /* Stacked (Custom CSS), that basis would be a height: a gap under the
-     name. */
+  /* Stacked (Custom CSS), that basis would be a height: a gap under the name. */
   :root[data-window-chrome="mobile"] .settings-row-stacked > *:first-child {
     flex-basis: auto;
   }
@@ -179,11 +171,8 @@
     height: 31px;
   }
 
-  /* iOS's inset grouped style: white cards on a grey page (black page,
-     dark grey cards in dark mode) - not near-white cards on white, which
-     reads inverted - with hairlines a device pixel thin. */
-  /* On the root, so the strips under the status bar and the home
-     indicator can take the page colour while Settings is up (base.css). */
+  /* iOS's inset grouped style: white cards on a grey page (dark grey on black),
+     hairlines a device pixel thin. On the root so the safe-area strips match. */
   :root[data-window-chrome="mobile"] {
     --grouped-page: #f2f2f7;
     --grouped-card: #fff;
@@ -208,9 +197,8 @@
     background: var(--grouped-card);
   }
 
-  /* A built-in skill: its switch beside the name, Customize… on a line
-     of its own under what it does - beside the switch it squeezed the
-     text into a narrow column and was cut short itself. */
+  /* A built-in skill: Customize… on its own line under what it does; beside the
+     switch it squeezed the text and was cut short. */
   :root[data-window-chrome="mobile"] .settings-builtin-skill {
     flex-wrap: wrap;
     row-gap: 0;

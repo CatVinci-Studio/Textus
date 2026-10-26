@@ -1,8 +1,6 @@
 /**
- * textus.files.onWillSave: plugins that may change a document just before
- * it is saved (a "modified" date in its front matter). Saving asks each,
- * in turn, and waits at most a second for each: a slow or broken plugin
- * never holds up a save.
+ * Plugins that may change a document just before it is saved. Each is asked
+ * in turn and given at most a second, so a broken plugin never holds up a save.
  */
 type Ask = (path: string, text: string) => Promise<string | null>;
 

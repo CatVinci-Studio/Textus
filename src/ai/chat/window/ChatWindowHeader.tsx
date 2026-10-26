@@ -7,19 +7,9 @@ import { Tooltip } from "../../../ui/Tooltip";
 import type { Strings } from "../../../i18n/strings";
 
 /**
- * The chat window's top row, and the only chrome it draws. It sits where
- * the title bar would be (see build_with_app_chrome), so it doubles as the
- * drag handle - without one, a window with no title bar of its own can't
- * be moved. Content is right-aligned so it clears the traffic lights on
- * macOS without a hardcoded platform-specific inset.
- *
- * On Windows there is no frame at all, so this row also carries the
- * caption - including the close button, which is what sends the
- * conversation back to the editor to be re-embedded.
- *
- * Drawn in every state of the window, not just the loaded one: a chat
- * whose handoff never arrived (or whose editor went away) must still be
- * movable and closable.
+ * The chat window's top row and only chrome: it is the drag handle, and on
+ * Windows the caption with the close button. Drawn in every state, so a chat
+ * whose handoff never arrived can still be moved and closed.
  */
 export function ChatWindowHeader({
   context,

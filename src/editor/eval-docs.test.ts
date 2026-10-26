@@ -7,22 +7,17 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import { createTestEditor } from "../document-view/editor-test-harness";
 import { documentMarkdown, serializeBlocks } from "../ai/doc-markdown";
 
-// The live AI evaluation (src-tauri/src/ai/live_eval) sends these documents
-// to the model as the editor would show them. This keeps them byte-exact:
-// each must come back unchanged from opening it in the full editor and
-// reading it the way the AI paths do (doc-markdown.ts - blocks serialized
-// one by one, joined by a blank line). The first evaluation's documents
-// used "-" bullets and minimal table rules while the app shows "*" and
-// padded tables, so the model saw something the users' model never does.
+// The live AI evaluation sends these documents to the model as the editor
+// shows them, so each must come back byte-exact from opening it in the full
+// editor and reading it the way the AI paths do.
 
 // Resolved from the repository root (where vitest runs): import.meta.url
 // is not a file URL under the jsdom environment.
 const dir = join(process.cwd(), "src-tauri/src/ai/live_eval/docs");
 const docs = readdirSync(dir).filter((name) => name.endsWith(".md"));
 
-// The diagram preview renders asynchronously and would dispatch into an
-// editor this file has already destroyed; it has nothing to do with the
-// markdown, so it never finishes here.
+// The diagram preview renders asynchronously and would dispatch into a
+// destroyed editor; it has nothing to do with the markdown.
 vi.mock("mermaid", () => ({
   default: { initialize() {}, render: () => new Promise(() => {}) },
 }));

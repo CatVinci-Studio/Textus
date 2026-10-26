@@ -26,8 +26,7 @@ export interface InlineChatLabels extends ChatBodyLabels, CloseConfirmLabels {
 
 interface InlineChatProps {
   document: DocumentSnapshot;
-  /** The document and selection to send against, read at send time (see
-   *  ChatBody's `refreshContext`). */
+  /** The document and selection to send against, read at send time. */
   sendContext: () => Promise<{
     document: DocumentSnapshot;
     selectionMarkdown: string | null;
@@ -43,22 +42,22 @@ interface InlineChatProps {
   conversation: AgentConversation;
   defaultMode: AgentMode;
   defaultWebSearch: boolean;
-  /** See ChatComposer's selectionChip. */
+  /** The composer's selection chip handlers. */
   selectionChip?: SelectionChipHandlers;
-  /** A message went out through a skill - see ChatComposer. */
+  /** A message went out through a skill. */
   onSkillUsed?: () => void;
   labels: InlineChatLabels;
   onProposals: (
     proposals: { callId: string; proposal: EditProposal }[],
   ) => void;
-  /** Live status of a propose_edit call_id, from usePendingEdits.status. */
+  /** Live status of a propose_edit call_id. */
   proposalStatus: (callId: string) => PendingStatus;
   onAcceptProposal: (callId: string) => void;
   onRejectProposal: (callId: string) => void;
   onAcceptAll: () => void;
   onRejectAll: () => void;
-  /** How many proposals are currently decidable (usePendingEdits.decidable -
-   *  streaming ones excluded). Drives the nav bar below. */
+  /** How many proposals are currently decidable (streaming ones excluded).
+   *  Drives the nav bar below. */
   pendingCount: number;
   /** 0-based position of the currently focused edit, or -1 if none. */
   focusIndex: number;
@@ -66,44 +65,25 @@ interface InlineChatProps {
   onFocusPrevious: () => void;
   onAcceptFocused: () => void;
   onRejectFocused: () => void;
-  /** Pops the full conversation out into its own OS window (chat-bridge) -
-   *  the explicit, user-initiated escalation path from this one-shot bar. */
+  /** Pops the full conversation out into its own OS window. */
   onDetach: () => void;
-  /** Close and New Conversation both go through the editor (MilkdownEditor),
-   *  which owns the pending-edits guard: every entry point - the header
-   *  buttons, Escape, the shortcut - asks the same question before
-   *  discarding a panel that still has undecided edits. */
+  /** Close and New Conversation both go through the editor, which owns the
+   *  pending-edits guard, so every entry point asks before discarding edits. */
   onNewConversation: () => void;
   onRequestClose: () => void;
   /** Set while that guard is asking; the bar's answer runs `onProceed`. */
   confirm: { onProceed: () => void; onCancel: () => void } | null;
   /** iPhone: docked at the bottom of the screen, above the keyboard, rather
-   *  than a widget in the document (see mobile/styles/quick-ask-dock.css). */
+   *  than a widget in the document. */
   docked?: boolean;
   /** Docked only: the panel's height changed (`first`: it just opened) -
    *  the editor keeps the passage being discussed in view above it. */
   onDockResize?: (first: boolean) => void;
 }
 
-/// QUICK ASK - the in-document half of the chat's two surfaces (the other
-/// is the detached OS window), modeled on VS Code's inline chat.
-///
-/// It renders as a ZONE WIDGET: a block portaled into the document flow
-/// right after the block the chat was opened on (quick-ask-widget-plugin),
-/// so the content below is pushed down, never covered, and the panel
-/// follows its block through edits. It is a command bar, not a chat log:
-/// an instruction produces previews in the document plus the pending bar
-/// (the ONE in-app place edits are confirmed); a question produces a compact
-/// reply preview that can expand in place, or detach into a full window.
-///
-/// On an iPhone it is DOCKED instead (`docked`): fixed to the bottom of the
-/// screen above the keyboard, where a block in the document would sit under
-/// the keyboard. Same body, same controls; the previews stay in the
-/// document. See mobile/styles/quick-ask-dock.css.
-///
-/// This file is only the panel's CHROME: the header and the close
-/// confirmation. The body is ChatBody in its "quick" variant, sharing send
-/// orchestration and streaming with the detached window's "full" variant.
+/// Quick Ask, the in-document chat: a zone widget after the block it was
+/// opened on (docked above the keyboard on an iPhone). This is only its
+/// chrome; the body is ChatBody's "quick" variant.
 export function InlineChat({
   document,
   sendContext,
@@ -136,10 +116,8 @@ export function InlineChat({
   docked = false,
   onDockResize,
 }: InlineChatProps) {
-  // Sitting in the document flow means the panel can open - or grow - below
-  // the fold with nothing on screen to say so. See useQuickAskReveal. (A
-  // docked panel is outside the editor's scroll area, so that is a no-op
-  // for it; the dock keeps the document clear of itself instead.)
+  // In the document flow the panel can open or grow below the fold with
+  // nothing on screen to say so. (A docked panel is outside the scroll area.)
   const panelRef = useRef<HTMLDivElement>(null);
   useQuickAskReveal(panelRef);
   useQuickAskDock(panelRef, docked, onDockResize);

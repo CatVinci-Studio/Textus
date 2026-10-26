@@ -1,26 +1,7 @@
-/* Built-in content themes - each only overrides the editor-content CSS
-   variables (--editor-*), never the app chrome (--bg, --sidebar-*), so
-   switching themes only reskins the writing area, not the whole app shell.
-   Scoped by `data-content-theme`, set by SettingsContext; combined with the
-   existing `data-theme` (light/dark) attribute the same way milkdown-theme.css
-   already does for syntax-highlight token colors.
-
-   THEME AND APPEARANCE ARE ORTHOGONAL. Settings picks them separately (which
-   theme, and light/dark/system), so every combination has to be defined -
-   there is no "this theme is a dark theme". Each one is therefore three
-   blocks, in this order:
-
-     [data-content-theme="x"]                      base: the light form, and
-                                                   anything shared (fonts)
-     @media (prefers-color-scheme: dark)
-       :root:not([data-theme="light"])[…="x"]      dark, for "follow system"
-     :root[data-theme="dark"][…="x"]               dark, pinned
-
-   The two dark blocks are identical by construction; the base block is
-   unconditional, so the dark ones only restate what actually CHANGES
-   (colors) and inherit the rest. A theme with a single design still needs
-   all three - give the dark blocks the same values as the base, so that
-   switching appearance leaves it alone instead of half-applying. */
+/* Built-in content themes: each overrides only the --editor-* variables,
+   never the app chrome. Theme and appearance are independent, so each theme
+   is three blocks: the light base, dark for "follow system", and dark
+   pinned. The two dark blocks are identical. */
 
 /* Paper - warm, cream, serif-leaning */
 
@@ -32,7 +13,7 @@
   --editor-quote-border: #b5652f;
   --editor-accent: #9a5628;
   --editor-code-bg: #f1e9d8;
-  /* The CJK faces follow <html lang> (ui/base.css). */
+  /* The CJK faces follow <html lang>. */
   --editor-font:
     var(--font-cjk-punct-serif), Georgia, var(--font-cjk-serif), serif;
 }

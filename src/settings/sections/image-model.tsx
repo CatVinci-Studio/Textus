@@ -13,16 +13,11 @@ import {
   type ImageProviderEntry,
 } from "../../ai/image-models";
 
-// Settings › Textus AI › Image model (#194): which service makes the
-// pictures generate_image proposes, and with which of its models. By
-// default the chat provider's own (ai/images.rs following_chat): OpenAI's
-// through the ChatGPT sign-in while there is one, nothing for a chat
-// provider that makes no pictures. Two selects - the service, then its
-// model - rather than every service's every model in one list. A key is
-// asked for only when the service doesn't already have one from chat.
+// Settings › Textus AI › Image model: which service makes the pictures, and
+// with which model. Defaults to the chat provider's own; a key is asked for
+// only when the service has none from chat.
 
-// Brand names, but for the ones named in words (as for chat,
-// provider-connection.ts).
+// Brand names, but for the ones named in words.
 const LOCALIZED_LABELS: Partial<Record<string, TextKey>> = {
   custom: "imageProviderCustom",
   doubao: "providerDoubao",

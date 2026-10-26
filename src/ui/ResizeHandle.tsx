@@ -1,18 +1,11 @@
 import { useRef, useState } from "react";
 import "./resize-handle.css";
 
-/** How far one arrow key press moves the edge. */
 const KEY_STEP = 20;
 
-/**
- * The drag handle on a side panel's inner edge (the sidebar's right one,
- * the Agent panel's left one). `edge` is the side of the panel it sits on:
- * pulling that edge outward widens the panel, and so do the arrow key
- * pointing that way. The width follows the pointer as `onResize(w, false)`;
- * `onResize(w, true)` comes once the drag lets go, and on every key press,
- * for the caller to remember it - not on each frame of a drag. A double
- * click puts back the default (`onReset`).
- */
+/** The drag handle on a side panel's inner edge. `onResize(w, false)` follows
+ *  the pointer; `onResize(w, true)` comes on release and each key press, for
+ *  the caller to remember. */
 export function ResizeHandle({
   className,
   edge,

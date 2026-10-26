@@ -32,8 +32,7 @@
   animation: motion-enter var(--dur-base) var(--ease-out) both;
 }
 
-/* Inside the backdrop's padding, which starts under the window bar (see
-   .settings-panel for why not dvh). */
+/* Inside the backdrop's padding, which starts under the window bar. */
 .tutorial-overlay {
   max-height: 100%;
   overflow-y: auto;
@@ -41,9 +40,7 @@
   padding: 22px 24px 24px;
 }
 
-/* Beside the docked AI panel, never over it: the AI lessons happen there.
-   The card has --docked-panel-width while one is docked
-   (utils/hooks/useDockedPanelWidth.ts). */
+/* Beside the docked AI panel, never over it: the AI lessons happen there. */
 .tutorial-card {
   position: fixed;
   top: 48px;
@@ -55,10 +52,8 @@
   padding: 18px;
 }
 
-/* With the AI panel open, the lesson is about it and about the text: the
-   card goes down to the bottom corner, off the top of the text the panel
-   now narrows. Over a panel that overlays a narrow window, the other
-   corner. */
+/* With the AI panel open, the card goes to the bottom corner, off the text
+   the panel narrows; over an overlaying panel, the other corner. */
 @media (min-width: 721px) {
   .app-shell:has(> .agent-panel) .tutorial-card {
     top: auto;
@@ -299,8 +294,8 @@
   background: var(--tutorial-soft);
 }
 
-/* Wraps: in a long language the links and buttons don't fit one row of
-   the card, and the buttons move under the links instead of off its edge. */
+/* Wraps, so in a long language the buttons move under the links instead of
+   off the card's edge. */
 .tutorial-actions {
   display: flex;
   flex-wrap: wrap;

@@ -1,10 +1,8 @@
 import { setExportStep, type ExportPage } from "../../export/export-step";
 
 /**
- * textus.export.onWillExport: plugins that add CSS to an HTML or PDF
- * export's page, or change its HTML (numbered headings, a footer). The
- * export asks each in turn (export/export-step.ts) and waits at most two
- * seconds for each: a slow or broken plugin never holds an export up.
+ * Plugins that add CSS to an HTML or PDF export or change its HTML. Each is
+ * asked in turn and given at most two seconds, so none holds an export up.
  */
 type Answer = { html?: string | null; css?: string | null } | null;
 type Ask = (page: ExportPage) => Promise<Answer>;

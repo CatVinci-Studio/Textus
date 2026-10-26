@@ -6,10 +6,8 @@ use super::*;
 pub(crate) const ADD_COMMENT_TOOL_NAME: &str = "add_comment";
 pub(super) const COMMENT_ADDED: &str = "Comment added";
 
-/// Feedback pinned to a passage instead of an edit to it - for "what's weak
-/// here", "review this draft". Changes nothing; its block is checked like
-/// propose_edit's so the card's "locate" button lands on it. One of the
-/// call's `comments` (agent/lists.rs).
+/// Feedback pinned to a passage instead of an edit to it. Changes nothing; its
+/// block is checked like propose_edit's so the card's "locate" lands on it.
 pub(super) fn add_comment(ctx: &ToolContext, arguments: &str) -> String {
     let parsed: serde_json::Value = serde_json::from_str(arguments).unwrap_or_default();
     let comment = parsed.get("comment").and_then(|v| v.as_str()).unwrap_or("");
@@ -24,11 +22,9 @@ pub(super) fn add_comment(ctx: &ToolContext, arguments: &str) -> String {
 
 pub(super) const USE_SKILL_TOOL_NAME: &str = "use_skill";
 
-/// Dynamic skill loading: the system prompt only carries each skill's name
-/// and description; this returns the full instructions on demand, with the
-/// reference-pack sections the skill declares appended (builtin::
-/// expand_skill). A reference pack loads by name too, whole or one section
-/// (`standards-fr#dialogue`).
+/// Returns a skill's full instructions on demand, with its declared
+/// reference-pack sections; the system prompt carries only names and
+/// descriptions. A pack loads by name too (`standards-fr#dialogue`).
 pub(super) fn use_skill(ctx: &ToolContext, arguments: &str) -> String {
     let name = serde_json::from_str::<serde_json::Value>(arguments)
         .ok()
@@ -79,16 +75,14 @@ pub(super) fn use_skill(ctx: &ToolContext, arguments: &str) -> String {
 
 pub(super) const READ_FILE_TOOL_NAME: &str = "read_file";
 
-/// How much of the project the listing shows: enough for reference
-/// material next to the document, small enough that a huge folder can't
-/// blow up the prompt.
+/// How much of the project the listing shows: enough for reference material,
+/// small enough that a huge folder can't blow up the prompt.
 pub(super) const MAX_LISTED_FILES: usize = 200;
 pub(super) const SEARCH_FILES_TOOL_NAME: &str = "search_files";
 pub(super) const FIND_FILES_TOOL_NAME: &str = "find_files";
 
-/// The project folder's files the tools can read (paths relative to it),
-/// images marked - find_files with no name. Hidden entries and
-/// build/dependency folders are skipped - see ai::project.
+/// The project folder's files the tools can read, images marked: find_files
+/// with no name.
 fn list_files(ctx: &ToolContext, root: &std::path::Path) -> String {
     let walked = crate::ai::project::walk_readable_files(root, ctx.sees_images);
     let files = walked.files;
@@ -121,10 +115,8 @@ pub(super) fn path_argument(arguments: &str, key: &str) -> String {
         .unwrap_or_default()
 }
 
-/// Reads a text file or a document from inside the project folder, whole
-/// or a line range of it - containment, hidden files and size are enforced
-/// by ai::project::read_part - or shows an image to a model that sees
-/// them.
+/// Reads a text file or document from inside the project folder, whole or a
+/// line range, or shows an image to a model that sees them.
 pub(super) fn read_file(ctx: &ToolContext, arguments: &str) -> ToolOutput {
     let Some(root) = ctx.root else {
         return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to read."
@@ -173,9 +165,8 @@ pub(super) fn search_files(ctx: &ToolContext, arguments: &str) -> String {
     crate::ai::project::search(root, &path_argument(arguments, "query"))
 }
 
-/// Finds project files by name - what the sidebar's file search does for
-/// the writer, and cheaper for the model than listing everything - or,
-/// with no name, lists them.
+/// Finds project files by name, cheaper for the model than listing everything,
+/// or with no name lists them.
 pub(super) fn find_files(ctx: &ToolContext, arguments: &str) -> String {
     let Some(root) = ctx.root else {
         return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to find."

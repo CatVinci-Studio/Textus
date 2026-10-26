@@ -1,9 +1,6 @@
 /**
- * Blocks the document draws by someone else's code - a plugin's code block
- * (document-view/plugins/plugin-code-blocks.ts) - which only their drawer
- * can turn into a picture. The window shell says how (setDrawnBlocks); an
- * export asks, and puts the pictures where the drawings were. A block with
- * no picture exports as its source, as it would with no drawer at all.
+ * Blocks drawn by a plugin's code, which only their drawer can turn into a
+ * picture for an export. A block with no picture exports as its source.
  */
 export interface DrawnBlocks {
   /** The drawings' elements in the editor, each just after its source. */
@@ -54,8 +51,7 @@ async function pictures(
 
 /**
  * Asks every drawing under the live `editor` for its picture and marks it
- * there, for cloneEditorContent to place (placeDrawnPictures). Returns
- * what takes the marks off again, once the copy is made.
+ * there for the export copy. Returns what takes the marks off again.
  */
 export async function markDrawnPictures(
   editor: Element,

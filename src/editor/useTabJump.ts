@@ -8,17 +8,15 @@ import { onTabJump, takeTabJump, type TabJump } from "./tab-jump";
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { DocumentPlace } from "../plugins/app-bridge";
 
-/** This tab's editor carries out the jump its opener left (tab-jump.ts)
- *  once it is mounted and on screen. `initialValue` is the markdown it
- *  mounted with, which a caret offset counts into. */
+/** This tab's editor carries out the jump its opener left once mounted and
+ *  on screen. `initialValue` is the markdown a caret offset counts into. */
 export function useTabJump(
   run: EditorRunner,
   tabId: string,
   isActive: boolean,
   initialValue: string,
   typewriter: boolean,
-  /** Goes to a place a plugin opened the document at (document-view's
-   *  plugin-edits.ts, a layer above this one). */
+  /** Goes to a place a plugin opened the document at. */
   revealPlace: (ctx: Ctx, place: DocumentPlace) => void,
 ) {
   const runReady = run(() => true) === true;
@@ -31,9 +29,8 @@ export function useTabJump(
         if (jump.kind === "heading")
           revealHeading(ctx.get(editorViewCtx), jump.anchor);
         else if (jump.kind === "place") revealPlace(ctx, jump.place);
-        // An offset past the end (a shorter file) lands at the end. In
-        // Typewriter Mode the caret's line goes to the middle, where the
-        // next key would put it anyway.
+        // An offset past the end lands at the end. In Typewriter Mode the caret's
+        // line goes to the middle.
         else if ("pos" in jump.at)
           placeEditorCaret(
             ctx.get(editorViewCtx),
@@ -55,8 +52,7 @@ export function useTabJump(
     if (!isActive || !runReady) return;
     const take = () => {
       const jump = takeTabJump(tabId);
-      // After layout: a tab just shown or just mounted has no coordinates
-      // to scroll by before then.
+      // After layout: a tab just shown or mounted has no coordinates before then.
       if (jump) requestAnimationFrame(() => apply(jump));
     };
     take();

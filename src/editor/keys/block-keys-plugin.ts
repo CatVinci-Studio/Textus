@@ -20,30 +20,10 @@ import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
 import { modIsMeta } from "../../platform/os";
 
 /**
- * Enter and Mod+Enter across Textus's container blocks, decided in one
- * place so they follow one rule (issue #28):
- *
- * - Enter on an empty line leaves the block: an empty list item or quote
- *   line (ProseMirror's liftEmptyBlock, untouched here), the empty last
- *   line of a code/math block, the untouched new last row of a table.
- * - Mod+Enter leaves the block from anywhere in it: code blocks (the base
- *   keymap's exitCode), tables (gfm's exitTable), and quotes (here).
- *
- * Inside a table Enter moves down a row, and on the last row adds one, as
- * in Typora and spreadsheets - gfm's own keymap exits the table instead.
- * Enter on a `| a | b |` line turns it into a table.
- *
- * Shift+Enter is left to Milkdown's hardbreak keymap (a line break; a
- * second one right after a break becomes a new paragraph), except where
- * its rule misfires - see shiftEnterWithTrailingBreak - and where a line
- * break can't go: a heading, which can't hold one, splits as with Enter,
- * and a code block takes a newline (Milkdown's filter dropped the key, as
- * it did in a table, where the break is now saved as `<br>`:
- * lineBreakInTableCell).
- *
- * Registered before every other key handler in editor-extensions.ts, and
- * $prose plugins run ahead of the preset keymaps, so these win over gfm's
- * table keymap and ProseMirror's base keymap.
+ * Enter, Shift+Enter and Mod+Enter across Textus's container blocks, decided
+ * in one place so they follow one rule: Enter on an empty line leaves the
+ * block, Mod+Enter leaves it from anywhere. Registered ahead of the preset
+ * keymaps, so these win over gfm's table keys and the base keymap.
  */
 
 const LEAVABLE_TEXT_BLOCKS = new Set(["code_block", "math_block"]);
@@ -61,15 +41,13 @@ function landAfter(tr: Transaction, after: number): Transaction {
   return tr.setSelection(TextSelection.create(tr.doc, after + 1));
 }
 
-/** Enter on the empty (or whitespace-only) last line of a code or math block: drop that line
- *  and continue below the block. The first Enter makes the empty line, so
- *  it takes two, as with list items and quotes. */
+/** Enter on the empty last line of a code or math block: drop that line and
+ *  continue below. It takes two Enters, as with list items and quotes. */
 export const leaveTextBlockOnEmptyLastLine: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
   if (!empty || !LEAVABLE_TEXT_BLOCKS.has($from.parent.type.name)) return false;
   if ($from.parentOffset !== $from.parent.content.size) return false;
-  // The last line counts as empty when it holds only the indentation the
-  // code block carried over from the line above.
+  // A line holding only carried-over indentation counts as empty.
   const text = $from.parent.textContent;
   const lastBreak = text.lastIndexOf("\n");
   if (lastBreak < 0 || text.slice(lastBreak + 1).trim() !== "") return false;
@@ -124,9 +102,8 @@ function selectCell(
   return tr.setSelection(Selection.near(tr.doc.resolve(cellEnd), -1));
 }
 
-/** Enter in a table cell: down a row; on the last row, a new row with the
- *  cursor in its first cell, like a new line; on a new last row left empty,
- *  out of the table (the row goes with it). */
+/** Enter in a table cell: down a row; on the last row, a new row; on a new
+ *  last row left empty, out of the table (the row goes with it). */
 export const enterInTable: Command = (state, dispatch) => {
   if (!isInTable(state) || state.selection instanceof CellSelection)
     return false;
@@ -226,15 +203,9 @@ export const pipeRowToTable: Command = (state, dispatch) => {
   return true;
 };
 
-/** Shift+Enter in a paragraph that already ends in a line break (the user
- *  pressed Shift+Enter at the end, then went back up). Milkdown's
- *  insertHardbreakCommand means "a second break right after a break
- *  becomes a new paragraph", but checks the paragraph's last child instead
- *  of the node before the cursor and replaces the position before the
- *  cursor with a paragraph node. Mid-line that deletes the character
- *  before the cursor and opens paragraph gaps where a line break was asked
- *  for; right after a mid-paragraph break it leaves an empty paragraph
- *  behind. Here the rule is applied as meant. */
+/** Shift+Enter in a paragraph that already ends in a line break. Milkdown's
+ *  rule checks the paragraph's last child instead of the node before the
+ *  cursor, which mid-line deletes a character; here it's applied as meant. */
 export const shiftEnterWithTrailingBreak: Command = (state, dispatch) => {
   const { selection } = state;
   if (!(selection instanceof TextSelection) || !selection.empty) return false;
@@ -246,17 +217,16 @@ export const shiftEnterWithTrailingBreak: Command = (state, dispatch) => {
   if ($from.nodeBefore?.type === hardbreak) {
     tr.delete($from.pos - 1, $from.pos).split($from.pos - 1);
   } else {
-    // The "hardbreak" meta keeps Milkdown's filter (no breaks in code
-    // blocks or tables) in charge, as for its own command.
+    // The "hardbreak" meta keeps Milkdown's filter (no breaks in code blocks or
+    // tables) in charge.
     tr.setMeta("hardbreak", true).replaceSelectionWith(hardbreak.create());
   }
   dispatch(tr.scrollIntoView());
   return true;
 };
 
-/** Shift+Enter where Markdown has no line break. A heading is one line:
- *  a break in it saved as a setext heading, `# a` becoming `a\` / `b` /
- *  `==`. A code or math block is all lines already. */
+/** Shift+Enter where Markdown has no line break: a heading splits (a break
+ *  would save as a setext heading), a code or math block takes a newline. */
 export const shiftEnterWithoutBreak: Command = (state, dispatch) => {
   const { $from } = state.selection;
   let depth = $from.depth;
@@ -268,24 +238,20 @@ export const shiftEnterWithoutBreak: Command = (state, dispatch) => {
   return true;
 };
 
-/** Enter in inline code (or a wikilink or embed, kept as source text):
- *  a new line, as in bold, where the span splits in two - not a newline
- *  inside the span, which ProseMirror gives anything marked as code and
- *  which reads back as a space. */
+/** Enter in inline code (or a wikilink or embed): the span splits in two, as
+ *  bold does; a newline inside it would read back as a space. */
 export const splitInlineCode: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
   const parent = $from.parent;
   if (!empty || !parent.isInline || !parent.type.spec.code) return false;
-  // Inline math and a link's source have their own Enter (math-autopair-
-  // plugin.ts, link-reveal.ts).
+  // Inline math and a link's source have their own Enter.
   if (parent.type.name === "math_inline" || parent.type.name === "link_source")
     return false;
   return splitBlock(state, dispatch);
 };
 
-/** Shift+Enter in a table cell: a line break in the cell, saved as `<br>`
- *  (markdown-output.ts), as a GFM table row can't hold a line end.
- *  Milkdown's own command is filtered out in tables, so it did nothing. */
+/** Shift+Enter in a table cell: a line break saved as `<br>`, since a GFM
+ *  row can't hold a line end and Milkdown's command is filtered out there. */
 export const lineBreakInTableCell: Command = (state, dispatch) => {
   const { selection } = state;
   const hardbreak = state.schema.nodes.hardbreak;
@@ -299,9 +265,8 @@ export const lineBreakInTableCell: Command = (state, dispatch) => {
   return true;
 };
 
-/** Enter on "---" typed as the document's first line: a front matter
- *  block, the caret in it, as in Typora. The line stays text until then
- *  (ruleInputRule in reduced-presets.ts). */
+/** Enter on "---" typed as the document's first line: a front matter block,
+ *  as in Typora. */
 export const frontMatterFromFirstLine: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
   const frontmatter = state.schema.nodes.frontmatter;
@@ -320,10 +285,8 @@ export const frontMatterFromFirstLine: Command = (state, dispatch) => {
 };
 
 /**
- * The spaces right after the caret, taken out before Enter splits the line
- * there: the new line would start with them, and a line's leading space is
- * nothing in Markdown - saved as `&#x20;here`, an entity the file never
- * had. Null when there are none, or in code, where spaces are text.
+ * The spaces after the caret, taken out before Enter splits the line: a
+ * line's leading space would save as `&#x20;`. Null when none, or in code.
  */
 export function spacesAfterCaret(state: EditorState): Transaction | null {
   const { $from, empty } = state.selection;
@@ -336,10 +299,8 @@ export function spacesAfterCaret(state: EditorState): Transaction | null {
 }
 
 /**
- * Enter on an empty task nested in a task list: it moves up a level, as
- * any empty nested item does - and stays a task. ProseMirror's
- * splitListItem makes the item it moves up as a new one with the default
- * attributes, so a task came out as a plain bullet among tasks (#355).
+ * Enter on an empty task nested in a task list moves it up a level and keeps
+ * it a task; splitListItem alone made it a plain bullet.
  */
 export const liftEmptyNestedTask: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
@@ -381,10 +342,8 @@ const onShiftEnter: Command[] = [
   shiftEnterWithTrailingBreak,
 ];
 
-/** How soon before Enter a Shift press still counts as part of the same
- *  stroke rather than held on purpose. macOS Pinyin toggles 中/英 with a
- *  Shift tap; when that tap overlaps the Enter after a Latin word, the page
- *  gets Shift+Enter and a line break the writer never asked for. */
+/** How soon before Enter a Shift press still counts as the same stroke:
+ *  macOS Pinyin toggles 中/英 with a Shift tap that can overlap the Enter. */
 export const SHIFT_OVERLAP_MS = 100;
 
 export const blockKeysPlugin = $prose(() => {

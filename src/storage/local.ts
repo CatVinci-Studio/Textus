@@ -1,29 +1,22 @@
 /**
- * The webview's own localStorage, for the few things kept there rather than
- * in Rust's files (docs/dev/storage.md): small choices every window of the
- * app shares and nothing is lost without - the store's own fallback when no
- * Rust is behind the page aside. Every read and write goes through here,
- * where blocked or full storage (a private browser window, a quota) is
- * caught: a value that can't be kept is just not remembered.
+ * The webview's own localStorage, for small choices every window shares and
+ * nothing is lost without. Blocked or full storage is caught here: a value
+ * that can't be kept is just not remembered.
  */
 
 /** Every localStorage key the app reads or writes outside the stores'
- *  pre-0.9.7 fallbacks (ui-state.ts, persisted-list.ts). Renaming one loses
- *  what users have saved under it. */
+ *  fallbacks. Renaming one loses what users have saved under it. */
 export const LOCAL_KEYS = {
-  /** The settings blob from before settings.json - still the settings
-   *  store without Rust, and what the one-time import reads
-   *  (settings/settings-store.ts). */
+  /** The settings blob from before settings.json: the settings store without
+   *  Rust, and what the one-time import reads. */
   settings: "catvinci-settings",
-  /** Deep thinking left on in the composer (ai/chat/deep-thinking.ts). */
+  /** Deep thinking left on in the composer. */
   deepThinking: "textus-agent-deep-thinking",
-  /** The Agent mode last picked, with the default it was picked under
-   *  (ai/chat/last-mode.ts). */
+  /** The Agent mode last picked, with the default it was picked under. */
   lastMode: "textus-agent-last-mode",
-  /** A provider's last fetched model list, by provider id
-   *  (ai/model-info.ts). */
+  /** A provider's last fetched model list, by provider id. */
   fetchedModels: (provider: string) => `textus-fetched-models:${provider}`,
-  /** Where each file was last being read (document-view/reading-place.ts). */
+  /** Where each file was last being read. */
   readingPlaces: "textus-reading-places",
 } as const;
 
@@ -36,8 +29,7 @@ export function readLocal(key: string): string | null {
   }
 }
 
-/** A localStorage value as JSON, or null when absent or unreadable - for
- *  the fallback stores and the one-time import. */
+/** A localStorage value as JSON, or null when absent or unreadable. */
 export function readLocalJson(key: string): unknown {
   const raw = readLocal(key);
   if (!raw) return null;

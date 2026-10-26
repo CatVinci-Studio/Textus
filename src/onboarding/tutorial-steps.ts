@@ -11,12 +11,9 @@ import {
 } from "./tutorial-evaluation";
 
 /**
- * The first-run tour, on reading notes about a classic (practice-notes.ts):
- * Markdown typed for real, the window around the editor, connecting an AI,
- * then Textus AI working on the learner's notes - never on the classic's
- * own words. Every lesson is one card: a title, one sentence, and the exact
- * things to type or click, one per line, each ticked off as it is done.
- * The animation on the website is an optional extra, never the way through.
+ * The first-run tour, on reading notes about a classic: Markdown typed for
+ * real, the window, connecting an AI, then Textus AI working on the
+ * learner's notes, never on the classic. Each lesson is one card.
  */
 
 type TutorialChapterId = "start" | "writing" | "connect" | "ai" | "done";
@@ -39,8 +36,7 @@ export type TutorialStepId =
   | "done";
 
 /** The clips on the website's tutorials page. Rust opens the page and
- *  accepts only these (TUTORIAL_CLIPS in src-tauri/src/commands/links.rs -
- *  change both). */
+ *  accepts only these; keep in step with its TUTORIAL_CLIPS. */
 export const TUTORIAL_CLIPS = [
   "wysiwyg",
   "blocks",
@@ -62,7 +58,6 @@ export interface TutorialChapter {
   titleKey: TextKey;
 }
 
-/** One line of what to do. */
 export interface TutorialTask {
   key: TextKey;
   /** Its wording on a phone (taps, no shortcuts), where it differs. */
@@ -81,9 +76,7 @@ export interface TutorialStep {
    *  to work in, the card at its side. */
   layout: "overlay" | "card";
   titleKey: TextKey;
-  /** The one sentence under the title. */
   bodyKey: TextKey;
-  /** What to do, a line each. */
   tasks?: TutorialTask[];
   /** Its clip on the website's tutorials page, when it has one. */
   clip?: TutorialClipId;
@@ -193,9 +186,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     clip: "sidebar-export",
   },
   {
-    // The Settings › Textus AI provider controls, as they are there. Never
-    // a gate: leaving it decides whether the AI lessons are done for real
-    // or watched (useTutorial's aiMode).
+    // Never a gate: leaving it decides whether the AI lessons are done for real
+    // or watched.
     id: "connect",
     chapter: "connect",
     layout: "overlay",
@@ -302,17 +294,12 @@ export function stepIndexOf(id: TutorialStepId): number {
   return TUTORIAL_STEPS.findIndex((step) => step.id === id);
 }
 
-/** How the AI lessons run: for real with a connected AI ("live"), or
- *  watched ("watch"). Decided on leaving the connect lesson, null before
- *  that. */
+/** How the AI lessons run: for real with a connected AI, or watched.
+ *  Decided on leaving the connect lesson. */
 export type TutorialAiMode = "live" | "watch";
 
-/**
- * Where saved progress resumes, and in which AI mode. Read by `stepId`; one
- * this tour doesn't have (a damaged save, a step since removed) starts the
- * tour over. An AI lesson resumes only with its mode saved beside it;
- * without one the learner is asked about connecting again.
- */
+/** Where saved progress resumes, and in which AI mode. An unknown `stepId`
+ *  starts over; an AI lesson resumes only with its mode saved beside it. */
 export function resolveSavedProgress(saved: {
   stepId?: unknown;
   aiMode?: unknown;

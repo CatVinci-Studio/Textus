@@ -7,9 +7,8 @@ type Snapshot = {
   providers: Record<string, { models: Record<string, { status?: string }> }>;
 };
 
-// The TS mirror of catalog.rs is checked against the same models.dev
-// snapshot (scripts/sync-models.mjs) as the Rust side, so the two can't
-// drift onto models that no longer exist.
+// Checked against the same models.dev snapshot as the backend's catalog, so
+// neither drifts onto models that no longer exist.
 describe("provider catalog mirror", () => {
   const data = snapshot as Snapshot;
   for (const entry of FALLBACK_CATALOG) {

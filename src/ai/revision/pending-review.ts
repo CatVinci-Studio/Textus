@@ -6,13 +6,8 @@ import {
   type PendingPreview,
 } from "./pending-edit-plugin";
 
-/**
- * Going through the proposals one by one: the review bar's sentence by
- * sentence stops and its count, and Quick Ask's proposal by proposal
- * pointer. What is reviewed, its stops and its count are pure functions of
- * the previews; useReviewNavigation keeps the two pointers, by identity,
- * across changes to them.
- */
+/** Going through the proposals one by one: the review bar's stops and count,
+ *  and Quick Ask's per-proposal pointer. */
 
 /** One stop of the review bar: a changed sentence, or a whole proposal
  *  that isn't shown sentence by sentence (`index` -1). */
@@ -22,11 +17,8 @@ export interface ReviewStop {
   from: number;
 }
 
-/** What the review bar and the margin go through: the decidable previews,
- *  and the rewrites still streaming in sentence by sentence, whose
- *  completed changes are counted and shown as each one comes
- *  (PendingPreview.streamChanges) - they can be looked at, not decided
- *  yet. Top to bottom. */
+/** What the review bar and the margin go through, top to bottom: decidable
+ *  previews, and streaming rewrites whose completed changes can be looked at. */
 export function reviewedPreviews(previews: PendingPreview[]): PendingPreview[] {
   return previews
     .filter((p) => !p.streaming || p.streamChanges)
@@ -94,8 +86,6 @@ export function useReviewNavigation(previews: PendingPreview[]) {
   const derived = useMemo(() => {
     const reviewed = reviewedPreviews(previews);
     return {
-      // Ordered by document position, not arrival order, so Next reads top
-      // to bottom the way scrolling through the document would.
       decidable: orderForReview(previews),
       reviewed,
       reviewStops: reviewStopsOf(reviewed),
@@ -107,9 +97,8 @@ export function useReviewNavigation(previews: PendingPreview[]) {
     focused: null,
     stop: null,
   });
-  // Each pointer is kept where it was (nextFocusAfterChange) when the
-  // previews change - a proposal settled, or left through accept, reject or
-  // an edit under it - rather than sent back to the start.
+  // Each pointer keeps its place when the previews change, rather than going
+  // back to the start.
   const last = useRef({ order: [] as string[], stops: [] as string[] });
   useEffect(() => {
     const order = derived.decidable.map((p) => p.callId);
@@ -159,10 +148,8 @@ export function useReviewNavigation(previews: PendingPreview[]) {
         if (stop) pointAt(stop);
         return stop;
       },
-      /** Moves Quick Ask's pointer by `delta` (wrapping; a fresh pointer
-       *  starts at the first proposal either way) and returns what it now
-       *  points at - the caller reveals it at once: moving the pointer
-       *  doesn't change the navigable set, so there's nothing to wait for. */
+      /** Moves Quick Ask's pointer by `delta`, wrapping, and returns what it
+       *  now points at. */
       step(delta: 1 | -1): PendingPreview | null {
         if (decidable.length === 0) return null;
         const preview =

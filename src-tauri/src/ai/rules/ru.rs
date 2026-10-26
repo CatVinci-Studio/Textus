@@ -1,5 +1,5 @@
-//! Russian rules (CATALOGUE.md §3.10). Never flagged: `?..` and `!..`, ё
-//! either way, `«В бой!».` (a title that ends in ! inside a sentence).
+//! Russian rules. Never flagged: `?..` and `!..`, ё either way, `«В бой!».`
+//! (a title that ends in ! inside a sentence).
 
 use super::stats::minority;
 use super::text::*;

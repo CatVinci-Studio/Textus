@@ -1,13 +1,6 @@
-//! The public theme gallery (github.com/CatVinci-Studio/textus-themes),
-//! browsed from Settings › Editor & Appearance › More themes › Browse themes.
-//!
-//! Every request goes to one fixed place: the gallery repository's files on
-//! raw.githubusercontent.com. The frontend names a file by its path inside
-//! that repository, as the catalog gives it (`themes/<id>/theme.css`), never
-//! by URL, and a path is checked against the shape the gallery uses before
-//! it is joined to the base - so a catalog or a page can't point the app at
-//! another host, another repository, or anything but a theme's stylesheet
-//! and its screenshots. Nothing is fetched until the gallery page is opened.
+//! The public theme gallery, browsed from Settings. Every request goes to the
+//! gallery repository on raw.githubusercontent.com, by a path checked against
+//! the gallery's shape, so nothing can point the app at another host.
 
 use base64::Engine;
 use serde::{Deserialize, Serialize};
@@ -17,20 +10,19 @@ use std::time::Duration;
 const GALLERY_BASE: &str = "https://raw.githubusercontent.com/CatVinci-Studio/textus-themes/main/";
 const CATALOG_PATH: &str = "index.json";
 
-/// The gallery accepts a stylesheet up to 200 KB and screenshots up to 2 MB
-/// (its README); a little over each, so a file at the limit still loads.
+/// The gallery accepts a stylesheet up to 200 KB and screenshots up to 2 MB;
+/// a little over each, so a file at the limit still loads.
 const MAX_CATALOG_BYTES: usize = 1024 * 1024;
 const MAX_CSS_BYTES: usize = 256 * 1024;
 const MAX_PREVIEW_BYTES: usize = 2 * 1024 * 1024 + 64 * 1024;
 const MAX_PREVIEWS: usize = 2;
 
-/// Short: the page shows a spinner until this answers, and an offline
-/// machine should see the "couldn't reach" message, not a long wait.
+/// Short: an offline machine should see the "couldn't reach" message, not a
+/// long spinner.
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 
-/// One theme of the catalog, as the frontend gets it - generated into
-/// src/platform/bindings/app.ts.
+/// One theme of the catalog, as the frontend gets it.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -103,9 +95,8 @@ fn clip(text: &str, max_chars: usize) -> String {
     text.trim().chars().take(max_chars).collect()
 }
 
-/// The catalog's themes the app can show and install. An entry that is
-/// malformed, or names a file outside the gallery's shape, is left out
-/// rather than failing the whole list.
+/// The catalog's themes the app can show and install. A malformed entry is
+/// left out rather than failing the whole list.
 fn parse_catalog(bytes: &[u8]) -> Result<Vec<GalleryTheme>, String> {
     let root: Value = serde_json::from_slice(bytes).map_err(|_| "catalog is not JSON")?;
     let entries = root
@@ -181,11 +172,8 @@ fn without_strings(css: &str) -> String {
     out
 }
 
-/// The gallery's rule (its README): one self-contained file - no `@import`,
-/// and every `url()` a `data:` URI. A theme that breaks it would fetch from
-/// some server each time it is shown, so it isn't installed. Comments never
-/// count, and strings don't for `@import`; a `url("...")` target is a
-/// string, though, and is checked.
+/// The gallery's rule: one self-contained file, no `@import`, and every `url()`
+/// a `data:` URI, so a theme never fetches when shown. Comments never count.
 fn check_self_contained(css: &str) -> Result<(), String> {
     let code = without_comments(css).to_ascii_lowercase();
     if without_strings(&code).contains("@import") {
@@ -240,8 +228,7 @@ pub async fn theme_gallery_catalog() -> Result<Vec<GalleryTheme>, String> {
     parse_catalog(&bytes)
 }
 
-/// A gallery theme's stylesheet, by its catalog path. The frontend saves it
-/// with save_theme_css (commands/themes.rs), as Import CSS… does a file.
+/// A gallery theme's stylesheet, by its catalog path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn theme_gallery_css(path: String) -> Result<String, String> {
@@ -252,8 +239,8 @@ pub async fn theme_gallery_css(path: String) -> Result<String, String> {
     Ok(css)
 }
 
-/// A gallery screenshot, by its catalog path, as a `data:` URL - the page
-/// shows it in an `<img>` and never loads anything from the network itself.
+/// A gallery screenshot, by its catalog path, as a `data:` URL, so the page
+/// never loads from the network itself.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn theme_gallery_preview(path: String) -> Result<String, String> {

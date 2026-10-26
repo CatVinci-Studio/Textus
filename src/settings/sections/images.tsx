@@ -44,12 +44,9 @@ export function ImageStorageSection({ t }: { t: Strings }) {
   );
 }
 
-/** Where a saved document's images go: its own folder, or a subfolder
- *  named beside the choice. Under it, the link a paste writes - what
- *  "assets" means is clearer as the Markdown it produces than as a
- *  description. The name is kept as typed but only stored once the
- *  backend would take it, so a half-typed or refused name never reaches
- *  a paste. */
+/** Where a saved document's images go, with the link a paste writes shown
+ *  under it. A name is stored only once the backend would take it, so a
+ *  half-typed one never reaches a paste. */
 function ImageFolderRow({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const same = settings.imageFolder === SAME_FOLDER;
@@ -201,9 +198,7 @@ function TextFieldRow({
   value: string;
   onChange: (value: string) => void;
 }) {
-  // The field is named by the label alone: the "?" inside the <label>
-  // would otherwise be read as part of its name, or taken as what the
-  // <label> labels.
+  // Named by the label alone: the "?" sits inside the <label>.
   const id = useId();
   return (
     <label className="settings-row image-settings-row" htmlFor={id}>

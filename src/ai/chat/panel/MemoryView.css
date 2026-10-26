@@ -1,6 +1,5 @@
-/* The AI panel's Project tab (MemoryView.tsx): the project folder row, then
-   one section per thing the AI keeps - a title, a line saying what it is,
-   its quiet card - each set off from the next by a hairline. */
+/* The AI panel's Project tab: the project folder row, then one section per
+   thing the AI keeps, each set off from the next by a hairline. */
 .project-bar-memory {
   display: flex;
   flex-direction: column;

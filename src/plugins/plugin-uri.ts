@@ -5,11 +5,9 @@ import { showConfirm, showMessage } from "../ui/app-dialog";
 import { askPlugin, loadPlugins } from "./manager";
 
 /**
- * `textus://` links opened from outside Textus (src-tauri plugins/uri.rs):
- * - `textus://<plugin id>/<path>?<query>` for one plugin
- *   (textus.uri.registerHandler), which gets the path and the query;
- * - `textus://command/<command id>?<query>` runs a command, once the user
- *   says so - a link is anyone's to write.
+ * `textus://` links opened from outside: `textus://<plugin id>/<path>?<query>`
+ * goes to that plugin; `textus://command/<id>?<query>` runs a command once the
+ * user agrees, since a link is anyone's to write.
  */
 export type TextusUri =
   | {
@@ -80,9 +78,8 @@ function givePlugin(uri: Extract<TextusUri, { kind: "plugin" }>) {
 }
 
 /**
- * Takes the links waiting for this window and does what each says. One
- * nothing takes (no such plugin or command, turned off, no handler) is
- * said so.
+ * Takes the links waiting for this window and does what each says; one that
+ * nothing takes is reported.
  */
 export async function takePluginUris(): Promise<void> {
   // The plugins known first: a link can come before the window has them.

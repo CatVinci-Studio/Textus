@@ -1,35 +1,13 @@
-//! The in-app update check, on the channel chosen in Settings › General ›
-//! About Textus (`updateChannel`, src/settings/SettingsContext.tsx).
-//!
-//!   stable  tauri.conf.json's endpoint: the newest stable GitHub release's
-//!           textus-latest.json (never latest.json - see
-//!           scripts/updater-manifest.mjs).
-//!   beta    textus-beta.json on our own download bucket, which the release
-//!           workflow points at the newest release of any kind, release
-//!           candidates included: GitHub's `releases/latest` skips
-//!           pre-releases, so it can't serve them. The stable endpoint
-//!           follows as a fallback, so a bucket outage still leaves beta
-//!           users the stable updates.
-//!
-//! Either way an update must be newer than what is installed, so a beta
-//! user who switches back to Stable keeps the beta until a newer stable
-//! version exists (1.0.5 > 1.0.5-rc.2 in semver) - unless they ask to go
-//! back (`back_to_stable`): then a beta install is offered the newest
-//! stable release even though it is older. Only asked for, never by the
-//! background check.
-//!
-//! It replaces the JS `check()` of @tauri-apps/plugin-updater, which can't
-//! choose endpoints: it answers the same metadata, and the JS `Update`
-//! built from it downloads and installs through the plugin's own commands.
+//! The in-app update check on the chosen channel. Beta reads our bucket's
+//! manifest (GitHub's `releases/latest` skips pre-releases), then stable. Only
+//! newer versions are offered, except on an explicit `back_to_stable`.
 
 use semver::Version;
 use serde::Serialize;
 use tauri::{Manager, Runtime, Url, Webview};
 use tauri_plugin_updater::UpdaterExt;
 
-/// Where the beta channel's manifest lives. The website's
-/// functions/download/[[path]].js (CatVinci-Studio/levis-homepage) serves
-/// it with a short cache; release.yml uploads it.
+/// Where the beta channel's manifest lives; the release workflow uploads it.
 pub const BETA_MANIFEST_URL: &str = "https://textus.catvinci.com/download/textus-beta.json";
 
 /// The endpoints to ask, in order, for `channel` ("stable" or "beta"; an
@@ -56,17 +34,14 @@ pub fn is_back_to_stable(current: &Version, remote: &Version) -> bool {
     !current.pre.is_empty() && remote.pre.is_empty()
 }
 
-/// The manifest key an .rpm install updates from (scripts/updater-manifest.mjs):
-/// `linux-x86_64-rpm` or `linux-aarch64-rpm`. On those two architectures
-/// `std::env::consts::ARCH` is what tauri-plugin-updater puts in its keys.
+/// The manifest key an .rpm install updates from: `linux-x86_64-rpm` or
+/// `linux-aarch64-rpm`, matching the plugin's use of `std::env::consts::ARCH`.
 fn rpm_platform() -> String {
     format!("linux-{}-rpm", std::env::consts::ARCH)
 }
 
-/// Whether a release can update this install. Release candidates have no
-/// .rpm (RPM versions can't contain '-'), and without that entry the plugin
-/// would hand an .rpm install the AppImage, which it then refuses to
-/// install; such an install waits for the stable release instead.
+/// Whether a release can update this install. Release candidates have no .rpm
+/// (RPM versions can't contain '-'), and the plugin would hand an .rpm install the AppImage.
 fn serves_install(release: &tauri_plugin_updater::RemoteRelease, rpm_install: bool) -> bool {
     !rpm_install || release.download_url(&rpm_platform()).is_ok()
 }
@@ -76,9 +51,8 @@ fn is_rpm_install() -> bool {
         && tauri::utils::platform::bundle_type() == Some(tauri::utils::config::BundleType::Rpm)
 }
 
-/// The plugin's own check answer (tauri-plugin-updater's commands.rs
-/// `Metadata`), which the JS `Update` class is built from
-/// (`updater.check` in src/platform/ipc.ts).
+/// The plugin's own check answer (its `Metadata`), which the JS `Update` class
+/// is built from.
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -153,13 +127,9 @@ pub async fn check_for_update<R: Runtime>(
     }))
 }
 
-/// Just before the relaunch that applies an update: gives up the claim to
-/// be the running Textus. The relaunch starts the new process before this
-/// one ends, and the single-instance plugin lets go of its claim only on a
-/// clean exit - so the new process found it, handed its launch to this one
-/// and quit, and this one, about to end, opened a window for it (#349).
-/// Windows and Linux only, where the plugin is (Cargo.toml): macOS keeps
-/// one app running by itself.
+/// Just before the relaunch that applies an update: gives up the single-instance
+/// claim, which the plugin only drops on a clean exit, or the new process would
+/// hand its launch to this dying one. Windows and Linux only.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn release_instance<R: Runtime>(app: tauri::AppHandle<R>) {
@@ -221,7 +191,7 @@ mod tests {
 
     #[test]
     fn a_beta_goes_back_to_the_stable_release_only_when_asked() {
-        // Not by the ordinary check: 1.2.1 is older than the beta.
+        // Not by the ordinary check: a stable older than the beta.
         assert!(!is_update(&v("1.3.0-beta.1"), &v("1.2.1")));
         assert!(is_back_to_stable(&v("1.3.0-beta.1"), &v("1.2.1")));
         // Nor to another beta, nor from a stable install.
@@ -281,7 +251,7 @@ mod tests {
 
     #[test]
     fn switching_back_to_stable_never_downgrades() {
-        // On 1.0.5-rc.2, the stable manifest still says 1.0.4.
+        // On a release candidate, the stable manifest still names the older version.
         assert!(!is_update(&v("1.0.5-rc.2"), &v("1.0.4")));
         assert!(!is_update(&v("1.0.5"), &v("1.0.5")));
         assert!(!is_update(&v("1.0.5"), &v("1.0.5-rc.2")));

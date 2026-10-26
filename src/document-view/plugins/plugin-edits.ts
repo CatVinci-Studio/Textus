@@ -12,11 +12,9 @@ import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source
 import type { DocumentPlace } from "../../plugins/app-bridge";
 
 /**
- * A plugin's changes to the document in front, made at once
- * (textus.editor.edit): placed by block ids as Textus AI's are - each
- * against the document as the ones before it left it - and written in one
- * transaction, so one undo takes them all back. Nothing is written when
- * one of them can't be placed.
+ * A plugin's edits to the document in front, placed by block ids in order
+ * and written in one transaction (one undo). Nothing is written when one
+ * can't be placed.
  */
 export function applyPluginEdits(ctx: Ctx, edits: EditProposal[]): boolean {
   const view = ctx.get(editorViewCtx);
@@ -91,8 +89,7 @@ export function findPlace(
     if (heading) return heading.from + 1;
   }
   if (typeof place.line === "number") {
-    // Lines of the document's Markdown, as metadata and the outline count
-    // them: the block whose lines hold it.
+    // Markdown lines, as metadata and the outline count them.
     let line = 0;
     for (const block of blocks) {
       const lines = block.markdown.split("\n").length;
@@ -129,7 +126,7 @@ export function selectionText(ctx: Ctx): string {
 }
 
 /** A short name for the document's version: changes whenever its text
- *  does (textus.files.process, for a document open in a tab). */
+ *  does. */
 export function documentRevision(markdown: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < markdown.length; i++) {
@@ -141,8 +138,7 @@ export function documentRevision(markdown: string): string {
 
 /**
  * The document made to read `markdown`, as one undo step: only the blocks
- * that differ are written again - the ones before and after the change
- * stay as they are, the caret with them.
+ * that differ are rewritten, so the caret stays.
  */
 export function replaceDocument(ctx: Ctx, markdown: string): boolean {
   const view = ctx.get(editorViewCtx);

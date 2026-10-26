@@ -13,13 +13,9 @@ import {
 } from "./app-menu-model";
 
 /**
- * The app menu's top level laid out along the window bar - File, Edit,
- * View and the rest - where the app draws the frame (Windows, Linux) and
- * Settings › Editor & Appearance › Show the menu bar is on; otherwise the
- * menu is behind AppMenuButton's ☰. Each title opens its own list
- * (AppMenu's `section`); with one open, the pointer moving onto another
- * title or ← / → moves to that one, as a native menu bar does. A click
- * elsewhere or Escape closes it, and the focus goes back to where it was.
+ * The app menu's top level laid out along the window bar, where the app
+ * draws the frame and the menu bar setting is on. Behaves like a native
+ * menu bar: hover or ← / → move between open lists.
  */
 export function MenuBar({ checks }: { checks?: MenuChecks }) {
   const { t, settings } = useSettings();
@@ -41,16 +37,15 @@ export function MenuBar({ checks }: { checks?: MenuChecks }) {
     focusOnClose.current = null;
   }, []);
   // Round the titles and the open list both, so a click on a title isn't
-  // "outside" (AppMenuButton explains).
+  // "outside".
   const ref = useCloseOnOutsideClick<HTMLDivElement>(
     close,
     true,
     open !== null,
   );
 
-  // ← / → walk along the bar while a list is open. On the window, as the
-  // focus may be on the list or still on a title; a submenu's own ← / →
-  // stop before they get here (AppMenu's MenuList).
+  // ← / → walk the bar while a list is open; on the window, since the focus
+  // may be on a title.
   useWindowEvent("keydown", (e) => {
     const key = (e as KeyboardEvent).key;
     if (!open || (key !== "ArrowLeft" && key !== "ArrowRight")) return;

@@ -1,24 +1,6 @@
-//! The live eval's `conventions_clean` check: the deterministic rules
-//! engine (`src-tauri/src/ai/rules/`, built-in skills catalogue §3) run
-//! over the text an edit wrote, so "follows the writing conventions of its
-//! language and profile" is checked by the same code the grammar check and
-//! the `check_conventions` tool use, not by a second hand-written list.
-//!
-//! The engine is reached through a small adapter so this file compiles on
-//! its own: [`Engine`] is the one call the check needs, in the shape the
-//! catalogue specifies (§3.0 "API": `check(text, lang, profile, level) ->
-//! Vec<Finding>` per paragraph, offsets in Unicode scalars, `Finding {
-//! rule, start, end, original, suggestion, severity, fix, message }`), and
-//! [`engine`] returns the real one, or None while it isn't wired in. With
-//! no engine the check is named "... not checked (no rules engine)" and
-//! passes, so a run says plainly that it measured nothing instead of
-//! reporting a pass it didn't earn.
-//!
-//! What "clean" means (§5.10): no P0 or P1 findings in the changed text.
-//! P0 and P1 rules are the ones that run at the "standard" grammar level
-//! (P2 needs "strict"), so the check runs every changed paragraph at
-//! [`Level::Standard`] and counts every finding except `info` (document-level
-//! consistency notes, which a single edit can't be blamed for).
+//! The live eval's `conventions_clean` check: the rules engine run over the
+//! text an edit wrote, at the standard level, counting every finding but info.
+//! Without an engine the check's name says it measured nothing.
 
 use super::checks;
 
@@ -30,9 +12,8 @@ pub enum Severity {
     Info,
 }
 
-/// Whether a finding's suggestion may be applied without asking. (The
-/// check reads only some of a finding; the rest mirrors the engine's
-/// shape so the integration is a field-by-field conversion.)
+/// Whether a finding's suggestion may be applied without asking. (Fields the
+/// check doesn't read mirror the engine's shape.)
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Fix {
@@ -68,17 +49,14 @@ pub enum Level {
     Strict,
 }
 
-/// The rules engine as the check calls it: one paragraph of plain text,
-/// its language (`zh-Hans`, `zh-Hant`, `en`, `ja`, `ko`, `es`, `fr`, `de`,
-/// `ru`, `pt`), the conventions profile (`zh-Hans-CN/fiction`, `fr-FR`,
-/// `en-US/general` ...) and the level.
+/// The rules engine as the check calls it: one paragraph of plain text, its
+/// language, the conventions profile (`zh-Hans-CN/fiction`...) and the level.
 pub trait Engine: Sync {
     fn check(&self, text: &str, lang: &str, profile: &str, level: Level) -> Vec<Finding>;
 }
 
-/// The real rules engine (crate::ai::rules), behind the adapter: the
-/// paragraph is checked in the language the case names, under exactly the
-/// profile it names (as if chosen in Settings), with no library names.
+/// The real rules engine: the paragraph checked in the case's language, under
+/// exactly its profile, with no library names.
 struct RulesEngine;
 
 impl Engine for RulesEngine {
@@ -123,10 +101,9 @@ pub fn engine() -> Option<&'static dyn Engine> {
     Some(&RulesEngine)
 }
 
-/// The language code the engine takes, from a conventions profile:
-/// `zh-Hans-CN/fiction` -> `zh-Hans`, `zh-Hant-TW/gongwen` -> `zh-Hant`,
-/// `en-GB/govuk` -> `en`, `fr-CA` -> `fr`, `pt-BR/official` -> `pt`. A bare
-/// `zh` is Simplified, as Automatic treats it.
+/// The language code the engine takes, from a conventions profile
+/// (`zh-Hant-TW/gongwen` -> `zh-Hant`, `fr-CA` -> `fr`). A bare `zh` is
+/// Simplified.
 pub fn profile_lang(profile: &str) -> String {
     let tag = profile.split('/').next().unwrap_or("").trim();
     let mut parts = tag.split('-');
@@ -144,16 +121,14 @@ pub fn profile_lang(profile: &str) -> String {
     base
 }
 
-/// The whole blocks (blank-line separated) of `after` that an edit from
-/// `before` touched - the rules see complete paragraphs, not the fragment
-/// a diff happens to start in the middle of. Empty when nothing changed.
+/// The whole blocks of `after` that an edit from `before` touched, so the
+/// rules see complete paragraphs. Empty when nothing changed.
 pub fn changed_blocks(before: &str, after: &str) -> String {
     super::checks_builtin::changed_blocks(before, after).1
 }
 
-/// The prose paragraphs of a Markdown passage as the grammar check gets
-/// them (plain text, inline syntax gone), leaving out what the engine never
-/// checks: fenced code, display math, front matter, tables and raw HTML.
+/// The prose paragraphs of a Markdown passage as plain text, leaving out what
+/// the engine never checks: code, display math, front matter, tables, HTML.
 pub fn prose_paragraphs(markdown: &str) -> Vec<String> {
     let mut out = Vec::new();
     let mut in_fence = false;

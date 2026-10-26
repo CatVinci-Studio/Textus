@@ -1,10 +1,7 @@
 /**
- * JSON-RPC 2.0 over a MessagePort - what the window (broker.ts), a
- * plugin's host and its webviews speak to each other.
- *
- * The frames get this same function as source text (frames.ts puts
- * `createEndpoint.toString()` into them), so it must stay self-contained:
- * nothing from outside its body, no imports, no helpers.
+ * JSON-RPC 2.0 over a MessagePort, between the window, a plugin's host and its
+ * webviews. The frames get this function as source text, so it must stay
+ * self-contained: no imports, nothing from outside its body.
  */
 
 export type Handlers = Record<string, (params: never) => unknown>;

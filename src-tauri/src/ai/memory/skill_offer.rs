@@ -1,10 +1,6 @@
 //! A task worth doing again, offered as a skill: after an exchange whose
-//! request was a procedure of its own - several particular requirements
-//! for a kind of task the user is likely to ask for again (a house style
-//! for translations, a checklist for weekly reports) - one small request
-//! decides whether to offer it, and the chat shows the offer under the
-//! reply. Saved (save_offered_skill), it is a skill like any other, in the
-//! `/` menu from then on. Nothing is saved unasked.
+//! request was a procedure of its own, one small request decides whether to
+//! offer it. Nothing is saved unasked.
 
 use super::*;
 use crate::ai::workspace::{skill_file_path, AgentSkill};

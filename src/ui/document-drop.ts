@@ -1,10 +1,6 @@
-/**
- * Something dragged over the documents from elsewhere in the window - a
- * file from the sidebar's tree - and let go there. The window shell says
- * what that does (app/split/split-drop.ts: show where it would open, then open
- * it there); what is dragged only asks, so it needs to know nothing of
- * tabs or splits.
- */
+/** Something dragged over the documents from elsewhere in the window and let
+ *  go there. The window shell decides what that does, so what is dragged
+ *  needs to know nothing of tabs or splits. */
 export interface DocumentDrop {
   /** The pointer is at (x, y): shows where a drop would open; false when
    *  it isn't over the documents. */

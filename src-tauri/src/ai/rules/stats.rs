@@ -1,8 +1,6 @@
-//! How a text writes the conventions that sources disagree on - CJK-Latin
-//! spacing, quote systems, French spacing, dash and ellipsis forms,
-//! percent spacing, register - counted over the whole document (or, in the
-//! grammar check, the paragraph). Automatic follows the majority and flags
-//! only the minority, and only when the majority is clear ([`minority`]).
+//! How a text writes the conventions sources disagree on, counted over the
+//! document (or paragraph). Automatic follows the majority and flags only a
+//! clear minority.
 
 use super::detect::Lang;
 use super::text::*;

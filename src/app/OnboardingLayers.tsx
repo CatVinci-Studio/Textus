@@ -9,8 +9,7 @@ import { Presence } from "../ui/usePresence";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import type { Strings } from "../i18n/strings";
 
-// The tour runs once, on first launch: it loads when it starts - warm, so
-// it usually has by then - and is no weight on every later start.
+// The tour runs once, on first launch, so it loads only when it starts.
 const TutorialExperience = lazyComponent(
   lazyModule("tutorial", () => import("../onboarding/TutorialExperience"), {
     warm: true,

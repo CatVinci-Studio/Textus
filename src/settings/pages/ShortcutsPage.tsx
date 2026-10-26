@@ -21,9 +21,8 @@ export function ShortcutsPage({
     settings.commandShortcuts[command.id] ?? command.shortcut ?? "";
   return (
     <>
-      {/* Most used first: finding - in the document, then among the
-            folder's file names - and moving between tabs, then the
-            panels and modes of the window, then the AI's keys. */}
+      {/* Most used first: finding, moving between tabs, the window's panels
+            and modes, then the AI's keys. */}
       {(
         [
           [

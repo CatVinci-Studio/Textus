@@ -1,8 +1,6 @@
-//! Whole-document checks: the Markdown parsed with pulldown-cmark into
-//! blocks of prose (code, math, front matter, HTML and link targets never
-//! reach a rule), each checked in its own language with the document's
-//! convention counts, plus the rules only a document has - heading
-//! structure, image alt text, link text, the 公文 title/body pair.
+//! Whole-document checks: the Markdown parsed into blocks of prose (code, math,
+//! front matter, HTML never reach a rule), each in its own language, plus the
+//! rules only a document has: headings, image alt text, link text, 公文.
 
 use super::detect::{self, Lang};
 use super::messages;
@@ -227,11 +225,9 @@ fn script_family(text: &str) -> Option<u8> {
     (score > 0).then_some(family)
 }
 
-/// A block's language: its own when it says so clearly, else the
-/// document's. A short block in the document's script is the document's
-/// language (a Japanese heading of kanji isn't Chinese, an English
-/// document's two-word line isn't French); kana makes Chinese text
-/// Japanese only when there is enough of it.
+/// A block's language: its own when it says so clearly, else the document's.
+/// A short block in the document's script is the document's language (a
+/// Japanese heading of kanji isn't Chinese).
 fn block_language(text: &str, doc_lang: Option<Lang>) -> Option<Lang> {
     let letters = text.chars().filter(|c| c.is_alphabetic()).count();
     let own = detect::detect(text);
@@ -280,11 +276,9 @@ pub struct DocReport {
     pub findings: Vec<Finding>,
 }
 
-/// Checks a whole Markdown document: every block in its own language, the
-/// convention counts of the whole document behind Automatic's majority, and
-/// the document-level rules. Offsets are chars into `markdown`; `line` is
-/// set. A suggestion whose span crosses Markdown syntax (the source text
-/// isn't the finding's text) is dropped, keeping the finding as a flag.
+/// Checks a whole Markdown document: every block in its own language, with the
+/// whole document's convention counts. Offsets are chars into `markdown`. A
+/// suggestion whose span crosses Markdown syntax is dropped, the flag kept.
 pub fn check_document(
     markdown: &str,
     conv: &Conventions,

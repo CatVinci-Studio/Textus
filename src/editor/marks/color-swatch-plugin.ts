@@ -28,16 +28,13 @@ interface SwatchState {
 const key = new PluginKey<SwatchState>("color-swatch");
 
 /** A block whose text can hold colour codes: a code block, or one that
- *  isn't code at all - not front matter or block math. */
+ *  isn't code at all. */
 const isSwatchBlock = (node: ProseNode) =>
   node.isTextblock && (!node.type.spec.code || node.type.name === "code_block");
 
 function codeSwatch(color: string, pos: number): Decoration {
-  // Inside the span, before its text: the caret's way across a span is
-  // enclosure.ts's (it hops between outside and inside on its own), so
-  // no native caret move ever has to step over this element. Before the
-  // span, in the paragraph, it sat in the native step to and from the
-  // text before - where WebKit stalls on uneditable content.
+  // Inside the span, before its text, where no native caret move has to step
+  // over it: before the span, WebKit stalled on the uneditable element.
   return Decoration.widget(
     pos + 1,
     () => {
@@ -52,8 +49,8 @@ function codeSwatch(color: string, pos: number): Decoration {
   );
 }
 
-// One character, which no other decoration (a find match, a syntax
-// token) can split into pieces that each draw a swatch.
+// One character, which no other decoration can split into pieces that each
+// draw a swatch.
 const textSwatch = (from: number, color: string) =>
   Decoration.inline(
     from,
@@ -71,15 +68,10 @@ interface Run {
 }
 
 /**
- * A block's swatches, for a mode that isn't "off". A code block's colour
- * literals outside its comments, short hex included. Inline code that is
- * all one colour.
- * With "everywhere", also the colour codes in the block's text, read as
- * one string, so whether a code stands as a token of its own is judged by
- * what really stands beside it, across bold or italic. Only the block's
- * own text can hold one: a link's text (an autolinked URL among them) is
- * read but never matched, and inline code, wikilinks, math, images and
- * raw HTML read as OPAQUE.
+ * A block's swatches: a code block's literals outside its comments, and
+ * inline code that is one colour. With "everywhere", also codes in the
+ * block's own text, read as one string across bold or italic so neighbours
+ * are judged truly; link text is read but never matched.
  */
 function swatches(
   mode: ColorSwatchMode,
@@ -142,8 +134,8 @@ function build(doc: ProseNode, mode: ColorSwatchMode): SwatchState {
   };
 }
 
-/** `set` with the blocks around `ranges` - what an IME composition
- *  changed - drawn again, once it has ended. */
+/** `set` with the blocks around what an IME composition changed drawn
+ *  again, once it has ended. */
 function redrawAround(
   mode: ColorSwatchMode,
   set: DecorationSet,
@@ -173,10 +165,8 @@ export function colorSwatchPlugin(mode: () => ColorSwatchMode): Plugin {
           tr.mapping.map(from, -1),
           tr.mapping.map(to, 1),
         ]);
-        // A swatch drawn or dropped mid-composition splits or joins the
-        // text node the IME is writing into (the swatch's character is a
-        // <span> of its own), which aborts or doubles the preedit on
-        // WebKitGTK; what the composition changes waits for its end.
+        // A swatch drawn mid-composition splits the text node the IME writes into,
+        // which aborts or doubles the preedit on WebKitGTK; it waits for the end.
         if (tr.getMeta("composition"))
           return tr.docChanged
             ? {
@@ -211,14 +201,9 @@ export function colorSwatchPlugin(mode: () => ColorSwatchMode): Plugin {
 }
 
 /**
- * Settings › Editor & Appearance › Swatches before colour codes (#146),
- * off by default: a small square of the colour before a colour code. "In
- * code only" draws it in inline code that is one colour and before the
- * colour literals of code blocks; "Everywhere" also before `#ff8800` or
- * `rgb(0 128 255)` written in a paragraph, heading, list item or table
- * cell. Decorations only, never text: nothing of them is saved, copied or
- * exported. Redrawn per block around what an edit touched; MilkdownEditor
- * sends an empty transaction when the setting changes.
+ * A small square of the colour before a colour code: "In code only" in
+ * inline code and code blocks, "Everywhere" in text too. Decorations only,
+ * never saved, copied or exported.
  */
 export function createColorSwatchPlugin(options: {
   mode: () => ColorSwatchMode;

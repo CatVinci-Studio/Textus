@@ -9,14 +9,10 @@ import {
   quickReplyExpands,
 } from "./chat-body-types";
 
-/**
- * The chat body's state, a concern each (ChatBody.tsx): the reply as it
- * is drawn, Quick Ask's answer shown whole or not, the proposals a
- * streaming reply brings, and the messages queued behind it.
- */
+/** The chat body's state, one hook per concern. */
 
-/** The in-flight exchange as drawn: its prose paced onto the screen
- *  (useRevealedText). The conversation keeps the text as received. */
+/** The in-flight exchange as drawn, its prose paced onto the screen. The
+ *  conversation keeps the text as received. */
 export function useRevealedStream(
   received: ChatBodyProps["conversation"]["streaming"],
 ) {
@@ -66,11 +62,8 @@ export function useQuickExpanded(
   return { quickExpanded, toggleQuickExpanded };
 }
 
-/** Streamed turns become pending previews the moment they land, not when
- *  the whole exchange resolves - a propose_edit shows up in the document
- *  while the agent loop is still running. afterSend re-extracts the same
- *  proposals afterwards; showPreviews adds are idempotent per callId, so
- *  the second pass is a no-op for anything already shown here. */
+/** Streamed turns become pending previews the moment they land. The pass
+ *  after the send repeats them, a no-op since adds are idempotent per callId. */
 export function useStreamedProposals(
   streaming: { turns: AgentTurn[] } | null | undefined,
   onProposals: ChatBodyProps["onProposals"],
@@ -90,9 +83,8 @@ export function useStreamedProposals(
   }, [turns, handler]);
 }
 
-/** Messages sent while a reply is coming (MessageQueue), sent in turn by
- *  `sendNext` once nothing is in flight. A failed reply (no turns) pauses
- *  them until Continue. */
+/** Messages sent while a reply is coming, sent in turn by `sendNext` once
+ *  nothing is in flight. A failed reply pauses them until Continue. */
 export function useMessageQueue(
   busy: boolean,
   sendNext: (next: QueuedMessage) => Promise<AgentTurn[] | undefined>,

@@ -222,8 +222,8 @@ fn a_fact_about_an_entry_is_added_to_it_and_replaces_rewrites_it() {
     let mut cold = args("fact", None, "林晚性子冷，开口只有三五个字。");
     cold.name = Some("林晚".into());
     let first = dirs.remember(cold, &source(), NOW).unwrap();
-    // Named for the change, with her name as an alias (GPT, 1.2.0-rc.6):
-    // more about her, in her entry, what was true before kept.
+    // Named for the change, with her name as an alias: it goes into her entry,
+    // what was true before kept.
     let mut changed = args("fact", None, "从第四章开始，林晚话多了起来。");
     changed.name = Some("林晚的性格变化".into());
     changed.aliases = vec!["林晚".into()];
@@ -311,8 +311,7 @@ fn the_prompt_budget_counts_characters_and_keeps_the_project_first() {
     let base = scratch("cap");
     let dirs = dirs(&base);
     // 1,500 Chinese characters each: 4,500 bytes, but 1,500 against the
-    // 4,000-character budget - two fit, the third doesn't. (Written
-    // by hand: the tool keeps a memory under MAX_TEXT_CHARS.)
+    // 4,000-character budget, so two fit. Written by hand, past MAX_TEXT_CHARS.
     for (i, scope) in ["personal", "project", "project"].iter().enumerate() {
         let text = format!("{i}{}", "字".repeat(1_499));
         let dir = dirs

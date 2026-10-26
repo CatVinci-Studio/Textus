@@ -1,11 +1,6 @@
-//! New document, new folder and move, from the sidebar's file tree
-//! (src/sidebar/FileTree.tsx) on the desktop. The iPhone keeps its own
-//! document list (documents.rs).
-//!
-//! Nothing here overwrites or deletes: a name already taken is refused,
-//! creating uses create-new semantics, and a move or rename is one rename
-//! that fails rather than replaces. A folder can't move into itself. What
-//! the user removes goes to the system's Trash, where it can be put back.
+//! New document, new folder, move, rename and trash for the sidebar's file
+//! tree. Nothing here overwrites or deletes: a taken name is refused, and what
+//! the user removes goes to the Trash.
 
 use std::path::{Path, PathBuf};
 use tokio::fs;
@@ -106,10 +101,8 @@ pub async fn tree_move_entry(path: String, into: String) -> Result<String, Strin
     Ok(to.to_string_lossy().to_string())
 }
 
-/// Gives a file or folder a new name in the folder it is in. A document
-/// renamed without an extension keeps being a document (`.md` added, as
-/// tree_create_document does); a folder takes the name as typed. Returns
-/// its new path.
+/// Gives a file or folder a new name in its folder. A document renamed without
+/// an extension gets `.md`; a folder takes the name as typed. Returns its new path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_rename_entry(path: String, name: String) -> Result<String, String> {

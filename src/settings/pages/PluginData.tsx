@@ -18,8 +18,8 @@ export function sizeText(bytes: number): string {
   return `${n < 10 ? n.toFixed(1) : Math.round(n)} ${units[i]}`;
 }
 
-/** What the plugin keeps (store.rs), for every document and in the open
- *  project, and a way to empty it; nothing while it keeps nothing. */
+/** What the plugin keeps, for every document and in the open project, and
+ *  a way to empty it; nothing while it keeps nothing. */
 export function PluginData({
   id,
   name,

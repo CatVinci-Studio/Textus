@@ -18,12 +18,9 @@ type Item =
   | { kind: "model"; provider: string; model: string };
 
 /**
- * The composer's mode and model in one control: "Write · gpt-6.1-sol". Its
- * list holds the modes, each with a line on what it does, and under them
- * the models of every provider set up in Settings, grouped by provider -
- * one list, one set of keys, as a Select's (ui/Select.tsx, whose look it
- * shares). Without `models` (Quick Ask, or nothing to switch to) it is the
- * mode alone.
+ * The composer's mode and model in one control: "Write · gpt-6.1-sol". One
+ * list holds the modes, then the models grouped by provider. Without
+ * `models` it is the mode alone.
  */
 export function ModePicker({
   mode,
@@ -240,8 +237,8 @@ export function ModePicker({
   );
 }
 
-/** The picker with the models of Settings › Textus AI under the modes: for
- *  the panel and the chat window, where the model can be switched. */
+/** The picker with the models under the modes, where the model can be
+ *  switched. */
 export function ModeAndModelPicker(
   props: Omit<Parameters<typeof ModePicker>[0], "models">,
 ) {

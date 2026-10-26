@@ -30,9 +30,8 @@ export function useSaveTabs(opts: {
   const { tabState, t, autoSuggestFilename, imageFolder } = opts;
   const { liveTabs, updateTab, tabsRef } = tabState;
 
-  // Writes a document, or says why it couldn't and resolves false - the tab
-  // stays dirty, so nothing is lost. A failed save used to be silent: the
-  // unsaved dot simply stayed, and a read-only file gave no reason at all.
+  // Writes a document, or says why it couldn't and resolves false; the tab
+  // stays dirty, so nothing is lost.
   const writeOrReport = useCallback(
     async (path: string, content: string): Promise<boolean> => {
       try {
@@ -56,11 +55,8 @@ export function useSaveTabs(opts: {
     [t],
   );
 
-  // Resolves true only when the document actually reached disk - the close
-  // prompt must not close the window (or remove the tab) when a save-as
-  // dialog was cancelled.
-  // Always asks where to write, regardless of whether the document already
-  // has a path - File > Save As…, and the "first save of a draft" case.
+  // Always asks where to write. Resolves true only when the document reached
+  // disk, so a cancelled dialog doesn't close the tab.
   const saveTabAs = useCallback(
     async (tabId: string): Promise<boolean> => {
       const tab = liveTabs().find((tb) => tb.id === tabId);
@@ -80,20 +76,15 @@ export function useSaveTabs(opts: {
           ));
       const picked = await fs.saveFileDialog(defaultName, fromWord?.dir);
       if (!picked) return false;
-      // Markdown written into a .docx would destroy the Word document - the
-      // one this was opened from, most likely.
+      // Markdown written into a .docx would destroy the Word document.
       if (isWordDocument(picked)) {
         await showMessage(t.wordSaveRefused, { tone: "warning" });
         return false;
       }
       if (!(await writeOrReport(picked, tab.content))) return false;
       void session.addRecentFile(picked);
-      // First save of a draft: any pasted images it holds live in the app's
-      // data dir with an absolute src (fs.rs's save_pasted_image) - now that
-      // the document has a real home, move them into its image folder and
-      // rewrite the markdown to relative paths (4.2). Saved as a file in
-      // another folder, its relative images are copied along the same way.
-      // A no-op for documents with neither.
+      // Pasted images in a first-saved draft move into its image folder with
+      // relative paths; saved to another folder, relative images are copied.
       let { content } = tab;
       try {
         const migration = await migrateDraftImages(
@@ -127,8 +118,7 @@ export function useSaveTabs(opts: {
         // Image migration rewrote the markdown: the editor has to load it.
         ...(content !== tab.content ? { reloadKey: tab.reloadKey + 1 } : {}),
       });
-      // The document goes on under its new name, and its past
-      // conversations with it.
+      // Its past conversations follow it to the new name.
       if (tab.path) moveConversations(tab.path, picked);
       emitPluginEvent("didSave", { path: picked, text: content });
       return true;
@@ -136,11 +126,8 @@ export function useSaveTabs(opts: {
     [updateTab, liveTabs, t, autoSuggestFilename, imageFolder, writeOrReport],
   );
 
-  // A save that reached disk: the tab turns clean and takes the file's new
-  // mtime. tabsRef is patched as well as the state, so a save of the same
-  // tab right behind this one (an autosave, a close) compares the disk
-  // against this write's mtime - the state only reaches tabsRef on the next
-  // render, and the old mtime would make our own write look external.
+  // tabsRef is patched as well as the state, so a save right behind this one
+  // compares against this write's mtime and doesn't see it as external.
   const commitSaved = useCallback(
     async (tabId: string, path: string, content: string) => {
       const patch = { savedContent: content, diskMtime: await statMtime(path) };
@@ -154,17 +141,14 @@ export function useSaveTabs(opts: {
     [tabsRef, updateTab],
   );
 
-  // Writes a document that already has a file. "conflict": the file changed
-  // on disk and the user chose to keep that version. `auto`: an autosave
-  // asked, so the prompt starts on Cancel - the user didn't ask to save.
+  // "conflict": the file changed on disk and the user kept that version.
+  // `auto`: the prompt starts on Cancel, since the user didn't ask to save.
   const saveToPath = useCallback(
     async (tabId: string, auto: boolean): Promise<SaveOutcome> => {
       const tab = liveTabs().find((tb) => tb.id === tabId);
       if (!tab?.path) return "skipped";
-      // The file changed on disk since it was read (another app, git, a sync
-      // service): saving now would silently destroy those changes, so ask.
-      // A null current mtime means the file was deleted - writing simply
-      // recreates it, nothing to protect.
+      // Changed on disk since it was read: ask before overwriting. A null
+      // mtime means it was deleted, and writing recreates it.
       if (tab.diskMtime !== null) {
         const current = await statMtime(tab.path);
         if (current !== null && current !== tab.diskMtime) {
@@ -207,8 +191,7 @@ export function useSaveTabs(opts: {
     async (tabId: string): Promise<boolean> => {
       const tab = liveTabs().find((tb) => tb.id === tabId);
       if (!tab) return false;
-      // Draft never saved before: ask where to put it, then this document
-      // graduates into a real file (the sidebar tree picks up its folder).
+      // Never saved: ask where to put it.
       if (!tab.path) return saveTabAs(tabId);
       return (
         (await serialized(tabId, () => saveToPath(tabId, false))) === "saved"
@@ -217,10 +200,8 @@ export function useSaveTabs(opts: {
     [liveTabs, saveTabAs, saveToPath, serialized],
   );
 
-  /** Settings › General › Save Automatically: File > Save for a document
-   *  that already has a file and has changed - never a Save As. A conflict
-   *  or a failure shows the same prompt or error a manual save does;
-   *  document/autosave.ts sees that it is shown once. */
+  /** Autosave: File > Save for a changed document that has a file, never a
+   *  Save As. Conflicts and failures prompt as a manual save does. */
   const autosaveTab = useCallback(
     (tabId: string): Promise<SaveOutcome> =>
       serialized(tabId, async () => {
@@ -235,10 +216,8 @@ export function useSaveTabs(opts: {
 }
 
 /**
- * The text to save once the plugins listening (textus.files.onWillSave)
- * have changed it - put into the editor first, as one undo step, so what
- * is saved is what shows. A document with no editor to take the change
- * (Source Mode) is saved as it is.
+ * The text to save once onWillSave plugins have changed it, put into the
+ * editor first as one undo step so what is saved is what shows.
  */
 async function beforeSave(path: string, text: string): Promise<string> {
   if (!hasWillSave()) return text;

@@ -3,18 +3,14 @@ import type { GalleryTheme_Serialize as GalleryThemeAnswer } from "../platform/b
 import type { UserThemeMeta } from "../settings/SettingsContext";
 import { saveUserTheme } from "./theme-import";
 
-/// The public theme gallery (github.com/CatVinci-Studio/textus-themes):
-/// what Settings › Extensions › Themes lists, and installing one of its themes as
-/// a user theme - the same kind Import CSS… makes, remembering which gallery
-/// theme it came from so a newer version shows as an update.
+/// The public theme gallery: what Settings lists, and installing a theme as a
+/// user theme that remembers its source, so a newer version shows as an update.
 
-/** One theme of the gallery's catalog, as theme_gallery_catalog answers -
- *  generated from `GalleryTheme` in src-tauri/src/commands/theme_gallery.rs. */
+/** One theme of the gallery's catalog. */
 export type GalleryTheme = GalleryThemeAnswer;
 
 export type GalleryStatus = "install" | "installed" | "update";
 
-/** The user theme installed from this gallery theme, if there is one. */
 export function installedCopy(
   theme: GalleryTheme,
   userThemes: UserThemeMeta[],

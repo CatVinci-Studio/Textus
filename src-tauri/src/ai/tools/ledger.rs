@@ -48,10 +48,9 @@ impl ProposalLedger {
         }
     }
 
-    /// What becomes of the picture lines in `text`, for its result: each
-    /// now reads `textus-generated:ID` in the call the model sees again.
-    /// Unexplained, DeepSeek and MiniMax took that for an id they had made
-    /// up, and spent the rest of the request trying to fix it.
+    /// What becomes of the picture lines in `text`, for its result: each now reads
+    /// `textus-generated:ID`. Unexplained, models took that for an invented id and
+    /// spent the request trying to fix it.
     pub fn pictures_placed(&self, text: &str) -> String {
         let placed = self
             .pictures
@@ -128,13 +127,9 @@ impl ProposalLedger {
     }
 }
 
-/// A passage one of this request's proposals replaces or deletes: where it
-/// sits in the document when the anchor (or its disambiguating context)
-/// is found there verbatim, and the quoted text either way. Two proposals
-/// overlap when their spans intersect - two fixes of the same repeated
-/// word in one paragraph, pinned by overlapping contexts, are different
-/// passages - and, where a span couldn't be placed, when one quote
-/// contains the other.
+/// A passage one of this request's proposals replaces or deletes: its span
+/// when the quote is found verbatim, and the quoted text. Two overlap when
+/// their spans intersect or, unplaced, when one quote contains the other.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ProposedPassage {
     /// Byte range in the document.

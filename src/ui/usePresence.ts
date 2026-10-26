@@ -13,16 +13,9 @@ import {
 } from "react";
 
 /**
- * Exits. A surface that React would unmount the moment it closes stays in
- * the DOM a little longer, marked data-state="closing", so its stylesheet
- * can play it out - a menu shrinking back into its button, a sheet going
- * down. Entrances need nothing from here: they are keyframes that run when
- * the element mounts.
- *
- * While closing it is `inert`: no clicks (they land on what is underneath),
- * no focus, nothing for a screen reader. Nothing ever waits for the exit -
- * focus goes back where it came from as the exit starts (useModalDialog),
- * and a choice made in a menu has already run.
+ * Exits: a surface stays mounted a little after it closes, marked
+ * data-state="closing" and `inert`, so its stylesheet can play it out.
+ * Entrances need nothing from here. Nothing ever waits for the exit.
  */
 
 export type PresenceState = "open" | "closing";
@@ -35,10 +28,8 @@ export interface PresenceHandle {
   ref: (el: Element | null) => void;
 }
 
-/** The finite animations running in the element and its subtree: the exit
- *  its closing style just started - a scrim fading while its sheet goes
- *  down counts as one. Loops (a spinner, the thinking dots) are left out.
- *  Null without the Web Animations API. */
+/** The finite animations running in the element and its subtree; loops are
+ *  left out. Null without the Web Animations API. */
 function runningExit(el: Element): Animation[] | null {
   if (typeof el.getAnimations !== "function") return null;
   return el.getAnimations({ subtree: true }).filter((animation) => {
@@ -61,14 +52,8 @@ function hasExit(el: Element): boolean {
   return animated || transitioned;
 }
 
-/**
- * `open` as it should be on screen: true at once when it opens, and on
- * close still mounted - state "closing" - until the element's exit has
- * played. It leaves at the first of: the exit animations in it ending,
- * `exitMs` (plus a margin) passing, or straight away when no exit runs at
- * all - reduced motion without one, or a stylesheet that turned animation
- * off (the e2e helpers), so nothing ever waits on an event that won't come.
- */
+/** `open` as it should be on screen: on close it stays mounted, "closing",
+ *  until its exit animations end, `exitMs` passes, or at once when none runs. */
 export function usePresence(
   open: boolean,
   { exitMs = 200 }: { exitMs?: number } = {},
@@ -131,12 +116,8 @@ export function usePresence(
 
 const PresenceContext = createContext<PresenceHandle | null>(null);
 
-/**
- * Wraps a conditionally rendered surface - `{open && <Menu/>}` becomes
- * `<Presence show={open}>{open && <Menu/>}</Presence>` - and keeps showing
- * the last thing it rendered while that plays its exit. The surface takes
- * its exit wiring from usePresenceProps.
- */
+/** Wraps a conditionally rendered surface and keeps showing the last thing it
+ *  rendered while that plays its exit: `<Presence show={open}>{open && <Menu/>}</Presence>`. */
 export function Presence({
   show,
   exitMs,
@@ -150,9 +131,8 @@ export function Presence({
   const presence = usePresence(show, { exitMs });
   const last = useRef<ReactNode>(null);
   if (show) last.current = children;
-  // Opened again while its exit plays: a fresh copy, not the one going
-  // out - it mounts as it always did (autoFocus, mount effects, its own
-  // state reset), and its entrance starts over anyway.
+  // Opened again while its exit plays: a fresh copy, so it mounts as it always
+  // did (autoFocus, mount effects, state reset).
   const generation = useRef(0);
   const wasLeaving = useRef(false);
   if (show && wasLeaving.current) generation.current += 1;
@@ -175,12 +155,8 @@ export function usePresenceState(): PresenceState {
   return useContext(PresenceContext)?.state ?? "open";
 }
 
-/**
- * The props for a surface's root element inside a Presence: the ref that
- * times its exit, `data-state` for the stylesheet, and `inert` while it
- * closes. `ownRef` is merged in when the root already has a ref of its own.
- * Outside a Presence the surface is simply open.
- */
+/** The props for a surface's root inside a Presence: the exit-timing ref,
+ *  `data-state` and `inert` while closing. `ownRef` is merged in. */
 export function usePresenceProps<T extends Element>(ownRef?: Ref<T>) {
   const presence = useContext(PresenceContext);
   const state = presence?.state ?? "open";

@@ -60,8 +60,8 @@ const doc = n.doc.create(null, [
   n.paragraph.create(null, n.image.create({ src: "a.png", title: null })),
 ]);
 
-/** A runner over a bare state, standing in for the editor's: the menu's
- *  commands only reach for the view's state, dispatch and focus. */
+/** A runner over a bare state: the menu's commands only reach for the
+ *  view's state, dispatch and focus. */
 function editorAt(position: (state: EditorState) => EditorState) {
   const view = {
     state: position(EditorState.create({ doc })),

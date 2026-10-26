@@ -2,12 +2,8 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::Manager;
 
-/// Recently opened files and folders, backing File > Open Recent. Each list
-/// is persisted as a plain JSON array (most recent first) next to
-/// prefs.json, so the menu survives restarts. The frontend reports every
-/// successful open/save-as via add_recent_file and every File > Open Folder
-/// via add_recent_folder; the Rust side owns the lists and the menu that
-/// mirrors them (menu.rs's rebuild_recent_menu).
+/// Recently opened files and folders, backing File > Open Recent. Each list is
+/// a JSON array (most recent first) next to prefs.json; Rust owns the lists and the menu.
 const MAX_RECENT_FILES: usize = 10;
 /// Fewer folders than files: a writer keeps a handful of projects, and they
 /// sit above the files in the same submenu.

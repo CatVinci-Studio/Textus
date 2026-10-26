@@ -1,13 +1,11 @@
-//! The folder the sidebar is opened on (File > Open Folder…) and the index
-//! behind its file-name search. The frontend half is src/app/useOpenFolder.ts
-//! and src/sidebar/FileSearch.tsx.
+//! The folder the sidebar is opened on, and the index behind its file-name search.
 
 use crate::ai::project::is_too_broad;
 use crate::walk::{walk, Limits, LIMITS};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
-/// One indexed file - generated into src/platform/bindings/files.ts.
+/// One indexed file.
 #[derive(Serialize, Debug, PartialEq)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct IndexedFile {
@@ -17,7 +15,6 @@ pub struct IndexedFile {
     rel: String,
 }
 
-/// Generated into src/platform/bindings/files.ts.
 #[derive(Serialize, Debug)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct FolderIndex {
@@ -26,8 +23,7 @@ pub struct FolderIndex {
     truncated: bool,
 }
 
-/// Every file under `root`, the way fd finds them - see crate::walk, which
-/// the AI's project tools walk with too.
+/// Every file under `root`, the way fd finds them (see crate::walk).
 fn index(root: &Path, limits: &Limits) -> FolderIndex {
     let walk = walk(root, limits, |_| true);
     FolderIndex {
@@ -43,9 +39,8 @@ fn index(root: &Path, limits: &Limits) -> FolderIndex {
     }
 }
 
-/// The files under `root`, for the sidebar's file-name search. Refuses the
-/// home folder and a drive root ("TOO_BROAD"), as the AI's project folder
-/// does: a walk there would be everything the user owns.
+/// The files under `root`, for the sidebar's file-name search. Refuses the home
+/// folder and a drive root ("TOO_BROAD"): a walk there is everything the user owns.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn index_folder(root: String) -> Result<FolderIndex, String> {
@@ -65,9 +60,7 @@ pub async fn index_folder(root: String) -> Result<FolderIndex, String> {
 }
 
 /// File > Open Folder…: a folder picker. The home folder or a drive root is
-/// refused here, where the choice is made, with "TOO_BROAD" for the
-/// frontend to explain - the sidebar's search, and the AI that may follow
-/// the folder, would otherwise reach everything the user owns.
+/// refused with "TOO_BROAD" for the frontend to explain.
 #[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]

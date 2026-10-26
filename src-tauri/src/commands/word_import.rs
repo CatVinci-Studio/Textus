@@ -1,22 +1,13 @@
-//! Opening a Word document (.docx): File > Open, a drop on the window, or a
-//! path handed over by the OS. The frontend makes a new, untitled Markdown
-//! document of what this returns (src/document/word-import.ts); the .docx
-//! itself is only read, never written.
-//!
-//! The conversion is the one the AI reads Word files with (extract/docx.rs),
-//! in its document mode: escaped text, and the pictures saved where a
-//! picture pasted into an unsaved document goes - the drafts' image folder,
-//! named as a pasted one is - so that the first save moves them into the
-//! image folder Settings › Images names, as it does for a paste
-//! (fs.rs's migrate_draft_images).
+//! Opening a Word document (.docx) as a new, untitled Markdown document; the
+//! .docx is only read. Pictures go to the drafts' image folder, named as pasted
+//! ones, so the first save moves them like a paste.
 
 use super::fs::{draft_assets_dir, require_non_empty, write_new_file_sync};
 use crate::extract::{docx_document, extension_of, MAX_SOURCE_BYTES};
 use serde::Serialize;
 use std::path::Path;
 
-/// What `open_word_document` hands the frontend - generated into
-/// src/platform/bindings/files.ts.
+/// What `open_word_document` hands the frontend.
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct WordDocument {
@@ -45,8 +36,7 @@ fn convert(path: &Path, assets: &Path) -> Result<String, String> {
     if size > MAX_SOURCE_BYTES {
         return Err("This Word document is too large to open.".to_string());
     }
-    // One stamp for the whole document: its pictures are image-<stamp>.png,
-    // image-<stamp>-1.jpeg... - a pasted picture's name, numbered.
+    // One stamp for the whole document: image-<stamp>.png, image-<stamp>-1.jpeg...
     let stamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_err(|e| e.to_string())?
@@ -57,8 +47,7 @@ fn convert(path: &Path, assets: &Path) -> Result<String, String> {
 }
 
 /// Writes one picture of the document into `assets` and returns its src: an
-/// absolute path, with forward slashes - a backslash in a Markdown link
-/// would escape the character after it.
+/// absolute path with forward slashes, since a backslash would escape in Markdown.
 fn save_picture(assets: &Path, stamp: u128, name: &str, bytes: &[u8]) -> Option<String> {
     let ext = extension_of(Path::new(name));
     if ext.is_empty() || !ext.chars().all(|c| c.is_ascii_alphanumeric()) {
@@ -113,11 +102,8 @@ mod tests {
         (hasher.finish(), mtime)
     }
 
-    /// The owner's rule: opening a Word document never touches it. Open,
-    /// convert and the first Save As (the Markdown written where the user
-    /// chose, then fs.rs's image migration, as useSaveTabs.ts runs them)
-    /// leave the .docx byte for byte and mtime for mtime as it was, and put
-    /// nothing beside it but the .md and its pictures in the image folder.
+    /// Opening a Word document never touches it: open, convert and the first Save
+    /// As leave the .docx byte for byte and mtime as it was.
     #[test]
     fn open_convert_and_save_as_leave_the_word_file_untouched() {
         let root = tempfile::tempdir().unwrap();

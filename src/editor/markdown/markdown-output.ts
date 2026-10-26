@@ -52,52 +52,33 @@ export {
   linksOnSpansSerializer,
 } from "./link-output";
 export { documentBreaks, displayWidth } from "./text-output";
-// How the editor writes markdown back out. Every rule here exists to keep a
-// saved file close to what the user wrote, instead of remark-stringify's
-// house style.
+// How the editor writes markdown back out: every rule keeps a saved file
+// close to what the user wrote, not remark-stringify's house style.
 
 /**
- * Serializes a thematic break as "---", except as the document's very first
- * block, where it stays "***".
- *
- * A leading "---" is the frontmatter OPENING fence: remark-frontmatter
- * (frontmatter-schema.ts) would then take the next "---" in the file as the
- * closing one and swallow everything between them into a YAML block the next
- * time the file is opened. remark-frontmatter does register an unsafe pattern
- * against exactly this, but mdast-util-to-markdown never runs a thematic
- * break through its escaping - the handler's return value is used verbatim -
- * so the one ambiguous position has to avoid the dash form itself.
+ * A thematic break is "---", except as the first block, where it stays
+ * "***": a leading "---" would open frontmatter on reopening, and the
+ * handler's output bypasses escaping.
  */
 const thematicBreak: Handle = (node, parent) => {
   const isFirstBlock = parent?.type === "root" && parent.children[0] === node;
-  // In a list item it is "___": right after the marker, a rule of the
-  // marker's character makes the whole line a rule (`- ---`, `* ***`), and
-  // in a tight item "---" on the line under a paragraph underlines it into
-  // a heading.
+  // In a list item it is "___": after the marker a rule of the marker's
+  // character makes the line a rule, and "---" under a paragraph underlines it.
   if (isFirstBlock) return "***";
   return parent?.type === "listItem" ? "___" : "---";
 };
 
 /**
- * Milkdown stores list and list-item `spread` as the STRINGS "true" /
- * "false" and hands bullet lists and list items to remark as-is (ordered
- * lists alone compare `=== "true"`). "false" is truthy, so every tight
- * bullet list - and every item with a nested list - was written back loose,
- * a blank line between each item, the first time a file was saved.
- *
- * Fixed in the list handler, items included, rather than by also replacing
- * listItem: that handler is remark-gfm's (it writes the task-list "[ ]"),
- * and a listItem here would override it.
+ * Milkdown stores list `spread` as the strings "true"/"false", and "false"
+ * is truthy, so tight bullet lists were written loose. Fixed in the list
+ * handler, since listItem is remark-gfm's (it writes "[ ]").
  */
 const toBoolean = (spread: unknown) => spread === true || spread === "true";
 
 /**
- * An item whose first paragraph is empty but has more after it - its line
- * deleted, or one that opened with indented code (the editor's items start
- * with a paragraph) - is written with the next block on the marker's line.
- * Written as it was, a marker alone on its line and a blank line, the item
- * ended there: `-\n\n  bar` is an empty item and a paragraph after the
- * list. A task item keeps it; withEmptyTasks below writes that one.
+ * An item whose first paragraph is empty but has more after it is written
+ * with the next block on the marker's line: a marker alone and a blank line
+ * would end the item there. A task item keeps it.
  */
 function withoutEmptyLead(item: ListItem): void {
   const [first, ...rest] = item.children;
@@ -111,11 +92,9 @@ function withoutEmptyLead(item: ListItem): void {
 }
 
 /**
- * Whether `node` is a list right under a paragraph of a tight item,
- * `* PHP\n  * Symfony`. An empty item can't interrupt a paragraph in
- * CommonMark, so with its only word deleted the first item's bullet read
- * back as text, "PHP *". That item is written with a space as a character
- * reference, which reads back as an item with nothing to show.
+ * Whether `node` is a list right under a paragraph of a tight item. An
+ * empty item can't interrupt a paragraph, so its first item is written with
+ * a space as a character reference.
  */
 function interruptsParagraph(node: List, parent: Parents | undefined) {
   const siblings = (parent?.children ?? []) as Phrasing[];
@@ -149,14 +128,9 @@ const list: Handle = (node, parent, state, info) => {
 };
 
 /**
- * Writes a task item with no text yet as `- [ ] `. remark-gfm's handler
- * puts the box after the bullet's following space, and an empty item has
- * none: the box was dropped (a plain "-" saved), or - with a nested list
- * under it - landed at the start of the next line, "[x]   - child", which
- * reads back as a different document. The box is written here instead,
- * around remark-gfm's handler (which this wraps for the one list, so its
- * handling of every other item stays), and read back by
- * remarkEmptyTaskItems (task-list-plugin.ts).
+ * Writes a task item with no text yet as `- [ ] `: remark-gfm puts the box
+ * after the bullet's following space, which an empty item lacks, so the box
+ * was dropped or landed on the next line.
  */
 function withEmptyTasks(listItem: Handle): Handle {
   return (node, parent, state, info) => {
@@ -177,17 +151,10 @@ function withEmptyTasks(listItem: Handle): Handle {
 }
 
 /**
- * The image node, with a width and the `<img>` tag it was read from
- * (images/image-html.ts): a sized image is saved as `<img width>`, and a
- * tag nobody changed as it was written.
- *
- * An image read from HTML takes its title from `title` alone. Milkdown's
- * parseDOM falls back to the alt, and its clipboard plugin pastes plain
- * text by parsing it as markdown, drawing it as HTML and reading that back -
- * so a pasted `![alt](src)` was saved as `![alt](src "alt")` (issue #189).
- * Its width comes back from `data-width`, which only the editor's own
- * images carry: a picture pasted from a web page, sized for that page,
- * stays `![]()`.
+ * The image node with a width and the `<img>` tag it was read from. From
+ * HTML its title comes from `title` alone: Milkdown's alt fallback turned a
+ * pasted `![alt](src)` into `![alt](src "alt")`. Only the editor's own
+ * images carry `data-width`.
  */
 function configureImageNode(ctx: Ctx): void {
   ctx.update(imageSchema.key, (prev) => (innerCtx) => {
@@ -198,7 +165,6 @@ function configureImageNode(ctx: Ctx): void {
         ...schema.attrs,
         width: { default: "", validate: "string" },
         html: { default: "", validate: "string" },
-        // How a reference image was written (reference-links.ts).
         reference: { default: "", validate: "string" },
       },
       parseDOM: [
@@ -213,9 +179,8 @@ function configureImageNode(ctx: Ctx): void {
             },
         },
       ],
-      // The stock toDOM spreads every attr onto the <img>; the tag's
-      // source isn't one. The width shows in another app it's pasted into,
-      // one an older Textus kept in the title included (and not the title).
+      // The stock toDOM spreads every attr onto the <img>; the tag's source isn't
+      // one. The width shows in another app it's pasted into.
       toDOM: (node) => {
         const { src, alt } = node.attrs as ImageAttrs;
         const { title } = readImagePresentation(node.attrs.title as string);
@@ -273,10 +238,8 @@ function configureImageNode(ctx: Ctx): void {
 }
 
 /**
- * A code fence's info string past the language - ```` ```js title="a.js" ````
- * - kept in a `meta` attr and written back. Milkdown's code block keeps
- * only the language, so the rest was dropped on the first save, and with
- * it the file names and line highlights other tools draw from it.
+ * A code fence's info string past the language (```` ```js title="a.js" ````)
+ * kept in a `meta` attr; Milkdown keeps only the language.
  */
 function keepCodeFenceMeta(ctx: Ctx): void {
   ctx.update(codeBlockSchema.key, (prev) => (innerCtx) => {
@@ -335,12 +298,9 @@ function keepCodeFenceMeta(ctx: Ctx): void {
 }
 
 /**
- * Image srcs that are shown but never written: a pasted screenshot's
- * `blob:` URL while its file is still being stored (image-plugin.ts).
- * A blob: URL names memory of this page alone, so a save made in that
- * window wrote an image that was gone on reopen (issue #59's failure).
- * Left out instead; the swap to the stored path changes the document
- * again, so it is dirty and the next save writes the image.
+ * Image srcs shown but never written: a pasted screenshot's `blob:` URL
+ * while its file is being stored. The swap to the stored path dirties the
+ * document, so the next save writes the image.
  */
 export const unwrittenImageSrcs = new Set<string>();
 
@@ -360,10 +320,8 @@ const image = Object.assign(
 );
 
 /**
- * A "#" at the start of a line is escaped only where it would open a
- * heading: up to six of them followed by a space, a tab or the line's end.
- * remark escaped every one, so an Obsidian tag, `#idea`, was saved as
- * `\#idea`.
+ * A "#" at a line's start is escaped only where it would open a heading;
+ * remark escaped every one, so `#idea` saved as `\#idea`.
  */
 const isHeadingGuard = (pattern: Unsafe) =>
   pattern.character === "#" &&
@@ -377,9 +335,8 @@ const headingGuard: Unsafe = {
   after: "#{0,5}(?:[ \\t\\r\\n]|$)",
 };
 
-/** A "#" ending a heading's text, spaces after it or not: `### foo ###`
- *  closes the heading there, and the text loses its "###". remark's own
- *  guard misses the spaces (escapingBeforeSpaces hands them over). */
+/** A "#" ending a heading's text, spaces after it or not, which would close
+ *  the heading there. remark's own guard misses the spaces. */
 const closingHashGuard: Unsafe = {
   character: "#",
   inConstruct: "headingAtx",
@@ -408,10 +365,8 @@ const root: Handle = (node, parent, state, info) => {
 };
 
 /**
- * The bullet the document's own lists use ("-", "*" or "+"), by majority,
- * or null when it has none. remark writes "*" whatever the file had, so
- * the first edit to a README written with "-" rewrote every bullet in it
- * and the file's diff ran to hundreds of lines.
+ * The bullet the document's own lists use, by majority, or null. remark
+ * writes "*" whatever the file had, rewriting every bullet on the first edit.
  */
 export function documentBullet(markdown: string): "-" | "*" | "+" | null {
   const counts = { "-": 0, "*": 0, "+": 0 };
@@ -421,9 +376,8 @@ export function documentBullet(markdown: string): "-" | "*" | "+" | null {
   return count > 0 ? (best as "-" | "*" | "+") : null;
 }
 
-/** Installs the rules above. `update`, not `set`: the slice already carries
- *  Milkdown's own text/strong/emphasis handlers, and replacing it wholesale
- *  would drop them. */
+/** Installs the rules above. `update`, not `set`: replacing the slice would
+ *  drop Milkdown's own handlers. */
 export function configureMarkdownOutput(ctx: Ctx): void {
   keepLinkAcrossInlineNodes(ctx);
   configureImageNode(ctx);
@@ -432,7 +386,7 @@ export function configureMarkdownOutput(ctx: Ctx): void {
     ...options,
     stringLength: displayWidth,
   }));
-  // The editor's opening text (MilkdownEditor sets it before this runs).
+  // The editor's opening text, set before this runs.
   const initial = ctx.get(defaultValueCtx);
   const bullet = typeof initial === "string" ? documentBullet(initial) : null;
   const breaks =

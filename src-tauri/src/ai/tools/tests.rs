@@ -159,10 +159,8 @@ fn md(text: &str) -> &'static Document {
     Box::leak(Box::new(Document::from_markdown(text)))
 }
 
-/// A call as the model sends it, naming the block its `anchor` is in (the
-/// one block that holds it), resolved as agent::settle does before the
-/// tool sees it. Words in no block - text proposed and not decided yet -
-/// stay a quote.
+/// A call as the model sends it, naming the block its `anchor` is in, resolved
+/// as the agent does before the tool sees it. Words in no block stay a quote.
 fn named(document: &Document, args: &str) -> String {
     let mut v: serde_json::Value = serde_json::from_str(args).unwrap();
     if let Some(anchor) = v.get("anchor").and_then(|a| a.as_str()) {
@@ -535,8 +533,7 @@ fn an_edit_may_change_text_proposed_and_not_decided_yet() {
     );
 }
 
-/// Write took in 1.2.0's Revise mode in 1.2.1: it adds text and changes
-/// the text that is there.
+/// Write adds text and changes the text that is there.
 #[test]
 fn write_mode_offers_every_edit() {
     let doc = "The cat sat on the mat.";
@@ -681,7 +678,7 @@ fn a_result_says_its_picture_ids_are_textus_own() {
 
 #[test]
 fn words_of_an_undecided_rewrite_quoted_by_its_block_go_into_the_rewrite() {
-    // Haiku named the block it had rewritten and quoted its own rewrite.
+    // The model named the block it had rewritten and quoted its own rewrite.
     let doc = "The lighthouse stood on the rock.\n\nWaves broke below.";
     let undecided = vec![crate::ai::images::UndecidedEdit {
         replaced: "The lighthouse stood on the rock.".into(),

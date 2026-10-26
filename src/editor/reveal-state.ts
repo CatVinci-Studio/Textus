@@ -17,14 +17,13 @@ import { cursorTouches } from "./marks/enclosure";
 
 /**
  * Plugin state for the "render it, reveal the source under the caret"
- * plugins (math, Mermaid, raw HTML, GitHub alerts, Obsidian embeds). What
- * they draw depends on the selection only through cursorTouches, so the
- * set is stored with every range that was asked about.
+ * plugins. What they draw depends on the selection only through
+ * cursorTouches, so the set is stored with every range that was asked about.
  */
 export interface RevealState {
   set: DecorationSet;
-  /** Each range a drawing asked cursorTouches about, as a decoration, so
-   *  the ones near a caret are found without a look at the others. */
+  /** Each range a drawing asked cursorTouches about, so the ones near a caret
+   *  are found without a look at the others. */
   touched: DecorationSet;
   /** Reveal.config when this was drawn. */
   config: unknown;
@@ -36,13 +35,11 @@ export type Touches = (from: number, to: number) => boolean;
 export interface Reveal {
   /** The nodes drawn one at a time; the walk doesn't go into one. */
   match: (node: ProseNode) => boolean;
-  /** What one draws, all of it inside the node (a widget at its end
-   *  counts). `touches` is cursorTouches for the selection, and records
-   *  each range it answers. */
+  /** What one draws, all inside the node (a widget at its end counts).
+   *  `touches` is cursorTouches for the selection, recording each range. */
   decorate: (node: ProseNode, pos: number, touches: Touches) => Decoration[];
-  /** What the drawing depends on besides the document and the caret - a
-   *  setting, the document's path. When it changes (===), everything is
-   *  drawn again. */
+  /** What the drawing depends on besides the document and caret (a setting,
+   *  the path). When it changes (===), everything is drawn again. */
   config?: () => unknown;
 }
 
@@ -66,8 +63,8 @@ function recorder(selection: Selection) {
   return { touches, ranges };
 }
 
-/** Every node of the document `reveal` matches, drawn. `before` draws
- *  what isn't drawn node by node (raw HTML's <details> folds) first. */
+/** Every node `reveal` matches, drawn. `before` first draws what isn't drawn
+ *  node by node. */
 export function revealAll(
   state: EditorState,
   reveal: Reveal,
@@ -93,11 +90,9 @@ const touchesSpan = (a: number, b: number, from: number, to: number) =>
   a <= to && b >= from;
 
 /**
- * `prev` mapped through `tr`, and the top-level blocks whose drawing that
- * leaves stale: the ones the transaction changed, and the ones holding a
- * range whose cursorTouches the caret's move flipped. Only ranges at the
- * old or the new caret can flip, so only those are looked at - not every
- * range in the document.
+ * `prev` mapped through `tr`, and the top-level blocks it leaves stale: those
+ * the transaction changed and those with a range whose cursorTouches the
+ * caret's move flipped. Only ranges at the old or new caret can flip.
  */
 export function revealChanges(
   tr: Transaction,
@@ -157,11 +152,9 @@ export function redrawReveal(
 }
 
 /**
- * The shared state.apply. Drawing everything again meant a walk of the
- * whole document on every transaction, arrow keys and clicks included; an
- * edit is drawn again only in the blocks it changed, and a caret move only
- * where it flips cursorTouches for a recorded range. Anything else keeps
- * the previous state as it is.
+ * The shared state.apply: an edit redraws only the blocks it changed, a
+ * caret move only where it flips a recorded range, instead of walking the
+ * whole document on every transaction.
  */
 export function applyReveal(
   tr: Transaction,
@@ -177,9 +170,8 @@ export function applyReveal(
   return redrawReveal(mapped, newState, blocks, reveal);
 }
 
-/** A click on a rendered widget puts the caret in the source it stands for
- *  (the widget sits right after it), which shows that source to edit.
- *  `skip` leaves a click to the widget itself. */
+/** A click on a rendered widget puts the caret in the source it stands for,
+ *  right before it. `skip` leaves a click to the widget itself. */
 export function caretToSourceOnClick(
   el: HTMLElement,
   view: EditorView,

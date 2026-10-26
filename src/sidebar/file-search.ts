@@ -7,8 +7,7 @@ export const MAX_SHOWN_MATCHES = 200;
 /** The search box's filter beside it: every file, or documents only. */
 export type SearchScope = "all" | "documents";
 
-/** What Textus opens as a document - the types File > Open offers before
- *  "All files". They are listed before every other file. */
+/** What Textus opens as a document, listed before every other file. */
 const DOCUMENT_EXTENSIONS = new Set(["md", "markdown", "txt", "text"]);
 
 export function isDocumentName(name: string): boolean {
@@ -26,15 +25,13 @@ export interface SearchEntry extends IndexedFile {
   key: string;
 }
 
-/** Case and Unicode form folded away: macOS hands names over decomposed
- *  (é as e + ́), a typed query arrives composed. CJK has no case and is
- *  left as it is. */
+/** Case and Unicode form folded away: macOS hands names over decomposed,
+ *  a typed query arrives composed. */
 function fold(text: string): string {
   return text.normalize("NFC").toLowerCase();
 }
 
-/** The index, in the order results are listed: by name as `collator`
- *  sorts names (utils/name-order.ts), then by folder. */
+/** The index in result order: by name as `collator` sorts, then by folder. */
 export function searchEntries(
   files: IndexedFile[],
   collator: Intl.Collator,
@@ -59,10 +56,9 @@ export function searchEntries(
 }
 
 /**
- * The files whose name contains `query`, ignoring case. Documents come
- * before other files, and within each, names that start with the query
- * before the rest - each group in index order. At most `limit`; an empty
- * query matches nothing.
+ * The files whose name contains `query`, ignoring case: documents first,
+ * then names starting with the query, each group in index order. At most
+ * `limit`; an empty query matches nothing.
  */
 export function matchFiles(
   entries: SearchEntry[],

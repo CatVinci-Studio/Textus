@@ -1,19 +1,12 @@
-//! Rename and delete for the iPhone's document list (the recently opened
-//! documents, src/mobile/DocumentList.tsx), inside the app's own Documents
-//! folder - "On My iPhone > Textus" in the Files app. Desktop users have a
-//! real file manager for this, so these are registered on iOS only.
-//!
-//! Every path is checked to lie inside Documents before anything is touched:
-//! the webview names the paths, and nothing outside the app's own folder is
-//! its to rename or delete.
+//! Rename and delete for the iPhone's document list, inside the app's own
+//! Documents folder; iOS only. Every path is checked to lie inside Documents first.
 
 use std::path::{Path, PathBuf};
 use tauri::Manager;
 use tokio::fs;
 
-/// The canonical Documents folder, and `path` canonicalised and checked to
-/// be strictly inside it. `must_exist` false checks the parent instead, for
-/// a path that is about to be created.
+/// The canonical Documents folder, and `path` checked to be strictly inside
+/// it. `must_exist` false checks the parent instead, for a path about to be created.
 fn inside_documents(
     app: &tauri::AppHandle,
     path: &str,

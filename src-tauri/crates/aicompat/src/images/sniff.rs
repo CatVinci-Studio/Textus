@@ -1,11 +1,6 @@
-//! What a generated image really is, read from its bytes rather than from
-//! the provider's word for it: a reply's `mimeType`, a URL's extension or a
-//! download's Content-Type can each be wrong, and the file is saved under
-//! the extension this decides. Only PNG, JPEG and WebP pass - what every
-//! image API here returns - so an SVG (script inside) or an HTML error page
-//! served as a picture never reaches the document. The size is read from
-//! the header alone: the webview decodes the picture itself, and a decoder
-//! here would cost the binary more than all of the image code together.
+//! What a generated image really is, read from its bytes rather than the
+//! provider's word for it. Only PNG, JPEG and WebP pass, so an SVG or an HTML
+//! error page never reaches the document; the size comes from the header.
 
 /// The largest image accepted, encoded. The biggest picture any of these
 /// services makes (4096 x 4096 PNG) stays well under it.

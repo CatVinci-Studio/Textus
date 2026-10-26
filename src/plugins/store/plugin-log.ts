@@ -1,8 +1,6 @@
 /**
- * What went wrong in each plugin lately - its code's errors, a call that
- * failed, its being turned off - for its page in Settings, where a
- * developer (or Textus AI writing a plugin) reads why. In memory only, the
- * last LIMIT of each.
+ * What went wrong in each plugin lately, for its page in Settings where a
+ * developer reads why. In memory only, the last LIMIT of each.
  */
 
 export interface PluginLogEntry {

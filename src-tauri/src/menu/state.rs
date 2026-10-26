@@ -1,29 +1,23 @@
-//! What the menu bar keeps between rebuilds: its labels in the app's
-//! language, the View checks, the accelerators, the recent submenu.
+//! What the menu bar keeps between rebuilds: labels, View checks,
+//! accelerators, the recent submenu.
 
 use super::*;
 
-/// Handle to the File > Open Recent submenu, kept so add_recent_file can
-/// rebuild its entries at runtime without touching the rest of the menu.
+/// Handle to the File > Open Recent submenu, so its entries can be rebuilt alone.
 pub(crate) struct RecentMenu(pub(crate) Mutex<Option<Submenu<tauri::Wry>>>);
 
-/// The labels the menu is built with, keyed by menu id - or, for what has
-/// no id of ours, "menu:<name>" for a submenu and "predefined:<name>" for
-/// an item muda makes (the keys `nativeMenuLabels` in
-/// src/app/menu/app-menu-model.ts sends). Empty until the frontend sends them,
-/// which leaves every label English.
+/// The labels the menu is built with, keyed by menu id, or "menu:<name>" and
+/// "predefined:<name>" for what has none. Empty (all English) until the frontend sends them.
 #[derive(Default)]
 pub(crate) struct MenuLabels(pub(crate) Mutex<HashMap<String, String>>);
 
-/// The View menu's on/off items and whether each is on, keyed by menu id:
-/// the states the frontend last sent (`set_menu_checks`), kept so a rebuild
-/// for a new language starts from them, and the items they are shown on.
+/// The View menu's on/off items and their states as the frontend last sent
+/// them, kept so a rebuild starts from them.
 #[derive(Default)]
 pub(crate) struct ViewChecks(pub(crate) Mutex<ViewCheckState>);
 
-/// The Format menu's heading keys, keyed by menu id, as the frontend last
-/// sent them (`set_menu_accelerators`) - Settings › Shortcuts' bindings,
-/// kept so every rebuild of the bar carries them. Empty off macOS.
+/// The Format menu's heading keys as the frontend last sent them, kept for
+/// every rebuild. Empty off macOS.
 #[derive(Default)]
 pub(crate) struct MenuAccelerators(pub(crate) Mutex<HashMap<String, String>>);
 
@@ -43,9 +37,8 @@ pub(crate) struct BuiltMenu {
     pub(crate) check_items: Vec<CheckMenuItem<Wry>>,
 }
 
-/// The label for `key`, or `english` when none was sent - as menu text:
-/// muda reads a lone `&` as a mnemonic marker and drops it ("Find & Replace…"
-/// showed as "Find  Replace…"), so a literal one is doubled.
+/// The label for `key`, or `english` when none was sent, as menu text (a lone
+/// `&` is doubled, since muda reads it as a mnemonic).
 pub(crate) fn label(labels: &HashMap<String, String>, key: &str, english: &str) -> String {
     menu_text(labels.get(key).map_or(english, String::as_str))
 }

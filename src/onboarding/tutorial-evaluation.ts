@@ -1,15 +1,13 @@
 import type { TutorialStep } from "./tutorial-steps";
 
 /**
- * What the lessons ask for, found in what the learner did. A lesson's phase
- * is a set of bits, one per thing to do (its task lines' `part`); a lesson
- * whose lines have none is done on LESSON_DONE, which the tour's signals
- * (useTutorial) and the window's lessons set.
+ * What the lessons ask for, found in what the learner did. A phase is a set
+ * of bits, one per task line's `part`; a lesson without parts is done on
+ * LESSON_DONE.
  */
 
 export const LESSON_DONE = 1;
 
-/** The WYSIWYG lesson's four marks. */
 export const WYSIWYG_PART = {
   heading: 1,
   list: 2,
@@ -17,21 +15,18 @@ export const WYSIWYG_PART = {
   task: 8,
 } as const;
 
-/** The marks lesson's four lines. */
 export const MARKS_PART = { emphasis: 1, quote: 2, code: 4, link: 8 } as const;
 
 /** The table lesson: a table, then a row filled in. */
 export const TABLE_PART = { table: 1, row: 2 } as const;
 
-/** The modes-and-themes lesson's two parts. */
 export const MODES_PART = { mode: 1, theme: 2 } as const;
 
 /** The AI writing lesson: the panel open, then the new text decided. */
 export const WRITE_PART = { done: LESSON_DONE, panel: 2 } as const;
 
-/** The grammar lesson: the card opened (the lesson's signal), the
- *  sentence typed, and - once the sentence has waited a while with
- *  nothing flagged - quiet, which lets the learner on with a word why. */
+/** The grammar lesson: the card opened (the lesson's signal), the sentence
+ *  typed, and quiet once it has waited with nothing flagged. */
 export const GRAMMAR_PART = { card: LESSON_DONE, typed: 2, quiet: 4 } as const;
 
 /** The lines of `markdown` that aren't in `own` (the practice notes as the
@@ -60,7 +55,7 @@ export function evaluateWysiwyg(markdown: string): number {
 }
 
 /** Bold and italic, a quote, inline code and a link, in the lines the
- *  learner added to `own` - the notes' own excerpt is a quote already. */
+ *  learner added: the notes' own excerpt is a quote already. */
 export function evaluateMarks(markdown: string, own: string): number {
   const lines = typedLines(markdown, own);
   const text = lines.join("\n");
@@ -115,7 +110,6 @@ export function isLessonComplete(step: TutorialStep, phase: number): boolean {
   return (phase & required) === required;
 }
 
-/** Whether one task line is ticked. */
 export function isTaskDone(
   step: TutorialStep,
   part: number | undefined,

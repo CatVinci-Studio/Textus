@@ -15,21 +15,9 @@ pub(crate) fn global_agent_dir(app: &AppHandle) -> Result<PathBuf, String> {
 /// as a project's `.textus/` is (agent.md, skills/, memory/).
 pub(crate) const GLOBAL_DIR: &str = "textus";
 
-/// Resolves the workspace root - the project folder: the folder `.textus/`
-/// is read from and the sandbox boundary the `find_files`/`read_file` tools
-/// may not escape.
-///
-/// `root_override` is the chosen project folder ("Choose project folder…"
-/// in the project bar, or Settings > Textus AI > Project Folder) - one
-/// setting for every document, unsaved drafts included. Without it, the
-/// project is the nearest folder holding the document that has a `.textus/`
-/// folder (enclosing_project), else the document's own folder: a chapter in
-/// `novel/part-1/` belongs to `novel/` once `novel/.textus/` exists, and a
-/// folder of chapters with notes next to the draft needs nothing at all.
-///
-/// An override that no longer exists (a moved or unmounted folder) falls
-/// back to the document's project rather than leaving the agent with no
-/// workspace at all.
+/// Resolves the project folder, the sandbox for the file tools: the chosen
+/// folder, else the nearest enclosing folder with `.textus/`, else the
+/// document's own. A chosen folder that no longer exists falls back.
 pub(crate) fn resolve_root(doc_path: Option<&str>, root_override: Option<&str>) -> Option<PathBuf> {
     let picked = root_override
         .map(str::trim)
@@ -50,13 +38,8 @@ pub(crate) fn document_folder(doc_path: Option<&str>) -> Option<&Path> {
 }
 
 /// The nearest folder from `folder` upwards that is a project: one holding
-/// a `.textus/` folder, or the folder above `.textus/` itself - a file of
-/// the project's own (.textus/library/Lin.md, opened from the Memory tab)
-/// belongs to it; left at its own folder, the panel took .textus/library
-/// for the project and showed an empty library right after New library
-/// entry. The walk stops before the home folder and a drive root, which
-/// are never a project (project::is_too_broad) - a `.textus/` there would
-/// make every document under it part of one.
+/// `.textus/`, or the folder above `.textus/` itself (for a file inside it).
+/// Stops before the home folder and a drive root, which are never a project.
 pub(crate) fn enclosing_project(folder: &Path) -> Option<PathBuf> {
     for dir in folder.ancestors() {
         if dir.file_name().and_then(|n| n.to_str()) == Some(WORKSPACE_DIR_NAME) {
@@ -96,9 +79,7 @@ pub fn load(
     }
 }
 
-/// [`load`] with the global layer's folder given directly - the live
-/// eval's loader, which builds real workspaces on disk to exercise exactly
-/// this path.
+/// [`load`] with the global layer's folder given directly, for the live eval.
 #[cfg(test)]
 pub(crate) fn load_from(
     global_dir: Option<&Path>,
@@ -166,12 +147,9 @@ pub(crate) fn listed(skills: Vec<AgentSkill>) -> Vec<AgentSkill> {
         .collect()
 }
 
-/// Guarantees the global config folder exists with its starter files;
-/// returns it. `template` is the starter agent.md in the UI language
-/// (`agentInstructionsTemplate` in src/i18n/locales/): a how-to written
-/// entirely in HTML comments, which `read_layer` strips before anything
-/// reaches the model - so it teaches without polluting the system prompt.
-/// It is only written when there is no agent.md yet.
+/// Guarantees the global config folder exists with its starter files; returns
+/// it. `template` is the starter agent.md, written only when there is none:
+/// all HTML comments, which never reach the model.
 pub(crate) fn ensure_global_layer(app: &AppHandle, template: &str) -> Result<PathBuf, String> {
     let dir = global_agent_dir(app)?;
     std::fs::create_dir_all(dir.join("skills")).map_err(|e| e.to_string())?;

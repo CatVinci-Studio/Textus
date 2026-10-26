@@ -1,77 +1,56 @@
-/// Shared window CustomEvent names for wiring global keyboard shortcuts
-/// (handled in App.tsx) to the currently mounted editor instance
-/// (MilkdownEditor.tsx) without a direct import between the two.
+/// Window CustomEvent names linking global shortcuts to the mounted editor
+/// without a direct import between the two.
 export const TRIGGER_COMPLETION_EVENT = "textus:trigger-completion";
 export const TRIGGER_GRAMMAR_CHECK_EVENT = "textus:trigger-grammar-check";
 export const TOGGLE_FLOATING_CHAT_EVENT = "textus:toggle-floating-chat";
 export const TOGGLE_FIND_REPLACE_EVENT = "textus:toggle-find-replace";
-/// Closes the find bar if it is open: the iPhone's sidebar drawer opens
-/// over the top of the page, where the bar sits.
+/// Closes the find bar: the iPhone's sidebar drawer opens over it.
 export const CLOSE_FIND_REPLACE_EVENT = "textus:close-find-replace";
 
-/// detail: `{ paths, point }` - image files dropped on the window from a
-/// file manager, and where in the page they landed (app/useFileOpening.ts's
-/// useFileDrop). The editor on screen inserts them (images/image-plugin.ts).
+/// detail: `{ paths, point }`, image files dropped on the window from a file
+/// manager and where they landed; the editor on screen inserts them.
 export const DROP_IMAGE_FILES_EVENT = "textus:drop-image-files";
 
-/// detail: the markdown text to insert at the cursor (clipboard history panel).
+/// detail: the markdown text to insert at the cursor.
 export const INSERT_CLIPBOARD_TEXT_EVENT = "textus:insert-clipboard-text";
 
-/// A saved conversation is waiting to be restored (the AI panel's history):
-/// the editor it is for takes it from ai/chat/chat-restore.ts.
+/// A saved conversation is waiting to be restored by the editor it is for.
 export const RESTORE_CHAT_EVENT = "textus:restore-chat";
 
-/// detail: an editing action from the app-drawn menu's Edit submenu -
-/// "undo", "redo", "cut", "copy", "paste" or "select-all" (see
-/// app/menu/app-menu-actions.ts). Those items are `PredefinedMenuItem`s in the
-/// native menu, which has no id to address them by, so on Windows they come
-/// through here to the editor instead.
+/// detail: "undo", "redo", "cut", "copy", "paste" or "select-all". Native
+/// predefined menu items have no id, so on Windows they come through here.
 export const EDIT_ACTION_EVENT = "textus:edit-action";
 
-/// detail: what to do with the writer's tracked changes in the document on
-/// screen (ai/margin/useOwnRevisions.ts) - Edit › Track My Changes turns
-/// tracking on or off; the editor's menu accepts or rejects them all.
+/// detail: what to do with the writer's tracked changes in the document on screen.
 export const TRACK_CHANGES_EVENT = "textus:track-changes";
 export type TrackChangesAction = "toggle" | "accept-all" | "reject-all";
 
-/// detail: the block kind to insert at the cursor, from the native Format
-/// menu (see menu-insert-block in src-tauri/src/lib.rs) - "h1".."h6",
-/// "bullet-list", "ordered-list", "blockquote", "code-block", or "table";
-/// or "paragraph", from the heading shortcuts (app/useGlobalShortcuts.ts).
+/// detail: the block kind to insert at the cursor: "h1".."h6", "bullet-list",
+/// "ordered-list", "blockquote", "code-block", "table" or "paragraph".
 export const INSERT_BLOCK_EVENT = "textus:insert-block";
 
-/// detail: "heading" | "bullet-list" | "ordered-list" | "blockquote" - the
-/// iPhone keyboard toolbar's block buttons, which toggle rather than only
-/// insert (editor/keys/block-toggles.ts).
+/// detail: "heading" | "bullet-list" | "ordered-list" | "blockquote"; these
+/// toggle rather than only insert.
 export const TOGGLE_BLOCK_EVENT = "textus:toggle-block";
 
-/// detail: "bold" | "italic" - makes the selection bold or italic, or plain
-/// again (editor/marks/span-commands.ts; the iPhone's keyboard toolbar).
+/// detail: "bold" | "italic": toggles the mark on the selection.
 export const TOGGLE_MARK_EVENT = "textus:toggle-mark";
 
-/// detail: a TableAction (editor/editor-menu.ts) - "row-below",
-/// "delete-column" and so on - for the table under the caret: the iPhone
-/// keyboard toolbar's table buttons.
+/// detail: a TableAction ("row-below", "delete-column"…) for the table under the caret.
 export const TABLE_ACTION_EVENT = "textus:table-action";
 
-/// detail: "width:auto" | "width:<percent>" | "delete" - for the selected
-/// image: the iPhone keyboard toolbar's image buttons.
+/// detail: "width:auto" | "width:<percent>" | "delete", for the selected image.
 export const IMAGE_ACTION_EVENT = "textus:image-action";
 
-/// Opens the editor's menu for where the caret is, as an action sheet
-/// (editor-menu.ts's buildPhoneMoreItems): the iPhone keyboard toolbar's
-/// "More" button, standing in for the right-click a phone doesn't have.
+/// Opens the editor's menu for the caret as an action sheet, standing in for
+/// the right-click a phone doesn't have.
 export const EDITOR_MORE_EVENT = "textus:editor-more";
 
-/// The AI of the tour's practice tab (onboarding/): "muted" while the
-/// lesson isn't about it, or the learner chose to watch the animations
-/// instead of connecting one - completion and the grammar check stay quiet
-/// and their shortcuts do nothing; "live" for the AI lessons of a learner
-/// who connected one - the real thing, exactly as outside the tour.
+/// The AI of the tour's practice tab: "muted" keeps completion and the
+/// grammar check quiet; "live" is the real thing, as outside the tour.
 export type TourAi = "muted" | "live";
 
-/// What the learner did in the tour's practice tab that a lesson waits
-/// for. Sent only by the practice tab's editor (MilkdownEditor's `tour`).
+/// What the learner did in the tour's practice tab that a lesson waits for.
 export type TourSignal =
   /** A completion suggestion was taken (Tab, or a tap on a phone). */
   | "completion-accepted"
@@ -86,7 +65,7 @@ export type TourSignal =
   /** A message went out through a skill (`/name`). */
   | "skill-sent";
 
-/// detail: a TourSignal. See useTutorial's listener.
+/// detail: a TourSignal.
 export const TOUR_SIGNAL_EVENT = "textus:tour-signal";
 
 export function sendTourSignal(signal: TourSignal): void {
@@ -95,24 +74,18 @@ export function sendTourSignal(signal: TourSignal): void {
   );
 }
 
-/** Open a file in a new tab (the project bar's style profile and library
- *  entries, a followed link) - detail: the absolute path, or an
- *  OpenFileInTab. Handled by App. */
+/** Open a file in a new tab. detail: the absolute path, or an OpenFileInTab. */
 export const OPEN_FILE_IN_TAB_EVENT = "textus:open-file-in-tab";
 
-/** OPEN_FILE_IN_TAB_EVENT's detail for a link into a file: the heading it
- *  names is scrolled to once the file is on screen. */
+/** A link into a file: the heading it names is scrolled to once it's on screen. */
 export interface OpenFileInTab {
   path: string;
   anchor?: string;
 }
 
-/** Zen mode turned on/off (detail: boolean) - editors refresh their
- *  focus dimming (zen-focus-plugin). Fired by App. */
+/** Zen mode turned on/off (detail: boolean). */
 export const ZEN_MODE_EVENT = "textus:zen-mode";
 
-/** A file on disk was written from inside the window, not by a save of
- *  its tab (detail: its path) - a plugin ticking a task. Open tabs of it
- *  check the disk as on refocus (useExternalChangeReload). Fired by the
- *  plugin broker. */
+/** A file was written from inside the window, not by its tab's save
+ *  (detail: its path); open tabs of it check the disk. */
 export const FILE_WRITTEN_EVENT = "textus:file-written";

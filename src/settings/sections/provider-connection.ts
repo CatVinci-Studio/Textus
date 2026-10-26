@@ -4,10 +4,8 @@ import type { ProviderCatalogEntry } from "../../ai/provider-catalog";
 import { auth } from "../../platform/ipc";
 import type { AiProvider } from "../SettingsContext";
 
-/**
- * Whether each AI provider is connected - by account, by key, or as a
- * custom endpoint - and its name as Settings shows it (providers.tsx).
- */
+/** Whether each AI provider is connected (by account, key or custom
+ *  endpoint), and its name as Settings shows it. */
 
 // The catalog's labels are brand names, the same in every language - except
 // these: "custom" is a description, Doubao is known in Chinese by its
@@ -27,10 +25,8 @@ export function localizedLabel(
   return key ? t[key] : entry.label;
 }
 
-/// Each provider's "is it connected" check speaks a different shape
-/// (status-object, bare boolean, or config-or-null) - this normalizes them
-/// to one boolean per auth method for the picker's status pill and to decide
-/// which auth tab opens by default.
+/// Normalizes each provider's differently shaped "is it connected" check to
+/// one boolean per auth method.
 export async function fetchConnected(
   entry: ProviderCatalogEntry,
 ): Promise<{ oauth: boolean; apiKey: boolean }> {
@@ -53,8 +49,7 @@ export interface ConnectedState {
 }
 
 /** Each catalog provider's connection, checked as the catalog loads and
- *  again after a sign-in changes (`refreshConnected`), and whether the
- *  selected one is connected - also reported to `onActiveConnectedChange`. */
+ *  after a sign-in changes; the selected one's is also reported. */
 export function useConnectedProviders(
   catalog: ProviderCatalogEntry[],
   activeId: AiProvider,

@@ -1,9 +1,8 @@
 import { useCallback, useState } from "react";
 import type { ImageNameRequest } from "./ImageNameDialog";
 
-/** The "name this image" prompt (image naming "ask"): the image plugin
- *  awaits `requestImageName`, which resolves once ImageNameDialog closes -
- *  with the chosen stem, or null when cancelled. */
+/** The "name this image" prompt: `requestImageName` resolves once the
+ *  dialog closes, with the chosen stem or null. */
 export function useImageNameRequest() {
   const [imageNameRequest, setImageNameRequest] =
     useState<ImageNameRequest | null>(null);

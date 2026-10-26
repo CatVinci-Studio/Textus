@@ -7,9 +7,8 @@ import {
 } from "./plugin-records";
 
 /**
- * What the plugins that are on offer, read from their manifests without
- * running them: the custom editor for a file, the Plugins and tray menus'
- * commands.
+ * What the plugins on offer contribute, read from their manifests without
+ * running them: a file's custom editor, the Plugins and tray menus' commands.
  */
 
 /** The plugin that opens `path` in a tab of its own, if one is on:
@@ -31,8 +30,7 @@ export function customEditorFor(
   return null;
 }
 
-/** The commands the plugins that are on put in the Plugins menu
- *  (contributes.menus["app/plugins"]), in the plugins' order. */
+/** The commands the plugins that are on put in the Plugins menu, in order. */
 export function pluginMenuEntries(
   from: PluginsSnapshot = pluginsSnapshot(),
   menu: "app/plugins" | "app/tray" = "app/plugins",

@@ -4,18 +4,9 @@ import { registerEditorMenuItems } from "./editor/editor-menu-items";
 import { registerSettingsPage } from "./settings/settings-pages";
 
 /**
- * The places other code can add to the app, gathered in one object - the
- * draft of the plugin API (docs/dev/plugin-api.md). Each `register*`
- * returns the function that takes back what it added.
- *
- *   commands        an action, its name and optionally a shortcut
- *   editorMenu      items in the editor's right-click menu
- *   sidebarTabs     a tab in the sidebar, after Files, Outline, Clipboard
- *   settingsPages   a page in Settings, after the built-in ones
- *
- * Not loaded from anywhere yet: plugins come in 1.3. A development build
- * puts it on `window.__textusPlugins`, for the e2e flows and for trying an
- * extension out from the console.
+ * The places other code can add to the app: commands, editor menu items,
+ * sidebar tabs and settings pages. Each `register*` returns its undo. A
+ * development build puts it on `window.__textusPlugins`.
  */
 export const pluginApi = {
   commands: { register: registerCommand, run: runCommand },

@@ -9,7 +9,7 @@ export const findReplaceKey = new PluginKey<FindReplaceState>("find-replace");
 export interface FindReplaceMatch {
   from: number;
   to: number;
-  /** The exact matched text, needed so regex-mode replace can re-run capture groups against it. */
+  /** The exact matched text, so regex-mode replace can re-run capture groups. */
   text: string;
 }
 
@@ -17,7 +17,7 @@ export interface FindReplaceState {
   query: string;
   caseSensitive: boolean;
   useRegex: boolean;
-  /** Set when `useRegex` and `query` fails to compile - matches is empty in that case. */
+  /** Set when a regex-mode `query` fails to compile; matches is then empty. */
   error: boolean;
   matches: FindReplaceMatch[];
   activeIndex: number;
@@ -30,10 +30,8 @@ type FindReplaceMeta =
   | { type: "clear" };
 
 /**
- * The one place a find query becomes a RegExp - search (computeMatches) and
- * replacement (useFindReplace's capture-group re-apply) both compile through
- * here so their semantics can never drift apart. Null when a regex-mode
- * query doesn't compile.
+ * The one place a find query becomes a RegExp, so search and replacement
+ * can't drift apart. Null when a regex-mode query doesn't compile.
  */
 export function compileQuery(
   query: string,
@@ -52,15 +50,9 @@ export function compileQuery(
 }
 
 /**
- * Flattens a textblock's inline content (including nested enclosure nodes
- * like bold/italic md_span wrappers) into a plain string, alongside a
- * parallel array mapping each character index to its absolute doc position -
- * `posMap[i]` is the position right before character `i`, and the final
- * entry is the position right after the last character.
- *
- * Sibling of src/ai/doc-text.ts's textOffsetToDocPos: that one resolves a
- * single offset per walk, this one builds the whole map up front because a
- * search hits many offsets per block.
+ * Flattens a textblock's inline content, nested enclosures included, into a
+ * string plus a map from each character index to its doc position (one extra
+ * entry for the end).
  */
 function textblockCharMap(
   node: ProseNode,
@@ -101,12 +93,12 @@ export function computeMatches(
       const end = start + m[0].length;
       matches.push({
         from: posMap[start],
-        // The next character may live OUTSIDE an inline enclosure. Its
-        // start includes closing/opening node tokens that aren't matched.
+        // The next character may sit outside an inline enclosure, past node tokens
+        // that aren't matched.
         to: end > start ? posMap[end - 1] + 1 : posMap[start],
         text: m[0],
       });
-      // Zero-width matches (e.g. an all-optional regex) would otherwise spin forever.
+      // Zero-width matches would otherwise spin forever.
       regex.lastIndex = end > start ? end : end + 1;
     }
     return false;
@@ -139,10 +131,8 @@ const EMPTY_STATE: FindReplaceState = {
 };
 
 /**
- * Search/highlight engine for the find & replace bar (see useFindReplace.ts
- * and FindReplaceBar.tsx). Entirely driven by meta commands dispatched from
- * the hook - inert (no decorations, no work on every transaction) until a
- * query is set.
+ * Search/highlight engine for the find & replace bar, driven by meta
+ * commands; inert until a query is set.
  */
 export const findReplacePlugin = $prose(
   () =>
@@ -163,9 +153,7 @@ export const findReplacePlugin = $prose(
               meta.caseSensitive,
               meta.useRegex,
             );
-            // The first match from the caret on (wrapping), as in every
-            // other editor - not the document's first, which can be pages
-            // away from where the user is reading.
+            // The first match from the caret on (wrapping), not the document's first.
             const caret = tr.selection.from;
             const fromCaret = matches.findIndex((m) => m.from >= caret);
             const activeIndex = matches.length ? Math.max(fromCaret, 0) : -1;
@@ -190,8 +178,7 @@ export const findReplacePlugin = $prose(
 
           if (!tr.docChanged || !prev.query) return prev;
 
-          // Live re-search: keep results in step with edits (typing, undo, AI
-          // proposals) without waiting for the next explicit search command.
+          // Live re-search, so results follow edits.
           const { matches, error } = computeMatches(
             tr.doc,
             prev.query,

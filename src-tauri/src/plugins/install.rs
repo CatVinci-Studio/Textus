@@ -1,10 +1,6 @@
-//! Installing a plugin from a folder or a `.textusplugin` file (a zip of
-//! one), loading a folder in developer mode, listing what is installed and
-//! uninstalling.
-//!
-//! The manifest is read here only for its id and version - enough to know
-//! where the plugin goes. The window checks the rest of it
-//! (src/plugins/store/manifest.ts) before anything of the plugin runs.
+//! Installing a plugin from a folder or a `.textusplugin` zip, developer-mode
+//! loading, listing and uninstalling. Only the manifest's id and version are
+//! read here; the window checks the rest before the plugin runs.
 
 use super::state::{self, PluginEntry};
 use super::{data_dir, plugins_root, require_id, MANIFEST};
@@ -56,9 +52,8 @@ fn installed(id: String, dir: &Path, manifest: String, dev: bool) -> InstalledPl
     }
 }
 
-/// Every installed plugin: the folders under `plugins/` and the developer
-/// folders `state.json` names. One whose manifest can't be read is left
-/// out; a developer folder wins over an installed copy of the same id.
+/// Every installed plugin: `plugins/` and the developer folders in
+/// `state.json`. Unreadable manifests are left out; a developer folder wins.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn plugins_installed(app: tauri::AppHandle) -> Result<Vec<InstalledPlugin>, String> {
@@ -98,10 +93,8 @@ pub fn plugins_installed(app: tauri::AppHandle) -> Result<Vec<InstalledPlugin>, 
     Ok(out)
 }
 
-/// Copies a plugin folder, or unpacks a `.textusplugin`, into
-/// `plugins/<id>/`, replacing an earlier version. Its switch and grants are
-/// left as they were: a new plugin starts off, and the window asks for the
-/// permissions of one that wants more than it was granted.
+/// Copies a plugin folder or unpacks a `.textusplugin` into `plugins/<id>/`,
+/// replacing an earlier version. Its switch and grants are left as they were.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn plugin_install(
@@ -119,8 +112,8 @@ pub(super) fn install_sync(
 ) -> Result<InstalledPlugin, String> {
     let root = plugins_root(app)?;
     std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
-    // Unpacked beside where it goes, then renamed into place: a failed
-    // install leaves the earlier version as it was.
+    // Unpacked beside where it goes, then renamed into place, so a failed install
+    // leaves the earlier version.
     let staging = root.join(format!(
         ".installing-{}",
         std::time::SystemTime::now()
@@ -142,8 +135,8 @@ pub(super) fn install_sync(
             std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
         }
         std::fs::rename(&dir, &target).map_err(|e| e.to_string())?;
-        // Installed now, so no longer loaded from a developer folder - and,
-        // until the catalog says so (catalog.rs), not marked Official.
+        // Installed now, so no longer a developer folder, and not Official until the
+        // catalog says so.
         state::update(app, |state| {
             if let Some(entry) = state.plugins.get_mut(&head.id) {
                 entry.dev_path = None;
@@ -158,8 +151,7 @@ pub(super) fn install_sync(
     result
 }
 
-/// A plugin's files as text, by path in the plugin: what Textus AI writes
-/// when it makes one (src/ai/chat/ReplyPlugins.tsx).
+/// A plugin's files as text, by path in the plugin, as Textus AI writes them.
 #[derive(Deserialize, Debug)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct PluginFile {
@@ -171,8 +163,7 @@ pub struct PluginFile {
 const MAX_WRITTEN_BYTES: usize = 2 * 1024 * 1024;
 
 /// Writes `files` into a folder of their own, then installs it as a package
-/// is installed: the same checks, the same place, replacing an earlier
-/// version of the same plugin - the AI's next draft of it.
+/// is installed, replacing an earlier draft of the same plugin.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn plugin_install_files(
@@ -196,9 +187,8 @@ fn plain_relative(path: &str) -> bool {
         })
 }
 
-/// A plugin written in the conversation is the user's own: its id is
-/// `local.…`, so it can never replace an official plugin or anyone
-/// else's - a change to one of those is a copy beside it.
+/// A plugin written in the conversation is the user's own: its id is `local.…`,
+/// so it never replaces anyone else's plugin.
 fn written_id(manifest: &str) -> Result<String, String> {
     let id = serde_json::from_str::<serde_json::Value>(manifest)
         .ok()
@@ -330,9 +320,8 @@ fn unzip(file: &Path, to: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// Settings › Plugins › Load a plugin folder…: the plugin runs from where it
-/// is, so a change to its files shows on reload. It starts off, like any
-/// new plugin.
+/// Load a plugin folder…: the plugin runs from where it is, so changes show on
+/// reload. It starts off, like any new plugin.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_load_dev(app: tauri::AppHandle, path: String) -> Result<InstalledPlugin, String> {
@@ -349,9 +338,8 @@ pub fn plugin_load_dev(app: tauri::AppHandle, path: String) -> Result<InstalledP
     Ok(installed(head.id, &dir, text, true))
 }
 
-/// When a developer's plugin folder last changed: the newest file's time,
-/// in ms - the window loads the plugin again when it moves (folders such
-/// as node_modules and .git aside). None for a plugin not loaded from one.
+/// When a developer's plugin folder last changed (newest file, in ms, ignoring
+/// node_modules and .git), so the window reloads it. None for other plugins.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_dev_stamp(app: tauri::AppHandle, id: String) -> Result<Option<f64>, String> {
@@ -395,8 +383,8 @@ fn newest_change(dir: &std::path::Path, depth: usize) -> Option<f64> {
     newest
 }
 
-/// Removes a plugin: its entry, its storage and - unless it was loaded from
-/// a developer's folder, which is theirs - its files.
+/// Removes a plugin: its entry, its storage and, unless loaded from a
+/// developer's folder, its files.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String> {

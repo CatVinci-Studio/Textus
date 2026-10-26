@@ -10,9 +10,8 @@ import { ResizeHandle } from "../ui/ResizeHandle";
 import type { Strings } from "../i18n/strings";
 import { TextusAiOffNote } from "../ai/TextusAiSwitch";
 
-/** The docked Agent panel's frame on the right (a bottom sheet on a
- *  phone). App owns the frame; the active tab's editor renders its
- *  conversation into the mount point here. */
+/** The docked Agent panel's frame (a bottom sheet on a phone); the active
+ *  tab's editor renders its conversation into the mount point here. */
 export function AgentPanelDock({
   presence,
   closing,
@@ -39,8 +38,8 @@ export function AgentPanelDock({
   /** The active tab is in source mode or split view. */
   sourceMode: boolean;
   onToggleSourceMode: () => void;
-  /** Textus AI is on. Off, the panel closes (useSidePanels); one opened
-   *  anyway (a tour lesson) says so and offers to turn it back on. */
+  /** Textus AI is on. A panel opened anyway (a tour lesson) offers to turn
+   *  it back on. */
   aiOn: boolean;
   t: Strings;
 }) {
@@ -53,8 +52,7 @@ export function AgentPanelDock({
       className={`agent-panel${sheetFull ? " agent-panel-sheet-full" : ""}`}
       style={{ width }}
     >
-      {/* Phone widths: the panel is a bottom sheet (mobile/styles)
-        and this is its handle; hidden elsewhere. */}
+      {/* Phone widths: the bottom sheet's handle. */}
       {isIOSApp && (
         <AgentPanelSheetGrip
           full={sheetFull}
@@ -74,10 +72,8 @@ export function AgentPanelDock({
         label={t.agentPanelResize}
       />
       <div className="agent-panel-mount" ref={mountRef} />
-      {/* The conversation lives in the rich editor (each tab's
-        MilkdownEditor renders it here); source mode and split view
-        have none to render, and nothing does while Textus AI is off,
-        so say so instead of an empty column. */}
+      {/* Source mode, split view and AI off have no conversation, so say so
+        instead of an empty column. */}
       {!aiOn && <TextusAiOffNote className="agent-panel-placeholder" />}
       {aiOn && sourceMode && (
         <div className="agent-panel-placeholder">

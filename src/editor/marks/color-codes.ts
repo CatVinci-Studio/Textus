@@ -1,12 +1,9 @@
 /**
- * Colour codes a swatch can show (#146): inline code that is one colour,
- * and colour codes written in a block's plain text. Both name the colour
- * outright - hex or a CSS colour function with plain numbers - so `red`,
- * `currentColor` or `var(--x)` never get one.
+ * Colour codes a swatch can show: inline code that is one colour, and codes
+ * in a block's plain text. Only hex or colour functions with plain numbers,
+ * never `red` or `var(--x)`.
  */
 
-// Plain numbers only - the same idea as raw HTML's style check
-// (html/html-policy.ts), stricter.
 const NUM = String.raw`[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?`;
 const PCT = `${NUM}%`;
 const NUM_OR_PCT = `${NUM}%?`;
@@ -29,9 +26,8 @@ const FUNCTION_FORMS = [
 const HEX = "#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})";
 const CODE_RE = new RegExp(`^(?:${[HEX, ...FUNCTION_FORMS].join("|")})$`, "i");
 
-// The pattern lets through a few the browser refuses (percentages and
-// numbers mixed in the comma form); it has the last word where it can be
-// asked. Remembered, since a document repeats its few colours.
+// The pattern lets through a few the browser refuses; it has the last word
+// where it can be asked. Remembered, since a document repeats its colours.
 const taken = new Map<string, boolean>();
 function browserTakes(value: string): boolean {
   if (typeof CSS === "undefined" || !CSS.supports) return true;
@@ -44,16 +40,15 @@ function browserTakes(value: string): boolean {
   return ok;
 }
 
-/** The colour inline code's text is, when a swatch can show it: hex,
- *  rgb()/rgba(), hsl()/hsla(), oklch(), oklab() or color() - never a bare
- *  keyword. Else null. */
+/** The colour inline code's text is, when a swatch can show it; never a
+ *  bare keyword. Else null. */
 export function colorOfCode(text: string): string | null {
   const value = text.trim();
   return CODE_RE.test(value) && browserTakes(value) ? value : null;
 }
 
-/** Stands for what isn't the block's own text - inline code, a wikilink,
- *  an image, raw HTML - in the string findColorCodes reads. */
+/** Stands for what isn't the block's own text in the string findColorCodes
+ *  reads. */
 export const OPAQUE = "\uFFFC";
 
 export interface ColorCode {
@@ -64,8 +59,7 @@ export interface ColorCode {
 }
 
 // Six or eight digits only in prose, where a short one is as often a tag
-// (#add, #cafe) or an issue (#234) as a colour; code takes the short ones
-// too (`color: #fff`).
+// (#add) or an issue (#234); code takes the short ones too.
 const HEX_RE = /#([0-9a-f]{8}|[0-9a-f]{6})/gi;
 const CODE_HEX_RE = /#([0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})/gi;
 const FUNCTION_RE = new RegExp(`(?:${FUNCTION_FORMS.join("|")})`, "gi");
@@ -74,17 +68,15 @@ const FUNCTION_RE = new RegExp(`(?:${FUNCTION_FORMS.join("|")})`, "gi");
 // follow a letter directly: 颜色#ff8800.
 const CJK =
   /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
-// Next to a hex code, these make it part of something else: a word, a
-// path or URL (`/#fff`, `?c=#fff`, `x.com#fff`), a footnote (`[^#fff]`),
-// another tag or code (`#fff#000`, `#fff-dark`).
+// Next to a hex code, these make it part of something else: a word, a path
+// or URL, a footnote, another tag.
 const WORDLIKE = /[\p{L}\p{N}_\-#/\\@&=?%~+^*$]/u;
 const BEFORE_FUNCTION = /[\p{L}\p{N}_\-.]/u;
 
 const isWordlike = (ch: string | undefined) =>
   ch !== undefined && WORDLIKE.test(ch) && !CJK.test(ch);
 
-// English words spelled in hex digits, six or eight long: tags, not
-// colours (#facade).
+// English words spelled in hex digits: tags, not colours (#facade).
 const HEX_WORDS = new Set([
   "accede",
   "beaded",
@@ -108,13 +100,10 @@ function tokenAround(text: string, from: number, to: number): string {
 const inUrl = (token: string) => /:\/\/|www\./i.test(token);
 
 /**
- * The colour codes written in a block's text, in order. A hex code counts
- * only as a token of its own - not inside a word, a URL or a path - and
- * only with six or eight digits that don't spell a word, so Obsidian tags
- * (#add, #cafe, #facade) and issue numbers (#234) stay plain. In a code
- * block (`inCode`) three and four digits count too, as CSS writes them,
- * but not a CSS id selector (`#fed {`). Colour functions count wherever
- * their syntax is whole. Colour names never do.
+ * The colour codes in a block's text, in order. A hex code counts only as a
+ * token of its own, not in a word, URL or path, and with six or eight digits
+ * that don't spell a word; in code (`inCode`) three and four too, but not a
+ * CSS id selector. Colour functions count wherever whole.
  */
 export function findColorCodes(text: string, inCode = false): ColorCode[] {
   const found: ColorCode[] = [];

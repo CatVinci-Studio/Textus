@@ -1,13 +1,6 @@
-//! Word (.docx) to Markdown: headings from the paragraph styles, numbered and
-//! bulleted lists from the numbering part, tables, bold, italic and
-//! strikethrough, links, images by their alt text, and footnotes and
-//! endnotes as `[^1]` references with their text at the end.
-//!
-//! MarkItDown (github.com/microsoft/markitdown, MIT) gets here through
-//! mammoth's docx-to-HTML and then HTML to Markdown; without Python, this
-//! reads the same parts of the file directly. What it keeps follows
-//! mammoth's default style map: built-in "heading N" styles (and styles based
-//! on them) become headings, "Title" a top heading.
+//! Word (.docx) to Markdown: headings, lists, tables, emphasis, links, images
+//! by alt text, and notes as `[^1]` references. Follows mammoth's default style
+//! map, as MarkItDown (MIT) does, but reads the parts directly.
 
 use super::markdown::{self, Blocks, Inline, Marks};
 use super::xml::{resolve_part, zip_entry, Node, Pull, Rels, Tag};
@@ -19,8 +12,8 @@ pub(crate) use styles::*;
 mod numbering;
 pub(crate) use numbering::*;
 
-/// Saves one picture of a document being opened - its file name in the
-/// .docx and its bytes - and returns the src to link it by.
+/// Saves one picture of a document being opened (its file name in the .docx
+/// and its bytes) and returns the src to link it by.
 pub(crate) type SaveImage<'a> = dyn FnMut(&str, &[u8]) -> Option<String> + 'a;
 
 /// The src a picture's relationship target is saved as (`convert`).
@@ -32,12 +25,9 @@ pub(super) fn docx_markdown(path: &Path) -> Result<String, String> {
     convert(path, None)
 }
 
-/// The Markdown of a Word file opened as a document (File > Open; the
-/// command is commands/word_import.rs). Unlike the AI's, the text is
-/// escaped so it reads back as the same words, line breaks stay breaks,
-/// and each picture is handed to `save_image` with its file name and bytes;
-/// the src it returns is what the document links to (None: the picture is
-/// linked by its path inside the file, and shows as missing).
+/// The Markdown of a Word file opened as a document. Unlike the AI's, the text
+/// is escaped, line breaks stay breaks, and each picture goes to `save_image`,
+/// whose src the document links to (None: linked by its path inside the file).
 pub(crate) fn docx_document(path: &Path, save_image: &mut SaveImage<'_>) -> Result<String, String> {
     convert(path, Some(save_image))
 }
@@ -114,9 +104,8 @@ struct Docx<'a> {
     /// The notes in the order the body refers to them; a note's number is
     /// its place here.
     cited: Vec<(&'static str, String)>,
-    /// Set when the file is opened as a document (`docx_document`): the src
-    /// a picture's relationship target is saved as. It also means the text
-    /// is escaped.
+    /// Set when the file is opened as a document: the src a picture's
+    /// relationship target is saved as. It also means the text is escaped.
     picture: Option<&'a mut Picture<'a>>,
     /// Inside a table cell or a note, whose paragraphs are written on one
     /// line: a line break there is no Markdown break.
@@ -147,10 +136,8 @@ impl Docx<'_> {
         }
     }
 
-    /// A paragraph's rendered runs as the lines of one block. Opened as a
-    /// document, a line break is a hard break (`\` at the line's end) and
-    /// not the soft one that reads as a space, and no line may start a
-    /// block of its own.
+    /// A paragraph's rendered runs as the lines of one block. Opened as a document,
+    /// a line break is a hard break, and no line may start a block of its own.
     fn lines(&self, text: String) -> String {
         if !self.opening() {
             return text;
@@ -163,9 +150,8 @@ impl Docx<'_> {
         }
     }
 
-    /// Paragraphs and tables until the Close of the element they sit in (the
-    /// body, a table cell, a text box, a note). Everything else - content
-    /// controls, custom XML, inserted revisions - is looked through.
+    /// Paragraphs and tables until the Close of the element they sit in. Content
+    /// controls, custom XML and inserted revisions are looked through.
     fn blocks(&mut self, x: &mut Pull, out: &mut Blocks) {
         let mut depth = 0usize;
         loop {
@@ -347,9 +333,7 @@ impl Docx<'_> {
         }
     }
 
-    /// A picture as `![alt text](media/image1.png)`, from wherever in the
-    /// drawing its description and its image sit; text boxes in it go to
-    /// `boxed`.
+    /// A picture as `![alt text](media/image1.png)`; text boxes in it go to `boxed`.
     fn drawing(&mut self, x: &mut Pull, boxed: &mut Blocks) -> Option<String> {
         let mut alt = String::new();
         let mut target = None;
@@ -554,8 +538,7 @@ fn cell_span(x: &mut Pull) -> usize {
     }
 }
 
-/// Alt text on one line, without the brackets that would end it early -
-/// MarkItDown's cleanup of slide picture descriptions.
+/// Alt text on one line, without the brackets that would end it early.
 pub(super) fn image_alt(text: &str) -> String {
     text.replace(['[', ']'], " ")
         .split_whitespace()

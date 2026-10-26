@@ -17,8 +17,8 @@ pub(crate) fn install(app: &tauri::App) -> tauri::Result<()> {
     Ok(())
 }
 
-/// Builds the menu bar with `labels` and makes it the app's, Open Recent
-/// filled from the persisted list.
+/// Builds the menu bar with `labels` and makes it the app's, Open Recent filled
+/// from the persisted list.
 pub(crate) fn set_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Result<()> {
     let checked = app.state::<ViewChecks>().0.lock().unwrap().checked.clone();
     let accelerators = app.state::<MenuAccelerators>().0.lock().unwrap().clone();
@@ -32,9 +32,8 @@ pub(crate) fn set_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tau
     Ok(())
 }
 
-/// The whole menu bar, its Open Recent submenu (built empty) and the View
-/// menu's on/off items, marked as `checked` has them, and the heading
-/// levels with the keys in `accelerators`.
+/// The whole menu bar, its Open Recent submenu (built empty), the View menu's
+/// on/off items, and the heading levels with the keys in `accelerators`.
 pub(crate) fn build(
     app: &AppHandle,
     labels: &HashMap<String, String>,
@@ -43,29 +42,20 @@ pub(crate) fn build(
 ) -> tauri::Result<BuiltMenu> {
     let l = |key: &str, english: &'static str| label(labels, key, english);
     let name = app_identity::APP_NAME;
-    // Accelerators below are written "CmdOrCtrl+X", never "Cmd+X". They read
-    // the same on macOS - both parse to ⌘ - but muda maps a bare CMD to
-    // SUPER, which on Windows is the WINDOWS key. That silently handed our
-    // shortcuts to the OS: Cmd+P became Win+P (the projection panel),
-    // Cmd+Shift+S became Win+Shift+S (the screenshot tool), and none of them
-    // ever reached the app.
+    // Accelerators are "CmdOrCtrl+X", never "Cmd+X": muda maps a bare CMD to
+    // SUPER, the Windows key on Windows, which handed shortcuts to the OS.
     let settings_item =
         MenuItemBuilder::with_id(SETTINGS_MENU_ID, l(SETTINGS_MENU_ID, "Settings…"))
             .accelerator("CmdOrCtrl+,")
             .build(app)?;
 
-    // Custom Quit instead of the predefined one: quitting must give
-    // every window's unsaved document its close-confirmation prompt,
-    // so it goes through each window's normal close request rather
-    // than exiting the process outright.
+    // Custom Quit: it goes through each window's close request so unsaved
+    // documents get their prompt.
     let quit_item = {
         let quit = format!("Quit {name}");
         let builder = MenuItemBuilder::with_id(QUIT_ID, label(labels, QUIT_ID, &quit));
-        // Cmd+Q on macOS, Ctrl+Q on Linux - but Windows has no such combo.
-        // There the app is closed with Alt+F4, which the OS delivers on its
-        // own, and Ctrl+Q means nothing, so claiming it would only take a
-        // shortcut Windows users never aim at Quit. The app-drawn menu
-        // advertises Alt+F4 instead (src/app/menu/app-menu-model.ts).
+        // Cmd+Q on macOS, Ctrl+Q on Linux. Windows quits with Alt+F4, so Ctrl+Q isn't
+        // claimed there.
         #[cfg(not(windows))]
         let builder = builder.accelerator("CmdOrCtrl+Q");
         builder.build(app)?
@@ -77,9 +67,7 @@ pub(crate) fn build(
             .about_with_text(label(labels, "predefined:about", &about), None)
             .separator()
             .item(&settings_item);
-        // Hide / Hide Others / Show All are macOS application-menu concepts.
-        // muda still renders them elsewhere, so on Windows they were three
-        // entries that did nothing when clicked.
+        // Hide / Hide Others / Show All are macOS concepts; elsewhere they did nothing.
         #[cfg(target_os = "macos")]
         let builder = {
             let hide = format!("Hide {name}");
@@ -92,11 +80,8 @@ pub(crate) fn build(
         builder.separator().item(&quit_item).build()?
     };
 
-    // Windows draws its menu inside the webview, so New/Open are captured by
-    // App.tsx and routed back through dispatch below. Keeping native
-    // accelerators there as well risks either losing them while editor focus
-    // is active or firing both paths. macOS/Linux keep their visible native
-    // menu accelerators.
+    // Windows draws its menu in the webview, so New/Open are routed by the
+    // frontend; native accelerators there would be lost or fire twice.
     let new_file_builder = MenuItemBuilder::with_id(NEW_FILE_ID, l(NEW_FILE_ID, "New File"));
     #[cfg(not(windows))]
     let new_file_builder = new_file_builder.accelerator("CmdOrCtrl+N");
@@ -106,14 +91,13 @@ pub(crate) fn build(
     #[cfg(not(windows))]
     let open_file_builder = open_file_builder.accelerator("CmdOrCtrl+O");
     let open_file_item = open_file_builder.build(app)?;
-    // No accelerator: Cmd+Shift+O is the sidebar's file search, a
-    // configurable shortcut the frontend handles.
+    // No accelerator: Cmd+Shift+O is the sidebar's file search, handled by the
+    // frontend.
     let open_folder_item =
         MenuItemBuilder::with_id(OPEN_FOLDER_ID, l(OPEN_FOLDER_ID, "Open Folder…")).build(app)?;
     let close_folder_item =
         MenuItemBuilder::with_id(CLOSE_FOLDER_ID, l(CLOSE_FOLDER_ID, "Close Folder")).build(app)?;
-    // Built empty here; rebuild_recent_menu below fills it from the
-    // persisted list and keeps it current as files are opened.
+    // Built empty; rebuild_recent_menu fills it.
     let open_recent_menu =
         SubmenuBuilder::new(app, l("menu:open-recent", "Open Recent")).build()?;
     let save_file_item = MenuItemBuilder::with_id(SAVE_FILE_ID, l(SAVE_FILE_ID, "Save"))
@@ -132,8 +116,7 @@ pub(crate) fn build(
         .item(&export_pdf_item)
         .item(&export_html_item)
         .separator();
-    // Everything below converts through a user-installed pandoc
-    // (commands/export.rs) - same format list Typora offers.
+    // These all convert through a user-installed pandoc.
     for (format, label) in [
         ("docx", "Word (.docx)…"),
         ("odt", "OpenDocument (.odt)…"),
@@ -151,8 +134,7 @@ pub(crate) fn build(
     }
     let export_menu = export_menu_builder.build()?;
 
-    // Cmd+W closes the current tab (not the window - see
-    // CLOSE_WINDOW_ID below, which owns Cmd+Shift+W instead).
+    // Cmd+W closes the current tab; Close Window owns Cmd+Shift+W.
     let close_tab_item = MenuItemBuilder::with_id(CLOSE_TAB_ID, l(CLOSE_TAB_ID, "Close Tab"))
         .accelerator("CmdOrCtrl+W")
         .build(app)?;
@@ -172,9 +154,8 @@ pub(crate) fn build(
         .item(&close_tab_item)
         .build()?;
 
-    // No fixed accelerator - the combo is user-configurable and
-    // handled by the frontend keydown dispatcher (see
-    // toggle_source_mode_item's comment below for why).
+    // No fixed accelerator: the combo is user-configurable and handled by the
+    // frontend.
     let find_replace_item =
         MenuItemBuilder::with_id(FIND_REPLACE_ID, l(FIND_REPLACE_ID, "Find & Replace…"))
             .build(app)?;
@@ -200,8 +181,7 @@ pub(crate) fn build(
     );
     #[cfg(not(target_os = "macos"))]
     let edit_menu = edit_menu.select_all_with_text(l("predefined:select-all", "Select All"));
-    // On for the document on screen (src/ai/margin/useOwnRevisions.ts),
-    // whose check the frontend sends.
+    // On for the document on screen, as the frontend sends.
     let track_changes_item =
         CheckMenuItemBuilder::with_id(TRACK_CHANGES_ID, l(TRACK_CHANGES_ID, "Track My Changes"))
             .checked(checked.get(TRACK_CHANGES_ID).copied().unwrap_or(false))
@@ -224,8 +204,8 @@ pub(crate) fn build(
     ] {
         let id = format!("{INSERT_BLOCK_PREFIX}{kind}");
         let item = MenuItemBuilder::with_id(&id, l(&id, label)).build(app)?;
-        // Set after the build: a key muda can't read leaves the item
-        // without one, where the builder would fail the whole bar.
+        // Set after the build: a key muda can't read leaves the item without one,
+        // where the builder would fail the whole bar.
         if let Some(accelerator) = accelerators.get(&id) {
             let _ = item.set_accelerator(Some(accelerator));
         }
@@ -245,11 +225,8 @@ pub(crate) fn build(
     }
     let format_menu = format_menu_builder.build()?;
 
-    // No fixed accelerators on these - their shortcuts are
-    // user-configurable and handled by the frontend keydown
-    // dispatcher (App.tsx), which reads the current bindings from
-    // Settings. A native accelerator here would keep firing on the
-    // default combo even after the user rebinds it.
+    // No fixed accelerators: these are user-configurable and handled by the
+    // frontend; a native one would keep firing on the default combo after a rebind.
     let item = |id: &str, english: &'static str| MenuItemBuilder::with_id(id, l(id, english));
     // The on/off items: named by what they show ("Sidebar", never "Toggle
     // Sidebar"), with the check mark saying whether it is on.
@@ -269,10 +246,8 @@ pub(crate) fn build(
     let split_down_item = item(SPLIT_DOWN_ID, "Split Down").build(app)?;
     let close_split_item = item(CLOSE_SPLIT_ID, "Close Split").build(app)?;
 
-    // Fixed OS-convention accelerators (like Cmd+S / Cmd+W), not
-    // user-configurable ones - so unlike the items above they keep
-    // native accelerators. Zoom itself is applied by the frontend
-    // (app/useZoom.ts), which also handles pinch and mod+wheel.
+    // Fixed OS-convention accelerators, unlike the items above. The frontend
+    // applies the zoom itself.
     let zoom_in_item = item(ZOOM_IN_ID, "Zoom In")
         .accelerator("CmdOrCtrl+=")
         .build(app)?;
@@ -304,12 +279,8 @@ pub(crate) fn build(
             .item(&zoom_in_item)
             .item(&zoom_out_item)
             .item(&zoom_reset_item);
-        // Same story as Hide/Show All and Bring All to Front: muda documents
-        // its predefined fullscreen item as unsupported on Windows and
-        // Linux, where it renders as an entry that does nothing when
-        // clicked. Windows reaches fullscreen through the app-drawn menu
-        // instead, which calls the window API directly
-        // (src/app/menu/app-menu-actions.ts).
+        // muda's predefined fullscreen item does nothing on Windows and Linux; Windows
+        // reaches fullscreen through the app-drawn menu.
         #[cfg(target_os = "macos")]
         let builder = builder
             .separator()
@@ -317,16 +288,13 @@ pub(crate) fn build(
         builder.build()?
     };
 
-    // Cmd/Ctrl+Shift+N everywhere: what file managers, browsers and VS Code
-    // open a window with. Cmd+T read as "new tab" to anyone coming from a
-    // browser, and this app has tabs (Cmd+N opens a new document in one).
+    // Cmd/Ctrl+Shift+N everywhere, as file managers and browsers do; Cmd+N opens
+    // a new document.
     const NEW_WINDOW_ACCEL: &str = "CmdOrCtrl+Shift+N";
     let new_window_item = item(NEW_WINDOW_ID, "New Window")
         .accelerator(NEW_WINDOW_ACCEL)
         .build(app)?;
-    // Built manually (not the .close_window() predefined item) so it
-    // doesn't own the OS-default Cmd+W accelerator - that's Close
-    // Tab's now (see CLOSE_TAB_ID above).
+    // Built manually so it doesn't own Cmd+W, which is Close Tab's.
     let close_window_item = item(CLOSE_WINDOW_ID, "Close Window")
         .accelerator("CmdOrCtrl+Shift+W")
         .build(app)?;
@@ -339,8 +307,7 @@ pub(crate) fn build(
             .maximize_with_text(l("predefined:maximize", "Zoom"))
             .separator()
             .item(&close_window_item);
-        // Same story as Hide/Show All above: "Bring All to Front" is an
-        // NSApplication command with no Windows counterpart.
+        // "Bring All to Front" is an NSApplication command with no Windows counterpart.
         #[cfg(target_os = "macos")]
         let builder = builder
             .separator()
@@ -366,8 +333,8 @@ pub(crate) fn build(
         .text(COMMUNITY_ID, l(COMMUNITY_ID, "Join the Community"))
         .build()?;
 
-    // Filled by rebuild_plugin_menu, from what the plugins that are on add;
-    // none where the app doesn't show plugins.
+    // Filled by rebuild_plugin_menu from the enabled plugins; none where plugins
+    // aren't shown.
     let plugins_menu = if PLUGINS_SHOWN {
         Some(SubmenuBuilder::new(app, l("menu:plugins", "Plugins")).build()?)
     } else {

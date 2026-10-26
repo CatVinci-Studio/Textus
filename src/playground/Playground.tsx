@@ -45,9 +45,9 @@ function usePageEvents(
   toggleSource: () => void,
   editorRef: RefObject<EditorHandle | null>,
 ) {
-  // Files dropped anywhere on the page: a document is imported, anything
-  // else explained - and never left to the browser, which would navigate
-  // away to show it. Dragging text inside the editor isn't a file drag.
+  // Files dropped on the page: a document is imported, anything else
+  // explained, never left to the browser to navigate to. Text dragged inside
+  // the editor isn't a file drag.
   const importRef = useRef(importFile);
   importRef.current = importFile;
   useEffect(() => {
@@ -107,10 +107,8 @@ function useNotice() {
   return [notice, setNotice] as const;
 }
 
-/**
- * Textus in a browser tab: the editor, Import, Export and nothing else.
- * One document, kept in this browser (document-store.ts).
- */
+/** Textus in a browser tab: the editor, Import and Export. One document,
+ *  kept in this browser. */
 export function Playground({ settings }: { settings: Settings }) {
   const t = resolveStrings(settings.language);
   const [content, setContent] = useState(

@@ -1,5 +1,5 @@
-/* The browser playground's page: the app's palette and type (base.css),
-   its document column (editor-column.css), and a slim bar of its own. */
+/* The browser playground's page: the app's palette, type and document
+   column, and a slim bar of its own. */
 @import "../ui/base.css";
 @import "../app/editor-column.css";
 

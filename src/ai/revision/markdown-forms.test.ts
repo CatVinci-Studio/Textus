@@ -9,8 +9,8 @@ import {
   wholeBlockKind,
 } from "./markdown-forms";
 
-// Blocks are read by the editor's parser (block-reader.ts), which an
-// editor registers as it starts.
+// Blocks are read by the editor's parser, which an editor registers as it
+// starts.
 let reader: Editor | null = null;
 beforeAll(async () => {
   reader = await createTestEditor("");

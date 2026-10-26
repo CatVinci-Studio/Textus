@@ -1,11 +1,7 @@
 import { useEffect } from "react";
 
-/** Fixed-position popups are placed once, from where their anchor was:
- *  when the page moves under them (scroll, resize, the window losing
- *  focus) they'd point at the wrong text, so they close instead.
- *  A phone shows both as action sheets, which point at nothing - and
- *  closing them when the sheet's own list scrolls or the keyboard goes
- *  down would only lose them (the caller passes `anyPopup` false there). */
+/** Fixed-position popups close when the page moves under them, since they
+ *  would point at the wrong text. A phone's action sheets are exempt. */
 export function usePopupDismiss({
   anyPopup,
   setMenu,
@@ -24,10 +20,8 @@ export function usePopupDismiss({
       setMenu(null);
       hideGrammar();
     };
-    // Typewriter mode scrolls on every caret move - the very move that
-    // opens the grammar popover - so there a scroll only closes the menu.
-    // A long menu scrolls inside itself (a table's, on a short window);
-    // that moves nothing it points at, so it stays open.
+    // Typewriter mode scrolls on every caret move, so there a scroll only
+    // closes the menu. A menu scrolling inside itself stays open.
     const onScroll = (e: Event) => {
       if (e.target instanceof Element && e.target.closest(".floating-surface"))
         return;

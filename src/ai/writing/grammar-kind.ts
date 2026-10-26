@@ -1,12 +1,7 @@
 import { CJK_SCRIPT } from "../../utils/cjk";
 
-/**
- * What kind of slip a grammar suggestion fixes, for the label on its card:
- * a writing-rules finding, punctuation only, a misspelling or wrong
- * character, or grammar. Read off the change itself - the checker reports
- * a description, not a category - so it is a guess with a safe default:
- * anything not plainly one of the first three is "grammar".
- */
+/** What kind of slip a grammar suggestion fixes, guessed from the change
+ *  since the checker gives no category. Anything unclear is "grammar". */
 export type GrammarKind = "rules" | "punctuation" | "spelling" | "grammar";
 
 const PUNCT = /[\p{P}\p{S}\s]/gu;

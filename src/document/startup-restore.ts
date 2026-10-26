@@ -23,13 +23,9 @@ async function opensInPlugin(path: string): Promise<boolean> {
   return customEditorFor(path) !== null;
 }
 
-// Module-scoped, NOT a ref: React StrictMode (dev builds) runs mount effects
-// twice on the same component, and this drain is a destructive pull from
-// shared Rust-side queues (and the drafts store) - a second run would steal
-// content meant for other windows or double-claim recovered drafts. Module
-// state survives the StrictMode remount; separate windows are separate
-// webviews with their own module instance, so each window still drains
-// exactly once.
+// Module-scoped, not a ref: StrictMode runs mount effects twice, and this
+// drain is a destructive pull from shared queues. Each window is its own
+// webview, so each still drains exactly once.
 let drained = false;
 
 export interface StartupRestoreOptions {
@@ -46,43 +42,28 @@ export interface StartupRestoreOptions {
     open?: { restoreCaret?: boolean },
   ) => Promise<void>;
   openFile: (path: string, open?: { restoreCaret?: boolean }) => Promise<void>;
-  /** Opens `path` in tab `tabId`, in place of what it holds
-   *  (app/useFileOpening.ts). */
+  /** Opens `path` in tab `tabId`, in place of what it holds. */
   replaceTabWithFile: (tabId: string, path: string) => Promise<void>;
-  /** Settings › General › Restore previous session on startup: reopened
-   *  documents come back at the caret they were left at. */
+  /** Reopened documents come back at the caret they were left at. */
   restoreCarets: boolean;
   startTutorial: (tabId: string) => void;
   stopTutorial: () => void;
 }
 
 /**
- * Everything that can claim this window's initial blank tab (or add extra
- * ones) at launch, in priority order: a tab dragged in from another window
- * (which short-circuits everything else - see below), recovered drafts (2.4,
- * never steals focus - just adds tabs), a Help doc this window was spawned to
- * show, OS-handed-over file paths, and finally - if nothing else claimed
- * anything - the first-run tutorial. Runs exactly
- * once per window, at mount; the effect deliberately uses `[]` (not the
- * values it closes over) since a later change to any of them shouldn't
- * re-trigger a second drain.
+ * Everything that can claim this window's initial blank tab at launch, in
+ * priority order. Runs once per window: later option changes must not
+ * trigger a second drain.
  */
 export function useStartupRestore(options: StartupRestoreOptions): void {
-  // Read once, as the window mounts: this runs once per launch.
   const latest = useLatest(options);
   useEffect(() => {
     if (drained) return;
     drained = true;
     const opts = latest.current;
-    // Puts a document into the initial blank tab. Its editor may well have
-    // mounted already (it is lazy-loaded, and everything below awaits IPC
-    // first), and an editor reads its content once, at mount - so without
-    // a remount it went on showing the blank tab's empty document while the
-    // tab held the file: the word count right, the page empty, and typing
-    // there would have replaced the file's text on the next save. Moving
-    // reloadKey on remounts it on the new content, as app/useFileOpening.ts's
-    // replaceTabWithFile does; before the editor has mounted it costs
-    // nothing.
+    // The blank tab's editor may already have mounted and read its content
+    // once; moving reloadKey remounts it on the new document, or it would
+    // show (and save) the empty one.
     const loadIntoInitialTab = (doc: Partial<DocTab>) =>
       opts.setTabs((prev) =>
         prev.map((tab) =>
@@ -91,33 +72,23 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
             : tab,
         ),
       );
-    // A document reopened into the initial tab: at its last caret
-    // (last-carets.ts), taken by the editor its reloadKey remounts.
+    // At its last caret, taken by the editor its reloadKey remounts.
     const restoreCaret = (path: string, diskMtime: number | null) => {
       const at = opts.restoreCarets ? lastCaret(path, diskMtime) : null;
       if (at) setTabJump(opts.activeTabId, { kind: "caret", at });
     };
     void (async () => {
-      // A tab dragged out of another window's tab bar (see TabBar.tsx /
-      // detachTab). Checked FIRST, ahead of draft recovery: this window was
-      // created for this one document and must claim nothing else. Draft
-      // recovery below is a DESTRUCTIVE drain of the app-wide snapshot pool,
-      // and the dragged tab's own snapshot is very likely still in it - the
-      // source window clears it asynchronously (draft-autosave.ts) with no
-      // ordering guarantee against this window mounting. Draining here would
-      // re-add the dragged document as a "recovered" tab and then land it a
-      // second time as the detached tab.
+      // A tab dragged out of another window. Checked first: the draft drain
+      // below would otherwise re-add it, since its source window clears its
+      // snapshot asynchronously.
       const detached = canUseWindows ? await windowIpc.takeDetachedTab() : null;
       if (detached) {
         opts.stopTutorial();
         loadIntoInitialTab(detached);
         return;
       }
-      // Recovered drafts (2.4): content a previous run snapshotted but never
-      // resolved (crash, forced quit) - added as extra tabs, never stealing
-      // focus from whatever this launch's OS-open/session claim below picks.
-      // Skipped entirely while the privacy toggle is off - any leftover
-      // snapshot files just sit unread until Clear or a re-enable.
+      // Recovered drafts from a crash or forced quit, added as extra tabs
+      // without stealing focus. Skipped while the privacy toggle is off.
       const draftSnapshots = opts.enableDraftRecovery
         ? ((await drafts.takeDraftSnapshots()) ?? [])
         : [];
@@ -153,18 +124,14 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           opts.setDraftsRestoredCount(restored.length);
         }
       }
-      // A Help menu doc clicked with no window open: this window was
-      // spawned to show it, so the bundled document rides the blank
-      // initial tab instead of opening next to it. "welcome" starts the
-      // tutorial on that same already-blank tab instead (same as clicking
-      // the Help menu item directly would - see startWelcomeTutorial).
+      // A Help doc clicked with no window open: this window was spawned to
+      // show it in the blank tab. "welcome" starts the tutorial there.
       const helpDoc: string | null = hasAppMenu
         ? await windowIpc.takePendingShowHelp()
         : null;
       if (helpDoc === "markdown" || helpDoc === "agent") {
-        // A tutorial can be persisted from a previous window. A window born
-        // specifically to show a guide must not restore that overlay on top
-        // of the guide (nor treat the guide's bundled text as practice).
+        // A window born to show a guide must not restore a persisted
+        // tutorial over it.
         opts.stopTutorial();
         const content = await helpDocContent(helpDoc as HelpDoc, opts.language);
         loadIntoInitialTab({
@@ -179,9 +146,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         if (!opts.onboardingShown) opts.markOnboardingShown();
         return;
       }
-      // A document whose unsaved edits were just recovered opens once, with
-      // those edits - not once as saved and again as a recovered tab (the
-      // session reopens the files a crash left open, drafts and all).
+      // A document with recovered edits opens once, with those edits.
       const recoveredFor = (path: string) =>
         restored.find((tab) => tab.path === path);
       const loadRecoveredIntoInitialTab = (recovered: DocTab) => {
@@ -202,8 +167,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           if (recovered) {
             loadRecoveredIntoInitialTab(recovered);
           } else if (isWordDocument(first) || (await opensInPlugin(first))) {
-            // Converted into the initial tab (word-import.ts), or shown
-            // there by the plugin that opens it (plugins/manager.ts).
+            // Converted into the initial tab, or shown there by a plugin.
             await opts.replaceTabWithFile(opts.activeTabId, first);
           } else {
             const { content: text, diskMtime } = await readDocFromDisk(first);
@@ -232,11 +196,10 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           return;
         }
       }
-      // iOS: the document that was open last time (see lastIOSDocument).
+      // iOS: the document that was open last time.
       const last = isIOSApp ? await lastIOSDocument() : null;
-      // Its unsaved edits were just recovered into a tab of their own: that
-      // tab takes the initial one's place rather than the document opening
-      // twice, once as saved and once as recovered.
+      // Its recovered tab takes the initial one's place, so it doesn't open
+      // twice.
       const recovered = last ? recoveredFor(last) : undefined;
       if (recovered) {
         loadRecoveredIntoInitialTab(recovered);
@@ -257,19 +220,15 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           // Moved or deleted since: start blank.
         }
       }
-      // Recovered drafts and nothing else to open: the first of them takes
-      // the blank initial tab, rather than an empty "Untitled" opening
-      // beside what was recovered.
+      // Only recovered drafts: the first takes the blank tab instead of an
+      // empty "Untitled" beside them.
       if (restored.length > 0) {
         loadRecoveredIntoInitialTab(restored[0]);
         return;
       }
-      // Nothing else claimed the initial blank tab and this installation has
-      // never shown onboarding. Keeping the durable flag false until this
-      // exact point means a first launch that was busy opening a file can
-      // defer the guide safely to the next ordinary launch instead of losing
-      // it forever.
-      // Not on the iPhone: the lessons are taught with keyboard shortcuts.
+      // Nothing claimed the blank tab and onboarding was never shown. The
+      // flag stays false until here, so a busy first launch defers the guide
+      // instead of losing it. Not on the iPhone: it teaches shortcuts.
       if (!opts.onboardingShown) {
         if (!isIOSApp) opts.startTutorial(opts.activeTabId);
         opts.markOnboardingShown();

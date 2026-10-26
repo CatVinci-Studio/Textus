@@ -34,13 +34,9 @@ import {
   type RawHtmlPreviewState,
 } from "./details-fold";
 
-// Markdown parses inline HTML as SEPARATE nodes: "foo <b>bar</b>" is
-// [text, html("<b>"), text("bar"), html("</b>")] - the pair never arrives
-// as one fragment. GitHub still renders it as bold "bar" on one line, so
-// this plugin pairs matching open/close tags within a textblock and styles
-// the text between them via an inline decoration (the tags themselves hide
-// while the cursor is away). Only inline FORMATTING tags participate -
-// each maps to the class that mimics it.
+// Markdown parses "foo <b>bar</b>" as separate html and text nodes, so
+// matching inline formatting tags are paired within a textblock and the
+// text between is styled, the tags hidden while the caret is away.
 const PAIR_TAG_CLASSES: Record<string, string> = {
   b: "rhtml-b",
   strong: "rhtml-b",
@@ -61,8 +57,7 @@ const PAIR_TAG_CLASSES: Record<string, string> = {
   span: "",
 };
 
-// Void elements can't open a pair - "<img ...>" is complete in itself and
-// goes down the fragment-widget path instead.
+// Void elements can't open a pair; they render as fragments.
 const VOID_TAGS = new Set(["br", "img", "hr"]);
 
 const OPEN_TAG_RE = /^<([a-zA-Z][a-zA-Z0-9]*)(\s[^<>]*)?>$/;
@@ -73,17 +68,14 @@ function fragmentWidget(
   docPath: () => string | null,
 ) {
   return (view: EditorView, getPos: () => number | undefined) => {
-    // Inline fragments (a lone <img>, <kbd>x</kbd>, <br>) stay in the
-    // line they were written in; only block-level content (alignment
-    // wrappers, headings) becomes its own block - matching GitHub.
+    // Inline fragments stay in their line; only block-level content becomes its
+    // own block, as on GitHub.
     const el = document.createElement(rendered.inline ? "span" : "div");
     el.className = rendered.inline
       ? "raw-html-rendered raw-html-rendered-inline"
       : "raw-html-rendered";
     el.innerHTML = rendered.html;
-    // An <img src="pic.png"> means the file beside the document, as in
-    // Typora - left as is, the webview looked for it in the app itself.
-    // An inline SVG's picture is a data URL already.
+    // An <img src="pic.png"> means the file beside the document, as in Typora.
     el.querySelectorAll<HTMLImageElement>("img:not(.html-svg)").forEach((img) =>
       showDocImage(img, img.getAttribute("src") ?? "", docPath()),
     );
@@ -94,31 +86,27 @@ function fragmentWidget(
 
 const COMMENT_RE = /^(\s*<!--\s*)([\s\S]*?)(\s*-->\s*)$/;
 
-/** Where an HTML node that is one whole comment keeps its text, as offsets
- *  into it: the body without the markers and the blank lines around it.
- *  Null for anything else. */
+/** For an HTML node that is one whole comment: the offsets of its body,
+ *  without the markers and surrounding blank lines. Null otherwise. */
 export function commentParts(
   text: string,
 ): { bodyFrom: number; bodyTo: number } | null {
   const match = COMMENT_RE.exec(text);
-  // "<!-- a --> <b>x</b> <!-- b -->" isn't one comment: its middle has a
-  // closing marker of its own.
+  // "<!-- a --> <b>x</b> <!-- b -->" isn't one comment.
   if (!match || match[2].includes("-->")) return null;
   const bodyFrom = match[1].length;
   return { bodyFrom, bodyTo: bodyFrom + match[2].length };
 }
 
-/** The href of a paired <a ...> open tag, shown as a hover title on the
- *  styled range. Not checked against the sanitizer's schemes: the range
- *  gets no href, so the title is only text, never followed. */
+/** The href of a paired <a> open tag, as a hover title. Not checked against
+ *  the sanitizer's schemes: the range gets no href, so it's never followed. */
 function pairedLinkTitle(openTag: string): string | undefined {
   const href = /\bhref\s*=\s*("([^"]*)"|'([^']*)')/i.exec(openTag);
   const value = href?.[2] ?? href?.[3];
   return value || undefined;
 }
 
-/** A paired open tag's `style`, cut down to what the policy allows
- *  (html-policy.ts): `<span style="color: red">` colours the text between. */
+/** A paired open tag's `style`, cut down to what the policy allows. */
 function pairedStyle(openTag: string): string | null {
   const style = /\bstyle\s*=\s*("([^"]*)"|'([^']*)')/i.exec(openTag);
   const value = style?.[2] ?? style?.[3];
@@ -130,10 +118,9 @@ const SVG_CLOSE_RE = /^<\/svg\s*>$/i;
 const selfClosed = (tag: string) => /\/>$/.test(tag);
 
 /**
- * An SVG written inside a line of text: markdown splits it into one HTML
- * node per tag ("<svg ...>", "<circle/>", "</svg>"), with any text between
- * as text nodes. Each run from an <svg> to its </svg> is one picture; the
- * HTML nodes a run spans are left out of `rest`.
+ * An SVG inside a line of text arrives as one HTML node per tag. Each run
+ * from <svg> to its </svg> is one picture; the nodes a run spans are left
+ * out of `rest`.
  */
 function inlineSvgRuns(
   block: ProseNode,
@@ -184,7 +171,7 @@ function decorateTextblock(
   const all: HtmlChild[] = [];
   block.forEach((child, offset) => {
     const from = blockPos + 1 + offset;
-    // A <details> split around markdown is decorateDetails' to draw.
+    // A <details> split around markdown is drawn by decorateDetails.
     if (child.type.name === "html" && !handled.has(from))
       all.push({ from, to: from + child.nodeSize, text: child.textContent });
   });
@@ -229,23 +216,21 @@ function decorateTextblock(
           break;
         }
       }
-      // No matching open: leave the stray close tag as visible raw text.
-      // Mis-nested opens skipped over by this match stay unstyled too.
+      // No matching open: the stray close tag stays visible raw text.
       if (openIdx >= 0) {
         pairs.push({ tag, open: stack[openIdx].item, close: item });
         stack.length = openIdx;
       }
       continue;
     }
-    // Unmatched lone open/close tags of pairable elements never reach
-    // here - anything else (a void tag, a self-contained fragment like
-    // "<b>x</b>", a full block of HTML) renders as a widget below.
+    // Anything else (a void tag, a self-contained fragment, a block of HTML)
+    // renders as a widget below.
     fragments.push(item);
   }
 
   for (const { tag, open, close } of pairs) {
-    // Cursor on either tag reveals BOTH raw (the pair is one edit unit).
-    // Both asked unconditionally: each is a range a caret move can flip.
+    // The caret on either tag reveals both. Both are asked unconditionally:
+    // each is a range a caret move can flip.
     const touchesOpen = touches(open.from, open.to);
     const touchesClose = touches(close.from, close.to);
     if (touchesOpen || touchesClose) continue;
@@ -259,7 +244,7 @@ function decorateTextblock(
         class: "raw-html-source-hidden",
       }),
     );
-    if (close.from <= open.to) continue; // nothing between the tags
+    if (close.from <= open.to) continue;
     const cls = PAIR_TAG_CLASSES[tag];
     const attrs: Record<string, string> = {};
     if (cls) attrs.class = cls;
@@ -277,11 +262,8 @@ function decorateTextblock(
     if (touches(item.from, item.to)) continue;
     const comment = commentParts(item.text);
     if (comment) {
-      // A note to the reader of the source - the project templates
-      // (.textus/style.md, library entries, agent.md) explain themselves
-      // in one, and the AI never sees it. The sanitizer drops comments,
-      // so it used to stay as raw "<!-- … -->"; it reads as a quiet note
-      // instead, its markers back under the caret.
+      // A note to the reader of the source, which the sanitizer would drop: shown
+      // as a quiet note, its markers back under the caret.
       const start = item.from + 1;
       decorations.push(
         Decoration.inline(start, start + comment.bodyFrom, {
@@ -300,8 +282,7 @@ function decorateTextblock(
       continue;
     }
     const rendered = renderWhitelistedHtml(item.text);
-    // Not whitelisted (or unparsable): raw text stays visible, the
-    // existing fallback for anything outside the whitelist.
+    // Not whitelisted: the raw text stays visible.
     if (rendered === null) continue;
     decorations.push(
       Decoration.inline(item.from + 1, item.to - 1, {
@@ -312,8 +293,8 @@ function decorateTextblock(
       Decoration.widget(
         item.to,
         fragmentWidget(rendered, docPath),
-        // Kept across rebuilds while the text is the same: a <details>
-        // the reader opened stays open while they type elsewhere.
+        // Kept across rebuilds while the text is the same, so an opened <details>
+        // stays open.
         widgetSpec(`${docPath() ?? ""}\n${item.text}`),
       ),
     );
@@ -357,26 +338,13 @@ function drawAll(
   return { reveal, open, spans };
 }
 
-/**
- * Raw-HTML counterpart to math-preview-plugin.ts: while the cursor is away,
- * whitelisted HTML renders in place of its source - paired inline tags
- * style the text between them right in the line (GitHub-style), and
- * self-contained fragments show as sanitized inline or block widgets.
- * Cursor on any of it reveals the raw markup for direct editing. A
- * <details> written around markdown folds it (details-fold.ts).
- */
 const isHtml = (node: ProseNode | null | undefined) =>
   node?.type.name === "html";
 
 /**
- * Left and Right across inline HTML, one character a press as in text.
- * Drawn as what it makes (`<b>x</b>` shown bold, its tags hidden), a tag
- * has no caret position at its edge for the browser to stop on: Left from
- * after "x</b>" landed before the "<b>", skipping the "x" and both tags in
- * one press. And once a tag's source shows, its edge is two positions -
- * outside the tag and inside it - drawn as one spot, which Chromium took a
- * press for and WebKit didn't. Each step is taken here: onto a hidden
- * tag's edge, and past the inside of a shown one.
+ * Left and Right across inline HTML, one character a press. A hidden tag
+ * has no caret position at its edge for the browser to stop on, and a shown
+ * one has two drawn as one spot, so each step is taken here.
  */
 function arrowOntoHtml(view: EditorView, event: KeyboardEvent): boolean {
   const step =
@@ -392,8 +360,8 @@ function arrowOntoHtml(view: EditorView, event: KeyboardEvent): boolean {
   return true;
 }
 
-/** Where one character's step from `$pos` lands, where HTML is in the
- *  way (arrowOntoHtml); null to leave the step to the browser. */
+/** Where one character's step from `$pos` lands when HTML is in the way;
+ *  null to leave it to the browser. */
 function htmlStep($pos: ResolvedPos, step: 1 | -1): number | null {
   const pos = $pos.pos;
   const ahead = step === 1 ? $pos.nodeAfter : $pos.nodeBefore;
@@ -426,8 +394,8 @@ export function createRawHtmlPreviewPlugin(
   } = {},
 ) {
   const docPath = options.docPath ?? (() => null);
-  // Drawn again block by block, no textblock there is a fold's: an edit or
-  // a caret move that could change a fold draws everything again.
+  // No textblock in this reveal is a fold's: a change that could touch a fold
+  // draws everything again.
   const blockReveal = textblockReveal(docPath);
   return $prose(
     () =>

@@ -11,23 +11,14 @@ import { bareUrl, insertUrlLink } from "./markdown/paste-url";
 export interface EditorClipboard {
   copyOrCut: (cut: boolean) => void;
   /** The selection's Markdown source, for an app that should get the marks
-   *  themselves (Copy gives plain-text apps the words as they read). */
+   *  themselves. */
   copyAsMarkdown: () => void;
   paste: () => void;
   selectAll: () => void;
-  /** Insert arbitrary markdown text at the cursor, exactly like pasting it. */
+  /** Inserts markdown text at the cursor, as pasting it would. */
   insertText: (text: string) => void;
 }
 
-/**
- * Clipboard actions for the context menu: copy/cut put on the clipboard
- * what Cmd+C does (the formatted HTML, and the words as they read for
- * plain-text apps), Copy as Markdown the Markdown source, and paste parses clipboard text as
- * markdown so formatted content lands as rendered nodes instead of staying
- * literal source. Cmd+C/V already behave this way via milkdown's clipboard
- * plugin - these are the menu-driven equivalents, which can't go through
- * the native clipboard events.
- */
 /** The clipboard's HTML when it is a copy from a Textus editor; null when
  *  it isn't, or the webview can't read rich clipboard content. */
 async function ownHtml(): Promise<string | null> {
@@ -55,17 +46,18 @@ function selectionMarkdown(ctx: Ctx): string {
   }
 }
 
+/** Clipboard actions for the menus, which can't go through the native
+ *  clipboard events: the same results as Cmd+C/V. */
 export function useEditorClipboard(run: EditorRunner): EditorClipboard {
   const copyOrCut = useCallback(
     (cut: boolean) => {
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
         const { state } = view;
-        // The history keeps the Markdown source, as for Cmd+C
-        // (clipboard/history-plugin.ts).
+        // The history keeps the Markdown source, as for Cmd+C.
         const markdown = selectionMarkdown(ctx);
-        // The clipboard gets what Cmd+C puts there: the formatted HTML, and
-        // the words as they read for plain-text apps (plain-text-copy-plugin).
+        // The clipboard gets what Cmd+C puts there: the HTML, and the words as
+        // they read for plain-text apps.
         const { dom, text } = view.serializeForClipboard(
           state.selection.content(),
         );
@@ -82,8 +74,7 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
               // A webview without ClipboardItem: the plain text alone.
               await navigator.clipboard.writeText(text);
             }
-            // navigator.clipboard bypasses the DOM copy event the history's
-            // document-level capture listens on - record explicitly.
+            // navigator.clipboard bypasses the copy event the history listens on.
             recordClipboardEntry(markdown);
           }
           if (cut) view.dispatch(view.state.tr.deleteSelection());
@@ -100,9 +91,8 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
       const markdown = selectionMarkdown(ctx);
       if (!markdown) return;
       void (async () => {
-        // The plain text is the source, so every app gets the marks; the
-        // Markdown flavour too where the webview can write one (Chromium
-        // refuses the type, and the plain text alone goes).
+        // The plain text is the source, so every app gets the marks; text/markdown
+        // too where the webview allows it (Chromium refuses).
         try {
           await navigator.clipboard.write([
             new ClipboardItem({
@@ -147,10 +137,8 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
 
   const paste = useCallback(() => {
     void (async () => {
-      // A copy from Textus itself comes back whole from its HTML (marked
-      // data-pm-slice by ProseMirror): its plain text may be the readable
-      // flavor now (plain-text-copy-plugin), which would lose the
-      // formatting. Anything else goes the text way, as before.
+      // A copy from Textus itself comes back whole from its HTML: its plain text
+      // is the readable flavour, which would lose the formatting.
       const html = await ownHtml();
       if (html) {
         run((ctx) => {

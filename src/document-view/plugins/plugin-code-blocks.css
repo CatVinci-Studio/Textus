@@ -1,5 +1,5 @@
-/* Code blocks a plugin draws (plugin-code-blocks.ts): its page below the
-   block, the source hidden while the caret is elsewhere. */
+/* Code blocks a plugin draws: its page below the block, the source hidden
+   while the caret is elsewhere. */
 
 .plugin-code-source-hidden {
   display: none;

@@ -14,9 +14,8 @@ pub struct DirEntryInfo {
     /// Last modified, in ms since the epoch, for the tree's sort by date;
     /// None where the system doesn't say.
     modified_ms: Option<f64>,
-    /// Hidden: a name starting with a dot, or, on Windows, a file marked
-    /// hidden or system (desktop.ini). The tree leaves it out unless the
-    /// user shows hidden files (#357).
+    /// Hidden: a name starting with a dot, or on Windows a file marked hidden or
+    /// system (desktop.ini).
     hidden: bool,
 }
 
@@ -35,11 +34,7 @@ fn marked_hidden(_meta: &std::fs::Metadata) -> bool {
 }
 
 /// A native file dialog owned by the window that asked for it. Unowned, a
-/// Windows dialog isn't modal and can open behind the app, looking like the
-/// click did nothing. On macOS the dialog is a sheet either way (rfd attaches
-/// an unowned one to the app's main window), but unowned it took the first
-/// window AppKit still lists whenever no window was main - a closed one,
-/// kept hidden, which came back on screen empty with the sheet on it.
+/// Windows dialog can open behind the app, and a macOS sheet can land on a hidden window.
 pub(crate) fn window_file_dialog(
     window: &tauri::WebviewWindow,
 ) -> tauri_plugin_dialog::FileDialogBuilder<tauri::Wry> {
@@ -52,16 +47,9 @@ pub(crate) fn window_file_dialog(
     dialog
 }
 
-/// The file types File > Open offers, in order: Markdown first, as the
-/// one picked by default, then plain text, Word documents (opened as a new
-/// Markdown document, word_import.rs) and any file at all (issue #78 -
-/// Markdown alone locked every other file out). The names come from the
-/// frontend, in the UI language.
-///
-/// None on macOS: NSOpenPanel shows no file-type menu, it only greys out
-/// what the filters leave out (rfd hands it every filter's extensions at
-/// once, with no "any file" among them), so no filter is the "All files"
-/// choice there. iOS has its own picker and never opens this one.
+/// The file types File > Open offers: Markdown first, then text, Word and any
+/// file. None on macOS, where NSOpenPanel has no type menu, so no filter means
+/// "All files".
 fn open_document_filters(
     text: &str,
     word: &str,
@@ -108,8 +96,7 @@ pub async fn open_file_dialog(
     .flatten()
 }
 
-/// Opens a native file picker for a CSS theme file (e.g. a Typora-compatible
-/// community theme).
+/// Opens a native file picker for a CSS theme file.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn open_css_file_dialog(window: tauri::WebviewWindow) -> Option<String> {
@@ -124,10 +111,8 @@ pub async fn open_css_file_dialog(window: tauri::WebviewWindow) -> Option<String
     .flatten()
 }
 
-/// Opens a native file picker for one image: "Choose image…" on a missing
-/// image's card (src/editor/images/missing-image.ts). The frontend names the
-/// filter in the UI language and lists the types its image store takes
-/// (IMAGE_FILE_EXTENSIONS in src/editor/images/pasted-files.ts).
+/// Opens a native file picker for one image, for a missing image's card. The
+/// frontend names the filter and lists the image types.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn open_image_file_dialog(
@@ -147,9 +132,8 @@ pub async fn open_image_file_dialog(
     .flatten()
 }
 
-/// Opens a native "Save As" dialog for a new, never-saved document - in
-/// `default_dir` when given: beside the Word file a document was opened
-/// from.
+/// Opens a native "Save As" dialog for a never-saved document, in `default_dir`
+/// when given (beside the Word file it came from).
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn save_file_dialog(
@@ -179,10 +163,8 @@ pub async fn save_file_dialog(
     .flatten()
 }
 
-/// GTK and the desktop portal hand back exactly what was typed - "notes",
-/// not "notes.md" - where Windows and macOS append the filter's extension.
-/// A name with no extension at all gets the default one; any extension the
-/// user did type is respected.
+/// GTK and the desktop portal return the name as typed ("notes"), where Windows
+/// and macOS append the filter's extension; a name with no extension gets the default.
 pub(crate) fn with_default_extension(path: String, ext: &str) -> String {
     if Path::new(&path).extension().is_some() {
         path
@@ -191,10 +173,6 @@ pub(crate) fn with_default_extension(path: String, ext: &str) -> String {
     }
 }
 
-// The chat's "+" button used to live here as a text-only `read_to_string`,
-// which is why a PDF looked like a dead button. It now has its own module -
-// see commands/attachment.rs.
-
 pub(crate) fn require_non_empty(path: &str) -> Result<(), String> {
     if path.trim().is_empty() {
         return Err("empty path".to_string());
@@ -202,10 +180,8 @@ pub(crate) fn require_non_empty(path: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Lists the immediate children of a directory (non-recursive; the frontend
-/// calls this again when a subfolder is expanded, so startup never walks the
-/// whole tree). Async so a slow/network-mounted directory doesn't stall the
-/// app while it's being read.
+/// Lists the immediate children of a directory; the frontend asks again per
+/// expanded folder. Async so a slow network mount doesn't stall the app.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn list_dir(path: String) -> Result<Vec<DirEntryInfo>, String> {
@@ -240,10 +216,8 @@ pub async fn list_dir(path: String) -> Result<Vec<DirEntryInfo>, String> {
     Ok(items)
 }
 
-/// Millisecond mtime of a file, or None if it doesn't exist. The frontend
-/// snapshots this when a document is read or written, then compares against
-/// it to detect external modifications (reload on window focus, and the
-/// overwrite-conflict prompt before saving).
+/// Millisecond mtime of a file, or None if it doesn't exist; the frontend
+/// compares it to detect external modifications.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn file_mtime_ms(path: String) -> Result<Option<f64>, String> {
@@ -269,9 +243,8 @@ pub async fn read_text_file(path: String) -> Result<String, String> {
     fs::read_to_string(&path).await.map_err(|e| e.to_string())
 }
 
-/// Reads a file as base64 - used to inline a CSS theme's local font/image
-/// `url(...)` assets as data URIs, since a relative path in a `<style>` tag
-/// injected at runtime has no base to resolve against.
+/// Reads a file as base64, to inline a CSS theme's local `url(...)` assets: a
+/// runtime `<style>` tag has no base to resolve relative paths against.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn read_binary_file_base64(path: String) -> Result<String, String> {
@@ -281,10 +254,8 @@ pub async fn read_binary_file_base64(path: String) -> Result<String, String> {
     Ok(STANDARD.encode(bytes))
 }
 
-/// Persists an image pasted into the editor. Saved documents get it in
-/// their image folder (`folder`, see ImageFolder) and a relative src;
-/// unsaved drafts fall back to an assets folder in the app's data dir with
-/// an absolute src (still valid after the draft is saved elsewhere).
+/// Persists an image pasted into the editor. Saved documents get it in their
+/// image folder with a relative src; unsaved drafts use the app's assets folder, absolute.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn save_pasted_image(
@@ -326,19 +297,9 @@ pub async fn save_pasted_image(
     Ok(SavedImage { src })
 }
 
-/// Brings a document's images into the image folder (`folder`, see
-/// ImageFolder) of the file it was just saved as, rewriting each markdown
-/// `src` to the new relative path. Two kinds of src are taken:
-/// - a draft's pasted image, an absolute path in the app data dir's
-///   `assets/` folder (save_pasted_image): moved, the draft is gone;
-/// - with `source_doc_path` (Save As of a document that had a file), a
-///   path relative to that document: copied, since the old file still
-///   links to it. Such an image used to stay behind, and the new file's
-///   link pointed at nothing.
-///
-/// Anything else - another absolute path, a relative one naming no
-/// picture, every relative one when the folder didn't change - is left
-/// alone, matching the frontend's job of only offering candidates here.
+/// Brings a document's images into the image folder of the file it was just
+/// saved as, rewriting each `src`: a draft's pasted images are moved, and on Save
+/// As images relative to the old document are copied. Anything else is left alone.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn migrate_draft_images(
@@ -377,10 +338,8 @@ pub(super) async fn migrate_images(
     for old in srcs {
         let path = Path::new(&old);
         let new = if path.is_absolute() || path.has_root() {
-            // Not a draft-origin image (e.g. some other absolute path the
-            // user inserted directly) - silently skipped, not a failure:
-            // `new: None` is reserved for an image that WAS found here but
-            // failed to move, the only case worth a toast.
+            // Not a draft-origin image: skipped, not a failure. `new: None` is only for
+            // an image found here that failed to move.
             if path.parent() != Some(draft_assets_dir) {
                 continue;
             }
@@ -422,9 +381,8 @@ pub async fn write_text_file(path: String, contents: String) -> Result<(), Strin
         .map_err(|e| e.to_string())
 }
 
-/// Moves a picture that an accepted AI picture replaced to the system's
-/// Trash (Recycle Bin), once the user said so - never deletes it; it can
-/// be put back from there.
+/// Moves a picture that an accepted AI picture replaced to the Trash, once the
+/// user said so; never deletes it.
 #[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]

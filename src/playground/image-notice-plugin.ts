@@ -32,10 +32,8 @@ export function pastesImage(
 }
 
 /**
- * Stands in for the image store (editor/images/image-plugin.ts) in the
- * browser playground, which has nowhere to keep a pasted image: the paste
- * inserts nothing and `onImage` says why. Image files dropped on the page
- * never reach the editor - the playground takes every file drop itself.
+ * Stands in for the image store in the playground, which has nowhere to keep
+ * a pasted image: the paste inserts nothing and `onImage` says why.
  */
 export function createImageNoticePlugin(onImage: () => void) {
   return $prose(

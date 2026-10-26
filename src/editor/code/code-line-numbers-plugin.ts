@@ -4,9 +4,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { decorateAll, redecorateChanged } from "../changed-ranges";
 
-/** On a code block whose lines are numbered: a gutter beside its lines,
- *  each number as tall as its line (gutter-fit.ts, milkdown-theme.css).
- *  The export takes it off again (export/exporters.ts). */
+/** On a code block whose lines are numbered. The export takes it off again. */
 export const CODE_LINE_NUMBERS_CLASS = "code-block-numbered";
 
 /** What the code block's view looks for among its decorations. */
@@ -31,12 +29,8 @@ const numbered = (node: ProseNode, pos: number) => [
 ];
 
 /**
- * Settings › Editor & Appearance › Line numbers in code blocks: marks each
- * code block with a node decoration, which its view
- * (code-block-language-view.ts) answers with a gutter of line numbers. Off
- * (the default) there is nothing to draw, and the blocks are as they were.
- * The setting is read on every transaction; MilkdownEditor sends an empty
- * one when it changes.
+ * Marks each code block with a node decoration, which its view answers with
+ * a gutter of line numbers. The setting is read on every transaction.
  */
 export function createCodeLineNumbersPlugin(options: {
   enabled: () => boolean;

@@ -14,9 +14,7 @@ let pending: ChatRestore | null = null;
 
 /**
  * Hands `restore` to the editor it is for. Kept until that editor claims it,
- * since the document may only now be opening: an editor already open
- * claims it on RESTORE_CHAT_EVENT, a tab opened for it as it mounts
- * (useEditorWindowEvents).
+ * since the document may only now be opening.
  */
 export function requestChatRestore(restore: ChatRestore) {
   pending = restore;

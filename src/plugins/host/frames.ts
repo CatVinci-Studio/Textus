@@ -3,17 +3,12 @@ import pluginUiCss from "./runtime/plugin-ui.css?raw";
 import { createEndpoint, type Endpoint, type Handlers } from "./rpc";
 
 /**
- * The sandboxed frames a plugin runs in (docs/design/plugins.md §3): its
- * host, hidden, where its code runs, and its webviews, what it draws.
- *
- * Each is an `<iframe sandbox="allow-scripts">` written as `srcdoc`.
- * Without `allow-same-origin` its origin is opaque: none of the window's
- * storage, cookies, DOM or Tauri reach it, and its own Content Security
- * Policy keeps it off the network. What it can do goes through the one
- * MessagePort the window hands it once it has loaded (connectFrame).
+ * The sandboxed frames a plugin runs in: its hidden host and its webviews.
+ * Without `allow-same-origin` the origin is opaque, and the CSP keeps it off
+ * the network; everything goes through one MessagePort.
  */
 
-/** rpc.ts's createEndpoint as source, for the frames' runtimes. */
+/** The RPC endpoint as source, for the frames' runtimes. */
 export const RPC_SOURCE = `var createEndpoint = ${createEndpoint.toString()};`;
 
 /** Text inside a `<script>`/`<style>` element can't hold its end tag. */
@@ -21,9 +16,8 @@ export function inElement(code: string, tag: "script" | "style"): string {
   return code.replace(new RegExp(`</(${tag})`, "gi"), "<\\/$1");
 }
 
-/** A webview's Content Security Policy: its own inline and `data:`/`blob:`
- *  code, styles, images, fonts and media, no network - except frames from
- *  the HTTPS hosts in `frameHosts` (a plugin granted those hosts). */
+/** A webview's CSP: its own inline and `data:`/`blob:` content, no network,
+ *  except frames from the HTTPS hosts in `frameHosts`. */
 export function webviewCsp(frameHosts: readonly string[]): string {
   const frames = frameHosts.length
     ? frameHosts
@@ -43,16 +37,15 @@ export function webviewCsp(frameHosts: readonly string[]): string {
   ].join("; ");
 }
 
-/** A webview's page: the plugin's HTML with the policy, the theme, the UI
- *  kit and the runtime put first in its head. */
+/** A webview's page: the plugin's HTML with the policy, theme, UI kit and
+ *  runtime first in its head. */
 export function webviewDocument(
   html: string,
   options: {
     themeCss: string;
     dark: boolean;
     frameHosts: readonly string[];
-    /** The UI's language and the plugin's strings (its manifest's l10n),
-     *  there before the page's own scripts run (api.t). */
+    /** The UI's language and the plugin's strings, there before its scripts run. */
     language: string;
     l10n: Record<string, Record<string, string>>;
   },
@@ -101,9 +94,8 @@ export function sandboxedFrame(
 }
 
 /**
- * Connects to `frame` each time its page loads (a webview's HTML set again
- * is a new page): a new channel, the old one closed, `init` sent with it.
- * `onConnect` gets the endpoint. Returns the function that stops.
+ * Connects to `frame` each time its page loads: a new channel, the old one
+ * closed, `init` sent with it. Returns the function that stops.
  */
 export function connectFrame(
   frame: HTMLIFrameElement,

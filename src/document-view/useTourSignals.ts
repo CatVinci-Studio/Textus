@@ -4,13 +4,8 @@ import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import { sendTourSignal, type TourAi } from "../utils/events";
 
 /**
- * What the tour's AI lessons wait for, as this editor sees it happen: a
- * grammar card opening, a revision decided, a review note pinned, an
- * answer arriving. Only the tour's practice tab reports (`tour` set), so
- * work in another document never ticks a lesson off. A skill sent is
- * reported by the composer through the returned `onSkillUsed`; the
- * completion suggestion taken is reported where it happens
- * (editor-plugins.ts).
+ * What the tour's AI lessons wait for, as this editor sees it. Only the
+ * practice tab reports, so other documents never tick a lesson off.
  */
 export function useTourSignals({
   tour,
@@ -30,8 +25,7 @@ export function useTourSignals({
     if (tour && grammarCardOpen) sendTourSignal("grammar-card");
   }, [tour, grammarCardOpen]);
 
-  // Decided means all of it: the review bar takes a revision a sentence at
-  // a time, and the lesson is about deciding, whichever way.
+  // Decided means all of it: the review bar takes a sentence at a time.
   const hadRevisions = useRef(false);
   useEffect(() => {
     if (undecidedRevisions > 0) hadRevisions.current = true;
@@ -61,7 +55,6 @@ export function useTourSignals({
     if (tour && answered) sendTourSignal("reply");
   }, [tour, busy, failed, latest]);
 
-  // For the chat composers (ChatComposer's onSkillUsed).
   const onSkillUsed = tour ? () => sendTourSignal("skill-sent") : undefined;
   return { onSkillUsed };
 }

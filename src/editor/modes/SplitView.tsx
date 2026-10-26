@@ -8,15 +8,9 @@ import { SourceTextarea } from "./SourceTextarea";
 import "./SplitView.css";
 
 /**
- * Split view: the markdown source on the left, editable, and the rendered
- * document on the right - for people who think in markdown but want to see
- * the result. The preview is rendered from the source (renderDocumentHtml)
- * inside the editor's content classes, so the same theme styles it.
- *
- * Scrolling is kept in step by proportion; the side being scrolled by the
- * user leads, and the scroll event the follower then fires is recognized by
- * its position and not echoed back. With typewriter mode on, the source keeps the caret's line in the
- * middle the way the rich editor does.
+ * Split view: editable markdown source on the left, the rendered document
+ * on the right, styled by the same theme. Scrolling follows by proportion;
+ * the side the user scrolls leads.
  */
 export function SplitView({
   content,
@@ -37,8 +31,8 @@ export function SplitView({
   const html = useKatexHtml(deferred, renderDocumentHtml);
   const { diagramEngine } = useSettings().settings;
 
-  // Relative image paths resolve against the document's folder, as in the
-  // editor; Mermaid fences become diagrams (loaded only when present).
+  // Relative image paths resolve against the document's folder; Mermaid
+  // fences become diagrams.
   useEffect(() => {
     const root = previewRef.current;
     if (!root) return;
@@ -51,9 +45,8 @@ export function SplitView({
     );
     if (diagrams.length === 0) return;
     let cancelled = false;
-    // The editor's own engines and settings: mermaid is one global, so a
-    // second initialize() of other settings here would reset the editor's
-    // diagrams too.
+    // The editor's own engines and settings: mermaid is one global, so other
+    // settings here would reset the editor's diagrams too.
     const draw = diagramRenderer(diagramEngine, {
       width: root.clientWidth,
       fontFamily: getComputedStyle(root).fontFamily,
@@ -82,10 +75,9 @@ export function SplitView({
     };
   }, [html, filePath, diagramEngine]);
 
-  // The scrollTop each side was last moved to by the other one. The scroll
-  // event that move fires arrives a frame or more later (WebKitGTK, long
-  // documents) - matching it by position, not by a one-frame guard, is what
-  // keeps it from steering the side the user is actually scrolling back.
+  // The scrollTop each side was last moved to by the other. Its scroll event
+  // can arrive frames later (WebKitGTK), so it is matched by position, not a
+  // one-frame guard, to keep it from steering the user's side back.
   const echo = useRef<{ source: number | null; preview: number | null }>({
     source: null,
     preview: null,

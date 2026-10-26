@@ -9,21 +9,11 @@ import { keepPastedLines } from "./paste-lines";
 import { cleanPastedHtml } from "./paste-html";
 
 /**
- * Milkdown's clipboard plugin only parses pasted text as markdown when the
- * clipboard carries NO text/html flavor at all - but nearly every source
- * (browsers, chat apps, code editors, Word) attaches an HTML flavor even for
- * what is visually plain text, so pasted markdown source ("$x^2$",
- * "**bold**") lands as literal characters via the HTML path. When that HTML
- * is merely a styled wrapper around plain text - no semantically rich tags -
- * the markdown source in text/plain is the better representation: parse it,
- * exactly like the clipboard plugin's no-HTML branch would. Genuinely rich
- * HTML (links, tables, real formatting) still goes through the HTML path
- * untouched. Must be registered BEFORE the clipboard plugin - handlePaste
- * props run in registration order and the first to return true wins.
- * Every paste also keeps the spans at its ends (keepPastedSpans below),
- * and lines pasted into a table cell stay in it (paste-slice.ts); pasted
- * text keeps its line breaks, and a quote copied with its bars is a quote
- * (paste-lines.ts); pasted HTML keeps what its styles meant (paste-html.ts).
+ * Milkdown parses pasted text as markdown only when the clipboard has no
+ * text/html at all, yet nearly every source attaches HTML to plain text.
+ * When that HTML is just styled plain text, the text/plain markdown is
+ * parsed instead. Registered before the clipboard plugin: the first
+ * handlePaste to return true wins.
  */
 
 const RICH_HTML_SELECTOR = [
@@ -60,26 +50,16 @@ const RICH_HTML_SELECTOR = [
 function htmlIsStyledPlainText(html: string): boolean {
   const template = document.createElement("template");
   template.innerHTML = html;
-  // Every custom node type this editor defines (md_span, md_code_span,
-  // math_inline, math_block, ...) marks its wrapper element with data-type -
-  // that's real node data, not styling, regardless of which (possibly bare
-  // span/div) tag it rides on. Content copied from Textus itself - even back
-  // into Textus - would otherwise get misread as "styled plain text" here:
-  // its wrapper tags aren't in RICH_HTML_SELECTOR, so this plugin would
-  // discard the HTML and re-parse the plain-text fallback as markdown
-  // instead, which for math nodes (whose text content is bare LaTeX with no
-  // $ delimiters) silently drops the formula entirely.
+  // Textus's own node types mark their wrappers with data-type: that's node
+  // data, and re-parsing their plain text would drop math formulas.
   if (template.content.querySelector("[data-type]")) return false;
   return !template.content.querySelector(RICH_HTML_SELECTOR);
 }
 
 /**
- * How deep a pasted slice stays open at one end: through its blocks, which
- * join the paragraph pasted into, but through bold, italic, code or maths
- * only where the paste lands inside a span just like it. An open span's
- * content is poured into the node at the caret, so `**bold** text` pasted
- * into a paragraph came in as plain "bold text": every paste - Markdown
- * text, a web page's <strong> - lost the span it started with.
+ * How deep a pasted slice stays open at one end: through its blocks, but
+ * through a span only where the paste lands inside one like it. An open
+ * span's content is poured into the node at the caret, losing the span.
  */
 function openDepth(slice: Slice, $pos: ResolvedPos, end: "start" | "end") {
   const open = end === "start" ? slice.openStart : slice.openEnd;
@@ -107,10 +87,9 @@ export function keepPastedSpans(slice: Slice, selection: Selection): Slice {
 }
 
 /**
- * Whether the parsed paste is one line of a block other than a paragraph -
- * `# T`, `- x`, `> q` - landing in a line that has text: its text joins
- * that line and the block is gone, so "# T" pasted mid-sentence came in
- * as "T". It is pasted as the text it is instead.
+ * Whether the parsed paste is one line of a non-paragraph block landing in
+ * a line with text, which would merge it away ("# T" mid-sentence came in as
+ * "T"). It is pasted as the text it is instead.
  */
 function mergesAway(doc: ProseNode, $pos: ResolvedPos): boolean {
   if (doc.childCount !== 1 || !$pos.parent.isTextblock) return false;
@@ -132,8 +111,8 @@ export const pasteMarkdownSourcePlugin = $prose(
   (ctx) =>
     new Plugin({
       props: {
-        // Pasted HTML, Textus's own copies and drags: ProseMirror's slice,
-        // which the clipboard plugin pastes as it is.
+        // Pasted HTML, Textus's own copies and drags: ProseMirror's slice, which
+        // the clipboard plugin pastes as it is.
         transformPasted: (slice, view) =>
           joinLinesForTableCell(
             keepPastedSpans(slice, view.state.selection),
@@ -151,7 +130,6 @@ export const pasteMarkdownSourcePlugin = $prose(
           const text = data.getData("text/plain");
           if (!text || (html && !htmlIsStyledPlainText(html))) return false;
 
-          // Its lines as the writer saw them (paste-lines.ts).
           const lined = keepPastedLines(text);
           const doc = parseMarkdownSource(ctx, lined);
           if (!doc || typeof doc === "string" || doc.content.size === 0)
@@ -170,14 +148,13 @@ export const pasteMarkdownSourcePlugin = $prose(
             keepPastedSpans(parsed, view.state.selection),
             view.state.selection.$from,
           );
-          // Text alone the clipboard plugin's own branch markdown-parses
-          // too, but into a slice open through the spans at its ends (and
-          // lines it would spread over a table's cells).
+          // The clipboard plugin's own branch parses text alone too, but into a slice
+          // open through the spans at its ends.
           if (!html && slice === parsed && lined === text) return false;
           view.dispatch(
             view.state.tr
               .replaceSelection(slice)
-              // As ProseMirror marks its own pastes (br-hardbreak-plugin.ts).
+              // As ProseMirror marks its own pastes.
               .setMeta("uiEvent", "paste")
               .scrollIntoView(),
           );

@@ -18,23 +18,17 @@ import {
   type McpServer,
 } from "../mcp";
 
-/**
- * Settings › Extensions › MCP: the servers Textus AI may use, each a card
- * with its switch and how it is doing (starting, its tools, or why it
- * failed), and a form to add or change one, which can try it first. None
- * comes suggested: the user adds the servers they want. The servers
- * themselves run in the Rust side (src-tauri mcp/), which this asks for
- * their state.
- */
+/** Settings › Extensions › MCP: the servers Textus AI may use, each a card
+ *  with its switch and state, and a form to add, change or try one. The
+ *  servers run in Rust; this asks for their state. */
 export function McpSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const servers = settings.mcpServers;
   const [status, setStatus] = useState<McpServerStatus[]>([]);
   const [editing, setEditing] = useState<McpServer | null>(null);
 
-  // The state of the servers that are on - again while any is starting,
-  // or isn't listed yet (the settings it was just saved in are on their
-  // way to the backend).
+  // Polled again while any is starting or not listed yet, since just-saved
+  // settings are still on their way to the backend.
   const enabled = servers.filter((s) => s.enabled);
   const enabledKey = enabled.map((s) => JSON.stringify(s)).join();
   const enabledIds = enabled.map((s) => s.id).join("\n");
@@ -237,8 +231,6 @@ function ToolList({ tools }: { tools: McpToolInfo[] }) {
   );
 }
 
-/** Adding or changing a server: by a command or a URL, tried before it is
- *  saved if the user wants. */
 /** Try: start a server as the form has it and list its tools, or say why
  *  it didn't start. */
 function useMcpTry(t: Strings) {

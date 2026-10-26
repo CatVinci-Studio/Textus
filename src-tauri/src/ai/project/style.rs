@@ -7,9 +7,8 @@ pub(crate) const STYLE_SAMPLE_CHARS: usize = 20_000;
 
 pub(crate) const STYLE_TOTAL_CHARS: usize = 60_000;
 
-/// The user turn of a "Learn my style" request: up to eight picked files,
-/// each cut to STYLE_SAMPLE_CHARS, until STYLE_TOTAL_CHARS - shared with the
-/// live eval, which feeds it the same files from a scratch folder.
+/// The user turn of a "Learn my style" request: up to eight picked files, each
+/// cut to STYLE_SAMPLE_CHARS, until STYLE_TOTAL_CHARS.
 pub(crate) fn style_samples(files: &[String]) -> Result<String, String> {
     let mut samples = String::new();
     for file in files.iter().take(8) {
@@ -34,17 +33,9 @@ pub(crate) fn style_samples(files: &[String]) -> Result<String, String> {
     Ok(samples)
 }
 
-/// "Learn my style": the prompt that drafts the style profile from samples.
-/// The profile is written in the samples' language, headings included:
-/// the author reviews and edits it in a tab right afterwards, and the
-/// app's own templates (projectStyleTemplate in src/i18n/locales/) use
-/// the same headings in each UI language. The round-2 eval found
-/// Chinese samples profiled in English bullets - the earlier prompt fixed
-/// English headings, gave only English examples and mentioned the language
-/// once, mid-sentence - and bullets that didn't hold for the samples
-/// ("about 6-8 paragraphs" for pieces of five and six, "no metaphors" next
-/// to a metaphor). The headings come from ui_language.rs, one line for
-/// each language that has its own (style-headings/<code>.txt).
+/// The prompt that drafts the style profile from samples, written in the
+/// samples' language with that language's headings, since the author edits
+/// it right afterwards.
 pub(crate) fn style_instructions() -> String {
     let headings = crate::ai::ui_language::style_heading_lines();
     format!("You analyse an author's writing so that an AI writing assistant can continue and revise their text in their own voice. You are given samples the author picked as representative. Write their style profile in Markdown.

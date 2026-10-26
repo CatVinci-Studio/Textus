@@ -4,12 +4,8 @@
 use super::*;
 
 /// A skill's instructions as the model gets them: the body, then the pack
-/// sections it declares (`textus-packs`) for the document's language, and
-/// for a translation the target language's (`textus-target-packs`, when
-/// `request` names the target). A skill without packs is just its body.
-/// `profile` is the writing-conventions profile, when one is set (None
-/// until that setting exists: every variant is kept and the header says to
-/// follow the document).
+/// sections it declares for the document's language (and a translation's
+/// target). `profile` filters the variants; None keeps them all.
 pub(crate) fn expand_skill(
     skill: &AgentSkill,
     document: &str,
@@ -68,21 +64,14 @@ pub(crate) fn find_invocable<'a>(skills: &'a [AgentSkill], token: &str) -> Optio
     })
 }
 
-/// The `<skill name="…">` block a `/name` call becomes in the user's
-/// message (src/ai/chat/user-message.ts's skillBlock, which folds it back
-/// to `/name` in the transcript).
+/// The `<skill name="…">` block a `/name` call becomes in the user's message.
 pub(crate) fn skill_block(name: &str, instructions: &str) -> String {
     format!("<skill name=\"{name}\">\n{instructions}\n</skill>")
 }
 
-/// Fills in the skill a message calls, right before it is sent: a
-/// `<skill name="…">` block (what the composer sends for `/name`, with or
-/// without the body inside - the body is replaced either way) or a message
-/// starting with `/name` or `／name`. The block then holds the expanded
-/// instructions (expand_skill), with the text after it as the request - the
-/// same text use_skill would return, so `/name` needs no extra round trip.
-/// The name may be an alias. Anything else - an unknown or turned-off
-/// skill, no skill at all - comes back unchanged.
+/// Fills in the skill a message calls: a `<skill name="…">` block or a
+/// message starting with `/name` gets the expanded instructions, so `/name`
+/// needs no extra round trip. Anything else comes back unchanged.
 #[cfg(test)]
 pub(crate) fn expand_message(
     message: &str,
@@ -93,10 +82,8 @@ pub(crate) fn expand_message(
     expand_message_with(message, skills, document, ui_language, None)
 }
 
-/// The writing-conventions profile a skill's packs are filtered by: the
-/// one the user chose (project style.md, then Settings) for the document's
-/// language. None under Automatic, where every variant stays and the model
-/// follows the document's own majority.
+/// The writing-conventions profile the user chose for the document's
+/// language. None under Automatic, where every variant stays.
 pub(crate) fn chosen_profile(
     conventions: &crate::ai::rules::Conventions,
     document: &str,
@@ -106,7 +93,7 @@ pub(crate) fn chosen_profile(
     profile.explicit.then_some(profile.id)
 }
 
-/// expand_message, with the packs filtered by `profile` (chosen_profile).
+/// expand_message, with the packs filtered by `profile`.
 pub(crate) fn expand_message_with(
     message: &str,
     skills: &[AgentSkill],
@@ -115,9 +102,8 @@ pub(crate) fn expand_message_with(
     profile: Option<&str>,
 ) -> String {
     const OPEN: &str = "<skill name=\"";
-    // The last block: the composer's own comes after the attached files and
-    // the selection (ChatBody's send path), so a file or a selection that
-    // happens to contain `<skill name="…">` text is never what expands.
+    // The last block: the composer's own comes after attached files and the
+    // selection, so text inside those never expands.
     if let Some(start) = message.rfind(OPEN) {
         let name_start = start + OPEN.len();
         let Some(name_len) = message[name_start..].find('"') else {

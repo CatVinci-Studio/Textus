@@ -7,9 +7,8 @@ const segmenter: Intl.Segmenter | undefined =
     ? new Intl.Segmenter(undefined, { granularity: "word" })
     : undefined;
 
-/** Han characters, kana and the iteration marks: in Chinese and Japanese
- *  every one counts, the way writers there count length (字数). Hangul is
- *  written in spaced words and counts by word. */
+/** Han characters, kana and iteration marks each count, as writers there
+ *  count length. Hangul is spaced and counts by word. */
 const CJK_CHAR =
   /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}々〆〇]/gu;
 
@@ -32,11 +31,8 @@ function countText(text: string): number {
   return words;
 }
 
-// Each paragraph's count, by its text. The count is taken again after
-// every edit, and segmenting a long document whole took a quarter of a
-// second each time (a 300k-character one); an edit changes a paragraph
-// or two, and a word never runs across a line break, so the sum of the
-// paragraphs' counts is the document's. The cap only bounds a session.
+// Each paragraph's count, cached by its text: segmenting a long document
+// whole after every edit was slow, and no word crosses a line break.
 const PARAGRAPHS_KEPT = 50_000;
 const paragraphCounts = new Map<string, number>();
 
@@ -51,11 +47,8 @@ function countParagraph(text: string): number {
 }
 
 /**
- * Counts words via Intl.Segmenter, which locates word boundaries in
- * scripts without spaces as well as Latin text. A word of Chinese or
- * Japanese counts each of its characters, as their word counters do, so
- * 红楼梦 is three, not one. Fenced code blocks are excluded so code
- * doesn't inflate the prose count.
+ * Counts words via Intl.Segmenter. Chinese and Japanese count each character
+ * (红楼梦 is three); fenced code blocks are left out.
  */
 export function countWords(markdown: string): WordCount {
   let words = 0;

@@ -4,8 +4,8 @@ import type { AgentTurn } from "../types";
 import type { RememberedChange } from "../../platform/ipc";
 import { parseUserMessage } from "./user-message";
 
-/** How many of the user's messages the pass reads, newest last - the same
- *  number the backend shows it (ai/memory/pass.rs, RECENT_MESSAGES). */
+/** How many of the user's messages the pass reads, newest last. Keep in step
+ *  with the backend's RECENT_MESSAGES. */
 const RECENT_MESSAGES = 6;
 
 /** What the memory pass reads of a conversation after an exchange: the
@@ -34,10 +34,8 @@ export function passExchange(history: AgentTurn[]): {
   return { messages, reply };
 }
 
-/** The pass's changes as the chat keeps them: each a `remember` call and
- *  its result, which ChatMessages shows as a MemoryChip - and which the
- *  backend leaves out of what it sends the model
- *  (agent/history.rs, without_memory_turns). */
+/** The pass's changes as the chat keeps them: each a `remember` call and its
+ *  result, shown as a chip and left out of what is sent to the model. */
 export function memoryTurns(
   changes: RememberedChange[],
   newId: () => string,
@@ -60,8 +58,8 @@ export function memoryTurns(
   });
 }
 
-/** A skill offered after an exchange, as the call and result it stands
- *  in the conversation as (SkillOfferChip shows it). */
+/** A skill offered after an exchange, as the call and result it stands in
+ *  the conversation as. */
 export function skillOfferTurns(
   offer: SkillOffer,
   newId: () => string,

@@ -1,8 +1,6 @@
-//! Volcengine Ark's Seedream models (Doubao). OpenAI's path and fields,
-//! with Ark's sizes and error codes. Seedream 5.0 Pro and Flash make
-//! pictures from 921,600 pixels (1280 x 720) up; the sizes here are the
-//! smallest at each aspect. Ark marks the picture "AI 生成" unless asked not
-//! to, and it is left to do so.
+//! Volcengine Ark's Seedream models (Doubao): OpenAI's path and fields,
+//! with Ark's sizes and error codes. The sizes here are the smallest Seedream
+//! makes at each aspect.
 
 use super::{base64, join, malformed, Aspect, ImageError, Reply, Request};
 use serde_json::{json, Value};

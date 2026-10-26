@@ -3,7 +3,6 @@
 
 use super::*;
 
-// Values confirmed against earendil-works/pi's anthropic.ts oauth client.
 pub(crate) const CLIENT_ID: &str = "9d1c250a-e61b-44d9-88ed-5944d1962f5e";
 
 pub(crate) const AUTHORIZE_URL: &str = "https://claude.ai/oauth/authorize";
@@ -13,9 +12,8 @@ pub(crate) const TOKEN_URL: &str = "https://platform.claude.com/v1/oauth/token";
 pub(crate) const SCOPES: &str =
     "org:create_api_key user:profile user:inference user:sessions:claude_code user:mcp_servers user:file_upload";
 
-/// Builds the browser authorize URL plus the PKCE verifier, which pi's
-/// reference implementation reuses as the OAuth `state` value too (unusual,
-/// but matches the reference exactly so this login flow actually works).
+/// Builds the browser authorize URL plus the PKCE verifier, which also serves
+/// as the OAuth `state` value, as the login flow expects.
 pub fn build_authorize_request() -> Result<(String, String, String), String> {
     let (verifier, challenge) = generate_pkce();
     let state = verifier.clone();
@@ -46,7 +44,7 @@ pub(crate) fn credential_from_token(token: TokenResponse) -> ClaudeCredential {
     ClaudeCredential {
         access: token.access_token,
         refresh: token.refresh_token,
-        // Reference implementation shaves 5 minutes off to refresh a little early.
+        // Refresh a little early.
         expires: now_ms() + token.expires_in * 1000 - 5 * 60 * 1000,
     }
 }

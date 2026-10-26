@@ -1,34 +1,21 @@
-// Page-seam layout for the macOS PDF export.
-//
-// A PDF page cannot have a painted margin here: WebKit never paints an
-// @page margin, so dark or tinted themes would get white bands at the top
-// and bottom of every sheet. Instead the sheet has no margin (the theme
-// background bleeds to every edge) and the margin is laid out - the
-// document is rendered at the paper's width, and every block that would
-// cross a page seam, or start inside the top or bottom margin band, is
-// pushed to the next page's top margin by a spacer. A block taller than a
-// page is cut into one copy of it per page instead (#151).
-//
-// The layout must use the renderer's own sheet size in CSS px, or every
-// computed seam drifts - and the two renderers differ (see export.rs):
+// Page-seam layout for the PDF export. WebKit never paints an @page margin,
+// so the sheet has none and the margin is laid out: blocks that would cross
+// a seam or start in a margin band are pushed down by spacers.
 
 /** The sheet as the PDF renderer lays it out, in CSS px. */
 export interface PageGeometry {
   width: number;
   height: number;
-  /** ~20mm: the band at the top and bottom of each sheet text stays out of -
-   *  the margin of a printed page, matching the ~20mm at the sides. */
+  /** ~20mm band at the top and bottom of each sheet, matching the sides. */
   margin: number;
 }
 
-/** macOS: WKWebView.createPDF renders 1 CSS px as 1 pt, so the sheet is A4
- *  in points - PAPER_WIDTH/HEIGHT in export.rs. (NSPrintOperation was not
- *  usable: its page height depends on the selected printer's imageable
- *  area, so no layout computed here could line up with it.) */
+/** macOS: createPDF renders 1 CSS px as 1 pt, so the sheet is A4 in points.
+ *  NSPrintOperation's page height depends on the printer, so it can't match. */
 export const MAC_PAGE: PageGeometry = { width: 595, height: 842, margin: 57 };
 
-/** Windows: WebView2's PrintToPdf at scale 1 lays out at 96 CSS px per
- *  inch - A4 is 794 x 1122.5 px, and pages are cut at whole pixels. */
+/** Windows: PrintToPdf lays out at 96 CSS px per inch, cutting pages at
+ *  whole pixels. */
 export const WINDOWS_PAGE: PageGeometry = {
   width: 794,
   height: 1122,
@@ -42,7 +29,7 @@ function isSplittable(el: Element): boolean {
   return /^(UL|OL|LI|BLOCKQUOTE|TABLE|DIV)$/.test(el.tagName);
 }
 
-/** Code and paragraphs, cut between lines (see textBreak). */
+/** Code and paragraphs, cut between lines. */
 function isTextBlock(el: Element): boolean {
   return /^(PRE|P)$/.test(el.tagName) && /\S/.test(el.textContent ?? "");
 }
@@ -65,11 +52,9 @@ function headerRow(table: Element): Element | null {
 }
 
 /**
- * Moves everything in `el` from `node` on (from `offset` into it, for text)
- * into a shallow copy of `el` inserted after it, and returns the copy. The
- * elements the cut runs through are copied too, so code keeps its
- * highlighting on both sides. A table's copy repeats its column widths and
- * header row; an ordered list's goes on counting.
+ * Moves everything in `el` from `node` on into a shallow copy inserted after
+ * it, and returns the copy. Tables repeat their header; ordered lists go on
+ * counting.
  */
 export function splitBefore(el: Element, node: Node, offset?: number): Element {
   const range = el.ownerDocument.createRange();
@@ -94,10 +79,8 @@ export function splitBefore(el: Element, node: Node, offset?: number): Element {
   return rest;
 }
 
-/** Where `block`'s text breaks so that what comes before ends above
- *  `limit`: the start of the first line reaching below it - for code, of
- *  its source line, so a wrapped line stays whole. Null if no line fits,
- *  or every line does. */
+/** Where `block`'s text breaks so what comes before ends above `limit`; a
+ *  wrapped code line stays whole. Null if no line fits, or every line does. */
 function textBreak(
   block: Element,
   limit: number,
@@ -121,8 +104,6 @@ function textBreak(
     const leading = Math.max(0, (lineHeight || rect.height) - rect.height);
     return rect.bottom + scrollTop + leading / 2 > limit;
   };
-  // Lines run down the block in text order, so bisect for the first
-  // character below the limit.
   let lo = 0;
   let hi = chars.length;
   while (lo < hi) {
@@ -136,8 +117,8 @@ function textBreak(
   return at > 0 && at < chars.length ? chars[at] : null;
 }
 
-/** The next sibling that takes up space - a diagram's hidden source block
- *  sits between a label and the rendered diagram it introduces. */
+/** The next sibling that takes up space; a diagram's hidden source block
+ *  can sit in between. */
 function nextVisible(el: Element): Element | null {
   let next = el.nextElementSibling;
   while (next && next.getBoundingClientRect().height === 0)
@@ -155,10 +136,8 @@ function introduces(el: Element): boolean {
 }
 
 /**
- * Inserts spacers into `root` (already laid out at the page width) so no
- * block straddles a page seam or sits inside a margin band. Blocks are
- * handled in document order and re-measured after every insertion, since
- * each spacer moves everything after it.
+ * Inserts spacers into `root` so no block straddles a seam or sits in a
+ * margin band, re-measuring after each, since every spacer moves the rest.
  */
 export function paginateDocument(
   doc: Document,
@@ -181,16 +160,13 @@ export function paginateDocument(
     const pageTop = page * pageHeight;
     const contentTop = pageTop + margin;
     const contentEnd = pageTop + pageHeight - margin;
-    // A heading - or a "Label:" line introducing what follows - travels
-    // with the next block, so it never ends a page on its own.
+    // A heading or "Label:" line travels with the next block.
     const next = introduces(el) ? nextVisible(el) : null;
     const withNext = next ? bottom(next) : 0;
     const end = next && withNext - start <= usable ? withNext : bottom(el);
 
-    // Too tall for any page: cut into one piece per page, so its
-    // background and border stop at the margin along with its text.
-    // Anything else that tall (a picture) splits wherever the engine puts
-    // the seam.
+    // Too tall for any page: cut into one piece per page, so its background
+    // stops at the margin too.
     if (rect.height > usable) {
       if (isSplittable(el) || isTextBlock(el)) placeTall(el);
       return;
@@ -200,14 +176,10 @@ export function paginateDocument(
     else if (end > contentEnd) moveTo(el, contentTop + pageHeight);
   };
 
-  // Puts `el`'s top at `target` with a spacer before it.
   const moveTo = (el: Element, target: number) => {
     const pageTop = Math.floor(top(el) / pageHeight) * pageHeight;
     const contentTop = pageTop + margin;
-    // Moving to the next page takes along the heading and label lines that
-    // introduce this block, if they would otherwise stay behind at the
-    // bottom of this one. (They were placed first and fit, since they only
-    // looked one block ahead.)
+    // Take along introducing lines that would stay behind on this page.
     let anchor = el;
     if (target > pageTop + pageHeight - margin) {
       for (
@@ -222,18 +194,13 @@ export function paginateDocument(
 
     const spacer = makeSpacer(doc);
     anchor.parentNode?.insertBefore(spacer, anchor);
-    // Measured, not computed: the spacer breaks margin collapsing, so the
-    // block's own top margin may now sit between the spacer and the block.
-    // Measured with the spacer already open - an empty one lets the margins
-    // on both sides collapse through it, and the block landed that margin
-    // below its target, its bottom in the margin band.
+    // Measured, not computed: the spacer breaks margin collapsing. Measured
+    // with the spacer open, since an empty one lets margins collapse through.
     spacer.style.height = "1px";
     spacer.style.height = `${Math.max(0, target - top(anchor) + 1)}px`;
     inserted++;
   };
 
-  // Cuts `el` where it reaches below `limit`, moving the rest into a copy
-  // after it, and returns the copy - or null if nothing fits above.
   const cut = (el: Element, limit: number): Element | null => {
     const style = getComputedStyle(el);
     const inner =
@@ -268,9 +235,8 @@ export function paginateDocument(
     return at === units[0] ? null : splitBefore(el, at);
   };
 
-  // A piece starting in the top margin band moves down to the text first;
-  // one that can't keep even its first line or child on this page moves to
-  // the next.
+  // A piece in the top margin band moves down to the text; one that can't
+  // keep even its first line on this page moves to the next.
   const placeTall = (el: Element) => {
     let pageTop = Math.floor(top(el) / pageHeight) * pageHeight;
     if (top(el) < pageTop + margin) moveTo(el, pageTop + margin);
@@ -285,9 +251,8 @@ export function paginateDocument(
 
   for (const child of Array.from(root.children)) place(child);
 
-  // The theme background only reaches as far as the content, so the last
-  // sheet would end in a white band. Fill it to an exact page multiple -
-  // export.rs cuts the render into ceil(height / page) sheets.
+  // Fill the last sheet to an exact page multiple, or it ends in a white
+  // band.
   const body = doc.body;
   const height = doc.documentElement.scrollHeight;
   const fill = Math.ceil(height / pageHeight) * pageHeight - height;
@@ -302,9 +267,8 @@ export function paginateDocument(
 }
 
 /**
- * Lays `html` out in a hidden frame at the paper width, paginates it, and
- * returns the result. Runs in the app's own webview, which is the same
- * engine as the offscreen print view, so line breaks and heights match.
+ * Lays `html` out in a hidden frame at the paper width and paginates it. The
+ * app's webview is the same engine as the print view, so heights match.
  */
 export async function paginateHtml(
   html: string,

@@ -27,7 +27,7 @@ import { optionalStr, type Params, type PluginScope } from "./broker-scope";
 let proposalCounter = 0;
 
 /** A change as the runtime sends it, placed by block ids against the
- *  document as it is now (doc-blocks.ts), as Textus AI's edits are. */
+ *  document as it is now, as Textus AI's edits are. */
 function editOf(
   doc: ActiveDocumentAccess,
   change: unknown,
@@ -68,10 +68,9 @@ function editOf(
 }
 
 /**
- * A plugin's calls on the document in front (textus.editor): reading it,
- * changing it at once (editor.write) or as a proposal (editor.propose),
- * going to a place in it, and what it adds while the user types - hover
- * cards, marks, the keyboard of a Vim or Emacs.
+ * A plugin's calls on the document in front: reading it, changing it at once
+ * or as a proposal, going to a place in it, and what it adds while the user
+ * types (hover cards, marks, the keyboard).
  */
 export function editorHandlers(p: PluginScope) {
   const doc = (

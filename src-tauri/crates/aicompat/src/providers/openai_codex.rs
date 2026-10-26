@@ -18,33 +18,19 @@ pub const REDIRECT_URI: &str = "http://localhost:1455/auth/callback";
 const SCOPE: &str = "openid profile email offline_access";
 const JWT_CLAIM_PATH: &str = "https://api.openai.com/auth";
 
-// The Codex OAuth token only works against ChatGPT's backend API (used by
-// the chatgpt.com web app and the Codex CLI), not the public
-// api.openai.com Responses API. Confirmed against the equivalent open-source
-// client implementation (earendil-works/pi).
+// The Codex OAuth token only works against ChatGPT's backend API, not the
+// public api.openai.com Responses API.
 const CODEX_RESPONSES_URL: &str = "https://chatgpt.com/backend-api/codex/responses";
 pub const COMPLETION_MODEL: &str = "gpt-6-luna";
 
-/// The only models the ChatGPT-account backend accepts. Anything else comes
-/// back as `400 The '<model>' model is not supported when using Codex with a
-/// ChatGPT account` - including models that are perfectly valid on the public
-/// API-key endpoint, which is the same provider entry with the other auth
-/// method.
-///
-/// Mirrored by OPENAI_OAUTH_*_MODEL_PRESETS in src/settings/agent-models.ts,
-/// which is what the Settings picker offers while this login is active.
+/// The only models the ChatGPT-account backend accepts; anything else is a 400,
+/// including models valid on the public API-key endpoint. Keep in step with
+/// OPENAI_OAUTH_*_MODEL_PRESETS in agent-models.ts.
 pub const SUPPORTED_MODELS: &[&str] = &["gpt-6-astra", "gpt-6.1-sol", "gpt-6-luna"];
 
-/// Clamps a requested model to something this login can actually use.
-///
-/// The saved model outlives the auth method that was active when it was
-/// picked: sign in with an API key, choose `gpt-5.4`, later switch to "sign
-/// in with ChatGPT", and every request 400s. A preset this login served
-/// once and no longer does (a retired model) fails the same way, without
-/// the user having changed anything.
-///
-/// The Settings panel normalizes the stored value too, but only while it is
-/// open - which is not where a request's correctness can live.
+/// Clamps a requested model to something this login can actually use. The saved
+/// model can outlive the auth method it was picked under, or be a retired
+/// preset; Settings normalizes it only while open.
 pub fn usable_model<'a>(requested: Option<&'a str>, fallback: &'a str) -> &'a str {
     match requested {
         Some(model) if SUPPORTED_MODELS.contains(&model) => model,
@@ -61,11 +47,8 @@ pub struct CodexCredential {
     pub account_id: String,
 }
 
-/// Builds the browser authorize URL plus the PKCE verifier and state that
-/// must be kept around for the token exchange / callback verification.
-/// `originator` identifies the calling app to OpenAI (any short slug works -
-/// this mirrors what the Codex CLI itself sends, just naming a different
-/// client).
+/// Builds the browser authorize URL plus the PKCE verifier and state kept for
+/// the token exchange. `originator` identifies the calling app to OpenAI.
 pub fn build_authorize_request(originator: &str) -> Result<(String, String, String), String> {
     let (verifier, challenge) = generate_pkce();
     let state = generate_state();
@@ -194,14 +177,7 @@ pub async fn call_completion(
 }
 
 /// Runs one round-trip against Codex with the full turn history and tool
-/// definitions. Returns either the model's final text, or one-or-more tool
-/// calls the caller must execute and feed back via `AgentTurn::ToolResult`
-/// before calling this again. Request/response shape is shared with every
-/// other Responses-API dialect - see `responses_api::agent_request_body` /
-/// `parse_agent_output`.
-// The authentication headers plus the provider-neutral agent inputs make
-// eight arguments at this wire-format boundary. Grouping them would merely
-// hide the same values in a one-use transport struct.
+/// definitions, in the shared Responses API wire format.
 #[allow(clippy::too_many_arguments)]
 pub async fn agent_step(
     access_token: &str,
@@ -245,8 +221,8 @@ pub async fn agent_step(
 /// The request for one picture through the ChatGPT sign-in: the Responses
 /// API's image_generation tool, made the only thing the model may do.
 fn image_request_body(prompt: &str, aspect: Aspect, reference: Option<&ImageAttachment>) -> Value {
-    // The tool's `size` alone was not kept to (a square asked for came
-    // back 1536 x 1024): the shape is said in the request too.
+    // The tool's `size` alone was not kept to, so the shape is said in the
+    // request too.
     let size = gpt_image_size(aspect);
     let text = format!(
         "{prompt}\n\nAspect ratio {}, {size} pixels.",
@@ -272,8 +248,7 @@ fn image_request_body(prompt: &str, aspect: Aspect, reference: Option<&ImageAtta
         "tools": [{
             "type": "image_generation",
             "size": size,
-            // As the API-key route asks (images/openai.rs): plenty for a
-            // page, and the plan's image allowance goes further.
+            // Plenty for a page, and the plan's image allowance goes further.
             "quality": "medium",
             "output_format": "jpeg",
         }],
@@ -324,9 +299,8 @@ fn image_failure(message: String) -> ImageError {
 }
 
 /// One picture through the ChatGPT sign-in, counted against the plan's own
-/// image allowance rather than API credit. This is the backend ChatGPT's
-/// apps use, not a published API - it has changed without notice before,
-/// so Settings calls it experimental and the API-key route stays.
+/// image allowance. This backend is not a published API and can change without
+/// notice, so Settings calls it experimental.
 pub async fn generate_image(
     access_token: &str,
     account_id: &str,

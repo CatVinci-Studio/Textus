@@ -2,16 +2,10 @@ import { APP_NAME, type Strings } from "../../i18n/strings";
 import type { HeadingAction, Shortcuts } from "../../settings/SettingsContext";
 import { buildAppMenu, NO_RECENTS, type MenuNode } from "./app-menu-model";
 
-// What the macOS menu bar - native, built in Rust (src-tauri/src/menu.rs) -
-// is sent to say and show: the labels of the app menu's model
-// (app-menu-model.ts) for the same ids, and the user's keys.
-
 /**
- * The macOS menu bar's labels, for menu.rs's set_menu_labels: the bar is
- * native there and built in Rust, in English unless sent these. Keyed by
- * native menu id - the app-drawn menu's own labels for the same ids, so
- * the two menus say the same thing - plus "menu:<name>" for each submenu
- * and "predefined:<name>" for the items muda makes (menu.rs's build).
+ * The macOS menu bar's labels, which is native and English unless sent
+ * these: the app-drawn menu's labels by native id, plus "menu:<name>" for
+ * submenus and "predefined:<name>" for muda's items.
  */
 export function nativeMenuLabels(t: Strings): Record<string, string> {
   const labels: Record<string, string> = {};
@@ -60,11 +54,8 @@ export function nativeMenuLabels(t: Strings): Record<string, string> {
 }
 
 /**
- * The macOS menu bar's keys for the Format menu's heading levels, for
- * menu.rs's set_menu_accelerators: keyed by native menu id, written as muda
- * reads them, and only for the levels bound in Settings › Shortcuts. The
- * bar then shows the user's keys, and a level rebound or cleared there
- * keeps no native key that would go on firing.
+ * The macOS menu bar's heading-level keys, only for levels bound in
+ * Settings, so a rebound or cleared level keeps no native key firing.
  */
 export function nativeMenuAccelerators(
   shortcuts: Shortcuts,
@@ -79,7 +70,7 @@ export function nativeMenuAccelerators(
 }
 
 const NATIVE_MODIFIERS: Record<string, string> = {
-  // CmdOrCtrl, never Cmd: see the accelerators in menu.rs's build.
+  // CmdOrCtrl, never Cmd, as the native menu is built.
   mod: "CmdOrCtrl",
   ctrl: "Ctrl",
   alt: "Alt",
@@ -87,8 +78,8 @@ const NATIVE_MODIFIERS: Record<string, string> = {
   meta: "Super",
 };
 
-/** "mod+shift+1" -> "CmdOrCtrl+Shift+1". muda reads key names in any case;
- *  one it can't read leaves the item without a key (menu.rs). */
+/** "mod+shift+1" -> "CmdOrCtrl+Shift+1". A key muda can't read leaves the
+ *  item without one. */
 function nativeAccelerator(combo: string): string {
   return combo
     .split("+")

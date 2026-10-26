@@ -30,12 +30,9 @@ import { canSwitch } from "../../plugins/store/lifecycle";
 import { openUsageGuide } from "../../plugins/store/usage-guide";
 
 /**
- * Settings › Extensions › Plugins (docs/design/plugins.md §6). Nothing comes
- * installed: Get more (`onGetMore`) offers the catalog's plugins, "⋯"
- * installs one from a file or loads a folder; the installed plugins are
- * cards - its name, what it does, who made it (Official when it is
- * CatVinci's), its switch - that open the plugin's own page; above them,
- * one switch turns them all on or off.
+ * Settings › Extensions › Plugins. Nothing comes installed: Get more offers
+ * the catalog, "⋯" installs from a file or loads a folder; each installed
+ * plugin is a card opening its own page, and one switch turns them all.
  */
 export function PluginsPage({
   t,
@@ -73,8 +70,8 @@ export function PluginsPage({
   const openRecord = open
     ? snapshot.records.find((r) => r.id === open)
     : undefined;
-  // The plugins made in Create mode (publisher "local") under their own
-  // heading, after the rest.
+  // Plugins made in Create mode (publisher "local") go last, under their own
+  // heading.
   const isMine = (r: (typeof snapshot.records)[number]) =>
     r.manifest?.publisher === "local";
   const mine = snapshot.records.filter(isMine);

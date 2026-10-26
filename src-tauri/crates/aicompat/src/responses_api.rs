@@ -10,9 +10,8 @@ use std::collections::HashMap;
 mod agent_turns;
 pub use agent_turns::*;
 
-/// Shared request/response shapes for OpenAI's Responses API - both the
-/// Codex (chatgpt.com backend) and the plain public API key path send the
-/// exact same body shape, they just differ in URL/model/auth headers.
+// Shared request/response shapes for OpenAI's Responses API: the Codex and
+// API-key paths send the same body, with different URL, model and auth.
 
 #[derive(Serialize)]
 struct TextConfig {
@@ -50,20 +49,15 @@ pub struct ResponsesRequest {
     reasoning: Option<ReasoningConfig>,
 }
 
-/// `text.verbosity` is a GPT-5-only Responses API field - sending it to
-/// older models (e.g. gpt-4o-mini) gets rejected with "Unknown parameter:
-/// 'verbosity'". Gate it on the model name so any model can be plugged in
-/// here without breaking the request.
+/// `text.verbosity` is a GPT-5-only Responses API field; older models reject
+/// it.
 fn supports_verbosity(model: &str) -> bool {
     model.starts_with("gpt-5")
 }
 
 /// The lowest reasoning effort a model accepts, for the short one-shot
-/// requests (inline completion, grammar check) that `ResponsesRequest`
-/// carries. GPT-6 reasons at `medium` unless told otherwise, which turns a
-/// ghost-text suggestion into a multi-second wait. Luna can switch
-/// reasoning off; Astra and Sol reject `none` and bottom out at `low`.
-/// Older models get no field - GPT-4-era models reject it outright.
+/// requests. GPT-6 reasons at `medium` unless told otherwise; Astra and Sol
+/// reject `none`; GPT-4-era models reject the field outright.
 fn quick_reasoning_effort(model: &str) -> Option<&'static str> {
     if !model.starts_with("gpt-6") {
         return None;
@@ -97,9 +91,8 @@ impl ResponsesRequest {
         }
     }
 
-    /// The ChatGPT backend (chatgpt.com/backend-api/codex/responses) rejects
-    /// `stream: false` outright ("Stream must be set to true") - unlike the
-    /// public api.openai.com/v1/responses endpoint, it only serves SSE.
+    /// The ChatGPT backend rejects `stream: false` outright: it only serves
+    /// SSE.
     pub fn streaming(mut self) -> Self {
         self.stream = true;
         self
@@ -150,15 +143,9 @@ pub async fn extract_response_text(
 }
 
 /// Reads a `stream: true` Responses API SSE body and collects the completed
-/// output items, reporting live fragments through `on_event` as they come
-/// off the wire (`http::read_sse`) - text via `response.output_text.delta`,
-/// tool calls via `response.output_item.added` + arguments deltas.
-///
-/// The `response.completed` event's `response.output` is unreliable (often
-/// empty) on this backend, so instead this accumulates each
-/// `response.output_item.done` event's `item` - which carries the same
-/// message/function_call shape the non-streaming `output` array used to -
-/// as they arrive.
+/// output items, reporting live fragments through `on_event`. The
+/// `response.completed` event's output is unreliable on this backend, so each
+/// `response.output_item.done` item is collected as it arrives.
 pub async fn read_streamed_output(
     res: reqwest::Response,
     provider_label: &str,
@@ -178,18 +165,14 @@ pub async fn read_streamed_response(
 ) -> Result<(Vec<Value>, Option<StepUsage>), String> {
     let mut output = Vec::new();
     let mut usage = None;
-    // A remote failure arrives as an event, not a transport error - noted
-    // here and surfaced after the read loop (read_sse's callback can't
-    // return early).
+    // A remote failure arrives as an event, not a transport error; it is
+    // surfaced after the read loop.
     let mut failure: Option<String> = None;
     // arguments-delta events carry the ITEM id, not the call_id the rest of
     // the pipeline keys on - the mapping arrives on output_item.added.
     let mut call_ids: HashMap<String, String> = HashMap::new();
 
-    // TEXTUS_SSE_TRACE=1: each event's type, item and time, on stderr - how
-    // a service paces a step (live_eval::latency). A response with a long
-    // call beside others came with no argument deltas at all, the calls
-    // whole at its end (ChatGPT, 2026-10).
+    // TEXTUS_SSE_TRACE=1: each event's type, item and time, on stderr.
     let trace_started = std::time::Instant::now();
     let trace = std::env::var("TEXTUS_SSE_TRACE").is_ok_and(|v| v == "1");
     crate::http::read_sse(res, provider_label, |data| {

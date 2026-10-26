@@ -1,20 +1,6 @@
-//! Exact counts for platform limits (the measure_text agent tool), because
-//! models can't count characters. The limits are versioned facts from the
-//! catalogue's platform table (craft#platforms, verified 2026-10-14):
-//!
-//! - X: 280 weighted - weight 1 for U+0000-U+10FF, U+2000-U+200D,
-//!   U+2010-U+201F, U+2032-U+2037, 2 for everything else (CJK, kana,
-//!   Hangul); every URL 23; each emoji (ZWJ sequences included) 2; NFC
-//!   first (X docs; the weights from twitter-text's v3 config, facts only).
-//! - Bluesky: 300 graphemes and 3,000 UTF-8 bytes (atproto lexicon).
-//! - Threads 500; Instagram 2,200 and at most 5 hashtags; Mastodon 500 by
-//!   default with links counted as 23 and mentions as their username;
-//!   LinkedIn 3,000 with the "see more" fold near 140-210.
-//! - WeChat 公众号 (API): title 32, digest 120, content under 20,000.
-//! - 小红书 title 20 and body 1,000, 微博 2,000 folded at 140: unverified,
-//!   warnings only.
-//! - GOV.UK: title 65, summary 160 ending with a full stop.
-//! - Chinese academic titles: 25 字 (GB/T 7713.2).
+//! Exact counts for platform limits (the measure_text tool), because models
+//! can't count characters. X weighs CJK as 2 and every URL as 23; Bluesky
+//! counts graphemes; the rest count characters.
 
 use super::text::{is_cjk, is_hangul};
 use regex::Regex;

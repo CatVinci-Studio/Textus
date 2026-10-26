@@ -1,14 +1,6 @@
-/**
- * Sentence-level diff for partially accepting a rewrite: the proposal card
- * lists each changed sentence (group) with a checkbox, and the accepted
- * text is the original with only the checked changes applied.
- *
- * Sentences, not words: a word-level pick produces Frankenstein grammar,
- * while a writer judging a rewrite thinks "keep this sentence, not that
- * one". Ends at CJK and Latin terminators and line breaks; a terminator
- * keeps its trailing quote/bracket and whitespace with it, so joining the
- * pieces reproduces the text exactly.
- */
+/** Sentence-level diff for partially accepting a rewrite. Sentences, not
+ *  words, as word-level picks make broken grammar; the pieces join back into
+ *  the text exactly. */
 
 import { formKey } from "./markdown-forms";
 import { MATCH, similarity } from "./sentence-similarity";
@@ -18,12 +10,8 @@ export type SentenceHunk =
   | { kind: "change"; before: string; after: string };
 
 export function splitSentences(text: string): string[] {
-  // A full stop ends a sentence before a space, a line break (a Markdown
-  // hard break, `\` or `<br>`, too) or the end; elsewhere (3.14, a URL) it
-  // is part of the sentence - which used to fail the whole split, and the
-  // rewrite was shown whole. A picture's `![` is no exclamation. The break
-  // after a sentence goes with it. Arabic's ؟, Devanagari's । and an
-  // ellipsis end one too.
+  // A full stop ends a sentence only before a space, a line break or the
+  // end, not in 3.14 or a URL. A picture's `![` is no exclamation.
   const parts =
     text.match(
       /(?:[^。！？!?.;；؟।…\n]|\.(?!\s|$|\\\n|<br\s*\/?>)|!(?=\[))*(?:[。！？!?;；؟।…]+|\.|\n+|$)[”’"')）」』\]]*(?:\\\n|<br\s*\/?>|\s)*/g,
@@ -43,20 +31,15 @@ export function trimBreaks(sentence: string): string {
     .trim();
 }
 
-/** A sentence as it is drawn in its place in the text: trimBreaks, and
- *  without a heading's `#`s - the heading it stands in already is one, and
- *  inline its marker showed as text ("# The moon can hear"). */
+/** A sentence as drawn in its place: trimBreaks, and without a heading's
+ *  `#`s, which would show as text inline. */
 export function inlineSentence(sentence: string): string {
   return trimBreaks(sentence).replace(/^#{1,6}[ \t]+/, "");
 }
 
-/**
- * Units already split, diffed in one: LCS, then runs of non-matching ones
- * become change hunks (see flush). `alignTail` aligns the last run of
- * changes - the one that reaches the end of `a` - when `b` is a stream so
- * far; without it the rewrite is finished, and every paragraph is
- * regrouped (regroup).
- */
+/** Units diffed by LCS, runs of non-matching ones becoming changes.
+ *  `alignTail`: `b` is a stream so far; without it every paragraph is
+ *  regrouped. */
 export function diffSentenceLists(
   a: string[],
   b: string[],
@@ -86,8 +69,7 @@ function sentencePairs(
     after: string[],
   ) => { before: string; after: string }[] = alignRun,
 ): Pair[] {
-  // Compared as written either way (formKey): `<https://…>` the editor
-  // writes and the `https://…` a model writes back are the same sentence.
+  // `<https://…>` from the editor and `https://…` from a model are the same.
   const keyA = a.map(formKey);
   const keyB = b.map(formKey);
   const lcs: number[][] = Array.from({ length: a.length + 1 }, () =>
@@ -103,9 +85,8 @@ function sentencePairs(
   const pairs: Pair[] = [];
   let pendingBefore: string[] = [];
   let pendingAfter: string[] = [];
-  // A run of changed sentences is aligned sentence to sentence by what
-  // they say (alignRun), so each becomes its own decision - also when the
-  // rewrite split one sentence in two or joined two into one.
+  // A run of changed sentences is aligned by what they say, so each is its
+  // own decision, splits and joins too.
   const flush = (align = alignRun) => {
     for (const group of align(pendingBefore, pendingAfter))
       pairs.push({ same: false, ...group });
@@ -141,17 +122,13 @@ interface Pair {
   after: string;
 }
 
-/** A paragraph more of whose sentences than this changed, and which
- *  reads less like its original than REWRITTEN (`similarity`), was
- *  rewritten: it is one change, struck whole with the new paragraph after
- *  it - by sentence it read as red and green confetti. A polish that
- *  touched a few words in every sentence stays sentence by sentence. */
+/** A paragraph with more of its sentences changed than this, reading less
+ *  like its original than REWRITTEN, is one change, not sentence confetti. */
 const DENSE = 0.5;
 const REWRITTEN = 0.55;
 
-/** A paragraph this short or shorter, changed whole next to another such,
- *  is decided with it: a run of short lines rewritten (dialogue, a list
- *  of points) was a card a line, the margin a column of chips. */
+/** A paragraph this short, changed whole next to another such, is decided
+ *  with it, not a card a line. */
 const SHORT_PARAGRAPH = 80;
 /** Short paragraphs taken together up to this much, then a new change. */
 const MERGED_AT_MOST = 320;
@@ -160,11 +137,8 @@ const MERGED_AT_MOST = 320;
 const PLAIN =
   /^(?!\s*(?:#{1,6}\s|[-*+]\s|\d+[.)]\s|>|\||```|~~~|\$\$|!\[|\[\^|<|\[toc\]))/i;
 
-/**
- * Changes next to each other that are each a whole short paragraph, on
- * both sides, merged into one change of those paragraphs. A change inside
- * a paragraph, or of a long one, stays as it was.
- */
+/** Adjacent changes that are each a whole short paragraph on both sides,
+ *  merged into one change. */
 function mergeShortParagraphs(pairs: Pair[]): Pair[] {
   const out: Pair[] = [];
   // Whether the text so far ends a paragraph: a change after that which
@@ -224,27 +198,14 @@ function paragraphsOf(text: string): string[] {
   return parts;
 }
 
-/**
- * How finely a rewrite is decided, chosen by what it did. Its pairs are cut
- * into the smallest runs both sides of which end a paragraph together;
- * then each run:
- *
- * - kept its paragraphs (as many new as old): paragraph by paragraph, each
- *   one sentence by sentence - or whole when most of it changed (DENSE);
- * - joined, split or regrouped paragraphs: one change, its paragraphs from
- *   the original against the new ones they became (the joined paragraphs
- *   struck in place: pending-edit-plugin's struck blocks).
- *
- * `finished` false: the last run, which may still grow, stays as it is -
- * unless both its sides end a paragraph, and it is whole paragraphs.
- */
+/** How finely a rewrite is decided: runs that kept their paragraphs go
+ *  sentence by sentence (or whole when DENSE); joins and splits are one
+ *  change. Unfinished, the last run stays unless it is whole paragraphs. */
 function regroup(pairs: Pair[], finished: boolean): Pair[] {
   const out: Pair[] = [];
   let run: Pair[] = [];
-  // Runs next to each other that both joined or split paragraphs are
-  // shaped as one: sentences paired across a paragraph break (a line of
-  // dialogue dropped into the narration before it) cut a join of three
-  // lines in two, and alignParagraphs struck one of them on its own.
+  // Adjacent runs that joined or split paragraphs are shaped as one, or a
+  // pairing across a paragraph break would cut a join in two.
   let uneven: Pair[] = [];
   const flush = () => {
     if (uneven.length > 0) out.push(...shapeRun(uneven));
@@ -268,15 +229,12 @@ function regroup(pairs: Pair[], finished: boolean): Pair[] {
     const after = run.map((p) => p.after).join("");
     const ends = (text: string) => !text || ENDS_PARAGRAPH.test(text);
     // The last run, still streaming, is whole paragraphs once both sides
-    // end one - as each lands (unit-reveal.ts): shaped then, a translation
-    // landed as one change over every paragraph, drawn inside the title.
+    // end one, and is shaped then.
     const whole = ends(before) && ends(after);
     if (last ? finished || (whole && !!before && !!after) : whole) close();
   }
-  // Still streaming, a join just before the text being written may go on
-  // into it: shaped already unless that leaves a paragraph struck on its
-  // own at its end (the rest of the join not written yet), so its card
-  // stands where it will once the stream ends.
+  // Still streaming, a join may go on into the text being written: shaped
+  // already unless that leaves a paragraph struck on its own at its end.
   if (finished || run.length === 0) flush();
   else {
     const shaped = shapeRun(uneven);
@@ -299,10 +257,8 @@ function shapeRun(run: Pair[]): Pair[] {
   const before = run.map((p) => p.before).join("");
   const after = run.map((p) => p.after).join("");
   const count = paragraphCount;
-  // Joined paragraphs are a change even with every sentence as it was:
-  // taken as "same", accepting joined them unseen. Each new paragraph is set
-  // against the ones it came from (alignParagraphs) - a translation, which
-  // nothing pairs sentence by sentence, used to be one change for all of it.
+  // Joined paragraphs are a change even with every sentence as it was, or
+  // accepting would join them unseen. Each new one is set against its sources.
   if (count(before) !== count(after)) {
     if (count(before) === 0 || count(after) === 0)
       return [{ same: false, before, after }];
@@ -320,9 +276,8 @@ function shapeRun(run: Pair[]): Pair[] {
   }
   if (run.every((p) => p.same)) return run;
   if (count(before) > 1) {
-    // As many paragraphs, broken differently than sentence by sentence
-    // (the run didn't end at each): paired paragraph by paragraph, each
-    // compared again by its sentences.
+    // As many paragraphs, broken differently: paired paragraph by paragraph,
+    // each compared again by its sentences.
     const olds = paragraphsOf(before);
     const news = paragraphsOf(after);
     if (olds.length === news.length)
@@ -356,14 +311,8 @@ const LONE_PARAGRAPH = 1.5;
 /** The most paragraphs one paragraph is joined from or split into. */
 const MAX_GROUP = 4;
 
-/**
- * Pairs the paragraphs of a rewrite that has a different number of them:
- * each original with the one it became, or two joined into one, one split
- * in two, one dropped or added - the cheapest alignment in order, by how
- * long each is against the whole (so a translation, whose words share
- * nothing with its original, still pairs paragraph by paragraph), by kind,
- * and by what they share where they are in the same language.
- */
+/** Pairs the paragraphs of a rewrite with a different number of them, by
+ *  relative length (so translations pair too), kind, and shared words. */
 function alignParagraphs(
   olds: string[],
   news: string[],
@@ -445,13 +394,8 @@ function dense(run: Pair[]): Pair[] {
   return [{ same: false, before, after }];
 }
 
-/**
- * Pairs the sentences of a changed run: each original sentence with the
- * one, or two, it became (or two originals joined into one), by the most
- * similar alignment in order - a dynamic program over 1:1, 1:2 and 2:1
- * pairs, plus sentences dropped or added on their own. A rewrite that can't
- * be aligned that way (nothing similar enough) stays one change.
- */
+/** Pairs a changed run's sentences 1:1, 1:2 or 2:1 by the most similar
+ *  alignment in order. With nothing similar enough, it stays one change. */
 export function alignRun(
   before: string[],
   after: string[],
@@ -475,9 +419,8 @@ export function alignRun(
     [1, 0],
     [0, 1],
   ];
-  // `band`: only alignments that stay this near the diagonal (beyond the
-  // runs' difference in length) - for a rewrite streaming in, which runs
-  // this once per sentence it completes.
+  // `band`: only alignments this near the diagonal, for a streaming rewrite
+  // that runs this once per completed sentence.
   const reach = band + Math.abs(m - n);
   for (let i = 0; i <= m; i++)
     for (let j = 0; j <= n; j++) {
@@ -515,12 +458,11 @@ export function alignRun(
     i -= di;
     j -= dj;
   }
-  // Nothing paired up: one change, as before.
+  // Nothing paired up: one change.
   if (!groups.some((g) => g.before && g.after))
     return [{ before: before.join(""), after: after.join("") }];
-  // A sentence dropped or added on its own joins the pair before it (or
-  // after it, at the start), so it is decided with its neighbour rather
-  // than as a lone strike or insert between two pairs.
+  // A lone dropped or added sentence joins its neighbouring pair, rather
+  // than standing alone between two pairs.
   const merged: { before: string; after: string }[] = [];
   for (const g of groups) {
     const last = merged[merged.length - 1];
@@ -539,13 +481,8 @@ export function alignRun(
   return merged;
 }
 
-/**
- * How many of a change's original sentences its new text stands for, from
- * the first: the rest were dropped and joined to it (`alignRun`), and its
- * new text goes after those it replaces, not after the dropped ones - so a
- * rewrite streaming in doesn't move a sentence's new text when the stream
- * passes the one after it and finds it dropped.
- */
+/** How many of a change's original sentences its new text stands for; the
+ *  rest were dropped, and the new text goes before them so it doesn't move. */
 export function pairedPrefix(before: string[], after: string): number {
   if (before.length <= 1 || !after.trim()) return before.length;
   let best = before.length;

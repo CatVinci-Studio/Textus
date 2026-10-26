@@ -1,13 +1,10 @@
 use super::*;
 
-/// scripts/sync-models.mjs's reviewed copy of what each provider serves,
-/// per models.dev. Test-only - nothing in the app reads it.
+/// The reviewed copy of what each provider serves. Test-only.
 const SNAPSHOT: &str = include_str!("../../../../src/ai/models-snapshot.json");
 
-/// aicompat's capability table needs a row for every provider here: how
-/// it takes thinking parameters and switches on its own search. A
-/// missing row silently falls back to plain OpenAI-compatible Chat
-/// Completions, which is wrong for most named providers.
+/// The capability table needs a row for every provider here: a missing row
+/// silently falls back to plain Chat Completions, wrong for most providers.
 #[test]
 fn every_provider_has_a_capability_row() {
     for entry in PROVIDER_CATALOG {
@@ -31,9 +28,7 @@ fn deep_thinking_follows_the_default_agent_model() {
 }
 
 /// Every model the catalog pins must still exist upstream and not be
-/// deprecated - the check that would have caught Groq's and Kimi's
-/// defaults being shut down months before anyone noticed. A failure
-/// here after a snapshot refresh means: re-pick that provider's models.
+/// deprecated. A failure after a snapshot refresh means re-pick the models.
 #[test]
 fn pinned_models_are_current_per_models_dev() {
     let snapshot: serde_json::Value = serde_json::from_str(SNAPSHOT).unwrap();

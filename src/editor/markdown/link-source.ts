@@ -2,17 +2,9 @@ import { $remark } from "@milkdown/kit/utils";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 
 /**
- * A link remembers the Markdown it was written as, the way an image read
- * from an `<img>` tag keeps the tag (images/image-html.ts). The caret on a
- * link shows that source to edit (link-reveal.ts): a bare
- * `https://example.com` shows bare and `[a](<b c> 'd')` as it was typed,
- * not as remark would write them. A save writes it back too, while the
- * link still says what it said (markdown-output.ts).
- *
- * Kept on the link mark as JSON, in a `source` attr: the text, and what the
- * link said when it was read - its URL, title and a key of its content -
- * so a link changed some other way (its URL edited, a word of it bold) is
- * written by the serializer again rather than as the old text.
+ * A link remembers the Markdown it was written as, so the caret on it shows
+ * that source and a save writes it back. Kept with the URL, title and a key
+ * of its content, so a link changed some other way is serialized afresh.
  */
 export interface LinkSource {
   source: string;
@@ -33,10 +25,8 @@ interface Phrasing {
   [key: string]: unknown;
 }
 
-/** What a link's mdast content says, as one string: its text, and the
- *  kind and target of what isn't text. The same whether the content was
- *  read from a file or written from the editor, which splits text into
- *  pieces differently. */
+/** What a link's mdast content says, as one string, the same whether read
+ *  from a file or written from the editor (which splits text differently). */
 export function phrasingKey(nodes: readonly Phrasing[] | undefined): string {
   return (nodes ?? [])
     .map((node) =>
@@ -58,8 +48,8 @@ export function readLinkSource(attr: unknown): LinkSource | null {
   }
 }
 
-/** Each link's source text, onto its mdast node as `data.source` - after
- *  reference-links.ts has given a reference its URL. */
+/** Each link's source text, onto its mdast node as `data.source`, after
+ *  references have their URLs. */
 const remarkLinkSource: RemarkPluginRaw<unknown> = () => (tree, file) => {
   const text = String((file as { value?: unknown }).value ?? "");
   const walk = (node: Phrasing) => {

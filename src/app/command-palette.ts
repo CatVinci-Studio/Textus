@@ -13,11 +13,8 @@ import {
 } from "./menu/app-menu-model";
 
 /**
- * View › Command Palette (mod+shift+p): everything the menus do and every
- * command a plugin adds, in one list found by typing - VS Code's and
- * Obsidian's palette. It reads the menu the app already builds
- * (app-menu-model.ts) and the command registry (commands.ts), so nothing
- * is listed twice over and a new menu item is in it by itself.
+ * The command palette: every menu item and plugin command, found by typing.
+ * Read from the menu model and command registry, so nothing is listed twice.
  */
 export interface PaletteEntry {
   label: string;
@@ -27,9 +24,8 @@ export interface PaletteEntry {
   run: { menu: MenuAction } | { command: string };
 }
 
-/** The menu's items that do something now, each with the path to it,
- *  then the registered commands no menu item already runs. Recent files
- *  are left out (File › Open Recent lists them), and so is the palette. */
+/** The menu's items that do something now, each with its path, then the
+ *  commands no menu item runs. Recent files and the palette are left out. */
 export function paletteEntries(
   menu: MenuNode[],
   registered: readonly { id: string; title: string; shortcut?: string }[],

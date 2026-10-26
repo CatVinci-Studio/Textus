@@ -5,13 +5,8 @@ import { showConfirm, showMessage } from "../../ui/app-dialog";
 import { errorText } from "../../utils/error-text";
 import type { Strings } from "../../i18n/strings";
 
-/**
- * A redone picture is in (generate_image's `replace`, accepted): the old
- * one's file is still on disk. Offered, never done unasked: the file goes
- * to the system's Trash - not deleted, it can be put back - if it is a
- * file on this computer and nothing left in the document still shows it.
- * Kept is the default answer.
- */
+/** Offers to move a replaced picture's old file to the Trash, if it is a
+ *  local file nothing in the document still shows. Keeping it is the default. */
 export async function offerOldPictureTrash(
   oldSrc: string,
   docPath: string | null,

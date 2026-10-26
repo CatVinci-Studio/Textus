@@ -1,24 +1,6 @@
-//! The deterministic writing-rules engine: the mechanical conventions of
-//! the ten document languages, checked and fixed in code instead of being
-//! left to a model that can't count characters or see a half-width comma
-//! (CATALOGUE.md §3, decisions 5-6).
-//!
-//! - [`check`]: one paragraph's plain text, as the grammar check receives
-//!   it - merged with the model's issues in `client::finish_grammar`.
-//! - [`check_document`]: a whole Markdown document (code, math, front
-//!   matter, link targets and HTML skipped), with the document-level and
-//!   consistency rules - the `check_conventions` agent tool.
-//! - [`postfix`]: the safe subsets applied to completions (CP) and to the
-//!   text of edit proposals (PR), only where the document already follows
-//!   the convention.
-//! - [`measure`]: exact platform counts for the `measure_text` tool.
-//!
-//! Every rule has an id (`zh.punct.halfwidth`) and an entry in
-//! [`registry`] with its priority: P0 runs at the "standard" grammar level
-//! and its fix is safe; P1 runs at "standard" as one-by-one suggestions; P2
-//! only at "strict", under a profile the user chose, or as document-level
-//! consistency info. The "typos" level runs only spelling rules. Messages
-//! are in the language of the text the rule fires on.
+//! The deterministic writing-rules engine: the mechanical conventions of the
+//! document languages, checked and fixed in code, since models can't count
+//! characters or see a half-width comma. Each rule has an id and a priority.
 
 pub mod detect;
 pub(crate) mod document;
@@ -280,17 +262,15 @@ pub(crate) fn tidy(mut found: Vec<Finding>) -> Vec<Finding> {
     kept
 }
 
-/// One paragraph's findings for the grammar check: the language detected
-/// from the text, the profile from `conv`, and only the rules that run in
-/// the grammar check at `level`.
+/// One paragraph's findings for the grammar check, at `level`.
 // The text's own language for messages; the app calls check_for.
 #[cfg(test)]
 pub fn check(text: &str, conv: &Conventions, level: Level, library: &[String]) -> Vec<Finding> {
     check_for(text, conv, level, library, None)
 }
 
-/// [`check`], with the shared rules' messages in the app's language
-/// (`ui`, a code from src/i18n/langs.ts) rather than the text's.
+/// [`check`], with the shared rules' messages in the UI language `ui` rather
+/// than the text's.
 pub fn check_for(
     text: &str,
     conv: &Conventions,

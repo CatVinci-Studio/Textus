@@ -23,15 +23,13 @@ export function headingPos(doc: ProseNode, anchor: string): number | null {
 }
 
 /**
- * Scrolls to the heading `anchor` names - a followed `#heading` link, in
- * this document or (link-click-plugin.ts, tab-jump.ts) one just opened.
- * False when the document has no such heading; nothing moves then.
+ * Scrolls to the heading `anchor` names. False when the document has no such
+ * heading; nothing moves then.
  */
 export function revealHeading(view: EditorView, anchor: string): boolean {
   const pos = headingPos(view.state.doc, anchor);
   if (pos === null) return false;
-  // A heading in a folded <details> has no place on screen to scroll to
-  // until its fold opens.
+  // A heading in a folded <details> has no place on screen until it opens.
   unfoldRange(view, pos);
   revealPosition(view, pos);
   return true;

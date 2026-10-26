@@ -1,8 +1,5 @@
-/**
- * Whether the document on screen tracks the writer's changes
- * (useOwnRevisions), for Edit › Track My Changes' check mark in the
- * app-drawn menu and the macOS menu bar. Set by the active tab's editor.
- */
+/** Whether the document on screen tracks the writer's changes, for the Track
+ *  My Changes check mark. Set by the active tab's editor. */
 let tracking = false;
 const listeners = new Set<() => void>();
 

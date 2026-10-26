@@ -1,8 +1,6 @@
-//! Word and character lists for the Chinese rules - our own lists (the
-//! pairs are facts: which form the national norms recommend), kept small
-//! and high-precision instead of shipping OpenCC's dictionaries (2.4 MB
-//! and 46 crates for a check that only needs the common unambiguous pairs;
-//! see the dependency notes in rules/mod.rs).
+//! Word and character lists for the Chinese rules: our own small,
+//! high-precision lists of the common unambiguous pairs, rather than OpenCC's
+//! large dictionaries.
 
 /// How a Simplified/Traditional pair converts.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -98,8 +96,8 @@ pub(crate) fn to_traditional(c: char) -> Option<Vec<char>> {
     (!forms.is_empty()).then_some(forms)
 }
 
-/// Wrong-character pairs (W3), Simplified and Traditional. 莫明其妙 is a
-/// suggestion only (in VARIANTS): some dictionaries list it.
+/// Wrong-character pairs, Simplified and Traditional. 莫明其妙 is a suggestion
+/// only (in VARIANTS): some dictionaries list it.
 pub(crate) const TYPOS: &[(&str, &str)] = &[
     ("再接再励", "再接再厉"),
     ("迫不急待", "迫不及待"),
@@ -148,8 +146,8 @@ pub(crate) const TYPOS: &[(&str, &str)] = &[
     ("黃梁", "黃粱"),
 ];
 
-/// Variant words (异形词, GF 1001): (variant, recommended). Not 蹚/趟 or
-/// 噘/撅 (the 2013 table made 蹚 and 噘 standard) and not 标识.
+/// Variant words (异形词, GF 1001): (variant, recommended). Not 蹚/趟 or 噘/撅
+/// (蹚 and 噘 are standard now) and not 标识.
 pub(crate) const VARIANTS: &[(&str, &str)] = &[
     ("案语", "按语"),
     ("班驳", "斑驳"),
@@ -247,8 +245,8 @@ pub(crate) const VARIANTS: &[(&str, &str)] = &[
     ("莫明其妙", "莫名其妙"),
 ];
 
-/// Mainland words in Traditional text (TW18), suggestions for Taiwan.
-/// 質量 (also "mass") and 程序 (also "procedure") only in compounds.
+/// Mainland words in Traditional text, suggestions for Taiwan. 質量 (also
+/// "mass") and 程序 (also "procedure") only in compounds.
 pub(crate) const TW_MAINLAND: &[(&str, &str)] = &[
     ("軟件", "軟體"),
     ("硬件", "硬體"),
@@ -273,7 +271,7 @@ pub(crate) const TW_MAINLAND: &[(&str, &str)] = &[
     ("質量管理", "品質管理"),
 ];
 
-/// 法律統一用字 (TW20): (other form, the legal form).
+/// 法律統一用字: (other form, the legal form).
 pub(crate) const TW_LEGAL: &[(&str, &str)] = &[
     ("盡量", "儘量"),
     ("公佈", "公布"),
@@ -291,5 +289,5 @@ pub(crate) const TW_LEGAL: &[(&str, &str)] = &[
     ("水錶", "水表"),
 ];
 
-/// Taiwan / Hong Kong character variants (TW17): (Taiwan, Hong Kong).
+/// Taiwan / Hong Kong character variants: (Taiwan, Hong Kong).
 pub(crate) const TW_HK: &[(char, char)] = &[('裡', '裏'), ('著', '着'), ('線', '綫'), ('衛', '衞')];

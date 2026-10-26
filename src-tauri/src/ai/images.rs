@@ -1,17 +1,6 @@
-//! Pictures from Textus AI (#194): the image model chosen in Settings ›
-//! Textus AI (none by default - a picture costs money, and most chat models
-//! can't make one), the generate_image tool the agent gets while one is
-//! chosen, and the pictures waiting for the user's decision.
-//!
-//! A picture is a proposal like any other edit. The tool runs the request
-//! ([`ImageRun::execute`]) and keeps the picture here, in memory; the
-//! frontend shows it in place with Accept and Reject, and only Accept
-//! saves it - into the image folder, under the naming rules, or up to the
-//! image host, as Settings › Images says for a pasted picture - and writes
-//! the Markdown image. Reject, or closing the app, leaves nothing behind.
-//! The protocol of each service is aicompat::images. Ideas from #221 by
-//! Zhuohang Jiang: the per-send cap, the checked download, refusals told
-//! apart from failures.
+//! Pictures from Textus AI: the image model chosen in Settings (none by
+//! default, as a picture costs money), the generate_image tool, and the pictures
+//! waiting in memory for the user's decision. Only Accept saves one.
 
 use crate::ai::agent::StreamEvent;
 use crate::ai::tools::{Access, ProposalLedger, Run, Tool, EDITING_MODES};

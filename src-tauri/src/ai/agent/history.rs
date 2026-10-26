@@ -4,22 +4,15 @@
 use super::*;
 
 /// Tool output from an earlier exchange longer than this is cut to a stub
-/// before being replayed: a file or section read three questions ago is
-/// rarely needed again, and re-sending it with every request is most of what
-/// made long conversations slow, expensive and finally too big to send.
+/// before being replayed; re-sending old reads made long conversations slow.
 pub(super) const OLD_TOOL_OUTPUT_LIMIT: usize = 1_500;
 pub(super) const OLD_TOOL_OUTPUT_KEEP: usize = 400;
 /// Past this much replayed history (characters), whole exchanges are dropped
-/// oldest first, so a long session degrades into forgetting its beginning
-/// instead of failing every send once it no longer fits the context window.
+/// oldest first, so a long session forgets its start instead of failing.
 pub(super) const HISTORY_BUDGET: usize = 150_000;
 /// Exchanges are dropped in blocks of at least this many characters, counted
-/// from the start of the conversation. Dropping just enough for each send
-/// moved the history's first message every turn once over budget, and with
-/// it every byte of the prompt cache; a block boundary depends only on the
-/// exchanges before it, so the start now stays put until the conversation
-/// has grown by another block. Never more than two blocks beyond what the
-/// budget needs, though (see compact_history).
+/// from the start, so the history's first message (and the prompt cache)
+/// stays put until the conversation grows by another block.
 pub(super) const HISTORY_DROP_STEP: usize = HISTORY_BUDGET / 3;
 
 pub(super) fn turn_chars(turn: &AgentTurn) -> usize {
@@ -30,10 +23,8 @@ pub(super) fn turn_chars(turn: &AgentTurn) -> usize {
     }
 }
 
-/// What was remembered, as the chat records it for its chips (a remember
-/// call and its result - memory::pass's, or the remember tool's before
-/// 1.2.0-rc.6), isn't sent: the model has no remember tool to have called,
-/// and what is remembered comes with every message.
+/// Memory chips' turns (a remember call and its result) aren't sent: the model
+/// has no remember tool, and what is remembered comes with every message.
 pub(crate) fn without_memory_turns(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
     let memory: std::collections::HashSet<String> = history
         .iter()
@@ -55,21 +46,12 @@ pub(crate) fn without_memory_turns(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
         .collect()
 }
 
-/// The name a memory chip's turns go by (src/ai/chat/memory-pass.ts).
+/// The name a memory chip's turns go by.
 pub(crate) const MEMORY_TURN: &str = "remember";
 
-/// Shrinks the replayed conversation (everything before the message being
-/// sent) to what a writing agent still needs from it. propose_edit results
-/// are never cut - they carry the accepted/rejected status notes the model
-/// relies on. Edits nothing the user sees: the frontend keeps the full
-/// history; only what goes to the provider is trimmed.
-///
-/// Both cuts are made the same way on every send, so a turn reads the same
-/// from the first request that replays it to the last: a tool result is cut
-/// to the same stub each time, and the oldest exchanges go in fixed blocks
-/// (HISTORY_DROP_STEP). That is what lets the provider's prompt cache cover
-/// the whole history (see anthropic.rs's cache breakpoints) - the only bytes
-/// that change are the current message's, which carries the document.
+/// Shrinks the replayed conversation to what a writing agent still needs;
+/// propose_edit results are never cut. Both cuts come out the same on every
+/// send, so the prompt cache can cover the whole history.
 pub(crate) fn compact_history(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
     let history = without_memory_turns(history);
     let tool_names: std::collections::HashMap<String, String> = history
@@ -128,11 +110,8 @@ pub(crate) fn compact_history(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
     else {
         return turns;
     };
-    // Rounded up to the end of its block, which drops under two blocks more
-    // than must go while exchanges are small next to a block. One carrying
-    // a long attachment (inlined into its message) can be bigger than a
-    // block, and rounding past it would leave a fraction of the budget:
-    // then just what must go, the way it was before blocks.
+    // Rounded up to the end of its block. An exchange bigger than a block (a long
+    // attachment) would leave a fraction of the budget, so then just what must go.
     let mut cut = needed;
     let mut block_start = 0;
     for &(i, before) in &starts {

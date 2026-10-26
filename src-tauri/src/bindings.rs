@@ -1,23 +1,6 @@
-//! The TypeScript side of the backend commands, generated from their Rust
-//! signatures: src/platform/bindings/*.ts, one file per group of
-//! src/platform/ipc-*.ts. A command listed here carries
-//! `#[cfg_attr(test, specta::specta)]`, and the types it takes and returns
-//! `#[cfg_attr(test, derive(specta::Type))]` - test-only, so a shipped
-//! build never compiles specta.
-//!
-//! `bindings_are_current` fails when a checked-in file is not what these
-//! signatures generate; `npm run bindings` (TEXTUS_WRITE_BINDINGS=1)
-//! writes them again. Not listed: the commands reading their inputs as one
-//! struct (commands/args.rs) and ai_agent_message, whose inputs and stream
-//! are exported as types instead, and the iOS-only ones
-//! (commands/documents.rs), which a desktop test build doesn't compile.
-//! aicompat's types (AgentTurn and what it holds) derive specta::Type
-//! behind its `specta` feature, which only the dev-dependency turns on.
-//!
-//! The settings, histories and conversations are opaque JSON
-//! (serde_json::Value) to Rust, and `rev`/counts are u64/usize; specta
-//! refuses 64-bit integers by default, since JSON.parse rounds past 2^53.
-//! None of these come near that, so they are exported as `number`.
+//! Generates the TypeScript bindings from commands marked
+//! `#[cfg_attr(test, specta::specta)]` and types marked
+//! `#[cfg_attr(test, derive(specta::Type))]`; u64 counts are exported as `number`.
 
 use specta_typescript::Typescript;
 use std::path::PathBuf;
@@ -27,8 +10,7 @@ const HEADER: &str = "// Generated from the Rust commands by src-tauri/src/bindi
 // edit. `npm run bindings` writes it again; `cargo test` fails while it\n\
 // is out of date.\n";
 
-/// One generated file: its name under src/platform/bindings/ and its
-/// commands.
+/// One generated file: its name and its commands.
 fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
     vec![
         (
@@ -188,10 +170,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             ]),
         ),
         (
-            // What a running plugin reaches through the window: the open
-            // folder, the network, its storage and secrets, the folder's
-            // index (src-tauri/src/plugins/access.rs, files.rs, store.rs,
-            // workspace.rs, metadata.rs).
+            // What a running plugin reaches through the window.
             "plugin-access.ts",
             builder().commands(collect_commands![
                 crate::plugins::access::plugin_fs_list,
@@ -221,10 +200,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::plugins::store::plugin_store_clear,
             ]),
         ),
-        // The AI commands, in a file per concern (a generated file is held
-        // to the same 600 lines as any other): providers and the requests
-        // that take one struct, the agent's stream and what it shows, the
-        // project, its memory, and the writing conventions.
+        // The AI commands, a file per concern (generated files are held to the same
+        // 600-line limit).
         (
             "ai.ts",
             builder()
@@ -236,9 +213,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::ai::web::web_search_status,
                     crate::ai::next_message::suggest_next_message,
                 ])
-                // The commands reading their inputs as one struct
-                // (commands/args.rs) can't be generated; their inputs are,
-                // and ipc.ts types each call's argument object with them.
+                // Commands reading their inputs as one struct can't be generated; their
+                // input types are.
                 .typ::<crate::ai::client::CompletionRequest>()
                 .typ::<crate::ai::client::GrammarRequest>(),
         ),
@@ -257,10 +233,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::ai::kept_proposals::kept_proposals_read,
                     crate::ai::kept_proposals::kept_proposals_write,
                 ])
-                // ai_agent_message takes more parameters than specta's
-                // function traits go to (ten), so it is not generated
-                // either: what its Channel streams is, AgentTurn with it,
-                // and the thinking level it takes.
+                // ai_agent_message takes more parameters than specta supports (ten), so
+                // only the types it streams and takes are exported.
                 .typ::<crate::ai::agent::StreamEvent>()
                 .typ::<aicompat::capabilities::ThinkingLevel>(),
         ),
@@ -320,11 +294,9 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
 
 fn builder() -> Builder<tauri::Wry> {
     Builder::new()
-        // ipc-call.ts turns a rejection into an IpcError, as for every
-        // other command.
         .error_handling(ErrorHandlingMode::Throw)
-        // The accessors are the commands' own names, so the name the
-        // frontend passes is checked against this list by tsc.
+        // The accessors are the commands' own names, so tsc checks the names the
+        // frontend passes.
         .function_casing(tauri_specta::Casing::SnakeCase)
         .dangerously_cast_bigints_to_number()
 }

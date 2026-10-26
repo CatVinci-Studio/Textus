@@ -31,7 +31,7 @@ import {
 import { windowInfo } from "../store/plugin-records";
 import "./PluginListView.css";
 
-/** A list item as a plugin gives it (textus.d.ts's ListItem). */
+/** A list item as a plugin gives it. */
 export interface PluginListItem {
   id?: string;
   label: string;
@@ -91,10 +91,8 @@ function defaultSelect(item: PluginListItem) {
 }
 
 /**
- * A plugin's list (textus.views.registerList), drawn by Textus - in a
- * sidebar tab or a tab of its own: the plugin gives the items, Textus the
- * look, the keys, the filter and the folding, as its own lists have. The
- * items are asked of the plugin each time it refreshes the list.
+ * A plugin's list, drawn by Textus in a sidebar tab or a tab of its own: the
+ * plugin gives the items, Textus the look, keys, filter and folding.
  */
 export function PluginListPane({
   plugin,
@@ -312,9 +310,8 @@ export function PluginListPane({
 }
 
 /**
- * A plugin list's items as its plugin gives them: asked when the list
- * shows and each time the plugin refreshes it, the open items' children
- * with them; the plugin started first if it isn't running.
+ * A plugin list's items, asked when the list shows and on each refresh, with
+ * the open items' children; the plugin is started first if needed.
  */
 function usePluginListItems(plugin: string, view: string) {
   useSyncExternalStore(subscribeListViews, listViewsVersion);

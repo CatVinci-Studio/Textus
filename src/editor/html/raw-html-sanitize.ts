@@ -1,21 +1,14 @@
 /**
- * Whitelist renderer for the raw HTML raw-html-schema.ts stores as real
- * text: common README-style markup (alignment wrappers, images, headings,
- * bold/italic, links, <details>, tables, a few inline styles, inline SVG)
- * gets rebuilt into a small, sanitized DOM tree by the shared policy
- * (html-policy.ts, which the split view uses too); a snippet whose
- * outermost tag isn't in the whitelist - `<script>`, `<iframe>`, a stray
- * closing tag - returns null so the caller falls back to showing the raw
- * text plainly.
+ * Renders raw HTML through the shared allow-list. A snippet whose outermost
+ * tag isn't allowed returns null, so the caller shows the raw text.
  */
 
 import { ALLOWED_TAGS, INLINE_TAGS, sanitizeNodes } from "./html-policy";
 
 type RenderedHtml = { html: string; inline: boolean } | null;
 
-// The preview re-renders every fragment in the document on each edit, and
-// a fragment's output depends on its text alone. Bounded so a long session
-// of edits can't grow it without limit.
+// The preview re-renders every fragment on each edit, and the output
+// depends on the text alone. Bounded.
 const renderCache = new Map<string, RenderedHtml>();
 const RENDER_CACHE_MAX = 500;
 
@@ -40,13 +33,12 @@ function renderUncached(raw: string): RenderedHtml {
   if (!firstElement || !ALLOWED_TAGS.has(firstElement.localName.toLowerCase()))
     return null;
 
-  // Built in the parsed document, which is inert: an <img> made in the
-  // live page would start loading before it was ever shown.
+  // Built in the inert parsed document: an <img> made in the live page would
+  // start loading before it was shown.
   const wrapper = parsed.createElement("div");
   sanitizeNodes(Array.from(body.childNodes), wrapper, { linkTarget: true });
-  // Inline iff nothing block-level survived at the top: the widget then
-  // flows with the line it sits in (GitHub renders e.g. a lone <img> or
-  // <kbd>x</kbd> inline, not as its own paragraph).
+  // Inline iff nothing block-level survived at the top, as GitHub renders a
+  // lone <img> or <kbd>.
   const inline = Array.from(wrapper.children).every((el) =>
     INLINE_TAGS.has(el.tagName.toLowerCase()),
   );

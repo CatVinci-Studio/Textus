@@ -1,25 +1,19 @@
-//! Tabs in flight between windows: the floating tab drag, its pill window,
-//! and the native mouse tracking behind both drag flows (a tab pulled off a
-//! tab bar, or a whole single-tab window dragged by its title bar). The
-//! frontend counterpart is app/useTabDragMerge.ts.
+//! Tabs in flight between windows: the floating tab drag, its pill window, and
+//! the native mouse tracking behind both drag flows.
 
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::{Manager, State};
-// Everything that emits events or shows the pill lives behind the macOS-only
-// drag threads - other platforms compile only the stub command bodies.
+// Everything that emits events or shows the pill is macOS-only; other platforms
+// compile only stub command bodies.
 #[cfg(target_os = "macos")]
 use tauri::{Emitter, EventTarget, WebviewUrl, WebviewWindowBuilder};
 
 #[cfg(target_os = "macos")]
 use std::sync::atomic::{AtomicBool, Ordering};
 
-/// A tab dragged out of the tab bar (Settings > General > tab mode):
-/// unlike PendingOpenPaths, this carries live in-memory content, not just a
-/// path - the tab may be an unsaved draft, or have edits that haven't hit
-/// disk yet, and dragging it out must not lose that. Keyed by the specific
-/// new window's label (not a shared queue) since it's a 1:1 handoff to the
-/// one window spawned for it, not a batch any window could claim.
+/// A tab dragged out of the tab bar, carrying its live content (it may be
+/// unsaved). Keyed by the one new window's label, a 1:1 handoff.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct DetachedTab {
@@ -27,18 +21,15 @@ pub struct DetachedTab {
     content: String,
     #[serde(rename = "savedContent")]
     saved_content: String,
-    /// The source tab's disk-mtime snapshot, carried along so the receiving
-    /// window's external-change detection keeps its baseline instead of
-    /// re-adopting whatever is on disk after the drop.
+    /// The source tab's disk-mtime snapshot, so the receiving window's
+    /// external-change detection keeps its baseline.
     #[serde(rename = "diskMtime")]
     disk_mtime: Option<f64>,
-    /// Bundled Help doc id ("markdown"/"agent") when the dragged tab is a
-    /// Help document - keeps its title and per-doc dedupe working in the
-    /// window it lands in.
+    /// Bundled Help doc id when the dragged tab is a Help document, keeping its
+    /// title and dedupe in the new window.
     #[serde(rename = "helpDoc", default, skip_serializing_if = "Option::is_none")]
     help_doc: Option<String>,
-    /// The Word document an unsaved tab was opened from - its title, and
-    /// where its first save is suggested (src/document/word-import.ts).
+    /// The Word document an unsaved tab was opened from.
     #[serde(
         rename = "importedFrom",
         default,
@@ -48,9 +39,8 @@ pub struct DetachedTab {
 }
 pub struct PendingDetachedTabs(pub Mutex<HashMap<String, DetachedTab>>);
 
-/// Windows that currently have a live drag-tracking thread (see
-/// start_window_drag_tracking) - guards against spawning a second poller for
-/// the same window when onMoved fires again before the first tick lands.
+/// Windows with a live drag-tracking thread, so onMoved firing again doesn't
+/// spawn a second poller.
 #[derive(Default)]
 pub struct DragTrackers {
     #[cfg(target_os = "macos")]
@@ -74,31 +64,23 @@ pub struct WindowBounds {
     y: i32,
     width: u32,
     height: u32,
-    /// Physical-per-logical-pixel ratio, so the frontend can convert its own
-    /// "the tab row is the top N logical pixels" constant into physical
-    /// pixels for THIS SPECIFIC window (which may sit on a different-DPI
-    /// display than the one being dragged from).
-    /// Always a finite ratio: `number`, not specta's `number | null` for
-    /// an f64 (the null a NaN would serialize to).
+    /// Physical-per-logical-pixel ratio for this window, which may sit on a
+    /// different-DPI display. Always finite, so specta types it `number`.
     #[serde(rename = "scaleFactor")]
     #[cfg_attr(test, specta(type = specta_typescript::Number))]
     scale_factor: f64,
 }
 
-/// Physical-pixel screen bounds of every open window - lets a single-tab
-/// window being dragged by its title bar (useTabDragMerge.ts's onMoved/tick
-/// effect) spot the moment its cursor enters another window's tab row, which
-/// is when it hands itself over to start_floating_tab_drag.
+/// Physical-pixel screen bounds of every open window, so a single-tab window
+/// dragged by its title bar can spot entering another window's tab row.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn list_window_bounds(app: tauri::AppHandle) -> Vec<WindowBounds> {
     app.webview_windows()
         .iter()
         .filter_map(|(label, window)| {
-            // The floating drag pill is the thing BEING dragged, never a
-            // drop target; neither is a detached chat window (no tab bar, no
-            // document - a tab dropped there would just vanish), and a hidden
-            // window can't be one either.
+            // Never a drop target: the pill being dragged, a detached chat (a dropped tab
+            // would vanish), or a hidden window.
             if !crate::commands::chat_window::is_editor_window(label)
                 || !window.is_visible().unwrap_or(false)
             {
@@ -119,21 +101,15 @@ pub fn list_window_bounds(app: tauri::AppHandle) -> Vec<WindowBounds> {
         .collect()
 }
 
-/// The floating tab pill: while a tab is dragged between windows it exists
-/// as this dedicated tiny always-on-top transparent window (a webview can't
-/// paint outside its own window, so the in-flight tab has to BE a window).
-/// One per app, created fresh per drag (create_drag_pill) and destroyed on
-/// release (destroy_drag_pill) - recreating is cheap (the page is a static
-/// ~1KB dragpill.html) and passing title/dirty in the URL avoids any
-/// eval-before-page-load race a persistent window would need to handle.
+/// The floating tab pill: a webview can't paint outside its window, so the
+/// in-flight tab is a tiny always-on-top transparent window, made fresh per drag.
 pub const DRAG_PILL_LABEL: &str = "drag-pill";
 #[cfg(target_os = "macos")]
 const DRAG_PILL_WIDTH: f64 = 200.0;
 #[cfg(target_os = "macos")]
 const DRAG_PILL_HEIGHT: f64 = 34.0;
 
-/// Percent-encode a URL query value (std has no urlencoder; this is the
-/// RFC 3986 unreserved set, byte-wise, so any title round-trips).
+/// Percent-encode a URL query value (RFC 3986 unreserved set, byte-wise).
 #[cfg(target_os = "macos")]
 fn url_encode(s: &str) -> String {
     s.bytes()
@@ -146,12 +122,8 @@ fn url_encode(s: &str) -> String {
         .collect()
 }
 
-/// Create the floating pill centered under the cursor (x/y in global
-/// logical points), like a tab held by its middle. Click-through
-/// (set_ignore_cursor_events) so it never swallows pointer events, never
-/// focused so it never steals keyboard focus. Window creation must happen
-/// on the main thread on macOS, and the drag thread isn't one; hence the
-/// run_on_main_thread hop.
+/// Create the floating pill centered under the cursor (global logical points),
+/// click-through and never focused. Window creation must be on the main thread.
 #[cfg(target_os = "macos")]
 fn create_drag_pill(app: &tauri::AppHandle, title: &str, dirty: bool, x: f64, y: f64) {
     let url = format!(
@@ -182,7 +154,7 @@ fn create_drag_pill(app: &tauri::AppHandle, title: &str, dirty: bool, x: f64, y:
 }
 
 /// Reposition the pill under the cursor mid-drag; also re-shows it after a
-/// park_drag_pill (leaving a tab row un-merged puts the pill back in hand).
+/// park_drag_pill.
 #[cfg(target_os = "macos")]
 fn move_drag_pill(app: &tauri::AppHandle, x: f64, y: f64) {
     if let Some(window) = app.get_webview_window(DRAG_PILL_LABEL) {
@@ -194,9 +166,8 @@ fn move_drag_pill(app: &tauri::AppHandle, x: f64, y: f64) {
     }
 }
 
-/// Hide (don't destroy) the pill while the cursor is over a target tab row:
-/// the target shows the preview pill IN its bar instead, so the tab visually
-/// snaps into the row while the drag is still live.
+/// Hide (don't destroy) the pill while over a target tab row, where the target
+/// shows the preview pill in its bar instead.
 #[cfg(target_os = "macos")]
 fn park_drag_pill(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window(DRAG_PILL_LABEL) {
@@ -204,9 +175,8 @@ fn park_drag_pill(app: &tauri::AppHandle) {
     }
 }
 
-/// The drag ended (merged, detached, or cancelled) - the pill must not
-/// outlive it, also because a lingering hidden window would keep the app
-/// alive after the last real window closes.
+/// The drag ended: a lingering hidden pill would keep the app alive after the
+/// last real window closes.
 #[cfg(target_os = "macos")]
 fn destroy_drag_pill(app: &tauri::AppHandle) {
     let app = app.clone();
@@ -217,18 +187,13 @@ fn destroy_drag_pill(app: &tauri::AppHandle) {
     });
 }
 
-/// Height of the strip along a window's top edge that counts as its "tab
-/// row" for drop purposes - the tab bar when it has one, or the title strip
-/// of a single-tab window. Must equal useTabDragMerge.ts's
-/// TAB_ROW_HEIGHT_LOGICAL (it was 60 here against 72 there, so the macOS drop
-/// zone was smaller than the one the frontend highlighted).
+/// Height of the strip along a window's top edge that counts as its tab row for
+/// drops. Keep in step with TAB_ROW_HEIGHT_LOGICAL in useTabDragMerge.ts.
 #[cfg(target_os = "macos")]
 const TAB_ROW_HEIGHT_LOGICAL: f64 = 72.0;
 
-/// Which window's tab row (if any) is under the cursor (global logical
-/// points). The pill itself and hidden windows are never targets; the drag
-/// SOURCE deliberately is one - dropping a pulled-out tab back onto its own
-/// window's row simply re-inserts it there.
+/// Which window's tab row (if any) is under the cursor. The pill and hidden
+/// windows never are; the drag source is, so a tab can drop back where it came from.
 #[cfg(target_os = "macos")]
 fn top_strip_hit(app: &tauri::AppHandle, x: f64, y: f64) -> Option<String> {
     for (label, window) in app.webview_windows() {
@@ -258,21 +223,9 @@ fn top_strip_hit(app: &tauri::AppHandle, x: f64, y: f64) -> Option<String> {
 #[cfg(target_os = "macos")]
 static FLOATING_DRAG_ACTIVE: AtomicBool = AtomicBool::new(false);
 
-/// THE floating tab. The moment a tab becomes "in flight" - pulled past a
-/// tab bar's detach threshold, or a whole single-tab window dragged onto
-/// another window's tab row - its document is handed to Rust and its
-/// source ceases to exist (the caller removes the pill from its bar, or
-/// destroy_source tears the whole window down; destroy is the one window
-/// operation macOS reliably honors mid-native-drag, unlike hide, which the
-/// drag session ignores). From here this thread owns the drag outright,
-/// polling the real cursor/button (see mod mouse): over a tab row, the
-/// tab rides that row as the preview pill (the floating pill parks);
-/// elsewhere it rides the cursor as the pill (created lazily the first
-/// time it's actually needed). Release resolves it: over a row -> pushed
-/// to that window as a real tab; anywhere else -> a fresh window right
-/// there, via the same PendingDetachedTabs handoff a tab-bar detach has
-/// always used. Nothing polls outside an active drag, and the thread ends
-/// itself on release.
+/// The floating tab. Once a tab is in flight its document is handed to Rust and
+/// its source is gone (destroy is what macOS honors mid-drag). This thread polls
+/// the cursor until release: over a tab row the tab lands there, else in a new window.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn start_floating_tab_drag(
@@ -306,13 +259,10 @@ pub fn start_floating_tab_drag(
             let (x, y, final_hit) = loop {
                 let (x, y, down) = mouse::state();
                 if !down {
-                    // Release: one fresh hit test decides - the cached one
-                    // may be up to two ticks stale.
+                    // Release: one fresh hit test decides; the cached one may be two ticks stale.
                     break (x, y, top_strip_hit(&app, x, y));
                 }
-                // Pill movement wants near-pointer-rate smoothness; the hit
-                // test costs several event-loop round trips per window, so
-                // it runs every 3rd tick and the last result stands between.
+                // The pill moves every tick; the costly hit test runs every 3rd.
                 if ticks.is_multiple_of(3) {
                     hit = top_strip_hit(&app, x, y);
                 }
@@ -320,9 +270,8 @@ pub fn start_floating_tab_drag(
 
                 match &hit {
                     Some(label) => {
-                        // Snapped into a row: the preview pill in the
-                        // target's bar represents the tab now, the floating
-                        // pill parks.
+                        // Snapped into a row: the target's preview pill stands for the tab, the
+                        // floating pill parks.
                         if pill_exists && !pill_parked {
                             park_drag_pill(&app);
                             pill_parked = true;
@@ -337,9 +286,7 @@ pub fn start_floating_tab_drag(
                             }
                             hover = Some(label.clone());
                         }
-                        // Every tick, not just on target change: the x is
-                        // what lets the preview pill ride the cursor along
-                        // the target's bar.
+                        // Every tick: the x lets the preview pill ride the cursor along the bar.
                         let _ = app.emit_to(
                             EventTarget::webview_window(label),
                             "drag-hover",
@@ -371,10 +318,8 @@ pub fn start_floating_tab_drag(
                 std::thread::sleep(std::time::Duration::from_millis(15));
             };
 
-            // A preview left on a window that ISN'T where the tab lands
-            // gets an explicit off; the landing window's preview is
-            // deliberately left alone - its receive-detached-tab listener
-            // swaps it for the real tab without an empty-gap flash.
+            // A preview on a window that isn't the landing one gets an explicit off; the
+            // landing window swaps its preview for the tab itself, without a gap flash.
             if let Some(prev) = &hover {
                 if final_hit.as_deref() != Some(prev.as_str()) {
                     let _ = app.emit_to(
@@ -421,10 +366,8 @@ struct DragTick {
     down: bool,
 }
 
-/// Global cursor position (logical points, top-left origin - the same space
-/// as the browser's PointerEvent.screenX/Y) and left-button state, via
-/// CoreGraphics. Neither call needs Accessibility/Input Monitoring consent:
-/// they read shared session state, they don't tap the event stream.
+/// Global cursor position (logical points, top-left origin) and left-button
+/// state via CoreGraphics, which needs no Accessibility consent.
 #[cfg(target_os = "macos")]
 mod mouse {
     #[repr(C)]
@@ -458,17 +401,9 @@ mod mouse {
     }
 }
 
-/// Tauri's onMoved fires on every tick of a native window drag but there is
-/// no "drag ended" event, and a merge decision made on anything short of the
-/// actual button release is wrong (a debounce merges while the user is
-/// merely holding still). So: the frontend calls this on the FIRST onMoved
-/// of a drag, and a short-lived thread streams `window-drag-tick`
-/// {x, y, down} events (cursor in global logical points) to the calling
-/// window until the left button is truly released - the final tick carries
-/// down=false. Lazy by construction: no thread exists outside an active
-/// drag, and it exits itself on release. Returns false when there's nothing
-/// to track (button already up - e.g. a programmatic setPosition fired
-/// onMoved - or a non-macOS platform).
+/// Tauri's onMoved has no "drag ended" event, so on the first onMoved the
+/// frontend starts this: a thread streams `window-drag-tick` {x, y, down} until the
+/// button is released. Returns false when there is nothing to track.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn start_window_drag_tracking(
@@ -487,9 +422,8 @@ pub fn start_window_drag_tracking(
         let app = window.app_handle().clone();
         std::thread::spawn(move || {
             loop {
-                // The window dies mid-drag when it turns into a floating
-                // tab (start_floating_tab_drag destroys it) - that thread
-                // owns the drag from there, this one is done.
+                // The window dies mid-drag when it turns into a floating tab; that thread owns
+                // the drag from there.
                 if app.get_webview_window(&label).is_none() {
                     break;
                 }
@@ -519,11 +453,8 @@ pub fn start_window_drag_tracking(
     }
 }
 
-/// Payload of the "drag-hover" event a floating tab drag emits to the
-/// window whose tab row it's currently over - re-emitted on every tick
-/// with the live cursor x (global logical), so the receiver can render the
-/// incoming tab as a real pill sliding along its bar with the cursor, its
-/// neighbors giving way. Cleared with None on leave.
+/// Payload of "drag-hover", re-emitted every tick with the live cursor x so the
+/// receiver can slide the incoming tab along its bar. None on leave.
 #[cfg(target_os = "macos")]
 #[derive(Clone, serde::Serialize)]
 struct DragHoverPreview {
@@ -532,10 +463,8 @@ struct DragHoverPreview {
     x: f64,
 }
 
-/// Payload of "receive-detached-tab": the document plus where (cursor x,
-/// global logical) it was dropped - the receiver derives the insertion
-/// index from it, so the tab lands at the slot it was hovering, not at
-/// the end of the bar.
+/// Payload of "receive-detached-tab": the document and the drop's cursor x, so
+/// the tab lands at the slot it hovered.
 #[cfg(target_os = "macos")]
 #[derive(Clone, serde::Serialize)]
 struct DroppedTab {

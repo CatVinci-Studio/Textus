@@ -1,17 +1,6 @@
-//! HTML to Markdown: headings, paragraphs, lists, quotes, code blocks,
-//! tables, emphasis, links and images. For .html attachments and the
-//! chapters of an EPUB here, and for any caller that has a web page and
-//! wants what a model reads best - `html_to_markdown` takes a string.
-//!
-//! The rules follow MarkItDown's HTML converter (github.com/microsoft/
-//! markitdown, MIT; converters/_html_converter.py and _markdownify.py):
-//! scripts and styles dropped, `#` headings, links kept only for schemes a
-//! reader can follow (no `javascript:`), an image's `data:` URI cut to its
-//! type so a pasted screenshot doesn't fill the prompt with base64, a lazy
-//! image's `data-src` preferred over its placeholder, and checkboxes as
-//! `[x]` / `[ ]`. Parsing is html5ever's, the browsers' algorithm, so tag
-//! soup - unclosed `<p>` and `<li>`, stray end tags - reads as a browser
-//! would show it.
+//! HTML to Markdown, for .html attachments, EPUB chapters and web pages.
+//! Follows MarkItDown's (MIT) rules: scripts dropped, only followable links,
+//! `data:` images cut to their type. html5ever parses tag soup as a browser would.
 
 use super::markdown::{self, Marks};
 use dom_query::{Document, NodeRef};
@@ -30,9 +19,8 @@ struct Writer {
     out: String,
     /// The paragraph being written, whitespace already collapsed.
     line: String,
-    /// Bumped whenever `line` is flushed, so an inline element can tell its
-    /// text was split by a block inside it (`<a><div>…</div></a>`) and leave
-    /// it unwrapped rather than wrap the wrong text.
+    /// Bumped whenever `line` is flushed, so an inline element split by a block
+    /// inside it (`<a><div>…</div></a>`) is left unwrapped.
     flushes: usize,
     /// Inside a list item: a nested list follows the item's text on the next
     /// line, keeping the list tight.
@@ -137,9 +125,8 @@ impl Writer {
         }
     }
 
-    /// Text as a browser lays it out: runs of whitespace are one space, and
-    /// none at the start of a line. Only ASCII whitespace - a no-break space
-    /// is a character the author put there.
+    /// Text as a browser lays it out: whitespace runs are one space, none at a line
+    /// start. ASCII only: a no-break space is the author's.
     fn text(&mut self, text: &str) {
         for c in text.chars() {
             if c.is_ascii_whitespace() {
@@ -387,7 +374,7 @@ fn is_data_uri(src: &str) -> bool {
 }
 
 /// A link a reader can follow: relative, or http(s), file or mailto. A
-/// `javascript:` link keeps its text and loses the link, as in MarkItDown.
+/// `javascript:` link keeps its text and loses the link.
 fn followable(href: &str) -> bool {
     let href = href.trim();
     if href.is_empty() {

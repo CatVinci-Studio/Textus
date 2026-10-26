@@ -1,21 +1,8 @@
 /**
- * Pasted text as the writer saw it: its lines kept, and a quote's bars
- * made a quote. Pasted text is read as Markdown, where a line break inside
- * a paragraph is only a space - an email or a chat message pasted in came
- * in as one long line. So a line followed by another line of the same
- * paragraph keeps its break (a hard break); blocks are left as Markdown
- * reads them - fences, tables, lists, headings, quotes, indented code.
- *
- * Text copied from a terminal or a chat app's quote often carries the bar
- * it was drawn with ("▎ Hi Denisse,"): when every line that has text
- * starts with one, the bars go and the text is a quote.
- *
- * Two kinds of text break lines that were not the writer's (1.2.2): a PDF
- * and a terminal wrap a paragraph at their width, so a line that runs to
- * that width and stops mid-sentence joins the next one again - with no
- * space between CJK - and a PDF's ligatures (ﬁ) and radicals (⼀ for 一)
- * become the letters they stand for. And a terminal's output - a prompt,
- * columns lined up with spaces - is a code block, its spacing kept.
+ * Pasted text as the writer saw it. Markdown reads a line break inside a
+ * paragraph as a space, so such breaks are kept as hard breaks; quote bars
+ * ("▎ Hi") make a quote; PDF and terminal wrapping is rejoined, PDF
+ * ligatures unfolded, and terminal output becomes a code block.
  */
 
 /** The bars a copied quote is drawn with, at a line's start. */
@@ -28,8 +15,8 @@ const BLOCK_LINE =
 /** A shell's prompt at a line's start: `$ `, `% `, `PS C:\…> `. */
 const PROMPT = /^(?:[$%] \S|PS [A-Za-z]:\\[^>]*> )/;
 
-/** Columns lined up with spaces: two gaps of two or more inside a line -
- *  not after a full stop, where some typists put two. */
+/** Columns lined up with spaces: two gaps of two or more inside a line, not
+ *  after a full stop. */
 const COLUMNS = /[^\s.!?] {2,}\S.*[^\s.!?] {2,}\S/;
 
 /** Where a sentence or a clause ends. */
@@ -72,18 +59,17 @@ function closeUpSpacedCjk(line: string): string {
 }
 
 /**
- * Lines wrapped at a width rejoined: a line within a little of the
- * longest, stopping mid-clause, and the next line going on with the same
- * paragraph. Only where the lines run to a width - short lines are a
- * writer's own, as in an email.
+ * Lines wrapped at a width rejoined: a line near the longest, stopping
+ * mid-clause, and the next going on with the same paragraph. Short lines
+ * are the writer's own.
  */
 function rejoinWrapped(lines: string[]): string[] {
   const lengths = lines.map((line) => [...line.trimEnd()].length);
   const widest = Math.max(0, ...lengths);
   const cjk = CJK.test(lines.join(""));
   if (widest < (cjk ? 16 : 40)) return lines;
-  // Wrapped at a width, several lines run to it; one long line among short
-  // ones - a chat message with a link in it - is the writer's.
+  // One long line among short ones (a chat message with a link) is the
+  // writer's.
   const atWidth = lengths.filter((n) => n >= widest * 0.85).length >= 2;
   const out: string[] = [];
   for (let i = 0; i < lines.length; i++) {
@@ -104,8 +90,8 @@ function rejoinWrapped(lines: string[]): string[] {
         !/^\s*([-*_])(\s*\1){2,}\s*$/.test(here) &&
         (/^\s*[\p{Ll}\d(]/u.test(next) || CJK.test(next.trim()[0] ?? ""));
       if (!wraps) break;
-      // No space between CJK, nor after a word broken with a hyphen
-      // ("hand-" "written"): the hyphen stays, as it may be the word's.
+      // No space between CJK, nor after a hyphen-broken word; the hyphen stays,
+      // as it may be the word's.
       const joint =
         CJK.test(here.slice(-1)) ||
         CJK.test(next.trim()[0] ?? "") ||
@@ -161,8 +147,8 @@ export function keepPastedLines(text: string): string {
       !BLOCK_LINE.test(line) &&
       !BLOCK_LINE.test(next) &&
       !/(?: {2}|\\)$/.test(line);
-    // Two spaces, not a backslash: a backslash after a web address is
-    // read as part of it, and one ending the line already escapes it.
+    // Two spaces, not a backslash: a backslash after a web address reads as
+    // part of it.
     return breaks ? `${line.trimEnd()}  ` : line;
   });
   return out

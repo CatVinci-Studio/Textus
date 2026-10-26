@@ -16,10 +16,8 @@ pub(crate) const READ_FILE_DESCRIPTION: &str = "Read a text file, or the text of
 pub(crate) const READ_FILE_DESCRIPTION_WITH_IMAGES: &str = "Read a text file, or the text of a PDF, Word, PowerPoint, spreadsheet, EPUB or RTF file (as Markdown), from the project folder, by the relative path find_files or search_files shows - or look at an image there (PNG, JPEG, GIF or WebP, up to 6 MB: a map, a photo, a chart, a scanned page). A long file comes back in parts: the answer says which lines of how many it shows and where to read on; pass start_line and end_line to read a part - say, a few dozen lines around a line search_files found.";
 
 /// The tools available to an agent conversation. Skill and file tools are
-/// only offered when there's something for them to work on - a tool that can
-/// only report "nothing there" would just waste the model's steps. Append
-/// here (or extend to merge in MCP-provided tools) as the toolset grows.
-/// `sees_images`: the provider takes images (ToolContext::sees_images).
+/// only offered when there's something for them to work on, or they would
+/// waste the model's steps reporting "nothing there".
 pub fn builtin_tools<'a>(
     has_skills: bool,
     has_root: bool,

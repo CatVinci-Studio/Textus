@@ -1,13 +1,9 @@
-/* The phone layout's foundation: the tokens, fonts and title row every
-   other file in mobile/styles/ builds on, and the rules that hold for any
-   touch (iPhone and iPad alike). See index.css for how these files are
-   organised. */
+/* The phone layout's foundation: tokens, fonts and the title row, and the
+   rules that hold for any touch (iPhone and iPad alike). */
 
-/* iOS WebKit: -apple-system / system-ui / ui-monospace render Chinese and
-   Japanese as missing-glyph boxes, and a family that isn't installed (Fira
-   Code, SF Pro) sends Latin to Times instead of the next font in the list.
-   Single generic families cascade to PingFang correctly, so iOS gets
-   stacks made only of fonts it has. */
+/* iOS WebKit renders CJK as missing-glyph boxes in -apple-system/system-ui,
+   and a missing family sends Latin to Times. Single generic families cascade
+   to PingFang correctly, so iOS gets stacks of fonts it has. */
 /* The Slate and Forest content themes lead with -apple-system too. */
 :root[data-window-chrome="mobile"]:is(
     [data-content-theme="slate"],
@@ -20,16 +16,14 @@
   --font-sans: sans-serif;
   --font-mono: Menlo, monospace;
   --mobile-bar: 44px;
-  /* The document's background, resolved here at the root: inside the
-     chrome (.window-bar and the rest, design-system.css) --editor-bg is
-     re-bound to the chrome's own colour. */
+  /* The document's background, resolved at the root: inside the chrome
+     --editor-bg is re-bound to the chrome's colour. */
   --page-bg: var(--editor-bg, var(--bg));
   /* No grey flash over whatever a finger lands on. */
   -webkit-tap-highlight-color: transparent;
-  /* Phone-only layers. A full-screen page (Settings, Documents) covers
-     the find bar (300) and the app menu (310) but stays under the alerts
-     it asks its own questions with (400-450) - Delete, Clear. An action
-     sheet (ui/ActionSheet.tsx) is over everything. */
+  /* Phone-only layers. A full-screen page covers the find bar (300) and the
+     app menu (310) but stays under its own alerts (400-450); an action sheet
+     is over everything. */
   --z-phone-page: 350;
   --z-sheet-menu: 500;
 }
@@ -48,8 +42,8 @@
   background: var(--page-bg);
 }
 
-/* The web view shrinks while the keyboard is up (KeyboardFit.swift); 100%
-   follows it where 100vh might not. */
+/* The web view shrinks while the keyboard is up; 100% follows it where 100vh
+   might not. */
 :root[data-window-chrome="mobile"] .app-shell {
   height: 100%;
 }
@@ -87,10 +81,8 @@
   color: var(--chrome-accent);
 }
 
-/* Focus rings are for finding your place with a keyboard. A finger knows
-   where it is, and WebKit counts a focus the app moves itself (a dialog's
-   first button, the sheet's grip) as "visible" - an accent box around
-   whatever was just tapped. Text fields keep their own focused border. */
+/* Focus rings are for keyboards. WebKit counts a focus the app moves itself
+   as "visible", boxing whatever was just tapped. Text fields keep theirs. */
 @media (pointer: coarse) {
   :root[data-window-chrome="mobile"] :focus-visible {
     outline: none;
@@ -110,15 +102,9 @@
   height: 20px;
 }
 
-/* The web view stops at the safe area, so the strips under the status bar
-   and the home indicator show the body's background, not the page. While
-   something covers the page they take its colour, as a native sheet or
-   dimming view reaches the screen's edges: a full-screen page's own
-   background, or the page darkened by the scrim over it. WebKit paints
-   those strips from the background COLOUR alone, so each scrim's
-   translucent colour is pre-mixed over the page here (--overlay-bg is
-   30% navy in light themes, 48% black in dark - design-system.css). A
-   surface on its way out (data-state="closing") gives them back at once. */
+/* WebKit paints the safe-area strips from the body's background colour alone.
+   While something covers the page they take its colour, so each translucent
+   scrim is pre-mixed over the page here. A closing surface gives them back. */
 :root[data-window-chrome="mobile"] {
   --phone-dim-overlay: color-mix(in srgb, var(--page-bg) 70%, rgb(20 27 40));
 }
@@ -133,10 +119,8 @@
   --phone-dim-overlay: color-mix(in srgb, var(--page-bg) 52%, black);
 }
 
-/* Settings fills the phone's screen (settings.css) with iOS's grouped
-   page colour - #f2f2f7, black in dark - which the strips take too; they
-   were left the document's white (or its dark grey). On an iPad it is a
-   dialog over the dimmed page. */
+/* Settings fills the phone's screen with iOS's grouped page colour, which the
+   strips take too. On an iPad it is a dialog over the dimmed page. */
 @media (max-width: 760px) {
   :root[data-window-chrome="mobile"]:has(
       .settings-backdrop:not([data-state="closing"])
@@ -166,7 +150,7 @@
   background: var(--phone-dim-overlay);
 }
 
-/* The drawer's scrim is drawn at phone width only (sidebar.css). */
+/* The drawer's scrim is drawn at phone width only. */
 @media (max-width: 760px) {
   :root[data-window-chrome="mobile"]:has(
       .sidebar-scrim:not([data-state="closing"])

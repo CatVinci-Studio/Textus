@@ -2,16 +2,9 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// Two kinds of style rule made Chromium restyle the whole page whenever an
-// element was added anywhere - Enter in a 5k-block document recalculated
-// the style of every block, 30 ms each time, and more as the document grew:
-//
-// - a sibling rule onto anything with nothing above it, "a + *": every
-//   sibling after the new element was restyled;
-// - ":root:has(...)": the whole page was checked again.
-//
-// Found with a trace of Enter (StyleInvalidatorInvalidationTracking); kept
-// out of the app's own stylesheets here.
+// Two kinds of rule make Chromium restyle the whole page whenever an element
+// is added anywhere: a sibling rule onto anything ("a + *") and ":root:has(...)".
+// Kept out of the app's own stylesheets here.
 
 const root = join(__dirname, "..");
 

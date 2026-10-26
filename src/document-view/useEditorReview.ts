@@ -11,10 +11,8 @@ import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 
 /**
- * Reviewing one tab's document: its pane and the review bar, what is
- * announced as proposals come and go, the margin's notes and changes
- * (the AI's and the writer's own), a picture for a paragraph, and what
- * the tour's lessons wait for.
+ * Reviewing one tab's document: the review bar, announcements, the margin's
+ * notes and changes, illustrating a paragraph, and the tour's signals.
  */
 export function useEditorReview({
   setup,

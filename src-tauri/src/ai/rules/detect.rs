@@ -1,8 +1,6 @@
-//! Which language a paragraph or document is in - script ratios for the
-//! scripts that tell themselves apart, the Simplified/Traditional pair
-//! table for Chinese, and frequent-word lists for the Latin-script
-//! languages. Promoted from the live eval's checks (which now call this),
-//! so the rules engine and the eval agree on what a text "is".
+//! Which language a paragraph or document is in: script ratios, the
+//! Simplified/Traditional pair table, and frequent-word lists for Latin-script
+//! languages. Shared with the live eval, so both agree on what a text "is".
 
 use serde::Serialize;
 
@@ -68,8 +66,8 @@ impl Lang {
             .find(|l| l.code().eq_ignore_ascii_case(code))
     }
 
-    /// The UI language whose words a message in this language uses
-    /// (src/i18n/langs.ts: "zh" is Simplified Chinese there).
+    /// The UI language whose words a message in this language uses ("zh" is
+    /// Simplified Chinese).
     pub fn ui_code(self) -> &'static str {
         match self {
             Lang::ZhHans => "zh",
@@ -82,10 +80,9 @@ impl Lang {
     }
 }
 
-/// [`detect`], or - for a text too short to tell, such as a five-character
-/// Chinese clause - a guess from the scripts alone: kana is Japanese,
-/// Hangul Korean, ideographs Chinese, Cyrillic Russian. Latin-script text
-/// that short stays unknown: its languages share an alphabet.
+/// [`detect`], or, for a text too short to tell, a guess from the scripts
+/// alone: kana is Japanese, Hangul Korean, ideographs Chinese, Cyrillic
+/// Russian. Short Latin-script text stays unknown.
 pub fn guess(text: &str) -> Option<Lang> {
     if let Some(lang) = detect(text) {
         return Some(lang);
@@ -123,9 +120,9 @@ pub fn chinese_script(text: &str) -> Lang {
     }
 }
 
-/// Characters that exist in only one of the two Chinese scripts, in pairs
-/// (simplified, traditional) - common enough that any real paragraph has a
-/// few. Used to tell zh-Hans from zh-Hant, which script ratios can't.
+/// Characters that exist in only one of the two Chinese scripts, as
+/// (simplified, traditional) pairs, common enough that any real paragraph has a
+/// few.
 pub(crate) const HANS_HANT: &[(char, char)] = &[
     ('们', '們'),
     ('这', '這'),
@@ -346,9 +343,8 @@ pub fn detect(text: &str) -> Option<Lang> {
         .split(|ch: char| !ch.is_alphabetic())
         .filter(|w| !w.is_empty())
         .collect();
-    // No evidence, or a tie between languages: too little to tell. Short
-    // completions ("alojamiento", " buchen", "tu me promets de revenir")
-    // used to default to English, or to whichever list came first.
+    // No evidence, or a tie between languages: too little to tell, rather than
+    // defaulting to English or whichever list came first.
     let mut best = (Lang::En, 0.0f64);
     let mut tied = false;
     for (lang, list) in LATIN_WORDS {

@@ -3,18 +3,14 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import { useLatest } from "../utils/hooks/useLatest";
 
-/** The live selection, for the docked panel's selection chip and the
- *  highlight that keeps it visible (the detached window's too, while this
- *  is the active tab). Plain text and bounds only - cheap enough per
- *  selection change; the markdown the request carries is serialized once,
- *  at send (panelSendContext). */
+/** The live selection, for the panel's selection chip and its highlight.
+ *  Plain text and bounds only; the markdown is serialized once, at send. */
 export function usePanelSelection(run: EditorRunner, tracking: boolean) {
   const trackingRef = useLatest(tracking);
   const [panelSelection, setPanelSelection] = useState<{
     text: string;
     range: { from: number; to: number };
-    /** The selection is one picture: `text` is its description, which
-     *  the picture's own text would leave empty (no chip at all). */
+    /** The selection is one picture: `text` is its description. */
     picture: boolean;
   } | null>(null);
   const updatePanelSelection = useCallback(() => {

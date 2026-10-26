@@ -8,8 +8,8 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { toggleSpan } from "../editor/marks/span-commands";
 
 /**
- * Test-only: the edits the save round trip makes (save-roundtrip.ts), each
- * the way the app makes it, picked by a seeded random generator.
+ * Test-only: the edits the save round trip makes, each the way the app
+ * makes it, picked by a seeded random generator.
  */
 
 export const EDIT_KINDS = [
@@ -98,9 +98,8 @@ export function paragraphEnds(
   const ends: { index: number; end: number }[] = [];
   let pos = 0;
   doc.forEach((node, _offset, index) => {
-    // Prose: not a definition's line, whose rewriting cuts its references
-    // loose, nor an HTML block, which takes in what is pasted onto its
-    // last line (docs/dev/saving.md, "What a save can't keep").
+    // Not a definition's line, whose rewrite cuts its references loose, nor
+    // an HTML block, which takes in what is pasted onto its last line.
     const raw = ["link_definition", "html"].includes(
       node.lastChild?.type.name ?? "",
     );
@@ -208,8 +207,8 @@ export function makeEdit(
       if (!ends.length) return null;
       const { index, end } = pick(rand, ends);
       view.dispatch(state.tr.setSelection(TextSelection.create(doc, end)));
-      // Plain text on the clipboard, as from a text editor.
-      // (A plain Event: jsdom has no ClipboardEvent.)
+      // Plain text on the clipboard. A plain Event: jsdom has no
+      // ClipboardEvent.
       const event = new Event("paste") as ClipboardEvent;
       Object.defineProperty(event, "clipboardData", {
         value: {

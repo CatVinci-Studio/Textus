@@ -1,9 +1,7 @@
 /**
- * What kind of failure a provider error is - so the chat can say what to
- * do about it ("check the API key", "wait a moment") in the user's
- * language, above the provider's own (English, technical) message.
- * Recognized by the patterns providers actually send; anything else shows
- * just as it came.
+ * What kind of failure a provider error is, so the chat can say what to do in
+ * the user's language above the provider's own message. Unrecognized errors
+ * show as they came.
  */
 export type AiErrorKind =
   | "notConfigured"

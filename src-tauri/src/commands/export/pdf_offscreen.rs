@@ -6,9 +6,8 @@ use std::sync::Arc;
 use tauri::webview::PageLoadEvent;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
-/// A4 in inches; with scale 1 and no margins Chromium lays it out at
-/// 794 x 1122 CSS px - WINDOWS_PAGE in export/paginate.ts, which
-/// paginates the document at that size. Change both together.
+/// A4 in inches; Chromium lays it out at 794 x 1122 CSS px. Keep in step with
+/// WINDOWS_PAGE in paginate.ts.
 #[cfg(windows)]
 const PAGE_WIDTH_IN: f64 = 8.27;
 #[cfg(windows)]
@@ -16,8 +15,7 @@ const PAGE_HEIGHT_IN: f64 = 11.69;
 
 type Done = Sender<Result<(), String>>;
 
-/// The asset-protocol URL of a local file - what the frontend's
-/// convertFileSrc builds: the whole path as one percent-encoded segment.
+/// The asset-protocol URL of a local file, as convertFileSrc builds it.
 fn asset_url(path: &Path) -> Result<WebviewUrl, String> {
     let raw = path.to_string_lossy();
     let mut encoded = String::with_capacity(raw.len() * 3);
@@ -164,11 +162,8 @@ fn render_to_file(window: &tauri::WebviewWindow, output_path: &str, done: Done) 
     }
 }
 
-/// The name GTK's file backend gives its printer. WebKit picks the
-/// printer by exact name, and GTK translates this one (gtk30's
-/// "Print to File" - "打印到文件" in Chinese), so the English literal
-/// failed with "Printer not found" under every non-English locale
-/// (#62). Looked up through the same catalog GTK names it from.
+/// The name GTK's file backend gives its printer. WebKit matches it exactly and
+/// GTK translates it, so it is looked up through GTK's own catalog.
 #[cfg(target_os = "linux")]
 fn file_printer_name() -> String {
     gtk::glib::dgettext(Some("gtk30"), "Print to File").to_string()
@@ -194,12 +189,8 @@ fn render_to_file(window: &tauri::WebviewWindow, output_path: &str, done: Done) 
         settings.set(gtk::PRINT_SETTINGS_OUTPUT_URI.as_str(), Some(uri.as_str()));
         let setup = gtk::PageSetup::new();
         setup.set_paper_size(&gtk::PaperSize::new(Some(gtk::PAPER_NAME_A4.as_str())));
-        // Top and bottom margins here, not in CSS: WebKitGTK draws every
-        // page below this top margin whatever the CSS says, and keeps the
-        // bottom one only while the page's @page margin is `auto`
-        // (exporters.ts's pdfLayoutCss) - any other value cut taller
-        // pages that ran off the sheet (#68). The sides are the page's
-        // own padding, ~20mm too.
+        // Top and bottom margins here, not in CSS: WebKitGTK ignores the CSS top margin
+        // and keeps the bottom only while @page is `auto`. The sides are the page's padding.
         setup.set_top_margin(20.0, gtk::Unit::Mm);
         setup.set_bottom_margin(20.0, gtk::Unit::Mm);
         setup.set_left_margin(0.0, gtk::Unit::Mm);

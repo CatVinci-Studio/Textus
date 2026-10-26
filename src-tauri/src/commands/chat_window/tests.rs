@@ -12,9 +12,6 @@ fn registry(entries: Vec<(&str, &str)>) -> OpenChatWindows {
     ))
 }
 
-/// The window-classification bugs this predicate exists to prevent were
-/// all silent: a tab dropped on a chat window vanished, menu commands
-/// went nowhere, files opened into the void. Worth pinning down.
 #[test]
 fn editor_windows_are_those_holding_a_document() {
     assert!(is_editor_window("main"));
@@ -31,8 +28,8 @@ fn chat_and_pill_windows_are_not_editors() {
 
 #[test]
 fn detached_chat_labels_are_classified_as_chats() {
-    // The label format detach_chat_window builds must keep matching the
-    // prefix the predicate tests, or every guard silently stops working.
+    // The label format detach_chat_window builds must keep matching the prefix
+    // the predicate tests.
     let label = format!("{CHAT_LABEL_PREFIX}{}", 7);
     assert!(!is_editor_window(&label));
 }

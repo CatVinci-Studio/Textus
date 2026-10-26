@@ -9,9 +9,8 @@ export interface Comment {
   block?: string;
 }
 
-/** An add_comment call's arguments (src-tauri ai/tools/folder.rs) - one
- *  of a reply's comments, each a call of its own past the model
- *  (agent/lists.rs). */
+/** An add_comment call's arguments: one of a reply's comments, each a call
+ *  of its own. */
 export function parseComment(argumentsJson: string): Comment | null {
   try {
     const parsed = JSON.parse(argumentsJson);
@@ -93,11 +92,8 @@ function following(el: Element | null): Element[] {
 }
 
 /**
- * The notes one reply pinned, as one card: as cards of their own, forty
- * words glossed ran on for screens. Each note a row - the words it is
- * about, then the note - its first few shown and the rest behind "Show N
- * more", as a group of proposals folds (ProposalGroup). A row takes you to
- * its passage. One note alone keeps its own card.
+ * The notes one reply pinned, as one card: a row per note, the first few
+ * shown and the rest behind "Show N more". One note alone keeps its own card.
  */
 export function CommentGroup({
   items,
@@ -120,7 +116,7 @@ export function CommentGroup({
 }) {
   const [unfolded, setUnfolded] = useState(false);
   // A note arriving, or the card opening, slides what is below it to its
-  // new place rather than jumping it (FlipOnChange).
+  // new place rather than jumping it.
   const ref = useRef<HTMLDivElement>(null);
   const rows = unfolded ? items : items.slice(0, FOLDED_NOTES);
   const hidden = items.length - rows.length;
