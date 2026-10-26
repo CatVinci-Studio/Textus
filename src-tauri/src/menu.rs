@@ -33,6 +33,8 @@ mod recent;
 pub(crate) use recent::*;
 mod build;
 pub(crate) use build::*;
+#[cfg(target_os = "macos")]
+mod dock;
 mod plugins;
 pub use plugins::set_plugin_menu;
 pub(crate) use plugins::*;
