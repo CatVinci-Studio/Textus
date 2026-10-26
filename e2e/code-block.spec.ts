@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
-// A code block's copy button, beside its language picker, and the line
-// numbers Settings › Editor & Appearance can turn on (off by default).
+// A code block's copy and select buttons, its language picker, and the
+// line numbers Settings › Editor & Appearance can turn on (off by default).
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const block = `${editor} .code-block-wrapper`;
@@ -30,7 +30,9 @@ async function openWithCode(
 test("the copy button copies the block's code and says so", async ({
   page,
   context,
+  browserName,
 }) => {
+  test.skip(browserName === "webkit", "WebKit has no clipboard permission");
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await openWithCode(page, {});
   await page.locator(block).hover();
@@ -41,6 +43,55 @@ test("the copy button copies the block's code and says so", async ({
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(CODE);
   // Its label is chrome: the document is unchanged.
   await expect(page.locator(`${block} code`)).toHaveText(CODE);
+});
+
+test("the copy and select buttons sit in the block's top-right corner", async ({
+  page,
+}) => {
+  await openWithCode(page, {});
+  await page.locator(block).hover();
+  const box = (await page.locator(block).boundingBox())!;
+  const actions = (await page
+    .locator(`${block} .code-block-actions`)
+    .boundingBox())!;
+  expect(box.y + box.height - (actions.y + actions.height)).toBeGreaterThan(
+    box.height / 2,
+  );
+  expect(box.x + box.width - (actions.x + actions.width)).toBeLessThan(12);
+  await page.locator(`${block} .code-block-select-all`).click();
+  expect(await page.evaluate(() => getSelection()!.toString())).toBe(CODE);
+});
+
+test("the language is picked from the app's own menu, and the colours follow at once", async ({
+  page,
+}) => {
+  await openWithCode(page, {}, '{\n  "a": 1\n}');
+  await page.locator(block).hover();
+  await expect(page.locator(`${block} select`)).toHaveCount(0);
+  const picker = page.locator(`${block} .code-block-language-select`);
+  await expect(picker).toHaveText("js");
+  await picker.click();
+  await page.getByRole("option", { name: "plain text" }).click();
+  await expect(page.locator(`${block} code .token`)).toHaveCount(0);
+  await page.locator(block).hover();
+  await picker.click();
+  await page.getByRole("option", { name: "json", exact: true }).click();
+  await expect(picker).toHaveText("json");
+  await expect(
+    page.locator(`${block} code .token.property`, { hasText: '"a"' }),
+  ).toHaveCount(1);
+});
+
+test("pasted code keeps its lines, Chinese comments and long lines too", async ({
+  page,
+}) => {
+  const lines = Array.from({ length: 12 }, (_, i) =>
+    i % 3
+      ? `call(${i}); // a line of code that runs on a while`
+      : `  // 第 ${i} 行，中文注释`,
+  );
+  await openWithCode(page, {}, lines.join("\n"));
+  await expect(page.locator(`${block} code`)).toHaveText(lines.join("\n"));
 });
 
 test("the header and line numbers stay out of a printout", async ({ page }) => {

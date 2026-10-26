@@ -17,12 +17,12 @@
     display: none;
   }
 
-  /* A code block's copy button and language picker
+  /* A code block's copy and select buttons and language picker
      (code-block-language-view.ts), shown while the caret is in the block:
      44pt targets in text that reads at arm's length - 16px, below which
      iOS zooms the page into a focused control. */
   :root[data-window-chrome="mobile"]
-    :is(.code-block-language-select, .code-block-copy) {
+    :is(.code-block-language-select, .code-block-copy, .code-block-select-all) {
     min-height: 44px;
     padding: 0 12px;
     font-size: 16px;
