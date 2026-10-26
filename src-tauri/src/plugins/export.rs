@@ -93,7 +93,16 @@ pub(crate) fn export_to(source: &Path, publisher: &str, folder: &Path) -> Result
     manifest["publisher"] = publisher.into();
     let pretty = serde_json::to_string_pretty(&manifest).map_err(|e| e.to_string())?;
     std::fs::write(target.join("textus-plugin.json"), pretty + "\n").map_err(|e| e.to_string())?;
-    let field = |key: &str| manifest[key].as_str().unwrap_or_default().to_string();
+    // A "%key%" value is a string of its l10n, in English.
+    let field = |key: &str| {
+        let value = manifest[key].as_str().unwrap_or_default();
+        value
+            .strip_prefix('%')
+            .and_then(|v| v.strip_suffix('%'))
+            .and_then(|k| manifest["l10n"]["en"][k].as_str())
+            .unwrap_or(value)
+            .to_string()
+    };
     write_new(
         &target.join("README.md"),
         &README
@@ -135,7 +144,7 @@ mod tests {
         std::fs::create_dir_all(dir.join("lib")).unwrap();
         std::fs::write(
             dir.join("textus-plugin.json"),
-            r#"{"id":"local.word-count","name":"Word Count","publisher":"local","description":"Counts.","version":"0.1.0"}"#,
+            r#"{"id":"local.word-count","name":"%name%","publisher":"local","description":"Counts.","version":"0.1.0","l10n":{"en":{"name":"Word Count"}}}"#,
         )
         .unwrap();
         std::fs::write(dir.join("host.js"), "exports.activate = () => {};").unwrap();
