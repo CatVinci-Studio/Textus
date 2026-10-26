@@ -38,6 +38,7 @@ export {
   type AiProvider,
   type NewDocumentMode,
   type ContentWidth,
+  type ImageAlign,
   type ProxyType,
   THEME_MODES,
   UI_TEXT_SCALES,

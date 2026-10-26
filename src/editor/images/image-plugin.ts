@@ -254,7 +254,7 @@ function createImageView(
     const startX = event.clientX;
     // A centred image grows from both sides, so the edge under the pointer
     // moves half as far as the width changes.
-    const factor = paragraph.classList.contains("image-paragraph") ? 2 : 1;
+    const factor = getComputedStyle(paragraph).textAlign === "center" ? 2 : 1;
     // Rendered px -> layout px: the editor content is zoomed with CSS zoom.
     const scale = startWidth / Math.max(1, dom.offsetWidth);
     let percent = (startWidth / scale / available) * 100;

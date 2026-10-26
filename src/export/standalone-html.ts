@@ -310,10 +310,12 @@ export function buildStandaloneHtml(
   // An imported theme switches Textus's own ornaments off (content-base.css);
   // the export has to say so too, or they come back on the page.
   const userTheme = root.hasAttribute("data-user-theme");
+  const imageAlign = root.getAttribute("data-image-align");
   const rootAttrs =
     (dataTheme ? ` data-theme="${escapeHtml(dataTheme)}"` : "") +
     (contentTheme ? ` data-content-theme="${escapeHtml(contentTheme)}"` : "") +
-    (userTheme ? " data-user-theme" : "");
+    (userTheme ? " data-user-theme" : "") +
+    (imageAlign ? ` data-image-align="${escapeHtml(imageAlign)}"` : "");
   return `<!doctype html>
 <html${rootAttrs}>
 <head>
