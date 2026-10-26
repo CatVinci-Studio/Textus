@@ -16,13 +16,8 @@ import type { Options as ToMarkdownExtension } from "mdast-util-to-markdown";
 import type { Literal } from "mdast";
 
 /**
- * Obsidian's wikilinks: `[[Note]]`, `[[Note|shown text]]`,
- * `[[Note#Heading]]`. Textus saved them as `\[\[Note]]`, which Obsidian no
- * longer reads as a link. Kept as written, like an embed
- * (images/obsidian-embed.ts): the whole source is the node's text, shown
- * in the link colour, and written back unchanged. Ctrl/Cmd+click opens the
- * note (link-click-plugin.ts), found in the document's vault the way
- * Obsidian finds it (commands/vault.rs).
+ * Obsidian's wikilinks (`[[Note]]`, `[[Note|text]]`, `[[Note#Heading]]`),
+ * kept as written so a save doesn't escape them to `\[\[Note]]`.
  */
 
 declare module "micromark-util-types" {
@@ -48,8 +43,8 @@ declare module "mdast" {
 const WIKILINK_SOURCE = /^\[\[([^[\]\n]+)\]\]$/;
 
 export interface WikilinkTarget {
-  /** The note as written, without `#heading` and `|text`; empty for a
-   *  heading of this document (`[[#Heading]]`). */
+  /** The note as written, without `#heading` and `|text`; empty for a heading
+   *  of this document. */
   note: string;
   heading: string | null;
 }
@@ -71,10 +66,8 @@ const OPEN = 91; // "["
 const CLOSE = 93; // "]"
 const PAREN = 40; // "("
 
-/** micromark: `[[`, then anything but brackets and line endings, then
- *  `]]` - one token, so nothing inside (a "_" in a name) is read as
- *  emphasis. Tried before CommonMark's link start; `[[x]](url)`, a link
- *  whose text has brackets, is left to it. */
+/** micromark: `[[...]]` as one token, so a "_" in a name isn't emphasis.
+ *  `[[x]](url)`, a link whose text has brackets, is left to CommonMark. */
 function wikilinkSyntax(): Extension {
   return {
     text: { [OPEN]: { name: "wikilink", tokenize } },
@@ -176,8 +169,8 @@ export const wikilinkSchema = $nodeSchema("wikilink", () => ({
   },
 }));
 
-/** `[[...]]` typed as text becomes a wikilink once it closes - not the end
- *  of an embed, `![[...]]`, which has its own rule. */
+/** `[[...]]` typed as text becomes a wikilink once it closes, but not the
+ *  end of an embed, `![[...]]`. */
 export const wikilinkInputRule = $inputRule(
   (ctx) =>
     new InputRule(/\[\[[^[\]\n]+\]\]$/, (state, match, start, end) => {

@@ -2,31 +2,9 @@ import { markTime } from "../../ui/moves";
 import { wholeBlockKind } from "./markdown-forms";
 import { splitUnits } from "./unit-diff";
 
-/**
- * New text a proposal brings, put into the document a unit at a time - a
- * sentence of a paragraph, or a whole block (a heading, a list item, a
- * table, a fence, a formula) - not typed out a character at a time: a unit
- * half written showed as its Markdown (`## ` before a heading came, an
- * empty bullet, a table's first row as text) and as blank lines while it
- * was laid out, and every frame redrew it under the caret, which WebKit
- * then scrolled back to. The units are the rewrite's own (splitUnits), so
- * what is shown always ends where the layout of the rewrite does
- * (sentence-stream.ts).
- *
- * Text in the document (`paragraphs`) lands a block at a time: a paragraph
- * once it is written whole, then all of it at once - new writing and a
- * rewrite alike, whose sentences are still decided one by one. Landed a
- * sentence at a time, it grew in jerks, and a rewrite and new writing
- * moved two ways. A long paragraph isn't kept back whole, though: held
- * HOLD_MS, the sentences it has finished land together, as one batch, and
- * again each HOLD_MS after that - a paragraph of a few hundred words kept
- * the screen still for half a minute, then all came at once.
- *
- * Each unit lands markTime() after the last - the moment its original is
- * marked (ui/moves.ts, the rewrite's reading cursor) - and a backlog of
- * more than BACKLOG lands at once. Display only, like StreamReveal (the
- * chat's typewriter): the received text stays the real one.
- */
+/** A proposal's new text revealed a unit (sentence or block) at a time, as a
+ *  half-written unit shows raw Markdown. In the document, paragraphs land
+ *  whole, or as HOLD_MS batches of finished sentences. Display only. */
 
 /** Units waiting past which they all land together. */
 const BACKLOG = 5;
@@ -36,8 +14,7 @@ const BACKLOG = 5;
 export const HOLD_MS = 6000;
 
 /** A pause this long after a sentence's stop: the sentence is over, though
- *  nothing follows it yet. Half a sentence never lands on a pause - writing
- *  with no full stops lands a paragraph at a time. */
+ *  nothing follows it yet. */
 const IDLE_MS = 1000;
 
 /** A sentence this long with no end yet lands up to its last comma or
@@ -55,14 +32,8 @@ const BLOCK_START = /^\s*(#{1,6}\s|[-*+]\s|\d+[.)]\s|>|\||!\[|```|~~~|\$\$)/;
 /** Where a unit may be cut when it has gone on too long or stopped. */
 const SOFT_BREAK = /[，,、；;：:\s](?=[^，,、；;：:\s]*$)/;
 
-/**
- * The ends of the units of `text` after `shown` that are complete - the
- * places what is on screen may stop at. A unit is complete once something
- * follows it, once the text is `done`, or, for the last: a sentence ended
- * by a line break, by a stop and a space, or by a stop that needs none; a
- * whole block only once the next begins. `idle`: nothing has come for a
- * while, so the last unit may land up to its last soft break.
- */
+/** The ends of the complete units of `text` after `shown`, where the screen
+ *  may stop. `idle`: the last unit may land up to its last soft break. */
 export function landingEnds(
   text: string,
   shown: number,
@@ -126,9 +97,7 @@ function landings(
     }
     if (kind) return;
     const written = text.slice(Math.max(start, shown), end);
-    // Half a sentence never shows (a pause lands a sentence only once it
-    // has its stop, above): only one that runs on past LONG_UNIT does, up
-    // to its last soft break.
+    // Half a sentence shows only past LONG_UNIT, up to its last soft break.
     if (written.length >= LONG_UNIT) {
       const cut = written.search(SOFT_BREAK);
       if (cut > 0)
@@ -158,7 +127,7 @@ function fenceClosed(unit: string): boolean {
 }
 
 export class UnitReveal {
-  /** Paragraphs land whole (above): new writing and rewrites alike. */
+  /** Paragraphs land whole. */
   constructor(private paragraphs = false) {}
 
   private received = "";

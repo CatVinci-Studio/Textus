@@ -1,14 +1,12 @@
-//! The text a rule looks at: one block of plain text (a paragraph, a
-//! heading, a list item), with char offsets, a regex-friendly copy, and a
-//! mask of the spans no rule may touch - URLs, e-mail addresses, file
-//! paths, inline code and math, and the placeholders the Markdown reader
-//! leaves where inline code or math was.
+//! The text a rule looks at: one block of plain text with char offsets, a
+//! regex-friendly copy, and a mask of spans no rule may touch (URLs, e-mail
+//! addresses, paths, inline code and math, and their placeholders).
 
 use regex::Regex;
 use std::sync::LazyLock;
 
-/// Stands in for an inline code span or inline math inside a block's text
-/// (document.rs), so rules see a boundary there and never its contents.
+/// Stands in for an inline code span or inline math inside a block's text, so
+/// rules see a boundary there and never its contents.
 pub(crate) const PLACEHOLDER: char = '\u{FFFC}';
 
 pub(crate) fn is_han(c: char) -> bool {

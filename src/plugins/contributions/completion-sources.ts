@@ -2,12 +2,8 @@ import { pluginsSnapshot } from "../store/plugin-records";
 import { hasSlashItems, slashItemsFor } from "./slash-commands";
 
 /**
- * Completions plugins suggest as you type (manifest `contributes
- * .completions`, with editor.read): the editor tells what is before the
- * caret and whether it is in a formula, the manifests say which plugins
- * want it - so a plugin is asked, and started, only when its pattern
- * matches - and the plugin's answer is the list shown at the caret
- * (editor/completion/).
+ * Completions plugins suggest as you type. A plugin is asked, and started,
+ * only when its manifest's pattern matches what is before the caret.
  */
 
 export interface CompletionItem {
@@ -30,9 +26,8 @@ export interface CompletionResult {
 
 /** The most items a list holds. */
 const MAX_ITEMS = 50;
-/** How long a plugin has to answer - one starting takes a moment - before
- *  the next is asked. A list that comes after the text moved on is not
- *  shown (completion-plugin.ts). */
+/** How long a plugin has to answer (starting takes a moment) before the next
+ *  is asked. A list that arrives after the text moved on is not shown. */
 const ANSWER_MS = 1500;
 
 type Ask = (
@@ -43,7 +38,7 @@ type Ask = (
 
 let ask: Ask | null = null;
 
-/** manager.ts's way to run a plugin's provider, starting it first. */
+/** The way to run a plugin's provider, starting it first. */
 export function setCompletionAsker(run: Ask | null): void {
   ask = run;
 }
@@ -99,8 +94,8 @@ function items(value: unknown): CompletionItem[] {
     }));
 }
 
-/** The first list a plugin has for `text` (what is before the caret in
- *  its paragraph or formula), or null. */
+/** The first list a plugin has for the text before the caret in its
+ *  paragraph or formula, or null. */
 export async function provideCompletions(
   text: string,
   inMath: boolean,

@@ -1,10 +1,6 @@
-//! Everyday writing in Chinese and English - emails, reports, academic
-//! paragraphs, technical docs with code, meeting notes, essays, fiction
-//! with dialogue, social posts and product copy - asked casually and
-//! formally, on short documents and on a 42k-character one, through the
-//! side panel and through Quick Ask on a selection (the inline widget:
-//! Write mode, and every follow-up sent against the selection as it reads
-//! after the accepted edits - see harness::UserTurn::follow_selection).
+//! Everyday writing in Chinese and English, asked casually and formally, on
+//! short documents and a long one, through the side panel and through Quick Ask
+//! on a selection.
 
 use super::agent_matrix::{
     edit_anywhere, edit_in, either, inserted, no_edit, proposed_text, with_cursor, AgentCase,
@@ -59,11 +55,9 @@ pub fn quotes_kept(o: &TurnOutcome, marks: &[char]) -> Result<(), String> {
         .ok_or_else(|| format!("{before} quote marks -> {after}"))
 }
 
-/// The dialogue survives a rewrite of its tags: the same words are spoken,
-/// in the same order, in the same kind of quote marks. Counting marks
-/// (`quotes_kept`) fails a correct edit when a tag that split one line of
-/// speech goes - `"The bus broke down," he replied. "I ran the last mile."`
-/// becomes a single quote (round-2 integration, `novel/en/beats`).
+/// The dialogue survives a rewrite of its tags: the same words spoken in the
+/// same order and kind of quote marks. Counting marks fails a correct edit
+/// that joins one line of speech split by a tag.
 pub fn spoken_words_kept(o: &TurnOutcome, open: char, close: char) -> Result<(), String> {
     let spoken = |doc: &str| -> Vec<String> {
         let mut words = Vec::new();
@@ -286,8 +280,8 @@ fn zh_cases() -> Vec<AgentCase> {
         (o.reply != aicompat::agent::OUT_OF_STEPS).then_some(()).ok_or_else(|| "ran out of steps".into())
     }), "A 42k-character Chinese report shown as an outline: expect chapters 6, 7 and 8 read (several read_document calls in one step is best) and each replaced by its English translation - every number kept, including chapter 7's 214 households in 青石巷 - with nothing outside them touched."));
 
-    // The whole of it at once (agent/chapters.rs): every chapter
-    // translated by its own helper, the names written alike.
+    // The whole of it at once: every chapter translated by its own helper, the
+    // names written alike.
     c.push(AgentCase::new("long/zh/translate-whole", Lang::ZhHans, Lang::En, &long, "把全文翻译成英文。", edit_anywhere().has(&["214"]).check("the chapters at once", |o| {
         o.tools.iter().any(|t| t == "edit_chapters").then_some(()).ok_or_else(|| "edit_chapters not used".into())
     }).check("all of it, in English", |o| {
@@ -296,10 +290,8 @@ fn zh_cases() -> Vec<AgentCase> {
         (text.len() > 40_000 && cjk * 50 < text.chars().count()).then_some(()).ok_or_else(|| format!("{} bytes, {cjk} CJK characters", text.len()))
     }), "A 42k-character Chinese report in eleven chapters, to translate whole: expect one edit_chapters call with the instruction and a glossary of the recurring names and places (青石巷 and the like), every chapter replaced by its English translation, every number kept, and a short reply saying so."));
 
-    // A 28k-character document: whole until the limit counted Chinese as
-    // three, now the outline and the section the cursor is in - nothing it
-    // needs may go missing. The cursor is in chapter 7, as when the user
-    // works there.
+    // A 28k-character document: the outline and the section the cursor is in
+    // (chapter 7); nothing it needs may go missing.
     let mid = mid_doc_zh();
     let ch7 = mid.find("## 第七章").expect("chapter 7") + 3;
     let at_ch7 = Caret {
@@ -507,7 +499,7 @@ mod tests {
     #[test]
     fn dialogue_survives_a_tag_that_split_a_line_going() {
         let before = "\"You're late,\" she said angrily.\n\n\"The bus broke down,\" he replied apologetically. \"I ran the last mile.\"";
-        // run3: the tag between the two halves went, so the halves joined.
+        // The tag between the two halves went, so the halves joined.
         let joined = "Elena folded her arms. \"You're late.\"\n\nTom winced. \"The bus broke down. I ran the last mile.\"";
         assert!(spoken_words_kept(&outcome(before, joined, ""), '"', '"').is_ok());
         assert!(quotes_kept(&outcome(before, joined, ""), &['"']).is_err());

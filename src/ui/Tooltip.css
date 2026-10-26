@@ -1,7 +1,5 @@
-/* The hint over an icon-only button (Tooltip.tsx): a small floating
-   surface in the theme's colours that fades in and out - no travel, no
-   scale, so reduced motion has nothing to take away. It never takes the
-   pointer: the button under it stays the thing being pointed at. */
+/* The hint over an icon-only button: it fades only, so reduced motion has
+   nothing to take away, and never takes the pointer. */
 .tooltip {
   position: fixed;
   z-index: var(--z-select);

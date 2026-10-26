@@ -4,10 +4,8 @@ import { localize } from "./manifest";
 import { pluginsSnapshot, windowInfo } from "./plugin-records";
 
 /**
- * A plugin's usage guide: the USAGE.md in its package - USAGE.<lang>.md in
- * the UI's language where it has one - opened in a tab as a clean draft,
- * as the Help menu's guides are, once the plugin is installed and from its
- * page in Settings.
+ * A plugin's USAGE.md (USAGE.<lang>.md in the UI language where it has one),
+ * opened in a tab as a clean draft like the Help menu's guides.
  */
 
 /** The guide's text, or null when the plugin has none. */

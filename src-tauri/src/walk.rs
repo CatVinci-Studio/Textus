@@ -1,13 +1,6 @@
-//! The one way Textus walks a folder: the sidebar's file-name search
-//! (commands/folder.rs) and Textus AI's project tools (ai/project.rs) both
-//! go through `walk`, so a file one of them can see the other can too.
-//!
-//! It walks the way fd does - in parallel, with the `ignore` crate
-//! (ripgrep's walker) - and leaves out hidden entries, whatever `.gitignore`
-//! and `.ignore` files leave out (inside a git repository or not), and
-//! SKIPPED_DIRS. Symlinks are not followed, so a link back up the tree can't
-//! loop. It is bounded by `Limits`, and its answer is in a fixed order
-//! (`sort_key`) however the threads happened to finish.
+//! The one way Textus walks a folder, shared by the sidebar search and the AI's
+//! project tools. Walks as fd does (the `ignore` crate), skipping hidden,
+//! ignored and SKIPPED_DIRS entries without following symlinks, in a fixed order.
 
 use ignore::{WalkBuilder, WalkState};
 use std::path::{Path, PathBuf};
@@ -15,9 +8,8 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering as AtomicOrdering};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-/// Directories that are never writing material: build output, dependency
-/// trees, virtual environments. A folder that also holds code without a
-/// `.gitignore` saying so would otherwise drown every listing in them.
+/// Directories that are never writing material: build output, dependency trees,
+/// virtual environments, even without a `.gitignore` saying so.
 pub(crate) const SKIPPED_DIRS: &[&str] = &[
     "node_modules",
     "target",
@@ -28,10 +20,8 @@ pub(crate) const SKIPPED_DIRS: &[&str] = &[
     ".venv",
 ];
 
-/// Where the walk stops. Each limit leaves the walk marked `truncated`. A
-/// folder of writing is far below all of them; a folder that is really a
-/// disk of code or photos must not keep the machine (or a Textus AI
-/// request) busy, and the time budget holds on a slow network drive too.
+/// Where the walk stops; each limit marks it `truncated`. A folder of writing is
+/// far below them all, and the time budget holds on a slow network drive.
 pub(crate) struct Limits {
     /// Files kept (those `keep` accepts).
     pub files: usize,
@@ -124,16 +114,9 @@ pub(crate) fn walk(root: &Path, limits: &Limits, keep: impl Fn(&Path) -> bool + 
     }
 }
 
-/// `rel` as bytes that compare in the order of the sidebar's tree
-/// (src/utils/name-order.ts), for `/`-separated relative paths: folder by
-/// folder, a folder's subfolders before its files, and names compared
-/// naturally - numbers by value ("file2" before "file10"), case ignored.
-/// Paths with the same key go by code point, so the order never depends on
-/// which came first. The sidebar collates in the UI language (pinyin for
-/// Chinese); here other scripts go by code point, which is stable, and
-/// stability is what the AI's answers need. A key is worked out once per
-/// file: comparing names in place made sorting 45,000 paths take three
-/// times as long as walking them.
+/// `rel` as bytes that compare in the sidebar's tree order: folder by folder,
+/// subfolders before files, names natural ("file2" before "file10") and caseless,
+/// ties by code point. Precomputed per file, since in-place comparison was 3x slower.
 fn sort_key(rel: &str) -> Vec<u8> {
     let mut key = Vec::with_capacity(rel.len() + 8);
     let mut parts = rel.split('/').peekable();

@@ -34,16 +34,8 @@ export interface ReviewBarLabels {
   agentWritingEdit: string;
 }
 
-/**
- * The pending edits' controls, floating over the bottom of the document
- * while there are any: step through the changed sentences (‹ 1/3 ›), then
- * Accept what wasn't kept or Reject them all. The text itself carries a
- * ✓ / ✕ per sentence; this is the one place to finish - the AI panel's
- * card has the same buttons, the panel no longer has a bar of its own.
- *
- * On a phone it is the AI sheet's collapsed form: a bottom bar with big
- * buttons and a way back into the conversation.
- */
+/** The pending edits' controls over the bottom of the document: step through
+ *  the changes, then Accept or Reject. On a phone, the AI sheet's collapsed form. */
 export function ReviewBar({
   labels,
   taken,
@@ -66,16 +58,13 @@ export function ReviewBar({
   /** A picture in a pending proposal is still being made: Accept waits
    *  for it, and says so. */
   painting: boolean;
-  /** A rewrite is still streaming in: its changes are counted and can be
-   *  stepped through as they come, and Accept / Reject wait until it is
-   *  all in, as its ✓ / ✕ do - the AI panel's Stop ends it early. */
+  /** A rewrite is still streaming in: Accept / Reject wait until it is all
+   *  in, though its changes can be stepped through as they come. */
   streaming: boolean;
-  /** Some pending proposal is new text alone (Write): it has no original
-   *  for a margin view to show, so it stays in the text - the menu says
-   *  so beside those views. */
+  /** Some pending proposal is new text alone, which stays in the text in the
+   *  margin views; the menu says so. */
   newText: boolean;
-  /** How revisions show (Settings.revisionDisplay), switched from here as
-   *  in Word's Review ribbon. */
+  /** How revisions show. */
   display: RevisionDisplay;
   displayName: (mode: RevisionDisplay) => string;
   onDisplay: (mode: RevisionDisplay) => void;
@@ -102,9 +91,8 @@ export function ReviewBar({
     true,
     menuOpen,
   );
-  // A phone has no margin: only the two views that need none. Elsewhere
-  // the margin views stay listed while there is no room, unpickable, with
-  // why - and a chosen one waits there while the text shows everything.
+  // A phone lists only the views needing no margin. Elsewhere margin views
+  // stay listed without room, unpickable, and a chosen one waits.
   const modes = phone
     ? REVISION_DISPLAYS.filter((m) => !needsMargin(m))
     : REVISION_DISPLAYS;
@@ -204,9 +192,7 @@ export function ReviewBar({
           .replace("{k}", String(taken))
           .replace("{n}", String(total))
       : labels.proposalAccept;
-  // The count shows from the start of a stream, and stays once shown: a
-  // rewrite that ends with one change keeps it rather than lose it at the
-  // end.
+  // Once shown, the count stays, even if the rewrite ends with one change.
   const [counted, setCounted] = useState(false);
   if (!counted && (stops > 1 || streaming)) setCounted(true);
   const nav = (counted || stops > 1 || streaming) && (
@@ -248,9 +234,7 @@ export function ReviewBar({
       aria-label={labels.reviewBarLabel}
     >
       <div className="review-bar-top">
-        {/* While a rewrite is still written, the bar says so where its name
-            stands, with the "working" dots - the paragraph being written is
-            tinted in the text, and each one lands with its count here. */}
+        {/* While a rewrite is still written, the bar says so in its name's place. */}
         {streaming ? (
           <span className="review-bar-label review-bar-working" role="status">
             <ThinkingIndicator label={labels.agentWritingEdit} />

@@ -7,30 +7,16 @@ import {
 } from "./motion";
 import { measure, play } from "./flip";
 
-/**
- * The few moves everything in Textus is made of (docs/design/design-language.md, Motion), for
- * script that starts them - an element drawn by the editor, a proposal
- * landing. A stylesheet entrance (`animation: motion-enter …`, motion.css)
- * is the same move for an element that mounts.
- *
- * - enter: a part of the page arrives, fading in from a short way off;
- * - exit: it leaves the same way;
- * - mark: what is about to change is tinted for a moment, then the change
- *   comes (`land`);
- * - glide (flip.ts) and presence (usePresence.ts): moving to a new place,
- *   and staying in the DOM while an exit plays.
- *
- * Only opacity and transform ever animate; a tint is set and taken off,
- * never faded. Each move runs where motionAllowed() says so and otherwise
- * ends at once in its final state.
- */
+/** The few moves everything in Textus is made of: enter, exit, and mark (tint
+ *  what is about to change, then `land`). Only opacity and transform animate;
+ *  each move ends at once where motionAllowed() says no. */
 
 /** Where an element comes from or goes to: a short way below ("up": it
  *  rises into place), above, before or after it in the line, or nowhere
  *  (a fade in place). "start" and "end" follow the writing direction. */
 export type Direction = "none" | "up" | "down" | "start" | "end";
 
-/** How far it travels: motion.css's --motion-distance-sm / -md. */
+/** How far it travels: --motion-distance-sm / -md. */
 export type Distance = "sm" | "md";
 
 export interface MoveOptions {
@@ -113,7 +99,7 @@ export function exit(el: Element, options: MoveOptions = {}): Promise<void> {
     : Promise.resolve();
 }
 
-/** The class a mark puts on what is about to change (motion.css). */
+/** The class a mark puts on what is about to change. */
 export const MARK_CLASS = "motion-mark";
 
 /** How long a mark stays before the change comes. */
@@ -121,13 +107,9 @@ export function markTime(): number {
   return motionAllowed() ? duration("--dur-slow") : 0;
 }
 
-/**
- * The two beats of a change landing: what it changes is marked for a
- * moment (each of `marked`), then `change` runs and what it brought
- * (`entering`, from its return) enters. With nothing to mark - new text
- * with no original - the change comes at once. `skipMark` lands it at
- * once too, for a backlog catching up. Resolves once it has landed.
- */
+/** The two beats of a change landing: `marked` is tinted for a moment, then
+ *  `change` runs and what it returns enters. With nothing to mark, or
+ *  `skipMark`, it lands at once. */
 export async function land(
   marked: Element[],
   change: () => Element[] | void,
@@ -144,13 +126,9 @@ export async function land(
 }
 
 /**
- * Beats: the parts of one change - its new text in the document, its card
- * in the margin - enter as one, though each is drawn when its own code gets
- * to it (ProseMirror's widgets first, React's cards a frame or two later).
- * The first part to enter starts the beat, or the code that lands the
- * change starts it for all of them (`startBeat`); each part after joins it
- * as far in as it already is, so they all end together. Drawn on their own
- * moments, a card came in after its text and read as a second event.
+ * Beats: the parts of one change (its text, its margin card) enter as one,
+ * though each is drawn at its own moment. Each later part joins the beat as
+ * far in as it already is, so they all end together.
  */
 const beats = new Map<string, number>();
 
@@ -177,9 +155,8 @@ export function beatElapsed(
   return at === undefined ? null : now - at;
 }
 
-/** `el` enters on `key`'s beat: from the start if it begins the beat,
- *  partway into the entrance if the beat has begun - and is just there
- *  once the entrance would be over. */
+/** `el` enters on `key`'s beat: partway in if the beat has begun, and just
+ *  there once the entrance would be over. */
 export function enterOnBeat(
   el: Element,
   key: string,
@@ -196,27 +173,17 @@ export function enterOnBeat(
   return enter(el, { ...options, delay: (options.delay ?? 0) - into });
 }
 
-/** The same for an element whose stylesheet plays its entrance (a margin
- *  card's `motion-enter`): its animation set back by how far the beat is
- *  in. Without a beat it keeps its own entrance. */
+/** The same for an element whose stylesheet plays its entrance: its animation
+ *  set back by how far the beat is in. */
 export function joinBeat(el: HTMLElement, key: string) {
   const into = beatElapsed(key);
   if (into === null || !motionAllowed()) return;
   el.style.animationDelay = `${-Math.round(into)}ms`;
 }
 
-/**
- * A change to some blocks of `root` made in one go - a proposal accepted
- * or rejected - shown as one move: the blocks it touches (`touched`, the
- * first and the last of them) cross-fade from how they looked to how they
- * now look, the blocks after them glide to where the change put them, and
- * `leaving` (its cards in the margin) fade out where they stood. The old
- * looks are copies taken before `change` runs, which replaces the
- * elements; `change` runs at once and the motion follows, so nothing
- * waits on it - returning false, it changed nothing and nothing moves.
- * Changed at once, the text jumped, and the card was gone from one frame
- * to the next.
- */
+/** A change to some blocks made in one go, shown as one move: touched blocks
+ *  cross-fade, blocks after them glide, `leaving` fades out. `change` runs at
+ *  once; returning false, nothing moves. */
 export function crossfade(
   root: HTMLElement,
   touched: [first: Element, last: Element] | null,
@@ -258,9 +225,8 @@ export function crossfade(
   const fresh = span
     ? now.slice(first, last + 1 + now.length - kids.length).filter(onScreen)
     : [];
-  // The old look goes quickly and the new comes half a beat after it:
-  // two different texts over one another for the whole fade read as a
-  // smear.
+  // The old look goes quickly and the new comes half a beat after: two texts
+  // over one another for the whole fade read as a smear.
   const out = duration("--dur-fast");
   for (const el of fresh)
     animate(el, [{ opacity: 0 }, { opacity: 1 }], {
@@ -277,13 +243,11 @@ export function crossfade(
   play(below, { duration: "--dur-slow", easing: "--ease-out" });
 }
 
-/** A copy fading out (motion.css): none of its own entrances replay. */
+/** A copy fading out: none of its own entrances replay. */
 export const GHOST_CLASS = "motion-ghost";
 
-/** Where the copies of `root`'s blocks are laid while they fade: an empty
- *  copy of `root` itself beside it, out of its DOM (ProseMirror reads any
- *  change in its own as an edit) yet styled as it is - its classes and
- *  attributes, under the same ancestors. */
+/** Where the fading copies are laid: an empty copy of `root` beside it, out
+ *  of its DOM (ProseMirror reads any change there as an edit) but styled alike. */
 function ghostLayer(root: HTMLElement): HTMLElement | null {
   const parent = root.parentElement;
   if (!parent) return null;
@@ -359,12 +323,8 @@ function ghostBeside(el: HTMLElement) {
   return ghost;
 }
 
-/**
- * What comes after `el` in `root` - the parts below a part that just grew
- * by `by` px, or arrived - glides down from where it stood to where it now
- * is (FLIP): written into the middle of a document, each block that landed
- * pushed the text below it down at once. Only what is on screen moves.
- */
+/** What comes after `el` in `root` glides down from where it stood, after it
+ *  grew by `by` px or arrived. Only what is on screen moves. */
 export function glideAfter(el: Element, by: number, root: Element) {
   if (!motionAllowed() || by < 1) return;
   let block: Element | null = el;

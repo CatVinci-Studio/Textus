@@ -1,13 +1,11 @@
 import type { CompletionItem } from "../../plugins/contributions/completion-sources";
 import "./completion-list.css";
 
-/** On the page while a list is open: a formula's drawn preview, which
- *  shows where the list does, steps aside (completion-list.css). */
+/** On the page while a list is open, so a formula's preview steps aside. */
 const OPEN_CLASS = "completion-open";
 
-/** The list of completions under the caret (completion-plugin.ts): one
- *  element in the body, filled again for each list, the chosen item lit.
- *  The editor keeps the focus; a click takes an item. */
+/** The list of completions under the caret. The editor keeps the focus; a
+ *  click takes an item. */
 export class CompletionList {
   private el: HTMLElement | null = null;
   private chosen = 0;

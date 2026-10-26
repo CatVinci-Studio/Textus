@@ -15,15 +15,12 @@ import {
 } from "../../plugins/store/requirements";
 import type { Attempt } from "./PluginPage";
 
-/**
- * Installing a plugin from the catalog, as Settings › Plugins and the
- * market (MarketPage) both do: the package fetched and checked in Rust,
- * the plugin turned on - asking for its permissions - and what it needs
- * that is off offered to be turned on. A failure is said in a message.
- */
+/** Installs a plugin from the catalog: fetched and checked in Rust, turned
+ *  on with its permissions asked, and what it needs offered. Failures show
+ *  in a message. */
 export function usePluginInstall(
   t: Strings,
-  /** After a plugin is installed and on (MarketPage: its usage guide). */
+  /** After a plugin is installed and on. */
   onInstalled?: (id: string) => void,
 ) {
   const { settings, setSettings } = useSettings();

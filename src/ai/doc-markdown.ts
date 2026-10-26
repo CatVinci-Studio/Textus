@@ -14,30 +14,13 @@ import {
 } from "./doc-blocks";
 
 /**
- * The document as MARKDOWN SOURCE, which is the representation every AI edit
- * path works in.
- *
- * The older plain-text view (doc.textBetween) was lossy in a way that
- * silently destroyed formatting: the model was shown "这是 重要 内容" for a
- * document that actually reads "这是 **重要** 内容", so it had no way to know
- * a span was bold, a line was a heading, or a paragraph was a list item -
- * and its reply was then parsed BACK as markdown. Three different
- * representations, none of them equal.
- *
- * Everything here keeps a single one: what the model reads, what an edit's
- * words are found in, and what gets parsed on accept are all the same
- * markdown. The model reads it block by block - the editor's top-level
- * nodes, each with its id (doc-blocks.ts) - and names the blocks an edit
- * changes; each block carries its ProseMirror positions alongside, so a
- * markdown-space target still resolves to a real document range without
- * needing a markdown-offset -> ProseMirror-position sourcemap (Milkdown
- * offers none, and maintaining one would be its own moving part).
+ * The document as markdown source, the one representation every AI edit path
+ * works in: what the model reads, where an edit's words are found, and what
+ * is parsed on accept. Each block keeps its ProseMirror range alongside.
  */
 
-/** What documentMarkdown joins blocks with - one blank line, as markdown. */
 const BLOCK_SEPARATOR = "\n\n";
 
-/** One top-level block, in both coordinate systems at once. */
 export interface MarkdownBlock {
   /** ProseMirror position immediately before the block node. */
   from: number;
@@ -47,23 +30,17 @@ export interface MarkdownBlock {
   markdown: string;
   /** Where this block's markdown starts inside documentMarkdown()'s output. */
   offset: number;
-  /** Its id, as the model is shown it (doc-blocks.ts's blockIds). */
   id: string;
   kind: BlockKind;
 }
 
-/** The current selection, in the three forms every AI surface needs it in.
- *
- * Shared because there are two of those surfaces and they must agree on what
- * counts as "the selection": Quick Ask captures it once when it opens
- * (useInlineChat) and the detached window re-reads it as the user works
- * (chat/live-context). Two copies of these four expressions would drift the
- * first time either grew a special case. */
+/** The current selection in the forms every AI surface needs. Shared so
+ *  Quick Ask and the detached chat agree on what "the selection" is. */
 export interface SelectionSnapshot {
-  /** Plain text - display only (the composer's "{n} chars" chip). */
+  /** Plain text, for display only. */
   selectedText: string | null;
-  /** Markdown - what the model is actually shown, and what a
-   *  replace_selection proposal's staleness check compares against. */
+  /** Markdown: what the model is shown, and what a replace_selection
+   *  proposal's staleness check compares against. */
   selectionMarkdown: string | null;
   /** ProseMirror bounds, or null when the selection is empty. */
   range: { from: number; to: number } | null;
@@ -84,10 +61,8 @@ export function readSelection(ctx: Ctx, state: EditorState): SelectionSnapshot {
 
 /**
  * A selection's bounds without the block edges it only grazes. A triple
- * click selects a paragraph up to the START of the next one, so the range
- * crossed a block boundary it didn't mean: the model's rewrite replaced
- * that boundary too, and accepting it joined the paragraph to the next.
- * Each end steps back over empty block edges into the text it selected.
+ * click reaches the start of the next paragraph, and a rewrite of that range
+ * would join the two on accept.
  */
 export function textRange(
   doc: ProseNode,
@@ -149,8 +124,7 @@ export function headingTrail(
   return { title, path };
 }
 
-/** The caret and the plain text around it, when nothing is selected - for
- *  the <cursor> block a request carries (user-message.ts's cursorBlock). */
+/** The caret and the plain text around it, when nothing is selected. */
 export function caretContext(
   state: EditorState,
   span = 160,
@@ -180,17 +154,14 @@ export function serializeRange(
 }
 
 /**
- * Every top-level block with its markdown and its ProseMirror range. Blocks
- * are serialized one at a time (rather than slicing a whole-document string)
- * so each one's markdown is anchored to an exact node range - that pairing is
- * what lets a markdown-space match land back on a real document position.
+ * Every top-level block with its markdown and its ProseMirror range,
+ * serialized one at a time so each markdown is anchored to an exact range.
  */
 export function serializeBlocks(ctx: Ctx, doc: ProseNode): MarkdownBlock[] {
   const blocks: Omit<MarkdownBlock, "id">[] = [];
   let offset = 0;
   doc.forEach((node, pos) => {
-    // Cached per block (block-markdown.ts): after an edit only the blocks
-    // it touched are serialized again, not all of a long document's.
+    // Cached per block: after an edit only the blocks it touched are serialized again.
     const markdown = blockMarkdown(ctx, node).trimEnd();
     const kind = blockKind(node);
     blocks.push({ from: pos, to: pos + node.nodeSize, markdown, offset, kind });
@@ -207,26 +178,16 @@ export function documentMarkdown(
   return blocks.map((block) => block.markdown).join(BLOCK_SEPARATOR);
 }
 
-/** The document as a request carries it: its blocks, each with its id and
- *  kind, and their markdown joined - the same text, so the model, the
- *  backend and the editor never split it two ways. */
+/** The document as a request carries it: its blocks and their markdown
+ *  joined, so the model, backend and editor never split it two ways. */
 export interface DocumentSnapshot {
   markdown: string;
   blocks: SentBlock[];
 }
 
 /**
- * `documentMarkdown(serializeBlocks(...))`, cached against the ProseMirror
- * doc it came from.
- *
- * ProseMirror documents are immutable, so `doc === lastDoc` is an O(1) exact
- * test for "nothing to re-serialize" - and during the gesture the detached
- * chat's live context exists for, drag-selecting a passage, the document does
- * not change at all while the selection changes on every mousemove. Without
- * the cache each of those re-ran the serializer once per top-level block.
- * Quick Ask's open-time snapshot reads through the same cache, so opening the
- * bar right after a push reuses the identical string. A WeakMap so a
- * superseded doc is collectable the moment nothing else holds it.
+ * `documentMarkdown(serializeBlocks(...))`, cached per immutable doc: while
+ * the user drag-selects, the doc is unchanged on every mousemove.
  */
 const documentCache = new WeakMap<ProseNode, DocumentSnapshot>();
 
@@ -242,22 +203,15 @@ export function cachedDocument(ctx: Ctx, doc: ProseNode): DocumentSnapshot {
   return snapshot;
 }
 
-/** `cachedDocument`'s markdown alone - for what reads the text, not its
- *  blocks (a plugin, the illustrate flow). */
+/** `cachedDocument`'s markdown alone. */
 export function cachedDocumentMarkdown(ctx: Ctx, doc: ProseNode): string {
   return cachedDocument(ctx, doc).markdown;
 }
 
 /**
- * A resolved target: the ProseMirror range of the WHOLE blocks it touches,
- * plus the markdown on either side of the quoted words within them.
- *
- * The range is snapped outward to block boundaries deliberately. A markdown
- * offset inside a block can't be converted to a ProseMirror position, but a
- * block boundary can - so the edit is composed as text (prefix + new middle +
- * suffix) and applied by re-parsing those whole blocks. Sub-block precision
- * survives in the composed markdown; only the range that gets re-parsed is
- * coarse.
+ * A resolved target: the ProseMirror range of the whole blocks it touches,
+ * plus the markdown around the quoted words. A markdown offset inside a block
+ * has no ProseMirror position, so the edit re-parses those whole blocks.
  */
 export interface MarkdownMatch {
   from: number;
@@ -278,8 +232,7 @@ function blockIndexAt(blocks: MarkdownBlock[], offset: number): number {
 }
 
 /** What an edit, a comment or a picture names: its block (and the run's
- *  last), and, inside them, the words it is about - the whole run when
- *  `anchor` is left out or is the run's text. */
+ *  last), and the words inside them, or the whole run without `anchor`. */
 export interface BlockTarget {
   block?: string;
   lastBlock?: string;
@@ -287,11 +240,8 @@ export interface BlockTarget {
 }
 
 /**
- * Where `target` is in the document now: the blocks its ids name, narrowed
- * to its words when they are a part of them that occurs there once. Null
- * when an id names no block of `blocks` (the block changed since the
- * request, so its id is gone) or the words aren't in the run once - an
- * ambiguous or missing quote is never guessed at.
+ * Where `target` is in the document now. Null when an id is gone (the block
+ * changed) or the words don't occur in the run exactly once; never guessed.
  */
 export function matchTarget(
   blocks: MarkdownBlock[],
@@ -333,9 +283,8 @@ export function matchTarget(
   };
 }
 
-/** Whether `text` is block content of its own - several paragraphs, a
- *  heading/list/quote/fence/table line, or an image alone (a figure, such
- *  as generate_image proposes) - rather than words for a sentence. */
+/** Whether `text` is block content of its own (several paragraphs, a block
+ *  line, or an image alone) rather than words for a sentence. */
 function isBlockText(text: string): boolean {
   const trimmed = text.trim();
   return (
@@ -345,11 +294,8 @@ function isBlockText(text: string): boolean {
   );
 }
 
-/** Joins two runs of inline text, adding the one space Latin script needs
- *  between words when neither side brought it - "the study" + "in 2024" -
- *  and nothing between CJK characters, before punctuation or before a
- *  footnote reference, which attaches to its word ("snapshot" + "[^2]";
- *  the live eval saw "snapshot [^2]" next to the author's "document[^1]"). */
+/** Joins two runs of inline text with the space Latin script needs, but none
+ *  between CJK characters, before punctuation or before a footnote reference. */
 export function joinInline(left: string, right: string): string {
   const a = left.slice(-1);
   const b = right.charAt(0);
@@ -362,10 +308,8 @@ export function joinInline(left: string, right: string): string {
 const TABLE_ROW = /^\s*\|/;
 const LIST_ITEM = /^\s*([-*+]|\d+[.)])\s/;
 
-/** Whether two lines are rows of one table or items of one list - where a
- *  new line joins with a single newline. A blank line would end the table
- *  (the new row turns into a stray paragraph of pipes), and trimming a
- *  nested item's indent would pull it out of its parent. */
+/** Whether two lines are rows of one table or items of one list. A blank line
+ *  would end the table, and trimming a nested item's indent would unnest it. */
 function sameLineKind(a: string, b: string): boolean {
   return (
     (TABLE_ROW.test(a) && TABLE_ROW.test(b)) ||
@@ -373,26 +317,18 @@ function sameLineKind(a: string, b: string): boolean {
   );
 }
 
-/** Whether the match covers its blocks entirely - nothing before or after
- *  it inside them. */
 function wholeBlock(match: MarkdownMatch): boolean {
   return match.prefix.trim() === "" && match.suffix.trim() === "";
 }
 
-/** Whether the matched markdown is one plain paragraph - not several
- *  blocks, and not a heading, list, table, quote, fence, math or HTML
- *  block, footnote or rule. */
+/** Whether the matched markdown is one plain paragraph. */
 function isParagraph(markdown: string): boolean {
   return !isBlockText(markdown) && !/^\s*(<|\$\$|\[\^|---)/.test(markdown);
 }
 
-/** Whether text inserted on the `edge` side of the match (its prefix or
- *  suffix) starts a block of its own: it is block content, the match is
- *  the whole block, or the match reaches the edge of a block no sentence
- *  carries on past. Only a paragraph goes on after its last sentence - a
- *  sentence glued onto a table's row turns into a cell (or, before the
- *  header row, dissolves the table), and onto a heading or the last list
- *  item it becomes part of them. */
+/** Whether text inserted on the `edge` side of the match starts a block of its
+ *  own. Only a paragraph carries on past its last sentence: glued onto a table
+ *  row it becomes a cell, onto a heading or list item it joins them. */
 function startsBlock(
   match: MarkdownMatch,
   text: string,
@@ -402,21 +338,16 @@ function startsBlock(
   return edge.trim() === "" && !isParagraph(match.markdown);
 }
 
-/** `text` without blank lines around it, but with its first line's
- *  indentation - a nested list item's indent is part of its meaning. */
+/** `text` without blank lines around it, keeping its first line's indent,
+ *  which carries a nested list item's meaning. */
 function trimLines(text: string): string {
   return text.replace(/^\s*\n/, "").replace(/\s+$/, "");
 }
 
 /**
- * The markdown those blocks should become - composed in markdown space, so
- * whatever formatting the prefix/suffix carried is preserved verbatim rather
- * than being re-derived from a lossy plain-text round trip.
- *
- * The kept text for insert actions is sliced out of the DOCUMENT's markdown
- * (what the match actually covered), not taken from the model's quote - a
- * whitespace-tolerant match means the two can differ, and the model's
- * version must never reformat what it was only inserting next to.
+ * The markdown those blocks should become, composed in markdown space so the
+ * prefix/suffix formatting is kept verbatim. Insert actions keep the
+ * document's matched text, never the model's quote, which may differ.
  */
 export function composeMarkdownEdit(
   match: MarkdownMatch,
@@ -432,12 +363,8 @@ export function composeMarkdownEdit(
     case "delete":
       middle = "";
       break;
-    // A new row or list item next to a whole row or item joins its table
-    // or list line by line. Otherwise a new block only where one belongs
-    // (startsBlock). Anything else is part of the sentence - always
-    // breaking out a paragraph turned "add 'in 2024' after 'the study'"
-    // into three paragraphs, and a sentence added after a paragraph's last
-    // sentence into a paragraph of its own.
+    // A new row or item next to a whole row or item joins line by line; a new
+    // block only where one belongs; anything else joins the sentence.
     case "insert_before": {
       const line = (matched + match.suffix).split("\n")[0];
       const lines = trimLines(text);

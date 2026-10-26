@@ -3,12 +3,9 @@ import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-// docs/design/design-language.md › Motion: only opacity and transform
-// move; colours may change; nothing animates a size, a position, a margin,
-// a shadow's geometry or a filter - those lay out or repaint the page on
-// every frame, and WebKitGTK drops frames doing it. Every stylesheet in
-// src/ is read here, its transitions and keyframes listed, and anything
-// else named below with the reason it may.
+// Only opacity and transform move, and colours may change; anything that
+// lays out or repaints each frame drops frames in WebKitGTK. Every stylesheet
+// in src/ is read here; exceptions are listed with their reason.
 
 const SRC = fileURLToPath(new URL("..", import.meta.url));
 
@@ -36,7 +33,7 @@ const ALLOWED = new Set([
 
 /** `file selector property`, and why. */
 const EXCEPTIONS: Record<string, string> = {
-  // A focus ring may change its shadow (design-language.md).
+  // A focus ring may change its shadow.
   "ai/chat/inline-chat.css :is(.agent-panel-body, .chat-window-body) .inline-chat-field box-shadow":
     "focus ring",
   // A small absolutely placed pill: its width lays out nothing else.

@@ -1,8 +1,6 @@
 /**
- * A code block's line numbers beside lines that wrap (#353): each number
- * as tall as its line, which may run onto several rows of the block. The
- * line's top is its first character's - a newline for an empty line - so
- * the text is measured as drawn, highlighting spans and all.
+ * A code block's line numbers beside lines that wrap: each number as tall as
+ * its line, measured from the line's first character as drawn.
  */
 
 /** Sets each number's height in `gutter` from the lines of `code`. */

@@ -49,9 +49,8 @@ fn workspace_root_defaults_to_the_documents_folder() {
 
 #[test]
 fn an_explicit_root_wins_over_the_documents_folder() {
-    // The whole point of the setting: sources and draft in different
-    // folders. Uses a directory guaranteed to exist, since resolve_root
-    // only honours an override that is really there.
+    // Sources and draft in different folders. Uses a directory that exists, since
+    // resolve_root only honours an override that is really there.
     let existing = std::env::temp_dir();
     assert_eq!(
         resolve_root(

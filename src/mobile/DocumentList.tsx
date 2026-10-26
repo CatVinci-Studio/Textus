@@ -22,15 +22,9 @@ import {
 import "./DocumentList.css";
 
 /**
- * The iPhone's list of documents: every document opened in Textus, newest
- * first (document/ios-recents.ts keeps the history). Tap one to open it; its
- * menu (the "..." button, or a long press) shares, renames, deletes or
- * forgets it. Documents in the app's own folder can be renamed and deleted;
- * one picked elsewhere in Files only granted access to the file itself, so
- * it can be opened, shared and dropped from the list.
- *
- * Laid out like the Files app: rows, or a grid of page thumbnails showing
- * each document's opening lines - the choice is remembered.
+ * The iPhone's list of documents opened in Textus, newest first, as rows or
+ * thumbnails. A document picked elsewhere in Files only granted access to the
+ * file itself, so it can't be renamed or deleted.
  */
 interface Entry {
   path: string;
@@ -79,10 +73,9 @@ export interface DocumentListProps {
   onOpenOther: () => void;
 }
 
-/** The recent documents, each with where it lives, when it changed and how
- *  it begins, loaded as the list opens and again by `reload`; and `seen`,
- *  the ones the list already showed - one that turns up later (a rename's
- *  new name) appears by itself, the first load just shows. */
+/** The recent documents with where each lives, when it changed and how it
+ *  begins; `seen` is what the list already showed, so a later arrival (a
+ *  rename's new name) appears by itself; the first load just shows. */
 function useRecentDocuments() {
   const [entries, setEntries] = useState<Entry[] | null>(null);
 
@@ -120,11 +113,11 @@ export function DocumentList({
 }: DocumentListProps) {
   const { t, settings } = useSettings();
   const [view, setView] = useState<View>(loadView);
-  // Rendered inside a Presence (App.tsx): it goes back down as it closes.
+  // Rendered inside a Presence: it goes back down as it closes.
   const presence = usePresenceProps<HTMLDivElement>();
 
-  // Switching between rows and tiles crossfades the body rather than
-  // moving each document from its row to its tile - too much at once.
+  // Switching between rows and tiles crossfades the body rather than moving
+  // each document.
   const bodyRef = useRef<HTMLDivElement>(null);
   const { entries, reload, seen } = useRecentDocuments();
   function switchView(next: View) {

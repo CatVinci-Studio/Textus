@@ -15,8 +15,7 @@ interface OutlineProps {
 const HEADINGS = ":scope > :is(h1, h2, h3, h4, h5, h6)";
 
 /** The index of the section being read in the active editor: the last
- *  top-level heading at or above a line a little below the scroller's top
- *  (where an outline jump lands one), or -1 above the first. */
+ *  top-level heading just below the scroller's top, or -1 above the first. */
 function currentHeading(): number {
   const scroller = document.querySelector(
     '[data-active-tab="true"] > .editor-scroll',
@@ -37,9 +36,7 @@ function currentHeading(): number {
 
 function scrollToHeading(index: number) {
   // Every tab's editor stays mounted, so scope to the active one. Top-level
-  // headings only: parseHeadings never counts one inside a quote or list
-  // (its line doesn't start with "#"), nor do h1-h6 inside a Quick Ask
-  // reply or a raw HTML preview belong to the document's outline.
+  // headings only, as parseHeadings counts them.
   const root = document.querySelector(
     '[data-active-tab="true"] .editor-content .ProseMirror',
   );
@@ -63,9 +60,8 @@ export function headingLabel(text: string): string {
 export function Outline({ content }: OutlineProps) {
   const { t } = useSettings();
   const headings = useMemo(() => {
-    // A heading is remembered as collapsed by level + text + which repeat
-    // of that pair it is, not by index: typing a new heading above it must
-    // not move the collapse onto a different section.
+    // Collapse is keyed by level + text + repeat, not index, so a new heading
+    // above doesn't move it.
     const seen = new Map<string, number>();
     return parseHeadings(content).map((h, index, all) => {
       const base = `${h.level}|${h.text}`;
@@ -83,8 +79,8 @@ export function Outline({ content }: OutlineProps) {
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const treeRef = useRef<HTMLDivElement>(null);
   const treeKeys = useTreeKeys(treeRef);
-  // The section being read is marked, following the scroll (any scroller:
-  // the event doesn't bubble, so it is caught on its way down).
+  // Follows any scroller: the event doesn't bubble, so it is caught on the
+  // way down.
   const [current, setCurrent] = useState(-1);
   useEffect(() => {
     let frame = 0;
@@ -125,9 +121,7 @@ export function Outline({ content }: OutlineProps) {
       return next;
     });
 
-  // A tree: each row a heading, the arrow keys fold and walk it
-  // (ui/useTreeKeys.ts), Enter goes to the heading. The chevron is the
-  // pointer's way to fold; the keyboard's is ← / →.
+  // A tree: arrow keys fold and walk it, Enter goes to the heading.
   return (
     <div
       className="file-tree"

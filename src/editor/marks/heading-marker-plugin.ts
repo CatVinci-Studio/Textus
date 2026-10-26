@@ -23,20 +23,15 @@ function buildDecorations(state: EditorState): DecorationSet {
 
     const from = pos;
     const to = pos + node.nodeSize;
-    // Content bounds, not the node's outer bounds - touching the boundary
-    // from outside (e.g. cursor just moved onto the next block) shouldn't
-    // count as "inside" the heading.
+    // Content bounds, not the node's: a cursor just moved onto the next block
+    // isn't inside the heading.
     const cursorInside = selection.from <= to - 1 && selection.to >= from + 1;
     if (!cursorInside) return;
 
     const level = (node.attrs.level as number) ?? 1;
-    // A real widget element, not a CSS ::before on the heading: WKWebView
-    // (the Tauri webview) draws the caret for "start of text that carries
-    // ::before content" visually BEFORE the generated prefix, so the cursor
-    // appeared to sit in front of the "#" instead of after it. A real
-    // element gives the caret an unambiguous DOM position on each side, and
-    // ProseMirror canonicalizes the caret to the content side of a
-    // side: -1 widget.
+    // A real widget, not ::before: WKWebView drew the caret in front of a
+    // generated "#" prefix. ProseMirror keeps the caret on the content side of a
+    // side -1 widget.
     decorations.push(
       Decoration.widget(from + 1, () => makeMarkerEl("#".repeat(level) + " "), {
         side: -1,
@@ -48,12 +43,8 @@ function buildDecorations(state: EditorState): DecorationSet {
   return DecorationSet.create(state.doc, decorations);
 }
 
-/**
- * Typora-style reveal: the "# "/"## " prefix for a heading only shows up
- * while the cursor is on that line, otherwise the heading renders as plain
- * large/bold text with no marker (which is how headings render regardless -
- * this only toggles the prefix, not the heading styling itself).
- */
+/** Typora-style reveal: a heading's "# " prefix shows only while the cursor
+ *  is on that line. */
 export const headingMarkerPlugin = $prose(
   () =>
     new Plugin<DecorationSet>({
@@ -72,9 +63,8 @@ export const headingMarkerPlugin = $prose(
         handleKeyDown(view, event) {
           if (isImeKeyEvent(view, event)) return false;
 
-          // Backspace at the start of a heading makes it body text, at any
-          // level, as in Typora - Milkdown's keymap stepped it down one
-          // level at a time (an H3 took three presses).
+          // Backspace at the start of a heading makes it body text at any level, as
+          // in Typora; Milkdown's keymap stepped it down one level at a time.
           if (
             event.key === "Backspace" &&
             !event.metaKey &&
@@ -96,12 +86,8 @@ export const headingMarkerPlugin = $prose(
             return true;
           }
 
-          // Cmd+Backspace (macOS "delete to beginning of line"): with the
-          // revealed "# " widget sitting at the line start, WebKit's native
-          // line-start computation stalls against the non-editable element
-          // (the same stall the ArrowLeft case below works around), so the
-          // deletion silently does nothing. Perform it on the document
-          // directly.
+          // Cmd+Backspace: WebKit's line-start computation stalls against the
+          // revealed "# " widget, so the deletion is done on the document directly.
           if (
             event.key === "Backspace" &&
             event.metaKey &&
@@ -127,10 +113,8 @@ export const headingMarkerPlugin = $prose(
           if (!empty) return false;
           if ($from.parent.type.name !== "heading" || $from.parentOffset !== 0)
             return false;
-          // The revealed "# " prefix is a non-editable widget sitting between
-          // the caret and the start of the line, so native Left-arrow has no
-          // real text to move onto and stalls there. Hop to the end of the
-          // previous block explicitly.
+          // The "# " widget leaves native Left nothing to move onto, so hop to the end
+          // of the previous block explicitly.
           const target = Selection.near(
             state.doc.resolve($from.before($from.depth)),
             -1,

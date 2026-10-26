@@ -1,11 +1,6 @@
-//! The documents the agent matrix works on - the ones in docs/*.md are
-//! byte-exact copies of what the editor shows the model (src/editor/
-//! eval-docs.test.ts round-trips each through the real editor: `*`
-//! bullets, padded tables, no trailing newline). One short report written in
-//! every matrix language (same facts, same shape: title, intro, a wordy
-//! Method paragraph to tighten, Findings with numbers to keep, a one-line
-//! next step), a Chinese/English tech write-up for mixed text, and one
-//! document carrying every Markdown construct the editor supports.
+//! The documents the agent matrix works on, byte-exact copies of what the
+//! editor shows the model: one short report in every matrix language, a mixed
+//! Chinese/English write-up, and one carrying every Markdown construct.
 
 use super::checks::Lang;
 
@@ -107,9 +102,8 @@ pub fn para(doc: &str, n: usize) -> &str {
         .expect("paragraph exists")
 }
 
-/// Every construct the editor round-trips: front matter, an alert, a table,
-/// a task list, nested lists, inline and block math, a footnote, a link and
-/// an image, fenced Python with a bug in it, Mermaid, and raw HTML.
+/// Every construct the editor round-trips, from front matter and alerts to
+/// math, footnotes, Mermaid and raw HTML.
 pub const RICH_DOC: &str = include_str!("docs/rich.md");
 
 /// A Chinese counterpart for the structures most often edited in place.
@@ -118,8 +112,8 @@ pub const RICH_DOC_ZH: &str = include_str!("docs/rich-zh.md");
 /// Japanese task list for checking items off in place.
 pub const TASKS_DOC_JA: &str = include_str!("docs/tasks-ja.md");
 
-// Everyday writing, Chinese and English: what people actually open the
-// assistant on. Each is in the editor's own Markdown form (see the top).
+// Everyday writing, Chinese and English, each in the editor's own Markdown
+// form.
 pub const EMAIL_EN: &str = include_str!("docs/email-en.md");
 pub const EMAIL_ZH: &str = include_str!("docs/email-zh.md");
 pub const WEEKLY_ZH: &str = include_str!("docs/weekly-zh.md");
@@ -148,10 +142,8 @@ pub const BETA_EN: &str = include_str!("docs/beta-en.md");
 pub const MOVING_ZH: &str = include_str!("docs/moving-zh.md");
 pub const MOVING_EN: &str = include_str!("docs/moving-en.md");
 
-/// About 42k characters of Chinese - just past the 40k full-document limit,
-/// so the model sees an outline and the start and end, and has to read
-/// chapter 7 to edit or quote its second paragraph (a hand-written one;
-/// the rest is generated survey prose).
+/// About 42k characters of Chinese, just past the full-document limit, so the
+/// model has to read chapter 7 to edit or quote its second paragraph.
 pub fn long_doc_zh() -> String {
     let chapters = [
         "背景",
@@ -199,9 +191,8 @@ pub fn long_doc_zh() -> String {
     doc.trim_end().to_string()
 }
 
-/// The first eight chapters of long_doc_zh: about 28,000 characters, which
-/// used to be embedded whole and is now past the full-document limit in
-/// token-like units (agent::FULL_DOCUMENT_LIMIT).
+/// The first eight chapters of long_doc_zh: about 28,000 characters, past the
+/// full-document limit in char units.
 pub fn mid_doc_zh() -> String {
     let doc = long_doc_zh();
     let end = doc.find("## 第九章").expect("chapter 9");

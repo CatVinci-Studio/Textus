@@ -23,18 +23,13 @@ import {
 const TABS = extensionsTabs();
 
 /**
- * Settings › Extensions: everything added to Textus, one tab each -
- * themes (the theme gallery), plugins (the textus-plugins catalog), skills
- * (the built-ins, five on to start with, and the user's own), and MCP
- * servers. Every tab is laid out alike (ExtensionsTabLayout): what it
- * holds in a line, Get more and "⋯", what is installed, Advanced. Get more
- * (MarketPage) is where everything not installed yet is. Desktop only, as
- * plugins are.
+ * Settings › Extensions: themes, plugins, skills and MCP servers, a tab
+ * each, all laid out alike. Get more is where everything not installed yet
+ * is. Desktop only, as plugins are.
  */
 export function ExtensionsPage(props: SettingsPageProps) {
   const { t, onOpenFile, onFilesDeleted, onClose } = props;
   const [tab, setTabState] = useState<ExtensionsTab>(extensionsStartTab);
-  // Get more, opened on a kind.
   const [market, setMarket] = useState<MarketKind | null>(null);
   const [skillError, setSkillError] = useState<string | null>(null);
   const setTab = (next: ExtensionsTab) => {

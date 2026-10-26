@@ -12,11 +12,8 @@ pub(super) const EDIT_PROPOSED: &str = "Edit proposed";
 /// one: the original stays in it, and the new one is the picture tool's.
 const PICTURE_KEPT_NOTE: &str = " A picture of the document you rewrote is kept as it was in it: text edits never change a picture. To change that picture, call generate_image with its block, in this reply.";
 
-/// The edit operations the frontend knows how to apply. Kept in sync with
-/// `EditAction` in src/ai/types.ts - adding one here without teaching
-/// the frontend (usePendingEdits.ts, which resolves proposals, and
-/// apply-edit.ts, which writes them) about it produces proposals that validate but
-/// can't be applied.
+/// The edit operations the frontend knows how to apply. Keep in step with the
+/// frontend's `EditAction`, or proposals validate but can't be applied.
 pub(crate) const EDIT_ACTIONS: [&str; 7] = [
     "replace",
     "replace_selection",
@@ -28,9 +25,8 @@ pub(crate) const EDIT_ACTIONS: [&str; 7] = [
 ];
 
 pub(super) fn needs_anchor(action: &str) -> bool {
-    // replace_selection targets the user's captured selection, so there is
-    // no anchor to locate (and the selection may not be unique in the
-    // document anyway - that's the point of having the action).
+    // replace_selection targets the user's captured selection, so there is no
+    // anchor to locate (and the selection may not be unique in the document).
     action != "append" && action != "replace_selection" && action != "insert_at_cursor"
 }
 
@@ -38,12 +34,9 @@ pub(super) fn needs_text(action: &str) -> bool {
     action != "delete"
 }
 
-/// Doesn't modify anything itself - the document only ever changes through
-/// the user clicking Apply in the frontend. This validates the proposal
-/// against the same rules the frontend applies with (known action, required
-/// fields present, the blocks it names there - doc_blocks::check_target) so
-/// the model gets immediate feedback instead of the user getting a dead
-/// Apply button.
+/// Changes nothing itself: the document only changes when the user accepts.
+/// Validates the proposal by the frontend's rules, so the model gets feedback
+/// instead of the user getting a dead Apply button.
 pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     let parsed: serde_json::Value = match serde_json::from_str(arguments) {
         Ok(v) => v,
@@ -57,19 +50,14 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         );
     }
 
-    // What the edit is about: what its blocks name (agent::settle has
-    // filled that in for a call from the model), else the words it quotes.
+    // What the edit is about: what its blocks name, else the words it quotes.
     let anchor = match ctx.document.target_span(&parsed) {
         Some((from, to)) => &ctx.document.text[from..to],
         None => parsed.get("anchor").and_then(|v| v.as_str()).unwrap_or(""),
     };
-    // A block it names that isn't there (from before a change, mistyped):
-    // said as that, before anything the missing target would make it
-    // look like. Words its block doesn't hold that text proposed and not
-    // decided yet does - a rewrite of that very block, quoted as written -
-    // go into that proposal, as words quoted without a block do (Haiku
-    // named the block of the paragraph it had rewritten, live_eval::
-    // continuing).
+    // A block it names that isn't there is said as that. Words its block doesn't
+    // hold but undecided proposed text does (a rewrite of that block, quoted as
+    // written) go into that proposal.
     let mut quote_joins = false;
     if needs_anchor(action) && parsed.get("block").is_some() {
         if let Err(problem) = crate::ai::doc_blocks::check_target(ctx.document, &parsed) {
@@ -110,12 +98,9 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
             .iter()
             .find(|edit| !edit.replaced.is_empty() && edit.replaced.contains(anchor))
         {
-            // Document text an undecided rewrite replaces: the user sees the
-            // rewrite there, and an edit of the old text would overlap it
-            // (Sonnet anchored a word of the original after a rewrite of
-            // the paragraph, live_eval::continuing). Where the rewrite still
-            // has those words the edit goes into it, and a new version of
-            // the whole passage takes its place.
+            // Document text an undecided rewrite replaces: the user sees the rewrite
+            // there. Where the rewrite still has those words the edit goes into it, and
+            // a new version of the whole passage takes its place.
             again = action == "replace" && anchor == rewrite.replaced;
             if !again {
                 if rewrite.text.matches(anchor).count() != 1 || !quotes_undecided(ctx, anchor) {
@@ -126,12 +111,8 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         }
     }
 
-    // On later requests the frontend appends a bracketed status note to this
-    // result (accepted / rejected / still undecided) - see
-    // annotateProposalStatuses in src/ai/revision/proposal-status.ts. The size of
-    // the change is measured here so the reply can rest on it: replies
-    // called a 20% cut "about 70% of the original" and an expansion that
-    // shrank "expanded into two paragraphs" (docs/design/ai-eval.md, round 2).
+    // The frontend later appends a status note to this result. The size of the
+    // change is measured here so the reply can rest on it instead of guessing.
     let text = parsed.get("text").and_then(|v| v.as_str()).unwrap_or("");
     if let Some(problem) = degenerate_replacement(action, anchor, text) {
         // Refused once; the identical call again means it ("replace this
@@ -143,10 +124,8 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
             return problem;
         }
     }
-    // A second proposal for a passage this reply already changes: the two
-    // previews overlap and only one can ever be applied. Sonnet sent the
-    // same French proofreading twice in one step (round 4); the first
-    // stands, the copy is refused (and never shown - see proposal-status.ts).
+    // A second proposal for a passage this reply already changes: only one could
+    // ever be applied, so the first stands and the copy is refused.
     if !joins && matches!(action, "replace" | "delete" | "replace_selection") {
         let passage = match action {
             "replace_selection" => ProposedPassage::selection(),
@@ -174,10 +153,8 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
             format!(" It adds {n} {unit}.")
         }
     };
-    // "Even if it falls short": told the size, the model sent a second,
-    // shorter proposal for the same passage to meet a skill's 70% - two
-    // overlapping previews, of which only one can be applied (round-2
-    // integration, skill/zh/slash).
+    // "Even if it falls short": told the size, the model sent a second, shorter
+    // overlapping proposal to meet a target.
     let mut unmade = String::new();
     if !text.is_empty() {
         let mut ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
@@ -188,11 +165,9 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         unmade = ledger.take_unmade().unwrap_or_default();
         unmade.push_str(&ledger.pictures_placed(text));
     }
-    // A rewrite that swapped a picture keeps the original
-    // (doc_blocks::keep_pictures): the swap is generate_image's. One that
-    // kept its pictures says so too, with their ids: told only to redo a
-    // picture with generate_image, a model that rewrote the text around it
-    // said it had changed the picture and stopped (1.2.1, GPT-6.1 Sol).
+    // A rewrite that swapped a picture keeps the original: the swap is
+    // generate_image's. One that kept its pictures says so too, with their ids,
+    // or the model thought the picture already changed.
     if parsed
         .get(crate::ai::doc_blocks::PICTURES_KEPT_KEY)
         .is_some()
@@ -240,11 +215,8 @@ fn quotes_undecided(ctx: &ToolContext, anchor: &str) -> bool {
 }
 
 /// How long a stretch of text is, in the unit its language counts in:
-/// characters for Chinese and Japanese, words otherwise - counted exactly
-/// as measure_text's `chars` and `words` do. The note used to count only
-/// ideographs while measure_text counted punctuation too, and a reply told
-/// the user the two counts disagreed and to count again themselves
-/// (round 4, social/zh/shorten-100).
+/// characters for Chinese and Japanese, words otherwise, exactly as
+/// measure_text counts.
 pub(super) fn text_size(text: &str) -> (usize, &'static str) {
     // A picture's line is no part of the text's length.
     let without_pictures: String = text
@@ -275,15 +247,9 @@ pub(super) fn is_cjk_char(c: char) -> bool {
     matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}' | '\u{ac00}'..='\u{d7af}')
 }
 
-/// A replacement that can't be what the model meant: a whole clause of
-/// Chinese, Japanese or Korean replaced by one short Latin token. Sonnet
-/// once sent `"text": "due"` for a 26-character apology in a formal email
-/// and, told the proposal stood, could only ask the user to reject it
-/// (round 4, email/zh/formal). No translation or rewrite of a clause comes
-/// out as a single short token, so the call is refused before it becomes
-/// a proposal (the frontend drops refused calls too) and the model resends.
-/// A user can still ask for exactly that ("replace the sentence with
-/// TBD"): the identical call sent a second time goes through.
+/// A replacement that can't be what the model meant: a whole CJK clause
+/// replaced by one short Latin token. Refused so the model resends; the
+/// identical call sent again goes through ("replace the sentence with TBD").
 pub(super) fn degenerate_replacement(action: &str, anchor: &str, text: &str) -> Option<String> {
     if action != "replace" {
         return None;
@@ -299,11 +265,8 @@ pub(super) fn degenerate_replacement(action: &str, anchor: &str, text: &str) -> 
     })
 }
 
-/// One character's plain form: typographic quotes, dash variants,
-/// full-width ASCII and non-breaking spaces fold to their plain ASCII
-/// equivalents - the usual differences between two writings of the same
-/// text (the grammar check's, a memory file's name). One char in, one char
-/// out, so positions stay aligned.
+/// One character's plain form: typographic quotes, dashes, full-width ASCII and
+/// non-breaking spaces folded to ASCII. One char in, one out, so positions align.
 pub(crate) fn normalize_char(c: char) -> char {
     match c {
         '\u{2018}' | '\u{2019}' | '\u{201A}' | '\u{2032}' => '\'',

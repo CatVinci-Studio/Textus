@@ -1,6 +1,4 @@
-//! Korean rules (CATALOGUE.md §3.6), from 한글 맞춤법 and 문장 부호. Never
-//! flagged: a comma after a connective ending, `3 개` (allowed spacing),
-//! `...` and `…`, `(?)`, thousands commas, `“…” 하고`. Dependent-noun and
+//! Korean rules, from 한글 맞춤법 and 문장 부호. Dependent-noun and
 //! auxiliary-verb spacing needs morphology and is left to the model.
 
 use super::stats::minority;

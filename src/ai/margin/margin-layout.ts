@@ -6,15 +6,12 @@ import { flip } from "../../ui/flip";
 import { marginRoom } from "./margin-room";
 import "./ReviewMargin.css";
 
-/**
- * Where the margin goes and its cards stand (ReviewMargin.tsx): the room
- * beside the text, the column moved aside to make it, each card level
- * with its passage and stacked clear of the one above.
- */
+/** Where the margin goes and its cards stand, each level with its passage
+ *  and stacked clear of the one above. */
 
 export interface ReviewMarginLabels {
   reviewNoteBy: string;
-  /** "{n} notes": a run of them as one chip (MarginGroup). */
+  /** "{n} notes": a run of them as one chip. */
   reviewGroupNotes: string;
   /** A note's box while picking on the notes bar. */
   reviewNotesPickOne: string;
@@ -22,7 +19,7 @@ export interface ReviewMarginLabels {
   proposalChangeCount: string;
   reviewNoteAsk: string;
   reviewNoteDone: string;
-  /** An own note's mark, by-line and actions (useOwnNotes). */
+  /** An own note's mark, by-line and actions. */
   ownNoteMark: string;
   ownNoteBy: string;
   ownNoteEdit: string;
@@ -58,9 +55,8 @@ export type MarginItem =
       to: number;
       after: string;
       before: string;
-      /** Which side the card shows: the replacement ("original": the
-       *  original stays in the text) or what it replaces ("new": the result
-       *  is in the text - Result only, or the writer's own tracked change). */
+      /** Which side stays in the text: "original" (the card shows the
+       *  replacement) or "new" (the card shows what it replaces). */
       shows: "original" | "new";
       take: boolean | null;
       /** Its rewrite is still streaming in: shown, not decided yet. */
@@ -71,8 +67,8 @@ export const STACK_GAP = 8;
 /** How far a card can be pushed down by the ones above it and still draw
  *  its line at full strength. */
 export const LINE_DRIFT = 20;
-/** A chip's height (.review-note-chip): the card's heading and one line
- *  of its text under it. */
+/** A chip's height: the card's heading and one line of its text. Keep in
+ *  step with .review-note-chip. */
 export const CHIP_HEIGHT = 35;
 /** The least room a cut card is given - its heading and a line; with less,
  *  it is a chip. */
@@ -89,13 +85,13 @@ export interface Placed {
   top: number;
   /** How far the cards above pushed it below its passage. */
   drift: number;
-  /** The height it is cut to beside its passage (stackCards), or null
-   *  for the whole card. */
+  /** The height it is cut to beside its passage, or null for the whole
+   *  card. */
   cut: number | null;
   /** Cut to one line: a chip. */
   chip: boolean;
-  /** The key of the run's first card when the run shows as one chip (a
-   *  group, MarginGroup), all its cards at the group's place; else null. */
+  /** The key of the run's first card when the run shows as one chip, all
+   *  its cards at the group's place; else null. */
   group: string | null;
   /** The top-level block its passage is in: a group is a paragraph's. */
   block?: number;
@@ -119,10 +115,9 @@ export function measureRoom(
   );
 }
 
-/** Puts the text column's left edge at `marginLeft` ("" for its own,
- *  centred) at once, and glides it there on its transform (ui/flip.ts): a
- *  margin-left transition laid the whole document out again on every
- *  frame. */
+/** Sets the column's left edge to `marginLeft` ("" for centred) at once and
+ *  glides it there on its transform, as a margin-left transition would lay
+ *  the document out on every frame. */
 export function placeColumn(contentEl: HTMLElement, marginLeft: string) {
   if (contentEl.style.marginLeft === marginLeft) return;
   flip(
@@ -134,22 +129,9 @@ export function placeColumn(contentEl: HTMLElement, marginLeft: string) {
   );
 }
 
-/**
- * Stacks the cards downward, each level with its passage (`top`) or just
- * below the one above. A run of cards that push each other - many notes,
- * or many changed sentences, in one paragraph - drifted ever further from
- * their passages as whole cards, down beside other paragraphs and past the
- * text's end. In such a run each card is cut to the room beside its own
- * passage, down to where the next one's starts: a paragraph's rewrite keeps
- * about its paragraph's height, notes on adjacent lines a line each (a
- * chip). A cut card opens whole over the ones below (ReviewMargin), so
- * opening one moves nothing. Where even chips run far below their lines -
- * more notes than the paragraph has lines - each paragraph's cards in the
- * run are one chip, which opens to a list of them (a paragraph with one
- * card, a chip of its own). Grouped as one run, forty notes over a page
- * were one chip beside the first paragraph (1.2.1). `heightOf` is a card's
- * whole height.
- */
+/** Stacks the cards downward, each level with its passage or below the one
+ *  above. A crowded run is cut to the room beside each passage, and where even
+ *  chips drift too far, each paragraph's cards become one chip. */
 export function stackCards(
   placed: Placed[],
   heightOf: (key: string) => number,
@@ -157,9 +139,8 @@ export function stackCards(
   placed.sort((a, b) => a.top - b.top);
   const want = placed.map((p) => p.top);
   let floor = -Infinity;
-  // One run from `start`: the cards that push each other whole - cut, the
-  // same cards (`end`), so a crowded paragraph doesn't end on one whole
-  // card. Where it ends, and the floor under it.
+  // One run from `start` of cards that push each other; `end` keeps the same
+  // cards when cut, so a crowded paragraph doesn't end on one whole card.
   const lay = (start: number, end?: number) => {
     let below = floor;
     let i = start;
@@ -216,9 +197,8 @@ export function stackCards(
 
 export type Layout = { left: number; placed: Placed[] };
 
-/** Whether a measure found everything where it already was: the cards
- *  aren't drawn again then. A streaming rewrite re-measures on every frame
- *  it changes the text, and drew every card again each time. */
+/** Whether a measure found everything where it already was, so the cards
+ *  aren't drawn again on every streaming frame. */
 export function sameLayout(a: Layout | null, b: Layout): boolean {
   return (
     a !== null &&
@@ -279,12 +259,8 @@ export function useMarginRoom(
   return noMargin;
 }
 
-/**
- * The card a click selected (useReviewNotes) - a cut one opened whole over
- * the ones below - until a click elsewhere or Escape. Opened by the pointer
- * passing over it, a cut card covered the very cards the pointer went on
- * to, and they could not be reached.
- */
+/** The card a click selected, until a click elsewhere or Escape. Not opened
+ *  on hover, or a cut card would cover the cards the pointer goes on to. */
 export function useOpenedCard<T>() {
   const [opened, setOpened] = useState<T | null>(null);
   useEffect(() => {

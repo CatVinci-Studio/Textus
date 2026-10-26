@@ -1,15 +1,6 @@
-//! Which channel installed this build, fixed at compile time through the
-//! TEXTUS_DISTRIBUTION environment variable:
-//!
-//!   direct    (default) GitHub Release installers - the in-app updater owns
-//!             upgrades
-//!   homebrew  a Homebrew package
-//!   aur       the textus-bin AUR package
-//!
-//! For every channel except `direct` a package manager owns the installed
-//! files. If the app replaces them itself, the package manager's records
-//! no longer match the disk, so the frontend only reports a new version
-//! there and does not install it.
+//! Which channel installed this build, set at compile time by
+//! TEXTUS_DISTRIBUTION (`direct` default, `homebrew`, `aur`). Outside `direct`
+//! a package manager owns the files, so the app only reports new versions.
 
 const DISTRIBUTION: &str = match option_env!("TEXTUS_DISTRIBUTION") {
     Some(value) => value,

@@ -1,13 +1,6 @@
 //! EPUB to Markdown: the book's title and authors, then every chapter in
-//! reading order, each through the HTML converter.
-//!
-//! An EPUB is a zip of XHTML. Which file is the package (`content.opf`) is
-//! named in META-INF/container.xml; the package's manifest maps ids to
-//! files and its spine lists them in reading order. This is MarkItDown's
-//! reading (github.com/microsoft/markitdown, MIT; converters/
-//! _epub_converter.py), including resolving a manifest href both
-//! percent-decoded and as written, since producers disagree on which the
-//! zip entry is named.
+//! reading order through the HTML converter. A manifest href is tried both
+//! percent-decoded and as written, since producers disagree.
 
 use super::html::html_to_markdown;
 use super::xml::{resolve_part, zip_entry, Node, Pull};

@@ -2,10 +2,9 @@ import { plugins as pluginsIpc } from "../../platform/ipc";
 import { pluginsSnapshot } from "./plugin-records";
 
 /**
- * What plugins keep for one document (ctx.storage.document(path)): a key
- * `doc:<path>` in the plugin's global store, so it goes with the plugin
- * and not with the folder. A document renamed or moved takes it along -
- * a folder, its documents' - for every installed plugin.
+ * What plugins keep for one document: a `doc:<path>` key in the plugin's
+ * global store, so it goes with the plugin, not the folder. A rename or move
+ * takes it along for every installed plugin.
  */
 export const DOCUMENT_KEY_PREFIX = "doc:";
 

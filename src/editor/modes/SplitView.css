@@ -1,4 +1,4 @@
-/* Split view (SplitView.tsx): source | preview, each scrolling on its own. */
+/* Split view: source | preview, each scrolling on its own. */
 .split-view {
   flex: 1;
   min-height: 0;
@@ -30,9 +30,8 @@
   padding: 2.5rem 1.75rem 6rem;
 }
 
-/* Not ProseMirror content, just styled like it: the editor's base sheet
-   sets white-space: break-spaces on .ProseMirror, which rendered the
-   newlines between the preview's blocks as blank lines. */
+/* Not ProseMirror content, just styled like it: the base sheet's
+   white-space: break-spaces drew the blocks' newlines as blank lines. */
 .split-preview .split-preview-body {
   outline: none;
   white-space: normal;
@@ -43,8 +42,7 @@
   max-width: 100%;
 }
 
-/* The editor frames a code block with code-block-language-view.ts's
-   wrapper; the preview's plain <pre> gets the same box. */
+/* The preview's plain <pre> gets the editor's code-block box. */
 .split-preview-body pre {
   background: var(--editor-code-bg);
   border: 1px solid var(--editor-border);

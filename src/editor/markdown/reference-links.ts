@@ -3,17 +3,9 @@ import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import type { Literal } from "mdast";
 
 /**
- * Reference links, `[text][ref]` with a `[ref]: url` definition elsewhere.
- * Milkdown's remarkInlineLinkPlugin (left out, reduced-presets.ts) turned
- * each into an inline link and deleted the definitions, so a file written
- * with references lost them on its first save.
- *
- * Here a reference is read as an ordinary link (or image) to the URL its
- * definition gives - it shows and opens like one - remembering how it was
- * written, and is written back as that reference while its URL and title
- * are the definition's. A definition is kept as its source text, shown as
- * written, like raw HTML (html/raw-html-schema.ts), and written back as it
- * is.
+ * Reference links, `[text][ref]` with a `[ref]: url` definition: read as an
+ * ordinary link to the definition's URL and written back as the reference
+ * while it still says the same. A definition is kept as its source text.
  */
 
 declare module "mdast" {
@@ -30,15 +22,15 @@ export interface LinkDefinition extends Literal {
   type: "linkDefinition";
 }
 
-/** How a reference was written, kept on the link mark or image node (as
- *  JSON, in a `reference` attr) to write it back. */
+/** How a reference was written, kept on the link mark or image node to
+ *  write it back. */
 export interface LinkReference {
   /** `[text][ref]`, `[ref][]` or `[ref]`. */
   type: "full" | "collapsed" | "shortcut";
   /** The label as written. */
   label: string;
-  /** What the definition said: written back as a reference only while
-   *  the link still says it. */
+  /** What the definition said: written back as a reference only while the
+   *  link still says it. */
   url: string;
   title: string;
 }
@@ -84,9 +76,8 @@ interface DefinitionNode {
   };
 }
 
-/** A definition's source: the file's own text when it is on one line;
- *  otherwise (one inside a quote carries its `>` markers on every line)
- *  written out again. */
+/** A definition's source: the file's own text when on one line, otherwise
+ *  (inside a quote, with `>` markers) written out again. */
 function definitionSource(node: DefinitionNode, file: string): string {
   const { position } = node;
   const start = position?.start.offset;
@@ -196,8 +187,7 @@ export const linkDefinitionSchema = $nodeSchema("link_definition", () => ({
   },
   toMarkdown: {
     match: (node) => node.type.name === "link_definition",
-    // Written as it reads, as raw HTML is: `html` is the mdast node whose
-    // value goes out verbatim.
+    // `html` is the mdast node whose value goes out verbatim.
     runner: (state, node) => {
       state.addNode("html", undefined, node.textContent);
     },

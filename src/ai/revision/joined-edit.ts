@@ -2,13 +2,8 @@ import type { EditProposal } from "../types";
 import { joinedText } from "./generated-images";
 import { isPicture } from "./markdown-forms";
 
-/**
- * An edit whose anchor is in text proposed and not decided yet - text the
- * user sees but the document doesn't have (src-tauri tools.rs lets it
- * through): the proposal's text with the edit made in it, or null when the
- * edit isn't one that can go into text this way (an append, the cursor's,
- * the selection's) or its anchor isn't there exactly once.
- */
+/** An edit anchored in undecided proposed text, made in that text. Null for
+ *  appends, cursor or selection edits, or an anchor not found exactly once. */
 export function editedText(text: string, edit: EditProposal): string | null {
   const anchor = edit.anchor ?? "";
   const at = anchor ? text.indexOf(anchor) : -1;
@@ -56,14 +51,8 @@ function tidy(text: string): string {
   return text.replace(/\n{3,}/g, "\n\n").replace(/^\n+|\n+$/g, "");
 }
 
-/**
- * A picture not accepted yet, standing after (or before) a paragraph that
- * an accepted rewrite replaced - `oldText` with `newText`, which left the
- * picture out: put by the paragraph of the new text in the same place, the
- * nth paragraph for the nth (the last, if the new text has fewer), named
- * by that paragraph's block among `blocks` (the document now). Null when
- * the picture's paragraph wasn't in the rewritten text, or isn't a block.
- */
+/** A pending picture whose paragraph an accepted rewrite replaced, moved to
+ *  the new text's nth paragraph (or its last). Null when there's none. */
 export function reanchoredPicture(
   picture: EditProposal,
   oldText: string,

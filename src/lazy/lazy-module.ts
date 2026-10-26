@@ -1,12 +1,6 @@
-// One way for every heavy part of the app to load: declared where it is
-// used, loaded the first time it is needed. Plugins work this way already -
-// a plugin's commands, menus and tabs are known from its manifest, and its
-// code starts on first use (plugins/host/broker.ts) - and the app's own heavy
-// parts follow the same rule: mermaid and KaTeX when a document has a
-// diagram or formula, a language's strings when the UI is in it, Settings
-// and the AI panel when they are opened. A part likely to be opened soon is
-// "warm": it loads in the background once the window is idle, so the first
-// open doesn't wait, and it stays out of the startup bundle either way.
+// Every heavy part of the app loads the first time it is needed (mermaid,
+// KaTeX, a language's strings, Settings). A "warm" part loads in the
+// background once the window is idle, so its first open doesn't wait.
 
 export interface LazyModule<T> {
   readonly name: string;
@@ -15,8 +9,8 @@ export interface LazyModule<T> {
   load(): Promise<T>;
   /** The module if it has loaded, for code that can go without it. */
   peek(): T | undefined;
-  /** Forgets this module (a plugin turned off): it leaves loadedModules,
-   *  and a later lazyModule under its name starts afresh. */
+  /** Forgets this module (a plugin turned off), so a later lazyModule under its
+   *  name starts afresh. */
   drop(): void;
 }
 
@@ -28,8 +22,8 @@ interface Entry {
 
 const entries = new Map<string, Entry>();
 
-/** Declares a part of the app that loads on first use. `name` identifies
- *  it in loadedModules (e2e and the startup budget read that). */
+/** Declares a part of the app that loads on first use. `name` identifies it
+ *  in loadedModules, which e2e and the startup budget read. */
 export function lazyModule<T>(
   name: string,
   loader: () => Promise<T>,
@@ -75,7 +69,7 @@ export function loadedModules(): string[] {
     .map((entry) => entry.module.name);
 }
 
-// For e2e/lazy-loading.spec.ts: what a development build has loaded.
+// For e2e: what a development build has loaded.
 if (import.meta.env?.DEV)
   (globalThis as { __loadedModules?: () => string[] }).__loadedModules =
     loadedModules;
@@ -84,7 +78,7 @@ let warming = false;
 let scheduled = false;
 
 /** From now on, warm parts load one at a time whenever the window is idle.
- *  Called once the first document has painted (main.tsx). */
+ *  Called once the first document has painted. */
 export function startWarming(): void {
   warming = true;
   scheduleWarm();

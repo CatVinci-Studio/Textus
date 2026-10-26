@@ -23,8 +23,8 @@ describe("landingEnds", () => {
     expect(landingEnds("- one\n- tw", 0, false, false)).toEqual([6]);
   });
 
-  // A table is held whole until the next block: e2e (the editor's parser
-  // tells a table, and only the app has one).
+  // A table is held whole until the next block: covered end to end, since
+  // only the app's editor parser tells a table.
 
   it("lands writing with no stops a paragraph at a time, never half of one on a pause", () => {
     const text = "สวัสดีครับ วันนี้อากาศดี";

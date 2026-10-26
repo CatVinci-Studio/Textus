@@ -11,9 +11,7 @@ pub(crate) use completion::*;
 pub(crate) use grammar::*;
 
 /// `model` overrides the provider's default model; inline completion always
-/// passes `None`, only the agent chat path sets it. Dispatches by dialect -
-/// see `catalog::PROVIDER_CATALOG` for which id speaks which dialect, and
-/// `ai::route` for how a provider resolves to actual credentials.
+/// passes `None`. Dispatches by dialect.
 pub(crate) async fn call(
     app: &AppHandle,
     provider: &str,
@@ -67,9 +65,8 @@ pub(crate) async fn call(
     }
 }
 
-/// Live model list for the agent model picker in Settings. "custom" isn't
-/// handled here - it already has fetch_custom_models, which also lets the
-/// frontend try before saving a config.
+/// Live model list for the agent model picker in Settings. "custom" has
+/// fetch_custom_models instead.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<String>, String> {
@@ -86,9 +83,8 @@ pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<
             let auth = route::resolve_anthropic_auth(&app).await?;
             anthropic::list_models(&auth).await
         }
-        // OAuth (Codex) tokens 403 on GET /v1/models ("Missing scopes:
-        // api.model.read", a Console/API-key permission Codex tokens don't
-        // have) - only the API-key path can list.
+        // OAuth (Codex) tokens 403 on GET /v1/models (missing api.model.read):
+        // only the API-key path can list.
         "openai-responses" => {
             let key = crate::auth::keys::load_provider_key(&app, "openai")?
                 .ok_or_else(|| NOT_CONFIGURED.to_string())?;
@@ -108,10 +104,9 @@ pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<
     }
 }
 
-/// Mirrors the frontend's proxy setting into aicompat's shared HTTP client.
-/// Settings live in the frontend's localStorage, which Rust can't read (same
-/// mirroring precedent as commands::prefs), so the frontend re-sends this on
-/// startup and on every change. Rejects unparseable proxy URLs.
+/// Mirrors the frontend's proxy setting into aicompat's shared HTTP client:
+/// Rust can't read localStorage, so the frontend re-sends it on startup and on
+/// every change. Rejects unparseable proxy URLs.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn set_ai_proxy(proxy: Option<String>) -> Result<(), String> {

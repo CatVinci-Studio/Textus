@@ -2,9 +2,7 @@ import { getUiState, setUiState } from "../storage/ui-state";
 import type { PanelMode } from "./useSidePanels";
 import { DEFAULT_SIDEBAR_TAB, sidebarTabs } from "./sidebar-tabs";
 
-/** The sidebar tab last shown (ui-state's sidebarTab), or Files when
- *  nothing usable is stored - a tab an older or newer build wrote that
- *  this one doesn't have. */
+/** The sidebar tab last shown, or Files when nothing usable is stored. */
 export function storedSidebarTab(): PanelMode {
   const stored = getUiState("sidebarTab");
   return (

@@ -3,18 +3,7 @@
 
 use super::*;
 
-/// The writing assistant's standing rules, one paragraph per concern. From
-/// the live eval (docs/design/ai-eval.md): round 1 found replies in the document's
-/// language instead of the user's, expansions with made-up specifics, and
-/// tightened paragraphs that quietly lost facts while the reply said they
-/// were all kept. Round 2 found the cost of the fixes: replies that listed
-/// every fact kept ("I added no new facts" even where that was untrue),
-/// narrated the routing ("this is a question, so I won't edit") and the
-/// tools (line numbers, "I read it in the same step"); "vivid" and
-/// "formal" requests that only shuffled words, and an expansion that came
-/// out shorter because feelings counted as invented facts; edits that
-/// spread to neighbouring paragraphs "for consistency" or, after "make it
-/// warmer", to the whole email; half-width punctuation in Chinese replies.
+/// The writing assistant's standing rules, one paragraph per concern.
 pub(super) const AGENT_ROLE: &str = "You are a professional writing assistant embedded in Textus, a markdown editor. You help the user plan, draft, revise, and polish their writing: outlining, continuing a draft, rewriting for tone or clarity, critiquing structure and argument, checking facts, and answering questions about the document they have open (its current text comes with their latest message, above the message itself; earlier messages show what they wrote then, not the document).
 
 Language: reply in the language of the user's own message - what they typed under ---the user's message--- - not the language of the document, and not the target language of a translation they asked for (asked in English to translate a paragraph into Spanish, you put Spanish in the document and reply in English; asked in Chinese to translate into English, you reply in Chinese); text you write into the document stays in the document's language unless they ask for another. A reply language set under ---user instructions--- or in what you remember overrides this; a style profile never does, whatever language it is written in. In Chinese and Japanese, use full-width punctuation (，。：；？！（）) and quote with “ ” or 「」 - never ASCII \" or ( ) - in replies as well as in the document.
@@ -31,7 +20,7 @@ Style: avoid the tics that make text read as machine-written unless the author's
 /// tool-less provider to call tools would just confuse it.
 const AGENT_TOOL_INSTRUCTIONS: &str = "If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (one item of its `edits` per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal targets one block, by its `block` id: for several changes inside one block - an added list item and the renumbering it needs count as two - send a single replace of that block; for changes across several blocks, one replace per block you change, leaving the others alone - all of them items of the same call's `edits`, since there is no later message to send the rest in - or, when your changes run through consecutive blocks - a translation, a rewrite or polish of every paragraph, a reorganisation that moves, merges or reorders them - one replace from the first (`block`) through the last (`last_block`), however long the run: a whole section or document is one proposal, never split into parts. The user decides on each paragraph by itself either way, and overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE (each block after its `[#id]`, which is not part of the text), and both fields work in that same markdown: `anchor` quotes any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This`. `text` must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. Write that reply in the same message as your proposals (and comments), before the calls, and send every proposal for the request in that one propose_edit call: when they are all valid the request ends there, with that text as your reply - so write it as done (\"Cut the repeated point about cost\"), not as a plan (\"I'll tighten it\"). If one is refused, the result says which and why: send just those again, fixed, in a new propose_edit call. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. An undecided proposal stays in the editor next to new ones; a new proposal for the same passage replaces it, so never re-propose an undecided one unchanged or try to retract it yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin the points to their passages with one add_comment call and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose. When the user asks for a picture and you have no generate_image tool, say that Textus AI can make one once an image model is chosen in Settings > Textus AI > Image model.";
 
-/// The rules engine's two tools, in every mode (tools.rs).
+/// The rules engine's two tools, in every mode.
 const RULES_TOOL_INSTRUCTIONS: &str = "When you proofread or fix conventions, ground your changes in what check_conventions reports instead of guessing, and change only what it flags or what you are certain of; its \"check\" findings only point at something to look at. When a platform's limit matters, measure the exact text with measure_text before proposing it, and give the count in your reply. A length the user asks for (\"800 字\", \"about 500 words\") is a target, not a platform's limit: write the text straight into propose_edit - the user watches it come in, and its result tells you its size - and never write it out first in measure_text or check_conventions, where the user sees nothing while you draft. Conventions in proposed text are fixed on the way, so new writing needs no check first either.";
 
 /// Create mode's tools: reading only, and what is made goes in the reply.
@@ -39,15 +28,12 @@ pub(super) const AGENT_CREATE_TOOL_INSTRUCTIONS: &str = "No document edit or com
 
 pub(super) const AGENT_READ_ONLY_TOOL_INSTRUCTIONS: &str = "No document edit tool is available in this mode: you can read, research and comment. For feedback on specific passages, pin the points with add_comment - all of them in one call's `comments`, one per point (each word, when asked to gloss words), in document order - and write your short summary in the same message, before the call: when the comments are valid the request ends there, with that text as your reply, so write it as done (\"Marked the twelve hardest words\"), not as a plan (\"I'll mark the hard words\") - and never send some now and the rest later.";
 
-/// What the assistant is called in the UI and what its Settings page is
-/// called: `AI_NAME` in src/i18n/names.ts. A test keeps the two in step.
+/// What the assistant is called in the UI. A test keeps it in step with the
+/// frontend's `AI_NAME`.
 pub(crate) const AI_NAME: &str = "Textus AI";
 
 /// Where the user changes the project folder. The project menu exists only
-/// while there is a project folder - ProjectBar shows nothing for an
-/// unsaved draft and only a notice for a folder too broad - so without one,
-/// only the Settings row is named: told about the menu, the agent sent users
-/// with an unsaved draft to a bar that wasn't there (round-2 integration).
+/// while there is a project folder, so without one only Settings is named.
 pub(super) fn where_to_choose_the_project_folder(has_menu: bool) -> String {
     let settings = format!("Settings > {AI_NAME} > Project Folder");
     if has_menu {
@@ -57,19 +43,9 @@ pub(super) fn where_to_choose_the_project_folder(has_menu: bool) -> String {
     }
 }
 
-/// What the agent is told about its project folder (in code, the workspace
-/// root) - which one is in use and why - and about what the app calls the
-/// things that shape its work (docs/design/ai-concepts.md: project folder,
-/// `.textus/` folder, writing instructions, global config folder, skills,
-/// library, style profile, "Learn my style"), with the menu items, chips
-/// and Settings rows that make and open them, what reaches completion too,
-/// and the same names in the user's UI language (UiNames). Without
-/// it, the model made up its own names ("read-only mode"), told a user with
-/// an unsaved draft "I have no tool to open files" without saying why or
-/// what to do, and was told the document's folder held reference material
-/// even when no file tool was offered (docs/design/ai-eval.md, round 2). Labels it
-/// wasn't given never came up: users were told to write a hidden
-/// .textus/style.md by hand, and had no way back after choosing a folder.
+/// What the agent is told about its project folder, and what the app calls
+/// the things that shape its work, in English and the user's UI language.
+/// Without it, the model made up names and gave users wrong directions.
 pub(super) fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -> String {
     use crate::ai::workspace::RootSource;
     let one_folder = "There is one project folder at a time: for material in two places, the user chooses a folder that contains both.";
@@ -119,9 +95,8 @@ pub(super) fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -
     format!("---project---\n{folder}\n{guide}{names}")
 }
 
-/// What `use_skill` loads as `app-guide`: what the app calls the things
-/// that shape the agent's work, where they are, and how to answer a how-to
-/// question (docs/design/ai-concepts.md).
+/// What `use_skill` loads as `app-guide`: what the app calls things, where
+/// they are, and how to answer a how-to question.
 pub(crate) const APP_GUIDE: &str = "app-guide";
 
 /// What the system prompt says in place of the app guide.
@@ -134,19 +109,16 @@ pub(crate) fn app_guide() -> String {
     )
 }
 
-/// The conversation's mode, picked in the composer. Mirrors `AgentMode` in
-/// src/settings/SettingsContext.tsx. It decides what propose_edit may do
-/// (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
-/// and what the prompt says the user is here for.
+/// The conversation's mode, picked in the composer. It decides what
+/// propose_edit may do, which skills apply and what the prompt says.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "lowercase")]
 pub enum AgentMode {
     /// Reads, answers and comments: no propose_edit.
     Review,
-    /// Adds text and changes the text that is there: every propose_edit
-    /// action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
-    /// this one.
+    /// Adds text and changes the text that is there: every propose_edit action.
+    /// The old Revise mode reads as this one.
     #[serde(alias = "revise")]
     Write,
     /// Makes things for the app itself - a theme, a plugin, a skill - as
@@ -177,10 +149,8 @@ impl std::fmt::Display for AgentMode {
     }
 }
 
-/// The static half of the layering: role + writing instructions + skill
-/// index (+ the document, tool-less) go into the system prompt; skill bodies
-/// and project files stay out of it and are pulled in dynamically through
-/// tools.
+/// The static half of the prompt: role, writing instructions and skill index
+/// (and the document, tool-less). Skill bodies and files come through tools.
 pub(crate) fn build_instructions(
     workspace: &AgentWorkspace,
     document: &Document,
@@ -189,15 +159,13 @@ pub(crate) fn build_instructions(
     // What the request is about (the user's message) - library entries are
     // picked by what it and the document mention.
     focus: &str,
-    // The language the app's UI is in (a code of src/i18n/langs.ts), whose
-    // names for things the agent is given beside the English ones.
+    // The UI language, whose names for things the agent is given beside the
+    // English ones.
     ui_language: &str,
 ) -> String {
     let mut sections = vec![AGENT_ROLE.to_string()];
-    // Tool-less, everything goes in the system prompt; with tools, what
-    // changes from request to request comes with the message instead (see
-    // request_preamble), so a switch between Write and Review, or a memory
-    // saved, leaves the cached prefix as it was.
+    // Tool-less, everything goes in the system prompt; with tools, what changes
+    // per request comes with the message, so the cached prefix stays put.
     if !with_tools {
         sections.push(mode_section(mode, ui_language));
     }
@@ -215,11 +183,8 @@ pub(crate) fn build_instructions(
         sections.push(workspace_section(workspace, ui_language));
     }
 
-    // The writing instructions (agent.md): global, then the project's - the
-    // user's own standing rules: reply language, terminology, project
-    // background. With both layers present the project's section says it
-    // wins a conflict (docs/design/ai-concepts.md); a single layer keeps the plain
-    // header the rest of the prompt refers to.
+    // The writing instructions (agent.md): global, then the project's. With
+    // both present, the project's section says it wins a conflict.
     for instructions in &workspace.instructions {
         sections.push(format!("---user instructions---\n{instructions}"));
     }
@@ -231,45 +196,35 @@ pub(crate) fn build_instructions(
         });
     }
 
-    // What Textus AI remembered (ai::memory, kept after each exchange by
-    // memory::pass): personal, then the project's, after the user's own
-    // instructions, which win over both - here only without tools; with
-    // them it comes with the message (request_message), so a new memory
-    // doesn't change the system prompt and its cache.
+    // What Textus AI remembered, after the user's instructions, which win. Only
+    // without tools; with them it comes with the message, keeping the cache.
     if !with_tools {
         sections.extend(crate::ai::memory::memory_sections(&workspace.memories));
     }
 
-    // The skill index: names + descriptions only. Bodies load on demand via
-    // use_skill, so a large skill library costs almost nothing per request.
+    // The skill index: names and descriptions only; bodies load via use_skill.
     // /name-only skills (and turned-off built-ins) aren't offered.
     let index = skill_index(workspace, mode, ui_language);
     if with_tools && !index.is_empty() {
-        // A /name the user typed arrives already expanded in a <skill> block
-        // (builtin::expand_message); loading it again cost a round trip of
-        // 12-16 s in the live eval.
+        // A /name the user typed arrives already expanded in a <skill> block;
+        // loading it again cost a slow round trip.
         sections.push(format!(
             "---available skills---\n{index}\nWhen a request matches a skill's description, in whatever language it is written, load it with use_skill and follow it, before you answer or ask for missing details. When a skill marked (project) or (yours) and an unmarked built-in skill both match a request, use the marked one. A <skill name=\"...\"> block in the user's message is that skill already loaded - follow it without calling use_skill for it; its own rules for the result (length, form, what to say) override the general ones above.\nReference packs, loaded only when a skill asks for them: {}. Add #section to load one section, e.g. standards-fr#dialogue.",
             crate::ai::builtin::reference_pack_names().join(", ")
         ));
     }
 
-    // Tool-calling paths carry the document (and the writing context picked
-    // by it) in the user's latest message instead - see request_context -
-    // so this prompt stays byte-identical across a conversation and the
-    // provider's prompt cache survives every accepted edit. The tool-less
-    // fallback keeps it here: it sends one flattened turn anyway.
+    // Tool-calling paths carry the document in the latest user message, so this
+    // prompt stays byte-identical and the prompt cache survives. The tool-less
+    // fallback keeps it here.
     if !with_tools {
         sections.push(request_context(workspace, document, false, focus, None));
     }
     sections.join("\n\n")
 }
 
-/// The `---interaction mode---` section: what the user is in the panel for.
-/// Said in Write: text proposed and not decided yet is the
-/// document as the user sees it. A second request used to edit the
-/// document as saved under a first one's proposals - continuing before
-/// them, or quoting their text as an anchor the document didn't have.
+/// Said in Write: undecided proposals are the document as the user sees it.
+/// Without it, a second request edited the saved text under the first's.
 const UNDECIDED_TEXT: &str = "Text you proposed earlier that the user hasn't accepted or rejected yet is part of the document as they see it: to go on from it, insert_after its last sentence; to change or remove some of it, replace or delete with `anchor` quoted from it. The edit goes into that proposal.";
 
 pub(super) fn mode_section(mode: AgentMode, ui_language: &str) -> String {
@@ -293,11 +248,9 @@ pub(super) fn mode_section(mode: AgentMode, ui_language: &str) -> String {
     }
 }
 
-/// What a tool-calling request says before its context, rather than in the
-/// system prompt: the mode, and what Textus AI remembers. Both change
-/// within a conversation (the mode switch in the composer, a memory saved),
-/// and in the system prompt each change rewrote the whole cached prefix and
-/// history (docs/design/ai-tokens.md); here they cost only this message.
+/// What a tool-calling request says before its context: the mode and what
+/// Textus AI remembers. Both change mid-conversation, so keeping them out of
+/// the system prompt keeps its cache.
 pub(crate) fn request_preamble(
     workspace: &AgentWorkspace,
     mode: AgentMode,
@@ -308,11 +261,8 @@ pub(crate) fn request_preamble(
     sections.join("\n\n")
 }
 
-/// What the index says of a built-in skill: when to use it - its
-/// description's "Use when ..." part, without the request words in eight
-/// languages in parentheses, which the model doesn't need to route a
-/// request in any of them (agent-builtin's route cases) and which were half
-/// the index. What the skill does is in its instructions, loaded with it.
+/// What the index says of a built-in skill: its description's "Use when ..."
+/// part, without the multilingual request words, which were half the index.
 pub(super) fn index_line(description: &str) -> String {
     let from = description.find("Use when").unwrap_or(0);
     let mut line = String::with_capacity(description.len() - from);
@@ -348,14 +298,9 @@ pub(super) fn index_line(description: &str) -> String {
 /// skill) is cut with "…".
 pub(super) const INDEX_DESCRIPTION_CHARS: usize = 500;
 
-/// The skill index the model sees: the skills it may load by description,
-/// the user's own first (marked "(project)" or "(yours)"), then the
-/// built-ins by menu category and name. A built-in carries the name the
-/// user's UI gives it (its first alias there): told only "continuity", the
-/// agent called it "the 连续性 skill" in a Chinese answer, a /name that
-/// doesn't exist (round 4, concept/zh/library). Depends only on the
-/// workspace and the UI language, so the system prompt stays byte-identical
-/// across a conversation.
+/// The skill index the model sees: the user's skills first, then built-ins by
+/// category and name under the UI's name for them. Depends only on the
+/// workspace and UI language, so the system prompt stays byte-identical.
 pub(crate) fn skill_index(
     workspace: &AgentWorkspace,
     mode: AgentMode,

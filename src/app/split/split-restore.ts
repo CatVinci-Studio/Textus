@@ -30,11 +30,8 @@ export function readSavedSplit(raw: unknown): Saved | null {
 }
 
 /**
- * The split comes back with the window: the two documents it showed, by
- * path, side by side or one above the other, sharing the space as they
- * did - once both are open again. Until then (or a few seconds, or the
- * user splitting first) nothing is saved, so the restore can't be undone
- * by the window starting with one document.
+ * The last split comes back with the window once both documents are open
+ * again. Until then nothing is saved, so a one-document start can't undo it.
  */
 export function useSplitRestore(
   tabs: readonly DocTab[],

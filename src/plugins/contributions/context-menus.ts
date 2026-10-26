@@ -1,8 +1,6 @@
 /**
- * Items plugins add to the window's other right-click menus
- * (contributes.menus): a file's in the sidebar, a tab's, and the buttons
- * over a view of theirs. The sidebar, the tab bar and the view ask here
- * each time a menu opens; registerEditorMenuItems is the editor's own.
+ * Items plugins add to the window's other context menus: a file's in the
+ * sidebar, a tab's, and a view's title buttons. Asked each time a menu opens.
  */
 export type ContextMenuPlace = "file/context" | "tab/context" | "view/title";
 

@@ -1,7 +1,5 @@
-// Settings' search box: what it finds and where. The index is read from
-// the pages themselves as the panel renders them (SettingsPanel mounts
-// every page out of sight while a query is typed), so a row added to a page
-// is found with no list here to keep in step.
+// Settings' search. The index is read from the rendered pages themselves, so
+// a row added to a page is found with no list here to keep in step.
 
 /** One thing a query can find: a row, or the title of a group of rows. */
 export interface SearchEntry {
@@ -15,10 +13,8 @@ export interface SearchEntry {
   help: string;
 }
 
-/** Folded for matching: case, accents and full- or half-width forms set
- *  aside, so "resume" finds "Résumé" and "ＣＳＳ" finds "CSS". Only the
- *  Latin combining accents are dropped - a Japanese voicing mark is part
- *  of the letter (が is not か). */
+/** Folded for matching: case, Latin accents and full- or half-width forms
+ *  set aside, so "resume" finds "Résumé". A Japanese voicing mark stays. */
 export function foldText(text: string): string {
   return text
     .normalize("NFKD")
@@ -87,7 +83,6 @@ const sameEntry = (
   b: Omit<SearchEntry, "page">,
 ) => a.kind === b.kind && a.label === b.label && a.group === b.group;
 
-/** The findable things on a rendered page, each once. */
 export function harvestPage(root: Element, page: string): SearchEntry[] {
   const entries: SearchEntry[] = [];
   for (const { entry } of walk(root))
@@ -102,8 +97,8 @@ export interface SearchMatch {
   byHelp: boolean;
 }
 
-/** The entries `query` finds, in the order given: a plain substring of a
- *  label, a group's title or a row's "?" text, folded as foldText does. */
+/** The entries `query` finds, in order: a folded substring of a label, a
+ *  group's title or a row's "?" text. */
 export function matchEntries(
   entries: SearchEntry[],
   query: string,

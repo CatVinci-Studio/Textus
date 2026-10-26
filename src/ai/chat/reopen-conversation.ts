@@ -17,8 +17,8 @@ export interface ReopenTarget {
   openDocument: (path: string) => void;
 }
 
-/** The docked panel's: the editor of the conversation's document claims it
- *  (chat-restore.ts), in a tab of this window. */
+/** The docked panel's: the editor of the conversation's document claims it,
+ *  in a tab of this window. */
 export const PANEL_REOPEN: ReopenTarget = {
   restore: requestChatRestore,
   openDocument: (path) =>
@@ -28,13 +28,9 @@ export const PANEL_REOPEN: ReopenTarget = {
 };
 
 /**
- * A click on a past conversation in the history list (ChatHistoryMenu): it
- * reopens with its own document - that document's tab, opened if need be -
- * never in whichever document happens to be on screen, where its next save
- * would file it under the wrong document. A document that's gone is asked
- * about first: the conversation continues in the current one only if the
- * user says so (and is filed under it from then on). A conversation of a
- * document never saved has no other home and continues in the current one.
+ * Reopens a past conversation with its own document, never whichever is on
+ * screen, where its next save would file it wrongly. If that document is
+ * gone, it continues in the current one only if the user says so.
  */
 export async function reopenConversation(
   entry: ChatSummary,

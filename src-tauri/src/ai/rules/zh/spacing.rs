@@ -134,10 +134,9 @@ pub(crate) fn fullwidth_adjacent(t: &Text, ctx: &Ctx, out: &mut Out) {
     }
 }
 
-/// zh.space.cjk-latin: spaces between Chinese and Latin letters or digits
-/// by the profile's `cjk-latin-space`: `on` adds them, `off` and `layout`
-/// remove typed ones, Automatic flags only the minority form when the
-/// text's majority is clear. Never next to punctuation, %, or °.
+/// zh.space.cjk-latin: spaces between Chinese and Latin letters or digits by
+/// `cjk-latin-space` (`on` adds, `off`/`layout` remove); Automatic flags only a
+/// clear minority. Never next to punctuation, %, or °.
 pub(crate) fn cjk_latin(t: &Text, ctx: &Ctx, out: &mut Out) {
     let mode = match ctx.profile.opt("cjk-latin-space") {
         Some(v) => v,

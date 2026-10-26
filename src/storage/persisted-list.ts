@@ -5,50 +5,25 @@ import { readLocalJson } from "./local";
 import { trackWrite } from "./pending-writes";
 import { listenToThisWindow } from "../utils/tauri-events";
 
-/**
- * A small persisted list exposed as an external store, for the histories
- * (clipboard, chat) that must survive restarts and stay in sync across
- * windows - each window is its own SPA, so a change made in one has to
- * reach the others.
- *
- * Kept by Rust in a JSON file per list (src-tauri/src/settings.rs,
- * docs/dev/storage.md), changed one entry at a time - upsert, remove, clear -
- * and never by writing the whole array back: two windows saving different
- * conversations at once must both land. Rust broadcasts each change and
- * every other window applies the same operation to its copy.
- *
- * Without Rust behind the page (the browser dev shim, vitest) the list
- * lives in localStorage under `key`, and other windows hear of a write through the storage event.
- *
- * What comes back from storage is untrusted (an older build's shape, a
- * hand edit), so every entry passes `isEntry` on load.
- *
- * `T` is an entry as the list holds it, `Saved` one as it is saved - more
- * than the list shows, when the store keeps the rest elsewhere (see
- * `listed`).
- */
+/** A small persisted list as an external store, synced across windows. Rust
+ *  changes it one entry at a time, so concurrent saves from two windows both
+ *  land; without Rust it lives in localStorage. Loaded entries pass `isEntry`. */
 export function createPersistedList<T, Saved extends T = T>(
   key: string,
   options: {
     kind: HistoryKind;
     max: number;
     isEntry: (value: unknown) => value is T;
-    /** What makes two entries the same one (Rust's HistoryKind::key_of). */
+    /** What makes two entries the same one. */
     keyOf: (entry: T) => string;
     /** Order kept on every change, e.g. most recent first. */
     sort?: (a: T, b: T) => number;
-    /** The form an entry is stored in, applied to every entry written - and,
-     *  file-backed, to the entries already stored when the list loads, where
-     *  any it changes are written back: a migration of what an older build
-     *  stored (the chat history's iOS document paths, ai/chat/chat-history.ts).
-     *  Must return an entry already in that form unchanged (the same
-     *  object). */
+    /** The form an entry is stored in, applied to every write and, file-backed,
+     *  to loaded entries, which are written back if it changes them. Must return
+     *  an entry already in that form unchanged (the same object). */
     normalise?: <E extends T>(entry: E) => E;
-    /** File-backed, what of a saved entry the list holds, when Rust keeps
-     *  the rest out of the list (a conversation's turns, in a file of its
-     *  own): applied to what this window saves, as Rust applies it to what
-     *  it tells the other windows. The localStorage fallback keeps whole
-     *  entries. */
+    /** File-backed, the part of a saved entry the list holds when Rust keeps the
+     *  rest elsewhere. The localStorage fallback keeps whole entries. */
     listed?: (entry: Saved) => T;
     /** How an entry loaded in an older form is written back in the one
      *  `normalise` gives it; by default, an upsert of it. */
@@ -58,12 +33,9 @@ export function createPersistedList<T, Saved extends T = T>(
   const listeners = new Set<() => void>();
   let entries: T[] = [];
   let started = false;
-  /** File mode: the latest list request, with the operations made since it
-   *  went out, replayed onto its answer - which may predate them. All three
-   *  are idempotent, so one that IS already in the answer comes out the
-   *  same. A newer request (a "reload" while the first load is still on its
-   *  way) supersedes an older one, whose answer is then dropped: replaying
-   *  onto it would use up operations the newer answer may still lack. */
+  /** File mode: the latest list request, with the operations made since,
+   *  replayed onto its answer (they are idempotent). A newer request
+   *  supersedes an older one, whose answer is dropped. */
   let request: { ops: Op<T>[] } | null = null;
 
   function tidy(list: unknown[]): T[] {
@@ -178,9 +150,8 @@ export function createPersistedList<T, Saved extends T = T>(
           : op.type === "remove"
             ? storage.historyRemove(options.kind, op.key)
             : storage.historyClear(options.kind);
-      // A history is a convenience: a failed write just won't survive
-      // the session. A window closing waits for it, though
-      // (storage/pending-writes.ts).
+      // A failed write just won't survive the session; a closing window waits
+      // for it, though.
       trackWrite(sent).catch(() => {});
     } else {
       entries = apply(entries, op);
@@ -218,7 +189,6 @@ type Op<T> =
   | { type: "remove"; key: string }
   | { type: "clear" };
 
-/** Mirrors HistoryChanged in src-tauri/src/settings.rs. */
 interface HistoryChanged<T> {
   kind: HistoryKind;
   op: Op<T> | { type: "reload" };

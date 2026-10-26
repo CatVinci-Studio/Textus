@@ -1,8 +1,6 @@
-//! The grammar matrix: each strictness level on real mistakes, on clean text
-//! (where any report is a false positive), and on text full of things that
-//! must be left alone - code, URLs, math, names. The paragraph is what the
-//! editor sends: the block's textContent, so inline code arrives without
-//! its backticks and a link as its visible text.
+//! The grammar matrix: each strictness level on real mistakes, on clean text,
+//! and on text with code, URLs, math and names to leave alone. The paragraph is
+//! the block's textContent, as the editor sends it.
 
 use super::checks::{self, Lang};
 use super::harness::{self, Checks, Record};
@@ -21,10 +19,8 @@ pub struct GrammarCase {
     pub protected: &'static [&'static str],
     /// Most issues allowed beyond `fixes` (0 = no false positives at all).
     pub extra: usize,
-    /// The paragraph's Markdown when it carries inline formatting: the
-    /// check gets its textContent (as the editor sends it, `paragraph` is
-    /// ignored), and every fix must leave the formatting intact when it is
-    /// written back.
+    /// The paragraph's Markdown when it carries inline formatting: the check gets
+    /// its textContent, and every fix must keep the formatting when written back.
     pub markdown: Option<&'static str>,
 }
 
@@ -50,10 +46,8 @@ impl GrammarCase {
     }
 }
 
-/// A fix expectation may list alternatives: "late. We|late; we". Each one
-/// carries enough of its neighbourhood to fail on a fix that leaves the
-/// wrong word standing ("nous sommes allés", not just "sommes allés",
-/// which "nous avons sommes allés" contains).
+/// A fix expectation may list alternatives: "late. We|late; we". Each carries
+/// enough context to fail on a fix that leaves the wrong word standing.
 fn fix_ok(corrected: &str, fix: &str) -> bool {
     fix.split('|').any(|f| corrected.contains(f))
 }
@@ -191,8 +185,7 @@ pub fn run_case(auth: &AnthropicAuth, case: &GrammarCase, model: &str) -> Record
             Vec::new()
         }
     };
-    // What the user sees: the editor drops any fix that touches inline code
-    // (grammar-check-plugin.ts's touchesCode).
+    // What the user sees: the editor drops any fix that touches inline code.
     let issues: Vec<GrammarIssue> = match case.markdown {
         Some(md) => {
             let it = checks::inline_text(md);
@@ -228,9 +221,8 @@ pub fn run_case(auth: &AnthropicAuth, case: &GrammarCase, model: &str) -> Record
             || format!("corrected: {corrected}"),
         );
     }
-    // Accepting every suggestion must not write anything twice: "has a an
-    // opinion", "uns uns", "高兴的高兴地" - the kind of damage a misplaced
-    // span did while "fix gives" still found the fix inside it.
+    // Accepting every suggestion must not write anything twice ("has a an
+    // opinion", "uns uns").
     if !corrected.is_empty() {
         let doubled = checks::doubled_words(&paragraph, &corrected);
         checks.expect("no doubled text", doubled.is_none(), || {

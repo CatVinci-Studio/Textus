@@ -1,12 +1,9 @@
 import { imageMimeForPath } from "../editor/images/pasted-files";
 
 /**
- * Files dropped on the window from a file manager (issue #78). Tauri's
- * webview drag-drop handling takes OS file drops before the page sees them
- * - on every desktop platform, Windows included - and hands them over as a
- * `tauri://drag-drop` event with the files' paths, so a drop never reaches
- * the editor as an HTML5 drop. Images go into the document, as a pasted
- * image file does; everything else opens like File > Open.
+ * Files dropped from a file manager arrive as a Tauri event with paths, never
+ * as an HTML5 drop. Images go into the document; everything else opens like
+ * File > Open.
  */
 export function sortDroppedPaths(paths: string[]): {
   documents: string[];
@@ -22,10 +19,8 @@ export function sortDroppedPaths(paths: string[]): {
 }
 
 /**
- * Where a drop landed, in the page's CSS pixels. Tauri types the position
- * as physical, but only Windows sends physical pixels (wry maps the cursor
- * to the window's client area); WebKitGTK and WKWebView hand over their own
- * logical coordinates as they are.
+ * Where a drop landed, in CSS pixels. Tauri types it as physical, but only
+ * Windows sends physical pixels; the webkit engines send logical ones.
  */
 export function dropPointInPage(
   position: { x: number; y: number },

@@ -8,9 +8,8 @@ pub(crate) const MAX_SEARCH_MATCHES: usize = 40;
 /// Most names find_files returns: past this the answer is a longer name.
 pub(crate) const MAX_FOUND_FILES: usize = 50;
 
-/// How long search_files reads files once they are listed. A folder of
-/// writing is read in a fraction of this; a disk of code must not hold up
-/// the request.
+/// How long search_files reads files once they are listed: a disk of code
+/// must not hold up the request.
 pub(crate) const SEARCH_TIME: Duration = Duration::from_secs(5);
 
 /// Case-insensitive line search across the project's text files and
@@ -52,10 +51,9 @@ pub(crate) struct Found {
     pub(crate) read: usize,
 }
 
-/// The matching lines of `files`, read on every core. Files are taken in
-/// order and the search stops once the files before the first unread one
-/// hold more than MAX_SEARCH_MATCHES matches, so a folder always gives the
-/// same matches however the threads ran - the AI's answers stay stable.
+/// The matching lines of `files`, read on every core. The search stops once the
+/// files before the first unread one hold enough matches, so the results are
+/// the same however the threads ran.
 pub(crate) fn search_in_order(
     root: &Path,
     files: &[String],
@@ -107,11 +105,9 @@ pub(crate) fn search_in_order(
     Found { hits, read }
 }
 
-/// One file's lines containing `needle` (lowercase), at most one more than
-/// the search returns, numbered as read_file numbers them. A text file is
-/// read a line at a time, so a book costs no more memory than a chapter; one
-/// read_file refuses - too large, not UTF-8 - has none, and so does a
-/// document that can't be extracted.
+/// One file's lines containing `needle` (lowercase), at most one more than the
+/// search returns, numbered as read_file numbers them. Text is read a line at a
+/// time; unreadable files and failed extractions have none.
 pub(crate) fn matching_lines(root: &Path, rel: &str, needle: &str) -> Vec<String> {
     let path = root.join(rel);
     let mut hits = Vec::new();
@@ -161,9 +157,8 @@ pub(crate) fn matching_lines(root: &Path, rel: &str, needle: &str) -> Vec<String
     hits
 }
 
-/// A name as find_files compares it: one Unicode form (macOS hands names
-/// over decomposed), no case, and `-`/`_` read as spaces, so "chapter 3"
-/// finds chapter-3.md.
+/// A name as find_files compares it: NFC (macOS hands names over decomposed),
+/// no case, and `-`/`_` as spaces, so "chapter 3" finds chapter-3.md.
 pub(crate) fn fold_name(text: &str) -> String {
     text.nfc()
         .flat_map(char::to_lowercase)
@@ -171,12 +166,9 @@ pub(crate) fn fold_name(text: &str) -> String {
         .collect()
 }
 
-/// The project files whose path holds every word of `query`, ignoring case,
-/// the way the sidebar's file search finds names; images among them when
-/// the model can see (`images`). Documents come first, and within them
-/// names that start with the query, then names that contain it, then paths
-/// that only hold its words; each group in walk order. At most
-/// MAX_FOUND_FILES.
+/// The project files whose path holds every word of `query`, ignoring case;
+/// images too when the model can see. Documents first, then names that start
+/// with the query, contain it, then paths; at most MAX_FOUND_FILES.
 pub fn find(root: &Path, query: &str, images: bool) -> String {
     let whole = fold_name(query.trim());
     let words: Vec<&str> = whole.split_whitespace().collect();

@@ -1,5 +1,4 @@
-// KaTeX with its stylesheet (and through it the fonts), as one chunk that
-// katex-loader.ts fetches the first time a formula is drawn.
+// KaTeX with its stylesheet (and fonts), as one lazily fetched chunk.
 import katex from "katex";
 import "katex/dist/katex.min.css";
 

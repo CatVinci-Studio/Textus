@@ -14,11 +14,9 @@ import {
 import type { Tutorial } from "./useTutorial";
 
 /**
- * Evaluates edits made in the practice tab and ticks off what the lessons
- * about the text ask for. The callback stays stable for Milkdown's
- * once-registered change listener while a latest-value ref keeps the
- * tutorial state current. Parts are OR'd in: a line done once stays done
- * if it is edited away.
+ * Ticks off what the text lessons ask for, from edits in the practice tab.
+ * The callback stays stable for Milkdown's once-registered listener; a ref
+ * keeps state current. Parts are OR'd in, so a line done once stays done.
  */
 export function useTutorialDocumentEvaluation(
   tutorial: Tutorial,

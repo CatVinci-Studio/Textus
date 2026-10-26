@@ -23,13 +23,11 @@ import type { DiagramEngine } from "../settings/SettingsContext";
 
 const mermaidKey = new PluginKey("mermaid-preview");
 const DEBOUNCE_MS = 500;
-/** Drawings of diagrams not in the document (pending-diagram.ts) kept for
- *  when one is accepted - every streamed step of one lands here too. */
+/** Drawings of diagrams not in the document kept for when one is accepted;
+ *  every streamed step of one lands here too. */
 const PENDING_KEPT = 30;
-// Render ids are unique across every editor, not per editor: two tabs
-// rendering at startup both used "mermaid-preview-1-0", and the first one
-// to finish removed the other's measuring node mid-render (renderMermaid's
-// cleanup), so the diagram in the other tab failed and stayed raw source.
+// Render ids are unique across every editor: two tabs sharing an id removed
+// each other's measuring node mid-render.
 let renderIdCounter = 0;
 
 /** A diagram as the preview last drew it. */
@@ -38,9 +36,8 @@ interface Drawn {
   engine: DiagramEngine;
   /** What it was drawn for (the render pass's `styleOf`). */
   style: string;
-  /** Part of its widget's key: with the source alone as the key,
-   *  ProseMirror kept the old widget DOM, so a switch to dark redrew the
-   *  diagrams and still showed the light ones. */
+  /** Part of its widget's key: with the source alone, ProseMirror kept the old
+   *  widget DOM after a theme switch. */
   id: number;
 }
 
@@ -69,16 +66,13 @@ function collectMermaidBlocks(doc: ProseNode): MermaidBlock[] {
 }
 
 /**
- * Renders a live diagram preview below any fenced code block whose language
- * is "mermaid", as a widget decoration. While the cursor is away from a
- * successfully-rendered block, its raw fenced source is hidden (mirroring
- * math-preview-plugin's source/render swap) so only the diagram shows;
- * moving the cursor back into the block - or clicking the diagram - reveals
- * the source again for editing.
+ * A live diagram preview below every ```mermaid block. While the cursor is
+ * away from a drawn block its source hides; moving back in, or clicking the
+ * diagram, reveals it.
  */
 export function createMermaidPreviewPlugin(options: {
   enabled: () => boolean;
-  /** Settings.diagramEngine: which engine draws first (diagram-engine.ts). */
+  /** Which engine draws first. */
   engine: () => DiagramEngine;
 }) {
   return $prose(() => {
@@ -86,19 +80,13 @@ export function createMermaidPreviewPlugin(options: {
     // Per editor instance: rendering in one open tab must not cancel a
     // render already in flight in another tab.
     let renderSeq = 0;
-    // Keyed by the block's exact source text rather than its doc position -
-    // an edit anywhere earlier in the document shifts every later block's
-    // position on every keystroke, which would otherwise miss this cache
-    // (position-keyed) on every one of those keystrokes and flash the raw
-    // source back until the next debounced render, even though the diagram
-    // itself never changed.
+    // Keyed by source text, not position: an edit above shifts every later
+    // block's position, which would miss the cache and flash the source.
     let lastRenders = new Map<string, Drawn>();
-    // What Textus AI's proposals drew (pending-diagram.ts), by source: an
-    // accepted diagram shows at once instead of as source until the next
-    // pass, which takes the drawing over instead of drawing it again.
+    // What Textus AI's proposals drew, by source: an accepted diagram shows at
+    // once, and the next pass takes the drawing over.
     const pendingDrawn = new Map<string, Drawn>();
-    // The engine the last pass was started for: a change in Settings draws
-    // every diagram again (view.update below).
+    // The engine the last pass was started for: a change redraws every diagram.
     let drawnFor = options.engine();
 
     function decorate(
@@ -112,7 +100,7 @@ export function createMermaidPreviewPlugin(options: {
       const drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
       if (!drawn) return [];
       const { svg } = drawn;
-      if (touches(from, to)) return []; // editing it - keep source visible
+      if (touches(from, to)) return [];
       return [
         Decoration.node(from, to, { class: "mermaid-source-hidden" }),
         Decoration.widget(
@@ -124,9 +112,8 @@ export function createMermaidPreviewPlugin(options: {
             container.append(zoomButton(container));
             container.addEventListener("mousedown", (event) => {
               event.preventDefault();
-              // The widget's DOM outlives edits above it (its key leaves
-              // the position out), so where its block starts is asked now:
-              // the `from` of the pass that built it can be another block.
+              // The widget's DOM outlives edits above it, so where its block starts is
+              // asked now.
               const end = getPos();
               if (end === undefined) return;
               const block = view.state.doc.resolve(end).nodeBefore;
@@ -139,13 +126,9 @@ export function createMermaidPreviewPlugin(options: {
             });
             return container;
           },
-          // ProseMirror reuses a widget's DOM while its key is unchanged, so
-          // a position-only key kept showing the OLD diagram after its
-          // source was edited in place: the source is part of the key. The
-          // position is not - typing above a diagram moves it, and a key
-          // that moved with it rebuilt the SVG on every keystroke. Two
-          // copies of one source share a key, and a drawing: either
-          // widget's DOM shows the other just as well.
+          // ProseMirror reuses a widget's DOM while its key is unchanged, so the
+          // source is part of the key; the position isn't, or typing above a diagram
+          // rebuilt its SVG on every keystroke.
           {
             side: 1,
             key: `mermaid-${fnv1a(code).toString(36)}-${drawn.id}`,
@@ -184,21 +167,18 @@ export function createMermaidPreviewPlugin(options: {
           const fontFamily = getComputedStyle(editorView.dom).fontFamily;
           const engine = options.engine();
           const dark = appearanceIsDark();
-          // What a drawing depends on. A Pele one takes its colours from CSS
-          // variables (milkdown-theme.css), so a switch of appearance keeps
-          // it; a Mermaid one has its palette baked in and is drawn again.
+          // A Pele drawing takes its colours from CSS variables, so an appearance
+          // switch keeps it; a Mermaid one has its palette baked in.
           const layout = `${width}|${fontFamily}|${engine}`;
           const styleOf = (by: DiagramEngine) =>
             by === "pele" ? layout : `${layout}|${dark}`;
-          // Mermaid and Pele are the editor's largest optional dependencies.
-          // One is fetched only when a real diagram has to be drawn, so
-          // ordinary Markdown documents never pay for either.
+          // The editor's largest optional dependencies, fetched only when a real
+          // diagram has to be drawn.
           const draw = diagramRenderer(engine, { width, fontFamily, dark });
           return { draw, styleOf };
         }
 
-        // A proposal's diagram (pending-diagram.ts), drawn as the
-        // document's are.
+        // A proposal's diagram, drawn as the document's are.
         registerPendingDrawer(editorView.dom, async (code) => {
           if (!options.enabled() || editorView.dom.clientWidth === 0)
             throw new Error("diagrams are not drawn here");
@@ -233,10 +213,8 @@ export function createMermaidPreviewPlugin(options: {
           );
         }
 
-        // In a large document, diagrams off screen wait
-        // (draw-when-visible.ts says why): a pass draws those near the
-        // screen, and scrolling draws the rest as they come near. `all`
-        // draws every one, for an export.
+        // In a large document, off-screen diagrams wait: a pass draws those near
+        // the screen, scrolling the rest. `all` draws every one, for an export.
         let scroller: Element | null = null;
         let scrollTimer: ReturnType<typeof setTimeout> | undefined;
         const onScroll = () => {
@@ -262,9 +240,7 @@ export function createMermaidPreviewPlugin(options: {
             return;
           }
 
-          // A tab opened in the background is display:none: nothing can be
-          // measured there, and mermaid laid diagrams out at zero width or
-          // failed outright. Render once it is shown (the observer below).
+          // A background tab is display:none and can't be measured; render once shown.
           if (editorView.dom.clientWidth === 0) {
             waitingToBeShown = true;
             return;
@@ -287,10 +263,9 @@ export function createMermaidPreviewPlugin(options: {
           let offScreen = false;
           const large = isLargeDoc(editorView.state.doc);
           for (const { from, code } of blocks) {
-            if (!code.trim() || rendered.has(code)) continue; // identical diagrams share one render
-            // Drawn for the same width, face and engine: a pass only draws
-            // sources it hasn't seen, instead of every diagram again 500ms
-            // after each keystroke anywhere in the document.
+            if (!code.trim() || rendered.has(code)) continue;
+            // A pass only draws sources it hasn't drawn for the same width, face and
+            // engine.
             const cached = lastRenders.get(code) ?? pendingDrawn.get(code);
             if (cached && cached.style === styleOf(cached.engine)) {
               rendered.set(code, cached);
@@ -306,17 +281,16 @@ export function createMermaidPreviewPlugin(options: {
                 code,
                 `mermaid-preview-${id}`,
               );
-              if (mySeq !== renderSeq) return; // superseded by a newer render pass
+              if (mySeq !== renderSeq) return;
               rendered.set(code, { svg, engine: by, style: styleOf(by), id });
             } catch {
-              // invalid/incomplete diagram syntax mid-typing - just skip this block
+              // Invalid or half-typed diagram syntax: skip this block.
             }
           }
 
           if (mySeq !== renderSeq) return;
           waitForScroll(offScreen);
-          // Nothing new rendered and nothing dropped: the decorations
-          // already show exactly this, so skip the rebuild.
+          // Nothing new rendered and nothing dropped: skip the rebuild.
           const unchanged =
             rendered.size === lastRenders.size &&
             [...rendered].every(
@@ -361,8 +335,7 @@ export function createMermaidPreviewPlugin(options: {
 
         return {
           update(view, prevState) {
-            // Settings › Diagram engine changed (MilkdownEditor dispatches a
-            // transaction for it): every diagram again, at once.
+            // The diagram engine setting changed: every diagram again, at once.
             if (options.engine() !== drawnFor) {
               drawnFor = options.engine();
               if (debounceTimer) clearTimeout(debounceTimer);
@@ -371,9 +344,8 @@ export function createMermaidPreviewPlugin(options: {
               return;
             }
             if (view.state.doc.eq(prevState.doc)) return;
-            // Past PAUSE_FEATURES_THRESHOLD (large-doc.ts): existing diagrams stay pinned (their
-            // cached SVG is keyed by source text, untouched here) - only new
-            // re-render passes, the expensive part, stop scheduling.
+            // Past the pause threshold, existing diagrams stay as drawn; only new render
+            // passes, the expensive part, stop.
             if (pausesFeatures(view.state.doc)) return;
             if (debounceTimer) clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => void renderAll(), DEBOUNCE_MS);

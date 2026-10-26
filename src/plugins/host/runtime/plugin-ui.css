@@ -1,7 +1,6 @@
-/* @textus/plugin-ui: the base every plugin webview gets (frames.ts) - the
-   page in the theme's colours and type, and the controls Settings uses, so
-   a plugin's panel looks like the rest of Textus without its own CSS. Only
-   the variables of webviewThemeCss (theme-vars.ts) are used here. */
+/* @textus/plugin-ui: the base every plugin webview gets, so a panel looks
+   like the rest of Textus without its own CSS. Uses only the theme variables
+   plugins are given. */
 
 :root {
   color-scheme: light;
@@ -157,11 +156,8 @@ pre {
   color: var(--danger);
 }
 
-/* The app's moves (src/ui/motion.css), for a plugin's own parts: arriving
-   (animation: motion-enter var(--dur-medium) var(--ease-out) backwards,
-   from --enter-x / --enter-y / --enter-scale) and leaving (motion-exit,
-   --dur-fast, --ease-in, forwards). The durations and distances are the
-   window's own, reduced motion included. */
+/* The app's moves, for a plugin's own parts: motion-enter and motion-exit,
+   with the window's durations and distances, reduced motion included. */
 @keyframes motion-enter {
   from {
     opacity: 0;
@@ -178,10 +174,8 @@ pre {
   }
 }
 
-/* Parts that come in one after another, as the app's written text does
-   (src/ui/cascade.ts): each child of .motion-cascade arrives a
-   --dur-stagger after the one before it - a list's items, a board's
-   cards. The first twenty are spaced; any after come with the twentieth. */
+/* Each child of .motion-cascade arrives a --dur-stagger after the one before.
+   The first twenty are spaced; any after come with the twentieth. */
 .motion-cascade > * {
   animation: motion-enter var(--dur-medium) var(--ease-out) backwards;
 }

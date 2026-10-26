@@ -15,7 +15,7 @@ import {
 
 const DOLLAR = "$";
 
-/** See the Enter handler: the paragraph shapes that mean "the user typed $$". */
+/** The paragraph shapes that mean "the user typed $$". */
 function isMathFenceLine(paragraph: ProseNode): boolean {
   if (paragraph.childCount === 1 && paragraph.child(0).isText)
     return paragraph.child(0).text === "$$";
@@ -30,9 +30,8 @@ function isMathFenceLine(paragraph: ProseNode): boolean {
 
 /**
  * Turns the math_inline node at `nodeStart` back into the literal text it
- * was typed as: "$", its source, then `suffix` (the closing "$" and/or
- * what is being typed). The caret lands after it all, or `caretOffset`
- * characters into the source.
+ * was typed as, then `suffix`. The caret lands after it all, or
+ * `caretOffset` characters into the source.
  */
 function unwrapInlineMath(
   state: EditorState,
@@ -57,16 +56,10 @@ function unwrapInlineMath(
 const PRICE = /^\d[\d.,]*$/;
 
 /**
- * Typing prose with dollar amounts in it. A fresh "$" opens a formula
- * (below), so without this "It costs $5 a month." became the formula
- * "5 a month." - and stayed one into the next paragraph - while the file
- * read back as text. Pandoc's rule decides, as it does when the file is
- * opened (math-schema.ts):
- * - a space typed right after "$" and a number ("$5 ") ends a price, not
- *   a formula: the "$" goes back to text. A formula really starting with a
- *   number still forms when its closing "$" is typed (findRunOpen);
- * - a digit typed right after a formula ("$...$1") means its closing "$"
- *   was a price too, so the pair goes back to text.
+ * Typing prose with dollar amounts, by Pandoc's rule as when a file opens:
+ * a space right after "$5" ends a price, so the "$" goes back to text; a
+ * digit right after a formula ("$...$1") means its closing "$" was a price
+ * too. Without this "It costs $5 a month." became a formula.
  */
 function priceTyping(view: EditorView, from: number, text: string): boolean {
   const { state } = view;
@@ -98,24 +91,11 @@ function priceTyping(view: EditorView, from: number, text: string): boolean {
 }
 
 /**
- * What typing "$" does, modeled on how code editors auto-close brackets -
- * built on real math_inline nodes so the shared enclosure model
- * (enclosure.ts: delimiter reveal, cursor phases, delimiter deletion) and
- * math-preview-plugin (KaTeX render, floating live preview) drive the whole
- * experience uniformly for inline and block math alike:
- *
- * - Typing "$" outside any math opens an *empty* math_inline node right away,
- *   cursor inside - unless unclosed literal "$..."-looking text directly
- *   before the caret can be converted into a real formula instead (the
- *   findRunOpen path, which is also how a deleted "$" comes back when
- *   retyped).
- * - Typing "$" again while inside, exactly at the end of the node's content,
- *   closes it: non-empty content stays a real math_inline node and the
- *   cursor steps past it; empty content reverts to literal "$$" text instead
- *   of leaving a near-invisible empty formula node behind.
- * - Typing "$" anywhere else inside math source is just literal text.
- * - Enter right after opening an empty pair - with nothing else on the line
- *   - promotes the shell to an empty math_block.
+ * What typing "$" does, like auto-closed brackets on math_inline nodes:
+ * outside math it opens an empty node (or converts a literal "$..." run
+ * before the caret); at the end of a node it closes it, an empty one
+ * reverting to literal "$$"; elsewhere in math it is literal. Enter on an
+ * empty pair alone on its line makes a math_block.
  */
 export const mathAutopairPlugin = $prose(
   () =>
@@ -140,9 +120,8 @@ export const mathAutopairPlugin = $prose(
             const nodeStart = $pos.before($pos.depth);
             const nodeEnd = nodeStart + parent.nodeSize;
 
-            // "$4) and $": Pandoc's rule (math-schema.ts) - a formula
-            // can't start or end with a space. The pair stays the literal
-            // text the file will read back as.
+            // "$4) and $": by Pandoc's rule a formula can't start or end with a space,
+            // so the pair stays literal text.
             if (
               parent.type.name === "math_inline" &&
               /^\s|\s$/.test(parent.textContent)
@@ -152,8 +131,7 @@ export const mathAutopairPlugin = $prose(
             }
 
             if (parent.content.size === 0) {
-              // Empty pair, closed immediately - revert to literal "$$" rather
-              // than leave an empty formula node rendering as a stray widget.
+              // Empty pair closed at once: literal "$$" rather than an empty formula.
               const tr = state.tr.replaceWith(
                 nodeStart,
                 nodeEnd,
@@ -163,15 +141,12 @@ export const mathAutopairPlugin = $prose(
               return true;
             }
 
-            // Non-empty - leave it as a real node, step past it.
             view.dispatch(caretAt(state.tr, nodeEnd));
             return true;
           }
 
-          // WKWebView can normalize the caret from inside an empty shell to
-          // just after it, so the closing "$" arrives attributed to the
-          // paragraph instead of the shell - same close-empty-pair
-          // semantics as the inMath branch above.
+          // WKWebView can normalize the caret out of an empty shell, so the closing
+          // "$" arrives in the paragraph: close the empty pair the same way.
           const before = $pos.nodeBefore;
           if (
             before &&
@@ -201,9 +176,7 @@ export const mathAutopairPlugin = $prose(
             return true;
           }
 
-          // Complete a "$" typed in FRONT of existing content whose closing
-          // "$" already sits ahead in the literal text - the forward mirror
-          // of the findRunOpen path above.
+          // A "$" typed in front of content whose closing "$" already sits ahead.
           const { text: textAfter } = literalTextAfter($pos);
           const close = findRunClose(textBefore, textAfter, DOLLAR, 1);
           if (close) {
@@ -221,13 +194,10 @@ export const mathAutopairPlugin = $prose(
             return true;
           }
 
-          // With content still following the caret the "$" is being typed
-          // into the middle of existing text - keep it literal instead of
-          // spawning a fresh empty shell (converting an open run above
-          // still works mid-line).
+          // With content after the caret, keep the "$" literal rather than open a
+          // fresh shell mid-text.
           if ($pos.parentOffset !== parent.content.size) return false;
 
-          // Fresh "$" - open an empty math_inline node, cursor inside.
           const mathInline = state.schema.nodes.math_inline;
           const tr = state.tr.replaceWith(from, to, mathInline.create());
           view.dispatch(caretAt(tr, from + 1));
@@ -240,12 +210,8 @@ export const mathAutopairPlugin = $prose(
           if (!empty) return false;
           const parent = $from.parent;
 
-          // A line whose whole content amounts to a typed "$$" also promotes
-          // to a block. That state comes in several shapes: literal "$$"
-          // text (the second "$" closed the empty pair and reverted it - see
-          // handleTextInput above), a single empty shell the caret got
-          // normalized out of (WKWebView), or two empty shells left by the
-          // pre-fix version of that normalization bug.
+          // A line amounting to a typed "$$" also promotes to a block: literal "$$",
+          // or one or two empty shells the caret was normalized out of.
           if (
             parent.type.name === "paragraph" &&
             $from.parentOffset === parent.content.size &&
@@ -262,11 +228,8 @@ export const mathAutopairPlugin = $prose(
 
           if (parent.type.name !== "math_inline") return false;
           if (parent.content.size !== 0) {
-            // Enter inside a formula that was never closed ("costs $5."):
-            // a "$" with no partner is just a dollar sign, so it goes back
-            // to text and Enter then splits the line as usual - instead of
-            // carrying the open formula, and everything typed after it,
-            // into the next paragraph.
+            // Enter inside a formula never closed ("costs $5."): the "$" is a dollar
+            // sign, so it goes back to text and Enter splits the line as usual.
             view.dispatch(
               unwrapInlineMath(
                 state,
@@ -280,9 +243,8 @@ export const mathAutopairPlugin = $prose(
 
           const paragraphDepth = $from.depth - 1;
           const paragraph = $from.node(paragraphDepth);
-          // The line must contain nothing but the typed "$$" (in any of its
-          // shapes - see isMathFenceLine) so a stray empty pair elsewhere on
-          // a longer line can't hijack Enter.
+          // Only when the line holds nothing but the typed "$$", so a stray empty pair
+          // on a longer line can't hijack Enter.
           if (!isMathFenceLine(paragraph)) return false;
 
           const paragraphPos = $from.before(paragraphDepth);

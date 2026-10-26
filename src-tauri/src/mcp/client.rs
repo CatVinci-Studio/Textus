@@ -1,8 +1,6 @@
-//! One connection to an MCP server: JSON-RPC 2.0 over a child process's
-//! stdin and stdout (one message a line), or over Streamable HTTP (each
-//! message POSTed, the answer as JSON or a short event stream). Only what
-//! a client that calls tools needs: initialize, tools/list, tools/call -
-//! and an answer to the server's ping.
+//! One connection to an MCP server: JSON-RPC 2.0 over a child process's stdio
+//! (a message a line) or Streamable HTTP. Only initialize, tools/list,
+//! tools/call, and an answer to ping.
 
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -12,8 +10,8 @@ use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::oneshot;
 
-/// The protocol version asked for; a server answers with the one it
-/// speaks, and every version since 2024-11-05 has the calls used here.
+/// The protocol version asked for; a server answers with its own, and every
+/// version since 2024-11-05 has the calls used here.
 const PROTOCOL_VERSION: &str = "2025-06-18";
 /// How long a server gets to start and answer initialize - npx may first
 /// download the package.
@@ -164,9 +162,8 @@ impl Connection {
         Ok(tools)
     }
 
-    /// Calls a tool: its result as the model reads it - its text, and a
-    /// note for each picture or resource it sent - and whether the tool
-    /// said it failed.
+    /// Calls a tool: its result as the model reads it (text, plus a note per
+    /// picture or resource) and whether the tool said it failed.
     pub async fn call_tool(&self, name: &str, arguments: Value) -> Result<(String, bool), String> {
         let result = self
             .request(
@@ -339,10 +336,8 @@ fn spawn(program: &str, args: &[String], env: &[(String, String)]) -> Result<Std
     Ok(stdio)
 }
 
-/// A message from the server: the answer to one of ours goes to its
-/// caller; a request of its own gets the reply returned - ping answered,
-/// anything else (sampling, roots) not offered by this client refused. A
-/// notification (logging, progress) needs nothing.
+/// A message from the server: an answer goes to its caller; a request gets a
+/// reply (ping answered, anything else refused); a notification needs nothing.
 fn dispatch(waiting: &Waiting, message: Value) -> Option<Value> {
     if let Some(method) = message["method"].as_str() {
         let id = message.get("id")?.clone();

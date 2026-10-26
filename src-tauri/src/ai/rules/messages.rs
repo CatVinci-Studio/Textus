@@ -1,9 +1,6 @@
-//! Messages for the shared rules, in the ten UI languages - one file per
-//! language, messages/<code>.txt, each line `rule.key = message`, with
-//! `{0}`, `{1}` for values. Language-specific rules write their messages
-//! in their own language, in code, as the catalogue asks; these are the
-//! rules that fire on text in any language, so their message follows the
-//! text's language. English fills any gap.
+//! Messages for the shared rules, which fire on text in any language, in the
+//! UI languages: messages/<code>.txt, lines of `rule.key = message` with `{0}`
+//! for values. English fills any gap.
 
 use super::detect::Lang;
 use std::collections::HashMap;

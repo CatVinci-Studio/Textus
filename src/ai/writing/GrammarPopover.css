@@ -1,5 +1,5 @@
-/* The card under a grammar underline (GrammarPopover.tsx): kind, wrong →
-   fix, the checker's note, the fix as the button. */
+/* The card under a grammar underline: kind, wrong → fix, the checker's
+   note, the fix as the button. */
 .grammar-popover {
   position: fixed;
   z-index: 210;

@@ -1,4 +1,4 @@
-/* plugin-form.tsx: a plugin's few fields in the app's dialog. */
+/* A plugin's few fields in the app's dialog. */
 .plugin-form {
   min-width: min(380px, calc(100vw - 32px));
 }

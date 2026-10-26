@@ -7,13 +7,9 @@ import {
 } from "./motion";
 
 /**
- * FLIP: a list whose items moved (a tab closed, a card collapsed, a row
- * removed) lets each survivor slide from where it was to where it now is,
- * on transforms alone - the layout itself changes once, in one frame.
- *
- * First `measure` where everything is, change the DOM (React commits it),
- * then `play`. In React the two halves straddle a commit: measure in the
- * event handler that causes the change, play in a layout effect.
+ * FLIP: moved list items slide from their old place to their new one on
+ * transforms alone. `measure` in the event handler causing the change, then
+ * `play` in a layout effect after React commits.
  */
 
 export type Snapshot = Map<Element, DOMRect>;
@@ -30,10 +26,8 @@ export function measure(elements: Iterable<Element>): Snapshot {
 
 type Timing = { duration?: DurationToken | number; easing?: EasingToken };
 
-/** Slides every element of `before` that has moved from its old place to
- *  its new one. Reads all the new places first, then starts the slides.
- *  `timingFor` gives one element a timing of its own - the tab that was
- *  let go lands on a spring while the others make way for it. */
+/** Slides every element of `before` that moved from its old place to its new
+ *  one. `timingFor` gives one element its own timing. */
 export function play(
   before: Snapshot,
   {
@@ -81,8 +75,8 @@ export interface Ghost {
   height: number;
 }
 
-/** A copy of `el` and its place in its offset parent - for an exit played
- *  after React has already removed the original. */
+/** A copy of `el` and its place in its offset parent, for an exit played
+ *  after React has removed the original. */
 export function captureGhost(el: HTMLElement): Ghost {
   const node = el.cloneNode(true) as HTMLElement;
   // Not one of the list's own items: later measurements must not see it.
@@ -97,17 +91,9 @@ export function captureGhost(el: HTMLElement): Ghost {
   };
 }
 
-/**
- * Puts a captured copy back where its original was, out of the layout -
- * the survivors close the gap under it - and lets `className` (a
- * stylesheet animation) play it out. It leaves at the first of its
- * animations ending or `exitMs`, and at once when none runs. `parent` must
- * be the original's offset parent (positioned), so it scrolls with the
- * list it was part of. `under`: put first among the parent's children, so
- * the items moving into its place paint over it - unless a sibling rule
- * (a hairline drawn between rows) would then light up on the item after
- * it.
- */
+/** Puts a captured copy back where its original was, out of the layout, until
+ *  `className`'s animation ends or `exitMs`. `parent` must be the original's
+ *  positioned offset parent; `under` puts the copy beneath the survivors. */
 export function releaseGhost(
   ghost: Ghost,
   parent: HTMLElement,
@@ -151,13 +137,9 @@ export function flip(
 }
 
 /**
- * The same, for a change whose cause has no event handler of its own to
- * measure in - a panel opened from a menu, a shortcut, a tour step: every
- * commit in which `watch` changes is measured just before React applies it
- * and played just after, before the frame is painted. Renders nothing.
- *
- * A class because getSnapshotBeforeUpdate is the one hook React runs
- * before it touches the DOM; layout effects all run after.
+ * The same, for a change with no event handler to measure in: every commit
+ * in which `watch` changes is measured before and played after. A class,
+ * because getSnapshotBeforeUpdate is the one hook that runs before the DOM changes.
  */
 export class FlipOnChange extends Component<{
   watch: unknown;
@@ -174,9 +156,8 @@ export class FlipOnChange extends Component<{
 
   componentDidUpdate(_: unknown, __: unknown, before: Snapshot | null) {
     if (!before) return;
-    // After the rest of the commit's layout effects - a parent's runs after
-    // this, and one may be what moves the layout (zen's class on <html>) -
-    // but still before the frame is painted.
+    // After the commit's other layout effects (a parent's may be what moves the
+    // layout), but before the frame is painted.
     const { duration, easing } = this.props;
     queueMicrotask(() => play(before, { duration, easing }));
   }
@@ -186,10 +167,9 @@ export class FlipOnChange extends Component<{
   }
 }
 
-/** What a gesture measured itself, mid-move, for ListMotion to start from:
- *  the items' places before it cleared its own shifts, the item it let go
- *  of (it lands on a spring) and one that left with the pointer (nothing
- *  to fade out). */
+/** What a gesture measured itself mid-move, for ListMotion to start from:
+ *  places before it cleared its shifts, the item let go of, and one that left
+ *  with the pointer. */
 export interface PendingFlip {
   rects: Snapshot;
   dropped?: string;
@@ -197,12 +177,9 @@ export interface PendingFlip {
 }
 
 /**
- * The motion of a keyed list across a commit that changes which items it
- * has, or their order (state that lives elsewhere): every item - the
- * `container`'s descendants carrying `data-flip-id` - glides from where it
- * was to where it now is; an item removed stays a moment in its old place
- * as a copy (React has already removed it) to play `ghostClass`'s exit;
- * a new one appears by its own stylesheet animation. Renders nothing.
+ * The motion of a keyed list across a commit that changes its items or
+ * order: `data-flip-id` items glide to their new places, a removed one plays
+ * `ghostClass`'s exit as a copy, and a new one animates by its own stylesheet.
  */
 export class ListMotion extends Component<{
   ids: string[];
@@ -210,7 +187,6 @@ export class ListMotion extends Component<{
   ghostClass: string;
   /** The longest the ghost's exit runs - a fallback, not a wait. */
   exitMs: number;
-  /** See releaseGhost. */
   ghostsUnder?: boolean;
   pending?: RefObject<PendingFlip | null>;
 }> {

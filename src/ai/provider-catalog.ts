@@ -3,12 +3,8 @@ import { ai, type WebSearchStatus } from "../platform/ipc";
 import { useSettings } from "../settings/SettingsContext";
 
 /**
- * Structural facts about each AI provider, fetched from the Rust catalog
- * (src-tauri/src/ai/catalog.rs - fields kept in sync by hand, comments on
- * both sides point here) so the provider picker in Settings doesn't
- * hardcode the same facts a second time. Provider ids are plain strings now
- * (not a closed union) - the catalog itself is the source of truth for
- * which ones exist.
+ * Structural facts about each AI provider, fetched from the backend catalog
+ * so Settings doesn't hardcode them a second time. Fields kept in step by hand.
  */
 export interface ProviderCatalogEntry {
   id: string;
@@ -23,14 +19,12 @@ export interface ProviderCatalogEntry {
   /** Stronger default used only by Agent chat. */
   agentDefaultModel: string | null;
   keyOptional: boolean;
-  /** Whether this provider's API accepts image content parts at all - what
-   *  gates the chat's image attachments. A provider-level claim, not a
-   *  model-level one; see the Rust field's comment for why. */
+  /** Whether the provider's API accepts image parts at all, which gates the
+   *  chat's image attachments. A provider-level claim, not a model-level one. */
   supportsVision: boolean;
   /** False when a live model-list fetch is known not to work. */
   modelsListable: boolean;
-  /** A small pre-supplied set of current model ids (pi.dev's models.json
-   *  idea) - seeds the picker before, or in place of, any live fetch. */
+  /** A few current model ids that seed the picker before, or instead of, a live fetch. */
   knownModels: string[];
 }
 
@@ -38,10 +32,8 @@ function fetchProviderCatalog(): Promise<ProviderCatalogEntry[]> {
   return ai.listProviders();
 }
 
-/// A deliberate subset of the Rust catalog (src-tauri/src/ai/catalog.rs) -
-/// only for the first render and the dev shim, where
-/// `invoke("list_providers")` resolves to `null` instead of the real list.
-/// Its entries must still match the Rust ones (provider-catalog.test.ts).
+/// A subset of the backend catalog for the first render and the dev shim,
+/// where `list_providers` resolves to null. Entries must match the backend's.
 export const FALLBACK_CATALOG: ProviderCatalogEntry[] = [
   {
     id: "openai",
@@ -84,23 +76,16 @@ export const FALLBACK_CATALOG: ProviderCatalogEntry[] = [
   },
 ];
 
-/// The catalog entry for whichever provider is selected in Settings, or
-/// undefined while the catalog is still loading and the fallback doesn't
-/// carry it.
-///
-/// For callers that want only the active entry - it saves them wiring up
-/// both the catalog and the settings. A component that already holds the
-/// catalog for other reasons should keep doing its own `find` instead:
-/// calling this as well would subscribe to the catalog twice.
+/// The catalog entry for the provider selected in Settings, or undefined while
+/// loading. A component that already holds the catalog should `find` itself
+/// rather than subscribe twice.
 export function useActiveProvider(): ProviderCatalogEntry | undefined {
   const { settings } = useSettings();
   const catalog = useProviderCatalog();
   return catalog.find((entry) => entry.id === settings.aiProvider);
 }
 
-/// Shared catalog fetch (fallback -> real list once it resolves) - both the
-/// provider picker and the Textus AI page's chat model picker need the same
-/// data, so this is the one place that owns fetching it.
+/// The shared catalog fetch: the fallback, then the real list once it resolves.
 export function useProviderCatalog(): ProviderCatalogEntry[] {
   const [catalog, setCatalog] =
     useState<ProviderCatalogEntry[]>(FALLBACK_CATALOG);
@@ -116,18 +101,16 @@ export function useProviderCatalog(): ProviderCatalogEntry[] {
   return catalog;
 }
 
-/** Fired when a search service's key is saved or cleared - a key isn't a
- *  setting, so useWebSearchStatus wouldn't otherwise ask again. */
+/** Fired when a search service's key is saved or cleared; a key isn't a
+ *  setting, so nothing else would ask again. */
 const WEB_SEARCH_SETUP = "textus:web-search-setup";
 
 export function notifyWebSearchSetup() {
   window.dispatchEvent(new Event(WEB_SEARCH_SETUP));
 }
 
-/// What the composer's Web search button can do with the chat provider and
-/// model chosen in Settings: the provider's own search, or the search
-/// service Textus uses instead (src-tauri ai/web/mod.rs decides). Null
-/// until it is known.
+/// What the composer's Web search button can do with the chosen chat provider
+/// and model: its own search, or Textus's search service. Null until known.
 export function useWebSearchStatus(): WebSearchStatus | null {
   const { settings } = useSettings();
   const provider = settings.aiProvider;

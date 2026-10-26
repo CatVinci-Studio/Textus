@@ -23,20 +23,15 @@ import {
 } from "./sentence-stream";
 import { pendingEditKey, type PendingSentence } from "./pending-types";
 
-/**
- * New text coming into the document: one reveal per proposal (UnitReveal:
- * a sentence or a block at a time, each entering as it lands) and the green
- * text it fills in as it goes - Markdown rendered inline or
- * as blocks, diagrams and maths when ready, pictures in their frames - and
- * what a stopped rewrite keeps. DOM side effects only, outside the editor
- * state (pending-edit-plugin.ts).
- */
+/** New text coming into the document: one reveal per proposal and the green
+ *  text it fills in. DOM side effects only, kept outside the editor state
+ *  as streamed text can arrive before its widget exists. */
 
 export interface InsertAnimation {
   callId: string;
   /** Full text known so far - grows while the proposal streams. */
   target: string;
-  /** Paces `target` onto the screen a unit at a time (unit-reveal.ts). */
+  /** Paces `target` onto the screen a unit at a time. */
   reveal: UnitReveal;
   /** The text the widget last drew: a frame with nothing new draws
    *  nothing, so the DOM under the caret stays as it is. */
@@ -51,14 +46,13 @@ export interface InsertAnimation {
   /** The settle meta was dispatched - never dispatch it twice. */
   settled: boolean;
   /** Its text is whole but the call's own arguments aren't in yet: it
-   *  lands, and stays undecided (ProposalStreamEffects.feed's `final`). */
+   *  lands, and stays undecided. */
   awaitingFinal: boolean;
-  /** Set when the text is laid out sentence by sentence as it streams
-   *  (PendingPreview.streamSource); `span` is then only the sentence being
-   *  written. */
+  /** Set when the text is laid out sentence by sentence as it streams;
+   *  `span` is then only the sentence being written. */
   stream: StreamState | null;
   /** New text in a line of a paragraph: what of it has come in, for the
-   *  next batch to fade in on its own (renderAnimation). */
+   *  next batch to fade in on its own. */
   words: Cascade | null;
 }
 
@@ -71,26 +65,25 @@ export interface StreamState {
    *  only runs again when a sentence completes, not on every frame. */
   alignedFor: string | null;
   /** The most originals the stream has reached: a later layout never
-   *  hands one back (sentence-stream.ts's `reachedAtLeast`). */
+   *  hands one back. */
   reached: number;
   /** `layoutSignature` of the layout the decorations were last built
    *  from: a different one asks for a rebuild (`relayout`). */
   drawn: string;
   relayoutQueued: boolean;
-  /** The new text each change's widget was drawn with, by change index -
-   *  what tells a sentence just completed (the partial span already showed
-   *  it: no entrance) from one a re-alignment changed (a cross-fade). */
+  /** The new text each change's widget was drawn with, by change index, to
+   *  tell a just-completed sentence from one a re-alignment changed. */
   shown: Map<number, { after: string; at: number }>;
   /** The change index the sentence being written was drawn as. */
   partialIndex: number | null;
-  /** The struck originals whose strike has drawn in (drawStrikesIn). */
+  /** The struck originals whose strike has drawn in. */
   struck: Set<string>;
-  /** Set once stopped mid-stream: the text it keeps (stopRewrite). */
+  /** Set once stopped mid-stream: the text it keeps. */
   stopped?: string | null;
-  /** The completed changes as last drawn (PendingPreview.streamChanges). */
+  /** The completed changes as last drawn. */
   changes: PendingSentence[];
-  /** When the text last landed - a paragraph rewritten whole: the beat its
-   *  changes enter on, in the text and in the margin (ui/moves.ts). */
+  /** When the text last landed: the beat its changes enter on, in the text
+   *  and in the margin. */
   landedAt: number;
 }
 
@@ -148,19 +141,15 @@ export function textKey(text: string): string {
   return (h >>> 0).toString(36);
 }
 
-/**
- * The streaming rewrite's layout for what is on screen now (the reveal's
- * text, not what has arrived): completed sentences are aligned when one
- * completes, the sentence being written is placed every frame. Asks for a
- * rebuild when the shape changed.
- */
+/** The streaming rewrite's layout for what is on screen now: completed
+ *  sentences aligned when one completes, the partial one every frame. */
 export function refreshStream(anim: InsertAnimation) {
   const s = anim.stream;
   if (!s) return;
   const done = anim.done && anim.reveal.caughtUp;
   const pieces = splitUnits(anim.reveal.text);
-  // What is on screen ends where a unit does (unit-reveal.ts), unless a
-  // pause landed one partway: then its last piece is still being written.
+  // What is on screen ends where a unit does, unless a pause landed one
+  // partway: then its last piece is still being written.
   const completed =
     done || anim.reveal.endsOnUnit ? pieces : pieces.slice(0, -1);
   const key = `${done ? 1 : 0}${completed.join("")}`;
@@ -190,10 +179,8 @@ export function refreshStream(anim: InsertAnimation) {
   if (layoutSignature(s.layout) !== s.drawn) queueRelayout(anim);
 }
 
-/** Rebuilds the decorations from the new layout - after the current
- *  dispatch (this is reached from inside a decoration draw too), but before
- *  the frame is painted. What landed may grow its paragraph: the text below
- *  glides to its new place rather than jumping there (ui/flip.ts). */
+/** Rebuilds the decorations after the current dispatch (this runs inside
+ *  decoration draws too) but before paint; the text below glides. */
 export function queueRelayout(anim: InsertAnimation) {
   const s = anim.stream;
   const view = anim.view;
@@ -233,31 +220,20 @@ export function updateAnimation(
   anim.reveal.update(text, done, performance.now());
 }
 
-/** Whether the callId's text is still being revealed (or may still grow) -
- *  while true, the preview must stay in the un-decidable "streaming" state
- *  even after the final proposal arguments have landed. */
+/** Whether the callId's text is still being revealed or may still grow;
+ *  the preview stays undecidable meanwhile. */
 export function stillRevealing(callId: string): boolean {
   const anim = animations.get(callId);
   if (!anim) return false;
-  // Nothing to type out - once the arguments are final. A `delete` proposes
-  // no text, so no green insert widget is ever drawn for it and no reveal
-  // can ever complete: reporting "still revealing" after its final feed
-  // would strand the preview in `streaming` for good (settle can only be
-  // dispatched by a widget that doesn't exist), and a preview that never
-  // becomes decidable never gets an accept/reject bar. While the stream is
-  // still open, though, an empty text only means its first characters
-  // haven't arrived: a draft placed right after `"text": "` used to settle
-  // there and then, became decidable mid-stream, and - settling only once -
-  // stayed "Writing…" forever when the final proposal landed mid-reveal.
+  // Empty text is done only once the arguments are final (a `delete` has no
+  // widget to settle it); mid-stream it means none has arrived yet.
   if (anim.awaitingFinal) return true;
   if (anim.target.length === 0) return !anim.done;
   return !anim.done || !anim.reveal.caughtUp;
 }
 
-/** Once the reveal completes, flips the preview out of `streaming` via a
- *  plugin meta so Accept/Reject finally show. Deferred a tick: this is
- *  reached from animation frames but also from inside decoration draws,
- *  where a reentrant dispatch is not allowed. */
+/** Once the reveal completes, settles the preview. Deferred a tick, as this
+ *  also runs inside decoration draws, where dispatch can't re-enter. */
 export function maybeSettle(callId: string) {
   const anim = animations.get(callId);
   if (!anim || anim.settled || stillRevealing(callId)) return;
@@ -288,10 +264,8 @@ export function renderAnimation(anim: InsertAnimation) {
     "pending-insert-typing",
     !anim.reveal.caughtUp || !anim.done,
   );
-  // Drawn only when what it shows changed: redrawn every frame, the DOM
-  // under the caret changed sixty times a second and WebKit scrolled the
-  // caret back into view each time - the document wouldn't scroll away
-  // while a proposal was written.
+  // Drawn only when what it shows changed: WebKit scrolls the caret back
+  // into view on each DOM change under it.
   const fresh = anim.span.dataset.drawn !== "true";
   if (text === anim.drawn && !fresh) return;
   // A widget made again (its decoration redrawn) shows what was on screen
@@ -303,15 +277,11 @@ export function renderAnimation(anim: InsertAnimation) {
   renderPendingHtml(anim.span, text);
   anim.drawn = text;
   anim.span.dataset.drawn = "true";
-  // Each block that landed - a paragraph written whole - fades in rising
-  // from a little below (ui/moves.ts), all of it at once: a sentence or a
-  // word at a time, the writing came in jerks. A fence growing a line at a
-  // time is drawn again in place (its diagram builds itself up). Text
-  // replaced rather than added to shows at once.
+  // Each landed block fades in rising, all at once. Text replaced rather
+  // than added to shows at once.
   if (redrawn || !text.startsWith(shown)) return;
-  // In a line of a paragraph there are no blocks to rise: the batch that
-  // landed fades in as one, what was there before staying as it was (the
-  // widget's first text fades in with the widget, milkdown-theme.css).
+  // In a line of a paragraph the landed batch fades in as one; what was
+  // there before stays.
   if (anim.span.dataset.blocks !== "true") {
     anim.words ??= new Cascade();
     if (fresh) anim.words.settle(anim.span);
@@ -320,11 +290,8 @@ export function renderAnimation(anim: InsertAnimation) {
   }
   for (const el of [...anim.span.children].slice(before))
     enter(el, { from: "up", distance: "md", duration: "--dur-slow" });
-  // The text below it, pushed down by what landed, glides there - once
-  // the widget is in the document, when it was drawn as it was made: in a
-  // microtask, which runs once ProseMirror has put it in and before the
-  // frame is painted. On the next frame, the text stood a frame where it
-  // was pushed to and then went back up to glide down.
+  // The text below glides down, measured in a microtask: after ProseMirror
+  // puts the widget in, before paint, so nothing jumps for a frame.
   const span = anim.span;
   const push = () => {
     const root = span.closest(".ProseMirror");
@@ -334,25 +301,16 @@ export function renderAnimation(anim: InsertAnimation) {
   else queueMicrotask(push);
 }
 
-/**
- * New text into its widget, as rendered Markdown. With line breaks in it
- * (a hard break, or the blank line between two paragraphs), each line goes
- * into a span of its own that carries the tint (`pending-insert-lines`),
- * and the breaks stand between them untinted: one inline box over several
- * lines painted its padding at every line end and a stub of colour on an
- * empty line, and the darker hover tint, a box per line, more so. A
- * ```mermaid fence stands between the lines too, as its diagram.
- */
+/** New text into its widget, as rendered Markdown, each line its own tinted
+ *  span: one box over several lines paints padding at every line end. */
 export function renderPendingHtml(span: HTMLElement, markdown: string) {
   fillPendingHtml(span, markdown);
   if (span.querySelector(".math-pending")) awaitKatex(span, markdown);
   else waitingForKatex.delete(span);
 }
 
-// The widgets showing a formula's source while KaTeX loads (katex-loader.ts),
-// with the markdown each shows. A widget is kept by its key across
-// transactions, so nothing else would draw it again once KaTeX is here: it
-// would show the source until the proposal next changed.
+// Widgets showing a formula's source while KaTeX loads, redrawn once it is
+// here, since a widget kept by its key wouldn't be.
 export const waitingForKatex = new Map<HTMLElement, string>();
 
 export function awaitKatex(span: HTMLElement, markdown: string) {
@@ -367,8 +325,7 @@ export function awaitKatex(span: HTMLElement, markdown: string) {
 
 export function fillPendingHtml(span: HTMLElement, source: string) {
   fillPendingContent(span, source);
-  // A picture not here yet - still being made - is its frame until it
-  // comes (pending-picture.ts).
+  // A picture still being made is its frame until it comes.
   framePendingPictures(span);
 }
 
@@ -376,14 +333,8 @@ export function fillPendingHtml(span: HTMLElement, source: string) {
  *  HTML policy keeps (it drops blob: and textus-generated:). */
 export const PICTURE_STAND_IN = "https://textus.invalid/generated/";
 
-/**
- * New text between two blocks, as the blocks it will be: paragraphs,
- * lists, headings, tables, display math and footnotes rendered as the
- * document renders them (renderDocumentHtml) - drawn inline, as one
- * paragraph's run of text, they showed as their Markdown, "- one", "[^2]:
- * …", with line breaks between (rc.5). A ```mermaid fence is its diagram,
- * and a waiting picture its frame, as inline.
- */
+/** New text between two blocks, rendered as the blocks it will be, as
+ *  inline text would show its Markdown. */
 export function fillPendingBlocks(el: HTMLElement, source: string) {
   const parts = splitMermaidFences(source) ?? [
     { kind: "text" as const, text: source },
@@ -444,9 +395,8 @@ export function fillPendingContent(span: HTMLElement, source: string) {
     span.innerHTML = renderMarkdownInlineHtml(markdown);
     nodes = [...span.childNodes];
   } else {
-    // A ```mermaid fence is drawn as its diagram, in a box of its own
-    // between the lines (pending-diagram.ts). The same fence keeps its
-    // element across the typewriter's frames, and with it its drawing.
+    // A ```mermaid fence is drawn as its diagram, keeping its element across
+    // the typewriter's frames.
     const previous = span.querySelectorAll<HTMLElement>(".pending-diagram");
     let diagrams = 0;
     nodes = parts.flatMap((part) => {
@@ -513,12 +463,8 @@ export function dropAnimation(callId: string) {
   animations.delete(callId);
 }
 
-/**
- * Feeds streamed propose_edit text into the callId's green widget - called
- * by the editor (MilkdownEditor's stream-event handler) as `text` argument
- * fragments arrive, and once more with `done` when the call completes. The
- * widget picks the state up whenever it's created relative to this.
- */
+/** Feeds streamed text into the callId's green widget, and once more with
+ *  `done`. The widget picks the state up whenever it is created. */
 export function streamPendingInsertText(
   callId: string,
   text: string,
@@ -533,25 +479,17 @@ export function streamPendingInsertText(
     return;
   }
   existing.awaitingFinal = done && !final;
-  // `done` goes both directions: a widget drawn from an early streaming
-  // preview creates the entry with done=true (it can't know more text is
-  // coming) - the next stream call must be able to reopen it, or the
-  // reveal settles mid-stream.
+  // `done` can reopen: a widget drawn early creates the entry with
+  // done=true, or the reveal would settle mid-stream.
   updateAnimation(existing, text, done);
   ensureTicking(existing);
   renderAnimation(existing);
   maybeSettle(callId);
 }
 
-/**
- * What a rewrite stopped mid-stream keeps, when it was being laid out
- * sentence by sentence: the sentences it completed, then the original's
- * sentences it hadn't reached yet - as it reads on screen, where those are
- * still plain. A sentence cut off halfway goes, and its original stays: half
- * a sentence is not a revision anyone would take. Null when no sentence was
- * completed (nothing to keep), undefined when it wasn't laid out by
- * sentence (`text` is kept as it is).
- */
+/** What a stopped rewrite keeps, as it reads on screen: completed sentences,
+ *  then originals not reached. Half a sentence goes. Null: none completed;
+ *  undefined: not laid out by sentence. */
 export function stopRewrite(
   callId: string,
   text: string,
@@ -562,9 +500,8 @@ export function stopRewrite(
   return s.stopped;
 }
 
-/** What `stopRewrite` kept of the callId's rewrite - also for the re-add
- *  the conversation makes of the stopped turn, which carries the text as it
- *  streamed. Undefined when it wasn't stopped or not laid out by sentence. */
+/** What `stopRewrite` kept of the callId's rewrite, also for the stopped
+ *  turn's re-add. Undefined when not stopped or not laid out by sentence. */
 export function stoppedRewrite(callId: string): string | null | undefined {
   return animations.get(callId)?.stream?.stopped;
 }

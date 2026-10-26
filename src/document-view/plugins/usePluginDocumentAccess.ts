@@ -21,11 +21,8 @@ import {
 import type { useEditorProposals } from "../useEditorProposals";
 
 /**
- * A tab's editor, as plugins reach it (plugins/app-bridge.ts): while it is
- * the active tab, its Markdown and selection, edits made at once or shown
- * as proposals the user accepts or rejects - the same previews Textus AI's
- * edits are - and a place to go to; and, open in any tab, its text to read
- * and change in place (textus.files.process), so nothing typed is lost.
+ * A tab's editor as plugins reach it: while active, its Markdown, selection,
+ * edits and proposals; in any tab, its text to read and change in place.
  */
 export function usePluginDocumentAccess({
   run,

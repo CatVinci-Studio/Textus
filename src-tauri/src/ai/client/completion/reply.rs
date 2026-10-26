@@ -3,17 +3,9 @@
 
 use super::*;
 
-/// Removes what never belongs in a suggestion, before it is fitted: tags
-/// that aren't in the document (Haiku with thinking off once ended a word
-/// with "</reasoning_effort>"); outside code, line breaks at either end -
-/// including those a removed tag leaves behind ("率\n\n<br>" in a table
-/// cell, round-2 integration) - and the backticks a plain-text context
-/// doesn't use (Tab inserts plain text, so "`max_retries`" would land as
-/// literal backticks). A reply that still runs over several lines outside
-/// code is dropped whole: the prompt rules line breaks out there, and in
-/// the live eval every such reply was the model's reasoning about the
-/// prompt or a second block - an empty suggestion costs
-/// one pause, garbage costs a Tab and a cleanup.
+/// Removes what never belongs in a suggestion: stray tags, line breaks at
+/// either end outside code, backticks a plain-text context doesn't use. A reply
+/// still running over several lines outside code is dropped whole.
 pub(crate) fn clean_reply(before: &str, after: &str, text: &str, in_code: bool) -> String {
     let mut out = String::with_capacity(text.len());
     let mut rest = text;
@@ -47,10 +39,8 @@ pub(crate) fn clean_reply(before: &str, after: &str, text: &str, in_code: bool) 
     }
     let mut out = out.trim_matches(['\n', '\r']);
     if out.contains('\n') {
-        // One exception: the model answered, talked to itself, then gave
-        // the same answer again ("率\n\n</reasoning_effort>\n\nWait, I must
-        // not include tags. Output the cell content only.\n\n率", round 4,
-        // zh/table-cell) - an answer it stated twice is its answer.
+        // One exception: an answer the model stated twice, with talk in between,
+        // is its answer.
         let mut lines = out.lines().map(str::trim).filter(|l| !l.is_empty());
         match (lines.next(), lines.next_back()) {
             (Some(first), Some(last)) if first == last => out = first,
@@ -65,14 +55,9 @@ pub(crate) fn clean_reply(before: &str, after: &str, text: &str, in_code: bool) 
     }
 }
 
-/// Whether a suggestion carries a figure the text around the cursor
-/// doesn't - a time, a count, a status code. The prompt rules invented
-/// figures out, and Haiku still wrote "返回 200" into a deployment step and
-/// "오전 9시부터 오후 9시까지" as a library's hours (round 4); a figure the
-/// writer didn't give is the kind of invention they may not notice before
-/// sending. The next number in a sequence the text counts (step 3 after
-/// step 2) is fine. Formatting differences ("2,300" and "2300") are one
-/// figure.
+/// Whether a suggestion carries a figure (a time, a count, a status code) the
+/// text around the cursor doesn't. The next number in a counted sequence is
+/// fine; "2,300" and "2300" are one figure.
 pub(crate) fn invents_figures(before: &str, after: &str, text: &str) -> bool {
     let figures = |s: &str| -> Vec<String> {
         s.split(|c: char| !c.is_ascii_digit() && c != ',' && c != '.')
@@ -92,8 +77,7 @@ pub(crate) fn invents_figures(before: &str, after: &str, text: &str) -> bool {
 }
 
 /// A suggestion the model wrapped whole in ASCII quotes, around Chinese or
-/// Japanese text that never quotes with them: "時'就需要先傾聽居民的意見。'"
-/// (round 4, lang/zh-Hant/mid) - the quotes are the model's, not text.
+/// Japanese text that never quotes with them.
 pub(crate) fn unwrap_quotes(text: &str) -> &str {
     for q in ['\'', '"'] {
         if let Some(inner) = text.strip_prefix(q).and_then(|t| t.strip_suffix(q)) {
@@ -105,19 +89,9 @@ pub(crate) fn unwrap_quotes(text: &str) -> &str {
     text
 }
 
-/// The model's reply as the editor should get it: each candidate cleaned
-/// (clean_reply) and fitted to the cursor, the separator lines kept for the
-/// frontend's splitCandidates. A newline the first (or only) candidate
-/// opens with inside code is its own - code going on on the next line,
-/// whose indentation must survive - while after a separator, newlines only
-/// end the separator's line: each later candidate gets exactly one, so the
-/// frontend can split there and keep the joining space that follows it.
-/// Newlines a candidate ends with only lead into the next separator, so
-/// outside code the last one keeps none: the as-you-type path shows the
-/// reply as it is, and "率\n" in a table cell would insert the line break.
-/// The reply as the editor gets it, for this request (finish_completion):
-/// as the writer types (`length` short, one candidate), only to the end of
-/// its first clause; an explicit continuation as it came.
+/// The model's reply as the editor gets it: each candidate cleaned and fitted
+/// to the cursor, the separator lines kept, each later candidate opening with
+/// exactly one newline. As the writer types, only its first clause.
 pub(crate) fn finish_suggestion(
     before: &str,
     after: &str,
@@ -138,12 +112,8 @@ pub(crate) fn finish_suggestion(
     }
 }
 
-/// `text` up to the end of its first clause once it has a few words, and
-/// never more than a short line. Asked for 5 to 20 characters, Haiku wrote
-/// 20 to 60 more often than not, and what came after the first clause was
-/// where it went its own way: in the typing replay (completion_replay),
-/// suggestions of up to 16 characters were taken nine times in ten, those
-/// past 30 little more than half.
+/// `text` up to the end of its first clause once it has a few words, and never
+/// more than a short line: past that the model went its own way.
 pub(crate) fn first_clause(text: &str) -> String {
     const CJK_MIN: usize = 6;
     const CJK_MAX: usize = 24;
@@ -196,11 +166,8 @@ pub(crate) fn first_clause(text: &str) -> String {
     text.to_string()
 }
 
-/// `text` up to the end of its first sentence - an as-you-type suggestion
-/// is a few words, and what goes past the sentence the writer is in is
-/// what they would have to supply themselves. A full stop counts before a
-/// space or the end, not inside "3.5" or "e.g"; closing quotes and
-/// brackets right after it stay with it.
+/// `text` up to the end of its first sentence. A full stop counts before a
+/// space or the end, not inside "3.5"; closing quotes after it stay with it.
 pub(crate) fn first_sentence(text: &str) -> String {
     const CLOSERS: &str = "”’\"')）」』]";
     let chars: Vec<char> = text.chars().collect();
@@ -244,8 +211,7 @@ pub(crate) fn finish_completion(before: &str, after: &str, raw: &str, in_code: b
             } else if in_code {
                 format!("{lead}{}{tail}", fit_to_cursor(before, &body))
             } else {
-                // The conventions the text before the cursor already
-                // follows (rules::postfix, CATALOGUE.md §3.12).
+                // The conventions the text before the cursor already follows.
                 let fitted = fit_to_cursor(before, &body);
                 format!(
                     "{lead}{}{tail}",

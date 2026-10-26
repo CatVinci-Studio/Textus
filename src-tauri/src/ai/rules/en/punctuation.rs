@@ -72,9 +72,7 @@ pub(crate) static SERIAL_YES: LazyLock<Regex> =
 pub(crate) static SERIAL_NO: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\b\w+, \w+(?: \w+)? (?:and|or) \w+").unwrap());
 
-/// en.punct.serial-comma: only against a chosen preset (never in
-/// Automatic): Chicago-like, Oxford, APA, MLA and the tech guides use it;
-/// AP-like news and GOV.UK don't.
+/// en.punct.serial-comma: only against a chosen preset, never in Automatic.
 pub(crate) fn serial_comma(t: &Text, ctx: &Ctx, out: &mut Out) {
     let p = ctx.profile;
     if !p.explicit {

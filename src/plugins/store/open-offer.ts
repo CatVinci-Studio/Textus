@@ -11,9 +11,8 @@ import { pluginName, pluginRecord, setPluginEnabled } from "../manager";
 import { matchesFilename } from "./manifest";
 
 /**
- * A file nothing opens - a PDF, a picture - when an official plugin in the
- * market would: offered then and there, to install (or turn on) and open
- * the file with. No plugin comes with Textus; this is how one is found.
+ * A file nothing opens (a PDF, a picture) when an official plugin would:
+ * offered then and there, to install or turn on and open the file with.
  */
 
 /** The official plugin in the catalog whose custom editor opens `path`. */

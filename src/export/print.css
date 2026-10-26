@@ -1,19 +1,14 @@
-/* PDF export on Windows/Linux is window.print() on this live window (macOS
-   renders offscreen instead - see exporters.ts's exportPdf). These rules make
-   that print look like the themed document: hide app chrome, flow the content,
-   and keep the editor theme's colours. */
+/* PDF export on Windows/Linux prints this live window: hide app chrome, flow
+   the content and keep the theme's colours. */
 @media print {
-  /* Without this the print engine drops every background colour, flattening the
-     editor theme (code blocks, quotes, dark pages) to white. */
+  /* Otherwise the print engine drops every background colour. */
   :root {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  /* A real vertical page margin on every page - padding alone insets only
-     the first and last, leaving text at each page seam flush against the
-     sheet edge where printers clip it. Chromium still paints the root
-     background into the margin, so the theme stays full-bleed. */
+  /* A real margin on every page; padding alone insets only the first and
+     last. Chromium still paints the root background into it. */
   @page {
     margin: 20mm 0;
   }
@@ -32,8 +27,8 @@
     margin-left: 0 !important;
   }
 
-  /* Editing affordances, not content - keep in step with
-     EDITOR_CHROME_SELECTOR in exporters.ts. */
+  /* Editing affordances, not content. Keep in step with
+     EDITOR_CHROME_SELECTOR. */
   .heading-marker,
   .enclosure-delimiter,
   .code-block-header,
@@ -52,10 +47,8 @@
     display: none !important;
   }
 
-  /* Wide content wraps or fits instead of running off the sheet: a page
-     cannot scroll a code/math box, and a resized table's pixel widths were
-     sized for the screen column (exporters.ts rescales them for the other
-     exports; the live DOM printed here can only be capped). */
+  /* Wide content wraps or fits: a page can't scroll, and a resized table's
+     pixel widths were sized for the screen. */
   .milkdown table {
     width: 100% !important;
     min-width: 0 !important;
@@ -98,16 +91,14 @@
     background: var(--editor-bg, var(--bg)) !important;
   }
 
-  /* Inset the text (page margins are zero for full-bleed); drop typewriter
-     mode's centering padding. */
+  /* Inset the text (page margins are zero for full-bleed). */
   .editor-content,
   .editor-content.typewriter-active {
     max-width: none;
     padding: 0 14mm;
   }
 
-  /* Keep indivisible blocks off page seams - a display formula or a
-     diagram cut in two reads as two broken halves. */
+  /* Keep indivisible blocks off page seams. */
   pre,
   blockquote,
   table,
@@ -119,8 +110,7 @@
   }
 }
 
-/* "Preparing PDF…" progress overlay shown by exportPdf while the offscreen
-   render + file write runs. */
+/* "Preparing PDF…" overlay while the offscreen render runs. */
 .pdf-export-overlay {
   position: fixed;
   inset: 0;

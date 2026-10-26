@@ -1,13 +1,6 @@
-//! The AI's proposals the writer hasn't decided on yet, kept with the
-//! document they were made for: closing the document, or quitting, used to
-//! lose them. In a project they are a file of the project's own,
-//! `.textus/pending/<the document's path in the project>.json`, so they
-//! travel with it; outside one, the app's data folder keeps them under
-//! `pending/`, named by a hash of the document's path. What a file holds
-//! is the frontend's (ai/revision/kept-proposals.ts) - opaque JSON here.
-//! Their pictures, made and waiting for Accept (ai/images.rs keeps them in
-//! memory only), go beside it, one file each in `<that file>.pictures/`,
-//! and are put back where the frontend asks for them when it is read.
+//! The AI's undecided proposals, kept with their document: in a project under
+//! `.textus/pending/`, else in the app data's `pending/`. The contents are the
+//! frontend's opaque JSON; made pictures go beside it in `<file>.pictures/`.
 
 use crate::ai::workspace::project_dir;
 use sha2::{Digest, Sha256};
@@ -53,7 +46,7 @@ fn pictures_dir(file: &Path) -> PathBuf {
     PathBuf::from(name)
 }
 
-/// A picture id as ai/images.rs makes them: a few letters and digits, so
+/// A picture id as the image module makes them: letters and digits only, so
 /// it can name a file and nothing else.
 fn valid_id(id: &str) -> bool {
     !id.is_empty()
@@ -80,10 +73,9 @@ fn kept_pictures(dir: &Path) -> Vec<(String, PathBuf)> {
         .collect()
 }
 
-/// Keeps the made pictures among `ids` in `dir` and lets go of the kept
-/// ones no longer asked for. One still being made is kept on a later
-/// write, once it is made. Only picture files are ever removed, and the
-/// folder once it is empty.
+/// Keeps the made pictures among `ids` in `dir` and lets go of the rest. One
+/// still being made is kept on a later write. Only picture files are ever
+/// removed, and the folder once empty.
 fn keep_pictures(dir: &Path, ids: &[String]) -> std::io::Result<()> {
     for (id, path) in kept_pictures(dir) {
         if !ids.contains(&id) {
@@ -138,9 +130,8 @@ pub async fn kept_proposals_read(
     serde_json::from_slice(&bytes).ok()
 }
 
-/// Keeps `kept` for the document, with the made pictures among `pictures`
-/// - or, with None, removes what was kept, once every proposal is
-/// decided.
+/// Keeps `kept` for the document, with the made pictures among `pictures`; with
+/// None, removes what was kept.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn kept_proposals_write(

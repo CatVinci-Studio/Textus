@@ -4,11 +4,8 @@ import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
 import { isMacPlatform } from "../../platform/os";
 
-/** Resolve the displayed line, including soft wraps and inline enclosures.
- * Native WebKit navigation can stop at our contenteditable=false markers.
- * Document coordinates avoid those widgets, and binary search avoids walking
- * every character in a long paragraph on each key repeat.
- */
+/** The displayed line's boundary. Native WebKit navigation can stop at the
+ *  contenteditable=false markers, so coordinates are binary-searched. */
 export function visualLineBoundary(
   view: EditorView,
   head: number,

@@ -1,12 +1,6 @@
 /**
- * The UI languages, in the order the language pickers list them.
- *
- * "zh" is Simplified Chinese: the code saved settings have used since the
- * first release, so it stays rather than becoming "zh-Hans". Every language
- * is registered here, in the string tables (strings.ts) and in the backend
- * (agent.rs's UI_LANGUAGES) ahead of its translation - a language without
- * one shows English - so translating one only fills files of its own
- * (docs/dev/translating.md).
+ * The UI languages, in the order the language pickers list them. "zh" is
+ * Simplified Chinese, kept as the code saved settings already use.
  */
 export const LANGS = [
   "en",
@@ -23,8 +17,7 @@ export const LANGS = [
 
 export type Lang = (typeof LANGS)[number];
 
-/** Each language's name in that language - what the pickers show, so a
- *  user finds their own whatever the UI is in now. */
+/** Each language's name in that language, so a user finds their own. */
 export const LANG_NAMES: Record<Lang, string> = {
   en: "English",
   zh: "简体中文",
@@ -39,9 +32,8 @@ export const LANG_NAMES: Record<Lang, string> = {
 };
 
 /** The BCP 47 tag for a UI language: `<html lang>`, which the CSS :lang()
- *  font stacks key off (Chinese needs a region there to pick Simplified or
- *  Traditional glyphs), and the locale dates and numbers are formatted in.
- *  The boot script (src-tauri/src/boot.js) has a copy of this mapping. */
+ *  font stacks key off, and the locale for dates and numbers. The boot
+ *  script has a copy of this mapping. */
 export function localeOf(lang: Lang): string {
   if (lang === "zh") return "zh-CN";
   if (lang === "zh-Hant") return "zh-TW";
@@ -52,10 +44,8 @@ export function isLang(value: unknown): value is Lang {
   return (LANGS as readonly unknown[]).includes(value);
 }
 
-/** The UI language for an OS locale ("zh-TW", "pt-BR", "de-AT"): its
- *  language when the app has it, English otherwise. Chinese goes by
- *  script, or by region where the tag gives none - Taiwan, Hong Kong and
- *  Macau write Traditional. */
+/** The UI language for an OS locale, English when the app lacks it. Chinese
+ *  goes by script, else by region: Taiwan, Hong Kong and Macau get Traditional. */
 export function detectLang(locale: string): Lang {
   const tag = locale.toLowerCase().replace(/_/g, "-");
   const [primary, ...rest] = tag.split("-");

@@ -52,8 +52,7 @@ describe("refusedProposalIds", () => {
     expect(out[3]).toBe(turns[3]);
   });
 
-  // tools.rs's propose_insertion: a replace sent in Write mode is refused,
-  // so its streamed preview is dropped and never offered.
+  // Its streamed preview is dropped and never offered.
   it("treats Write mode's refusal of a replace as a refusal", () => {
     expect(
       isRefusal(

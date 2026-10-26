@@ -1,21 +1,14 @@
-/* Textus AI on a phone: the panel as a bottom sheet with a handle, the
-   Quick Ask dock above the keyboard and the touch-sized composer
-   (quick-ask-dock.css and composer.css, beside this file). */
+/* Textus AI on a phone: the panel as a bottom sheet with a handle. */
 
 @media (max-width: 760px) {
-  /* Textus AI is a bottom sheet: about half the screen, so the document
-     stays in view above it - an edit it proposes can be read against the
-     text. The handle on top (AgentPanelSheetGrip) pulls it up to full
-     height or down to close. The width a desktop user dragged it to means
-     nothing here, hence the !important over the inline style. */
+  /* About half the screen, so a proposed edit can be read against the text;
+     the handle pulls it to full height or down to close. The desktop's dragged
+     width means nothing here, hence the !important over the inline style. */
   :root[data-window-chrome="mobile"] .agent-panel {
     position: fixed;
-    /* The half stop - 55% of the screen, SHEET_HALF in agent-panel.tsx -
-       set by where its top sits, not by a height. Raising the keyboard
-       moved the sheet's bottom up with it a frame or two before the web
-       view had shrunk (KeyboardFit.swift): a height then kept its old
-       value and shot the top ~150pt up the screen and back. A top keeps
-       its place until the new size lands. */
+    /* The half stop (55%), set by where its top sits, not a height: the keyboard
+       moves the sheet's bottom a frame before the web view shrinks, and a height
+       would shoot the top up the screen and back. */
     top: 45%;
     right: 0;
     bottom: 0;
@@ -37,9 +30,8 @@
     animation: motion-sheet-in var(--dur-sheet) var(--ease-spring);
   }
 
-  /* Once it has been carried, it has entered: the entrance must not
-     start over when the drag hands it back to its stop (agent-panel.tsx,
-     setSheetDown). Closing, below, still animates. */
+  /* Once carried, it has entered: the entrance must not restart when the drag
+     hands it back to its stop. Closing still animates. */
   :root[data-window-chrome="mobile"] .agent-panel[data-settled] {
     animation: none;
   }
@@ -54,13 +46,9 @@
     animation: none;
   }
 
-  /* Carried - under a finger, or settling where it was let go - the sheet
-     is laid out at full height and moved by its transform alone, never
-     by its height (AgentPanelSheetGrip). The composer and the bars over
-     it are lifted by as much as the sheet is lowered, so they stay on the
-     screen's bottom edge, and are opaque, as the message list now runs on
-     under them. A shadow the sheet's colour fills in below its edge while
-     it is pulled past the top stop. */
+  /* Carried, the sheet is laid out at full height and moved by its transform
+     alone. The composer and bars over it are lifted by as much as it is
+     lowered, and are opaque, as the message list runs on under them. */
   :root[data-window-chrome="mobile"] .agent-panel[data-carried] {
     /* Its inline height lays it out from the bottom edge up. */
     top: auto;
@@ -91,10 +79,8 @@
     display: none;
   }
 
-  /* The sheet's header rides up beside the grip instead of a row of its
-     own - Conversation / Memory on the left, history, + and x on the
-     right; the rest of that row lets touches through to the grip under
-     it. */
+  /* The sheet's header rides up beside the grip instead of a row of its own;
+     the rest of that row lets touches through to the grip. */
   :root[data-window-chrome="mobile"] .agent-panel-header {
     /* The grip's height: the buttons centre on the grip's line. */
     margin-top: -44px;

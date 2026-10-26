@@ -1,5 +1,5 @@
-/* The "?" after a label (InfoTip.tsx): quiet until asked - a muted ring
-   that darkens on hover, focus or while its card is open. */
+/* The "?" after a label: a muted ring that darkens on hover, focus or while
+   its card is open. */
 .info-tip {
   display: inline-flex;
   vertical-align: middle;

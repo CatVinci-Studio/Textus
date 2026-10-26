@@ -4,9 +4,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * docs/dev/textus.d.ts names every part of the API the plugin host's
- * runtime (runtime/host.js) gives a plugin, and nothing it doesn't: the
- * runtime is run here with no window behind it, and its `textus` walked.
+ * textus.d.ts names every part of the API the host runtime gives a plugin,
+ * and nothing it doesn't: the runtime runs here windowless, its `textus` walked.
  */
 
 const ROOT = join(__dirname, "..", "..", "..");

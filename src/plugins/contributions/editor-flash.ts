@@ -1,8 +1,7 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { flatten, posOf } from "./editor-text";
 
-// Flash (the Vim plugin's s): where what was typed is on screen, and the
-// labels a jump takes, for editor-input.ts to draw.
+// Flash (Vim's s): where what was typed is on screen, and the labels a jump takes.
 
 /** A label: drawn after its match (`pos`), jumping to its start (`at`). */
 export interface FlashLabel {
@@ -13,10 +12,9 @@ export interface FlashLabel {
 
 const LABELS = "asdfghjklqwertyuiopzxcvbnm";
 
-/** The places `query` is on screen (in any case), lit, and - once two
- *  characters are typed - their labels: the nearest the caret first, and
- *  never a letter that could go on a match, so typing on narrows the
- *  search. `count` is how many places, or labels once there are some. */
+/** The places `query` is on screen (any case), and once two characters are
+ *  typed their labels: nearest the caret first, never a letter that could
+ *  continue a match, so typing on narrows the search. */
 export function findFlash(view: EditorView, query: string) {
   const { flat, found } = flashMatches(view, query);
   const hay = flat.text.toLowerCase();
@@ -31,8 +29,7 @@ export function findFlash(view: EditorView, query: string) {
     from: posOf(flat, at),
     to: posOf(flat, at + n - 1) + 1,
   }));
-  // One character typed lights the places; the labels wait for the
-  // second.
+  // One character lights the places; the labels wait for the second.
   const labels: FlashLabel[] =
     n < 2
       ? []

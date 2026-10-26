@@ -147,9 +147,8 @@ impl MemoryDirs {
         items
     }
 
-    /// One memory kept (memory::pass, MemoryDirs::keep): validates, refuses a duplicate, and writes one
-    /// memory (or library entry) through the atomic writer. The error is
-    /// what the model is told instead.
+    /// One memory kept: validates, refuses a duplicate, and writes it (or a library
+    /// entry) atomically. The error is what the model is told instead.
     pub(crate) fn remember(
         &self,
         args: RememberArgs,
@@ -288,9 +287,8 @@ impl MemoryDirs {
                     .ok_or_else(|| format!("No library entry `{id}` to replace."))?;
                 Some(entry)
             }
-            // The entry the fact is about, by its name or an alias: "林晚的
-            // 性格变化" with the alias 林晚 is more about 林晚, not an entry
-            // of its own beside hers that says the opposite (1.2.0-rc.6).
+            // The entry the fact is about, by its name or an alias: a fact about 林晚
+            // belongs in her entry, not one beside it that says the opposite.
             None => {
                 let called = |n: &String| {
                     let n = n.to_lowercase();
@@ -310,10 +308,9 @@ impl MemoryDirs {
                 return Err(format!("Already remembered as `{id}` - nothing saved."));
             }
         }
-        // Found without `replaces`, the entry keeps its name and what it
-        // said, and the fact is added to it (what was true before a change
-        // still holds for the chapters before it); with `replaces`, the
-        // fact is the entry rewritten.
+        // Found without `replaces`, the entry keeps what it said and the fact is
+        // added (what held before a change still holds for earlier chapters); with
+        // `replaces`, the fact is the entry rewritten.
         let (name, aliases, text) = match existing {
             Some(entry) if replaces.is_none() => {
                 let mut all: Vec<String> = entry.aliases.clone();
@@ -418,8 +415,8 @@ impl MemoryDirs {
         Ok(id_of(scope, MEMORY_FOLDER, &target))
     }
 
-    /// Deletes a memory or a library entry (the Memory tab asks first):
-    /// set aside in its folder's `.forgotten/`, to restore (forgotten.rs).
+    /// Deletes a memory or a library entry: set aside in its folder's
+    /// `.forgotten/`, to restore.
     pub fn delete(&self, id: &str) -> Result<(), String> {
         let loc = self.locate(id)?;
         if !loc.path.exists() {

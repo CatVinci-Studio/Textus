@@ -2,24 +2,9 @@ import { alignRun, ENDS_PARAGRAPH } from "./sentence-diff";
 import { MATCH, similarity } from "./sentence-similarity";
 import { diffUnits, splitUnits } from "./unit-diff";
 
-/**
- * A rewrite laid out sentence by sentence while it is still streaming in,
- * so each sentence shows in its final place as soon as it is written: the
- * struck original with its replacement beside it, or nothing for a
- * sentence kept as it was. Without it the whole original was struck, the
- * new text streamed after it as one block, and only the end of the stream
- * re-laid it out into sentences (1.1).
- *
- * The completed sentences of the new text are diffed against the original
- * the way the finished rewrite is (`diffUnits`), except for the
- * last run of changes: the originals the new text hasn't reached yet are
- * not deletions, they are still to come. Once the stream is done the
- * layout is exactly `diffSentences`, the one the finished proposal is shown
- * with, so nothing moves when it settles.
- *
- * Pure: the plugin (pending-edit-plugin.ts) turns the indices into
- * document ranges.
- */
+/** A streaming rewrite laid out sentence by sentence, each in its final
+ *  place as soon as it is written. Originals not reached yet are still to
+ *  come, not deleted; once done, the layout equals `diffSentences`. */
 
 /** One piece of the layout, over original sentences [start, end). */
 export type StreamPiece =
@@ -61,17 +46,12 @@ const SKIP = 0.15;
  *  shorter, it can't be told which original it rewrites. */
 const PARTIAL_JUDGED = 12;
 
-/** How far from sentence-for-sentence the alignment of a streaming rewrite
- *  looks (alignRun's `band`): it runs once per completed sentence, and a
- *  rewrite goes through its original in order. */
+/** How far from sentence-for-sentence the alignment looks: it runs once per
+ *  completed sentence, and a rewrite goes through its original in order. */
 const BAND = 8;
 
-/**
- * How many of `before` the new sentences `after` cover: an alignment like
- * `alignRun`'s, with skipped originals penalized and the originals after
- * the last one paired left out for free. The fewest when several score the
- * same. Banded: a few new sentences never reach far.
- */
+/** How many of `before` the new sentences `after` cover, skipped originals
+ *  penalized and trailing ones free. The fewest on a tie. */
 export function reachedPrefix(before: string[], after: string[]): number {
   const n = after.length;
   if (n === 0 || before.length === 0) return 0;
@@ -95,9 +75,8 @@ export function reachedPrefix(before: string[], after: string[]): number {
         const ni = i + di;
         const nj = j + dj;
         if (ni > m || nj > n || Math.abs(ni - nj) > BAND) continue;
-        // Every original reached costs SKIP: a pair has to be clearly the
-        // same sentence rewritten to reach it, and a loose likeness (two
-        // unrelated English sentences share many bigrams) doesn't.
+        // Each original reached costs SKIP, so a loose likeness (unrelated
+        // English sentences share many bigrams) doesn't reach it.
         let gain = -SKIP * di;
         if (di > 0 && dj > 0) {
           const sim = similarity(
@@ -115,15 +94,9 @@ export function reachedPrefix(before: string[], after: string[]): number {
   return Math.max(reached, paragraphsReached(before, after));
 }
 
-/**
- * How many of `before` the paragraphs `after` has finished cover, one for
- * one, when they read nothing like them - a translation, a rewrite in
- * other words - and likeness can't tell (reachedPrefix found none of it):
- * the new paragraphs went into the document ahead of every original until
- * the rewrite was done (rc.6). Zero while they read like the originals:
- * likeness places those, and a paragraph split in two would strike one too
- * many.
- */
+/** How many of `before` the finished paragraphs of `after` cover one for
+ *  one, when likeness can't tell (a translation). Zero while they read alike,
+ *  as a paragraph split in two would strike one too many. */
 function paragraphsReached(before: string[], after: string[]): number {
   const finished = after.filter((s) => ENDS_PARAGRAPH.test(s)).length;
   if (finished === 0) return 0;
@@ -138,13 +111,9 @@ function paragraphsReached(before: string[], after: string[]): number {
     : 0;
 }
 
-/**
- * The layout of `text` (the new text as far as it has arrived) against the
- * original's sentences. `done`: no more will come, the last sentence is
- * complete and every original not matched is deleted. `reachedAtLeast`:
- * what an earlier layout reached - a sentence once reached is not handed
- * back to "still to come" by a later one.
- */
+/** The layout of `text` so far against the original's sentences. `done`:
+ *  unmatched originals are deleted. `reachedAtLeast`: what was reached
+ *  before is never handed back. */
 export function alignStream(
   original: string[],
   text: string,
@@ -228,9 +197,8 @@ export function partialFor(
     if (original[k].trim().startsWith(text)) return null;
   if (next >= original.length)
     return { text, rewrites: null, at: original.length };
-  // Too little to tell which original it rewrites, or whether it is one of
-  // its own: shown a moment later, in its place, rather than now in one
-  // place and then in another.
+  // Too little to tell which original it rewrites: shown a moment later in
+  // its place, rather than jumping.
   if (weight(text) < PARTIAL_JUDGED) return null;
   // The original it is most like among the next few, the nearest winning
   // a near tie: a rewrite that drops a sentence goes on to the one after.

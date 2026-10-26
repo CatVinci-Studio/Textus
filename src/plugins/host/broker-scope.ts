@@ -5,9 +5,8 @@ import type { BrokerDeps, PluginRuntimeInfo } from "./broker";
 import type { WebviewRecord } from "../views/webviews";
 
 /**
- * What the calls of one running plugin (the broker-*.ts handlers) need of
- * it: who it is, what it was granted, and its way back to its own code.
- * PluginHost (broker.ts) is the one that makes it.
+ * What the calls of one running plugin need of it: who it is, what it was
+ * granted, and its way back to its own code.
  */
 export interface PluginScope {
   id: string;

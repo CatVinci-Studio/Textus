@@ -4,11 +4,8 @@ import type { AgentTurn } from "../types";
 import { passExchange } from "./memory-pass";
 
 /**
- * What the writer will probably send next, after a reply: grey in the
- * empty message box, Tab to take it (ChatComposer), gone once they type or
- * send - as Codex and Claude Code suggest the next prompt. One short
- * request to the conversation's model (ai/next_message.rs); a failure only
- * means no suggestion.
+ * What the writer will probably send next, after a reply: grey in the empty
+ * message box, Tab to take it. A failed request only means no suggestion.
  */
 export function useNextMessage(provider: string, model: string, on: boolean) {
   const [suggestion, setSuggestion] = useState<string | null>(null);

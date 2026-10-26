@@ -18,10 +18,9 @@ import { getWindowAccess } from "../../plugins/app-bridge";
 const REST_MS = 450;
 
 /**
- * Quick looks at what a link points to: the pointer resting on a link, a
- * wikilink or a citation asks the plugins with a hover provider
- * (textus.editor.registerHoverProvider) for a card, shown beside it
- * (hover-card.ts). Nothing is asked while no plugin provides one.
+ * Quick looks at what a link, wikilink or citation points to: a resting
+ * pointer asks the plugins' hover providers for a card. Nothing is asked
+ * while no plugin provides one.
  */
 export function createLinkHoverPlugin(docPath: () => string | null) {
   return $prose(() => {
@@ -89,8 +88,8 @@ export function createLinkHoverPlugin(docPath: () => string | null) {
         },
       },
       view: () => {
-        // The document scrolled under the card: it no longer sits by its
-        // link. (Captured: scrolling doesn't bubble.)
+        // The card no longer sits by its link once the document scrolls.
+        // Captured: scrolling doesn't bubble.
         const scrolled = (event: Event) => {
           // The card's own text scrolling keeps it.
           if ((event.target as Element | null)?.closest?.(".hover-card"))

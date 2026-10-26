@@ -3,25 +3,14 @@ import { STOPPED_TOOL_RESULT } from "../chat/cancelled-turns";
 import { isProposalTool } from "../chat/proposal";
 import type { PendingStatus } from "./usePendingEdits";
 
-/**
- * What each status means for the model, appended to the proposal's tool
- * result at request time. The wording leans on one fact the model can't
- * infer on its own: the document it is shown each turn contains ONLY
- * accepted edits, so an undecided or rejected proposal is absent from it -
- * without saying so, the model assumes its last proposal landed and either
- * re-proposes it or anchors follow-ups to text that isn't in the document.
- */
-/** What tools.rs's propose_edit result starts with when the proposal
- *  stands. Anything else (a missing anchor, a cut-off `text`) refused it:
- *  the model was told so and resends, so the call must never become a
- *  preview - the editor would otherwise show an edit the backend rejected
- *  ("due" for a whole sentence, round 4 of docs/design/ai-eval.md). */
+/** What propose_edit's result starts with when the proposal stands. Anything
+ *  else refused it, and the call must never become a preview. */
 const PROPOSED_PREFIX = "Edit proposed";
-/** The same for generate_image (ai/images.rs): a picture was made. */
+/** The same for generate_image: a picture was made. */
 const IMAGE_PROPOSED_PREFIX = "Image proposed";
 
-/** A propose_edit (or generate_image) result that refused the proposal. Results replaced by a
- *  stop (cancelled-turns.ts) aren't refusals: what streamed is kept. */
+/** A propose_edit (or generate_image) result that refused the proposal. A
+ *  stop's result isn't a refusal: what streamed is kept. */
 export function isRefusal(output: string): boolean {
   return (
     !output.startsWith(PROPOSED_PREFIX) &&
@@ -48,6 +37,8 @@ export function refusedProposalIds(turns: AgentTurn[]): Set<string> {
   return refused;
 }
 
+/** What each status means for the model. The document it is shown holds only
+ *  accepted edits; told nothing, it assumes its last proposal landed. */
 const STATUS_NOTES: Record<PendingStatus, string> = {
   pending:
     "Status: the user has NOT yet accepted or rejected this proposed edit. It is shown to them as a preview and is NOT in the document text in this request - do not assume it was applied. To change it or go on from it, anchor in its text: the edit goes into this proposal.",
@@ -64,27 +55,14 @@ const STATUS_NOTES: Record<PendingStatus, string> = {
     "Status: this proposed edit could not be applied (the text it targeted changed) and was discarded - it is not part of the document.",
   expired:
     "Status: this proposed edit is from an earlier session and was never applied - it is not part of the document.",
-  // A text edit or a picture made in another proposal (usePendingEdits's
-  // joinInto); images::undecided_edits reads the edit back into it.
+  // A text edit or a picture made in another proposal.
   joined:
     "Status: this went into the proposed text it changes or goes next to - that proposal now reads with it, and it is accepted or rejected with that proposal.",
 };
 
-/**
- * The conversation history as sent to the backend, with each propose_edit
- * tool result annotated with the proposal's CURRENT status. Applied fresh on
- * every send (never persisted - the stored history stays clean, and a status
- * can still change between sends). `statuses` is usePendingEdits'
- * `allStatuses`: only propose_edit call ids ever enter it, so presence in
- * the map is what identifies a proposal's result - a tool result absent from
- * it (other tools, or a proposal that failed validation and never became a
- * preview) passes through untouched.
- *
- * The backend counterpart: tools.rs's propose_edit result tells the model
- * "the user now sees it with an Apply button"; this is the follow-up that
- * result promises nothing about, and agent.rs's AGENT_TOOL_INSTRUCTIONS
- * tells the model to expect it.
- */
+/** The history as sent, each proposal's tool result annotated with its
+ *  current status. Applied on every send, never stored; results whose call
+ *  id isn't in `statuses` pass through untouched. */
 export function annotateProposalStatuses(
   history: AgentTurn[],
   statuses: Record<string, PendingStatus>,

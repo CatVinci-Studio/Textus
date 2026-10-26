@@ -1,9 +1,6 @@
-//! French rules (CATALOGUE.md §3.8). Spacing before ; : ! ? and inside
-//! « » differs by country (fr-FR no-break spaces, fr-CA and fr-CH none
-//! before ; ! ?, the EU none at all): Automatic follows the document's
-//! majority and turns a breaking space into a no-break one. Never flagged:
-//! either spelling of the 1990 rectifications, no space before ; ! ? in
-//! fr-CA, fr-CH or EU texts, times such as 13:52.
+//! French rules. Spacing before ; : ! ? and inside « » differs by country, so
+//! Automatic follows the document's majority and only turns a breaking space
+//! into a no-break one. Either 1990 spelling and times such as 13:52 pass.
 
 use super::stats::minority;
 use super::text::*;
@@ -40,10 +37,9 @@ enum Space {
     Full,
 }
 
-/// fr.space.high-punct: by the profile, else the document's majority. A
-/// regular space before ; : ! ? or inside « » becomes a no-break space; a
-/// missing one is added only when the document clearly spaces (or the
-/// profile is fr-FR). Not times (13:52), URLs, emoticons, `?!` clusters.
+/// fr.space.high-punct: by the profile, else the document's majority. A regular
+/// space before ; : ! ? or inside « » becomes no-break; a missing one is added
+/// only when the document clearly spaces. Not times, URLs, emoticons, `?!`.
 fn high_punct(t: &Text, ctx: &Ctx, out: &mut Out) {
     let s = ctx.stats;
     let spacing = ctx
@@ -322,9 +318,8 @@ static SYMBOL: LazyLock<Regex> =
 /// word starts with (unit letters after a space are too often words).
 static SPACED_SYMBOL: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(\d) (%|€)").unwrap());
 
-/// fr.num.symbol-space: 85%, 25€, 58kg - or 85 % with an ordinary space,
-/// which a line can break at - -> a no-break space before the
-/// symbol (fr-CH and the EU differ for %).
+/// fr.num.symbol-space: 85%, 25€, or 85 % with a breaking space -> a no-break
+/// space before the symbol (fr-CH and the EU differ for %).
 fn symbol_space(t: &Text, ctx: &Ctx, out: &mut Out) {
     let no_pct_space = ctx.profile.region_is("CH") || ctx.profile.is("eu");
     for caps in t.captures(&SYMBOL).chain(t.captures(&SPACED_SYMBOL)) {

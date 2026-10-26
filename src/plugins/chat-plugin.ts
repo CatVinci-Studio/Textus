@@ -2,10 +2,8 @@ import type { PluginFile } from "../platform/ipc";
 import { parseManifest, type PluginManifest } from "./store/manifest";
 
 /**
- * A plugin Textus AI wrote in a reply (the `plugin` skill): each of its
- * files in a fenced block whose info string is the language and the file's
- * path - ```json textus-plugin.json, ```js host.js, ```markdown USAGE.md.
- * The manifest makes it a plugin; the other named blocks are its files.
+ * A plugin Textus AI wrote in a reply: each file in a fenced block whose info
+ * string is the language and path (```js host.js). The manifest makes it one.
  */
 export interface ReplyPlugin {
   /** The manifest, checked as an installed one is; null with `error`. */

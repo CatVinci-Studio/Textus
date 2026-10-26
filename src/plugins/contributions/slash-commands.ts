@@ -1,8 +1,6 @@
 /**
- * The `/` menu: plugin commands put there (manifest `menus["editor/slash"]`,
- * registered by plugin-contributions.ts), offered at the caret when a word
- * starts with "/" - the completion list shows them (completion-sources.ts),
- * and taking one removes what was typed and runs the command.
+ * The `/` menu: plugin commands offered at the caret when a word starts with
+ * "/". Taking one removes what was typed and runs the command.
  */
 export interface SlashItem {
   label: string;

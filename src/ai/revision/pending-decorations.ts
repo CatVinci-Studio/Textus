@@ -28,12 +28,8 @@ import {
 } from "./pending-widgets";
 import { streamDecorations } from "./stream-widgets";
 
-/**
- * Every proposal's decorations, built from the plugin state: which pieces
- * (pending-widgets.ts) each preview is drawn with in the revision view the
- * writer chose, the blocks a join strikes, the sentence under the pointer,
- * and the streaming widgets kept in step with the view.
- */
+/** Every proposal's decorations, built from the plugin state for the
+ *  revision view the writer chose. */
 
 export interface SentenceHooks {
   labels: () => SentencePickLabels;
@@ -43,9 +39,8 @@ export interface SentenceHooks {
   focused: () => { callId: string; index: number } | null;
 }
 
-/** The revision views (Word's markup views, revision-display.ts), as the
- *  editor's `data-revision-display`: the stylesheet shows each view's parts
- *  (milkdown-theme.css). */
+/** The revision view as an attribute on the editor; the stylesheet shows
+ *  each view's parts. */
 export const REVISION_DISPLAY_ATTR = "data-revision-display";
 
 /** The parts a view switch can show or hide. */
@@ -53,23 +48,14 @@ export const REVISION_PARTS =
   ".pending-delete, .pending-insert, .pending-pick, .pending-insert-mark, .pending-delete-mark";
 
 export function shown(el: HTMLElement): boolean {
-  // Hidden text stays in the document, out of the flow (font-size 0, see
-  // milkdown-theme.css): display:none would start its entrance again when
-  // it comes back.
+  // Hidden text stays in the document, out of the flow: display:none would
+  // restart its entrance when it comes back.
   const style = getComputedStyle(el);
   return style.display !== "none" && style.fontSize !== "0px";
 }
 
-/**
- * Puts the view on the editor, and cross-fades what it brings in: the
- * parts that stay are left alone (the same elements, at full opacity), the
- * ones it shows fade in shortly from faint. Never their entrances: those
- * are for new proposals, and the parts a view switch shows are not new -
- * the plugin settles them (`pending-settled`, its own class on its own
- * widgets), and the struck originals are only ever hidden in the flow.
- * Script-driven, so reduced motion (and the e2e stylesheet) switch it off
- * through ui/motion.ts.
- */
+/** Puts the view on the editor, fading in the parts it shows; never their
+ *  entrances, which are for new proposals. */
 export function syncDisplay(view: EditorView, display: RevisionDisplay) {
   const root = view.dom as HTMLElement;
   const before = root.getAttribute(REVISION_DISPLAY_ATTR);
@@ -109,14 +95,8 @@ export function wholeStrike(
   return removesTextOf(p) && from < to ? { from, to } : null;
 }
 
-/**
- * The sentence-by-sentence layout of a rewrite streaming in, started the
- * first time it is drawn. Null where it streams in whole: no streamSource,
- * no typewriter (animation off, reduced motion), or a preview that settled
- * without ever streaming. A settled one that streamed keeps its layout
- * until its sentences arrive with the final proposal, rather than falling
- * back to one struck block for a moment.
- */
+/** A streaming rewrite's sentence layout, started when first drawn; null
+ *  where it streams in whole. A settled one keeps it until its sentences come. */
 export function streamFor(
   p: PendingPreview,
   animate: boolean,
@@ -199,19 +179,9 @@ export function decorationsFor(
   return decos;
 }
 
-/**
- * Where a proposal shown whole draws its new text. `replace`'s follows the
- * strike range (not just "p.to") so the green text lands immediately
- * after the red - "struck old text, new text right after" - rather than at
- * the very end of a whole re-parsed block that may extend well past what
- * was struck. An insertion next to words inside a paragraph goes right
- * by them, as Accept writes it: drawn at the paragraph's edge, it stood
- * as a paragraph of its own and moved into the text when taken. One next
- * to a whole block (no strike range, pending-place's resolveAnchored)
- * goes between blocks - decided by the anchor, not by the text, which
- * grows while it streams: a first paragraph drawn inside moved out when
- * a second came.
- */
+/** Where a proposal shown whole draws its new text: right after the strike,
+ *  or by the words an insertion names, as Accept writes it. One next to a
+ *  whole block goes between blocks, decided by the anchor. */
 export function insertAt(p: PendingPreview): number {
   const { action } = p.proposal;
   if (action === "insert_before") return p.strikeFrom ?? p.from;
@@ -220,8 +190,8 @@ export function insertAt(p: PendingPreview): number {
   return p.to;
 }
 
-/** The old picture's node, while the picture that redoes it (a picture
- *  proposal's `replace`, ai/images.rs) is still being made. */
+/** The old picture's node, while the picture that redoes it is still being
+ *  made. */
 export function redrawing(
   p: PendingPreview,
 ): { from: number; to: number } | null {
@@ -242,18 +212,9 @@ export function buildDecorations(
   return DecorationSet.create(doc, [...decos, ...struckBlocks(doc, decos)]);
 }
 
-/**
- * The blocks whose text is all struck and that hold no new text: a
- * paragraph a rewrite folds into the one before it, or one it deletes.
- * The view that takes the originals out of the text ("final") takes
- * these out of the flow too (`pending-struck-block`): their text hidden,
- * they still stood there as empty lines with a paragraph's margins, and a
- * rewrite that joins paragraphs left blank gaps in the text. One that
- * holds the mark of a deleted sentence (`pending-struck-marked`) keeps its
- * line, where the mark shows. Read off the decorations' own `part`:
- * "struck" for an original that view hides, "text" for new text, "mark"
- * for a deleted sentence's mark.
- */
+/** Blocks wholly struck and holding no new text, which the "final" view
+ *  takes out of the flow so they leave no blank gaps. Read off each
+ *  decoration's `part`. */
 export function struckBlocks(
   doc: ProseNode,
   decos: Decoration[],
@@ -305,20 +266,9 @@ export function struckBlocks(
   return out;
 }
 
-/**
- * The pointer's sentence pair, a shade darker (`.pending-sentence-hot`), and
- * the text the last Accept wrote, fading from green (`.pending-landed`).
- * The text side is one more inline decoration over the sentence, which
- * ProseMirror merges into the spans already there and patches in place.
- * The widget side (the new text, a margin mark, the ✓ / ✕) gets the class
- * from the plugin view instead (`syncWidgetClasses`): a widget redrawn for it
- * would replay its entrance, the new text fading in from nothing.
- *
- * Nothing may write the class onto a decorated text span from outside:
- * ProseMirror reads that as a foreign edit and redraws the paragraph, and
- * every strike and replacement in it replays its entrance - the red and
- * the green vanished under the pointer (1.1.0-rc.4).
- */
+/** The pointer's sentence pair darker, and the last Accept's text fading
+ *  from green. Never write a class onto a decorated span from outside:
+ *  ProseMirror redraws the paragraph and every entrance replays. */
 export function hotDecorations(
   doc: ProseNode,
   state: PendingState,
@@ -354,9 +304,8 @@ export function hotDecorations(
   return extra.length > 0 ? state.decoration.add(doc, extra) : state.decoration;
 }
 
-/** The runs of text in [from, to), without the hard breaks (and other
- *  inline leaves) between them: the darker hover tint is the text's, and a
- *  line break given it painted a box at the line's end. */
+/** The runs of text in [from, to) without inline leaves between them: a
+ *  tinted line break paints a box at the line's end. */
 export function textRuns(
   doc: ProseNode,
   from: number,
@@ -378,15 +327,8 @@ export function textRuns(
 /** `hotDecorations` per state: `decorations` is asked on every redraw. */
 export const hotSets = new WeakMap<PendingState, DecorationSet>();
 
-/**
- * The streaming side of a rewrite laid out sentence by sentence, after each
- * rebuild: the reveal is handed the view (it may have no widget to get it
- * from - nothing is drawn while a sentence repeats its original) and
- * keeps going, and the widgets of a rewrite that settled lose
- * `pending-streaming`: its ✓ / ✕ start taking clicks. A class on the
- * plugin's own widgets, not a redraw: the settle keeps every element on
- * screen as it is.
- */
+/** After each rebuild, hands streaming reveals the view and takes
+ *  `pending-streaming` off a settled rewrite's widgets, without a redraw. */
 export function syncStreaming(view: EditorView, previews: PendingPreview[]) {
   const streaming = new Set<string>();
   for (const p of previews) {
@@ -402,10 +344,8 @@ export function syncStreaming(view: EditorView, previews: PendingPreview[]) {
   for (const el of view.dom.querySelectorAll<HTMLElement>(".pending-streaming"))
     if (!streaming.has(el.dataset.call ?? "")) {
       el.classList.remove("pending-streaming");
-      // The faint ✓ / ✕ come up to full as they start taking clicks - as
-      // their one move: the stylesheet's entrance, set back by its delay,
-      // was still running under it and took over when it ended, the
-      // buttons dipping back to faint (1.2.1).
+      // The faint ✓ / ✕ come up to full as their one move, or the delayed
+      // CSS entrance would take over and dip them back to faint.
       if (el.classList.contains("pending-pick")) {
         el.style.animation = "none";
         animateElement(el, [{ opacity: 0.35 }, { opacity: 1 }], {
@@ -416,14 +356,9 @@ export function syncStreaming(view: EditorView, previews: PendingPreview[]) {
     }
 }
 
-/**
- * The strike of an original the stream has just reached draws in: from
- * plain text to struck, as a settled proposal's strike does in CSS. Only
- * the first time that sentence is struck - ProseMirror draws a span again
- * as the sentences around it change (a dropped sentence struck beside it
- * takes its old span), and the strike must not draw in again then. A Web
- * Animation, never a class: the span is ProseMirror's.
- */
+/** Draws in the strike of an original the stream just reached, only the
+ *  first time, as ProseMirror redraws spans. A Web Animation, as the span
+ *  is ProseMirror's. */
 export function drawStrikesIn(
   view: EditorView,
   callId: string,
@@ -432,9 +367,8 @@ export function drawStrikesIn(
   // Every colour is read before any animation starts: an animation started
   // makes the next read recalculate the page's style, once per sentence.
   const strikes: { el: HTMLElement; from: Keyframe; to: Keyframe }[] = [];
-  // A sentence lands from under the reading tint (readingDecoration): its
-  // strike's colour comes from that tint - from none, the tint went and
-  // the red came a frame apart, a flash at each landing (1.2.1).
+  // A sentence lands from under the reading tint, so its strike starts
+  // from that colour, or each landing would flash.
   const reading =
     getComputedStyle(view.dom)
       .getPropertyValue("--revision-reading-bg")
@@ -470,12 +404,8 @@ export function drawStrikesIn(
     });
 }
 
-/** The widget side of `hotDecorations`, and of the review bar's pointer
- *  (`.pending-sentence-focus` on the new text): set on the widgets as they
- *  stand, not by redrawing them - a widget keyed by the pointer was
- *  redrawn on every prev / next, and its new text faded in from nothing
- *  again. Widgets are the plugin's own DOM, and ProseMirror leaves a class
- *  change on them alone. */
+/** The widget side of `hotDecorations` and the review bar's pointer, set on
+ *  the widgets as they stand so they aren't redrawn. */
 export function syncWidgetClasses(
   view: EditorView,
   hot: HotSentence | null,

@@ -1,7 +1,5 @@
-/* Clipboard-history sidebar panel. Entries are hairline-separated rather
-   than gap-separated: a clipboard entry is several clamped lines of the
-   user's own prose, so without a rule where one ends and the next begins,
-   two entries read as one run-on block. */
+/* Clipboard-history panel. Entries are hairline-separated, or two clamped
+   prose entries read as one block. */
 .clipboard-history {
   display: flex;
   flex-direction: column;

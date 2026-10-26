@@ -125,8 +125,7 @@ pub(crate) fn find_phrase(t: &Text, phrase: &str) -> Vec<(usize, usize)> {
     find_word(t, phrase, true)
 }
 
-/// en.word.wordy, en.word.plain (GOV.UK), en.word.please (tech guides),
-/// en.word.inclusive and en.govuk.style: word lists, all suggestions, none
+/// Word-list suggestions (wordy, plain, please, inclusive, GOV.UK style), none
 /// inside quotations, dialogue or titles of works.
 pub(crate) fn phrases(t: &Text, ctx: &Ctx, out: &mut Out) {
     let fix_list =
@@ -369,9 +368,8 @@ pub(crate) const AI_VOCAB: &[&str] = &[
     "leveraging",
 ];
 
-/// en.style.ai-vocab: words that cluster in generated text - info per
-/// sighting, a warning at two or more in one paragraph. Technical senses
-/// (robust statistics, financial leverage) are left alone.
+/// en.style.ai-vocab: words that cluster in generated text: info per sighting,
+/// a warning at two or more in one paragraph. Technical senses are left alone.
 pub(crate) fn ai_vocab(t: &Text, _ctx: &Ctx, out: &mut Out) {
     let mut hits = Vec::new();
     for w in AI_VOCAB {

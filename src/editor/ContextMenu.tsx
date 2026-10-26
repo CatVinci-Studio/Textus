@@ -17,8 +17,7 @@ export interface ContextMenuItem {
   label: string;
   onSelect: () => void;
   danger?: boolean;
-  /** One choice of several (the file tree's sort): marked with a check
-   *  while it is the one in force. */
+  /** One choice of several, marked with a check while it is in force. */
   checked?: boolean;
 }
 
@@ -30,15 +29,13 @@ interface ContextMenuProps {
   /** Heads the phone's action sheet (a file's name, say); unused by the
    *  menu at the pointer, which shows where it was opened. */
   title?: string;
-  /** Opened from the keyboard (Shift+F10, the Menu key): the focus moves
-   *  to the first item, and back to where it was once the menu closes. A
-   *  menu opened by the pointer leaves the focus in the text. */
+  /** Opened from the keyboard: focus moves to the first item and back once
+   *  the menu closes. */
   keyboard?: boolean;
 }
 
-/** A menu at the pointer - or, on a phone, the same items as an action
- *  sheet from the bottom edge (ui/ActionSheet.tsx). Render it inside a
- *  Presence (ui/usePresence.ts) for its exit. */
+/** A menu at the pointer, or on a phone an action sheet. Render it inside a
+ *  Presence for its exit. */
 export function ContextMenu(props: ContextMenuProps) {
   const phone = usePhoneLayout();
   if (phone)
@@ -65,10 +62,8 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
     "--transform-origin": `${Math.max(0, x - pos.left)}px ${Math.max(0, y - pos.top)}px`,
   } as CSSProperties;
 
-  // Closing - an item chosen, Escape, a click away - hands the focus back
-  // as the exit starts (or at once, with no exit to play), unless what was
-  // chosen took it somewhere else, a dialog say.
-  // What had the focus as the menu opened, read before it takes it.
+  // Closing hands the focus back to what had it as the menu opened, unless
+  // the chosen item took it somewhere else (a dialog).
   const [opener] = useState(() =>
     keyboard ? (document.activeElement as HTMLElement | null) : null,
   );
@@ -105,9 +100,8 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
       e.preventDefault();
       return;
     } else if (e.key === "Escape") {
-      // Closed here, with the focus in it: the document's listener
-      // (useCloseOnOutsideClick) is re-armed a tick after each render,
-      // and an Escape in that gap was lost.
+      // Closed here: the document's listener is re-armed a tick after each
+      // render, and an Escape in that gap was lost.
       e.preventDefault();
       e.stopPropagation();
       onClose();
@@ -124,10 +118,8 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
       role="menu"
       style={{ ...pos, ...origin }}
       onKeyDown={onKeyDown}
-      // A press on an item doesn't take the focus: on Linux the button
-      // kept it, and once the menu closed it fell to the page - Tab then
-      // left the document instead of taking the suggestion that "Continue
-      // writing" had just put there.
+      // A press on an item doesn't take the focus: on Linux the button kept it,
+      // and once the menu closed it fell to the page.
       onMouseDown={(e) => e.preventDefault()}
     >
       {items.map((item, i) =>

@@ -1,9 +1,5 @@
-//! "Install 'textus' command in PATH" - the same idea as VS Code's command
-//! palette entry. Only macOS is supported: the installed script shells out to
-//! `open -a Textus`, which reuses a running instance via the Apple
-//! open-documents event already handled in `lib.rs`, instead of spawning a
-//! second, unrelated process the way exec'ing the bundled binary directly
-//! would.
+//! "Install 'textus' command in PATH". macOS only: the script runs
+//! `open -a Textus`, which reuses a running instance.
 
 #[cfg(target_os = "macos")]
 use crate::app_identity::APP_NAME;
@@ -32,12 +28,8 @@ pub fn is_installed() -> bool {
         .unwrap_or(false)
 }
 
-/// Called once on startup. `/usr/local/bin` is only user-writable on some
-/// Macs (e.g. once Homebrew has chown'd it); when it is, this quietly
-/// finishes the whole feature without the user ever visiting Settings. When
-/// it isn't, this silently does nothing - never escalates to an admin
-/// prompt on its own, since a password dialog on every launch would be worse
-/// than leaving the manual Settings button for that case.
+/// Called once on startup: installs quietly when `/usr/local/bin` is
+/// user-writable, and otherwise does nothing rather than prompt for a password.
 #[cfg(target_os = "macos")]
 pub fn try_silent_install() {
     if !is_installed() {
@@ -50,13 +42,8 @@ pub fn install() -> Result<(), String> {
     if write_direct().is_ok() {
         return Ok(());
     }
-    // Root-owned /usr/local/bin (the stock-Mac default): stage the script to
-    // a temp file and have an admin-privileged shell command copy it into
-    // place, so the AppleScript string only ever has to quote plain paths
-    // rather than the script body itself.
-    // A fresh, owner-only file (atomic::TempFile): the admin shell copies
-    // whatever is at this path into /usr/local/bin, so it must be ours and
-    // stay ours. Removed when `tmp` drops.
+    // Root-owned /usr/local/bin: stage the script in a fresh owner-only temp
+    // file and have an admin shell copy it, so AppleScript only quotes paths.
     let tmp = crate::atomic::TempFile::create("textus-cli-install-", "", script_content())
         .map_err(|e| e.to_string())?;
     let shell_cmd = format!(

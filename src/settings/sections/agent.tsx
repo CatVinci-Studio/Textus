@@ -23,19 +23,16 @@ import { ai, auth } from "../../platform/ipc";
 import { Select } from "../../ui/Select";
 import { SecretInput, SettingRow, VERBATIM_INPUT } from "./controls";
 
-// The AI category's model pickers, and the rows for the concepts in
-// docs/design/ai-concepts.md: the project folder, the global writing instructions
-// (agent.md), skills and the global config folder. Those are files, not
-// settings - these rows open folders and files rather than embedding
-// editors; Help > AI Features Guide explains them.
+// The AI category's model pickers, and rows for the project folder, global
+// writing instructions, skills and config folder. Those are files, so these
+// rows open them rather than embedding editors.
 
 /** Fired after a model list is fetched, so both pickers (writing and
  *  chat) pick up the new list from the cache at once. */
 const MODELS_FETCHED_EVENT = "textus-models-fetched";
 
-/** The provider's sign-in models (SIGN_IN_MODELS) while that sign-in is the
- *  active login - "sign in with ChatGPT" for OpenAI: its token can't list
- *  models, and only accepts its own preset family. Null otherwise. */
+/** The provider's sign-in models while that sign-in is the active login: its
+ *  token can't list models and only accepts its own presets. Null otherwise. */
 function useSignInModels(provider: string): SignInModels | null {
   const models = SIGN_IN_MODELS[provider] ?? null;
   const [active, setActive] = useState(false);
@@ -73,14 +70,10 @@ function useFetchedModels(provider: string) {
   return { models: cached?.models ?? [], at: cached?.at ?? null };
 }
 
-/// Model picker for writing (completion and grammar) or the chat, for
-/// whichever provider is active. Seeded from the catalog's `knownModels` (a
-/// small pre-supplied list, same idea as pi.dev's models.json) so the
-/// dropdown is never empty; ModelListRow adds any live-fetched extras on
-/// top. Where "sign in with ChatGPT" is active its presets (agent-models.ts)
-/// replace the catalog's. Custom endpoints keep their configured model as
-/// the fallback, while these two fields can optionally override it for
-/// writing and chat independently.
+/// Model picker for writing (completion and grammar) or the chat. Seeded
+/// from the catalog's `knownModels` so it is never empty; sign-in presets
+/// replace those where that login is active. Custom endpoints fall back to
+/// their configured model.
 function ProviderModelRow({
   t,
   kind,
@@ -112,10 +105,8 @@ function ProviderModelRow({
   );
   const entry = useActiveProvider();
 
-  // An API model id can be left behind when the user later enables Codex
-  // OAuth. The OAuth backend only accepts its preset family; normalize an
-  // incompatible saved choice to that mode's default instead of rendering a
-  // blank select and sending a model the login cannot use.
+  // The OAuth backend only accepts its preset family, so a saved API model id
+  // becomes that mode's default rather than a blank select.
   useEffect(() => {
     if (!signIn || !current) return;
     const presets = kind === "agent" ? signIn.agent : signIn.writing;
@@ -135,17 +126,14 @@ function ProviderModelRow({
   // retired. Still selectable (it may just be unlisted), but flagged.
   const currentMissing =
     !!current && fetched.length > 0 && !fetched.includes(current);
-  // A list to choose from, or only a name to type (a custom endpoint, whose
-  // models are never listed here). Decided before the saved name joins the
-  // options: counting it turned the text field into a one-option select at
-  // the first keystroke, so a model name could only ever be one character.
+  // Decided before the saved name joins the options, or the text field turns
+  // into a one-option select at the first keystroke.
   const hasList = knownAndFetched.length > 0;
   if (current && !knownAndFetched.includes(current)) {
     knownAndFetched.push(current);
   }
-  // "gpt-6-luna · vision · tools · 400K", "(deprecated)" - from the bundled
-  // models.dev snapshot, so a long fetched list can be chosen from. This is
-  // also where what a model can do is shown: vision, tools, context.
+  // "gpt-6-luna · vision · tools · 400K", "(deprecated)": what a model can do,
+  // from the bundled models.dev snapshot.
   const describe = (id: string) => {
     const info = modelInfo(provider, id);
     if (!info) return id;
@@ -224,10 +212,8 @@ export function AgentModelSection({ t }: { t: Strings }) {
   return <ProviderModelRow t={t} kind="agent" />;
 }
 
-/// One fetch for both pickers: the provider's live model list, added on
-/// top of the catalog's known models. Absent where listing can't work - a
-/// custom endpoint, the ChatGPT login, or a provider the catalog marks
-/// unlistable.
+/// One fetch for both pickers: the provider's live model list, on top of the
+/// catalog's. Absent where listing can't work.
 export function ModelListRow({ t }: { t: Strings }) {
   const { settings } = useSettings();
   const provider = settings.aiProvider;
@@ -281,9 +267,8 @@ export function ModelListRow({ t }: { t: Strings }) {
   );
 }
 
-/// The global config folder: the global agent.md and skills/, which apply
-/// to every document. Opens it in the file manager (creating it, with the
-/// starter agent.md, on first use).
+/// The global config folder (agent.md and skills/, for every document),
+/// opened in the file manager and created on first use.
 export function AgentWorkspaceSection({ t }: { t: Strings }) {
   const [error, setError] = useState<string | null>(null);
 
@@ -308,15 +293,9 @@ export function AgentWorkspaceSection({ t }: { t: Strings }) {
   );
 }
 
-/// WHICH folder is the project folder (in code: the workspace root).
-///
-/// The default - the folder of the document being edited - is right until
-/// the user's sources and their draft don't live together, and then there is
-/// no way out of it: `.textus/` is looked for there, and the agent's
-/// find_files/read_file are sandboxed to it (ai/workspace.rs), so material
-/// one folder over is simply unreachable. This makes the root explicit while
-/// keeping the default for everyone it already suits. The project bar's
-/// menu offers the same choice, with the same labels.
+/// Which folder is the project folder (the workspace root). The default, the
+/// document's folder, fails once sources live elsewhere: the agent's file
+/// tools are sandboxed to it.
 export function AgentWorkspaceRootSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const [error, setError] = useState<string | null>(null);
@@ -359,12 +338,9 @@ export function AgentWorkspaceRootSection({ t }: { t: Strings }) {
   );
 }
 
-/// The GLOBAL writing instructions (agent.md) - sent with every
-/// conversation, for all documents. Textus IS a markdown editor, so the
-/// button just opens the file as a document (creating the comment-only
-/// starter on first use) instead of embedding a bespoke editor here. A
-/// project's .textus/agent.md is layered after it; the project bar's menu
-/// opens that one.
+/// The global writing instructions (agent.md), sent with every conversation.
+/// Opened as a document rather than edited here; a project's own is layered
+/// after it.
 export function AgentSystemPromptSection({
   t,
   onOpenFile,
@@ -400,8 +376,7 @@ export function AgentSystemPromptSection({
 }
 
 /** Where each search service's key is kept: the AI provider's own key for
- *  the three that share it. Mirrors `Backend::key_id` in
- *  src-tauri/src/ai/web/search.rs. */
+ *  the three that share it. Keep in step with the backend's `key_id`. */
 const SEARCH_KEY_IDS: Partial<Record<SearchService, string>> = {
   deepseek: "deepseek",
   zhipu: "zhipu",
@@ -435,13 +410,9 @@ function searchServiceName(t: Strings, id: string): string {
   return "key" in name ? t[name.key] : name.brand;
 }
 
-/**
- * Settings > Textus AI > Search service, under Web search: what Textus's own
- * web_search uses when the chat model can't search by itself. Shown only
- * where it matters - the chosen model has no search of its own, or a
- * service was chosen before - with the key (or SearXNG's address) right
- * under it, and the row saying where queries go.
- */
+/** Settings › Textus AI › Search service: what web_search uses when the chat
+ *  model can't search itself. Shown only when that matters, or when a service
+ *  was chosen before. */
 export function SearchServiceSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const status = useWebSearchStatus();
@@ -499,8 +470,8 @@ export function SearchServiceSection({ t }: { t: Strings }) {
   );
 }
 
-/** A search service's key: saved with the AI providers' keys
- *  (auth/keys.rs), never in Settings. */
+/** A search service's key, saved with the AI providers' keys, never in
+ *  Settings. */
 function SearchKeyRow({
   t,
   keyId,

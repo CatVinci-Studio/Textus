@@ -5,11 +5,9 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { onWebPagesCover, webPagesCovered } from "./web-page-cover";
 
 /**
- * Tab `id`'s web page as a native webview of its own
- * (commands/web_page.rs), laid over `holder` - its place in the tab - and
- * kept there as the layout changes: hidden while the tab is out of sight
- * or something of the window's is shown over it, closed with the tab.
- * `onNavigated` hears each address the page arrives at.
+ * Tab `id`'s web page as a native webview laid over `holder` and kept there
+ * as the layout changes: hidden while out of sight or covered, closed with the
+ * tab. `onNavigated` hears each address it arrives at.
  */
 export function useNativeWebPage(
   id: string,

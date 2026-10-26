@@ -29,11 +29,9 @@ import { lazyModule, type LazyModule } from "../../lazy/lazy-module";
 import { webview } from "../views/webviews";
 
 /**
- * The window's side of one running plugin (docs/design/plugins.md §4):
- * its host frame, and every call its code makes, checked against what the
- * user granted before anything is done - the privileged ones made in Rust,
- * which checks them again (src-tauri/src/plugins/). The calls themselves
- * are the broker-*.ts handlers, one file per part of the API.
+ * The window's side of one running plugin: its host frame, and every call its
+ * code makes, checked against what the user granted before anything is done.
+ * Privileged calls are checked again in Rust.
  */
 
 /** A running plugin as the broker knows it. */
@@ -43,7 +41,7 @@ export interface PluginRuntimeInfo {
   granted: readonly Permission[];
 }
 
-/** What the broker needs of the plugin manager (manager.ts). */
+/** What the broker needs of the plugin manager. */
 export interface BrokerDeps {
   strings(): Strings;
   language(): string;
@@ -112,8 +110,7 @@ function withTimeout<T>(
 }
 
 /** The events a plugin can listen to, and the permission each needs.
- *  `settings` and `editorKey` are told to one plugin by the manager and
- *  the editor; the rest come from the window (app-bridge.ts). */
+ *  `settings` and `editorKey` are told to one plugin only. */
 const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   didSave: "files.read",
   activeDocument: "editor.read",
@@ -162,8 +159,7 @@ export class PluginHost {
     );
   }
 
-  /** Starts the host and activates the plugin, once: its code loads on
-   *  first use, as the app's own heavy parts do (lazy-module.ts). A failed
+  /** Starts the host and activates the plugin, once, on first use. A failed
    *  start turns the plugin off, which stops this broker. */
   start(): Promise<void> {
     this.code ??= lazyModule(`plugin:${this.id}`, () =>
@@ -191,8 +187,7 @@ export class PluginHost {
       this.endpoint?.notify("$event", { name, data });
   }
 
-  /** A message to the plugin's code that expects no answer, if it is
-   *  running. */
+  /** A message to the plugin's code that expects no answer, if it is running. */
   notify(method: string, params?: unknown): void {
     this.endpoint?.notify(method, params);
   }
@@ -313,7 +308,7 @@ export class PluginHost {
     };
   }
 
-  /** The methods the plugin's code calls (runtime/host.js's `textus`). */
+  /** The methods the plugin's code calls. */
   private handlers() {
     const scope = this.scope();
     return {

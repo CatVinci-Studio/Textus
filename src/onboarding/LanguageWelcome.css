@@ -1,8 +1,8 @@
 .language-welcome-backdrop {
   position: fixed;
   inset: 0;
-  /* A modal like Settings: below the unsaved-changes prompt, which a close
-     during the first launch still has to show (ui/app-dialog.css). */
+  /* Below the unsaved-changes prompt, which a close during the first launch
+     still has to show. */
   z-index: var(--z-modal);
   display: flex;
   align-items: center;
@@ -21,7 +21,7 @@
   --editor-text: var(--chrome-text);
   --editor-muted: var(--chrome-muted);
   --editor-accent: var(--chrome-accent);
-  /* Inside the backdrop's padding (see .settings-panel for why not dvh). */
+  /* Inside the backdrop's padding, not dvh. */
   max-height: 100%;
   overflow-y: auto;
   width: min(520px, 100%);

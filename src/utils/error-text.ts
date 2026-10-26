@@ -1,9 +1,7 @@
 /**
- * What a caught error says to a person. ipc.ts's IpcError leads its message
- * with the internal command name ("agent_chat: Claude request failed
- * (401)"), which is for logs; the user gets what the backend actually said.
- * Recognized by name rather than `instanceof`, so this module doesn't
- * import ipc.ts (tests mock that module wholesale).
+ * What a caught error says to a person: IpcError's message leads with the
+ * command name, for logs. Recognized by name, not `instanceof`, since tests
+ * mock ipc.ts wholesale.
  */
 export function errorText(err: unknown): string {
   if (err instanceof Error && err.name === "IpcError" && "cause" in err)
@@ -13,10 +11,8 @@ export function errorText(err: unknown): string {
 }
 
 /**
- * A benign, expected outcome of an on-demand AI action ("no issues found",
- * "put the caret at the end of a paragraph") - thrown with a code so the
- * notice can be shown in the user's language, unlike a free-form English
- * message built where the editor has no access to translations.
+ * A benign, expected outcome of an on-demand AI action ("no issues found"),
+ * thrown with a code so the notice can be shown in the user's language.
  */
 export class AiNoticeError extends Error {
   readonly code: AiNoticeCode;

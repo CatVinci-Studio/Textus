@@ -26,14 +26,8 @@ const WRITE_AFTER = 400;
 const onScreen = (view: EditorView) =>
   !!view.dom.closest('[data-active-tab="true"]');
 
-/**
- * Track My Changes for one document (own-revision-plugin.ts): turned on
- * and off from Edit › Track My Changes, its changes listed for the margin,
- * each accepted (it becomes part of the original) or rejected (the text
- * goes back). While a document tracks, its original is kept beside the
- * app's data (own_notes.rs, part "revisions") and tracking carries on
- * when it opens again; the file itself always holds the new text.
- */
+/** Track My Changes for one document. Its original is kept in the app's
+ *  data so tracking carries on when it reopens; the file holds the new text. */
 export function useOwnRevisions({
   run,
   filePath,

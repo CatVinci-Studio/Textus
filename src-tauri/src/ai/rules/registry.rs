@@ -1,7 +1,5 @@
-//! Every rule the engine ships, with the priority, category, severity, fix
-//! kind and run sites the catalogue gives it (CATALOGUE.md §3). Rules only
-//! report a rule id; everything a caller filters on comes from here, so a
-//! priority changes in one place.
+//! Every rule the engine ships, with its priority, category, severity, fix kind
+//! and run sites. Rules only report an id; callers filter on what is here.
 
 use super::{Fix, Priority, Severity};
 
@@ -21,8 +19,8 @@ pub enum Category {
     Consistency,
 }
 
-/// Where a rule runs (CATALOGUE.md §3.0): the grammar check, the document
-/// check (check_conventions), completion and proposal post-processing.
+/// Where a rule runs: the grammar check, the document check, completion and
+/// proposal post-processing.
 pub const GC: u8 = 1;
 pub const DOC: u8 = 2;
 pub const CP: u8 = 4;

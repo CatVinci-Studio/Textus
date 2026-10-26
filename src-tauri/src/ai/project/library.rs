@@ -26,8 +26,7 @@ pub struct LibraryEntry {
     /// Path relative to the project root, for "open this entry".
     pub file: String,
     pub body: String,
-    /// Set on an entry Textus AI wrote (ai::memory),
-    /// which the Memory tab also lists under "AI remembered".
+    /// Set on an entry Textus AI wrote, which the Memory tab also lists.
     pub remembered: Option<Remembered>,
 }
 
@@ -95,9 +94,8 @@ pub fn read_library(root: &Path) -> Vec<LibraryEntry> {
         .filter_map(|path| {
             let stem = path.file_stem().and_then(|s| s.to_str())?;
             let content = std::fs::read_to_string(&path).ok()?;
-            // An entry with nothing written in it yet is still listed (the
-            // Memory tab showed nothing after New library entry, as if it
-            // had failed); relevant_library leaves it out of requests.
+            // An entry with nothing in it yet is still listed (else a new entry seemed to
+            // fail); relevant_library leaves it out of requests.
             Some(parse_library_entry(
                 &format!("{WORKSPACE_DIR_NAME}/library/{stem}.md"),
                 stem,
@@ -121,21 +119,18 @@ pub fn read_style(root: &Path) -> Option<String> {
         .map(|s| s.chars().take(MAX_STYLE_CHARS).collect())
 }
 
-/// The writing conventions a style profile's front matter sets: a
-/// `conventions:` profile (or several, comma-separated, one per language)
-/// and option keys such as `cjk-latin-space: on` - see rules::profile. The
-/// front matter stays in the profile text the model reads.
+/// The writing conventions a style profile's front matter sets: `conventions:`
+/// profiles and option keys such as `cjk-latin-space: on`. The front matter
+/// stays in the text the model reads.
 pub fn style_conventions(style: Option<&str>) -> crate::ai::rules::ProjectConventions {
     style
         .map(crate::ai::rules::ProjectConventions::from_style)
         .unwrap_or_default()
 }
 
-/// The library entries a request should carry: `always` ones, plus
-/// `detected` ones whose name or an alias appears in `context` (the user's
-/// message, the selection, the text around the cursor), until
-/// MAX_LIBRARY_CHARS characters. Those that came up but didn't fit are
-/// `left_out`, for the Memory tab to say so rather than drop them silently.
+/// The library entries a request should carry: `always` ones, plus `detected`
+/// ones named in `context`, up to MAX_LIBRARY_CHARS. Those that didn't fit are
+/// `left_out`, for the Memory tab to say so.
 pub fn pick_library<'a>(library: &'a [LibraryEntry], context: &str) -> LibraryPick<'a> {
     let haystack = context.to_lowercase();
     let mut pick = LibraryPick::default();
@@ -176,13 +171,9 @@ pub fn relevant_library<'a>(library: &'a [LibraryEntry], context: &str) -> Vec<&
     pick_library(library, context).included
 }
 
-/// The prompt section for the style profile and the relevant library
-/// entries - shared by the agent and the inline completion. Each header
-/// says what the material is and how it binds: in the round-2 eval the
-/// agent applied a profile's present tense to a plan for next year, split a
-/// sentence under a length rule so it no longer covered what it had, and
-/// shrank a requested expansion; and it recited a library entry's back
-/// story as exposition where a scene was asked for.
+/// The prompt section for the style profile and the relevant library entries,
+/// shared by the agent and completion. Each header says how the material binds,
+/// or the model over-applied profile rules and recited entries as exposition.
 pub fn writing_context_section(style: Option<&str>, entries: &[&LibraryEntry]) -> Option<String> {
     let mut parts = Vec::new();
     if let Some(style) = style {
@@ -210,11 +201,9 @@ pub fn writing_context_section(style: Option<&str>, entries: &[&LibraryEntry]) -
     (!parts.is_empty()).then(|| parts.join("\n\n"))
 }
 
-/// Which library entries reached Textus AI, for the Memory tab's marks
-/// (src/platform/bindings/ai-memory.ts): the entries' `file`s, those that came
-/// up but didn't fit, and whether this is what the last conversation
-/// request for the document carried (`lastRequest`) or what its text alone
-/// would bring in, before any request.
+/// Which library entries reached Textus AI, for the Memory tab's marks: sent or
+/// left out, and whether from the last request (`lastRequest`) or from the
+/// document's text alone.
 #[derive(Serialize, Clone, Debug, Default, PartialEq)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -238,9 +227,8 @@ impl LibraryUse {
     }
 }
 
-/// The last request's LibraryUse per document path, recorded by
-/// ai_agent_message - so the marks are what was sent, picked by the same
-/// rule, never a second guess at it in TypeScript.
+/// The last request's LibraryUse per document path, so the marks are what was
+/// actually sent.
 pub(crate) static LAST_SENT: std::sync::Mutex<std::collections::BTreeMap<String, LibraryUse>> =
     std::sync::Mutex::new(std::collections::BTreeMap::new());
 

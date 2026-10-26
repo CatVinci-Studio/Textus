@@ -137,7 +137,6 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
               disabled={status.matchCount === 0}
               aria-label={labels.findNextMatch}
             >
-              {/* Same arrow, flipped - see ArrowUpIcon. */}
               <ArrowUpIcon className="find-replace-arrow-down" />
             </button>
           </Tooltip>

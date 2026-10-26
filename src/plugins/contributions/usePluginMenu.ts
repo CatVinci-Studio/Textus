@@ -6,7 +6,7 @@ import type { PluginMenuEntry } from "../../app/menu/app-menu-model";
 import { pluginsSnapshot, subscribePlugins } from "../manager";
 import { pluginMenuEntries } from "../store/plugin-lookup";
 
-/** What the Plugins menu lists now - the app-drawn menu's (AppMenu.tsx). */
+/** What the Plugins menu lists now. */
 export function usePluginMenuEntries(language: string): PluginMenuEntry[] {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   return useMemo(
@@ -15,10 +15,8 @@ export function usePluginMenuEntries(language: string): PluginMenuEntry[] {
   );
 }
 
-/** Keeps the macOS menu bar's Plugins menu (menu.rs) to the same list,
- *  and background mode's tray menu to what plugins put there - and runs a
- *  command picked in the tray while no window was open, once this
- *  window's plugins are on. */
+/** Keeps the native Plugins menu and the tray menu to what plugins put there,
+ *  and runs a command picked in the tray while no window was open. */
 export function usePluginMenuSync(language: string): void {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const entries = usePluginMenuEntries(language);

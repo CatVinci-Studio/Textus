@@ -48,9 +48,8 @@ import {
   type TourAi,
 } from "../utils/events";
 
-/** The window events (utils/events.ts) one tab's editor answers: menu
- *  commands, shortcuts, the iPhone keyboard toolbar and the sidebar
- *  panels. */
+/** The window events one tab's editor answers: menu commands, shortcuts,
+ *  the iPhone keyboard toolbar and the sidebar panels. */
 export function useEditorWindowEvents({
   run,
   settings,
@@ -90,22 +89,17 @@ export function useEditorWindowEvents({
   /** This editor's document; null for one never saved. */
   docPath: string | null;
 }) {
-  // Every open tab's editor stays mounted (App.tsx hides the inactive ones
-  // with display:none, which nulls offsetParent) but the window events below
-  // all mean "act on the editor the user is looking at" - without this guard
-  // each fires in EVERY tab: a clipboard-history click inserts into every
-  // document, a chat toggle toggles per-editor chats out of sync, and so on.
+  // Every tab's editor stays mounted, hidden with display:none, but these
+  // events mean the editor on screen; without this guard each fires in
+  // every tab.
   const isOnScreen = useCallback(
     () =>
       run((ctx) => ctx.get(editorViewCtx).dom.offsetParent !== null) ?? false,
     [run],
   );
 
-  // Shortcuts respect the same feature toggles as the context menu items -
-  // a feature turned off in Settings, or Textus AI itself, is off through
-  // every entry point. The two typing-assistance triggers are also ignored
-  // while the tour mutes the AI; the chat stays available, as the tour's AI
-  // panel lesson opens it whether or not an AI is connected.
+  // Shortcuts respect the same feature toggles as the context menu. The
+  // typing-assistance triggers are also ignored while the tour mutes the AI.
   const features = aiFeatures(settings, tour !== null);
   useWindowEvent(
     TRIGGER_COMPLETION_EVENT,
@@ -133,18 +127,15 @@ export function useEditorWindowEvents({
   );
   useWindowEvent(CLOSE_FIND_REPLACE_EVENT, () => findReplace.dismiss());
 
-  // Clipboard-history panel clicks: carries the text as CustomEvent detail.
+  // Clipboard-history panel clicks, with the text as detail.
   useWindowEvent(INSERT_CLIPBOARD_TEXT_EVENT, (e) => {
     if (!isOnScreen()) return;
     const text = (e as CustomEvent<string>).detail;
     if (typeof text === "string" && text) insertText(text);
   });
 
-  // Native Format menu clicks (see menu-insert-block in src-tauri/src/lib.rs,
-  // relayed through App.tsx): same commands the right-click Insert submenu
-  // (editor-menu.ts) uses, keyed by the menu item's kind string instead of
-  // a click. The heading shortcuts (useGlobalShortcuts) come here too, with
-  // "paragraph" for body text.
+  // Native Format menu clicks and the heading shortcuts ("paragraph" for
+  // body text): the same commands as the right-click Insert submenu.
   useWindowEvent(INSERT_BLOCK_EVENT, (e) => {
     if (!isOnScreen()) return;
     const kind = (e as CustomEvent<string>).detail;
@@ -177,8 +168,8 @@ export function useEditorWindowEvents({
     }
   });
 
-  // The iPhone keyboard toolbar's block buttons, which toggle (see
-  // block-toggles.ts) rather than only insert.
+  // The iPhone keyboard toolbar's block buttons, which toggle rather than
+  // only insert.
   useWindowEvent(TOGGLE_BLOCK_EVENT, (e) => {
     if (!isOnScreen()) return;
     const kind = (e as CustomEvent<string>).detail;
@@ -223,8 +214,7 @@ export function useEditorWindowEvents({
       return;
     }
     const width = /^width:(auto|\d+)$/.exec(action)?.[1];
-    // Still selected afterwards, so the toolbar shows the new width on and
-    // another preset is a tap away.
+    // Still selected afterwards, so another preset is a tap away.
     if (width)
       setImageWidth(run, pos, width === "auto" ? null : Number(width), true);
   });
@@ -236,10 +226,8 @@ export function useEditorWindowEvents({
     setMenu({ x: 0, y: 0, imagePos: selectedImagePos(run), phone: true });
   });
 
-  // The app-drawn menu's Edit submenu (Windows - see app/menu/app-menu-actions.ts).
-  // These are `PredefinedMenuItem`s in the native menu, which gives them no
-  // id to dispatch by, so they arrive as an event and run the very commands
-  // the right-click menu (editor-menu.ts) runs.
+  // The app-drawn menu's Edit submenu: these native items are predefined and
+  // have no id, so they arrive as an event.
   useWindowEvent(EDIT_ACTION_EVENT, (e) => {
     if (!isOnScreen()) return;
     switch ((e as CustomEvent<string>).detail) {
@@ -267,10 +255,8 @@ export function useEditorWindowEvents({
     }
   });
 
-  // A conversation reopened from the history list becomes the live one in
-  // its own document's editor (ai/chat/chat-restore.ts): this one, already
-  // open, when the event arrives, or a tab just opened for it, as soon as
-  // it mounts with that document.
+  // A conversation reopened from history becomes the live one in its
+  // document's editor: this one if open, or a tab opened for it on mount.
   const claimRestore = useLatest(() => {
     const restore = claimChatRestore(docPath, isOnScreen);
     if (!restore) return;

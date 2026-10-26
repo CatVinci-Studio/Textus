@@ -25,12 +25,8 @@ import {
   storedAgentMode,
 } from "./settings-types";
 
-/**
- * Saved settings read back whole: a field missing, ill-typed or holding a
- * value this version doesn't know takes its default, and fields this
- * version doesn't know are kept as they are (SettingsContext.tsx). Pure
- * functions.
- */
+/** Saved settings read back whole: a missing, ill-typed or unknown value
+ *  takes its default, and fields this version doesn't know are kept. */
 
 /** A stored provider-to-model map: its string entries, nothing else. */
 function stringMap(value: unknown): Record<string, string> {
@@ -44,9 +40,7 @@ function stringMap(value: unknown): Record<string, string> {
 }
 
 /** The `lang` attribute for the UI language, which the CSS `:lang()` font
- *  stacks key off (Chinese needs its region to pick Simplified or
- *  Traditional glyphs). Kept in step with the boot script
- *  (src-tauri/src/boot.js). */
+ *  stacks key off. Keep in step with the boot script. */
 export function htmlLang(language: Lang): string {
   return localeOf(language);
 }
@@ -56,11 +50,8 @@ export function guessLanguage(): Lang {
   return detectLang(typeof navigator === "undefined" ? "" : navigator.language);
 }
 
-/**
- * Stored settings -> a complete, valid `Settings`: defaults for what's
- * missing or unusable. Nothing stored at all (null, or an empty object) is
- * a brand-new installation, which also starts in the OS's language.
- */
+/** Stored settings -> a complete, valid `Settings`. Nothing stored at all is
+ *  a new installation, which starts in the OS's language. */
 export function normaliseSettings(parsed: Raw | null): Settings {
   if (!parsed || Object.keys(parsed).length === 0)
     return { ...DEFAULT_SETTINGS, language: guessLanguage() };

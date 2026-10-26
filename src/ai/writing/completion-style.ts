@@ -1,7 +1,6 @@
 import type { CompletionTone } from "../../settings/SettingsContext";
 
-/// Tone presets as English directives - the model instruction language is
-/// English regardless of the UI language, matching the backend prompts.
+/// English directives whatever the UI language, like the backend prompts.
 const TONE_DIRECTIVES: Record<CompletionTone, string | null> = {
   default: null,
   formal: "Write in a formal, polished tone.",
@@ -13,10 +12,7 @@ const TONE_DIRECTIVES: Record<CompletionTone, string | null> = {
     "Be as concise as possible - the fewest plain words that carry the point, at the short end of the length above.",
 };
 
-/**
- * The user's completion tone preference as a directive string for the
- * backend to append to the completion prompt, or null when nothing is set.
- */
+/** The tone as a directive for the completion prompt, or null when unset. */
 export function buildCompletionStyle(tone: CompletionTone): string | null {
   return TONE_DIRECTIVES[tone];
 }

@@ -1,6 +1,5 @@
-/** `address` if a web page may be shown in a tab: HTTPS, and never the
- *  app's own origin - the frame keeps its page's origin, and the app's
- *  would be the app. */
+/** `address` if a web page may be shown in a tab: HTTPS, and never the app's
+ *  own origin, which the frame would then have. */
 export function webPageUrl(address: string): string | null {
   try {
     const url = new URL(address);

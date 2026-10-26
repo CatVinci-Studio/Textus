@@ -19,10 +19,8 @@ import {
 import { errorText } from "../../utils/error-text";
 
 /**
- * The plugins Textus offers to install (Settings › Extensions › Plugins › Get plugins):
- * textus-plugins' catalog, fetched by Rust (src-tauri/src/plugins/
- * catalog.rs), which also downloads, checks and installs a package. No
- * plugin comes with Textus.
+ * The plugins Textus offers to install, from the textus-plugins catalog that
+ * Rust fetches, checks and installs. No plugin comes with Textus.
  */
 
 export interface CatalogItem {
@@ -37,9 +35,8 @@ export interface CatalogItem {
 
 export type { SkillEntry };
 
-/** Ready with the list kept from last time while a fresh one is fetched;
- *  `error` when fetching it failed and the kept list is what there is.
- *  `skills`: the skills the same catalog lists, for the market. */
+/** Ready with last time's list while a fresh one is fetched; `error` when
+ *  fetching failed. `skills`: the skills the same catalog lists. */
 export type CatalogState =
   | { status: "idle" | "loading" }
   | {
@@ -92,9 +89,8 @@ let fetching: Promise<void> | null = null;
 const skills = (): Promise<SkillEntry[]> =>
   pluginsIpc.skillCatalog().catch(() => []);
 
-/** Fetches the catalog (again, with `force`). The first time, the list
- *  kept from last time is shown at once while the fresh one comes; when
- *  fetching fails, a list already shown stays. */
+/** Fetches the catalog (again, with `force`). Last time's list shows at once
+ *  the first time; when fetching fails, a list already shown stays. */
 export function loadCatalog(force = false): Promise<void> {
   if (fetching) return fetching;
   if (!force && state.status === "ready") return Promise.resolve();
@@ -139,9 +135,8 @@ export function updateFor(
     : null;
 }
 
-/** Installs (or updates) `id` from the catalog. A new plugin is turned
- *  on - installing it was asking for it - which asks for its
- *  permissions; an update keeps it as it was. */
+/** Installs (or updates) `id` from the catalog. A new plugin is turned on,
+ *  which asks for its permissions; an update keeps it as it was. */
 export async function installFromCatalog(id: string): Promise<void> {
   const before = pluginRecord(id);
   await pluginsIpc.installFromCatalog(id);
@@ -152,9 +147,8 @@ export async function installFromCatalog(id: string): Promise<void> {
 
 export type PackId = "writing" | "charts" | "research";
 
-/** Plugins that go together, offered to install at once on Get more: the
- *  official ones, by what they are for. A pack shows the ones the catalog
- *  has. */
+/** Plugins offered to install together: the official ones, by purpose. A
+ *  pack shows the ones the catalog has. */
 export const PLUGIN_PACKS: { id: PackId; plugins: string[] }[] = [
   {
     id: "writing",
@@ -190,8 +184,7 @@ export const PLUGIN_PACKS: { id: PackId; plugins: string[] }[] = [
   },
 ];
 
-/** The plugins Get more puts first, while nothing is searched for: the
- *  ones most people want first. */
+/** The plugins Get more puts first while nothing is searched for. */
 export const RECOMMENDED_PLUGINS = [
   "catvinci.pdf-viewer",
   "catvinci.image-viewer",
@@ -207,7 +200,7 @@ export function notInstalled(from: CatalogState = state): CatalogItem[] {
 }
 
 /** The items whose name, description, author or id hold every word of
- *  `query`, case aside - in the UI language and in the manifest's own. */
+ *  `query`, case aside, in the UI language and the manifest's own. */
 export function searchCatalog(
   list: CatalogItem[],
   query: string,

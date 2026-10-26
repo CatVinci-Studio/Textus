@@ -2,25 +2,21 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, PluginKey, type Transaction } from "@milkdown/kit/prose/state";
 import { $prose, $remark } from "@milkdown/kit/utils";
 
-// Attributes included (e.g. Word/Notion/Google Docs paste tends to emit
-// `<br clear="all">`) - a bare `<br>`/`<br/>` with no attributes never even
-// reaches here, since Milkdown's own remark-preserve-empty-line plugin
-// (its "blank line" placeholder mechanism) already strips those from the
-// tree unconditionally; only the attributed form survives as a real node.
+// Attributed `<br clear="all">` too (Word/Notion paste); a bare `<br>` is
+// stripped earlier by Milkdown's remark-preserve-empty-line.
 const BR_RE = /^<br(\s[^<>]*)?\/?>$/i;
 
-// GFM tables can't hold a real hardbreak, so `<br>` is the only way to
-// write a line break inside a table cell: see the cell rules below.
+// GFM tables can't hold a real hardbreak, so `<br>` is the only line break
+// in a table cell.
 const TABLE_CELL_TYPES = new Set(["table_cell", "table_header"]);
 
 /** `<br>`, `<br/>` or `<br />`, with no attributes. */
 const PLAIN_BR_RE = /^<br\s*\/?>$/i;
 
 /**
- * Which of a table cell's inline pieces (`isBr` tells a plain `<br>`) are
- * line breaks: every plain `<br>` with something after it in the cell.
- * Not the ones that end it: Milkdown writes a cell without its last break,
- * and the `<br>` would be gone from the file on the next save.
+ * Which of a table cell's pieces are line breaks: every plain `<br>` with
+ * something after it. Not the ones that end it: Milkdown writes a cell
+ * without its last break, so that `<br>` would be lost on save.
  */
 function cellBreaks<T>(pieces: readonly T[], isBr: (piece: T) => boolean) {
   let lastContent = pieces.length - 1;
@@ -37,12 +33,8 @@ interface MdastNode {
 const isMdastBr = (node: MdastNode) =>
   node.type === "html" && PLAIN_BR_RE.test(node.value ?? "");
 
-/**
- * A `<br>` in a table cell, the line break Shift+Enter makes there
- * (block-keys-plugin.ts), is read as a break (cellBreaks): shown as a new
- * line in the cell, not as the tag, and written back as `<br>`
- * (markdown-output.ts).
- */
+/** A `<br>` in a table cell is read as a break, shown as a new line and
+ *  written back as `<br>`. */
 export const remarkTableCellBreaks = $remark(
   "remark-table-cell-breaks",
   () => () => (tree: unknown) => {
@@ -58,35 +50,16 @@ export const remarkTableCellBreaks = $remark(
 );
 
 /**
- * A lone `<br>`/`<br/>`/`<br />` raw-HTML node (see raw-html-schema.ts) sitting
- * outside a table is really just a line break - normalize it to a genuine
- * hardbreak node so it round-trips as a proper markdown break (backslash +
- * newline) instead of literal `<br/>` text surviving in the saved file.
- *
- * Only where a paste or a drop changed the document - a `<br>` typed is
- * the user's to keep.
- * The file's own `<br>`s stay as written: saving writes every block the
- * user didn't edit back as the file has it (source-preserving.ts), and a
- * `<br>` turned into a break on the first edit anywhere - or on opening,
- * when a plugin's first transaction (heading ids) touched the document -
- * made its block one the user didn't edit but the save rewrote.
- *
- * A `<br>` that starts or ends its paragraph has no Markdown break to
- * become, and stays HTML: a break only stands between two pieces of a
- * paragraph (at the end, `\` is a literal backslash). A `<br>` at the end of a line is the
- * break and the line end together, `a<br>\nb`: it becomes one break, not a
- * break and then a line end, which wrote a blank line and split the
- * paragraph.
- *
- * In an edited table cell, the `<br>`s the file would read back as breaks
- * (cellBreaks): one that ended the cell does once text is typed after it.
+ * A lone `<br>` outside a table becomes a hardbreak, so it round-trips as a
+ * Markdown break. Only where a paste or drop changed the document: a typed
+ * or the file's own `<br>` stays, or untouched blocks would be rewritten on
+ * save. One that starts or ends its paragraph has no break to become.
  */
 export const brToHardbreakPlugin = $prose(() => {
   return new Plugin({
     key: new PluginKey("br-to-hardbreak"),
     appendTransaction(transactions, _oldState, newState) {
-      // Pasted or dropped only: a `<br>` typed by hand is kept as typed
-      // (markdown/source-input-rules.ts).
+      // A `<br>` typed by hand is kept as typed.
       const pasted = transactions.filter(
         (tr) =>
           tr.docChanged &&
@@ -102,7 +75,6 @@ export const brToHardbreakPlugin = $prose(() => {
           node.isTextblock &&
           TABLE_CELL_TYPES.has(newState.doc.resolve(pos).parent.type.name)
         ) {
-          // An edited cell, as it would read back from the file.
           const pieces: { node: ProseNode; pos: number }[] = [];
           node.forEach((child, offset) =>
             pieces.push({ node: child, pos: pos + 1 + offset }),
@@ -151,8 +123,8 @@ export const brToHardbreakPlugin = $prose(() => {
   });
 });
 
-/** The ranges the transactions in `only` rewrote, in `doc`'s (the final)
- *  positions - `transactions` being all of them, in order. */
+/** The ranges the transactions in `only` rewrote, in the final document's
+ *  positions. */
 function changedRanges(
   transactions: readonly Transaction[],
   doc: ProseNode,
@@ -163,8 +135,6 @@ function changedRanges(
     if (!only.includes(tr)) return;
     tr.mapping.maps.forEach((map, i) => {
       map.forEach((_oldStart, _oldEnd, newStart, newEnd) => {
-        // Carried through every later step, this transaction's and the
-        // ones after it, to land in final-document positions.
         let from = tr.mapping.slice(i + 1).map(newStart, -1);
         let to = tr.mapping.slice(i + 1).map(newEnd, 1);
         for (const later of transactions.slice(t + 1)) {

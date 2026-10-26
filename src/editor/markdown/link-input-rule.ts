@@ -3,30 +3,22 @@ import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import { $inputRule } from "@milkdown/kit/utils";
 
 /**
- * `[text](url)` typed out becomes a link as its `)` goes in, the way `**`
- * and `` ` `` become their marks; without it, a link typed in the editor
- * stayed as brackets and parentheses. The text is plain: a run with an
- * inline node in it (code, math - the object replacement character in the
- * rule's view of the text) is left alone rather than flattened. An image's
- * `![` is left alone too: TYPED_IMAGE below takes it.
+ * `[text](url)` typed out becomes a link as its `)` goes in. A run holding an
+ * inline node (code, math) is left alone, and so is an image's `![`.
  */
 export const TYPED_LINK = /(?<!!)\[([^[\]\n\ufffc]+)\]\(([^()\s\ufffc]+)\)$/;
 
 /**
- * `![alt](src)` typed out becomes an image the same way (issue #189).
- * Milkdown's commonmark preset defines an image input rule but leaves it
- * out of the preset, so a typed image stayed text, and saving escaped it
- * to `!\[alt]\(src)` - which no Markdown reader shows as an image. The alt
- * may be empty, as `![](src)` is how a picture without one is written;
- * `![[file]]` is an Obsidian embed (obsidian-embed.ts), not this.
+ * `![alt](src)` typed out becomes an image the same way: Milkdown leaves its
+ * image input rule out of the preset, and saving escaped a typed image to
+ * text. `![[file]]` is an Obsidian embed, not this.
  */
 export const TYPED_IMAGE = /!\[([^[\]\n\ufffc]*)\]\(([^()\s\ufffc]+)\)$/;
 
 type Match = RegExpMatchArray | RegExpExecArray;
 
-/** `[text](url)` at start..end as a link: the input rule's change, the
- *  bracket autopair's when the caret leaves a ")" it put in, and
- *  link-settle.ts's when the caret leaves one filled in from inside. */
+/** `[text](url)` at start..end as a link: the input rule's change, and the
+ *  autopair's and link-settle's when the caret leaves a ")". */
 export function typedLink(
   state: EditorState,
   match: Match,
@@ -71,23 +63,18 @@ export function typedImage(
     )
   )
     return null;
-  // A URL pasted between the parentheses is a link (paste-url.ts); the
-  // replacement drops it with the rest of the typed text.
+  // A URL pasted between the parentheses is a link; the replacement drops it
+  // with the rest of the typed text.
   return state.tr
     .replaceWith(start, end, image.create({ src, alt }))
     .setStoredMarks([]);
 }
 
 /**
- * A typed link or image whose ")" is the last character before `end`, as
- * the input rules would have made it had the ")" been typed - for the
- * bracket autopair (keys/bracket-autopair-plugin.ts), whose ")" is already
- * there when the caret moves on past it, or Enter is pressed before it.
- * The text of its block up to `end` is read, across text nodes: a URL
- * pasted between the parentheses is a link of its own (paste-url.ts), and
- * reading only the text node before `end` - that URL's - found no link.
- * An inline node (code, math) reads as the object replacement character,
- * which neither pattern takes. Null when there is none.
+ * A typed link or image whose ")" is the last character before `end`, for
+ * the bracket autopair's ")" that is already there. The block's text is read
+ * across text nodes, since a URL pasted inside is a link of its own. Null
+ * when there is none.
  */
 export function typedLinkEndingAt(
   state: EditorState,

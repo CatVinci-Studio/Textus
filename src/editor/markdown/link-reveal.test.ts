@@ -44,7 +44,7 @@ async function open(markdown: string, { focus = true } = {}) {
     /** What the serializer writes for the document now. */
     markdown: () =>
       editor.action((ctx) => ctx.get(serializerCtx)(view.state.doc)),
-    /** What a save writes for it (useDocumentReporting.ts). */
+    /** What a save writes for it. */
     saved: () =>
       editor.action((ctx) => {
         const source = readSourceBlocks(ctx, markdown, opened)!;

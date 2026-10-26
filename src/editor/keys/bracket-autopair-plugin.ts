@@ -19,8 +19,8 @@ import {
 } from "../marks/enclosure";
 import { typedLinkEndingAt } from "../markdown/link-input-rule";
 
-/** Each opening bracket or quote and the partner typed after it. The
- *  full-width ones are what Chinese and Japanese input methods commit. */
+/** Each opening bracket or quote and its partner. The full-width ones are
+ *  what Chinese and Japanese input methods commit. */
 export const BRACKET_PAIRS: Readonly<Record<string, string>> = {
   "(": ")",
   "[": "]",
@@ -36,24 +36,21 @@ export const BRACKET_PAIRS: Readonly<Record<string, string>> = {
   "‘": "’",
 };
 
-/** How long after compositionend a committed bracket is paired: once
- *  prosemirror-view has read the commit back in and enclosure.ts has
- *  moved it out of an adjacent node. */
+/** How long after compositionend a committed bracket is paired: once the
+ *  commit has been read back in and moved out of an adjacent node. */
 export const BRACKET_COMPOSITION_DELAY_MS = COMPOSE_RELOCATE_DELAY_MS + 10;
 
 const WORD_CHAR = /^[\p{L}\p{N}_]$/u;
 /** The text before the caret ends in a web address being typed. */
 const URL_BEFORE = /(?:^|\s)(?:[a-z][\w+.-]*:\/\/|www\.)\S*$/iu;
 
-/** A closing partner put in by this plugin, still where it was put: the
- *  opener at `open`, the closer at `close`, the caret between them. */
+/** A closing partner put in by this plugin, still where it was put. */
 interface Pair {
   open: number;
   close: number;
   closer: string;
-  /** The opener is gone: a rule took it, as a typed link's does with the
-   *  rest of `[text](url)` when an input method commits the ")". Only
-   *  that closer is still stepped over. */
+  /** The opener is gone, taken by a rule (a typed link's, when an input
+   *  method commits the ")"). Only that closer is still stepped over. */
   orphan?: boolean;
 }
 
@@ -62,8 +59,7 @@ const pairsKey = new PluginKey<Pair[]>("bracket-autopair");
 const INLINE_NODE = "\uFFFC";
 
 /** The character after `$pos`: "" at the end of its line and INLINE_NODE
- *  for an inline node that isn't text (a span, a formula, an image).
- *  nodeAfter and nodeBefore are cut at `$pos`. */
+ *  for an inline node that isn't text. */
 function charAfter($pos: ResolvedPos): string {
   const node = $pos.nodeAfter;
   if (!node || node.type.name === "hardbreak") return "";
@@ -81,9 +77,8 @@ function charAt(doc: ProseNode, pos: number): string {
   return charAfter(doc.resolve(pos));
 }
 
-/** Text where brackets are typed as they are: code, maths, raw HTML and the
- *  other verbatim nodes, and link text, whose address may be what is
- *  being typed. */
+/** Text where brackets are typed as they are: code, maths, raw HTML, and
+ *  link text, whose address may be what is being typed. */
 function isVerbatim($pos: ResolvedPos): boolean {
   const parent = $pos.parent;
   if (!parent.isTextblock && !parent.isInline) return true;
@@ -95,11 +90,9 @@ function isVerbatim($pos: ResolvedPos): boolean {
 }
 
 /**
- * Whether an `opener` standing (or about to stand) right before `$after`
- * gets its partner: not in verbatim text, not right before a word or an
- * inline node (the bracket is being put around what follows, which the
- * user will close themselves), not in a web address, and a `'` not after a
- * word, where it is an apostrophe: don't, it's.
+ * Whether an `opener` before `$after` gets its partner: not in verbatim
+ * text, not right before a word or inline node (the user is wrapping it),
+ * not in a web address, and a `'` not after a word (don't, it's).
  */
 function pairsHere(
   $after: ResolvedPos,
@@ -133,8 +126,8 @@ function pairClosingAt(state: EditorState, pos: number): Pair | undefined {
   return pairsOf(state).find((pair) => pair.close === pos);
 }
 
-/** Typing `opener` over a selection in one textblock: the selection,
- *  kept selected, between the opener and its partner. */
+/** Typing `opener` over a selection in one textblock: the selection, kept
+ *  selected, between the opener and its partner. */
 function wrap(
   tr: Transaction,
   from: number,
@@ -149,9 +142,8 @@ function wrap(
   return tr.setSelection(TextSelection.create(tr.doc, from + 1, end + 1));
 }
 
-/** After an input method committed `committed` at the caret: the same as
- *  typing its last character would have done. `wrapped` is what the
- *  composition replaced, if it began over a selection. */
+/** After an input method committed `committed`: what typing its last
+ *  character would have done. `wrapped` is what the composition replaced. */
 export function pairAfterComposition(
   view: EditorView,
   committed: string,
@@ -164,8 +156,8 @@ export function pairAfterComposition(
   const caret = sel.from;
   const typedBefore = charAt(state.doc, caret - typed.length) === typed;
 
-  // The closer typed in front of a closer this plugin put in: one closer.
-  // Or taken by a rule with its opener (an orphan): none left over.
+  // The closer typed in front of one this plugin put in: one closer. Or taken
+  // by a rule with its opener (an orphan): none left over.
   const pair = pairClosingAt(state, caret);
   if (
     pair?.closer === typed &&
@@ -180,14 +172,14 @@ export function pairAfterComposition(
   const closer = BRACKET_PAIRS[typed];
   if (!closer) return false;
   const open = caret - typed.length;
-  if (pairsOf(state).some((p) => p.open === open)) return false; // paired already
+  if (pairsOf(state).some((p) => p.open === open)) return false;
   if (
     wrapped &&
     committed === typed &&
     wrapped.from === open &&
     state.doc.content.size === wrapped.sizeAfter
   ) {
-    // The opener stands where the selection was; put the selection back
+    // The opener stands where the selection was: the selection goes back
     // after it, and the partner after that.
     const tr = state.tr.delete(open, caret);
     view.dispatch(
@@ -209,18 +201,11 @@ export function pairAfterComposition(
 }
 
 /**
- * Brackets and quotes typed with their partner, as in Typora and code
- * editors: `(` puts in `)` after the caret, the `)` typed in front of it
- * steps over it rather than doubling it, Backspace right after the `(`
- * takes both while nothing was typed between them, and an opener typed over
- * a selection wraps it. Only a partner this plugin put in is stepped over
- * or deleted with its opener; every other closer is typed as it is.
- *
- * Input methods commit their brackets (`（`, `【`, `「`, `“`...) through a
- * composition, which nothing may disturb while it runs, so those are
- * paired once it has ended, the same way.
- *
- * `enabled` is Settings > Close (), [] and “”.
+ * Brackets and quotes typed with their partner, as in Typora: the closer
+ * typed in front of it steps over it, Backspace takes both while nothing is
+ * between, and an opener over a selection wraps it. Only partners put in
+ * here are stepped over. Input methods' brackets are paired once their
+ * composition has ended.
  */
 export const createBracketAutopairPlugin = (options: {
   enabled: () => boolean;
@@ -262,9 +247,8 @@ export const createBracketAutopairPlugin = (options: {
           return next;
         },
       },
-      // A ")" put in after `[text](url` is a link's end the user never
-      // typed: moving on past it - an arrow, End, a click - makes the link,
-      // as typing it would have (link-input-rule.ts).
+      // A ")" put in after `[text](url` is a link's end the user never typed:
+      // moving past it makes the link, as typing it would have.
       appendTransaction(trs, oldState, newState) {
         const before = pairsOf(oldState).filter(
           (pair) => pair.closer === ")" && !pair.orphan,
@@ -283,17 +267,15 @@ export const createBracketAutopairPlugin = (options: {
       },
       props: {
         handleTextInput(view, from, to, text) {
-          // Dispatching mid-composition aborts the input method's preedit;
-          // compositionend below takes over.
+          // Dispatching mid-composition aborts the preedit; compositionend takes over.
           if (view.composing || !options.enabled()) return false;
           const { state } = view;
 
           if (from === to) {
             const pair = pairClosingAt(state, from);
             if (pair && pair.closer === text) {
-              // Take out the partner put in and let the typed closer go
-              // in as usual, so the rules that act on it (a typed link's
-              // ")", a wikilink's "]]") still see it.
+              // The typed closer goes in as usual, so the rules that act on it (a
+              // typed link's ")", a wikilink's "]]") still see it.
               view.dispatch(state.tr.delete(from, from + text.length));
               return false;
             }
@@ -323,8 +305,8 @@ export const createBracketAutopairPlugin = (options: {
           return true;
         },
         handleKeyDown(view, event) {
-          // Enter right before a ")" put in after `[text](url`: the link
-          // first, then the new line after it - not the ")" carried down.
+          // Enter right before a ")" put in after `[text](url`: the link first,
+          // then the new line, not the ")" carried down.
           if (
             event.key === "Enter" &&
             !event.shiftKey &&
@@ -380,9 +362,7 @@ export const createBracketAutopairPlugin = (options: {
             const committed = event.data ?? "";
             const pending = wrapped;
             wrapped = undefined;
-            // prosemirror-view reads the committed text in a moment after
-            // this event (WebKitGTK as deleteCompositionText, then
-            // insertFromComposition); look once it has.
+            // prosemirror-view reads the committed text in a moment after this event.
             setTimeout(() => {
               if (view.composing || view.isDestroyed || !options.enabled())
                 return;

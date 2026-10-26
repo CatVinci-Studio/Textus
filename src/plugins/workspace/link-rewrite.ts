@@ -1,18 +1,16 @@
 import { basename, dirname } from "../../utils/path";
 
 /**
- * Links in a document that pointed at a file renamed or moved, made to
- * point at its new place (textus.files.rename with `updateLinks`): Markdown
- * links and pictures by their relative path, and [[wiki links]] by the
- * file's name. Anything else in the text is left exactly as it was.
+ * Links to a renamed or moved file, made to point at its new place: Markdown
+ * links and pictures by relative path, [[wiki links]] by name. Anything else
+ * is left exactly as it was.
  */
 
 function sep(path: string): string {
   return path.replace(/\\/g, "/");
 }
 
-/** `to`, written relative to the folder `fromDir` - as a link in a document
- *  there spells it. */
+/** `to`, written relative to the folder `fromDir`. */
 export function relativePath(fromDir: string, to: string): string {
   const a = sep(fromDir).split("/").filter(Boolean);
   const b = sep(to).split("/").filter(Boolean);

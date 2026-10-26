@@ -1,8 +1,7 @@
 /**
- * A menu item's `when` (contributes.menus): whether it shows now, as VS
- * Code's when clauses say it - `editorHasSelection`, `fileExtension ==
- * .pdf`, `view == catvinci.tasks.list && !folderOpen`. Keys the context
- * doesn't know are false; a clause that can't be read shows the item.
+ * A menu item's `when`, as VS Code's when clauses: `editorHasSelection`,
+ * `fileExtension == .pdf`. Unknown keys are false; an unreadable clause shows
+ * the item.
  */
 export type WhenContext = Record<string, string | boolean | undefined>;
 

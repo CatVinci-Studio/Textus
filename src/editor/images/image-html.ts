@@ -4,18 +4,9 @@ import { escapeHtml } from "../../utils/html";
 import { sanitizeDimension, sanitizeStyle } from "../html/html-policy";
 
 /**
- * A sized image is written as HTML - `<img src="a.png" alt="x" width="50%">`
- * - the one way to give a picture a width that GitHub, VS Code, Typora and
- * Obsidian all show. Textus 1.1.0 and older kept it in the title instead,
- * `![x](a.png "{textus-width=50%}")`, which every other app ignored (and
- * showed as the tooltip); that form is still read (readImagePresentation)
- * and left as written until the width is changed.
- *
- * Both are one image node: an `<img>` tag in the document becomes an image
- * like `![]()` does, with its `width` and its source as written (`html`), so
- * the width menu, the missing-image card, drag and undo work the same. A
- * tag nobody changed is saved byte for byte; once its picture, alt, title
- * or width changes, it is written afresh (imageMarkdownHtml).
+ * A sized image is written as `<img ... width="50%">`, the one width form
+ * GitHub, VS Code, Typora and Obsidian all show. An `<img>` tag reads as an
+ * image node, and one nobody changed is saved byte for byte.
  */
 
 /** The attributes of an image node this module reads and writes. */
@@ -33,17 +24,13 @@ export interface ImageAttrs {
 const IMG_TAG =
   /^<img(?:\s+[^\s"'<>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*\s*\/?>$/i;
 
-/** Attributes an image node shows; a tag with any other (height, class,
- *  align...) stays raw HTML, drawn as it always was
- *  (raw-html-preview-plugin.ts), so nothing it says is lost on a resize. */
+/** Attributes an image node shows; a tag with any other stays raw HTML, so
+ *  nothing it says is lost on a resize. */
 const IMAGE_ATTRIBUTES = new Set(["src", "alt", "title", "width", "style"]);
 
 /**
- * The picture an `<img>` tag shows, or null when it isn't one an image
- * node can carry: no src, an attribute outside IMAGE_ATTRIBUTES, a width
- * that isn't a number or a percentage, or a style the HTML policy would
- * draw. A style it ignores - Typora's `zoom:50%` - is kept in the source
- * and not shown, as before.
+ * The picture an `<img>` tag shows, or null when an image node can't carry
+ * it. A style the policy ignores (Typora's `zoom:50%`) is kept, not shown.
  */
 export function parseImageTag(raw: string): Omit<ImageAttrs, "html"> | null {
   const tag = raw.trim();
@@ -74,9 +61,8 @@ export function escapeAttribute(value: string): string {
 }
 
 /**
- * How an image is saved: the HTML to write, or null for `![alt](src)`.
- * A tag read from the document comes back as it was while what it says is
- * unchanged; a sized image is `<img>`; anything else is Markdown.
+ * How an image is saved: the HTML to write, or null for `![alt](src)`. An
+ * unchanged tag comes back as it was; a sized image is `<img>`.
  */
 export function imageMarkdownHtml(attrs: ImageAttrs): string | null {
   if (attrs.html) {
@@ -98,12 +84,11 @@ export function imageMarkdownHtml(attrs: ImageAttrs): string | null {
   return `<img ${parts.join(" ")}>`;
 }
 
-/** `{textus-width=N%}` at the end of the title: where Textus 1.1.0 and
- *  older kept an image's width. A document's own text, so read for good. */
+/** `{textus-width=N%}` at the end of the title: an older form of an image's
+ *  width, still read. */
 const IMAGE_WIDTH_METADATA = /\s*\{textus-width=(\d{1,3})%\}\s*$/;
 
-/** An image title split into the caption it shows and the width an older
- *  Textus kept at its end. */
+/** An image title split into its caption and the older title-kept width. */
 export function readImagePresentation(title: string | null | undefined): {
   title: string;
   widthPercent: number | null;
@@ -121,9 +106,8 @@ export function readImagePresentation(title: string | null | undefined): {
   };
 }
 
-/** The width an image shows at, as HTML writes it ("50%", "320"), or null
- *  for its own size: its `width`, else one an older Textus kept in its
- *  title. */
+/** The width an image shows at, as HTML writes it, or null for its own
+ *  size: its `width`, else one kept in its title. */
 export function imageWidthOf(attrs: Attrs): string | null {
   const width = (attrs.width as string | undefined) ?? "";
   if (width) return width;
@@ -132,10 +116,8 @@ export function imageWidthOf(attrs: Attrs): string | null {
 }
 
 /**
- * An image's attrs at a new width - a percentage, or null for its own size
- * - saved as `<img width>`, or for null as `![]()`. A width an older Textus
- * kept in the title comes out of it, leaving the caption. Never a null
- * title: the node's title attr validates as a string.
+ * An image's attrs at a new width, or null for its own size. A width kept
+ * in the title comes out of it. Never a null title: it validates as a string.
  */
 export function withImageWidth(
   attrs: Attrs,
@@ -161,9 +143,8 @@ interface MdastNode {
   children?: MdastNode[];
 }
 
-// Where an inline node can't stand on its own and goes in a paragraph.
-// Milkdown's remarkHtmlTransformer, which runs first, wraps block HTML in
-// one already; this is the fallback should that ever change.
+// Where an inline node goes in a paragraph. remarkHtmlTransformer wraps
+// block HTML already; this is the fallback.
 const BLOCK_PARENTS = new Set([
   "root",
   "blockquote",
@@ -195,7 +176,7 @@ function readImageTags(node: MdastNode): void {
   });
 }
 
-/** Reads each `<img>` tag an image node can carry as one (parseImageTag). */
+/** Reads each `<img>` tag an image node can carry as one. */
 export const remarkHtmlImages = $remark(
   "remark-html-images",
   () => () => (tree) => readImageTags(tree as MdastNode),

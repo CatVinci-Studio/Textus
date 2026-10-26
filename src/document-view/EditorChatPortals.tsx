@@ -8,9 +8,8 @@ import { chatLabels } from "../ai/chat/chat-labels";
 import type { AgentMode, Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
-/** Where one tab's chats are drawn: the docked AI panel, while this is
- *  the active tab and the panel is open, and Quick Ask - in the
- *  document's flow, or on a phone docked above the keyboard. */
+/** Where one tab's chats are drawn: the docked AI panel while active, and
+ *  Quick Ask in the document's flow or, on a phone, above the keyboard. */
 export function EditorChatPortals({
   setup,
   chat,
@@ -37,7 +36,7 @@ export function EditorChatPortals({
   const { handleFocusNext } = chat.review;
   return (
     <>
-      {/* Off, the panel shows that instead (app/AgentPanelDock.tsx). */}
+      {/* Off, the panel shows that instead. */}
       {panelContainer &&
         settings.textusAi &&
         createPortal(
@@ -74,11 +73,8 @@ export function EditorChatPortals({
       {inlineChat.chatInfo &&
         inlineChat.visible &&
         controls.quickAskHost &&
-        // The panel renders through a portal into the zone widget's DOM
-        // container (quick-ask-widget-plugin) - a real block in the
-        // document flow, so it pushes content below it down instead of
-        // floating over it. On a phone, into the page, docked above the
-        // keyboard.
+        // Portaled into the zone widget, a real block that pushes content
+        // down instead of floating over it. On a phone, docked to the page.
         createPortal(
           <InlineChat
             document={inlineChat.chatInfo.document}
@@ -88,9 +84,7 @@ export function EditorChatPortals({
             docPath={filePath}
             workspaceRoot={settings.agentWorkspaceRoot || null}
             conversation={chat.quickConversation}
-            // Write first: Quick Ask is opened on a passage to change it,
-            // and Review mode (the general default) turned "shorten this"
-            // into a chat answer. Review stays one click away in the picker.
+            // Write first: Quick Ask is opened on a passage to change it.
             defaultMode="write"
             selectionChip={chat.quickChipHandlers}
             defaultWebSearch={settings.enableWebSearch}

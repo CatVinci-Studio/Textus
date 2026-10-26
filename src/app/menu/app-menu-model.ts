@@ -4,27 +4,11 @@ import type { HeadingAction, Shortcuts } from "../../settings/SettingsContext";
 import { basename } from "../../utils/path";
 
 /**
- * The app menu, as data - what `AppMenu.tsx` draws where the app owns its
- * window frame and there is no native menu bar left (Windows; see
- * platform/window-chrome.ts).
- *
- * Every entry that reaches the backend carries the SAME id its native twin
- * in src-tauri/src/menu.rs was built with, and `trigger_menu_item` there
- * runs it through the one dispatch the native click path uses. So the ids
- * are the contract between the two files: labels, order and grouping are
- * this file's business, behaviour is menu.rs's, and neither can quietly
- * change the other.
- *
- * The layout deliberately does NOT mirror the macOS menu bar. It is the one
- * Windows apps use: no application submenu (About lives in Settings, where
- * the version and update check already are), no Window submenu (New Window
- * belongs in File, and minimise/maximise are the caption buttons two
- * centimetres to the right), and Settings/Exit sit at the root of the
- * popover the way Edge's and VS Code's do.
+ * The app-drawn menu, as data, for windows with no native menu bar. Entries
+ * that reach the backend use the same ids as the native menu.
  */
 
-/** Menu ids that exist natively (src-tauri/src/menu.rs) - listed here so a
- *  typo is a compile error rather than an item that silently does nothing. */
+/** Native menu ids, typed so a typo is a compile error. */
 export type NativeMenuId =
   | "settings"
   | "new-file"
@@ -66,19 +50,13 @@ export type NativeMenuId =
   | "manage-plugins"
   | "command-palette"
   | `plugin-command:${string}`
-  // The phone menu's own (buildMobileMenu): emitted by emitMenuEvent, with
-  // no menu.rs counterpart.
+  // Phone menu only, with no native counterpart.
   | "share"
   | "documents";
 
 /**
- * The handful of items with no native id to send.
- *
- * They were `PredefinedMenuItem`s in the native menu - muda generates their
- * ids, so there is nothing stable to address them by, and no API to fire one
- * from outside a click. The frontend already implements every one of them
- * (the editor's own clipboard helpers, prosemirror history, the window API),
- * so the app-drawn menu calls that directly instead.
+ * Items with no native id: their native twins are predefined items with
+ * generated ids, so the frontend runs them directly.
  */
 export type LocalMenuAction =
   "undo" | "redo" | "cut" | "copy" | "paste" | "select-all" | "fullscreen";
@@ -87,18 +65,16 @@ export type MenuAction = { native: NativeMenuId } | { local: LocalMenuAction };
 
 export interface MenuEntry {
   label: string;
-  /** A stored combo string ("mod+shift+s"), rendered with formatCombo. Only
-   *  set it where the combo really is bound - a hint for a shortcut that
-   *  does nothing is worse than no hint. */
+  /** A stored combo string ("mod+shift+s"). Set only where the combo is
+   *  really bound. */
   accel?: string;
   /** Native tooltip, for entries whose label had to be shortened. */
   title?: string;
   action?: MenuAction;
   submenu?: MenuNode[];
   disabled?: boolean;
-  /** An on/off mode, named by the thing itself ("Sidebar", "Zen Mode" -
-   *  never "Toggle ..."): a check mark at the row's trailing edge shows
-   *  when it is on. Leave unset for plain actions. */
+  /** An on/off mode, named by the thing itself ("Sidebar", never
+   *  "Toggle ..."); shows a check mark when on. */
   checked?: boolean;
 }
 
@@ -106,8 +82,7 @@ export interface MenuEntry {
 export interface MenuChecks {
   sidebar?: boolean;
   agentPanel?: boolean;
-  /** Textus AI's master switch (Settings.textusAi). Off, it also leaves
-   *  the AI panel nothing to open; unset counts as on. */
+  /** Textus AI's master switch; unset counts as on. */
   textusAi?: boolean;
   sourceMode?: boolean;
   splitView?: boolean;
@@ -117,17 +92,15 @@ export interface MenuChecks {
   trackChanges?: boolean;
   fullscreen?: boolean;
   /** Not a check mark: a folder is open, so Close Folder has something to
-   *  close. The macOS menu bar keeps it enabled (it is app-wide). */
+   *  close. */
   folderOpen?: boolean;
 }
 
 export type MenuNode = MenuEntry | "separator";
 
 /**
- * The same states for the macOS menu bar, keyed by native menu id, for
- * menu.rs's set_menu_checks: there the View items are NSMenu check items,
- * which draw AppKit's own mark. Full Screen is left out - AppKit names and
- * marks its own fullscreen item.
+ * The same states keyed by native menu id, for the macOS check items. Full
+ * Screen is left out: AppKit marks its own.
  */
 export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
   return {
@@ -141,13 +114,13 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
   };
 }
 
-/** A command a plugin put in the Plugins menu (plugins/manager.ts). */
+/** A command a plugin put in the Plugins menu. */
 export interface PluginMenuEntry {
   command: string;
   label: string;
 }
 
-/** What File > Open Recent lists (menu.rs's recents), most recent first. */
+/** What File > Open Recent lists, most recent first. */
 export interface RecentLists {
   files: string[];
   /** Opened with File > Open Folder…; listed above the files. */
@@ -156,10 +129,8 @@ export interface RecentLists {
 
 export const NO_RECENTS: RecentLists = { files: [], folders: [] };
 
-/** Recent files are listed by name, with the full path on hover - a Windows
- *  home directory eats most of the width of `C:\Users\...\notes.md`, and two
- *  files can share a name. A folder's name ends in a separator, as in the
- *  native menu, to tell it from the files below it. */
+/** Recent files by name, full path on hover. A folder's name ends in a
+ *  separator to tell it from the files. */
 function recentEntries(t: Strings, recents: RecentLists): MenuNode[] {
   const { files, folders } = recents;
   if (files.length === 0 && folders.length === 0) {
@@ -188,8 +159,7 @@ function recentEntries(t: Strings, recents: RecentLists): MenuNode[] {
   ];
 }
 
-/** Same format list, in the same order, as menu.rs's EXPORT_PANDOC_PREFIX
- *  loop and the frontend's PANDOC_FORMATS (export/exporters.ts). */
+/** Keep in step with the native menu's pandoc export list. */
 function exportEntries(t: Strings): MenuNode[] {
   const pandoc: [string, string][] = [
     ["docx", t.menuExportDocx],
@@ -220,7 +190,6 @@ function exportEntries(t: Strings): MenuNode[] {
 function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
   const headings = [1, 2, 3, 4, 5, 6].map((level): MenuNode => ({
     label: t.menuHeadingTemplate.replace("{n}", String(level)),
-    // Ctrl/Cmd+1..6 unless rebound in Settings › Shortcuts.
     accel: shortcuts[`setHeading${level}` as HeadingAction] || undefined,
     action: { native: `insert-block:h${level}` },
   }));
@@ -241,9 +210,8 @@ function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
   ];
 }
 
-/** The Plugins menu: the commands plugins put there, then Manage Plugins…
- *  - none at all where the app doesn't show plugins
- *  (plugins/store/availability.ts). */
+/** The Plugins menu: plugin commands, then Manage Plugins…; none where the
+ *  app doesn't show plugins. */
 function pluginsMenu(
   t: Strings,
   plugins: readonly PluginMenuEntry[],
@@ -283,9 +251,8 @@ export function buildAppMenu(
           action: { native: "new-file" },
         },
         {
-          // Ctrl+Shift+N, as Cmd+Shift+N on macOS: Ctrl+T is "new tab"
-          // to anyone from a browser and this app has tabs. Bound to match
-          // in menu.rs (NEW_WINDOW_ACCEL).
+          // Ctrl+T means "new tab" to anyone from a browser, and this app
+          // has tabs.
           label: t.menuNewWindow,
           accel: "mod+shift+n",
           action: { native: "new-window" },
@@ -327,9 +294,8 @@ export function buildAppMenu(
       label: t.menuEdit,
       submenu: [
         { label: t.menuUndo, accel: "mod+z", action: { local: "undo" } },
-        // Ctrl+Y is the redo Windows advertises; milkdown's history keymap
-        // binds "Mod-y" alongside "Shift-Mod-z", so both really work and this
-        // shows the one the platform expects.
+        // Ctrl+Y is the redo Windows advertises; the history keymap binds
+        // both.
         { label: t.menuRedo, accel: "mod+y", action: { local: "redo" } },
         "separator",
         { label: t.cut, accel: "mod+x", action: { local: "cut" } },
@@ -420,11 +386,8 @@ export function buildAppMenu(
           action: { native: "zoom-reset" },
         },
         "separator",
-        // muda's predefined fullscreen item is documented as unsupported on
-        // Windows, which is why this runs the window API here instead of
-        // dispatching a menu id. F11 is bound to the same action by App.tsx's
-        // keydown handler rather than by a native accelerator, for the same
-        // reason - there is no native item to hang one on.
+        // The predefined fullscreen item is unsupported on Windows, so this
+        // calls the window API directly.
         {
           label: t.menuFullscreen,
           accel: "f11",
@@ -454,25 +417,20 @@ export function buildAppMenu(
     },
     "separator",
     { label: t.menuSettings, accel: "mod+,", action: { native: "settings" } },
-    // Alt+F4, not the Cmd+Q this has on macOS - Ctrl+Q closes nothing on
-    // Windows and menu.rs deliberately no longer registers it. The hint is
-    // the OS's own: Alt+F4 closes the focused window, which for the usual
-    // single window is exactly this item; with several windows open this
-    // one closes them all and Alt+F4 closes the front one.
+    // Ctrl+Q closes nothing on Windows; Alt+F4 is the OS's own hint.
     { label: t.menuExit, accel: "alt+f4", action: { native: "quit" } },
   ];
 }
 
-/** One of the menu bar's titles (app/menu/MenuBar.tsx) and the list it opens. */
+/** One of the menu bar's titles and the list it opens. */
 export interface MenuBarSection {
   label: string;
   items: MenuNode[];
 }
 
 /**
- * The menu as a bar of titles: each entry with a submenu is a title of its
- * own; the ones without (Settings…, Exit) go to the end of the first
- * list, File, as a Windows app has them.
+ * The menu as a bar of titles. Entries without a submenu (Settings…, Exit)
+ * go to the end of File, as in a Windows app.
  */
 export function menuBarSections(menu: MenuNode[]): MenuBarSection[] {
   const sections: MenuBarSection[] = [];
@@ -489,21 +447,12 @@ export function menuBarSections(menu: MenuNode[]): MenuBarSection[] {
 }
 
 /**
- * The iPhone's menu, behind the title row's button. One flat list: a
- * flyout has nowhere to go on a 400-point-wide screen, and most of the
- * desktop menu is not there to offer - windows, exports through PDF or
- * pandoc, zoom (pinch), split view (no room for two panes). Undo is on
- * the keyboard toolbar (mobile/KeyboardToolbar.tsx), the clipboard in the
- * system's long-press menu. Recent documents have their own page
- * (Documents, mobile/DocumentList.tsx).
+ * The iPhone's menu: one flat list, with only what a phone needs.
  */
 export function buildMobileMenu(
   t: Strings,
   checks: MenuChecks = {},
 ): MenuNode[] {
-  // Kept short: the file actions, then what is reached for while writing.
-  // The view modes and the guides live in Settings (General > Help,
-  // Editor > View), where a phone has room to say what each one does.
   return [
     { label: t.menuDocuments, action: { native: "documents" } },
     { label: t.menuNewFile, action: { native: "new-file" } },

@@ -1,32 +1,6 @@
-//! The skills and writing-standards reference packs bundled with the app.
-//!
-//! ```text
-//! skills/
-//! ├── expand.md … skill.md               <- the built-in skills (SKILL_FILES)
-//! ├── packs/                             <- the reference packs (PACK_FILES)
-//! │   ├── contract.md                    <- the editing contract every built-in follows
-//! │   ├── craft.md                       <- fiction, plain language, email, platforms
-//! │   └── standards-<lang>.md            <- one per document language
-//! └── ATTRIBUTION.md                     <- credits for the adapted texts
-//! ```
-//!
-//! All of it is compiled in with `include_str!`, like ui-names/*.txt, so it
-//! needs no resource path or file access (iOS included) and the app never
-//! writes it. A skill is an Agent Skills file (frontmatter + body, parsed
-//! by workspace::parse_skill_file); the user's global skills/ and the
-//! project's .textus/skills/ override a built-in of the same name
-//! (workspace::load_layers) and Customize… copies one there. Each panel
-//! mode has its own (`textus-modes`), always on; the other skills come from
-//! the market (plugins::catalog) and are the user's own files.
-//!
-//! A pack is split into `## sections` with the same names in every
-//! language's pack (`typography`, `numbers`, `words`, `dialogue`,
-//! `register`, `letters`, `official`, `academic`, `social`, `ai-tells`), so
-//! a skill asks for `standards#dialogue` whatever the document's language.
-//! The sections a skill lists in `textus-packs` are appended to its body
-//! when it is used - by `/name` (expand_message) or use_skill - so there is
-//! no second round trip to fetch them; the model can also load any section
-//! with `use_skill("standards-fr#dialogue")` (load_reference).
+//! The skills and writing-standards reference packs bundled with the app,
+//! compiled in with `include_str!`. The user's own skill of the same name
+//! overrides a built-in; a skill's `textus-packs` sections come with its body.
 
 use crate::ai::workspace::{parse_skill_file, AgentSkill, Invocation, SkillSource};
 use std::sync::OnceLock;
@@ -58,9 +32,8 @@ pub(crate) const SKILL_FILES: &[(&str, &str)] = bundled!("skills/";
     "skill",
 );
 
-/// The skills that were built in until 1.3 and are in the market now: a
-/// profile from before then gets the ones it had on installed from there
-/// (workspace::moved::install_moved_skills).
+/// The skills that were built in until 1.3 and are in the market now: an
+/// older profile gets the ones it had installed from there.
 pub(crate) const MOVED_TO_MARKET: &[&str] = &[
     "continue-story",
     "describe",
@@ -92,8 +65,7 @@ pub(crate) const PACK_FILES: &[(&str, &str)] = bundled!("skills/packs/";
     "standards-pt",
 );
 
-/// Credits for the adapted texts in the skills and packs (also shown in
-/// Help > Acknowledgements).
+/// Credits for the adapted texts in the skills and packs.
 pub(crate) const ATTRIBUTION: &str = include_str!("skills/ATTRIBUTION.md");
 
 /// ATTRIBUTION.md as Markdown, for Help > Acknowledgements.

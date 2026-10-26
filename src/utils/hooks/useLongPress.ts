@@ -4,10 +4,8 @@ const LONG_PRESS_MS = 450;
 const LONG_PRESS_SLOP = 10;
 
 /**
- * A touch held still on a row: where it happened, so a menu can open
- * there. iOS fires no contextmenu event for a long press in a web view, so
- * this times the touch itself. The click that follows the finger lifting is
- * swallowed (consumeClick), or the row would also open the file.
+ * A touch held still on a row, and where. iOS fires no contextmenu for a long
+ * press in a web view, so this times it; the click after lifting is swallowed.
  */
 export function useLongPress() {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);

@@ -24,29 +24,9 @@ import { MarginGroup } from "./MarginGroup";
 export { type ReviewMarginLabels, type MarginItem } from "./margin-layout";
 export { NotePopover } from "./MarginCards";
 
-/**
- * The page's margin: review notes and the changed sentences of a pending
- * rewrite, beside the text they are about (review-notes-plugin.ts and
- * pending-edit-plugin.ts mark it). Each card sits level with the first line
- * of its passage, cards that would overlap stack downward - the cards move,
- * never the text - and a thin line runs to the card from the text column's
- * edge, level with that first line - not from the passage's end, which
- * would cross the words after it or, when it wraps, throw the line across
- * the page. A card the stack pushed far below its passage draws its line
- * fainter, at full strength while it is under the pointer or the review
- * bar's pointer: such lines run down the narrow gap between text and cards,
- * and a stack of them at full strength read as a tangle - but with none (as
- * in rc.6 before), the card read as belonging to nothing. Hovering either
- * side lights both.
- *
- * The margin is made, not assumed: when the space right of the text is too
- * narrow the text column moves left to open it (gliding there, placeColumn),
- * and when even that isn't enough - a narrow window, a phone - `onNoMargin`
- * hands everything back to the text: notes behind numbered badges, a
- * rewrite's sentences inline with their ✓ / ✕. Whether one is available
- * is measured with or without anything to show, so the margin views are
- * offered only where they would work.
- */
+/** The page's margin: review notes and a pending rewrite's changes, each card
+ *  level with its passage and linked to it. The text column moves left to
+ *  make room; with none, `onNoMargin` hands everything back to the text. */
 export function ReviewMargin({
   view,
   items,
@@ -66,8 +46,7 @@ export function ReviewMargin({
   onPick,
   onOpen,
 }: {
-  /** A click on a card selects it (useReviewNotes' `selected`, which
-   *  comes back as `focused`). */
+  /** A click on a card selects it; it comes back as `focused`. */
   onOpen?: (key: string | null) => void;
   /** The notes picked on the notes bar, or null while not picking: each
    *  note's card then has its box, and a click on it picks it. */
@@ -154,9 +133,8 @@ export function ReviewMargin({
           block: view.state.doc
             .resolve(Math.min(at, view.state.doc.content.size))
             .index(0),
-          // From the column's edge, level with the passage's first line -
-          // never from inside the text, where it would cross the words
-          // after the passage.
+          // From the column's edge, never inside the text, where it would
+          // cross the words after the passage.
           ax: textEdge + 6,
           ay: (first.top + first.bottom) / 2 - top0,
         });
@@ -166,9 +144,7 @@ export function ReviewMargin({
       setLayout((was) => (sameLayout(was, next) ? was : next));
     };
     measure();
-    // Anything that can move a passage - typing, widgets drawn or typed
-    // in, an image loading, the window resized - re-measures, at most once
-    // a frame.
+    // Anything that can move a passage re-measures, at most once a frame.
     let frame = 0;
     const soon = () => {
       if (frame) return;
@@ -243,8 +219,7 @@ export function ReviewMargin({
                   (q) => q.group === p.group && q.item.key === key,
                 );
           const lit = own(hot) || own(focused);
-          // Pushed far below its passage, a card's line is fainter, not
-          // gone: with none, the card read as belonging to nothing.
+          // Far below its passage, a card's line is fainter, not gone.
           const far = p.drift > LINE_DRIFT;
           const x2 = layout.left;
           const y2 = p.top + (p.chip ? CHIP_HEIGHT / 2 : 16);
@@ -252,9 +227,7 @@ export function ReviewMargin({
           return (
             <path
               key={p.item.key}
-              // Its length as 1, for the dash it draws in with: a fixed
-              // dash length left a long line - a card stacked far below
-              // its passage - broken into stray pieces.
+              // Length 1 for the draw-in dash, so long lines don't break up.
               pathLength={1}
               className={`${p.item.kind}${lit ? " hot" : far ? " far" : ""}`}
               d={`M${p.ax} ${p.ay} C ${p.ax + dx} ${p.ay}, ${x2 - dx} ${y2}, ${x2} ${y2}`}

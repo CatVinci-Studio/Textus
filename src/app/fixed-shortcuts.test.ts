@@ -53,7 +53,7 @@ function menuCombos(nodes: MenuNode[]): string[] {
   );
 }
 
-/** menu.rs's accelerators (with menu/build.rs) ("CmdOrCtrl+Shift+S"), as stored combos. */
+/** The native menu's accelerators, as stored combos. */
 function nativeAccelerators(): string[] {
   const source = ["menu.rs", "menu/build.rs"]
     .map((file) => readFileSync(`src-tauri/src/${file}`, "utf8"))
@@ -81,9 +81,8 @@ describe("the fixed shortcuts in Settings", () => {
     const native = nativeAccelerators();
     expect(native).toContain("mod+shift+n");
     const mac = fixedCombos("macos");
-    // Both ways: nothing menu.rs binds is missing from the list, and the
-    // list claims no menu combo menu.rs doesn't bind. The rest are muda's
-    // predefined Edit items, the editor's own keys and the tab keys.
+    // Both ways. The rest are muda's predefined Edit items, the editor's own
+    // keys and the tab keys.
     expect(mac).toEqual(expect.arrayContaining(native));
     const outsideMenuRs = new Set([
       "mod+z",
@@ -96,7 +95,7 @@ describe("the fixed shortcuts in Settings", () => {
       "mod+enter",
       MAC_NEXT_TAB,
       MAC_PREVIOUS_TAB,
-      // The window's own keys (app/regions.ts, document-view/useReviewBar.ts).
+      // The window's own keys.
       "f6",
       "shift+f6",
       "f7",

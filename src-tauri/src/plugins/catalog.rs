@@ -1,12 +1,6 @@
-//! The plugins Textus offers to install (Settings › Plugins › Get plugins):
-//! the catalog published with CatVinci-Studio/textus-plugins, and
-//! installing one from it. No plugin comes with Textus; each is downloaded
-//! when the user asks for it.
-//!
-//! Only Rust fetches the catalog and the packages, from fixed addresses,
-//! and checks each package against the catalog's SHA-256 before it
-//! installs it - so whether a plugin is CatVinci's own (Settings marks it
-//! Official) is decided here, from where it came, not by the window.
+//! The plugins Textus offers to install, from the textus-plugins catalog. Only
+//! Rust fetches the catalog and packages, from fixed addresses, and checks each
+//! package's SHA-256, so "Official" is decided here, not by the window.
 
 use super::{install, state};
 use serde::{Deserialize, Serialize};
@@ -14,12 +8,12 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::sync::Mutex;
 
-/// The catalog, rebuilt by textus-plugins' release workflow.
+/// The catalog's published address.
 const CATALOG_URL: &str =
     "https://github.com/CatVinci-Studio/textus-plugins/releases/download/catalog/index.json";
 
-/// Where packages may come from: that repository's releases (GitHub sends
-/// the download on to its own storage, which the redirect may reach).
+/// Where packages may come from: that repository's releases (GitHub redirects
+/// to its own storage).
 const PACKAGE_PREFIX: &str = "https://github.com/CatVinci-Studio/textus-plugins/releases/download/";
 const DOWNLOAD_HOSTS: [&str; 3] = [
     "github.com",
@@ -30,8 +24,7 @@ const DOWNLOAD_HOSTS: [&str; 3] = [
 /// A package this large is not a plugin.
 const MAX_PACKAGE: u64 = 200 * 1024 * 1024;
 
-/// One plugin in the catalog - generated into
-/// src/platform/bindings/plugins.ts (src/plugins/store/catalog.ts reads it).
+/// One plugin in the catalog.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -45,15 +38,13 @@ pub struct CatalogEntry {
     pub url: String,
     pub sha256: String,
     pub size: u64,
-    /// Pictures of it at work, for the market (from the repository's
-    /// releases, like its package; any other is left out).
+    /// Pictures of it at work, for the market (from the repository's releases;
+    /// any other is left out).
     #[serde(default)]
     pub screenshots: Vec<String>,
 }
 
-/// One skill in the catalog: a skill file (workspace/skills.rs), listed
-/// beside the plugins in the market - generated into
-/// src/platform/bindings/plugins.ts.
+/// One skill in the catalog, listed beside the plugins in the market.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -87,8 +78,7 @@ fn write_mode() -> Vec<crate::ai::agent::AgentMode> {
 struct Catalog {
     schema: u32,
     plugins: Vec<CatalogEntry>,
-    /// Skills came into the catalog with 1.3 beta.2; an older catalog has
-    /// none.
+    /// An older catalog has no skills.
     #[serde(default)]
     skills: Vec<SkillEntry>,
 }
@@ -120,8 +110,8 @@ fn client() -> Result<reqwest::Client, String> {
         .map_err(|e| e.to_string())
 }
 
-/// The catalog's address: the published one, or - for testing a catalog
-/// before it is published - TEXTUS_PLUGIN_CATALOG.
+/// The catalog's address: the published one, or TEXTUS_PLUGIN_CATALOG for
+/// testing one before it is published.
 fn catalog_url() -> String {
     std::env::var("TEXTUS_PLUGIN_CATALOG").unwrap_or_else(|_| CATALOG_URL.to_string())
 }
@@ -157,8 +147,7 @@ fn parse(text: &str) -> Result<Vec<CatalogEntry>, String> {
     Ok(plugins)
 }
 
-/// The skills the catalog last fetched (or kept) lists - after
-/// plugin_catalog or plugin_catalog_cached has read it.
+/// The skills the catalog last fetched (or kept) lists.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn skill_catalog() -> Vec<SkillEntry> {
@@ -168,8 +157,8 @@ pub fn skill_catalog() -> Vec<SkillEntry> {
         .clone()
 }
 
-/// The catalog as last fetched, kept in the app's cache folder so Get
-/// plugins can list it at once - and still list it offline.
+/// The catalog as last fetched, kept in the cache folder so Get plugins can
+/// list it at once, even offline.
 fn cache_file(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     use tauri::Manager;
     Ok(app
@@ -199,8 +188,7 @@ async fn fetch() -> Result<String, String> {
     response.text().await.map_err(|e| e.to_string())
 }
 
-/// The catalog, fetched now - and kept for the next time
-/// (plugin_catalog_cached).
+/// The catalog, fetched now and kept for next time.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn plugin_catalog(app: tauri::AppHandle) -> Result<Vec<CatalogEntry>, String> {
@@ -217,9 +205,8 @@ pub async fn plugin_catalog(app: tauri::AppHandle) -> Result<Vec<CatalogEntry>, 
     Ok(entries)
 }
 
-/// The catalog as last fetched, if one was kept - shown while a fresh one
-/// is fetched. Installing from it works as from a fresh one: a version's
-/// package never changes, so its checksum still holds.
+/// The catalog as last fetched, shown while a fresh one loads. Installing from
+/// it is safe: a version's package never changes, so its checksum holds.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_catalog_cached(app: tauri::AppHandle) -> Option<Vec<CatalogEntry>> {
@@ -275,13 +262,11 @@ async fn download(url: &str, what: &str) -> Result<Vec<u8>, String> {
     Ok(response.bytes().await.map_err(|e| e.to_string())?.to_vec())
 }
 
-/// The error when a skill of that name is there already: the user's own,
-/// or the same one installed before - never overwritten.
+/// The error when a skill of that name exists already; it is never overwritten.
 pub const SKILL_EXISTS: &str = "SKILL_EXISTS";
 
-/// Installs skill `name` from the catalog last fetched: downloads its
-/// file, checks it, and puts it in the global config folder's skills/,
-/// where it is in the `/` menu of every document. Its path.
+/// Installs skill `name` from the catalog last fetched into the global skills/
+/// folder, after checking it. Returns its path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn skill_install_catalog(app: tauri::AppHandle, name: String) -> Result<String, String> {
@@ -331,9 +316,8 @@ fn install_skill_in(
     Ok(path)
 }
 
-/// Installs `id` from the catalog last fetched: downloads its package,
-/// checks it, and installs it as a package from a file is - marked
-/// Official when the catalog says it is CatVinci's.
+/// Installs `id` from the catalog last fetched after checking its package,
+/// marked Official when the catalog says it is CatVinci's.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn plugin_install_catalog(
@@ -445,9 +429,8 @@ mod tests {
             .contains("bytes"));
     }
 
-    /// The published catalog, and one package from it, through the same
-    /// client and checks an install uses. Run with `--ignored`; it needs
-    /// the network.
+    /// The published catalog, and one package from it, through the same checks an
+    /// install uses. Needs the network.
     #[test]
     #[ignore = "network: the published catalog"]
     fn the_published_catalog_and_its_packages_check_out() {

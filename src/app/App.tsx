@@ -35,12 +35,8 @@ import "../plugins/plugins.css";
 import "./App.css";
 
 /**
- * One window: its tabs, the panels around them, and the prompts and
- * notices over them. Its frame (useWindowShell), its documents
- * (useWindowDocuments) and what reaches it from outside (useWindowWiring)
- * are hooks of their own, called in the order their parts had when all of
- * this was one function, so their effects still run in it; this is where
- * they meet the components.
+ * One window: its tabs, the panels around them, and the prompts and notices
+ * over them. The hooks run in a fixed order so their effects keep theirs.
  */
 function App() {
   const { t, settings, setSettings } = useSettings();
@@ -96,8 +92,7 @@ function App() {
         className="app-shell"
         style={
           {
-            // The sidebar's dragged width (sidebar-frame.css); an iPad
-            // keeps the stylesheet's, its sidebar has no handle.
+            // The sidebar's dragged width; an iPad's sidebar has no handle.
             ...(!isIOSApp && {
               "--sidebar-width": `${sidebarWidth.width}px`,
             }),

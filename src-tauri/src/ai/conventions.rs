@@ -1,8 +1,6 @@
 //! Writing conventions as the app uses them: the effective profile for a
-//! document (the project's `.textus/style.md` front matter, then the
-//! `writingConventions` setting, then Automatic - rules::profile), and the
-//! commands the frontend calls for the settings row, an offline document
-//! check and platform counts.
+//! document (style.md front matter, then the setting, then Automatic), and the
+//! commands for the Settings row, an offline check and platform counts.
 
 use crate::ai::rules::{self, measure, profile, Conventions, DocReport, Lang, Level, Profile};
 use crate::ai::workspace::{self, AgentWorkspace};
@@ -26,9 +24,8 @@ pub(crate) fn library_names(ws: &AgentWorkspace) -> Vec<String> {
         .collect()
 }
 
-/// The setting's key, its "automatic" value, the profiles each language
-/// offers (with the one Automatic uses) and the option keys - everything
-/// the Settings row needs to offer the choice.
+/// Everything the Settings row needs to offer the choice: the key, its
+/// "automatic" value, each language's profiles and the option keys.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn writing_conventions_options() -> profile::ConventionsOptions {
@@ -73,9 +70,8 @@ pub async fn writing_conventions_effective(
     }
 }
 
-/// Checks a whole document against its writing conventions, offline (no
-/// AI provider): the findings check_conventions gives the agent, with
-/// offsets and lines into the Markdown, for a "Check conventions" command.
+/// Checks a whole document against its writing conventions, offline, with
+/// offsets and lines into the Markdown.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn conventions_check_document(
@@ -103,9 +99,8 @@ pub async fn conventions_check_document(
     })
 }
 
-/// Exact platform counts (X weighted length, Bluesky graphemes, WeChat
-/// titles...) - rules::measure::METRICS lists the metrics. None for an
-/// unknown metric.
+/// Exact platform counts (X weighted length, Bluesky graphemes...). None for
+/// an unknown metric.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn measure_text(text: String, metric: String) -> Option<measure::Measure> {

@@ -33,11 +33,8 @@ type IndexState =
   | { kind: "failed" };
 
 /**
- * The folder's files, indexed by the backend (commands/folder.rs) the
- * first time the box gains focus and again on a later focus once stale, or
- * after `refreshKey` moves (the tree's Refresh). A rebuild keeps the old
- * results on screen until the new ones arrive. Sorted here, once per
- * index, so a keystroke only filters.
+ * The folder's files, indexed on first focus, on a later focus once stale,
+ * or when `refreshKey` moves. Old results stay until new ones arrive.
  */
 function useFolderIndex(
   root: string,
@@ -48,8 +45,7 @@ function useFolderIndex(
   const builtAt = useRef(0);
   const request = useRef(0);
 
-  // Another folder, Refresh or another language's order: what was indexed
-  // no longer stands.
+  // Another folder, Refresh or sort order: the index no longer stands.
   useEffect(() => {
     builtAt.current = 0;
     request.current++;
@@ -92,17 +88,8 @@ function focusEditor() {
     ?.focus();
 }
 
-/**
- * The search box at the top of the Files tab: file names anywhere under
- * the folder, matched as you type - documents first, then other files,
- * or documents only with the filter beside the box. While it holds a
- * query its results stand in for the tree (which stays mounted underneath,
- * expanded as it was). Enter opens the selected match the way clicking it
- * in the tree does, ↑/↓ move, Esc clears and goes back to the editor.
- */
-/** The files matching the query in the scope. Matching runs a beat behind
- *  the keystroke: the box shows each letter at once, and a large index
- *  can't hold up typing. */
+/** The files matching the query in the scope, a beat behind the keystroke
+ *  so a large index can't hold up typing. */
 function useFileMatches(
   index: ReturnType<typeof useFolderIndex>["index"],
   query: string,
@@ -133,7 +120,7 @@ export function FileSearch({
   refreshKey: number;
   query: string;
   onQueryChange: (query: string) => void;
-  /** Every file or documents only - the tree's filter too (FileTree). */
+  /** Every file or documents only. */
   scope: SearchScope;
   onScopeChange: (scope: SearchScope) => void;
   onOpen: (path: string) => void;
@@ -147,8 +134,8 @@ export function FileSearch({
   const { index, ensure } = useFolderIndex(root, refreshKey, collator);
   const [selected, setSelected] = useState(0);
 
-  // The folder changed (or Refresh) while the box has the keyboard: there
-  // is no focus event to come, so index the new one now.
+  // The folder changed while the box has the keyboard: no focus event is
+  // coming, so index now.
   useEffect(() => {
     if (document.activeElement === input.current) ensure();
   }, [ensure, refreshKey]);

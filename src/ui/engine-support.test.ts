@@ -3,22 +3,10 @@ import { join, relative } from "node:path";
 import postcss, { type AtRule, type Node } from "postcss";
 import { describe, expect, it } from "vitest";
 
-// The oldest engine Textus supports is WebView2 on Chromium 105, what a
-// Windows 10 machine that isn't updated may still run
-// (docs/dev/webview-support.md). The e2e flows run a current Chromium,
-// which can't show what an old one drops - Settings past the window's
-// edges (dvh, #260), switches with no track (color-mix) - so the sources
-// are read here instead.
-//
-// A feature newer than the minimum is fine inside an @supports that tests
-// for it, with a fallback outside. color-mix() needs no guard: the build
-// gives every rule that uses it a plain-colour twin (vite.color-mix-fallback.ts,
-// whose test checks it can for every stylesheet here).
-// Newer properties an old engine just ignores, with nothing lost but polish
-// (text-wrap, scrollbar-width, transition-behavior), aren't listed.
-//
-// Not read: src/mobile/ (the phone and iPad only, iOS 16's WKWebView) and
-// src/playground/ (the website, in the visitor's own browser).
+// The oldest supported engine is WebView2 on Chromium 105. The e2e flows run
+// a current Chromium, which can't show what an old one drops, so the sources
+// are read here. Newer features are fine inside a matching @supports with a
+// fallback; color-mix() needs no guard, as the build lowers it.
 
 const SRC = join(__dirname, "..");
 const SKIPPED = ["mobile", "playground"];
@@ -126,9 +114,8 @@ const SCRIPT_ALLOWED: Record<string, string> = {
   "editor/marks/color-codes.ts": "oklch(), oklab()",
 };
 
-/** DOM APIs newer than Chromium 105. TypeScript's lib (tsconfig.json,
- *  ES2020) already keeps newer JavaScript built-ins out of our code; for a
- *  dependency that calls one, see utils/polyfills.ts. */
+/** DOM APIs newer than Chromium 105. TypeScript's lib already keeps newer
+ *  JavaScript built-ins out of our code. */
 const DOM_APIS: { name: string; since: number; pattern: RegExp }[] = [
   {
     name: "document.startViewTransition",

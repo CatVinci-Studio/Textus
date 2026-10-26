@@ -4,11 +4,9 @@ import { listenToThisWindow } from "../../utils/tauri-events";
 import { pluginsSnapshot, subscribePlugins } from "../store/plugin-records";
 
 /**
- * Tools plugins give Textus AI (src-tauri plugins/ai_tools.rs): this
- * window tells Rust the tools of its on plugins granted `ai.tools`, from
- * their manifests, whether or not they have started; a call comes back as
- * "plugin-ai-tool-call", runs in the plugin (starting it first) and is
- * answered with plugin_ai_tool_result.
+ * Tools plugins give Textus AI: the window tells Rust the tools of its on
+ * plugins granted `ai.tools`, started or not; a call comes back as an event,
+ * runs in the plugin and is answered.
  */
 
 interface ToolCallEvent {
@@ -35,7 +33,7 @@ function offered() {
 }
 
 /** Keeps Rust told and answers calls, until the returned function. `run`
- *  runs a plugin's tool (manager.ts's runPluginAiTool). */
+ *  runs a plugin's tool. */
 export function watchPluginAiTools(
   run: (plugin: string, name: string, args: unknown) => Promise<unknown>,
 ): () => void {

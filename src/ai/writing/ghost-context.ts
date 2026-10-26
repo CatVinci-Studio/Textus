@@ -3,27 +3,16 @@ import { cjkChunk, isCjk, isCjkLetter } from "../../utils/cjk";
 import { headingTrail } from "../doc-markdown";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 
-/**
- * What a completion is asked with and what is shown of it: the prose
- * around the caret and where it is, the reply tidied and split into
- * candidates, the next word Tab takes (ghost-text-plugin.ts). Pure
- * functions of the document.
- */
+/** What a completion is asked with and how its reply is tidied and split:
+ *  pure functions of the document. */
 
-// The section around the caret is what the next words follow from; more
-// before it cost on every request and changed little (completion_replay).
+// More context costs on every request and barely changes the suggestion.
 export const MAX_CONTEXT_CHARS = 1500;
-// Look-ahead after the cursor: enough for the model to lead into what
-// follows when completing mid-document, small enough not to dominate the
-// prompt.
+// Enough to lead into what follows mid-document without dominating the prompt.
 export const MAX_AFTER_CONTEXT_CHARS = 300;
 
-/**
- * Models often start a continuation with a space out of English habit; after
- * CJK text (or CJK punctuation) that space is wrong - CJK doesn't separate
- * with spaces - so it's stripped. Latin before-text keeps the suggestion
- * verbatim: a leading space there is usually a correct word boundary.
- */
+/** Strips the leading space models often add after CJK text, which doesn't
+ *  separate words with spaces. After Latin text the space is kept. */
 export function tidySuggestion(
   before: string,
   suggestion: string,
@@ -32,8 +21,7 @@ export function tidySuggestion(
   const text = isCjk(before.slice(-1))
     ? suggestion.replace(/^[ \t]+/, "")
     : suggestion;
-  // A table cell or a heading holds one line: a line break taken into one
-  // split the table row (or the heading) when the file was saved.
+  // A line break in a table cell or heading would split it on save.
   return oneLine ? text.replace(/[ \t]*\n+[ \t]*/g, " ").trimEnd() : text;
 }
 
@@ -48,13 +36,8 @@ export function isOneLineBlock(doc: ProseNode, pos: number): boolean {
   return false;
 }
 
-/**
- * Models sometimes open the continuation by repeating the end of the
- * before-text ("...the results show" -> "the results show that ..."),
- * which Tab would then insert twice. A repeat of at least a few words is
- * cut; a short overlap is left alone, since "the " ending one sentence and
- * starting the next is ordinary prose.
- */
+/** Cuts a continuation's repeat of the before-text's end, which Tab would
+ *  insert twice. Short overlaps stay, as they are ordinary prose. */
 export function stripEcho(before: string, suggestion: string): string {
   const max = Math.min(before.length, suggestion.length, 200);
   for (let k = max; k >= 6; k--) {
@@ -69,20 +52,12 @@ export const BLOCK_NAMES: Record<string, string> = {
   blockquote: "blockquote",
   table_cell: "table cell",
   table_header: "table cell",
-  // Without it a code block went out as a "paragraph" and the model had to
-  // guess it was continuing code (the live eval scored the hinted case
-  // higher - docs/design/ai-eval.md).
+  // Otherwise the model has to guess it is continuing code.
   code_block: "code block",
 };
 
-/**
- * What the 2000 characters around the cursor can't say on their own: what
- * the document is (its first heading), which section is being written (the
- * heading path down to the cursor), and what kind of block the cursor is in
- * - without which a completion inside a list item or a heading came back as
- * a full prose sentence. Walks top-level blocks only, and runs once per
- * request (inside the debounce), not per keystroke.
- */
+/** What the text around the cursor can't say: the title, the section, and
+ *  the kind of block. Runs once per request, not per keystroke. */
 export function completionHints(
   doc: ProseNode,
   cursorPos: number,
@@ -104,13 +79,8 @@ export function completionHints(
   return { title, section, block, length };
 }
 
-/**
- * The prose between two positions: the text of its textblocks, less code
- * blocks (a Mermaid diagram's source among them) and inline atoms such as
- * math. Keywords like `graph TD` aren't a language the writer writes in:
- * read as one, a document opening with a diagram got continuations in
- * Russian in a Chinese app.
- */
+/** The prose between two positions, less code blocks and inline atoms, so
+ *  code keywords aren't taken for the writer's language. */
 export function proseText(doc: ProseNode, from: number, to: number): string {
   const parts: string[] = [];
   doc.nodesBetween(from, to, (node, pos) => {
@@ -134,11 +104,8 @@ export function completionContext(
   doc: ProseNode,
   cursorPos: number,
 ): { before: string; after: string; prose: string } {
-  // Scanned over a bounded window around the cursor, not the whole document:
-  // this runs on every keystroke at a block end, BEFORE the debounce. A
-  // character occupies at least one position, so a 4x-margin position window
-  // always covers the characters actually kept below (block boundaries eat
-  // positions without emitting characters - hence the margin, not 1x).
+  // A bounded window, as this runs on every keystroke before the debounce.
+  // The 4x margin covers block boundaries, which take positions but no text.
   const from = Math.max(0, cursorPos - 4 * MAX_CONTEXT_CHARS);
   const to = Math.min(
     doc.content.size,
@@ -160,11 +127,8 @@ export function completionContext(
   };
 }
 
-/**
- * The next piece of a suggestion that Ctrl/Cmd+Right accepts on its own:
- * leading space plus one word - or, for CJK text, which has no spaces to
- * find words by, up to two characters (and any punctuation right after).
- */
+/** The next piece Ctrl/Cmd+Right accepts: leading space plus one word, or up
+ *  to two CJK characters. */
 export function nextWordChunk(text: string): string {
   const lead = /^\s*/.exec(text)?.[0] ?? "";
   const rest = text.slice(lead.length);
@@ -174,14 +138,8 @@ export function nextWordChunk(text: string): string {
   return lead + (m ? m[0] : rest);
 }
 
-/** The alternatives in a multi-candidate response (CANDIDATE_SEPARATOR in
- *  src-tauri ai/client.rs); a single continuation comes back as one. Only
- *  whole lines after the separator go with it: a candidate's leading space
- *  is the join the backend made onto the before-text ("quickly" + " grew").
- *  The separator is cut wherever it sits - at the very start (the first
- *  alternative was dropped) or on a candidate's own line, which a model
- *  sometimes writes - rather than only on a line of its own; left in, Tab
- *  inserted "<<<>>>" into the document. */
+/** The alternatives in a multi-candidate response. The separator is cut
+ *  wherever it sits; a candidate's leading space is kept as its join. */
 export function splitCandidates(raw: string): string[] {
   return raw.split(/\s*<<<>>>(?:[ \t]*\n)*/).filter((part) => part.trim());
 }

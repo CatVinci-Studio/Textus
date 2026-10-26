@@ -4,9 +4,8 @@ import { localize, type Permission, type PluginManifest } from "./manifest";
 import type { PluginStatus } from "./lifecycle";
 
 /**
- * The plugins as the window draws them (manager.ts keeps them): one
- * record per plugin, published to whatever listens - Settings, the
- * sidebar, the menus - whenever one changes.
+ * The plugins as the window draws them: one record per plugin, published to
+ * whatever listens whenever one changes.
  */
 
 export interface PluginRecord {
@@ -18,8 +17,7 @@ export interface PluginRecord {
   problem?: string;
   /** Where its files are, for one on disk. */
   dir?: string;
-  /** Installed from the catalog as CatVinci's own (Rust decides it,
-   *  plugins/catalog.rs): Settings marks it Official. */
+  /** Installed from the catalog as CatVinci's own: Settings marks it Official. */
   official: boolean;
 }
 
@@ -32,7 +30,7 @@ export interface PluginsSnapshot {
 let snapshot: PluginsSnapshot = { loaded: false, allOn: true, records: [] };
 const listeners = new Set<() => void>();
 
-/** What the window tells the manager about itself (usePluginManager). */
+/** What the window tells the manager about itself. */
 export interface WindowInfo {
   strings: () => Strings;
   language: () => string;

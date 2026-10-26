@@ -1,8 +1,7 @@
 /**
- * The theme a plugin's webview is drawn in: these variables, with the
- * values they have in the window now. They are the plugin API's colours
- * and sizes (docs/dev/plugin-api.md) - kept to this list so a theme
- * reworking the window's own variables doesn't change what a plugin sees.
+ * The theme a plugin's webview is drawn in: the plugin API's variables with
+ * their current values, a fixed list so a theme reworking the window's own
+ * variables doesn't change what a plugin sees.
  */
 export const WEBVIEW_THEME_VARS = [
   "--bg",
@@ -41,9 +40,8 @@ export const WEBVIEW_THEME_VARS = [
   "--space-4",
   "--space-5",
   "--space-6",
-  // Motion (docs/design/design-language.md, Motion), as the window has it
-  // now: under reduced motion the distances are 0, so a plugin's moves
-  // turn into fades with the app's.
+  // Motion as the window has it now: under reduced motion the distances are
+  // 0, so a plugin's moves turn into fades.
   "--dur-fast",
   "--dur-base",
   "--dur-medium",
@@ -75,9 +73,8 @@ export function webviewThemeCss(): string {
 }
 
 /**
- * Calls `onChange` whenever the window's theme may have changed - the
- * appearance attributes on <html>, a theme's stylesheet coming or going,
- * the system turning dark. Returns the function that stops listening.
+ * Calls `onChange` whenever the window's theme may have changed. Returns the
+ * function that stops listening.
  */
 export function watchTheme(onChange: () => void): () => void {
   let queued = false;

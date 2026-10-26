@@ -3,13 +3,9 @@ import { lazyModule } from "../../lazy/lazy-module";
 import { escapeHtml } from "../../utils/html";
 
 /**
- * KaTeX - its code, stylesheet and fonts - is loaded the first time a
- * formula is drawn: most documents and replies have none, and it was a
- * good part of the bundle every window loads at start. A renderer asks
- * `katexNow()`, which starts the load and is null until it is done, and
- * draws again on `onKatexReady`. A document that has maths waits for it
- * before it opens (document-view/EditorPane.tsx's KatexFirst), so its
- * formulas never show as source for a moment.
+ * KaTeX is loaded the first time a formula is drawn: most documents have
+ * none, and it was a large part of the startup bundle. `katexNow()` starts
+ * the load and is null until done; renderers redraw on `onKatexReady`.
  */
 type Katex = typeof import("katex").default;
 
@@ -17,7 +13,7 @@ let katex: Katex | null = null;
 let firstLoad: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
-// A failed load is tried again by the next formula drawn (lazy-module.ts).
+// A failed load is tried again by the next formula drawn.
 const katexModule = lazyModule("katex", () =>
   import("./katex-bundle").then((module) => {
     katex = module.default;
@@ -44,9 +40,8 @@ export function onKatexReady(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-/** The first load, settled either way - for a caller that waits for it
- *  and opens without KaTeX if it fails rather than not at all. The same
- *  promise every time, so React's `use` can wait on it. */
+/** The first load, settled either way, so a caller can open without KaTeX
+ *  if it fails. The same promise every time, for React's `use`. */
 export function katexFirstLoad(): Promise<void> {
   firstLoad ??= loadKatex().then(
     () => {},
@@ -59,9 +54,8 @@ export function katexLoaded(): boolean {
   return katex !== null;
 }
 
-// `$`, `\(` or `\[` - every way markdown here writes a formula
-// (utils/markdown-math.ts). A price's "$" says yes too, which only loads
-// KaTeX early.
+// `$`, `\(` or `\[`. A price's "$" says yes too, which only loads KaTeX
+// early.
 const MATH_HINT = /\$|\\\(|\\\[/;
 
 /** Whether `markdown` may have a formula, for loading KaTeX before it is
@@ -70,8 +64,7 @@ export function mayHaveMath(markdown: string): boolean {
   return MATH_HINT.test(markdown);
 }
 
-/** True once KaTeX has loaded: a memo key that renders the component
- *  again then. */
+/** True once KaTeX has loaded: a memo key that re-renders then. */
 export function useKatexReady(): boolean {
   const [ready, setReady] = useState(katex !== null);
   useEffect(() => {

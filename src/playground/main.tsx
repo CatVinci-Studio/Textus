@@ -8,20 +8,19 @@ import { installNativeStandIn } from "./native-stand-in";
 import { Playground } from "./Playground";
 import "./playground.css";
 
-// The browser playground's entry (playground.html, built by
-// `npm run build:playground`). The app's own entry is src/main.tsx.
+// The browser playground's entry.
 
 installPolyfills();
 installNativeStandIn();
 installScrollReveal();
 
 // The app's defaults, in the browser's language: no Settings panel, no
-// stored settings. Light or dark follows the system through base.css.
+// stored settings. Light or dark follows the system.
 const language = detectLang(navigator.language);
 const settings = { ...normaliseSettings(null), language };
 document.documentElement.lang = localeOf(language);
 
-// Its strings load first (i18n/strings.ts), as in the app.
+// Its strings load first, as in the app.
 void loadLocale(language)
   .catch(() => {})
   .then(() =>

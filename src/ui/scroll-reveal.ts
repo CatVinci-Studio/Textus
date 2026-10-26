@@ -1,15 +1,11 @@
-/** The scrollers whose bar shows only while they move (design-system.css). */
+/** The scrollers whose bar shows only while they move. */
 const REVEAL_SELECTOR = ".editor-scroll, .source-view";
 /** How long the bar stays after the last scroll step. */
 const HIDE_AFTER_MS = 900;
 
-/**
- * The document's scrollbar shows while it scrolls and fades after: with the
- * AI panel open a permanent bar ran down the middle of the window, between
- * the page and the panel. One capture-phase listener serves every tab's
- * scroller (scroll doesn't bubble, capture still sees it); the class it
- * sets is what the CSS reveals the thumb on.
- */
+/** The document's scrollbar shows while it scrolls and fades after. One
+ *  capture-phase listener serves every tab's scroller, since scroll doesn't
+ *  bubble. */
 export function installScrollReveal(): void {
   const timers = new WeakMap<Element, number>();
   document.addEventListener(

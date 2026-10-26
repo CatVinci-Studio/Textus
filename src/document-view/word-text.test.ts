@@ -5,13 +5,9 @@ import { createTestEditor } from "./editor-test-harness";
 import fixture from "../../src-tauri/src/extract/testdata/word-text.json";
 import markdown from "../../src-tauri/src/extract/testdata/word-text.md?raw";
 
-// A Word document opened in Textus (document/word-import.ts) is the
-// backend's Markdown of it, with the text escaped so it reads back as the
-// words the Word file holds. The backend's test turns word-text.json into a
-// .docx and checks that it converts to word-text.md, read back by a
-// CommonMark parser (src-tauri/src/extract/docx.rs); this reads the same
-// Markdown with the editor itself, whose own syntax - ==highlight==, $maths$,
-// wikilinks - a CommonMark parser doesn't know.
+// A Word document opens as the backend's escaped Markdown of it. This reads
+// that Markdown with the editor itself, whose own syntax (==highlight==,
+// $maths$, wikilinks) a CommonMark parser doesn't know.
 
 vi.mock("mermaid", () => ({
   default: { initialize() {}, render: () => new Promise(() => {}) },
@@ -30,9 +26,7 @@ it("reads a Word document's escaped text back as the same words", async () => {
   editor = await createTestEditor(markdown);
   const doc = editor.ctx.get(editorViewCtx).state.doc;
   const texts: string[] = [];
-  // Anything the editor made of the text besides text and line breaks -
-  // emphasis, a link, a maths or highlight node - is Markdown the escaping
-  // missed.
+  // Anything besides text and line breaks is Markdown the escaping missed.
   const markup: string[] = [];
   doc.descendants((node) => {
     if (node.isTextblock) {

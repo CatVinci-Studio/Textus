@@ -1,9 +1,6 @@
-//! Tools plugins give Textus AI (`contributes.aiTools`, with `ai.tools`):
-//! each window tells Rust which its plugins offer, a request offers them
-//! with the built-ins and the MCP servers', and a call goes back to the
-//! window that offered it - its plugin runs it there and answers with
-//! `plugin_ai_tool_result`. As an MCP server's, a plugin's tool may do
-//! anything the plugin may, so its calls run one at a time, in order.
+//! Tools plugins give Textus AI: each window reports its plugins' tools, a
+//! request offers them, and a call goes back to the offering window. Like MCP
+//! tools, calls run one at a time, in order.
 
 use crate::ai::tools::{Access, Run, Tool, EVERY_MODE};
 use aicompat::agent::{ToolCall, ToolOutput, ToolSpec};
@@ -87,8 +84,8 @@ pub fn plugin_ai_tool_result(
     }
 }
 
-/// The model's name for a plugin's tool: `plugin_` and the plugin's name
-/// for it, in the letters a tool name may have, at most 64.
+/// The model's name for a plugin's tool: `plugin_` and its name, in the
+/// letters a tool name may have, at most 64.
 fn model_name(plugin: &str, name: &str) -> String {
     let short = plugin.rsplit('.').next().unwrap_or(plugin);
     let mut out: String = format!("plugin_{short}_{name}")

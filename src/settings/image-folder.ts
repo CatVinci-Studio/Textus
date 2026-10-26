@@ -7,12 +7,9 @@ export const SAME_FOLDER = "./";
 export const DEFAULT_IMAGE_SUBFOLDER = "assets";
 
 /**
- * The folder as the Markdown names it - relative to the document, with
- * forward slashes, "" for the document's own folder - or null for a
- * setting the backend refuses: empty, absolute, a drive, an empty segment
- * ("img//x") or one that climbs out with "..". Mirrors ImageFolder::resolve
- * in src-tauri/src/commands/fs.rs, which is what decides where images go -
- * a change to one is a change to both.
+ * The folder as the Markdown names it (relative, forward slashes, "" for the
+ * document's own folder), or null for a setting the backend refuses. Keep in
+ * step with the backend's ImageFolder::resolve, which decides where images go.
  */
 function imageFolderPrefix(setting: string): string | null {
   const trimmed = setting.trim();
@@ -45,12 +42,8 @@ export function isImageSubfolder(name: string): boolean {
   return !!imageFolderPrefix(name);
 }
 
-/**
- * A stored `imageFolder` as one of the two choices Settings offers: the
- * document's folder, or one subfolder. A folder of the user's own is kept
- * when it is a single plain name; a pattern, a path or anything the
- * backend refuses (a hand edit) becomes "assets".
- */
+/** A stored `imageFolder` as one of Settings' two choices: the document's
+ *  folder, or one plain subfolder name; anything else becomes "assets". */
 export function storedImageFolder(stored: unknown): string {
   if (typeof stored !== "string") return DEFAULT_IMAGE_SUBFOLDER;
   const prefix = imageFolderPrefix(stored);

@@ -1,8 +1,6 @@
-//! The safe subsets applied without asking (CATALOGUE.md §3.12-3.13):
-//! completions (CP) and the text of edit proposals (PR) are made to match
-//! what the document already does - never a convention the document
-//! doesn't follow, so a Chinese document written with half-width
-//! punctuation on purpose isn't fought.
+//! The safe fixes applied without asking to completions and proposal text,
+//! only where the document already follows the convention, so deliberate
+//! half-width punctuation isn't fought.
 
 use super::detect::{self, Lang};
 use super::document::check_document_with;
@@ -11,10 +9,9 @@ use super::registry::{CP, PR};
 use super::text::{is_cjk, Text};
 use super::{apply, Finding, Fix, Level, Stats};
 
-/// Proposal post-processing: the P0 "match the document" fixes, each only
-/// where the rest of the document follows that convention (it has no
-/// finding of the rule and enough text in the script to tell). Returns the
-/// fixed text and the rules applied.
+/// Proposal post-processing: the P0 "match the document" fixes, each only where
+/// the rest of the document follows that convention. Returns the fixed text and
+/// the rules applied.
 pub fn proposal_text(
     document: &str,
     text: &str,
@@ -53,12 +50,8 @@ pub fn proposal_text(
             _ => false,
         }
     };
-    // French spacing the user chose (a fr-FR or fr-CA profile set in
-    // Settings or the style profile), even where the document doesn't
-    // follow it yet: models can't type a no-break space - told the exact
-    // character and its JSON escape, Sonnet still proposed "Bonjour !"
-    // with a plain space and said it had put in no-break spaces (round 4,
-    // builtin/proofread/fr/typography). Only the kind of space changes.
+    // French spacing the user chose, even where the document doesn't follow it
+    // yet: models can't type a no-break space. Only the kind of space changes.
     let chosen_french = doc_lang == Some(Lang::Fr) && conv.profile_for(Lang::Fr).explicit;
     let french_space = |f: &Finding| -> bool {
         let unspaced = |s: &str| -> String { s.chars().filter(|c| !c.is_whitespace()).collect() };
@@ -118,13 +111,9 @@ fn tail(s: &str, n: usize) -> &str {
     &s[at..]
 }
 
-/// Completion post-processing: in the completion only, NFC; Chinese and
-/// Japanese half-width punctuation when the text before the cursor uses
-/// full-width; `...` -> `……` in Chinese; CJK-Latin spacing matched to the
-/// text before the cursor; Korean particles attached; French spacing before
-/// ; : ! ? matched; straight/curly quotes matched when the text before is
-/// consistent. Never grouping, spelling, register or word changes, and
-/// never a space inserted in Japanese or Korean.
+/// Completion post-processing, matched to the text before the cursor: NFC,
+/// full-width CJK punctuation, CJK-Latin spacing, Korean particles, French
+/// spacing, quote style. Never word changes, never a space in Japanese/Korean.
 pub fn completion(before: &str, text: &str) -> String {
     if text.trim().is_empty() {
         return text.to_string();

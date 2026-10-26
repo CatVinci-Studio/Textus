@@ -1,10 +1,8 @@
 import type { SentBlock } from "../../ai/doc-blocks";
 
 /**
- * The plugins that mark the document's text (textus.editor.register
- * Decorations): asked for the blocks in sight, and again when those
- * change. The editor's side (editor/marks/plugin-decorations.ts) draws
- * what they answer.
+ * The plugins that mark the document's text: asked for the blocks in sight,
+ * and again when those change.
  */
 export interface PluginDecoration {
   block: string;

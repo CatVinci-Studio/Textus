@@ -247,7 +247,7 @@ describe("code inside bold, italic, strikethrough and highlight", () => {
 
   it("moves IME text pulled into the code beside the caret back out into the bold", async () => {
     // WebKit can draw the caret after the code as inside it, and the
-    // composition lands in the code (enclosure.ts, relocateComposedText).
+    // composition lands in the code.
     const { view, save } = await openView("**a `b`**\n");
     const afterCode = 7; // in the bold, after "a " and the code
     view.dispatch(

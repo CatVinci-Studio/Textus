@@ -1,13 +1,6 @@
-//! Saved Agent conversations: one file per conversation in
-//! `<data>/chat-history/`, plus `index.json`, the small list the AI panel's
-//! history shows (docs/dev/storage.md).
-//!
-//! One file holding every conversation would be rewritten whole on every
-//! saved turn: a long conversation would make every save of every other one
-//! megabytes of writing. So a save rewrites only that conversation's file
-//! and the index, each through the same debounced, atomic `Store` as the
-//! other files, and a conversation beyond the cap is moved into `.trash/`
-//! rather than dropped.
+//! Saved Agent conversations: one file per conversation plus `index.json`, so a
+//! save rewrites only that conversation and the index. Conversations past the
+//! cap move into `.trash/` rather than being dropped.
 
 use super::{file_name, read_store_file, HistoryKind, Store};
 use serde_json::{json, Value};
@@ -22,16 +15,15 @@ const MAX_TRASHED: usize = 200;
 const INDEX: &str = "index.json";
 const TRASH: &str = ".trash";
 
-/// The folder, named like the files: a debug build gets `chat-history.dev/`
-/// (see `file_name`).
+/// The folder, named like the files (a debug build gets `chat-history.dev/`).
 fn dir_name() -> String {
     file_name(HistoryKind::Chat.stem())
         .trim_end_matches(".json")
         .to_owned()
 }
 
-/// Whether `id` can name a file: conversation ids are UUIDs, but a stored
-/// one is untrusted (a hand edit, an import) and becomes a path component.
+/// Whether `id` can name a file: a stored id is untrusted and becomes a path
+/// component.
 pub fn safe_id(id: &str) -> bool {
     !id.is_empty()
         && id.len() <= 128
@@ -51,8 +43,7 @@ fn id_of_file(name: &str) -> Option<&str> {
     name.strip_suffix(".json").filter(|id| safe_id(id))
 }
 
-/// A conversation as the index lists it. Mirrors `ChatSummary` in
-/// src/ai/chat/chat-history.ts.
+/// A conversation as the index lists it.
 fn summary(entry: &Value) -> Value {
     json!({
         "id": entry["id"],
@@ -70,9 +61,8 @@ fn id_str(entry: &Value) -> Option<&str> {
 pub struct ChatHistory {
     dir: PathBuf,
     index: Arc<Store>,
-    /// The conversation files saved or changed this session, each a `Store`
-    /// with its own debounced write. The lock is held through every whole
-    /// operation, so a save never interleaves with a trim or a clear.
+    /// The conversation files saved or changed this session, each a `Store`. The
+    /// lock is held through every whole operation, so a save never interleaves with a trim.
     files: Mutex<HashMap<String, Arc<Store>>>,
 }
 
@@ -107,9 +97,8 @@ impl ChatHistory {
             .filter(|entry| entry.get("turns").is_some())
     }
 
-    /// Writes one conversation's file and its line in the index (moving the
-    /// oldest beyond the cap to the trash). Returns the summary - what other
-    /// windows are told about.
+    /// Writes one conversation's file and its index line (trashing the oldest past
+    /// the cap). Returns the summary other windows are told.
     pub fn save(&self, entry: Value) -> Value {
         let mut files = self.files.lock().unwrap();
         let Some(id) = id_str(&entry).map(str::to_owned) else {
@@ -143,8 +132,8 @@ impl ChatHistory {
         remove_file(&self.dir.join(file_of(id)));
     }
 
-    /// Privacy › Clear chat history: every conversation file, in the folder
-    /// and in the trash, by name - nothing else in the folder is touched.
+    /// Privacy › Clear chat history: every conversation file, in the folder and the
+    /// trash, by name; nothing else is touched.
     pub fn clear(&self) {
         let mut files = self.files.lock().unwrap();
         let stores: Vec<_> = files.drain().map(|(_, store)| store).collect();
@@ -164,8 +153,8 @@ impl ChatHistory {
         }
     }
 
-    /// A document Textus saved under a new path (Save As, a rename) takes
-    /// its conversations along. Returns whether any did.
+    /// A document saved under a new path takes its conversations along. Returns
+    /// whether any did.
     pub fn move_document(&self, from: &str, to: &str) -> bool {
         let mut files = self.files.lock().unwrap();
         let belongs = |e: &Value| e.get("docPath").and_then(Value::as_str) == Some(from);
@@ -233,8 +222,8 @@ impl ChatHistory {
             return;
         }
         for id in dropped.iter().filter_map(id_str).filter(|id| safe_id(id)) {
-            // A save still waiting on its debounce is written first, so the
-            // file moved is the latest; then nothing more may write it.
+            // A save still waiting on its debounce is written first, so the moved file is
+            // the latest; then nothing more may write it.
             let store = files.remove(id);
             if let Some(Err(e)) = store.as_ref().map(|s| s.flush()) {
                 eprintln!("textus: cannot write {}: {e}", file_of(id));
@@ -257,9 +246,8 @@ impl ChatHistory {
         }
     }
 
-    /// An index that's missing or was unreadable (moved aside) while the
-    /// conversation files are all still there: built again from them, so
-    /// they don't vanish from the list.
+    /// An index that's missing or was unreadable while the conversation files remain
+    /// is rebuilt from them, so they don't vanish from the list.
     fn rebuild_lost_index(&self) {
         let listed = self.list().as_array().is_some_and(|l| !l.is_empty());
         if listed || self.index.unreadable {

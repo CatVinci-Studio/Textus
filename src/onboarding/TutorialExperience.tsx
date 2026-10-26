@@ -17,9 +17,8 @@ import { TutorialOverlay } from "./TutorialOverlay";
 import { TUTORIAL_CHAPTERS, type TutorialTask } from "./tutorial-steps";
 import type { Tutorial } from "./useTutorial";
 
-/** How long the grammar lesson waits, once the sentence is typed, for the
- *  AI to flag something before it lets the learner go on without: a
- *  careful model may find nothing. */
+/** How long the grammar lesson waits for the AI to flag the typed sentence
+ *  before letting the learner on: a careful model may find nothing. */
 export const GRAMMAR_WAIT_MS = 20_000;
 
 interface TutorialExperienceProps {
@@ -33,11 +32,8 @@ interface TutorialExperienceProps {
   zen: { on: boolean; toggle: () => void };
 }
 
-/**
- * Maps tutorial state to the card the learner sees: its copy, its gate,
- * its buttons. App owns the events that advance lessons; this owns
- * everything shown, keeping lesson copy and controls out of the shell.
- */
+/** Maps tutorial state to the card the learner sees: its copy, gate and
+ *  buttons. App owns the events that advance lessons. */
 export function TutorialExperience({
   tutorial,
   t,
@@ -58,8 +54,6 @@ export function TutorialExperience({
     [setPhase],
   );
 
-  // The grammar lesson, live: once the sentence is in, give the AI a while
-  // to flag it before letting the learner on.
   const grammarWaiting =
     live &&
     step.id === "grammar" &&

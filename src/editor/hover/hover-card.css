@@ -1,6 +1,3 @@
-/* A plugin's card for what the pointer rests on (hover-card.ts): a small
-   page beside the link, fading in and rising a little; pinned, it stays
-   where it is moved to. */
 .hover-card {
   position: fixed;
   z-index: 100;

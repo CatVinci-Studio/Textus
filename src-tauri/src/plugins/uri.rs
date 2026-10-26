@@ -1,14 +1,12 @@
-//! `textus://<plugin id>/<path>?<query>` links opened from outside Textus -
-//! a browser's "send to Textus" button, Zotero jumping back - for the plugin
-//! they name (textus.uri.registerHandler). The operating system hands them
-//! to the deep-link plugin; they wait here until a window takes them, so
-//! one that arrives while Textus is still starting isn't lost.
+//! `textus://<plugin id>/<path>?<query>` links opened from outside Textus, for
+//! the plugin they name. They wait here until a window takes them, so one
+//! arriving during startup isn't lost.
 
 use std::sync::Mutex;
 
 use tauri::{Emitter, Manager};
 
-/// The scheme Textus answers to (tauri.conf.json plugins.deep-link).
+/// The scheme Textus answers to.
 pub const SCHEME: &str = "textus";
 
 /// Links not yet taken by a window, oldest first.
@@ -44,8 +42,8 @@ pub fn plugin_take_uris(pending: tauri::State<'_, PendingUris>) -> Vec<String> {
 #[cfg(desktop)]
 pub fn listen(app: &tauri::AppHandle) {
     use tauri_plugin_deep_link::DeepLinkExt;
-    // Linux (an AppImage has no installer to register the scheme) and a
-    // development build on Windows register it as they run.
+    // Linux (an AppImage has no installer) and a Windows dev build register the
+    // scheme as they run.
     #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
     let _ = app.deep_link().register_all();
     let handle = app.clone();

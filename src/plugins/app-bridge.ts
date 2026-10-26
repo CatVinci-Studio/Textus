@@ -2,12 +2,11 @@ import type { SentBlock } from "../ai/doc-blocks";
 import { moveDocumentData } from "./store/document-data";
 import type { EditProposal } from "../ai/types";
 
-/** Where something opens: a tab of its own, beside the tab in front, or
- *  in its place (textus.layout's `where`). */
+/** Where something opens: a tab of its own, beside the front tab, or in its place. */
 export type Where = "tab" | "beside" | "current";
 
-/** A place in a file (textus.d.ts's Location): where to open it, or what
- *  a list item, a task or a search hit points at. */
+/** A place in a file: where to open it, or what a list item, task or search
+ *  hit points at. */
 export interface PluginLocation {
   path: string;
   line?: number;
@@ -21,7 +20,7 @@ export interface PluginLocation {
 /** A place in the document in front: its path left out. */
 export type DocumentPlace = Omit<PluginLocation, "path">;
 
-/** A tab, as a plugin is told of it (layout.tabs). */
+/** A tab, as a plugin is told of it. */
 export interface PluginTabInfo {
   id: string;
   title: string;
@@ -32,20 +31,15 @@ export interface PluginTabInfo {
 }
 
 /**
- * What the plugin broker reaches of the window, set by the window itself:
- * the document in front (by its editor, while it is the active tab), the
- * window's ways to open things, and the events plugins may listen to.
- * Kept here so the broker needs no React tree, and the window no plugin
- * code.
+ * What the plugin broker reaches of the window, set by the window itself,
+ * so the broker needs no React tree and the window no plugin code.
  */
 
 /** The document in front, as its editor reads it. */
 export interface ActiveDocumentAccess {
   path: string | null;
-  /** Its Markdown. */
   text(): string;
-  /** Its blocks, as Textus AI is shown them (doc-blocks.ts): what an
-   *  edit names by `block`. */
+  /** Its blocks as Textus AI is shown them: what an edit names by `block`. */
   blocks(): SentBlock[];
   /** The selection: its plain text, and as Markdown (null when empty). */
   selection(): { text: string; markdown: string | null };
@@ -55,14 +49,12 @@ export interface ActiveDocumentAccess {
   /** Makes the edits at once, as one undo step; false when one can't be
    *  placed (then none is made). */
   edit(edits: EditProposal[]): boolean;
-  /** Scrolls to a place and puts the caret there; false when it isn't
-   *  found. */
+  /** Scrolls to a place and puts the caret there; false when not found. */
   reveal(place: DocumentPlace): boolean;
 }
 
 /** A document open in a tab, in front or not. */
 export interface OpenDocumentAccess {
-  /** Its Markdown now. */
   text(): string;
   /** Names its version: changes whenever its text does. */
   revision(): string;
@@ -71,7 +63,7 @@ export interface OpenDocumentAccess {
   replaceText(text: string, revision: string): boolean;
 }
 
-/** A tab a plugin's view or custom editor is shown in (DocTab.view). */
+/** A tab a plugin's view or custom editor is shown in. */
 export interface PluginTabView {
   plugin: string;
   /** A view's id (contributes.views) or a custom editor's viewType. */
@@ -80,15 +72,12 @@ export interface PluginTabView {
   /** The file a custom editor shows; a web page's address. */
   resource?: string;
   title?: string;
-  /** What a view was opened with (window.openView's `state`), until it
-   *  keeps state of its own. */
+  /** What a view was opened with, until it keeps state of its own. */
   state?: unknown;
-  /** The place a file editor was opened at (layout.open's location),
-   *  given to it as its target. */
+  /** The place a file editor was opened at, given to it as its target. */
   target?: PluginLocation;
 }
 
-/** The window's side. */
 export interface WindowAccess {
   /** The folder the sidebar shows, if any. */
   rootPath(): string | null;
@@ -100,13 +89,12 @@ export interface WindowAccess {
     options: { place?: DocumentPlace; asDocument?: boolean; where?: Where },
   ): void;
   openUntitled(content: string, title?: string, where?: Where): void;
-  /** A guide to read (a plugin's USAGE.md): a clean draft, closed without
-   *  asking; the same guide open already comes to the front. */
+  /** A guide to read: a clean draft, closed without asking; the same guide
+   *  already open comes to the front. */
   openGuide(content: string, title: string): void;
   openPluginTab(view: PluginTabView, where?: Where): void;
-  /** A document open in a tab with unsaved changes, by its path - what
-   *  textus.files.process changes in the editor rather than on disk, so
-   *  nothing typed is lost. A saved one is changed on disk, and reloads. */
+  /** A document open with unsaved changes, by its path: files.process edits it
+   *  in the editor so nothing typed is lost. A saved one is changed on disk. */
   documentAt(path: string): OpenDocumentAccess | null;
   /** The window's tabs, and the one in front. */
   tabs(): PluginTabInfo[];
@@ -154,8 +142,7 @@ export function getWindowAccess(): WindowAccess | null {
   return windowAccess;
 }
 
-/** What plugins can be told of (textus.workspace.onDidSaveDocument and
- *  the like): the event's name and what it carries. */
+/** What plugins can be told of: the event's name and what it carries. */
 export interface PluginEventMap {
   didSave: { path: string; text: string };
   activeDocument: { path: string | null };
@@ -175,8 +162,7 @@ export interface PluginEventMap {
   language: string;
   /** One of the plugin's own settings changed (told to that plugin only). */
   settings: { key: string; value: unknown };
-  /** A key the editor handed the plugin holding the keyboard
-   *  (editor-input.ts), to that plugin only. */
+  /** A key the editor handed the plugin holding the keyboard, to it only. */
   editorKey: string;
 }
 
@@ -185,7 +171,6 @@ type Listener<K extends keyof PluginEventMap> = (
 ) => void;
 const listeners = new Map<keyof PluginEventMap, Set<Listener<never>>>();
 
-/** The window tells plugins something happened. */
 export function emitPluginEvent<K extends keyof PluginEventMap>(
   name: K,
   data: PluginEventMap[K],
@@ -194,9 +179,8 @@ export function emitPluginEvent<K extends keyof PluginEventMap>(
     (listener as Listener<K>)(data);
 }
 
-/** A document or folder was renamed or moved, by the window or a
- *  plugin: plugins hear it (files.onDidRename), and what they keep for
- *  its documents moves with it. */
+/** A document or folder was renamed or moved: plugins hear it, and what they
+ *  keep for its documents moves with it. */
 export async function notePathMoved(from: string, to: string): Promise<void> {
   emitPluginEvent("fileRename", { from, to });
   await moveDocumentData(from, to);

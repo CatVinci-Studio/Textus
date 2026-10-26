@@ -1,10 +1,6 @@
-// Drawing deferred until it is near the screen: a formula's KaTeX (a
-// diagram waits in mermaid-plugin.ts and registers its draw-all here). A long document holds hundreds of them, and drawing them all
-// when it opens is much of what opening costs; the reader sees a screen or
-// two of them. Each waits behind a placeholder until an
-// IntersectionObserver on its editor's scroller sees it within a screen of
-// the view, then draws once. An export or print draws everything still
-// waiting first (drawEverything).
+// Drawing deferred until it is near the screen: drawing every formula of a
+// long document is much of what opening it costs. An export or print draws
+// everything still waiting first.
 
 /** Marks an element still waiting to be drawn. */
 export const PENDING_ATTR = "data-draw-pending";
@@ -29,8 +25,7 @@ function drawNow(el: Element) {
 const onIntersect = (entries: IntersectionObserverEntry[]) => {
   for (const { isIntersecting, target } of entries) {
     if (isIntersecting) drawNow(target);
-    // Taken out of the document undrawn (its widget redrawn, the tab
-    // closed): nothing to wait for any more.
+    // Taken out of the document undrawn: nothing to wait for any more.
     else if (!target.isConnected) {
       waiting.get(target)?.observer.unobserve(target);
       waiting.delete(target);
@@ -52,10 +47,8 @@ function observerFor(scroller: Element): IntersectionObserver {
 }
 
 /**
- * Calls `draw` once `el` comes within a screen of where the editor at
- * `editorDom` is scrolled to. `el` is the placeholder, sized to stand in
- * for the drawing; `draw` fills it. Without an IntersectionObserver or a
- * scroller (a test, the playground's page) it draws at once.
+ * Calls `draw` once the placeholder `el` comes within a screen of the view.
+ * Without an IntersectionObserver or a scroller it draws at once.
  */
 export function drawWhenVisible(
   el: HTMLElement,
@@ -73,8 +66,8 @@ export function drawWhenVisible(
   observer.observe(el);
 }
 
-/** Each editor's way to draw what it holds back that isn't a placeholder
- *  of drawWhenVisible's (its diagrams), by its view.dom. */
+/** Each editor's way to draw what it holds back outside these placeholders
+ *  (its diagrams), by its view.dom. */
 const drawAllers = new WeakMap<Element, () => Promise<void>>();
 
 export function registerDrawAll(
@@ -85,8 +78,7 @@ export function registerDrawAll(
   else drawAllers.delete(editorDom);
 }
 
-/** Draws everything in `root` (an editor, or what holds one) still
- *  waiting, for an export or print that copies the page as it is. */
+/** Draws everything in `root` still waiting, for an export or print. */
 export async function drawEverything(root: Element): Promise<void> {
   const editor = root.matches(".ProseMirror")
     ? root

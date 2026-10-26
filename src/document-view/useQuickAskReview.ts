@@ -32,9 +32,8 @@ function previewOnScreen(view: EditorView, pos: number): boolean {
   }
 }
 
-/** Quick Ask's nav bar (Next/Previous/Accept/Reject over the pending
- *  edits): each step selects the edit, scrolls to it and moves the zone
- *  widget along, and gives the focus back where review-focus.ts says. */
+/** Quick Ask's nav bar over the pending edits: each step selects the edit,
+ *  scrolls to it, moves the zone widget along and restores the focus. */
 export function useQuickAskReview({
   run,
   pendingEdits,
@@ -48,8 +47,7 @@ export function useQuickAskReview({
   phone: boolean;
   isActive: boolean;
 }) {
-  /** iPad: whether the editor had focus at the last press anywhere in the
-   *  page - see editorFocusedBeforeAction. */
+  /** iPad: whether the editor had focus at the last press anywhere. */
   const focusAtPress = useRef<{ focused: boolean; at: number } | null>(null);
   const editorHasFocus = useCallback(
     () => run((ctx) => ctx.get(editorViewCtx).hasFocus()) === true,
@@ -73,12 +71,9 @@ export function useQuickAskReview({
     );
   }
 
-  /** Scrolls to a pending edit and, while Quick Ask is the active surface,
-   *  moves its zone widget to follow - the direct, synchronous result of a
-   *  nav-bar click (Next/Previous/Accept/Reject), never a background
-   *  reaction to something else changing (see the call sites below).
-   *  `editorHadFocus`: whether the editor had focus when the step began
-   *  (by default: now, or at the press that started it). */
+  /** Scrolls to a pending edit and moves Quick Ask's zone widget to follow;
+   *  only ever the direct result of a nav-bar click. `editorHadFocus`
+   *  defaults to now, or the press that started the step. */
   function revealPreview(
     preview: PendingPreview,
     editorHadFocus = editorHadFocusBeforeAction(),
@@ -88,12 +83,10 @@ export function useQuickAskReview({
       const view = ctx.get(editorViewCtx);
       const { doc } = view.state;
       // Edits arriving mid-answer, the first already on screen: the panel
-      // stays where it is. Moved to the edit's block, it jumped from under
-      // the selection to above it in one frame and pushed the text down.
+      // stays put rather than jumping above the selection.
       const stay = arriving && !phone && previewOnScreen(view, preview.from);
-      // near(), not create(): an anchored proposal's `from` is the position
-      // BEFORE a block node, which is not a valid text position - create()
-      // throws there. near() snaps to the closest one it can select.
+      // near(), not create(): an anchored proposal's `from` sits before a
+      // block node, where create() throws.
       let tr = view.state.tr.setSelection(
         TextSelection.near(doc.resolve(preview.from)),
       );
@@ -102,13 +95,12 @@ export function useQuickAskReview({
         tr = setQuickAskWidget(tr, blockPositionAfter(doc, preview.from));
       }
       view.dispatch(tr);
-      // Docked on a phone, the panel covers the bottom of the scroll area
-      // that scrollIntoView counted as visible.
+      // Docked on a phone, the panel covers the bottom of the scroll area.
       if (inlineChat.visible && phone) {
         requestAnimationFrame(() => keepClearOfDock(view, preview.from, true));
       }
       // Back into the document, except out of a text field, on a phone, or
-      // on an iPad whose user wasn't typing in it (review-focus.ts).
+      // on an iPad whose user wasn't typing in it.
       const active = document.activeElement;
       if (
         refocusAfterReview({
@@ -134,20 +126,13 @@ export function useQuickAskReview({
     if (preview) revealPreview(preview);
   }
 
-  // Accept/reject-focused change WHICH preview is decidable (not just the
-  // pointer within a fixed set, unlike Next/Previous above), so where the
-  // pointer lands next depends on usePendingEdits' own reindex effect
-  // running first - there's no new preview to reveal synchronously here.
-  // `revealArmed` bridges that one-render gap: armed right before the
-  // action, consumed by the effect below once `focusedPreview` actually
-  // updates. The same flag is armed once per batch of edits arriving (0 ->
-  // >0 pending), so the first edit is revealed without the user having to
-  // click Next first - after that, only an explicit nav/decide action moves
-  // the panel again (see [[ui-no-auto-jump-preference]]).
+  // Accept/Reject change which preview is decidable, so the next one is
+  // known only after usePendingEdits reindexes. `revealArmed` bridges that
+  // render; it is also armed when a batch of edits arrives, so the first is
+  // revealed without a click. Nothing else moves the panel.
   const revealArmed = useRef(false);
   /** Whether the editor had focus when the Accept/Reject that armed the
-   *  reveal was pressed - by the time the reveal runs, a render later, that
-   *  is history - and when. Null when edits arriving armed it. */
+   *  reveal was pressed, and when. Null when arriving edits armed it. */
   const revealArmedFocus = useRef<{ focused: boolean; at: number } | null>(
     null,
   );
@@ -171,10 +156,8 @@ export function useQuickAskReview({
     if (focusedPreview)
       reveal.current.revealPreview(
         focusedPreview,
-        // The press that armed it, if it was just now; otherwise (edits
-        // arriving, or an arming that never led to a reveal until much
-        // later) nobody pressed anything for this reveal - only whether
-        // the editor has focus now counts.
+        // The press that armed it, if recent; otherwise only whether the
+        // editor has focus now counts.
         armed && Date.now() - armed.at < PRESS_WINDOW_MS
           ? armed.focused
           : reveal.current.editorHasFocus(),

@@ -2,12 +2,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    // WebKitGTK's DMA-BUF renderer (2.42+) draws a blank or white window,
-    // or crashes, on NVIDIA's proprietary driver - the most common "Textus
-    // opens empty" report on Linux. Falling back to the older renderer costs
-    // little for a text editor. Only on NVIDIA, and never over a value the
-    // user set themselves. Set before any thread exists, which is what makes
-    // set_var sound here.
+    // WebKitGTK's DMA-BUF renderer draws a blank window or crashes on NVIDIA's
+    // proprietary driver, so fall back to the older renderer there unless the user
+    // set it. Set before any thread exists, which makes set_var sound.
     #[cfg(target_os = "linux")]
     if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none()
         && std::path::Path::new("/proc/driver/nvidia/version").exists()

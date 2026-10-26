@@ -8,12 +8,9 @@ import { BRACKET_COMPOSITION_DELAY_MS } from "../keys/bracket-autopair-plugin";
 const CHECKBOX_HIT_WIDTH = 24;
 
 /**
- * Reads `- [ ] ` and `- [x] ` with nothing after the box as empty task
- * items. GFM takes a box with no text for literal text - "[ ]" in a plain
- * bullet - yet that is exactly what an item made here and saved before its
- * text was typed looks like (markdown-output.ts writes it so, as Typora
- * does), so the checkbox was gone on the next open. Only an unescaped box:
- * `- \[ ]` is text the user wrote, and its source runs longer than "[ ]".
+ * Reads `- [ ] ` with nothing after the box as an empty task item, which is
+ * how one is saved before its text is typed; GFM would read it as text.
+ * Only an unescaped box: `- \[ ]` is text the user wrote.
  */
 const EMPTY_TASK = /^\[([ xX])\]$/;
 
@@ -56,19 +53,10 @@ export const remarkEmptyTaskItems = $remark(
 );
 
 /**
- * Milkdown's gfm preset only marks task list items with a `data-checked`
- * attribute — it renders no actual checkbox glyph or click handling. This
- * plugin adds a CSS-drawn checkbox (see milkdown-theme.css) and toggles the
- * node's `checked` attr when that glyph area is clicked, without pulling in
- * @milkdown/components (which drags in a Vue runtime for one checkbox).
- *
- * It toggles on mousedown and cancels the default, not on click: the
- * mousedown would otherwise move the caret into the item, and in Typewriter
- * Mode that recentres the view before the button is released - the click
- * then landed on whatever had scrolled under the pointer, so the box never
- * ticked and the caret jumped (#136). A press on the box now leaves caret,
- * focus and scroll where they were; TYPEWRITER_HOLD stops the typewriter
- * recentring on the unmoved (maybe far away) caret after the edit.
+ * Draws nothing itself (CSS draws the checkbox) but toggles `checked` when
+ * the box area is pressed. On mousedown, default cancelled, so the caret
+ * doesn't move and Typewriter Mode doesn't scroll another item under the
+ * pointer; TYPEWRITER_HOLD keeps it from recentring after the edit.
  */
 export const taskListClickPlugin = $prose(
   () =>
@@ -113,22 +101,15 @@ export const taskListClickPlugin = $prose(
     }),
 );
 
-// Chinese input: with an IME on, "[" and "]" type as 【 and 】 (and many
-// IMEs pair them, leaving the caret between), so the GFM "[ ] " rule never
-// fires. A list item whose whole text is 【】, 【 】 or 【x】 (or the
-// full-width ［］) becomes a task, as does a paragraph reading "- 【】" -
-// written out as standard "- [ ] " markdown. The looser ASCII spellings
-// people type for the same thing, "[]" and "-[]", count too. The whole
-// paragraph is checked, not just the text before the caret, so a paired
-// 【|】 counts. Typed input and IME commits only; a paste never converts.
+// With a Chinese IME, "[" and "]" type as 【 and 】, so the GFM "[ ] " rule
+// never fires: an item whose whole text is 【】 or 【x】 (or ［］, "[]"), or a
+// paragraph "- 【】", becomes a task. The whole paragraph is checked so a
+// paired 【|】 counts. Typed input and IME commits only, never a paste.
 const CJK_TASK = /^\s*[【［[]\s*([xX√✓]?)\s*[】］\]]\s*$/;
 const CJK_TASK_PARAGRAPH = /^\s*[-*+]\s*[【［[]\s*([xX√✓]?)\s*[】］\]]\s*$/;
 
-// The document and caret right after a conversion: a space typed while
-// both are still current is the separator of "[ ] " (the GFM spelling,
-// which now converts at the "]") and is dropped rather than starting the
-// item. The caret too: a click elsewhere changes no document, and the
-// next space typed there was swallowed.
+// The document and caret right after a conversion: a space typed while both
+// are still current is the separator of "[ ] " and is dropped.
 const converted = new WeakMap<EditorView, { doc: ProseNode; pos: number }>();
 
 function markConverted(view: EditorView) {
@@ -168,9 +149,8 @@ function convertCjkTask(
   const { bullet_list, list_item, paragraph } = state.schema.nodes;
   if (!match || item?.type.name === "list_item") return false;
   if (!bullet_list || !list_item || !paragraph) return false;
-  // Only where a list can stand in for the paragraph. A table cell holds
-  // a paragraph and nothing else: replacing it there split the table in
-  // two around a list, emptying the cells of the row it was typed in.
+  // Only where a list can stand in for the paragraph: in a table cell it
+  // would split the table.
   const index = $from.index($from.depth - 1);
   if (
     !$from.node($from.depth - 1).canReplaceWith(index, index + 1, bullet_list)
@@ -200,8 +180,8 @@ export const cjkTaskInputPlugin = $prose(
             last?.doc === view.state.doc &&
             last.pos === view.state.selection.head;
           if (justConverted && text === " ") return true;
-          // A box made at its paired "[ ]" (bracket-autopair-plugin.ts)
-          // before its "]" was typed: that "]", and the space after it.
+          // A box made at its paired "[ ]" before its "]" was typed: that "]", and
+          // the space after it.
           if (justConverted && /^[\]】］]$/.test(text)) {
             markConverted(view);
             return true;
@@ -216,9 +196,8 @@ export const cjkTaskInputPlugin = $prose(
           return convertCjkTask(view, full);
         },
         handleDOMEvents: {
-          // An IME commit doesn't go through handleTextInput; look once
-          // ProseMirror has read the committed text back in, and once a
-          // committed 【 has its 】 (bracket-autopair-plugin.ts).
+          // An IME commit doesn't go through handleTextInput; look once the commit is
+          // read back in and a committed 【 has its 】.
           compositionend(view, event) {
             const committed = event.data ?? "";
             setTimeout(() => {

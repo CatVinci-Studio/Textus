@@ -41,8 +41,7 @@ const ALERT_TYPES: Record<AlertType, { icon: string }> = {
 
 const ALERT_NAMES = Object.keys(ALERT_TYPES) as AlertType[];
 
-// Any case, as GitHub and Obsidian read it, and with Obsidian's "-" / "+"
-// (folded / unfolded) after it.
+// Any case, as GitHub and Obsidian read it, with Obsidian's fold "-" / "+".
 const MARKER_RE = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][-+]?/i;
 
 function buildTitle(
@@ -57,8 +56,7 @@ function buildTitle(
   el.innerHTML =
     `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="${info.icon}"/></svg>` +
     `<span>${escapeHtml(label)}</span>`;
-  // Clicking the badge puts the cursor on the (currently hidden) marker,
-  // which reveals it for editing - same interaction as the math preview.
+  // Clicking the badge puts the cursor on the hidden marker, revealing it.
   el.addEventListener("mousedown", (event) => {
     event.preventDefault();
     const widgetPos = getPos();
@@ -73,17 +71,12 @@ function buildTitle(
   return el;
 }
 
-/** A blockquote's alert marker: its type, the marker's length, and how
- *  much of the first paragraph is hidden behind the badge - the marker,
- *  the spaces after it and the line break ending its line. Null when the
- *  quote isn't an alert. */
+/** A blockquote's alert marker: its type, length, and how much of the first
+ *  paragraph hides behind the badge. Null when the quote isn't an alert. */
 function alertMarker(
   quote: ProseNode,
 ): { type: AlertType; length: number; hidden: number } | null {
-  // GitHub's syntax: the marker must be the blockquote's very first line,
-  // alone. In ProseMirror terms: the first child is a textblock whose
-  // first text node starts with the marker, with nothing but whitespace
-  // (or a line break) after it in that text node.
+  // The marker must be the quote's very first line, alone.
   const para = quote.firstChild;
   if (!para || !para.isTextblock) return null;
   const firstText = para.firstChild;
@@ -93,9 +86,8 @@ function alertMarker(
   const rest = firstText.text.slice(match[0].length);
   if (!/^[ \t]*(\n|$)/.test(rest)) return null;
   const hideLen = match[0].length + (/^[ \t]*\n?/.exec(rest)?.[0].length ?? 0);
-  // The marker line's soft break, when it is a node of its own (an
-  // inline hardbreak, drawn as a space): hidden with the marker, it
-  // started the body one space in from the lines under it.
+  // The marker line's soft break, when it is a node of its own: left shown,
+  // it started the body one space in.
   const next = para.childCount > 1 ? para.child(1) : null;
   const breakAfter =
     hideLen === firstText.text.length && next?.type.name === "hardbreak"
@@ -109,12 +101,9 @@ function alertMarker(
 }
 
 /**
- * Backspace at the start of an alert's first line of text. Joined to the
- * line before like any other, that line is the hidden marker: the badge
- * went and "[!NOTE]body" showed in a plain quote. The first press leaves
- * the alert as it is; a second one, right after, takes the marker out and
- * leaves a plain quote. Returns the range to delete on that second press,
- * or false when the caret isn't there.
+ * Backspace at the start of an alert's first line would join it to the
+ * hidden marker. The first press does nothing; a second takes the marker
+ * out. Returns the range to delete, or false when the caret isn't there.
  */
 function markerBeforeCaret(
   state: EditorState,
@@ -129,10 +118,8 @@ function markerBeforeCaret(
     const quotePos = $from.before(d);
     const first = quote.firstChild!;
     const markerFrom = quotePos + 2;
-    // The body on the marker's own paragraph, after its line break - or
-    // anywhere in the hidden marker, where Home puts the caret when the
-    // body shares the marker's text (Chromium before it, WebKit before
-    // the line end).
+    // The body on the marker's own paragraph, or anywhere in the hidden marker,
+    // where Home puts the caret.
     const markerTo = markerFrom + marker.hidden;
     if (
       $from.depth === d + 1 &&
@@ -162,10 +149,6 @@ function decorateAlert(
   labelOf: AlertLabel,
   decorations: Decoration[],
 ) {
-  // GitHub's syntax: the marker must be the blockquote's very first line,
-  // alone. In ProseMirror terms: the first child is a textblock whose
-  // first text node starts with the marker, with nothing but whitespace
-  // (or a line break) after it in that text node.
   const marker = alertMarker(node);
   if (!marker) return;
   const { type, length, hidden } = marker;
@@ -178,9 +161,8 @@ function decorateAlert(
     }),
   );
 
-  // The colored border/title stay on even while editing; only the raw
-  // [!TYPE] marker toggles between hidden (badge shown in its place) and
-  // visible (cursor touching it).
+  // Only the raw [!TYPE] marker toggles between hidden and shown; the
+  // callout's styling stays while editing.
   const markerFrom = pos + 2; // +1 into the blockquote, +1 into its first paragraph
   const markerTo = markerFrom + hidden;
   if (touches(markerFrom, markerFrom + length)) return;
@@ -214,23 +196,15 @@ function alertReveal(labelOf: AlertLabel): Reveal {
       });
       return decorations;
     },
-    // The badges' words: the UI's language.
     config: () => ALERT_NAMES.map(labelOf).join("\n"),
   };
 }
 
-/**
- * GitHub-style alerts: a blockquote whose first line is `[!NOTE]`,
- * `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` renders as the
- * matching colored callout with an icon badge in place of the marker. The
- * marker is real text (round-trips through markdown untouched); clicking
- * the badge, or moving the cursor onto it, reveals it for editing.
- */
-/** The document a Backspace at an alert's first line was pressed on and
- *  left alone (markerBeforeCaret): the next press on it removes the
- *  marker. */
+/** The document a first Backspace at an alert's first line was pressed on. */
 const firstPress = new WeakMap<EditorView, ProseNode>();
 
+/** GitHub-style alerts: a blockquote whose first line is `[!NOTE]` etc.
+ *  renders as a callout, the marker real text behind a badge. */
 export function createGithubAlertPlugin(labelOf: AlertLabel) {
   const reveal = alertReveal(labelOf);
   return $prose(
@@ -249,7 +223,6 @@ export function createGithubAlertPlugin(labelOf: AlertLabel) {
           handleKeyDown(view, event) {
             if (event.key !== "Backspace" || view.composing) return false;
             if (event.metaKey || event.ctrlKey || event.altKey) return false;
-            // The caret a click or Home has just put there.
             const state = stateWithLiveSelection(view);
             const marker = markerBeforeCaret(state);
             if (!marker) {

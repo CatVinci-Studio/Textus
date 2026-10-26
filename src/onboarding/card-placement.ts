@@ -1,12 +1,8 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 
 /**
- * Where a lesson card sits so that it never hides what the lesson is about:
- * the AI's proposal and its review bar, margin notes, the grammar underline
- * and its card, the completion's gray text, the line being typed, an AI
- * panel laid over the editor. The card takes the first corner clear of all
- * of them, keeping the one it is in while that stays clear; with no corner
- * clear, it folds to its header in the corner where it hides least.
+ * Places a lesson card so it never hides what the lesson is about, folding
+ * it to its header where it hides least when no corner is clear.
  */
 
 export type CardPlace =
@@ -33,7 +29,6 @@ export const CARD_OBSTACLES = [
   ".agent-panel",
 ].join(", ");
 
-/** The card's box in `place`, `width` by `height`, inside `area`. */
 export function placedBox(
   place: CardPlace,
   width: number,
@@ -56,11 +51,8 @@ function overlap(a: Box, b: Box): number {
   return w > 0 && h > 0 ? w * h : 0;
 }
 
-/**
- * The place for a card: `current` if it is clear, else the first clear one
- * of `places`. `fits` is false when none is clear; the place is then the one
- * covering the least of the obstacles.
- */
+/** The place for a card: `current` if clear, else the first clear one of
+ *  `places`; with none clear (`fits` false), the one covering least. */
 export function choosePlace(
   places: CardPlace[],
   current: CardPlace,
@@ -117,12 +109,8 @@ function visibleObstacles(card: HTMLElement): Box[] {
   return boxes;
 }
 
-/**
- * Keeps a lesson card clear of what the lesson is about, as the page
- * changes. Returns where it sits (for its style) and whether it has room
- * to show its instructions; `active` off (an opening or ending card) leaves
- * it where its stylesheet puts it.
- */
+/** Keeps a lesson card clear of what the lesson is about, as the page
+ *  changes. `active` off leaves it where its stylesheet puts it. */
 export function useCardPlacement(
   cardRef: RefObject<HTMLElement | null>,
   active: boolean,

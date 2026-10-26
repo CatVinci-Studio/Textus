@@ -1,5 +1,5 @@
-/* A phone's bottom card (BottomCard.tsx): the action sheet's scrim and
-   motion, a single card holding content and two big buttons. */
+/* A phone's bottom card: the action sheet's scrim and motion, one card with
+   content and two big buttons. */
 .bottom-card-scrim {
   position: fixed;
   inset: 0;

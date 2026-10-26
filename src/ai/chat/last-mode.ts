@@ -5,11 +5,9 @@ import {
 import { LOCAL_KEYS, readLocalJson, writeLocal } from "../../storage/local";
 
 /**
- * The panel's mode carries over: a new conversation and the detached window
- * used to start back in the Settings default (Review) right after the user
- * had switched to Write. The pick is kept with the default it was made under, so
- * changing the default in Settings still takes effect. Shared through
- * localStorage, which the detached window sees too.
+ * The panel's last mode, kept with the default it was picked under so a new
+ * Settings default still takes effect. In localStorage so the detached
+ * window sees it.
  */
 export function initialMode(defaultMode: AgentMode): AgentMode {
   // Unreadable or blocked storage reads as nothing kept: the default.

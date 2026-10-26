@@ -4,12 +4,9 @@ import { installFromCatalog, loadCatalog, catalogSnapshot } from "./catalog";
 import { loadPlugins, uninstallPlugin } from "../manager";
 
 /**
- * The official plugins as Textus 1.3.0-beta.1 had them (1.x, on the plugin
- * API before 1.0) moved to their 0.1.0 rewrites, once, when a window
- * starts: each replaced from the catalog as it was - on or off - its
- * permissions carried over to their new names; Split Panes, now part of
- * Textus, removed. Nothing happens when none is installed, so most
- * windows never ask the catalog.
+ * Moves the official plugins written for the pre-1.0 plugin API to their
+ * rewrites, once, when a window starts: same on/off, permissions renamed,
+ * ones now built in removed. Nothing happens when none is installed.
  */
 
 /** Permissions as the API before 1.0 named them. */

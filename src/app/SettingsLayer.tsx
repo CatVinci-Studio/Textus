@@ -5,8 +5,7 @@ import { openExtensionsTab } from "../settings/pages/extensions-tab";
 import type { SettingsPanelProps } from "../settings/SettingsPanel";
 import { Presence } from "../ui/usePresence";
 
-// Settings loads on first open - warm, so by then it usually has, once the
-// window was idle (lazy-module.ts).
+// Settings loads on first open, warmed once the window is idle.
 const SettingsPanel = lazyComponent(
   lazyModule("settings", () => import("../settings/SettingsPanel"), {
     warm: true,

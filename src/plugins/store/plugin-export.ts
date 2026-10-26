@@ -7,10 +7,8 @@ import { errorText } from "../../utils/error-text";
 let lastPublisher = "";
 
 /**
- * Export for Publishing… (a plugin's page, a chat's plugin card): asks
- * for the publisher's name its id will carry and a folder to put it in,
- * then lays it out there ready to be a GitHub repository (src-tauri
- * plugins/export.rs), and says where and what to do next.
+ * Export for Publishing…: asks for a publisher name and a folder, lays the
+ * plugin out there ready to be a GitHub repository, and says what's next.
  */
 export async function exportPluginForPublishing(id: string): Promise<void> {
   const t = currentStrings();

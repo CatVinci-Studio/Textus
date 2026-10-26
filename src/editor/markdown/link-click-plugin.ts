@@ -19,7 +19,7 @@ function linkAt(view: EditorView, event: MouseEvent): HTMLAnchorElement | null {
     : null;
 }
 
-/** The wikilink (wikilink.ts) under a mouse event in this editor, if any. */
+/** The wikilink under a mouse event in this editor, if any. */
 function wikilinkAt(view: EditorView, event: MouseEvent): HTMLElement | null {
   const link = (event.target as Element | null)?.closest?.(
     '[data-type="wikilink"]',
@@ -27,8 +27,8 @@ function wikilinkAt(view: EditorView, event: MouseEvent): HTMLElement | null {
   return link instanceof HTMLElement && view.dom.contains(link) ? link : null;
 }
 
-/** Ctrl+click, or Cmd+click where Mod is Cmd (a Mac, an iPad's keyboard) -
- *  on a Mac, Ctrl+click is the right click. */
+/** Ctrl+click, or Cmd+click where Mod is Cmd: on a Mac, Ctrl+click is the
+ *  right click. */
 function isFollowClick(event: MouseEvent): boolean {
   return event.button === 0 && (modIsMeta() ? event.metaKey : event.ctrlKey);
 }
@@ -39,7 +39,7 @@ async function follow(view: EditorView, target: LinkTarget): Promise<void> {
     return;
   }
   if (target.kind === "web") {
-    // A plugin that opens such links (Web View) shows it in Textus.
+    // A plugin that opens such links shows it in Textus.
     if (openLinkInPlugin(target.url)) return;
     return links.openWebLink(target.url);
   }
@@ -51,14 +51,13 @@ async function follow(view: EditorView, target: LinkTarget): Promise<void> {
         detail: { path: target.path, anchor: target.anchor },
       }),
     );
-  // Shown, not opened: opening hands the file to the system, which runs a
-  // linked program or script as readily as it shows a PDF.
+  // Shown, not opened: the system would run a linked program as readily as it
+  // shows a PDF.
   else return exportDoc.revealInDir(target.path);
 }
 
-/** A wikilink: `[[#Heading]]` scrolls to a heading here, `[[Note]]` opens
- *  the note the document's vault holds by that name, and `[[Note#Heading]]`
- *  opens it at that heading. */
+/** A wikilink: `[[#Heading]]` scrolls here, `[[Note]]` opens the vault's
+ *  note by that name, `[[Note#Heading]]` at that heading. */
 async function followWikilink(
   view: EditorView,
   source: string,
@@ -80,8 +79,8 @@ async function followWikilink(
     );
 }
 
-/** The URL of the link under a mouse event: a link, or one the caret
- *  shows as its source (link-reveal.ts). */
+/** The URL of the link under a mouse event, or of one the caret shows as
+ *  its source. */
 function hrefAt(view: EditorView, event: MouseEvent): string | null {
   const link = linkAt(view, event);
   if (link) return link.getAttribute("href") ?? "";
@@ -89,19 +88,11 @@ function hrefAt(view: EditorView, event: MouseEvent): string | null {
 }
 
 /**
- * Following links: Ctrl/Cmd+click opens a web link in the browser - or
- * in the plugin that opens such links (link-handlers.ts) - a
- * Markdown file in a tab (scrolled to its `#heading`, if the link names
- * one), any other file in the file manager, and scrolls to a `#heading` of
- * this document; on a wikilink it opens the note. A plain click only
- * places the caret - and shows the link as its source to edit. A link
- * shown that way still opens on Ctrl/Cmd+click.
- *
- * The webview must never follow a link itself: WebView2 opened a
- * Ctrl+clicked relative link in the browser as http://tauri.localhost/...
- * (#152), and a plain click on a link in a raw HTML preview (not editable)
- * would navigate the window away from the app. So every click and middle
- * click on a link has its default cancelled.
+ * Ctrl/Cmd+click follows links: web links to the browser (or a plugin),
+ * Markdown files in a tab, other files in the file manager, `#heading`s by
+ * scrolling. The webview must never follow a link itself (WebView2 opened
+ * relative links as http://tauri.localhost/...), so every click's default
+ * on a link is cancelled.
  */
 export function createLinkClickPlugin(docPath: () => string | null) {
   return $prose(
@@ -109,8 +100,8 @@ export function createLinkClickPlugin(docPath: () => string | null) {
       new Plugin({
         props: {
           handleDOMEvents: {
-            // The editor's own mousedown would place the caret, or with
-            // Ctrl/Cmd held select the whole block, before the click.
+            // The editor's own mousedown would place the caret, or with Ctrl/Cmd held
+            // select the whole block, before the click.
             mousedown(view, event) {
               if (!isFollowClick(event)) return false;
               if (hrefAt(view, event) === null && !wikilinkAt(view, event))
@@ -120,8 +111,7 @@ export function createLinkClickPlugin(docPath: () => string | null) {
             },
             click(view, event) {
               const doc = docPath();
-              // A document picked in iOS Files is a scoped URL with no
-              // folder this app may read beside it.
+              // An iOS Files document has no folder this app may read beside it.
               const folder = doc && !isScopedUrl(doc) ? doc : null;
               const wikilink = wikilinkAt(view, event);
               if (wikilink && isFollowClick(event)) {

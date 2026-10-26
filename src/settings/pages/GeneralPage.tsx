@@ -13,7 +13,8 @@ import {
   canUseWindows,
 } from "../../platform/capabilities";
 
-/** General: the language, how documents open and reach the disk, the system's integrations, About, and the guides. */
+/** General: language, documents and disk, system integrations, About, and
+ *  the guides. */
 export function GeneralPage({
   t,
   settings,
@@ -89,9 +90,8 @@ export function GeneralPage({
         <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
       </SettingsGroup>
 
-      {/* Last: links out rather than settings. The desktop also has
-            them in the Help menu; a phone's menu is kept short, so there
-            this is where they are. */}
+      {/* Last: links out rather than settings. A phone's menu is kept short,
+            so there this is where they are. */}
       <SettingsGroup title={t.settingsHelpGroup}>
         <LinkRow
           label={t.menuHelpMarkdown}

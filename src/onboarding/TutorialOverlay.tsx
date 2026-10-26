@@ -17,14 +17,12 @@ interface TutorialOverlayLabels {
   back: string;
   collapse: string;
   expand: string;
-  /** Leaves the whole tour. */
   skip: string;
   /** The per-lesson escape hatch shown while an exercise is incomplete. */
   skipStep: string;
-  /** Heads the thing to do. */
   tryIt: string;
   chapters: string;
-  /** "{i}"/"{n}" placeholders - the step counter. */
+  /** The step counter, with "{i}"/"{n}" placeholders. */
   stepOfCount: string;
 }
 
@@ -39,7 +37,6 @@ interface TutorialButton {
   onClick: () => void;
 }
 
-/** One line of what to do, and whether it is done. */
 export interface TutorialTaskLine {
   text: string;
   done: boolean;
@@ -54,34 +51,28 @@ interface TutorialOverlayProps {
   totalSteps: number;
   chapters: TutorialChapterNavItem[];
   title: string;
-  /** The one sentence under the title. */
   body: string;
   /** What to do, a line each. `code` spans (backticks) are what to type. */
   tasks?: TutorialTaskLine[];
-  /** One line of feedback on the exercise. */
   status?: string | null;
   /** The whole lesson is done (its feedback line turns to success). */
   complete?: boolean;
   /** A quieter line under the exercise (watching instead of doing). */
   note?: string | null;
-  /** The lesson's animation on the website, as a link. */
   watch?: TutorialButton | null;
-  /** Lesson-specific controls (the provider picker, the theme picker, the
-   *  ending's links). */
   children?: ReactNode;
   primary: TutorialButton & { disabled?: boolean };
   onBack: () => void;
   onSkip: () => void;
-  /** Advance past THIS lesson without completing it. Shown only while the
-   *  primary action is disabled - an exercise whose detection misfires
-   *  must never leave "exit the whole guide" as the only way out. */
+  /** Advance past this lesson without completing it. Shown only while the
+   *  primary action is disabled, so a misfiring exercise never traps the learner. */
   onSkipStep?: () => void;
   labels: TutorialOverlayLabels;
   /** The phone layout: a card goes to the top or the bottom. */
   phone?: boolean;
 }
 
-// The welcome step shows the app icon instead (see the header below).
+// The welcome step shows the app icon instead.
 const STEP_GLYPHS: Record<Exclude<TutorialStepId, "welcome">, string> = {
   wysiwyg: "M↓",
   marks: "B",
@@ -99,10 +90,8 @@ const STEP_GLYPHS: Record<Exclude<TutorialStepId, "welcome">, string> = {
   done: "✓",
 };
 
-/** `text` with its code spans as code - what the learner types. As in
- *  Markdown, a span opened by a run of backticks closes at the next run as
- *  long, so ``a `b` c`` shows backticks (one space inside each end is
- *  dropped); an unclosed run stays text. */
+/** `text` with its code spans as code. As in Markdown, a span opened by a
+ *  run of backticks closes at the next run as long; an unclosed run stays text. */
 export function withCode(text: string): ReactNode[] {
   const out: ReactNode[] = [];
   let plain = "";
@@ -138,11 +127,8 @@ export function withCode(text: string): ReactNode[] {
   return out;
 }
 
-/**
- * One lesson card: where you are, a title, one sentence, the one thing to
- * do, and a link to watch it done. Lessons leave the editor usable beside
- * the card; the opening, connecting and ending sit over a dimmed window.
- */
+/** One lesson card. Lessons leave the editor usable beside the card; the
+ *  opening, connecting and ending sit over a dimmed window. */
 export function TutorialOverlay({
   layout,
   stepId,
@@ -171,9 +157,8 @@ export function TutorialOverlay({
   const primaryRef = useRef<HTMLButtonElement>(null);
   const modal = useModalDialog(onSkip, layout === "overlay");
   const dockedWidth = useDockedPanelWidth();
-  // A lesson card keeps clear of the proposal, the notes and the review
-  // bar it is about; with no room anywhere it folds to its header until
-  // there is - unless the learner opened or folded it on this lesson.
+  // Keeps clear of what the lesson is about; with no room it folds to its
+  // header, unless the learner opened or folded it on this lesson.
   const placement = useCardPlacement(
     modal.ref,
     layout === "card",

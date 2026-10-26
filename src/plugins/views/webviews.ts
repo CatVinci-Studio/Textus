@@ -1,12 +1,8 @@
 import type { Endpoint } from "../host/rpc";
 
 /**
- * The webviews plugins have open - a sidebar panel, a view or editor in a
- * tab, a settings page - by id. The plugin's host sets a webview's HTML
- * and posts to it (broker.ts); PluginWebview.tsx draws it in a sandboxed
- * frame and passes its messages back. A webview's state (setState) is
- * kept by its `key` - the view, or the tab - so a panel closed and opened
- * again finds it.
+ * The webviews plugins have open, by id. A webview's state is kept by its
+ * `key` (the view, or the tab), so a panel closed and reopened finds it.
  */
 export type WebviewKind =
   "sidebar" | "view" | "editor" | "settings" | "codeBlock";
@@ -125,9 +121,8 @@ function whenConnected(id: string, ms: number): Promise<Endpoint | null> {
   });
 }
 
-/** How the webview's page looks, for an export (WebviewApi.onExport): an
- *  SVG's markup or an image's data: URL; null when the page gives none
- *  within `ms`. */
+/** How the webview's page looks, for an export: an SVG's markup or an
+ *  image's data: URL; null when the page gives none within `ms`. */
 export async function webviewPicture(
   id: string,
   theme: "light" | "dark",

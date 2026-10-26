@@ -1,18 +1,7 @@
 /**
- * The chat panel's markdown renderer, and the editor before a file is
- * involved, read maths in `$...$` / `$$...$$`; LLMs default to LaTeX's
- * `\(...\)` / `\[...\]` unless told otherwise (the system prompt,
- * AGENT_ROLE in src-tauri/src/ai/agent/prompt.rs, asks for `$`/`$$`, but this is a
- * backstop for replies that use the backslash form anyway). AI replies,
- * pastes (src/editor/markdown/parse-markdown-source.ts) and rendered chat
- * and HTML (render-html.ts) run through this first. A file opened in the
- * editor does not: it reads both forms as they are and writes them back
- * that way (src/editor/math/latex-math-syntax.ts).
- *
- * A `\[...\]` alone on its lines becomes a `$$` block; one inside a line,
- * inline `$$...$$`. A pair holding only a citation's characters (`\[1\]`,
- * `\[2, 3\]`, `\[4-6\]`) is an escaped bracket and stays. Skips fenced
- * code blocks so literal `\(` in a code sample isn't touched.
+ * Rewrites LaTeX's `\(...\)` / `\[...\]` as `$...$` / `$$...$$` for AI
+ * replies, pastes and rendered HTML; LLMs use the backslash form even when
+ * asked not to. A citation-like `\[1\]` stays, and fenced code is skipped.
  */
 export function normalizeMathDelimiters(text: string): string {
   const citation = (inner: string) => /^[\d,\s-]*$/.test(inner);

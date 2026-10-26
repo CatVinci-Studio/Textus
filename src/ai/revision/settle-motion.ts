@@ -2,15 +2,8 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { motionAllowed } from "../../ui/motion";
 import { crossfade } from "../../ui/moves";
 
-/**
- * A proposal decided - accepted, rejected, or all of them at once - leaving
- * the text as one move (ui/moves.ts's crossfade): the blocks it was drawn
- * in cross-fade to how they now read, the text after them glides to where
- * the change put it, and its cards in the margin fade out where they stood.
- * Decided at once, the text jumped and the cards were gone between two
- * frames. `callIds` null: every proposal. `change` makes the decision and
- * says whether the document changed: false, and nothing moves.
- */
+/** Animates a decided proposal leaving the text in one move. `callIds` null
+ *  means every proposal; `change` returns false when nothing changed. */
 export function settle(
   view: EditorView,
   callIds: string[] | null,

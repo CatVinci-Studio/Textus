@@ -2,13 +2,8 @@ import contentBaseCss from "./content-base.css?raw";
 
 const ORNAMENT_PREFIX = ":root:not([data-user-theme]) .milkdown ";
 
-/**
- * Textus's own ornaments from content-base.css (the h2 rule, the h3 bar, the
- * tinted quote, ...) rewritten as plain `#write` rules. Importing any theme
- * switches those ornaments off, so an exported theme has to carry them
- * itself or it loses them on the way back in (#29) - and as real rules the
- * user can edit or delete each one.
- */
+/** Textus's own ornaments rewritten as plain `#write` rules. Importing any
+ *  theme switches those ornaments off, so an exported theme must carry them. */
 export function ornamentRules(css: string = contentBaseCss): string {
   const rules: string[] = [];
   const uncommented = css.replace(/\/\*[\s\S]*?\*\//g, "");

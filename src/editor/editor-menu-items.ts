@@ -1,9 +1,8 @@
 import type { ContextMenuItem } from "./ContextMenu";
 
 /**
- * Items added to the editor's right-click menu from outside - plugins,
- * plugin-api.ts - apart from editor-menu.ts and the editor it needs, so
- * what registers them doesn't load the editor at startup.
+ * Items added to the editor's right-click menu from outside, kept apart
+ * from the menu so registering them doesn't load the editor at startup.
  */
 
 /** What an item added to the editor's menu is told: the text selected,
@@ -12,9 +11,8 @@ export interface EditorMenuContext {
   selectedText: string;
 }
 
-/** Items added to the editor's menu from outside (docs/dev/plugin-api.md):
- *  each provider is asked when the menu opens, and its items are a group
- *  of their own before Select All. */
+/** Asked when the menu opens; its items are a group of their own before
+ *  Select All. */
 export type EditorMenuProvider = (
   context: EditorMenuContext,
 ) => ContextMenuItem[];

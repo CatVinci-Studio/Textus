@@ -26,15 +26,13 @@ const listProjectFiles = vi.fn();
 let supportsVision = true;
 let webSearchStatus: { native: boolean; service: string | null } | null = null;
 
-// The composer derives vision support from the active provider itself (so no
-// caller can forget to pass it), which is what this stands in for.
+// The composer derives vision support from the active provider itself.
 vi.mock("../provider-catalog", () => ({
   useActiveProvider: () => ({ supportsVision }),
   useWebSearchStatus: () => webSearchStatus,
 }));
 
-// Whether the provider's model can think deeper is the capability table's
-// answer (deep-thinking.ts); the storage half stays real.
+// Whether the model can think deeper is mocked; the storage half stays real.
 let canThinkDeeper = true;
 vi.mock("./deep-thinking", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -176,10 +174,8 @@ afterEach(cleanup);
 
 describe("ChatComposer selection chip", () => {
   it("brings the chip back for a NEW selection after one was dismissed", () => {
-    // The detached Agent window is the cross-file surface: the user goes on
-    // highlighting passages while it is open, and each new highlight is a
-    // fresh request to talk about it. A dismissal that stuck for the rest of
-    // the chat meant every later selection silently failed to ride along.
+    // In the detached window each new highlight is a fresh request, so a
+    // dismissal must not stick for later selections.
     const { rerender } = renderComposer({ selectedText: "first passage" });
     expect(screen.getByText(/13 chars selected/)).toBeInTheDocument();
 
@@ -286,7 +282,7 @@ describe("ChatComposer selection chip", () => {
   it("sends the selected interaction mode and web-search choice", () => {
     const { onSend } = renderComposer();
     fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
-    // Write, Review, then Create - 1.2.0's Revise is part of Write.
+    // Write, Review, then Create.
     expect(
       screen
         .getAllByRole("option")
@@ -300,8 +296,7 @@ describe("ChatComposer selection chip", () => {
       screen.getByRole("option", { name: "Review" }).textContent,
     ).toContain("Reads and leaves notes");
     fireEvent.click(screen.getByRole("option", { name: "Write" }));
-    // Named for what it picks, not for one of its choices: a screen
-    // reader used to hear "Ask" over a picker set to Plan.
+    // Named for what it picks, not for one of its choices.
     expect(screen.queryByRole("combobox", { name: "Review" })).toBeNull();
     expect(
       screen.getByRole("combobox", { name: "Mode" }).textContent,
@@ -427,9 +422,8 @@ describe("ChatComposer Deep thinking", () => {
 
 describe("ChatComposer attachments", () => {
   it("shows why a file could not be attached instead of doing nothing", async () => {
-    // The regression this pins: every failure used to be swallowed by a
-    // `.catch(() => null)`, so picking a PDF - which could not work at all -
-    // was indistinguishable from a dead "+" button.
+    // Every failure must surface: a PDF that can't work must not look like a
+    // dead "+" button.
     pickAttachmentFile.mockRejectedValue(
       new IpcError("pick_attachment_file", "This PDF has no text layer."),
     );

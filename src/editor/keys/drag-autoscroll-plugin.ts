@@ -8,9 +8,9 @@ const EDGE = 36;
 const MAX_STEP = 40;
 
 /**
- * Pixels a frame a drag-select pointer at `y` asks the scroller spanning
- * `top`..`bottom` to move: nothing well inside it, more the further into
- * the edge band or past the edge it is, up to MAX_STEP; negative upwards.
+ * Pixels a frame a drag-select pointer at `y` asks the scroller to move:
+ * more the further into the edge band or past it, up to MAX_STEP; negative
+ * upwards.
  */
 export function edgeStep(y: number, top: number, bottom: number): number {
   const below = y - (bottom - EDGE);
@@ -22,12 +22,10 @@ export function edgeStep(y: number, top: number, bottom: number): number {
 }
 
 /**
- * Selecting by dragging past the bottom or top of the document scrolls it
- * and takes the selection along (#219). WebKitGTK, the Linux app's web
- * view, didn't scroll downwards at all and crawled upwards, and nothing
- * scrolls in a headless test browser. Each frame tops the scroll up to
- * edgeStep's pace: a web view that scrolls by itself (Chromium, macOS's)
- * already moved most of it, so it isn't scrolled twice.
+ * Dragging a selection past the document's top or bottom scrolls it and
+ * takes the selection along; WebKitGTK barely scrolls by itself. Each frame
+ * tops the scroll up to edgeStep's pace, so a web view that scrolls on its
+ * own isn't scrolled twice.
  */
 export function createDragAutoscrollPlugin() {
   return new Plugin({
@@ -96,7 +94,7 @@ export function createDragAutoscrollPlugin() {
 }
 
 /** The selection from `anchor` to the text under the pointer, held inside
- *  the scroller's box so the edge line is the one it reaches. */
+ *  the scroller's box. */
 function extendTo(
   view: EditorView,
   anchor: number,

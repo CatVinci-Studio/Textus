@@ -1,29 +1,9 @@
 import { isDrivePath } from "../../utils/path";
 
 /**
- * The one HTML policy for a document's own markup: what the WYSIWYG editor
- * renders of raw HTML (raw-html-sanitize.ts) and what the split view's
- * preview renders of the whole document (markdown/render-html.ts). Both
- * read the same whitelist, so a snippet looks the same in either view.
- *
- * Why so strict: the webview runs with no CSP and full Tauri IPC (file
- * read/write), so anything that executes in a document is as good as code
- * on the user's machine. Hence an allow-list rather than a deny-list:
- * - tags outside the list unwrap (their text stays), and the ones that ARE
- *   the attack surface (script, style, iframe, ...) drop with their content;
- * - attributes are allowed per tag and validated; no on*, no id/name;
- * - href/src take http, https, mailto or a relative path only;
- * - `style` keeps a few text properties with literal values - nothing that
- *   can load a resource (url(), image-set, @import) or compute one (var(),
- *   expression(), calc());
- * - an <svg> never enters the page as DOM: it becomes an <img> of an
- *   image/svg+xml data URL, where scripts, event handlers and
- *   foreignObject don't run and nothing external loads. It is also
- *   stripped of all of those first, for an exported page opened elsewhere.
- *
- * Elements are created in the parsed (inert) document, never the live one:
- * an <img> created in the page starts loading its src before it is even
- * attached.
+ * The one HTML allow-list for a document's own markup, shared by the editor
+ * and the split view. It is strict because the webview has no CSP and full
+ * Tauri IPC: anything that runs in a document runs on the user's machine.
  */
 
 // Block-level: a fragment containing one of these renders as a block.
@@ -79,8 +59,7 @@ export const INLINE_TAGS = new Set([
 ]);
 export const ALLOWED_TAGS = new Set([...BLOCK_TAGS, ...INLINE_TAGS, "svg"]);
 
-// Dropped along with their children - the actual attack surface, distinct
-// from "just not in the whitelist" (which unwraps instead, keeping content).
+// Dropped with their children; tags merely not allowed unwrap instead.
 const DANGEROUS_TAGS = new Set([
   "script",
   "style",
@@ -134,9 +113,8 @@ function sanitizeSpan(value: string): string | null {
 }
 
 const ALLOWED_URL_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
-/** Rejects javascript:/data:/vbscript:/file:/etc.; relative and
- *  scheme-less URLs (the common case for local images and links) resolve
- *  against the dummy base and come out as "http:", so they pass through. */
+/** Rejects javascript:/data:/file: etc.; relative URLs resolve against the
+ *  dummy base as "http:" and pass. */
 export function sanitizeUrl(value: string): string | null {
   try {
     const resolved = new URL(value, "http://localhost/");
@@ -146,9 +124,8 @@ export function sanitizeUrl(value: string): string | null {
   }
 }
 
-/** An image may also be a raster data URL (a pasted screenshot) or a
- *  Windows path the image loader resolves (images/image-plugin.ts). Not
- *  image/svg+xml: an SVG only ever comes from svgToImage below, cleaned. */
+/** An image may also be a raster data URL or a Windows path. Not
+ *  image/svg+xml: an SVG only ever comes from svgToImage, cleaned. */
 function sanitizeImageSrc(value: string): string | null {
   const trimmed = value.trim();
   if (
@@ -163,9 +140,8 @@ function sanitizeImageSrc(value: string): string | null {
 
 // --- style ---------------------------------------------------------------
 
-// Hex, rgb()/rgba()/hsl()/hsla() with plain numbers, or a keyword (a named
-// colour, currentcolor, transparent): letters alone can't load or compute
-// anything, so they need no list.
+// Hex, plain-number rgb()/hsl(), or a keyword: letters alone can't load or
+// compute anything.
 const COLOR_RE =
   /^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgba?|hsla?)\(\s*[-\d.%deg\s,/]+\)|[a-z]{3,20})$/;
 const SIZE_RE = /^\d{1,4}(\.\d{1,3})?(px|em|rem|%)$/;
@@ -190,10 +166,8 @@ const STYLE_RULES: Record<string, (value: string) => boolean> = {
 };
 
 /**
- * The safe part of a `style` attribute: allowed properties whose values
- * match a literal pattern, rebuilt as "prop: value; ...". Anything else -
- * another property, url(), var(), a comment, an escape, !important -
- * drops that declaration. Null when nothing is left.
+ * The safe part of a `style` attribute: allowed properties with literal
+ * values. Anything else drops that declaration. Null when nothing is left.
  */
 export function sanitizeStyle(value: string): string | null {
   const kept: string[] = [];
@@ -250,9 +224,8 @@ const SVG_ELEMENTS = new Set([
   "feoffset",
   "fedropshadow",
 ]);
-// Not in the list and also dropped: script, foreignObject (HTML inside an
-// SVG), style (CSS that can @import), image (loads a file), animate/set
-// (can rewrite an href to javascript: after load). <a> unwraps.
+// Also dropped: script, foreignObject, style (@import), image (loads a
+// file), animate/set (can rewrite an href to javascript: after load).
 const SVG_UNWRAP = new Set(["a", "switch"]);
 
 /** Within an SVG, a reference may only point inside the same picture. */
@@ -339,8 +312,7 @@ const ATTR_RULES: Record<string, Record<string, AttrRule>> = {
   td: { colspan: sanitizeSpan, rowspan: sanitizeSpan },
   ol: { start: (v) => (/^-?\d{1,6}$/.test(v.trim()) ? v.trim() : null) },
   details: { open: () => "" },
-  // Markdown's own code fences name their language this way (a Mermaid
-  // fence is found by it).
+  // Code fences name their language this way (a Mermaid fence is found by it).
   code: {
     class: (v) => (/^language-[\w+#-]+$/.test(v.trim()) ? v.trim() : null),
   },
@@ -349,9 +321,8 @@ const ATTR_RULES: Record<string, Record<string, AttrRule>> = {
 export interface PolicyOptions {
   /** Links open outside the editor (WYSIWYG widgets). */
   linkTarget?: boolean;
-  /** Lets the caller put trusted output of its own in place of an element
-   *  it planted (the split view's math): a node to insert, or undefined to
-   *  sanitize the element as usual. */
+  /** Lets the caller put trusted output of its own in place of an element it
+   *  planted: a node to insert, or undefined to sanitize as usual. */
   replace?: (el: Element) => Node | undefined;
 }
 
@@ -374,7 +345,7 @@ function cleanNode(
     out.appendChild(doc.createTextNode(node.textContent ?? ""));
     return;
   }
-  if (node.nodeType !== Node.ELEMENT_NODE) return; // comments, etc. - dropped
+  if (node.nodeType !== Node.ELEMENT_NODE) return;
 
   const el = node as Element;
   const replacement = options.replace?.(el);
@@ -384,13 +355,12 @@ function cleanNode(
   }
   const tag = el.localName.toLowerCase();
 
-  if (DANGEROUS_TAGS.has(tag)) return; // drop entirely, including content
+  if (DANGEROUS_TAGS.has(tag)) return;
   if (tag === "svg") {
     out.appendChild(svgToImage(el, doc));
     return;
   }
-  // Only HTML elements from here on: an SVG or MathML child out of place
-  // unwraps to its text.
+  // Only HTML elements from here on: SVG or MathML out of place unwraps.
   if (!ALLOWED_TAGS.has(tag) || el.namespaceURI !== HTML_NS) {
     for (const child of Array.from(el.childNodes))
       cleanNode(child, out, options);
@@ -403,8 +373,7 @@ function cleanNode(
     const align = sanitizeAlign(el.getAttribute("align") ?? "");
     if (align) {
       clean.setAttribute("align", align);
-      // A theme's `th { text-align: left }` outranks the attribute; as a
-      // style it holds, as GitHub shows it.
+      // A theme's `th { text-align: left }` outranks the attribute; a style holds.
       if (tag === "th" || tag === "td") styles.push(`text-align: ${align}`);
     }
   }

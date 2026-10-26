@@ -87,7 +87,6 @@ function Harness({
 }: {
   language?: Lang;
   phone?: boolean;
-  /** Hands the tour's state out, to act as the app would. */
   onTutorial?: (tutorial: Tutorial) => void;
 }) {
   const tutorial = useTutorial();

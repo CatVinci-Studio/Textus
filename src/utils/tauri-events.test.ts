@@ -30,9 +30,8 @@ function installFakeRuntime(label: string): ListenArgs[] {
 
 describe("listenToThisWindow", () => {
   it("registers for this window's label, never the app-wide catch-all", async () => {
-    // A bare `listen()` would register `{ kind: "Any" }`, which Tauri treats
-    // as a catch-all: it also receives events emit_to'd at ANOTHER window, so
-    // e.g. a file opened in tab mode landed in every open window at once.
+    // A bare `listen()` registers `{ kind: "Any" }`, a catch-all that also gets
+    // events emit_to'd at another window.
     const calls = installFakeRuntime("window-3");
     await listenToThisWindow("open-paths-as-tabs", () => {});
 

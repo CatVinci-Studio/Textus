@@ -6,11 +6,11 @@ import { basename } from "../utils/path";
 import type { Strings } from "../i18n/strings";
 import type { useAppUpdate } from "./useAppUpdate";
 
-/** Zen mode's way out, shown while it is on (useZenMode.ts). */
+/** Zen mode's way out, shown while it is on. */
 export function ZenHint({ onExit, t }: { onExit: () => void; t: Strings }) {
   return isIOSApp ? (
-    // No Esc key on a phone, and zen hides the menu: the hint is
-    // the way out, so it stays (faintly) and takes a tap.
+    // No Esc key on a phone: the hint is the way out, so it stays and takes
+    // a tap.
     <button type="button" className="zen-hint zen-hint-button" onClick={onExit}>
       {t.zenExitButton}
     </button>
@@ -21,8 +21,7 @@ export function ZenHint({ onExit, t }: { onExit: () => void; t: Strings }) {
   );
 }
 
-/** Says that drafts from an earlier session were brought back
- *  (useStartupRestore). */
+/** Says that drafts from an earlier session were brought back. */
 export function DraftRestoredToast({
   count,
   onDismiss,
@@ -57,8 +56,8 @@ export function useWordImported() {
  *  nothing. */
 const WORD_NOTICE_MS = 12_000;
 
-/** Says that the Word document at `path` was opened as a new Markdown one
- *  and may look different (document/word-import.ts). */
+/** Says the Word document at `path` was opened as a new Markdown one and
+ *  may look different. */
 export function WordImportNotice({
   path,
   onDismiss,
@@ -91,7 +90,7 @@ export function WordImportNotice({
   );
 }
 
-/** The update banner (useAppUpdate.ts): available, downloading, failed. */
+/** The update banner: available, downloading, failed. */
 export function UpdateToast({
   appUpdate,
   t,

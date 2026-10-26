@@ -14,10 +14,8 @@ export interface ReplyThemeLabels {
 }
 
 /**
- * "Use this theme" under a reply that wrote one (the `theme` skill): saves
- * the ```css block as a user theme and switches to it, as Import CSS…
- * does with a file. Once installed, the button switches back to that copy
- * rather than saving another.
+ * "Use this theme" under a reply that wrote one: saves the ```css block as a
+ * user theme and switches to it. Once installed, it switches back to that copy.
  */
 export function ReplyThemes({
   text,

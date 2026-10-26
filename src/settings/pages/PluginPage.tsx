@@ -101,9 +101,9 @@ export function PluginPage({
   onBack: () => void;
   onEnable: (on: boolean) => void;
   onUpdate: () => void;
-  /** Opens its usage guide (USAGE.md), when it has one. */
+  /** Opens its usage guide, when it has one. */
   onGuide: () => void;
-  /** The AI panel in Create mode, asked to change it (ask-ai.ts). */
+  /** The AI panel in Create mode, asked to change it. */
   onEditWithAi: () => void;
   attempt: Attempt;
 }) {

@@ -42,73 +42,43 @@ fn with_web_section(instructions: String, web: &WebPlan) -> String {
     }
 }
 
-/// Skill loads, file reads, and web searches all consume steps, so a
-/// research-y request needs more headroom than the old chat-only loop did.
+/// Skill loads, file reads, and web searches all consume steps.
 pub(crate) const MAX_STEPS: usize = 12;
 
-/// Sends one user message and runs the conversation forward, returning the
-/// new turns produced (the user's own turn, any tool calls/results, and the
-/// final assistant reply) for the frontend to append to its history.
-///
-/// Tool calling runs for every dialect `aicompat::providers::AgentProvider`
-/// has a step for: openai-responses, anthropic-messages, and
-/// openai-chat-completions (the generic dialect most self-hosted/proxy
-/// servers speak - OpenRouter, Groq, Ollama, and friends, plus "custom").
-/// The chat-completions dialect additionally falls back to
-/// `flattened_chat_turn` on a hard failure, since not every compatible
-/// server actually implements `tools` correctly. A provider with no dialect
-/// at all falls straight to `flattened_chat_turn`, a single non-agentic
-/// completion (with the writing instructions still in the system prompt;
-/// skills reach them via the frontend's /name injection instead of
-/// use_skill). The orchestration loop (`run_agent_loop`), the tool
-/// implementations (`crate::ai::tools`) and the one path below that
-/// prepares them don't know which dialect is in play - tool-calling support
-/// for another provider is an `Endpoint` and its arm in `AgentProvider`.
-/// `model` is the user's Settings choice, or None for the provider default.
-// Each parameter is a distinct invoke() payload key - bundling them into a
-// struct would only move the width into the frontend call site.
-/// Thin wrapper around `ai_agent_message_inner` that races it against a
-/// cancellation signal (the chat "stop" button - see `ai::cancel`).
-/// `request_id` is frontend-generated and only meaningful for the duration
-/// of this one call, so it's registered and torn down here rather than
-/// threaded into the request logic below.
+/// Sends one user message and returns the new turns for the frontend's
+/// history, racing the request against its cancel signal (`ai::cancel`).
+// Each parameter is a distinct invoke() payload key.
 #[allow(clippy::too_many_arguments)]
 #[tauri::command]
 pub async fn ai_agent_message(
     app: AppHandle,
     provider: String,
-    // The document, block by block as the editor has it (doc_blocks.rs).
+    // The document, block by block as the editor has it.
     blocks: Vec<doc_blocks::SentBlock>,
     doc_path: Option<String>,
-    // `workspace_root`: the chosen project folder. None keeps the default -
-    // the document's own folder (see workspace::load).
+    // The chosen project folder. None keeps the document's own folder.
     workspace_root: Option<String>,
     history: Vec<AgentTurn>,
     message: String,
-    // `images`: attachments with no text to extract. The text-shaped ones
-    // (PDF, Word, spreadsheets) were already extracted and inlined into
-    // `message` by the frontend; only images travel as their own parts.
+    // Attachments with no text to extract; text-shaped ones were already
+    // inlined into `message` by the frontend.
     images: Vec<ImageAttachment>,
     web_search: bool,
-    // How hard the model thinks (capabilities::ThinkingLevel): Deep when
-    // the composer's Deep thinking is on, Fast from Quick Ask. None - an
-    // older frontend - is Auto, the provider's default.
+    // How hard the model thinks. None (an older frontend) is Auto.
     thinking: Option<ThinkingLevel>,
-    // Settings > Textus AI > Search service: "auto" (None from an older
-    // frontend) or a service id, and the SearXNG server address - what
-    // web_search uses when the model has no search of its own (ai::web).
+    // "auto" (None from an older frontend) or a service id, and the SearXNG
+    // address: what web_search uses when the model has no search of its own.
     search_service: Option<String>,
     searxng_url: Option<String>,
     mode: AgentMode,
     model: Option<String>,
     request_id: String,
-    // Heading of the section the user is working in (see request_context).
+    // Heading of the section the user is working in.
     focus_heading: Option<String>,
-    // The UI language (src/i18n/langs.ts), for the names the agent is told
-    // the app uses (UiNames). None - an older frontend - is English.
+    // The UI language, for the names the agent is told the app uses.
+    // None (an older frontend) is English.
     ui_language: Option<String>,
-    // The image model (Settings › Textus AI › Image model); None for none,
-    // and from an older frontend. See ai::images.
+    // The image model; None for none, and from an older frontend.
     image_model: Option<crate::ai::images::ImageModel>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
@@ -148,8 +118,7 @@ async fn ai_agent_message_inner(
     provider: String,
     document: Document,
     doc_path: Option<String>,
-    // `workspace_root`: the chosen project folder. None keeps the default -
-    // the document's own folder (see workspace::load).
+    // The chosen project folder. None keeps the document's own folder.
     workspace_root: Option<String>,
     history: Vec<AgentTurn>,
     message: String,
@@ -172,8 +141,8 @@ async fn ai_agent_message_inner(
     // reference packs go in.
     let focus = message.clone();
     workspace.memories.select_for(&focus);
-    // A /name call gets the skill's instructions and reference packs filled
-    // in here, and history keeps the expanded message (see expand_message).
+    // A /name call gets the skill's instructions and reference packs filled in
+    // here, and history keeps the expanded message.
     let message = crate::ai::builtin::expand_message_with(
         &message,
         &workspace.skills,
@@ -205,18 +174,16 @@ async fn ai_agent_message_inner(
     if entry.supports_vision {
         images.extend(selected_picture(&focus, doc_path.as_deref()));
     }
-    // Refuse rather than drop. Sending the images to a provider that can't
-    // read them would get an answer confidently written about a picture the
-    // model never saw - the frontend hides the attach affordance for these
-    // providers, so reaching here means something got out of step.
+    // Refuse rather than drop: the model would answer confidently about a
+    // picture it never saw. The frontend hides attach for these providers.
     if !images.is_empty() && !entry.supports_vision {
         return Err(format!(
             "{} can't read images. Remove the image, or switch provider in Settings > {AI_NAME}.",
             entry.label
         ));
     }
-    // Tool-calling paths: the document rides in this message (see
-    // build_instructions). The tool-less fallback rebuilds its own turn.
+    // Tool-calling paths: the document rides in this message. The tool-less
+    // fallback rebuilds its own turn.
     let (context, sent_library) = request_context_and_library(
         &workspace,
         &document,
@@ -241,9 +208,8 @@ async fn ai_agent_message_inner(
                 build_instructions(&workspace, &document, true, mode, &focus, &ui_language),
                 web,
             );
-            // The text of proposals still undecided from earlier requests:
-            // an edit or a picture may go into it (ai::images, tools.rs's
-            // propose_edit).
+            // The text of proposals still undecided from earlier requests: an edit or
+            // a picture may go into it.
             let undecided = crate::ai::images::undecided_edits(&history);
             let tool_ctx = ToolContext {
                 document: &document,
@@ -262,9 +228,8 @@ async fn ai_agent_message_inner(
                 checks: Default::default(),
             };
             let stores = tauri::Manager::state::<crate::settings::Stores>(&app);
-            // A change through the whole of a long document, chapter by
-            // chapter at once (chapters.rs): each chapter's helper has
-            // propose_edit, and its turns join this request's.
+            // A change through the whole of a long document, chapter by chapter at
+            // once: each chapter's helper has propose_edit, and its turns join ours.
             let helper_tools = ToolRegistry::builtin(false, false, mode, entry.supports_vision)
                 .only(tools::PROPOSE_EDIT_TOOL_NAME);
             let helpers = HelperTurns::default();
@@ -295,9 +260,8 @@ async fn ai_agent_message_inner(
                     run: tools::Run::Async(Box::new(move |call| Box::pin(run.run(call)))),
                 });
             }
-            // A document shown whole needs no tools to read it: offered,
-            // they were read again and again instead of edited (DeepSeek,
-            // 1.2.0-rc.6).
+            // A document shown whole needs no tools to read it: offered, they were
+            // read again and again instead of edited.
             if context::shown_whole(&document, true) {
                 tools.remove(tools::SEARCH_TOOL_NAME);
                 tools.remove(tools::READ_DOCUMENT_TOOL_NAME);
@@ -339,8 +303,7 @@ async fn ai_agent_message_inner(
                 let inline = inline.as_ref();
                 let (document, conventions) = (&document, &conventions);
                 async move {
-                    // Edits and comments as lists to the model, one call
-                    // per item past it (lists.rs).
+                    // Edits and comments as lists to the model, one call per item past it.
                     let lists = lists::ListStream::default();
                     let sink = |e: ProviderEvent<'_>| {
                         lists.feed(e, &|e| forward(&channel, web, inline, e))
@@ -366,8 +329,7 @@ async fn ai_agent_message_inner(
             )
             .await
             {
-                // A server that doesn't implement `tools` properly
-                // (AgentProvider::falls_back_to_plain_chat) gets a single
+                // A server that doesn't implement `tools` properly gets a single
                 // tool-less completion instead of failing the request.
                 Err(_) if agent.falls_back_to_plain_chat() => {
                     let instructions = build_instructions(
@@ -411,9 +373,8 @@ async fn ai_agent_message_inner(
             .await
         }
     };
-    // What history keeps is the message as the user wrote it - the document
-    // copy was for this request only, and replaying it in every later
-    // request would multiply the prompt by the number of turns.
+    // History keeps the message as the user wrote it: replaying the document
+    // copy in every later request would multiply the prompt.
     result.map(|turns| {
         let mut turns: Vec<AgentTurn> = turns.into_iter().map(for_history).collect();
         if let Some(AgentTurn::User { text, .. }) = turns.first_mut() {
@@ -425,10 +386,7 @@ async fn ai_agent_message_inner(
 }
 
 /// A turn as the frontend keeps it: a tool result without the images it
-/// showed the model, which were for this request only - base64 in the saved
-/// chat history would grow it by megabytes a picture, as the frontend's own
-/// note on a user turn's images says (useAgentConversation.ts). The result
-/// says so, so a later request that needs the picture opens it again.
+/// showed the model, which would grow the saved history by megabytes.
 fn for_history(turn: AgentTurn) -> AgentTurn {
     match turn {
         // The step's reasoning was for this exchange's own requests: no
@@ -459,9 +417,8 @@ fn for_history(turn: AgentTurn) -> AgentTurn {
     }
 }
 
-/// Providers without tool-calling support get the conversation flattened
-/// into a single plain-text turn and answered with one non-agentic
-/// completion call.
+/// Providers without tool calling get the conversation flattened into one
+/// plain-text turn and a single completion.
 async fn flattened_chat_turn(
     app: &AppHandle,
     provider: &str,
@@ -472,9 +429,8 @@ async fn flattened_chat_turn(
 ) -> Result<Vec<AgentTurn>, String> {
     fn turn_to_plain_text(turn: &AgentTurn) -> Option<String> {
         match turn {
-            // Images are dropped here on purpose: this path exists for
-            // providers with no tool calling and no vision, and the command
-            // has already refused an image-carrying message for those.
+            // Images are dropped on purpose: the command already refused an
+            // image-carrying message for these providers.
             AgentTurn::User { text, .. } => Some(format!("User: {text}")),
             AgentTurn::Assistant { text, .. } => Some(format!("Assistant: {text}")),
             _ => None,
@@ -501,11 +457,8 @@ async fn flattened_chat_turn(
     Ok(vec![user_turn, AgentTurn::assistant(text)])
 }
 
-/// The picture a message's selection is, when it is one picture and
-/// nothing else (`<selected-text>`, src/ai/chat/user-message.ts) whose
-/// file is in the document's folder: PNG, JPEG, GIF or WebP, as read_file
-/// reads them. None for a picture on the web, one outside the folder, or
-/// a selection of anything more.
+/// The picture a message's selection is, when it is one picture and nothing
+/// else, in the document's folder, and PNG, JPEG, GIF or WebP.
 fn selected_picture(message: &str, doc_path: Option<&str>) -> Option<ImageAttachment> {
     let inner = message
         .strip_prefix("<selected-text>")?

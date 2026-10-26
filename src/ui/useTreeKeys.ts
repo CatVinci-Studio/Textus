@@ -20,21 +20,9 @@ function level(el: HTMLElement): number {
   return Number(el.getAttribute("aria-level")) || 1;
 }
 
-/**
- * The keyboard of a tree (the sidebar's files and outline): `role="tree"`
- * on `ref`, `role="treeitem"` rows with `aria-level`, and `aria-expanded`
- * on the ones that fold. One row is in the tab order - the last one
- * focused, else the selected one, else the first - so Tab passes the tree
- * in one step, as WAI-ARIA's tree pattern has it:
- *
- * - ↑ / ↓, Home / End move between the rows on screen;
- * - → opens a folded row, or steps into an open one; ← folds an open row,
- *   or steps out to its parent;
- * - Enter and Space do what a click does.
- *
- * A row folds through the element marked `data-tree-toggle` inside it, or
- * through its own click (a folder's row) when there is none.
- */
+/** Keyboard handling for a tree, per the WAI-ARIA tree pattern: one row is in
+ *  the tab order, arrows move and fold, Enter and Space click. A row folds
+ *  through its `data-tree-toggle` element, else its own click. */
 export function useTreeKeys(ref: RefObject<HTMLElement | null>) {
   const current = useRef<HTMLElement | null>(null);
 

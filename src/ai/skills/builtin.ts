@@ -1,16 +1,7 @@
 import type { AgentMode } from "../../settings/settings-types";
 
-/**
- * The built-in skills the app ships (src-tauri/src/ai/skills/), as far as
- * the frontend needs to know them: the name, the `/` menu's group, whether
- * the model may pick one up by itself, and the panel mode it belongs to. Their
- * words for people - label, one-line hint, the aliases typed after `/` -
- * live in src/i18n/skills/<code>.ts, one file per UI language.
- *
- * The backend's skill list (`list_skills`) is the authority on which exist
- * and which are on; this list is the order Settings shows them in and the
- * fallback when a list comes without them.
- */
+/** The built-in skills as the frontend needs them. The backend's list decides
+ *  which exist; this one sets Settings' order and is the fallback. */
 
 export const SKILL_CATEGORIES = [
   "write",
@@ -21,8 +12,8 @@ export const SKILL_CATEGORIES = [
 ] as const;
 export type SkillCategory = (typeof SKILL_CATEGORIES)[number];
 
-/** Each mode's own skills, always on (src-tauri/src/ai/skills/*.md says
- *  the same in `textus-modes`); every other skill comes from the market. */
+/** Each mode's own skills, always on; every other skill comes from the
+ *  market. Keep in step with the backend's skill files. */
 export const BUILTIN_SKILLS = [
   { name: "expand", category: "revise", invocation: "userOnly", mode: "write" },
   {

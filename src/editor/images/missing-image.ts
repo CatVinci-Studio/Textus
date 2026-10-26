@@ -11,15 +11,8 @@ import {
 import { localPath } from "../markdown/link-target";
 
 /**
- * The card a picture that won't load shows in its place (issue: the
- * browser's broken-image icon named neither the image nor the reason). A
- * Markdown image (image-plugin.ts) and an Obsidian embed whose file isn't
- * in the vault (obsidian-embed-preview.ts) both show it: the file's name,
- * why it isn't there, and the way to fix it - choose another image, or
- * look in the folder it was expected in.
- *
- * It is editor chrome: an export (export/exporters.ts) drops the card and
- * the wrapper's MISSING_IMAGE_CLASS, so a page shows what it showed before.
+ * The card a picture that won't load shows in its place: the file's name,
+ * why it isn't there, and a way to fix it. Editor chrome: an export drops it.
  */
 
 /** On an image's wrapper while its card stands in for the picture. */
@@ -37,8 +30,7 @@ export type ImageLocation =
   /** Anything else (data:, file:, a document read through iOS Files). */
   | { kind: "other" };
 
-/** Where `src`, an image in the document at `docPath`, points - as
- *  resolveImageSrc (image-plugin.ts) reads it. */
+/** Where `src`, an image in the document at `docPath`, points. */
 export function imageLocation(
   src: string,
   docPath: string | null,
@@ -63,10 +55,9 @@ export function imageLocation(
 export type MissingReason =
   "notFound" | "unsupported" | "remote" | "unsaved" | "notInVault" | "failed";
 
-/** The reason for `location`, given whether its file is on disk (null
- *  when that couldn't be asked). A local file that is there but still
- *  failed to load is one the webview can't show: a HEIC, a TIFF outside
- *  Safari, a damaged file. */
+/** The reason for `location`, given whether its file is on disk (null when
+ *  unknown). A local file that is there but failed is one the webview can't
+ *  show (a HEIC). */
 export function missingReason(
   location: ImageLocation,
   exists: boolean | null,
@@ -124,8 +115,7 @@ async function pathExists(path: string): Promise<boolean | null> {
   }
 }
 
-/** Why the image at `location` didn't load, asking the backend whether a
- *  local file is there - a load error alone can't tell a missing file
+/** Why the image didn't load: a load error alone can't tell a missing file
  *  from one the webview can't show. */
 export async function probeMissing(
   location: ImageLocation,
@@ -224,8 +214,7 @@ export function missingImageCard(
       button.type = "button";
       button.dataset.action = name;
       button.textContent = label;
-      // The editor would take the press as a click into the document:
-      // a selection change, or the embed's source opening under the caret.
+      // The editor would take the press as a click into the document.
       button.addEventListener("mousedown", (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -242,8 +231,7 @@ export function missingImageCard(
   return card;
 }
 
-/** Whether an event started on one of a card's buttons - which the
- *  editor must leave alone. */
+/** Whether an event started on one of a card's buttons. */
 export function isMissingCardAction(event: Event): boolean {
   const target = event.target as Element | null;
   return !!target?.closest?.(".missing-image-actions");

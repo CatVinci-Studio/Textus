@@ -5,9 +5,8 @@ import { $prose } from "@milkdown/kit/utils";
 /** Room kept between the caret's line and the bottom of what shows. */
 const MARGIN = 12;
 
-/** Scrolls `view`'s caret up into its scroll container if the container's
- *  bottom has come down over it. Never down, and never centred: the line
- *  only has to be visible. */
+/** Scrolls `view`'s caret up into view if the container's bottom has come
+ *  down over it. Never down, never centred. */
 export function revealCaret(view: EditorView) {
   const container = view.dom.closest(".editor-scroll");
   if (!container || view.dom.offsetParent === null) return;
@@ -22,14 +21,10 @@ export function revealCaret(view: EditorView) {
 }
 
 /**
- * On a phone the keyboard comes up after the tap that put the caret in the
- * text: the web view shortens (KeyboardFit.swift) and a caret in the lower
- * half is left behind the keyboard - WebKit's own scroll-to-the-caret is
- * what KeyboardFit turns off, as it carried the whole page, title row and
- * all, off the top. So when the window gets shorter while the editor has
- * the focus, its caret is brought back into view: once at the resize and
- * once more after the keyboard's animation, whichever size WebKit reports
- * on the way.
+ * On a phone the keyboard shortens the web view after the tap, and WebKit's
+ * own scroll-to-caret is turned off (it carried the whole page off the top),
+ * so a shrinking window brings the caret back: at the resize and after the
+ * keyboard's animation.
  */
 export const keyboardRevealPlugin = $prose(
   () =>

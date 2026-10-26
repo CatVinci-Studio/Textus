@@ -1,15 +1,10 @@
-//! Pages of ours the app opens in the system browser. Each URL is fixed
-//! here rather than passed in, so the frontend can't send the browser
-//! anywhere else - except a link the reader follows in a document, which
-//! is held to the web and mail schemes (`web_link`).
+//! Pages the app opens in the system browser. Each URL is fixed here, so the
+//! frontend can't send the browser elsewhere; document links are held to web and mail.
 
 const SITE: &str = "https://textus.catvinci.com";
 
-/// The website's community page (Discord, and the QQ and WeChat groups) in
-/// the UI's `language` (a code of LANGS in src/i18n/langs.ts). Without one,
-/// /join picks the page from the browser's languages. The page, not an
-/// invite, so a changed invite or a new week's WeChat code needs no app
-/// update.
+/// The website's community page in the UI's `language`; without one, /join
+/// picks by the browser's languages. The page, not an invite, so changes need no update.
 pub fn community_url(language: Option<&str>) -> String {
     match language.and_then(language_dir) {
         Some(dir) => format!("{SITE}/{dir}community/"),
@@ -17,8 +12,7 @@ pub fn community_url(language: Option<&str>) -> String {
     }
 }
 
-/// The website's folder for a UI language (a code of LANGS in
-/// src/i18n/langs.ts): "" for English, which the site serves at its root.
+/// The website's folder for a UI language: "" for English, served at the root.
 fn language_dir(language: &str) -> Option<&'static str> {
     Some(match language {
         "en" => "",
@@ -35,10 +29,8 @@ fn language_dir(language: &str) -> Option<&'static str> {
     })
 }
 
-/// The clips on the website's tutorials page, one per lesson of the
-/// first-run tour that has an animation. The tour's "Watch the animation"
-/// links name one of these (TUTORIAL_CLIPS in src/onboarding/tutorial-steps.ts
-/// - change both), and the page has an element with each as its id.
+/// The clips on the website's tutorials page, each an element id there. Keep
+/// in step with TUTORIAL_CLIPS in tutorial-steps.ts.
 const TUTORIAL_CLIPS: &[&str] = &[
     "wysiwyg",
     "blocks",
@@ -53,9 +45,8 @@ const TUTORIAL_CLIPS: &[&str] = &[
     "memory",
 ];
 
-/// The website's video tutorials in the UI's `language` (English when there
-/// is none or it is unknown), at `clip` when one is named. None for a clip
-/// the page doesn't have.
+/// The website's video tutorials in the UI's `language` (English by default),
+/// at `clip` when named. None for a clip the page doesn't have.
 pub fn tutorials_url(clip: Option<&str>, language: Option<&str>) -> Option<String> {
     let dir = language.and_then(language_dir).unwrap_or("");
     let page = format!("{SITE}/{dir}tutorials/");
@@ -86,10 +77,8 @@ pub fn open_community(app: &tauri::AppHandle, language: Option<&str>) -> Result<
         .map_err(|e| e.to_string())
 }
 
-/// Settings › General › About Textus: the code, and the two places to
-/// talk with us there - by name, so the frontend can only pick one of
-/// these. Discord and QQ go through the website's redirects (/discord,
-/// /qq), so a changed invite needs no app update.
+/// Settings › About Textus links, by name so the frontend can only pick one.
+/// Discord and QQ go through the website's redirects, so invites can change.
 fn about_url(page: &str) -> Option<&'static str> {
     match page {
         "github" => Some("https://github.com/CatVinci-Studio/Textus"),
@@ -113,17 +102,14 @@ pub async fn open_about_link(app: tauri::AppHandle, page: String) -> Result<(), 
         .map_err(|e| e.to_string())
 }
 
-/// `url` if it is a web or mail link, as the system should be handed it.
-/// The document's author chose it, so anything else - file:, javascript:, a
-/// scheme some installed app registered - is refused rather than passed to
-/// the OS, which would launch whatever handles it.
+/// `url` if it is a web or mail link. Anything else (file:, javascript:, an
+/// app's custom scheme) is refused rather than handed to the OS.
 fn web_link(url: &str) -> Option<String> {
     let url = tauri::Url::parse(url).ok()?;
     matches!(url.scheme(), "http" | "https" | "mailto").then(|| url.to_string())
 }
 
-/// A link Ctrl/Cmd+clicked in a document (src/editor/markdown/
-/// link-click-plugin.ts).
+/// A link Ctrl/Cmd+clicked in a document.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn open_web_link(app: tauri::AppHandle, url: String) -> Result<(), String> {

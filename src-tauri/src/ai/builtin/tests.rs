@@ -186,9 +186,8 @@ fn aliases_are_unique_per_language_and_never_another_skills_name() {
             }
         }
     }
-    // The UI's own words for inline completion never label a skill;
-    // as an alias only the Chinese ones appear, on continue-story,
-    // where /续写 can only mean writing on.
+    // The UI's own words for inline completion never label a skill; only the
+    // Chinese ones appear as an alias, on continue-story.
     let completion = [
         "補完",
         "이어 쓰기",
@@ -558,9 +557,8 @@ fn messages_expand_by_name_alias_or_block() {
         want,
         "a full-width slash"
     );
-    // What the composer sends today (the body filled in from the skill
-    // list) and an empty block both become the full expansion, and
-    // expanding again changes nothing.
+    // What the composer sends and an empty block both become the full
+    // expansion, and expanding again changes nothing.
     let composer = format!("<selected-text>\nx\n</selected-text>\n\n<skill name=\"proofread\">\n{}\n</skill>\n\n第二段", find("proofread").unwrap().prompt);
     let expanded = expand_message(&composer, &skills, doc_zh(), "zh");
     assert_eq!(

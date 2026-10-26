@@ -1,7 +1,5 @@
-/* A picture still being made (pending-picture.ts): a frame in its shape,
-   three soft colours drifting under a passing sheen, after #221 by
-   Zhuohang Jiang. As wide as the picture will be once accepted
-   (.image-view), so nothing moves when it comes. */
+/* A picture still being made. As wide as the picture will be once
+   accepted, so nothing moves when it comes. */
 .pending-picture {
   position: relative;
   display: block;
@@ -173,10 +171,8 @@
   }
 }
 
-/* The chat's proposal card shows it small, as .agent-proposal-picture. */
-/* In the picture's own shape (its aspect-ratio set inline), as tall as the
-   picture will be on the card: a fixed 160x120 made every picture 4:3
-   until it came, then it jumped to its shape. */
+/* The chat's proposal card shows it small, in the picture's own shape (its
+   aspect-ratio set inline), so it doesn't jump when the picture comes. */
 .agent-proposal-picture-frame {
   /* Inline-block: a block's auto width fills the line, and the height
      would set no width from the ratio. */
@@ -196,9 +192,8 @@
   color: var(--editor-muted);
 }
 
-/* A picture being redone (pending-edit-plugin's redrawing): the old one
-   stays where it is, dimmed under the same passing sheen, until the new
-   one has come. Clipped to it, so the sheen stays on the picture. */
+/* A picture being redone: the old one stays, dimmed under the sheen, until
+   the new one comes. Clipped, so the sheen stays on the picture. */
 .pending-redraw {
   position: relative;
   display: inline-block;

@@ -2,9 +2,8 @@ import { plugins as pluginsIpc } from "../../platform/ipc";
 import { reloadPlugin } from "../manager";
 import { pluginsSnapshot } from "./plugin-records";
 
-/** Loads a developer's plugin again whenever its folder changes, while the
- *  returned function isn't called: its folder is looked at every
- *  `everyMs`. */
+/** Reloads a developer's plugin whenever its folder changes, checking every
+ *  `everyMs`, until the returned function is called. */
 export function watchDevPlugins(everyMs = 1500): () => void {
   const seen = new Map<string, number | null>();
   let busy = false;

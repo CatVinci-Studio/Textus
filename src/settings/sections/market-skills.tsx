@@ -6,8 +6,7 @@ import { errorText } from "../../utils/error-text";
 import { useSettings } from "../SettingsContext";
 import type { TextKey } from "../../i18n/strings";
 
-/** The error skill_install_catalog answers for a skill of that name the
- *  user has already (plugins/catalog.rs). */
+/** The error the backend gives for a skill of that name the user already has. */
 const SKILL_EXISTS = "SKILL_EXISTS";
 
 /** The catalog's skills whose name, description, author or names in any
@@ -27,19 +26,14 @@ export function searchSkills(list: SkillEntry[], query: string): SkillEntry[] {
   });
 }
 
-/** What the UI calls each mode. */
 const MODE_LABEL = {
   write: "agentModeWrite",
   review: "agentModeReview",
   create: "agentModeCreate",
 } as const satisfies Record<string, TextKey>;
 
-/**
- * The market's skills (Settings › Extensions › Get more): the skill
- * files textus-plugins' catalog lists, each installed into the global
- * skills folder - and so in the `/` menu of every document - with a
- * click. One the user has already (by name) says so instead.
- */
+/** The market's skills: the catalog's skill files, each installed with a
+ *  click into the global skills folder. One the user already has says so. */
 export function MarketSkills({
   t,
   catalog,

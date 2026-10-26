@@ -1,40 +1,12 @@
-/**
- * Storage writes this page has started but Rust hasn't answered yet, and
- * the way to wait for them before the window goes away.
- *
- * localStorage was synchronous: whatever had been set was kept, however
- * soon the window closed. The files Rust owns (docs/dev/storage.md) are
- * reached through IPC, which is not. Every settings, UI-state and history
- * change is sent as it is made (SettingsContext's persist), but a window
- * destroyed before Rust has taken it can still drop it - and one value is
- * held back on purpose: useZoom saves the zoom only once a pinch or wheel
- * burst has rested. `pagehide` doesn't help: a Tauri window closes without
- * firing it.
- *
- * So every close the frontend handles - the window's close request (its
- * close button, File > Close Window, Quit / Cmd+Q, which closes each window
- * in turn, the last window's close), the unsaved-changes prompt's Save and
- * Don't Save, closing the last tab, the detached chat closing - awaits
- * `flushPendingWrites()` before it lets the window be destroyed, and so
- * does installing an update (before the download too: on Windows the
- * installer ends the process inside it). Once Rust has the change, it is
- * written to disk on its own debounce or when the app exits (settings.rs's
- * flush_all).
- *
- * Two windows are destroyed by Rust with no close request, and can't wait:
- * a single-tab window dragged onto another window's tabs (useTabDragMerge
- * sends what's held back just before, so it lands first) and a detached
- * chat whose editor window closed (it holds nothing back - its only
- * setting, the pin, is sent at once - and its writes are already on their
- * way). macOS's Dock "Quit" and a logout end the app without asking any
- * window, as they skip the unsaved-changes prompt too.
- */
+/** Storage writes Rust hasn't answered yet. A Tauri window closes without
+ *  `pagehide`, so every close the frontend handles awaits
+ *  `flushPendingWrites()` before the window is destroyed. */
 
 const inFlight = new Set<Promise<unknown>>();
 const flushers = new Set<() => void>();
 
 /** How long a closing window waits at most: a wedged IPC must never keep a
- *  window from closing. Rust answers these in well under a millisecond. */
+ *  window from closing. */
 const FLUSH_TIMEOUT_MS = 2000;
 
 /** Remembers a storage write until it settles. Returns the same promise. */
@@ -54,13 +26,9 @@ export function onFlush(flush: () => void): () => void {
   return () => flushers.delete(flush);
 }
 
-/**
- * Sends every held-back write now and resolves once Rust has answered all
- * the writes this page started - or after `timeoutMs`, whichever is first.
- * Never rejects. The held-back writes go out synchronously, before the
- * first await, so a caller that can't wait (a window Rust is about to
- * destroy) still gets them on their way first.
- */
+/** Sends every held-back write now and resolves once Rust has answered all
+ *  writes this page started, or after `timeoutMs`. Never rejects. The
+ *  held-back writes go out before the first await, for callers that can't wait. */
 export async function flushPendingWrites(
   timeoutMs = FLUSH_TIMEOUT_MS,
 ): Promise<void> {
@@ -91,14 +59,9 @@ export async function flushPendingWrites(
 
 let flushOnHideInstalled = false;
 
-/**
- * Also sends the held-back writes whenever the page is hidden or unloads,
- * where nothing can be awaited: iOS sends an app to the background (where
- * it may be ended without notice) with only a visibility change, and a
- * reload fires `pagehide` rather than a close request. Anything already in
- * flight lands on its own while the app still runs. Called once at startup
- * (main.tsx); calling it again does nothing.
- */
+/** Also sends the held-back writes whenever the page is hidden or unloads:
+ *  iOS backgrounds an app with only a visibility change, and a reload fires
+ *  `pagehide` rather than a close request. Idempotent. */
 export function flushWhenHidden(): void {
   if (flushOnHideInstalled) return;
   flushOnHideInstalled = true;
@@ -108,7 +71,6 @@ export function flushWhenHidden(): void {
   window.addEventListener("pagehide", () => void flushPendingWrites());
 }
 
-/** Forgets everything, for tests. */
 export function resetPendingWritesForTests(): void {
   inFlight.clear();
   flushers.clear();

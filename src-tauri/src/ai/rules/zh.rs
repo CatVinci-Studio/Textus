@@ -1,7 +1,5 @@
-//! Chinese rules (CATALOGUE.md §3.2): the region-neutral ones for both
-//! scripts, and the mainland (GB/T) ones for zh-Hans-CN and zh-Hant-CN.
-//! Taiwan and Hong Kong rules are in tw.rs. Messages are in Chinese, in the
-//! script of the text.
+//! Chinese rules: the region-neutral ones for both scripts, and the mainland
+//! (GB/T) ones. Messages are in Chinese, in the script of the text.
 
 use super::stats::minority;
 use super::text::*;

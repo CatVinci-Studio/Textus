@@ -1,10 +1,8 @@
-/* Self-dismissing message from an on-demand AI trigger (MilkdownEditor's
-   showAiNotice) - "no issues found", "not signed in", ... */
+/* Self-dismissing message from an on-demand AI trigger. */
 .ai-notice {
   position: fixed;
   bottom: 20px;
-  /* Centred by its margins rather than a transform, which its entrance
-     (design-system.css) needs for itself. */
+  /* Centred by its margins: its entrance needs the transform. */
   left: 0;
   right: 0;
   width: fit-content;
@@ -28,10 +26,7 @@ body {
 }
 
 /* The window never scrolls as a whole. `clip`, not `hidden`: a hidden box
-   still scrolls when something in it is focused or scrolled into view past
-   its edge, which shifted the whole window sideways. And no rubber band:
-   a swipe that reached the end of the sidebar's list bounced the whole
-   page on a Mac. */
+   still scrolls to focused content. No rubber band either. */
 html,
 body {
   overscroll-behavior: none;

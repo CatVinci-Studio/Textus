@@ -1,15 +1,6 @@
-//! RTF to Markdown: paragraphs, bold, italic and strikethrough, headings
-//! (from outline levels or "heading N" styles), list items, tables, links
-//! and footnotes. RTF is what TextEdit
-//! saves by default and what Scrivener and WordPad export, so it is often
-//! the format a writer's older drafts are in.
-//!
-//! MarkItDown has no RTF reader; this is the format's own model, kept small.
-//! An RTF file is groups `{…}` of control words (`\b`, `\par`, `\u8217`) and
-//! text. Each group inherits its parent's state (bold, the destination its
-//! text goes to, the paragraph's properties) and restores it on `}`; groups
-//! that hold no reading text - the font table, pictures, anything marked
-//! `\*` - are skipped whole.
+//! RTF to Markdown: paragraphs, emphasis, headings, list items, tables, links
+//! and footnotes. Groups inherit their parent's state and restore it on `}`;
+//! groups holding no reading text (font table, pictures, `\*`) are skipped.
 
 use super::markdown::{self, Blocks, Inline, Marks};
 use std::collections::HashMap;

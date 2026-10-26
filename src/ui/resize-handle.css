@@ -1,8 +1,6 @@
-/* A side panel's resize handle (ResizeHandle.tsx): a strip a few px wide
-   astride the panel's edge, invisible until the pointer or focus finds it.
-   Each panel places its own (top, left/right). Under a drag the width
-   follows the pointer with no transition - the panel is in the hand; only
-   the handle's own colour fades. */
+/* A side panel's resize handle: a strip astride the panel's edge, invisible
+   until the pointer or focus finds it. Under a drag the width follows the
+   pointer with no transition. */
 .resize-handle {
   position: absolute;
   bottom: 0;

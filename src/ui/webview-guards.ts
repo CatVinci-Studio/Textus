@@ -1,18 +1,7 @@
 /**
- * Turns off the parts of the browser engine that show through in a desktop
- * app. Release builds only - in development both are how you inspect and
- * reload the page.
- *
- * - The engine's own right-click menu (WebKitGTK's "Reload", WebView2's
- *   Back/Refresh/Print) appeared anywhere the app hadn't drawn its own: the
- *   sidebar, tab bar, Settings, chat. Text fields keep it - that is where
- *   Cut/Copy/Paste and spelling suggestions live. The editor already shows
- *   its own menu (MilkdownEditor) and prevents this one itself.
- * - F5 and Ctrl/Cmd+R reload the page, which throws away every open tab's
- *   unsaved edits and undo history; draft autosave only softens that.
- *   Bubble phase, after useGlobalShortcuts' capture-phase handler (which
- *   skips default-prevented events), so a user who binds Ctrl+R to a
- *   command in Settings still gets it.
+ * Turns off the engine's own right-click menu (text fields keep it) and the
+ * F5 / Ctrl+R reload, which would discard unsaved edits. Release builds only.
+ * Bubble phase, so a user's own Ctrl+R binding still runs.
  */
 export function installWebviewGuards(): void {
   if (import.meta.env.DEV) return;

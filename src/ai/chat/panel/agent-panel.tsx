@@ -15,27 +15,16 @@ import "./agent-panel.css";
 import "../inline-chat.css";
 
 /**
- * The docked Agent panel on the right of the editor window - the full
- * conversation's default home (the detached window remains, one click away,
- * for a second monitor).
- *
- * App owns only the frame: whether it's open, how wide, and the DOM element
- * to render into. The conversation itself stays where it already lives, in
- * each tab's editor (MilkdownEditor), which portals its own chat into the
- * frame while it is the active tab. So switching tabs switches the
- * conversation with the document, and the panel talks to its editor
- * directly - none of the detached window's context pushing between webviews,
- * which is where most of that surface's bugs came from.
+ * The docked Agent panel's frame: open, width, tab and the element to render
+ * into. Each tab's editor portals its own chat into it while active, so the
+ * conversation switches with the document.
  */
 export interface AgentPanelFrame {
   setOpen: (open: boolean) => void;
   /** The element the active editor portals into; null while closed. */
   container: HTMLElement | null;
-  /** Which of the panel's tabs shows. The frame's, not each editor's:
-   *  every document tab draws its own panel, and one kept per editor put
-   *  the panel back on Conversation whenever another document came to
-   *  the front - opening a new library entry from Memory did exactly that,
-   *  hiding the entry just made. */
+  /** Which of the panel's tabs shows. The frame's, not each editor's, so
+   *  bringing another document to the front doesn't reset it. */
   tab: AgentPanelTab;
   setTab: (tab: AgentPanelTab) => void;
 }
@@ -81,8 +70,7 @@ export function useAgentPanelState() {
     // "ask about this note" - wants the conversation.
     if (next) setTab("chat");
   }, []);
-  // Remembered once a drag lets go (ResizeHandle's `done`), not on every
-  // frame of it.
+  // Remembered once a drag lets go, not on every frame of it.
   const setWidth = useCallback((next: number, persist = true) => {
     const clamped = clampWidth(next);
     setWidthState(clamped);
@@ -141,7 +129,7 @@ export function sheetRestingPlace(
 
 type SheetPlace = ReturnType<typeof sheetRestingPlace>;
 
-/** The half stop's share of the screen - ai-sheet.css's height for it. */
+/** The half stop's share of the screen. Keep in step with ai-sheet.css. */
 const SHEET_HALF = 0.55;
 
 /** The geometry of one gesture, read when it starts: nothing is measured
@@ -183,8 +171,8 @@ function pinnedParts(sheet: HTMLElement): HTMLElement[] {
   );
 }
 
-/** Lays the sheet out at full height and shows it at `offset` - its
- *  transform alone moves from here on (ai-sheet.css, data-carried). */
+/** Lays the sheet out at full height and shows it at `offset`; its
+ *  transform alone moves from here on. */
 function carrySheet(carry: SheetCarry, offset: number) {
   const { sheet } = carry;
   sheet.dataset.carried = "";
@@ -193,10 +181,8 @@ function carrySheet(carry: SheetCarry, offset: number) {
   sheet.style.setProperty("--sheet-lift", `${liftAt(carry, offset)}px`);
 }
 
-/** Back to the stop its class lays it out at. Marked settled first: with
- *  data-carried gone the entrance animation was the sheet's animation again
- *  - a new one, which replayed the slide up from the bottom (a flash, under
- *  reduced motion) after every drag (ai-sheet.css). */
+/** Back to the stop its class lays it out at. Marked settled first, or the
+ *  entrance animation replays after every drag. */
 function setSheetDown(sheet: HTMLElement) {
   sheet.dataset.settled = "";
   delete sheet.dataset.carried;
@@ -211,21 +197,9 @@ function rubberBand(excess: number): number {
 }
 
 /**
- * The handle on top of the panel when it is a bottom sheet (phone widths,
- * mobile/styles). The sheet follows the finger while it is dragged and
- * settles at full height, half, or closed (sheetRestingPlace); a tap toggles
- * half and full.
- *
- * All of that moves the sheet by its transform - a height that changed on
- * every frame reflowed the whole conversation under the finger. While
- * carried it is laid out at full height and moved down to where it shows;
- * the composer is lifted by as much, so it stays on the bottom edge rather
- * than sliding under it. Only once a settle has landed does the sheet go
- * back to the height its stop lays it out at, in the same frame.
- *
- * The press is default-prevented so the handle never takes focus: focus
- * moving off the composer dropped the keyboard, and the web view shrinking
- * under the finger (KeyboardFit.swift) cancelled the drag.
+ * The handle on top of the panel when it is a bottom sheet: drag to full,
+ * half or closed, tap to toggle. Moves by transform, since a changing height
+ * reflows the conversation. Never takes focus, or the keyboard drops.
  */
 export function AgentPanelSheetGrip({
   full,
@@ -278,7 +252,7 @@ export function AgentPanelSheetGrip({
     const target = offsetOf(carry, to);
     const land = () => {
       settling.current = null;
-      // Already off the screen: no second way down (ai-sheet.css).
+      // Already off the screen: no second way down.
       if (to === "closed") carry.sheet.dataset.dismissed = "";
       flushSync(() => {
         if (to === "closed") onClose();
@@ -291,7 +265,7 @@ export function AgentPanelSheetGrip({
     const timing =
       to === "closed"
         ? {
-            // An exit's 70% of the way in (motion.css, --dur-sheet-exit).
+            // An exit's 70% of the way in.
             duration: duration("--dur-sheet") * 0.7,
             easing: "--ease-in" as const,
           }
@@ -392,8 +366,7 @@ export function AgentPanelSheetGrip({
           d.carry.max,
           d.velocity,
         );
-        // A fast fling down from full height goes one stop, to half - it
-        // closed the sheet when the fling had carried it below 70%.
+        // A fast fling down from full height goes one stop, to half.
         if (
           place === "closed" &&
           d.velocity > FLICK &&

@@ -18,15 +18,8 @@ export {
   CustomProviderPanel,
 } from "./provider-auth";
 
-// General > AI Login Settings: two compact disclosure rows (provider, then
-// credentials) plus the per-provider account/API-key/custom panels.
-
-/// Two compact rows: the first opens a searchable provider list; the second
-/// independently expands login/API-key details for the active provider.
-/// The tutorial's "Connect your AI" lesson embeds this same panel:
-/// `expandCredentials` keeps the credentials row open (also after a provider
-/// switch) and `onActiveConnectedChange` reports whether the selected
-/// provider is connected, so the lesson can't drift from Settings.
+/// Two compact rows: a searchable provider list, then the active provider's
+/// credentials. The tutorial's connect lesson embeds this same panel.
 export function ProviderListPanel({
   t,
   expandCredentials = false,
@@ -53,8 +46,7 @@ export function ProviderListPanel({
     onActiveConnectedChange,
   );
 
-  // catalog is already in scope here, so this stays a plain find:
-  // useActiveProvider would subscribe to the catalog a second time.
+  // A plain find: useActiveProvider would subscribe to the catalog again.
   const active = catalog.find((e) => e.id === settings.aiProvider);
   const usesAccountStatus = active?.auth.includes("oauth") ?? false;
   const statusLabel =

@@ -1,6 +1,5 @@
-/* The whole height of the sidebar, so the empty space under the tree is
-   the tree's: a right-click there makes something in its root, and a drag
-   dropped there goes into the root. */
+/* The whole height of the sidebar, so a right-click or drop on the empty
+   space below the tree goes to its root. */
 .file-tree {
   display: flex;
   flex-direction: column;
@@ -136,9 +135,8 @@
   opacity: 0.4;
 }
 
-/* Dragging a row (FileTree's drag): the folder it would go into, and the
-   name under the pointer. Over the tree's own empty space it goes into
-   the root. */
+/* Dragging a row: the folder it would go into, and the name under the
+   pointer. */
 .tree-body {
   flex: 1;
   border-radius: var(--radius-control);
@@ -164,9 +162,7 @@
   white-space: nowrap;
 }
 
-/* The file-name search at the top of the Files tab (FileSearch.tsx). */
-/* The box, and the filter beside it (design-system.css draws the filter
-   as a compact select). */
+/* The file-name search at the top of the Files tab. */
 .file-search-bar {
   display: flex;
   align-items: center;
@@ -224,8 +220,7 @@
   display: none;
 }
 
-/* A result is two lines: the name, and under it the folder it is in -
-   beside the name, a sidebar's width left neither readable. */
+/* A result is two lines: the name, then its folder. */
 .file-search-row {
   align-items: flex-start;
 }
@@ -244,8 +239,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: left;
-  /* Cut from the start: the folder's end is the useful part
-     ("…/chapters/part-2"). The <bdi> inside keeps its text in order. */
+  /* Cut from the start: the folder's end is the useful part. The <bdi>
+     inside keeps its text in order. */
   direction: rtl;
   font-size: var(--text-xs);
   opacity: 0.9;

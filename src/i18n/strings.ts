@@ -19,7 +19,7 @@ type English = typeof en;
 export type StringKey = keyof English;
 
 /** The UI's strings in one language: English's keys, each a string or, for
- *  a count, the plural forms (plural.ts). */
+ *  a count, the plural forms. */
 export type Strings = {
   [K in StringKey]: English[K] extends string ? string : Plural;
 };
@@ -33,17 +33,15 @@ export type TextKey = {
  *  left out shows in English. */
 export type Translation = Partial<Strings>;
 
-/** A language's file (locales/<code>.ts): its translations, and whether it
- *  claims to translate every key - strings.test.ts holds a complete one to
- *  that, so a key added later can't go untranslated unnoticed. */
+/** A language's file: its translations, and whether it claims to translate
+ *  every key (a test holds a complete one to that). */
 interface Locale {
   default: Translation;
   complete: boolean;
 }
 
-/** Every language's file but English's, loaded when the UI is first in it
- *  (lazy-module.ts). English is what a missing key falls back to, so it is
- *  always there; each other language is a chunk of its own. */
+/** Every language's file but English's, loaded when the UI is first in it.
+ *  English is the fallback, so it is always bundled. */
 const files = import.meta.glob<Locale>(["./locales/*.ts", "!./locales/en.ts"]);
 
 const LOCALES = new Map<Lang, LazyModule<Locale>>([
@@ -69,11 +67,8 @@ export function localeLoaded(lang: Lang): boolean {
 
 const resolved = new Map<Lang, Strings>();
 
-/** The strings for `lang`: its translations over English, so a key it
- *  hasn't translated yet - or a whole language that has none - shows in
- *  English instead of nothing. An unknown code (a newer build's, a hand
- *  edit) gets English, and so does a language whose file hasn't loaded
- *  yet (loadLocale - main.tsx loads the UI's before the first render). */
+/** The strings for `lang`: its translations over English, so an untranslated
+ *  key, unknown code or not-yet-loaded file shows English instead of nothing. */
 export function resolveStrings(lang: Lang): Strings {
   const code = isLang(lang) ? lang : "en";
   const cached = resolved.get(code);

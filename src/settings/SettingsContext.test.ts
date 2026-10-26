@@ -70,7 +70,7 @@ describe("settings from a build with features since taken out", () => {
   beforeEach(() => localStorage.clear());
 
   it("load as before, the old fields doing nothing", () => {
-    // 1.2.0-rc.1's Quick Notes and open-at-login fields.
+    // An older build's Quick Notes and open-at-login fields.
     localStorage.setItem(
       SETTINGS_KEY,
       JSON.stringify({

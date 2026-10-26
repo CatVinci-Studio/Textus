@@ -1,19 +1,7 @@
 /**
- * Pasted HTML as the page it was copied from meant it (1.2.2):
- *
- * - Google Docs and Word for the web write bold, italic and struck text
- *   as styles on a span (`font-weight:700`), which a Markdown document has
- *   no use for - so they came in plain. They become <strong>, <em> and
- *   <del>. Word for the web's headings are `<p role="heading">`.
- * - Mail writes its blank lines as paragraphs of their own - Outlook's
- *   `<p><o:p>&nbsp;</o:p></p>`, Apple Mail's and Docs' `<br>` between
- *   blocks - which came in as empty paragraphs, a page of them in a long
- *   thread. They go: the paragraphs are apart already.
- * - Outlook's Safe Links wrap every link in a redirect; the link is the
- *   address it redirects to.
- *
- * What Textus copies itself (ProseMirror's `data-pm-slice`) is left as it
- * is.
+ * Pasted HTML as its page meant it: Docs/Word style spans become <strong>,
+ * <em>, <del>; mail's empty spacer paragraphs go; Outlook Safe Links become
+ * their real address. Textus's own copies (`data-pm-slice`) are left alone.
  */
 
 const BLOCKS = "p,div,li,blockquote,h1,h2,h3,h4,h5,h6,section,article";
@@ -78,7 +66,7 @@ export function cleanPastedHtml(html: string): string {
 
   for (const el of root.querySelectorAll<HTMLElement>("[style]")) {
     if (el.closest("pre,code,h1,h2,h3,h4,h5,h6")) continue;
-    // Docs' `<b style="font-weight:normal">` round everything: not bold.
+    // Docs wraps everything in `<b style="font-weight:normal">`: not bold.
     if (/^(B|STRONG|EM|I|DEL|S)$/.test(el.tagName)) continue;
     const marks = styleMarks(el.style).filter((m) => !el.closest(m));
     if (!marks.length || (el.textContent ?? "").trim() === "") continue;

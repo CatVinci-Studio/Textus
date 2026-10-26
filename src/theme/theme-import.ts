@@ -1,13 +1,9 @@
 import { fs, themes } from "../platform/ipc";
 import type { UserThemeMeta } from "../settings/SettingsContext";
 
-/// Typora theme files commonly `@import` a base stylesheet from the same
-/// theme folder (e.g. `phycat-orange.css` importing `./phycat/phycat.light.css`)
-/// and reference local font/image files via relative `url(...)`. Neither
-/// resolves when the CSS text is injected into a runtime `<style>` tag (no
-/// base URL to resolve against), so this inlines both: `@import`s are
-/// recursively substituted with their target file's content, and local
-/// `url(...)` assets are embedded as base64 data URIs.
+/// Typora themes often `@import` a sibling stylesheet and use relative
+/// `url(...)` assets, neither of which resolves in a runtime `<style>`. So
+/// imports are inlined recursively and local assets embedded as data URIs.
 
 const IMPORT_RE =
   /@import\s+(?:url\(\s*["']?([^"')]+)["']?\s*\)|["']([^"']+)["'])\s*;/g;
@@ -35,10 +31,8 @@ function dirnameOf(path: string): string {
   return idx >= 0 ? path.slice(0, idx) : "";
 }
 
-// baseDir is an OS path (either separator - a Unix split keeps its leading
-// "" element, which the join below turns back into the root "/"; a Windows
-// split starts at the drive letter); rel comes from CSS, so always "/".
-// Joining with "/" is fine on Windows, whose APIs accept both separators.
+// baseDir is an OS path with either separator; rel comes from CSS, so "/".
+// Windows APIs accept "/" too.
 function resolvePath(baseDir: string, rel: string): string {
   const stack = baseDir ? baseDir.split(/[\\/]/) : [];
   for (const part of rel.split("/")) {
@@ -107,17 +101,13 @@ async function inlineFile(path: string, seen: Set<string>): Promise<string> {
   return inlineLocalUrls(withImports, baseDir);
 }
 
-/// Reads a theme CSS file, inlining any local `@import`s and font/image
-/// assets so the result is a single self-contained stylesheet safe to inject
-/// into a `<style>` tag at runtime.
+/// Reads a theme CSS file as one self-contained stylesheet.
 export async function importThemeCss(path: string): Promise<string> {
   return inlineFile(path, new Set());
 }
 
-/// Saves a self-contained stylesheet as a user theme - a new one, or over
-/// the theme `replacing` names (a gallery theme's update) - and returns its
-/// settings entry, for `withUserTheme`. Import CSS… and the theme gallery both
-/// install through here.
+/// Saves a self-contained stylesheet as a user theme, new or over `replacing`
+/// (a gallery update), and returns its settings entry.
 export async function saveUserTheme(
   css: string,
   meta: Omit<UserThemeMeta, "id" | "hasDark">,

@@ -4,12 +4,9 @@
 
 use super::*;
 
-/// One live fragment of an in-flight `ai_agent_message`, pushed to the
-/// invoking window over a Tauri channel while the agent loop runs. Purely
-/// additive display data: the command still resolves with the complete turn
-/// list, which remains the authoritative result the frontend appends to its
-/// history - a dropped or ignored event costs liveness, never correctness.
-/// Generated into src/platform/bindings/ai-agent.ts.
+/// One live fragment of an in-flight `ai_agent_message`. Display only: the
+/// command still resolves with the complete turn list, so a dropped event costs
+/// liveness, never correctness.
 #[derive(Clone, Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(
@@ -26,9 +23,8 @@ pub enum StreamEvent {
     ToolArgsDelta { call_id: String, delta: String },
     /// A completed intermediate turn (ToolCall/ToolResult) as it lands.
     Turn { turn: AgentTurn },
-    /// The step being streamed came back garbled and is asked for again
-    /// (aicompat's run_agent_loop): drop what it streamed - its prose and
-    /// its proposal drafts - and show the new attempt instead.
+    /// The step being streamed came back garbled and is asked for again: drop
+    /// what it streamed and show the new attempt instead.
     Retry,
     /// The model is thinking: a fragment of its reasoning, or "" when the
     /// provider only says that it is. Shown above the reply, never kept.
@@ -45,11 +41,9 @@ pub enum StreamEvent {
     },
 }
 
-/// Forwards a provider-level fragment onto the frontend channel. Send
-/// failures are ignored deliberately - a closed webview mid-request must
-/// not fail the agent loop, which still returns turns for the history.
-/// A native search citation goes to the request's sources instead (it is
-/// shown with the finished reply).
+/// Forwards a provider-level fragment onto the frontend channel. Send failures
+/// are ignored: a closed webview must not fail the agent loop. A native search
+/// citation goes to the request's sources instead.
 pub(crate) fn forward(
     channel: &Channel<StreamEvent>,
     web: &WebPlan,
@@ -82,8 +76,8 @@ pub(crate) fn forward(
     let _ = channel.send(event);
 }
 
-/// Forwards what the agent loop reports onto the frontend channel, each
-/// turn as the frontend's history keeps it (see `forward` on send errors).
+/// Forwards what the agent loop reports onto the frontend channel, each turn as
+/// the frontend's history keeps it.
 pub(crate) fn report(channel: &Channel<StreamEvent>) -> impl FnMut(LoopEvent<'_>) + '_ {
     move |event| {
         let event = match event {

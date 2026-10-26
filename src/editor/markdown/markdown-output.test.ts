@@ -369,8 +369,7 @@ describe("an image's width", () => {
 });
 
 describe("an edited block is saved so it reads back the same", () => {
-  // Each from the save round trip on real files (docs/dev/saving.md): the
-  // edit, then the block as the serializer writes it.
+  // Each is an edit, then the block as the serializer writes it.
 
   /** Opens `markdown`, makes `edit`, and saves the whole document. */
   async function savedAfter(

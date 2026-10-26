@@ -1,14 +1,6 @@
-//! A plugin's own data, in two places it alone reaches:
-//!
-//! - global: `<config>/textus/plugins/<id>/`, beside the global agent.md
-//!   and skills - one for every document;
-//! - project: `<folder>/.textus/plugins/<id>/`, in the folder the window
-//!   has open - with `project.data`, as it writes into the user's folder.
-//!
-//! Each holds keys (`kv/`, a file per key, so a write rewrites that key
-//! alone - version history kept every snapshot in one file and rewrote it
-//! all on each save) and files of the plugin's own (`files/`). Each is held
-//! to the quota, and nothing reaches outside it.
+//! A plugin's own data, in a global place and a project one (with
+//! `project.data`), each with keys (`kv/`, a file per key so a write touches one
+//! key) and files (`files/`), held to a quota.
 
 use super::access::inside;
 use super::require_id;
@@ -59,10 +51,8 @@ fn place(
     }
 }
 
-/// An uninstalled plugin's global storage (`ctx.storage.global`), to the
-/// Trash where there is one: what it kept may be the user's own notes. A
-/// project's `.textus/plugins/<id>` stays - it belongs to that folder, and
-/// may be in its version control.
+/// An uninstalled plugin's global storage goes to the Trash where there is one,
+/// since it may hold the user's notes. A project's copy stays with that folder.
 pub(super) fn forget_global(app: &tauri::AppHandle, id: &str) -> Result<(), String> {
     require_id(id)?;
     let place = crate::ai::workspace::global_agent_dir(app)?
@@ -81,8 +71,8 @@ fn project_place(root: &Path, id: &str) -> PathBuf {
     root.join(".textus").join("plugins").join(id)
 }
 
-/// A key as a file name: letters, digits, `-` and `_` as they are, every
-/// other byte as `%XX` - so no key names a path, and each comes back.
+/// A key as a file name: letters, digits, `-` and `_` kept, other bytes as
+/// `%XX`, so no key names a path and each comes back.
 fn key_file(key: &str) -> Result<String, String> {
     if key.is_empty() || key.len() > MAX_KEY_BYTES {
         return Err(format!("A key is 1 to {MAX_KEY_BYTES} bytes."));
@@ -300,8 +290,8 @@ pub fn plugin_store_delete(
     }
 }
 
-/// How much a plugin keeps in each place - Settings shows it, and empties
-/// it on Clear data. `root` is the open folder, for the project's.
+/// How much a plugin keeps in each place, for Settings. `root` is the open
+/// folder, for the project's.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_usage(
@@ -320,8 +310,8 @@ pub fn plugin_store_usage(
     Ok((size_of(&global), project))
 }
 
-/// Empties one of a plugin's places (Settings › its page › Clear data).
-/// Asked by the user, not the plugin: it may be off.
+/// Empties one of a plugin's places (Clear data). Asked by the user, not the
+/// plugin, which may be off.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_clear(

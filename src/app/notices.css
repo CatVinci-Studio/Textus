@@ -1,5 +1,4 @@
-/* Bottom-right notice when a newer release exists - update runs only when
-   the user clicks, and the app relaunches itself afterwards. */
+/* Bottom-right notice when a newer release exists. */
 .update-toast {
   position: fixed;
   right: 16px;
@@ -21,9 +20,8 @@
   color: var(--editor-muted, inherit);
 }
 
-/* Startup notice that a crash/force-quit's unsaved content was recovered as
-   extra tabs (see draft-autosave.ts) - opposite corner from .update-toast so
-   the two never overlap if both happen to show at once. */
+/* Startup notice that unsaved content was recovered, in the opposite corner
+   from .update-toast so the two never overlap. */
 .draft-restored-toast {
   position: fixed;
   left: 16px;

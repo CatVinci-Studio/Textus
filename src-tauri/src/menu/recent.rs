@@ -2,8 +2,8 @@
 
 use super::*;
 
-/// How a recent folder reads in the submenu: its path ending in a
-/// separator, which sets it apart from the files below it in any language.
+/// How a recent folder reads in the submenu: its path ending in a separator,
+/// which sets it apart from files in any language.
 pub(crate) fn folder_menu_text(path: &str) -> String {
     let sep = if path.contains('\\') && !path.contains('/') {
         '\\'
@@ -15,8 +15,8 @@ pub(crate) fn folder_menu_text(path: &str) -> String {
 }
 
 pub(crate) fn abbreviate_home(path: &str) -> String {
-    // Windows has no HOME; without USERPROFILE every recent file there shows
-    // its full C:\Users\... prefix and the submenu is unreadable.
+    // Windows has no HOME; without USERPROFILE every recent file would show its
+    // full C:\Users\... prefix.
     let home = std::env::var("HOME")
         .or_else(|_| std::env::var("USERPROFILE"))
         .ok();
@@ -28,10 +28,8 @@ pub(crate) fn abbreviate_home(path: &str) -> String {
     path.to_string()
 }
 
-/// Refill the Open Recent submenu from the persisted lists, most recent
-/// first: the folders, then the files. Menus may only be mutated on the
-/// main thread, and the caller may be a command on any thread - hence the
-/// hop.
+/// Refill the Open Recent submenu, folders then files, most recent first. Menus
+/// may only change on the main thread, hence the hop.
 pub(crate) fn rebuild_recent_menu(app: &tauri::AppHandle) {
     let folders = commands::recents::read_recent_folders(app);
     let list = commands::recents::read_recent_files(app);

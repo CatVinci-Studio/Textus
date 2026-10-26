@@ -1,12 +1,9 @@
 import type { WebSource } from "./types";
 
 /**
- * Web citations in text Textus AI proposes for the document. The model
- * marks a fact taken from the web with its source's number as a link to the
- * page - `[2](https://…)` (src-tauri ai/web/mod.rs asks for exactly that) -
- * so a proposal says which page backs what without the chat around it. On
- * accepting, they become Markdown footnotes or are left out, as the card's
- * "Add sources as footnotes" says (settings.sourcesAsFootnotes).
+ * Web citations in text Textus AI proposes: the model marks a web fact with
+ * its source's number as a link, `[2](https://…)`. On accept they become
+ * footnotes or are left out, per settings.sourcesAsFootnotes.
  */
 const CITATION = /[ \t]?\[(\d{1,3})\]\((https?:\/\/[^)\s]+)\)/g;
 
@@ -20,8 +17,7 @@ export function withoutCitations(text: string): string {
   return text.replace(CITATION, "");
 }
 
-/** One page, one footnote: an address without its fragment or trailing
- *  slash (as ai/web/sources.rs's same_page). */
+/** One page, one footnote: an address without its fragment or trailing slash. */
 function samePage(url: string): string {
   return url.split("#")[0].replace(/\/+$/, "");
 }
@@ -41,10 +37,9 @@ export function footnoteLabels(markdown: string): Set<string> {
 }
 
 /**
- * The text with each citation as a footnote reference, and the footnote
- * definitions they need - one per page, numbered on from the document's
- * own footnotes, titled from the conversation's sources where the page is
- * one of them.
+ * The text with each citation as a footnote reference, plus the definitions
+ * they need: one per page, numbered on from the document's own, titled from
+ * the conversation's sources.
  */
 export function citationsAsFootnotes(
   text: string,

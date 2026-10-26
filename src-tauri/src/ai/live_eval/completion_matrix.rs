@@ -1,11 +1,6 @@
-//! The completion matrix: the inline autocomplete in every tone preset,
-//! across languages and block types (mid-sentence, after a sentence, list
-//! item, table cell, heading, blockquote, code), with after-text, and the
-//! manual trigger's alternative candidates.
-//!
-//! The before-text is what the editor actually sends: ProseMirror's
-//! textBetween with blocks joined by blank lines - plain text, no Markdown
-//! markers (ghost-text-plugin.ts's completionContext).
+//! The completion matrix: the inline autocomplete in every tone preset, across
+//! languages and block types, with after-text, and the manual trigger's
+//! alternatives. The before-text is plain text, as the editor sends it.
 
 use super::checks::{self, Lang};
 use super::harness::{self, Checks, Record};
@@ -16,8 +11,8 @@ use crate::ai::client::{
 use aicompat::providers::anthropic::AnthropicAuth;
 use serde_json::json;
 
-/// src/ai/writing/completion-style.ts's TONE_DIRECTIVES, word for word -
-/// `tone_directives_match_the_frontend` below keeps the two in step.
+/// The frontend's TONE_DIRECTIVES, word for word; a test below keeps them in
+/// step.
 pub const TONES: &[(&str, Option<&str>)] = &[
     ("default", None),
     ("formal", Some("Write in a formal, polished tone.")),
@@ -263,10 +258,8 @@ pub fn all_cases() -> Vec<CompletionCase> {
         .space(true),
     );
 
-    // A code block, with the hint the editor sends since round 1 (the old
-    // "paragraph" variant is gone: the editor no longer sends it, and only
-    // a code block may take a multi-line completion - client.rs's
-    // clean_reply).
+    // A code block, with the hint the editor sends: only a code block may take a
+    // multi-line completion.
     let code = "def average_replay_time(samples):\n    if not samples:\n        return 0.0\n    total = 0\n    for s in samples:\n        ";
     let mut c = CompletionCase::new("code/python-code-block", Lang::En, code, CODE_BLOCK_HINT)
         .title("Sync engine notes", &["Sync engine notes", "Design"]);
@@ -335,7 +328,7 @@ pub fn all_cases() -> Vec<CompletionCase> {
     cases
 }
 
-/// ghost-text-plugin.ts's stripEcho + tidySuggestion: what the user sees.
+/// The frontend's stripEcho + tidySuggestion: what the user sees.
 pub(super) fn shown(before: &str, raw: &str) -> String {
     let b: Vec<char> = before.chars().collect();
     let r: Vec<char> = raw.chars().collect();
@@ -347,8 +340,8 @@ pub(super) fn shown(before: &str, raw: &str) -> String {
             break;
         }
     }
-    // src/utils/cjk.ts's isCjk - kana, ideographs and CJK punctuation, but
-    // not Hangul: Korean spaces its words, and the editor keeps the space.
+    // The frontend's isCjk: kana, ideographs and CJK punctuation, but not Hangul,
+    // since Korean spaces its words.
     let last_cjk = before.chars().last().is_some_and(|c| {
         matches!(c,
             '\u{3000}'..='\u{30ff}'
@@ -393,8 +386,7 @@ fn check_one(case: &CompletionCase, raw: &str, text: &str, checks: &mut Checks) 
     checks.expect("no meta-commentary", meta.is_none(), || {
         format!("contains {:?}", meta.unwrap_or_default())
     });
-    // A trailing line break counts: Tab inserts it too ("率\n\n" in a table
-    // cell passed while this check trimmed it).
+    // A trailing line break counts: Tab inserts it too.
     if case.block != "paragraph" || !case.long {
         checks.expect("no line break", !text.contains('\n') || case.code, || {
             "line break in output".into()
@@ -472,7 +464,7 @@ fn check_one(case: &CompletionCase, raw: &str, text: &str, checks: &mut Checks) 
 }
 
 /// The request as ai_complete builds it: the prompt, plus the style profile
-/// when the project has one (add_writing_context).
+/// when the project has one.
 pub fn request_for(case: &CompletionCase) -> (String, String, Option<&'static str>) {
     let hints = CompletionHints {
         title: case.title.map(str::to_string),

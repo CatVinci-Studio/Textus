@@ -1,12 +1,6 @@
-//! A pull parser over one XML part (an OOXML or EPUB part), shaped for the
-//! recursive descent docx.rs and pptx.rs do: every element arrives as an
-//! `Open`, every `Open` - an empty `<w:br/>` included - is answered by one
-//! `Close`, and a reader that isn't interested in an element calls `skip` and
-//! is handed the next sibling.
-//!
-//! Names are local names. OOXML prefixes are only conventionally `w`/`a`/`p`
-//! (a file may bind the namespace to any prefix), so matching `w:t` would
-//! silently read nothing from such a file.
+//! A pull parser over one XML part: every element arrives as an `Open`
+//! answered by one `Close`, and `skip` passes over one. Names are local names,
+//! since OOXML files may bind namespaces to any prefix.
 
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader;
@@ -78,9 +72,8 @@ impl<'a> Pull<'a> {
                         return Node::Text(text.into_owned());
                     }
                 }
-                // Since quick-xml 0.38 `&amp;` and `&#8217;` arrive as their
-                // own event rather than inside the text around them; ignoring
-                // it dropped every ampersand and curly quote a file escaped.
+                // `&amp;` and `&#8217;` arrive as their own event; ignoring it would drop
+                // every escaped ampersand and curly quote.
                 Ok(Event::GeneralRef(e)) => {
                     if let Ok(Some(c)) = e.resolve_char_ref() {
                         return Node::Text(c.to_string());
@@ -212,9 +205,8 @@ impl Rels {
     }
 }
 
-/// `../notesSlides/notesSlide1.xml` seen from `ppt/slides/` ->
-/// `ppt/notesSlides/notesSlide1.xml`: a relationship target as the zip entry
-/// it names.
+/// A relationship target as the zip entry it names:
+/// `../notesSlides/notesSlide1.xml` from `ppt/slides/` -> `ppt/notesSlides/notesSlide1.xml`.
 pub(super) fn resolve_part(dir: &str, target: &str) -> String {
     if let Some(absolute) = target.strip_prefix('/') {
         return absolute.to_string();

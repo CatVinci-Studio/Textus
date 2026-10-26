@@ -229,9 +229,8 @@ fn compacted_history_is_the_same_on_every_send() {
     }
 }
 
-/// Over budget, the history's first message moves once per block of
-/// growth, not on every send - and between moves each send's history
-/// starts with the previous one's, so the cached prefix survives.
+/// Over budget, the history's first message moves once per block of growth,
+/// not on every send, so the cached prefix survives.
 #[test]
 fn over_budget_the_oldest_exchanges_go_in_blocks() {
     let mut history = Vec::new();
@@ -258,10 +257,8 @@ fn over_budget_the_oldest_exchanges_go_in_blocks() {
     assert!(moves > 0);
 }
 
-/// An attached file inlined into a message can make one exchange bigger
-/// than a block. Rounding the cut up to the next block end would then
-/// drop it with everything before it, though the budget only needs the
-/// oldest two exchanges gone - so it isn't rounded that far.
+/// An attached file can make one exchange bigger than a block; the cut isn't
+/// rounded past it when the budget needs only the oldest two gone.
 #[test]
 fn over_budget_a_long_attachment_is_not_dropped_early() {
     let mut history = Vec::new();
@@ -336,7 +333,7 @@ fn the_message_header_names_the_language_the_user_typed() {
 fn short_document_is_embedded_verbatim() {
     let doc = "# Title\n\nJust a short document.";
     let section = document_section(&md(doc), true, None);
-    // Whole, each block marked with its id (doc_blocks.rs).
+    // Whole, each block marked with its id.
     let blocks = md(doc).blocks;
     assert_eq!(
         section,
@@ -364,8 +361,8 @@ fn long_document_is_truncated_with_outline_and_excerpts() {
 
 #[test]
 fn the_document_tools_are_for_a_document_shown_in_part() {
-    // agent::run_agent takes search_document and read_document out when
-    // the whole document is in the message.
+    // The document tools are taken out when the whole document is in the
+    // message.
     assert!(context::shown_whole("# Title\n\nOne paragraph.", true));
     assert!(!context::shown_whole(
         &"x".repeat(FULL_DOCUMENT_LIMIT + 1),
@@ -389,9 +386,8 @@ fn excerpts_are_char_boundary_safe_for_cjk() {
     assert!(section.contains('中'));
 }
 
-/// A Chinese document is about a token a character: past a third of the
-/// limit it is outlined, with the section being edited, where the
-/// model can read on - and sent whole where it can't.
+/// A Chinese document is outlined past a third of the limit where the model
+/// can read on, and sent whole where it can't.
 #[test]
 fn a_long_cjk_document_is_outlined_by_its_token_weight() {
     let mut doc = String::from("# 报告\n\n");
@@ -621,11 +617,8 @@ fn the_workspace_section_says_which_folder_and_why() {
 
 #[test]
 fn the_prompt_names_things_exactly_as_the_ui_does() {
-    // Every UI label the agent is told about must be the one the user
-    // sees, in each language, or the agent sends people to menu items
-    // that don't exist. Read from the frontend's files, so a language
-    // still to be translated - no help guide of its own yet - is simply
-    // not there.
+    // Every UI label the agent is told about must be the one the user sees,
+    // in each language. Read from the frontend's files.
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
     let read = |path: &str| std::fs::read_to_string(repo.join(path)).unwrap_or_default();
     let names_ts = read("src/i18n/names.ts");
@@ -789,9 +782,8 @@ fn interaction_mode_is_explicit_in_every_message() {
     );
 }
 
-/// Saving a memory must not change the system prompt or the tool list:
-/// it rewrote the whole cached prefix and the history after it
-/// (docs/design/ai-tokens.md).
+/// Saving a memory must not change the system prompt or the tool list,
+/// which would rewrite the cached prefix.
 #[test]
 fn the_cached_prefix_survives_a_new_memory() {
     use crate::ai::memory::{Memories, Memory, MemoryKind, Scope};
@@ -887,8 +879,8 @@ fn remembered_memories_follow_the_users_instructions() {
         ..AgentWorkspace::default()
     };
     let prompt = build_instructions(&ws, &md("draft"), true, AgentMode::Review, "", "en");
-    // What to remember is decided after the exchange (memory::pass): the
-    // request has no remember tool to be told about.
+    // What to remember is decided after the exchange: the request has no
+    // remember tool to be told about.
     assert!(!prompt.contains("remember tool"));
     // What is remembered comes with the message, after the user's own
     // instructions (in the system prompt).
@@ -1020,8 +1012,8 @@ fn proposed_edits(turns: &[AgentTurn]) -> usize {
 
 #[test]
 fn a_comment_and_a_sentence_before_any_edit_is_asked_on() {
-    // DeepSeek, 1.2.0-rc.6: "Translated it all" with a comment, and no
-    // edit - the edits it meant to send next were never asked for.
+    // A comment saying "Translated it all" and no edit: the edits it meant to
+    // send next were never asked for.
     let document = "# 借雨\n\n雨夜。";
     let (turns, steps) = scripted_revise(
         document,

@@ -1,8 +1,5 @@
-/* The AI composer on an iPhone (ChatComposer.tsx), in the docked Quick Ask
-   and the Textus AI sheet alike: every control a 44pt target - Apple's
-   minimum - and no :hover left stuck on whatever was tapped last. Phone
-   width only, like the rest of the phone layout (mobile/styles): an iPad
-   keeps the desktop's compact composer. */
+/* The AI composer on an iPhone: every control a 44pt target and no :hover
+   stuck on what was tapped. Phone width only; an iPad keeps the desktop's. */
 
 /* Ask / Edit / Plan as a segmented control: a tinted track with the
    chosen segment raised out of it. Rendered only on a phone. */
@@ -14,10 +11,8 @@
   background: color-mix(in srgb, var(--editor-text) 8%, transparent);
 }
 
-/* In the AI sheet the modes are a row of their own and the tools and Send
-   the row under them: three 44pt words and three 44pt controls don't share
-   a phone's width in German or Russian, and wrapped wherever they ran out,
-   Send ended up apart from the rest. */
+/* In the AI sheet the modes get a row of their own: with the tools and Send
+   they don't fit a phone's width in German or Russian, and Send wrapped apart. */
 :root[data-window-chrome="mobile"] .agent-panel .inline-chat-toolbar {
   flex-wrap: wrap;
   row-gap: 6px;

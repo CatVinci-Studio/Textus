@@ -13,8 +13,7 @@ interface QuickAskState {
 
 const quickAskKey = new PluginKey<QuickAskState>("quick-ask-widget");
 
-/** Shows the panel's widget after document position `pos` (MilkdownEditor,
- *  on open) - or hides it (close, or hide-for-detach). */
+/** Shows the panel's widget after document position `pos`, or hides it. */
 export function setQuickAskWidget(
   tr: Transaction,
   pos: number | null,
@@ -26,35 +25,21 @@ export function setQuickAskWidget(
 }
 
 /**
- * The Quick Ask panel's place in the document: a block widget decoration
- * right after the top-level block the chat was opened on - VS Code's
- * inline-chat "zone widget" pattern. Being IN the flow means the content
- * below is pushed down rather than covered, and the decoration maps through
- * every edit, so the panel follows its block instead of drifting (the old
- * fixed-position popup's anchor never remapped).
- *
- * The plugin only owns the empty container element; React portals the
- * actual panel into it (MilkdownEditor), the same state-outside /
- * pixels-inside split the chat sidebar experiment used. `stopEvent`
- * keeps ProseMirror's editing machinery out of the panel's inputs -
- * the same trick code-block-language-view relies on for its picker.
+ * The Quick Ask panel's place in the document: a block widget after the
+ * block it was opened on, so content below is pushed down and the panel maps
+ * through edits. React portals the panel into it; `stopEvent` keeps
+ * ProseMirror out of the panel's inputs.
  */
 export function createQuickAskWidgetPlugin(options: {
   /** Hands React the widget's DOM container. */
   onMount: (el: HTMLElement) => void;
-  /** That container has left the document (hide, or the decoration moving to
-   *  a new position). Passed the element that went away rather than a bare
-   *  null: when the widget MOVES, ProseMirror may well build the replacement
-   *  before tearing the old one down (placeWidget inserts as it walks the
-   *  document; the unmatched old desc is destroyed afterwards), and a
-   *  React setter that just clears would then land last and unmount the
-   *  panel that was supposed to survive the move. */
+  /** That container has left the document. Passed the element that went away:
+   *  on a move ProseMirror may build the replacement first, and a bare clear
+   *  landing last would unmount the panel that survived. */
   onUnmount: (el: HTMLElement) => void;
 }) {
-  // ONE container for the panel's whole life, re-used wherever the widget
-  // goes. A fresh element per move made React remount the portal into it -
-  // wiping a half-typed follow-up, staged attachments and the chosen mode
-  // every time Next/Accept moved the panel to another block.
+  // ONE container for the panel's whole life: a fresh element per move
+  // remounts the portal, wiping a half-typed follow-up and attachments.
   let anchor: HTMLElement | null = null;
 
   function build(doc: ProseNode, pos: number): DecorationSet {
@@ -111,11 +96,9 @@ export function createQuickAskWidgetPlugin(options: {
                 tr.doc.content.size,
               );
               const decoration = prev.decoration.map(tr.mapping, tr.doc);
-              // A deletion across the widget's spot (Backspace joining the
-              // next paragraph up, deleting the block below) drops a widget
-              // decoration outright. The panel is still open, so it is put
-              // back where its spot mapped to - before, it vanished and
-              // nothing ever showed it again.
+              // A deletion across the widget's spot drops the decoration
+              // outright; the panel is still open, so put it back where its
+              // spot mapped to.
               return {
                 pos,
                 decoration:

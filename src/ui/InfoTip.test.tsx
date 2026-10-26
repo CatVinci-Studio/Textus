@@ -10,8 +10,7 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { InfoTip } from "./InfoTip";
 
-// jsdom has no ResizeObserver, which useViewportClamp keeps the card in the
-// window with; nothing here resizes, so a stub that never fires will do.
+// jsdom has no ResizeObserver; nothing here resizes, so a stub will do.
 globalThis.ResizeObserver = class {
   observe() {}
   unobserve() {}

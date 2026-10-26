@@ -1,7 +1,6 @@
 /**
- * A last step an HTML or PDF export takes, given by the window shell: the
- * plugins listening (textus.export.onWillExport) may add CSS to the page
- * or change its HTML. Without one, the page is as the editor made it.
+ * A last step an HTML or PDF export takes: onWillExport plugins may add CSS
+ * or change the HTML.
  */
 export interface ExportPage {
   format: "html" | "pdf";
@@ -21,9 +20,8 @@ export function setExportStep(step: ExportStep | null): void {
   current = step;
 }
 
-/** The page after the step: its HTML, and CSS to add to the page's own.
- *  HTML the step changed loses whatever could run (scripts, handlers,
- *  frames): the page is opened elsewhere, and a PDF is drawn by the app. */
+/** The page after the step. HTML the step changed loses whatever could run,
+ *  since the page is opened elsewhere. */
 export async function finishExportPage(
   page: ExportPage,
 ): Promise<{ html: string; css: string }> {

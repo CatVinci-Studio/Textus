@@ -26,19 +26,11 @@ import { findInOrder, locateHunks } from "./sentence-locate";
 import { locatePlainText } from "./text-locate";
 import { wholeParagraphs } from "./whole-paragraphs";
 
-/**
- * Where a proposal goes in the document: the blocks it names, the
- * sentences it changes found in the text, and what deciding it decided.
- * Pure - each reads the editor's state and writes nothing (usePendingEdits
- * dispatches).
- */
+/** Where a proposal goes in the document and what deciding it decided.
+ *  Reads the editor's state and writes nothing. */
 
-/**
- * What a `replace_selection` proposal targets: the selection the request was
- * sent with, in this window's coordinates. Each surface passes the selection
- * IT sent (MilkdownEditor's showProposals), the only one the model was shown;
- * Quick Ask's `InlineChatInfo` satisfies it structurally.
- */
+/** What a `replace_selection` proposal targets: the selection the request
+ *  was sent with, in this window's coordinates. */
 export interface SelectionTarget {
   range: { from: number; to: number } | null;
   selectionMarkdown: string | null;
@@ -47,16 +39,9 @@ export interface SelectionTarget {
   cursor?: number | null;
 }
 
-/**
- * A tighter strike range for `replace`/`delete`, covering just the text
- * actually being removed rather than the whole containing block - see
- * text-locate.ts for why plain-text location sidesteps the markdown-offset
- * constraint that forces `match.from`/`match.to` to the block boundary.
- * Null (falls back to the whole-block range) whenever the match spans more
- * than one block, the matched markdown fails to parse, or its plain text
- * isn't uniquely findable in the block - never a worse result than today's
- * whole-block strike, only sometimes a more precise one.
- */
+/** A strike range covering just the removed text, found by plain text since
+ *  Markdown offsets only map to block boundaries. Null falls back to the
+ *  whole block: across blocks, unparseable, or not unique. */
 function computeStrikeRange(
   ctx: Ctx,
   doc: ProseNode,
@@ -72,9 +57,8 @@ function computeStrikeRange(
   );
   if (!matched) return null;
 
-  // The shared guarded parse (its math normalization is a no-op here -
-  // `matched` came from this editor's own serializer, so math is already
-  // $-delimited).
+  // `matched` came from this editor's serializer, so math is already
+  // $-delimited.
   const parsed = parseMarkdownSource(ctx, matched);
   if (!parsed || typeof parsed === "string") return null;
   const parsedText = parsed.textContent;
@@ -83,9 +67,8 @@ function computeStrikeRange(
   return locatePlainText(doc, match.from, match.to, parsedText);
 }
 
-/** Where a passage a comment or a picture names is in the document now -
- *  narrowed to its quoted words when they sit inside one block, else the
- *  blocks. For a comment card's "locate". */
+/** Where a passage a comment or picture names is now: its quoted words when
+ *  inside one block, else the blocks. */
 export function locateTarget(
   ctx: Ctx,
   doc: ProseNode,
@@ -102,9 +85,8 @@ export function locateTarget(
   );
 }
 
-/** Where a proposal named by its blocks (replace/delete/insert_before/
- *  after) lands in `doc` now, and what it would write there. Null when its
- *  blocks are gone (changed since the request). */
+/** Where a block-anchored proposal lands in `doc` now and what it would
+ *  write; null when its blocks have changed since the request. */
 export function resolveAnchored(
   ctx: Ctx,
   doc: ProseNode,
@@ -114,7 +96,7 @@ export function resolveAnchored(
   range: { from: number; to: number };
   replacement: string;
   strikeRange: { from: number; to: number } | null;
-  /** The markdown in `range` before the anchor (MarkdownMatch.prefix). */
+  /** The markdown in `range` before the anchor. */
   lead: string;
 } | null {
   const match = matchTarget(blocks, proposal);
@@ -126,9 +108,8 @@ export function resolveAnchored(
       proposal.action,
       proposal.text ?? "",
     ),
-    // An insertion next to words inside its block has theirs: drawn
-    // there, inside the paragraph, where Accept writes it (insertAt in
-    // pending-decorations.ts). One next to the whole block goes beside it.
+    // An insertion next to words inside its block is drawn there, where
+    // Accept writes it; one next to the whole block goes beside it.
     strikeRange:
       proposal.action === "replace" ||
       proposal.action === "delete" ||
@@ -141,13 +122,8 @@ export function resolveAnchored(
   };
 }
 
-/**
- * A rewrite's sentence-by-sentence view (PendingPreview.sentences): the
- * diff of what it replaces against its text, each change found in the
- * document. Null when the proposal isn't a rewrite, nothing changed, or a
- * piece can't be found - it is then shown and decided whole. `lead`: the
- * markdown in `range` before `original` (locateHunks).
- */
+/** A rewrite's sentence-by-sentence view, each change found in the
+ *  document. Null shows it whole. `lead`: the markdown before `original`. */
 function sentencesFor(
   ctx: Ctx,
   doc: ProseNode,
@@ -194,14 +170,9 @@ function sentencesFor(
   return { hunks, changes };
 }
 
-/**
- * A rewrite whose original the writer edited while it streamed in, found
- * again change by change in `range` as the text now reads: each change
- * whose original sentences are still there, in order, stands; one whose
- * original they changed is left out. Null when none is left. The changes
- * are then applied one by one (PendingPreview.rebased), never the range
- * whole - that would undo what the writer typed.
- */
+/** A rewrite whose original the writer edited while it streamed, found again
+ *  change by change; null when none is left. Applied change by change, as
+ *  the whole range would undo what they typed. */
 function rebasedSentences(
   ctx: Ctx,
   doc: ProseNode,
@@ -230,10 +201,8 @@ function rebasedSentences(
   return changes.length > 0 ? { hunks, changes } : undefined;
 }
 
-/** A change over several original sentences: where each stands, and where
- *  its new text goes (PendingSentence.parts / .at) - the layout the same
- *  rewrite has while it streams in (pending-edit-plugin's
- *  streamDecorations). */
+/** A change over several original sentences: where each stands and where
+ *  its new text goes, as while it streamed in. */
 function changeParts(
   ctx: Ctx,
   doc: ProseNode,
@@ -255,12 +224,8 @@ function changeParts(
   return { parts, at: parts[pairedPrefix(sentences, after) - 1].to };
 }
 
-/**
- * The original of a rewrite split into sentences, each found in the
- * document: what lets the rewrite be laid out sentence by sentence while it
- * is still streaming (PendingPreview.streamSource). Undefined when a
- * sentence can't be found - it then streams in whole, as before.
- */
+/** A rewrite's original split into sentences found in the document, for
+ *  laying it out while it streams. Undefined streams it in whole. */
 function streamSourceFor(
   ctx: Ctx,
   doc: ProseNode,
@@ -282,8 +247,7 @@ function streamSourceFor(
   return ranges ? { sentences, ranges } : undefined;
 }
 
-/** `markdown`'s text as the document shows it (matchableMarkdown), for
- *  finding it there. */
+/** `markdown`'s text as the document shows it, for finding it there. */
 export function plainText(ctx: Ctx, markdown: string): string | null {
   const parsed = parseMarkdownSource(ctx, matchableMarkdown(markdown));
   return parsed && typeof parsed !== "string" ? parsed.textContent : null;
@@ -294,16 +258,15 @@ export const isAnchored = (proposal: EditProposal) =>
   proposal.action !== "insert_at_cursor" &&
   proposal.action !== "replace_selection";
 
-/** A change the writer decided, for learning from it (revision-learning). */
+/** A change the writer decided, for learning from it. */
 export interface DecidedChange {
   before: string;
   after: string;
   taken: boolean;
 }
 
-/** What deciding `preview` decided: each of its sentences, `take(i)`, or
- *  a rewrite shown whole, `take(-1)`. New text alone (Write) has no
- *  before to compare and decides nothing to learn from. */
+/** What deciding `preview` decided, per sentence or whole (`take(-1)`). New
+ *  text alone decides nothing to learn from. */
 export function decidedChanges(
   preview: PendingPreview,
   take: (index: number) => boolean,
@@ -324,8 +287,8 @@ export function decidedChanges(
   return [];
 }
 
-/** Whether a proposal carries pictures being made, on their own or in
- *  its text: its Accept saves them first (acceptPictures). */
+/** Whether a proposal carries pictures being made: its Accept saves them
+ *  first. */
 export function carriesPictures(preview: PendingPreview): boolean {
   return (
     !!preview.proposal.image || hasGeneratedImage(preview.proposal.text ?? "")
@@ -336,18 +299,13 @@ export function carriesPictures(preview: PendingPreview): boolean {
 export interface ProposalToPlace {
   callId: string;
   proposal: EditProposal;
-  /** Its arguments are still arriving: placed early so the text can grow
-   *  in the document, un-acceptable until the final add for the same
-   *  callId lands without the flag. */
+  /** Its arguments are still arriving: placed early so the text can grow,
+   *  undecidable until the final add. */
   streaming?: boolean;
 }
 
-/**
- * Where each proposal goes in the document as it stands, as previews for
- * pending-edit-plugin, and the ones that can't go anywhere (a final
- * proposal only - a streaming draft that doesn't resolve isn't shown yet).
- * Reads the editor and writes nothing: usePendingEdits dispatches.
- */
+/** Each proposal placed as a preview, and the final ones that can't go
+ *  anywhere. Writes nothing. */
 export function placeProposals(
   ctx: Ctx,
   state: EditorState,
@@ -372,11 +330,8 @@ export function placeProposals(
       const at = chatInfo?.cursor;
       if (typeof at === "number" && at <= docSize) range = { from: at, to: at };
     } else if (proposal.action === "replace_selection") {
-      // Targets the selection captured when the chat opened. Staleness
-      // is judged on the selection's MARKDOWN: that's what the model
-      // was shown, so a formatting-only change under it (bolding a
-      // word) has to invalidate the proposal just as a text change
-      // would - the reply was written against the old formatting.
+      // Staleness is judged on the selection's Markdown, as the model saw
+      // it, so a formatting-only change invalidates it too.
       if (
         chatInfo?.range &&
         chatInfo.range.to <= docSize &&
@@ -393,8 +348,7 @@ export function placeProposals(
       const resolved = resolveAnchored(ctx, state.doc, blocks, proposal);
       if (resolved) ({ range, replacement, strikeRange, lead } = resolved);
       // Not found as quoted: the writer edited its original while it
-      // streamed in. Found again where its draft stands, change by
-      // change, if any change's original is still there.
+      // streamed. Found again change by change where its draft stands.
       const draft = !resolved
         ? pendingEditKey
             .getState(state)
@@ -430,19 +384,14 @@ export function placeProposals(
     }
 
     if (!range) {
-      // A still-streaming draft that doesn't resolve just isn't shown
-      // yet - the final proposal gets the real verdict; only IT may
-      // mark the call invalid.
+      // A streaming draft that doesn't resolve isn't shown yet; only the
+      // final proposal may mark the call invalid.
       if (!streaming) invalidIds.push(callId);
       continue;
     }
-    // Only the final proposal is split into sentences: a streaming
-    // draft's text is still growing (and is typed in whole anyway).
-    // An anchor across paragraphs has no strike range of its own
-    // (computeStrikeRange): its sentences are found in the whole
-    // blocks, past what precedes it there. Rewriting several
-    // paragraphs at once - what Revise does to text Write just
-    // added - used to be shown whole, and no revision view applied.
+    // Only the final proposal is split into sentences. An anchor across
+    // paragraphs has no strike range: its sentences are found in the whole
+    // blocks, past what precedes it there.
     const sentences = streaming
       ? undefined
       : proposal.action === "replace"

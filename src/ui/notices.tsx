@@ -1,12 +1,9 @@
 import { useEffect, useState } from "react";
 import "./notices.css";
 
-/**
- * Short notes at the bottom of the window that go by themselves, and
- * progress bars for slow work (textus.ui.notice / withProgress): what a
- * plugin says without stopping the user, unlike app-dialog's boxes.
- * Callable from anywhere; shown by the one NoticeHost App mounts.
- */
+/** Short notes at the bottom of the window that go by themselves, and
+ *  progress bars for slow work: what a plugin says without stopping the user.
+ *  Shown by the one NoticeHost App mounts. */
 
 export interface Notice {
   id: number;

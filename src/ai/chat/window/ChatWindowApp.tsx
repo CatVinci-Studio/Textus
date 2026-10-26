@@ -8,10 +8,8 @@ import { useChatWindowHandoff } from "./useChatWindowHandoff";
 import { useChatWindowBridge } from "./useChatWindowBridge";
 import { ChatWindowHeader } from "./ChatWindowHeader";
 import { AppDialogHost } from "../../../ui/app-dialog";
-// Every theme custom property (--editor-bg, --editor-text, --editor-border,
-// ...) is declared on :root in ui/base.css. This window doesn't render App,
-// so without this import every var() resolves to nothing and the whole
-// window is unstyled; the dialogs' look comes along for its close prompt.
+// This window doesn't render App, so without this the theme's custom
+// properties are never declared and the window is unstyled.
 import "../../../ui/base.css";
 import "../../../ui/app-dialog.css";
 import "../AgentTurnView.css";
@@ -20,27 +18,9 @@ import { TextusAiOffNote } from "../../TextusAiSwitch";
 import "./chat-window.css";
 
 /**
- * The chat as its own OS window - and, deliberately, the CROSS-FILE surface.
- *
- * A real window rather than a webview-drawn panel, because the point of
- * detaching is to put it OUTSIDE the main window - which only the platform's
- * own window can do, along with native edge/corner resizing and multi-monitor
- * placement.
- *
- * The Agent's two surfaces divide by scope, not by size: the in-document
- * Quick Ask bar is about ONE file and keeps the snapshot it opened with,
- * while this window follows the user. Switch tabs or windows and its
- * document, title and selection follow; highlight a new passage and it
- * arrives here as a new selection chip. There is only ever one of these
- * windows per scope (see commands/chat_window.rs), which is what makes
- * "follows the user" coherent - two of them would fight over the same
- * editor.
- *
- * It renders the same ChatBody as the embedded popup and, like the popup,
- * owns no document state: proposals and accept/reject are forwarded to the
- * editor window (chat-bridge.ts), which stays the single place edits are
- * resolved and applied. Losing that would mean two implementations of the
- * anchor/apply logic drifting apart.
+ * The chat as its own OS window: the cross-file surface, following the user's
+ * active document and selection. One per scope, so two never fight over an
+ * editor. Edits are forwarded to the editor window, the one place they apply.
  */
 export function ChatWindowApp() {
   const { t, settings, setSettings } = useSettings();
@@ -71,7 +51,7 @@ export function ChatWindowApp() {
     />
   );
 
-  // The history list's "document not found" question (app-dialog.tsx).
+  // The history list's "document not found" question.
   const dialogs = <AppDialogHost okLabel={t.dialogOk} />;
 
   // Turned off - here or in any window - the conversation waits behind the

@@ -8,20 +8,8 @@ import { placeProposals } from "./pending-place";
 import { diffSentences, splitUnits } from "./unit-diff";
 import { formKey, wholeBlockKind } from "./markdown-forms";
 
-/**
- * Documents put together at random from the blocks a rewrite meets -
- * prose of every kind, pictures, tables, code, maths, rules, HTML,
- * footnotes - each rewritten whole the way a translation is: every
- * paragraph in other words, each block kept, changed, dropped or added.
- * What has to hold whatever comes (markdown-forms.ts, unit-diff.ts,
- * sentence-locate.ts):
- *
- * - the units join back into the text, and the hunks into both sides;
- * - every piece is found in the document: the rewrite is never shown
- *   whole for want of one;
- * - with the blocks unchanged in kind and order, each block is a hunk of
- *   its own, never part of a paragraph's change.
- */
+/** Random documents rewritten whole, as a translation is. The pieces must
+ *  join back, each be found in the document, and kept blocks stay apart. */
 
 const RUNS = 300;
 

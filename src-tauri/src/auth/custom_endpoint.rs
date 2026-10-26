@@ -17,11 +17,8 @@ fn config_file_path(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(dir.join("custom_endpoint.json"))
 }
 
-/// What the settings page is told about the saved endpoint. The key itself
-/// never goes back to the webview - it is a secret like the provider keys,
-/// which only ever report whether one is set. `api_key` stays in the shape
-/// (always null) so the page's existing type still fits; `has_api_key`
-/// says whether one is stored.
+/// What the settings page is told about the saved endpoint. The key never
+/// goes back to the webview; `api_key` is always null and `has_api_key` says whether one is stored.
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct CustomEndpointStatus {
@@ -31,11 +28,8 @@ pub struct CustomEndpointStatus {
     model: String,
 }
 
-/// Saves the endpoint. A missing key keeps the stored one while the URL
-/// stays the same: the settings page no longer gets the key back, so an
-/// empty key field on re-save means "unchanged", not "remove it" (clearing
-/// the endpoint removes it). Saved for another URL, the old key is dropped
-/// rather than sent to the new host with every request (see resolve_key).
+/// Saves the endpoint. A missing key keeps the stored one while the URL stays
+/// the same; for another URL the old key is dropped rather than sent to the new host.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn set_custom_endpoint(
@@ -78,16 +72,14 @@ pub fn custom_endpoint_status(app: AppHandle) -> Result<Option<CustomEndpointSta
     }))
 }
 
-/// The key to use with `base_url` - to save it, fetch its models or test
-/// it. A stored config that can't be read counts as none: saving over it
-/// is how the user repairs it, so it must not fail the save.
+/// The key to use with `base_url`. An unreadable stored config counts as none,
+/// since saving over it is how the user repairs it.
 fn key_for(app: &AppHandle, base_url: &str, typed: Option<String>) -> Option<String> {
     resolve_key(load_custom_endpoint(app).ok().flatten(), base_url, typed)
 }
 
-/// The key typed, else the stored one - but only for the URL it was saved
-/// with, so editing the URL to another host and pressing "Fetch models" or
-/// "Save" doesn't hand that host the old key.
+/// The key typed, else the stored one, but only for the URL it was saved with,
+/// so a new host never gets the old key.
 fn resolve_key(
     stored: Option<CustomEndpointConfig>,
     base_url: &str,
