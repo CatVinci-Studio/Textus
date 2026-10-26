@@ -102,7 +102,13 @@ export function PluginWebview({
     };
   }, [id, html, fitHeight]);
 
-  return <div ref={boxRef} className={`plugin-webview ${className ?? ""}`} />;
+  return (
+    <div
+      ref={boxRef}
+      className={`plugin-webview ${className ?? ""}`}
+      data-webview-id={id}
+    />
+  );
 }
 
 /**
@@ -303,17 +309,20 @@ export function PluginCodeBlock({
     return () => untrackCodeBlock(record.id);
   }, [record, plugin]);
   // What it was made with is the plugin's already.
-  const told = useRef({ source: seen.source, block: seen.block });
+  const meta = JSON.stringify(seen.meta);
+  const told = useRef({ source: seen.source, block: seen.block, meta });
   useEffect(() => {
     if (!record) return;
+    const now = { source: seen.source, block: seen.block, meta };
     if (
-      told.current.source === seen.source &&
-      told.current.block === seen.block
+      told.current.source === now.source &&
+      told.current.block === now.block &&
+      told.current.meta === now.meta
     )
       return;
-    told.current = { source: seen.source, block: seen.block };
-    codeBlockChanged(record, told.current);
-  }, [record, seen.source, seen.block]);
+    told.current = now;
+    codeBlockChanged(record, { ...now, meta: JSON.parse(meta) });
+  }, [record, seen.source, seen.block, meta]);
   if (error) return <div className="plugin-webview-problem">{error}</div>;
   if (!record) return null;
   return (

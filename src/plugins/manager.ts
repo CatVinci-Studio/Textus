@@ -356,14 +356,16 @@ export async function resolveWebview(
 export interface CodeBlockSeen {
   language: string;
   source: string;
+  /** What follows the language on the fence, read (parseFenceMeta). */
+  meta: Record<string, string>;
   path: string | null;
   block: string;
 }
 
-/** A drawn code block's source changed (CodeBlock.onDidChange). */
+/** A drawn code block's source or fence meta changed (CodeBlock.onDidChange). */
 export function codeBlockChanged(
   record: WebviewRecord,
-  seen: Pick<CodeBlockSeen, "source" | "block">,
+  seen: Pick<CodeBlockSeen, "source" | "meta" | "block">,
 ): void {
   hosts
     .get(record.plugin)

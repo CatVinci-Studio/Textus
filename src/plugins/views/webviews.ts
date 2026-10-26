@@ -105,6 +105,45 @@ export function postToWebview(id: string, message: unknown): void {
   else record.outbox.push(message);
 }
 
+/** The webview's frame once it is connected; null when it isn't within
+ *  `ms`, or the webview goes. */
+function whenConnected(id: string, ms: number): Promise<Endpoint | null> {
+  const now = records.get(id)?.endpoint;
+  if (now) return Promise.resolve(now);
+  return new Promise((resolve) => {
+    const done = (endpoint: Endpoint | null) => {
+      clearTimeout(timer);
+      stop();
+      resolve(endpoint);
+    };
+    const timer = setTimeout(() => done(null), ms);
+    const stop = subscribeWebviews(() => {
+      const record = records.get(id);
+      if (!record) done(null);
+      else if (record.endpoint) done(record.endpoint);
+    });
+  });
+}
+
+/** How the webview's page looks, for an export (WebviewApi.onExport): an
+ *  SVG's markup or an image's data: URL; null when the page gives none
+ *  within `ms`. */
+export async function webviewPicture(
+  id: string,
+  theme: "light" | "dark",
+  ms = 10_000,
+): Promise<string | null> {
+  const started = Date.now();
+  const endpoint = await whenConnected(id, ms);
+  if (!endpoint) return null;
+  const left = ms - (Date.now() - started);
+  const answer = await Promise.race([
+    endpoint.call("export", { theme }).catch(() => null),
+    new Promise((resolve) => setTimeout(() => resolve(null), left)),
+  ]);
+  return typeof answer === "string" ? answer : null;
+}
+
 export function webviewConnected(id: string, endpoint: Endpoint | null): void {
   const record = records.get(id);
   if (!record) return;
@@ -112,6 +151,7 @@ export function webviewConnected(id: string, endpoint: Endpoint | null): void {
   if (endpoint)
     for (const message of record.outbox.splice(0))
       endpoint.notify("message", { message });
+  changed();
 }
 
 export function webviewState(key: string): unknown {

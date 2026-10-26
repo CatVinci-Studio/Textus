@@ -18,11 +18,12 @@ export interface DiagramImage {
   width: number;
 }
 
-/** Replaces every ```mermaid block with what `draw` makes of its source;
- *  a block `draw` returns null for is kept as it is. */
-export async function replaceMermaidBlocks(
+/** Replaces each fenced block with what `draw` makes of its language
+ *  (lowercased) and source; a block `draw` returns null for, or throws on,
+ *  is kept as it is. */
+export async function replaceFencedBlocks(
   markdown: string,
-  draw: (code: string) => Promise<DiagramImage | null>,
+  draw: (language: string, code: string) => Promise<DiagramImage | null>,
 ): Promise<string> {
   const lines = markdown.split("\n");
   const out: string[] = [];
@@ -47,11 +48,14 @@ export async function replaceMermaidBlocks(
     }
     const block = lines.slice(i, Math.min(end + 1, lines.length));
     i = end;
-    if (open[2].toLowerCase() !== "mermaid" || end >= lines.length) {
+    if (end >= lines.length) {
       out.push(...block);
       continue;
     }
-    const image = await draw(block.slice(1, -1).join("\n")).catch(() => null);
+    const image = await draw(
+      open[2].toLowerCase(),
+      block.slice(1, -1).join("\n"),
+    ).catch(() => null);
     if (image) {
       out.push(`![](${image.dataUrl}){width=${Math.round(image.width)}px}`);
     } else {
@@ -132,9 +136,42 @@ export async function diagramsToImages(
     { width: MAX_WIDTH, fontFamily, dark: false },
     configure,
   );
-  return replaceMermaidBlocks(markdown, async (code) =>
-    svgToPng((await draw(code, `export-diagram-${++exportId}`)).svg),
+  return replaceFencedBlocks(markdown, async (language, code) =>
+    language === "mermaid"
+      ? svgToPng((await draw(code, `export-diagram-${++exportId}`)).svg)
+      : null,
   );
+}
+
+/** A drawn block's picture (drawn-blocks.ts) as a PNG pandoc can embed:
+ *  an SVG drawn onto white, an image as it is, placed no wider than a
+ *  page's text. */
+async function pictureToImage(url: string): Promise<DiagramImage> {
+  if (url.startsWith("data:image/svg+xml"))
+    return svgToPng(decodeURIComponent(url.slice(url.indexOf(",") + 1)));
+  const image = new Image();
+  image.src = url;
+  await image.decode();
+  return { dataUrl: url, width: Math.min(image.naturalWidth / 2, MAX_WIDTH) };
+}
+
+/** The markdown with each drawn block (a plugin's code block) as its
+ *  picture, from `pictures` by language in the document's order; one
+ *  with no picture keeps its source. */
+export async function drawnBlocksToImages(
+  markdown: string,
+  pictures: Map<string, (string | null)[]>,
+): Promise<string> {
+  if (!pictures.size) return markdown;
+  const seen = new Map<string, number>();
+  return replaceFencedBlocks(markdown, async (language) => {
+    const list = pictures.get(language);
+    if (!list) return null;
+    const n = seen.get(language) ?? 0;
+    seen.set(language, n + 1);
+    const url = list[n];
+    return url ? pictureToImage(url) : null;
+  });
 }
 
 /** Replaces the SVG of every rendered diagram in serialized editor `html`

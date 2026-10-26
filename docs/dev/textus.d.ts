@@ -431,10 +431,14 @@ declare global {
     interface CodeBlock {
       readonly language: string;
       readonly source: string;
+      /** What follows the language on its fence, read as settings:
+       *  ` ```chart height=300 title="Sales" legend` is
+       *  `{ height: "300", title: "Sales", legend: "true" }`. */
+      readonly meta: Readonly<Record<string, string>>;
       /** The document it is in. */
       readonly path: string | null;
       readonly block: string;
-      /** The block's source changed (typed, undone); the page stays. */
+      /** Its source or meta changed (typed, undone); the page stays. */
       onDidChange: Event<string>;
       /** Replaces its source (needs editor.write), one undo step. */
       setSource(source: string): Promise<boolean>;
@@ -839,6 +843,15 @@ declare global {
       onMessage(fn: (message: unknown) => void): Disposable;
       getState(): unknown;
       setState<T>(state: T): T;
+      /** How the page looks as a picture, asked when the document is
+       *  exported (a code block's page): an SVG's markup or an image's
+       *  `data:` URL, for a page of `theme`. Without it, or answering
+       *  null, the block exports as its source. */
+      onExport(
+        provider: (options: {
+          theme: "light" | "dark";
+        }) => string | null | Promise<string | null>,
+      ): Disposable;
     }
   }
 }

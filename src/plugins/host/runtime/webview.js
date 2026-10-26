@@ -11,6 +11,14 @@
   var queue = [];
   var receivers = new Set();
   var state = null;
+  var exporter = null;
+
+  // The page with everything it loads (its chart library) in, so a
+  // picture asked for at once is not asked of a page still loading.
+  var loaded = new Promise(function (resolve) {
+    if (document.readyState === "complete") resolve();
+    else window.addEventListener("load", resolve, { once: true });
+  });
 
   function send(method, params) {
     if (app) app.notify(method, params);
@@ -89,6 +97,16 @@
       send("state", { state: value });
       return value;
     },
+    // How the page looks as a picture, asked when the document is
+    // exported: an SVG's markup or an image's data: URL.
+    onExport: function (provider) {
+      exporter = provider;
+      return {
+        dispose: function () {
+          if (exporter === provider) exporter = null;
+        },
+      };
+    },
   };
 
   window.addEventListener("message", function receive(event) {
@@ -112,6 +130,11 @@
         },
         theme: function (params) {
           setTheme(params.css, params.dark);
+        },
+        export: function (params) {
+          return loaded.then(function () {
+            return exporter ? exporter({ theme: params.theme }) : null;
+          });
         },
       },
       0,

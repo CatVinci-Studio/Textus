@@ -209,6 +209,7 @@
   function CodeBlock(webviewId, params) {
     this.language = params.language;
     this.source = params.source;
+    this.meta = params.meta || {};
     this.path = params.path;
     this.block = params.block;
     this._webview = webviewId;
@@ -951,6 +952,7 @@
       var block = codeBlocks.get(params.webview);
       if (!block) return;
       block.source = params.source;
+      block.meta = params.meta || {};
       block.block = params.block;
       block._changed.forEach(function (changed) {
         changed(params.source);

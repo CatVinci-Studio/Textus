@@ -313,14 +313,15 @@ The file a file editor was opened on.
 
 A code block the plugin draws.
 
-| Member                                        |                                                             |
-| --------------------------------------------- | ----------------------------------------------------------- |
-| `readonly language: string`                   |                                                             |
-| `readonly source: string`                     |                                                             |
-| `readonly path: string \| null`               | The document it is in.                                      |
-| `readonly block: string`                      |                                                             |
-| `onDidChange: Event<string>`                  | The block's source changed (typed, undone); the page stays. |
-| `setSource(source: string): Promise<boolean>` | Replaces its source (needs editor.write), one undo step.    |
+| Member                                            |                                                                                                                                                               |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly language: string`                       |                                                                                                                                                               |
+| `readonly source: string`                         |                                                                                                                                                               |
+| `readonly meta: Readonly<Record<string, string>>` | What follows the language on its fence, read as settings: ` ```chart height=300 title="Sales" legend` is `{ height: "300", title: "Sales", legend: "true" }`. |
+| `readonly path: string \| null`                   | The document it is in.                                                                                                                                        |
+| `readonly block: string`                          |                                                                                                                                                               |
+| `onDidChange: Event<string>`                      | Its source or meta changed (typed, undone); the page stays.                                                                                                   |
+| `setSource(source: string): Promise<boolean>`     | Replaces its source (needs editor.write), one undo step.                                                                                                      |
 
 ## Editor
 
@@ -577,11 +578,12 @@ Tools for Textus AI (ai.tools): each one named in the manifest's contributes.aiT
 
 ## WebviewApi
 
-| Member                                                  |     |
-| ------------------------------------------------------- | --- |
-| `readonly language: string`                             |     |
-| `t(key: string, ...args: unknown[]): string`            |     |
-| `postMessage(message: unknown): void`                   |     |
-| `onMessage(fn: (message: unknown) => void): Disposable` |     |
-| `getState(): unknown`                                   |     |
-| `setState<T>(state: T): T`                              |     |
+| Member                                                                                                                  |                                                                                                                                                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly language: string`                                                                                             |                                                                                                                                                                                                                               |
+| `t(key: string, ...args: unknown[]): string`                                                                            |                                                                                                                                                                                                                               |
+| `postMessage(message: unknown): void`                                                                                   |                                                                                                                                                                                                                               |
+| `onMessage(fn: (message: unknown) => void): Disposable`                                                                 |                                                                                                                                                                                                                               |
+| `getState(): unknown`                                                                                                   |                                                                                                                                                                                                                               |
+| `setState<T>(state: T): T`                                                                                              |                                                                                                                                                                                                                               |
+| `onExport(provider: (options: { theme: "light" \| "dark"; }) => string \| null \| Promise<string \| null>): Disposable` | How the page looks as a picture, asked when the document is exported (a code block's page): an SVG's markup or an image's `data:` URL, for a page of `theme`. Without it, or answering null, the block exports as its source. |

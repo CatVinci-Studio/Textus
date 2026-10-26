@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
-import { redrawDiagrams, replaceMermaidBlocks } from "./diagram-images";
+import { redrawDiagrams, replaceFencedBlocks } from "./diagram-images";
 
-const draw = async (code: string) =>
-  code.includes("broken")
+const draw = async (language: string, code: string) =>
+  language !== "mermaid" || code.includes("broken")
     ? null
     : { dataUrl: `data:x,${code.length}`, width: 640.4 };
 
-describe("replaceMermaidBlocks", () => {
-  it("turns each mermaid block into an image and keeps other code", async () => {
+describe("replaceFencedBlocks", () => {
+  it("turns the blocks drawn into images and keeps the rest", async () => {
     const md = [
       "# T",
       "```mermaid",
@@ -22,7 +22,7 @@ describe("replaceMermaidBlocks", () => {
       "broken",
       "~~~",
     ].join("\n");
-    expect(await replaceMermaidBlocks(md, draw)).toBe(
+    expect(await replaceFencedBlocks(md, draw)).toBe(
       [
         "# T",
         "![](data:x,18){width=640px}",
@@ -38,13 +38,13 @@ describe("replaceMermaidBlocks", () => {
 
   it("leaves an unclosed block as source", async () => {
     const md = "```mermaid\ngraph LR";
-    expect(await replaceMermaidBlocks(md, draw)).toBe(md);
+    expect(await replaceFencedBlocks(md, draw)).toBe(md);
   });
 
   it("keeps the source when drawing throws", async () => {
     const md = "```mermaid\ngraph LR\n```";
     expect(
-      await replaceMermaidBlocks(md, () => Promise.reject(new Error("x"))),
+      await replaceFencedBlocks(md, () => Promise.reject(new Error("x"))),
     ).toBe(md);
   });
 });

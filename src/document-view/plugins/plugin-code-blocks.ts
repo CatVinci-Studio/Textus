@@ -21,12 +21,19 @@ import {
   codeBlockPlugin,
   hasCodeBlockLanguages,
   onCodeBlockLanguages,
+  parseFenceMeta,
 } from "../../plugins/contributions/code-blocks";
 import type { CodeBlockSeen } from "../../plugins/manager";
 import { PluginCodeBlock } from "../../plugins/views/plugin-views";
+import { webviewPicture } from "../../plugins/views/webviews";
+import { setDrawnBlocks } from "../../export/drawn-blocks";
 import "./plugin-code-blocks.css";
 
 const key = new PluginKey<DecorationSet>("plugin-code-blocks");
+const BLOCK_CLASS = "plugin-code-block";
+const HIDDEN_SOURCE_CLASS = "plugin-code-source-hidden";
+/** How long an export waits for a drawing just made to have its page. */
+const PAGE_WAIT_MS = 5000;
 /** How long typing pauses before a drawn block is told its new source. */
 const TELL_MS = 300;
 
@@ -47,6 +54,7 @@ interface Drawn {
  * (CodeBlock.onDidChange) rather than making the page again.
  */
 export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
+  setDrawnBlocks(DRAWN_BLOCKS);
   return $prose((ctx) => {
     const drawn = new Map<string, Drawn>();
 
@@ -64,9 +72,7 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
         seen.set(language, n);
         const end = pos + node.nodeSize;
         if (from < pos || to > end)
-          out.push(
-            Decoration.node(pos, end, { class: "plugin-code-source-hidden" }),
-          );
+          out.push(Decoration.node(pos, end, { class: HIDDEN_SOURCE_CLASS }));
         const widget = `${plugin}:${language}:${n}`;
         out.push(
           Decoration.widget(
@@ -98,7 +104,8 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       widget: string,
     ): HTMLElement {
       const el = document.createElement("div");
-      el.className = "plugin-code-block";
+      el.className = BLOCK_CLASS;
+      el.dataset.language = language;
       el.contentEditable = "false";
       el.append(editButton(view, getPos));
       const holder = document.createElement("div");
@@ -147,6 +154,7 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       return {
         language,
         source: node.textContent,
+        meta: parseFenceMeta(String(node.attrs.meta ?? "")),
         path: docPath.current,
         block: cachedDocument(ctx, doc).blocks[top]?.id ?? "",
       };
@@ -233,4 +241,38 @@ function editButton(
     view.focus();
   });
   return button;
+}
+
+/** An export's way to the drawings' pictures (export/drawn-blocks.ts):
+ *  each asks its plugin's page (WebviewApi.onExport). */
+const DRAWN_BLOCKS = {
+  selector: `.${BLOCK_CLASS}`,
+  hiddenSource: HIDDEN_SOURCE_CLASS,
+  language: (el: HTMLElement) => el.dataset.language ?? "",
+  async picture(el: HTMLElement, theme: "light" | "dark") {
+    const page = await pageIn(el);
+    return page ? webviewPicture(page, theme) : null;
+  },
+};
+
+/** The webview drawn in `el`: there once its plugin has made it. */
+function pageIn(el: HTMLElement): Promise<string | null> {
+  const find = () =>
+    el.querySelector<HTMLElement>("[data-webview-id]")?.dataset.webviewId ??
+    null;
+  const now = find();
+  if (now) return Promise.resolve(now);
+  return new Promise((resolve) => {
+    const done = (id: string | null) => {
+      observer.disconnect();
+      clearTimeout(timer);
+      resolve(id);
+    };
+    const observer = new MutationObserver(() => {
+      const id = find();
+      if (id) done(id);
+    });
+    observer.observe(el, { childList: true, subtree: true });
+    const timer = setTimeout(() => done(null), PAGE_WAIT_MS);
+  });
 }

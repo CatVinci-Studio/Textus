@@ -44,6 +44,20 @@ export function onCodeBlockLanguages(listener: () => void): () => void {
   return () => languageListeners.delete(listener);
 }
 
+/**
+ * What follows a fence's language, as a drawn block is given it
+ * (CodeBlock.meta): ` ```chart height=300 title="Sales 2026" legend` is
+ * { height: "300", title: "Sales 2026", legend: "true" }. Words that are
+ * not `key=value` count as `key=true`; a key given twice keeps the last.
+ */
+export function parseFenceMeta(meta: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  const pair = /([^\s=]+)(?:=(?:"([^"]*)"|'([^']*)'|(\S*)))?/g;
+  for (const m of meta.matchAll(pair))
+    out[m[1]] = m[2] ?? m[3] ?? m[4] ?? "true";
+  return out;
+}
+
 /** A drawn block's way back into the document. */
 export interface DrawnCodeBlock {
   plugin: string;

@@ -20,6 +20,7 @@ import {
   MISSING_IMAGE_CLASS,
 } from "../editor/images/missing-image";
 import { CODE_LINE_NUMBERS_CLASS } from "../editor/code/code-line-numbers-plugin";
+import { placeDrawnPictures } from "./drawn-blocks";
 import {
   COLOR_SWATCH_CLASS,
   COLOR_SWATCH_TEXT_CLASS,
@@ -171,6 +172,7 @@ export function cloneEditorContent(
     .querySelectorAll("[contenteditable]")
     .forEach((el) => el.removeAttribute("contenteditable"));
   clone.querySelectorAll(EDITOR_CHROME_SELECTOR).forEach((el) => el.remove());
+  placeDrawnPictures(clone);
   // Without its card, a missing image is the <img> it always was.
   clone
     .querySelectorAll(`.${MISSING_IMAGE_CLASS}`)

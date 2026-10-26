@@ -229,7 +229,10 @@ when clicked).
 - **A code block** (`registerCodeBlock(language, { render(block, webview) })`)
   for fenced blocks in its language: drawn below the block, which hides
   until the caret goes in; `block.onDidChange` hears the source change and
-  `block.setSource(text)` (`editor.write`) changes it.
+  `block.setSource(text)` (`editor.write`) changes it. What follows the
+  language on the fence is `block.meta`: ` ```chart height=300
+title="Sales" legend` gives `{ height: "300", title: "Sales",
+legend: "true" }`. See [Code blocks in an export](#code-blocks-in-an-export).
 
 ### Tabs and panes - `layout`
 
@@ -329,6 +332,27 @@ var(--ease-out) backwards` for a part arriving, `motion-exit` for one
   With the system's Reduce motion they become fades. Animate only
   `opacity` and `transform`.
 - A code block's frame grows with its page; others fill their place.
+
+### Code blocks in an export
+
+A page can't go into a PDF, a Word file or an HTML page, so an export asks
+each code block's page for a picture of itself with `api.onExport`: an
+SVG's markup or an image's `data:` URL, drawn for the exported page's
+`theme` ("light" for paper). The picture takes the drawing's place; a page
+that gives none exports as the block's source.
+
+```html
+<div id="chart"></div>
+<script src="textus-resource:lib/chart.min.js"></script>
+<script>
+  const api = acquireTextusApi();
+  const chart = drawChart(document.getElementById("chart"));
+  api.onExport(({ theme }) => chart.toSvg({ dark: theme === "dark" }));
+</script>
+```
+
+Textus asks once the page has loaded (its scripts included), and waits a
+few seconds for an answer.
 
 ## What a plugin can't do
 
