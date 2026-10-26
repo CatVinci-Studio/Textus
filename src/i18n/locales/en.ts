@@ -117,6 +117,7 @@ type /name in a conversation to use one.
   diagramViewerHint:
     "Scroll or pinch to zoom · drag to move · double-click to fit",
   codeBlockLanguage: "Code language",
+  codeBlockLanguageSearch: "Search languages",
   announceAiWriting: `${AI_NAME} is writing…`,
   announceAiDone: `${AI_NAME} is done.`,
   announceChangesProposed: {

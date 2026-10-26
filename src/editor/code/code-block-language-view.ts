@@ -56,8 +56,8 @@ function lineCount(node: ProseNode): number {
  * <pre><code>), which has no way to change the fence's language after the
  * fact. This NodeView wraps that same <pre><code> (still the real
  * contentDOM, so typing/highlighting decorations work exactly as before)
- * with a small header: buttons that copy and select the code at its top
- * right, and the language picker below it. A Mermaid block's source, and
+ * with a small header at its top right: the language picker and buttons
+ * that copy and select the code. A Mermaid block's source, and
  * with it this header, is hidden while its diagram shows; the buttons act
  * on the source once the block is opened for editing. With line numbers on
  * (code-line-numbers-plugin.ts) a gutter sits inside the <pre>, before
@@ -69,6 +69,7 @@ export function createCodeBlockView(
     copied: string;
     selectAll: string;
     language: string;
+    languageSearch: string;
   },
 ) {
   return $view(
@@ -87,7 +88,7 @@ export function createCodeBlockView(
       actions.className = "code-block-actions";
       const picker = document.createElement("div");
       picker.className = "code-block-language";
-      header.append(actions, picker);
+      header.append(actions);
 
       const copy = document.createElement("button");
       copy.type = "button";
@@ -139,7 +140,7 @@ export function createCodeBlockView(
         );
         view.focus();
       });
-      actions.append(copy, selectAll);
+      actions.append(picker, copy, selectAll);
 
       // Mounted when the block is first pointed at or tabbed into: the
       // header is hidden until then, and a long document has many blocks.
@@ -153,6 +154,9 @@ export function createCodeBlockView(
           value,
           languages: LANGUAGES,
           label: labels().language,
+          searchLabel: labels().languageSearch,
+          onOpenChange: (open) =>
+            wrapper.classList.toggle("is-picking-language", open),
           onChange: (language) => {
             const pos = getPos();
             if (pos == null) return;

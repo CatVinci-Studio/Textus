@@ -117,6 +117,7 @@ export default {
   diagramViewerHint:
     "Прокрутка или щипок — масштаб · перетаскивание — сдвиг · двойной щелчок — вписать",
   codeBlockLanguage: "Язык кода",
+  codeBlockLanguageSearch: "Найти язык",
   announceAiWriting: `${AI_NAME} пишет…`,
   announceAiDone: `${AI_NAME} закончил.`,
   announceChangesProposed: {

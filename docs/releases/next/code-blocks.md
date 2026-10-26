@@ -1,7 +1,7 @@
 ### Improved
 
-- A code block's **Copy** button sits in its top-right corner, next to a new **Select All** button.
-- A code block's language is picked from the app's own menu, like every other menu, instead of the system's.
+- A code block's language, **Copy** and a new **Select All** button sit together in its top-right corner.
+- A code block's language is picked from the app's own menu, which you can search by typing, instead of the system's.
 
 ### Fixed
 

@@ -45,7 +45,7 @@ test("the copy button copies the block's code and says so", async ({
   await expect(page.locator(`${block} code`)).toHaveText(CODE);
 });
 
-test("the copy and select buttons sit in the block's top-right corner", async ({
+test("the language, copy and select buttons sit in the block's top-right corner", async ({
   page,
 }) => {
   await openWithCode(page, {});
@@ -80,6 +80,13 @@ test("the language is picked from the app's own menu, and the colours follow at 
   await expect(
     page.locator(`${block} code .token.property`, { hasText: '"a"' }),
   ).toHaveCount(1);
+  // Typed into the menu's search, Enter takes the first match.
+  await page.locator(block).hover();
+  await picker.click();
+  await page.keyboard.type("yam");
+  await expect(page.getByRole("option")).toHaveText(["yaml", "yam"]);
+  await page.keyboard.press("Enter");
+  await expect(picker).toHaveText("yaml");
 });
 
 test("pasted code keeps its lines, Chinese comments and long lines too", async ({

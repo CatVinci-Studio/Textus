@@ -124,6 +124,7 @@ para usar una.
   diagramViewerHint:
     "Desplaza o pellizca para hacer zoom · arrastra para mover · doble clic para ajustar",
   codeBlockLanguage: "Lenguaje del código",
+  codeBlockLanguageSearch: "Buscar lenguaje",
   announceAiWriting: `${AI_NAME} está escribiendo…`,
   announceAiDone: `${AI_NAME} ha terminado.`,
   announceChangesProposed: {

@@ -1259,13 +1259,10 @@ br:is(.pending-delete, .pending-sentence-hot) {
   position: relative;
 }
 
-/* The header covers the block without taking the pointer; its parts show
-   while the block is hovered or being edited. Copy and Select All sit in
-   the top-right corner, over the code, on an opaque face. The language
-   picker hangs just below the bottom-right corner, outside the box, the
-   way Typora shows a fence's language: inside it covered a long last line
-   (#16). Its top padding bridges the gap to the box, so moving the
-   pointer down onto it doesn't count as leaving the block. */
+/* The header covers the block without taking the pointer. Its buttons -
+   the language, Copy, Select All - sit in the top-right corner, over the
+   code on an opaque face, while the block is hovered or being edited, or
+   its language menu is open. */
 .code-block-header {
   position: absolute;
   inset: 0;
@@ -1273,31 +1270,25 @@ br:is(.pending-delete, .pending-sentence-hot) {
   pointer-events: none;
 }
 
-.code-block-actions,
-.code-block-language {
+.code-block-actions {
   position: absolute;
-  right: 0;
+  top: 6px;
+  right: 6px;
   display: flex;
   gap: 4px;
   opacity: 0;
   transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
-.code-block-actions {
-  top: 6px;
-  right: 6px;
+.code-block-wrapper:hover .code-block-actions,
+.code-block-wrapper:focus-within .code-block-actions,
+.code-block-wrapper.is-picking-language .code-block-actions {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .code-block-language {
-  top: 100%;
-  padding-top: 2px;
-}
-
-.code-block-wrapper:hover :is(.code-block-actions, .code-block-language),
-.code-block-wrapper:focus-within
-  :is(.code-block-actions, .code-block-language) {
-  opacity: 1;
-  pointer-events: auto;
+  display: flex;
 }
 
 .code-block-copy,
@@ -1336,6 +1327,28 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 .code-block-copy.is-copied {
   color: var(--editor-accent);
+}
+
+/* The language menu's search field, kept at the top as the list scrolls. */
+.code-language-search {
+  position: sticky;
+  top: -4px;
+  margin: -4px -4px 4px;
+  padding: 4px;
+  background: var(--bg);
+}
+
+.code-language-search input {
+  width: 100%;
+  min-width: 9em;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  border: 1px solid var(--editor-border, var(--border-color));
+  border-radius: var(--radius-control);
+  background: var(--editor-bg, var(--bg));
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-sm);
 }
 
 /* Line numbers (code-line-numbers-plugin.ts): the gutter floats at the
