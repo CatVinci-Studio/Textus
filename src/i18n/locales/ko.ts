@@ -783,6 +783,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   autoCloseMarksLabel: "** 와 ` 짝 맞추기",
   autoCloseBracketsLabel: "(), [], “” 짝 맞추기",
   pdfPageNumbersLabel: "내보낼 때 쪽 번호 표시",
+  pdfLightColorsLabel: "PDF를 밝은 색으로 내보내기",
   infoTipLabel: "‘{label}’ 설명",
   infoTipLabelPlain: "설명",
   askAi: "AI에게 묻기…",

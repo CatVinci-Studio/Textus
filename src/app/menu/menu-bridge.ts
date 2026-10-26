@@ -31,8 +31,8 @@ export interface MenuBridgeHandlers {
    *  export carries what is on screen. */
   liveTabs: () => DocTab[];
   t: Strings;
-  /** Settings › "Page numbers in PDF", read when File > Export as PDF runs. */
   pdfPageNumbers: boolean;
+  pdfLightColors: boolean;
   diagramEngine: DiagramEngine;
   onOpenSettings: () => void;
   /** Plugins › Manage Plugins…: Settings at its Plugins page. */
@@ -128,7 +128,11 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       // the chosen file (no print dialog). See exportPdf in export-doc.
       listenToThisWindow("menu-export-pdf", () => {
         const tab = activeTabNow();
-        if (tab) void exportPdf(tab, h().t, h().pdfPageNumbers);
+        if (tab)
+          void exportPdf(tab, h().t, {
+            pageNumbers: h().pdfPageNumbers,
+            lightColors: h().pdfLightColors,
+          });
       }),
       listenToThisWindow("menu-export-html", () => {
         const tab = activeTabNow();

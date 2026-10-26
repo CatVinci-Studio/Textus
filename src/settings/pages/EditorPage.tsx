@@ -14,6 +14,7 @@ import { Select } from "../../ui/Select";
 import { emitMenuEvent } from "../../platform/menu-events";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canExportPdf, isIOSApp } from "../../platform/capabilities";
+import { isMacPlatform } from "../../platform/os";
 import { openExtensionsTab } from "./extensions-tab";
 
 /** Editor & Appearance: the theme, the window's layout and view modes, and how Markdown is typed and shown. */
@@ -181,6 +182,13 @@ export function EditorPage({
             checked={settings.pdfPageNumbers}
             onChange={(v) => setSettings({ pdfPageNumbers: v })}
           />
+          {isMacPlatform() && (
+            <ToggleRow
+              label={t.pdfLightColorsLabel}
+              checked={settings.pdfLightColors}
+              onChange={(v) => setSettings({ pdfLightColors: v })}
+            />
+          )}
         </SettingsGroup>
       )}
     </>
