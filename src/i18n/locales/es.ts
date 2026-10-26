@@ -1410,6 +1410,12 @@ para usar una.
   pluginRepository: "Código fuente",
   pluginReload: "Recargar",
   pluginUninstall: "Desinstalar",
+  pluginExport: "Exportar para publicar…",
+  pluginExportPrompt:
+    "Tu nombre como editor: minúsculas, números y guiones. Tu usuario de GitHub va bien. Sustituye a «local» en el id del complemento.",
+  pluginExportChooseFolder: "Elegir una carpeta…",
+  pluginExportDone:
+    "Exportado a {path}.\n\nConvierte esa carpeta en un repositorio de GitHub y sube una etiqueta como v0.1.0: su flujo de publicación publica el complemento. El README que contiene explica cómo aparecer en Textus.",
   pluginUriNotTaken: "Ningún complemento activado abre este enlace: {link}",
   pluginUnload: "Quitar",
   pluginUninstallAsk:

@@ -26,6 +26,7 @@ import { canSwitch } from "../../plugins/lifecycle";
 import { usageGuide } from "../../plugins/usage-guide";
 import { PluginSettingsWebview } from "../../plugins/plugin-views";
 import type { PluginManifest } from "../../plugins/manifest";
+import { exportPluginForPublishing } from "../../plugins/plugin-export";
 
 export type Attempt = (work: () => Promise<unknown>) => Promise<void>;
 
@@ -247,6 +248,14 @@ export function PluginPage({
             onClick={() => void attempt(() => reloadPlugin(record.id))}
           >
             {t.pluginReload}
+          </button>
+        )}
+        {(record.origin === "dev" || record.id.startsWith("local.")) && (
+          <button
+            type="button"
+            onClick={() => void exportPluginForPublishing(record.id)}
+          >
+            {t.pluginExport}
           </button>
         )}
         <button

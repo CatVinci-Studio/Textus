@@ -1277,6 +1277,12 @@ export default {
   pluginRepository: "源代码",
   pluginReload: "重新加载",
   pluginUninstall: "卸载",
+  pluginExport: "导出以发布…",
+  pluginExportPrompt:
+    "填写发布者名字（小写字母、数字和短横线），用你的 GitHub 用户名就很好。它会替换插件 id 里的“local”。",
+  pluginExportChooseFolder: "选择文件夹…",
+  pluginExportDone:
+    "已导出到 {path}。\n\n把这个文件夹建成 GitHub 仓库，推送一个 v0.1.0 这样的标签，里面的发布流程就会自动发布插件。怎么上架到 Textus，见文件夹里的 README。",
   pluginUriNotTaken: "没有已开启的插件能打开这个链接：{link}",
   pluginUnload: "移除",
   pluginUninstallAsk: "卸载 {name}？它的文件和保存的数据都会删除。",

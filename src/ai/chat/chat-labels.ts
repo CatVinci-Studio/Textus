@@ -94,6 +94,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     updatePlugin: t.chatUpdatePlugin,
     pluginInstalled: t.themeGalleryInstalled,
     usageGuide: t.pluginUsageGuide,
+    exportPlugin: t.pluginExport,
     pluginCantInstall: t.chatPluginCantInstall,
     permission: (p) => permissionLabel(p, t),
     language: lang,

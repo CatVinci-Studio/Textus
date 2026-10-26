@@ -1379,6 +1379,12 @@ type /name in a conversation to use one.
   pluginRepository: "Source",
   pluginReload: "Reload",
   pluginUninstall: "Uninstall",
+  pluginExport: "Export for Publishing…",
+  pluginExportPrompt:
+    "Your name as its publisher - lowercase letters, digits and dashes. Your GitHub name works well. It replaces “local” in the plugin's id.",
+  pluginExportChooseFolder: "Choose a Folder…",
+  pluginExportDone:
+    "Exported to {path}.\n\nMake that folder a GitHub repository and push a tag such as v0.1.0: its release workflow publishes the plugin. The README in it says how to have it listed in Textus.",
   pluginUriNotTaken: "No plugin that is turned on opens this link: {link}",
   pluginUnload: "Remove",
   pluginUninstallAsk:

@@ -1435,6 +1435,12 @@ utiliser une.
   pluginRepository: "Source",
   pluginReload: "Recharger",
   pluginUninstall: "Désinstaller",
+  pluginExport: "Exporter pour publier…",
+  pluginExportPrompt:
+    "Votre nom d’éditeur : minuscules, chiffres et tirets. Votre nom GitHub convient bien. Il remplace « local » dans l’id de l’extension.",
+  pluginExportChooseFolder: "Choisir un dossier…",
+  pluginExportDone:
+    "Exporté dans {path}.\n\nFaites de ce dossier un dépôt GitHub et poussez une étiquette comme v0.1.0 : son workflow de publication publie l’extension. Le README qu’il contient explique comment la faire figurer dans Textus.",
   pluginUriNotTaken: "Aucune extension activée n’ouvre ce lien : {link}",
   pluginUnload: "Enlever",
   pluginUninstallAsk:

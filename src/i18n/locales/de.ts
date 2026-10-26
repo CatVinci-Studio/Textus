@@ -1400,6 +1400,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginRepository: "Quellcode",
   pluginReload: "Neu laden",
   pluginUninstall: "Deinstallieren",
+  pluginExport: "Zum Veröffentlichen exportieren…",
+  pluginExportPrompt:
+    "Ihr Name als Herausgeber – Kleinbuchstaben, Ziffern und Bindestriche. Ihr GitHub-Name passt gut. Er ersetzt „local“ in der Plugin-ID.",
+  pluginExportChooseFolder: "Ordner wählen…",
+  pluginExportDone:
+    "Exportiert nach {path}.\n\nMachen Sie den Ordner zu einem GitHub-Repository und pushen Sie ein Tag wie v0.1.0: Sein Release-Workflow veröffentlicht das Plugin. Wie es in Textus gelistet wird, steht in der README darin.",
   pluginUriNotTaken: "Kein eingeschaltetes Plugin öffnet diesen Link: {link}",
   pluginUnload: "Entfernen",
   pluginUninstallAsk:

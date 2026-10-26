@@ -88,7 +88,7 @@ pub(super) fn require_not_app_data(app: &tauri::AppHandle, path: &Path) -> Resul
 }
 
 /// Where a plugin's own files are: its developer folder or `plugins/<id>/`.
-fn plugin_home(app: &tauri::AppHandle, state: &PluginsState, id: &str) -> Result<PathBuf, String> {
+pub(super) fn plugin_home(app: &tauri::AppHandle, state: &PluginsState, id: &str) -> Result<PathBuf, String> {
     require_id(id)?;
     if let Some(path) = state.plugins.get(id).and_then(|p| p.dev_path.clone()) {
         return Ok(PathBuf::from(path));

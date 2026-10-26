@@ -1,0 +1,42 @@
+name: release
+
+# Publishes the plugin when a version tag is pushed (v0.1.0, v0.2.0...):
+# its files at that tag, zipped, as a GitHub release Textus can install.
+# The zip holds exactly what the tag holds - less this folder and
+# .gitignore - so anyone can check a release against its source, as
+# the Textus plugin listing does.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the version
+        run: |
+          set -euo pipefail
+          id=$(jq -r .id textus-plugin.json)
+          version=$(jq -r .version textus-plugin.json)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::The tag is $GITHUB_REF_NAME but textus-plugin.json says $version."
+            exit 1
+          fi
+          echo "ID=$id" >> "$GITHUB_ENV"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - name: Package
+        run: |
+          set -euo pipefail
+          git archive --format=zip -o "$ID-$VERSION.zip" HEAD -- . ':!.github' ':!.gitignore'
+          sha256sum "$ID-$VERSION.zip" | tee "$ID-$VERSION.zip.sha256"
+      - name: Release
+        run: |
+          gh release create "$GITHUB_REF_NAME" "$ID-$VERSION.zip" \
+            --title "$ID $VERSION" \
+            --notes "SHA-256: $(cut -d' ' -f1 "$ID-$VERSION.zip.sha256")"

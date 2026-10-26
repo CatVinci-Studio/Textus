@@ -25,6 +25,7 @@
 pub mod access;
 pub mod ai_tools;
 pub mod catalog;
+pub mod export;
 pub mod files;
 pub mod install;
 pub mod metadata;
@@ -67,6 +68,7 @@ macro_rules! with_plugin_commands {
             $crate::plugins::install::plugin_load_dev,
             $crate::plugins::install::plugin_uninstall,
             $crate::plugins::uri::plugin_take_uris,
+            $crate::plugins::export::plugin_export,
             $crate::plugins::access::plugin_file,
             $crate::plugins::access::plugin_read_resource,
             $crate::plugins::access::plugin_fs_read,

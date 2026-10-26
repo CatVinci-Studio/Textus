@@ -1282,6 +1282,12 @@ export default {
   pluginRepository: "原始碼",
   pluginReload: "重新載入",
   pluginUninstall: "解除安裝",
+  pluginExport: "匯出以發佈…",
+  pluginExportPrompt:
+    "填寫發佈者名稱（小寫字母、數字和連字號），用你的 GitHub 使用者名稱就很好。它會取代外掛程式 id 裡的「local」。",
+  pluginExportChooseFolder: "選擇資料夾…",
+  pluginExportDone:
+    "已匯出到 {path}。\n\n把這個資料夾建成 GitHub 儲存庫，推送一個 v0.1.0 這樣的標籤，裡面的發佈流程就會自動發佈外掛程式。如何上架到 Textus，請見資料夾裡的 README。",
   pluginUriNotTaken: "沒有已開啟的外掛程式能開啟這個連結：{link}",
   pluginUnload: "移除",
   pluginUninstallAsk: "要解除安裝 {name} 嗎？它的檔案和保存的資料都會刪除。",

@@ -1399,6 +1399,12 @@ export default {
   pluginRepository: "Исходный код",
   pluginReload: "Перезагрузить",
   pluginUninstall: "Удалить",
+  pluginExport: "Экспортировать для публикации…",
+  pluginExportPrompt:
+    "Ваше имя как издателя — строчные буквы, цифры и дефисы. Хорошо подойдёт имя на GitHub. Оно заменит «local» в id плагина.",
+  pluginExportChooseFolder: "Выбрать папку…",
+  pluginExportDone:
+    "Экспортировано в {path}.\n\nСделайте эту папку репозиторием GitHub и отправьте тег вроде v0.1.0 — её рабочий процесс выпуска опубликует плагин. Как попасть в список Textus, написано в README внутри.",
   pluginUriNotTaken:
     "Ни один включённый плагин не открывает эту ссылку: {link}",
   pluginUnload: "Убрать",

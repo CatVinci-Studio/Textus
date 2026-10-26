@@ -1391,6 +1391,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginRepository: "Código-fonte",
   pluginReload: "Recarregar",
   pluginUninstall: "Desinstalar",
+  pluginExport: "Exportar para publicar…",
+  pluginExportPrompt:
+    "O seu nome como editor: minúsculas, números e hífenes. O seu nome no GitHub serve bem. Substitui “local” no id do plugin.",
+  pluginExportChooseFolder: "Escolher uma pasta…",
+  pluginExportDone:
+    "Exportado para {path}.\n\nFaça dessa pasta um repositório GitHub e envie uma etiqueta como v0.1.0: o fluxo de publicação dela publica o plugin. O README lá dentro explica como aparecer no Textus.",
   pluginUriNotTaken: "Nenhum plugin ativado abre este link: {link}",
   pluginUnload: "Remover",
   pluginUninstallAsk:

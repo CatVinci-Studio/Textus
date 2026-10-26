@@ -1113,7 +1113,17 @@ export function installDevTauriShim(): void {
       case "plugin_install":
       case "plugin_load_dev":
         return Promise.reject("The dev shim installs no plugin from a file.");
+      // A picker's answer (`window.__devPickPluginFolder`), and Export for
+      // Publishing (plugins/export.rs): what it was asked, in
+      // `window.__devPluginExports`, and the folder it would make.
       case "plugin_pick_package":
+        return Promise.resolve(w.__devPickPluginFolder ?? null);
+      case "plugin_export": {
+        const asked = { id, publisher: args.publisher, folder: args.folder };
+        ((w.__devPluginExports ??= []) as unknown[]).push(asked);
+        const name = String(id).split(".").slice(1).join(".");
+        return Promise.resolve(`${args.folder}/${args.publisher}.${name}`);
+      }
       case "set_plugin_menu":
       case "set_tray_plugin_items":
         return Promise.resolve(null);

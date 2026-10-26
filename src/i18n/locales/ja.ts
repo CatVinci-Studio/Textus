@@ -1342,6 +1342,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginRepository: "ソース",
   pluginReload: "再読み込み",
   pluginUninstall: "アンインストール",
+  pluginExport: "公開用に書き出す…",
+  pluginExportPrompt:
+    "公開者名を入力してください（小文字・数字・ハイフン）。GitHub のユーザー名がおすすめです。プラグイン ID の「local」がこの名前に置き換わります。",
+  pluginExportChooseFolder: "フォルダを選ぶ…",
+  pluginExportDone:
+    "{path} に書き出しました。\n\nこのフォルダを GitHub リポジトリにして v0.1.0 のようなタグをプッシュすると、同梱のリリース用ワークフローがプラグインを公開します。Textus に掲載する方法はフォルダ内の README をご覧ください。",
   pluginUriNotTaken: "このリンクを開ける有効なプラグインがありません：{link}",
   pluginUnload: "取り除く",
   pluginUninstallAsk:

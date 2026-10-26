@@ -10,12 +10,14 @@ import { localize, type Permission } from "../../plugins/manifest";
 import { openUsageGuide } from "../../plugins/usage-guide";
 import { showMessage } from "../../ui/app-dialog";
 import { errorText } from "../../utils/error-text";
+import { exportPluginForPublishing } from "../../plugins/plugin-export";
 
 export interface ReplyPluginLabels {
   installPlugin: string;
   updatePlugin: string;
   pluginInstalled: string;
   usageGuide: string;
+  exportPlugin: string;
   /** "Can't be installed: {reason}". */
   pluginCantInstall: string;
   /** What a permission lets a plugin do, in a few words. */
@@ -111,6 +113,14 @@ function ReplyPluginChip({
       {current && (
         <button type="button" onClick={() => void openUsageGuide(manifest.id)}>
           {labels.usageGuide}
+        </button>
+      )}
+      {current && (
+        <button
+          type="button"
+          onClick={() => void exportPluginForPublishing(manifest.id)}
+        >
+          {labels.exportPlugin}
         </button>
       )}
     </div>
