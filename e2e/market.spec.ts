@@ -114,9 +114,10 @@ test("Get more leads with the recommended plugins, until something is searched f
     "catvinci.tasks",
     "catvinci.daily-notes",
   ]);
-  await expect(page.locator(".plugin-subgroup-title").first()).toHaveText(
+  await expect(page.locator(".plugin-subgroup-title")).toContainText([
+    "Packs",
     "Recommended",
-  );
+  ]);
   await page.getByRole("searchbox").fill("kanban");
   await expect(page.locator(".market-recommended")).toHaveCount(0);
 });

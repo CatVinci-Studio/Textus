@@ -114,7 +114,7 @@ test("Get plugins searches the catalog by name, what it does and who made it", a
   await expect(cards).toHaveCount(1);
   await expect(cards).toHaveAttribute("data-catalog", "catvinci.kanban");
   // Every word has to match, in any field.
-  await search.fill("catvinci graph");
+  await search.fill("catvinci graph view");
   await expect(cards).toHaveCount(1);
   await search.fill("CatVinci Studio");
   await expect(cards).toHaveCount(all);

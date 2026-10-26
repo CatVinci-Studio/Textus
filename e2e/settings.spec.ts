@@ -592,10 +592,11 @@ test.describe("desktop", () => {
       t.shortcutHeadingsGroupLabel,
       t.shortcutFixedGroupLabel,
     ]);
-    // Finding, in the document and among the folder's files, comes first.
+    // Finding - commands, in the document, among the folder's files - first.
     await expect(
       panel.locator(".settings-group").first().locator(".settings-row-label"),
     ).toHaveText([
+      "Command Palette",
       "Find & replace",
       "Search file names",
       "Next tab",

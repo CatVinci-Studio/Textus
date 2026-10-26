@@ -190,11 +190,14 @@ function App() {
             zen: zenMode,
           }}
           fixedShortcuts={fixedShortcutGroups(t, platformName())}
-          pluginCommands={commands().map((c) => ({
-            id: c.id,
-            title: c.title(t),
-            shortcut: c.shortcut,
-          }))}
+          pluginCommands={commands()
+            // Textus's own (Save, Close Tab) have their keys under File.
+            .filter((c) => !c.id.startsWith("textus."))
+            .map((c) => ({
+              id: c.id,
+              title: c.title(t),
+              shortcut: c.shortcut,
+            }))}
         />
 
         <ClosePrompt
