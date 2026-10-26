@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { PHONE, openPhone, pasteMarkdown } from "./helpers";
 
-// The iPhone layout (mobile/styles), checked in Chromium with touch and a
-// phone-sized viewport (see PHONE and openPhone in helpers.ts).
+// The iPhone layout, checked in Chromium with touch and a phone-sized
+// viewport.
 test.use(PHONE);
 
 test("the phone menu opens the sidebar as a drawer over the page", async ({
@@ -111,8 +111,7 @@ test("with the keyboard up the AI sheet keeps its handle, and drops what no long
   await openPhone(page);
   await page.locator(".window-bar-toggle").tap();
   await expect(page.locator(".agent-panel-empty-mark")).toBeVisible();
-  // The keyboard shortens the web view (KeyboardFit.swift) - on a small
-  // phone, to about this.
+  // The keyboard shortens the web view to about this on a small phone.
   await page.setViewportSize({ width: 430, height: 440 });
   const sheet = await page.locator(".agent-panel").boundingBox();
   expect(Math.round(sheet!.y)).toBe(Math.round(440 * 0.45));
@@ -199,8 +198,7 @@ test("a dragged AI sheet settles without replaying its entrance", async ({
     .poll(async () => (await sheet.boundingBox())!.height)
     .toBeGreaterThan(932 * 0.9);
   await expect(sheet).toHaveAttribute("data-settled", "");
-  // Back at its stop, no animation starts over: the slide up from the
-  // bottom edge (a flash under reduced motion) played again before.
+  // Back at its stop, no animation starts over.
   expect(
     await sheet.evaluate((el) => ({
       name: getComputedStyle(el).animationName,
@@ -228,7 +226,7 @@ test("the line being typed stays above the keyboard toolbar", async ({
   const scroller = page.locator('[data-active-tab="true"] .editor-scroll');
   await scroller.evaluate((el) => (el.scrollTop = 0));
   // A tap low on the screen, then the keyboard comes up: the web view
-  // shortens (KeyboardFit.swift), which a smaller viewport stands in for.
+  // shortens, which a smaller viewport stands in for.
   await page.touchscreen.tap(100, 800);
   const toolbar = page.getByRole("toolbar", { name: "Formatting" });
   await expect(toolbar).toBeVisible();

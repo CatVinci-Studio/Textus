@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { PHONE, openPhone } from "./helpers";
 
-// The phone's dialogs, menus and bars (mobile/styles/chrome.css), checked in
-// Chromium with touch and a phone-sized viewport (see PHONE in helpers.ts).
+// The phone's dialogs, menus and bars, checked in Chromium with touch and a
+// phone-sized viewport.
 test.use(PHONE);
 
 async function menuItem(page: Page, name: string) {
@@ -157,7 +157,7 @@ test("a full-screen page covers the find bar but not its own alerts", async ({
   await openPhone(page);
   await menuItem(page, "Find & Replace…");
   await menuItem(page, "Settings…");
-  // Settings loads on first use (lazy-module.ts): here before it's checked.
+  // Settings loads on first use: wait for it before checking.
   await expect(page.locator(".settings-panel")).toBeVisible();
   const hitAt = (x: number, y: number) =>
     page.evaluate(

@@ -1,13 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
-// #146: a colour code gets a small swatch of its colour before it, as
-// Settings › Editor & Appearance › Swatches before colour codes says: off
-// (the default); in code only - inline code that is a colour and colour
-// literals in code blocks; or everywhere - also a hex code or colour
-// function written in the text of a paragraph, heading, list, quote or
-// table. The text itself is unchanged, and so is the way the caret moves
-// through it, what find finds and what is saved.
+// A colour code gets a swatch before it, per Settings: off (the default), in
+// code only, or everywhere. The text, the caret's moves, find and what is
+// saved are unchanged.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 /** Settings.colorSwatches. */
@@ -356,7 +352,7 @@ test("swatches never reach the saved file", async ({ page }) => {
   await openApp(page, {
     settings: { language: "en", autosave: true, colorSwatches: "everywhere" },
   });
-  // A stand-in for commands/fs.rs, as in autosave.spec.ts.
+  // A stand-in for the backend's file commands.
   await page.evaluate(
     ({ path, text }) => {
       const w = window as unknown as Record<string, unknown> & {

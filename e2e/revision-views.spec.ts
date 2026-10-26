@@ -1,12 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
-// The revision views (the review bar's eye menu) after the owner's flow in
-// 1.1.0-rc.6: Write adds a few paragraphs, then rewrites them. The
-// rewrite's anchor spans paragraphs, so it used to be shown whole - one
-// struck block and one green block - and no view changed anything. Now it
-// is shown sentence by sentence and every view applies; Write's new text,
-// which has no original, stays a green block in the margin views.
+// The revision views: Write adds paragraphs, then rewrites them across
+// paragraphs, shown sentence by sentence in every view. New text with no
+// original stays a green block in the margin views.
 
 const STORY =
   "The lighthouse keeper woke before dawn. He climbed the stairs slowly. The lamp was still warm.\n\nOutside, the sea was calm. A gull cried somewhere far off.";
@@ -280,8 +277,8 @@ test("hover and the review bar darken a pair in the theme's --revision-*-hover-b
     .locator(".agent-proposal-actions .inline-chat-action-primary")
     .click();
   await revise(page);
-  // What an imported theme or custom CSS would set - including the outline
-  // variables of 1.1.0, which no longer draw anything.
+  // What an imported theme or custom CSS would set, including outline
+  // variables that no longer draw anything.
   await page.addStyleTag({
     content:
       ":root { --revision-insert-hover-bg: rgb(1, 120, 2); --revision-delete-hover-bg: rgb(140, 3, 4); --revision-insert-outline: rgb(5, 100, 6); --revision-delete-outline: rgb(110, 7, 8); --revision-insert-focus: rgb(5, 100, 6); --revision-delete-focus: rgb(110, 7, 8); }",

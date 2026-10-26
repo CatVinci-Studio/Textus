@@ -1,12 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown, SAMPLE_DOC } from "../../helpers";
 
-// Screenshots of Settings › Shortcuts with its fixed list (#214), and of the
-// sidebar, tab bar and AI panel at their narrowest at 100% and 125%
-// Interface Text Size (#150) - for review, not a baseline. Runs only with
-// TEXTUS_SHOTS_DIR set to where the PNGs go:
-//
-//   TEXTUS_SHOTS_DIR=../assets/working/ui-1.2.0 npm run screenshots:review -- ui-1-2-0
+// Review screenshots of Settings › Shortcuts and of the narrowest panels at
+// 100% and 125% text size. Runs only with TEXTUS_SHOTS_DIR set.
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");

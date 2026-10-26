@@ -2,12 +2,8 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 // Hovering a changed sentence, or its card in the margin, darkens the
-// pair's tints - as a review note's passage darkens under the pointer -
-// and nothing more: no outline, and the struck original and the
-// replacement both stay drawn as they were. In 1.1.0-rc.4 the hover wrote
-// a class onto the decorated text, ProseMirror redrew the paragraph, and
-// every strike and replacement in it replayed its entrance - the red and
-// the green vanished under the pointer and faded back.
+// pair's tints and nothing more: no outline, and no redraw that would
+// replay the entrances.
 
 const DOC = `# Field notes
 
@@ -105,11 +101,9 @@ async function expectSidesUnchanged(page: Page) {
   expect(problems).toEqual([]);
 }
 
-/** Each drawn side of a change, or the text of its margin card, is in its
- *  darker hover tint - green for the new text, red for the original, the
- *  theme's --revision-*-hover-bg - and none is outlined. Colours are
- *  compared as values: after the transition Chromium reports the tint in
- *  oklab, the variable in srgb. */
+/** Each drawn side of a change, or its margin card's text, is in its darker
+ *  hover tint and not outlined. Colours are compared as values: Chromium
+ *  reports the tint in oklab, the variable in srgb. */
 async function expectDarker(sides: Locator) {
   await expect
     .poll(() =>
@@ -182,9 +176,7 @@ async function hover(page: Page, target: Locator) {
 }
 
 /** The review bar's prev / next move its tint from sentence to sentence
- *  without redrawing anything either: in 1.1.0-rc.4 the new text's widget
- *  was keyed by the pointer, so every step redrew it and it faded in from
- *  nothing again. */
+ *  without redrawing anything either. */
 async function stepWithReviewBar(page: Page) {
   const nav = page.locator(".review-bar-nav button");
   for (const [button, index] of [
@@ -235,9 +227,8 @@ const MODES = [
   ["final", ["pending-insert"], true, true],
 ] as const;
 
-// Every view in light. In dark only the inline view: it draws both sides
-// with their hover tints, which are all of this that differs by colour
-// scheme.
+// Every view in light. In dark only the inline view, which draws both
+// sides' hover tints: all that differs by colour scheme.
 const CASES = [
   ...MODES.map((mode) => [mode, "light"] as const),
   [MODES[0], "dark"] as const,
@@ -253,7 +244,7 @@ for (const [[display, sides, margin, steps], colorScheme] of CASES) {
       settings: { language: "en", revisionDisplay: display },
       storage: { "textus-agent-panel-open": "1" },
       colorScheme,
-      // The bug was an entrance replaying: keep the motion on.
+      // Entrances must not replay: keep the motion on.
       animations: true,
     });
     await proposeRevision(page);

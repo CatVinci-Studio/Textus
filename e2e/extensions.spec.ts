@@ -2,10 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * Settings › Extensions (src/settings/pages/ExtensionsPage.tsx): plugins,
- * themes, skills and MCP servers, one tab each. The MCP servers are the
- * dev shim's: each one on is ready with one tool, and a command called
- * "missing" isn't installed.
+ * Settings › Extensions: plugins, themes, skills and MCP servers, one tab
+ * each. The dev shim's MCP servers are each ready with one tool, and a
+ * command called "missing" isn't installed.
  */
 
 async function openExtensions(page: Page) {

@@ -1,12 +1,8 @@
 import { test, type Page } from "@playwright/test";
 import { PHONE, openApp, openPhone } from "../../helpers";
 
-// Settings' search box: the results of a query, and the row a result led
-// to while its tint is on, in English and Chinese, on the desktop and the
-// phone, light and dark - for review, not a baseline. Runs only with
-// TEXTUS_SHOTS_DIR set to where the PNGs go:
-//
-//   TEXTUS_SHOTS_DIR=../assets/working/settings-search-1.2.0 npm run screenshots:review -- settings-search
+// Review screenshots of Settings' search results and the row a result led
+// to. Runs only with TEXTUS_SHOTS_DIR set to where the PNGs go.
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");

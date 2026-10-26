@@ -2,9 +2,8 @@ import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * View › Command Palette (app/command-palette.ts): the menus' items and
- * the plugins' commands in one list, found by typing; Enter runs the one
- * picked.
+ * The Command Palette: the menus' items and the plugins' commands in one
+ * list, found by typing; Enter runs the one picked.
  */
 
 const HOST = `
@@ -47,7 +46,7 @@ test("the palette finds a menu item and a plugin's command, and runs them", asyn
     };
   }, ENTRY);
   await openApp(page, { settings: { language: "en" } });
-  // The backend's menu dispatch (menu.rs): an item run sends its event.
+  // The backend's menu dispatch: an item run sends its event.
   await page.evaluate(() => {
     const w = window as unknown as {
       __TAURI_INTERNALS__: {

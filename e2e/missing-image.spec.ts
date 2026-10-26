@@ -3,10 +3,8 @@ import { PHONE, openPhone, pasteMarkdown } from "./helpers";
 import { DOC_PATH, PICKED, calls, editor, openDoc } from "./image-disk";
 
 /**
- * A picture that won't load shows a card in its place
- * (editor/images/missing-image.ts): its name, the reason - asked of the
- * backend, not guessed from the load error - and Choose image… / Show in
- * folder.
+ * A picture that won't load shows a card in its place: its name, the reason
+ * (asked of the backend, not guessed), and Choose image… / Show in folder.
  */
 
 async function emit(page: Page, name: string) {

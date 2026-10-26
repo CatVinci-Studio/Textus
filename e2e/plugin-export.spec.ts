@@ -2,10 +2,8 @@ import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * Export for Publishing (plugins/store/plugin-export.ts, src-tauri
- * plugins/export.rs): a plugin you made goes into a folder under your
- * name, ready to be a repository; the window asks the name and the
- * folder, and says where it went. The layout itself is export.rs's tests.
+ * Export for Publishing: a plugin you made goes into a folder under your
+ * name, ready to be a repository. The Rust tests cover the layout.
  */
 
 const ENTRY = {

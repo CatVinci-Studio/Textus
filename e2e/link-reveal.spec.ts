@@ -1,11 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
-// A link the caret is on shows as its Markdown, as Typora shows it, and
-// that Markdown is edited in place: click or arrow onto a link and its
-// `[text](url)` (or `[text][ref]`, `<url>`, a bare URL) is text; leave it
-// and it is a link again - with the URL or the text as edited. Ctrl/Cmd+
-// click still opens it. The file is opened the way a dropped file is.
+// A link the caret is on shows as its Markdown, edited in place; leave it and
+// it is a link again, as edited. Ctrl/Cmd+click still opens it. The file is
+// opened the way a dropped file is.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const source = `${editor} .link-source`;
@@ -45,7 +43,7 @@ async function openDoc(page: Page) {
 }
 
 /** Presses `key` `times` times, a frame apart: pressed back to back,
- *  Playwright's WebKit loses some arrow presses (on main as well). */
+ *  Playwright's WebKit loses some arrow presses. */
 async function press(page: Page, key: string, times = 1) {
   for (let i = 0; i < times; i++) {
     await page.keyboard.press(key);

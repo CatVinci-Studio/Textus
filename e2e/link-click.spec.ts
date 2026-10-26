@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
-// Issue #152: Ctrl/Cmd+click follows a link - a Markdown file opens in a
-// tab, a web link goes to the system browser - while a plain click only
-// places the caret. The document is opened the way a dropped file is, so
-// it has a path for relative links to resolve against.
+// Ctrl/Cmd+click follows a link (a Markdown file in a tab, a web link in the
+// browser) while a plain click only places the caret. Opened as a dropped
+// file is, the document has a path for relative links.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 

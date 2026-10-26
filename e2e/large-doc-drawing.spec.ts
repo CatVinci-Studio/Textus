@@ -1,9 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// In a large document (editor/large-doc.ts), a formula or a diagram off
-// screen is drawn only once it comes near it (draw-when-visible.ts) - and
-// an export, which copies the page, still has every one of them drawn.
+// In a large document a formula or a diagram off screen is drawn only once
+// it comes near, and an export, which copies the page, still has all drawn.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const COUNT = 1400;

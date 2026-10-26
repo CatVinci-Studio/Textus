@@ -3,10 +3,8 @@ import { pasteMarkdown } from "./helpers";
 import { hasPlugin, openWithPlugins } from "./plugin-helpers";
 
 /**
- * The Vim plugin (textus-plugins' catvinci.vim) through the editor's key
- * capture (src/plugins/contributions/editor-input.ts): normal mode's keys never type,
- * motions and operators edit as typing does, insert mode types, u undoes,
- * and flash jumps to a label.
+ * The Vim plugin through the editor's key capture: normal mode's keys
+ * never type.
  */
 
 test.skip(!hasPlugin("catvinci.vim"), "catvinci.vim is not published yet");

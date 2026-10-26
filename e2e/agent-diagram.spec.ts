@@ -1,11 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// A ```mermaid block Textus AI proposes is drawn as its diagram while it
-// waits for a decision - it used to show as one line of inline code until
-// Accept - and while it streams in, the diagram grows a statement at a time,
-// only the new parts fading in. Accept keeps the drawing, Reject and undo
-// take it away with the proposal.
+// A proposed ```mermaid block is drawn as its diagram while it waits and
+// while it streams, only new parts fading in. Accept keeps it; Reject and
+// undo remove it.
 
 const DIAGRAM = "```mermaid\nflowchart LR\n  A[Start] --> B[Finish]\n```";
 const editor = '[data-active-tab="true"] .ProseMirror';

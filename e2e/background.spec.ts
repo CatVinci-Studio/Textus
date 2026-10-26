@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
-// Settings › General › Application's background switch against a canned
-// background_status standing in for src-tauri/src/background/.
+// Settings › General's background switch against a canned background_status.
 
-// English labels, as in src/i18n/locales/en.ts.
+// English labels.
 const t = {
   group: "Application",
   toggle: "Keep running in the background",

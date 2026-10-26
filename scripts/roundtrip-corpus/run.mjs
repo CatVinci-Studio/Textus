@@ -1,12 +1,6 @@
 #!/usr/bin/env node
-// Runs the save round trip on the whole corpus (docs/dev/saving.md), one
-// vitest process per shard, and prints what failed, by kind.
-//
-//   npm run test:roundtrip                  (fetch the corpus first:
-//   npm run test:roundtrip -- --shards 4     node scripts/roundtrip-corpus/fetch.mjs)
-//   npm run test:roundtrip -- --rounds 3    (each edit kind three times per file)
-//
-// The merged report is .cache/roundtrip-corpus/report/summary.json.
+// Runs the save round trip on the fetched corpus, one vitest process per
+// shard, and prints what failed, by kind.
 import { spawn } from "node:child_process";
 import { availableParallelism } from "node:os";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";

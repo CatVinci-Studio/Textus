@@ -2,10 +2,8 @@ import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { mockInvoke, openApp } from "./helpers";
 
-// The theme skill's reply (src/theme/fixtures/theme-skill-reply.md, what
-// /theme wrote for a short request) in the AI panel: "Use this theme"
-// under it installs the ```css block as a user theme, the way Import CSS…
-// does, and switches to it.
+// The theme skill's reply in the AI panel: "Use this theme" installs the
+// ```css block as a user theme and switches to it.
 
 const reply = readFileSync("src/theme/fixtures/theme-skill-reply.md", "utf8");
 

@@ -1,11 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// The sidebar's file tree as a small file manager (sidebar/FileTree.tsx):
-// up by the parent folder's name, sort and filter, New Document and New
-// Folder from the right-click menu, and dragging a row into a folder. The
-// dev shim's in-memory folder (window.__devFs) stands in for the disk
-// (commands/tree_ops.rs in the app).
+// The sidebar's file tree as a small file manager: up to the parent, sort and
+// filter, New Document and New Folder, and dragging a row into a folder. The
+// dev shim's in-memory folder (window.__devFs) stands in for the disk.
 
 const FILES: Record<string, string> = {
   "/work/notes/b.md": "# Bravo",

@@ -1,10 +1,5 @@
-// Import cycles in src/: modules that, through their imports, end up
-// importing themselves. A cycle ties its modules into one - none can be
-// read, tested or loaded lazily on its own - so the frontend keeps none.
-// Type-only imports leave nothing at runtime and don't count; nor do
-// dynamic import()s, which load later by design.
-//   node scripts/check-cycles.mjs          lists them, fails if any
-//   node scripts/check-cycles.mjs --list   lists them, exits 0
+// Fails on import cycles in src/, which tie modules into one. Type-only and
+// dynamic imports don't count. `--list` lists them and exits 0.
 
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";

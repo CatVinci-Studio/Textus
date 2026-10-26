@@ -2,12 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "../../helpers";
 import { STORY, STORY_CLASSICAL, streamRevise } from "../../revise-mock";
 
-// Screenshots of a Revise rewrite in the margin views - mid-stream and
-// settled, one story (8 changes) and three (24), light and dark, in
-// Chinese - for review, not a baseline. Runs only with TEXTUS_SHOTS_DIR set
-// to where the PNGs go:
-//
-//   TEXTUS_SHOTS_DIR=../assets/working/revise-margin npm run screenshots:review -- revise-margin
+// Review screenshots of a Revise rewrite in the margin views, mid-stream
+// and settled. Runs only with TEXTUS_SHOTS_DIR set to where the PNGs go.
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");

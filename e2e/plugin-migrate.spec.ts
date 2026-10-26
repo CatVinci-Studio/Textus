@@ -2,10 +2,8 @@ import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * The official plugins of before the plugin API 1.0 (1.x) moved to their
- * 0.1.0 rewrites when a window starts (plugins/store/migrate-official.ts): Tasks
- * replaced from the catalog, still on, its permissions under their new
- * names; Split Panes - now part of Textus - removed.
+ * Official plugins written for the old plugin API move to their rewrites
+ * when a window starts; Split Panes, now part of Textus, is removed.
  */
 
 const old = (id: string, permissions: string[]) => ({

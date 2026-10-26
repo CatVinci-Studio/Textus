@@ -1,10 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// File > Open Folder… and the sidebar's file-name search (#152, #79, #196).
-// The folder pins the tree's root; without one, opening a file deeper in
-// the tree no longer re-roots it there. The dev shim's in-memory folder
-// (window.__devFs) stands in for the disk.
+// File > Open Folder… and the sidebar's file-name search. The folder pins
+// the tree's root; the dev shim's in-memory folder stands in for the disk.
 
 const FILES: Record<string, string> = {
   "/work/notes/a.md": "# Alpha",

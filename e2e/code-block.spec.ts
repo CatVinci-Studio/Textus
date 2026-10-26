@@ -53,7 +53,7 @@ test("the header and line numbers stay out of a printout", async ({ page }) => {
 test("line numbers are off by default", async ({ page }) => {
   await openWithCode(page, {});
   await expect(page.locator(`${block} .code-line-gutter`)).toHaveCount(0);
-  // The long line wraps, as it always has.
+  // The long line wraps.
   const lines = await codeLineMiddles(page);
   expect(lines.length).toBeGreaterThan(4);
 });

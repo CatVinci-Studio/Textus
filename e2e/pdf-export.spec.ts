@@ -2,14 +2,12 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 /**
- * PDF export on Windows (export/paginate.ts): the sheet has no margin, so
- * the top and bottom margins are laid out by the export itself - and a
- * block taller than a page (#151) has to be cut into one piece per page
- * for its text, background and border all to stay out of them. Chromium
- * stands in for WebView2, which lays the page out the same way.
+ * PDF export on Windows: the export lays out the page margins itself, so a
+ * block taller than a page is cut into one piece per page. Chromium stands
+ * in for WebView2.
  */
 
-// WINDOWS_PAGE in export/paginate.ts.
+// Keep in step with WINDOWS_PAGE.
 const PAGE = { width: 794, height: 1122, margin: 76 };
 
 const DOC = [

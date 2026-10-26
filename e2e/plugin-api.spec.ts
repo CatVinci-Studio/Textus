@@ -2,10 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 /**
- * The plugin API draft (src/plugin-api.ts), as a development build puts it
- * on window.__textusPlugins: a command and its shortcut, an item in the
- * editor's menu, a sidebar tab and a Settings page, each added from
- * outside and taken back.
+ * The plugin API on window.__textusPlugins in a development build: a
+ * command, menu item, sidebar tab and Settings page, each added and removed.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';

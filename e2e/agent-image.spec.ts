@@ -1,11 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// A picture Textus AI makes (generate_image, #194) is a proposal like any
-// other insertion: drawn in place with Accept and Reject, and saved only
-// on Accept, the way Settings › Images says for a pasted one. Reject
-// leaves nothing behind; undo brings the proposal back without a second
-// file. The image service itself is the backend's (mocked here).
+// A picture Textus AI makes is a proposal like any other insertion: saved
+// only on Accept, Reject leaves nothing, undo restores it without a second file.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const pending = `${editor} .pending-insert img`;
@@ -235,14 +232,13 @@ test("a proposed picture larger than the page keeps within its column", async ({
     const { width, height } = img.getBoundingClientRect();
     return { width, height };
   });
-  // The column's width, the picture's shape (as .image-view draws it once
-  // accepted).
+  // The column's width, the picture's shape.
   expect(Math.abs(box.width - column)).toBeLessThan(6);
   expect(box.height / box.width).toBeCloseTo(900 / 1600, 2);
 });
 
-// generate_image returns while the picture is made (ai/images.rs): the
-// call records it as pending, and ai_generated_image answers once it is.
+// generate_image returns while the picture is made: the call records it as
+// pending, and ai_generated_image answers once it is.
 const painting = {
   ...made,
   image: { id: "abc123", width: 1536, height: 1024, pending: true },
@@ -338,9 +334,8 @@ test("Accept waits for a picture being made, and saves it once it has come", asy
   expect(await calls(page, "save_pasted_image")).toHaveLength(1);
 });
 
-/** A reply that writes text with a picture in it (ai/images/inline.rs
- *  placed its line), the picture taking `ms` to come (or failing then
- *  with `refusal`). */
+/** A reply that writes text with a picture in it, the picture taking `ms`
+ *  to come (or failing then with `refusal`). */
 async function writeWithPictureInside(
   page: Page,
   ms: number,
@@ -734,7 +729,7 @@ test("pictures per request is a setting, sent with each request", async ({
   page,
 }) => {
   await open(page);
-  // The backend's image catalog (ai/images.rs), which Settings lists.
+  // The backend's image catalog, which Settings lists.
   await mockInvoke(page, {
     list_image_providers: [
       {
@@ -782,10 +777,8 @@ test("pictures per request is a setting, sent with each request", async ({
     .toBe(4);
 });
 
-/** A reply as a model streams it: text with a picture line in it, a
- *  line at a time - the next when the test calls `__nextLine()` - and the
- *  backend saying the picture is begun (the `picture` event) once its
- *  line is complete, as ai/images/inline.rs does. */
+/** A reply streamed a line at a time (the next on `__nextLine()`), with the
+ *  `picture` event once the picture's line is complete. */
 async function streamTextWithPicture(page: Page, lines: string[]) {
   await page.evaluate((lines) => {
     type Send = (event: unknown) => void;

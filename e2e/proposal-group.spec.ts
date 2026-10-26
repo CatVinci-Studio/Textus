@@ -2,10 +2,8 @@ import { expect, test } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * Proposals one reply made in a row for the same reason - a translation, a
- * paragraph at a time - are one card in the conversation (rc.6 feedback:
- * "Translate this paragraph" six cards over): the reason once, a row each
- * with its own ✓ / ✕, and Accept all / Reject all.
+ * Proposals one reply made in a row for the same reason are one card: the
+ * reason once, a row each with its own ✓ / ✕, and Accept all / Reject all.
  */
 
 const PARAS = [

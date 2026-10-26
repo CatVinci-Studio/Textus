@@ -1,11 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, PHONE, openPhone } from "./helpers";
 
-// The Settings panel: the AI page's layout and the focus/state bugs fixed
-// with it.
+// The Settings panel.
 
-// The English labels these tests look for, as in src/i18n/locales/en.ts
-// (the e2e project can't import it). AI_NAME is src/i18n/names.ts's.
+// Keep in step with the English locale; e2e can't import it.
 const AI_NAME = "Textus AI";
 const t = {
   settingsTitle: "Settings",
@@ -81,7 +79,7 @@ const defaultEditorStatus = {
   appImage: { supported: false, isDefault: false, chooseInSettings: false },
 };
 
-/** The canned commands Settings sent, in order (dev-tauri-shim). */
+/** The canned commands Settings sent, in order. */
 function invokeCalls(page: Page) {
   return page.evaluate(() =>
     (
@@ -108,8 +106,7 @@ test.describe("desktop", () => {
   }) => {
     await openApp(page, { settings: { language: "en" } });
     const panel = await openSettings(page);
-    // Six categories: AI service and Agent are one page now, and plugins
-    // have theirs.
+    // Six categories, plugins among them.
     await expect(panel.locator(".settings-nav-item")).toHaveText([
       t.navGeneral,
       t.navEditor,
@@ -155,7 +152,7 @@ test.describe("desktop", () => {
     await expect(
       panel.getByRole("checkbox", { name: t.webSearchLabel, exact: true }),
     ).not.toBeChecked();
-    // The UI never says "Agent" any more.
+    // The UI never says "Agent".
     await expect(panel).not.toContainText(/\bAgent\b/);
 
     // Turning the chat off hides the two groups below it.
@@ -289,7 +286,7 @@ test.describe("desktop", () => {
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: t.navAi, exact: true }).click();
     // Nothing to list for a custom endpoint: a field to type the name in,
-    // which used to become a one-option select after the first character.
+    // which stays a field after the first character.
     for (const label of [t.writingModelLabel, t.agentModelLabel]) {
       const field = panel.getByRole("textbox", { name: label });
       await field.pressSequentially("mock-model-1");
@@ -487,8 +484,8 @@ test.describe("desktop", () => {
   test("every page is as wide as the others, whichever category is chosen", async ({
     page,
   }) => {
-    // Russian: its longest name ("Editor & Appearance") sets the nav's
-    // width, and that one turning bold once narrowed the page beside it.
+    // Russian: its longest name sets the nav's width, and turning bold
+    // must not narrow the page beside it.
     await openApp(page, { settings: { language: "ru" } });
     await openSettings(page);
     const panel = page.locator(".settings-panel");

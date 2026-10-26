@@ -2,12 +2,9 @@ import { expect, test } from "@playwright/test";
 import { blockIds, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * A review note shows in the margin as soon as it has said where it goes
- * and what it says - by its block, as the model names a passage now - one
- * note after another, not all of them once the reply is done (rc.6). The
- * model sends all of a reply's notes in one call (1.2.1), which the backend
- * streams on as a call per note (agent/lists.rs) - what the scripted model
- * here sends.
+ * A review note shows in the margin as soon as it has said where it goes and
+ * what it says, one after another. The backend streams a call of all notes on
+ * as a call per note, which is what the scripted model here sends.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';
@@ -59,7 +56,7 @@ test("each note of a reply shows in the margin as soon as it is written, and the
             kind: "ToolCall",
             call_id: note.id,
             name: "add_comment",
-            // As the backend hands it on (src/dev/settle-calls.ts).
+            // As the backend hands it on.
             arguments: settle(blocks, "add_comment", note.raw),
           })),
           ...notes.map((note) => ({

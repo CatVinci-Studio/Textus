@@ -2,17 +2,9 @@ import { defineConfig } from "@playwright/test";
 import base from "./playwright.config";
 
 /**
- * The e2e flows in the oldest engine Textus supports on Windows, WebView2
- * on Chromium 105 (docs/dev/webview-support.md). Playwright's own Chromium
- * is too new to show what an old engine drops, so this runs a Chromium
- * build you point it at:
- *
- *   OLD_CHROMIUM=/path/to/chrome-linux/chrome \
- *     npx playwright test -c playwright.webview.config.ts settings.spec.ts
- *
- * It runs the built frontend, as the app ships it (Vite lowers syntax for
- * build.target, the dev server doesn't), in development mode so the dev
- * Tauri shim is in it. Not run by CI; screenshots are not compared.
+ * The e2e flows in the oldest WebView2 Textus supports, Chromium 105, set by
+ * OLD_CHROMIUM. Runs the built frontend, since only the build lowers syntax;
+ * not run by CI.
  */
 const executablePath = process.env.OLD_CHROMIUM;
 if (!executablePath) {

@@ -2,10 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * The hover tooltips over the composer's icon-only buttons (ui/Tooltip.tsx),
- * which stand in for the native `title` WebKitGTK showed late or not at
- * all: shown after the mouse rests or on Tab, state-aware, gone on a
- * press or Esc, and never taking the focus from the message field.
+ * The composer's hover tooltips, which replace the native `title` WebKitGTK
+ * shows late or not at all. They never take focus from the message field.
  */
 
 const composer = (page: Page) => page.locator(".agent-panel-view textarea");

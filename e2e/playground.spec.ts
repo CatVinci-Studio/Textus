@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 
-// The browser playground (src/playground/): the editor alone, as it runs at
-// textus.catvinci.com/playground/ - no dev shim, nothing native behind it.
+// The browser playground: the editor alone, with no dev shim and nothing
+// native behind it.
 
 const editor = ".editor-content .ProseMirror";
 
@@ -50,8 +50,8 @@ test("the first visit shows the sample, rendered", async ({ page }) => {
   await expect(page.locator(`${editor} h1`)).toContainText("Welcome to Textus");
   await expect(page.locator(`${editor} table`)).toBeVisible();
   await expect(page.locator(`${editor} .katex`).first()).toBeVisible();
-  // KaTeX's fonts are bundled as woff2 alone (vite.katex-fonts.ts); the
-  // formulas must still get them rather than a fallback face.
+  // KaTeX's fonts are bundled as woff2 alone; the formulas must still get
+  // them rather than a fallback face.
   await page.evaluate(() => document.fonts.ready);
   expect(
     await page.evaluate(() => {
@@ -90,11 +90,8 @@ test("an edit the debounce still holds is kept on leaving", async ({
   page,
 }) => {
   await openPlayground(page);
-  // At the end of the heading's text. A click in the heading's middle
-  // landed inside "Textus" with CI's fonts, and an End sent at once - while
-  // the click first draws the heading's "# " marker - was sometimes lost in
-  // Chromium, so the "!" went in before the "s": "Textu!s" (also on the
-  // commit before #245, with the CPU slowed down).
+  // At the end of the heading's text: an End sent right after a click, while
+  // the "# " marker draws, was sometimes lost in Chromium.
   const end = await page.locator(`${editor} h1`).evaluate((heading) => {
     const range = document.createRange();
     range.selectNodeContents(heading);

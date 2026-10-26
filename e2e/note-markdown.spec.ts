@@ -2,9 +2,8 @@ import { expect, test } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * A review note's words keep their inline Markdown, in the margin and in
- * the chat's card: a term in **bold** is bold, not wrapped in asterisks
- * (rc.6, in a real window: "**relief crew**: 换防人员").
+ * A review note's words keep their inline Markdown, in the margin and in the
+ * chat's card: a term in **bold** is bold, not wrapped in asterisks.
  */
 test("a review note's bold term shows bold, without its asterisks", async ({
   page,

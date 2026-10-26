@@ -1,12 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { blockIds, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// The standard flow's second step (1.2.1): a story translated, its picture
-// redone with it - a rewrite of the run of blocks the picture stands in,
-// and a generate_image `replace` of the picture by its block. Short
-// paragraphs around the picture were merged into one block change
-// (sentence-diff.ts's mergeShortParagraphs), the picture's node with them:
-// accepting the rewrite took that node away and the redo was "not found".
+// A story translated with its picture redone: merging short paragraphs
+// around the picture must not take its node, or the redo finds nothing.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const PNG =

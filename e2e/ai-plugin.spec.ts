@@ -1,10 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
-// The plugin skill's reply in the AI panel: "Install this plugin" under it
-// installs the named files as a plugin and turns it on - asking for its
-// permissions - with the conversation still in view; its command works and
-// How to use opens its guide.
+// "Install this plugin" under the plugin skill's reply installs and enables
+// it, asking for its permissions, with the conversation still in view.
 
 const manifest = (version: string) => ({
   id: "local.word-count",

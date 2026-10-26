@@ -1,9 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
-// Issue #78: files dropped on the window from a file manager. Tauri hands
-// the drop over as a `tauri://drag-drop` event with the files' paths, which
-// the dev shim fires the way Rust would; reading the files is canned.
+// Files dropped from a file manager arrive as a `tauri://drag-drop` event
+// with their paths, fired by the dev shim as Rust would; reading is canned.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 

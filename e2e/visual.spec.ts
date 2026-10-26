@@ -33,7 +33,7 @@ for (const colorScheme of ["light", "dark"] as const) {
   test(`document content renders (${colorScheme})`, async ({ page }) => {
     await openApp(page, { colorScheme });
     await pasteMarkdown(page, SAMPLE_DOC);
-    // Table headers never wrap one character per line (#15).
+    // Table headers never wrap one character per line.
     const header = page.locator(".milkdown th").first();
     const box = await header.boundingBox();
     expect(box!.height).toBeLessThan(60);
@@ -129,9 +129,8 @@ test("an agent reply shows a reasoned edit, a sentence picker and a comment", as
     "删去重复和冗余的修饰，保留时间和人数。",
   );
   await expect(page.locator(".agent-comment")).toBeVisible();
-  // The edit previews sentence by sentence: each changed sentence marked in
-  // the text, its replacement and ✓ / ✕ in the margin - and the card lists
-  // the same two. The comment sits in the margin too.
+  // Each changed sentence is marked in the text, its replacement in the
+  // margin, and the card lists the same two.
   await expect(page.locator(".milkdown .pending-sentence")).toHaveCount(2);
   await expect(page.locator(".revision-note")).toHaveCount(2);
   await expect(page.locator(".review-note:not(.revision-note)")).toHaveCount(1);
@@ -223,10 +222,8 @@ test("an accepted new table row and nested item land inside the table and list",
     page,
     "| Component | Owner |\n| --- | --- |\n| Search | Tom |\n\n- Transport\n  - WebSocket\n\nThe end.",
   );
-  // What the model sends for "add a row" / "add a sub-item": insert_after
-  // the last row / item line, quoted from the serialized markdown (which
-  // pads a table's cells and writes bullets as `*`). These used to land after a blank line - the
-  // row as a stray paragraph of pipes, the item un-nested.
+  // "Add a row" / "add a sub-item": insert_after the last row or item, quoted
+  // from the serialized markdown; it must not land after a blank line.
   await mockInvoke(page, {
     ai_agent_message: [
       { kind: "User", text: "Add a row and a sub-item" },
@@ -262,8 +259,7 @@ test("an accepted new table row and nested item land inside the table and list",
   const accept = page.locator(".agent-proposal-group-rows .pending-pick-take");
   await expect(accept).toHaveCount(2);
   // Top-down: the table grows by a row, and the list's preview below it
-  // must follow - it used to keep its old position, drift off the list and
-  // refuse its Accept.
+  // must follow.
   await accept.first().click();
   await expect(accept).toHaveCount(1);
   await accept.first().click();
@@ -401,8 +397,7 @@ test("Quick Ask stays under its paragraph when an edit arrives", async ({
   await expect(
     page.locator(".milkdown .pending-delete").first(),
   ).toBeAttached();
-  // Right after the edited paragraph - it used to jump to the document's
-  // end, out of sight, leaving the edit with no visible controls.
+  // Right after the edited paragraph, not at the document's end out of sight.
   const quoteTop = (await page.locator(".milkdown blockquote").boundingBox())!
     .y;
   const chatTop = (await page.locator(".inline-chat").boundingBox())!.y;
@@ -591,8 +586,8 @@ test("menu events: New File opens one tab after edits, Zen and Split View respon
     );
   const tabs = page.locator("[data-active-tab]");
   const before = await tabs.count();
-  // Edits re-render App with new handlers - the bridge used to resubscribe
-  // on each, and one menu click then ran several times.
+  // Edits re-render App with new handlers; one menu click must still run
+  // once.
   await pasteMarkdown(page, "some words");
   await page.keyboard.type(" and more");
   await emit("menu-new-file");

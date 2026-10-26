@@ -1,31 +1,7 @@
 #!/usr/bin/env node
-// Refreshes src/ai/models-snapshot.json from models.dev - the open model
-// database (https://github.com/anomalyco/models.dev) - and checks the
-// models the app pins against it.
-//
-// The snapshot is a checked-in, reviewed copy of what each provider in the
-// catalog currently serves (text-output models only), not something the
-// app downloads at runtime. Next to it the script writes
-// model-capabilities.json in the aicompat crate: what each of those models
-// can do that changes a request (today: whether and how it thinks, from
-// models.dev's `reasoning_options`). That one the app does read - built in,
-// never downloaded - to decide which thinking parameters to send and whether
-// the composer offers Deep thinking. Choosing which models to pin - the defaults and
-// the short known_models lists in src-tauri/src/ai/catalog.rs and its
-// mirror src/ai/provider-catalog.ts - stays a human decision: models.dev's
-// "newest" includes image, speech and embedding models, lags on shutdowns,
-// and lists one vendor's models under another's section. What this script
-// automates is noticing: a pinned model that disappeared or was deprecated
-// fails the check, and new models show up in the report.
-//
-// Usage:
-//   node scripts/sync-models.mjs [--input api.json] [--report report.md] [--check]
-//     --input   read a saved api.json instead of downloading it
-//     --report  also write the Markdown report to this file (the PR body)
-//     --check   don't write the snapshot; exit 1 if it's stale or a pin is bad
-//
-// Exit status: 0 when every pin checks out, 1 otherwise (after still
-// writing the snapshot and report, so the problem lands in a PR).
+// Refreshes the models snapshot and the built-in model capabilities from
+// models.dev, and fails when a pinned model disappeared or was deprecated.
+// Which models to pin stays a human decision; models.dev is too noisy.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -42,11 +18,8 @@ const TS_CATALOG = join(ROOT, "src/ai/provider-catalog.ts");
 const SOURCE = "https://models.dev/api.json";
 
 // Catalog provider id -> models.dev provider id. Moonshot and Qwen map to
-// the China endpoints because those are the base URLs the catalog calls.
-// Providers whose models are not a fixed list are left out on purpose:
-// OpenRouter's pins are its router ids, Ollama and custom are whatever the
-// user runs. catalog.rs's tests require every catalog entry to be either
-// here or in UNMAPPED.
+// the China endpoints the catalog calls. Every catalog entry must be here or
+// in UNMAPPED.
 const PROVIDERS = {
   openai: "openai",
   anthropic: "anthropic",
@@ -91,11 +64,8 @@ function pickModels(models) {
   return sortKeys(out);
 }
 
-/** What a model's thinking can be told to do, in the compact form
- *  aicompat/src/capabilities.rs reads: `false` when it doesn't reason,
- *  `true` when it does but takes no setting, else which settings it takes -
- *  `toggle` (can be switched off), `effort` (the levels it accepts, in
- *  models.dev's order) and `budget` (a token budget, with its maximum). */
+/** What a model's thinking can be told to do: `false` when it doesn't
+ *  reason, `true` when it takes no setting, else its toggle/effort/budget. */
 function reasoningOf(m) {
   if (m.reasoning !== true) return false;
   const out = {};
@@ -108,7 +78,7 @@ function reasoningOf(m) {
   return Object.keys(out).length ? out : true;
 }
 
-/** One provider's text-output models' capabilities (see reasoningOf). */
+/** One provider's text-output models' capabilities. */
 function pickCapabilities(models) {
   const out = {};
   for (const m of Object.values(models)) {

@@ -2,11 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * The AI panel's two modes - Write adds and changes, Review reads - and
- * the selection the composer's chip refers to staying highlighted in
- * the document while the composer has the focus. What each mode may
- * propose is enforced in Rust (tools.rs); here the AI is mocked, so these
- * check what the app sends and how it shows what comes back.
+ * The AI panel's modes, and the chip's selection staying highlighted while
+ * the composer has focus. The AI is mocked and the backend enforces what each
+ * mode may propose, so these check what the app sends and shows.
  */
 
 const composer = (page: Page) => page.locator(".agent-panel-view textarea");

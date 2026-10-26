@@ -3,10 +3,8 @@ import { mockInvoke } from "./helpers";
 import { openPath, openWithPlugins } from "./plugin-helpers";
 
 /**
- * Quick Preview (catvinci.quick-preview): the pointer resting on a link to
- * another document shows its opening, or the section the link names, in
- * a card beside it - the app's card, filled by the plugin's hover
- * provider. Pin keeps it.
+ * Quick Preview: resting on a link to another document shows its opening,
+ * or the linked section, in a card filled by the plugin. Pin keeps it.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';

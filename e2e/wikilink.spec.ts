@@ -1,9 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
-// Obsidian wikilinks: `[[Note]]` shows in the link colour, and Ctrl/Cmd+
-// click opens the note the vault holds by that name (resolve_vault_note)
-// in a tab, while a plain click only places the caret.
+// Obsidian wikilinks: Ctrl/Cmd+click opens the vault's note by that name in
+// a tab, while a plain click only places the caret.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 

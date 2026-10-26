@@ -1,16 +1,11 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown, PHONE } from "./helpers";
 
-// The composer's footer - the mode, + and search, the selection chip, Send -
-// is one row at the AI panel's narrowest. In 1.1.0-rc.6 a selection's chip
-// ("已选择 N 字", longer in German or Russian) pushed Send onto a line of
-// its own; now the chip gives way first, ellipsized, and Send keeps its
-// place at the end of the row.
+// The composer's footer is one row at the AI panel's narrowest: a long
+// selection chip ellipsizes first, and Send keeps its place at the end.
 
-// What in the row doesn't give way is the mode's name and Send. Two of
-// the ten locales are left out as the same widths again: zh-Hant's are
-// zh's (two Han characters each, 審閱 / 傳送), pt's are es's word for word
-// (Revisar / Enviar); the chip ellipsizes in every one.
+// The mode's name and Send don't give way. zh-Hant and pt are left out:
+// their widths match zh's and es's.
 const LANGUAGES = ["en", "zh", "ja", "ko", "es", "fr", "de", "ru"] as const;
 
 /** A long passage: the chip counts its characters, five digits of them. */
@@ -59,7 +54,7 @@ async function selectPassage(page: Page) {
   await page.locator(".milkdown p").first().click({ clickCount: 3 });
 }
 
-// And with Settings › Interface Text Size at its largest, 125% (#150).
+// And with Interface Text Size at its largest, 125%.
 for (const uiTextScale of [1, 1.25])
   for (const language of LANGUAGES)
     test(`${language}: the footer stays one row with a long selection chip at the panel's narrowest${uiTextScale === 1 ? "" : `, at ${uiTextScale * 100}% text`}`, async ({
@@ -88,10 +83,9 @@ for (const uiTextScale of [1, 1.25])
       );
     });
 
-// Fonts differ from machine to machine: the CI runner's set Russian 4.5px
-// wider than a desktop's and pushed Send out. With every word in the
-// footer much wider than any real font makes it, the row still holds:
-// the chip goes to its x, then the mode's name to an ellipsis.
+// Fonts differ between machines: with every footer word far wider than any
+// real font makes it, the row still holds, the chip giving way first, then
+// the mode's name.
 for (const language of ["de", "ru"] as const)
   test(`${language}: the footer holds its row in a wider font too`, async ({
     page,

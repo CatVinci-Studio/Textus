@@ -15,8 +15,7 @@ const current = Object.fromEntries(
 );
 
 /** The real files as a bump to 9.9.9 leaves them: only the app's own
- *  version lines, the way PRs like #192 change them. A dependency can carry
- *  the same version number (1.1.0 did), and must stay as it is. */
+ *  version lines. A dependency with the same version must stay as it is. */
 const bumpedLock = JSON.parse(current["package-lock.json"]);
 bumpedLock.version = "9.9.9";
 bumpedLock.packages[""].version = "9.9.9";

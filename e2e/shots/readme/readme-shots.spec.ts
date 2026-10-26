@@ -1,8 +1,6 @@
 /**
  * The README screenshots, one set per README language, in that language's
- * UI with a document written in it. Not a test - nothing is compared; run
- * `npm run screenshots:readme` after a visible UI change and commit the
- * images in docs/images/readme/.
+ * UI. Not a test: nothing is compared.
  */
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "../../helpers";

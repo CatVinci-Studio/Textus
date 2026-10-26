@@ -1,10 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { PHONE, openApp, openPhone } from "./helpers";
 
-// The window bar's button for the AI panel (app/WindowBar.tsx) is Textus
-// AI's own: the app icon's quill (AssistantIcon in ui/icons.tsx), struck through
-// while Textus AI is off (textus-ai-switch.spec.ts). The phone's title row
-// draws the same button.
+// The window bar's AI panel button: the app icon's quill, struck through
+// while Textus AI is off. The phone's title row draws the same button.
 
 const button = '.window-bar-toggle[aria-label="Textus AI"]';
 

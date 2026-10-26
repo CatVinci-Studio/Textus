@@ -2,8 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { openApp, PHONE } from "./helpers";
 
 // The composer's `/` and `@` pickers and Settings' skills, against the dev
-// shim's skill list (dev/tauri-shim.ts: the 9 built-ins - Write's,
-// Review's and Create's - and one skill of the user's own, in Write).
+// shim's 9 built-ins and one user skill in Write.
 
 const AI_NAME = "Textus AI";
 

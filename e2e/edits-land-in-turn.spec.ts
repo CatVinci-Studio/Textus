@@ -2,10 +2,8 @@ import { expect, test } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 /**
- * A reply's edits come in one call, which the backend streams on as a call
- * per edit (agent/lists.rs), the step's turns only after the last: each
- * edit lands as soon as its text is whole, not when the step ends - ten
- * edits appeared at once on GPT Sol (1.2.1).
+ * A reply's edits come in one call the backend streams on as a call per edit,
+ * the step's turns after the last: each edit lands once its text is whole.
  */
 const DOC = "First line here.\n\nSecond line here.\n\nThird line here.";
 

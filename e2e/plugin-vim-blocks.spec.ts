@@ -2,12 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { pasteMarkdown } from "./helpers";
 import { hasPlugin, openWithPlugins } from "./plugin-helpers";
 
-/**
- * The Vim plugin across a Markdown document's blocks: j and k through
- * headings, lists, quotes and code blocks, } and dw, flash's labels
- * nearest the caret, the command line (:w, :q, :12) and vimrc mappings
- * (inoremap jj <Esc>).
- */
+/** The Vim plugin across a Markdown document's blocks. */
 
 test.skip(!hasPlugin("catvinci.vim"), "catvinci.vim is not published yet");
 

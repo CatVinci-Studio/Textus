@@ -1,12 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// The margin view of a revision ("original in the text, changes in the
-// margin") needs room right of the text. Without it they
+// A revision's margin views need room right of the text. Without it they
 // can't be picked, and say why; a chosen one waits, untouched in Settings,
 // and applies again once there is room.
 
-// As in src/i18n/locales/en.ts (the e2e project can't import it).
+// The English strings (the e2e project can't import the locale).
 const t = {
   inline: "All in the text",
   original: "Original in the text, changes in the margin",

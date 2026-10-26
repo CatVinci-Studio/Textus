@@ -1,36 +1,15 @@
 import type { AtRule, Container, Declaration, Plugin } from "postcss";
 
 /**
- * color-mix() needs Chromium 111, and WebView2 on a Windows 10 machine that
- * isn't updated can be older (docs/dev/webview-support.md). Nearly every
- * value that uses it also names a var(), so the old engine keeps the
- * declaration at parse time and only finds it invalid once the variable is
- * substituted - and then the property computes to `unset`, not to an
- * earlier fallback line: off switches lost their track, cards their
- * backgrounds and hairlines, the review bar its fill, revisions their
- * green and red.
- *
- * So every rule with a color-mix() value gets a twin right after it, inside
- * `@supports not (color: color-mix(...))`, with each mix replaced by a plain
- * colour that the old engine can draw. A current engine skips the twin and
- * keeps the exact mix. The plain colour, for `color-mix(in S, A p%, B)`:
- *
- * - B is `transparent` or a background (`var(--bg)`, `var(--editor-bg)`,
- *   ...): a tint of A over whatever is behind it. From 50% up that is A
- *   itself; below, A's hue at p% opacity - a var() can't be given an alpha
- *   without color-mix, so a known token's light-theme hue (TINTS), a hex
- *   literal's own, and otherwise a neutral grey, which reads on light and
- *   dark backgrounds alike.
- * - Otherwise, whichever of A and B weighs more.
- *
- * Applied to the app's and the playground's CSS (vite.config.ts).
+ * color-mix() needs Chromium 111, older than some WebView2. With a var() in
+ * it, an old engine computes the property to `unset`, so each such rule gets
+ * an `@supports not` twin with every mix replaced by a plain colour.
  */
 export const COLOR_MIX_UNSUPPORTED =
   "not (color: color-mix(in srgb, red, red))";
 
-/** The hue of a theme token in the light appearance (ui/base.css,
- *  ui/design-system.css), for a tint of it. Dark-theme tints are close
- *  enough in hue at the low opacities these are drawn at. */
+/** The hue of a theme token in the light appearance, for a tint of it; dark
+ *  tints are close enough at these low opacities. */
 const TINTS: [RegExp, string][] = [
   [/^var\(\s*--(editor|chrome)-(accent|primary)\b/, "49 94 209"],
   [/^var\(\s*--success-color\b/, "36 115 77"],

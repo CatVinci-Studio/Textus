@@ -3,8 +3,7 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * A rewrite of the whole text, every sentence changed: a card in the
- * margin for each change, beside its own passage - not one card for the
- * lot.
+ * margin for each change, beside its own passage.
  */
 
 const BEFORE = [
@@ -100,10 +99,8 @@ test("long paragraphs rewritten across have a card beside each; short ones rewri
   );
 });
 
-// A table or a code block the rewrite leaves alone: its Markdown is no
-// text the document has, and finding it used to fail - the whole rewrite
-// one card at the top. The table as the document writes it out, which is
-// what the model has to quote.
+// A table or code block the rewrite leaves alone, quoted as the document
+// writes it out: its Markdown isn't text the document has.
 for (const [what, between] of [
   ["table", "| Boat | Catch |\n| :--- | :---- |\n| Mary | Cod   |"],
   ["code block", "```\nls -la\n```"],
@@ -111,7 +108,7 @@ for (const [what, between] of [
   test(`a rewrite around a ${what} has a card for each change`, async ({
     page,
   }) => {
-    // The caret in a revision's widget once threw (liveCaretPos's -1).
+    // The caret in a revision's widget must not throw.
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await proposeRewrite(
@@ -130,8 +127,6 @@ for (const [what, between] of [
 test("a translation has a card for each paragraph, its paragraphs apart", async ({
   page,
 }) => {
-  // rc.6: "translate it into English" came out as two cards for the
-  // whole text, the paragraphs in each run together.
   const before = [
     "许小满承母之修伞肆，初至之客，乃一老者。",
     "曰：“漏乎？”",
@@ -158,8 +153,7 @@ test("a translation has a card for each paragraph, its paragraphs apart", async 
 test("a rewrite that joins paragraphs has a card for each new paragraph, beside the ones it came from", async ({
   page,
 }) => {
-  // Four short paragraphs made two (rc.6: "make it fewer paragraphs" came
-  // out as one card for everything).
+  // Four short paragraphs made two.
   const before = [
     "夜里，小满拆开伞顶。",
     "她在夹层里找到一枚白色纽扣。",
@@ -187,8 +181,6 @@ test("a rewrite that joins paragraphs has a card for each new paragraph, beside 
 test("a translated heading shows its new text without the Markdown #", async ({
   page,
 }) => {
-  // rc.6, in a real window: "# The moon can hear" beside the struck
-  // heading, its # as text.
   await proposeRewrite(
     page,
     "# 月亮听得见\n\n月球最后一座声音站即将关闭。",

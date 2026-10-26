@@ -95,8 +95,8 @@ test("deleting the text after bold or italic leaves the caret after the closing 
     await page.keyboard.press("End");
     await page.keyboard.press("ArrowLeft");
     await page.keyboard.press("Backspace");
-    // The browser's own deletion used to leave its caret at the end of the
-    // span's text, before the revealed closing mark, so typing went bold.
+    // The caret must not sit inside the span before the revealed closing
+    // mark, or typing goes bold.
     const caretInSpan = await page.evaluate(
       (t) => !!document.getSelection()?.anchorNode?.parentElement?.closest(t),
       tag,
@@ -475,7 +475,7 @@ test("the adaptive column takes 62% of a pane past about 1100px, between 680 and
     settings: { language: "en" },
     storage: { "textus-agent-panel-open": "0", "textus-sidebar-open": "0" },
   });
-  // A laptop window: wider than Standard, where 56% held it at 680.
+  // A laptop window: wider than Standard.
   expect(await width()).toBe(Math.round(1280 * 0.62));
   await page.setViewportSize({ width: 1000, height: 800 });
   expect(await width()).toBe(680);
@@ -644,8 +644,8 @@ test("a note's body starts flush with the lines under it", async ({ page }) => {
     "Intro.\n\n> [!NOTE]\n> Useful information.\n\nEnd.",
   );
   await page.locator('[data-active-tab="true"] .milkdown p').last().click();
-  // The marker line's soft break is hidden with the marker: drawn, it was
-  // a space at the start of the body.
+  // The marker line's soft break is hidden with the marker, or it draws a
+  // space at the start of the body.
   const shown = await page.evaluate(() =>
     Array.from(
       document.querySelectorAll(
@@ -748,10 +748,9 @@ test("the wheel over a table scrolls the page, not the table", async ({
   await page.keyboard.press("End");
   await page.keyboard.press("Control+Shift+Space");
   await expect(page.locator(".ghost-text")).toHaveCount(1);
-  // The table's box a little shorter than the table, as a suggestion
-  // wrapping the cell to a fractional height can leave it. A stylesheet,
-  // not the element's style: ProseMirror redraws a node view whose
-  // attributes change under it.
+  // The table's box a little shorter than the table, as a fractional cell
+  // height can leave it. A stylesheet, since ProseMirror redraws a node view
+  // whose attributes change.
   const box = page.locator(".table-scroll");
   const height = await box.evaluate((el) => el.getBoundingClientRect().height);
   await page.addStyleTag({
@@ -767,8 +766,8 @@ test("the wheel over a table scrolls the page, not the table", async ({
   expect(await box.evaluate((el) => el.scrollTop)).toBe(0);
 });
 
-/** A deliberate Shift+Enter: Shift held first, as a writer does. (Shift
- *  and Enter pressed together count as Enter - see block-keys-plugin.ts.) */
+/** A deliberate Shift+Enter: Shift held first, since Shift and Enter pressed
+ *  together count as Enter. */
 async function shiftEnter(page: Page) {
   await page.keyboard.down("Shift");
   await page.waitForTimeout(200);
@@ -865,10 +864,8 @@ test("repairing a pruned IME commit leaves a real empty item alone", async ({
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   // Three task items: an empty one, "a", and a fresh one to compose in.
   await pasteMarkdown(page, "- [ ] e\n- [ ] a\n- [ ] x");
-  // ProseMirror takes a caret set this way from the selectionchange that
-  // follows it - a key pressed before that lands where the caret was. Its
-  // own listener was added first, so it has read the caret by the time
-  // this one runs.
+  // ProseMirror reads a caret set this way on the next selectionchange; its
+  // listener runs before this one.
   const caretAfter = (index: number) =>
     page.evaluate(
       (i) =>
@@ -1017,8 +1014,7 @@ test("source mode: body-sized text, centred on a whole pixel, unchanged by focus
         willChange: cs.willChange,
         filter: cs.filter,
         opacity: cs.opacity,
-        // The focus ring outlined the textarea's composited layer, which
-        // is when WebKitGTK's text went soft (#61): the page is the field.
+        // A focus ring composites the textarea, which blurs WebKitGTK's text.
         outline: cs.outlineStyle,
       };
     });
@@ -1084,9 +1080,8 @@ test("ASCII - [] and -[] make tasks too; the space after - [ ] is eaten", async 
 test("list items aren't positioned, so WebKit's IME commit can't prune them", async ({
   page,
 }) => {
-  // WebKit removes an element emptied by deleteCompositionText only when
-  // it's positioned (see composition-prune-guard-plugin.ts); the markers
-  // must keep working without it.
+  // WebKit removes an element emptied by deleteCompositionText only when it
+  // is positioned; the markers must keep working without it.
   await openApp(page);
   await pasteMarkdown(page, "- a\n\n1. b\n\n- [x] c\n");
   const positions = await page
@@ -1269,8 +1264,8 @@ test("in Typewriter Mode a click on a task's box ticks it without scrolling (#13
   await expect(task.first()).toHaveAttribute("data-checked", "false");
   await page.waitForTimeout(100);
   expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
-  // A click on the text places the caret where it is (#217), and the first
-  // key centres it.
+  // A click on the text places the caret where it is, and the first key
+  // centres it.
   await page.mouse.click(box.x + 80, box.y + box.height / 2);
   await page.waitForTimeout(100);
   expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);

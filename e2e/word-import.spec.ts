@@ -1,11 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
-// A Word document opened in Textus becomes a new, unsaved Markdown
-// document (document/word-import.ts). The conversion is the backend's
-// (commands/word_import.rs, tested there), so it is canned here; what is
-// checked is the flow around it: which commands run, the tab it makes, the
-// notice, and where Save suggests writing.
+// A Word document opens as a new, unsaved Markdown document. The backend's
+// conversion is canned; this checks the flow around it.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 

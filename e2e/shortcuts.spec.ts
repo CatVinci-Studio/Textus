@@ -3,7 +3,7 @@ import { openApp, pasteMarkdown } from "./helpers";
 
 // Settings › Shortcuts lists the fixed shortcuts under the configurable
 // ones, and the new actions work: Ctrl+Tab between tabs, and the heading
-// levels on Ctrl+1..6 (#214). Chromium on Linux: Mod is Ctrl.
+// levels on Ctrl+1..6. Chromium on Linux: Mod is Ctrl.
 
 function emit(page: Page, name: string, payload?: unknown) {
   return page.evaluate(
