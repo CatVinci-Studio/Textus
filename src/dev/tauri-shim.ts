@@ -25,7 +25,7 @@ import type { PluginsState_Serialize } from "../platform/bindings/plugins";
 import type { FsEntry_Serialize } from "../platform/bindings/plugin-access";
 import type { SentBlock } from "../ai/doc-blocks";
 import { namedCall, settledArguments, settledTurns } from "./settle-calls";
-import { pluginApiShim } from "./plugin-shim-api";
+import { forgetShimSecrets, pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";
 
 /** The built-in skills as `list_skills` reports them: name, `/` menu group,
@@ -1068,10 +1068,16 @@ export function installDevTauriShim(): void {
           String(args.callId)
         ] = args.error ? { error: args.error } : { text: args.text };
         return Promise.resolve(null);
-      case "plugin_uninstall":
+      case "plugin_uninstall": {
         w.__devPlugins = installed.filter((p) => p.id !== id);
         delete pluginState.plugins[id];
+        // Its global data and its secrets go with it; a project's stays
+        // (plugins/install.rs).
+        const stores = (w.__devPluginStore ?? {}) as Record<string, unknown>;
+        delete stores[`${id}|global|`];
+        forgetShimSecrets(id);
         return Promise.resolve(null);
+      }
       // A plugin Textus AI wrote: listed with its files, over an earlier
       // version of the same id.
       case "plugin_install_files": {

@@ -18,6 +18,12 @@ interface ShimContext {
 
 const secrets = new Map<string, string>();
 
+/** An uninstalled plugin's secrets go with it (plugins/files.rs). */
+export function forgetShimSecrets(id: string): void {
+  for (const key of [...secrets.keys()])
+    if (key.startsWith(`${id}\u0000`)) secrets.delete(key);
+}
+
 function token(text: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) {

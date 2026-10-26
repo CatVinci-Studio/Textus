@@ -150,3 +150,33 @@ test("its page says what a plugin keeps, and Clear empties it", async ({
     ),
   ).toEqual([]);
 });
+
+test("uninstalled, a plugin's own data and secrets go; the project's stays", async ({
+  page,
+}) => {
+  await open(page, ["project.data"]);
+  await save(page);
+  await expect(page.getByText(/^global 1 /)).toBeVisible();
+  await page.getByRole("button", { name: "OK" }).click();
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-manage-plugins"),
+  );
+  await page
+    .locator('.plugin-card[data-plugin="test.keep"] .plugin-card-open')
+    .click();
+  const own = page.locator('[data-plugin-page="test.keep"]');
+  await own.getByRole("button", { name: "Uninstall", exact: true }).click();
+  await page
+    .locator(".app-dialog")
+    .getByRole("button", { name: "Uninstall" })
+    .click();
+  await expect(
+    page.locator('.plugin-card[data-plugin="test.keep"]'),
+  ).toHaveCount(0);
+  const stores = await page.evaluate(
+    () => (window as unknown as { __devPluginStore: object }).__devPluginStore,
+  );
+  expect(Object.keys(stores)).toEqual(["test.keep|project|/work/notes"]);
+});

@@ -403,6 +403,7 @@ pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String>
     if data.is_dir() {
         std::fs::remove_dir_all(&data).map_err(|e| e.to_string())?;
     }
+    super::store::forget_global(&app, &id)?;
     super::files::forget_secrets(&app, &id)
 }
 
