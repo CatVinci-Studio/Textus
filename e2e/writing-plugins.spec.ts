@@ -7,10 +7,7 @@ import {
 } from "./plugin-helpers";
 
 /**
- * The writing-tool plugins (textus-plugins): Markdown Lint underlines and
- * fixes, CJK Spacing spaces, Heading Numbers numbers - in the editor and
- * in an export - Templates inserts, Bookmarks keeps a passage in the
- * sidebar. Each from the checkout the dev server serves.
+ * The writing-tool plugins, each loaded from the checkout the dev server serves.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';

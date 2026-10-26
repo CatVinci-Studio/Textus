@@ -1256,7 +1256,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuWindow: "Fenster",
   menuZoomWindow: "Zoomen",
   menuBringAllToFront: "Alle nach vorne bringen",
-  // The browser playground (src/playground/).
+  // The browser playground.
   playgroundName: "Spielwiese",
   playgroundImport: "Importieren",
   playgroundExport: "Exportieren",

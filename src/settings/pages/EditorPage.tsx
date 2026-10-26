@@ -43,11 +43,8 @@ export function EditorPage({
           }}
         />
       </SettingsGroup>
-      {/* How the window lays out - the text's width and the interface's
-            size - then the window's view modes, beside the one that is a
-            setting (typewriter): on a phone, whose menu is kept short,
-            this is where they are switched. Each mode goes through the
-            same event as its menu item, so the two never disagree. */}
+      {/* On a phone, whose menu is kept short, the view modes are switched
+            here, through the same event as their menu items. */}
       <SettingsGroup title={t.settingsViewGroup}>
         <SettingRow label={t.contentWidthLabel}>
           <Select
@@ -187,8 +184,7 @@ export function EditorPage({
       <SettingsGroup title={t.imageStorageGroupLabel}>
         <ImageStorageSection t={t} />
       </SettingsGroup>
-      {/* What a PDF export looks like. No PDF export on the phone
-            (canExportPdf), so no group there either. */}
+      {/* No PDF export on the phone, so no group there either. */}
       {canExportPdf && (
         <SettingsGroup title={t.menuExport}>
           <ToggleRow

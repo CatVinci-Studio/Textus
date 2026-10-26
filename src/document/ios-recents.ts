@@ -6,20 +6,18 @@ import {
   joinPath,
 } from "../platform/ios-files";
 // Entries in Documents are stored relative to it: the app's container moves
-// on every reinstall and App Store update (see documents-path.ts).
+// on every reinstall and App Store update.
 import { IN_DOCUMENTS } from "../platform/documents-path";
 import { getUiState, setUiState, uiStateReady } from "../storage/ui-state";
 
-// The iPhone's recent-documents list, kept in ui-state.json: what reopens at
-// launch, File > Open Recent and the document list. File access itself is
-// platform/ios-files.ts.
+// The iPhone's recent-documents list: what reopens at launch, Open Recent
+// and the document list.
 
 /** The document list keeps this many; the phone menu shows the first few. */
 const RECENT_LIMIT = 30;
 
-/** The stored list (ui-state.json; see storage/ui-state.ts). Waits for the
- *  live copy: a reload replays the boot snapshot, and a read-modify-write
- *  built on that would drop whatever was opened since the window was made. */
+/** The stored list. Waits for the live copy: a read-modify-write on the boot
+ *  snapshot would drop what was opened since. */
 async function readRecents(): Promise<string[]> {
   await uiStateReady();
   const list = getUiState("iosRecentDocuments");
@@ -28,17 +26,10 @@ async function readRecents(): Promise<string[]> {
     : [];
 }
 
-/** The tail of the queue of changes to the list, see updateRecents. */
 let recentsQueue: Promise<unknown> = Promise.resolve();
 
-/**
- * Changes the stored list, one change at a time. Each is a read, an await
- * or two (the live copy, the Documents path), then a write - and two
- * documents opened together (a launch restoring one while "Open in Textus"
- * delivers another) used to interleave: both read the same list and the
- * second write dropped the first one's entry. Queued, each change starts
- * from what the previous one wrote.
- */
+/** Changes the stored list one change at a time, so two documents opened
+ *  together can't both read the same list and drop an entry. */
 function updateRecents(
   change: (list: string[]) => string[] | Promise<string[]>,
 ): Promise<void> {
@@ -59,12 +50,8 @@ function resolveRecent(docs: string, stored: string): Promise<string> {
     : Promise.resolve(stored);
 }
 
-/**
- * The documents opened most recently, newest first - File > Open Recent on
- * the phone, and the first is what reopens at launch: iOS ends a
- * backgrounded app whenever it likes, and the desktop's per-window session
- * (session.rs) and recents list (menu.rs) are not built there.
- */
+/** The documents opened most recently, newest first; the first reopens at
+ *  launch, since iOS ends a backgrounded app whenever it likes. */
 export async function recentIOSDocuments(): Promise<string[]> {
   // After any change already queued, so it lists what that change made.
   await recentsQueue;
@@ -102,11 +89,8 @@ export function forgetIOSDocument(path: string): Promise<void> {
   });
 }
 
-/** Where a recent document lives: in the app's own Documents folder (which
- *  the list can rename and delete in), or picked from elsewhere in Files
- *  (iCloud Drive and the like - a single picked file grants access to that
- *  file only, not to its folder, so it can be opened and shared but not
- *  renamed or deleted from here). */
+/** Whether a document is in the app's own Documents folder. A file picked
+ *  from elsewhere grants access to itself only, so it can't be renamed or deleted. */
 export async function inIOSDocuments(path: string): Promise<boolean> {
   const docs = (await documentsFolder()).replace(/\/+$/, "") + "/";
   return path.startsWith(docs);

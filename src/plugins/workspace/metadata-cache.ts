@@ -12,12 +12,8 @@ import {
 import { parseYaml, type Frontmatter } from "./frontmatter";
 
 /**
- * textus.metadata on the window's side: the index Rust keeps of the open
- * folder's documents (src-tauri plugins/metadata.rs), with what is worked
- * out across documents - where each link goes, who links to a document,
- * every tag and task. Asked for when a plugin asks, and brought up to date
- * when files are written or saved and when the window comes back to the
- * front - then told to the plugins listening, with the paths that changed.
+ * textus.metadata on the window's side: Rust's index of the open folder plus
+ * what is worked out across documents (links, backlinks, tags, tasks).
  */
 
 export interface MetaTask {
@@ -104,7 +100,6 @@ export function resolveIn(
   );
 }
 
-/** One document as Rust sends it, as the API gives it. */
 export function documentOf(
   meta: PluginDocumentMeta,
   paths: readonly string[],

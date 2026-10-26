@@ -3,13 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { hashString, roundTripFile } from "./save-roundtrip";
 import { snippetDocuments } from "./save-roundtrip-snippets";
 
-// The save round trip (docs/dev/saving.md) on a fixed set that runs in CI:
-// generated snippets of every construct and the shapes the corpus run found
-// bugs in; this repository's own Markdown is in save-roundtrip-docs.test.ts
-// and save-roundtrip-help.test.ts, so the three run in parallel. Each
-// document is opened, saved unedited (byte for byte the file), and edited
-// nine ways on fresh loads, with the untouched blocks checked byte for byte
-// and the text read back. The full corpus is `npm run test:roundtrip`.
+// The save round trip on a fixed CI set: snippets of every construct and
+// shapes the corpus run found bugs in. Each document must save unedited byte
+// for byte, and edited, with untouched blocks byte for byte.
 
 vi.mock("mermaid", () => ({
   default: { initialize() {}, render: () => new Promise(() => {}) },
@@ -23,8 +19,8 @@ const css = (globalThis.CSS ?? {}) as { escape?: (value: string) => string };
 css.escape ??= (value) => value.replace(/["\\]/g, "\\$&");
 (globalThis as { CSS?: unknown }).CSS = css;
 
-// CI runs these once, in `check`, and only for a change that can reach
-// saving (scripts/ci-changes.mjs); the native jobs set this to skip them.
+// CI runs these once, only for changes that can reach saving; the native
+// jobs set this to skip them.
 describe.skipIf(process.env.TEXTUS_SKIP_ROUNDTRIP === "1")(
   "saving after an edit keeps the rest and loses nothing",
   () => {

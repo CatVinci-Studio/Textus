@@ -37,12 +37,10 @@ export {
   cloneEditorContent,
   buildStandaloneHtml,
 } from "./standalone-html";
-// File > Export implementations (HTML serializes the live editor DOM;
-// everything else converts through a user-installed pandoc; PDF drives the
-// system print panel after a themed-render pass - see exportPdf below).
+// File > Export: HTML serializes the live editor DOM, PDF prints a themed
+// render, everything else converts through a user-installed pandoc.
 
-// Keys are pandoc writer names, matching the export menu ids Rust builds in
-// menu.rs (EXPORT_PANDOC_PREFIX) - the two lists must stay in step.
+// Keys are pandoc writer names; keep in step with menu.rs's export ids.
 const PANDOC_FORMATS: Record<string, { ext: string; label: string }> = {
   docx: { ext: "docx", label: "Word" },
   odt: { ext: "odt", label: "OpenDocument" },
@@ -59,51 +57,28 @@ const PANDOC_FORMATS: Record<string, { ext: string; label: string }> = {
 // as one; the plain-text ones (LaTeX, MediaWiki, ...) keep its source.
 const EMBEDS_IMAGES = new Set(["docx", "odt", "epub", "rtf"]);
 
-// The export's default filename stem: the document's name without its
-// extension, or the tab title for drafts.
 function exportBaseName(tab: DocTab, t: Strings): string {
   return tab.path
     ? basename(tab.path).replace(/\.[^.]+$/, "")
     : tabTitle(tab, t);
 }
 
-// --- Standalone document HTML (shared by HTML and PDF export) --------------
-//
-// Both exports serialize the live editor DOM - what you see is what exports -
-// into a self-contained page with every stylesheet inlined. The current
-// editor theme is reproduced by mirroring the app root's data-theme /
-// data-content-theme / data-user-theme onto the exported <html> (what
-// content-themes.css and content-base.css key off) and keeping the same
-// ancestor classes.
+// Standalone HTML (HTML and PDF export): the live editor DOM with every
+// stylesheet inlined and the app root's theme attributes mirrored.
 
 const isMac = isMacPlatform();
 
-// Layout shared by every export: content too wide for a page wraps or
-// shrinks to fit instead of being clipped at the sheet edge. Display math
-// is a scroll box on screen; a page cannot scroll, so let KaTeX break at
-// its top-level operators like inline math does.
+// Content too wide for a page wraps or shrinks instead of being clipped. A
+// page can't scroll, so display math breaks like inline math.
 const EXPORT_FIT_CSS =
   ".milkdown table { width: 100%; } " +
   ".math-block-rendered, .katex-display { overflow: visible; } " +
   ".katex-display > .katex { white-space: normal; } " +
   ".milkdown a, .milkdown p, .milkdown li, .milkdown td, .milkdown th { overflow-wrap: anywhere; } ";
 
-// Theme + page CSS for the offscreen PDF render. print-color-adjust keeps
-// the theme's own backgrounds (code blocks, quotes) from being dropped.
-//
-// `whitePage` prints the page itself on white, as paper is (Windows and
-// Linux, #68): the theme's page colour goes, and exportPdf renders the
-// theme's light form, so a dark theme's pale text never lands on white.
-// macOS keeps the page in the theme's own colour.
-//
-// With a known page geometry (macOS, Windows) the sheet margin stays zero so
-// the page colour bleeds to every edge - WebKit never paints an @page
-// margin, which would leave white bands on tinted themes - and the top and
-// bottom margins are laid out instead, by paginate.ts pushing blocks
-// off each page seam. Without one (Linux, where WebKitGTK's print geometry
-// isn't pinned down) the GTK page setup gives each sheet a real top and
-// bottom margin (export.rs). Every platform ends up near 20mm all round,
-// the margin of a printed page.
+// Theme + page CSS for the offscreen PDF render. `whitePage` prints on white
+// (with the theme's light form). With a known page geometry the sheet margin
+// is zero so the page colour bleeds to the edges, and paginate.ts lays margins out.
 export function pdfLayoutCss(
   page: PageGeometry | null,
   whitePage = false,
@@ -114,12 +89,8 @@ export function pdfLayoutCss(
     ":root { -webkit-print-color-adjust: exact; print-color-adjust: exact; } " +
     // Whatever paints with the page colour (sticky bars, cut-outs) matches.
     (whitePage ? ":root { --editor-bg: #fff !important; } " : "") +
-    // macOS and Windows lay their margins out (paginate.ts), so the sheet
-    // has none. On Linux the GTK page setup holds them (export.rs), and only
-    // `auto` leaves them to it: given a CSS margin - even the 0 this used
-    // to set, or print.css's - WebKitGTK cut its pages that much taller but
-    // still drew each one below the setup's top margin, so a page's last
-    // lines ran off the sheet and were lost.
+    // Only `auto` leaves Linux margins to the GTK page setup: given a CSS
+    // margin, WebKitGTK cut pages taller and lost each page's last lines.
     `@page { margin: ${page ? "0" : "auto"}; } ` +
     `html, body { margin: 0; background: ${background}; } ` +
     ".app-shell, .main-pane, .editor-scroll { height: auto; overflow: visible; background: transparent; } " +
@@ -127,16 +98,14 @@ export function pdfLayoutCss(
     (page
       ? ""
       : "pre, blockquote, table, img, .math-block-wrapper, .mermaid-preview, .md-alert { break-inside: avoid; } " +
-        // WebKitGTK's print-to-file ignores break-inside on a block, and cut
-        // a display formula in two at the seam; an inline-block it never
-        // splits.
+        // WebKitGTK's print-to-file ignores break-inside and cut display
+        // formulas at the seam; it never splits an inline-block.
         ".math-block-wrapper, .mermaid-preview { display: inline-block; width: 100%; } ") +
     EXPORT_FIT_CSS
   );
 }
 
-/** The sheet geometry the native renderer on this platform lays out, or
- *  null where it isn't known (see pdfLayoutCss). */
+/** The sheet geometry this platform's native renderer lays out, if known. */
 function platformPage(): PageGeometry | null {
   if (isMac) return MAC_PAGE;
   if (isWindowsPlatform()) return WINDOWS_PAGE;
@@ -148,7 +117,6 @@ const HTML_LAYOUT_CSS =
   ".editor-content { padding: 2rem 1.5rem; } " +
   EXPORT_FIT_CSS;
 
-// Injects the "Preparing PDF…" progress overlay (removed when export ends).
 function showPdfOverlay(t: Strings): HTMLElement {
   const el = document.createElement("div");
   el.className = "pdf-export-overlay";
@@ -157,11 +125,8 @@ function showPdfOverlay(t: Strings): HTMLElement {
   return el;
 }
 
-// KaTeX loads on a document's first formula (katex-loader.ts); one still
-// waiting for it would export as its source, and without KaTeX's
-// stylesheet among the rules collectInlinedCss copies. Drawn first. So is
-// every formula and diagram still waiting to come near the screen
-// (draw-when-visible.ts): the export copies the page as it is.
+// Draws everything still pending first, since the export copies the page as
+// it is: formulas waiting for KaTeX, and blocks waiting to come on screen.
 async function drawPending(editor: Element): Promise<void> {
   if (
     !katexLoaded() &&
@@ -177,10 +142,7 @@ async function drawPending(editor: Element): Promise<void> {
   await drawEverything(editor);
 }
 
-// Lets web fonts (theme fonts like Parchment's script face) and images settle
-// before serializing, so the offscreen render doesn't miss them. Diagrams and
-// math are already inline SVG/HTML in the DOM (drawPending), so no extra pass
-// is needed.
+// Lets web fonts and images settle before serializing.
 async function settleRender(editor: Element): Promise<void> {
   await drawPending(editor);
   try {
@@ -199,10 +161,7 @@ async function settleRender(editor: Element): Promise<void> {
   await nextFrame();
 }
 
-// File > Export as PDF. Requires the WYSIWYG view (source mode has no themed
-// DOM) and exports the active tab as-is - unsaved edits included.
-// `pageNumbers` (Settings › Page numbers in PDF) has Rust number the
-// finished file's pages; the render itself is the same either way.
+// File > Export as PDF. Needs the WYSIWYG view; unsaved edits included.
 export async function exportPdf(
   tab: DocTab,
   t: Strings,
@@ -255,7 +214,6 @@ export async function exportPdf(
       whitePage,
     );
     const html = page ? await paginateHtml(standalone, page) : standalone;
-    // Resolves once the file is written.
     await exportDoc.exportPdfNative({
       html,
       // Resolves relative image srcs (assets/...) against the document folder.
@@ -265,9 +223,7 @@ export async function exportPdf(
     });
     void exportDoc.revealInDir(picked);
   } catch (err) {
-    // Off before the message: the overlay sits above the app's dialogs, so
-    // left up it covered the error and its button, and the spinner never
-    // stopped (#62).
+    // Off before the message: the overlay sits above the app's dialogs.
     overlay.remove();
     await showMessage(`${t.pdfFailed} ${errorText(err)}`, {
       title: t.exportFailedTitle,
@@ -278,11 +234,8 @@ export async function exportPdf(
   }
 }
 
-// Serializes the tab's live editor DOM into a self-contained HTML file.
-// Saved next to the document, relative image paths (assets/...) are kept
-// as-is, like Typora's HTML export. Anywhere else they would point at
-// nothing - nor would a draft's, in the app's own folder - so the pictures
-// go inside the page.
+// Saved next to the document, relative image paths are kept as-is, like
+// Typora; anywhere else the pictures go inside the page.
 export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
   const editor = document.querySelector('[data-active-tab="true"] .milkdown');
   if (!editor) {
@@ -324,8 +277,7 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
   void exportDoc.revealInDir(picked);
 }
 
-// The pictures of the drawn blocks (a plugin's) in the active tab's editor, all
-// drawn first (drawPending), for a pandoc export made from its Markdown.
+// The drawn blocks' pictures in the active editor, for a pandoc export.
 async function drawnPictures(): Promise<Map<string, (string | null)[]>> {
   const editor = document.querySelector('[data-active-tab="true"] .milkdown');
   if (!editor) return new Map();
@@ -343,8 +295,7 @@ export async function exportViaPandoc(
   if (!info || !canExportWithPandoc) return;
   const pandoc = await exportDoc.detectPandoc();
   if (!pandoc) {
-    // Typora's model: guide the user to install pandoc rather than
-    // bundling the ~180MB GPL binary in the app.
+    // Guide the user to install pandoc rather than bundle the GPL binary.
     const goInstall = await showConfirm(t.pandocMissingMessage, {
       title: t.pandocMissingTitle,
       okLabel: t.pandocMissingDownload,

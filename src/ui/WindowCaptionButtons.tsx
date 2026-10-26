@@ -12,12 +12,8 @@ import { Tooltip } from "./Tooltip";
 import "./window-caption.css";
 
 /**
- * Minimise / maximise / close.
- *
- * Close goes through `close()`, not `destroy()`, so it lands in the same
- * onCloseRequested handler the native button used to reach: the editor still
- * gets its unsaved-document prompt, and the detached chat still hands its
- * conversation back for re-embedding.
+ * Minimise / maximise / close. Close goes through `close()`, not `destroy()`,
+ * so onCloseRequested still runs (unsaved prompt, chat hand-back).
  */
 export function WindowCaptionButtons() {
   const { t } = useSettings();
@@ -38,12 +34,9 @@ export function WindowCaptionButtons() {
         });
     };
     sync();
-    // Maximising is not the only way into the state: Aero snap, Win+Up and a
-    // double-click on the drag region all get there without going through
-    // the button below, and a stale glyph would offer "maximize" on an
-    // already-maximized window.
-    // A drag-resize fires this every frame, and each sync is three IPC
-    // round trips; only where the resize ends matters.
+    // Snap, Win+Up and a double-click on the drag region also maximise, so the
+    // glyph follows resizes. A drag-resize fires every frame and each sync is
+    // three IPC round trips; only where the resize ends matters.
     let settle: ReturnType<typeof setTimeout> | undefined;
     const unlisten = win.onResized(() => {
       clearTimeout(settle);

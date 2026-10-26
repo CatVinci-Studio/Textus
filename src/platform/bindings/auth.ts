@@ -9,21 +9,15 @@ import { invoke as __TAURI_INVOKE, Channel } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	/**
-	 *  Runs the Codex (ChatGPT Plus/Pro) OAuth login: opens the system browser,
-	 *  waits for the localhost callback, exchanges the code for tokens, and
-	 *  stores the credential in the app config dir (0600 permissions).
-	 * 
-	 *  Reuses the OpenAI Codex CLI's own OAuth client id (the same technique
-	 *  several other open-source coding agents use) rather than a standard API
-	 *  key, per the "sign in with ChatGPT" requirement.
+	 *  Runs the Codex (ChatGPT Plus/Pro) OAuth login and stores the credential in
+	 *  the app config dir (0600). Uses the Codex CLI's own OAuth client id.
 	 */
 	codex_login: (onUrl: Channel<string>) => __TAURI_INVOKE<AuthStatus_Serialize>("codex_login", { onUrl }),
 	codex_auth_status: () => __TAURI_INVOKE<AuthStatus_Serialize>("codex_auth_status"),
 	codex_logout: () => __TAURI_INVOKE<null>("codex_logout"),
 	/**
-	 *  Runs the Claude (Anthropic Pro/Max) OAuth login, same shape as the Codex
-	 *  login but against Anthropic's own OAuth client - see aicompat's
-	 *  providers::anthropic module for the reference this was verified against.
+	 *  Runs the Claude (Anthropic Pro/Max) OAuth login against Anthropic's own
+	 *  OAuth client.
 	 */
 	claude_login: (onUrl: Channel<string>) => __TAURI_INVOKE<ClaudeAuthStatus>("claude_login", { onUrl }),
 	claude_auth_status: () => __TAURI_INVOKE<ClaudeAuthStatus>("claude_auth_status"),

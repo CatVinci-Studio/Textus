@@ -1,7 +1,3 @@
-// ---------------------------------------------------------------------------
-// fs (src-tauri/src/commands/fs.rs)
-// ---------------------------------------------------------------------------
-/** One entry of a folder listing - generated from DirEntryInfo in
- *  commands/fs.rs. `modified_ms` is null or absent where the backend
- *  doesn't say (the iPhone's Files, platform/ios-files.ts). */
+/** One entry of a folder listing. `modified_ms` is null or absent where the
+ *  backend doesn't say (iOS Files). */
 export type { DirEntryInfo } from "./bindings/files";

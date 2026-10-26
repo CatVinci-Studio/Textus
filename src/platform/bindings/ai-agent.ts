@@ -177,10 +177,7 @@ truncated: boolean } | { kind: "image"; name: string;
 /**  "image/png", ... - what the provider is told this is. */
 mime: string; dataBase64: string };
 
-/**
- *  A pending picture as the frontend takes it - generated into
- *  src/platform/bindings/ai-agent.ts.
- */
+/**  A pending picture as the frontend takes it. */
 export type GeneratedImageData = {
 	mime: string,
 	ext: string,

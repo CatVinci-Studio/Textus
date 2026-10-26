@@ -4,8 +4,7 @@ import { canUseWindows } from "../platform/capabilities";
 import { session } from "../platform/ipc";
 import type { DocTab } from "../document/doc-tabs";
 
-/** The OS title names the document too: it is what the taskbar, Alt+Tab
- *  and window lists show, where every window read "Textus" before. */
+/** The OS title names the document, for the taskbar, Alt+Tab and window lists. */
 export function useWindowTitle(activeTitle: string): void {
   useEffect(() => {
     if (!canUseWindows) return;
@@ -16,11 +15,8 @@ export function useWindowTitle(activeTitle: string): void {
 }
 
 /**
- * Reports this window's on-disk tab paths to Rust so a relaunch (an app
- * update, a crash, or just quitting and reopening) can restore what was
- * open - see commands/session.rs. Untitled/unsaved tabs have no path and
- * are simply skipped; keyed on the joined path list (not `tabs` itself) so
- * content edits don't spam the round trip.
+ * Reports this window's on-disk tab paths to Rust so a relaunch can restore
+ * them. Keyed on the joined paths so content edits don't trigger a round trip.
  */
 export function useSessionPaths(tabs: DocTab[]): void {
   // A plugin's tab of a file (a PDF) reopens through its plugin.

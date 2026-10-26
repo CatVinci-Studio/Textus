@@ -26,13 +26,7 @@ import type { WindowDocuments } from "./useWindowDocuments";
 import type { Settings, useSettings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
-/**
- * What reaches a window from outside its own controls (App.tsx): the
- * global shortcuts, the clipboard history, what opens at launch or is
- * pushed or dropped in, the close guard, files changed on disk, the menus
- * (their check marks, accelerators and events), the tour's lessons, and
- * the close prompt's answers.
- */
+/** Everything that reaches a window from outside its own controls. */
 export function useWindowWiring({
   shell,
   docs,
@@ -75,10 +69,8 @@ export function useWindowWiring({
     evaluate: shell.evaluateTutorialDocumentChange,
   });
 
-  // Files handed over by the OS (Finder "Open With" / double-click, or the
-  // `textus` CLI command) at launch, recovered drafts, a dragged-in tab, or a
-  // Help doc this window was spawned to show - see startup-restore.ts for
-  // the actual priority chain. Deliberately runs only once, at mount.
+  // What opens at launch (OS-opened files, recovered drafts, a dragged-in
+  // tab, a Help doc). Runs only once, at mount.
   useStartupRestore({
     activeTabId,
     enableDraftRecovery: settings.enableDraftRecovery,
@@ -96,7 +88,7 @@ export function useWindowWiring({
     stopTutorial: tutorial.exit,
   });
 
-  // The same, pushed to an already-running window (useFileOpening.ts).
+  // The same, pushed to an already-running window.
   useOpenPathsPush(openPathInTab);
   const activeTabRef = useLatest(activeTab);
   const activeIsUntouchedDraft = useCallback(
@@ -105,7 +97,7 @@ export function useWindowWiring({
   );
   useFileDrop(openFile, openPathInTab, activeIsUntouchedDraft);
   // A file from the sidebar dragged over the documents opens where it is
-  // let go (split-drop.ts).
+  // let go.
   useEffect(() => {
     setDocumentDrop(
       fileDropOnDocuments((path, drop) => void openPathInTab(path, { drop })),
@@ -144,9 +136,6 @@ export function useWindowWiring({
   useNativeMenuChecks(menuChecks);
   useNativeMenuAccelerators(settings.shortcuts);
 
-  // Menu events from Rust (menu.rs's dispatch) - every File/View/Format/Help
-  // action the frontend owns arrives here as a window event; see
-  // menu-bridge.ts for the actual subscriptions.
   useMenuBridge({
     activeTabId,
     liveTabs,

@@ -4,10 +4,8 @@ import { tabIsDirty, type DocTab } from "./doc-tabs";
 import { createTabIdleTimers } from "./tab-idle-timers";
 import { unlistenAll } from "../platform/events";
 
-/** What one save of a tab came to (app/useSaveTabs.ts's autosaveTab).
- *  "skipped": nothing to write - no file, or no change. "conflict": the file
- *  changed on disk and the user kept that version. "failed": the write
- *  failed and the user was told why. */
+/** What one save of a tab came to. "conflict": the user kept the changed
+ *  disk version; "failed": the user was told why. */
 export type SaveOutcome = "saved" | "skipped" | "conflict" | "failed";
 
 /** How long typing has to rest before a document is written back. */
@@ -28,8 +26,7 @@ function pauseOf(tab: DocTab): AutosavePause {
   };
 }
 
-/** A pause ends once the tab has been saved, reloaded or saved elsewhere
- *  some other way - the user dealt with what stopped it. */
+/** A pause ends once the tab has been saved, reloaded or saved elsewhere. */
 function pauseResolved(tab: DocTab, pause: AutosavePause): boolean {
   return (
     tab.path !== pause.path ||
@@ -38,9 +35,8 @@ function pauseResolved(tab: DocTab, pause: AutosavePause): boolean {
   );
 }
 
-/** Whether a tab is one autosave writes: it has a file, it has changed,
- *  and autosave hasn't stopped on it. Untitled documents (and the Help
- *  guides, which have no file either) are left to draft recovery. */
+/** Whether autosave writes a tab: it has a file, has changed, and isn't
+ *  paused. Untitled documents are left to draft recovery. */
 export function autosaveWants(
   tab: DocTab,
   pause: AutosavePause | undefined,
@@ -50,23 +46,9 @@ export function autosaveWants(
 }
 
 /**
- * Settings › General › Save Automatically (#133): a document that already
- * has a file is written back to it once typing has rested for
- * AUTOSAVE_IDLE_MS, and right away when the window loses focus, the page is
- * hidden, or another tab is chosen. Off by default; draft recovery
- * (draft-autosave.ts) keeps covering untitled documents either way.
- *
- * Every write is File > Save's own (`autosaveTab`), so the conflict check,
- * the line endings and the saved state are the same. When the file changed
- * on disk, that save asks before overwriting; a Cancel there, or a write
- * that failed (a read-only file), pauses autosave for the tab, so the
- * prompt or the error is shown once rather than every two seconds. The
- * pause ends when the tab is saved, reloaded or saved elsewhere some other
- * way (pauseResolved).
- *
- * Returns `flush(ids?)`: writes the given tabs (every tab by default) now,
- * resolving once done - what closing a tab or the window waits for before
- * deciding whether anything is still unsaved. A no-op while off.
+ * Save Automatically: writes a file-backed document after typing rests, on
+ * blur, hide or tab switch. A conflict Cancel or failed write pauses the tab,
+ * so the prompt shows once. `flush(ids?)` writes now; closing waits on it.
  */
 export function useAutosave(opts: {
   tabs: DocTab[];

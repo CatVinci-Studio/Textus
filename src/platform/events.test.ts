@@ -8,8 +8,7 @@ interface ListenArgs {
   target: { kind: string; label?: string };
 }
 
-/** Minimal stand-in for the Tauri IPC globals, capturing what the event
- *  plugin is asked to register. */
+/** Stand-in for the Tauri IPC globals, capturing event registrations. */
 function installFakeRuntime(label: string): ListenArgs[] {
   const calls: ListenArgs[] = [];
   (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__ = {
@@ -30,9 +29,8 @@ function installFakeRuntime(label: string): ListenArgs[] {
 
 describe("listenToThisWindow", () => {
   it("registers for this window's label, never the app-wide catch-all", async () => {
-    // A bare `listen()` would register `{ kind: "Any" }`, which Tauri treats
-    // as a catch-all: it also receives events emit_to'd at ANOTHER window, so
-    // e.g. a file opened in tab mode landed in every open window at once.
+    // A bare `listen()` registers `{ kind: "Any" }`, which also receives
+    // events emit_to'd at another window.
     const calls = installFakeRuntime("window-3");
     await listenToThisWindow("open-paths-as-tabs", () => {});
 
