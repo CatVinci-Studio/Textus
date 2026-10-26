@@ -6,6 +6,7 @@ import { parseMarkdownSource } from "./parse-markdown-source";
 import { joinLinesForTableCell } from "./paste-slice";
 import { wordListsToHtml } from "./word-lists";
 import { keepPastedLines } from "./paste-lines";
+import { cleanPastedHtml } from "./paste-html";
 
 /**
  * Milkdown's clipboard plugin only parses pasted text as markdown when the
@@ -22,7 +23,7 @@ import { keepPastedLines } from "./paste-lines";
  * Every paste also keeps the spans at its ends (keepPastedSpans below),
  * and lines pasted into a table cell stay in it (paste-slice.ts); pasted
  * text keeps its line breaks, and a quote copied with its bars is a quote
- * (paste-lines.ts).
+ * (paste-lines.ts); pasted HTML keeps what its styles meant (paste-html.ts).
  */
 
 const RICH_HTML_SELECTOR = [
@@ -138,13 +139,15 @@ export const pasteMarkdownSourcePlugin = $prose(
             keepPastedSpans(slice, view.state.selection),
             view.state.selection.$from,
           ),
-        transformPastedHTML: (html) => wordListsToHtml(html),
+        transformPastedHTML: (html) => cleanPastedHtml(wordListsToHtml(html)),
         handlePaste(view, event) {
           const data = event.clipboardData;
           if (!data) return false;
           if (view.state.selection.$from.node().type.spec.code) return false; // inside code: paste stays literal
           if (data.getData("vscode-editor-data")) return false; // clipboard plugin turns these into a code block
-          const html = wordListsToHtml(data.getData("text/html"));
+          const html = cleanPastedHtml(
+            wordListsToHtml(data.getData("text/html")),
+          );
           const text = data.getData("text/plain");
           if (!text || (html && !htmlIsStyledPlainText(html))) return false;
 

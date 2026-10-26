@@ -10,6 +10,26 @@ import { openApp } from "./helpers";
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 
+async function pasteFlavors(page: Page, flavors: Record<string, string>) {
+  await page.locator(editor).click();
+  await page.evaluate(
+    ({ sel, flavors }) => {
+      const pm = document.querySelector(sel) as HTMLElement;
+      const data = new DataTransfer();
+      for (const [type, value] of Object.entries(flavors))
+        data.setData(type, value);
+      pm.dispatchEvent(
+        new ClipboardEvent("paste", {
+          clipboardData: data,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    },
+    { sel: editor, flavors },
+  );
+}
+
 async function pasteText(page: Page, text: string) {
   await page.locator(editor).click();
   await page.evaluate(
@@ -66,5 +86,76 @@ test("plain pasted lines keep their breaks", async ({ page }) => {
   await pasteText(page, "Dear Sam,\nThanks for the notes.\nSee you Monday.");
   await expect(page.locator(`${editor} p`).first().locator("br")).toHaveCount(
     2,
+  );
+});
+
+// 1.2.2: what the paste audit found (paste-lines.ts, paste-html.ts).
+
+test("a paragraph a PDF wrapped at its width comes in whole", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteText(
+    page,
+    [
+      "The results show that the proposed method significantly",
+      "outperforms the baseline on all three benchmarks. In particular,",
+      "the effect is strongest for long documents, where the corpus",
+      "contains more than ten thousand files.",
+    ].join("\n"),
+  );
+  const p = page.locator(`${editor} p`).first();
+  await expect(p).toContainText("significantly outperforms the baseline");
+  await expect(p.locator("br")).toHaveCount(0);
+});
+
+test("a terminal's output is a code block, its columns kept", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteText(
+    page,
+    "Filesystem      Size  Used Avail\n/dev/nvme0n1p2  468G  301G  144G\ntmpfs            16G  1.2M   16G",
+  );
+  await expect(page.locator(`${editor} pre`)).toContainText(
+    "tmpfs            16G",
+  );
+});
+
+test("a line ending in a web address keeps its link and its break", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteText(page, "Map: https://map.example.com/?q=hall\nSee you there");
+  const p = page.locator(`${editor} p`).first();
+  await expect(p.locator("br")).toHaveCount(1);
+  await expect(p).not.toContainText("\\");
+});
+
+test("Google Docs' bold, italic and struck text stay so", async ({ page }) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteFlavors(page, {
+    "text/html":
+      '<meta charset="utf-8"><b style="font-weight:normal;" id="docs-internal-guid-1"><p dir="ltr"><span style="font-weight:700;">Friday</span><span style="font-weight:400;"> and </span><span style="font-style:italic;">mostly</span><span> </span><span style="text-decoration:line-through;">(old)</span></p></b>',
+    "text/plain": "Friday and mostly (old)",
+  });
+  await expect(page.locator(`${editor} strong`)).toHaveText("Friday");
+  await expect(page.locator(`${editor} em`)).toHaveText("mostly");
+  await expect(page.locator(`${editor} del, ${editor} s`)).toHaveText("(old)");
+});
+
+test("an Outlook message comes in without its empty paragraphs", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteFlavors(page, {
+    "text/html":
+      '<p class=MsoNormal>Hi Chen,<o:p></o:p></p><p class=MsoNormal><o:p>&nbsp;</o:p></p><p class=MsoNormal>See the <a href="https://nam12.safelinks.protection.outlook.com/?url=https%3A%2F%2Fexample.com%2Fq3&amp;data=05">sheet</a>.<o:p></o:p></p><p class=MsoNormal><o:p>&nbsp;</o:p></p><p class=MsoNormal>Thanks,<o:p></o:p></p>',
+    "text/plain": "Hi Chen,\n\nSee the sheet.\n\nThanks,",
+  });
+  await expect(page.locator(`${editor} > p`)).toHaveCount(3);
+  await expect(page.locator(`${editor} a`)).toHaveAttribute(
+    "href",
+    "https://example.com/q3",
   );
 });
