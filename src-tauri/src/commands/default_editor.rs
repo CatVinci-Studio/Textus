@@ -30,7 +30,6 @@ pub async fn set_default_editor(app: AppHandle) -> Result<(), String> {
     platform::make_default(&app)
 }
 
-
 /// The registry values that list Textus for Markdown files, all under
 /// HKEY_CURRENT_USER. Built without touching the registry, so they can be tested.
 #[cfg(any(windows, test))]
@@ -180,7 +179,6 @@ mod platform {
     }
 }
 
-
 /// Markdown's type as macOS and most editors declare it.
 #[cfg(any(target_os = "macos", test))]
 const MARKDOWN_UTI: &str = "net.daringfireball.markdown";
@@ -270,7 +268,6 @@ mod platform {
         Ok(())
     }
 }
-
 
 /// The desktop entry ids Textus is installed under: the .deb and .rpm name
 /// it after the product, the AUR package and the tarball after the binary.

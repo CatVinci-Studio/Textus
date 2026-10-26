@@ -3,7 +3,6 @@
 
 use super::*;
 
-
 #[derive(Default)]
 pub(crate) struct Style {
     /// Lowercase: the built-in names ("heading 1") are stored in English

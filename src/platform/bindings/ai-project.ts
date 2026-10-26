@@ -9,84 +9,69 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	/**
-	 *  The workspace as the frontend needs it: the skill list for the `/name`
-	 *  picker in the chat input, plus the resolved project folder (`root`),
-	 *  style profile and library the project bar shows. Loaded fresh each time
-	 *  the chat opens so file edits are picked up without restarting.
+	 *  The workspace as the frontend needs it: skills, the resolved project
+	 *  folder, style profile and library. Loaded fresh each time so edits show.
 	 */
 	load_agent_workspace: (docPath: string | null, rootOverride: string | null) => __TAURI_INVOKE<AgentWorkspace_Serialize>("load_agent_workspace", { docPath, rootOverride }),
 	/**
-	 *  Folder picker behind "Choose project folder…" (the project bar's menu
-	 *  and Settings > Textus AI > Project Folder). Desktop only: the dialog
+	 *  Folder picker behind "Choose project folder…". Desktop only: the dialog
 	 *  plugin has no folder picker on iOS.
 	 */
 	pick_workspace_root: () => __TAURI_INVOKE<string | null>("pick_workspace_root"),
 	/**
-	 *  Creates the global config folder (with a starter agent.md and skills/
-	 *  folder on first use) and reveals it in the file manager - Settings >
-	 *  Textus AI > Global Config Folder. Desktop only: iOS has no file manager to
-	 *  reveal a folder in (the opener plugin only opens URLs there).
+	 *  Creates the global config folder (with a starter agent.md and skills/) and
+	 *  reveals it in the file manager. Desktop only: iOS has no file manager.
 	 */
 	open_global_agent_dir: (template: string) => __TAURI_INVOKE<null>("open_global_agent_dir", { template }),
 	/**
-	 *  Creates the global config folder if needed (skills/ folder plus a
-	 *  starter agent.md, same shape `open_global_agent_dir` guarantees) and
-	 *  returns the agent.md path. Backs Settings > Textus AI > Writing
-	 *  Instructions > Edit agent.md, which opens that file in the editor itself
-	 *  - Textus IS a markdown editor, so there's no bespoke textarea for it.
+	 *  Creates the global config folder if needed and returns the agent.md path,
+	 *  which the frontend opens in the editor itself.
 	 */
 	ensure_global_agent_md: (template: string) => __TAURI_INVOKE<string>("ensure_global_agent_md", { template }),
 	/**  The project's text files, for the composer's @-mention picker. */
 	list_project_files: (docPath: string | null, workspaceRoot: string | null) => __TAURI_INVOKE<string[]>("list_project_files", { docPath, workspaceRoot }),
 	/**
-	 *  One project file's text, for an @-mention - the same safety rules as the
-	 *  agent's read_file tool.
+	 *  One project file's text, for an @-mention, under the same safety rules as
+	 *  the agent's read_file.
 	 */
 	read_project_file: (docPath: string | null, workspaceRoot: string | null, path: string) => __TAURI_INVOKE<string>("read_project_file", { docPath, workspaceRoot, path }),
 	/**
 	 *  Creates `.textus/<rel>` with `template` unless it already exists, and
-	 *  returns its absolute path - "new library entry", "open style profile".
+	 *  returns its absolute path.
 	 */
 	ensure_project_file: (docPath: string | null, workspaceRoot: string | null, rel: string, template: string) => __TAURI_INVOKE<string>("ensure_project_file", { docPath, workspaceRoot, rel, template }),
 	/**  Multi-select picker for the writing samples "Learn my style" analyses. */
 	pick_text_files: () => __TAURI_INVOKE<string[]>("pick_text_files"),
 	/**
-	 *  "Learn my style": analyses the picked samples and writes the project's
-	 *  `.textus/style.md` (keeping the previous one as style.previous.md), which
-	 *  the agent and the inline completion then follow. Returns its path, which
-	 *  the frontend opens for the author to review and edit.
+	 *  "Learn my style": analyses the picked samples and writes `.textus/style.md`
+	 *  (keeping the previous one as style.previous.md). Returns its path, which the
+	 *  frontend opens for review.
 	 */
 	learn_style: (provider: string, model: string | null, docPath: string | null, workspaceRoot: string | null, files: string[]) => __TAURI_INVOKE<string>("learn_style", { provider, model, docPath, workspaceRoot, files }),
 };
 
 /* Types */
 /**
- *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
- *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
- *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
- *  and what the prompt says the user is here for.
+ *  The conversation's mode, picked in the composer. It decides what
+ *  propose_edit may do, which skills apply and what the prompt says.
  */
 export type AgentMode = AgentMode_Serialize | AgentMode_Deserialize;
 
 /**
- *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
- *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
- *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
- *  and what the prompt says the user is here for.
+ *  The conversation's mode, picked in the composer. It decides what
+ *  propose_edit may do, which skills apply and what the prompt says.
  */
 export type AgentMode_Deserialize = 
 /**  Reads, answers and comments: no propose_edit. */
 "review" | 
 /**
- *  Adds text and changes the text that is there: every propose_edit
- *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
- *  this one.
+ *  Adds text and changes the text that is there: every propose_edit action.
+ *  The old Revise mode reads as this one.
  */
 "write" | 
 /**
- *  Adds text and changes the text that is there: every propose_edit
- *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
- *  this one.
+ *  Adds text and changes the text that is there: every propose_edit action.
+ *  The old Revise mode reads as this one.
  */
 "revise" | 
 /**
@@ -97,18 +82,15 @@ export type AgentMode_Deserialize =
 "create";
 
 /**
- *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
- *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
- *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
- *  and what the prompt says the user is here for.
+ *  The conversation's mode, picked in the composer. It decides what
+ *  propose_edit may do, which skills apply and what the prompt says.
  */
 export type AgentMode_Serialize = 
 /**  Reads, answers and comments: no propose_edit. */
 "review" | 
 /**
- *  Adds text and changes the text that is there: every propose_edit
- *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
- *  this one.
+ *  Adds text and changes the text that is there: every propose_edit action.
+ *  The old Revise mode reads as this one.
  */
 "write" | 
 /**
@@ -119,18 +101,14 @@ export type AgentMode_Serialize =
 "create";
 
 /**
- *  One skill as the app sees it: the frontmatter's name and description,
- *  the body (`prompt`, comments stripped) and the Textus-only keys under
- *  `metadata:` (see docs in parse_skill_file). Serialised camelCase for
- *  the frontend's skill list (src/ai/types.ts).
+ *  One skill as the app sees it: the frontmatter's name and description, the
+ *  body (`prompt`, comments stripped) and the Textus-only `metadata:` keys.
  */
 export type AgentSkill = AgentSkill_Serialize | AgentSkill_Deserialize;
 
 /**
- *  One skill as the app sees it: the frontmatter's name and description,
- *  the body (`prompt`, comments stripped) and the Textus-only keys under
- *  `metadata:` (see docs in parse_skill_file). Serialised camelCase for
- *  the frontend's skill list (src/ai/types.ts).
+ *  One skill as the app sees it: the frontmatter's name and description, the
+ *  body (`prompt`, comments stripped) and the Textus-only `metadata:` keys.
  */
 export type AgentSkill_Deserialize = {
 	name: string,
@@ -142,9 +120,8 @@ export type AgentSkill_Deserialize = {
 	 */
 	category?: string | null,
 	/**
-	 *  `textus-modes`: the panel modes the skill applies in (write, review,
-	 *  create) - only those offer it in the `/` menu and the skill index.
-	 *  Write for a skill that doesn't say.
+	 *  `textus-modes`: the panel modes the skill applies in. Write for a skill
+	 *  that doesn't say.
 	 */
 	modes: AgentMode_Deserialize[],
 	invocation: Invocation,
@@ -155,20 +132,18 @@ export type AgentSkill_Deserialize = {
 	 */
 	overridesBuiltin: boolean,
 	/**
-	 *  What people see it called, and its one-line hint, per UI language
-	 *  code: `textus-label-<code>` and `textus-hint-<code>` - a market or
-	 *  user skill's; a built-in's are in src/ai/skills/texts.
+	 *  What people see it called, and its one-line hint, per UI language code
+	 *  (`textus-label-<code>`, `textus-hint-<code>`), for market or user skills.
 	 */
 	labels: { [key in string]: SkillLabel },
 	/**
 	 *  Extra words the user can type after `/`, per UI language code
-	 *  (src/i18n/langs.ts): `textus-aliases-<code>`, comma-separated.
+	 *  (`textus-aliases-<code>`, comma-separated).
 	 */
 	aliases: { [key in string]: string[] },
 	/**
-	 *  `textus-packs`: the reference-pack sections appended to the body when
-	 *  the skill is used ("contract", "craft#fiction", "standards#dialogue"
-	 *  for the document's language) - see ai::builtin::expand_skill.
+	 *  `textus-packs`: the reference-pack sections appended to the body when the
+	 *  skill is used ("craft#fiction", "standards#dialogue").
 	 */
 	packs: string[],
 	/**
@@ -177,8 +152,8 @@ export type AgentSkill_Deserialize = {
 	 */
 	version?: string | null,
 	/**
-	 *  `textus-based-on: "<name>@<version>"`, written into a copy made with
-	 *  Customize… - what makes Reset allowed to delete it.
+	 *  `textus-based-on: "<name>@<version>"`, written into a Customize… copy;
+	 *  what allows Reset to delete it.
 	 */
 	basedOn?: string | null,
 	/**  A customized copy whose built-in has a newer version since. */
@@ -186,10 +161,8 @@ export type AgentSkill_Deserialize = {
 };
 
 /**
- *  One skill as the app sees it: the frontmatter's name and description,
- *  the body (`prompt`, comments stripped) and the Textus-only keys under
- *  `metadata:` (see docs in parse_skill_file). Serialised camelCase for
- *  the frontend's skill list (src/ai/types.ts).
+ *  One skill as the app sees it: the frontmatter's name and description, the
+ *  body (`prompt`, comments stripped) and the Textus-only `metadata:` keys.
  */
 export type AgentSkill_Serialize = {
 	name: string,
@@ -201,9 +174,8 @@ export type AgentSkill_Serialize = {
 	 */
 	category: string | null,
 	/**
-	 *  `textus-modes`: the panel modes the skill applies in (write, review,
-	 *  create) - only those offer it in the `/` menu and the skill index.
-	 *  Write for a skill that doesn't say.
+	 *  `textus-modes`: the panel modes the skill applies in. Write for a skill
+	 *  that doesn't say.
 	 */
 	modes: AgentMode_Serialize[],
 	invocation: Invocation,
@@ -214,20 +186,18 @@ export type AgentSkill_Serialize = {
 	 */
 	overridesBuiltin: boolean,
 	/**
-	 *  What people see it called, and its one-line hint, per UI language
-	 *  code: `textus-label-<code>` and `textus-hint-<code>` - a market or
-	 *  user skill's; a built-in's are in src/ai/skills/texts.
+	 *  What people see it called, and its one-line hint, per UI language code
+	 *  (`textus-label-<code>`, `textus-hint-<code>`), for market or user skills.
 	 */
 	labels: { [key in string]: SkillLabel },
 	/**
 	 *  Extra words the user can type after `/`, per UI language code
-	 *  (src/i18n/langs.ts): `textus-aliases-<code>`, comma-separated.
+	 *  (`textus-aliases-<code>`, comma-separated).
 	 */
 	aliases: { [key in string]: string[] },
 	/**
-	 *  `textus-packs`: the reference-pack sections appended to the body when
-	 *  the skill is used ("contract", "craft#fiction", "standards#dialogue"
-	 *  for the document's language) - see ai::builtin::expand_skill.
+	 *  `textus-packs`: the reference-pack sections appended to the body when the
+	 *  skill is used ("craft#fiction", "standards#dialogue").
 	 */
 	packs: string[],
 	/**
@@ -236,8 +206,8 @@ export type AgentSkill_Serialize = {
 	 */
 	version: string | null,
 	/**
-	 *  `textus-based-on: "<name>@<version>"`, written into a copy made with
-	 *  Customize… - what makes Reset allowed to delete it.
+	 *  `textus-based-on: "<name>@<version>"`, written into a Customize… copy;
+	 *  what allows Reset to delete it.
 	 */
 	basedOn: string | null,
 	/**  A customized copy whose built-in has a newer version since. */
@@ -258,18 +228,14 @@ export type AgentWorkspace_Deserialize = {
 	 */
 	project_instructions?: string | null,
 	/**
-	 *  Merged skills: the built-in ones (turned-off ones included, with
-	 *  `enabled: false`, so Settings can list them), then the global
-	 *  config folder's, then the project's, each replacing same-named
-	 *  skills of the layers before it. The reference packs are not here
-	 *  (ai::builtin::packs).
+	 *  Merged skills: the built-ins (turned-off ones too, so Settings can list
+	 *  them), then the global folder's, then the project's, each replacing
+	 *  same-named ones before it.
 	 */
 	skills: AgentSkill_Deserialize[],
 	/**
-	 *  The project folder - the document's own by default, or the one
-	 *  picked in the panel - when there is one: the sandbox root for the
-	 *  agent's file tools. None for an unsaved draft, and for a folder too
-	 *  broad to expose (the home directory or a filesystem root).
+	 *  The project folder, the sandbox root for the agent's file tools. None for
+	 *  an unsaved draft, and for a folder too broad to expose.
 	 */
 	root?: string | null,
 	/**  `.textus/style.md` - the author's style profile. */
@@ -277,25 +243,15 @@ export type AgentWorkspace_Deserialize = {
 	/**  `.textus/library/*.md` - the project's people, places and terms. */
 	library: LibraryEntry_Deserialize[],
 	/**
-	 *  Where `root` came from - or why there is none - so the agent can
-	 *  tell the user which folder it reads and how to change that.
+	 *  Where `root` came from, or why there is none, so the agent can tell the
+	 *  user which folder it reads and how to change that.
 	 */
 	root_source: RootSource,
-	/**
-	 *  The writing conventions the style profile's front matter sets
-	 *  (`conventions: zh-Hans-CN/fiction`, option keys) - rules::profile.
-	 */
+	/**  The writing conventions the style profile's front matter sets. */
 	conventions: ProjectConventions,
-	/**
-	 *  What Textus AI remembered by itself, personal and the project's
-	 *  (ai::memory), with which of them fit in the prompt.
-	 */
+	/**  What Textus AI remembered by itself, with which of them fit in the prompt. */
 	memories: Memories_Deserialize,
-	/**
-	 *  Whether Textus AI may remember things by itself: the `remember`
-	 *  tool is offered only then (Settings > Textus AI > Remember
-	 *  automatically, settings.json's `rememberAutomatically`).
-	 */
+	/**  Whether Textus AI may remember things by itself. */
 	remember: boolean,
 };
 
@@ -311,18 +267,14 @@ export type AgentWorkspace_Serialize = {
 	 */
 	project_instructions: string | null,
 	/**
-	 *  Merged skills: the built-in ones (turned-off ones included, with
-	 *  `enabled: false`, so Settings can list them), then the global
-	 *  config folder's, then the project's, each replacing same-named
-	 *  skills of the layers before it. The reference packs are not here
-	 *  (ai::builtin::packs).
+	 *  Merged skills: the built-ins (turned-off ones too, so Settings can list
+	 *  them), then the global folder's, then the project's, each replacing
+	 *  same-named ones before it.
 	 */
 	skills: AgentSkill_Serialize[],
 	/**
-	 *  The project folder - the document's own by default, or the one
-	 *  picked in the panel - when there is one: the sandbox root for the
-	 *  agent's file tools. None for an unsaved draft, and for a folder too
-	 *  broad to expose (the home directory or a filesystem root).
+	 *  The project folder, the sandbox root for the agent's file tools. None for
+	 *  an unsaved draft, and for a folder too broad to expose.
 	 */
 	root: string | null,
 	/**  `.textus/style.md` - the author's style profile. */
@@ -330,25 +282,15 @@ export type AgentWorkspace_Serialize = {
 	/**  `.textus/library/*.md` - the project's people, places and terms. */
 	library: LibraryEntry_Serialize[],
 	/**
-	 *  Where `root` came from - or why there is none - so the agent can
-	 *  tell the user which folder it reads and how to change that.
+	 *  Where `root` came from, or why there is none, so the agent can tell the
+	 *  user which folder it reads and how to change that.
 	 */
 	root_source: RootSource,
-	/**
-	 *  The writing conventions the style profile's front matter sets
-	 *  (`conventions: zh-Hans-CN/fiction`, option keys) - rules::profile.
-	 */
+	/**  The writing conventions the style profile's front matter sets. */
 	conventions: ProjectConventions,
-	/**
-	 *  What Textus AI remembered by itself, personal and the project's
-	 *  (ai::memory), with which of them fit in the prompt.
-	 */
+	/**  What Textus AI remembered by itself, with which of them fit in the prompt. */
 	memories: Memories_Serialize,
-	/**
-	 *  Whether Textus AI may remember things by itself: the `remember`
-	 *  tool is offered only then (Settings > Textus AI > Remember
-	 *  automatically, settings.json's `rememberAutomatically`).
-	 */
+	/**  Whether Textus AI may remember things by itself. */
 	remember: boolean,
 };
 
@@ -380,11 +322,9 @@ export type Forgotten_Serialize = {
 };
 
 /**
- *  Who may start a skill (`metadata.textus-invocation`). `Both`: the model,
- *  when a request matches the description, and the user with /name.
- *  `UserOnly`: /name only - left out of the skill index the model sees.
- *  `Hidden`: neither; loaded by exact name with use_skill (the reference
- *  packs).
+ *  Who may start a skill (`metadata.textus-invocation`). `Both`: the model and
+ *  /name. `UserOnly`: /name only. `Hidden`: neither; loaded by exact name with
+ *  use_skill (the reference packs).
  */
 export type Invocation = "both" | "userOnly" | "hidden";
 
@@ -397,10 +337,7 @@ export type LibraryEntry_Deserialize = {
 	/**  Path relative to the project root, for "open this entry". */
 	file: string,
 	body: string,
-	/**
-	 *  Set on an entry Textus AI wrote (ai::memory),
-	 *  which the Memory tab also lists under "AI remembered".
-	 */
+	/**  Set on an entry Textus AI wrote, which the Memory tab also lists. */
 	remembered?: Remembered_Deserialize | null,
 };
 
@@ -411,10 +348,7 @@ export type LibraryEntry_Serialize = {
 	/**  Path relative to the project root, for "open this entry". */
 	file: string,
 	body: string,
-	/**
-	 *  Set on an entry Textus AI wrote (ai::memory),
-	 *  which the Memory tab also lists under "AI remembered".
-	 */
+	/**  Set on an entry Textus AI wrote, which the Memory tab also lists. */
 	remembered: Remembered_Serialize | null,
 };
 
@@ -454,16 +388,12 @@ export type Memories_Serialize = {
 	forgotten: Forgotten_Serialize[],
 };
 
-/**
- *  One memory, as the Memory tab and the prompt see it. Serialised
- *  camelCase (`Memory` in src/platform/bindings/ai-project.ts).
- */
+/**  One memory, as the Memory tab and the prompt see it. Serialised camelCase. */
 export type Memory = Memory_Serialize | Memory_Deserialize;
 
 /**
- *  What a memory is about. Facts about the work are not a kind: they go
- *  into the library, where the existing matching sends each only when it
- *  comes up.
+ *  What a memory is about. Facts about the work are not a kind: they go into
+ *  the library.
  */
 export type MemoryKind = 
 /**  Something the user asked to be always or never done. */
@@ -473,10 +403,7 @@ export type MemoryKind =
 /**  How the user writes. */
 "style";
 
-/**
- *  One memory, as the Memory tab and the prompt see it. Serialised
- *  camelCase (`Memory` in src/platform/bindings/ai-project.ts).
- */
+/**  One memory, as the Memory tab and the prompt see it. Serialised camelCase. */
 export type Memory_Deserialize = {
 	id: string,
 	scope: Scope,
@@ -489,10 +416,7 @@ export type Memory_Deserialize = {
 	included: boolean,
 };
 
-/**
- *  One memory, as the Memory tab and the prompt see it. Serialised
- *  camelCase (`Memory` in src/platform/bindings/ai-project.ts).
- */
+/**  One memory, as the Memory tab and the prompt see it. Serialised camelCase. */
 export type Memory_Serialize = {
 	id: string,
 	scope: Scope,
@@ -514,38 +438,32 @@ export type ProjectConventions = {
 };
 
 /**
- *  Where and when something was remembered. Serialised camelCase for the
- *  Memory tab (`Remembered` in src/platform/bindings/ai-project.ts).
+ *  Where and when something was remembered, serialised camelCase for the
+ *  Memory tab.
  */
 export type Remembered = Remembered_Serialize | Remembered_Deserialize;
 
 /**
- *  Where and when something was remembered. Serialised camelCase for the
- *  Memory tab (`Remembered` in src/platform/bindings/ai-project.ts).
+ *  Where and when something was remembered, serialised camelCase for the
+ *  Memory tab.
  */
 export type Remembered_Deserialize = {
 	created: string,
 	updated: string,
-	/**
-	 *  The conversation it came from (useAgentConversation's id) and its
-	 *  title, and the document open then.
-	 */
+	/**  The conversation it came from and its title, and the document open then. */
 	conversation?: string | null,
 	title?: string | null,
 	document?: string | null,
 };
 
 /**
- *  Where and when something was remembered. Serialised camelCase for the
- *  Memory tab (`Remembered` in src/platform/bindings/ai-project.ts).
+ *  Where and when something was remembered, serialised camelCase for the
+ *  Memory tab.
  */
 export type Remembered_Serialize = {
 	created: string,
 	updated: string,
-	/**
-	 *  The conversation it came from (useAgentConversation's id) and its
-	 *  title, and the document open then.
-	 */
+	/**  The conversation it came from and its title, and the document open then. */
 	conversation: string | null,
 	title: string | null,
 	document: string | null,
@@ -565,8 +483,8 @@ export type RootSource =
 /**  The folder the user chose (the project menu, or Settings > Textus AI). */
 "chosen" | 
 /**
- *  The folder would be the home folder or a drive root, which is never
- *  opened to the agent (project::is_too_broad).
+ *  The folder would be the home folder or a drive root, never opened to the
+ *  agent.
  */
 "tooBroad";
 
@@ -583,9 +501,8 @@ export type SkillLabel = {
 };
 
 /**
- *  Which layer a skill comes from: bundled with the app (ai::builtin), the
- *  global config folder's skills/, or the project's .textus/skills/. Each
- *  layer replaces same-named skills of the ones before it.
+ *  Which layer a skill comes from: built in, the global config folder, or the
+ *  project. Each layer replaces same-named skills of the ones before it.
  */
 export type SkillSource = "builtin" | "global" | "project";
 

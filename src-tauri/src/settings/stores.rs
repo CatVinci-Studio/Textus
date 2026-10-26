@@ -2,7 +2,6 @@
 
 use super::*;
 
-
 /// The two histories. Their caps match the frontend's and are enforced here
 /// too, as the one writer.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -68,7 +67,6 @@ impl HistoryKind {
         list.split_off(list.len().min(self.max()))
     }
 }
-
 
 pub struct Stores {
     pub settings: Arc<Store>,

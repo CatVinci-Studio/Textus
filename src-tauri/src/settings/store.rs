@@ -21,7 +21,6 @@ pub(crate) fn file_name(stem: &str) -> String {
     }
 }
 
-
 /// One file: `{"schemaVersion": n, "<key>": payload}`, where the payload is
 /// an object (settings, UI state) or an array (histories).
 pub struct Store {
@@ -175,7 +174,6 @@ impl Store {
         inner
     }
 
-
     /// Merges top-level fields only: each field in `patch` replaces that field
     /// whole (null removes it), so two windows can change different settings at once.
     pub fn patch(self: &Arc<Self>, patch: &Map<String, Value>) -> u64 {
@@ -208,7 +206,6 @@ impl Store {
         self.schedule_flush();
         Some((added, rev))
     }
-
 
     pub fn upsert(self: &Arc<Self>, kind: HistoryKind, entry: Value) -> u64 {
         self.update(|payload| {

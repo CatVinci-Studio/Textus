@@ -173,7 +173,6 @@ pub async fn plugin_fs_write_if(
     Ok(true)
 }
 
-
 type Secrets = BTreeMap<String, BTreeMap<String, String>>;
 
 /// Every plugin's secrets, in one owner-only file apart from settings and storage.

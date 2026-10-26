@@ -48,130 +48,68 @@ export const commands = {
 	 */
 	kept_proposals_read: (docPath: string, workspaceRoot: string | null) => __TAURI_INVOKE<Value | null>("kept_proposals_read", { docPath, workspaceRoot }),
 	/**
-	 *  Keeps `kept` for the document, with the made pictures among `pictures`
-	 *  - or, with None, removes what was kept, once every proposal is
-	 *  decided.
+	 *  Keeps `kept` for the document, with the made pictures among `pictures`; with
+	 *  None, removes what was kept.
 	 */
 	kept_proposals_write: (docPath: string, workspaceRoot: string | null, kept: Value | null, pictures: string[]) => __TAURI_INVOKE<null>("kept_proposals_write", { docPath, workspaceRoot, kept, pictures }),
 };
 
 /* Types */
-/**
- *  One entry in an agent conversation. Kept provider-agnostic so the main
- *  crate's loop doesn't need to know about each provider's wire format.
- *  Generated into the app's src/platform/bindings/ai-agent.ts; `AgentTurn` in
- *  src/ai/types.ts is the narrower turn the frontend keeps.
- */
+/**  One entry in an agent conversation, kept provider-agnostic. */
 export type AgentTurn = AgentTurn_Serialize | AgentTurn_Deserialize;
 
-/**
- *  One entry in an agent conversation. Kept provider-agnostic so the main
- *  crate's loop doesn't need to know about each provider's wire format.
- *  Generated into the app's src/platform/bindings/ai-agent.ts; `AgentTurn` in
- *  src/ai/types.ts is the narrower turn the frontend keeps.
- */
+/**  One entry in an agent conversation, kept provider-agnostic. */
 export type AgentTurn_Deserialize = { kind: "User"; text: string; 
-/**
- *  Defaulted, because conversations saved before images existed are
- *  still in users' localStorage (see chat-history.ts) and must keep
- *  deserializing.
- */
+/**  Defaulted so conversations saved before images existed still deserialize. */
 images?: ImageAttachment[] } | { kind: "Assistant"; text: string; 
 /**
- *  The web pages the reply cites as [n] - Textus's own web_search
- *  and web_fetch results and the provider's native search
- *  citations, numbered once per conversation. Defaulted and skipped
- *  when empty, so conversations saved before web sources keep
- *  deserializing and a reply without any stays `{kind, text}`.
+ *  The web pages the reply cites as [n], numbered once per conversation.
+ *  Defaulted and skipped when empty so older saves still deserialize.
  */
 sources?: WebSource[] } | { kind: "ToolCall"; call_id: string; name: string; arguments: string; 
 /**
- *  The model's reasoning for the step this call opens, in its
- *  provider's own wire shape (Claude's thinking blocks, an
- *  OpenAI-compatible `reasoning_content` string) - on the first call
- *  of a step only. Sent back with the step's calls for the rest of
- *  the exchange, where thinking with tools requires it; the main
- *  crate drops it before the turn reaches the frontend, so it never
- *  outlives the exchange (or appears in `AgentTurn` in types.ts).
+ *  The model's reasoning for the step this call opens, in the provider's
+ *  wire shape, on the step's first call only. Thinking with tools requires
+ *  it sent back; it never outlives the exchange.
  */
 reasoning?: Value | null } | { kind: "ToolResult"; call_id: string; output: string; 
 /**
- *  Images the tool showed the model (Textus AI's view_image). Each
- *  dialect delivers them its own way - inside the tool result where
- *  the API takes images there, as a user message right after it
- *  where it doesn't. They are for the request in flight only: the
- *  main crate drops them before the turn reaches the frontend's
- *  history, as the frontend drops a user turn's images.
+ *  Images the tool showed the model, for the request in flight only. Each
+ *  dialect delivers them in the tool result or as a user message after it.
  */
 images?: ImageAttachment[] };
 
-/**
- *  One entry in an agent conversation. Kept provider-agnostic so the main
- *  crate's loop doesn't need to know about each provider's wire format.
- *  Generated into the app's src/platform/bindings/ai-agent.ts; `AgentTurn` in
- *  src/ai/types.ts is the narrower turn the frontend keeps.
- */
+/**  One entry in an agent conversation, kept provider-agnostic. */
 export type AgentTurn_Serialize = { kind: "User"; text: string; 
-/**
- *  Defaulted, because conversations saved before images existed are
- *  still in users' localStorage (see chat-history.ts) and must keep
- *  deserializing.
- */
+/**  Defaulted so conversations saved before images existed still deserialize. */
 images: ImageAttachment[] } | { kind: "Assistant"; text: string; 
 /**
- *  The web pages the reply cites as [n] - Textus's own web_search
- *  and web_fetch results and the provider's native search
- *  citations, numbered once per conversation. Defaulted and skipped
- *  when empty, so conversations saved before web sources keep
- *  deserializing and a reply without any stays `{kind, text}`.
+ *  The web pages the reply cites as [n], numbered once per conversation.
+ *  Defaulted and skipped when empty so older saves still deserialize.
  */
 sources?: WebSource[] } | { kind: "ToolCall"; call_id: string; name: string; arguments: string; 
 /**
- *  The model's reasoning for the step this call opens, in its
- *  provider's own wire shape (Claude's thinking blocks, an
- *  OpenAI-compatible `reasoning_content` string) - on the first call
- *  of a step only. Sent back with the step's calls for the rest of
- *  the exchange, where thinking with tools requires it; the main
- *  crate drops it before the turn reaches the frontend, so it never
- *  outlives the exchange (or appears in `AgentTurn` in types.ts).
+ *  The model's reasoning for the step this call opens, in the provider's
+ *  wire shape, on the step's first call only. Thinking with tools requires
+ *  it sent back; it never outlives the exchange.
  */
 reasoning?: Value } | { kind: "ToolResult"; call_id: string; output: string; 
 /**
- *  Images the tool showed the model (Textus AI's view_image). Each
- *  dialect delivers them its own way - inside the tool result where
- *  the API takes images there, as a user message right after it
- *  where it doesn't. They are for the request in flight only: the
- *  main crate drops them before the turn reaches the frontend's
- *  history, as the frontend drops a user turn's images.
+ *  Images the tool showed the model, for the request in flight only. Each
+ *  dialect delivers them in the tool result or as a user message after it.
  */
 images?: ImageAttachment[] };
 
 /**
  *  A chat attachment: whatever the user picked, turned into something a model
- *  can actually read.
- * 
- *  There are exactly two destinations, and every format has to reach one of
- *  them - which is why this is a tagged union rather than one struct with a
- *  `kind` string. The variants share only a name; as a flat struct every
- *  constructor had to fill the other half with `String::new()`, and both
- *  languages carried "empty for images" / "empty for text" comments enforcing
- *  by convention what the type can enforce itself. Generated into
- *  src/platform/bindings/ai-agent.ts (`ChatAttachment` in src/ai/types.ts), where
- *  `kind` narrows the union the same way.
- * 
- *  The old implementation was a plain `read_to_string`, so every binary -
- *  a PDF above all - came back `Err`, and the frontend's `.catch(() => null)`
- *  swallowed it. The button looked dead. Everything here therefore reports a
- *  real reason on failure, and the caller shows it.
+ *  can read. Failures carry a real reason for the user to see.
  */
 export type ChatAttachment = { kind: "text"; name: string; 
 /**  Extracted text, inlined into the prompt by the caller. */
 content: string; 
 /**
- *  `content` hit MAX_EXTRACTED_CHARS and was cut. The frontend labels
- *  the chip so the user knows the model isn't seeing the whole thing -
- *  a silent truncation reads as "the model has my file" when it
- *  doesn't.
+ *  `content` hit MAX_EXTRACTED_CHARS and was cut; the frontend labels the chip
+ *  so the user knows the model isn't seeing the whole file.
  */
 truncated: boolean } | { kind: "image"; name: string; 
 /**  "image/png", ... - what the provider is told this is. */
@@ -208,23 +146,14 @@ export type ImageApi =
 /**  MiniMax's image-01. */
 "mini-max" | 
 /**
- *  The ChatGPT sign-in: the image_generation tool on the backend
- *  ChatGPT's own apps use (providers::openai_codex::generate_image),
- *  not an Images API - no address or key, so never through
- *  [`generate`].
+ *  The ChatGPT sign-in: the image_generation tool on ChatGPT's backend,
+ *  not an Images API, so never through [`generate`].
  */
 "chat-gpt";
 
 /**
- *  An image riding along with a user turn.
- * 
- *  Images are the one attachment kind with no text to extract, so they can't
- *  be inlined into the prompt the way a PDF or spreadsheet is (see the main
- *  crate's commands/attachment.rs). They have to reach the model as the
- *  provider's own image content part, which is what every `turns_to_*`
- *  function below builds. `data_base64` is the raw file, base64-encoded;
- *  `mime` is what the provider is told it is. Generated into the app's
- *  src/platform/bindings/ai-agent.ts.
+ *  An image riding along with a user turn. Images have no text to extract,
+ *  so they reach the model as the provider's own image content part.
  */
 export type ImageAttachment = {
 	name: string,
@@ -233,21 +162,18 @@ export type ImageAttachment = {
 };
 
 /**
- *  One service Settings › Textus AI › Image model offers. Mirrored by
- *  `ImageProviderEntry` in src/ai/image-models.ts.
+ *  One service Settings offers as Image model. Keep in step with the frontend's
+ *  `ImageProviderEntry`.
  */
 export type ImageProviderEntry = ImageProviderEntry_Serialize | ImageProviderEntry_Deserialize;
 
 /**
- *  One service Settings › Textus AI › Image model offers. Mirrored by
- *  `ImageProviderEntry` in src/ai/image-models.ts.
+ *  One service Settings offers as Image model. Keep in step with the frontend's
+ *  `ImageProviderEntry`.
  */
 export type ImageProviderEntry_Deserialize = {
 	id: string,
-	/**
-	 *  A brand name; "custom", "doubao" and MiniMax's two are localized by
-	 *  the frontend.
-	 */
+	/**  A brand name; a few are localized by the frontend. */
 	label: string,
 	api: ImageApi,
 	/**  None for the compatible endpoint, whose address the user gives. */
@@ -271,15 +197,12 @@ export type ImageProviderEntry_Deserialize = {
 };
 
 /**
- *  One service Settings › Textus AI › Image model offers. Mirrored by
- *  `ImageProviderEntry` in src/ai/image-models.ts.
+ *  One service Settings offers as Image model. Keep in step with the frontend's
+ *  `ImageProviderEntry`.
  */
 export type ImageProviderEntry_Serialize = {
 	id: string,
-	/**
-	 *  A brand name; "custom", "doubao" and MiniMax's two are localized by
-	 *  the frontend.
-	 */
+	/**  A brand name; a few are localized by the frontend. */
 	label: string,
 	api: ImageApi,
 	/**  None for the compatible endpoint, whose address the user gives. */
@@ -303,22 +226,16 @@ export type ImageProviderEntry_Serialize = {
 };
 
 /**
- *  One live fragment of an in-flight `ai_agent_message`, pushed to the
- *  invoking window over a Tauri channel while the agent loop runs. Purely
- *  additive display data: the command still resolves with the complete turn
- *  list, which remains the authoritative result the frontend appends to its
- *  history - a dropped or ignored event costs liveness, never correctness.
- *  Generated into src/platform/bindings/ai-agent.ts.
+ *  One live fragment of an in-flight `ai_agent_message`. Display only: the
+ *  command still resolves with the complete turn list, so a dropped event costs
+ *  liveness, never correctness.
  */
 export type StreamEvent = StreamEvent_Serialize | StreamEvent_Deserialize;
 
 /**
- *  One live fragment of an in-flight `ai_agent_message`, pushed to the
- *  invoking window over a Tauri channel while the agent loop runs. Purely
- *  additive display data: the command still resolves with the complete turn
- *  list, which remains the authoritative result the frontend appends to its
- *  history - a dropped or ignored event costs liveness, never correctness.
- *  Generated into src/platform/bindings/ai-agent.ts.
+ *  One live fragment of an in-flight `ai_agent_message`. Display only: the
+ *  command still resolves with the complete turn list, so a dropped event costs
+ *  liveness, never correctness.
  */
 export type StreamEvent_Deserialize = 
 /**  A chunk of the assistant's prose for the turn being generated. */
@@ -330,9 +247,8 @@ export type StreamEvent_Deserialize =
 /**  A completed intermediate turn (ToolCall/ToolResult) as it lands. */
 { type: "turn"; turn: AgentTurn_Deserialize } | 
 /**
- *  The step being streamed came back garbled and is asked for again
- *  (aicompat's run_agent_loop): drop what it streamed - its prose and
- *  its proposal drafts - and show the new attempt instead.
+ *  The step being streamed came back garbled and is asked for again: drop
+ *  what it streamed and show the new attempt instead.
  */
 { type: "retry" } | 
 /**
@@ -348,12 +264,9 @@ export type StreamEvent_Deserialize =
 { type: "picture"; callId: string; line: string; id: string; width: number; height: number };
 
 /**
- *  One live fragment of an in-flight `ai_agent_message`, pushed to the
- *  invoking window over a Tauri channel while the agent loop runs. Purely
- *  additive display data: the command still resolves with the complete turn
- *  list, which remains the authoritative result the frontend appends to its
- *  history - a dropped or ignored event costs liveness, never correctness.
- *  Generated into src/platform/bindings/ai-agent.ts.
+ *  One live fragment of an in-flight `ai_agent_message`. Display only: the
+ *  command still resolves with the complete turn list, so a dropped event costs
+ *  liveness, never correctness.
  */
 export type StreamEvent_Serialize = 
 /**  A chunk of the assistant's prose for the turn being generated. */
@@ -365,9 +278,8 @@ export type StreamEvent_Serialize =
 /**  A completed intermediate turn (ToolCall/ToolResult) as it lands. */
 { type: "turn"; turn: AgentTurn_Serialize } | 
 /**
- *  The step being streamed came back garbled and is asked for again
- *  (aicompat's run_agent_loop): drop what it streamed - its prose and
- *  its proposal drafts - and show the new attempt instead.
+ *  The step being streamed came back garbled and is asked for again: drop
+ *  what it streamed and show the new attempt instead.
  */
 { type: "retry" } | 
 /**
@@ -384,8 +296,7 @@ export type StreamEvent_Serialize =
 
 /**
  *  How hard the model is asked to think. The user sees one button, Deep
- *  thinking; the other two are picked by the surface. Generated into the
- *  app's src/platform/bindings/ai-agent.ts.
+ *  thinking; the other two are picked by the surface.
  */
 export type ThinkingLevel = 
 /**  Quick Ask: as little as the model allows - it is for a quick change. */
@@ -397,18 +308,13 @@ export type ThinkingLevel =
 "auto" | 
 /**
  *  Deep thinking on: `high` where the model has levels (never `xhigh`
- *  or `max`, which cost several times as much), on where it only
- *  switches.
+ *  or `max`, which cost several times as much), on where it only switches.
  */
 "deep";
 
 export type Value = null | boolean | number | string | Value[] | { [key in string]: Value };
 
-/**
- *  One web page a reply cites as `[n]`. Generated into the app's
- *  src/platform/bindings/ai-agent.ts as WebSource, its name there (JSON never
- *  carries a struct's name).
- */
+/**  One web page a reply cites as `[n]`. Exported as WebSource. */
 export type WebSource = {
 	n: number,
 	url: string,

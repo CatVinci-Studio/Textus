@@ -92,7 +92,6 @@ pub(crate) fn emit_to_all<S: Serialize + Clone>(app: &AppHandle, event: &str, pa
     }
 }
 
-
 /// The script every app webview runs first: it publishes `window.__BOOT__` and
 /// applies the appearance. Read when the window is built, so the frontend treats
 /// it as a first-paint hint and re-reads live values.

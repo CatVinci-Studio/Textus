@@ -77,7 +77,6 @@ const SUPPORTED_EXTENSIONS: &[&str] = &[
     "png", "jpg", "jpeg", "gif", "webp",
 ];
 
-
 /// Reads and converts one already-picked file, all inside one `spawn_blocking`.
 fn extract(path: &Path, bytes: u64) -> Result<ChatAttachment, String> {
     let name = file_name_of(path);

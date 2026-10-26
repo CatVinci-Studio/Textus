@@ -20,7 +20,6 @@ pub(crate) use stores::*;
 mod app;
 pub(crate) use app::*;
 
-
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct Snapshot {

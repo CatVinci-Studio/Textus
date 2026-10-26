@@ -127,7 +127,6 @@ fn tidy_lines(text: &str) -> String {
     out
 }
 
-
 /// Every sheet as a Markdown table under its name: the rest of the prompt is
 /// Markdown, so the model reads one representation.
 fn spreadsheet_text(path: &Path) -> Result<String, String> {
