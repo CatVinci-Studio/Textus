@@ -491,6 +491,7 @@ utiliser une.
   treeOpen: "Ouvrir",
   outlineCollapse: "Replier",
   outlineExpand: "Déplier",
+  wordUnit: "mot",
   wordsUnit: "mots",
   alertNote: "Remarque",
   alertTip: "Astuce",

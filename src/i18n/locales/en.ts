@@ -469,6 +469,7 @@ type /name in a conversation to use one.
   treeOpen: "Open",
   outlineCollapse: "Collapse",
   outlineExpand: "Expand",
+  wordUnit: "word",
   wordsUnit: "words",
   alertNote: "Note",
   alertTip: "Tip",
