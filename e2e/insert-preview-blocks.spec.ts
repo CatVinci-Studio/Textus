@@ -3,8 +3,8 @@ import { openApp, pasteMarkdown } from "./helpers";
 
 /**
  * Text Textus AI writes after the document's last block is shown as the
- * blocks it will be - paragraphs, a list, a footnote - while it streams in
- * and before it is taken, not as its Markdown with line breaks (rc.5).
+ * blocks it will be (paragraphs, a list, a footnote) while it streams in and
+ * before it is taken, not as its Markdown.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';

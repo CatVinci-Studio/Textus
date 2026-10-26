@@ -2,11 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { blockIds, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * A generate_image call shows its frame - in its place, in its shape - the
- * moment the call says where it goes and how wide it is, while its long
- * description still streams in, and the picture takes the frame's place
- * when the call completes (rc.6: the redo of a picture began only once the
- * whole description had come).
+ * A generate_image call shows its frame, in place and in shape, as soon as
+ * its anchor and width arrive; the picture replaces it when the call ends.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';
@@ -14,10 +11,8 @@ const FIRST = "The harbour was quiet before the boats came in.";
 const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
-/** Streams `raw` as generate_image's arguments - by the block its
- *  `anchor` is in, as a model names it - then waits for window.__release
- *  before the call completes with `final`, settled as the backend settles
- *  it (src/dev/settle-calls.ts). */
+/** Streams `raw` as generate_image's arguments, then waits for
+ *  window.__release before the call completes with `final`. */
 async function streamPicture(page: Page, raw: string, final: string | null) {
   await page.evaluate(
     ({ raw, final }) => {
@@ -225,8 +220,7 @@ test("while a picture is made, its frame on the chat's card has its shape", asyn
     }),
   );
   await send(page);
-  // The picture's shape, as tall as the card shows pictures - not a
-  // fixed 4:3 that the picture then jumped out of.
+  // The picture's shape, not a fixed 4:3.
   const card = page.locator(".agent-panel-view .agent-proposal-picture-frame");
   await expect(card).toHaveCount(1);
   const small = (await card.boundingBox())!;

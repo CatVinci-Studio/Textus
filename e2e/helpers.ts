@@ -29,10 +29,8 @@ console.log("a fairly long first line of code to see whether the language label 
 /** Opens the app with onboarding done and the given extra localStorage,
  *  and makes rendering deterministic (no animations, no blinking caret).
  *  `animations: true` leaves the motion on, for the specs that test it. */
-/** For the first wait on something KaTeX draws, or a document with maths
- *  (which opens once KaTeX has loaded): a dev server bundles KaTeX on its
- *  first request, which on a CI runner can take longer than the default 5
- *  seconds - such tests failed there and passed on the retry. */
+/** For the first wait on something KaTeX draws: the dev server bundles KaTeX
+ *  on its first request, which on a CI runner can exceed the default 5s. */
 export const FIRST_LOAD = { timeout: 20_000 };
 
 export async function openApp(
@@ -47,9 +45,8 @@ export async function openApp(
   await page.emulateMedia({ colorScheme: options.colorScheme ?? "light" });
   await page.addInitScript(
     ({ settings, storage }) => {
-      // Not in the iframe applyThemeChrome samples an imported theme in:
-      // rewriting the settings there fires a storage event in the page,
-      // and the theme it just imported reverted.
+      // Not in the iframe an imported theme is sampled in: rewriting the settings
+      // there fires a storage event that reverts the import.
       if (window.top !== window) return;
       localStorage.setItem(
         "catvinci-settings",
@@ -110,7 +107,7 @@ export async function blockIds(page: Page, doc: string): Promise<string[]> {
   );
 }
 
-/** Answers a backend command with a canned value (dev-tauri-shim). */
+/** Answers a backend command with a canned value. */
 export async function mockInvoke(page: Page, results: Record<string, unknown>) {
   await page.evaluate((r) => {
     (window as unknown as { __devInvokeResults: unknown }).__devInvokeResults =
@@ -128,7 +125,7 @@ export const PHONE = {
   userAgent: devices["iPhone 15 Pro Max"].userAgent,
 };
 
-/** openApp as an iPhone: the phone layout (mobile/styles) is on. */
+/** openApp as an iPhone: the phone layout is on. */
 export async function openPhone(
   page: Page,
   options: {

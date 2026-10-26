@@ -2,11 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * The writer's own notes (ai/margin/useOwnNotes.ts): right-click a
- * selection › Add Note, and the note is in the margin beside the AI's,
- * marked Me; it can be edited and deleted, and it is kept beside the app's
- * data - never in the Markdown - and back on its words when the document
- * opens again.
+ * The writer's own notes: added from the context menu, shown in the margin
+ * marked Me, kept outside the Markdown and back on their words on reopen.
  */
 
 const PATH = "/notes/draft.md";

@@ -76,8 +76,7 @@ describe("updater manifest", () => {
     expect(forbiddenAssets(["latest.json\r"])).toHaveLength(1);
   });
 
-  // A stable release's signed assets, named as tauri-bundler names them:
-  // x64 as on the 1.0.4 release, ARM64 with its arm64/aarch64 spellings.
+  // A stable release's signed assets, named as tauri-bundler names them.
   const base =
     "https://github.com/CatVinci-Studio/Textus/releases/download/v1.1.0";
   const stable = buildManifest({

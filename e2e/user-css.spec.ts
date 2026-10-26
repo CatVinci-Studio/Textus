@@ -2,12 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { openApp, pasteMarkdown } from "./helpers";
 
-// Imported Typora themes and Custom CSS (Settings > Editor & Appearance):
-// a theme applies as a whole in either appearance, Textus's ornaments step
-// aside for it, the user's CSS wins over both, Export -> Import keeps the
-// look, and the one cascade layer that makes all that work stays intact.
-// The fixture themes (fixtures/themes/) imitate the shapes real themes
-// take - type on body/html, text pinned dark, light fills on some boxes.
+// Imported Typora themes and Custom CSS: a theme applies whole in either
+// appearance, the user's CSS wins over both, and the cascade layer holds.
+// The fixture themes imitate the shapes real themes take.
 
 const THEMES = {
   newsprint: {
@@ -432,9 +429,8 @@ test("the document's look sits in the one textus-content layer", async ({
   expect(report.unlayered).toEqual([]);
 });
 
-// A rule in a layer of the CSS's own lands in a layer declared after the
-// app's, so it overrides the built-in look (unlayered CSS still wins over
-// both).
+// The CSS's own layer is declared after the app's, so it overrides the
+// built-in look.
 test("CSS in a layer of its own still overrides the look", async ({ page }) => {
   await openApp(page, {
     settings: {

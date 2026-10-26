@@ -1,10 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { PHONE, mockInvoke, openPhone, pasteMarkdown } from "./helpers";
 
-// Editing by finger on the iPhone layout: the keyboard toolbar follows the
-// caret into tables, its "More" stands in for the right-click menu, and a
-// grammar underline answers a tap. Chromium with touch (see PHONE in
-// helpers.ts) - iOS WebKit's own keyboard and text menu aren't reachable.
+// Editing by finger on the iPhone layout, in Chromium with touch: iOS
+// WebKit's own keyboard and text menu aren't reachable.
 test.use(PHONE);
 
 const TABLE = `Before the table.
@@ -57,10 +55,8 @@ test("a swipe along the keyboard toolbar that starts on Delete Table deletes not
     .getByRole("button", { name: "Delete Table" });
   await expect(remove).toBeVisible();
 
-  // A finger down on the button, dragged sideways to scroll the row, then
-  // lifted: Playwright's touchscreen only taps, so the raw touch events.
-  // The row starts scrolled to its beginning, which may leave the button
-  // past the screen's edge.
+  // A finger dragged sideways from the button to scroll the row. Playwright's
+  // touchscreen only taps, so this sends raw touch events.
   await remove.scrollIntoViewIfNeeded();
   const box = (await remove.boundingBox())!;
   const x = box.x + box.width / 2;

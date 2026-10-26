@@ -1,18 +1,7 @@
 #!/usr/bin/env node
-// A quick `npm run check` while you work - `npm run check:quick`: the whole
-// typecheck, then lint, formatting and the unit tests for only the files
-// your branch changed since it left origin/main, committed or not. The
-// tests are those `vitest related` finds: the changed test files and the
-// tests that import a changed file. The save round trip
-// (src/document-view/save-roundtrip*.test.ts), half of `npm test`'s time,
-// runs only when a change can reach saving, as in CI
-// (scripts/ci-changes.mjs).
-//
-// It is a shortcut, not a replacement: run `npm run check` before you open
-// a pull request. Same on Linux, macOS and Windows.
-//
-//   node scripts/check-quick.mjs                 (against origin/main)
-//   node scripts/check-quick.mjs --base REF      (against another branch)
+// A quick check while you work: the whole typecheck, then lint, formatting
+// and related unit tests for only the files changed since the base (default
+// origin/main, or --base REF). Not a replacement for `npm run check`.
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";

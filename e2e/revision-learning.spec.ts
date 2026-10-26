@@ -1,10 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// Learning from revision choices (ai/revision/revision-learning.ts): the
-// same kind of change turned down again and again - here 「」 made “” -
-// leads to one quiet suggestion where the review bar was, and Remember
-// saves it as a memory the Memory tab lists. The note is the writer's own.
+// Learning from revision choices: the same kind of change turned down
+// repeatedly leads to one suggestion, and Remember saves it as a memory.
 
 const NOTE =
   "会议记录：经理说「下周再议」。小李回答「没问题」。\n\n第二天，大家都说「辛苦了」。";

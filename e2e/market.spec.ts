@@ -2,9 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
 /**
- * Settings › Extensions › Get more (MarketPage): plugins, themes and
- * skills in one place, one search over them and a filter by kind; a
- * skill installed from the catalog is the user's from then on.
+ * Settings › Extensions › Get more: plugins, themes and skills, one search
+ * and a filter by kind; a skill installed from the catalog is the user's.
  */
 
 const SKILLS = [

@@ -3,11 +3,8 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
- * Rewrites streaming in, beyond one at a time in one view (1.2.1): two
- * proposals in one reply, each paragraph landing in its place with its own
- * beat and the count growing across both; and the view switched while one
- * still streams - what each view shows of what has landed, and of what is
- * still being written.
+ * Rewrites streaming in: two proposals in one reply, each paragraph landing
+ * in its place, and the view switched while one still streams.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';

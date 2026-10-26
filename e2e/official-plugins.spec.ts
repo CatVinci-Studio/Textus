@@ -11,9 +11,8 @@ import {
 } from "./plugin-helpers";
 
 /**
- * The official plugins (public/plugins/official/), each turned on with its
- * permissions through the dev shim (window.__devPluginState) and used as
- * a writer would: a file opened in its tab, its sidebar panel, its command.
+ * The official plugins, each turned on with its permissions through the dev
+ * shim and used as a writer would: a file in its tab, its panel, its command.
  */
 
 test("a picture opens in the Image Viewer's tab", async ({ page }) => {
@@ -151,7 +150,7 @@ test("a selected link opens in a web page tab of its own", async ({ page }) => {
   await page
     .getByRole("menuitem", { name: "Open or search the selection in a tab" })
     .click();
-  // Framed, as on Linux (native-web-page.spec.ts has the native page).
+  // Framed, as on Linux.
   const web = page.frameLocator('[data-active-tab="true"] .web-page-frame');
   await expect(web.locator("h1")).toHaveText("Example page");
   await expect(page.getByRole("textbox", { name: "Web address" })).toHaveValue(

@@ -1,14 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "../../helpers";
 
-// Screenshots of the Files tab's Open Folder button in its three states -
-// nothing saved yet, a document opened without a folder, a folder opened -
-// at the sidebar's narrowest and default widths, in English and Chinese,
-// light and dark, plus the interface text sizes and two bundled themes at
-// the narrowest width. For review, not a baseline. Runs only with
-// TEXTUS_SHOTS_DIR set:
-//
-//   TEXTUS_SHOTS_DIR=../assets/working/sidebar-open-folder npm run screenshots:review -- sidebar-open-folder
+// Review screenshots of the Files tab's Open Folder button in its three
+// states and widths. Runs only with TEXTUS_SHOTS_DIR set.
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");

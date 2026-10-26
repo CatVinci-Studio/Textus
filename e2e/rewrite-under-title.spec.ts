@@ -2,9 +2,8 @@ import { expect, test } from "@playwright/test";
 import { blockIds, openApp, pasteMarkdown } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
-// The standard flow's translation, as the real window showed it (1.2.1):
-// a story under its title rewritten whole. While it streamed in, Result
-// only drew the new paragraphs in the title's type.
+// A story under its title rewritten whole: while streaming, Result only
+// must not draw the new paragraphs in the title's type.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const DOC =

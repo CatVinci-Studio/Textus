@@ -2,10 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * Text pasted in keeps its lines - an email pasted from a mail or chat app
- * came in as one long line, Markdown reading a line break inside a
- * paragraph as a space - and a quote copied with the bars it was drawn
- * with ("▎ ") is a quote (1.2.1).
+ * Pasted text keeps its line breaks, and a quote copied with its bars
+ * ("▎ ") comes in as a quote.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';
@@ -88,8 +86,6 @@ test("plain pasted lines keep their breaks", async ({ page }) => {
     2,
   );
 });
-
-// 1.2.2: what the paste audit found (paste-lines.ts, paste-html.ts).
 
 test("a paragraph a PDF wrapped at its width comes in whole", async ({
   page,

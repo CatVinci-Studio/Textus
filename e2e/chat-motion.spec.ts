@@ -2,12 +2,9 @@ import { expect, test } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 /**
- * The panel's motion through a streamed exchange, frame by frame, motion on
- * (rc.6 feedback: "这部分的动画整理一下"): between the edits of a run the
- * row at the end says "Writing the edit…" throughout, not flicking back to
- * "Thinking…" with a fade-in each time; the run's group takes its first
- * card's place without fading in again; and a decision slides what is
- * below up, rather than jumping it.
+ * The panel's motion through a streamed run of edits, frame by frame: the
+ * end row's label stays steady, the group takes its first card's place
+ * without fading in again, and a decision slides what is below up.
  */
 test("a streamed run of edits moves smoothly: steady label, no second fade, a slide after each decision", async ({
   page,
@@ -189,10 +186,9 @@ test("a streamed run of edits moves smoothly: steady label, no second fade, a sl
     .flatMap((f) => f.rows)
     .find(([name]) => name.startsWith("agent-proposal.agent-proposal-group"));
   expect(group?.[3]).toBe("1.00");
-  // The reply under the cards moves only in slides: each run of frames that
-  // moves it spans three frames or more, none covering nearly all the way -
-  // a jump covers all of it in one. (--ease-out is front-loaded: a slide's
-  // first frame is its longest, near half of it.)
+  // The reply under the cards moves only in slides: each run of moving frames
+  // spans three or more, none covering nearly all of it (--ease-out's first
+  // frame is near half; a jump is all of it).
   const tops = frames
     .map((f) => f.rows.find(([name]) => name.includes("#Done:"))?.[1])
     .filter((top): top is number => top !== undefined);

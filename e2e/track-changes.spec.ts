@@ -2,11 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * Edit › Track My Changes (ai/margin/useOwnRevisions.ts): with it on, the
- * writer's edits stay in the text as they type, what went shown struck
- * where it was and what came marked, each a card in the margin marked Me
- * to accept or reject; the original is kept beside the app's data, so
- * tracking carries on when the document opens again.
+ * Edit › Track My Changes: the writer's edits show as marked changes with
+ * margin cards, and the kept original survives a reopen.
  */
 
 const PATH = "/notes/draft.md";

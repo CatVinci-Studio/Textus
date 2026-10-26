@@ -2,10 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * The window bar's sidebar toggle (app/WindowBar.tsx): the row's first
- * control - beside the menu button where the app draws the frame, just
- * past the traffic lights on a Mac, in their corner in full screen. It
- * belongs to the bar, so the sidebar's slide never moves it.
+ * The window bar's sidebar toggle: the row's first control, which belongs to
+ * the bar, so the sidebar's slide never moves it.
  */
 
 const toggle = '.window-bar [aria-label="Sidebar"]';
@@ -72,9 +70,7 @@ test.describe("on a Mac", () => {
     page,
   }) => {
     await openApp(page, { settings: { language: "en" } });
-    // The browser has no window or menu bar of its own; the Mac app's
-    // window is the native one, with the system's menu bar, so no menu
-    // button in the row.
+    // The Mac app uses the system's menu bar, so no menu button in the row.
     await page.evaluate(() => {
       document.documentElement.dataset.windowChrome = "native";
       document.querySelector(".window-menu-button")?.remove();

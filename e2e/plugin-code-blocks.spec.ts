@@ -2,13 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * Code blocks a plugin draws (textus.views.registerCodeBlock,
- * document-view/plugins/plugin-code-blocks.ts): its page below a block in its
- * language, the source hidden until the caret goes back; typing tells the
- * page (CodeBlock.onDidChange), and the page can change the source
- * (setSource, with editor.write). The fence's words after the language
- * reach it as `block.meta`, and an export puts the page's picture
- * (onExport) where the block was.
+ * Code blocks a plugin draws (textus.views.registerCodeBlock): the page
+ * and the source stay in sync, and an export puts the page's picture there.
  */
 
 const HOST = `

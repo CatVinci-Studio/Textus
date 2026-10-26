@@ -1,9 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// The sidebar's width is the user's to drag (app/sidebar-width.ts,
-// ui/ResizeHandle.tsx): it follows the handle, stays within its bounds,
-// is remembered for the next window, and the keyboard can do the same.
+// The sidebar's width follows the handle, stays within its bounds, is
+// remembered for the next window, and the keyboard can do the same.
 
 async function openSidebar(page: Page) {
   await page.evaluate(() =>
@@ -56,7 +55,7 @@ test("dragging the sidebar's edge resizes it, and it comes back open at that wid
 
   await page.reload();
   await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
-  // Left open, it comes back open (#152).
+  // Left open, it comes back open.
   await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar-collapsed/);
   expect(await sidebarWidth(page)).toBe(320);
   expect(await mainPaneLeft(page)).toBe(320);

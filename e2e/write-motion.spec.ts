@@ -2,10 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 /**
- * Text written on at a document's end, frame by frame with motion on: the
- * page follows the writing down in soft strokes, not a jump the height of
- * each block that lands; and nothing at the window's bottom - the review
- * bar - pops in or out.
+ * Text written at a document's end with motion on: the page glides down
+ * with it, and the review bar never pops in or out.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';

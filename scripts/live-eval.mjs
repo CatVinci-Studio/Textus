@@ -1,22 +1,7 @@
 #!/usr/bin/env node
-// The live evaluation's one way in (docs/design/ai-eval.md, "Running it").
-// The suites are `#[ignore]`d Rust tests that spend real money; this sets
-// their environment from a few flags, with the cheap choices as defaults:
-// no judge, a budget, the keys from .env.local.
-//
-//   node scripts/live-eval.mjs run --provider deepseek [--suite matrix]
-//        [--set core] [--filter ids] [--model id] [--budget 1] [--judge] [--jobs 6]
-//        [--out dir]
-//   node scripts/live-eval.mjs compare <before> <after>
-//   node scripts/live-eval.mjs baseline <run-dir> <provider>
-//
-// run: --suite is matrix (the agent cases), continuing (requests on top of
-// undecided proposals), builtin, completion, grammar or all; --budget, in
-// US dollars at list prices, stops starting cases once spent (default 1).
-// compare: <before> and <after> are run folders, or a baseline file; prints
-// the agent cases that started or stopped passing. baseline: keeps a run's
-// passing and failing case ids as the provider's baseline in
-// src-tauri/src/ai/live_eval/baselines/, for the next compare.
+// Runs the live evals, `#[ignore]`d Rust tests that spend real money, with
+// cheap defaults: no judge, a $1 budget, keys from .env.local. Also
+// `compare <before> <after>` and `baseline <run-dir> <provider>`.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";

@@ -2,10 +2,8 @@ import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * The `/` menu (plugins/contributions/slash-commands.ts): a plugin's
- * commands put in `menus["editor/slash"]` are offered when a word starts
- * with "/", filtered by what follows; taking one removes the "/" word and
- * runs the command, which writes at the caret.
+ * The `/` menu offers a plugin's `menus["editor/slash"]` commands; taking
+ * one removes the "/" word and runs the command.
  */
 
 const HOST = `

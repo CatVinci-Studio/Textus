@@ -3,16 +3,9 @@ import { dirname, join, normalize, resolve } from "node:path";
 import type { Plugin } from "vite";
 
 /**
- * The official plugins, in development and the browser tests, read from a
- * checkout of CatVinci-Studio/textus-plugins as the published catalog
- * would offer them: `/dev-plugins/index.json` (the catalog, its packages
- * left unbuilt) and `/dev-plugins/<id>/<file>`, the libraries its libs.json
- * names taken from that checkout's node_modules. The dev shim installs
- * from here (src/dev/tauri-shim.ts); the app itself ships no plugin.
- *
- * Where the checkout is: TEXTUS_PLUGINS_DIR, else a `textus-plugins`
- * folder beside this repository or above it. Without one, the catalog is
- * empty and the official plugins' tests are skipped.
+ * Serves the official plugins from a textus-plugins checkout under
+ * /dev-plugins/, as the catalog would. The checkout is TEXTUS_PLUGINS_DIR or
+ * a sibling folder; without one the catalog is empty.
  */
 export function pluginsCheckout(): string | null {
   const named = process.env.TEXTUS_PLUGINS_DIR;

@@ -1,12 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "../../helpers";
 
-// Screenshots of the hover tooltips (ui/Tooltip.tsx) - the composer's Deep
-// thinking button off and on, and the window bar's AI button - in Chinese
-// and English, light and dark, for review rather than as a baseline. Runs
-// only with TEXTUS_SHOTS_DIR set to where the PNGs go:
-//
-//   TEXTUS_SHOTS_DIR=../assets/working/tooltips-1.2.0 npm run screenshots:review -- tooltips
+// Review screenshots of the hover tooltips. Runs only with TEXTUS_SHOTS_DIR
+// set to where the PNGs go.
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");

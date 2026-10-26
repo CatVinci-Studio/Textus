@@ -2,10 +2,8 @@ import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * A plugin command's key in Settings › Shortcuts (settings/sections/
- * shortcut-rows.tsx): listed under Plugins with its manifest's key, set
- * to another - which then runs it, and the old one no longer does - and
- * refused, with the owner's name, where an app action has the key.
+ * A plugin command's key in Settings › Shortcuts: rebindable, and refused
+ * where an app action already has the key.
  */
 
 const HOST = `

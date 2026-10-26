@@ -3,8 +3,7 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * After a reply, what the writer will probably say next shows grey in the
- * empty message box (ai/chat/next-message.ts); Tab takes it, and with
- * Settings › Textus AI › Suggest your next message off nothing is asked.
+ * empty message box; Tab takes it, and with the setting off nothing is asked.
  */
 
 const composer = (page: Page) => page.locator(".agent-panel-view textarea");

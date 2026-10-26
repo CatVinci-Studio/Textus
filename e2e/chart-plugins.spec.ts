@@ -2,11 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { hasPlugin, openWithPlugins, openPath } from "./plugin-helpers";
 
 /**
- * The chart plugins (textus-plugins: markmap, echarts, plantuml, chartjs,
- * timeline, abc, wavedrom, function-plot), each from the checkout the dev
- * server serves: a block in its language is drawn below the source, a
- * mistake in the source is said under it, and an HTML export carries the
- * drawing as a picture.
+ * Each chart plugin, from the checkout the dev server serves: a block is
+ * drawn below its source, a mistake is reported under it, and an HTML export
+ * carries the drawing as a picture.
  */
 
 const CHARTS: [id: string, language: string, source: string][] = [

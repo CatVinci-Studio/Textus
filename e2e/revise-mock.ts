@@ -1,12 +1,9 @@
 import type { Page } from "@playwright/test";
 
 /**
- * The backend streaming `calls` (propose_edit arguments) in `chunk`-sized
- * argument fragments every `every` ms, then the turns. A call written as
- * the words it is about is named by their block first, as a model names
- * it, and settled as the backend settles it (src/dev/settle-calls.ts).
- * `hold`: the stream stops after this many fragments of the arguments as
- * given (before naming their block) and waits for a stop (ai_cancel).
+ * The backend streaming propose_edit `calls` in `chunk`-sized fragments
+ * every `every` ms. `hold`: stop after this many fragments and wait for
+ * ai_cancel.
  */
 export async function streamRevise(
   page: Page,
@@ -109,9 +106,8 @@ export async function streamRevise(
 }
 
 /**
- * A short story of our own in modern Chinese, and the same story rewritten
- * in classical Chinese - the rewrite folds the three lines of dialogue into
- * one, so one change's original runs over three paragraphs.
+ * A short story and its classical Chinese rewrite, which folds three lines
+ * of dialogue into one change spanning three paragraphs.
  */
 export const STORY = [
   "雨下了一整夜，楼道里的灯坏了两盏。",

@@ -1,13 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown, PHONE } from "../../helpers";
 
-// Screenshots of the AI panel (empty, a reply with an edit, a comment and a
-// sentence picker, a reply streaming in, the / menu) and of the app's
-// surfaces (menus, selects, dialogs, settings) in English and Chinese, light
-// and dark, desktop, a narrow panel and phone - for review, not a baseline.
-// Runs only with TEXTUS_SHOTS_DIR set to where the PNGs go:
-//
-//   TEXTUS_SHOTS_DIR=../assets/ui-polish/after npm run screenshots:review -- ui-polish
+// Review screenshots of the AI panel and the app's other surfaces. Runs only
+// with TEXTUS_SHOTS_DIR set to where the PNGs go.
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");
@@ -220,9 +215,7 @@ for (const form of ["desktop", "narrow", "phone"] as Form[]) {
   });
 }
 
-// The app's other surfaces, for the corner-radius pass and the View menu:
-// the menu with View open, the context menu, a select, the find bar, a
-// dialog, settings, the sidebar, and the phone's menu.
+// The app's other surfaces: menus, a select, the find bar, dialogs, settings.
 for (const language of ["en", "zh"] as Lang[]) {
   for (const scheme of ["light", "dark"] as const) {
     const shot = (page: Page, name: string) =>

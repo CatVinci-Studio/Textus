@@ -1,11 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
-// Han characters are drawn differently in Japanese, Simplified and
-// Traditional Chinese and Korean; the font stacks pick the faces for the
-// language <html lang> names (App.css), in the chrome and in the content
-// themes alike. What's checked is the stack each element resolves to - the
-// faces themselves aren't installed on a CI runner.
+// Han characters differ by language, so the font stacks pick faces for the
+// <html lang>, in the chrome and content themes alike. The resolved stack is
+// checked: the faces themselves aren't installed on a CI runner.
 
 /** The first CJK face in the font-family of `selector`, under `lang`. */
 async function firstCjkFace(page: Page, lang: string, selector: string) {
@@ -52,8 +50,8 @@ async function faces(page: Page, lang: string, selector: string) {
 test("a Latin face comes before the CJK ones outside Chinese, Japanese and Korean", async ({
   page,
 }) => {
-  // A CJK face draws ’ full-width: with it ahead of system-ui on Linux,
-  // French "d’habitants" showed a gap after the apostrophe.
+  // A CJK face draws ’ full-width: ahead of system-ui on Linux it leaves a gap
+  // in French "d’habitants".
   await openApp(page);
   for (const selector of ["body", ".milkdown .ProseMirror"]) {
     for (const lang of ["fr", "de", "ru", "en"]) {
@@ -117,8 +115,8 @@ test("every language falls back to the Simplified Chinese faces last, and the Pa
 test("Korean breaks at spaces, in the UI and the document, but not in table cells", async ({
   page,
 }) => {
-  // keep-all on a table cell made a Chinese cell one unbreakable run, so
-  // the table outgrew the page; paragraphs still wrap at the edge.
+  // keep-all on a table cell would make a Chinese cell one unbreakable run that
+  // outgrows the page; paragraphs still wrap at the edge.
   await openApp(page, { settings: { language: "ko" } });
   await pasteMarkdown(
     page,
@@ -155,8 +153,8 @@ test("Chinese and Japanese UIs take quotes, the ellipsis and the dash from the C
 test("source mode names a mono face for Latin and a sans face for CJK before the generic monospace (#132)", async ({
   page,
 }) => {
-  // WebView2 in a Chinese Windows resolves `monospace` to NSimSun: with no
-  // named face holding Chinese ahead of it, source mode showed SimSun.
+  // WebView2 on a Chinese Windows resolves `monospace` to NSimSun, so a named
+  // face holding Chinese must come ahead of it.
   await openApp(page);
   await page.evaluate(() =>
     (

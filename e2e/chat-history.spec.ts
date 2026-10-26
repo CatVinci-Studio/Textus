@@ -2,13 +2,9 @@ import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// The history button in the AI panel's header (ai/chat/ChatHistoryMenu.tsx):
-// a past conversation reopens with its own document - never filed under
-// whichever document is on screen - and one whose document is gone asks
-// first. The last test
-// boots the page the way Rust does, where the list is the index of
-// conversations (settings/chat_history.rs) and each one's turns are read
-// from its own file when it reopens.
+// The AI panel's history: a past conversation reopens with its own document,
+// and one whose document is gone asks first. The last test boots as Rust
+// does, each conversation's turns read from its own file when it reopens.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const CHAPTER = "/novel/chapter-one.md";
@@ -33,7 +29,7 @@ const SAVED = [
   conversation("c3", null, "Brainstorm a title", 1),
 ];
 
-/** Only CHAPTER is on disk (a stand-in for commands/fs.rs). */
+/** Only CHAPTER is on disk. */
 async function installDisk(page: Page) {
   await page.evaluate((path) => {
     const w = window as unknown as {
@@ -54,9 +50,8 @@ async function installDisk(page: Page) {
   }, CHAPTER);
 }
 
-/** The page booted as Rust boots it (src-tauri/src/boot.js), with the
- *  conversations in the store behind (dev/tauri-shim.ts) and three more in
- *  its trash. */
+/** The page booted as Rust boots it, with the conversations in the store
+ *  and three more in its trash. */
 async function bootWithRust(page: Page, saved: unknown[]) {
   const boot = {
     settings: { language: "en", languageChosen: true, onboardingShown: true },

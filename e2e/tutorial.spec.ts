@@ -1,13 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, openPhone, PHONE } from "./helpers";
 
-// The first-run tour end to end: Markdown typed for real on reading notes
-// about a classic, the window around the editor, the connect lesson, then
-// the Textus AI lessons - watched when no AI is connected, done for real
-// (against canned answers from the dev shim) when one is. The AI only ever
-// works on the learner's notes, never on the quoted classic.
+// The first-run tour end to end. The AI lessons are watched with no AI and
+// done for real against canned answers with one; the AI only ever works on
+// the learner's notes, never on the quoted classic.
 
-/** The copy the tour shows, as the learner reads it (src/i18n/locales). */
+/** The copy the tour shows, as the learner reads it. */
 const UI = {
   en: {
     appMenu: "Menu",
@@ -63,7 +61,7 @@ const UI = {
   },
 };
 
-/** The practice notes as the tour writes them (src/onboarding/practice-notes.ts). */
+/** The practice notes as the tour writes them. */
 const NOTES = {
   en: {
     excerpt: "To be, or not to be, that is the question:",

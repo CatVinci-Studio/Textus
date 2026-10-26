@@ -2,11 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 /**
- * The plugin system (src/plugins/) end to end, with a small plugin
- * installed through the dev shim (window.__devPlugins): turned on in
- * Settings › Plugins behind its permission dialog, its sidebar panel a
- * sandboxed webview talking to its code, its command in the editor's menu
- * and the Plugins menu, its storage, and an edit it proposes.
+ * The plugin system end to end, with a small plugin installed through the
+ * dev shim (window.__devPlugins).
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';

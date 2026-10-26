@@ -2,9 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * ctx.storage.document(path) (store/document-data.ts): what a plugin keeps
- * for one document follows it when the file tree renames it, and the
- * plugin hears the rename (files.onDidRename).
+ * ctx.storage.document(path): a plugin's data for a document follows a
+ * rename, and the plugin hears it.
  */
 
 const HOST = `

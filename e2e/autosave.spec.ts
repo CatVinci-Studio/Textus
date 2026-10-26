@@ -1,11 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// Settings › General › Save Automatically (#133): a document opened from a
-// file is written back to it once typing rests, through File > Save; with
-// the setting off nothing is written, and a file changed on disk meanwhile
-// is never overwritten. The files live in the page (a stand-in for
-// commands/fs.rs), each with an mtime that moves on every write.
+// Save Automatically: a file-backed document is written back once typing
+// rests; with it off nothing is written, and a file changed on disk is never
+// overwritten. Files live in the page, each mtime moving on every write.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const PATH = "/home/me/notes.md";

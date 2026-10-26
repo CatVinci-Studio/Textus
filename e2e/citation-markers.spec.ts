@@ -2,10 +2,9 @@ import { expect, test } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 /**
- * An OpenAI model that searched the web writes its own app's citation
- * markers - `citeturn3view0`, its private-use delimiters lost or not -
- * into the text it proposes. They reached documents as garbage (rc.5);
- * neither the text streaming in nor the text accepted shows them now.
+ * An OpenAI model that searched the web writes its app's citation markers
+ * (`citeturn3view0`, delimiters lost or not) into the text it proposes;
+ * neither the streaming nor the accepted text may show them.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';

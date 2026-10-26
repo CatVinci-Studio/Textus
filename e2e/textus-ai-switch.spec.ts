@@ -2,15 +2,11 @@ import { expect, test, type Page } from "@playwright/test";
 import { PHONE, openApp, openPhone, pasteMarkdown } from "./helpers";
 
 /**
- * Textus AI's switch (#196): right-click the window bar's AI button to
- * pause it for an hour or turn it off; off, the button's bubble is struck
- * through and a click offers to turn it back on. Off, nothing of it
- * runs - no completion, no grammar check, no conversation - and not one
- * request reaches an AI service, from the moment the app starts; each
- * feature's own setting is kept and applies again once it is back on.
+ * Textus AI's switch on the window bar's AI button: off, nothing of it runs
+ * and no request reaches an AI service; each feature keeps its own setting.
  */
 
-/** The commands that send something to an AI service (ipc.ts's aiCall). */
+/** The commands that send something to an AI service. */
 const PROVIDER_COMMANDS = [
   "ai_complete",
   "ai_grammar_check",
@@ -188,8 +184,7 @@ test("turning Textus AI off clears what it showed and stops a running reply", as
   page,
 }) => {
   await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
-  // A reply that starts and then never ends until it is cancelled, as
-  // Rust's ai_cancel ends the request.
+  // A reply that never ends until it is cancelled.
   await page.evaluate(() => {
     const w = window as unknown as {
       __TAURI_INTERNALS__: {
@@ -258,7 +253,7 @@ test("the menu and the shortcut turn it off and on too", async ({ page }) => {
   await page.locator(".milkdown").click();
   await page.keyboard.press("ControlOrMeta+Alt+A");
   await expect(aiButton(page)).toHaveClass(/textus-ai-button-off/);
-  // The iPhone's menu, as menu.rs's dispatch sends it.
+  // The iPhone's menu, as the backend sends it.
   await page.evaluate(() =>
     (
       window as unknown as { __devEmitTauriEvent: (e: string) => void }

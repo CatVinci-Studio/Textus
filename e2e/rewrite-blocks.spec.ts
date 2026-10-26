@@ -3,18 +3,8 @@ import { readFileSync } from "node:fs";
 import { FIRST_LOAD, openApp } from "./helpers";
 
 /**
- * A rewrite of a whole document with a block in it that isn't sentences -
- * a picture, a table, a code block, a footnote, a link's definition - is
- * still decided paragraph by paragraph, the block a change of its own or
- * kept (src/ai/revision/markdown-forms.ts). Before, one such block made the
- * whole rewrite one block and one card, or a table's rows words in the
- * next paragraph (rc.6). And a block written another way (`***` for `---`,
- * an autolink without its brackets, a table without its padding) is the
- * same block, no change.
- *
- * Each case: a paragraph, the block, a paragraph - rewritten into English
- * with the block as `rewritten`; `changes` is how many changes its card
- * lists.
+ * A whole-document rewrite around a non-sentence block is still decided
+ * paragraph by paragraph; a block written another way is no change.
  */
 
 interface Case {
@@ -27,8 +17,7 @@ interface Case {
 const CASES: Case[] = JSON.parse(
   readFileSync(new URL("./rewrite-blocks-cases.json", import.meta.url), "utf8"),
 );
-// Long enough on both sides not to be merged with a short paragraph next
-// to them (sentence-diff.ts, SHORT_PARAGRAPH): each part is its own.
+// Long enough on both sides not to be merged as short paragraphs.
 const BEFORE =
   "小满撑开伞，仔细看过伞面和竹骨，都好好的。她又把伞收起来，在手里掂了掂，伞柄上的漆早就磨掉了，露出底下发黑的木头，摸上去却还是光滑的，像被很多只手握过很多年，一直没有换过。";
 const AFTER =
@@ -40,9 +29,7 @@ const NEW_AFTER =
 const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
-/** The model's side: one replace of the whole document as the request
- *  sent it - its first block to its last - with `text`, settled as the
- *  backend settles it (src/dev/settle-calls.ts). */
+/** The model's side: one replace of the whole document with `text`. */
 async function replyWithRewrite(page: Page, text: string) {
   await page.evaluate((text) => {
     const w = window as unknown as Record<string, unknown>;

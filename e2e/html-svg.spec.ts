@@ -2,10 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 /**
- * HTML in a document (editor/html/html-policy.ts): <details>, tables, a few
- * inline styles and inline SVG render in the editor, in the split view's
- * preview the same way, and in an HTML export - an SVG always as a picture,
- * never as live markup.
+ * HTML in a document (<details>, tables, a few inline styles, inline SVG)
+ * renders in the editor, the split preview and an HTML export, an SVG always
+ * as a picture, never as live markup.
  */
 
 const DOC = [

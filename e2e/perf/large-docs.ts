@@ -1,14 +1,6 @@
 /**
- * The large documents the editor benchmark (large-doc.perf.ts) opens,
- * written by script so no megabyte fixture is committed. The same seed
- * gives the same document on every machine, so numbers from two runs - or
- * two branches - are about the same text.
- *
- * A mixed document holds, per 5,000 top-level blocks, what design §6.4
- * asks of a 50k-character one: 200 headings, 150 local images (half with
- * a width), 300 inline and 60 block formulas, 40 tables, 15 Mermaid
- * diagrams, 80 code blocks, quotes and GitHub alerts, raw HTML, lists;
- * the rest paragraphs.
+ * The benchmark's large documents, generated from a fixed seed so every
+ * machine and branch measures the same text without a committed fixture.
  */
 
 export type DocLanguage = "zh" | "en";

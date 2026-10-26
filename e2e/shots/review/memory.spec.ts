@@ -1,12 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { mockInvoke, openApp } from "../../helpers";
 
-// Screenshots of what Textus AI remembers - the chips under a reply (kept,
-// updated, forgotten) and the Memory tab with personal and project
-// memories and library entries - in English and Chinese, light and dark,
-// for review, not a baseline. Runs only with TEXTUS_SHOTS_DIR set:
-//
-//   TEXTUS_SHOTS_DIR=../assets/working/memory-ui npm run screenshots:review -- memory
+// Review screenshots of what Textus AI remembers, in English and Chinese,
+// light and dark. Runs only with TEXTUS_SHOTS_DIR set.
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");

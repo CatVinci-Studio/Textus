@@ -1,11 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
-// An image's width is saved as `<img ... width="50%">`, which GitHub,
-// Typora, Obsidian and VS Code all show, and Image width: Auto saves it as
-// `![]()` again. A file an older Textus saved - the width in the title as
-// `{textus-width=N%}` - still opens at that width and is saved as written
-// until its width changes; so is a Typora `<img style="zoom">`.
+// An image's width is saved as `<img ... width="50%">`, which other editors
+// show too, and Image width: Auto saves `![]()` again. An older
+// `{textus-width=N%}` title or a Typora zoom opens at its width, saved as is.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 // A 200x100 block, narrower than the page, so the widths differ.

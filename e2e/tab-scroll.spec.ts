@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// A tab switched away from and back to shows the place it was left at. A
-// tab in the back is display: none, and WebKit (WebKitGTK, WKWebView) set
-// a hidden scroller back to the top: the document opened at its first
-// line again. Also run in WebKit: E2E_WEBKIT=1 (playwright.config.ts).
+// A tab switched away from and back to shows the place it was left at:
+// WebKit resets a display: none scroller to the top. Run in WebKit with
+// E2E_WEBKIT=1.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const scroller = '[data-active-tab="true"] > .editor-scroll';

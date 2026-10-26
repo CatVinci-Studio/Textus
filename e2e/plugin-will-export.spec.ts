@@ -2,9 +2,8 @@ import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * textus.export.onWillExport (plugins/contributions/will-export.ts,
- * export/export-step.ts): a plugin adds CSS to an HTML export's page and
- * changes its HTML; a script it puts in is taken out.
+ * textus.export.onWillExport: a plugin adds CSS and changes the HTML; a
+ * script it puts in is taken out.
  */
 
 const HOST = `

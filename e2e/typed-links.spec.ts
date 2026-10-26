@@ -1,10 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// Issue #189: a link or an image written out in the editor - typed, typed
-// with the URL pasted in, pasted whole, or with its words committed by a
-// Chinese input method - is a working link or image, and is saved without
-// the backslashes that turned it back into text.
+// A link or image typed, pasted or committed by an input method becomes a
+// working link or image, and is saved without escaping backslashes.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const URL = "http://www.baidu.com";

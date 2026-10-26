@@ -2,11 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { blockIds, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * An edit that names its block (src/ai/doc-blocks.ts) instead of quoting
- * it shows the moment the block is named - the new text typing into the
- * document while the call still streams - rather than after a quote of the
- * whole passage (rc.6: ten seconds of nothing for a rewrite of a whole
- * document on a ChatGPT subscription).
+ * An edit that names its block shows the moment the block is named, the new
+ * text typing in while the call still streams, not after a quote of the
+ * whole passage.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';
@@ -14,8 +12,7 @@ const DOC =
   "# Night hours\n\nThe library opened late on Wednesdays.\n\nStudents came most.\n\nThe end.";
 
 /** A reply that streams `raw` (the model's arguments, by block) and then,
- *  once window.__release is set, completes with them settled as the
- *  backend settles them (src/dev/settle-calls.ts). */
+ *  once window.__release is set, completes as the backend settles them. */
 async function streamEdit(page: Page, raw: string) {
   await page.evaluate(
     ({ raw }) => {
@@ -156,9 +153,8 @@ test("a few words named inside a block change in it as they stream", async ({
   await expect(page.locator(editor)).toContainText("Pupils");
 });
 
-// Edit animation off, or the system's Reduce motion: no typewriter, but
-// the edit still shows while it streams - it used to wait for the whole
-// call (rc.6: "Thinking…", then every edit at once).
+// Edit animation off, or the system's Reduce motion: no typewriter, but the
+// edit still shows while it streams.
 for (const [name, setup] of [
   ["edit animation off", { enableEditAnimation: false }],
   ["Reduce motion", null],

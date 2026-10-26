@@ -6,12 +6,9 @@ const ORIGINAL =
   "The keeper woke before dawn. The lamp was still warm. Outside, the sea was calm.";
 
 /**
- * The grey completion: it goes the moment what it continues changes -
- * typing that differs, an IME composition, a paste, an undo, a caret move,
- * a Textus AI edit - and a reply that comes back after the text moved on
- * is dropped. Typing its own next letters keeps the rest on offer. And it
- * isn't asked for where there's no prose to continue, such as right after
- * a diagram.
+ * The grey completion goes the moment what it continues changes, and a reply
+ * that comes after the text moved on is dropped. Typing its own next letters
+ * keeps the rest; none is asked for where there's no prose, as after a diagram.
  */
 
 const CANNED = " and this ghost text is a canned dev-shim suggestion.";
@@ -220,7 +217,7 @@ test("a reply landing while a Textus AI edit is on show is dropped", async ({
 test("no completion is asked for right after a diagram with no prose, and the app's language goes along", async ({
   page,
 }) => {
-  // The Chinese UI (openApp's default), as in the report.
+  // The Chinese UI, openApp's default.
   await openApp(page);
   await mockInvoke(page, { ai_complete: "继续写" });
   const calls = () =>

@@ -78,7 +78,7 @@ test("Shift+Enter in a heading starts a new line below it, in a code block a new
   await page.locator(`${editor} h1`).click();
   await page.keyboard.press("End");
   await page.keyboard.down("Shift");
-  // Held, not pressed with Enter (block-keys-plugin.ts's SHIFT_OVERLAP_MS).
+  // Held, not pressed with Enter (SHIFT_OVERLAP_MS).
   await page.waitForTimeout(150);
   await page.keyboard.press("Enter");
   await page.keyboard.up("Shift");

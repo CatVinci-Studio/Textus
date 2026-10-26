@@ -1,12 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, openPhone, PHONE } from "../../helpers";
 
-// Screenshots of the first-run tour, for review rather than as a baseline:
-// every step in Chinese on the desktop (light), the AI lessons both watched
-// and done for real (against canned answers), and a few in English, dark
-// and on a phone. Runs only with TEXTUS_SHOTS_DIR set to where they go:
-//
-//   TEXTUS_SHOTS_DIR=../assets/working/tutorial-v3 npm run screenshots:review -- tutorial
+// Review screenshots of the first-run tour, AI lessons against canned
+// answers. Runs only with TEXTUS_SHOTS_DIR set to where the PNGs go.
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");
@@ -21,7 +17,7 @@ const at = (stepId: string, extra: Record<string, unknown> = {}) => ({
   }),
 });
 
-/** The copy the tour shows, as the learner reads it (src/i18n/locales). */
+/** The copy the tour shows, as the learner reads it. */
 const UI = {
   en: {
     appMenu: "Menu",
@@ -77,7 +73,7 @@ const UI = {
   },
 };
 
-/** The practice notes as the tour writes them (src/onboarding/practice-notes.ts). */
+/** The practice notes as the tour writes them. */
 const NOTES = {
   en: {
     excerpt: "To be, or not to be, that is the question:",

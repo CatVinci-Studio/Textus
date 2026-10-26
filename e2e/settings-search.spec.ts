@@ -1,11 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, openPhone, PHONE } from "./helpers";
 
-// Settings' search box (src/settings/SettingsSearch.tsx): typing lists the
-// matching rows of every page - labels, group titles, subpages such as
-// About Textus and the Extensions tabs, the shortcut list and the hidden "?" text - grouped by
-// page; Enter or a click opens the row's page and goes to it; Esc clears;
-// Ctrl/⌘+F reaches the box while Settings is open.
+// Settings' search box: lists matching rows of every page, grouped by
+// page; Enter or a click goes to the row.
 
 async function openSettings(page: Page, title = "Settings") {
   await page.evaluate(() =>
@@ -97,7 +94,7 @@ test.describe("in English", () => {
     await expect(dialog.locator(".settings-search-empty")).toHaveText(
       "No settings match.",
     );
-    // Said through the window's one live region (ui/announce.ts).
+    // Said through the window's one live region.
     await expect(page.locator('[role="status"][aria-live]')).toContainText(
       "No settings match.",
     );

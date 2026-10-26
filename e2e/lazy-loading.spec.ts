@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
-// The heavy parts of the app load on first use (src/lazy/lazy-module.ts):
-// a window opens with its own language's strings only, Settings and the
-// diagram and formula engines come when they are needed, and the parts
-// likely to be opened soon ("warm") load once the window is idle.
+// The heavy parts load on first use: a window opens with its own language's
+// strings only, Settings and the diagram and formula engines come when
+// needed, and the parts likely opened soon load once the window is idle.
 
 function loaded(page: Page): Promise<string[]> {
   return page.evaluate(() =>

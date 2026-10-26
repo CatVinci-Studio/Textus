@@ -3,11 +3,9 @@ import { pasteMarkdown } from "./helpers";
 import { openWithPlugins } from "./plugin-helpers";
 
 /**
- * A web page tab's page is a native webview laid over the tab
- * (commands/web_page.rs) - in the dev browser, a frame where it would be
- * (dev/native-web-pages.ts): over the tab's area, out of sight while the
- * tab is or while a menu is open over it, gone with the tab. On Windows
- * and macOS: Linux keeps the framed page (capabilities.ts).
+ * A web page tab's page is a native webview laid over the tab (a frame in the
+ * dev browser): hidden while its tab is or a menu is over it, gone with the
+ * tab. Windows and macOS only; Linux keeps the framed page.
  */
 
 test.beforeEach(async ({ page }) => {
@@ -72,7 +70,7 @@ test("the page goes out of sight with its tab and under a menu, and comes back",
 
 test("closing the tab lets its page go", async ({ page }) => {
   await openPage(page);
-  // Delete on the tab closes it (TabBar).
+  // Delete on the tab closes it.
   await page.locator(".tab-bar [role='tab']").last().focus();
   await page.keyboard.press("Delete");
   await expect(native(page)).toHaveCount(0);

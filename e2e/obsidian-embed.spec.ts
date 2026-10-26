@@ -2,9 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * Obsidian image embeds (editor/images/obsidian-embed*.ts, issue #135): in
- * a saved document, `![[file]]` shows the picture the backend finds in the
- * vault, and the caret on it brings the source back to edit.
+ * Obsidian image embeds: in a saved document, `![[file]]` shows the picture
+ * the backend finds in the vault, and the caret on it brings the source back.
  */
 
 const DOC = "# Trip\n\n![[attachments/cat.png|120]]\n\nThe end.\n";
@@ -67,7 +66,7 @@ test("an embed whose file isn't in the vault shows its name", async ({
   page,
 }) => {
   const editor = await openVaultDoc(page, null);
-  // The missing image's card (missing-image.spec.ts has the rest).
+  // The missing image's card.
   await expect(editor.locator(".missing-image-title")).toHaveText(
     "Image not found: cat.png",
   );

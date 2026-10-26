@@ -3,12 +3,8 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
- * A rewrite streaming in is laid out sentence by sentence from the
- * start (pending-edit-plugin's streamDecorations), and lands a paragraph
- * at a time (unit-reveal.ts): each paragraph's changes show in place, all
- * of them at once, once it is rewritten whole - with no phase where the
- * whole original is struck and the new text streams after it as one
- * block, and nothing moves when the stream ends.
+ * A streaming rewrite lands a paragraph at a time, each paragraph's changes
+ * together, and nothing moves when the stream ends.
  */
 
 export const ORIGINAL =
@@ -195,9 +191,7 @@ test("a streaming rewrite lands each paragraph in place, never the whole origina
   expect(early!.struck[0]).toBe("He climbed the stairs slowly.");
   for (const s of samples) expect(s.partial).toBeNull();
   // Nothing is drawn twice: each new text stays the same element from the
-  // moment it appears - also when the stream passes the dropped sentence
-  // after it and joins that to its change - and a struck original, once
-  // struck, stays struck.
+  // moment it appears, and a struck original stays struck.
   for (const text of [
     "He climbed the stairs one by one.",
     "The lamp was warm to the touch.",
@@ -229,7 +223,7 @@ test("a streaming rewrite lands each paragraph in place, never the whole origina
     expect(Math.abs(f.x - after.x)).toBeLessThan(1);
     expect(Math.abs(f.y - after.y)).toBeLessThan(1);
   }
-  // ...and the end is the layout the finished proposal has always had.
+  // ...and the end is the finished proposal's layout.
   const streamed = await layout(page);
   await page.reload();
   await open(page, { enableEditAnimation: false }, false, STORY);
@@ -307,9 +301,8 @@ test("each display mode draws a streaming rewrite's landed paragraphs, with thei
     await expect(fresh).toBeAttached();
     await expect(page.locator(".milkdown .pending-whole")).toHaveCount(0);
     await expect(page.locator(".review-bar")).toBeVisible();
-    // The landed paragraph's changes have their cards already, the one
-    // being written none yet, nor any half of it in the text - where it
-    // is marked as being written.
+    // The landed paragraph's changes have cards; the one being written has
+    // none yet, and is only marked in the text.
     await expect(page.locator(".revision-note")).toHaveCount(2);
     await expect(page.locator(".milkdown .pending-partial")).toHaveCount(0);
     await expect(page.locator(".milkdown .pending-reading")).toContainText(
@@ -461,8 +454,8 @@ test("with motion on, each strike draws in once and each new text comes in once"
 test("a rewrite whose arguments arrive in one piece still lands paragraph by paragraph", async ({
   page,
 }) => {
-  // MiniMax sends a tool call's arguments whole: the reveal (unit-reveal)
-  // spreads them out instead of the whole rewrite appearing in one frame.
+  // MiniMax sends a tool call's arguments whole: the reveal spreads them
+  // out instead of the whole rewrite appearing in one frame.
   await open(page, {}, false, STORY);
   await streamRevise(page, [REVISE_STORY], { chunk: 100_000 });
   const stop = await record(page);

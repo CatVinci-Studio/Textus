@@ -1,10 +1,6 @@
 /**
- * The official plugins' market pictures: each plugin at work in a 1200x750
- * window, light appearance, written to `screenshots/1.png` beside its
- * manifest in the textus-plugins checkout the dev server serves. Not a
- * test: run `npm run screenshots:plugins`, look, then commit them there.
- *
- * PLUGINS narrows the run to some ids, comma-separated.
+ * The official plugins' market pictures, written beside each manifest in
+ * the textus-plugins checkout. Not a test; PLUGINS narrows the ids.
  */
 import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";

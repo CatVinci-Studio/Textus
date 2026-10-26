@@ -2,14 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 import base from "./playwright.config";
 
 /**
- * Screenshot generators (e2e/shots/), not tests: they write images for a
- * person to look at and assert nothing CI needs. One project each:
- *
- *   npm run screenshots:readme    the README's images, docs/images/readme/
- *   npm run screenshots:website   the website's app shots (see the spec's header)
- *   npm run screenshots:plugins   the official plugins' market pictures
- *   npm run screenshots:review    design-review shots; set TEXTUS_SHOTS_DIR
- *                                 to where they go, or they skip
+ * Screenshot generators, not tests: they write images for a person to look
+ * at. The review shots skip unless TEXTUS_SHOTS_DIR is set.
  */
 export default defineConfig({
   ...base,
