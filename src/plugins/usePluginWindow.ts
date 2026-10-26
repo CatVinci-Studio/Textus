@@ -30,6 +30,7 @@ import { watchTheme, windowIsDark } from "./theme-vars";
 import { usePluginMenuSync } from "./usePluginMenu";
 import { openBeside } from "../app/split-layout";
 import { takePluginUris } from "./plugin-uri";
+import { migrateOfficialPlugins } from "./migrate-official";
 import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
 
 /**
@@ -76,7 +77,11 @@ export function usePluginWindow({
       language: () => languageRef.current,
       dark: windowIsDark,
     });
-    void loadPlugins();
+    // Then, once, the official plugins of before the plugin API 1.0 moved
+    // to their rewrites (migrate-official.ts).
+    void loadPlugins()
+      .then(() => migrateOfficialPlugins())
+      .catch(() => {});
   }, [tRef, languageRef]);
 
   useEffect(() => {
