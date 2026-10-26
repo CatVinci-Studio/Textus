@@ -130,7 +130,8 @@ export function reorderInPane(
 
 /** The pane a tab opened next joins. */
 export function focusPane(pane: PaneIndex): void {
-  if (layout && layout.focus !== pane) setSplitLayout({ ...layout, focus: pane });
+  if (layout && layout.focus !== pane)
+    setSplitLayout({ ...layout, focus: pane });
 }
 
 /**

@@ -1,6 +1,9 @@
-import { Suspense, type ComponentProps } from "react";
+import { Suspense, type ComponentProps, type CSSProperties } from "react";
 import { EditorPane } from "../document-view/EditorPane";
-import { canDragTabsBetweenWindows } from "../platform/capabilities";
+import {
+  canDragTabsBetweenWindows,
+  canUseWindows,
+} from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { SourceTextarea } from "../editor/modes/SourceTextarea";
@@ -17,7 +20,13 @@ import { TabBar } from "./tabs/TabBar";
 import { useSplitPanes } from "./split/useSplitPanes";
 import { SplitDivider, splitGridStyles } from "./split/SplitDivider";
 import "./split/split-panes.css";
-import { openBeside, splitEditor } from "./split/split-layout";
+import {
+  focusPane,
+  openBeside,
+  reorderInPane,
+  splitEditor,
+  type PaneIndex,
+} from "./split/split-layout";
 import { pullTab } from "./split/split-drop";
 import type { ContextMenuItem } from "../editor/ContextMenu";
 import { contributedContextItems } from "../ui/context-menu-items";
@@ -47,6 +56,7 @@ export function MainPane({
   onClose,
   onAdd,
   onDetach,
+  onMoveToNewWindow,
   onReorder,
   previewTab,
   onChange,
@@ -62,6 +72,7 @@ export function MainPane({
   onAdd: () => void;
   /** A tab pulled out of the window leaves for a window of its own (macOS). */
   onDetach: (tabId: string) => void;
+  onMoveToNewWindow: (tabId: string) => void;
   onReorder: (tabId: string, index: number) => void;
   previewTab: TabBarProps["previewTab"];
   onChange: (tabId: string, markdown: string) => void;

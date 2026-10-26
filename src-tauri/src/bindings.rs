@@ -75,6 +75,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::launch::open_paths,
                 crate::launch::open_path_in_new_window,
                 crate::tab_drag::take_detached_tab,
+                crate::tab_drag::move_tab_to_new_window,
                 crate::tab_drag::list_window_bounds,
                 crate::tab_drag::start_window_drag_tracking,
                 crate::tab_drag::start_floating_tab_drag,

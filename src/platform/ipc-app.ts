@@ -36,6 +36,8 @@ export const windowIpc = {
       null,
     ) as Promise<DetachedTabDoc | null>,
   listWindowBounds: () => desktopQueryCommand("list_window_bounds", []),
+  moveTabToNewWindow: ({ tab }: FloatingDragArgs) =>
+    desktopActionCommand("move_tab_to_new_window", tab),
   startFloatingTabDrag: ({
     tab,
     title,

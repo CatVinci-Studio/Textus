@@ -328,6 +328,7 @@ export default {
   splitSwap: "交换两边",
   splitEven: "两边一样大",
   openBeside: "在旁边打开",
+  moveToNewWindow: "移到新窗口",
   menuViewSidebar: "侧边栏",
   menuViewSource: "源码模式",
   menuViewTypewriter: "打字机模式",

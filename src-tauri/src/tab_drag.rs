@@ -6,10 +6,10 @@ use std::sync::Mutex;
 use tauri::{Manager, State};
 // Everything that emits events or shows the pill is macOS-only; other platforms
 // compile only stub command bodies.
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 use tauri::{Emitter, EventTarget, WebviewUrl, WebviewWindowBuilder};
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 use std::sync::atomic::{AtomicBool, Ordering};
 
 /// A tab dragged out of the tab bar, carrying its live content (it may be
@@ -43,7 +43,7 @@ pub struct PendingDetachedTabs(pub Mutex<HashMap<String, DetachedTab>>);
 /// spawn a second poller.
 #[derive(Default)]
 pub struct DragTrackers {
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", windows))]
     active: Mutex<std::collections::HashSet<String>>,
 }
 
@@ -54,6 +54,23 @@ pub fn take_detached_tab(
     pending: State<PendingDetachedTabs>,
 ) -> Option<DetachedTab> {
     pending.0.lock().unwrap().remove(window.label())
+}
+
+/// A tab's own right-click Move to New Window: the tab handed to a fresh
+/// window, which takes it as it opens.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn move_tab_to_new_window(
+    app: tauri::AppHandle,
+    pending: State<PendingDetachedTabs>,
+    tab: DetachedTab,
+) -> Result<(), String> {
+    let label = format!("window-{}", crate::next_window_id());
+    pending.0.lock().unwrap().insert(label.clone(), tab);
+    crate::build_window(&app, &label, None).map_err(|e| {
+        pending.0.lock().unwrap().remove(&label);
+        e.to_string()
+    })
 }
 
 #[derive(serde::Serialize)]
@@ -104,13 +121,13 @@ pub fn list_window_bounds(app: tauri::AppHandle) -> Vec<WindowBounds> {
 /// The floating tab pill: a webview can't paint outside its window, so the
 /// in-flight tab is a tiny always-on-top transparent window, made fresh per drag.
 pub const DRAG_PILL_LABEL: &str = "drag-pill";
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 const DRAG_PILL_WIDTH: f64 = 200.0;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 const DRAG_PILL_HEIGHT: f64 = 34.0;
 
 /// Percent-encode a URL query value (RFC 3986 unreserved set, byte-wise).
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 fn url_encode(s: &str) -> String {
     s.bytes()
         .map(|b| match b {
@@ -124,7 +141,7 @@ fn url_encode(s: &str) -> String {
 
 /// Create the floating pill centered under the cursor (global logical points),
 /// click-through and never focused. Window creation must be on the main thread.
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 fn create_drag_pill(app: &tauri::AppHandle, title: &str, dirty: bool, x: f64, y: f64) {
     let url = format!(
         "dragpill.html?title={}&dirty={}",
@@ -155,7 +172,7 @@ fn create_drag_pill(app: &tauri::AppHandle, title: &str, dirty: bool, x: f64, y:
 
 /// Reposition the pill under the cursor mid-drag; also re-shows it after a
 /// park_drag_pill.
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 fn move_drag_pill(app: &tauri::AppHandle, x: f64, y: f64) {
     if let Some(window) = app.get_webview_window(DRAG_PILL_LABEL) {
         let _ = window.set_position(tauri::LogicalPosition::new(
@@ -168,7 +185,7 @@ fn move_drag_pill(app: &tauri::AppHandle, x: f64, y: f64) {
 
 /// Hide (don't destroy) the pill while over a target tab row, where the target
 /// shows the preview pill in its bar instead.
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 fn park_drag_pill(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window(DRAG_PILL_LABEL) {
         let _ = window.hide();
@@ -177,7 +194,7 @@ fn park_drag_pill(app: &tauri::AppHandle) {
 
 /// The drag ended: a lingering hidden pill would keep the app alive after the
 /// last real window closes.
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 fn destroy_drag_pill(app: &tauri::AppHandle) {
     let app = app.clone();
     let _ = app.clone().run_on_main_thread(move || {
@@ -189,12 +206,12 @@ fn destroy_drag_pill(app: &tauri::AppHandle) {
 
 /// Height of the strip along a window's top edge that counts as its tab row for
 /// drops. Keep in step with TAB_ROW_HEIGHT_LOGICAL in useTabDragMerge.ts.
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 const TAB_ROW_HEIGHT_LOGICAL: f64 = 72.0;
 
 /// Which window's tab row (if any) is under the cursor. The pill and hidden
 /// windows never are; the drag source is, so a tab can drop back where it came from.
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 fn top_strip_hit(app: &tauri::AppHandle, x: f64, y: f64) -> Option<String> {
     for (label, window) in app.webview_windows() {
         if !crate::commands::chat_window::is_editor_window(&label)
@@ -220,7 +237,7 @@ fn top_strip_hit(app: &tauri::AppHandle, x: f64, y: f64) -> Option<String> {
 }
 
 /// One floating tab drag at a time, app-wide - there's only one mouse.
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 static FLOATING_DRAG_ACTIVE: AtomicBool = AtomicBool::new(false);
 
 /// The floating tab. Once a tab is in flight its document is handed to Rust and
@@ -235,12 +252,12 @@ pub fn start_floating_tab_drag(
     dirty: bool,
     destroy_source: bool,
 ) -> Result<(), String> {
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", windows)))]
     {
         let _ = (window, tab, title, dirty, destroy_source);
-        Err("floating tab drags require macOS cursor tracking".to_string())
+        Err("floating tab drags need global cursor tracking".to_string())
     }
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", windows))]
     {
         if FLOATING_DRAG_ACTIVE.swap(true, Ordering::SeqCst) {
             return Err("a floating tab drag is already active".to_string());
@@ -358,7 +375,7 @@ pub fn start_floating_tab_drag(
     }
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 #[derive(Clone, serde::Serialize)]
 struct DragTick {
     x: f64,
@@ -401,6 +418,38 @@ mod mouse {
     }
 }
 
+/// The same on Windows: the cursor in physical pixels, divided by the scale
+/// of the display it is on, so it compares with windows' logical bounds.
+#[cfg(windows)]
+mod mouse {
+    use windows::Win32::Foundation::POINT;
+    use windows::Win32::Graphics::Gdi::{MonitorFromPoint, MONITOR_DEFAULTTONEAREST};
+    use windows::Win32::UI::HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI};
+    use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON};
+    use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
+
+    pub fn left_button_down() -> bool {
+        // The high bit is set while the button is down.
+        unsafe { GetAsyncKeyState(VK_LBUTTON.0 as i32) < 0 }
+    }
+
+    pub fn state() -> (f64, f64, bool) {
+        let mut point = POINT::default();
+        unsafe {
+            let _ = GetCursorPos(&mut point);
+            let monitor = MonitorFromPoint(point, MONITOR_DEFAULTTONEAREST);
+            let (mut dpi_x, mut dpi_y) = (96u32, 96u32);
+            let _ = GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &mut dpi_x, &mut dpi_y);
+            let scale = dpi_x.max(1) as f64 / 96.0;
+            (
+                point.x as f64 / scale,
+                point.y as f64 / scale,
+                left_button_down(),
+            )
+        }
+    }
+}
+
 /// Tauri's onMoved has no "drag ended" event, so on the first onMoved the
 /// frontend starts this: a thread streams `window-drag-tick` {x, y, down} until the
 /// button is released. Returns false when there is nothing to track.
@@ -410,7 +459,7 @@ pub fn start_window_drag_tracking(
     window: tauri::WebviewWindow,
     trackers: State<DragTrackers>,
 ) -> bool {
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", windows))]
     {
         if !mouse::left_button_down() {
             return false;
@@ -446,7 +495,7 @@ pub fn start_window_drag_tracking(
         });
         true
     }
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", windows)))]
     {
         let _ = (window, trackers);
         false
@@ -455,7 +504,7 @@ pub fn start_window_drag_tracking(
 
 /// Payload of "drag-hover", re-emitted every tick with the live cursor x so the
 /// receiver can slide the incoming tab along its bar. None on leave.
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 #[derive(Clone, serde::Serialize)]
 struct DragHoverPreview {
     title: String,
@@ -465,7 +514,7 @@ struct DragHoverPreview {
 
 /// Payload of "receive-detached-tab": the document and the drop's cursor x, so
 /// the tab lands at the slot it hovered.
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 #[derive(Clone, serde::Serialize)]
 struct DroppedTab {
     #[serde(flatten)]

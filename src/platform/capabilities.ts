@@ -1,4 +1,10 @@
-import { isDesktop, isIOSPlatform, isLinuxPlatform, isMacPlatform } from "./os";
+import {
+  isDesktop,
+  isIOSPlatform,
+  isLinuxPlatform,
+  isMacPlatform,
+  isWindowsPlatform,
+} from "./os";
 
 /**
  * What this build can do: the one place the desktop/iOS split is decided on
@@ -19,9 +25,12 @@ export const hasAppMenu = isDesktopApp;
 /** The menu bar is the OS's own (macOS), so it gets UI-language labels sent. */
 export const hasNativeMenuBar = isDesktopApp && isMacPlatform();
 
-/** Tabs torn off into other windows. Needs global cursor and window
- *  positions, which only macOS gives reliably. */
-export const canDragTabsBetweenWindows = isDesktopApp && isMacPlatform();
+/** Tabs dragged out of one window into another, or into a new one, with
+ *  the window following the pointer: macOS and Windows give the global
+ *  cursor and window positions this needs. Linux, Wayland above all,
+ *  doesn't. */
+export const canDragTabsBetweenWindows =
+  isDesktopApp && (isMacPlatform() || isWindowsPlatform());
 
 /** Web page tabs as a native webview over the tab. GTK can't place a second
  *  webview, so Linux keeps the framed page. */

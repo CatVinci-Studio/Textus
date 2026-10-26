@@ -128,12 +128,14 @@ export function splitForDrop(
   const direction: SplitDirection =
     target.zone === "left" || target.zone === "right" ? "row" : "column";
   const first = target.zone === "left" || target.zone === "top";
-  // The window's other tabs stay with the document dropped beside.
-  setSplitLayout(
-    first
-      ? pairLayout(direction, tabId, other, 1)
-      : pairLayout(direction, other, tabId, 0),
-  );
+  // The window's other tabs stay with the document dropped beside, in
+  // their order.
+  const rest = tabIds.filter((id) => id !== tabId);
+  const layout = first
+    ? pairLayout(direction, tabId, other, 1)
+    : pairLayout(direction, other, tabId, 0);
+  layout.groups = first ? [[tabId], rest] : [rest, [tabId]];
+  setSplitLayout(layout);
 }
 
 /**
@@ -148,6 +150,8 @@ export function pullTab(
     tabIds: readonly string[];
     activate: (id: string) => void;
     detach?: (id: string) => void;
+    /** Let go outside the window, where `detach` can't follow the pointer. */
+    releaseOutside?: (id: string) => void;
   },
 ): void {
   const ghost = document.createElement("div");
@@ -173,6 +177,10 @@ export function pullTab(
   const up = (e: PointerEvent) => {
     const target = dropTargetAt(e.clientX, e.clientY);
     stop();
+    if (opts.releaseOutside && outside(e)) {
+      opts.releaseOutside(tabId);
+      return;
+    }
     if (!target) return;
     opts.activate(tabId);
     // Once it is in front, the next frame: the split takes it from there.

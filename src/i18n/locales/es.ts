@@ -374,6 +374,7 @@ para usar una.
   splitSwap: "Intercambiar los lados",
   splitEven: "Igualar los dos lados",
   openBeside: "Abrir al lado",
+  moveToNewWindow: "Mover a una ventana nueva",
   menuViewSidebar: "Barra lateral",
   menuViewSource: "Modo código fuente",
   menuViewTypewriter: "Modo máquina de escribir",

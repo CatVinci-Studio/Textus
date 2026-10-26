@@ -29,7 +29,10 @@ export function resolveSplit(
     const at = tabIds.indexOf(active);
     const other = tabIds[at + 1] ?? tabIds[at - 1];
     if (!other) return "blank";
-    return settle(pairLayout(request.direction, active, other), tabIds, active);
+    // The tab beside goes over; the rest stay as they were ordered.
+    const paired = pairLayout(request.direction, active, other);
+    paired.groups = [tabIds.filter((id) => id !== other), [other]];
+    return settle(paired, tabIds, active);
   }
   return settle(layout, tabIds, active);
 }
@@ -61,7 +64,8 @@ function settle(
     ...layout,
     panes,
     groups,
-    focus: at ?? layout.focus,
+    // Waiting, the blank tab is on its way to the second pane.
+    focus: waiting ? layout.focus : (at ?? layout.focus),
   };
   return same(next, layout) ? layout : next;
 }

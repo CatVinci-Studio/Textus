@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type RefObject,
+  type CSSProperties,
 } from "react";
 import { CloseIcon } from "../../ui/icons";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
@@ -39,6 +40,8 @@ interface TabBarProps {
   menuFor?: (id: string) => (ContextMenuItem | "separator")[];
   /** What the icon-only buttons' tooltips and a screen reader say. */
   labels: { tabs: string; close: string; add: string; unsaved: string };
+  /** Where it sits in a split's grid. */
+  style?: CSSProperties;
 }
 
 // Drag distances to leave the bar (vertical) or start a reorder
@@ -61,6 +64,7 @@ export function TabBar({
   previewTab,
   menuFor,
   labels,
+  style,
 }: TabBarProps) {
   const barRef = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<{
@@ -134,6 +138,7 @@ export function TabBar({
   return (
     <div
       className="tab-bar"
+      style={style}
       ref={barRef}
       role="tablist"
       aria-label={labels.tabs}

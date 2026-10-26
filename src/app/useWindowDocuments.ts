@@ -138,14 +138,15 @@ export function useWindowDocuments({
   });
 
   // Tabs moving between windows, in both directions.
-  const { dragHoverPreview, handleTabDetach } = useTabDragMerge({
-    tabsRef,
-    liveTabs,
-    t,
-    removeTab,
-    setTabs,
-    setActiveTabId,
-  });
+  const { dragHoverPreview, handleTabDetach, moveTabToNewWindow } =
+    useTabDragMerge({
+      tabsRef,
+      liveTabs,
+      t,
+      removeTab,
+      setTabs,
+      setActiveTabId,
+    });
 
   // The bar shows only with several tabs, or when an incoming tab's preview
   // needs somewhere to land.
@@ -170,6 +171,7 @@ export function useWindowDocuments({
     requestCloseTab,
     dragHoverPreview,
     handleTabDetach,
+    moveTabToNewWindow,
     showTabBar,
   };
 }
