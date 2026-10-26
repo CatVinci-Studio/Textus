@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown } from "./helpers";
-import { openPath, openWithPlugins } from "./plugin-helpers";
+import { openApp, pasteMarkdown } from "./helpers";
+import { openPath, openWithPlugins, pluginsAtStart } from "./plugin-helpers";
 
 /**
  * Split panes (app/split-layout.ts): two documents at once - View > Split
@@ -257,4 +257,64 @@ test("a tab pulled down and let go in the middle only comes to the front", async
   await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
     "One",
   );
+});
+
+test("the split is remembered and comes back once its documents are open", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    if (window.top !== window) return;
+    localStorage.setItem(
+      "textus-split-layout",
+      JSON.stringify({
+        direction: "column",
+        ratio: 0.5,
+        paths: ["/notes/two.md", "/notes/one.md"],
+      }),
+    );
+  });
+  await pluginsAtStart(page, {
+    plugins: {},
+    folder: {
+      "/notes/one.md": "# One\n\nThe first.\n",
+      "/notes/two.md": "# Two\n\nThe second.\n",
+    },
+  });
+  // Each document in a tab of its own, as a restored session has them.
+  await openApp(page, {
+    settings: { language: "en", newDocumentMode: "tab" },
+  });
+  await openPath(page, "/notes/one.md");
+  await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
+    "One",
+  );
+  // As the next document of a session arrives: a tab of its own.
+  await page.evaluate(() =>
+    (
+      window as unknown as {
+        __devEmitTauriEvent: (n: string, p: unknown) => void;
+      }
+    ).__devEmitTauriEvent("open-paths-as-tabs", ["/notes/two.md"]),
+  );
+  await expect(page.locator(panes)).toHaveCount(2);
+  await expect(page.locator(".main-pane-split")).toHaveAttribute(
+    "data-split",
+    "column",
+  );
+  await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
+  await expect(page.locator(`${pane("second")} h1`)).toContainText("One");
+
+  // Turned and closed, it is saved as it is now.
+  await dividerMenu(page, "Side by Side ⇄ One Above the Other");
+  await expect
+    .poll(() =>
+      page.evaluate(() => localStorage.getItem("textus-split-layout")),
+    )
+    .toContain('"row"');
+  await emit(page, "menu-close-split");
+  await expect
+    .poll(() =>
+      page.evaluate(() => localStorage.getItem("textus-split-layout")),
+    )
+    .toBe("null");
 });

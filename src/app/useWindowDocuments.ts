@@ -4,6 +4,7 @@ import { useAutosave } from "../document/autosave";
 import { useLastCarets } from "../document/last-carets";
 import { useActiveDocument } from "./useActiveDocument";
 import { useOpenFolder } from "./useOpenFolder";
+import { useSplitRestore } from "./split-restore";
 import { useSessionPaths, useWindowTitle } from "./useWindowSession";
 import { useFileOpening } from "./useFileOpening";
 import { useHelpTabs } from "./useHelpTabs";
@@ -64,6 +65,7 @@ export function useWindowDocuments({
   }, [showFiles, hasTree]);
   useWindowTitle(activeTitle);
   useSessionPaths(tabs);
+  useSplitRestore(tabs, setActiveTabId);
 
   const dialogFilters = useMemo(
     () => ({
