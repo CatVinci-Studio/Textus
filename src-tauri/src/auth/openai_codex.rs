@@ -1,5 +1,5 @@
+use super::pkce_login::{run_pkce_login, PkceLoginRequest};
 use aicompat::providers::openai_codex::{self, CodexCredential};
-use aicompat::{run_pkce_login, PkceLoginRequest};
 use serde::Serialize;
 use std::fs;
 use std::path::PathBuf;
