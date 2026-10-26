@@ -1517,28 +1517,6 @@ pub fn run_case(auth: &AnthropicAuth, case: &AgentCase, model: &str) -> Record {
     }
 }
 
-/// The comparison subset: one case of each kind, small enough to run on
-/// every candidate agent model.
-pub const COMPARISON_CASES: &[&str] = &[
-    "lang/zh-Hans/shorten",
-    "lang/ja/question",
-    "lang/de/shorten",
-    "cross/en-asks-zh-doc/shorten",
-    "md/table-add-row",
-    "md/code-fix-bug",
-    "md/footnote-add",
-    "md/rewrite-keeps-inline",
-    "task/summarize-in-chat",
-    "task/insert-at-cursor-en",
-    "review/revise-mode-comments",
-    "ambiguous/make-it-better",
-    "multi/en-rejected-retry",
-    "agentmd/reply-language-and-spelling",
-    "skill/matched-by-description",
-    "files/facts-from-notes",
-    "long/edit-one-section",
-];
-
 #[cfg(test)]
 mod tests {
     use super::*;
