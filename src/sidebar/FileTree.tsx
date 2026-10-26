@@ -21,6 +21,7 @@ import { useSettings } from "../settings/SettingsContext";
 import { basename, parentDir } from "../utils/path";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { ContextMenu, type ContextMenuItem } from "../editor/ContextMenu";
+import { contributedContextItems } from "../ui/context-menu-items";
 import { Presence } from "../ui/usePresence";
 import { useTreeKeys } from "../ui/useTreeKeys";
 import { FileSearch } from "./FileSearch";
@@ -468,6 +469,8 @@ function useRowMenu(
             danger: true,
           },
         );
+      const added = contributedContextItems("file/context", { path });
+      if (added.length) items.push("separator", ...added);
       setMenu({ x: e.clientX, y: e.clientY, items });
     },
     [root, t, create, rename, trash, onFileSelect, setMenu],

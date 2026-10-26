@@ -5,7 +5,10 @@ import { registerEditorMenuItems } from "../../editor/editor-menu-items";
 import { showMessage } from "../../ui/app-dialog";
 import { isMacPlatform } from "../../platform/os";
 import { getActiveDocument, getWindowAccess } from "../app-bridge";
-import { registerContextItems, type ContextMenuPlace } from "./context-menus";
+import {
+  registerContextItems,
+  type ContextMenuPlace,
+} from "../../ui/context-menu-items";
 import { setHoverStarter } from "./hover-providers";
 import { localize, type MenuContribution } from "../store/manifest";
 import {
