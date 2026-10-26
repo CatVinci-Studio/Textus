@@ -554,6 +554,8 @@ type /name in a conversation to use one.
   accountNotConnected: "Not connected",
   accountConnectedAs: "Connected",
   signInTemplate: "Sign in with {name}",
+  signInUnofficial:
+    "Not an official sign-in: {name} may stop it working at any time, or bill it as extra usage rather than against your plan. An API key always works.",
   logoutButton: "Sign out",
   loggingIn: "Waiting for browser login…",
   loginLinkHint:

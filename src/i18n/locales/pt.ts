@@ -557,6 +557,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   accountNotConnected: "Não conectado",
   accountConnectedAs: "Conectado",
   signInTemplate: "Entrar com {name}",
+  signInUnofficial:
+    "Não é um login oficial: {name} pode bloqueá-lo a qualquer momento ou cobrá-lo como uso adicional em vez do seu plano. Uma chave de API sempre funciona.",
   logoutButton: "Sair",
   loggingIn: "Aguardando o login no navegador…",
   loginLinkHint:

@@ -560,6 +560,8 @@ export default {
   accountNotConnected: "Не подключён",
   accountConnectedAs: "Подключён",
   signInTemplate: "Войти через {name}",
+  signInUnofficial:
+    "Это неофициальный вход: {name} может в любой момент его отключить или списывать использование как дополнительное, а не по вашему тарифу. API-ключ работает всегда.",
   logoutButton: "Выйти",
   loggingIn: "Ожидание входа в браузере…",
   loginLinkHint:

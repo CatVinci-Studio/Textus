@@ -510,6 +510,8 @@ export default {
   accountNotConnected: "未登录",
   accountConnectedAs: "已登录",
   signInTemplate: "使用 {name} 登录",
+  signInUnofficial:
+    "这不是官方提供的登录方式：{name} 随时可能让它失效，或者按额外用量另行计费、不算在订阅额度里。用 API 密钥则始终可用。",
   logoutButton: "退出登录",
   loggingIn: "等待浏览器完成登录…",
   loginLinkHint: "浏览器没有打开？在这台电脑的浏览器里打开这个链接：",

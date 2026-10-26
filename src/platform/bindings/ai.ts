@@ -233,6 +233,11 @@ export type ProviderCatalogEntry_Deserialize = {
 	/**  True for local servers (Ollama) that work without a key. */
 	keyOptional: boolean,
 	/**
+	 *  Its "oauth" sign-in isn't one the provider offers other apps: it may
+	 *  stop working, or be billed apart from the plan, and Settings says so.
+	 */
+	oauthUnofficial: boolean,
+	/**
 	 *  Whether this provider's API accepts image content parts at all, which
 	 *  is what gates the chat's image attachments (aicompat's per-dialect
 	 *  `turns_to_*`). Deliberately a PROVIDER-level, not model-level, claim:
@@ -299,6 +304,11 @@ export type ProviderCatalogEntry_Serialize = {
 	agentDefaultModel: string | null,
 	/**  True for local servers (Ollama) that work without a key. */
 	keyOptional: boolean,
+	/**
+	 *  Its "oauth" sign-in isn't one the provider offers other apps: it may
+	 *  stop working, or be billed apart from the plan, and Settings says so.
+	 */
+	oauthUnofficial: boolean,
 	/**
 	 *  Whether this provider's API accepts image content parts at all, which
 	 *  is what gates the chat's image attachments (aicompat's per-dialect

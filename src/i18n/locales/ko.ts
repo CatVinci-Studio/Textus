@@ -530,6 +530,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   accountNotConnected: "연결 안 됨",
   accountConnectedAs: "연결됨",
   signInTemplate: "{name} 계정으로 로그인",
+  signInUnofficial:
+    "공식 로그인 방식이 아닙니다. {name}이(가) 언제든 막거나, 요금제 한도가 아닌 추가 사용량으로 청구할 수 있습니다. API 키는 항상 사용할 수 있습니다.",
   logoutButton: "로그아웃",
   loggingIn: "브라우저 로그인을 기다리는 중…",
   loginLinkHint:

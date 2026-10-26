@@ -572,6 +572,8 @@ para usar una.
   accountNotConnected: "Sin conectar",
   accountConnectedAs: "Conectado",
   signInTemplate: "Iniciar sesión con {name}",
+  signInUnofficial:
+    "No es un inicio de sesión oficial: {name} puede dejar de permitirlo en cualquier momento o cobrarlo como uso adicional en lugar de con tu plan. Una clave de API siempre funciona.",
   logoutButton: "Cerrar sesión",
   loggingIn: "Esperando el inicio de sesión en el navegador…",
   loginLinkHint:

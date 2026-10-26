@@ -30,6 +30,7 @@ const providerMocks = vi.hoisted(() => ({
       defaultModel: "gemini-3.1-flash-lite",
       agentDefaultModel: "gemini-3.5-flash",
       keyOptional: false,
+      oauthUnofficial: false,
       modelsListable: true,
       knownModels: ["gemini-3.5-flash"],
     },
@@ -42,6 +43,7 @@ const providerMocks = vi.hoisted(() => ({
       defaultModel: "doubao-seed-2-1-turbo-260628",
       agentDefaultModel: "doubao-seed-2-1-pro-260628",
       keyOptional: false,
+      oauthUnofficial: false,
       modelsListable: true,
       knownModels: ["doubao-seed-2-1-pro-260628"],
     },
@@ -160,6 +162,24 @@ describe("account sign-in", () => {
     label: "Claude",
     auth: ["oauth"],
   } as ProviderCatalogEntry;
+
+  it("says under an unofficial sign-in that it may stop, and only there", () => {
+    const t = resolveStrings("en");
+    const note = t.signInUnofficial.replace("{name}", "Claude");
+    const { unmount } = render(
+      <ProviderAuthPanel
+        t={t}
+        entry={{ ...anthropic, oauthUnofficial: true }}
+        onStatusChange={() => {}}
+      />,
+    );
+    expect(screen.getByText(note)).toBeInTheDocument();
+    unmount();
+    render(
+      <ProviderAuthPanel t={t} entry={anthropic} onStatusChange={() => {}} />,
+    );
+    expect(screen.queryByText(note)).not.toBeInTheDocument();
+  });
 
   it("offers the sign-in link while it waits, for when no browser opens", async () => {
     let finish: (s: { configured: boolean }) => void = () => {};

@@ -557,6 +557,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   accountNotConnected: "Nicht verbunden",
   accountConnectedAs: "Verbunden",
   signInTemplate: "Mit {name} anmelden",
+  signInUnofficial:
+    "Keine offizielle Anmeldung: {name} kann sie jederzeit sperren oder als zusätzliche Nutzung statt über deinen Plan abrechnen. Ein API-Schlüssel funktioniert immer.",
   logoutButton: "Abmelden",
   loggingIn: "Warte auf die Anmeldung im Browser…",
   loginLinkHint:
