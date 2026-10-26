@@ -20,6 +20,7 @@ import {
 } from "../store/plugin-records";
 import { evaluateWhen, type WhenContext } from "./when";
 import { addCodeBlockLanguage } from "./code-blocks";
+import { addSlashItems } from "./slash-commands";
 
 /**
  * What an on plugin adds to the window, registered from its manifest
@@ -115,6 +116,19 @@ export function applyContributions(
             label: titleOf(item.command),
             onSelect: () => runCommand(item.command),
           })),
+      ),
+    );
+  const slashItems = menus["editor/slash"] ?? [];
+  if (slashItems.length)
+    undo.push(
+      addSlashItems(
+        id,
+        slashItems.map((item) => ({
+          label: titleOf(item.command),
+          detail: text(manifest.name),
+          shown: () => evaluateWhen(item.when, whenContext()),
+          run: () => runCommand(item.command),
+        })),
       ),
     );
   const places: ContextMenuPlace[] = [

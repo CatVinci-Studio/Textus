@@ -10,6 +10,7 @@ import type {
 /** Where a plugin's menu items may go (contributes.menus). */
 export const MENU_IDS: readonly MenuId[] = [
   "editor/context",
+  "editor/slash",
   "file/context",
   "tab/context",
   "view/title",

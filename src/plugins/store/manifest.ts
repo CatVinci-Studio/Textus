@@ -72,6 +72,7 @@ export interface KeybindingContribution {
  *  bar - there with no window open, which it opens first. */
 export type MenuId =
   | "editor/context"
+  | "editor/slash"
   | "file/context"
   | "tab/context"
   | "view/title"

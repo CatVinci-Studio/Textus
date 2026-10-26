@@ -66,6 +66,7 @@ export function createCompletionPlugin() {
                 .scrollIntoView(),
             );
             view.focus();
+            item.run?.();
           };
           const ask = async () => {
             const context = contextAt(view);

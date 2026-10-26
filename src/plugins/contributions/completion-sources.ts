@@ -1,4 +1,5 @@
 import { pluginsSnapshot } from "../store/plugin-records";
+import { hasSlashItems, slashItemsFor } from "./slash-commands";
 
 /**
  * Completions plugins suggest as you type (manifest `contributes
@@ -16,6 +17,9 @@ export interface CompletionItem {
   insert: string;
   /** A word or two beside the label, dimmed. */
   detail?: string;
+  /** Run once the item is taken (a `/` command): what was typed goes, and
+   *  `insert` is empty. */
+  run?: () => void;
 }
 
 export interface CompletionResult {
@@ -75,7 +79,7 @@ function sources(): Source[] {
 }
 
 export function hasCompletionSources(): boolean {
-  return sources().length > 0;
+  return sources().length > 0 || hasSlashItems();
 }
 
 function items(value: unknown): CompletionItem[] {
@@ -101,6 +105,17 @@ export async function provideCompletions(
   text: string,
   inMath: boolean,
 ): Promise<CompletionResult | null> {
+  const slash = inMath ? null : slashItemsFor(text);
+  if (slash)
+    return {
+      replace: slash.replace,
+      items: slash.items.map((item) => ({
+        label: item.label,
+        insert: "",
+        detail: item.detail,
+        run: item.run,
+      })),
+    };
   if (!ask) return null;
   for (const source of sources()) {
     if (source.where !== "any" && (source.where === "math") !== inMath)

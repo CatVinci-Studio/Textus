@@ -150,6 +150,7 @@
           "propertyNames": {
             "enum": [
               "editor/context",
+              "editor/slash",
               "file/context",
               "tab/context",
               "view/title",
