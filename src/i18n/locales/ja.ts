@@ -1342,6 +1342,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginRepository: "ソース",
   pluginReload: "再読み込み",
   pluginUninstall: "アンインストール",
+  pluginUriNotTaken: "このリンクを開ける有効なプラグインがありません：{link}",
   pluginUnload: "取り除く",
   pluginUninstallAsk:
     "{name} をアンインストールしますか？ファイルと保存したデータは削除されます。",

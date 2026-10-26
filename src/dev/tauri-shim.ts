@@ -1068,6 +1068,13 @@ export function installDevTauriShim(): void {
           String(args.callId)
         ] = args.error ? { error: args.error } : { text: args.text };
         return Promise.resolve(null);
+      // textus:// links waiting for a window (plugins/uri.rs):
+      // `window.__devPluginUris`, taken once.
+      case "plugin_take_uris": {
+        const links = (w.__devPluginUris ?? []) as string[];
+        w.__devPluginUris = [];
+        return Promise.resolve(links);
+      }
       case "plugin_uninstall": {
         w.__devPlugins = installed.filter((p) => p.id !== id);
         delete pluginState.plugins[id];

@@ -72,6 +72,11 @@
       "endpoints": [
         "https://github.com/CatVinci-Studio/Textus/releases/latest/download/textus-latest.json"
       ]
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["textus"]
+      }
     }
   }
 }

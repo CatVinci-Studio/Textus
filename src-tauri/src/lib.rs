@@ -108,6 +108,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(mcp::McpHub::default())
         .manage(plugins::ai_tools::PluginAiTools::default())
         .manage(plugins::metadata::MetadataIndex::default())
+        .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
             let app = window.app_handle();
             if matches!(event, tauri::WindowEvent::Destroyed) {
@@ -152,6 +153,8 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     detect_wayland();
     #[cfg(target_os = "macos")]
     watch_fullscreen(app.handle());
+    // textus:// links for plugins (plugins/uri.rs).
+    plugins::uri::listen(app.handle());
     // Windows/Linux hand an associated file over as a plain argv
     // path; macOS hands the files it launched the app with to the Opened
     // run-event, which parks them in LAUNCH_OPENED until now. With no file
@@ -229,6 +232,7 @@ pub fn run() {
         }
     }));
     let builder = builder
+        .manage(plugins::uri::PendingUris::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(PendingOpenPaths(Mutex::new(Vec::new())));

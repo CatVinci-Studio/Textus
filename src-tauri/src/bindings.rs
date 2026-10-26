@@ -160,6 +160,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             "plugins.ts",
             builder().commands(collect_commands![
                 crate::plugins::state::plugins_state,
+                crate::plugins::uri::plugin_take_uris,
                 crate::plugins::state::plugins_set_all,
                 crate::plugins::state::plugin_set,
                 crate::plugins::install::plugins_installed,

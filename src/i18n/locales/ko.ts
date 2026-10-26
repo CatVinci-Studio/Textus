@@ -1330,6 +1330,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginRepository: "소스",
   pluginReload: "다시 불러오기",
   pluginUninstall: "제거",
+  pluginUriNotTaken: "이 링크를 열 수 있는 켜진 플러그인이 없습니다: {link}",
   pluginUnload: "빼기",
   pluginUninstallAsk:
     "{name}을(를) 제거할까요? 파일과 저장한 데이터가 삭제됩니다.",

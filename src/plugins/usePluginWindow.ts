@@ -29,6 +29,8 @@ import {
 import { watchTheme, windowIsDark } from "./theme-vars";
 import { usePluginMenuSync } from "./usePluginMenu";
 import { openBeside } from "../app/split-layout";
+import { takePluginUris } from "./plugin-uri";
+import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
 
 /**
  * A window's side of the plugins: what it tells the manager (its strings,
@@ -187,6 +189,14 @@ export function usePluginWindow({
 
   // A plugin a developer loaded from a folder, loaded again as it changes.
   useEffect(() => watchDevPlugins(), []);
+  // textus:// links from outside (plugins/uri.rs): those that came before
+  // this window did, then each as it comes.
+  useEffect(() => {
+    void takePluginUris();
+    return unlistenAll(
+      listenToThisWindow("plugin-uri", () => void takePluginUris()),
+    );
+  }, []);
   // Tools the plugins give Textus AI, told to Rust and run when called.
   useEffect(() => watchPluginAiTools(runPluginAiTool), []);
   // The completions plugins suggest as you type (completion-sources.ts).

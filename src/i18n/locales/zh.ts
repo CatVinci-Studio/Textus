@@ -1277,6 +1277,7 @@ export default {
   pluginRepository: "源代码",
   pluginReload: "重新加载",
   pluginUninstall: "卸载",
+  pluginUriNotTaken: "没有已开启的插件能打开这个链接：{link}",
   pluginUnload: "移除",
   pluginUninstallAsk: "卸载 {name}？它的文件和保存的数据都会删除。",
   pluginOk: "好",

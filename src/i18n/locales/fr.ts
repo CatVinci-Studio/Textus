@@ -1435,6 +1435,7 @@ utiliser une.
   pluginRepository: "Source",
   pluginReload: "Recharger",
   pluginUninstall: "Désinstaller",
+  pluginUriNotTaken: "Aucune extension activée n’ouvre ce lien : {link}",
   pluginUnload: "Enlever",
   pluginUninstallAsk:
     "Désinstaller {name} ? Ses fichiers et ses données seront supprimés.",

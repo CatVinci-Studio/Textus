@@ -1400,6 +1400,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginRepository: "Quellcode",
   pluginReload: "Neu laden",
   pluginUninstall: "Deinstallieren",
+  pluginUriNotTaken: "Kein eingeschaltetes Plugin öffnet diesen Link: {link}",
   pluginUnload: "Entfernen",
   pluginUninstallAsk:
     "{name} deinstallieren? Seine Dateien und gespeicherten Daten werden gelöscht.",

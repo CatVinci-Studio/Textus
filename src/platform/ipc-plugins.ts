@@ -66,6 +66,8 @@ export const plugins = {
   installFiles: (files: PluginFile[]) => command("plugin_install_files", files),
   loadDev: (path: string) => command("plugin_load_dev", path),
   uninstall: (id: string) => command("plugin_uninstall", id),
+  /** textus:// links waiting for a window (plugins/uri.rs), taken. */
+  takeUris: () => command("plugin_take_uris"),
   /** The plugins Textus offers (textus-plugins' catalog), fetched now
    *  and kept for next time. */
   catalog: () => command("plugin_catalog"),

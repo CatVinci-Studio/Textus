@@ -122,7 +122,7 @@ pub(crate) fn paths_from_argv(
 ) -> Vec<String> {
     args.into_iter()
         .skip(1)
-        .filter(|a| !a.starts_with('-'))
+        .filter(|a| !a.starts_with('-') && !crate::plugins::uri::is_textus_uri(a))
         .map(|a| cwd.join(&a).to_string_lossy().into_owned())
         .collect()
 }

@@ -1379,6 +1379,7 @@ type /name in a conversation to use one.
   pluginRepository: "Source",
   pluginReload: "Reload",
   pluginUninstall: "Uninstall",
+  pluginUriNotTaken: "No plugin that is turned on opens this link: {link}",
   pluginUnload: "Remove",
   pluginUninstallAsk:
     "Uninstall {name}? Its files and what it kept are removed.",

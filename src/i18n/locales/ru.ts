@@ -1399,6 +1399,8 @@ export default {
   pluginRepository: "Исходный код",
   pluginReload: "Перезагрузить",
   pluginUninstall: "Удалить",
+  pluginUriNotTaken:
+    "Ни один включённый плагин не открывает эту ссылку: {link}",
   pluginUnload: "Убрать",
   pluginUninstallAsk:
     "Удалить {name}? Его файлы и сохранённые данные будут удалены.",

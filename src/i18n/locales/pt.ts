@@ -1391,6 +1391,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginRepository: "Código-fonte",
   pluginReload: "Recarregar",
   pluginUninstall: "Desinstalar",
+  pluginUriNotTaken: "Nenhum plugin ativado abre este link: {link}",
   pluginUnload: "Remover",
   pluginUninstallAsk:
     "Desinstalar {name}? Os arquivos e os dados que ele guardou serão apagados.",

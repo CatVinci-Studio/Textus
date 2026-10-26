@@ -32,6 +32,7 @@ pub mod moved_skills;
 pub mod read_tool;
 pub mod state;
 pub mod store;
+pub mod uri;
 pub mod workspace;
 
 /// The app's invoke handler with every plugin command (the shared ones,
@@ -65,6 +66,7 @@ macro_rules! with_plugin_commands {
             $crate::plugins::catalog::plugin_install_catalog,
             $crate::plugins::install::plugin_load_dev,
             $crate::plugins::install::plugin_uninstall,
+            $crate::plugins::uri::plugin_take_uris,
             $crate::plugins::access::plugin_file,
             $crate::plugins::access::plugin_read_resource,
             $crate::plugins::access::plugin_fs_read,

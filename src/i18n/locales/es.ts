@@ -1410,6 +1410,7 @@ para usar una.
   pluginRepository: "Código fuente",
   pluginReload: "Recargar",
   pluginUninstall: "Desinstalar",
+  pluginUriNotTaken: "Ningún complemento activado abre este enlace: {link}",
   pluginUnload: "Quitar",
   pluginUninstallAsk:
     "¿Desinstalar {name}? Se eliminarán sus archivos y lo que guardó.",

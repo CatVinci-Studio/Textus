@@ -9,6 +9,8 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	plugins_state: () => __TAURI_INVOKE<PluginsState_Serialize>("plugins_state"),
+	/**  Hands the waiting links to the window that asks, and forgets them. */
+	plugin_take_uris: () => __TAURI_INVOKE<string[]>("plugin_take_uris"),
 	/**  Settings › Plugins › Plugins, the switch for all of them. */
 	plugins_set_all: (on: boolean) => __TAURI_INVOKE<null>("plugins_set_all", { on }),
 	/**

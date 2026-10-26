@@ -1282,6 +1282,7 @@ export default {
   pluginRepository: "原始碼",
   pluginReload: "重新載入",
   pluginUninstall: "解除安裝",
+  pluginUriNotTaken: "沒有已開啟的外掛程式能開啟這個連結：{link}",
   pluginUnload: "移除",
   pluginUninstallAsk: "要解除安裝 {name} 嗎？它的檔案和保存的資料都會刪除。",
   pluginOk: "好",
