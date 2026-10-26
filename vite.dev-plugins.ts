@@ -91,17 +91,15 @@ export function devPlugins(): Plugin {
         const folder = Object.keys(libs).find(
           (target) => target.endsWith("/") && rel.startsWith(target),
         );
+        // "./shared/x.js" is the checkout's own; any other, a package's.
+        const source = (lib: string) =>
+          lib.startsWith("./")
+            ? join(root, lib)
+            : join(root, "node_modules", lib);
         const file = libs[rel]
-          ? join(root, "node_modules", libs[rel])
+          ? source(libs[rel])
           : folder
-            ? normalize(
-                join(
-                  root,
-                  "node_modules",
-                  libs[folder],
-                  rel.slice(folder.length),
-                ),
-              )
+            ? normalize(join(source(libs[folder]), rel.slice(folder.length)))
             : normalize(join(root, "plugins", rel));
         if (!file.startsWith(join(root, "")) || !existsSync(file))
           return send(404, `${rel}: no such file`, "text/plain");
