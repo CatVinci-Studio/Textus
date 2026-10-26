@@ -161,12 +161,13 @@ jobs:
       - run: npm ci
       # The official plugins, which no longer ship with the app: the dev
       # server serves them from this checkout (vite.dev-plugins.ts), and
-      # the plugin flows install them from it. 1.2.x keeps the plugins of
-      # API 0.x: textus-plugins' main moved to 1.3's API 1.0.
+      # the plugin flows install them from it. 1.2.x tests against the
+      # plugins made for 1.2 ("they run on Textus 1.2"): textus-plugins'
+      # main has moved on to 1.3's plugin API.
       - uses: actions/checkout@v7
         with:
           repository: CatVinci-Studio/textus-plugins
-          ref: 72374757af8d53d3928c3e9c7885787b07ce3731
+          ref: 72b06ceb2577e87cdb76f2f68269c21d615d323e
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       # Chromium comes from the cache when this Playwright version's is there;
