@@ -42,7 +42,7 @@ async function open(
   grants: string[],
   folder: Record<string, string>,
   path: string,
-  extra: Partial<PluginsAtStart> = {},
+  extra: Partial<PluginsAtStart> & { language?: string } = {},
 ) {
   await openWithPlugins(page, {
     plugins: { [id]: grants },
