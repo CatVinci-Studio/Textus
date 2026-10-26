@@ -1154,7 +1154,10 @@ for (const lang of LANGS) {
         // View > Zoom Out, so the whole tour is on one screen.
         settings: { zoom: TOUR_ZOOM },
         // Its outline open in the sidebar, as a long document is written.
-        storage: { "textus-sidebar-open": "1", "textus-sidebar-tab": "outline" },
+        storage: {
+          "textus-sidebar-open": "1",
+          "textus-sidebar-tab": "outline",
+        },
       });
       const doc = page.locator('[data-active-tab="true"] .milkdown');
       await expect(doc.locator("blockquote.md-alert")).toHaveCount(1);
