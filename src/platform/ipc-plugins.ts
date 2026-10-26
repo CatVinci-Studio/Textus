@@ -13,8 +13,6 @@ import { call, command, desktopActionCommand } from "./ipc-call";
 export type PluginsState = Generated.PluginsState_Serialize;
 export type PluginCatalogEntry = Generated.CatalogEntry_Serialize;
 export type { InstalledPlugin } from "./bindings/plugins";
-export type PluginFsEntry = Access.FsEntry_Serialize;
-export type PluginHttpResponse = Access.HttpResponse;
 export type StoreScope = Access.StoreScope;
 export type PluginDocumentMeta = Access.DocumentMeta_Serialize;
 
