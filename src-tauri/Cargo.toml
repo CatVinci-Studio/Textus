@@ -222,7 +222,9 @@ webview2-com = "0.39"
 # tree via hyper-util.
 # Win32_UI_WindowsAndMessaging: the notification area's icon size at the
 # display's scale (src/background/tray.rs).
-windows = { version = "0.62", features = ["Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
+# Win32_UI_Input_KeyboardAndMouse, Win32_UI_HiDpi, Win32_Graphics_Gdi: the
+# cursor and its display's scale for a tab dragged out (src/tab_drag.rs).
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
 windows-registry = "0.6"
 
 [target.'cfg(target_os = "linux")'.dependencies]

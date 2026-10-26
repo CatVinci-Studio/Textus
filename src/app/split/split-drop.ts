@@ -138,6 +138,8 @@ export function pullTab(
     tabIds: readonly string[];
     activate: (id: string) => void;
     detach?: (id: string) => void;
+    /** Let go outside the window, where `detach` can't follow the pointer. */
+    releaseOutside?: (id: string) => void;
   },
 ): void {
   const ghost = document.createElement("div");
@@ -163,6 +165,10 @@ export function pullTab(
   const up = (e: PointerEvent) => {
     const target = dropTargetAt(e.clientX, e.clientY);
     stop();
+    if (opts.releaseOutside && outside(e)) {
+      opts.releaseOutside(tabId);
+      return;
+    }
     if (!target) return;
     opts.activate(tabId);
     // Once it is in front, the next frame: the split takes it from there.

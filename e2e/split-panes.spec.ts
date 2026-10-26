@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 import { openPath, openWithPlugins, pluginsAtStart } from "./plugin-helpers";
 
 /**
@@ -317,4 +317,63 @@ test("the split is remembered and comes back once its documents are open", async
       page.evaluate(() => localStorage.getItem("textus-split-layout")),
     )
     .toBe("null");
+});
+
+test("a tab's Move to New Window hands it to a new window and takes it out of this one", async ({
+  page,
+}) => {
+  await openTwo(page);
+  await mockInvoke(page, { move_tab_to_new_window: null });
+  await page
+    .locator('.tab-bar [role="tab"]', { hasText: "one.md" })
+    .click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Move to New Window" }).click();
+  await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(0);
+  await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
+    "Two",
+  );
+  const sent = await page.evaluate(() =>
+    (
+      (
+        window as unknown as {
+          __devInvokeCalls?: {
+            cmd: string;
+            tab?: { path?: string };
+          }[];
+        }
+      ).__devInvokeCalls ?? []
+    ).filter((c) => c.cmd === "move_tab_to_new_window"),
+  );
+  expect(sent).toHaveLength(1);
+  expect(sent[0].tab?.path).toBe("/notes/one.md");
+});
+
+test.describe("on Linux", () => {
+  // Playwright's desktop Chrome reports Windows, which drags tabs out itself.
+  test.use({
+    userAgent:
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+  });
+
+  test("a tab let go outside the window opens in a new window", async ({
+    page,
+  }) => {
+    await openTwo(page);
+    await mockInvoke(page, { move_tab_to_new_window: null });
+    const tab = page.locator('.tab-bar [role="tab"]', { hasText: "one.md" });
+    const box = (await tab.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2, box.y + 200, { steps: 5 });
+    await page.mouse.move(box.x + box.width / 2, -40, { steps: 5 });
+    await page.mouse.up();
+    await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(0);
+    const sent = await page.evaluate(() =>
+      (
+        (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
+          .__devInvokeCalls ?? []
+      ).filter((c) => c.cmd === "move_tab_to_new_window"),
+    );
+    expect(sent).toHaveLength(1);
+  });
 });

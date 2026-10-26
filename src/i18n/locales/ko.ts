@@ -340,6 +340,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   splitSwap: "양쪽 바꾸기",
   splitEven: "양쪽 같은 크기로",
   openBeside: "옆에 열기",
+  moveToNewWindow: "새 창으로 이동",
   menuViewSidebar: "사이드바",
   menuViewSource: "소스 모드",
   menuViewTypewriter: "타자기 모드",

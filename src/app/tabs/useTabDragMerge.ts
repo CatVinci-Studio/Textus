@@ -96,6 +96,21 @@ export function useTabDragMerge(opts: {
     [liveTabs, removeTab, t],
   );
 
+  // The tab's right-click Move to New Window, on every desktop.
+  const moveTabToNewWindow = useCallback(
+    async (id: string) => {
+      const tab = liveTabs().find((tb) => tb.id === id);
+      if (!tab) return;
+      try {
+        await windowIpc.moveTabToNewWindow(floatingDragArgs(tab, t, false));
+      } catch {
+        return;
+      }
+      removeTab(id);
+    },
+    [liveTabs, removeTab, t],
+  );
+
   // A single-tab window merges by dragging the whole window onto another's
   // tab row. Tauri has no "drag ended" event, so Rust streams cursor and
   // button ticks; on entering a row the window hands off its document and is
@@ -217,5 +232,5 @@ export function useTabDragMerge(opts: {
     return unlistenAll(unlisten);
   }, [setActiveTabId, setTabs, tabsRef]);
 
-  return { dragHoverPreview, handleTabDetach };
+  return { dragHoverPreview, handleTabDetach, moveTabToNewWindow };
 }

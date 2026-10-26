@@ -366,6 +366,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   splitSwap: "Seiten tauschen",
   splitEven: "Beide Seiten gleich groß",
   openBeside: "Daneben öffnen",
+  moveToNewWindow: "In neues Fenster verschieben",
   menuViewSidebar: "Seitenleiste",
   menuViewSource: "Quellcodemodus",
   menuViewTypewriter: "Schreibmaschinenmodus",
