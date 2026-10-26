@@ -206,7 +206,7 @@ async function settleRender(editor: Element): Promise<void> {
 export async function exportPdf(
   tab: DocTab,
   t: Strings,
-  pageNumbers = false,
+  { pageNumbers = false, lightColors = false } = {},
 ): Promise<void> {
   if (!canExportPdf) return;
   const editor = document.querySelector('[data-active-tab="true"] .milkdown');
@@ -221,9 +221,8 @@ export async function exportPdf(
   try {
     await nextFrame();
     await settleRender(editor);
-    // Paper is white: macOS keeps the theme's page colour, the others print
-    // on white in the theme's light form (#68).
-    const whitePage = !isMac;
+    // macOS keeps the theme's page colour unless asked for light colours.
+    const whitePage = !isMac || lightColors;
     const unmark = await markDrawnPictures(
       editor,
       whitePage || !appearanceIsDark() ? "light" : "dark",

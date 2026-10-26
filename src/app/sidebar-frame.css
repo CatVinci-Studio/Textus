@@ -113,6 +113,30 @@
   color: var(--sidebar-active-text);
 }
 
+.sidebar-view-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 0 8px 4px;
+}
+
+.sidebar-view-action {
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
+  border: none;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--editor-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.sidebar-view-action:hover {
+  background: var(--sidebar-hover);
+}
+
 .main-pane {
   flex: 1;
   position: relative;

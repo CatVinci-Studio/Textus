@@ -19,6 +19,8 @@ import { SplitDivider, splitGridStyles } from "./split/SplitDivider";
 import "./split/split-panes.css";
 import { openBeside, splitEditor } from "./split/split-layout";
 import { pullTab } from "./split/split-drop";
+import type { ContextMenuItem } from "../editor/ContextMenu";
+import { contributedContextItems } from "../ui/context-menu-items";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 
@@ -29,8 +31,16 @@ const SplitView = lazyComponent(
   (m) => m.SplitView,
 );
 
+function pluginTabItems(
+  path: string | null,
+): (ContextMenuItem | "separator")[] {
+  const added = contributedContextItems("tab/context", { path });
+  return added.length ? ["separator", ...added] : [];
+}
+
 /** The document column: the tab bar (when there is more than one tab to
  *  switch between) over every open tab's editor. */
+
 export function MainPane({
   tabs,
   activeTabId,
@@ -113,6 +123,7 @@ export function MainPane({
             },
             "separator",
             { label: t.menuCloseTab, onSelect: () => onClose(id) },
+            ...pluginTabItems(tabs.find((tab) => tab.id === id)?.path ?? null),
           ]}
           labels={{
             tabs: t.menuDocuments,

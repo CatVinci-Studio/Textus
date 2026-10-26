@@ -7,6 +7,7 @@ import type { useSidebarWidth } from "./sidebar-width";
 import type { OpenFolder } from "./useOpenFolder";
 import { Tooltip } from "../ui/Tooltip";
 import { sidebarTab, sidebarTabs } from "./sidebar-tabs";
+import { ViewTitleActions } from "../plugins/views/plugin-views";
 
 /** The left sidebar - its tabs (sidebar-tabs.tsx: the file tree, the
  *  outline, the clipboard history) - and, on iPhone, the scrim behind its
@@ -92,6 +93,7 @@ export function Sidebar({
               </div>
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
+              <ViewTitleActions view={shown.id} />
               <shown.Panel
                 t={t}
                 openFolder={openFolder}

@@ -2,6 +2,7 @@ import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
 import {
   type ContentWidth,
+  type ImageAlign,
   UI_TEXT_SCALES,
   type UiTextScale,
   type ColorSwatchMode,
@@ -14,6 +15,7 @@ import { Select } from "../../ui/Select";
 import { emitMenuEvent } from "../../platform/menu-events";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canExportPdf, isIOSApp } from "../../platform/capabilities";
+import { isMacPlatform } from "../../platform/os";
 import { openExtensionsTab } from "./extensions-tab";
 
 /** Editor & Appearance: the theme, the window's layout and view modes, and how Markdown is typed and shown. */
@@ -61,6 +63,19 @@ export function EditorPage({
             <option value="auto">{t.contentWidthAuto}</option>
             <option value="standard">{t.contentWidthStandard}</option>
             <option value="full">{t.contentWidthFull}</option>
+          </Select>
+        </SettingRow>
+        <SettingRow label={t.imageAlignLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.imageAlignLabel}
+            value={settings.imageAlign}
+            onChange={(e) =>
+              setSettings({ imageAlign: e.target.value as ImageAlign })
+            }
+          >
+            <option value="center">{t.imageAlignCenter}</option>
+            <option value="left">{t.imageAlignLeft}</option>
           </Select>
         </SettingRow>
         {/* A phone's UI is sized by iOS's own text styles instead. */}
@@ -181,6 +196,13 @@ export function EditorPage({
             checked={settings.pdfPageNumbers}
             onChange={(v) => setSettings({ pdfPageNumbers: v })}
           />
+          {isMacPlatform() && (
+            <ToggleRow
+              label={t.pdfLightColorsLabel}
+              checked={settings.pdfLightColors}
+              onChange={(v) => setSettings({ pdfLightColors: v })}
+            />
+          )}
         </SettingsGroup>
       )}
     </>
