@@ -109,7 +109,7 @@ export const windowIpc = {
 
 export const menuIpc = {
   /** Runs a menu id exactly as clicking its native twin would. The ids come
-   *  from app/app-menu-model.ts and are defined in src-tauri/src/menu.rs. */
+   *  from app/menu/app-menu-model.ts and are defined in src-tauri/src/menu.rs. */
   triggerMenuItem: (id: string) =>
     desktopQueryCommand("trigger_menu_item", undefined, id),
   /** Backs File > Open Recent, whose native submenu the app-drawn menu
@@ -118,15 +118,15 @@ export const menuIpc = {
   /** The folders listed above the files there. */
   listRecentFolders: () => desktopQueryCommand("list_recent_folders", []),
   /** Rebuilds the native (macOS) menu bar with these labels, keyed as
-   *  app/app-menu-model.ts's nativeMenuLabels keys them. */
+   *  app/menu/app-menu-model.ts's nativeMenuLabels keys them. */
   setMenuLabels: (labels: Record<string, string>) =>
     desktopQueryCommand("set_menu_labels", undefined, labels),
   /** Sets the native (macOS) View items' check marks, keyed by menu id
-   *  (app/app-menu-model.ts's nativeMenuChecks). */
+   *  (app/menu/app-menu-model.ts's nativeMenuChecks). */
   setMenuChecks: (checks: Record<string, boolean>) =>
     desktopQueryCommand("set_menu_checks", undefined, checks),
   /** Sets the native (macOS) Format items' keys, keyed by menu id
-   *  (app/app-menu-model.ts's nativeMenuAccelerators). */
+   *  (app/menu/app-menu-model.ts's nativeMenuAccelerators). */
   setMenuAccelerators: (accelerators: Record<string, string>) =>
     desktopQueryCommand("set_menu_accelerators", undefined, accelerators),
   /** Fills the native Plugins menu with what the plugins that are on put
@@ -169,7 +169,7 @@ export const links = {
 };
 
 /** Web pages in tabs as native webviews of their own, laid over each tab's
- *  area (commands/web_page.rs; plugins/useNativeWebPage.ts). Desktop. */
+ *  area (commands/web_page.rs; plugins/views/useNativeWebPage.ts). Desktop. */
 export const webPages = {
   show: (
     id: string,
@@ -314,12 +314,18 @@ export type UpdateMetadata = ConstructorParameters<typeof Update>[0];
 
 export const updater = {
   /** The plugin's `check()` on `channel`'s endpoints; the `Update` it
-   *  answers downloads and installs through the plugin as usual. */
-  check: async (channel: UpdateChannel): Promise<Update | null> => {
+   *  answers downloads and installs through the plugin as usual.
+   *  `backToStable`: a beta install is offered the newest stable release,
+   *  older though it is - only when the user asks to go back. */
+  check: async (
+    channel: UpdateChannel,
+    backToStable = false,
+  ): Promise<Update | null> => {
     const metadata = (await desktopQueryCommand(
       "check_for_update",
       null,
       channel,
+      backToStable,
     )) as UpdateMetadata | null;
     return metadata ? new Update(metadata) : null;
   },

@@ -1,6 +1,9 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
-import { hasHoverProviders, provideHover } from "../../plugins/hover-providers";
+import {
+  hasHoverProviders,
+  provideHover,
+} from "../../plugins/contributions/hover-providers";
 import {
   floatingCardKey,
   hideHoverCard,
@@ -9,6 +12,7 @@ import {
   showHoverCard,
 } from "./hover-card";
 import { hoverSpot } from "./hover-target";
+import { getWindowAccess } from "../../plugins/app-bridge";
 
 /** How long the pointer rests before a card is asked for. */
 const REST_MS = 450;
@@ -50,7 +54,18 @@ export function createLinkHoverPlugin(docPath: () => string | null) {
                   const card = target && (await provideHover(target));
                   if (waiting?.key !== key) return;
                   waiting = null;
-                  if (card) showHoverCard(key, spot.rect, card);
+                  if (!card) return;
+                  // A document's card opens it, at the section linked to.
+                  const open =
+                    target.type === "document"
+                      ? () =>
+                          void getWindowAccess()?.openFile(target.path, {
+                            place: target.heading
+                              ? { heading: target.heading }
+                              : undefined,
+                          })
+                      : undefined;
+                  showHoverCard(key, spot.rect, { ...card, open });
                 })();
               }, REST_MS),
             };

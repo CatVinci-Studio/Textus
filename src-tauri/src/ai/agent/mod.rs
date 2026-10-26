@@ -326,6 +326,10 @@ async fn ai_agent_message_inner(
             for tool in crate::plugins::ai_tools::tools_for_request(&app) {
                 tools.add(tool);
             }
+            // Create mode reads the plugins installed, to change one.
+            if let Some(tool) = crate::plugins::read_tool::read_plugin_tool(&app) {
+                tools.add(tool);
+            }
             // Pictures written into the text, begun as their lines stream in.
             let inline = image_run.as_ref().map(|run| run.inline(&tool_ctx.proposed));
             let tool_specs = tools.specs();

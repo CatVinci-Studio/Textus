@@ -12,7 +12,8 @@ use super::*;
 ///
 /// The Textus keys under `metadata:` (all optional; built-in skills set them
 /// all): `textus-version`, `textus-invocation` (both, user-only, hidden),
-/// `textus-category`, `textus-packs` and `textus-target-packs` (space-separated
+/// `textus-category`, `textus-modes` (space- or comma-separated modes),
+/// `textus-packs` and `textus-target-packs` (space-separated
 /// pack references), `textus-aliases-<ui language>` (comma-separated),
 /// `textus-based-on` (a Customize… copy) and `textus-sources` (credits, not
 /// read). Claude Code's top-level `disable-model-invocation: true` also makes a
@@ -55,6 +56,35 @@ pub(crate) fn parse_skill_file(file_stem: &str, content: &str) -> AgentSkill {
         };
     }
     skill.category = meta("category").map(str::to_string);
+    for (key, value) in &fm.metadata {
+        let Some(lang) = key
+            .strip_prefix(META_PREFIX)
+            .and_then(|k| k.strip_prefix("-label-"))
+        else {
+            continue;
+        };
+        let label = value.trim();
+        if !label.is_empty() {
+            skill.labels.insert(
+                lang.to_string(),
+                SkillLabel {
+                    label: label.to_string(),
+                    hint: meta(&format!("hint-{lang}")).unwrap_or("").to_string(),
+                },
+            );
+        }
+    }
+    if let Some(modes) = meta("modes") {
+        let mut list: Vec<AgentMode> = modes
+            .split([' ', ','])
+            .filter_map(AgentMode::from_word)
+            .collect();
+        list.sort();
+        list.dedup();
+        if !list.is_empty() {
+            skill.modes = list;
+        }
+    }
     skill.version = meta("version").map(str::to_string);
     skill.based_on = meta("based-on").map(str::to_string);
     let words = |v: Option<&str>| {
@@ -175,18 +205,9 @@ pub(crate) fn push_layer_skill(skills: &mut Vec<AgentSkill>, skill: AgentSkill) 
     skills.push(skill);
 }
 
-/// The built-in skills the user turned off in Settings > Textus AI > Skills
-/// (settings.json's `disabledBuiltinSkills`).
-pub(crate) fn disabled_builtin_skills(app: &AppHandle) -> Vec<String> {
-    crate::settings::read_setting(app, DISABLED_BUILTINS_KEY)
-        .and_then(|v| v.as_array().cloned())
-        .unwrap_or_default()
-        .into_iter()
-        .filter_map(|v| v.as_str().map(str::to_string))
-        .collect()
-}
-
-/// The settings.json field listing the built-in skills turned off.
+/// The settings.json field where a profile from before 1.3.0-beta.2 listed
+/// the built-in skills it had turned off - read only to know which of the
+/// skills moved to the market it had on (plugins::moved_skills).
 pub(crate) const DISABLED_BUILTINS_KEY: &str = "disabledBuiltinSkills";
 
 /// Windows refuses these as file names whatever the extension ("con.md").
@@ -303,18 +324,109 @@ pub(crate) fn reset_in(skills_dir: &Path, name: &str) -> Result<Vec<String>, Str
     Ok(deleted)
 }
 
-/// The disabled list after turning `name` on or off: sorted, no repeats,
-/// and only names that are still built-in skills.
-pub(crate) fn toggled_builtins(current: &[String], name: &str, enabled: bool) -> Vec<String> {
-    let mut list: Vec<String> = current
-        .iter()
-        .filter(|n| n.as_str() != name && builtin::find(n).is_some())
-        .cloned()
-        .collect();
-    if !enabled {
-        list.push(name.to_string());
+/// `raw` (a skill file) with its `metadata:` key `textus-<key>` set to
+/// `value`: the line replaced where there is one, else added under
+/// `metadata:`, which is added to the front matter - or the front matter
+/// to the file - when it has none.
+pub(crate) fn with_metadata(raw: &str, key: &str, value: &str) -> String {
+    let line = format!("  {META_PREFIX}-{key}: \"{value}\"");
+    let prefix = format!("  {META_PREFIX}-{key}:");
+    let mut lines: Vec<String> = raw.lines().map(str::to_string).collect();
+    let closing = (lines.first().map(|l| l.trim_end()) == Some("---"))
+        .then(|| {
+            lines
+                .iter()
+                .skip(1)
+                .position(|l| l.trim_end() == "---")
+                .map(|i| i + 1)
+        })
+        .flatten();
+    match closing {
+        Some(end) => {
+            if let Some(i) = lines[..end].iter().position(|l| l.starts_with(&prefix)) {
+                lines[i] = line;
+            } else if let Some(i) = lines[..end]
+                .iter()
+                .position(|l| l.trim_end() == "metadata:")
+            {
+                lines.insert(i + 1, line);
+            } else {
+                lines.insert(end, line);
+                lines.insert(end, "metadata:".to_string());
+            }
+        }
+        None => {
+            let stem = "skill";
+            let mut head = vec![
+                "---".to_string(),
+                format!("name: {stem}"),
+                "metadata:".to_string(),
+                line,
+                "---".to_string(),
+            ];
+            head.extend(lines);
+            lines = head;
+        }
     }
-    list.sort();
-    list.dedup();
-    list
+    let mut text = lines.join("\n");
+    if raw.ends_with('\n') || closing.is_none() {
+        text.push('\n');
+    }
+    text
+}
+
+/// The most a skill file written in a reply may be.
+const MAX_WRITTEN_SKILL: usize = 64 * 1024;
+
+/// Writes a skill file from a reply into `skills_dir` with `modes`: a new
+/// file, or over the one holding the skill of that name already.
+pub(crate) fn save_written_in(
+    skills_dir: &Path,
+    text: &str,
+    modes: &[AgentMode],
+) -> Result<PathBuf, String> {
+    if text.len() > MAX_WRITTEN_SKILL {
+        return Err("That skill is too long to save.".to_string());
+    }
+    let skill = parse_skill_file("", text);
+    if skill.name.is_empty() || skill.prompt.is_empty() {
+        return Err("That isn't a skill file: it needs a name and instructions.".to_string());
+    }
+    if modes.is_empty() {
+        return Err("A skill needs at least one mode.".to_string());
+    }
+    std::fs::create_dir_all(skills_dir).map_err(|e| e.to_string())?;
+    let path = match read_skill_files(skills_dir)
+        .into_iter()
+        .find(|(_, s)| s.name == skill.name)
+    {
+        Some((path, _)) => path,
+        None => skill_file_path(skills_dir, &skill.name)?,
+    };
+    let words: Vec<String> = modes.iter().map(|m| m.to_string()).collect();
+    crate::atomic::write_sync(&path, with_metadata(text, "modes", &words.join(" ")))
+        .map_err(|e| e.to_string())?;
+    Ok(path)
+}
+
+/// Rewrites the modes of the skill `name` in `skills_dir`.
+pub(crate) fn set_modes_in(
+    skills_dir: &Path,
+    name: &str,
+    modes: &[AgentMode],
+) -> Result<(), String> {
+    let mut modes = modes.to_vec();
+    modes.sort();
+    modes.dedup();
+    if modes.is_empty() {
+        return Err("A skill needs at least one mode.".to_string());
+    }
+    let (path, _) = read_skill_files(skills_dir)
+        .into_iter()
+        .find(|(_, s)| s.name == name)
+        .ok_or_else(|| format!("No skill called {name}."))?;
+    let raw = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    let words: Vec<String> = modes.iter().map(|m| m.to_string()).collect();
+    let text = with_metadata(&raw, "modes", &words.join(" "));
+    crate::atomic::write_sync(&path, text).map_err(|e| e.to_string())
 }

@@ -59,6 +59,13 @@ export interface UiState {
   fileTreeSort: string;
   /** "1" when the file tree shows hidden files (#357). */
   fileTreeHidden: string;
+  /** The split the window was left in, by its two documents' paths
+   *  (app/split/split-restore.ts); null when it showed one. */
+  splitLayout: {
+    direction: "row" | "column";
+    ratio: number;
+    paths: [string, string];
+  } | null;
 }
 
 export interface ThemeChromeCache {
@@ -150,6 +157,11 @@ const LOCAL: {
     key: "textus-file-tree-hidden",
     decode: (raw) => raw,
     encode: (value) => value,
+  },
+  splitLayout: {
+    key: "textus-split-layout",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
   },
   fileTreeSort: {
     key: "textus-file-tree-sort",

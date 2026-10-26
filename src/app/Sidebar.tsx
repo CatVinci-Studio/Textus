@@ -44,7 +44,8 @@ export function Sidebar({
   activeContent: string;
   onToggle: () => void;
   onClose: () => void;
-  onOpenFile: (path: string) => void;
+  /** `beside`: in a split beside the document in front. */
+  onOpenFile: (path: string, beside?: boolean) => void;
   /** A file or folder was dragged into another folder in the tree. */
   onEntryMoved: (from: string, to: string) => void;
   /** The search shortcut asked for the Files tab's search box. */

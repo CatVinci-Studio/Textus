@@ -27,7 +27,7 @@ import {
   SearchIcon,
 } from "../../ui/icons";
 import { rememberDeepThinking } from "./deep-thinking";
-import { Select } from "../../ui/Select";
+import { ModeAndModelPicker, ModePicker, type ModeChoice } from "./ModePicker";
 import { Tooltip } from "../../ui/Tooltip";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 
@@ -45,6 +45,12 @@ import {
   FILE_LIMIT,
   type ChatComposerProps,
 } from "./composer-types";
+
+/** A tablet's sheet has no room for the model: it is picked in Settings
+ *  there, as on a phone. */
+function mobileChrome() {
+  return document.documentElement.dataset.windowChrome === "mobile";
+}
 
 export type {
   ChatComposerHandle,
@@ -75,7 +81,7 @@ export function ChatComposer({
   focusOnOpen = true,
   defaultWebSearch,
   dockActions,
-  modelSwitcher,
+  switchModels = false,
   onSend,
   onSkillUsed,
   onStop,
@@ -115,6 +121,7 @@ export function ChatComposer({
     input,
     dismissedInput,
     lang: picker.lang,
+    mode,
   });
 
   // @-mention picker: "@" (or the full-width "＠" a CJK IME types) plus a
@@ -303,11 +310,29 @@ export function ChatComposer({
   // The suggested next message, while the box is empty.
   const offered = !busy && input === "" ? suggestion : null;
 
-  const modeLabels: Record<AgentMode, string> = {
-    write: labels.modeWrite,
-    review: labels.modeReview,
+  const modeLabels: Record<AgentMode, [string, string]> = {
+    write: [labels.modeWrite, labels.modeWriteHint],
+    review: [labels.modeReview, labels.modeReviewHint],
+    create: [labels.modeCreate, labels.modeCreateHint],
   };
-  const modes = AGENT_MODES.map((m) => [m, modeLabels[m]] as const);
+  // Quick Ask works on the selection: it writes or reviews, never creates.
+  const modes: ModeChoice[] = AGENT_MODES.filter(
+    (m) => !compact || m !== "create",
+  ).map((value) => ({
+    value,
+    label: modeLabels[value][0],
+    hint: modeLabels[value][1],
+  }));
+  const pickerProps = {
+    mode,
+    modes,
+    onMode: setMode,
+    labels: {
+      mode: labels.modeLabel,
+      model: labels.modelLabel,
+      picker: switchModels ? labels.modeAndModelLabel : labels.modeLabel,
+    },
+  };
 
   // On a phone, the composer's buttons leave focus - and so the keyboard -
   // in the textarea: a tap's default is to blur it, which drops the
@@ -422,7 +447,7 @@ export function ChatComposer({
                 role="radiogroup"
                 aria-label={labels.modeLabel}
               >
-                {modes.map(([value, label]) => (
+                {modes.map(({ value, label }) => (
                   <button
                     key={value}
                     type="button"
@@ -436,19 +461,10 @@ export function ChatComposer({
                   </button>
                 ))}
               </div>
+            ) : switchModels && !mobileChrome() ? (
+              <ModeAndModelPicker {...pickerProps} />
             ) : (
-              <Select
-                className="inline-chat-mode"
-                value={mode}
-                aria-label={labels.modeLabel}
-                onChange={(event) => setMode(event.target.value as AgentMode)}
-              >
-                {modes.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </Select>
+              <ModePicker {...pickerProps} />
             )}
             {!compact && (
               <>
@@ -520,7 +536,6 @@ export function ChatComposer({
                     </button>
                   </Tooltip>
                 )}
-                {modelSwitcher}
               </>
             )}
             {selectedText && !selectionDropped && dockActions === undefined && (

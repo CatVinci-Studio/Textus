@@ -1,28 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown } from "./helpers";
-import { openPath, openWithPlugins } from "./plugin-helpers";
+import { openApp, pasteMarkdown } from "./helpers";
+import { openPath, openWithPlugins, pluginsAtStart } from "./plugin-helpers";
 
 /**
- * Split Panes (catvinci.split-panes): two documents at once through the
- * app's layout API - the panes and the line between them are the app's,
- * the commands the plugin's.
+ * Split panes (app/split/split-layout.ts): two documents at once - View > Split
+ * Right / Split Down / Close Split, their shortcut, the line between the
+ * panes (dragged, or its right-click menu) and a tab's right-click menu.
  */
 
 const panes = ".main-pane-split > .split-pane";
 const pane = (which: "first" | "second") => `.split-pane[data-pane="${which}"]`;
 
-async function command(page: Page, id: string) {
-  await page.evaluate(
-    (id) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-plugin-command", id),
-    id,
-  );
-}
-
+/** A View menu item, as the native menu sends it. */
 async function emit(page: Page, name: string) {
   await page.evaluate(
     (name) =>
@@ -33,10 +22,18 @@ async function emit(page: Page, name: string) {
   );
 }
 
+/** An item of the divider's right-click menu. */
+async function dividerMenu(page: Page, item: string) {
+  await page
+    .getByRole("separator", { name: "Divider between the documents" })
+    .click({ button: "right" });
+  await page.getByRole("menuitem", { name: item }).click();
+}
+
 /** Two tabs: one.md, and a new one with "Two" in front. */
 async function openTwo(page: Page) {
   await openWithPlugins(page, {
-    plugins: { "catvinci.split-panes": [] },
+    plugins: {},
     folder: { "/notes/one.md": "# One\n\nThe first.\n" },
   });
   await openPath(page, "/notes/one.md");
@@ -56,7 +53,7 @@ test("Split Right shows the document beside another, and a click brings either t
 }) => {
   await openTwo(page);
   await page.locator('[data-active-tab="true"] .ProseMirror').click();
-  // Its shortcut, once the plugin has started.
+  // Its shortcut.
   await expect(async () => {
     await page.keyboard.press("ControlOrMeta+Alt+s");
     await expect(page.locator(panes)).toHaveCount(2, { timeout: 500 });
@@ -83,7 +80,7 @@ test("Split Right shows the document beside another, and a click brings either t
   await expect(page.locator(`${pane("first")} p`)).not.toContainText("Typed.");
 
   // Close Split: one document, the one in front.
-  await command(page, "catvinci.split-panes.close");
+  await emit(page, "menu-close-split");
   await expect(page.locator(panes)).toHaveCount(0);
   await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
     "One",
@@ -94,7 +91,7 @@ test("Split Down puts one above the other, and the line between them shares the 
   page,
 }) => {
   await openTwo(page);
-  await command(page, "catvinci.split-panes.down");
+  await emit(page, "menu-split-down");
   await expect(page.locator(panes)).toHaveCount(2);
   const first = (await page.locator(pane("first")).boundingBox())!;
   const second = (await page.locator(pane("second")).boundingBox())!;
@@ -128,7 +125,7 @@ test("a tab chosen from the tab bar opens in the pane in front; closing a pane's
     "One",
   );
   await page.locator('[data-active-tab="true"] .ProseMirror').click();
-  // Its shortcut, once the plugin has started.
+  // Its shortcut.
   await expect(async () => {
     await page.keyboard.press("ControlOrMeta+Alt+s");
     await expect(page.locator(panes)).toHaveCount(2, { timeout: 500 });
@@ -150,10 +147,174 @@ test("a tab chosen from the tab bar opens in the pane in front; closing a pane's
 test("with one tab, Split Right opens a blank one beside it", async ({
   page,
 }) => {
-  await openWithPlugins(page, {
-    plugins: { "catvinci.split-panes": [] },
-  });
-  await command(page, "catvinci.split-panes.right");
+  await openWithPlugins(page, { plugins: {} });
+  await emit(page, "menu-split-right");
   await expect(page.locator(panes)).toHaveCount(2);
   await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(2);
+});
+
+test("an open split turns, swaps its sides and evens them out", async ({
+  page,
+}) => {
+  await openTwo(page);
+  await page.locator('[data-active-tab="true"] .ProseMirror').click();
+  await page.keyboard.press("ControlOrMeta+Alt+s");
+  await expect(page.locator(panes)).toHaveCount(2);
+  await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
+
+  // Side by side becomes one above the other.
+  await dividerMenu(page, "Side by Side ⇄ One Above the Other");
+  await expect(async () => {
+    const first = (await page.locator(pane("first")).boundingBox())!;
+    const second = (await page.locator(pane("second")).boundingBox())!;
+    expect(second.y).toBeGreaterThan(first.y + first.height - 2);
+  }).toPass();
+
+  // The two tabs change places.
+  await dividerMenu(page, "Swap the Two Sides");
+  await expect(page.locator(`${pane("first")} h1`)).toContainText("One");
+  await expect(page.locator(`${pane("second")} h1`)).toContainText("Two");
+
+  // Dragged off-centre, Even puts the line back in the middle.
+  const line = page.getByRole("separator", {
+    name: "Divider between the documents",
+  });
+  const box = (await line.boundingBox())!;
+  const first = (await page.locator(pane("first")).boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, first.y + first.height * 0.6, {
+    steps: 4,
+  });
+  await page.mouse.up();
+  await dividerMenu(page, "Make Both Sides Equal");
+  await expect(async () => {
+    const a = (await page.locator(pane("first")).boundingBox())!;
+    const b = (await page.locator(pane("second")).boundingBox())!;
+    expect(Math.abs(a.height - b.height)).toBeLessThan(4);
+  }).toPass();
+
+  // The same keys again: one document.
+  await page.locator(`${pane("first")} .ProseMirror`).click();
+  await page.keyboard.press("ControlOrMeta+Alt+s");
+  await expect(page.locator(panes)).toHaveCount(0);
+});
+
+test("a tab's right-click menu opens it beside the one in front", async ({
+  page,
+}) => {
+  await openTwo(page);
+  await page
+    .locator('.tab-bar [role="tab"]')
+    .first()
+    .click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Open to the Side" }).click();
+  await expect(page.locator(panes)).toHaveCount(2);
+  await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
+  await expect(page.locator(`${pane("second")} h1`)).toContainText("One");
+});
+
+test("a tab pulled down onto the document splits it on the side it is let go", async ({
+  page,
+}) => {
+  await openTwo(page);
+  const tab = page.locator('.tab-bar [role="tab"]').first();
+  const box = (await tab.boundingBox())!;
+  const main = (await page.locator(".main-pane").boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  // Down out of the bar, then to the document's right edge.
+  await page.mouse.move(box.x + box.width / 2, box.y + 80, { steps: 4 });
+  await page.mouse.move(main.x + main.width - 20, main.y + main.height / 2, {
+    steps: 6,
+  });
+  await expect(page.locator(".split-drop-hint")).toBeVisible();
+  await expect(page.locator(".tab-pull-ghost")).toHaveText("one.md");
+  await page.mouse.up();
+  await expect(page.locator(".split-drop-hint")).toHaveCount(0);
+  await expect(page.locator(panes)).toHaveCount(2);
+  // One on the right, the other on the left.
+  await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
+  await expect(page.locator(`${pane("second")} h1`)).toContainText("One");
+  await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(2);
+});
+
+test("a tab pulled down and let go in the middle only comes to the front", async ({
+  page,
+}) => {
+  await openTwo(page);
+  const tab = page.locator('.tab-bar [role="tab"]').first();
+  const box = (await tab.boundingBox())!;
+  const main = (await page.locator(".main-pane").boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y + 80, { steps: 4 });
+  await page.mouse.move(main.x + main.width / 2, main.y + main.height / 2, {
+    steps: 6,
+  });
+  await page.mouse.up();
+  await expect(page.locator(panes)).toHaveCount(0);
+  await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
+    "One",
+  );
+});
+
+test("the split is remembered and comes back once its documents are open", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    if (window.top !== window) return;
+    localStorage.setItem(
+      "textus-split-layout",
+      JSON.stringify({
+        direction: "column",
+        ratio: 0.5,
+        paths: ["/notes/two.md", "/notes/one.md"],
+      }),
+    );
+  });
+  await pluginsAtStart(page, {
+    plugins: {},
+    folder: {
+      "/notes/one.md": "# One\n\nThe first.\n",
+      "/notes/two.md": "# Two\n\nThe second.\n",
+    },
+  });
+  // Each document in a tab of its own, as a restored session has them.
+  await openApp(page, {
+    settings: { language: "en", newDocumentMode: "tab" },
+  });
+  await openPath(page, "/notes/one.md");
+  await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
+    "One",
+  );
+  // As the next document of a session arrives: a tab of its own.
+  await page.evaluate(() =>
+    (
+      window as unknown as {
+        __devEmitTauriEvent: (n: string, p: unknown) => void;
+      }
+    ).__devEmitTauriEvent("open-paths-as-tabs", ["/notes/two.md"]),
+  );
+  await expect(page.locator(panes)).toHaveCount(2);
+  await expect(page.locator(".main-pane-split")).toHaveAttribute(
+    "data-split",
+    "column",
+  );
+  await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
+  await expect(page.locator(`${pane("second")} h1`)).toContainText("One");
+
+  // Turned and closed, it is saved as it is now.
+  await dividerMenu(page, "Side by Side ⇄ One Above the Other");
+  await expect
+    .poll(() =>
+      page.evaluate(() => localStorage.getItem("textus-split-layout")),
+    )
+    .toContain('"row"');
+  await emit(page, "menu-close-split");
+  await expect
+    .poll(() =>
+      page.evaluate(() => localStorage.getItem("textus-split-layout")),
+    )
+    .toBe("null");
 });

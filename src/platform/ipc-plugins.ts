@@ -1,4 +1,8 @@
 import type * as Generated from "./bindings/plugins";
+import type * as Access from "./bindings/plugin-access";
+
+/** A plugin file as text (commands/plugins install.rs PluginFile). */
+export type PluginFile = Generated.PluginFile;
 import { call, command, desktopActionCommand } from "./ipc-call";
 
 /**
@@ -9,7 +13,7 @@ import { call, command, desktopActionCommand } from "./ipc-call";
 
 // ---------------------------------------------------------------------------
 // plugins (src-tauri/src/plugins/) - what is installed and granted, and the
-// calls a plugin makes through the window (src/plugins/broker.ts).
+// calls a plugin makes through the window (src/plugins/host/broker.ts).
 // ---------------------------------------------------------------------------
 
 // Generated from the Rust commands (src/platform/bindings/plugins.ts):
@@ -19,9 +23,10 @@ import { call, command, desktopActionCommand } from "./ipc-call";
 export type PluginsState = Generated.PluginsState_Serialize;
 export type PluginCatalogEntry = Generated.CatalogEntry_Serialize;
 export type { InstalledPlugin } from "./bindings/plugins";
-export type PluginFsEntry = Generated.FsEntry_Serialize;
-export type PluginHttpResponse = Generated.HttpResponse;
-export type StoreScope = Generated.StoreScope;
+export type PluginFsEntry = Access.FsEntry_Serialize;
+export type PluginHttpResponse = Access.HttpResponse;
+export type StoreScope = Access.StoreScope;
+export type PluginDocumentMeta = Access.DocumentMeta_Serialize;
 
 /** A raw IPC response's bytes (tauri::ipc::Response) - which specta has no
  *  type for, so the commands answering one go through `call`. */
@@ -56,8 +61,16 @@ export const plugins = {
     command("plugin_set", id, enabled, granted),
   installed: () => command("plugins_installed"),
   install: (path: string) => command("plugin_install", path),
+  /** A plugin from its files' text (what Textus AI writes), installed as
+   *  a package is. */
+  installFiles: (files: PluginFile[]) => command("plugin_install_files", files),
   loadDev: (path: string) => command("plugin_load_dev", path),
   uninstall: (id: string) => command("plugin_uninstall", id),
+  /** Export for Publishing (plugins/export.rs): the new folder's path. */
+  exportPlugin: (id: string, publisher: string, folder: string) =>
+    command("plugin_export", id, publisher, folder),
+  /** textus:// links waiting for a window (plugins/uri.rs), taken. */
+  takeUris: () => command("plugin_take_uris"),
   /** The plugins Textus offers (textus-plugins' catalog), fetched now
    *  and kept for next time. */
   catalog: () => command("plugin_catalog"),
@@ -75,6 +88,9 @@ export const plugins = {
    *  picker. Desktop only. */
   pickPackage: (folder: boolean, filterName: string) =>
     desktopActionCommand("plugin_pick_package", folder, filterName),
+  /** Settings › Plugins › Open Scripts Folder (plugins/scripts.rs).
+   *  Desktop only. */
+  openScriptsDir: () => desktopActionCommand("plugin_open_scripts_dir"),
   file: (id: string, rel: string) =>
     bytes(call<ArrayBuffer>("plugin_file", { id, rel })),
   readResource: (id: string, path: string) =>
@@ -95,6 +111,30 @@ export const plugins = {
     command("plugin_fs_trash", id, root, path),
   fsMkdir: (id: string, root: string, path: string) =>
     command("plugin_fs_mkdir", id, root, path),
+  fsStat: (id: string, root: string, path: string) =>
+    command("plugin_fs_stat", id, root, path),
+  fsCreate: (id: string, root: string, path: string, text: string) =>
+    command("plugin_fs_create", id, root, path, text),
+  /** A text file and a token naming its version (textus.files.process). */
+  fsReadVersioned: (id: string, root: string, path: string) =>
+    command("plugin_fs_read_versioned", id, root, path),
+  /** Writes only if the file is still the version `token` names. */
+  fsWriteIf: (
+    id: string,
+    root: string,
+    path: string,
+    text: string,
+    token: string,
+  ) => command("plugin_fs_write_if", id, root, path, text, token),
+  /** Every document of the folder and what it holds, and what changed
+   *  since last asked (plugins/metadata.rs). */
+  metadataAll: (id: string, root: string) =>
+    command("plugin_metadata_all", id, root),
+  metadataGet: (id: string, root: string, path: string) =>
+    command("plugin_metadata_get", id, root, path),
+  secretGet: (id: string, key: string) => command("plugin_secret_get", id, key),
+  secretSet: (id: string, key: string, value: string | null) =>
+    command("plugin_secret_set", id, key, value),
   fsWrite: (
     id: string,
     root: string,
@@ -122,8 +162,7 @@ export const plugins = {
     root: string | null,
     key: string,
     value: unknown,
-  ) =>
-    command("plugin_store_set", id, scope, root, key, value as Generated.Value),
+  ) => command("plugin_store_set", id, scope, root, key, value as Access.Value),
   storeKeys: (id: string, scope: StoreScope, root: string | null) =>
     command("plugin_store_keys", id, scope, root),
   storeRead: (

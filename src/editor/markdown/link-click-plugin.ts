@@ -3,7 +3,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { exportDoc, fs, links } from "../../platform/ipc";
 import { isScopedUrl } from "../../platform/ios-files";
-import { openLinkInPlugin } from "../../plugins/link-handlers";
+import { openLinkInPlugin } from "../../plugins/contributions/link-handlers";
 import { modIsMeta } from "../../platform/os";
 import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import { revealHeading } from "./heading-jump";

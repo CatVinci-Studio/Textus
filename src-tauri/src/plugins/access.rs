@@ -3,8 +3,8 @@
 //! - its own files (`plugin_file`) - always;
 //! - the file a custom editor of it was opened on (`plugin_read_resource`)
 //!   - always, the window vouching that it is that file;
-//! - the open folder (`plugin_fs_*`) - with `workspace.read` /
-//!   `workspace.write`, and only inside the folder the window names, never
+//! - the open folder (`plugin_fs_*`) - with `files.read` /
+//!   `files.write`, and only inside the folder the window names, never
 //!   the app's own data;
 //! - the network (`plugin_http`) - only the hosts it was granted, HTTPS
 //!   (plain HTTP to this computer only), no cookies, a size limit;
@@ -76,7 +76,7 @@ pub(super) fn inside(root: &Path, path: &Path) -> Result<PathBuf, String> {
 
 /// The app's own folders, which no plugin reads or writes through the
 /// workspace calls - other plugins' storage, settings, keys.
-fn require_not_app_data(app: &tauri::AppHandle, path: &Path) -> Result<(), String> {
+pub(super) fn require_not_app_data(app: &tauri::AppHandle, path: &Path) -> Result<(), String> {
     let own = [app.path().app_data_dir(), app.path().app_config_dir()];
     for dir in own.into_iter().flatten() {
         let dir = std::fs::canonicalize(&dir).unwrap_or(dir);
@@ -88,15 +88,23 @@ fn require_not_app_data(app: &tauri::AppHandle, path: &Path) -> Result<(), Strin
 }
 
 /// Where a plugin's own files are: its developer folder or `plugins/<id>/`.
-fn plugin_home(app: &tauri::AppHandle, state: &PluginsState, id: &str) -> Result<PathBuf, String> {
+pub(super) fn plugin_home(
+    app: &tauri::AppHandle,
+    state: &PluginsState,
+    id: &str,
+) -> Result<PathBuf, String> {
     require_id(id)?;
     if let Some(path) = state.plugins.get(id).and_then(|p| p.dev_path.clone()) {
         return Ok(PathBuf::from(path));
     }
-    Ok(plugins_root(app)?.join(id))
+    let installed = plugins_root(app)?.join(id);
+    if !installed.is_dir() && super::scripts::script_file(app, id).is_some() {
+        return super::scripts::scripts_dir(app);
+    }
+    Ok(installed)
 }
 
-async fn read_bytes(path: PathBuf) -> Result<Response, String> {
+pub(super) async fn read_bytes(path: PathBuf) -> Result<Response, String> {
     let meta = tokio::fs::metadata(&path)
         .await
         .map_err(|e| e.to_string())?;
@@ -145,8 +153,8 @@ pub async fn plugin_fs_read(
     root: String,
     path: String,
 ) -> Result<Response, String> {
-    if !state::read(&app).allows(&id, "workspace.read") {
-        return Err(refused(&id, "workspace.read"));
+    if !state::read(&app).allows(&id, "files.read") {
+        return Err(refused(&id, "files.read"));
     }
     let path = inside(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;
@@ -174,8 +182,8 @@ pub async fn plugin_fs_list(
     root: String,
     path: String,
 ) -> Result<Vec<FsEntry>, String> {
-    if !state::read(&app).allows(&id, "workspace.read") {
-        return Err(refused(&id, "workspace.read"));
+    if !state::read(&app).allows(&id, "files.read") {
+        return Err(refused(&id, "files.read"));
     }
     let dir = inside(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &dir)?;
@@ -217,8 +225,8 @@ pub async fn plugin_fs_write(
     contents: String,
     base64: Option<bool>,
 ) -> Result<(), String> {
-    if !state::read(&app).allows(&id, "workspace.write") {
-        return Err(refused(&id, "workspace.write"));
+    if !state::read(&app).allows(&id, "files.write") {
+        return Err(refused(&id, "files.write"));
     }
     let path = inside(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;
@@ -249,8 +257,8 @@ pub async fn plugin_fs_rename(
     from: String,
     to: String,
 ) -> Result<(), String> {
-    if !state::read(&app).allows(&id, "workspace.write") {
-        return Err(refused(&id, "workspace.write"));
+    if !state::read(&app).allows(&id, "files.write") {
+        return Err(refused(&id, "files.write"));
     }
     let root = Path::new(&root);
     let from = inside(root, Path::new(&from))?;
@@ -280,8 +288,8 @@ pub async fn plugin_fs_trash(
     root: String,
     path: String,
 ) -> Result<(), String> {
-    if !state::read(&app).allows(&id, "workspace.write") {
-        return Err(refused(&id, "workspace.write"));
+    if !state::read(&app).allows(&id, "files.write") {
+        return Err(refused(&id, "files.write"));
     }
     let path = inside(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;
@@ -312,8 +320,8 @@ pub async fn plugin_fs_mkdir(
     root: String,
     path: String,
 ) -> Result<(), String> {
-    if !state::read(&app).allows(&id, "workspace.write") {
-        return Err(refused(&id, "workspace.write"));
+    if !state::read(&app).allows(&id, "files.write") {
+        return Err(refused(&id, "files.write"));
     }
     let path = inside(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;

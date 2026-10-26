@@ -1097,6 +1097,27 @@ pub fn doubled_words(before: &str, after: &str) -> Option<String> {
 /// `text` without what it quotes ("...", “...”, 「...」) - a reply in English
 /// about a Chinese edit quotes Chinese words, which say nothing about the
 /// reply's own language.
+/// `text` without its fenced code blocks: a reply's prose, without the
+/// files Create mode writes in it (a YAML header's quotes are not the
+/// reply's punctuation).
+pub fn without_code(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut fence: Option<String> = None;
+    for line in text.split_inclusive('\n') {
+        let trimmed = line.trim_start();
+        match &fence {
+            Some(open) if trimmed.trim_end() == open => fence = None,
+            Some(_) => {}
+            None if trimmed.starts_with("```") => {
+                let ticks = trimmed.chars().take_while(|c| *c == '`').count();
+                fence = Some("`".repeat(ticks));
+            }
+            None => out.push_str(line),
+        }
+    }
+    out
+}
+
 pub fn unquoted(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let mut closing: Option<char> = None;
@@ -1659,5 +1680,12 @@ Wait—the instructions say"
         assert_eq!(word_count("hello world"), 2);
         assert_eq!(word_count("你好世界"), 4);
         assert_eq!(word_count("用 React 写"), 3);
+    }
+
+    #[test]
+    fn a_replys_prose_leaves_its_code_blocks_out() {
+        let reply = "做好了：\n\n```markdown x.md\n---\nlabel: \"周报\"\n---\n```\n\n保存即可。\n";
+        assert_eq!(without_code(reply), "做好了：\n\n\n保存即可。\n");
+        assert_eq!(without_code("no fences"), "no fences");
     }
 }

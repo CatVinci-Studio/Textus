@@ -1,6 +1,6 @@
 import type { Strings } from "../../i18n/strings";
 import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
-import type { MenuChecks } from "../../app/app-menu-model";
+import type { MenuChecks } from "../../app/menu/app-menu-model";
 import type { Settings, useSettings } from "../SettingsContext";
 
 /** A page's own page within its category (General › About Textus; on the
@@ -13,6 +13,13 @@ export type Subpage = "about" | "themes";
  * panel's own ways out - a subpage, a guide, a file. A page takes the ones
  * it needs.
  */
+/** A plugin's command, for Settings › Shortcuts: its own key, if any. */
+export interface ShortcutCommand {
+  id: string;
+  title: string;
+  shortcut?: string;
+}
+
 export interface SettingsPageProps {
   t: Strings;
   settings: Settings;
@@ -41,6 +48,8 @@ export interface SettingsPageProps {
   viewChecks: Pick<MenuChecks, "sourceMode" | "zen">;
   /** The shortcuts that can't be changed (app/fixed-shortcuts.ts). */
   fixedShortcuts: FixedShortcutGroup[];
+  /** The commands plugins add (app/commands.ts), whose keys can be set. */
+  pluginCommands: ShortcutCommand[];
   /** Rendered for the settings search to read, not to be shown: a page
    *  with tabs leaves them out, as the search reads each on its own. */
   indexing?: boolean;

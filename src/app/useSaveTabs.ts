@@ -14,9 +14,10 @@ import { fs, session } from "../platform/ipc";
 import { moveConversations } from "../ai/chat/chat-history";
 import { defaultMarkdownFilename } from "../document/save-default-name";
 import { isWordDocument, wordSaveSuggestion } from "../document/word-import";
-import { emitPluginEvent } from "../plugins/app-bridge";
+import { emitPluginEvent, openDocumentAt } from "../plugins/app-bridge";
+import { hasWillSave, runWillSave } from "../plugins/contributions/will-save";
 import type { Strings } from "../i18n/strings";
-import type { TabState } from "./useTabState";
+import type { TabState } from "./tabs/useTabState";
 
 /** Save and Save As for this window's tabs. Both resolve true only when the
  *  document actually reached disk. */
@@ -176,8 +177,9 @@ export function useSaveTabs(opts: {
           if (!overwrite) return "conflict";
         }
       }
-      if (!(await writeOrReport(tab.path, tab.content))) return "failed";
-      await commitSaved(tabId, tab.path, tab.content);
+      const content = await beforeSave(tab.path, tab.content);
+      if (!(await writeOrReport(tab.path, content))) return "failed";
+      await commitSaved(tabId, tab.path, content);
       return "saved";
     },
     [liveTabs, t, writeOrReport, commitSaved],
@@ -230,4 +232,19 @@ export function useSaveTabs(opts: {
   );
 
   return { saveTab, saveTabAs, autosaveTab };
+}
+
+/**
+ * The text to save once the plugins listening (textus.files.onWillSave)
+ * have changed it - put into the editor first, as one undo step, so what
+ * is saved is what shows. A document with no editor to take the change
+ * (Source Mode) is saved as it is.
+ */
+async function beforeSave(path: string, text: string): Promise<string> {
+  if (!hasWillSave()) return text;
+  const changed = await runWillSave(path, text);
+  if (changed === text) return text;
+  const doc = openDocumentAt(path);
+  if (!doc?.replaceText(changed, doc.revision())) return text;
+  return doc.text();
 }

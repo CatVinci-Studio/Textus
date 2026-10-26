@@ -32,6 +32,7 @@ export function pickerLabels(t: Strings, lang: Lang): PickerLabels {
       revise: t.skillCategoryRevise,
       check: t.skillCategoryCheck,
       format: t.skillCategoryFormat,
+      create: t.skillCategoryCreate,
     },
     keys: t.pickerKeysHint,
     skillAbout: t.skillPickerAbout,

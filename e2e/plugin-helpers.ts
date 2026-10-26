@@ -110,6 +110,19 @@ export async function openSidebarTab(page: Page, name: string) {
   return page.frameLocator(".sidebar .plugin-webview-frame");
 }
 
+/** A plugin's list in the sidebar (views.registerList): drawn by Textus
+ *  in the page itself, not in a frame. */
+export async function openSidebarList(page: Page, name: string) {
+  if (await page.locator(".sidebar.sidebar-collapsed").count())
+    await page.evaluate(() =>
+      (
+        window as unknown as { __devEmitTauriEvent: (n: string) => void }
+      ).__devEmitTauriEvent("menu-toggle-sidebar"),
+    );
+  await page.locator(".sidebar-tabs").getByRole("button", { name }).click();
+  return page.locator(".sidebar .plugin-list");
+}
+
 /** The frame of the plugin's tab in front. */
 export const tabFrame = (page: Page) =>
   page.frameLocator('[data-active-tab="true"] .plugin-webview-frame');

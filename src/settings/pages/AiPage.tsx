@@ -191,6 +191,7 @@ export function AiPage({
                   >
                     <option value="write">{t.agentModeWrite}</option>
                     <option value="review">{t.agentModeReview}</option>
+                    <option value="create">{t.agentModeCreate}</option>
                   </Select>
                 </SettingRow>
                 <SettingRow

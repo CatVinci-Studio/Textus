@@ -10,7 +10,7 @@ import {
   type ShortcutAction,
 } from "../settings/SettingsContext";
 import { isBindableCombo, isReservedCombo } from "../utils/shortcuts";
-import { buildAppMenu, NO_RECENTS, type MenuNode } from "./app-menu-model";
+import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
 import {
   fixedShortcutGroups,
   macTabStep,

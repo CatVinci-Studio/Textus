@@ -5,7 +5,7 @@ import {
   type HelpDoc,
 } from "../document/doc-tabs";
 import type { Lang } from "../i18n/langs";
-import type { TabState } from "./useTabState";
+import type { TabState } from "./tabs/useTabState";
 
 const HELP_DOCS: readonly HelpDoc[] = ["markdown", "agent"];
 

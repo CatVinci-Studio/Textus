@@ -74,6 +74,7 @@ export function useEditorSetup({
     reporting,
     settingsRef,
     filePathRef,
+    isActiveRef,
     tourRef,
     tRef,
     setQuickAskEl,

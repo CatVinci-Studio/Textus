@@ -29,10 +29,10 @@ describe.each(LANGS)("the tour in %s", (lang) => {
           description: "",
           source: "builtin",
           overridesBuiltin: false,
-          enabled: true,
+          modes: [skill.mode],
         }) as unknown as SkillListItem,
     );
-    const available = pickerSkills(items, lang);
+    const available = pickerSkills(items, lang, "write");
     const words = [...t.tutorialSkillsTask.matchAll(/`([^`]+)`/g)].map(
       (m) => m[1],
     );

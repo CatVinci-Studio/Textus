@@ -94,6 +94,7 @@ export function normaliseSettings(parsed: Raw | null): Settings {
             ? (parsed.revisionDisplay as RevisionDisplay)
             : DEFAULT_SETTINGS.revisionDisplay,
       shortcuts: storedShortcuts(parsed.shortcuts),
+      commandShortcuts: stringMap(parsed.commandShortcuts),
       mcpServers: normaliseMcpServers(parsed.mcpServers),
       plugins: isRecord(parsed.plugins)
         ? (Object.fromEntries(

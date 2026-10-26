@@ -1,15 +1,22 @@
 import { pictureSrc } from "../revision/generated-images";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import type { AgentTurn, ImageAttachment, WebSource } from "../types";
 import { links } from "../../platform/ipc";
 import { MarkdownText } from "../MarkdownText";
 import { siteOf } from "../citations";
 import { parseUserMessage } from "./user-message";
 import { ReplyThemes, type ReplyThemeLabels } from "./ReplyThemes";
+import type { ReplyPluginLabels } from "./ReplyPlugins";
+import { ReplySkills } from "./ReplySkills";
 import { ChevronIcon, PaperclipIcon, SearchIcon } from "../../ui/icons";
 import "./AgentTurnView.css";
 
-export interface AgentTurnLabels extends ReplyThemeLabels {
+// A reply that wrote a plugin brings in the plugin manager: loaded only then.
+const ReplyPlugins = lazy(() =>
+  import("./ReplyPlugins").then((m) => ({ default: m.ReplyPlugins })),
+);
+
+export interface AgentTurnLabels extends ReplyThemeLabels, ReplyPluginLabels {
   /** Selection chip, for a selection of `n` characters. */
   selectionChip: (n: number) => string;
   /** The chip of a selection that was one picture. */
@@ -91,6 +98,12 @@ export function AgentTurnView({
             <SourceList sources={turn.sources} label={labels.sources} />
           )}
           <ReplyThemes text={turn.text} labels={labels} />
+          {/\nname:/.test(turn.text) && <ReplySkills text={turn.text} />}
+          {turn.text.includes("textus-plugin.json") && (
+            <Suspense fallback={null}>
+              <ReplyPlugins text={turn.text} labels={labels} />
+            </Suspense>
+          )}
         </div>
       );
     case "ToolCall":

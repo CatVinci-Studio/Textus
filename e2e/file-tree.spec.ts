@@ -290,3 +290,48 @@ test("hidden files stay out of the tree until it shows them (#357)", async ({
     await page.evaluate(() => localStorage.getItem("textus-file-tree-hidden")),
   ).toBe("1");
 });
+
+test("Open to the Side shows a document beside the one in front", async ({
+  page,
+}) => {
+  await open(page);
+  await row(page, "b.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Open to the Side" }).click();
+  const panes = page.locator(".main-pane-split > .split-pane");
+  await expect(panes).toHaveCount(2);
+  await expect(page.locator('.split-pane[data-pane="first"] h1')).toContainText(
+    "Alpha",
+  );
+  await expect(
+    page.locator('.split-pane[data-pane="second"] h1'),
+  ).toContainText("Bravo");
+});
+
+test("a file dragged onto the lower half of the document opens below it", async ({
+  page,
+}) => {
+  await open(page);
+  const from = (await row(page, "b.md").boundingBox())!;
+  const main = (await page.locator(".main-pane").boundingBox())!;
+  await page.mouse.move(from.x + 20, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(main.x + main.width / 2, main.y + main.height - 30, {
+    steps: 8,
+  });
+  await expect(page.locator(".split-drop-hint")).toBeVisible();
+  await page.mouse.up();
+  const panes = page.locator(".main-pane-split > .split-pane");
+  await expect(panes).toHaveCount(2);
+  await expect(page.locator('.split-pane[data-pane="first"] h1')).toContainText(
+    "Alpha",
+  );
+  await expect(
+    page.locator('.split-pane[data-pane="second"] h1'),
+  ).toContainText("Bravo");
+  await expect(page.locator(".main-pane-split")).toHaveAttribute(
+    "data-split",
+    "column",
+  );
+  // The file stays where it was.
+  expect(await files(page)).toContain("/work/notes/b.md");
+});

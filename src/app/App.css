@@ -7,7 +7,7 @@
 @import "../document-view/ai-notice.css";
 @import "./sidebar-frame.css";
 @import "./window-bar.css";
-@import "./TabBar.css";
+@import "./tabs/TabBar.css";
 @import "./editor-column.css";
 @import "./notices.css";
 @import "../ui/app-dialog.css";

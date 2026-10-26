@@ -21,7 +21,7 @@ const HELP_GUIDES = new Map(
   ]),
 );
 
-// The document-tab data model shared by app/useTabState.ts (tab state) and
+// The document-tab data model shared by app/tabs/useTabState.ts (tab state) and
 // useTabDragMerge.ts (tabs in flight between windows).
 
 // Mirrors the doc ids Rust puts in its Help menu ids (menu.rs

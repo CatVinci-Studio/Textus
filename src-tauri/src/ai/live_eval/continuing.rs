@@ -29,7 +29,7 @@ fn run_with(
         eprintln!("live_eval: no ANTHROPIC_API_KEY - skipping");
         return None;
     };
-    let ws = workspace::load_layers(None, None, None, &[]);
+    let ws = workspace::load_layers(None, None, None);
     let model = harness::agent_model();
     let setup = AgentSetup {
         model: &model,

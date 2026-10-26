@@ -21,121 +21,73 @@ import type {
 import type { AgentSkill_Serialize } from "../platform/bindings/ai-project";
 import type { GalleryTheme_Serialize } from "../platform/bindings/app";
 import type { CustomEndpointStatus_Serialize } from "../platform/bindings/auth";
-import type {
-  FsEntry_Serialize,
-  PluginsState_Serialize,
-} from "../platform/bindings/plugins";
+import type { PluginsState_Serialize } from "../platform/bindings/plugins";
+import type { FsEntry_Serialize } from "../platform/bindings/plugin-access";
 import type { SentBlock } from "../ai/doc-blocks";
 import { namedCall, settledArguments, settledTurns } from "./settle-calls";
+import { forgetShimSecrets, pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";
 
 /** The built-in skills as `list_skills` reports them: name, `/` menu group,
  *  invocation and the description written for the model (abridged). */
-const DEV_BUILTIN_SKILLS: [string, string, string, string][] = [
-  [
-    "continue-story",
-    "write",
-    "both",
-    "Writes the next scene or section of a story, picking up exactly where the text stops.",
-  ],
-  [
-    "describe",
-    "write",
-    "both",
-    "Adds concrete, sensory description of a person, place or scene.",
-  ],
-  [
-    "dialogue",
-    "write",
-    "both",
-    "Fixes dialogue punctuation, tags and rhythm for the document's language.",
-  ],
-  [
-    "imitate-style",
-    "write",
-    "both",
-    "Rewrites text in the style of a sample or the style profile.",
-  ],
+const DEV_BUILTIN_SKILLS: [string, string, string, string, string][] = [
   [
     "expand",
     "revise",
     "userOnly",
+    "write",
     "Makes a passage fuller without adding facts.",
   ],
-  ["tighten", "revise", "userOnly", "Cuts wordiness and keeps every fact."],
   [
-    "change-tone",
+    "tighten",
     "revise",
     "userOnly",
-    "Makes text more formal, plain, warm or firm.",
-  ],
-  [
-    "de-ai",
-    "revise",
-    "both",
-    "Removes stock AI phrasing and formula, or flags it.",
+    "write",
+    "Cuts a passage down without losing its meaning.",
   ],
   [
     "translate",
     "revise",
     "both",
-    "Translates so the result reads as native writing.",
-  ],
-  [
-    "proofread",
-    "check",
-    "both",
-    "Checks spelling, punctuation and numbers against the language's standards.",
-  ],
-  [
-    "continuity",
-    "check",
-    "both",
-    "Finds contradictions with the library and other chapters.",
-  ],
-  ["email", "format", "both", "Drafts or restructures an email or letter."],
-  [
-    "notice",
-    "format",
-    "both",
-    "Drafts or fixes a notice or official document.",
-  ],
-  [
-    "minutes",
-    "format",
-    "both",
-    "Turns meeting notes into decisions and action items.",
-  ],
-  [
-    "academic-polish",
-    "format",
-    "both",
-    "Formal, calibrated academic wording; citations untouched.",
-  ],
-  [
-    "social-post",
-    "format",
-    "both",
-    "Writes a post that fits the platform's limits and rules.",
-  ],
-  [
-    "headline",
-    "format",
-    "both",
-    "Writes an accurate title or headline of the right length.",
+    "write",
+    "Translates the selection or the document.",
   ],
   [
     "summarize",
     "format",
     "userOnly",
-    "Summarizes faithfully at the length asked for.",
+    "write",
+    "Sums up the document or a passage.",
+  ],
+  [
+    "proofread",
+    "check",
+    "both",
+    "review",
+    "Fixes typos, grammar and punctuation.",
+  ],
+  [
+    "continuity",
+    "check",
+    "both",
+    "review",
+    "Checks names, facts and timelines against the library.",
   ],
   [
     "theme",
-    "format",
+    "create",
     "both",
-    "Designs an editor theme and writes it as one CSS file in the reply.",
+    "create",
+    "Designs an editor theme from a description.",
   ],
+  [
+    "plugin",
+    "create",
+    "both",
+    "create",
+    "Makes a small plugin from a description.",
+  ],
+  ["skill", "create", "both", "create", "Saves a task you repeat as a skill."],
 ];
 
 export function installDevTauriShim(): void {
@@ -525,12 +477,13 @@ export function installDevTauriShim(): void {
     return null;
   }
 
-  // The skill list of ai::workspace and Settings' commands for the
-  // built-ins, in memory: the 19 built-ins, one skill of the user's own,
-  // and what Customize…/Reset/the switches did. `window.__devSkills`
-  // exposes the state for assertions.
+  // The skill list of ai::workspace and Settings' commands for skills, in
+  // memory: the 9 built-ins, one skill of the user's own, and what
+  // Customize…/Reset and its mode boxes did. `window.__devSkills` exposes
+  // the state for assertions.
   const skills = {
-    disabled: new Set<string>(),
+    // The modes of the user's own skill, house-style.
+    ownModes: ["write"] as string[],
     customized: new Set<string>(),
     // Copies made before the bundled built-in last changed.
     outdated: new Set<string>(),
@@ -548,7 +501,7 @@ export function installDevTauriShim(): void {
     switch (cmd) {
       case "list_skills": {
         // As ai::workspace::list_skills: one item per name - a copy made by
-        // Customize… replaces its built-in (and follows its switch).
+        // Customize… replaces its built-in.
         const base = {
           prompt: "",
           packs: [] as string[],
@@ -556,10 +509,11 @@ export function installDevTauriShim(): void {
           basedOn: null as string | null,
           builtinUpdated: false,
           aliases: {},
+          labels: {},
         };
         const builtins = DEV_BUILTIN_SKILLS.map(
-          ([skill, category, invocation, description]) => {
-            const enabled = !skills.disabled.has(skill);
+          ([skill, category, invocation, mode, description]) => {
+            const modes = [mode] as AgentSkill_Serialize["modes"];
             return skills.customized.has(skill)
               ? {
                   ...base,
@@ -569,7 +523,7 @@ export function installDevTauriShim(): void {
                   invocation,
                   source: "global",
                   overridesBuiltin: true,
-                  enabled,
+                  modes,
                   basedOn: `${skill}@${skills.outdated.has(skill) ? 0 : 1}`,
                   builtinUpdated: skills.outdated.has(skill),
                 }
@@ -581,7 +535,7 @@ export function installDevTauriShim(): void {
                   invocation,
                   source: "builtin",
                   overridesBuiltin: false,
-                  enabled,
+                  modes,
                   version: "1",
                 };
           },
@@ -594,15 +548,19 @@ export function installDevTauriShim(): void {
           invocation: "both",
           source: "global",
           overridesBuiltin: false,
-          enabled: true,
+          modes: skills.ownModes as AgentSkill_Serialize["modes"],
         } satisfies AgentSkill_Serialize;
         return Promise.resolve([...builtins, own]);
       }
-      case "set_builtin_skill_enabled":
-        skills.log.push(`${cmd}:${name}:${args.enabled}`);
-        if (args.enabled) skills.disabled.delete(name);
-        else skills.disabled.add(name);
-        return Promise.resolve([...skills.disabled].sort());
+      // Save this skill (Create mode): the file and its modes, logged.
+      case "save_written_skill":
+        skills.log.push(`${cmd}:${String(args.modes)}`);
+        skills.files.set(skillCopyPath("written"), String(args.text ?? ""));
+        return Promise.resolve(skillCopyPath("written"));
+      case "set_skill_modes":
+        skills.log.push(`${cmd}:${name}:${String(args.modes)}`);
+        skills.ownModes = [...((args.modes as string[]) ?? [])];
+        return Promise.resolve(null);
       case "customize_builtin_skill": {
         skills.log.push(`${cmd}:${name}`);
         const path = skillCopyPath(name);
@@ -881,6 +839,16 @@ export function installDevTauriShim(): void {
       catalog?: boolean;
     }[];
     const path = String(args.path ?? "");
+    const api = pluginApiShim(cmd, args, {
+      id,
+      folder,
+      write: (target, text) => {
+        ((w.__devFs ??= {}) as Record<string, string>)[target] = text;
+      },
+      granted: (permission) =>
+        !!pluginState.plugins[id]?.granted.includes(permission),
+    });
+    if (api) return api;
     const fileText = (p: string) =>
       p in binary
         ? Promise.resolve(
@@ -1100,14 +1068,62 @@ export function installDevTauriShim(): void {
           String(args.callId)
         ] = args.error ? { error: args.error } : { text: args.text };
         return Promise.resolve(null);
-      case "plugin_uninstall":
+      // textus:// links waiting for a window (plugins/uri.rs):
+      // `window.__devPluginUris`, taken once.
+      case "plugin_take_uris": {
+        const links = (w.__devPluginUris ?? []) as string[];
+        w.__devPluginUris = [];
+        return Promise.resolve(links);
+      }
+      case "plugin_uninstall": {
         w.__devPlugins = installed.filter((p) => p.id !== id);
         delete pluginState.plugins[id];
+        // Its global data and its secrets go with it; a project's stays
+        // (plugins/install.rs).
+        const stores = (w.__devPluginStore ?? {}) as Record<string, unknown>;
+        delete stores[`${id}|global|`];
+        forgetShimSecrets(id);
         return Promise.resolve(null);
+      }
+      // A plugin Textus AI wrote: listed with its files, over an earlier
+      // version of the same id.
+      case "plugin_install_files": {
+        const files = (args.files ?? []) as { path: string; text: string }[];
+        const manifestFile = files.find((f) => f.path === "textus-plugin.json");
+        if (!manifestFile)
+          return Promise.reject("No textus-plugin.json among the files.");
+        const pid = (JSON.parse(manifestFile.text) as { id: string }).id;
+        // The user's own, as plugins/install.rs has it.
+        if (!pid.startsWith("local."))
+          return Promise.reject(
+            `A plugin written in the conversation needs an id starting with local. - ${pid} is someone else's.`,
+          );
+        const written = {
+          id: pid,
+          dir: `/plugins/${pid}`,
+          manifest: manifestFile.text,
+          dev: false,
+          files: Object.fromEntries(files.map((f) => [f.path, f.text])),
+        };
+        w.__devPlugins = [...installed.filter((p) => p.id !== pid), written];
+        const listed: Record<string, unknown> = { ...written };
+        delete listed.files;
+        return Promise.resolve(listed);
+      }
       case "plugin_install":
       case "plugin_load_dev":
         return Promise.reject("The dev shim installs no plugin from a file.");
+      // A picker's answer (`window.__devPickPluginFolder`), and Export for
+      // Publishing (plugins/export.rs): what it was asked, in
+      // `window.__devPluginExports`, and the folder it would make.
       case "plugin_pick_package":
+        return Promise.resolve(w.__devPickPluginFolder ?? null);
+      case "plugin_export": {
+        const asked = { id, publisher: args.publisher, folder: args.folder };
+        ((w.__devPluginExports ??= []) as unknown[]).push(asked);
+        const name = String(id).split(".").slice(1).join(".");
+        return Promise.resolve(`${args.folder}/${args.publisher}.${name}`);
+      }
       case "set_plugin_menu":
       case "set_tray_plugin_items":
         return Promise.resolve(null);
@@ -1142,6 +1158,12 @@ export function installDevTauriShim(): void {
       // `window.__devFileMtimes = { path: ms }` their times (default 1).
       const files = w.__devFiles as Record<string, string> | undefined;
       const filePath = String((args as { path?: unknown })?.path ?? "");
+      // A PDF or a picture (`__devBinaryFiles`) isn't text, as on disk.
+      if (
+        cmd === "read_text_file" &&
+        filePath in ((w.__devBinaryFiles ?? {}) as Record<string, string>)
+      )
+        return Promise.reject("stream did not contain valid UTF-8");
       if (files && filePath in files) {
         if (cmd === "read_text_file") return Promise.resolve(files[filePath]);
         if (cmd === "file_mtime_ms")

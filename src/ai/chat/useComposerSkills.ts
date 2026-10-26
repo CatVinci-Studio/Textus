@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { AgentSkill } from "../types";
 import { ai, type SkillListItem } from "../../platform/ipc";
 import type { PickerLabels } from "./ComposerPicker";
+import type { AgentMode } from "../../settings/settings-types";
 import {
   SKILL_TRIGGER,
   listFromWorkspace,
@@ -21,6 +22,7 @@ export function useComposerSkills({
   input,
   dismissedInput,
   lang,
+  mode,
 }: {
   docPath: string | null;
   workspaceRoot: string | null;
@@ -28,6 +30,8 @@ export function useComposerSkills({
   /** The input Escape closed the menu for; typing reopens it. */
   dismissedInput: string | null;
   lang: PickerLabels["lang"];
+  /** Only this mode's skills are offered. */
+  mode: AgentMode;
 }) {
   const [skills, setSkills] = useState<AgentSkill[]>([]);
   const [skillList, setSkillList] = useState<SkillListItem[] | null>(null);
@@ -48,9 +52,9 @@ export function useComposerSkills({
     };
   }, [docPath, workspaceRoot]);
 
-  // The `/` menu's list - built-ins included, with their groups and which
-  // are on - fetched again each time the menu opens, so a skill turned off
-  // in Settings a moment ago is already gone from it.
+  // The `/` menu's list - built-ins included, with their groups and modes
+  // - fetched again each time the menu opens, so a skill installed or moved
+  // to another mode a moment ago is already there.
   const skillTrigger = SKILL_TRIGGER.exec(input);
   const skillMenuOpen = !!skillTrigger && dismissedInput !== input;
   useEffect(() => {
@@ -74,8 +78,8 @@ export function useComposerSkills({
     const listed = skillList ?? [];
     const names = new Set(listed.map((s) => s.name));
     const extra = listFromWorkspace(skills.filter((s) => !names.has(s.name)));
-    return pickerSkills([...listed, ...extra], lang);
-  }, [skillList, skills, lang]);
+    return pickerSkills([...listed, ...extra], lang, mode);
+  }, [skillList, skills, lang, mode]);
 
   return {
     skills,

@@ -4,7 +4,7 @@ import { hasPlugin, openWithPlugins } from "./plugin-helpers";
 
 /**
  * The Emacs plugin (textus-plugins' catvinci.emacs) through the editor's
- * key capture (src/plugins/editor-input.ts): only its own keys are taken,
+ * key capture (src/plugins/contributions/editor-input.ts): only its own keys are taken,
  * so typing stays the editor's; motions, the mark, kills into the kill
  * ring and yanks back, and undo.
  */
@@ -96,4 +96,16 @@ test("without the Ctrl setting, Ctrl keys stay the app's on Windows and Linux", 
   await page.keyboard.type("!");
   // C-e didn't move to the end: the typing went in at the start.
   await expect(firstParagraph(page)).toHaveText("!plain text");
+});
+
+test("M-u, M-c and M-l recase the next word", async ({ page }) => {
+  await open(page, "one two three", { ctrlKeys: true });
+  await keys(page, ["Alt+u"]);
+  await expect(firstParagraph(page)).toHaveText("ONE two three");
+  await keys(page, ["Alt+c"]);
+  await expect(firstParagraph(page)).toHaveText("ONE Two three");
+  await keys(page, ["Alt+l"]);
+  await expect(firstParagraph(page)).toHaveText("ONE Two three");
+  await keys(page, ["Alt+b", "Alt+b", "Alt+l"]);
+  await expect(firstParagraph(page)).toHaveText("ONE two three");
 });

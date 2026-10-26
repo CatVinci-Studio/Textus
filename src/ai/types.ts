@@ -4,6 +4,7 @@ import type {
   ThinkingLevel as Thinking,
   WebSource as Source,
 } from "../platform/bindings/ai-agent";
+import type { AgentMode } from "../settings/settings-types";
 
 /**
  * The operations a propose_edit tool call can carry. Mirrors EDIT_ACTIONS in
@@ -74,7 +75,8 @@ export interface AgentSkill {
   invocation?: "both" | "userOnly" | "hidden";
   source?: "builtin" | "global" | "project";
   overridesBuiltin?: boolean;
-  enabled?: boolean;
+  modes?: AgentMode[];
+  labels?: Record<string, { label: string; hint: string }>;
   aliases?: Record<string, string[]>;
   packs?: string[];
   version?: string | null;

@@ -5,7 +5,7 @@ import {
   hasCompletionSources,
   provideCompletions,
   type CompletionResult,
-} from "../../plugins/completion-sources";
+} from "../../plugins/contributions/completion-sources";
 import { CompletionList } from "./completion-list";
 
 /** The most text before the caret a plugin is shown. */
@@ -66,6 +66,7 @@ export function createCompletionPlugin() {
                 .scrollIntoView(),
             );
             view.focus();
+            item.run?.();
           };
           const ask = async () => {
             const context = contextAt(view);

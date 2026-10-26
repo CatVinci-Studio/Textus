@@ -6,7 +6,7 @@ import { useAppUpdate } from "./useAppUpdate";
 import { useZoom } from "./useZoom";
 import { useDraftAutosave } from "../document/draft-autosave";
 import { useTextusAi, useTextusAiResume } from "../ai/TextusAiSwitch";
-import { useTabState } from "./useTabState";
+import { useTabState } from "./tabs/useTabState";
 import { useSidePanels } from "./useSidePanels";
 import { useWordImported } from "./AppNotices";
 import type { PendingClose } from "./close-flow";

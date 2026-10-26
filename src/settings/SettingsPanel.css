@@ -907,6 +907,22 @@ button.settings-inline-button {
   text-overflow: ellipsis;
 }
 
+/* The modes a skill of the user's works in, at the end of its line. */
+.settings-skill-modes {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+  flex: none;
+  color: var(--editor-muted);
+}
+
+.settings-skill-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
 /* "Replaces a built-in skill", "This project", "Customized": a quiet pill
    after the name. */
 .settings-skill-tag {

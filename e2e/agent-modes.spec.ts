@@ -88,9 +88,12 @@ test("Quick Ask starts on Write, even after Review was picked in the panel", asy
   const picker = page
     .locator(".inline-chat")
     .getByRole("combobox", { name: "模式" });
-  await expect(picker).toHaveText("写作");
+  await expect(picker.locator(".mode-picker-value")).toHaveText("写作");
   await picker.click();
-  await expect(page.getByRole("option")).toHaveText(["写作", "审阅"]);
+  await expect(page.locator(".mode-picker-mode-name")).toHaveText([
+    "写作",
+    "审阅",
+  ]);
 });
 
 /** Each mode: its name in the picker, and what the empty panel says. */
@@ -109,6 +112,11 @@ const MODE_LINES: Record<
       name: "Review",
       line: "Get more suggestions",
     },
+    {
+      mode: "create",
+      name: "Create",
+      line: "Make a theme, plugin or skill",
+    },
   ],
   zh: [
     {
@@ -121,11 +129,16 @@ const MODE_LINES: Record<
       name: "审阅",
       line: "提出更多建议",
     },
+    {
+      mode: "create",
+      name: "创造",
+      line: "做一个主题、插件或技能",
+    },
   ],
 };
 
 for (const language of ["en", "zh"] as const)
-  test(`${language}: the composer offers Write and Review; the empty panel shows the mode's icon and says what it does, and follows a switch`, async ({
+  test(`${language}: the composer offers Write, Review and Create; the empty panel shows the mode's icon and says what it does, and follows a switch`, async ({
     page,
   }) => {
     await openPanel(page, language);
@@ -136,18 +149,20 @@ for (const language of ["en", "zh"] as const)
     const mark = page.locator(".agent-panel-empty-mark .chat-mode-icon");
     const hint = page.locator(".agent-panel-empty-text");
     // Review is the default. The composer's picker and menu are words only.
-    await expect(picker).toHaveText(modes[1].name);
+    const shown = picker.locator(".mode-picker-value");
+    await expect(shown).toHaveText(modes[1].name);
     await expect(picker.locator("svg")).toHaveCount(0);
     await expect(mark).toHaveAttribute("data-mode", "review");
     await expect(hint).toHaveText(modes[1].line);
     for (const { mode, name, line } of modes) {
       await picker.click();
-      // Write, then Review.
-      await expect(page.getByRole("option")).toHaveText(
+      // Write, Review, then Create.
+      await expect(page.locator(".mode-picker-mode-name")).toHaveText(
         modes.map((m) => m.name),
       );
       await expect(page.getByRole("option").locator("svg")).toHaveCount(0);
-      await page.getByRole("option", { name }).click();
+      await page.getByRole("option", { name, exact: true }).click();
+      await expect(shown).toHaveText(name);
       await expect(mark).toHaveAttribute("data-mode", mode);
       await expect(hint).toHaveText(line);
     }

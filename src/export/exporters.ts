@@ -10,7 +10,13 @@ import { exportDoc, fs } from "../platform/ipc";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
 import { canExportPdf, canExportWithPandoc } from "../platform/capabilities";
 import { toPandocMarkdown } from "./pandoc-markdown";
-import { diagramsToImages, lightDiagrams } from "./diagram-images";
+import {
+  diagramsToImages,
+  drawnBlocksToImages,
+  lightDiagrams,
+} from "./diagram-images";
+import { drawnPicturesByLanguage, markDrawnPictures } from "./drawn-blocks";
+import { finishExportPage } from "./export-step";
 import { appearanceIsDark } from "../editor/diagram-engine";
 import type { DiagramEngine } from "../settings/SettingsContext";
 import {
@@ -218,10 +224,17 @@ export async function exportPdf(
     // Paper is white: macOS keeps the theme's page colour, the others print
     // on white in the theme's light form (#68).
     const whitePage = !isMac;
-    let content = await inlineImages(
-      cloneEditorContent(editor, "inline", await linkRenderer(editor)),
-      tab.path,
+    const unmark = await markDrawnPictures(
+      editor,
+      whitePage || !appearanceIsDark() ? "light" : "dark",
     );
+    const copy = cloneEditorContent(
+      editor,
+      "inline",
+      await linkRenderer(editor),
+    );
+    unmark();
+    let content = await inlineImages(copy, tab.path);
     if (whitePage && appearanceIsDark()) {
       const style = getComputedStyle(editor);
       content = await lightDiagrams(
@@ -230,11 +243,16 @@ export async function exportPdf(
         style.fontFamily,
       );
     }
+    const finished = await finishExportPage({
+      format: "pdf",
+      path: tab.path,
+      html: content,
+    });
     const page = platformPage();
     const standalone = buildStandaloneHtml(
       base,
-      content,
-      pdfLayoutCss(page, whitePage),
+      finished.html,
+      pdfLayoutCss(page, whitePage) + finished.css,
       whitePage,
     );
     const html = page ? await paginateHtml(standalone, page) : standalone;
@@ -282,15 +300,38 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
   await drawPending(editor);
   const besideDocument = !!tab.path && dirname(tab.path) === dirname(picked);
   const renderLink = await linkRenderer(editor);
-  const content = besideDocument
-    ? cloneEditorContent(editor, "document", renderLink)
-    : await inlineImages(
-        cloneEditorContent(editor, "inline", renderLink),
-        tab.path,
-      );
-  const html = buildStandaloneHtml(base, content, HTML_LAYOUT_CSS);
+  const unmark = await markDrawnPictures(
+    editor,
+    appearanceIsDark() ? "dark" : "light",
+  );
+  const copy = cloneEditorContent(
+    editor,
+    besideDocument ? "document" : "inline",
+    renderLink,
+  );
+  unmark();
+  const content = besideDocument ? copy : await inlineImages(copy, tab.path);
+  const finished = await finishExportPage({
+    format: "html",
+    path: tab.path,
+    html: content,
+  });
+  const html = buildStandaloneHtml(
+    base,
+    finished.html,
+    HTML_LAYOUT_CSS + finished.css,
+  );
   await fs.writeTextFile(picked, html);
   void exportDoc.revealInDir(picked);
+}
+
+// The pictures of the drawn blocks (a plugin's) in the active tab's editor, all
+// drawn first (drawPending), for a pandoc export made from its Markdown.
+async function drawnPictures(): Promise<Map<string, (string | null)[]>> {
+  const editor = document.querySelector('[data-active-tab="true"] .milkdown');
+  if (!editor) return new Map();
+  await drawPending(editor);
+  return drawnPicturesByLanguage(editor, "light");
 }
 
 export async function exportViaPandoc(
@@ -332,7 +373,10 @@ export async function exportViaPandoc(
     await exportDoc.exportViaPandoc({
       pandocPath: pandoc,
       markdown: EMBEDS_IMAGES.has(format)
-        ? await diagramsToImages(text, diagramEngine)
+        ? await drawnBlocksToImages(
+            await diagramsToImages(text, diagramEngine),
+            await drawnPictures(),
+          )
         : text,
       outputPath: picked,
       format,

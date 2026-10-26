@@ -52,9 +52,21 @@ export function runCommand(id: string, args: unknown[] = []): boolean {
   return true;
 }
 
+/** A command's key: the user's (Settings › Shortcuts, `overrides` by id,
+ *  "" for none), else its own. */
+export function commandShortcut(
+  command: CommandDef,
+  overrides: Record<string, string>,
+): string | undefined {
+  return overrides[command.id] ?? command.shortcut;
+}
+
 /** The command a combo runs, if one has it and can run now. */
-export function commandForCombo(combo: string): CommandDef | undefined {
+export function commandForCombo(
+  combo: string,
+  overrides: Record<string, string> = {},
+): CommandDef | undefined {
   return registered.find(
-    (c) => c.shortcut === combo && c.enabled?.() !== false,
+    (c) => commandShortcut(c, overrides) === combo && c.enabled?.() !== false,
   );
 }

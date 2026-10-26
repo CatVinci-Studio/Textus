@@ -11,6 +11,7 @@ metadata:
   textus-version: "1"
   textus-invocation: "user-only"
   textus-category: "revise"
+  textus-modes: "write"
   textus-packs: "contract standards#ai-tells"
   textus-sources: "Our own text. Plain-language habits from the Federal Plain Language Guidelines (public domain) and GOV.UK guidance (OGL v3.0), summarised."
   textus-aliases-en: "elaborate"

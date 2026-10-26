@@ -11,7 +11,8 @@ license: MIT
 metadata:
   textus-version: "1"
   textus-invocation: "both"
-  textus-category: "format"
+  textus-category: "create"
+  textus-modes: "create"
   textus-packs: "contract"
   textus-sources: "Our own text. The theme format is the app's own (Typora-compatible #write selectors); contrast ratios from WCAG 2.2 (W3C), summarised."
   textus-aliases-en: "theme-css, stylesheet"

@@ -4,7 +4,7 @@
 //!
 //! The manifest is read here only for its id and version - enough to know
 //! where the plugin goes. The window checks the rest of it
-//! (src/plugins/manifest.ts) before anything of the plugin runs.
+//! (src/plugins/store/manifest.ts) before anything of the plugin runs.
 
 use super::state::{self, PluginEntry};
 use super::{data_dir, plugins_root, require_id, MANIFEST};
@@ -89,6 +89,11 @@ pub fn plugins_installed(app: tauri::AppHandle) -> Result<Vec<InstalledPlugin>, 
             }
         }
     }
+    for script in super::scripts::scripts(&app) {
+        if !out.iter().any(|p| p.id == script.id) {
+            out.push(script);
+        }
+    }
     out.sort_by(|a, b| a.id.cmp(&b.id));
     Ok(out)
 }
@@ -149,6 +154,100 @@ pub(super) fn install_sync(
     })();
     if staging.exists() {
         let _ = std::fs::remove_dir_all(&staging);
+    }
+    result
+}
+
+/// A plugin's files as text, by path in the plugin: what Textus AI writes
+/// when it makes one (src/ai/chat/ReplyPlugins.tsx).
+#[derive(Deserialize, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
+pub struct PluginFile {
+    pub path: String,
+    pub text: String,
+}
+
+/// The most a plugin made in the conversation may hold, all files together.
+const MAX_WRITTEN_BYTES: usize = 2 * 1024 * 1024;
+
+/// Writes `files` into a folder of their own, then installs it as a package
+/// is installed: the same checks, the same place, replacing an earlier
+/// version of the same plugin - the AI's next draft of it.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn plugin_install_files(
+    app: tauri::AppHandle,
+    files: Vec<PluginFile>,
+) -> Result<InstalledPlugin, String> {
+    tauri::async_runtime::spawn_blocking(move || install_files_sync(&app, &files))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+/// Whether `path` is a plain relative path inside the plugin: no root, no
+/// `..`, no drive, nothing hidden.
+fn plain_relative(path: &str) -> bool {
+    let p = Path::new(path);
+    !path.is_empty()
+        && !path.contains('\\')
+        && p.components().all(|c| match c {
+            std::path::Component::Normal(name) => !name.to_string_lossy().starts_with('.'),
+            _ => false,
+        })
+}
+
+/// A plugin written in the conversation is the user's own: its id is
+/// `local.…`, so it can never replace an official plugin or anyone
+/// else's - a change to one of those is a copy beside it.
+fn written_id(manifest: &str) -> Result<String, String> {
+    let id = serde_json::from_str::<serde_json::Value>(manifest)
+        .ok()
+        .and_then(|m| m["id"].as_str().map(str::to_string))
+        .ok_or_else(|| format!("{MANIFEST} has no id."))?;
+    if !id.starts_with("local.") {
+        return Err(format!(
+            "A plugin written in the conversation needs an id starting with local. - {id} is someone else's."
+        ));
+    }
+    Ok(id)
+}
+
+pub(super) fn install_files_sync(
+    app: &tauri::AppHandle,
+    files: &[PluginFile],
+) -> Result<InstalledPlugin, String> {
+    let total: usize = files.iter().map(|f| f.text.len()).sum();
+    if total > MAX_WRITTEN_BYTES {
+        return Err("The plugin is too big to install from the conversation.".into());
+    }
+    let Some(manifest) = files.iter().find(|f| f.path == MANIFEST) else {
+        return Err(format!("No {MANIFEST} among the plugin's files."));
+    };
+    written_id(&manifest.text)?;
+    let root = plugins_root(app)?;
+    std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
+    let folder = root.join(format!(
+        ".written-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0)
+    ));
+    let result = (|| {
+        for file in files {
+            if !plain_relative(&file.path) {
+                return Err(format!("A plugin file can't be at {}.", file.path));
+            }
+            let target = folder.join(&file.path);
+            if let Some(parent) = target.parent() {
+                std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+            }
+            std::fs::write(&target, &file.text).map_err(|e| e.to_string())?;
+        }
+        install_sync(app, &folder)
+    })();
+    if folder.exists() {
+        let _ = std::fs::remove_dir_all(&folder);
     }
     result
 }
@@ -258,10 +357,14 @@ pub fn plugin_load_dev(app: tauri::AppHandle, path: String) -> Result<InstalledP
 pub fn plugin_dev_stamp(app: tauri::AppHandle, id: String) -> Result<Option<f64>, String> {
     require_id(&id)?;
     let state = state::read(&app);
-    let Some(path) = state.plugins.get(&id).and_then(|p| p.dev_path.clone()) else {
-        return Ok(None);
-    };
-    Ok(newest_change(&PathBuf::from(path), 0))
+    if let Some(path) = state.plugins.get(&id).and_then(|p| p.dev_path.clone()) {
+        return Ok(newest_change(&PathBuf::from(path), 0));
+    }
+    // A script runs from the scripts folder: a change to one of them
+    // reloads it.
+    Ok(super::scripts::script_file(&app, &id)
+        .and_then(|_| super::scripts::scripts_dir(&app).ok())
+        .and_then(|dir| newest_change(&dir, 0)))
 }
 
 fn newest_change(dir: &std::path::Path, depth: usize) -> Option<f64> {
@@ -309,7 +412,13 @@ pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String>
     if data.is_dir() {
         std::fs::remove_dir_all(&data).map_err(|e| e.to_string())?;
     }
-    Ok(())
+    super::store::forget_global(&app, &id)?;
+    // A script's file goes to the Trash, or it would be found again.
+    #[cfg(desktop)]
+    if let Some(file) = super::scripts::script_file(&app, &id) {
+        trash::delete(&file).map_err(|e| e.to_string())?;
+    }
+    super::files::forget_secrets(&app, &id)
 }
 
 /// The picker for Install from file… (a `.textusplugin`) or, with
@@ -341,6 +450,29 @@ pub async fn plugin_pick_package(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_written_plugin_is_the_users_own() {
+        assert_eq!(
+            written_id(r#"{"id":"local.word-count"}"#).unwrap(),
+            "local.word-count"
+        );
+        assert!(written_id(r#"{"id":"catvinci.tasks"}"#)
+            .unwrap_err()
+            .contains("someone else's"));
+        assert!(written_id("{}").is_err());
+    }
+
+    #[test]
+    fn a_written_plugin_file_stays_inside_the_plugin() {
+        assert!(super::plain_relative("host.js"));
+        assert!(super::plain_relative("lib/view.js"));
+        assert!(!super::plain_relative("../host.js"));
+        assert!(!super::plain_relative("/etc/passwd"));
+        assert!(!super::plain_relative(".hidden"));
+        assert!(!super::plain_relative(""));
+        assert!(!super::plain_relative("a\\b.js"));
+    }
+
     use super::*;
     use std::io::Write;
 

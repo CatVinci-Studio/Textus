@@ -15,6 +15,10 @@ import type { Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import { configureEditorRoot } from "../editor/editor-extensions";
+import {
+  documentChangedForPlugins,
+  selectionChangedForPlugins,
+} from "./plugins/plugin-events";
 
 /** The ref-indirected callbacks the plugin chain reads at call time: the
  *  chain is built once, on mount, before the hooks that own the real
@@ -38,6 +42,7 @@ export function useTextusEditor({
   reporting,
   settingsRef,
   filePathRef,
+  isActiveRef,
   tourRef,
   tRef,
   setQuickAskEl,
@@ -50,6 +55,7 @@ export function useTextusEditor({
   // captured at construction time.
   settingsRef: { readonly current: Settings };
   filePathRef: { readonly current: string | null };
+  isActiveRef: { readonly current: boolean };
   tourRef: { readonly current: TourAi | null };
   tRef: { readonly current: Strings };
   setQuickAskEl: Dispatch<SetStateAction<HTMLElement | null>>;
@@ -106,12 +112,19 @@ export function useTextusEditor({
             .updated((ctx, doc) => {
               reportedDocRef.current = doc;
               reportDoc(ctx, doc);
+              documentChangedForPlugins(
+                isActiveRef.current,
+                filePathRef.current,
+              );
             })
             // Every new selection has to reach the detached chat window as a
             // fresh selection chip - that surface is defined by following
             // the user's work rather than a snapshot. Read through a ref
             // because this chain is built once, on mount.
-            .selectionUpdated(() => onSelectionChangeRef.current());
+            .selectionUpdated((ctx) => {
+              onSelectionChangeRef.current();
+              selectionChangedForPlugins(isActiveRef.current, ctx);
+            });
         }),
         settingsRef,
         filePathRef,

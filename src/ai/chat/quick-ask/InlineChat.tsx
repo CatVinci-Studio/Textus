@@ -213,7 +213,8 @@ export function InlineChat({
           docPath={docPath}
           workspaceRoot={workspaceRoot}
           conversation={conversation}
-          defaultMode={defaultMode}
+          // Quick Ask has no Create: a default of Create starts in Write.
+          defaultMode={defaultMode === "create" ? "write" : defaultMode}
           defaultWebSearch={defaultWebSearch}
           onSkillUsed={onSkillUsed}
           labels={labels}

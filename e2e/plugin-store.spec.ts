@@ -3,18 +3,18 @@ import { openApp } from "./helpers";
 
 /**
  * A plugin's own data (src-tauri plugins/store.rs, through the dev shim):
- * `textus.storage.global` for every document, `textus.storage.project` in
+ * `ctx.storage.global` for every document, `ctx.storage.project` in
  * the open folder's `.textus/plugins/<id>/` - the project's only with
  * project.data, and one plugin never sees another's.
  */
 
 const HOST = `
-exports.activate = function () {
-  textus.commands.registerCommand("test.keep.save", async function () {
-    const g = textus.storage.global;
-    const p = textus.storage.project;
+exports.activate = function (ctx) {
+  textus.commands.register("test.keep.save", async function () {
+    const g = ctx.storage.global;
+    const p = ctx.storage.project;
     await g.set("count", ((await g.get("count")) || 0) + 1);
-    await textus.storage.set("legacy", "same as global");
+    await g.set("legacy", "same as global");
     let project = "refused";
     try {
       await p.set("board", { cards: 2 });
@@ -23,7 +23,7 @@ exports.activate = function () {
     } catch (err) {
       project = "refused: " + err.message;
     }
-    await textus.window.showMessage(
+    await textus.ui.message(
       "global " + (await g.get("count")) + " " + (await g.keys()).join(",") +
         " | project " + project,
     );
@@ -149,4 +149,34 @@ test("its page says what a plugin keeps, and Clear empties it", async ({
       ),
     ),
   ).toEqual([]);
+});
+
+test("uninstalled, a plugin's own data and secrets go; the project's stays", async ({
+  page,
+}) => {
+  await open(page, ["project.data"]);
+  await save(page);
+  await expect(page.getByText(/^global 1 /)).toBeVisible();
+  await page.getByRole("button", { name: "OK" }).click();
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-manage-plugins"),
+  );
+  await page
+    .locator('.plugin-card[data-plugin="test.keep"] .plugin-card-open')
+    .click();
+  const own = page.locator('[data-plugin-page="test.keep"]');
+  await own.getByRole("button", { name: "Uninstall", exact: true }).click();
+  await page
+    .locator(".app-dialog")
+    .getByRole("button", { name: "Uninstall" })
+    .click();
+  await expect(
+    page.locator('.plugin-card[data-plugin="test.keep"]'),
+  ).toHaveCount(0);
+  const stores = await page.evaluate(
+    () => (window as unknown as { __devPluginStore: object }).__devPluginStore,
+  );
+  expect(Object.keys(stores)).toEqual(["test.keep|project|/work/notes"]);
 });

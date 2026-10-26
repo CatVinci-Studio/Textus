@@ -34,6 +34,9 @@ const AGENT_TOOL_INSTRUCTIONS: &str = "If what the user is asking for ends up as
 /// The rules engine's two tools, in every mode (tools.rs).
 const RULES_TOOL_INSTRUCTIONS: &str = "When you proofread or fix conventions, ground your changes in what check_conventions reports instead of guessing, and change only what it flags or what you are certain of; its \"check\" findings only point at something to look at. When a platform's limit matters, measure the exact text with measure_text before proposing it, and give the count in your reply. A length the user asks for (\"800 字\", \"about 500 words\") is a target, not a platform's limit: write the text straight into propose_edit - the user watches it come in, and its result tells you its size - and never write it out first in measure_text or check_conventions, where the user sees nothing while you draft. Conventions in proposed text are fixed on the way, so new writing needs no check first either.";
 
+/// Create mode's tools: reading only, and what is made goes in the reply.
+pub(super) const AGENT_CREATE_TOOL_INSTRUCTIONS: &str = "No document edit or comment tool is available in this mode: what you make - a theme, a plugin, a skill - goes in your reply as files in fenced code blocks, exactly as the skill for it says. Read the document, the project or the web only when the request needs them.";
+
 pub(super) const AGENT_READ_ONLY_TOOL_INSTRUCTIONS: &str = "No document edit tool is available in this mode: you can read, research and comment. For feedback on specific passages, pin the points with add_comment - all of them in one call's `comments`, one per point (each word, when asked to gloss words), in document order - and write your short summary in the same message, before the call: when the comments are valid the request ends there, with that text as your reply, so write it as done (\"Marked the twelve hardest words\"), not as a plan (\"I'll mark the hard words\") - and never send some now and the rest later.";
 
 /// What the assistant is called in the UI and what its Settings page is
@@ -127,14 +130,16 @@ pub(super) const APP_GUIDE_POINTER: &str = "Textus's own features - the project 
 /// The app guide (see APP_GUIDE).
 pub(crate) fn app_guide() -> String {
     format!(
-        "What the app calls the things that shape your work, in its English UI: the project folder, whose .textus/ folder holds the project's own settings. The writing instructions: agent.md files in the global config folder and in .textus/, shown to you under ---user instructions--- headings and used only in conversations; the global ones open from Settings > {AI_NAME} > Writing Instructions (agent.md) > Edit agent.md, the project's from Edit project writing instructions in the project menu. Skills: reusable instructions the user calls with /name, or that you load when a request matches one, each one Markdown file - a name and a one-line description at the top, then the instructions. The app ships built-in skills, listed in Settings > {AI_NAME} > Built-in skills, where each has a switch to turn it off and Customize…, which copies it into the global config folder's skills/ and opens the copy to edit (Reset deletes the copy and brings the built-in back); the user's own skills go in .textus/skills/ or in the global config folder's skills/ (Settings > {AI_NAME} > Skills > Import Skill… copies a file there), and one with a built-in skill's name replaces it. The library: one file per person, place or term in .textus/library, an entry sent to you whenever its name or an alias appears in the user's message or the open document (aliases go on an `aliases:` line at the top of the entry); New library entry… in the project menu starts one. The style profile: .textus/style.md, sent to you as ---the author's style profile---; Learn my style from samples… in the project menu drafts it from the user's own writing (\"Learn my style\"), Create style profile starts an empty one, and once it exists Open style profile in the menu, or the Style chip next to the folder name, opens it. Writing conventions (Settings > {AI_NAME}, under Writing Assistance) picks the punctuation, spacing and number norms you, the grammar check and check_conventions follow - Automatic, or one profile such as en-GB/govuk for documents in that language; a `conventions:` line in the style profile's front matter overrides it for the project. The style profile and the library also shape completion, the grey suggestions as the user types; Enable AI completion in Settings > {AI_NAME}, under Writing Assistance, turns completion on or off, and Completion tone there sets its register. What you remember: what Textus AI keeps after each conversation, one small file each - the user's personal memories in the global config folder's memory/, the project's in .textus/memory/, facts about the work as library entries - shown with Undo under your reply and listed in the AI panel's Memory tab, where the user can edit, delete or move each one; Remember automatically in Settings > {AI_NAME} turns it on or off. The panel's modes are Write, which writes in the document - new text, and changes to the text already there - and Review, which only reads and comments; the user applies a proposal with Accept or drops it with Reject.\nAsked how to do something in the app, answer in two to four plain sentences: what to use, where it is and what it does - for a skill, first a built-in skill that already does it (named as their UI names it) and Customize… to adapt it, before writing one from scratch - no headings or code blocks, no tips they didn't ask for, and no remarks about their document or their files."
+        "What the app calls the things that shape your work, in its English UI: the project folder, whose .textus/ folder holds the project's own settings. The writing instructions: agent.md files in the global config folder and in .textus/, shown to you under ---user instructions--- headings and used only in conversations; the global ones open from Settings > {AI_NAME} > Writing Instructions (agent.md) > Edit agent.md, the project's from Edit project writing instructions in the project menu. Skills: reusable instructions the user calls with /name, or that you load when a request matches one, each one Markdown file - a name and a one-line description at the top, then the instructions. Each panel mode has its own built-in skills, always on - Write: expand, tighten, translate, summarize; Review: proofread, continuity; Create: theme, plugin, skill - listed under Built-in skills in Settings > Extensions > Skills, each with Customize…, which copies it into the global config folder's skills/ and opens the copy to edit (Reset deletes the copy and brings the built-in back). Every other skill is the user's: installed from Get more there (the market), made in Create mode, or written by hand in .textus/skills/ or the global config folder's skills/ (Import Skill… copies a file there); each applies in the modes ticked beside it in that list, and one with a built-in skill's name replaces it. The / menu and you only use the current mode's skills. The library: one file per person, place or term in .textus/library, an entry sent to you whenever its name or an alias appears in the user's message or the open document (aliases go on an `aliases:` line at the top of the entry); New library entry… in the project menu starts one. The style profile: .textus/style.md, sent to you as ---the author's style profile---; Learn my style from samples… in the project menu drafts it from the user's own writing (\"Learn my style\"), Create style profile starts an empty one, and once it exists Open style profile in the menu, or the Style chip next to the folder name, opens it. Writing conventions (Settings > {AI_NAME}, under Writing Assistance) picks the punctuation, spacing and number norms you, the grammar check and check_conventions follow - Automatic, or one profile such as en-GB/govuk for documents in that language; a `conventions:` line in the style profile's front matter overrides it for the project. The style profile and the library also shape completion, the grey suggestions as the user types; Enable AI completion in Settings > {AI_NAME}, under Writing Assistance, turns completion on or off, and Completion tone there sets its register. What you remember: what Textus AI keeps after each conversation, one small file each - the user's personal memories in the global config folder's memory/, the project's in .textus/memory/, facts about the work as library entries - shown with Undo under your reply and listed in the AI panel's Memory tab, where the user can edit, delete or move each one; Remember automatically in Settings > {AI_NAME} turns it on or off. The panel's modes are Write, which writes in the document - new text, and changes to the text already there - Review, which only reads and comments, and Create, which makes a theme, a plugin or a skill for the app as files in the reply, installed or saved with one click under it; the user applies a proposal with Accept or drops it with Reject.\nAsked how to do something in the app, answer in two to four plain sentences: what to use, where it is and what it does - for a skill, first a built-in skill that already does it (named as their UI names it) and Customize… to adapt it, before writing one from scratch - no headings or code blocks, no tips they didn't ask for, and no remarks about their document or their files."
     )
 }
 
 /// The conversation's mode, picked in the composer. Mirrors `AgentMode` in
 /// src/settings/SettingsContext.tsx. It decides what propose_edit may do
-/// (tools::builtin_tools) and what the prompt says the user is here for.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+/// (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
+/// and what the prompt says the user is here for.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "lowercase")]
 pub enum AgentMode {
     /// Reads, answers and comments: no propose_edit.
@@ -144,6 +149,22 @@ pub enum AgentMode {
     /// this one.
     #[serde(alias = "revise")]
     Write,
+    /// Makes things for the app itself - a theme, a plugin, a skill - as
+    /// files in the reply, which the chat offers to install: no
+    /// propose_edit, no comments.
+    Create,
+}
+
+impl AgentMode {
+    /// The mode a skill file's `textus-modes` word names.
+    pub fn from_word(word: &str) -> Option<Self> {
+        match word.trim().to_ascii_lowercase().as_str() {
+            "write" | "revise" => Some(AgentMode::Write),
+            "review" => Some(AgentMode::Review),
+            "create" => Some(AgentMode::Create),
+            _ => None,
+        }
+    }
 }
 
 impl std::fmt::Display for AgentMode {
@@ -151,6 +172,7 @@ impl std::fmt::Display for AgentMode {
         f.write_str(match self {
             AgentMode::Review => "review",
             AgentMode::Write => "write",
+            AgentMode::Create => "create",
         })
     }
 }
@@ -182,10 +204,10 @@ pub(crate) fn build_instructions(
 
     if with_tools {
         sections.push(
-            if mode == AgentMode::Review {
-                AGENT_READ_ONLY_TOOL_INSTRUCTIONS
-            } else {
-                AGENT_TOOL_INSTRUCTIONS
+            match mode {
+                AgentMode::Review => AGENT_READ_ONLY_TOOL_INSTRUCTIONS,
+                AgentMode::Write => AGENT_TOOL_INSTRUCTIONS,
+                AgentMode::Create => AGENT_CREATE_TOOL_INSTRUCTIONS,
             }
             .to_string(),
         );
@@ -221,7 +243,7 @@ pub(crate) fn build_instructions(
     // The skill index: names + descriptions only. Bodies load on demand via
     // use_skill, so a large skill library costs almost nothing per request.
     // /name-only skills (and turned-off built-ins) aren't offered.
-    let index = skill_index(workspace, ui_language);
+    let index = skill_index(workspace, mode, ui_language);
     if with_tools && !index.is_empty() {
         // A /name the user typed arrives already expanded in a <skill> block
         // (builtin::expand_message); loading it again cost a round trip of
@@ -266,6 +288,7 @@ pub(super) fn mode_section(mode: AgentMode, ui_language: &str) -> String {
     };
     match mode {
         AgentMode::Review => format!("---interaction mode: review---\nThe user is in {}: answer, explain, discuss or research, and pin feedback to passages with add_comment; you can't change the document here. When they ask for a change anyway, give the new text in your reply and say that in {} you can propose it for them to apply with one click.", named("Review", true), named("Write", false)),
+        AgentMode::Create => format!("---interaction mode: create---\nThe user is in {}: they are making something for the app itself - an editor theme, a plugin or a skill - not working on the document. Load the skill marked [create] that matches what they ask for and deliver what it makes as files in fenced code blocks in your reply, which the chat offers to install or save; read the document or the project only when the request is about them. Questions about the app still get a plain reply. For writing in the document, send them to {}.", named("Create", true), named("Write", false)),
         AgentMode::Write => format!("---interaction mode: write---\nThe user is in {}: carry out their request on the document - continue it, add a paragraph, section, list, scene or dialogue, or rewrite, tighten, fix, translate, restructure or delete what is there - and submit every document change through propose_edit so they can review it before applying. Where new text goes, when the request doesn't say: with a <selected-text> block, a change to the selection (rewrite it, translate it, shorten it) replaces it with replace_selection, while more text (continue, add) goes right after it - insert_after with the selection's last sentence (or the whole selection) as `anchor`; otherwise, with a <cursor> block in a document that has text, insert_at_cursor; in an empty document, append. Questions and feedback still get a plain reply. {UNDECIDED_TEXT}", named("Write", true)),
     }
 }
@@ -333,12 +356,16 @@ pub(super) const INDEX_DESCRIPTION_CHARS: usize = 500;
 /// doesn't exist (round 4, concept/zh/library). Depends only on the
 /// workspace and the UI language, so the system prompt stays byte-identical
 /// across a conversation.
-pub(crate) fn skill_index(workspace: &AgentWorkspace, ui_language: &str) -> String {
+pub(crate) fn skill_index(
+    workspace: &AgentWorkspace,
+    mode: AgentMode,
+    ui_language: &str,
+) -> String {
     use crate::ai::workspace::SkillSource;
     let mut offered: Vec<&crate::ai::workspace::AgentSkill> = workspace
         .skills
         .iter()
-        .filter(|s| s.offered_to_model())
+        .filter(|s| s.offered_to_model() && s.modes.contains(&mode))
         .collect();
     let rank = |s: &crate::ai::workspace::AgentSkill| {
         let layer = match s.source {

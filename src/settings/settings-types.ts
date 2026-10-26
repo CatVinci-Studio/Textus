@@ -121,11 +121,12 @@ export type ImageHost = "picgo" | "smms" | "imgur" | "custom";
 export const IMAGE_HOSTS: ImageHost[] = ["picgo", "smms", "imgur", "custom"];
 export type ImageNamingMode = "auto" | "original" | "ask";
 /** The AI conversation's mode: Write adds text and changes the text that
- *  is there, Review only reads and comments. Mirrors `AgentMode` in
+ *  is there, Review only reads and comments, Create makes a theme, a
+ *  plugin or a skill for the app. Mirrors `AgentMode` in
  *  src-tauri/src/ai/agent/prompt.rs. In the order the composer offers
  *  them. */
-export type AgentMode = "write" | "review";
-export const AGENT_MODES: readonly AgentMode[] = ["write", "review"];
+export type AgentMode = "write" | "review" | "create";
+export const AGENT_MODES: readonly AgentMode[] = ["write", "review", "create"];
 
 /** A stored mode, or null for anything that isn't one of today's - 1.2.0's
  *  Revise, folded into Write in 1.2.1, reads as Write. */
@@ -243,7 +244,7 @@ export interface Settings {
   /// The MCP servers Textus AI may use (Settings › Extensions › MCP),
   /// read by Rust from the settings file (src-tauri mcp/mod.rs).
   mcpServers: McpServer[];
-  /// Each plugin's settings, by plugin id (src/plugins/plugin-settings.ts);
+  /// Each plugin's settings, by plugin id (src/plugins/store/plugin-settings.ts);
   /// a project's `.textus/settings.json` holds the same, over these.
   plugins: Record<string, Record<string, unknown>>;
   /// Settings > Textus AI > Suggest your next message: after each reply,
@@ -277,7 +278,7 @@ export interface Settings {
   typewriterMode: boolean;
   contentWidth: ContentWidth;
   /// Windows and Linux, where the app draws the window bar: File, Edit,
-  /// View and the rest along it (app/MenuBar.tsx) instead of behind ☰.
+  /// View and the rest along it (app/menu/MenuBar.tsx) instead of behind ☰.
   /// Off by default; on, the bar has no sidebar button (the sidebar is in
   /// View and has its shortcut).
   menuBarShown: boolean;
@@ -302,6 +303,9 @@ export interface Settings {
   /// the document has its own zoom, above.
   uiTextScale: UiTextScale;
   shortcuts: Shortcuts;
+  /** The keys of plugins' commands as the user set them, by command id,
+   *  over their manifests' keybindings; "" for none. */
+  commandShortcuts: Record<string, string>;
   /// Either a built-in theme id (theme/builtin-themes.ts) or a
   /// `UserThemeMeta.id`.
   themeId: string;
@@ -409,6 +413,7 @@ export const DEFAULT_SETTINGS: Settings = {
   zoom: 1,
   uiTextScale: 1,
   shortcuts: DEFAULT_SHORTCUTS,
+  commandShortcuts: {},
   themeId: "default",
   userThemes: [],
   newDocumentMode: "window",

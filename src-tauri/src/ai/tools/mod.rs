@@ -94,7 +94,9 @@ pub enum Access {
 }
 
 /// The modes a tool is offered in.
-pub const EVERY_MODE: &[AgentMode] = &[AgentMode::Review, AgentMode::Write];
+pub const EVERY_MODE: &[AgentMode] = &[AgentMode::Review, AgentMode::Write, AgentMode::Create];
+/// Write and Review: the modes that work on the document (comments).
+pub const DOCUMENT_MODES: &[AgentMode] = &[AgentMode::Review, AgentMode::Write];
 /// Write: the modes that change the document.
 pub const EDITING_MODES: &[AgentMode] = &[AgentMode::Write];
 

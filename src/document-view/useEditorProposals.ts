@@ -40,7 +40,7 @@ import { resolveStrings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
 import { announce } from "../ui/announce";
 import { plural } from "../i18n/plural";
-import { usePluginDocumentAccess } from "./usePluginDocumentAccess";
+import { usePluginDocumentAccess } from "./plugins/usePluginDocumentAccess";
 import { useKeptProposals } from "../ai/revision/useKeptProposals";
 
 /** The editor's side of AI edits: the pending previews (usePendingEdits),

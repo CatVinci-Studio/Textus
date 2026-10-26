@@ -1,4 +1,4 @@
-import { heldByPlugin } from "../plugins/editor-input";
+import { heldByPlugin } from "../plugins/contributions/editor-input";
 import { useEffect } from "react";
 import { cycleRegion, trackRegionFocus } from "./regions";
 import { useSettings, type HeadingAction } from "../settings/SettingsContext";
@@ -9,7 +9,7 @@ import {
   appDrawsWindowFrame,
   ownsMenuAccelerators,
 } from "../platform/window-chrome";
-import { runLocalMenuAction } from "./app-menu-actions";
+import { runLocalMenuAction } from "./menu/app-menu-actions";
 import { canOpenFolder } from "../platform/capabilities";
 import { comboFromEvent } from "../utils/shortcuts";
 import { menuIpc } from "../platform/ipc";
@@ -22,6 +22,8 @@ import {
   TOGGLE_FIND_REPLACE_EVENT,
   INSERT_BLOCK_EVENT,
 } from "../utils/events";
+import { closeSplit, splitEditor, splitLayout } from "./split/split-layout";
+import { openCommandPalette } from "./command-palette";
 
 /** The heading shortcuts, by the Format menu's block kind they apply
  *  (INSERT_BLOCK_EVENT). */
@@ -236,6 +238,14 @@ export function useGlobalShortcuts(opts: {
       } else if (combo === shortcuts.toggleZenMode) {
         e.preventDefault();
         toggleZenMode();
+      } else if (combo === shortcuts.commandPalette) {
+        e.preventDefault();
+        void openCommandPalette();
+      } else if (combo === shortcuts.splitEditor) {
+        // Split side by side, and the same keys go back to one.
+        e.preventDefault();
+        if (splitLayout()) closeSplit();
+        else splitEditor("row");
       } else if (canOpenFolder && combo === shortcuts.searchFiles) {
         e.preventDefault();
         searchFiles();
@@ -248,7 +258,7 @@ export function useGlobalShortcuts(opts: {
       } else {
         // A command added from outside (commands.ts), on a combo none of
         // the app's own has taken.
-        const command = commandForCombo(combo);
+        const command = commandForCombo(combo, settings.commandShortcuts);
         if (command) {
           e.preventDefault();
           command.run();

@@ -1,4 +1,5 @@
 import type { CaretPlace } from "./tab-caret";
+import type { DocumentPlace } from "../plugins/app-bridge";
 
 /**
  * Where a tab's editor should put the reader once it is on screen: handed
@@ -13,7 +14,10 @@ export type TabJump =
   | { kind: "heading"; anchor: string }
   /** A document reopened (the last session, Open Recent): the caret where
    *  it was left (tab-caret.ts). */
-  | { kind: "caret"; at: CaretPlace };
+  | { kind: "caret"; at: CaretPlace }
+  /** A plugin opened it at a place (textus.layout.open): a block, a line,
+   *  some words, a heading (document-view/plugins/plugin-edits.ts). */
+  | { kind: "place"; place: DocumentPlace };
 
 const pending = new Map<string, TabJump>();
 const listeners = new Set<(tabId: string) => void>();

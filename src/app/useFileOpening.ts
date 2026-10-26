@@ -26,14 +26,19 @@ import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
 import { isWordDocument, wordDocumentTab } from "../document/word-import";
 import { showMessage } from "../ui/app-dialog";
-import { loadPlugins } from "../plugins/manager";
-import { customEditorFor } from "../plugins/plugin-lookup";
+import { loadPlugins, revealInPluginTab } from "../plugins/manager";
+import type { DocumentPlace } from "../plugins/app-bridge";
+import type { Where } from "../plugins/app-bridge";
+import { customEditorFor } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
+import { useLatest } from "../utils/hooks/useLatest";
+import { openBeside } from "./split/split-layout";
 import { errorText } from "../utils/error-text";
 import type { Strings } from "../i18n/strings";
 import type { NewDocumentMode } from "../settings/SettingsContext";
 import type { PendingClose } from "./close-flow";
-import type { TabState } from "./useTabState";
+import type { TabState } from "./tabs/useTabState";
+import { splitForDrop, type DropTarget } from "./split/split-drop";
 
 /** How a document opens, beyond which file. */
 export interface OpenOptions {
@@ -46,6 +51,15 @@ export interface OpenOptions {
   /** As a document of ours even where a plugin opens that file type - a
    *  Word file the Word reader shows, opened to be edited as Markdown. */
   asDocument?: boolean;
+  /** A plugin opened it at a place (textus.layout.open): gone to once the
+   *  tab shows; a plugin's file editor is given it as its target. */
+  place?: DocumentPlace;
+  /** In a tab of its own (the default), beside the tab in front, or in
+   *  its place (textus.layout.open's `where`). */
+  where?: Where;
+  /** Dragged over the documents and let go there (split-drop.ts): opens
+   *  on the side it was dropped on. */
+  drop?: DropTarget;
 }
 
 /** Where a document just read from disk should open, if not at its top. */
@@ -55,10 +69,35 @@ function openingJump(
   diskMtime: number | null,
   restoreCarets: boolean,
 ): TabJump | null {
+  if (open.place) return { kind: "place", place: open.place };
   if (open.anchor) return { kind: "heading", anchor: open.anchor };
   const at =
     open.restoreCaret && restoreCarets ? lastCaret(path, diskMtime) : null;
   return at && { kind: "caret", at };
+}
+
+/** The tab a plugin's custom editor opens `path` in (a PDF, a board). */
+function pluginTab(
+  path: string,
+  editor: NonNullable<ReturnType<typeof customEditorFor>>,
+  target?: DocumentPlace,
+): Partial<DocTab> {
+  void session.addRecentFile(path);
+  return {
+    path: null,
+    content: "",
+    savedContent: "",
+    diskMtime: null,
+    importedFrom: undefined,
+    view: {
+      plugin: editor.plugin,
+      view: editor.viewType,
+      kind: "editor",
+      resource: path,
+      title: editor.title,
+      ...(target ? { target: { path, ...target } } : {}),
+    },
+  };
 }
 
 /**
@@ -98,29 +137,14 @@ export function useFileOpening(opts: {
     async (
       path: string,
       asDocument = false,
+      place?: DocumentPlace,
     ): Promise<Partial<DocTab> | null> => {
       // A file type a plugin opens - a PDF, a board - is its tab, not a
       // document (plugins/manager.ts). The plugins are read first: a file
       // opened as the app starts may come before them.
       if (!asDocument) await loadPlugins().catch(() => {});
       const editor = asDocument ? null : customEditorFor(path);
-      if (editor) {
-        void session.addRecentFile(path);
-        return {
-          path: null,
-          content: "",
-          savedContent: "",
-          diskMtime: null,
-          importedFrom: undefined,
-          view: {
-            plugin: editor.plugin,
-            view: editor.viewType,
-            kind: "editor",
-            resource: path,
-            title: editor.title,
-          },
-        };
-      }
+      if (editor) return pluginTab(path, editor, place);
       if (isWordDocument(path)) {
         try {
           const doc = await wordDocumentTab(path);
@@ -134,7 +158,22 @@ export function useFileOpening(opts: {
           return null;
         }
       }
-      const { content, diskMtime } = await readDocFromDisk(path);
+      let disk: { content: string; diskMtime: number | null };
+      try {
+        disk = await readDocFromDisk(path);
+      } catch (err) {
+        // Not text - a PDF, a picture: a plugin in the market may open it,
+        // offered then and there (plugins/store/open-offer.ts).
+        if (asDocument) throw err;
+        const { offerPluginToOpen } =
+          await import("../plugins/store/open-offer");
+        const now = (await offerPluginToOpen(path, t))
+          ? customEditorFor(path)
+          : null;
+        if (now) return pluginTab(path, now, place);
+        throw err;
+      }
+      const { content, diskMtime } = disk;
       void session.addRecentFile(path); // feeds File > Open Recent
       return {
         path,
@@ -148,8 +187,26 @@ export function useFileOpening(opts: {
     [t, onWordDocumentOpened],
   );
 
+  const activeIdRef = useLatest(activeTabId);
   const openPathInTab = useCallback(
     async (path: string, open: OpenOptions = {}) => {
+      // Beside the tab in front when asked (split-layout.ts): once the
+      // tab is among the window's, the next frame.
+      const from = activeIdRef.current;
+      const show = (id: string) => {
+        setActiveTabId(id);
+        const { drop } = open;
+        if (open.where === "beside")
+          requestAnimationFrame(() => openBeside(id, from));
+        else if (drop)
+          requestAnimationFrame(() =>
+            splitForDrop(
+              id,
+              drop,
+              tabsRef.current.map((tab) => tab.id),
+            ),
+          );
+      };
       const existing = tabsRef.current.find(
         (tab) =>
           tab.path === path ||
@@ -157,26 +214,38 @@ export function useFileOpening(opts: {
           (!open.asDocument && tab.view?.resource === path),
       );
       if (existing) {
+        // A plugin's file editor is asked to show the place itself.
+        if (open.place && existing.view?.kind === "editor")
+          revealInPluginTab(existing.id, { path, ...open.place });
+        else if (open.place && !existing.sourceMode)
+          setTabJump(existing.id, { kind: "place", place: open.place }, true);
         // Source Mode has no headings to scroll to: the tab just comes up.
-        if (open.anchor && !existing.sourceMode)
+        else if (open.anchor && !existing.sourceMode)
           setTabJump(
             existing.id,
             { kind: "heading", anchor: open.anchor },
             true,
           );
-        setActiveTabId(existing.id);
+        show(existing.id);
         return;
       }
-      const doc = await readDocument(path, open.asDocument);
+      const doc = await readDocument(path, open.asDocument, open.place);
       if (!doc) return;
       const newTab: DocTab = { ...makeBlankTab(), ...doc };
       const jump =
         newTab.path && openingJump(open, path, newTab.diskMtime, restoreCarets);
       if (jump) setTabJump(newTab.id, jump);
       setTabs((prev) => [...prev, newTab]);
-      setActiveTabId(newTab.id);
+      show(newTab.id);
     },
-    [tabsRef, setTabs, setActiveTabId, restoreCarets, readDocument],
+    [
+      tabsRef,
+      activeIdRef,
+      setTabs,
+      setActiveTabId,
+      restoreCarets,
+      readDocument,
+    ],
   );
 
   // "window" mode's actual replace step, shared between the no-dirty fast
@@ -199,7 +268,8 @@ export function useFileOpening(opts: {
 
   const openFile = useCallback(
     async (path: string, open: OpenOptions = {}) => {
-      if (newDocumentMode === "tab") {
+      // Beside the one in front is a tab of its own in either mode.
+      if (newDocumentMode === "tab" || open.where === "beside" || open.drop) {
         await openPathInTab(path, open);
         return;
       }

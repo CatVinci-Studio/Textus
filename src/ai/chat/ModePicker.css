@@ -1,0 +1,65 @@
+/* The composer's mode and model (ModePicker.tsx): the mode select's frame
+   (design-system.css, .inline-chat-mode) holding "Write · gpt-6.1-sol".
+   When the row is narrow the model's name gives way first, cut short; the
+   mode's never does. */
+.mode-picker {
+  gap: 0;
+  min-width: 0;
+}
+
+.mode-picker-value {
+  flex: none;
+}
+
+.mode-picker-model {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--editor-muted);
+}
+
+.mode-picker-model::before {
+  content: "·";
+  padding: 0 0.4em;
+}
+
+/* Beside the composer's tools, it is what gives way (inline-chat.css keeps
+   the others at their size) - but never below the mode's name. */
+.inline-chat-toolbar > .mode-picker {
+  flex: 0 1 auto;
+  min-width: 64px;
+}
+
+/* The list: the modes, each with a line on what it does, then the models
+   by provider. Wider than the trigger, as the lines need. */
+.mode-picker-menu {
+  min-width: 240px;
+}
+
+.ui-select-option.mode-picker-mode {
+  white-space: normal;
+}
+
+.mode-picker-mode-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mode-picker-mode-hint {
+  color: var(--editor-muted);
+  font-size: var(--text-xs);
+}
+
+.mode-picker-models {
+  margin-top: 4px;
+  border-top: 1px solid var(--editor-border, var(--border-color));
+  padding-top: 8px;
+}
+
+.mode-picker-provider {
+  padding: 4px 10px 2px 26px;
+  color: var(--editor-muted);
+  font-size: var(--text-xs);
+  cursor: default;
+}

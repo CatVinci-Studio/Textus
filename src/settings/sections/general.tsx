@@ -1,5 +1,7 @@
 import { errorText } from "../../utils/error-text";
 import { useEffect, useState } from "react";
+import { getVersion } from "@tauri-apps/api/app";
+import { showConfirm } from "../../ui/app-dialog";
 import type { Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import type { Strings } from "../../i18n/strings";
@@ -71,17 +73,7 @@ export function UpdateButton({ t }: { t: Strings }) {
     setPhase("downloading");
     setMessage(t.updateDownloading);
     try {
-      // Neither way out of here asks a window to close first. On Windows
-      // downloadAndInstall never returns: it starts the installer and ends
-      // the process (tauri-plugin-updater calls std::process::exit, which
-      // also skips Rust's exit-time flush) - so what's held back goes now,
-      // and Rust's own 250 ms write lands while the download runs.
-      await flushPendingWrites();
-      await update.downloadAndInstall();
-      // macOS and Linux: anything changed during the download, then the
-      // relaunch (which does flush Rust's files on its way out).
-      await flushPendingWrites();
-      await relaunch();
+      await installAndRelaunch(update);
     } catch (err) {
       setPhase("error");
       setMessage(`${t.updateFailed} ${errorText(err)}`);
@@ -120,6 +112,97 @@ export function UpdateButton({ t }: { t: Strings }) {
   );
 }
 
+/** Downloads `update`, installs it and starts the new Textus. Neither way
+ *  out of here asks a window to close first. On Windows downloadAndInstall
+ *  never returns: it starts the installer and ends the process
+ *  (tauri-plugin-updater calls std::process::exit, which also skips Rust's
+ *  exit-time flush) - so what's held back goes now, and Rust's own 250 ms
+ *  write lands while the download runs. */
+async function installAndRelaunch(update: Update) {
+  await flushPendingWrites();
+  await update.downloadAndInstall();
+  // macOS and Linux: anything changed during the download, then the
+  // relaunch (which does flush Rust's files on its way out).
+  await flushPendingWrites();
+  await relaunch();
+}
+
+/**
+ * On a beta with the channel set back to Stable: Go Back to Stable, which
+ * installs the newest stable release even though it is older than the
+ * beta - after asking, as it goes back in time. Nothing else ever installs
+ * an older version (src-tauri/src/commands/update.rs).
+ */
+function BackToStable({ t }: { t: Strings }) {
+  const [version, setVersion] = useState("");
+  const [phase, setPhase] = useState<"idle" | "working" | "none" | "error">(
+    "idle",
+  );
+  const [message, setMessage] = useState("");
+  useEffect(() => {
+    void getVersion()
+      .then((v) => setVersion(v ?? ""))
+      .catch(() => {});
+  }, []);
+  // Only a pre-release has a stable version to go back to.
+  if (!version.includes("-")) return null;
+
+  async function goBack() {
+    setPhase("working");
+    setMessage("");
+    try {
+      const found = await updater.check("stable", true);
+      if (!found) {
+        setPhase("none");
+        setMessage(t.backToStableNone);
+        return;
+      }
+      const ok = await showConfirm(
+        t.backToStableConfirm
+          .replace("{version}", found.version)
+          .replace("{beta}", version),
+        {
+          okLabel: t.backToStableInstall.replace("{version}", found.version),
+          cancelLabel: t.cancel,
+        },
+      );
+      if (!ok) {
+        setPhase("idle");
+        return;
+      }
+      setMessage(t.updateDownloading);
+      await installAndRelaunch(found);
+    } catch (err) {
+      setPhase("error");
+      setMessage(`${t.updateFailed} ${errorText(err)}`);
+    }
+  }
+
+  return (
+    <SettingRow
+      label={t.backToStableLabel}
+      hint={t.backToStableHint.replace("{version}", version)}
+    >
+      <button
+        type="button"
+        className="text-button settings-inline-button"
+        disabled={phase === "working"}
+        onClick={() => void goBack()}
+      >
+        {t.backToStableButton}
+      </button>
+      {message && (
+        <div
+          className={`settings-about-status${phase === "error" ? " settings-error" : ""}`}
+          role="status"
+        >
+          {message}
+        </div>
+      )}
+    </SettingRow>
+  );
+}
+
 /**
  * Stable or Beta, under the update button in About Textus. Beta also gets
  * release candidates, always the newest release of either kind; going back
@@ -152,6 +235,7 @@ export function UpdateChannelRow({ t }: { t: Strings }) {
           <option value="beta">{t.updateChannelBeta}</option>
         </Select>
       </SettingRow>
+      {settings.updateChannel === "stable" && <BackToStable t={t} />}
     </div>
   );
 }

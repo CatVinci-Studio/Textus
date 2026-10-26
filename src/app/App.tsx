@@ -8,6 +8,7 @@ import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { useSettings } from "../settings/SettingsContext";
 import { formatCombo } from "../utils/shortcuts";
 import { fixedShortcutGroups } from "./fixed-shortcuts";
+import { commands } from "./commands";
 import { platformName } from "../platform/window-chrome";
 import { Presence } from "../ui/usePresence";
 import { FlipOnChange } from "../ui/flip";
@@ -27,7 +28,9 @@ import {
   ZenHint,
 } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
-import { QuickPickHost } from "../plugins/quick-pick";
+import { QuickPickHost } from "../ui/quick-pick";
+import { PluginFormHost } from "../plugins/views/plugin-form";
+import { NoticeHost } from "../ui/notices";
 import "../plugins/plugins.css";
 import "./App.css";
 
@@ -128,7 +131,9 @@ function App() {
           activeContent={activeTab.content}
           onToggle={toggleSidebar}
           onClose={() => setPanelOpen(false)}
-          onOpenFile={(path) => void openFile(path)}
+          onOpenFile={(path, beside) =>
+            void openFile(path, beside ? { where: "beside" } : {})
+          }
           onEntryMoved={entryMoved}
           searchFocusRequest={searchFocusRequest}
           onSearchFocusHandled={clearSearchFocusRequest}
@@ -185,6 +190,14 @@ function App() {
             zen: zenMode,
           }}
           fixedShortcuts={fixedShortcutGroups(t, platformName())}
+          pluginCommands={commands()
+            // Textus's own (Save, Close Tab) have their keys under File.
+            .filter((c) => !c.id.startsWith("textus."))
+            .map((c) => ({
+              id: c.id,
+              title: c.title(t),
+              shortcut: c.shortcut,
+            }))}
         />
 
         <ClosePrompt
@@ -214,7 +227,12 @@ function App() {
           )}
         </Presence>
         <AppDialogHost okLabel={t.dialogOk} />
-        <QuickPickHost emptyLabel={t.pluginQuickPickEmpty} />
+        <QuickPickHost
+          emptyLabel={t.pluginQuickPickEmpty}
+          okLabel={t.pluginOk}
+        />
+        <PluginFormHost />
+        <NoticeHost />
 
         {zenMode && <ZenHint onExit={() => setZenMode(false)} t={t} />}
 

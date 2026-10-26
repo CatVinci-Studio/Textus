@@ -8,7 +8,7 @@
 //! On Windows and Linux the bar built here is never seen - it is hidden with
 //! the window frame (kept on Windows for its accelerators; on Linux GTK stops
 //! firing them, and the frontend handles those keys), and the menu the user
-//! opens is drawn in HTML (src/app/app-menu-model.ts, which lists the same
+//! opens is drawn in HTML (src/app/menu/app-menu-model.ts, which lists the same
 //! ids) and comes back through `trigger_menu_item`. Renaming an id here
 //! means renaming it there.
 //!
@@ -70,6 +70,13 @@ const TOGGLE_AGENT_PANEL_ID: &str = "toggle-agent-panel";
 const TOGGLE_TEXTUS_AI_ID: &str = "toggle-textus-ai";
 const TOGGLE_SPLIT_VIEW_ID: &str = "toggle-split-view";
 const TOGGLE_ZEN_MODE_ID: &str = "toggle-zen-mode";
+/// Two documents at once (src/app/split/split-layout.ts): the one in front and
+/// another, side by side or one above the other.
+const SPLIT_RIGHT_ID: &str = "split-right";
+/// Everything the menus do, found by typing (src/app/command-palette.ts).
+const COMMAND_PALETTE_ID: &str = "command-palette";
+const SPLIT_DOWN_ID: &str = "split-down";
+const CLOSE_SPLIT_ID: &str = "close-split";
 const ZOOM_IN_ID: &str = "zoom-in";
 const ZOOM_OUT_ID: &str = "zoom-out";
 const ZOOM_RESET_ID: &str = "zoom-reset";
@@ -81,7 +88,7 @@ const COPY_AS_MARKDOWN_ID: &str = "copy-as-markdown";
 /// Edit > Select All on macOS, in place of the predefined item: that one
 /// sends WebKit's own selectAll:, which with the caret in no text field
 /// selected the whole window - the sidebar's notes, the empty document's
-/// box. The focused window picks what to select (app/app-menu-actions.ts).
+/// box. The focused window picks what to select (app/menu/app-menu-actions.ts).
 #[cfg(target_os = "macos")]
 const SELECT_ALL_ID: &str = "select-all";
 const NEW_WINDOW_ID: &str = "new-window";
@@ -208,7 +215,7 @@ pub fn set_menu_labels(app: AppHandle, labels: HashMap<String, String>) {
 /// window, which sends its state on every change and as it gains focus.
 /// The items are named by what they show, never "Toggle ...", and the mark
 /// is AppKit's own. Only macOS shows this menu; elsewhere the app-drawn menu
-/// draws the same marks (app/AppMenu.tsx) and this does nothing.
+/// draws the same marks (app/menu/AppMenu.tsx) and this does nothing.
 #[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn set_menu_checks(app: AppHandle, checks: HashMap<String, bool>) {
@@ -267,7 +274,7 @@ pub fn set_menu_accelerators(app: AppHandle, accelerators: HashMap<String, Strin
 
 /// Runs a menu id exactly as clicking that item in the native menu would.
 ///
-/// The way in for the app-drawn menu on Windows (src/app/AppMenu.tsx): there
+/// The way in for the app-drawn menu on Windows (src/app/menu/AppMenu.tsx): there
 /// the native menu bar is hidden and the menu is redrawn in HTML, so its
 /// items have no native click to dispatch - they send their id here instead.
 /// The ids are the contract between the two, and `dispatch` below is the one
@@ -418,6 +425,14 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-toggle-split-view");
     } else if id == TOGGLE_ZEN_MODE_ID {
         emit_to_focused(app_handle, "menu-toggle-zen-mode");
+    } else if id == COMMAND_PALETTE_ID {
+        emit_to_focused(app_handle, "menu-command-palette");
+    } else if id == SPLIT_RIGHT_ID {
+        emit_to_focused(app_handle, "menu-split-right");
+    } else if id == SPLIT_DOWN_ID {
+        emit_to_focused(app_handle, "menu-split-down");
+    } else if id == CLOSE_SPLIT_ID {
+        emit_to_focused(app_handle, "menu-close-split");
     } else if id == COPY_AS_MARKDOWN_ID {
         emit_to_focused(app_handle, "menu-copy-as-markdown");
     } else if cfg!(target_os = "macos") && id == "select-all" {

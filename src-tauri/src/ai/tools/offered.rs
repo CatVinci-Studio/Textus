@@ -167,7 +167,7 @@ pub fn builtin_tools<'a>(
             }),
         },
         access: Access::Proposes,
-        modes: EVERY_MODE,
+        modes: DOCUMENT_MODES,
         run: Run::Text(add_comment),
     });
 

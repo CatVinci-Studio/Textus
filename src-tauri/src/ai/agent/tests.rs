@@ -491,7 +491,7 @@ fn a_built_in_skill_is_indexed_by_when_to_use_it() {
 fn the_app_guide_is_loaded_on_demand_where_skills_can_be() {
     let plain = AgentWorkspace::default();
     assert!(workspace_section(&plain, "en").contains("What the app calls the things"));
-    let with_skills = crate::ai::workspace::load_layers(None, None, None, &[]);
+    let with_skills = crate::ai::workspace::load_layers(None, None, None);
     assert!(with_skills.has_usable_skills());
     let section = workspace_section(&with_skills, "en");
     assert!(!section.contains("What the app calls the things"));
@@ -502,7 +502,7 @@ fn the_app_guide_is_loaded_on_demand_where_skills_can_be() {
 #[test]
 fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     use crate::ai::workspace::{AgentSkill, SkillSource};
-    let mut ws = crate::ai::workspace::load_layers(None, None, None, &["describe".to_string()]);
+    let mut ws = crate::ai::workspace::load_layers(None, None, None);
     ws.skills.push(AgentSkill {
         name: "house-headline".into(),
         description: "Titles in the house style".into(),
@@ -517,36 +517,36 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
         source: SkillSource::Global,
         ..AgentSkill::default()
     });
-    let index = skill_index(&ws, "en");
+    let index = skill_index(&ws, AgentMode::Write, "en");
     let lines: Vec<&str> = index.lines().collect();
     assert!(lines[0].starts_with("- house-headline (project): "));
     assert!(lines[1].starts_with("- my-tone (yours): ") && lines[1].ends_with('…'));
     assert!(lines[1].chars().count() < 540, "a long description is cut");
     // A built-in says when to use it, without the request words in
     // eight languages; the user's own keep their description.
-    assert_eq!(
-        lines[2],
-        "- continue-story: Use when asked to continue the story, write the next part or chapter, or what happens next. Not for non-fiction drafts or for questions about inline completion."
+    assert!(
+        lines[2].starts_with("- translate: Use when asked to translate"),
+        "{}",
+        lines[2]
     );
     // In another UI a built-in carries that UI's name for it.
-    let zh = skill_index(&ws, "zh");
+    let zh = skill_index(&ws, AgentMode::Review, "zh");
     assert!(
         zh.contains("- continuity [/检查前后一致 in their UI]: "),
         "{zh}"
     );
-    assert!(zh.contains("- house-headline (project): "));
-    // /name-only skills and turned-off ones aren't offered.
-    for absent in ["tighten", "expand", "change-tone", "summarize", "describe"] {
+    // Only the mode's skills: Review's built-ins, not Write's - nor the
+    // user's, which are Write's unless they say.
+    assert!(!zh.contains("- house-headline") && !zh.contains("- translate:"));
+    let create = skill_index(&ws, AgentMode::Create, "en");
+    for name in ["theme", "plugin", "skill"] {
+        assert!(create.contains(&format!("- {name}:")), "{name}");
+    }
+    assert!(!create.contains("- proofread:"));
+    // /name-only skills aren't offered.
+    for absent in ["tighten", "expand", "summarize", "proofread"] {
         assert!(!index.contains(&format!("- {absent}:")), "{absent}");
     }
-    // Built-ins by menu category: write before revise before check
-    // before format.
-    let at = |name: &str| index.find(&format!("- {name}:")).unwrap();
-    assert!(
-        at("dialogue") < at("de-ai")
-            && at("de-ai") < at("proofread")
-            && at("proofread") < at("email")
-    );
     // The system prompt carries it, the preference rule and the packs,
     // the same whatever the document.
     let a = build_instructions(&ws, &md("# One"), true, AgentMode::Write, "hi", "en");
@@ -563,28 +563,11 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     assert!(a.contains("standards-zh-hant") && !a.contains("contract,"));
     // Nothing to offer, no index.
     let mut none = ws.clone();
-    none.skills.iter_mut().for_each(|s| s.enabled = false);
+    none.skills.clear();
     assert!(
         !build_instructions(&none, &md(""), true, AgentMode::Write, "", "en")
             .contains("---available skills---")
     );
-}
-
-#[test]
-fn the_academic_skill_is_indexed_in_one_line() {
-    let ws = crate::ai::workspace::load_layers(None, None, None, &[]);
-    let zh = skill_index(&ws, "zh");
-    let line = zh
-        .lines()
-        .find(|l| l.starts_with("- academic-polish [/学术润色 in their UI]: "))
-        .unwrap_or_else(|| panic!("{zh}"));
-    // Sent with every request: one line, under the 500 cap uncut, and
-    // it names grant proposals so they route here.
-    assert!(
-        !line.ends_with('…') && line.contains("grant proposal"),
-        "{line}"
-    );
-    assert!(!zh.contains("research-writing"));
 }
 
 #[test]

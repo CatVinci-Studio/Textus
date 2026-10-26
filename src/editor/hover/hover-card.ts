@@ -1,5 +1,5 @@
 import { currentStrings } from "../../i18n/current";
-import type { HoverCard } from "../../plugins/hover-providers";
+import type { HoverCard } from "../../plugins/contributions/hover-providers";
 import { renderMarkdownHtml } from "../markdown/render-html";
 import "./hover-card.css";
 import { duration } from "../../ui/motion";
@@ -86,7 +86,21 @@ function build(card: HoverCard): HTMLElement {
     pin.onclick = () => el.remove();
     movable(el, head);
   });
-  head.append(title, pin);
+  head.append(title);
+  if (card.open) {
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "hover-card-button";
+    open.textContent = t.hoverOpen;
+    const go = card.open;
+    open.addEventListener("click", () => {
+      el.remove();
+      if (floating?.el === el) floating = null;
+      go();
+    });
+    head.append(open);
+  }
+  head.append(pin);
   const body = document.createElement("div");
   body.className = "hover-card-body milkdown";
   body.innerHTML = renderMarkdownHtml(card.markdown);

@@ -59,6 +59,24 @@ fn place(
     }
 }
 
+/// An uninstalled plugin's global storage (`ctx.storage.global`), to the
+/// Trash where there is one: what it kept may be the user's own notes. A
+/// project's `.textus/plugins/<id>` stays - it belongs to that folder, and
+/// may be in its version control.
+pub(super) fn forget_global(app: &tauri::AppHandle, id: &str) -> Result<(), String> {
+    require_id(id)?;
+    let place = crate::ai::workspace::global_agent_dir(app)?
+        .join("plugins")
+        .join(id);
+    if !place.is_dir() {
+        return Ok(());
+    }
+    #[cfg(desktop)]
+    return trash::delete(&place).map_err(|e| e.to_string());
+    #[cfg(not(desktop))]
+    std::fs::remove_dir_all(&place).map_err(|e| e.to_string())
+}
+
 fn project_place(root: &Path, id: &str) -> PathBuf {
     root.join(".textus").join("plugins").join(id)
 }

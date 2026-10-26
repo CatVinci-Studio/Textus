@@ -7,7 +7,7 @@ import { drafts, session } from "../platform/ipc";
 import { flushPendingWrites } from "../storage/pending-writes";
 import { useModalDialog } from "../ui/useModalDialog";
 import { useLatest } from "../utils/hooks/useLatest";
-import type { TabState } from "./useTabState";
+import type { TabState } from "./tabs/useTabState";
 
 // The one save/discard/cancel prompt, reused for every "this would lose
 // unsaved content" moment: closing a tab, closing the whole window (every

@@ -1,6 +1,6 @@
 //! Web pages in a tab as native webviews of their own (desktop): one per
 //! tab, laid over the tab's area of the window by the frontend
-//! (src/plugins/useNativeWebPage.ts), which says where it goes as the
+//! (src/plugins/views/useNativeWebPage.ts), which says where it goes as the
 //! layout changes and hides it when the tab goes out of sight. Unlike the
 //! frame it replaces, a native page opens every site - many refuse to be
 //! framed - and keeps its own cookies, as a browser would.

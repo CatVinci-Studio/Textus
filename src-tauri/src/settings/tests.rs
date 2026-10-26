@@ -50,23 +50,23 @@ fn patches_merge_top_level_fields_and_bump_the_revision() {
 /// Settings without what a new profile is seeded with.
 fn without_seed(mut settings: Value) -> Value {
     if let Some(map) = settings.as_object_mut() {
-        map.remove(crate::ai::workspace::DISABLED_BUILTINS_KEY);
+        map.remove(crate::plugins::moved_skills::MOVED_KEY);
     }
     settings
 }
 
 #[test]
-fn a_new_profile_starts_with_only_the_core_skills_and_an_old_one_keeps_all() {
+fn a_new_profile_has_no_moved_skills_to_bring_over_and_an_old_one_does() {
+    let moved = crate::plugins::moved_skills::MOVED_KEY;
     let dir = temp_dir();
     let stores = Stores::load(&dir, &dir);
-    let off = &stores.settings.snapshot().0[crate::ai::workspace::DISABLED_BUILTINS_KEY];
-    assert_eq!(off, &json!(crate::ai::builtin::optional_skill_names()));
+    assert_eq!(stores.settings.snapshot().0[moved], json!(true));
     // Written out with the first change, as any setting.
     stores.patch_settings(&obj(json!({ "theme": "dark" })));
     stores.flush_all();
     let file = read_file(&settings_path(&dir));
-    assert!(file["settings"][crate::ai::workspace::DISABLED_BUILTINS_KEY].is_array());
-    // A settings file from before the list: nothing turned off.
+    assert_eq!(file["settings"][moved], json!(true));
+    // A settings file from before the move: its skills still to install.
     let old = temp_dir();
     std::fs::write(
         settings_path(&old),
@@ -74,7 +74,7 @@ fn a_new_profile_starts_with_only_the_core_skills_and_an_old_one_keeps_all() {
     )
     .unwrap();
     let stores = Stores::load(&old, &old);
-    assert!(stores.settings.snapshot().0[crate::ai::workspace::DISABLED_BUILTINS_KEY].is_null());
+    assert!(stores.settings.snapshot().0[moved].is_null());
 }
 
 #[test]

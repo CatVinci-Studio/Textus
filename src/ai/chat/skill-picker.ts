@@ -9,6 +9,7 @@ import {
   type SkillCategory,
 } from "../skills/builtin";
 import type { AgentSkill } from "../types";
+import type { AgentMode } from "../../settings/settings-types";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { CJK_SCRIPT } from "../../utils/cjk";
 
@@ -80,23 +81,26 @@ export function listFromWorkspace(skills: AgentSkill[]): SkillListItem[] {
       invocation: skill.invocation ?? builtin?.invocation ?? "both",
       source: skill.source ?? "global",
       overridesBuiltin: skill.overridesBuiltin ?? false,
-      enabled: skill.enabled ?? true,
+      modes: skill.modes ?? ["write"],
+      labels: skill.labels,
       aliases: skill.aliases ?? {},
       basedOn: skill.basedOn ?? null,
     };
   });
 }
 
-/** The skills the `/` menu offers, in the UI language: turned-off
- *  built-ins and hidden reference packs left out. */
+/** The skills the `/` menu offers in `mode`, in the UI language: hidden
+ *  reference packs and other modes' skills left out. */
 export function pickerSkills(
   items: SkillListItem[],
   lang: Lang,
+  mode: AgentMode,
 ): PickerSkill[] {
   return items
     .filter(
       (item) =>
-        item.enabled !== false && (item.invocation as string) !== "hidden",
+        (item.modes ?? ["write"]).includes(mode) &&
+        (item.invocation as string) !== "hidden",
     )
     .map((item) => {
       // A built-in, or a copy of one made by Customize…; a skill the user
@@ -106,13 +110,19 @@ export function pickerSkills(
         (item.source === "builtin" || !!item.basedOn || !item.overridesBuiltin)
           ? item.name
           : null;
-      const local = builtin ? SKILL_TEXTS[lang][builtin] : null;
-      const english = builtin ? SKILL_TEXTS.en[builtin] : null;
+      // A market or user skill names itself in its file, per language.
+      const own = item.labels ?? {};
+      const local = builtin
+        ? SKILL_TEXTS[lang][builtin]
+        : (own[lang] ?? own.en ?? null);
+      const english = builtin ? SKILL_TEXTS.en[builtin] : (own.en ?? null);
       const backend = item.aliases ?? {};
       const terms = [
         item.name,
-        ...(local ? [local.label, ...local.aliases] : []),
-        ...(english ? [english.label, ...english.aliases] : []),
+        ...(local ? [local.label] : []),
+        ...(english ? [english.label] : []),
+        ...(builtin ? [...SKILL_TEXTS[lang][builtin].aliases] : []),
+        ...(builtin ? [...SKILL_TEXTS.en[builtin].aliases] : []),
         ...(backend[lang] ?? []),
         ...(backend.en ?? []),
       ];
@@ -123,7 +133,7 @@ export function pickerSkills(
               const text = SKILL_TEXTS[code][builtin];
               return [text.label, ...text.aliases];
             })
-          : []),
+          : Object.values(own).map((l) => l.label)),
         ...Object.values(backend).flat(),
       ];
       return {
@@ -131,7 +141,7 @@ export function pickerSkills(
         label: local?.label ?? null,
         // A copy made by Customize… keeps the built-in's words: its own
         // description is the long one written for the model.
-        hint: local?.hint ?? item.description,
+        hint: local?.hint || item.description,
         source: item.source,
         category: builtin ? (item.category ?? null) : null,
         terms: unique(terms),

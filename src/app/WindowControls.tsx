@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from "react";
 import { useSettings } from "../settings/SettingsContext";
 import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
-import { AppMenu } from "./AppMenu";
-import type { MenuChecks } from "./app-menu-model";
+import { AppMenu } from "./menu/AppMenu";
+import type { MenuChecks } from "./menu/app-menu-model";
 import { HamburgerIcon } from "../ui/icons";
 import { appDrawsWindowFrame } from "../platform/window-chrome";
 import { Presence } from "../ui/usePresence";

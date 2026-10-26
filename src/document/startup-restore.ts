@@ -15,7 +15,7 @@ import { setTabJump } from "../editor/tab-jump";
 import { lastCaret } from "./last-carets";
 import { isWordDocument } from "./word-import";
 import { loadPlugins } from "../plugins/manager";
-import { customEditorFor } from "../plugins/plugin-lookup";
+import { customEditorFor } from "../plugins/store/plugin-lookup";
 
 /** Whether a plugin opens `path` in a tab of its own (a PDF). */
 async function opensInPlugin(path: string): Promise<boolean> {

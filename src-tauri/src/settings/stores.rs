@@ -119,17 +119,14 @@ impl Stores {
     }
 
     /// What a profile starts with that a profile from before it was added
-    /// doesn't: only the core built-in skills on (ai::builtin::CORE_SKILLS);
-    /// the rest are added in Settings › Extensions › Skills. A settings
-    /// file that already exists has no such list, and keeps every skill it
-    /// had. In memory until the first write.
+    /// doesn't: nothing to bring over from the skills that moved to the
+    /// market (plugins::moved_skills) - an older settings file has no such
+    /// mark, and gets the ones it had on installed. In memory until the
+    /// first write.
     fn seed_new_profile(&self) {
         let mut inner = self.settings.inner.lock().unwrap();
         let mut seed = Map::new();
-        seed.insert(
-            crate::ai::workspace::DISABLED_BUILTINS_KEY.into(),
-            json!(crate::ai::builtin::optional_skill_names()),
-        );
+        seed.insert(crate::plugins::moved_skills::MOVED_KEY.into(), json!(true));
         merge_top_level(&mut inner.payload, &seed);
     }
 

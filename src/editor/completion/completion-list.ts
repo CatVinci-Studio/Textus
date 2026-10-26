@@ -1,4 +1,4 @@
-import type { CompletionItem } from "../../plugins/completion-sources";
+import type { CompletionItem } from "../../plugins/contributions/completion-sources";
 import "./completion-list.css";
 
 /** On the page while a list is open: a formula's drawn preview, which

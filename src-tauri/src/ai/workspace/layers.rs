@@ -92,40 +92,31 @@ pub fn load(
             global_agent_dir(app).ok().as_deref(),
             doc_path,
             root_override,
-            &disabled_builtin_skills(app),
         )
     }
 }
 
-/// [`load`] with the global layer's folder given directly and no built-in
-/// skill turned off - the live eval's loader, which builds real workspaces
-/// on disk to exercise exactly this path.
+/// [`load`] with the global layer's folder given directly - the live
+/// eval's loader, which builds real workspaces on disk to exercise exactly
+/// this path.
 #[cfg(test)]
 pub(crate) fn load_from(
     global_dir: Option<&Path>,
     doc_path: Option<&str>,
     root_override: Option<&str>,
 ) -> AgentWorkspace {
-    load_layers(global_dir, doc_path, root_override, &[])
+    load_layers(global_dir, doc_path, root_override)
 }
 
-/// The three skill layers: built-in < global < project, by name. A
-/// built-in in `disabled` stays in the list, turned off, so Settings can
-/// show it; a user skill of the same name still replaces it.
+/// The three skill layers: built-in < global < project, by name; a user
+/// skill replaces a built-in of the same name.
 pub(crate) fn load_layers(
     global_dir: Option<&Path>,
     doc_path: Option<&str>,
     root_override: Option<&str>,
-    disabled: &[String],
 ) -> AgentWorkspace {
     let mut ws = AgentWorkspace {
-        skills: builtin::skills()
-            .iter()
-            .map(|s| AgentSkill {
-                enabled: !disabled.contains(&s.name),
-                ..s.clone()
-            })
-            .collect(),
+        skills: builtin::skills().to_vec(),
         ..AgentWorkspace::default()
     };
 
@@ -164,15 +155,6 @@ pub(crate) fn load_layers(
         }
     }
     ws.memories = crate::ai::memory::MemoryDirs::new(global_dir, root.as_deref()).load();
-
-    // A copy made by Customize… is still that built-in as far as the
-    // switch in Settings goes: turning the built-in off turns the copy off.
-    // A skill the user wrote by hand with the same name is theirs and stays.
-    for skill in &mut ws.skills {
-        if skill.based_on.is_some() && disabled.contains(&skill.name) {
-            skill.enabled = false;
-        }
-    }
 
     ws
 }

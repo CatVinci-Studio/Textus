@@ -63,7 +63,7 @@ pub(crate) fn build(
         // There the app is closed with Alt+F4, which the OS delivers on its
         // own, and Ctrl+Q means nothing, so claiming it would only take a
         // shortcut Windows users never aim at Quit. The app-drawn menu
-        // advertises Alt+F4 instead (src/app/app-menu-model.ts).
+        // advertises Alt+F4 instead (src/app/menu/app-menu-model.ts).
         #[cfg(not(windows))]
         let builder = builder.accelerator("CmdOrCtrl+Q");
         builder.build(app)?
@@ -262,6 +262,10 @@ pub(crate) fn build(
     let toggle_agent_panel_item = check(TOGGLE_AGENT_PANEL_ID, "AI Panel")?;
     let toggle_split_view_item = check(TOGGLE_SPLIT_VIEW_ID, "Split View")?;
     let toggle_zen_mode_item = check(TOGGLE_ZEN_MODE_ID, "Zen Mode")?;
+    let command_palette_item = item(COMMAND_PALETTE_ID, "Command Palette…").build(app)?;
+    let split_right_item = item(SPLIT_RIGHT_ID, "Split Right").build(app)?;
+    let split_down_item = item(SPLIT_DOWN_ID, "Split Down").build(app)?;
+    let close_split_item = item(CLOSE_SPLIT_ID, "Close Split").build(app)?;
 
     // Fixed OS-convention accelerators (like Cmd+S / Cmd+W), not
     // user-configurable ones - so unlike the items above they keep
@@ -288,6 +292,13 @@ pub(crate) fn build(
             .item(&toggle_typewriter_mode_item)
             .item(&toggle_zen_mode_item)
             .separator()
+            .item(&command_palette_item)
+            .separator()
+            // Two documents at once.
+            .item(&split_right_item)
+            .item(&split_down_item)
+            .item(&close_split_item)
+            .separator()
             .item(&zoom_in_item)
             .item(&zoom_out_item)
             .item(&zoom_reset_item);
@@ -296,7 +307,7 @@ pub(crate) fn build(
         // Linux, where it renders as an entry that does nothing when
         // clicked. Windows reaches fullscreen through the app-drawn menu
         // instead, which calls the window API directly
-        // (src/app/app-menu-actions.ts).
+        // (src/app/menu/app-menu-actions.ts).
         #[cfg(target_os = "macos")]
         let builder = builder
             .separator()

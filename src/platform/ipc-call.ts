@@ -6,10 +6,12 @@ import { commands as aiAgentCommands } from "./bindings/ai-agent";
 import { commands as aiConventionsCommands } from "./bindings/ai-conventions";
 import { commands as aiMemoryCommands } from "./bindings/ai-memory";
 import { commands as aiProjectCommands } from "./bindings/ai-project";
+import { commands as aiSkillsCommands } from "./bindings/ai-skills";
 import { commands as appCommands } from "./bindings/app";
 import { commands as authCommands } from "./bindings/auth";
 import { commands as fileCommands } from "./bindings/files";
 import { commands as pluginCommands } from "./bindings/plugins";
+import { commands as pluginAccessCommands } from "./bindings/plugin-access";
 
 /**
  * How every backend command is called: errors as IpcError, AI commands
@@ -39,10 +41,12 @@ const commands = {
   ...aiConventionsCommands,
   ...aiMemoryCommands,
   ...aiProjectCommands,
+  ...aiSkillsCommands,
   ...appCommands,
   ...authCommands,
   ...fileCommands,
   ...pluginCommands,
+  ...pluginAccessCommands,
 };
 type Commands = typeof commands;
 /** A backend command with generated types: its name, as Rust registers it. */

@@ -2,15 +2,15 @@
 // that what sends the user there (the app's Plugins menu, Textus AI's
 // Skills row) needn't load the page (lazy-module.ts).
 
-import { PLUGINS_SHOWN } from "../../plugins/availability";
+import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 
 export type ExtensionsTab = "plugins" | "themes" | "skills" | "mcp";
 
 /** The page's tabs, in order: Plugins only where the app shows plugins
- *  (plugins/availability.ts). */
+ *  (plugins/store/availability.ts). */
 export function extensionsTabs(pluginsShown = PLUGINS_SHOWN): ExtensionsTab[] {
   return pluginsShown
-    ? ["plugins", "themes", "skills", "mcp"]
+    ? ["themes", "plugins", "skills", "mcp"]
     : ["themes", "skills", "mcp"];
 }
 

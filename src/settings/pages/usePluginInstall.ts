@@ -4,12 +4,15 @@ import { useSettings } from "../SettingsContext";
 import { errorText } from "../../utils/error-text";
 import type { Strings } from "../../i18n/strings";
 import { pluginName, pluginText, pluginsSnapshot } from "../../plugins/manager";
-import { installFromCatalog, type CatalogItem } from "../../plugins/catalog";
+import {
+  installFromCatalog,
+  type CatalogItem,
+} from "../../plugins/store/catalog";
 import {
   requirementLabel,
   requirementMet,
   turnOnRequirement,
-} from "../../plugins/requirements";
+} from "../../plugins/store/requirements";
 import type { Attempt } from "./PluginPage";
 
 /**
@@ -37,13 +40,14 @@ export function usePluginInstall(
     }
   };
 
-  const install = (item: CatalogItem) =>
+  /** `quietly`: one of several (a pack) - no guide opens after it. */
+  const install = (item: CatalogItem, quietly = false) =>
     attempt(async () => {
       setInstalling(item.id);
       try {
         await installFromCatalog(item.id);
         await askForRequirements(item.id, t, settings, setSettings);
-        onInstalled?.(item.id);
+        if (!quietly) onInstalled?.(item.id);
       } finally {
         setInstalling(null);
       }

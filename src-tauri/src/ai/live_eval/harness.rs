@@ -885,6 +885,13 @@ pub fn run_conversation(
                 &events,
             ));
         }
+        // Create mode reads the plugins installed: the textus-plugins
+        // checkout's, as if all were.
+        if setup.mode == crate::ai::agent::AgentMode::Create {
+            tool_set.add(crate::plugins::read_tool::read_plugin_tool_over(
+                super::agent_builtin::checkout_plugins(),
+            ));
+        }
         if helper_tools.edits() && crate::ai::agent::offers_chapters(&document) {
             let run = &chapter_run;
             tool_set.add(tools::Tool {

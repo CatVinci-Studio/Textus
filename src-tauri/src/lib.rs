@@ -107,6 +107,8 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
         .manage(plugins::ai_tools::PluginAiTools::default())
+        .manage(plugins::metadata::MetadataIndex::default())
+        .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
             let app = window.app_handle();
             if matches!(event, tauri::WindowEvent::Destroyed) {
@@ -151,6 +153,8 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     detect_wayland();
     #[cfg(target_os = "macos")]
     watch_fullscreen(app.handle());
+    // textus:// links for plugins (plugins/uri.rs).
+    plugins::uri::listen(app.handle());
     // Windows/Linux hand an associated file over as a plain argv
     // path; macOS hands the files it launched the app with to the Opened
     // run-event, which parks them in LAUNCH_OPENED until now. With no file
@@ -228,6 +232,7 @@ pub fn run() {
         }
     }));
     let builder = builder
+        .manage(plugins::uri::PendingUris::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(PendingOpenPaths(Mutex::new(Vec::new())));
@@ -240,6 +245,9 @@ pub fn run() {
         .setup(|app| {
             // Before any window: every window's boot script is made from it.
             settings::init(app.handle());
+            tauri::async_runtime::spawn(plugins::moved_skills::install_moved_skills(
+                app.handle().clone(),
+            ));
             build_main_window(app)?;
             #[cfg(desktop)]
             desktop_setup(app)?;
@@ -249,7 +257,7 @@ pub fn run() {
         // #[cfg(desktop)] and are simply not registered on iOS - the
         // frontend never calls them there (src/platform/capabilities.ts and
         // the desktop-only wrappers in platform/ipc.ts).
-        .invoke_handler(tauri::generate_handler![
+        .invoke_handler(crate::with_plugin_commands![
             // Shared: desktop and iOS.
             take_pending_open_path,
             take_pending_open_paths,
@@ -320,7 +328,8 @@ pub fn run() {
             crate::ai::workspace::list_skills,
             crate::ai::workspace::customize_builtin_skill,
             crate::ai::workspace::reset_builtin_skill,
-            crate::ai::workspace::set_builtin_skill_enabled,
+            crate::ai::workspace::set_skill_modes,
+            crate::ai::workspace::save_written_skill,
             crate::ai::builtin::builtin_skills_attribution,
             crate::ai::project::list_project_files,
             crate::ai::project::read_project_file,
@@ -358,18 +367,6 @@ pub fn run() {
             commands::own_notes::own_notes_read,
             commands::own_notes::own_notes_write,
             distribution::app_distribution,
-            plugins::state::plugins_state,
-            plugins::state::plugins_set_all,
-            plugins::state::plugin_set,
-            plugins::install::plugins_installed,
-            plugins::install::plugin_install,
-            plugins::catalog::plugin_catalog,
-            plugins::catalog::plugin_catalog_cached,
-            plugins::catalog::skill_catalog,
-            plugins::catalog::skill_install_catalog,
-            plugins::access::plugin_fs_rename,
-            plugins::access::plugin_fs_trash,
-            plugins::access::plugin_fs_mkdir,
             #[cfg(desktop)]
             background::tray::set_tray_plugin_items,
             #[cfg(desktop)]
@@ -380,29 +377,6 @@ pub fn run() {
             mcp::mcp_restart,
             #[cfg(desktop)]
             mcp::mcp_try,
-            plugins::catalog::plugin_install_catalog,
-            plugins::install::plugin_load_dev,
-            plugins::install::plugin_uninstall,
-            plugins::access::plugin_file,
-            plugins::access::plugin_read_resource,
-            plugins::access::plugin_fs_read,
-            plugins::access::plugin_fs_list,
-            plugins::workspace::plugin_fs_documents,
-            plugins::workspace::plugin_fs_search,
-            plugins::access::plugin_fs_write,
-            plugins::access::plugin_http,
-            plugins::install::plugin_dev_stamp,
-            plugins::ai_tools::plugin_ai_tools_set,
-            plugins::ai_tools::plugin_ai_tool_result,
-            plugins::store::plugin_store_get,
-            plugins::store::plugin_store_set,
-            plugins::store::plugin_store_keys,
-            plugins::store::plugin_store_read,
-            plugins::store::plugin_store_write,
-            plugins::store::plugin_store_files,
-            plugins::store::plugin_store_delete,
-            plugins::store::plugin_store_usage,
-            plugins::store::plugin_store_clear,
             // iOS only: rename and delete in the document list.
             #[cfg(mobile)]
             commands::documents::rename_entry,
@@ -421,6 +395,8 @@ pub fn run() {
             commands::folder::pick_open_folder,
             #[cfg(desktop)]
             plugins::install::plugin_pick_package,
+            #[cfg(desktop)]
+            plugins::scripts::plugin_open_scripts_dir,
             #[cfg(desktop)]
             menu::set_plugin_menu,
             #[cfg(desktop)]

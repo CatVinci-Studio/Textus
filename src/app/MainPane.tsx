@@ -8,12 +8,17 @@ import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import type { AgentMode } from "../settings/SettingsContext";
-import { PluginTabPane } from "../plugins/PluginWebview";
-import { WebPagePane } from "../plugins/WebPagePane";
-import { TabBar } from "./TabBar";
-import { useSplitPanes } from "./useSplitPanes";
-import { SplitDivider, splitGridStyles } from "./SplitDivider";
-import "./split-panes.css";
+import {
+  PluginListPane,
+  PluginTabPane,
+  WebPagePane,
+} from "../plugins/views/plugin-views";
+import { TabBar } from "./tabs/TabBar";
+import { useSplitPanes } from "./split/useSplitPanes";
+import { SplitDivider, splitGridStyles } from "./split/SplitDivider";
+import "./split/split-panes.css";
+import { openBeside, splitEditor } from "./split/split-layout";
+import { pullTab } from "./split/split-drop";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 
@@ -47,7 +52,9 @@ export function MainPane({
   onActivate: (tabId: string) => void;
   onClose: (tabId: string) => void;
   onAdd: () => void;
-  onDetach: NonNullable<TabBarProps["onDetach"]>;
+  /** A tab pulled out of the window: it leaves for a window of its own
+   *  (tab_drag.rs, macOS). */
+  onDetach: (tabId: string) => void;
   onReorder: (tabId: string, index: number) => void;
   previewTab: TabBarProps["previewTab"];
   onChange: (tabId: string, markdown: string) => void;
@@ -82,12 +89,31 @@ export function MainPane({
           onActivate={onActivate}
           onClose={onClose}
           onAdd={onAdd}
-          // Tear-off needs global cursor and window positions - macOS
-          // only (tab_drag.rs); on Linux, and above all under Wayland,
-          // the drag could only fail and cancel the reorder with it.
-          onDetach={canDragTabsBetweenWindows ? onDetach : undefined}
+          // Pulled down: over the documents it splits, as in VS Code;
+          // out of the window it tears off - which needs global cursor
+          // and window positions, macOS only (tab_drag.rs).
+          onPullOut={(id, title) =>
+            pullTab(id, title, {
+              tabIds: tabs.map((tab) => tab.id),
+              activate: onActivate,
+              detach: canDragTabsBetweenWindows ? onDetach : undefined,
+            })
+          }
           onReorder={onReorder}
           previewTab={previewTab}
+          menuFor={(id) => [
+            {
+              label: t.openBeside,
+              // The tab in front splits with its neighbour; another one
+              // opens beside it.
+              onSelect: () =>
+                id === activeTabId
+                  ? splitEditor("row")
+                  : openBeside(id, activeTabId),
+            },
+            "separator",
+            { label: t.menuCloseTab, onSelect: () => onClose(id) },
+          ]}
           labels={{
             tabs: t.menuDocuments,
             close: t.menuCloseTab,
@@ -110,6 +136,7 @@ export function MainPane({
           <div
             key={tab.id}
             data-active-tab={tab.id === activeTabId}
+            data-tab-id={tab.id}
             data-pane={pane ?? undefined}
             className={pane ? "split-pane" : undefined}
             style={
@@ -130,6 +157,12 @@ export function MainPane({
           >
             {tab.view?.kind === "web" && tab.view.resource ? (
               <WebPagePane tabId={tab.id} url={tab.view.resource} t={t} />
+            ) : tab.view?.kind === "list" ? (
+              <PluginListPane
+                plugin={tab.view.plugin}
+                view={tab.view.view}
+                className="plugin-list-tab"
+              />
             ) : tab.view && tab.view.kind !== "web" ? (
               <PluginTabPane
                 tabId={tab.id}
@@ -138,6 +171,7 @@ export function MainPane({
                 kind={tab.view.kind}
                 resource={tab.view.resource}
                 state={tab.view.state}
+                target={tab.view.target}
               />
             ) : tab.sourceMode && tab.splitView ? (
               <Suspense fallback={null}>
@@ -171,11 +205,7 @@ export function MainPane({
         );
       })}
       {split && grid && (
-        <SplitDivider
-          layout={split}
-          style={grid.divider}
-          label={t.splitDivider}
-        />
+        <SplitDivider layout={split} style={grid.divider} t={t} />
       )}
     </main>
   );

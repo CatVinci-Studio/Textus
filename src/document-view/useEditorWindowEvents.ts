@@ -236,7 +236,7 @@ export function useEditorWindowEvents({
     setMenu({ x: 0, y: 0, imagePos: selectedImagePos(run), phone: true });
   });
 
-  // The app-drawn menu's Edit submenu (Windows - see app/app-menu-actions.ts).
+  // The app-drawn menu's Edit submenu (Windows - see app/menu/app-menu-actions.ts).
   // These are `PredefinedMenuItem`s in the native menu, which gives them no
   // id to dispatch by, so they arrive as an event and run the very commands
   // the right-click menu (editor-menu.ts) runs.

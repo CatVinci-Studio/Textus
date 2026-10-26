@@ -1,5 +1,5 @@
 //! The open folder's Markdown documents for a plugin with
-//! `workspace.read`, in one call rather than one read each: all of them
+//! `files.read`, in one call rather than one read each: all of them
 //! with their text (`plugin_fs_documents` - what a graph of links or a
 //! list of tasks is built from), or the lines that hold some words
 //! (`plugin_fs_search`). Walked as the sidebar walks (crate::walk), so
@@ -28,8 +28,8 @@ fn is_markdown(path: &Path) -> bool {
 }
 
 fn checked_root(app: &tauri::AppHandle, id: &str, root: &str) -> Result<(), String> {
-    if !state::read(app).allows(id, "workspace.read") {
-        return Err(refused(id, "workspace.read"));
+    if !state::read(app).allows(id, "files.read") {
+        return Err(refused(id, "files.read"));
     }
     if root.is_empty() || !Path::new(root).is_dir() {
         return Err("No folder is open.".to_string());

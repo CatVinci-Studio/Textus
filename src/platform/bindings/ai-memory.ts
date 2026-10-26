@@ -33,7 +33,7 @@ export const commands = {
 	 *  config folder's skills/) or this project's (its .textus/skills/). Its
 	 *  file's path.
 	 */
-	save_offered_skill: (offer: SkillOffer, scope: string, docPath: string | null, workspaceRoot: string | null) => __TAURI_INVOKE<string>("save_offered_skill", { offer, scope, docPath, workspaceRoot }),
+	save_offered_skill: (offer: SkillOffer, scope: string, docPath: string | null, workspaceRoot: string | null, modes: AgentMode_Deserialize[]) => __TAURI_INVOKE<string>("save_offered_skill", { offer, scope, docPath, workspaceRoot, modes }),
 	/**  The Memory tab's Delete, for a memory or a library entry. */
 	memory_delete: (docPath: string | null, workspaceRoot: string | null, id: string) => __TAURI_INVOKE<null>("memory_delete", { docPath, workspaceRoot, id }),
 	/**
@@ -49,6 +49,64 @@ export const commands = {
 };
 
 /* Types */
+/**
+ *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
+ *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
+ *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
+ *  and what the prompt says the user is here for.
+ */
+export type AgentMode = AgentMode_Serialize | AgentMode_Deserialize;
+
+/**
+ *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
+ *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
+ *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
+ *  and what the prompt says the user is here for.
+ */
+export type AgentMode_Deserialize = 
+/**  Reads, answers and comments: no propose_edit. */
+"review" | 
+/**
+ *  Adds text and changes the text that is there: every propose_edit
+ *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
+ *  this one.
+ */
+"write" | 
+/**
+ *  Adds text and changes the text that is there: every propose_edit
+ *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
+ *  this one.
+ */
+"revise" | 
+/**
+ *  Makes things for the app itself - a theme, a plugin, a skill - as
+ *  files in the reply, which the chat offers to install: no
+ *  propose_edit, no comments.
+ */
+"create";
+
+/**
+ *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
+ *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
+ *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
+ *  and what the prompt says the user is here for.
+ */
+export type AgentMode_Serialize = 
+/**  Reads, answers and comments: no propose_edit. */
+"review" | 
+/**
+ *  Adds text and changes the text that is there: every propose_edit
+ *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
+ *  this one.
+ */
+"write" | 
+/**
+ *  Makes things for the app itself - a theme, a plugin, a skill - as
+ *  files in the reply, which the chat offers to install: no
+ *  propose_edit, no comments.
+ */
+"create";
+
 /**  One exchange, as the pass reads it. */
 export type Exchange = {
 	/**

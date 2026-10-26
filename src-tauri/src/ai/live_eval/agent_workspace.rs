@@ -46,12 +46,34 @@ pub fn scratch(name: &str) -> PathBuf {
     // and a shared one was emptied by one test while another loaded it.
     static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    let dir = std::env::temp_dir()
-        .join(format!("textus-eval-ws-{}", std::process::id()))
+    let dir = scratch_root()
+        .join(std::process::id().to_string())
         .join(format!("{n}-{name}"));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).expect("scratch dir");
     dir
+}
+
+/// Under the build folder rather than the system temp dir: each run
+/// writes thousands of small files, and on a tmpfs /tmp they used up its
+/// inodes. Folders left by earlier runs (their process gone) are cleared
+/// once per run.
+fn scratch_root() -> PathBuf {
+    static ROOT: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+    ROOT.get_or_init(|| {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("target/textus-eval-ws");
+        let alive = |pid: &str| Path::new("/proc").join(pid).exists();
+        if Path::new("/proc/self").exists() {
+            for entry in std::fs::read_dir(&root).into_iter().flatten().flatten() {
+                let pid = entry.file_name().to_string_lossy().into_owned();
+                if pid.parse::<u32>().is_ok() && !alive(&pid) {
+                    let _ = std::fs::remove_dir_all(entry.path());
+                }
+            }
+        }
+        root
+    })
+    .clone()
 }
 
 pub fn put(dir: &Path, rel: &str, text: &str) -> PathBuf {

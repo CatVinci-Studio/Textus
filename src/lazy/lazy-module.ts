@@ -1,7 +1,7 @@
 // One way for every heavy part of the app to load: declared where it is
 // used, loaded the first time it is needed. Plugins work this way already -
 // a plugin's commands, menus and tabs are known from its manifest, and its
-// code starts on first use (plugins/broker.ts) - and the app's own heavy
+// code starts on first use (plugins/host/broker.ts) - and the app's own heavy
 // parts follow the same rule: mermaid and KaTeX when a document has a
 // diagram or formula, a language's strings when the UI is in it, Settings
 // and the AI panel when they are opened. A part likely to be opened soon is

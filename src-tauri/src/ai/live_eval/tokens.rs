@@ -83,7 +83,7 @@ fn text_tokens(key: &str, model: &str, text: &str) -> u64 {
 /// The built-in skills and no project folder: an unsaved draft, as the app
 /// loads it (every built-in skill on).
 fn draft_workspace() -> AgentWorkspace {
-    workspace::load_layers(None, None, None, &[])
+    workspace::load_layers(None, None, None)
 }
 
 /// A saved document in a folder with a few notes: the project folder is the
@@ -195,7 +195,7 @@ fn live_token_breakdown() {
             text.chars().count()
         );
     }
-    let index = skill_index(&project, "en");
+    let index = skill_index(&project, AgentMode::Write, "en");
     println!(
         "- (of which the skill list itself: {} tokens, {} skills)",
         text_tokens(key, AGENT_MODEL, &index),

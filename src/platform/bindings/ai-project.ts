@@ -36,47 +36,6 @@ export const commands = {
 	 *  - Textus IS a markdown editor, so there's no bespoke textarea for it.
 	 */
 	ensure_global_agent_md: (template: string) => __TAURI_INVOKE<string>("ensure_global_agent_md", { template }),
-	/**
-	 *  Copies a user-picked .md skill file into the global skills folder and
-	 *  returns the refreshed global skill list (None if the dialog was
-	 *  cancelled). The file is stored under the skill's resolved name, so
-	 *  re-importing an updated copy replaces the old one instead of piling up.
-	 */
-	import_agent_skill: () => __TAURI_INVOKE<AgentSkill_Serialize[] | null>("import_agent_skill"),
-	/**
-	 *  Every skill for a document as the `/` menu and Settings list it:
-	 *  built-ins (turned-off ones too, with `enabled: false`), then the global
-	 *  folder's, then the project's, each replacing same-named ones. Hidden
-	 *  skills are left out. Both arguments None (Settings) gives the built-ins
-	 *  and the global skills.
-	 */
-	list_skills: (docPath: string | null, workspaceRoot: string | null) => __TAURI_INVOKE<AgentSkill_Serialize[]>("list_skills", { docPath, workspaceRoot }),
-	/**
-	 *  Settings > Textus AI > Skills > Customize…: copies a built-in skill into
-	 *  the global config folder's skills/, where it replaces the built-in, and
-	 *  returns the copy's path for the frontend to open in a tab. The copy
-	 *  gains `textus-based-on: "<name>@<version>"` under `metadata:`, which is
-	 *  what lets Reset delete it and Settings say when the built-in has changed.
-	 *  An existing skill of that name - an earlier copy, or the user's own - is
-	 *  never overwritten: its path is returned instead.
-	 */
-	customize_builtin_skill: (name: string) => __TAURI_INVOKE<string>("customize_builtin_skill", { name }),
-	/**
-	 *  Settings > Textus AI > Skills > Reset to built-in: deletes the global
-	 *  copies Customize… made of a built-in skill (those carrying
-	 *  `textus-based-on`), so the built-in applies again. A same-named skill the
-	 *  user wrote or imported themselves is theirs: NOT_A_COPY, nothing
-	 *  deleted. Nothing to delete is not an error. Returns the deleted files'
-	 *  paths, so the frontend can close a tab still showing one: saving that
-	 *  tab would quietly write the copy back.
-	 */
-	reset_builtin_skill: (name: string) => __TAURI_INVOKE<string[]>("reset_builtin_skill", { name }),
-	/**
-	 *  Turns a built-in skill on or off (Settings > Textus AI > Skills): kept in
-	 *  settings.json as `disabledBuiltinSkills`, broadcast to every window like
-	 *  any settings change. Returns the new list.
-	 */
-	set_builtin_skill_enabled: (name: string, enabled: boolean) => __TAURI_INVOKE<string[]>("set_builtin_skill_enabled", { name, enabled }),
 	/**  The project's text files, for the composer's @-mention picker. */
 	list_project_files: (docPath: string | null, workspaceRoot: string | null) => __TAURI_INVOKE<string[]>("list_project_files", { docPath, workspaceRoot }),
 	/**
@@ -102,6 +61,64 @@ export const commands = {
 
 /* Types */
 /**
+ *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
+ *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
+ *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
+ *  and what the prompt says the user is here for.
+ */
+export type AgentMode = AgentMode_Serialize | AgentMode_Deserialize;
+
+/**
+ *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
+ *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
+ *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
+ *  and what the prompt says the user is here for.
+ */
+export type AgentMode_Deserialize = 
+/**  Reads, answers and comments: no propose_edit. */
+"review" | 
+/**
+ *  Adds text and changes the text that is there: every propose_edit
+ *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
+ *  this one.
+ */
+"write" | 
+/**
+ *  Adds text and changes the text that is there: every propose_edit
+ *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
+ *  this one.
+ */
+"revise" | 
+/**
+ *  Makes things for the app itself - a theme, a plugin, a skill - as
+ *  files in the reply, which the chat offers to install: no
+ *  propose_edit, no comments.
+ */
+"create";
+
+/**
+ *  The conversation's mode, picked in the composer. Mirrors `AgentMode` in
+ *  src/settings/SettingsContext.tsx. It decides what propose_edit may do
+ *  (tools::builtin_tools), which skills apply (a skill's `textus-modes`)
+ *  and what the prompt says the user is here for.
+ */
+export type AgentMode_Serialize = 
+/**  Reads, answers and comments: no propose_edit. */
+"review" | 
+/**
+ *  Adds text and changes the text that is there: every propose_edit
+ *  action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
+ *  this one.
+ */
+"write" | 
+/**
+ *  Makes things for the app itself - a theme, a plugin, a skill - as
+ *  files in the reply, which the chat offers to install: no
+ *  propose_edit, no comments.
+ */
+"create";
+
+/**
  *  One skill as the app sees it: the frontmatter's name and description,
  *  the body (`prompt`, comments stripped) and the Textus-only keys under
  *  `metadata:` (see docs in parse_skill_file). Serialised camelCase for
@@ -124,6 +141,12 @@ export type AgentSkill_Deserialize = {
 	 *  groups). None for a user skill that doesn't say.
 	 */
 	category?: string | null,
+	/**
+	 *  `textus-modes`: the panel modes the skill applies in (write, review,
+	 *  create) - only those offer it in the `/` menu and the skill index.
+	 *  Write for a skill that doesn't say.
+	 */
+	modes: AgentMode_Deserialize[],
 	invocation: Invocation,
 	source: SkillSource,
 	/**
@@ -132,10 +155,11 @@ export type AgentSkill_Deserialize = {
 	 */
 	overridesBuiltin: boolean,
 	/**
-	 *  False for a built-in skill the user turned off in Settings
-	 *  (`disabledBuiltinSkills`); always true for the user's own skills.
+	 *  What people see it called, and its one-line hint, per UI language
+	 *  code: `textus-label-<code>` and `textus-hint-<code>` - a market or
+	 *  user skill's; a built-in's are in src/ai/skills/texts.
 	 */
-	enabled: boolean,
+	labels: { [key in string]: SkillLabel },
 	/**
 	 *  Extra words the user can type after `/`, per UI language code
 	 *  (src/i18n/langs.ts): `textus-aliases-<code>`, comma-separated.
@@ -176,6 +200,12 @@ export type AgentSkill_Serialize = {
 	 *  groups). None for a user skill that doesn't say.
 	 */
 	category: string | null,
+	/**
+	 *  `textus-modes`: the panel modes the skill applies in (write, review,
+	 *  create) - only those offer it in the `/` menu and the skill index.
+	 *  Write for a skill that doesn't say.
+	 */
+	modes: AgentMode_Serialize[],
 	invocation: Invocation,
 	source: SkillSource,
 	/**
@@ -184,10 +214,11 @@ export type AgentSkill_Serialize = {
 	 */
 	overridesBuiltin: boolean,
 	/**
-	 *  False for a built-in skill the user turned off in Settings
-	 *  (`disabledBuiltinSkills`); always true for the user's own skills.
+	 *  What people see it called, and its one-line hint, per UI language
+	 *  code: `textus-label-<code>` and `textus-hint-<code>` - a market or
+	 *  user skill's; a built-in's are in src/ai/skills/texts.
 	 */
-	enabled: boolean,
+	labels: { [key in string]: SkillLabel },
 	/**
 	 *  Extra words the user can type after `/`, per UI language code
 	 *  (src/i18n/langs.ts): `textus-aliases-<code>`, comma-separated.
@@ -544,6 +575,12 @@ export type RootSource =
  *  this project's (its `.textus/`).
  */
 export type Scope = "project" | "personal";
+
+/**  A skill's name and one-line hint in one UI language. */
+export type SkillLabel = {
+	label: string,
+	hint: string,
+};
 
 /**
  *  Which layer a skill comes from: bundled with the app (ai::builtin), the

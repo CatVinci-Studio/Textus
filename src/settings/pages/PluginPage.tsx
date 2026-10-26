@@ -20,12 +20,13 @@ import {
   requirementLabel,
   requirementMet,
   turnOnRequirement,
-} from "../../plugins/requirements";
-import { permissionLabel } from "../../plugins/permissions";
-import { canSwitch } from "../../plugins/lifecycle";
-import { usageGuide } from "../../plugins/usage-guide";
-import { PluginSettingsWebview } from "../../plugins/PluginWebview";
-import type { PluginManifest } from "../../plugins/manifest";
+} from "../../plugins/store/requirements";
+import { permissionLabel } from "../../plugins/store/permissions";
+import { canSwitch } from "../../plugins/store/lifecycle";
+import { usageGuide } from "../../plugins/store/usage-guide";
+import { PluginSettingsWebview } from "../../plugins/views/plugin-views";
+import type { PluginManifest } from "../../plugins/store/manifest";
+import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
 
 export type Attempt = (work: () => Promise<unknown>) => Promise<void>;
 
@@ -89,6 +90,7 @@ export function PluginPage({
   onEnable,
   onUpdate,
   onGuide,
+  onEditWithAi,
   attempt,
 }: {
   record: PluginRecord;
@@ -101,6 +103,8 @@ export function PluginPage({
   onUpdate: () => void;
   /** Opens its usage guide (USAGE.md), when it has one. */
   onGuide: () => void;
+  /** The AI panel in Create mode, asked to change it (ask-ai.ts). */
+  onEditWithAi: () => void;
   attempt: Attempt;
 }) {
   const { settings, setSettings } = useSettings();
@@ -149,8 +153,8 @@ export function PluginPage({
             onChange={(e) => onEnable(e.target.checked)}
           />
         </label>
-        {hasGuide && (
-          <div className="settings-row plugin-guide-row">
+        <div className="settings-row plugin-guide-row">
+          {hasGuide && (
             <button
               type="button"
               className="text-button settings-inline-button"
@@ -158,8 +162,17 @@ export function PluginPage({
             >
               {t.pluginUsageGuide}
             </button>
-          </div>
-        )}
+          )}
+          {manifest && (
+            <button
+              type="button"
+              className="text-button settings-inline-button"
+              onClick={onEditWithAi}
+            >
+              {t.pluginEditWithAi}
+            </button>
+          )}
+        </div>
       </div>
       {manifest && manifest.requires.length > 0 && (
         <SettingsGroup title={t.pluginRequiresGroup}>
@@ -235,6 +248,14 @@ export function PluginPage({
             onClick={() => void attempt(() => reloadPlugin(record.id))}
           >
             {t.pluginReload}
+          </button>
+        )}
+        {(record.origin === "dev" || record.id.startsWith("local.")) && (
+          <button
+            type="button"
+            onClick={() => void exportPluginForPublishing(record.id)}
+          >
+            {t.pluginExport}
           </button>
         )}
         <button

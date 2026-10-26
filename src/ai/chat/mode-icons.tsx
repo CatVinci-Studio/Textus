@@ -1,9 +1,10 @@
 import type { AgentMode } from "../../settings/SettingsContext";
-import { ReviewModeIcon, WriteModeIcon } from "../../ui/icons";
+import { CreateModeIcon, ReviewModeIcon, WriteModeIcon } from "../../ui/icons";
 
 const ICONS = {
   write: WriteModeIcon,
   review: ReviewModeIcon,
+  create: CreateModeIcon,
 } satisfies Record<AgentMode, unknown>;
 
 /** A mode's icon, large in the AI panel's empty state (the composer's

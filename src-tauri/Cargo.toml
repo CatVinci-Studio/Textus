@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.3.0-beta.1"
+version = "1.3.0-beta.2"
 description = "Textus Markdown Editor"
 authors = ["CatVinci Studio"]
 edition = "2021"
@@ -142,6 +142,8 @@ tauri-plugin-textus-files = { path = "plugins/textus-files" }
 # In step with @tauri-apps/plugin-updater and @tauri-apps/plugin-process.
 tauri-plugin-updater = "2.14"
 tauri-plugin-process = "2.4"
+# textus:// links for plugins (plugins/uri.rs).
+tauri-plugin-deep-link = "2"
 # The update check's version comparison (commands/update.rs); the updater
 # hands its versions over as semver 1.
 semver = "1"
@@ -229,7 +231,9 @@ gtk = "0.18"
 libloading = "0.7"
 
 [target.'cfg(any(windows, target_os = "linux"))'.dependencies]
-tauri-plugin-single-instance = "2"
+# A second launch with a textus:// link hands it to the running app
+# (plugins/uri.rs).
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 
 [dev-dependencies]
 # Throwaway folders for the walker's tests (src/walk.rs), removed when

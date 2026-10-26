@@ -46,8 +46,18 @@ export interface ChatComposerLabels {
   attachmentNoVision: string;
   modeWrite: string;
   modeReview: string;
-  /** Accessible name of the phone's segmented mode control. */
+  modeCreate: string;
+  /** One line on what each mode does, under its name in the picker. */
+  modeWriteHint: string;
+  modeReviewHint: string;
+  modeCreateHint: string;
+  /** Accessible name of the phone's segmented mode control, and the
+   *  picker's heading over the modes. */
   modeLabel: string;
+  /** The picker's heading over the models. */
+  modelLabel: string;
+  /** Accessible name of the picker: the mode and the model. */
+  modeAndModelLabel: string;
   webSearch: string;
   deepThinking: string;
   /** Deep thinking's tooltip: what turning it on does. */
@@ -130,9 +140,10 @@ export interface ChatComposerProps {
    *  in place of the toolbar's "{n} chars selected" chip, and carries these
    *  controls (new, continue in panel, close) beside it. */
   dockActions?: ReactNode;
-  /** The model button (ModelSwitcher), in the toolbar after the toggles;
-   *  the caller renders it, as it reads Settings and this doesn't. */
-  modelSwitcher?: ReactNode;
+  /** The mode picker lists the models of Settings › Textus AI under the
+   *  modes (ModeAndModelPicker): the panel and the chat window, not Quick
+   *  Ask. */
+  switchModels?: boolean;
   /** The resolved message (skill expanded) plus any attachments - InlineChat
    *  owns tagging it with selected-text/chatInfo and actually sending it. */
   onSend: (

@@ -263,7 +263,7 @@ fn write_with_picture(message: &str, ui_language: &str) -> Vec<serde_json::Value
         eprintln!("live_eval: no ANTHROPIC_API_KEY - skipping");
         return Vec::new();
     };
-    let ws = workspace::load_layers(None, None, None, &[]);
+    let ws = workspace::load_layers(None, None, None);
     let real = std::env::var("TEXTUS_EVAL_REAL_PICTURES").as_deref() == Ok("1");
     let pictures = if real {
         let key = secret("VOLCENGINE_ARK_API_KEY").expect("VOLCENGINE_ARK_API_KEY");

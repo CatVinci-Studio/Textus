@@ -351,13 +351,20 @@ export const ai = {
     workspaceRoot: string | null;
     exchange: { messages: string[]; reply: string };
   }) => aiCall<SkillOffer | null>("ai_offer_skill", args),
-  /** An offered skill saved, for every document or this project's. */
+  /** An offered skill saved, for every document or this project's, in
+   *  `modes`. */
   saveOfferedSkill: (
     offer: SkillOffer,
     scope: "personal" | "project",
     docPath: string | null,
     workspaceRoot: string | null,
-  ) => command("save_offered_skill", offer, scope, docPath, workspaceRoot),
+    modes: AgentMode[],
+  ) =>
+    command("save_offered_skill", offer, scope, docPath, workspaceRoot, modes),
+  /** A skill file a reply wrote, saved in the global skills folder in
+   *  `modes` - over an earlier version of it. Its path. */
+  saveWrittenSkill: (text: string, modes: AgentMode[]) =>
+    command("save_written_skill", text, modes),
   /** What the writer will probably say next, after a reply
    *  (ai/next_message.rs); null when there is no clear next step. */
   suggestNextMessage: (args: {
@@ -445,9 +452,9 @@ export const ai = {
   ensureGlobalAgentMd: (template: string) =>
     command("ensure_global_agent_md", template),
   importAgentSkill: () => command("import_agent_skill"),
-  /** Every skill for this document - built-in, global and project - with
-   *  the turned-off built-ins still in (`enabled: false`). Both null: the
-   *  built-ins and the global ones, as Settings shows them. */
+  /** Every skill for this document - built-in, global and project - each
+   *  with the modes it applies in. Both null: the built-ins and the global
+   *  ones, as Settings shows them. */
   listSkills: (docPath: string | null, workspaceRoot: string | null) =>
     command("list_skills", docPath, workspaceRoot) as Promise<SkillListItem[]>,
   /** Copies a built-in into the global config folder's skills/ (or finds
@@ -457,8 +464,15 @@ export const ai = {
   /** Deletes the copy Customize… made, so the built-in applies again;
    *  returns the deleted files' paths (a tab showing one is closed). */
   resetBuiltinSkill: (name: string) => command("reset_builtin_skill", name),
-  setBuiltinSkillEnabled: (name: string, enabled: boolean) =>
-    command("set_builtin_skill_enabled", name, enabled),
+  /** Sets the modes a skill of the user's applies in (its file's
+   *  `textus-modes`); a built-in's are fixed. */
+  setSkillModes: (
+    name: string,
+    source: SkillListItem["source"],
+    docPath: string | null,
+    workspaceRoot: string | null,
+    modes: AgentMode[],
+  ) => command("set_skill_modes", name, source, docPath, workspaceRoot, modes),
   pickAttachmentFile: () => command("pick_attachment_file"),
 };
 

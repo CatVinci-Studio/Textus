@@ -12,27 +12,27 @@ import { openApp, pasteMarkdown } from "./helpers";
 const editor = '[data-active-tab="true"] .ProseMirror';
 
 const HOST = `
-exports.activate = function () {
-  textus.commands.registerCommand("test.hello.greet", async function () {
-    const count = ((await textus.storage.get("count")) || 0) + 1;
-    await textus.storage.set("count", count);
-    await textus.window.showMessage("Hello " + count);
+exports.activate = function (ctx) {
+  textus.commands.register("test.hello.greet", async function () {
+    const count = ((await ctx.storage.global.get("count")) || 0) + 1;
+    await ctx.storage.global.set("count", count);
+    await textus.ui.message("Hello " + count);
   });
-  textus.window.registerWebviewViewProvider("test.hello.panel", {
-    resolveWebviewView: function (webview) {
+  textus.views.registerWebview("test.hello.panel", {
+    resolve: function (webview) {
       webview.onDidReceiveMessage(async function (message) {
         if (message === "ping") {
-          const text = await textus.document.getText();
+          const text = await textus.editor.getText();
           webview.postMessage("pong " + text.trim());
         }
         if (message === "propose")
-          await textus.document.proposeEdit({ action: "append", text: "Added by Hello." });
+          await textus.editor.propose({ action: "append", text: "Added by Hello." });
         if (message === "outline") {
-          const outline = await textus.document.getOutline();
+          const outline = await textus.editor.getOutline();
           webview.postMessage(outline.map((h) => h.level + ":" + h.text).join("|"));
         }
         if (message === "status")
-          textus.window.setStatusItem("count", {
+          textus.ui.statusItem("count", {
             text: "Hello here",
             tooltip: "Greet",
             command: "test.hello.greet",
@@ -41,7 +41,7 @@ exports.activate = function () {
           webview.postMessage(textus.l10n.t("greeting", "host"));
         if (message === "folder") {
           try {
-            await textus.workspace.list("");
+            await textus.files.list("");
           } catch (err) {
             webview.postMessage("refused: " + err.message);
           }
@@ -84,7 +84,7 @@ const MANIFEST = {
   description: "Says hello.",
   engines: { textus: "^1.2.0" },
   main: "host.js",
-  permissions: ["document.read", "document.propose"],
+  permissions: ["editor.read", "editor.propose"],
   contributes: {
     commands: [{ command: "test.hello.greet", title: "Greet" }],
     menus: {
@@ -179,7 +179,7 @@ test("a plugin turned on shows its panel, sandboxed, talking to its code", async
   // And a call it wasn't granted is refused.
   await panel.locator("#folder").click();
   await expect(panel.locator("#out")).toContainText(
-    "refused: test.hello was not granted workspace.read",
+    "refused: test.hello was not granted files.read",
   );
 });
 
@@ -234,9 +234,8 @@ test("turning every plugin off takes its tab away", async ({ page }) => {
     .getByRole("button", { name: "Hello" });
   await expect(tab).toHaveCount(1);
   await openPluginsPage(page);
-  // The switch for them all is under Advanced.
-  await page.locator(".extensions-advanced summary").click();
-  await page.getByRole("checkbox", { name: "Plugins" }).uncheck();
+  // The switch for them all is above the installed plugins.
+  await page.getByRole("checkbox", { name: "All plugins" }).uncheck();
   await page.keyboard.press("Escape");
   await expect(tab).toHaveCount(0);
 });

@@ -31,7 +31,7 @@ const DOWNLOAD_HOSTS: [&str; 3] = [
 const MAX_PACKAGE: u64 = 200 * 1024 * 1024;
 
 /// One plugin in the catalog - generated into
-/// src/platform/bindings/plugins.ts (src/plugins/catalog.ts reads it).
+/// src/platform/bindings/plugins.ts (src/plugins/store/catalog.ts reads it).
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -45,6 +45,10 @@ pub struct CatalogEntry {
     pub url: String,
     pub sha256: String,
     pub size: u64,
+    /// Pictures of it at work, for the market (from the repository's
+    /// releases, like its package; any other is left out).
+    #[serde(default)]
+    pub screenshots: Vec<String>,
 }
 
 /// One skill in the catalog: a skill file (workspace/skills.rs), listed
@@ -62,9 +66,21 @@ pub struct SkillEntry {
     pub author: String,
     #[serde(default)]
     pub official: bool,
+    /// The panel modes it works in (its file's `textus-modes`); Write's
+    /// when the catalog doesn't say.
+    #[serde(default = "write_mode")]
+    pub modes: Vec<crate::ai::agent::AgentMode>,
+    /// Its name and one-line hint by UI language code, for the market to
+    /// show (its file's `textus-label-<code>`).
+    #[serde(default)]
+    pub labels: std::collections::BTreeMap<String, crate::ai::workspace::SkillLabel>,
     pub url: String,
     pub sha256: String,
     pub size: u64,
+}
+
+fn write_mode() -> Vec<crate::ai::agent::AgentMode> {
+    vec![crate::ai::agent::AgentMode::Write]
 }
 
 #[derive(Deserialize)]
@@ -120,6 +136,10 @@ fn parse_all(text: &str) -> Result<(Vec<CatalogEntry>, Vec<SkillEntry>), String>
         .plugins
         .into_iter()
         .filter(|p| super::require_id(&p.id).is_ok() && p.url.starts_with(PACKAGE_PREFIX))
+        .map(|mut p| {
+            p.screenshots.retain(|url| url.starts_with(PACKAGE_PREFIX));
+            p
+        })
         .collect();
     let skills = catalog
         .skills
@@ -397,7 +417,20 @@ mod tests {
             url: format!("{PACKAGE_PREFIX}catvinci.tasks-v1.0.0/catvinci.tasks-1.0.0.zip"),
             sha256: hex(&Sha256::digest(bytes)),
             size: bytes.len() as u64,
+            screenshots: Vec::new(),
         }
+    }
+
+    #[test]
+    fn a_screenshot_from_anywhere_else_is_left_out() {
+        let text = format!(
+            r#"{{"schema": 1, "plugins": [{{"id": "catvinci.tasks", "version": "1.0.0", "manifest": null, "url": "{PACKAGE_PREFIX}t/t.zip", "sha256": "ab", "size": 1, "screenshots": ["{PACKAGE_PREFIX}catalog/shot-catvinci.tasks-1.png", "https://example.com/x.png"]}}]}}"#
+        );
+        let (plugins, _) = parse_all(&text).unwrap();
+        assert_eq!(
+            plugins[0].screenshots,
+            vec![format!("{PACKAGE_PREFIX}catalog/shot-catvinci.tasks-1.png")]
+        );
     }
 
     #[test]

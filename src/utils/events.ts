@@ -23,7 +23,7 @@ export const RESTORE_CHAT_EVENT = "textus:restore-chat";
 
 /// detail: an editing action from the app-drawn menu's Edit submenu -
 /// "undo", "redo", "cut", "copy", "paste" or "select-all" (see
-/// app/app-menu-actions.ts). Those items are `PredefinedMenuItem`s in the
+/// app/menu/app-menu-actions.ts). Those items are `PredefinedMenuItem`s in the
 /// native menu, which has no id to address them by, so on Windows they come
 /// through here to the editor instead.
 export const EDIT_ACTION_EVENT = "textus:edit-action";

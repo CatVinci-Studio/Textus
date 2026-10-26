@@ -1331,9 +1331,9 @@ for (const lang of LANGS) {
         file: { path: fileIn(s.folder, titles[0]), content: "" },
         plugins: {
           plugins: {
-            "catvinci.graph": ["workspace.read", "document.read"],
+            "catvinci.graph": ["files.read", "editor.read"],
             "catvinci.split-panes": [],
-            "catvinci.quick-preview": ["document.read", "workspace.read"],
+            "catvinci.quick-preview": ["editor.read", "files.read"],
           },
           folder,
         },

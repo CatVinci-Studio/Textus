@@ -75,7 +75,7 @@ import { createMathPreviewPlugin } from "./math/math-preview-plugin";
 import { headingMarkerPlugin } from "./marks/heading-marker-plugin";
 import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
 import { dragAutoscrollPlugin } from "./keys/drag-autoscroll-plugin";
-import { editorInputPlugin } from "../plugins/editor-input";
+import { editorInputPlugin } from "../plugins/contributions/editor-input";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,

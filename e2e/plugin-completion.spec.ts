@@ -18,7 +18,7 @@ const list = (page: Page) => page.locator(".completion-list:not([hidden])");
 const formula = (page: Page) =>
   page.locator('[data-active-tab="true"] .math-inline').first();
 
-async function open(page: Page, granted = ["document.read"]) {
+async function open(page: Page, granted = ["editor.read"]) {
   await openWithPlugins(page, {
     plugins: { "catvinci.latex-completion": granted },
     folder: { "/notes/maths.md": "Area $x$ here.\n\nPlain words.\n" },
