@@ -17,8 +17,6 @@ export type {
   WordDocument,
 } from "./bindings/files";
 export type HistoryKind = Generated.HistoryKind;
-export type ImageMigration = Generated.ImageMigration_Serialize;
-export type DraftSnapshot = Generated.DraftSnapshot_Serialize;
 
 export const fs = {
   // On iOS a picked document is a file:// URL read and written through the

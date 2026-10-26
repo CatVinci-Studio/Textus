@@ -4,15 +4,7 @@ import type {
   GeneratedImageData as GeneratedImage,
   StreamEvent_Serialize,
 } from "./bindings/ai-agent";
-import type {
-  ConventionsOptions_Serialize,
-  DocReport_Serialize,
-  EffectiveConventions_Serialize,
-  Finding_Serialize,
-  Lang,
-  Measure_Serialize,
-  Profile_Serialize,
-} from "./bindings/ai-conventions";
+import type { Lang } from "./bindings/ai-conventions";
 import type {
   LibraryUse as LibraryUseAnswer,
   Remembering_Serialize,
@@ -21,12 +13,9 @@ import type {
   AgentMode_Serialize as AgentMode,
   AgentSkill_Serialize,
   AgentWorkspace_Serialize,
-  Forgotten_Serialize,
   LibraryEntry_Serialize,
-  Memories_Serialize,
   MemoryKind as Kind,
   Memory_Serialize,
-  ProjectConventions as StyleFrontMatter,
   Remembered_Serialize,
   Scope,
   SkillLabel,
@@ -89,13 +78,6 @@ export type MemoryKind = Kind;
  *  Undo to put back. */
 export type RememberedChange = Remembering_Serialize;
 
-/** Every memory for a document, personal first, and what was deleted or
- *  forgotten lately. */
-export type Memories = Memories_Serialize;
-
-/** A deleted or forgotten memory or library entry, kept to restore. */
-export type ForgottenMemory = Forgotten_Serialize;
-
 /** Which library entries reached Textus AI. */
 export type LibraryUse = LibraryUseAnswer;
 
@@ -108,7 +90,9 @@ export type AgentWorkspaceInfo = AgentWorkspace_Serialize;
  *  but a Rust test checks it against the backend's key.
  *  @public */
 export const WRITING_CONVENTIONS_KEY = "writingConventions";
-/** Its default value, and the per-language value meaning "no choice". */
+/** Its default value, and the per-language value meaning "no choice";
+ *  checked by the same test.
+ *  @public */
 export const WRITING_CONVENTIONS_AUTOMATIC = "automatic";
 
 /** A document language as the rules engine names it. */
@@ -170,35 +154,6 @@ export const WRITING_CONVENTIONS: Record<
     profiles: ["pt-BR", "pt-BR/official", "pt-PT", "pt/eu"],
   },
 };
-
-/**
- * The stored setting: "automatic", one profile, or a profile per language
- * (left out or "automatic" stays Automatic), with optional option keys.
- */
-export type WritingConventionsSetting =
-  | typeof WRITING_CONVENTIONS_AUTOMATIC
-  | string
-  | ({ [lang in ConventionsLang]?: string } & {
-      options?: Record<string, string>;
-    });
-
-/** `.textus/style.md` front matter, as Rust read it. */
-export type ProjectConventions = StyleFrontMatter;
-
-/** A resolved profile. */
-export type ConventionsProfile = Profile_Serialize;
-
-export type WritingConventionsOptions = ConventionsOptions_Serialize;
-
-export type EffectiveConventions = EffectiveConventions_Serialize;
-
-/** One finding of the rules engine. */
-export type ConventionsFinding = Finding_Serialize;
-
-export type ConventionsReport = DocReport_Serialize;
-
-/** An exact platform count. */
-export type TextMeasure = Measure_Serialize;
 
 /**
  * One skill as the `/` menu and Settings list it; later layers replace

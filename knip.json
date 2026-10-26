@@ -12,7 +12,6 @@
   "ignore": ["src/platform/bindings/**"],
   "ignoreExportsUsedInFile": true,
   "rules": {
-    "types": "off",
     "duplicates": "off"
   }
 }
