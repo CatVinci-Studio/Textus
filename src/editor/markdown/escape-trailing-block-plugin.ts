@@ -99,12 +99,9 @@ function backspaceOutOfLeadingEmptyCodeBlock(view: EditorView): boolean {
 }
 
 /**
- * Backspace at the start of a quote's first line takes that line out of
- * the quote, as every editor does. Without this it did nothing at all: the
- * default join has nothing sensible to merge the line into (an empty quote
- * at the top of the document was impossible to remove), so the quote could
- * only be got rid of by selecting around it. A later line joins the one
- * above it, as the default join does.
+ * Backspace at the start of a quote's first line takes it out of the
+ * quote: the default join has nothing to merge it into, so an empty quote
+ * couldn't be removed. A later line joins the one above, as by default.
  */
 function backspaceOutOfBlockquote(view: EditorView): boolean {
   const { state } = view;
