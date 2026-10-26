@@ -115,7 +115,7 @@ test("Split Down puts one above the other, and the line between them shares the 
     .toBeGreaterThan(first.height - 4);
 });
 
-test("a tab chosen from the tab bar opens in the pane in front; closing a pane's tab ends the split", async ({
+test("a new tab opens in the pane in use; closing a pane's last tab ends the split", async ({
   page,
 }) => {
   await openTwo(page);
@@ -130,7 +130,7 @@ test("a tab chosen from the tab bar opens in the pane in front; closing a pane's
     await expect(page.locator(panes)).toHaveCount(2, { timeout: 500 });
   }).toPass();
   await expect(page.locator(`${pane("first")} h1`)).toContainText("One");
-  // A third tab, chosen in the tab bar, takes the front pane's place.
+  // A third tab joins the front pane's own tab bar.
   await emit(page, "menu-new-file");
   await expect(page.locator(panes)).toHaveCount(2);
   await expect(page.locator(`${pane("second")} h1`)).toContainText("Two");
@@ -138,9 +138,48 @@ test("a tab chosen from the tab bar opens in the pane in front; closing a pane's
     "data-active-tab",
     "true",
   );
-  // Closing it: one document again.
+  const bars = page.locator(".main-pane-split > .tab-bar");
+  await expect(bars).toHaveCount(2);
+  await expect(bars.first().locator('[role="tab"]')).toHaveCount(2);
+  await expect(bars.last().locator('[role="tab"]')).toHaveCount(1);
+  // Closing it: the pane shows its other tab again.
+  await page.keyboard.press("ControlOrMeta+w");
+  await expect(page.locator(panes)).toHaveCount(2);
+  await expect(page.locator(`${pane("first")} h1`)).toContainText("One");
+  // Closing the pane's last tab: one document again.
+  await page.locator(`${pane("first")} .ProseMirror`).click();
   await page.keyboard.press("ControlOrMeta+w");
   await expect(page.locator(panes)).toHaveCount(0);
+});
+
+test("a tab dragged onto the other pane moves into its tab bar", async ({
+  page,
+}) => {
+  await openTwo(page);
+  await page.locator('[data-active-tab="true"] .ProseMirror').click();
+  await expect(async () => {
+    await page.keyboard.press("ControlOrMeta+Alt+s");
+    await expect(page.locator(panes)).toHaveCount(2, { timeout: 500 });
+  }).toPass();
+  await emit(page, "menu-new-file");
+  const bars = page.locator(".main-pane-split > .tab-bar");
+  await expect(bars.first().locator('[role="tab"]')).toHaveCount(2);
+  await pasteMarkdown(page, "# Three");
+  const three = bars.first().locator('[role="tab"][aria-selected="true"]');
+  await expect(three).toHaveCount(1);
+  const from = (await three.boundingBox())!;
+  const to = (await page.locator(pane("second")).boundingBox())!;
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + from.width / 2, from.y + 120, { steps: 5 });
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, {
+    steps: 8,
+  });
+  await page.mouse.up();
+  await expect(bars.last().locator('[role="tab"]')).toHaveCount(2);
+  await expect(bars.first().locator('[role="tab"]')).toHaveCount(1);
+  await expect(page.locator(pane("second"))).toContainText("Three");
+  await expect(page.locator(pane("first"))).toContainText("Two");
 });
 
 test("with one tab, Split Right opens a blank one beside it", async ({

@@ -1,44 +1,86 @@
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import {
   closeSplit,
+  pairLayout,
   setSplitLayout,
   splitLayout,
   splitRequest,
   subscribeSplit,
+  type PaneIndex,
   type SplitLayout,
   type SplitRequest,
 } from "./split-layout";
 
 /**
- * The layout as the window's tabs now stand: a requested split pairs with a
- * neighbour, a closed pane's tab ends the split. "blank" when the window has
- * one tab and a blank one must be opened.
+ * The layout as the window's tabs now stand: a tab opened joins the pane in
+ * use, a closed one leaves its pane, the tab in front shows in its pane,
+ * and a pane left without tabs ends the split. "blank" when a split is
+ * asked for in a window of one tab, so a blank one must open. The same
+ * object comes back when nothing changed.
  */
 export function resolveSplit(
   layout: SplitLayout | null,
   request: SplitRequest | null,
   tabIds: readonly string[],
   active: string,
-  focused: 0 | 1,
 ): SplitLayout | null | "blank" {
   if (!layout) {
     if (!request) return null;
     const at = tabIds.indexOf(active);
     const other = tabIds[at + 1] ?? tabIds[at - 1];
     if (!other) return "blank";
-    return { direction: request.direction, panes: [active, other], ratio: 0.5 };
+    // The tab beside goes over; the rest stay as they were ordered.
+    const paired = pairLayout(request.direction, active, other);
+    paired.groups = [tabIds.filter((id) => id !== other), [other]];
+    return settle(paired, tabIds, active);
   }
-  const [first, second] = layout.panes;
-  if (!tabIds.includes(first)) return null;
-  if (second === null) {
-    // Waiting for the blank tab: it comes to the front.
-    return active === first ? layout : { ...layout, panes: [first, active] };
-  }
-  if (!tabIds.includes(second)) return null;
-  if (active === first || active === second) return layout;
-  const panes: [string, string] =
-    focused === 0 ? [active, second] : [first, active];
-  return { ...layout, panes };
+  return settle(layout, tabIds, active);
+}
+
+function settle(
+  layout: SplitLayout,
+  tabIds: readonly string[],
+  active: string,
+): SplitLayout | null {
+  const open = new Set(tabIds);
+  const groups = layout.groups.map((group) =>
+    group.filter((id) => open.has(id)),
+  ) as [string[], string[]];
+  const known = new Set(groups.flat());
+  for (const id of tabIds) if (!known.has(id)) groups[layout.focus].push(id);
+  const waiting = layout.panes[1] === null && groups[1].length === 0;
+  if (!groups[0].length || (!groups[1].length && !waiting)) return null;
+  const panes = [...layout.panes] as [string, string | null];
+  const at: PaneIndex | null = groups[0].includes(active)
+    ? 0
+    : groups[1].includes(active)
+      ? 1
+      : null;
+  if (at !== null) panes[at] = active;
+  if (!groups[0].includes(panes[0])) panes[0] = groups[0][0];
+  if (!waiting && (panes[1] === null || !groups[1].includes(panes[1])))
+    panes[1] = groups[1][0];
+  const next: SplitLayout = {
+    ...layout,
+    panes,
+    groups,
+    // Waiting, the blank tab is on its way to the second pane.
+    focus: waiting ? layout.focus : (at ?? layout.focus),
+  };
+  return same(next, layout) ? layout : next;
+}
+
+function same(a: SplitLayout, b: SplitLayout): boolean {
+  return (
+    a.focus === b.focus &&
+    a.panes[0] === b.panes[0] &&
+    a.panes[1] === b.panes[1] &&
+    a.groups.every(
+      (group, i) =>
+        group.length === b.groups[i].length &&
+        group.every((id, j) => id === b.groups[i][j]),
+    )
+  );
 }
 
 /** The window's split as its tabs stand, kept in step with them. */
@@ -49,30 +91,18 @@ export function useSplitPanes(
 ): SplitLayout | null {
   const layout = useSyncExternalStore(subscribeSplit, splitLayout);
   const request = useSyncExternalStore(subscribeSplit, splitRequest);
-  // The pane the tab in front was last shown in.
-  const focused = useRef<0 | 1>(0);
-  const resolved = resolveSplit(
-    layout,
-    request,
-    tabIds,
-    active,
-    focused.current,
-  );
-  const shown = resolved === "blank" ? null : resolved;
-  if (shown) focused.current = shown.panes[1] === active ? 1 : 0;
+  const resolved = resolveSplit(layout, request, tabIds, active);
   useEffect(() => {
     if (resolved === "blank") {
       // Once per request: the layout set here takes the request away.
       if (!splitRequest()) return;
-      setSplitLayout({
-        direction: request?.direction ?? "row",
-        panes: [active, null],
-        ratio: 0.5,
-      });
+      // The blank tab opens into the second pane.
+      setSplitLayout(pairLayout(request?.direction ?? "row", active, null, 1));
       addBlankTab();
     } else if (resolved === null) {
       if (layout || request) closeSplit();
     } else setSplitLayout(resolved);
   }, [resolved, layout, request, active, addBlankTab]);
+  const shown = resolved === "blank" ? null : resolved;
   return shown?.panes[1] ? shown : null;
 }

@@ -4,9 +4,9 @@
   display: grid;
 }
 
+/* A pane's own tab bar, over its document. */
 .main-pane-split > .tab-bar {
-  grid-column: 1 / -1;
-  grid-row: 1;
+  min-width: 0;
 }
 
 /* A pane holds its tab's editor as the column did: a column of its own,

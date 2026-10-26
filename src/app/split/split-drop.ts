@@ -1,4 +1,7 @@
 import {
+  moveToPane,
+  pairLayout,
+  paneOf,
   setSplitLayout,
   splitLayout,
   type SplitDirection,
@@ -99,31 +102,40 @@ export function showDropHint(target: DropTarget | null): void {
 }
 
 /**
- * Splits the window for `tabId` dropped at `target`. A tab dropped on its
- * own document pairs with a neighbour, or nothing changes. Call once
- * `tabId` is among the window's tabs and in front.
+ * Puts `tabId` where it was dropped. Already split, it moves into the pane
+ * it was dropped on (an edge counts as that side's pane). Otherwise an edge
+ * splits the window, and a tab dropped on its own document pairs with a
+ * neighbour. Call once `tabId` is among the window's tabs and in front.
  */
 export function splitForDrop(
   tabId: string,
   target: DropTarget,
   tabIds: readonly string[],
 ): void {
+  const now = splitLayout();
+  if (now?.panes[1]) {
+    const pane = paneOf(now, target.tabId);
+    if (pane !== null) moveToPane(tabId, pane);
+    return;
+  }
   if (target.zone === "center") return;
   let other = target.tabId;
   if (other === tabId) {
     const at = tabIds.indexOf(tabId);
-    const now = splitLayout()?.panes.find((p) => p && p !== tabId);
-    other = now ?? tabIds[at + 1] ?? tabIds[at - 1];
+    other = tabIds[at + 1] ?? tabIds[at - 1];
     if (!other) return;
   }
   const direction: SplitDirection =
     target.zone === "left" || target.zone === "right" ? "row" : "column";
   const first = target.zone === "left" || target.zone === "top";
-  setSplitLayout({
-    direction,
-    panes: first ? [tabId, other] : [other, tabId],
-    ratio: 0.5,
-  });
+  // The window's other tabs stay with the document dropped beside, in
+  // their order.
+  const rest = tabIds.filter((id) => id !== tabId);
+  const layout = first
+    ? pairLayout(direction, tabId, other, 1)
+    : pairLayout(direction, other, tabId, 0);
+  layout.groups = first ? [[tabId], rest] : [rest, [tabId]];
+  setSplitLayout(layout);
 }
 
 /**
@@ -172,8 +184,7 @@ export function pullTab(
     if (!target) return;
     opts.activate(tabId);
     // Once it is in front, the next frame: the split takes it from there.
-    if (target.zone !== "center")
-      requestAnimationFrame(() => splitForDrop(tabId, target, opts.tabIds));
+    requestAnimationFrame(() => splitForDrop(tabId, target, opts.tabIds));
   };
   const key = (e: KeyboardEvent) => {
     if (e.key === "Escape") stop();
