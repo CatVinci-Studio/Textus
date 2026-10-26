@@ -7,8 +7,8 @@ import {
   type MutableRefObject,
   type SetStateAction,
 } from "react";
-import { listenToThisWindow, unlistenAll } from "../../utils/tauri-events";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { listenToThisWindow, unlistenAll } from "../../platform/events";
+import { thisWindow } from "../../platform/this-window";
 import type { Strings } from "../../i18n/strings";
 import {
   floatingDragArgs,
@@ -84,7 +84,7 @@ export function useTabDragMerge(opts: {
 
   const hitTestWindow = useCallback(
     async (screenX: number, screenY: number): Promise<string | null> => {
-      const selfLabel = getCurrentWindow().label;
+      const selfLabel = thisWindow().label;
       try {
         const bounds = await windowIpc.listWindowBounds();
         const hit = bounds.find(
@@ -153,7 +153,7 @@ export function useTabDragMerge(opts: {
   useEffect(() => {
     // One window, never dragged, on iOS.
     if (!canUseWindows) return;
-    const win = getCurrentWindow();
+    const win = thisWindow();
 
     async function handleTick(x: number, y: number, down: boolean) {
       if (!down) {
@@ -259,7 +259,7 @@ export function useTabDragMerge(opts: {
           return;
         }
         if (previewWinLeftRef.current === null) {
-          const win = getCurrentWindow();
+          const win = thisWindow();
           const [pos, scale] = await Promise.all([
             win.outerPosition(),
             win.scaleFactor(),

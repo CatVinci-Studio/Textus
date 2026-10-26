@@ -1,6 +1,6 @@
-import { emitTo } from "@tauri-apps/api/event";
+import { emitToWindow } from "./events";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "./this-window";
 import type { NativeMenuId } from "../app/menu/app-menu-model";
 import { menuIpc } from "./ipc";
 
@@ -19,7 +19,7 @@ export function emitMenuEvent(id: NativeMenuId): void {
   // label is AnyLabel, which on iOS - where the window and its webview are
   // both "main" - delivered the event twice, so every toggle undid itself.
   const { label } = getCurrentWebviewWindow();
-  void emitTo({ kind: "WebviewWindow", label }, event, payload);
+  void emitToWindow({ kind: "WebviewWindow", label }, event, payload);
 }
 
 /**
@@ -32,6 +32,6 @@ export function emitMenuEvent(id: NativeMenuId): void {
  * window's own close button, so unsaved tabs are still asked about.
  */
 export function runMenuItemHere(id: string): Promise<void> {
-  if (id === "close-window") return getCurrentWindow().close();
+  if (id === "close-window") return thisWindow().close();
   return menuIpc.triggerMenuItem(id);
 }

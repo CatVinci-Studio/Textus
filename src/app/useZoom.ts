@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
 import { blockAt, holdBlock } from "../ui/hold-line";
-import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
+import { listenToThisWindow, unlistenAll } from "../platform/events";
 
 /// Document zoom, scoped to the editor CONTENT - the window chrome (tab
 /// bar, titlebar filename, sidebar, toolbars) stays at 100%. The factor is

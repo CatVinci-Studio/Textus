@@ -1,6 +1,6 @@
 import type * as Generated from "../../platform/bindings/plugins";
 import { plugins as pluginsIpc } from "../../platform/ipc";
-import { listenToThisWindow } from "../../utils/tauri-events";
+import { listenToThisWindow } from "../../platform/events";
 import { pluginsSnapshot, subscribePlugins } from "../store/plugin-records";
 
 /**

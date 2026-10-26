@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../platform/this-window";
 import { canOpenFolder } from "../platform/capabilities";
 import { fs, session, windowIpc } from "../platform/ipc";
 import { getUiState, setUiState } from "../storage/ui-state";
@@ -19,7 +19,7 @@ import {
 function restoredFolder(restoreSession: boolean): string | null {
   if (!canOpenFolder || !restoreSession) return null;
   try {
-    if (getCurrentWindow().label !== "main") return null;
+    if (thisWindow().label !== "main") return null;
   } catch {
     return null;
   }

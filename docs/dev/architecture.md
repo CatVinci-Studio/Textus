@@ -63,6 +63,9 @@ remembering them:
 - **Layers**: a folder imports from its own layer and the ones below
   (ESLint, `no-restricted-imports`), and nothing outside `plugins/` reaches
   into `plugins/host/`.
+- **Tauri behind `src/platform/`**: nothing else imports `@tauri-apps/*`
+  (ESLint). Each platform module has a browser stand-in, chosen by the
+  browser build's `TEXTUS_BROWSER` flag (`platform/runtime.ts`).
 - **No import cycles**: no module imports itself through others
   (`scripts/check-cycles.mjs`). A cycle ties its modules into one: none can
   be read, tested or loaded lazily on its own.

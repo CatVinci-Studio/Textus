@@ -31,7 +31,7 @@ import { usePluginMenuSync } from "./contributions/usePluginMenu";
 import { openBeside } from "../app/split/split-layout";
 import { takePluginUris } from "./plugin-uri";
 import { migrateOfficialPlugins } from "./store/migrate-official";
-import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
+import { listenToThisWindow, unlistenAll } from "../platform/events";
 
 /**
  * A window's side of the plugins: what it tells the manager (its strings,

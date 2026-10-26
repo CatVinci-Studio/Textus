@@ -1,6 +1,10 @@
-import { invoke } from "@tauri-apps/api/core";
-import { documentDir, join } from "@tauri-apps/api/path";
 import { isIOSApp } from "../platform/capabilities";
+import {
+  deleteSandboxEntry,
+  renameSandboxEntry,
+  documentsFolder,
+  joinPath,
+} from "../platform/ios-files";
 // Entries in Documents are stored relative to it: the app's container moves
 // on every reinstall and App Store update (see documents-path.ts).
 import { IN_DOCUMENTS } from "../platform/documents-path";
@@ -51,7 +55,7 @@ function updateRecents(
  *  `docs`, the app's current Documents folder. */
 function resolveRecent(docs: string, stored: string): Promise<string> {
   return stored.startsWith(IN_DOCUMENTS)
-    ? join(docs, stored.slice(IN_DOCUMENTS.length))
+    ? joinPath(docs, stored.slice(IN_DOCUMENTS.length))
     : Promise.resolve(stored);
 }
 
@@ -64,7 +68,7 @@ function resolveRecent(docs: string, stored: string): Promise<string> {
 export async function recentIOSDocuments(): Promise<string[]> {
   // After any change already queued, so it lists what that change made.
   await recentsQueue;
-  const docs = await documentDir();
+  const docs = await documentsFolder();
   return Promise.all(
     (await readRecents()).map((stored) => resolveRecent(docs, stored)),
   );
@@ -79,7 +83,7 @@ export async function rememberIOSDocument(path: string | null): Promise<void> {
   // with would otherwise wipe it before startup gets to read it.
   if (!isIOSApp || !path) return;
   return updateRecents(async (list) => {
-    const docs = (await documentDir()).replace(/\/+$/, "") + "/";
+    const docs = (await documentsFolder()).replace(/\/+$/, "") + "/";
     const stored = path.startsWith(docs)
       ? IN_DOCUMENTS + path.slice(docs.length)
       : path;
@@ -90,7 +94,7 @@ export async function rememberIOSDocument(path: string | null): Promise<void> {
 /** Drops an entry that no longer opens (moved or deleted in Files). */
 export function forgetIOSDocument(path: string): Promise<void> {
   return updateRecents(async (list) => {
-    const docs = await documentDir();
+    const docs = await documentsFolder();
     const resolved = await Promise.all(
       list.map((stored) => resolveRecent(docs, stored)),
     );
@@ -104,7 +108,7 @@ export function forgetIOSDocument(path: string): Promise<void> {
  *  file only, not to its folder, so it can be opened and shared but not
  *  renamed or deleted from here). */
 export async function inIOSDocuments(path: string): Promise<boolean> {
-  const docs = (await documentDir()).replace(/\/+$/, "") + "/";
+  const docs = (await documentsFolder()).replace(/\/+$/, "") + "/";
   return path.startsWith(docs);
 }
 
@@ -114,8 +118,8 @@ export async function renameIOSDocument(
   path: string,
   name: string,
 ): Promise<string> {
-  const renamed = await invoke<string>("rename_entry", { path, name });
-  const docs = (await documentDir()).replace(/\/+$/, "") + "/";
+  const renamed = await renameSandboxEntry(path, name);
+  const docs = (await documentsFolder()).replace(/\/+$/, "") + "/";
   const before = IN_DOCUMENTS + path.slice(docs.length);
   const after = IN_DOCUMENTS + renamed.slice(docs.length);
   await updateRecents((list) => list.map((p) => (p === before ? after : p)));
@@ -124,6 +128,6 @@ export async function renameIOSDocument(
 
 /** Deletes a document in Documents and drops it from the recent list. */
 export async function deleteIOSDocument(path: string): Promise<void> {
-  await invoke("delete_entry", { path });
+  await deleteSandboxEntry(path);
   await forgetIOSDocument(path);
 }

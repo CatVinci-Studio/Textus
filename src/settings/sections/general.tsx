@@ -1,9 +1,9 @@
 import { errorText } from "../../utils/error-text";
 import { useEffect, useState } from "react";
-import { getVersion } from "@tauri-apps/api/app";
+import { appVersion } from "../../platform/app-info";
 import { showConfirm } from "../../ui/app-dialog";
-import type { Update } from "@tauri-apps/plugin-updater";
-import { relaunch } from "@tauri-apps/plugin-process";
+import type { Update } from "../../platform/app-info";
+import { relaunchApp } from "../../platform/app-info";
 import type { Strings } from "../../i18n/strings";
 import {
   cli,
@@ -124,7 +124,7 @@ async function installAndRelaunch(update: Update) {
   // macOS and Linux: anything changed during the download, then the
   // relaunch (which does flush Rust's files on its way out).
   await flushPendingWrites();
-  await relaunch();
+  await relaunchApp();
 }
 
 /**
@@ -140,7 +140,7 @@ function BackToStable({ t }: { t: Strings }) {
   );
   const [message, setMessage] = useState("");
   useEffect(() => {
-    void getVersion()
+    void appVersion()
       .then((v) => setVersion(v ?? ""))
       .catch(() => {});
   }, []);

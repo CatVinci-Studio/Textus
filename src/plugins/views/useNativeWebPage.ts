@@ -1,6 +1,6 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { webPages } from "../../platform/ipc";
-import { listenToThisWindow, unlistenAll } from "../../utils/tauri-events";
+import { listenToThisWindow, unlistenAll } from "../../platform/events";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { onWebPagesCover, webPagesCovered } from "./web-page-cover";
 

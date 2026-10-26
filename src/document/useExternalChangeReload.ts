@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../platform/this-window";
 import { readDocText, statMtime, tabIsDirty, type DocTab } from "./doc-tabs";
-import { unlistenAll } from "../utils/tauri-events";
+import { unlistenAll } from "../platform/events";
 import { FILE_WRITTEN_EVENT } from "../utils/events";
 
 // External-change pickup: whenever this window regains focus, compare each
@@ -72,7 +72,7 @@ export function useExternalChangeReload(
         }
       });
     };
-    const unlisten = getCurrentWindow().onFocusChanged(
+    const unlisten = thisWindow().onFocusChanged(
       ({ payload: focused }) => {
         if (focused) check();
       },

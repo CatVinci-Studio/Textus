@@ -1,5 +1,5 @@
 import { useCallback, useRef } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../platform/this-window";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { useEditorProposals } from "./useEditorProposals";
@@ -207,7 +207,7 @@ export function useChatContextBridge({
       run,
       filePathRef.current,
       docTitleRef.current,
-      getCurrentWindow().label,
+      thisWindow().label,
     );
     if (!live) return;
     pushed.current = { selection, docPath: live.context.docPath };
@@ -242,7 +242,7 @@ export function useChatContextBridge({
       run,
       filePath,
       docTitle,
-      getCurrentWindow().label,
+      thisWindow().label,
     );
     if (!live) return;
     sentSelection.current = live.selection;

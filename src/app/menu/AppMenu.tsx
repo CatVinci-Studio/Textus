@@ -15,7 +15,7 @@ import {
   type MenuEntry,
   type MenuNode,
 } from "./app-menu-model";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../../platform/this-window";
 import { canToggleFullscreen, hasAppMenu } from "../../platform/capabilities";
 import { CheckIcon, ChevronIcon } from "../../ui/icons";
 import { usePresenceProps } from "../../ui/usePresence";
@@ -150,7 +150,7 @@ function useMenuOpening() {
     if (!hasAppMenu || !canToggleFullscreen) return;
     let alive = true;
     try {
-      void getCurrentWindow()
+      void thisWindow()
         .isFullscreen()
         .then((on) => {
           if (alive) setFullscreen(on === true);

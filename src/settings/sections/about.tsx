@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getVersion } from "@tauri-apps/api/app";
+import { appVersion } from "../../platform/app-info";
 import type { Strings } from "../../i18n/strings";
 import { links } from "../../platform/ipc";
 import { UpdateButton, UpdateChannelRow } from "./general";
@@ -11,7 +11,7 @@ export function AboutSection({ t }: { t: Strings }) {
   const [version, setVersion] = useState("");
 
   useEffect(() => {
-    getVersion()
+    appVersion()
       .then(setVersion)
       .catch(() => setVersion(""));
   }, []);

@@ -5,7 +5,7 @@ import {
   BACKGROUND_STATUS,
   type BackgroundStatus,
 } from "../../platform/ipc";
-import { listenToThisWindow, unlistenAll } from "../../utils/tauri-events";
+import { listenToThisWindow, unlistenAll } from "../../platform/events";
 import { useSettings } from "../SettingsContext";
 import { ToggleRow } from "./controls";
 
