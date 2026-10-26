@@ -16,7 +16,7 @@ export type TabJump =
    *  it was left (tab-caret.ts). */
   | { kind: "caret"; at: CaretPlace }
   /** A plugin opened it at a place (textus.layout.open): a block, a line,
-   *  some words, a heading (document-view/plugin-edits.ts). */
+   *  some words, a heading (document-view/plugins/plugin-edits.ts). */
   | { kind: "place"; place: DocumentPlace };
 
 const pending = new Map<string, TabJump>();

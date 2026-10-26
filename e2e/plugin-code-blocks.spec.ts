@@ -3,7 +3,7 @@ import { openApp } from "./helpers";
 
 /**
  * Code blocks a plugin draws (textus.views.registerCodeBlock,
- * document-view/plugin-code-blocks.ts): its page below a block in its
+ * document-view/plugins/plugin-code-blocks.ts): its page below a block in its
  * language, the source hidden until the caret goes back; typing tells the
  * page (CodeBlock.onDidChange), and the page can change the source
  * (setSource, with editor.write).

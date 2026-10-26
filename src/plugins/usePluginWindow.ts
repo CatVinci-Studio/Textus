@@ -1,12 +1,12 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { watchDevPlugins } from "./dev-reload";
-import { watchPluginAiTools } from "./ai-tools";
-import { setCompletionAsker } from "./completion-sources";
+import { watchDevPlugins } from "./store/dev-reload";
+import { watchPluginAiTools } from "./contributions/ai-tools";
+import { setCompletionAsker } from "./contributions/completion-sources";
 import { makeBlankTab, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
 import { registerCommand } from "../app/commands";
-import type { TabState } from "../app/useTabState";
+import type { TabState } from "../app/tabs/useTabState";
 import type { OpenOptions } from "../app/useFileOpening";
 import {
   emitPluginEvent,
@@ -15,7 +15,7 @@ import {
   type PluginTabInfo,
   type PluginTabView,
 } from "./app-bridge";
-import type { Where } from "./broker-scope";
+import type { Where } from "./app-bridge";
 import {
   askPlugin,
   configurePlugins,
@@ -26,11 +26,11 @@ import {
   subscribePlugins,
   type PluginsSnapshot,
 } from "./manager";
-import { watchTheme, windowIsDark } from "./theme-vars";
-import { usePluginMenuSync } from "./usePluginMenu";
-import { openBeside } from "../app/split-layout";
+import { watchTheme, windowIsDark } from "./views/theme-vars";
+import { usePluginMenuSync } from "./contributions/usePluginMenu";
+import { openBeside } from "../app/split/split-layout";
 import { takePluginUris } from "./plugin-uri";
-import { migrateOfficialPlugins } from "./migrate-official";
+import { migrateOfficialPlugins } from "./store/migrate-official";
 import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
 
 /**

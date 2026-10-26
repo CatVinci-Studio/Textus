@@ -1,5 +1,5 @@
 import { currentStrings } from "../../i18n/current";
-import type { HoverCard } from "../../plugins/hover-providers";
+import type { HoverCard } from "../../plugins/contributions/hover-providers";
 import { renderMarkdownHtml } from "../markdown/render-html";
 import "./hover-card.css";
 import { duration } from "../../ui/motion";

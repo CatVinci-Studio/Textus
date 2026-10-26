@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * textus.files.onWillSave (plugins/will-save.ts, app/useSaveTabs.ts): a
+ * textus.files.onWillSave (plugins/contributions/will-save.ts, app/useSaveTabs.ts): a
  * plugin changes a document just before it is saved - the change goes
  * into the editor too, so what is saved is what shows, and the tab is
  * clean after.

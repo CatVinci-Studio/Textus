@@ -3,7 +3,7 @@ import { openApp } from "./helpers";
 
 /**
  * The official plugins of before the plugin API 1.0 (1.x) moved to their
- * 0.1.0 rewrites when a window starts (plugins/migrate-official.ts): Tasks
+ * 0.1.0 rewrites when a window starts (plugins/store/migrate-official.ts): Tasks
  * replaced from the catalog, still on, its permissions under their new
  * names; Split Panes - now part of Textus - removed.
  */

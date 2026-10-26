@@ -3,7 +3,7 @@ import { openApp, pasteMarkdown } from "./helpers";
 import { openPath, openWithPlugins, pluginsAtStart } from "./plugin-helpers";
 
 /**
- * Split panes (app/split-layout.ts): two documents at once - View > Split
+ * Split panes (app/split/split-layout.ts): two documents at once - View > Split
  * Right / Split Down / Close Split, their shortcut, the line between the
  * panes (dragged, or its right-click menu) and a tab's right-click menu.
  */

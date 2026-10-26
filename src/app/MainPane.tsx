@@ -12,13 +12,13 @@ import {
   PluginListPane,
   PluginTabPane,
   WebPagePane,
-} from "../plugins/plugin-views";
-import { TabBar } from "./TabBar";
-import { useSplitPanes } from "./useSplitPanes";
-import { SplitDivider, splitGridStyles } from "./SplitDivider";
-import "./split-panes.css";
-import { openBeside, splitEditor } from "./split-layout";
-import { pullTab } from "./split-drop";
+} from "../plugins/views/plugin-views";
+import { TabBar } from "./tabs/TabBar";
+import { useSplitPanes } from "./split/useSplitPanes";
+import { SplitDivider, splitGridStyles } from "./split/SplitDivider";
+import "./split/split-panes.css";
+import { openBeside, splitEditor } from "./split/split-layout";
+import { pullTab } from "./split/split-drop";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 

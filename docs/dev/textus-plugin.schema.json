@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/CatVinci-Studio/Textus/main/docs/dev/textus-plugin.schema.json",
   "title": "textus-plugin.json",
-  "description": "A Textus plugin's manifest, as src/plugins/manifest.ts reads it. docs/dev/writing-plugins.md says what each field does.",
+  "description": "A Textus plugin's manifest, as src/plugins/store/manifest.ts reads it. docs/dev/writing-plugins.md says what each field does.",
   "type": "object",
   "required": ["id", "name", "version", "publisher", "engines", "main"],
   "properties": {
@@ -168,7 +168,7 @@
                 },
                 "when": {
                   "type": "string",
-                  "description": "editorHasSelection, documentOpen, folderOpen, fileExtension == .pdf, view == <view id>; && || ! and ( ) (src/plugins/when.ts)"
+                  "description": "editorHasSelection, documentOpen, folderOpen, fileExtension == .pdf, view == <view id>; && || ! and ( ) (src/plugins/contributions/when.ts)"
                 },
                 "icon": {
                   "type": "string",

@@ -4,12 +4,15 @@ import { useSettings } from "../SettingsContext";
 import { errorText } from "../../utils/error-text";
 import type { Strings } from "../../i18n/strings";
 import { pluginName, pluginText, pluginsSnapshot } from "../../plugins/manager";
-import { installFromCatalog, type CatalogItem } from "../../plugins/catalog";
+import {
+  installFromCatalog,
+  type CatalogItem,
+} from "../../plugins/store/catalog";
 import {
   requirementLabel,
   requirementMet,
   turnOnRequirement,
-} from "../../plugins/requirements";
+} from "../../plugins/store/requirements";
 import type { Attempt } from "./PluginPage";
 
 /**

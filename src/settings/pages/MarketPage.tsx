@@ -11,7 +11,7 @@ import {
   subscribeCatalog,
   type CatalogItem,
   type CatalogState,
-} from "../../plugins/catalog";
+} from "../../plugins/store/catalog";
 import { ThemeGallerySection } from "../sections/theme-gallery";
 import { MarketSkills } from "../sections/market-skills";
 import { links } from "../../platform/ipc";

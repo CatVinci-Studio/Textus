@@ -2,7 +2,7 @@ import { plural, type Lang, type Strings } from "../../i18n/strings";
 import { blockNames } from "../revision/markdown-forms";
 import type { InlineChatLabels } from "./quick-ask/InlineChat";
 import { pickerLabels } from "./ComposerPicker";
-import { permissionLabel } from "../../plugins/permissions";
+import { permissionLabel } from "../../plugins/store/permissions";
 
 /**
  * The chat's user-facing strings, assembled once here rather than inline at

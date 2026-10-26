@@ -4,7 +4,7 @@ import { hasPlugin, openWithPlugins } from "./plugin-helpers";
 
 /**
  * The Vim plugin (textus-plugins' catvinci.vim) through the editor's key
- * capture (src/plugins/editor-input.ts): normal mode's keys never type,
+ * capture (src/plugins/contributions/editor-input.ts): normal mode's keys never type,
  * motions and operators edit as typing does, insert mode types, u undoes,
  * and flash jumps to a label.
  */

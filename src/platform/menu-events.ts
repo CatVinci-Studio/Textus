@@ -1,7 +1,7 @@
 import { emitTo } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import type { NativeMenuId } from "../app/app-menu-model";
+import type { NativeMenuId } from "../app/menu/app-menu-model";
 import { menuIpc } from "./ipc";
 
 /**

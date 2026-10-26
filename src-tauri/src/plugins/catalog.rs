@@ -31,7 +31,7 @@ const DOWNLOAD_HOSTS: [&str; 3] = [
 const MAX_PACKAGE: u64 = 200 * 1024 * 1024;
 
 /// One plugin in the catalog - generated into
-/// src/platform/bindings/plugins.ts (src/plugins/catalog.ts reads it).
+/// src/platform/bindings/plugins.ts (src/plugins/store/catalog.ts reads it).
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]

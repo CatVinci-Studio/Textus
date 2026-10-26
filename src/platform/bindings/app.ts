@@ -117,7 +117,7 @@ export const commands = {
 	/**
 	 *  Runs a menu id exactly as clicking that item in the native menu would.
 	 * 
-	 *  The way in for the app-drawn menu on Windows (src/app/AppMenu.tsx): there
+	 *  The way in for the app-drawn menu on Windows (src/app/menu/AppMenu.tsx): there
 	 *  the native menu bar is hidden and the menu is redrawn in HTML, so its
 	 *  items have no native click to dispatch - they send their id here instead.
 	 *  The ids are the contract between the two, and `dispatch` below is the one
@@ -160,7 +160,7 @@ export const commands = {
 	 *  window, which sends its state on every change and as it gains focus.
 	 *  The items are named by what they show, never "Toggle ...", and the mark
 	 *  is AppKit's own. Only macOS shows this menu; elsewhere the app-drawn menu
-	 *  draws the same marks (app/AppMenu.tsx) and this does nothing.
+	 *  draws the same marks (app/menu/AppMenu.tsx) and this does nothing.
 	 */
 	set_menu_checks: (checks: { [key in string]: boolean }) => __TAURI_INVOKE<void>("set_menu_checks", { checks }),
 	/**

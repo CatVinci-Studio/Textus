@@ -1,6 +1,6 @@
 import { APP_NAME, type Strings } from "../i18n/strings";
 import { defaultShortcuts, type Shortcuts } from "../settings/SettingsContext";
-import { buildAppMenu, NO_RECENTS, type MenuNode } from "./app-menu-model";
+import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
 
 /**
  * The shortcuts that can't be changed, as Settings › Shortcuts lists them

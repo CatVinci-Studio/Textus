@@ -10,7 +10,7 @@ pub(crate) struct RecentMenu(pub(crate) Mutex<Option<Submenu<tauri::Wry>>>);
 /// The labels the menu is built with, keyed by menu id - or, for what has
 /// no id of ours, "menu:<name>" for a submenu and "predefined:<name>" for
 /// an item muda makes (the keys `nativeMenuLabels` in
-/// src/app/app-menu-model.ts sends). Empty until the frontend sends them,
+/// src/app/menu/app-menu-model.ts sends). Empty until the frontend sends them,
 /// which leaves every label English.
 #[derive(Default)]
 pub(crate) struct MenuLabels(pub(crate) Mutex<HashMap<String, String>>);

@@ -14,9 +14,9 @@ import {
   pluginValue,
   projectRoot,
   type SettingScope,
-} from "../../plugins/plugin-settings";
+} from "../../plugins/store/plugin-settings";
 import { basename } from "../../utils/path";
-import type { SettingContribution } from "../../plugins/manifest";
+import type { SettingContribution } from "../../plugins/store/manifest";
 
 /**
  * A plugin's settings from its manifest, drawn like Textus's own: for

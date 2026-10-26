@@ -20,13 +20,13 @@ import {
   requirementLabel,
   requirementMet,
   turnOnRequirement,
-} from "../../plugins/requirements";
-import { permissionLabel } from "../../plugins/permissions";
-import { canSwitch } from "../../plugins/lifecycle";
-import { usageGuide } from "../../plugins/usage-guide";
-import { PluginSettingsWebview } from "../../plugins/plugin-views";
-import type { PluginManifest } from "../../plugins/manifest";
-import { exportPluginForPublishing } from "../../plugins/plugin-export";
+} from "../../plugins/store/requirements";
+import { permissionLabel } from "../../plugins/store/permissions";
+import { canSwitch } from "../../plugins/store/lifecycle";
+import { usageGuide } from "../../plugins/store/usage-guide";
+import { PluginSettingsWebview } from "../../plugins/views/plugin-views";
+import type { PluginManifest } from "../../plugins/store/manifest";
+import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
 
 export type Attempt = (work: () => Promise<unknown>) => Promise<void>;
 

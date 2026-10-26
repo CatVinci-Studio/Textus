@@ -102,11 +102,11 @@ export const commands = {
 	plugin_ai_tool_result: (callId: string, text: string | null, error: string | null) => __TAURI_INVOKE<void>("plugin_ai_tool_result", { callId, text, error }),
 	/**
 	 *  The commands the plugins that are on put in the Plugins menu (the
-	 *  frontend's, src/plugins/usePluginMenu.ts), refilled when they change.
+	 *  frontend's, src/plugins/contributions/usePluginMenu.ts), refilled when they change.
 	 */
 	set_plugin_menu: (items: PluginMenuItem[]) => __TAURI_INVOKE<void>("set_plugin_menu", { items }),
 	/**
-	 *  The plugin commands the menu lists (src/plugins/usePluginMenu.ts),
+	 *  The plugin commands the menu lists (src/plugins/contributions/usePluginMenu.ts),
 	 *  refilled when the plugins that are on change.
 	 */
 	set_tray_plugin_items: (items: TrayPluginItem[]) => __TAURI_INVOKE<void>("set_tray_plugin_items", { items }),
@@ -179,13 +179,13 @@ export type AgentMode_Serialize =
 
 /**
  *  One plugin in the catalog - generated into
- *  src/platform/bindings/plugins.ts (src/plugins/catalog.ts reads it).
+ *  src/platform/bindings/plugins.ts (src/plugins/store/catalog.ts reads it).
  */
 export type CatalogEntry = CatalogEntry_Serialize | CatalogEntry_Deserialize;
 
 /**
  *  One plugin in the catalog - generated into
- *  src/platform/bindings/plugins.ts (src/plugins/catalog.ts reads it).
+ *  src/platform/bindings/plugins.ts (src/plugins/store/catalog.ts reads it).
  */
 export type CatalogEntry_Deserialize = {
 	id: string,
@@ -200,7 +200,7 @@ export type CatalogEntry_Deserialize = {
 
 /**
  *  One plugin in the catalog - generated into
- *  src/platform/bindings/plugins.ts (src/plugins/catalog.ts reads it).
+ *  src/platform/bindings/plugins.ts (src/plugins/store/catalog.ts reads it).
  */
 export type CatalogEntry_Serialize = {
 	id: string,

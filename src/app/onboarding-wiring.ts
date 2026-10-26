@@ -11,7 +11,7 @@ import { stepIndexOf } from "../onboarding/tutorial-steps";
 import type { Tutorial } from "../onboarding/useTutorial";
 import type { Lang } from "../i18n/strings";
 import type { PanelMode } from "./useSidePanels";
-import type { TabState } from "./useTabState";
+import type { TabState } from "./tabs/useTabState";
 
 /**
  * How the first-run surfaces (the language welcome, the onboarding tour)

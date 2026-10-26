@@ -63,7 +63,7 @@ pub(crate) fn build(
         // There the app is closed with Alt+F4, which the OS delivers on its
         // own, and Ctrl+Q means nothing, so claiming it would only take a
         // shortcut Windows users never aim at Quit. The app-drawn menu
-        // advertises Alt+F4 instead (src/app/app-menu-model.ts).
+        // advertises Alt+F4 instead (src/app/menu/app-menu-model.ts).
         #[cfg(not(windows))]
         let builder = builder.accelerator("CmdOrCtrl+Q");
         builder.build(app)?
@@ -304,7 +304,7 @@ pub(crate) fn build(
         // Linux, where it renders as an entry that does nothing when
         // clicked. Windows reaches fullscreen through the app-drawn menu
         // instead, which calls the window API directly
-        // (src/app/app-menu-actions.ts).
+        // (src/app/menu/app-menu-actions.ts).
         #[cfg(target_os = "macos")]
         let builder = builder
             .separator()

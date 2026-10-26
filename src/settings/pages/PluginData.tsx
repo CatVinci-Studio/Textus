@@ -3,7 +3,7 @@ import { SettingRow } from "../sections/controls";
 import { showConfirm } from "../../ui/app-dialog";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
-import { projectRoot } from "../../plugins/plugin-settings";
+import { projectRoot } from "../../plugins/store/plugin-settings";
 
 /** "12.3 KB", the way a file manager says it. */
 export function sizeText(bytes: number): string {

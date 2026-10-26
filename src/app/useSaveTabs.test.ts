@@ -2,7 +2,7 @@
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useSaveTabs } from "./useSaveTabs";
-import { useTabState } from "./useTabState";
+import { useTabState } from "./tabs/useTabState";
 import { fs } from "../platform/ipc";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import en from "../i18n/locales/en";

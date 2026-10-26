@@ -4,7 +4,7 @@
 //! storage.
 //!
 //! A plugin's code never calls these itself: it runs in a sandboxed frame
-//! with no access to Tauri, and asks the app window (src/plugins/broker.ts),
+//! with no access to Tauri, and asks the app window (src/plugins/host/broker.ts),
 //! which checks the call and makes it here. The checks are made again here
 //! all the same - the grant from `state.json`, the path inside the folder it
 //! was given - so a mistake in the window can't hand a plugin more than the

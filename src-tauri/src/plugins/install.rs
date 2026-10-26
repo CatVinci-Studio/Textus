@@ -4,7 +4,7 @@
 //!
 //! The manifest is read here only for its id and version - enough to know
 //! where the plugin goes. The window checks the rest of it
-//! (src/plugins/manifest.ts) before anything of the plugin runs.
+//! (src/plugins/store/manifest.ts) before anything of the plugin runs.
 
 use super::state::{self, PluginEntry};
 use super::{data_dir, plugins_root, require_id, MANIFEST};

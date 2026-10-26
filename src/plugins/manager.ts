@@ -1,11 +1,11 @@
-import { logPluginError } from "./plugin-log";
+import { logPluginError } from "./store/plugin-log";
 import {
   forgetPluginSettings,
   loadProjectPluginSettings,
   pluginValue,
   setPluginValue,
   type SettingScope,
-} from "./plugin-settings";
+} from "./store/plugin-settings";
 import { version as APP_VERSION } from "../../package.json";
 import { plugins as pluginsIpc, type PluginsState } from "../platform/ipc";
 import type { PluginFile } from "../platform/ipc";
@@ -14,26 +14,30 @@ import { isMacPlatform, isWindowsPlatform } from "../platform/os";
 import { registerCommand, runCommand } from "../app/commands";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import { getActiveDocument } from "./app-bridge";
-import type { PluginHost } from "./broker";
+import type { PluginHost } from "./host/broker";
 import { lazyModule } from "../lazy/lazy-module";
-import { type PluginOrigin } from "./files";
-import { engineSatisfied, parseManifest, type Permission } from "./manifest";
-import { permissionLabel } from "./permissions";
+import { type PluginOrigin } from "./store/files";
+import {
+  engineSatisfied,
+  parseManifest,
+  type Permission,
+} from "./store/manifest";
+import { permissionLabel } from "./store/permissions";
 import {
   addContribution,
   applyContributions,
   contributingPlugins,
   withdrawContributions,
   type ContributionDeps,
-} from "./plugin-contributions";
+} from "./contributions/plugin-contributions";
 import {
   removeWebview,
   webview,
   webviewForKey,
   webviewState,
   type WebviewRecord,
-} from "./webviews";
-import { canRun, canSwitch, nextStatus } from "./lifecycle";
+} from "./views/webviews";
+import { canRun, canSwitch, nextStatus } from "./store/lifecycle";
 import {
   pluginName,
   pluginRecord,
@@ -42,7 +46,7 @@ import {
   update,
   windowInfo,
   type PluginRecord,
-} from "./plugin-records";
+} from "./store/plugin-records";
 
 /**
  * Every plugin installed - from the catalog (catalog.ts) or a file - and
@@ -56,7 +60,7 @@ import {
  * asks (`onStartupFinished`).
  */
 
-export type { PluginStatus } from "./lifecycle";
+export type { PluginStatus } from "./store/lifecycle";
 export {
   configurePlugins,
   pluginName,
@@ -66,7 +70,7 @@ export {
   subscribePlugins,
   type PluginRecord,
   type PluginsSnapshot,
-} from "./plugin-records";
+} from "./store/plugin-records";
 
 const hosts = new Map<string, PluginHost>();
 
@@ -162,7 +166,7 @@ export function loadPlugins(reload = false): Promise<void> {
 
 // The broker - the frame a plugin's code runs in and every call it makes -
 // loads when the first plugin starts: a window with none on never does.
-const brokerModule = lazyModule("plugin-broker", () => import("./broker"));
+const brokerModule = lazyModule("plugin-broker", () => import("./host/broker"));
 
 async function host(record: PluginRecord): Promise<PluginHost> {
   const { PluginHost } = await brokerModule.load();

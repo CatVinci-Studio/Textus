@@ -1,10 +1,10 @@
 import { useCallback, useMemo, useState } from "react";
-import { useTabDragMerge } from "./useTabDragMerge";
+import { useTabDragMerge } from "./tabs/useTabDragMerge";
 import { useAutosave } from "../document/autosave";
 import { useLastCarets } from "../document/last-carets";
 import { useActiveDocument } from "./useActiveDocument";
 import { useOpenFolder } from "./useOpenFolder";
-import { useSplitRestore } from "./split-restore";
+import { useSplitRestore } from "./split/split-restore";
 import { useSessionPaths, useWindowTitle } from "./useWindowSession";
 import { useFileOpening } from "./useFileOpening";
 import { useHelpTabs } from "./useHelpTabs";

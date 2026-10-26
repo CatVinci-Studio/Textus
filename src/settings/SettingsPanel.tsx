@@ -38,7 +38,7 @@ import type { SettingsPageProps, Subpage } from "./pages/types";
 import { useModalDialog } from "../ui/useModalDialog";
 import { usePresenceProps } from "../ui/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
-import type { MenuChecks } from "../app/app-menu-model";
+import type { MenuChecks } from "../app/menu/app-menu-model";
 import { isIOSApp } from "../platform/capabilities";
 
 // The settings dialog shell: the pages' navigation (settings-pages.tsx),

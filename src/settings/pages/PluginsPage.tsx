@@ -24,9 +24,9 @@ import {
   loadCatalog,
   subscribeCatalog,
   updateFor,
-} from "../../plugins/catalog";
-import { canSwitch } from "../../plugins/lifecycle";
-import { openUsageGuide } from "../../plugins/usage-guide";
+} from "../../plugins/store/catalog";
+import { canSwitch } from "../../plugins/store/lifecycle";
+import { openUsageGuide } from "../../plugins/store/usage-guide";
 
 /**
  * Settings › Extensions › Plugins (docs/design/plugins.md §6). Nothing comes

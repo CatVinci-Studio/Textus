@@ -6,11 +6,11 @@ import {
   setPluginEnabled,
   subscribePlugins,
 } from "../../plugins/manager";
-import { localize, type Permission } from "../../plugins/manifest";
-import { openUsageGuide } from "../../plugins/usage-guide";
+import { localize, type Permission } from "../../plugins/store/manifest";
+import { openUsageGuide } from "../../plugins/store/usage-guide";
 import { showMessage } from "../../ui/app-dialog";
 import { errorText } from "../../utils/error-text";
-import { exportPluginForPublishing } from "../../plugins/plugin-export";
+import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
 
 export interface ReplyPluginLabels {
   installPlugin: string;

@@ -1,7 +1,7 @@
 /**
  * Something dragged over the documents from elsewhere in the window - a
  * file from the sidebar's tree - and let go there. The window shell says
- * what that does (app/split-drop.ts: show where it would open, then open
+ * what that does (app/split/split-drop.ts: show where it would open, then open
  * it there); what is dragged only asks, so it needs to know nothing of
  * tabs or splits.
  */

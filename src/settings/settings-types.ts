@@ -244,7 +244,7 @@ export interface Settings {
   /// The MCP servers Textus AI may use (Settings › Extensions › MCP),
   /// read by Rust from the settings file (src-tauri mcp/mod.rs).
   mcpServers: McpServer[];
-  /// Each plugin's settings, by plugin id (src/plugins/plugin-settings.ts);
+  /// Each plugin's settings, by plugin id (src/plugins/store/plugin-settings.ts);
   /// a project's `.textus/settings.json` holds the same, over these.
   plugins: Record<string, Record<string, unknown>>;
   /// Settings > Textus AI > Suggest your next message: after each reply,
@@ -278,7 +278,7 @@ export interface Settings {
   typewriterMode: boolean;
   contentWidth: ContentWidth;
   /// Windows and Linux, where the app draws the window bar: File, Edit,
-  /// View and the rest along it (app/MenuBar.tsx) instead of behind ☰.
+  /// View and the rest along it (app/menu/MenuBar.tsx) instead of behind ☰.
   /// Off by default; on, the bar has no sidebar button (the sidebar is in
   /// View and has its shortcut).
   menuBarShown: boolean;

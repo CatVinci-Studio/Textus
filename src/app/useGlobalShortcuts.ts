@@ -1,4 +1,4 @@
-import { heldByPlugin } from "../plugins/editor-input";
+import { heldByPlugin } from "../plugins/contributions/editor-input";
 import { useEffect } from "react";
 import { cycleRegion, trackRegionFocus } from "./regions";
 import { useSettings, type HeadingAction } from "../settings/SettingsContext";
@@ -9,7 +9,7 @@ import {
   appDrawsWindowFrame,
   ownsMenuAccelerators,
 } from "../platform/window-chrome";
-import { runLocalMenuAction } from "./app-menu-actions";
+import { runLocalMenuAction } from "./menu/app-menu-actions";
 import { canOpenFolder } from "../platform/capabilities";
 import { comboFromEvent } from "../utils/shortcuts";
 import { menuIpc } from "../platform/ipc";
@@ -22,7 +22,7 @@ import {
   TOGGLE_FIND_REPLACE_EVENT,
   INSERT_BLOCK_EVENT,
 } from "../utils/events";
-import { closeSplit, splitEditor, splitLayout } from "./split-layout";
+import { closeSplit, splitEditor, splitLayout } from "./split/split-layout";
 
 /** The heading shortcuts, by the Format menu's block kind they apply
  *  (INSERT_BLOCK_EVENT). */

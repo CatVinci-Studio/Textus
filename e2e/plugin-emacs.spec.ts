@@ -4,7 +4,7 @@ import { hasPlugin, openWithPlugins } from "./plugin-helpers";
 
 /**
  * The Emacs plugin (textus-plugins' catvinci.emacs) through the editor's
- * key capture (src/plugins/editor-input.ts): only its own keys are taken,
+ * key capture (src/plugins/contributions/editor-input.ts): only its own keys are taken,
  * so typing stays the editor's; motions, the mark, kills into the kill
  * ring and yanks back, and undo.
  */

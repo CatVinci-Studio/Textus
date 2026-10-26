@@ -1,6 +1,9 @@
 import type { SentBlock } from "../ai/doc-blocks";
 import type { EditProposal } from "../ai/types";
-import type { Where } from "./broker-scope";
+
+/** Where something opens: a tab of its own, beside the tab in front, or
+ *  in its place (textus.layout's `where`). */
+export type Where = "tab" | "beside" | "current";
 
 /** A place in a file (textus.d.ts's Location): where to open it, or what
  *  a list item, a task or a search hit points at. */

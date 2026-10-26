@@ -10,7 +10,7 @@ import {
 } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
 import { errorText } from "../../utils/error-text";
-import { openUsageGuide } from "../../plugins/usage-guide";
+import { openUsageGuide } from "../../plugins/store/usage-guide";
 import { MarketPage, type MarketKind } from "./MarketPage";
 
 import {

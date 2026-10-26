@@ -3,7 +3,7 @@ import { openApp } from "./helpers";
 
 /**
  * Marks a plugin puts on the text (textus.editor.registerDecorations,
- * document-view/plugin-decorations.ts): the blocks in sight go to the
+ * document-view/plugins/plugin-decorations.ts): the blocks in sight go to the
  * plugin, and what it answers is drawn - on an anchor's words or a whole
  * block - and drawn again as the text changes.
  */

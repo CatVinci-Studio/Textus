@@ -1,0 +1,117 @@
+/* The app-drawn menu (app/menu/AppMenu.tsx). Windows only - where the OS frame is
+   gone there is no native menu bar left, and this is the whole way in.
+
+   Sized to the app rather than to Win32: the same 13px body text, the same
+   --editor-* colours and the same rounded floating-surface the context menu
+   and the chat popovers use, so opening the menu doesn't drop a grey system
+   panel into an otherwise themed window. */
+
+/* Above the find bar (300): the menu opens from the title row over
+   whatever bar is showing - level with it, the find bar covered its first
+   rows and had to be closed to reach them. */
+.app-menu {
+  position: fixed;
+  z-index: var(--z-menu);
+}
+
+/* Grows out of the button it hangs from. The list moves rather than the
+   wrapper: a transform on an ancestor would become the containing block
+   of the fixed flyouts and drag them along. Closing, the whole menu fades
+   where it is - also from the wrapper, for the same reason. */
+.app-menu > .app-menu-list {
+  transform-origin: top left;
+  animation: motion-pop-in var(--dur-base) var(--ease-out);
+}
+
+.app-menu[data-state="closing"] {
+  animation: motion-fade-out var(--dur-fast) var(--ease-in) forwards;
+}
+
+.app-menu-list {
+  min-width: 200px;
+  /* Caps how far a long label (a recent file's name, a translated "Toggle
+     Typewriter Mode") can stretch the panel; past this they ellipsize. */
+  max-width: 340px;
+  /* Long lists (Open Recent with ten files, the export formats) scroll
+     rather than run off the bottom of a short window. */
+  max-height: min(78vh, 560px);
+  overflow-y: auto;
+}
+
+.app-menu-row {
+  /* The anchor a flyout is measured against; the flyout itself is fixed, so
+     this only has to be a stable box, not a containing block. */
+  position: relative;
+}
+
+.app-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.app-menu-item:hover:not(:disabled),
+.app-menu-item:focus-visible,
+.app-menu-item[aria-expanded="true"] {
+  background: var(--sidebar-hover);
+  outline: none;
+}
+
+.app-menu-item:disabled {
+  color: var(--editor-muted);
+}
+
+.app-menu-label {
+  flex: 1;
+  /* A flex item's min-width defaults to auto, which is its content width -
+     without this the label refuses to shrink and never ellipsizes. */
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The shortcut hint. Deliberately quiet and never the reason the panel is
+   wide - the label pushes it right, it doesn't push the label. */
+.app-menu-accel {
+  flex-shrink: 0;
+  color: var(--editor-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The on/off items' column (View > Sidebar, Source Code Mode...): the
+   trailing edge of the row, after the shortcut hint, where the mark shows
+   while the mode is on. Every row of a list that has one keeps the column
+   (empty when off or a plain action), so the hints stay aligned. */
+.app-menu-check {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  /* Closer to the hint than the label's 16px gap: it belongs to the row's
+     trailing edge, not to the hint. */
+  margin-left: -6px;
+  color: var(--chrome-accent);
+}
+
+.app-menu-chevron {
+  flex-shrink: 0;
+  margin-right: -2px;
+  color: var(--editor-muted);
+}
+
+.app-menu-flyout {
+  position: fixed;
+  z-index: 311;
+  --enter-x: calc(var(--motion-distance-sm) * -1);
+  animation: motion-enter var(--dur-fast) var(--ease-out);
+}
+
+/* Another submenu was open a moment ago: this one replaces it at once. */
+.app-menu-flyout-instant {
+  animation: none;
+}

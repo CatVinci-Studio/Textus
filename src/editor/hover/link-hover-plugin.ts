@@ -1,6 +1,9 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
-import { hasHoverProviders, provideHover } from "../../plugins/hover-providers";
+import {
+  hasHoverProviders,
+  provideHover,
+} from "../../plugins/contributions/hover-providers";
 import {
   floatingCardKey,
   hideHoverCard,

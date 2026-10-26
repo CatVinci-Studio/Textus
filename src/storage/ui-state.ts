@@ -60,7 +60,7 @@ export interface UiState {
   /** "1" when the file tree shows hidden files (#357). */
   fileTreeHidden: string;
   /** The split the window was left in, by its two documents' paths
-   *  (app/split-restore.ts); null when it showed one. */
+   *  (app/split/split-restore.ts); null when it showed one. */
   splitLayout: {
     direction: "row" | "column";
     ratio: number;

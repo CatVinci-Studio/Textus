@@ -7,7 +7,7 @@ import {
   useMenuBridge,
   useNativeMenuAccelerators,
   useNativeMenuChecks,
-} from "./menu-bridge";
+} from "./menu/menu-bridge";
 import { useStartupRestore } from "../document/startup-restore";
 import { useOpenPathsPush, useFileDrop } from "./useFileOpening";
 import { useDocumentActions } from "./useDocumentActions";
@@ -20,7 +20,7 @@ import {
 import { tabIsUntouchedDraft } from "../document/doc-tabs";
 import { useLatest } from "../utils/hooks/useLatest";
 import { setDocumentDrop } from "../ui/document-drop";
-import { fileDropOnDocuments } from "./split-drop";
+import { fileDropOnDocuments } from "./split/split-drop";
 import type { WindowShell } from "./useWindowShell";
 import type { WindowDocuments } from "./useWindowDocuments";
 import type { Settings, useSettings } from "../settings/SettingsContext";

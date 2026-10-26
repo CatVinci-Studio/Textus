@@ -15,9 +15,9 @@ import { moveConversations } from "../ai/chat/chat-history";
 import { defaultMarkdownFilename } from "../document/save-default-name";
 import { isWordDocument, wordSaveSuggestion } from "../document/word-import";
 import { emitPluginEvent, openDocumentAt } from "../plugins/app-bridge";
-import { hasWillSave, runWillSave } from "../plugins/will-save";
+import { hasWillSave, runWillSave } from "../plugins/contributions/will-save";
 import type { Strings } from "../i18n/strings";
-import type { TabState } from "./useTabState";
+import type { TabState } from "./tabs/useTabState";
 
 /** Save and Save As for this window's tabs. Both resolve true only when the
  *  document actually reached disk. */

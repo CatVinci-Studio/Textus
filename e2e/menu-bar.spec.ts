@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
 /**
- * The menu bar (app/MenuBar.tsx), where the app draws the window frame -
+ * The menu bar (app/menu/MenuBar.tsx), where the app draws the window frame -
  * Windows and Linux, so these runs: off by default (the ☰ and the
  * sidebar's button), on from Settings › Editor & Appearance; then File,
  * Edit, View… along the bar, each opening its list, the pointer or ← / →

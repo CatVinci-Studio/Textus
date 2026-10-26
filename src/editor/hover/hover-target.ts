@@ -1,6 +1,6 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { fs } from "../../platform/ipc";
-import type { HoverTarget } from "../../plugins/hover-providers";
+import type { HoverTarget } from "../../plugins/contributions/hover-providers";
 import { linkTarget } from "../markdown/link-target";
 import { parseWikilink } from "../markdown/wikilink";
 

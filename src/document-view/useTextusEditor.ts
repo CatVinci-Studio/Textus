@@ -18,7 +18,7 @@ import { configureEditorRoot } from "../editor/editor-extensions";
 import {
   documentChangedForPlugins,
   selectionChangedForPlugins,
-} from "./plugin-events";
+} from "./plugins/plugin-events";
 
 /** The ref-indirected callbacks the plugin chain reads at call time: the
  *  chain is built once, on mount, before the hooks that own the real

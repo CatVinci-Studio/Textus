@@ -15,7 +15,7 @@ import { FILE_WRITTEN_EVENT } from "../utils/events";
 // The same check runs when something in the window wrote a file without
 // the window losing focus - a plugin ticking a task (FILE_WRITTEN_EVENT).
 //
-// `liveTabs` is app/useTabState.ts's: a clean-looking tab can still hold an
+// `liveTabs` is app/tabs/useTabState.ts's: a clean-looking tab can still hold an
 // edit the editor hasn't reported yet, and reloading it would remount the
 // editor over that edit.
 export function useExternalChangeReload(

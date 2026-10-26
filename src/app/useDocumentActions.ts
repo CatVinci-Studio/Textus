@@ -3,7 +3,7 @@ import { iosFiles } from "../platform/ios-files";
 import { forgetIOSDocument } from "../document/ios-recents";
 import { moveConversations } from "../ai/chat/chat-history";
 import { makeBlankTab, tabIsDirty } from "../document/doc-tabs";
-import type { TabState } from "./useTabState";
+import type { TabState } from "./tabs/useTabState";
 import { isInside } from "../utils/path";
 
 /**

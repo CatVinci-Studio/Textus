@@ -1,9 +1,9 @@
 import { Fragment, useSyncExternalStore } from "react";
 import { useSettings } from "../settings/SettingsContext";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
-import type { MenuChecks } from "./app-menu-model";
+import type { MenuChecks } from "./menu/app-menu-model";
 import { AppMenuButton } from "./WindowControls";
-import { MenuBar } from "./MenuBar";
+import { MenuBar } from "./menu/MenuBar";
 import { appDrawsWindowFrame } from "../platform/window-chrome";
 import { Tooltip } from "../ui/Tooltip";
 import { TextusAiButton } from "../ai/TextusAiSwitch";
@@ -14,7 +14,7 @@ import { runCommand } from "./commands";
 import {
   statusItemsSnapshot,
   subscribeStatusItems,
-} from "../plugins/status-items";
+} from "../plugins/contributions/status-items";
 
 /**
  * The window's one top strip: traffic-light room, which document this
@@ -137,7 +137,7 @@ export function WindowBar({
   );
 }
 
-/** What plugins show here (window.setStatusItem, plugins/status-items.ts):
+/** What plugins show here (window.setStatusItem, plugins/contributions/status-items.ts):
  *  a text, its tooltip, and a command a click runs. */
 function PluginStatusItems() {
   const items = useSyncExternalStore(subscribeStatusItems, statusItemsSnapshot);

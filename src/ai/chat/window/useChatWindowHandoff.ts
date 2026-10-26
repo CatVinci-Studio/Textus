@@ -97,7 +97,7 @@ export function useChatWindowHandoff(settings: Settings) {
   }, [claimHandoff]);
 
   // Edit › Select All in this window too: macOS's menu sends it to the
-  // focused window, the composer's text here (app/app-menu-actions.ts).
+  // focused window, the composer's text here (app/menu/app-menu-actions.ts).
   useEffect(
     () => unlistenAll(listenToThisWindow("menu-select-all", selectAllInFocus)),
     [],

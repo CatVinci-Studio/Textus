@@ -1,5 +1,5 @@
 import type { PluginFile } from "../platform/ipc";
-import { parseManifest, type PluginManifest } from "./manifest";
+import { parseManifest, type PluginManifest } from "./store/manifest";
 
 /**
  * A plugin Textus AI wrote in a reply (the `plugin` skill): each of its

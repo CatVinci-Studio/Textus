@@ -13,7 +13,7 @@ import { call, command, desktopActionCommand } from "./ipc-call";
 
 // ---------------------------------------------------------------------------
 // plugins (src-tauri/src/plugins/) - what is installed and granted, and the
-// calls a plugin makes through the window (src/plugins/broker.ts).
+// calls a plugin makes through the window (src/plugins/host/broker.ts).
 // ---------------------------------------------------------------------------
 
 // Generated from the Rust commands (src/platform/bindings/plugins.ts):

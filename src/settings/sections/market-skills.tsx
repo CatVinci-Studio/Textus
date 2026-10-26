@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Strings } from "../../i18n/strings";
 import { ai, plugins as pluginsIpc } from "../../platform/ipc";
-import type { CatalogState, SkillEntry } from "../../plugins/catalog";
+import type { CatalogState, SkillEntry } from "../../plugins/store/catalog";
 import { errorText } from "../../utils/error-text";
 import { useSettings } from "../SettingsContext";
 import type { TextKey } from "../../i18n/strings";

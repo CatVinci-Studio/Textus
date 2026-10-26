@@ -4,7 +4,7 @@
 //! otherwise.
 //!
 //! Its menu: Open Textus, the commands plugins put there (`app/tray`,
-//! src/plugins/manifest.ts) - each opens a window first when none is open,
+//! src/plugins/store/manifest.ts) - each opens a window first when none is open,
 //! then runs - and Quit Textus. A left click opens Textus on
 //! Windows; on macOS it opens the menu, as menu bar items do, and on Linux
 //! the AppIndicator protocol has no click of its own, so it opens the menu
@@ -138,7 +138,7 @@ fn run_plugin_command(app: &AppHandle, command: &str) {
     }
 }
 
-/// The plugin commands the menu lists (src/plugins/usePluginMenu.ts),
+/// The plugin commands the menu lists (src/plugins/contributions/usePluginMenu.ts),
 /// refilled when the plugins that are on change.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]

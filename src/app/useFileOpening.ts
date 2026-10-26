@@ -28,17 +28,17 @@ import { isWordDocument, wordDocumentTab } from "../document/word-import";
 import { showMessage } from "../ui/app-dialog";
 import { loadPlugins, revealInPluginTab } from "../plugins/manager";
 import type { DocumentPlace } from "../plugins/app-bridge";
-import type { Where } from "../plugins/broker-scope";
-import { customEditorFor } from "../plugins/plugin-lookup";
+import type { Where } from "../plugins/app-bridge";
+import { customEditorFor } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
 import { useLatest } from "../utils/hooks/useLatest";
-import { openBeside } from "./split-layout";
+import { openBeside } from "./split/split-layout";
 import { errorText } from "../utils/error-text";
 import type { Strings } from "../i18n/strings";
 import type { NewDocumentMode } from "../settings/SettingsContext";
 import type { PendingClose } from "./close-flow";
-import type { TabState } from "./useTabState";
-import { splitForDrop, type DropTarget } from "./split-drop";
+import type { TabState } from "./tabs/useTabState";
+import { splitForDrop, type DropTarget } from "./split/split-drop";
 
 /** How a document opens, beyond which file. */
 export interface OpenOptions {
@@ -163,9 +163,10 @@ export function useFileOpening(opts: {
         disk = await readDocFromDisk(path);
       } catch (err) {
         // Not text - a PDF, a picture: a plugin in the market may open it,
-        // offered then and there (plugins/open-offer.ts).
+        // offered then and there (plugins/store/open-offer.ts).
         if (asDocument) throw err;
-        const { offerPluginToOpen } = await import("../plugins/open-offer");
+        const { offerPluginToOpen } =
+          await import("../plugins/store/open-offer");
         const now = (await offerPluginToOpen(path, t))
           ? customEditorFor(path)
           : null;

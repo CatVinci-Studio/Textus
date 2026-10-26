@@ -7,7 +7,7 @@ import {
   takePendingCaret,
 } from "../editor/modes/mode-switch";
 import type { DocTab } from "../document/doc-tabs";
-import type { TabState } from "./useTabState";
+import type { TabState } from "./tabs/useTabState";
 
 /** Switching the active tab between the rich editor, plain source mode and
  *  split view, with the caret carried across each switch. */

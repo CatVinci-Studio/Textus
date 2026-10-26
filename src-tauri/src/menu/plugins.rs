@@ -90,7 +90,7 @@ pub(crate) fn rebuild_plugin_menu(app: &tauri::AppHandle) {
 }
 
 /// The commands the plugins that are on put in the Plugins menu (the
-/// frontend's, src/plugins/usePluginMenu.ts), refilled when they change.
+/// frontend's, src/plugins/contributions/usePluginMenu.ts), refilled when they change.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn set_plugin_menu(app: AppHandle, items: Vec<PluginMenuItem>) {

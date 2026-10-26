@@ -6,7 +6,7 @@ import {
   pluginLog,
   pluginLogVersion,
   subscribePluginLog,
-} from "../../plugins/plugin-log";
+} from "../../plugins/store/plugin-log";
 
 /** What went wrong in the plugin lately (plugin-log.ts), newest first;
  *  nothing when nothing has. */
