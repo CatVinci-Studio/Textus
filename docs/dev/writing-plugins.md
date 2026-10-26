@@ -26,9 +26,8 @@ of typing. The design behind the system is
 
 ## Getting started
 
-1. Start from the template: GitHub's **Use this template** on
-   [textus-plugin-template](https://github.com/CatVinci-Studio/textus-plugin-template),
-   or copy [`template/`](https://github.com/CatVinci-Studio/textus-plugins/tree/main/template)
+1. Start from the template: copy
+   [`template/`](https://github.com/CatVinci-Studio/textus-plugins/tree/main/template)
    from textus-plugins. It is a working plugin: a command and a sidebar
    list, in English and Chinese.
 2. In Textus, **Settings › Extensions › Plugins › Install a plugin › Load a
