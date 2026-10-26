@@ -12,6 +12,8 @@ pub(crate) fn install(app: &tauri::App) -> tauri::Result<()> {
     app.manage(PluginMenu::default());
     set_menu(app.handle(), &HashMap::new())?;
     app.on_menu_event(move |app_handle, event| dispatch(app_handle, event.id().as_ref()));
+    #[cfg(target_os = "macos")]
+    super::dock::install(app.handle());
     Ok(())
 }
 

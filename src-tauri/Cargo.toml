@@ -183,6 +183,9 @@ objc2-app-kit = { version = "0.3", default-features = false, features = [
     "std",
     "objc2-core-foundation",
     "NSApplication",
+    # The Dock icon's menu (menu/dock.rs).
+    "NSMenu",
+    "NSMenuItem",
     "NSResponder",
     "NSWindow",
     "NSView",
