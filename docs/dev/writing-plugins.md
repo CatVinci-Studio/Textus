@@ -289,6 +289,11 @@ from)`, `tags()`, `tasks()`, `search(query)`, `onDidChange`. Read this
   back from other tools. The plugin starts for them if it must.
 - `editor.keys` (`editor.input`): for a way of typing (Vim, Emacs) -
   `capture`, `onKey` and `exec(op)`; see the Vim plugin.
+- `export.onWillExport(fn)` (`editor.read`): an HTML or PDF export's
+  page before it is written - return `{ css }` to add styles (numbered
+  headings, a print footer) or `{ html }` to change its content. Scripts
+  in it are taken out. A code block's picture comes from its page instead
+  ([Code blocks in an export](#code-blocks-in-an-export)).
 
 ## Webviews
 

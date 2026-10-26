@@ -25,6 +25,7 @@
   var aiTools = new Map();
   var uriHandlers = [];
   var willSave = [];
+  var willExport = [];
   var settingsProvider = null;
   var webviews = new Map();
   var listeners = new Map();
@@ -847,6 +848,18 @@
         });
       },
     },
+    export: {
+      onWillExport: function (listener) {
+        willExport.push(listener);
+        if (willExport.length === 1)
+          quiet(call("export.willExport", { on: true }));
+        return disposable(function () {
+          without(willExport, listener);
+          if (!willExport.length)
+            quiet(call("export.willExport", { on: false }));
+        });
+      },
+    },
     uri: {
       registerHandler: function (handler) {
         uriHandlers.push(handler);
@@ -994,6 +1007,20 @@
         if (typeof next === "string") current = next;
       }
       return current === params.text ? null : current;
+    },
+    $willExport: async function (params) {
+      var html = params.html;
+      var css = "";
+      for (var i = 0; i < willExport.length; i++) {
+        var answer = await willExport[i]({
+          format: params.format,
+          path: params.path,
+          html: html,
+        });
+        if (answer && typeof answer.html === "string") html = answer.html;
+        if (answer && typeof answer.css === "string") css += "\n" + answer.css;
+      }
+      return { html: html === params.html ? null : html, css: css || null };
     },
     $uri: async function (params) {
       for (var i = 0; i < uriHandlers.length; i++)

@@ -10,6 +10,7 @@ import {
   type Frontmatter,
 } from "../workspace/frontmatter";
 import { rewriteLinks } from "../workspace/link-rewrite";
+import { setWillExport } from "../contributions/will-export";
 import { setWillSave } from "../contributions/will-save";
 import {
   optionalStr,
@@ -190,6 +191,12 @@ export function fileHandlers(p: PluginScope) {
       p.need("files.write");
       setWillSave(p.id, on === true, (path, text) =>
         p.request<string | null>("$willSave", { path, text }),
+      );
+    },
+    "export.willExport": ({ on }: Params) => {
+      p.need("editor.read");
+      setWillExport(p.id, on === true, (page) =>
+        p.request("$willExport", page),
       );
     },
     "net.fetch": async (r: Params) => {

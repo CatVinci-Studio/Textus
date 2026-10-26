@@ -20,6 +20,7 @@ import { metadataHandlers } from "./broker-metadata";
 import { stopPluginUi, uiHandlers } from "./broker-ui";
 import { viewHandlers } from "./broker-views";
 import { forgetListViews } from "../contributions/list-views";
+import { forgetWillExport } from "../contributions/will-export";
 import { forgetWillSave } from "../contributions/will-save";
 import { unwatchMetadata, watchMetadata } from "../workspace/metadata-cache";
 import { str, type Params, type PluginScope } from "./broker-scope";
@@ -210,6 +211,7 @@ export class PluginHost {
     stopPluginEditor(this.id);
     forgetListViews(this.id);
     forgetWillSave(this.id);
+    forgetWillExport(this.id);
     unwatchMetadata(this.id);
     setTimeout(() => {
       this.disconnect?.();

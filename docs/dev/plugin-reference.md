@@ -117,6 +117,7 @@ What `exports.activate` is given.
 | `ai: Ai`             |     |
 | `plugins: Plugins`   |     |
 | `uri: Uri`           |     |
+| `export: Export`     |     |
 
 ## Env
 
@@ -569,6 +570,12 @@ Tools for Textus AI (ai.tools): each one named in the manifest's contributes.aiT
 | Member                                                                                              |                                                                                                                                                                                              |
 | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `get<T = Record<string, (...args: unknown[]) => Promise<unknown>>>(id: string): Promise<T \| null>` | What another plugin's `activate` returned, its functions callable from here (their arguments and answers as JSON); starts it if it isn't running. null when it isn't installed or turned on. |
+
+## Export
+
+| Member                                                                                                                                                                                                           |                                                                                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onWillExport(listener: (page: { format: "html" \| "pdf"; path: string \| null; html: string; }) => \| { css?: string; html?: string } \| void \| Promise<{ css?: string; html?: string } \| void>): Disposable` | An HTML or PDF export's page, before it is written (editor.read): `css` is added to its styles, `html` replaces its content. Scripts and handlers in the HTML are taken out. Each plugin is waited for at most two seconds. |
 
 ## Uri
 

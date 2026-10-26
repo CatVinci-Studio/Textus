@@ -26,33 +26,30 @@ function runtimeMembers(): string[] {
   return out;
 }
 
-/** The members the declaration file gives an interface. */
-function declared(iface: string): string[] {
-  const body = new RegExp(`interface ${iface} \\{([\\s\\S]*?)\\n    \\}`).exec(
+/** An interface's body in the declaration file. */
+function declaredBody(iface: string): string | undefined {
+  return new RegExp(`interface ${iface} \\{([\\s\\S]*?)\\n    \\}`).exec(
     TYPES,
   )?.[1];
+}
+
+/** The members the declaration file gives an interface. */
+function declared(iface: string): string[] {
+  const body = declaredBody(iface);
   if (!body) return [];
   return [...body.matchAll(/^ {6}(?:readonly )?(\w+)[(?:<]/gm)].map(
     (m) => m[1],
   );
 }
 
-const INTERFACES: Record<string, string> = {
-  env: "Env",
-  l10n: "L10n",
-  commands: "Commands",
-  ui: "Ui",
-  layout: "Layout",
-  views: "Views",
-  editor: "Editor",
-  files: "Files",
-  metadata: "Metadata",
-  net: "Net",
-  settings: "Settings",
-  ai: "Ai",
-  plugins: "Plugins",
-  uri: "Uri",
-};
+/** Each namespace of `textus` and its interface, as `interface Api` lists
+ *  them. */
+const INTERFACES: Record<string, string> = Object.fromEntries(
+  [...(declaredBody("Api") ?? "").matchAll(/^ {6}(\w+): (\w+);/gm)].map((m) => [
+    m[1],
+    m[2],
+  ]),
+);
 
 describe("textus.d.ts", () => {
   it("declares every part of the plugin API, and only those", () => {

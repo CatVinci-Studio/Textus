@@ -16,6 +16,7 @@ import {
   lightDiagrams,
 } from "./diagram-images";
 import { drawnPicturesByLanguage, markDrawnPictures } from "./drawn-blocks";
+import { finishExportPage } from "./export-step";
 import { appearanceIsDark } from "../editor/diagram-engine";
 import type { DiagramEngine } from "../settings/SettingsContext";
 import {
@@ -242,11 +243,16 @@ export async function exportPdf(
         style.fontFamily,
       );
     }
+    const finished = await finishExportPage({
+      format: "pdf",
+      path: tab.path,
+      html: content,
+    });
     const page = platformPage();
     const standalone = buildStandaloneHtml(
       base,
-      content,
-      pdfLayoutCss(page, whitePage),
+      finished.html,
+      pdfLayoutCss(page, whitePage) + finished.css,
       whitePage,
     );
     const html = page ? await paginateHtml(standalone, page) : standalone;
@@ -305,7 +311,16 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
   );
   unmark();
   const content = besideDocument ? copy : await inlineImages(copy, tab.path);
-  const html = buildStandaloneHtml(base, content, HTML_LAYOUT_CSS);
+  const finished = await finishExportPage({
+    format: "html",
+    path: tab.path,
+    html: content,
+  });
+  const html = buildStandaloneHtml(
+    base,
+    finished.html,
+    HTML_LAYOUT_CSS + finished.css,
+  );
   await fs.writeTextFile(picked, html);
   void exportDoc.revealInDir(picked);
 }

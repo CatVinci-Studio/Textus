@@ -131,6 +131,7 @@ declare global {
       ai: Ai;
       plugins: Plugins;
       uri: Uri;
+      export: Export;
     }
 
     interface Env {
@@ -819,6 +820,23 @@ declare global {
       get<T = Record<string, (...args: unknown[]) => Promise<unknown>>>(
         id: string,
       ): Promise<T | null>;
+    }
+
+    interface Export {
+      /** An HTML or PDF export's page, before it is written (editor.read):
+       *  `css` is added to its styles, `html` replaces its content. Scripts
+       *  and handlers in the HTML are taken out. Each plugin is waited for
+       *  at most two seconds. */
+      onWillExport(
+        listener: (page: {
+          format: "html" | "pdf";
+          path: string | null;
+          html: string;
+        }) =>
+          | { css?: string; html?: string }
+          | void
+          | Promise<{ css?: string; html?: string } | void>,
+      ): Disposable;
     }
 
     interface Uri {
