@@ -19,6 +19,7 @@ export type ShortcutAction =
   | "toggleSplitView"
   | "toggleZenMode"
   | "splitEditor"
+  | "commandPalette"
   | "toggleSourceMode"
   | "toggleTypewriterMode"
   | "findReplace"
@@ -58,6 +59,7 @@ export function defaultShortcuts(mac = modIsMeta()): Shortcuts {
     toggleZenMode: "mod+shift+j",
     // The one Split Panes had as a plugin.
     splitEditor: "mod+alt+s",
+    commandPalette: "mod+shift+p",
     toggleSourceMode: "mod+/",
     toggleTypewriterMode: "",
     findReplace: "mod+f",

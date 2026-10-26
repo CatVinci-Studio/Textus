@@ -48,7 +48,7 @@ inside is in folders by job:
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `host/`          | Running a plugin: the sandboxed frames, the runtimes put in them (`runtime/`), the broker that answers every call (`broker*.ts`), the RPC.       |
 | `contributions/` | The registries of what plugins add: commands and menus, code blocks, decorations, completions, hover cards, links, lists, AI tools, before-save. |
-| `views/`         | What draws plugins: webviews, lists, web pages, forms and pickers, the theme given to a page.                                                    |
+| `views/`         | What draws plugins: webviews, lists, web pages, forms, the theme given to a page.                                                                |
 | `store/`         | What is installed and how: manifests, the catalog, records and their state, permissions, settings, logs, export, migration.                      |
 | `workspace/`     | What plugins know of the folder: the metadata index, globs, front matter, links that follow a rename.                                            |
 

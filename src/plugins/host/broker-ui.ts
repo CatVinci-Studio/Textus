@@ -6,7 +6,7 @@ import {
   startProgress,
 } from "../../ui/notices";
 import { showPluginForm, type PluginFormField } from "../views/plugin-form";
-import { showQuickPick, type QuickPickItem } from "../views/quick-pick";
+import { showQuickPick, type QuickPickItem } from "../../ui/quick-pick";
 import { removeStatusItem, setStatusItem } from "../contributions/status-items";
 import {
   optionalStr,

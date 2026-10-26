@@ -390,6 +390,7 @@ export function ShortcutRow({
       toggleSplitView: t.shortcutToggleSplitView,
       toggleZenMode: t.shortcutToggleZenMode,
       splitEditor: t.shortcutSplitEditor,
+      commandPalette: t.shortcutCommandPalette,
       toggleSourceMode: t.shortcutToggleSourceMode,
       toggleTypewriterMode: t.shortcutToggleTypewriterMode,
       searchFiles: t.shortcutSearchFiles,

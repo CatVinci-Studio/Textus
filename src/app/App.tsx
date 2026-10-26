@@ -27,7 +27,7 @@ import {
   ZenHint,
 } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
-import { QuickPickHost } from "../plugins/views/quick-pick";
+import { QuickPickHost } from "../ui/quick-pick";
 import { PluginFormHost } from "../plugins/views/plugin-form";
 import { NoticeHost } from "../ui/notices";
 import "../plugins/plugins.css";

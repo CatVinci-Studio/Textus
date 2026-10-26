@@ -22,6 +22,7 @@ import type { DocTab, HelpDoc } from "../../document/doc-tabs";
 import type { Strings } from "../../i18n/strings";
 import type { DiagramEngine, Shortcuts } from "../../settings/SettingsContext";
 import { closeSplit, splitEditor } from "../split/split-layout";
+import { openCommandPalette } from "../command-palette";
 
 export interface MenuBridgeHandlers {
   activeTabId: string;
@@ -162,6 +163,10 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       ),
       listenToThisWindow("menu-toggle-zen-mode", () => h().onToggleZenMode()),
       // Two documents at once (split-layout.ts).
+      listenToThisWindow(
+        "menu-command-palette",
+        () => void openCommandPalette(),
+      ),
       listenToThisWindow("menu-split-right", () => splitEditor("row")),
       listenToThisWindow("menu-split-down", () => splitEditor("column")),
       listenToThisWindow("menu-close-split", () => closeSplit()),

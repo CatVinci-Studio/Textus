@@ -23,6 +23,7 @@ import {
   INSERT_BLOCK_EVENT,
 } from "../utils/events";
 import { closeSplit, splitEditor, splitLayout } from "./split/split-layout";
+import { openCommandPalette } from "./command-palette";
 
 /** The heading shortcuts, by the Format menu's block kind they apply
  *  (INSERT_BLOCK_EVENT). */
@@ -237,6 +238,9 @@ export function useGlobalShortcuts(opts: {
       } else if (combo === shortcuts.toggleZenMode) {
         e.preventDefault();
         toggleZenMode();
+      } else if (combo === shortcuts.commandPalette) {
+        e.preventDefault();
+        void openCommandPalette();
       } else if (combo === shortcuts.splitEditor) {
         // Split side by side, and the same keys go back to one.
         e.preventDefault();

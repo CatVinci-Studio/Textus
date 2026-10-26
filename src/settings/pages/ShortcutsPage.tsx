@@ -24,6 +24,7 @@ export function ShortcutsPage({
           [
             t.shortcutEditorGroupLabel,
             [
+              ["commandPalette", t.shortcutCommandPalette],
               ["findReplace", t.shortcutFindReplace],
               ["searchFiles", t.shortcutSearchFiles],
               ["nextTab", t.shortcutNextTab],

@@ -262,6 +262,7 @@ pub(crate) fn build(
     let toggle_agent_panel_item = check(TOGGLE_AGENT_PANEL_ID, "AI Panel")?;
     let toggle_split_view_item = check(TOGGLE_SPLIT_VIEW_ID, "Split View")?;
     let toggle_zen_mode_item = check(TOGGLE_ZEN_MODE_ID, "Zen Mode")?;
+    let command_palette_item = item(COMMAND_PALETTE_ID, "Command Palette…").build(app)?;
     let split_right_item = item(SPLIT_RIGHT_ID, "Split Right").build(app)?;
     let split_down_item = item(SPLIT_DOWN_ID, "Split Down").build(app)?;
     let close_split_item = item(CLOSE_SPLIT_ID, "Close Split").build(app)?;
@@ -290,6 +291,8 @@ pub(crate) fn build(
             .item(&toggle_split_view_item)
             .item(&toggle_typewriter_mode_item)
             .item(&toggle_zen_mode_item)
+            .separator()
+            .item(&command_palette_item)
             .separator()
             // Two documents at once.
             .item(&split_right_item)

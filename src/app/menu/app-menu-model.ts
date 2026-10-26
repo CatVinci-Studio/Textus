@@ -64,6 +64,7 @@ export type NativeMenuId =
   | "help-community"
   | "help-tutorials"
   | "manage-plugins"
+  | "command-palette"
   | `plugin-command:${string}`
   // The phone menu's own (buildMobileMenu): emitted by emitMenuEvent, with
   // no menu.rs counterpart.
@@ -82,7 +83,7 @@ export type NativeMenuId =
 export type LocalMenuAction =
   "undo" | "redo" | "cut" | "copy" | "paste" | "select-all" | "fullscreen";
 
-type MenuAction = { native: NativeMenuId } | { local: LocalMenuAction };
+export type MenuAction = { native: NativeMenuId } | { local: LocalMenuAction };
 
 export interface MenuEntry {
   label: string;
@@ -391,6 +392,12 @@ export function buildAppMenu(
           accel: shortcuts.toggleZenMode,
           action: { native: "toggle-zen-mode" },
           checked: !!checks.zen,
+        },
+        "separator",
+        {
+          label: t.menuCommandPalette,
+          accel: shortcuts.commandPalette,
+          action: { native: "command-palette" },
         },
         "separator",
         {

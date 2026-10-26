@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useModalDialog } from "../../ui/useModalDialog";
+import { formatCombo } from "../utils/shortcuts";
+import { useModalDialog } from "./useModalDialog";
+import "./quick-pick.css";
 
 /**
- * textus.ui.pick: a list to choose an item from - or several, ticked -
- * filtered by what is typed, so a plugin asks for a choice without a
- * webview of its own. Shown by the QuickPickHost App mounts; requests
- * queue, as app-dialog's do.
+ * A list to choose an item from - or several, ticked - filtered by what is
+ * typed: the command palette's (app/command-palette.ts), and a plugin's
+ * textus.ui.pick, so it asks for a choice without a webview of its own.
+ * Shown by the QuickPickHost App mounts; requests queue, as app-dialog's
+ * do.
  */
 export interface QuickPickItem {
   label: string;
@@ -16,6 +19,8 @@ export interface QuickPickItem {
   value?: unknown;
   /** With `multiple`: ticked to start with. */
   picked?: boolean;
+  /** A shortcut that does the same, shown at the row's end ("mod+s"). */
+  keys?: string;
 }
 
 interface Request {
@@ -226,6 +231,9 @@ function QuickPick({
                 <span className="quick-pick-description">
                   {item.description}
                 </span>
+              )}
+              {item.keys && (
+                <kbd className="quick-pick-keys">{formatCombo(item.keys)}</kbd>
               )}
               {item.detail && (
                 <span className="quick-pick-detail">{item.detail}</span>

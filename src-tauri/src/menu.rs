@@ -73,6 +73,8 @@ const TOGGLE_ZEN_MODE_ID: &str = "toggle-zen-mode";
 /// Two documents at once (src/app/split/split-layout.ts): the one in front and
 /// another, side by side or one above the other.
 const SPLIT_RIGHT_ID: &str = "split-right";
+/// Everything the menus do, found by typing (src/app/command-palette.ts).
+const COMMAND_PALETTE_ID: &str = "command-palette";
 const SPLIT_DOWN_ID: &str = "split-down";
 const CLOSE_SPLIT_ID: &str = "close-split";
 const ZOOM_IN_ID: &str = "zoom-in";
@@ -423,6 +425,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-toggle-split-view");
     } else if id == TOGGLE_ZEN_MODE_ID {
         emit_to_focused(app_handle, "menu-toggle-zen-mode");
+    } else if id == COMMAND_PALETTE_ID {
+        emit_to_focused(app_handle, "menu-command-palette");
     } else if id == SPLIT_RIGHT_ID {
         emit_to_focused(app_handle, "menu-split-right");
     } else if id == SPLIT_DOWN_ID {
