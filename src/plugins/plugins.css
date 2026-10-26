@@ -290,6 +290,21 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-setting-input {
   width: 220px;
 }
+/* A heading over a plugin's settings that share a group. */
+.plugin-setting-group {
+  margin: var(--space-3) var(--space-3) var(--space-1);
+  color: var(--chrome-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+.plugin-setting-color {
+  width: 40px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: none;
+}
 /* A setting of several lines: its box under its title, the row's width. */
 .plugin-setting-lines {
   padding-bottom: var(--space-3);

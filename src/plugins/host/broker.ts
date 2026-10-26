@@ -352,7 +352,10 @@ export class PluginHost {
         this.deps.setting(this.id, str(key, "key")),
       "settings.set": ({ key, value }: Params) => {
         const k = str(key, "key");
-        if (!this.info.manifest.contributes.settings.some((s) => s.key === k))
+        const setting = this.info.manifest.contributes.settings.find(
+          (s) => s.key === k,
+        );
+        if (!setting || setting.type === "button")
           throw new Error(`No setting ${k} in the manifest.`);
         return this.deps.setSetting(this.id, k, value);
       },

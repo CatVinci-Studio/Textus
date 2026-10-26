@@ -114,7 +114,7 @@ made when they are first shown.
 | `completions`   | `{ id, where: "math" \| "text" \| "any", pattern }`: completions as you type when what is before the caret matches `pattern` (`editor.registerCompletion`).                                                                                     |
 | `aiTools`       | `{ name, description, parameters }`: tools Textus AI can call (`ai.registerTool`); `parameters` is a JSON schema.                                                                                                                               |
 | `links`         | `{ pattern, command }`: web links Ctrl/Cmd+clicked in a document whose URL matches `pattern` run `command` with the URL.                                                                                                                        |
-| `settings`      | `{ key, type: boolean \| string \| number \| enum, default, title, description?, options?, multiline? }`: rows on the plugin's page in Settings, drawn as Textus's own.                                                                         |
+| `settings`      | Rows on the plugin's page in Settings, drawn as Textus's own: `{ key, type, default, title, description?, group?, when? }`. See [Settings of every kind](#settings-of-every-kind).                                                              |
 | `settingsPage`  | `{ title }`: a page of the plugin's own under its settings, a webview.                                                                                                                                                                          |
 
 A menu item's `when` is a small expression over the moment it is shown:
@@ -275,6 +275,23 @@ from)`, `tags()`, `tasks()`, `search(query)`, `onDidChange`. Read this
 - `textus.settings.get(key)` / `set(key, value)` / `onDidChange`: the
   manifest's `settings`, as the user set them for the project or for
   every document.
+
+#### Settings of every kind
+
+| `type`    | Drawn as                     | `default`                     | Also                          |
+| --------- | ---------------------------- | ----------------------------- | ----------------------------- |
+| `boolean` | a switch                     | `true` / `false`              |                               |
+| `string`  | a field                      | a string                      | `multiline: true`             |
+| `number`  | a number field               | a number                      | `min`, `max`                  |
+| `enum`    | a menu                       | one of its `options`' `value` | `options: [{ value, label }]` |
+| `color`   | a colour picker              | `"#rrggbb"`                   |                               |
+| `list`    | a box of lines, one per item | a list of strings             |                               |
+| `button`  | a button                     | none                          | `command` it runs             |
+
+`group` puts a heading over a setting and the ones after it, until
+another group is named. `when` shows a setting only while another one is
+so: `"legend"` (on, or a list with anything in it), `"!legend"`,
+`"style == dark"`, `"style != dark"`.
 
 ### The rest
 

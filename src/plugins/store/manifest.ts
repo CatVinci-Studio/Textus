@@ -140,19 +140,33 @@ export interface CustomEditorContribution {
   priority: "default" | "option";
 }
 
-export type SettingType = "boolean" | "string" | "number" | "enum";
+export type SettingType =
+  "boolean" | "string" | "number" | "enum" | "color" | "list" | "button";
 
 export interface SettingContribution {
   key: string;
   type: SettingType;
-  default: boolean | string | number;
+  /** None for a "button"; a "#rrggbb" for a "color", strings for a
+   *  "list". */
+  default?: boolean | string | number | string[];
   title: string;
   description?: string;
+  /** A heading the setting goes under; the ones after it share it until
+   *  another is named. */
+  group?: string;
+  /** Shown only while another setting is so (settingShown):
+   *  "legend", "!legend", "style == dark", "style != dark". */
+  when?: string;
   /** For "enum": the values, and what each is called. */
   options?: { value: string; label: string }[];
   /** For "string": several lines, in a box under its title (Vim's key
    *  mappings). */
   multiline?: boolean;
+  /** For "number": the least and most it takes. */
+  min?: number;
+  max?: number;
+  /** For "button": the command it runs. */
+  command?: string;
 }
 
 export interface ThemeContribution {

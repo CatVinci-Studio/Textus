@@ -3,6 +3,7 @@ import type {
   Contributes,
   MenuId,
   SettingContribution,
+  SettingType,
   ViewType,
 } from "./manifest";
 
@@ -76,18 +77,63 @@ export function parseMain(value: unknown): string[] | undefined {
   return files.map((f, i) => text(f, `main[${i}]`));
 }
 
+const SETTING_TYPES: readonly SettingType[] = [
+  "boolean",
+  "string",
+  "number",
+  "enum",
+  "color",
+  "list",
+  "button",
+];
+
+/** A setting's `when`: a key, maybe negated, or a key compared. */
+const SETTING_WHEN = /^\s*!?[\w.-]+\s*$|^\s*[\w.-]+\s*(==|!=)\s*\S.*$/;
+
+/** What a setting's default must be, by its type. */
+function checkDefault(s: Json, type: SettingType, at: string): void {
+  const fallback = s.default;
+  const ok =
+    type === "button"
+      ? fallback === undefined
+      : type === "list"
+        ? Array.isArray(fallback) &&
+          fallback.every((v) => typeof v === "string")
+        : type === "color"
+          ? typeof fallback === "string" && /^#[0-9a-f]{6}$/i.test(fallback)
+          : typeof fallback === (type === "enum" ? "string" : type);
+  if (ok) return;
+  const expected = {
+    button: "left out",
+    list: "a list of strings",
+    color: 'a colour like "#3366ff"',
+    enum: "a string",
+  }[type as string];
+  throw new ManifestError(`${at}.default must be ${expected ?? `a ${type}`}.`);
+}
+
+function number(value: unknown, what: string): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "number")
+    throw new ManifestError(`${what} must be a number.`);
+  return value;
+}
+
 function parseSetting(raw: unknown, at: string): SettingContribution {
   const s = object(raw, at);
-  const type = s.type;
-  if (
-    type !== "boolean" &&
-    type !== "string" &&
-    type !== "number" &&
-    type !== "enum"
-  )
+  const type = s.type as SettingType;
+  if (!SETTING_TYPES.includes(type))
     throw new ManifestError(
-      `${at}.type must be boolean, string, number or enum.`,
+      `${at}.type must be one of ${SETTING_TYPES.join(", ")}.`,
     );
+  checkDefault(s, type, at);
+  const when = text(s.when, `${at}.when`, true) || undefined;
+  if (when && !SETTING_WHEN.test(when))
+    throw new ManifestError(
+      `${at}.when must be "key", "!key", "key == value" or "key != value".`,
+    );
+  const min = number(s.min, `${at}.min`);
+  const max = number(s.max, `${at}.max`);
   const options =
     type === "enum"
       ? list(s.options, `${at}.options`).map((o, i) => {
@@ -98,20 +144,26 @@ function parseSetting(raw: unknown, at: string): SettingContribution {
           };
         })
       : undefined;
-  const fallback = s.default;
-  const expected = type === "enum" ? "string" : type;
-  if (typeof fallback !== expected)
-    throw new ManifestError(`${at}.default must be a ${expected}.`);
-  if (options && !options.some((o) => o.value === fallback))
+  if (options && !options.some((o) => o.value === s.default))
     throw new ManifestError(`${at}.default must be one of its options.`);
+  if (
+    typeof s.default === "number" &&
+    ((min !== undefined && s.default < min) ||
+      (max !== undefined && s.default > max))
+  )
+    throw new ManifestError(`${at}.default must be within min and max.`);
   return {
     key: text(s.key, `${at}.key`),
     type,
-    default: fallback as SettingContribution["default"],
+    default: s.default as SettingContribution["default"],
     title: text(s.title, `${at}.title`),
     description: text(s.description, `${at}.description`, true) || undefined,
+    group: text(s.group, `${at}.group`, true) || undefined,
+    when,
     options,
     ...(type === "string" && s.multiline === true ? { multiline: true } : {}),
+    ...(type === "number" ? { min, max } : {}),
+    ...(type === "button" ? { command: text(s.command, `${at}.command`) } : {}),
   };
 }
 
@@ -210,6 +262,14 @@ export function parseContributes(raw: unknown, id: string): Contributes {
   const settings = list(c.settings, "contributes.settings").map((x, i) =>
     parseSetting(x, `contributes.settings[${i}]`),
   );
+  const keys = new Set(settings.map((s) => s.key));
+  settings.forEach((s, i) => {
+    const on = s.when && /[\w.-]+/.exec(s.when)?.[0];
+    if (on && !keys.has(on))
+      throw new ManifestError(
+        `contributes.settings[${i}].when names "${on}", which is no setting.`,
+      );
+  });
   const page =
     c.settingsPage === undefined
       ? null

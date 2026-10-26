@@ -148,6 +148,63 @@ describe("a plugin's manifest", () => {
   });
 });
 
+describe("a plugin's settings", () => {
+  const withSettings = (settings: unknown[]) =>
+    parseManifest({ ...base, contributes: { settings } });
+
+  it("reads every kind, with groups, conditions and bounds", () => {
+    const m = withSettings([
+      { key: "on", type: "boolean", default: true, title: "On", group: "A" },
+      {
+        key: "tint",
+        type: "color",
+        default: "#AABBCC",
+        title: "Tint",
+        when: "on",
+      },
+      { key: "h", type: "number", default: 3, min: 1, max: 9, title: "H" },
+      { key: "words", type: "list", default: ["a"], title: "Words" },
+      {
+        key: "go",
+        type: "button",
+        command: "catvinci.example.go",
+        title: "Go",
+      },
+    ]);
+    const [on, tint, h, words, go] = m.contributes.settings;
+    expect(on.group).toBe("A");
+    expect(tint.when).toBe("on");
+    expect([h.min, h.max]).toEqual([1, 9]);
+    expect(words.default).toEqual(["a"]);
+    expect(go.command).toBe("catvinci.example.go");
+    expect(go.default).toBeUndefined();
+  });
+
+  it("refuses a default of the wrong kind, a bad condition, or one on no setting", () => {
+    const bad: [unknown, RegExp][] = [
+      [{ key: "c", type: "color", default: "blue", title: "C" }, /colour/],
+      [{ key: "l", type: "list", default: "a", title: "L" }, /list of strings/],
+      [
+        { key: "b", type: "button", default: 1, command: "x", title: "B" },
+        /left out/,
+      ],
+      [{ key: "b", type: "button", title: "B" }, /command/],
+      [{ key: "n", type: "number", default: 0, min: 1, title: "N" }, /within/],
+      [
+        { key: "w", type: "string", default: "", title: "W", when: "a ==" },
+        /when/,
+      ],
+      [
+        { key: "w", type: "string", default: "", title: "W", when: "ghost" },
+        /no setting/,
+      ],
+      [{ key: "x", type: "date", default: "", title: "X" }, /type/],
+    ];
+    for (const [setting, message] of bad)
+      expect(() => withSettings([setting])).toThrow(message);
+  });
+});
+
 describe("versions", () => {
   it("order as semver, a pre-release before its release", () => {
     expect(compareVersions("1.3.0-beta.1", "1.3.0")).toBe(-1);

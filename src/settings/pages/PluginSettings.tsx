@@ -5,6 +5,7 @@ import type { Strings } from "../../i18n/strings";
 import {
   pluginSetting,
   pluginText,
+  runPluginCommand,
   setPluginSetting,
   type PluginRecord,
 } from "../../plugins/manager";
@@ -13,6 +14,7 @@ import {
   onPluginSettingsChange,
   pluginValue,
   projectRoot,
+  settingShown,
   type SettingScope,
 } from "../../plugins/store/plugin-settings";
 import { basename } from "../../utils/path";
@@ -52,17 +54,41 @@ export function PluginSettingRows({
           </Select>
         </SettingRow>
       )}
-      {record.manifest!.contributes.settings.map((setting) => (
-        <PluginSettingRow
-          key={setting.key}
-          record={record}
-          setting={setting}
-          scope={where}
-          t={t}
-        />
+      {shownSettings(record).map(({ setting, heading }) => (
+        <div key={setting.key} className="plugin-setting">
+          {heading && (
+            <h4 className="plugin-setting-group">
+              {pluginText(record, heading)}
+            </h4>
+          )}
+          <PluginSettingRow
+            record={record}
+            setting={setting}
+            scope={where}
+            t={t}
+          />
+        </div>
       ))}
     </>
   );
+}
+
+/** The settings that show now (their `when`), each with the heading to
+ *  put over it: its group's, where a new group starts. */
+function shownSettings(
+  record: PluginRecord,
+): { setting: SettingContribution; heading?: string }[] {
+  let group: string | undefined;
+  return record
+    .manifest!.contributes.settings.filter((setting) =>
+      settingShown(setting.when, (key) => pluginSetting(record.id, key)),
+    )
+    .map((setting) => {
+      const heading =
+        setting.group && setting.group !== group ? setting.group : undefined;
+      group = setting.group ?? group;
+      return { setting, heading };
+    });
 }
 
 /** One setting, as `scope` holds it: the project's shows its own value or
@@ -106,6 +132,18 @@ function PluginSettingRow({
         {t.pluginSettingUseGeneral}
       </button>
     ) : null;
+  if (setting.type === "button")
+    return (
+      <SettingRow label={label} help={description}>
+        <button
+          type="button"
+          className="text-button settings-inline-button"
+          onClick={() => void runPluginCommand(record.id, setting.command!, [])}
+        >
+          {label}
+        </button>
+      </SettingRow>
+    );
   if (setting.type === "boolean")
     return (
       <>
@@ -118,7 +156,7 @@ function PluginSettingRow({
         {reset && <div className="plugin-setting-reset">{reset}</div>}
       </>
     );
-  if (setting.multiline)
+  if (setting.multiline || setting.type === "list")
     return (
       <div className="plugin-setting-lines">
         <SettingRow label={label} help={help}>
@@ -126,13 +164,24 @@ function PluginSettingRow({
         </SettingRow>
         <textarea
           // A new layer's value, a new field (as below).
-          key={`${scope}:${String(value ?? "")}`}
+          key={`${scope}:${JSON.stringify(value ?? "")}`}
           className="settings-text-input plugin-setting-textarea"
           aria-label={label}
           rows={5}
-          defaultValue={String(value ?? "")}
+          defaultValue={
+            Array.isArray(value) ? value.join("\n") : String(value ?? "")
+          }
           {...VERBATIM_INPUT}
-          onBlur={(e) => save(e.target.value)}
+          onBlur={(e) =>
+            save(
+              setting.type === "list"
+                ? e.target.value
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+                : e.target.value,
+            )
+          }
         />
       </div>
     );
@@ -151,6 +200,14 @@ function PluginSettingRow({
             </option>
           ))}
         </Select>
+      ) : setting.type === "color" ? (
+        <input
+          className="plugin-setting-color"
+          aria-label={label}
+          type="color"
+          value={String(value ?? "#000000")}
+          onChange={(e) => save(e.target.value)}
+        />
       ) : (
         <input
           // A new layer's value, a new field: the old one's text is not
@@ -159,12 +216,14 @@ function PluginSettingRow({
           className="settings-text-input plugin-setting-input"
           aria-label={label}
           type={setting.type === "number" ? "number" : "text"}
+          min={setting.min}
+          max={setting.max}
           defaultValue={String(value ?? "")}
           {...VERBATIM_INPUT}
           onBlur={(e) =>
             save(
               setting.type === "number"
-                ? Number(e.target.value)
+                ? clamp(Number(e.target.value), setting)
                 : e.target.value,
             )
           }
@@ -173,6 +232,14 @@ function PluginSettingRow({
       {reset}
     </SettingRow>
   );
+}
+
+/** A number typed, kept within the setting's min and max. */
+function clamp(n: number, setting: SettingContribution): number {
+  const low = setting.min ?? -Infinity;
+  const high = setting.max ?? Infinity;
+  const typed = Number.isFinite(n) ? n : Number(setting.default ?? 0);
+  return Math.min(high, Math.max(low, typed));
 }
 
 /** The value for every document, the project's aside. */

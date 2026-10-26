@@ -94,6 +94,25 @@ export function pluginValue(
   return { value: undefined, from: null };
 }
 
+/** Whether a setting with `when` shows, as the other settings are now
+ *  (`value` of a key): "legend" while legend is on (or set), "!legend"
+ *  while it isn't, "style == dark" / "style != dark" by its value. */
+export function settingShown(
+  when: string | undefined,
+  value: (key: string) => unknown,
+): boolean {
+  if (!when) return true;
+  const m = /^\s*(!?)([\w.-]+)\s*(?:(==|!=)\s*(.+?))?\s*$/.exec(when);
+  if (!m) return true;
+  const [, not, key, op, expected] = m;
+  const current = value(key);
+  if (!op) {
+    const on = Array.isArray(current) ? current.length > 0 : !!current;
+    return not ? !on : on;
+  }
+  return (String(current) === expected) === (op === "==");
+}
+
 /** The value for every document alone, or undefined. */
 export function globalPluginValue(id: string, key: string): unknown {
   return loadSettings().plugins[id]?.[key];

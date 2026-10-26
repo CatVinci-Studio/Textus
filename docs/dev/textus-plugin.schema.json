@@ -248,13 +248,21 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["key", "type", "title", "default"],
+            "required": ["key", "type", "title"],
             "properties": {
               "key": {
                 "type": "string"
               },
               "type": {
-                "enum": ["boolean", "string", "number", "enum"]
+                "enum": [
+                  "boolean",
+                  "string",
+                  "number",
+                  "enum",
+                  "color",
+                  "list",
+                  "button"
+                ]
               },
               "title": {
                 "type": "string"
@@ -277,6 +285,27 @@
                     }
                   }
                 }
+              },
+              "group": {
+                "type": "string",
+                "description": "A heading the setting goes under, shared by the ones after it."
+              },
+              "when": {
+                "type": "string",
+                "description": "Shown only while another setting is so: \"key\", \"!key\", \"key == value\", \"key != value\"."
+              },
+              "multiline": {
+                "type": "boolean"
+              },
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "command": {
+                "type": "string",
+                "description": "For a button: the command it runs."
               }
             }
           }
