@@ -1287,6 +1287,8 @@ export default {
   pluginExportDone:
     "已导出到 {path}。\n\n把这个文件夹建成 GitHub 仓库，推送一个 v0.1.0 这样的标签，里面的发布流程就会自动发布插件。怎么上架到 Textus，见文件夹里的 README。",
   pluginUriNotTaken: "没有已开启的插件能打开这个链接：{link}",
+  uriCommandConfirm: "一个链接请求运行“{command}”。要运行吗？",
+  uriCommandRun: "运行",
   pluginUnload: "移除",
   pluginUninstallAsk: "卸载 {name}？它的文件和保存的数据都会删除。",
   pluginOk: "好",

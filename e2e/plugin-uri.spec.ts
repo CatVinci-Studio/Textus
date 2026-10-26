@@ -5,13 +5,16 @@ import { openApp } from "./helpers";
  * textus:// links (src-tauri plugins/uri.rs, plugins/plugin-uri.ts): one
  * that came before the window did, and one that comes later, each given
  * to the plugin it names - started for it; a link no plugin takes is said
- * so.
+ * so. A textus://command/ link runs its command once the user says so.
  */
 
 const HOST = `
 exports.activate = function () {
   textus.uri.registerHandler(function (uri) {
     textus.ui.statusItem("clip", { text: uri.path + " " + uri.query.title });
+  });
+  textus.commands.register("test.clip.count", function (query) {
+    textus.ui.statusItem("count", { text: "counted " + query.scope });
   });
 };
 `;
@@ -27,6 +30,9 @@ const ENTRY = {
     description: "Takes clips from the browser.",
     engines: { textus: "^1.3.0" },
     main: "host.js",
+    contributes: {
+      commands: [{ command: "test.clip.count", title: "Count Clips" }],
+    },
   }),
   dev: false,
   files: { "host.js": HOST },
@@ -72,4 +78,20 @@ test("a link for no plugin that is on says so", async ({ page }) => {
   await expect(page.locator(".app-dialog")).toContainText(
     "No plugin that is turned on opens this link: textus://someone.else/x",
   );
+});
+
+test("a command link runs its command once the user says so", async ({
+  page,
+}) => {
+  await open(page);
+  await expect(page.getByText("/save First")).toBeVisible();
+  await arrive(page, "textus://command/test.clip.count?scope=all");
+  const dialog = page.locator(".app-dialog");
+  await expect(dialog).toContainText("A link asks to run “Count Clips”.");
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByText("counted all")).toHaveCount(0);
+
+  await arrive(page, "textus://command/test.clip.count?scope=all");
+  await dialog.getByRole("button", { name: "Run" }).click();
+  await expect(page.getByText("counted all")).toBeVisible();
 });

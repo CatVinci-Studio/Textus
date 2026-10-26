@@ -1352,6 +1352,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginExportDone:
     "{path} に書き出しました。\n\nこのフォルダを GitHub リポジトリにして v0.1.0 のようなタグをプッシュすると、同梱のリリース用ワークフローがプラグインを公開します。Textus に掲載する方法はフォルダ内の README をご覧ください。",
   pluginUriNotTaken: "このリンクを開ける有効なプラグインがありません：{link}",
+  uriCommandConfirm: "リンクが「{command}」の実行を求めています。実行しますか？",
+  uriCommandRun: "実行",
   pluginUnload: "取り除く",
   pluginUninstallAsk:
     "{name} をアンインストールしますか？ファイルと保存したデータは削除されます。",

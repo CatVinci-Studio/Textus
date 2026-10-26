@@ -1389,6 +1389,8 @@ type /name in a conversation to use one.
   pluginExportDone:
     "Exported to {path}.\n\nMake that folder a GitHub repository and push a tag such as v0.1.0: its release workflow publishes the plugin. The README in it says how to have it listed in Textus.",
   pluginUriNotTaken: "No plugin that is turned on opens this link: {link}",
+  uriCommandConfirm: "A link asks to run “{command}”. Run it?",
+  uriCommandRun: "Run",
   pluginUnload: "Remove",
   pluginUninstallAsk:
     "Uninstall {name}? Its files and what it kept are removed.",

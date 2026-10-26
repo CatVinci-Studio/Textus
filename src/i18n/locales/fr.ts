@@ -1445,6 +1445,8 @@ utiliser une.
   pluginExportDone:
     "Exporté dans {path}.\n\nFaites de ce dossier un dépôt GitHub et poussez une étiquette comme v0.1.0 : son workflow de publication publie l’extension. Le README qu’il contient explique comment la faire figurer dans Textus.",
   pluginUriNotTaken: "Aucune extension activée n’ouvre ce lien : {link}",
+  uriCommandConfirm: "Un lien demande d’exécuter « {command} ». L’exécuter ?",
+  uriCommandRun: "Exécuter",
   pluginUnload: "Enlever",
   pluginUninstallAsk:
     "Désinstaller {name} ? Ses fichiers et ses données seront supprimés.",

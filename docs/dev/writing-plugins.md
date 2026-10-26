@@ -308,6 +308,8 @@ so: `"legend"` (on, or a list with anything in it), `"!legend"`,
 - `uri.registerHandler(fn)`: `textus://<plugin id>/<path>?<query>` links
   from a browser or another app, for "send to Textus" buttons and links
   back from other tools. The plugin starts for them if it must.
+  `textus://command/<command id>?<query>` runs any command - Textus asks
+  the user first, and the command gets the query as its argument.
 - `editor.keys` (`editor.input`): for a way of typing (Vim, Emacs) -
   `capture`, `onKey` and `exec(op)`; see the Vim plugin.
 - `export.onWillExport(fn)` (`editor.read`): an HTML or PDF export's

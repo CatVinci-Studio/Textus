@@ -1410,6 +1410,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginExportDone:
     "Exportiert nach {path}.\n\nMachen Sie den Ordner zu einem GitHub-Repository und pushen Sie ein Tag wie v0.1.0: Sein Release-Workflow veröffentlicht das Plugin. Wie es in Textus gelistet wird, steht in der README darin.",
   pluginUriNotTaken: "Kein eingeschaltetes Plugin öffnet diesen Link: {link}",
+  uriCommandConfirm: "Ein Link möchte „{command}“ ausführen. Ausführen?",
+  uriCommandRun: "Ausführen",
   pluginUnload: "Entfernen",
   pluginUninstallAsk:
     "{name} deinstallieren? Seine Dateien und gespeicherten Daten werden gelöscht.",

@@ -1292,6 +1292,8 @@ export default {
   pluginExportDone:
     "已匯出到 {path}。\n\n把這個資料夾建成 GitHub 儲存庫，推送一個 v0.1.0 這樣的標籤，裡面的發佈流程就會自動發佈外掛程式。如何上架到 Textus，請見資料夾裡的 README。",
   pluginUriNotTaken: "沒有已開啟的外掛程式能開啟這個連結：{link}",
+  uriCommandConfirm: "一個連結請求執行「{command}」。要執行嗎？",
+  uriCommandRun: "執行",
   pluginUnload: "移除",
   pluginUninstallAsk: "要解除安裝 {name} 嗎？它的檔案和保存的資料都會刪除。",
   pluginOk: "好",

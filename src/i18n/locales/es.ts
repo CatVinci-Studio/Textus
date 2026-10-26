@@ -1420,6 +1420,8 @@ para usar una.
   pluginExportDone:
     "Exportado a {path}.\n\nConvierte esa carpeta en un repositorio de GitHub y sube una etiqueta como v0.1.0: su flujo de publicación publica el complemento. El README que contiene explica cómo aparecer en Textus.",
   pluginUriNotTaken: "Ningún complemento activado abre este enlace: {link}",
+  uriCommandConfirm: "Un enlace pide ejecutar «{command}». ¿Ejecutarlo?",
+  uriCommandRun: "Ejecutar",
   pluginUnload: "Quitar",
   pluginUninstallAsk:
     "¿Desinstalar {name}? Se eliminarán sus archivos y lo que guardó.",

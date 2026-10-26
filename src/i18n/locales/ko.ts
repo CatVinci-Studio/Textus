@@ -1340,6 +1340,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginExportDone:
     "{path}에 내보냈습니다.\n\n이 폴더를 GitHub 저장소로 만들고 v0.1.0 같은 태그를 푸시하면 안에 든 릴리스 워크플로가 플러그인을 게시합니다. Textus에 등록하는 방법은 폴더 안의 README를 보세요.",
   pluginUriNotTaken: "이 링크를 열 수 있는 켜진 플러그인이 없습니다: {link}",
+  uriCommandConfirm: "링크가 “{command}” 실행을 요청합니다. 실행할까요?",
+  uriCommandRun: "실행",
   pluginUnload: "빼기",
   pluginUninstallAsk:
     "{name}을(를) 제거할까요? 파일과 저장한 데이터가 삭제됩니다.",
