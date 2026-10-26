@@ -67,15 +67,18 @@ export async function triggerGrammarCheckNow(
 ): Promise<void> {
   const { $from } = view.state.selection;
   const para = $from.parent;
-  if (!para.isTextblock) throw new AiNoticeError("grammar-needs-paragraph");
+  if (!para.isTextblock || para.type.spec.code)
+    throw new AiNoticeError("grammar-needs-paragraph");
 
   const text = para.textContent;
-  if (!text.trim()) throw new AiNoticeError("grammar-empty-paragraph");
+  const checked = checkedText(para);
+  if (!checked.split(CODE_MASK).join("").trim())
+    throw new AiNoticeError("grammar-empty-paragraph");
 
   const contentStart = $from.start($from.depth);
   const issues = await ai.grammarCheck(
     provider,
-    text,
+    checked,
     strictness,
     model,
     project,
@@ -175,6 +178,27 @@ export interface GrammarDecorationSpec {
   original?: string;
 }
 
+/** What stands in for each UTF-16 unit of inline code in the text sent for
+ *  checking: code isn't prose, and in mixed Chinese and English it drew
+ *  false fixes. One unit apiece keeps the offsets the paragraph's own. */
+const CODE_MASK = "\u2022";
+
+/** The paragraph's text as the check sees it, inline code masked. */
+export function checkedText(para: ProseNode): string {
+  const text = para.textContent;
+  let masked = "";
+  let end = 0;
+  para.descendants((node, pos) => {
+    if (!node.isText || !node.marks.some((mark) => mark.type.spec.code))
+      return true;
+    const start = para.textBetween(0, pos, "").length;
+    masked += text.slice(end, start) + CODE_MASK.repeat(node.text!.length);
+    end = start + node.text!.length;
+    return true;
+  });
+  return masked + text.slice(end);
+}
+
 /** Whether any text in [from, to) of the paragraph (positions relative to
  *  its content) carries a code mark - inline code. */
 export function touchesCode(
@@ -195,7 +219,7 @@ export function issuesToDecorations(
   issues: GrammarIssue[],
   contentStart: number,
 ): Decoration[] {
-  const text = para.textContent;
+  const text = checkedText(para);
   const decorations: Decoration[] = [];
   // Left-to-right with overlaps dropped: stacked highlights on the same text
   // render as one visual range whose hover popover only ever shows found[0],
@@ -341,10 +365,15 @@ export function createGrammarCheckPlugin(options: {
 
               const { $from } = view.state.selection;
               const para = $from.parent;
-              if (!para.isTextblock) return;
+              if (!para.isTextblock || para.type.spec.code) return;
 
               const text = para.textContent;
-              if (text.trim().length < MIN_PARAGRAPH_CHARS) return;
+              const checked = checkedText(para);
+              if (
+                checked.split(CODE_MASK).join("").trim().length <
+                MIN_PARAGRAPH_CHARS
+              )
+                return;
 
               const contentStart = $from.start($from.depth);
 
@@ -355,7 +384,7 @@ export function createGrammarCheckPlugin(options: {
                 try {
                   issues = await ai.grammarCheck(
                     options.provider(),
-                    text,
+                    checked,
                     options.strictness(),
                     options.model(),
                     options.project?.(),
