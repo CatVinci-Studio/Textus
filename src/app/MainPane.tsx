@@ -1,6 +1,9 @@
 import { Suspense, type ComponentProps } from "react";
 import { EditorPane } from "../document-view/EditorPane";
-import { canDragTabsBetweenWindows } from "../platform/capabilities";
+import {
+  canDragTabsBetweenWindows,
+  canUseWindows,
+} from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { SourceTextarea } from "../editor/modes/SourceTextarea";
@@ -47,6 +50,7 @@ export function MainPane({
   onClose,
   onAdd,
   onDetach,
+  onMoveToNewWindow,
   onReorder,
   previewTab,
   onChange,
@@ -62,6 +66,7 @@ export function MainPane({
   onAdd: () => void;
   /** A tab pulled out of the window leaves for a window of its own (macOS). */
   onDetach: (tabId: string) => void;
+  onMoveToNewWindow: (tabId: string) => void;
   onReorder: (tabId: string, index: number) => void;
   previewTab: TabBarProps["previewTab"];
   onChange: (tabId: string, markdown: string) => void;
@@ -97,12 +102,16 @@ export function MainPane({
           onClose={onClose}
           onAdd={onAdd}
           // Pulled over the documents it splits; out of the window it tears
-          // off, which needs global cursor positions (macOS only).
+          // off where the platform gives global cursor positions.
           onPullOut={(id, title) =>
             pullTab(id, title, {
               tabIds: tabs.map((tab) => tab.id),
               activate: onActivate,
               detach: canDragTabsBetweenWindows ? onDetach : undefined,
+              releaseOutside:
+                canUseWindows && !canDragTabsBetweenWindows
+                  ? onMoveToNewWindow
+                  : undefined,
             })
           }
           onReorder={onReorder}
@@ -117,6 +126,14 @@ export function MainPane({
                   ? splitEditor("row")
                   : openBeside(id, activeTabId),
             },
+            ...(canUseWindows
+              ? [
+                  {
+                    label: t.moveToNewWindow,
+                    onSelect: () => onMoveToNewWindow(id),
+                  },
+                ]
+              : []),
             "separator",
             { label: t.menuCloseTab, onSelect: () => onClose(id) },
             ...pluginTabItems(tabs.find((tab) => tab.id === id)?.path ?? null),

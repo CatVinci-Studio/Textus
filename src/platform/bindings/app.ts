@@ -29,6 +29,11 @@ export const commands = {
 	open_path_in_new_window: (path: string) => __TAURI_INVOKE<void>("open_path_in_new_window", { path }),
 	take_detached_tab: () => __TAURI_INVOKE<DetachedTab_Serialize | null>("take_detached_tab"),
 	/**
+	 *  A tab's own right-click Move to New Window: the tab handed to a fresh
+	 *  window, which takes it as it opens.
+	 */
+	move_tab_to_new_window: (tab: DetachedTab_Deserialize) => __TAURI_INVOKE<null>("move_tab_to_new_window", { tab }),
+	/**
 	 *  Physical-pixel screen bounds of every open window, so a single-tab window
 	 *  dragged by its title bar can spot entering another window's tab row.
 	 */

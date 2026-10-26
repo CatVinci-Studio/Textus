@@ -347,6 +347,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   splitSwap: "左右を入れ替え",
   splitEven: "両側を同じ大きさに",
   openBeside: "横に開く",
+  moveToNewWindow: "新しいウインドウに移動",
   menuViewSidebar: "サイドバー",
   menuViewSource: "ソースモード",
   menuViewTypewriter: "タイプライターモード",

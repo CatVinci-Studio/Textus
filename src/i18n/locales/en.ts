@@ -361,6 +361,7 @@ type /name in a conversation to use one.
   splitSwap: "Swap the Two Sides",
   splitEven: "Make Both Sides Equal",
   openBeside: "Open to the Side",
+  moveToNewWindow: "Move to New Window",
   menuViewSidebar: "Sidebar",
   menuViewSource: "Source Mode",
   menuViewTypewriter: "Typewriter Mode",

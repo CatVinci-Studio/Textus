@@ -363,6 +363,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   splitSwap: "Trocar os lados",
   splitEven: "Igualar os dois lados",
   openBeside: "Abrir ao lado",
+  moveToNewWindow: "Mover para nova janela",
   menuViewSidebar: "Barra Lateral",
   menuViewSource: "Modo Código-Fonte",
   menuViewTypewriter: "Modo Máquina de Escrever",

@@ -62,6 +62,7 @@ function App() {
   const { searchFocusRequest, clearSearchFocusRequest } = docs;
   const { showTabBar, requestCloseTab, handleTabDetach, dragHoverPreview } =
     docs;
+  const { moveTabToNewWindow } = docs;
   const { toggleSourceMode, zenMode, setZenMode, toggleZenMode } = docs;
   const { menuChecks, sidebarLesson, entryMoved, skillFilesDeleted } = wiring;
   const { documentsOpen, setDocumentsOpen, openFromDocuments } = wiring;
@@ -143,6 +144,7 @@ function App() {
           onClose={requestCloseTab}
           onAdd={addBlankTab}
           onDetach={handleTabDetach}
+          onMoveToNewWindow={moveTabToNewWindow}
           onReorder={reorderTab}
           previewTab={dragHoverPreview}
           onChange={handleChange}

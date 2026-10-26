@@ -393,6 +393,8 @@ pub fn run() {
             #[cfg(desktop)]
             tab_drag::take_detached_tab,
             #[cfg(desktop)]
+            tab_drag::move_tab_to_new_window,
+            #[cfg(desktop)]
             tab_drag::list_window_bounds,
             #[cfg(desktop)]
             tab_drag::start_window_drag_tracking,

@@ -365,6 +365,7 @@ export default {
   splitSwap: "Поменять стороны местами",
   splitEven: "Сделать стороны равными",
   openBeside: "Открыть рядом",
+  moveToNewWindow: "Переместить в новое окно",
   menuViewSidebar: "Боковая панель",
   menuViewSource: "Режим исходного кода",
   menuViewTypewriter: "Режим пишущей машинки",
