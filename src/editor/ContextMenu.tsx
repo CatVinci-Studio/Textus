@@ -6,6 +6,7 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent,
+  type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
 import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
@@ -95,27 +96,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
     "--transform-origin": `${Math.max(0, x - pos.left)}px ${Math.max(0, y - pos.top)}px`,
   } as CSSProperties;
 
-  // Closing hands the focus back to what had it as the menu opened, unless
-  // the chosen item took it somewhere else (a dialog).
-  const [opener] = useState(() =>
-    keyboard ? (document.activeElement as HTMLElement | null) : null,
-  );
-  const giveBack = useCallback(() => {
-    const at = document.activeElement;
-    if (
-      opener?.isConnected &&
-      (!at || at === document.body || ref.current?.contains(at))
-    )
-      opener.focus({ preventScroll: true });
-  }, [opener, ref]);
-  useEffect(() => {
-    if (!opener) return;
-    ref.current?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
-    return giveBack;
-  }, [opener, ref, giveBack]);
-  useEffect(() => {
-    if (!open) giveBack();
-  }, [open, giveBack]);
+  useFocusReturn(ref, keyboard, open);
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const rows = Array.from(
@@ -151,22 +132,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
     next?.focus();
   }
 
-  const [openGroup, setOpenGroup] = useState<{
-    index: number;
-    focus: boolean;
-  } | null>(null);
-  const rowRefs = useRef(new Map<number, HTMLButtonElement>());
-  const hoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(hoverTimer.current), []);
-  // Hovering a row opens its group, or closes the one open, after a beat:
-  // a pointer crossing to the submenu passes over other rows.
-  const hover = (index: number | null) => {
-    clearTimeout(hoverTimer.current);
-    hoverTimer.current = setTimeout(
-      () => setOpenGroup(index === null ? null : { index, focus: false }),
-      120,
-    );
-  };
+  const { openGroup, setOpenGroup, rowRefs, hover, holdHover } = useSubmenu();
   const group = openGroup ? items[openGroup.index] : undefined;
 
   return (
@@ -221,11 +187,62 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
             rowRefs.current.get(openGroup.index)?.focus();
             setOpenGroup(null);
           }}
-          onEnter={() => clearTimeout(hoverTimer.current)}
+          onEnter={holdHover}
         />
       )}
     </div>
   );
+}
+
+/** Opened from the keyboard, the first item takes the focus, and closing
+ *  hands it back to what had it, unless the chosen item took it elsewhere
+ *  (a dialog). */
+function useFocusReturn(
+  ref: RefObject<HTMLDivElement | null>,
+  keyboard: boolean | undefined,
+  open: boolean,
+) {
+  const [opener] = useState(() =>
+    keyboard ? (document.activeElement as HTMLElement | null) : null,
+  );
+  const giveBack = useCallback(() => {
+    const at = document.activeElement;
+    if (
+      opener?.isConnected &&
+      (!at || at === document.body || ref.current?.contains(at))
+    )
+      opener.focus({ preventScroll: true });
+  }, [opener, ref]);
+  useEffect(() => {
+    if (!opener) return;
+    ref.current?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
+    return giveBack;
+  }, [opener, ref, giveBack]);
+  useEffect(() => {
+    if (!open) giveBack();
+  }, [open, giveBack]);
+}
+
+/** Which group's submenu is open, and the rows to place it by. Hovering a
+ *  row opens its group, or closes the one open, after a beat: a pointer
+ *  crossing to the submenu passes over other rows. */
+function useSubmenu() {
+  const [openGroup, setOpenGroup] = useState<{
+    index: number;
+    focus: boolean;
+  } | null>(null);
+  const rowRefs = useRef(new Map<number, HTMLButtonElement>());
+  const hoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(hoverTimer.current), []);
+  const hover = (index: number | null) => {
+    clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(
+      () => setOpenGroup(index === null ? null : { index, focus: false }),
+      120,
+    );
+  };
+  const holdHover = () => clearTimeout(hoverTimer.current);
+  return { openGroup, setOpenGroup, rowRefs, hover, holdHover };
 }
 
 function MenuRow({
