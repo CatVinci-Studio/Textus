@@ -18,35 +18,39 @@ const KEY_STEP = 0.05;
  * The split's grid in the document column. Every tab's editor stays a child
  * of the column, so a tab moving into a pane keeps its undo and scroll.
  */
-export function splitGridStyles(
-  layout: SplitLayout,
-  tabBar: boolean,
-): {
+export function splitGridStyles(layout: SplitLayout): {
   column: CSSProperties;
+  bars: [CSSProperties, CSSProperties];
   first: CSSProperties;
   divider: CSSProperties;
   second: CSSProperties;
 } {
-  const tracks = `minmax(0, ${layout.ratio}fr) 1px minmax(0, ${1 - layout.ratio}fr)`;
-  const bar = tabBar ? 1 : 0;
+  const a = `minmax(0, ${layout.ratio}fr)`;
+  const b = `minmax(0, ${1 - layout.ratio}fr)`;
+  // Each pane is its tab bar over its document.
   if (layout.direction === "row")
     return {
       column: {
-        gridTemplateColumns: tracks,
-        gridTemplateRows: tabBar ? "auto minmax(0, 1fr)" : "minmax(0, 1fr)",
+        gridTemplateColumns: `${a} 1px ${b}`,
+        gridTemplateRows: "auto minmax(0, 1fr)",
       },
-      first: { gridColumn: 1, gridRow: bar + 1 },
-      divider: { gridColumn: 2, gridRow: bar + 1 },
-      second: { gridColumn: 3, gridRow: bar + 1 },
+      bars: [
+        { gridColumn: 1, gridRow: 1 },
+        { gridColumn: 3, gridRow: 1 },
+      ],
+      first: { gridColumn: 1, gridRow: 2 },
+      divider: { gridColumn: 2, gridRow: "1 / span 2" },
+      second: { gridColumn: 3, gridRow: 2 },
     };
   return {
     column: {
       gridTemplateColumns: "minmax(0, 1fr)",
-      gridTemplateRows: tabBar ? `auto ${tracks}` : tracks,
+      gridTemplateRows: `auto ${a} 1px auto ${b}`,
     },
-    first: { gridRow: bar + 1 },
-    divider: { gridRow: bar + 2 },
-    second: { gridRow: bar + 3 },
+    bars: [{ gridRow: 1 }, { gridRow: 4 }],
+    first: { gridRow: 2 },
+    divider: { gridRow: 3 },
+    second: { gridRow: 5 },
   };
 }
 

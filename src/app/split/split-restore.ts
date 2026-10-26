@@ -3,6 +3,7 @@ import type { DocTab } from "../../document/doc-tabs";
 import { getUiState, setUiState, type UiState } from "../../storage/ui-state";
 import {
   clampRatio,
+  pairLayout,
   setSplitLayout,
   splitLayout,
   subscribeSplit,
@@ -80,10 +81,6 @@ export function useSplitRestore(
     settled.current = true;
     // Its first document in front, so the split keeps both.
     activate(ids[0]);
-    setSplitLayout({
-      direction: want.direction,
-      ratio: want.ratio,
-      panes: [ids[0], ids[1]],
-    });
+    setSplitLayout(pairLayout(want.direction, ids[0], ids[1], 0, want.ratio));
   }, [tabs, activate]);
 }

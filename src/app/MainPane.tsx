@@ -76,59 +76,98 @@ export function MainPane({
     activeTabId,
     onAdd,
   );
-  const grid = split && splitGridStyles(split, showTabBar);
+  const grid = split && splitGridStyles(split);
   const paneOf = (id: string) =>
     split?.panes[0] === id ? "first" : split?.panes[1] === id ? "second" : null;
+  const byId = new Map(tabs.map((tab) => [tab.id, tab]));
+  const tabBar = (
+    list: DocTab[],
+    active: string,
+    pane: PaneIndex | null,
+    style?: CSSProperties,
+  ) => (
+    <TabBar
+      key={pane ?? "window"}
+      style={style}
+      tabs={list.map((tab) => ({
+        id: tab.id,
+        title: tabTitle(tab, t),
+        dirty: tabIsDirty(tab),
+      }))}
+      activeTabId={active}
+      onActivate={onActivate}
+      onClose={onClose}
+      onAdd={() => {
+        if (pane !== null) focusPane(pane);
+        onAdd();
+      }}
+      // Pulled over the documents it splits; out of the window it tears
+      // off where the platform gives global cursor positions.
+      onPullOut={(id, title) =>
+        pullTab(id, title, {
+          tabIds: tabs.map((tab) => tab.id),
+          activate: onActivate,
+          detach: canDragTabsBetweenWindows ? onDetach : undefined,
+          releaseOutside:
+            canUseWindows && !canDragTabsBetweenWindows
+              ? onMoveToNewWindow
+              : undefined,
+        })
+      }
+      onReorder={
+        pane === null
+          ? onReorder
+          : (id, index) => reorderInPane(pane, id, index)
+      }
+      previewTab={pane === 1 ? null : previewTab}
+      menuFor={(id) => [
+        {
+          label: t.openBeside,
+          // The tab in front splits with its neighbour; another one
+          // opens beside it.
+          onSelect: () =>
+            id === activeTabId && !split
+              ? splitEditor("row")
+              : openBeside(id, activeTabId),
+        },
+        ...(canUseWindows
+          ? [
+              {
+                label: t.moveToNewWindow,
+                onSelect: () => onMoveToNewWindow(id),
+              },
+            ]
+          : []),
+        "separator",
+        { label: t.menuCloseTab, onSelect: () => onClose(id) },
+        ...pluginTabItems(byId.get(id)?.path ?? null),
+      ]}
+      labels={{
+        tabs: t.menuDocuments,
+        close: t.menuCloseTab,
+        add: t.menuNewFile,
+        unsaved: t.unsavedIndicator,
+      }}
+    />
+  );
+  const paneTabs = (pane: PaneIndex) =>
+    (split?.groups[pane] ?? []).flatMap((id) => byId.get(id) ?? []);
   return (
     <main
       className={split ? "main-pane main-pane-split" : "main-pane"}
       data-split={split?.direction}
       style={grid?.column}
     >
-      {showTabBar && (
-        <TabBar
-          tabs={tabs.map((tab) => ({
-            id: tab.id,
-            title: tabTitle(tab, t),
-            dirty: tabIsDirty(tab),
-          }))}
-          activeTabId={activeTabId}
-          onActivate={onActivate}
-          onClose={onClose}
-          onAdd={onAdd}
-          // Pulled over the documents it splits; out of the window it tears
-          // off, which needs global cursor positions (macOS only).
-          onPullOut={(id, title) =>
-            pullTab(id, title, {
-              tabIds: tabs.map((tab) => tab.id),
-              activate: onActivate,
-              detach: canDragTabsBetweenWindows ? onDetach : undefined,
-            })
-          }
-          onReorder={onReorder}
-          previewTab={previewTab}
-          menuFor={(id) => [
-            {
-              label: t.openBeside,
-              // The tab in front splits with its neighbour; another one
-              // opens beside it.
-              onSelect: () =>
-                id === activeTabId
-                  ? splitEditor("row")
-                  : openBeside(id, activeTabId),
-            },
-            "separator",
-            { label: t.menuCloseTab, onSelect: () => onClose(id) },
-            ...pluginTabItems(tabs.find((tab) => tab.id === id)?.path ?? null),
-          ]}
-          labels={{
-            tabs: t.menuDocuments,
-            close: t.menuCloseTab,
-            add: t.menuNewFile,
-            unsaved: t.unsavedIndicator,
-          }}
-        />
-      )}
+      {split && grid
+        ? ([0, 1] as const).map((pane) =>
+            tabBar(
+              paneTabs(pane),
+              split.panes[pane] ?? "",
+              pane,
+              grid.bars[pane],
+            ),
+          )
+        : showTabBar && tabBar(tabs, activeTabId, null)}
 
       {/* Every tab's editor stays mounted, just hidden, so switching keeps
         undo history, scroll position and in-flight AI state. */}
