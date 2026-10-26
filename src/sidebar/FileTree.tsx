@@ -1,12 +1,9 @@
 import {
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
-  type PointerEvent as ReactPointerEvent,
-  type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -33,15 +30,14 @@ import { getUiState, setUiState } from "../storage/ui-state";
 import { showConfirm, showMessage, showPrompt } from "../ui/app-dialog";
 import type { Strings } from "../i18n/strings";
 import {
-  canMoveInto,
-  DRAG_START_PX,
+  failureText,
   TreeContext,
   type TreeShared,
   type TreeSort,
 } from "./tree-shared";
+import { useRowDrag } from "./useRowDrag";
 import { DirNode } from "./TreeNodes";
 import "./FileTree.css";
-import { documentDrop } from "../ui/document-drop";
 export type { TreeSort } from "./tree-shared";
 
 interface FileTreeProps {
@@ -66,25 +62,6 @@ interface FileTreeProps {
   /** The search shortcut asked for the search box. */
   searchFocusRequest: boolean;
   onSearchFocusHandled: () => void;
-}
-
-/** A row being dragged, and the folder under the pointer. */
-interface Drag {
-  path: string;
-  name: string;
-  isDir: boolean;
-  x: number;
-  y: number;
-  /** The folder it would go into; null over nowhere it can go. */
-  into: string | null;
-}
-
-/** The backend's refusal in the user's words. */
-function failureText(t: Strings, err: unknown, name: string): string {
-  const reason = err instanceof Error ? err.message : String(err);
-  if (reason.includes("Already exists"))
-    return t.treeNameTaken.replace("{name}", name);
-  return t.treeActionFailed.replace("{reason}", reason);
 }
 
 function savedSort(): TreeSort {
@@ -495,117 +472,4 @@ function useRowMenu(
     },
     [root, t, create, rename, trash, onFileSelect, setMenu],
   );
-}
-
-/** A row dragged onto a folder moves into it; a file dragged over the
- *  documents opens there, beside the one under it (ui/document-drop.ts).
- *  A drag: a press on a row that moves past DRAG_START_PX. Pointer events rather than HTML drag and drop,
- *  which the window's own file drop (dragging files in from Finder or
- *  Explorer) takes over on Windows. `takeDragClick` reports - once - that
- *  the click a drag's release sends is the drag's, not a row's. */
-function useRowDrag(
-  treeRef: RefObject<HTMLDivElement | null>,
-  reload: (...dirs: string[]) => void,
-  onEntryMoved: (from: string, to: string) => void,
-  t: Strings,
-) {
-  const [drag, setDrag] = useState<Drag | null>(null);
-  const dragClick = useRef(false);
-  const pressed = useRef<{
-    path: string;
-    name: string;
-    isDir: boolean;
-    x: number;
-    y: number;
-  } | null>(null);
-  const onRowPointerDown = useCallback(
-    (e: ReactPointerEvent, path: string, name: string, isDir: boolean) => {
-      if (e.button !== 0 || e.pointerType === "touch") return;
-      pressed.current = { path, name, isDir, x: e.clientX, y: e.clientY };
-    },
-    [],
-  );
-  useEffect(() => {
-    const targetAt = (x: number, y: number, path: string, isDir: boolean) => {
-      const el = document
-        .elementFromPoint(x, y)
-        ?.closest<HTMLElement>("[data-drop-dir]");
-      const into = el?.dataset.dropDir;
-      return into &&
-        treeRef.current?.contains(el) &&
-        canMoveInto(path, isDir, into)
-        ? into
-        : null;
-    };
-    let current: Drag | null = null;
-    const show = (next: Drag | null) => {
-      current = next;
-      setDrag(next);
-    };
-    const onMove = (e: PointerEvent) => {
-      const start = pressed.current;
-      if (!start) return;
-      if (
-        !current &&
-        Math.hypot(e.clientX - start.x, e.clientY - start.y) < DRAG_START_PX
-      )
-        return;
-      const into = targetAt(e.clientX, e.clientY, start.path, start.isDir);
-      show({
-        path: start.path,
-        name: start.name,
-        isDir: start.isDir,
-        x: e.clientX,
-        y: e.clientY,
-        into,
-      });
-      if (!into && !start.isDir) documentDrop()?.over(e.clientX, e.clientY);
-      else documentDrop()?.leave();
-    };
-    const end = (e: PointerEvent) => {
-      pressed.current = null;
-      const dropped = current;
-      if (!dropped) return;
-      show(null);
-      documentDrop()?.leave();
-      if (!dropped.into && !dropped.isDir && e.type === "pointerup")
-        documentDrop()?.drop(dropped.path, e.clientX, e.clientY);
-      dragClick.current = true;
-      // A click may not follow (released outside the row).
-      window.setTimeout(() => (dragClick.current = false), 0);
-      if (dropped.into) void move(dropped.path, dropped.into);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || !pressed.current) return;
-      pressed.current = null;
-      show(null);
-      documentDrop()?.leave();
-    };
-    const move = async (from: string, into: string) => {
-      try {
-        const to = await fs.moveEntry(from, into);
-        reload(parentDir(from) ?? into, into);
-        onEntryMoved(from, to);
-      } catch (err) {
-        await showMessage(failureText(t, err, basename(from)));
-      }
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", end);
-    window.addEventListener("pointercancel", end);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", end);
-      window.removeEventListener("pointercancel", end);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [treeRef, reload, onEntryMoved, t]);
-
-  const takeDragClick = useCallback(() => {
-    const taken = dragClick.current;
-    dragClick.current = false;
-    return taken;
-  }, []);
-  return { drag, onRowPointerDown, takeDragClick };
 }

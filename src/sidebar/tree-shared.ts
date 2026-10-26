@@ -5,6 +5,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import type { SearchScope } from "./file-search";
+import type { Strings } from "../i18n/strings";
 import { isInside, parentDir } from "../utils/path";
 
 // What the file tree (FileTree.tsx) and its rows (TreeNodes.tsx) share:
@@ -63,4 +64,12 @@ export function canMoveInto(
   if (parentDir(path) === into) return false;
   if (isDir && (into === path || isInside(into, path))) return false;
   return true;
+}
+
+/** The backend's refusal in the user's words. */
+export function failureText(t: Strings, err: unknown, name: string): string {
+  const reason = err instanceof Error ? err.message : String(err);
+  if (reason.includes("Already exists"))
+    return t.treeNameTaken.replace("{name}", name);
+  return t.treeActionFailed.replace("{reason}", reason);
 }

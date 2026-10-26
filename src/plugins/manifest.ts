@@ -77,14 +77,6 @@ export type MenuId =
   | "view/title"
   | "app/plugins"
   | "app/tray";
-export const MENU_IDS: readonly MenuId[] = [
-  "editor/context",
-  "file/context",
-  "tab/context",
-  "view/title",
-  "app/plugins",
-  "app/tray",
-];
 
 /** A Textus setting a plugin needs on to do all it does. Settings › Extensions › Plugins
  *  says which, and offers to turn it on (requirements.ts). */

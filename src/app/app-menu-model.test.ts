@@ -15,11 +15,10 @@ import {
   buildMobileMenu,
   menuBarSections,
   NO_RECENTS,
-  nativeMenuAccelerators,
   nativeMenuChecks,
-  nativeMenuLabels,
   type MenuNode,
 } from "./app-menu-model";
+import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";
 import { readFileSync } from "node:fs";
 
 /**

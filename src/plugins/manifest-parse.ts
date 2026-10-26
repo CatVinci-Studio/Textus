@@ -5,7 +5,16 @@ import type {
   SettingContribution,
   ViewType,
 } from "./manifest";
-import { MENU_IDS } from "./manifest";
+
+/** Where a plugin's menu items may go (contributes.menus). */
+export const MENU_IDS: readonly MenuId[] = [
+  "editor/context",
+  "file/context",
+  "tab/context",
+  "view/title",
+  "app/plugins",
+  "app/tray",
+];
 
 /**
  * Reading a manifest's parts (manifest.ts's parseManifest): its

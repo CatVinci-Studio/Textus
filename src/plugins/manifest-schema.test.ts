@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { MENU_IDS, REQUIRED_SETTINGS, isPermission } from "./manifest";
+import { REQUIRED_SETTINGS, isPermission } from "./manifest";
+import { MENU_IDS } from "./manifest-parse";
 
 /**
  * docs/dev/textus-plugin.schema.json says what manifest.ts reads: the same

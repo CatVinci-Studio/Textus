@@ -8,12 +8,8 @@ import { TRACK_CHANGES_EVENT } from "../utils/events";
 import { menuIpc, windowIpc } from "../platform/ipc";
 import { selectAllInFocus } from "../ui/select-all";
 import { hasNativeMenuBar } from "../platform/capabilities";
-import {
-  nativeMenuAccelerators,
-  nativeMenuChecks,
-  nativeMenuLabels,
-  type MenuChecks,
-} from "./app-menu-model";
+import { nativeMenuChecks, type MenuChecks } from "./app-menu-model";
+import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";
 import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
 import { runCommand } from "./commands";
 import { exportHtml, exportPdf, exportViaPandoc } from "../export/exporters";
