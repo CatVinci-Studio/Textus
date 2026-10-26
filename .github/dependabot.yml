@@ -19,6 +19,11 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # Saving an empty task item throws in mdast-util-to-markdown-cjk-friendly.
+      - dependency-name: "remark-cjk-friendly"
+        versions: ["2.3.3"]
+      - dependency-name: "remark-cjk-friendly-gfm-strikethrough"
+        versions: ["2.3.2"]
 
   - package-ecosystem: cargo
     directory: /src-tauri
