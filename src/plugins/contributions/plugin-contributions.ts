@@ -50,10 +50,6 @@ const contributions = new Map<string, (() => void)[]>();
 /** A file name's extension, with its dot: ".pdf". */
 const extname = (path: string) => /\.[^./\\]+$/.exec(path)?.[0] ?? "";
 
-export function hasContributions(id: string): boolean {
-  return contributions.has(id);
-}
-
 /** Adds an undo to what goes when the plugin is withdrawn. */
 export function addContribution(id: string, undo: () => void): void {
   contributions.get(id)?.push(undo);

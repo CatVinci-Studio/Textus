@@ -69,6 +69,8 @@ remembering them:
 - **No import cycles**: no module imports itself through others
   (`scripts/check-cycles.mjs`). A cycle ties its modules into one: none can
   be read, tested or loaded lazily on its own.
+- **No dead code**: no unused file, export or dependency (`knip`, set up
+  in `knip.json`).
 - **Shape**: no file over 600 lines, no component with more than eight
   hooks (`scripts/check-code-shape.mjs`) - split by concern, as
   `MilkdownEditor` and `App` were.

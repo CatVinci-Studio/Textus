@@ -423,16 +423,6 @@ function withdraw(id: string) {
   withdrawContributions(id, contributionDeps);
 }
 
-/** Starts a plugin's code and asks it, if it is on (a `textus://` link,
- *  a code block coming into sight). */
-export async function startPlugin(id: string): Promise<PluginHost | null> {
-  const record = pluginRecord(id);
-  if (!record || !canRun(record.status, pluginsSnapshot().allOn)) return null;
-  const running = await host(record);
-  await running.start();
-  return running;
-}
-
 // ---------------------------------------------------------------------------
 // Settings
 // ---------------------------------------------------------------------------
