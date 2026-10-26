@@ -142,8 +142,7 @@ export function createCodeBlockView(
       });
       actions.append(picker, copy, selectAll);
 
-      // Mounted when the block is first pointed at or tabbed into: the
-      // header is hidden until then, and a long document has many blocks.
+      // Mounted on first hover or focus: a long document has many blocks.
       let languagePicker: ReturnType<typeof mountLanguagePicker> | null = null;
       let shownLanguage: string | null = null;
       function syncPicker() {
@@ -241,8 +240,7 @@ export function createCodeBlockView(
           syncGutter(updatedNode, updatedDecorations);
           return true;
         },
-        // The header's buttons and picker are the view's own, not the
-        // editor's: Enter on one isn't a new line.
+        // Keys on the header's buttons aren't the editor's.
         stopEvent: (event) => header.contains(event.target as Node),
         // The header's label and the gutter change under the view's
         // DOM observer; only the code is the document's.

@@ -367,8 +367,7 @@ export function createGhostTextPlugin(options: {
               if (!selection.empty) return;
 
               const $pos = selection.$from;
-              // In code a pause is not a sentence left open, and a
-              // suggestion there ran many lines over what was being typed.
+              // In code a suggestion ran many lines over what was typed.
               if ($pos.parent.type.spec.code) return;
               const atBlockEnd =
                 $pos.parent.isTextblock &&
@@ -402,9 +401,7 @@ export function createGhostTextPlugin(options: {
               // is the only real no-op case - "continue from the exact end
               // of the before-text" is meaningless with no before-text.
               if (!before.trim()) return;
-              // A before-text of only code (a diagram's source above an
-              // empty paragraph) has no prose to continue either: what came
-              // back was text in no one's language.
+              // Only code before (a diagram's source): no prose to continue.
               if (!hasProse(prose)) return;
 
               debounced.schedule(async (isCurrent) => {

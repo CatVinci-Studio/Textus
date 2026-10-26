@@ -178,12 +178,10 @@ export interface GrammarDecorationSpec {
   original?: string;
 }
 
-/** What stands in for each UTF-16 unit of inline code in the text sent for
- *  checking: code isn't prose, and in mixed Chinese and English it drew
- *  false fixes. One unit apiece keeps the offsets the paragraph's own. */
+/** Masks inline code, one unit per unit so offsets still match: in mixed
+ *  Chinese and English, code drew false fixes. */
 const CODE_MASK = "\u2022";
 
-/** The paragraph's text as the check sees it, inline code masked. */
 export function checkedText(para: ProseNode): string {
   const text = para.textContent;
   let masked = "";

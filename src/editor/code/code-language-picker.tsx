@@ -6,23 +6,20 @@ import { Select } from "../../ui/Select";
 import { usePresence, useMergedRef } from "../../ui/usePresence";
 import { useFloatingList } from "../../ui/useFloatingList";
 
-/** What the picker shows and does; given again whenever it changes. */
 export interface LanguagePickerProps {
-  /** The fence's language, "" for none. */
+  /** "" for plain text. */
   value: string;
-  /** The menu's languages, "" first for plain text. */
   languages: readonly string[];
   label: string;
   searchLabel: string;
   onChange: (language: string) => void;
-  /** The menu opened or closed: the block keeps its header shown. */
   onOpenChange: (open: boolean) => void;
 }
 
 const optionLabel = (lang: string) => (lang === "" ? "plain text" : lang);
 
-/** The languages matching `query`; one typed that the menu lacks is
- *  offered as it is, so any fence can be named. */
+/** The languages matching `query`, plus `query` itself so any fence can
+ *  be named. */
 export function matchLanguages(
   languages: readonly string[],
   query: string,
@@ -32,25 +29,19 @@ export function matchLanguages(
   const found = languages.filter((lang) =>
     optionLabel(lang).toLowerCase().includes(q),
   );
-  // Those starting with what was typed first: "sc" finds scss before css.
   const starts = (lang: string) => optionLabel(lang).startsWith(q);
   found.sort((a, b) => Number(starts(b)) - Number(starts(a)));
   return found.includes(q) || /\s/.test(q) ? found : [...found, q];
 }
 
-/**
- * A code block's language picker inside the block's view
- * (code-block-language-view.ts), which is plain DOM: the app's menu with a
- * search field on top, as the list is long. On iPhone and iPad the
- * system's picker (Select), sized for a finger.
- */
+/** The code block view's language menu, searchable as the list is long;
+ *  on iPhone and iPad the system picker, sized for a finger. */
 export function mountLanguagePicker(container: HTMLElement) {
   let root: Root | null = createRoot(container);
   return {
     render(props: LanguagePickerProps) {
-      // A fence's own spelling (`js`, `sh`, `mermaid`) outside the list
-      // gets an option of its own: shown as plain text, the block would
-      // be mislabelled, and picking from the menu rewrote its fence.
+      // A fence's own spelling (`js`, `mermaid`) stays: as plain text the
+      // block was mislabelled.
       const languages = props.languages.includes(props.value)
         ? props.languages
         : [...props.languages, props.value];
@@ -76,15 +67,12 @@ export function mountLanguagePicker(container: HTMLElement) {
     destroy() {
       const done = root;
       root = null;
-      // Not while ProseMirror is redrawing, which may be inside a React
-      // render of its own.
+      // Not during a render ProseMirror's redraw may be inside.
       queueMicrotask(() => done?.unmount());
     },
   };
 }
 
-/** A list beside its trigger (useFloatingList) that shrinks back into it
- *  as it closes, as Select's does. */
 function useFloatingMenu(open: boolean, active: number, dismiss: () => void) {
   const floating = useFloatingList(open, active, dismiss);
   const presence = usePresence(open, { exitMs: 120 });
@@ -112,7 +100,7 @@ function LanguageMenu({
   const listId = useId();
   const shown = matchLanguages(languages, query);
 
-  // After the list takes the focus as it opens: typing goes to the search.
+  // After the list takes the focus: typing goes to the search.
   useEffect(() => {
     if (open) search.current?.focus({ preventScroll: true });
   }, [open]);

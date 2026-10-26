@@ -15,8 +15,8 @@ export function fitGutter(gutter: HTMLElement, code: HTMLElement): void {
     for (const number of numbers) number.style.removeProperty("height");
     return;
   }
-  // Measured on screen, set in the block's own pixels: the document's zoom
-  // (CSS zoom) scales both, and unscaled the numbers drifted off their lines.
+  // Measured on screen, set in CSS pixels: undone, the document's zoom
+  // drifted the numbers off their lines.
   const style = getComputedStyle(code);
   const zoom = box.height / (parseFloat(style.height) || box.height);
   // Lines with no character of their own - after a last newline - are a
