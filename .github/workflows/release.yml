@@ -402,6 +402,15 @@ jobs:
       tag: ${{ inputs.tag || github.ref_name }}
     secrets: inherit
 
+  # The browser playground follows the latest stable release.
+  deploy-playground:
+    needs: publish
+    if: ${{ needs.publish.outputs.newest-stable == 'true' }}
+    uses: ./.github/workflows/deploy-playground.yml
+    with:
+      tag: ${{ inputs.tag || github.ref_name }}
+    secrets: inherit
+
   # pacman also sorts 0.9.0_rc.1 above 0.9.0 (see update-arch-repo.yml).
   update-arch-repo:
     needs: publish
