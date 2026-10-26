@@ -32,7 +32,7 @@ vi.mock("../../platform/ipc", () => ({
     chatHistoryMoveDocument: vi.fn().mockResolvedValue(null),
   },
 }));
-vi.mock("../../utils/tauri-events", () => ({
+vi.mock("../../platform/events", () => ({
   listenToThisWindow: () => Promise.resolve(() => {}),
 }));
 

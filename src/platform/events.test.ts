@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it, vi } from "vitest";
-import { listenToThisWindow, unlistenAll } from "./tauri-events";
+import { listenToThisWindow, unlistenAll } from "./events";
 
 interface ListenArgs {
   event: string;

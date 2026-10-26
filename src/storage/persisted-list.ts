@@ -3,7 +3,7 @@ import { storage, type HistoryKind } from "../platform/ipc";
 import { readBoot } from "./boot";
 import { readLocalJson } from "./local";
 import { trackWrite } from "./pending-writes";
-import { listenToThisWindow } from "../utils/tauri-events";
+import { listenToThisWindow } from "../platform/events";
 
 /**
  * A small persisted list exposed as an external store, for the histories

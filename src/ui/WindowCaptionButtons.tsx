@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../platform/this-window";
 import { useSettings } from "../settings/SettingsContext";
 import {
   WindowCloseIcon,
@@ -25,7 +25,7 @@ export function WindowCaptionButtons() {
 
   useEffect(() => {
     if (!appDrawsWindowFrame) return;
-    const win = getCurrentWindow();
+    const win = thisWindow();
     let alive = true;
     const sync = () => {
       void win
@@ -65,7 +65,7 @@ export function WindowCaptionButtons() {
           type="button"
           className="window-caption-button"
           aria-label={t.windowMinimize}
-          onClick={() => void getCurrentWindow().minimize()}
+          onClick={() => void thisWindow().minimize()}
         >
           <WindowMinimizeIcon />
         </button>
@@ -75,7 +75,7 @@ export function WindowCaptionButtons() {
           type="button"
           className="window-caption-button"
           aria-label={maximized ? t.windowRestore : t.windowMaximize}
-          onClick={() => void getCurrentWindow().toggleMaximize()}
+          onClick={() => void thisWindow().toggleMaximize()}
         >
           {maximized ? <WindowRestoreIcon /> : <WindowMaximizeIcon />}
         </button>
@@ -85,7 +85,7 @@ export function WindowCaptionButtons() {
           type="button"
           className="window-caption-button window-caption-close"
           aria-label={t.windowClose}
-          onClick={() => void getCurrentWindow().close()}
+          onClick={() => void thisWindow().close()}
         >
           <WindowCloseIcon />
         </button>

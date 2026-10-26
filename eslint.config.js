@@ -6,7 +6,14 @@ import tseslint from "typescript-eslint";
 // The layers of src/, lowest first: a folder imports from its own layer and
 // the ones below, never above (docs/dev/architecture.md). Type-only imports are
 // allowed across layers - they leave nothing behind at runtime.
-const above = (folders) => ({
+// Only src/platform/ (and the dev shim) talk to Tauri: everything else goes
+// through it, so the same code can run in the browser build.
+const TAURI = {
+  group: ["@tauri-apps/*"],
+  allowTypeImports: true,
+  message: "Tauri is reached through src/platform/ only.",
+};
+const above = (folders, { tauri = false } = {}) => ({
   "@typescript-eslint/no-restricted-imports": [
     "error",
     {
@@ -30,6 +37,7 @@ const above = (folders) => ({
           message:
             "plugins/host/ is inside the plugin system; use plugins/manager.ts or plugins/app-bridge.ts.",
         },
+        ...(tauri ? [] : [TAURI]),
       ],
     },
   ],
@@ -87,9 +95,14 @@ export default tseslint.config(
     },
   },
   {
-    files: ["src/{utils,platform,i18n,storage}/**/*.{ts,tsx}"],
+    files: ["src/{utils,i18n,storage}/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
     rules: above([...SHELL, ...FEATURES, "ui"]),
+  },
+  {
+    files: ["src/platform/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([...SHELL, ...FEATURES, "ui"], { tauri: true }),
   },
   {
     files: ["src/ui/**/*.{ts,tsx}"],
@@ -119,9 +132,26 @@ export default tseslint.config(
   {
     // The window's shell is the top layer: it may import anything but the
     // plugin system's insides.
-    files: ["src/{app,document-view,lazy,dev,playground,help}/**/*.{ts,tsx}"],
+    files: ["src/{app,document-view,lazy,playground,help}/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
     rules: above([]),
+  },
+  {
+    // The plugin system and the entry files aren't layered, but they still
+    // reach Tauri only through src/platform/.
+    files: ["src/plugins/**/*.{ts,tsx}", "src/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        { patterns: [TAURI] },
+      ],
+    },
+  },
+  {
+    files: ["src/dev/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([], { tauri: true }),
   },
   {
     // Plugin code: the runtimes put into a plugin's sandboxed frames

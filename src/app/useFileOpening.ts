@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
+import { listenToThisWindow, unlistenAll } from "../platform/events";
 import {
   CHAT_TO_EDITOR,
   onWindowEvent,

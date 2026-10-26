@@ -3,7 +3,7 @@ import { gateAiRequests } from "../platform/ai-gate";
 import { readBoot } from "../storage/boot";
 import { LOCAL_KEYS, readLocalJson, writeLocal } from "../storage/local";
 import { trackWrite } from "../storage/pending-writes";
-import { listenToThisWindow } from "../utils/tauri-events";
+import { listenToThisWindow } from "../platform/events";
 import { SettingsSync, isRecord, type Raw } from "./settings-sync";
 import type { Settings } from "./settings-types";
 import { normaliseSettings } from "./settings-normalise";

@@ -48,7 +48,7 @@ vi.mock("../platform/ipc", () => ({
     historyList: vi.fn().mockResolvedValue([]),
   },
 }));
-vi.mock("../utils/tauri-events", () => ({
+vi.mock("../platform/events", () => ({
   listenToThisWindow: (
     event: string,
     handler: (event: { payload: unknown }) => void,

@@ -1,7 +1,7 @@
 import { errorText } from "../utils/error-text";
 import { useEffect, useState } from "react";
-import type { Update } from "@tauri-apps/plugin-updater";
-import { relaunch } from "@tauri-apps/plugin-process";
+import type { Update } from "../platform/app-info";
+import { relaunchApp } from "../platform/app-info";
 import { checkChannel, selfUpdateAllowed } from "../platform/distribution";
 import { flushPendingWrites } from "../storage/pending-writes";
 import { canAutoUpdate } from "../platform/capabilities";
@@ -79,7 +79,7 @@ export function useAppUpdate(channel: UpdateChannel) {
       // relaunch (which does flush Rust's files on its way out).
       await flushPendingWrites();
       await updater.releaseInstance();
-      await relaunch();
+      await relaunchApp();
     } catch (err) {
       setError(errorText(err));
       setStatus("error");

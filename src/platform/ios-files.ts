@@ -159,3 +159,20 @@ export async function newDocumentPath(
     if (!(await exists(path))) return path;
   }
 }
+
+/** The app's own Documents folder. */
+export const documentsFolder = documentDir;
+export const joinPath = join;
+
+/** Renames a file in the app's own Documents folder; the new path. */
+export function renameSandboxEntry(
+  path: string,
+  name: string,
+): Promise<string> {
+  return invoke<string>("rename_entry", { path, name });
+}
+
+/** Deletes a file or folder in the app's own Documents folder. */
+export function deleteSandboxEntry(path: string): Promise<void> {
+  return invoke("delete_entry", { path });
+}

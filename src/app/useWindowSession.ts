@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../platform/this-window";
 import { canUseWindows } from "../platform/capabilities";
 import { session } from "../platform/ipc";
 import type { DocTab } from "../document/doc-tabs";
@@ -9,7 +9,7 @@ import type { DocTab } from "../document/doc-tabs";
 export function useWindowTitle(activeTitle: string): void {
   useEffect(() => {
     if (!canUseWindows) return;
-    void getCurrentWindow()
+    void thisWindow()
       .setTitle(`${activeTitle} - Textus`)
       .catch(() => {});
   }, [activeTitle]);

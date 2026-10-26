@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../platform/this-window";
 import { tabIsDirty, type DocTab } from "./doc-tabs";
 import { createTabIdleTimers } from "./tab-idle-timers";
-import { unlistenAll } from "../utils/tauri-events";
+import { unlistenAll } from "../platform/events";
 
 /** What one save of a tab came to (app/useSaveTabs.ts's autosaveTab).
  *  "skipped": nothing to write - no file, or no change. "conflict": the file
@@ -157,11 +157,9 @@ export function useAutosave(opts: {
   // Leaving the window (another app, another Textus window) or hiding the
   // page (minimised; on iOS, going to the background) writes everything.
   useEffect(() => {
-    const unlisten = getCurrentWindow().onFocusChanged(
-      ({ payload: focused }) => {
-        if (!focused) void flush();
-      },
-    );
+    const unlisten = thisWindow().onFocusChanged(({ payload: focused }) => {
+      if (!focused) void flush();
+    });
     const onHidden = () => {
       if (document.visibilityState === "hidden") void flush();
     };

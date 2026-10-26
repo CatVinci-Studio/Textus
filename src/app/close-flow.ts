@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../platform/this-window";
 import { canUseWindows } from "../platform/capabilities";
-import { unlistenAll } from "../utils/tauri-events";
+import { unlistenAll } from "../platform/events";
 import { tabIsDirty, type DocTab } from "../document/doc-tabs";
 import { drafts, session } from "../platform/ipc";
 import { flushPendingWrites } from "../storage/pending-writes";
@@ -51,7 +51,7 @@ export function useTabRemoval(opts: {
           void Promise.allSettled([
             drafts.clearDraftSnapshot(id),
             flushPendingWrites(),
-          ]).then(() => void getCurrentWindow().destroy());
+          ]).then(() => void thisWindow().destroy());
           return prev;
         }
         return next;
@@ -109,7 +109,7 @@ export function useWindowCloseGuard(
 ): void {
   const keep = useLatest(keepUnsaved);
   useEffect(() => {
-    const unlisten = getCurrentWindow().onCloseRequested(async (event) => {
+    const unlisten = thisWindow().onCloseRequested(async (event) => {
       // Save Automatically writes what it can first; the prompt is for the
       // rest.
       await flushAutosave();
@@ -188,7 +188,7 @@ export function useClosePrompt(opts: {
       // (it runs on a later effect tick) - do it synchronously instead.
       await clearWindowDrafts();
       await flushPendingWrites();
-      await getCurrentWindow().destroy();
+      await thisWindow().destroy();
     } else if (action.kind === "tab") {
       if (!(await saveTab(action.tabId))) return;
       removeTab(action.tabId);
@@ -215,7 +215,7 @@ export function useClosePrompt(opts: {
       // back as a recovered draft on the next launch.
       await clearWindowDrafts();
       await flushPendingWrites();
-      await getCurrentWindow().destroy();
+      await thisWindow().destroy();
     } else if (action.kind === "tab") removeTab(action.tabId);
     else await replaceTabWithFile(action.tabId, action.path);
   }, [
