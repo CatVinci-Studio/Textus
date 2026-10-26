@@ -511,6 +511,7 @@ export default {
   accountNotConnected: "未登入",
   accountConnectedAs: "已登入",
   signInTemplate: "使用 {name} 登入",
+  signInExperimental: "試驗性功能，謹慎使用。",
   logoutButton: "登出",
   loggingIn: "正在等待瀏覽器完成登入…",
   loginLinkHint: "瀏覽器沒有開啟？在這台電腦的瀏覽器裡開啟這個連結：",

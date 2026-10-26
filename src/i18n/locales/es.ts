@@ -573,6 +573,7 @@ para usar una.
   accountNotConnected: "Sin conectar",
   accountConnectedAs: "Conectado",
   signInTemplate: "Iniciar sesión con {name}",
+  signInExperimental: "Función experimental: úsala con cuidado.",
   logoutButton: "Cerrar sesión",
   loggingIn: "Esperando el inicio de sesión en el navegador…",
   loginLinkHint:

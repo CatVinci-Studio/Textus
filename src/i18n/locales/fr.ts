@@ -578,6 +578,7 @@ utiliser une.
   accountNotConnected: "Non connecté",
   accountConnectedAs: "Connecté",
   signInTemplate: "Se connecter avec {name}",
+  signInExperimental: "Fonction expérimentale : à utiliser avec prudence.",
   logoutButton: "Se déconnecter",
   loggingIn: "En attente de la connexion dans le navigateur…",
   loginLinkHint:

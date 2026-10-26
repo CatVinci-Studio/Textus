@@ -511,6 +511,7 @@ export default {
   accountNotConnected: "未登录",
   accountConnectedAs: "已登录",
   signInTemplate: "使用 {name} 登录",
+  signInExperimental: "试验性功能，谨慎使用。",
   logoutButton: "退出登录",
   loggingIn: "等待浏览器完成登录…",
   loginLinkHint: "浏览器没有打开？在这台电脑的浏览器里打开这个链接：",

@@ -558,6 +558,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   accountNotConnected: "Não conectado",
   accountConnectedAs: "Conectado",
   signInTemplate: "Entrar com {name}",
+  signInExperimental: "Recurso experimental: use com cuidado.",
   logoutButton: "Sair",
   loggingIn: "Aguardando o login no navegador…",
   loginLinkHint:

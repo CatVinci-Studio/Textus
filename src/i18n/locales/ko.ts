@@ -531,6 +531,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   accountNotConnected: "연결 안 됨",
   accountConnectedAs: "연결됨",
   signInTemplate: "{name} 계정으로 로그인",
+  signInExperimental: "실험적 기능입니다. 주의해서 사용하세요.",
   logoutButton: "로그아웃",
   loggingIn: "브라우저 로그인을 기다리는 중…",
   loginLinkHint:
