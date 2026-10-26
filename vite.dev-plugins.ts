@@ -47,6 +47,13 @@ function catalog(root: string) {
           url: `/dev-plugins/${id}`,
           sha256: "",
           size: 0,
+          // As the catalog release has them: a plugin's screenshots/*.png.
+          screenshots: existsSync(join(plugins, id, "screenshots"))
+            ? readdirSync(join(plugins, id, "screenshots"))
+                .filter((name) => name.endsWith(".png"))
+                .sort()
+                .map((name) => `/dev-plugins/${id}/screenshots/${name}`)
+            : [],
         };
       }),
   };

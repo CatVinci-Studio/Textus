@@ -31,6 +31,8 @@ export interface CatalogItem {
   official: boolean;
   manifest: PluginManifest;
   size: number;
+  /** Pictures of it at work, from the catalog's release. */
+  screenshots: string[];
 }
 
 export type { SkillEntry };
@@ -74,6 +76,7 @@ function item(entry: PluginCatalogEntry): CatalogItem | null {
       official: entry.official,
       manifest: parseManifest(entry.manifest),
       size: entry.size,
+      screenshots: entry.screenshots,
     };
   } catch {
     return null;
@@ -146,6 +149,47 @@ export async function installFromCatalog(id: string): Promise<void> {
   const wasOn = before?.status === "on";
   if (!before || wasOn) await setPluginEnabled(id, true);
 }
+
+export type PackId = "writing" | "charts" | "research";
+
+/** Plugins that go together, offered to install at once on Get more: the
+ *  official ones, by what they are for. A pack shows the ones the catalog
+ *  has. */
+export const PLUGIN_PACKS: { id: PackId; plugins: string[] }[] = [
+  {
+    id: "writing",
+    plugins: [
+      "catvinci.markdown-lint",
+      "catvinci.cjk-spacing",
+      "catvinci.heading-numbers",
+      "catvinci.templates",
+      "catvinci.bookmarks",
+    ],
+  },
+  {
+    id: "charts",
+    plugins: [
+      "catvinci.markmap",
+      "catvinci.echarts",
+      "catvinci.plantuml",
+      "catvinci.drawio",
+      "catvinci.vega-lite",
+      "catvinci.timeline",
+      "catvinci.abc",
+      "catvinci.wavedrom",
+      "catvinci.function-plot",
+    ],
+  },
+  {
+    id: "research",
+    plugins: [
+      "catvinci.zotero",
+      "catvinci.pdf-viewer",
+      "catvinci.daily-notes",
+      "catvinci.graph",
+    ],
+  },
+];
 
 /** The plugins Get more puts first, while nothing is searched for: the
  *  ones most people want first. */

@@ -198,6 +198,11 @@ export type CatalogEntry_Deserialize = {
 	url: string,
 	sha256: string,
 	size: number,
+	/**
+	 *  Pictures of it at work, for the market (from the repository's
+	 *  releases, like its package; any other is left out).
+	 */
+	screenshots?: string[],
 };
 
 /**
@@ -213,6 +218,11 @@ export type CatalogEntry_Serialize = {
 	url: string,
 	sha256: string,
 	size: number,
+	/**
+	 *  Pictures of it at work, for the market (from the repository's
+	 *  releases, like its package; any other is left out).
+	 */
+	screenshots: string[],
 };
 
 /**  One installed plugin, as Settings › Plugins lists it. */

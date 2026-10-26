@@ -40,13 +40,14 @@ export function usePluginInstall(
     }
   };
 
-  const install = (item: CatalogItem) =>
+  /** `quietly`: one of several (a pack) - no guide opens after it. */
+  const install = (item: CatalogItem, quietly = false) =>
     attempt(async () => {
       setInstalling(item.id);
       try {
         await installFromCatalog(item.id);
         await askForRequirements(item.id, t, settings, setSettings);
-        onInstalled?.(item.id);
+        if (!quietly) onInstalled?.(item.id);
       } finally {
         setInstalling(null);
       }

@@ -219,6 +219,17 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-setting-input {
   width: 220px;
 }
+/* A catalog plugin's picture of itself at work (Get more). */
+.plugin-card-shot {
+  display: block;
+  max-width: 100%;
+  max-height: 160px;
+  margin-top: var(--space-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-small);
+  object-fit: cover;
+  object-position: top left;
+}
 /* A heading over a plugin's settings that share a group. */
 .plugin-setting-group {
   margin: var(--space-3) var(--space-3) var(--space-1);

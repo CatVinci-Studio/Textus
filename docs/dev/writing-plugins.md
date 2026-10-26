@@ -425,6 +425,13 @@ and so on for other languages - saying in a few lines what the plugin does
 and how to reach it. Textus opens it when the plugin is installed, and its
 page in Settings has **How to use** to open it again.
 
+## Screenshots
+
+Pictures of the plugin at work go in `screenshots/` beside its manifest,
+PNGs in the order to show them. They aren't packed with the plugin: the
+catalog lists them, and Get more shows the first on the plugin's card. Keep
+them light - a window of about 1200 px, cropped to what the plugin does.
+
 ## Publishing
 
 1. On the plugin's page in Settings (or the chat card of one Textus AI

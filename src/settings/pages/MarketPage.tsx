@@ -1,17 +1,11 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { Byline } from "./PluginPage";
 import type { Strings } from "../../i18n/strings";
-import { pluginName, pluginText } from "../../plugins/manager";
 import {
   catalogSnapshot,
   loadCatalog,
-  notInstalled,
-  RECOMMENDED_PLUGINS,
-  searchCatalog,
   subscribeCatalog,
-  type CatalogItem,
-  type CatalogState,
 } from "../../plugins/store/catalog";
+import { MarketPlugins } from "./MarketPlugins";
 import { ThemeGallerySection } from "../sections/theme-gallery";
 import { MarketSkills } from "../sections/market-skills";
 import { links } from "../../platform/ipc";
@@ -97,7 +91,7 @@ export function MarketPage({
             catalog={catalog}
             query={query}
             installing={installing}
-            onInstall={(item) => void install(item)}
+            onInstall={install}
           />
         </section>
       )}
@@ -116,133 +110,6 @@ export function MarketPage({
           {t.marketListingRules}
         </button>
       </p>
-    </div>
-  );
-}
-
-/** The catalog's plugins not installed yet, as far as `query` lets. */
-function MarketPlugins({
-  t,
-  catalog,
-  query,
-  installing,
-  onInstall,
-}: {
-  t: Strings;
-  catalog: CatalogState;
-  query: string;
-  installing: string | null;
-  onInstall: (item: CatalogItem) => void;
-}) {
-  if (catalog.status === "failed")
-    return (
-      <CatalogProblem
-        t={t}
-        text={t.pluginsCatalogFailed.replace("{reason}", catalog.error)}
-      />
-    );
-  if (catalog.status !== "ready")
-    return <p className="plugin-empty">{t.pluginsCatalogLoading}</p>;
-  const offered = notInstalled(catalog);
-  const shown = searchCatalog(offered, query);
-  // The recommended ones lead while nothing is searched for.
-  const picks = query.trim()
-    ? []
-    : RECOMMENDED_PLUGINS.flatMap((id) => shown.filter((i) => i.id === id));
-  const rest = shown.filter((i) => !picks.includes(i));
-  const card = (item: CatalogItem) => (
-    <CatalogCard
-      key={item.id}
-      item={item}
-      t={t}
-      installing={installing === item.id}
-      onInstall={() => onInstall(item)}
-    />
-  );
-  return (
-    <>
-      {catalog.error && (
-        <CatalogProblem
-          t={t}
-          text={t.pluginsCatalogKept.replace("{reason}", catalog.error)}
-        />
-      )}
-      {picks.length > 0 && (
-        <>
-          <h4 className="plugin-subgroup-title">{t.pluginsRecommended}</h4>
-          <div className="settings-group-body market-recommended">
-            {picks.map(card)}
-          </div>
-          {rest.length > 0 && (
-            <h4 className="plugin-subgroup-title">{t.pluginsMore}</h4>
-          )}
-        </>
-      )}
-      <div className="settings-group-body">
-        {shown.length ? (
-          rest.map(card)
-        ) : (
-          <p className="plugin-empty">
-            {offered.length
-              ? t.pluginsSearchNone.replace("{query}", query.trim())
-              : t.pluginsCatalogAllInstalled}
-          </p>
-        )}
-      </div>
-    </>
-  );
-}
-
-/** Why the list couldn't be fetched, with Try again. */
-function CatalogProblem({ t, text }: { t: Strings; text: string }) {
-  return (
-    <div className="settings-row plugin-catalog-problem">
-      <div className="settings-row-text">
-        <div className="settings-error">{text}</div>
-      </div>
-      <div className="settings-row-control">
-        <button type="button" onClick={() => void loadCatalog(true)}>
-          {t.pluginsCatalogRetry}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/** A plugin the catalog offers, with Install. */
-function CatalogCard({
-  item,
-  t,
-  installing,
-  onInstall,
-}: {
-  item: CatalogItem;
-  t: Strings;
-  installing: boolean;
-  onInstall: () => void;
-}) {
-  const record = { manifest: item.manifest };
-  return (
-    <div className="settings-row plugin-card" data-catalog={item.id}>
-      <div className="plugin-card-open">
-        <span className="settings-row-label plugin-card-name">
-          {pluginName({ id: item.id, manifest: item.manifest })}
-        </span>
-        <span className="settings-row-hint plugin-card-description">
-          {pluginText(record, item.manifest.description)}
-        </span>
-        <Byline manifest={item.manifest} official={item.official} t={t} />
-      </div>
-      <div className="settings-row-control">
-        <button
-          type="button"
-          className="plugin-install"
-          disabled={installing}
-          onClick={onInstall}
-        >
-          {installing ? t.pluginInstalling : t.pluginInstall}
-        </button>
-      </div>
     </div>
   );
 }
