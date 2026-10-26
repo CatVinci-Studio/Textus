@@ -1,39 +1,29 @@
 name: Deploy playground
 
-# Builds the browser playground (src/playground/) and uploads it to the
-# Cloudflare Worker `textus-playground`, which serves
-# textus.catvinci.com/playground/ (wrangler.playground.jsonc). Runs on every
-# push to main that can change the page, and by hand to redeploy main.
+# Builds the browser playground (src/playground/) at a release tag and
+# uploads it to the Cloudflare Worker `textus-playground`, which serves
+# textus.catvinci.com/playground/ (wrangler.playground.jsonc). The page
+# follows the latest stable release: release.yml calls this after
+# publishing one, and it can be run by hand for a tag.
 #
-# Needs CLOUDFLARE_PLAYGROUND_TOKEN (an API token with Workers edit on the
-# account, no zone rights: the route is managed in the dashboard). Never runs
-# for pull requests, so the token is never available to a fork's code.
+# Needs CLOUDFLARE_PLAYGROUND_TOKEN (Workers edit on the account, no zone
+# rights). Never runs for pull requests.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "src/**"
-      # The page's icons.
-      - "src-tauri/icons/**"
-      - "playground.html"
-      - "vite.playground.config.ts"
-      - "vite.katex-fonts.ts"
-      - "package.json"
-      - "package-lock.json"
-      - "wrangler.playground.jsonc"
-      - ".github/workflows/deploy-playground.yml"
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Stable release tag (for example v1.2.3)
+        required: true
+        type: string
 
 permissions:
   contents: read
-
-# One deploy at a time. A newer push replaces a deploy still waiting, so the
-# latest main is what ends up live; one already uploading is left to finish
-# rather than cut off halfway.
-concurrency:
-  group: deploy-playground
-  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -41,8 +31,14 @@ jobs:
     if: github.repository == 'CatVinci-Studio/Textus'
     runs-on: ubuntu-22.04
     timeout-minutes: 15
+    # One deploy at a time; one already uploading is left to finish.
+    concurrency:
+      group: deploy-playground
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
 
       - uses: actions/setup-node@v7
         with:
