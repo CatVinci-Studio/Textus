@@ -55,9 +55,6 @@ dependencies = [
  "serde_json",
  "sha2",
  "specta",
- "tauri",
- "tauri-plugin-oauth",
- "tauri-plugin-opener",
  "tokio",
  "url",
 ]
@@ -4911,6 +4908,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-deep-link",
  "tauri-plugin-dialog",
+ "tauri-plugin-oauth",
  "tauri-plugin-opener",
  "tauri-plugin-process",
  "tauri-plugin-single-instance",

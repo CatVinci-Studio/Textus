@@ -163,7 +163,7 @@ mod tests {
     fn a_name_resolving_to_a_private_address_is_refused() {
         use reqwest::dns::Resolve;
         let name: reqwest::dns::Name = "localhost".parse().unwrap();
-        let resolved = tauri::async_runtime::block_on(PublicOnly.resolve(name));
+        let resolved = crate::block_on(PublicOnly.resolve(name));
         assert!(resolved.is_err());
     }
 
