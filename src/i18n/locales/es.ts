@@ -842,6 +842,7 @@ para usar una.
   autoCloseMarksLabel: "Cerrar ** y `",
   autoCloseBracketsLabel: "Cerrar (), [] y «»",
   pdfPageNumbersLabel: "Mostrar números de página al exportar",
+  pdfLightColorsLabel: "Exportar PDF con colores claros",
   infoTipLabel: "Más sobre «{label}»",
   infoTipLabelPlain: "Más información",
   askAi: "Preguntar a la IA…",

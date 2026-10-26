@@ -826,6 +826,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   autoCloseMarksLabel: "** und ` schließen",
   autoCloseBracketsLabel: "(), [] und „“ schließen",
   pdfPageNumbersLabel: "Seitenzahlen beim Exportieren anzeigen",
+  pdfLightColorsLabel: "PDFs in hellen Farben exportieren",
   infoTipLabel: "Mehr zu „{label}“",
   infoTipLabelPlain: "Mehr erfahren",
   askAi: "KI fragen…",

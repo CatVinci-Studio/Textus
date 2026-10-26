@@ -791,6 +791,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   autoCloseMarksLabel: "** と ` を補完",
   autoCloseBracketsLabel: "()、[]、「」を補完",
   pdfPageNumbersLabel: "書き出し時にページ番号を表示",
+  pdfLightColorsLabel: "PDF を明るい配色で書き出す",
   infoTipLabel: "「{label}」について",
   infoTipLabelPlain: "詳細",
   askAi: "AIに聞く…",

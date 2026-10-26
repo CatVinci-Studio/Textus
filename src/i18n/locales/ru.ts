@@ -834,6 +834,7 @@ export default {
   autoCloseMarksLabel: "Закрывать ** и `",
   autoCloseBracketsLabel: "Закрывать (), [] и «»",
   pdfPageNumbersLabel: "Показывать номера страниц при экспорте",
+  pdfLightColorsLabel: "Экспортировать PDF в светлых цветах",
   infoTipLabel: "Подробнее о «{label}»",
   infoTipLabelPlain: "Подробнее",
   askAi: "Спросить ИИ…",

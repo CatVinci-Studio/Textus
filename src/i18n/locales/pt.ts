@@ -826,6 +826,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   autoCloseMarksLabel: "Fechar ** e `",
   autoCloseBracketsLabel: "Fechar (), [] e “”",
   pdfPageNumbersLabel: "Mostrar números de página ao exportar",
+  pdfLightColorsLabel: "Exportar PDFs em cores claras",
   infoTipLabel: "Mais sobre “{label}”",
   infoTipLabelPlain: "Mais informações",
   askAi: "Perguntar à IA…",

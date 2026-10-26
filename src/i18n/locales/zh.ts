@@ -755,6 +755,7 @@ export default {
   autoCloseMarksLabel: "补全 ** 和 `",
   autoCloseBracketsLabel: "补全 ()、[] 和 “”",
   pdfPageNumbersLabel: "导出时显示页码",
+  pdfLightColorsLabel: "导出 PDF 时使用浅色",
   infoTipLabel: "关于“{label}”的说明",
   infoTipLabelPlain: "说明",
   askAi: "询问 AI…",

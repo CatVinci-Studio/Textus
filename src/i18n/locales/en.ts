@@ -812,6 +812,7 @@ type /name in a conversation to use one.
   autoCloseMarksLabel: "Close ** and `",
   autoCloseBracketsLabel: "Close (), [] and “”",
   pdfPageNumbersLabel: "Show page numbers in exports",
+  pdfLightColorsLabel: "Export PDFs in light colors",
   infoTipLabel: "More about {label}",
   infoTipLabelPlain: "More information",
   askAi: "Ask AI…",
