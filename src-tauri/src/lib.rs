@@ -392,6 +392,7 @@ pub fn run() {
             menu::set_menu_accelerators,
             #[cfg(desktop)]
             tab_drag::take_detached_tab,
+            #[cfg(desktop)]
             tab_drag::move_tab_to_new_window,
             #[cfg(desktop)]
             tab_drag::list_window_bounds,
