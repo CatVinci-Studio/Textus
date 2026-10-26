@@ -1289,9 +1289,13 @@ utiliser une.
   menuBringAllToFront: "Tout ramener au premier plan",
   // The browser playground.
   playgroundName: "Bac à sable",
-  playgroundImport: "Importer",
-  playgroundExport: "Exporter",
   playgroundSource: "Source",
+  playgroundDocuments: "Documents",
+  playgroundNewDocument: "Nouveau document",
+  playgroundDeleteDocument: "Supprimer ce document",
+  playgroundOpen: "Ouvrir…",
+  playgroundSave: "Enregistrer",
+  playgroundSavedTo: "Enregistré dans {name}.",
   playgroundDownload: `Télécharger ${APP_NAME}`,
   playgroundLocalNote:
     "Votre document est conservé dans ce navigateur uniquement.",

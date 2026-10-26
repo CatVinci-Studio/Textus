@@ -1233,11 +1233,15 @@ type /name in a conversation to use one.
   menuBringAllToFront: "Bring All to Front",
   // The browser playground.
   playgroundName: "Playground",
-  playgroundImport: "Import",
-  playgroundExport: "Export",
   playgroundSource: "Source",
+  playgroundDocuments: "Documents",
+  playgroundNewDocument: "New Document",
+  playgroundDeleteDocument: "Delete This Document",
+  playgroundOpen: "Open…",
+  playgroundSave: "Save",
+  playgroundSavedTo: "Saved to {name}.",
   playgroundDownload: `Download ${APP_NAME}`,
-  playgroundLocalNote: "Your document is kept in this browser only.",
+  playgroundLocalNote: "Your documents are kept in this browser only.",
   playgroundImageNotice: `Images need the ${APP_NAME} desktop app.`,
   playgroundImportUnsupported:
     "Only .md, .markdown and .txt files can be imported.",
