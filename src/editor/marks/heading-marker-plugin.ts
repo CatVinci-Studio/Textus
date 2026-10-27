@@ -86,7 +86,6 @@ export const headingMarkerPlugin = $prose(
             return true;
           }
 
-
           if (event.key !== "ArrowLeft") return false;
           if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
             return false;
