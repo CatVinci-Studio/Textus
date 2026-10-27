@@ -376,23 +376,27 @@ test("Backspace at a code block's start and Delete before it move the caret, lea
   expect(await sourceOf(page)).toBe("Before!\n\n```js\nxone\ntwo\n```");
 });
 
-test("Delete before a table goes into it, and Delete before a quote joins its first line", async ({
-  page,
-}) => {
-  await open(
-    page,
-    "Before\n\n| a | b |\n| - | - |\n| c | d |\n\nAbove\n\n> one\n>\n> two",
-  );
+test("Delete before a table goes into its first cell", async ({ page }) => {
+  await open(page, "Before\n\n| a | b |\n| - | - |\n| c | d |");
   await page.locator(`${editor} p`).getByText("Before").click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
+  );
   await page.keyboard.press("Delete");
   await page.keyboard.type("x", { delay: 20 });
-  await page.locator(`${editor} p`).getByText("Above").click();
-  await page.keyboard.press("End");
-  await page.keyboard.press("Delete");
   expect(await sourceOf(page)).toBe(
-    "Before\n\n| xa | b |\n| -- | - |\n| c  | d |\n\nAboveone\n\n> two",
+    "Before\n\n| xa | b |\n| -- | - |\n| c  | d |",
   );
+});
+
+test("Delete before a quote joins its first line", async ({ page }) => {
+  await open(page, "Above\n\n> one\n>\n> two");
+  await page.locator(`${editor} p`).getByText("Above").click();
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
+  );
+  await page.keyboard.press("Delete");
+  expect(await sourceOf(page)).toBe("Aboveone\n\n> two");
 });
 
 test("Enter in a code block in a list adds a line, and an indented blank line keeps the block", async ({
@@ -400,10 +404,15 @@ test("Enter in a code block in a list adds a line, and an indented blank line ke
 }) => {
   await open(page, "- item\n\n  ```py\n  def f():\n      x = 1\n  ```");
   await page.locator(`${editor} pre code`).click();
-  await page.keyboard.press("ArrowDown");
-  await page.keyboard.press(
-    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
-  );
+  // The caret after "x = 1", the code's last line.
+  await page.evaluate((sel) => {
+    const code = document.querySelector(`${sel} pre code`)!;
+    const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+    let last: Text | null = null;
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) last = n as Text;
+    getSelection()!.collapse(last!, last!.data.length);
+  }, editor);
+  await selectionRead(page);
   await page.keyboard.press("Enter");
   await page.keyboard.press("Enter");
   await page.keyboard.type("y = 2", { delay: 20 });
