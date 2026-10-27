@@ -136,9 +136,11 @@ test("flash lights what is typed, labels the nearest first, and ds deletes to a 
   await page.keyboard.press("G");
   await page.keyboard.press("s");
   await page.keyboard.press("w");
-  // One character lights the places, without labels yet.
+  // One character lights the places and labels them.
   await expect(page.locator(".plugin-flash-match").first()).toBeVisible();
-  await expect(page.locator(".plugin-flash-label")).toHaveCount(0);
+  await expect(
+    page.locator(`${editor} p`).last().locator(".plugin-flash-label"),
+  ).toHaveText("a");
   await page.keyboard.press("o");
   // The nearest place - on the caret's own line - gets the first letter.
   const last = page.locator(`${editor} p`).last();
@@ -162,27 +164,39 @@ test("flash lights what is typed, labels the nearest first, and ds deletes to a 
   await expect(last).toHaveText("has some .");
 });
 
-test("the command line: :12 goes to a line, :w saves, :q closes the tab, an unknown one says so", async ({
+test("the command line in the palette: :12 goes to a line, :q closes the tab, an unknown one says so", async ({
   page,
 }) => {
   await open(page, "one\n\ntwo\n\nthree");
-  await page.keyboard.type(":3");
-  await expect(page.locator(status)).toHaveText(":3");
+  const palette = page.getByRole("dialog", {
+    name: "Vim command, or search the commands",
+  });
+  const box = palette.getByRole("combobox");
+  // ":" opens the palette; what follows is typed into it.
+  const command = async (text: string) => {
+    await page.keyboard.type(":");
+    await expect(box).toHaveValue(":");
+    await page.keyboard.type(text);
+  };
+  await command("3");
   await page.keyboard.press("Enter");
+  await expect(palette).toBeHidden();
   await expect.poll(() => caretLine(page)).toBe("three");
   await expect(page.locator(status)).toContainText("NORMAL");
-  await page.keyboard.type(":nope");
+  await command("nope");
   await page.keyboard.press("Enter");
   await expect(page.locator(status)).toContainText("Not a command here: nope");
-  // Escape leaves the command line, typing nothing.
-  await page.keyboard.type(":wq");
+  // Escape leaves the palette, running nothing.
+  await command("wq");
   await page.keyboard.press("Escape");
-  await expect(page.locator(status)).toContainText("NORMAL");
+  await expect(palette).toBeHidden();
   await expect(page.locator(`${editor} p`).last()).toHaveText("three");
-  // :q on an unsaved document asks first, as File › Close Tab does.
-  await page.keyboard.type(":q");
+  // Vim's own come first; :q on an unsaved document asks first, as File ›
+  // Close Tab does.
+  await command("q");
+  await expect(palette.getByRole("option").first()).toContainText(":q");
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.locator(".close-prompt-discard")).toBeVisible();
 });
 
 test("vimrc mappings: inoremap jj <Esc> and a leader mapping", async ({
@@ -233,6 +247,7 @@ test("j goes on past the bottom of the window; flash labels only what is seen", 
   await page.keyboard.press("p");
   await page.keyboard.press("a");
   // The caret's own line gets the first label; none goes off screen.
+  await expect(here.locator(".plugin-flash-label")).toHaveCount(1);
   await expect(here.locator(".plugin-flash-label")).toHaveText("a");
   for (const label of await page.locator(".plugin-flash-label").all())
     await expect(label).toBeInViewport();

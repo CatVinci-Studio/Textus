@@ -125,12 +125,16 @@ function QuickPick({
   );
   const listRef = useRef<HTMLUListElement>(null);
   const shown = useMemo(() => {
-    // ":sa" finds Save as well as ":saveas".
+    // ":sa" finds Save as well as ":saveas"; ":12" is a line, not Heading
+    // 1 or 2.
     const rest = query.startsWith(request.query)
       ? query.slice(request.query.length)
       : query;
+    const words = /\p{L}/u.test(rest);
     return request.items.filter(
-      (item) => quickPickMatches(item, query) || quickPickMatches(item, rest),
+      (item) =>
+        quickPickMatches(item, query) ||
+        (words && quickPickMatches(item, rest)),
     );
   }, [request.items, request.query, query]);
   const dialog = useModalDialog(

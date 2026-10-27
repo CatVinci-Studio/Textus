@@ -12,9 +12,9 @@ export interface FlashLabel {
 
 const LABELS = "asdfghjklqwertyuiopzxcvbnm";
 
-/** The places `query` is on screen (any case), and once two characters are
- *  typed their labels: nearest the caret first, never a letter that could
- *  continue a match, so typing on narrows the search. */
+/** The places `query` is on screen (any case), and their labels: nearest
+ *  the caret first, never a letter that could continue a match, so typing
+ *  on narrows the search. */
 export function findFlash(view: EditorView, query: string) {
   const { flat, found } = flashMatches(view, query);
   const hay = flat.text.toLowerCase();
@@ -29,16 +29,12 @@ export function findFlash(view: EditorView, query: string) {
     from: posOf(flat, at),
     to: posOf(flat, at + n - 1) + 1,
   }));
-  // One character lights the places; the labels wait for the second.
-  const labels: FlashLabel[] =
-    n < 2
-      ? []
-      : near.slice(0, letters.length).map((at, k) => ({
-          pos: posOf(flat, at + n - 1) + 1,
-          at: posOf(flat, at),
-          label: letters[k],
-        }));
-  return { matches, labels, count: n < 2 ? found.length : labels.length };
+  const labels: FlashLabel[] = near.slice(0, letters.length).map((at, k) => ({
+    pos: posOf(flat, at + n - 1) + 1,
+    at: posOf(flat, at),
+    label: letters[k],
+  }));
+  return { matches, labels, count: labels.length };
 }
 
 /** Where `query` is (in any case) in what can be seen of the document:
