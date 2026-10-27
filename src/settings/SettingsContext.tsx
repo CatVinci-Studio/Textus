@@ -15,7 +15,6 @@ import {
 } from "../i18n/strings";
 import { ai } from "../platform/ipc";
 import { readBoot } from "../storage/boot";
-import { useApplyAppearance } from "../theme/apply-appearance";
 import type { Settings } from "./settings-types";
 import { htmlLang } from "./settings-normalise";
 import { setCurrentLanguage } from "../i18n/current";
@@ -123,9 +122,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         : null;
     ai.setAiProxy(proxy).catch(() => {});
   }, [settings.proxyType, settings.proxyHost, settings.proxyPort]);
-
-  // How it looks: appearance, text width, the theme and Custom CSS.
-  useApplyAppearance(settings, setSettings);
 
   function setSettings(patch: Partial<Settings>) {
     const apply = () => {

@@ -21,6 +21,7 @@ import {
   useSettings,
 } from "./SettingsContext";
 import { readFileSync } from "node:fs";
+import { AppearanceSync } from "../theme/apply-appearance";
 import { storage } from "../platform/ipc";
 import { resetBootForTests } from "../storage/boot";
 import {
@@ -354,6 +355,7 @@ describe("interface text size", () => {
     boot({ uiTextScale: 1.1, languageChosen: true });
     render(
       <SettingsProvider>
+        <AppearanceSync />
         <Probe />
       </SettingsProvider>,
     );
