@@ -20,6 +20,7 @@ import {
 import { findFlash, type FlashLabel } from "./editor-flash";
 import { keyName } from "./editor-keys";
 import { isImeKeydown } from "../../utils/ime";
+import { inputSourceIpc } from "../../platform/ipc-app";
 
 /**
  * A plugin that takes over the editor's keyboard (Vim, Emacs). A sandboxed
@@ -62,6 +63,19 @@ function visualSelection(state: EditorState, anchor: number, head: number) {
     : TextSelection.create(doc, after(anchor), head);
 }
 
+let roman = false;
+
+/** While every key is a command (Vim's normal mode), an input method would
+ *  make text of them: the window takes Roman input only, the user's own
+ *  source coming back once the editor has its keys again or loses focus. */
+function syncRomanInput(again = false) {
+  const want =
+    owner?.capture.mode === "all" && !!lastView && lastView.hasFocus();
+  if (want === roman && !again) return;
+  roman = want;
+  void inputSourceIpc.setRoman(want).catch(() => {});
+}
+
 /** Gives `plugin` the keys `capture` names, delivered to `deliver`; null
  *  gives the keyboard back. */
 export function setKeyCapture(
@@ -72,9 +86,11 @@ export function setKeyCapture(
   if (!capture) {
     if (owner?.plugin === plugin) owner = null;
     setCursorStyle("bar");
+    syncRomanInput();
     return;
   }
   owner = { plugin, capture, deliver, lastKeyAt: owner?.lastKeyAt ?? 0 };
+  syncRomanInput();
 }
 
 /** Lets go of whatever `plugin` held: it stopped. */
@@ -83,6 +99,7 @@ export function releaseKeys(plugin: string): void {
   owner = null;
   setCursorStyle("bar");
   clearFlash();
+  syncRomanInput();
 }
 
 /** How long after a key it was handed a plugin's actions are taken. */
@@ -157,6 +174,14 @@ export const createEditorInputPlugin = () =>
       handleDOMEvents: {
         focus(view) {
           lastView = view;
+          // WebKit lets every input source in again as an element takes
+          // the focus: after it has.
+          setTimeout(() => syncRomanInput(true), 50);
+          return false;
+        },
+        blur() {
+          // After the blur, when the focus has gone.
+          setTimeout(syncRomanInput);
           return false;
         },
       },

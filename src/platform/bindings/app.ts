@@ -94,6 +94,11 @@ export const commands = {
 	 */
 	clipboard_text: () => __TAURI_INVOKE<string | null>("clipboard_text"),
 	/**
+	 *  Roman input sources only in this window (`on`), or all of them again.
+	 *  Nothing where the input method can't be set from here (all but macOS).
+	 */
+	set_roman_input: (on: boolean) => __TAURI_INVOKE<void>("set_roman_input", { on }),
+	/**
 	 *  Runs a menu id exactly as clicking that native item would; the way in for
 	 *  the app-drawn menu. Unknown ids do nothing. Async because creating or
 	 *  closing windows from the calling webview's IPC callback freezes Windows.

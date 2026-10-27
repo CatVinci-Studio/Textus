@@ -192,6 +192,9 @@ objc2-app-kit = { version = "0.3", default-features = false, features = [
     "NSResponder",
     "NSWindow",
     "NSView",
+    # Roman input only while Vim's normal mode holds the keys (commands/input_source.rs).
+    "NSTextInputContext",
+    "NSTextView",
 ] }
 objc2-web-kit = { version = "0.3", features = [
     "WKWebView",

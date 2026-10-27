@@ -423,6 +423,7 @@ pub fn run() {
             commands::clipboard::paste_natively,
             #[cfg(desktop)]
             commands::clipboard::clipboard_text,
+            commands::input_source::set_roman_input,
             #[cfg(desktop)]
             background::background_status,
             #[cfg(desktop)]
