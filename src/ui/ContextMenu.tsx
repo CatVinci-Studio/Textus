@@ -33,6 +33,11 @@ export interface ContextMenuGroup {
 
 export type ContextMenuEntry = ContextMenuItem | ContextMenuGroup | "separator";
 
+const anyChecked = (items: readonly ContextMenuEntry[]) =>
+  items.some(
+    (item) => typeof item === "object" && "checked" in item && item.checked,
+  );
+
 export function isMenuGroup(
   entry: ContextMenuEntry,
 ): entry is ContextMenuGroup {
@@ -174,6 +179,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
             item={item}
             onClose={onClose}
             onMouseEnter={() => hover(null)}
+            checkShown={anyChecked(items)}
           />
         ),
       )}
@@ -249,10 +255,14 @@ function MenuRow({
   item,
   onClose,
   onMouseEnter,
+  checkShown,
 }: {
   item: ContextMenuItem;
   onClose: () => void;
   onMouseEnter?: () => void;
+  /** A choice beside it is checked: this one keeps the check's room. A
+   *  lone toggle that is off takes none. */
+  checkShown: boolean;
 }) {
   return (
     <button
@@ -266,7 +276,7 @@ function MenuRow({
         onClose();
       }}
     >
-      {item.checked !== undefined && (
+      {(item.checked || (item.checked !== undefined && checkShown)) && (
         <CheckIcon
           className={`context-menu-check${item.checked ? "" : " context-menu-check-off"}`}
         />
@@ -354,7 +364,12 @@ function SubMenu({
         item === "separator" ? (
           <div key={i} className="context-menu-separator" role="separator" />
         ) : (
-          <MenuRow key={i} item={item} onClose={onClose} />
+          <MenuRow
+            key={i}
+            item={item}
+            onClose={onClose}
+            checkShown={anyChecked(items)}
+          />
         ),
       )}
     </div>,
