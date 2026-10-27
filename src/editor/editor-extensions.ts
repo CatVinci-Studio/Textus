@@ -88,6 +88,7 @@ import { tableColumnResizing, tableHoverView } from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
 import { blockJoinPlugin } from "./keys/block-join-plugin";
+import { inlineSourcePlugin } from "./keys/inline-source-plugin";
 import { tabExtendPlugin, tabStaysPlugin } from "./keys/tab-extend-plugin";
 import {
   escapeTrailingBlockPlugin,
@@ -393,6 +394,7 @@ export function withEditorCore(
       .use(tabStaysPlugin)
       .use(escapeTrailingBlockPlugin)
       .use(blockJoinPlugin)
+      .use(inlineSourcePlugin)
       .use(findReplacePlugin)
       .use(zenFocusPlugin)
       .use(keyboardRevealPlugin)
