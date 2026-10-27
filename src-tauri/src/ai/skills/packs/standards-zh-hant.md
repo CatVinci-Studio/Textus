@@ -51,4 +51,5 @@ metadata:
 ## ai-tells
 - Strong (edit on one sighting): 不是 X 而是 Y / 並非…而是… / 不在於…而在於… / 不只是…更是… used as a shell (keep when it corrects a real belief); 讓我們深入看看 / 下面我們來看 openers; 標誌著…新時代 inflation; 彰顯了… tails; 客服腔 (希望對您有幫助！); 總而言之…讓我們拭目以待 closers; empty 隨著…的發展 / 在…的時代背景下 openers.
 - Weak (only in clusters): 賦能, 至關重要, 深入探討, 無縫, 閉環 used vaguely; mechanical 首先…其次…最後; forced triads; 四字詞排比 that says nothing; dashes as all-purpose links; stacked hedges (可能也許); chains of 的; 進行 + verb (fine in formal text); stacked 被; 正確的廢話.
+- Hard to read (edit when it slows the reader): 主語前一長串定語（把子句拆開或後置）; 三個以上名詞連用作定語; 讓事物做人的動作（數據告訴我們、這首歌邀請你）, unless the author means the figure; 主語和謂語之間插入很長的成分; 生造的搭配. Each is rewritten to the plain sentence it stands for. [Clark, Martin & Mahowald 2026, adapted]
 - Rewrites keep Taiwan quotation marks 「」 and Taiwan vocabulary. [Humanizer-zh (MIT, ideas); 科普中国 2025 (summarised)]
