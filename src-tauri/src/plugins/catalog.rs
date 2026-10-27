@@ -424,14 +424,11 @@ mod tests {
 
     #[test]
     fn a_readme_is_in_the_language_asked_for_its_base_or_english() {
-        let readme: std::collections::BTreeMap<String, String> = [
-            ("en", "en.md"),
-            ("zh", "zh.md"),
-            ("zh-Hant", "hant.md"),
-        ]
-        .into_iter()
-        .map(|(k, v)| (k.to_string(), v.to_string()))
-        .collect();
+        let readme: std::collections::BTreeMap<String, String> =
+            [("en", "en.md"), ("zh", "zh.md"), ("zh-Hant", "hant.md")]
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect();
         assert_eq!(readme_for(&readme, "zh-Hant").as_deref(), Some("hant.md"));
         assert_eq!(readme_for(&readme, "zh").as_deref(), Some("zh.md"));
         assert_eq!(readme_for(&readme, "ja").as_deref(), Some("en.md"));

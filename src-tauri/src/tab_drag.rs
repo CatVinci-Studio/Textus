@@ -65,9 +65,9 @@ pub fn move_tab_to_new_window(
     pending: State<PendingDetachedTabs>,
     tab: DetachedTab,
 ) -> Result<(), String> {
-    let label = format!("window-{}", crate::next_window_id());
+    let label = format!("window-{}", crate::editor_windows::next_window_id());
     pending.0.lock().unwrap().insert(label.clone(), tab);
-    crate::build_window(&app, &label, None).map_err(|e| {
+    crate::editor_windows::build_window(&app, &label, None).map_err(|e| {
         pending.0.lock().unwrap().remove(&label);
         e.to_string()
     })
@@ -355,7 +355,7 @@ pub fn start_floating_tab_drag(
                     );
                 }
                 None => {
-                    let label = format!("window-{}", crate::next_window_id());
+                    let label = format!("window-{}", crate::editor_windows::next_window_id());
                     app.state::<PendingDetachedTabs>()
                         .0
                         .lock()
@@ -364,7 +364,7 @@ pub fn start_floating_tab_drag(
                     let app2 = app.clone();
                     let position = (x - 100.0, (y - 14.0).max(0.0));
                     let _ = app.run_on_main_thread(move || {
-                        let _ = crate::build_window(&app2, &label, Some(position));
+                        let _ = crate::editor_windows::build_window(&app2, &label, Some(position));
                     });
                 }
             }

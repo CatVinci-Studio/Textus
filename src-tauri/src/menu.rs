@@ -139,7 +139,7 @@ fn emit_or_open_window(app: &tauri::AppHandle, event: &'static str) {
         emit_to_focused(app, event);
     } else {
         *crate::PENDING_MENU_EVENT.lock().unwrap() = Some(event);
-        let _ = crate::open_new_window(app);
+        let _ = crate::editor_windows::open_new_window(app);
     }
 }
 
@@ -284,7 +284,7 @@ fn open_folder_in_sidebar(app_handle: &tauri::AppHandle, path: &str) {
         emit_to_focused_payload(app_handle, "menu-open-recent-folder", path);
     } else {
         *crate::PENDING_OPEN_FOLDER.lock().unwrap() = Some(path.to_string());
-        let _ = crate::open_new_window(app_handle);
+        let _ = crate::editor_windows::open_new_window(app_handle);
     }
 }
 
@@ -301,7 +301,7 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         if app_handle.webview_windows().is_empty()
             || commands::prefs::read_new_document_mode(app_handle) != "tab"
         {
-            let _ = crate::open_new_window(app_handle);
+            let _ = crate::editor_windows::open_new_window(app_handle);
         } else {
             emit_to_focused(app_handle, "menu-new-file");
         }
@@ -394,7 +394,7 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
             let _ = window.close();
         }
     } else if id == NEW_WINDOW_ID {
-        let _ = crate::open_new_window(app_handle);
+        let _ = crate::editor_windows::open_new_window(app_handle);
     } else if id == COMMUNITY_ID {
         // A window knows the UI's language; with none open (macOS keeps
         // running after the last one closes), the site picks it.
@@ -424,7 +424,7 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
             let _ = app_handle.emit_to(EventTarget::webview_window(&label), "menu-open-help", doc);
         } else {
             *crate::PENDING_SHOW_HELP.lock().unwrap() = Some(doc.to_string());
-            let _ = crate::open_new_window(app_handle);
+            let _ = crate::editor_windows::open_new_window(app_handle);
         }
     }
 }

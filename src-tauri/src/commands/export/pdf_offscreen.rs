@@ -53,7 +53,7 @@ pub async fn export(
     html: String,
     output_path: String,
 ) -> Result<(), String> {
-    let id = crate::next_window_id();
+    let id = crate::editor_windows::next_window_id();
     // Removed when `page` drops, however this returns.
     let page = crate::atomic::TempFile::create("textus-pdf-export-", ".html", html)
         .map_err(|e| e.to_string())?;

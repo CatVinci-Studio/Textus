@@ -59,7 +59,7 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
         // that mounts next.
         queue_pending(app, paths);
         if ui_ready {
-            let _ = open_new_window(app);
+            let _ = crate::editor_windows::open_new_window(app);
         }
         return;
     }
@@ -70,7 +70,7 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
     queue_pending(app, paths);
     let extra_windows = if ui_ready { count } else { count - 1 };
     for _ in 0..extra_windows {
-        let _ = open_new_window(app);
+        let _ = crate::editor_windows::open_new_window(app);
     }
 }
 
@@ -155,7 +155,7 @@ pub(crate) fn open_paths(app: tauri::AppHandle, paths: Vec<String>) {
 #[cfg_attr(test, specta::specta)]
 pub(crate) fn open_path_in_new_window(app: tauri::AppHandle, path: String) {
     queue_pending(&app, vec![path]);
-    let _ = open_new_window(&app);
+    let _ = crate::editor_windows::open_new_window(&app);
 }
 
 #[tauri::command]

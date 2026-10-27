@@ -90,7 +90,7 @@ pub fn on_menu(app: &AppHandle, item: &str) {
         return;
     }
     match item {
-        OPEN_APP => crate::reopen_without_windows(app),
+        OPEN_APP => crate::editor_windows::reopen_without_windows(app),
         QUIT => crate::menu::quit(app),
         _ => {}
     }
@@ -106,7 +106,7 @@ fn run_plugin_command(app: &AppHandle, command: &str) {
         .map(|(_, window)| window);
     match window {
         Some(window) => {
-            crate::reopen_without_windows(app);
+            crate::editor_windows::reopen_without_windows(app);
             let _ = window.emit_to(
                 tauri::EventTarget::webview_window(window.label()),
                 "menu-plugin-command",
@@ -118,7 +118,7 @@ fn run_plugin_command(app: &AppHandle, command: &str) {
                 *state.pending.lock().unwrap_or_else(|e| e.into_inner()) =
                     Some(command.to_string());
             }
-            crate::reopen_without_windows(app);
+            crate::editor_windows::reopen_without_windows(app);
         }
     }
 }
@@ -263,7 +263,7 @@ fn build(app: &AppHandle) -> tauri::Result<()> {
                 ..
             } = event
             {
-                crate::reopen_without_windows(tray.app_handle());
+                crate::editor_windows::reopen_without_windows(tray.app_handle());
             }
         });
     builder.build(app)?;

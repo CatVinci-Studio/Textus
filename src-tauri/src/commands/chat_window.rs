@@ -120,7 +120,10 @@ pub fn detach_chat_window(
             .retain(|entry| entry.label != existing);
     }
 
-    let label = format!("{CHAT_LABEL_PREFIX}{}", crate::next_window_id());
+    let label = format!(
+        "{CHAT_LABEL_PREFIX}{}",
+        crate::editor_windows::next_window_id()
+    );
     pending.0.lock().unwrap().insert(
         label.clone(),
         ChatHandoff {
@@ -156,7 +159,8 @@ pub fn detach_chat_window(
     // Same chrome as the editor windows: the app draws its own top row. The boot
     // script carries the settings into the chat's first frame.
     let builder = crate::settings::with_boot(builder, &app, &label);
-    crate::build_with_app_chrome(builder, position).map_err(|err| err.to_string())?;
+    crate::editor_windows::build_with_app_chrome(builder, position)
+        .map_err(|err| err.to_string())?;
     notify_chat_windows_changed(&app);
     Ok(label)
 }
