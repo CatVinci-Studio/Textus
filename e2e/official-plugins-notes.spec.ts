@@ -476,8 +476,54 @@ test("the graph draws the folder's notes and links, and the sidebar the ones aro
   await expect(local.locator("#stats")).toHaveText("3 notes · 2 links");
   await runCommand(page, "catvinci.graph.open");
   const full = tabFrame(page);
-  await expect(full.locator("#stats")).toHaveText("5 notes · 3 links");
+  await expect(full.locator("#stats")).toHaveText("4 notes · 3 links");
   await expect(full.locator("canvas")).toBeVisible();
+  // The settings panel's filters: no unwritten notes, no notes alone.
+  await full.getByRole("button", { name: "Graph settings" }).click();
+  await full.getByLabel("Existing files only").check();
+  await full.getByLabel("Orphans").uncheck();
+  await expect(full.locator("#stats")).toHaveText("3 notes · 2 links");
+  await full.getByLabel("Search notes").fill("-c");
+  await expect(full.locator("#stats")).toHaveText("2 notes · 1 link");
+});
+
+test("backlinks list what links here, what names it, and link a mention", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.backlinks": ["editor.read", "files.read", "files.write"],
+    },
+    folder: {
+      "/notes/Zettel.md": "# Zettel\n\nSee [[method]].",
+      "/notes/a.md": "Read [[Zettel]] today.",
+      "/notes/b.md": "The zettel way works.",
+      "/notes/method.md": "Plain.",
+    },
+  });
+  await openPath(page, "/notes/Zettel.md");
+  await expect(page.locator(editor)).toContainText("See");
+  const list = await openSidebarList(page, "Backlinks");
+  await expect(list.locator(".plugin-list-group")).toHaveText([
+    "Linked mentions · 1",
+    "Unlinked mentions · 1",
+    "Outgoing links · 1",
+  ]);
+  await list
+    .locator(".plugin-list-row", { hasText: "The zettel way works." })
+    .click({ button: "right" });
+  await page.locator(".context-menu-item", { hasText: "Link" }).click();
+  await expect(list.locator(".plugin-list-group")).toHaveText([
+    "Linked mentions · 2",
+    "Outgoing links · 1",
+  ]);
+  const file = await page.evaluate(
+    () =>
+      (window as unknown as { __devFs: Record<string, string> }).__devFs[
+        "/notes/b.md"
+      ],
+  );
+  expect(file).toBe("The [[Zettel|zettel]] way works.");
 });
 
 test("Insert References List lists the works the document cites", async ({
