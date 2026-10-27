@@ -4,9 +4,8 @@
 
 ### Fixed
 
-- The right-click menu's Paste works as Cmd/Ctrl+V does: images, formatted text from other apps, kept line breaks and table cells, where it used to read only the text.
+- The right-click menu's Paste works as Cmd/Ctrl+V does: images, formatted text from other apps, kept line breaks and table cells, where it used to read only the text. On macOS it no longer asks for a second click on a "Paste" button.
 
 ### New
 
 - Edit › Paste as Plain Text (Cmd/Ctrl+Shift+V) pastes the clipboard's text as it is, without reading Markdown in it.
-- macOS: the menus' Paste and Paste as Plain Text paste at once, without the "Paste" button macOS showed first.
