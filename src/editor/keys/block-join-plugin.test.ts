@@ -10,6 +10,7 @@ import {
   backspaceKeepingApart,
   deleteJoiningText,
   deleteKeepingApart,
+  deleteSelectionKeepingApart,
 } from "./block-join-plugin";
 
 const cells = tableNodes({
@@ -125,6 +126,49 @@ describe("backspaceKeepingApart", () => {
         backspaceKeepingApart,
         at(docOf(code("a"), n.hr.create(), p("b")), "b", false),
       ),
+    ).toBeNull();
+  });
+});
+
+describe("backspaceKeepingApart on an empty line", () => {
+  it("removes the empty line itself between two code blocks", () => {
+    const doc = docOf(code("a"), p(), code("b"));
+    const next = run(backspaceKeepingApart, at(doc, "", false))!;
+    expect(next.doc.eq(docOf(code("a"), code("b")))).toBe(true);
+    expect(caretLine(next)).toBe("a");
+  });
+});
+
+describe("deleteSelectionKeepingApart", () => {
+  function selecting(doc: Node, from: string, to: string): EditorState {
+    const state = at(doc, from, false);
+    const end = at(doc, to, true).selection.from;
+    return state.apply(
+      state.tr.setSelection(
+        TextSelection.create(doc, state.selection.from, end),
+      ),
+    );
+  }
+
+  it("keeps the code block a selection ends in", () => {
+    const doc = docOf(p("text"), code("l1\nl2"));
+    const next = run(
+      deleteSelectionKeepingApart,
+      selecting(doc, "text", "l1\nl2"),
+    )!;
+    expect(next.doc.eq(docOf(p(), code()))).toBe(true);
+  });
+
+  it("removes the lines wholly inside the selection", () => {
+    const doc = docOf(p("a"), p("b"), code("c"));
+    const next = run(deleteSelectionKeepingApart, selecting(doc, "a", "c"))!;
+    expect(next.doc.eq(docOf(p(), code()))).toBe(true);
+  });
+
+  it("leaves a selection across ordinary lines to the default", () => {
+    const doc = docOf(p("a"), p("b"));
+    expect(
+      run(deleteSelectionKeepingApart, selecting(doc, "a", "b")),
     ).toBeNull();
   });
 });

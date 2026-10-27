@@ -3,6 +3,7 @@ import {
   Selection,
   TextSelection,
   type Command,
+  type EditorState,
   type Transaction,
 } from "@milkdown/kit/prose/state";
 import type { Node, ResolvedPos } from "@milkdown/kit/prose/model";
@@ -53,6 +54,16 @@ function neighbour($pos: ResolvedPos, dir: -1 | 1): ResolvedPos | null {
   return between ? null : $near;
 }
 
+/** Where text starts at `$pos`: past an alert's hidden marker line, where
+ *  typing would break the alert. */
+function startOfText($pos: ResolvedPos): number {
+  const marker = opensAlert($pos) && alertMarker($pos.node(-1));
+  if (!marker) return $pos.pos;
+  if (marker.hidden < $pos.parent.content.size) return $pos.pos + marker.hidden;
+  const body = Selection.findFrom($pos.doc.resolve($pos.after()), 1, true);
+  return body ? body.from : $pos.pos;
+}
+
 const isEmptyLine = (node: Node) =>
   node.content.size === 0 && !isVerbatim(node);
 
@@ -65,7 +76,7 @@ function deleteBlock(tr: Transaction, $in: ResolvedPos): boolean {
 }
 
 /** Backspace at the start of a line kept apart from the one above: the
- *  caret goes up, or an empty line above goes. */
+ *  caret goes up, or an empty line on either side goes. */
 export const backspaceKeepingApart: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
   if (!empty || !$from.parent.isTextblock || $from.parentOffset !== 0)
@@ -76,7 +87,9 @@ export const backspaceKeepingApart: Command = (state, dispatch) => {
   if (isVerbatim($from.parent) && $from.parent.content.size === 0) return false;
   if (!dispatch) return true;
   const tr = state.tr;
-  if (!(isEmptyLine($prev.parent) && deleteBlock(tr, $prev)))
+  if (isEmptyLine($from.parent) && deleteBlock(tr, $from))
+    tr.setSelection(TextSelection.create(tr.doc, $prev.pos));
+  else if (!(isEmptyLine($prev.parent) && deleteBlock(tr, $prev)))
     tr.setSelection(TextSelection.create(tr.doc, $prev.pos));
   dispatch(tr.scrollIntoView());
   return true;
@@ -92,10 +105,11 @@ export const deleteKeepingApart: Command = (state, dispatch) => {
   if (!$next || !keptApart($from, $next)) return false;
   if (!dispatch) return true;
   const tr = state.tr;
+  const landing = startOfText($next);
   if (isEmptyLine($from.parent) && deleteBlock(tr, $from))
-    tr.setSelection(TextSelection.create(tr.doc, tr.mapping.map($next.pos)));
+    tr.setSelection(TextSelection.create(tr.doc, tr.mapping.map(landing)));
   else if (!($next.parent.content.size === 0 && deleteBlock(tr, $next)))
-    tr.setSelection(TextSelection.create(tr.doc, $next.pos));
+    tr.setSelection(TextSelection.create(tr.doc, landing));
   dispatch(tr.scrollIntoView());
   return true;
 };
@@ -120,9 +134,33 @@ export const deleteJoiningText: Command = (state, dispatch) => {
   return true;
 };
 
+/** A selection from one line into another kept apart from it, deleted
+ *  without joining what is left of the two: the default turned a code
+ *  block's remaining lines into a paragraph. */
+function deleteSelectionApart(state: EditorState): Transaction | null {
+  const { selection } = state;
+  if (!(selection instanceof TextSelection) || selection.empty) return null;
+  const { $from, $to } = selection;
+  if ($from.sameParent($to) || !$from.parent.isTextblock) return null;
+  if (!$to.parent.isTextblock || !keptApart($from, $to)) return null;
+  const tr = state.tr.delete($to.start(), $to.pos);
+  tr.delete($from.pos, $from.end());
+  const between = tr.mapping.map($from.after());
+  const lastLine = tr.mapping.map($to.before());
+  if (lastLine > between) tr.delete(between, lastLine);
+  return tr.setSelection(TextSelection.create(tr.doc, $from.pos));
+}
+
+export const deleteSelectionKeepingApart: Command = (state, dispatch) => {
+  const tr = deleteSelectionApart(state);
+  if (!tr) return false;
+  dispatch?.(tr.scrollIntoView());
+  return true;
+};
+
 const onKey: Record<string, Command[]> = {
-  Backspace: [backspaceKeepingApart],
-  Delete: [deleteKeepingApart, deleteJoiningText],
+  Backspace: [deleteSelectionKeepingApart, backspaceKeepingApart],
+  Delete: [deleteSelectionKeepingApart, deleteKeepingApart, deleteJoiningText],
 };
 
 export const blockJoinPlugin = $prose(
@@ -136,6 +174,13 @@ export const blockJoinPlugin = $prose(
           if (!commands || isImeKeyEvent(view, event)) return false;
           const state = stateWithLiveSelection(view);
           return commands.some((command) => command(state, view.dispatch));
+        },
+        handleTextInput(view, _from, _to, text) {
+          if (view.composing) return false;
+          const tr = deleteSelectionApart(view.state);
+          if (!tr) return false;
+          view.dispatch(tr.insertText(text).scrollIntoView());
+          return true;
         },
       },
     }),
