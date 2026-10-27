@@ -139,6 +139,14 @@ describe("backspaceKeepingApart on an empty line", () => {
   });
 });
 
+describe("backspaceKeepingApart below an empty code block", () => {
+  it("removes the empty code block, as Delete does", () => {
+    const doc = docOf(p("a"), code(), p("b"));
+    const next = run(backspaceKeepingApart, at(doc, "b", false))!;
+    expect(next.doc.eq(docOf(p("a"), p("b")))).toBe(true);
+  });
+});
+
 describe("deleteSelectionKeepingApart", () => {
   function selecting(doc: Node, from: string, to: string): EditorState {
     const state = at(doc, from, false);
@@ -231,6 +239,17 @@ describe("deleteJoiningText", () => {
     const doc = docOf(p("a"), p(), quote(p("bbb")));
     const next = run(deleteJoiningText, at(doc, "", true))!;
     expect(next.doc.eq(docOf(p("a"), quote(p("bbb"))))).toBe(true);
+  });
+
+  it("joins one list item's text onto the item above", () => {
+    const next = run(deleteJoiningText, at(docOf(list("a", "b")), "a", true))!;
+    expect(next.doc.eq(docOf(list("ab")))).toBe(true);
+  });
+
+  it("leaves an item holding a nested list to the default, which keeps a first line", () => {
+    const nested = n.list_item.create(null, [p("b"), list("c")]);
+    const doc = docOf(p("text"), n.bullet_list.create(null, nested));
+    expect(run(deleteJoiningText, at(doc, "text", true))).toBeNull();
   });
 
   it("leaves lines side by side and table cells to the default", () => {

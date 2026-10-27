@@ -7,6 +7,7 @@ import {
   type Transaction,
 } from "@milkdown/kit/prose/state";
 import type { Node, ResolvedPos } from "@milkdown/kit/prose/model";
+import { cellAround } from "@milkdown/kit/prose/tables";
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
 import { alertMarker } from "../markdown/github-alert-plugin";
@@ -14,11 +15,7 @@ import { alertMarker } from "../markdown/github-alert-plugin";
 /** Code, maths, front matter: text kept as written. */
 const isVerbatim = (node: Node) => node.isTextblock && !!node.type.spec.code;
 
-const inTable = ($pos: ResolvedPos) => {
-  for (let d = $pos.depth; d > 0; d--)
-    if ($pos.node(d).type.spec.tableRole) return true;
-  return false;
-};
+const inTable = ($pos: ResolvedPos) => cellAround($pos) != null;
 
 /** The hidden `[!NOTE]` line an alert starts with. */
 const opensAlert = ($pos: ResolvedPos) =>
@@ -67,7 +64,6 @@ function startOfText($pos: ResolvedPos): number {
 const isEmptyLine = (node: Node) =>
   node.content.size === 0 && !isVerbatim(node);
 
-/** Deletes the textblock `$in` is in, when its parent may lose it. */
 function deleteBlock(tr: Transaction, $in: ResolvedPos): boolean {
   const index = $in.index(-1);
   if (!$in.node(-1).canReplace(index, index + 1)) return false;
@@ -89,14 +85,13 @@ export const backspaceKeepingApart: Command = (state, dispatch) => {
   const tr = state.tr;
   if (isEmptyLine($from.parent) && deleteBlock(tr, $from))
     tr.setSelection(TextSelection.create(tr.doc, $prev.pos));
-  else if (!(isEmptyLine($prev.parent) && deleteBlock(tr, $prev)))
+  else if (!($prev.parent.content.size === 0 && deleteBlock(tr, $prev)))
     tr.setSelection(TextSelection.create(tr.doc, $prev.pos));
   dispatch(tr.scrollIntoView());
   return true;
 };
 
-/** Delete at the end of a line kept apart from the next: the caret goes
- *  down, or an empty line on either side goes. */
+/** Delete at the end of a line kept apart from the next, as Backspace. */
 export const deleteKeepingApart: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
   if (!empty || !$from.parent.isTextblock) return false;
@@ -114,9 +109,9 @@ export const deleteKeepingApart: Command = (state, dispatch) => {
   return true;
 };
 
-/** Delete at the end of a line before a quote or list: their text joins,
- *  as with Backspace, where the default took the next line out of it. An
- *  empty line there goes. */
+/** Delete at the end of a line before a line in another block - a quote,
+ *  a list item, out of a quote - joins their text, where the default took
+ *  the next line out of its quote or list. An empty line there goes. */
 export const deleteJoiningText: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
   if (!empty || !$from.parent.isTextblock || inTable($from)) return false;
@@ -125,6 +120,9 @@ export const deleteJoiningText: Command = (state, dispatch) => {
   // Lines side by side join by default.
   if (!$next || inTable($next) || $next.node(-1) === $from.node(-1))
     return false;
+  // A list item with more in it keeps a first line: let the default lift it.
+  const host = $next.node(-1);
+  if (host.childCount > 1 && !host.canReplace(0, 1)) return false;
   if (!dispatch) return true;
   const tr = state.tr;
   if ($from.parent.content.size === 0 && deleteBlock(tr, $from))
@@ -168,8 +166,9 @@ export const blockJoinPlugin = $prose(
     new Plugin({
       props: {
         handleKeyDown(view, event) {
-          if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey)
-            return false;
+          if (event.metaKey || event.ctrlKey || event.altKey) return false;
+          // Shift+Backspace is Backspace; Shift+Delete cuts on Windows.
+          if (event.shiftKey && event.key !== "Backspace") return false;
           const commands = onKey[event.key];
           if (!commands || isImeKeyEvent(view, event)) return false;
           const state = stateWithLiveSelection(view);
