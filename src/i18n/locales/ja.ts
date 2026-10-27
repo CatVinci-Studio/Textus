@@ -770,6 +770,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "タブを閉じる",
+  menuReopenClosedTab: "閉じたタブを再度開く",
   menuUndo: "取り消す",
   menuRedo: "やり直す",
   menuFindReplace: "検索と置換…",

@@ -736,6 +736,7 @@ export default {
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "关闭标签页",
+  menuReopenClosedTab: "重新打开关闭的标签页",
   menuUndo: "撤销",
   menuRedo: "重做",
   menuFindReplace: "查找与替换…",

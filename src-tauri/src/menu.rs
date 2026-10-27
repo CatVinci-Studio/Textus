@@ -60,6 +60,9 @@ const EXPORT_HTML_ID: &str = "export-html";
 const EXPORT_PANDOC_PREFIX: &str = "export-pandoc:";
 const QUIT_ID: &str = "quit";
 const CLOSE_TAB_ID: &str = "close-tab";
+/// File > Reopen Closed Tab: the focused window opens the document it
+/// closed last (app/close-flow.ts).
+const REOPEN_CLOSED_TAB_ID: &str = "reopen-closed-tab";
 const CLOSE_WINDOW_ID: &str = "close-window";
 const TOGGLE_SOURCE_MODE_ID: &str = "toggle-source-mode";
 const TOGGLE_TYPEWRITER_MODE_ID: &str = "toggle-typewriter-mode";
@@ -452,6 +455,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-zoom-out");
     } else if id == ZOOM_RESET_ID {
         emit_to_focused(app_handle, "menu-zoom-reset");
+    } else if id == REOPEN_CLOSED_TAB_ID {
+        emit_to_focused(app_handle, "menu-reopen-closed-tab");
     } else if id == CLOSE_TAB_ID {
         emit_to_focused(app_handle, "menu-close-tab");
     } else if id == CLOSE_WINDOW_ID {

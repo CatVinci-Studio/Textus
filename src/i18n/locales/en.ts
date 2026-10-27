@@ -795,6 +795,7 @@ type /name in a conversation to use one.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Close Tab",
+  menuReopenClosedTab: "Reopen Closed Tab",
   menuUndo: "Undo",
   menuRedo: "Redo",
   menuFindReplace: "Find & Replace…",

@@ -38,6 +38,7 @@ export type NativeMenuId =
   | "export-pdf"
   | "export-html"
   | "close-tab"
+  | "reopen-closed-tab"
   | "close-window"
   | "quit"
   | "find-replace"
@@ -272,15 +273,14 @@ export function buildAppMenu(
       submenu: [
         {
           label: t.menuNewFile,
-          accel: "mod+n",
+          accel: "mod+t",
           action: { native: "new-file" },
         },
         {
-          // Ctrl+Shift+N, as Cmd+Shift+N on macOS: Ctrl+T is "new tab"
-          // to anyone from a browser and this app has tabs. Bound to match
-          // in menu.rs (NEW_WINDOW_ACCEL).
+          // A browser's keys: Ctrl+T a tab, Ctrl+N a window (menu.rs's
+          // NEW_WINDOW_ACCEL).
           label: t.menuNewWindow,
-          accel: "mod+shift+n",
+          accel: "mod+n",
           action: { native: "new-window" },
         },
         {
@@ -308,6 +308,11 @@ export function buildAppMenu(
           label: t.menuCloseTab,
           accel: "mod+w",
           action: { native: "close-tab" },
+        },
+        {
+          label: t.menuReopenClosedTab,
+          accel: "mod+shift+t",
+          action: { native: "reopen-closed-tab" },
         },
         {
           label: t.menuCloseWindow,

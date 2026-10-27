@@ -51,6 +51,8 @@ export interface MenuBridgeHandlers {
   saveTabAs: (tabId: string) => Promise<boolean>;
   toggleSourceMode: () => void;
   requestCloseTab: (tabId: string) => void;
+  /** File > Reopen Closed Tab (close-flow.ts). */
+  reopenClosedTab: () => void;
   openHelpTab: (doc: HelpDoc) => void;
   startWelcomeTutorial: () => void;
   /** Help > Join the Community: the website's page in the UI's language. */
@@ -172,6 +174,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-close-tab", () =>
         h().requestCloseTab(h().activeTabId),
       ),
+      listenToThisWindow("menu-reopen-closed-tab", () => h().reopenClosedTab()),
       // Payload is the block kind (h1..h6, bullet-list, ...) from the menu id -
       // relayed to whichever editor is mounted as active (MilkdownEditor.tsx).
       listenToThisWindow<string>("menu-insert-block", (event) => {
