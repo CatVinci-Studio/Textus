@@ -1112,8 +1112,11 @@ export function installDevTauriShim(): void {
     },
     // Tauri's Windows form of an asset URL, which a test can answer with
     // page.route - a custom scheme never reaches the network.
+    // No plugin files are served here: their frames get data: URLs.
     convertFileSrc: (path: string, protocol = "asset") =>
-      `http://${protocol}.localhost/${encodeURIComponent(path)}`,
+      protocol === "textus-plugin"
+        ? ""
+        : `http://${protocol}.localhost/${encodeURIComponent(path)}`,
     invoke: (cmd: string, args?: { event?: string; handler?: number }) => {
       log(cmd);
       // Pages and links opened in the browser: `window.__devLinks`.

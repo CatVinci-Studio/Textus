@@ -8,3 +8,4 @@
 - A web page that doesn't load says so in its tab, with Reload and Open in Browser, instead of staying blank.
 - A web page out of sight for five minutes is let go, and no more than three stay loaded: each takes a WebKit process of its own. Shown again, it loads its last address.
 - Web pages on a Mac name themselves as Safari does, so sites such as Bilibili no longer turn them away as an old browser.
+- A plugin's pages load its files by URL instead of inlining them: a window drawing a PlantUML block took close to 3 GB, and now takes under 200 MB. Charts, PDFs and Word documents open with far less memory too.

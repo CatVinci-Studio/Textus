@@ -31,7 +31,7 @@ fn running(state: &PluginsState, id: &str) -> Result<(), String> {
 
 /// `path` resolved inside `root`: no `..`, and still under `root` after
 /// following links in the part that exists; the rest is kept as named.
-pub(super) fn inside(root: &Path, path: &Path) -> Result<PathBuf, String> {
+pub(crate) fn inside(root: &Path, path: &Path) -> Result<PathBuf, String> {
     let root = std::fs::canonicalize(root).map_err(|e| format!("{}: {e}", root.display()))?;
     let path = if path.is_absolute() {
         path.to_path_buf()
@@ -77,7 +77,7 @@ pub(super) fn require_not_app_data(app: &tauri::AppHandle, path: &Path) -> Resul
 }
 
 /// Where a plugin's own files are: its developer folder or `plugins/<id>/`.
-pub(super) fn plugin_home(
+pub(crate) fn plugin_home(
     app: &tauri::AppHandle,
     state: &PluginsState,
     id: &str,

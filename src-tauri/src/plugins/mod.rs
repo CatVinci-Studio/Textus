@@ -11,6 +11,7 @@ pub mod install;
 pub mod metadata;
 pub mod moved_skills;
 pub mod read_tool;
+pub mod scheme;
 pub mod scripts;
 pub mod state;
 pub mod store;

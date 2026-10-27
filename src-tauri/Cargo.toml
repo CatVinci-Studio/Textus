@@ -57,6 +57,8 @@ tauri-build = { version = "2", features = [] }
 # Keep the minor in step with @tauri-apps/api in package.json; the tauri
 # CLI warns when the JS and Rust versions drift apart.
 tauri = { version = "2.12", features = ["protocol-asset", "macos-private-api", "tray-icon", "unstable"] }
+# Decodes the paths of textus-plugin:// URLs (plugins/scheme.rs); in the tree via url.
+percent-encoding = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-oauth = "2"
 tauri-plugin-dialog = "2"

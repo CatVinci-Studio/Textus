@@ -197,6 +197,10 @@ pub fn run() {
         }
     }));
     let builder = builder
+        .register_asynchronous_uri_scheme_protocol(
+            plugins::scheme::SCHEME,
+            |ctx, request, responder| plugins::scheme::handle(ctx.app_handle(), request, responder),
+        )
         .manage(plugins::uri::PendingUris::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())

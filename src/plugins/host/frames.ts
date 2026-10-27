@@ -16,8 +16,12 @@ export function inElement(code: string, tag: "script" | "style"): string {
   return code.replace(new RegExp(`</(${tag})`, "gi"), "<\\/$1");
 }
 
-/** A webview's CSP: its own inline and `data:`/`blob:` content, no network,
- *  except frames from the HTTPS hosts in `frameHosts`. */
+/** The plugins' own files, as served on macOS and Linux, and on Windows. */
+const PLUGIN_FILES = "textus-plugin: http://textus-plugin.localhost";
+
+/** A webview's CSP: its own inline and `data:`/`blob:` content and the
+ *  plugins' files, no network, except frames from the HTTPS hosts in
+ *  `frameHosts`. */
 export function webviewCsp(frameHosts: readonly string[]): string {
   const frames = frameHosts.length
     ? frameHosts
@@ -26,13 +30,13 @@ export function webviewCsp(frameHosts: readonly string[]): string {
     : "'none'";
   return [
     "default-src 'none'",
-    "script-src 'unsafe-inline' 'wasm-unsafe-eval' data: blob:",
-    "style-src 'unsafe-inline' data:",
-    "img-src data: blob:",
-    "font-src data:",
-    "media-src data: blob:",
-    "connect-src data: blob:",
-    "worker-src data: blob:",
+    `script-src 'unsafe-inline' 'wasm-unsafe-eval' data: blob: ${PLUGIN_FILES}`,
+    `style-src 'unsafe-inline' data: ${PLUGIN_FILES}`,
+    `img-src data: blob: ${PLUGIN_FILES}`,
+    `font-src data: ${PLUGIN_FILES}`,
+    `media-src data: blob: ${PLUGIN_FILES}`,
+    `connect-src data: blob: ${PLUGIN_FILES}`,
+    `worker-src data: blob: ${PLUGIN_FILES}`,
     `frame-src ${frames}`,
   ].join("; ");
 }
