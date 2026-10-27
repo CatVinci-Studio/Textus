@@ -13,6 +13,7 @@ import { isIOSApp } from "../platform/capabilities";
 import { useMergedRef, usePresence } from "./usePresence";
 import { useFloatingList } from "./useFloatingList";
 import "./Select.css";
+import { isImeKeydown } from "../utils/ime";
 
 /** A drop-in for `<select>` whose list the app draws, in a portal marked
  *  `data-floating-select` so outside-click code treats it as inside its opener.
@@ -209,7 +210,7 @@ function DrawnSelect({
   }
 
   function onListKey(e: KeyboardEvent<HTMLUListElement>) {
-    if (e.nativeEvent.isComposing) return;
+    if (isImeKeydown(e)) return;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
       setActive((i) => step(i, e.key === "ArrowDown" ? 1 : -1));

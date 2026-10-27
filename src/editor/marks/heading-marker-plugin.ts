@@ -2,7 +2,8 @@ import { Plugin, PluginKey, Selection } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { EditorState } from "@milkdown/kit/prose/state";
-import { isImeKeyEvent, stateWithLiveSelection } from "./enclosure";
+import { stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "../keys/ime";
 
 const headingMarkerKey = new PluginKey("heading-marker");
 

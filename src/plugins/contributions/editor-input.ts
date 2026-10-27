@@ -19,6 +19,7 @@ import {
 } from "./editor-text";
 import { findFlash, type FlashLabel } from "./editor-flash";
 import { keyName } from "./editor-keys";
+import { isImeKeydown } from "../../utils/ime";
 
 /**
  * A plugin that takes over the editor's keyboard (Vim, Emacs). A sandboxed
@@ -88,7 +89,7 @@ export function releaseKeys(plugin: string): void {
 const ACT_WITHIN_MS = 3000;
 
 function captures(event: KeyboardEvent, capture: KeyCapture): string | null {
-  if (event.isComposing || event.keyCode === 229) return null;
+  if (isImeKeydown(event)) return null;
   if (["Shift", "Control", "Alt", "Meta", "CapsLock"].includes(event.key))
     return null;
   const name = keyName(event);

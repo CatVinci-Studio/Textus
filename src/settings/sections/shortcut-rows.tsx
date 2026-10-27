@@ -13,6 +13,7 @@ import {
   formatCombo,
   isReservedCombo,
 } from "../../utils/shortcuts";
+import { isImeKeydown } from "../../utils/ime";
 
 // Settings › Shortcuts' rows: one that records a key combination, for the
 // app's own actions and for the commands plugins add.
@@ -214,7 +215,7 @@ function ShortcutRecorder({
   useEffect(() => {
     if (!recording) return;
     function onKeyDown(e: KeyboardEvent) {
-      if (e.isComposing || e.keyCode === 229) return;
+      if (isImeKeydown(e)) return;
       e.preventDefault();
       e.stopImmediatePropagation();
       if (e.key === "Escape") {

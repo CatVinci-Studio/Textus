@@ -20,6 +20,7 @@ import {
   type SearchScope,
 } from "./file-search";
 import type { Strings } from "../i18n/strings";
+import { isImeKeydown } from "../utils/ime";
 
 /** An index older than this is built again the next time the box gains
  *  focus: files come and go while the box sits unused. */
@@ -156,7 +157,7 @@ export function FileSearch({
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+    if (isImeKeydown(e)) return;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
       if (matches.length === 0) return;

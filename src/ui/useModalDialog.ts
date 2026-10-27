@@ -1,6 +1,7 @@
 import { useEffect, useRef, type KeyboardEvent } from "react";
 import { usePhoneLayout } from "./usePhoneLayout";
 import { usePresenceState } from "./usePresence";
+import { isImeKeydown } from "../utils/ime";
 
 // `summary` is a <details> toggle: without it Settings' folded Advanced
 // group can't be reached by Tab - the wrap goes back to the close button.
@@ -70,7 +71,7 @@ export function useModalDialog(
       if (openDialogs[openDialogs.length - 1] !== dialog) return;
       const focused = document.activeElement;
       if (focused && focused !== document.body) return;
-      if (event.isComposing) return;
+      if (isImeKeydown(event)) return;
       dialog.focus();
       if (event.key === "Escape") {
         event.preventDefault();
@@ -100,8 +101,7 @@ export function useModalDialog(
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (!active) return;
-    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229)
-      return;
+    if (isImeKeydown(event)) return;
     if (event.key === "Escape" && !event.defaultPrevented) {
       event.preventDefault();
       event.stopPropagation();

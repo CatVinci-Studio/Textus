@@ -1,7 +1,8 @@
 import { Plugin, Selection, TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
+import { stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "./ime";
 import { isMacPlatform } from "../../platform/os";
 
 /** The displayed line's boundary. Native WebKit navigation can stop at the

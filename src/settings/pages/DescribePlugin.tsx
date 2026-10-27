@@ -2,6 +2,7 @@ import { useState } from "react";
 import { askAi } from "../../ai/chat/ask-ai";
 import type { Strings } from "../../i18n/strings";
 import { SettingRow, VERBATIM_INPUT } from "../sections/controls";
+import { isImeKeydown } from "../../utils/ime";
 
 /** Settings › Plugins › Make your own: what the user wants, in their words,
  *  handed to Textus AI's Create mode, which writes the plugin. */
@@ -31,7 +32,7 @@ export function DescribePlugin({
         spellCheck
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.nativeEvent.isComposing) make();
+          if (e.key === "Enter" && !isImeKeydown(e)) make();
         }}
       />
       <button

@@ -9,7 +9,8 @@ import {
 import type { Node, ResolvedPos } from "@milkdown/kit/prose/model";
 import { cellAround } from "@milkdown/kit/prose/tables";
 import { $prose } from "@milkdown/kit/utils";
-import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
+import { stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "./ime";
 import { alertMarker } from "../markdown/github-alert-plugin";
 
 /** Code, maths, front matter: text kept as written. */

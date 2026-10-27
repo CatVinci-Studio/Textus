@@ -15,6 +15,7 @@ import {
   type SearchEntry,
   type SearchMatch,
 } from "./settings-search";
+import { isImeKeydown } from "../utils/ime";
 
 // The Settings search box and the results that stand in for the page while
 // it holds a query. A combobox: ↑/↓ move, Enter goes to the row, Esc clears.
@@ -124,7 +125,7 @@ export function SettingsSearchField({
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
         onKeyDown={(e) => {
-          if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+          if (isImeKeydown(e)) return;
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault();
             onMove(e.key === "ArrowDown" ? 1 : -1);

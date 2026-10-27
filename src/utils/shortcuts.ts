@@ -1,13 +1,13 @@
 /// Key-combo helpers. Combos are normalized strings like "mod+shift+g", where
 /// "mod" is Cmd on Apple platforms and Ctrl elsewhere.
 import { modIsMeta } from "../platform/os";
+import { isImeKeydown } from "./ime";
 const MODIFIER_KEYS = new Set(["control", "meta", "alt", "shift", "altgraph"]);
 
 /// Builds a normalized combo string from a KeyboardEvent. Returns null while
 /// only modifier keys are held (not a complete, bindable combo yet).
 export function comboFromEvent(e: KeyboardEvent): string | null {
-  if (e.isComposing || e.keyCode === 229 || e.getModifierState("AltGraph"))
-    return null;
+  if (isImeKeydown(e) || e.getModifierState("AltGraph")) return null;
   const key = e.key.toLowerCase();
   if (MODIFIER_KEYS.has(key)) return null;
 

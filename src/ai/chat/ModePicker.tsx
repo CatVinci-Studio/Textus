@@ -5,6 +5,7 @@ import { useMergedRef, usePresence } from "../../ui/usePresence";
 import { useFloatingList } from "../../ui/useFloatingList";
 import { useChatModels, type ChatModels } from "./chat-models";
 import "./ModePicker.css";
+import { isImeKeydown } from "../../utils/ime";
 
 export interface ModeChoice {
   value: AgentMode;
@@ -91,7 +92,7 @@ export function ModePicker({
   }
 
   function onListKey(e: KeyboardEvent<HTMLUListElement>) {
-    if (e.nativeEvent.isComposing) return;
+    if (isImeKeydown(e)) return;
     const n = items.length;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();

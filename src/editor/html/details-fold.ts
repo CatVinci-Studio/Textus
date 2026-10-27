@@ -9,7 +9,7 @@ import {
   type RevealState,
   type Touches,
 } from "../reveal-state";
-import { liveCaretPos } from "../marks/enclosure";
+import { liveCaretPos } from "../live-selection";
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
 
 // The folding half of the raw-HTML preview. The plugin's state holds the

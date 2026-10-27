@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useModalDialog } from "../../ui/useModalDialog";
 import { usePresenceProps } from "../../ui/usePresence";
 import "./ImageNameDialog.css";
+import { isImeKeydown } from "../../utils/ime";
 
 export interface ImageNameRequest {
   stem: string;
@@ -50,11 +51,7 @@ export function ImageNameDialog({
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => {
           modal.onKeyDown(event);
-          if (
-            event.nativeEvent.isComposing ||
-            event.nativeEvent.keyCode === 229
-          )
-            return;
+          if (isImeKeydown(event) || event.nativeEvent.keyCode === 229) return;
           if (
             event.key === "Enter" &&
             event.target instanceof HTMLInputElement

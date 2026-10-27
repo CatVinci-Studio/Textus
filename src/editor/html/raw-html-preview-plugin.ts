@@ -2,7 +2,7 @@ import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { showDocImage } from "../images/image-plugin";
-import { stateWithLiveSelection } from "../marks/enclosure";
+import { stateWithLiveSelection } from "../live-selection";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";

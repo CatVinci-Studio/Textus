@@ -45,6 +45,7 @@ import {
   FILE_LIMIT,
   type ChatComposerProps,
 } from "./composer-types";
+import { isImeKeydown } from "../../utils/ime";
 
 /** A tablet's sheet has no room for the model: it is picked in Settings
  *  there, as on a phone. */
@@ -255,7 +256,7 @@ export function ChatComposer({
     // Keys during an IME composition belong to the IME. WebKit can fire the
     // confirming keydown after compositionend with isComposing false but
     // keyCode still 229, so check both.
-    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+    if (isImeKeydown(e)) return;
     // While a picker is open, the navigation keys, Enter and Escape drive it
     // instead of the chat.
     if (pickerOpen) {

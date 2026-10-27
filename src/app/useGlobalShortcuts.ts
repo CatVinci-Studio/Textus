@@ -24,6 +24,7 @@ import {
 } from "../utils/events";
 import { closeSplit, splitEditor, splitLayout } from "./split/split-layout";
 import { openCommandPalette } from "./command-palette";
+import { isImeKeydown } from "../utils/ime";
 
 /** The heading shortcuts, by the block kind they apply. */
 const HEADING_KINDS: [HeadingAction, string][] = [
@@ -94,7 +95,7 @@ export function useGlobalShortcuts(opts: {
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.defaultPrevented || e.isComposing || e.keyCode === 229) return;
+      if (e.defaultPrevented || isImeKeydown(e)) return;
       if (heldByPlugin(e)) return;
       const combo = comboFromEvent(e);
       if (!combo) return;

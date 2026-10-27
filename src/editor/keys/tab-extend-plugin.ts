@@ -12,7 +12,9 @@ import {
   addRowAfter,
   goToNextCell,
 } from "@milkdown/kit/prose/tables";
-import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
+import { stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "./ime";
+import { isImeKeydown } from "../../utils/ime";
 
 const INDENT = "  ";
 
@@ -123,7 +125,7 @@ export const tabStaysPlugin = $prose(
         const keepFocus = (event: KeyboardEvent) => {
           if (event.key !== "Tab" || event.defaultPrevented) return;
           if (event.ctrlKey || event.metaKey || event.altKey) return;
-          if (event.isComposing) return;
+          if (isImeKeydown(event)) return;
           event.preventDefault();
         };
         view.dom.addEventListener("keydown", keepFocus);

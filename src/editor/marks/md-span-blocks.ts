@@ -2,7 +2,8 @@ import { canJoin, findWrapping } from "@milkdown/kit/prose/transform";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { caretAt, literalTextAfter, literalTextBefore } from "./enclosure";
+import { literalTextAfter, literalTextBefore } from "./enclosure";
+import { caretAt } from "../live-selection";
 import {
   SPECS,
   closeOpenRun,

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { ZEN_MODE_EVENT } from "../utils/events";
+import { isImeKeydown } from "../utils/ime";
 
 /**
  * Zen mode: only the text. Chrome goes away and every paragraph but the
@@ -22,7 +23,7 @@ export function useZenMode() {
     // that Escape should close first keeps it.
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (e.isComposing || e.keyCode === 229) return;
+      if (isImeKeydown(e)) return;
       if (
         document.querySelector(
           ':is([role="dialog"], [role="menu"], .inline-chat, .find-replace-bar, .context-menu):not([data-state="closing"] *, [data-state="closing"])',

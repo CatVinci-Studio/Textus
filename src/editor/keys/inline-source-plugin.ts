@@ -1,7 +1,8 @@
 import { Plugin, type Command } from "@milkdown/kit/prose/state";
 import type { Node } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
-import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
+import { stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "./ime";
 import { isEnclosure } from "../marks/enclosure-runs";
 
 /** A link's source, a wikilink, an embed or raw HTML: text edited as

@@ -1,6 +1,6 @@
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { Attrs, NodeType } from "@milkdown/kit/prose/model";
-import { caretAt } from "../marks/enclosure";
+import { caretAt } from "../live-selection";
 
 /** The typed fence line (```, $$) at `pos` made an empty `type` block, the
  *  caret in it. A list item's first line must stay a paragraph, so there

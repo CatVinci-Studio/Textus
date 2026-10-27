@@ -12,11 +12,9 @@ import type {
 } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import {
-  COMPOSE_RELOCATE_DELAY_MS,
-  isImeKeyEvent,
-  stateWithLiveSelection,
-} from "../marks/enclosure";
+import { COMPOSE_RELOCATE_DELAY_MS } from "../marks/enclosure";
+import { stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "./ime";
 import { typedLinkEndingAt } from "../markdown/link-input-rule";
 
 /** Each opening bracket or quote and its partner. The full-width ones are

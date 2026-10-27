@@ -13,6 +13,7 @@ import type { AgentMode } from "../../../settings/SettingsContext";
 import "../AgentTurnView.css";
 import "../inline-chat.css";
 import { Tooltip } from "../../../ui/Tooltip";
+import { isImeKeydown } from "../../../utils/ime";
 
 export interface InlineChatLabels extends ChatBodyLabels, CloseConfirmLabels {
   /** Accessible name / tooltip of the header's close button. */
@@ -169,7 +170,7 @@ export function InlineChat({
       // candidate), and a control that consumed the key says so.
       onKeyDown={(e) => {
         if (e.key !== "Escape" || e.defaultPrevented) return;
-        if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+        if (isImeKeydown(e)) return;
         e.preventDefault();
         if (confirm) confirm.onCancel();
         else onRequestClose();

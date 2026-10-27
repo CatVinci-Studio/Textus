@@ -7,6 +7,7 @@ import {
   type CompletionResult,
 } from "../../plugins/contributions/completion-sources";
 import { CompletionList } from "./completion-list";
+import { isImeKeydown } from "../../utils/ime";
 
 /** The most text before the caret a plugin is shown. */
 const CONTEXT_CHARS = 200;
@@ -115,7 +116,7 @@ export function createCompletionPlugin() {
         },
         props: {
           handleKeyDown(view, event) {
-            if (event.isComposing || event.metaKey || event.ctrlKey)
+            if (isImeKeydown(event) || event.metaKey || event.ctrlKey)
               return false;
             if (!completionViews.get(view)?.key(event.key)) return false;
             event.preventDefault();

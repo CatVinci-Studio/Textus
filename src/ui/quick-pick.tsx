@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { formatCombo } from "../utils/shortcuts";
 import { useModalDialog } from "./useModalDialog";
 import "./quick-pick.css";
+import { isImeKeydown } from "../utils/ime";
 
 /** A list to choose one item from, or several ticked, filtered by what is
  *  typed: the command palette's and a plugin's textus.ui.pick. Requests queue. */
@@ -173,7 +174,7 @@ function QuickPick({
             setIndex(0);
           }}
           onKeyDown={(e) => {
-            if (e.nativeEvent.isComposing) return;
+            if (isImeKeydown(e)) return;
             if (e.key === "ArrowDown") {
               e.preventDefault();
               setIndex((i) => Math.min(i + 1, shown.length - 1));

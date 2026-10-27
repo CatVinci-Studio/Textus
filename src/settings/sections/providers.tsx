@@ -12,6 +12,7 @@ import {
   useProviderSearch,
 } from "./provider-connection";
 import { CustomProviderPanel, ProviderAuthPanel } from "./provider-auth";
+import { isImeKeydown } from "../../utils/ime";
 export {
   ProviderAuthPanel,
   ApiKeyProviderPanel,
@@ -79,7 +80,7 @@ export function ProviderListPanel({
           if (
             open &&
             event.key === "Escape" &&
-            !event.nativeEvent.isComposing &&
+            !isImeKeydown(event) &&
             event.nativeEvent.keyCode !== 229
           ) {
             event.preventDefault();

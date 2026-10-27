@@ -6,6 +6,7 @@ import { usePresenceProps } from "../../ui/usePresence";
 import { useDockedPanelWidth } from "../../utils/hooks/useDockedPanelWidth";
 import { Tooltip } from "../../ui/Tooltip";
 import "./FindReplaceBar.css";
+import { isImeKeydown } from "../../utils/ime";
 
 type FindReplaceBarLabels = Pick<
   Strings,
@@ -51,7 +52,7 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
   // Escape handled once here for both inputs; stopPropagation keeps bar
   // keystrokes out of the app-level shortcut dispatcher.
   function onBarKeyDown(e: React.KeyboardEvent) {
-    const composing = e.nativeEvent.isComposing || e.keyCode === 229;
+    const composing = isImeKeydown(e);
     if (e.key === "Escape" && !composing) {
       e.preventDefault();
       findReplace.close();
