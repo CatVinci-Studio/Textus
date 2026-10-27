@@ -502,8 +502,14 @@ function TabPill({
       onPointerUp={handlePointerUp}
       onContextMenu={onContextMenu}
       // Otherwise WebKit starts a text selection and paints a sweep through
-      // the editor once the pill detaches.
+      // the editor once the pill detaches. (And a middle press would scroll.)
       onMouseDown={(e) => e.preventDefault()}
+      // A middle click closes the tab, as in a browser.
+      onAuxClick={(e) => {
+        if (e.button !== 1) return;
+        e.preventDefault();
+        onClose(tab.id);
+      }}
       // Entered once: a moved node restarts its stylesheet animation.
       onAnimationEnd={(e) => {
         if (e.target === e.currentTarget) e.currentTarget.dataset.entered = "";

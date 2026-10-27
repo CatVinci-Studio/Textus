@@ -1428,3 +1428,31 @@ test("Enter on an empty nested task lifts it a level as a task, not a bullet (#3
     "  * [ ] two\n    * [ ] three\n  * [ ] four",
   );
 });
+
+test("the outline folds and unfolds every heading from its menu, or with Option-click", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(
+    page,
+    "# One\n\n## One a\n\n### One a i\n\n# Two\n\n## Two a",
+  );
+  await emit(page, "menu-toggle-sidebar");
+  await page.locator(".sidebar-tab").nth(1).click();
+  const rows = page.locator(".outline-row .tree-label");
+  await expect(rows).toHaveCount(5);
+  const outline = page.getByRole("tree", { name: "Outline" });
+  await outline.click({ button: "right" });
+  await page.locator(".context-menu-item").getByText("Collapse All").click();
+  await expect(rows).toHaveText(["One", "Two"]);
+  await outline.click({ button: "right" });
+  await page.locator(".context-menu-item").getByText("Expand All").click();
+  await expect(rows).toHaveCount(5);
+  // Option-click on one heading's arrow folds them all.
+  await page
+    .locator(".outline-row", { hasText: "Two" })
+    .first()
+    .locator(".outline-toggle")
+    .click({ modifiers: ["Alt"] });
+  await expect(rows).toHaveText(["One", "Two"]);
+});

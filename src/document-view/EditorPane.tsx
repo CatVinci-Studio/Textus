@@ -46,6 +46,8 @@ interface EditorPaneProps {
   tour?: TourAi | null;
   /** The tour's AI panel mode, on its practice tab. */
   tourMode?: AgentMode | null;
+  /** View › Read Only, for this tab. */
+  readOnly?: boolean;
 }
 
 /**
@@ -142,6 +144,7 @@ export const EditorPane = memo(function EditorPane({
   isActive,
   tour,
   tourMode,
+  readOnly,
 }: EditorPaneProps) {
   // No file yet: still an editable blank canvas. The path is not a remount
   // key, since saving or renaming is the same document and a remount drops
@@ -170,6 +173,7 @@ export const EditorPane = memo(function EditorPane({
                 isActive={isActive}
                 tour={tour}
                 tourMode={tourMode}
+                readOnly={readOnly}
               />
             </MilkdownProvider>
           </KatexFirst>

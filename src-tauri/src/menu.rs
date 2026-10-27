@@ -56,6 +56,8 @@ const TOGGLE_AGENT_PANEL_ID: &str = "toggle-agent-panel";
 const TOGGLE_TEXTUS_AI_ID: &str = "toggle-textus-ai";
 const TOGGLE_SPLIT_VIEW_ID: &str = "toggle-split-view";
 const TOGGLE_ZEN_MODE_ID: &str = "toggle-zen-mode";
+/// View > Read Only: the document on screen can't be changed.
+const TOGGLE_READ_ONLY_ID: &str = "toggle-read-only";
 /// Two documents at once, side by side or one above the other.
 const SPLIT_RIGHT_ID: &str = "split-right";
 /// Everything the menus do, found by typing.
@@ -355,6 +357,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-toggle-split-view");
     } else if id == TOGGLE_ZEN_MODE_ID {
         emit_to_focused(app_handle, "menu-toggle-zen-mode");
+    } else if id == TOGGLE_READ_ONLY_ID {
+        emit_to_focused(app_handle, "menu-toggle-read-only");
     } else if id == COMMAND_PALETTE_ID {
         emit_to_focused(app_handle, "menu-command-palette");
     } else if id == SPLIT_RIGHT_ID {

@@ -3,6 +3,7 @@ import { installClipboardCapture } from "../clipboard/history";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
 import { useExternalChangeReload } from "../document/useExternalChangeReload";
+import { tabReadOnly } from "../document/read-only";
 import {
   useMenuBridge,
   useNativeMenuAccelerators,
@@ -131,6 +132,7 @@ export function useWindowWiring({
     splitView: !!activeTab.sourceMode && !!activeTab.splitView,
     typewriter: settings.typewriterMode,
     zen: docs.zenMode,
+    readOnly: tabReadOnly(activeTab),
     folderOpen: openFolder.folder !== null,
   };
   useNativeMenuChecks(menuChecks);
@@ -151,6 +153,7 @@ export function useWindowWiring({
     onToggleAgentPanel: panels.toggleAgentPanel,
     onToggleTextusAi: textusAi.toggle,
     onToggleSplitView: docs.toggleSplitView,
+    onToggleReadOnly: () => docs.toggleReadOnly(),
     onToggleZenMode: docs.toggleZenMode,
     addBlankTab: tabState.addBlankTab,
     openFileDialog: docs.openFileDialog,

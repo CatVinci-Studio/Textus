@@ -48,6 +48,9 @@ export interface DocTab {
   importedFrom?: string;
   /** A pathless draft's own name instead of "Untitled". */
   draftTitle?: string;
+  /** View › Read Only: nothing may change it. Kept by path
+   *  (document/read-only.ts). */
+  readOnly?: boolean;
   /** A plugin's view or custom editor shown instead of a document; a custom
    *  editor's file is its `resource`, which the plugin saves itself. */
   view?: PluginTabView;

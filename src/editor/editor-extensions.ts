@@ -122,6 +122,7 @@ import { zenFocusPlugin } from "./modes/zen-focus-plugin";
 import { keyboardRevealPlugin } from "./keys/keyboard-reveal-plugin";
 import { createPlaceholderPlugin } from "./placeholder-plugin";
 import { findReplacePlugin } from "./find/find-replace-plugin";
+import { readOnlyPlugin } from "./read-only-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../settings/SettingsContext";
 
@@ -364,6 +365,7 @@ export function withEditorCore(
       .use(blockJoinPlugin)
       .use(inlineSourcePlugin)
       .use(findReplacePlugin)
+      .use(readOnlyPlugin)
       .use(zenFocusPlugin)
       .use(keyboardRevealPlugin)
       .use(

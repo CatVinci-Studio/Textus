@@ -40,6 +40,7 @@ export interface MenuBridgeHandlers {
   onToggleAgentPanel: () => void;
   onToggleTextusAi: () => void;
   onToggleSplitView: () => void;
+  onToggleReadOnly: () => void;
   onToggleZenMode: () => void;
   addBlankTab: () => void;
   openFileDialog: () => Promise<void>;
@@ -145,6 +146,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-toggle-split-view", () =>
         h().onToggleSplitView(),
       ),
+      listenToThisWindow("menu-toggle-read-only", () => h().onToggleReadOnly()),
       listenToThisWindow("menu-toggle-zen-mode", () => h().onToggleZenMode()),
       listenToThisWindow(
         "menu-command-palette",

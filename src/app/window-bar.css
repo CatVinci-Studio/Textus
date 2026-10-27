@@ -81,6 +81,22 @@
   text-overflow: ellipsis;
 }
 
+/* A read-only document's padlock: quiet, and the one part of the title
+   that takes a click. */
+.window-bar-lock {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border: 0;
+  background: none;
+  color: var(--editor-muted);
+  pointer-events: auto;
+}
+
+.window-bar-lock:hover {
+  color: var(--editor-text);
+}
+
 /* Bounded so it never slides under the app-drawn caption buttons. */
 :root[data-window-chrome="app"] .window-bar-title {
   max-width: max(0px, calc(100% - 300px));

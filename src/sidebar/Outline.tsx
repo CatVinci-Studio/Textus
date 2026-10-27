@@ -6,6 +6,8 @@ import { scrollBehavior } from "../ui/motion";
 import { unfoldElement } from "../editor/html/details-fold";
 import { useTreeKeys } from "../ui/useTreeKeys";
 import { Tooltip } from "../ui/Tooltip";
+import { ContextMenu } from "../editor/ContextMenu";
+import { Presence } from "../ui/usePresence";
 import "./FileTree.css";
 
 interface OutlineProps {
@@ -79,22 +81,8 @@ export function Outline({ content }: OutlineProps) {
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const treeRef = useRef<HTMLDivElement>(null);
   const treeKeys = useTreeKeys(treeRef);
-  // Follows any scroller: the event doesn't bubble, so it is caught on the
-  // way down.
-  const [current, setCurrent] = useState(-1);
-  useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => setCurrent(currentHeading()));
-    };
-    update();
-    document.addEventListener("scroll", update, true);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener("scroll", update, true);
-    };
-  }, [content]);
+  const current = useCurrentHeading(content);
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
 
   const visible = useMemo(() => {
     const rows: typeof headings = [];
@@ -120,6 +108,8 @@ export function Outline({ content }: OutlineProps) {
       if (!next.delete(id)) next.add(id);
       return next;
     });
+  const parents = headings.filter((h) => h.hasChildren).map((h) => h.id);
+  const foldAll = (fold: boolean) => setCollapsed(new Set(fold ? parents : []));
 
   // A tree: arrow keys fold and walk it, Enter goes to the heading.
   return (
@@ -129,6 +119,10 @@ export function Outline({ content }: OutlineProps) {
       role="tree"
       aria-label={t.outlineTab}
       onKeyDown={treeKeys}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setMenu({ x: e.clientX, y: e.clientY });
+      }}
     >
       {visible.map((h) => {
         const isCollapsed = collapsed.has(h.id);
@@ -151,7 +145,9 @@ export function Outline({ content }: OutlineProps) {
                   aria-hidden="true"
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggle(h.id);
+                    // Option/Alt-click folds or unfolds every heading.
+                    if (e.altKey) foldAll(!isCollapsed);
+                    else toggle(h.id);
                   }}
                 >
                   <ChevronIcon
@@ -170,6 +166,39 @@ export function Outline({ content }: OutlineProps) {
           </div>
         );
       })}
+      <Presence show={menu !== null} exitMs={120}>
+        {menu && (
+          <ContextMenu
+            x={menu.x}
+            y={menu.y}
+            items={[
+              { label: t.outlineExpandAll, onSelect: () => foldAll(false) },
+              { label: t.outlineCollapseAll, onSelect: () => foldAll(true) },
+            ]}
+            onClose={() => setMenu(null)}
+          />
+        )}
+      </Presence>
     </div>
   );
+}
+
+/** The index of the heading the reader is at, following any scroller: the
+ *  scroll event doesn't bubble, so it is caught on the way down. */
+function useCurrentHeading(content: string): number {
+  const [current, setCurrent] = useState(-1);
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => setCurrent(currentHeading()));
+    };
+    update();
+    document.addEventListener("scroll", update, true);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("scroll", update, true);
+    };
+  }, [content]);
+  return current;
 }
