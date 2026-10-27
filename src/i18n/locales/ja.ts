@@ -539,6 +539,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   accountNotConnected: "未接続",
   accountConnectedAs: "接続済み",
   signInTemplate: "{name}でサインイン",
+  signInExperimental: "試験的な機能です。慎重にお使いください。",
   logoutButton: "サインアウト",
   loggingIn: "ブラウザでのログインを待っています…",
   loginLinkHint:

@@ -554,6 +554,7 @@ type /name in a conversation to use one.
   accountNotConnected: "Not connected",
   accountConnectedAs: "Connected",
   signInTemplate: "Sign in with {name}",
+  signInExperimental: "Experimental - use with care.",
   logoutButton: "Sign out",
   loggingIn: "Waiting for browser login…",
   loginLinkHint:

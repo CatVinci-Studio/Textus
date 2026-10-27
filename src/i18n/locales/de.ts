@@ -557,6 +557,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   accountNotConnected: "Nicht verbunden",
   accountConnectedAs: "Verbunden",
   signInTemplate: "Mit {name} anmelden",
+  signInExperimental: "Experimentell – mit Vorsicht verwenden.",
   logoutButton: "Abmelden",
   loggingIn: "Warte auf die Anmeldung im Browser…",
   loginLinkHint:

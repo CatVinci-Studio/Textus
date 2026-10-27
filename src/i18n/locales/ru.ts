@@ -560,6 +560,8 @@ export default {
   accountNotConnected: "Не подключён",
   accountConnectedAs: "Подключён",
   signInTemplate: "Войти через {name}",
+  signInExperimental:
+    "Экспериментальная функция — используйте с осторожностью.",
   logoutButton: "Выйти",
   loggingIn: "Ожидание входа в браузере…",
   loginLinkHint:
