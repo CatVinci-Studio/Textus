@@ -18,6 +18,7 @@ import { splitListItem } from "@milkdown/kit/prose/schema-list";
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
 import { modIsMeta } from "../../platform/os";
+import { leadingWhitespaceOfLastLine } from "../code/code-indent";
 
 /**
  * Enter and Mod+Enter across Textus's container blocks, decided in one
@@ -61,25 +62,37 @@ function landAfter(tr: Transaction, after: number): Transaction {
   return tr.setSelection(TextSelection.create(tr.doc, after + 1));
 }
 
-/** Enter on the empty (or whitespace-only) last line of a code or math block: drop that line
+/** Enter on the empty last line of a code or math block: drop that line
  *  and continue below the block. The first Enter makes the empty line, so
  *  it takes two, as with list items and quotes. */
 export const leaveTextBlockOnEmptyLastLine: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
   if (!empty || !LEAVABLE_TEXT_BLOCKS.has($from.parent.type.name)) return false;
   if ($from.parentOffset !== $from.parent.content.size) return false;
-  // The last line counts as empty when it holds only the indentation the
-  // code block carried over from the line above.
-  const text = $from.parent.textContent;
-  const lastBreak = text.lastIndexOf("\n");
-  if (lastBreak < 0 || text.slice(lastBreak + 1).trim() !== "") return false;
+  if (!$from.parent.textContent.endsWith("\n")) return false;
   if (dispatch) {
-    const tr = state.tr.delete(
-      $from.pos - (text.length - lastBreak),
-      $from.pos,
-    );
+    const tr = state.tr.delete($from.pos - 1, $from.pos);
     dispatch(landAfter(tr, tr.mapping.map($from.after())).scrollIntoView());
   }
+  return true;
+};
+
+/** Enter in a code or math block: a new line, indented as the one above -
+ *  in a list too, whose Enter started a new item. A line of only
+ *  indentation is left empty, its indentation carried on. */
+export const newlineInCode: Command = (state, dispatch) => {
+  const { $from, $to } = state.selection;
+  const block = $from.parent;
+  if (!block.isTextblock || !block.type.spec.code || !$from.sameParent($to))
+    return false;
+  if (!dispatch) return true;
+  const before = block.textBetween(0, $from.parentOffset);
+  const indent = leadingWhitespaceOfLastLine(before);
+  const after = block.textBetween($to.parentOffset, block.content.size);
+  const line = before.slice(before.lastIndexOf("\n") + 1);
+  const blankLine = line === indent && !/^[^\n]/.test(after);
+  const from = blankLine ? $from.pos - indent.length : $from.pos;
+  dispatch(state.tr.insertText("\n" + indent, from, $to.pos).scrollIntoView());
   return true;
 };
 
@@ -373,6 +386,7 @@ const onEnter: Command[] = [
   pipeRowToTable,
   leaveTextBlockOnEmptyLastLine,
   liftEmptyNestedTask,
+  newlineInCode,
 ];
 const onModEnter: Command[] = [leaveBlockquote];
 const onShiftEnter: Command[] = [
