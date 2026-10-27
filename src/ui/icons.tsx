@@ -307,6 +307,34 @@ export function SidebarToggleIcon({ className }: IconProps) {
   );
 }
 
+/** A read-only document's padlock, in the line weight of the bar's icons. */
+export function LockIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="12"
+      height="12"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <rect
+        x="3.2"
+        y="7"
+        width="9.6"
+        height="7"
+        rx="1.6"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
+      <path
+        d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
+    </svg>
+  );
+}
+
 /** Textus AI's own button: the app icon's quill as a silhouette, struck
  *  through while Textus AI is off. Filled and a pixel larger than the rest:
  *  it is the product's mark. The strike is cut out, so it reads on any background. */

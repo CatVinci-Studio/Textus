@@ -62,7 +62,7 @@ function App() {
   const { searchFocusRequest, clearSearchFocusRequest } = docs;
   const { showTabBar, requestCloseTab, handleTabDetach, dragHoverPreview } =
     docs;
-  const { moveTabToNewWindow } = docs;
+  const { moveTabToNewWindow, toggleReadOnly } = docs;
   const { toggleSourceMode, zenMode, setZenMode, toggleZenMode } = docs;
   const { menuChecks, sidebarLesson, entryMoved, skillFilesDeleted } = wiring;
   const { documentsOpen, setDocumentsOpen, openFromDocuments } = wiring;
@@ -113,6 +113,7 @@ function App() {
           agentOpen={agentPanel.open}
           agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}
           onToggleAgent={toggleAgentPanel}
+          onToggleReadOnly={() => toggleReadOnly()}
         />
         <Sidebar
           open={panelOpen}
@@ -145,6 +146,7 @@ function App() {
           onAdd={addBlankTab}
           onDetach={handleTabDetach}
           onMoveToNewWindow={moveTabToNewWindow}
+          onToggleReadOnly={toggleReadOnly}
           onReorder={reorderTab}
           previewTab={dragHoverPreview}
           onChange={handleChange}

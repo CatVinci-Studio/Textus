@@ -8,6 +8,7 @@ import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { SourceTextarea } from "../editor/modes/SourceTextarea";
 import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
+import { tabReadOnly } from "../document/read-only";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import type { AgentMode } from "../settings/SettingsContext";
@@ -57,6 +58,7 @@ export function MainPane({
   onAdd,
   onDetach,
   onMoveToNewWindow,
+  onToggleReadOnly,
   onReorder,
   previewTab,
   onChange,
@@ -73,6 +75,7 @@ export function MainPane({
   /** A tab pulled out of the window leaves for a window of its own (macOS). */
   onDetach: (tabId: string) => void;
   onMoveToNewWindow: (tabId: string) => void;
+  onToggleReadOnly: (tabId: string) => void;
   onReorder: (tabId: string, index: number) => void;
   previewTab: TabBarProps["previewTab"];
   onChange: (tabId: string, markdown: string) => void;
@@ -95,6 +98,17 @@ export function MainPane({
   // rather than a prompt for each.
   const closeSaved = (list: DocTab[]) => {
     for (const tab of list) if (!tabIsDirty(tab)) onClose(tab.id);
+  };
+  const readOnlyItem = (id: string) => {
+    const tab = byId.get(id);
+    if (!tab || tab.view) return [];
+    return [
+      {
+        label: t.menuToggleReadOnly,
+        checked: tabReadOnly(tab),
+        onSelect: () => onToggleReadOnly(id),
+      },
+    ];
   };
   const closeManyItems = (list: DocTab[], id: string) => {
     const at = list.findIndex((tab) => tab.id === id);
@@ -168,6 +182,7 @@ export function MainPane({
               },
             ]
           : []),
+        ...readOnlyItem(id),
         "separator",
         { label: t.menuCloseTab, onSelect: () => onClose(id) },
         ...closeManyItems(list, id),
@@ -253,6 +268,7 @@ export function MainPane({
                   filePath={tab.path}
                   typewriter={typewriter}
                   onChange={(markdown) => onChange(tab.id, markdown)}
+                  readOnly={tabReadOnly(tab)}
                 />
               </Suspense>
             ) : tab.sourceMode ? (
@@ -260,6 +276,7 @@ export function MainPane({
                 value={tab.content}
                 typewriter={typewriter}
                 onChange={(markdown) => onChange(tab.id, markdown)}
+                readOnly={tabReadOnly(tab)}
               />
             ) : (
               <EditorPane
@@ -272,6 +289,7 @@ export function MainPane({
                 isActive={tab.id === activeTabId}
                 tour={tour && tab.id === tour.tabId ? tour.ai : null}
                 tourMode={tour && tab.id === tour.tabId ? tour.mode : null}
+                readOnly={tabReadOnly(tab)}
               />
             )}
           </div>
