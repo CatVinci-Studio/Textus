@@ -20,7 +20,7 @@ import {
   type MenuNode,
 } from "./app-menu-model";
 import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 
 /**
  * The app-drawn menu is the only menu Windows users see. Its combos diverge
@@ -285,5 +285,40 @@ describe("menu bar", () => {
     expect(file.slice(-3)).toEqual(["separator", t.menuSettings, t.menuExit]);
     for (const section of sections)
       expect(section.items.length).toBeGreaterThan(0);
+  });
+});
+
+describe("the menu ids", () => {
+  it("each name an item the Rust menu dispatches", () => {
+    const source = [
+      "menu.rs",
+      ...readdirSync("src-tauri/src/menu").map((file) => `menu/${file}`),
+    ]
+      .filter((file) => file.endsWith(".rs"))
+      .map((file) => readFileSync(`src-tauri/src/${file}`, "utf8"))
+      .join("\n");
+    const rust = [...source.matchAll(/const \w+: &str = "([^"]+)";/g)].map(
+      (match) => match[1],
+    );
+    const known = (id: string) =>
+      rust.includes(id) ||
+      rust.some((prefix) => prefix.endsWith(":") && id.startsWith(prefix));
+    const ids: string[] = [];
+    const collect = (nodes: MenuNode[]) => {
+      for (const node of nodes) {
+        if (node === "separator") continue;
+        if (node.action && "native" in node.action)
+          ids.push(node.action.native);
+        if (node.submenu) collect(node.submenu);
+      }
+    };
+    collect(
+      buildAppMenu(t, shortcuts, {
+        files: ["/notes/a.md"],
+        folders: ["/notes"],
+      }),
+    );
+    expect(ids.length).toBeGreaterThan(20);
+    expect(ids.filter((id) => !known(id))).toEqual([]);
   });
 });
