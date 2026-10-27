@@ -1132,10 +1132,10 @@ para usar una.
     "Al final, escribe `Lo que de verdad enloquece al hidalgo es`, haz una pausa y pulsa Tab",
   tutorialContinuationTaskPhone:
     "Al final, escribe `Lo que de verdad enloquece al hidalgo es`, haz una pausa y toca el texto gris",
-  tutorialSkillsTitle: "Habilidades integradas",
-  tutorialSkillsBody: "Escribe / en el panel de IA para elegir una.",
-  tutorialSkillsTask:
-    "Selecciona una de tus notas y envía `/acortar` o `/traducir`",
+  tutorialSkillsTitle: "Habilidades",
+  tutorialSkillsBody:
+    "Escribe / en el panel de IA para elegir una, o consigue más en Extensiones.",
+  tutorialSkillsTask: "Selecciona una de tus notas y envía `/corregir`",
   tutorialDoneTitle: "¡Listo!",
   tutorialDoneBody: "Ahora empieza a escribir lo tuyo.",
   tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en la pestaña Proyecto del panel de IA.`,

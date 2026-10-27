@@ -520,7 +520,7 @@ describe("ChatComposer pickers", () => {
         selectedText={null}
         busy={false}
         labels={{ ...labels, picker: pickerLabels(resolveStrings("zh"), "zh") }}
-        defaultMode="write"
+        defaultMode="create"
         defaultWebSearch={false}
         onSend={onSend}
         onStop={() => {}}
@@ -540,12 +540,11 @@ describe("ChatComposer pickers", () => {
       const { type } = renderZh();
       type(key);
       const list = await screen.findByRole("listbox");
-      expect(list).toHaveTextContent("扩写");
-      expect(list).toHaveTextContent("/expand");
-      for (const group of ["修改", "文体"])
-        expect(screen.getByRole("group", { name: group })).toBeInTheDocument();
-      // Write's four: Review's and Create's are in their own modes.
-      expect(screen.getAllByRole("option")).toHaveLength(4);
+      expect(list).toHaveTextContent("设计主题");
+      expect(list).toHaveTextContent("/theme");
+      expect(screen.getByRole("group", { name: "生成" })).toBeInTheDocument();
+      // Create's three: Review's is in its own mode.
+      expect(screen.getAllByRole("option")).toHaveLength(3);
       expect(list).not.toHaveTextContent("校对");
     },
   );
@@ -571,12 +570,12 @@ describe("ChatComposer pickers", () => {
   it("finds a skill by its localized label and alias", async () => {
     listSkills.mockResolvedValue(builtins);
     const { type } = renderZh();
-    type("/精");
+    type("/设计");
     const first = (await screen.findAllByRole("option"))[0];
-    expect(first).toHaveTextContent("精简");
-    type("/翻译");
+    expect(first).toHaveTextContent("设计主题");
+    type("/小工具");
     await waitFor(() =>
-      expect(screen.getAllByRole("option")[0]).toHaveTextContent("/translate"),
+      expect(screen.getAllByRole("option")[0]).toHaveTextContent("/plugin"),
     );
   });
 
@@ -585,14 +584,14 @@ describe("ChatComposer pickers", () => {
     const { type, onSend, input } = renderZh();
     type("/");
     await screen.findByRole("listbox");
-    type("、翻译 林晚走进书店");
+    type("、主题 深蓝色的夜读主题");
     fireEvent.keyDown(input, { key: "Enter" });
     expect(onSend).toHaveBeenCalledWith(
-      '<skill name="translate" typed="/翻译"></skill>\n\n林晚走进书店',
+      '<skill name="theme" typed="/主题"></skill>\n\n深蓝色的夜读主题',
       [],
       true,
-      { mode: "write", webSearch: false, thinking: "auto" },
-      "、翻译 林晚走进书店",
+      { mode: "create", webSearch: false, thinking: "auto" },
+      "、主题 深蓝色的夜读主题",
     );
   });
 
@@ -603,7 +602,7 @@ describe("ChatComposer pickers", () => {
     await screen.findByRole("listbox");
     fireEvent.keyDown(input, { key: "ArrowDown" });
     fireEvent.keyDown(input, { key: "Enter" });
-    expect(input).toHaveValue("/tighten ");
+    expect(input).toHaveValue("/plugin ");
 
     type("/");
     await screen.findByRole("listbox");

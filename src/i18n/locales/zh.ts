@@ -1020,9 +1020,9 @@ export default {
     "在末尾输入 `宝玉和黛玉的缘分`，停一下，按 Tab 采纳",
   tutorialContinuationTaskPhone:
     "在末尾输入 `宝玉和黛玉的缘分`，停一下，点灰色文字采纳",
-  tutorialSkillsTitle: "内置技能",
-  tutorialSkillsBody: "在 AI 面板里输入 / 就能挑一个。",
-  tutorialSkillsTask: "选中一段笔记，发送 `/精简` 或 `/翻译`",
+  tutorialSkillsTitle: "技能",
+  tutorialSkillsBody: "在 AI 面板里输入 / 就能挑一个，「扩展」里还能获取更多。",
+  tutorialSkillsTask: "选中一段笔记，发送 `/校对`",
   tutorialDoneTitle: "完成",
   tutorialDoneBody: "开始写你自己的吧。",
   tutorialDoneMemory: `${AI_NAME} 会慢慢记住你的要求和风格，可以在 AI 面板的“项目”里查看。`,

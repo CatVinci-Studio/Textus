@@ -15,22 +15,7 @@ export type SkillCategory = (typeof SKILL_CATEGORIES)[number];
 /** Each mode's own skills, always on; every other skill comes from the
  *  market. Keep in step with the backend's skill files. */
 export const BUILTIN_SKILLS = [
-  { name: "expand", category: "revise", invocation: "userOnly", mode: "write" },
-  {
-    name: "tighten",
-    category: "revise",
-    invocation: "userOnly",
-    mode: "write",
-  },
-  { name: "translate", category: "revise", invocation: "both", mode: "write" },
-  {
-    name: "summarize",
-    category: "format",
-    invocation: "userOnly",
-    mode: "write",
-  },
   { name: "proofread", category: "check", invocation: "both", mode: "review" },
-  { name: "continuity", category: "check", invocation: "both", mode: "review" },
   { name: "theme", category: "create", invocation: "both", mode: "create" },
   { name: "plugin", category: "create", invocation: "both", mode: "create" },
   { name: "skill", category: "create", invocation: "both", mode: "create" },

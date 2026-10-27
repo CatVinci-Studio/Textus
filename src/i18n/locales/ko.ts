@@ -1059,9 +1059,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "끝에 `달밤의 메밀밭은`을 입력하고 잠시 멈춘 뒤 Tab",
   tutorialContinuationTaskPhone:
     "끝에 `달밤의 메밀밭은`을 입력하고 잠시 멈춘 뒤 회색 글자를 탭",
-  tutorialSkillsTitle: "내장 스킬",
-  tutorialSkillsBody: "AI 패널에서 /를 입력해 고르세요.",
-  tutorialSkillsTask: "노트 하나를 선택하고 `/간결하게`나 `/번역` 보내기",
+  tutorialSkillsTitle: "스킬",
+  tutorialSkillsBody:
+    "AI 패널에서 /를 입력해 고르고, 「확장」에서 더 받을 수 있습니다.",
+  tutorialSkillsTask: "노트 하나를 선택하고 `/교정` 보내기",
   tutorialDoneTitle: "완료",
   tutorialDoneBody: "이제 당신의 글을 써 보세요.",
   tutorialDoneMemory: `${AI_NAME}는 당신의 요청과 문체를 차츰 기억하며, AI 패널의 ‘프로젝트’에서 확인할 수 있습니다.`,

@@ -3,35 +3,10 @@ import type { SkillTexts } from "../builtin";
 /** French. "Complétion" is the UI's word for inline completion: not a
  *  label. */
 export default {
-  expand: {
-    label: "Développer",
-    hint: "Étoffe un passage sans ajouter de faits",
-    aliases: ["étoffer", "etoffer"],
-  },
-  tighten: {
-    label: "Resserrer",
-    hint: "Supprime les longueurs et garde tous les faits",
-    aliases: ["raccourcir"],
-  },
-  translate: {
-    label: "Traduire et peaufiner",
-    hint: "Traduit pour que le texte se lise comme s'il avait été écrit dans la langue",
-    aliases: ["traduire"],
-  },
   proofread: {
     label: "Relire et corriger",
     hint: "Vérifie orthographe, ponctuation et nombres selon les normes de votre langue",
     aliases: ["relire", "coquilles"],
-  },
-  continuity: {
-    label: "Vérifier la cohérence",
-    hint: "Repère les contradictions avec la bibliothèque et les autres chapitres",
-    aliases: ["cohérence", "coherence"],
-  },
-  summarize: {
-    label: "Résumer",
-    hint: "Résume fidèlement, à la longueur demandée",
-    aliases: ["résumé", "resume"],
   },
   theme: {
     label: "Créer un thème",

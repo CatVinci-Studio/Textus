@@ -21,19 +21,15 @@ macro_rules! bundled {
 /// The built-in skills, by file stem (which is also each skill's name):
 /// Write's, Review's and Create's, in that order.
 pub(crate) const SKILL_FILES: &[(&str, &str)] = bundled!("skills/";
-    "expand",
-    "tighten",
-    "translate",
-    "summarize",
     "proofread",
-    "continuity",
     "theme",
     "plugin",
     "skill",
 );
 
-/// The skills that were built in until 1.3 and are in the market now: an
-/// older profile gets the ones it had installed from there.
+/// The skills that were built in and are in the market now: an older
+/// profile gets the ones it had installed from there. The first twelve moved
+/// with 1.3.0-beta.1, the rest with beta.3.
 pub(crate) const MOVED_TO_MARKET: &[&str] = &[
     "continue-story",
     "describe",
@@ -47,6 +43,11 @@ pub(crate) const MOVED_TO_MARKET: &[&str] = &[
     "academic-polish",
     "social-post",
     "headline",
+    "expand",
+    "tighten",
+    "translate",
+    "summarize",
+    "continuity",
 ];
 
 /// The reference packs, by file stem (= the name use_skill loads them by).

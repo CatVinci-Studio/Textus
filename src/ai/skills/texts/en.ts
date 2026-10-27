@@ -2,35 +2,10 @@ import type { SkillTexts } from "../builtin";
 
 /** English: the source the other languages translate. */
 export default {
-  expand: {
-    label: "Expand",
-    hint: "Make a passage fuller without adding facts",
-    aliases: ["elaborate"],
-  },
-  tighten: {
-    label: "Tighten",
-    hint: "Cut the wordiness and keep every fact",
-    aliases: ["shorten", "concise"],
-  },
-  translate: {
-    label: "Translate and polish",
-    hint: "Translate so it reads like native writing",
-    aliases: ["translation"],
-  },
   proofread: {
     label: "Proofread",
     hint: "Check spelling, punctuation and numbers against your language's standards",
     aliases: ["typos", "check"],
-  },
-  continuity: {
-    label: "Check continuity",
-    hint: "Find contradictions with the library and other chapters",
-    aliases: ["consistency"],
-  },
-  summarize: {
-    label: "Summarize",
-    hint: "Sum up faithfully, at the length you ask for",
-    aliases: ["summary", "tldr", "abstract"],
   },
   theme: {
     label: "Design a theme",

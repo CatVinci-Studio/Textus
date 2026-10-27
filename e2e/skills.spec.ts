@@ -60,21 +60,17 @@ test.describe("the / picker", () => {
   test("opens on / and on what a Chinese or Japanese IME types for it (／、・), with the mode's skills, grouped and in Chinese", async ({
     page,
   }) => {
-    const input = await openWithPanel(page, "zh", "write");
+    const input = await openWithPanel(page, "zh", "create");
     const menu = page.locator(".composer-picker");
     for (const key of ["/", "／", "、", "・"]) {
       await input.fill(key);
       await expect(menu, key).toBeVisible();
-      // Write's four built-ins and the user's own skill.
-      await expect(menu.getByRole("option"), key).toHaveCount(5);
+      // Create's three built-ins.
+      await expect(menu.getByRole("option"), key).toHaveCount(3);
       await expect(
-        menu.getByRole("group", { name: "修改" }),
+        menu.getByRole("group", { name: "生成" }),
         key,
-      ).toContainText("扩写");
-      await expect(
-        menu.getByRole("group", { name: "我的技能" }),
-        key,
-      ).toContainText("/house-style");
+      ).toContainText("设计主题");
       await expect(menu, key).toContainText("↑↓ 选择");
       await input.fill("");
       await expect(menu, key).toHaveCount(0);
@@ -104,19 +100,23 @@ test.describe("the / picker", () => {
   test("an alias resolves to the skill, and the bubble shows what was typed", async ({
     page,
   }) => {
-    const input = await openWithPanel(page, "zh", "write");
+    const input = await openWithPanel(page, "zh", "review");
     await captureMessages(page);
-    await input.fill("/翻译");
+    await input.fill("/查错");
     await expect(
       page.locator(".composer-picker").getByRole("option").first(),
-    ).toContainText("/translate");
-    await input.fill("/翻译 译成英文");
+    ).toContainText("/proofread");
+    await input.fill("/查错 看看第一段");
     await input.press("Enter");
     // After the cursor block the composer's caller adds.
     await expect
       .poll(async () => (await sent(page))[0] ?? "")
-      .toMatch(/<skill name="translate" typed="\/翻译"><\/skill>\n\n译成英文$/);
-    await expect(page.locator(".agent-panel")).toContainText("/翻译 译成英文");
+      .toMatch(
+        /<skill name="proofread" typed="\/查错"><\/skill>\n\n看看第一段$/,
+      );
+    await expect(page.locator(".agent-panel")).toContainText(
+      "/查错 看看第一段",
+    );
   });
 
   test("each mode offers its own skills", async ({ page }) => {
@@ -203,7 +203,7 @@ test.describe("Settings › Extensions › Skills", () => {
     await expect(proofread.getByRole("checkbox")).toHaveCount(0);
     await expect(
       tab.getByRole("group", { name: "Review" }).locator("[data-skill]"),
-    ).toHaveCount(2);
+    ).toHaveCount(1);
     // The user's skill: in Write; its modes are ticked in a menu, several at
     // once, and the last can't be unticked.
     const own = tab.locator('.settings-skill-item[data-skill="house-style"]');
@@ -236,29 +236,29 @@ test.describe("Settings › Extensions › Skills", () => {
     await openApp(page, { settings: { language: "en" } });
     let panel = await openSettings(page);
     await openSkillsTab(panel);
-    await panel.getByRole("button", { name: "Customize…: Summarize" }).click();
+    await panel.getByRole("button", { name: "Customize…: Proofread" }).click();
     // Settings gives way to the copy, opened as a document.
     await expect(page.locator(".settings-panel")).toHaveCount(0);
     await expect(
       page.locator('[data-active-tab="true"] .ProseMirror'),
-    ).toContainText("summarize");
+    ).toContainText("proofread");
 
     panel = await openSettings(page);
     await openSkillsTab(panel);
     const builtins = panel.getByRole("tabpanel");
-    const row = builtins.locator('[data-skill="summarize"]');
+    const row = builtins.locator('[data-skill="proofread"]');
     await expect(row).toContainText("Customized");
     // The copy shows here only, not again among the user's own skills.
     await expect(panel.locator(".settings-skill-list")).not.toContainText(
-      "/summarize",
+      "/proofread",
     );
-    await row.getByRole("button", { name: "Reset: Summarize" }).click();
+    await row.getByRole("button", { name: "Reset: Proofread" }).click();
     const confirm = page.getByRole("dialog", { name: /Delete your copy/ });
-    await expect(confirm).toContainText("“Summarize”");
+    await expect(confirm).toContainText("“Proofread”");
     await confirm.getByRole("button", { name: "Reset" }).click();
     await expect(row).not.toContainText("Customized");
     await expect(
-      row.getByRole("button", { name: "Customize…: Summarize" }),
+      row.getByRole("button", { name: "Customize…: Proofread" }),
     ).toBeVisible();
     // The tab that showed the deleted copy is gone with it: saving it
     // would have written the copy back.
@@ -266,7 +266,7 @@ test.describe("Settings › Extensions › Skills", () => {
     await expect(page.locator(".settings-panel")).toHaveCount(0);
     await expect(
       page.locator('[data-active-tab="true"] .ProseMirror'),
-    ).not.toContainText("summarize");
+    ).not.toContainText("proofread");
   });
 
   test("a copy older than its built-in says so", async ({ page }) => {
@@ -277,12 +277,12 @@ test.describe("Settings › Extensions › Skills", () => {
           __devSkills: { customized: Set<string>; outdated: Set<string> };
         }
       ).__devSkills;
-      skills.customized.add("translate");
-      skills.outdated.add("translate");
+      skills.customized.add("theme");
+      skills.outdated.add("theme");
     });
     const panel = await openSettings(page);
     await openSkillsTab(panel);
-    const row = panel.getByRole("tabpanel").locator('[data-skill="translate"]');
+    const row = panel.getByRole("tabpanel").locator('[data-skill="theme"]');
     await expect(row.locator(".settings-skill-tag-notice")).toHaveText(
       "Built-in updated",
     );
@@ -371,9 +371,9 @@ test.describe("on a phone", () => {
     await panel.getByRole("button", { name: AI_NAME, exact: true }).tap();
     const builtins = panel.locator(".settings-builtin-skills");
     await builtins.locator("summary").tap();
-    for (const mode of ["Write", "Review", "Create"])
+    for (const mode of ["Review", "Create"])
       await expect(builtins.getByRole("group", { name: mode })).toBeVisible();
-    await expect(builtins.locator('[data-skill="tighten"]')).toContainText(
+    await expect(builtins.locator('[data-skill="proofread"]')).toContainText(
       "Built-in",
     );
     // Nothing spills past the screen's edge.

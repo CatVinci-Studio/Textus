@@ -1117,10 +1117,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "No fim, digite `O que Bentinho esconde é`, faça uma pausa e pressione Tab",
   tutorialContinuationTaskPhone:
     "No fim, digite `O que Bentinho esconde é`, faça uma pausa e toque no texto cinza",
-  tutorialSkillsTitle: "Habilidades integradas",
-  tutorialSkillsBody: "Digite / no painel de IA para escolher uma.",
-  tutorialSkillsTask:
-    "Selecione uma das suas notas e envie `/encurtar` ou `/traduzir`",
+  tutorialSkillsTitle: "Habilidades",
+  tutorialSkillsBody:
+    "Digite / no painel de IA para escolher uma, ou obtenha mais em Extensões.",
+  tutorialSkillsTask: "Selecione uma das suas notas e envie `/revisar`",
   tutorialDoneTitle: "Pronto",
   tutorialDoneBody: "Agora comece a escrever o seu.",
   tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja a aba Projeto no painel de IA.`,

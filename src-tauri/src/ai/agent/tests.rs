@@ -518,31 +518,26 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     assert!(lines[0].starts_with("- house-headline (project): "));
     assert!(lines[1].starts_with("- my-tone (yours): ") && lines[1].ends_with('…'));
     assert!(lines[1].chars().count() < 540, "a long description is cut");
+    // Write has no built-ins: only the user's own.
+    assert_eq!(lines.len(), 2, "{index}");
     // A built-in says when to use it, without the request words in
     // eight languages; the user's own keep their description.
+    let review = skill_index(&ws, AgentMode::Review, "en");
     assert!(
-        lines[2].starts_with("- translate: Use when asked to translate"),
-        "{}",
-        lines[2]
+        review.contains("- proofread: Use when asked to proofread"),
+        "{review}"
     );
     // In another UI a built-in carries that UI's name for it.
     let zh = skill_index(&ws, AgentMode::Review, "zh");
-    assert!(
-        zh.contains("- continuity [/检查前后一致 in their UI]: "),
-        "{zh}"
-    );
-    // Only the mode's skills: Review's built-ins, not Write's - nor the
-    // user's, which are Write's unless they say.
-    assert!(!zh.contains("- house-headline") && !zh.contains("- translate:"));
+    assert!(zh.contains("- proofread [/校对 in their UI]: "), "{zh}");
+    // Only the mode's skills: Review's built-ins, not the user's, which are
+    // Write's unless they say.
+    assert!(!zh.contains("- house-headline"));
     let create = skill_index(&ws, AgentMode::Create, "en");
     for name in ["theme", "plugin", "skill"] {
         assert!(create.contains(&format!("- {name}:")), "{name}");
     }
     assert!(!create.contains("- proofread:"));
-    // /name-only skills aren't offered.
-    for absent in ["tighten", "expand", "summarize", "proofread"] {
-        assert!(!index.contains(&format!("- {absent}:")), "{absent}");
-    }
     // The system prompt carries it, the preference rule and the packs,
     // the same whatever the document.
     let a = build_instructions(&ws, &md("# One"), true, AgentMode::Write, "hi", "en");

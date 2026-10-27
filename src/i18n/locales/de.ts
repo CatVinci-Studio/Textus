@@ -1119,10 +1119,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und drück Tab",
   tutorialContinuationTaskPhone:
     "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und tippe auf den grauen Text",
-  tutorialSkillsTitle: "Integrierte Skills",
-  tutorialSkillsBody: "Tippe / im KI-Bereich, um einen auszuwählen.",
-  tutorialSkillsTask:
-    "Markiere eine deiner Notizen und sende `/kürzen` oder `/übersetzen`",
+  tutorialSkillsTitle: "Skills",
+  tutorialSkillsBody:
+    "Tippe / im KI-Bereich, um einen auszuwählen, oder hol dir weitere unter Erweiterungen.",
+  tutorialSkillsTask: "Markiere eine deiner Notizen und sende `/korrektur`",
   tutorialDoneTitle: "Fertig",
   tutorialDoneBody: "Jetzt schreib dein Eigenes.",
   tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Projekt nach.`,

@@ -1098,10 +1098,10 @@ type /name in a conversation to use one.
     "At the end, type `What really stops Hamlet is`, pause, then press Tab",
   tutorialContinuationTaskPhone:
     "At the end, type `What really stops Hamlet is`, pause, then tap the gray text",
-  tutorialSkillsTitle: "Built-in skills",
-  tutorialSkillsBody: "Type / in the AI panel to pick one.",
-  tutorialSkillsTask:
-    "Select one of your notes, then send `/tighten` or `/translate`",
+  tutorialSkillsTitle: "Skills",
+  tutorialSkillsBody:
+    "Type / in the AI panel to pick one, or get more from Extensions.",
+  tutorialSkillsTask: "Select one of your notes, then send `/proofread`",
   tutorialDoneTitle: "All done",
   tutorialDoneBody: "Now start writing your own.",
   tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see the Project tab in the AI panel.`,

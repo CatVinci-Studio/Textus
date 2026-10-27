@@ -1021,9 +1021,10 @@ export default {
     "在結尾輸入 `石猴之所以能稱王，是因為`，停一下，按 Tab 採用",
   tutorialContinuationTaskPhone:
     "在結尾輸入 `石猴之所以能稱王，是因為`，停一下，點灰色文字採用",
-  tutorialSkillsTitle: "內建技能",
-  tutorialSkillsBody: "在 AI 面板裡輸入 / 就能挑一個。",
-  tutorialSkillsTask: "選取一段筆記，傳送 `/精簡` 或 `/翻譯`",
+  tutorialSkillsTitle: "技能",
+  tutorialSkillsBody:
+    "在 AI 面板裡輸入 / 就能挑一個，「擴充功能」裡還能取得更多。",
+  tutorialSkillsTask: "選取一段筆記，傳送 `/校對`",
   tutorialDoneTitle: "完成",
   tutorialDoneBody: "開始寫你自己的吧。",
   tutorialDoneMemory: `${AI_NAME} 會慢慢記住你的要求和風格，可以在 AI 面板的「專案」裡查看。`,

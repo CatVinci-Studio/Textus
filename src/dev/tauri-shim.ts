@@ -24,46 +24,11 @@ import { webPageCommand } from "./native-web-pages";
 /** The built-in skills as `list_skills` reports them (descriptions abridged). */
 const DEV_BUILTIN_SKILLS: [string, string, string, string, string][] = [
   [
-    "expand",
-    "revise",
-    "userOnly",
-    "write",
-    "Makes a passage fuller without adding facts.",
-  ],
-  [
-    "tighten",
-    "revise",
-    "userOnly",
-    "write",
-    "Cuts a passage down without losing its meaning.",
-  ],
-  [
-    "translate",
-    "revise",
-    "both",
-    "write",
-    "Translates the selection or the document.",
-  ],
-  [
-    "summarize",
-    "format",
-    "userOnly",
-    "write",
-    "Sums up the document or a passage.",
-  ],
-  [
     "proofread",
     "check",
     "both",
     "review",
     "Fixes typos, grammar and punctuation.",
-  ],
-  [
-    "continuity",
-    "check",
-    "both",
-    "review",
-    "Checks names, facts and timelines against the library.",
   ],
   [
     "theme",
@@ -446,7 +411,7 @@ export function installDevTauriShim(): void {
     return null;
   }
 
-  // Skills in memory: the 9 built-ins and one of the user's own.
+  // Skills in memory: the 4 built-ins and one of the user's own.
   // `window.__devSkills` exposes the state.
   const skills = {
     ownModes: ["write"] as string[],

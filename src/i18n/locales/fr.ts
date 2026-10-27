@@ -1150,10 +1150,10 @@ utiliser une.
     "À la fin, tapez `Ce que Hugo veut montrer, c'est`, faites une pause, puis appuyez sur Tab",
   tutorialContinuationTaskPhone:
     "À la fin, tapez `Ce que Hugo veut montrer, c'est`, faites une pause, puis touchez le texte gris",
-  tutorialSkillsTitle: "Compétences intégrées",
-  tutorialSkillsBody: "Tapez / dans le panneau IA pour en choisir une.",
-  tutorialSkillsTask:
-    "Sélectionnez une de vos notes, puis envoyez `/raccourcir` ou `/traduire`",
+  tutorialSkillsTitle: "Compétences",
+  tutorialSkillsBody:
+    "Tapez / dans le panneau IA pour en choisir une, ou trouvez-en d’autres dans Extensions.",
+  tutorialSkillsTask: "Sélectionnez une de vos notes, puis envoyez `/relire`",
   tutorialDoneTitle: "Terminé",
   tutorialDoneBody: "À vous d'écrire, maintenant.",
   tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez l'onglet Projet du panneau IA.`,

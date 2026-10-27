@@ -138,11 +138,12 @@ fn use_skill_expands_skills_and_loads_packs() {
     assert!(
         proofread.contains("### contract") && proofread.contains("### standards-ja#typography")
     );
-    assert!(call("tighten").contains("only when the user types /tighten"));
-    assert!(
-        call("describe").starts_with("No skill named `describe`"),
-        "in the market, not built in"
-    );
+    for moved in ["describe", "tighten"] {
+        assert!(
+            call(moved).starts_with(&format!("No skill named `{moved}`")),
+            "{moved} is in the market, not built in"
+        );
+    }
     let fr = call("standards-fr#dialogue");
     assert!(fr.starts_with("Reference `standards-fr#dialogue`") && fr.contains("guillemets"));
     let missing = call("nope");

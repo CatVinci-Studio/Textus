@@ -1067,9 +1067,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "末尾に `猫の目から見ると、人間は` と入力し、手を止めて Tab を押す",
   tutorialContinuationTaskPhone:
     "末尾に `猫の目から見ると、人間は` と入力し、手を止めて灰色の文字をタップ",
-  tutorialSkillsTitle: "組み込みスキル",
-  tutorialSkillsBody: "AIパネルで / を入力すると選べます。",
-  tutorialSkillsTask: "ノートを一つ選択し、`/短く` か `/翻訳` を送る",
+  tutorialSkillsTitle: "スキル",
+  tutorialSkillsBody:
+    "AIパネルで / を入力すると選べ、「拡張機能」でさらに入手できます。",
+  tutorialSkillsTask: "ノートを一つ選択し、`/校正` を送る",
   tutorialDoneTitle: "完了",
   tutorialDoneBody: "さあ、あなた自身の文章を書きましょう。",
   tutorialDoneMemory: `${AI_NAME} はあなたの求めることや文体を少しずつ覚えていき、AIパネルの「プロジェクト」で確かめられます。`,
