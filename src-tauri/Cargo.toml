@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.2.3"
+version = "1.2.4"
 description = "Textus Markdown Editor"
 authors = ["CatVinci Studio"]
 edition = "2021"
