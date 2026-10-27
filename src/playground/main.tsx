@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { detectLang, loadLocale, localeOf } from "../i18n/strings";
-import { normaliseSettings } from "../settings/SettingsContext";
+import { normaliseSettings } from "../prefs/SettingsContext";
 import { installScrollReveal } from "../ui/scroll-reveal";
 import { installPolyfills } from "../utils/polyfills";
 import { installNativeStandIn } from "./native-stand-in";

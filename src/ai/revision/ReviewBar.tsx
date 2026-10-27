@@ -3,7 +3,7 @@ import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick
 import {
   REVISION_DISPLAYS,
   type RevisionDisplay,
-} from "../../settings/SettingsContext";
+} from "../../prefs/SettingsContext";
 import { AssistantIcon, ChevronIcon } from "../../ui/icons";
 import { usePresenceProps } from "../../ui/usePresence";
 import { useMarginAvailable } from "../margin/margin-room";

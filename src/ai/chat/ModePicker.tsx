@@ -1,6 +1,6 @@
 import { Fragment, useId, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
-import type { AgentMode } from "../../settings/SettingsContext";
+import type { AgentMode } from "../../prefs/SettingsContext";
 import { useMergedRef, usePresence } from "../../ui/usePresence";
 import { useFloatingList } from "../../ui/useFloatingList";
 import { useChatModels, type ChatModels } from "./chat-models";

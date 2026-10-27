@@ -4,7 +4,7 @@ import {
   type HeadingAction,
   type ShortcutAction,
   type Shortcuts,
-} from "../SettingsContext";
+} from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
 import {

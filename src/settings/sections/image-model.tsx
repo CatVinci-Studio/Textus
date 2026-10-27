@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings, TextKey } from "../../i18n/strings";
 import { auth } from "../../platform/ipc";
 import { Select } from "../../ui/Select";

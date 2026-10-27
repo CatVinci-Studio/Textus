@@ -9,7 +9,7 @@ import {
   type SkillCategory,
 } from "../skills/builtin";
 import type { AgentSkill } from "../types";
-import type { AgentMode } from "../../settings/settings-types";
+import type { AgentMode } from "../../prefs/settings-types";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { CJK_SCRIPT } from "../../utils/cjk";
 

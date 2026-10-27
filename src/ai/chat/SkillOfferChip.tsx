@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { ai } from "../../platform/ipc";
 import type { SkillOffer } from "../../platform/bindings/ai-memory";
-import { useSettings } from "../../settings/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { errorText } from "../../utils/error-text";
-import type { AgentMode } from "../../settings/settings-types";
+import type { AgentMode } from "../../prefs/settings-types";
 import { ModeChoice } from "./ModeChoice";
 
 /** The call an offer stands in the conversation as. */

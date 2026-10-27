@@ -9,7 +9,7 @@ vi.mock("../platform/capabilities", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   isIOSApp: true,
 }));
-vi.mock("../settings/SettingsContext", () => ({
+vi.mock("../prefs/SettingsContext", () => ({
   useSettings: () => ({ t: { cancel: "Cancel" } }),
 }));
 beforeAll(() => {

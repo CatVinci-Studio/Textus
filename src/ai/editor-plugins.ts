@@ -17,7 +17,7 @@ import {
 import { ownRevisionPlugin } from "./margin/own-revision-plugin";
 import { resolveStrings } from "../i18n/strings";
 import { sendTourSignal, type TourAi } from "../utils/events";
-import type { RevisionDisplay, Settings } from "../settings/SettingsContext";
+import type { RevisionDisplay, Settings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../settings/textus-ai";
 
 export interface PendingEditCallbacks {

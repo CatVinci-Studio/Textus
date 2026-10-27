@@ -4,7 +4,7 @@ import { links } from "../platform/ipc";
 import { isMacPlatform } from "../platform/os";
 import { ProviderListPanel } from "../settings/sections/providers";
 import { TextusAiOffNote } from "../ai/TextusAiSwitch";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
 import { Select } from "../ui/Select";
 import { practiceNotes } from "./practice-notes";

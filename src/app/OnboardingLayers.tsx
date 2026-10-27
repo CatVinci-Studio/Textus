@@ -3,7 +3,7 @@ import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { LanguageWelcome } from "../onboarding/LanguageWelcome";
 import type { Tutorial } from "../onboarding/useTutorial";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import { formatCombo } from "../utils/shortcuts";
 import { Presence } from "../ui/usePresence";
 import { usePhoneLayout } from "../ui/usePhoneLayout";

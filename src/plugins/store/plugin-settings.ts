@@ -1,10 +1,10 @@
 import { fs } from "../../platform/ipc";
-import { isRecord } from "../../settings/settings-sync";
+import { isRecord } from "../../prefs/settings-sync";
 import {
   loadSettings,
   persist,
   subscribeRemote,
-} from "../../settings/settings-store";
+} from "../../prefs/settings-store";
 
 /**
  * A plugin's settings, kept under `plugins.<id>` in settings.json and, for a

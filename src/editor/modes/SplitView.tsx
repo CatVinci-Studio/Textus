@@ -3,7 +3,7 @@ import { renderDocumentHtml } from "../markdown/render-html";
 import { useKatexHtml } from "../math/useKatexHtml";
 import { resolveImageSrc } from "../images/image-plugin";
 import { diagramRenderer } from "../diagram-engine";
-import { useSettings } from "../../settings/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { SourceTextarea } from "./SourceTextarea";
 import "./SplitView.css";
 

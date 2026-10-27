@@ -6,7 +6,7 @@ import type { EditorChat } from "./useEditorChat";
 import type { EditorPopups } from "./useEditorPopups";
 import { useRevisionAnnouncements } from "../ai/revision/useRevisionAnnouncements";
 import { useReviewNotes } from "../ai/margin/useReviewNotes";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 

@@ -11,7 +11,7 @@ import { windowIpc } from "../../../platform/ipc";
 import { listenToThisWindow, unlistenAll } from "../../../platform/events";
 import { selectAllInFocus } from "../../../ui/select-all";
 import { useLatest } from "../../../utils/hooks/useLatest";
-import type { Settings } from "../../../settings/SettingsContext";
+import type { Settings } from "../../../prefs/SettingsContext";
 
 /**
  * The chat window's side of a detach: the handoffs it takes on, the editor's

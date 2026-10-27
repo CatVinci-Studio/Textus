@@ -1,4 +1,4 @@
-import type { Settings } from "./SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 
 /** What Textus AI may do now: the master switch over each feature's own
  *  setting. Always read this, never a feature's setting alone. `inTour`

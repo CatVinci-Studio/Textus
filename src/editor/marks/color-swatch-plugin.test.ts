@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Schema, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import { EditorState } from "@milkdown/kit/prose/state";
 import type { DecorationSet } from "@milkdown/kit/prose/view";
-import type { ColorSwatchMode } from "../../settings/SettingsContext";
+import type { ColorSwatchMode } from "../../prefs/SettingsContext";
 import { colorSwatchPlugin } from "./color-swatch-plugin";
 
 const schema = new Schema({

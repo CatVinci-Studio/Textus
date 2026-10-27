@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import { MilkdownProvider } from "@milkdown/react";
-import { useSettings, type AgentMode } from "../settings/SettingsContext";
+import { useSettings, type AgentMode } from "../prefs/SettingsContext";
 import { KatexFirst } from "../editor/math/KatexFirst";
 import { isIOSApp } from "../platform/capabilities";
 import { isMacPlatform } from "../platform/os";

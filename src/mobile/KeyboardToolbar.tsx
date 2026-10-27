@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../settings/textus-ai";
 import type { TableAction } from "../editor/editor-menu";
 import {

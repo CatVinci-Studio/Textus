@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { parseHeadings } from "./outline-parse";
 import { ChevronIcon } from "../ui/icons";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { scrollBehavior } from "../ui/motion";
 import { unfoldElement } from "../editor/html/details-fold";
 import { useTreeKeys } from "../ui/useTreeKeys";

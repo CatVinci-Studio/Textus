@@ -15,7 +15,7 @@ import { useTabRemoval } from "./close-flow";
 import { usePracticeTab } from "./onboarding-wiring";
 import { usePluginWindow } from "../plugins/usePluginWindow";
 import type { WindowShell } from "./useWindowShell";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /**

@@ -24,7 +24,7 @@ import { setDocumentDrop } from "../ui/document-drop";
 import { fileDropOnDocuments } from "./split/split-drop";
 import type { WindowShell } from "./useWindowShell";
 import type { WindowDocuments } from "./useWindowDocuments";
-import type { Settings, useSettings } from "../settings/SettingsContext";
+import type { Settings, useSettings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /** Everything that reaches a window from outside its own controls. */

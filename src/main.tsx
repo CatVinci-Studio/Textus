@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./app/App";
 import { lazyComponent } from "./lazy/lazy-component";
-import { loadSettings, SettingsProvider } from "./settings/SettingsContext";
+import { loadSettings, SettingsProvider } from "./prefs/SettingsContext";
 import { AppearanceSync } from "./theme/apply-appearance";
 import { loadLocale } from "./i18n/strings";
 import { lazyModule, startWarming } from "./lazy/lazy-module";

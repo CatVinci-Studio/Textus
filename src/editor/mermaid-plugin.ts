@@ -19,7 +19,7 @@ import {
   redrawPendingDiagrams,
   registerPendingDrawer,
 } from "./pending-diagram";
-import type { DiagramEngine } from "../settings/SettingsContext";
+import type { DiagramEngine } from "../prefs/SettingsContext";
 
 const mermaidKey = new PluginKey("mermaid-preview");
 const DEBOUNCE_MS = 500;

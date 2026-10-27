@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { errorText } from "../../utils/error-text";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings, TextKey } from "../../i18n/strings";
 import { skillText } from "../../ai/skills/texts";
 import { BUILTIN_SKILLS } from "../../ai/skills/builtin";
 import { listFromWorkspace } from "../../ai/chat/skill-picker";
-import { AGENT_MODES, type AgentMode } from "../settings-types";
+import { AGENT_MODES, type AgentMode } from "../../prefs/settings-types";
 import { ModeChoice } from "../../ai/chat/ModeChoice";
 import type { AgentSkill } from "../../ai/types";
 import { ai, type SkillListItem } from "../../platform/ipc";

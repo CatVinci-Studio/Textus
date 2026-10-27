@@ -24,7 +24,7 @@ import { isRefusal } from "../ai/revision/proposal-status";
 import { isProposalTool } from "../ai/chat/proposal";
 import type { EditProposal } from "../ai/types";
 import type { StreamEvent } from "../platform/ipc";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import { prefersReducedMotion } from "../ui/motion";
 import { storeImage } from "../editor/images/image-plugin";
 import { showMessage } from "../ui/app-dialog";

@@ -9,7 +9,7 @@ import type { AgentWorkspaceInfo } from "../../../platform/ipc";
 const t = resolveStrings("en");
 let answer: (info: AgentWorkspaceInfo | null) => void = () => {};
 
-vi.mock("../../../settings/SettingsContext", () => ({
+vi.mock("../../../prefs/SettingsContext", () => ({
   useSettings: () => ({
     t,
     settings: { agentWorkspaceRoot: "", aiProvider: "custom", agentModels: {} },

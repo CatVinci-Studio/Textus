@@ -15,7 +15,7 @@ import {
 import { flushPendingWrites } from "../../storage/pending-writes";
 import { checkChannel, selfUpdateAllowed } from "../../platform/distribution";
 import { canAutoUpdate } from "../../platform/capabilities";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { Select } from "../../ui/Select";
 import { SettingRow } from "./controls";
 

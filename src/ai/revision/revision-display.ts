@@ -1,5 +1,5 @@
 import type { Strings } from "../../i18n/strings";
-import type { RevisionDisplay } from "../../settings/SettingsContext";
+import type { RevisionDisplay } from "../../prefs/SettingsContext";
 import type { EditProposal } from "../types";
 
 /** A revision display's name, for the settings list and the review bar's

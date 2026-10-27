@@ -18,7 +18,7 @@ import {
 import { drawnPicturesByLanguage, markDrawnPictures } from "./drawn-blocks";
 import { finishExportPage } from "./export-step";
 import { appearanceIsDark } from "../editor/diagram-engine";
-import type { DiagramEngine } from "../settings/SettingsContext";
+import type { DiagramEngine } from "../prefs/SettingsContext";
 import {
   MAC_PAGE,
   WINDOWS_PAGE,

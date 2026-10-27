@@ -6,7 +6,7 @@ import { PluginErrors } from "./PluginErrors";
 import { PluginData } from "./PluginData";
 import { showConfirm } from "../../ui/app-dialog";
 import { links } from "../../platform/ipc";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import {
   pluginName,

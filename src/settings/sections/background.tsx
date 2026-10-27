@@ -6,7 +6,7 @@ import {
   type BackgroundStatus,
 } from "../../platform/ipc";
 import { listenToThisWindow, unlistenAll } from "../../platform/events";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { ToggleRow } from "./controls";
 
 /** Rust's view of the tray: asked once, then kept current by the event it

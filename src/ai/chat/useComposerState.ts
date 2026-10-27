@@ -10,7 +10,7 @@ import type { ChatAttachment, ThinkingLevel } from "../types";
 import { ai } from "../../platform/ipc";
 import { errorText } from "../../utils/error-text";
 import { useActiveProvider, useWebSearchStatus } from "../provider-catalog";
-import type { AgentMode } from "../../settings/SettingsContext";
+import type { AgentMode } from "../../prefs/SettingsContext";
 import { initialMode, rememberMode } from "./last-mode";
 import { deepThinkingOn, useCanThinkDeeper } from "./deep-thinking";
 import { useLatest } from "../../utils/hooks/useLatest";

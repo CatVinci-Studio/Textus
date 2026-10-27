@@ -4,7 +4,7 @@ import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import type { Settings } from "../../settings/SettingsContext";
+import type { Settings } from "../../prefs/SettingsContext";
 import { createTestEditor } from "../../document-view/editor-test-harness";
 import { convertRunClosedBeforeCaret } from "./md-span-autopair-plugin";
 import { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure";

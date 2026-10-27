@@ -10,7 +10,7 @@ import {
   fileIconFor,
 } from "../ui/icons";
 import { fs } from "../platform/ipc";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { basename, isInside, parentDir } from "../utils/path";
 import { isIOSApp } from "../platform/capabilities";
 import { iosFiles } from "../platform/ios-files";

@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { useSettings } from "../../settings/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { themesInReply, type ReplyTheme } from "../../theme/chat-theme";
 import { saveUserTheme, withUserTheme } from "../../theme/theme-import";
 import { showMessage } from "../../ui/app-dialog";

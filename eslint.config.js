@@ -105,9 +105,15 @@ export default tseslint.config(
     rules: above([...SHELL, ...FEATURES, "ui"], { tauri: true }),
   },
   {
+    // The settings model: what every layer above reads.
+    files: ["src/prefs/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([...SHELL, ...FEATURES, "ui"]),
+  },
+  {
     files: ["src/ui/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
-    rules: above([...SHELL, ...FEATURES.filter((f) => f !== "settings")]),
+    rules: above([...SHELL, ...FEATURES]),
   },
   {
     files: ["src/editor/**/*.{ts,tsx}"],

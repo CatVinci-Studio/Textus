@@ -9,7 +9,7 @@ import {
   redrawBlocks,
   touchedBlocks,
 } from "../changed-ranges";
-import type { ColorSwatchMode } from "../../settings/SettingsContext";
+import type { ColorSwatchMode } from "../../prefs/SettingsContext";
 import { commentRanges } from "../code/code-comments";
 import { colorOfCode, findColorCodes, OPAQUE } from "./color-codes";
 import {

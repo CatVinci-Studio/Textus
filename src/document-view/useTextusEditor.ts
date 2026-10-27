@@ -11,7 +11,7 @@ import { effectiveRevisionDisplay } from "../ai/revision/revision-display";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { useLatest } from "../utils/hooks/useLatest";
 import type { ReviewNote } from "../ai/margin/review-notes-plugin";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import { configureEditorRoot } from "../editor/editor-extensions";

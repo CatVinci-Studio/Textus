@@ -3,7 +3,7 @@ import type { Strings } from "../../i18n/strings";
 import { ai, plugins as pluginsIpc } from "../../platform/ipc";
 import type { CatalogState, SkillEntry } from "../../plugins/store/catalog";
 import { errorText } from "../../utils/error-text";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import type { TextKey } from "../../i18n/strings";
 
 /** The error the backend gives for a skill of that name the user already has. */

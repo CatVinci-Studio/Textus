@@ -124,7 +124,7 @@ import { createPlaceholderPlugin } from "./placeholder-plugin";
 import { findReplacePlugin } from "./find/find-replace-plugin";
 import { readOnlyPlugin } from "./read-only-plugin";
 import { resolveStrings } from "../i18n/strings";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 
 /** Where the editor mounts and what it opens with, plus the DOM details the
  *  stylesheets rely on. `label` is read on every update, so a language

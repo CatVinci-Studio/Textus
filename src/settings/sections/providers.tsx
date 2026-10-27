@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import type { Strings } from "../../i18n/strings";
-import type { AiProvider } from "../SettingsContext";
-import { useSettings } from "../SettingsContext";
+import type { AiProvider } from "../../prefs/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { useProviderCatalog } from "../../ai/provider-catalog";
 import { ChevronIcon } from "../../ui/icons";

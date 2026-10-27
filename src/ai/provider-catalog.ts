@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ai, type WebSearchStatus } from "../platform/ipc";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 
 /**
  * Structural facts about each AI provider, fetched from the backend catalog

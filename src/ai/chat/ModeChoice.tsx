@@ -1,5 +1,5 @@
 import type { Strings, TextKey } from "../../i18n/strings";
-import { AGENT_MODES, type AgentMode } from "../../settings/settings-types";
+import { AGENT_MODES, type AgentMode } from "../../prefs/settings-types";
 
 const MODE_LABEL: Record<AgentMode, TextKey> = {
   write: "agentModeWrite",

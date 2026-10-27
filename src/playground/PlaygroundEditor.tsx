@@ -12,7 +12,7 @@ import { useEditorRunner } from "../editor/useEditorRunner";
 import { useModeSwitchCaret } from "../editor/modes/useModeSwitchCaret";
 import { KatexFirst } from "../editor/math/KatexFirst";
 import { resolveStrings } from "../i18n/strings";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import { useLatest } from "../utils/hooks/useLatest";
 import { normalizeMathDelimiters } from "../utils/markdown-math";
 import { createImageNoticePlugin } from "./image-notice-plugin";

@@ -25,8 +25,10 @@ type-only import may cross, since it leaves nothing behind at runtime.
    playground/         the browser playground: the editor core in a web page
    document-view/      the document on screen: MilkdownEditor + its AI, assembled
 4  ai/  editor/  export/  sidebar/  mobile/  onboarding/  document/  clipboard/
-   settings/  theme/   features (editor is below ai: ai builds on it)
+   settings/  theme/   features (editor is below ai: ai builds on it);
+                       settings/ is the Settings window
 3  ui/                 shared widgets: dialogs, Select, icons, sheets, motion
+   prefs/              the settings model: SettingsProvider, useSettings, types
 2  storage/            persisted state: settings file, ui-state, history lists
 1  platform/  i18n/  utils/   the backend bridge, OS facts, strings, pure helpers
 ```

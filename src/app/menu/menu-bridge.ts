@@ -20,7 +20,7 @@ import {
 } from "../../utils/events";
 import type { DocTab, HelpDoc } from "../../document/doc-tabs";
 import type { Strings } from "../../i18n/strings";
-import type { DiagramEngine, Shortcuts } from "../../settings/SettingsContext";
+import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
 import { closeSplit, splitEditor } from "../split/split-layout";
 import { openCommandPalette } from "../command-palette";
 

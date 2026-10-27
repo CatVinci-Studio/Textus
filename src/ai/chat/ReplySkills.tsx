@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ai } from "../../platform/ipc";
-import { useSettings } from "../../settings/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { errorText } from "../../utils/error-text";
 import { skillsInReply, type ReplySkill } from "./chat-skill";
 import { ModeChoice } from "./ModeChoice";

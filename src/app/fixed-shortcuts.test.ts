@@ -8,7 +8,7 @@ import { resolveStrings, type Strings } from "../i18n/strings";
 import {
   defaultShortcuts,
   type ShortcutAction,
-} from "../settings/SettingsContext";
+} from "../prefs/SettingsContext";
 import { isBindableCombo, isReservedCombo } from "../utils/shortcuts";
 import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
 import {

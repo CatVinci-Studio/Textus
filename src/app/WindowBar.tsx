@@ -1,5 +1,5 @@
 import { Fragment, useSyncExternalStore } from "react";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./menu/app-menu-model";
 import { AppMenuButton } from "./WindowControls";

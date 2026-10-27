@@ -1,4 +1,4 @@
-import type { AgentMode } from "../../settings/settings-types";
+import type { AgentMode } from "../../prefs/settings-types";
 
 /** The built-in skills as the frontend needs them. The backend's list decides
  *  which exist; this one sets Settings' order and is the fallback. */

@@ -11,7 +11,7 @@ import {
 } from "../../platform/capabilities";
 import { fs } from "../../platform/ipc";
 import { isScopedUrl } from "../../platform/ios-files";
-import type { Settings } from "../../settings/SettingsContext";
+import type { Settings } from "../../prefs/SettingsContext";
 import { showMessage } from "../../ui/app-dialog";
 import { errorText } from "../../utils/error-text";
 import { basename, dirname, isInside } from "../../utils/path";

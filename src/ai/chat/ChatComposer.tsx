@@ -17,7 +17,7 @@ import {
 } from "./skill-picker";
 import { errorText } from "../../utils/error-text";
 import { basename } from "../../utils/path";
-import { AGENT_MODES, type AgentMode } from "../../settings/SettingsContext";
+import { AGENT_MODES, type AgentMode } from "../../prefs/SettingsContext";
 import {
   CloseIcon,
   GenericFileIcon,

@@ -1,6 +1,6 @@
 import { Editor, defaultValueCtx, rootCtx } from "@milkdown/kit/core";
 import { withEditorExtensions } from "./editor-extensions";
-import { loadSettings, type Settings } from "../settings/SettingsContext";
+import { loadSettings, type Settings } from "../prefs/SettingsContext";
 
 // Test-only: the full editor chain MilkdownEditor builds, mounted in jsdom
 // with no-op callbacks, for tests that need real parsing and serializing.

@@ -19,7 +19,7 @@ const mock = vi.hoisted(() => ({
     userThemes: [{ id: "user-test", name: "Test", hasDark: false }],
   },
 }));
-vi.mock("../SettingsContext", () => ({
+vi.mock("../../prefs/SettingsContext", () => ({
   useSettings: () => mock,
   THEME_MODES: ["system", "light", "dark"],
 }));

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { SettingRow, ToggleRow } from "./controls";
 import { showConfirm } from "../../ui/app-dialog";

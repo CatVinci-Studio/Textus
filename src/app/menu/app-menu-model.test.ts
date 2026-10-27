@@ -3,10 +3,7 @@
 // formatCombo reads navigator, which Node 20 doesn't define globally.
 
 import { describe, expect, it } from "vitest";
-import {
-  defaultShortcuts,
-  type Shortcuts,
-} from "../../settings/SettingsContext";
+import { defaultShortcuts, type Shortcuts } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { APP_NAME, resolveStrings } from "../../i18n/strings";
 import { formatCombo } from "../../utils/shortcuts";

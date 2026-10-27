@@ -19,7 +19,7 @@ vi.mock("../../platform/capabilities", () => ({ isIOSApp: true }));
 vi.mock("@tauri-apps/api/path", () => ({
   documentDir: () => Promise.resolve(DOCS),
 }));
-vi.mock("../../settings/SettingsContext", () => ({
+vi.mock("../../prefs/SettingsContext", () => ({
   loadSettings: () => ({ enableChatHistory: true }),
 }));
 vi.mock("../../platform/ipc", () => ({

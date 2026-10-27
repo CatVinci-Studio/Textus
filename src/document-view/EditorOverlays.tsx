@@ -9,7 +9,7 @@ import { InsertTableDialog } from "../editor/tables/InsertTableDialog";
 import { ImageNameDialog } from "../editor/images/ImageNameDialog";
 import { FindReplaceBar } from "../editor/find/FindReplaceBar";
 import { Presence, PresenceDiv } from "../ui/usePresence";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /** What opens over one tab's editor: the find bar, its menu, the AI notice,

@@ -9,7 +9,7 @@ import { usePicturesState } from "../revision/usePicturesState";
 import type { EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import { hasCitations } from "../citations";
-import { useSettings } from "../../settings/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { diffLines } from "./line-diff";
 import type { PendingSentence } from "../revision/pending-edit-plugin";
 import {

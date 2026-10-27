@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { showConfirm, showMessage } from "../../ui/app-dialog";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { errorText } from "../../utils/error-text";
 import type { Strings } from "../../i18n/strings";
 import { pluginName, pluginText, pluginsSnapshot } from "../../plugins/manager";

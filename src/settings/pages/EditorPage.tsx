@@ -7,7 +7,7 @@ import {
   type UiTextScale,
   type ColorSwatchMode,
   type DiagramEngine,
-} from "../SettingsContext";
+} from "../../prefs/SettingsContext";
 import { SettingRow, ToggleRow } from "../sections/controls";
 import { ThemeSection } from "../sections/theme";
 import { ImageStorageSection } from "../sections/images";

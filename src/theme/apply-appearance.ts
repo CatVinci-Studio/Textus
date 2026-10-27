@@ -11,7 +11,7 @@ import {
   useSettings,
   type Settings,
   type ThemeMode,
-} from "../settings/SettingsContext";
+} from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
 import { applyThemeChrome, clearThemeChrome } from "./theme-chrome";
 import { adaptTyporaCss } from "./typora-compat";

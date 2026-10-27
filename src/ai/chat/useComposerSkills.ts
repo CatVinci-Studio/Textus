@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { AgentSkill } from "../types";
 import { ai, type SkillListItem } from "../../platform/ipc";
 import type { PickerLabels } from "./ComposerPicker";
-import type { AgentMode } from "../../settings/settings-types";
+import type { AgentMode } from "../../prefs/settings-types";
 import {
   SKILL_TRIGGER,
   listFromWorkspace,

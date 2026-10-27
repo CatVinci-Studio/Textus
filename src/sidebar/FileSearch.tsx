@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import { fs } from "../platform/ipc";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { SearchIcon, fileIconFor } from "../ui/icons";
 import { Select } from "../ui/Select";
 import { localeOf } from "../i18n/langs";

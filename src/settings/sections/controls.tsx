@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { resolveStrings, type Strings } from "../../i18n/strings";
 import { ChevronIcon } from "../../ui/icons";
 import { InfoTip } from "../../ui/InfoTip";

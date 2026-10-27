@@ -1,4 +1,4 @@
-import type { CompletionTone } from "../../settings/SettingsContext";
+import type { CompletionTone } from "../../prefs/SettingsContext";
 
 /// English directives whatever the UI language, like the backend prompts.
 const TONE_DIRECTIVES: Record<CompletionTone, string | null> = {

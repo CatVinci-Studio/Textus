@@ -10,7 +10,7 @@ import {
   type DocTab,
   type HelpDoc,
 } from "./doc-tabs";
-import type { NewDocumentMode } from "../settings/SettingsContext";
+import type { NewDocumentMode } from "../prefs/SettingsContext";
 import { setTabJump } from "../editor/tab-jump";
 import { lastCaret } from "./last-carets";
 import { isWordDocument } from "./word-import";

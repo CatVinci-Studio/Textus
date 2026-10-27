@@ -1,7 +1,7 @@
 import { currentStrings } from "../i18n/current";
 import type { Strings } from "../i18n/strings";
-import type { Settings } from "../settings/SettingsContext";
-import { loadSettings } from "../settings/settings-store";
+import type { Settings } from "../prefs/SettingsContext";
+import { loadSettings } from "../prefs/settings-store";
 import { showQuickPick, type QuickPickItem } from "../ui/quick-pick";
 import { commands, commandShortcut, runCommand } from "./commands";
 import { runMenuAction } from "./menu/app-menu-actions";

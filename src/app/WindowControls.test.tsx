@@ -47,7 +47,7 @@ vi.mock("@tauri-apps/api/window", () => ({
 
 // The real string table, in Chinese: a hand-written stub would pass whether
 // or not the menu follows the chosen language.
-vi.mock("../settings/SettingsContext", async () => {
+vi.mock("../prefs/SettingsContext", async () => {
   const { resolveStrings } = await import("../i18n/strings");
   return {
     useSettings: () => ({

@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import { APP_NAME, resolveStrings, type Lang } from "../i18n/strings";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import { SourceTextarea } from "../editor/modes/SourceTextarea";
 import {
   applyTextareaCaret,

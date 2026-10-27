@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { UserThemeMeta } from "../settings/SettingsContext";
+import type { UserThemeMeta } from "../prefs/SettingsContext";
 import {
   galleryStatus,
   installedCopy,

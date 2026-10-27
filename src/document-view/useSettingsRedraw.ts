@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 
 /**
  * Decorations draw only on a transaction, so settings they read (language,

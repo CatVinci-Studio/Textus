@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useSettings } from "../../../settings/SettingsContext";
+import { useSettings } from "../../../prefs/SettingsContext";
 import type { EditProposal } from "../../types";
 import { ChatBody } from "../ChatBody";
 import { chatLabels } from "../chat-labels";

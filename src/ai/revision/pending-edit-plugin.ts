@@ -4,7 +4,7 @@ import { DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { FoldAttention } from "../../editor/html/details-fold";
 import { onPictureSettled } from "./generated-images";
-import type { RevisionDisplay } from "../../settings/SettingsContext";
+import type { RevisionDisplay } from "../../prefs/SettingsContext";
 import type {
   AppliedEdit,
   HotSentence,

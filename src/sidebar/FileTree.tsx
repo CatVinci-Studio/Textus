@@ -17,7 +17,7 @@ import { fs, windowIpc } from "../platform/ipc";
 
 const openInNewWindow = (path: string) =>
   void windowIpc.openPathInNewWindow(path);
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { basename, parentDir } from "../utils/path";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { ContextMenu, type ContextMenuItem } from "../ui/ContextMenu";

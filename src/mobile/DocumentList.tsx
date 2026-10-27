@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { localeOf, plural } from "../i18n/strings";
 import { ContextMenu, type ContextMenuItem } from "../ui/ContextMenu";
 import { showConfirm, showMessage, showPrompt } from "../ui/app-dialog";

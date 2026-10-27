@@ -11,7 +11,7 @@ import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import { tabReadOnly } from "../document/read-only";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
-import type { AgentMode } from "../settings/SettingsContext";
+import type { AgentMode } from "../prefs/SettingsContext";
 import {
   PluginListPane,
   PluginTabPane,

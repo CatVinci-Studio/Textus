@@ -9,7 +9,7 @@ import { CloseConfirmBar, type CloseConfirmLabels } from "../CloseConfirm";
 import { useQuickAskReveal } from "./useQuickAskReveal";
 import { useQuickAskDock } from "./quick-ask-dock";
 import { CloseIcon, DetachIcon, PlusIcon } from "../../../ui/icons";
-import type { AgentMode } from "../../../settings/SettingsContext";
+import type { AgentMode } from "../../../prefs/SettingsContext";
 import "../AgentTurnView.css";
 import "../inline-chat.css";
 import { Tooltip } from "../../../ui/Tooltip";

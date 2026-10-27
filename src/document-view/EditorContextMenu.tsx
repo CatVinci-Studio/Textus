@@ -7,7 +7,7 @@ import {
 } from "../editor/editor-menu";
 import { ContextMenu } from "../ui/ContextMenu";
 import { Presence } from "../ui/usePresence";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../settings/textus-ai";
 import type { Strings } from "../i18n/strings";
 import type { ImageLocation } from "../editor/images/missing-image";

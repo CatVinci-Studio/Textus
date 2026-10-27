@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ai } from "../../platform/ipc";
-import { useSettings } from "../../settings/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import {
   LOCAL_KEYS,
   readLocal,

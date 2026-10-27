@@ -5,7 +5,7 @@ import { SettingsLayer } from "./SettingsLayer";
 import { DocumentList } from "../mobile/DocumentList";
 import { KeyboardToolbar } from "../mobile/KeyboardToolbar";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { formatCombo } from "../utils/shortcuts";
 import { fixedShortcutGroups } from "./fixed-shortcuts";
 import { commands } from "./commands";

@@ -7,7 +7,7 @@ import { EditorMarginLayer } from "./EditorMarginLayer";
 import { EditorOverlays } from "./EditorOverlays";
 import { EditorChatPortals } from "./EditorChatPortals";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
-import { useSettings, type AgentMode } from "../settings/SettingsContext";
+import { useSettings, type AgentMode } from "../prefs/SettingsContext";
 import type { TourAi } from "../utils/events";
 import { Milkdown } from "@milkdown/react";
 import "@milkdown/kit/prose/view/style/prosemirror.css";

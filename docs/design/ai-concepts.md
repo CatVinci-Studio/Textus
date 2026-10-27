@@ -309,7 +309,7 @@ only reads, answers and comments.**
   of each message, and the tools: Review gets no `propose_edit`, Write
   gets every action. Every proposal is decided by the user either way
   ([ai-proposals.md](ai-proposals.md)).
-- In code: `AgentMode` (`settings/SettingsContext.tsx`,
+- In code: `AgentMode` (`prefs/SettingsContext.tsx`,
   `ai/agent/prompt.rs`) with the values `write` and `review`. 1.2.0's
   third mode, Revise (修订), folded into Write in 1.2.1: a stored or sent
   `revise` reads as `write`, any other unknown value as the default

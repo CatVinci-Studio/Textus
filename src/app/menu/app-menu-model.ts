@@ -1,6 +1,6 @@
 import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 import type { Strings } from "../../i18n/strings";
-import type { HeadingAction, Shortcuts } from "../../settings/SettingsContext";
+import type { HeadingAction, Shortcuts } from "../../prefs/SettingsContext";
 import { basename } from "../../utils/path";
 
 /**

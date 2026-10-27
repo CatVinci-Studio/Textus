@@ -1,6 +1,6 @@
 import { errorText } from "../../utils/error-text";
 import { useId, useRef, useState } from "react";
-import { useSettings, THEME_MODES } from "../SettingsContext";
+import { useSettings, THEME_MODES } from "../../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../../theme/builtin-themes";
 import type { Strings } from "../../i18n/strings";
 import {

@@ -9,7 +9,7 @@ import { useEditorRunner } from "../editor/useEditorRunner";
 import { useEditorClipboard } from "../editor/clipboard/useEditorClipboard";
 import { useAiActions } from "../ai/writing/useAiActions";
 import { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import { useLatest } from "../utils/hooks/useLatest";

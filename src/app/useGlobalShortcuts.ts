@@ -1,7 +1,7 @@
 import { heldByPlugin } from "../plugins/contributions/editor-input";
 import { useEffect } from "react";
 import { cycleRegion, trackRegionFocus } from "./regions";
-import { useSettings, type HeadingAction } from "../settings/SettingsContext";
+import { useSettings, type HeadingAction } from "../prefs/SettingsContext";
 import { adjacentTabId, type DocTab } from "../document/doc-tabs";
 import { modIsMeta } from "../platform/os";
 import { macTabStep } from "./fixed-shortcuts";

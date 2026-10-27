@@ -4,7 +4,7 @@ import {
   canPickFolder,
   canRevealInFileManager,
 } from "../../../platform/capabilities";
-import { useSettings } from "../../../settings/SettingsContext";
+import { useSettings } from "../../../prefs/SettingsContext";
 import { useActiveProvider } from "../../provider-catalog";
 import { useCloseOnOutsideClick } from "../../../utils/hooks/useCloseOnOutsideClick";
 import { Presence, PresenceDiv } from "../../../ui/usePresence";

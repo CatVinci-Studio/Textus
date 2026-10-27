@@ -6,7 +6,7 @@ import {
   prefersReducedMotion,
 } from "../../ui/motion";
 import { pictureState } from "./generated-images";
-import type { RevisionDisplay } from "../../settings/SettingsContext";
+import type { RevisionDisplay } from "../../prefs/SettingsContext";
 import {
   type HotSentence,
   type PendingPreview,

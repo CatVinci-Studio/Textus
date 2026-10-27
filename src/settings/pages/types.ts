@@ -1,7 +1,7 @@
 import type { Strings } from "../../i18n/strings";
 import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
 import type { MenuChecks } from "../../app/menu/app-menu-model";
-import type { Settings, useSettings } from "../SettingsContext";
+import type { Settings, useSettings } from "../../prefs/SettingsContext";
 
 /** A page's own page within its category (General › About Textus; on the
  *  phone, Editor & Appearance › More themes). */

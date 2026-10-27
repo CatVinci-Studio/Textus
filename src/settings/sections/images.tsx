@@ -7,13 +7,13 @@ import {
   type ImageHost,
   type ImageNamingMode,
   type ImageStorageMode,
-} from "../SettingsContext";
+} from "../../prefs/SettingsContext";
 import {
   DEFAULT_IMAGE_SUBFOLDER,
   SAME_FOLDER,
   imageFolderExample,
   isImageSubfolder,
-} from "../image-folder";
+} from "../../prefs/image-folder";
 import { Select } from "../../ui/Select";
 import { RowHelp, SecretInput, SettingRow, VERBATIM_INPUT } from "./controls";
 

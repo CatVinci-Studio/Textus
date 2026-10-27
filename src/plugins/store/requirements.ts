@@ -1,4 +1,4 @@
-import type { Settings } from "../../settings/SettingsContext";
+import type { Settings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import type { RequiredSetting, Requirement } from "./manifest";
 

@@ -8,7 +8,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { SettingsProvider, useSettings } from "./SettingsContext";
+import { SettingsProvider, useSettings } from "../prefs/SettingsContext";
 import { themes } from "../platform/ipc";
 import { applyThemeChrome } from "../theme/theme-chrome";
 import { AppearanceSync } from "../theme/apply-appearance";

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { AgentMode } from "../../settings/settings-types";
+import type { AgentMode } from "../../prefs/settings-types";
 
 /**
  * The AI panel asked for from outside the editor (a plugin's "Edit with AI"):

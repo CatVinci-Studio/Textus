@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ShortcutRow } from "./shortcut-rows";
 import { resolveStrings } from "../../i18n/strings";
-import { defaultShortcuts, type Shortcuts } from "../SettingsContext";
+import { defaultShortcuts, type Shortcuts } from "../../prefs/SettingsContext";
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();

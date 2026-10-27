@@ -8,7 +8,7 @@ import { setQuickAskWidget } from "../ai/chat/quick-ask/quick-ask-widget-plugin"
 import { keepClearOfDock } from "../ai/chat/quick-ask/quick-ask-dock";
 import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
 import { canDetachChat } from "../platform/capabilities";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 
 /** Opening, closing and handing on Quick Ask, from every entry point (the
  *  shortcut, the context menu, its own buttons). */

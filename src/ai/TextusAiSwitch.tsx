@@ -1,6 +1,6 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { announce } from "../ui/announce";
 import { AssistantIcon } from "../ui/icons";
 import { Tooltip } from "../ui/Tooltip";

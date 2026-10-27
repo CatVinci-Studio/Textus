@@ -35,7 +35,7 @@ import { useLatest } from "../utils/hooks/useLatest";
 import { openBeside } from "./split/split-layout";
 import { errorText } from "../utils/error-text";
 import type { Strings } from "../i18n/strings";
-import type { NewDocumentMode } from "../settings/SettingsContext";
+import type { NewDocumentMode } from "../prefs/SettingsContext";
 import type { PendingClose } from "./close-flow";
 import type { TabState } from "./tabs/useTabState";
 import { splitForDrop, type DropTarget } from "./split/split-drop";
