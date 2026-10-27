@@ -4,6 +4,7 @@ import type {
   MenuId,
   SettingContribution,
   SettingType,
+  SuggestKind,
   ViewType,
 } from "./manifest";
 
@@ -66,6 +67,8 @@ function viewType(value: unknown, what: string): ViewType {
 }
 
 /** Code block languages Textus draws itself: a plugin can't take them. */
+export const SUGGEST_KINDS: readonly SuggestKind[] = ["wikilinks"];
+
 const BUILT_IN_BLOCKS = ["mermaid", "math", "latex", "katex", "tex"];
 
 /** `main`: one file, or several run in order; the host takes no imports. */
@@ -347,6 +350,12 @@ export function parseContributes(raw: unknown, id: string): Contributes {
       };
     },
   );
+  // A kind this Textus doesn't know is a later one's: left out.
+  const suggestFor = list(c.suggestFor, "contributes.suggestFor")
+    .map((x, i) => text(x, `contributes.suggestFor[${i}]`))
+    .filter((kind): kind is SuggestKind =>
+      (SUGGEST_KINDS as readonly string[]).includes(kind),
+    );
   return {
     aiTools,
     completions,
@@ -363,5 +372,6 @@ export function parseContributes(raw: unknown, id: string): Contributes {
       title: text(page.title, "contributes.settingsPage.title"),
     },
     themes,
+    suggestFor,
   };
 }

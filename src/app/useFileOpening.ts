@@ -166,7 +166,7 @@ export function useFileOpening(opts: {
       const { content, diskMtime } = disk;
       void session.addRecentFile(path);
       void import("../plugins/store/open-offer").then((offer) =>
-        offer.offerBacklinks(content, t),
+        offer.offerForContent(content, t),
       );
       return {
         path,

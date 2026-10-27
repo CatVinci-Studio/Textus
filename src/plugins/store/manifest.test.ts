@@ -138,6 +138,15 @@ describe("a plugin's manifest", () => {
     );
   });
 
+  it("reads what a document must hold for the plugin to be suggested, leaving out kinds it doesn't know", () => {
+    const m = parseManifest({
+      ...base,
+      contributes: { suggestFor: ["wikilinks", "a-later-kind"] },
+    });
+    expect(m.contributes.suggestFor).toEqual(["wikilinks"]);
+    expect(parseManifest(base).contributes.suggestFor).toEqual([]);
+  });
+
   it("names network permissions by host", () => {
     expect(isPermission("network:api.zotero.org")).toBe(true);
     expect(isPermission("network:*.wikipedia.org")).toBe(true);

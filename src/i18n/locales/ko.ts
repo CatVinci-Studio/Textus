@@ -1341,8 +1341,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginOpenOffer:
     "“{file}”은(는) {name} 플러그인으로 열 수 있습니다. 설치하고 열까요?",
   pluginOpenInstall: "설치하고 열기",
-  backlinksOffer:
-    "이 문서는 [[위키링크]]로 노트를 잇고 있습니다. {name}에서 이곳을 가리키는 노트를 볼 수 있습니다.",
+  wikilinksPluginOffer:
+    "이 문서는 [[위키링크]]를 씁니다. 플러그인 {name}: {description}",
   pluginOpenTurnOn:
     "“{file}”은(는) {name} 플러그인으로 열 수 있지만 꺼져 있습니다. 켜고 열까요?",
   pluginOpenTurnOnButton: "켜고 열기",

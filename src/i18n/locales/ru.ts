@@ -1411,8 +1411,8 @@ export default {
   pluginOpenOffer:
     "Плагин «{name}» открывает «{file}». Установить его и открыть файл?",
   pluginOpenInstall: "Установить и открыть",
-  backlinksOffer:
-    "В этом документе заметки связаны [[вики-ссылками]]. «{name}» показывает, какие заметки ссылаются сюда.",
+  wikilinksPluginOffer:
+    "В этом документе есть [[вики-ссылки]]. Плагин «{name}»: {description}",
   pluginOpenTurnOn:
     "Плагин «{name}» открывает «{file}», но он выключен. Включить его и открыть файл?",
   pluginOpenTurnOnButton: "Включить и открыть",

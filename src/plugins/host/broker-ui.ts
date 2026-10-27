@@ -73,14 +73,12 @@ export function uiHandlers(p: PluginScope) {
           : (item as QuickPickItem),
       );
       // A command line: the items among the palette's (Vim's ":").
-      if (commands === true) {
-        const { pickWithCommands } = await import("../../app/command-palette");
-        return pickWithCommands(
+      if (commands === true)
+        return p.deps.pickWithCommands(
           list,
           optionalStr(value) ?? "",
           optionalStr(placeholder),
         );
-      }
       return showQuickPick(list, optionalStr(placeholder) ?? "", {
         multiple: multiple === true,
         query: optionalStr(value),

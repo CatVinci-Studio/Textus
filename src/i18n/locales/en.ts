@@ -1385,8 +1385,8 @@ type /name in a conversation to use one.
   pluginOpenOffer:
     "The {name} plugin opens “{file}”. Install it and open the file?",
   pluginOpenInstall: "Install and open",
-  backlinksOffer:
-    "This document links notes with [[wikilinks]]. {name} shows which notes link here.",
+  wikilinksPluginOffer:
+    "This document uses [[wikilinks]]. The {name} plugin: {description}",
   pluginOpenTurnOn:
     "The {name} plugin opens “{file}”, but it is off. Turn it on and open the file?",
   pluginOpenTurnOnButton: "Turn on and open",

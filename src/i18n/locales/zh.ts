@@ -1287,8 +1287,7 @@ export default {
   pluginsInstalledGroup: "已安装",
   pluginOpenOffer: "插件「{name}」可以打开“{file}”。安装并打开吗？",
   pluginOpenInstall: "安装并打开",
-  backlinksOffer:
-    "这篇文档用 [[双链]] 连接笔记。「{name}」可以显示哪些笔记链接到这里。",
+  wikilinksPluginOffer: "这篇文档用了 [[双链]]。插件「{name}」：{description}",
   pluginOpenTurnOn:
     "插件「{name}」可以打开“{file}”，但它现在关着。开启插件并打开这个文件吗？",
   pluginOpenTurnOnButton: "开启并打开",

@@ -9,8 +9,15 @@ import {
   loadCatalog,
   type CatalogItem,
 } from "./catalog";
-import { pluginName, pluginRecord, setPluginEnabled } from "../manager";
-import { matchesFilename } from "./manifest";
+import {
+  pluginName,
+  pluginRecord,
+  pluginsSnapshot,
+  pluginText,
+  setPluginEnabled,
+} from "../manager";
+import { matchesFilename, type SuggestKind } from "./manifest";
+import { SUGGEST_KINDS } from "./manifest-parse";
 
 /**
  * A file nothing opens (a PDF, a picture) when an official plugin would:
@@ -65,26 +72,43 @@ export async function offerPluginToOpen(
   return pluginRecord(item.id)?.status === "on";
 }
 
-const BACKLINKS = "catvinci.backlinks";
-const WIKILINK = /\[\[[^[\]\n]+\]\]/;
+/** How each kind a plugin can be suggested for shows in a document. */
+const HOLDS: Record<SuggestKind, RegExp> = {
+  wikilinks: /\[\[[^[\]\n]+\]\]/,
+};
 
-/** A document written with [[wikilinks]], opened without Backlinks
- *  installed: a note offers it, once ever. */
-export async function offerBacklinks(content: string, t: Strings) {
-  if (!WIKILINK.test(content) || getUiState("linkPluginOffered") === true)
-    return;
-  if (pluginRecord(BACKLINKS)) return;
+/** A document opened with something an official plugin works with
+ *  (contributes.suggestFor) and no installed plugin that does: a note
+ *  offers it, once ever for each kind. */
+export async function offerForContent(content: string, t: Strings) {
+  const offered = getUiState("pluginsOfferedFor");
+  const shown = Array.isArray(offered) ? offered : [];
+  const kinds = SUGGEST_KINDS.filter(
+    (kind) => !shown.includes(kind) && HOLDS[kind].test(content),
+  );
+  if (!kinds.length) return;
+  const covered = (kind: SuggestKind) =>
+    pluginsSnapshot().records.some((r) =>
+      r.manifest?.contributes.suggestFor.includes(kind),
+    );
+  const kind = kinds.find((k) => !covered(k));
+  if (!kind) return;
   await loadCatalog().catch(() => {});
   const catalog = catalogSnapshot();
   if (catalog.status !== "ready") return;
-  const item = catalog.items.find((i) => i.id === BACKLINKS);
-  if (!item || pluginRecord(BACKLINKS)) return;
-  setUiState("linkPluginOffered", true);
+  const item = catalog.items.find(
+    (i) =>
+      i.official &&
+      i.manifest.contributes.suggestFor.includes(kind) &&
+      !pluginRecord(i.id),
+  );
+  if (!item || covered(kind)) return;
+  setUiState("pluginsOfferedFor", [...shown, kind]);
+  const { manifest } = item;
   showNotice(
-    t.backlinksOffer.replace(
-      "{name}",
-      pluginName({ id: item.id, manifest: item.manifest }),
-    ),
+    OFFER_TEXT[kind](t)
+      .replace("{name}", pluginName({ id: item.id, manifest }))
+      .replace("{description}", pluginText({ manifest }, manifest.description)),
     {
       action: {
         label: t.pluginInstall,
@@ -93,3 +117,7 @@ export async function offerBacklinks(content: string, t: Strings) {
     },
   );
 }
+
+const OFFER_TEXT: Record<SuggestKind, (t: Strings) => string> = {
+  wikilinks: (t) => t.wikilinksPluginOffer,
+};

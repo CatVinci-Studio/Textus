@@ -48,8 +48,8 @@ export interface UiState {
   fileTreeHidden: string;
   /** The documents left read-only (View › Read Only), by path. */
   readOnlyPaths: string[];
-  /** Backlinks was offered for a document with [[wikilinks]], once. */
-  linkPluginOffered: boolean;
+  /** The kinds (contributes.suggestFor) a plugin was offered for, once each. */
+  pluginsOfferedFor: string[];
   /** The split the window was left in, by its two documents' paths; null when
    *  it showed one. */
   splitLayout: {
@@ -157,10 +157,10 @@ const LOCAL: {
     decode: (raw) => raw,
     encode: (value) => value,
   },
-  linkPluginOffered: {
-    key: "textus-link-plugin-offered",
-    decode: (raw) => raw === "1",
-    encode: (value) => (value ? "1" : "0"),
+  pluginsOfferedFor: {
+    key: "textus-plugins-offered-for",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
   },
   readOnlyPaths: {
     key: "textus-read-only-paths",

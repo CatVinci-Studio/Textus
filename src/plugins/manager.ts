@@ -14,6 +14,7 @@ import type { PluginFile } from "../platform/ipc";
 import { isIOSApp } from "../platform/capabilities";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
 import { registerCommand, runCommand } from "../app/commands";
+import { pickWithCommands } from "../app/command-palette";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import { getActiveDocument } from "./app-bridge";
 import type { PluginHost } from "./host/broker";
@@ -182,6 +183,7 @@ async function host(record: PluginRecord): Promise<PluginHost> {
         platform: platform(),
         setting: async (id, key) => pluginSetting(id, key),
         setSetting: (id, key, value) => setPluginSetting(id, key, value),
+        pickWithCommands,
         runCommand: async (command, args) => {
           const owner = pluginsSnapshot().records.find(
             (r) => r.status === "on" && command.startsWith(`${r.id}.`),
