@@ -73,10 +73,11 @@ test("Close Others leaves a tab with unsaved changes open", async ({
   page,
 }) => {
   await openApp(page, {
-    settings: { language: "en", newDocumentMode: "tab", autoSave: false },
+    settings: { language: "en", newDocumentMode: "tab", autosave: false },
   });
   await openFiles(page, ["a.md", "b.md", "c.md"]);
-  await tab(page, "a.md").click();
+  // On the title: a narrow pill's centre can be its close button.
+  await tab(page, "a.md").locator(".tab-pill-title").click();
   await page.locator('[data-active-tab="true"] .ProseMirror').click();
   await page.keyboard.type("changed", { delay: 20 });
   await expect(tab(page, "a.md").locator(".tab-pill-dirty-dot")).toHaveCount(1);
