@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { openApp, pasteMarkdown } from "./helpers";
 
 /**
  * Text pasted in keeps its lines - an email pasted from a mail or chat app
@@ -96,9 +96,21 @@ test("a code block pasted on an empty list item stays a code block", async ({
   await page.locator(editor).click();
   await page.keyboard.type("- item", { delay: 20 });
   await page.keyboard.press("Enter");
-  await pasteText(page, "```js\nx\ny\n```");
+  await pasteMarkdown(page, "```js\nx\ny\n```");
   await expect(page.locator(`${editor} li pre`)).toHaveCount(1);
   await expect(page.locator(`${editor} li pre`)).toContainText("x\ny");
+  await expect(page.locator(`${editor} li`).nth(1).locator("p")).toHaveText("");
+});
+
+test("a code block pasted into a table cell stays in the cell as text", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "| a | b |\n| - | - |\n| c | d |");
+  await page.locator(`${editor} td`).first().click();
+  await pasteMarkdown(page, "```js\nx\n```");
+  await expect(page.locator(`${editor} table`)).toHaveCount(1);
+  await expect(page.locator(`${editor} pre`)).toHaveCount(0);
 });
 
 test("a code block pasted in the middle of a line stays a code block between its halves", async ({
@@ -108,18 +120,14 @@ test("a code block pasted in the middle of a line stays a code block between its
   await page.locator(editor).click();
   await page.keyboard.type("beforeafter", { delay: 20 });
   for (let i = 0; i < 5; i++) await page.keyboard.press("ArrowLeft");
-  // At the caret, not after a click (pasteText).
-  await page.evaluate((sel) => {
-    const data = new DataTransfer();
-    data.setData("text/plain", "```js\nx\ny\n```");
-    document.querySelector(sel)!.dispatchEvent(
-      new ClipboardEvent("paste", {
-        clipboardData: data,
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
-  }, editor);
+  // Once ProseMirror has read the caret the arrows moved.
+  await page.evaluate(
+    () =>
+      new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      ),
+  );
+  await pasteMarkdown(page, "```js\nx\ny\n```");
   await expect(page.locator(`${editor} pre`)).toContainText("x\ny");
   await expect(page.locator(`${editor} > p`)).toHaveText(["before", "after"]);
 });
