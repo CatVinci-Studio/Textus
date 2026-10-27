@@ -6,7 +6,7 @@ import {
   splitLayout,
   type SplitDirection,
 } from "./split-layout";
-import type { DocumentDrop } from "../../ui/document-drop";
+import { setDragging, type DocumentDrop } from "../../ui/document-drop";
 import "./split-drop.css";
 
 /**
@@ -161,7 +161,7 @@ export function pullTab(
   ghost.textContent = title;
   ghost.setAttribute("aria-hidden", "true");
   document.body.append(ghost);
-  document.body.classList.add("tab-pulling");
+  setDragging(true);
   const outside = (e: PointerEvent) =>
     e.clientX < 0 ||
     e.clientY < 0 ||
@@ -197,7 +197,7 @@ export function pullTab(
     window.removeEventListener("pointercancel", stop);
     window.removeEventListener("keydown", key, true);
     ghost.remove();
-    document.body.classList.remove("tab-pulling");
+    setDragging(false);
     showDropHint(null);
   }
   window.addEventListener("pointermove", move);

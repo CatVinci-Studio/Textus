@@ -9,7 +9,7 @@ import {
 import { fs } from "../platform/ipc";
 import type { Strings } from "../i18n/strings";
 import { showMessage } from "../ui/app-dialog";
-import { documentDrop } from "../ui/document-drop";
+import { documentDrop, setDragging } from "../ui/document-drop";
 import { basename, parentDir } from "../utils/path";
 import { canMoveInto, DRAG_START_PX, failureText } from "./tree-shared";
 
@@ -63,6 +63,7 @@ export function useRowDrag(
     };
     let current: Drag | null = null;
     const show = (next: Drag | null) => {
+      if (!current !== !next) setDragging(!!next);
       current = next;
       setDrag(next);
     };

@@ -28,7 +28,11 @@
   pointer-events: none;
 }
 
-body.tab-pulling,
-body.tab-pulling * {
+body.document-dragging,
+body.document-dragging * {
   cursor: grabbing !important;
+}
+
+body.document-dragging iframe {
+  pointer-events: none;
 }

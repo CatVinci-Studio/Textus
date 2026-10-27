@@ -21,3 +21,9 @@ export function setDocumentDrop(drop: DocumentDrop | null): void {
 export function documentDrop(): DocumentDrop | null {
   return current;
 }
+
+/** While something is dragged, a plugin's frame (a PDF, a chart) must not
+ *  take the pointer: the drag would stop at its edge. */
+export function setDragging(on: boolean): void {
+  document.body.classList.toggle("document-dragging", on);
+}
