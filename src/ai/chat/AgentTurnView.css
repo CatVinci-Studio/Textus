@@ -487,17 +487,49 @@ button.agent-context-chip:hover {
 }
 
 /* The modes a skill is saved in, before Save. */
+/* Write, Review, Create as small pills, lit where the skill applies; the
+   checkbox in each stays for the keyboard and screen readers. */
 .skill-mode-choice {
   display: inline-flex;
-  gap: 8px;
+  gap: 2px;
   margin-right: 8px;
-  color: var(--editor-muted);
+  padding: 2px;
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--editor-text) 5%, transparent);
 }
 
 .skill-mode-choice label {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
+  position: relative;
+  padding: 1px 8px;
+  border-radius: var(--radius-small);
+  color: var(--editor-muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  user-select: none;
+}
+
+.skill-mode-choice label:has(input:checked) {
+  background: var(--editor-bg, var(--bg));
+  color: var(--editor-text);
+  box-shadow: var(--shadow-raised);
+}
+
+.skill-mode-choice label:has(input:disabled) {
+  cursor: default;
+}
+
+.skill-mode-choice label:has(input:focus-visible) {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 1px;
+}
+
+/* Over the whole pill, unseen: a click anywhere on it ticks it. */
+.skill-mode-choice input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
 }
 
 .agent-memory-chip-actions button + button::before,

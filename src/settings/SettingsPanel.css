@@ -858,24 +858,40 @@ button.settings-inline-button {
   border-top: none;
 }
 
+/* Laid out as a built-in's row: its name, then its command and what it
+   does. */
 .settings-skill-item {
   display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 48px;
+  padding: 8px 0;
+  min-width: 0;
+}
+
+.settings-skill-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.settings-skill-title {
+  display: flex;
   align-items: baseline;
-  gap: 8px;
-  padding: 3px 0;
-  font-size: var(--text-sm);
   min-width: 0;
 }
 
 .settings-skill-name {
   flex-shrink: 0;
-  font-weight: 600;
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  color: var(--editor-text);
+  font-size: var(--text-lg);
 }
 
 .settings-skill-desc {
   color: var(--editor-muted);
+  font-size: var(--text-md);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -884,17 +900,7 @@ button.settings-inline-button {
 /* The modes a skill of the user's works in, at the end of its line. */
 .settings-skill-modes {
   display: flex;
-  gap: 10px;
-  margin-left: auto;
   flex: none;
-  color: var(--editor-muted);
-}
-
-.settings-skill-mode {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
 }
 
 /* "Replaces a built-in skill", "This project", "Customized": a quiet pill
@@ -936,7 +942,8 @@ button.settings-inline-button {
   font-weight: 600;
 }
 
-.settings-builtin-category > .settings-row + .settings-row {
+.settings-builtin-category > .settings-row + .settings-row,
+.settings-skill-item + .settings-skill-item {
   border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
 }
 

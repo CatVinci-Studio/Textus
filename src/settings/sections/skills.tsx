@@ -133,16 +133,23 @@ export function OwnSkillsList({ t }: { t: Strings }) {
             className="settings-skill-item"
             data-skill={skill.name}
           >
-            <span className="settings-skill-name">
-              {words?.label ?? `/${skill.name}`}
-            </span>
-            {(shadows || skill.source === "project") && (
-              <span className="settings-skill-tag">
-                {shadows ? t.agentSkillsShadows : t.skillGroupProject}
+            <span className="settings-skill-text">
+              <span className="settings-skill-title">
+                <span className="settings-skill-name">
+                  {words?.label ?? skill.name}
+                </span>
+                {(shadows || skill.source === "project") && (
+                  <span className="settings-skill-tag">
+                    {shadows ? t.agentSkillsShadows : t.skillGroupProject}
+                  </span>
+                )}
               </span>
-            )}
-            <span className="settings-skill-desc">
-              {words ? `/${skill.name} · ${words.hint}` : skill.description}
+              <span className="settings-skill-desc">
+                <span className="settings-builtin-skill-name">
+                  /{skill.name}
+                </span>
+                {` · ${words?.hint ?? skill.description}`}
+              </span>
             </span>
             <span className="settings-skill-modes">
               <ModeChoice
