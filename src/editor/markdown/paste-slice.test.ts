@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Schema, Slice, type Node } from "@milkdown/kit/prose/model";
 import { tableNodes } from "@milkdown/kit/prose/tables";
-import { joinLinesForTableCell } from "./paste-slice";
+import { fillTable, joinLinesForTableCell } from "./paste-slice";
 
 const cells = tableNodes({
   tableGroup: "block",
@@ -67,5 +67,86 @@ describe("joinLinesForTableCell", () => {
     const two = Slice.maxOpen(n.doc.create(null, [p("a"), p("b")]).content);
     const outside = landing(n.doc.create(null, [p("x")]));
     expect(joinLinesForTableCell(two, outside)).toBe(two);
+  });
+});
+
+describe("fillTable", () => {
+  // The app's tables: a header row of their own, then body rows.
+  const gfm = new Schema({
+    nodes: {
+      doc: { content: "block+" },
+      paragraph: { group: "block", content: "text*" },
+      text: {},
+      table: { ...cells.table, content: "table_header_row table_row+" },
+      table_header_row: { ...cells.table_row, content: "table_header*" },
+      table_row: { ...cells.table_row, content: "table_cell*" },
+      table_header: cells.table_header,
+      table_cell: cells.table_cell,
+    },
+  });
+  const g = gfm.nodes;
+  const para = (text: string) =>
+    g.paragraph.create(null, text ? gfm.text(text) : null);
+  const table = (...rows: string[][]) =>
+    g.table.create(
+      null,
+      rows.map((texts, r) =>
+        (r === 0 ? g.table_header_row : g.table_row).create(
+          null,
+          texts.map((t) =>
+            (r === 0 ? g.table_header : g.table_cell).create(null, para(t)),
+          ),
+        ),
+      ),
+    );
+  const texts = (t: Node) => {
+    const out: string[][] = [];
+    t.forEach((row) => {
+      const line: string[] = [];
+      row.forEach((cell) => line.push(cell.textContent));
+      out.push(line);
+    });
+    return out;
+  };
+
+  it("writes the pasted cells in from the caret's cell, adding rows", () => {
+    const filled = fillTable(
+      table(["a", "b"], ["c", "d"]),
+      1,
+      0,
+      table(["p", "q"], ["r", "s"]),
+    );
+    expect(texts(filled)).toEqual([
+      ["a", "b"],
+      ["p", "q"],
+      ["r", "s"],
+    ]);
+    expect(() => filled.check()).not.toThrow();
+  });
+
+  it("adds columns, the header's too, where the paste runs past the edge", () => {
+    const filled = fillTable(
+      table(["a", "b"], ["c", "d"]),
+      1,
+      1,
+      table(["p", "q", "r"], ["s", "t", "u"]),
+    );
+    expect(texts(filled)).toEqual([
+      ["a", "b", "", ""],
+      ["c", "p", "q", "r"],
+      ["", "s", "t", "u"],
+    ]);
+    expect(() => filled.check()).not.toThrow();
+  });
+
+  it("keeps header cells in the header row", () => {
+    const filled = fillTable(
+      table(["a", "b"], ["c", "d"]),
+      0,
+      0,
+      table(["p", "q"]),
+    );
+    expect(filled.firstChild!.firstChild!.type).toBe(g.table_header);
+    expect(texts(filled)[0]).toEqual(["p", "q"]);
   });
 });

@@ -132,6 +132,21 @@ test("a code block pasted in the middle of a line stays a code block between its
   await expect(page.locator(`${editor} > p`)).toHaveText(["before", "after"]);
 });
 
+test("a table pasted on a new line takes that line, and one pasted in a cell fills the cells from it", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.locator(editor).click();
+  await page.keyboard.type("Before", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await pasteMarkdown(page, "| a | b |\n| - | - |\n| c | d |");
+  await expect(page.locator(`${editor} > p`)).toHaveText(["Before"]);
+  await page.locator(`${editor} td`, { hasText: "d" }).click();
+  await pasteMarkdown(page, "| p | q |\n| - | - |\n| r | s |");
+  await expect(page.locator(`${editor} table`)).toHaveCount(1);
+  await expect(page.locator(`${editor} tr`)).toHaveText(["ab", "cpq", "rs"]);
+});
+
 test("plain pasted lines keep their breaks", async ({ page }) => {
   await openApp(page, { settings: { language: "en" } });
   await pasteText(page, "Dear Sam,\nThanks for the notes.\nSee you Monday.");
