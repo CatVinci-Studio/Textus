@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- The right-click menu's Paste works as Cmd/Ctrl+V does: images, formatted text from other apps, kept line breaks and table cells, where it used to read only the text.
+- The right-click menu's Paste works as Cmd/Ctrl+V does: images, formatted text from other apps, kept line breaks and table cells, where it used to read only the text. On macOS it no longer asks for a second click on a "Paste" button.
 
 ### New
 

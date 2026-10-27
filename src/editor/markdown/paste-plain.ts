@@ -2,11 +2,14 @@ import { Plugin } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { modIsMeta } from "../../platform/os";
+import { clipboardIpc } from "../../platform/ipc";
 
 /** Paste as Plain Text: the clipboard's text as it is, through
  *  ProseMirror's plain-text paste - its lines as lines, no Markdown read. */
 export async function pastePlainText(view: EditorView): Promise<void> {
-  const text = await navigator.clipboard.readText().catch(() => "");
+  const text =
+    (await clipboardIpc.text().catch(() => null)) ??
+    (await navigator.clipboard.readText().catch(() => ""));
   if (text) view.pasteText(text);
   view.focus();
 }
