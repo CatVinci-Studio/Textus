@@ -1481,6 +1481,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   webPageAddress: "Webadresse",
   webPageReload: "Neu laden",
   webPageOpenInBrowser: "Im Browser öffnen",
+  webPageFailed:
+    "Diese Seite ließ sich nicht öffnen. Vielleicht fehlt das Netz, oder die Website hat die Verbindung abgelehnt.",
   webPageHideBar: "Adressleiste ausblenden",
   webPageShowBar: "Adressleiste einblenden",
   webPageHint:

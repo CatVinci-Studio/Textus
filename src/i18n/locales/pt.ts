@@ -1472,6 +1472,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   webPageAddress: "Endereço web",
   webPageReload: "Recarregar",
   webPageOpenInBrowser: "Abrir no navegador",
+  webPageFailed:
+    "Esta página não abriu. Pode ser que a rede esteja fora do ar ou que o site tenha recusado a conexão.",
   webPageHideBar: "Ocultar a barra de endereço",
   webPageShowBar: "Mostrar a barra de endereço",
   webPageHint:

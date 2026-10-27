@@ -1482,6 +1482,8 @@ export default {
   webPageAddress: "Адрес",
   webPageReload: "Обновить",
   webPageOpenInBrowser: "Открыть в браузере",
+  webPageFailed:
+    "Страница не открылась. Возможно, нет сети или сайт отказал в соединении.",
   webPageHideBar: "Скрыть адресную строку",
   webPageShowBar: "Показать адресную строку",
   webPageHint:

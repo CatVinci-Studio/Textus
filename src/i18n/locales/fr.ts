@@ -1516,6 +1516,8 @@ utiliser une.
   webPageAddress: "Adresse web",
   webPageReload: "Recharger",
   webPageOpenInBrowser: "Ouvrir dans le navigateur",
+  webPageFailed:
+    "Cette page ne s’est pas ouverte. Le réseau est peut-être coupé, ou le site a refusé la connexion.",
   webPageHideBar: "Masquer la barre d’adresse",
   webPageShowBar: "Afficher la barre d’adresse",
   webPageHint:

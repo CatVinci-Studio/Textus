@@ -1351,6 +1351,7 @@ export default {
   webPageAddress: "网址",
   webPageReload: "重新载入",
   webPageOpenInBrowser: "在浏览器中打开",
+  webPageFailed: "这个页面没能打开。可能是网络出了问题，或者网站拒绝了连接。",
   webPageHideBar: "收起地址栏",
   webPageShowBar: "展开地址栏",
   webPageHint:

@@ -1455,6 +1455,8 @@ type /name in a conversation to use one.
   webPageAddress: "Web address",
   webPageReload: "Reload",
   webPageOpenInBrowser: "Open in Browser",
+  webPageFailed:
+    "This page didn't open. The network may be down, or the site refused the connection.",
   webPageHideBar: "Hide the address bar",
   webPageShowBar: "Show the address bar",
   webPageHint:

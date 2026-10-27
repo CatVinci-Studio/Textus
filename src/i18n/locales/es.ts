@@ -1491,6 +1491,8 @@ para usar una.
   webPageAddress: "Dirección web",
   webPageReload: "Recargar",
   webPageOpenInBrowser: "Abrir en el navegador",
+  webPageFailed:
+    "Esta página no se abrió. Puede que no haya red o que el sitio haya rechazado la conexión.",
   webPageHideBar: "Ocultar la barra de dirección",
   webPageShowBar: "Mostrar la barra de dirección",
   webPageHint:

@@ -429,6 +429,29 @@ button.plugin-card-open:hover .plugin-card-name {
 .web-page-chevron-down {
   transform: rotate(90deg);
 }
+/* A page that didn't load: said in the page's place, which it no longer
+   covers. */
+.web-page-failed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--space-4);
+  color: var(--editor-muted);
+  text-align: center;
+}
+
+.web-page-failed-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.web-page-failed .text-button {
+  width: auto;
+}
+
 .web-page-bar-folded {
   justify-content: center;
   height: 10px;

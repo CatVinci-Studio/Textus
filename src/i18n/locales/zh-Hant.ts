@@ -1357,6 +1357,7 @@ export default {
   webPageAddress: "網址",
   webPageReload: "重新載入",
   webPageOpenInBrowser: "在瀏覽器中開啟",
+  webPageFailed: "這個頁面沒能開啟。可能是網路出了問題，或者網站拒絕了連線。",
   webPageHideBar: "收起網址列",
   webPageShowBar: "展開網址列",
   webPageHint:

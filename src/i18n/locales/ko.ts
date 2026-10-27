@@ -1409,6 +1409,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   webPageAddress: "웹 주소",
   webPageReload: "새로고침",
   webPageOpenInBrowser: "브라우저에서 열기",
+  webPageFailed:
+    "이 페이지를 열지 못했습니다. 네트워크 문제이거나 사이트가 연결을 거부했을 수 있습니다.",
   webPageHideBar: "주소 표시줄 숨기기",
   webPageShowBar: "주소 표시줄 보기",
   webPageHint:
