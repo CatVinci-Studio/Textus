@@ -88,7 +88,10 @@ export function useEditorSetup({
   useEditorReadOnly(
     run,
     readOnly,
-    useCallback(() => showAiNotice(tRef.current.readOnlyRefused), [showAiNotice, tRef]),
+    useCallback(
+      () => showAiNotice(tRef.current.readOnlyRefused),
+      [showAiNotice, tRef],
+    ),
   );
 
   const { triggerCompletion, triggerGrammarCheck } = useAiActions(
