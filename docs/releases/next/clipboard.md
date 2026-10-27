@@ -9,3 +9,4 @@
 ### New
 
 - Edit › Paste as Plain Text (Cmd/Ctrl+Shift+V) pastes the clipboard's text as it is, without reading Markdown in it.
+- macOS: the menus' Paste and Paste as Plain Text paste at once, without the "Paste" button macOS showed first.

@@ -6,6 +6,7 @@ import type { EditorRunner } from "./useEditorRunner";
 import { recordClipboardEntry } from "../clipboard/history";
 import { parseMarkdownSource } from "./markdown/parse-markdown-source";
 import { pastePlainText } from "./markdown/paste-plain";
+import { clipboardIpc } from "../platform/ipc";
 import { plainTextOf } from "./markdown/plain-text";
 import { bareUrl, insertUrlLink } from "./markdown/paste-url";
 
@@ -125,6 +126,8 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
 
   const paste = useCallback(() => {
     void (async () => {
+      run((ctx) => ctx.get(editorViewCtx).focus());
+      if (await clipboardIpc.pasteNatively().catch(() => false)) return;
       const data = await clipboardData();
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
