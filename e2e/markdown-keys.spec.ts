@@ -359,3 +359,74 @@ test("~~ and == stay as typed until their closing pair makes a strikethrough or 
   await expect(page.locator(`${editor} mark`)).toHaveText("kept");
   expect(await sourceOf(page)).toBe("~~gone~~ and ==kept== ok");
 });
+
+test("Backspace at a code block's start and Delete before it move the caret, leaving the block whole", async ({
+  page,
+}) => {
+  await open(page, "Before\n\n```js\none\ntwo\n```");
+  await page.locator(`${editor} pre code`).getByText("one").click();
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowLeft" : "Home",
+  );
+  await selectionRead(page);
+  await page.keyboard.press("Backspace");
+  await page.keyboard.type("!", { delay: 20 });
+  await page.keyboard.press("Delete");
+  await page.keyboard.type("x", { delay: 20 });
+  expect(await sourceOf(page)).toBe("Before!\n\n```js\nxone\ntwo\n```");
+});
+
+test("Delete before a table goes into its first cell", async ({ page }) => {
+  await open(page, "Before\n\n| a | b |\n| - | - |\n| c | d |");
+  await page.locator(`${editor} p`).getByText("Before").click();
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
+  );
+  await page.keyboard.press("Delete");
+  await page.keyboard.type("x", { delay: 20 });
+  expect(await sourceOf(page)).toBe(
+    "Before\n\n| xa | b |\n| -- | - |\n| c  | d |",
+  );
+});
+
+test("Delete before a quote joins its first line", async ({ page }) => {
+  await open(page, "Above\n\n> one\n>\n> two");
+  await page.locator(`${editor} p`).getByText("Above").click();
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
+  );
+  await page.keyboard.press("Delete");
+  expect(await sourceOf(page)).toBe("Aboveone\n\n> two");
+});
+
+test("typing over a selection that ends in a code block keeps the code block", async ({
+  page,
+}) => {
+  await open(page, "Before\n\n```js\none\ntwo\n```");
+  await page.locator(`${editor} p`).getByText("Before").click();
+  // From the start of "Before" to the end of "one".
+  await page.evaluate((sel) => {
+    const p = document.querySelector(`${sel} p`)!.firstChild!;
+    const code = document.querySelector(`${sel} pre code`)!;
+    const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+    let one = walker.nextNode() as Text;
+    while (!one.data.includes("one")) one = walker.nextNode() as Text;
+    getSelection()!.setBaseAndExtent(p, 0, one, one.data.indexOf("one") + 3);
+  }, editor);
+  await selectionRead(page);
+  await page.keyboard.type("Z", { delay: 20 });
+  expect(await sourceOf(page)).toBe("Z\n\n```js\n\ntwo\n```");
+});
+
+test("Delete before a callout puts the caret at its text, keeping the callout", async ({
+  page,
+}) => {
+  await open(page, "Above\n\n> [!NOTE]\n> body");
+  await page.locator(`${editor} p`).getByText("Above").click();
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
+  );
+  await page.keyboard.press("Delete");
+  await page.keyboard.type("x", { delay: 20 });
+  expect(await sourceOf(page)).toBe("Above\n\n> [!NOTE]\n> xbody");
+});

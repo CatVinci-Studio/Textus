@@ -87,6 +87,7 @@ import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
 import { tableColumnResizing, tableHoverView } from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
+import { blockJoinPlugin } from "./keys/block-join-plugin";
 import { tabExtendPlugin, tabStaysPlugin } from "./keys/tab-extend-plugin";
 import {
   escapeTrailingBlockPlugin,
@@ -388,6 +389,7 @@ export function withEditorCore(
       .use(tabExtendPlugin)
       .use(tabStaysPlugin)
       .use(escapeTrailingBlockPlugin)
+      .use(blockJoinPlugin)
       .use(codeBlockIndentPlugin)
       .use(findReplacePlugin)
       .use(zenFocusPlugin)
