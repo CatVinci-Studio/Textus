@@ -130,6 +130,10 @@ describe("which CI jobs a pull request needs", () => {
     ).toEqual(NATIVE);
   });
 
+  it("runs both for the generated bindings, which a Rust test compares", () => {
+    expect(edit(["src/platform/bindings/app.ts"])).toEqual(ALL);
+  });
+
   it("runs both for a frontend file the Rust tests embed", () => {
     expect(rustReads).toContain("index.html");
     expect(rustReads).toContain("src/app/menu/app-menu-model.ts");

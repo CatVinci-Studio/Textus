@@ -139,7 +139,7 @@ jobs:
           # identifier in app version must be numeric-only ... for msi
           # target"), so rc tags were NSIS-only regardless, and the updater
           # has always shipped NSIS. One installer, one upgrade path.
-          - platform: windows-latest
+          - platform: windows-2025
             args: ""
           # ARM64 Windows and Linux (from 1.1.0), each on GitHub's native
           # arm64 runner, so the frontend tooling, the Rust build and the
@@ -178,6 +178,8 @@ jobs:
           workspaces: "./src-tauri -> target"
           # The two macOS builds share a runner image; one cache each.
           key: ${{ matrix.target || 'host' }}
+          # Saved from a tag no later tag can read: it only crowds out main's.
+          save-if: false
 
       # ring (rustls, under reqwest) assembles its ARM64 Windows code with
       # clang, which must be on PATH. The windows-11-arm image ships LLVM;
@@ -208,6 +210,23 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
+
+      # With the signing secrets missing, Tauri builds an unsigned DMG and
+      # says nothing.
+      - name: Require the macOS signing secrets
+        if: startsWith(matrix.platform, 'macos-')
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          for name in APPLE_CERTIFICATE APPLE_SIGNING_IDENTITY APPLE_ID APPLE_TEAM_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is not set: the DMG would ship unsigned."
+              exit 1
+            fi
+          done
 
       - name: Build and release
         # Pinned to the commit of v1.0.0: a moving major tag could change how
