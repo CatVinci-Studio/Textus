@@ -492,6 +492,8 @@ utiliser une.
   treeOpen: "Ouvrir",
   outlineCollapse: "Replier",
   outlineExpand: "Déplier",
+  outlineExpandAll: "Tout déplier",
+  outlineCollapseAll: "Tout replier",
   wordUnit: "mot",
   wordsUnit: "mots",
   alertNote: "Remarque",

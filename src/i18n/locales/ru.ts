@@ -477,6 +477,8 @@ export default {
   treeOpen: "Открыть",
   outlineCollapse: "Свернуть",
   outlineExpand: "Развернуть",
+  outlineExpandAll: "Развернуть все",
+  outlineCollapseAll: "Свернуть все",
   wordUnit: "сл.",
   wordsUnit: "сл.",
   alertNote: "Примечание",

@@ -473,6 +473,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeOpen: "Abrir",
   outlineCollapse: "Recolher",
   outlineExpand: "Expandir",
+  outlineExpandAll: "Expandir tudo",
+  outlineCollapseAll: "Recolher tudo",
   wordUnit: "palavra",
   wordsUnit: "palavras",
   alertNote: "Nota",
