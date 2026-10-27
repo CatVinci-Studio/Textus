@@ -3,7 +3,7 @@ import { Slice } from "@milkdown/kit/prose/model";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { parseMarkdownSource } from "./parse-markdown-source";
-import { inTableCell, joinLinesForTableCell } from "./paste-slice";
+import { fillTable, inTableCell, joinLinesForTableCell } from "./paste-slice";
 import { wordListsToHtml } from "./word-lists";
 import { keepPastedLines } from "./paste-lines";
 import { cleanPastedHtml } from "./paste-html";
@@ -107,7 +107,12 @@ export function keepPastedSpans(slice: Slice, selection: Selection): Slice {
 }
 
 /** Blocks a paste keeps whole, rather than pouring into the line. */
-const WHOLE_BLOCKS = new Set(["blockquote", "code_block", "math_block"]);
+const WHOLE_BLOCKS = new Set([
+  "blockquote",
+  "code_block",
+  "math_block",
+  "table",
+]);
 const keepsItsShape = (node: ProseNode | null) =>
   !!node && WHOLE_BLOCKS.has(node.type.name);
 
@@ -190,6 +195,32 @@ export const pasteMarkdownSourcePlugin = $prose(
             view.dispatch(
               view.state.tr
                 .insertText(text.replace(/[\r\n]+$/, ""))
+                .setMeta("uiEvent", "paste")
+                .scrollIntoView(),
+            );
+            return true;
+          }
+          // A table pasted into a table: its cells fill the table from the
+          // caret's cell on, as a copy of cells from a table does.
+          if (
+            inTableCell(view.state.selection.$from) &&
+            doc.childCount === 1 &&
+            doc.firstChild!.type.spec.tableRole === "table"
+          ) {
+            const $from = view.state.selection.$from;
+            let depth = $from.depth;
+            while ($from.node(depth).type.spec.tableRole !== "table") depth--;
+            const table = $from.node(depth);
+            const filled = fillTable(
+              table,
+              $from.index(depth),
+              $from.index(depth + 1),
+              doc.firstChild!,
+            );
+            const at = $from.before(depth);
+            view.dispatch(
+              view.state.tr
+                .replaceWith(at, at + table.nodeSize, filled)
                 .setMeta("uiEvent", "paste")
                 .scrollIntoView(),
             );
