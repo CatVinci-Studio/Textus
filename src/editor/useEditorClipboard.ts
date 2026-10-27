@@ -6,41 +6,47 @@ import { AllSelection } from "@milkdown/kit/prose/state";
 import type { EditorRunner } from "./useEditorRunner";
 import { recordClipboardEntry } from "../clipboard/history";
 import { parseMarkdownSource } from "./markdown/parse-markdown-source";
+import { pastePlainText } from "./markdown/paste-plain";
+import { plainTextOf } from "./markdown/plain-text";
 import { bareUrl, insertUrlLink } from "./markdown/paste-url";
 
 export interface EditorClipboard {
   copyOrCut: (cut: boolean) => void;
-  /** The selection's Markdown source, for an app that should get the marks
-   *  themselves (Copy gives plain-text apps the words as they read). */
-  copyAsMarkdown: () => void;
+  /** The selection's words as they read, for an app that shouldn't get
+   *  the Markdown marks a copy's plain text carries. */
+  copyAsPlainText: () => void;
   paste: () => void;
+  pasteAsPlainText: () => void;
   selectAll: () => void;
   /** Insert arbitrary markdown text at the cursor, exactly like pasting it. */
   insertText: (text: string) => void;
 }
 
 /**
- * Clipboard actions for the context menu: copy/cut put on the clipboard
- * what Cmd+C does (the formatted HTML, and the words as they read for
- * plain-text apps), Copy as Markdown the Markdown source, and paste parses clipboard text as
- * markdown so formatted content lands as rendered nodes instead of staying
- * literal source. Cmd+C/V already behave this way via milkdown's clipboard
- * plugin - these are the menu-driven equivalents, which can't go through
- * the native clipboard events.
+ * Clipboard actions for the menus, which can't go through the native
+ * clipboard events: copy/cut put on the clipboard what Cmd+C does (the
+ * formatted HTML, and the Markdown source as plain text), and paste hands
+ * the clipboard's content to the editor's paste handling, as Cmd+V does.
  */
-/** The clipboard's HTML when it is a copy from a Textus editor; null when
- *  it isn't, or the webview can't read rich clipboard content. */
-async function ownHtml(): Promise<string | null> {
+/** The clipboard as a paste event's data: its text, HTML and images; its
+ *  text alone where the webview can't read more. */
+async function clipboardData(): Promise<DataTransfer | null> {
+  const data = new DataTransfer();
   try {
     for (const item of await navigator.clipboard.read()) {
-      if (!item.types.includes("text/html")) continue;
-      const html = await (await item.getType("text/html")).text();
-      if (html.includes("data-pm-slice")) return html;
+      for (const type of item.types) {
+        const blob = await item.getType(type);
+        if (type.startsWith("image/"))
+          data.items.add(new File([blob], "pasted", { type }));
+        else if (type === "text/plain" || type === "text/html")
+          data.setData(type, await blob.text());
+      }
     }
   } catch {
-    // No rich clipboard access here: the text path.
+    const text = await navigator.clipboard.readText().catch(() => "");
+    if (text) data.setData("text/plain", text);
   }
-  return null;
+  return data.items.length > 0 ? data : null;
 }
 
 /** The selection as Markdown source; its bare text if that won't
@@ -65,7 +71,7 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
         // (clipboard/history-plugin.ts).
         const markdown = selectionMarkdown(ctx);
         // The clipboard gets what Cmd+C puts there: the formatted HTML, and
-        // the words as they read for plain-text apps (plain-text-copy-plugin).
+        // the Markdown source as plain text (copy-text-plugin.ts).
         const { dom, text } = view.serializeForClipboard(
           state.selection.content(),
         );
@@ -94,26 +100,14 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
     [run],
   );
 
-  const copyAsMarkdown = useCallback(() => {
+  const copyAsPlainText = useCallback(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      const markdown = selectionMarkdown(ctx);
-      if (!markdown) return;
+      const text = plainTextOf(view.state.selection.content().content);
+      if (!text) return;
       void (async () => {
-        // The plain text is the source, so every app gets the marks; the
-        // Markdown flavour too where the webview can write one (Chromium
-        // refuses the type, and the plain text alone goes).
-        try {
-          await navigator.clipboard.write([
-            new ClipboardItem({
-              "text/plain": new Blob([markdown], { type: "text/plain" }),
-              "text/markdown": new Blob([markdown], { type: "text/markdown" }),
-            }),
-          ]);
-        } catch {
-          await navigator.clipboard.writeText(markdown).catch(() => {});
-        }
-        recordClipboardEntry(markdown);
+        await navigator.clipboard.writeText(text).catch(() => {});
+        recordClipboardEntry(text);
         view.focus();
       })();
     });
@@ -147,28 +141,25 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
 
   const paste = useCallback(() => {
     void (async () => {
-      // A copy from Textus itself comes back whole from its HTML (marked
-      // data-pm-slice by ProseMirror): its plain text may be the readable
-      // flavor now (plain-text-copy-plugin), which would lose the
-      // formatting. Anything else goes the text way, as before.
-      const html = await ownHtml();
-      if (html) {
-        run((ctx) => {
-          const view = ctx.get(editorViewCtx);
-          view.pasteHTML(html);
-          view.focus();
-        });
-        return;
-      }
-      const text = await navigator.clipboard.readText();
-      if (!text) {
-        run((ctx) => ctx.get(editorViewCtx).focus());
-        return;
-      }
-      recordClipboardEntry(text);
-      insertText(text);
+      const data = await clipboardData();
+      run((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        view.focus();
+        if (data)
+          view.dom.dispatchEvent(
+            new ClipboardEvent("paste", {
+              clipboardData: data,
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+      });
     })();
-  }, [run, insertText]);
+  }, [run]);
+
+  const pasteAsPlainText = useCallback(() => {
+    run((ctx) => void pastePlainText(ctx.get(editorViewCtx)));
+  }, [run]);
 
   const selectAll = useCallback(() => {
     run((ctx) => {
@@ -180,5 +171,12 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
     });
   }, [run]);
 
-  return { copyOrCut, copyAsMarkdown, paste, selectAll, insertText };
+  return {
+    copyOrCut,
+    copyAsPlainText,
+    paste,
+    pasteAsPlainText,
+    selectAll,
+    insertText,
+  };
 }
