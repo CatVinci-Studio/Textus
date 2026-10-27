@@ -1,33 +1,41 @@
 import { useState } from "react";
 import { Byline } from "./PluginPage";
+import { PluginIcon } from "./PluginArt";
 import type { Strings } from "../../i18n/strings";
 import { pluginName, pluginText } from "../../plugins/manager";
 import {
   loadCatalog,
-  notInstalled,
-  PLUGIN_PACKS,
-  RECOMMENDED_PLUGINS,
   searchCatalog,
+  sortCatalog,
   type CatalogItem,
+  type CatalogSort,
   type CatalogState,
-  type PackId,
 } from "../../plugins/store/catalog";
+import { Select } from "../../ui/Select";
 
-/** Get more › Plugins: the catalog's plugins not installed yet; with no
- *  search, the packs and the recommended ones first. */
+const SORTS: CatalogSort[] = ["popular", "newest", "name"];
+
+/** Get more › Plugins: the catalog's plugins, the most installed first (or
+ *  as sorted), each opening its page. */
 export function MarketPlugins({
   t,
   catalog,
   query,
+  installed,
   installing,
   onInstall,
+  onOpen,
 }: {
   t: Strings;
   catalog: CatalogState;
   query: string;
+  /** The ids of the plugins installed already. */
+  installed: ReadonlySet<string>;
   installing: string | null;
-  onInstall: (item: CatalogItem, quietly?: boolean) => Promise<void>;
+  onInstall: (item: CatalogItem) => void;
+  onOpen: (item: CatalogItem) => void;
 }) {
+  const [sort, setSort] = useState<CatalogSort>("popular");
   if (catalog.status === "failed")
     return (
       <CatalogProblem
@@ -37,22 +45,12 @@ export function MarketPlugins({
     );
   if (catalog.status !== "ready")
     return <p className="plugin-empty">{t.pluginsCatalogLoading}</p>;
-  const offered = notInstalled(catalog);
-  const shown = searchCatalog(offered, query);
-  const browsing = !query.trim();
-  const picks = browsing
-    ? RECOMMENDED_PLUGINS.flatMap((id) => shown.filter((i) => i.id === id))
-    : [];
-  const rest = shown.filter((i) => !picks.includes(i));
-  const card = (item: CatalogItem) => (
-    <CatalogCard
-      key={item.id}
-      item={item}
-      t={t}
-      installing={installing === item.id}
-      onInstall={() => void onInstall(item)}
-    />
-  );
+  const shown = sortCatalog(searchCatalog(catalog.items, query), sort);
+  const sortLabel: Record<CatalogSort, string> = {
+    popular: t.pluginsSortPopular,
+    newest: t.pluginsSortNewest,
+    name: t.pluginsSortName,
+  };
   return (
     <>
       {catalog.error && (
@@ -61,112 +59,38 @@ export function MarketPlugins({
           text={t.pluginsCatalogKept.replace("{reason}", catalog.error)}
         />
       )}
-      {browsing && (
-        <PluginPacks
-          t={t}
-          catalog={catalog.items}
-          offered={offered}
-          onInstall={onInstall}
-        />
-      )}
-      {picks.length > 0 && (
-        <>
-          <h4 className="plugin-subgroup-title">{t.pluginsRecommended}</h4>
-          <div className="settings-group-body market-recommended">
-            {picks.map(card)}
-          </div>
-          {rest.length > 0 && (
-            <h4 className="plugin-subgroup-title">{t.pluginsMore}</h4>
-          )}
-        </>
-      )}
+      <div className="market-sort">
+        <Select
+          className="inline-chat-mode"
+          aria-label={t.pluginsSortLabel}
+          value={sort}
+          onChange={(e) => setSort(e.target.value as CatalogSort)}
+        >
+          {SORTS.map((s) => (
+            <option key={s} value={s}>
+              {sortLabel[s]}
+            </option>
+          ))}
+        </Select>
+      </div>
       <div className="settings-group-body">
         {shown.length ? (
-          rest.map(card)
+          shown.map((item) => (
+            <CatalogCard
+              key={item.id}
+              item={item}
+              t={t}
+              installed={installed.has(item.id)}
+              installing={installing === item.id}
+              onInstall={() => onInstall(item)}
+              onOpen={() => onOpen(item)}
+            />
+          ))
         ) : (
           <p className="plugin-empty">
-            {offered.length
-              ? t.pluginsSearchNone.replace("{query}", query.trim())
-              : t.pluginsCatalogAllInstalled}
+            {t.pluginsSearchNone.replace("{query}", query.trim())}
           </p>
         )}
-      </div>
-    </>
-  );
-}
-
-const PACK_NAMES: Record<PackId, (t: Strings) => string> = {
-  writing: (t) => t.packWriting,
-  charts: (t) => t.packCharts,
-  research: (t) => t.packResearch,
-};
-
-/** The packs the catalog has two or more plugins of: their plugins by
- *  name, and Install all for the ones not installed yet, one after another. */
-function PluginPacks({
-  t,
-  catalog,
-  offered,
-  onInstall,
-}: {
-  t: Strings;
-  catalog: CatalogItem[];
-  offered: CatalogItem[];
-  onInstall: (item: CatalogItem, quietly?: boolean) => Promise<void>;
-}) {
-  const [busy, setBusy] = useState<PackId | null>(null);
-  const packs = PLUGIN_PACKS.map((pack) => ({
-    ...pack,
-    items: pack.plugins.flatMap((id) => catalog.filter((i) => i.id === id)),
-  })).filter((pack) => pack.items.length >= 2);
-  if (!packs.length) return null;
-  const installAll = async (id: PackId, missing: CatalogItem[]) => {
-    setBusy(id);
-    try {
-      for (const item of missing) await onInstall(item, true);
-    } finally {
-      setBusy(null);
-    }
-  };
-  return (
-    <>
-      <h4 className="plugin-subgroup-title">{t.pluginsPacks}</h4>
-      <div className="settings-group-body">
-        {packs.map((pack) => {
-          const missing = pack.items.filter((i) => offered.includes(i));
-          return (
-            <div
-              key={pack.id}
-              className="settings-row plugin-card"
-              data-pack={pack.id}
-            >
-              <div className="plugin-card-open">
-                <span className="settings-row-label plugin-card-name">
-                  {PACK_NAMES[pack.id](t)}
-                </span>
-                <span className="settings-row-hint plugin-card-description">
-                  {pack.items
-                    .map((i) => pluginName({ id: i.id, manifest: i.manifest }))
-                    .join(" · ")}
-                </span>
-              </div>
-              <div className="settings-row-control">
-                <button
-                  type="button"
-                  className="plugin-install"
-                  disabled={!missing.length || busy !== null}
-                  onClick={() => void installAll(pack.id, missing)}
-                >
-                  {busy === pack.id
-                    ? t.pluginInstalling
-                    : missing.length
-                      ? t.packInstallAll.replace("{n}", String(missing.length))
-                      : t.packAllInstalled}
-                </button>
-              </div>
-            </div>
-          );
-        })}
       </div>
     </>
   );
@@ -187,48 +111,86 @@ function CatalogProblem({ t, text }: { t: Strings; text: string }) {
   );
 }
 
-/** A plugin the catalog offers, with Install, and a picture of it at work
- *  when it has one. */
-function CatalogCard({
-  item,
+/** "1,234 installs", in the UI language's digits; nothing when uncounted. */
+export function installsText(item: CatalogItem, t: Strings): string | null {
+  if (item.installs === undefined) return null;
+  return t.pluginInstalls.replace("{n}", item.installs.toLocaleString());
+}
+
+/** Install, or Installed once it is - in place, so several can be
+ *  installed one after another. */
+export function InstallButton({
   t,
+  installed,
   installing,
   onInstall,
 }: {
-  item: CatalogItem;
   t: Strings;
+  installed: boolean;
   installing: boolean;
   onInstall: () => void;
 }) {
-  const record = { manifest: item.manifest };
+  return (
+    <button
+      type="button"
+      className={`text-button plugin-install${installed ? " is-installed" : ""}`}
+      disabled={installed || installing}
+      onClick={onInstall}
+    >
+      {installed
+        ? t.pluginInstalled
+        : installing
+          ? t.pluginInstalling
+          : t.pluginInstall}
+    </button>
+  );
+}
+
+/** A plugin the catalog offers: its icon, name, line and installs, opening
+ *  its page; Install beside it. */
+function CatalogCard({
+  item,
+  t,
+  installed,
+  installing,
+  onInstall,
+  onOpen,
+}: {
+  item: CatalogItem;
+  t: Strings;
+  installed: boolean;
+  installing: boolean;
+  onInstall: () => void;
+  onOpen: () => void;
+}) {
   const name = pluginName({ id: item.id, manifest: item.manifest });
-  const shot = item.screenshots[0];
+  const installs = installsText(item, t);
   return (
     <div className="settings-row plugin-card" data-catalog={item.id}>
-      <div className="plugin-card-open">
-        <span className="settings-row-label plugin-card-name">{name}</span>
-        <span className="settings-row-hint plugin-card-description">
-          {pluginText(record, item.manifest.description)}
+      <button
+        type="button"
+        className="plugin-card-open plugin-card-with-icon"
+        aria-label={t.pluginOpenDetails.replace("{name}", name)}
+        onClick={onOpen}
+      >
+        <PluginIcon id={item.id} manifest={item.manifest} url={item.icon} />
+        <span className="plugin-card-text">
+          <span className="settings-row-label plugin-card-name">{name}</span>
+          <span className="settings-row-hint plugin-card-description">
+            {pluginText({ manifest: item.manifest }, item.manifest.description)}
+          </span>
+          <Byline manifest={item.manifest} official={item.official} t={t}>
+            {installs && <span className="plugin-installs">{installs}</span>}
+          </Byline>
         </span>
-        <Byline manifest={item.manifest} official={item.official} t={t} />
-        {shot && (
-          <img
-            className="plugin-card-shot"
-            src={shot}
-            alt={t.pluginScreenshot.replace("{name}", name)}
-            loading="lazy"
-          />
-        )}
-      </div>
+      </button>
       <div className="settings-row-control">
-        <button
-          type="button"
-          className="plugin-install"
-          disabled={installing}
-          onClick={onInstall}
-        >
-          {installing ? t.pluginInstalling : t.pluginInstall}
-        </button>
+        <InstallButton
+          t={t}
+          installed={installed}
+          installing={installing}
+          onInstall={onInstall}
+        />
       </div>
     </div>
   );

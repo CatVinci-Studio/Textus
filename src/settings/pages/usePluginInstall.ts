@@ -16,13 +16,10 @@ import {
 import type { Attempt } from "./PluginPage";
 
 /** Installs a plugin from the catalog: fetched and checked in Rust, turned
- *  on with its permissions asked, and what it needs offered. Failures show
- *  in a message. */
-export function usePluginInstall(
-  t: Strings,
-  /** After a plugin is installed and on. */
-  onInstalled?: (id: string) => void,
-) {
+ *  on with its permissions asked, and what it needs offered. Nothing opens
+ *  after it, so several can be installed in a row. Failures show in a
+ *  message. */
+export function usePluginInstall(t: Strings) {
   const { settings, setSettings } = useSettings();
   const [installing, setInstalling] = useState<string | null>(null);
 
@@ -37,14 +34,12 @@ export function usePluginInstall(
     }
   };
 
-  /** `quietly`: one of several (a pack) - no guide opens after it. */
-  const install = (item: CatalogItem, quietly = false) =>
+  const install = (item: CatalogItem) =>
     attempt(async () => {
       setInstalling(item.id);
       try {
         await installFromCatalog(item.id);
         await askForRequirements(item.id, t, settings, setSettings);
-        if (!quietly) onInstalled?.(item.id);
       } finally {
         setInstalling(null);
       }

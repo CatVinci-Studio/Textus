@@ -88,35 +88,3 @@ test("Get more has a tab per kind - themes, plugins, skills - each with its sear
   await expect(page.locator("[data-skill]")).toHaveCount(1);
   await expect(page.locator('[data-skill="cover-letter"]')).toBeVisible();
 });
-
-test("Get more leads with the recommended plugins, until something is searched for", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
-  await page.getByRole("button", { name: "Extensions" }).click();
-  await page.getByRole("tab", { name: "Plugins" }).click();
-  await page.getByRole("button", { name: "Get more" }).click();
-  const picks = page.locator(".market-recommended .plugin-card");
-  await expect(picks.first()).toBeVisible();
-  expect(
-    await picks.evaluateAll((cards) =>
-      cards.map((c) => c.getAttribute("data-catalog")),
-    ),
-  ).toEqual([
-    "catvinci.pdf-viewer",
-    "catvinci.image-viewer",
-    "catvinci.tasks",
-    "catvinci.daily-notes",
-  ]);
-  await expect(page.locator(".plugin-subgroup-title")).toContainText([
-    "Packs",
-    "Recommended",
-  ]);
-  await page.getByRole("searchbox").fill("kanban");
-  await expect(page.locator(".market-recommended")).toHaveCount(0);
-});

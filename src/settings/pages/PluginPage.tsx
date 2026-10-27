@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow } from "../sections/controls";
 import { PluginSettingRows } from "./PluginSettings";
@@ -23,7 +23,7 @@ import {
 } from "../../plugins/store/requirements";
 import { permissionLabel } from "../../plugins/store/permissions";
 import { canSwitch } from "../../plugins/store/lifecycle";
-import { usageGuide } from "../../plugins/store/usage-guide";
+import { PluginIcon, PluginReadme } from "./PluginArt";
 import { PluginSettingsWebview } from "../../plugins/views/plugin-views";
 import type { PluginManifest } from "../../plugins/store/manifest";
 import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
@@ -58,11 +58,14 @@ export function Byline({
   official,
   dev,
   t,
+  children,
 }: {
   manifest: PluginManifest;
   official: boolean;
   dev?: boolean;
   t: Strings;
+  /** More about it after the version: its installs. */
+  children?: ReactNode;
 }) {
   return (
     <div className="plugin-byline">
@@ -74,6 +77,7 @@ export function Byline({
         {manifest.version}
         {dev ? ` · ${t.pluginDevTag}` : ""}
       </span>
+      {children}
     </div>
   );
 }
@@ -89,7 +93,6 @@ export function PluginPage({
   onBack,
   onEnable,
   onUpdate,
-  onGuide,
   onEditWithAi,
   attempt,
 }: {
@@ -101,8 +104,6 @@ export function PluginPage({
   onBack: () => void;
   onEnable: (on: boolean) => void;
   onUpdate: () => void;
-  /** Opens its usage guide, when it has one. */
-  onGuide: () => void;
   /** The AI panel in Create mode, asked to change it. */
   onEditWithAi: () => void;
   attempt: Attempt;
@@ -113,14 +114,6 @@ export function PluginPage({
   const on = record.status === "on";
   const status = statusText(record, allOn, t);
   const switchable = !!manifest && canSwitch(record.status);
-  const [hasGuide, setHasGuide] = useState(false);
-  useEffect(() => {
-    let live = true;
-    void usageGuide(record.id).then((text) => live && setHasGuide(!!text));
-    return () => {
-      live = false;
-    };
-  }, [record.id]);
   return (
     <div className="plugin-page" data-plugin-page={record.id}>
       <button type="button" className="plugin-back" onClick={onBack}>
@@ -128,6 +121,12 @@ export function PluginPage({
       </button>
       <div className="settings-group-body plugin-page-head">
         <label className="settings-row plugin-page-title-row">
+          <PluginIcon
+            id={record.id}
+            manifest={manifest}
+            origin={record.origin}
+            large
+          />
           <div className="settings-row-text">
             <h2 className="plugin-page-title">{name}</h2>
             {manifest?.description && (
@@ -154,15 +153,6 @@ export function PluginPage({
           />
         </label>
         <div className="settings-row plugin-guide-row">
-          {hasGuide && (
-            <button
-              type="button"
-              className="text-button settings-inline-button"
-              onClick={onGuide}
-            >
-              {t.pluginUsageGuide}
-            </button>
-          )}
           {manifest && (
             <button
               type="button"
@@ -224,6 +214,11 @@ export function PluginPage({
           )}
         </SettingsGroup>
       )}
+      <PluginReadme
+        id={record.id}
+        installed
+        label={t.pluginReadmeLabel.replace("{name}", name)}
+      />
       <PluginErrors id={record.id} t={t} />
       {manifest && <PluginAbout record={record} t={t} attempt={attempt} />}
       <div className="plugin-detail-actions">

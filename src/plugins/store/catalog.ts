@@ -13,7 +13,6 @@ import {
   pluginName,
   pluginRecord,
   pluginText,
-  pluginsSnapshot,
   setPluginEnabled,
 } from "../manager";
 import { errorText } from "../../utils/error-text";
@@ -31,6 +30,13 @@ export interface CatalogItem {
   size: number;
   /** Pictures of it at work, from the catalog's release. */
   screenshots: string[];
+  /** Whether it has a README for its page (pluginReadme). */
+  hasReadme: boolean;
+  icon?: string;
+  /** Its packages' downloads, every version's; unknown when uncounted. */
+  installs?: number;
+  /** Its latest version's date, YYYY-MM-DD. */
+  updated?: string;
 }
 
 export type { SkillEntry };
@@ -74,6 +80,10 @@ function item(entry: PluginCatalogEntry): CatalogItem | null {
       manifest: parseManifest(entry.manifest),
       size: entry.size,
       screenshots: entry.screenshots,
+      hasReadme: Object.keys(entry.readme).length > 0,
+      icon: entry.icon ?? undefined,
+      installs: entry.installs ?? undefined,
+      updated: entry.updated ?? undefined,
     };
   } catch {
     return null;
@@ -145,58 +155,24 @@ export async function installFromCatalog(id: string): Promise<void> {
   if (!before || wasOn) await setPluginEnabled(id, true);
 }
 
-export type PackId = "writing" | "charts" | "research";
+export type CatalogSort = "popular" | "newest" | "name";
 
-/** Plugins offered to install together: the official ones, by purpose. A
- *  pack shows the ones the catalog has. */
-export const PLUGIN_PACKS: { id: PackId; plugins: string[] }[] = [
-  {
-    id: "writing",
-    plugins: [
-      "catvinci.markdown-lint",
-      "catvinci.cjk-spacing",
-      "catvinci.heading-numbers",
-      "catvinci.templates",
-      "catvinci.bookmarks",
-    ],
-  },
-  {
-    id: "charts",
-    plugins: [
-      "catvinci.markmap",
-      "catvinci.echarts",
-      "catvinci.plantuml",
-      "catvinci.chartjs",
-      "catvinci.timeline",
-      "catvinci.abc",
-      "catvinci.wavedrom",
-      "catvinci.function-plot",
-    ],
-  },
-  {
-    id: "research",
-    plugins: [
-      "catvinci.zotero",
-      "catvinci.pdf-viewer",
-      "catvinci.daily-notes",
-      "catvinci.graph",
-    ],
-  },
-];
-
-/** The plugins Get more puts first while nothing is searched for. */
-export const RECOMMENDED_PLUGINS = [
-  "catvinci.pdf-viewer",
-  "catvinci.image-viewer",
-  "catvinci.tasks",
-  "catvinci.daily-notes",
-];
-
-/** The catalog's plugins not installed yet. */
-export function notInstalled(from: CatalogState = state): CatalogItem[] {
-  if (from.status !== "ready") return [];
-  const installed = new Set(pluginsSnapshot().records.map((r) => r.id));
-  return from.items.filter((i) => !installed.has(i.id));
+/** `list` in the order Get more shows: the most installed first, the
+ *  latest updated, or by name in the UI language. Ties go by name. */
+export function sortCatalog(
+  list: CatalogItem[],
+  by: CatalogSort,
+): CatalogItem[] {
+  const name = (i: CatalogItem) =>
+    pluginName({ id: i.id, manifest: i.manifest });
+  const byName = (a: CatalogItem, b: CatalogItem) =>
+    name(a).localeCompare(name(b));
+  const key: Record<CatalogSort, (a: CatalogItem, b: CatalogItem) => number> = {
+    popular: (a, b) => (b.installs ?? 0) - (a.installs ?? 0),
+    newest: (a, b) => (b.updated ?? "").localeCompare(a.updated ?? ""),
+    name: () => 0,
+  };
+  return [...list].sort((a, b) => key[by](a, b) || byName(a, b));
 }
 
 /** The items whose name, description, author or id hold every word of

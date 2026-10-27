@@ -26,7 +26,7 @@ const reply = [
   "exports.activate = function () {};",
   "```",
   "",
-  "```markdown USAGE.md",
+  "```markdown README.md",
   "# Word Count",
   "",
   "```",
@@ -44,7 +44,7 @@ describe("a plugin in a reply", () => {
     expect(plugin.files.map((f) => f.path)).toEqual([
       "textus-plugin.json",
       "host.js",
-      "USAGE.md",
+      "README.md",
     ]);
     expect(plugin.files[1].text).toBe("exports.activate = function () {};\n");
   });

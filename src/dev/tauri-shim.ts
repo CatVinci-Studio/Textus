@@ -726,7 +726,8 @@ export function installDevTauriShim(): void {
   // Plugins in memory. Folder calls read `window.__devFs` (a lone document,
   // `__devFiles`); installed plugins are `__devPlugins`, and `__devPluginState`
   // starts some on. The catalog is served at /dev-plugins/; see also
-  // `__devCatalogInstalled`, `__devCatalogCache` and `__devCatalogFails`.
+  // `__devCatalogInstalled`, `__devCatalogCache`, `__devCatalogFails` and
+  // `__devCatalogStats`.
   type DevPluginEntry = {
     enabled: boolean;
     granted: string[];
@@ -738,13 +739,25 @@ export function installDevTauriShim(): void {
     allOn: true,
     plugins: {} as Record<string, DevPluginEntry>,
   };
-  type CatalogEntry = { id: string; official: boolean; manifest: unknown };
+  type CatalogEntry = {
+    id: string;
+    official: boolean;
+    manifest: unknown;
+    readme?: Record<string, string>;
+  };
   let catalogEntries: Promise<CatalogEntry[]> | null = null;
   const devCatalog = () =>
     (catalogEntries ??= fetch("/dev-plugins/index.json").then((r) =>
       r.ok
-        ? (r.json() as Promise<{ plugins: CatalogEntry[] }>).then(
-            (c) => c.plugins,
+        ? (r.json() as Promise<{ plugins: CatalogEntry[] }>).then((c) =>
+            // `__devCatalogStats`: installs and dates by id, as the
+            // release's daily count adds them.
+            c.plugins.map((p) => ({
+              ...p,
+              ...((w.__devCatalogStats as Record<string, object> | undefined)?.[
+                p.id
+              ] ?? {}),
+            })),
           )
         : Promise.reject(new Error("No textus-plugins checkout to list.")),
     ));
@@ -847,6 +860,16 @@ export function installDevTauriShim(): void {
         );
       case "plugin_install_catalog":
         return installFromDevCatalog(id);
+      // As Rust picks it: the language, its base, then English.
+      case "plugin_catalog_readme":
+        return devCatalog().then((entries) => {
+          const readme = entries.find((e) => e.id === id)?.readme ?? {};
+          const lang = String(args.language);
+          const url = [lang, lang.split("-")[0], "en"]
+            .map((l) => readme[l])
+            .find(Boolean);
+          return url ? fetch(url).then((r) => r.text()) : null;
+        });
       // The catalog's skills: `window.__devCatalogSkills`, installed into
       // `window.__devInstalledSkills`.
       case "skill_catalog":

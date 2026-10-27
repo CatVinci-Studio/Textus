@@ -7,7 +7,7 @@ import {
   subscribePlugins,
 } from "../../plugins/manager";
 import { localize, type Permission } from "../../plugins/store/manifest";
-import { openUsageGuide } from "../../plugins/store/usage-guide";
+import { openReadme } from "../../plugins/store/readme";
 import { showMessage } from "../../ui/app-dialog";
 import { errorText } from "../../utils/error-text";
 import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
@@ -108,7 +108,7 @@ function ReplyPluginChip({
             : labels.installPlugin}
       </button>
       {current && (
-        <button type="button" onClick={() => void openUsageGuide(manifest.id)}>
+        <button type="button" onClick={() => void openReadme(manifest.id)}>
           {labels.usageGuide}
         </button>
       )}
