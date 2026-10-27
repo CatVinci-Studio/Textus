@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { pluginName } from "../../plugins/manager";
 import { dataUrl, readPluginFile } from "../../plugins/store/files";
 import type { PluginManifest } from "../../plugins/store/manifest";
 import type { PluginOrigin } from "../../plugins/store/files";
@@ -38,7 +37,9 @@ export function PluginIcon({
     };
   }, [id, origin, file, url]);
   const src = broken ? null : (url ?? read);
-  const letter = [...pluginName({ id, manifest })][0]?.toUpperCase() ?? "?";
+  // From the id, which is Latin in every language: a name's first character
+  // could be one of its script's (函 for 函数图像).
+  const letter = (id.split(".")[1] ?? id).charAt(0).toUpperCase() || "?";
   return (
     <span
       className={`plugin-icon${large ? " plugin-icon-large" : ""}`}
