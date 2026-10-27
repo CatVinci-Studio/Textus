@@ -622,7 +622,7 @@ declare global {
       | { op: "deleteLines"; count?: number }
       | { op: "copy" }
       | { op: "copyLines"; count?: number }
-      | { op: "deleteChars"; count?: number; back?: boolean }
+      | { op: "deleteChars"; count?: number; back?: boolean; copy?: boolean }
       | { op: "insertText"; text: string }
       | { op: "pasteLines"; text: string; above?: boolean }
       | { op: "openLine"; above?: boolean }
