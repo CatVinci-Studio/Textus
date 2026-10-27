@@ -134,9 +134,15 @@ interface InputState {
 
 const inputKey = new PluginKey<InputState>("plugin-editor-input");
 
+/** The cursor the plugin with the keys asked for, kept for an editor that
+ *  wasn't there yet (Vim starts before one has the focus) or opens later. */
+let cursorStyle: "bar" | "block" = "bar";
+
 function setCursorStyle(style: "bar" | "block") {
+  cursorStyle = style;
   const view = lastView;
   if (!view || view.isDestroyed) return;
+  if (inputKey.getState(view.state)?.cursor === style) return;
   view.dispatch(view.state.tr.setMeta(inputKey, { cursor: style }));
 }
 
@@ -152,7 +158,7 @@ export const createEditorInputPlugin = () =>
   new Plugin<InputState>({
     key: inputKey,
     state: {
-      init: () => ({ cursor: "bar", labels: [], matches: [] }),
+      init: () => ({ cursor: cursorStyle, labels: [], matches: [] }),
       apply(tr, prev) {
         const meta = tr.getMeta(inputKey) as Partial<InputState> | undefined;
         const next = meta ? { ...prev, ...meta } : prev;
@@ -174,6 +180,7 @@ export const createEditorInputPlugin = () =>
       handleDOMEvents: {
         focus(view) {
           lastView = view;
+          setCursorStyle(cursorStyle);
           // WebKit lets every input source in again as an element takes
           // the focus: after it has.
           setTimeout(() => syncRomanInput(true), 50);
@@ -316,8 +323,12 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
     throw new Error(
       "Only the plugin that has the keyboard acts in the editor.",
     );
+  if (action.op === "cursor") {
+    setCursorStyle(action.style);
+    return { empty: true };
+  }
   // Changing the cursor's look or clearing flash needs no key before it.
-  const looks = action.op === "cursor" || action.op === "flashClear";
+  const looks = action.op === "flashClear";
   if (!looks && Date.now() - owner.lastKeyAt > ACT_WITHIN_MS)
     throw new Error("Editor actions follow a key the user pressed.");
   const view = lastView;
@@ -528,9 +539,6 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
       break;
     case "redo":
       redo(state, view.dispatch);
-      break;
-    case "cursor":
-      view.dispatch(state.tr.setMeta(inputKey, { cursor: action.style }));
       break;
     case "flash": {
       const found = findFlash(view, action.query);
