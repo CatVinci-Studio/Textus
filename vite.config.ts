@@ -34,6 +34,13 @@ export default defineConfig(async () => ({
 
   // Keep Vite from obscuring Rust errors.
   clearScreen: false,
+  // Scanned from the app's own pages only. A plugin checkout inside the
+  // project (CI's textus-plugins/) has pages that import textus-resource:
+  // URLs; scanning them failed and pre-bundling was skipped, so the first
+  // flow of a run met a mid-test reload.
+  optimizeDeps: {
+    entries: ["index.html", "playground.html"],
+  },
   // Tauri expects a fixed port; fail if it is taken.
   server: {
     port: 1420,
