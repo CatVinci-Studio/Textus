@@ -18,6 +18,7 @@ import { splitListItem } from "@milkdown/kit/prose/schema-list";
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
 import { modIsMeta } from "../../platform/os";
+import { paragraphToRule } from "../marks/md-span-blocks";
 import { leadingWhitespaceOfLastLine } from "../code/code-indent";
 
 /**
@@ -379,8 +380,29 @@ export const liftEmptyNestedTask: Command = (state, dispatch) => {
   );
 };
 
+/** Enter on a line of only "---" or "___": a rule, the caret on a new line
+ *  below it, as for "***". Made as the third dash was typed, the rule left
+ *  the caret on an empty line and Enter added a second one. */
+export const ruleFromDashes: Command = (state, dispatch) => {
+  const { $from, empty } = state.selection;
+  const line = $from.parent;
+  if (!empty || line.type.name !== "paragraph") return false;
+  if (!/^(---|___)$/.test(line.textContent) || line.childCount !== 1)
+    return false;
+  if ($from.parentOffset !== line.content.size) return false;
+  // A list item's first line must stay a paragraph.
+  const index = $from.index(-1);
+  const { hr } = state.schema.nodes;
+  if (!hr || !$from.node(-1).canReplaceWith(index, index, hr)) return false;
+  const tr = paragraphToRule(state, $from.before());
+  if (!tr) return false;
+  dispatch?.(tr.scrollIntoView());
+  return true;
+};
+
 const onEnter: Command[] = [
   frontMatterFromFirstLine,
+  ruleFromDashes,
   splitInlineCode,
   enterInTable,
   pipeRowToTable,

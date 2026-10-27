@@ -12,6 +12,7 @@ import {
   leaveTextBlockOnEmptyLastLine,
   newlineInCode,
   parsePipeRow,
+  ruleFromDashes,
   pipeRowToTable,
   frontMatterFromFirstLine,
   shiftEnterWithoutBreak,
@@ -36,6 +37,7 @@ const schema = new Schema({
       attrs: { level: { default: 1 } },
     },
     blockquote: { group: "block", content: "block+" },
+    hr: { group: "block" },
     bullet_list: { group: "block", content: "list_item+" },
     list_item: { content: "paragraph block*" },
     code_block: { group: "block", content: "text*", code: true },
@@ -397,5 +399,22 @@ describe("newlineInCode", () => {
 
   it("leaves other blocks alone", () => {
     expect(run(newlineInCode, stateAt(docOf(p("text")), "text"))).toBeNull();
+  });
+});
+
+describe("ruleFromDashes", () => {
+  it("makes a line of --- a rule, the caret on one new line below", () => {
+    const next = run(ruleFromDashes, stateAt(docOf(p("a"), p("---")), "---"))!;
+    expect(next.doc.childCount).toBe(3);
+    expect(next.doc.child(1).type.name).toBe("hr");
+    expect(next.selection.$from.parent).toBe(next.doc.child(2));
+  });
+
+  it("leaves other lines, and a list item's first line, to the default", () => {
+    expect(run(ruleFromDashes, stateAt(docOf(p("---x")), "---x"))).toBeNull();
+    const list = n.bullet_list.create(null, [
+      n.list_item.create(null, [p("---")]),
+    ]);
+    expect(run(ruleFromDashes, stateAt(docOf(list), "---"))).toBeNull();
   });
 });

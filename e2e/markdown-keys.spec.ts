@@ -503,3 +503,15 @@ test("Backspace right after a link takes one character of its source, not the li
     "[Textus](https://a.com end",
   );
 });
+
+test("--- and Enter make a rule with the caret on the one line below it", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("above", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("---", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("below", { delay: 20 });
+  expect(await sourceOf(page)).toBe("above\n\n---\n\nbelow");
+});
