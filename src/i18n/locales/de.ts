@@ -118,6 +118,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   diagramViewerHint:
     "Scrollen oder Zwei-Finger-Zoom · ziehen zum Verschieben · Doppelklick zum Einpassen",
   codeBlockLanguage: "Sprache des Codes",
+  codeBlockLanguageSearch: "Sprache suchen",
   announceAiWriting: `${AI_NAME} schreibt…`,
   announceAiDone: `${AI_NAME} ist fertig.`,
   announceChangesProposed: {

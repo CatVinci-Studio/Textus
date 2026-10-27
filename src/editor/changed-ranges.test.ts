@@ -8,7 +8,12 @@ const schema = new Schema({
   nodes: {
     doc: { content: "block+" },
     paragraph: { content: "text*", group: "block" },
-    code_block: { content: "text*", group: "block", code: true },
+    code_block: {
+      content: "text*",
+      group: "block",
+      code: true,
+      attrs: { language: { default: "" } },
+    },
     text: {},
   },
 });
@@ -57,6 +62,22 @@ describe("redecorateChanged", () => {
       ),
     );
     expect(ranges(set)).toHaveLength(1);
+  });
+
+  it("draws a block again when only an attribute of it changes", () => {
+    const { state, set } = start();
+    const at = state.doc.child(0).nodeSize;
+    let drawn = 0;
+    redecorateChanged(
+      set,
+      state.tr.setNodeAttribute(at, "language", "json"),
+      isCode,
+      (node, pos) => {
+        drawn++;
+        return mark(node, pos);
+      },
+    );
+    expect(drawn).toBe(1);
   });
 
   it("draws nothing again for an edit away from every block", () => {

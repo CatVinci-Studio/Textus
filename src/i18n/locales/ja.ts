@@ -115,6 +115,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   diagramViewerHint:
     "スクロールかピンチで拡大縮小 · ドラッグで移動 · ダブルクリックで全体表示",
   codeBlockLanguage: "コードの言語",
+  codeBlockLanguageSearch: "言語を検索",
   announceAiWriting: `${AI_NAME} が書いています…`,
   announceAiDone: `${AI_NAME} が書き終えました。`,
   announceChangesProposed: { other: "{n} か所の変更が提案されました。" },

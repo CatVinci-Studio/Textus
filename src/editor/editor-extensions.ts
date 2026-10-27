@@ -335,7 +335,9 @@ export function withEditorCore(
           return {
             copy: t.codeBlockCopy,
             copied: t.codeBlockCopied,
+            selectAll: t.selectAll,
             language: t.codeBlockLanguage,
+            languageSearch: t.codeBlockLanguageSearch,
           };
         }),
       )

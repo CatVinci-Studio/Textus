@@ -367,6 +367,8 @@ export function createGhostTextPlugin(options: {
               if (!selection.empty) return;
 
               const $pos = selection.$from;
+              // In code a suggestion ran many lines over what was typed.
+              if ($pos.parent.type.spec.code) return;
               const atBlockEnd =
                 $pos.parent.isTextblock &&
                 $pos.parentOffset === $pos.parent.content.size &&
@@ -386,13 +388,8 @@ export function createGhostTextPlugin(options: {
               // Right after punctuation - a full stop, a comma - the next
               // words are the writer's own choice: suggestions there were
               // useful three times in ten, mid-clause seven
-              // (completion_replay). Only a pause after a word asks; code
-              // has no such clauses.
-              if (
-                !$pos.parent.type.spec.code &&
-                !/[\p{L}\p{N}]\s?$/u.test(before)
-              )
-                return;
+              // (completion_replay). Only a pause after a word asks.
+              if (!/[\p{L}\p{N}]\s?$/u.test(before)) return;
               // Mid-document, at the end of a paragraph with more after it,
               // the suggestion leads into what follows (the after-text goes
               // along); it used to stay quiet there.
@@ -404,10 +401,8 @@ export function createGhostTextPlugin(options: {
               // is the only real no-op case - "continue from the exact end
               // of the before-text" is meaningless with no before-text.
               if (!before.trim()) return;
-              // Outside code, a before-text of only code (a diagram's
-              // source above an empty paragraph) has no prose to continue
-              // either: what came back was text in no one's language.
-              if (!$pos.parent.type.spec.code && !hasProse(prose)) return;
+              // Only code before (a diagram's source): no prose to continue.
+              if (!hasProse(prose)) return;
 
               debounced.schedule(async (isCurrent) => {
                 // Turned off while the request waited out the debounce.

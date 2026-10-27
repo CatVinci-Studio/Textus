@@ -116,6 +116,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   diagramViewerHint:
     "Role ou faça pinça para dar zoom · arraste para mover · clique duas vezes para ajustar",
   codeBlockLanguage: "Linguagem do código",
+  codeBlockLanguageSearch: "Pesquisar linguagem",
   announceAiWriting: `${AI_NAME} está escrevendo…`,
   announceAiDone: `${AI_NAME} terminou.`,
   announceChangesProposed: {

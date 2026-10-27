@@ -108,6 +108,7 @@ export default {
   diagramViewerClose: "关闭",
   diagramViewerHint: "滚动或双指缩放 · 拖动移动 · 双击恢复",
   codeBlockLanguage: "代码语言",
+  codeBlockLanguageSearch: "搜索语言",
   announceAiWriting: `${AI_NAME} 正在写…`,
   announceAiDone: `${AI_NAME} 写完了。`,
   announceChangesProposed: { other: "提出了 {n} 处修改。" },

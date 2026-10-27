@@ -114,6 +114,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   diagramViewerHint:
     "스크롤하거나 손가락을 오므려 확대·축소 · 끌어서 이동 · 두 번 클릭하면 맞춤",
   codeBlockLanguage: "코드 언어",
+  codeBlockLanguageSearch: "언어 검색",
   announceAiWriting: `${AI_NAME}가 쓰는 중…`,
   announceAiDone: `${AI_NAME}가 다 썼습니다.`,
   announceChangesProposed: { other: "{n}곳 수정을 제안했습니다." },
