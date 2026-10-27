@@ -131,104 +131,104 @@ function clearFlash() {
 
 const NO_FLASH: Partial<InputState> = { labels: [], matches: [] };
 
-export const editorInputPlugin = $prose(
-  () =>
-    new Plugin<InputState>({
-      key: inputKey,
-      state: {
-        init: () => ({ cursor: "bar", labels: [], matches: [] }),
-        apply(tr, prev) {
-          const meta = tr.getMeta(inputKey) as Partial<InputState> | undefined;
-          const next = meta ? { ...prev, ...meta } : prev;
-          if (tr.docChanged && (next.labels.length || next.matches.length))
-            return { ...next, ...NO_FLASH };
-          return next;
+export const createEditorInputPlugin = () =>
+  new Plugin<InputState>({
+    key: inputKey,
+    state: {
+      init: () => ({ cursor: "bar", labels: [], matches: [] }),
+      apply(tr, prev) {
+        const meta = tr.getMeta(inputKey) as Partial<InputState> | undefined;
+        const next = meta ? { ...prev, ...meta } : prev;
+        if (tr.docChanged && (next.labels.length || next.matches.length))
+          return { ...next, ...NO_FLASH };
+        return next;
+      },
+    },
+    props: {
+      handleKeyDown(view, event) {
+        if (!owner) return false;
+        const name = captures(event, owner.capture);
+        if (!name) return false;
+        lastView = view;
+        owner.lastKeyAt = Date.now();
+        owner.deliver(name);
+        return true;
+      },
+      handleDOMEvents: {
+        focus(view) {
+          lastView = view;
+          return false;
         },
       },
-      props: {
-        handleKeyDown(view, event) {
-          if (!owner) return false;
-          const name = captures(event, owner.capture);
-          if (!name) return false;
-          lastView = view;
-          owner.lastKeyAt = Date.now();
-          owner.deliver(name);
-          return true;
-        },
-        handleDOMEvents: {
-          focus(view) {
-            lastView = view;
-            return false;
-          },
-        },
-        attributes(state): Record<string, string> {
-          const s = inputKey.getState(state);
-          return s?.cursor === "block" ? { class: "plugin-cursor-block" } : {};
-        },
-        decorations(state) {
-          const s = inputKey.getState(state);
-          if (!s) return null;
-          const decos: Decoration[] = [];
-          const { selection, doc } = state;
-          if (s.cursor === "block" && selection.empty) {
-            const at = selection.head;
-            const next =
-              at < doc.content.size
-                ? doc.textBetween(at, at + 1, "\n", "\n")
-                : "";
-            if (next && next !== "\n")
-              decos.push(
-                Decoration.inline(at, at + 1, { class: "plugin-block-cursor" }),
-              );
-            else
-              decos.push(
-                Decoration.widget(
-                  at,
-                  () => {
-                    const span = document.createElement("span");
-                    span.className =
-                      "plugin-block-cursor plugin-block-cursor-empty";
-                    span.textContent = " ";
-                    return span;
-                  },
-                  { side: 1, key: "plugin-block-cursor" },
-                ),
-              );
-          }
-          for (const { from, to } of s.matches)
+      attributes(state): Record<string, string> {
+        const s = inputKey.getState(state);
+        return s?.cursor === "block" ? { class: "plugin-cursor-block" } : {};
+      },
+      decorations(state) {
+        const s = inputKey.getState(state);
+        if (!s) return null;
+        const decos: Decoration[] = [];
+        const { selection, doc } = state;
+        if (s.cursor === "block" && selection.empty) {
+          const at = selection.head;
+          const next =
+            at < doc.content.size
+              ? doc.textBetween(at, at + 1, "\n", "\n")
+              : "";
+          if (next && next !== "\n")
             decos.push(
-              Decoration.inline(from, to, { class: "plugin-flash-match" }),
+              Decoration.inline(at, at + 1, { class: "plugin-block-cursor" }),
             );
-          // A label goes over the character after its match, so the match stays readable.
-          for (const { pos, label } of s.labels)
+          else
             decos.push(
               Decoration.widget(
-                pos,
+                at,
                 () => {
-                  const anchor = document.createElement("span");
-                  anchor.className = "plugin-flash-anchor";
                   const span = document.createElement("span");
-                  span.className = "plugin-flash-label";
-                  span.textContent = label;
-                  anchor.append(span);
-                  return anchor;
+                  span.className =
+                    "plugin-block-cursor plugin-block-cursor-empty";
+                  span.textContent = " ";
+                  return span;
                 },
-                { side: -1, key: `flash-${pos}-${label}` },
+                { side: 1, key: "plugin-block-cursor" },
               ),
             );
-          return decos.length ? DecorationSet.create(doc, decos) : null;
+        }
+        for (const { from, to } of s.matches)
+          decos.push(
+            Decoration.inline(from, to, { class: "plugin-flash-match" }),
+          );
+        // A label goes over the character after its match, so the match stays readable.
+        for (const { pos, label } of s.labels)
+          decos.push(
+            Decoration.widget(
+              pos,
+              () => {
+                const anchor = document.createElement("span");
+                anchor.className = "plugin-flash-anchor";
+                const span = document.createElement("span");
+                span.className = "plugin-flash-label";
+                span.textContent = label;
+                anchor.append(span);
+                return anchor;
+              },
+              { side: -1, key: `flash-${pos}-${label}` },
+            ),
+          );
+        return decos.length ? DecorationSet.create(doc, decos) : null;
+      },
+    },
+    view(view) {
+      lastView = view;
+      return {
+        destroy() {
+          if (lastView === view) lastView = null;
         },
-      },
-      view(view) {
-        lastView = view;
-        return {
-          destroy() {
-            if (lastView === view) lastView = null;
-          },
-        };
-      },
-    }),
-);
+      };
+    },
+  });
+
+export const editorInputPlugin = $prose(createEditorInputPlugin);
 
 export type EditorOp =
   | {
@@ -249,7 +249,7 @@ export type EditorOp =
   | { op: "deleteLines"; count?: number }
   | { op: "copy" }
   | { op: "copyLines"; count?: number }
-  | { op: "deleteChars"; count?: number; back?: boolean }
+  | { op: "deleteChars"; count?: number; back?: boolean; copy?: boolean }
   | { op: "insertText"; text: string }
   | { op: "pasteLines"; text: string; above?: boolean }
   | { op: "openLine"; above?: boolean }
@@ -420,7 +420,7 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
         const from = posOf(flat, a);
         const to = posOf(flat, b);
         result.text = state.doc.textBetween(from, to, "\n");
-        copyText(result.text);
+        if (action.copy !== false) copyText(result.text);
         dispatch(state.tr.delete(from, to));
       }
       break;
