@@ -118,6 +118,7 @@ export default tseslint.config(
   {
     files: ["src/editor/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
+    // Plugins add to the editor through editor/extension-points.ts.
     rules: above([
       ...SHELL,
       "ai",
@@ -125,6 +126,7 @@ export default tseslint.config(
       "export",
       "mobile",
       "onboarding",
+      "plugins",
       "sidebar",
     ]),
   },

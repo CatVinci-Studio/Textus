@@ -75,7 +75,7 @@ import { createMathPreviewPlugin } from "./math/math-preview-plugin";
 import { headingMarkerPlugin } from "./marks/heading-marker-plugin";
 import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
 import { dragAutoscrollPlugin } from "./keys/drag-autoscroll-plugin";
-import { editorInputPlugin } from "../plugins/contributions/editor-input";
+import { editorExtensions } from "./extension-points";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,
@@ -191,7 +191,7 @@ export function withEditorCore(
       .use(openedParseRecorder)
       .use(linksOnSpansSerializer)
       // A plugin holding the keyboard (Vim's normal mode) has its keys first.
-      .use(editorInputPlugin)
+      .use(editorExtensions().keyInput)
       // A plugin's completions take Enter, Tab and the arrows while open.
       .use(createCompletionPlugin())
       .use(macNavigationPlugin)

@@ -1,9 +1,7 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
-import {
-  hasHoverProviders,
-  provideHover,
-} from "../../plugins/contributions/hover-providers";
+import { editorExtensions } from "../extension-points";
+import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import {
   floatingCardKey,
   hideHoverCard,
@@ -12,7 +10,6 @@ import {
   showHoverCard,
 } from "./hover-card";
 import { hoverSpot } from "./hover-target";
-import { getWindowAccess } from "../../plugins/app-bridge";
 
 /** How long the pointer rests before a card is asked for. */
 const REST_MS = 450;
@@ -34,7 +31,8 @@ export function createLinkHoverPlugin(docPath: () => string | null) {
       props: {
         handleDOMEvents: {
           mousemove(view, event) {
-            if (!hasHoverProviders() || event.buttons !== 0) return false;
+            if (!editorExtensions().hasHoverProviders() || event.buttons !== 0)
+              return false;
             const spot = hoverSpot(view, event, docPath());
             if (spot && spot.key === floatingCardKey()) {
               keepHoverCard();
@@ -50,7 +48,8 @@ export function createLinkHoverPlugin(docPath: () => string | null) {
               timer: setTimeout(() => {
                 void (async () => {
                   const target = await spot.resolve();
-                  const card = target && (await provideHover(target));
+                  const card =
+                    target && (await editorExtensions().provideHover(target));
                   if (waiting?.key !== key) return;
                   waiting = null;
                   if (!card) return;
@@ -58,11 +57,17 @@ export function createLinkHoverPlugin(docPath: () => string | null) {
                   const open =
                     target.type === "document"
                       ? () =>
-                          void getWindowAccess()?.openFile(target.path, {
-                            place: target.heading
-                              ? { heading: target.heading }
-                              : undefined,
-                          })
+                          window.dispatchEvent(
+                            new CustomEvent<OpenFileInTab>(
+                              OPEN_FILE_IN_TAB_EVENT,
+                              {
+                                detail: {
+                                  path: target.path,
+                                  anchor: target.heading ?? undefined,
+                                },
+                              },
+                            ),
+                          )
                       : undefined;
                   showHoverCard(key, spot.rect, { ...card, open });
                 })();

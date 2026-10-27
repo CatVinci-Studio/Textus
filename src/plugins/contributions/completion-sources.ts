@@ -1,28 +1,16 @@
 import { pluginsSnapshot } from "../store/plugin-records";
 import { hasSlashItems, slashItemsFor } from "./slash-commands";
+import type {
+  CompletionItem,
+  CompletionResult,
+} from "../../editor/extension-points";
 
 /**
  * Completions plugins suggest as you type. A plugin is asked, and started,
  * only when its manifest's pattern matches what is before the caret.
  */
 
-export interface CompletionItem {
-  /** What the list shows. */
-  label: string;
-  /** What replaces the matched text; `$0` marks where the caret goes. */
-  insert: string;
-  /** A word or two beside the label, dimmed. */
-  detail?: string;
-  /** Run once the item is taken (a `/` command): what was typed goes, and
-   *  `insert` is empty. */
-  run?: () => void;
-}
-
-export interface CompletionResult {
-  /** How many characters before the caret the item replaces: the match. */
-  replace: number;
-  items: CompletionItem[];
-}
+export type { CompletionItem, CompletionResult };
 
 /** The most items a list holds. */
 const MAX_ITEMS = 50;
