@@ -25,6 +25,12 @@ struct Navigated {
     url: String,
 }
 
+/// What a page is told it runs in on macOS. WKWebView's own name stops before
+/// Safari's "Version/… Safari/…", and sites read that as an old browser: a
+/// plain Google, Bilibili's "your browser is too old".
+#[cfg(target_os = "macos")]
+const SAFARI_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15";
+
 /// The event a window's tabs hear their pages' addresses by.
 const NAVIGATED: &str = "web-page-navigated";
 
@@ -114,6 +120,8 @@ pub fn web_page_show(
                 },
             );
         });
+    #[cfg(target_os = "macos")]
+    let builder = builder.user_agent(SAFARI_USER_AGENT);
     window
         .add_child(builder, position, size)
         .map(|_| ())
