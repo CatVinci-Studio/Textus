@@ -55,100 +55,52 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 Free and open source, under the MIT license.
 
-| Platform              | Download                                                                                              |
-| --------------------- | ----------------------------------------------------------------------------------------------------- |
-| macOS · Apple Silicon | [Download .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                            |
-| macOS · Intel         | [Download .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                            |
-| Windows · x64         | [Download .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                            |
-| Linux · x64           | [Download .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · Also as .deb · .rpm |
+| Platform              | Download                                                                                              | Other ways to install                                                               |
+| --------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| macOS · Apple Silicon | [Download .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                            | Homebrew: `brew install --cask textus`                                              |
+| macOS · Intel         | [Download .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                            | Homebrew: `brew install --cask textus`                                              |
+| Windows · x64         | [Download .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                            | —                                                                                   |
+| Linux · x64           | [Download .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · Also as .deb · .rpm | Arch Linux: the [`[catvinci]` repository](https://github.com/CatVinci-Studio/arch-repo) |
 
-Or with Homebrew:
+> iOS and iPadOS are coming soon.
 
-```sh
-brew install --cask textus
-```
-
-Arch Linux via the signed [`[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) pacman repository (once; `sudo pacman -Syu` then keeps Textus up to date):
-
-```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/CatVinci-Studio/arch-repo/main/install.sh) textus-bin
-```
-
-iPhone and iPad: coming soon. [All releases on GitHub](https://github.com/CatVinci-Studio/Textus/releases)
-
-Want new versions early? In **Settings › General › About Textus**, set **Update channel** to **Beta** to get release candidates too; set it back to **Stable** any time, and you stay on your version until a newer stable one is out.
+Beta: in **Settings › General › About Textus**, set **Update channel** to **Beta**.
 
 ## Writing
 
-Every Markdown mark, rendered as you write. Point at a line to see its Markdown.
+What you see is what you get, laid out with Markdown as you type. Export to PDF, Word, HTML and more.
 
 <p align="center">
-  <img src="docs/images/readme/en/markdown.png" alt="What you see is what you get." width="860" />
+  <img src="docs/images/readme/en/markdown.webp" alt="A document using every kind of Markdown mark - headings, bold and italic, quotes, lists, tasks, links, a note - all laid out" width="860" />
 </p>
 
-Math renders as you type, tables line up, and a few lines of text draw a diagram.
-
-<p align="center">
-  <img src="docs/images/readme/en/math.png" alt="Formulas, tables, diagrams – done in a snap." width="860" />
-</p>
-
-### Your writing style? Your call
-
-Four writing modes, any theme you like – Typora themes included.
-
-| Writing modes    | What it does                                         |
-| ---------------- | ---------------------------------------------------- |
-| Zen Mode         | Everything but your words steps away                 |
-| Typewriter Mode  | The line you are writing stays at the same height    |
-| Split View       | Markdown on one side, the finished page on the other |
-| Source Code Mode | The whole document as plain Markdown                 |
-
-<p align="center">
-  <img src="docs/images/readme/en/split.png" alt="Split View" width="49%" />
-  <img src="docs/images/readme/en/zen.png" alt="Zen Mode" width="49%" />
-</p>
-
-Export to PDF, Word, HTML and more.
+| Code blocks | Tables |
+| :---: | :---: |
+| <img src="docs/images/readme/en/code.webp" alt="A code block, coloured for its language" width="420" /> | <img src="docs/images/readme/en/table.webp" alt="A table, its columns lined up" width="420" /> |
+| **Math** | **Diagrams** |
+| <img src="docs/images/readme/en/formula.webp" alt="Formulas drawn as you type them" width="420" /> | <img src="docs/images/readme/en/diagram.webp" alt="A Mermaid flowchart" width="420" /> |
 
 ## Textus AI
 
-Your writing assistant. It writes with you.
+Works with online and local LLMs alike - AI that speeds your writing along.
 
-### While you write
+| Continuation | Typos and grammar | Proposed edits |
+| :---: | :---: | :---: |
+| <img src="docs/images/readme/en/ai-continue.webp" alt="The next words in grey when you pause; Tab takes them" width="280" /> | <img src="docs/images/readme/en/ai-grammar.webp" alt="A slip underlined, fixed with Alt+Enter" width="280" /> | <img src="docs/images/readme/en/ai-revise.webp" alt="Edits sentence by sentence, each with its reason" width="280" /> |
+| **Review comments** | **Slash skills** | **Any model** |
+| <img src="docs/images/readme/en/ai-review.webp" alt="A comment pinned to its sentence" width="280" /> | <img src="docs/images/readme/en/ai-skills.webp" alt="The skills menu, opened with /" width="280" /> | <img src="docs/images/readme/en/ai-models.webp" alt="Choosing a provider in Settings" width="280" /> |
 
-Pause, and the next words appear in grey. Tab takes them. Typos and grammar are flagged as you write, along with your own conventions. Alt+Enter fixes them.
+## Plugins (in testing, 1.3 beta)
 
-### When you ask
+Not just writing: plugins add whatever else you need.
 
-Edits arrive as proposals, each with a reason. Take one whole, or sentence by sentence. Comments pinned to the lines they mean. Notes, not rewrites. Tighten, proofread, translate, change the tone and more, one slash away.
+| Graph View | Vim |
+| :---: | :---: |
+| <img src="docs/images/readme/en/plugin-graph.webp" alt="Notes and their links drawn as a graph" width="420" /> | <img src="docs/images/readme/en/plugin-vim.webp" alt="Vim's flash labels and its mode in the window bar" width="420" /> |
+| **Quick Preview** | **Version History** |
+| <img src="docs/images/readme/en/plugin-preview.webp" alt="Resting on a link shows that note in a card" width="420" /> | <img src="docs/images/readme/en/plugin-history.webp" alt="A note's earlier versions beside it" width="420" /> |
 
-### It knows you
-
-It learns your style, remembers your characters and places, and follows your instructions.
-
-### Any LLM you like
-
-Textus works with more than 20 LLMs, and with any LLM that offers an OpenAI-compatible API.
-
-OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Doubao · Ollama · Any OpenAI-compatible endpoint
-
-<p align="center">
-  <img src="docs/images/readme/en/settings.png" alt="Any LLM you like." width="860" />
-</p>
-
-## Plugins
-
-Add what you need, and nothing else. A graph of your notes and the links between them, a card that shows where a link leads, two documents side by side, kanban boards, version history, PDFs and Word files in a tab, citations from Zotero – all in **Settings › Extensions › Get more**, beside the themes and skills. Each plugin asks before it uses anything.
-
-<p align="center">
-  <img src="docs/images/readme/en/plugins.png" alt="Notes on Hamlet beside the graph of their links, with the note a link leads to open in a card." width="860" />
-</p>
-
-## What you write is yours alone
-
-Your writing stays yours. Textus is built so that it can, and its code is open so that anyone can check.
-
-Documents are plain Markdown files, kept wherever you choose. API keys and sign-ins are stored only on your computer. AI requests travel directly from your device to the provider you pick. Download it and write. There is nothing to sign up for. No analytics, no telemetry, no ads. MIT-licensed and public, line by line, so anyone can verify all of this. With a local model through Ollama, your words never leave your computer.
+Kanban boards, PDF and Word in a tab, Zotero citations, charts of every kind and more are in **Settings › Extensions › Get more**.
 
 ## Questions
 
@@ -162,7 +114,14 @@ Yes. It is free and open source under the MIT license, with no account and no su
 <details>
 <summary><strong>Which platforms does it run on?</strong></summary>
 
-macOS (Apple Silicon and Intel), Windows and Linux. iPhone and iPad are coming.
+macOS (Apple Silicon and Intel), Windows and Linux. iOS and iPadOS are coming soon.
+
+</details>
+
+<details>
+<summary><strong>How much memory does it use?</strong></summary>
+
+We care a great deal about memory and measure it in every release. A window takes about 110 MB, and each further window about 55 MB more. Plugins load only when they are used, and a web page left in the background is let go and loads again when you come back to it.
 
 </details>
 
@@ -186,15 +145,6 @@ The editor does, completely. Textus AI needs your provider, unless you run a loc
 Yes: plain .md files, with tables, task lists, footnotes, math and Mermaid. You can export to PDF, Word, HTML and more.
 
 </details>
-
-## Quick start
-
-1. Launch Textus. It opens on a blank draft; you only need a file when you save.
-2. Open **Settings → Textus AI**, choose a provider, and sign in or paste a key under **Login & credentials**.
-3. Start typing. A continuation appears in grey when you pause; Tab accepts it.
-4. Open the AI panel with the **Textus AI** button (the quill) in the window bar. **Help → AI Features Guide** covers the rest.
-
-Every shortcut is listed, and can be changed, in **Settings → Shortcuts**.
 
 ## Community
 

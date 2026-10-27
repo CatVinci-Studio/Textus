@@ -52,100 +52,52 @@ https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
 
 免费开源，采用 MIT 协议。
 
-| 平台               | 下载                                                                                         |
-| ---------------- | ------------------------------------------------------------------------------------------ |
-| macOS · Apple 芯片 | [下载 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                       |
-| macOS · Intel    | [下载 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                       |
-| Windows · x64    | [下载 .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                       |
-| Linux · x64      | [下载 .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · 另有 .deb · .rpm |
+| 平台               | 下载                                                                                         | 其他安装方式                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| macOS · Apple 芯片 | [下载 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                       | Homebrew：`brew install --cask textus`                                  |
+| macOS · Intel    | [下载 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                       | Homebrew：`brew install --cask textus`                                  |
+| Windows · x64    | [下载 .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                       | —                                                                      |
+| Linux · x64      | [下载 .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · 另有 .deb · .rpm | Arch Linux：[`[catvinci]` 软件源](https://github.com/CatVinci-Studio/arch-repo) |
 
-或用 Homebrew 安装：
+> iOS 与 iPadOS 版即将推出。
 
-```sh
-brew install --cask textus
-```
-
-Arch Linux 可以使用带签名的 [`[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) pacman 软件源（只需设置一次，之后 `sudo pacman -Syu` 会让 Textus 保持最新）：
-
-```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/CatVinci-Studio/arch-repo/main/install.sh) textus-bin
-```
-
-iPhone 与 iPad 版即将推出。[在 GitHub 查看所有版本](https://github.com/CatVinci-Studio/Textus/releases)
-
-想抢先用上新版本？在 **设置 › 通用 › 关于 Textus** 中把 **更新通道** 改为 **测试版**，就会同时收到候选版本；随时可以改回 **正式版**，之后会停在当前版本，直到有更新的正式版。
+测试版：在 **设置 › 通用 › 关于 Textus** 中把 **更新通道** 改为 **测试版**。
 
 ## 写作
 
-每一种 Markdown 标记，边写边排好。指向任意一行，就能看到它的源码。
+所见即所得，使用 Markdown 快速排版。支持多种导出格式，包括 PDF、Word、HTML。
 
 <p align="center">
-  <img src="docs/images/readme/zh/markdown.png" alt="所见即所得" width="860" />
+  <img src="docs/images/readme/zh/markdown.webp" alt="一篇文档里用到了全部 Markdown 标记：标题、粗体斜体、引用、列表、任务、链接、脚注，都已排好" width="860" />
 </p>
 
-公式边打边出，表格自动对齐，几行文字就能画出图表。
-
-<p align="center">
-  <img src="docs/images/readme/zh/math.png" alt="公式、表格、图表，一键搞定" width="860" />
-</p>
-
-### 写作风格？随你喜欢
-
-四种写作模式随心切换，主题一键更换，Typora 主题也能直接用。
-
-| 写作模式  | 作用                  |
-| ----- | ------------------- |
-| 禅模式   | 除了文字，其余一切都退到幕后      |
-| 打字机模式 | 正在写的那一行始终停在同一高度     |
-| 分屏视图  | 一边写 Markdown，一边看排版  |
-| 源码模式  | 整篇文档以 Markdown 原文呈现 |
-
-<p align="center">
-  <img src="docs/images/readme/zh/split.png" alt="分屏视图" width="49%" />
-  <img src="docs/images/readme/zh/zen.png" alt="禅模式" width="49%" />
-</p>
-
-导出为 PDF、Word、HTML 等格式。
+| 代码块 | 表格 |
+| :---: | :---: |
+| <img src="docs/images/readme/zh/code.webp" alt="带语言高亮和行号的代码块" width="420" /> | <img src="docs/images/readme/zh/table.webp" alt="自动对齐的表格" width="420" /> |
+| **数学公式** | **图像渲染** |
+| <img src="docs/images/readme/zh/formula.webp" alt="边打边出的数学公式" width="420" /> | <img src="docs/images/readme/zh/diagram.webp" alt="Mermaid 流程图和插图" width="420" /> |
 
 ## Textus AI
 
-你的写作助手，和你一起写。
+支持在线、本地等多种 LLM 模型服务，让 AI 加速你的写作进程。
 
-### 写的时候
+| 续写 | 错字与语病 | 修改提议 |
+| :---: | :---: | :---: |
+| <img src="docs/images/readme/zh/ai-continue.webp" alt="停笔时出现灰色的下文，按 Tab 收下" width="280" /> | <img src="docs/images/readme/zh/ai-grammar.webp" alt="错字和语病被标出，按 Alt+Enter 修正" width="280" /> | <img src="docs/images/readme/zh/ai-revise.webp" alt="逐句的修改提议，各附理由" width="280" /> |
+| **审阅批注** | **斜杠技能** | **任选模型** |
+| <img src="docs/images/readme/zh/ai-review.webp" alt="批注钉在对应的句子旁" width="280" /> | <img src="docs/images/readme/zh/ai-skills.webp" alt="输入 / 调出技能菜单" width="280" /> | <img src="docs/images/readme/zh/ai-models.webp" alt="在设置里选择模型服务" width="280" /> |
 
-停下笔，灰色的下文便会出现，按 Tab 收下。边写边标出错字和语病，也会对照你的写作规范。按 Alt+Enter 即可修正。
+## 插件（测试中，1.3 beta）
 
-### 需要帮忙时
+不仅是写作，通过插件来实现更多功能。
 
-修改以提议的形式出现，各附理由。可以整段采纳，也可以逐句取舍。批注钉在对应的句子旁。只提意见，不改你的稿。精简、校对、翻译、换个语气……输入斜杠即可调用。
+| 知识图谱 | Vim |
+| :---: | :---: |
+| <img src="docs/images/readme/zh/plugin-graph.webp" alt="笔记和链接画成的知识图谱" width="420" /> | <img src="docs/images/readme/zh/plugin-vim.webp" alt="Vim 的普通模式和命令面板" width="420" /> |
+| **浮动卡片** | **版本历史** |
+| <img src="docs/images/readme/zh/plugin-preview.webp" alt="停在链接上，卡片显示那篇笔记" width="420" /> | <img src="docs/images/readme/zh/plugin-history.webp" alt="一篇文档的历史版本和差异" width="420" /> |
 
-### 懂你
-
-学习你的文风，记住你笔下的人物与地点，遵循你定下的写作要求。
-
-### 不同 LLM，随你喜欢
-
-Textus 支持超过 20 种不同的 LLM，以及任何提供 OpenAI 兼容接口的 LLM。
-
-OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · 豆包 · Ollama · 任何兼容 OpenAI 接口的服务
-
-<p align="center">
-  <img src="docs/images/readme/zh/settings.png" alt="不同 LLM，随你喜欢" width="860" />
-</p>
-
-## 插件
-
-需要什么就装什么。笔记和链接画成的知识图谱、停在链接上就能看到内容的卡片、两篇文档并排、看板、版本历史、在标签页里看 PDF 和 Word、从 Zotero 插入引用——都在**设置 › 扩展 › 获取更多**里，和主题、技能放在一起。每个插件用到什么，都会先问你。
-
-<p align="center">
-  <img src="docs/images/readme/zh/plugins.png" alt="《红楼梦》的人物笔记和它们的知识图谱并排，一条链接指向的笔记显示在卡片里。" width="860" />
-</p>
-
-## 你写的东西，只属于你
-
-你写的东西只属于你。Textus 从设计上保证这一点，代码公开，任何人都能核实。
-
-文档是普通的 Markdown 文件，放在你选的位置。API Key 和登录信息只保存在你的电脑上。AI 请求从你的设备直接发往你选择的服务商。下载就能写，没有任何需要注册的东西。没有统计，没有遥测，没有广告。以 MIT 协议公开每一行代码，上面这些，任何人都能核实。 通过 Ollama 使用本地模型时，你的文字从不离开你的电脑。
+还有看板、PDF 与 Word 阅读、Zotero 引用、各类图表等，都在 **设置 › 扩展 › 获取更多**。
 
 ## 常见问题
 
@@ -159,7 +111,14 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
 <details>
 <summary><strong>支持哪些平台？</strong></summary>
 
-支持 macOS（Apple 芯片和 Intel）、Windows 和 Linux。iPhone 与 iPad 版即将推出。
+支持 macOS（Apple 芯片和 Intel）、Windows 和 Linux。iOS 与 iPadOS 版即将推出。
+
+</details>
+
+<details>
+<summary><strong>占用内存多吗？</strong></summary>
+
+我们非常在乎内存占用，每个版本都会实测。打开一个窗口约 110 MB，每多开一个窗口约多 55 MB。插件用到时才加载；网页标签放在后台久了会自动释放，回来时再重新打开。
 
 </details>
 
@@ -184,19 +143,10 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
 
 </details>
 
-## 快速上手
-
-1. 打开 Textus。它从一份空白草稿开始，保存时才需要选择文件。
-2. 打开 **设置 → Textus AI**，选择服务商，在 **登录与凭据** 中登录或填入密钥。
-3. 开始写作。停笔时，续写会以灰色文字出现，按 Tab 采纳。
-4. 点窗口栏里的 **Textus AI** 按钮（羽毛笔）打开 AI 面板。其余功能见 **帮助 → AI 功能指南**。
-
-所有快捷键都可以在 **设置 → 快捷键** 中查看和修改。
-
 ## 社区
 
 - [QQ 群](https://textus.catvinci.com/qq)：1128285004
-- [微信群](https://textus.catvinci.com/wechat)：扫码加入（二维码每周更新）
+- [微信群](https://textus.catvinci.com/wechat)：扫码加入
 - [Discord](https://textus.catvinci.com/discord)：英文交流
 
 bug 反馈和功能建议也欢迎提到 [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues)。
