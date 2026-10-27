@@ -779,6 +779,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuSettings: "Einstellungen…",
   menuExit: "Beenden",
   menuNewFile: "Neue Datei",
+  menuNewTab: "Neuer Tab",
   menuOpenFile: "Öffnen…",
   menuOpenRecent: "Zuletzt geöffnet",
   menuRecentNone: "Keine zuletzt geöffneten Dateien",

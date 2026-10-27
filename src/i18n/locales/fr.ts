@@ -807,6 +807,7 @@ utiliser une.
   menuSettings: "Réglages…",
   menuExit: "Quitter",
   menuNewFile: "Nouveau fichier",
+  menuNewTab: "Nouvel onglet",
   menuOpenFile: "Ouvrir…",
   menuOpenRecent: "Ouvrir l'élément récent",
   menuRecentNone: "Aucun fichier récent",

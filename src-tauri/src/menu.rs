@@ -377,15 +377,12 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     } else if let Some(item) = id.strip_prefix(crate::background::tray::MENU_PREFIX) {
         crate::background::tray::on_menu(app_handle, item);
     } else if id == NEW_FILE_ID {
-        // Honors the same Settings choice as opening files: a new tab in the
-        // focused window in tab mode, a fresh window otherwise (or when
-        // there's no window at all).
-        if app_handle.webview_windows().is_empty()
-            || commands::prefs::read_new_document_mode(app_handle) != "tab"
-        {
-            let _ = crate::open_new_window(app_handle);
-        } else {
+        // New Tab, as a browser's: a tab in the focused window whatever
+        // Settings says files open in; a window when there is none.
+        if focused_editor_window(app_handle).is_some() {
             emit_to_focused(app_handle, "menu-new-file");
+        } else {
+            let _ = crate::open_new_window(app_handle);
         }
     } else if let Some(command) = id.strip_prefix(PLUGIN_COMMAND_PREFIX) {
         emit_to_focused_payload(app_handle, "menu-plugin-command", command.to_string());

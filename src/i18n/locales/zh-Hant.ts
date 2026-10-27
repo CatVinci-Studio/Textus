@@ -714,6 +714,7 @@ export default {
   menuSettings: "設定…",
   menuExit: "結束",
   menuNewFile: "新增檔案",
+  menuNewTab: "新增分頁",
   menuOpenFile: "開啟…",
   menuOpenRecent: "最近使用的檔案",
   menuRecentNone: "沒有最近使用的檔案",

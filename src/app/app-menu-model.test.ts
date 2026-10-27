@@ -76,7 +76,7 @@ describe("the Windows app menu", () => {
   });
 
   it("keeps a browser's tab keys: Ctrl+T, Ctrl+N, Ctrl+W, Ctrl+Shift+T", () => {
-    expect(accelOf(t.menuNewFile)).toBe("mod+t");
+    expect(accelOf(t.menuNewTab)).toBe("mod+t");
     expect(accelOf(t.menuNewWindow)).toBe("mod+n");
     expect(accelOf(t.menuCloseTab)).toBe("mod+w");
     expect(accelOf(t.menuReopenClosedTab)).toBe("mod+shift+t");

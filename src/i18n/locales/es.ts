@@ -797,6 +797,7 @@ para usar una.
   menuSettings: "Ajustes…",
   menuExit: "Salir",
   menuNewFile: "Nuevo archivo",
+  menuNewTab: "Nueva pestaña",
   menuOpenFile: "Abrir…",
   menuOpenRecent: "Abrir recientes",
   menuRecentNone: "No hay archivos recientes",

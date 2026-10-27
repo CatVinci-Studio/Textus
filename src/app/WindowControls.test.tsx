@@ -198,7 +198,7 @@ describe("where the app owns the frame", () => {
     fireEvent.mouseEnter(screen.getByRole("menuitem", { name: /文件/ }));
 
     expect(
-      screen.getByRole("menuitem", { name: /新建文件/ }),
+      screen.getByRole("menuitem", { name: /新建标签页/ }),
     ).toBeInTheDocument();
   });
 });

@@ -739,6 +739,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuSettings: "설정…",
   menuExit: "끝내기",
   menuNewFile: "새 파일",
+  menuNewTab: "새 탭",
   menuOpenFile: "열기…",
   menuOpenRecent: "최근 사용 항목 열기",
   menuRecentNone: "최근 파일 없음",

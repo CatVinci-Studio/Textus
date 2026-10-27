@@ -772,6 +772,7 @@ type /name in a conversation to use one.
   menuSettings: "Settings…",
   menuExit: "Exit",
   menuNewFile: "New File",
+  menuNewTab: "New Tab",
   menuOpenFile: "Open…",
   menuOpenRecent: "Open Recent",
   menuRecentNone: "No Recent Files",
