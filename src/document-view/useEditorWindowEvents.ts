@@ -6,7 +6,7 @@ import {
 } from "@milkdown/kit/preset/commonmark";
 import { undoCommand, redoCommand } from "@milkdown/kit/plugin/history";
 import type { EditorRunner } from "../editor/useEditorRunner";
-import type { EditorClipboard } from "../editor/useEditorClipboard";
+import type { EditorClipboard } from "../editor/clipboard/useEditorClipboard";
 import {
   deleteImage,
   insertHeading,

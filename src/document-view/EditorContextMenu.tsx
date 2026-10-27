@@ -1,5 +1,5 @@
 import type { EditorRunner } from "../editor/useEditorRunner";
-import type { EditorClipboard } from "../editor/useEditorClipboard";
+import type { EditorClipboard } from "../editor/clipboard/useEditorClipboard";
 import {
   buildContextMenuItems,
   buildPhoneMoreItems,

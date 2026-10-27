@@ -6,7 +6,7 @@ import { useQuickAskDecorations } from "./useQuickAskDecorations";
 import { useSettingsRedraw } from "./useSettingsRedraw";
 import { useImageNameRequest } from "../editor/images/useImageNameRequest";
 import { useEditorRunner } from "../editor/useEditorRunner";
-import { useEditorClipboard } from "../editor/useEditorClipboard";
+import { useEditorClipboard } from "../editor/clipboard/useEditorClipboard";
 import { useAiActions } from "../ai/writing/useAiActions";
 import { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
 import type { Settings } from "../settings/SettingsContext";

@@ -2,7 +2,7 @@ import { Plugin, type Selection } from "@milkdown/kit/prose/state";
 import { Slice } from "@milkdown/kit/prose/model";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
-import { parseMarkdownSource } from "./parse-markdown-source";
+import { parseMarkdownSource } from "../markdown/parse-markdown-source";
 import { fillTable, inTableCell, joinLinesForTableCell } from "./paste-slice";
 import { wordListsToHtml } from "./word-lists";
 import { keepPastedLines } from "./paste-lines";

@@ -2,13 +2,13 @@ import { useCallback } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { Slice } from "@milkdown/kit/prose/model";
 import { AllSelection } from "@milkdown/kit/prose/state";
-import type { EditorRunner } from "./useEditorRunner";
-import { recordClipboardEntry } from "../clipboard/history";
-import { parseMarkdownSource } from "./markdown/parse-markdown-source";
-import { pastePlainText } from "./markdown/paste-plain";
-import { clipboardIpc } from "../platform/ipc";
-import { plainTextOf } from "./markdown/plain-text";
-import { bareUrl, insertUrlLink } from "./markdown/paste-url";
+import type { EditorRunner } from "../useEditorRunner";
+import { recordClipboardEntry } from "../../clipboard/history";
+import { parseMarkdownSource } from "../markdown/parse-markdown-source";
+import { pastePlainText } from "./paste-plain";
+import { clipboardIpc } from "../../platform/ipc";
+import { plainTextOf } from "./plain-text";
+import { bareUrl, insertUrlLink } from "./paste-url";
 
 export interface EditorClipboard {
   copyOrCut: (cut: boolean) => void;

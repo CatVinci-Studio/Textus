@@ -94,7 +94,7 @@ import {
   escapeTrailingBlockPlugin,
   tableEdgeArrowPlugin,
 } from "./markdown/escape-trailing-block-plugin";
-import { pasteMarkdownSourcePlugin } from "./markdown/paste-markdown-plugin";
+import { pasteMarkdownSourcePlugin } from "./clipboard/paste-markdown-plugin";
 import { imageInputRule, linkInputRule } from "./markdown/link-input-rule";
 import { linkSettlePlugin } from "./markdown/link-settle";
 import { remarkLinkSourcePlugin } from "./markdown/link-source";
@@ -103,13 +103,13 @@ import {
   footnoteInputRule,
   htmlTagInputRule,
 } from "./markdown/source-input-rules";
-import { pasteUrlPlugin } from "./markdown/paste-url";
+import { pasteUrlPlugin } from "./clipboard/paste-url";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { createLinkHoverPlugin } from "./hover/link-hover-plugin";
 import { createCompletionPlugin } from "./completion/completion-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
-import { copyTextPlugin } from "./markdown/copy-text-plugin";
-import { pastePlainTextKeyPlugin } from "./markdown/paste-plain";
+import { copyTextPlugin } from "./clipboard/copy-text-plugin";
+import { pastePlainTextKeyPlugin } from "./clipboard/paste-plain";
 import { createImagePlugin } from "./images/image-plugin";
 import {
   obsidianEmbedInputRule,
