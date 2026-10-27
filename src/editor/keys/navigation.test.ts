@@ -128,6 +128,22 @@ describe("macOS navigation", () => {
     expect(visualLineBoundary(view, 5, 1)).toBe(11);
     view.destroy();
   });
+  it("Cmd+Backspace deletes back to the start of the caret's line, in a code block too", () => {
+    const { view, press } = fixture([block("code_block", "ab cd\nef gh")], 6);
+    vi.mocked(view.coordsAtPos).mockImplementation((pos) => ({
+      left: 0,
+      right: 0,
+      top: pos < 7 ? 0 : 20,
+      bottom: pos < 7 ? 20 : 40,
+    }));
+    const plugin = createMacNavigationPlugin(() => true);
+    expect(press(plugin, "Backspace", { metaKey: true })).toBe(true);
+    expect(view.state.doc.textContent).toBe("\nef gh");
+    // At a line's start it is the browser's: joining the line above.
+    expect(press(plugin, "Backspace", { metaKey: true })).toBe(false);
+    view.destroy();
+  });
+
   it("navigates out of nested inline formatting to the containing line", () => {
     const paragraph = schema.node("paragraph", null, [
       schema.text("a "),
