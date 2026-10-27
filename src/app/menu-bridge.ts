@@ -153,12 +153,17 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         h().onToggleSplitView(),
       ),
       listenToThisWindow("menu-toggle-zen-mode", () => h().onToggleZenMode()),
-      // Edit > Copy as Markdown runs where Copy does, in the editor on
-      // screen (useEditorWindowEvents.ts).
+      // Edit > Copy and Paste as Plain Text run where Copy does, in the
+      // editor on screen (useEditorWindowEvents.ts).
       listenToThisWindow("menu-select-all", selectAllInFocus),
-      listenToThisWindow("menu-copy-as-markdown", () =>
+      listenToThisWindow("menu-copy-as-plain-text", () =>
         window.dispatchEvent(
-          new CustomEvent(EDIT_ACTION_EVENT, { detail: "copy-as-markdown" }),
+          new CustomEvent(EDIT_ACTION_EVENT, { detail: "copy-as-plain-text" }),
+        ),
+      ),
+      listenToThisWindow("menu-paste-as-plain-text", () =>
+        window.dispatchEvent(
+          new CustomEvent(EDIT_ACTION_EVENT, { detail: "paste-as-plain-text" }),
         ),
       ),
       listenToThisWindow("menu-find-replace", () =>

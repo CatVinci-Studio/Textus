@@ -178,10 +178,16 @@ pub(crate) fn build(
     let find_replace_item =
         MenuItemBuilder::with_id(FIND_REPLACE_ID, l(FIND_REPLACE_ID, "Find & Replace…"))
             .build(app)?;
-    let copy_as_markdown_item = MenuItemBuilder::with_id(
-        COPY_AS_MARKDOWN_ID,
-        l(COPY_AS_MARKDOWN_ID, "Copy as Markdown"),
+    let copy_as_plain_text_item = MenuItemBuilder::with_id(
+        COPY_AS_PLAIN_TEXT_ID,
+        l(COPY_AS_PLAIN_TEXT_ID, "Copy as Plain Text"),
     )
+    .build(app)?;
+    let paste_as_plain_text_item = MenuItemBuilder::with_id(
+        PASTE_AS_PLAIN_TEXT_ID,
+        l(PASTE_AS_PLAIN_TEXT_ID, "Paste as Plain Text"),
+    )
+    .accelerator("CmdOrCtrl+Shift+V")
     .build(app)?;
 
     let edit_menu = SubmenuBuilder::new(app, l("menu:edit", "Edit"))
@@ -190,8 +196,9 @@ pub(crate) fn build(
         .separator()
         .cut_with_text(l("predefined:cut", "Cut"))
         .copy_with_text(l("predefined:copy", "Copy"))
-        .item(&copy_as_markdown_item)
-        .paste_with_text(l("predefined:paste", "Paste"));
+        .item(&copy_as_plain_text_item)
+        .paste_with_text(l("predefined:paste", "Paste"))
+        .item(&paste_as_plain_text_item);
     #[cfg(target_os = "macos")]
     let edit_menu = edit_menu.item(
         &MenuItemBuilder::with_id(SELECT_ALL_ID, l("predefined:select-all", "Select All"))

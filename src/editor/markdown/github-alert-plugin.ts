@@ -4,7 +4,7 @@ import { $prose } from "@milkdown/kit/utils";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import { escapeHtml } from "../../utils/html";
-import { stateWithLiveSelection } from "../marks/enclosure";
+import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   applyReveal,
@@ -247,7 +247,8 @@ export function createGithubAlertPlugin(labelOf: AlertLabel) {
             return githubAlertKey.getState(state)?.set;
           },
           handleKeyDown(view, event) {
-            if (event.key !== "Backspace" || view.composing) return false;
+            if (event.key !== "Backspace" || isImeKeyEvent(view, event))
+              return false;
             if (event.metaKey || event.ctrlKey || event.altKey) return false;
             // The caret a click or Home has just put there.
             const state = stateWithLiveSelection(view);
