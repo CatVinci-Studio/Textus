@@ -13,6 +13,8 @@ pub mod chat_window;
 #[cfg(desktop)]
 pub mod cli;
 #[cfg(desktop)]
+pub mod clipboard;
+#[cfg(desktop)]
 pub mod default_editor;
 #[cfg(mobile)]
 pub mod documents;

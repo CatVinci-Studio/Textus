@@ -267,29 +267,38 @@ async function clipboardNow(page: Page) {
 
 const LINKED = "See [Textus](https://textus.catvinci.com) and **bold** text.";
 
-test("a copy's plain text reads as words, links with their address", async ({
+test("a copy's plain text is its Markdown source, and code copied inside a code block is the code alone", async ({
   page,
 }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
-  await pasteMarkdown(page, LINKED);
+  await pasteMarkdown(page, LINKED + "\n\n```js\nlet x = 1;\n```");
   await page.locator(`${editor} p`).first().click();
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.press("ControlOrMeta+c");
   const clip = await clipboardNow(page);
-  expect(clip["text/plain"]).toBe(
-    "See Textus (https://textus.catvinci.com) and bold text.",
-  );
-  // The formatting still travels in the HTML, for apps that take it.
+  expect(clip["text/plain"]).toBe(LINKED + "\n\n```js\nlet x = 1;\n```");
+  // The formatting travels in the HTML, for apps that take it.
   expect(clip["text/html"]).toContain('href="https://textus.catvinci.com');
+
+  await page.evaluate((sel) => {
+    const code = document.querySelector(`${sel} pre code`)!;
+    const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+    const first = walker.nextNode() as Text;
+    let last = first;
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) last = n as Text;
+    getSelection()!.setBaseAndExtent(first, 0, last, last.data.length);
+  }, editor);
+  await page.keyboard.press("ControlOrMeta+c");
+  expect((await clipboardNow(page))["text/plain"]).toBe("let x = 1;");
 });
 
-test("Copy as Markdown puts the source on the clipboard; an old Markdown copy setting changes nothing", async ({
+test("Copy as Plain Text gives the words as they read; an old copy setting changes nothing", async ({
   page,
 }) => {
-  // The Copy setting is gone (1.2.0): a settings file that still says
-  // "markdown" loads, and Cmd+C gives the readable text as for everyone.
+  // The Copy setting is gone (1.2.0): a settings file that still has it
+  // loads, and Cmd+C gives the Markdown source as for everyone.
   await openApp(page, {
-    settings: { language: "en", copyTextMode: "markdown" },
+    settings: { language: "en", copyTextMode: "plain" },
   });
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await pasteMarkdown(page, LINKED);
@@ -297,32 +306,29 @@ test("Copy as Markdown puts the source on the clipboard; an old Markdown copy se
   await first.click();
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.press("ControlOrMeta+c");
-  expect((await clipboardNow(page))["text/plain"]).toBe(
-    "See Textus (https://textus.catvinci.com) and bold text.",
-  );
+  expect((await clipboardNow(page))["text/plain"]).toBe(LINKED);
   await first.click({ button: "right" });
   await page
     .locator(".context-menu-item")
-    .getByText("Copy as Markdown", { exact: true })
+    .getByText("Copy as Plain Text", { exact: true })
     .click();
   await expect
     .poll(() =>
       clipboardNow(page)
-        .then((c) => c["text/plain"].trimEnd())
+        .then((c) => c["text/plain"])
         .catch(() => ""),
     )
-    .toBe(LINKED);
+    .toBe("See Textus (https://textus.catvinci.com) and bold text.");
 });
 
-test("the context menu's Copy and Paste keep the formatting", async ({
+test("the context menu's Copy and Paste keep the formatting, as Cmd+C and Cmd+V do", async ({
   page,
 }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await pasteMarkdown(page, LINKED + "\n\nEnd.");
   const first = page.locator(`${editor} p`).first();
   await first.click();
-  await page.keyboard.press("Home");
-  await page.keyboard.press("Shift+End");
+  await page.keyboard.press("ControlOrMeta+a");
   await first.click({ button: "right" });
   await page
     .locator(".context-menu-item")
@@ -335,10 +341,13 @@ test("the context menu's Copy and Paste keep the formatting", async ({
         .then((c) => c["text/plain"])
         .catch(() => ""),
     )
-    .toBe("See Textus (https://textus.catvinci.com) and bold text.");
+    .toBe(LINKED + "\n\nEnd.");
   const last = page.locator(`${editor} p`).last();
   await last.click();
-  await page.keyboard.press("End");
+  await page.evaluate((sel) => {
+    const text = [...document.querySelectorAll(`${sel} p`)].pop()!.firstChild!;
+    getSelection()!.collapse(text, text.textContent!.length);
+  }, editor);
   await last.click({ button: "right" });
   await page
     .locator(".context-menu-item")
@@ -348,6 +357,21 @@ test("the context menu's Copy and Paste keep the formatting", async ({
   await expect(
     page.locator(`${editor} strong, ${editor} .md-strong`),
   ).toHaveCount(2);
+});
+
+test("Paste as Plain Text keeps Markdown marks as text", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.locator(editor).click();
+  await page.evaluate(() => navigator.clipboard.writeText("**not bold**"));
+  await page.locator(editor).click({ button: "right" });
+  await page
+    .locator(".context-menu-item")
+    .getByText("Paste as Plain Text", { exact: true })
+    .click();
+  await expect(page.locator(`${editor} p`).first()).toHaveText("**not bold**");
+  await expect(
+    page.locator(`${editor} strong, ${editor} .md-strong`),
+  ).toHaveCount(0);
 });
 
 test("lines pasted into a table cell stay in that cell", async ({ page }) => {

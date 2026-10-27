@@ -105,7 +105,8 @@ import {
 import { pasteUrlPlugin } from "./markdown/paste-url";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
-import { plainTextCopyPlugin } from "./markdown/plain-text-copy-plugin";
+import { copyTextPlugin } from "./markdown/copy-text-plugin";
+import { pastePlainTextKeyPlugin } from "./markdown/paste-plain";
 import { createImagePlugin } from "./images/image-plugin";
 import {
   obsidianEmbedInputRule,
@@ -377,7 +378,8 @@ export function withEditorCore(
       .use(footnoteInputRule)
       .use(pasteUrlPlugin)
       .use(pasteMarkdownSourcePlugin)
-      .use(plainTextCopyPlugin)
+      .use(copyTextPlugin)
+      .use(pastePlainTextKeyPlugin)
       .use(clipboard)
       .use(disk ? clipboardHistoryPlugin : [])
       // Ctrl/Cmd+click follows a link. The playground leaves links to the
