@@ -133,7 +133,7 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/zh-hant/settings.png" alt="不同 LLM，隨你喜歡" width="860" />
 </p>
 
-## 外掛程式
+## 外掛程式（測試中，1.3 beta）
 
 需要什麼就裝什麼。筆記和連結畫成的知識圖譜、停在連結上就能看到內容的卡片、兩篇文件並排、看板、版本紀錄、在分頁裡看 PDF 和 Word、從 Zotero 插入引用——都在**設定 › 擴充功能 › 取得更多**裡，和主題、技能放在一起。每個外掛程式用到什麼，都會先問你。
 

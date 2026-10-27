@@ -132,7 +132,7 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/ko/settings.png" alt="원하는 LLM으로" width="860" />
 </p>
 
-## 플러그인
+## 플러그인 (테스트 중, 1.3 베타)
 
 필요한 것만 더하세요. 노트와 링크를 그린 그래프, 링크가 가리키는 곳을 보여 주는 카드, 두 문서를 나란히 보는 화면 분할, 칸반 보드, 버전 기록, 탭에서 여는 PDF와 Word, Zotero 인용까지 – 모두 **설정 › 확장 › 더 받기**에 테마, 스킬과 함께 있습니다. 플러그인은 무엇이든 쓰기 전에 먼저 묻습니다.
 

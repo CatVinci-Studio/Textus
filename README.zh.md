@@ -133,7 +133,7 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/zh/settings.png" alt="不同 LLM，随你喜欢" width="860" />
 </p>
 
-## 插件
+## 插件（测试中，1.3 beta）
 
 需要什么就装什么。笔记和链接画成的知识图谱、停在链接上就能看到内容的卡片、两篇文档并排、看板、版本历史、在标签页里看 PDF 和 Word、从 Zotero 插入引用——都在**设置 › 扩展 › 获取更多**里，和主题、技能放在一起。每个插件用到什么，都会先问你。
 
