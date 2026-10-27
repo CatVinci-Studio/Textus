@@ -36,9 +36,8 @@ of typing. The design behind the system is
 3. Change `host.js` and save: a folder you loaded is read again as it
    changes. Its page in Settings shows what it logged (`ctx.log`).
 
-Or ask Textus AI: **Settings › Extensions › Plugins › Make your own**, or
-"a plugin that …" in **Create** mode, writes one you can install from the
-reply and change in the next message.
+Or ask Textus AI: "a plugin that …" in **Create** mode writes one you can
+install from the reply and change in the next message.
 
 ### A script: a plugin in one file
 

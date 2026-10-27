@@ -1440,10 +1440,6 @@ utiliser une.
   pluginsInstallFile: "Installer depuis un fichier…",
   pluginsLoadFolder: "Charger un dossier d’extension…",
   pluginsOpenScripts: "Ouvrir le dossier des scripts",
-  pluginsDescribeLabel: "Créer le vôtre",
-  pluginsDescribePlaceholder: "Décrivez ce qu’il doit faire…",
-  pluginsDescribeMake: "Créer avec l’IA",
-  pluginsDescribeAsk: "Crée un plugin qui fait ceci : ",
   pluginPackageFilter: "Extension Textus",
   pluginsInstalledGroup: "Installées",
   pluginOpenOffer:

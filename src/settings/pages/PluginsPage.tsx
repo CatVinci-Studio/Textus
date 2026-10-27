@@ -1,6 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { askAi } from "../../ai/chat/ask-ai";
-import { DescribePlugin } from "./DescribePlugin";
 import type { SettingsPageProps } from "./types";
 import { Byline, PluginPage, statusText } from "./PluginPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
@@ -27,6 +26,7 @@ import {
   updateFor,
 } from "../../plugins/store/catalog";
 import { canSwitch } from "../../plugins/store/lifecycle";
+import { pluginMatches } from "../../plugins/store/plugin-records";
 import { PluginIcon } from "./PluginArt";
 
 /**
@@ -44,6 +44,7 @@ export function PluginsPage({
   const { installing, install, attempt, settings, setSettings } =
     usePluginInstall(t);
   const [open, setOpen] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
   useEffect(() => {
     void loadCatalog();
   }, []);
@@ -71,8 +72,9 @@ export function PluginsPage({
   // heading.
   const isMine = (r: (typeof snapshot.records)[number]) =>
     r.manifest?.publisher === "local";
-  const mine = snapshot.records.filter(isMine);
-  const others = snapshot.records.filter((r) => !isMine(r));
+  const shown = snapshot.records.filter((r) => pluginMatches(r, query));
+  const mine = shown.filter(isMine);
+  const others = shown.filter((r) => !isMine(r));
   const card = (record: (typeof snapshot.records)[number]) => (
     <PluginCard
       key={record.id}
@@ -137,7 +139,14 @@ export function PluginsPage({
       installed={
         snapshot.records.length ? (
           <>
-            <DescribePlugin t={t} onAsked={onClose} />
+            <input
+              type="search"
+              className="plugin-search"
+              placeholder={t.marketSearch}
+              aria-label={t.marketSearch}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
             <ToggleRow
               label={t.pluginsAllLabel}
               help={t.pluginsAllHelp}
@@ -153,10 +162,7 @@ export function PluginsPage({
             )}
           </>
         ) : (
-          <>
-            <DescribePlugin t={t} onAsked={onClose} />
-            <p className="plugin-empty">{t.pluginsNone}</p>
-          </>
+          <p className="plugin-empty">{t.pluginsNone}</p>
         )
       }
     />

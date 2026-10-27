@@ -1406,10 +1406,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsInstallFile: "Aus Datei installieren…",
   pluginsLoadFolder: "Plugin-Ordner laden…",
   pluginsOpenScripts: "Skriptordner öffnen",
-  pluginsDescribeLabel: "Selbst machen",
-  pluginsDescribePlaceholder: "Beschreiben, was es tun soll…",
-  pluginsDescribeMake: "Mit KI machen",
-  pluginsDescribeAsk: "Mach ein Plugin, das Folgendes tut: ",
   pluginPackageFilter: "Textus-Plugin",
   pluginsInstalledGroup: "Installiert",
   pluginOpenOffer:

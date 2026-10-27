@@ -237,6 +237,20 @@ test("turning every plugin off takes its tab away", async ({ page }) => {
   await expect(tab).toHaveCount(0);
 });
 
+test("the search above the installed plugins narrows them", async ({
+  page,
+}) => {
+  await open(page);
+  await openPluginsPage(page);
+  const card = page.locator('[data-plugin="test.hello"]');
+  await expect(card).toHaveCount(1);
+  const search = page.getByRole("searchbox", { name: "Search" });
+  await search.fill("no such plugin");
+  await expect(card).toHaveCount(0);
+  await search.fill("hel");
+  await expect(card).toHaveCount(1);
+});
+
 test("a plugin reads the document's outline, and puts a status in the window bar that runs its command", async ({
   page,
 }) => {

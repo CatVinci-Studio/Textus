@@ -1348,10 +1348,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsInstallFile: "ファイルからインストール…",
   pluginsLoadFolder: "プラグインフォルダを読み込む…",
   pluginsOpenScripts: "スクリプトフォルダを開く",
-  pluginsDescribeLabel: "自分で作る",
-  pluginsDescribePlaceholder: "やりたいことを説明…",
-  pluginsDescribeMake: "AI で作る",
-  pluginsDescribeAsk: "次のことをするプラグインを作って：",
   pluginPackageFilter: "Textus プラグイン",
   pluginsInstalledGroup: "インストール済み",
   pluginOpenOffer:

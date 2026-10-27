@@ -96,3 +96,25 @@ export function pluginText(
     ? localize(record.manifest, value, info.language())
     : value;
 }
+
+/** Whether the plugin's name, description, author or id holds every word
+ *  of `query`, case aside, in the UI language and the manifest's own. */
+export function pluginMatches(
+  record: Pick<PluginRecord, "id" | "manifest">,
+  query: string,
+): boolean {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const m = record.manifest;
+  const text = [
+    pluginName(record),
+    m?.name,
+    m && pluginText(record, m.description),
+    m?.description,
+    m?.author,
+    m?.publisher,
+    record.id,
+  ]
+    .join("\n")
+    .toLowerCase();
+  return words.every((w) => text.includes(w));
+}

@@ -1406,10 +1406,6 @@ export default {
   pluginsInstallFile: "Установить из файла…",
   pluginsLoadFolder: "Загрузить папку плагина…",
   pluginsOpenScripts: "Открыть папку скриптов",
-  pluginsDescribeLabel: "Сделать свой",
-  pluginsDescribePlaceholder: "Опишите, что он должен делать…",
-  pluginsDescribeMake: "Сделать с ИИ",
-  pluginsDescribeAsk: "Сделай плагин, который делает следующее: ",
   pluginPackageFilter: "Плагин Textus",
   pluginsInstalledGroup: "Установленные",
   pluginOpenOffer:

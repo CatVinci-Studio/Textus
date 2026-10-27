@@ -12,9 +12,9 @@ import {
   loadPlugins,
   pluginName,
   pluginRecord,
-  pluginText,
   setPluginEnabled,
 } from "../manager";
+import { pluginMatches } from "./plugin-records";
 import { errorText } from "../../utils/error-text";
 
 /**
@@ -175,27 +175,10 @@ export function sortCatalog(
   return [...list].sort((a, b) => key[by](a, b) || byName(a, b));
 }
 
-/** The items whose name, description, author or id hold every word of
- *  `query`, case aside, in the UI language and the manifest's own. */
+/** The items `query` finds: see pluginMatches. */
 export function searchCatalog(
   list: CatalogItem[],
   query: string,
 ): CatalogItem[] {
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  if (!words.length) return list;
-  return list.filter((i) => {
-    const m = i.manifest;
-    const text = [
-      pluginName({ id: i.id, manifest: m }),
-      m.name,
-      pluginText({ manifest: m }, m.description),
-      m.description,
-      m.author,
-      m.publisher,
-      i.id,
-    ]
-      .join("\n")
-      .toLowerCase();
-    return words.every((w) => text.includes(w));
-  });
+  return list.filter((i) => pluginMatches(i, query));
 }
