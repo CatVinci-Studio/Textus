@@ -81,6 +81,14 @@ test("pasted lines stay lines, and a quote with bars is a quote", async ({
   ).toHaveCount(1);
 });
 
+test("a quote that starts with a list stays a quote", async ({ page }) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteText(page, "> - one\n> - two");
+  const quote = page.locator(`${editor} blockquote`);
+  await expect(quote).toHaveCount(1);
+  await expect(quote.locator("li")).toHaveText(["one", "two"]);
+});
+
 test("plain pasted lines keep their breaks", async ({ page }) => {
   await openApp(page, { settings: { language: "en" } });
   await pasteText(page, "Dear Sam,\nThanks for the notes.\nSee you Monday.");

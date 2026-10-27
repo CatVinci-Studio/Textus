@@ -106,6 +106,18 @@ export function keepPastedSpans(slice: Slice, selection: Selection): Slice {
     : new Slice(slice.content, openStart, openEnd);
 }
 
+/** A pasted quote landing on an empty line, closed at its start: opened,
+ *  a quote that began with a list came in as the bare list. */
+export function keepPastedQuote(slice: Slice, $pos: ResolvedPos): Slice {
+  if (
+    slice.openStart === 0 ||
+    slice.content.firstChild?.type.name !== "blockquote"
+  )
+    return slice;
+  if (!$pos.parent.isTextblock || $pos.parent.content.size > 0) return slice;
+  return new Slice(slice.content, 0, slice.openEnd);
+}
+
 /**
  * Whether the parsed paste is one line of a block other than a paragraph -
  * `# T`, `- x`, `> q` - landing in a line that has text: its text joins
@@ -136,7 +148,10 @@ export const pasteMarkdownSourcePlugin = $prose(
         // which the clipboard plugin pastes as it is.
         transformPasted: (slice, view) =>
           joinLinesForTableCell(
-            keepPastedSpans(slice, view.state.selection),
+            keepPastedSpans(
+              keepPastedQuote(slice, view.state.selection.$from),
+              view.state.selection,
+            ),
             view.state.selection.$from,
           ),
         transformPastedHTML: (html) => cleanPastedHtml(wordListsToHtml(html)),
@@ -167,7 +182,10 @@ export const pasteMarkdownSourcePlugin = $prose(
           }
           const parsed = Slice.maxOpen(doc.content);
           const slice = joinLinesForTableCell(
-            keepPastedSpans(parsed, view.state.selection),
+            keepPastedSpans(
+              keepPastedQuote(parsed, view.state.selection.$from),
+              view.state.selection,
+            ),
             view.state.selection.$from,
           );
           // Text alone the clipboard plugin's own branch markdown-parses
