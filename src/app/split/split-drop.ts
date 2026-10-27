@@ -48,6 +48,8 @@ export function dropTargetAt(x: number, y: number): DropTarget | null {
       ?.dataset.tabId;
   }
   if (!tabId || !inside(rect, x, y)) return null;
+  // Split already, a drop only joins the pane: its edges split nothing.
+  if (panes.length > 1) return { zone: "center", tabId, rect };
   const fx = (x - rect.left) / rect.width;
   const fy = (y - rect.top) / rect.height;
   const near = Math.min(fx, 1 - fx, fy, 1 - fy);
