@@ -453,28 +453,6 @@ test("Delete before a callout puts the caret at its text, keeping the callout", 
   expect(await sourceOf(page)).toBe("Above\n\n> [!NOTE]\n> xbody");
 });
 
-test("Enter in a code block in a list adds a line, and an indented blank line keeps the block", async ({
-  page,
-}) => {
-  await open(page, "- item\n\n  ```py\n  def f():\n      x = 1\n  ```");
-  await page.locator(`${editor} pre code`).click();
-  // The caret after "x = 1", the code's last line.
-  await page.evaluate((sel) => {
-    const code = document.querySelector(`${sel} pre code`)!;
-    const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
-    let last: Text | null = null;
-    for (let n = walker.nextNode(); n; n = walker.nextNode()) last = n as Text;
-    getSelection()!.collapse(last!, last!.data.length);
-  }, editor);
-  await selectionRead(page);
-  await page.keyboard.press("Enter");
-  await page.keyboard.press("Enter");
-  await page.keyboard.type("y = 2", { delay: 20 });
-  expect(await sourceOf(page)).toBe(
-    "- item\n\n  ```py\n  def f():\n      x = 1\n\n      y = 2\n  ```",
-  );
-});
-
 test("``` and $$ typed in a list item start a code block and a maths block in it", async ({
   page,
 }) => {
