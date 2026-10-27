@@ -40,6 +40,18 @@ export function visualLineBoundary(
   return low;
 }
 
+/** Cmd+Backspace, done on the document: WebKit's own stalls at a line that
+ *  starts beside a non-editable element (a heading's "#", a code block's
+ *  first line) and loses the caret. */
+function deleteToLineStart(view: EditorView): boolean {
+  const { selection } = stateWithLiveSelection(view);
+  if (!selection.empty || !selection.$head.parent.inlineContent) return false;
+  const start = visualLineBoundary(view, selection.head, -1);
+  if (start === selection.head) return false;
+  view.dispatch(view.state.tr.delete(start, selection.head).scrollIntoView());
+  return true;
+}
+
 export function createMacNavigationPlugin(isMac = isMacPlatform) {
   return new Plugin({
     props: {
@@ -53,6 +65,8 @@ export function createMacNavigationPlugin(isMac = isMacPlatform) {
           !view.editable
         )
           return false;
+        if (event.key === "Backspace" && !event.shiftKey)
+          return deleteToLineStart(view);
         const backward = event.key === "ArrowLeft" || event.key === "ArrowUp";
         const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
         if (!backward && !forward) return false;
