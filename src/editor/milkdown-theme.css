@@ -1259,59 +1259,97 @@ br:is(.pending-delete, .pending-sentence-hot) {
   position: relative;
 }
 
-/* The language picker hangs just below the block's bottom-right corner,
-   outside it, and only while the block is hovered or being edited - the
-   way Typora shows a fence's language. Inside the box it either covered a
-   long first line or (#16) needed a header's worth of padding on top of
-   every block, pushing the code away from the frame (#15). The top padding
-   bridges the gap to the box, so moving the pointer down onto the picker
-   doesn't count as leaving the block. */
+/* Over the block's top-right corner, shown while it is hovered, edited or
+   its language menu is open. */
 .code-block-header {
   position: absolute;
-  top: 100%;
-  right: 0;
+  inset: 0;
   z-index: 2;
+  pointer-events: none;
+}
+
+.code-block-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
   display: flex;
   gap: 4px;
-  padding-top: 2px;
+  user-select: none;
+  -webkit-user-select: none;
   opacity: 0;
-  pointer-events: none;
   transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
-.code-block-wrapper:hover .code-block-header,
-.code-block-wrapper:focus-within .code-block-header {
+.code-block-wrapper:hover .code-block-actions,
+.code-block-wrapper:focus-within .code-block-actions,
+.code-block-wrapper.is-picking-language .code-block-actions {
   opacity: 1;
   pointer-events: auto;
 }
 
-.code-block-language-select,
-.code-block-copy {
+.code-block-language {
+  display: flex;
+}
+
+.code-block-copy,
+.code-block-select-all,
+.code-block-language-select {
+  font: inherit;
   font-size: 0.72em;
+  line-height: 1.6;
   color: var(--editor-muted);
-  /* Opaque: it can overlap the text right below the block. */
+  /* Opaque: it lies over the code, or the text right below the block. */
   background: var(--editor-bg, var(--bg));
   border: 1px solid var(--editor-border);
   border-radius: var(--radius-control);
-  padding: 0.1em 0.3em;
+  padding: 0.1em 0.5em;
   cursor: pointer;
 }
 
-.code-block-language-select:hover,
-.code-block-language-select:focus-visible,
-.code-block-copy:hover,
-.code-block-copy:focus-visible {
-  background: var(--editor-bg, var(--bg));
-  color: var(--editor-text);
+.code-block-language-select {
+  padding-right: 1.9em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.8L5 6.8L8 3.8' stroke='%23888888' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5em center;
+  background-size: 0.8em 0.8em;
 }
 
-.code-block-copy {
-  font-family: inherit;
-  line-height: inherit;
+.code-block-copy:hover,
+.code-block-copy:focus-visible,
+.code-block-select-all:hover,
+.code-block-select-all:focus-visible,
+.code-block-language-select:hover,
+.code-block-language-select:focus-visible,
+.code-block-language-select[aria-expanded="true"] {
+  color: var(--editor-text);
 }
 
 .code-block-copy.is-copied {
   color: var(--editor-accent);
+}
+
+/* Stays at the top as the list scrolls. */
+.code-language-search {
+  position: sticky;
+  /* Above the options, which are positioned too. */
+  z-index: 1;
+  top: -4px;
+  margin: -4px -4px 4px;
+  padding: 4px;
+  background: var(--bg);
+}
+
+.code-language-search input {
+  width: 100%;
+  min-width: 9em;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  border: 1px solid var(--editor-border, var(--border-color));
+  border-radius: var(--radius-control);
+  background: var(--editor-bg, var(--bg));
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-sm);
 }
 
 /* Line numbers (code-line-numbers-plugin.ts): the gutter floats at the
@@ -1370,6 +1408,19 @@ br:is(.pending-delete, .pending-sentence-hot) {
   border: 0;
   border-radius: 0;
   box-shadow: none;
+}
+
+/* "```" typed on a line of its own: the fence, not inline code
+   (md-span-autopair-plugin.ts). */
+#write code.is-fence {
+  background: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
 }
 
 /* Syntax highlighting tokens (via refractor/Prism token classes) */

@@ -1,9 +1,11 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { Transaction } from "@milkdown/kit/prose/state";
+import { AttrStep } from "@milkdown/kit/prose/transform";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 
 /** The ranges of the transaction's new document that its steps wrote,
- *  each mapped through the steps after it. */
+ *  each mapped through the steps after it. An attribute step (a code
+ *  block's language) maps nothing, so its node counts. */
 export function changedRanges(tr: Transaction): [number, number][] {
   const ranges: [number, number][] = [];
   tr.mapping.maps.forEach((map, i) => {
@@ -11,6 +13,9 @@ export function changedRanges(tr: Transaction): [number, number][] {
     map.forEach((_oldStart, _oldEnd, newStart, newEnd) =>
       ranges.push([after.map(newStart, -1), after.map(newEnd, 1)]),
     );
+    const step = tr.steps[i];
+    if (step instanceof AttrStep)
+      ranges.push([after.map(step.pos, 1), after.map(step.pos + 1, -1)]);
   });
   return ranges;
 }

@@ -117,6 +117,7 @@ export default {
   diagramViewerHint:
     "Прокрутка или щипок — масштаб · перетаскивание — сдвиг · двойной щелчок — вписать",
   codeBlockLanguage: "Язык кода",
+  codeBlockLanguageSearch: "Найти язык",
   announceAiWriting: `${AI_NAME} пишет…`,
   announceAiDone: `${AI_NAME} закончил.`,
   announceChangesProposed: {
@@ -560,6 +561,8 @@ export default {
   accountNotConnected: "Не подключён",
   accountConnectedAs: "Подключён",
   signInTemplate: "Войти через {name}",
+  signInExperimental:
+    "Экспериментальная функция — используйте с осторожностью.",
   logoutButton: "Выйти",
   loggingIn: "Ожидание входа в браузере…",
   loginLinkHint:
@@ -681,7 +684,8 @@ export default {
   chatSelectedPicture: "Выбрана картинка",
   cut: "Вырезать",
   copy: "Скопировать",
-  copyAsMarkdown: "Копировать как Markdown",
+  copyAsPlainText: "Копировать как обычный текст",
+  pasteAsPlainText: "Вставить как обычный текст",
   paste: "Вставить",
   selectAll: "Выбрать все",
   findReplace: "Найти и заменить",
@@ -789,6 +793,7 @@ export default {
   menuSettings: "Настройки…",
   menuExit: "Выход",
   menuNewFile: "Новый файл",
+  menuNewTab: "Новая вкладка",
   menuOpenFile: "Открыть…",
   menuOpenRecent: "Открыть недавние",
   menuRecentNone: "Нет недавних файлов",
@@ -809,6 +814,7 @@ export default {
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Закрыть вкладку",
+  menuReopenClosedTab: "Открыть закрытую вкладку",
   menuUndo: "Отменить",
   menuRedo: "Повторить",
   menuFindReplace: "Найти и заменить…",

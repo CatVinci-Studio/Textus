@@ -180,7 +180,7 @@ export function TabBar({
           <span className="tab-pill-title">{previewTab.title}</span>
         </div>
       )}
-      {/* The pointer's File › New File (Ctrl/⌘ + N, the keyboard's): a tab
+      {/* The pointer's File › New Tab (Ctrl/⌘ + T, the keyboard's): a tab
         list holds only tabs, so it stays out of the list's tree. */}
       <Tooltip text={labels.add} description={null}>
         <button

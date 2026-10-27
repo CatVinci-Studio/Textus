@@ -144,8 +144,7 @@ export function MilkdownEditor({
   });
 
   const run = useEditorRunner();
-  const { copyOrCut, copyAsMarkdown, paste, selectAll, insertText } =
-    useEditorClipboard(run);
+  const clipboard = useEditorClipboard(run);
   useEditorFlush(tabId, run, reporting);
 
   const { aiNotice, showAiNotice, holdAiNotice, releaseAiNotice } =
@@ -330,11 +329,7 @@ export function MilkdownEditor({
     triggerGrammarCheck,
     toggleAgentConversation,
     findReplace,
-    insertText,
-    copyOrCut,
-    copyAsMarkdown,
-    paste,
-    selectAll,
+    clipboard,
     openTableDialog: () => setTableDialogOpen(true),
     setMenu,
     conversation,
@@ -548,10 +543,7 @@ export function MilkdownEditor({
         illustrateParagraph={illustrateParagraph}
         triggerCompletion={triggerCompletion}
         triggerGrammarCheck={triggerGrammarCheck}
-        copyOrCut={copyOrCut}
-        copyAsMarkdown={copyAsMarkdown}
-        paste={paste}
-        selectAll={selectAll}
+        clipboard={clipboard}
         toggleFindReplace={findReplace.toggle}
         openTableDialog={() => setTableDialogOpen(true)}
         onClose={() => setMenu(null)}

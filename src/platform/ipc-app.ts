@@ -143,6 +143,15 @@ export const menuIpc = {
     desktopQueryCommand("take_pending_plugin_command", null),
 };
 
+/** The menus' Paste (commands/clipboard.rs): macOS shows a page that
+ *  reads the clipboard a "Paste" callout first, so it pastes natively. */
+export const clipboardIpc = {
+  /** Cmd+V's paste into this window; false where the page pastes itself. */
+  pasteNatively: () => desktopQueryCommand("paste_natively", false),
+  /** The clipboard's plain text; null where the page reads it itself. */
+  text: () => desktopQueryCommand("clipboard_text", null),
+};
+
 // ---------------------------------------------------------------------------
 // export (src-tauri/src/commands/export.rs)
 // ---------------------------------------------------------------------------

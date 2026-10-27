@@ -23,6 +23,8 @@ export interface ProviderCatalogEntry {
   /** Stronger default used only by Agent chat. */
   agentDefaultModel: string | null;
   keyOptional: boolean;
+  /** Its account sign-in isn't one the provider offers other apps. */
+  oauthUnofficial: boolean;
   /** Whether this provider's API accepts image content parts at all - what
    *  gates the chat's image attachments. A provider-level claim, not a
    *  model-level one; see the Rust field's comment for why. */
@@ -52,6 +54,7 @@ export const FALLBACK_CATALOG: ProviderCatalogEntry[] = [
     defaultModel: "gpt-6-luna",
     agentDefaultModel: "gpt-6.1-sol",
     keyOptional: false,
+    oauthUnofficial: false,
     supportsVision: true,
     modelsListable: true,
     knownModels: ["gpt-6.1-sol", "gpt-6-luna"],
@@ -65,6 +68,7 @@ export const FALLBACK_CATALOG: ProviderCatalogEntry[] = [
     defaultModel: "claude-haiku-5-5",
     agentDefaultModel: "claude-sonnet-5-5",
     keyOptional: false,
+    oauthUnofficial: true,
     supportsVision: true,
     modelsListable: true,
     knownModels: ["claude-sonnet-5-5", "claude-haiku-5-5"],
@@ -78,6 +82,7 @@ export const FALLBACK_CATALOG: ProviderCatalogEntry[] = [
     defaultModel: null,
     agentDefaultModel: null,
     keyOptional: true,
+    oauthUnofficial: false,
     supportsVision: true,
     modelsListable: true,
     knownModels: [],

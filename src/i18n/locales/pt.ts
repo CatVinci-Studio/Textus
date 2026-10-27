@@ -116,6 +116,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   diagramViewerHint:
     "Role ou faça pinça para dar zoom · arraste para mover · clique duas vezes para ajustar",
   codeBlockLanguage: "Linguagem do código",
+  codeBlockLanguageSearch: "Pesquisar linguagem",
   announceAiWriting: `${AI_NAME} está escrevendo…`,
   announceAiDone: `${AI_NAME} terminou.`,
   announceChangesProposed: {
@@ -557,6 +558,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   accountNotConnected: "Não conectado",
   accountConnectedAs: "Conectado",
   signInTemplate: "Entrar com {name}",
+  signInExperimental: "Recurso experimental: use com cuidado.",
   logoutButton: "Sair",
   loggingIn: "Aguardando o login no navegador…",
   loginLinkHint:
@@ -674,7 +676,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   chatSelectedPicture: "Imagem selecionada",
   cut: "Recortar",
   copy: "Copiar",
-  copyAsMarkdown: "Copiar como Markdown",
+  copyAsPlainText: "Copiar como texto simples",
+  pasteAsPlainText: "Colar como texto simples",
   paste: "Colar",
   selectAll: "Selecionar Tudo",
   findReplace: "Buscar e Substituir",
@@ -781,6 +784,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuSettings: "Ajustes…",
   menuExit: "Sair",
   menuNewFile: "Novo Arquivo",
+  menuNewTab: "Nova Aba",
   menuOpenFile: "Abrir…",
   menuOpenRecent: "Abrir Recente",
   menuRecentNone: "Nenhum Arquivo Recente",
@@ -801,6 +805,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Fechar Aba",
+  menuReopenClosedTab: "Reabrir Aba Fechada",
   menuUndo: "Desfazer",
   menuRedo: "Refazer",
   menuFindReplace: "Buscar e Substituir…",

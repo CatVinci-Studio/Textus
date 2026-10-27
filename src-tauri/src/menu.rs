@@ -60,6 +60,9 @@ const EXPORT_HTML_ID: &str = "export-html";
 const EXPORT_PANDOC_PREFIX: &str = "export-pandoc:";
 const QUIT_ID: &str = "quit";
 const CLOSE_TAB_ID: &str = "close-tab";
+/// File > Reopen Closed Tab: the focused window opens the document it
+/// closed last (app/close-flow.ts).
+const REOPEN_CLOSED_TAB_ID: &str = "reopen-closed-tab";
 const CLOSE_WINDOW_ID: &str = "close-window";
 const TOGGLE_SOURCE_MODE_ID: &str = "toggle-source-mode";
 const TOGGLE_TYPEWRITER_MODE_ID: &str = "toggle-typewriter-mode";
@@ -76,10 +79,11 @@ const ZOOM_IN_ID: &str = "zoom-in";
 const ZOOM_OUT_ID: &str = "zoom-out";
 const ZOOM_RESET_ID: &str = "zoom-reset";
 const FIND_REPLACE_ID: &str = "find-replace";
-/// Edit > Copy as Markdown: the selection's Markdown source, where Copy
-/// gives plain-text apps the words as they read
-/// (src/editor/useEditorClipboard.ts).
-const COPY_AS_MARKDOWN_ID: &str = "copy-as-markdown";
+/// Edit > Copy as Plain Text and Paste as Plain Text: the words without the
+/// Markdown marks Copy's plain text carries, and the clipboard's text
+/// pasted as it is (src/editor/useEditorClipboard.ts).
+const COPY_AS_PLAIN_TEXT_ID: &str = "copy-as-plain-text";
+const PASTE_AS_PLAIN_TEXT_ID: &str = "paste-as-plain-text";
 /// Edit > Select All on macOS, in place of the predefined item: that one
 /// sends WebKit's own selectAll:, which with the caret in no text field
 /// selected the whole window - the sidebar's notes, the empty document's
@@ -374,15 +378,12 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     } else if let Some(item) = id.strip_prefix(crate::background::tray::MENU_PREFIX) {
         crate::background::tray::on_menu(app_handle, item);
     } else if id == NEW_FILE_ID {
-        // Honors the same Settings choice as opening files: a new tab in the
-        // focused window in tab mode, a fresh window otherwise (or when
-        // there's no window at all).
-        if app_handle.webview_windows().is_empty()
-            || commands::prefs::read_new_document_mode(app_handle) != "tab"
-        {
-            let _ = crate::open_new_window(app_handle);
-        } else {
+        // New Tab, as a browser's: a tab in the focused window whatever
+        // Settings says files open in; a window when there is none.
+        if focused_editor_window(app_handle).is_some() {
             emit_to_focused(app_handle, "menu-new-file");
+        } else {
+            let _ = crate::open_new_window(app_handle);
         }
     } else if let Some(command) = id.strip_prefix(PLUGIN_COMMAND_PREFIX) {
         emit_to_focused_payload(app_handle, "menu-plugin-command", command.to_string());
@@ -437,8 +438,10 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-toggle-split-view");
     } else if id == TOGGLE_ZEN_MODE_ID {
         emit_to_focused(app_handle, "menu-toggle-zen-mode");
-    } else if id == COPY_AS_MARKDOWN_ID {
-        emit_to_focused(app_handle, "menu-copy-as-markdown");
+    } else if id == COPY_AS_PLAIN_TEXT_ID {
+        emit_to_focused(app_handle, "menu-copy-as-plain-text");
+    } else if id == PASTE_AS_PLAIN_TEXT_ID {
+        emit_to_focused(app_handle, "menu-paste-as-plain-text");
     } else if cfg!(target_os = "macos") && id == "select-all" {
         emit_to_focused(app_handle, "menu-select-all");
     } else if id == FIND_REPLACE_ID {
@@ -449,6 +452,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-zoom-out");
     } else if id == ZOOM_RESET_ID {
         emit_to_focused(app_handle, "menu-zoom-reset");
+    } else if id == REOPEN_CLOSED_TAB_ID {
+        emit_to_focused(app_handle, "menu-reopen-closed-tab");
     } else if id == CLOSE_TAB_ID {
         emit_to_focused(app_handle, "menu-close-tab");
     } else if id == CLOSE_WINDOW_ID {

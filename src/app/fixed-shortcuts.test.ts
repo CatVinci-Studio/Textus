@@ -79,7 +79,7 @@ describe("the fixed shortcuts in Settings", () => {
 
   it("match the macOS menu bar's accelerators in menu.rs", () => {
     const native = nativeAccelerators();
-    expect(native).toContain("mod+shift+n");
+    expect(native).toContain("mod+shift+t");
     const mac = fixedCombos("macos");
     // Both ways: nothing menu.rs binds is missing from the list, and the
     // list claims no menu combo menu.rs doesn't bind. The rest are muda's

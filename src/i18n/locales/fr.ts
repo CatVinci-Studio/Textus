@@ -124,6 +124,7 @@ utiliser une.
   diagramViewerHint:
     "Faites défiler ou pincez pour zoomer · faites glisser pour déplacer · double-cliquez pour ajuster",
   codeBlockLanguage: "Langage du code",
+  codeBlockLanguageSearch: "Rechercher un langage",
   announceAiWriting: `${AI_NAME} écrit…`,
   announceAiDone: `${AI_NAME} a terminé.`,
   announceChangesProposed: {
@@ -577,6 +578,7 @@ utiliser une.
   accountNotConnected: "Non connecté",
   accountConnectedAs: "Connecté",
   signInTemplate: "Se connecter avec {name}",
+  signInExperimental: "Fonction expérimentale : à utiliser avec prudence.",
   logoutButton: "Se déconnecter",
   loggingIn: "En attente de la connexion dans le navigateur…",
   loginLinkHint:
@@ -696,7 +698,8 @@ utiliser une.
   chatSelectedPicture: "Image sélectionnée",
   cut: "Couper",
   copy: "Copier",
-  copyAsMarkdown: "Copier en Markdown",
+  copyAsPlainText: "Copier en texte brut",
+  pasteAsPlainText: "Coller en texte brut",
   paste: "Coller",
   selectAll: "Tout sélectionner",
   findReplace: "Rechercher et remplacer",
@@ -807,6 +810,7 @@ utiliser une.
   menuSettings: "Réglages…",
   menuExit: "Quitter",
   menuNewFile: "Nouveau fichier",
+  menuNewTab: "Nouvel onglet",
   menuOpenFile: "Ouvrir…",
   menuOpenRecent: "Ouvrir l'élément récent",
   menuRecentNone: "Aucun fichier récent",
@@ -827,6 +831,7 @@ utiliser une.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Fermer l'onglet",
+  menuReopenClosedTab: "Rouvrir l'onglet fermé",
   menuUndo: "Annuler",
   menuRedo: "Rétablir",
   menuFindReplace: "Rechercher et remplacer…",

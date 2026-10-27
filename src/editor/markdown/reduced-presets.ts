@@ -165,24 +165,19 @@ export const headingInputRule = $inputRule((ctx) =>
   }),
 );
 
-/** "---", "___ " or "*** " alone on a line makes a rule - except "---" on
- *  the document's first line, which Enter turns into front matter
- *  (block-keys-plugin.ts); "--- " makes a rule there. */
+/** "--- ", "___ " or "*** " alone on a line makes a rule. "---" and "___"
+ *  make one on Enter (block-keys-plugin.ts), or front matter on the
+ *  document's first line. */
 export const ruleInputRule = $inputRule(
   (ctx) =>
-    new InputRule(
-      /^(?:---|---\s|___\s|\*\*\*\s)$/,
-      (state, match, start, end) => {
-        const $start = state.doc.resolve(start);
-        const firstLine = $start.depth === 1 && $start.index(0) === 0;
-        if (match[0] === "---" && firstLine) return null;
-        // The rule goes above the line, which keeps the caret and any text
-        // after it.
-        return state.tr
-          .delete(start, end)
-          .insert($start.before(), hrSchema.type(ctx).create());
-      },
-    ),
+    new InputRule(/^(?:---\s|___\s|\*\*\*\s)$/, (state, _match, start, end) => {
+      const $start = state.doc.resolve(start);
+      // The rule goes above the line, which keeps the caret and any text
+      // after it.
+      return state.tr
+        .delete(start, end)
+        .insert($start.before(), hrSchema.type(ctx).create());
+    }),
 );
 
 /** "1. " or "1) " at the start of a line starts an ordered list from that

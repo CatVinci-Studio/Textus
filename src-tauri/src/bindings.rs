@@ -97,6 +97,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::chat_window::close_chat_window,
                 crate::commands::chat_window::focus_chat_window,
                 crate::commands::chat_window::current_chat_window,
+                crate::commands::clipboard::paste_natively,
+                crate::commands::clipboard::clipboard_text,
                 crate::menu::trigger_menu_item,
                 crate::menu::list_recent_files,
                 crate::menu::list_recent_folders,

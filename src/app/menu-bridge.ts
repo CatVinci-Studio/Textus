@@ -51,6 +51,8 @@ export interface MenuBridgeHandlers {
   saveTabAs: (tabId: string) => Promise<boolean>;
   toggleSourceMode: () => void;
   requestCloseTab: (tabId: string) => void;
+  /** File > Reopen Closed Tab (close-flow.ts). */
+  reopenClosedTab: () => void;
   openHelpTab: (doc: HelpDoc) => void;
   startWelcomeTutorial: () => void;
   /** Help > Join the Community: the website's page in the UI's language. */
@@ -96,8 +98,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow<string>("menu-plugin-command", (event) =>
         runCommand(event.payload),
       ),
-      // Only arrives in tab mode - in window mode the Rust menu handler opens
-      // a fresh window itself instead of emitting this.
+      // File > New Tab (menu.rs).
       listenToThisWindow("menu-new-file", () => h().addBlankTab()),
       listenToThisWindow("menu-open-file", () => void h().openFileDialog()),
       listenToThisWindow<string>(
@@ -153,12 +154,17 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         h().onToggleSplitView(),
       ),
       listenToThisWindow("menu-toggle-zen-mode", () => h().onToggleZenMode()),
-      // Edit > Copy as Markdown runs where Copy does, in the editor on
-      // screen (useEditorWindowEvents.ts).
+      // Edit > Copy and Paste as Plain Text run where Copy does, in the
+      // editor on screen (useEditorWindowEvents.ts).
       listenToThisWindow("menu-select-all", selectAllInFocus),
-      listenToThisWindow("menu-copy-as-markdown", () =>
+      listenToThisWindow("menu-copy-as-plain-text", () =>
         window.dispatchEvent(
-          new CustomEvent(EDIT_ACTION_EVENT, { detail: "copy-as-markdown" }),
+          new CustomEvent(EDIT_ACTION_EVENT, { detail: "copy-as-plain-text" }),
+        ),
+      ),
+      listenToThisWindow("menu-paste-as-plain-text", () =>
+        window.dispatchEvent(
+          new CustomEvent(EDIT_ACTION_EVENT, { detail: "paste-as-plain-text" }),
         ),
       ),
       listenToThisWindow("menu-find-replace", () =>
@@ -167,6 +173,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-close-tab", () =>
         h().requestCloseTab(h().activeTabId),
       ),
+      listenToThisWindow("menu-reopen-closed-tab", () => h().reopenClosedTab()),
       // Payload is the block kind (h1..h6, bullet-list, ...) from the menu id -
       // relayed to whichever editor is mounted as active (MilkdownEditor.tsx).
       listenToThisWindow<string>("menu-insert-block", (event) => {
