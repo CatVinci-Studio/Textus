@@ -167,7 +167,11 @@ function LanguageMenu({
             style={place}
             data-floating-select=""
           >
-            <li role="presentation" className="code-language-search">
+            <li
+              role="presentation"
+              className="code-language-search"
+              data-pinned=""
+            >
               <input
                 ref={search}
                 type="text"

@@ -1,7 +1,11 @@
 import { useCallback } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
-import { Slice } from "@milkdown/kit/prose/model";
-import { AllSelection } from "@milkdown/kit/prose/state";
+import { Slice, type Node as ProseNode } from "@milkdown/kit/prose/model";
+import {
+  AllSelection,
+  Selection,
+  TextSelection,
+} from "@milkdown/kit/prose/state";
 import type { EditorRunner } from "./useEditorRunner";
 import { recordClipboardEntry } from "../clipboard/history";
 import { parseMarkdownSource } from "./markdown/parse-markdown-source";
@@ -47,6 +51,22 @@ async function clipboardData(): Promise<DataTransfer | null> {
     if (text) data.setData("text/plain", text);
   }
   return data.items.length > 0 ? data : null;
+}
+
+/** All of `doc`. WebKit draws no highlight for a selection that starts or
+ *  ends beside a code block; there it runs from its first character to its
+ *  last. */
+function wholeDocument(doc: ProseNode): Selection {
+  const start = Selection.atStart(doc);
+  const end = Selection.atEnd(doc);
+  const codeAtEdge = [doc.firstChild, doc.lastChild].some(
+    (node) => node?.type.spec.code,
+  );
+  return codeAtEdge &&
+    start instanceof TextSelection &&
+    end instanceof TextSelection
+    ? TextSelection.create(doc, start.from, end.to)
+    : new AllSelection(doc);
 }
 
 export function useEditorClipboard(run: EditorRunner): EditorClipboard {
@@ -150,9 +170,7 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
   const selectAll = useCallback(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      view.dispatch(
-        view.state.tr.setSelection(new AllSelection(view.state.doc)),
-      );
+      view.dispatch(view.state.tr.setSelection(wholeDocument(view.state.doc)));
       view.focus();
     });
   }, [run]);

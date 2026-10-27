@@ -403,6 +403,28 @@ test("Delete before a quote joins its first line", async ({ page }) => {
   expect(await sourceOf(page)).toBe("Aboveone\n\n> two");
 });
 
+test("Enter in a code block in a list adds a line, and an indented blank line keeps the block", async ({
+  page,
+}) => {
+  await open(page, "- item\n\n  ```py\n  def f():\n      x = 1\n  ```");
+  await page.locator(`${editor} pre code`).click();
+  // The caret after "x = 1", the code's last line.
+  await page.evaluate((sel) => {
+    const code = document.querySelector(`${sel} pre code`)!;
+    const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+    let last: Text | null = null;
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) last = n as Text;
+    getSelection()!.collapse(last!, last!.data.length);
+  }, editor);
+  await selectionRead(page);
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("y = 2", { delay: 20 });
+  expect(await sourceOf(page)).toBe(
+    "- item\n\n  ```py\n  def f():\n      x = 1\n\n      y = 2\n  ```",
+  );
+});
+
 test("typing over a selection that ends in a code block keeps the code block", async ({
   page,
 }) => {
@@ -433,28 +455,6 @@ test("Delete before a callout puts the caret at its text, keeping the callout", 
   await page.keyboard.press("Delete");
   await page.keyboard.type("x", { delay: 20 });
   expect(await sourceOf(page)).toBe("Above\n\n> [!NOTE]\n> xbody");
-});
-
-test("Enter in a code block in a list adds a line, and an indented blank line keeps the block", async ({
-  page,
-}) => {
-  await open(page, "- item\n\n  ```py\n  def f():\n      x = 1\n  ```");
-  await page.locator(`${editor} pre code`).click();
-  // The caret after "x = 1", the code's last line.
-  await page.evaluate((sel) => {
-    const code = document.querySelector(`${sel} pre code`)!;
-    const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
-    let last: Text | null = null;
-    for (let n = walker.nextNode(); n; n = walker.nextNode()) last = n as Text;
-    getSelection()!.collapse(last!, last!.data.length);
-  }, editor);
-  await selectionRead(page);
-  await page.keyboard.press("Enter");
-  await page.keyboard.press("Enter");
-  await page.keyboard.type("y = 2", { delay: 20 });
-  expect(await sourceOf(page)).toBe(
-    "- item\n\n  ```py\n  def f():\n      x = 1\n\n      y = 2\n  ```",
-  );
 });
 
 test("``` and $$ typed in a list item start a code block and a maths block in it", async ({
@@ -518,4 +518,23 @@ test("--- and Enter make a rule with the caret on the one line below it", async 
   await page.keyboard.press("Enter");
   await page.keyboard.type("below", { delay: 20 });
   expect(await sourceOf(page)).toBe("above\n\n---\n\nbelow");
+});
+
+test("``` typed on a line of its own reads as a fence, not as code", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("```", { delay: 20 });
+  const span = page.locator(`${editor} .md-code-span`);
+  await expect(span).toHaveClass(/is-fence/);
+  const look = await span.evaluate(
+    (el) => getComputedStyle(el).backgroundColor,
+  );
+  expect(look).toBe("rgba(0, 0, 0, 0)");
+  await open(page);
+  await page.keyboard.type("a `x`", { delay: 20 });
+  await expect(page.locator(`${editor} .md-code-span`)).toHaveCount(1);
+  await expect(page.locator(`${editor} .md-code-span`)).not.toHaveClass(
+    /is-fence/,
+  );
 });

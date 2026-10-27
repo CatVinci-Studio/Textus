@@ -1100,6 +1100,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   right: 6px;
   display: flex;
   gap: 4px;
+  user-select: none;
+  -webkit-user-select: none;
   opacity: 0;
   transition: opacity var(--dur-fast) var(--ease-standard);
 }
@@ -1155,6 +1157,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
 /* Stays at the top as the list scrolls. */
 .code-language-search {
   position: sticky;
+  /* Above the options, which are positioned too. */
+  z-index: 1;
   top: -4px;
   margin: -4px -4px 4px;
   padding: 4px;
@@ -1218,6 +1222,19 @@ br:is(.pending-delete, .pending-sentence-hot) {
   border: 0;
   border-radius: 0;
   box-shadow: none;
+}
+
+/* "```" typed on a line of its own: the fence, not inline code
+   (md-span-autopair-plugin.ts). */
+#write code.is-fence {
+  background: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
 }
 
 /* Syntax highlighting tokens (via refractor/Prism token classes) */

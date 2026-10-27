@@ -11,7 +11,11 @@ import {
 import { useStartupRestore } from "../document/startup-restore";
 import { useOpenPathsPush, useFileDrop } from "./useFileOpening";
 import { useDocumentActions } from "./useDocumentActions";
-import { useClosePrompt, useWindowCloseGuard } from "./close-flow";
+import {
+  takeClosedPath,
+  useClosePrompt,
+  useWindowCloseGuard,
+} from "./close-flow";
 import {
   usePracticeNotes,
   useTutorialTabRecovery,
@@ -162,6 +166,12 @@ export function useWindowWiring({
     saveTabAs: docs.saveTabAs,
     toggleSourceMode: docs.toggleSourceMode,
     requestCloseTab: docs.requestCloseTab,
+    reopenClosedTab: () => {
+      const path = takeClosedPath((p) =>
+        liveTabs().some((tb) => tb.path === p),
+      );
+      if (path) void openPathInTab(path, { restoreCaret: true });
+    },
     openHelpTab: docs.openHelpTab,
     startWelcomeTutorial: docs.startWelcomeTutorial,
     openCommunity: () => void links.openCommunityPage(settings.language),

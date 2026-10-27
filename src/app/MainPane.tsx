@@ -156,7 +156,7 @@ export function MainPane({
       labels={{
         tabs: t.menuDocuments,
         close: t.menuCloseTab,
-        add: t.menuNewFile,
+        add: t.menuNewTab,
         unsaved: t.unsavedIndicator,
       }}
     />

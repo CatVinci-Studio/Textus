@@ -51,6 +51,8 @@ export interface MenuBridgeHandlers {
   saveTabAs: (tabId: string) => Promise<boolean>;
   toggleSourceMode: () => void;
   requestCloseTab: (tabId: string) => void;
+  /** File > Reopen Closed Tab (close-flow.ts). */
+  reopenClosedTab: () => void;
   openHelpTab: (doc: HelpDoc) => void;
   startWelcomeTutorial: () => void;
   /** Help > Join the Community: the website's page in the UI's language. */
@@ -86,7 +88,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow<string>("menu-plugin-command", (event) =>
         runCommand(event.payload),
       ),
-      // Tab mode only: in window mode Rust opens a fresh window itself.
+      // File > New Tab (menu.rs).
       listenToThisWindow("menu-new-file", () => h().addBlankTab()),
       listenToThisWindow("menu-open-file", () => void h().openFileDialog()),
       listenToThisWindow<string>(
@@ -171,6 +173,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-close-tab", () =>
         h().requestCloseTab(h().activeTabId),
       ),
+      listenToThisWindow("menu-reopen-closed-tab", () => h().reopenClosedTab()),
       // Payload is the block kind (h1..h6, bullet-list, ...) from the menu id.
       listenToThisWindow<string>("menu-insert-block", (event) => {
         window.dispatchEvent(
