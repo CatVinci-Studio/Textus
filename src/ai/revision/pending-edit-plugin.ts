@@ -325,49 +325,53 @@ export function createPendingEditPlugin(options: {
             }
             return set;
           },
-          handleKeyDown(view, event) {
-            const mod = event.metaKey || event.ctrlKey;
-            if (!mod) return false;
-            const previews =
-              pendingEditKey.getState(view.state)?.previews ?? [];
-            if (previews.length === 0) return false;
-            const focused = options.getFocusedCallId?.() ?? null;
-            const targetId =
-              (focused && previews.some((p) => p.callId === focused)
-                ? focused
-                : null) ?? previews[0].callId;
-            // The sentence the review bar points at (‹ › or F7) is the
-            // one decided, as its ✓ / ✕ would.
-            const sentence = options.getFocusedSentence?.() ?? null;
-            const pointed =
-              sentence && sentence.index >= 0 && sentence.callId === targetId
-                ? sentence
-                : null;
-            if (event.key === "Enter") {
-              event.preventDefault();
-              if (pointed)
-                options.onDecide?.(pointed.callId, pointed.index, true);
-              else options.onAccept?.(targetId);
-              return true;
-            }
-            if (event.key === "Backspace") {
-              // Ctrl+Backspace (Windows/Linux) and Cmd+Backspace (macOS)
-              // are everyday "delete word/line" keys, so they only mean
-              // Reject with the caret on a preview itself - anywhere else
-              // they used to throw a suggestion away mid-sentence.
-              const { selection } = view.state;
-              if (!selection.empty) return false;
-              const here = previews.find(
-                (p) => selection.from >= p.from && selection.from <= p.to,
-              );
-              if (!here) return false;
-              event.preventDefault();
-              if (pointed && pointed.callId === here.callId)
-                options.onDecide?.(pointed.callId, pointed.index, false);
-              else options.onReject?.(here.callId);
-              return true;
-            }
-            return false;
+          // Before every plugin's handleKeyDown: on a preview these keys
+          // decide it, ahead of the editor's own Mod+Enter and Mod+Backspace.
+          handleDOMEvents: {
+            keydown(view, event) {
+              const mod = event.metaKey || event.ctrlKey;
+              if (!mod) return false;
+              const previews =
+                pendingEditKey.getState(view.state)?.previews ?? [];
+              if (previews.length === 0) return false;
+              const focused = options.getFocusedCallId?.() ?? null;
+              const targetId =
+                (focused && previews.some((p) => p.callId === focused)
+                  ? focused
+                  : null) ?? previews[0].callId;
+              // The sentence the review bar points at (‹ › or F7) is the
+              // one decided, as its ✓ / ✕ would.
+              const sentence = options.getFocusedSentence?.() ?? null;
+              const pointed =
+                sentence && sentence.index >= 0 && sentence.callId === targetId
+                  ? sentence
+                  : null;
+              if (event.key === "Enter") {
+                event.preventDefault();
+                if (pointed)
+                  options.onDecide?.(pointed.callId, pointed.index, true);
+                else options.onAccept?.(targetId);
+                return true;
+              }
+              if (event.key === "Backspace") {
+                // Ctrl+Backspace (Windows/Linux) and Cmd+Backspace (macOS)
+                // are everyday "delete word/line" keys, so they only mean
+                // Reject with the caret on a preview itself - anywhere else
+                // they used to throw a suggestion away mid-sentence.
+                const { selection } = view.state;
+                if (!selection.empty) return false;
+                const here = previews.find(
+                  (p) => selection.from >= p.from && selection.from <= p.to,
+                );
+                if (!here) return false;
+                event.preventDefault();
+                if (pointed && pointed.callId === here.callId)
+                  options.onDecide?.(pointed.callId, pointed.index, false);
+                else options.onReject?.(here.callId);
+                return true;
+              }
+              return false;
+            },
           },
         },
         view(editorView) {
