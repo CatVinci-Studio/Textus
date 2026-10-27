@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { leadingWhitespaceOfLastLine } from "./code-block-indent-plugin";
+import { leadingWhitespaceOfLastLine } from "./code-indent";
 
 describe("leadingWhitespaceOfLastLine", () => {
   it("returns the indentation of the last line", () => {

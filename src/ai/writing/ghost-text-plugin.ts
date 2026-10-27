@@ -336,6 +336,8 @@ export function createGhostTextPlugin(options: {
               if (!selection.empty) return;
 
               const $pos = selection.$from;
+              // In code a suggestion ran many lines over what was typed.
+              if ($pos.parent.type.spec.code) return;
               const atBlockEnd =
                 $pos.parent.isTextblock &&
                 $pos.parentOffset === $pos.parent.content.size &&
@@ -352,17 +354,12 @@ export function createGhostTextPlugin(options: {
               if ($pos.parent.content.size === 0) return;
               // After punctuation the next words are the writer's choice and
               // suggestions rarely help; only a pause after a word asks.
-              if (
-                !$pos.parent.type.spec.code &&
-                !/[\p{L}\p{N}]\s?$/u.test(before)
-              )
-                return;
+              if (!/[\p{L}\p{N}]\s?$/u.test(before)) return;
               // No minimum length, so a fresh document's first sentence asks
               // too; only an empty before-text has nothing to continue.
               if (!before.trim()) return;
-              // Outside code, a before-text of only code has no prose to
-              // continue either.
-              if (!$pos.parent.type.spec.code && !hasProse(prose)) return;
+              // Only code before (a diagram's source): no prose to continue.
+              if (!hasProse(prose)) return;
 
               debounced.schedule(async (isCurrent) => {
                 // Turned off while the request waited out the debounce.

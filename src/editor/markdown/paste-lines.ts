@@ -2,7 +2,8 @@
  * Pasted text as the writer saw it. Markdown reads a line break inside a
  * paragraph as a space, so such breaks are kept as hard breaks; quote bars
  * ("▎ Hi") make a quote; PDF and terminal wrapping is rejoined, PDF
- * ligatures unfolded, and terminal output becomes a code block.
+ * ligatures unfolded, and terminal output becomes a code block. Fenced
+ * code is pasted as it is.
  */
 
 /** The bars a copied quote is drawn with, at a line's start. */
@@ -44,6 +45,20 @@ function terminalOutput(lines: string[]): boolean {
   return filled.filter((line) => COLUMNS.test(line)).length >= 2;
 }
 
+/** Whether each line is a fence's or inside one. */
+function fencedLines(lines: string[]): boolean[] {
+  let fence: string | null = null;
+  return lines.map((line) => {
+    const marker = /^[ \t]*(```|~~~|\$\$)/.exec(line)?.[1];
+    if (fence) {
+      if (marker === fence) fence = null;
+      return true;
+    }
+    if (marker) fence = marker;
+    return !!marker;
+  });
+}
+
 /** A PDF's ligatures and radical forms as the letters they stand for. */
 function plainLetters(text: string): string {
   return text.replace(/[\ufb00-\ufb06\u2e80-\u2fdf]/g, (c) =>
@@ -63,10 +78,12 @@ function closeUpSpacedCjk(line: string): string {
  * mid-clause, and the next going on with the same paragraph. Short lines
  * are the writer's own.
  */
-function rejoinWrapped(lines: string[]): string[] {
-  const lengths = lines.map((line) => [...line.trimEnd()].length);
+function rejoinWrapped(lines: string[], fenced: boolean[]): string[] {
+  const lengths = lines.map((line, i) =>
+    fenced[i] ? 0 : [...line.trimEnd()].length,
+  );
   const widest = Math.max(0, ...lengths);
-  const cjk = CJK.test(lines.join(""));
+  const cjk = CJK.test(lines.filter((_, i) => !fenced[i]).join(""));
   if (widest < (cjk ? 16 : 40)) return lines;
   // One long line among short ones (a chat message with a link) is the
   // writer's.
@@ -78,6 +95,8 @@ function rejoinWrapped(lines: string[]): string[] {
       const here = line.trimEnd();
       const next = lines[i + 1];
       const wraps =
+        !fenced[i] &&
+        !fenced[i + 1] &&
         here !== "" &&
         next.trim() !== "" &&
         !BLOCK_LINE.test(next) &&
@@ -109,11 +128,11 @@ function rejoinWrapped(lines: string[]): string[] {
 /** `text` with its quote bars made Markdown quotes, the line breaks
  *  inside its paragraphs kept, and a terminal's output a code block. */
 export function keepPastedLines(text: string): string {
-  let lines = plainLetters(text).replace(/\r\n?/g, "\n").split("\n");
+  let lines = text.replace(/\r\n?/g, "\n").split("\n");
   const quote = quotedWithBars(lines);
   if (quote) lines = lines.map((line) => line.replace(QUOTE_BAR, ""));
   if (terminalOutput(lines)) {
-    const body = lines.join("\n").replace(/^\n+|\n+$/g, "");
+    const body = plainLetters(lines.join("\n")).replace(/^\n+|\n+$/g, "");
     const fenced = "```text\n" + body + "\n```";
     return quote
       ? fenced
@@ -123,10 +142,17 @@ export function keepPastedLines(text: string): string {
       : fenced;
   }
   // A PDF's bullets ("•") as Markdown's, so they are a list.
+  const fenced = fencedLines(lines);
   lines = rejoinWrapped(
-    lines.map((line) =>
-      closeUpSpacedCjk(line).replace(/^(\s*)[•●▪◦]\s+/, "$1- "),
+    lines.map((line, i) =>
+      fenced[i]
+        ? line
+        : closeUpSpacedCjk(plainLetters(line)).replace(
+            /^(\s*)[•●▪◦]\s+/,
+            "$1- ",
+          ),
     ),
+    fenced,
   );
   let fence: string | null = null;
   const out = lines.map((line, i) => {

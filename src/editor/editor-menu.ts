@@ -139,8 +139,9 @@ export interface ContextMenuOptions {
   /** Textus AI's items for the image right-clicked. */
   pictureAiItems?: ContextMenuItem[];
   copyOrCut: (cut: boolean) => void;
-  copyAsMarkdown: () => void;
+  copyAsPlainText: () => void;
   paste: () => void;
+  pasteAsPlainText: () => void;
   selectAll: () => void;
   toggleFindReplace: () => void;
   openTableDialog: () => void;
@@ -163,8 +164,9 @@ export function buildContextMenuItems(
   const clipboard: MenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
     { label: t.copy, onSelect: () => options.copyOrCut(false) },
-    { label: t.copyAsMarkdown, onSelect: options.copyAsMarkdown },
+    { label: t.copyAsPlainText, onSelect: options.copyAsPlainText },
     { label: t.paste, onSelect: options.paste },
+    { label: t.pasteAsPlainText, onSelect: options.pasteAsPlainText },
     ...(options.addNote && selectedText(run)
       ? [{ label: t.ownNoteAdd, onSelect: options.addNote }]
       : []),
@@ -212,10 +214,10 @@ export function buildPhoneMoreItems(
   options: ContextMenuOptions,
 ): MenuEntry[] {
   const { t, imagePos } = options;
-  // The phone has no Edit menu to offer the Markdown source.
+  // The phone has no Edit menu to offer the plain text.
   const clipboard: MenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
-    { label: t.copyAsMarkdown, onSelect: options.copyAsMarkdown },
+    { label: t.copyAsPlainText, onSelect: options.copyAsPlainText },
   ];
   if (inTable(run)) {
     return [

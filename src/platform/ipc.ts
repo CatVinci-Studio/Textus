@@ -53,6 +53,7 @@ export {
   type WindowBounds,
   windowIpc,
   menuIpc,
+  clipboardIpc,
   links,
   webPages,
   exportDoc,

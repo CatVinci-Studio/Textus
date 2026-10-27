@@ -37,6 +37,7 @@ const providerMocks = vi.hoisted(() => ({
       defaultModel: "gpt-6-luna",
       agentDefaultModel: "gpt-6.1-sol",
       keyOptional: false,
+      oauthUnofficial: false,
       supportsVision: true,
       modelsListable: true,
       knownModels: [],

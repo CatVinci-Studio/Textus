@@ -3,7 +3,7 @@ import { Slice } from "@milkdown/kit/prose/model";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { parseMarkdownSource } from "./parse-markdown-source";
-import { joinLinesForTableCell } from "./paste-slice";
+import { fillTable, inTableCell, joinLinesForTableCell } from "./paste-slice";
 import { wordListsToHtml } from "./word-lists";
 import { keepPastedLines } from "./paste-lines";
 import { cleanPastedHtml } from "./paste-html";
@@ -86,6 +86,38 @@ export function keepPastedSpans(slice: Slice, selection: Selection): Slice {
     : new Slice(slice.content, openStart, openEnd);
 }
 
+/** Blocks a paste keeps whole, rather than pouring into the line. */
+const WHOLE_BLOCKS = new Set([
+  "blockquote",
+  "code_block",
+  "math_block",
+  "table",
+]);
+const keepsItsShape = (node: ProseNode | null) =>
+  !!node && WHOLE_BLOCKS.has(node.type.name);
+
+/** Opened, a quote or code block was poured into the line: a quote starting
+ *  with a list lost its quote, and code became text. Copies from Textus
+ *  keep it only on an empty line, as a piece of code pasted into text is
+ *  text. A table cell holds one paragraph, so there it stays poured. */
+export function keepPastedBlock(
+  slice: Slice,
+  $pos: ResolvedPos,
+  onAnyLine: boolean,
+): Slice {
+  if (!$pos.parent.isTextblock || $pos.parent.type.spec.code) return slice;
+  if (inTableCell($pos)) return slice;
+  const { firstChild, lastChild } = slice.content;
+  const openStart =
+    keepsItsShape(firstChild) && (onAnyLine || $pos.parent.content.size === 0)
+      ? 0
+      : slice.openStart;
+  const openEnd = onAnyLine && keepsItsShape(lastChild) ? 0 : slice.openEnd;
+  return openStart === slice.openStart && openEnd === slice.openEnd
+    ? slice
+    : new Slice(slice.content, openStart, openEnd);
+}
+
 /**
  * Whether the parsed paste is one line of a non-paragraph block landing in
  * a line with text, which would merge it away ("# T" mid-sentence came in as
@@ -115,7 +147,10 @@ export const pasteMarkdownSourcePlugin = $prose(
         // the clipboard plugin pastes as it is.
         transformPasted: (slice, view) =>
           joinLinesForTableCell(
-            keepPastedSpans(slice, view.state.selection),
+            keepPastedSpans(
+              keepPastedBlock(slice, view.state.selection.$from, false),
+              view.state.selection,
+            ),
             view.state.selection.$from,
           ),
         transformPastedHTML: (html) => cleanPastedHtml(wordListsToHtml(html)),
@@ -143,9 +178,38 @@ export const pasteMarkdownSourcePlugin = $prose(
             );
             return true;
           }
+          // A table pasted into a table: its cells fill the table from the
+          // caret's cell on, as a copy of cells from a table does.
+          if (
+            inTableCell(view.state.selection.$from) &&
+            doc.childCount === 1 &&
+            doc.firstChild!.type.spec.tableRole === "table"
+          ) {
+            const $from = view.state.selection.$from;
+            let depth = $from.depth;
+            while ($from.node(depth).type.spec.tableRole !== "table") depth--;
+            const table = $from.node(depth);
+            const filled = fillTable(
+              table,
+              $from.index(depth),
+              $from.index(depth + 1),
+              doc.firstChild!,
+            );
+            const at = $from.before(depth);
+            view.dispatch(
+              view.state.tr
+                .replaceWith(at, at + table.nodeSize, filled)
+                .setMeta("uiEvent", "paste")
+                .scrollIntoView(),
+            );
+            return true;
+          }
           const parsed = Slice.maxOpen(doc.content);
           const slice = joinLinesForTableCell(
-            keepPastedSpans(parsed, view.state.selection),
+            keepPastedSpans(
+              keepPastedBlock(parsed, view.state.selection.$from, true),
+              view.state.selection,
+            ),
             view.state.selection.$from,
           );
           // The clipboard plugin's own branch parses text alone too, but into a slice

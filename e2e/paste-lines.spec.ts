@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { openApp, pasteMarkdown } from "./helpers";
 
 /**
  * Pasted text keeps its line breaks, and a quote copied with its bars
@@ -77,6 +77,72 @@ test("pasted lines stay lines, and a quote with bars is a quote", async ({
   await expect(
     quote.locator("p", { hasText: "I went through" }).locator("br"),
   ).toHaveCount(1);
+});
+
+test("a quote that starts with a list stays a quote", async ({ page }) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteText(page, "> - one\n> - two");
+  const quote = page.locator(`${editor} blockquote`);
+  await expect(quote).toHaveCount(1);
+  await expect(quote.locator("li")).toHaveText(["one", "two"]);
+});
+
+test("a code block pasted on an empty list item stays a code block", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.locator(editor).click();
+  await page.keyboard.type("- item", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await pasteMarkdown(page, "```js\nx\ny\n```");
+  await expect(page.locator(`${editor} li pre`)).toHaveCount(1);
+  await expect(page.locator(`${editor} li pre`)).toContainText("x\ny");
+  await expect(page.locator(`${editor} li`).nth(1).locator("p")).toHaveText("");
+});
+
+test("a code block pasted into a table cell stays in the cell as text", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "| a | b |\n| - | - |\n| c | d |");
+  await page.locator(`${editor} td`).first().click();
+  await pasteMarkdown(page, "```js\nx\n```");
+  await expect(page.locator(`${editor} table`)).toHaveCount(1);
+  await expect(page.locator(`${editor} pre`)).toHaveCount(0);
+});
+
+test("a code block pasted in the middle of a line stays a code block between its halves", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.locator(editor).click();
+  await page.keyboard.type("beforeafter", { delay: 20 });
+  for (let i = 0; i < 5; i++) await page.keyboard.press("ArrowLeft");
+  // Once ProseMirror has read the caret the arrows moved.
+  await page.evaluate(
+    () =>
+      new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      ),
+  );
+  await pasteMarkdown(page, "```js\nx\ny\n```");
+  await expect(page.locator(`${editor} pre`)).toContainText("x\ny");
+  await expect(page.locator(`${editor} > p`)).toHaveText(["before", "after"]);
+});
+
+test("a table pasted on a new line takes that line, and one pasted in a cell fills the cells from it", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.locator(editor).click();
+  await page.keyboard.type("Before", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await pasteMarkdown(page, "| a | b |\n| - | - |\n| c | d |");
+  await expect(page.locator(`${editor} > p`)).toHaveText(["Before"]);
+  await page.locator(`${editor} td`, { hasText: "d" }).click();
+  await pasteMarkdown(page, "| p | q |\n| - | - |\n| r | s |");
+  await expect(page.locator(`${editor} table`)).toHaveCount(1);
+  await expect(page.locator(`${editor} tr`)).toHaveText(["ab", "cpq", "rs"]);
 });
 
 test("plain pasted lines keep their breaks", async ({ page }) => {

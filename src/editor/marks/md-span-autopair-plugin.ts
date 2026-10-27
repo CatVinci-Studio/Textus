@@ -2,6 +2,7 @@ import { Plugin } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { fenceLineToBlock } from "../markdown/fence-line";
 import {
   COMPOSE_RELOCATE_DELAY_MS,
   caretAt,
@@ -312,11 +313,9 @@ export const createMdSpanAutopairPlugin = (options: {
 
             const codeBlock = state.schema.nodes.code_block;
             if (!codeBlock) return false;
-            const paragraphPos = $from.before($from.depth);
-            const tr = state.tr
-              .delete(paragraphPos + 1, paragraphPos + 1 + parent.content.size)
-              .setNodeMarkup(paragraphPos, codeBlock, { language });
-            view.dispatch(caretAt(tr, paragraphPos + 1));
+            view.dispatch(
+              fenceLineToBlock(state, $from.before(), codeBlock, { language }),
+            );
             event.preventDefault();
             return true;
           },

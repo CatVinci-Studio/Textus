@@ -532,6 +532,35 @@ test("backspace at the start of a quoted line takes it out of the quote", async 
   await expect(editor.locator("blockquote")).toHaveCount(0);
 });
 
+test("backspace at the start of a quote's later line joins it to the line above", async ({
+  page,
+}) => {
+  await openApp(page);
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await editor.click();
+  await page.keyboard.type("> 温度修正是用来处理的，");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("普通的分类器");
+  await page.keyboard.press("Enter");
+  await expect(editor.locator("blockquote p")).toHaveCount(3);
+  await editor.locator("blockquote p", { hasText: "普通的分类器" }).click();
+  await page.waitForTimeout(100);
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowLeft" : "Home",
+  );
+  await page.waitForTimeout(100);
+  await page.keyboard.press("Backspace");
+  await expect(editor.locator("blockquote")).toHaveCount(1);
+  await expect(editor.locator("blockquote p").first()).toHaveText(
+    "温度修正是用来处理的，普通的分类器",
+  );
+  // The caret where the two met: typing goes in between.
+  await page.keyboard.type("X");
+  await expect(editor.locator("blockquote p").first()).toHaveText(
+    "温度修正是用来处理的，X普通的分类器",
+  );
+});
+
 test("the phone toolbar's block buttons toggle: H steps through levels, lists and quotes come off again", async ({
   page,
 }) => {

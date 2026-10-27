@@ -1,8 +1,14 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { Schema, Slice } from "@milkdown/kit/prose/model";
+import {
+  Fragment,
+  Schema,
+  Slice,
+  type Node as ProseNode,
+} from "@milkdown/kit/prose/model";
+import { tableNodes } from "@milkdown/kit/prose/tables";
 import { EditorState, TextSelection } from "@milkdown/kit/prose/state";
-import { keepPastedSpans } from "./paste-markdown-plugin";
+import { keepPastedBlock, keepPastedSpans } from "./paste-markdown-plugin";
 
 const schema = new Schema({
   nodes: {
@@ -83,5 +89,66 @@ describe("keepPastedSpans", () => {
       ]).content,
     );
     expect(keepPastedSpans(plain, caretIn(null, 2))).toBe(plain);
+  });
+});
+
+describe("keepPastedBlock", () => {
+  const cells = tableNodes({
+    tableGroup: "block",
+    cellContent: "paragraph",
+    cellAttributes: {},
+  });
+  const blocks = new Schema({
+    nodes: {
+      doc: { content: "block+" },
+      paragraph: { group: "block", content: "text*" },
+      blockquote: { group: "block", content: "block+" },
+      code_block: { group: "block", content: "text*", code: true },
+      frontmatter: { group: "block", content: "text*", code: true },
+      text: { group: "inline" },
+      ...cells,
+    },
+  });
+  const b = blocks.nodes;
+  const para = (text = "") =>
+    b.paragraph.create(null, text ? blocks.text(text) : null);
+  const pasted = (node: ProseNode) => Slice.maxOpen(Fragment.from(node));
+  /** The caret at the end of the first textblock in `doc`. */
+  const caret = (doc: ProseNode) => {
+    let pos = -1;
+    doc.descendants((node, offset) => {
+      if (pos < 0 && node.isTextblock) pos = offset + 1 + node.content.size;
+      return pos < 0;
+    });
+    return doc.resolve(pos);
+  };
+  const quoted = pasted(b.blockquote.create(null, para("q")));
+  const code = pasted(b.code_block.create(null, blocks.text("x")));
+
+  it("closes a quote or code block landing on an empty line", () => {
+    const $pos = caret(b.doc.create(null, para()));
+    expect(keepPastedBlock(quoted, $pos, false).openStart).toBe(0);
+    expect(keepPastedBlock(code, $pos, false).openStart).toBe(0);
+  });
+
+  it("on a line with text, only for pasted Markdown, at both ends", () => {
+    const $pos = caret(b.doc.create(null, para("text")));
+    expect(keepPastedBlock(code, $pos, false)).toBe(code);
+    const kept = keepPastedBlock(code, $pos, true);
+    expect([kept.openStart, kept.openEnd]).toEqual([0, 0]);
+  });
+
+  it("leaves a table cell, code and front matter as they were", () => {
+    const table = b.table.create(null, [
+      b.table_row.create(null, [b.table_cell.create(null, para())]),
+    ]);
+    expect(keepPastedBlock(code, caret(b.doc.create(null, table)), true)).toBe(
+      code,
+    );
+    const inCode = caret(b.doc.create(null, b.code_block.create()));
+    expect(keepPastedBlock(quoted, inCode, true)).toBe(quoted);
+    const front = pasted(b.frontmatter.create(null, blocks.text("a: b")));
+    const $line = caret(b.doc.create(null, para("text")));
+    expect(keepPastedBlock(front, $line, true)).toBe(front);
   });
 });

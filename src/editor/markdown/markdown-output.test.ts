@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
+import { act } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { DOMParser, DOMSerializer } from "@milkdown/kit/prose/model";
@@ -213,13 +214,29 @@ describe("saved markdown stays as written", () => {
   it("keeps a code fence's meta when its language is changed", async () => {
     const editor = await createTestEditor('```js title="a.js"\nx\n```\n');
     editors.push(editor);
-    const saved = editor.action((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      const select = view.dom.querySelector("select")!;
-      select.value = "typescript";
-      select.dispatchEvent(new Event("change"));
-      return ctx.get(serializerCtx)(view.state.doc);
-    });
+    const view = editor.action((ctx) => ctx.get(editorViewCtx));
+    view.dom
+      .querySelector(".code-block-wrapper")!
+      .dispatchEvent(new Event("pointerenter"));
+    const found = <T>(el: T | null | undefined): T => {
+      if (!el) throw new Error("not drawn yet");
+      return el;
+    };
+    const picker = await vi.waitFor(() =>
+      found(view.dom.querySelector<HTMLElement>(".code-block-language-select")),
+    );
+    act(() => picker.click());
+    const option = await vi.waitFor(() =>
+      found(
+        [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+          (o) => o.textContent === "typescript",
+        ),
+      ),
+    );
+    act(() => option.click());
+    const saved = editor.action((ctx) =>
+      ctx.get(serializerCtx)(view.state.doc),
+    );
     expect(saved).toBe('```typescript title="a.js"\nx\n```\n');
   });
 

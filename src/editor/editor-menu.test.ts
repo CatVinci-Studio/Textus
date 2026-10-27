@@ -96,7 +96,8 @@ const options = (pos: number | null): ContextMenuOptions => ({
   imagePos: pos,
   aiItems: [],
   copyOrCut: () => {},
-  copyAsMarkdown: () => {},
+  copyAsPlainText: () => {},
+  pasteAsPlainText: () => {},
   paste: () => {},
   selectAll: () => {},
   toggleFindReplace: () => {},
@@ -123,8 +124,9 @@ describe("the editor menu", () => {
       "-",
       t.cut,
       t.copy,
-      t.copyAsMarkdown,
+      t.copyAsPlainText,
       t.paste,
+      t.pasteAsPlainText,
     ]);
   });
 
@@ -139,8 +141,9 @@ describe("the editor menu", () => {
     ).toEqual([
       t.cut,
       t.copy,
-      t.copyAsMarkdown,
+      t.copyAsPlainText,
       t.paste,
+      t.pasteAsPlainText,
       "-",
       `${t.menuGroupInsert} › ${t.insertBulletList} | ${t.insertOrderedList} | ${t.insertBlockquote} | ${t.insertCodeBlock} | ${t.insertTable}`,
       `${t.menuTextusAi} › Ask | Continue`,
@@ -189,8 +192,8 @@ describe("the editor menu", () => {
     expect(inTable).toContain(t.alignCenter);
     expect(inTable).not.toContain(t.insertRowBelow);
     expect(inTable).not.toContain(t.copy);
-    // The toolbar copies; only the menu has the Markdown source.
-    expect(inTable).toContain(t.copyAsMarkdown);
+    // The toolbar copies; only the menu has the plain text.
+    expect(inTable).toContain(t.copyAsPlainText);
 
     const inText = labels(
       buildPhoneMoreItems(editorAt(caretIn("text")).run, options(null)),

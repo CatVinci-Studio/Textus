@@ -184,6 +184,8 @@ objc2-app-kit = { version = "0.3", default-features = false, features = [
     "std",
     "objc2-core-foundation",
     "NSApplication",
+    # Paste without the webview's paste callout (commands/clipboard.rs).
+    "NSPasteboard",
     # The Dock icon's menu (menu/dock.rs).
     "NSMenu",
     "NSMenuItem",
