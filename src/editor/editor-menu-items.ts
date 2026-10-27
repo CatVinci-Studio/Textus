@@ -1,4 +1,4 @@
-import type { ContextMenuItem } from "./ContextMenu";
+import type { ContextMenuItem } from "../ui/ContextMenu";
 
 /**
  * Items added to the editor's right-click menu from outside, kept apart

@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { ContextMenu } from "../../editor/ContextMenu";
+import { ContextMenu } from "../../ui/ContextMenu";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { runCommand } from "../../app/commands";
 import {

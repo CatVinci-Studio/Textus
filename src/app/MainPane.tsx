@@ -29,7 +29,7 @@ import {
   type PaneIndex,
 } from "./split/split-layout";
 import { pullTab } from "./split/split-drop";
-import type { ContextMenuItem } from "../editor/ContextMenu";
+import type { ContextMenuItem } from "../ui/ContextMenu";
 import { contributedContextItems } from "../ui/context-menu-items";
 
 type TabBarProps = ComponentProps<typeof TabBar>;

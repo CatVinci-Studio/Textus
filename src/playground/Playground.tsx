@@ -25,7 +25,7 @@ import {
   readMarkdownFile,
 } from "./markdown-file";
 import { documentName, useWebDocuments } from "./useWebDocuments";
-import { ContextMenu } from "../editor/ContextMenu";
+import { ContextMenu } from "../ui/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import { ChevronIcon } from "../ui/icons";
 import sampleEn from "./samples/en.md?raw";

@@ -14,7 +14,7 @@ import { useSettings } from "../settings/SettingsContext";
 import { basename, isInside, parentDir } from "../utils/path";
 import { isIOSApp } from "../platform/capabilities";
 import { iosFiles } from "../platform/ios-files";
-import { ContextMenu } from "../editor/ContextMenu";
+import { ContextMenu } from "../ui/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import { useLongPress } from "../utils/hooks/useLongPress";
 import { isDocumentName } from "./file-search";

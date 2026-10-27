@@ -6,7 +6,7 @@ import { scrollBehavior } from "../ui/motion";
 import { unfoldElement } from "../editor/html/details-fold";
 import { useTreeKeys } from "../ui/useTreeKeys";
 import { Tooltip } from "../ui/Tooltip";
-import { ContextMenu } from "../editor/ContextMenu";
+import { ContextMenu } from "../ui/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import "./FileTree.css";
 

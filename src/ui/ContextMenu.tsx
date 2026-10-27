@@ -11,10 +11,10 @@ import {
 import { createPortal } from "react-dom";
 import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
 import { useViewportClamp } from "../utils/hooks/useViewportClamp";
-import { ActionSheet } from "../ui/ActionSheet";
-import { usePhoneLayout } from "../ui/usePhoneLayout";
-import { usePresenceProps, usePresenceState } from "../ui/usePresence";
-import { CheckIcon, ChevronIcon } from "../ui/icons";
+import { ActionSheet } from "./ActionSheet";
+import { usePhoneLayout } from "./usePhoneLayout";
+import { usePresenceProps, usePresenceState } from "./usePresence";
+import { CheckIcon, ChevronIcon } from "./icons";
 import "./ContextMenu.css";
 
 export interface ContextMenuItem {

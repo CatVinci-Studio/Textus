@@ -12,7 +12,7 @@ import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { animate, scrollBehavior } from "../../ui/motion";
 import { ListMotion, measure, play, type PendingFlip } from "../../ui/flip";
 import { Tooltip } from "../../ui/Tooltip";
-import { ContextMenu, type ContextMenuItem } from "../../editor/ContextMenu";
+import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
 import { Presence } from "../../ui/usePresence";
 
 interface TabInfo {

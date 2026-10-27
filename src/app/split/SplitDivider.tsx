@@ -1,5 +1,5 @@
 import { useRef, useState, type CSSProperties } from "react";
-import { ContextMenu } from "../../editor/ContextMenu";
+import { ContextMenu } from "../../ui/ContextMenu";
 import type { Strings } from "../../i18n/strings";
 import { Presence } from "../../ui/usePresence";
 import {

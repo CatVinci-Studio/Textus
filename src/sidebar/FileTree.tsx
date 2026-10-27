@@ -20,7 +20,7 @@ const openInNewWindow = (path: string) =>
 import { useSettings } from "../settings/SettingsContext";
 import { basename, parentDir } from "../utils/path";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
-import { ContextMenu, type ContextMenuItem } from "../editor/ContextMenu";
+import { ContextMenu, type ContextMenuItem } from "../ui/ContextMenu";
 import { contributedContextItems } from "../ui/context-menu-items";
 import { Presence } from "../ui/usePresence";
 import { useTreeKeys } from "../ui/useTreeKeys";

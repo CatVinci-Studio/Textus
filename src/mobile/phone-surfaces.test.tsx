@@ -21,7 +21,7 @@ beforeAll(() => {
 });
 afterEach(cleanup);
 
-const { ContextMenu } = await import("../editor/ContextMenu");
+const { ContextMenu } = await import("../ui/ContextMenu");
 const { Select } = await import("../ui/Select");
 
 describe("on a phone", () => {
