@@ -452,3 +452,25 @@ test("Enter in a code block in a list adds a line, and an indented blank line ke
     "- item\n\n  ```py\n  def f():\n      x = 1\n\n      y = 2\n  ```",
   );
 });
+
+test("``` and $$ typed in a list item start a code block and a maths block in it", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("- item", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("```js", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("x", { delay: 20 });
+  await expect(page.locator(`${editor} li pre`)).toHaveCount(1);
+  expect(await sourceOf(page)).toBe("* item\n* ```js\n  x\n  ```");
+
+  await open(page);
+  await page.keyboard.type("- item", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("$$", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("y", { delay: 20 });
+  await expect(page.locator(`${editor} li .math-block`)).toHaveCount(1);
+  expect(await sourceOf(page)).toBe("* item\n* $$\n  y\n  $$");
+});
