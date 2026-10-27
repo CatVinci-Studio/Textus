@@ -357,7 +357,9 @@ export function withEditorCore(
       .use(disk ? createLinkClickPlugin(() => docPath.current) : [])
       .use(disk ? createLinkHoverPlugin(() => docPath.current) : [])
       .use(listener)
-      // Ahead of the other key handlers and the preset keymaps.
+      // The block keys: after the inline ones above (enclosures, autopairs,
+      // headings, callouts), ahead of the preset keymaps, which Milkdown adds
+      // last. The order is pinned in editor-extensions.test.ts.
       .use(blockKeysPlugin)
       .use(tabExtendPlugin)
       .use(tabStaysPlugin)
