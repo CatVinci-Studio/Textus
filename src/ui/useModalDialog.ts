@@ -1,4 +1,4 @@
-import { useEffect, useRef, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, type KeyboardEvent } from "react";
 import { usePhoneLayout } from "./usePhoneLayout";
 import { usePresenceState } from "./usePresence";
 import { isImeKeydown } from "../utils/ime";
@@ -29,7 +29,9 @@ export function useModalDialog(
   const phone = usePhoneLayout();
   const presence = usePresenceState();
   const active = enabled && presence === "open";
-  useEffect(() => {
+  // Before the dialog is painted: a key typed as it appears (Vim's ":" then
+  // "w") goes into it, not to what had the focus.
+  useLayoutEffect(() => {
     if (!active) return;
     const dialog = ref.current;
     if (!dialog) return;
