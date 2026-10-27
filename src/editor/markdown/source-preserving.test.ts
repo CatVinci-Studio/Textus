@@ -251,8 +251,8 @@ describe("saving after an edit elsewhere keeps as written", () => {
   });
 
   it("keeps a file's own <br> through an edit elsewhere", async () => {
-    // A heading's id is set by a transaction on opening, which used to turn
-    // every <br> in the file into a break, and rewrite its block.
+    // A heading's id is set by a transaction on opening, which must not turn
+    // the file's <br>s into breaks.
     const markdown =
       "# Title\n\n- one<br>\n  two\n- **bold**<br>more\n\nEdit me\n";
     expect(await saveAfter(markdown, typeInto(2))).toBe(
@@ -288,9 +288,8 @@ describe("saving after an edit elsewhere keeps as written", () => {
   });
 
   it("checks a list's join with an indented definition elsewhere", async () => {
-    // The definitions are read after each join; indented, they joined a
-    // list that ended the join, so it never read back and the blocks
-    // around it were serialized too.
+    // The definitions are read after each join; indented, they joined a list,
+    // so blocks around it would serialize too.
     const markdown =
       "Intro _x_\n\n  [r]: https://x.org\n  [s]: https://y.org\n\nPara _y_\n";
     const out = await saveAfter(markdown, (view) => {
@@ -354,8 +353,8 @@ describe("saving a long document", () => {
           "Paragraph 501 with _em_ and snake_case words.!",
         ),
       );
-      // The whole document is what the editor serialized on every edit
-      // before; the changed block alone is a small part of it.
+      // The whole document is the cost without preservation; the changed block
+      // alone is a small part of it.
       expect(preserving).toBeLessThan(whole);
     });
   }, 60_000);

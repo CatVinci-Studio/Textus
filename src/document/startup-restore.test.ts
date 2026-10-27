@@ -98,7 +98,6 @@ async function restore(
       stopTutorial: vi.fn(),
     }),
   );
-  // The module instances the hook used (vi.resetModules above).
   const { takeTabJump } = await import("../editor/tab-jump");
   return {
     tabs: () => tabs,
@@ -126,10 +125,8 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("startup restore into the initial tab", () => {
-  // The initial tab's editor can mount before the restore's IPC round trips
-  // finish, and reads its content only at mount: whatever lands in that tab
-  // must move reloadKey on, or the editor keeps showing an empty document
-  // over the file the tab now holds.
+  // The initial tab's editor can mount before the restore finishes and reads
+  // its content only at mount, so reloadKey must move.
   it("remounts the initial tab's editor on the first restored document", async () => {
     ipc.takePendingOpenPaths.mockResolvedValue(["/docs/a.md", "/docs/b.md"]);
     const { tabs, openPathInTab } = await restore("tab");
@@ -228,9 +225,8 @@ describe("startup restore into the initial tab", () => {
     ]);
   });
 
-  // After a crash the session reopens the files that were open, and the
-  // drafts hold their unsaved edits: each document must open once, edits
-  // and all, not as a saved tab beside a recovered copy.
+  // After a crash, each reopened document opens once, with its recovered
+  // edits.
   it("opens a reopened session file once, with its recovered edits", async () => {
     ipc.takePendingOpenPaths.mockResolvedValue([
       "/docs/a.md",
@@ -295,7 +291,6 @@ describe("startup restore into the initial tab", () => {
     expect(tabs()).toEqual([INITIAL]);
   });
 
-  // #218: the last session's documents come back where they were left.
   describe("at the last caret", () => {
     beforeAll(installTestLocalStorage);
     beforeEach(() =>

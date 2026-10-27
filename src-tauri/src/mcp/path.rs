@@ -1,7 +1,5 @@
-//! Where an MCP server's command is found. An app opened from the Dock or
-//! a launcher doesn't get the PATH a terminal has - Homebrew's npx and
-//! uvx live outside it - so the user's login shell is asked once, and the
-//! usual places are added after what it says.
+//! Where an MCP server's command is found. An app opened from the Dock lacks a
+//! terminal's PATH, so the login shell is asked once and the usual places added.
 
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;

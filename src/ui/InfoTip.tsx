@@ -23,20 +23,9 @@ const HOVER_CLOSE_MS = 160;
  *  passing over it on the way to the switch beside it shows nothing. */
 const HOVER_OPEN_MS = 250;
 
-/**
- * A small "?" after a label, for the explanation a label can't carry - a
- * trade-off, what happens behind the scenes - kept off the page until it
- * is asked for, so a page of settings reads as a list of names.
- *
- * The card opens on hover with a mouse, on a click or tap (the only way on
- * a touch screen), and on keyboard focus; Esc, a click outside, a scroll
- * or moving the pointer away closes it. A click keeps it open until the next click.
- * The explanation is the button's description for a screen reader either
- * way, so it is heard without opening anything.
- *
- * The card lives in a portal on <body>, as Select's list does: an ancestor
- * with a transform or a scroll clip (Settings' content) would trap it.
- */
+/** A small "?" after a label, for what the label can't carry; a click pins
+ *  it open. It lives in a portal on <body>, since an ancestor's transform or
+ *  scroll clip would trap it. */
 export function InfoTip({
   label,
   children,
@@ -61,10 +50,8 @@ export function InfoTip({
     pinned.current = false;
     setOpen(false);
   }, [timerRef]);
-  // The card is placed once, under the button: a scroll that moves the
-  // button would leave it behind, so it closes instead, as a Select's list
-  // does. A scroll event comes a frame late, so one that ended before the
-  // card opened (the row scrolled into view) moved nothing and is let be.
+  // Placed once under the button, so a scroll closes it. A scroll event comes
+  // a frame late, so one that ended before the card opened is let be.
   useEffect(() => {
     if (!open) return;
     const at = buttonRef.current?.getBoundingClientRect();
@@ -130,8 +117,7 @@ export function InfoTip({
         onBlur={() => {
           if (!pinned.current) close();
         }}
-        // One Escape closes the card, not also the dialog it sits in
-        // (useModalDialog skips a handled Escape).
+        // One Escape closes the card, not also the dialog it sits in.
         onKeyDown={(e) => {
           if (e.key === "Escape" && open) {
             e.preventDefault();

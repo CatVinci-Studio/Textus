@@ -1,4 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { askAi } from "../../ai/chat/ask-ai";
+import { DescribePlugin } from "./DescribePlugin";
 import type { SettingsPageProps } from "./types";
 import { Byline, PluginPage, statusText } from "./PluginPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
@@ -23,17 +25,14 @@ import {
   loadCatalog,
   subscribeCatalog,
   updateFor,
-} from "../../plugins/catalog";
-import { canSwitch } from "../../plugins/lifecycle";
-import { openUsageGuide } from "../../plugins/usage-guide";
+} from "../../plugins/store/catalog";
+import { canSwitch } from "../../plugins/store/lifecycle";
+import { openUsageGuide } from "../../plugins/store/usage-guide";
 
 /**
- * Settings › Extensions › Plugins (docs/design/plugins.md §6). Nothing comes
- * installed: Get more (`onGetMore`) offers the catalog's plugins, "⋯"
- * installs one from a file or loads a folder; the installed plugins are
- * cards - its name, what it does, who made it (Official when it is
- * CatVinci's), its switch - that open the plugin's own page; the switch
- * for them all is under Advanced.
+ * Settings › Extensions › Plugins. Nothing comes installed: Get more offers
+ * the catalog, "⋯" installs from a file or loads a folder; each installed
+ * plugin is a card opening its own page, and one switch turns them all.
  */
 export function PluginsPage({
   t,
@@ -71,6 +70,23 @@ export function PluginsPage({
   const openRecord = open
     ? snapshot.records.find((r) => r.id === open)
     : undefined;
+  // Plugins made in Create mode (publisher "local") go last, under their own
+  // heading.
+  const isMine = (r: (typeof snapshot.records)[number]) =>
+    r.manifest?.publisher === "local";
+  const mine = snapshot.records.filter(isMine);
+  const others = snapshot.records.filter((r) => !isMine(r));
+  const card = (record: (typeof snapshot.records)[number]) => (
+    <PluginCard
+      key={record.id}
+      record={record}
+      t={t}
+      allOn={snapshot.allOn}
+      update={updateFor(record.id, catalog)}
+      onOpen={() => setOpen(record.id)}
+      onEnable={(on) => void enable(record, on)}
+    />
+  );
   if (openRecord)
     return (
       <PluginPage
@@ -85,6 +101,10 @@ export function PluginsPage({
             if (opened) onClose();
           })
         }
+        onEditWithAi={() => {
+          onClose();
+          askAi(editRequest(openRecord, t), "create");
+        }}
         onEnable={(on) => void enable(openRecord, on)}
         onUpdate={() => {
           const item =
@@ -114,34 +134,38 @@ export function PluginsPage({
                 label: t.pluginsLoadFolder,
                 onSelect: () => void installFile(true),
               },
+              {
+                label: t.pluginsOpenScripts,
+                onSelect: () => void attempt(() => pluginsIpc.openScriptsDir()),
+              },
             ]
           : []
       }
       installedTitle={t.pluginsInstalledGroup}
       installed={
         snapshot.records.length ? (
-          snapshot.records.map((record) => (
-            <PluginCard
-              key={record.id}
-              record={record}
-              t={t}
-              allOn={snapshot.allOn}
-              update={updateFor(record.id, catalog)}
-              onOpen={() => setOpen(record.id)}
-              onEnable={(on) => void enable(record, on)}
+          <>
+            <DescribePlugin t={t} onAsked={onClose} />
+            <ToggleRow
+              label={t.pluginsAllLabel}
+              help={t.pluginsAllHelp}
+              checked={snapshot.allOn}
+              onChange={(on) => void attempt(() => setAllPlugins(on))}
             />
-          ))
+            {others.map(card)}
+            {mine.length > 0 && (
+              <>
+                <h4 className="plugin-subgroup-title">{t.pluginsMine}</h4>
+                {mine.map(card)}
+              </>
+            )}
+          </>
         ) : (
-          <p className="plugin-empty">{t.pluginsNone}</p>
+          <>
+            <DescribePlugin t={t} onAsked={onClose} />
+            <p className="plugin-empty">{t.pluginsNone}</p>
+          </>
         )
-      }
-      advanced={
-        <ToggleRow
-          label={t.pluginsAllLabel}
-          help={t.pluginsAllHelp}
-          checked={snapshot.allOn}
-          onChange={(on) => void attempt(() => setAllPlugins(on))}
-        />
       }
     />
   );
@@ -205,4 +229,15 @@ function PluginCard({
       />
     </div>
   );
+}
+
+/** What "Edit with AI" puts in the AI panel's box: the plugin, and the
+ *  error it last stopped with, for the user to say what to change. */
+function editRequest(record: PluginRecord, t: Strings): string {
+  const ask = t.pluginEditWithAiAsk
+    .replace("{name}", pluginName(record))
+    .replace("{id}", record.id);
+  return record.problem
+    ? `${ask}${t.pluginEditWithAiError.replace("{error}", record.problem)}`
+    : ask;
 }

@@ -1,17 +1,15 @@
-/** Mirrors ai::TEXTUS_AI_OFF in src-tauri/src/ai/mod.rs - what a request
- *  to an AI service is refused with while Textus AI is turned off. */
+/** What an AI request is refused with while Textus AI is off; keep in step
+ *  with the Rust constant. */
 export const AI_OFF = "textus-ai-off";
 
 let allowed: () => boolean = () => true;
 
-/** Tells the requests to AI services (ipc.ts's aiCall) whether Textus AI
- *  is on: the settings store (settings/SettingsContext.tsx) hands over its
- *  live read as it loads, before anything can ask. */
+/** Tells AI requests whether Textus AI is on; the settings store hands over
+ *  its live read before anything can ask. */
 export function gateAiRequests(read: () => boolean): void {
   allowed = read;
 }
 
-/** Whether a request to an AI service may go out right now. */
 export function aiRequestsAllowed(): boolean {
   return allowed();
 }

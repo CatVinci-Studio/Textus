@@ -8,21 +8,17 @@ import { startupBudget } from "./vite.startup-budget";
 
 const host = process.env.TAURI_DEV_HOST;
 
-// https://vite.dev/config/
 export default defineConfig(async () => ({
   plugins: [react(), katexWoff2Only(), devPlugins(), startupBudget()],
   css: { postcss: { plugins: [colorMixFallback()] } },
-  // The oldest engines Textus runs in: WebView2 on Chromium 105 (Windows
-  // 10 without updates) and WKWebView on iOS 16. Syntax newer than these
-  // is lowered; APIs and CSS aren't - docs/dev/webview-support.md.
+  // The oldest engines Textus runs in. Newer syntax is lowered; APIs and
+  // CSS aren't.
   build: { target: ["chrome105", "safari16"] },
-  // One KaTeX: Mermaid's own copy (for maths in diagram labels) was a
-  // second 260 KB in the installer; it uses only renderToString, which
-  // ours has unchanged.
+  // Mermaid's own KaTeX copy would add 260 KB; it uses only renderToString,
+  // which ours has unchanged.
   resolve: { dedupe: ["katex"] },
 
-  // Unit tests only; e2e/ holds the Playwright flows (npm run test:e2e)
-  // and screenshot generators, which vitest must not try to run.
+  // Unit tests only; vitest must not run the Playwright files in e2e/.
   test: {
     setupFiles: ["src/test-setup.ts"],
     exclude: [
@@ -36,11 +32,9 @@ export default defineConfig(async () => ({
     ],
   },
 
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent Vite from obscuring rust errors
+  // Keep Vite from obscuring Rust errors.
   clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
+  // Tauri expects a fixed port; fail if it is taken.
   server: {
     port: 1420,
     strictPort: true,
@@ -53,7 +47,6 @@ export default defineConfig(async () => ({
         }
       : undefined,
     watch: {
-      // 3. tell Vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
   },

@@ -1,13 +1,10 @@
-//! A rewrite's pictures: a text edit never changes a picture - the
-//! picture tool does - so `keep_pictures` puts back the ones a rewrite of
-//! a run left out or swapped (doc_blocks.rs resolves the call around it).
+//! A rewrite's pictures: a text edit never changes a picture, so
+//! `keep_pictures` puts back the ones a rewrite left out or swapped.
 
 use super::paragraphs;
 
-/// Whether `block` is a picture and nothing else: `![alt](path)`, or an
-/// `<img>` (a picture given a width) - for text the model wrote, which has
-/// no node to ask. isPicture in src/ai/doc-blocks.ts; both are held to
-/// keep-pictures-cases.json.
+/// Whether `block` is a picture and nothing else: `![alt](path)` or an
+/// `<img>`. Keep in step with the frontend's isPicture (shared cases file).
 pub(super) fn is_picture(block: &str) -> bool {
     let b = block.trim();
     if b.contains('\n') {
@@ -28,21 +25,11 @@ pub(super) fn is_picture(block: &str) -> bool {
         .is_some_and(|attrs| attrs.starts_with(char::is_whitespace) && !attrs.contains('>'))
 }
 
-/// `text`, a rewrite of the run `run` (its blocks' markdown), with the
-/// run's pictures as they were: a text edit never changes a picture -
-/// generate_image does. A picture the rewrite left out goes back, after as
-/// many of the new text's paragraphs as there were text blocks before it
-/// in the run - by the paragraph it stood by, as the card pairs them. A
-/// new picture the rewrite wrote where one was is taken out first, the
-/// original going back in its place: the swap is the picture tool's to
-/// propose, on a card of its own. Before, a picture dropped from a rewrite
-/// was deleted with nothing said, a swapped one went with the words, and
-/// either way the card had nothing to pair paragraph by paragraph (rc.6).
-/// New pictures with every original kept stay. `complete`: all of `text`
-/// is there; while it streams in, a picture whose place it hasn't reached
-/// is left out for now (keepPictures in src/ai/doc-blocks.ts, held to the
-/// same cases by keep-pictures-cases.json). Returns the text and how many
-/// swapped pictures were taken out.
+/// `text`, a rewrite of `run`, with the run's pictures as they were: a dropped
+/// picture goes back by the paragraph it stood by, and a swapped one is taken
+/// out and the original put back (the swap is generate_image's to propose).
+/// `complete`: all of `text` is there; while streaming, a picture whose place
+/// isn't reached yet is left out. Returns the text and how many were taken out.
 pub(crate) fn keep_pictures(run: &[&str], text: &str, complete: bool) -> (String, usize) {
     let originals: Vec<&str> = run
         .iter()

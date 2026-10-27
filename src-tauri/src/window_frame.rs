@@ -1,7 +1,5 @@
-//! Where an editor window opens (#356): where the last one closed, when
-//! that is still on a screen; else centred on the main screen. Either way
-//! no bigger than the screen it opens on - a size kept from a larger
-//! display opened a window running off the edge.
+//! Where an editor window opens: where the last one closed if still on a screen,
+//! else centred on the main screen, and never bigger than its screen.
 
 /// A screen's work area (without the menu bar, Dock or taskbar), in
 /// logical pixels - the window's own units.
@@ -17,9 +15,8 @@ pub struct Screen {
 /// to count as there: enough of the title bar to take hold of and drag.
 const GRIP: (f64, f64) = (120.0, 40.0);
 
-/// The window's position and size (logical px). `saved` is the last
-/// window's position, if any; `size` its size; the first screen is the
-/// main one; `min` the window's least size.
+/// The window's position and size (logical px). `saved` is the last window's
+/// position; the first screen is the main one; `min` the least size.
 pub fn place(
     saved: Option<(f64, f64)>,
     size: (f64, f64),

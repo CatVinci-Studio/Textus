@@ -27,14 +27,9 @@ export interface AiActions {
   triggerGrammarCheck: () => void;
 }
 
-/**
- * On-demand AI triggers (menu items / keyboard shortcuts), as opposed to
- * the passive typing-driven runs the ghost-text and grammar plugins do on
- * their own. `getSettings` is a getter, not a value, so the actions built
- * once here always use the provider currently selected in settings.
- * Failures (including benign ones like "no issues found") go to `onNotice`
- * as a plain message - never a blocking dialog, these fire mid-typing.
- */
+/** AI actions run from the menu or a shortcut. `getSettings` is a getter so
+ *  they always use the current provider; failures go to `onNotice`, never a
+ *  dialog, since these fire mid-typing. */
 export function useAiActions(
   run: EditorRunner,
   getSettings: () => Settings,
@@ -42,9 +37,8 @@ export function useAiActions(
   onNotice: (message: string | null) => void,
   getDocPath: () => string | null = () => null,
 ): AiActions {
-  // A manual trigger can take a few seconds: say it's working, then either
-  // clear that (the result is in the document) or replace it with what
-  // happened, in the user's language.
+  // A manual trigger can take a few seconds: say it's working, then clear
+  // that or replace it with what happened.
   const report = useCallback(
     (work: Promise<void>, working: string) => {
       onNotice(working);

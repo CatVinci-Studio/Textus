@@ -1,35 +1,20 @@
 //! The document's blocks and their ids, as the model sees them: each block
-//! starts with `[#k3f9] `, and an edit names the block it changes instead
-//! of quoting it. Quoting cost the whole passage again before anything
-//! could show - a rewrite of a whole document began with the whole
-//! document, ten seconds of nothing on a ChatGPT subscription
-//! (live_eval::latency) - and grew with the document.
-//!
-//! The blocks are the editor's: the request carries them, each top-level
-//! node with its id and kind (src/ai/doc-blocks.ts), and the document is
-//! their markdown joined. Nothing here splits the document, so the block a
-//! model names is a node the editor has - a list or a quote of several
-//! paragraphs is one block, as it is one node.
-//!
-//! An edit keeps the ids it names (`resolve_edit_arguments` only fills in
-//! what they stand for), and the frontend places it by them - never by
-//! searching the document for its text.
+//! starts with `[#k3f9] `, and an edit names its block instead of quoting it.
+//! The blocks are the editor's top-level nodes, and the frontend places an edit
+//! by its ids, never by searching for its text.
 
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
 
-/// An argument resolve_edit_arguments adds to a run's rewrite that tried
-/// to swap a picture: how many it took out (tools/edits.rs tells the model
-/// so). Not the model's to write.
+/// An argument added to a run's rewrite that tried to swap a picture: how many
+/// it took out. Not the model's to write.
 pub const PICTURES_KEPT_KEY: &str = "pictures_kept";
 
-/// An argument resolve_edit_arguments adds to a run's rewrite with
-/// pictures in it: their blocks' ids, which the rewrite keeps as they were
-/// (tools/edits.rs tells the model, which redoes one with generate_image
-/// when the user asked for it to change). Not the model's to write.
+/// An argument added to a run's rewrite with pictures in it: their blocks'
+/// ids, which the rewrite keeps as they were. Not the model's to write.
 pub const PICTURES_IN_RUN_KEY: &str = "pictures_in_run";
 
-/// One block as the request carries it - `SentBlock` in doc-blocks.ts.
+/// One block as the request carries it.
 #[derive(Debug, Clone, Deserialize)]
 pub struct SentBlock {
     pub id: String,
@@ -57,7 +42,7 @@ pub struct Document {
     pub blocks: Vec<Block>,
 }
 
-/// What blocks are joined with - one blank line, as documentMarkdown does.
+/// What blocks are joined with: one blank line.
 const SEPARATOR: &str = "\n\n";
 
 impl Document {
@@ -81,8 +66,8 @@ impl Document {
         Self { text, blocks }
     }
 
-    /// A document no editor stands behind - a project file, a test's - in
-    /// its paragraphs (`paragraphs`), a picture alone in one read as one.
+    /// A document no editor stands behind (a project file, a test's) in its
+    /// paragraphs, a picture alone in one read as one.
     pub fn from_markdown(text: &str) -> Self {
         let spans = paragraphs(text);
         let ids = block_ids(spans.iter().map(|&(s, e)| &text[s..e]));
@@ -151,10 +136,9 @@ impl Document {
     }
 }
 
-/// Whether a call's `block` (with `last_block` and `anchor`) names a place
-/// in `document` - the tool result that tells the model how to fix it when
-/// not. The frontend places the call by the same ids (matchTarget in
-/// src/ai/doc-markdown.ts), so a call that passes here lands.
+/// Whether a call's `block` (with `last_block` and `anchor`) names a place in
+/// `document`, else the tool result telling the model how to fix it. The
+/// frontend places the call by the same ids, so a call that passes here lands.
 pub fn check_target(document: &Document, args: &Value) -> Result<(), String> {
     let Some(block) = args.get("block").and_then(|v| v.as_str()) else {
         return Err(NO_BLOCK.to_string());
@@ -175,8 +159,7 @@ pub fn check_target(document: &Document, args: &Value) -> Result<(), String> {
 /// Told when a call names no block for document text.
 pub const NO_BLOCK: &str = "Not proposed: name the passage by its block - `block` takes the id shown before it, like `k3f9` from `[#k3f9]` - and, for a few words inside it, quote them in `anchor`.";
 
-/// An id as a model may write it - `k3f9`, `#k3f9`, or the whole marker
-/// `[#k3f9]` it was shown - as the id. cleanId in doc-blocks.ts.
+/// An id as a model may write it (`k3f9`, `#k3f9` or `[#k3f9]`) as the id.
 pub fn clean_id(id: &str) -> &str {
     id.trim()
         .trim_start_matches('[')
@@ -192,8 +175,7 @@ impl std::ops::Deref for Document {
     }
 }
 
-/// FNV-1a over the block's bytes, as base 36 - doc-blocks.ts's hashId, for
-/// a document that comes as text (`from_markdown`).
+/// FNV-1a over the block's bytes, as base 36, matching the frontend's hashId.
 fn hash_id(text: &str) -> String {
     let mut h: u32 = 0x811c_9dc5;
     for b in text.as_bytes() {
@@ -242,9 +224,8 @@ fn fence_opening(line: &str) -> Option<&'static str> {
     }
 }
 
-/// Text with no editor behind it - what the model wrote, a project file -
-/// in its paragraphs: runs of lines between blank lines, a fenced code or
-/// maths block whole, as byte spans. textParagraphs in doc-blocks.ts.
+/// Text with no editor behind it in its paragraphs: runs of lines between
+/// blank lines, a fenced code or maths block whole, as byte spans.
 pub fn paragraphs(text: &str) -> Vec<(usize, usize)> {
     let mut spans: Vec<(usize, usize)> = Vec::new();
     let mut start: Option<usize> = None;
@@ -359,20 +340,11 @@ fn cleaned(arguments: &str, keys: &[&str]) -> Option<Map<String, Value>> {
     Some(args)
 }
 
-/// A propose_edit call's arguments with what its ids stand for filled in -
-/// its ids kept, for the frontend to place it by:
-///
-/// - `block` alone (and `last_block`): `anchor` is the run's whole text;
-/// - `block` and `anchor` (a few words in it) with `replace` or `delete`: a
-///   replacement of the whole run, those words changed in it - one edit
-///   per block, as the card shows it;
-/// - with `insert_after` / `insert_before`: the words stay the anchor, the
-///   block telling which of them is meant.
-///
-/// A run's rewrite keeps the run's pictures (keep_pictures). Ids that name
-/// no run, or words not in it once, are left as they came, for
-/// propose_edit to say so. Markers copied into `anchor` or `text` come out
-/// either way. Arguments that aren't JSON are returned as they were.
+/// A propose_edit call's arguments with what its ids stand for filled in, the
+/// ids kept. `block` alone names the run; with `anchor` and `replace`/`delete`
+/// the whole run is replaced with those words changed; with an insert the words
+/// stay the anchor. Ids or words that don't match are left for propose_edit to
+/// report. Arguments that aren't JSON are returned as they were.
 pub fn resolve_edit_arguments(document: &Document, arguments: &str) -> String {
     let Some(mut args) = cleaned(arguments, &["anchor", "text"]) else {
         return arguments.to_string();
@@ -450,14 +422,9 @@ pub fn resolve_edit_arguments(document: &Document, arguments: &str) -> String {
     reorder(args).to_string()
 }
 
-/// An add_comment or generate_image call's arguments with what its block
-/// stands for filled in, as for an insertion by propose_edit: a phrase
-/// quoted in `anchor` that the block holds once stays the anchor (a
-/// comment on a few words, a picture after a sentence); otherwise the
-/// anchor is the whole block - a paragraph a comment is about or a picture
-/// goes next to, or the picture a redo replaces. The id is kept, for the
-/// frontend to place it by; one that names no block is left, for the tool
-/// to say so.
+/// An add_comment or generate_image call's arguments with its block filled in:
+/// an `anchor` the block holds once stays the anchor, otherwise the anchor is
+/// the whole block. An id that names no block is left for the tool to report.
 pub fn resolve_target_arguments(document: &Document, arguments: &str) -> String {
     let Some(mut args) = cleaned(arguments, &["anchor"]) else {
         return arguments.to_string();

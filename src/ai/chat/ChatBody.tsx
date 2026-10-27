@@ -14,7 +14,6 @@ import { ChatMessages } from "./ChatMessages";
 import { ErrorRow } from "./ErrorRow";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
-import { ModelSwitcher } from "./ModelSwitcher";
 import { MarkdownText } from "../MarkdownText";
 import { QuickAskPendingBar } from "./quick-ask/QuickAskPendingBar";
 import { toolActivityText } from "./AgentTurnView";
@@ -82,9 +81,8 @@ export function ChatBody({
   dockActions,
   selectionChip,
 }: ChatBodyProps) {
-  // A selection that is one picture has no text: the composer would show
-  // no chip at all, and say nothing of what goes with the message. It is
-  // the picture's description (or its Markdown) there, and says so.
+  // A selection that is one picture has no text, so the chip shows the
+  // picture's description (or its Markdown) and says so.
   const pictureMarkdown =
     pictureSrc(selectionMarkdown ?? "") !== null ? selectionMarkdown : null;
   const selectedPictureText = pictureMarkdown
@@ -126,18 +124,9 @@ export function ChatBody({
   }
 
   /**
-   * Composes a NEW message and sends it - the user's own, and the relocate
-   * request, which are the two that have to be written against the document
-   * as it reads at send time rather than as it read when this component last
-   * rendered. `buildMessage` therefore receives that state, pulled fresh
-   * first (`refreshContext`): the detached window asks the editor over IPC,
-   * the in-document bar reads its own editor - keeping the selection it
-   * captured at open, which is what its rewrites target.
-   *
-   * `handleRetry` deliberately does NOT come through here: a retry resends
-   * the failed message verbatim, against the document it was composed for
-   * (useAgentConversation's RetryableSend), so re-resolving it would make
-   * "retry" mean something else.
+   * Composes a new message against the document as it reads at send time
+   * (`refreshContext` first). Retry doesn't come through here: it resends the
+   * failed message verbatim, against the document it was composed for.
    */
   function dispatchSend(
     buildMessage: (state: {
@@ -160,10 +149,8 @@ export function ChatBody({
     })();
   }
 
-  // Messages sent while a reply is coming (MessageQueue): composed as they
-  // are sent, and sent in turn once the replies before them have finished
-  // - against the document as it reads then. A failed reply pauses them
-  // until Continue; Stop gives them back to the composer.
+  // Messages sent while a reply is coming, sent in turn once the replies
+  // before them finish. A failed reply pauses them; Stop gives them back.
   const queueState = useMessageQueue(busy, async (next) => {
     const latest = refreshContext ? await refreshContext() : null;
     const turns = await send(
@@ -223,31 +210,24 @@ export function ChatBody({
     attachments: ChatAttachment[],
     includeSelection: boolean,
   ): { message: string; images?: ImageAttachment[] } {
-    // Rewrites of the selection come back as replace_selection tool calls
-    // (see AGENT_TOOL_INSTRUCTIONS in src-tauri/src/ai/agent/prompt.rs); the tag
-    // carries the selection's MARKDOWN so formatting survives the trip.
-    // With nothing selected, the cursor's surroundings say where "here"
-    // is (and where insert_at_cursor writes).
+    // The tag carries the selection's markdown so formatting survives the
+    // trip; with nothing selected, the caret's surroundings say where "here" is.
     const tagged =
       selection && includeSelection
         ? `${selectedTextBlock(selection)}\n\n${message}`
         : cursor
           ? `${cursorBlock(cursor.before, cursor.after)}\n\n${message}`
           : message;
-    // Text-shaped attachments were already extracted in Rust (PDF, Word,
-    // spreadsheets and plain files all arrive as text) and ride inside the
-    // prompt. Images have nothing to extract and go as provider image
-    // parts instead - see commands/attachment.rs.
+    // Text attachments were extracted in Rust and ride inside the prompt;
+    // images go as provider image parts.
     const attachmentBlocks = attachments
       .filter((f) => f.kind === "text")
       .map((f) => attachedFileBlock(f.name, f.content))
       .join("\n\n");
     return {
       message: attachmentBlocks ? `${attachmentBlocks}\n\n${tagged}` : tagged,
-      // Not filtered on vision here: the composer refuses to stage an image
-      // for a provider that can't read one, and the backend refuses the
-      // whole message if one gets through anyway. Silently dropping it
-      // would be a third policy contradicting both.
+      // Not filtered on vision here: the composer and the backend both refuse
+      // an image the provider can't read; dropping it would be a third policy.
       images: attachments
         .filter((f) => f.kind === "image")
         .map((f) => ({
@@ -287,12 +267,11 @@ export function ChatBody({
 
   const showMessages = history.length > 0 || busy || !!error || !!fillHeight;
 
-  // The quick variant's one-line reply: live streamed prose while it
-  // arrives, else the conversation's last assistant reply (so a restored
-  // conversation shows where it left off).
+  // The quick variant's one-line reply: the streamed prose while it arrives,
+  // else the last assistant reply (so a restored conversation shows it).
   let summaryText: string | null = null;
   // The question the summary answers, echoed above it: once sent, the
-  // composer is empty and nothing on screen said what had been asked.
+  // composer is empty.
   let promptText: string | null = null;
   // Whether the exchange holds more than its one-line summary - tool
   // steps, or a reply the summary clamps - and so earns "show all".
@@ -311,8 +290,7 @@ export function ChatBody({
   }
   if (variant === "quick") {
     // The exchange in progress counts as the newest one: its user turn only
-    // reaches `history` when the reply completes, and until then the bar
-    // showed the PREVIOUS question and answer with no sign of the new one.
+    // reaches `history` when the reply completes.
     const exchange = lastExchange(
       busy && streaming ? [...history, ...streaming.turns] : history,
     );
@@ -525,7 +503,7 @@ export function ChatBody({
         compact={variant === "quick"}
         focusOnOpen={variant === "quick" || !phone}
         dockActions={dockActions}
-        modelSwitcher={variant === "quick" ? undefined : <ModelSwitcher />}
+        switchModels={variant !== "quick"}
         defaultWebSearch={defaultWebSearch}
         onSend={handleSend}
         onSkillUsed={onSkillUsed}

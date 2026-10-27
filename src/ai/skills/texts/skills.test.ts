@@ -4,11 +4,11 @@ import { SKILL_TEXTS, skillText } from ".";
 import { BUILTIN_SKILLS } from "../builtin";
 import { fold } from "../../chat/skill-picker";
 
-// The built-in skills' words in every UI language (docs/dev/translating.md):
-// what the `/` menu and Settings show, and what people type after `/`.
+// The built-in skills' words in every UI language: what the `/` menu and
+// Settings show, and what people type after `/`.
 
 /** Each UI's word for inline completion: never a skill's label, or two
- *  different things would answer to one name (catalogue §0.3). */
+ *  different things would answer to one name. */
 const COMPLETION_WORDS = [
   "续写",
   "續寫",

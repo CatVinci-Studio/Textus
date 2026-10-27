@@ -10,64 +10,44 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 export const commands = {
 	take_pending_open_path: () => __TAURI_INVOKE<string | null>("take_pending_open_path"),
 	/**
-	 *  Tab-mode counterpart to take_pending_open_path: drains the whole queue at
-	 *  once so a single window can open every pending path as its own tab,
-	 *  instead of one window claiming just the first path off the front.
+	 *  Tab-mode counterpart to take_pending_open_path: drains the whole queue so
+	 *  one window opens every path as a tab.
 	 */
 	take_pending_open_paths: () => __TAURI_INVOKE<string[]>("take_pending_open_paths"),
 	take_pending_show_help: () => __TAURI_INVOKE<string | null>("take_pending_show_help"),
 	take_pending_menu_event: () => __TAURI_INVOKE<string | null>("take_pending_menu_event"),
 	take_pending_open_folder: () => __TAURI_INVOKE<string | null>("take_pending_open_folder"),
 	/**
-	 *  File > Open Recent from a window that keeps what it holds (menu.rs, then
-	 *  useFileOpening.ts's openRecentFile): the file opens the way a file
-	 *  manager's open does - a window of its own, or a tab per the setting.
+	 *  File > Open Recent from a window that keeps what it holds: the file opens as
+	 *  a file manager's open does.
 	 */
 	open_paths: (paths: string[]) => __TAURI_INVOKE<void>("open_paths", { paths }),
 	/**
-	 *  ⌘/Ctrl-click in the sidebar's file tree: the file in a window of its
-	 *  own, whether new documents open as tabs or windows (#348). The fresh
-	 *  window drains it from the queue as it mounts, either way.
+	 *  ⌘/Ctrl-click in the sidebar's file tree: the file in a window of its own,
+	 *  whatever the tab setting.
 	 */
 	open_path_in_new_window: (path: string) => __TAURI_INVOKE<void>("open_path_in_new_window", { path }),
 	take_detached_tab: () => __TAURI_INVOKE<DetachedTab_Serialize | null>("take_detached_tab"),
 	/**
-	 *  Physical-pixel screen bounds of every open window - lets a single-tab
-	 *  window being dragged by its title bar (useTabDragMerge.ts's onMoved/tick
-	 *  effect) spot the moment its cursor enters another window's tab row, which
-	 *  is when it hands itself over to start_floating_tab_drag.
+	 *  A tab's own right-click Move to New Window: the tab handed to a fresh
+	 *  window, which takes it as it opens.
+	 */
+	move_tab_to_new_window: (tab: DetachedTab_Deserialize) => __TAURI_INVOKE<null>("move_tab_to_new_window", { tab }),
+	/**
+	 *  Physical-pixel screen bounds of every open window, so a single-tab window
+	 *  dragged by its title bar can spot entering another window's tab row.
 	 */
 	list_window_bounds: () => __TAURI_INVOKE<WindowBounds[]>("list_window_bounds"),
 	/**
-	 *  Tauri's onMoved fires on every tick of a native window drag but there is
-	 *  no "drag ended" event, and a merge decision made on anything short of the
-	 *  actual button release is wrong (a debounce merges while the user is
-	 *  merely holding still). So: the frontend calls this on the FIRST onMoved
-	 *  of a drag, and a short-lived thread streams `window-drag-tick`
-	 *  {x, y, down} events (cursor in global logical points) to the calling
-	 *  window until the left button is truly released - the final tick carries
-	 *  down=false. Lazy by construction: no thread exists outside an active
-	 *  drag, and it exits itself on release. Returns false when there's nothing
-	 *  to track (button already up - e.g. a programmatic setPosition fired
-	 *  onMoved - or a non-macOS platform).
+	 *  Tauri's onMoved has no "drag ended" event, so on the first onMoved the
+	 *  frontend starts this: a thread streams `window-drag-tick` {x, y, down} until the
+	 *  button is released. Returns false when there is nothing to track.
 	 */
 	start_window_drag_tracking: () => __TAURI_INVOKE<boolean>("start_window_drag_tracking"),
 	/**
-	 *  THE floating tab. The moment a tab becomes "in flight" - pulled past a
-	 *  tab bar's detach threshold, or a whole single-tab window dragged onto
-	 *  another window's tab row - its document is handed to Rust and its
-	 *  source ceases to exist (the caller removes the pill from its bar, or
-	 *  destroy_source tears the whole window down; destroy is the one window
-	 *  operation macOS reliably honors mid-native-drag, unlike hide, which the
-	 *  drag session ignores). From here this thread owns the drag outright,
-	 *  polling the real cursor/button (see mod mouse): over a tab row, the
-	 *  tab rides that row as the preview pill (the floating pill parks);
-	 *  elsewhere it rides the cursor as the pill (created lazily the first
-	 *  time it's actually needed). Release resolves it: over a row -> pushed
-	 *  to that window as a real tab; anywhere else -> a fresh window right
-	 *  there, via the same PendingDetachedTabs handoff a tab-bar detach has
-	 *  always used. Nothing polls outside an active drag, and the thread ends
-	 *  itself on release.
+	 *  The floating tab. Once a tab is in flight its document is handed to Rust and
+	 *  its source is gone (destroy is what macOS honors mid-drag). This thread polls
+	 *  the cursor until release: over a tab row the tab lands there, else in a new window.
 	 */
 	start_floating_tab_drag: (tab: DetachedTab_Deserialize, title: string, dirty: boolean, destroySource: boolean) => __TAURI_INVOKE<null>("start_floating_tab_drag", { tab, title, dirty, destroySource }),
 	/**
@@ -75,20 +55,16 @@ export const commands = {
 	 *  CHAT_ADOPT_HANDOFF says another one is waiting. Destructive either way.
 	 */
 	take_chat_handoff: () => __TAURI_INVOKE<ChatHandoff | null>("take_chat_handoff"),
-	/**
-	 *  Closes the detached chat serving this editor, if one is open - what the
-	 *  editor calls when the user re-embeds the panel.
-	 */
+	/**  Closes the detached chat serving this editor, if one is open (re-embedding the panel). */
 	close_chat_window: () => __TAURI_INVOKE<void>("close_chat_window"),
 	/**
-	 *  Shows tab `id`'s page at `bounds`, making it the first time; a page
-	 *  made already is moved there and shown again, at the address it was
-	 *  left at.
+	 *  Shows tab `id`'s page at `bounds`, making it the first time; an existing
+	 *  page is moved and shown again where it was left.
 	 */
 	web_page_show: (id: string, url: string, bounds: PageBounds) => __TAURI_INVOKE<null>("web_page_show", { id, url, bounds }),
 	/**
-	 *  Hides tab `id`'s page: its tab went out of sight, or something is shown
-	 *  over it (a menu, a dialog) that a native page would cover.
+	 *  Hides tab `id`'s page: its tab went out of sight, or a menu or dialog is
+	 *  over it that a native page would cover.
 	 */
 	web_page_hide: (id: string) => __TAURI_INVOKE<null>("web_page_hide", { id }),
 	/**  Lets tab `id`'s page go: its tab closed. */
@@ -98,163 +74,106 @@ export const commands = {
 	/**  Loads tab `id`'s page again. */
 	web_page_reload: (id: string) => __TAURI_INVOKE<null>("web_page_reload", { id }),
 	/**
-	 *  Brings the detached chat serving this editor to the front, without
-	 *  handing it anything. Opening Ask AI while a chat window exists means "go
-	 *  to the conversation", and the conversation there has moved on since it
-	 *  left the editor - re-running `detach_chat_window` would park the editor's
-	 *  older copy for the window to adopt, overwriting what the user did in it.
-	 *  Returns whether there was a window to focus.
+	 *  Brings the detached chat serving this editor to the front without handing
+	 *  it anything, which would overwrite its newer conversation. Returns whether there was one.
 	 */
 	focus_chat_window: () => __TAURI_INVOKE<boolean>("focus_chat_window"),
 	/**
-	 *  The chat window serving the calling editor window, if any.
-	 * 
-	 *  Editor windows call this on mount and on focus, so a reloaded webview -
-	 *  or one whose chat was closed from the chat's own window - learns the
-	 *  current label instead of trusting a cached one.
+	 *  The chat window serving the calling editor window, if any. Asked on mount
+	 *  and focus, so a reloaded webview never trusts a stale label.
 	 */
 	current_chat_window: () => __TAURI_INVOKE<string | null>("current_chat_window"),
 	/**
-	 *  Runs a menu id exactly as clicking that item in the native menu would.
-	 * 
-	 *  The way in for the app-drawn menu on Windows (src/app/AppMenu.tsx): there
-	 *  the native menu bar is hidden and the menu is redrawn in HTML, so its
-	 *  items have no native click to dispatch - they send their id here instead.
-	 *  The ids are the contract between the two, and `dispatch` below is the one
-	 *  implementation both entry points run, so an HTML item can never drift
-	 *  into doing something different from its native twin.
-	 * 
-	 *  Ids the HTML menu invents (there is no such native item) are simply not
-	 *  matched by `dispatch` and do nothing, so a typo fails quietly rather than
-	 *  firing the wrong command.
-	 * 
-	 *  `command(async)`, like detach_chat_window, and for the same reason: half
-	 *  of what dispatch does is create or close windows, and on Windows doing
-	 *  that from inside the calling webview's own IPC callback - which a plain
-	 *  `command` runs on the main thread - is the re-entrancy that freezes the
-	 *  whole app.
+	 *  Pastes into the focused webview as Cmd+V does. False where the page
+	 *  reads the clipboard itself (everywhere but macOS).
+	 */
+	paste_natively: () => __TAURI_INVOKE<boolean>("paste_natively"),
+	/**
+	 *  The clipboard's plain text, read without the webview's paste callout.
+	 *  None where the page reads it itself (everywhere but macOS).
+	 */
+	clipboard_text: () => __TAURI_INVOKE<string | null>("clipboard_text"),
+	/**
+	 *  Runs a menu id exactly as clicking that native item would; the way in for
+	 *  the app-drawn menu. Unknown ids do nothing. Async because creating or
+	 *  closing windows from the calling webview's IPC callback freezes Windows.
 	 */
 	trigger_menu_item: (id: string) => __TAURI_INVOKE<void>("trigger_menu_item", { id }),
-	/**
-	 *  The recent-file list behind File > Open Recent, for the app-drawn menu -
-	 *  the native submenu is filled by `rebuild_recent_menu`, which the HTML one
-	 *  can't read.
-	 */
+	/**  The recent-file list behind File > Open Recent, for the app-drawn menu. */
 	list_recent_files: () => __TAURI_INVOKE<string[]>("list_recent_files"),
-	/**  The recent folders, listed above the files there - same reason. */
+	/**  The recent folders, listed above the files there. */
 	list_recent_folders: () => __TAURI_INVOKE<string[]>("list_recent_folders"),
 	/**
-	 *  The menu bar in the UI's language: `labels` as `MenuLabels` keys them,
-	 *  from the frontend's string table. Only macOS shows this menu - Windows
-	 *  and Linux draw their own in HTML (app-menu-model.ts) and keep the native
-	 *  one hidden for its accelerators, which rebuilding it would only put at
-	 *  risk - so elsewhere this does nothing. Every window sends its labels as
-	 *  it opens; the bar is rebuilt only when one has changed (the language),
-	 *  with the same ids and accelerators as before. `command(async)` and a hop
-	 *  to the main thread, as menus are only built there.
+	 *  The macOS menu bar in the UI's language, rebuilt only when the labels
+	 *  change. Elsewhere it does nothing. Async with a main-thread hop, as menus
+	 *  are only built there.
 	 */
 	set_menu_labels: (labels: { [key in string]: string }) => __TAURI_INVOKE<void>("set_menu_labels", { labels }),
 	/**
-	 *  The View menu's check marks (Sidebar, AI Panel, Source Code Mode, Split
-	 *  View, Typewriter Mode, Zen Mode), keyed by menu id - from the front
-	 *  window, which sends its state on every change and as it gains focus.
-	 *  The items are named by what they show, never "Toggle ...", and the mark
-	 *  is AppKit's own. Only macOS shows this menu; elsewhere the app-drawn menu
-	 *  draws the same marks (app/AppMenu.tsx) and this does nothing.
+	 *  The View menu's check marks, keyed by menu id, sent by the front window on
+	 *  change and focus. macOS only; elsewhere the app-drawn menu draws them.
 	 */
 	set_menu_checks: (checks: { [key in string]: boolean }) => __TAURI_INVOKE<void>("set_menu_checks", { checks }),
 	/**
-	 *  The Format menu's heading keys (Ctrl/Cmd+1..6 unless rebound), keyed by
-	 *  menu id - mirrors `nativeMenuAccelerators` in src/app/app-menu-model.ts.
-	 *  They follow Settings › Shortcuts, unlike a fixed accelerator: a level
-	 *  rebound or cleared there must not keep a native key that goes on
-	 *  firing. The frontend handles the keys itself and stops them, so the
-	 *  bar's key only acts where the page doesn't (no window, say). Only macOS
-	 *  shows this menu; on Windows a native key would fire twice beside the
-	 *  frontend's, so elsewhere this does nothing.
+	 *  The Format menu's heading keys, keyed by menu id, following Settings ›
+	 *  Shortcuts so a rebound key doesn't keep firing. macOS only: on Windows a
+	 *  native key would fire twice beside the frontend's.
 	 */
 	set_menu_accelerators: (accelerators: { [key in string]: string }) => __TAURI_INVOKE<void>("set_menu_accelerators", { accelerators }),
 	/**  Help > Join the Community, and its row in Settings. */
 	open_community_page: (language: string | null) => __TAURI_INVOKE<null>("open_community_page", { language }),
 	open_about_link: (page: string) => __TAURI_INVOKE<null>("open_about_link", { page }),
-	/**
-	 *  A link Ctrl/Cmd+clicked in a document (src/editor/markdown/
-	 *  link-click-plugin.ts).
-	 */
+	/**  A link Ctrl/Cmd+clicked in a document. */
 	open_web_link: (url: string) => __TAURI_INVOKE<null>("open_web_link", { url }),
 	/**
 	 *  Help > Video Tutorials, its row in Settings, and the tour's "Watch the
 	 *  animation" links, which name their `clip`.
 	 */
 	open_tutorials_page: (clip: string | null, language: string | null) => __TAURI_INVOKE<null>("open_tutorials_page", { clip, language }),
-	/**
-	 *  Save dialog for exports - like save_file_dialog but with the target
-	 *  format's name and extension.
-	 */
+	/**  Save dialog for exports, with the target format's name and extension. */
 	export_save_dialog: (defaultName: string, filterName: string, ext: string) => __TAURI_INVOKE<string | null>("export_save_dialog", { defaultName, filterName, ext }),
 	/**
 	 *  Returns the path of a working pandoc binary, or None. GUI apps launched
-	 *  from Finder don't inherit the shell's PATH, so beyond a plain `pandoc`
-	 *  lookup this probes the usual install locations (Homebrew, MacPorts, the
-	 *  official installer's /usr/local, ~/.local).
+	 *  from Finder lack the shell's PATH, so the usual install locations are probed.
 	 */
 	detect_pandoc: () => __TAURI_INVOKE<string | null>("detect_pandoc"),
 	/**
-	 *  Converts the current document text to `format` (a pandoc writer name)
-	 *  via a user-installed pandoc. The markdown is piped through stdin - no
-	 *  temp file - and --resource-path points at the document's folder so
-	 *  relative image srcs (Typora-style assets/...) resolve for formats that
-	 *  embed them (docx, epub, odt).
+	 *  Converts the document text to `format` via a user-installed pandoc, through
+	 *  stdin; --resource-path lets relative images resolve.
 	 */
 	export_via_pandoc: (pandocPath: string, markdown: string, outputPath: string, format: string, resourceDir: string | null, title: string) => __TAURI_INVOKE<null>("export_via_pandoc", { pandocPath, markdown, outputPath, format, resourceDir, title }),
 	/**
-	 *  Writes the themed, already-paginated document to a PDF at `output_path`,
-	 *  rendered offscreen with no print dialog - each platform's way, in the
-	 *  notes above. One doc comment for every platform's variant: it is what
-	 *  the generated TypeScript (src/platform/bindings/app.ts) shows, which
-	 *  must not depend on the platform it was generated on.
+	 *  Writes the themed, paginated document to a PDF at `output_path`, offscreen
+	 *  with no print dialog. Same text on every variant: it is the generated TS doc.
 	 */
 	export_pdf_native: (html: string, baseDir: string | null, outputPath: string, pageNumbers: boolean) => __TAURI_INVOKE<null>("export_pdf_native", { html, baseDir, outputPath, pageNumbers }),
 	open_pandoc_install_page: () => __TAURI_INVOKE<null>("open_pandoc_install_page"),
-	/**
-	 *  Shows the exported file in Finder, so a successful export has visible
-	 *  feedback beyond the dialog closing.
-	 */
+	/**  Shows the exported file in Finder, as visible feedback for the export. */
 	reveal_in_dir: (path: string) => __TAURI_INVOKE<null>("reveal_in_dir", { path }),
 	save_theme_css: (id: string, variant: string, css: string) => __TAURI_INVOKE<null>("save_theme_css", { id, variant, css }),
 	load_theme_css: (id: string, variant: string) => __TAURI_INVOKE<string | null>("load_theme_css", { id, variant }),
 	delete_theme: (id: string) => __TAURI_INVOKE<null>("delete_theme", { id }),
 	/**  The gallery's catalog (index.json). */
 	theme_gallery_catalog: () => __TAURI_INVOKE<GalleryTheme_Serialize[]>("theme_gallery_catalog"),
-	/**
-	 *  A gallery theme's stylesheet, by its catalog path. The frontend saves it
-	 *  with save_theme_css (commands/themes.rs), as Import CSS… does a file.
-	 */
+	/**  A gallery theme's stylesheet, by its catalog path. */
 	theme_gallery_css: (path: string) => __TAURI_INVOKE<string>("theme_gallery_css", { path }),
 	/**
-	 *  A gallery screenshot, by its catalog path, as a `data:` URL - the page
-	 *  shows it in an `<img>` and never loads anything from the network itself.
+	 *  A gallery screenshot, by its catalog path, as a `data:` URL, so the page
+	 *  never loads from the network itself.
 	 */
 	theme_gallery_preview: (path: string) => __TAURI_INVOKE<string>("theme_gallery_preview", { path }),
 	cli_command_status: () => __TAURI_INVOKE<boolean>("cli_command_status"),
 	install_cli_command: () => __TAURI_INVOKE<null>("install_cli_command"),
-	/**
-	 *  The tray now, for Settings as it opens; the event keeps it current
-	 *  after that.
-	 */
+	/**  The tray now, for Settings as it opens. */
 	background_status: () => __TAURI_INVOKE<Status>("background_status"),
 	default_editor_status: () => __TAURI_INVOKE<DefaultEditorStatus>("default_editor_status"),
 	set_default_editor: () => __TAURI_INVOKE<null>("set_default_editor"),
 	app_distribution: () => __TAURI_INVOKE<string>("app_distribution"),
-	check_for_update: (channel: string) => __TAURI_INVOKE<UpdateMetadata_Serialize | null>("check_for_update", { channel }),
+	check_for_update: (channel: string, backToStable: boolean) => __TAURI_INVOKE<UpdateMetadata_Serialize | null>("check_for_update", { channel, backToStable }),
 	/**
-	 *  Just before the relaunch that applies an update: gives up the claim to
-	 *  be the running Textus. The relaunch starts the new process before this
-	 *  one ends, and the single-instance plugin lets go of its claim only on a
-	 *  clean exit - so the new process found it, handed its launch to this one
-	 *  and quit, and this one, about to end, opened a window for it (#349).
-	 *  Windows and Linux only, where the plugin is (Cargo.toml): macOS keeps
-	 *  one app running by itself.
+	 *  Just before the relaunch that applies an update: gives up the single-instance
+	 *  claim, which the plugin only drops on a clean exit, or the new process would
+	 *  hand its launch to this dying one. Windows and Linux only.
 	 */
 	release_instance: () => __TAURI_INVOKE<void>("release_instance"),
 };
@@ -262,22 +181,18 @@ export const commands = {
 /* Types */
 /**
  *  Everything a detached chat window needs to carry on where the embedded
- *  panel left off. `state` is opaque JSON: the actual shape is defined once,
- *  in TypeScript (src/ai/chat/window/chat-bridge.ts), so the protocol doesn't have
- *  to be kept in sync across two languages for a payload Rust never inspects.
+ *  panel left off. `state` is opaque JSON whose shape TypeScript defines.
  */
 export type ChatHandoff = {
 	/**
-	 *  Window label of the editor this chat belongs to. Only the STARTING
-	 *  address: once running, the chat re-addresses itself to whichever
-	 *  editor last pushed it context (see chat-bridge.ts), which is how one
-	 *  window can serve several files.
+	 *  Window label of the editor this chat starts with; once running, the chat
+	 *  re-addresses itself to whichever editor last pushed it context.
 	 */
 	editorLabel: string,
 	state: Value,
 };
 
-/**  What Settings shows for the row - generated into src/platform/bindings/app.ts. */
+/**  What Settings shows for the row. */
 export type DefaultEditorStatus = {
 	/**  False where this installation can't be made the default (an AppImage). */
 	supported: boolean,
@@ -290,87 +205,59 @@ export type DefaultEditorStatus = {
 };
 
 /**
- *  A tab dragged out of the tab bar (Settings > General > tab mode):
- *  unlike PendingOpenPaths, this carries live in-memory content, not just a
- *  path - the tab may be an unsaved draft, or have edits that haven't hit
- *  disk yet, and dragging it out must not lose that. Keyed by the specific
- *  new window's label (not a shared queue) since it's a 1:1 handoff to the
- *  one window spawned for it, not a batch any window could claim.
+ *  A tab dragged out of the tab bar, carrying its live content (it may be
+ *  unsaved). Keyed by the one new window's label, a 1:1 handoff.
  */
 export type DetachedTab = DetachedTab_Serialize | DetachedTab_Deserialize;
 
 /**
- *  A tab dragged out of the tab bar (Settings > General > tab mode):
- *  unlike PendingOpenPaths, this carries live in-memory content, not just a
- *  path - the tab may be an unsaved draft, or have edits that haven't hit
- *  disk yet, and dragging it out must not lose that. Keyed by the specific
- *  new window's label (not a shared queue) since it's a 1:1 handoff to the
- *  one window spawned for it, not a batch any window could claim.
+ *  A tab dragged out of the tab bar, carrying its live content (it may be
+ *  unsaved). Keyed by the one new window's label, a 1:1 handoff.
  */
 export type DetachedTab_Deserialize = {
 	path?: string | null,
 	content: string,
 	savedContent: string,
 	/**
-	 *  The source tab's disk-mtime snapshot, carried along so the receiving
-	 *  window's external-change detection keeps its baseline instead of
-	 *  re-adopting whatever is on disk after the drop.
+	 *  The source tab's disk-mtime snapshot, so the receiving window's
+	 *  external-change detection keeps its baseline.
 	 */
 	diskMtime?: number | null,
 	/**
-	 *  Bundled Help doc id ("markdown"/"agent") when the dragged tab is a
-	 *  Help document - keeps its title and per-doc dedupe working in the
-	 *  window it lands in.
+	 *  Bundled Help doc id when the dragged tab is a Help document, keeping its
+	 *  title and dedupe in the new window.
 	 */
 	helpDoc?: string | null,
-	/**
-	 *  The Word document an unsaved tab was opened from - its title, and
-	 *  where its first save is suggested (src/document/word-import.ts).
-	 */
+	/**  The Word document an unsaved tab was opened from. */
 	importedFrom?: string | null,
 };
 
 /**
- *  A tab dragged out of the tab bar (Settings > General > tab mode):
- *  unlike PendingOpenPaths, this carries live in-memory content, not just a
- *  path - the tab may be an unsaved draft, or have edits that haven't hit
- *  disk yet, and dragging it out must not lose that. Keyed by the specific
- *  new window's label (not a shared queue) since it's a 1:1 handoff to the
- *  one window spawned for it, not a batch any window could claim.
+ *  A tab dragged out of the tab bar, carrying its live content (it may be
+ *  unsaved). Keyed by the one new window's label, a 1:1 handoff.
  */
 export type DetachedTab_Serialize = {
 	path: string | null,
 	content: string,
 	savedContent: string,
 	/**
-	 *  The source tab's disk-mtime snapshot, carried along so the receiving
-	 *  window's external-change detection keeps its baseline instead of
-	 *  re-adopting whatever is on disk after the drop.
+	 *  The source tab's disk-mtime snapshot, so the receiving window's
+	 *  external-change detection keeps its baseline.
 	 */
 	diskMtime: number | null,
 	/**
-	 *  Bundled Help doc id ("markdown"/"agent") when the dragged tab is a
-	 *  Help document - keeps its title and per-doc dedupe working in the
-	 *  window it lands in.
+	 *  Bundled Help doc id when the dragged tab is a Help document, keeping its
+	 *  title and dedupe in the new window.
 	 */
 	helpDoc?: string,
-	/**
-	 *  The Word document an unsaved tab was opened from - its title, and
-	 *  where its first save is suggested (src/document/word-import.ts).
-	 */
+	/**  The Word document an unsaved tab was opened from. */
 	importedFrom?: string,
 };
 
-/**
- *  One theme of the catalog, as the frontend gets it - generated into
- *  src/platform/bindings/app.ts.
- */
+/**  One theme of the catalog, as the frontend gets it. */
 export type GalleryTheme = GalleryTheme_Serialize | GalleryTheme_Deserialize;
 
-/**
- *  One theme of the catalog, as the frontend gets it - generated into
- *  src/platform/bindings/app.ts.
- */
+/**  One theme of the catalog, as the frontend gets it. */
 export type GalleryTheme_Deserialize = {
 	id: string,
 	name: string,
@@ -386,10 +273,7 @@ export type GalleryTheme_Deserialize = {
 	previews?: string[],
 };
 
-/**
- *  One theme of the catalog, as the frontend gets it - generated into
- *  src/platform/bindings/app.ts.
- */
+/**  One theme of the catalog, as the frontend gets it. */
 export type GalleryTheme_Serialize = {
 	id: string,
 	name: string,
@@ -416,7 +300,7 @@ export type PageBounds = {
 	height: number | null,
 };
 
-/**  The tray, for Settings - generated into src/platform/bindings/app.ts. */
+/**  The tray, for Settings. */
 export type Status = {
 	/**
 	 *  "off", "on", or "unavailable" (Linux without an AppIndicator
@@ -426,16 +310,14 @@ export type Status = {
 };
 
 /**
- *  The plugin's own check answer (tauri-plugin-updater's commands.rs
- *  `Metadata`), which the JS `Update` class is built from
- *  (`updater.check` in src/platform/ipc.ts).
+ *  The plugin's own check answer (its `Metadata`), which the JS `Update` class
+ *  is built from.
  */
 export type UpdateMetadata = UpdateMetadata_Serialize | UpdateMetadata_Deserialize;
 
 /**
- *  The plugin's own check answer (tauri-plugin-updater's commands.rs
- *  `Metadata`), which the JS `Update` class is built from
- *  (`updater.check` in src/platform/ipc.ts).
+ *  The plugin's own check answer (its `Metadata`), which the JS `Update` class
+ *  is built from.
  */
 export type UpdateMetadata_Deserialize = {
 	rid: number,
@@ -447,9 +329,8 @@ export type UpdateMetadata_Deserialize = {
 };
 
 /**
- *  The plugin's own check answer (tauri-plugin-updater's commands.rs
- *  `Metadata`), which the JS `Update` class is built from
- *  (`updater.check` in src/platform/ipc.ts).
+ *  The plugin's own check answer (its `Metadata`), which the JS `Update` class
+ *  is built from.
  */
 export type UpdateMetadata_Serialize = {
 	rid: number,
@@ -469,12 +350,8 @@ export type WindowBounds = {
 	width: number,
 	height: number,
 	/**
-	 *  Physical-per-logical-pixel ratio, so the frontend can convert its own
-	 *  "the tab row is the top N logical pixels" constant into physical
-	 *  pixels for THIS SPECIFIC window (which may sit on a different-DPI
-	 *  display than the one being dragged from).
-	 *  Always a finite ratio: `number`, not specta's `number | null` for
-	 *  an f64 (the null a NaN would serialize to).
+	 *  Physical-per-logical-pixel ratio for this window, which may sit on a
+	 *  different-DPI display. Always finite, so specta types it `number`.
 	 */
 	scaleFactor: number,
 };

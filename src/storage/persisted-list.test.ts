@@ -23,7 +23,7 @@ vi.mock("../platform/ipc", () => ({
     historyClear: vi.fn().mockResolvedValue(null),
   },
 }));
-vi.mock("../utils/tauri-events", () => ({
+vi.mock("../platform/events", () => ({
   listenToThisWindow: (
     event: string,
     handler: (event: { payload: unknown }) => void,
@@ -199,7 +199,7 @@ describe("with Rust (file-backed)", () => {
       at: number;
       path: string;
     }
-    // Stand-in for chat-history's: "old:" is the form an earlier build stored.
+    // "old:" is the form an earlier build stored.
     const normalise = <E extends Doc>(e: E): E =>
       e.path.startsWith("old:") ? { ...e, path: `new:${e.path.slice(4)}` } : e;
     const makeDocs = () =>

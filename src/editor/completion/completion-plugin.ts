@@ -5,16 +5,15 @@ import {
   hasCompletionSources,
   provideCompletions,
   type CompletionResult,
-} from "../../plugins/completion-sources";
+} from "../../plugins/contributions/completion-sources";
 import { CompletionList } from "./completion-list";
 
 /** The most text before the caret a plugin is shown. */
 const CONTEXT_CHARS = 200;
 const MATH_NODES = new Set(["math_inline", "math_block"]);
 
-/** What is before the caret in its paragraph or formula, and whether it
- *  is a formula; null where nothing is typed (a selection, a code block's
- *  neighbour that isn't text). */
+/** What is before the caret in its paragraph or formula; null where nothing
+ *  is typed. */
 function contextAt(view: EditorView): { text: string; inMath: boolean } | null {
   const { selection } = view.state;
   if (!selection.empty) return null;
@@ -30,11 +29,8 @@ function contextAt(view: EditorView): { text: string; inMath: boolean } | null {
 }
 
 /**
- * Completions plugins suggest as you type (completion-sources.ts): after a
- * keystroke, what is before the caret goes to the plugins whose pattern it
- * matches, and the first list that comes back is shown under the caret -
- * ↑ ↓ to choose, Enter or Tab to take, Esc to put away. Nothing is asked
- * while no plugin suggests any.
+ * Completions plugins suggest as you type: the text before the caret goes to
+ * the plugins whose pattern matches, and the first list back is shown.
  */
 export function createCompletionPlugin() {
   return $prose(
@@ -66,6 +62,7 @@ export function createCompletionPlugin() {
                 .scrollIntoView(),
             );
             view.focus();
+            item.run?.();
           };
           const ask = async () => {
             const context = contextAt(view);

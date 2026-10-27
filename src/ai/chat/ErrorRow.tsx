@@ -1,8 +1,7 @@
 import { classifyAiError, type AiErrorKind } from "../error-messages";
 
 /** The error row, with a retry button when the failed send is resendable
- *  (`onRetry` null otherwise) - ChatMessages's, and ChatBody's quick
- *  variant's. */
+ *  (`onRetry` null otherwise). */
 export function ErrorRow({
   error,
   retryLabel,
@@ -12,7 +11,7 @@ export function ErrorRow({
   error: string;
   retryLabel: string;
   onRetry: (() => void) | null;
-  /** What to do, per recognized kind of failure (error-messages.ts). */
+  /** What to do, per recognized kind of failure. */
   explanations?: Partial<Record<AiErrorKind, string>>;
 }) {
   const kind = classifyAiError(error);

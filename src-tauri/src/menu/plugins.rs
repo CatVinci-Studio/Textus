@@ -1,15 +1,11 @@
-//! The Plugins menu: the commands the plugins that are on put there, then
-//! Manage Plugins….
+//! The Plugins menu: the enabled plugins' commands, then Manage Plugins….
 
 use super::*;
 
-/// Whether the bar has a Plugins menu: from 1.3, which offers plugins to
-/// install, always (1.2 kept the system out of sight). src/plugins/
-/// availability.ts decides the frontend's entries the same way.
+/// Whether the bar has a Plugins menu.
 pub(crate) const PLUGINS_SHOWN: bool = true;
 
-/// Plugins menu ids carry the command to run: "plugin-command:<command>",
-/// a command a plugin added to the menu (src/plugins/manager.ts).
+/// Plugins menu ids carry the command to run: "plugin-command:<command>".
 pub(crate) const PLUGIN_COMMAND_PREFIX: &str = "plugin-command:";
 /// Plugins > Manage Plugins…: Settings, at its Plugins page.
 pub(crate) const MANAGE_PLUGINS_ID: &str = "manage-plugins";
@@ -24,16 +20,15 @@ pub struct PluginMenuItem {
     label: String,
 }
 
-/// The Plugins submenu and the commands the frontend last put in it, kept
-/// so a rebuild of the bar (a new language) fills it again.
+/// The Plugins submenu and the commands the frontend last put in it, kept so a
+/// rebuild (a new language) fills it again.
 #[derive(Default)]
 pub(crate) struct PluginMenu {
     pub(crate) submenu: Mutex<Option<Submenu<tauri::Wry>>>,
     items: Mutex<Vec<PluginMenuItem>>,
 }
 
-/// Refill the Plugins submenu: the commands plugins put there, then Manage
-/// Plugins…. On the main thread, as rebuild_recent_menu.
+/// Refill the Plugins submenu, on the main thread.
 pub(crate) fn rebuild_plugin_menu(app: &tauri::AppHandle) {
     let app = app.clone();
     let _ = app.clone().run_on_main_thread(move || {
@@ -89,8 +84,8 @@ pub(crate) fn rebuild_plugin_menu(app: &tauri::AppHandle) {
     });
 }
 
-/// The commands the plugins that are on put in the Plugins menu (the
-/// frontend's, src/plugins/usePluginMenu.ts), refilled when they change.
+/// The commands the enabled plugins put in the Plugins menu, refilled when they
+/// change.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn set_plugin_menu(app: AppHandle, items: Vec<PluginMenuItem>) {

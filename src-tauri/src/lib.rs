@@ -1,14 +1,5 @@
-//! App entry: window creation, the OS-open queue, and the Tauri builder
-//! (state, plugins, command registration). The menu bar lives in menu.rs;
-//! tabs dragged between windows in tab_drag.rs; everything invoked by the
-//! frontend beyond that in commands/, ai/ and auth/.
-//!
-//! The same crate builds the desktop app and the iOS app. Everything about
-//! OS windows - the menu bar, more than one window, window chrome, single
-//! instance, tabs dragged between windows, the detached chat, the updater,
-//! session restore, argv - exists on desktop only and is gated with
-//! `#[cfg(desktop)]` (tauri-build sets `desktop` / `mobile` per target).
-//! Ungated code is shared. docs/dev/ios-code-map.md has the map.
+//! App entry: window creation and the Tauri builder. The same crate builds the
+//! desktop and iOS apps; everything about OS windows is `#[cfg(desktop)]`.
 
 mod ai;
 mod app_identity;
@@ -16,8 +7,7 @@ mod atomic;
 mod auth;
 #[cfg(desktop)]
 mod background;
-// Generates src/platform/bindings/ - desktop builds hold every command it
-// lists.
+// Checks src/platform/bindings/; desktop builds hold every command it lists.
 #[cfg(all(test, desktop))]
 mod bindings;
 mod commands;
@@ -84,11 +74,8 @@ pub(crate) use launch::*;
 mod editor_windows;
 pub(crate) use editor_windows::*;
 
-/// Everything the builder needs on desktop only: the updater and process
-/// plugins, the window/tab/session state, window-lifecycle bookkeeping, and
-/// a startup that handles argv, session restore, the CLI shim and the menu
-/// bar. iOS has none of these - one webview, no menu, no argv, App Store
-/// updates.
+/// Everything the builder needs on desktop only: the updater, window/tab/session
+/// state, window lifecycle, and startup's argv, session restore and menu bar.
 #[cfg(desktop)]
 fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
     builder
@@ -107,6 +94,8 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
         .manage(plugins::ai_tools::PluginAiTools::default())
+        .manage(plugins::metadata::MetadataIndex::default())
+        .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
             let app = window.app_handle();
             if matches!(event, tauri::WindowEvent::Destroyed) {
@@ -115,26 +104,20 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                     .keys()
                     .all(|label| label == window.label());
                 if let Some(state) = app.try_state::<SessionTabsState>() {
-                    // The last editor window keeps its documents in the
-                    // session file for the next launch (commands/session.rs).
+                    // The last editor window keeps its documents in the session file.
                     commands::session::forget_window(app, window.label(), &state);
                 }
                 if let Some(state) = app.try_state::<commands::chat_window::OpenChatWindows>() {
                     commands::chat_window::forget_chat_window(app, window.label(), &state);
                 }
-                // File > Quit is implemented as close() on every window so
-                // dirty editors can still cancel. macOS otherwise stays alive
-                // with no windows (see the run loop's ExitRequested), so
-                // finish the successful quit explicitly only after the final
-                // window has actually been destroyed.
+                // File > Quit closes every window so dirty editors can cancel; macOS would
+                // otherwise stay alive windowless, so exit once the final window is gone.
                 if no_other_windows && commands::session::app_quitting() {
                     app.exit(0);
                 }
             }
-            // Nothing else remembers a window's size and place between
-            // launches (the undecorated Linux window gets no help from the
-            // desktop either). Close, not Destroyed - by then they can no
-            // longer be read.
+            // Remember a window's size and place on Close, since after Destroyed they can
+            // no longer be read.
             if matches!(event, tauri::WindowEvent::CloseRequested { .. })
                 && commands::chat_window::is_editor_window(window.label())
             {
@@ -151,13 +134,11 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     detect_wayland();
     #[cfg(target_os = "macos")]
     watch_fullscreen(app.handle());
-    // Windows/Linux hand an associated file over as a plain argv
-    // path; macOS hands the files it launched the app with to the Opened
-    // run-event, which parks them in LAUNCH_OPENED until now. With no file
-    // to open, fall back to restoring last session's documents (unless the
-    // user turned that off in Settings) - this is also what makes an
-    // app-update relaunch (which passes no args at all) reopen whatever
-    // was open before the update.
+    // textus:// links for plugins.
+    plugins::uri::listen(app.handle());
+    // Windows/Linux pass an associated file as argv; macOS parks its launch files
+    // in LAUNCH_OPENED. With none, restore last session's documents (also what an
+    // update relaunch relies on).
     #[allow(unused_mut)]
     let mut arg_paths = paths_from_argv(
         std::env::args(),
@@ -178,18 +159,13 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
 
     menu::install(app)?;
 
-    // Every window that already exists got its menu bar from the
-    // set_menu inside install() just now, which is AFTER the point
-    // build_with_app_chrome had to hide it: the main window never
-    // goes through that helper at all, and the startup windows
-    // queue_paths_to_open opened above did, back when there was no
-    // menu yet to hide. One sweep here covers both.
+    // The menu bar was set by install() after build_with_app_chrome could hide
+    // it, so hide it on every existing window now.
     for (_, window) in app.webview_windows() {
         hide_native_menu_bar(&window);
     }
 
-    // Background mode costs nothing until it is turned on: off, this is
-    // one settings read.
+    // Background mode costs one settings read while off.
     if background::enabled(app.handle()) {
         background::apply(app.handle(), background::Change::Startup);
     }
@@ -200,14 +176,9 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default();
-    // Windows and Linux start a whole new process for every file opened
-    // from the file manager - its own windows, settings and session file,
-    // so "open in a tab" couldn't work and two processes wrote the same
-    // session. Must be the first plugin: a second launch hands its argv to
-    // the running instance here and exits before setting anything else up.
-    // (macOS routes later opens to the running app itself; see
-    // RunEvent::Opened below.) Release builds only, so a dev build can run
-    // next to an installed Textus instead of forwarding to it.
+    // Windows and Linux would start a new process per opened file. Must be the
+    // first plugin: a second launch hands over its argv and exits. Release builds
+    // only, so a dev build can run beside an installed Textus.
     #[cfg(all(any(windows, target_os = "linux"), not(debug_assertions)))]
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
         let paths = paths_from_argv(argv, std::path::Path::new(&cwd));
@@ -220,18 +191,18 @@ pub fn run() {
             // window: the same documents a fresh launch would restore.
             reopen_without_windows(app);
         } else if paths.is_empty() {
-            // Launched again from the app menu or dock: a fresh window,
-            // as a second process used to give.
+            // Launched again from the app menu or dock: a fresh window.
             let _ = open_new_window(app);
         } else {
             queue_paths_to_open(app, paths);
         }
     }));
     let builder = builder
+        .manage(plugins::uri::PendingUris::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(PendingOpenPaths(Mutex::new(Vec::new())));
-    // Document access outside the app's own folder (plugins/textus-files).
+    // Document access outside the app's own folder.
     #[cfg(target_os = "ios")]
     let builder = builder.plugin(tauri_plugin_textus_files::init());
     #[cfg(desktop)]
@@ -240,16 +211,17 @@ pub fn run() {
         .setup(|app| {
             // Before any window: every window's boot script is made from it.
             settings::init(app.handle());
+            tauri::async_runtime::spawn(plugins::moved_skills::install_moved_skills(
+                app.handle().clone(),
+            ));
             build_main_window(app)?;
             #[cfg(desktop)]
             desktop_setup(app)?;
             Ok(())
         })
-        // One handler list for both targets. Desktop-only commands carry
-        // #[cfg(desktop)] and are simply not registered on iOS - the
-        // frontend never calls them there (src/platform/capabilities.ts and
-        // the desktop-only wrappers in platform/ipc.ts).
-        .invoke_handler(tauri::generate_handler![
+        // One handler list for both targets: commands gated #[cfg(desktop)] are not
+        // registered on iOS, where the frontend never calls them.
+        .invoke_handler(crate::with_plugin_commands![
             // Shared: desktop and iOS.
             take_pending_open_path,
             take_pending_open_paths,
@@ -320,7 +292,8 @@ pub fn run() {
             crate::ai::workspace::list_skills,
             crate::ai::workspace::customize_builtin_skill,
             crate::ai::workspace::reset_builtin_skill,
-            crate::ai::workspace::set_builtin_skill_enabled,
+            crate::ai::workspace::set_skill_modes,
+            crate::ai::workspace::save_written_skill,
             crate::ai::builtin::builtin_skills_attribution,
             crate::ai::project::list_project_files,
             crate::ai::project::read_project_file,
@@ -358,18 +331,6 @@ pub fn run() {
             commands::own_notes::own_notes_read,
             commands::own_notes::own_notes_write,
             distribution::app_distribution,
-            plugins::state::plugins_state,
-            plugins::state::plugins_set_all,
-            plugins::state::plugin_set,
-            plugins::install::plugins_installed,
-            plugins::install::plugin_install,
-            plugins::catalog::plugin_catalog,
-            plugins::catalog::plugin_catalog_cached,
-            plugins::catalog::skill_catalog,
-            plugins::catalog::skill_install_catalog,
-            plugins::access::plugin_fs_rename,
-            plugins::access::plugin_fs_trash,
-            plugins::access::plugin_fs_mkdir,
             #[cfg(desktop)]
             background::tray::set_tray_plugin_items,
             #[cfg(desktop)]
@@ -380,37 +341,13 @@ pub fn run() {
             mcp::mcp_restart,
             #[cfg(desktop)]
             mcp::mcp_try,
-            plugins::catalog::plugin_install_catalog,
-            plugins::install::plugin_load_dev,
-            plugins::install::plugin_uninstall,
-            plugins::access::plugin_file,
-            plugins::access::plugin_read_resource,
-            plugins::access::plugin_fs_read,
-            plugins::access::plugin_fs_list,
-            plugins::workspace::plugin_fs_documents,
-            plugins::workspace::plugin_fs_search,
-            plugins::access::plugin_fs_write,
-            plugins::access::plugin_http,
-            plugins::install::plugin_dev_stamp,
-            plugins::ai_tools::plugin_ai_tools_set,
-            plugins::ai_tools::plugin_ai_tool_result,
-            plugins::store::plugin_store_get,
-            plugins::store::plugin_store_set,
-            plugins::store::plugin_store_keys,
-            plugins::store::plugin_store_read,
-            plugins::store::plugin_store_write,
-            plugins::store::plugin_store_files,
-            plugins::store::plugin_store_delete,
-            plugins::store::plugin_store_usage,
-            plugins::store::plugin_store_clear,
             // iOS only: rename and delete in the document list.
             #[cfg(mobile)]
             commands::documents::rename_entry,
             #[cfg(mobile)]
             commands::documents::delete_entry,
-            // Desktop only: menus, windows, tab drag, detached chat, session
-            // restore, the terminal command,
-            // pandoc/PDF export, folder pickers and file-manager reveals.
+            // Desktop only: menus, windows, tab drag, detached chat, session restore, the
+            // terminal command, export, folder pickers and file-manager reveals.
             #[cfg(desktop)]
             take_pending_show_help,
             #[cfg(desktop)]
@@ -421,6 +358,8 @@ pub fn run() {
             commands::folder::pick_open_folder,
             #[cfg(desktop)]
             plugins::install::plugin_pick_package,
+            #[cfg(desktop)]
+            plugins::scripts::plugin_open_scripts_dir,
             #[cfg(desktop)]
             menu::set_plugin_menu,
             #[cfg(desktop)]
@@ -454,6 +393,8 @@ pub fn run() {
             #[cfg(desktop)]
             tab_drag::take_detached_tab,
             #[cfg(desktop)]
+            tab_drag::move_tab_to_new_window,
+            #[cfg(desktop)]
             tab_drag::list_window_bounds,
             #[cfg(desktop)]
             tab_drag::start_window_drag_tracking,
@@ -479,6 +420,10 @@ pub fn run() {
             commands::chat_window::focus_chat_window,
             #[cfg(desktop)]
             commands::chat_window::current_chat_window,
+            #[cfg(desktop)]
+            commands::clipboard::paste_natively,
+            #[cfg(desktop)]
+            commands::clipboard::clipboard_text,
             #[cfg(desktop)]
             background::background_status,
             #[cfg(desktop)]
@@ -521,19 +466,13 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
         .run(|app_handle, event| {
-            // Whatever is still waiting on its debounce (settings.rs).
+            // Flush whatever is still waiting on its debounce.
             if let tauri::RunEvent::Exit = event {
                 settings::flush_all(app_handle);
             }
-            // Closing the last window leaves the app running on macOS, as
-            // Mac apps do - in the Dock and the menu bar, reopened from
-            // either - and on Windows and Linux in background mode, in the
-            // tray. Tauri asks to exit when its last window is destroyed
-            // (`code` None); a programmatic exit (File > Quit's and the
-            // tray's app.exit, a restart for an update) has a code and goes
-            // ahead, and so do the Dock's Quit and logging out, which end
-            // the app without this request. background/mod.rs's
-            // keeps_running is the rule, tested there.
+            // Closing the last window leaves the app running on macOS, and elsewhere in
+            // background mode. Tauri's codeless request after the last window is turned
+            // down per `keeps_running`; exits with a code go ahead.
             #[cfg(desktop)]
             if let tauri::RunEvent::ExitRequested { code, api, .. } = &event {
                 if background::keeps_running(
@@ -554,15 +493,12 @@ pub fn run() {
             {
                 reopen_without_windows(app_handle);
             }
-            // Finder "Open With"/double-click on an associated .md lands
-            // here as an Apple open-documents event (macOS never passes
-            // opened files via argv). iOS delivers "Open in Textus" from the
-            // Files app the same way.
+            // Finder "Open With" arrives as an Apple open-documents event (never argv);
+            // iOS delivers "Open in Textus" the same way.
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             if let tauri::RunEvent::Opened { urls } = event {
-                // iOS hands over a security-scoped URL: kept as a URL, it is
-                // read and written through plugins/textus-files, which opens
-                // its scope. A plain path would be unreadable there.
+                // iOS hands over a security-scoped URL, kept as a URL so the textus-files
+                // plugin can open its scope.
                 #[cfg(target_os = "ios")]
                 let paths: Vec<String> = urls
                     .iter()

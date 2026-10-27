@@ -2,9 +2,9 @@ import { expect, test } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 /**
- * Selecting by dragging past the bottom or top of the document scrolls it
- * and takes the selection along (#219): WebKitGTK, the Linux app's web
- * view, did neither downwards and crawled upwards.
+ * Dragging a selection past the document's bottom or top scrolls it and
+ * takes the selection along; WebKitGTK did neither downwards and crawled
+ * upwards.
  */
 
 const scroller = '[data-active-tab="true"] .editor-scroll';

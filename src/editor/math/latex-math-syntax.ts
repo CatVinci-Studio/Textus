@@ -1,8 +1,5 @@
-// LaTeX's own math delimiters, `\(...\)` (inline) and `\[...\]` (display),
-// read as math the way remark-math reads `$...$`, with the delimiter kept so
-// a save writes it back. Most AI tools write maths this way. Files used to be
-// rewritten to `$` on load instead, which changed every formula in them on
-// the first save.
+// LaTeX's math delimiters, `\(...\)` and `\[...\]`, read as math with the
+// delimiter kept so a save writes it back. Most AI tools write maths this way.
 import type {
   Code,
   Effects,
@@ -16,8 +13,8 @@ import type {
   Extension as FromMarkdownExtension,
 } from "mdast-util-from-markdown";
 
-/** The mdast shapes this file reads and makes (remark-math's own types
- *  live in a package Textus doesn't depend on directly). */
+/** The mdast shapes this file reads and makes (remark-math's own types live
+ *  in a package Textus doesn't depend on directly). */
 interface MdastNode {
   type: string;
   value?: string;
@@ -40,9 +37,8 @@ const CLOSER: Record<number, number> = { 40: 41, 91: 93 }; // ( ) and [ ]
 /** CR, LF and CRLF are -5, -4 and -3 in micromark. */
 const isLineEnding = (code: Code) => code !== null && code < -2;
 
-/** A code that can sit in a bracketed citation, `\[1\]`, `\[2, 3\]`,
- *  `\[4-6\]`: digits, commas, hyphens and whitespace (negative codes are
- *  tabs, virtual spaces and line endings). */
+/** A code that can sit in a bracketed citation, `\[1\]`, `\[2, 3\]`:
+ *  digits, commas, hyphens and whitespace. */
 function isCitationCode(code: number): boolean {
   return (
     code < 0 ||
@@ -54,15 +50,10 @@ function isCitationCode(code: number): boolean {
 }
 
 /**
- * micromark syntax: `\(...\)` and `\[...\]` in text. Text is one block's
- * content, so a formula never spans a blank line or two paragraphs, and
- * code - fenced, indented or inline - is never text, so a `\(` in code stays
- * as it is. A formula also stops at a backtick: `\( a ` b \)` leaves the
- * code span alone. A pair holding only a citation's characters is an
- * escaped bracket, `\[1\]`, not math.
- *
- * Registered on the backslash ahead of character escapes; when this fails
- * the backslash is an escape as before.
+ * micromark syntax: `\(...\)` and `\[...\]` in text, so never across blocks
+ * or in code, and stopping at a backtick. A pair holding only citation
+ * characters is an escaped bracket, `\[1\]`. Registered ahead of character
+ * escapes; when this fails the backslash is an escape.
  */
 export function latexMathSyntax(): Extension {
   return { text: { [BACKSLASH]: { name: "latexMath", tokenize } } };
@@ -78,9 +69,8 @@ function tokenize(
   let citation = true;
   return start;
 
-  // The formula is chunks of one line each, with line endings of their own
-  // between them, as a code span is: micromark takes a token with nothing
-  // inside it that spans lines for a line ending.
+  // The formula is chunks of one line each, with line endings between, as a
+  // code span is: micromark takes a lone token spanning lines for a line end.
   function start(code: Code): State | undefined {
     effects.enter("latexMath");
     effects.enter("latexMathChunk");
@@ -132,17 +122,14 @@ function tokenize(
   }
 }
 
-// A line that could start a block of its own and so end the paragraph a
-// formula sits in - a list item, quote, heading, setext underline, fence,
-// HTML or table - judged loosely: a formula that might is written in dollars.
+// A line that could start a block and so end the formula's paragraph, judged
+// loosely: such a formula is written in dollars.
 const BLOCK_START = /\n[ \t]*(?:[-+*>#=_|<]|`{3}|~{3}|\d+[.)])/;
 
 /**
- * `value` written between the LaTeX `delimiter` ("\\(" or "\\["), on lines
- * of its own when `ownLines`, or null when it would not read back as the
- * same formula: empty or a citation's characters only, holding a backtick,
- * the closer or a blank line, or with a line that could start a block. The
- * caller writes it in dollars instead.
+ * `value` between the LaTeX `delimiter`, on lines of its own when
+ * `ownLines`, or null when it wouldn't read back the same; the caller then
+ * writes it in dollars.
  */
 export function writeLatexMath(
   value: string,
@@ -157,8 +144,8 @@ export function writeLatexMath(
     /\n[ \t]*\n/.test(value)
   )
     return null;
-  // A backslash pairs with the character after it (see `escaped` above):
-  // one before the closer, or last of all, would end the formula early.
+  // A backslash pairs with the next character: one before the closer, or
+  // last of all, would end the formula early.
   for (let i = 0; i < value.length; i++) {
     if (value[i] !== "\\") continue;
     if (i + 1 === value.length || value[i + 1] === close) return null;
@@ -173,9 +160,8 @@ export function writeLatexMath(
 export function latexMathFromMarkdown(): FromMarkdownExtension {
   return {
     enter: {
-      // The node's value is read whole from the source on exit; the buffer
-      // takes the line endings inside, which would otherwise be added to
-      // it as text.
+      // The value is read whole from the source on exit; the buffer swallows the
+      // line endings inside, which would otherwise be added as text.
       latexMath(this: CompileContext, token: Token) {
         this.enter(
           { type: "inlineMath", value: "" } as Parameters<
@@ -200,10 +186,8 @@ export function latexMathFromMarkdown(): FromMarkdownExtension {
 }
 
 /**
- * A `\[...\]` that is a paragraph of its own is display math - a math
- * block, as `$$` makes - whether on one line or with the delimiters on
- * lines of their own (recorded as `oneLine`, to write it back the same).
- * Anywhere else in a paragraph it stays inline.
+ * A `\[...\]` that is a paragraph of its own is a math block, one-line or
+ * not (recorded as `oneLine`). Anywhere else it stays inline.
  */
 export function displayLatexBlocks(tree: MdastNode): void {
   const walk = (parent: MdastNode) => {

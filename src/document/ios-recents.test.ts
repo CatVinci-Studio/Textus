@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// The recent-documents list in ui-state.json, as iOS keeps it. The store
-// answers asynchronously, like the real one: every reader waits on the
-// same live re-read (uiStateReady), which at launch is still on its way -
-// so two documents opening then both read the list when it lands, before
-// either has written.
+// Asynchronous like the real store: every reader waits on the same live
+// re-read, so two documents opening at launch both read before either writes.
 const stored = vi.hoisted(() => ({
   list: [] as unknown,
   ready: Promise.resolve() as Promise<void>,

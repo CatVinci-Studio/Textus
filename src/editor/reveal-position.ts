@@ -2,13 +2,9 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { animate, duration, glideScroll } from "../ui/motion";
 
 /**
- * Brings `pos` into view and pulses the block it is in once, so the eye
- * lands on it - for a review note's "Show in document", a margin card
- * clicked, the review bar's and the notes bar's steps, and a followed
- * #heading link (link-click-plugin.ts). The scroll is one eased stroke of a
- * fixed length however far it goes (glideScroll) - the movement says which
- * way it was; the browser's own smooth scroll crawled on a long way, so
- * that one used to jump. Already in view, nothing moves.
+ * Brings `pos` into view in one eased stroke of fixed length (the browser's
+ * smooth scroll crawled on long ways) and pulses its block once. Already in
+ * view, nothing moves.
  */
 export function revealPosition(view: EditorView, pos: number) {
   const scroller = view.dom.closest<HTMLElement>(".editor-scroll");
@@ -24,12 +20,9 @@ export function revealPosition(view: EditorView, pos: number) {
     node instanceof Element ? node : node.parentElement
   )?.closest<HTMLElement>(".ProseMirror > *");
   if (!block) return;
-  // The accent flashes once and lets go - long enough to be found, gone
-  // before it reads as a mark. Animated, never a class: the block is
-  // ProseMirror's DOM, and a class written onto it reads as an edit, so
-  // the block was redrawn and every revision in it replayed its entrance -
-  // the new text faded in from nothing on each review bar step.
-  // Restarted, if it was still pulsing from a click a moment ago.
+  // Animated, never a class: a class on ProseMirror's DOM reads as an edit,
+  // redrawing the block and replaying its revisions' entrances. Restarted if
+  // it is still pulsing.
   for (const running of block.getAnimations?.() ?? [])
     if (running.id === "reveal-pulse") running.cancel();
   const accent = getComputedStyle(block)

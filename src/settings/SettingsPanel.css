@@ -3,7 +3,7 @@
   inset: 0;
   background: var(--overlay-bg);
   /* Modal tier: above the find bar, popovers and toasts (200-300), which
-     otherwise drew over the dimmed backdrop and still took clicks. */
+     would otherwise draw over the backdrop and take clicks. */
   z-index: 400;
   display: flex;
   align-items: center;
@@ -18,13 +18,9 @@
   color: var(--editor-text);
   width: calc(100% - 32px);
   max-width: 840px;
-  /* In vh and in the backdrop's own height, not dvh: a WebView2 older than
-     Chromium 108 (a Windows 10 machine that isn't updated) doesn't know
-     dvh and dropped both lines, so the panel grew to its content's height,
-     centred past both window edges with nothing to scroll (#260). The
-     backdrop starts under the window bar, so a percentage also keeps
-     the header clear of it. The other dialogs are sized the same way
-     (ui/dialog-sizing.test.ts). */
+  /* vh and %, not dvh: an older WebView2 drops dvh lines entirely, and the
+     panel then grows past both window edges. The % keeps the header clear of
+     the window bar. */
   height: min(82vh, 720px);
   max-height: calc(100% - 32px);
   display: flex;
@@ -61,9 +57,8 @@
   min-height: 0;
 }
 
-/* As wide as the longest category name needs, within bounds: a German or
-   Russian "Editor & Appearance" gets room for one line, and a name longer
-   still wraps (hyphenated where the language allows) inside the cap. */
+/* As wide as the longest category name needs, within bounds; longer names
+   wrap inside the cap. */
 .settings-sidebar {
   min-width: 176px;
   max-width: 232px;
@@ -82,8 +77,7 @@
   overflow-y: auto;
 }
 
-/* The search box above the categories, drawn as the sidebar's file search
-   is (sidebar/FileTree.css). */
+/* The search box above the categories, drawn like the sidebar's file search. */
 .settings-search {
   display: flex;
   align-items: center;
@@ -151,9 +145,8 @@
   padding: 4px 4px 0;
 }
 
-/* The row a result led to, tinted for a moment and fading back: a tint
-   laid over the row, a little wider than its text, whose opacity fades -
-   no movement, so reduced motion keeps it. */
+/* The row a result led to, tinted for a moment and fading back: opacity
+   only, so reduced motion keeps it. */
 .settings-search-hit {
   position: relative;
 }
@@ -204,10 +197,8 @@
   font-weight: 500;
 }
 
-/* An invisible bold copy of the label holds every item at its active
-   width: the nav is as wide as its longest label, so when that label
-   turned bold the nav grew a few pixels and the page beside it narrowed
-   (Russian, 198 -> 201 px). */
+/* An invisible bold copy of the label holds each item at its active width,
+   so the nav doesn't grow when a label turns bold. */
 .settings-nav-item::after {
   content: attr(data-label);
   display: block;
@@ -224,21 +215,15 @@
   overscroll-behavior: contain;
   flex: 1;
   min-width: 0;
-  /* The scrollbar's room is always kept, so a page that scrolls is as wide
-     as one that doesn't. The gutter alone isn't enough in WebKit: it keeps
-     no room for a scrollbar styled with ::-webkit-scrollbar (ours, in
-     design-system.css, 10 px), and older versions ignore the property
-     altogether - a long page came in 10 px narrower than a short one.
-     With nothing to scroll the track stays empty and transparent. */
+  /* Keeps the scrollbar's room so long and short pages are the same width.
+     The gutter alone isn't enough in WebKit with a ::-webkit-scrollbar style. */
   scrollbar-gutter: stable;
   overflow-y: scroll;
   padding: 24px 28px 32px;
 }
 
-/* Information architecture: each group is a quiet inset card - the title
-   floats above it, rows live inside it, and the ONLY rules anywhere are the
-   faint hairlines between adjacent rows of the same card. No group-to-group
-   separators, no full-width rules in open space, no double borders. */
+/* Each group is a quiet inset card: the title above it, rows inside, and the
+   only rules are the hairlines between rows of the same card. */
 .settings-group + .settings-group {
   margin-top: 24px;
 }
@@ -251,8 +236,7 @@
   overflow: hidden;
 }
 
-/* The triangle is drawn: the native marker is a glyph that iOS's font stack lacks, which showed as a missing-character
-   box. */
+/* The triangle is drawn: iOS's font stack lacks the native marker's glyph. */
 .settings-advanced > summary {
   display: flex;
   align-items: center;
@@ -311,16 +295,15 @@
   border-radius: var(--radius-surface);
 }
 
-/* The one divider in the design: an inset hairline between adjacent rows of
-   a card (fragments flatten sections into direct children, so this covers
-   every settings.* row and section root alike). */
+/* The one divider: an inset hairline between adjacent rows of a card.
+   Fragments flatten sections into direct children, so this covers them all. */
 .settings-group-body > * + *,
 .provider-picker > * + * {
   border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
 }
 
-/* Every row: the setting's name on the left, its control on the right
-   (sections/controls.tsx's SettingRow), one height throughout. */
+/* Every row: the setting's name on the left, its control on the right, one
+   height throughout. */
 .settings-row {
   display: flex;
   align-items: center;
@@ -392,9 +375,8 @@ button.settings-danger-button {
   font-size: var(--text-lg);
 }
 
-/* Only the few rows that need one have a hint - a value (the folder in
-   use, a fetched-on date) or a live status. Explanations go behind the
-   row's "?" (ui/InfoTip.tsx) instead. */
+/* Only rows that show a value or a live status have a hint; explanations go
+   behind the row's "?". */
 .settings-row-hint {
   color: var(--editor-muted);
   font-size: var(--text-md);
@@ -404,9 +386,8 @@ button.settings-danger-button {
   overflow-wrap: anywhere;
 }
 
-/* The sign-in page's address, for when no browser opened: selectable in
-   full (the rest of Settings is not), wrapping anywhere - it is one long
-   word. */
+/* The sign-in page's address, for when no browser opened: selectable, and
+   wrapping anywhere since it is one long word. */
 .settings-login-url {
   display: block;
   margin-top: 6px;
@@ -421,8 +402,7 @@ button.settings-danger-button {
   -webkit-user-select: text;
 }
 
-/* Toggles render as switches, not native checkboxes - the single clearest
-   "this is a settings panel" affordance, and it reads at a glance. */
+/* Toggles render as switches, not native checkboxes. */
 .settings-row input[type="checkbox"] {
   /* The thumb, and how far it travels (the phone's are UIKit's sizes). */
   --switch-thumb: 17px;
@@ -441,8 +421,8 @@ button.settings-danger-button {
   transition: background-color var(--dur-base) var(--ease-standard);
 }
 
-/* The thumb lands with UISwitch's slight overshoot. Reduced motion: it
-   jumps (a travel of 0), and only the track's colour fades. */
+/* The thumb lands with UISwitch's slight overshoot; reduced motion jumps
+   it, and only the track's colour fades. */
 .settings-row input[type="checkbox"]::after {
   content: "";
   position: absolute;
@@ -497,8 +477,7 @@ button.settings-inline-button {
   background: var(--bg);
 }
 
-/* A row with two actions (switch / reset), stacked so a long folder path
-   next to them still has room to breathe. */
+/* A row with two actions, stacked so a long folder path beside them has room. */
 .settings-inline-buttons {
   display: flex;
   flex-direction: column;
@@ -506,8 +485,8 @@ button.settings-inline-button {
   flex-shrink: 0;
 }
 
-/* The resolved project folder. A path is long and matters exactly, so it
-   gets its own line in a mono face rather than being squeezed into the hint. */
+/* The resolved project folder gets its own mono line: a path is long and
+   matters exactly. */
 .shortcut-row-controls {
   display: flex;
   align-items: center;
@@ -574,17 +553,15 @@ button.settings-inline-button {
   font-size: var(--text-md);
 }
 
-/* Inline error/success banners sit between card rows; they carry their own
-   left accent, so suppress the row hairline directly above them. */
+/* Inline banners carry their own left accent, so drop the row hairline
+   above them. */
 .settings-group-body > .settings-error,
 .settings-group-body > .settings-success {
   border-top: none;
 }
 
-/* Every <select> in Settings uses this class - a native select otherwise
-   renders with no border/background at all outside `.settings-row`. The
-   native dropdown arrow is replaced (appearance:none) with a drawn chevron
-   matching the app's iconography. */
+/* Every <select> in Settings uses this class: outside `.settings-row` a
+   native select has no border or background. The arrow is a drawn chevron. */
 .settings-select {
   min-width: 0;
   max-width: 100%;
@@ -785,8 +762,7 @@ button.settings-inline-button {
   flex-shrink: 0;
 }
 
-/* Expanded credentials: indented behind an accent-tinted rail, the same
-   "dependent detail" language the AI tab's sub-options use. */
+/* Expanded credentials: indented behind an accent-tinted rail. */
 .provider-picker > .provider-panel {
   border-top: none;
 }
@@ -803,8 +779,8 @@ button.settings-inline-button {
   padding: 9px 0;
 }
 
-/* Account vs API key: a segmented control instead of underline tabs - one
-   fewer horizontal rule, and the choice reads as the mode switch it is. */
+/* Account vs API key: a segmented control, which reads as the mode switch
+   it is. */
 .auth-tabs {
   display: inline-flex;
   gap: 2px;
@@ -846,16 +822,14 @@ button.settings-inline-button {
   padding: 12px 0;
 }
 
-/* Label on top, then the controls, then their note - for a field whose
-   controls (a model picker and its fetch button) need the row's width. */
+/* Label on top, then the controls, then their note, for controls that need
+   the row's width. */
 .settings-field-label {
   font-size: var(--text-md);
   color: var(--editor-text);
   flex-shrink: 0;
 }
 
-/* Vertical variant of .settings-field: label + hint stacked over a full-
-   width control (the completion custom prompt textarea). */
 /* Proxy setting: type select + host + port on one line. */
 .settings-proxy-row {
   display: flex;
@@ -873,8 +847,8 @@ button.settings-inline-button {
   flex: 0 0 72px;
 }
 
-/* Global skills as read-only rows: /name + description. Managed as files -
-   this list is a mirror, plus the import button above it. */
+/* Global skills as read-only rows: /name + description. They are managed as
+   files; this list is a mirror. */
 .settings-skill-list {
   display: flex;
   flex-direction: column;
@@ -905,6 +879,22 @@ button.settings-inline-button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* The modes a skill of the user's works in, at the end of its line. */
+.settings-skill-modes {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+  flex: none;
+  color: var(--editor-muted);
+}
+
+.settings-skill-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 /* "Replaces a built-in skill", "This project", "Customized": a quiet pill
@@ -960,8 +950,8 @@ button.settings-inline-button {
   gap: 4px;
 }
 
-/* Customize… / Open / Reset: words, not boxed buttons - nineteen rows of
-   boxes outweighed the skills they belong to. */
+/* Customize… / Open / Reset: words, not boxed buttons, so the actions don't
+   outweigh the skills. */
 button.settings-skill-action {
   width: auto;
   margin: 0;
@@ -999,8 +989,6 @@ button.settings-skill-action:focus-visible {
   border-top: none;
 }
 
-/* The agent-workspace explainer needs room to wrap - it's a paragraph, not
-   a one-line hint. */
 .custom-model-row {
   display: flex;
   align-items: center;
@@ -1040,8 +1028,7 @@ button.settings-skill-action:focus-visible {
     margin: 8px 8px 0;
   }
 
-  /* One row of tabs that scrolls sideways, rather than wrapping onto a
-     second line when the labels don't fit (narrow windows, the iPhone). */
+  /* One row of tabs that scrolls sideways rather than wrapping. */
   .settings-nav {
     flex-direction: row;
     flex-wrap: nowrap;
@@ -1248,7 +1235,7 @@ button.settings-skill-action:focus-visible {
   justify-content: flex-end;
 }
 
-/* Settings › About (sections/about.tsx): the app on its own, centred. */
+/* Settings › About: the app on its own, centred. */
 .settings-about {
   display: flex;
   flex-direction: column;
@@ -1313,8 +1300,8 @@ button.settings-skill-action:focus-visible {
   border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
 }
 
-/* Extensions › Themes › Get themes (sections/theme-gallery.tsx): each
-   theme is an ordinary settings row with its screenshot in front. */
+/* Extensions › Themes › Get themes: each theme is an ordinary settings row
+   with its screenshot in front. */
 .theme-gallery-item {
   display: flex;
   align-items: center;

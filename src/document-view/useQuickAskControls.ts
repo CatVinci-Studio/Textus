@@ -37,33 +37,25 @@ export function useQuickAskControls({
   agentPanel: AgentPanelFrame;
   handleDetachChat: () => void;
 }) {
-  // What Ask AI means, from every entry point: Quick Ask opens at the caret,
-  // whatever the panel or a detached window is doing - it has its own
-  // conversation, so there is nothing to race. The shortcut additionally
-  // closes a Quick Ask whose composer already has focus, so pressing it
-  // twice is "open, then put away".
-  // Closing, and starting a new conversation, are guarded: with edits still
-  // undecided the panel asks first (CloseConfirmBar), from every entry point.
+  // Quick Ask opens at the caret whatever the panel is doing: it has its own
+  // conversation. Closing or starting anew with undecided edits asks first.
   const [chatGuard, setChatGuard] = useState<"close" | "new" | null>(null);
 
-  // The question is moot once the panel is gone (detached, say) or its
-  // edits are all decided some other way - in the document, for instance.
+  // The question is moot once the panel is gone or its edits are decided.
   const decidableCount = pendingEdits.decidable.length;
   useEffect(() => {
     if (!inlineChat.visible || decidableCount === 0) setChatGuard(null);
   }, [inlineChat.visible, decidableCount]);
 
-  // Where the Quick Ask panel renders: the zone widget in the document, or
-  // on a phone the page itself, docked - for the active tab only, since
-  // the page is shared by every tab's editor.
+  // On a phone Quick Ask docks to the page, which every tab shares, so only
+  // the active tab renders it there.
   const quickAskHost = phone ? (isActive ? document.body : null) : quickAskEl;
   const chatComposer = () =>
     quickAskHost?.querySelector<HTMLTextAreaElement>(".inline-chat textarea") ??
     null;
 
-  /** Docked Quick Ask: keeps what it is about - the edit under review, the
-   *  first one proposed, else the passage it was opened on - above the
-   *  panel as the panel opens and grows. */
+  /** Docked Quick Ask: keeps its subject above the panel as it opens and
+   *  grows. */
   function keepQuickAskTargetInView(first: boolean) {
     const info = inlineChat.chatInfo;
     const target =
@@ -81,8 +73,8 @@ export function useQuickAskControls({
   function performChatAction(action: "close" | "new") {
     setChatGuard(null);
     if (action === "close") {
-      // Closing while a reply is still running stops it: otherwise previews
-      // kept appearing in the document with no panel left to decide them.
+      // Closing mid-reply stops it, or previews keep arriving with no panel
+      // to decide them.
       if (quickConversation.busy) quickConversation.stop();
       inlineChat.close();
       focusEditor();
@@ -125,12 +117,8 @@ export function useQuickAskControls({
     }
   }
 
-  // Quick Ask's "continue in the panel": its exchange becomes the full
-  // conversation - in the docked panel, or the detached window when the
-  // user prefers it there (Settings > Textus AI > Advanced) - and from then
-  // on is saved to History like any other. The panel's previous
-  // conversation is already in History. Not while either side is
-  // mid-reply: the turns would be incomplete.
+  // "Continue in the panel": the exchange becomes the full conversation,
+  // saved to History. Not mid-reply: the turns would be incomplete.
   function expandQuickAsk() {
     if (quickConversation.busy || conversation.busy) return;
     if (quickConversation.history.length > 0) {

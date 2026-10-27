@@ -19,11 +19,9 @@ interface MdastNode {
 
 /**
  * Pandoc's rule for single-dollar math, on top of remark-math (which pairs
- * any two dollars): the opening `$` needs a non-space right after it, the
- * closing one a non-space right before it and no digit right after it. So
- * "about $4) and round's $19" and "$5 and $6" stay prices, as they do in
- * Pandoc, Typora and GitHub, instead of one long italic formula. A pair
- * that breaks the rule goes back to the text it was written as.
+ * any two dollars): no space just inside either `$`, no digit right after
+ * the closing one. So "$5 and $6" stay prices; a pair breaking it goes back
+ * to text.
  */
 export function revertCurrencyDollars(tree: MdastNode, source: string): void {
   const walk = (node: MdastNode) => {
@@ -46,9 +44,8 @@ export function revertCurrencyDollars(tree: MdastNode, source: string): void {
 }
 
 /**
- * Records how many dollars an inline formula was written with, as
- * `data.mathDelimiter`, when it is more than one: mdast writes the fewest
- * that work, so an inline `$$x$$` was saved as `$x$`.
+ * Records a formula's dollar count as `data.mathDelimiter` when it is more
+ * than one: mdast writes the fewest that work, so `$$x$$` saved as `$x$`.
  */
 function recordDollarRuns(tree: MdastNode, source: string): void {
   const walk = (node: MdastNode) => {
@@ -93,9 +90,8 @@ export const mathInlineSchema = $nodeSchema("math_inline", () => ({
   group: "inline",
   inline: true,
   marks: "",
-  // As written in the file: "$" (the default, and all the editor makes),
-  // "$$" (see recordDollarRuns), or LaTeX's `\(` or `\[` (see
-  // latex-math-syntax.ts).
+  // As written in the file: "$" (all the editor makes), "$$", or LaTeX's `\(`
+  // or `\[`.
   attrs: { delimiter: { default: "$", validate: "string" } },
   parseDOM: [
     {
@@ -118,8 +114,8 @@ export const mathInlineSchema = $nodeSchema("math_inline", () => ({
   ],
   parseMarkdown: {
     match: (node) => node.type === "inlineMath",
-    // Added whole, like inline code (md-span-schema.ts): closeNode would
-    // drop a surrounding link for the text after the formula.
+    // Added whole, like inline code: closeNode would drop a surrounding link
+    // for the text after the formula.
     runner: (state, node, type) => {
       const value = node.value as string | undefined;
       const delimiter = delimiterOf(node);
@@ -150,8 +146,7 @@ export const mathBlockSchema = $nodeSchema("math_block", () => ({
   marks: "",
   code: true,
   defining: true,
-  // "$$" (the default) or `\[` - see latex-math-syntax.ts - and, for `\[`,
-  // whether it shared one line with its formula: `\[x\]`.
+  // "$$" or `\[`, and for `\[` whether it shared one line with its formula.
   attrs: {
     delimiter: { default: "$$", validate: "string" },
     oneLine: { default: false, validate: "boolean" },
@@ -166,11 +161,8 @@ export const mathBlockSchema = $nodeSchema("math_block", () => ({
       }),
     },
   ],
-  // Wrapped in an outer div so the editing state (enclosure.ts's
-  // .math-block-revealed, which decorates the node's OUTERMOST DOM
-  // regardless of this nesting) can get its own panel styling in
-  // milkdown-theme.css, independent of the inner div's white-space/content
-  // handling.
+  // Wrapped in an outer div so the revealed state, which decorates the
+  // node's outermost DOM, gets its own panel styling.
   toDOM: (node) => [
     "div",
     { class: "math-block-wrapper" },
@@ -229,10 +221,8 @@ export const mathBlockSchema = $nodeSchema("math_block", () => ({
   },
 }));
 
-// Fallback for "$formula$" arriving as a single bulk insertion (e.g. paste)
-// rather than character-by-character typing - the normal typing path is
-// math-autopair-plugin's "$" auto-pairing, which handles closing a pair one
-// keystroke at a time and never reaches this rule.
+// Fallback for "$formula$" arriving in one insertion (a paste); typing goes
+// through the "$" autopair and never reaches this rule.
 export const mathInlineInputRule = $inputRule(
   (ctx) =>
     new InputRule(

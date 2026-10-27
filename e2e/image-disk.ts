@@ -2,11 +2,9 @@ import { expect, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * A document opened from a stand-in disk, for the image flows
- * (missing-image.spec.ts, image-menu.spec.ts): opened the way a dropped
- * file is, so relative srcs have a folder to resolve against, with the
- * backend's file questions answered from `Disk` and the commands that
- * would reach outside the page recorded instead (calls()).
+ * A document opened from a stand-in disk for the image flows: opened as a
+ * dropped file is, so relative srcs resolve, with the backend's file
+ * questions answered from `Disk` and outbound commands recorded instead.
  */
 
 export const editor = '[data-active-tab="true"] .ProseMirror';

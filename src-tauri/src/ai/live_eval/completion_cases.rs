@@ -1,16 +1,7 @@
-//! More completion contexts, above all Chinese and English everyday
-//! writing: emails, reports, academic and technical prose, meeting notes,
-//! essays, fiction narration and dialogue (including inside an open
-//! quote), poetry (lines as paragraphs, and lines joined by hard breaks),
-//! an empty paragraph after a heading or a long section, list items, table
-//! cells and code; a list item and another block in every other matrix
-//! language; and completions under a style profile.
-//!
-//! The before-text is what the editor sends (ghost-text-plugin.ts's
-//! completionContext): textBetween with blocks joined by a blank line and a
-//! hard break as "\n" - no Markdown markers. As-you-type requests ("short")
-//! only fire at the end of the document's last block (no after-text); the
-//! manual trigger is always "long" with three candidates.
+//! More completion contexts, above all Chinese and English everyday writing,
+//! poetry, empty paragraphs, list items, table cells, code, and completions
+//! under a style profile. The before-text is plain text as the editor sends
+//! it; as-you-type requests fire only at the end of the last block.
 
 use super::checks::Lang;
 use super::completion_matrix::CompletionCase as C;

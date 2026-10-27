@@ -3,12 +3,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 /**
- * The file-backed storage path (src-tauri/src/settings.rs): the page is
- * booted the way Rust boots a real window - the boot script itself
- * (src-tauri/src/boot.js) runs first with a snapshot - and the dev shim
- * stands in for the store behind the commands, exposing its state as
- * `window.__devStorage`. Every other spec runs without a snapshot, on the
- * localStorage fallback.
+ * The file-backed storage path: the real boot script runs first with a
+ * snapshot, and the dev shim's store is exposed as `window.__devStorage`.
+ * Every other spec runs on the localStorage fallback.
  */
 
 const BOOT_JS = readFileSync(
@@ -21,7 +18,7 @@ interface DevStorage {
   patches: Record<string, unknown>[];
   fills: Record<string, unknown>[];
   /** Every command in order, plus "<command>:done" for each storage write
-   *  answered (dev/tauri-shim.ts). */
+   *  answered. */
   log: string[];
   uiState: Record<string, unknown>;
   histories: Record<string, { text?: string }[]>;
@@ -62,9 +59,7 @@ async function bootLikeRust(
           __textusBoot: (boot: unknown, css: unknown) => void;
         }
       ).__textusBoot(snapshot, themeCss);
-      // What the document looked like before any of the app's own code
-      // ran: "interactive" is reached once the HTML is parsed, before the
-      // (deferred) module scripts execute.
+      // "interactive" comes before the deferred module scripts run.
       document.addEventListener("readystatechange", () => {
         if (document.readyState !== "interactive") return;
         const root = document.documentElement;
@@ -262,8 +257,7 @@ test("a setting typed just before the window closes still reaches Rust", async (
   await openApp(page);
   const css = await customCssField(page);
   await css.fill("p { color: red; }");
-  // Closed at once, with the patch still on its way to Rust - the way the
-  // close button, Close Window and Quit all reach a window.
+  // Closed at once, with the patch still on its way to Rust.
   await emit(page, "tauri://close-requested", null);
   await expect
     .poll(async () => (await devStorage(page)).log)
@@ -338,9 +332,8 @@ test("the detached chat window also waits for its writes before it closes", asyn
 test("a window booted with no settings fills in defaults, never over newer values", async ({
   page,
 }) => {
-  // After a corrupt settings.json was moved aside, the window booted with
-  // an empty snapshot - and a reload replays that same snapshot, while Rust
-  // holds everything the user has changed since.
+  // After a corrupt settings.json, a reload replays the empty snapshot while
+  // Rust holds everything changed since.
   await shimOptions(page, { liveSettings: SETTINGS });
   await bootLikeRust(page, { settings: {} });
   await openApp(page);
@@ -358,8 +351,8 @@ test("a window booted with no settings fills in defaults, never over newer value
   expect(stored.patches.filter((p) => "theme" in p)).toEqual([]);
 });
 
-/** An imported theme, and the app chrome colours the frontend last derived
- *  from it (theme/theme-chrome.ts), as ui-state.json remembers them. */
+/** An imported theme, and the chrome colours last derived from it, as
+ *  ui-state.json remembers them. */
 const THEME_CSS = "#write { color: rgb(1, 2, 3); }";
 const CHROME = ":root { --sidebar-bg: rgb(10, 20, 30) !important; }";
 const themed = (theme: string) => ({

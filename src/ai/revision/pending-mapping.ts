@@ -10,11 +10,8 @@ import type {
 } from "./pending-types";
 import { animations } from "./pending-animation";
 
-/**
- * Proposals kept in place as the document changes: previews mapped
- * through each transaction, rebased over the writer's own edits, their
- * streamed changes and undo history kept in step (pending-edit-plugin.ts).
- */
+/** Keeps proposals in place as the document changes, rebased over the
+ *  writer's own edits. */
 
 /** Accepts remembered for undo - older ones are rarely undone that far. */
 export const MAX_APPLIED = 20;
@@ -51,13 +48,8 @@ export function replayHistory(
   return { previews: [...others, ...back], applied };
 }
 
-/**
- * The previews carried through a document change: each range (strike
- * included) mapped through the transaction, and any whose mapped range no
- * longer holds the text it was resolved against dropped - an edit inside
- * or around a pending change invalidates it rather than risk applying it
- * to the wrong text later. `changed` says whether anything moved or went.
- */
+/** The previews mapped through a change; any whose range no longer holds
+ *  its text is dropped rather than risk applying it to the wrong text. */
 export function mapPreviews(
   previews: PendingPreview[],
   tr: Transaction,
@@ -118,21 +110,9 @@ export function mapPreviews(
   return { survivors, changed };
 }
 
-/**
- * A preview whose text the writer changed (`text`, as it now reads),
- * carried on rather than dropped where that can be done without touching
- * what they wrote - null where it can't:
- *
- * - decided sentence by sentence: each change stands while its own
- *   original reads as it did; one whose original they changed is set aside
- *   (`parked`), and back if it reads so again (an undo); none left, it goes;
- * - still streaming in, a rewrite: its original's ranges follow the edit,
- *   and the completed call is found again sentence by sentence against the
- *   text as it then is (usePendingEdits' `rebasedSentences`).
- *
- * Anything else - shown and decided whole - goes, as before: its Accept
- * writes the whole range, the writer's edit with it.
- */
+/** A preview whose text the writer changed, carried on where that leaves
+ *  their edit alone; null otherwise. A change whose original they edited is
+ *  parked until it reads so again. */
 export function rebase(
   p: PendingPreview,
   doc: ProseNode,
@@ -166,10 +146,8 @@ export function rebase(
   };
 }
 
-/** The previews with each streaming rewrite's completed changes as last
- *  drawn (PendingPreview.streamChanges): a new preview only when they
- *  changed, so React hears of each change as it completes, not of every
- *  frame of the sentence being written. */
+/** The previews with each streaming rewrite's completed changes; a new
+ *  preview only when they changed, so React doesn't hear every frame. */
 export function withStreamChanges(
   previews: PendingPreview[],
 ): PendingPreview[] {

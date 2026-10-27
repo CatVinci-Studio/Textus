@@ -1,20 +1,8 @@
 import { isPicture } from "../doc-blocks";
 import { markdownBlockKind } from "./block-reader";
 
-/**
- * The Markdown a revision is compared and found by, in one place: which
- * blocks are changed whole rather than sentence by sentence, when two
- * ways of writing a thing are the same thing, and what a piece's text is
- * in the document - where Markdown marks show nothing.
- *
- * A rewrite is diffed as Markdown (sentence-diff.ts) and found in the
- * document as rendered text (sentence-locate.ts). The document reaches the
- * model as the editor writes it (`<https://…>`, `***`, padded tables) and
- * comes back as the model writes it (`https://…`, `---`, `|a|b|`); a mark
- * like a footnote's `[^1]` is a node with no text. Each difference left
- * out here made a rewrite of a whole document one block and one card, or
- * a change of nothing (rc.6).
- */
+/** The Markdown forms a revision is compared and found by: the editor and
+ *  the model write the same thing differently (`***` vs `---`). */
 
 export { isPicture };
 
@@ -45,14 +33,8 @@ const WHOLE = new Set<string>([
   "html",
 ]);
 
-/**
- * What kind of block `block` (one block of text) is, when it is one a
- * rewrite changes whole rather than by sentence: a picture, a table, a
- * code or maths block, a footnote's or a link's definition, a rule, an
- * HTML block - as the editor's parser reads it (block-reader.ts), the
- * reading the document's own blocks have. Null for prose (a paragraph, a
- * heading, a list, a quote). An `<img>` is a picture given a width.
- */
+/** The kind of `block` when a rewrite changes it whole rather than by
+ *  sentence; null for prose. An `<img>` is a picture given a width. */
 export function wholeBlockKind(block: string): WholeBlockKind | null {
   const text = block.trim();
   if (!text) return null;
@@ -61,16 +43,8 @@ export function wholeBlockKind(block: string): WholeBlockKind | null {
   return kind && WHOLE.has(kind) ? (kind as WholeBlockKind) : null;
 }
 
-/**
- * A sentence or block as it is compared: two that differ only in how the
- * same thing is written have the same key - an autolink's brackets, a
- * rule's characters, a table's padding and its dashes.
- *
- * Every backslash escape is dropped too, on purpose: the editor escapes a
- * `*` or `_` it writes as text (`\*`), and a model writing the same
- * sentence back leaves it bare. The two read alike; only the key forgets
- * the difference - the text applied is the model's, as written.
- */
+/** A comparison key, the same for two ways of writing one thing. Backslash
+ *  escapes go too: the editor escapes `\*`, a model writes it bare. */
 export function formKey(markdown: string): string {
   const text = markdown.trim();
   const kind = wholeBlockKind(text);
@@ -90,12 +64,8 @@ export function formKey(markdown: string): string {
     .join("\n");
 }
 
-/**
- * `markdown` as its text shows in the document, for finding it there: a
- * footnote's mark is a node with no text, and a reference link shows its
- * words without the reference (parsed alone, with no definition, both
- * were kept as written and never found).
- */
+/** `markdown` as its text shows in the document: footnote marks and link
+ *  references show no text there. */
 export function matchableMarkdown(markdown: string): string {
   return markdown
     .replace(/\[\^[^\]\s]+\](?!:)/g, "")
@@ -126,12 +96,8 @@ export function blockNames(t: {
   };
 }
 
-/**
- * What a card says for a change of a whole block, `markdown`, as Markdown
- * to draw inline: a table or a picture isn't drawn whole in a line of a
- * card, its kind (and a picture's description) is; a footnote's definition
- * is its raised label and its words. Null for prose, which is its text.
- */
+/** What a card says for a whole-block change, as inline Markdown: a table
+ *  or picture by its kind. Null for prose. */
 export function blockSummary(
   markdown: string,
   names: BlockNames,

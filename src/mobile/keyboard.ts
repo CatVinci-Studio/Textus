@@ -1,8 +1,6 @@
 /**
- * Whether the iOS keyboard is up, read off the window's height: the web
- * view is shortened by the keyboard's height while it shows
- * (KeyboardFit.swift), so the window is then well short of the tallest it
- * has been at this width. A rotation (a new width) starts over.
+ * Whether the iOS keyboard is up, read off the window's height: the web view
+ * shrinks by the keyboard's height. A rotation (a new width) starts over.
  */
 let tallest = 0;
 let width = 0;

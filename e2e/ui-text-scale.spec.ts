@@ -1,9 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown, SAMPLE_DOC } from "./helpers";
 
-// Settings › Editor & Appearance › Interface Text Size scales the app's own
-// text - sidebar, tabs, AI panel, Settings - and leaves the document's
-// alone, which has its own zoom (#150).
+// Interface Text Size scales the app's own text and leaves the document's
+// alone, which has its own zoom.
 
 function emit(page: Page, name: string, payload?: unknown) {
   return page.evaluate(

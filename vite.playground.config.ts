@@ -4,12 +4,8 @@ import { katexWoff2Only } from "./vite.katex-fonts";
 import { colorMixFallback } from "./vite.color-mix-fallback";
 
 /**
- * The browser playground (src/playground/): the editor alone, served from
- * textus.catvinci.com/playground/. Its own build, into dist-playground/, so
- * the app's `npm run build` and dist/ stay exactly as they are.
- *
- *   npm run build:playground   builds dist-playground/playground/
- *   npm run dev:playground     serves it at http://localhost:1450/playground/
+ * The browser playground: the editor alone, served at /playground/. Its own
+ * build, so the app's build and dist/ stay as they are.
  */
 
 const ENTRY = "playground.html";
@@ -39,6 +35,8 @@ export default defineConfig({
   plugins: [react(), katexWoff2Only(), servedAsIndex()],
   css: { postcss: { plugins: [colorMixFallback()] } },
   base: "/playground/",
+  // The platform modules' browser stand-ins.
+  define: { "import.meta.env.TEXTUS_BROWSER": "true" },
   // public/ holds the app's files.
   publicDir: false,
   clearScreen: false,
@@ -47,8 +45,7 @@ export default defineConfig({
   // optimizing into one cache reloaded each other's pages mid-test.
   cacheDir: "node_modules/.vite-playground",
   build: {
-    // dist-playground/ is the site root the Worker serves
-    // (wrangler.playground.jsonc), so the files sit under /playground/ there.
+    // dist-playground/ is the site root the Worker serves.
     outDir: "dist-playground/playground",
     emptyOutDir: true,
     rollupOptions: { input: ENTRY },

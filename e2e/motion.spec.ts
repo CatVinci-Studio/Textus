@@ -8,11 +8,9 @@ import {
 } from "./helpers";
 import { STORY, STORY_CLASSICAL } from "./revise-mock";
 
-// Motion with the animations ON (every other spec turns them off): menus,
-// dialogs, Settings and the AI panel still open and close, nothing stays
-// mounted after its exit (a Presence leak would leave an invisible, inert
-// layer over the app), and reduced motion turns travel and scale into
-// plain fades. ui/motion.css holds the tokens, ui/usePresence.ts the exits.
+// Motion with the animations on: surfaces still open and close, nothing
+// stays mounted after its exit (it would leave an inert layer over the app),
+// and reduced motion turns travel and scale into plain fades.
 
 /** Longest exit plus margin: a closed surface must be gone by then. */
 const GONE = { timeout: 600 };
@@ -247,9 +245,8 @@ test("the text column glides aside for the margin, on its transform", async ({
   await composer.fill("Classical Chinese, please");
   await composer.press("Enter");
   const frames = await sampling;
-  // The beside-the-panel window has to make room: the column moved over
-  // at once and slid there, rather than laying the text out again on
-  // every frame of a margin transition.
+  // The beside-the-panel window makes room by moving the column at once and
+  // sliding it, not by laying the text out again every frame.
   await expect(page.locator(".revision-note").first()).toBeVisible();
   expect(
     await page
@@ -271,8 +268,8 @@ test("the find bar keeps clear of the docked AI panel", async ({ page }) => {
   const panelBox = (await panel.boundingBox())!;
   const barBox = (await bar.boundingBox())!;
   expect(Math.round(panelBox.x - (barBox.x + barBox.width))).toBe(24);
-  // Told to the bar itself: on the app's shell, the whole window
-  // inherited it and restyled every element whenever it changed.
+  // Told to the bar itself: on the app's shell, the whole window would inherit
+  // it and restyle every element whenever it changed.
   expect(
     await page
       .locator(".app-shell")

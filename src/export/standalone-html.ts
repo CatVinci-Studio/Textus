@@ -20,15 +20,15 @@ import {
   MISSING_IMAGE_CLASS,
 } from "../editor/images/missing-image";
 import { CODE_LINE_NUMBERS_CLASS } from "../editor/code/code-line-numbers-plugin";
+import { placeDrawnPictures } from "./drawn-blocks";
 import {
   COLOR_SWATCH_CLASS,
   COLOR_SWATCH_TEXT_CLASS,
 } from "../editor/marks/color-swatch-classes";
 
 /**
- * The document as one HTML file (exporters.ts): the editor's content
- * cloned without its chrome, links as written, folded details opened,
- * tables fitted, pictures inlined, and the app's styles carried along.
+ * The document as one HTML file: the editor's content without its chrome,
+ * pictures inlined, and the app's styles carried along.
  */
 
 export function nextFrame(): Promise<void> {
@@ -51,12 +51,8 @@ export function collectInlinedCss(): string {
   return css;
 }
 
-// Editing affordances that live in the editor DOM but are not document
-// content: heading "#" markers, the code-block header (copy button and
-// language picker) and line numbers, colour swatches, table
-// insert buttons, delimiters shown around the caret, AI previews. Kept in
-// step with the @media print list in print.css, which hides the same chrome
-// when the webview's PDF renderer applies print media.
+// Editing affordances in the editor DOM that aren't document content. Keep
+// in step with print.css's @media print list.
 export const EDITOR_CHROME_SELECTOR = [
   ".heading-marker",
   ".enclosure-delimiter",
@@ -72,15 +68,18 @@ export const EDITOR_CHROME_SELECTOR = [
   ".image-resize-handle",
   // Front matter is metadata for tools, not part of the page.
   ".frontmatter-block",
-  // A missing image's card and its buttons: the page keeps the image as
-  // written (cloneEditorContent).
+  // A missing image's card: the page keeps the image as written.
   `.${MISSING_IMAGE_CARD_CLASS}`,
+  // Anything drawn for the editor alone (a plugin's badge).
+  "[data-editor-chrome]",
 ].join(", ");
 
-// A resized table carries pixel widths (an inline table width plus one per
-// <col>, see table-hover-view.ts) sized for the editor column. On a page
-// narrower than that column they overflow and are cut off at the page edge,
-// so the export keeps each column's share of the width instead.
+/** Marks over the text drawn for the editor alone (a plugin's highlight
+ *  or underline): the copy keeps their text, not them. */
+export const EDITOR_MARK_SELECTOR = "[data-editor-mark]";
+
+// A resized table carries pixel widths sized for the editor column, cut off
+// on a narrower page, so the export keeps each column's share instead.
 export function fitTablesToWidth(root: HTMLElement): void {
   root.querySelectorAll("table").forEach((table) => {
     table.style.width = "";
@@ -101,11 +100,9 @@ export function fitTablesToWidth(root: HTMLElement): void {
   });
 }
 
-// A <details> written around markdown shows in the editor as a head widget
-// with the document's own paragraphs below it, hidden while folded
-// (editor/html/details-fold.ts). A page has no editor to fold them, so they
-// go back inside one real <details>, which opens and closes by itself.
-// Innermost first, so a nested one moves into its parent whole.
+// Folded <details> are paragraphs hidden below a head widget in the editor;
+// a page puts them back inside one real <details>. Innermost first, so a
+// nested one moves into its parent whole.
 export function gatherDetails(root: HTMLElement): void {
   const heads = Array.from(
     root.querySelectorAll<HTMLDetailsElement>(`details[${DETAILS_HEAD_ATTR}]`),
@@ -135,15 +132,11 @@ export function gatherDetails(root: HTMLElement): void {
   root.querySelectorAll(`.${DETAILS_END_CLASS}`).forEach((el) => el.remove());
 }
 
-// Local images render through asset: URLs (image-plugin.ts), which resolve
-// only inside this app. A file exported next to the document wants the
-// markdown's own paths back ("document"); a self-contained render wants the
-// pixels themselves ("inline", see inlineImages, which reads each from the
-// file data-doc-src names - left on the image for it).
+// Local images render through app-only asset: URLs. "document" restores the
+// markdown's paths; "inline" embeds the pixels, read from data-doc-src.
 export type ExportImages = "document" | "inline";
 
-// A link shown as its Markdown while the caret is on it
-// (editor/markdown/link-reveal.ts).
+// A link shown as its Markdown while the caret is on it.
 export const LINK_SOURCE_SELECTOR = '[data-type="link_source"]';
 
 const renderHtml = lazyModule(
@@ -151,8 +144,7 @@ const renderHtml = lazyModule(
   () => import("../editor/markdown/render-html"),
 );
 
-// What draws a link shown as its Markdown, when the editor has one: the
-// renderer stays out of the entry chunk otherwise (see color-swatch-classes.ts).
+// Loaded only when the editor has such a link, to keep it out of the entry chunk.
 export async function linkRenderer(
   editor: Element,
 ): Promise<((markdown: string) => string) | undefined> {
@@ -171,6 +163,10 @@ export function cloneEditorContent(
     .querySelectorAll("[contenteditable]")
     .forEach((el) => el.removeAttribute("contenteditable"));
   clone.querySelectorAll(EDITOR_CHROME_SELECTOR).forEach((el) => el.remove());
+  clone
+    .querySelectorAll(EDITOR_MARK_SELECTOR)
+    .forEach((el) => el.replaceWith(...el.childNodes));
+  placeDrawnPictures(clone);
   // Without its card, a missing image is the <img> it always was.
   clone
     .querySelectorAll(`.${MISSING_IMAGE_CLASS}`)
@@ -192,8 +188,7 @@ export function cloneEditorContent(
   clone
     .querySelectorAll(`.${COLOR_SWATCH_TEXT_CLASS}`)
     .forEach((el) => el.replaceWith(...el.childNodes));
-  // A picture the editor loads only near the screen (a large document's)
-  // loads at once in the page made from this.
+  // A lazily loaded picture loads at once in the page.
   clone
     .querySelectorAll("img[loading]")
     .forEach((img) => img.removeAttribute("loading"));
@@ -209,9 +204,8 @@ export function cloneEditorContent(
   return clone.outerHTML;
 }
 
-// The file a document image's src names, decoded as the editor reads it
-// (image-plugin.ts's resolveImageSrc); null for a URL, or a relative src
-// with no folder on disk to resolve it in.
+// The file a document image's src names; null for a URL, or a relative src
+// with no folder on disk.
 export function localImagePath(
   src: string,
   docPath: string | null,
@@ -233,14 +227,10 @@ export function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-// Replaces every local image in `html` with a data URL, so a render in a
-// webview that has no asset protocol (the macOS PDF path), or a page opened
-// away from the document's folder, still shows it. Each is read from its
-// file on disk (data-doc-src, against `docPath`) rather than fetched back
-// through the webview, where a fetch the asset protocol didn't answer left
-// the picture an unloadable link, blank in the PDF. The fetch stays for an
-// image with no file to read (an iOS document's). An image that can't be
-// read is left as-is rather than failing the export.
+// Replaces every local image with a data URL, read from its file on disk
+// rather than fetched through the webview, where an unanswered asset fetch
+// left a blank picture. The fetch stays for images with no file (iOS).
+// An unreadable image is left as-is rather than failing the export.
 export async function inlineImages(
   html: string,
   docPath: string | null,
@@ -275,10 +265,8 @@ export async function inlineImages(
   return template.innerHTML;
 }
 
-// Wraps serialized editor content in a full themed document. `layoutCss` frees
-// it from the app's fixed-viewport layout (each export tunes its own page).
-// `light` renders the theme's light form whatever the app shows, for a page
-// printed on white (see pdfLayoutCss).
+// Wraps serialized editor content in a full themed document. `light` renders
+// the theme's light form, for a page printed on white.
 export function buildStandaloneHtml(
   base: string,
   contentHtml: string,
@@ -286,9 +274,8 @@ export function buildStandaloneHtml(
   light = false,
 ): string {
   const root = document.documentElement;
-  // Pin the appearance the page was exported in. Following the system
-  // (no data-theme) would let a reader's dark mode restyle the text while
-  // the diagrams keep the colours they were rendered with.
+  // Pin the exported appearance, or a reader's dark mode restyles the text
+  // while diagrams keep their rendered colours.
   const dataTheme = light
     ? "light"
     : (root.getAttribute("data-theme") ??
@@ -296,13 +283,14 @@ export function buildStandaloneHtml(
         ? "dark"
         : "light"));
   const contentTheme = root.getAttribute("data-content-theme");
-  // An imported theme switches Textus's own ornaments off (content-base.css);
-  // the export has to say so too, or they come back on the page.
+  // An imported theme switches Textus's own ornaments off; the export must too.
   const userTheme = root.hasAttribute("data-user-theme");
+  const imageAlign = root.getAttribute("data-image-align");
   const rootAttrs =
     (dataTheme ? ` data-theme="${escapeHtml(dataTheme)}"` : "") +
     (contentTheme ? ` data-content-theme="${escapeHtml(contentTheme)}"` : "") +
-    (userTheme ? " data-user-theme" : "");
+    (userTheme ? " data-user-theme" : "") +
+    (imageAlign ? ` data-image-align="${escapeHtml(imageAlign)}"` : "");
   return `<!doctype html>
 <html${rootAttrs}>
 <head>
@@ -317,13 +305,3 @@ export function buildStandaloneHtml(
 </body>
 </html>`;
 }
-
-// --- PDF export -------------------------------------------------------------
-//
-// PDF export never goes through a print dialog or a printer driver: the
-// themed document is laid out into A4 pages here and rendered straight to a
-// file natively - vector, selectable text (export_pdf_native in Rust:
-// WKWebView.createPDF on macOS, WebView2's PrintToPdf on Windows, WebKitGTK's
-// print-to-file on Linux). wry's window.print() was never an option on macOS
-// anyway - it drives a broken NSPrintPanel that flashes and self-dismisses
-// (tauri-apps/wry#713, tauri#6202).

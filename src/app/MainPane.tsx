@@ -1,6 +1,9 @@
-import { Suspense, type ComponentProps } from "react";
+import { Suspense, type ComponentProps, type CSSProperties } from "react";
 import { EditorPane } from "../document-view/EditorPane";
-import { canDragTabsBetweenWindows } from "../platform/capabilities";
+import {
+  canDragTabsBetweenWindows,
+  canUseWindows,
+} from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { SourceTextarea } from "../editor/modes/SourceTextarea";
@@ -8,24 +11,43 @@ import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import type { AgentMode } from "../settings/SettingsContext";
-import { PluginTabPane } from "../plugins/PluginWebview";
-import { WebPagePane } from "../plugins/WebPagePane";
-import { TabBar } from "./TabBar";
-import { useSplitPanes } from "./useSplitPanes";
-import { SplitDivider, splitGridStyles } from "./SplitDivider";
-import "./split-panes.css";
+import {
+  PluginListPane,
+  PluginTabPane,
+  WebPagePane,
+} from "../plugins/views/plugin-views";
+import { TabBar } from "./tabs/TabBar";
+import { useSplitPanes } from "./split/useSplitPanes";
+import { SplitDivider, splitGridStyles } from "./split/SplitDivider";
+import "./split/split-panes.css";
+import {
+  focusPane,
+  openBeside,
+  reorderInPane,
+  splitEditor,
+  type PaneIndex,
+} from "./split/split-layout";
+import { pullTab } from "./split/split-drop";
+import type { ContextMenuItem } from "../editor/ContextMenu";
+import { contributedContextItems } from "../ui/context-menu-items";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 
-// Split View renders the page as HTML beside the source: its Markdown
-// renderer loads when a tab first shows it, not with the window.
+// Its Markdown renderer loads when a tab first shows it, not with the window.
 const SplitView = lazyComponent(
   lazyModule("split-view", () => import("../editor/modes/SplitView")),
   (m) => m.SplitView,
 );
 
-/** The document column: the tab bar (when there is more than one tab to
- *  switch between) over every open tab's editor. */
+function pluginTabItems(
+  path: string | null,
+): (ContextMenuItem | "separator")[] {
+  const added = contributedContextItems("tab/context", { path });
+  return added.length ? ["separator", ...added] : [];
+}
+
+/** The document column: the tab bar over every open tab's editor. */
+
 export function MainPane({
   tabs,
   activeTabId,
@@ -34,6 +56,7 @@ export function MainPane({
   onClose,
   onAdd,
   onDetach,
+  onMoveToNewWindow,
   onReorder,
   previewTab,
   onChange,
@@ -47,7 +70,9 @@ export function MainPane({
   onActivate: (tabId: string) => void;
   onClose: (tabId: string) => void;
   onAdd: () => void;
-  onDetach: NonNullable<TabBarProps["onDetach"]>;
+  /** A tab pulled out of the window leaves for a window of its own (macOS). */
+  onDetach: (tabId: string) => void;
+  onMoveToNewWindow: (tabId: string) => void;
   onReorder: (tabId: string, index: number) => void;
   previewTab: TabBarProps["previewTab"];
   onChange: (tabId: string, markdown: string) => void;
@@ -62,54 +87,109 @@ export function MainPane({
     activeTabId,
     onAdd,
   );
-  const grid = split && splitGridStyles(split, showTabBar);
+  const grid = split && splitGridStyles(split);
   const paneOf = (id: string) =>
     split?.panes[0] === id ? "first" : split?.panes[1] === id ? "second" : null;
+  const byId = new Map(tabs.map((tab) => [tab.id, tab]));
+  const tabBar = (
+    list: DocTab[],
+    active: string,
+    pane: PaneIndex | null,
+    style?: CSSProperties,
+  ) => (
+    <TabBar
+      key={pane ?? "window"}
+      style={style}
+      tabs={list.map((tab) => ({
+        id: tab.id,
+        title: tabTitle(tab, t),
+        dirty: tabIsDirty(tab),
+      }))}
+      activeTabId={active}
+      onActivate={onActivate}
+      onClose={onClose}
+      onAdd={() => {
+        if (pane !== null) focusPane(pane);
+        onAdd();
+      }}
+      // Pulled over the documents it splits; out of the window it tears
+      // off where the platform gives global cursor positions.
+      onPullOut={(id, title) =>
+        pullTab(id, title, {
+          tabIds: tabs.map((tab) => tab.id),
+          activate: onActivate,
+          detach: canDragTabsBetweenWindows ? onDetach : undefined,
+          releaseOutside:
+            canUseWindows && !canDragTabsBetweenWindows
+              ? onMoveToNewWindow
+              : undefined,
+        })
+      }
+      onReorder={
+        pane === null
+          ? onReorder
+          : (id, index) => reorderInPane(pane, id, index)
+      }
+      previewTab={pane === 1 ? null : previewTab}
+      menuFor={(id) => [
+        {
+          label: t.openBeside,
+          // The tab in front splits with its neighbour; another one
+          // opens beside it.
+          onSelect: () =>
+            id === activeTabId && !split
+              ? splitEditor("row")
+              : openBeside(id, activeTabId),
+        },
+        ...(canUseWindows
+          ? [
+              {
+                label: t.moveToNewWindow,
+                onSelect: () => onMoveToNewWindow(id),
+              },
+            ]
+          : []),
+        "separator",
+        { label: t.menuCloseTab, onSelect: () => onClose(id) },
+        ...pluginTabItems(byId.get(id)?.path ?? null),
+      ]}
+      labels={{
+        tabs: t.menuDocuments,
+        close: t.menuCloseTab,
+        add: t.menuNewTab,
+        unsaved: t.unsavedIndicator,
+      }}
+    />
+  );
+  const paneTabs = (pane: PaneIndex) =>
+    (split?.groups[pane] ?? []).flatMap((id) => byId.get(id) ?? []);
   return (
     <main
       className={split ? "main-pane main-pane-split" : "main-pane"}
       data-split={split?.direction}
       style={grid?.column}
     >
-      {showTabBar && (
-        <TabBar
-          tabs={tabs.map((tab) => ({
-            id: tab.id,
-            title: tabTitle(tab, t),
-            dirty: tabIsDirty(tab),
-          }))}
-          activeTabId={activeTabId}
-          onActivate={onActivate}
-          onClose={onClose}
-          onAdd={onAdd}
-          // Tear-off needs global cursor and window positions - macOS
-          // only (tab_drag.rs); on Linux, and above all under Wayland,
-          // the drag could only fail and cancel the reorder with it.
-          onDetach={canDragTabsBetweenWindows ? onDetach : undefined}
-          onReorder={onReorder}
-          previewTab={previewTab}
-          labels={{
-            tabs: t.menuDocuments,
-            close: t.menuCloseTab,
-            add: t.menuNewFile,
-            unsaved: t.unsavedIndicator,
-          }}
-        />
-      )}
+      {split && grid
+        ? ([0, 1] as const).map((pane) =>
+            tabBar(
+              paneTabs(pane),
+              split.panes[pane] ?? "",
+              pane,
+              grid.bars[pane],
+            ),
+          )
+        : showTabBar && tabBar(tabs, activeTabId, null)}
 
-      {/* Every open tab's editor stays mounted (just hidden) so switching
-        tabs preserves undo history, scroll position, and in-flight AI
-        state - only the active one is ever unmounted-on-purpose (via
-        reloadKey, when leaving source mode). */}
-      {/* Split (a plugin's, through split-layout.ts), two tabs show side
-        by side, each in its pane; a click or focus in one brings its tab
-        to the front. */}
+      {/* Every tab's editor stays mounted, just hidden, so switching keeps
+        undo history, scroll position and in-flight AI state. */}
+      {/* In a split, a click or focus in a pane brings its tab to the front. */}
       {tabs.map((tab) => {
         const pane = paneOf(tab.id);
         return (
           <div
             key={tab.id}
             data-active-tab={tab.id === activeTabId}
+            data-tab-id={tab.id}
             data-pane={pane ?? undefined}
             className={pane ? "split-pane" : undefined}
             style={
@@ -130,6 +210,12 @@ export function MainPane({
           >
             {tab.view?.kind === "web" && tab.view.resource ? (
               <WebPagePane tabId={tab.id} url={tab.view.resource} t={t} />
+            ) : tab.view?.kind === "list" ? (
+              <PluginListPane
+                plugin={tab.view.plugin}
+                view={tab.view.view}
+                className="plugin-list-tab"
+              />
             ) : tab.view && tab.view.kind !== "web" ? (
               <PluginTabPane
                 tabId={tab.id}
@@ -138,6 +224,7 @@ export function MainPane({
                 kind={tab.view.kind}
                 resource={tab.view.resource}
                 state={tab.view.state}
+                target={tab.view.target}
               />
             ) : tab.sourceMode && tab.splitView ? (
               <Suspense fallback={null}>
@@ -171,11 +258,7 @@ export function MainPane({
         );
       })}
       {split && grid && (
-        <SplitDivider
-          layout={split}
-          style={grid.divider}
-          label={t.splitDivider}
-        />
+        <SplitDivider layout={split} style={grid.divider} t={t} />
       )}
     </main>
   );

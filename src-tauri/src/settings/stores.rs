@@ -2,14 +2,8 @@
 
 use super::*;
 
-// ---------------------------------------------------------------------------
-// Histories
-// ---------------------------------------------------------------------------
-
-/// The two histories. Their caps match the frontend's
-/// (src/ai/chat/chat-history.ts, src/clipboard/history.ts); they're
-/// enforced here too because this is the one writer. The chat history is a
-/// folder of its own (settings/chat_history.rs), the clipboard one file.
+/// The two histories. Their caps match the frontend's and are enforced here
+/// too, as the one writer.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "lowercase")]
@@ -35,8 +29,8 @@ impl HistoryKind {
         }
     }
 
-    /// What makes two entries the same entry: a conversation's id; a
-    /// clipboard text itself (copying it again moves it to the top).
+    /// What makes two entries the same: a conversation's id, or a clipboard text
+    /// itself (copying again moves it to the top).
     pub(crate) fn key_of(self, entry: &Value) -> Option<&str> {
         let field = match self {
             Self::Chat => "id",
@@ -63,10 +57,8 @@ impl HistoryKind {
         }
     }
 
-    /// Order and cap: conversations most recently active first (the stable
-    /// sort keeps an upserted entry ahead of an equal timestamp); clipboard
-    /// entries stay in the order they were recorded, newest first. Returns
-    /// the entries beyond the cap, taken off the list.
+    /// Order and cap: conversations most recently active first (stable, so an
+    /// upserted entry leads ties); clipboard entries newest first. Returns the overflow.
     pub(crate) fn tidy(self, list: &mut Vec<Value>) -> Vec<Value> {
         if self == Self::Chat {
             let updated = |e: &Value| e.get("updatedAt").and_then(Value::as_f64).unwrap_or(0.0);
@@ -75,10 +67,6 @@ impl HistoryKind {
         list.split_off(list.len().min(self.max()))
     }
 }
-
-// ---------------------------------------------------------------------------
-// App state
-// ---------------------------------------------------------------------------
 
 pub struct Stores {
     pub settings: Arc<Store>,
@@ -118,18 +106,12 @@ impl Stores {
         stores
     }
 
-    /// What a profile starts with that a profile from before it was added
-    /// doesn't: only the core built-in skills on (ai::builtin::CORE_SKILLS);
-    /// the rest are added in Settings › Extensions › Skills. A settings
-    /// file that already exists has no such list, and keeps every skill it
-    /// had. In memory until the first write.
+    /// Marks a new profile as having no moved skills to bring over; an older
+    /// settings file lacks the mark and gets them installed. In memory until the first write.
     fn seed_new_profile(&self) {
         let mut inner = self.settings.inner.lock().unwrap();
         let mut seed = Map::new();
-        seed.insert(
-            crate::ai::workspace::DISABLED_BUILTINS_KEY.into(),
-            json!(crate::ai::builtin::optional_skill_names()),
-        );
+        seed.insert(crate::plugins::moved_skills::MOVED_KEY.into(), json!(true));
         merge_top_level(&mut inner.payload, &seed);
     }
 
@@ -137,16 +119,9 @@ impl Stores {
         self.settings.patch(patch)
     }
 
-    /// Adds the fields of `defaults` the settings don't have yet, and
-    /// nothing else - checked and changed under one lock, so it can never
-    /// overwrite a value, whoever set it and whenever. A window whose boot
-    /// snapshot had no settings at all (a corrupt settings.json was moved
-    /// aside at launch, or an unreadable one is being left alone) writes
-    /// the fresh defaults out through this;
-    /// reloaded later, it replays that same empty snapshot, and a plain
-    /// patch would then put every default back over what the user has
-    /// changed since. Returns the fields added and the new revision, or
-    /// `None` when nothing was missing.
+    /// Adds the fields of `defaults` the settings lack, under one lock, so it never
+    /// overwrites a value. A window with an empty boot snapshot writes defaults
+    /// through this, so a later reload can't undo the user's changes.
     pub fn fill_missing_settings(
         &self,
         defaults: &Map<String, Value>,
@@ -164,10 +139,8 @@ impl Stores {
     }
 }
 
-/// A store file read once, without keeping a `Store` for it (a saved
-/// conversation): its payload under `key`, or `None` when the file is
-/// missing or isn't one. A newer `schemaVersion` is read best-effort:
-/// unknown fields are kept.
+/// A store file read once without keeping a `Store` for it: its payload under
+/// `key`, or `None` when missing or malformed. A newer `schemaVersion` keeps unknown fields.
 pub fn read_store_file(path: &Path, key: &str, empty: &Value) -> Option<Value> {
     let raw = std::fs::read_to_string(path).ok()?;
     parse(&raw, key, empty).map(|(payload, _)| payload)

@@ -4,11 +4,8 @@ import { useEffect, useRef } from "react";
 const NEAR = 40;
 
 /**
- * Keeps the newest streamed content in view while it grows - while the
- * reader is at the bottom. Scrolled up, the list stays where they put it:
- * it was pulled back down on every piece of a reply, and could not be
- * scrolled up, or read an opened row, until the reply ended. Back at the
- * bottom, or on the next send (`stick`), it follows again.
+ * Keeps the newest streamed content in view while the reader is at the
+ * bottom. Scrolled up, the list stays put until they return or send (`stick`).
  */
 export function useFollowBottom(content: unknown) {
   const ref = useRef<HTMLDivElement>(null);

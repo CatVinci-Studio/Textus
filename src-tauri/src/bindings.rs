@@ -1,23 +1,6 @@
-//! The TypeScript side of the backend commands, generated from their Rust
-//! signatures: src/platform/bindings/*.ts, one file per group of
-//! src/platform/ipc-*.ts. A command listed here carries
-//! `#[cfg_attr(test, specta::specta)]`, and the types it takes and returns
-//! `#[cfg_attr(test, derive(specta::Type))]` - test-only, so a shipped
-//! build never compiles specta.
-//!
-//! `bindings_are_current` fails when a checked-in file is not what these
-//! signatures generate; `npm run bindings` (TEXTUS_WRITE_BINDINGS=1)
-//! writes them again. Not listed: the commands reading their inputs as one
-//! struct (commands/args.rs) and ai_agent_message, whose inputs and stream
-//! are exported as types instead, and the iOS-only ones
-//! (commands/documents.rs), which a desktop test build doesn't compile.
-//! aicompat's types (AgentTurn and what it holds) derive specta::Type
-//! behind its `specta` feature, which only the dev-dependency turns on.
-//!
-//! The settings, histories and conversations are opaque JSON
-//! (serde_json::Value) to Rust, and `rev`/counts are u64/usize; specta
-//! refuses 64-bit integers by default, since JSON.parse rounds past 2^53.
-//! None of these come near that, so they are exported as `number`.
+//! Generates the TypeScript bindings from commands marked
+//! `#[cfg_attr(test, specta::specta)]` and types marked
+//! `#[cfg_attr(test, derive(specta::Type))]`; u64 counts are exported as `number`.
 
 use specta_typescript::Typescript;
 use std::path::PathBuf;
@@ -27,8 +10,7 @@ const HEADER: &str = "// Generated from the Rust commands by src-tauri/src/bindi
 // edit. `npm run bindings` writes it again; `cargo test` fails while it\n\
 // is out of date.\n";
 
-/// One generated file: its name under src/platform/bindings/ and its
-/// commands.
+/// One generated file: its name and its commands.
 fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
     vec![
         (
@@ -93,6 +75,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::launch::open_paths,
                 crate::launch::open_path_in_new_window,
                 crate::tab_drag::take_detached_tab,
+                crate::tab_drag::move_tab_to_new_window,
                 crate::tab_drag::list_window_bounds,
                 crate::tab_drag::start_window_drag_tracking,
                 crate::tab_drag::start_floating_tab_drag,
@@ -105,6 +88,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::web_page::web_page_reload,
                 crate::commands::chat_window::focus_chat_window,
                 crate::commands::chat_window::current_chat_window,
+                crate::commands::clipboard::paste_natively,
+                crate::commands::clipboard::clipboard_text,
                 crate::menu::trigger_menu_item,
                 crate::menu::list_recent_files,
                 crate::menu::list_recent_folders,
@@ -160,18 +145,37 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             "plugins.ts",
             builder().commands(collect_commands![
                 crate::plugins::state::plugins_state,
+                crate::plugins::uri::plugin_take_uris,
+                crate::plugins::export::plugin_export,
                 crate::plugins::state::plugins_set_all,
                 crate::plugins::state::plugin_set,
                 crate::plugins::install::plugins_installed,
                 crate::plugins::install::plugin_install,
+                crate::plugins::install::plugin_install_files,
                 crate::plugins::install::plugin_load_dev,
                 crate::plugins::install::plugin_uninstall,
                 crate::plugins::install::plugin_pick_package,
+                crate::plugins::scripts::plugin_open_scripts_dir,
                 crate::plugins::catalog::plugin_catalog,
                 crate::plugins::catalog::plugin_catalog_cached,
                 crate::plugins::catalog::skill_catalog,
                 crate::plugins::catalog::skill_install_catalog,
                 crate::plugins::catalog::plugin_install_catalog,
+                crate::plugins::install::plugin_dev_stamp,
+                crate::plugins::ai_tools::plugin_ai_tools_set,
+                crate::plugins::ai_tools::plugin_ai_tool_result,
+                crate::menu::set_plugin_menu,
+                crate::background::tray::set_tray_plugin_items,
+                crate::background::tray::take_pending_plugin_command,
+                crate::mcp::mcp_status,
+                crate::mcp::mcp_restart,
+                crate::mcp::mcp_try,
+            ]),
+        ),
+        (
+            // What a running plugin reaches through the window.
+            "plugin-access.ts",
+            builder().commands(collect_commands![
                 crate::plugins::access::plugin_fs_list,
                 crate::plugins::workspace::plugin_fs_documents,
                 crate::plugins::workspace::plugin_fs_search,
@@ -179,10 +183,15 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::plugins::access::plugin_fs_rename,
                 crate::plugins::access::plugin_fs_trash,
                 crate::plugins::access::plugin_fs_mkdir,
+                crate::plugins::files::plugin_fs_stat,
+                crate::plugins::files::plugin_fs_create,
+                crate::plugins::files::plugin_fs_read_versioned,
+                crate::plugins::files::plugin_fs_write_if,
+                crate::plugins::files::plugin_secret_get,
+                crate::plugins::files::plugin_secret_set,
+                crate::plugins::metadata::plugin_metadata_all,
+                crate::plugins::metadata::plugin_metadata_get,
                 crate::plugins::access::plugin_http,
-                crate::plugins::install::plugin_dev_stamp,
-                crate::plugins::ai_tools::plugin_ai_tools_set,
-                crate::plugins::ai_tools::plugin_ai_tool_result,
                 crate::plugins::store::plugin_store_get,
                 crate::plugins::store::plugin_store_set,
                 crate::plugins::store::plugin_store_keys,
@@ -192,18 +201,10 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::plugins::store::plugin_store_delete,
                 crate::plugins::store::plugin_store_usage,
                 crate::plugins::store::plugin_store_clear,
-                crate::menu::set_plugin_menu,
-                crate::background::tray::set_tray_plugin_items,
-                crate::background::tray::take_pending_plugin_command,
-                crate::mcp::mcp_status,
-                crate::mcp::mcp_restart,
-                crate::mcp::mcp_try,
             ]),
         ),
-        // The AI commands, in a file per concern (a generated file is held
-        // to the same 600 lines as any other): providers and the requests
-        // that take one struct, the agent's stream and what it shows, the
-        // project, its memory, and the writing conventions.
+        // The AI commands, a file per concern (generated files are held to the same
+        // 600-line limit).
         (
             "ai.ts",
             builder()
@@ -215,9 +216,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::ai::web::web_search_status,
                     crate::ai::next_message::suggest_next_message,
                 ])
-                // The commands reading their inputs as one struct
-                // (commands/args.rs) can't be generated; their inputs are,
-                // and ipc.ts types each call's argument object with them.
+                // Commands reading their inputs as one struct can't be generated; their
+                // input types are.
                 .typ::<crate::ai::client::CompletionRequest>()
                 .typ::<crate::ai::client::GrammarRequest>(),
         ),
@@ -236,10 +236,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::ai::kept_proposals::kept_proposals_read,
                     crate::ai::kept_proposals::kept_proposals_write,
                 ])
-                // ai_agent_message takes more parameters than specta's
-                // function traits go to (ten), so it is not generated
-                // either: what its Channel streams is, AgentTurn with it,
-                // and the thinking level it takes.
+                // ai_agent_message takes more parameters than specta supports (ten), so
+                // only the types it streams and takes are exported.
                 .typ::<crate::ai::agent::StreamEvent>()
                 .typ::<aicompat::capabilities::ThinkingLevel>(),
         ),
@@ -250,16 +248,22 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::ai::workspace::pick_workspace_root,
                 crate::ai::workspace::open_global_agent_dir,
                 crate::ai::workspace::ensure_global_agent_md,
-                crate::ai::workspace::import_agent_skill,
-                crate::ai::workspace::list_skills,
-                crate::ai::workspace::customize_builtin_skill,
-                crate::ai::workspace::reset_builtin_skill,
-                crate::ai::workspace::set_builtin_skill_enabled,
                 crate::ai::project::list_project_files,
                 crate::ai::project::read_project_file,
                 crate::ai::project::ensure_project_file,
                 crate::ai::project::pick_text_files,
                 crate::ai::project::learn_style,
+            ]),
+        ),
+        (
+            "ai-skills.ts",
+            builder().commands(collect_commands![
+                crate::ai::workspace::import_agent_skill,
+                crate::ai::workspace::list_skills,
+                crate::ai::workspace::customize_builtin_skill,
+                crate::ai::workspace::reset_builtin_skill,
+                crate::ai::workspace::set_skill_modes,
+                crate::ai::workspace::save_written_skill,
             ]),
         ),
         (
@@ -293,11 +297,9 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
 
 fn builder() -> Builder<tauri::Wry> {
     Builder::new()
-        // ipc-call.ts turns a rejection into an IpcError, as for every
-        // other command.
         .error_handling(ErrorHandlingMode::Throw)
-        // The accessors are the commands' own names, so the name the
-        // frontend passes is checked against this list by tsc.
+        // The accessors are the commands' own names, so tsc checks the names the
+        // frontend passes.
         .function_casing(tauri_specta::Casing::SnakeCase)
         .dangerously_cast_bigints_to_number()
 }

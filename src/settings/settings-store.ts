@@ -3,16 +3,13 @@ import { gateAiRequests } from "../platform/ai-gate";
 import { readBoot } from "../storage/boot";
 import { LOCAL_KEYS, readLocalJson, writeLocal } from "../storage/local";
 import { trackWrite } from "../storage/pending-writes";
-import { listenToThisWindow } from "../utils/tauri-events";
+import { listenToThisWindow } from "../platform/events";
 import { SettingsSync, isRecord, type Raw } from "./settings-sync";
 import type { Settings } from "./settings-types";
 import { normaliseSettings } from "./settings-normalise";
 
-/**
- * Where the settings live: the settings file shared by every window, a
- * local copy for a fast start, changes sent and received as other windows
- * make them (SettingsContext.tsx). The side effects of settings.
- */
+/** Where the settings live: the shared settings file, a local copy for a
+ *  fast start, and changes to and from other windows. */
 
 export const STORAGE_KEY = LOCAL_KEYS.settings;
 
@@ -28,15 +25,10 @@ export function writeLocalSettings(patch: Raw) {
   writeLocal(STORAGE_KEY, JSON.stringify({ ...readLocalSettings(), ...patch }));
 }
 
-// ---------------------------------------------------------------------------
-// The store. With Rust behind the page (src/storage/boot.ts), the settings
-// live in settings.json, held by Rust: read here from the boot snapshot,
-// changed by sending only the fields that changed, and kept in step with
-// other windows through "settings-changed" (see settings-sync.ts for who
-// wins when). Without it, localStorage.
-// ---------------------------------------------------------------------------
+// The store. With Rust behind the page, settings live in settings.json:
+// read from the boot snapshot, changed by sending only changed fields, and
+// synced across windows by "settings-changed". Without it, localStorage.
 
-/** Mirrors SettingsChanged in src-tauri/src/settings.rs. */
 export interface SettingsChanged {
   rev: number;
   patch: Raw;
@@ -53,19 +45,16 @@ export function fileStore(): SettingsSync | null {
   const boot = readBoot();
   if (!boot) return null;
 
-  // Nothing stored - a new profile, holding at most what Rust seeds one
-  // with, or a corrupt settings.json moved aside, or one Rust can't read
-  // being left alone: a new installation's defaults (the OS's language
-  // among them), written out now so the next launch reads the same.
+  // Nothing stored (a new profile, or an unreadable file set aside): a new
+  // installation's defaults, written now so the next launch reads the same.
   const fresh = boot.newProfile || Object.keys(boot.settings).length === 0;
   const defaults: Raw = { ...normaliseSettings(null) };
   sync = new SettingsSync(
     fresh ? { ...defaults, ...boot.settings } : boot.settings,
     boot.rev,
   );
-  // The snapshot is from when the window was built - a reload replays an
-  // old one, and a change made meanwhile by another window was sent
-  // before this page could hear it - so the live values replace it.
+  // A reload replays an old snapshot, and another window may have changed
+  // things meanwhile, so the live values replace it.
   const live = fresh
     ? // Only into fields still missing, though: reloaded later, this
       // window replays the same snapshot, and must not put the defaults
@@ -77,8 +66,7 @@ export function fileStore(): SettingsSync | null {
   void listenToThisWindow<SettingsChanged>("settings-changed", (event) => {
     const { rev, patch, from } = event.payload;
     if (from === boot.label || !sync) return;
-    // Zoom is each window's own (see its field comment): saved for the
-    // next window to open with, never pushed into ones already open.
+    // Zoom is each window's own: saved for the next window, never pushed to open ones.
     const shared = { ...patch };
     delete shared.zoom;
     if (sync.remote(shared, rev)) notifyRemote();
@@ -114,17 +102,9 @@ export function send(ticket: Map<string, number>) {
   );
 }
 
-/** Saves the fields in `patch` that differ from what's stored.
- *
- *  Every change goes to Rust at once, keystrokes in Custom CSS included:
- *  Rust holds it in memory, coalesces the disk writes (FLUSH_DELAY in
- *  settings.rs) and writes whatever is pending when the app exits. A
- *  debounce here lost the last keystrokes of a quick Cmd+Q, window close or
- *  Dock Quit on macOS: the window was gone before the timer fired, and a
- *  flush from pagehide didn't reach Rust either. The IPC is still
- *  asynchronous, so every close path the app owns waits for the patches
- *  on their way before the window is destroyed (send's trackWrite,
- *  storage/pending-writes.ts). */
+/** Saves the fields in `patch` that differ from what's stored. Every change
+ *  goes to Rust at once: Rust coalesces disk writes and flushes on exit, while
+ *  a debounce here would lose the last keystrokes of a quick quit. */
 export function persist(patch: Partial<Settings>) {
   const store = fileStore();
   if (!store) {
@@ -158,10 +138,8 @@ export function subscribeRemote(fn: () => void): () => void {
   return () => window.removeEventListener("storage", onStorage);
 }
 
-/** The current settings, outside React - exported so small standalone
- *  stores (chat-history.ts, clipboard-history.ts) can read a privacy
- *  toggle's current value without depending on context. Includes this
- *  window's latest changes, whether or not they've reached Rust yet. */
+/** The current settings, outside React, including this window's changes not
+ *  yet in Rust. */
 export function loadSettings(): Settings {
   const store = fileStore();
   // The fallback re-reads every time: other tabs write it too.
@@ -171,9 +149,8 @@ export function loadSettings(): Settings {
   return normalised.settings;
 }
 
-// Every request to an AI service asks the switch as it goes out - this
-// window's latest value, so a request made right after turning Textus AI
-// off is refused, and one made at launch goes by what was saved.
+// Every AI request checks the switch as it goes out, so one made right after
+// turning Textus AI off is refused.
 gateAiRequests(() => loadSettings().textusAi);
 
 /** Forgets the store, for tests that install a different boot snapshot. */

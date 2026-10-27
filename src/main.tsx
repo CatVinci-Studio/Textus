@@ -22,25 +22,21 @@ installPolyfills();
 installDevTauriShim();
 installWebviewGuards();
 installScrollReveal();
-// Held-back storage writes go out when iOS sends the app to the background
-// (a closing window waits for them instead - storage/pending-writes.ts).
+// Held-back storage writes go out when iOS sends the app to the background.
 flushWhenHidden();
 // iOS: reopen the folders picked in earlier sessions (a no-op elsewhere).
 void restoreFolderAccess().catch(() => {});
 
-// Before the first render: the stylesheet keys the title row's insets off
-// this, and correcting it afterwards would paint the row at the macOS
-// traffic-light inset for a frame on every Windows launch.
+// Before the first render: correcting it afterwards would paint the title row
+// at the macOS traffic-light inset for a frame on every Windows launch.
 publishWindowChrome();
 installMobileViewport();
 markEngineQuirks();
-// The plugin API draft, on the window in a development build (plugin-api.ts).
+// The plugin API draft, on the window in a development build.
 exposePluginApiForDevelopment();
 
-// Which view this window is. One bundle serves both: a second HTML entry
-// point would mean a second build target and a second copy of the shared
-// providers, for a window that reuses most of the app anyway. See
-// commands/chat_window.rs, which opens the detached chat with this query.
+// Which view this window is. One bundle serves both, rather than a second
+// build target and copy of the shared providers.
 const view = new URLSearchParams(window.location.search).get("view");
 
 // The detached chat's own view, loaded only in that window.
@@ -49,8 +45,8 @@ const ChatWindowApp = lazyComponent(
   (m) => m.ChatWindowApp,
 );
 
-// The UI's language loads first (i18n/strings.ts), so the first frame is
-// already in it; one that fails to load shows in English.
+// The UI's language loads first, so the first frame is already in it; one
+// that fails to load shows in English.
 void loadLocale(loadSettings().language)
   .catch(() => {})
   .then(() => {

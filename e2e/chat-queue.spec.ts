@@ -2,9 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * Messages sent while a reply is coming (ai/chat/MessageQueue.tsx): they
- * wait over the composer and go in turn; Edit and Remove take one out;
- * Stop gives them back to the box.
+ * Messages sent while a reply is coming wait over the composer and go in
+ * turn; Edit and Remove take one out; Stop gives them back to the box.
  */
 
 const composer = (page: Page) => page.locator(".agent-panel-view textarea");

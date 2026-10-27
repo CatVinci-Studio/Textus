@@ -1,5 +1,5 @@
-/* Plugins in the window (src/plugins/): their hidden hosts, the frames
-   their webviews are drawn in, a sidebar tab's icon, the quick pick. */
+/* Plugins in the window: hidden hosts, webview frames, sidebar tab icons,
+   the quick pick. */
 
 /* Out of sight, still running: a frame left out of the layout keeps its
    timers going, which display: none would not promise. */
@@ -40,8 +40,8 @@
   flex: 1;
   min-height: 0;
   min-width: 0;
-  /* Clear of the window bar floating over the top (window-bar.css), as
-     the editor's page is - unless the tab bar is there to do it. */
+  /* Clear of the floating window bar, as the editor's page is, unless the tab
+     bar is there to do it. */
   padding-top: 28px;
 }
 .tab-bar ~ * .plugin-tab-pane {
@@ -72,69 +72,8 @@
   -webkit-mask-position: center;
 }
 
-.quick-pick-overlay {
-  align-items: flex-start;
-  padding-top: 12vh;
-}
-.quick-pick {
-  width: min(520px, calc(100vw - 32px));
-  max-width: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.quick-pick-input {
-  margin: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  font: inherit;
-  font-size: var(--text-md);
-  color: var(--editor-text);
-  background: var(--bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
-}
-.quick-pick-input:focus {
-  outline: 2px solid var(--chrome-accent);
-  outline-offset: -1px;
-}
-.quick-pick-list {
-  list-style: none;
-  margin: 0;
-  padding: 0 var(--space-2) var(--space-2);
-  max-height: 50vh;
-  overflow-y: auto;
-}
-.quick-pick-item {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-small);
-  font-size: var(--text-md);
-  cursor: pointer;
-}
-.quick-pick-item[aria-selected="true"] {
-  background: var(--sidebar-active);
-  color: var(--sidebar-active-text);
-}
-.quick-pick-description {
-  color: var(--chrome-muted);
-  font-size: var(--text-sm);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.quick-pick-empty {
-  padding: var(--space-3);
-  color: var(--chrome-muted);
-  font-size: var(--text-sm);
-}
-
-/* Settings › Extensions › Plugins (settings/pages/PluginsPage.tsx): a card per plugin
-   - its name, what it does, who made it, its switch - opening its own
-   page. No icons: a list of names reads at a glance, and a plugin's
-   artwork never sat well beside Settings' own rows. */
+/* Settings › Extensions › Plugins: a card per plugin opening its own page.
+   No icons: a list of names reads at a glance. */
 .plugin-install-buttons,
 .plugin-detail-actions {
   display: flex;
@@ -278,13 +217,51 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-setting-input {
   width: 220px;
 }
+/* A catalog plugin's picture of itself at work (Get more). */
+.plugin-card-shot {
+  display: block;
+  max-width: 100%;
+  max-height: 160px;
+  margin-top: var(--space-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-small);
+  object-fit: cover;
+  object-position: top left;
+}
+/* A heading over a plugin's settings that share a group. */
+.plugin-setting-group {
+  margin: var(--space-3) var(--space-3) var(--space-1);
+  color: var(--chrome-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+.plugin-setting-color {
+  width: 40px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: none;
+}
+/* A setting of several lines: its box under its title, the row's width. */
+.plugin-setting-lines {
+  padding-bottom: var(--space-3);
+}
+.plugin-setting-textarea {
+  display: block;
+  box-sizing: border-box;
+  width: calc(100% - 2 * var(--space-3));
+  margin: 0 var(--space-3);
+  font-family: var(--font-mono);
+  resize: vertical;
+}
 .plugin-empty {
   margin: 0;
   padding: var(--space-3);
   color: var(--chrome-muted);
   font-size: var(--text-sm);
 }
-/* A plugin's recent errors (PluginErrors.tsx). */
+/* A plugin's recent errors. */
 .plugin-errors {
   margin: 0;
   font-family: var(--font-mono);
@@ -302,7 +279,7 @@ button.plugin-card-open:hover .plugin-card-name {
   padding: 0 var(--space-3) var(--space-3);
 }
 
-/* A web page in a tab (WebPagePane.tsx). */
+/* A web page in a tab. */
 .web-page-pane {
   display: flex;
   flex-direction: column;
@@ -390,17 +367,15 @@ button.plugin-card-open:hover .plugin-card-name {
   border: 0;
   background: var(--bg);
 }
-/* Where the native page (useNativeWebPage) is laid: its size and place
-   are the page's. */
+/* Where the native page is laid: its size and place are the page's. */
 .web-page-native {
   flex: 1;
   min-height: 0;
   background: var(--bg);
 }
 
-/* A plugin's status in the window bar (WindowBar's PluginStatusItems):
-   read like the word count beside it, a button only when it runs
-   something. */
+/* A plugin's status in the window bar: read like the word count beside it,
+   a button only when it runs something. */
 .plugin-status-item {
   font-size: var(--text-sm);
   color: var(--editor-muted);
@@ -423,9 +398,8 @@ button.plugin-card-open:hover .plugin-card-name {
   color: var(--editor-text);
 }
 
-/* A plugin holding the keyboard (editor-input.ts): Vim's block cursor in
-   normal mode, the native caret hidden, and flash's jump labels laid over
-   the text without moving it. */
+/* A plugin holding the keyboard: Vim's block cursor in normal mode, the
+   native caret hidden, and flash's jump labels over the text. */
 .ProseMirror.plugin-cursor-block {
   caret-color: transparent;
 }
@@ -438,19 +412,35 @@ button.plugin-card-open:hover .plugin-card-name {
   display: inline-block;
   width: 0.55em;
 }
+/* Flash: what was found, lit; each label over the character after its
+   match, from a zero-width anchor so the line doesn't move. */
+.plugin-flash-match {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ui-primary) 22%, transparent);
+}
+.plugin-flash-anchor {
+  position: relative;
+  display: inline-block;
+  width: 0;
+  height: 1em;
+  vertical-align: baseline;
+}
 .plugin-flash-label {
   position: absolute;
   z-index: 2;
-  padding: 0 3px;
+  left: 0;
+  bottom: -0.2em;
+  min-width: 0.6em;
+  padding: 0 2px;
   border-radius: 3px;
   background: var(--ui-primary);
   color: var(--ui-on-primary);
   font-family: var(--font-mono);
-  font-size: 0.78em;
+  font-size: 0.9em;
   font-weight: 700;
-  line-height: 1.35;
+  line-height: 1.2;
+  text-align: center;
   pointer-events: none;
-  transform: translateY(-0.1em);
 }
 
 /* Settings › Extensions: its tabs over the page. */
@@ -458,8 +448,8 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: 0 0 var(--space-3);
 }
 
-/* Every Extensions tab (ExtensionsTabLayout.tsx): a line of what it holds
-   with Get more and "…" on the right, the installed items, Advanced. */
+/* Every Extensions tab: a line of what it holds with Get more and "…" on
+   the right, the installed items, Advanced. */
 .extensions-head {
   display: flex;
   align-items: center;
@@ -570,4 +560,19 @@ button.mcp-homepage:hover {
 }
 .mcp-form-spacer {
   flex: 1;
+}
+/* "Recommended", "More plugins", "Made by you": a quiet heading over a
+   run of cards. */
+.plugin-subgroup-title {
+  margin: var(--space-3) 0 6px;
+  padding-left: 4px;
+  color: var(--chrome-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+.plugin-subgroup-title:first-child {
+  margin-top: 0;
+}
+.market-recommended {
+  margin-bottom: var(--space-2);
 }

@@ -1,11 +1,9 @@
 import { diagramRenderer, type MermaidApi } from "../editor/diagram-engine";
 import type { DiagramEngine } from "../settings/SettingsContext";
 
-// Word, OpenDocument and EPUB have no idea what a ```mermaid block is, so
-// pandoc would print the diagram's source. Before the markdown goes to
-// pandoc, each diagram is drawn as a picture instead - a PNG at twice its
-// size, as a data URL that pandoc embeds like any other image. A diagram
-// that can't be drawn keeps its source.
+// Word, OpenDocument and EPUB don't know mermaid blocks, so each diagram is
+// drawn as a PNG data URL before pandoc. One that can't be drawn keeps its
+// source.
 
 const FENCE = /^ {0,3}(`{3,}|~{3,})\s*([^\s`]*)/;
 
@@ -18,11 +16,11 @@ export interface DiagramImage {
   width: number;
 }
 
-/** Replaces every ```mermaid block with what `draw` makes of its source;
- *  a block `draw` returns null for is kept as it is. */
-export async function replaceMermaidBlocks(
+/** Replaces each fenced block with what `draw` makes of its language
+ *  (lowercased) and source; null or a throw keeps the block. */
+export async function replaceFencedBlocks(
   markdown: string,
-  draw: (code: string) => Promise<DiagramImage | null>,
+  draw: (language: string, code: string) => Promise<DiagramImage | null>,
 ): Promise<string> {
   const lines = markdown.split("\n");
   const out: string[] = [];
@@ -47,11 +45,14 @@ export async function replaceMermaidBlocks(
     }
     const block = lines.slice(i, Math.min(end + 1, lines.length));
     i = end;
-    if (open[2].toLowerCase() !== "mermaid" || end >= lines.length) {
+    if (end >= lines.length) {
       out.push(...block);
       continue;
     }
-    const image = await draw(block.slice(1, -1).join("\n")).catch(() => null);
+    const image = await draw(
+      open[2].toLowerCase(),
+      block.slice(1, -1).join("\n"),
+    ).catch(() => null);
     if (image) {
       out.push(`![](${image.dataUrl}){width=${Math.round(image.width)}px}`);
     } else {
@@ -97,16 +98,15 @@ async function svgToPng(svg: string): Promise<DiagramImage> {
 let exportId = 0;
 
 /** The markdown with its diagrams as pictures, for a pandoc export, drawn
- *  by `engine` (Settings.diagramEngine) and Mermaid where it can't. */
+ *  by `engine` and by Mermaid where it can't. */
 export async function diagramsToImages(
   markdown: string,
   engine: DiagramEngine,
 ): Promise<string> {
   if (!/^ {0,3}(`{3,}|~{3,})\s*mermaid/im.test(markdown)) return markdown;
   const fontFamily = getComputedStyle(document.body).fontFamily;
-  // A page is white whatever the app looks like, and labels are plain SVG
-  // text (not HTML), so the picture can be drawn to a canvas. The editor
-  // re-applies its own settings before its next render (configureMermaid).
+  // A page is white, and labels must be SVG text (not HTML) to draw on a
+  // canvas. The editor re-applies its own settings before its next render.
   const configure = (mermaid: MermaidApi) =>
     mermaid.initialize({
       startOnLoad: false,
@@ -115,8 +115,7 @@ export async function diagramsToImages(
       suppressErrorRendering: true,
       htmlLabels: false,
       flowchart: { htmlLabels: false },
-      // At the page's width: laid out at mermaid's offscreen 1200px and then
-      // shrunk onto the page, a Gantt chart's labels became unreadable.
+      // At the page's width: shrunk from 1200px, Gantt labels are unreadable.
       gantt: {
         useWidth: MAX_WIDTH,
         fontSize: 13,
@@ -132,16 +131,45 @@ export async function diagramsToImages(
     { width: MAX_WIDTH, fontFamily, dark: false },
     configure,
   );
-  return replaceMermaidBlocks(markdown, async (code) =>
-    svgToPng((await draw(code, `export-diagram-${++exportId}`)).svg),
+  return replaceFencedBlocks(markdown, async (language, code) =>
+    language === "mermaid"
+      ? svgToPng((await draw(code, `export-diagram-${++exportId}`)).svg)
+      : null,
   );
 }
 
-/** Replaces the SVG of every rendered diagram in serialized editor `html`
- *  with what `draw` makes of its source (the hidden code block just before
- *  the preview); a diagram `draw` returns null for keeps its picture, and so
- *  does one Pele drew: its colours are CSS variables, which a light page
- *  answers by itself. */
+/** A drawn block's picture as a PNG pandoc can embed, no wider than a
+ *  page's text. */
+async function pictureToImage(url: string): Promise<DiagramImage> {
+  if (url.startsWith("data:image/svg+xml"))
+    return svgToPng(decodeURIComponent(url.slice(url.indexOf(",") + 1)));
+  const image = new Image();
+  image.src = url;
+  await image.decode();
+  return { dataUrl: url, width: Math.min(image.naturalWidth / 2, MAX_WIDTH) };
+}
+
+/** The markdown with each plugin-drawn block as its picture, by language in
+ *  document order; one with no picture keeps its source. */
+export async function drawnBlocksToImages(
+  markdown: string,
+  pictures: Map<string, (string | null)[]>,
+): Promise<string> {
+  if (!pictures.size) return markdown;
+  const seen = new Map<string, number>();
+  return replaceFencedBlocks(markdown, async (language) => {
+    const list = pictures.get(language);
+    if (!list) return null;
+    const n = seen.get(language) ?? 0;
+    seen.set(language, n + 1);
+    const url = list[n];
+    return url ? pictureToImage(url) : null;
+  });
+}
+
+/** Replaces the SVG of every rendered diagram in editor `html` with what
+ *  `draw` makes of its source. Pele's are kept: their CSS-variable colours
+ *  adapt to a light page. */
 export async function redrawDiagrams(
   html: string,
   draw: (code: string) => Promise<string | null>,
@@ -162,12 +190,8 @@ export async function redrawDiagrams(
   return template.innerHTML;
 }
 
-/** The editor's Mermaid diagrams drawn again in mermaid's light style, for
- *  a PDF printed on white: drawn for a dark appearance, their pale lines and
- *  labels all but vanished on it. Laid out like the editor's own pass
- *  (`width`, `fontFamily`), which re-applies its settings before its next
- *  one (configureMermaid). Those Pele drew are left as they are
- *  (redrawDiagrams), the Mermaid ones are what Pele couldn't draw. */
+/** The editor's Mermaid diagrams redrawn in mermaid's light style for a PDF
+ *  on white, where dark-theme lines vanish. Pele's are left as they are. */
 export async function lightDiagrams(
   html: string,
   width: number,

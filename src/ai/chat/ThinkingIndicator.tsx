@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 
-/** The three-dot "thinking" row. Shared with ChatBody's quick variant so the
- *  two chat surfaces can't drift on this markup. */
+/** The three-dot "thinking" row, shared by both chat surfaces. */
 export function ThinkingIndicator({
   label,
   after = false,
@@ -13,10 +12,9 @@ export function ThinkingIndicator({
   after?: boolean;
   /** Before anything has come back: shows after a beat. */
   soon?: boolean;
-  /** Counts the seconds once nothing has moved for WAIT_SHOWN: a model
-   *  that sends no thinking, or a call whose text comes whole, looked
-   *  stuck with dots alone (rc.6). The row is re-keyed by each piece of
-   *  progress, so it counts from the last one. */
+  /** Counts the seconds once nothing has moved for WAIT_SHOWN, so a model
+   *  that sends no thinking doesn't look stuck. Re-keyed by each piece of
+   *  progress, it counts from the last one. */
   waitedFor?: (seconds: number) => string;
 }) {
   const seconds = useSecondsSince(waitedFor !== undefined);

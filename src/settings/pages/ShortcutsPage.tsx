@@ -1,29 +1,34 @@
-import type { SettingsPageProps } from "./types";
+import type { SettingsPageProps, ShortcutCommand } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
 import { type HeadingAction, type ShortcutAction } from "../SettingsContext";
 import {
+  CommandShortcutRow,
   ShortcutRow,
   FixedShortcutList,
   headingLabels,
-} from "../sections/controls";
+} from "../sections/shortcut-rows";
 
-/** Shortcuts: the ones that can be changed, by group, then the fixed ones. */
+/** Shortcuts: the ones that can be changed, by group - the plugins'
+ *  commands last among them - then the fixed ones. */
 export function ShortcutsPage({
   t,
   settings,
   setSettings,
   fixedShortcuts,
+  pluginCommands,
 }: SettingsPageProps) {
+  const keyOf = (command: ShortcutCommand) =>
+    settings.commandShortcuts[command.id] ?? command.shortcut ?? "";
   return (
     <>
-      {/* Most used first: finding - in the document, then among the
-            folder's file names - and moving between tabs, then the
-            panels and modes of the window, then the AI's keys. */}
+      {/* Most used first: finding, moving between tabs, the window's panels
+            and modes, then the AI's keys. */}
       {(
         [
           [
             t.shortcutEditorGroupLabel,
             [
+              ["commandPalette", t.shortcutCommandPalette],
               ["findReplace", t.shortcutFindReplace],
               ["searchFiles", t.shortcutSearchFiles],
               ["nextTab", t.shortcutNextTab],
@@ -39,6 +44,7 @@ export function ShortcutsPage({
               ["toggleSourceMode", t.shortcutToggleSourceMode],
               ["toggleTypewriterMode", t.shortcutToggleTypewriterMode],
               ["toggleZenMode", t.shortcutToggleZenMode],
+              ["splitEditor", t.shortcutSplitEditor],
             ],
           ],
           [
@@ -79,6 +85,28 @@ export function ShortcutsPage({
           />
         ))}
       </SettingsGroup>
+      {pluginCommands.length > 0 && (
+        <SettingsGroup title={t.menuPlugins}>
+          {pluginCommands.map((command) => (
+            <CommandShortcutRow
+              key={command.id}
+              label={command.title}
+              command={command.id}
+              fallback={command.shortcut}
+              overrides={settings.commandShortcuts}
+              setOverrides={(commandShortcuts) =>
+                setSettings({ commandShortcuts })
+              }
+              others={pluginCommands
+                .filter((other) => other.id !== command.id && keyOf(other))
+                .map((other) => ({ label: other.title, combo: keyOf(other) }))}
+              shortcuts={settings.shortcuts}
+              t={t}
+              fixed={fixedShortcuts}
+            />
+          ))}
+        </SettingsGroup>
+      )}
       {fixedShortcuts.length > 0 && (
         <SettingsGroup title={t.shortcutFixedGroupLabel}>
           <FixedShortcutList groups={fixedShortcuts} />

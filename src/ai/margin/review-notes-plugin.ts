@@ -4,32 +4,22 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import type { FoldAttention } from "../../editor/html/details-fold";
 
-/**
- * An add_comment note pinned to its passage: the review the AI leaves
- * beside the text, not in it. The passage is marked in the document; the
- * note itself is drawn in the page's margin (ReviewMargin.tsx), or - with
- * no room for a margin - behind a numbered badge after the passage.
- */
+/** A note pinned to its passage, drawn in the margin or, with no room,
+ *  behind a numbered badge after the passage. */
 export interface ReviewNote {
   /** The add_comment call's id. */
   id: string;
   from: number;
   to: number;
   comment: string;
-  /** Its badge's number - also shown on its card in the chat (numberNotes). */
+  /** Its badge's number, also shown on its card in the chat. */
   num: number;
-  /** The writer's own note (useOwnNotes.ts) rather than the AI's. */
+  /** The writer's own note rather than the AI's. */
   by?: "me";
 }
 
-/**
- * Numbers newly placed notes after the ones already in the text, in the
- * order the AI left them - the order the chat lists their cards in, so the
- * badge "2" is the chat's second note. Numbered by position in the text
- * they matched nothing on the other side, and every note after a new one
- * placed earlier in the text was renumbered under the writer's eyes. Back
- * to 1 once none is left.
- */
+/** Numbers new notes after the existing ones in the order the AI left them,
+ *  matching the chat's cards; never renumbers. Back to 1 once none is left. */
 export function numberNotes(
   kept: readonly ReviewNote[],
   added: readonly Omit<ReviewNote, "num">[],
@@ -101,12 +91,8 @@ function build(
   return DecorationSet.create(doc, decos);
 }
 
-/**
- * Keeps the notes on their passages through edits (a note whose passage is
- * deleted goes with it) and draws the passage marks and, in compact mode,
- * the badges. Which notes exist is decided outside (MilkdownEditor, from
- * the conversation); this plugin only holds and maps them.
- */
+/** Keeps the notes on their passages through edits and draws their marks
+ *  and badges. Which notes exist is decided outside. */
 export function createReviewNotesPlugin(options: {
   /** The notes changed (set, mapped, dropped) - React's only way to learn. */
   onChange: (notes: ReviewNote[]) => void;

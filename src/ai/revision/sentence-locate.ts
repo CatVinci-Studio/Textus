@@ -2,39 +2,8 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { wholeBlockKind } from "./markdown-forms";
 import { trimBreaks, type SentenceHunk } from "./sentence-diff";
 
-/**
- * Where each piece of a sentence diff (sentence-diff.ts) sits in the
- * document, so a rewrite can be shown - and decided - sentence by sentence
- * in the text itself, not only in the chat card.
- *
- * The hunks are MARKDOWN (the proposal's anchor and text), the document is
- * rendered text: each piece is turned into its plain text (`plainOf`, the
- * editor's own parser) and found in order in the range's text, the way
- * text-locate.ts finds a single needle. A piece that can't be rendered or
- * isn't next in line (markdown that changes structure, a list marker the
- * parse turns into a node) gives up on the whole proposal - the caller
- * then shows it as one struck block plus one insert, as before.
- *
- * `lead` is the markdown in the range before the first hunk. An anchor that
- * spans paragraphs resolves to their whole blocks, not to the quoted text
- * (there is no tighter range across blocks), so the first block may start
- * with words the rewrite doesn't touch. They are skipped as one piece and
- * never searched past: a sentence repeated before the anchor would
- * otherwise be taken for it.
- *
- * A block changed whole (markdown-forms.ts's wholeBlockKind: a picture, a
- * table, a code block) isn't text to find: it is the next such block node,
- * found by the node it is (wholeNodes).
- *
- * Returns one range per hunk, `same` and `change` alike, in order; an empty
- * `before` (a pure insertion) gets an empty range where it would go.
- */
-/**
- * The range's text, and each character's document position - unlike
- * textBetween, nothing between text nodes (a hard break, an inline atom, a
- * block boundary) adds characters, so a piece never has to match across a
- * separator.
- */
+/** The range's text and each character's position. Unlike textBetween,
+ *  nothing between text nodes adds characters. */
 function textPositions(
   doc: ProseNode,
   from: number,
@@ -53,11 +22,8 @@ function textPositions(
   return { text, positions };
 }
 
-/**
- * Where each of `needles` (plain text, line breaks left out) stands in
- * [from, to), in order - for the text an Accept just wrote. One not found
- * is skipped.
- */
+/** Where each of `needles` stands in [from, to), in order; one not found is
+ *  skipped. */
 export function findInOrder(
   doc: ProseNode,
   from: number,
@@ -79,6 +45,9 @@ export function findInOrder(
   return out;
 }
 
+/** Where each sentence-diff hunk sits in the document, one range per hunk in
+ *  order; null when a piece isn't next in line. `lead` is the untouched text
+ *  before the first hunk, skipped so a repeat before the anchor isn't taken. */
 export function locateHunks(
   doc: ProseNode,
   from: number,
@@ -113,10 +82,8 @@ export function locateHunks(
     cursor = index + plain.length;
     pos = at(cursor - 1) + 1;
   }
-  // An unchanged piece whose text can't be matched as it stands, or a
-  // piece with no text (a lone footnote mark): it is whatever lies between
-  // the piece before it and the next one found (a run of them, the first
-  // taking it all).
+  // An unchanged piece that can't be matched, or has no text, is whatever
+  // lies between its neighbours.
   let unplaced = -1;
   const place = (end: number) => {
     if (unplaced < 0) return;
@@ -138,9 +105,8 @@ export function locateHunks(
       out.push({ from: p, to: p });
       continue;
     }
-    // A block changed whole (wholeBlockKind: a picture, a table…) is the
-    // next such block of the document: its Markdown isn't the text it
-    // shows, and it may have none.
+    // A block changed whole is the next such block of the document: its
+    // Markdown isn't the text it shows.
     const kind = wholeBlockKind(markdown);
     if (kind !== null) {
       // The next block node of its kind; the next of any, when the editor
@@ -156,9 +122,8 @@ export function locateHunks(
     }
     const plain = plainPiece(markdown);
     const index = plain ? text.indexOf(plain, cursor) : -1;
-    // Found, and nothing but whitespace skipped on the way - text in
-    // between would belong to no piece, unless an unchanged one before it
-    // is still to be placed.
+    // Found with only whitespace skipped, or text between would belong to no
+    // piece, unless an unchanged one before it is still to be placed.
     const adjacent = index !== -1 && !text.slice(cursor, index).trim();
     if (!plain || (hunk.kind === "same" && !adjacent)) {
       if (unplaced < 0) unplaced = out.length;
@@ -198,9 +163,8 @@ const PROSE = new Set([
   "list_item",
 ]);
 
-/** The blocks in [from, to) a whole-block hunk can be - each node that
- *  isn't prose (a table, a code block, a footnote's definition) or is a
- *  paragraph of nothing but a picture - in order, outermost first. */
+/** The blocks in [from, to) a whole-block hunk can be: non-prose nodes and
+ *  picture-only paragraphs, in order, outermost first. */
 function wholeNodes(doc: ProseNode, from: number, to: number): WholeNode[] {
   const out: WholeNode[] = [];
   doc.nodesBetween(from, to, (node, pos) => {
@@ -221,9 +185,8 @@ interface WholeNode {
   kind: string;
 }
 
-/** What `node` is as a whole block, by the editor's own reading of it:
- *  null for prose. A paragraph with no text of its own is a picture's, an
- *  HTML block's (`paragraph > html`) or a link's definition. */
+/** What `node` is as a whole block; null for prose. A paragraph with no text
+ *  of its own is a picture, an HTML block or a link definition. */
 function nodeKind(node: ProseNode): string | null {
   const name = node.type.name;
   const kinds: Record<string, string> = {
@@ -248,8 +211,8 @@ function nodeKind(node: ProseNode): string | null {
   return "picture";
 }
 
-/** Whether a node read as `node` can be a block written as `markdown`
- *  (wholeBlockKind): an `<img>` is a picture written as HTML. */
+/** Whether a node read as `node` can be a block written as `markdown`: an
+ *  `<img>` is a picture written as HTML. */
 function fits(markdown: string, node: string): boolean {
   return node === markdown || (markdown === "picture" && node === "html");
 }

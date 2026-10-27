@@ -27,7 +27,7 @@ fn run_scripted<R: Into<ToolOutput>>(
 ) -> (Vec<AgentTurn>, Vec<Vec<AgentTurn>>) {
     let script = RefCell::new(VecDeque::from(script));
     let seen = RefCell::new(Vec::new());
-    let turns = tauri::async_runtime::block_on(run_agent_loop(
+    let turns = crate::block_on(run_agent_loop(
         vec![],
         user("go"),
         max_steps,
@@ -205,7 +205,7 @@ fn the_last_steps_are_announced_to_the_model_only() {
 fn run_counting_retries(script: Vec<StepResult>) -> (Vec<AgentTurn>, usize) {
     let script = RefCell::new(VecDeque::from(script));
     let retries = RefCell::new(0);
-    let turns = tauri::async_runtime::block_on(run_agent_loop(
+    let turns = crate::block_on(run_agent_loop(
         vec![],
         user("go"),
         12,
@@ -307,7 +307,7 @@ fn reads_in_one_step_run_together_and_are_recorded_in_call_order() {
         ]),
         StepResult::Done(String::new()),
     ]));
-    let turns = tauri::async_runtime::block_on(run_agent_loop(
+    let turns = crate::block_on(run_agent_loop(
         vec![],
         user("go"),
         12,
@@ -347,7 +347,7 @@ fn a_proposal_waits_for_the_reads_before_it() {
         ]),
         StepResult::Done(String::new()),
     ]));
-    let turns = tauri::async_runtime::block_on(run_agent_loop(
+    let turns = crate::block_on(run_agent_loop(
         vec![],
         user("go"),
         12,
@@ -386,7 +386,7 @@ fn propose_then(text: &str, settled: bool) -> (Vec<AgentTurn>, usize) {
         StepResult::calls_with_text(vec![call("p", "propose_edit", "{}")], text.to_string()),
         StepResult::Done("asked again".into()),
     ]));
-    let turns = tauri::async_runtime::block_on(run_agent_loop(
+    let turns = crate::block_on(run_agent_loop(
         vec![],
         user("go"),
         12,
@@ -421,7 +421,7 @@ fn a_settled_proposal_with_its_reply_ends_the_exchange() {
     let (turns, steps) = propose_then("Tightened the opening.", true);
     assert_eq!(steps, 1, "no request just for the closing sentence");
     assert_eq!(reply_of(&turns), "Tightened the opening.");
-    // user, call, result, reply - the reply after the result, as before.
+    // user, call, result, reply - the reply after the result.
     assert!(matches!(turns[2], AgentTurn::ToolResult { .. }));
 }
 
@@ -436,7 +436,7 @@ fn comments_then(calls: usize) -> usize {
         StepResult::calls_with_text(step, "Glossed the hard words.".to_string()),
         StepResult::Done("and the rest".into()),
     ]));
-    tauri::async_runtime::block_on(run_agent_loop(
+    crate::block_on(run_agent_loop(
         vec![],
         user("go"),
         12,
@@ -485,7 +485,7 @@ fn an_amending_tool_rewrites_its_call_before_it_is_reported() {
         StepResult::Done(String::new()),
     ]));
     let reported = RefCell::new(Vec::new());
-    let turns = tauri::async_runtime::block_on(run_agent_loop(
+    let turns = crate::block_on(run_agent_loop(
         vec![],
         user("go"),
         12,
@@ -560,7 +560,7 @@ fn openai_style_usage_reads_the_cached_part_out_of_the_input() {
 
 #[test]
 fn a_step_error_aborts_the_exchange() {
-    let result = tauri::async_runtime::block_on(run_agent_loop(
+    let result = crate::block_on(run_agent_loop(
         vec![],
         user("go"),
         12,

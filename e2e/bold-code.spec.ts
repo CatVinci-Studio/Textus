@@ -2,8 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 // Inline code inside bold, italic and strikethrough: typed, made with
-// Ctrl+B, pasted, and saved as written. A backtick typed inside bold used
-// to stay a literal character, and Ctrl+B did nothing over code.
+// Ctrl+B, pasted, and saved as written.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 

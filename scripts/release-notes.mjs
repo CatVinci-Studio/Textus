@@ -1,26 +1,7 @@
 #!/usr/bin/env node
-// Release-note fragments. A pull request doesn't edit docs/releases/X.Y.Z.md:
-// it adds its own file under docs/releases/next/ (any name ending in .md
-// but README.md), so two pull requests never touch the same lines and the
-// second one to merge needs no rebase. A fragment holds one or more of the
-// template's section headings, each with its bullets:
-//
-//   ### Fixed
-//
-//   - Keeps the caret where it was when ... (#123)
-//
-// At release time `build` adds every fragment's bullets to the end of their
-// sections in docs/releases/X.Y.Z.md - creating the file from
-// docs/releases/TEMPLATE.md's outline when it doesn't exist yet - in the
-// order the fragments were added to the repository, and deletes the
-// fragments. See docs/dev/releasing.md.
-//
-//   node scripts/release-notes.mjs check            (exit 1 on a malformed
-//                                                    fragment)
-//   node scripts/release-notes.mjs build [X.Y.Z]    (default: package.json's
-//                                                    version without its
-//                                                    pre-release suffix)
-//   node scripts/release-notes.mjs --root DIR ...   (another checkout)
+// Release-note fragments: each pull request adds its own file of section
+// headings and bullets, so two never conflict. `check` validates them;
+// `build` adds their bullets to the version's notes and deletes them.
 import { execFileSync } from "node:child_process";
 import {
   existsSync,
@@ -42,12 +23,12 @@ const PLATFORMS = ["macOS", "Windows", "Linux", "iPhone and iPad"];
 
 export const FRAGMENT_DIR = "docs/releases/next";
 
-/** The closing line of every release's notes (TEMPLATE.md). */
+/** The closing line of every release's notes. */
 const CLOSING =
   "Installers for macOS (Apple silicon and Intel), Windows and Linux (x64 and ARM64) are below; the app updates itself.";
 
 /** What `build` writes where the summary sentence goes in a new file; a
- *  stable tag is refused while it is still there (check-versions.mjs). */
+ *  stable tag is refused while it is still there. */
 export const SUMMARY_PLACEHOLDER = "<one sentence: what this release is about>";
 
 /** The fragment files under `root`, by name. */
@@ -133,10 +114,8 @@ function platformRank(bullet) {
   return at < 0 ? PLATFORMS.length : at;
 }
 
-/** `notes` (the current text of docs/releases/X.Y.Z.md, or undefined) with
- *  the fragments' bullets added to their sections. Sections keep the
- *  template's order; a section the notes didn't have is added in its
- *  place. Platform notes stay grouped by platform. */
+/** `notes` (or undefined) with the fragments' bullets added to their
+ *  sections, in the template's order; platform notes stay grouped. */
 export function assemble({ version, notes, fragments }) {
   const parsed = notes
     ? parseNotes(notes)

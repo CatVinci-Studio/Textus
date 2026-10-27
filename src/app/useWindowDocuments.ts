@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState } from "react";
-import { useTabDragMerge } from "./useTabDragMerge";
+import { useTabDragMerge } from "./tabs/useTabDragMerge";
 import { useAutosave } from "../document/autosave";
 import { useLastCarets } from "../document/last-carets";
 import { useActiveDocument } from "./useActiveDocument";
 import { useOpenFolder } from "./useOpenFolder";
+import { useSplitRestore } from "./split/split-restore";
 import { useSessionPaths, useWindowTitle } from "./useWindowSession";
 import { useFileOpening } from "./useFileOpening";
 import { useHelpTabs } from "./useHelpTabs";
@@ -18,10 +19,8 @@ import type { Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /**
- * A window's documents (App.tsx): the one on screen, the folder in the
- * sidebar, opening, saving and autosaving, closing a tab, the help tabs
- * and the tour's practice tab, the view modes, plugins' view of the
- * window, and tabs moving between windows.
+ * A window's documents: the active one, the sidebar folder, opening,
+ * saving, closing, view modes and tabs moving between windows.
  */
 export function useWindowDocuments({
   shell,
@@ -48,8 +47,7 @@ export function useWindowDocuments({
     onOpened: showFiles,
     folderTooBroad: t.folderTooBroad,
   });
-  // The search shortcut's request for the Files tab's search box, taken
-  // (and cleared) by the box once the sidebar shows it.
+  // The search shortcut's request, cleared by the box once it shows.
   const [searchFocusRequest, setSearchFocusRequest] = useState(false);
   const clearSearchFocusRequest = useCallback(
     () => setSearchFocusRequest(false),
@@ -58,12 +56,12 @@ export function useWindowDocuments({
   const hasTree = openFolder.treeRoot !== null;
   const searchFiles = useCallback(() => {
     showFiles();
-    // No tree yet (an unsaved draft): nothing to search, and a request
-    // left standing would take the keyboard whenever a tree came.
+    // No tree yet: a request left standing would take the keyboard later.
     if (hasTree) setSearchFocusRequest(true);
   }, [showFiles, hasTree]);
   useWindowTitle(activeTitle);
   useSessionPaths(tabs);
+  useSplitRestore(tabs, setActiveTabId);
 
   const dialogFilters = useMemo(
     () => ({
@@ -91,7 +89,8 @@ export function useWindowDocuments({
     tabState,
     openPathInTab: opening.openPathInTab,
     // Defined below; read when a plugin asks.
-    saveActiveTab: () => void saving.saveTab(activeTab.id),
+    saveActiveTab: () => saving.saveTab(activeTab.id),
+    closeActiveTab: () => requestCloseTab(activeTab.id),
   });
 
   const { openHelpTab } = useHelpTabs({
@@ -138,23 +137,19 @@ export function useWindowDocuments({
     setPendingClose,
   });
 
-  // Tabs moving BETWEEN windows, in both directions (drag out, drop in,
-  // hover preview) - see useTabDragMerge.ts.
-  const { dragHoverPreview, handleTabDetach } = useTabDragMerge({
-    tabsRef,
-    liveTabs,
-    t,
-    removeTab,
-    setTabs,
-    setActiveTabId,
-  });
+  // Tabs moving between windows, in both directions.
+  const { dragHoverPreview, handleTabDetach, moveTabToNewWindow } =
+    useTabDragMerge({
+      tabsRef,
+      liveTabs,
+      t,
+      removeTab,
+      setTabs,
+      setActiveTabId,
+    });
 
-  // Nothing to switch between with a single tab, regardless of
-  // newDocumentMode - the setting only decides how NEW documents open, not
-  // whether the bar shows. A single-tab window stays draggable-to-merge via
-  // its native title bar instead (see useTabDragMerge.ts) - but the bar
-  // still needs to appear the moment an incoming-tab preview lands, so the
-  // incoming tab has somewhere to show up before the merge actually happens.
+  // The bar shows only with several tabs, or when an incoming tab's preview
+  // needs somewhere to land.
   const showTabBar = tabs.length > 1 || dragHoverPreview !== null;
 
   return {
@@ -176,6 +171,7 @@ export function useWindowDocuments({
     requestCloseTab,
     dragHoverPreview,
     handleTabDetach,
+    moveTabToNewWindow,
     showTabBar,
   };
 }

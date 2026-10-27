@@ -1,19 +1,15 @@
 import type { Lang } from "../i18n/strings";
 
 /**
- * The tour's practice document: reading notes on the classic the website
- * shows for the language (levis-homepage, site/content/classics/<lang>.json),
- * written as the learner's own. A short public-domain excerpt is quoted,
- * verbatim; under it are the learner's notes, in a wordy first draft. Every
- * AI lesson works on the notes or on lines the learner types - the classic
- * is only ever quoted, never rewritten.
+ * The tour's practice document: a short public-domain excerpt quoted
+ * verbatim, then the learner's own wordy notes. AI lessons only ever rework
+ * the notes, never the classic.
  */
 export interface PracticeNotes {
   /** The level-one heading the WYSIWYG lesson has the learner type. */
   title: string;
-  /** Everything under it: the excerpt and the notes. No level-one heading,
-   *  list, table, inline mark or link of its own - those are what the
-   *  writing lessons ask the learner to add. */
+  /** Everything under it. No level-one heading, list, table, inline mark or
+   *  link of its own: those are what the writing lessons ask the learner to add. */
   body: string;
   /** The grammar lesson's sentence, with one slip in it, for the learner to
    *  type. An input method types the slip as written. */
@@ -177,7 +173,6 @@ De certa forma, poderíamos dizer que já aqui ele se mostra como alguém que co
   },
 };
 
-/** The notes in the UI's language. */
 export function practiceNotes(lang: Lang): PracticeNotes {
   return NOTES[lang];
 }
@@ -188,12 +183,8 @@ const MARKERS = Object.values(NOTES).map((notes) =>
   notes.body.split("\n")[0].slice(3),
 );
 
-/**
- * The practice document with the notes in it. What the learner wrote in
- * the first lesson stays on top, the notes go under it; an empty document
- * gets their title too. Already there (in any language), the document is
- * returned as it is.
- */
+/** The practice document with the notes under what the learner wrote; an
+ *  empty one gets their title too. Already there, it is returned as is. */
 export function withPracticeNotes(
   markdown: string,
   notes: PracticeNotes,

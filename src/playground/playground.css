@@ -1,5 +1,5 @@
-/* The browser playground's page: the app's palette and type (base.css),
-   its document column (editor-column.css), and a slim bar of its own. */
+/* The browser playground's page: the app's palette, type and document
+   column, and a slim bar of its own. */
 @import "../ui/base.css";
 @import "../app/editor-column.css";
 
@@ -138,4 +138,21 @@ body {
   .playground .source-view {
     padding: 1.5rem 1rem 4rem;
   }
+}
+
+/* The document's name, opening the list of documents. */
+.playground-documents {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--control-height-sm);
+  padding: 0 10px 0 12px;
+  max-width: 260px;
+  color: inherit;
+}
+
+.playground-documents-chevron {
+  flex-shrink: 0;
+  transform: rotate(90deg);
+  opacity: 0.6;
 }

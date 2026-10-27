@@ -2,12 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * A proposal decided leaves as one move (revision/settle-motion.ts): the
- * paragraph it was drawn in cross-fades from how it looked to how it now
- * reads, the text after it glides to its new place, and its cards fade out
- * in the margin - from copies laid beside the editor, never in it.
- * Decided at once, the text jumped and the cards were gone between two
- * frames (1.2.1).
+ * A decided proposal leaves as one move: the paragraph cross-fades, the
+ * text after it glides, and its cards fade out, all from copies beside the
+ * editor.
  */
 
 const FIRST =

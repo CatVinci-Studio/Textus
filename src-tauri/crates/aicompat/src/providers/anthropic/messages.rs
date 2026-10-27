@@ -3,14 +3,9 @@
 
 use super::*;
 
-// --- Agentic tool-calling support (the anthropic-messages dialect - see
-// `aicompat::agent` for the provider-agnostic loop this feeds).
-
-/// `eager_input_streaming`: the arguments stream as Claude writes them.
-/// Without it the API holds each value back until it is whole, so an
-/// edit's new text arrived in one piece and a rewrite showed paragraph by
-/// paragraph, with nothing between (rc.6). The arguments may then end up
-/// invalid JSON - a call that doesn't parse is refused like any other.
+/// `eager_input_streaming`: the arguments stream as Claude writes them
+/// instead of each value arriving whole. They may then be invalid JSON; a
+/// call that doesn't parse is refused like any other.
 pub(crate) fn tool_to_schema(tool: &ToolSpec) -> Value {
     json!({
         "name": tool.name,
@@ -20,24 +15,6 @@ pub(crate) fn tool_to_schema(tool: &ToolSpec) -> Value {
     })
 }
 
-/// Groups the flat `AgentTurn` history into Messages API turns. This is
-/// where the Anthropic dialect genuinely differs from the Responses API one
-/// (`responses_api::agent_request_body`, which just emits one item per
-/// turn): Messages requires strictly alternating user/assistant roles, so a
-/// `ToolCall`/`ToolResult` can't each be their own message the way they are
-/// for OpenAI - every `ToolCall` of a step must land in ONE assistant
-/// message's `tool_use` blocks, immediately followed by their `ToolResult`s
-/// as ONE user message's `tool_result` blocks (matched by id).
-/// `run_agent_loop` records a step as its calls, then their results (see
-/// agent.rs), so a run of calls and the run of results after it are one
-/// step, and a call right after a result starts the next.
-///
-/// Splitting at steps is also what keeps the prompt cache: merging a later
-/// step's calls into the earlier step's message changed that message, so
-/// every step re-sent the ones before it uncached. Conversations saved
-/// before the loop recorded calls first interleave Call1, Result1, Call2,
-/// Result2 - those replay as one pair per call, which is valid and only
-/// loses the fact that the calls ran in parallel.
 /// An image as a Messages API content block.
 pub(crate) fn image_block(image: &ImageAttachment) -> Value {
     json!({
@@ -50,16 +27,18 @@ pub(crate) fn image_block(image: &ImageAttachment) -> Value {
     })
 }
 
+/// Groups the flat `AgentTurn` history into Messages API turns. Roles must
+/// alternate, so a step's calls form ONE assistant message of `tool_use`
+/// blocks and its results ONE user message of `tool_result` blocks.
 pub(crate) fn turns_to_messages(history: &[AgentTurn]) -> Vec<Value> {
     let mut messages = Vec::new();
     let mut i = 0;
     while i < history.len() {
         match &history[i] {
             AgentTurn::User { text, images } => {
-                // A text-only turn keeps the plain-string `content` shape it
-                // always had; only a turn carrying images needs the block
-                // form. Same wire meaning, but it keeps the common request
-                // byte-identical to what shipped before images existed.
+                // A text-only turn keeps the plain-string `content` shape, so
+                // the common request stays byte-identical to what it was before
+                // images.
                 if images.is_empty() {
                     messages.push(json!({"role": "user", "content": text}));
                 } else {
@@ -70,11 +49,8 @@ pub(crate) fn turns_to_messages(history: &[AgentTurn]) -> Vec<Value> {
                 i += 1;
             }
             AgentTurn::Assistant { text, .. } => {
-                // Claude can end a turn with no text (right after tool
-                // results, say), but rejects an empty assistant message on
-                // replay - and that 400 would then fail every later send in
-                // the conversation. The API merges the neighbours left
-                // adjacent by skipping it.
+                // Claude rejects an empty assistant message on replay, which would fail
+                // every later send; the API merges the neighbours left adjacent.
                 if !text.trim().is_empty() {
                     messages.push(json!({"role": "assistant", "content": text}));
                 }
@@ -94,9 +70,8 @@ pub(crate) fn turns_to_messages(history: &[AgentTurn]) -> Vec<Value> {
                             reasoning,
                         } => {
                             // The step's thinking blocks, ahead of its first
-                            // tool_use as Claude wrote them: thinking with
-                            // tools needs them back, signatures untouched,
-                            // until the step's results are answered.
+                            // tool_use: thinking with tools needs them back,
+                            // signatures untouched.
                             if tool_uses.is_empty() {
                                 if let Some(Value::Array(blocks)) = reasoning {
                                     tool_uses.extend(blocks.iter().cloned());
@@ -151,8 +126,8 @@ pub(crate) fn turns_to_messages(history: &[AgentTurn]) -> Vec<Value> {
 pub(crate) const EPHEMERAL: &str = "ephemeral";
 
 /// Makes the last content block of `message` a cache breakpoint. A plain
-/// string `content` becomes the one text block it stands for - the same
-/// prompt, so the cache entry still matches it once the marker moves on.
+/// string `content` becomes the one text block it stands for, so the cache
+/// entry still matches once the marker moves on.
 pub(crate) fn mark_cache_breakpoint(message: &mut Value) {
     let content = &mut message["content"];
     if let Some(text) = content.as_str() {
@@ -165,16 +140,11 @@ pub(crate) fn mark_cache_breakpoint(message: &mut Value) {
 
 /// [`turns_to_messages`] with the conversation's two cache breakpoints.
 ///
-/// The message being sent carries the document (agent.rs's request_context)
-/// and history later keeps it without, so nothing cached while an exchange
-/// ran is ever a prefix of the next exchange's requests. What every later
-/// request does share is the history, which agent.rs keeps byte-stable once
-/// replayed: the first breakpoint goes on its last block, so this request
-/// writes everything up to the message being sent. The second goes on the
-/// last block before the newest exchange in that history - exactly where the
-/// previous request put its first one - so the cache entry it wrote is read
-/// back at a breakpoint of its own, however many blocks the newest exchange
-/// added (a breakpoint only looks 20 blocks back for an earlier entry).
+/// The message being sent carries the document and history keeps it
+/// without, so only the history is shared by later requests. The first
+/// breakpoint goes on its last block; the second on the last block before
+/// the newest exchange, where the previous request put its first, so that
+/// entry is read back however many blocks the exchange added.
 pub(crate) fn messages_with_cache_breakpoints(history: &[AgentTurn]) -> Vec<Value> {
     let is_user = |turn: &AgentTurn| matches!(turn, AgentTurn::User { .. });
     let Some(current) = history.iter().rposition(is_user) else {
@@ -195,14 +165,10 @@ pub(crate) fn messages_with_cache_breakpoints(history: &[AgentTurn]) -> Vec<Valu
     messages
 }
 
-/// One agent step's Messages API body. Three explicit cache breakpoints
-/// plus the automatic one - the API's limit of four: the last system block
-/// (tools render before it, so tools and system prompt are cached together,
-/// for every exchange and every conversation in the same project and mode),
-/// the two in the history (see [`messages_with_cache_breakpoints`]), and the
-/// top-level automatic breakpoint, which follows the end of the request so
-/// each tool step (up to 12 per message) reads the step before it -
-/// document included - instead of paying for it again.
+/// One agent step's Messages API body, with three explicit cache breakpoints
+/// plus the automatic one (the API's limit of four): the last system block,
+/// the two in the history, and the top-level one that follows the request's
+/// end so each tool step reads the step before it from cache.
 pub(crate) fn agent_request_body(
     auth: &AnthropicAuth,
     instructions: &str,
@@ -220,12 +186,9 @@ pub(crate) fn agent_request_body(
         last["cache_control"] = json!({"type": EPHEMERAL});
     }
     let mut tool_schemas = tools.iter().map(tool_to_schema).collect::<Vec<_>>();
-    // Claude executes this server tool inside the Messages request: its
-    // server_tool_use and result blocks are replayed only to continue a
-    // paused turn (agent_step_with_usage), and the citations on the text
-    // blocks become the reply's sources (parse_agent_response). The 2026
-    // versions route the search through code execution by default; this
-    // one searches directly, on every model.
+    // Claude executes this server tool inside the Messages request. Newer
+    // versions route the search through code execution by default; this one
+    // searches directly, on every model.
     if web_search {
         tool_schemas.push(json!({
             "type": "web_search_20250305",
@@ -235,9 +198,8 @@ pub(crate) fn agent_request_body(
     }
     let mut body = json!({
         "model": model,
-        // Room for a rewritten section inside one propose_edit call; at
-        // 4096 a long rewrite was cut off mid-arguments. Deep thinking
-        // spends from the same limit, so it gets twice the room.
+        // Room for a rewritten section inside one propose_edit call. Deep
+        // thinking spends from the same limit, so it gets twice the room.
         "max_tokens": if thinking.show { DEEP_MAX_TOKENS } else { AGENT_MAX_TOKENS },
         "stream": true,
         "system": system,
@@ -249,15 +211,10 @@ pub(crate) fn agent_request_body(
     (body, binding_beta)
 }
 
-/// Parses a Messages API `content` block array into a [`StepResult`]: any
-/// `tool_use` blocks become tool calls the caller must execute, otherwise
-/// the `text` blocks are the model's final answer - joined as they stand:
-/// a reply that cites the web comes as many short text blocks, a cited
-/// phrase each, and a newline between them broke sentences in two. Text
-/// after a search (a server block) starts a new paragraph. Each page a
-/// block cites is reported through `on_event` and marked at its end. A tool
-/// step's thinking blocks ride on its first call, verbatim, to be sent back
-/// with it.
+/// Parses a Messages API `content` block array into a [`StepResult`]. Text
+/// blocks are joined as they stand, since a cited reply comes as many short
+/// blocks; text after a server block starts a new paragraph. A tool step's
+/// thinking blocks ride on its first call, verbatim.
 pub(crate) fn parse_agent_response(content: &[Value], on_event: EventSink<'_>) -> StepResult {
     let mut tool_calls = Vec::new();
     let mut text = String::new();

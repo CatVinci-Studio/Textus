@@ -2,9 +2,8 @@ import { AI_NAME, APP_NAME } from "../names";
 import type { Plural } from "../plural";
 
 /**
- * English: the source of truth. Every key the UI reads is defined here, and
- * `Strings` (../strings.ts) is this object's shape - another language
- * leaves out what it hasn't translated and falls back to these.
+ * English, the source of truth: `Strings` is this object's shape, and other
+ * languages fall back to it for what they haven't translated.
  */
 const en = {
   agentPanelTitle: AI_NAME,
@@ -31,6 +30,7 @@ const en = {
   menuToggleAgentPanel: "AI Panel",
   agentPanelEmptyWrite: "Start writing",
   agentPanelEmptyReview: "Get more suggestions",
+  agentPanelEmptyCreate: "Make a theme, plugin or skill",
   aiWorkingCompletion: "Writing a continuation…",
   aiWorkingGrammar: "Checking this paragraph…",
   noticeCompletionNeedsCaret:
@@ -112,11 +112,13 @@ type /name in a conversation to use one.
   proposalChangeCount: "{n} changes",
   editorLabel: "Document",
   diagramZoom: "Enlarge diagram",
+  codeBlockEditSource: "Edit Source",
   diagramViewerLabel: "Diagram",
   diagramViewerClose: "Close",
   diagramViewerHint:
     "Scroll or pinch to zoom · drag to move · double-click to fit",
   codeBlockLanguage: "Code language",
+  codeBlockLanguageSearch: "Search languages",
   announceAiWriting: `${AI_NAME} is writing…`,
   announceAiDone: `${AI_NAME} is done.`,
   announceChangesProposed: {
@@ -324,6 +326,11 @@ type /name in a conversation to use one.
   commentNotFound: "That passage is no longer in the document.",
   toolResult: "Result",
   chatUseTheme: "Use this theme",
+  chatInstallPlugin: "Install this plugin",
+  chatUpdatePlugin: "Update the plugin",
+  chatPluginCantInstall: "This plugin can't be installed: {reason}",
+  chatSaveSkill: "Save this skill",
+  chatUpdateSkill: "Update the skill",
   toolSearchDocument: "Searching the document for “{arg}”",
   toolReadDocument: "Reading “{arg}”",
   toolReadWholeDocument: "Reading the document",
@@ -344,6 +351,18 @@ type /name in a conversation to use one.
   menuToggleSplitView: "Split View",
   shortcutToggleSplitView: "Toggle split view (source | preview)",
   menuToggleZenMode: "Zen Mode",
+  menuSplitRight: "Split Right",
+  menuCommandPalette: "Command Palette…",
+  shortcutCommandPalette: "Command Palette",
+  commandPalettePlaceholder: "Type a command…",
+  menuSplitDown: "Split Down",
+  menuCloseSplit: "Close Split",
+  shortcutSplitEditor: "Split or Unsplit",
+  splitTurn: "Side by Side ⇄ One Above the Other",
+  splitSwap: "Swap the Two Sides",
+  splitEven: "Make Both Sides Equal",
+  openBeside: "Open to the Side",
+  moveToNewWindow: "Move to New Window",
   menuViewSidebar: "Sidebar",
   menuViewSource: "Source Mode",
   menuViewTypewriter: "Typewriter Mode",
@@ -451,6 +470,7 @@ type /name in a conversation to use one.
   treeOpen: "Open",
   outlineCollapse: "Collapse",
   outlineExpand: "Expand",
+  wordUnit: "word",
   wordsUnit: "words",
   alertNote: "Note",
   alertTip: "Tip",
@@ -488,6 +508,14 @@ type /name in a conversation to use one.
   updateChannelLabel: "Update channel",
   updateChannelStable: "Stable",
   updateChannelBeta: "Beta",
+  backToStableLabel: "Go back to the stable version",
+  backToStableHint:
+    "You're using a beta ({version}). The stable version is older; going back installs it.",
+  backToStableButton: "Go Back to Stable",
+  backToStableConfirm:
+    "Install Textus {version}, the stable release? It's older than the beta you have ({beta}). Your documents aren't touched; what only the beta has - its plugins, for one - may not come along.",
+  backToStableInstall: "Install {version}",
+  backToStableNone: "There's no stable version to go back to right now.",
   aiCompletionLabel: "Enable AI completion",
   completionToneLabel: "Completion tone",
   completionTone_default: "Match the document",
@@ -524,6 +552,7 @@ type /name in a conversation to use one.
   skillCategoryRevise: "Revise",
   skillCategoryCheck: "Check",
   skillCategoryFormat: "Formats",
+  skillCategoryCreate: "Make",
   pickerKeysHint: "↑↓ to move · Enter to choose · Esc to close",
   skillPickerAbout:
     "Type / to run a skill: a ready-made instruction such as Proofread or Summarize.",
@@ -535,9 +564,10 @@ type /name in a conversation to use one.
   mentionPickerNoFiles: "The project folder has no text files yet.",
   mentionPickerNoMatch: "No file matches “{query}”.",
   agentSkillsBuiltin: "Built-in skills",
-  agentSkillsOnCount: "{n} of {total} on",
   agentSkillsCustomize: "Customize…",
   agentSkillsCustomized: "Customized",
+  agentSkillsModes: "Modes it works in",
+  agentSkillsBuiltinTag: "Built-in",
   agentSkillsOpen: "Open",
   agentSkillsReset: "Reset",
   agentSkillsResetConfirm:
@@ -571,6 +601,7 @@ type /name in a conversation to use one.
   accountNotConnected: "Not connected",
   accountConnectedAs: "Connected",
   signInTemplate: "Sign in with {name}",
+  signInExperimental: "Experimental - use with care.",
   logoutButton: "Sign out",
   loggingIn: "Waiting for browser login…",
   loginLinkHint:
@@ -592,6 +623,9 @@ type /name in a conversation to use one.
   alignRight: "Align Right",
   selectRow: "Select Row",
   selectColumn: "Select Column",
+  menuGroupInsert: "Insert",
+  tableRowGroup: "Row",
+  tableColumnGroup: "Column",
   insertRowAbove: "Insert Row Above",
   insertRowBelow: "Insert Row Below",
   insertColumnLeft: "Insert Column Left",
@@ -616,8 +650,13 @@ type /name in a conversation to use one.
   agentDefaultModeLabel: "Default mode",
   agentModeWrite: "Write",
   agentModeReview: "Review",
+  agentModeCreate: "Create",
   chatModeLabel: "Mode",
   chatModelLabel: "Model",
+  chatModeModelLabel: "Mode and model",
+  agentModeWriteHint: "Writes and changes the document",
+  agentModeReviewHint: "Reads it and leaves notes; changes nothing",
+  agentModeCreateHint: "Makes themes, plugins and skills",
   agentPersonalizationGroupLabel: "Writing Instructions & Skills",
   agentAdvancedGroupLabel: "Advanced",
   writingModelLabel: "Assist model",
@@ -692,7 +731,8 @@ type /name in a conversation to use one.
   chatSelectedPicture: "Picture selected",
   cut: "Cut",
   copy: "Copy",
-  copyAsMarkdown: "Copy as Markdown",
+  copyAsPlainText: "Copy as Plain Text",
+  pasteAsPlainText: "Paste as Plain Text",
   paste: "Paste",
   selectAll: "Select All",
   findReplace: "Find & Replace",
@@ -779,6 +819,7 @@ type /name in a conversation to use one.
   autoCloseMarksLabel: "Close ** and `",
   autoCloseBracketsLabel: "Close (), [] and “”",
   pdfPageNumbersLabel: "Show page numbers in exports",
+  pdfLightColorsLabel: "Export PDFs in light colors",
   infoTipLabel: "More about {label}",
   infoTipLabelPlain: "More information",
   askAi: "Ask AI…",
@@ -794,10 +835,7 @@ type /name in a conversation to use one.
   menuBarLabel: "Show the menu bar",
   menuBarHelp:
     "File, Edit, View and the rest along the title bar, instead of behind ☰. The sidebar button makes room for them: the sidebar is in View, and has its shortcut.",
-  // The app menu itself. Rendered from src/ui/app-menu-model.ts, which
-  // pairs each of these with the menu id its native twin in
-  // src-tauri/src/menu.rs carries - the ids are the contract, these
-  // strings are only what the user reads.
+  // The app menu. The menu ids are the contract; these are only labels.
   menuFile: "File",
   menuEdit: "Edit",
   menuFormat: "Format",
@@ -806,6 +844,7 @@ type /name in a conversation to use one.
   menuSettings: "Settings…",
   menuExit: "Exit",
   menuNewFile: "New File",
+  menuNewTab: "New Tab",
   menuOpenFile: "Open…",
   menuOpenRecent: "Open Recent",
   menuRecentNone: "No Recent Files",
@@ -826,9 +865,11 @@ type /name in a conversation to use one.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Close Tab",
+  menuReopenClosedTab: "Reopen Closed Tab",
   splitDivider: "Divider between the documents",
   hoverCard: "Preview",
   hoverPin: "Pin",
+  hoverOpen: "Open",
   hoverClose: "Close",
   menuUndo: "Undo",
   menuRedo: "Redo",
@@ -940,6 +981,9 @@ type /name in a conversation to use one.
   contentWidthAuto: "Adaptive",
   contentWidthStandard: "Standard",
   contentWidthFull: "Full Width",
+  imageAlignLabel: "Images on their own line",
+  imageAlignCenter: "Centered",
+  imageAlignLeft: "Left",
   uiTextScaleLabel: "Interface text size",
   newDocumentModeLabel: "Open documents in",
   newDocumentModeWindow: "A new window",
@@ -1059,8 +1103,7 @@ type /name in a conversation to use one.
   cancel: "Cancel",
   draftRestoredMessage: "Recovered unsaved content from the last session.",
   draftRestoredDismiss: "Got it",
-  /** A Word document was opened as a new Markdown one
-   *  (document/word-import.ts). */
+  /** A Word document was opened as a new Markdown one. */
   wordImportNotice:
     "Opened {name} as a new Markdown document. Some formatting may look different than in Word; the Word file itself is unchanged.",
   wordImportDismiss: "Got it",
@@ -1197,20 +1240,24 @@ type /name in a conversation to use one.
   menuWindow: "Window",
   menuZoomWindow: "Zoom",
   menuBringAllToFront: "Bring All to Front",
-  // The browser playground (src/playground/).
+  // The browser playground.
   playgroundName: "Playground",
-  playgroundImport: "Import",
-  playgroundExport: "Export",
   playgroundSource: "Source",
+  playgroundDocuments: "Documents",
+  playgroundNewDocument: "New Document",
+  playgroundDeleteDocument: "Delete This Document",
+  playgroundOpen: "Open…",
+  playgroundSave: "Save",
+  playgroundSavedTo: "Saved to {name}.",
   playgroundDownload: `Download ${APP_NAME}`,
-  playgroundLocalNote: "Your document is kept in this browser only.",
+  playgroundLocalNote: "Your documents are kept in this browser only.",
   playgroundImageNotice: `Images need the ${APP_NAME} desktop app.`,
   playgroundImportUnsupported:
     "Only .md, .markdown and .txt files can be imported.",
   backgroundToggle: "Keep running in the background",
   backgroundTrayUnavailable: `This desktop has no tray: libayatana-appindicator isn’t installed. ${APP_NAME} still keeps running; open it again from your launcher.`,
   trayOpenTextus: `Open ${APP_NAME}`,
-  // Plugins (src/plugins/, Settings › Plugins).
+  // Plugins.
   navExtensions: "Extensions",
   extensionsTabPlugins: "Plugins",
   extensionsTabThemes: "Themes",
@@ -1231,8 +1278,7 @@ type /name in a conversation to use one.
   mcpServersGroup: "MCP servers",
   mcpHelp: `An MCP server gives ${AI_NAME} more tools: a folder, a database, a search. Each one on is started in the background, and ${AI_NAME} may call its tools while it helps you; the conversation shows each call.`,
   mcpNone: "No server added yet.",
-  mcpAdd: "Add a server…",
-  mcpPresetAdd: "Add",
+  mcpAdd: "Add MCP server",
   mcpStateOff: "Off",
   mcpStateStarting: "Starting…",
   mcpStateReady: "Ready · {count} tools",
@@ -1269,15 +1315,13 @@ type /name in a conversation to use one.
   marketGetMore: "Get more",
   marketTitle: "Get more",
   marketHelp:
-    "Plugins, themes, skills and MCP servers for Textus, in one place. Each one asks before it is installed what it may do.",
-  marketAll: "All",
-  marketSearch: "Search plugins, themes, skills and servers",
+    "Themes, plugins and skills for Textus. Each one asks before it is installed what it may do.",
+  marketSearch: "Search",
   marketListYours: "Made one of your own?",
   marketListingRules: "How to list it",
   marketSkillFailed: "It wasn't installed.",
   marketSkillInstalled: "Installed",
   marketSkillsNone: "No skills are listed yet.",
-  marketMcpAllAdded: "You have added every server listed here.",
   pluginsCatalogKept:
     "Showing the list from last time - couldn’t get a newer one: {reason}",
   pluginInstall: "Install",
@@ -1308,15 +1352,39 @@ type /name in a conversation to use one.
   pluginDataClearAsk: "Clear what {name} keeps? It can't be brought back.",
   pluginVersionLabel: "Version {version}",
   pluginUsageGuide: "How to use",
-  pluginsAllLabel: "Plugins",
+  pluginEditWithAi: "Edit with AI",
+  pluginEditWithAiAsk: "Change the {name} plugin ({id}): ",
+  pluginEditWithAiError: "it stopped with this error - fix it: {error}\n",
+  pluginsAllLabel: "All plugins",
   pluginsAllHelp:
     "Off, no plugin runs and nothing they add is shown. Your plugins and their settings stay as they are.",
   pluginsInstallHelp:
     "A plugin package (.textusplugin) is copied into Textus. A plugin folder is loaded where it is, for trying out one you are writing; it reloads from there.",
   pluginsInstallFile: "Install from file…",
   pluginsLoadFolder: "Load a plugin folder…",
+  pluginsOpenScripts: "Open Scripts Folder",
+  pluginsDescribeLabel: "Make your own",
+  pluginsDescribePlaceholder: "Describe what it should do…",
+  pluginsDescribeMake: "Make with AI",
+  pluginsDescribeAsk: "Make a plugin that does this: ",
   pluginPackageFilter: "Textus plugin",
   pluginsInstalledGroup: "Installed",
+  pluginOpenOffer:
+    "The {name} plugin opens “{file}”. Install it and open the file?",
+  pluginOpenInstall: "Install and open",
+  pluginOpenTurnOn:
+    "The {name} plugin opens “{file}”, but it is off. Turn it on and open the file?",
+  pluginOpenTurnOnButton: "Turn on and open",
+  pluginsRecommended: "Recommended",
+  pluginsPacks: "Packs",
+  packWriting: "Writing",
+  packCharts: "Charts",
+  packResearch: "Research",
+  packInstallAll: "Install all ({n})",
+  packAllInstalled: "All installed",
+  pluginScreenshot: "{name} at work",
+  pluginsMore: "More plugins",
+  pluginsMine: "Made by you",
   pluginsNone: "None yet.",
   pluginStatusBroken: "Can’t be read: {reason}",
   pluginStatusIncompatible: "Made for another version of Textus ({range}).",
@@ -1339,6 +1407,15 @@ type /name in a conversation to use one.
   pluginRepository: "Source",
   pluginReload: "Reload",
   pluginUninstall: "Uninstall",
+  pluginExport: "Export for Publishing…",
+  pluginExportPrompt:
+    "Your name as its publisher - lowercase letters, digits and dashes. Your GitHub name works well. It replaces “local” in the plugin's id.",
+  pluginExportChooseFolder: "Choose a Folder…",
+  pluginExportDone:
+    "Exported to {path}.\n\nMake that folder a GitHub repository and push a tag such as v0.1.0: its release workflow publishes the plugin. The README in it says how to have it listed in Textus.",
+  pluginUriNotTaken: "No plugin that is turned on opens this link: {link}",
+  uriCommandConfirm: "A link asks to run “{command}”. Run it?",
+  uriCommandRun: "Run",
   pluginUnload: "Remove",
   pluginUninstallAsk:
     "Uninstall {name}? Its files and what it kept are removed.",
@@ -1350,11 +1427,13 @@ type /name in a conversation to use one.
   pluginStoppedAnswering: "it stopped answering",
   pluginTooManyErrors: "it failed too often",
   pluginQuickPickEmpty: "Nothing matches.",
-  pluginPermDocumentRead: "Read the document in front and its selection",
-  pluginPermDocumentPropose:
+  pluginPermEditorRead: "Read the document in front and its selection",
+  pluginPermEditorWrite:
+    "Change the document in front directly (each change can be undone)",
+  pluginPermEditorPropose:
     "Suggest edits to the document, which you accept or reject",
-  pluginPermWorkspaceRead: "Read the files in the open folder",
-  pluginPermWorkspaceWrite: "Create and change files in the open folder",
+  pluginPermFilesRead: "Read the files in the open folder",
+  pluginPermFilesWrite: "Create and change files in the open folder",
   pluginPermClipboard: "Read and write the clipboard",
   pluginPermEditorInput:
     "Take over the keys you type in the editor, and edit as you type",

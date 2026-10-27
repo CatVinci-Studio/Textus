@@ -1,0 +1,245 @@
+/* @textus/plugin-ui: the base every plugin webview gets, so a panel looks
+   like the rest of Textus without its own CSS. Uses only the theme variables
+   plugins are given. */
+
+:root {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* The page fills its frame: a panel's background reaches the bottom of
+   the sidebar, however little is in it. */
+html {
+  height: 100%;
+}
+body {
+  min-height: 100%;
+}
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--editor-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--chrome-accent);
+}
+
+.muted {
+  color: var(--chrome-muted);
+}
+
+button,
+.button {
+  font: inherit;
+  font-size: var(--text-sm);
+  min-height: var(--control-height-sm);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  color: var(--chrome-text);
+  cursor: pointer;
+}
+button:hover,
+.button:hover {
+  background: var(--sidebar-hover);
+}
+button.primary {
+  background: var(--chrome-accent);
+  border-color: var(--chrome-accent);
+  color: var(--bg);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+button.icon {
+  border-color: transparent;
+  background: transparent;
+  padding: 0 var(--space-2);
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--editor-text);
+  background: var(--bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-2);
+}
+input:focus,
+select:focus,
+textarea:focus,
+button:focus-visible {
+  outline: 2px solid var(--chrome-accent);
+  outline-offset: -1px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+}
+.toolbar .spacer {
+  flex: 1;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.list > li,
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-small);
+  color: var(--sidebar-text);
+}
+.list > li.clickable:hover,
+.row.clickable:hover {
+  background: var(--sidebar-hover);
+  cursor: pointer;
+}
+.list > li.active {
+  background: var(--sidebar-active);
+  color: var(--sidebar-active-text);
+}
+
+.empty {
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  color: var(--chrome-muted);
+}
+
+h1,
+h2,
+h3 {
+  color: var(--chrome-text);
+  font-weight: 600;
+}
+h2 {
+  font-size: var(--text-lg);
+}
+h3 {
+  font-size: var(--text-md);
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+  background: var(--editor-code-bg);
+  border-radius: var(--radius-small);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+/* The app's moves, for a plugin's own parts: motion-enter and motion-exit,
+   with the window's durations and distances, reduced motion included. */
+@keyframes motion-enter {
+  from {
+    opacity: 0;
+    transform: translate(var(--enter-x, 0), var(--enter-y, 0))
+      scale(var(--enter-scale, 1));
+  }
+}
+
+@keyframes motion-exit {
+  to {
+    opacity: 0;
+    transform: translate(var(--exit-x, 0), var(--exit-y, 0))
+      scale(var(--exit-scale, 1));
+  }
+}
+
+/* Each child of .motion-cascade arrives a --dur-stagger after the one before.
+   The first twenty are spaced; any after come with the twentieth. */
+.motion-cascade > * {
+  animation: motion-enter var(--dur-medium) var(--ease-out) backwards;
+}
+.motion-cascade > :nth-child(2) {
+  animation-delay: calc(var(--dur-stagger) * 1);
+}
+.motion-cascade > :nth-child(3) {
+  animation-delay: calc(var(--dur-stagger) * 2);
+}
+.motion-cascade > :nth-child(4) {
+  animation-delay: calc(var(--dur-stagger) * 3);
+}
+.motion-cascade > :nth-child(5) {
+  animation-delay: calc(var(--dur-stagger) * 4);
+}
+.motion-cascade > :nth-child(6) {
+  animation-delay: calc(var(--dur-stagger) * 5);
+}
+.motion-cascade > :nth-child(7) {
+  animation-delay: calc(var(--dur-stagger) * 6);
+}
+.motion-cascade > :nth-child(8) {
+  animation-delay: calc(var(--dur-stagger) * 7);
+}
+.motion-cascade > :nth-child(9) {
+  animation-delay: calc(var(--dur-stagger) * 8);
+}
+.motion-cascade > :nth-child(10) {
+  animation-delay: calc(var(--dur-stagger) * 9);
+}
+.motion-cascade > :nth-child(11) {
+  animation-delay: calc(var(--dur-stagger) * 10);
+}
+.motion-cascade > :nth-child(12) {
+  animation-delay: calc(var(--dur-stagger) * 11);
+}
+.motion-cascade > :nth-child(13) {
+  animation-delay: calc(var(--dur-stagger) * 12);
+}
+.motion-cascade > :nth-child(14) {
+  animation-delay: calc(var(--dur-stagger) * 13);
+}
+.motion-cascade > :nth-child(15) {
+  animation-delay: calc(var(--dur-stagger) * 14);
+}
+.motion-cascade > :nth-child(16) {
+  animation-delay: calc(var(--dur-stagger) * 15);
+}
+.motion-cascade > :nth-child(17) {
+  animation-delay: calc(var(--dur-stagger) * 16);
+}
+.motion-cascade > :nth-child(18) {
+  animation-delay: calc(var(--dur-stagger) * 17);
+}
+.motion-cascade > :nth-child(19) {
+  animation-delay: calc(var(--dur-stagger) * 18);
+}
+.motion-cascade > :nth-child(20) {
+  animation-delay: calc(var(--dur-stagger) * 19);
+}
+
+/* What is about to change, for the moment before it does: a tint, set and
+   taken off, never faded. */
+.motion-mark {
+  background-color: var(--motion-mark-bg);
+  border-radius: 2px;
+}

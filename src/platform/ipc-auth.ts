@@ -3,25 +3,19 @@ import type { ImageHost } from "../settings/SettingsContext";
 import type { CustomEndpointStatus_Serialize } from "./bindings/auth";
 import { aiCommand, command } from "./ipc-call";
 
-/**
- * Backend commands for signing in: AI providers by OAuth or key, custom
- * endpoints, and picture hosts (ipc.ts).
- */
+/** Backend commands for signing in: AI providers, custom endpoints, picture hosts. */
 
 /** What every sign-in's status command answers (more, for some). */
 export interface OauthStatus {
   configured: boolean;
 }
 
-/** What custom_endpoint_status reports - generated from
- *  CustomEndpointStatus in src-tauri/src/auth/custom_endpoint.rs. The key
- *  itself never comes back to the webview - `api_key` is always null - only
- *  whether one is stored (`has_api_key`). */
+/** What custom_endpoint_status reports. The key itself never comes back
+ *  (`api_key` is always null), only `has_api_key`. */
 export type CustomEndpointConfig = CustomEndpointStatus_Serialize;
 
-/** Provider ids with an OAuth flow and their command names - dynamic
- *  dispatch (not a fixed per-provider function) because the picker iterates
- *  the catalog and looks these up by provider id. */
+/** Provider ids with an OAuth flow and their command names, looked up by
+ *  provider id as the picker iterates the catalog. */
 export const OAUTH_COMMANDS: Record<
   string,
   {
@@ -72,10 +66,8 @@ export const auth = {
     aiCommand("test_custom_endpoint", baseUrl, apiKey),
 };
 
-/** Image-host credentials reuse the same private 0600 credential store as
- * provider keys, one per host under a reserved id that is never shown as
- * an AI provider. Mirrors `ImageHost::credential_id` in
- * src-tauri/src/commands/image_host.rs. */
+/** Image-host credentials in the provider-key store, one per host under a
+ *  reserved id never shown as a provider. Keep in step with the Rust side. */
 export const IMAGE_HOST_CREDENTIAL_IDS: Record<ImageHost, string> = {
   picgo: "__image_host_picgo",
   smms: "__image_host_smms",
@@ -90,7 +82,3 @@ export const imageHostAuth = {
   clearToken: (host: ImageHost) =>
     auth.clearProviderApiKey(IMAGE_HOST_CREDENTIAL_IDS[host]),
 };
-
-// ---------------------------------------------------------------------------
-// ai (src-tauri/src/ai/*.rs)
-// ---------------------------------------------------------------------------

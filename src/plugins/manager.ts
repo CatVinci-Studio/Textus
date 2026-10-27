@@ -1,39 +1,43 @@
-import { createElement } from "react";
-import { logPluginError } from "./plugin-log";
-import { setHoverStarter } from "./hover-providers";
+import { logPluginError } from "./store/plugin-log";
 import {
   forgetPluginSettings,
   loadProjectPluginSettings,
   pluginValue,
   setPluginValue,
   type SettingScope,
-} from "./plugin-settings";
+} from "./store/plugin-settings";
 import { version as APP_VERSION } from "../../package.json";
 import { plugins as pluginsIpc, type PluginsState } from "../platform/ipc";
+import type { PluginFile } from "../platform/ipc";
 import { isIOSApp } from "../platform/capabilities";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
 import { registerCommand, runCommand } from "../app/commands";
-import { registerSidebarTab } from "../app/sidebar-tabs";
-import { registerEditorMenuItems } from "../editor/editor-menu-items";
 import { showConfirm, showMessage } from "../ui/app-dialog";
-import type { PluginHost } from "./broker";
+import { getActiveDocument } from "./app-bridge";
+import type { PluginHost } from "./host/broker";
 import { lazyModule } from "../lazy/lazy-module";
-import { type PluginOrigin } from "./files";
+import { type PluginOrigin } from "./store/files";
 import {
   engineSatisfied,
-  localize,
   parseManifest,
   type Permission,
-} from "./manifest";
-import { permissionLabel } from "./permissions";
-import { PluginTabIcon, PluginWebviewPanel } from "./PluginWebview";
+} from "./store/manifest";
+import { permissionLabel } from "./store/permissions";
+import {
+  addContribution,
+  applyContributions,
+  contributingPlugins,
+  withdrawContributions,
+  type ContributionDeps,
+} from "./contributions/plugin-contributions";
 import {
   removeWebview,
   webview,
+  webviewForKey,
   webviewState,
   type WebviewRecord,
-} from "./webviews";
-import { canRun, canSwitch, nextStatus } from "./lifecycle";
+} from "./views/webviews";
+import { canRun, canSwitch, nextStatus } from "./store/lifecycle";
 import {
   pluginName,
   pluginRecord,
@@ -42,21 +46,15 @@ import {
   update,
   windowInfo,
   type PluginRecord,
-} from "./plugin-records";
+} from "./store/plugin-records";
 
 /**
- * Every plugin installed - from the catalog (catalog.ts) or a file - and
- * a developer's loaded folder, with its switch, its grants and what it
- * adds while on
- * (docs/design/plugins.md §5-6).
- *
- * A plugin's contributions (commands, sidebar tabs, menu items, file
- * types) are registered as soon as it is on, from its manifest alone; its
- * code starts the first time one of them is used, or at startup if it
- * asks (`onStartupFinished`).
+ * Every installed plugin and a developer's loaded folder, with its switch,
+ * grants and contributions. Contributions register from the manifest when on;
+ * code starts on first use, or at startup if it asks.
  */
 
-export type { PluginStatus } from "./lifecycle";
+export type { PluginStatus } from "./store/lifecycle";
 export {
   configurePlugins,
   pluginName,
@@ -66,10 +64,9 @@ export {
   subscribePlugins,
   type PluginRecord,
   type PluginsSnapshot,
-} from "./plugin-records";
+} from "./store/plugin-records";
 
 const hosts = new Map<string, PluginHost>();
-const contributions = new Map<string, (() => void)[]>();
 
 function platform(): string {
   if (isIOSApp) return "ios";
@@ -133,7 +130,7 @@ let loading: Promise<void> | null = null;
 /** Reads every plugin and turns on those that are on. Once per window;
  *  `reload` reads them again (after an install). */
 export function loadPlugins(reload = false): Promise<void> {
-  // Desktop only for now (settings-pages.tsx says why).
+  // Desktop only for now.
   if (isIOSApp) return Promise.resolve();
   if (loading && !reload) return loading;
   loading = (async () => {
@@ -149,7 +146,7 @@ export function loadPlugins(reload = false): Promise<void> {
         makeRecord(p.id, p.dev ? "dev" : "installed", p.manifest, state, p.dir),
       );
     records.sort((a, b) => pluginName(a).localeCompare(pluginName(b)));
-    for (const id of [...contributions.keys()]) withdraw(id);
+    for (const id of contributingPlugins()) withdraw(id);
     publish({ loaded: true, allOn: state.allOn, records });
     for (const record of records)
       if (canRun(record.status, state.allOn)) apply(record);
@@ -163,7 +160,7 @@ export function loadPlugins(reload = false): Promise<void> {
 
 // The broker - the frame a plugin's code runs in and every call it makes -
 // loads when the first plugin starts: a window with none on never does.
-const brokerModule = lazyModule("plugin-broker", () => import("./broker"));
+const brokerModule = lazyModule("plugin-broker", () => import("./host/broker"));
 
 async function host(record: PluginRecord): Promise<PluginHost> {
   const { PluginHost } = await brokerModule.load();
@@ -182,6 +179,7 @@ async function host(record: PluginRecord): Promise<PluginHost> {
         appVersion: APP_VERSION,
         platform: platform(),
         setting: async (id, key) => pluginSetting(id, key),
+        setSetting: (id, key, value) => setPluginSetting(id, key, value),
         runCommand: async (command, args) => {
           const owner = pluginsSnapshot().records.find(
             (r) => r.status === "on" && command.startsWith(`${r.id}.`),
@@ -191,19 +189,43 @@ async function host(record: PluginRecord): Promise<PluginHost> {
             throw new Error(`No command ${command}.`);
           return null;
         },
-        addCommand: (id, command) => {
-          if (dynamicCommands.has(command)) return;
+        commandRegistered: (id, command, editor) => {
+          const manifest = pluginRecord(id)?.manifest;
+          const declared = manifest?.contributes.commands.some(
+            (c) => c.command === command,
+          );
+          if (editor) editorCommands.add(command);
+          if (declared || dynamicCommands.has(command)) return;
           dynamicCommands.set(
             command,
             registerCommand({
               id: command,
               title: () => command,
-              run: () => void runPluginCommand(id, command, []),
+              run: (...args) => void runPluginCommand(id, command, args),
+              enabled: () =>
+                !editorCommands.has(command) || !!getActiveDocument(),
             }),
           );
-          contributions.get(id)?.push(() => removeDynamicCommand(command));
+          addContribution(id, () => removeDynamicCommand(command));
         },
-        removeCommand: removeDynamicCommand,
+        commandUnregistered: (_id, command) => {
+          editorCommands.delete(command);
+          removeDynamicCommand(command);
+        },
+        exportsOf: async (other) => {
+          const target = pluginRecord(other);
+          if (!target || !canRun(target.status, pluginsSnapshot().allOn))
+            return null;
+          const running = await host(target);
+          await running.start();
+          return running.exports;
+        },
+        callExport: async (other, name, args) => {
+          const target = pluginRecord(other);
+          if (!target || !canRun(target.status, pluginsSnapshot().allOn))
+            throw new Error(`${other} is turned off.`);
+          return (await host(target)).request("$callExport", { name, args });
+        },
         failed: pluginFailed,
       },
     );
@@ -215,6 +237,9 @@ async function host(record: PluginRecord): Promise<PluginHost> {
 
 /** Commands a plugin's code registered beyond its manifest's. */
 const dynamicCommands = new Map<string, () => void>();
+/** Commands that work on the document in front: offered only with one
+ *  (registerEditorCommand). */
+const editorCommands = new Set<string>();
 
 function removeDynamicCommand(command: string) {
   dynamicCommands.get(command)?.();
@@ -265,7 +290,6 @@ export async function askPlugin(
   return (await host(record)).request(method, params);
 }
 
-/** Runs one of a plugin's commands in its code, starting it first. */
 export function runPluginCommand(
   id: string,
   command: string,
@@ -283,30 +307,72 @@ export function runPluginAiTool(
   return askPlugin(id, "$callAiTool", { name, arguments: args }, "ai.tools");
 }
 
-/** Asks the plugin to fill a webview (PluginWebview.tsx): a sidebar tab's
- *  or a view's panel, a custom editor, a settings page. */
+/** Asks the plugin to fill a webview: a sidebar tab's or a view's panel,
+ *  a custom editor, a settings page. */
 export async function resolveWebview(
   record: WebviewRecord,
-  target: { view?: string; viewType?: string; state?: unknown },
+  target: {
+    view?: string;
+    viewType?: string;
+    state?: unknown;
+    target?: unknown;
+    codeBlock?: CodeBlockSeen;
+  },
 ): Promise<void> {
   const plugin = pluginRecord(record.plugin);
   if (!plugin || plugin.status !== "on")
     throw new Error(`${record.plugin} is turned off.`);
   const running = await host(plugin);
   if (record.kind === "editor")
-    await running.request("$resolveCustomEditor", {
+    await running.request("$resolveFileEditor", {
       viewType: target.viewType,
       webview: record.id,
       path: record.resource,
+      target: target.target ?? null,
     });
   else if (record.kind === "settings")
     await running.request("$resolveSettingsPage", { webview: record.id });
+  else if (record.kind === "codeBlock")
+    await running.request("$renderCodeBlock", {
+      webview: record.id,
+      ...target.codeBlock,
+    });
   else
-    await running.request("$resolveWebviewView", {
+    await running.request("$resolveWebview", {
       view: target.view,
       webview: record.id,
       state: webviewState(record.key) ?? target.state ?? null,
     });
+}
+
+/** A code block as its plugin is shown it (textus CodeBlock). */
+export interface CodeBlockSeen {
+  language: string;
+  source: string;
+  /** What follows the language on the fence, read (parseFenceMeta). */
+  meta: Record<string, string>;
+  path: string | null;
+  block: string;
+}
+
+/** A drawn code block's source or fence meta changed (CodeBlock.onDidChange). */
+export function codeBlockChanged(
+  record: WebviewRecord,
+  seen: Pick<CodeBlockSeen, "source" | "meta" | "block">,
+): void {
+  hosts
+    .get(record.plugin)
+    ?.notify("$codeBlockChanged", { webview: record.id, ...seen });
+}
+
+/** A file editor already open in tab `tabId` asked to show a place
+ *  (OpenFile.onDidRequestReveal). */
+export function revealInPluginTab(tabId: string, target: unknown): void {
+  const record = webviewForKey(`tab:${tabId}`);
+  if (record)
+    hosts
+      .get(record.plugin)
+      ?.notify("$revealFile", { webview: record.id, target });
 }
 
 /** A webview's frame message, for its plugin's code. */
@@ -321,7 +387,6 @@ export function webviewMessage(id: string, message: unknown): void {
     .catch(() => {});
 }
 
-/** A webview closed: forgotten here and by its plugin. */
 export function disposeWebview(id: string): void {
   const record = removeWebview(id);
   if (!record) return;
@@ -332,110 +397,20 @@ export function disposeWebview(id: string): void {
 // Contributions
 // ---------------------------------------------------------------------------
 
-/** Registers what an on plugin adds, from its manifest. */
+const contributionDeps: ContributionDeps = {
+  runPluginCommand,
+  start: async (id) => {
+    const record = pluginRecord(id);
+    if (record?.status === "on") await (await host(record)).start();
+  },
+};
+
 function apply(record: PluginRecord) {
-  const manifest = record.manifest;
-  if (!manifest || contributions.has(record.id)) return;
-  const id = record.id;
-  const text = (value: string) =>
-    localize(manifest, value, windowInfo().language());
-  const undo: (() => void)[] = [];
-  const { commands, keybindings, menus, sidebarTabs } = manifest.contributes;
-  for (const command of commands)
-    undo.push(
-      registerCommand({
-        id: command.command,
-        title: () => text(command.title),
-        shortcut: keybindings.find((k) => k.command === command.command)?.key,
-        run: (...args) =>
-          void runPluginCommand(id, command.command, args).catch((err) =>
-            showMessage(String((err as Error)?.message ?? err), {
-              title: text(manifest.name),
-              tone: "error",
-            }),
-          ),
-      }),
-    );
-  const contextItems = menus["editor/context"] ?? [];
-  if (contextItems.length)
-    undo.push(
-      registerEditorMenuItems(({ selectedText }) =>
-        contextItems
-          .filter((item) => item.when !== "editorHasSelection" || selectedText)
-          .map((item) => {
-            const command = commands.find((c) => c.command === item.command);
-            return {
-              label: text(command?.title ?? item.command),
-              onSelect: () => runCommand(item.command),
-            };
-          }),
-      ),
-    );
-  for (const tab of sidebarTabs)
-    undo.push(
-      registerSidebarTab({
-        id: tab.id,
-        label: () => text(tab.title),
-        Icon: () =>
-          createElement(PluginTabIcon, {
-            plugin: id,
-            origin: record.origin,
-            icon: tab.icon,
-          }),
-        Panel: () =>
-          createElement(PluginWebviewPanel, {
-            plugin: id,
-            view: tab.id,
-            kind: "sidebar",
-          }),
-      }),
-    );
-  contributions.set(id, undo);
-  if (
-    manifest.activationEvents.includes("onStartupFinished") ||
-    manifest.activationEvents.includes("*")
-  )
-    void host(record)
-      .then((running) => running.start())
-      .catch(() => {});
-  else if (manifest.activationEvents.includes("onHover")) {
-    hoverWaiting.add(id);
-    syncHoverStarter();
-  }
+  applyContributions(record, contributionDeps);
 }
 
-/** On plugins that start when the pointer first rests on a link
- *  (`onHover`) and haven't yet. */
-const hoverWaiting = new Set<string>();
-
-function syncHoverStarter() {
-  setHoverStarter(
-    hoverWaiting.size,
-    hoverWaiting.size === 0
-      ? null
-      : async () => {
-          const ids = [...hoverWaiting];
-          hoverWaiting.clear();
-          syncHoverStarter();
-          await Promise.all(
-            ids.map((id) => {
-              const record = pluginRecord(id);
-              return record?.status === "on"
-                ? host(record)
-                    .then((running) => running.start())
-                    .catch(() => {})
-                : undefined;
-            }),
-          );
-        },
-  );
-}
-
-/** Takes back what a plugin added. */
 function withdraw(id: string) {
-  if (hoverWaiting.delete(id)) syncHoverStarter();
-  for (const undo of contributions.get(id) ?? []) undo();
-  contributions.delete(id);
+  withdrawContributions(id, contributionDeps);
 }
 
 // ---------------------------------------------------------------------------
@@ -443,7 +418,7 @@ function withdraw(id: string) {
 // ---------------------------------------------------------------------------
 
 /** A plugin's setting: the project's value, else the one for every
- *  document, else its manifest's default (plugin-settings.ts). */
+ *  document, else its manifest's default. */
 export function pluginSetting(id: string, key: string): unknown {
   const { value, from } = pluginValue(id, key);
   if (from) return value;
@@ -536,7 +511,6 @@ export async function setPluginEnabled(id: string, on: boolean): Promise<void> {
   if (canRun(next.status, pluginsSnapshot().allOn)) apply(next);
 }
 
-/** Takes back one permission; the plugin restarts without it. */
 export async function revokePermission(
   id: string,
   permission: Permission,
@@ -558,21 +532,25 @@ export async function revokePermission(
 export async function setAllPlugins(on: boolean): Promise<void> {
   await pluginsIpc.setAll(on);
   if (!on) for (const id of [...hosts.keys()]) stopHost(id);
-  if (!on) for (const id of [...contributions.keys()]) withdraw(id);
+  if (!on) for (const id of contributingPlugins()) withdraw(id);
   publish({ allOn: on });
   for (const record of pluginsSnapshot().records)
     if (canRun(record.status, on)) apply(record);
 }
 
-/** A developer's folder changed: its code and manifest read again. */
 export async function reloadPlugin(id: string): Promise<void> {
   stopHost(id);
   withdraw(id);
   await loadPlugins(true);
 }
 
-export async function installPlugin(path: string): Promise<string> {
-  const installed = await pluginsIpc.install(path);
+/** A package or folder at `source`, or files Textus AI wrote, installed. */
+export async function installPlugin(
+  source: string | PluginFile[],
+): Promise<string> {
+  const installed = await (typeof source === "string"
+    ? pluginsIpc.install(source)
+    : pluginsIpc.installFiles(source));
   stopHost(installed.id);
   await loadPlugins(true);
   return installed.id;

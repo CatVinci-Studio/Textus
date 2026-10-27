@@ -3,17 +3,9 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 
 /**
- * A pasted URL becomes a link whose text is the URL, written `[url](url)`.
- *
- * Left to the markdown parser, a bare URL is a GFM autolink literal, which
- * remark writes back as `<https://...>` - a form readers took for a bug
- * (issue #60), and one that only reads as a link in the source to someone
- * who knows the autolink syntax. `[url](url)` is the plain link syntax,
- * clickable in the editor and in every Markdown renderer (a bare URL is
- * not: CommonMark without GFM leaves it text), and it is written back the
- * same way because the link mark remembers its syntax (markdown-output.ts).
- * The text is the URL rather than empty, as some apps write it: `[](url)`
- * shows nothing at all on GitHub and most other renderers.
+ * A pasted URL becomes `[url](url)`: remark writes a bare autolink back as
+ * `<https://...>`, which readers took for a bug, and `[](url)` shows
+ * nothing on most renderers.
  */
 
 /** The URL, when the pasted text is one URL and nothing else. */
@@ -24,12 +16,9 @@ export function bareUrl(text: string): string | null {
     : null;
 }
 
-/** Pastes `url` as a link: over selected text, that text becomes a link to
- *  it (the way most editors take a URL pasted on a selection); with the
- *  caret inside an existing link, it goes in as that link's text - a new
- *  link there split the old one in three around it; anywhere else, a new
- *  link whose text is the URL. False when there is no link mark here
- *  (inside code, say), so the caller pastes it as text. */
+/** Pastes `url` as a link: over selected text, that text links to it; inside
+ *  an existing link, as its text (a new link would split it in three); else a
+ *  new link. False where no link mark is allowed. */
 export function insertUrlLink(view: EditorView, url: string): boolean {
   const { state } = view;
   const link = state.schema.marks.link;
@@ -46,8 +35,7 @@ export function insertUrlLink(view: EditorView, url: string): boolean {
     $from.sameParent($to) &&
     state.doc.textBetween(from, to).trim()
   ) {
-    // The selected words keep their text and take the URL; an old link on
-    // them is replaced rather than nested.
+    // An old link on the selected words is replaced rather than nested.
     tr.removeMark(from, to, link).addMark(from, to, link.create({ href: url }));
     view.dispatch(tr.scrollIntoView());
     return true;

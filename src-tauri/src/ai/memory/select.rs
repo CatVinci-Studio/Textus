@@ -1,8 +1,6 @@
-//! Which memories go with a request once they are more than the budget
-//! holds (MAX_MEMORY_CHARS): the requirements always, then the ones that
-//! share the most words with what the request is about, newer before
-//! older - as Letta keeps the memory that bears on the turn in view,
-//! instead of only the newest. Under the budget every memory goes.
+//! Which memories go with a request once they exceed the budget: requirements
+//! always, then those sharing the most words with the request, newer first.
+//! Under the budget every memory goes.
 
 use super::*;
 use std::collections::HashSet;

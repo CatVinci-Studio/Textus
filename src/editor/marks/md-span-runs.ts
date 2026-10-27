@@ -3,11 +3,8 @@ import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { caretAt, findRunOpen, literalTextAfter } from "./enclosure";
 
-/**
- * The spans a typed delimiter pairs - `**`, `*`, `_`, `~~`, `==`, `` ` ``,
- * `$` - and the run of text a closing one turns into its node
- * (md-span-autopair-plugin.ts).
- */
+/** The spans a typed delimiter pairs, and the text run a closing one turns
+ *  into its node. */
 
 export interface SpanSpec {
   char: string;
@@ -16,11 +13,9 @@ export interface SpanSpec {
   maxRung: number;
 }
 
-// "*" covers italic(1)/bold(2)/bold+italic(3) - typing it again while the
-// shell is still empty upgrades the rung. "~" and "=" only have a 2-character
-// form, so a lone one is left as literal text until a second, matching one
-// completes it. "`" is its own node type (see md-span-schema.ts) since code
-// content must never contain nested formatting.
+// "*" covers italic, bold and bold-italic: typed again in an empty shell it
+// upgrades the rung. "~" and "=" only have a 2-character form. "`" is its
+// own node type, since code holds no nested formatting.
 export const SPECS: SpanSpec[] = [
   { char: "*", nodeType: "md_span", minRung: 1, maxRung: 3 },
   { char: "~", nodeType: "md_span", minRung: 2, maxRung: 2 },
@@ -34,9 +29,8 @@ export function isOurNode(name: string): boolean {
 
 /**
  * Whether `spec`'s delimiter typed in `parent` may make a node: in a
- * paragraph or heading, and code in bold, italic, strikethrough or
- * highlight too - `**a `b` c**`, which the file reads as. Never inside code
- * or maths, whose text is verbatim, and no span in a span of another kind.
+ * paragraph or heading, and code inside other spans too. Never inside code
+ * or maths, and no span in a span of another kind.
  */
 export function pairsIn(parent: ProseNode, spec: SpanSpec): boolean {
   if (parent.type.name === "md_span") return spec.nodeType === "md_code_span";
@@ -58,9 +52,8 @@ export function spanNode(
     : schema.nodes.md_code_span.create({}, content);
 }
 
-/** The node `spec` makes at `rung` around what stands from `from` to `to`
- *  in one parent: a span keeps the code, maths and links in it (see
- *  literalTextBefore's `withAtoms`); code takes it as text. */
+/** The node `spec` makes at `rung` around `from`..`to` in one parent: a span
+ *  keeps the code, maths and links in it; code takes it as text. */
 export function spanAround(
   state: EditorState,
   spec: SpanSpec,
@@ -82,11 +75,9 @@ export function spanAround(
 export const runsHoldAtoms = (spec: SpanSpec) => spec.nodeType === "md_span";
 
 /**
- * Closes an opening run left in the literal text before the caret
- * (`textBefore`, starting at `runStart`) with the delimiter being typed:
- * from that opener to `to` becomes one span. Longest rung first, so
- * "**hello" + "*" + "*" re-forms bold rather than italic. Returns whether
- * there was a run to close.
+ * Closes an opening run left in the literal text before the caret with the
+ * typed delimiter. Longest rung first, so "**hello**" re-forms bold rather
+ * than italic. Returns whether there was a run to close.
  */
 export function closeOpenRun(
   view: EditorView,
@@ -115,8 +106,8 @@ export function closeOpenRun(
   return false;
 }
 
-/** Italic written with underscores - only ever closed, never opened as an
- *  empty shell: see closeUnderscoreRun. */
+/** Italic written with underscores, only ever closed, never opened as an
+ *  empty shell. */
 export const UNDERSCORE: SpanSpec = {
   char: "_",
   nodeType: "md_span",
@@ -128,12 +119,9 @@ export const LETTER_OR_DIGIT = /^[\p{L}\p{N}]$/u;
 export const ONLY_CLOSERS = /^[)\]}"'」』）】》”’]+$/u;
 
 /**
- * The closing "_" of `_italic_`, at `to`, after the literal `textBefore`
- * (from `runStart`): the pair becomes italic by CommonMark's rule for
- * underscores, which open and close only at a word's edges - the opening
- * one not after a letter or digit, the closing one not before one - so
- * snake_case and file_name_v2 stay text. "_" never opens an empty shell
- * the way "*" does: in a word it is just a character.
+ * The closing "_" of `_italic_`, by CommonMark's rule that underscores open
+ * and close only at a word's edges, so snake_case stays text. "_" never
+ * opens an empty shell: in a word it is just a character.
  */
 export function closeUnderscoreRun(
   view: EditorView,
@@ -151,8 +139,8 @@ export function closeUnderscoreRun(
   return closeOpenRun(view, UNDERSCORE, textBefore, runStart, to);
 }
 
-/** Typing an empty shell's delimiter again: the shell (an md_span at
- *  `nodeStart`) one rung up, "*" to "**" - or null at its top rung. */
+/** Typing an empty shell's delimiter again: the shell one rung up, or null
+ *  at its top rung. */
 export function upgradeRung(
   state: EditorState,
   nodeStart: number,
@@ -169,9 +157,8 @@ export function upgradeRung(
 
 /**
  * A third "~" or "=" typed into the empty shell the first two opened: no
- * strikethrough or highlight takes three, so the three stay as typed -
- * "===" was a highlight of "=", and "~~~", a code fence, a strikethrough
- * of "~". Null for the other delimiters.
+ * span takes three, so they stay as typed ("~~~" is a code fence). Null for
+ * the other delimiters.
  */
 export function threeLiteral(
   state: EditorState,

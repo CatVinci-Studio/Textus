@@ -58,8 +58,8 @@ function eachId(
   });
 }
 
-/** `doc` with its headings' ids written in - a new document, sharing every
- *  block that holds no heading. */
+/** `doc` with its headings' ids written in, sharing every block that holds
+ *  no heading. */
 export function withHeadingIds(doc: ProseNode, idOf: IdOf): ProseNode {
   const ids = new Map<number, string>();
   eachId(doc, idOf, (node, pos, id) => {
@@ -89,11 +89,9 @@ export function withHeadingIds(doc: ProseNode, idOf: IdOf): ProseNode {
 const HeadingIdsParsed = createTimer("HeadingIdsParsed");
 
 /**
- * Gives a parsed document its heading ids before the editor opens it.
- * Set afterwards (as syncHeadingIdPlugin did, and the view below would),
- * the ids changed every heading in one transaction as the document
- * opened: in a long one, every heading drawn again and the page laid out
- * twice, half a second at 5k blocks.
+ * Gives a parsed document its heading ids before the editor opens it. Set
+ * afterwards, they redrew every heading in one transaction as a long
+ * document opened.
  */
 export const headingIdsOnParse: MilkdownPlugin = (ctx) => {
   ctx.record(HeadingIdsParsed);
@@ -112,17 +110,13 @@ export const headingIdsOnParse: MilkdownPlugin = (ctx) => {
 };
 
 // How long typing in a heading rests before its id follows: setting it
-// draws the heading again, which in a long document lays the page out
-// again - on every keystroke, typing in a heading crawled.
+// lays a long page out again.
 const SYNC_DELAY_MS = 300;
 
 /**
- * Each heading's `id` (its anchor, for #heading links), as Milkdown's
- * syncHeadingIdPlugin gives it. That plugin walked the whole document
- * after every change to work them out again; an id only depends on the
- * headings, so here they are worked out again only after a change to
- * one, once typing rests. The state counts those changes; the view syncs
- * when the count moved.
+ * Each heading's `id`, as Milkdown's syncHeadingIdPlugin gives it, but
+ * recomputed only after a change to a heading, once typing rests (that
+ * plugin walked the whole document after every change).
  */
 export const headingIdPlugin = $prose((ctx) => {
   const sync = (view: EditorView) => {
@@ -150,8 +144,8 @@ export const headingIdPlugin = $prose((ctx) => {
         clearTimeout(timer);
         timer = setTimeout(() => {
           if (view.isDestroyed) return;
-          // Not mid-composition (as Milkdown's): the attr change would
-          // redraw the heading under the input method.
+          // Not mid-composition: the attr change would redraw the heading under the
+          // input method.
           if (view.composing) return later();
           synced = key.getState(view.state);
           sync(view);

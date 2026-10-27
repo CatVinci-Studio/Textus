@@ -6,19 +6,9 @@ export function isWithin(path: string, dir: string): boolean {
 }
 
 /**
- * Where the sidebar's file tree is rooted after the document in front, or
- * the opened folder, changes - given where it is rooted now.
- *
- * - An opened folder (File > Open Folder…) holds the tree. It may have been
- *   entered into a subfolder; it goes back to the folder itself only when
- *   the new document is in the folder but outside that subfolder.
- * - Without one, the tree stays where it is while the document is inside
- *   it - opening a file in a subfolder used to re-root the tree there, and
- *   the folder the user was looking at went with its expanded folders. A
- *   document elsewhere roots it at that document's folder.
- * - An unsaved draft shows `fallback` where there is one (iOS: the app's
- *   Documents folder, where Save puts it) and otherwise leaves the tree as
- *   it is - in a new window, nothing to show.
+ * Where the file tree is rooted after the front document or opened folder
+ * changes. An opened folder holds the tree; otherwise it stays while the
+ * document is inside it. A draft shows `fallback`, or leaves the tree.
  */
 export function nextTreeRoot({
   current,
@@ -43,11 +33,8 @@ export function nextTreeRoot({
 }
 
 /**
- * The AI's project folder (Settings.agentWorkspaceRoot) once a folder is
- * opened in the sidebar, or null to leave it. The AI follows the opened
- * folder while it has no project folder of its own: none chosen (""), or
- * the one an earlier Open Folder set (`fromFolder`). A folder the user
- * chose for the AI is theirs and stays.
+ * The AI's project folder once a folder is opened, or null to leave it. It
+ * follows the opened folder unless the user chose one for the AI.
  */
 export function agentRootOnOpen(
   current: string,
@@ -58,9 +45,8 @@ export function agentRootOnOpen(
   return current === "" || current === fromFolder ? opened : null;
 }
 
-/** The same on Close Folder: back to the default ("", the document's own
- *  folder) if the AI's folder is the one this folder put there, else null
- *  to leave it. */
+/** The same on Close Folder: back to "" if this folder set the AI's
+ *  folder, else null to leave it. */
 export function agentRootOnClose(
   current: string,
   fromFolder: string,

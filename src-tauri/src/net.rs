@@ -1,6 +1,5 @@
-//! What the commands that call a web server share: a client that gives up
-//! instead of waiting forever on a server that doesn't answer, and a body
-//! read that stops at a size instead of taking whatever the server sends.
+//! What the commands calling web servers share: a client that gives up on a
+//! silent server, and a body read capped at a size.
 
 use std::time::Duration;
 
@@ -14,9 +13,8 @@ pub fn client(connect: Duration, total: Duration) -> reqwest::ClientBuilder {
         .user_agent(concat!("Textus/", env!("CARGO_PKG_VERSION")))
 }
 
-/// The response's body, or None if it is longer than `max` bytes - known
-/// from the declared length before any of it is read, or else once the
-/// chunks read so far pass it.
+/// The response's body, or None if it is longer than `max` bytes, judged by the
+/// declared length or else while reading.
 pub async fn read_limited(
     mut response: reqwest::Response,
     max: usize,

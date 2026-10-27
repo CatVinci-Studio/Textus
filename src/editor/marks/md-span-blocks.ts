@@ -11,20 +11,13 @@ import {
   runsHoldAtoms,
 } from "./md-span-runs";
 
-/**
- * Delimiters typed at the start of a line that make a block instead of a
- * span: a code fence, a rule, a bullet item (md-span-autopair-plugin.ts).
- */
+/** Delimiters typed at a line's start that make a block instead of a span:
+ *  a code fence, a rule, a bullet item. */
 
 /**
- * Whether a paragraph is a "```" (or "```lang") code-fence line, returning
- * the language ("" for none) or null if it isn't one. Typing three backticks
- * doesn't leave literal "```" text - the autopair turns the first two into a
- * code span holding one literal backtick and the third closes it - so the
- * fence shape to recognize at Enter time is that node, optionally followed
- * by a language word. A literal "```lang" run (left by a paste or by
- * deleting a delimiter) counts too, and "~~~lang", which stays literal
- * (threeLiteral).
+ * A paragraph's code-fence language ("" for none), or null if it isn't a
+ * "```lang" line. Three typed backticks leave a code span holding one
+ * backtick, so that shape counts, as do a literal "```lang" or "~~~lang".
  */
 export function codeFenceLanguage(paragraph: ProseNode): string | null {
   if (paragraph.childCount === 0 || paragraph.childCount > 2) return null;
@@ -50,10 +43,9 @@ export function codeFenceLanguage(paragraph: ProseNode): string | null {
 }
 
 /**
- * An empty "*" shell that is all its paragraph holds: what "*" or "***" at
- * the start of a line leaves, the autopair having taken the stars. Those
- * are a list marker and a rule there, as "-" and "---" are; returns the
- * shell's rung and the paragraph's position, or null.
+ * An empty "*" shell that is all its paragraph holds, as "*" or "***" at a
+ * line's start leaves: a list marker or a rule there. Its rung and the
+ * paragraph's position, or null.
  */
 export function lineStartStars(
   $pos: ReturnType<ProseNode["resolve"]>,
@@ -91,8 +83,8 @@ export function paragraphToRule(
   return caretAt(tr, paragraphPos + 2);
 }
 
-/** The paragraph at `paragraphPos`, emptied, as the first item of a
- *  bullet list - joined to a bullet list right above, as "- " does. */
+/** The paragraph at `paragraphPos`, emptied, as the first item of a bullet
+ *  list, joined to one right above as "- " does. */
 export function paragraphToBulletItem(
   state: EditorState,
   paragraphPos: number,
@@ -115,20 +107,11 @@ export function paragraphToBulletItem(
 }
 
 /**
- * The IME counterpart of the run-closing path in handleTextInput below.
- * Several Windows IMEs in Chinese mode (Microsoft Pinyin, Sogou) deliver
- * even a plain "*" through a composition, and handleTextInput must stay out
- * of the way while one is active (dispatching aborts the preedit), so a
- * "**加粗文本**" written that way used to stay literal text (#134). Once the
- * composition has been committed, look at the text before the caret: if it
- * ends in a complete closing run that pairs with an opening run left in the
- * same literal text, convert the pair exactly as typing the last delimiter
- * would have. Only full pairs are converted - nothing opens an empty shell
- * after the fact - so a lone "*" committed this way stays literal until its
- * partner arrives. `committed` is the composition's text: unless it ends
- * in the delimiter, the closing run was already there (say, literal text
- * left by a paste) and is not the user's to convert now. Returns whether it
- * converted anything.
+ * The IME counterpart of run closing: Chinese-mode Windows IMEs (Microsoft
+ * Pinyin, Sogou) deliver even "*" through a composition. Once committed, a
+ * complete closing run before the caret that pairs with an opening run is
+ * converted; nothing opens a shell after the fact. Only when `committed`
+ * ends in the delimiter. Returns whether it converted anything.
  */
 export function convertRunClosedBeforeCaret(
   view: EditorView,

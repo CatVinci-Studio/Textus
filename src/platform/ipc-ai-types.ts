@@ -4,65 +4,45 @@ import type {
   GeneratedImageData as GeneratedImage,
   StreamEvent_Serialize,
 } from "./bindings/ai-agent";
-import type {
-  ConventionsOptions_Serialize,
-  DocReport_Serialize,
-  EffectiveConventions_Serialize,
-  Finding_Serialize,
-  Lang,
-  Measure_Serialize,
-  Profile_Serialize,
-} from "./bindings/ai-conventions";
+import type { Lang } from "./bindings/ai-conventions";
 import type {
   LibraryUse as LibraryUseAnswer,
   Remembering_Serialize,
 } from "./bindings/ai-memory";
 import type {
+  AgentMode_Serialize as AgentMode,
   AgentSkill_Serialize,
   AgentWorkspace_Serialize,
-  Forgotten_Serialize,
   LibraryEntry_Serialize,
-  Memories_Serialize,
   MemoryKind as Kind,
   Memory_Serialize,
-  ProjectConventions as StyleFrontMatter,
   Remembered_Serialize,
   Scope,
+  SkillLabel,
 } from "./bindings/ai-project";
 
 /**
- * What the AI commands send and return: stream events, completion hints,
- * the project's library and memory, writing conventions and their
- * findings, skills (ipc.ts). What Rust answers is generated from its types
- * (src/platform/bindings/ai*.ts) and named here as the callers know it;
- * what the frontend sends keeps its own, narrower type where it has one,
- * which ipc.ts checks against the generated request.
+ * What the AI commands send and return. Rust's answers are generated types,
+ * renamed here; requests keep their own narrower types where they have one.
  */
 
-/// Mirrors ai::cancel::CANCELLED - the error string ai_agent_message rejects
-/// with when a stop() call won the race against the in-flight request. Not a
-/// real failure, so callers should treat it differently from other errors.
+/// The error ai_agent_message rejects with when stop() won the race. Not a
+/// real failure, so callers treat it apart from other errors.
 export const AI_CANCELLED = "cancelled";
 
-/** A picture waiting for a decision (ai/images/pending.rs). */
+/** A picture waiting for a decision. */
 export type GeneratedImageData = GeneratedImage;
 
 /** Whether the provider searches by itself, and otherwise the search
- *  service Textus's web_search uses, null when none is set up
- *  (ai/web/mod.rs). */
+ *  service web_search uses, null when none is set up. */
 export type WebSearchStatus = WebSearchStatus_Serialize;
 
-/** One live fragment of an in-flight ai_agent_message, delivered over a
- *  Tauri channel while the agent loop runs (ai/agent/events.rs). Purely
- *  additive display data - the command still resolves with the complete
- *  turn list, which stays the authoritative result. */
+/** One live fragment of an in-flight ai_agent_message. Display only: the
+ *  command still resolves with the authoritative turn list. */
 export type StreamEvent = StreamEvent_Serialize;
 
-/** Where the cursor sits, beyond the raw text around it - what lets a
- *  completion fit the document instead of guessing from 2000 characters.
- *  Narrower than CompletionHints in src-tauri/src/ai/client/completion.rs,
- *  which takes the strings as they come; ipc.ts checks it against the
- *  generated type. */
+/** Where the cursor sits, beyond the raw text around it, so a completion
+ *  fits the document. Narrower than the Rust type. */
 export interface CompletionHints {
   /** The document's first heading, when it has one. */
   title: string | null;
@@ -74,66 +54,53 @@ export interface CompletionHints {
   length: "short" | "long";
   /** How many alternatives to write (the manual trigger asks for three). */
   candidates?: number;
-  /** The context's prose - its text without code blocks, diagram and math
-   *  source - which the backend reads the language from. */
+  /** The context's text without code, diagram and math source, which the
+   *  backend reads the language from. */
   prose?: string;
   /** The app's language, for when the prose is too short to tell. */
   uiLanguage?: string | null;
 }
 
-/** A project library entry (`.textus/library/*.md`, ai::project);
- *  `remembered` is set on an entry Textus AI wrote (ai::memory). */
+/** A project library entry; `remembered` is set on one Textus AI wrote. */
 export type LibraryEntry = LibraryEntry_Serialize;
 
-/** Where and when Textus AI remembered something (ai/memory.rs). */
+/** Where and when Textus AI remembered something. */
 export type Remembered = Remembered_Serialize;
 
-/** One thing Textus AI remembered by itself (ai/memory.rs). `id` is
+/** One thing Textus AI remembered by itself. `id` is
  *  `<scope>/memory/<file stem>`. */
 export type Memory = Memory_Serialize;
 
 export type MemoryScope = Scope;
 export type MemoryKind = Kind;
 
-/** One change the memory pass made - `Remembering` in ai/memory.rs: what
- *  is remembered now (or, `forgot`, what was taken back), and `previous`,
- *  the file before, for Undo to put back. */
+/** One change the memory pass made, with `previous`, the file before, for
+ *  Undo to put back. */
 export type RememberedChange = Remembering_Serialize;
 
-/** Every memory for a document, personal first, and what was deleted or
- *  forgotten lately (ai/memory.rs). */
-export type Memories = Memories_Serialize;
-
-/** A deleted or forgotten memory or library entry, kept to restore
- *  (ai/memory/forgotten.rs). */
-export type ForgottenMemory = Forgotten_Serialize;
-
-/** Which library entries reached Textus AI (ai/project.rs). */
+/** Which library entries reached Textus AI. */
 export type LibraryUse = LibraryUseAnswer;
 
-/** What shapes Textus AI for one document - `AgentWorkspace` in
- *  ai/workspace.rs; see docs/design/ai-concepts.md. */
+/** What shapes Textus AI for one document. */
 export type AgentWorkspaceInfo = AgentWorkspace_Serialize;
 
-// ---------------------------------------------------------------------------
-// Writing conventions (src-tauri/src/ai/rules/profile.rs)
+// Writing conventions
 
-/** The settings.json key of the global writing conventions default. No
- *  frontend code reads it, but keep it: profile.rs's tests check it against
- *  the key the backend uses. */
+/** The settings.json key of the writing conventions default. Unread here,
+ *  but a Rust test checks it against the backend's key.
+ *  @public */
 export const WRITING_CONVENTIONS_KEY = "writingConventions";
-/** Its default value, and the per-language value meaning "no choice". */
+/** Its default value, and the per-language value meaning "no choice";
+ *  checked by the same test.
+ *  @public */
 export const WRITING_CONVENTIONS_AUTOMATIC = "automatic";
 
-/** A document language as the rules engine names it (rules::detect). */
+/** A document language as the rules engine names it. */
 export type ConventionsLang = Lang;
 
 /**
- * The profiles each language offers, the first entry being the one
- * Automatic uses (null: no national norm - universal rules and consistency
- * checks only). Mirrors LANGUAGE_PROFILES in src-tauri/src/ai/rules/profile.rs
- * (a Rust test keeps them the same); `writingConventionsOptions()` returns
- * the same data from Rust, with the option keys.
+ * The profiles each language offers, the first being Automatic's (null: no
+ * national norm). A Rust test keeps this in step with the backend's list.
  */
 export const WRITING_CONVENTIONS: Record<
   ConventionsLang,
@@ -189,46 +156,9 @@ export const WRITING_CONVENTIONS: Record<
 };
 
 /**
- * The stored setting: "automatic", one profile (what the Settings row
- * stores - it applies to documents in that profile's language), or a
- * profile per language (a language left out, or set to "automatic", stays
- * Automatic), with optional option keys (`cjk-latin-space`, `quotes`,
- * `fr.spacing`...).
- */
-export type WritingConventionsSetting =
-  | typeof WRITING_CONVENTIONS_AUTOMATIC
-  | string
-  | ({ [lang in ConventionsLang]?: string } & {
-      options?: Record<string, string>;
-    });
-
-/** `.textus/style.md` front matter, as Rust read it. */
-export type ProjectConventions = StyleFrontMatter;
-
-/** A resolved profile (rules::Profile). */
-export type ConventionsProfile = Profile_Serialize;
-
-export type WritingConventionsOptions = ConventionsOptions_Serialize;
-
-export type EffectiveConventions = EffectiveConventions_Serialize;
-
-/** One finding of the rules engine (rules::Finding). */
-export type ConventionsFinding = Finding_Serialize;
-
-export type ConventionsReport = DocReport_Serialize;
-
-/** An exact platform count (rules::measure). */
-export type TextMeasure = Measure_Serialize;
-
-/**
- * One skill as the `/` menu and Settings list it (ai::workspace::AgentSkill,
- * from `list_skills`): the built-ins, the global config folder's skills/
- * and the project's .textus/skills/, each layer replacing same-named skills
- * of the layers before it. Hidden skills are never listed. Written by hand:
- * the frontend also makes one from a workspace's skills (skill-picker.ts),
- * where the later fields are unknown, and `category` is one of the `/`
- * menu's groups where Rust holds a plain string. Its other fields are
- * AgentSkill's (src/platform/bindings/ai-project.ts).
+ * One skill as the `/` menu and Settings list it; later layers replace
+ * same-named skills. Hand-written: the frontend builds some itself, and
+ * `category` is narrower than Rust's string.
  */
 export interface SkillListItem {
   /** Canonical, ASCII kebab-case for a built-in; what follows the `/`. */
@@ -242,22 +172,21 @@ export interface SkillListItem {
    *  on its own. */
   invocation: AgentSkill_Serialize["invocation"];
   source: AgentSkill_Serialize["source"];
-  /** A global or project skill with a built-in's name - a copy made by
-   *  Customize… (`basedOn` set), or the user's own skill that happens to
-   *  share it. */
+  /** A global or project skill sharing a built-in's name: a Customize… copy
+   *  (`basedOn` set) or the user's own. */
   overridesBuiltin: boolean;
-  /** False for a built-in turned off in Settings, and for a copy of one
-   *  made by Customize… (it stays listed so Settings can turn it back on;
-   *  the `/` menu leaves it out). */
-  enabled: boolean;
+  /** The panel modes it applies in; only those offer it in the `/` menu.
+   *  Write's for a skill that doesn't say. */
+  modes: AgentMode[];
+  /** A market or user skill's name and one-line hint, by UI language code. */
+  labels?: Record<string, SkillLabel>;
   /** Extra words typed after `/` for it, by UI language code. */
   aliases: Record<string, string[]>;
   /** Reference-pack sections Rust appends when it is used. */
   packs?: string[];
   /** A built-in's `textus-version`. */
   version?: string | null;
-  /** "tighten@1" on a copy made by Customize… - only then can Reset
-   *  delete it. */
+  /** "tighten@1" on a Customize… copy; only then can Reset delete it. */
   basedOn?: string | null;
   /** That copy is older than the bundled built-in. */
   builtinUpdated?: boolean;

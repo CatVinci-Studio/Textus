@@ -26,15 +26,13 @@ const listProjectFiles = vi.fn();
 let supportsVision = true;
 let webSearchStatus: { native: boolean; service: string | null } | null = null;
 
-// The composer derives vision support from the active provider itself (so no
-// caller can forget to pass it), which is what this stands in for.
+// The composer derives vision support from the active provider itself.
 vi.mock("../provider-catalog", () => ({
   useActiveProvider: () => ({ supportsVision }),
   useWebSearchStatus: () => webSearchStatus,
 }));
 
-// Whether the provider's model can think deeper is the capability table's
-// answer (deep-thinking.ts); the storage half stays real.
+// Whether the model can think deeper is mocked; the storage half stays real.
 let canThinkDeeper = true;
 vi.mock("./deep-thinking", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -78,7 +76,13 @@ const labels = {
   attachmentNoVision: "This provider can't read images.",
   modeWrite: "Write",
   modeReview: "Review",
+  modeCreate: "Create",
+  modeWriteHint: "Writes and changes the document",
+  modeReviewHint: "Reads and leaves notes",
+  modeCreateHint: "Makes themes, plugins and skills",
   modeLabel: "Mode",
+  modelLabel: "Model",
+  modeAndModelLabel: "Mode and model",
   webSearch: "Web search",
   deepThinking: "Deep thinking",
   deepThinkingHint:
@@ -170,10 +174,8 @@ afterEach(cleanup);
 
 describe("ChatComposer selection chip", () => {
   it("brings the chip back for a NEW selection after one was dismissed", () => {
-    // The detached Agent window is the cross-file surface: the user goes on
-    // highlighting passages while it is open, and each new highlight is a
-    // fresh request to talk about it. A dismissal that stuck for the rest of
-    // the chat meant every later selection silently failed to ride along.
+    // In the detached window each new highlight is a fresh request, so a
+    // dismissal must not stick for later selections.
     const { rerender } = renderComposer({ selectedText: "first passage" });
     expect(screen.getByText(/13 chars selected/)).toBeInTheDocument();
 
@@ -280,13 +282,21 @@ describe("ChatComposer selection chip", () => {
   it("sends the selected interaction mode and web-search choice", () => {
     const { onSend } = renderComposer();
     fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
-    // Write, then Review - 1.2.0's Revise is part of Write.
+    // Write, Review, then Create.
     expect(
-      screen.getAllByRole("option").map((option) => option.textContent),
-    ).toEqual(["Write", "Review"]);
+      screen
+        .getAllByRole("option")
+        .map(
+          (option) =>
+            option.querySelector(".mode-picker-mode-name")?.textContent,
+        ),
+    ).toEqual(["Write", "Review", "Create"]);
+    // Each with a line on what it does.
+    expect(
+      screen.getByRole("option", { name: "Review" }).textContent,
+    ).toContain("Reads and leaves notes");
     fireEvent.click(screen.getByRole("option", { name: "Write" }));
-    // Named for what it picks, not for one of its choices: a screen
-    // reader used to hear "Ask" over a picker set to Plan.
+    // Named for what it picks, not for one of its choices.
     expect(screen.queryByRole("combobox", { name: "Review" })).toBeNull();
     expect(
       screen.getByRole("combobox", { name: "Mode" }).textContent,
@@ -412,9 +422,8 @@ describe("ChatComposer Deep thinking", () => {
 
 describe("ChatComposer attachments", () => {
   it("shows why a file could not be attached instead of doing nothing", async () => {
-    // The regression this pins: every failure used to be swallowed by a
-    // `.catch(() => null)`, so picking a PDF - which could not work at all -
-    // was indistinguishable from a dead "+" button.
+    // Every failure must surface: a PDF that can't work must not look like a
+    // dead "+" button.
     pickAttachmentFile.mockRejectedValue(
       new IpcError("pick_attachment_file", "This PDF has no text layer."),
     );
@@ -495,7 +504,7 @@ describe("ChatComposer pickers", () => {
     invocation: skill.invocation,
     source: "builtin",
     overridesBuiltin: false,
-    enabled: true,
+    modes: [skill.mode],
     aliases: {},
   }));
 
@@ -511,7 +520,7 @@ describe("ChatComposer pickers", () => {
         selectedText={null}
         busy={false}
         labels={{ ...labels, picker: pickerLabels(resolveStrings("zh"), "zh") }}
-        defaultMode="review"
+        defaultMode="write"
         defaultWebSearch={false}
         onSend={onSend}
         onStop={() => {}}
@@ -525,17 +534,19 @@ describe("ChatComposer pickers", () => {
   }
 
   it.each(["/", "／", "、", "・"])(
-    "%s lists the built-ins by group, with their labels",
+    "%s lists the mode's built-ins by group, with their labels",
     async (key) => {
       listSkills.mockResolvedValue(builtins);
       const { type } = renderZh();
       type(key);
       const list = await screen.findByRole("listbox");
-      expect(list).toHaveTextContent("接着写");
-      expect(list).toHaveTextContent("/continue-story");
-      for (const group of ["写作", "修改", "检查", "文体"])
+      expect(list).toHaveTextContent("扩写");
+      expect(list).toHaveTextContent("/expand");
+      for (const group of ["修改", "文体"])
         expect(screen.getByRole("group", { name: group })).toBeInTheDocument();
-      expect(screen.getAllByRole("option")).toHaveLength(19);
+      // Write's four: Review's and Create's are in their own modes.
+      expect(screen.getAllByRole("option")).toHaveLength(4);
+      expect(list).not.toHaveTextContent("校对");
     },
   );
 
@@ -560,14 +571,12 @@ describe("ChatComposer pickers", () => {
   it("finds a skill by its localized label and alias", async () => {
     listSkills.mockResolvedValue(builtins);
     const { type } = renderZh();
-    type("/校");
+    type("/精");
     const first = (await screen.findAllByRole("option"))[0];
-    expect(first).toHaveTextContent("校对");
-    type("/续写");
+    expect(first).toHaveTextContent("精简");
+    type("/翻译");
     await waitFor(() =>
-      expect(screen.getAllByRole("option")[0]).toHaveTextContent(
-        "/continue-story",
-      ),
+      expect(screen.getAllByRole("option")[0]).toHaveTextContent("/translate"),
     );
   });
 
@@ -576,14 +585,14 @@ describe("ChatComposer pickers", () => {
     const { type, onSend, input } = renderZh();
     type("/");
     await screen.findByRole("listbox");
-    type("、续写 林晚走进书店");
+    type("、翻译 林晚走进书店");
     fireEvent.keyDown(input, { key: "Enter" });
     expect(onSend).toHaveBeenCalledWith(
-      '<skill name="continue-story" typed="/续写"></skill>\n\n林晚走进书店',
+      '<skill name="translate" typed="/翻译"></skill>\n\n林晚走进书店',
       [],
       true,
-      { mode: "review", webSearch: false, thinking: "auto" },
-      "、续写 林晚走进书店",
+      { mode: "write", webSearch: false, thinking: "auto" },
+      "、翻译 林晚走进书店",
     );
   });
 
@@ -594,7 +603,7 @@ describe("ChatComposer pickers", () => {
     await screen.findByRole("listbox");
     fireEvent.keyDown(input, { key: "ArrowDown" });
     fireEvent.keyDown(input, { key: "Enter" });
-    expect(input).toHaveValue("/describe ");
+    expect(input).toHaveValue("/tighten ");
 
     type("/");
     await screen.findByRole("listbox");

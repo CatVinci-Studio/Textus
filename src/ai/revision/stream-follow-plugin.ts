@@ -18,19 +18,8 @@ const WRITING = ".pending-insert-typing, .pending-reading";
 
 export const streamFollowKey = new PluginKey("textus-stream-follow");
 
-/**
- * While Textus AI writes into the document, the page follows the writing -
- * while the reader is with it, as the chat follows a reply
- * (useFollowBottom): if they could see where it was writing when it
- * started, or scroll back to it, it is kept in view as it grows. Scrolled
- * away, the page stays where they put it.
- *
- * And it stays there: WebKit scrolls the caret back into view when the
- * text around it changes, which pulled a reader who had scrolled away
- * back to where the writing began. A scroll the reader didn't make - none
- * of their wheel, keys, touch or clicks just before - that moves the page
- * more than a screen while something is written is undone.
- */
+/** The page follows AI writing while the reader is with it. A scroll they
+ *  didn't make of over a screen is undone, as WebKit pulls the caret back. */
 export const streamFollowPlugin = $prose(
   () =>
     new Plugin({
@@ -68,7 +57,7 @@ class StreamFollow {
   }
 
   /** A transaction may have started the writing; the frames after it,
-   *  which write without one (pending-animation.ts), carry it on. */
+   *  which write without one, carry it on. */
   update() {
     if (this.live || this.view.dom.querySelector(WRITING) === null) return;
     this.live = true;
@@ -102,23 +91,16 @@ class StreamFollow {
     this.intent = performance.now();
   };
 
-  /** The reader scrolling: no following until the scroll says where they
-   *  went - else a frame between the wheel and its scroll set the page
-   *  back, and cut the browser's smooth scroll short. */
+  /** No following until the reader's scroll lands, or a frame in between
+   *  would set the page back and cut smooth scrolling short. */
   private letGo = () => {
     this.intent = performance.now();
     this.following = false;
     this.speed = 0;
   };
 
-  /**
-   * How far a frame of following goes, the writing `over` px below the
-   * view: a critically damped spring, so a sentence or block that lands
-   * draws the page down from rest and settles it without overshoot, in
-   * about --dur-slow - where it jumped down by the block's height, and an
-   * eased stroke that started at full speed still kicked when many landed
-   * at once. Under reduced motion, all of it at once.
-   */
+  /** How far a frame of following goes: a critically damped spring, so the
+   *  page settles without overshoot. Under reduced motion, all at once. */
   private glide(over: number, dt: number): number {
     if (over <= 0) {
       this.speed = 0;
@@ -177,8 +159,6 @@ class StreamFollow {
     this.kept = top;
   };
 
-  /** Each frame while something is written: keep it in view while
-   *  following; stop once nothing is. */
   /** The last frame's time, for how far a frame's glide goes. */
   private lastFrame = 0;
   /** How fast the page is gliding after the writing, px/s. */

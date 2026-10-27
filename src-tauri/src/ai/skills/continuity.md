@@ -12,6 +12,7 @@ metadata:
   textus-version: "1"
   textus-invocation: "both"
   textus-category: "check"
+  textus-modes: "review"
   textus-packs: "contract craft#fiction"
   textus-sources: "Our own text."
   textus-aliases-en: "consistency"

@@ -16,10 +16,8 @@ import {
   type SearchMatch,
 } from "./settings-search";
 
-// The search box at the top of Settings' categories and the results that
-// stand in for the page while it holds a query (settings-search.ts finds
-// them). The box is a combobox over the results: ↑/↓ move, Enter goes to
-// the row, Esc clears.
+// The Settings search box and the results that stand in for the page while
+// it holds a query. A combobox: ↑/↓ move, Enter goes to the row, Esc clears.
 
 /** A page the search reads, rendered out of sight while a query is typed. */
 export interface SearchablePage {
@@ -29,12 +27,8 @@ export interface SearchablePage {
   render: () => ReactNode;
 }
 
-/**
- * Every searchable page, mounted hidden (no layout, out of the
- * accessibility tree and the tab order) for as long as there is a query,
- * and read into entries as it renders - and again when a row arrives late,
- * such as a status fetched from the backend.
- */
+/** Every searchable page, mounted hidden while there is a query and read
+ *  into entries as it renders, again when a row arrives late. */
 export function SettingsSearchIndex({
   pages,
   onEntries,
@@ -236,10 +230,8 @@ export function SettingsSearchResults({
 const FOCUSABLE =
   ":is(input, select, textarea, button, a[href]):not(.info-tip-button):not(:disabled)";
 
-/** Takes the user to a found row on its page: unfolds what hides it,
- *  scrolls it to the middle, gives it the keyboard and tints it for a
- *  moment (motion.css's --dur-linger; reduced motion jumps instead of
- *  scrolling, the tint still fades). */
+/** Takes the user to a found row: unfolds what hides it, scrolls it to the
+ *  middle, focuses it and tints it for a moment. */
 export function revealEntry(el: HTMLElement) {
   const details = el.closest("details");
   if (details && !details.open) details.open = true;

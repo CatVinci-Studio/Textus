@@ -2,10 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 /**
- * Equation numbers (#182): the rows of gather, align and equation are
- * numbered in order across the whole document, as LaTeX numbers them - in
- * the editor, in the split view's preview and in an HTML export. \tag
- * replaces a row's number, \notag drops it, and the starred forms have none.
+ * Equation numbers run in order across the document, as LaTeX numbers them,
+ * in the editor, the split preview and an HTML export. \tag replaces a
+ * row's number, \notag drops it, and the starred forms have none.
  */
 
 const DOC = [
@@ -46,10 +45,9 @@ const DOC = [
   "The end.",
 ].join("\n");
 
-/** What each display formula under `scope` shows at the right, as one
- *  string per formula ("(1)(2)"). The numbers are CSS counters, drawn in
- *  ::before content that no DOM API reads back, so this asks Chromium's
- *  layout snapshot for the text it actually laid out. */
+/** What each display formula under `scope` shows at the right ("(1)(2)").
+ *  The numbers are CSS counters in ::before, which no DOM API reads back,
+ *  so this asks Chromium's layout snapshot. */
 async function equationLabels(page: Page, scope: string): Promise<string[]> {
   const count = await page.evaluate((selector) => {
     const displays = document.querySelectorAll(

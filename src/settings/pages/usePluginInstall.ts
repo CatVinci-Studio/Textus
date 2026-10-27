@@ -4,23 +4,23 @@ import { useSettings } from "../SettingsContext";
 import { errorText } from "../../utils/error-text";
 import type { Strings } from "../../i18n/strings";
 import { pluginName, pluginText, pluginsSnapshot } from "../../plugins/manager";
-import { installFromCatalog, type CatalogItem } from "../../plugins/catalog";
+import {
+  installFromCatalog,
+  type CatalogItem,
+} from "../../plugins/store/catalog";
 import {
   requirementLabel,
   requirementMet,
   turnOnRequirement,
-} from "../../plugins/requirements";
+} from "../../plugins/store/requirements";
 import type { Attempt } from "./PluginPage";
 
-/**
- * Installing a plugin from the catalog, as Settings › Plugins and the
- * market (MarketPage) both do: the package fetched and checked in Rust,
- * the plugin turned on - asking for its permissions - and what it needs
- * that is off offered to be turned on. A failure is said in a message.
- */
+/** Installs a plugin from the catalog: fetched and checked in Rust, turned
+ *  on with its permissions asked, and what it needs offered. Failures show
+ *  in a message. */
 export function usePluginInstall(
   t: Strings,
-  /** After a plugin is installed and on (MarketPage: its usage guide). */
+  /** After a plugin is installed and on. */
   onInstalled?: (id: string) => void,
 ) {
   const { settings, setSettings } = useSettings();
@@ -37,13 +37,14 @@ export function usePluginInstall(
     }
   };
 
-  const install = (item: CatalogItem) =>
+  /** `quietly`: one of several (a pack) - no guide opens after it. */
+  const install = (item: CatalogItem, quietly = false) =>
     attempt(async () => {
       setInstalling(item.id);
       try {
         await installFromCatalog(item.id);
         await askForRequirements(item.id, t, settings, setSettings);
-        onInstalled?.(item.id);
+        if (!quietly) onInstalled?.(item.id);
       } finally {
         setInstalling(null);
       }

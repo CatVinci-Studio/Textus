@@ -1,21 +1,12 @@
 #!/usr/bin/env node
-// Which installer the website's download buttons get under which key: the
-// manifest.json that scripts/mirror-downloads.sh puts in the download bucket
-// (textus-downloads). The site (CatVinci-Studio/levis-homepage) reads it
-// through functions/download/[[path]].js, so a key, once there, stays.
-//
-//   node scripts/mirror-keys.mjs --tag vX.Y.Z --out FILE FILE...
-//       writes the manifest for the files given (any path; only the name
-//       counts) to FILE; names that are no installer are left out
+// The download bucket's manifest.json: which installer the website serves
+// under which key. The site reads it, so a key, once there, stays.
 import { writeFileSync } from "node:fs";
 import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
-/** Each key and the installer it serves, by tauri-bundler's name for it, in
- *  the manifest's order. The x64 keys came first and keep their names;
- *  ARM64 Windows and Linux (from 1.1.0) end in -arm64. Keep x64 first: the
- *  site's src/main.ts has matched files by extension alone (/-setup\.exe$/)
- *  and takes the first match. */
+/** Each key and the installer it serves, by tauri-bundler's name for it.
+ *  Keep x64 first: the site matches files by extension and takes the first. */
 export const MIRROR_KEYS = [
   ["mac", /_aarch64\.dmg$/],
   ["mac-intel", /_x64\.dmg$/],

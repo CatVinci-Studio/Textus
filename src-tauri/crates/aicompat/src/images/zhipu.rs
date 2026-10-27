@@ -1,7 +1,5 @@
-//! Zhipu's image models - GLM-Image and CogView - on OpenAI's path. The
-//! picture comes back as a link. GLM-Image wants sides in multiples of 32
-//! from 1024 and only `quality: "hd"`; CogView makes smaller pictures.
-//! Zhipu's watermark is left at its default.
+//! Zhipu's image models (GLM-Image and CogView) on OpenAI's path. GLM-Image
+//! wants sides in multiples of 32 from 1024 and only `quality: "hd"`.
 
 use super::{join, malformed, Aspect, ImageError, Reply, Request};
 use serde_json::{json, Value};

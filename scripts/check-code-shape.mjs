@@ -1,19 +1,7 @@
 #!/usr/bin/env node
-// Checks the shape rules in CONTRIBUTING.md ("Code shape"):
-//
-//   - a source file holds at most 600 lines (tests, the translation and
-//     icon tables and the dev shim aside);
-//   - a React component calls at most 8 hooks - more is a component doing
-//     several things, and its concerns become hooks of their own;
-//   - no code outside a provider's own adapter compares a provider's id:
-//     what differs between providers is data (the catalog, capabilities.rs,
-//     a table), not an `if`.
-//
-// A few files and components are over a limit today. They are listed below
-// with what they are at now: they may shrink, not grow, and the number
-// comes down with them.
-//
-//   node scripts/check-code-shape.mjs     (exit 1 on any breach)
+// Checks the code shape rules: at most 600 lines per source file, at most 8
+// hooks per component, and no provider id compared outside its adapter.
+// Files listed over a limit may shrink, not grow.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -45,7 +33,7 @@ const isTest = (path) =>
   /\.(test|spec)\.tsx?$/.test(path) ||
   /(^|\/)tests?(\.rs|\/)/.test(path) ||
   /_tests\.rs$/.test(path) ||
-  // The live evals are test code (#[cfg(test)] mod live_eval).
+  // The live evals are test code (#[cfg(test)]).
   path.includes("/live_eval/") ||
   path.startsWith("src/dev/");
 

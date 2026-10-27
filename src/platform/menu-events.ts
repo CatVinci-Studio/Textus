@@ -1,13 +1,12 @@
-import { emitTo } from "@tauri-apps/api/event";
+import { emitToWindow } from "./events";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import type { NativeMenuId } from "../app/app-menu-model";
+import { thisWindow } from "./this-window";
+import type { NativeMenuId } from "../app/menu/app-menu-model";
 import { menuIpc } from "./ipc";
 
 /**
- * iOS has no menu.rs, so this does its `dispatch` for the ids the phone
- * menu offers: turn the id into the window event useMenuBridge (and
- * useZoom) already listen for, and send it to this webview.
+ * iOS has no native menu, so this turns a phone menu id into the window
+ * event the menu bridge listens for and sends it to this webview.
  */
 export function emitMenuEvent(id: NativeMenuId): void {
   const [event, payload] = id.startsWith("help-doc:")
@@ -15,23 +14,18 @@ export function emitMenuEvent(id: NativeMenuId): void {
     : id.startsWith("insert-block:")
       ? ["menu-insert-block", id.slice("insert-block:".length)]
       : [id === "settings" ? "menu-open-settings" : `menu-${id}`, undefined];
-  // Addressed to the WebviewWindow, the form menu.rs's emit_to uses. A bare
-  // label is AnyLabel, which on iOS - where the window and its webview are
-  // both "main" - delivered the event twice, so every toggle undid itself.
+  // Addressed to the WebviewWindow: a bare label is AnyLabel, which on iOS
+  // delivered the event twice, so every toggle undid itself.
   const { label } = getCurrentWebviewWindow();
-  void emitTo({ kind: "WebviewWindow", label }, event, payload);
+  void emitToWindow({ kind: "WebviewWindow", label }, event, payload);
 }
 
 /**
- * A menu item run from inside this window - the app-drawn menu, or a
- * shortcut the page hears first - through the backend's dispatch, as a
- * click in the native menu would be. Close Window closes this window
- * itself: the backend has to ask which window has the focus, and on
- * Windows and Linux a window whose focus is inside its webview may say it
- * has none, so File › Close Window did nothing (#345). close(), as the
- * window's own close button, so unsaved tabs are still asked about.
+ * A menu item run from inside this window, as a native menu click would be.
+ * Close Window closes this window itself, since a window focused in its
+ * webview may report no focus; close() still asks about unsaved tabs.
  */
 export function runMenuItemHere(id: string): Promise<void> {
-  if (id === "close-window") return getCurrentWindow().close();
+  if (id === "close-window") return thisWindow().close();
   return menuIpc.triggerMenuItem(id);
 }

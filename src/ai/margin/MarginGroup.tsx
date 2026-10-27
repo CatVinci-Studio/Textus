@@ -33,13 +33,8 @@ function groupGlimpse(items: MarginItem[]): string {
         .replace(/^#{1,6}\s+/, "");
 }
 
-/**
- * A run with more notes than its paragraph has lines (stackCards' group):
- * one chip, "8 notes", which opens - clicked, one of its own pointed at by
- * a bar, or while picking - to the list of its cards over the margin
- * below, none of the other cards moved. Each card in the list lights its
- * passage as one in the margin does.
- */
+/** A run with more notes than its paragraph has lines: one chip, "8 notes",
+ *  that opens to its cards over the margin below without moving the others. */
 export const MarginGroup = memo(function MarginGroup({
   groupKey,
   items,

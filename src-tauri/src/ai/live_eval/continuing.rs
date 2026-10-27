@@ -1,13 +1,6 @@
-//! Live checks of a conversation that goes on before the user decides:
-//! messages sent while the last one's proposals are still undecided - typed
-//! on, or queued while it was writing (src/ai/chat/MessageQueue.tsx). Each
-//! later request works on the document as the user sees it: an edit of the
-//! undecided text goes into that proposal (tools.rs's quotes_undecided, the
-//! frontend's joinEdit), and the one Accept at the end takes it all.
-//!
-//! On Claude (ANTHROPIC_API_KEY), or TEXTUS_EVAL_PROVIDER's model. Run from
-//! src-tauri/:
-//!   cargo test --lib live_eval::continuing -- --ignored --nocapture --test-threads=1
+//! Live checks of messages sent while the last one's proposals are undecided:
+//! each later request works on the document as the user sees it. Run with
+//! `cargo test --lib live_eval::continuing -- --ignored --nocapture --test-threads=1`.
 
 use super::harness::{self, auth, AgentSetup, Conversation, UserTurn};
 use crate::ai::agent::AgentMode;
@@ -29,7 +22,7 @@ fn run_with(
         eprintln!("live_eval: no ANTHROPIC_API_KEY - skipping");
         return None;
     };
-    let ws = workspace::load_layers(None, None, None, &[]);
+    let ws = workspace::load_layers(None, None, None);
     let model = harness::agent_model();
     let setup = AgentSetup {
         model: &model,
@@ -239,9 +232,8 @@ fn an_undecided_picture_survives_a_rewrite_of_its_text() {
     );
 }
 
-/// The rewrite case in English, two requests: a rewrite of the first
-/// paragraph left undecided, then one word of it changed - quoted from the
-/// original or from the rewrite, it goes into the rewrite.
+/// Two requests in English: a rewrite left undecided, then one word of it
+/// changed. Quoted from the original or the rewrite, it goes into the rewrite.
 #[test]
 #[ignore = "live API - see module docs"]
 fn a_word_changed_in_an_undecided_rewrite_goes_into_it() {

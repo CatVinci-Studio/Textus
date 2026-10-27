@@ -3,13 +3,8 @@
 
 use super::*;
 
-// --- Agentic tool-calling support (the generic openai-chat-completions
-// dialect - see `aicompat::agent` for the provider-agnostic loop this
-// feeds). This is the dialect self-hosted models, OpenRouter, Groq, Ollama,
-// and most other OpenAI-compatible servers speak - unlike the Responses API
-// and Messages API dialects, `tools` support here varies a lot server to
-// server, so the caller (agent.rs) is expected to fall back to
-// `call_completion` on a hard failure rather than this module guessing.
+// `tools` support varies a lot from server to server in this dialect, so the
+// caller falls back to `call_completion` on a hard failure.
 
 pub(crate) fn tool_to_schema(tool: &ToolSpec) -> Value {
     json!({
@@ -92,18 +87,10 @@ pub(crate) fn user_message_with_images(images: &[ImageAttachment], text: &str) -
     json!({"role": "user", "content": content})
 }
 
-/// Groups the flat `AgentTurn` history into Chat Completions messages.
-/// Like the Anthropic dialect, every `ToolCall` of a step must land in ONE
-/// assistant message's `tool_calls` array - but each `ToolResult` becomes
-/// its OWN `role: "tool"` message afterward (not grouped into one, unlike
-/// Anthropic's `tool_result` content blocks), matching what
-/// api.openai.com/v1/chat/completions and compatible servers expect. A call
-/// after a result starts the next step's message (`run_agent_loop` records
-/// each step's calls before their results), so a new step only appends to
-/// the messages and the servers that cache prompt prefixes on their own
-/// (DeepSeek, Qwen, Kimi, ...) keep the earlier steps cached. With
-/// `replay_reasoning`, a step's `reasoning_content` goes back on its
-/// assistant message (see `ProviderCaps::replay_reasoning`).
+/// Groups the flat `AgentTurn` history into Chat Completions messages: every
+/// `ToolCall` of a step in ONE assistant message's `tool_calls`, each
+/// `ToolResult` its OWN `role: "tool"` message after it. A new step only
+/// appends, so servers that cache prompt prefixes keep earlier steps cached.
 pub(crate) fn turns_to_messages(
     instructions: &str,
     history: &[AgentTurn],
@@ -114,10 +101,8 @@ pub(crate) fn turns_to_messages(
     while i < history.len() {
         match &history[i] {
             AgentTurn::User { text, images } => {
-                // Plain string `content` unless there are images: an
-                // OpenAI-compatible server that predates vision accepts the
-                // string form and may reject the content-part array, and the
-                // overwhelming majority of turns have no images.
+                // Plain string `content` unless there are images: a server that
+                // predates vision may reject the content-part array.
                 if images.is_empty() {
                     messages.push(json!({"role": "user", "content": text}));
                 } else {
@@ -182,10 +167,8 @@ pub(crate) fn turns_to_messages(
                     messages
                         .push(json!({"role": "tool", "tool_call_id": call_id, "content": output}));
                 }
-                // A `tool` message's content is text only (OpenAI's own
-                // API rejects image parts there, and the compatible servers
-                // follow it), so the step's images follow its results as
-                // one user message.
+                // A `tool` message's content is text only, so the step's images
+                // follow its results as one user message.
                 if !tool_images.is_empty() {
                     let note = tool_images_note(&tool_images);
                     messages.push(user_message_with_images(&tool_images, &note));
@@ -196,10 +179,8 @@ pub(crate) fn turns_to_messages(
     messages
 }
 
-/// Parses a Chat Completions `choices[0].message` object into a
-/// [`StepResult`]: any `tool_calls` become tool calls the caller must
-/// execute, otherwise `content` is the model's final answer, with the
-/// pages a native search cited (`report`) marked and reported.
+/// Parses a Chat Completions `choices[0].message` object into a [`StepResult`],
+/// with the pages a native search cited marked and reported.
 pub(crate) fn parse_agent_response(
     message: &Value,
     report: &SearchReport,
@@ -272,9 +253,8 @@ const REASONING_CONTENT: &str = "reasoning_content";
 const EXTRA_CONTENT: &str = "extra_content";
 
 /// A call's `extra_content` as its turn keeps it. Gemini 3 sends a thought
-/// signature there and refuses the next request when a call comes back
-/// without it (400 "Function call is missing a thought_signature",
-/// 1.2.0-rc.6); other servers send none, and their turns are as before.
+/// signature there and refuses the next request when a call comes back without
+/// it.
 pub(crate) fn call_extra(extra: Value) -> Value {
     json!({ EXTRA_CONTENT: extra })
 }

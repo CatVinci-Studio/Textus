@@ -1,9 +1,11 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { Transaction } from "@milkdown/kit/prose/state";
+import { AttrStep } from "@milkdown/kit/prose/transform";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 
 /** The ranges of the transaction's new document that its steps wrote,
- *  each mapped through the steps after it. */
+ *  each mapped through the steps after it. An attribute step (a code
+ *  block's language) maps nothing, so its node counts. */
 export function changedRanges(tr: Transaction): [number, number][] {
   const ranges: [number, number][] = [];
   tr.mapping.maps.forEach((map, i) => {
@@ -11,6 +13,9 @@ export function changedRanges(tr: Transaction): [number, number][] {
     map.forEach((_oldStart, _oldEnd, newStart, newEnd) =>
       ranges.push([after.map(newStart, -1), after.map(newEnd, 1)]),
     );
+    const step = tr.steps[i];
+    if (step instanceof AttrStep)
+      ranges.push([after.map(step.pos, 1), after.map(step.pos + 1, -1)]);
   });
   return ranges;
 }
@@ -70,14 +75,9 @@ export function redrawBlocks(
 }
 
 /**
- * Keeps decorations drawn per node (a code block, an inline code span) in
- * step with an edit for the cost of what it touched: `set` is mapped
- * through `tr`, and only in the top-level blocks the edit changed are the
- * old decorations dropped and those of each node `match`es drawn again
- * with `decorate` - rather than every such node in the document on every
- * keystroke. Whole blocks, not just the nodes at the edit: a code block
- * turned into a paragraph keeps its text, and its tokens' decorations
- * mapped onto that text would otherwise stay.
+ * Keeps per-node decorations in step with an edit for the cost of what it
+ * touched. Whole top-level blocks are redrawn, so a code block turned into a
+ * paragraph drops its token decorations.
  */
 export function redecorateChanged(
   set: DecorationSet,

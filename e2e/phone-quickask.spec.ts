@@ -1,8 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { PHONE, mockInvoke, openPhone, pasteMarkdown } from "./helpers";
 
-// Quick Ask and the AI composer on an iPhone (mobile/styles/quick-ask-dock.css,
-// mobile/styles/composer.css), in Chromium's phone viewport (see PHONE).
+// Quick Ask and the AI composer in Chromium's phone viewport.
 test.use(PHONE);
 
 const PARAGRAPH = "The survey covered three districts over two months.";
@@ -95,12 +94,12 @@ test("the mode picker is a segmented control on a phone", async ({ page }) => {
   await expect(dock.locator("select")).toHaveCount(0);
   await page.keyboard.press("Escape");
 
-  // The Textus AI sheet's composer: the same two, and 44pt buttons.
+  // The Textus AI sheet's composer: the two and Create, and 44pt buttons.
   await page.locator(".window-bar-toggle").tap();
   const sheet = page.locator(".agent-panel");
   await expect(
     sheet.getByRole("radiogroup", { name: "Mode" }).getByRole("radio"),
-  ).toHaveText(["Write", "Review"]);
+  ).toHaveText(["Write", "Review", "Create"]);
   await expectTouchTarget(page, ".agent-panel .chat-mode-segments");
   await expectTouchTarget(page, ".agent-panel .inline-chat-attach");
   await expectTouchTarget(page, ".agent-panel .inline-chat-web-search");

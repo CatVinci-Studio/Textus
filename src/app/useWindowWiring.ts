@@ -7,11 +7,15 @@ import {
   useMenuBridge,
   useNativeMenuAccelerators,
   useNativeMenuChecks,
-} from "./menu-bridge";
+} from "./menu/menu-bridge";
 import { useStartupRestore } from "../document/startup-restore";
 import { useOpenPathsPush, useFileDrop } from "./useFileOpening";
 import { useDocumentActions } from "./useDocumentActions";
-import { useClosePrompt, useWindowCloseGuard } from "./close-flow";
+import {
+  takeClosedPath,
+  useClosePrompt,
+  useWindowCloseGuard,
+} from "./close-flow";
 import {
   usePracticeNotes,
   useTutorialTabRecovery,
@@ -19,18 +23,14 @@ import {
 } from "./onboarding-wiring";
 import { tabIsUntouchedDraft } from "../document/doc-tabs";
 import { useLatest } from "../utils/hooks/useLatest";
+import { setDocumentDrop } from "../ui/document-drop";
+import { fileDropOnDocuments } from "./split/split-drop";
 import type { WindowShell } from "./useWindowShell";
 import type { WindowDocuments } from "./useWindowDocuments";
 import type { Settings, useSettings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
-/**
- * What reaches a window from outside its own controls (App.tsx): the
- * global shortcuts, the clipboard history, what opens at launch or is
- * pushed or dropped in, the close guard, files changed on disk, the menus
- * (their check marks, accelerators and events), the tour's lessons, and
- * the close prompt's answers.
- */
+/** Everything that reaches a window from outside its own controls. */
 export function useWindowWiring({
   shell,
   docs,
@@ -73,10 +73,8 @@ export function useWindowWiring({
     evaluate: shell.evaluateTutorialDocumentChange,
   });
 
-  // Files handed over by the OS (Finder "Open With" / double-click, or the
-  // `textus` CLI command) at launch, recovered drafts, a dragged-in tab, or a
-  // Help doc this window was spawned to show - see startup-restore.ts for
-  // the actual priority chain. Deliberately runs only once, at mount.
+  // What opens at launch (OS-opened files, recovered drafts, a dragged-in
+  // tab, a Help doc). Runs only once, at mount.
   useStartupRestore({
     activeTabId,
     enableDraftRecovery: settings.enableDraftRecovery,
@@ -94,7 +92,7 @@ export function useWindowWiring({
     stopTutorial: tutorial.exit,
   });
 
-  // The same, pushed to an already-running window (useFileOpening.ts).
+  // The same, pushed to an already-running window.
   useOpenPathsPush(openPathInTab);
   const activeTabRef = useLatest(activeTab);
   const activeIsUntouchedDraft = useCallback(
@@ -102,6 +100,14 @@ export function useWindowWiring({
     [activeTabRef],
   );
   useFileDrop(openFile, openPathInTab, activeIsUntouchedDraft);
+  // A file from the sidebar dragged over the documents opens where it is
+  // let go.
+  useEffect(() => {
+    setDocumentDrop(
+      fileDropOnDocuments((path, drop) => void openPathInTab(path, { drop })),
+    );
+    return () => setDocumentDrop(null);
+  }, [openPathInTab]);
 
   useWindowCloseGuard(
     liveTabs,
@@ -134,14 +140,12 @@ export function useWindowWiring({
   useNativeMenuChecks(menuChecks);
   useNativeMenuAccelerators(settings.shortcuts);
 
-  // Menu events from Rust (menu.rs's dispatch) - every File/View/Format/Help
-  // action the frontend owns arrives here as a window event; see
-  // menu-bridge.ts for the actual subscriptions.
   useMenuBridge({
     activeTabId,
     liveTabs,
     t,
     pdfPageNumbers: settings.pdfPageNumbers,
+    pdfLightColors: settings.pdfLightColors,
     diagramEngine: settings.diagramEngine,
     onOpenSettings: shell.settingsOpening.openSettings,
     onOpenPluginSettings: shell.settingsOpening.openPluginSettings,
@@ -162,6 +166,12 @@ export function useWindowWiring({
     saveTabAs: docs.saveTabAs,
     toggleSourceMode: docs.toggleSourceMode,
     requestCloseTab: docs.requestCloseTab,
+    reopenClosedTab: () => {
+      const path = takeClosedPath((p) =>
+        liveTabs().some((tb) => tb.path === p),
+      );
+      if (path) void openPathInTab(path, { restoreCaret: true });
+    },
     openHelpTab: docs.openHelpTab,
     startWelcomeTutorial: docs.startWelcomeTutorial,
     openCommunity: () => void links.openCommunityPage(settings.language),

@@ -1,0 +1,132 @@
+/* padding-top clears the floating window bar, or its drag region would
+   swallow clicks meant for the tabs. */
+.tab-bar {
+  /* The offset parent a closed tab's last look is left in. */
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 34px 10px 6px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  /* Pill drags must never read as a text selection. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* An arriving pill takes its full width at once while neighbours slide
+   aside; growing its width reflowed the bar every frame. */
+
+.tab-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* Sized by content up to max-width; when tabs stop fitting they shrink
+     together to min-width, then the bar scrolls. */
+  flex-shrink: 1;
+  min-width: 90px;
+  max-width: 200px;
+  padding: 5px 8px;
+  border-radius: var(--radius-control);
+  font-size: var(--text-sm);
+  color: var(--editor-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: motion-pop-in var(--dur-base) var(--ease-out);
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+
+.tab-pill[data-entered]:not(.tab-pill-ghost) {
+  animation: none;
+}
+
+/* Inside the ring: the bar scrolls, and clips what lies outside it. */
+.tab-pill:focus-visible {
+  outline-offset: -2px;
+}
+
+.tab-pill:hover {
+  background: var(--sidebar-hover);
+}
+
+.tab-pill-ghost {
+  --exit-scale: var(--scale-enter);
+  animation: motion-exit var(--dur-fast) var(--ease-in) forwards;
+}
+
+.tab-pill-active {
+  background: var(--sidebar-active);
+  color: var(--sidebar-active-text);
+}
+
+/* An incoming tab riding this bar mid-drag. No pop-in: a pill still scaling
+   would skew the slot math that positions it. */
+.tab-pill-preview {
+  pointer-events: none;
+  animation: none;
+}
+
+/* The pill following the cursor is its own tiny OS window, since nothing in
+   this webview can paint beyond the window's edge. */
+
+.tab-pill-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-pill-dirty-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.tab-pill-close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+  line-height: 1;
+  border-radius: var(--radius-small);
+}
+
+.tab-pill-close:hover {
+  opacity: 1;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.tab-bar-add {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--editor-muted);
+  font-size: var(--text-lg);
+  padding: 4px 10px;
+  border-radius: var(--radius-control);
+}
+
+.tab-bar-add:hover {
+  background: var(--sidebar-hover);
+}
+
+.word-count {
+  font-size: var(--text-sm);
+  color: var(--editor-muted);
+  white-space: nowrap;
+  min-width: 1px;
+  padding: 0 4px;
+  /* Counts change in place without their digits shifting. */
+  font-variant-numeric: tabular-nums;
+}

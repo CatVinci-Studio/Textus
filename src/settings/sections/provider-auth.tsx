@@ -13,13 +13,11 @@ import {
 } from "./controls";
 import { type ConnectedState, localizedLabel } from "./provider-connection";
 
-/**
- * Signing in to one AI provider: the account and API-key panels, and the
- * custom endpoint's address, key and model (providers.tsx).
- */
+/** Signing in to one AI provider: the account and API-key panels, and the
+ *  custom endpoint's address, key and model. */
 
-/// A provider with one or both of oauth/api_key auth: renders a tab switch
-/// when both are available, or just the relevant panel when only one is.
+/// Tabs between oauth and api_key auth when both are available, else just
+/// the one panel.
 export function ProviderAuthPanel({
   t,
   entry,
@@ -33,9 +31,8 @@ export function ProviderAuthPanel({
 }) {
   const hasOauth = entry.auth.includes("oauth");
   const hasApiKey = entry.auth.includes("api_key");
-  // Default to whichever method is already connected; oauth otherwise, since
-  // it's the richer entitlement and what the backend prefers when both are
-  // configured (see ai::route::resolve_openai_auth).
+  // Defaults to whichever method is connected, else oauth, which the backend
+  // prefers when both are configured.
   const [tab, setTab] = useState<"oauth" | "api_key">(() => {
     if (!hasOauth) return "api_key";
     if (!hasApiKey) return "oauth";
@@ -69,6 +66,7 @@ export function ProviderAuthPanel({
           t={t}
           providerId={entry.id}
           label={label}
+          unofficial={entry.oauthUnofficial}
           onStatusChange={onStatusChange}
         />
       )}
@@ -89,19 +87,19 @@ export function OauthPanel({
   t,
   providerId,
   label,
+  unofficial = false,
   onStatusChange,
 }: {
   t: Strings;
   providerId: string;
   label: string;
+  unofficial?: boolean;
   onStatusChange?: (configured: boolean) => void;
 }) {
   const [configured, setConfiguredState] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
-  // The sign-in page's address, shown while signing in: some machines open
-  // no browser (no default set, a sandbox, a remote desktop), and then this
-  // is the only way in. Opened on the same computer - the sign-in comes
-  // back to it.
+  // Shown while signing in: some machines open no browser, and then this is
+  // the only way in.
   const [loginUrl, setLoginUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -159,6 +157,11 @@ export function OauthPanel({
                 ? t.accountConnectedAs
                 : t.accountNotConnected}
           </div>
+          {unofficial && (
+            <div className="settings-row-hint settings-signin-unofficial">
+              {t.signInExperimental}
+            </div>
+          )}
         </div>
         {configured ? (
           <button
@@ -268,9 +271,8 @@ export function ApiKeyProviderPanel({
   );
 }
 
-/** Whether two base URLs name the same endpoint - the rule the backend's
- *  same_endpoint (auth/custom_endpoint.rs) uses to decide that a stored key
- *  may go to a URL. */
+/** Whether two base URLs name the same endpoint, by the backend's rule for
+ *  sending a stored key to a URL. */
 export function sameEndpoint(a: string, b: string): boolean {
   const norm = (url: string) => url.trim().replace(/\/+$/, "");
   return norm(a) === norm(b);
@@ -329,10 +331,8 @@ export function CustomProviderPanel({
     }
   }
 
-  // An empty key field means "the saved key" to every action here (the
-  // backend fills it in) - but only while the URL is the one it was saved
-  // with: edited to another host, the old key is not sent, so the field
-  // must not claim one either.
+  // An empty key field means "the saved key", but only while the URL is the
+  // one it was saved with; another host is not sent the old key.
   const keySaved =
     !!config?.has_api_key && sameEndpoint(config.base_url, baseUrl);
 

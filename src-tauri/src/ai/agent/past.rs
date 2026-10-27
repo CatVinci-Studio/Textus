@@ -1,7 +1,5 @@
 //! search_conversations: the user's earlier conversations with Textus AI,
-//! searched for words when they refer to one ("the name we picked last
-//! week", "as you suggested yesterday") - what was said there, where the
-//! memory keeps only what should always hold.
+//! searched for words when they refer to one.
 
 use crate::ai::tools::{Access, Run, Tool, EVERY_MODE};
 use crate::settings::chat_history::ChatHistory;
@@ -30,8 +28,7 @@ fn spec() -> ToolSpec {
     }
 }
 
-/// When a conversation was last changed, as a date (UTC): days since
-/// 1970 to year, month and day by the civil-from-days algorithm.
+/// When a conversation was last changed, as a UTC date (civil-from-days).
 fn date(updated_at: &Value) -> String {
     let days = (updated_at.as_f64().unwrap_or(0.0) / 86_400_000.0).floor() as i64;
     let z = days + 719_468;

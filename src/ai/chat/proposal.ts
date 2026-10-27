@@ -12,8 +12,7 @@ import {
 
 /**
  * A propose_edit tool call's arguments as a validated EditProposal, or null
- * if they don't parse or are missing what their action requires (same rules
- * the backend tool validates against).
+ * if they don't parse or lack what their action requires.
  */
 export function parseProposal(argumentsJson: string): EditProposal | null {
   try {
@@ -75,19 +74,10 @@ export function parseToolProposal(
 }
 
 /**
- * Resolves a leading /name skill invocation: the skill's prompt becomes the
- * message body, in a <skill> block that tells the model it is already
- * loaded (agent.rs's skill index says so - sent bare, the model called
- * use_skill for it again, a 12-16 s round trip in the live eval), with
- * whatever followed the name appended as extra input. A slash token that
- * doesn't name a skill is left alone - it might just be text that starts
- * with a slash. The transcript shows it as the /word the user typed
- * (user-message.ts's parseUserMessage).
- *
- * The slash may be what a CJK IME types for that key (`／`, or a leading
- * `、` or `・`), and the word may be an alias (`/续写`): `resolveName` maps it to
- * the canonical name. A skill the workspace has no prompt for (a built-in
- * the backend expands) goes out as an empty block naming it.
+ * Resolves a leading /name skill invocation: the skill's prompt goes in a
+ * <skill> block marked as loaded, so the model doesn't call use_skill again.
+ * A slash token that names no skill is left alone. `resolveName` maps IME
+ * slashes (`／`, `、`, `・`) and aliases to the canonical name.
  */
 export function resolveSkillMessage(
   message: string,

@@ -5,8 +5,7 @@ import type { MouseEvent, PointerEvent, TouchEvent } from "react";
 const TAP_SLOP = 10;
 
 /** Where each touch began, per element: kept outside the props so a
- *  re-render between touchstart and touchend (results arriving while the
- *  finger is down) doesn't forget it. */
+ *  re-render while the finger is down doesn't forget it. */
 const touchStarts = new WeakMap<Element, { x: number; y: number }>();
 
 function rememberTouchStart(e: TouchEvent) {
@@ -27,17 +26,9 @@ function endedAsTap(e: TouchEvent): boolean {
   );
 }
 
-/**
- * Props that run `action` on a press without taking focus from the text
- * field being typed in - for rows picked from a list under a composer (the
- * `/` skill and `@` file suggestions).
- *
- * A mouse runs it on mousedown, whose default (moving focus) is cancelled.
- * A finger runs it on touchend, cancelled there too: that stops the
- * mousedown and click WebKit would synthesise after it - which would run
- * it a second time - and the focus change that would drop the keyboard.
- * A touch that moved is a scroll of the list, not a pick.
- */
+/** Props that run `action` on a press without taking focus from the field
+ *  being typed in. The touchend is cancelled so WebKit synthesises no second
+ *  click; a touch that moved is a scroll, not a pick. */
 export function tapKeepingFocus(action: () => void) {
   return {
     onMouseDown: (e: MouseEvent) => {
@@ -53,14 +44,9 @@ export function tapKeepingFocus(action: () => void) {
   };
 }
 
-/**
- * Props for a button in a strip that keeps the editor's focus (the bar
- * above the iPhone keyboard): the same tap-or-scroll rule as
- * `tapKeepingFocus`, but a mouse or keyboard runs it on click, and a
- * finger's touchend is cancelled even when it moved. The strip scrolls
- * sideways under buttons like "Delete table", so a swipe that starts on
- * one must not press it - nor leave WebKit a click to synthesise.
- */
+/** Props for a button in a strip that keeps the editor's focus. Like
+ *  `tapKeepingFocus`, but a mouse or keyboard runs it on click, and a
+ *  finger's touchend is cancelled even when it moved, since the strip scrolls. */
 export function pressKeepingFocus(action: () => void) {
   return {
     // The default of pointerdown is what moves focus to the button.

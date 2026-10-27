@@ -1,6 +1,5 @@
-//! German rules (CATALOGUE.md §3.9), Duden-style by default. Never
-//! flagged: a comma before *und*, `%` compounds and derivatives (5%-Klausel,
-//! 100%ig, 25%ige), the infinitive comma after *versuchen, erlauben...*,
+//! German rules, Duden-style by default. Never flagged: a comma before *und*,
+//! `%` compounds (5%-Klausel, 100%ig), the infinitive comma after *versuchen*,
 //! range-dash style (only inconsistency), Swiss `ss`.
 
 use super::text::*;

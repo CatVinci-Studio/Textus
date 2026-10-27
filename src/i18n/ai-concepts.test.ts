@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { AI_NAME, LANGS, resolveStrings } from "./strings";
 
-// The copy for the concepts in docs/design/ai-concepts.md: the starter files and
-// the names the user meets in Settings and the project bar.
+// The copy for the AI concepts: the starter files and the names the user
+// meets in Settings and the project bar.
 
 /** What the backend sends the model from an agent.md: everything outside
- *  `<!-- -->` comments (src-tauri ai::workspace::strip_html_comments). */
+ *  `<!-- -->` comments. */
 function sentToModel(text: string): string {
   return text.replace(/<!--[\s\S]*?(-->|$)/g, "").trim();
 }
@@ -35,8 +35,7 @@ describe.each(LANGS)("AI concept copy in %s", (lang) => {
   });
 
   it("every Settings path names a page that exists", () => {
-    // The AI page is AI_NAME ("Textus AI"); messages that sent the user to
-    // "Settings → AI" pointed at a page that was renamed in 0.9.7.
+    // The AI page is AI_NAME ("Textus AI"), not "Settings → AI".
     const settings = t.settingsTitle;
     const pages = [
       t.navGeneral,

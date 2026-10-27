@@ -1,8 +1,6 @@
-//! The automatic half of the live evaluation's judgement: which language a
-//! text is in, what Markdown structure a document has, and what a set of
-//! accepted `propose_edit` calls does to the document. All pure and cheap -
-//! the unit tests at the bottom run in CI, so the checks themselves can't
-//! silently rot while the live tests that use them sit ignored.
+//! The automatic half of the live evaluation's judgement: language, Markdown
+//! structure, and what accepted `propose_edit` calls do to the document. Pure
+//! and cheap, and unit-tested so the checks can't silently rot.
 
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
 use std::collections::BTreeMap;
@@ -44,8 +42,8 @@ impl Lang {
         }
     }
 
-    /// The app's UI language for a user who writes in this one: the code
-    /// src/i18n/langs.ts gives it ("zh" is Simplified Chinese there).
+    /// The app's UI language code for a user who writes in this one ("zh" is
+    /// Simplified Chinese).
     pub fn ui_code(self) -> &'static str {
         match self {
             Lang::ZhHans | Lang::Mixed => "zh",
@@ -64,8 +62,7 @@ impl Lang {
 }
 
 /// Best guess at the language of `text`, or None when there is too little
-/// prose to tell - the rules engine's detector (rules::detect), in the
-/// matrix's terms.
+/// prose to tell.
 pub fn detect(text: &str) -> Option<Lang> {
     use crate::ai::rules::detect::Lang as R;
     Some(match crate::ai::rules::detect::detect(text)? {
@@ -82,10 +79,8 @@ pub fn detect(text: &str) -> Option<Lang> {
     })
 }
 
-/// The live eval's `conventions_clean` check (CATALOGUE.md §5.10): no P0
-/// or P1 finding of the writing-rules engine in `text` (Markdown), under
-/// `conv`. Err lists what it found, one finding per line. Consistency info
-/// and P2 hints don't count.
+/// No P0 or P1 rules-engine finding in `text` (Markdown) under `conv`. Err lists
+/// the findings, one per line.
 pub fn conventions_clean(text: &str, conv: &crate::ai::rules::Conventions) -> Result<(), String> {
     use crate::ai::rules::{check_document, Level, Priority};
     let found: Vec<String> = check_document(text, conv, Level::Standard, &[])
@@ -122,10 +117,8 @@ pub fn check_lang(text: &str, expected: Lang) -> Result<(), String> {
     }
 }
 
-/// Characters in `text` that only Simplified Chinese writes (from the pair
-/// table `detect` uses), each once - a zh-Hant result should have none.
-/// Pairs whose simplified form is also ordinary Traditional (后 queen, 里
-/// the unit, 划 to row) are left out.
+/// Characters in `text` that only Simplified Chinese writes, each once. Pairs
+/// whose simplified form is also ordinary Traditional (后, 里, 划) are left out.
 pub fn simplified_only(text: &str) -> Vec<char> {
     let mut found = Vec::new();
     for ch in text.chars() {
@@ -151,11 +144,9 @@ fn markdown_options() -> Options {
         | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS
 }
 
-/// A document's Markdown structure with the words taken out: the block
-/// tree as a token sequence (`h2`, `list`, `item`, `task`, `table[3]`,
-/// `code:python`, `alert:Note`, `$$`, ...) and a count of the inline
-/// constructs that carry meaning (links with their target, images, math,
-/// footnote references, code spans, inline HTML).
+/// A document's Markdown structure with the words taken out: the block tree as
+/// tokens (`h2`, `table[3]`, `code:python`...) and a count of meaningful inline
+/// constructs (links, images, math, footnotes, code spans, HTML).
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub struct Skeleton {
     pub blocks: Vec<String>,
@@ -334,8 +325,7 @@ impl Proposal {
 }
 
 /// Where the user's cursor or selection was when they sent the message, as
-/// byte offsets into the document markdown - what insert_at_cursor and
-/// replace_selection act on.
+/// byte offsets into the document markdown.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Caret {
     pub cursor: Option<usize>,
@@ -363,9 +353,9 @@ fn unique_index(haystack: &str, needle: &str) -> Option<usize> {
     it.next().is_none().then_some(first)
 }
 
-/// Byte range of the one place `anchor` targets - the same resolution order
-/// as doc-markdown.ts's findMarkdownMatch: exact, then through `context`,
-/// then typography-normalized, then whitespace-folded.
+/// Byte range of the one place `anchor` targets, in the frontend's order:
+/// exact, then through `context`, then typography-normalized, then
+/// whitespace-folded.
 pub fn locate(doc: &str, anchor: &str, context: &str) -> Option<(usize, usize)> {
     if let Some(i) = unique_index(doc, anchor) {
         return Some((i, i + anchor.len()));
@@ -631,10 +621,9 @@ fn resolve(doc: &str, p: &Proposal, caret: Caret) -> Result<(usize, usize, Strin
     }
 }
 
-/// The document after the user accepts every proposal - each resolved
-/// against the document the model saw (as the frontend's previews are),
-/// then written back to front. Overlapping proposals are an error: the
-/// frontend would show both and accepting one would invalidate the other.
+/// The document after the user accepts every proposal, each resolved against
+/// the document the model saw, written back to front. Overlapping proposals
+/// are an error: accepting one would invalidate the other.
 pub fn apply_all(doc: &str, proposals: &[Proposal], caret: Caret) -> Result<String, String> {
     let mut spans = proposals
         .iter()
@@ -744,8 +733,7 @@ pub fn word_count(text: &str) -> usize {
 
 /// Markdown as ProseMirror's `textBetween(from, to, sep)` reads it: inline
 /// syntax gone (link text kept, images dropped), a hard break as "\n", and
-/// `sep` between textblocks - what the editor puts in a `<cursor>` block
-/// (caretContext, sep "\n") or a completion's before-text (sep "\n\n").
+/// `sep` between textblocks.
 pub fn plain_text(markdown: &str, sep: &str) -> String {
     let mut out = String::new();
     let mut pending = false;
@@ -785,11 +773,8 @@ pub fn plain_text(markdown: &str, sep: &str) -> String {
     out
 }
 
-/// doc-markdown.ts's caretContext: up to `span` characters of plain text
-/// either side of the cursor at byte `at`, blocks separated by "\n". The
-/// block the cursor is in counts as the first one visited, so a cursor at a
-/// block's end sees the next block after a separator, and one at a block's
-/// start sees a separator after the previous block.
+/// The frontend's caretContext: up to `span` characters of plain text either
+/// side of the cursor at byte `at`, blocks separated by "\n".
 pub fn cursor_context(doc: &str, at: usize, span: usize) -> (String, String) {
     let (before_md, after_md) = doc.split_at(at);
     let mut before = plain_text(before_md, "\n");
@@ -821,11 +806,8 @@ pub struct InlineMark {
     pub kind: &'static str,
 }
 
-/// A paragraph's markdown as the grammar check sees it - the block's
-/// textContent - plus where each piece of inline formatting sits in that
-/// text and, for every text char, its byte offset in the markdown (one
-/// extra entry for the end), so fixes found in the text can be written back
-/// into the markdown.
+/// A paragraph's text as the grammar check sees it, plus its formatting ranges
+/// and each char's byte offset in the markdown, so fixes can be written back.
 pub struct InlineText {
     pub text: String,
     pub marks: Vec<InlineMark>,
@@ -998,10 +980,9 @@ pub fn row_cells_are(doc: &str, first: &str, want: &[&str]) -> Result<(), String
 
 // --------------------------------------------------------------- completion
 
-/// Text the suggestion repeats from just before the cursor, as the user
-/// would read it once accepted: "常備" + "常備薬" reads 常備常備薬, "Lessons
-/// from" + " Lessons from a..." reads the heading twice. Two or more
-/// characters of an unspaced script, or four or more otherwise.
+/// Text the suggestion repeats from just before the cursor, as read once
+/// accepted ("常備" + "常備薬"). Two or more characters of an unspaced script,
+/// or four or more otherwise.
 pub fn doubled_at_join(before: &str, shown: &str) -> Option<String> {
     let start = shown.trim_start();
     let chars: Vec<char> = before.trim_end().chars().collect();
@@ -1094,9 +1075,26 @@ pub fn doubled_words(before: &str, after: &str) -> Option<String> {
     None
 }
 
-/// `text` without what it quotes ("...", “...”, 「...」) - a reply in English
-/// about a Chinese edit quotes Chinese words, which say nothing about the
-/// reply's own language.
+/// `text` without its fenced code blocks: a reply's prose, without the files
+/// Create mode writes in it.
+pub fn without_code(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut fence: Option<String> = None;
+    for line in text.split_inclusive('\n') {
+        let trimmed = line.trim_start();
+        match &fence {
+            Some(open) if trimmed.trim_end() == open => fence = None,
+            Some(_) => {}
+            None if trimmed.starts_with("```") => {
+                let ticks = trimmed.chars().take_while(|c| *c == '`').count();
+                fence = Some("`".repeat(ticks));
+            }
+            None => out.push_str(line),
+        }
+    }
+    out
+}
+
 pub fn unquoted(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let mut closing: Option<char> = None;
@@ -1135,9 +1133,8 @@ pub fn process_talk(reply: &str) -> Option<String> {
     if let Some(t) = tools.iter().find(|t| lower.contains(*t)) {
         return Some(t.to_string());
     }
-    // How the proposals fit together is the app's business: "two edits:
-    // one inserts..., apply both so the list doesn't end up with a
-    // duplicate" (round 4, tech/en/add-step) worried the user for nothing.
+    // How the proposals fit together is the app's business: explaining it only
+    // worried the user.
     let mechanics = [
         "apply both",
         "accept both",
@@ -1182,10 +1179,9 @@ pub fn process_talk(reply: &str) -> Option<String> {
     None
 }
 
-/// ASCII punctuation in Chinese or Japanese prose in a reply - "无法按时出席,
-/// 特向您", "文档\"配置\"一节", "(当前这章)" - outside code spans: a comma,
-/// colon or semicolon right after a CJK character, or a bracket or quote
-/// next to one.
+/// ASCII punctuation in Chinese or Japanese prose in a reply, outside code
+/// spans: a comma, colon or semicolon after a CJK character, or a bracket or
+/// quote next to one.
 pub fn half_width_in_cjk(reply: &str) -> Option<String> {
     let cjk = |c: char| matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}');
     for line in reply.lines() {
@@ -1456,7 +1452,7 @@ Wait—the instructions say"
             Lang::Pt,
             "passam por ali antes de voltar para casa e levam livros emprestados para ler no trem.",
         )]);
-        // Two short completions the first round-2 run misread (as pt, en).
+        // Two short completions once misread (as pt, en).
         let samples = samples.chain([
             (
                 Lang::Es,
@@ -1659,5 +1655,12 @@ Wait—the instructions say"
         assert_eq!(word_count("hello world"), 2);
         assert_eq!(word_count("你好世界"), 4);
         assert_eq!(word_count("用 React 写"), 3);
+    }
+
+    #[test]
+    fn a_replys_prose_leaves_its_code_blocks_out() {
+        let reply = "做好了：\n\n```markdown x.md\n---\nlabel: \"周报\"\n---\n```\n\n保存即可。\n";
+        assert_eq!(without_code(reply), "做好了：\n\n\n保存即可。\n");
+        assert_eq!(without_code("no fences"), "no fences");
     }
 }

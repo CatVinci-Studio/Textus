@@ -19,16 +19,13 @@ impl Slot {
     }
 }
 
-/// The pictures waiting for a decision, newest last. Bounded: a long
-/// session of undecided pictures must not hold hundreds of megabytes; the
-/// oldest go first (and its proposal can then no longer be accepted - the
-/// frontend says so).
+/// The pictures waiting for a decision, newest last. Bounded so undecided
+/// pictures can't hold hundreds of megabytes; the oldest go first.
 pub(crate) static PENDING: Mutex<Vec<(String, Slot)>> = Mutex::new(Vec::new());
 
 #[cfg(not(test))]
 pub(crate) const PENDING_COUNT: usize = 16;
-// The tests run side by side and share the list: kept to sixteen, one
-// test's pictures pushed out another's while it was looking at them.
+// The tests run side by side and share the list, so it is larger there.
 #[cfg(test)]
 pub(crate) const PENDING_COUNT: usize = 1024;
 
@@ -49,10 +46,8 @@ pub(crate) fn begin() -> String {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or_default();
-    // Short, and unlike the one before: the model copies it into its text,
-    // and two long ids differing in their last digits were copied wrong
-    // (one picture drawn in two places). Six letters and digits from a
-    // mix of the time and a counter.
+    // Short and distinct: the model copies it into its text, and long ids
+    // differing in their last digits were copied wrong.
     let mut x = (nanos as u64) ^ ((NEXT.fetch_add(1, Ordering::Relaxed) as u64) << 40);
     x = (x ^ (x >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
     x = (x ^ (x >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
@@ -72,8 +67,7 @@ pub(crate) fn begin() -> String {
 }
 
 /// What each pending picture was asked for, so one that wasn't made can be
-/// asked for again by itself (ai_retry_generated_image). Kept for as long
-/// as its slot is.
+/// asked for again by itself. Kept for as long as its slot is.
 pub(crate) struct Asked {
     pub(crate) job: ImageJob,
     pub(crate) prompt: String,
@@ -81,21 +75,18 @@ pub(crate) struct Asked {
     pub(crate) reference: Option<Reference>,
 }
 
-/// A picture a new one is drawn from, where the service takes one
-/// (ImageApi::takes_reference).
+/// A picture a new one is drawn from, where the service takes one.
 #[derive(Clone)]
 pub(crate) enum Reference {
-    /// The picture being redone (`replace`), changed as the description
-    /// says.
+    /// The picture being redone (`replace`), changed as the description says.
     Change(ImageAttachment),
     /// An earlier picture (`like`) whose people and style the new one
     /// keeps - a new scene, not a change to that one.
     Like(ImageAttachment),
 }
 
-/// What a picture drawn like another is asked for, before its own
-/// description: the services read a picture sent with the description as
-/// one to change.
+/// Prefixed to the description of a picture drawn like another: services
+/// otherwise read an attached picture as one to change.
 pub(crate) const LIKE: &str = "A new picture, not a copy of the attached one: keep the people, animals and places from the attached picture looking as they do there, and keep its style. The new picture: ";
 
 impl Asked {
@@ -171,10 +162,8 @@ pub(crate) fn prompt_of(id: &str) -> Option<String> {
         .map(|(_, a)| a.prompt.clone())
 }
 
-/// Makes picture `id` again from `prompt` - the writer's change to its
-/// description - with the same service, shape and reference; made or
-/// not, it goes back to being made. Err when it is gone, or still being
-/// made.
+/// Makes picture `id` again from the writer's changed `prompt`, with the same
+/// service, shape and reference. Err when it is gone or still being made.
 pub(crate) fn redraw(id: &str, prompt: String) -> Result<(), String> {
     let prompt = prompt.trim().to_string();
     if prompt.is_empty() {
@@ -209,8 +198,7 @@ pub(crate) fn redraw(id: &str, prompt: String) -> Result<(), String> {
 }
 
 /// A made picture's file contents and extension, for keeping it with its
-/// document (ai/kept_proposals.rs). None while it is made, or when it
-/// failed or is gone.
+/// document. None while being made, or when it failed or is gone.
 pub(crate) fn ready_bytes(id: &str) -> Option<(Vec<u8>, &'static str)> {
     pending()
         .iter()
@@ -249,15 +237,14 @@ pub(crate) fn finish(id: &str, slot: Slot) {
 }
 
 /// The size a picture is asked for at `aspect`, as GPT image makes it: the
-/// frame's shape while it is made (the service rounds to its own).
+/// frame's shape while it is made.
 pub(crate) fn nominal_size(aspect: Aspect) -> (u32, u32) {
     let size = gen::gpt_image_size(aspect);
     let (w, h) = size.split_once('x').unwrap_or(("1024", "1024"));
     (w.parse().unwrap_or(1024), h.parse().unwrap_or(1024))
 }
 
-/// A pending picture as the frontend takes it - generated into
-/// src/platform/bindings/ai-agent.ts.
+/// A pending picture as the frontend takes it.
 #[derive(Serialize, Debug)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -269,16 +256,8 @@ pub struct GeneratedImageData {
     pub(crate) height: u32,
 }
 
-#[cfg(test)]
-impl GeneratedImageData {
-    pub(crate) fn data_base64_len(&self) -> usize {
-        self.data_base64.len()
-    }
-}
-
-/// Picture `id` as a picture to send a service, once it is made - for a
-/// new one drawn like it (Reference::Like). None while it is being made:
-/// a new picture doesn't wait for it.
+/// Picture `id` as a picture to send a service, for a new one drawn like it.
+/// None while it is being made: a new picture doesn't wait for it.
 pub(crate) fn made_picture(id: &str) -> Option<ImageAttachment> {
     use base64::{engine::general_purpose::STANDARD, Engine};
     let pending = pending();

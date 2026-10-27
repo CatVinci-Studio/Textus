@@ -12,6 +12,7 @@ metadata:
   textus-version: "1"
   textus-invocation: "user-only"
   textus-category: "format"
+  textus-modes: "write"
   textus-packs: "contract standards#academic"
   textus-sources: "Our own text. BLUF from AR 25-50 (public domain); GOV.UK summaries (OGL v3.0); abstract conventions summarised from the APA abstract guide and GB/T 7713.2."
   textus-aliases-en: "summary, tldr, abstract"

@@ -1,6 +1,5 @@
-//! Portuguese rules (CATALOGUE.md §3.11), Brazilian by default (pt-BR, as
-//! the UI is), with the AO90 spelling on (pt.ao90). Never flagged: optional
-//! accents (amámos/amamos, dêmos/demos, fôrma/forma), pôde/pode, pôr/por.
+//! Portuguese rules, Brazilian by default, with the AO90 spelling on. Never
+//! flagged: optional accents (amámos/amamos, fôrma/forma), pôde/pode, pôr/por.
 
 use super::stats::minority;
 use super::text::*;

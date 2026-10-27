@@ -185,8 +185,7 @@ test("Tab in a table moves to the end of the next cell, and Shift+Enter breaks t
   await page.keyboard.type("!", { delay: 30 });
   await page.keyboard.press("Shift+Tab");
   expect(await caretLine(page)).toBe("one|");
-  // Shift held first: pressed together with Enter it counts as an Enter
-  // (block-keys-plugin.ts, SHIFT_OVERLAP_MS).
+  // Shift held first: pressed together with Enter it counts as an Enter.
   await page.keyboard.down("Shift");
   await page.waitForTimeout(150);
   await page.keyboard.press("Enter");

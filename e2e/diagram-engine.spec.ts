@@ -2,11 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { openApp, pasteMarkdown } from "./helpers";
 
-// Settings › Editor & Appearance › Diagram engine: Mermaid by default, Pele
-// (pele.run) when chosen, with Mermaid drawing whatever Pele can't. Each
-// engine is fetched only when a diagram needs it; a Pele diagram's colours
-// are CSS variables, so it follows the appearance and an imported theme
-// without being drawn again; exports carry the SVG either way.
+// Diagram engine: Mermaid by default, Pele when chosen, with Mermaid drawing
+// what Pele can't. Each engine loads only when needed; Pele's colours are CSS
+// variables, so they follow the theme without a redraw.
 
 const FLOW = "```mermaid\nflowchart LR\n  A[Start] --> B[Finish]\n```\n\nEnd.";
 const preview = '[data-active-tab="true"] .ProseMirror .mermaid-preview';
@@ -294,8 +292,8 @@ test("a PDF export printed on white keeps a Pele diagram drawn in a dark appeara
     .toContain('class="pele pele-flowchart"');
 });
 
-/** Imports `css` as a theme through Settings › Extensions › Themes › Import CSS…, answering the
- *  file picker and the theme store from memory (as user-css.spec.ts). */
+/** Imports `css` as a theme through Settings, answering the file picker and
+ *  the theme store from memory. */
 async function importTheme(page: Page, css: string) {
   await page.evaluate((css) => {
     const w = window as unknown as {

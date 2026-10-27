@@ -9,15 +9,10 @@ import { CHECK, CROSS, ChangeText } from "./ProposalCard";
 import type { ChatMessagesLabels } from "./ChatMessages";
 
 /**
- * Proposals one reply made one after another, shown as one card
- * (ProposalGroup): as cards of their own they were a column of the same
- * card - a translation, a paragraph at a time, "Translate this paragraph"
- * six times over - and ran on for screens. Two or more in a row are one
- * card, whatever their reasons: as the second streams in, the first card
- * becomes the group and grows a row at a time (formed at the third, two
- * cards turned into one under the reader's eyes). By its first call's id,
- * the calls in it; a call in a group but not first renders nothing. A
- * picture keeps its own card.
+ * Two or more proposals one reply made in a row, shown as one card that
+ * grows a row at a time as they stream. By its first call's id, the calls in
+ * it; a call in a group but not first renders nothing. A picture keeps its
+ * own card.
  */
 export function proposalRuns(
   turns: AgentTurn[],
@@ -161,8 +156,8 @@ function GroupRow({
   );
 }
 
-/** The card of a run of proposals (proposalRuns): the reason once, a row
- *  each, and Accept all / Reject all for the ones still waiting. */
+/** The card of a run of proposals: the reason once, a row each, and Accept
+ *  all / Reject all for the ones still waiting. */
 export function ProposalGroup({
   items,
   reveal,
@@ -190,10 +185,8 @@ export function ProposalGroup({
   // Folded: its first rows, the rest behind "Show N more"; decided, all of
   // it behind its status line. A click opens it either way.
   const [unfolded, setUnfolded] = useState(false);
-  // Its shape changing - a row arriving, its text or its decision coming
-  // in, the card folding or opening - slides what is below it to its new
-  // place (FlipOnChange), on transform: grown or shrunk at once, the card
-  // jumped the reply under it.
+  // Its shape changing slides what is below it to its new place, on
+  // transform: resized at once, the card would jump the reply under it.
   const ref = useRef<HTMLDivElement>(null);
   const shape = `${unfolded}:${items.map((i) => `${i.status}${i.proposal.text ? "+" : ""}`).join()}`;
   const rows = unfolded ? items : items.slice(0, FOLDED_ROWS);
@@ -266,8 +259,8 @@ export function ProposalGroup({
           )}
         </>
       )}
-      {/* There from the first row, waiting while the run streams in: shown
-          only once it was all in, it grew the card under the reader. */}
+      {/* There from the first row: shown only once the run was all in, it
+          would grow the card under the reader. */}
       {actions && !done && (
         <div className="agent-proposal-actions">
           <button

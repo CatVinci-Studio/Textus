@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-// Everything a pull request is checked for - `npm run check:all`, before
-// opening one: the frontend checks, the e2e flows and the native checks,
-// in that order, stopping at the first that fails. Same on every platform.
+// Everything a pull request is checked for: frontend checks, e2e flows and
+// native checks, stopping at the first that fails.
 import { spawnSync } from "node:child_process";
 
 for (const script of ["check", "test:e2e", "check:native"]) {

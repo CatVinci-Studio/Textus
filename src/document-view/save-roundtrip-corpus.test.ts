@@ -15,10 +15,8 @@ import {
   type FileReport,
 } from "./save-roundtrip";
 
-// The save round trip on the real-document corpus: a few thousand files
-// from scripts/roundtrip-corpus/fetch.mjs, and this repository's own docs.
-// Runs only when asked, through `npm run test:roundtrip` (which shards it
-// over the CPU's cores); the CI subset is save-roundtrip.test.ts.
+// The save round trip on the real-document corpus and this repository's own
+// docs. Runs only when asked (`npm run test:roundtrip`).
 
 const cache = join(process.cwd(), ".cache/roundtrip-corpus");
 const enabled = process.env.ROUNDTRIP_CORPUS === "1";
@@ -71,10 +69,8 @@ function corpusFiles(): [string, string][] {
 }
 
 /**
- * What the corpus run still finds, by file and edit, each one a case
- * docs/dev/saving.md lists under "What a save can't keep": Markdown has no
- * way to write what the editor holds there, or the reading is ambiguous.
- * Anything else fails.
+ * Known losses, by file and edit: Markdown can't write what the editor holds
+ * there, or the reading is ambiguous. Anything else fails.
  */
 const UNCLOSED_HTML = "an unclosed <style> block runs to the end of the file";
 const LIST_IN_ITEM =

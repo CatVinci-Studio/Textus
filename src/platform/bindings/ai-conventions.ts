@@ -9,9 +9,8 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	/**
-	 *  The setting's key, its "automatic" value, the profiles each language
-	 *  offers (with the one Automatic uses) and the option keys - everything
-	 *  the Settings row needs to offer the choice.
+	 *  Everything the Settings row needs to offer the choice: the key, its
+	 *  "automatic" value, each language's profiles and the option keys.
 	 */
 	writing_conventions_options: () => __TAURI_INVOKE<ConventionsOptions_Serialize>("writing_conventions_options"),
 	/**
@@ -20,15 +19,13 @@ export const commands = {
 	 */
 	writing_conventions_effective: (docPath: string | null, workspaceRoot: string | null, document: string | null) => __TAURI_INVOKE<EffectiveConventions_Serialize>("writing_conventions_effective", { docPath, workspaceRoot, document }),
 	/**
-	 *  Checks a whole document against its writing conventions, offline (no
-	 *  AI provider): the findings check_conventions gives the agent, with
-	 *  offsets and lines into the Markdown, for a "Check conventions" command.
+	 *  Checks a whole document against its writing conventions, offline, with
+	 *  offsets and lines into the Markdown.
 	 */
 	conventions_check_document: (document: string, docPath: string | null, workspaceRoot: string | null, strictness: string | null) => __TAURI_INVOKE<DocReport_Serialize>("conventions_check_document", { document, docPath, workspaceRoot, strictness }),
 	/**
-	 *  Exact platform counts (X weighted length, Bluesky graphemes, WeChat
-	 *  titles...) - rules::measure::METRICS lists the metrics. None for an
-	 *  unknown metric.
+	 *  Exact platform counts (X weighted length, Bluesky graphemes...). None for
+	 *  an unknown metric.
 	 */
 	measure_text: (text: string, metric: string) => __TAURI_INVOKE<Measure_Serialize | null>("measure_text", { text, metric }),
 };
@@ -198,10 +195,7 @@ export type Priority = "P0" | "P1" | "P2";
 /**  The conventions one document follows, as the rules read them. */
 export type Profile = Profile_Serialize | Profile_Deserialize;
 
-/**
- *  Where the effective profile came from. Generated as ProfileSource (JSON
- *  never carries an enum's name).
- */
+/**  Where the effective profile came from. */
 export type ProfileSource = "automatic" | "settings" | "project";
 
 /**  The conventions one document follows, as the rules read them. */
@@ -217,12 +211,7 @@ export type Profile_Deserialize = {
 	 *  `DE`, `AT`, `BR`, `PT`.
 	 */
 	region?: string | null,
-	/**
-	 *  `fiction`, `tech`, `gongwen`, `academic`, `newmedia`, `general`,
-	 *  `news`, `tech-google`, `tech-microsoft`, `apa`, `mla`, `govuk`,
-	 *  `oxford`, `army`, `jtf`, `koyobun`, `official`, `eu`, `din5008`,
-	 *  `gost`.
-	 */
+	/**  The house-style preset, e.g. `fiction`, `govuk`, `jtf`. */
 	preset?: string | null,
 	/**  Chosen by the user (settings or project) rather than Automatic. */
 	explicit: boolean,
@@ -243,12 +232,7 @@ export type Profile_Serialize = {
 	 *  `DE`, `AT`, `BR`, `PT`.
 	 */
 	region: string | null,
-	/**
-	 *  `fiction`, `tech`, `gongwen`, `academic`, `newmedia`, `general`,
-	 *  `news`, `tech-google`, `tech-microsoft`, `apa`, `mla`, `govuk`,
-	 *  `oxford`, `army`, `jtf`, `koyobun`, `official`, `eu`, `din5008`,
-	 *  `gost`.
-	 */
+	/**  The house-style preset, e.g. `fiction`, `govuk`, `jtf`. */
 	preset: string | null,
 	/**  Chosen by the user (settings or project) rather than Automatic. */
 	explicit: boolean,

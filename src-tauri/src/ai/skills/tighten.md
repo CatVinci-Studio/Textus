@@ -10,6 +10,7 @@ metadata:
   textus-version: "1"
   textus-invocation: "user-only"
   textus-category: "revise"
+  textus-modes: "write"
   textus-packs: "contract standards#words"
   textus-sources: "Our own text. Wordiness rules summarised from the Federal Plain Language Guidelines and Strunk 1920 (public domain), write-good and Vale Microsoft (MIT, ideas), Humanizer-zh (MIT, ideas), JTF style guide (CC BY 4.0) and k-skill (MIT, ideas)."
   textus-aliases-en: "shorten, concise"

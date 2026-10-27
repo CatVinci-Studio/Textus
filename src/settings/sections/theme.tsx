@@ -23,8 +23,8 @@ const CUSTOM_CSS_PLACEHOLDER = `#write > p {
   line-height: 2;
 }`;
 
-/** The variables a theme sets (see the textus-theme skill), as the current
- *  theme resolves them - the starting point of an exported theme. */
+/** The variables a theme sets, as the current theme resolves them: the
+ *  starting point of an exported theme. */
 const THEME_VARIABLES = [
   "--editor-bg",
   "--editor-text",
@@ -36,7 +36,7 @@ const THEME_VARIABLES = [
   "--editor-highlight-bg",
   "--editor-font",
   "--editor-list-gap",
-  // A proposed revision's colours (design-system.css).
+  // A proposed revision's colours.
   "--revision-insert-bg",
   "--revision-insert-text",
   "--revision-insert-hover-bg",
@@ -47,21 +47,14 @@ const THEME_VARIABLES = [
   "--revision-delete-hover-bg",
 ];
 
-/**
- * Writes the current theme out as a starter CSS file (#13): the colour and
- * font variables as they resolve right now, Textus's heading/quote/table
- * ornaments (#29), the user's own CSS, and a few commented hooks for the
- * usual adjustments. Importing the edited file
- * (Import CSS…) makes it a theme of its own.
- */
+/** Writes the current theme out as a starter CSS file: its variables as
+ *  they resolve now, the ornaments, the user's CSS and a few hooks. */
 async function exportThemeCss(t: Strings, customCss: string): Promise<void> {
   const style = getComputedStyle(document.documentElement);
   const write = document.querySelector("#write");
   const writeStyle = write ? getComputedStyle(write) : null;
-  // The Default theme leaves --editor-bg and --editor-font unset and falls
-  // back to the app's --bg and --font-sans; written out commented, the
-  // file pinned the text colour but not the page under it, and read dark
-  // on dark once imported. Their fallbacks are written instead.
+  // The Default theme leaves --editor-bg and --editor-font unset, so their
+  // fallbacks are written; otherwise an import read dark on dark.
   const fallbacks: Record<string, string> = {
     "--editor-bg": "--bg",
     "--editor-font": "--font-sans",
@@ -75,8 +68,8 @@ async function exportThemeCss(t: Strings, customCss: string): Promise<void> {
       resolve(name) || (fallbacks[name] ? resolve(fallbacks[name]) : "");
     return value ? `  ${name}: ${value};` : `  /* ${name}: ; */`;
   }).join("\n");
-  // An imported theme sets its own type (content-base.css), so the face,
-  // size and leading the document has now go into the file as well.
+  // An imported theme sets its own type, so the document's current face, size
+  // and leading go into the file too.
   const milkdown = document.querySelector(".milkdown");
   const type = milkdown ? getComputedStyle(milkdown) : null;
   const fontSize = type ? parseFloat(type.fontSize) : NaN;
@@ -155,9 +148,7 @@ function useThemeAction() {
 }
 
 /** Settings › Editor & Appearance › Theme: which form (light, dark) and
- *  which theme - a choice and nothing else. Getting themes and changing
- *  them is in Settings › Extensions › Themes (ThemeLibrarySection), which
- *  Get more themes (`onMore`) opens. */
+ *  which theme, nothing else. */
 export function ThemeSection({
   t,
   onMore,
@@ -268,11 +259,8 @@ export function ThemeSection({
   );
 }
 
-/**
- * On the phone, which has no Extensions, Editor & Appearance › More
- * themes: a CSS file to add, the user's own CSS on top of whichever theme
- * is picked, and the gallery. The picker stays in Editor & Appearance.
- */
+/** The phone's Editor & Appearance › More themes, as it has no Extensions:
+ *  a CSS file to add, the user's own CSS, and the gallery. */
 export function ThemeLibrarySection({ t }: { t: Strings }) {
   return (
     <>
@@ -286,8 +274,7 @@ export function ThemeLibrarySection({ t }: { t: Strings }) {
 }
 
 /** Picks a CSS file, imports it as a theme named after the file and
- *  selects it - one step. (A dark variant can still exist in the data
- *  model for themes that shipped one; imports are single-file.) */
+ *  selects it. */
 function useImportTheme(run: (action: () => Promise<void>) => Promise<void>) {
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
@@ -329,12 +316,8 @@ function CustomCssRow({ t }: { t: Strings }) {
   );
 }
 
-/**
- * Settings › Extensions › Themes: the themes the user added, each one to
- * use or delete; Get more (`onGetMore`) opens the gallery, "⋯" imports a
- * CSS file or exports the current theme as one, and the user's own CSS
- * waits folded under Advanced. The picker stays in Editor & Appearance.
- */
+/** Settings › Extensions › Themes: the user's themes, Get more, "⋯" to
+ *  import or export, and the user's own CSS folded under Advanced. */
 export function ThemesTab({
   t,
   onGetMore,

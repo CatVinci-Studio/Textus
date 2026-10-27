@@ -1,13 +1,8 @@
 import { test, type Page } from "@playwright/test";
 import { PHONE, openApp, openPhone } from "../../helpers";
 
-// Every page of Settings at its full length - each category, About Textus
-// and Extensions › Themes, in English and Chinese, on the desktop and the phone,
-// light and dark - and a row's "?" open, for reviewing how Settings is
-// grouped, ordered and explained, not a baseline. Runs only with
-// TEXTUS_SHOTS_DIR set to where the PNGs go:
-//
-//   TEXTUS_SHOTS_DIR=../assets/working/settings-themes-1.2.0/after npm run screenshots:review -- settings-layout
+// Review screenshots of every Settings page at full length, desktop and
+// phone, light and dark. Runs only with TEXTUS_SHOTS_DIR set.
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");

@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 
-// The browser playground (src/playground/): the editor alone, as it runs at
-// textus.catvinci.com/playground/ - no dev shim, nothing native behind it.
+// The browser playground: the editor alone, with no dev shim and nothing
+// native behind it.
 
 const editor = ".editor-content .ProseMirror";
 
@@ -23,11 +23,31 @@ async function openPlayground(page: Page) {
   await expect(page.locator(`${editor} h1`)).toBeVisible();
 }
 
-/** The document as saved in this browser. */
+/** The open document as last kept in this browser. */
 function saved(page: Page) {
-  return page.evaluate(() =>
-    localStorage.getItem("textus-playground:document"),
+  return page.evaluate(
+    () =>
+      (
+        JSON.parse(
+          localStorage.getItem("textus-playground:pending") ?? "null",
+        ) as { markdown: string } | null
+      )?.markdown ?? null,
   );
+}
+
+/** A browser without the file pickers: Open picks a file, Save downloads. */
+async function withoutFilePickers(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    delete w.showOpenFilePicker;
+    delete w.showSaveFilePicker;
+  });
+}
+
+/** The Documents menu's items. */
+async function documentsMenu(page: Page) {
+  await page.getByRole("button", { name: "Documents" }).click();
+  return page.locator(".context-menu .context-menu-item");
 }
 
 /** Types a new paragraph at the end of the sample, once its diagram has
@@ -50,8 +70,8 @@ test("the first visit shows the sample, rendered", async ({ page }) => {
   await expect(page.locator(`${editor} h1`)).toContainText("Welcome to Textus");
   await expect(page.locator(`${editor} table`)).toBeVisible();
   await expect(page.locator(`${editor} .katex`).first()).toBeVisible();
-  // KaTeX's fonts are bundled as woff2 alone (vite.katex-fonts.ts); the
-  // formulas must still get them rather than a fallback face.
+  // KaTeX's fonts are bundled as woff2 alone; the formulas must still get
+  // them rather than a fallback face.
   await page.evaluate(() => document.fonts.ready);
   expect(
     await page.evaluate(() => {
@@ -71,7 +91,7 @@ test("the first visit shows the sample, rendered", async ({ page }) => {
     page.getByRole("banner").getByRole("link", { name: "Download Textus" }),
   ).toHaveAttribute("href", "https://textus.catvinci.com/#download");
   await expect(
-    page.getByText("Your document is kept in this browser only."),
+    page.getByText("Your documents are kept in this browser only."),
   ).toBeVisible();
   // Nothing is saved until something is written.
   expect(await saved(page)).toBeNull();
@@ -90,11 +110,8 @@ test("an edit the debounce still holds is kept on leaving", async ({
   page,
 }) => {
   await openPlayground(page);
-  // At the end of the heading's text. A click in the heading's middle
-  // landed inside "Textus" with CI's fonts, and an End sent at once - while
-  // the click first draws the heading's "# " marker - was sometimes lost in
-  // Chromium, so the "!" went in before the "s": "Textu!s" (also on the
-  // commit before #245, with the CPU slowed down).
+  // At the end of the heading's text: an End sent right after a click, while
+  // the "# " marker draws, was sometimes lost in Chromium.
   const end = await page.locator(`${editor} h1`).evaluate((heading) => {
     const range = document.createRange();
     range.selectNodeContents(heading);
@@ -111,22 +128,70 @@ test("an edit the debounce still holds is kept on leaving", async ({
   );
 });
 
-test("Import replaces the document, and Undo brings it back", async ({
+test("Open adds a file as a document of its own, and the Documents menu goes back", async ({
   page,
 }) => {
   await openPlayground(page);
   await page.getByTestId("playground-import-input").setInputFiles({
     name: "notes.md",
     mimeType: "text/markdown",
-    buffer: Buffer.from("﻿# Imported\r\n\r\n- [ ] a task\r\n"),
+    buffer: Buffer.from("\ufeff# Imported\r\n\r\n- [ ] a task\r\n"),
   });
   await expect(page.locator(`${editor} h1`)).toContainText("Imported");
   await expect(page.locator(`${editor} li`)).toHaveText("a task");
-  await expect.poll(() => saved(page)).toContain("# Imported");
-
-  await page.locator(editor).focus();
-  await page.keyboard.press("Control+z");
+  const items = await documentsMenu(page);
+  await expect(items).toContainText(["notes", "Welcome to Textus"]);
+  await items.filter({ hasText: "Welcome to Textus" }).click();
   await expect(page.locator(`${editor} h1`)).toContainText("Welcome to Textus");
+});
+
+test("New Document opens an empty one, and Delete takes it away", async ({
+  page,
+}) => {
+  await openPlayground(page);
+  await (await documentsMenu(page)).filter({ hasText: "New Document" }).click();
+  await expect(page.locator(`${editor} h1`)).toHaveCount(0);
+  await page.locator(editor).click();
+  await page.keyboard.type("A fresh page");
+  await page.reload();
+  await expect(page.locator(editor)).toContainText("A fresh page");
+  await (
+    await documentsMenu(page)
+  )
+    .filter({ hasText: "Delete This Document" })
+    .click();
+  await expect(page.locator(`${editor} h1`)).toContainText("Welcome to Textus");
+  await expect(await documentsMenu(page)).not.toContainText(["A fresh page"]);
+});
+
+test("Save writes back into the file it was opened from", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    const handle = {
+      name: "notes.md",
+      getFile: async () => new File(["# From disk\n"], "notes.md"),
+      createWritable: async () => ({
+        write: async (text: string) => {
+          w.__written = text;
+        },
+        close: async () => {},
+      }),
+    };
+    w.showOpenFilePicker = async () => [handle];
+  });
+  await openPlayground(page);
+  await page.getByRole("button", { name: "Open…" }).click();
+  await expect(page.locator(`${editor} h1`)).toContainText("From disk");
+  await page.locator(`${editor} h1`).click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" again");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByRole("status")).toHaveText("Saved to notes.md.");
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __written?: string }).__written,
+    ),
+  ).toBe("# From disk again\n");
 });
 
 test("a Markdown file dropped on the page is imported", async ({ page }) => {
@@ -158,12 +223,15 @@ test("a file that isn't Markdown is turned away", async ({ page }) => {
   await expect(page.locator(`${editor} h1`)).toContainText("Welcome to Textus");
 });
 
-test("Export downloads the document as Markdown", async ({ page }) => {
+test("Save downloads the document where the browser can't save files", async ({
+  page,
+}) => {
+  await withoutFilePickers(page);
   await openPlayground(page);
   await typeAtEnd(page, "Exported line");
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    page.getByRole("button", { name: "Export" }).click(),
+    page.getByRole("button", { name: "Save" }).click(),
   ]);
   expect(download.suggestedFilename()).toBe("Welcome to Textus.md");
   const text = readFileSync(await download.path(), "utf8");
@@ -224,7 +292,7 @@ test.describe("in Chinese", () => {
   }) => {
     await openPlayground(page);
     await expect(page.locator(`${editor} h1`)).toContainText("欢迎使用 Textus");
-    await expect(page.getByRole("button", { name: "导入" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "打开…" })).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   });
 });

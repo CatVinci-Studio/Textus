@@ -36,14 +36,9 @@ import { writeAccept, type AcceptOutcome } from "./pending-accept";
 import { settle } from "./settle-motion";
 import type { PendingEditOptions } from "./usePendingEdits";
 
-/**
- * What a writer does with proposals - accept, reject, decide a sentence,
- * join a picture to the text it goes with - as plain functions over an
- * environment: the editor runner, the latest state and options, the
- * state's setters. usePendingEdits builds them once per runner, so each
- * keeps its identity: MilkdownEditor's ProposalStream closes over some of
- * them, and one that changed mid-stream rebuilt it and dropped its drafts.
- */
+/** What a writer does with proposals, as plain functions over an
+ *  environment. Built once per runner so each keeps its identity: one that
+ *  changed mid-stream would drop the stream's drafts. */
 export interface PendingEnv {
   run: EditorRunner;
   options: () => PendingEditOptions;
@@ -59,7 +54,7 @@ export interface PendingEnv {
   /** Kept across renders, never shown. */
   mutable: {
     /** Accepted proposals whose decision was reported: an undo can bring
-     *  them back (syncFromPlugin), and then that decision no longer stands. */
+     *  them back, and then that decision no longer stands. */
     reportedAccepts: Set<string>;
     knownIds: Set<string>;
     /** Accepted pictures being saved, by call id: a second Accept while the
@@ -77,9 +72,8 @@ export function makePendingActions(env: PendingEnv) {
     env.options().onDecided?.(preview.callId, changes);
   };
 
-  /** Wired (via a ref-indirected callback, see MilkdownEditor) to the
-   *  plugin's onPreviewsChange - the only path React learns about a preview
-   *  the plugin silently dropped because the document changed under it. */
+  /** The plugin's onPreviewsChange: the only way React learns of a preview
+   *  dropped because the document changed under it. */
   const syncFromPlugin = (next: PendingPreview[], applied: string[] = []) => {
     const nextIds = new Set(next.map((p) => p.callId));
     const dropped = [...env.mutable.knownIds].filter((id) => !nextIds.has(id));
@@ -101,7 +95,7 @@ export function makePendingActions(env: PendingEnv) {
         { type: "dropped", applied: true },
       );
       // An undo put an accepted proposal back on offer, a redo applied
-      // it again: its card follows (pending-edit-plugin's `applied`).
+      // it again: its card follows.
       next = recordStatuses(next, nextIds, { type: "back" });
       return recordStatuses(
         next,
@@ -142,14 +136,9 @@ export function makePendingActions(env: PendingEnv) {
     });
   };
 
-  /** The Accept of a proposal that carries pictures - a picture on its
-   *  own, or text with pictures written into it (ai/images/inline.rs): each
-   *  saved first (Settings › Images), then the text written with their
-   *  srcs like any insertion. Not while one is still being made - Accept
-   *  waits for it (the card says so) - and a picture that wasn't made is
-   *  left out of the text it came with; a picture on its own that wasn't
-   *  made has nothing to accept. Saved once: an undo that brings the
-   *  proposal back, accepted again, writes the same files. */
+  /** Accepts a proposal with pictures: each saved first, once, then the text
+   *  written with their srcs. Waits for pictures still being made; ones that
+   *  weren't made are left out. */
   const acceptPictures = (callId: string, proposal: EditProposal): boolean => {
     let text = proposal.text ?? "";
     const ids = generatedIdsIn(text);
@@ -202,14 +191,11 @@ export function makePendingActions(env: PendingEnv) {
     return true;
   };
 
-  // Applies without announcing: the callers below say what was decided -
-  // a sentence's ✓ that completes its proposal was the one decision, an
-  // Accept of everything one decision of many changes.
+  // Applies without announcing: the callers say what was decided.
   const applyAccept = (
     callId: string,
-    /** Partial acceptance: the proposal's text with only some of its
-     *  sentence changes kept (the card's per-sentence picker). Composed
-     *  against the same target the preview resolved. */
+    /** The proposal's text with only some of its sentence changes kept,
+     *  composed against the target the preview resolved. */
     textOverride?: string,
   ): boolean => {
     if (textOverride === undefined) {
@@ -276,9 +262,7 @@ export function makePendingActions(env: PendingEnv) {
   };
 
   /** Takes a proposal off the document as rejected. `learn`: the writer
-   *  rejected it (Reject, ✕) - not a new request superseding it, the
-   *  backend refusing it or a stop leaving nothing of it, which `discard`
-   *  is for. */
+   *  rejected it, rather than a newer request, a refusal or a stop. */
   const remove = (
     callId: string,
     learn: boolean,
@@ -312,15 +296,8 @@ export function makePendingActions(env: PendingEnv) {
    *  reads as replaced, not rejected - in its card and to the model. */
   const replace = (callId: string) => remove(callId, false, "replaced");
 
-  /** A picture asked for next to text that is proposed and not decided
-   *  yet - its anchor quoted from that text, which isn't in the document
-   *  (ai/images.rs allows it): put into that proposal, on a line of its
-   *  own, so the two are one proposal accepted or rejected together,
-   *  rather than one that can't be placed. False when no such proposal
-   *  is pending: the picture is shown as its own. */
-  /** `callId`'s edit made in a proposal not decided yet whose text holds
-   *  `anchor` (which the document doesn't): `rewrite` gives that text with
-   *  the edit in it, or null for a proposal it doesn't fit. */
+  /** `callId`'s edit made in the undecided proposal whose text holds
+   *  `anchor`; `rewrite` gives that text edited, or null if it doesn't fit. */
   const joinInto = (
     callId: string,
     anchor: string,
@@ -337,8 +314,8 @@ export function makePendingActions(env: PendingEnv) {
       for (const host of previews) {
         if (host.streaming || host.proposal.image || host.callId === callId)
           continue;
-        // Document text this rewrite replaces is its text now, as the
-        // user sees it (src-tauri tools.rs's propose_edit).
+        // Document text this rewrite replaces is its text now, as the user
+        // sees it.
         const replaces =
           host.proposal.action === "replace" &&
           (host.proposal.anchor ?? "").includes(anchor);
@@ -373,6 +350,8 @@ export function makePendingActions(env: PendingEnv) {
     return joined;
   };
 
+  /** A picture anchored in undecided proposed text, put into that proposal
+   *  on a line of its own. False when there's none: it stands alone. */
   const joinPicture = (callId: string, picture: EditProposal): boolean => {
     const { anchor, action } = picture;
     if (
@@ -386,10 +365,8 @@ export function makePendingActions(env: PendingEnv) {
     );
   };
 
-  /** The pictures text proposals now carry, standing as proposals of
-   *  their own too: a rewrite of the paragraph a picture not accepted yet
-   *  stands by, which put the picture into its new text. The picture's own
-   *  proposal gives way (joined), the picture goes on in the text. */
+  /** Pictures a text proposal now carries give up their own proposals, as
+   *  joined; the picture goes on in the text. */
   const withdrawPictures = (ids: Set<string>, carriers: Set<string>) => {
     const gone: string[] = [];
     env.run((ctx) => {
@@ -413,23 +390,15 @@ export function makePendingActions(env: PendingEnv) {
       );
   };
 
-  /** A text edit quoted from a proposal not decided yet - a request after
-   *  it changing what it proposed, or going on from it (src-tauri
-   *  tools.rs): made in that proposal, which now reads with it, rather
-   *  than shown as an edit with nowhere to go. */
+  /** A text edit anchored in an undecided proposal, made in that proposal
+   *  rather than shown with nowhere to go. */
   const joinEdit = (callId: string, edit: EditProposal): boolean => {
     if (edit.image || !edit.anchor) return false;
     return joinInto(callId, edit.anchor, (text) => editedText(text, edit));
   };
 
-  /**
-   * One sentence taken (true), kept as written (false) or undecided again
-   * (null). Once every sentence of the proposal has a decision, it is
-   * applied - the last ✓ / ✕ is the Accept; one that kept them all is a
-   * rejection. Until then Accept (the card, the review bar, Ctrl/⌘+Enter)
-   * takes the undecided ones. A proposal shown whole (index -1, its margin
-   * card) has one decision: ✓ accepts it, ✕ rejects it.
-   */
+  /** One sentence taken (true), kept (false) or undecided again (null). Once
+   *  all are decided the proposal is applied; index -1 decides it whole. */
   const decide = (callId: string, index: number, take: boolean | null) => {
     if (index < 0) {
       if (take === true) accept(callId);
@@ -460,12 +429,8 @@ export function makePendingActions(env: PendingEnv) {
     if (complete) applyAccept(callId);
   };
 
-  // Reads the ids from the plugin's own state rather than the `previews`
-  // mirror so the callback stays STABLE ([run] only): MilkdownEditor's
-  // ProposalStream machine closes over it, and a rejectAll that changed
-  // identity on every preview change would rebuild the machine mid-stream,
-  // dropping its accumulated drafts.
-  // `learn` as in `remove`: false when a new request supersedes them.
+  // Reads the plugin's state, not `previews`, so the callback stays stable
+  // and the stream machine isn't rebuilt mid-stream. `learn` as in `remove`.
   const clearAll = (learn: boolean) => {
     env.run((ctx) => {
       const view = ctx.get(editorViewCtx);
@@ -493,9 +458,8 @@ export function makePendingActions(env: PendingEnv) {
   };
   const discardAll = () => clearAll(false);
 
-  /** Accepts every currently pending preview, one transaction each (so a
-   *  mid-batch failure - text one of them depended on changed - doesn't
-   *  undo the ones that already landed). */
+  /** Accepts every pending preview, one transaction each, so a failure
+   *  mid-batch doesn't undo the ones that landed. */
   const acceptAll = () => {
     const { previews, reviewCount } = env.latest();
     const taken = reviewCount.taken;
@@ -507,12 +471,8 @@ export function makePendingActions(env: PendingEnv) {
   const focusNext = () => env.latest().step(1);
   const focusPrevious = () => env.latest().step(-1);
 
-  /** Accept/reject the currently focused preview - the Quick Ask nav bar's
-   *  primary buttons. Unlike focusNext/Previous, WHERE the pointer lands
-   *  afterward depends on the plugin round-trip (dispatch -> decoration
-   *  state -> onPreviewsChange -> this hook's reindex effect above), so
-   *  there's no new preview to return synchronously; the caller reveals the
-   *  result via an effect on `focusedPreview` instead. */
+  /** Accept/reject the focused preview. Where the pointer lands depends on
+   *  the plugin round-trip, so nothing is returned. */
   const acceptFocused = () => {
     const { focusedCallId } = env.latest();
     if (focusedCallId) accept(focusedCallId);

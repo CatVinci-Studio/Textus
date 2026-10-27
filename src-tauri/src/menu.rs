@@ -1,21 +1,8 @@
-//! The native menu bar: construction (install), the id -> frontend-event
-//! dispatch, and the mutable File > Open Recent submenu. Menu ids that carry
-//! a payload do it in the id string ("recent:<path>", "recent-folder:<path>",
-//! "export-pandoc:<fmt>", "help-doc:<doc>", "insert-block:<kind>"); the
-//! frontend listener for each
-//! menu-* event lives in app/menu-bridge.ts.
-//!
-//! On Windows and Linux the bar built here is never seen - it is hidden with
-//! the window frame (kept on Windows for its accelerators; on Linux GTK stops
-//! firing them, and the frontend handles those keys), and the menu the user
-//! opens is drawn in HTML (src/app/app-menu-model.ts, which lists the same
-//! ids) and comes back through `trigger_menu_item`. Renaming an id here
-//! means renaming it there.
-//!
-//! The labels below are English. On macOS, where this menu is the one the
-//! user sees, the frontend sends them in the UI's language once a window
-//! is up (`set_menu_labels`) and the bar is rebuilt with them.
+//! The native menu bar: construction, the id -> frontend-event dispatch, and
+//! File > Open Recent. Windows and Linux hide it and draw the menu in HTML
+//! with the same ids, so renaming an id here means renaming it there.
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::menu::{
@@ -33,6 +20,8 @@ mod recent;
 pub(crate) use recent::*;
 mod build;
 pub(crate) use build::*;
+#[cfg(target_os = "macos")]
+mod dock;
 mod plugins;
 pub use plugins::set_plugin_menu;
 pub(crate) use plugins::*;
@@ -51,65 +40,55 @@ const RECENT_PREFIX: &str = "recent:";
 const RECENT_FOLDER_PREFIX: &str = "recent-folder:";
 const EXPORT_PDF_ID: &str = "export-pdf";
 const EXPORT_HTML_ID: &str = "export-html";
-/// Menu ids of pandoc-backed File > Export entries carry the pandoc writer
-/// name: "export-pandoc:<format>". The format list must stay in step with
-/// the frontend's PANDOC_FORMATS (export/exporters.ts).
+/// Pandoc-backed File > Export ids carry the writer name. Keep the formats
+/// in step with the frontend's PANDOC_FORMATS.
 const EXPORT_PANDOC_PREFIX: &str = "export-pandoc:";
 const QUIT_ID: &str = "quit";
 const CLOSE_TAB_ID: &str = "close-tab";
+/// File > Reopen Closed Tab: the focused window opens the document it
+/// closed last (app/close-flow.ts).
+const REOPEN_CLOSED_TAB_ID: &str = "reopen-closed-tab";
 const CLOSE_WINDOW_ID: &str = "close-window";
 const TOGGLE_SOURCE_MODE_ID: &str = "toggle-source-mode";
 const TOGGLE_TYPEWRITER_MODE_ID: &str = "toggle-typewriter-mode";
 const TRACK_CHANGES_ID: &str = "track-changes";
 const TOGGLE_SIDEBAR_ID: &str = "toggle-sidebar";
 const TOGGLE_AGENT_PANEL_ID: &str = "toggle-agent-panel";
-/// Textus AI's master switch (`textusAi` in settings.json), flipped by the
-/// focused window, which owns the setting and says so aloud. Not in the
-/// View menu - the window bar's button and Settings carry it - but the
-/// iPhone's app-drawn menu runs it through here (run_menu_item).
+/// Textus AI's master switch, flipped by the focused window, which owns the
+/// setting. Not in the View menu, but the iPhone's app-drawn menu runs it.
 const TOGGLE_TEXTUS_AI_ID: &str = "toggle-textus-ai";
 const TOGGLE_SPLIT_VIEW_ID: &str = "toggle-split-view";
 const TOGGLE_ZEN_MODE_ID: &str = "toggle-zen-mode";
+/// Two documents at once, side by side or one above the other.
+const SPLIT_RIGHT_ID: &str = "split-right";
+/// Everything the menus do, found by typing.
+const COMMAND_PALETTE_ID: &str = "command-palette";
+const SPLIT_DOWN_ID: &str = "split-down";
+const CLOSE_SPLIT_ID: &str = "close-split";
 const ZOOM_IN_ID: &str = "zoom-in";
 const ZOOM_OUT_ID: &str = "zoom-out";
 const ZOOM_RESET_ID: &str = "zoom-reset";
 const FIND_REPLACE_ID: &str = "find-replace";
-/// Edit > Copy as Markdown: the selection's Markdown source, where Copy
-/// gives plain-text apps the words as they read
-/// (src/editor/useEditorClipboard.ts).
-const COPY_AS_MARKDOWN_ID: &str = "copy-as-markdown";
-/// Edit > Select All on macOS, in place of the predefined item: that one
-/// sends WebKit's own selectAll:, which with the caret in no text field
-/// selected the whole window - the sidebar's notes, the empty document's
-/// box. The focused window picks what to select (app/app-menu-actions.ts).
+/// Edit > Copy as Plain Text and Paste as Plain Text: the words without the
+/// Markdown marks Copy's plain text carries, and the clipboard's text as is.
+const COPY_AS_PLAIN_TEXT_ID: &str = "copy-as-plain-text";
+const PASTE_AS_PLAIN_TEXT_ID: &str = "paste-as-plain-text";
+/// Edit > Select All on macOS, in place of the predefined item, whose
+/// selectAll: with no text field focused selected the whole window.
 #[cfg(target_os = "macos")]
 const SELECT_ALL_ID: &str = "select-all";
 const NEW_WINDOW_ID: &str = "new-window";
-/// Help menu ids carry the bundled doc they open: "help-doc:<doc>", where
-/// <doc> is the frontend's HelpDoc id ("markdown" | "agent" | "welcome").
-/// "welcome" additionally re-arms the coach-mark tour on the frontend side
-/// (see menu-bridge.ts's menu-open-help handler) - this string slot doesn't need
-/// to change for that, it's just a payload value like any other doc id.
+/// Help menu ids carry the bundled doc they open: "help-doc:<doc>".
 const HELP_DOC_PREFIX: &str = "help-doc:";
-/// Help > Join the Community: the website's community page, in the UI's
-/// language (the focused window opens it, knowing the language).
+/// Help > Join the Community, in the UI's language (the focused window knows it).
 const COMMUNITY_ID: &str = "help-community";
-/// Help > Video Tutorials: the website's tutorials page, in the UI's
-/// language - the same way round as Join the Community.
+/// Help > Video Tutorials, opened the same way as Join the Community.
 const TUTORIALS_ID: &str = "help-tutorials";
-/// Format menu ids carry the block kind to insert: "insert-block:<kind>",
-/// where <kind> is one of h1..h6, bullet-list, ordered-list, blockquote,
-/// code-block, table - matching the frontend's INSERT_BLOCK_EVENT handler.
+/// Format menu ids carry the block kind to insert: "insert-block:<kind>".
 const INSERT_BLOCK_PREFIX: &str = "insert-block:";
 
-/// Emit a menu event only to the focused window - each window is an
-/// independent document, so broadcast semantics would e.g. save every
-/// window's document at once. Deliberately `emit_to` (scoped to one
-/// webview), not `emit` on a `Window`/`WebviewWindow` handle - the latter
-/// looks scoped but actually broadcasts to every window app-wide, same as
-/// calling `emit` on the `AppHandle` itself (both go through the same
-/// manager-wide `Emitter::emit`; only `emit_to`/`emit_filter` actually
-/// target a specific webview).
+/// Emit a menu event only to the focused window. `emit_to`, not `emit` on a
+/// window handle: that one looks scoped but broadcasts to every window.
 fn emit_to_focused(app: &tauri::AppHandle, event: &str) {
     emit_to_focused_payload(app, event, ());
 }
@@ -124,22 +103,20 @@ fn emit_to_focused_payload<S: serde::Serialize + Clone>(
     }
 }
 
-/// The editor window a window-addressed message should go to - menu commands
-/// here, and lib.rs's OS-open handling, which has the same "which of several
-/// windows means *this* one" question.
-///
-/// "Focused window" alone is not enough once a detached chat window exists:
-/// the chat holds focus for as long as the user is typing in it, but it has
-/// no document and subscribes to none of these events, so Save/Open/Export/
-/// Find would all quietly do nothing. A focused chat is resolved back to the
-/// editor it belongs to; failing that, any editor window is a better target
-/// than none.
+/// The editor window a menu command or OS open goes to. A focused detached
+/// chat resolves to its editor; failing that, any editor window. An item run
+/// from inside a window names it, since its webview focus may not register.
 pub(crate) fn focused_editor_window(app: &tauri::AppHandle) -> Option<String> {
     let windows = app.webview_windows();
-    let focused = windows
-        .iter()
-        .find(|(_, w)| w.is_focused().unwrap_or(false))
-        .map(|(label, _)| label.clone());
+    let focused = MENU_ORIGIN
+        .with(|origin| origin.borrow().clone())
+        .filter(|label| windows.contains_key(label))
+        .or_else(|| {
+            windows
+                .iter()
+                .find(|(_, w)| w.is_focused().unwrap_or(false))
+                .map(|(label, _)| label.clone())
+        });
 
     match focused {
         Some(label) if crate::commands::chat_window::is_editor_window(&label) => Some(label),
@@ -156,12 +133,8 @@ pub(crate) fn focused_editor_window(app: &tauri::AppHandle) -> Option<String> {
     })
 }
 
-/// `emit_to_focused` for a command that needs a window to happen in - with
-/// none open (macOS keeps running after its last window closes), a fresh
-/// window opens and runs it once it has mounted (PENDING_MENU_EVENT). Not
-/// done here and now without a window: an open panel with no window to
-/// own it attached itself as a sheet to a closed window, which came back
-/// empty and stayed on screen.
+/// `emit_to_focused`, or with no window open, a fresh window that runs it once
+/// mounted. Not run now: a panel with no window attached itself to a closed one.
 fn emit_or_open_window(app: &tauri::AppHandle, event: &'static str) {
     if focused_editor_window(app).is_some() {
         emit_to_focused(app, event);
@@ -171,14 +144,9 @@ fn emit_or_open_window(app: &tauri::AppHandle, event: &'static str) {
     }
 }
 
-/// The menu bar in the UI's language: `labels` as `MenuLabels` keys them,
-/// from the frontend's string table. Only macOS shows this menu - Windows
-/// and Linux draw their own in HTML (app-menu-model.ts) and keep the native
-/// one hidden for its accelerators, which rebuilding it would only put at
-/// risk - so elsewhere this does nothing. Every window sends its labels as
-/// it opens; the bar is rebuilt only when one has changed (the language),
-/// with the same ids and accelerators as before. `command(async)` and a hop
-/// to the main thread, as menus are only built there.
+/// The macOS menu bar in the UI's language, rebuilt only when the labels
+/// change. Elsewhere it does nothing. Async with a main-thread hop, as menus
+/// are only built there.
 #[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn set_menu_labels(app: AppHandle, labels: HashMap<String, String>) {
@@ -203,12 +171,8 @@ pub fn set_menu_labels(app: AppHandle, labels: HashMap<String, String>) {
     let _ = (app, labels);
 }
 
-/// The View menu's check marks (Sidebar, AI Panel, Source Code Mode, Split
-/// View, Typewriter Mode, Zen Mode), keyed by menu id - from the front
-/// window, which sends its state on every change and as it gains focus.
-/// The items are named by what they show, never "Toggle ...", and the mark
-/// is AppKit's own. Only macOS shows this menu; elsewhere the app-drawn menu
-/// draws the same marks (app/AppMenu.tsx) and this does nothing.
+/// The View menu's check marks, keyed by menu id, sent by the front window on
+/// change and focus. macOS only; elsewhere the app-drawn menu draws them.
 #[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn set_menu_checks(app: AppHandle, checks: HashMap<String, bool>) {
@@ -232,14 +196,9 @@ pub fn set_menu_checks(app: AppHandle, checks: HashMap<String, bool>) {
     let _ = (app, checks);
 }
 
-/// The Format menu's heading keys (Ctrl/Cmd+1..6 unless rebound), keyed by
-/// menu id - mirrors `nativeMenuAccelerators` in src/app/app-menu-model.ts.
-/// They follow Settings › Shortcuts, unlike a fixed accelerator: a level
-/// rebound or cleared there must not keep a native key that goes on
-/// firing. The frontend handles the keys itself and stops them, so the
-/// bar's key only acts where the page doesn't (no window, say). Only macOS
-/// shows this menu; on Windows a native key would fire twice beside the
-/// frontend's, so elsewhere this does nothing.
+/// The Format menu's heading keys, keyed by menu id, following Settings ›
+/// Shortcuts so a rebound key doesn't keep firing. macOS only: on Windows a
+/// native key would fire twice beside the frontend's.
 #[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn set_menu_accelerators(app: AppHandle, accelerators: HashMap<String, String>) {
@@ -265,51 +224,39 @@ pub fn set_menu_accelerators(app: AppHandle, accelerators: HashMap<String, Strin
     let _ = (app, accelerators);
 }
 
-/// Runs a menu id exactly as clicking that item in the native menu would.
-///
-/// The way in for the app-drawn menu on Windows (src/app/AppMenu.tsx): there
-/// the native menu bar is hidden and the menu is redrawn in HTML, so its
-/// items have no native click to dispatch - they send their id here instead.
-/// The ids are the contract between the two, and `dispatch` below is the one
-/// implementation both entry points run, so an HTML item can never drift
-/// into doing something different from its native twin.
-///
-/// Ids the HTML menu invents (there is no such native item) are simply not
-/// matched by `dispatch` and do nothing, so a typo fails quietly rather than
-/// firing the wrong command.
-///
-/// `command(async)`, like detach_chat_window, and for the same reason: half
-/// of what dispatch does is create or close windows, and on Windows doing
-/// that from inside the calling webview's own IPC callback - which a plain
-/// `command` runs on the main thread - is the re-entrancy that freezes the
-/// whole app.
+/// Runs a menu id exactly as clicking that native item would; the way in for
+/// the app-drawn menu. Unknown ids do nothing. Async because creating or
+/// closing windows from the calling webview's IPC callback freezes Windows.
 #[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
-pub fn trigger_menu_item(app: tauri::AppHandle, id: String) {
+pub fn trigger_menu_item(app: tauri::AppHandle, window: tauri::WebviewWindow, id: String) {
+    MENU_ORIGIN.with(|origin| *origin.borrow_mut() = Some(window.label().to_string()));
     dispatch(&app, &id);
+    MENU_ORIGIN.with(|origin| *origin.borrow_mut() = None);
 }
 
-/// The recent-file list behind File > Open Recent, for the app-drawn menu -
-/// the native submenu is filled by `rebuild_recent_menu`, which the HTML one
-/// can't read.
+thread_local! {
+    /// The window whose app-drawn menu or shortcut is being dispatched, set only
+    /// for one `trigger_menu_item` call on its thread.
+    static MENU_ORIGIN: RefCell<Option<String>> = const { RefCell::new(None) };
+}
+
+/// The recent-file list behind File > Open Recent, for the app-drawn menu.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn list_recent_files(app: tauri::AppHandle) -> Vec<String> {
     commands::recents::read_recent_files(&app)
 }
 
-/// The recent folders, listed above the files there - same reason.
+/// The recent folders, listed above the files there.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn list_recent_folders(app: tauri::AppHandle) -> Vec<String> {
     commands::recents::read_recent_folders(&app)
 }
 
-/// Quit, from the menu bar (⌘Q, File › Quit) or the tray: every window is
-/// asked to close, so each unsaved document gets its prompt, and the app
-/// exits once the last one is gone (lib.rs's Destroyed handler) - with an
-/// exit code, which background mode never holds back (background/mod.rs's
-/// keeps_running).
+/// Quit: every window is asked to close, so each unsaved document gets its
+/// prompt, and the app exits once the last one is gone.
 pub(crate) fn quit(app_handle: &tauri::AppHandle) {
     // Capture every editor before destruction order can progressively
     // shrink the session. A cancelled dirty-window prompt resets this
@@ -331,9 +278,8 @@ pub(crate) fn quit(app_handle: &tauri::AppHandle) {
     }
 }
 
-/// Opens `path` in the focused window's sidebar, as File > Open Folder…
-/// does (a recent folder); with no window open, a
-/// fresh window does once it has mounted.
+/// Opens `path` in the focused window's sidebar; with no window open, a fresh
+/// window does once it has mounted.
 fn open_folder_in_sidebar(app_handle: &tauri::AppHandle, path: &str) {
     if focused_editor_window(app_handle).is_some() {
         emit_to_focused_payload(app_handle, "menu-open-recent-folder", path);
@@ -343,25 +289,19 @@ fn open_folder_in_sidebar(app_handle: &tauri::AppHandle, path: &str) {
     }
 }
 
-/// What a menu id does. Reached from a native menu click (`on_menu_event`
-/// above), from the app-drawn menu's `trigger_menu_item` and from the
-/// tray's menu (Tauri sends its clicks to the same handler), so every entry
-/// point stays one behaviour.
+/// What a menu id does, for native clicks, the app-drawn menu and the tray alike.
 fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     if id == SETTINGS_MENU_ID {
         emit_or_open_window(app_handle, "menu-open-settings");
     } else if let Some(item) = id.strip_prefix(crate::background::tray::MENU_PREFIX) {
         crate::background::tray::on_menu(app_handle, item);
     } else if id == NEW_FILE_ID {
-        // Honors the same Settings choice as opening files: a new tab in the
-        // focused window in tab mode, a fresh window otherwise (or when
-        // there's no window at all).
-        if app_handle.webview_windows().is_empty()
-            || commands::prefs::read_new_document_mode(app_handle) != "tab"
-        {
-            let _ = crate::open_new_window(app_handle);
-        } else {
+        // New Tab, as a browser's: a tab in the focused window whatever
+        // Settings says files open in; a window when there is none.
+        if focused_editor_window(app_handle).is_some() {
             emit_to_focused(app_handle, "menu-new-file");
+        } else {
+            let _ = crate::open_new_window(app_handle);
         }
     } else if let Some(command) = id.strip_prefix(PLUGIN_COMMAND_PREFIX) {
         emit_to_focused_payload(app_handle, "menu-plugin-command", command.to_string());
@@ -382,11 +322,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     } else if let Some(path) = id.strip_prefix(RECENT_FOLDER_PREFIX) {
         open_folder_in_sidebar(app_handle, path);
     } else if let Some(path) = id.strip_prefix(RECENT_PREFIX) {
-        // The focused window decides (useFileOpening.ts's openRecentFile): a
-        // fresh, untouched one takes the file itself, as File > Open does,
-        // instead of a second window opening beside it; any other sends it
-        // back through open_paths. With no window to ask, it goes through
-        // the same queue as Finder/CLI opens.
+        // The focused window decides: a fresh, untouched one takes the file itself;
+        // any other sends it back through open_paths. With no window, it queues.
         if focused_editor_window(app_handle).is_some() {
             emit_to_focused_payload(app_handle, "menu-open-recent", path);
         } else {
@@ -418,8 +355,18 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-toggle-split-view");
     } else if id == TOGGLE_ZEN_MODE_ID {
         emit_to_focused(app_handle, "menu-toggle-zen-mode");
-    } else if id == COPY_AS_MARKDOWN_ID {
-        emit_to_focused(app_handle, "menu-copy-as-markdown");
+    } else if id == COMMAND_PALETTE_ID {
+        emit_to_focused(app_handle, "menu-command-palette");
+    } else if id == SPLIT_RIGHT_ID {
+        emit_to_focused(app_handle, "menu-split-right");
+    } else if id == SPLIT_DOWN_ID {
+        emit_to_focused(app_handle, "menu-split-down");
+    } else if id == CLOSE_SPLIT_ID {
+        emit_to_focused(app_handle, "menu-close-split");
+    } else if id == COPY_AS_PLAIN_TEXT_ID {
+        emit_to_focused(app_handle, "menu-copy-as-plain-text");
+    } else if id == PASTE_AS_PLAIN_TEXT_ID {
+        emit_to_focused(app_handle, "menu-paste-as-plain-text");
     } else if cfg!(target_os = "macos") && id == "select-all" {
         emit_to_focused(app_handle, "menu-select-all");
     } else if id == FIND_REPLACE_ID {
@@ -430,6 +377,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-zoom-out");
     } else if id == ZOOM_RESET_ID {
         emit_to_focused(app_handle, "menu-zoom-reset");
+    } else if id == REOPEN_CLOSED_TAB_ID {
+        emit_to_focused(app_handle, "menu-reopen-closed-tab");
     } else if id == CLOSE_TAB_ID {
         emit_to_focused(app_handle, "menu-close-tab");
     } else if id == CLOSE_WINDOW_ID {
@@ -467,9 +416,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
             let _ = commands::links::open_tutorials(app_handle, None, None);
         }
     } else if let Some(doc) = id.strip_prefix(HELP_DOC_PREFIX) {
-        // A help doc opens as a tab in the focused window; with no window to
-        // receive it (macOS keeps the app running after its last window
-        // closes), spawn one that drains the pending doc on mount.
+        // A help doc opens as a tab in the focused window; with none, a fresh
+        // window drains the pending doc on mount.
         if let Some(label) = focused_editor_window(app_handle) {
             let _ = app_handle.emit_to(EventTarget::webview_window(&label), "menu-open-help", doc);
         } else {

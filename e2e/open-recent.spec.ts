@@ -1,10 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
-// Issue #201: File > Open Recent in a fresh, empty window opened the file
-// in a second window. menu.rs now hands the choice to the focused window
-// (menu-open-recent), which keeps the file itself when it holds nothing
-// and otherwise asks Rust to open it elsewhere (open_paths).
+// File > Open Recent: an empty focused window keeps the file itself;
+// otherwise it opens elsewhere.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 

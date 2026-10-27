@@ -16,18 +16,9 @@ import type { Options as ToMarkdownExtension } from "mdast-util-to-markdown";
 import type { Literal } from "mdast";
 
 /**
- * Obsidian's embeds, `![[file]]` (issue #135). An Obsidian vault links its
- * pictures this way, and Textus showed them as text. The embed is kept as
- * written - its whole source is the node's text, like raw HTML
- * (html/raw-html-schema.ts) - so saving writes it back unchanged;
- * obsidian-embed-preview.ts shows an image embed as the picture while the
- * caret is elsewhere. Any other embed (a note, a heading) stays text.
- *
- * HTML and PDF exports are copies of the editor's page, so they carry the
- * picture (its src: obsidian-embed-preview.ts's exportSrc). Exports from the
- * Markdown source -
- * Word and the other Pandoc formats - keep the embed as text: Pandoc can't
- * read it, and rewriting it to `![](path)` would change what was written.
+ * Obsidian's embeds, `![[file]]`, kept as written (the source is the node's
+ * text) so saving writes them back unchanged. Pandoc exports keep the embed
+ * as text: rewriting it to `![](path)` would change what was written.
  */
 
 declare module "micromark-util-types" {
@@ -50,8 +41,7 @@ declare module "mdast" {
   }
 }
 
-/** File types an embed shows as a picture - IMAGE_EXTENSIONS in
- *  src-tauri/src/commands/vault.rs. */
+/** File types an embed shows as a picture. */
 export const IMAGE_EXTENSIONS = [
   "png",
   "jpg",
@@ -118,10 +108,8 @@ const BANG = 33; // "!"
 const OPEN = 91; // "["
 const CLOSE = 93; // "]"
 
-/** micromark: `![[`, then anything but brackets and line endings, then
- *  `]]` - one token, so nothing inside (a "_" in a file name) is read as
- *  emphasis. Tried before CommonMark's image start, which would otherwise
- *  take the `![`. */
+/** micromark: `![[...]]` as one token, so a "_" in a file name isn't
+ *  emphasis. Tried before CommonMark's image start would take the `![`. */
 function embedSyntax(): Extension {
   return {
     text: { [BANG]: { name: "obsidianEmbed", tokenize } },

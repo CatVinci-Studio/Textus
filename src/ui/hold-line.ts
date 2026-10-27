@@ -7,10 +7,8 @@ export function blockAt(blocks: Element, line: number): Element | null {
   return null;
 }
 
-/// Runs `change` - anything that reflows the document: a zoom step,
-/// revisions moving between the text and the margin - with the line at
-/// viewport y `line` held still: `block`, the one at that line, keeps the
-/// same share of its height there.
+/// Runs `change`, anything that reflows the document, with the line at
+/// viewport y `line` held still: `block` keeps the same share of its height there.
 export function holdBlock(
   scroller: HTMLElement,
   block: Element,

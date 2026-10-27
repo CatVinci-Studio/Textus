@@ -1,35 +1,7 @@
 #!/usr/bin/env node
-// Which CI jobs a change needs: the `changes` job of .github/workflows/ci.yml
-// runs this and passes its answers on to the other jobs.
-//
-//   e2e        the change can reach the browser: the Playwright flows run
-//   native     the change can reach the Rust build or its tests: the three
-//              native-platform jobs and the iOS build run
-//   roundtrip  the change can reach saving: `check` runs the save round
-//              trip (src/document-view/save-roundtrip*.test.ts); a push
-//              always does
-//
-// A pull request is compared with its base:
-//
-//   documentation only                   neither (`check` alone)
-//   a version bump only                  neither
-//   the Rust backend only                native
-//   the frontend only                    e2e
-//   both; or CI's workflows, .nvmrc, or
-//   package.json / package-lock.json
-//   beyond the version                   both
-//
-// A bump's version lines count for nothing in a mixed change. A push to main
-// or a release branch runs everything, except a version bump's merge: the
-// release workflow waits for CI on the tagged commit, and that commit is
-// usually the bump, which `check` (scripts/check-versions.mjs) covers alone.
-//
-//   node scripts/ci-changes.mjs --base SHA           (a pull request)
-//   node scripts/ci-changes.mjs --base SHA --push    (a push; SHA is the
-//                                                     commit before it)
-//
-// Prints `e2e=...`, `native=...` and `roundtrip=...` lines for $GITHUB_OUTPUT. Without a
-// usable base (a new branch, a force push) everything runs.
+// Which CI jobs a change needs (e2e, native, roundtrip), printed for
+// $GITHUB_OUTPUT. Docs or a version bump alone need neither; a push runs
+// everything except a bump's merge; without a usable base everything runs.
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, posix, relative } from "node:path";
@@ -41,13 +13,11 @@ const ownRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DOCS = /(\.md$|^docs\/|^\.github\/ISSUE_TEMPLATE\/|^LICENSE$)/;
 
 /** Markdown in these trees is the app's own content or test input, not
- *  documentation: the skills Rust embeds (src-tauri/src/ai/skills/), the
- *  help guides and playground samples the frontend imports (?raw). */
+ *  documentation. */
 const CODE_TREES = /^(src|e2e|src-tauri)\//;
 
-/** Changes that run everything: CI itself, the Node version every job
- *  installs, and the npm manifest and lockfile (a bump's version lines
- *  aside). */
+/** Changes that run everything: CI itself, the Node version, and the npm
+ *  manifest and lockfile beyond a bump's version lines. */
 const EVERYTHING =
   /^(\.github\/workflows\/|\.nvmrc$|package\.json$|package-lock\.json$)/;
 
@@ -56,15 +26,13 @@ const EVERYTHING =
 const NATIVE =
   /(^src-tauri\/|(^|\/)Cargo\.(toml|lock)$|(^|\/)\.cargo\/|(^|\/)rust-toolchain(\.toml)?$|^scripts\/check-native\.mjs$|^scripts\/ios-)/;
 
-/** The native files the browser does see: the icons the frontend imports,
- *  boot.js (which e2e/storage.spec.ts runs) and the Tauri configs. */
+/** The native files the browser does see: icons, boot.js and the Tauri
+ *  configs. */
 const BROWSER_NATIVE =
   /^src-tauri\/(icons\/|src\/boot\.js$|tauri(\.[a-z]+)?\.conf\.json$)/;
 
-/** What the save round trip (src/document-view/save-roundtrip*.test.ts)
- *  can be changed by: the editor and the document code it runs, the
- *  Markdown helpers, the npm dependencies, CI itself, and the documents it
- *  reads (our docs and help guides). */
+/** What can change the save round trip's result, including the documents
+ *  it reads. */
 const ROUNDTRIP =
   /^(src\/editor\/|src\/document[^/]*\/|src\/utils\/markdown|src\/help\/|docs\/|package\.json$|package-lock\.json$|\.github\/workflows\/)/;
 
@@ -98,8 +66,8 @@ function tomlVersion(header) {
   };
 }
 
-/** The files a version bump touches (scripts/check-versions.mjs keeps them
- *  in step), each with the test that its change is the version alone. */
+/** The files a version bump touches, each with the test that its change is
+ *  the version alone. */
 const VERSION_FILES = {
   "package.json": jsonVersions(["version"]),
   "package-lock.json": jsonVersions(["version"], ["packages", "", "version"]),
@@ -119,9 +87,8 @@ function versionOnly(file, before, after) {
   }
 }
 
-/** `files` changed; `read(file)` gives a file's text `before` and `after`
- *  the change (null where it doesn't exist); `rustReads` are the files
- *  outside src-tauri/ that the Rust code embeds (rustIncludes()). */
+/** `read(file)` gives a file's text `before` and `after` the change (null
+ *  where missing); `rustReads` are files outside src-tauri/ Rust embeds. */
 export function classify({ files, push, read, rustReads = [] }) {
   const all = { e2e: true, native: true };
   const code = files.filter(
@@ -139,8 +106,7 @@ export function classify({ files, push, read, rustReads = [] }) {
 }
 
 /** The files outside src-tauri/ that its Rust code embeds with
- *  include_str!/include_bytes! (index.html, TypeScript sources its tests
- *  compare against), as paths from the repository root. */
+ *  include_str!/include_bytes!, as paths from the repository root. */
 export function rustIncludes(root = ownRoot) {
   const found = new Set();
   const walk = (dir) => {

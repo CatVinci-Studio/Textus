@@ -3,7 +3,7 @@
 Status: sections 1-7 are built, on the registries
 ([docs/dev/plugin-api.md](../dev/plugin-api.md)), and ship in 1.2.0 with
 their entry points hidden in release builds until there are plugins to
-install (`PLUGINS_SHOWN`, src/plugins/availability.ts); a
+install (`PLUGINS_SHOWN`, src/plugins/store/availability.ts); a
 plugin's author reads [docs/dev/writing-plugins.md](../dev/writing-plugins.md).
 The market (section 8), `aiTools`, `slashCommands`, `codeBlockRenderers`,
 importers, exporters, templates and plugin themes come in later betas.
@@ -94,7 +94,7 @@ other plugins' data, running native code, drawing over the document.
 ## 3. Lifecycle
 
 A plugin has a status - what Settings shows, decided in one table
-(src/plugins/lifecycle.ts) - and, while it may run, a host:
+(src/plugins/store/lifecycle.ts) - and, while it may run, a host:
 
 ```mermaid
 flowchart LR

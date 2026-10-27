@@ -1,19 +1,7 @@
-//! What Textus AI remembers over real use: several conversations on the
-//! same work, a day apart, as people write in them - a preference said
-//! once in passing or shown by turning a draft down, a fact told as
-//! background to a request, a change of mind, something to forget - and
-//! whether a later conversation, with nothing but the memories to go on,
-//! works the way the user asked. memory_eval.rs checks single requests;
-//! this checks the whole of it, the way mem0 and its peers are measured
-//! (LOCOMO's recall over sessions), on a writer's work instead of chat.
-//!
-//! Each scenario runs on its own temporary global folder (and project
-//! folder), with Remember automatically on. Every conversation starts
-//! fresh: no history, only what was remembered. The report
-//! (TEXTUS_EVAL_OUT, default target/live-eval) has each scenario's
-//! conversations, what was remembered after each, and its checks.
-//!
-//!   cargo test --lib live_eval::memory_sessions -- --ignored --nocapture
+//! What Textus AI remembers over real use: several conversations on the same
+//! work, each starting fresh with only the memories, and whether a later one
+//! works the way the user asked. Run with
+//! `cargo test --lib live_eval::memory_sessions -- --ignored --nocapture`.
 
 use super::harness::{self, auth, AgentSetup, Conversation, UserTurn};
 use crate::ai::agent::AgentMode;
@@ -499,8 +487,8 @@ fn run_scenario(
     let model = harness::agent_model();
     let dirs = folders.dirs();
     let ws = match &folders.project {
-        Some(root) => workspace::load_layers(None, None, Some(root.to_str().unwrap()), &[]),
-        None => workspace::load_layers(None, None, None, &[]),
+        Some(root) => workspace::load_layers(None, None, Some(root.to_str().unwrap())),
+        None => workspace::load_layers(None, None, None),
     };
     for (kind, scope, text) in &scenario.seed {
         folders
@@ -558,9 +546,8 @@ fn run_scenario(
     json!({"id": scenario.id, "conversations": log, "checks": checks})
 }
 
-/// Every scenario, its report written, its checks summed up. Reports only:
-/// a scenario's checks are for comparing one way of remembering with
-/// another, not a gate.
+/// Every scenario, its report written, its checks summed up. Reports only, not
+/// a gate.
 #[test]
 #[ignore = "live API - see module docs"]
 fn live_memory_over_sessions() {
@@ -588,9 +575,8 @@ fn live_memory_over_sessions() {
     eprintln!("memory_sessions: report at {path}");
 }
 
-/// The memory tidied (memory::tidy) on the eval's provider: three ways of
-/// saying "reply in English", a rule a later one overturned, and others
-/// that must stay as they are.
+/// The memory tidied on the eval's provider: duplicates merged, an overturned
+/// rule dropped, the others kept as they are.
 #[test]
 #[ignore = "live API - see module docs"]
 fn live_memory_tidy() {
@@ -660,9 +646,8 @@ fn live_memory_tidy() {
     }
 }
 
-/// Whether a request is offered as a skill (memory::skill_offer), on the
-/// eval's provider: a procedure of the user's own is, a one-off request
-/// about this text and one a skill already does are not.
+/// Whether a request is offered as a skill, on the eval's provider: a
+/// procedure of the user's own is, a one-off or an existing skill's is not.
 #[test]
 #[ignore = "live API - see module docs"]
 fn live_skill_offer() {

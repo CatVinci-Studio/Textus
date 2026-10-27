@@ -9,21 +9,15 @@ import { invoke as __TAURI_INVOKE, Channel } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	/**
-	 *  Runs the Codex (ChatGPT Plus/Pro) OAuth login: opens the system browser,
-	 *  waits for the localhost callback, exchanges the code for tokens, and
-	 *  stores the credential in the app config dir (0600 permissions).
-	 * 
-	 *  Reuses the OpenAI Codex CLI's own OAuth client id (the same technique
-	 *  several other open-source coding agents use) rather than a standard API
-	 *  key, per the "sign in with ChatGPT" requirement.
+	 *  Runs the Codex (ChatGPT Plus/Pro) OAuth login and stores the credential in
+	 *  the app config dir (0600). Uses the Codex CLI's own OAuth client id.
 	 */
 	codex_login: (onUrl: Channel<string>) => __TAURI_INVOKE<AuthStatus_Serialize>("codex_login", { onUrl }),
 	codex_auth_status: () => __TAURI_INVOKE<AuthStatus_Serialize>("codex_auth_status"),
 	codex_logout: () => __TAURI_INVOKE<null>("codex_logout"),
 	/**
-	 *  Runs the Claude (Anthropic Pro/Max) OAuth login, same shape as the Codex
-	 *  login but against Anthropic's own OAuth client - see aicompat's
-	 *  providers::anthropic module for the reference this was verified against.
+	 *  Runs the Claude (Anthropic Pro/Max) OAuth login against Anthropic's own
+	 *  OAuth client.
 	 */
 	claude_login: (onUrl: Channel<string>) => __TAURI_INVOKE<ClaudeAuthStatus>("claude_login", { onUrl }),
 	claude_auth_status: () => __TAURI_INVOKE<ClaudeAuthStatus>("claude_auth_status"),
@@ -32,11 +26,8 @@ export const commands = {
 	provider_api_key_status: (provider: string) => __TAURI_INVOKE<boolean>("provider_api_key_status", { provider }),
 	clear_provider_api_key: (provider: string) => __TAURI_INVOKE<null>("clear_provider_api_key", { provider }),
 	/**
-	 *  Saves the endpoint. A missing key keeps the stored one while the URL
-	 *  stays the same: the settings page no longer gets the key back, so an
-	 *  empty key field on re-save means "unchanged", not "remove it" (clearing
-	 *  the endpoint removes it). Saved for another URL, the old key is dropped
-	 *  rather than sent to the new host with every request (see resolve_key).
+	 *  Saves the endpoint. A missing key keeps the stored one while the URL stays
+	 *  the same; for another URL the old key is dropped rather than sent to the new host.
 	 */
 	set_custom_endpoint: (baseUrl: string, apiKey: string | null, model: string) => __TAURI_INVOKE<null>("set_custom_endpoint", { baseUrl, apiKey, model }),
 	custom_endpoint_status: () => __TAURI_INVOKE<CustomEndpointStatus_Serialize | null>("custom_endpoint_status"),
@@ -63,20 +54,14 @@ export type ClaudeAuthStatus = {
 };
 
 /**
- *  What the settings page is told about the saved endpoint. The key itself
- *  never goes back to the webview - it is a secret like the provider keys,
- *  which only ever report whether one is set. `api_key` stays in the shape
- *  (always null) so the page's existing type still fits; `has_api_key`
- *  says whether one is stored.
+ *  What the settings page is told about the saved endpoint. The key never
+ *  goes back to the webview; `api_key` is always null and `has_api_key` says whether one is stored.
  */
 export type CustomEndpointStatus = CustomEndpointStatus_Serialize | CustomEndpointStatus_Deserialize;
 
 /**
- *  What the settings page is told about the saved endpoint. The key itself
- *  never goes back to the webview - it is a secret like the provider keys,
- *  which only ever report whether one is set. `api_key` stays in the shape
- *  (always null) so the page's existing type still fits; `has_api_key`
- *  says whether one is stored.
+ *  What the settings page is told about the saved endpoint. The key never
+ *  goes back to the webview; `api_key` is always null and `has_api_key` says whether one is stored.
  */
 export type CustomEndpointStatus_Deserialize = {
 	base_url: string,
@@ -86,11 +71,8 @@ export type CustomEndpointStatus_Deserialize = {
 };
 
 /**
- *  What the settings page is told about the saved endpoint. The key itself
- *  never goes back to the webview - it is a secret like the provider keys,
- *  which only ever report whether one is set. `api_key` stays in the shape
- *  (always null) so the page's existing type still fits; `has_api_key`
- *  says whether one is stored.
+ *  What the settings page is told about the saved endpoint. The key never
+ *  goes back to the webview; `api_key` is always null and `has_api_key` says whether one is stored.
  */
 export type CustomEndpointStatus_Serialize = {
 	base_url: string,

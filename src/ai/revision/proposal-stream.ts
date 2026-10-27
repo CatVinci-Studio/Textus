@@ -5,52 +5,16 @@ import type { PartialString } from "../chat/partial-tool-args";
 import { parseProposal } from "../chat/proposal";
 import type { EditProposal } from "../types";
 
-/**
- * The writing-phase state machine for streamed propose_edit calls - the one
- * place that decides when a draft becomes visible, what happens to it when
- * the stream ends, and which endings keep it. Consolidates what used to be
- * an args-accumulating ref in MilkdownEditor plus a cleanup effect whose
- * stop/error behavior lived apart from the streaming logic it undid.
- *
- * Per callId:
- *
- *             argsDelta                argsDelta (anchor complete)
- *   toolStart ────────► drafting ──────────────────────► revealing
- *                          │                                 │  feed() per delta
- *      finish(any) ──────► forgotten (nothing on screen)     │
- *                                                            │
- *        finalCall(parseable args) ────────────────────────► feed(done) - leaves the machine
- *        finalCall(unparseable args) ──────────────────────► discard()
- *        finish("stopped") ────────────────────────────────► feed(done) + finalize(partial)
- *        finish("failed") ─────────────────────────────────► discard()
- *
- * "stopped" keeps what the user already watched type into the document -
- * frozen at the text streamed so far, re-shown without the streaming flag so
- * it becomes decidable (a rewrite laid out sentence by sentence keeps what
- * it reads as on screen: pending-edit-plugin's stopRewrite, which the
- * editor's finalize applies). "failed" discards instead: the error path offers
- * Retry, and a kept preview would duplicate the retried proposal.
- *
- * The machine ends where the DECIDING phase begins: after finalize/feed-done
- * the preview's life continues as a PendingStatus (usePendingEdits.ts:
- * streaming → pending → accepted/rejected/invalid), driven by the typewriter
- * settle (pending-edit-plugin.ts) and the user's Accept/Reject. Exchange
- * boundaries are also outside the machine: a NEW exchange's first placed
- * proposal supersedes whatever previews the user left undecided
- * (MilkdownEditor's addPreviews wrapper), and each send reports every past
- * proposal's current status to the model (proposal-status.ts). The full
- * picture lives in docs/design/ai-proposals.md.
- */
+/** The writing-phase state machine for streamed proposal calls. A stop keeps
+ *  what streamed, made decidable; a failure discards it, as Retry would
+ *  duplicate it. */
 export interface ProposalStreamEffects {
   /** First moment the draft can be located: show it as a streaming
    *  (un-decidable) preview at its anchor. */
   place(callId: string, proposal: EditProposal): void;
-  /** Text for the callId's typewriter as known so far; `done` promises no
-   *  more will come, which is what lets the reveal settle. `final` (with
-   *  `done`, by default) says the call's own arguments are in too: text
-   *  whole before them lands, and stays undecided until they come - the
-   *  preview is split into its sentences only from them, and decidable
-   *  sooner it was one card for its whole paragraph for a moment. */
+  /** Text for the typewriter so far; `done` lets the reveal settle. `final`
+   *  (default with `done`): the call's own arguments are in, which the
+   *  preview needs before it is decidable. */
   feed(callId: string, text: string, done: boolean, final?: boolean): void;
   /** A stop froze this draft: re-show it as a final, decidable proposal
    *  carrying the partially streamed text. */
@@ -63,7 +27,7 @@ interface Draft {
   phase: "drafting" | "revealing";
   args: string;
   /** A generate_image call: its frame shows where it goes, the picture
-   *  follows with the completed call (draftPictureProposal). */
+   *  follows with the completed call. */
   picture?: boolean;
 }
 
@@ -74,18 +38,16 @@ export class ProposalStream {
 
   constructor(
     private effects: ProposalStreamEffects,
-    /** The document's blocks now, for a draft that names its block
-     *  (doc-blocks.ts): it is placed as soon as the block is named. */
+    /** The document's blocks now, so a draft naming its block is placed as
+     *  soon as it is named. */
     private documentNow?: () => SentBlock[],
   ) {}
 
   /** A tool call opened - propose_edit and generate_image enter the
    *  machine. */
   toolStart(callId: string, toolName: string): void {
-    // Said again for a call already here - images.rs' execute announces
-    // the picture it runs - it is the same call: a fresh draft in its
-    // place left the frame placed from the stream un-discardable, and the
-    // picture's proposal "Writing…" for good, never in the text (rc.6).
+    // The backend announces a running picture again: the same call, and a
+    // fresh draft would leave the placed frame un-discardable.
     if (this.drafts.has(callId)) return;
     if (toolName === "propose_edit")
       this.drafts.set(callId, { phase: "drafting", args: "" });
@@ -93,9 +55,8 @@ export class ProposalStream {
       this.drafts.set(callId, { phase: "drafting", args: "", picture: true });
   }
 
-  /** An argument fragment arrived. Places the preview the first time the
-   *  accumulated args parse far enough to locate (partial-tool-args), and
-   *  feeds the typewriter from then on. */
+  /** An argument fragment arrived. Places the preview once the args parse
+   *  far enough to locate, and feeds the typewriter from then on. */
   argsDelta(callId: string, delta: string): void {
     const draft = this.drafts.get(callId);
     if (!draft) return;
@@ -118,9 +79,8 @@ export class ProposalStream {
       draft.phase = "revealing";
       this.effects.place(callId, parsed.proposal);
     }
-    // Its text whole - the closing quote in - it lands now, not when the
-    // step ends: a reply's edits stream one after another (agent/
-    // lists.rs), and the step's turns come only after the last.
+    // Its text whole, it lands now: the step's turns come only after a
+    // reply's last edit.
     this.effects.feed(
       callId,
       parsed.proposal.text ?? "",
@@ -129,20 +89,14 @@ export class ProposalStream {
     );
   }
 
-  /** The completed ToolCall turn landed: the authoritative arguments. Closes
-   *  the reveal even for a proposal with no text at all (a `delete`) -
-   *  without the done feed its animation entry stays "more may come" forever
-   *  and the preview never becomes decidable. The final re-show without the
-   *  streaming flag is the caller's ordinary completed-turn path (ChatBody's
-   *  afterSend), not the machine's. */
+  /** The completed call's authoritative arguments. Closes the reveal even
+   *  for a proposal with no text, or it would never become decidable. */
   finalCall(callId: string, argumentsJson: string): void {
     const draft = this.drafts.get(callId);
     this.drafts.delete(callId);
     this.awaiting.add(callId);
     if (draft?.picture) {
-      // The frame goes; the picture's own proposal (ChatBody's
-      // completed-turn path, right after this) is placed in its stead - a
-      // final add over a streaming one keeps its text, and this one's
+      // The frame goes; the picture's own proposal, placed right after,
       // names another picture. One that made none leaves nothing.
       if (draft.phase === "revealing") this.effects.discard(callId);
       return;
@@ -157,18 +111,14 @@ export class ProposalStream {
     this.effects.feed(callId, proposal.text ?? "", true);
   }
 
-  /** A completed call's result came. One the backend refused (tools.rs:
-   *  a cut-off `text`, isRefusal) may already be on screen - streamed, or
-   *  placed from its completed call a moment before - and goes, with or
-   *  without animation; the model sends it again, fixed. */
+  /** A completed call's result came. One the backend refused may already be
+   *  on screen, and goes; the model sends it again, fixed. */
   result(callId: string, refused: boolean): void {
     if (!this.awaiting.delete(callId)) return;
     if (refused) this.effects.discard(callId);
   }
 
-  /** The exchange ended without a finalCall for whatever is still here. A
-   *  normal completion leaves the machine empty (every call got its
-   *  finalCall), so this only ever acts on interrupted drafts. */
+  /** The exchange ended; only interrupted drafts are still here. */
   finish(outcome: "stopped" | "failed"): void {
     for (const [callId, draft] of this.drafts) {
       if (draft.phase !== "revealing") continue; // nothing ever shown
@@ -192,11 +142,8 @@ export class ProposalStream {
   }
 }
 
-/**
- * A picture call's fields with the block it names (doc-blocks.ts'
- * resolveBlockTarget) and its anchor, once that is complete - before, no
- * anchor, so the frame waits for it. Without a block, as they came.
- */
+/** A picture call's fields with its named block resolved, once complete;
+ *  until then no anchor, so the frame waits. */
 function byBlock(
   fields: Record<string, PartialString>,
   blocks: SentBlock[] | undefined,

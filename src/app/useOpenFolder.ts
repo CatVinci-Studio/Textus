@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../platform/this-window";
 import { canOpenFolder } from "../platform/capabilities";
 import { fs, session, windowIpc } from "../platform/ipc";
 import { getUiState, setUiState } from "../storage/ui-state";
@@ -14,12 +14,11 @@ import {
 } from "../sidebar/tree-root";
 
 /** The folder the last session had open, for the window that restores the
- *  session: the first one, "main" (lib.rs reopens every document of the
- *  last session there). A window opened later starts without one. */
+ *  session; later windows start without one. */
 function restoredFolder(restoreSession: boolean): string | null {
   if (!canOpenFolder || !restoreSession) return null;
   try {
-    if (getCurrentWindow().label !== "main") return null;
+    if (thisWindow().label !== "main") return null;
   } catch {
     return null;
   }
@@ -43,15 +42,9 @@ function inputsKey(
 }
 
 /**
- * The sidebar tree's root and the folder opened with File > Open Folder…,
- * for one window. The folder pins the tree's root and is what the file
- * search covers; without one the tree follows the document in front, but
- * only out of a folder it isn't in (sidebar/tree-root.ts). The folder is
- * remembered in ui-state and comes back with the session, and it is listed
- * under File > Open Recent.
- *
- * Opening a folder also makes it the AI's project folder, unless the user
- * chose a different one for the AI (agentRootOnOpen).
+ * One window's opened folder and sidebar tree root. The folder pins the root;
+ * without one the tree follows the document in front. It also becomes the
+ * AI's project folder unless the user chose another.
  */
 export function useOpenFolder({
   activePath,
@@ -148,8 +141,7 @@ export function useOpenFolder({
       setUiState("agentRootFromFolder", "");
     }
     setFolder(null);
-    // Back to following the document: its own folder, as before the folder
-    // was opened.
+    // Back to following the document.
     setTree({
       key: inputsKey(null, now.activePath, now.fallback),
       root: now.activePath ? dirname(now.activePath) : now.fallback,
@@ -167,7 +159,7 @@ export function useOpenFolder({
   }, [openFolder, folderTooBroad]);
 
   // A recent folder chosen while no window was open: this window was
-  // opened to show it (menu.rs). Asked once - the answer is taken.
+  // opened to show it. Taken once.
   const open = useLatest(openFolder);
   useEffect(() => {
     void windowIpc

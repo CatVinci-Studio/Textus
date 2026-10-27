@@ -11,15 +11,9 @@ export interface ActionSheetItem {
 }
 
 /**
- * The iPhone's form of a menu: a list rising from the bottom edge, in
- * thumb's reach, with Cancel set apart below it - UIKit's action sheet.
- * ContextMenu renders this on a phone, so every menu built from
- * ContextMenu items (a file's long press, a document's "...") gets it
- * without its own phone branch.
- *
- * A tap on the dimmed page or on Cancel closes it; picking an action runs
- * it and closes. Inside a Presence (ui/usePresence.ts) it goes back down
- * as it closes.
+ * The iPhone's form of a menu, UIKit's action sheet. ContextMenu renders this
+ * on a phone, so every menu built from its items gets it. A tap outside or on
+ * Cancel closes it; picking an action runs it and closes.
  */
 export function ActionSheet({
   title,

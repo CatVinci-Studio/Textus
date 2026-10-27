@@ -2,10 +2,9 @@ import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 
 export interface ViewportClampOptions {
   margin?: number;
-  /** "down" (default): top pinned at `y`, grows toward the bottom edge.
-   *  "up": bottom edge pinned near `y` (established on first render), grows
-   *  toward the top edge instead - for popups whose input row should stay
-   *  put while a message list accumulates above it. */
+  /** "down" (default): top pinned at `y`, grows downward. "up": bottom pinned
+   *  near `y` on first render, grows upward, so an input row stays put while
+   *  messages pile up above it. */
   grow?: "down" | "up";
   /** A right edge short of the window's (the editor beside the AI panel),
    *  read at each clamp. */
@@ -13,12 +12,9 @@ export interface ViewportClampOptions {
 }
 
 /**
- * Keeps a fixed-position popup fully inside the viewport: give it the
- * anchor point you WANT (usually just below the caret or a hovered element)
- * and it returns the position to actually render at, pulled back from the
- * window edges. Re-clamps whenever the element resizes (chat messages
- * arriving, popover text wrapping), via ResizeObserver - popups grow, and a
- * position that fit when empty overflows once they do.
+ * Keeps a fixed-position popup inside the viewport: give it the anchor point
+ * you want and it returns where to render. Re-clamps whenever the element
+ * resizes, since popups grow.
  */
 export function useViewportClamp(
   ref: RefObject<HTMLElement | null>,
@@ -30,8 +26,8 @@ export function useViewportClamp(
   const rightRef = useRef(right);
   rightRef.current = right;
   const [pos, setPos] = useState({ left: x, top: y });
-  // Established on the first clamp of a given (x, y) when grow === "up" -
-  // the bottom edge that later growth pivots around instead of `y` itself.
+  // With grow === "up": the bottom edge later growth pivots around, set on the
+  // first clamp of a given (x, y).
   const bottomAnchor = useRef<number | null>(null);
 
   useLayoutEffect(() => {
@@ -43,9 +39,8 @@ export function useViewportClamp(
     if (!el) return;
 
     const clamp = () => {
-      // Layout size, not the on-screen box: an entrance scaling the popup
-      // up from 96% would otherwise have it measured short and placed
-      // over the edge it is being kept off.
+      // Layout size, not the on-screen box: an entrance scaling up from 96% would
+      // be measured short and placed over the edge.
       const rect = el.getBoundingClientRect();
       const width = el.offsetWidth || rect.width;
       const height = el.offsetHeight || rect.height;

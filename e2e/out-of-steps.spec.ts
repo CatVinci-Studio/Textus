@@ -1,14 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-/** src/ai/chat/out-of-steps.ts's OUT_OF_STEPS (e2e can't import src). */
+/** Keep in step with the app's OUT_OF_STEPS; e2e can't import src. */
 const OUT_OF_STEPS =
   "(Stopped at the step limit before finishing. Ask me to continue, or narrow the request.)";
 
 /**
- * An exchange that runs out of tool steps (aicompat's OUT_OF_STEPS) says
- * so in the user's language, with Continue under it, which asks it to go
- * on the way the last message was sent.
+ * An exchange that runs out of tool steps says so in the user's language,
+ * with Continue under it, sent the way the last message was.
  */
 
 const composer = (page: Page) => page.locator(".agent-panel-view textarea");

@@ -7,14 +7,8 @@ export function isMacPlatform(): boolean {
 }
 
 /**
- * Whether the Mod key of a shortcut ("mod+f", ProseMirror's "Mod-Enter") is
- * Cmd rather than Ctrl: on a Mac, and on an iPhone, iPad or iPod with a
- * hardware keyboard. An iPhone's platform string says "iPhone", and an
- * iPad's says "iPad" whenever WebKit gives it the mobile content mode (in
- * the desktop-class one it says "MacIntel", see isIOSPlatform) - not "Mac",
- * so isMacPlatform() says no there, yet the keyboard has a Cmd key and the
- * user expects it. Decided exactly as ProseMirror's keymap decides it, so
- * the app's own shortcuts and the editor's Mod-bindings always agree.
+ * Whether a shortcut's Mod key is Cmd: on a Mac, and on iOS devices with a
+ * hardware keyboard. Decided as ProseMirror's keymap does, so both agree.
  */
 export function modIsMeta(
   platform = typeof navigator === "undefined" ? "" : navigator.platform,
@@ -41,11 +35,8 @@ export function isLinuxPlatform(): boolean {
   );
 }
 
-/** iOS and iPadOS - the Tauri iOS app's WKWebView. An iPhone reports
- *  "iPhone" as its platform. An iPad, though, gets the desktop-class
- *  WebKit user agent by default and reports "MacIntel" like a real Mac; the
- *  tell is the touch screen, which no Mac has (`maxTouchPoints` is 0 there,
- *  5 on an iPad). */
+/** iOS and iPadOS. An iPad reports "MacIntel" like a Mac by default; the
+ *  tell is the touch screen (`maxTouchPoints` is 0 on a Mac). */
 export function isIOSPlatform(): boolean {
   if (typeof navigator === "undefined") return false;
   const platform = navigator.platform ?? "";
@@ -54,9 +45,8 @@ export function isIOSPlatform(): boolean {
   return platform === "MacIntel" && (navigator.maxTouchPoints ?? 0) > 1;
 }
 
-/** A desktop build (macOS, Windows, Linux): everything that isn't the iOS
- *  app (or an Android webview, which Textus doesn't ship but which must
- *  never be mistaken for desktop Linux). The Rust side's `cfg(desktop)`. */
+/** A desktop build: anything not iOS or Android (whose "Linux" must never
+ *  read as desktop). The Rust side's `cfg(desktop)`. */
 export function isDesktop(): boolean {
   if (typeof navigator === "undefined") return true;
   return !isIOSPlatform() && !/android/i.test(navigator.userAgent);

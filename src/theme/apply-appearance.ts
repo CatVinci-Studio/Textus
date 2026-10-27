@@ -12,18 +12,13 @@ import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
 import { applyThemeChrome, clearThemeChrome } from "./theme-chrome";
 import { adaptTyporaCss } from "./typora-compat";
 
-// Puts the appearance settings on the page: light or dark, the text
-// column's width, the content theme (a built-in's attribute, or an imported
-// Typora theme's stylesheet and the window colours derived from it) and the
-// user's Custom CSS, in that cascade order. SettingsProvider runs it.
+// Puts the appearance settings on the page: light or dark, the text width,
+// the content theme and the user's Custom CSS, in that cascade order.
 
-/** The <style> holding Settings > Theme > Custom CSS. */
 const CUSTOM_CSS_STYLE_ID = "textus-user-css";
 
 /** Keeps an imported theme's chrome colours for the boot script, which
- *  paints the next window's first frame with them (ui-state.ts's
- *  themeChrome) - written only when they changed, so opening a window
- *  doesn't rewrite ui-state.json. Without Rust there is no boot script. */
+ *  paints the next window's first frame with them. Written only on change. */
 function rememberThemeChrome(chrome: ThemeChromeCache) {
   if (!readBoot()) return;
   const cached = getUiState("themeChrome") as
@@ -39,12 +34,9 @@ function rememberThemeChrome(chrome: ThemeChromeCache) {
 }
 
 /**
- * Marks every custom property the user's own CSS sets `!important`. An
- * imported theme's chrome (theme-chrome.ts) pins the `--editor-*` colours
- * with !important to beat ui/base.css's dark block, which made a plain
- * `:root { --editor-bg: ... }` in Custom CSS lose. Custom CSS comes after
- * the chrome, so at equal weight it now wins again. Only custom
- * properties: everything else keeps the cascade the user wrote it for.
+ * Marks every custom property the user's CSS sets `!important`, since an
+ * imported theme's chrome pins `--editor-*` with !important. Custom CSS comes
+ * later, so at equal weight it wins. Other properties keep their cascade.
  */
 function promoteCustomProperties(rules: CSSRuleList) {
   for (const rule of Array.from(rules)) {
@@ -60,10 +52,8 @@ function promoteCustomProperties(rules: CSSRuleList) {
   }
 }
 
-/// Optional-called: an environment without matchMedia (jsdom, an odd
-/// webview) must not throw here - `isEffectiveDark` is reachable from
-/// render, and inside `loadSettings` a throw would discard the ENTIRE
-/// settings blob to answer one question that has a fine default.
+/// Optional-called: without matchMedia (jsdom, an odd webview) a throw inside
+/// `loadSettings` would discard the entire settings blob.
 function systemPrefersDark(): boolean {
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
 }
@@ -81,9 +71,8 @@ export function useApplyAppearance(
   // Called from the theme effect only to fall back from a deleted theme;
   // a ref, so a new function each render doesn't re-run that effect.
   const setSettingsRef = useLatest(setSettings);
-  // "system" removes the attribute rather than resolving it here, so the
-  // @media (prefers-color-scheme) rules in ui/base.css/content-themes.css are
-  // what answer - and the app follows an OS switch live, with no listener.
+  // "system" removes the attribute, so the prefers-color-scheme rules answer
+  // and an OS switch is followed live with no listener.
   useEffect(() => {
     const root = document.documentElement;
     if (settings.theme === "system") {
@@ -100,10 +89,15 @@ export function useApplyAppearance(
     else root.setAttribute("data-content-width", settings.contentWidth);
   }, [settings.contentWidth]);
 
-  // The UI's type scale (ui/design-system.css's --text-* tokens) reads this;
-  // the document's text doesn't. A factor on font sizes rather than CSS
-  // zoom on the panels: WebKit's zoom leaves popovers and pointer
-  // coordinates in the unzoomed space (see app/useZoom.ts).
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.imageAlign === "center")
+      root.removeAttribute("data-image-align");
+    else root.setAttribute("data-image-align", settings.imageAlign);
+  }, [settings.imageAlign]);
+
+  // A factor on font sizes rather than CSS zoom on the panels: WebKit's zoom
+  // leaves popovers and pointer coordinates in the unzoomed space.
   useEffect(() => {
     const root = document.documentElement;
     if (settings.uiTextScale === 1)
@@ -129,13 +123,9 @@ export function useApplyAppearance(
     if (styleEl.sheet) promoteCustomProperties(styleEl.sheet.cssRules);
   }, [settings.customCss]);
 
-  // Resolves the selected theme (built-in content theme, user-imported
-  // theme, or "default") to either a `data-content-theme` attribute (for
-  // built-ins, which are pure CSS-variable overlays - see
-  // content-themes.css) or an injected <style> tag with the theme's raw CSS
-  // (for user themes, which are arbitrary Typora-style stylesheets read from
-  // disk). Re-resolves on theme/mode change and on live OS dark/light
-  // switches while in "system" mode.
+  // Built-in themes are CSS-variable overlays set by attribute; imported
+  // themes are arbitrary stylesheets injected as a <style>. Re-resolves on
+  // theme/mode change and on OS switches in "system" mode.
   useEffect(() => {
     const root = document.documentElement;
     const STYLE_ID = "textus-custom-theme";
@@ -171,8 +161,8 @@ export function useApplyAppearance(
     }
 
     root.removeAttribute("data-content-theme");
-    // Turns Textus's own content ornaments off (content-base.css): an
-    // imported theme should look the way it does in Typora.
+    // Turns Textus's own content ornaments off: an imported theme should look
+    // the way it does in Typora.
     root.setAttribute("data-user-theme", "");
     let cancelled = false;
     let revision = 0;
@@ -199,21 +189,16 @@ export function useApplyAppearance(
         const dark = isEffectiveDark(settings.theme);
         let chrome: string | null;
         try {
-          // A one-design theme is that design's page in both appearances:
-          // its chrome is derived as the light page it was written for.
-          // Derived as dark, a theme that pins its text dark (most light
-          // themes) got a dark page behind it - Pixyll read at 1.3:1 - and
-          // one that styles only some boxes kept their light fills under
-          // the greyed text.
+          // A one-design theme is that design's page in both appearances, its chrome
+          // derived as light: derived as dark, themes that pin dark text became unreadable.
           chrome = applyThemeChrome(css ?? "", dark && theme.hasDark);
           // ...and the document's own dark-only colours (syntax tokens,
           // alert accents, mermaid) stand down on that light page.
           if (dark && !theme.hasDark) root.setAttribute("data-light-page", "");
           else root.removeAttribute("data-light-page");
         } finally {
-          // The user's own CSS stays after the theme and the chrome derived
-          // from it, whenever they load - the order the boot script gives
-          // the first frame, and the one an edit to it leaves.
+          // The user's own CSS stays after the theme and its chrome, whenever they
+          // load - the order the boot script gives the first frame.
           const custom = document.getElementById(
             CUSTOM_CSS_STYLE_ID,
           ) as HTMLStyleElement | null;

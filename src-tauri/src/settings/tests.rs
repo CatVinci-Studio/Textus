@@ -50,23 +50,23 @@ fn patches_merge_top_level_fields_and_bump_the_revision() {
 /// Settings without what a new profile is seeded with.
 fn without_seed(mut settings: Value) -> Value {
     if let Some(map) = settings.as_object_mut() {
-        map.remove(crate::ai::workspace::DISABLED_BUILTINS_KEY);
+        map.remove(crate::plugins::moved_skills::MOVED_KEY);
     }
     settings
 }
 
 #[test]
-fn a_new_profile_starts_with_only_the_core_skills_and_an_old_one_keeps_all() {
+fn a_new_profile_has_no_moved_skills_to_bring_over_and_an_old_one_does() {
+    let moved = crate::plugins::moved_skills::MOVED_KEY;
     let dir = temp_dir();
     let stores = Stores::load(&dir, &dir);
-    let off = &stores.settings.snapshot().0[crate::ai::workspace::DISABLED_BUILTINS_KEY];
-    assert_eq!(off, &json!(crate::ai::builtin::optional_skill_names()));
+    assert_eq!(stores.settings.snapshot().0[moved], json!(true));
     // Written out with the first change, as any setting.
     stores.patch_settings(&obj(json!({ "theme": "dark" })));
     stores.flush_all();
     let file = read_file(&settings_path(&dir));
-    assert!(file["settings"][crate::ai::workspace::DISABLED_BUILTINS_KEY].is_array());
-    // A settings file from before the list: nothing turned off.
+    assert_eq!(file["settings"][moved], json!(true));
+    // A settings file from before the move: its skills still to install.
     let old = temp_dir();
     std::fs::write(
         settings_path(&old),
@@ -74,7 +74,7 @@ fn a_new_profile_starts_with_only_the_core_skills_and_an_old_one_keeps_all() {
     )
     .unwrap();
     let stores = Stores::load(&old, &old);
-    assert!(stores.settings.snapshot().0[crate::ai::workspace::DISABLED_BUILTINS_KEY].is_null());
+    assert!(stores.settings.snapshot().0[moved].is_null());
 }
 
 #[test]
@@ -84,8 +84,8 @@ fn writes_are_debounced_and_flushed() {
     stores.patch_settings(&obj(json!({ "theme": "dark" })));
     // Not yet: the write waits out the debounce.
     assert!(!settings_path(&dir).exists());
-    // Then it lands on its own. Wait for it rather than for a fixed time:
-    // a busy CI runner can take well past the debounce to get there.
+    // Then it lands on its own. Wait for it rather than a fixed time: a busy CI
+    // runner can take well past the debounce.
     let deadline = std::time::Instant::now() + Duration::from_secs(10);
     while !settings_path(&dir).exists() && std::time::Instant::now() < deadline {
         std::thread::sleep(FLUSH_DELAY / 5);
@@ -149,9 +149,8 @@ fn a_settings_file_that_is_not_utf8_counts_as_corrupt() {
     );
 }
 
-/// A settings.json that's there but can't be read (here: no read
-/// permission) is left exactly as it is - never replaced by this
-/// session's defaults - while the app runs on in-memory settings.
+/// A settings.json that can't be read is left exactly as it is, while the app
+/// runs on in-memory settings.
 #[cfg(unix)]
 #[test]
 fn an_unreadable_settings_file_is_never_overwritten() {
@@ -257,10 +256,8 @@ fn only_a_pinned_appearance_overrides_the_system() {
 
 #[test]
 fn a_pinned_appearance_gives_windows_the_page_background() {
-    // Checked against the page itself, not restated here: a window must
-    // open in exactly the colour index.html paints first and ui/base.css's
-    // --bg keeps, or the change is a flash of its own. A failure here
-    // means one of the three moved without the others.
+    // Checked against the page itself: a window must open in exactly the colour
+    // index.html paints first and ui/base.css's --bg keeps.
     let index = include_str!("../../../index.html");
     let app_css = include_str!("../../../src/ui/base.css");
     for (theme, app_css_rule) in [

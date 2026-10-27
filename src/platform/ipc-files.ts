@@ -7,10 +7,9 @@ import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
 
 /**
  * Backend commands for files and what the app keeps on disk: documents,
- * folders, pictures, the session, stored history and drafts (ipc.ts).
+ * folders, pictures, the session, stored history and drafts.
  */
 
-// Generated from the Rust commands (src/platform/bindings/files.ts).
 export type {
   SavedImage,
   IndexedFile,
@@ -18,15 +17,12 @@ export type {
   WordDocument,
 } from "./bindings/files";
 export type HistoryKind = Generated.HistoryKind;
-export type ImageMigration = Generated.ImageMigration_Serialize;
-export type DraftSnapshot = Generated.DraftSnapshot_Serialize;
 
 export const fs = {
   // On iOS a picked document is a file:// URL read and written through the
-  // native plugin (platform/ios-files.ts); sandbox paths and every desktop
-  // path go to Rust as before.
+  // native plugin; every other path goes to Rust.
   /** `filters` names the dialog's file-type choices besides Markdown, in
-   *  the UI language (commands/fs.rs). */
+   *  the UI language. */
   openFileDialog: (filters?: {
     textFilter: string;
     wordFilter: string;
@@ -41,14 +37,11 @@ export const fs = {
           filters?.allFilter ?? null,
         ),
   openCssFileDialog: () => command("open_css_file_dialog"),
-  /** A picker for one image file - "Choose image…" on a missing image's
-   *  card (editor/images/missing-image.ts). `filterName` names
-   *  `extensions` in the UI language (commands/fs.rs). Offered on
-   *  desktop only (capabilities.ts's canPickImageFile). */
+  /** A picker for one image file. `filterName` names `extensions` in the UI
+   *  language. Desktop only. */
   openImageFileDialog: (filterName: string, extensions: readonly string[]) =>
     command("open_image_file_dialog", filterName, [...extensions]),
-  /** `defaultDir`: the folder the dialog starts in, when there is one to
-   *  suggest - beside the Word file a document was opened from. */
+  /** `defaultDir`: the folder the dialog starts in, if any to suggest. */
   saveFileDialog: (
     defaultName: string,
     defaultDir: string | null = null,
@@ -61,10 +54,8 @@ export const fs = {
       : command("save_file_dialog", defaultName, defaultDir),
   listDir: (path: string): Promise<DirEntryInfo[]> =>
     isScopedUrl(path) ? iosFiles.listFolder(path) : command("list_dir", path),
-  /** The sidebar tree's New Document and New Folder, and moving an entry
-   *  into a folder by dragging it there (commands/tree_ops.rs). Each
-   *  returns the new path and refuses a name that is already taken.
-   *  Desktop only. */
+  /** The sidebar tree's New Document, New Folder and drag-to-move. Each
+   *  returns the new path and refuses a taken name. Desktop only. */
   createDocument: (dir: string, name: string) =>
     desktopActionCommand("tree_create_document", dir, name),
   createFolder: (dir: string, name: string) =>
@@ -77,11 +68,11 @@ export const fs = {
   /** To the system's Trash, never deleted; refuses the tree's own root. */
   trashEntry: (path: string, root: string) =>
     desktopActionCommand("tree_trash_entry", path, root),
-  /** File > Open Folder…'s picker (commands/folder.rs). Rejects with
-   *  "TOO_BROAD" for the home folder or a drive root. Desktop only. */
+  /** File > Open Folder…'s picker. Rejects with "TOO_BROAD" for the home
+   *  folder or a drive root. Desktop only. */
   pickOpenFolder: () => desktopActionCommand("pick_open_folder"),
-  /** Every document under `root`, for the sidebar's file-name search
-   *  (commands/folder.rs). Rejects with "TOO_BROAD" as the picker does. */
+  /** Every document under `root`, for the sidebar's file-name search.
+   *  Rejects with "TOO_BROAD" as the picker does. */
   indexFolder: (root: string) => command("index_folder", root),
   // No change watching for picked documents: the coordinator serialises
   // our writes with iCloud's, and the app re-reads on open.
@@ -91,8 +82,8 @@ export const fs = {
     isScopedUrl(path)
       ? iosFiles.readText(path)
       : command("read_text_file", path),
-  /** A Word document as the Markdown of a new document, its pictures
-   *  saved with the drafts' (commands/word_import.rs). Desktop only. */
+  /** A Word document as a new document's Markdown, its pictures saved with
+   *  the drafts'. Desktop only. */
   openWordDocument: (path: string) => command("open_word_document", path),
   readBinaryFileBase64: (path: string) =>
     command("read_binary_file_base64", path),
@@ -102,8 +93,8 @@ export const fs = {
     ext: string,
     folder: string,
   ) => command("save_pasted_image", docPath, dataBase64, ext, folder),
-  /** A replaced picture's file to the system's Trash - only one in the
-   *  document's folder or the drafts' images. Desktop only. */
+  /** A replaced picture's file to the Trash, only from the document's folder
+   *  or the drafts' images. Desktop only. */
   movePictureToTrash: (docPath: string | null, path: string) =>
     command("move_picture_to_trash", docPath, path),
   uploadImage: (
@@ -123,16 +114,14 @@ export const fs = {
       endpoint,
       urlField,
     ),
-  /** The file an Obsidian image embed names, searched in the document's
-   *  vault (commands/vault.rs); null when there is none. */
+  /** The file an Obsidian image embed names in the document's vault, or null. */
   resolveVaultImage: (docPath: string, link: string) =>
     command("resolve_vault_image", docPath, link),
-  /** The note an Obsidian wikilink names, searched in the document's vault
-   *  (commands/vault.rs's resolve_vault_note); null when there is none. */
+  /** The note an Obsidian wikilink names in the document's vault, or null. */
   resolveVaultNote: (docPath: string, link: string) =>
     command("resolve_vault_note", docPath, link),
   /** `sourceDocPath`: the file a Save As started from, whose relative
-   *  images are copied along (commands/fs.rs's migrate_draft_images). */
+   *  images are copied along. */
   migrateDraftImages: (
     docPath: string,
     srcs: string[],
@@ -145,9 +134,7 @@ export const fs = {
       : command("write_text_file", path, contents),
 };
 
-// ---------------------------------------------------------------------------
-// session / recents (src-tauri/src/commands/session.rs, recents.rs)
-// ---------------------------------------------------------------------------
+// Session and recents
 
 export const session = {
   updateSessionPaths: (paths: string[]) =>
@@ -159,21 +146,16 @@ export const session = {
     desktopQueryCommand("add_recent_folder", undefined, path),
 };
 
-// ---------------------------------------------------------------------------
-// storage (src-tauri/src/settings.rs) - settings, UI state and the two
-// histories, held by Rust in plain JSON files (docs/dev/storage.md). Only called
-// when Rust booted this window (src/storage/boot.ts); without that, the
-// stores fall back to localStorage.
-// ---------------------------------------------------------------------------
+// Storage: settings, UI state and histories, held by Rust as JSON files.
+// Only called when Rust booted this window; otherwise the stores use localStorage.
 
-/** Snapshot in settings.rs, whose settings Rust holds as plain JSON. */
+/** A settings snapshot and its revision. */
 export interface StoredSnapshot {
   value: Record<string, unknown>;
   rev: number;
 }
 
-/** Settings, UI state and history entries are the frontend's shapes, which
- *  Rust keeps as opaque JSON (serde_json::Value): handed over as they are. */
+/** The frontend's shapes, which Rust keeps as opaque JSON, handed over as they are. */
 const json = (value: unknown) => value as Generated.Value;
 const jsonObject = (value: Record<string, unknown>) =>
   value as Record<string, Generated.Value>;
@@ -183,8 +165,8 @@ export const storage = {
   /** Top-level fields only; resolves to the new revision. */
   settingsPatch: (patch: Record<string, unknown>) =>
     command("settings_patch", jsonObject(patch)),
-  /** Stores the fields of `defaults` that aren't set yet - never over one
-   *  that is - and resolves to the live settings. */
+  /** Stores the fields of `defaults` not set yet and resolves to the live
+   *  settings. */
   settingsFillDefaults: (defaults: Record<string, unknown>) =>
     command(
       "settings_fill_defaults",
@@ -204,8 +186,7 @@ export const storage = {
    *  null when its file is gone. */
   chatHistoryGet: (id: string): Promise<unknown> =>
     command("chat_history_get", id),
-  /** The saved conversations with every word of `query` in what was
-   *  said, newest first (settings/chat_history/search.rs). */
+  /** Saved conversations with every word of `query`, newest first. */
   chatHistorySearch: (query: string): Promise<unknown[]> =>
     command("chat_history_search", query),
   /** How many older conversations were moved to the chat history's trash. */
@@ -215,9 +196,7 @@ export const storage = {
     command("chat_history_move_document", from, to),
 };
 
-// ---------------------------------------------------------------------------
-// window / tab-drag (src-tauri/src/tab_drag.rs, App's pending-open queue)
-// ---------------------------------------------------------------------------
+// Drafts
 
 export const drafts = {
   saveDraftSnapshot: (tabId: string, path: string | null, content: string) =>
@@ -227,9 +206,8 @@ export const drafts = {
   clearAllDrafts: () => command("clear_all_drafts"),
 };
 
-/** What the writer keeps on a document beside the app's data
- *  (src-tauri/src/commands/own_notes.rs), as JSON: their notes, or the
- *  changes they track. */
+/** What the writer keeps on a document beside the app's data, as JSON:
+ *  their notes, or the changes they track. */
 export const ownNotes = {
   read: (path: string, part: "notes" | "revisions") =>
     command("own_notes_read", path, part),

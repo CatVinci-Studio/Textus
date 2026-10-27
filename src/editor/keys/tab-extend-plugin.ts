@@ -17,11 +17,9 @@ import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
 const INDENT = "  ";
 
 /**
- * Tab and Shift+Tab in a code block. With the caret on one line, Tab puts
- * in an indent at the caret; with lines selected, it indents each of them
- * (it used to replace the selection with the indent). Shift+Tab takes one
- * indent - two spaces, or a tab - off the start of each line touched.
- * Null when there is nothing to do, or the selection leaves the block.
+ * Tab and Shift+Tab in a code block: an indent at the caret, or each selected
+ * line indented or outdented (two spaces or a tab). Null when there is
+ * nothing to do, or the selection leaves the block.
  */
 export function indentCodeLines(
   state: EditorState,
@@ -55,10 +53,8 @@ export function indentCodeLines(
 }
 
 /**
- * Tab / Shift+Tab in a table: the next / previous cell, with the caret at
- * the end of its text. prosemirror-tables' own command (gfm's Tab keymap)
- * selects the whole cell instead, and the next character typed replaced
- * it. In the first cell Shift+Tab does nothing here.
+ * Tab / Shift+Tab in a table: the next / previous cell, the caret at the end
+ * of its text. prosemirror-tables' own command selects the whole cell.
  */
 export const moveToCell =
   (direction: 1 | -1): Command =>
@@ -73,11 +69,9 @@ export const moveToCell =
   };
 
 /**
- * Tab at the last cell of a table adds a new row and jumps into it (like
- * spreadsheets/Notion), instead of doing nothing; anywhere else in a table
- * Tab and Shift+Tab move between cells (moveToCell). $prose plugins run
- * ahead of the preset keymaps, so this wins over gfm's table keymap. In a
- * code block Tab indents (indentCodeLines).
+ * Tab at a table's last cell adds a row and jumps into it; elsewhere in a
+ * table Tab moves between cells, and in a code block it indents. Runs ahead
+ * of gfm's table keymap.
  */
 export const tabExtendPlugin = $prose(
   () =>
@@ -118,13 +112,9 @@ export const tabExtendPlugin = $prose(
 );
 
 /**
- * Tab and Shift+Tab never take the focus out of the text: where nothing
- * else uses them - a paragraph, a list's first item, which can't go in -
- * they do nothing, as in Typora, instead of moving the focus to the next
- * button. F6 is the way out of the editor (app/regions.ts). A listener of
- * its own, added after ProseMirror's, so every key handler - lists,
- * tables, accepting a completion - has had its turn and marked the event
- * when it used it.
+ * Tab and Shift+Tab never take the focus out of the text (F6 does). A
+ * listener of its own, added after ProseMirror's, so every key handler has
+ * had its turn and marked the event if it used it.
  */
 export const tabStaysPlugin = $prose(
   () =>

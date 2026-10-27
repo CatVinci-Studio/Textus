@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { marginRoom } from "./margin-room";
 
 // The "auto" text width: a 680px column at most widths, 1.5rem padding each
-// side (app/editor-column.css).
+// side.
 const COLUMN = 680;
 const PADDING = 48;
 

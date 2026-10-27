@@ -1,18 +1,11 @@
 import { APP_NAME, type Strings } from "../i18n/strings";
 import { defaultShortcuts, type Shortcuts } from "../settings/SettingsContext";
-import { buildAppMenu, NO_RECENTS, type MenuNode } from "./app-menu-model";
+import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
 
 /**
- * The shortcuts that can't be changed, as Settings › Shortcuts lists them
- * under the ones that can (#214).
- *
- * Read off the app menu's model, the one place their combos are written
- * down for the menus: with every configurable shortcut unbound, an entry
- * that still shows a combo has a fixed one. On top of that, the per-
- * platform differences that model leaves to menu.rs (macOS) and
- * useGlobalShortcuts (Linux), and the few fixed keys no menu item carries:
- * the editor's own (bold, italic, leaving a block) and macOS's tab keys.
- * fixed-shortcuts.test.ts holds this to menu.rs's accelerators.
+ * The shortcuts that can't be changed, for Settings › Shortcuts. Read off
+ * the app menu model with every configurable shortcut unbound, plus the
+ * platform differences and fixed keys no menu item carries.
  */
 
 export type ShortcutPlatform = "macos" | "ios" | "windows" | "linux";
@@ -28,10 +21,8 @@ export interface FixedShortcutGroup {
   items: FixedShortcut[];
 }
 
-/** macOS's own Next/Previous Tab keys (Safari, Finder, Terminal), fixed
- *  there alongside the configurable Ctrl+Tab. Matched by physical key: with
- *  Shift held, the character is "}" on a US keyboard and something else on
- *  others (see macTabStep). */
+/** macOS's own Next/Previous Tab keys, matched by physical key: the shifted
+ *  character differs between keyboard layouts. */
 export const MAC_NEXT_TAB = "mod+shift+]";
 export const MAC_PREVIOUS_TAB = "mod+shift+[";
 
@@ -84,15 +75,15 @@ export function fixedShortcutGroups(
     groups.flatMap((group) => group.items).find((item) => item.label === label);
   const exit = find(t.menuExit);
   if (exit && mac) {
-    // Cmd+Q, as menu.rs binds it; Alt+F4 is Windows'.
+    // Cmd+Q on a Mac; Alt+F4 is Windows'.
     exit.label = t.menuQuit.replace("{name}", APP_NAME);
     exit.combos = ["mod+q"];
   } else if (exit && platform === "linux") {
-    // useGlobalShortcuts routes Ctrl+Q to Quit there as well.
+    // Ctrl+Q also quits on Linux.
     exit.combos.push("mod+q");
   }
   const redo = find(t.menuRedo);
-  // Milkdown's history binds both; a Mac advertises Cmd+Shift+Z.
+  // The history keymap binds both; a Mac advertises Cmd+Shift+Z.
   if (redo) redo.combos = mac ? ["mod+shift+z"] : ["mod+y", "mod+shift+z"];
 
   const view = groups.find((group) => group.title === t.menuView);
@@ -111,19 +102,17 @@ export function fixedShortcutGroups(
     items: [
       { label: t.toolbarBold, combos: ["mod+b"] },
       { label: t.toolbarItalic, combos: ["mod+i"] },
-      // editor/keys/block-keys-plugin.ts.
       { label: t.shortcutLeaveBlock, combos: ["mod+enter"] },
     ],
   });
-  // The keyboard's way round the window (app/regions.ts) and through
-  // Textus AI's changes (document-view/useReviewBar.ts).
+  // The keyboard's way round the window and through Textus AI's changes.
   groups.push({
     title: t.shortcutKeyboardGroupLabel,
     items: [
       { label: t.shortcutCycleRegions, combos: ["f6", "shift+f6"] },
       { label: t.quickAskNextEdit, combos: ["f7"] },
       { label: t.quickAskPrevEdit, combos: ["shift+f7"] },
-      // pending-edit-plugin's keys, per sentence once ‹ › or F7 point at one.
+      // Per sentence, once ‹ › or F7 point at one.
       { label: t.shortcutTakeChange, combos: ["mod+enter"] },
       { label: t.shortcutKeepOriginal, combos: ["mod+backspace"] },
     ],

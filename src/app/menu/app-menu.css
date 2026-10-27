@@ -1,0 +1,99 @@
+/* The app-drawn menu, where the OS frame and its menu bar are gone. Themed
+   like the context menu, so it doesn't drop a grey system panel in. */
+
+/* Above the find bar (300), which would otherwise cover its first rows. */
+.app-menu {
+  position: fixed;
+  z-index: var(--z-menu);
+}
+
+/* The list moves rather than the wrapper: a transform on an ancestor would
+   become the containing block of the fixed flyouts. */
+.app-menu > .app-menu-list {
+  transform-origin: top left;
+  animation: motion-pop-in var(--dur-base) var(--ease-out);
+}
+
+.app-menu[data-state="closing"] {
+  animation: motion-fade-out var(--dur-fast) var(--ease-in) forwards;
+}
+
+.app-menu-list {
+  min-width: 200px;
+  /* Caps how far a long label stretches the panel; past this it ellipsizes. */
+  max-width: 340px;
+  /* Long lists scroll rather than run off a short window. */
+  max-height: min(78vh, 560px);
+  overflow-y: auto;
+}
+
+.app-menu-row {
+  /* The anchor a fixed flyout is measured against. */
+  position: relative;
+}
+
+.app-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.app-menu-item:hover:not(:disabled),
+.app-menu-item:focus-visible,
+.app-menu-item[aria-expanded="true"] {
+  background: var(--sidebar-hover);
+  outline: none;
+}
+
+.app-menu-item:disabled {
+  color: var(--editor-muted);
+}
+
+.app-menu-label {
+  flex: 1;
+  /* Otherwise the label refuses to shrink and never ellipsizes. */
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The shortcut hint: quiet, and never the reason the panel is wide. */
+.app-menu-accel {
+  flex-shrink: 0;
+  color: var(--editor-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The on/off items' check column, kept on every row of a list that has one
+   so the hints stay aligned. */
+.app-menu-check {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: -6px;
+  color: var(--chrome-accent);
+}
+
+.app-menu-chevron {
+  flex-shrink: 0;
+  margin-right: -2px;
+  color: var(--editor-muted);
+}
+
+.app-menu-flyout {
+  position: fixed;
+  z-index: 311;
+  --enter-x: calc(var(--motion-distance-sm) * -1);
+  animation: motion-enter var(--dur-fast) var(--ease-out);
+}
+
+/* Another submenu was open a moment ago: this one replaces it at once. */
+.app-menu-flyout-instant {
+  animation: none;
+}

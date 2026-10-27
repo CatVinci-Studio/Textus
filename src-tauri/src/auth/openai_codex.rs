@@ -1,5 +1,5 @@
+use super::pkce_login::{run_pkce_login, PkceLoginRequest};
 use aicompat::providers::openai_codex::{self, CodexCredential};
-use aicompat::{run_pkce_login, PkceLoginRequest};
 use serde::Serialize;
 use std::fs;
 use std::path::PathBuf;
@@ -47,13 +47,8 @@ fn load_credential(app: &AppHandle) -> Result<Option<CodexCredential>, String> {
         .map_err(|e| e.to_string())
 }
 
-/// Runs the Codex (ChatGPT Plus/Pro) OAuth login: opens the system browser,
-/// waits for the localhost callback, exchanges the code for tokens, and
-/// stores the credential in the app config dir (0600 permissions).
-///
-/// Reuses the OpenAI Codex CLI's own OAuth client id (the same technique
-/// several other open-source coding agents use) rather than a standard API
-/// key, per the "sign in with ChatGPT" requirement.
+/// Runs the Codex (ChatGPT Plus/Pro) OAuth login and stores the credential in
+/// the app config dir (0600). Uses the Codex CLI's own OAuth client id.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn codex_login(
@@ -119,8 +114,7 @@ pub fn codex_logout(app: AppHandle) -> Result<(), String> {
 }
 
 /// Returns a valid (access_token, account_id) pair, refreshing the token
-/// first if it's expired or close to expiring. Used internally by the AI
-/// completion/grammar-check commands.
+/// first if it's expired or close to expiring.
 pub async fn get_valid_credential(app: &AppHandle) -> Result<(String, String), String> {
     let cred = load_credential(app)?.ok_or_else(|| "not logged in".to_string())?;
 
@@ -128,11 +122,8 @@ pub async fn get_valid_credential(app: &AppHandle) -> Result<(String, String), S
         return Ok((cred.access, cred.account_id));
     }
 
-    // One refresh at a time. The refresh token rotates: two requests racing
-    // with the same one (a completion and a grammar check starting
-    // together) leave the loser with invalid_grant - and, if it saved
-    // anything, the user logged out. Whoever waited here re-reads the file,
-    // since the winner has usually just stored a fresh token.
+    // One refresh at a time: the refresh token rotates, so two racing requests
+    // leave the loser with invalid_grant. A waiter re-reads the stored token.
     let _refreshing = REFRESH_LOCK.lock().await;
     let cred = load_credential(app)?.ok_or_else(|| "not logged in".to_string())?;
     if !expires_soon(cred.expires) {

@@ -1,19 +1,7 @@
 /**
- * The app's icon set - one house style, drawn once.
- *
- * All of them are stroked line art on a 16-unit grid, sized in the 10-15px
- * range, and coloured with `currentColor` so an icon takes the colour and
- * opacity of whatever it sits in. That last part is why these exist at all:
- * the UI used to reach for emoji (📄, 🖼, 🔍, 📎, 📌) and typographic marks
- * (✕, ⧉, ▾) wherever the sidebar's set didn't reach. Emoji render at the
- * system's own size and in full colour, so they read as stickers dropped
- * into 11px muted chrome and look different on every platform; ✕ and ⧉ in
- * particular vary enough in metrics between fonts to shift a toolbar's
- * alignment. Neither can be styled - a disabled or accented icon still
- * arrives at full saturation.
- *
- * Add new icons here rather than inline, and keep to the same grid and
- * stroke weight, or the set stops being a set.
+ * The app's icon set: stroked line art on a 16-unit grid, coloured with
+ * `currentColor` so an icon takes its surroundings' colour, unlike emoji.
+ * Add new icons here, on the same grid and stroke weight.
  */
 import { useId } from "react";
 
@@ -39,8 +27,7 @@ export function ChevronIcon({ className }: IconProps) {
   );
 }
 
-/** The folder outline, drawn once: FolderIcon fills it, TreeTabIcon strokes
- *  it. Two copies of the path drifted apart the moment either was nudged. */
+/** The folder outline, drawn once: FolderIcon fills it, TreeTabIcon strokes it. */
 const FOLDER_PATH =
   "M1.5 3.5C1.5 2.94772 1.94772 2.5 2.5 2.5H6L7.5 4H13.5C14.0523 4 14.5 4.44772 14.5 5V11.5C14.5 12.0523 14.0523 12.5 13.5 12.5H2.5C1.94772 12.5 1.5 12.0523 1.5 11.5V3.5Z";
 
@@ -80,8 +67,7 @@ export function FolderOpenIcon({ className }: IconProps) {
   );
 }
 
-/** File > Open Folder… in the sidebar's toolbar: the folder outline with a
- *  plus in it. */
+/** File > Open Folder…: the folder outline with a plus in it. */
 export function OpenFolderIcon({ className }: IconProps) {
   return (
     <svg
@@ -175,8 +161,7 @@ export function ImageFileIcon({ className }: IconProps) {
   );
 }
 
-/** ImageFileIcon as markup, for a missing image's card - built by a
- *  ProseMirror node view, like PLUS_ICON_HTML's buttons. */
+/** ImageFileIcon as markup, for a missing image's card built by a node view. */
 export const IMAGE_ICON_HTML =
   `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">` +
   `<rect x="1.5" y="2" width="13" height="12" rx="1.5" stroke="currentColor" stroke-width="1.1"/>` +
@@ -298,8 +283,7 @@ export function ClipboardTabIcon({ className }: IconProps) {
   );
 }
 
-/** The window bar's toggle for the sidebar: a window with its left pane
- *  drawn - what pressing it brings back or takes away. */
+/** The window bar's sidebar toggle: a window with its left pane drawn. */
 export function SidebarToggleIcon({ className }: IconProps) {
   return (
     <svg
@@ -323,13 +307,9 @@ export function SidebarToggleIcon({ className }: IconProps) {
   );
 }
 
-/** Textus AI's own button - the window bar's toggle for the AI panel, and
- *  the review bar's way back to it on a phone: the app icon's quill as a
- *  silhouette, the tray's (scripts/make-tray-icons.sh) traced with potrace,
- *  struck through while Textus AI is off (`off`, ai/TextusAiSwitch.tsx).
- *  Filled, where the rest of the set is stroked, and a pixel larger: it is
- *  the product's mark, not one more tool, and a slim diagonal at 15 px. The strike is cut out of the quill, so it reads on
- *  any background. */
+/** Textus AI's own button: the app icon's quill as a silhouette, struck
+ *  through while Textus AI is off. Filled and a pixel larger than the rest:
+ *  it is the product's mark. The strike is cut out, so it reads on any background. */
 export function AssistantIcon({
   className,
   off = false,
@@ -438,7 +418,7 @@ export function CloseIcon({ className }: IconProps) {
   );
 }
 
-/** Pop out into a separate window (Quick Ask's ⧉, clipboard history). */
+/** Pop out into a separate window. */
 export function DetachIcon({ className }: IconProps) {
   return (
     <svg
@@ -466,8 +446,7 @@ export function DetachIcon({ className }: IconProps) {
   );
 }
 
-/** Copy to clipboard. Distinct from DetachIcon, which the clipboard history
- *  used to borrow (⧉) even though it copies rather than opens anything. */
+/** Copy to clipboard. */
 export function CopyIcon({ className }: IconProps) {
   return (
     <svg
@@ -541,10 +520,8 @@ export function PlusIcon({ className }: IconProps) {
 
 const PLUS_PATH = "M8 3.5V12.5M3.5 8H12.5";
 
-/** The same plus as markup, for the parts of the editor that build their DOM
- *  imperatively (ProseMirror node views) and can't render a component. Kept
- *  here so those buttons stay part of the set instead of drifting back to a
- *  "+" character with its own font metrics. */
+/** The same plus as markup, for ProseMirror node views that can't render a
+ *  component. */
 export const PLUS_ICON_HTML =
   `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">` +
   `<path d="${PLUS_PATH}" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>` +
@@ -639,8 +616,8 @@ export function CheckIcon({ className }: IconProps) {
   );
 }
 
-/** Step to the previous/next match in Find & Replace. One icon, flipped by
- *  the caller with a CSS rotate - two hand-drawn mirror images drift. */
+/** Previous/next match in Find & Replace; the caller flips it with a CSS
+ *  rotate. */
 export function ArrowUpIcon({ className }: IconProps) {
   return (
     <svg
@@ -661,9 +638,7 @@ export function ArrowUpIcon({ className }: IconProps) {
   );
 }
 
-/** Re-read a listing from disk (the file tree). */
-/** The file tree's sort (sidebar/FileTree.tsx): three lines, shorter
- *  each, the way a list is ordered. */
+/** The file tree's sort: three lines, shorter each. */
 export function SortIcon({ className }: IconProps) {
   return (
     <svg
@@ -703,12 +678,9 @@ export function RefreshIcon({ className }: IconProps) {
   );
 }
 
-/* The window caption, drawn only where the app owns the frame - Windows, see
-   platform/window-chrome.ts. These four deliberately break the 16-unit stroked
-   grid the rest of the set keeps to: Windows caption glyphs are a fixed
-   10x10 hairline shape that every other app on the desktop draws the same
-   way, and a rounder, heavier "house style" close button next to the
-   system's own would read as the wrong control rather than as ours. */
+/* The window caption, drawn only where the app owns the frame (Windows).
+   These break the 16-unit grid on purpose: Windows caption glyphs are fixed
+   10x10 hairlines every app draws alike. */
 
 /** The way into the app menu, once the native menu bar is gone. */
 export function HamburgerIcon({ className }: IconProps) {
@@ -1018,8 +990,7 @@ export function ListViewIcon({ className }: IconProps) {
   );
 }
 
-// The composer's three modes, shown in the AI panel's empty state
-// (ai/chat/mode-icons.tsx). No magnifier for Review: that is web search's.
+// The composer's three modes. No magnifier for Review: that is web search's.
 
 /** Write: a pen nib - new text. */
 export function WriteModeIcon({ className }: IconProps) {
@@ -1044,6 +1015,26 @@ export function WriteModeIcon({ className }: IconProps) {
         strokeLinecap="round"
       />
       <circle cx="8" cy="8.5" r="1.2" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  );
+}
+
+/** Create: a four-point spark - something new for the app itself. */
+export function CreateModeIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M8 1.8C8.4 5.4 10.6 7.6 14.2 8C10.6 8.4 8.4 10.6 8 14.2C7.6 10.6 5.4 8.4 1.8 8C5.4 7.6 7.6 5.4 8 1.8Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

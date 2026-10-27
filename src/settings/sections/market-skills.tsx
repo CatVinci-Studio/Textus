@@ -1,30 +1,39 @@
 import { useEffect, useState } from "react";
 import type { Strings } from "../../i18n/strings";
 import { ai, plugins as pluginsIpc } from "../../platform/ipc";
-import type { CatalogState, SkillEntry } from "../../plugins/catalog";
+import type { CatalogState, SkillEntry } from "../../plugins/store/catalog";
 import { errorText } from "../../utils/error-text";
+import { useSettings } from "../SettingsContext";
+import type { TextKey } from "../../i18n/strings";
 
-/** The error skill_install_catalog answers for a skill of that name the
- *  user has already (plugins/catalog.rs). */
+/** The error the backend gives for a skill of that name the user already has. */
 const SKILL_EXISTS = "SKILL_EXISTS";
 
-/** The catalog's skills whose name, description or author hold every
- *  word of `query`. */
+/** The catalog's skills whose name, description, author or names in any
+ *  language hold every word of `query`. */
 export function searchSkills(list: SkillEntry[], query: string): SkillEntry[] {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (!words.length) return list;
   return list.filter((s) => {
-    const text = [s.name, s.description, s.author].join("\n").toLowerCase();
+    const names = Object.values(s.labels ?? {}).flatMap((l) => [
+      l.label,
+      l.hint,
+    ]);
+    const text = [s.name, s.description, s.author, ...names]
+      .join("\n")
+      .toLowerCase();
     return words.every((w) => text.includes(w));
   });
 }
 
-/**
- * The market's skills (Settings › Extensions › Get more): the skill
- * files textus-plugins' catalog lists, each installed into the global
- * skills folder - and so in the `/` menu of every document - with a
- * click. One the user has already (by name) says so instead.
- */
+const MODE_LABEL = {
+  write: "agentModeWrite",
+  review: "agentModeReview",
+  create: "agentModeCreate",
+} as const satisfies Record<string, TextKey>;
+
+/** The market's skills: the catalog's skill files, each installed with a
+ *  click into the global skills folder. One the user already has says so. */
 export function MarketSkills({
   t,
   catalog,
@@ -37,6 +46,7 @@ export function MarketSkills({
   const [have, setHave] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { settings } = useSettings();
   useEffect(() => {
     let live = true;
     void ai
@@ -77,6 +87,8 @@ export function MarketSkills({
         {shown.length ? (
           shown.map((skill) => {
             const installed = have.has(skill.name.toLowerCase());
+            const words =
+              skill.labels?.[settings.language] ?? skill.labels?.en ?? null;
             return (
               <div
                 key={skill.name}
@@ -85,13 +97,20 @@ export function MarketSkills({
               >
                 <div className="plugin-card-open">
                   <span className="settings-row-label plugin-card-name">
-                    /{skill.name}
+                    {words?.label ?? `/${skill.name}`}
                   </span>
                   <span className="settings-row-hint plugin-card-description">
-                    {skill.description}
+                    {words
+                      ? `/${skill.name} · ${words.hint}`
+                      : skill.description}
                   </span>
                   {(skill.official || skill.author) && (
                     <span className="plugin-byline">
+                      <span className="market-skill-modes">
+                        {(skill.modes ?? ["write"])
+                          .map((m) => t[MODE_LABEL[m]])
+                          .join(" · ")}
+                      </span>
                       {skill.official && (
                         <span className="plugin-official">
                           {t.pluginOfficial}

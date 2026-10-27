@@ -5,11 +5,9 @@ import type { DirEntryInfo } from "./fs-types";
 import { isIOSApp } from "./capabilities";
 
 /**
- * iOS document access (src-tauri/plugins/textus-files). A file or folder the
- * user picks in the Files app is addressed by its `file://` URL and read and
- * written through the native plugin, which holds the security scope; the
- * app's own Documents folder keeps plain paths and the ordinary Rust file
- * commands. ipc.ts's `fs` decides per call - nothing else needs to know.
+ * iOS document access. Files-app picks are `file://` URLs read through the
+ * native plugin, which holds the security scope; the app's own Documents
+ * folder keeps plain paths and the ordinary Rust commands.
  */
 
 /** True for a picked file or folder (a URL) rather than a sandbox path. */
@@ -22,9 +20,8 @@ type Picked = { url: string | null; name?: string; folder?: boolean };
 const call = <T>(command: string, args?: Record<string, unknown>) =>
   invoke<T>(`plugin:textus-files|${command}`, args ? { args } : undefined);
 
-/** A pick from the app's own Documents folder as the plain path the rest of
- *  the app (the file tree, open tabs) knows it by - otherwise the same file
- *  opens twice, once per spelling. Anything else stays a URL. */
+/** A pick from the app's own Documents folder as its plain path, or the
+ *  same file opens twice, once per spelling. */
 async function inDocuments(url: string | null): Promise<string | null> {
   if (!url?.startsWith("file://")) return url;
   const path = decodeURIComponent(new URL(url).pathname);
@@ -42,8 +39,7 @@ export const iosFiles = {
     inDocuments((await call<Picked>("pick_document")).url),
   readText: async (url: string): Promise<string> =>
     (await call<{ text: string }>("read_text", { url })).text,
-  /** The share sheet (AirDrop, Messages, Mail, Save to Files...) for a
-   *  saved document - a plain path or a picked file's URL. */
+  /** The share sheet for a saved document, by path or picked URL. */
   share: (path: string): Promise<void> => call<void>("share", { path }),
   readBase64: async (url: string): Promise<string> =>
     (await call<{ data: string }>("read_data", { url })).data,
@@ -67,8 +63,7 @@ export const iosFiles = {
         "remembered",
       )
     ).items,
-  /** Opens a picked folder for the rest of the session and returns its
-   *  plain path, which the Rust side can read like any other. */
+  /** Opens a picked folder for the session and returns its plain path. */
   beginAccess: async (url: string): Promise<string> =>
     (await call<{ path: string }>("begin_access", { url })).path,
   /** Picks a folder for the project and opens it: its plain path, or null. */
@@ -89,10 +84,8 @@ const IMAGE_TYPES: Record<string, string> = {
 };
 
 /**
- * An image a picked document refers to by a relative path, as a data: URL.
- * The webview can't load a security-scoped file itself, so the plugin reads
- * it - which works when the image is inside a picked folder (a document
- * picked on its own grants access to that one file only).
+ * An image a picked document refers to, as a data: URL read by the plugin.
+ * Works only inside a picked folder: a lone picked file grants just itself.
  */
 export async function scopedImageSrc(
   src: string,
@@ -105,10 +98,8 @@ export async function scopedImageSrc(
 }
 
 /**
- * Reopens the folders picked in earlier sessions. Their plain paths are
- * still in settings (the project folder), but an iOS scope ends with the
- * process: without this the AI could no longer read the project after a
- * relaunch. Documents need nothing - each read resolves its bookmark.
+ * Reopens folders picked in earlier sessions: an iOS scope ends with the
+ * process, so the AI couldn't read the project after a relaunch otherwise.
  */
 export async function restoreFolderAccess(): Promise<void> {
   if (!isIOSApp) return;
@@ -122,9 +113,8 @@ export async function restoreFolderAccess(): Promise<void> {
   );
 }
 
-/** The app's Documents folder - "On My iPhone > Textus" in the Files app,
- *  where new documents are saved and what the file tree shows by default.
- *  Null until it resolves, and always null on desktop. */
+/** The app's Documents folder ("On My iPhone > Textus"); null until it
+ *  resolves, and always on desktop. */
 export function useIOSDocumentsFolder(): string | null {
   const [dir, setDir] = useState<string | null>(null);
   useEffect(() => {
@@ -139,9 +129,8 @@ export function useIOSDocumentsFolder(): string | null {
 }
 
 /**
- * Where "Save" puts a new document on iOS: the Documents folder, under the
- * suggested name - numbered ("Notes 2.md") rather than overwriting a file
- * that is already there. There is no save panel to ask with.
+ * Where "Save" puts a new document on iOS, with no save panel to ask: the
+ * Documents folder, numbered ("Notes 2.md") rather than overwriting.
  */
 export async function newDocumentPath(
   defaultName: string,
@@ -158,4 +147,21 @@ export async function newDocumentPath(
     );
     if (!(await exists(path))) return path;
   }
+}
+
+/** The app's own Documents folder. */
+export const documentsFolder = documentDir;
+export const joinPath = join;
+
+/** Renames a file in the app's own Documents folder; the new path. */
+export function renameSandboxEntry(
+  path: string,
+  name: string,
+): Promise<string> {
+  return invoke<string>("rename_entry", { path, name });
+}
+
+/** Deletes a file or folder in the app's own Documents folder. */
+export function deleteSandboxEntry(path: string): Promise<void> {
+  return invoke("delete_entry", { path });
 }

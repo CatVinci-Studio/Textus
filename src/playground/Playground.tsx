@@ -17,14 +17,17 @@ import {
 } from "../editor/modes/mode-switch";
 import { modIsMeta } from "../platform/os";
 import { type EditorHandle, PlaygroundEditor } from "./PlaygroundEditor";
-import { loadDocument, saveDocument } from "./document-store";
 import {
   IMPORT_EXTENSIONS,
-  downloadMarkdown,
-  exportFilename,
+  canOpenFiles,
   fileKind,
+  pickMarkdownFiles,
   readMarkdownFile,
 } from "./markdown-file";
+import { documentName, useWebDocuments } from "./useWebDocuments";
+import { ContextMenu } from "../editor/ContextMenu";
+import { Presence } from "../ui/usePresence";
+import { ChevronIcon } from "../ui/icons";
 import sampleEn from "./samples/en.md?raw";
 import sampleZh from "./samples/zh.md?raw";
 import mark from "../../src-tauri/icons/128x128.png";
@@ -43,11 +46,12 @@ function sample(lang: Lang): string {
 function usePageEvents(
   importFile: (file: File) => Promise<void>,
   toggleSource: () => void,
+  save: () => void,
   editorRef: RefObject<EditorHandle | null>,
 ) {
-  // Files dropped anywhere on the page: a document is imported, anything
-  // else explained - and never left to the browser, which would navigate
-  // away to show it. Dragging text inside the editor isn't a file drag.
+  // Files dropped on the page: a document is imported, anything else
+  // explained, never left to the browser to navigate to. Text dragged inside
+  // the editor isn't a file drag.
   const importRef = useRef(importFile);
   importRef.current = importFile;
   useEffect(() => {
@@ -73,15 +77,21 @@ function usePageEvents(
     };
   }, []);
 
-  // Mod+/ switches to source mode and back, as in the app.
+  // Mod+/ switches to source mode and back, as in the app; Mod+S saves.
   const toggleRef = useRef(toggleSource);
   toggleRef.current = toggleSource;
+  const saveRef = useRef(save);
+  saveRef.current = save;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = modIsMeta() ? e.metaKey : e.ctrlKey;
-      if (mod && !e.altKey && !e.shiftKey && e.key === "/") {
+      if (!mod || e.altKey || e.shiftKey) return;
+      if (e.key === "/") {
         e.preventDefault();
         toggleRef.current();
+      } else if (e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        saveRef.current();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -107,29 +117,37 @@ function useNotice() {
   return [notice, setNotice] as const;
 }
 
-/**
- * Textus in a browser tab: the editor, Import, Export and nothing else.
- * One document, kept in this browser (document-store.ts).
- */
+/** Textus in a browser tab: documents kept in this browser, opened from
+ *  and saved to files on disk. */
 export function Playground({ settings }: { settings: Settings }) {
   const t = resolveStrings(settings.language);
-  const [content, setContent] = useState(
-    () => loadDocument() ?? sample(settings.language),
-  );
+  const docs = useWebDocuments(sample(settings.language), t.untitledTab);
+  if (!docs.doc || !docs.docs) return null;
+  return <WebEditor settings={settings} t={t} docs={docs} />;
+}
+
+function WebEditor({
+  settings,
+  t,
+  docs,
+}: {
+  settings: Settings;
+  t: ReturnType<typeof resolveStrings>;
+  docs: ReturnType<typeof useWebDocuments>;
+}) {
+  const doc = docs.doc!;
   const [source, setSource] = useState(false);
   const [notice, setNotice] = useNotice();
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const editorRef = useRef<EditorHandle | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  function onChange(markdown: string) {
-    setContent(markdown);
-    saveDocument(markdown);
-  }
+  const onChange = (markdown: string) => docs.update(doc.id, markdown);
 
   /** The document as it stands, wherever it is being edited. */
   function currentMarkdown(): string {
-    return (source ? null : editorRef.current?.markdown()) ?? content;
+    return (source ? null : editorRef.current?.markdown()) ?? doc.markdown;
   }
 
   function toggleSource() {
@@ -140,7 +158,7 @@ export function Playground({ settings }: { settings: Settings }) {
     } else {
       const markdown = currentMarkdown();
       setPendingCaret(captureEditorCaret(markdown));
-      setContent(markdown);
+      onChange(markdown);
     }
     setSource(!source);
   }
@@ -162,25 +180,56 @@ export function Playground({ settings }: { settings: Settings }) {
       );
       return;
     }
-    const markdown = await readMarkdownFile(file);
-    saveDocument(markdown);
-    // In the editor, as an edit Undo takes back.
-    if (!source && editorRef.current) editorRef.current.replace(markdown);
-    else setContent(markdown);
+    docs.open([{ markdown: await readMarkdownFile(file), name: file.name }]);
+  }
+
+  async function openFiles() {
+    if (!canOpenFiles()) {
+      fileInputRef.current?.click();
+      return;
+    }
+    const picked = await pickMarkdownFiles();
+    if (!picked) return;
+    docs.open(
+      await Promise.all(
+        picked.map(async ({ file, handle }) => ({
+          markdown: await readMarkdownFile(file),
+          name: file.name,
+          handle,
+        })),
+      ),
+    );
   }
 
   function onPick(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const files = [...(e.target.files ?? [])];
     e.target.value = "";
-    if (file) void importFile(file);
+    for (const file of files) void importFile(file);
   }
 
-  function exportDocument() {
+  async function save() {
     const markdown = currentMarkdown();
-    downloadMarkdown(markdown, exportFilename(markdown, t.untitledTab));
+    onChange(markdown);
+    const name = await docs.save(markdown).catch(() => null);
+    if (name) setNotice(t.playgroundSavedTo.replace("{name}", name));
   }
 
-  usePageEvents(importFile, toggleSource, editorRef);
+  usePageEvents(importFile, toggleSource, () => void save(), editorRef);
+
+  const items = [
+    ...docs.docs!.map((d) => ({
+      label: documentName(d, t.untitledTab),
+      checked: d.id === doc.id,
+      onSelect: () => docs.select(d.id),
+    })),
+    "separator" as const,
+    { label: t.playgroundNewDocument, onSelect: docs.create },
+    {
+      label: t.playgroundDeleteDocument,
+      onSelect: () => docs.remove(doc.id),
+      danger: true,
+    },
+  ];
 
   return (
     <div className="playground">
@@ -190,6 +239,19 @@ export function Playground({ settings }: { settings: Settings }) {
           <span className="playground-name">{APP_NAME}</span>
           <span className="playground-tag">{t.playgroundName}</span>
         </div>
+        <button
+          type="button"
+          className="text-button playground-documents"
+          aria-haspopup="menu"
+          aria-label={t.playgroundDocuments}
+          onClick={(e) => {
+            const box = e.currentTarget.getBoundingClientRect();
+            setMenu({ x: box.left, y: box.bottom + 4 });
+          }}
+        >
+          {documentName(doc, t.untitledTab)}
+          <ChevronIcon className="playground-documents-chevron" />
+        </button>
         <p className="playground-note">{t.playgroundLocalNote}</p>
         <div className="playground-actions">
           <button
@@ -204,16 +266,16 @@ export function Playground({ settings }: { settings: Settings }) {
           <button
             type="button"
             className="text-button"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => void openFiles()}
           >
-            {t.playgroundImport}
+            {t.playgroundOpen}
           </button>
           <button
             type="button"
             className="text-button"
-            onClick={exportDocument}
+            onClick={() => void save()}
           >
-            {t.playgroundExport}
+            {t.playgroundSave}
           </button>
           <a className="playground-download" href={DOWNLOAD_URL}>
             {t.playgroundDownload}
@@ -223,6 +285,7 @@ export function Playground({ settings }: { settings: Settings }) {
           ref={fileInputRef}
           type="file"
           hidden
+          multiple
           accept={[...IMPORT_EXTENSIONS, "text/markdown", "text/plain"].join(
             ",",
           )}
@@ -230,16 +293,28 @@ export function Playground({ settings }: { settings: Settings }) {
           data-testid="playground-import-input"
         />
       </header>
+      <Presence show={menu !== null} exitMs={120}>
+        {menu && (
+          <ContextMenu
+            x={menu.x}
+            y={menu.y}
+            items={items}
+            onClose={() => setMenu(null)}
+          />
+        )}
+      </Presence>
       {source ? (
         <SourceTextarea
+          key={doc.id}
           ref={textareaRef}
-          value={content}
+          value={doc.markdown}
           typewriter={false}
           onChange={onChange}
         />
       ) : (
         <PlaygroundEditor
-          initialValue={content}
+          key={doc.id}
+          initialValue={doc.markdown}
           settings={settings}
           onChange={onChange}
           onImage={() => setNotice(t.playgroundImageNotice)}

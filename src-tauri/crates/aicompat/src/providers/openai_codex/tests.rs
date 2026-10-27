@@ -68,9 +68,8 @@ fn failures_are_told_apart() {
     ));
 }
 
-/// The exact failure this guard exists for: a model saved while the
-/// API-key auth method was active is a hard 400 once the login is a
-/// ChatGPT account.
+/// A model saved while the API-key auth method was active is a hard 400 once
+/// the login is a ChatGPT account.
 #[test]
 fn a_model_this_login_cannot_use_falls_back_to_the_default() {
     assert_eq!(usable_model(Some("gpt-5.4"), "gpt-6.1-sol"), "gpt-6.1-sol");
@@ -80,8 +79,8 @@ fn a_model_this_login_cannot_use_falls_back_to_the_default() {
     );
 }
 
-/// The GPT-5.6 family was the previous preset list; Codex no longer
-/// serves it, so a choice saved by an older version must not survive.
+/// Codex no longer serves the GPT-5.6 family, so a saved choice of it must not
+/// survive.
 #[test]
 fn a_retired_preset_falls_back_to_the_default() {
     assert_eq!(

@@ -24,53 +24,40 @@ pub(crate) use offered::*;
 mod budget;
 pub(crate) use budget::*;
 
-/// Everything a tool implementation needs to actually do its work. Grows as
-/// more tools need more context (e.g. an MCP client handle) without changing
-/// each tool's call signature.
+/// Everything a tool implementation needs to do its work.
 pub struct ToolContext<'a> {
-    /// Proposals from earlier requests the user hasn't accepted or
-    /// rejected (images::undecided_edits): their text is part of the
-    /// document as the user sees it, in place of what a rewrite replaces,
-    /// so an edit may change it - the frontend puts that edit into the
-    /// proposal (usePendingEdits's joinEdit).
+    /// Proposals from earlier requests the user hasn't decided on: their text is
+    /// part of the document as the user sees it, so an edit may change it.
     pub undecided: &'a [crate::ai::images::UndecidedEdit],
     /// The document and its blocks, as the editor sent them.
     pub document: &'a crate::ai::doc_blocks::Document,
     /// The merged skills: built-in, global config folder, project .textus/.
     pub skills: &'a [AgentSkill],
-    /// The UI language (src/i18n/langs.ts) - which language's writing
-    /// conventions a skill gets when the document is too short to tell.
+    /// The UI language: which language's conventions a skill gets when the
+    /// document is too short to tell.
     pub ui_language: &'a str,
-    /// The project folder (workspace root) - the sandbox boundary for the
-    /// file tools. The document's own folder by default, or the chosen
-    /// project folder (see workspace::resolve_root). None for an unsaved
-    /// draft with no folder chosen, or a folder too broad to use, in which
-    /// case the file tools aren't offered at all.
+    /// The project folder, the sandbox boundary for the file tools. None for an
+    /// unsaved draft with no folder chosen, or a folder too broad, in which case
+    /// the file tools aren't offered.
     pub root: Option<&'a Path>,
-    /// The provider takes images (catalog's `supports_vision`, the gate on
-    /// the chat's image attachments): the file tools then list images and
-    /// read_file shows them.
+    /// The provider takes images: the file tools then list images and read_file
+    /// shows them.
     pub sees_images: bool,
     /// The writing conventions (setting and style-profile front matter)
     /// check_conventions checks against.
     pub conventions: &'a crate::ai::rules::Conventions,
     /// Library names and aliases, for the library-name rule.
     pub library: &'a [String],
-    /// The passages this request's proposals already replace or delete
-    /// (where their blocks put them; "" for the selection). One context
-    /// serves one request, every step of it.
+    /// What this request's proposals have done so far. One context serves one
+    /// request, every step of it.
     pub proposed: std::sync::Mutex<ProposalLedger>,
     /// How often this request has called each check tool (CHECK_BUDGETS).
     pub checks: std::sync::Mutex<std::collections::HashMap<&'static str, usize>>,
 }
 
-/// A tool the agent can call: what the model is told (name, description,
-/// JSON schema), what calling it does, the modes it is offered in, and its
-/// implementation. Built-in tools (like `search_document` below) run here;
-/// the web tools and generate_image are added per request
-/// ([`ToolRegistry::add`]), and a plugin's or an MCP server's tools will be
-/// too - a spec from the plugin or server, and an [`Run::Async`] that
-/// forwards the call.
+/// A tool the agent can call: what the model is told (name, description, JSON
+/// schema), what calling it does, the modes it is offered in, and its
+/// implementation.
 pub struct Tool<'a> {
     pub spec: ToolSpec,
     pub access: Access,
@@ -94,7 +81,9 @@ pub enum Access {
 }
 
 /// The modes a tool is offered in.
-pub const EVERY_MODE: &[AgentMode] = &[AgentMode::Review, AgentMode::Write];
+pub const EVERY_MODE: &[AgentMode] = &[AgentMode::Review, AgentMode::Write, AgentMode::Create];
+/// Write and Review: the modes that work on the document (comments).
+pub const DOCUMENT_MODES: &[AgentMode] = &[AgentMode::Review, AgentMode::Write];
 /// Write: the modes that change the document.
 pub const EDITING_MODES: &[AgentMode] = &[AgentMode::Write];
 
@@ -105,16 +94,14 @@ pub enum Run<'a> {
     Text(fn(&ToolContext, &str) -> String),
     /// Text and images for the model to look at (read_file).
     Seeing(fn(&ToolContext, &str) -> ToolOutput),
-    /// Awaited, with what it needs captured: a search, a page read, a
-    /// picture being made - work that waits on the network, which Stop
-    /// drops in flight.
+    /// Awaited, with what it needs captured: network work such as a search or a
+    /// picture, which Stop drops in flight.
     Async(Box<dyn Fn(ToolCall) -> ToolFuture<'a> + Send + Sync + 'a>),
 }
 
-/// The tools one request offers, assembled for its mode: the built-ins
-/// that have something to work on ([`builtin_tools`]), then what the
-/// request adds - the web tools, generate_image, and later plugin and MCP
-/// tools. The one place a tool is looked up by name.
+/// The tools one request offers, assembled for its mode: the built-ins with
+/// something to work on, then what the request adds. The one place a tool is
+/// looked up by name.
 pub struct ToolRegistry<'a> {
     mode: AgentMode,
     tools: Vec<Tool<'a>>,
@@ -136,8 +123,7 @@ impl<'a> ToolRegistry<'a> {
         registry
     }
 
-    /// Only the tool named `name`, if it is offered: what a chapter's
-    /// helper has (agent/chapters.rs).
+    /// Only the tool named `name`, if it is offered: what a chapter's helper has.
     pub fn only(mut self, name: &str) -> Self {
         self.tools.retain(|t| t.spec.name == name);
         self

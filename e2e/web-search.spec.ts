@@ -2,13 +2,11 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
 /**
- * Web search (src-tauri ai/web): the Search service row in Settings, which
- * shows only where the chat model can't search by itself; the pages a
- * reply cites, listed under it; and a proposal's citations, written as
- * footnotes or left out. The AI and the key store are mocked.
+ * Web search: the Search service row in Settings, a reply's cited pages,
+ * and a proposal's citations as footnotes. The AI and key store are mocked.
  */
 
-// English labels, as in src/i18n/locales/en.ts.
+// English labels.
 const t = {
   settingsTitle: "Settings",
   navAi: "Textus AI",

@@ -6,9 +6,8 @@ import { createParser } from "prosemirror-highlight/refractor";
 import { refractor } from "refractor";
 import { decorateAll, redecorateChanged } from "../changed-ranges";
 
-// `refractor`'s default export bundles the ~40 most common languages
-// (js/ts/python/rust/bash/json/css/html/...); good enough coverage without
-// pulling in the full ~300-language "all" build.
+// The default export bundles the ~40 most common languages, not the full
+// ~300-language build.
 const highlight = createParser(refractor);
 
 const isCodeBlock = (node: ProseNode) => node.type.name === "code_block";
@@ -29,11 +28,8 @@ function tokens(node: ProseNode, pos: number): Decoration[] {
 const key = new PluginKey<DecorationSet>("syntax-highlight");
 
 /**
- * Code blocks' syntax colours, from refractor's tokens. Not
- * prosemirror-highlight's own plugin: on every edit it walked the whole
- * document for code blocks and built one decoration set from every
- * block's tokens again - most of a keystroke's time in a long document.
- * Only the blocks an edit touched are tokenized again here.
+ * Code blocks' syntax colours. Not prosemirror-highlight's own plugin, which
+ * retokenized every block on every edit; only touched blocks are redone here.
  */
 export const syntaxHighlightPlugin = $prose(
   () =>

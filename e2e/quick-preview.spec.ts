@@ -3,10 +3,8 @@ import { mockInvoke } from "./helpers";
 import { openPath, openWithPlugins } from "./plugin-helpers";
 
 /**
- * Quick Preview (catvinci.quick-preview): the pointer resting on a link to
- * another document shows its opening, or the section the link names, in
- * a card beside it - the app's card, filled by the plugin's hover
- * provider. Pin keeps it.
+ * Quick Preview: resting on a link to another document shows its opening,
+ * or the linked section, in a card filled by the plugin. Pin keeps it.
  */
 
 const editor = '[data-active-tab="true"] .ProseMirror';
@@ -21,7 +19,7 @@ const NOTES = {
 
 async function open(page: Page) {
   await openWithPlugins(page, {
-    plugins: { "catvinci.quick-preview": ["document.read", "workspace.read"] },
+    plugins: { "catvinci.quick-preview": ["editor.read", "files.read"] },
     folder: NOTES,
   });
   await openPath(page, "/notes/one.md");
@@ -62,6 +60,16 @@ test("a wikilink shows the note's opening, without its front matter", async ({
   await expect(card(page).locator(".hover-card-title")).toHaveText("two");
   await expect(card(page)).toContainText("The opening of two.");
   await expect(card(page)).not.toContainText("tags:");
+});
+
+test("Open on a card goes to the document, at the section linked to", async ({
+  page,
+}) => {
+  await open(page);
+  await restOn(page, page.locator(`${editor} a`, { hasText: "the harbour" }));
+  await card(page).getByRole("button", { name: "Open" }).click();
+  await expect(card(page)).toHaveCount(0);
+  await expect(page.locator(`${editor} h1`)).toContainText("Two");
 });
 
 test("a pinned card stays while the pointer goes, and closes by its button", async ({
@@ -109,8 +117,8 @@ test("a citation shows what it cites, from Zotero", async ({ page }) => {
     plugins: {
       "catvinci.zotero": [
         "network:localhost:23119",
-        "document.propose",
-        "document.read",
+        "editor.write",
+        "editor.read",
       ],
     },
     folder: {

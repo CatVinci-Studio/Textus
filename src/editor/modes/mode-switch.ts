@@ -5,27 +5,16 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { parseMarkdownSource } from "../markdown/parse-markdown-source";
 
 /**
- * Keeping your place across a source/WYSIWYG switch (#12). The two views
- * share no coordinates - one is a ProseMirror document, the other a
- * textarea of markdown - and the WYSIWYG side remounts on every switch, so
- * the caret used to land at the very start of the document each time.
- *
- * The bridge is an offset into the markdown, plus how far down the pane
- * the caret sat, so the view can be scrolled to put it back where the eye
- * left it:
- * - WYSIWYG -> source: the document up to the caret, serialized, is the
- *   markdown before it.
- * - source -> WYSIWYG: the markdown before the caret, parsed, ends where
- *   the caret goes.
- * Both are approximate where markdown syntax and document structure
- * disagree (escapes, a cut through a list marker); the error is a few
- * characters, never a jump to elsewhere in the document.
+ * Keeping your place across a source/WYSIWYG switch. The views share no
+ * coordinates, so the bridge is an offset into the markdown plus how far
+ * down the pane the caret sat. It is approximate where markdown syntax and
+ * document structure disagree, by a few characters at most.
  */
 export interface ModeSwitchCaret {
   /** Offset into the tab's markdown. */
   offset: number;
   /** The caret's distance from the top of the visible pane, in screen px;
-   *  null when it was not on screen. */
+   *  null when it was off screen. */
   viewportY: number | null;
 }
 
@@ -43,8 +32,8 @@ export function takePendingCaret(): ModeSwitchCaret | null {
   return caret;
 }
 
-/** The on-screen WYSIWYG editor registers how to read its caret; only one
- *  editor is ever the active one. Returns the unregister function. */
+/** The on-screen WYSIWYG editor registers how to read its caret. Returns the
+ *  unregister function. */
 export function registerCaretReporter(
   report: (markdown: string) => ModeSwitchCaret | null,
 ): () => void {
@@ -54,26 +43,23 @@ export function registerCaretReporter(
   };
 }
 
-/** `markdown` is the tab's text as the source view will show it - the
- *  file's own spelling, which re-serializing the document would not
- *  reproduce. */
+/** `markdown` is the tab's text as the source view shows it: the file's own
+ *  spelling, which re-serializing wouldn't reproduce. */
 export function captureEditorCaret(markdown: string): ModeSwitchCaret | null {
   return reporter?.(markdown) ?? null;
 }
 
 /**
- * Where `prefix` (markdown serialized from the start of the document up to
- * the caret) ends inside the whole `markdown`. The prefix reads like the
- * start of the document but not byte for byte - the cut closes open
- * structures, and escapes can differ there - so its last few characters are
- * located near the expected spot rather than trusting its length outright.
+ * Where `prefix` (markdown serialized up to the caret) ends inside
+ * `markdown`. The cut closes open structures and escapes can differ, so its
+ * last characters are located near the expected spot instead.
  */
 export function alignPrefixOffset(prefix: string, markdown: string): number {
   const trimmed = prefix.replace(/\s+$/, "");
   const expected = Math.min(trimmed.length, markdown.length);
-  // Longest tail first: it is the most specific. Shorter ones survive a
-  // spelling difference just before the caret (`*x*` serialized where the
-  // file says `_x_`), which the markdown on screen is free to have.
+  // Longest tail first: the most specific. Shorter ones survive a spelling
+  // difference just before the caret (`*x*` serialized where the file has
+  // `_x_`).
   for (const length of [32, 16, 8]) {
     const tail = trimmed.slice(-length);
     if (tail.trim().length < 4) continue;
@@ -92,15 +78,14 @@ function scrollerOf(el: Element): HTMLElement | null {
   return el.closest<HTMLElement>(".editor-scroll");
 }
 
-/** ProseMirror reads a click's new DOM selection asynchronously: the state
- *  read right after a click (a switch pressed, a page unloading) would
- *  otherwise hold the old caret. The observer is prosemirror-view's own,
- *  untyped. */
+/** ProseMirror reads a click's new DOM selection asynchronously, so a state
+ *  read right after a click would hold the old caret. The observer is
+ *  prosemirror-view's own, untyped. */
 export function flushDomSelection(view: EditorView): void {
   (view as { domObserver?: { flush?: () => void } }).domObserver?.flush?.();
 }
 
-/** The WYSIWYG caret as a markdown offset (reporter side). */
+/** The WYSIWYG caret as a markdown offset. */
 export function readEditorCaret(ctx: Ctx, markdown: string): ModeSwitchCaret {
   const view = ctx.get(editorViewCtx);
   flushDomSelection(view);
@@ -117,14 +102,13 @@ export function readEditorCaret(ctx: Ctx, markdown: string): ModeSwitchCaret {
     const box = scroller?.getBoundingClientRect();
     if (box && top >= box.top && top <= box.bottom) viewportY = top - box.top;
   } catch {
-    // No layout for that position (hidden) - just don't restore scroll.
+    // No layout for that position (hidden): don't restore scroll.
   }
   return { offset, viewportY };
 }
 
-/** Places the WYSIWYG caret at a markdown offset (just remounted).
- *  `centre`: with no `viewportY` to keep, its line goes to the middle of
- *  the pane (Typewriter Mode) rather than a third of the way down. */
+/** Places the WYSIWYG caret at a markdown offset. `centre`: with no
+ *  `viewportY`, its line goes to the pane's middle rather than a third down. */
 export function applyEditorCaret(
   ctx: Ctx,
   markdown: string,
@@ -142,8 +126,8 @@ export function applyEditorCaret(
   placeEditorCaret(ctx.get(editorViewCtx), pos, caret.viewportY, centre);
 }
 
-/** Places the WYSIWYG caret at document position `pos` (clamped to the
- *  document) and scrolls it to `viewportY`, as applyEditorCaret does. */
+/** Places the WYSIWYG caret at document position `pos` and scrolls it to
+ *  `viewportY`. */
 export function placeEditorCaret(
   view: EditorView,
   pos: number,
@@ -169,12 +153,12 @@ export function placeEditorCaret(
         : box.height / 3);
     scroller.scrollTop += coords.top - box.top - target;
   } catch {
-    // No layout yet - the caret is set; scrolling is best effort.
+    // No layout yet: the caret is set; scrolling is best effort.
   }
 }
 
-/** The caret's y inside a textarea's content (layout px), via a mirror
- *  element - a textarea has no API for where a character sits. */
+/** The caret's y inside a textarea's content, via a mirror element: a
+ *  textarea has no API for where a character sits. */
 export function textareaCaretTop(
   textarea: HTMLTextAreaElement,
   offset: number,
@@ -248,8 +232,7 @@ export function applyTextareaCaret(
   textarea.scrollTop = textareaCaretTop(textarea, offset) - target / zoom;
 }
 
-/** Typewriter mode in a source textarea: scroll so the caret's line sits in
- *  the middle (the rich editor's typewriter-plugin does the same). */
+/** Typewriter mode in a source textarea: the caret's line in the middle. */
 export function centerTextareaCaret(textarea: HTMLTextAreaElement): void {
   const top = textareaCaretTop(textarea, textarea.selectionStart);
   textarea.scrollTop = top - textarea.clientHeight / 2;

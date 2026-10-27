@@ -2,18 +2,13 @@ import { type Handle } from "mdast-util-to-markdown";
 import { writeLatexMath } from "../math/latex-math-syntax";
 import type { PeekingHandle } from "./link-output";
 
-/**
- * Bold, italic, strikethrough, highlight and maths written so they read
- * back the same: adjacent spans joined, markers alternated when nested,
- * edges encoded where a delimiter would not flank, tildes and dollars as
- * typed (markdown-output.ts).
- */
+/** Bold, italic, strikethrough, highlight and maths written so they read
+ *  back the same. */
 
 /**
- * Writes a strikethrough with as many tildes as it was read with (see
- * remarkStrikethroughTildes in md-span-schema.ts): `~x~` stays single. It
- * wraps whichever `delete` handler the extensions installed - the
- * CJK-friendly one - for this one serialization, as `list` does listItem.
+ * Writes a strikethrough with as many tildes as it was read with, so `~x~`
+ * stays single. Wraps whichever `delete` handler is installed (the
+ * CJK-friendly one).
  */
 export function withTildesAsWritten(del: Handle): Handle {
   return Object.assign(
@@ -32,11 +27,8 @@ export type MathData =
   { mathDelimiter?: string; oneLine?: boolean } | undefined;
 
 /**
- * Writes inline math in the delimiter it was read with - remark-math writes
- * the fewest dollars that work: as many dollars as the file had (see
- * recordDollarRuns in math-schema.ts), so an inline `$$x$$` stays as it
- * was, or LaTeX's `\(x\)` / `\[x\]` (latex-math-syntax.ts). Wraps
- * remark-math's handler for this one serialization, as above.
+ * Writes inline math in the delimiter it was read with: as many dollars as
+ * the file had (remark-math writes the fewest that work), or LaTeX's `\(x\)`.
  */
 export function withInlineMathAsWritten(inlineMath: Handle): Handle {
   const latex = (node: { value?: string; data?: unknown }) => {
@@ -79,9 +71,8 @@ export interface Phrasing {
   data?: unknown;
   value?: string;
   children?: Phrasing[];
-  /** The delimiter Milkdown's strong and emphasis handlers write: "_"
-   *  for italic read or typed with underscores, and see
-   *  alternateNestedMarkers. */
+  /** The delimiter Milkdown's strong and emphasis handlers write: "_" for
+   *  italic read or typed with underscores. */
   marker?: string;
 }
 
@@ -93,15 +84,9 @@ export const inDollars = (node: Phrasing | undefined) =>
   !(node.data as MathData)?.mathDelimiter?.startsWith("\\");
 
 /**
- * Inline nodes that can't stand side by side in Markdown - left so when
- * the words between them were deleted - written so they read back:
- *
- * - Two spans of one kind become one: `**foo****bar**` reads back as text
- *   with eight asterisks in it, not as bold.
- * - Two code spans become one: in `` `a``b` `` the second's opening
- *   backtick runs into the first's closing one, and the code reads "a``b".
- * - Two formulas get a space between them: `$a$$b$` reads as one formula,
- *   "a$$b", and the text after it swallowed into maths.
+ * Inline nodes that can't stand side by side in Markdown, written so they
+ * read back: two spans of one kind join (`**foo****bar**` isn't bold), two
+ * code spans join, and two formulas get a space (`$a$$b$` is one).
  */
 export function joinAdjacent(node: Phrasing): void {
   if (!node.children) return;
@@ -132,9 +117,8 @@ export function joinAdjacent(node: Phrasing): void {
   children.forEach(joinAdjacent);
 }
 
-/** The first or last character a node is written with, nested spans and
- *  all. A link, an image, code or maths starts and ends with punctuation
- *  (`[`, `)`, a backtick, `$`), whatever is inside. */
+/** The first or last character a node is written with. A link, image, code
+ *  or maths starts and ends with punctuation, whatever is inside. */
 export function edgeCharacter(node: Phrasing, end: "first" | "last"): string {
   if (node.type === "text") {
     const chars = [...(node.value ?? "")];
@@ -158,16 +142,15 @@ export function innerEdgeCharacter(
 }
 
 export const ATTENTION = new Set(["strong", "emphasis"]);
-/** Spans whose delimiters open and close by the same rule as bold's:
- *  GFM's strikethrough and the highlight (highlight-syntax.ts). */
+/** Spans whose delimiters open and close by the same rule as bold's. */
 export const FLANKED = new Set([...ATTENTION, "delete", "mark"]);
 export const PUNCTUATION = /^[\p{P}\p{S}]$/u;
 // CJK text is read by remark-cjk-friendly, which lets bold stand against it.
 export const WORD =
   /^(?![\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Hangul}])[\p{L}\p{N}]$/u;
 
-/** `text` with its first or last character as a character reference, an
- *  inline HTML node (which is written as it is), and the rest. */
+/** `text` with its first or last character as a character reference (an
+ *  inline HTML node, written as it is), and the rest. */
 export function referenced(text: Phrasing, end: "first" | "last"): Phrasing[] {
   const chars = [...(text.value ?? "")];
   const char = end === "first" ? chars.shift()! : chars.pop()!;
@@ -182,15 +165,10 @@ export function referenced(text: Phrasing, end: "first" | "last"): Phrasing[] {
 }
 
 /**
- * Bold or italic whose text starts or ends with punctuation, right against
- * a word: `**per file.**Pasted` doesn't close (a closing `**` after
- * punctuation needs a space or punctuation after it), so the bold read
- * back as text with asterisks in it - text typed or pasted straight after
- * a bold sentence. The word's letter beside it is written as a character
- * reference, `**per file.**&#x50;asted`, which reads as the letter, as
- * remark itself does; CJK text is left alone. The same for strikethrough
- * and highlight: `~~`code`~~` lost its line once a word was typed against
- * it.
+ * Bold or italic ending in punctuation right against a word doesn't close
+ * (`**per file.**Pasted`), so the word's letter beside it is written as a
+ * character reference, as remark itself does; CJK text is left alone. The
+ * same for strikethrough and highlight.
  */
 export function encodeAroundAttention(node: Phrasing): void {
   if (!node.children) return;
@@ -220,16 +198,10 @@ export function encodeAroundAttention(node: Phrasing): void {
 }
 
 /**
- * Bold directly inside bold, or italic inside italic, at its end and with
- * text right after it: `*foo *bar**Pasted`. The two closing runs are one,
- * `**`, which can open as well as close there, and the rule of 3 then
- * keeps it from closing a single `*`: both spans read back as text with
- * asterisks in it - text pasted or typed after a nested span. The inner
- * span is written with underscores, `*foo _bar_*`, so the runs stay
- * apart, and encodeAroundAttention writes the word's letter after it as a
- * character reference. The same at the start, with text right before.
- * Not where the underscores would stand against a word inside the span:
- * they don't open or close in a word.
+ * Bold inside bold (or italic in italic) at its end with text right after,
+ * `*foo *bar**Pasted`, merges the closing runs and reads back as text. The
+ * inner span is written with underscores, `*foo _bar_*`; the same at the
+ * start. Not where the underscores would stand against a word inside.
  */
 export function alternateNestedMarkers(node: Phrasing): void {
   if (!node.children) return;
@@ -260,10 +232,8 @@ export function alternateNestedMarkers(node: Phrasing): void {
 }
 
 /**
- * Italic written `_text_` (md-span-schema.ts) right against a letter or a
- * digit, `a_text_`: underscores don't open or close inside a word, so it
- * read back as text with underscores in it - a word typed against the
- * italic. Written with asterisks there, which do.
+ * Italic written `_text_` right against a letter or digit doesn't open or
+ * close (underscores don't in a word), so it is written with asterisks.
  */
 export function underscoresAtWordEdges(node: Phrasing): void {
   if (!node.children) return;

@@ -3,7 +3,7 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 // A proposed picture drawn again from the writer's own change to its
 // description: Redraw… over the picture, the description to change, and
-// the picture alone is asked for again (ai_redraw_generated_image).
+// the picture alone is asked for again.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const pending = `${editor} .pending-insert img`;

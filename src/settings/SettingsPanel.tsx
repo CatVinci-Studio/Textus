@@ -34,41 +34,38 @@ import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import { TOGGLE_FIND_REPLACE_EVENT } from "../utils/events";
 import "./SettingsPanel.css";
 import { settingsPage, settingsPages } from "./settings-pages";
-import type { SettingsPageProps, Subpage } from "./pages/types";
+import type {
+  SettingsPageProps,
+  ShortcutCommand,
+  Subpage,
+} from "./pages/types";
 import { useModalDialog } from "../ui/useModalDialog";
 import { usePresenceProps } from "../ui/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
-import type { MenuChecks } from "../app/app-menu-model";
+import type { MenuChecks } from "../app/menu/app-menu-model";
 import { isIOSApp } from "../platform/capabilities";
 
-// The settings dialog shell: the pages' navigation (settings-pages.tsx),
-// the search over them, and the subpages. Each page is its own component in
-// pages/; anything with its own state or backend round-trips lives in
-// sections/.
-//
-// One panel for every platform. Each row is a name and a control
-// (SettingRow); explanations are kept to the few rows that need one. On a
-// phone the same panel fills the screen with the categories as a row of
-// tabs along the top (mobile/styles/settings.css) - layout only, no second
-// set of pages to keep in step.
+// The settings dialog shell: navigation, search and subpages, for every
+// platform. On a phone the same panel fills the screen with the categories
+// as tabs along the top.
 
 export interface SettingsPanelProps {
   onClose: () => void;
-  /** Opens a document in the editor - the agent.md "edit" button uses it. */
+  /** Opens a document in the editor, for the agent.md "edit" button. */
   onOpenFile: (path: string) => void;
   /** Files a settings action deleted (Reset on a customized skill), for
    *  the editor to close their tabs. */
   onFilesDeleted?: (paths: string[]) => void;
   /** Which of the window's view modes are on, for Editor > View. */
   viewChecks?: Pick<MenuChecks, "sourceMode" | "zen">;
-  /** The shortcuts that can't be changed, listed under the ones that can
-   *  (built from the app menu, app/fixed-shortcuts.ts). */
+  /** The shortcuts that can't be changed, listed under the ones that can. */
   fixedShortcuts?: FixedShortcutGroup[];
+  /** The commands plugins add, under Shortcuts' own. */
+  pluginCommands?: ShortcutCommand[];
   /** The page to open at; General when left out. */
   initialCategory?: string;
 }
 
-/** A Settings page's id (settings-pages.tsx). */
 type Category = string;
 
 /** The subpages the search reads, by the category each is in. More themes
@@ -78,12 +75,11 @@ const SEARCHED_SUBPAGES: [Subpage, Category][] = [
   ...(isIOSApp ? [["themes", "editor"] as [Subpage, Category]] : []),
 ];
 
-/** The Extensions tabs the search reads, each as a page of its own: their
- *  page reads none (SettingsPageProps.indexing). Not on the phone, which
- *  has no Extensions. */
+/** The Extensions tabs the search reads, each as a page of its own. The
+ *  phone has no Extensions. */
 const SEARCHED_TABS: ExtensionsTab[] = isIOSApp ? [] : ["themes"];
 
-/** A searchable page's key (SearchEntry.page): "editor", "editor/themes",
+/** A searchable page's key: "editor", "editor/themes",
  *  "extensions/tab:themes". */
 const pageKey = (category: Category, subpage: Subpage | null) =>
   subpage ? `${category}/${subpage}` : category;
@@ -111,11 +107,11 @@ export function SettingsPanel({
   onFilesDeleted,
   viewChecks = {},
   fixedShortcuts = [],
+  pluginCommands = [],
   initialCategory = "general",
 }: SettingsPanelProps) {
   const { settings, setSettings, t } = useSettings();
-  // As in the review bar: a phone never has a margin, so there is nothing
-  // to explain there.
+  // A phone never has a margin, so there is nothing to explain there.
   const marginAvailable = useMarginAvailable();
   const phone = usePhoneLayout();
   const noMargin = !phone && !marginAvailable;
@@ -126,7 +122,7 @@ export function SettingsPanel({
   // Closing Settings on a phone leaves the keyboard down: the user is
   // going back to the page, not necessarily to typing.
   const modal = useModalDialog(onClose, true, undefined, false);
-  // Rendered inside a Presence (App.tsx): it goes the way it came.
+  // Rendered inside a Presence: it goes the way it came.
   const presence = usePresenceProps<HTMLDivElement>();
   const { category, setCategory, subpage, setSubpage, content, setJump } =
     useSettingsNav(initialCategory);
@@ -140,7 +136,6 @@ export function SettingsPanel({
     emitMenuEvent(`help-doc:${doc}`);
   };
 
-  // The pages, in navigation order, from the one list (settings-pages.tsx).
   const categories = settingsPages().map((page) => ({
     id: page.id,
     label: page.label(t),
@@ -170,6 +165,7 @@ export function SettingsPanel({
     onClose,
     viewChecks,
     fixedShortcuts,
+    pluginCommands,
   };
   const renderCategory = (c: Category, indexing = false) => {
     const page = settingsPage(c);
@@ -189,8 +185,7 @@ export function SettingsPanel({
       </>
     );
 
-  // Each category, with the subpages it holds after it - the order the
-  // results are listed in.
+  // Each category, with the subpages it holds after it.
   const searchPages: SearchablePage[] = categories.flatMap((c) => [
     { key: c.id, name: c.label, render: () => renderCategory(c.id, true) },
     ...SEARCHED_SUBPAGES.filter(([, under]) => under === c.id).map(([s]) => ({
@@ -291,9 +286,7 @@ export function SettingsPanel({
                     setQuery("");
                     setCategory(c.id);
                     setSubpage(null);
-                    // On a phone the tabs are one row that scrolls sideways;
-                    // in a long language the chosen one can be half out of
-                    // view.
+                    // The phone's tabs scroll sideways; the chosen one can be half out of view.
                     e.currentTarget.scrollIntoView?.({
                       block: "nearest",
                       inline: "nearest",
@@ -363,11 +356,8 @@ export function SettingsPanel({
   );
 }
 
-/** Which page Settings shows: a category, and a page of its own inside it
- *  with a way back: General › About Textus, and on the phone Editor &
- *  Appearance › More themes. A search
- *  result picked sets `jump`: once the row's page is on screen, it goes to
- *  the row. */
+/** Which page Settings shows: a category, and possibly a subpage inside it
+ *  with a way back. A picked search result sets `jump` to go to its row. */
 function useSettingsNav(initialCategory: Category) {
   const [category, setCategory] = useState<Category>(initialCategory);
   const [subpage, setSubpage] = useState<Subpage | null>(null);
@@ -396,9 +386,8 @@ function useSettingsNav(initialCategory: Category) {
   return { category, setCategory, subpage, setSubpage, content, setJump };
 }
 
-/** The search box (SettingsSearch.tsx): while it holds a query, its
- *  results stand in for the page, and picking one opens the row's page and
- *  goes to the row. */
+/** The search box: while it holds a query its results stand in for the page,
+ *  and picking one goes to the row. */
 function useSettingsSearch() {
   const [query, setQuery] = useState("");
   const searching = query.trim() !== "";
@@ -416,9 +405,8 @@ function useSettingsSearch() {
     searchInput.current?.focus();
     searchInput.current?.select();
   }, []);
-  // Ctrl/⌘+F finds in Settings while it is open, not in the document
-  // behind it - from the keyboard here, or from Edit › Find on a Mac,
-  // whose menu takes the keys before the page sees them.
+  // Ctrl/⌘+F finds in Settings while it is open, not in the document behind
+  // it; on a Mac the Edit › Find menu takes the keys first.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (comboFromEvent(e) !== "mod+f") return;

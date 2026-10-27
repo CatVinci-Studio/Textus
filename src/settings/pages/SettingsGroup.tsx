@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-/** A titled group of rows on a Settings page. */
 export function SettingsGroup({
   title,
   children,

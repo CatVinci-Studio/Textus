@@ -31,6 +31,7 @@ Enable AI completion = AI 이어 쓰기 사용
 Completion tone = 이어 쓰기 어조
 Write = 쓰기
 Review = 검토
+Create = 만들기
 Accept = 수락
 Reject = 거부
 Editor & Appearance (Settings page) = 편집기 및 모양

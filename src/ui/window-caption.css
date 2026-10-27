@@ -1,11 +1,6 @@
-/* The app-drawn window caption. Only ever on screen where the OS frame is
-   gone (Windows and Linux - see platform/window-chrome.ts); on macOS these
-   components render null and none of this applies.
-
-   Sized and spaced to Windows' own caption rather than to this app's icon
-   buttons: a 46x28 hit area per glyph, no rounding, no gap. Next to the
-   system's other windows a rounded, inset close button reads as a page
-   control that happens to say X, not as the window's close button. */
+/* The app-drawn window caption, only where the OS frame is gone. Sized to
+   Windows' own caption, a 46x28 hit area per glyph with no rounding, so it
+   reads as the window's close button. */
 
 .window-caption {
   display: flex;
@@ -14,8 +9,7 @@
      row's full height instead, or the hit areas end up a glyph tall. */
   align-self: stretch;
   flex-shrink: 0;
-  /* Cancels .window-bar's right padding so the buttons run to the very edge
-     of the window, which is where the pointer throws itself at them. */
+  /* Cancels .window-bar's right padding so the buttons run to the window's edge. */
   margin-right: -12px;
   /* The bar is the drag region; the buttons must take their own clicks back
      (.window-bar-status next to them deliberately does not). */
@@ -46,9 +40,8 @@
   background: color-mix(in srgb, var(--editor-text) 20%, transparent);
 }
 
-/* Close is the one caption button Windows colours, and the one where hitting
-   it by accident costs the most - it gets the platform's red rather than the
-   theme's accent so it reads the same as every other window on the desktop. */
+/* Close gets the platform's red, not the theme's accent, as on every other
+   window. */
 .window-caption-close:hover,
 .window-caption-close:active {
   background: #c42b1c;

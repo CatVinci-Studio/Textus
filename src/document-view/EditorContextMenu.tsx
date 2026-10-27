@@ -1,4 +1,5 @@
 import type { EditorRunner } from "../editor/useEditorRunner";
+import type { EditorClipboard } from "../editor/useEditorClipboard";
 import {
   buildContextMenuItems,
   buildPhoneMoreItems,
@@ -18,12 +19,11 @@ export type EditorMenuState = {
   x: number;
   y: number;
   imagePos: number | null;
-  /** Where the right-clicked picture's file is (contextMenuTarget). */
+  /** Where the right-clicked picture's file is. */
   imageLocation?: ImageLocation | null;
-  /** Opened by the iPhone keyboard toolbar's "More": the phone's items
-   *  (buildPhoneMoreItems), as an action sheet. */
+  /** Opened by the iPhone keyboard toolbar's "More", as an action sheet. */
   phone?: boolean;
-  /** Opened from the keyboard, at the caret (ContextMenu's `keyboard`). */
+  /** Opened from the keyboard, at the caret. */
   keyboard?: boolean;
 } | null;
 
@@ -39,10 +39,7 @@ export function EditorContextMenu({
   illustrateParagraph,
   triggerCompletion,
   triggerGrammarCheck,
-  copyOrCut,
-  copyAsMarkdown,
-  paste,
-  selectAll,
+  clipboard,
   toggleFindReplace,
   openTableDialog,
   own,
@@ -55,19 +52,15 @@ export function EditorContextMenu({
   /** This is the tour's practice tab. */
   inTour: boolean;
   openAgentConversation: () => void;
-  /** Asks Textus AI for a picture for the paragraph (useIllustrateParagraph). */
+  /** Asks Textus AI for a picture for the paragraph. */
   illustrateParagraph: (at: { x: number; y: number }) => void;
   triggerCompletion: () => void;
   triggerGrammarCheck: () => void;
-  copyOrCut: (cut: boolean) => void;
-  copyAsMarkdown: () => void;
-  paste: () => void;
-  selectAll: () => void;
+  clipboard: EditorClipboard;
   toggleFindReplace: () => void;
   openTableDialog: () => void;
-  /** A note of the writer's own on the selection (useOwnNotes). */
-  /** The writer's own items: a note on the selection, and their tracked
-   *  changes all accepted or rejected (useReviewNotes' `menu`). */
+  /** The writer's own items: a note on the selection, and accepting or
+   *  rejecting all their tracked changes. */
   own: Pick<ContextMenuOptions, "addNote" | "ownChanges">;
   onClose: () => void;
 }) {
@@ -86,9 +79,8 @@ export function EditorContextMenu({
               t,
               imagePos: menu.imagePos,
               imageLocation: menu.imageLocation,
-              // A picture is changed by asking for a new one in its place
-              // (generate_image's replace): Quick Ask on the picture, the
-              // user saying how. While there is an image service.
+              // A picture is changed by asking for a new one in its place,
+              // while there is an image service.
               pictureAiItems:
                 ai.chat && imageService && menu.imagePos !== null && !menu.phone
                   ? [
@@ -101,19 +93,15 @@ export function EditorContextMenu({
                       },
                     ]
                   : [],
-              // Each AI item is only offered while its feature is enabled in
-              // Settings, and none while Textus AI is off. The tour's
-              // practice tab always offers Ask AI, so its AI lessons work
-              // even for someone who turned Agent chat off before replaying
-              // the tour from Help. The phone's "More" leaves it to the
-              // toolbar's own button.
+              // Each AI item only while its feature is on, and none while
+              // Textus AI is off. The tour's practice tab always offers Ask
+              // AI so its lessons work.
               aiItems: [
                 ...(aiFeatures(settings, inTour).chat && !menu.phone
                   ? [{ label: t.askAi, onSelect: openAgentConversation }]
                   : []),
-                // A picture costs money: offered while there is an image
-                // service (Settings › Textus AI › Image model) - the chat
-                // provider's own by default, none for one without.
+                // A picture costs money: offered only while there is an
+                // image service.
                 ...(ai.chat && imageService
                   ? [
                       {
@@ -139,10 +127,7 @@ export function EditorContextMenu({
                     ]
                   : []),
               ],
-              copyOrCut,
-              copyAsMarkdown,
-              paste,
-              selectAll,
+              ...clipboard,
               toggleFindReplace,
               openTableDialog,
               ...own,

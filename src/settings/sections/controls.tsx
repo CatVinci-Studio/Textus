@@ -1,38 +1,11 @@
-import {
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
-import {
-  defaultShortcuts,
-  useSettings,
-  type HeadingAction,
-  type ShortcutAction,
-  type Shortcuts,
-} from "../SettingsContext";
+import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useSettings } from "../SettingsContext";
 import { resolveStrings, type Strings } from "../../i18n/strings";
-import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
-import {
-  comboFromEvent,
-  isBindableCombo,
-  formatCombo,
-  isReservedCombo,
-} from "../../utils/shortcuts";
 import { ChevronIcon } from "../../ui/icons";
 import { InfoTip } from "../../ui/InfoTip";
 
-// Generic row controls shared by the settings categories.
-
-/**
- * For a field that takes a machine-read value - a URL, a host, a model or
- * field name - rather than prose. iOS capitalises the first letter of a
- * text field and autocorrects it, with the software keyboard and a hardware
- * one alike: "Http://..." still connected, but "Mock-model" or "Gpt-..."
- * is a model id the provider rejects. Spread onto the <input>.
- */
+/** For a field that takes a machine-read value rather than prose: iOS would
+ *  capitalise and autocorrect it into an id the provider rejects. */
 export const VERBATIM_INPUT = {
   autoCapitalize: "off",
   autoCorrect: "off",
@@ -40,15 +13,9 @@ export const VERBATIM_INPUT = {
 } as const;
 
 /**
- * One setting: its name on the left, its control on the right - the shape
- * every row in Settings takes, on the desktop and the phone alike.
- *
- * The label says what the setting does, so most rows need nothing else.
- * `help` is the explanation a label can't carry - a trade-off, what
- * happens behind the scenes - behind a "?" after the label, never as grey
- * text on the page. `hint` is for what is live rather than explained: a
- * value (the folder in use, a fetched-on date, the link a pasted image
- * gets) or a status (no room for the margin, a shortcut in use).
+ * One setting: its name on the left, its control on the right. `help` is the
+ * explanation a label can't carry, behind a "?"; `hint` is something live
+ * under the label, a value or a status.
  */
 export function SettingRow({
   label,
@@ -78,7 +45,7 @@ export function SettingRow({
   );
 }
 
-/** A row's "?" (ui/InfoTip.tsx), named after the row: "More about …". */
+/** A row's "?", named after the row: "More about …". */
 export function RowHelp({
   label,
   children,
@@ -124,11 +91,8 @@ export function LinkRow({
   );
 }
 
-/**
- * A switch row; the whole row toggles it. `help` as SettingRow's.
- * The switch is named by the label alone (aria-labelledby): the "?" sits
- * inside the <label>, and would otherwise be read as part of the name.
- */
+/** A switch row; the whole row toggles it. The switch is named by the label
+ *  alone, since the "?" sits inside the <label>. */
 export function ToggleRow({
   label,
   help,
@@ -164,14 +128,8 @@ export function ToggleRow({
   );
 }
 
-/**
- * A key or token kept in the system keychain: a password field and Save
- * until one is stored, then "Configured" and Clear - the stored value is
- * never read back into the page. The caller stores and clears it.
- */
 /** How a key reads in its field: its first six and last four characters
- *  around ***, enough to tell which key was pasted without showing it; a
- *  short one, still being typed, as dots. */
+ *  around ***; a short one, still being typed, as dots. */
 export function maskKey(key: string): string {
   if (key.length <= 12) return "•".repeat(key.length);
   return `${key.slice(0, 6)}***${key.slice(-4)}`;
@@ -184,12 +142,9 @@ function wholeSelected(el: HTMLInputElement): boolean {
 }
 
 /**
- * A key's field, showing it masked (maskKey). A password field drew a
- * pasted key as a row of dots as long as the key, and offered to save it
- * as a password. The field holds the mask, so every edit is taken before
- * the browser makes it: a paste or typing over the whole field replaces
- * the key, typing at its end adds to it, a deletion takes the last
- * character, or all of it when all is selected.
+ * A key's field, showing it masked. A password field would show a row of
+ * dots and offer to save it. The field holds the mask, so every edit is
+ * taken before the browser makes it.
  */
 export function MaskedKeyInput({
   label,
@@ -268,7 +223,6 @@ export function SecretInput({
   saveDisabled,
 }: {
   t: Strings;
-  /** The field's accessible name. */
   label: string;
   saved: boolean;
   value: string;
@@ -300,201 +254,6 @@ export function SecretInput({
       >
         {t.apiKeySave}
       </button>
-    </div>
-  );
-}
-
-/** The heading shortcuts' names: the Format menu's own, and Paragraph. */
-export function headingLabels(t: Strings): Record<HeadingAction, string> {
-  const level = (n: number) => t.menuHeadingTemplate.replace("{n}", String(n));
-  return {
-    setHeading1: level(1),
-    setHeading2: level(2),
-    setHeading3: level(3),
-    setHeading4: level(4),
-    setHeading5: level(5),
-    setHeading6: level(6),
-    setParagraph: t.shortcutParagraph,
-  };
-}
-
-/** The shortcuts that can't be changed (app/fixed-shortcuts.ts), read-only,
- *  by the menu they belong to. */
-export function FixedShortcutList({
-  groups,
-}: {
-  groups: FixedShortcutGroup[];
-}) {
-  return (
-    <div className="shortcut-fixed">
-      {groups.map((group) => (
-        <section key={group.title} className="shortcut-fixed-section">
-          <h3 className="shortcut-fixed-title">{group.title}</h3>
-          <dl className="shortcut-fixed-list">
-            {group.items.map((item) => (
-              <div key={item.label} className="shortcut-fixed-row">
-                <dt>{item.label}</dt>
-                <dd>
-                  {item.combos.map((combo) => (
-                    <kbd key={combo}>{formatCombo(combo)}</kbd>
-                  ))}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      ))}
-    </div>
-  );
-}
-
-export function ShortcutRow({
-  label,
-  action,
-  shortcuts,
-  setSettings,
-  t,
-  fixed = [],
-}: {
-  label: string;
-  action: ShortcutAction;
-  shortcuts: Shortcuts;
-  setSettings: (patch: { shortcuts: Shortcuts }) => void;
-  t: Strings;
-  /** The shortcuts that can't be changed (app/fixed-shortcuts.ts): a key
-   *  one of them owns can't be bound here, as it would never fire - Ctrl+0
-   *  for Paragraph is Actual Size. */
-  fixed?: FixedShortcutGroup[];
-}) {
-  const [recording, setRecording] = useState(false);
-  const combo = shortcuts[action];
-  /** The fixed shortcut that has `next` already, by its label. */
-  const fixedOwner = (next: string) =>
-    fixed
-      .flatMap((group) => group.items)
-      .find((item) => item.combos.includes(next))?.label;
-  // A key bound before it was checked (or before it became fixed).
-  const taken = combo ? fixedOwner(combo) : undefined;
-  /** The combo a new installation has here, which Reset puts back. */
-  const fallback = defaultShortcuts()[action];
-  const [error, setError] = useState("");
-  const actionLabels = useMemo<Record<ShortcutAction, string>>(
-    () => ({
-      triggerCompletion: t.shortcutTriggerCompletion,
-      triggerGrammarCheck: t.shortcutTriggerGrammarCheck,
-      toggleFloatingChat: t.shortcutToggleFloatingChat,
-      toggleTextusAi: t.shortcutToggleTextusAi,
-      findReplace: t.shortcutFindReplace,
-      toggleSidebar: t.shortcutToggleSidebar,
-      toggleAgentPanel: t.shortcutToggleAgentPanel,
-      toggleSplitView: t.shortcutToggleSplitView,
-      toggleZenMode: t.shortcutToggleZenMode,
-      toggleSourceMode: t.shortcutToggleSourceMode,
-      toggleTypewriterMode: t.shortcutToggleTypewriterMode,
-      searchFiles: t.shortcutSearchFiles,
-      nextTab: t.shortcutNextTab,
-      previousTab: t.shortcutPreviousTab,
-      ...headingLabels(t),
-    }),
-    [t],
-  );
-
-  useEffect(() => {
-    if (!recording) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.isComposing || e.keyCode === 229) return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      if (e.key === "Escape") {
-        setRecording(false);
-        return;
-      }
-      const captured = comboFromEvent(e);
-      if (!captured || !isBindableCombo(captured)) return;
-      // Named where a fixed shortcut owns the key, as for another action.
-      const owner = fixedOwner(captured);
-      if (owner) {
-        setError(t.shortcutConflict.replace("{action}", owner));
-        return;
-      }
-      if (isReservedCombo(captured)) {
-        setError(t.shortcutReserved);
-        return;
-      }
-      if (bind(captured)) setRecording(false);
-    }
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  });
-
-  /** Gives this action `next`, unless another action has it already.
-   *  Whether it did. */
-  function bind(next: string): boolean {
-    const conflict = (Object.keys(shortcuts) as ShortcutAction[]).find(
-      (other) => other !== action && shortcuts[other] === next,
-    );
-    if (conflict) {
-      setError(t.shortcutConflict.replace("{action}", actionLabels[conflict]));
-      return false;
-    }
-
-    setError("");
-    setSettings({ shortcuts: { ...shortcuts, [action]: next } });
-    return true;
-  }
-
-  function clear() {
-    setError("");
-    setSettings({ shortcuts: { ...shortcuts, [action]: "" } });
-  }
-
-  return (
-    <div className="shortcut-setting">
-      <div className="settings-row">
-        <span className="settings-row-label">{label}</span>
-        <div className="shortcut-row-controls">
-          <button
-            className={`text-button settings-inline-button shortcut-capture-button ${recording ? "shortcut-capture-active" : ""}`}
-            aria-label={`${label}: ${recording ? t.shortcutRecording : combo ? formatCombo(combo) : t.shortcutUnset}`}
-            aria-pressed={recording}
-            onClick={() => {
-              setError("");
-              setRecording(true);
-            }}
-            onBlur={() => setRecording(false)}
-          >
-            {recording
-              ? t.shortcutRecording
-              : combo
-                ? formatCombo(combo)
-                : t.shortcutUnset}
-          </button>
-          {combo && !recording && (
-            <button
-              className="text-button settings-inline-button"
-              aria-label={`${t.shortcutClear}: ${label}`}
-              onClick={clear}
-            >
-              {t.shortcutClear}
-            </button>
-          )}
-          {fallback && combo !== fallback && !recording && (
-            <button
-              className="text-button settings-inline-button"
-              aria-label={`${t.shortcutReset}: ${label}`}
-              title={formatCombo(fallback)}
-              onClick={() => bind(fallback)}
-            >
-              {t.shortcutReset}
-            </button>
-          )}
-        </div>
-      </div>
-      {(error || taken) && (
-        <div className="settings-error" role="alert">
-          {error || t.shortcutConflict.replace("{action}", taken!)}
-        </div>
-      )}
     </div>
   );
 }

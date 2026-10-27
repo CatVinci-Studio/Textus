@@ -1,22 +1,11 @@
-//! Settings › General › Default Markdown editor (#183): make Textus the app
-//! that opens .md files, as far as each system lets an app do that itself.
-//!
-//! - Windows never lets an app make itself the default: the choice is a
-//!   hashed `UserChoice` only the Settings app writes. So this registers
-//!   Textus again for .md and .markdown - the per-user keys the installer
-//!   writes (`src-tauri/installer/hooks.nsh`, change both) - and opens
-//!   Default apps at Textus, where the user picks it.
-//! - macOS: LaunchServices' default handler for the types .md and .markdown
-//!   resolve to.
-//! - Linux: `xdg-mime default` with the desktop entry the package installed.
-//!   An AppImage has none of its own, so there it is unsupported.
-//!
-//! Neither command takes an argument: everything they write is fixed here.
+//! Make Textus the app that opens .md files, as far as each system allows.
+//! Windows only lets the user choose, so this registers Textus and opens
+//! Default apps; macOS sets LaunchServices; Linux uses `xdg-mime` (not for an AppImage).
 
 use serde::Serialize;
 use tauri::AppHandle;
 
-/// What Settings shows for the row - generated into src/platform/bindings/app.ts.
+/// What Settings shows for the row.
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -41,18 +30,12 @@ pub async fn set_default_editor(app: AppHandle) -> Result<(), String> {
     platform::make_default(&app)
 }
 
-// ---------------------------------------------------------------------------
-// Windows
-// ---------------------------------------------------------------------------
-
 /// The registry values that list Textus for Markdown files, all under
-/// HKEY_CURRENT_USER. Built without touching the registry, so they can be
-/// tested on every platform.
+/// HKEY_CURRENT_USER. Built without touching the registry, so they can be tested.
 #[cfg(any(windows, test))]
 mod registry {
-    /// Textus's own ProgID. Not "Markdown", which other editors' installers
-    /// (MarkText's, for one) also write and so took .md away from Textus.
-    /// `bundle.fileAssociations` in tauri.windows.conf.json names it too.
+    /// Textus's own ProgID. Not "Markdown", which other editors' installers also
+    /// write. Keep in step with `bundle.fileAssociations`.
     pub const PROG_ID: &str = "Textus.Markdown";
     pub const EXTENSIONS: [&str; 2] = [".md", ".markdown"];
     /// The name Default apps knows Textus by, in RegisteredApplications.
@@ -83,10 +66,8 @@ mod registry {
         }
     }
 
-    /// Every value, for Textus installed at `exe` - the same set as
-    /// TEXTUS_REGISTER in hooks.nsh. The extensions' own default values are
-    /// left alone: those are the installer's, and Windows goes by the user's
-    /// choice in Default apps anyway.
+    /// Every value, for Textus installed at `exe`; keep in step with the installer
+    /// hooks. The extensions' own default values are left to the installer.
     pub fn values(exe: &str) -> Vec<Value> {
         let exe_name = exe.rsplit('\\').next().unwrap_or(exe);
         let open = format!("\"{exe}\" \"%1\"");
@@ -142,8 +123,7 @@ mod platform {
             .map_err(|e| e.to_string())
     }
 
-    /// The program Explorer opens a .md file with, the user's choice
-    /// included.
+    /// The program Explorer opens a .md file with, the user's choice included.
     fn md_handler() -> Option<String> {
         use windows::core::{w, PCWSTR, PWSTR};
         use windows::Win32::UI::Shell::{AssocQueryStringW, ASSOCF_NONE, ASSOCSTR_EXECUTABLE};
@@ -199,18 +179,12 @@ mod platform {
     }
 }
 
-// ---------------------------------------------------------------------------
-// macOS
-// ---------------------------------------------------------------------------
-
 /// Markdown's type as macOS and most editors declare it.
 #[cfg(any(target_os = "macos", test))]
 const MARKDOWN_UTI: &str = "net.daringfireball.markdown";
 
-/// The types to take over: what .md and .markdown resolve to on this Mac
-/// (`resolved`, a `dyn.` type when nothing installed declares Markdown),
-/// then Markdown's own type, each once. The first is the one checked for
-/// the status.
+/// The types to take over: what .md and .markdown resolve to here (a `dyn.`
+/// type when nothing declares Markdown), then Markdown's own; the first sets the status.
 #[cfg(any(target_os = "macos", test))]
 fn content_types(resolved: impl IntoIterator<Item = String>) -> Vec<String> {
     let mut types: Vec<String> = Vec::new();
@@ -295,21 +269,17 @@ mod platform {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Linux
-// ---------------------------------------------------------------------------
-
 /// The desktop entry ids Textus is installed under: the .deb and .rpm name
 /// it after the product, the AUR package and the tarball after the binary.
 #[cfg(any(target_os = "linux", test))]
 const DESKTOP_IDS: [&str; 2] = ["Textus.desktop", "textus.desktop"];
 
-/// The MIME types the desktop entry claims (packaging/linux/textus.desktop).
+/// The MIME types the desktop entry claims.
 #[cfg(any(target_os = "linux", test))]
 const MIME_TYPES: [&str; 2] = ["text/markdown", "text/x-markdown"];
 
 /// The first of DESKTOP_IDS found in one of the `applications` folders, in
-/// the XDG search order.
+/// XDG search order.
 #[cfg(any(target_os = "linux", test))]
 fn installed_desktop_id(
     applications: &[std::path::PathBuf],
@@ -348,8 +318,8 @@ mod platform {
             .collect()
     }
 
-    /// None in an AppImage: a packaged copy's desktop entry would open that
-    /// copy, not this one.
+    /// None in an AppImage: a packaged copy's desktop entry would open that copy,
+    /// not this one.
     fn desktop_id() -> Option<&'static str> {
         if std::env::var_os("APPIMAGE").is_some() {
             return None;

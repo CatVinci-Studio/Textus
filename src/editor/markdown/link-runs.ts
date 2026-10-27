@@ -6,14 +6,9 @@ import type {
 } from "@milkdown/kit/prose/model";
 import { firstLink, linked } from "./markdown-output";
 
-/**
- * A link as a run of text under one link mark, and its Markdown source:
- * the run around a position, the source parsed back to a link, and the
- * syntax ranges shown dimmed (link-reveal.ts). Pure functions of the
- * document.
- */
+/** A link as a run of text under one link mark, and its Markdown source. */
 
-/** The node a link is shown as while the caret is on it (link-reveal.ts). */
+/** The node a link is shown as while the caret is on it. */
 export const LINK_SOURCE = "link_source";
 
 /** A run of linked inline content: one link, from `from` to `to`. */
@@ -65,10 +60,9 @@ export function runAround(
 }
 
 /**
- * The link the caret at `pos` is on, inside it or at one of its ends: the
- * whole link, across the bold or code inside it. A link all inside one
- * bold span, `**[a](u)**`, is looked for inside the span, so the span's
- * own `**` stays out of its source.
+ * The link the caret at `pos` is on, inside it or at one of its ends, across
+ * the bold or code inside it. A link wholly inside one bold span is looked
+ * for inside the span, so the span's `**` stays out of its source.
  */
 export function linkRunAt(doc: ProseNode, pos: number): LinkRun | null {
   const $pos = doc.resolve(pos);
@@ -92,10 +86,8 @@ export function linkRunAt(doc: ProseNode, pos: number): LinkRun | null {
 
 /**
  * Where in `source` the caret goes that stood `offset` characters into the
- * link's text `visible`: right after the same character. The characters
- * of the text are looked for in order through the source, past the
- * syntax between them (`**`, a backslash), from just inside the opening
- * `[` or `<`.
+ * link's text: the text's characters are found in order through the source,
+ * past the syntax between them.
  */
 export function caretInSource(
   visible: string,
@@ -184,10 +176,9 @@ export function linkSyntaxRanges(source: string): [number, number][] {
 }
 
 /**
- * `doc.textBetween(from, to, separator)` with each link shown as source
- * read as the link's text, while its source is as it was shown - what a
- * pending AI edit checks its text against (revision/pending-edit-plugin.ts),
- * so a look at a link inside the text it would change doesn't drop it.
+ * `doc.textBetween` with each link shown as source read as the link's text,
+ * while its source is unchanged, so a pending AI edit isn't dropped by a
+ * look at a link.
  */
 export function visibleTextBetween(
   doc: ProseNode,

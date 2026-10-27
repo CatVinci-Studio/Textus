@@ -9,13 +9,9 @@ export interface ThoughtRowLabels {
 }
 
 /**
- * One grey line above a reply: how long the model has been thinking, live,
- * then how long it thought. Where the provider streams readable reasoning
- * (a summary, or the reasoning itself), the line opens to show it; where it
- * only says that it thinks, the line is just the time.
- *
- * It starts closed, live or not: the seconds ticking say work is going on.
- * Open on the streaming reasoning by default, it jumped with every piece.
+ * One grey line above a reply: how long the model is thinking, then thought.
+ * It opens on readable reasoning where the provider streams it. Starts
+ * closed: open on streaming reasoning, it would jump with every piece.
  */
 export function ThoughtRow({
   thought,

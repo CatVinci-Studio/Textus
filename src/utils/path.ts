@@ -1,28 +1,22 @@
-// OS-path string math shared across the frontend. A path may use either
-// separator - documents opened on Windows arrive with "\" while everything
-// else uses "/" - so both are treated as separators here (see commit
-// 030e9a2). Note theme-import.ts keeps its own dirnameOf: it needs ""
-// (not the input) for a separator-less path, feeding its resolvePath.
+// OS-path string math. Documents opened on Windows arrive with "\", so both
+// separators are treated as separators here.
 
 export function basename(path: string): string {
   const idx = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
   const name = idx >= 0 ? path.slice(idx + 1) : path;
-  // A document picked on iOS is a file:// URL - "My%20Notes.md" on disk
-  // is "My Notes.md".
+  // A document picked on iOS is a file:// URL with an encoded name.
   return path.startsWith("file://") ? decodeUrlPath(name) : name;
 }
 
-// The folder part of a path: "/" for a root-level "/name" (returning the
-// input there made image paths like "/name.md/img.png"), and the input
-// unchanged for a bare filename with no folder at all.
+// The folder part of a path: "/" for a root-level "/name", and the input
+// unchanged for a bare filename.
 export function dirname(path: string): string {
   const idx = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
   if (idx > 0) return path.slice(0, idx);
   return idx === 0 ? path[0] : path;
 }
 
-// The folder one level up, or null at a filesystem root ("/", "C:\") or a
-// UNC share root ("\\server\share"), where there is nothing above to list.
+// The folder one level up, or null at a filesystem or UNC share root.
 export function parentDir(path: string): string | null {
   const trimmed = path.replace(/[\\/]+$/, "");
   const idx = Math.max(trimmed.lastIndexOf("/"), trimmed.lastIndexOf("\\"));
@@ -34,17 +28,13 @@ export function parentDir(path: string): string | null {
   return parent;
 }
 
-// Whether `path` lies somewhere below folder `dir` (not equal to it).
 export function isInside(path: string, dir: string): boolean {
   if (!path.startsWith(dir) || path.length === dir.length) return false;
   return /[\\/]$/.test(dir) || /[\\/]/.test(path[dir.length]);
 }
 
-// A Markdown image or link destination is a URL, so other apps write a
-// space as "%20" (and Chinese as "%E5%9B%BE..."); the file on disk has the
-// decoded name. Undecoded, an image's "%20" reached the asset protocol as
-// "%2520" and found nothing (#135). A malformed escape (a file really named
-// "100%.png") is kept as written.
+// A Markdown image or link destination is a URL, so "%20" names a space in
+// the file on disk. A malformed escape (a file named "100%.png") is kept.
 export function decodeUrlPath(src: string): string {
   try {
     return decodeURIComponent(src);

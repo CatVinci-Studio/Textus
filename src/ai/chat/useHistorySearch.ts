@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { storage } from "../../platform/ipc";
 
-/** A place a search found in a saved conversation
- *  (settings/chat_history/search.rs). */
+/** A place a search found in a saved conversation. */
 export interface HistoryHit {
   id: string;
   docPath: string | null;

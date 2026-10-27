@@ -11,6 +11,7 @@ metadata:
   textus-version: "1"
   textus-invocation: "both"
   textus-category: "revise"
+  textus-modes: "write"
   textus-packs: "contract"
   textus-target-packs: "typography numbers register"
   textus-sources: "Our own text. Name and term rules summarised from 외래어 표기법, 外来語の表記, GB/T 28039 and OpenCC phrase logic (Apache-2.0, ideas); translationese patterns from k-skill, im-not-ai and Humanizer-zh (MIT, ideas)."

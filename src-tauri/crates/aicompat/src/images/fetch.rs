@@ -1,10 +1,6 @@
 //! Downloading a picture a service left at a URL. The address comes from the
-//! service's reply, not from the user, so it is held to more than the
-//! request was: HTTPS only, no credentials in it, a redirect only to another
-//! such address, no private or loopback address when Textus connects
-//! directly (with a proxy, the proxy resolves the name), and a size cap
-//! counted while the body arrives, not after. Adapted from the downloader in
-//! #221 by Zhuohang Jiang.
+//! service, not the user, so: HTTPS only, no credentials, no private address
+//! when connecting directly, and a size cap counted while the body arrives.
 
 use super::sniff::MAX_IMAGE_BYTES;
 use super::ImageError;
@@ -48,9 +44,8 @@ pub(crate) fn check_url(url: &reqwest::Url) -> Result<(), String> {
     }
 }
 
-/// Resolves names as usual, and refuses a name that resolves to an address
-/// [`is_public`] turns down (any of them: [`all_public`]) - what keeps a public-looking host from
-/// pointing a download into the user's own network.
+/// Resolves names as usual, but refuses a name that resolves to any non-public
+/// address, so a public-looking host can't point into the user's network.
 struct PublicOnly;
 
 impl reqwest::dns::Resolve for PublicOnly {
@@ -163,7 +158,7 @@ mod tests {
     fn a_name_resolving_to_a_private_address_is_refused() {
         use reqwest::dns::Resolve;
         let name: reqwest::dns::Name = "localhost".parse().unwrap();
-        let resolved = tauri::async_runtime::block_on(PublicOnly.resolve(name));
+        let resolved = crate::block_on(PublicOnly.resolve(name));
         assert!(resolved.is_err());
     }
 

@@ -12,6 +12,7 @@ metadata:
   textus-version: "1"
   textus-invocation: "both"
   textus-category: "check"
+  textus-modes: "review"
   textus-packs: "contract standards#typography standards#numbers standards#words"
   textus-sources: "Our own text. Standards summarised per the attached language packs; error-rate figures from 图书质量管理规定 (2004), 报纸期刊质量管理规定 (2020) and CY/T 266-2023 (summarised)."
   textus-aliases-en: "typos, check"

@@ -1,10 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
-// A table's header cells wrap like the cells under them. They used to be
-// kept on one line: a long header held its column at its whole width, so
-// the table scrolled sideways for it, and in a table with column widths
-// set - and in print and the exports - it ran over the next column.
+// A table's header cells wrap like the cells under them, so a long header
+// neither widens the table nor runs over the next column.
 
 const LONG = {
   zh: "| 序号 | 这是一个很长的中文表头，需要自动换行才能完整显示，否则会把整列撑得很宽 | 状态 |\n| --- | --- | --- |\n| 1 | 正文 | 完成 |\n",
@@ -83,7 +81,7 @@ for (const lang of ["zh", "en"] as const) {
     await pasteMarkdown(page, LONG[lang]);
     expect(await linesIn(page, 1)).toBeGreaterThan(1);
     expect(await scrolls(page)).toBe(false);
-    // A short header stays whole, CJK included (#15).
+    // A short header stays whole, CJK included.
     expect(await linesIn(page, 0)).toBe(1);
     expect(await linesIn(page, 2)).toBe(1);
 

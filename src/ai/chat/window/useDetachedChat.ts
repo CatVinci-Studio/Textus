@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../../../platform/this-window";
 import { windowIpc } from "../../../platform/ipc";
 import { canDetachChat } from "../../../platform/capabilities";
-import { listenToThisWindow, unlistenAll } from "../../../utils/tauri-events";
+import { listenToThisWindow, unlistenAll } from "../../../platform/events";
 import { useLatest } from "../../../utils/hooks/useLatest";
 import type { AgentTurn, EditProposal } from "../../types";
 import type { PendingStatus } from "../../revision/usePendingEdits";
@@ -24,15 +24,8 @@ import {
 import type { SelectionChipHandlers } from "../ChatComposer";
 
 /**
- * Which chat window this WEBVIEW is talking to.
- *
- * Module-level rather than React state because every tab in a window is a
- * separate mounted MilkdownEditor in one JS realm, and they must agree: the
- * chat window is shared across files, so a tab that never detached anything
- * itself still has to know where to push its context when it becomes the
- * active one. Per-tab state left every tab but the one that clicked "detach"
- * believing no chat was open, which is why only that one file's document ever
- * reached the window.
+ * Which chat window this webview talks to. Module-level, not React state, so
+ * every tab knows where to push its context, not just the one that detached.
  */
 let sharedChatLabel: string | null = null;
 const labelListeners = new Set<() => void>();
@@ -54,9 +47,8 @@ function subscribeChatLabel(listener: () => void) {
   };
 }
 
-/** Asks Rust which chat window serves this editor window. Covers what a
- *  local store cannot: the chat may have been closed from its own window,
- *  or this webview reloaded, so it never saw the change happen. */
+/** Asks Rust which chat window serves this editor window: the chat may have
+ *  closed, or this webview reloaded, without the local store seeing it. */
 async function refreshChatLabel() {
   try {
     setSharedChatLabel(await windowIpc.currentChatWindow());
@@ -66,19 +58,8 @@ async function refreshChatLabel() {
 }
 
 /**
- * Keeps the store honest, once per WEBVIEW rather than once per tab.
- *
- * Every open tab mounts its own `useDetachedChat`, so subscribing from the
- * hook meant N identical IPC round trips (each taking Rust's registry mutex)
- * every time the window was focused, N-1 of them resolving to the value the
- * store already had. This registers on the first subscriber and tears down
- * with the last.
- *
- * Rust announces registry changes (CHAT_WINDOWS_CHANGED) because it is the
- * only party that knows about them - a chat window closed from another editor
- * window is invisible here, and pushing context at a destroyed label fails
- * silently. Window focus is kept as a cheap backstop for anything the event
- * misses.
+ * Keeps the store honest once per webview, not once per tab, to avoid N
+ * identical IPC round trips. Focus is a cheap backstop for missed events.
  */
 let watchers = 0;
 let stopWatching: (() => void) | null = null;
@@ -109,11 +90,8 @@ function watchChatWindows(): () => void {
 }
 
 export interface DetachedChatHandlers {
-  /** Whether a doc-scoped message addressed to `docPath` is for THIS tab.
-   *  Applied by the hook itself before any of the five handlers below fires
-   *  (see the file comment on chat-bridge.ts's DocScopedMessage) - the
-   *  doc-scoping contract is enforced once at the boundary instead of
-   *  relying on every handler remembering to check. */
+  /** Whether a doc-scoped message for `docPath` is for this tab. Checked by
+   *  the hook before the doc-scoped handlers fire. */
   isTarget: (docPath: string | null) => boolean;
   onProposals: (
     proposals: { callId: string; proposal: EditProposal }[],
@@ -135,26 +113,17 @@ export interface DetachedChatHandlers {
 }
 
 /**
- * The editor's half of the detached-chat bridge.
- *
- * Authority stays here: the chat window renders a conversation and asks for
- * things, but every proposal is still resolved and applied by this window's
- * usePendingEdits. That is the whole reason the bridge forwards calls rather
- * than shipping state - a second copy of the anchor/apply logic living in
- * another window is exactly the kind of drift the 0.7.2 rework removed.
+ * The editor's half of the detached-chat bridge. Every proposal is still
+ * resolved and applied here, so the bridge forwards calls, not state.
  */
 export function useDetachedChat(handlers: DetachedChatHandlers) {
   const chatLabel = useSyncExternalStore(
     subscribeChatLabel,
     getSharedChatLabel,
   );
-  // Handlers change identity every render; the listeners are registered once,
-  // so they read through a ref rather than re-subscribing constantly.
   const latest = useLatest(handlers);
 
   useEffect(() => {
-    /** Dispatch for the five doc-scoped messages: the isTarget check runs
-     *  here, once, so no individual handler can forget it. */
     const scoped = <T extends DocScopedMessage>(
       handle: (payload: T) => void,
     ) => {
@@ -215,15 +184,13 @@ export function useDetachedChat(handlers: DetachedChatHandlers) {
     async (
       state: ChatHandoffState,
       title: string,
-      /** The live setting at this instant, for Rust to build the window
-       *  always-on-top from the start (the window then reads it itself). */
+      /** So Rust builds the window always-on-top from the start. */
       pinned: boolean,
     ) => {
-      const win = getCurrentWindow();
+      const win = thisWindow();
       let position: [number, number] | null = null;
       try {
-        // Open beside the editor rather than on top of it - the reason to
-        // detach is to stop the chat covering the document.
+        // Beside the editor: detaching is meant to uncover the document.
         const [pos, size, scale] = await Promise.all([
           win.outerPosition(),
           win.outerSize(),
@@ -245,10 +212,8 @@ export function useDetachedChat(handlers: DetachedChatHandlers) {
     [],
   );
 
-  /** Pushes the document and selection as they now read, so the chat shows
-   *  the file the user is actually in and a send never goes out against a
-   *  stale snapshot. Also re-addresses the chat to this window (the context
-   *  carries `editorLabel`). */
+  /** Pushes the current document and selection, which also re-addresses the
+   *  chat to this window. */
   const pushContext = useCallback(
     (context: ChatContext) => {
       if (chatLabel) sendToWindow(chatLabel, EDITOR_TO_CHAT.context, context);

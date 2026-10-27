@@ -4,9 +4,8 @@ import { resolveStrings } from "../../i18n/strings";
 import { pickerLabels, type PickerLabels } from "./ComposerPicker";
 import type { AgentMode } from "../../settings/SettingsContext";
 
-// What ChatComposer.tsx is given: its labels, the selection chip it shows,
-// and its props - apart from the component, so the hooks and windows that
-// only pass these along needn't import it.
+// What ChatComposer is given, apart from the component so the hooks and
+// windows that only pass these along needn't import it.
 
 /** What ChatBody may do to the composer. */
 export interface ChatComposerHandle {
@@ -46,8 +45,18 @@ export interface ChatComposerLabels {
   attachmentNoVision: string;
   modeWrite: string;
   modeReview: string;
-  /** Accessible name of the phone's segmented mode control. */
+  modeCreate: string;
+  /** One line on what each mode does, under its name in the picker. */
+  modeWriteHint: string;
+  modeReviewHint: string;
+  modeCreateHint: string;
+  /** Accessible name of the phone's segmented mode control, and the
+   *  picker's heading over the modes. */
   modeLabel: string;
+  /** The picker's heading over the models. */
+  modelLabel: string;
+  /** Accessible name of the picker: the mode and the model. */
+  modeAndModelLabel: string;
   webSearch: string;
   deepThinking: string;
   /** Deep thinking's tooltip: what turning it on does. */
@@ -70,7 +79,7 @@ export interface SelectionChip {
 }
 
 /** The chip's link to the passage it stands for, kept highlighted in the
- *  document while the chip shows (useChatSelectionHighlight). */
+ *  document while the chip shows. */
 export interface SelectionChipHandlers {
   onChange: (chip: SelectionChip) => void;
   /** The chip was clicked: bring the passage into view. */
@@ -87,8 +96,8 @@ export function defaultPickerLabels(): PickerLabels {
 export const FILE_LIMIT = 30;
 
 export interface ChatComposerProps {
-  /** What the writer will probably say next (next-message.ts): grey in the
-   *  empty box, Tab takes it. */
+  /** What the writer will probably say next: grey in the empty box, Tab
+   *  takes it. */
   suggestion?: string | null;
   /** Resolves the agent workspace (skills) - re-loaded whenever it changes. */
   docPath: string | null;
@@ -103,38 +112,30 @@ export interface ChatComposerProps {
   labels: ChatComposerLabels;
   defaultMode: AgentMode;
   /** The panel and the detached window: the mode picked carries over to
-   *  the next conversation (last-mode.ts). Quick Ask keeps its own. */
+   *  the next conversation. Quick Ask keeps its own. */
   carryMode?: boolean;
-  /** The tour's lesson's mode (onboarding/), put in place whenever it
-   *  changes; the learner can still pick another. Not carried over. */
+  /** The tour's lesson's mode, put in place whenever it changes; the learner
+   *  can still pick another. Not carried over. */
   tourMode?: AgentMode | null;
-  /** See SelectionChipHandlers. */
   selectionChip?: SelectionChipHandlers;
-  /** The panel and the detached window: a selection rides with one
-   *  message, so sending uses it up and the chip (with the highlight) goes
-   *  until the next selection. Quick Ask's captured selection stays for its
-   *  whole conversation. */
+  /** The panel and the detached window: a selection rides with one message,
+   *  so sending uses it up. Quick Ask's stays for its whole conversation. */
   selectionPerMessage?: boolean;
-  /** Quick Ask: no attach, web-search or Deep thinking buttons - those
-   *  stay in the panel (an @-mention still attaches a project file) - and
-   *  it asks for a fast answer: it is for a quick change. */
+  /** Quick Ask: no attach, web-search or Deep thinking buttons, and it asks
+   *  for a fast answer. */
   compact?: boolean;
-  /** Focus the input as the composer appears (default). Off for the
-   *  phone's AI sheet: focusing it raised the keyboard straight after the
-   *  document's went down - a flash - so the sheet opens with the keyboard
-   *  away and a tap on the input brings it up. */
+  /** Focus the input as the composer appears (default). Off for the phone's
+   *  AI sheet, where raising the keyboard right away flashes. */
   focusOnOpen?: boolean;
   defaultWebSearch: boolean;
-  /** The docked Quick Ask on a phone (InlineChat's `docked`): its top row
-   *  quotes what the request is about - the selection, or "at the cursor" -
-   *  in place of the toolbar's "{n} chars selected" chip, and carries these
-   *  controls (new, continue in panel, close) beside it. */
+  /** The docked Quick Ask on a phone: its top row quotes what the request
+   *  is about and carries these controls beside it. */
   dockActions?: ReactNode;
-  /** The model button (ModelSwitcher), in the toolbar after the toggles;
-   *  the caller renders it, as it reads Settings and this doesn't. */
-  modelSwitcher?: ReactNode;
-  /** The resolved message (skill expanded) plus any attachments - InlineChat
-   *  owns tagging it with selected-text/chatInfo and actually sending it. */
+  /** The mode picker lists the models under the modes: the panel and the
+   *  chat window, not Quick Ask. */
+  switchModels?: boolean;
+  /** The resolved message (skill expanded) plus any attachments; the caller
+   *  tags and sends it. */
   onSend: (
     message: string,
     attachments: ChatAttachment[],
@@ -153,7 +154,6 @@ export interface ChatComposerProps {
   onSkillUsed?: () => void;
   onStop: () => void;
   onEscape: () => void;
-  /** The mode as it is now - on the first render and on every switch (the
-   *  AI panel's empty state says what it will do). */
+  /** The mode as it is now, on the first render and on every switch. */
   onModeChange?: (mode: AgentMode) => void;
 }

@@ -2,13 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 import base from "./playwright.config";
 
 /**
- * The motion benchmark (e2e/bench/motion.bench.ts): frame timing for every
- * animated surface, with the animations on. A measurement for comparing
- * changes, not a test - CI doesn't run it.
- *
- *   npm run bench:motion
- *
- * Only the main window's dev server; the playground's isn't needed.
+ * The motion benchmark: frame timing for every animated surface, animations
+ * on. A measurement, not a test; CI doesn't run it.
  */
 export default defineConfig({
   ...base,

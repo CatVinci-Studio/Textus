@@ -2,9 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { isSelfContained, themeName, themesInReply } from "./chat-theme";
 
-// What the theme skill (src-tauri/src/ai/skills/theme.md) produced for
-// "a calm dark theme for night writing, teal accent, a serif", written down
-// as a reply: the shape the chat offers "Use this theme" for.
+// What the theme skill produced for "a calm dark theme for night writing,
+// teal accent, a serif", as a reply the chat offers "Use this theme" for.
 const reply = readFileSync("src/theme/fixtures/theme-skill-reply.md", "utf8");
 const skill = readFileSync("src-tauri/src/ai/skills/theme.md", "utf8");
 
@@ -67,8 +66,7 @@ describe("themeName", () => {
 });
 
 describe("the theme skill and its sample", () => {
-  // The variables the app reads (ui/base.css, milkdown-theme.css; the
-  // exporter's list in settings/sections/theme.tsx).
+  // The variables the app reads.
   const variables = [
     "--editor-bg",
     "--editor-text",

@@ -40,12 +40,9 @@ import {
 } from "../../platform/capabilities";
 import { openExtensionsTab } from "./extensions-tab";
 
-/** Textus AI: its own switch, then the account and each feature beside the model it drives. */
-/* One page for the AI: its own switch, then connect first and then
-    the features, each model beside the feature it drives. The model
-    list is fetched once, under Connection, for both pickers. With
-    Textus AI off, every other row is hidden: none of them does
-    anything then, and none may reach a provider (#196). */
+/** Textus AI: its own switch, then the account and each feature beside the
+ *  model it drives. With Textus AI off every other row is hidden, so none
+ *  may reach a provider. */
 export function AiPage({
   t,
   settings,
@@ -191,6 +188,7 @@ export function AiPage({
                   >
                     <option value="write">{t.agentModeWrite}</option>
                     <option value="review">{t.agentModeReview}</option>
+                    <option value="create">{t.agentModeCreate}</option>
                   </Select>
                 </SettingRow>
                 <SettingRow
@@ -232,17 +230,13 @@ export function AiPage({
             )}
           </SettingsGroup>
 
-          {/* Project files, writing instructions and skills only reach
-            conversations, so with chat off there is nothing here to set.
-            (Completion still follows the project's style profile and
-            library - see docs/design/ai-concepts.md.) */}
+          {/* Project files, instructions and skills only reach conversations, so
+              with chat off there is nothing here to set. */}
           {settings.enableAskAi && (
             <>
               <SettingsGroup title={t.agentPersonalizationGroupLabel}>
-                {/* What the AI may read - File › Open Folder… sets it
-                  too while the AI has no folder of its own
-                  (sidebar/tree-root.ts), so there is one folder setting,
-                  not a second one in General. */}
+                {/* File › Open Folder… sets the same folder, so there is one setting,
+                    not a second one in General. */}
                 {canPickFolder && <AgentWorkspaceRootSection t={t} />}
                 <ToggleRow
                   label={t.rememberAutomaticallyLabel}

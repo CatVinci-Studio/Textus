@@ -2,15 +2,14 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * Making a plugin: one loaded from a folder is loaded again when its files
- * change (the dev shim's __devPluginStamps stands in for the folder's
- * times), and what goes wrong in it is on its page in Settings.
+ * A plugin loaded from a folder reloads when its files change, and its
+ * errors show on its page in Settings.
  */
 
 const host = (word: string) => `
 exports.activate = function () {
-  textus.commands.registerCommand("test.dev.say", function () {
-    return textus.window.showMessage("${word}");
+  textus.commands.register("test.dev.say", function () {
+    return textus.ui.message("${word}");
   });
   setTimeout(function () { throw new Error("oops from ${word}"); }, 0);
 };

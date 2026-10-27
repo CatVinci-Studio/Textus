@@ -2,9 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
 /**
- * Settings › Extensions › Get more (MarketPage): plugins, themes and
- * skills in one place, one search over them and a filter by kind; a
- * skill installed from the catalog is the user's from then on.
+ * Settings › Extensions › Get more: plugins, themes and skills, one search
+ * and a filter by kind; a skill installed from the catalog is the user's.
  */
 
 const SKILLS = [
@@ -68,20 +67,56 @@ test("the market's skills install with a click, and say so once installed", asyn
   expect(installed).toEqual(["press-release"]);
 });
 
-test("one search goes over plugins, themes and skills, and All shows each kind", async ({
+test("Get more has a tab per kind - themes, plugins, skills - each with its search", async ({
   page,
 }) => {
   await openMarket(page);
-  await page.getByRole("tab", { name: "All" }).click();
-  for (const kind of ["Plugins", "Themes", "Skills"])
-    await expect(page.getByRole("region", { name: kind })).toBeVisible();
-  // Each kind in one box, the themes too - not a box in a box.
+  await expect(page.locator(".market-kinds").getByRole("tab")).toHaveText([
+    "Themes",
+    "Plugins",
+    "Skills",
+  ]);
+  await page.getByRole("tab", { name: "Themes" }).click();
+  await expect(page.getByRole("region", { name: "Themes" })).toBeVisible();
+  // The themes in one box - not a box in a box.
   await expect(page.locator(".theme-gallery-item")).toHaveCount(2);
   await expect(page.locator(".settings-group .settings-group")).toHaveCount(0);
-  const search = page.getByRole("searchbox", {
-    name: "Search plugins, themes, skills and servers",
-  });
+  await expect(page.getByRole("region", { name: "Skills" })).toHaveCount(0);
+  await page.getByRole("tab", { name: "Skills" }).click();
+  const search = page.getByRole("searchbox", { name: "Search" });
   await search.fill("cover letter");
   await expect(page.locator("[data-skill]")).toHaveCount(1);
   await expect(page.locator('[data-skill="cover-letter"]')).toBeVisible();
+});
+
+test("Get more leads with the recommended plugins, until something is searched for", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-open-settings"),
+  );
+  await page.getByRole("button", { name: "Extensions" }).click();
+  await page.getByRole("tab", { name: "Plugins" }).click();
+  await page.getByRole("button", { name: "Get more" }).click();
+  const picks = page.locator(".market-recommended .plugin-card");
+  await expect(picks.first()).toBeVisible();
+  expect(
+    await picks.evaluateAll((cards) =>
+      cards.map((c) => c.getAttribute("data-catalog")),
+    ),
+  ).toEqual([
+    "catvinci.pdf-viewer",
+    "catvinci.image-viewer",
+    "catvinci.tasks",
+    "catvinci.daily-notes",
+  ]);
+  await expect(page.locator(".plugin-subgroup-title")).toContainText([
+    "Packs",
+    "Recommended",
+  ]);
+  await page.getByRole("searchbox").fill("kanban");
+  await expect(page.locator(".market-recommended")).toHaveCount(0);
 });

@@ -1,21 +1,16 @@
 import type { Fragment, Node as ProseNode } from "@milkdown/kit/prose/model";
 
 /**
- * The plain-text flavor of a copy, for apps that only read plain text
- * (WeChat, chat apps, Notes): the words as they read on the page, not the
- * Markdown source - "[Textus](https://…)" and "**bold**" pasted there
- * verbatim. A link keeps its address after its text, "Textus (https://…)",
- * unless the text is the address already; lists keep a marker and their
- * nesting; a table is tab-separated, one row a line. The HTML flavor beside
- * it still carries the formatting for apps that read it (Word, mail, Textus
- * itself).
+ * The plain-text flavor of a copy: the words as they read, not the Markdown
+ * source. A link keeps its address after its text, lists keep a marker, a
+ * table is tab-separated.
  */
 export function plainTextOf(content: Fragment): string {
   return blocks(content).join("\n\n");
 }
 
-/** Each block's text, top to bottom. A fragment of inline content (a copy
- *  inside one paragraph) is one block. */
+/** Each block's text, top to bottom. A fragment of inline content is one
+ *  block. */
 function blocks(content: Fragment): string[] {
   const out: string[] = [];
   let inline: ProseNode[] = [];
@@ -52,8 +47,7 @@ function block(node: ProseNode): string | null {
     case "table":
       return table(node);
     default:
-      // A paragraph with nothing that reads (only an HTML comment, say)
-      // leaves no blank line behind.
+      // A paragraph with nothing that reads leaves no blank line behind.
       if (node.isTextblock) return inlineText(childrenOf(node)) || null;
       // Quotes, alerts and other wrappers: their blocks, one per paragraph.
       return blocks(node.content).join("\n\n");
@@ -97,9 +91,8 @@ function childrenOf(node: ProseNode): ProseNode[] {
   return out;
 }
 
-/** Inline content as read: a link's address after its text. Text in
- *  Textus's own inline nodes (bold, italic and code spans, inline math)
- *  is their text; a line break is a newline; an image is its alt text. */
+/** Inline content as read: a link's address after its text, a line break
+ *  as a newline, an image as its alt text. */
 function inlineText(nodes: ProseNode[]): string {
   const runs: { text: string; href: string | null }[] = [];
   const walk = (node: ProseNode) => {
@@ -114,7 +107,7 @@ function inlineText(nodes: ProseNode[]): string {
     } else if (node.type.name === "image") {
       runs.push({ text: String(node.attrs.alt ?? ""), href: null });
     } else if (node.type.name === "html") {
-      // Inline raw HTML, as above: not part of what reads.
+      // Inline raw HTML is not part of what reads.
     } else {
       node.forEach(walk);
     }
@@ -132,8 +125,7 @@ function inlineText(nodes: ProseNode[]): string {
   return out;
 }
 
-/** The link's text is its address already (with or without the scheme, or
- *  an email's mailto:), so repeating it would only double it. */
+/** The link's text is its address already, so repeating it would double it. */
 function sameAddress(text: string, href: string): boolean {
   const bare = (s: string) =>
     s

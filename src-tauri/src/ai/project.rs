@@ -1,34 +1,6 @@
-//! The project folder (in code, the workspace root) seen as writing
-//! material - see docs/design/ai-concepts.md. One place for walking it, reading
-//! from it safely, searching it, and the two writing aids that live in its
-//! `.textus/` directory:
-//!
-//! ```text
-//! my-novel/
-//! ├── chapter-1.md
-//! └── .textus/
-//!     ├── style.md            <- the author's style profile ("Learn my style")
-//!     └── library/
-//!         ├── lin-wan.md      <- one entry per character, place or term
-//!         └── harbour-city.md
-//! ```
-//!
-//! A library entry is markdown with an optional frontmatter block:
-//!
-//! ```text
-//! ---
-//! name: Lin Wan
-//! aliases: [Wan, Ms Lin]
-//! include: detected        # always | detected (default) | never
-//! ---
-//! Protagonist, 32, teaches Chinese at a secondary school...
-//! ```
-//!
-//! Entries go to the model only when they matter: `always`, or `detected` -
-//! the name or an alias appears in what the request is about. Undetected
-//! entries cost nothing, so a large library stays cheap. As in agent.md,
-//! `<!-- -->` comments in the style profile and in entries are notes to
-//! self and never reach the model.
+//! The project folder seen as writing material: walking, reading and searching
+//! it safely, and the `.textus/` style profile and library. A library entry
+//! goes to the model only when `always`, or when its name or an alias comes up.
 
 use crate::ai::memory::Remembered;
 use crate::ai::workspace::{project_dir, project_file, strip_html_comments, WORKSPACE_DIR_NAME};
@@ -50,8 +22,8 @@ pub(crate) use library::*;
 mod style;
 pub(crate) use style::*;
 
-/// Most library text one request carries, in characters - not bytes, which
-/// gave Chinese and Japanese a third of what English got.
+/// Most library text one request carries, in characters (not bytes, so CJK
+/// gets as much as English).
 pub(crate) const MAX_LIBRARY_CHARS: usize = 8_000;
 
 #[cfg(test)]
@@ -80,8 +52,8 @@ pub async fn list_project_files(
     .unwrap_or_default()
 }
 
-/// One project file's text, for an @-mention - the same safety rules as the
-/// agent's read_file tool.
+/// One project file's text, for an @-mention, under the same safety rules as
+/// the agent's read_file.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn read_project_file(
@@ -127,7 +99,7 @@ pub async fn library_use(
 }
 
 /// Creates `.textus/<rel>` with `template` unless it already exists, and
-/// returns its absolute path - "new library entry", "open style profile".
+/// returns its absolute path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn ensure_project_file(
@@ -175,10 +147,9 @@ pub async fn pick_text_files(window: tauri::WebviewWindow) -> Vec<String> {
     .unwrap_or_default()
 }
 
-/// "Learn my style": analyses the picked samples and writes the project's
-/// `.textus/style.md` (keeping the previous one as style.previous.md), which
-/// the agent and the inline completion then follow. Returns its path, which
-/// the frontend opens for the author to review and edit.
+/// "Learn my style": analyses the picked samples and writes `.textus/style.md`
+/// (keeping the previous one as style.previous.md). Returns its path, which the
+/// frontend opens for review.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn learn_style(

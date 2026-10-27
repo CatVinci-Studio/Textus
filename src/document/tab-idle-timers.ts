@@ -1,13 +1,7 @@
 /**
- * One idle timer per tab, for the two things written once typing rests:
- * draft snapshots (draft-autosave.ts) and Save Automatically (autosave.ts).
- *
- * `schedule` (re)starts a tab's timer for a snapshot of it, unless the
- * timer already stands for an equal one (`same`) - a re-render that changed
- * nothing doesn't push the write back. `maxWaitMs` caps how long one
- * unbroken typing burst can hold a write off; the cap restarts after each
- * write. A tab's entry stays after its timer fires, so an unchanged
- * snapshot isn't written twice; `cancel` drops it.
+ * One idle timer per tab, for writes made once typing rests. `schedule`
+ * skips a snapshot equal (`same`) to the pending one; `maxWaitMs` caps how
+ * long a typing burst holds a write off.
  */
 export interface TabIdleTimers<S> {
   schedule: (id: string, snapshot: S, fire: (snapshot: S) => void) => void;

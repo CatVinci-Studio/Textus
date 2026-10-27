@@ -118,7 +118,7 @@ static NO_CONVENTIONS: std::sync::LazyLock<crate::ai::rules::Conventions> =
     std::sync::LazyLock::new(crate::ai::rules::Conventions::default);
 #[test]
 fn use_skill_expands_skills_and_loads_packs() {
-    let ws = crate::ai::workspace::load_layers(None, None, None, &["describe".to_string()]);
+    let ws = crate::ai::workspace::load_layers(None, None, None);
     let doc = "雨はまだ降っていた。美咲は改札の前で、何度も時計を見た。";
     let ctx = ToolContext {
         undecided: &[],
@@ -133,13 +133,15 @@ fn use_skill_expands_skills_and_loads_packs() {
         checks: Default::default(),
     };
     let call = |name: &str| use_skill(&ctx, &json!({ "name": name }).to_string());
-    let dialogue = call("dialogue");
-    assert!(dialogue.starts_with("Instructions for skill `dialogue`"));
-    assert!(dialogue.contains("### contract") && dialogue.contains("### standards-ja#dialogue"));
+    let proofread = call("proofread");
+    assert!(proofread.starts_with("Instructions for skill `proofread`"));
+    assert!(
+        proofread.contains("### contract") && proofread.contains("### standards-ja#typography")
+    );
     assert!(call("tighten").contains("only when the user types /tighten"));
     assert!(
         call("describe").starts_with("No skill named `describe`"),
-        "turned off"
+        "in the market, not built in"
     );
     let fr = call("standards-fr#dialogue");
     assert!(fr.starts_with("Reference `standards-fr#dialogue`") && fr.contains("guillemets"));
@@ -157,10 +159,8 @@ fn md(text: &str) -> &'static Document {
     Box::leak(Box::new(Document::from_markdown(text)))
 }
 
-/// A call as the model sends it, naming the block its `anchor` is in (the
-/// one block that holds it), resolved as agent::settle does before the
-/// tool sees it. Words in no block - text proposed and not decided yet -
-/// stay a quote.
+/// A call as the model sends it, naming the block its `anchor` is in, resolved
+/// as the agent does before the tool sees it. Words in no block stay a quote.
 fn named(document: &Document, args: &str) -> String {
     let mut v: serde_json::Value = serde_json::from_str(args).unwrap();
     if let Some(anchor) = v.get("anchor").and_then(|a| a.as_str()) {
@@ -533,8 +533,7 @@ fn an_edit_may_change_text_proposed_and_not_decided_yet() {
     );
 }
 
-/// Write took in 1.2.0's Revise mode in 1.2.1: it adds text and changes
-/// the text that is there.
+/// Write adds text and changes the text that is there.
 #[test]
 fn write_mode_offers_every_edit() {
     let doc = "The cat sat on the mat.";
@@ -679,7 +678,7 @@ fn a_result_says_its_picture_ids_are_textus_own() {
 
 #[test]
 fn words_of_an_undecided_rewrite_quoted_by_its_block_go_into_the_rewrite() {
-    // Haiku named the block it had rewritten and quoted its own rewrite.
+    // The model named the block it had rewritten and quoted its own rewrite.
     let doc = "The lighthouse stood on the rock.\n\nWaves broke below.";
     let undecided = vec![crate::ai::images::UndecidedEdit {
         replaced: "The lighthouse stood on the rock.".into(),

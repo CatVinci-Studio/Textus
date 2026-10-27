@@ -1,6 +1,5 @@
-/* The history list in a chat header (ChatHistoryMenu.tsx). The header is
-   its containing block, so the list drops down across the panel's (or the
-   detached window's) whole width, however near the edge the button sits. */
+/* The history list in a chat header. The header is its containing block, so
+   the list spans the whole width however near the edge the button sits. */
 .chat-history-menu {
   position: absolute;
   top: calc(100% + 4px);
@@ -24,8 +23,8 @@
   color: var(--editor-muted);
 }
 
-/* Entries are hairline-separated, as the clipboard history's are: a title
-   and a date line per entry run together without a rule between them. */
+/* Entries are hairline-separated: a title and a date line per entry would
+   otherwise run together. */
 .chat-history {
   display: flex;
   flex-direction: column;
@@ -127,8 +126,8 @@
   }
 }
 
-/* Searching what was said (useHistorySearch): the field on top, and each
-   conversation found with the words it was found by. */
+/* Searching what was said: the field on top, and each conversation found
+   with the words it was found by. */
 .chat-history-search {
   margin: 4px 4px 6px;
   padding: 5px 8px;

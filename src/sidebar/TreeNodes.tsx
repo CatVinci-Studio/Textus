@@ -1,5 +1,5 @@
 // The file tree's rows: a folder, which reads and lists its entries, and
-// a file. Inside a FileTree, whose context they read (tree-shared.ts).
+// a file.
 
 import { useEffect, useMemo, useState } from "react";
 import type { DirEntryInfo } from "../platform/fs-types";
@@ -45,8 +45,8 @@ export function DirNode({
 }: DirNodeProps) {
   const tree = useTree();
   const version = tree.versions[path] ?? 0;
-  // The root is always open; a folder on the way down to the open document
-  // starts open too, so walking "up" still shows where that document is.
+  // The root is always open, and so is a folder on the way down to the open
+  // document.
   const [open, setOpen] = useState(
     depth === 0 || (activePath !== null && isInside(activePath, path)),
   );
@@ -54,8 +54,8 @@ export function DirNode({
     version: number;
     entries: DirEntryInfo[];
   } | null>(null);
-  // A document opened further down (from the search, say) shows where it
-  // is: its folders open, the rest stay as the user left them.
+  // A document opened further down shows where it is: its folders open, the
+  // rest stay as they were.
   useEffect(() => {
     if (activePath !== null && isInside(activePath, path)) setOpen(true);
   }, [activePath, path]);
@@ -76,9 +76,8 @@ export function DirNode({
       cancelled = true;
     };
   }, [open, loaded, version, path]);
-  // In the file manager's order for the UI's language (utils/name-order),
-  // not the backend's byte order: "第2章" before "第10章". Folders first
-  // either way; "Documents only" leaves out the other files.
+  // In the file manager's order for the UI language, not byte order
+  // ("第2章" before "第10章"). Folders first.
   const { settings } = useSettings();
   const collator = nameCollator(localeOf(settings.language));
   const sorted = useMemo(() => {

@@ -7,7 +7,7 @@ fn citation_markers_are_taken_out_of_text_and_arguments() {
         strip_citation_markers("返回选项及概率。\u{e200}cite\u{e202}turn3view0\u{e201}"),
         "返回选项及概率。"
     );
-    // Their delimiters lost, as they reached a document (rc.5).
+    // Their delimiters lost, as they reached a document.
     assert_eq!(
         strip_citation_markers("中文输入应优先测试多语言版。citeturn2search0turn3view2\n\nNext"),
         "中文输入应优先测试多语言版。\n\nNext"
@@ -152,9 +152,8 @@ fn a_new_step_only_appends_input_items() {
     assert_eq!(after.len(), before.len() + 2);
 }
 
-/// The image part's exact shape is the whole contract with the provider,
-/// and getting it wrong fails at request time with an opaque 400 - worth
-/// pinning here rather than discovering it from a user's bug report.
+/// The image part's exact shape is the whole contract with the provider;
+/// getting it wrong fails at request time with an opaque 400.
 #[test]
 fn user_turn_images_become_input_image_parts_before_the_text() {
     let turn = AgentTurn::User {

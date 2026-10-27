@@ -1,0 +1,53 @@
+/* Code blocks a plugin draws: its page below the block, the source hidden
+   while the caret is elsewhere. */
+
+.plugin-code-source-hidden {
+  display: none;
+}
+
+.plugin-code-block {
+  position: relative;
+  margin: var(--md-gap-box) 0;
+  border: 1px solid var(--editor-border);
+  border-radius: var(--md-radius);
+  background: var(--editor-code-bg);
+  overflow: hidden;
+}
+
+.plugin-code-block .plugin-code-block-frame,
+.plugin-code-block .plugin-webview-frame {
+  display: block;
+  width: 100%;
+  border: 0;
+}
+
+.plugin-code-block .plugin-webview-frame {
+  /* Until the page says how tall it is. */
+  height: 120px;
+}
+
+.plugin-code-edit {
+  position: absolute;
+  top: 6px;
+  inset-inline-end: 6px;
+  z-index: 1;
+  padding: 2px 6px;
+  border: 1px solid var(--editor-border);
+  border-radius: var(--md-radius-sm);
+  background: var(--editor-bg);
+  color: var(--text-muted);
+  font: 12px var(--font-mono);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.plugin-code-block:hover .plugin-code-edit,
+.plugin-code-edit:focus-visible {
+  opacity: 1;
+}
+
+.plugin-code-block .plugin-webview-problem {
+  padding: 0.8em 1em;
+  color: var(--text-muted);
+}

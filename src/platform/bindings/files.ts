@@ -13,86 +13,59 @@ export const commands = {
 	 *  default, any file once the user switches the type.
 	 */
 	open_file_dialog: (textFilter: string | null, wordFilter: string | null, allFilter: string | null) => __TAURI_INVOKE<string | null>("open_file_dialog", { textFilter, wordFilter, allFilter }),
-	/**
-	 *  Opens a native file picker for a CSS theme file (e.g. a Typora-compatible
-	 *  community theme).
-	 */
+	/**  Opens a native file picker for a CSS theme file. */
 	open_css_file_dialog: () => __TAURI_INVOKE<string | null>("open_css_file_dialog"),
 	/**
-	 *  Opens a native file picker for one image: "Choose image…" on a missing
-	 *  image's card (src/editor/images/missing-image.ts). The frontend names the
-	 *  filter in the UI language and lists the types its image store takes
-	 *  (IMAGE_FILE_EXTENSIONS in src/editor/images/pasted-files.ts).
+	 *  Opens a native file picker for one image, for a missing image's card. The
+	 *  frontend names the filter and lists the image types.
 	 */
 	open_image_file_dialog: (filterName: string, extensions: string[]) => __TAURI_INVOKE<string | null>("open_image_file_dialog", { filterName, extensions }),
 	/**
-	 *  Opens a native "Save As" dialog for a new, never-saved document - in
-	 *  `default_dir` when given: beside the Word file a document was opened
-	 *  from.
+	 *  Opens a native "Save As" dialog for a never-saved document, in `default_dir`
+	 *  when given (beside the Word file it came from).
 	 */
 	save_file_dialog: (defaultName: string, defaultDir: string | null) => __TAURI_INVOKE<string | null>("save_file_dialog", { defaultName, defaultDir }),
 	/**
-	 *  Lists the immediate children of a directory (non-recursive; the frontend
-	 *  calls this again when a subfolder is expanded, so startup never walks the
-	 *  whole tree). Async so a slow/network-mounted directory doesn't stall the
-	 *  app while it's being read.
+	 *  Lists the immediate children of a directory; the frontend asks again per
+	 *  expanded folder. Async so a slow network mount doesn't stall the app.
 	 */
 	list_dir: (path: string) => __TAURI_INVOKE<DirEntryInfo_Serialize[]>("list_dir", { path }),
 	/**
-	 *  Millisecond mtime of a file, or None if it doesn't exist. The frontend
-	 *  snapshots this when a document is read or written, then compares against
-	 *  it to detect external modifications (reload on window focus, and the
-	 *  overwrite-conflict prompt before saving).
+	 *  Millisecond mtime of a file, or None if it doesn't exist; the frontend
+	 *  compares it to detect external modifications.
 	 */
 	file_mtime_ms: (path: string) => __TAURI_INVOKE<number | null>("file_mtime_ms", { path }),
 	read_text_file: (path: string) => __TAURI_INVOKE<string>("read_text_file", { path }),
 	/**
-	 *  Reads a file as base64 - used to inline a CSS theme's local font/image
-	 *  `url(...)` assets as data URIs, since a relative path in a `<style>` tag
-	 *  injected at runtime has no base to resolve against.
+	 *  Reads a file as base64, to inline a CSS theme's local `url(...)` assets: a
+	 *  runtime `<style>` tag has no base to resolve relative paths against.
 	 */
 	read_binary_file_base64: (path: string) => __TAURI_INVOKE<string>("read_binary_file_base64", { path }),
 	write_text_file: (path: string, contents: string) => __TAURI_INVOKE<null>("write_text_file", { path, contents }),
 	/**
-	 *  Persists an image pasted into the editor. Saved documents get it in
-	 *  their image folder (`folder`, see ImageFolder) and a relative src;
-	 *  unsaved drafts fall back to an assets folder in the app's data dir with
-	 *  an absolute src (still valid after the draft is saved elsewhere).
+	 *  Persists an image pasted into the editor. Saved documents get it in their
+	 *  image folder with a relative src; unsaved drafts use the app's assets folder, absolute.
 	 */
 	save_pasted_image: (docPath: string | null, dataBase64: string, ext: string, folder: string) => __TAURI_INVOKE<SavedImage>("save_pasted_image", { docPath, dataBase64, ext, folder }),
 	/**
-	 *  Brings a document's images into the image folder (`folder`, see
-	 *  ImageFolder) of the file it was just saved as, rewriting each markdown
-	 *  `src` to the new relative path. Two kinds of src are taken:
-	 *  - a draft's pasted image, an absolute path in the app data dir's
-	 *    `assets/` folder (save_pasted_image): moved, the draft is gone;
-	 *  - with `source_doc_path` (Save As of a document that had a file), a
-	 *    path relative to that document: copied, since the old file still
-	 *    links to it. Such an image used to stay behind, and the new file's
-	 *    link pointed at nothing.
-	 * 
-	 *  Anything else - another absolute path, a relative one naming no
-	 *  picture, every relative one when the folder didn't change - is left
-	 *  alone, matching the frontend's job of only offering candidates here.
+	 *  Brings a document's images into the image folder of the file it was just
+	 *  saved as, rewriting each `src`: a draft's pasted images are moved, and on Save
+	 *  As images relative to the old document are copied. Anything else is left alone.
 	 */
 	migrate_draft_images: (docPath: string, srcs: string[], folder: string, sourceDocPath: string | null) => __TAURI_INVOKE<ImageMigration_Serialize[]>("migrate_draft_images", { docPath, srcs, folder, sourceDocPath }),
 	/**
-	 *  Moves a picture that an accepted AI picture replaced to the system's
-	 *  Trash (Recycle Bin), once the user said so - never deletes it; it can
-	 *  be put back from there.
+	 *  Moves a picture that an accepted AI picture replaced to the Trash, once the
+	 *  user said so; never deletes it.
 	 */
 	move_picture_to_trash: (docPath: string | null, path: string) => __TAURI_INVOKE<null>("move_picture_to_trash", { docPath, path }),
 	/**
-	 *  The files under `root`, for the sidebar's file-name search. Refuses the
-	 *  home folder and a drive root ("TOO_BROAD"), as the AI's project folder
-	 *  does: a walk there would be everything the user owns.
+	 *  The files under `root`, for the sidebar's file-name search. Refuses the home
+	 *  folder and a drive root ("TOO_BROAD"): a walk there is everything the user owns.
 	 */
 	index_folder: (root: string) => __TAURI_INVOKE<FolderIndex>("index_folder", { root }),
 	/**
 	 *  File > Open Folder…: a folder picker. The home folder or a drive root is
-	 *  refused here, where the choice is made, with "TOO_BROAD" for the
-	 *  frontend to explain - the sidebar's search, and the AI that may follow
-	 *  the folder, would otherwise reach everything the user owns.
+	 *  refused with "TOO_BROAD" for the frontend to explain.
 	 */
 	pick_open_folder: () => __TAURI_INVOKE<string | null>("pick_open_folder"),
 	/**  Creates an empty Markdown document in `dir`. Returns its path. */
@@ -102,10 +75,8 @@ export const commands = {
 	/**  Moves a file or folder into the folder `into`. Returns its new path. */
 	tree_move_entry: (path: string, into: string) => __TAURI_INVOKE<string>("tree_move_entry", { path, into }),
 	/**
-	 *  Gives a file or folder a new name in the folder it is in. A document
-	 *  renamed without an extension keeps being a document (`.md` added, as
-	 *  tree_create_document does); a folder takes the name as typed. Returns
-	 *  its new path.
+	 *  Gives a file or folder a new name in its folder. A document renamed without
+	 *  an extension gets `.md`; a folder takes the name as typed. Returns its new path.
 	 */
 	tree_rename_entry: (path: string, name: string) => __TAURI_INVOKE<string>("tree_rename_entry", { path, name }),
 	/**
@@ -114,40 +85,29 @@ export const commands = {
 	 */
 	tree_trash_entry: (path: string, root: string) => __TAURI_INVOKE<null>("tree_trash_entry", { path, root }),
 	/**
-	 *  Where an Obsidian image embed's file is, as an absolute path for the
-	 *  asset protocol; None when it isn't an image or isn't in the vault.
-	 *  Shape shared with fs.resolveVaultImage in src/platform/ipc.ts.
+	 *  Where an Obsidian image embed's file is, as an absolute path for the asset
+	 *  protocol; None when it isn't an image or isn't in the vault.
 	 */
 	resolve_vault_image: (docPath: string, link: string) => __TAURI_INVOKE<string | null>("resolve_vault_image", { docPath, link }),
 	/**
-	 *  The note an Obsidian wikilink (`[[Note]]`, `[[folder/Note]]`) names, as
-	 *  an absolute path; None when it isn't in the vault. Shape shared with
-	 *  fs.resolveVaultNote in src/platform/ipc.ts.
+	 *  The note an Obsidian wikilink names, as an absolute path; None when it isn't
+	 *  in the vault.
 	 */
 	resolve_vault_note: (docPath: string, link: string) => __TAURI_INVOKE<string | null>("resolve_vault_note", { docPath, link }),
 	open_word_document: (path: string) => __TAURI_INVOKE<WordDocument>("open_word_document", { path }),
 	upload_image: (host: ImageHost, dataBase64: string, mime: string, filename: string, endpoint: string, urlField: string) => __TAURI_INVOKE<UploadedImage>("upload_image", { host, dataBase64, mime, filename, endpoint, urlField }),
 	update_session_paths: (paths: string[]) => __TAURI_INVOKE<void>("update_session_paths", { paths }),
 	/**
-	 *  A dirty-window prompt can cancel File > Quit after other windows have
-	 *  already closed. Resume ordinary close bookkeeping and persist only the
-	 *  windows that remain alive.
+	 *  A dirty-window prompt cancelled File > Quit after other windows closed:
+	 *  resume ordinary bookkeeping and persist only the windows still alive.
 	 */
 	cancel_session_quit: () => __TAURI_INVOKE<void>("cancel_session_quit"),
 	add_recent_file: (path: string) => __TAURI_INVOKE<void>("add_recent_file", { path }),
 	add_recent_folder: (path: string) => __TAURI_INVOKE<void>("add_recent_folder", { path }),
 	save_draft_snapshot: (tabId: string, path: string | null, content: string) => __TAURI_INVOKE<null>("save_draft_snapshot", { tabId, path, content }),
 	/**
-	 *  Reads every pending draft and removes its file in the same pass - a
-	 *  destructive "take", same pattern as lib.rs's PendingOpenPaths, so at most
-	 *  one window claims a given recovered document even if several windows are
-	 *  restoring a session at once.
-	 * 
-	 *  Answers with nothing outside the config-defined main window, or after
-	 *  that window's first call: see DRAFTS_CLAIMED. Restricting the claim to
-	 *  `main` also closes a startup race where a newly spawned file window could
-	 *  mount first, drain a live tab's snapshot, and show that tab beside the file
-	 *  it was created to open.
+	 *  Takes every pending draft, removing its file, so at most one window claims
+	 *  each. Only the `main` window's first call gets anything (see DRAFTS_CLAIMED).
 	 */
 	take_draft_snapshots: () => __TAURI_INVOKE<DraftSnapshot_Serialize[]>("take_draft_snapshots"),
 	clear_draft_snapshot: (tabId: string) => __TAURI_INVOKE<null>("clear_draft_snapshot", { tabId }),
@@ -166,22 +126,18 @@ export const commands = {
 	settings_get: () => __TAURI_INVOKE<Snapshot>("settings_get"),
 	/**
 	 *  Changes the given top-level settings fields and tells every window
-	 *  ("settings-changed"; each skips the event its own patch caused).
+	 *  ("settings-changed").
 	 */
 	settings_patch: (patch: { [key in string]: Value }) => __TAURI_INVOKE<number>("settings_patch", { patch }),
 	/**
-	 *  Writes out the frontend's defaults for whatever settings fields are
-	 *  missing - never over a field that's set (`Stores::fill_missing_settings`)
-	 *  - and answers with the live settings either way, which the window then
-	 *  adopts in place of its (empty, possibly stale) boot snapshot. Fields it
-	 *  added are broadcast like any other change.
+	 *  Writes out the frontend's defaults for missing settings fields, never over a
+	 *  set one, and answers with the live settings for the window to adopt.
 	 */
 	settings_fill_defaults: (defaults: { [key in string]: Value }) => __TAURI_INVOKE<Snapshot>("settings_fill_defaults", { defaults }),
 	ui_state_get: () => __TAURI_INVOKE<Value>("ui_state_get"),
 	/**
-	 *  Same top-level merge as settings. Not broadcast: these are remembered
-	 *  for the next window or launch (panel width, tutorial step, recents),
-	 *  never pushed into windows already open.
+	 *  Same top-level merge as settings. Not broadcast: remembered for the next
+	 *  window or launch only.
 	 */
 	ui_state_patch: (patch: { [key in string]: Value }) => __TAURI_INVOKE<void>("ui_state_patch", { patch }),
 	/**
@@ -190,18 +146,13 @@ export const commands = {
 	 */
 	history_list: (kind: HistoryKind) => __TAURI_INVOKE<Value>("history_list", { kind }),
 	/**
-	 *  Adds an entry, or replaces the one with the same key, and moves it to
-	 *  the front. One entry per call, never the whole list: two windows saving
-	 *  different conversations at once both land. A conversation is announced
-	 *  to the windows as its summary, the form their lists hold.
+	 *  Adds an entry, or replaces the one with the same key, and moves it to the
+	 *  front. One entry per call, so two windows saving at once both land.
 	 */
 	history_upsert: (kind: HistoryKind, entry: Value) => __TAURI_INVOKE<null>("history_upsert", { kind, entry }),
 	history_remove: (kind: HistoryKind, key: string) => __TAURI_INVOKE<void>("history_remove", { kind, key }),
 	history_clear: (kind: HistoryKind) => __TAURI_INVOKE<void>("history_clear", { kind }),
-	/**
-	 *  One saved conversation whole, turns included - what restoring it from
-	 *  the history list loads. `None` when its file is gone.
-	 */
+	/**  One saved conversation whole, turns included. `None` when its file is gone. */
 	chat_history_get: (id: string) => __TAURI_INVOKE<Value | null>("chat_history_get", { id }),
 	/**  How many older conversations sit in the chat history's trash. */
 	chat_history_archived: () => __TAURI_INVOKE<number>("chat_history_archived"),
@@ -210,10 +161,7 @@ export const commands = {
 	 *  reply, newest first (the history list's search).
 	 */
 	chat_history_search: (query: string) => __TAURI_INVOKE<Value[]>("chat_history_search", { query }),
-	/**
-	 *  A document Textus saved under a new path (Save As, a rename): its
-	 *  conversations follow it, and every window lists them again.
-	 */
+	/**  A document saved under a new path: its conversations follow it. */
 	chat_history_move_document: (from: string, to: string) => __TAURI_INVOKE<void>("chat_history_move_document", { from, to }),
 };
 
@@ -230,9 +178,8 @@ export type DirEntryInfo_Deserialize = {
 	 */
 	modified_ms?: number | null,
 	/**
-	 *  Hidden: a name starting with a dot, or, on Windows, a file marked
-	 *  hidden or system (desktop.ini). The tree leaves it out unless the
-	 *  user shows hidden files (#357).
+	 *  Hidden: a name starting with a dot, or on Windows a file marked hidden or
+	 *  system (desktop.ini).
 	 */
 	hidden: boolean,
 };
@@ -247,9 +194,8 @@ export type DirEntryInfo_Serialize = {
 	 */
 	modified_ms: number | null,
 	/**
-	 *  Hidden: a name starting with a dot, or, on Windows, a file marked
-	 *  hidden or system (desktop.ini). The tree leaves it out unless the
-	 *  user shows hidden files (#357).
+	 *  Hidden: a name starting with a dot, or on Windows a file marked hidden or
+	 *  system (desktop.ini).
 	 */
 	hidden: boolean,
 };
@@ -268,7 +214,6 @@ export type DraftSnapshot_Serialize = {
 	content: string,
 };
 
-/**  Generated into src/platform/bindings/files.ts. */
 export type FolderIndex = {
 	files: IndexedFile[],
 	/**  A limit was hit: there may be more files than `files` holds. */
@@ -276,14 +221,11 @@ export type FolderIndex = {
 };
 
 /**
- *  The two histories. Their caps match the frontend's
- *  (src/ai/chat/chat-history.ts, src/clipboard/history.ts); they're
- *  enforced here too because this is the one writer. The chat history is a
- *  folder of its own (settings/chat_history.rs), the clipboard one file.
+ *  The two histories. Their caps match the frontend's and are enforced here
+ *  too, as the one writer.
  */
 export type HistoryKind = "chat" | "clipboard";
 
-/**  Mirrors `ImageHost` in src/settings/SettingsContext.tsx. */
 export type ImageHost = "picgo" | "smms" | "imgur" | "custom";
 
 export type ImageMigration = ImageMigration_Serialize | ImageMigration_Deserialize;
@@ -291,9 +233,8 @@ export type ImageMigration = ImageMigration_Serialize | ImageMigration_Deseriali
 export type ImageMigration_Deserialize = {
 	old: string,
 	/**
-	 *  New src (relative to the document) on success; None if this one
-	 *  image failed to move or copy - it's left at its old path, so nothing
-	 *  is lost, just not tidied up.
+	 *  New src (relative to the document) on success; None if this image failed
+	 *  to move or copy (it stays at its old path).
 	 */
 	new?: string | null,
 };
@@ -301,14 +242,13 @@ export type ImageMigration_Deserialize = {
 export type ImageMigration_Serialize = {
 	old: string,
 	/**
-	 *  New src (relative to the document) on success; None if this one
-	 *  image failed to move or copy - it's left at its old path, so nothing
-	 *  is lost, just not tidied up.
+	 *  New src (relative to the document) on success; None if this image failed
+	 *  to move or copy (it stays at its old path).
 	 */
 	new: string | null,
 };
 
-/**  One indexed file - generated into src/platform/bindings/files.ts. */
+/**  One indexed file. */
 export type IndexedFile = {
 	/**  Absolute, to open it. */
 	path: string,
@@ -317,8 +257,8 @@ export type IndexedFile = {
 };
 
 /**
- *  What is kept for a document: its own notes (a list), or its tracked
- *  changes (an object: the text they are measured from, useOwnRevisions).
+ *  What is kept for a document: its own notes (a list), or its tracked changes
+ *  (an object).
  */
 export type OwnPart = "notes" | "revisions";
 
@@ -341,10 +281,7 @@ export type UploadedImage = {
 
 export type Value = null | boolean | number | string | Value[] | { [key in string]: Value };
 
-/**
- *  What `open_word_document` hands the frontend - generated into
- *  src/platform/bindings/files.ts.
- */
+/**  What `open_word_document` hands the frontend. */
 export type WordDocument = {
 	markdown: string,
 };

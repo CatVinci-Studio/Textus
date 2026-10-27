@@ -1,15 +1,6 @@
-//! What is remembered is decided after each exchange, apart from it (the
-//! way mem0 keeps a chat's memory): one small request sees the user's
-//! messages, the reply and what is already remembered, and answers with
-//! the changes - add, update, forget - which go through the same writer
-//! as before (MemoryDirs::remember), so duplicates, facts joining their
-//! entry and the user's own library entries are handled as they were.
-//!
-//! In the main request, a remember tool depended on the model thinking of
-//! it while it edited: GPT kept 23 of 24 things over several
-//! conversations, DeepSeek 20 (it hardly ever called it), and models said
-//! "from now on I will" without keeping anything (1.2.0-rc.6,
-//! live_eval::memory_sessions).
+//! What is remembered is decided after each exchange, apart from it: one small
+//! request sees the messages, the reply and the memory, and answers with the
+//! changes. A remember tool in the main request was too often forgotten.
 
 use super::*;
 
@@ -265,10 +256,9 @@ impl MemoryDirs {
     }
 }
 
-/// One pass: shown `exchange`, asked through `call` (instructions, input),
-/// its changes made. The app's command and the live eval both run it. An
-/// answer with no JSON in it is asked for again, once: MiniMax answered
-/// one with nothing at all (1.2.0-rc.6), which lost a "forget that".
+/// One pass: shown `exchange`, asked through `call`, its changes made. An answer
+/// with no JSON in it is asked for again, once, as an empty answer lost a
+/// "forget that".
 pub async fn run_pass<F, Fut>(
     dirs: &MemoryDirs,
     exchange: &Exchange,

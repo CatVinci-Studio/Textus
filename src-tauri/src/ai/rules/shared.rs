@@ -1,5 +1,4 @@
-//! Rules for every language (CATALOGUE.md §3.1). Messages come from
-//! messages/<code>.txt in the language of the text.
+//! Rules for every language. Messages are in the language of the text.
 
 use super::messages;
 use super::text::*;
@@ -312,11 +311,9 @@ fn edit_distance(a: &[char], b: &[char]) -> usize {
     prev[b.len()]
 }
 
-/// shared.library-name: a near miss of a library name - "Elisabeth" for
-/// "Elizabeth", "林黛王" for "林黛玉". Latin names of four or more
-/// letters, capitalised words with the same first letter, within one edit
-/// (two for names over six letters); Chinese names of three characters,
-/// with the surname right and one other character different.
+/// shared.library-name: a near miss of a library name ("Elisabeth" for
+/// "Elizabeth", "林黛王" for "林黛玉"): one or two edits in a Latin name, one
+/// character with the surname right in a three-character Chinese one.
 fn library_name(t: &Text, ctx: &Ctx, out: &mut Out) {
     if ctx.library.is_empty() {
         return;

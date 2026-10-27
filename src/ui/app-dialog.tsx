@@ -3,13 +3,8 @@ import { useModalDialog } from "./useModalDialog";
 import { usePresence } from "./usePresence";
 
 /**
- * The app's own alert and confirm boxes, in place of the OS dialogs
- * (@tauri-apps/plugin-dialog's `message`/`ask`), which drew a GTK or Win32
- * box in the middle of an otherwise themed window. Callable from anywhere -
- * export code and editor plugins have no React tree of their own - and
- * shown by the one AppDialogHost each window mounts (App, and the detached
- * chat window's ChatWindowApp). Requests queue: a second one waits for the
- * first to be answered.
+ * The app's own alert, confirm and prompt boxes, in place of OS dialogs.
+ * Callable from anywhere, shown by each window's AppDialogHost; requests queue.
  */
 export interface AppDialogOptions {
   title?: string;
@@ -23,17 +18,17 @@ interface Request extends AppDialogOptions {
   /** Confirm only: the action button and the way out. */
   okLabel?: string;
   cancelLabel?: string;
-  /** Confirm only: the action destroys something (a delete). The phone's
-   *  alert draws its button in red (mobile/styles/chrome.css); elsewhere
-   *  it is the usual primary button. */
+  /** Confirm only: the action destroys something (a delete); the phone draws
+   *  its button in red. */
   danger?: boolean;
-  /** Confirm only: start on the way out instead of the action, for a
-   *  question the user didn't ask for (an autosave conflict) - an Enter
-   *  typed on the way back must not do something that can't be undone. */
+  /** Confirm only: start on the way out, for a question the user didn't ask
+   *  for - an Enter typed on the way back must not do something irreversible. */
   focusCancel?: boolean;
   confirm: boolean;
-  /** Prompt only: the text field's starting value. */
+  /** Prompt only: the text field's starting value, and its hint while
+   *  empty. */
   input?: string;
+  placeholder?: string;
   resolve: (ok: boolean, value?: string) => void;
 }
 
@@ -79,7 +74,11 @@ export function showConfirm(
 export function showPrompt(
   text: string,
   value: string,
-  options: AppDialogOptions & { okLabel: string; cancelLabel: string },
+  options: AppDialogOptions & {
+    okLabel: string;
+    cancelLabel: string;
+    placeholder?: string;
+  },
 ): Promise<string | null> {
   return new Promise((resolve) => {
     queue = [
@@ -103,7 +102,7 @@ function answer(request: Request, ok: boolean, value?: string) {
   request.resolve(ok, value);
 }
 
-/** Mounted once per window: by App, and by ChatWindowApp. */
+/** Mounted once per window. */
 export function AppDialogHost({ okLabel }: { okLabel: string }) {
   const [pending, setPending] = useState<Request[]>(queue);
   useEffect(() => {
@@ -160,6 +159,7 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
             ref={inputRef}
             className="app-dialog-input"
             defaultValue={shown.input}
+            placeholder={shown.placeholder}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) ok();
             }}

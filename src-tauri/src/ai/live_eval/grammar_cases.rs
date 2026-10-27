@@ -1,11 +1,6 @@
-//! More grammar cases: Chinese 的/地/得, full-width vs half-width
-//! punctuation, homophone typos and measure words; English articles,
-//! agreement, tense and run-ons; mixed Chinese/English text; paragraphs
-//! with Markdown inline formatting that every fix must leave intact (the
-//! check gets the block's textContent, the fix is written back into the
-//! Markdown); correct text in dialect, British spelling and long sentences
-//! that must stay clean; and long multi-mistake paragraphs in Korean and
-//! German, plus one more case in each other matrix language.
+//! More grammar cases: Chinese and English mistakes, mixed text, inline
+//! formatting every fix must leave intact, correct text that must stay clean,
+//! and long multi-mistake paragraphs, plus one case in each other language.
 
 use super::checks::Lang;
 use super::grammar_matrix::{GrammarCase, G};

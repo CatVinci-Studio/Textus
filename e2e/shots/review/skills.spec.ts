@@ -1,11 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, PHONE } from "../../helpers";
 
-// Screenshots of the `/` menu, the `@` empty state and Settings' skills in
-// four UI languages, desktop and phone - for review, not a baseline. Runs
-// only with TEXTUS_SHOTS_DIR set to where the PNGs go:
-//
-//   TEXTUS_SHOTS_DIR=../assets/creative npm run screenshots:review -- skills
+// Review screenshots of the `/` menu, `@` empty state and skills settings.
+// Runs only with TEXTUS_SHOTS_DIR set to where the PNGs go.
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 const LANGUAGES = ["zh", "en", "ja", "de"];

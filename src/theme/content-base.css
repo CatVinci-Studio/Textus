@@ -1,35 +1,13 @@
-/* How document elements look - headings, paragraphs, quotes, links, rules,
-   code, list rhythm, tables - kept apart from milkdown-theme.css, which
-   holds what makes the editor WORK (carets, markers, previews, resize
-   handles, table layout).
-
-   All of it sits in a cascade layer. Unlayered CSS beats layered CSS
-   whatever the selectors, so an imported Typora theme's plain
-   `blockquote {}` or `table td {}` now wins over the `.milkdown blockquote`
-   here instead of losing on specificity (#13), and so does the user's own
-   custom CSS. The functional rules stay unlayered on purpose: a theme
-   restyling a list must not be able to break its numbering or the caret.
-
-   Two tiers inside the layer. The plain rules are a neutral base, close to
-   Typora's own base.css, that every theme builds on. The
-   `:not([data-user-theme])` rules are Textus's own ornaments - the h2 rule,
-   the h3 bar, the h4 dot, the tinted quote - which an imported theme never
-   asked for: a theme that styles h3's colour but says nothing of borders
-   would otherwise keep Textus's accent bar. SettingsContext sets
-   data-user-theme while an imported theme is active.
-
-   CSS that puts its rules in a layer of its own (`@layer mine { ... }`)
-   creates a layer declared after this one, so its rules still override the
-   built-in look, and unlayered CSS wins over both (e2e/user-css.spec.ts). */
+/* How document elements look, apart from milkdown-theme.css, which holds what
+   makes the editor work. All of it sits in a cascade layer so any unlayered
+   theme or custom CSS wins whatever its specificity; the
+   `:not([data-user-theme])` rules are Textus's own ornaments, off under an
+   imported theme. */
 
 @layer textus-content {
-  /* The document's type. The size follows the column: the classic 16.5px
-     at the 760px standard measure, growing to 18px as the adaptive column
-     widens (app/editor-column.css --content-width), so a wide column doesn't read as
-     small print. cqi is the column's zoomed width, hence the divide; rem,
-     so an `html { font-size }` scales it. The face is the one the page
-     inherits (:root's --font-sans) unless a theme names --editor-font, so
-     a `body { font-family }` in Custom CSS reaches the document too. */
+  /* The document's type. The size grows from 16.5px at the 760px standard
+     measure to 18px as the column widens; cqi is the column's zoomed width,
+     hence the divide. The face is inherited unless a theme sets --editor-font. */
   .milkdown {
     font-family: var(--editor-font, inherit);
     font-size: clamp(
@@ -42,8 +20,7 @@
   }
 
   /* No column container to measure on an engine whose containers trap
-     position: fixed (app/editor-column.css); cqi would fall back to the
-     window's width. The standard measure's size instead. */
+     position: fixed, so the standard measure's size instead. */
   :root[data-early-containers] .milkdown {
     font-size: 1.03125rem;
   }
@@ -56,8 +33,8 @@
     color: inherit;
   }
 
-  /* Zen's focus fade (milkdown-theme.css), both ways. Layered, so a
-     theme's own `p { transition }` is left as the theme wrote it. */
+  /* Zen's focus fade, both ways. Layered, so a theme's own `p { transition }`
+     is left as the theme wrote it. */
   .milkdown .ProseMirror > * {
     transition: opacity var(--dur-base) var(--ease-standard);
   }
@@ -94,9 +71,8 @@
   .milkdown h6 {
     font-weight: 650;
     line-height: 1.3;
-    /* In the heading's own em, so a larger heading takes proportionally
-       more air above it; less below, so it binds to the text it
-       introduces. */
+    /* In the heading's own em, so a larger heading takes more air above; less
+       below, so it binds to its text. */
     margin: 1.5em 0 0.55em;
   }
 
@@ -113,10 +89,8 @@
   .milkdown li > :last-child,
   .milkdown td > :last-child,
   .milkdown th > :last-child,
-  /* The column-resize handle (milkdown-theme.css) is a widget appended to
-     the hovered cell, which would otherwise make the paragraph before it
-     no longer the last child - its margin came back and the whole row
-     grew while the border was hovered. */
+  /* The column-resize handle is a widget appended to the hovered cell, which
+     would make the paragraph no longer the last child and grow the row. */
   .milkdown td > :has(+ .column-resize-handle:last-child),
   .milkdown th > :has(+ .column-resize-handle:last-child) {
     margin-bottom: 0;
@@ -138,10 +112,8 @@
     font-size: 1.1em;
   }
 
-  /* Never below the text they head: the browser's own 0.83em and 0.67em
-     set h5 and h6 in smaller print than the paragraph under them (#58).
-     The weight tells h5 from body text; h6 is told from h5 by its colour
-     (below). */
+  /* Never below the text they head: the browser's 0.83em and 0.67em are
+     smaller than the paragraph. h6 is told from h5 by its colour. */
   .milkdown h5,
   .milkdown h6 {
     font-size: 1em;
@@ -173,9 +145,8 @@
     border-top: 1px solid var(--editor-border);
   }
 
-  /* Footnotes: the reference a small raised number, each definition its
-     number then its text on one line, in the note's smaller size - not
-     the browser's bare <dl>, which puts the number on a line of its own. */
+  /* Footnotes: the reference a small raised number, each definition its number
+     then its text on one line, not the browser's bare <dl>. */
   .milkdown sup[data-type="footnote_reference"] {
     font-size: 0.75em;
     line-height: 0;
@@ -225,10 +196,8 @@
     margin: var(--md-gap-box) 0;
   }
 
-  /* Size and line height live on the <pre>, not just its <code>: the
-     pre's own line box (its strut) is what each line is at least as tall
-     as, so leaving it at the prose 1.8 kept code double-spaced whatever
-     the code element said. */
+  /* Size and line height live on the <pre>: its strut sets each line's minimum
+     height, so the prose 1.8 would double-space code. */
   .milkdown pre {
     font-size: 0.9em;
     line-height: 1.55;
@@ -249,21 +218,14 @@
     white-space: pre-wrap;
     word-break: break-word;
     overflow-wrap: anywhere;
-    /* .milkdown code (above) sets font-size: 0.9em for inline code, and
-       without this the block case kept inheriting .milkdown's prose-tuned
-       1.8 - a line box roughly twice the monospace glyphs' height, which
-       the native caret sizes itself to (most visible on an empty line).
-       Inherits the pre's code-editor spacing. */
+    /* Otherwise block code inherits the prose 1.8, a line box twice the glyphs'
+       height that the native caret sizes itself to. */
     line-height: inherit;
   }
 
-  /* The vertical rhythm of a list. Every item's content is a paragraph
-     (list_item content is "paragraph block*"), so without this rule each
-     row carries .milkdown p's prose margin and a list reads as a stack of
-     separate paragraphs. Rows sit tighter than prose by default;
-     --editor-list-gap is the theme hook (see the textus-theme skill's
-     variable table). Nested ul/ol are included because their UA margin
-     (1em) is what makes the step into a sublist read wide. */
+  /* The vertical rhythm of a list. Every item's content is a paragraph, so
+     without this each row carries the prose margin. --editor-list-gap is the
+     theme hook; nested ul/ol are included for their 1em UA margin. */
   .milkdown li > p,
   .milkdown li > ul,
   .milkdown li > ol {
@@ -275,8 +237,7 @@
     width: 100%;
   }
 
-  /* Cells sit tighter than prose: the 1.8 body line height and roomy
-     padding made even one-line rows tall (#15). */
+  /* Cells sit tighter than prose, so one-line rows aren't tall. */
   .milkdown th,
   .milkdown td {
     padding: 0.35em 0.75em;
@@ -284,20 +245,9 @@
     border: 1px solid var(--editor-border);
   }
 
-  /* Not `thead th`: Milkdown keeps the header row in <tbody> (see
-     theme/typora-compat.ts). Every cell keeps a small floor: with
-     content-sized columns, CJK text - which may break between any two
-     characters - otherwise let the browser squeeze a short column down to
-     one character ("序/号"), wrapping every two-character word (#15). The
-     floor holds such a word with the padding and the border (box-sizing)
-     around it: at 3.5em alone it was a pixel too narrow, and "序号" broke.
-     Headers wrap like the cells under them: kept on one line, a long one
-     held its column at its whole width - the table scrolled sideways for
-     it, and in a resized table, a print or an export it ran over the next
-     column instead. A header breaks between words and after punctuation,
-     though, not inside a CJK word: a short label ("负责人") stays whole in
-     a narrow column, as it did on one line. A run too long for its
-     column still breaks once the widths are set, and in print. */
+  /* Not `thead th`: Milkdown keeps the header row in <tbody>. Every cell keeps
+     a floor, or CJK text lets a short column shrink to one character. Headers
+     wrap between words and after punctuation, not inside a CJK word. */
   .milkdown th {
     text-align: left;
     word-break: keep-all;
@@ -308,9 +258,8 @@
     min-width: calc(3.5em + 2px);
   }
 
-  /* Cells in a cell selection (Select Row/Column, dragging across cells).
-     prosemirror-tables hides the native highlight for these and marks them
-     .selectedCell instead; without a rule they looked unselected (#30). */
+  /* Cells in a cell selection: prosemirror-tables hides the native highlight
+     and marks them .selectedCell instead. */
   .milkdown td,
   .milkdown th {
     position: relative;
@@ -324,8 +273,7 @@
     pointer-events: none;
   }
 
-  /* Textus's own ornaments - see the header comment. Settings > Theme >
-     Export writes each of these out as a #write rule (theme-export.ts), so
+  /* Textus's own ornaments. Theme export writes each out as a #write rule, so
      keep them one selector per rule under this exact prefix. */
   :root:not([data-user-theme]) .milkdown h2 {
     padding-bottom: 0.3em;
@@ -377,9 +325,8 @@
     text-decoration-color: currentColor;
   }
 
-  /* Rounded like the code block beside it (--md-radius): separate
-     borders, so the outer edge can take the corner - each cell draws only
-     its right and bottom rule, the table the frame. */
+  /* Rounded like the code block: separate borders, so each cell draws only its
+     right and bottom rule and the table the frame. */
   :root:not([data-user-theme]) .milkdown table {
     font-size: 0.95em;
     border-collapse: separate;

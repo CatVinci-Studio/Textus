@@ -60,8 +60,8 @@ const doc = n.doc.create(null, [
   n.paragraph.create(null, n.image.create({ src: "a.png", title: null })),
 ]);
 
-/** A runner over a bare state, standing in for the editor's: the menu's
- *  commands only reach for the view's state, dispatch and focus. */
+/** A runner over a bare state: the menu's commands only reach for the
+ *  view's state, dispatch and focus. */
 function editorAt(position: (state: EditorState) => EditorState) {
   const view = {
     state: position(EditorState.create({ doc })),
@@ -96,42 +96,57 @@ const options = (pos: number | null): ContextMenuOptions => ({
   imagePos: pos,
   aiItems: [],
   copyOrCut: () => {},
-  copyAsMarkdown: () => {},
+  copyAsPlainText: () => {},
+  pasteAsPlainText: () => {},
   paste: () => {},
   selectAll: () => {},
   toggleFindReplace: () => {},
   openTableDialog: () => {},
 });
-const labels = (items: ReturnType<typeof buildContextMenuItems>) =>
-  items.map((item) => (item === "separator" ? "-" : item.label));
+const labels = (items: ReturnType<typeof buildContextMenuItems>): string[] =>
+  items.map((item) =>
+    item === "separator"
+      ? "-"
+      : "items" in item
+        ? `${item.label} › ${labels(item.items).join(" | ")}`
+        : item.label,
+  );
 
 describe("the editor menu", () => {
-  it("keeps the desktop's table menu as it was, with Copy as Markdown", () => {
+  it("puts a table's own actions first and the rest in submenus", () => {
     const { run } = editorAt(caretIn("1"));
     expect(labels(buildContextMenuItems(run, options(null)))).toEqual([
+      t.insertRowBelow,
+      t.insertColumnRight,
+      `${t.tableRowGroup} › ${t.insertRowAbove} | ${t.selectRow} | - | ${t.deleteRow}`,
+      `${t.tableColumnGroup} › ${t.insertColumnLeft} | - | ${t.alignLeft} | ${t.alignCenter} | ${t.alignRight} | - | ${t.selectColumn} | - | ${t.deleteColumn}`,
+      t.deleteTable,
+      "-",
       t.cut,
       t.copy,
-      t.copyAsMarkdown,
+      t.copyAsPlainText,
       t.paste,
-      t.selectAll,
+      t.pasteAsPlainText,
+    ]);
+  });
+
+  it("keeps the text's menu short: Insert and the AI in submenus", () => {
+    const { run } = editorAt(caretIn("text"));
+    const ai = ["Ask", "Continue"].map((label) => ({
+      label,
+      onSelect: () => {},
+    }));
+    expect(
+      labels(buildContextMenuItems(run, { ...options(null), aiItems: ai })),
+    ).toEqual([
+      t.cut,
+      t.copy,
+      t.copyAsPlainText,
+      t.paste,
+      t.pasteAsPlainText,
       "-",
-      t.findReplace,
-      "-",
-      t.alignLeft,
-      t.alignCenter,
-      t.alignRight,
-      "-",
-      t.selectRow,
-      t.selectColumn,
-      "-",
-      t.insertRowAbove,
-      t.insertRowBelow,
-      t.insertColumnLeft,
-      t.insertColumnRight,
-      "-",
-      t.deleteRow,
-      t.deleteColumn,
-      t.deleteTable,
+      `${t.menuGroupInsert} › ${t.insertBulletList} | ${t.insertOrderedList} | ${t.insertBlockquote} | ${t.insertCodeBlock} | ${t.insertTable}`,
+      `${t.menuTextusAi} › Ask | Continue`,
     ]);
   });
 
@@ -177,8 +192,8 @@ describe("the editor menu", () => {
     expect(inTable).toContain(t.alignCenter);
     expect(inTable).not.toContain(t.insertRowBelow);
     expect(inTable).not.toContain(t.copy);
-    // The toolbar copies; only the menu has the Markdown source.
-    expect(inTable).toContain(t.copyAsMarkdown);
+    // The toolbar copies; only the menu has the plain text.
+    expect(inTable).toContain(t.copyAsPlainText);
 
     const inText = labels(
       buildPhoneMoreItems(editorAt(caretIn("text")).run, options(null)),

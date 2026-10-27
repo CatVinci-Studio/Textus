@@ -14,19 +14,10 @@ import { showPrompt } from "../../ui/app-dialog";
 import { enter } from "../../ui/moves";
 import "./pending-picture.css";
 
-/**
- * A picture Textus AI is still making, in a proposal: a frame in its place
- * and shape, softly moving, until the picture comes - then the picture -
- * or, if it wasn't made, why. generate_image returns while the picture is
- * made (ai/images.rs), so the text around it, and the rest of the reply,
- * no longer wait for it. The frame's drift and sheen follow #221 by
- * Zhuohang Jiang.
- *
- * All the clocks share one phase: a frame drawn again (the proposal's
- * widget re-created as text streams in) picks up where the last one was
- * rather than starting over.
- */
+/** A picture still being made in a proposal: a moving frame in its place,
+ *  then the picture, or why it wasn't made. */
 
+// One shared phase, so a frame re-created as text streams in doesn't restart.
 const SHEEN_MS = 2400;
 
 /** The frame for picture `id`, its alt text the label. */
@@ -60,8 +51,7 @@ function settle(el: HTMLElement, id: string, alt: string, made: boolean) {
     const img = document.createElement("img");
     img.src = url;
     img.alt = alt;
-    // In once it can be drawn, fading in where the frame was (ui/moves.ts):
-    // swapped in at once, it stood blank while it decoded, then appeared.
+    // Swapped in only once decoded, or it would stand blank meanwhile.
     const made = madePicture(img, id, alt);
     void img
       .decode()
@@ -140,10 +130,8 @@ function madePicture(
   return box;
 }
 
-/**
- * Within `root` (a proposal's rendered text), each picture not here yet
- * becomes its frame, and each frame its picture once that comes.
- */
+/** Within `root`, each picture not here yet becomes its frame, and each
+ *  frame its picture once that comes. */
 export function framePendingPictures(root: HTMLElement): void {
   for (const img of root.querySelectorAll<HTMLImageElement>("img")) {
     const src = img.getAttribute("src") ?? "";

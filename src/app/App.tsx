@@ -8,6 +8,7 @@ import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { useSettings } from "../settings/SettingsContext";
 import { formatCombo } from "../utils/shortcuts";
 import { fixedShortcutGroups } from "./fixed-shortcuts";
+import { commands } from "./commands";
 import { platformName } from "../platform/window-chrome";
 import { Presence } from "../ui/usePresence";
 import { FlipOnChange } from "../ui/flip";
@@ -27,17 +28,15 @@ import {
   ZenHint,
 } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
-import { QuickPickHost } from "../plugins/quick-pick";
+import { QuickPickHost } from "../ui/quick-pick";
+import { PluginFormHost } from "../plugins/views/plugin-form";
+import { NoticeHost } from "../ui/notices";
 import "../plugins/plugins.css";
 import "./App.css";
 
 /**
- * One window: its tabs, the panels around them, and the prompts and
- * notices over them. Its frame (useWindowShell), its documents
- * (useWindowDocuments) and what reaches it from outside (useWindowWiring)
- * are hooks of their own, called in the order their parts had when all of
- * this was one function, so their effects still run in it; this is where
- * they meet the components.
+ * One window: its tabs, the panels around them, and the prompts and notices
+ * over them. The hooks run in a fixed order so their effects keep theirs.
  */
 function App() {
   const { t, settings, setSettings } = useSettings();
@@ -63,6 +62,7 @@ function App() {
   const { searchFocusRequest, clearSearchFocusRequest } = docs;
   const { showTabBar, requestCloseTab, handleTabDetach, dragHoverPreview } =
     docs;
+  const { moveTabToNewWindow } = docs;
   const { toggleSourceMode, zenMode, setZenMode, toggleZenMode } = docs;
   const { menuChecks, sidebarLesson, entryMoved, skillFilesDeleted } = wiring;
   const { documentsOpen, setDocumentsOpen, openFromDocuments } = wiring;
@@ -93,8 +93,7 @@ function App() {
         className="app-shell"
         style={
           {
-            // The sidebar's dragged width (sidebar-frame.css); an iPad
-            // keeps the stylesheet's, its sidebar has no handle.
+            // The sidebar's dragged width; an iPad's sidebar has no handle.
             ...(!isIOSApp && {
               "--sidebar-width": `${sidebarWidth.width}px`,
             }),
@@ -128,7 +127,9 @@ function App() {
           activeContent={activeTab.content}
           onToggle={toggleSidebar}
           onClose={() => setPanelOpen(false)}
-          onOpenFile={(path) => void openFile(path)}
+          onOpenFile={(path, beside) =>
+            void openFile(path, beside ? { where: "beside" } : {})
+          }
           onEntryMoved={entryMoved}
           searchFocusRequest={searchFocusRequest}
           onSearchFocusHandled={clearSearchFocusRequest}
@@ -143,6 +144,7 @@ function App() {
           onClose={requestCloseTab}
           onAdd={addBlankTab}
           onDetach={handleTabDetach}
+          onMoveToNewWindow={moveTabToNewWindow}
           onReorder={reorderTab}
           previewTab={dragHoverPreview}
           onChange={handleChange}
@@ -185,6 +187,14 @@ function App() {
             zen: zenMode,
           }}
           fixedShortcuts={fixedShortcutGroups(t, platformName())}
+          pluginCommands={commands()
+            // Textus's own (Save, Close Tab) have their keys under File.
+            .filter((c) => !c.id.startsWith("textus."))
+            .map((c) => ({
+              id: c.id,
+              title: c.title(t),
+              shortcut: c.shortcut,
+            }))}
         />
 
         <ClosePrompt
@@ -214,7 +224,12 @@ function App() {
           )}
         </Presence>
         <AppDialogHost okLabel={t.dialogOk} />
-        <QuickPickHost emptyLabel={t.pluginQuickPickEmpty} />
+        <QuickPickHost
+          emptyLabel={t.pluginQuickPickEmpty}
+          okLabel={t.pluginOk}
+        />
+        <PluginFormHost />
+        <NoticeHost />
 
         {zenMode && <ZenHint onExit={() => setZenMode(false)} t={t} />}
 

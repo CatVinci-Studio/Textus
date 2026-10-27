@@ -1,8 +1,6 @@
-//! What the writer will probably say next in a conversation, offered grey
-//! in the empty message box after each reply (Tab takes it; typing drops
-//! it), as Codex and Claude Code suggest a next prompt. One short request
-//! to the conversation's model, the way the memory pass is
-//! (memory/pass.rs).
+//! What the writer will probably say next in a conversation, offered grey in
+//! the empty message box after each reply. One short request to the
+//! conversation's model.
 
 use crate::ai::memory::Exchange;
 

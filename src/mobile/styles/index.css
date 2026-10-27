@@ -1,20 +1,7 @@
-/* Every phone and tablet style in one place. The desktop stylesheets are
-   written for a mouse and stay as they are; these files hold the whole
-   difference, layered on top.
-
-   The rules:
-   - Every selector starts with :root[data-window-chrome="mobile"]
-     (platform/window-chrome.ts sets it on iOS). That prefix is also what makes
-     an override win: it outranks the desktop rule it replaces on
-     specificity, so nothing here depends on load order - the editor's own
-     stylesheets arrive later, in its lazily loaded chunk.
-   - Rules for any touch (iPhone and iPad) sit at the top level; phone
-     forms - drawer, sheets, docked Quick Ask, full-screen settings - sit
-     inside @media (max-width: 760px), the width usePhoneLayout()
-     (ui/usePhoneLayout.ts) switches the components at.
-   - One file per area, below. A component that exists only on the phone
-     (ActionSheet, PhoneNavBar, KeyboardToolbar, DocumentList) keeps its
-     stylesheet beside it instead. */
+/* Every phone and tablet style, layered over the mouse-first desktop ones.
+   Each selector starts with :root[data-window-chrome="mobile"], which
+   outranks the desktop rule it replaces regardless of load order. Phone forms
+   sit inside @media (max-width: 760px), the width the components switch at. */
 @import "./base.css";
 @import "./sidebar.css";
 @import "./chrome.css";

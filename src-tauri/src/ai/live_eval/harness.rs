@@ -1,8 +1,6 @@
-//! Shared machinery for the live evaluation: credentials and model choice,
-//! a bounded worker pool, the agent conversation runner (the app's real
-//! prompts, tools and loop, plus the frontend's accept/annotate steps), the
-//! Opus judge, and the recorder that writes every case's output and scores
-//! to disk.
+//! Shared machinery for the live evaluation: credentials and model choice, a
+//! worker pool, the agent conversation runner, the judge, and the recorder
+//! that writes every case's output and scores to disk.
 
 use super::checks::{self, Caret, Proposal};
 use crate::ai::agent::{
@@ -24,10 +22,8 @@ use std::time::Instant;
 
 // ------------------------------------------------------------- environment
 
-/// A key for a live run: the environment variable `name`, else the line
-/// `name=value` in the one env file every key can live in - TEXTUS_ENV_FILE,
-/// or `.env.local` at the repository root (git-ignored). Quotes around the
-/// value and `export ` before the name are allowed; `#` starts a comment.
+/// A key for a live run: the environment variable `name`, else `name=value`
+/// in TEXTUS_ENV_FILE or `.env.local` at the repository root.
 pub fn secret(name: &str) -> Option<String> {
     if let Some(value) = std::env::var(name).ok().filter(|v| !v.trim().is_empty()) {
         return Some(value.trim().to_string());
@@ -60,7 +56,7 @@ pub fn auth() -> Option<AnthropicAuth> {
     if let Some(key) = secret("ANTHROPIC_API_KEY") {
         return Some(AnthropicAuth::ApiKey(key));
     }
-    // The key file that came before the env file still works.
+    // The older one-key file still works.
     let path = std::env::var("TEXTUS_ANTHROPIC_KEY_FILE")
         .unwrap_or_else(|_| format!("{}/../.anthropic-api-key.local", env!("CARGO_MANIFEST_DIR")));
     match std::fs::read_to_string(&path) {
@@ -76,8 +72,7 @@ pub fn block_on<F: std::future::Future>(future: F) -> F::Output {
     tauri::async_runtime::block_on(future)
 }
 
-/// The shipped agent default, unless TEXTUS_EVAL_AGENT_MODEL overrides it
-/// (how the matrix is re-run against another model).
+/// The shipped agent default, unless TEXTUS_EVAL_AGENT_MODEL overrides it.
 pub fn agent_model() -> String {
     std::env::var("TEXTUS_EVAL_AGENT_MODEL").unwrap_or_else(|_| {
         let model = crate::ai::catalog::find(agent_provider_id())
@@ -92,28 +87,15 @@ pub fn agent_model() -> String {
     })
 }
 
-/// TEXTUS_EVAL_PROVIDER=vertex: Gemini on Vertex AI, with the API key
-/// GOOGLE_VERTEX_API_KEY (express mode) and the project
-/// TEXTUS_EVAL_VERTEX_PROJECT - its OpenAI-compatible endpoint on
-/// aiplatform.googleapis.com, never the Gemini Developer API.
+/// TEXTUS_EVAL_PROVIDER=vertex: Gemini on Vertex AI's OpenAI-compatible
+/// endpoint (GOOGLE_VERTEX_API_KEY, TEXTUS_EVAL_VERTEX_PROJECT).
 fn on_vertex() -> bool {
     std::env::var("TEXTUS_EVAL_PROVIDER").is_ok_and(|v| v == "vertex")
 }
 
-/// TEXTUS_EVAL_PROVIDER=doubao: the agent cases run on Volcengine Ark
-/// (VOLCENGINE_ARK_API_KEY) instead of Claude, through the same
-/// AgentProvider path - to compare a change on a second provider, or when
-/// the Claude key can't be used. The judge stays Claude.
-///
-/// TEXTUS_EVAL_PROVIDER=deepseek or minimax: on DeepSeek
-/// (DEEPSEEK_API_KEY) or MiniMax's China platform (MINIMAX_API_KEY), the
-/// same way.
-///
-/// TEXTUS_EVAL_PROVIDER=chatgpt: on a ChatGPT subscription, as Textus on
-/// this machine is signed in (Settings › Textus AI › ChatGPT): its
-/// auth-codex.json, read where it is - never copied, printed or refreshed,
-/// so the app's sign-in stays as it was. Sign in again there once its
-/// token has expired.
+/// TEXTUS_EVAL_PROVIDER: doubao, deepseek or minimax run the agent cases on
+/// that provider (the judge stays Claude); chatgpt uses this machine's app
+/// sign-in, read in place and never copied, printed or refreshed.
 pub fn agent_provider_id() -> &'static str {
     match std::env::var("TEXTUS_EVAL_PROVIDER").as_deref() {
         Ok("doubao") => "doubao",
@@ -125,8 +107,7 @@ pub fn agent_provider_id() -> &'static str {
     }
 }
 
-/// The app's ChatGPT sign-in (auth/openai_codex.rs's auth-codex.json):
-/// its access token and account.
+/// The app's ChatGPT sign-in: its access token and account.
 pub(crate) fn chatgpt_sign_in() -> (String, String) {
     let path = std::env::var_os("HOME")
         .map(PathBuf::from)
@@ -152,7 +133,7 @@ pub(crate) fn chatgpt_sign_in() -> (String, String) {
     (field("access"), field("account_id"))
 }
 
-/// The endpoint the agent cases run on (see agent_provider_id).
+/// The endpoint the agent cases run on.
 pub(crate) fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
     match agent_provider_id() {
         "openai" => {
@@ -208,16 +189,14 @@ pub fn writing_model_arg(model: &str) -> Option<&str> {
     (model != anthropic::COMPLETION_MODEL).then_some(model)
 }
 
-/// The judge's model: Sonnet unless TEXTUS_EVAL_JUDGE_MODEL names another.
-/// Opus judged once, at several times the price of the whole run; asking
-/// for it is now a choice made on purpose.
+/// The judge's model: Sonnet unless TEXTUS_EVAL_JUDGE_MODEL names another;
+/// Opus costs several times the whole run.
 pub fn judge_model() -> String {
     std::env::var("TEXTUS_EVAL_JUDGE_MODEL").unwrap_or_else(|_| "claude-sonnet-5-5".into())
 }
 
 /// TEXTUS_EVAL_JUDGE=1 turns the judge on. Off by default: the automatic
-/// checks decide pass or fail, and a judged run costs about three times
-/// as much.
+/// checks decide pass or fail, and judging triples the cost.
 fn judge_enabled() -> bool {
     std::env::var("TEXTUS_EVAL_JUDGE").is_ok_and(|v| v == "1")
 }
@@ -229,8 +208,7 @@ pub fn selected(id: &str) -> bool {
 }
 
 /// Runs `f` over `items` on TEXTUS_EVAL_JOBS worker threads (default 6),
-/// keeping the input order in the output. The API is the bottleneck, not
-/// the CPU - this is what keeps a 150-case matrix to minutes.
+/// keeping the input order.
 pub fn par_map<T: Sync, R: Send>(items: &[T], f: impl Fn(&T) -> R + Sync) -> Vec<R> {
     let jobs: usize = std::env::var("TEXTUS_EVAL_JOBS")
         .ok()
@@ -258,10 +236,8 @@ pub fn par_map<T: Sync, R: Send>(items: &[T], f: impl Fn(&T) -> R + Sync) -> Vec
         .collect()
 }
 
-/// With TEXTUS_EVAL_TIMELINE=1, what the stream sends and when, printed as
-/// it comes: each run of thinking, text or a tool call's arguments with its
-/// start, end and size, and every pause of over a second between events -
-/// to see where a request keeps the user waiting.
+/// With TEXTUS_EVAL_TIMELINE=1, what the stream sends and when, and every
+/// pause of over a second - to see where a request keeps the user waiting.
 struct Timeline {
     on: bool,
     started: Instant,
@@ -375,10 +351,8 @@ pub fn with_retry<T>(mut attempt: impl FnMut() -> Result<T, String>) -> Result<T
 // ------------------------------------------------------------ cost and budget
 
 /// Dollars per million tokens: (input, 5-minute cache write, cache read,
-/// output) - Anthropic's first-party prices for the models the eval runs
-/// (Haiku 5.5 at the up-to-100K-token prompt rate, which every completion
-/// and grammar request is under). An unknown model is priced as Opus, so
-/// the budget guard errs on the side of stopping early, and says so once.
+/// output). An unknown model is priced as Opus, so the budget guard errs
+/// on stopping early.
 pub fn price(model: &str) -> [f64; 4] {
     match model {
         "claude-haiku-5-5" => [0.10, 0.125, 0.01, 0.50],
@@ -387,7 +361,7 @@ pub fn price(model: &str) -> [f64; 4] {
         m if m.starts_with("gpt-") && agent_provider_id() == "openai" => [0.0; 4],
         // Approximate, from Ark's yuan list prices.
         m if m.starts_with("doubao-") => [0.55, 0.0, 0.11, 2.2],
-        // The highest rates listed for each (2026), so the guard stops early.
+        // The highest listed rates, so the guard stops early.
         m if m.starts_with("deepseek-") => [1.74, 0.0, 0.15, 3.96],
         m if m.starts_with("MiniMax-") => [0.375, 0.0, 0.06, 1.5],
         m if m.contains("gemini-") && m.contains("flash") => [0.5, 0.0, 0.05, 3.0],
@@ -453,8 +427,7 @@ impl Usage {
     }
 }
 
-/// Every request this process made, in micro-dollars - what the budget
-/// guard compares against TEXTUS_EVAL_BUDGET_USD.
+/// Every request this process made, in micro-dollars.
 static SPENT_MICRO_USD: AtomicU64 = AtomicU64::new(0);
 
 /// Records one request's cost against the process-wide total.
@@ -467,10 +440,8 @@ pub fn spent_usd() -> f64 {
     SPENT_MICRO_USD.load(Ordering::SeqCst) as f64 / 1e6
 }
 
-/// TEXTUS_EVAL_BUDGET_USD: once this process has spent that much, cases that
-/// haven't started yet are skipped (marked with a failed `budget` check)
-/// instead of sent. Cases already running finish, so the overshoot is at
-/// most TEXTUS_EVAL_JOBS cases.
+/// TEXTUS_EVAL_BUDGET_USD: once spent, cases not yet started are skipped
+/// (a failed `budget` check). Running cases finish.
 pub fn budget_exhausted() -> Option<String> {
     let budget: f64 = std::env::var("TEXTUS_EVAL_BUDGET_USD")
         .ok()
@@ -524,16 +495,11 @@ pub struct UserTurn {
     pub message: String,
     pub caret: Caret,
     pub accept: bool,
-    /// Quick Ask on a selection: the message goes out wrapped in the
-    /// selection as it reads NOW - the range captured when Quick Ask opened,
-    /// mapped through every accepted edit since (useInlineChat's
-    /// sendContext + chat-selection-plugin), so "shorter" -> Accept ->
-    /// "now more formal" targets the rewritten text.
+    /// Quick Ask on a selection: the message is wrapped in the selection as it
+    /// reads now, mapped through every accepted edit since.
     pub follow_selection: bool,
-    /// Neither accepts nor rejects: the proposals stay undecided into the
-    /// next message, as when the user types on (or queues a message)
-    /// before deciding. A later edit quoted from them goes into them, as
-    /// the frontend's joinEdit does; a later turn's Accept takes them too.
+    /// Neither accepts nor rejects: the proposals stay undecided into the next
+    /// message, and a later edit quoted from them goes into them.
     pub leave: bool,
 }
 
@@ -568,11 +534,10 @@ pub struct TurnOutcome {
     pub focus_heading: Option<String>,
     pub turns: Vec<AgentTurn>,
     pub proposals: Vec<Proposal>,
-    /// propose_edit calls the tool rejected (bad anchor, missing field) -
-    /// each one cost the user a round trip of waiting.
+    /// propose_edit calls the tool rejected - each cost the user a round trip.
     pub invalid_proposals: usize,
     pub invalid_errors: Vec<String>,
-    /// Proposals that went into an earlier, undecided one (joinEdit).
+    /// Proposals that went into an earlier, undecided one.
     pub joined: usize,
     pub comments: Vec<(String, String)>,
     pub reply: String,
@@ -584,13 +549,8 @@ pub struct TurnOutcome {
     pub apply_error: Option<String>,
     pub latency_ms: u128,
     pub usage: Vec<StepUsage>,
-    /// Thinking the stream reported: events (Claude sends one per thinking
-    /// block even when it shows no text) and characters of readable text.
-    pub thinking_events: usize,
-    pub thinking_chars: usize,
-    /// Rules the proposal post-processing applied to this turn's
-    /// propose_edit texts (rules::postfix) - a prompt regression shows here
-    /// instead of being silently repaired.
+    /// Rules the proposal post-processing applied to this turn, so a prompt
+    /// regression shows instead of being silently repaired.
     pub postfix: Vec<String>,
 }
 
@@ -606,15 +566,13 @@ impl TurnOutcome {
     }
 }
 
-/// Mirrors user-message.ts's selectedTextBlock.
+/// Keep in step with the frontend's selectedTextBlock.
 pub fn selected_text_block(markdown: &str) -> String {
     format!("<selected-text>\n{markdown}\n</selected-text>")
 }
 
-/// Maps a byte position through the edit between `before` and `after` the
-/// way ProseMirror's mapping does: positions before the change stay, after
-/// it shift, and inside it go to the change's start (bias -1) or the end of
-/// the inserted text (bias 1).
+/// Maps a byte position through the edit between `before` and `after` as
+/// ProseMirror's mapping does; inside the change, `bias` picks start or end.
 pub fn map_pos(before: &str, after: &str, pos: usize, bias: i8) -> usize {
     if before == after {
         return pos;
@@ -644,16 +602,15 @@ pub fn map_pos(before: &str, after: &str, pos: usize, bias: i8) -> usize {
     }
 }
 
-/// chat-selection-plugin's range mapping: outward bias at both ends, so an
-/// accepted rewrite of the selection grows the range over the replacement.
+/// Selection range mapping: outward bias at both ends, so an accepted
+/// rewrite of the selection grows the range over the replacement.
 pub fn map_selection(before: &str, after: &str, sel: (usize, usize)) -> Option<(usize, usize)> {
     let from = map_pos(before, after, sel.0, -1);
     let to = map_pos(before, after, sel.1, 1);
     (from < to).then_some((from, to))
 }
 
-/// doc-markdown.ts's headingAt: the innermost heading above `pos` - the
-/// `focus_heading` the editor sends with each message.
+/// The innermost heading above `pos`: the `focus_heading` the editor sends.
 pub fn heading_at(doc: &str, pos: usize) -> Option<String> {
     let mut found = None;
     let mut in_fence = false;
@@ -700,40 +657,34 @@ pub struct AgentSetup<'a> {
     pub model: &'a str,
     pub mode: AgentMode,
     pub workspace: &'a AgentWorkspace,
-    /// None: each turn sends the heading above its selection or cursor, as
-    /// the editor does (headingAt); Some overrides it.
+    /// None: each turn sends the heading above its selection or cursor, as the
+    /// editor does; Some overrides it.
     pub focus_heading: Option<&'a str>,
-    /// The app's UI language (src/i18n/langs.ts), as the frontend sends it.
+    /// The app's UI language, as the frontend sends it.
     pub ui_language: &'a str,
-    /// What the composer asks for (Auto unless Deep thinking is on). Every
-    /// request also opts into Claude's preserved-thinking check, so a
-    /// thinking block replayed after an edit to the history fails the case
-    /// instead of passing on an account the check isn't enforced for.
+    /// What the composer asks for. Requests also opt into the preserved-thinking
+    /// check, so a replayed thinking block after a history edit fails the case.
     pub thinking: ThinkingLevel,
     /// generate_image, for the picture cases: None offers no such tool, as
     /// the app does without an image model.
     pub pictures: Option<&'a crate::ai::images::ImageRun>,
-    /// The memory pass after each exchange, writing to these folders, and what they hold
-    /// sent with each message, read again every turn - as the app does
-    /// with Remember automatically on. None: nothing is remembered.
+    /// The memory pass after each exchange, writing to these folders, whose
+    /// contents go with each message. None: nothing is remembered.
     pub memory: Option<&'a crate::ai::memory::MemoryDirs>,
 }
 
-/// Mirrors src/ai/revision/proposal-status.ts's note for a proposal not
-/// decided yet.
+/// Keep in step with the frontend's note for an undecided proposal.
 const PENDING_NOTE: &str = "Status: the user has NOT yet accepted or rejected this proposed edit. It is shown to them as a preview and is NOT in the document text in this request - do not assume it was applied. To change it or go on from it, anchor in its text: the edit goes into this proposal.";
 
-/// Mirrors src/ai/revision/proposal-status.ts's note for an edit that went
-/// into another proposal.
+/// Keep in step with the frontend's note for an edit joined into another.
 const JOINED_NOTE: &str = "Status: this went into the proposed text it changes or goes next to - that proposal now reads with it, and it is accepted or rejected with that proposal.";
 
-/// Mirrors src/ai/revision/proposal-status.ts's notes for the two decided states.
+/// Keep in step with the frontend's notes for the two decided states.
 const ACCEPTED_NOTE: &str =
     "Status: the user accepted this proposed edit - the document text in this request includes it.";
 const REJECTED_NOTE: &str =
     "Status: the user rejected this proposed edit - it was not applied. Don't propose it again unless asked.";
-/// Mirrors src/ai/revision/proposal-status.ts's note for a proposal a later
-/// one took the place of.
+/// Keep in step with the frontend's note for a replaced proposal.
 const REPLACED_NOTE: &str = "Status: a later proposal of yours for the same passage took this one's place before the user decided on it - it was not applied, and the user didn't reject it.";
 
 /// Longest tool result kept in a case's record (the model saw all of it).
@@ -745,12 +696,9 @@ pub fn sees_images() -> bool {
     crate::ai::catalog::find("anthropic").is_some_and(|e| e.supports_vision)
 }
 
-/// Runs a scripted conversation the way the app does: each message goes out
-/// with the current document (request_context), the loop runs the real
-/// tools, the stored history keeps the plain message, and before the next
-/// message the user accepts or rejects the proposals - accepted ones are
-/// applied to the document (as the frontend composes them) and every
-/// proposal's tool result gets the status note the frontend adds.
+/// Runs a scripted conversation the way the app does: real tools and
+/// history, and between messages the user's accept/reject is applied to the
+/// document with the status notes the frontend adds.
 pub fn run_conversation(
     auth: &AnthropicAuth,
     setup: &AgentSetup,
@@ -760,7 +708,7 @@ pub fn run_conversation(
     let ws = setup.workspace;
     let root = ws.root.as_deref().map(Path::new);
     // What generate_image streams (its start) goes nowhere here.
-    let events = tauri::ipc::Channel::new(|_| Ok(()));
+    let events = NoEvents;
     let mut history: Vec<AgentTurn> = Vec::new();
     let mut doc = document.to_string();
     // Proposals left undecided, by call id, as they now read.
@@ -817,9 +765,8 @@ pub fn run_conversation(
             &message_sent,
             setup.ui_language,
         );
-        // The app's conventions for this workspace (the setting is the
-        // default, Automatic): proposals are post-processed as the app does
-        // (agent::postfix_step), and what was fixed is recorded.
+        // The app's conventions (the default, Automatic): proposals are
+        // post-processed as the app does, and what was fixed is recorded.
         let conventions = crate::ai::rules::Conventions {
             setting: None,
             project: ws.conventions.clone(),
@@ -838,8 +785,7 @@ pub fn run_conversation(
             proposed: Default::default(),
             checks: Default::default(),
         };
-        // The app's provider path (route::agent_provider), on Claude unless
-        // TEXTUS_EVAL_PROVIDER says otherwise.
+        // The app's provider path, on Claude unless TEXTUS_EVAL_PROVIDER says otherwise.
         let agent = AgentProvider {
             id: agent_provider_id().to_string(),
             model: setup.model.to_string(),
@@ -848,8 +794,7 @@ pub fn run_conversation(
             native_search: None,
             enforce_binding: true,
         };
-        // A long document's chapters at once, as the app offers it
-        // (agent/chapters.rs).
+        // A long document's chapters at once, as the app offers it.
         let helper_tools = tools::ToolRegistry::builtin(false, false, setup.mode, sees_images())
             .only(tools::PROPOSE_EDIT_TOOL_NAME);
         let helpers = crate::ai::agent::HelperTurns::default();
@@ -865,10 +810,8 @@ pub fn run_conversation(
             channel: &events,
             helpers: &helpers,
         };
-        // Images as the
-        // app offers them to the provider the eval runs on (Anthropic), and
-        // generate_image when the case gives it one, on this turn's
-        // document as the app does per request.
+        // Images as the app offers them to the eval's provider, and generate_image
+        // when the case gives it one, on this turn's document.
         let mut tool_set = tools::ToolRegistry::builtin(
             ws.has_usable_skills(),
             root.is_some(),
@@ -885,6 +828,12 @@ pub fn run_conversation(
                 &events,
             ));
         }
+        // Create mode reads the installed plugins: the textus-plugins checkout's.
+        if setup.mode == crate::ai::agent::AgentMode::Create {
+            tool_set.add(crate::plugins::read_tool::read_plugin_tool_over(
+                super::agent_builtin::checkout_plugins(),
+            ));
+        }
         if helper_tools.edits() && crate::ai::agent::offers_chapters(&document) {
             let run = &chapter_run;
             tool_set.add(tools::Tool {
@@ -897,8 +846,6 @@ pub fn run_conversation(
         let specs = tool_set.specs();
         let usage = RefCell::new(Vec::new());
         let postfix = RefCell::new(Vec::new());
-        let thinking_events = AtomicUsize::new(0);
-        let thinking_chars = AtomicUsize::new(0);
         // Pictures written into the text, begun as the app begins them.
         let inline = setup.pictures.map(|p| p.inline(&ctx.proposed));
         let timeline = Timeline::from_env();
@@ -906,10 +853,6 @@ pub fn run_conversation(
             timeline.observe(&event);
             if let Some(inline) = &inline {
                 inline.observe(&event);
-            }
-            if let ProviderEvent::Thinking(text) = event {
-                thinking_events.fetch_add(1, Ordering::Relaxed);
-                thinking_chars.fetch_add(text.chars().count(), Ordering::Relaxed);
             }
         };
         let started = Instant::now();
@@ -971,8 +914,7 @@ pub fn run_conversation(
             }
         };
 
-        // What history keeps is the plain message (ai_agent_message_inner),
-        // and no step's reasoning (agent::for_history).
+        // History keeps the plain message, and no step's reasoning.
         if let Some(AgentTurn::User { text, .. }) = turns.first_mut() {
             *text = message_sent.clone();
         }
@@ -990,8 +932,6 @@ pub fn run_conversation(
             doc_before: doc.clone(),
             latency_ms,
             usage: usage.into_inner(),
-            thinking_events: thinking_events.into_inner(),
-            thinking_chars: thinking_chars.into_inner(),
             postfix: postfix.into_inner(),
             ..TurnOutcome::default()
         };
@@ -1042,8 +982,8 @@ pub fn run_conversation(
             }
         }
 
-        // An edit quoted from an undecided proposal goes into it - also one
-        // of document text a rewrite replaces (joinInto).
+        // An edit quoted from an undecided proposal goes into it - also one of
+        // document text a rewrite replaces.
         let mut standing = Vec::new();
         let mut standing_ids = Vec::new();
         let mut joined_ids = Vec::new();
@@ -1083,8 +1023,7 @@ pub fn run_conversation(
         outcome.proposals = standing;
         let proposal_ids = standing_ids;
         // A new version of a passage an undecided rewrite replaces takes its
-        // place: the old one reads as rejected (useEditorProposals's
-        // addPreviews).
+        // place: the old one reads as rejected.
         held_back.retain(|(id, held)| {
             let superseded = held.action == "replace"
                 && outcome
@@ -1167,9 +1106,8 @@ pub fn run_conversation(
                 }
             }
         }
-        // What to remember, decided after the exchange (memory::pass) by
-        // the conversation's model, as the app does; each change recorded
-        // as a remember call, as the chips show it.
+        // What to remember, decided after the exchange by the conversation's model;
+        // each change recorded as a remember call.
         if let Some(dirs) = setup.memory {
             let exchange = crate::ai::memory::Exchange {
                 messages: outcomes
@@ -1259,8 +1197,8 @@ Task-specific expectations follow the task; where they conflict with the general
 
 Respond with ONLY a JSON object, no fences: {\"faithfulness\": n|null, \"helpfulness\": n|null, \"minimality\": n|null, \"tone\": n|null, \"correctness\": n|null, \"reasons\": \"for every score below 5, one short sentence naming the specific flaw\"}";
 
-/// Asks Opus to grade one case. None when judging is switched off
-/// (TEXTUS_EVAL_JUDGE=0) or the judge's reply can't be parsed twice over.
+/// Asks the judge to grade one case. None when judging is off or its reply
+/// can't be parsed twice over.
 pub fn judge(
     auth: &AnthropicAuth,
     task: &str,
@@ -1303,9 +1241,8 @@ pub fn judge(
     None
 }
 
-/// The judge's view of an agent conversation: each message, the reply, the
-/// comments, and every accepted edit as before/after of the changed span
-/// with a little context.
+/// The judge's view of an agent conversation: messages, replies, comments,
+/// and each accepted edit as before/after of the changed span.
 pub fn conversation_material(conv: &Conversation) -> String {
     let mut out = String::new();
     for (i, o) in conv.outcomes.iter().enumerate() {
@@ -1513,11 +1450,9 @@ fn run_dir() -> &'static PathBuf {
     })
 }
 
-/// Writes `<suite>.jsonl` (every case in full) and `<suite>.md` (the summary
-/// table) into the run directory, prints the summary, and returns the hard
-/// failures for the test to assert on. Judge scores are reported, not
-/// asserted: they are the quality signal to compare run to run, while the
-/// automatic checks are the contract.
+/// Writes `<suite>.jsonl` and `<suite>.md` into the run directory, prints the
+/// summary, and returns the hard failures. Judge scores are reported, not
+/// asserted: the automatic checks are the contract.
 pub fn finish(suite: &str, records: Vec<Record>) -> Vec<String> {
     let (not_run, records): (Vec<Record>, Vec<Record>) = records
         .into_iter()
@@ -1696,8 +1631,8 @@ fn write_index(dir: &Path, suite: &str, rows: Vec<Value>) {
     std::fs::write(&path, serde_json::to_string_pretty(&all).unwrap()).expect("write index");
 }
 
-/// TEXTUS_EVAL_SPEND_FILE: a running `{"spent_usd", "runs": [...]}` ledger
-/// that each finished suite adds its cost to.
+/// TEXTUS_EVAL_SPEND_FILE: a running `{"spent_usd", "runs"}` ledger each
+/// finished suite adds its cost to.
 fn record_spend(dir: &Path, suite: &str, cases: usize, total: &Usage) {
     let Ok(path) = std::env::var("TEXTUS_EVAL_SPEND_FILE") else {
         return;
@@ -1817,4 +1752,11 @@ mod env_file_tests {
         assert_eq!(env_file_value(text, "EMPTY"), None);
         assert_eq!(env_file_value(text, "MISSING"), None);
     }
+}
+
+/// A request's live events, dropped: the eval reads the finished turns.
+struct NoEvents;
+
+impl crate::ai::agent::EventSink for NoEvents {
+    fn send(&self, _: crate::ai::agent::StreamEvent) {}
 }

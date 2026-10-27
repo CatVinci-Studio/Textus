@@ -4,11 +4,9 @@ import { SAMPLE_DOC, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
- * Accessibility for screen readers: axe-core over the main screens in the
- * light and the dark appearance, failing on a serious or critical
- * violation, and the announcements a screen reader hears from Textus AI.
- * A11Y_REPORT=1 prints every violation, of any impact, instead of failing -
- * an audit of the moderate ones too.
+ * axe-core over the main screens in light and dark, failing on a serious or
+ * critical violation, and what a screen reader hears from Textus AI.
+ * A11Y_REPORT=1 prints every violation instead of failing.
  */
 
 const FILES: Record<string, string> = {

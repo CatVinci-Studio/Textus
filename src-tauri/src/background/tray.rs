@@ -1,17 +1,5 @@
-//! The tray icon of background mode: the notification area on Windows, the
-//! StatusNotifier/AppIndicator tray on Linux, the menu bar on macOS. Built
-//! when the setting turns on, dropped when it turns off; never there
-//! otherwise.
-//!
-//! Its menu: Open Textus, the commands plugins put there (`app/tray`,
-//! src/plugins/manifest.ts) - each opens a window first when none is open,
-//! then runs - and Quit Textus. A left click opens Textus on
-//! Windows; on macOS it opens the menu, as menu bar items do, and on Linux
-//! the AppIndicator protocol has no click of its own, so it opens the menu
-//! too.
-//!
-//! The icons are src-tauri/icons/tray/, made from the app icon by
-//! scripts/make-tray-icons.sh.
+//! The tray icon of background mode, built when the setting turns on and
+//! dropped when it turns off. Its menu: Open Textus, plugin commands, Quit.
 
 use std::sync::Mutex;
 use tauri::image::Image;
@@ -22,9 +10,8 @@ use tauri::{AppHandle, Emitter, Manager, Wry};
 /// The tray's id. There is only ever one.
 pub const ID: &str = "textus";
 
-/// Menu ids, "tray:<item>". Clicks reach menu.rs's dispatch like the menu
-/// bar's do (Tauri sends tray menu clicks to the app's menu handler), which
-/// hands them to `on_menu`.
+/// Menu ids, "tray:<item>". Tauri sends tray menu clicks to the app's menu
+/// handler, which hands them to `on_menu`.
 pub const MENU_PREFIX: &str = "tray:";
 const OPEN_APP: &str = "open";
 const QUIT: &str = "quit";
@@ -39,18 +26,16 @@ pub struct TrayPluginItem {
     label: String,
 }
 
-/// The plugin commands the menu lists, and one asked for while no window
-/// was open - run by the window that opens for it (it asks, once its
-/// plugins are loaded: take_pending_plugin_command).
+/// The plugin commands the menu lists, and one asked for while no window was
+/// open, run by the window that opens for it.
 #[derive(Default)]
 pub struct TrayPlugins {
     items: Mutex<Vec<TrayPluginItem>>,
     pending: Mutex<Option<String>>,
 }
 
-/// The menu's labels in one language. Rust's own, not sent by a window:
-/// the tray can be up before any window has been. Each is the same string
-/// as in src/i18n/locales/ (a test holds them to it).
+/// The menu's labels, owned by Rust since the tray can be up before any window.
+/// Each matches the locale files (a test holds them to it).
 struct Labels {
     open_app: &'static str,
     quit: &'static str,
@@ -78,7 +63,7 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         .unwrap_or_default();
     let l = labels(&language);
     let item = |id: &str, text: &str| {
-        // muda reads a lone `&` as a mnemonic marker (menu.rs's menu_text).
+        // muda reads a lone `&` as a mnemonic marker.
         MenuItemBuilder::with_id(format!("{MENU_PREFIX}{id}"), text.replace('&', "&&")).build(app)
     };
     let plugins = app
@@ -98,7 +83,7 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     menu.separator().item(&item(QUIT, l.quit)?).build()
 }
 
-/// A tray menu click, from menu.rs's dispatch (`item` without the prefix).
+/// A tray menu click (`item` without the prefix).
 pub fn on_menu(app: &AppHandle, item: &str) {
     if let Some(command) = item.strip_prefix(PLUGIN) {
         run_plugin_command(app, command);
@@ -111,8 +96,8 @@ pub fn on_menu(app: &AppHandle, item: &str) {
     }
 }
 
-/// A plugin command from the tray: run by an editor window, brought
-/// forward - or, with none open, by the one opened for it.
+/// A plugin command from the tray: run by an editor window, brought forward,
+/// or with none open, by the one opened for it.
 fn run_plugin_command(app: &AppHandle, command: &str) {
     let window = app
         .webview_windows()
@@ -138,8 +123,7 @@ fn run_plugin_command(app: &AppHandle, command: &str) {
     }
 }
 
-/// The plugin commands the menu lists (src/plugins/usePluginMenu.ts),
-/// refilled when the plugins that are on change.
+/// The plugin commands the menu lists, refilled when the enabled plugins change.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn set_tray_plugin_items(app: AppHandle, items: Vec<TrayPluginItem>) {
@@ -187,9 +171,8 @@ fn icon() -> Image<'static> {
     }
 }
 
-/// The bitmap at the size the notification area draws its icons at on
-/// this display (16 px at 100%, 24 at 150%...), so Windows doesn't scale
-/// one up or down into a blur.
+/// The bitmap at the size the notification area draws on this display, so
+/// Windows doesn't scale one into a blur.
 #[cfg(windows)]
 fn windows_icon() -> Image<'static> {
     use windows::Win32::UI::WindowsAndMessaging::{GetSystemMetrics, SM_CXSMICON};
@@ -217,18 +200,15 @@ fn windows_icon_size(wanted: u32) -> u32 {
         .unwrap_or(WINDOWS_SIZES[WINDOWS_SIZES.len() - 1])
 }
 
-/// Whether a tray can be shown here. Linux needs libayatana-appindicator
-/// or libappindicator, loaded when the first tray is built - and tray-icon
-/// panics when neither is installed, so it is asked first, by the same
-/// names libappindicator-sys loads. Asked anew each time: a library
-/// installed since counts.
+/// Whether a tray can be shown here. On Linux tray-icon panics without an
+/// AppIndicator library, so it is probed first, anew each time.
 pub fn available() -> bool {
     #[cfg(target_os = "linux")]
     {
         ["libayatana-appindicator3.so.1", "libappindicator3.so.1"]
             .iter()
-            // SAFETY: loading a system library runs its initialisers,
-            // which is what tray-icon does with it next anyway.
+            // SAFETY: loading a system library runs its initialisers, which tray-icon
+            // does next anyway.
             .any(|name| unsafe { libloading::Library::new(name) }.is_ok())
     }
     #[cfg(not(target_os = "linux"))]
@@ -271,8 +251,7 @@ fn build(app: &AppHandle) -> tauri::Result<()> {
     // or dark.
     #[cfg(target_os = "macos")]
     let builder = builder.icon_as_template(true);
-    // Windows: a left click opens Textus, the right click the menu. On
-    // Linux this does nothing (the indicator only has its menu).
+    // Windows: a left click opens Textus, the right click the menu.
     #[cfg(not(target_os = "macos"))]
     let builder = builder
         .show_menu_on_left_click(false)
@@ -295,8 +274,7 @@ fn build(app: &AppHandle) -> tauri::Result<()> {
 mod tests {
     use super::*;
 
-    /// `key: "text"` (or `` `text` `` with ${APP_NAME}) in a locale file,
-    /// as the UI would show it.
+    /// `key: "text"` (or `` `text` `` with ${APP_NAME}) in a locale file, as the UI shows it.
     fn locale_string(source: &str, key: &str) -> String {
         let line = source
             .lines()

@@ -48,9 +48,8 @@ fn call_with(
     (serde_json::from_str(&out).unwrap(), announced)
 }
 
-/// A call as the model sends it: naming the block its `anchor` is in (the
-/// one block that holds it), resolved as agent::settle does. Words in no
-/// block stay a quote.
+/// A call as the model sends it: naming the block its `anchor` is in, resolved
+/// as the agent does. Words in no block stay a quote.
 fn named(document: &crate::ai::doc_blocks::Document, mut args: Value) -> String {
     if let Some(anchor) = args.get("anchor").and_then(|a| a.as_str()) {
         let holding: Vec<_> = document
@@ -601,9 +600,8 @@ fn a_picture_is_drawn_like_an_earlier_one_that_is_here_now() {
     assert!(attached.is_some());
 }
 
-/// An edit into undecided text as joined-edit.ts makes it: a title asked
-/// for above undecided writing is a paragraph of its own - joined with a
-/// space it was the writing's first line, the whole paragraph a heading.
+/// An edit into undecided text: a title asked for above undecided writing is a
+/// paragraph of its own, not joined to the writing's first line.
 #[test]
 fn an_edit_into_undecided_text_is_made_as_the_page_makes_it() {
     let text = "雨下到深夜，街上很静。\n\n雨没有停。";

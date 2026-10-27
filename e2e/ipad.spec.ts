@@ -1,10 +1,9 @@
 import { devices, expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// An iPad, as far as Chromium can be one: the iOS app at a tablet's width -
-// the desktop layout, not the phone's sheets - with a touch screen and
-// "iPad" as its platform, which is what a hardware keyboard's shortcuts and
-// the review steps' focus rule key off. Playwright can't drive iOS WebKit.
+// An iPad, as far as Chromium can be one: the desktop layout at a tablet's
+// width, with touch and "iPad" as its platform, which keyboard shortcuts and
+// the review steps' focus rule key off.
 test.use({
   viewport: { width: 1024, height: 1366 },
   isMobile: true,
@@ -49,7 +48,7 @@ test("an iPad keyboard's Cmd is the shortcuts' Mod", async ({ page }) => {
   await openQuickAsk(page);
   await page.keyboard.press("Escape");
   await expect(page.locator(".inline-chat")).toHaveCount(0);
-  // Ctrl is not: it was, before Mod followed ProseMirror's rule.
+  // Ctrl is not: Mod follows ProseMirror's rule.
   await page.locator('[data-active-tab="true"] .milkdown p').first().click();
   await page.keyboard.press("Control+Shift+K");
   await page.waitForTimeout(300);

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { mirrorKey, mirrorManifest } from "./mirror-keys.mjs";
 
-// What gh release download fetches for a stable release (the
-// mirror-downloads.sh patterns), plus files it must leave out.
+// What gh release download fetches for a stable release, plus files it must
+// leave out.
 const stable = [
   "Textus_1.1.0_aarch64.dmg",
   "Textus_1.1.0_x64.dmg",

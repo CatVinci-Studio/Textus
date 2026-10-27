@@ -1,11 +1,6 @@
-//! Best-effort autosave for unsaved content: the frontend periodically
-//! snapshots each dirty tab here (one file per tab, latest state only, no
-//! history) so an untitled draft or an unsaved edit survives a crash or a
-//! forced quit. Snapshots are meant to be short-lived - cleared the moment
-//! the frontend confirms the content is no longer at risk (saved, the tab
-//! closed cleanly, or the user explicitly discarded it) - so the drafts
-//! folder is normally empty; anything found here at the next launch is, by
-//! construction, content that was never resolved.
+//! Best-effort autosave of unsaved content, one snapshot per dirty tab, so it
+//! survives a crash. Snapshots are cleared once content is safe, so anything
+//! found at launch is unresolved.
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -13,8 +8,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Manager};
 use tokio::fs;
 
-/// Tab ids are frontend-generated UUIDs (crypto.randomUUID()), but this
-/// becomes a path component, so only ASCII letters, digits and '-' pass.
+/// Tab ids become a path component, so only ASCII letters, digits and '-' pass.
 fn valid_component(s: &str) -> bool {
     !s.is_empty() && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
 }
@@ -60,28 +54,12 @@ pub async fn save_draft_snapshot(
 }
 
 /// Whether the drafts pool has already been offered to a window this run.
-///
-/// Recovery is a LAUNCH-time question - "what did the last run leave behind
-/// that was never resolved" - but the drain is per-window, and a window can
-/// be created at any time. Once the app is up, every snapshot on disk belongs
-/// to a live, dirty tab in some window, so a window opened later (New Window)
-/// would "recover" documents that are still open and unsaved elsewhere -
-/// duplicating them, and deleting the snapshot that was protecting the
-/// original. The destructive drain alone doesn't prevent this: the first
-/// window commonly starts with an empty pool and the snapshot only appears
-/// once the user types.
+/// Recovery is a launch-time question: later, every snapshot belongs to a live
+/// tab, and a new window would duplicate it.
 static DRAFTS_CLAIMED: AtomicBool = AtomicBool::new(false);
 
-/// Reads every pending draft and removes its file in the same pass - a
-/// destructive "take", same pattern as lib.rs's PendingOpenPaths, so at most
-/// one window claims a given recovered document even if several windows are
-/// restoring a session at once.
-///
-/// Answers with nothing outside the config-defined main window, or after
-/// that window's first call: see DRAFTS_CLAIMED. Restricting the claim to
-/// `main` also closes a startup race where a newly spawned file window could
-/// mount first, drain a live tab's snapshot, and show that tab beside the file
-/// it was created to open.
+/// Takes every pending draft, removing its file, so at most one window claims
+/// each. Only the `main` window's first call gets anything (see DRAFTS_CLAIMED).
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn take_draft_snapshots(
@@ -103,9 +81,7 @@ pub async fn take_draft_snapshots(
         if path.extension().and_then(|e| e.to_str()) != Some("json") {
             continue;
         }
-        // A snapshot that fails to parse (partial write cut off by a crash
-        // mid-save, for instance) is simply dropped rather than surfaced -
-        // there's no sensible content to recover from it anyway.
+        // A snapshot that fails to parse (cut off by a crash) is dropped.
         if let Ok(raw) = fs::read_to_string(&path).await {
             if let Ok(snapshot) = serde_json::from_str::<DraftSnapshot>(&raw) {
                 snapshots.push(snapshot);

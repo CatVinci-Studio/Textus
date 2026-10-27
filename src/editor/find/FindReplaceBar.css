@@ -1,7 +1,5 @@
-/* Under the 28px window bar (not over the title and word count), and left
-   of a docked Textus AI panel rather than over its header and close button -
-   the bar has --docked-panel-width while one is docked
-   (utils/hooks/useDockedPanelWidth.ts). */
+/* Under the window bar, and left of a docked Textus AI panel rather than
+   over its header and close button. */
 .find-replace-bar {
   position: fixed;
   top: 40px;
@@ -10,7 +8,6 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  /* Card look (background/border/radius/shadow) comes from .floating-surface. */
   padding: 6px 8px;
   font-size: var(--text-md);
   animation: motion-drop-in var(--dur-base) var(--ease-out);
@@ -41,8 +38,6 @@
   color: var(--editor-muted);
   background: transparent;
   transition: transform var(--dur-fast) var(--ease-standard);
-  /* The chevron is now an SVG, so the button has to centre it rather than
-     rely on a glyph's own line box. */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -102,8 +97,6 @@
   gap: 4px;
 }
 
-/* Prev / next / close hold icons, not glyphs, so their buttons centre the
-   SVG instead of inheriting a text button's baseline padding. */
 .find-replace-nav button {
   display: flex;
   align-items: center;
@@ -153,7 +146,6 @@
   color: var(--editor-muted);
 }
 
-/* Prev/next share one arrow (see ArrowUpIcon); this is the "next" half. */
 .find-replace-arrow-down {
   transform: rotate(180deg);
 }

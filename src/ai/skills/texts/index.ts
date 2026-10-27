@@ -12,11 +12,8 @@ import de from "./de";
 import ru from "./ru";
 import pt from "./pt";
 
-/**
- * The built-in skills' labels, hints and aliases in every UI language
- * (docs/dev/translating.md, the sixth file of a language). Each file covers all
- * nineteen skills - the type says so - so none shows in another language.
- */
+/** The built-in skills' labels, hints and aliases in every UI language. The
+ *  type makes each file cover every skill. */
 export const SKILL_TEXTS: Record<Lang, SkillTexts> = {
   en,
   zh,

@@ -5,14 +5,13 @@ import {
   type HelpDoc,
 } from "../document/doc-tabs";
 import type { Lang } from "../i18n/langs";
-import type { TabState } from "./useTabState";
+import type { TabState } from "./tabs/useTabState";
 
 const HELP_DOCS: readonly HelpDoc[] = ["markdown", "agent"];
 
 /**
- * Help menu docs (Markdown Guide / AI Agent Guide): bundled documents (per
- * UI language), opened as clean pathless drafts - play with them freely,
- * close without saving. savedContent === content so they start non-dirty.
+ * Help guides open as clean pathless drafts in the UI language: free to
+ * play with, closed without saving.
  */
 export function useHelpTabs(opts: {
   tabState: TabState;
@@ -22,13 +21,11 @@ export function useHelpTabs(opts: {
   const { tabState, language, stopTutorial } = opts;
   const { setTabs, setActiveTabId } = tabState;
 
-  // A guide follows the UI language: switching it swaps the text of every
-  // open guide the user hasn't edited (an edited one is theirs to keep).
+  // Switching the UI language swaps the text of every unedited open guide.
   const guideOpen = tabState.tabs.some((tab) => tab.helpDoc);
   useEffect(() => {
     if (!guideOpen) return;
     let current = true;
-    // Both guides in the new language, loaded first (doc-tabs.ts).
     void Promise.all(
       HELP_DOCS.map((doc) => helpDocContent(doc, language)),
     ).then((texts) => {
@@ -58,15 +55,11 @@ export function useHelpTabs(opts: {
   const openingHelp = useRef(new Set<HelpDoc>());
   const openHelpTab = useCallback(
     (doc: HelpDoc) => {
-      // Help documents are destinations of their own, never a continuation
-      // of an in-progress onboarding run. Without this, a persisted tutorial
-      // could remain floating over the Markdown/AI guide after it opens.
+      // A guide is never part of an onboarding run: a persisted tutorial
+      // would otherwise float over it.
       stopTutorial();
-      // A second call before the first one's tab is in only needs to land
-      // on the same tab: one menu click can reach several listeners in the
-      // same instant (a re-subscribed listener whose predecessor hasn't
-      // been released yet), and each used to see "no guide open" and add
-      // one. Held until the guide's text has loaded and the tab is added.
+      // One menu click can reach several listeners at once; held until the
+      // tab is added so only one adds a guide.
       if (openingHelp.current.has(doc)) return;
       openingHelp.current.add(doc);
       void helpDocContent(doc, language)
@@ -77,8 +70,7 @@ export function useHelpTabs(opts: {
             savedContent: content,
             helpDoc: doc,
           };
-          // Checked against the tab list as it is being updated, not the
-          // last render's.
+          // Checked against the tab list being updated, not the last render's.
           let target = fresh.id;
           setTabs((prev) => {
             const existing = prev.find((tab) => tab.helpDoc === doc);

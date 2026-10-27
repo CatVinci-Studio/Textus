@@ -1,5 +1,5 @@
-/* ui/ActionSheet.tsx: UIKit's action sheet - grouped rows rising from
-   the bottom edge, Cancel set apart beneath them. */
+/* UIKit's action sheet: grouped rows rising from the bottom edge, Cancel set
+   apart beneath them. */
 .action-sheet-scrim {
   position: fixed;
   inset: 0;
@@ -90,8 +90,7 @@
   color: var(--danger);
 }
 
-/* Doubled class: .action-sheet-item's "background: none" comes later and
-   left Cancel floating on the scrim with no card under it. */
+/* Doubled class: .action-sheet-item's "background: none" comes later. */
 .action-sheet-item.action-sheet-cancel {
   background: var(--editor-bg, var(--bg));
   font-weight: 600;

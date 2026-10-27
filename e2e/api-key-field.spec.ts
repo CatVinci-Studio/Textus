@@ -2,9 +2,8 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
 /**
- * A key's field in Settings (SecretInput in settings/sections/controls.tsx)
- * shows the key masked - its first six and last four characters around
- * *** - and saves the key itself. Tavily's key stands in for every one.
+ * A key's field in Settings shows the key masked (first six and last four
+ * characters around ***) and saves the key itself.
  */
 
 const key = "tvly-dev-0123456789abcdefghijklmnopqrstuvwxyz";

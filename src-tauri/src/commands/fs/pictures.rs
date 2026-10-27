@@ -1,13 +1,10 @@
-//! Pictures on disk: the folder a pasted one is saved in, a name that
-//! takes no other file's place, a draft's pictures moved with it when it
-//! is saved, and which one may go to the Trash.
+//! Pictures on disk: where a pasted one is saved, a name that takes no other
+//! file's place, moving a draft's pictures, and which may go to the Trash.
 
 use super::*;
 
-/// Where a saved document's images go: Settings > Images > Folder
-/// (`imageFolder` in src/settings/SettingsContext.tsx), worked out for one
-/// document. src/settings/image-folder.ts previews the same rules for the
-/// example in Settings; change both.
+/// Where a saved document's images go (Settings > Images > Folder), worked out
+/// for one document. Keep in step with image-folder.ts, which previews the rules.
 #[derive(Debug, PartialEq)]
 pub(crate) struct ImageFolder {
     pub(crate) dir: PathBuf,
@@ -17,17 +14,14 @@ pub(crate) struct ImageFolder {
 }
 
 impl ImageFolder {
-    /// The setting is "./" (the document's own folder) or a subfolder of
-    /// it. It never leaves that folder - no "..", nothing absolute: an
-    /// absolute folder would write this machine's paths into every document
-    /// instead of links that travel with it. An empty segment ("img//x") is
-    /// refused, not read as a root.
+    /// The setting is "./" or a subfolder of it; never "..", nothing absolute, so
+    /// links travel with the document. An empty segment ("img//x") is refused.
     pub(crate) fn resolve(doc_path: &Path, setting: &str) -> Result<Self, String> {
         let invalid = || format!("invalid image folder: {setting:?}");
         let doc_dir = doc_path.parent().ok_or_else(invalid)?;
         let setting = setting.trim();
-        // A Windows drive ("C:\img", or "C:img" - relative to that drive's
-        // current folder, not the document's) is a root too.
+        // A Windows drive ("C:\img", or "C:img", relative to that drive's current
+        // folder) is a root too.
         if setting.is_empty()
             || Path::new(setting)
                 .components()
@@ -72,10 +66,8 @@ pub struct SavedImage {
     pub(crate) src: String,
 }
 
-/// Where the images of a document that has no file yet are kept: a pasted
-/// one (save_pasted_image), a Word document's (word_import.rs). They move
-/// into the document's image folder when it is first saved
-/// (migrate_draft_images).
+/// Where the images of a document with no file yet are kept. They move into
+/// its image folder when it is first saved.
 pub(crate) fn draft_assets_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     use tauri::Manager;
     app.path()
@@ -95,13 +87,9 @@ pub(crate) fn numbered_name(name: &str, n: usize) -> String {
     }
 }
 
-/// Writes `bytes` into `dir` as `name`, or the first free `numbered_name`,
-/// and returns the name used. The name is claimed with create_new before
-/// anything is written: checking that a name was free and then writing it
-/// let two saves at once (pastes in two windows within the same
-/// millisecond) take the same name, and the second overwrote the first's
-/// image. With `reuse`, a file that already holds exactly these bytes is
-/// taken as the copy instead of adding another one beside it.
+/// Writes `bytes` into `dir` as `name`, or the first free `numbered_name`, and
+/// returns the name used. The name is claimed with create_new first, so two
+/// simultaneous saves can't take the same name. With `reuse`, an identical file is taken.
 pub(crate) async fn write_new_file(
     dir: &Path,
     name: &str,
@@ -114,8 +102,7 @@ pub(crate) async fn write_new_file(
         .map_err(std::io::Error::other)?
 }
 
-/// `write_new_file` for a caller already off the async runtime - a Word
-/// document's pictures, saved while it is converted (word_import.rs).
+/// `write_new_file` for a caller already off the async runtime.
 pub(crate) fn write_new_file_sync(
     dir: &Path,
     name: &str,
@@ -155,15 +142,13 @@ pub(crate) fn write_new_file_sync(
 #[cfg_attr(test, derive(specta::Type))]
 pub struct ImageMigration {
     pub(crate) old: String,
-    /// New src (relative to the document) on success; None if this one
-    /// image failed to move or copy - it's left at its old path, so nothing
-    /// is lost, just not tidied up.
+    /// New src (relative to the document) on success; None if this image failed
+    /// to move or copy (it stays at its old path).
     pub(crate) new: Option<String>,
 }
 
-/// The picture formats Save As carries along with a document - the
-/// editor's (src/editor/images/pasted-files.ts). A relative link to any
-/// other kind of file is left as written, never copied.
+/// The picture formats Save As carries along with a document. A relative link
+/// to any other kind of file is left as written.
 pub(crate) fn is_image_file(path: &Path) -> bool {
     let ext = path
         .extension()
@@ -190,9 +175,7 @@ pub(crate) const PICTURE_EXTENSIONS: [&str; 8] =
     ["png", "jpg", "jpeg", "webp", "gif", "svg", "avif", "bmp"];
 
 /// Whether `path`, a picture an accepted AI picture replaced, may go to the
-/// Trash for the document at `doc_path`: a picture file in the document's
-/// own folder (or under it), or among the drafts' images - never anything
-/// else, whatever the document's Markdown said.
+/// Trash: a picture file in or under the document's folder, or among the drafts' images.
 #[cfg(desktop)]
 pub(crate) fn may_trash_picture(
     app_assets: Option<&Path>,

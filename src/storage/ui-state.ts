@@ -3,62 +3,56 @@ import { readBoot } from "./boot";
 import { trackWrite } from "./pending-writes";
 
 /**
- * Small bits of UI remembered between launches - not settings the user
- * picks, just where they left things. Kept by Rust in ui-state.json
- * (docs/dev/storage.md); without Rust (no boot snapshot) each is a
- * localStorage key of its own.
- *
- * Remembered for the next window or launch, never pushed into windows
- * already open. Values come back untrusted (a hand edit, a value this
- * version no longer uses); each caller validates its own.
+ * Small bits of UI remembered between launches: where the user left things.
+ * Kept by Rust in ui-state.json, else one localStorage key each. Never pushed
+ * into open windows; values come back untrusted, so callers validate.
  */
 export interface UiState {
-  /** The onboarding tour's step (onboarding/useTutorial.ts). */
+  /** The onboarding tour's step. */
   tutorialProgress: unknown;
   agentPanelOpen: boolean;
   agentPanelWidth: number;
-  /** The sidebar's width as last dragged (app/sidebar-width.ts). */
+  /** The sidebar's width as last dragged. */
   sidebarWidth: number;
-  /** Whether the sidebar was left open (app/useSidePanels.ts). */
+  /** Whether the sidebar was left open. */
   sidebarOpen: boolean;
-  /** The sidebar tab last shown: files, outline or clipboard
-   *  (app/sidebar-tab.ts). */
+  /** The sidebar tab last shown: files, outline or clipboard. */
   sidebarTab: string;
-  /** iOS: recently opened documents, newest first (platform/ios-files.ts). */
+  /** iOS: recently opened documents, newest first. */
   iosRecentDocuments: unknown;
-  /** iOS: the document list's layout (mobile/DocumentList.tsx). */
+  /** iOS: the document list's layout. */
   documentListView: string;
-  /** The chrome colours last derived from the selected imported theme
-   *  (theme/theme-chrome.ts), so the boot script (src-tauri/src/boot.js)
-   *  can paint the next window's first frame with them - deriving them
-   *  takes a CSS engine, which Rust doesn't have. A cache: the frontend
-   *  derives them again on every load and replaces both copies. */
+  /** The chrome colours last derived from the selected imported theme, so the
+   *  boot script can paint the next window's first frame: deriving them takes a
+   *  CSS engine, which Rust lacks. A cache, refreshed on every load. */
   themeChrome: ThemeChromeCache;
-  /** The skills last run from the composer, newest first - the `/` menu
-   *  lists them first (ai/chat/skill-picker.ts). */
+  /** The skills last run from the composer, newest first. */
   recentSkills: string[];
-  /** The folder last opened in the sidebar (File > Open Folder…), or null
-   *  after Close Folder - the session's first window opens it again
-   *  (app/useOpenFolder.ts). */
+  /** The folder last opened in the sidebar, or null after Close Folder; the
+   *  session's first window opens it again. */
   openFolder: string | null;
-  /** The AI project folder (Settings.agentWorkspaceRoot) that Open Folder
-   *  set, so a later Open or Close Folder knows it may change it - and
-   *  leaves one the user chose alone (sidebar/tree-root.ts). */
+  /** The AI project folder that Open Folder set, so a later Open or Close
+   *  Folder may change it but leaves one the user chose alone. */
   agentRootFromFolder: string;
-  /** Where the caret was in each document left recently, by path, least
-   *  recent first, with the file's modified time then
-   *  (document/last-carets.ts). */
+  /** Where the caret was in each recent document, by path, least recent
+   *  first, with the file's modified time then. */
   lastCarets: Record<
     string,
     { mtime: number } & ({ offset: number } | { pos: number })
   >;
-  /** The Files tab's filter, for the tree and its search: documents
-   *  only, or every file (sidebar/FileTree.tsx). */
+  /** The Files tab's filter: documents only, or every file. */
   fileSearchScope: string;
-  /** The file tree's order: "name" or "modified" (sidebar/FileTree.tsx). */
+  /** The file tree's order: "name" or "modified". */
   fileTreeSort: string;
-  /** "1" when the file tree shows hidden files (#357). */
+  /** "1" when the file tree shows hidden files. */
   fileTreeHidden: string;
+  /** The split the window was left in, by its two documents' paths; null when
+   *  it showed one. */
+  splitLayout: {
+    direction: "row" | "column";
+    ratio: number;
+    paths: [string, string];
+  } | null;
 }
 
 export interface ThemeChromeCache {
@@ -66,9 +60,8 @@ export interface ThemeChromeCache {
   id: string;
   /** For its dark appearance, or its light one. */
   dark: boolean;
-  /** The length of the theme stylesheet they were derived from: the UI
-   *  never rewrites an imported theme, but a hand-edited file shouldn't
-   *  get the old colours painted over its first frame either. */
+  /** The length of the theme stylesheet they were derived from, so a
+   *  hand-edited file doesn't get the old colours on its first frame. */
   sourceLength: number;
   /** The stylesheet applyThemeChrome applied. */
   css: string;
@@ -76,9 +69,8 @@ export interface ThemeChromeCache {
 
 export type UiStateKey = keyof UiState;
 
-/** Each field's localStorage key without Rust, and how it is encoded
- *  there. A field without one is kept in the file only (themeChrome: only
- *  Rust's boot script reads it). */
+/** Each field's localStorage key without Rust, and its encoding. A field
+ *  without one is kept in the file only. */
 const LOCAL: {
   [K in UiStateKey]?: {
     key: string;
@@ -151,6 +143,11 @@ const LOCAL: {
     decode: (raw) => raw,
     encode: (value) => value,
   },
+  splitLayout: {
+    key: "textus-split-layout",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
   fileTreeSort: {
     key: "textus-file-tree-sort",
     decode: (raw) => raw,
@@ -221,12 +218,9 @@ export function setUiState<K extends UiStateKey>(
   }
 }
 
-/**
- * Changes a field from its live value, for one every window adds to (the
- * last carets): setUiState from this page's copy would drop what another
- * window wrote since this one loaded. The read and the write go out at
- * once and are tracked together, so a closing window waits for both.
- */
+/** Changes a field from its live value, for one every window adds to: this
+ *  page's copy may miss another window's writes. The read and write are
+ *  tracked together, so a closing window waits for both. */
 export function updateUiState<K extends UiStateKey>(
   key: K,
   change: (current: unknown) => UiState[K],
@@ -248,9 +242,8 @@ export function updateUiState<K extends UiStateKey>(
   ).catch(() => {});
 }
 
-/** Resolves once the live values have replaced the boot snapshot - for a
- *  read-modify-write (the iOS recents list) that must not build on a
- *  snapshot a page reload left stale. */
+/** Resolves once the live values have replaced the boot snapshot, for a
+ *  read-modify-write that must not build on a stale one. */
 export function uiStateReady(): Promise<void> {
   fileCache();
   return refreshed ?? Promise.resolve();

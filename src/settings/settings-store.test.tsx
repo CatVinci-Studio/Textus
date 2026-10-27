@@ -30,9 +30,7 @@ import {
 import { resetUiStateForTests } from "../storage/ui-state";
 import { installTestLocalStorage } from "../dev/test-local-storage";
 
-// The file-backed path: what runs when Rust booted the window with a
-// snapshot (src/storage/boot.ts). The localStorage fallback is covered by
-// SettingsContext.test.ts.
+// The file-backed path, run when Rust booted the window with a snapshot.
 
 const handlers: Record<string, (event: { payload: unknown }) => void> = {};
 
@@ -48,7 +46,7 @@ vi.mock("../platform/ipc", () => ({
     historyList: vi.fn().mockResolvedValue([]),
   },
 }));
-vi.mock("../utils/tauri-events", () => ({
+vi.mock("../platform/events", () => ({
   listenToThisWindow: (
     event: string,
     handler: (event: { payload: unknown }) => void,
@@ -137,8 +135,8 @@ describe("file-backed settings", () => {
   });
 
   it("sends every keystroke at once, so a quick quit can't lose it", () => {
-    // Rust coalesces the disk writes and flushes on exit; a debounce here
-    // lost whatever was typed in the last moments before Cmd+Q.
+    // Rust coalesces the disk writes and flushes on exit; a debounce here would
+    // lose the last keystrokes before Cmd+Q.
     boot({ languageChosen: true });
     render(
       <SettingsProvider>
@@ -195,9 +193,8 @@ describe("file-backed settings", () => {
 
   it("keeps a change that lands before the provider has subscribed", () => {
     boot({ theme: "light", languageChosen: true });
-    // A child's layout effect runs after the provider's first render but
-    // before its own (passive) effect subscribes - the same gap the live
-    // re-read or another window's event can fall into while React yields.
+    // A child's layout effect runs after the provider's first render but before
+    // its passive effect subscribes.
     function EarlyEvent() {
       useLayoutEffect(() => {
         // Straight to the handler: render() is already inside act().
@@ -252,10 +249,8 @@ describe("file-backed settings", () => {
   });
 
   it("doesn't put the defaults back over changes when it reloads with an empty snapshot", async () => {
-    // A window that booted after a corrupt settings.json was moved aside
-    // replays the same empty snapshot on every reload; meanwhile the user
-    // has changed things. Rust keeps those (it only fills missing fields)
-    // and answers with the live settings, which the window takes.
+    // A window booted after a corrupt settings.json replays an empty snapshot on
+    // every reload; Rust only fills missing fields and answers with the live ones.
     vi.mocked(storage.settingsFillDefaults).mockResolvedValue({
       value: { theme: "dark", languageChosen: true, onboardingShown: true },
       rev: 9,
@@ -369,7 +364,6 @@ describe("interface text size", () => {
   });
 
   it("is applied by the boot script for the same sizes", () => {
-    // Its own copy of UI_TEXT_SCALES, less 1 (the stylesheet's default).
     const script = readFileSync("src-tauri/src/boot.js", "utf8");
     const list = /\[([\d., ]+)\]\.indexOf\(settings\.uiTextScale\)/.exec(
       script,

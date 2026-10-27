@@ -18,16 +18,10 @@ type Range = { from: number; to: number };
 const HIDDEN: SelectionChip = { shown: false, hot: false };
 
 /**
- * Keeps the passage a chat is about highlighted in the document
- * (chat-selection-plugin) for as long as its composer shows the selection
- * chip: Quick Ask's captured range while its panel is on screen, else the
- * live selection the AI panel's or the chat window's chip refers to - that
- * one only while the editor doesn't have the focus, since the selection
- * shows itself there. The chip going away (✕, a send that used the
- * selection, the selection collapsing, another tab) clears it.
- *
- * Returns the chip handlers for the two composers: hovering a chip
- * strengthens the highlight, clicking it scrolls the passage into view.
+ * Keeps the passage a chat is about highlighted while its composer shows
+ * the selection chip; the live selection only while the editor lacks focus,
+ * since it shows itself there. Returns the chip handlers: hover strengthens
+ * the highlight, click scrolls to it.
  */
 export function useChatSelectionHighlight({
   run,
@@ -42,8 +36,8 @@ export function useChatSelectionHighlight({
   /** Whether a panel or chat window is about this editor's selection. */
   tracking: boolean;
 }) {
-  // Shown until its composer says otherwise: the passage is marked as the
-  // bar opens, not a render later.
+  // Shown until its composer says otherwise, so the passage is marked as the
+  // bar opens.
   const [quickChip, setQuickChip] = useState<SelectionChip>({
     shown: true,
     hot: false,
@@ -51,17 +45,15 @@ export function useChatSelectionHighlight({
   const [panelChip, setPanelChip] = useState<SelectionChip>(HIDDEN);
   const editorFocused = useEditorFocus(run, tracking);
 
-  // Only while Quick Ask's panel is on screen: a detached or hidden one
-  // left its old range highlighted while the window was talking about a
-  // different passage.
+  // Only while Quick Ask's panel is on screen, or a stale range stays lit.
   const quickRange =
     inlineChat.visible && quickChip.shown
       ? (inlineChat.chatInfo?.range ?? null)
       : null;
   const liveRange =
     tracking && panelChip.shown && !editorFocused ? panelRange : null;
-  // Only on a change of range: Quick Ask's has been mapped through every
-  // edit since it was set, and setting it again would undo that.
+  // Only on a change of range: Quick Ask's is mapped through every edit, and
+  // setting it again would undo that.
   const target = quickRange ?? liveRange;
   useEffect(() => {
     run((ctx) => {

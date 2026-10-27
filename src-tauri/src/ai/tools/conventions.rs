@@ -25,10 +25,9 @@ pub(super) fn visible(s: &str) -> String {
         .collect()
 }
 
-/// Checks a passage against the document's writing conventions with the
-/// rules engine (ai::rules): a section, a line range, the whole document,
-/// or a draft (`text`) not yet in it - judged against the rest of the
-/// document's own majority. Findings grouped by rule, at most 50 lines.
+/// Checks a passage against the document's writing conventions: a section, a
+/// line range, the whole document, or a draft (`text`) judged against the
+/// document's majority. Findings grouped by rule, at most 50 lines.
 pub(super) fn check_conventions(ctx: &ToolContext, arguments: &str) -> String {
     use crate::ai::rules::{self, Level};
     let args: serde_json::Value = serde_json::from_str(arguments).unwrap_or_default();
@@ -42,11 +41,8 @@ pub(super) fn check_conventions(ctx: &ToolContext, arguments: &str) -> String {
         .and_then(|t| t.as_str())
         .filter(|t| !t.trim().is_empty());
     let (report, scope, range) = if let Some(text) = text {
-        // The draft as it will land: proposals go through the same
-        // automatic fixes (rules::postfix) - checked raw, a draft whose
-        // French spaces the app was about to fix made the model send its
-        // proposal again and tell the user the spaces might be wrong
-        // (round 4, builtin/proofread/fr/typography).
+        // The draft as it will land, after the automatic fixes: checked raw, fixes the
+        // app was about to make sent the model back to propose again.
         let (text, _) = rules::postfix::proposal_text(ctx.document, text, ctx.conventions);
         let report = rules::document::check_document_with(
             &text,
@@ -147,9 +143,8 @@ pub(super) fn check_conventions(ctx: &ToolContext, arguments: &str) -> String {
             findings.len() - shown
         ));
     }
-    // The bracketed names are for reading; told only those, the model
-    // proposed "Bonjour !" with a plain space and told the user it had put
-    // in no-break spaces (round 4, builtin/proofread/fr/typography).
+    // The bracketed names are for reading; told only those, the model believed
+    // a plain space was a no-break one.
     let invisible = findings.iter().any(|f| {
         f.suggestion
             .as_deref()

@@ -5,24 +5,13 @@ export interface DiffLine {
   text: string;
 }
 
-/**
- * Above this many lines on either side, the LCS table costs more than the
- * result is worth reading - a diff that long is scrolled past, not studied.
- * Such a pair is shown as a plain remove-all/add-all block instead.
- */
+/** Above this many lines on either side, the LCS table costs more than the
+ *  diff is worth; the pair shows as remove-all/add-all instead. */
 const MAX_LCS_LINES = 400;
 
 /**
- * Line-level diff of two markdown snippets, for the proposal card.
- *
- * A proposal used to render as one struck block followed by one inserted
- * block, which for a reworded sentence inside a paragraph meant reading the
- * whole paragraph twice to find the change. Lining the two up says what
- * actually moved.
- *
- * Plain LCS: proposals are a handful of lines, and the alternative (a
- * word-level or Myers diff) is a lot of machinery for a card that is read for
- * a second or two before being accepted.
+ * Line-level diff of two markdown snippets, for the proposal card. Plain
+ * LCS: proposals are a handful of lines.
  */
 export function diffLines(before: string, after: string): DiffLine[] {
   const a = before.length === 0 ? [] : before.split("\n");

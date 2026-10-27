@@ -37,12 +37,9 @@ import { parseEmbed, withEmbedPath, type EmbedTarget } from "./obsidian-embed";
 const embedPreviewKey = new PluginKey<RevealState>("obsidian-embed-preview");
 
 /**
- * The src an HTML export writes for an embed's picture (data-doc-src, see
- * export/exporters.ts): relative to the document, as an ordinary image's
- * is, when the file is in the document's folder or below it - the export
- * saved beside the document then finds it, and so does a copy of the whole
- * folder. A file elsewhere in the vault keeps its full path; a "../" one
- * would break as soon as the export is moved.
+ * The src an HTML export writes for an embed's picture: relative when the
+ * file is in the document's folder or below, else the full path, since a
+ * "../" one breaks once the export moves.
  */
 export function exportSrc(file: string, docPath: string): string {
   const dir = dirname(docPath);
@@ -56,12 +53,9 @@ export function exportSrc(file: string, docPath: string): string {
 }
 
 /**
- * "Choose image…" on a missing embed's card: the picked file is copied
- * into the image folder, as a dropped image is, and the embed names it by
- * its path from the document - which Textus and Obsidian both resolve -
- * still as `![[...]]`, alt and size kept, so it saves as written. Copied
- * even when Settings › Images uploads: an embed names a vault file, not a
- * web address. One undo step.
+ * "Choose image…" on a missing embed's card: the picked file is copied into
+ * the image folder (never uploaded: an embed names a vault file) and the
+ * embed names it by its path, still as `![[...]]`. One undo step.
  */
 async function replaceEmbed(
   view: EditorView,
@@ -99,13 +93,12 @@ async function replaceEmbed(
   }
 }
 
-/** Each embed picture's file in the vault, or - missing - where it was
- *  looked for (embedFileAt). Kept off the DOM, which an export copies. */
+/** Each embed picture's file in the vault, or where it was looked for.
+ *  Kept off the DOM, which an export copies. */
 const embedFiles = new WeakMap<Element, string>();
 
-/** The picture an image embed names, found in the document's vault by the
- *  backend. One it can't find, or can't show, gets the missing image's
- *  card (missing-image.ts). */
+/** The picture an image embed names, found in the vault by the backend, or
+ *  the missing image's card. */
 function embedWidget(
   embed: EmbedTarget,
   docPath: string,
@@ -119,8 +112,7 @@ function embedWidget(
     if (embed.width) img.style.width = `${embed.width}px`;
     if (embed.height) img.style.height = `${embed.height}px`;
     el.append(img);
-    // `path`: the file found, or - not found - where the link would be
-    // beside the document, for the tooltip and the folder to show.
+    // `path`: the file found, or where the link would be beside the document.
     const missing = (reason: MissingReason, path: string | null) => {
       const location: ImageLocation = path
         ? { kind: "local", path }
@@ -142,8 +134,7 @@ function embedWidget(
         },
         resolveStrings(settings().language),
       );
-      // The name as written stays for an export, which drops the card:
-      // a page shows what it showed before the card.
+      // The name as written stays for an export, which drops the card.
       const name = document.createElement("span");
       name.className = "image-missing-name";
       name.textContent = embed.path;
@@ -159,8 +150,8 @@ function embedWidget(
         img.dataset.docSrc = exportSrc(file, docPath);
       })
       .catch(() => missing("failed", null));
-    // A right-click is for the picture's menu (embedFileAt): moving the
-    // caret onto the source would take the picture away under it.
+    // A right-click is for the picture's menu: moving the caret onto the source
+    // would take the picture away under it.
     caretToSourceOnClick(
       el,
       view,
@@ -174,9 +165,8 @@ function embedWidget(
   };
 }
 
-/** The vault file the embed picture at `target` shows - or, missing,
- *  where it was looked for - for the right-click menu's Show in folder
- *  and Copy image path; null off an embed, or before the vault answered. */
+/** The vault file the embed picture at `target` shows, or where it was
+ *  looked for; null off an embed or before the vault answered. */
 export function embedFileAt(target: Element): string | null {
   const el = target.closest(".obsidian-embed-rendered");
   return (el && embedFiles.get(el)) ?? null;
@@ -194,8 +184,7 @@ function embedReveal(options: EmbedPreviewOptions): Reveal {
     match: isEmbed,
     decorate(node, pos, touches) {
       const docPath = options.docPath();
-      // An unsaved document has no vault; one picked in the iOS Files app
-      // is read through the system, which a vault search can't walk.
+      // An unsaved document has no vault; an iOS Files one can't be searched.
       if (!docPath || isScopedUrl(docPath)) return [];
       const embed = parseEmbed(node.textContent);
       const to = pos + node.nodeSize;
@@ -207,21 +196,15 @@ function embedReveal(options: EmbedPreviewOptions): Reveal {
         Decoration.widget(to, embedWidget(embed, docPath, options.settings), {
           side: -1,
           key: `${docPath}\n${node.textContent}`,
-          // The card's buttons are the card's; the editor leaves them be.
           stopEvent: isMissingCardAction,
         }),
       ];
     },
-    // Saved under a new name, the pictures are looked for from there.
     config: options.docPath,
   };
 }
 
-/**
- * Obsidian image embeds (obsidian-embed.ts) as pictures, the way
- * raw-html-preview-plugin.ts shows an <img>: while the caret is away the
- * source hides behind the picture; on it, the source is back to edit.
- */
+/** Obsidian image embeds as pictures while the caret is away. */
 export function createObsidianEmbedPreviewPlugin(options: EmbedPreviewOptions) {
   const reveal = embedReveal(options);
   return $prose(

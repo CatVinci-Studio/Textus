@@ -30,37 +30,21 @@ import { pressKeepingFocus } from "../ui/tap";
 import "./KeyboardToolbar.css";
 
 /**
- * The strip above the iPhone keyboard while the document is being edited:
- * undo (copy and paste are the system's own long-press menu, used too
- * rarely to keep two buttons here); then whatever fits where the caret is - formatting
- * without typing Markdown symbols in text, adding and deleting rows and
- * columns in a table, widths and delete on a tapped image; "More" for the
- * rest of the editor's right-click menu; and Quick Ask at the caret. A
- * phone has no right-click (a long press brings up the system's text
- * menu, not Textus's) and no hover, so this strip is how a finger reaches
- * what the desktop keeps in menus and hover controls.
- *
- * The buttons keep the editor's focus, so the keyboard stays up and the
- * caret where it was: a tap runs the button on touchend and cancels the
- * default there, which is what would move focus to the button (and the
- * click that would follow); a swipe along the row presses nothing
- * (pressKeepingFocus in tap.ts). They reach the editor the
- * way the menus do, through window events (utils/events.ts).
+ * The strip above the iPhone keyboard: undo, the controls for where the caret
+ * is, "More" for the context menu, and Quick Ask, since a phone has no
+ * right-click or hover. Buttons press on touchend so the editor keeps focus.
  */
 const send = (event: string, detail?: string) =>
   window.dispatchEvent(new CustomEvent(event, { detail }));
 
-/** What the caret sits in, read off the editor's DOM: the heading level
- *  the H button shows, which block buttons are on, and whether the table
- *  or image buttons take the place of the formatting ones. */
+/** What the caret sits in, read off the editor's DOM. */
 interface CaretBlock {
   heading: number;
   bulletList: boolean;
   orderedList: boolean;
   quote: boolean;
   table: boolean;
-  /** A tapped (node-selected) image, and its CSS width ("50%", "320px") -
-   *  null for auto. */
+  /** A tapped image and its CSS width; null for auto. */
   image: { width: string | null } | null;
 }
 const NO_BLOCK: CaretBlock = {
@@ -74,13 +58,12 @@ const NO_BLOCK: CaretBlock = {
 
 function caretBlock(): CaretBlock {
   const editor = document.activeElement?.closest(".milkdown .ProseMirror");
-  // ProseMirror marks the node view of a node selection (image-plugin.ts),
-  // where the DOM selection only brackets it.
+  // ProseMirror marks the node view of a node selection; the DOM selection
+  // only brackets it.
   const image = editor?.querySelector<HTMLElement>(
     ".image-view.ProseMirror-selectednode",
   );
   if (image) {
-    // The view sets its width from the image's (image-plugin.ts).
     return { ...NO_BLOCK, image: { width: image.style.width || null } };
   }
   const node = document.getSelection()?.anchorNode;
@@ -101,10 +84,8 @@ function caretBlock(): CaretBlock {
 const IMAGE_WIDTHS = [30, 50, 70, 100] as const;
 
 /**
- * An iPad with the AI panel docked beside the text: the strip spans the
- * text's column, not the screen - full width it covered the panel's
- * composer (mode picker, +, search and Send). The phone's AI sheet
- * (position: fixed) covers the strip itself, so it is not measured.
+ * With the AI panel docked on an iPad, the strip spans the text's column so it
+ * doesn't cover the panel's composer.
  */
 function usePanelInset(editing: boolean): number {
   const [panelInset, setPanelInset] = useState(0);
@@ -125,8 +106,8 @@ function usePanelInset(editing: boolean): number {
         observed = panel;
       }
       const docked = !!panel && getComputedStyle(panel).position !== "fixed";
-      // Its laid-out width, not where it shows: it may still be sliding
-      // in from beside the screen. It always stands at the right edge.
+      // Its laid-out width: it may still be sliding in. It always stands at the
+      // right edge.
       setPanelInset(docked ? panel.offsetWidth : 0);
     }
     measure();
@@ -160,11 +141,11 @@ export function KeyboardToolbar() {
     };
   }, [editing, update]);
 
-  // Up while a document editor has focus - which on a phone is exactly
-  // while its keyboard is up.
+  // Up while a document editor has focus, which on a phone is while the
+  // keyboard is up.
   useEffect(() => {
-    // Quick Ask's composer sits inside the editor's DOM (a widget at the
-    // caret), but typing there is not editing the document.
+    // Quick Ask's composer sits inside the editor's DOM, but typing there is not
+    // editing the document.
     const inEditor = (node: EventTarget | null) =>
       node instanceof Element &&
       !!node.closest(".milkdown .ProseMirror") &&
@@ -211,10 +192,8 @@ export function KeyboardToolbar() {
     { label: t.menuUndo, content: <UndoIcon />, run: edit("undo") },
   ];
 
-  // In a table or on an image, the buttons for it stand where the text
-  // formatting is: Markdown has no headings or lists inside a table cell,
-  // and none apply to an image. The table's own "+" strips are hover
-  // controls, hidden on a phone (mobile/styles/editor.css).
+  // In a table or on an image, its buttons replace the text formatting, none of
+  // which applies there.
   let contextGroups: Button[][];
   if (block.image) {
     const width = block.image.width;

@@ -3,14 +3,9 @@
 
 use super::*;
 
-/// Proposal post-processing (rules::postfix, CATALOGUE.md §3.13): the
-/// `text` of each propose_edit call in a step, made to follow the P0
-/// conventions the document already follows (full-width punctuation in a
-/// Chinese document that uses it, attached Korean particles...). Done here,
-/// before the call reaches the tool, the history and the frontend - whose
-/// proposal card takes the completed call's arguments as authoritative -
-/// so the user sees the fixed text. Returns the rules applied (the live
-/// eval records them, so prompt regressions stay visible).
+/// Makes each propose_edit `text` in a step follow the conventions the
+/// document already follows, before the call reaches the tool, history and
+/// frontend, so the user sees the fixed text. Returns the rules applied.
 pub(crate) fn postfix_step(
     result: StepResult,
     document: &Document,
@@ -20,8 +15,8 @@ pub(crate) fn postfix_step(
         return (result, Vec::new());
     };
     let mut applied = Vec::new();
-    // An edit naming its block (doc_blocks.rs) gets what the block says
-    // filled in, its ids kept for the frontend to place it by.
+    // An edit naming its block gets what the block says filled in, its ids kept
+    // for the frontend to place it by.
     let calls = calls
         .into_iter()
         .map(|call| match call {
@@ -72,10 +67,8 @@ pub(crate) fn postfix_step(
     (StepResult::ToolCalls(calls), applied)
 }
 
-/// A step's result as the loop takes it, once its edit tags are calls:
-/// [`postfix_step`] applied, and the pictures written into its text placed
-/// (InlinePictures::place). The app and the live eval both settle each
-/// step here; the rules applied are returned for the eval to record.
+/// A step's result as the loop takes it: [`postfix_step`] applied and inline
+/// pictures placed. Returns the rules applied, for the eval to record.
 pub(crate) fn settle_step(
     result: StepResult,
     document: &Document,
@@ -91,11 +84,8 @@ pub(crate) fn settle_step(
     (result, applied)
 }
 
-/// A step's edits run before its comments (calls run in order), so a
-/// comment knows whether the request has proposed a change
-/// (tools::settles), and a step of edits, comments and a sentence still ends
-/// in one step. Everything else keeps its place; a step without an edit is
-/// as it came.
+/// A step's edits run before its comments, so a comment knows whether the
+/// request has proposed a change. Everything else keeps its place.
 fn edits_before_comments(result: StepResult) -> StepResult {
     let StepResult::ToolCalls(mut calls) = result else {
         return result;

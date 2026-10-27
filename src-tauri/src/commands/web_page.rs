@@ -1,14 +1,6 @@
-//! Web pages in a tab as native webviews of their own (desktop): one per
-//! tab, laid over the tab's area of the window by the frontend
-//! (src/plugins/useNativeWebPage.ts), which says where it goes as the
-//! layout changes and hides it when the tab goes out of sight. Unlike the
-//! frame it replaces, a native page opens every site - many refuse to be
-//! framed - and keeps its own cookies, as a browser would.
-//!
-//! The page is the web's, never the app's: HTTPS only, and as a remote
-//! origin it reaches none of the app's commands (no capability names it).
-//! A link to anything else - another scheme, a window of its own - goes
-//! to the system browser.
+//! Web pages in a tab as native webviews of their own, laid over the tab's
+//! area by the frontend; unlike a frame, they open every site. HTTPS only, with
+//! no app capabilities; other links go to the system browser.
 
 use serde::{Deserialize, Serialize};
 use tauri::webview::{NewWindowResponse, PageLoadEvent, WebviewBuilder};
@@ -67,9 +59,8 @@ fn open_outside(app: &AppHandle, url: &Url) {
     }
 }
 
-/// Shows tab `id`'s page at `bounds`, making it the first time; a page
-/// made already is moved there and shown again, at the address it was
-/// left at.
+/// Shows tab `id`'s page at `bounds`, making it the first time; an existing
+/// page is moved and shown again where it was left.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn web_page_show(
@@ -129,8 +120,8 @@ pub fn web_page_show(
         .map_err(|e| e.to_string())
 }
 
-/// Hides tab `id`'s page: its tab went out of sight, or something is shown
-/// over it (a menu, a dialog) that a native page would cover.
+/// Hides tab `id`'s page: its tab went out of sight, or a menu or dialog is
+/// over it that a native page would cover.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn web_page_hide(window: Window, id: String) -> Result<(), String> {

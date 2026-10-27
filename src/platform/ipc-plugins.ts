@@ -1,38 +1,30 @@
 import type * as Generated from "./bindings/plugins";
+import type * as Access from "./bindings/plugin-access";
+
+/** A plugin file as text. */
+export type PluginFile = Generated.PluginFile;
 import { call, command, desktopActionCommand } from "./ipc-call";
 
-/**
- * Plugins (src-tauri/src/plugins/) and MCP servers (src-tauri/src/mcp/):
- * the calls Settings › Extensions and the plugin broker make. Re-exported
- * from ipc.ts.
- */
+/** Plugins and MCP servers: the calls Settings › Extensions and the plugin broker make. */
 
-// ---------------------------------------------------------------------------
-// plugins (src-tauri/src/plugins/) - what is installed and granted, and the
-// calls a plugin makes through the window (src/plugins/broker.ts).
-// ---------------------------------------------------------------------------
+// Plugins: what is installed and granted, and the calls a plugin makes
+// through the window.
 
-// Generated from the Rust commands (src/platform/bindings/plugins.ts):
-// PluginsState in plugins/state.rs, CatalogEntry in plugins/catalog.rs,
-// InstalledPlugin in plugins/install.rs, FsEntry and HttpResponse in
-// plugins/access.rs.
 export type PluginsState = Generated.PluginsState_Serialize;
 export type PluginCatalogEntry = Generated.CatalogEntry_Serialize;
 export type { InstalledPlugin } from "./bindings/plugins";
-export type PluginFsEntry = Generated.FsEntry_Serialize;
-export type PluginHttpResponse = Generated.HttpResponse;
-export type StoreScope = Generated.StoreScope;
+export type StoreScope = Access.StoreScope;
+export type PluginDocumentMeta = Access.DocumentMeta_Serialize;
 
-/** A raw IPC response's bytes (tauri::ipc::Response) - which specta has no
- *  type for, so the commands answering one go through `call`. */
+/** A raw IPC response's bytes, which specta can't type, so those commands
+ *  go through `call`. */
 const bytes = async (pending: Promise<ArrayBuffer>) =>
   new Uint8Array(await pending);
 
-/** One tool an MCP server offers (McpTool in src-tauri mcp/client.rs). */
+/** One tool an MCP server offers. */
 export type McpToolInfo = Generated.McpTool;
 
-/** A server that is on, as it is now (ServerStatus in src-tauri
- *  mcp/mod.rs, which sends its state as a string). */
+/** A server that is on, as it is now. */
 export interface McpServerStatus extends Generated.ServerStatus_Serialize {
   state: "starting" | "ready" | "failed";
 }
@@ -56,16 +48,23 @@ export const plugins = {
     command("plugin_set", id, enabled, granted),
   installed: () => command("plugins_installed"),
   install: (path: string) => command("plugin_install", path),
+  /** A plugin from its files' text (what Textus AI writes), installed as a
+   *  package is. */
+  installFiles: (files: PluginFile[]) => command("plugin_install_files", files),
   loadDev: (path: string) => command("plugin_load_dev", path),
   uninstall: (id: string) => command("plugin_uninstall", id),
-  /** The plugins Textus offers (textus-plugins' catalog), fetched now
-   *  and kept for next time. */
+  /** Export for Publishing: the new folder's path. */
+  exportPlugin: (id: string, publisher: string, folder: string) =>
+    command("plugin_export", id, publisher, folder),
+  /** textus:// links waiting for a window, taken. */
+  takeUris: () => command("plugin_take_uris"),
+  /** The plugins Textus offers, fetched now and kept for next time. */
   catalog: () => command("plugin_catalog"),
   /** The catalog as last fetched, if one was kept. */
   cachedCatalog: () => command("plugin_catalog_cached"),
   /** Downloads one from the catalog, checks it and installs it. */
   installFromCatalog: (id: string) => command("plugin_install_catalog", id),
-  /** The skills the catalog last read lists (catalog.rs's SkillEntry). */
+  /** The skills the catalog last read lists. */
   skillCatalog: () => command("skill_catalog"),
   /** Downloads a skill from the catalog into the global skills/ folder;
    *  SKILL_EXISTS when one of that name is there already. */
@@ -75,6 +74,8 @@ export const plugins = {
    *  picker. Desktop only. */
   pickPackage: (folder: boolean, filterName: string) =>
     desktopActionCommand("plugin_pick_package", folder, filterName),
+  /** Settings › Plugins › Open Scripts Folder. Desktop only. */
+  openScriptsDir: () => desktopActionCommand("plugin_open_scripts_dir"),
   file: (id: string, rel: string) =>
     bytes(call<ArrayBuffer>("plugin_file", { id, rel })),
   readResource: (id: string, path: string) =>
@@ -95,6 +96,30 @@ export const plugins = {
     command("plugin_fs_trash", id, root, path),
   fsMkdir: (id: string, root: string, path: string) =>
     command("plugin_fs_mkdir", id, root, path),
+  fsStat: (id: string, root: string, path: string) =>
+    command("plugin_fs_stat", id, root, path),
+  fsCreate: (id: string, root: string, path: string, text: string) =>
+    command("plugin_fs_create", id, root, path, text),
+  /** A text file and a token naming its version. */
+  fsReadVersioned: (id: string, root: string, path: string) =>
+    command("plugin_fs_read_versioned", id, root, path),
+  /** Writes only if the file is still the version `token` names. */
+  fsWriteIf: (
+    id: string,
+    root: string,
+    path: string,
+    text: string,
+    token: string,
+  ) => command("plugin_fs_write_if", id, root, path, text, token),
+  /** Every document of the folder and what it holds, and what changed
+   *  since last asked. */
+  metadataAll: (id: string, root: string) =>
+    command("plugin_metadata_all", id, root),
+  metadataGet: (id: string, root: string, path: string) =>
+    command("plugin_metadata_get", id, root, path),
+  secretGet: (id: string, key: string) => command("plugin_secret_get", id, key),
+  secretSet: (id: string, key: string, value: string | null) =>
+    command("plugin_secret_set", id, key, value),
   fsWrite: (
     id: string,
     root: string,
@@ -112,8 +137,7 @@ export const plugins = {
       bodyBase64?: boolean;
     },
   ) => command("plugin_http", id, request),
-  // A plugin's two places (plugins/store.rs): `root` is the open folder,
-  // for the project's.
+  // A plugin's two stores: `root` is the open folder, for the project's.
   storeGet: (id: string, scope: StoreScope, root: string | null, key: string) =>
     command("plugin_store_get", id, scope, root, key) as Promise<unknown>,
   storeSet: (
@@ -122,8 +146,7 @@ export const plugins = {
     root: string | null,
     key: string,
     value: unknown,
-  ) =>
-    command("plugin_store_set", id, scope, root, key, value as Generated.Value),
+  ) => command("plugin_store_set", id, scope, root, key, value as Access.Value),
   storeKeys: (id: string, scope: StoreScope, root: string | null) =>
     command("plugin_store_keys", id, scope, root),
   storeRead: (
@@ -149,7 +172,7 @@ export const plugins = {
   ) => command("plugin_store_delete", id, scope, root, path),
   /** When a developer's plugin folder last changed (ms), or null. */
   devStamp: (id: string) => command("plugin_dev_stamp", id),
-  /** The tools this window's plugins give Textus AI (plugins/ai_tools.rs). */
+  /** The tools this window's plugins give Textus AI. */
   aiToolsSet: (tools: Generated.PluginAiTool[]) =>
     command("plugin_ai_tools_set", tools),
   aiToolResult: (callId: string, text: string | null, error: string | null) =>

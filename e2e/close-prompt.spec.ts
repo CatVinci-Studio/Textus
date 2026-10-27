@@ -1,12 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// A window's close request - its own close button, Alt+F4, ⌘W, or the
-// window manager's close (niri's close-window, a taskbar's Close) - reaches
-// the page as tauri://close-requested (app/close-flow.ts). With unsaved
-// changes the window stays open behind the unsaved-changes prompt, so that
-// prompt must be the one thing in front: on a first launch it used to sit
-// under the language welcome, and the close looked ignored.
+// A close request (close button, Alt+F4, ⌘W, the window manager) reaches the
+// page as tauri://close-requested. With unsaved changes the prompt must be
+// the one thing in front, even over the first-launch welcome.
 
 function emit(page: Page, event: string, payload?: unknown) {
   return page.evaluate(

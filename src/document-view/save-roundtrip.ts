@@ -21,22 +21,12 @@ export {
   random,
   hashString,
 } from "./save-roundtrip-edits";
-// Test-only: the save round trip (docs/dev/saving.md) run on real files.
-// A file is opened in the full editor, as a tab opens it, one edit is made
-// the way the app makes it, and the save is checked:
-//
-//   (a) every top-level block the edit didn't touch is in the output as
-//       the file had it, byte for byte;
-//   (b) the output, read again, holds the text the editor held - no text,
-//       link target, image or footnote lost or garbled;
-//   (c) nothing threw.
-//
-// Every edit starts from a fresh load. Edits are picked by a seeded random
-// generator, so a failure reproduces from the file and the seed.
+// Test-only: opens a file in the full editor, makes one seeded edit, and
+// checks the save: (a) untouched blocks byte for byte, (b) the text reads
+// back the same, (c) nothing threw. A failure reproduces from file and seed.
 
-/** Why a check failed. The `-serializer` kinds fail the same way when the
- *  whole document is serialized, so they are the serializer's, not the
- *  preservation's; the rest are preservation's. */
+/** Why a check failed. `-serializer` kinds also fail with the whole document
+ *  serialized, so they are the serializer's fault, not preservation's. */
 export type FailureKind =
   | "exception"
   | "undo-changed"
@@ -73,17 +63,9 @@ export interface FileReport {
   blocks: number;
 }
 
-/** The document's content as text: each textblock's text on a line, and
- *  what an image, a footnote reference or a link points at. Formatting
- *  and the shape of lists and tables are left out, and so is what
- *  Markdown can't hold, or writes differently and reads the same:
- *
- *  - spaces at the end or start of a line of prose, which it drops;
- *  - line ends (shown as spaces) more than one at a time or at a
- *    paragraph's ends, a hard break at its end, and empty paragraphs;
- *  - spaces at a link's edges, which Milkdown writes outside the link;
- *  - a line end in inline code, which reads as a space;
- *  - two formulas side by side, written with a space between. */
+/** The document's content as text, one textblock per line, with link, image
+ *  and footnote targets. Leaves out formatting and whitespace Markdown can't
+ *  hold or writes differently but reads the same. */
 export function contentText(doc: ProseNode): string {
   const lines: string[] = [];
   doc.descendants((node) => {
@@ -162,9 +144,8 @@ export function firstDifference(a: string, b: string, context = 60): string {
   return `at ${i}: ${show(a)} vs ${show(b)}`;
 }
 
-/** What a tab reports for `doc` (useDocumentReporting.ts): the file's own
- *  text for the blocks that are as opened, or the whole document
- *  serialized when the blocks didn't pair. */
+/** What a tab saves for `doc`: the file's own text for unchanged blocks, or
+ *  the whole document serialized when the blocks didn't pair. */
 function saved(
   ctx: Ctx,
   opened: string,
@@ -318,39 +299,6 @@ export async function roundTripFile(
   return report;
 }
 
-/** For reproducing a failure: the opened text, what a save writes after
- *  edit `kind` with `seed` (the unedited save without one), and the whole
- *  document serialized. */
-export async function saveAfterEdit(
-  raw: string,
-  kind: EditKind | "none",
-  seed: number,
-): Promise<{
-  text: string;
-  out: string;
-  whole: string;
-  doc: ProseNode;
-} | null> {
-  const opened = await open(raw);
-  try {
-    return opened.editor.action((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      if (kind !== "none" && !makeEdit(view, kind, random(seed), ctx))
-        return null;
-      const { doc } = view.state;
-      const { text, source, mountDoc } = opened;
-      return {
-        text,
-        out: saved(ctx, text, source, mountDoc, doc),
-        whole: ctx.get(serializerCtx)(doc),
-        doc,
-      };
-    });
-  } finally {
-    await opened.editor.destroy();
-  }
-}
-
 async function checkEdit(
   raw: string,
   kind: EditKind,
@@ -380,10 +328,8 @@ async function checkEdit(
         return;
       }
 
-      // (a) The blocks the edit didn't touch, as the file had them, in
-      // order. A kept block right beside the edit may be serialized when
-      // the join with it wouldn't read back (saving.md, "Checking the
-      // joins"); (b) checks that one.
+      // (a) Untouched blocks, in order. A kept block beside the edit may be
+      // serialized when the join wouldn't read back; (b) checks that one.
       if (source) {
         const byBlock = unitsByBlock(source);
         const near = new Set<number | null>();

@@ -10,28 +10,22 @@ pub(crate) const TEXT_EXTENSIONS: &[&str] = &[
     "toml", "html", "htm", "xml",
 ];
 
-/// What the sidebar lists first as a document (src/sidebar/file-search.ts);
-/// find_files does the same.
+/// What the sidebar lists first as a document; find_files does the same.
 pub(crate) const SIDEBAR_DOCUMENT_EXTENSIONS: &[&str] = &["md", "markdown", "txt", "text"];
 
 /// Most an @-mention inlines: the whole file goes into the message.
 pub(crate) const MAX_FILE_BYTES: u64 = 100 * 1024;
 
-/// Largest text file read_file and search_files read: a whole book in one
-/// file (a 300,000-word novel is about 2 MB, a long Chinese one about 6 MB),
-/// well short of what a log or a data dump runs to. read_file shows it in
-/// parts (MAX_READ_UNITS); search_files reads it a line at a time.
+/// Largest text file read_file and search_files read: a whole book, well short
+/// of a log or data dump. read_file shows it in parts.
 pub(crate) const MAX_TEXT_BYTES: u64 = 16 * 1024 * 1024;
 
-/// Most of a file one read_file call returns, in characters with Chinese,
-/// Japanese and Korean ones counting 3 (`char_units`): about 40,000
-/// characters of English or 13,000 of Chinese, roughly the same number of
-/// tokens either way - a chapter, not a book.
+/// Most of a file one read_file call returns, in char units (CJK counts 3):
+/// roughly the same number of tokens in any language, a chapter, not a book.
 pub(crate) const MAX_READ_UNITS: usize = 40_000;
 
-/// A folder too broad to hand to the agent as a project: the filesystem
-/// root or the home directory. Everything under it would be one guessed
-/// path away from the provider.
+/// A folder too broad to hand to the agent as a project: the filesystem root
+/// or the home directory.
 pub fn is_too_broad(path: &Path) -> bool {
     let canon = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
     if canon.parent().is_none() {
@@ -55,10 +49,8 @@ pub(crate) fn is_text_file(path: &Path) -> bool {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum FileKind {
     Text,
-    /// PDF, Word, PowerPoint, a spreadsheet, EPUB or RTF: read as the
-    /// Markdown crate::extract makes of it. (An .html file is Text, checked
-    /// first: here it is source to read as written.) Not what the sidebar calls a document
-    /// (SIDEBAR_DOCUMENT_EXTENSIONS), which is a text file.
+    /// PDF, Word, PowerPoint, a spreadsheet, EPUB or RTF, read as the Markdown
+    /// extracted from it. (An .html file is Text: source to read as written.)
     Document,
     /// PNG, JPEG, GIF or WebP: shown to a model that can see (read_file).
     Image,
@@ -85,10 +77,8 @@ pub struct ProjectFiles {
     pub truncated: bool,
 }
 
-/// The project files `keep` accepts, walked as the sidebar's file search
-/// walks (crate::walk): hidden entries, what `.gitignore`/`.ignore` leave
-/// out and SKIPPED_DIRS are skipped, and a huge tree stops at the walk's
-/// limits rather than stalling the request.
+/// The project files `keep` accepts, walked as the sidebar's file search walks:
+/// hidden, ignored and skipped entries left out, a huge tree stopped at limits.
 pub(crate) fn walk_files(root: &Path, keep: impl Fn(&Path) -> bool + Sync) -> ProjectFiles {
     let walk = crate::walk::walk(root, &crate::walk::LIMITS, keep);
     ProjectFiles {
@@ -144,10 +134,8 @@ pub(crate) fn resolve(root: &Path, rel: &str) -> Result<(PathBuf, String), Strin
                 .to_string(),
         );
     }
-    // find_files never shows hidden entries, and nothing a writing task needs
-    // lives in them - but a project in ~ would otherwise put .ssh, .env or
-    // .aws/credentials one guessed path (or one injected instruction) away
-    // from being sent to the provider.
+    // Hidden entries are never needed for writing, and in a project at ~ they
+    // would put .ssh or .env one guessed path away from the provider.
     let hidden = path
         .strip_prefix(&root_canon)
         .unwrap_or(&path)
@@ -182,7 +170,7 @@ pub(crate) fn whole_text(path: &Path, rel: &str) -> Result<String, String> {
 }
 
 /// Reads `rel` from inside `root` whole, for an @-mention: text only,
-/// size-capped (resolve has the safety rules).
+/// size-capped.
 pub fn read_text(root: &Path, rel: &str) -> Result<String, String> {
     let (path, rel) = resolve(root, rel)?;
     let size = size_of(&path);
@@ -196,9 +184,8 @@ pub fn read_text(root: &Path, rel: &str) -> Result<String, String> {
     whole_text(&path, &rel)
 }
 
-/// A document's extracted text, kept while the file is unchanged: reading
-/// a long PDF in parts, or searching it again, would otherwise extract the
-/// whole file on every call.
+/// A document's extracted text, kept while the file is unchanged, so reading it
+/// in parts or searching it again doesn't extract it every call.
 pub(crate) struct Extracted {
     pub(crate) path: PathBuf,
     /// The file's size and modification time when it was extracted.
@@ -271,9 +258,8 @@ pub(crate) fn document_text(path: &Path) -> Result<Arc<String>, String> {
     Ok(text)
 }
 
-/// A character's weight in MAX_READ_UNITS: Chinese, Japanese and Korean
-/// characters are about a token each where English takes about four
-/// letters to one, so they count 3.
+/// A character's weight in MAX_READ_UNITS: a CJK character is about a token
+/// where English takes about four letters, so it counts 3.
 pub(crate) fn char_units(c: char) -> usize {
     match c {
         '\u{1100}'..='\u{11ff}'
@@ -299,12 +285,9 @@ pub struct LineRange {
     pub end: Option<usize>,
 }
 
-/// read_file: `rel`'s text, or the part of it `range` asks for, at most
-/// MAX_READ_UNITS. A file that fits comes back as it is; otherwise the
-/// answer says which lines of how many it holds and how to read on.
-/// Documents are read as their extracted text, numbered the same way
-/// search_files numbers them. An image is shown by read_file itself, to a
-/// model that sees images; here it is one the model can't see.
+/// read_file: `rel`'s text, or the part `range` asks for, at most
+/// MAX_READ_UNITS; a larger file's answer says how to read on. Documents are
+/// read as their extracted text; images here are ones the model can't see.
 pub fn read_part(root: &Path, rel: &str, range: LineRange) -> Result<String, String> {
     let (path, rel) = resolve(root, rel)?;
     let text = match file_kind(&path) {
@@ -396,9 +379,8 @@ pub(crate) fn excerpt(rel: &str, text: &str, range: LineRange) -> String {
     reply.trim_end().to_string()
 }
 
-/// read_file of an image: the image at `rel`, for the model to look at, within the
-/// size every provider accepts (crate::extract::MAX_IMAGE_BYTES). Textus
-/// has no way to shrink an image, so a larger one is refused with why.
+/// read_file of an image, within the size every provider accepts. Textus can't
+/// shrink an image, so a larger one is refused with why.
 pub fn read_image(root: &Path, rel: &str) -> Result<aicompat::agent::ImageAttachment, String> {
     let (path, rel) = resolve(root, rel)?;
     let ext = crate::extract::extension_of(&path);

@@ -9,17 +9,15 @@ import { useLatest } from "../utils/hooks/useLatest";
 
 const MENU_MAX_HEIGHT = 280;
 
-/**
- * A list that opens beside the control that opened it (Select.tsx): placed
- * below it, or above when the window has no room under it, and kept inside
- * the window across; focused while open, dismissed by a press outside or by
- * the page moving under it; the highlighted option (`active`, its
- * `data-index`) kept in view.
- */
+/** A list that opens beside its control: below it, or above without room,
+ *  kept inside the window; focused while open, dismissed by an outside press
+ *  or the page moving, with the highlighted option kept in view. */
 export function useFloatingList(
   open: boolean,
   active: number,
   dismiss: () => void,
+  /** How tall the list may grow; a longer one scrolls. */
+  maxHeight = MENU_MAX_HEIGHT,
 ) {
   const [place, setPlace] = useState<CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -35,11 +33,11 @@ export function useFloatingList(
     placedAt.current = rect;
     const below = window.innerHeight - rect.bottom - 8;
     const above = rect.top - 8;
-    const up = below < Math.min(MENU_MAX_HEIGHT, 160) && above > below;
+    const up = below < Math.min(maxHeight, 160) && above > below;
     setPlace({
       left: Math.min(rect.left, window.innerWidth - rect.width - 8),
       minWidth: rect.width,
-      maxHeight: Math.min(MENU_MAX_HEIGHT, up ? above : below),
+      maxHeight: Math.min(maxHeight, up ? above : below),
       ...(up
         ? { bottom: window.innerHeight - rect.top + 4 }
         : { top: rect.bottom + 4 }),
@@ -48,14 +46,10 @@ export function useFloatingList(
         "--transform-origin": up ? "bottom left" : "top left",
       } as CSSProperties),
     });
-  }, [open]);
+  }, [open, maxHeight]);
 
   // Then kept inside the window across: the list is often wider than its
-  // trigger (Settings' image models, "OpenAI · gpt-image-…" beside a "None"
-  // button), and placed by the trigger's width alone it ran past the
-  // window's right edge. One that doesn't fit lines up with the trigger's
-  // right edge instead, and never leaves the window. Layout width, not the
-  // box: the entrance scales it from 96%.
+  // trigger. Layout width, not the box: the entrance scales it from 96%.
   useLayoutEffect(() => {
     const list = listRef.current;
     const rect = placedAt.current;
@@ -76,17 +70,14 @@ export function useFloatingList(
     );
   }, [open, place.left]);
 
-  // While open: focus the list, close on any outside press, and close when
-  // the page moves under it (the list is placed once, from the trigger).
-  // Bound once per opening, as when this lived in Select.tsx: the latest
-  // dismiss is read when it fires.
+  // While open: focus the list, and close on an outside press or when the page
+  // moves under it. The latest dismiss is read when it fires.
   const close = useLatest(dismiss);
   useEffect(() => {
     if (!open) return;
     const dismiss = () => close.current();
-    // Without preventScroll the browser may scroll the page's own scroll
-    // areas to bring the list into view before it is placed (a Settings
-    // page still settling in moved, and the scroll closed the list).
+    // Without preventScroll the browser may scroll the page to bring the list
+    // into view before it is placed, and that scroll would close it.
     listRef.current?.focus({ preventScroll: true });
     const onPointer = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -101,10 +92,8 @@ export function useFloatingList(
       if (listRef.current?.contains(e.target as Node)) return;
       dismiss();
     };
-    // A scroll event arrives a frame after the scroll itself, so one made
-    // just before the list opened (the trigger scrolled into view, a wheel
-    // still settling) lands after the list was placed where the trigger
-    // already is. Only a scroll that moved the trigger leaves it behind.
+    // A scroll event arrives a frame late, so one made just before the list
+    // opened lands after it was placed. Only a scroll that moved the trigger counts.
     const onScroll = (e: Event) => {
       const now = triggerRef.current?.getBoundingClientRect();
       const then = placedAt.current;
@@ -130,7 +119,12 @@ export function useFloatingList(
     if (!open || !list) return;
     const item = list.querySelector<HTMLElement>(`[data-index="${active}"]`);
     if (!item) return;
-    if (item.offsetTop < list.scrollTop) list.scrollTop = item.offsetTop;
+    // A row pinned at the top (a search box) covers what scrolls under it.
+    const pinned =
+      list.querySelector<HTMLElement>(":scope > [data-pinned]")?.offsetHeight ??
+      0;
+    if (item.offsetTop - pinned < list.scrollTop)
+      list.scrollTop = item.offsetTop - pinned;
     else if (
       item.offsetTop + item.offsetHeight >
       list.scrollTop + list.clientHeight

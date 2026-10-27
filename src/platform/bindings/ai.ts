@@ -11,22 +11,18 @@ export const commands = {
 	list_providers: () => __TAURI_INVOKE<ProviderCatalogEntry_Serialize[]>("list_providers"),
 	/**
 	 *  Whether the chat composer offers Deep thinking for this provider and
-	 *  Agent model (None: the provider's agent default) - aicompat's capability
-	 *  table decides (`capabilities::can_think_deeper`). Mirrored by
-	 *  `ai.canThinkDeeper` in platform/ipc.ts.
+	 *  Agent model (None: the provider's agent default).
 	 */
 	ai_can_think_deeper: (provider: string, model: string | null) => __TAURI_INVOKE<boolean>("ai_can_think_deeper", { provider, model }),
 	/**
-	 *  Live model list for the agent model picker in Settings. "custom" isn't
-	 *  handled here - it already has fetch_custom_models, which also lets the
-	 *  frontend try before saving a config.
+	 *  Live model list for the agent model picker in Settings. "custom" has
+	 *  fetch_custom_models instead.
 	 */
 	fetch_agent_models: (provider: string) => __TAURI_INVOKE<string[]>("fetch_agent_models", { provider }),
 	/**
-	 *  Mirrors the frontend's proxy setting into aicompat's shared HTTP client.
-	 *  Settings live in the frontend's localStorage, which Rust can't read (same
-	 *  mirroring precedent as commands::prefs), so the frontend re-sends this on
-	 *  startup and on every change. Rejects unparseable proxy URLs.
+	 *  Mirrors the frontend's proxy setting into aicompat's shared HTTP client:
+	 *  Rust can't read localStorage, so the frontend re-sends it on startup and on
+	 *  every change. Rejects unparseable proxy URLs.
 	 */
 	set_ai_proxy: (proxy: string | null) => __TAURI_INVOKE<null>("set_ai_proxy", { proxy }),
 	web_search_status: (provider: string, model: string | null, searchService: string | null, searxngUrl: string | null) => __TAURI_INVOKE<WebSearchStatus_Serialize>("web_search_status", { provider, model, searchService, searxngUrl }),
@@ -35,27 +31,13 @@ export const commands = {
 };
 
 /* Types */
-/**
- *  One search service. The ids are what Settings stores
- *  (`aiSearchService` in src/settings/SettingsContext.tsx, which lists the
- *  same ones).
- */
+/**  One search service. The ids are what Settings stores. */
 export type Backend = "deepseek" | "zhipu" | "kimi" | "bocha" | "tavily" | "brave" | "exa" | "searxng";
 
-/**
- *  What the frontend knows about the cursor beyond the raw text around it
- *  (ghost-text-plugin.ts's completionHints) - generated into
- *  src/platform/bindings/ai.ts, which ipc.ts checks the frontend's
- *  narrower CompletionHints against.
- */
+/**  What the frontend knows about the cursor beyond the raw text around it. */
 export type CompletionHints = CompletionHints_Serialize | CompletionHints_Deserialize;
 
-/**
- *  What the frontend knows about the cursor beyond the raw text around it
- *  (ghost-text-plugin.ts's completionHints) - generated into
- *  src/platform/bindings/ai.ts, which ipc.ts checks the frontend's
- *  narrower CompletionHints against.
- */
+/**  What the frontend knows about the cursor beyond the raw text around it. */
 export type CompletionHints_Deserialize = {
 	title?: string | null,
 	section?: string[],
@@ -72,18 +54,13 @@ export type CompletionHints_Deserialize = {
 	 */
 	prose?: string | null,
 	/**
-	 *  The app's UI language (src/i18n/langs.ts), the fallback when the
-	 *  prose is too short to tell its language.
+	 *  The app's UI language, the fallback when the prose is too short to tell
+	 *  its language.
 	 */
 	uiLanguage?: string | null,
 };
 
-/**
- *  What the frontend knows about the cursor beyond the raw text around it
- *  (ghost-text-plugin.ts's completionHints) - generated into
- *  src/platform/bindings/ai.ts, which ipc.ts checks the frontend's
- *  narrower CompletionHints against.
- */
+/**  What the frontend knows about the cursor beyond the raw text around it. */
 export type CompletionHints_Serialize = {
 	title: string | null,
 	section: string[],
@@ -100,23 +77,21 @@ export type CompletionHints_Serialize = {
 	 */
 	prose: string | null,
 	/**
-	 *  The app's UI language (src/i18n/langs.ts), the fallback when the
-	 *  prose is too short to tell its language.
+	 *  The app's UI language, the fallback when the prose is too short to tell
+	 *  its language.
 	 */
 	uiLanguage: string | null,
 };
 
 /**
- *  ai_complete's inputs, the keys of `ai.complete`'s invoke in
- *  platform/ipc.ts - generated into src/platform/bindings/ai.ts, which
- *  types that call with it (the command itself, taking `Args`, can't be).
+ *  ai_complete's inputs, the keys of `ai.complete`'s invoke, generated into
+ *  the bindings to type that call.
  */
 export type CompletionRequest = CompletionRequest_Serialize | CompletionRequest_Deserialize;
 
 /**
- *  ai_complete's inputs, the keys of `ai.complete`'s invoke in
- *  platform/ipc.ts - generated into src/platform/bindings/ai.ts, which
- *  types that call with it (the command itself, taking `Args`, can't be).
+ *  ai_complete's inputs, the keys of `ai.complete`'s invoke, generated into
+ *  the bindings to type that call.
  */
 export type CompletionRequest_Deserialize = {
 	provider: string,
@@ -130,9 +105,8 @@ export type CompletionRequest_Deserialize = {
 };
 
 /**
- *  ai_complete's inputs, the keys of `ai.complete`'s invoke in
- *  platform/ipc.ts - generated into src/platform/bindings/ai.ts, which
- *  types that call with it (the command itself, taking `Args`, can't be).
+ *  ai_complete's inputs, the keys of `ai.complete`'s invoke, generated into
+ *  the bindings to type that call.
  */
 export type CompletionRequest_Serialize = {
 	provider: string,
@@ -156,18 +130,10 @@ export type Exchange = {
 	reply: string,
 };
 
-/**
- *  ai_grammar_check's inputs, the keys of `ai.grammarCheck`'s invoke in
- *  platform/ipc.ts - generated into src/platform/bindings/ai.ts, as
- *  CompletionRequest is.
- */
+/**  ai_grammar_check's inputs, the keys of `ai.grammarCheck`'s invoke. */
 export type GrammarRequest = GrammarRequest_Serialize | GrammarRequest_Deserialize;
 
-/**
- *  ai_grammar_check's inputs, the keys of `ai.grammarCheck`'s invoke in
- *  platform/ipc.ts - generated into src/platform/bindings/ai.ts, as
- *  CompletionRequest is.
- */
+/**  ai_grammar_check's inputs, the keys of `ai.grammarCheck`'s invoke. */
 export type GrammarRequest_Deserialize = {
 	provider: string,
 	paragraph: string,
@@ -178,11 +144,7 @@ export type GrammarRequest_Deserialize = {
 	uiLanguage?: string | null,
 };
 
-/**
- *  ai_grammar_check's inputs, the keys of `ai.grammarCheck`'s invoke in
- *  platform/ipc.ts - generated into src/platform/bindings/ai.ts, as
- *  CompletionRequest is.
- */
+/**  ai_grammar_check's inputs, the keys of `ai.grammarCheck`'s invoke. */
 export type GrammarRequest_Serialize = {
 	provider: string,
 	paragraph: string,
@@ -197,8 +159,8 @@ export type ProviderCatalogEntry = ProviderCatalogEntry_Serialize | ProviderCata
 
 export type ProviderCatalogEntry_Deserialize = {
 	/**
-	 *  Matches `Settings.aiProvider` on the TS side and the `provider`
-	 *  string every ai_* command dispatches on.
+	 *  Matches `Settings.aiProvider` and the `provider` string every ai_*
+	 *  command dispatches on.
 	 */
 	id: string,
 	label: string,
@@ -208,9 +170,8 @@ export type ProviderCatalogEntry_Deserialize = {
 	 */
 	dialect: string,
 	/**
-	 *  Auth methods the provider supports, in preference order:
-	 *  "oauth" (browser PKCE login), "api_key", "custom" (user-supplied
-	 *  endpoint config).
+	 *  Auth methods in preference order: "oauth" (browser PKCE login),
+	 *  "api_key", "custom" (user-supplied endpoint config).
 	 */
 	auth: string[],
 	/**
@@ -219,53 +180,41 @@ export type ProviderCatalogEntry_Deserialize = {
 	 */
 	baseUrl?: string | null,
 	/**
-	 *  Low-cost model used by writing completion and grammar checking until
-	 *  the user picks one in Settings. Agent chat has its own, generally
-	 *  stronger default below.
+	 *  Low-cost model for writing completion and grammar checking until the user
+	 *  picks one. Agent chat has its own default below.
 	 */
 	defaultModel?: string | null,
 	/**
-	 *  Model used by Agent chat until the user picks one in Settings. Keeping
-	 *  this separate from `default_model` prevents inline writing helpers
-	 *  from silently inheriting a more expensive Agent model.
+	 *  Model used by Agent chat until the user picks one. Kept apart so inline
+	 *  helpers don't silently inherit a more expensive model.
 	 */
 	agentDefaultModel?: string | null,
 	/**  True for local servers (Ollama) that work without a key. */
 	keyOptional: boolean,
+	/**  Its "oauth" sign-in isn't offered to other apps; Settings says so. */
+	oauthUnofficial: boolean,
 	/**
-	 *  Whether this provider's API accepts image content parts at all, which
-	 *  is what gates the chat's image attachments (aicompat's per-dialect
-	 *  `turns_to_*`). Deliberately a PROVIDER-level, not model-level, claim:
-	 *  whether the model the user picked can actually see is between them and
-	 *  the provider, and a model that can't says so in its own error. What
-	 *  this flag exists to prevent is offering images to an endpoint whose
-	 *  API rejects the request shape outright - so it is false only where
-	 *  that is known to be the case, and true wherever the user's own model
-	 *  choice decides (Ollama, custom endpoints).
+	 *  Whether this provider's API accepts image parts at all, which gates chat
+	 *  attachments. Provider-level on purpose: false only where the API rejects the
+	 *  request shape; a model that can't see says so in its own error.
 	 */
 	supportsVision: boolean,
 	/**
-	 *  False when a live GET /models call is known not to work for this
-	 *  provider (verified against the real endpoint - see the doc comment on
-	 *  `KNOWN_MODELS` below) - the frontend hides the "Fetch Models" action
-	 *  and relies solely on `known_models` instead of also offering a button
-	 *  that can only ever fail.
+	 *  False when a live GET /models is known not to work for this provider: the
+	 *  frontend then hides "Fetch Models" and relies on `known_models`.
 	 */
 	modelsListable: boolean,
 	/**
 	 *  The model ids offered before the user fetches the provider's own list:
-	 *  just the two defaults (agent first). Everything newer comes from the
-	 *  live listing (Settings' "Fetch models", tidied by aicompat::models),
-	 *  so this list doesn't need chasing every release - only the defaults
-	 *  do, and scripts/sync-models.mjs checks those weekly.
+	 *  just the two defaults (agent first), checked weekly by a script.
 	 */
 	knownModels: string[],
 };
 
 export type ProviderCatalogEntry_Serialize = {
 	/**
-	 *  Matches `Settings.aiProvider` on the TS side and the `provider`
-	 *  string every ai_* command dispatches on.
+	 *  Matches `Settings.aiProvider` and the `provider` string every ai_*
+	 *  command dispatches on.
 	 */
 	id: string,
 	label: string,
@@ -275,9 +224,8 @@ export type ProviderCatalogEntry_Serialize = {
 	 */
 	dialect: string,
 	/**
-	 *  Auth methods the provider supports, in preference order:
-	 *  "oauth" (browser PKCE login), "api_key", "custom" (user-supplied
-	 *  endpoint config).
+	 *  Auth methods in preference order: "oauth" (browser PKCE login),
+	 *  "api_key", "custom" (user-supplied endpoint config).
 	 */
 	auth: string[],
 	/**
@@ -286,58 +234,46 @@ export type ProviderCatalogEntry_Serialize = {
 	 */
 	baseUrl: string | null,
 	/**
-	 *  Low-cost model used by writing completion and grammar checking until
-	 *  the user picks one in Settings. Agent chat has its own, generally
-	 *  stronger default below.
+	 *  Low-cost model for writing completion and grammar checking until the user
+	 *  picks one. Agent chat has its own default below.
 	 */
 	defaultModel: string | null,
 	/**
-	 *  Model used by Agent chat until the user picks one in Settings. Keeping
-	 *  this separate from `default_model` prevents inline writing helpers
-	 *  from silently inheriting a more expensive Agent model.
+	 *  Model used by Agent chat until the user picks one. Kept apart so inline
+	 *  helpers don't silently inherit a more expensive model.
 	 */
 	agentDefaultModel: string | null,
 	/**  True for local servers (Ollama) that work without a key. */
 	keyOptional: boolean,
+	/**  Its "oauth" sign-in isn't offered to other apps; Settings says so. */
+	oauthUnofficial: boolean,
 	/**
-	 *  Whether this provider's API accepts image content parts at all, which
-	 *  is what gates the chat's image attachments (aicompat's per-dialect
-	 *  `turns_to_*`). Deliberately a PROVIDER-level, not model-level, claim:
-	 *  whether the model the user picked can actually see is between them and
-	 *  the provider, and a model that can't says so in its own error. What
-	 *  this flag exists to prevent is offering images to an endpoint whose
-	 *  API rejects the request shape outright - so it is false only where
-	 *  that is known to be the case, and true wherever the user's own model
-	 *  choice decides (Ollama, custom endpoints).
+	 *  Whether this provider's API accepts image parts at all, which gates chat
+	 *  attachments. Provider-level on purpose: false only where the API rejects the
+	 *  request shape; a model that can't see says so in its own error.
 	 */
 	supportsVision: boolean,
 	/**
-	 *  False when a live GET /models call is known not to work for this
-	 *  provider (verified against the real endpoint - see the doc comment on
-	 *  `KNOWN_MODELS` below) - the frontend hides the "Fetch Models" action
-	 *  and relies solely on `known_models` instead of also offering a button
-	 *  that can only ever fail.
+	 *  False when a live GET /models is known not to work for this provider: the
+	 *  frontend then hides "Fetch Models" and relies on `known_models`.
 	 */
 	modelsListable: boolean,
 	/**
 	 *  The model ids offered before the user fetches the provider's own list:
-	 *  just the two defaults (agent first). Everything newer comes from the
-	 *  live listing (Settings' "Fetch models", tidied by aicompat::models),
-	 *  so this list doesn't need chasing every release - only the defaults
-	 *  do, and scripts/sync-models.mjs checks those weekly.
+	 *  just the two defaults (agent first), checked weekly by a script.
 	 */
 	knownModels: string[],
 };
 
 /**
- *  What the composer's Web search button can do with the provider and
- *  model in use - generated into src/platform/bindings/ai.ts.
+ *  What the composer's Web search button can do with the provider and model in
+ *  use.
  */
 export type WebSearchStatus = WebSearchStatus_Serialize | WebSearchStatus_Deserialize;
 
 /**
- *  What the composer's Web search button can do with the provider and
- *  model in use - generated into src/platform/bindings/ai.ts.
+ *  What the composer's Web search button can do with the provider and model in
+ *  use.
  */
 export type WebSearchStatus_Deserialize = {
 	/**  The provider searches by itself. */
@@ -347,8 +283,8 @@ export type WebSearchStatus_Deserialize = {
 };
 
 /**
- *  What the composer's Web search button can do with the provider and
- *  model in use - generated into src/platform/bindings/ai.ts.
+ *  What the composer's Web search button can do with the provider and model in
+ *  use.
  */
 export type WebSearchStatus_Serialize = {
 	/**  The provider searches by itself. */

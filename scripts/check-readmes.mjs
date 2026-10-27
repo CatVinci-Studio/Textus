@@ -1,11 +1,6 @@
 #!/usr/bin/env node
-// Checks that every README.<lang>.md still follows README.md section
-// by section: the same heading levels in the same order, the same code
-// blocks, the same number of table rows and the same link targets (other
-// than the language switcher), and that every image they show exists.
-// Wording is free; structure drifting is how a translation falls behind.
-//
-//   node scripts/check-readmes.mjs     (exit 1 on any difference)
+// Checks every README.<lang>.md still matches README.md's structure:
+// headings, code blocks, table rows, link targets and existing images.
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -77,10 +72,8 @@ for (const file of [reference, ...translations]) {
     problems.push(
       `${file}: ${doc.tableRows} table rows - ${reference} has ${ref.tableRows}`,
     );
-  // The same links, in any order: a translation may list them in the order
-  // its readers want (the Chinese ones put the QQ and WeChat groups first).
-  // Compared as sets: a badge and the Community section may both link to
-  // the same group.
+  // Compared as sets: a translation may reorder links, and a badge and a
+  // section may link to the same place.
   const unique = (links) => [...new Set(links)].sort();
   if (!same(unique(doc.links), unique(ref.links)))
     problems.push(

@@ -7,16 +7,14 @@ interface HastNode {
   children?: HastNode[];
 }
 
-// A language refractor doesn't bundle (or none at all): the comment forms
-// most languages share - a line from `//`, `# ` or `-- `, and `/* */` or
-// `<!-- -->` blocks. `#` alone isn't one, or `#fff` in CSS would be.
+// For a language refractor doesn't bundle: the common comment forms. `#`
+// alone isn't one, or `#fff` in CSS would be.
 const FALLBACK_COMMENT =
   /\/\*[\s\S]*?(?:\*\/|(?![\s\S]))|<!--[\s\S]*?(?:-->|(?![\s\S]))|(?<=^|[ \t])(?:\/\/|#(?=[ \t])|--(?=[ \t]))[^\n]*/gm;
 
 /**
  * The [from, to) offsets of the comments in a code block's text, by the
- * same tokens its highlighting comes from (syntax-highlight-plugin.ts), or
- * by the common comment forms in a language refractor doesn't know.
+ * highlighter's tokens or by the common forms.
  */
 export function commentRanges(
   text: string,

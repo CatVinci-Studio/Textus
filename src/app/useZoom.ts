@@ -1,25 +1,17 @@
 import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
 import { blockAt, holdBlock } from "../ui/hold-line";
-import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
+import { listenToThisWindow, unlistenAll } from "../platform/events";
 
-/// Document zoom, scoped to the editor CONTENT - the window chrome (tab
-/// bar, titlebar filename, sidebar, toolbars) stays at 100%. The factor is
-/// published as the `--content-zoom` CSS variable; editor-column.css applies it as
-/// CSS `zoom` on the content nodes (.milkdown / .source-view) and widens
-/// the content column to match, so the text column scales geometrically
-/// like page zoom while fixed overlays (find bar, popovers) keep their
-/// unzoomed viewport coordinate space. Three input sources feed one
-/// engine: trackpad pinch (WebKit's non-standard gesture events),
-/// mod+wheel, and the View menu's Zoom items relayed from Rust.
+/// Document zoom, scoped to the editor content; the window chrome stays at
+/// 100%. Published as `--content-zoom`, so fixed overlays keep unzoomed
+/// coordinates. Fed by trackpad pinch, mod+wheel and the View menu.
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 /// Multiplicative step for the menu/keyboard Zoom In/Out items.
 const MENU_STEP = 1.1;
-/// Trailing delay before a zoom level is persisted to Settings - a pinch or
-/// wheel burst updates the ref every frame; only the resting value is saved.
-/// A window closing inside it saves at once (storage/pending-writes.ts).
+/// Trailing delay before persisting, so only the resting value is saved.
 const PERSIST_DELAY_MS = 400;
 
 /// WebKit's proprietary pinch events (gesturestart/change/end) - not in
@@ -34,22 +26,20 @@ function clamp(zoom: number): number {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
 }
 
-/// Snaps near-100% values back to exactly 1 so a pinch that ends around
-/// normal size doesn't leave text subtly blurry at 98%.
+/// Snaps near-100% values to exactly 1, so text isn't left blurry at 98%.
 function snap(zoom: number): number {
   const clamped = clamp(zoom);
   return Math.abs(clamped - 1) < 0.03 ? 1 : clamped;
 }
 
-/// Where a zoom step is held still: the rich editor's scroller, split
-/// view's preview (both scroll rendered blocks), or a source textarea
-/// (source mode, or split view's left pane), which scrolls itself.
+/// Where a zoom step is held still: a rendered scroller, or a source
+/// textarea, which scrolls itself.
 type Pane =
   | { kind: "rendered"; scroller: HTMLElement; content: Element }
   | { kind: "source"; scroller: HTMLTextAreaElement };
 
 /// The pane under the pointer, else the focused one, else the first on
-/// screen. In split view the two panes sit side by side, hence the x.
+/// screen. Split panes sit side by side, hence the x.
 function zoomPane(x: number | null, y: number | null): Pane | null {
   const tab = '[data-active-tab="true"]';
   const panes: Pane[] = [];
@@ -84,11 +74,8 @@ function zoomPane(x: number | null, y: number | null): Pane | null {
   );
 }
 
-/// Sets the zoom so the line at viewport y `line` of a rendered pane stays
-/// at `line`. The block under it keeps the same share of its height.
-/// Scaling the distance into the content alone drifted: where the column
-/// widens with the zoom the text rewraps, so the content does not grow in
-/// proportion.
+/// Keeps the line at viewport y `line` in place: the block under it keeps
+/// its share of its height. Scaling the offset alone drifts as text rewraps.
 function holdRendered(
   { scroller, content }: { scroller: HTMLElement; content: Element },
   line: number,
@@ -114,10 +101,8 @@ function holdRendered(
   scroller.scrollTop = contentTop() + (into * next) / prev - anchor;
 }
 
-/// The same for a source textarea, which scrolls in the zoomed node's own
-/// px (a screen px is 1/zoom of one). Its width doesn't grow with the zoom
-/// the way the text does, so long lines rewrap and no fixed offset stays on
-/// the same line - the anchor keeps its share of the whole text height.
+/// The same for a source textarea, which scrolls in zoomed px. Its lines
+/// rewrap, so the anchor keeps its share of the whole text height.
 function holdSource(
   source: HTMLTextAreaElement,
   line: number,
@@ -134,10 +119,8 @@ function holdSource(
 
 /**
  * Applies `initialZoom` on mount and owns every zoom input for this window.
- * The live value lives in a ref (not React state) - pinch updates arrive per
- * frame and nothing needs to re-render; `persist` receives the value once it
- * comes to rest. Reads `initialZoom` only on mount: each window's zoom is
- * independent after that, and this hook is itself the only writer.
+ * The live value is a ref, since pinch updates arrive per frame; `persist`
+ * gets it once it comes to rest.
  */
 export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
   const zoomRef = useRef(snap(initialZoom));
@@ -147,8 +130,7 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
   useEffect(() => {
     let raf = 0;
     let persistTimer: ReturnType<typeof setTimeout> | undefined;
-    // The zoom actually on screen, and the viewport point the next apply
-    // should hold still (the pointer for wheel/pinch; null = the focused
+    // The viewport point the next apply holds still (null: the focused
     // pane's centre).
     let appliedZoom = 1;
     let anchorClientX: number | null = null;
@@ -163,9 +145,8 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
           "--content-zoom",
           String(next),
         );
-      // Zooming scales the content's height but leaves scrollTop alone, so
-      // without holding a line still the text under the pointer slides up
-      // or down with every step.
+      // Zoom leaves scrollTop alone, so without this the text under the
+      // pointer slides with every step.
       const pane =
         prev === next ? null : zoomPane(anchorClientX, anchorClientY);
       if (!pane) {
@@ -180,8 +161,8 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
       if (pane.kind === "source")
         holdSource(pane.scroller, line, prev, next, setZoomVar);
       else holdRendered(pane, line, prev, next, setZoomVar);
-      // Split view keeps its panes in step on scroll (SplitView.tsx), and
-      // the held pane may not have moved at all: let the other follow it.
+      // Split panes sync on scroll, and the held pane may not have moved:
+      // let the other follow it.
       if (pane.scroller.closest(".split-view"))
         pane.scroller.dispatchEvent(new Event("scroll"));
     };
@@ -191,8 +172,7 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
       apply();
     };
 
-    // Saves the zoom if a save is still waiting for it to come to rest -
-    // from the timer, or at once when the window is about to close.
+    // Saves a pending zoom, from the timer or when the window closes.
     const persistNow = () => {
       if (persistTimer === undefined) return;
       clearTimeout(persistTimer);
@@ -201,9 +181,7 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
     };
     const unregisterFlush = onFlush(persistNow);
 
-    // `snapped: false` while a pinch is mid-flight, so the 100% snap zone
-    // doesn't make the gesture feel sticky; the resting snap happens on
-    // gestureend.
+    // `snapped: false` mid-pinch, so the 100% snap zone doesn't feel sticky.
     const setZoom = (
       zoom: number,
       snapped = true,
@@ -243,10 +221,8 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
       setZoom(zoomRef.current, true, e as WebKitGestureEvent);
     };
 
-    // mod+wheel zoom (plain scrolling passes through untouched). The
-    // exponential mapping makes steps proportional to the current level, so
-    // zooming feels uniform at 60% and at 250%. Chromium also reports
-    // trackpad pinch as ctrl+wheel, so this path covers pinch there too.
+    // mod+wheel zoom. Exponential, so steps are proportional to the current
+    // level. Chromium reports trackpad pinch as ctrl+wheel too.
     const onWheel = (e: WheelEvent) => {
       if (!e.metaKey && !e.ctrlKey) return;
       e.preventDefault();

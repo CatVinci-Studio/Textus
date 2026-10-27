@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { thisWindow } from "../platform/this-window";
 import { drawsWindowEdges } from "../platform/window-chrome";
 import "./window-edges.css";
 
@@ -25,24 +25,16 @@ const EDGES: ResizeDirection[] = [
 ];
 
 /**
- * The frame an undecorated Linux window no longer gets from GTK (#11):
- * without decorations there is no shadow or border, so a white window
- * vanishes against white content behind it, and the only resize zone is
- * the runtime's thin built-in strip, whose cursor shows up only once the
- * button is already down. This draws a hairline outline and puts real
- * hit areas along the edges - hovering shows the resize cursor, pressing
- * hands the drag to the compositor (startResizeDragging), which also works
- * under Wayland, where a client cannot move its own edges.
- *
- * Both are dropped while the window fills the screen (maximized, tiled
- * full-size, fullscreen): there is nothing to outline or drag there.
+ * The outline and resize edges an undecorated Linux window lacks. Pressing
+ * hands the drag to the compositor, which also works under Wayland. Dropped
+ * while the window fills the screen.
  */
 export function WindowEdges() {
   const [filled, setFilled] = useState(false);
 
   useEffect(() => {
     if (!drawsWindowEdges) return;
-    const win = getCurrentWindow();
+    const win = thisWindow();
     let alive = true;
     const sync = () => {
       void Promise.all([win.isMaximized(), win.isFullscreen()])
@@ -82,7 +74,7 @@ export function WindowEdges() {
           onPointerDown={(e) => {
             if (e.button !== 0) return;
             e.preventDefault();
-            void getCurrentWindow().startResizeDragging(edge);
+            void thisWindow().startResizeDragging(edge);
           }}
         />
       ))}

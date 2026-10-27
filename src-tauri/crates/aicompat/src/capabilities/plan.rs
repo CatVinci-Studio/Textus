@@ -4,8 +4,7 @@
 use super::*;
 
 /// The thinking-token budget Deep asks for where a model takes a budget
-/// rather than levels (Qwen, older Claude). A starting value, to be tuned
-/// with the live eval.
+/// rather than levels.
 pub const DEEP_BUDGET: u32 = 16_384;
 
 /// One request's thinking parameters, dialect-neutral; each dialect renders
@@ -23,9 +22,8 @@ pub struct Thinking {
     /// See [`ProviderCaps::replay_reasoning`].
     pub replay: bool,
     /// Live eval only: opt the Claude request into the preserved-thinking
-    /// check (`block_binding: error`), so a thinking block replayed after a
-    /// history edit fails the run instead of being let through on an
-    /// account created before the check was enforced.
+    /// check (`block_binding: error`), so a replayed thinking block after a
+    /// history edit fails the run instead of being let through.
     pub enforce_binding: bool,
 }
 
@@ -98,8 +96,7 @@ impl Thinking {
         }
     }
 
-    /// Responses API (OpenAI's, and the compatible `/responses` of xAI and
-    /// Qwen): `reasoning.effort`, with `reasoning.summary` when the
+    /// Responses API: `reasoning.effort`, with `reasoning.summary` when the
     /// reasoning should be readable. Qwen keeps its own switch there too.
     pub fn apply_responses(&self, body: &mut Value) {
         if self.format == Some(ThinkingFormat::Qwen) {

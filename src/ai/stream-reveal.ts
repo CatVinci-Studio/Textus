@@ -1,20 +1,7 @@
 /**
- * Paces streamed text onto the screen, one animation frame at a time.
- *
- * Providers don't deliver text at a steady rate: a delta can be one token
- * or a whole sentence, and a proxy or a busy connection hands over several
- * at once after a pause. Shown as received, a reply arrives in jumps. This
- * buffers what was received and reveals it at a pace that follows the
- * stream - faster while more is waiting, so the screen stays about
- * TARGET_LAG_MS behind the network and never more than MAX_LAG_MS. A
- * provider that sends a whole edit at once (MiniMax's tool arguments) is
- * typed out at up to MAX_RATE, or faster when that would miss MAX_LAG_MS,
- * instead of appearing in one frame.
- *
- * Display only: callers keep the received text as the real one (what is
- * stored, applied or handed to the model) and use `text` here for drawing.
- * Every streamed reveal goes through this - the chat reply (useRevealedText)
- * and a proposal typing into the document (pending-edit-plugin).
+ * Paces streamed text onto the screen, one animation frame at a time, so a
+ * bursty stream types in smoothly about TARGET_LAG_MS behind the network.
+ * Display only: callers keep the received text as the real one.
  */
 
 /** How far behind the received text the screen settles while it streams. */
@@ -32,8 +19,7 @@ const MAX_RATE = 1000;
  *  moves instead of creeping a character at a time. */
 const MIN_RATE = 60;
 
-/** How long the last grapheme waits for the rest of it (graphemeEnd's
- *  `holdLast`) once nothing more arrives. */
+/** How long the last grapheme waits for the rest of it once nothing more arrives. */
 const HOLD_LAST_MS = 350;
 
 const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
@@ -49,10 +35,9 @@ export class StreamReveal {
   /** Units earned but not yet revealed (a pace below one a frame). */
   private budget = 0;
 
-  /** The whole text received so far; `done` once no more will follow. A
-   *  text that replaces rather than extends the previous one (interim prose
-   *  dropped for a tool call, a proposal's final arguments) keeps what was
-   *  shown, up to its own length. */
+  /** The whole text received so far; `done` once no more will follow. A text
+   *  that replaces rather than extends the last keeps what was shown, up to its
+   *  own length. */
   update(text: string, done: boolean, now: number) {
     if (text.length > this.received.length) {
       this.arrivals.push({ end: text.length, at: now });
@@ -122,10 +107,9 @@ function isHighSurrogate(code: number): boolean {
 }
 
 /**
- * The first grapheme boundary at or past `want`, counting from `from`
- * (itself a boundary). With `holdLast` the text may still grow, and its
- * last grapheme is not complete yet: an emoji's joiner, a combining mark or
- * a skin tone can arrive in the next delta, so it stays back until then.
+ * The first grapheme boundary at or past `want`, counting from `from`. With
+ * `holdLast` the last grapheme stays back: a joiner, combining mark or skin
+ * tone may still arrive.
  */
 function graphemeEnd(
   text: string,

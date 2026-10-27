@@ -9,10 +9,9 @@ import {
 } from "../../storage/local";
 
 /**
- * Deep thinking stays on once pressed - across messages, conversations and
- * documents, and in the detached window, which shares localStorage - until
- * it is pressed again: a choice about how the user wants to work, not about
- * one message. Not a setting; the composer's button is the only control.
+ * Deep thinking stays on once pressed, across messages, conversations and the
+ * detached window, until pressed again. The composer's button is its only
+ * control.
  */
 export function deepThinkingOn(): boolean {
   return readLocal(LOCAL_KEYS.deepThinking) === "1";
@@ -25,10 +24,8 @@ export function rememberDeepThinking(on: boolean): void {
 }
 
 /**
- * Whether Deep thinking would change anything for the provider and Agent
- * model in use - the capability table's answer (ai.canThinkDeeper), asked
- * again whenever either changes. False until it answers, so the button
- * appears rather than disappears.
+ * Whether Deep thinking would change anything for the provider and model in
+ * use. False until it answers, so the button appears rather than disappears.
  */
 export function useCanThinkDeeper(enabled: boolean): boolean {
   const { settings } = useSettings();

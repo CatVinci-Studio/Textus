@@ -5,10 +5,8 @@ import { fs } from "../platform/ipc";
 import { detectFormat, toEditorText, toFileText } from "./file-format";
 import type { PluginTabView } from "../plugins/app-bridge";
 
-// Every bundled guide, by file name: "src/help/<doc>-guide.<lang>.md". A
-// language without its own copy of a guide gets the English one, so a
-// translated guide is a new file there and no change here. Each loads when
-// it is first opened (lazy-module.ts).
+// Every bundled guide, by file name. A language without its own copy gets
+// the English one.
 const HELP_GUIDES = new Map(
   Object.entries(
     import.meta.glob<string>("../help/*-guide.*.md", {
@@ -21,55 +19,41 @@ const HELP_GUIDES = new Map(
   ]),
 );
 
-// The document-tab data model shared by app/useTabState.ts (tab state) and
-// useTabDragMerge.ts (tabs in flight between windows).
+// The document-tab data model.
 
-// Mirrors the doc ids Rust puts in its Help menu ids (menu.rs
-// HELP_DOC_PREFIX) - they arrive here as the menu-open-help payload.
-// "welcome" isn't a bundled document - it starts the onboarding tour
-// (src/onboarding/) on a practice tab instead, handled entirely in
-// menu-bridge.ts's menu-open-help listener, so it never reaches helpDocContent.
+// Help doc ids, as the native Help menu sends them. "welcome" isn't one: it
+// starts the onboarding tour instead.
 export type HelpDoc = "markdown" | "agent";
 
 export interface DocTab {
   id: string;
   path: string | null;
   content: string;
-  // What's on disk (or "" for a fresh draft) - dirtiness is divergence from
-  // this, and it's what the close-confirmation prompt keys off.
+  // What's on disk ("" for a fresh draft); dirtiness is divergence from it.
   savedContent: string;
-  // Disk mtime (ms) snapshotted when this document was last read from or
-  // written to disk; null for drafts and for documents whose mtime is
-  // unknown (e.g. a tab received from another window). Divergence from the
-  // live mtime means the file changed externally - clean tabs reload on
-  // window focus, dirty tabs get an overwrite prompt on save.
+  // Disk mtime (ms) at the last read or write; null for drafts and unknown.
+  // A mismatch means an external change: clean tabs reload, dirty tabs get
+  // an overwrite prompt on save.
   diskMtime: number | null;
   sourceMode: boolean;
-  /** Source mode with a rendered preview beside it (editor/modes/SplitView.tsx).
-   *  Only meaningful while sourceMode is on. */
+  /** Source mode with a rendered preview beside it; only meaningful while
+   *  sourceMode is on. */
   splitView?: boolean;
   reloadKey: number;
-  // A bundled Help menu document: still a pathless draft (edits never touch
-  // disk; Save goes through Save As), but titled after itself instead of
-  // "Untitled", and deduped per doc so Help focuses the existing tab rather
-  // than opening another copy.
+  // A bundled Help document: a pathless draft titled after itself, one tab
+  // per doc.
   helpDoc?: HelpDoc;
-  /** The Word document this one was made from (document/word-import.ts),
-   *  until it is first saved: a pathless draft named after the Word file,
-   *  whose Save As starts beside it. The Word file is never written. */
+  /** The Word document this one was made from, until first saved. The Word
+   *  file is never written. */
   importedFrom?: string;
-  /** A pathless draft's own name instead of "Untitled" - a plugin's usage
-   *  guide, a document a plugin opened with a title. */
+  /** A pathless draft's own name instead of "Untitled". */
   draftTitle?: string;
-  /** A plugin's view or custom editor shown in this tab instead of a
-   *  document (src/plugins/): no path, nothing to save - a custom editor's
-   *  file is its `resource`, which the plugin reads and writes itself. */
+  /** A plugin's view or custom editor shown instead of a document; a custom
+   *  editor's file is its `resource`, which the plugin saves itself. */
   view?: PluginTabView;
 }
 
-// The document part of a tab in flight between windows - what
-// start_floating_tab_drag hands to Rust and take_detached_tab /
-// receive-detached-tab hand back (tab_drag.rs DetachedTab).
+// The document part of a tab in flight between windows.
 export interface DetachedTabDoc {
   path: string | null;
   content: string;
@@ -87,8 +71,7 @@ export function helpDocContent(doc: HelpDoc, lang: string): Promise<string> {
   ).load();
 }
 
-// A tab's display name everywhere one is shown (tab pill, title strip,
-// detached-drag pill, export default filename).
+// A tab's display name everywhere one is shown.
 export function tabTitle(tab: DocTab, t: Strings): string {
   if (tab.path) return basename(tab.path);
   if (tab.view)
@@ -120,8 +103,8 @@ export function tabIsDirty(tab: DocTab): boolean {
   return tab.content !== tab.savedContent;
 }
 
-/** A new Untitled tab nobody has written in: no file, no Help document,
- *  nothing typed. Something opened here replaces it without losing anything. */
+/** A new Untitled tab nobody has written in, so opening something here
+ *  loses nothing. */
 export function tabIsUntouchedDraft(tab: DocTab): boolean {
   return (
     !tab.path &&
@@ -138,9 +121,8 @@ export function windowIsUntouched(tabs: DocTab[]): boolean {
   return tabs.every(tabIsUntouchedDraft);
 }
 
-/** The tab `step` places from the active one, in tab-bar order, wrapping
- *  at either end - what Next Tab (1) and Previous Tab (-1) switch to. Null
- *  when there is no other tab to go to. */
+/** The tab `step` places from the active one, wrapping at either end; null
+ *  when there is no other tab. */
 export function adjacentTabId(
   tabs: readonly Pick<DocTab, "id">[],
   activeId: string,
@@ -152,9 +134,8 @@ export function adjacentTabId(
   return tabs[(index + step + tabs.length) % tabs.length].id;
 }
 
-// The full invoke arguments for start_floating_tab_drag - built here so the
-// two drag flows (tab pulled from a bar, whole single-tab window dragged)
-// can't drift apart on which fields travel with the document.
+// Shared by both drag flows, so they can't drift apart on which fields
+// travel with the document.
 export function floatingDragArgs(
   tab: DocTab,
   t: Strings,
@@ -175,9 +156,8 @@ export function floatingDragArgs(
   };
 }
 
-// Errors (permission issues, network mounts) are treated the same as "no
-// mtime available": external-change detection degrades to doing nothing
-// rather than blocking opens/saves.
+// Errors count as "no mtime", so change detection degrades instead of
+// blocking opens and saves.
 export async function statMtime(path: string): Promise<number | null> {
   try {
     return await fs.fileMtimeMs(path);
@@ -186,8 +166,7 @@ export async function statMtime(path: string): Promise<number | null> {
   }
 }
 
-/** A document's text as the editor holds it: "\n" line breaks, no BOM
- *  (file-format.ts). */
+/** A document's text as the editor holds it: "\n" line breaks, no BOM. */
 export async function readDocText(path: string): Promise<string> {
   return toEditorText(await fs.readTextFile(path));
 }
@@ -199,10 +178,8 @@ export async function readDocFromDisk(
   return { content, diskMtime: await statMtime(path) };
 }
 
-/** Writes a document, in the line endings and BOM the file already has on
- *  disk (a new file gets "\n" and none). Read at save time rather than
- *  remembered from the open, so it holds however the tab got here - a
- *  reload, a restored session, a tab dragged in from another window. */
+/** Writes a document in the line endings and BOM the file has on disk,
+ *  read at save time so it holds however the tab got here. */
 export async function writeDocFile(
   path: string,
   content: string,

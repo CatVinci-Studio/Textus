@@ -19,9 +19,8 @@ pub(crate) fn ellipsis(t: &Text, ctx: &Ctx, out: &mut Out) {
         if run == "……" || run == "…………" {
             continue;
         }
-        // A lone … after a menu command ("询问 AI…", "导入技能…") is the UI's
-        // label, not a Chinese ellipsis: only one inside a sentence (CJK
-        // letters on both sides) is taken for one.
+        // A lone … after a menu command ("导入技能…") is the UI's label: only one
+        // with CJK letters on both sides is taken for an ellipsis.
         if run == "…" && !(t.before(a).is_some_and(is_cjk) && t.at(b).is_some_and(is_cjk)) {
             continue;
         }
@@ -83,8 +82,7 @@ pub(crate) fn cjk_run_right(t: &Text, i: usize) -> usize {
 
 /// zh.punct.dash (mainland): -- －－ ── ―― and a single — between Chinese
 /// clauses -> ——. A single — between numbers, dates or places is the range
-/// connector (北京—上海): only a dash with long clauses on both sides is
-/// taken for a break.
+/// connector (北京—上海), so only one between long clauses is taken.
 pub(crate) fn dash(t: &Text, ctx: &Ctx, out: &mut Out) {
     let msg = m(ctx, "中文破折号用“——”（两个“—”）。", "中文破折號用「——」。");
     for (a, b) in t.find(&DASH) {

@@ -22,8 +22,7 @@ describe("joinInline", () => {
   });
 });
 
-/** Builds blocks the way serializeBlocks would, with fake ProseMirror
- *  positions - the matching logic only cares that they're monotonic. */
+/** Builds blocks as serializeBlocks would, with fake but monotonic positions. */
 function blocks(...markdown: string[]): MarkdownBlock[] {
   let offset = 0;
   let pos = 0;
@@ -43,8 +42,7 @@ function blocks(...markdown: string[]): MarkdownBlock[] {
   });
 }
 
-/** Where `quote` is, named as a model names it: by the blocks it is in -
- *  the one block that holds it, or the run it crosses - and its words. */
+/** Where `quote` is, named as a model names it: by its block (or run) and words. */
 function findQuote(doc: MarkdownBlock[], quote: string) {
   const text = documentMarkdown(doc);
   const at = text.indexOf(quote);
@@ -103,9 +101,7 @@ describe("matchTarget", () => {
     expect(match!.markdown).toBe("## Heading\n\nBody");
   });
 
-  // The shape that produced strings of "Couldn't locate that text": prose
-  // where the words an edit is about ("GPT 5.6 sol") repeat across
-  // paragraphs. The block says which is meant.
+  // Words an edit is about repeat across paragraphs; the block says which.
   it("tells words that repeat in the document apart by their block", () => {
     const doc = blocks(
       "I used GPT 5.6 sol to build Textus.",
@@ -197,9 +193,8 @@ describe("composeMarkdownEdit", () => {
   });
 
   it("keeps a sentence off the edge of a table, heading or list", () => {
-    // Only a paragraph carries on past its last sentence: glued on, the
-    // sentence would be a third cell, would turn the header row (and so
-    // the whole table) into a paragraph, or would join the heading/item.
+    // Only a paragraph carries on past its last sentence: glued on, it would be a
+    // cell, dissolve the table, or join the heading or item.
     const table = "| a | b |\n| --- | --- |\n| 1 | 2 |";
     const doc = blocks("## Background", table, "- one\n- two");
     const edit = (

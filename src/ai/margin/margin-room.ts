@@ -20,13 +20,8 @@ export interface MarginRoom {
   available: boolean;
 }
 
-/**
- * Whether the editor has room for the margin, and how far the text column
- * moves over to make it - from the scroller's width, the column's, and the
- * column's padding round the text. The one place this is decided: the
- * margin lays its cards out by it, and the review bar and Settings offer
- * the margin views only when it is available.
- */
+/** Whether the editor has room for the margin, and how far the text column
+ *  moves over to make it. The one place this is decided. */
 export function marginRoom(
   scrollWidth: number,
   columnWidth: number,
@@ -46,10 +41,8 @@ export function marginRoom(
   };
 }
 
-// Whether the active document has room for a margin right now, for the
-// surfaces outside it (Settings). A window shows one document at a time,
-// so one value per window; before any document has measured, the margin
-// is assumed to fit.
+// Whether the active document has room for a margin, for Settings. One value
+// per window; assumed to fit until a document has measured.
 let available = true;
 const listeners = new Set<() => void>();
 

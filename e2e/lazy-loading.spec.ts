@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
-// The heavy parts of the app load on first use (src/lazy/lazy-module.ts):
-// a window opens with its own language's strings only, Settings and the
-// diagram and formula engines come when they are needed, and the parts
-// likely to be opened soon ("warm") load once the window is idle.
+// The heavy parts load on first use: a window opens with its own language's
+// strings only, Settings and the diagram and formula engines come when
+// needed, and the parts likely opened soon load once the window is idle.
 
 function loaded(page: Page): Promise<string[]> {
   return page.evaluate(() =>
@@ -81,4 +80,72 @@ test("a diagram loads its engine when one is drawn", async ({ page }) => {
     ),
   ).toHaveCount(1, { timeout: 10_000 });
   expect(await loaded(page)).toContain("mermaid");
+});
+
+test("an installed plugin starts, and its views load, only once it is needed", async ({
+  page,
+}) => {
+  const host = `exports.activate = function () {
+    textus.views.registerCodeBlock("shout", {
+      render: function (block, webview) { webview.html = "<p>" + block.source + "</p>"; },
+    });
+  };`;
+  const entry = {
+    id: "test.shout",
+    dir: "/plugins/test.shout",
+    manifest: JSON.stringify({
+      id: "test.shout",
+      name: "Shout",
+      version: "1.0.0",
+      publisher: "test",
+      description: "Draws shout blocks.",
+      engines: { textus: "^1.3.0" },
+      main: "host.js",
+      contributes: { codeBlocks: [{ language: "shout" }] },
+    }),
+    dev: false,
+    files: { "host.js": host },
+  };
+  await page.addInitScript((entry) => {
+    if (window.top !== window) return;
+    const w = window as unknown as Record<string, unknown>;
+    w.__devPlugins = [entry];
+    w.__devPluginState = {
+      allOn: true,
+      plugins: { [entry.id]: { enabled: true, granted: [] } },
+    };
+    w.__devFs = {
+      "/work/plain.md": "# Plain\n\nNo blocks here.\n",
+    };
+  }, entry);
+  await openApp(page, { settings: { language: "en" } });
+  const open = (path: string) =>
+    page.evaluate(
+      (p) =>
+        (
+          window as unknown as {
+            __devEmitTauriEvent: (n: string, payload: unknown) => void;
+          }
+        ).__devEmitTauriEvent("menu-open-recent", p),
+      path,
+    );
+  await open("/work/plain.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor.locator("h1")).toContainText("Plain");
+  // Idle, with Settings warmed: the plugin is known, but nothing of it runs.
+  await expect.poll(() => loaded(page)).toContain("settings");
+  const before = await loaded(page);
+  expect(before).not.toContain("plugin-webviews");
+  expect(before).not.toContain("plugin-broker");
+  expect(before.filter((name) => name.startsWith("plugin:"))).toEqual([]);
+
+  // A block in its language: now its view loads and the plugin starts.
+  await emit(page, "menu-new-file");
+  await pasteMarkdown(page, "```shout\nhello\n```\n\nEnd.");
+  await expect(
+    page.frameLocator(".plugin-code-block iframe").first().locator("p"),
+  ).toHaveText("hello");
+  const after = await loaded(page);
+  expect(after).toContain("plugin-webviews");
+  expect(after).toContain("plugin:test.shout");
 });

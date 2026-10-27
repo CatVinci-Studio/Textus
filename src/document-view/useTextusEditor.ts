@@ -15,10 +15,13 @@ import type { Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import { configureEditorRoot } from "../editor/editor-extensions";
+import {
+  documentChangedForPlugins,
+  selectionChangedForPlugins,
+} from "./plugins/plugin-events";
 
-/** The ref-indirected callbacks the plugin chain reads at call time: the
- *  chain is built once, on mount, before the hooks that own the real
- *  functions exist. The component keeps each `.current` fresh. */
+/** Ref-indirected callbacks the plugin chain reads at call time: the chain
+ *  is built once on mount, before the hooks that own them exist. */
 export interface EditorBridges {
   pendingEditActionsRef: { current: PendingEditCallbacks };
   onSelectionChangeRef: { current: () => void };
@@ -31,13 +34,14 @@ export interface EditorBridges {
   };
 }
 
-/** Builds this tab's Milkdown instance: the full plugin chain
- *  (editor-extensions.ts) with the listener that reports the document. */
+/** Builds this tab's Milkdown instance, with the listener that reports the
+ *  document. */
 export function useTextusEditor({
   initialValue,
   reporting,
   settingsRef,
   filePathRef,
+  isActiveRef,
   tourRef,
   tRef,
   setQuickAskEl,
@@ -45,24 +49,18 @@ export function useTextusEditor({
 }: {
   initialValue: string;
   reporting: DocumentReporting;
-  // The editor plugin chain below is only built once (empty deps), so
-  // plugins read these refs to see live values instead of the ones
-  // captured at construction time.
+  // The chain is built once, so plugins read live values through these refs.
   settingsRef: { readonly current: Settings };
   filePathRef: { readonly current: string | null };
+  isActiveRef: { readonly current: boolean };
   tourRef: { readonly current: TourAi | null };
   tRef: { readonly current: Strings };
   setQuickAskEl: Dispatch<SetStateAction<HTMLElement | null>>;
   requestImageName: (stem: string, extension: string) => Promise<string | null>;
 }): EditorBridges {
   const { reportedDocRef, onMounted, reportDoc } = reporting;
-  // The pending-edit plugin's callbacks need to exist at chain-construction
-  // time below, but the real accept/reject/sync functions come from
-  // usePendingEdits, which needs `run` - only available after useEditor sets
-  // up the Milkdown instance. This ref bridges the gap the same way
-  // settingsRef/filePathRef do: a stable object the plugin reads `.current`
-  // off of at call time (user interaction, well after mount), kept fresh by
-  // an effect in useEditorProposals.
+  // The real accept/reject/sync come from usePendingEdits, which needs `run`
+  // from after the chain is built; plugins read `.current` at call time.
   const pendingEditActionsRef = useRef<PendingEditCallbacks>({
     onAccept: () => {},
     onReject: () => {},
@@ -71,12 +69,9 @@ export function useTextusEditor({
     onDecide: () => {},
     getFocusedSentence: () => null,
   });
-  // Same bridge, for the selection listener registered in the chain below:
-  // the real handler needs `run` and the detached-chat bridge, neither of
-  // which exists yet at construction time.
+  // Same bridge, for the selection listener.
   const onSelectionChangeRef = useRef<() => void>(() => {});
-  // Whether a rewrite's replacements are drawn in the text (no margin) -
-  // ReviewMargin decides, the pending-edit plugin reads it.
+  // Whether a rewrite's replacements are drawn in the text (no margin).
   const noMarginRef = useRef(false);
   const phoneRef = useLatest(usePhoneLayout());
   // The review notes' plugin callbacks, bridged like the pending edits'.
@@ -100,18 +95,22 @@ export function useTextusEditor({
             .mounted((ctx) => {
               onMounted(ctx, ctx.get(editorViewCtx).state.doc);
             })
-            // The listener's debounced report of an edit. Not
-            // markdownUpdated: that serializes the whole document, and a
-            // save writes only the changed blocks (useDocumentReporting).
+            // Not markdownUpdated: that serializes the whole document, and a
+            // save writes only the changed blocks.
             .updated((ctx, doc) => {
               reportedDocRef.current = doc;
               reportDoc(ctx, doc);
+              documentChangedForPlugins(
+                isActiveRef.current,
+                filePathRef.current,
+              );
             })
-            // Every new selection has to reach the detached chat window as a
-            // fresh selection chip - that surface is defined by following
-            // the user's work rather than a snapshot. Read through a ref
-            // because this chain is built once, on mount.
-            .selectionUpdated(() => onSelectionChangeRef.current());
+            // Every new selection reaches the detached chat window as a fresh
+            // selection chip.
+            .selectionUpdated((ctx) => {
+              onSelectionChangeRef.current();
+              selectionChangedForPlugins(isActiveRef.current, ctx);
+            });
         }),
         settingsRef,
         filePathRef,
@@ -133,11 +132,8 @@ export function useTextusEditor({
               phoneRef.current,
             ),
         },
-        // setQuickAskEl is a useState setter - always stable, no ref
-        // indirection needed (unlike pendingEdits above, whose real
-        // callbacks don't exist yet at chain-construction time). The
-        // unmount only clears if the element going away is still the
-        // current one; see the plugin's onUnmount for why that matters.
+        // A useState setter is stable, so no ref is needed. The unmount
+        // clears only if the element going away is still the current one.
         {
           onMount: setQuickAskEl,
           onUnmount: (el) =>

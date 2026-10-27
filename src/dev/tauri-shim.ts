@@ -1,14 +1,7 @@
 /**
- * Dev-only stub of the Tauri IPC globals so the editor can be smoke-tested
- * in a plain browser at http://localhost:1420. Without it, the first
- * `invoke()`/`getCurrentWindow()` call in App's mount effects throws and
- * React unmounts the whole tree (there's no error boundary), leaving a
- * blank page. Every command resolves to null and native events never fire -
- * anything actually exercising native behavior still needs the real app.
- *
- * Event listeners ARE tracked, though: `window.__devEmitTauriEvent(name,
- * payload)` fires them, so menu-driven features (Settings, Help docs, ...)
- * can be driven from the console / browser automation.
+ * Dev-only stub of the Tauri IPC globals, so the editor runs in a plain
+ * browser. Commands resolve to null; `window.__devEmitTauriEvent(name,
+ * payload)` fires tracked listeners.
  */
 import type {
   DirEntryInfo_Serialize,
@@ -21,121 +14,72 @@ import type {
 import type { AgentSkill_Serialize } from "../platform/bindings/ai-project";
 import type { GalleryTheme_Serialize } from "../platform/bindings/app";
 import type { CustomEndpointStatus_Serialize } from "../platform/bindings/auth";
-import type {
-  FsEntry_Serialize,
-  PluginsState_Serialize,
-} from "../platform/bindings/plugins";
+import type { PluginsState_Serialize } from "../platform/bindings/plugins";
+import type { FsEntry_Serialize } from "../platform/bindings/plugin-access";
 import type { SentBlock } from "../ai/doc-blocks";
 import { namedCall, settledArguments, settledTurns } from "./settle-calls";
+import { forgetShimSecrets, pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";
 
-/** The built-in skills as `list_skills` reports them: name, `/` menu group,
- *  invocation and the description written for the model (abridged). */
-const DEV_BUILTIN_SKILLS: [string, string, string, string][] = [
-  [
-    "continue-story",
-    "write",
-    "both",
-    "Writes the next scene or section of a story, picking up exactly where the text stops.",
-  ],
-  [
-    "describe",
-    "write",
-    "both",
-    "Adds concrete, sensory description of a person, place or scene.",
-  ],
-  [
-    "dialogue",
-    "write",
-    "both",
-    "Fixes dialogue punctuation, tags and rhythm for the document's language.",
-  ],
-  [
-    "imitate-style",
-    "write",
-    "both",
-    "Rewrites text in the style of a sample or the style profile.",
-  ],
+/** The built-in skills as `list_skills` reports them (descriptions abridged). */
+const DEV_BUILTIN_SKILLS: [string, string, string, string, string][] = [
   [
     "expand",
     "revise",
     "userOnly",
+    "write",
     "Makes a passage fuller without adding facts.",
   ],
-  ["tighten", "revise", "userOnly", "Cuts wordiness and keeps every fact."],
   [
-    "change-tone",
+    "tighten",
     "revise",
     "userOnly",
-    "Makes text more formal, plain, warm or firm.",
-  ],
-  [
-    "de-ai",
-    "revise",
-    "both",
-    "Removes stock AI phrasing and formula, or flags it.",
+    "write",
+    "Cuts a passage down without losing its meaning.",
   ],
   [
     "translate",
     "revise",
     "both",
-    "Translates so the result reads as native writing.",
-  ],
-  [
-    "proofread",
-    "check",
-    "both",
-    "Checks spelling, punctuation and numbers against the language's standards.",
-  ],
-  [
-    "continuity",
-    "check",
-    "both",
-    "Finds contradictions with the library and other chapters.",
-  ],
-  ["email", "format", "both", "Drafts or restructures an email or letter."],
-  [
-    "notice",
-    "format",
-    "both",
-    "Drafts or fixes a notice or official document.",
-  ],
-  [
-    "minutes",
-    "format",
-    "both",
-    "Turns meeting notes into decisions and action items.",
-  ],
-  [
-    "academic-polish",
-    "format",
-    "both",
-    "Formal, calibrated academic wording; citations untouched.",
-  ],
-  [
-    "social-post",
-    "format",
-    "both",
-    "Writes a post that fits the platform's limits and rules.",
-  ],
-  [
-    "headline",
-    "format",
-    "both",
-    "Writes an accurate title or headline of the right length.",
+    "write",
+    "Translates the selection or the document.",
   ],
   [
     "summarize",
     "format",
     "userOnly",
-    "Summarizes faithfully at the length asked for.",
+    "write",
+    "Sums up the document or a passage.",
+  ],
+  [
+    "proofread",
+    "check",
+    "both",
+    "review",
+    "Fixes typos, grammar and punctuation.",
+  ],
+  [
+    "continuity",
+    "check",
+    "both",
+    "review",
+    "Checks names, facts and timelines against the library.",
   ],
   [
     "theme",
-    "format",
+    "create",
     "both",
-    "Designs an editor theme and writes it as one CSS file in the reply.",
+    "create",
+    "Designs an editor theme from a description.",
   ],
+  [
+    "plugin",
+    "create",
+    "both",
+    "create",
+    "Makes a small plugin from a description.",
+  ],
+  ["skill", "create", "both", "create", "Saves a task you repeat as a skill."],
 ];
 
 export function installDevTauriShim(): void {
@@ -147,18 +91,10 @@ export function installDevTauriShim(): void {
   // event name -> handler callback ids (as registered via transformCallback)
   const listeners = new Map<string, number[]>();
 
-  // The settings/UI-state/history store of src-tauri/src/settings.rs, in
-  // memory (and, below, the saved custom endpoint, which every page can
-  // reach). The store is only reached when a test installs
-  // `window.__BOOT__` the way Rust would (e2e/storage.spec.ts) - without
-  // one the frontend keeps everything in localStorage and never calls
-  // these. `window.__devStorage` exposes the state for assertions,
-  // including `log`, every command in the order it arrived (and
-  // "<command>:done" when a storage write was answered).
-  // `window.__devLiveSettings` starts the store from other settings than
-  // the boot snapshot's - what Rust holds when a reload replays an old one -
-  // and `window.__devStorageLatency` (ms) delays every storage write's
-  // answer, as a slow IPC would.
+  // The settings/UI-state/history store, in memory. Only reached when a test
+  // installs `window.__BOOT__`; `window.__devStorage` exposes it, `log` included.
+  // `__devLiveSettings` overrides the boot settings; `__devStorageLatency` (ms)
+  // delays every storage write's answer.
   const boot = w.__BOOT__ as
     | {
         settings?: Record<string, unknown>;
@@ -175,18 +111,15 @@ export function installDevTauriShim(): void {
     log: [] as string[],
     uiState: { ...(boot?.uiState ?? {}) } as Record<string, unknown>,
     histories: { chat: [], clipboard: [] } as Record<string, unknown[]>,
-    // The chat history's conversation files by id, and how many sit in its
-    // trash (a test sets it to show the archived note).
+    // Conversation files by id, and how many sit in the trash.
     conversations: {} as Record<string, unknown>,
     archivedChats: 0,
-    // custom_endpoint.json: the key is kept here but, as in Rust, never
-    // handed back - custom_endpoint_status says only whether there is one.
+    // The key is kept but, as in Rust, never handed back.
     customEndpoint: null as {
       baseUrl: string;
       apiKey: string | null;
       model: string;
     } | null,
-    // .revision-choices.json (ai/memory.rs), for learning from revisions.
     revisionChoices: null as unknown,
     keptProposals: {} as Record<string, unknown>,
     keptPictures: {} as Record<string, unknown>,
@@ -216,15 +149,13 @@ export function installDevTauriShim(): void {
     );
   const historyKey = (kind: unknown, entry: unknown) =>
     (entry as Record<string, unknown>)?.[kind === "chat" ? "id" : "text"];
-  // A conversation is kept whole apart and listed as its summary, as
-  // settings/chat_history.rs does.
+  // A conversation is kept whole and listed as its summary.
   const keepConversation = (entry: Record<string, unknown>) => {
     store.conversations[String(entry.id)] = entry;
     const { turns, ...summary } = entry;
     return { ...summary, turnCount: Array.isArray(turns) ? turns.length : 0 };
   };
-  // `window.__devChatHistory` starts the chat history from whole
-  // conversations, and with `archived` of them in its trash.
+  // `window.__devChatHistory` starts the chat history, `archived` in its trash.
   const startChats = w.__devChatHistory as
     { saved: Record<string, unknown>[]; archived?: number } | undefined;
   if (startChats) {
@@ -239,12 +170,10 @@ export function installDevTauriShim(): void {
     switch (cmd) {
       case "settings_get":
         return Promise.resolve({ value: store.settings, rev: store.rev });
-      // MCP servers (src-tauri mcp/): each one on is ready at once, with
-      // one tool; a command called "missing" isn't installed.
+      // MCP servers: each one on is ready with one tool; "missing" isn't installed.
       case "mcp_status":
       case "mcp_restart": {
-        // Settings live in localStorage when the page booted without the
-        // file store (SettingsContext's readLocalSettings).
+        // Settings live in localStorage when the page booted without the file store.
         let local: Record<string, unknown> = {};
         try {
           local = JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}");
@@ -299,7 +228,7 @@ export function installDevTauriShim(): void {
         return answer(cmd, store.rev);
       }
       case "settings_fill_defaults": {
-        // Only the fields not set yet (settings.rs's fill_missing).
+        // Only the fields not set yet.
         const defaults = args.defaults as Record<string, unknown>;
         const added = Object.fromEntries(
           Object.entries(defaults).filter(([key]) => !(key in store.settings)),
@@ -343,8 +272,7 @@ export function installDevTauriShim(): void {
         return answer(cmd, null);
       case "chat_history_get":
         return Promise.resolve(store.conversations[String(args.id)] ?? null);
-      // As settings/chat_history/search.rs: every word in one message or
-      // reply, newest conversation first.
+      // Every word in one message or reply, newest conversation first.
       case "chat_history_search": {
         const terms = String(args.query)
           .toLowerCase()
@@ -372,9 +300,7 @@ export function installDevTauriShim(): void {
         });
         return Promise.resolve(terms.length ? hits : []);
       }
-      // commands/own_notes.rs: what the writer keeps on a document, by
-      // "<part>:<path>", in `window.__devOwnNotes` (a test can start it
-      // with some).
+      // A writer's own notes by "<part>:<path>", in `window.__devOwnNotes`.
       case "own_notes_read":
         return Promise.resolve(
           ((w.__devOwnNotes ??= {}) as Record<string, string>)[
@@ -403,8 +329,7 @@ export function installDevTauriShim(): void {
         });
         return answer(cmd, null);
       }
-      // auth/custom_endpoint.rs, including its rule that an empty key keeps
-      // the stored one - for the URL it was saved with only.
+      // An empty key keeps the stored one, for the URL it was saved with only.
       case "custom_endpoint_status": {
         const saved = store.customEndpoint;
         return Promise.resolve(
@@ -434,13 +359,12 @@ export function installDevTauriShim(): void {
       case "clear_custom_endpoint":
         store.customEndpoint = null;
         return Promise.resolve(null);
-      // ai/memory.rs's revision choices log, kept as given.
       case "revision_choices_read":
         return Promise.resolve(store.revisionChoices);
       case "revision_choices_write":
         store.revisionChoices = args.log ?? null;
         return answer(cmd, null);
-      // ai/kept_proposals.rs: a document's undecided proposals, by path.
+      // A document's undecided proposals, by path.
       case "kept_proposals_read":
         return Promise.resolve(
           store.keptProposals[String(args.docPath)] ?? null,
@@ -448,8 +372,7 @@ export function installDevTauriShim(): void {
       case "kept_proposals_write":
         if (args.kept == null) delete store.keptProposals[String(args.docPath)];
         else store.keptProposals[String(args.docPath)] = args.kept;
-        // The pictures the backend would keep beside them:
-        // `window.__devKeptPictures` for assertions.
+        // Pictures kept beside them: `window.__devKeptPictures`.
         store.keptPictures[String(args.docPath)] = args.pictures ?? [];
         (window as { __devKeptPictures?: unknown }).__devKeptPictures =
           store.keptPictures;
@@ -458,11 +381,9 @@ export function installDevTauriShim(): void {
     return null;
   }
 
-  // The saved theme stylesheets of commands/themes.rs and the theme gallery
-  // of commands/theme_gallery.rs, in memory. `window.__devThemeGallery` is
-  // the gallery - `{ offline, themes, files: {path: css or data URL} }`,
-  // which a test changes to publish an update or go offline - and
-  // `window.__devThemeFiles` what was saved.
+  // Saved theme stylesheets and the theme gallery, in memory.
+  // `window.__devThemeGallery` is `{ offline, themes, files }`;
+  // `window.__devThemeFiles` is what was saved.
   const themeFiles = new Map<string, string>();
   w.__devThemeFiles = themeFiles;
   const gallery = {
@@ -525,12 +446,10 @@ export function installDevTauriShim(): void {
     return null;
   }
 
-  // The skill list of ai::workspace and Settings' commands for the
-  // built-ins, in memory: the 19 built-ins, one skill of the user's own,
-  // and what Customize…/Reset/the switches did. `window.__devSkills`
-  // exposes the state for assertions.
+  // Skills in memory: the 9 built-ins and one of the user's own.
+  // `window.__devSkills` exposes the state.
   const skills = {
-    disabled: new Set<string>(),
+    ownModes: ["write"] as string[],
     customized: new Set<string>(),
     // Copies made before the bundled built-in last changed.
     outdated: new Set<string>(),
@@ -547,8 +466,7 @@ export function installDevTauriShim(): void {
     const name = String(args.name ?? "");
     switch (cmd) {
       case "list_skills": {
-        // As ai::workspace::list_skills: one item per name - a copy made by
-        // Customize… replaces its built-in (and follows its switch).
+        // One item per name: a customized copy replaces its built-in.
         const base = {
           prompt: "",
           packs: [] as string[],
@@ -556,10 +474,11 @@ export function installDevTauriShim(): void {
           basedOn: null as string | null,
           builtinUpdated: false,
           aliases: {},
+          labels: {},
         };
         const builtins = DEV_BUILTIN_SKILLS.map(
-          ([skill, category, invocation, description]) => {
-            const enabled = !skills.disabled.has(skill);
+          ([skill, category, invocation, mode, description]) => {
+            const modes = [mode] as AgentSkill_Serialize["modes"];
             return skills.customized.has(skill)
               ? {
                   ...base,
@@ -569,7 +488,7 @@ export function installDevTauriShim(): void {
                   invocation,
                   source: "global",
                   overridesBuiltin: true,
-                  enabled,
+                  modes,
                   basedOn: `${skill}@${skills.outdated.has(skill) ? 0 : 1}`,
                   builtinUpdated: skills.outdated.has(skill),
                 }
@@ -581,7 +500,7 @@ export function installDevTauriShim(): void {
                   invocation,
                   source: "builtin",
                   overridesBuiltin: false,
-                  enabled,
+                  modes,
                   version: "1",
                 };
           },
@@ -594,15 +513,19 @@ export function installDevTauriShim(): void {
           invocation: "both",
           source: "global",
           overridesBuiltin: false,
-          enabled: true,
+          modes: skills.ownModes as AgentSkill_Serialize["modes"],
         } satisfies AgentSkill_Serialize;
         return Promise.resolve([...builtins, own]);
       }
-      case "set_builtin_skill_enabled":
-        skills.log.push(`${cmd}:${name}:${args.enabled}`);
-        if (args.enabled) skills.disabled.delete(name);
-        else skills.disabled.add(name);
-        return Promise.resolve([...skills.disabled].sort());
+      // Save this skill (Create mode): the file and its modes, logged.
+      case "save_written_skill":
+        skills.log.push(`${cmd}:${String(args.modes)}`);
+        skills.files.set(skillCopyPath("written"), String(args.text ?? ""));
+        return Promise.resolve(skillCopyPath("written"));
+      case "set_skill_modes":
+        skills.log.push(`${cmd}:${name}:${String(args.modes)}`);
+        skills.ownModes = [...((args.modes as string[]) ?? [])];
+        return Promise.resolve(null);
       case "customize_builtin_skill": {
         skills.log.push(`${cmd}:${name}`);
         const path = skillCopyPath(name);
@@ -630,11 +553,9 @@ export function installDevTauriShim(): void {
     return null;
   }
 
-  // A folder of documents in memory, for the sidebar's tree and search:
-  // `window.__devFs = { "/notes/a.md": "# A", ... }` (files only; folders
-  // are what their paths imply). `window.__devPickFolder` is what File >
-  // Open Folder…'s picker answers ("TOO_BROAD" refuses), and the recent
-  // lists File > Open Recent shows are `window.__devRecents`.
+  // A folder of documents in memory: `window.__devFs = { "/notes/a.md": "# A" }`
+  // (files only). `__devPickFolder` answers the folder picker ("TOO_BROAD"
+  // refuses); `__devRecents` are the recent lists.
   const recents = { files: [] as string[], folders: [] as string[] };
   w.__devRecents = recents;
   const pushRecent = (list: string[], path: string) => {
@@ -704,9 +625,7 @@ export function installDevTauriShim(): void {
             ) satisfies DirEntryInfo_Serialize[],
         );
       }
-      // commands/tree_ops.rs. A folder is the files under it; an empty one
-      // holds a hidden ".keep", which list_dir leaves out as the backend
-      // leaves out dot files.
+      // A folder is the files under it; an empty one holds a hidden ".keep".
       case "tree_create_document":
       case "tree_create_folder": {
         const name = String(args.name).trim();
@@ -784,7 +703,7 @@ export function installDevTauriShim(): void {
         return Promise.resolve(null);
       }
       case "index_folder": {
-        // commands/folder.rs refuses these; the shim's "home" is /home/me.
+        // The backend refuses these; the shim's "home" is /home/me.
         if (path === "/" || path === "/home/me")
           return Promise.reject("TOO_BROAD");
         const indexed = Object.keys(files)
@@ -804,19 +723,10 @@ export function installDevTauriShim(): void {
     return null;
   }
 
-  // Plugins (src-tauri/src/plugins/), kept in memory: the switch and the
-  // grants, each plugin's storage, and its folder calls answered from the
-  // same `window.__devFs` the tree reads (a document opened on its own -
-  // a PDF given to a custom editor - from `__devFiles`). Installed plugins
-  // are `window.__devPlugins`: [{ id, dir, manifest, dev, files: {rel:
-  // text} }]. The network has nothing to answer: a test cans plugin_http.
-  // `window.__devPluginState` starts it with plugins already on. The
-  // catalog is the textus-plugins checkout the dev server serves at
-  // /dev-plugins/ (vite.dev-plugins.ts); installing from it lists the
-  // plugin with its files read from there, and `window.__devCatalogInstalled`
-  // ([ids]) has some installed from the start. The catalog last listed is
-  // kept as `window.__devCatalogCache`, which a test can set beforehand;
-  // `window.__devCatalogFails` (a message) makes fetching it fail.
+  // Plugins in memory. Folder calls read `window.__devFs` (a lone document,
+  // `__devFiles`); installed plugins are `__devPlugins`, and `__devPluginState`
+  // starts some on. The catalog is served at /dev-plugins/; see also
+  // `__devCatalogInstalled`, `__devCatalogCache` and `__devCatalogFails`.
   type DevPluginEntry = {
     enabled: boolean;
     granted: string[];
@@ -881,6 +791,16 @@ export function installDevTauriShim(): void {
       catalog?: boolean;
     }[];
     const path = String(args.path ?? "");
+    const api = pluginApiShim(cmd, args, {
+      id,
+      folder,
+      write: (target, text) => {
+        ((w.__devFs ??= {}) as Record<string, string>)[target] = text;
+      },
+      granted: (permission) =>
+        !!pluginState.plugins[id]?.granted.includes(permission),
+    });
+    if (api) return api;
     const fileText = (p: string) =>
       p in binary
         ? Promise.resolve(
@@ -927,8 +847,8 @@ export function installDevTauriShim(): void {
         );
       case "plugin_install_catalog":
         return installFromDevCatalog(id);
-      // The catalog's skills: `window.__devCatalogSkills` (catalog.rs's
-      // SkillEntry), installed into `window.__devInstalledSkills`.
+      // The catalog's skills: `window.__devCatalogSkills`, installed into
+      // `window.__devInstalledSkills`.
       case "skill_catalog":
         return Promise.resolve(w.__devCatalogSkills ?? []);
       case "skill_install_catalog": {
@@ -1016,9 +936,8 @@ export function installDevTauriShim(): void {
         return Promise.resolve(null);
       case "plugin_http":
         return Promise.reject("The dev shim has no network.");
-      // A plugin's two places (plugins/store.rs), each `{ kv, files }`
-      // in memory: the global one, and the project's per open folder -
-      // `window.__devPluginStore` to look at.
+      // A plugin's global store and the project's per open folder, each
+      // `{ kv, files }`: `window.__devPluginStore`.
       case "plugin_store_get":
       case "plugin_store_set":
       case "plugin_store_keys":
@@ -1082,16 +1001,14 @@ export function installDevTauriShim(): void {
         ];
         return Promise.resolve(null);
       }
-      // A developer's folder's last change: `window.__devPluginStamps`;
-      // `__devStampReads` counts the looks.
+      // `window.__devPluginStamps`; `__devStampReads` counts the looks.
       case "plugin_dev_stamp":
         w.__devStampReads = ((w.__devStampReads as number) ?? 0) + 1;
         return Promise.resolve(
           (w.__devPluginStamps as Record<string, number> | undefined)?.[id] ??
             null,
         );
-      // Tools for Textus AI (plugins/ai_tools.rs): what the window offers,
-      // and what each call answered, for a test to read.
+      // Tools for Textus AI, and what each call answered.
       case "plugin_ai_tools_set":
         w.__devAiTools = args.tools;
         return Promise.resolve(null);
@@ -1100,19 +1017,62 @@ export function installDevTauriShim(): void {
           String(args.callId)
         ] = args.error ? { error: args.error } : { text: args.text };
         return Promise.resolve(null);
-      case "plugin_uninstall":
+      // textus:// links waiting for a window: `window.__devPluginUris`, taken once.
+      case "plugin_take_uris": {
+        const links = (w.__devPluginUris ?? []) as string[];
+        w.__devPluginUris = [];
+        return Promise.resolve(links);
+      }
+      case "plugin_uninstall": {
         w.__devPlugins = installed.filter((p) => p.id !== id);
         delete pluginState.plugins[id];
+        // Its global data and secrets go with it; a project's stays.
+        const stores = (w.__devPluginStore ?? {}) as Record<string, unknown>;
+        delete stores[`${id}|global|`];
+        forgetShimSecrets(id);
         return Promise.resolve(null);
+      }
+      // A plugin Textus AI wrote: listed with its files, over an earlier
+      // version of the same id.
+      case "plugin_install_files": {
+        const files = (args.files ?? []) as { path: string; text: string }[];
+        const manifestFile = files.find((f) => f.path === "textus-plugin.json");
+        if (!manifestFile)
+          return Promise.reject("No textus-plugin.json among the files.");
+        const pid = (JSON.parse(manifestFile.text) as { id: string }).id;
+        if (!pid.startsWith("local."))
+          return Promise.reject(
+            `A plugin written in the conversation needs an id starting with local. - ${pid} is someone else's.`,
+          );
+        const written = {
+          id: pid,
+          dir: `/plugins/${pid}`,
+          manifest: manifestFile.text,
+          dev: false,
+          files: Object.fromEntries(files.map((f) => [f.path, f.text])),
+        };
+        w.__devPlugins = [...installed.filter((p) => p.id !== pid), written];
+        const listed: Record<string, unknown> = { ...written };
+        delete listed.files;
+        return Promise.resolve(listed);
+      }
       case "plugin_install":
       case "plugin_load_dev":
         return Promise.reject("The dev shim installs no plugin from a file.");
+      // A picker's answer (`window.__devPickPluginFolder`), and Export for
+      // Publishing's requests in `window.__devPluginExports`.
       case "plugin_pick_package":
+        return Promise.resolve(w.__devPickPluginFolder ?? null);
+      case "plugin_export": {
+        const asked = { id, publisher: args.publisher, folder: args.folder };
+        ((w.__devPluginExports ??= []) as unknown[]).push(asked);
+        const name = String(id).split(".").slice(1).join(".");
+        return Promise.resolve(`${args.folder}/${args.publisher}.${name}`);
+      }
       case "set_plugin_menu":
       case "set_tray_plugin_items":
         return Promise.resolve(null);
-      // `window.__devPendingPluginCommand`: one picked in the tray with no
-      // window open, for this window to run.
+      // `window.__devPendingPluginCommand`: one picked in the tray, for this window.
       case "take_pending_plugin_command": {
         const command = (w.__devPendingPluginCommand as string) ?? null;
         w.__devPendingPluginCommand = null;
@@ -1133,15 +1093,19 @@ export function installDevTauriShim(): void {
       `http://${protocol}.localhost/${encodeURIComponent(path)}`,
     invoke: (cmd: string, args?: { event?: string; handler?: number }) => {
       log(cmd);
-      // Pages and links opened in the browser (platform/ipc.ts's `links`),
-      // with what was asked for: `window.__devLinks` for assertions.
+      // Pages and links opened in the browser: `window.__devLinks`.
       if (cmd.startsWith("open_") && /_(page|link)$/.test(cmd))
         ((w.__devLinks ??= []) as unknown[]).push({ cmd, ...args });
-      // `window.__devFiles = { path: text }` is a disk of documents, for
-      // a flow that opens more than one (a link into another file), and
-      // `window.__devFileMtimes = { path: ms }` their times (default 1).
+      // `window.__devFiles = { path: text }` is a disk of documents;
+      // `__devFileMtimes = { path: ms }` their times (default 1).
       const files = w.__devFiles as Record<string, string> | undefined;
       const filePath = String((args as { path?: unknown })?.path ?? "");
+      // A PDF or a picture (`__devBinaryFiles`) isn't text, as on disk.
+      if (
+        cmd === "read_text_file" &&
+        filePath in ((w.__devBinaryFiles ?? {}) as Record<string, string>)
+      )
+        return Promise.reject("stream did not contain valid UTF-8");
       if (files && filePath in files) {
         if (cmd === "read_text_file") return Promise.resolve(files[filePath]);
         if (cmd === "file_mtime_ms")
@@ -1165,21 +1129,19 @@ export function installDevTauriShim(): void {
         ((w.__devInvokeCalls ??= []) as unknown[]).push({ cmd, ...args });
         return page;
       }
-      // `window.__devInvokeResults = { cmd: value }` answers a command with
-      // a canned value - e.g. take_chat_handoff, without which the chat
-      // window (?view=chat) has no conversation to show.
+      // `window.__devInvokeResults = { cmd: value }` answers a command with a
+      // canned value.
       const canned = w.__devInvokeResults as
         Record<string, unknown> | undefined;
       if (canned && cmd in canned) {
-        // And records what it was asked: `window.__devInvokeCalls`.
+        // And records it in `window.__devInvokeCalls`.
         ((w.__devInvokeCalls ??= []) as unknown[]).push({ cmd, ...args });
         let value = canned[cmd] as {
           __reject?: unknown;
           __delay?: number;
           value?: unknown;
         } | null;
-        // A canned reply's calls, settled against the request's blocks as
-        // the backend settles a model's (settle-calls.ts).
+        // Settled against the request's blocks, as the backend settles a model's.
         if (cmd === "ai_agent_message") {
           const blocks = ((args as { blocks?: SentBlock[] } | undefined)
             ?.blocks ?? []) as SentBlock[];
@@ -1214,13 +1176,11 @@ export function installDevTauriShim(): void {
           ...(listeners.get(args.event) ?? []),
           args.handler,
         ]);
-        // The listener id unlisten() later passes to unregisterListener -
-        // returning null here would make every unlisten a no-op and stale
-        // StrictMode handlers would double-fire events.
+        // Without a real id every unlisten is a no-op and stale StrictMode handlers
+        // double-fire.
         return Promise.resolve(args.handler);
       }
-      // The phone menu sends its commands to this same window
-      // (platform/menu-events.ts's emitMenuEvent); deliver them like Rust would.
+      // The phone menu sends its commands to this same window.
       if (cmd === "plugin:event|emit_to" && args?.event) {
         const { event, payload } = args as { event: string; payload?: unknown };
         queueMicrotask(() =>
@@ -1241,16 +1201,13 @@ export function installDevTauriShim(): void {
       if (file) return file;
       const plugin = pluginCommand(cmd, args as Record<string, unknown>);
       if (plugin) return plugin;
-      // A canned suggestion instead of null: lets ghost-text rendering (and
-      // the tour's completion lesson) be smoke-tested in the browser -
-      // null would make the manual trigger path throw an error dialog.
+      // Null would make the manual completion trigger throw an error dialog.
       if (cmd === "ai_complete") {
         return Promise.resolve(
           " and this ghost text is a canned dev-shim suggestion.",
         );
       }
-      // One canned issue on the paragraph's first character, so the
-      // underline decoration and hover popover can be smoke-tested too.
+      // One canned issue, so the underline and hover popover can be tried.
       if (cmd === "ai_grammar_check") {
         const paragraph =
           (args as unknown as { paragraph?: string })?.paragraph ?? "";
@@ -1267,15 +1224,8 @@ export function installDevTauriShim(): void {
             : [],
         );
       }
-      // A canned User/Assistant exchange (AgentTurn[]) instead of null - lets
-      // the inline chat's real send path be smoke-tested in the browser;
-      // null here made
-      // useAgentConversation's `[...prev, ...newTurns]` throw (newTurns not
-      // iterable) and crash the whole tree, since there's no error boundary.
-      // The reply is also drip-fed through the onEvent channel first, so the
-      // streaming render path gets exercised without a real provider. In
-      // this shim, invoke() receives the raw args object, so onEvent is the
-      // live Channel instance and its onmessage handler is callable.
+      // Null here crashes the tree when the reply is spread into turns. The reply
+      // is drip-fed through `onEvent` (the live Channel here) to exercise streaming.
       if (cmd === "ai_agent_message") {
         const { message = "", onEvent } =
           (args as unknown as {
@@ -1302,10 +1252,7 @@ export function installDevTauriShim(): void {
           }, 30);
         });
       }
-      // A canned text attachment, so the "+" button's staged-chip and
-      // inlining path can be smoke-tested in the browser. The real command
-      // (commands/attachment.rs) is where format handling actually lives -
-      // extracting a PDF or a spreadsheet needs the native side.
+      // Real format handling (PDF, spreadsheets) needs the native side.
       if (cmd === "pick_attachment_file") {
         return Promise.resolve({
           kind: "text",
@@ -1316,8 +1263,7 @@ export function installDevTauriShim(): void {
       }
       return Promise.resolve(null);
     },
-    // Mirrors the real runtime: the callback is parked on window under
-    // `_<id>` so it can be invoked by id later.
+    // As the real runtime: the callback is parked on window under `_<id>`.
     transformCallback: (cb?: (response: unknown) => void) => {
       const id = nextCallbackId++;
       w[`_${id}`] = cb ?? (() => {});
@@ -1326,9 +1272,8 @@ export function installDevTauriShim(): void {
     unregisterCallback: () => {},
     plugins: {},
   };
-  // The event plugin calls this from unlisten() - without it, React
-  // StrictMode's mount/cleanup/mount cycle leaves stale handlers behind and
-  // one __devEmitTauriEvent fires them all (symptom: duplicated tabs).
+  // Without this, StrictMode's remount leaves stale handlers that one emit
+  // fires twice.
   w.__TAURI_EVENT_PLUGIN_INTERNALS__ = {
     unregisterListener: (event: string, id: number) => {
       listeners.set(
@@ -1337,8 +1282,7 @@ export function installDevTauriShim(): void {
       );
     },
   };
-  // For an e2e mock that plays the model itself: its calls named and
-  // settled as the backend would (settle-calls.ts).
+  // For an e2e mock that plays the model: calls named and settled as the backend would.
   w.__devNameCall = namedCall;
   w.__devSettle = settledArguments;
   w.__devEmitTauriEvent = (event: string, payload?: unknown) => {

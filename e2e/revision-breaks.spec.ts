@@ -1,11 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// A proposal's tint is on its text, not on the line breaks in it: the hard
-// breaks the AI writes (`\`, two trailing spaces, `<br>`) and the blank
-// line between two paragraphs used to get a stub of green at every line end
-// and on the empty line, more so under the darker hover tint, and a strike
-// after a hard break ended a character late.
+// A proposal's tint is on its text, not on the hard breaks or blank lines
+// in it, and a strike after a hard break ends on time.
 
 const DOC = "First line here.\\\nSecond line here.\n\nAnother paragraph.";
 

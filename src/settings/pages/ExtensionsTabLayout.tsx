@@ -8,17 +8,14 @@ export interface ExtensionsAction {
   onSelect: () => void;
 }
 
-/**
- * One tab of Settings › Extensions, laid out as every tab is: a line of
- * what the tab holds (its longer story behind "?"), Get more and the
- * tab's other actions on the right; the installed items; then Advanced,
- * folded.
- */
+/** One tab of Settings › Extensions: a line of what it holds, Get more (or
+ *  `primary`) and other actions, the installed items, then Advanced, folded. */
 export function ExtensionsTabLayout({
   t,
   intro,
   help,
   onGetMore,
+  primary,
   actions = [],
   error,
   installedTitle,
@@ -29,6 +26,7 @@ export function ExtensionsTabLayout({
   intro: string;
   help?: ReactNode;
   onGetMore?: () => void;
+  primary?: ExtensionsAction;
   actions?: ExtensionsAction[];
   error?: string | null;
   installedTitle: string;
@@ -51,6 +49,15 @@ export function ExtensionsTabLayout({
               onClick={onGetMore}
             >
               {t.marketGetMore}
+            </button>
+          )}
+          {primary && (
+            <button
+              type="button"
+              className="text-button settings-inline-button extensions-get-more"
+              onClick={primary.onSelect}
+            >
+              {primary.label}
             </button>
           )}
         </div>

@@ -12,11 +12,8 @@ import {
 import { liveCaretPos } from "../marks/enclosure";
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
 
-// --- <details> around markdown ------------------------------------------
-//
-// The folding half of the raw-HTML preview (raw-html-preview-plugin.ts
-// builds the one plugin; its state holds the fold state too, so the key
-// and the state's shape are declared here, where the folds read them).
+// The folding half of the raw-HTML preview. The plugin's state holds the
+// fold state too, so its key and shape are declared here.
 
 /** Folded state per <details>, by its head paragraph's position. */
 export type OpenStates = Map<number, boolean>;
@@ -24,7 +21,6 @@ export type OpenStates = Map<number, boolean>;
 export interface RawHtmlPreviewState {
   reveal: RevealState;
   open: OpenStates;
-  /** The document's <details> around markdown (findDetailsSpans). */
   spans: DetailsSpan[];
 }
 
@@ -36,7 +32,7 @@ export const rawHtmlPreviewKey = new PluginKey<RawHtmlPreviewState>(
 export type FoldMeta = { set: [number, boolean][] };
 
 // What the fold draws. An export reads them back to put a body inside its
-// <details> again (export/exporters.ts).
+// <details> again.
 export const DETAILS_CLASS_PREFIX = "raw-html-details-";
 export const DETAILS_HEAD_CLASS = "raw-html-details-head";
 export const DETAILS_END_CLASS = "raw-html-details-end";
@@ -91,10 +87,9 @@ export interface DetailsSpan {
 }
 
 /**
- * GitHub's usual way to fold markdown: "<details>" and "<summary>" in one
- * HTML block, the markdown after a blank line, and "</details>" in a block
- * of its own. Markdown makes those separate paragraphs, so the pair is
- * found at the top level of the document (nested pairs included).
+ * GitHub's usual way to fold markdown: "<details><summary>" in one HTML
+ * block, the markdown, and "</details>" alone. These are separate top-level
+ * paragraphs, so the pair is matched there (nested pairs included).
  */
 export function findDetailsSpans(doc: ProseNode): DetailsSpan[] {
   const spans: DetailsSpan[] = [];
@@ -121,8 +116,7 @@ export function findDetailsSpans(doc: ProseNode): DetailsSpan[] {
   return spans;
 }
 
-/** `spans` through an edit that left them as they were (detailsTouched
- *  false). */
+/** `spans` through an edit that left them as they were. */
 export function mapSpans(
   spans: DetailsSpan[],
   mapping: Mapping,
@@ -143,10 +137,8 @@ export function mapSpans(
   }));
 }
 
-/** Whether drawing the top-level block [from, to] again could change a
- *  fold: it is in one (head, body or end, `spans` mapped to the new
- *  document), or it is a "<details>" or "</details>" line that may start or
- *  close one. Then the folds are drawn again, all of them. */
+/** Whether redrawing the top-level block [from, to] could change a fold:
+ *  it is in one, or it is a "<details>" or "</details>" line. */
 export function detailsTouched(
   doc: ProseNode,
   spans: DetailsSpan[],
@@ -171,10 +163,9 @@ function isFoldOpen(span: DetailsSpan, open: OpenStates): boolean {
 }
 
 /**
- * Something another plugin points the writer at - a proposed edit, a review
- * note - declared on its spec as `foldAttention`. A folded <details> opens
- * when an item with a key it hasn't seen lands in its hidden text; the
- * writer can fold it again afterwards.
+ * Something another plugin points the writer at (a proposed edit), declared
+ * on its spec as `foldAttention`. A fold opens when a new key lands in its
+ * hidden text.
  */
 export interface FoldAttentionItem {
   key: string;
@@ -195,7 +186,6 @@ function attentionItems(state: EditorState): FoldAttentionItem[] {
   return items;
 }
 
-// A transaction meta: open whatever folds hide [from, to] (unfoldRange).
 const UNFOLD_META = "details-unfold";
 
 /** The folded <details> whose hidden text holds part of [from, to]. */
@@ -217,10 +207,8 @@ function foldsHiding(
 }
 
 /**
- * Opens every folded <details> hiding [from, to], so whatever points there -
- * a find match, an outline jump, a followed #heading link - lands on text
- * the reader can see. Dispatches only when something was folded; true if
- * it did.
+ * Opens every folded <details> hiding [from, to], so a find match or jump
+ * lands on visible text. True if it dispatched.
  */
 export function unfoldRange(
   view: EditorView,
@@ -235,11 +223,9 @@ export function unfoldRange(
   return true;
 }
 
-// The DOM event unfoldElement sends, for callers holding only an element.
 const UNFOLD_EVENT = "textus-unfold";
 
-/** unfoldRange for an element of the editor's own DOM (the outline holds
- *  its heading's element, not a position). */
+/** unfoldRange for an element of the editor's own DOM. */
 export function unfoldElement(el: Element): void {
   el.dispatchEvent(new CustomEvent(UNFOLD_EVENT, { bubbles: true }));
 }
@@ -255,10 +241,8 @@ export const unfoldEventHandlers = {
 };
 
 /**
- * The folds to open after these transactions: one hiding the selection
- * (the caret moved into folded text, or text was typed there), one an
- * explicit unfoldRange asked for, one where another plugin's new
- * attention item (foldAttention) landed.
+ * The folds to open after these transactions: one hiding the selection, one
+ * unfoldRange asked for, one where a new attention item landed.
  */
 export function unfoldFor(
   trs: readonly Transaction[],
@@ -287,10 +271,8 @@ export function unfoldFor(
   return { set: [...heads].map((head) => [head, true]) };
 }
 
-/** ArrowUp/Down into a paragraph that is all HTML drawn as a block (a
- *  <details> head, a table) or hidden (a "</details>" line): the browser
- *  has no text there to stop on and skipped it, so its source could only
- *  be reached with the mouse. The caret goes into the source instead. */
+/** ArrowUp/Down into a paragraph that is all HTML drawn as a block or
+ *  hidden: the browser skipped it, so the caret goes into the source. */
 export function arrowIntoHtmlBlock(
   view: EditorView,
   event: KeyboardEvent,
@@ -300,9 +282,8 @@ export function arrowIntoHtmlBlock(
   if (!dir || event.shiftKey || event.altKey || event.metaKey || event.ctrlKey)
     return false;
   const { selection, doc } = view.state;
-  // Where the browser's caret is: a key pressed right after a native caret
-  // move (End, Home, a click) can arrive before the editor state has read
-  // that move, and the state's caret is then a line or more behind.
+  // The browser's caret: a key right after a native caret move can arrive
+  // before the state has read that move.
   let head = selection.head;
   const dom = (view.root as Document).getSelection?.();
   if (dom?.focusNode && view.dom.contains(dom.focusNode)) {
@@ -370,7 +351,7 @@ export function decorateDetails(
     const onHead = touches(span.head.from, span.head.to);
     const onEnd = touches(span.end.from, span.end.to);
     const rendered = renderWhitelistedHtml(span.head.text);
-    // The caret in the folded text opens it for good (unfoldFor above).
+    // The caret in the folded text opens it for good.
     const showBody = isFoldOpen(span, open) || onHead || onEnd || !rendered;
 
     if (rendered && !onHead && !onEnd) {
@@ -391,8 +372,8 @@ export function decorateDetails(
         }),
       );
     }
-    // Every block of the body says whose it is, so an export can put
-    // them back inside the <details> (export/exporters.ts).
+    // Every body block says whose it is, so an export can put them back inside
+    // the <details>.
     state.doc.nodesBetween(span.bodyFrom, span.endPos, (node, pos) => {
       if (pos < span.bodyFrom || pos >= span.endPos) return false;
       const classes = [`${DETAILS_IN_CLASS}${span.headPos}`];

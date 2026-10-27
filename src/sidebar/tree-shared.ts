@@ -5,10 +5,10 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import type { SearchScope } from "./file-search";
+import type { Strings } from "../i18n/strings";
 import { isInside, parentDir } from "../utils/path";
 
-// What the file tree (FileTree.tsx) and its rows (TreeNodes.tsx) share:
-// the order, the context every row reads, and where a move may go.
+// What the file tree and its rows share.
 
 /** The tree's order: by name, folders first, or newest first. */
 export type TreeSort = "name" | "modified";
@@ -21,7 +21,7 @@ export const DRAG_START_PX = 5;
 export interface TreeShared {
   sort: TreeSort;
   scope: SearchScope;
-  /** Hidden files shown too (#357): a dot's, or Windows marked hidden. */
+  /** Hidden files shown too: a dot's, or Windows marked hidden. */
   showHidden: boolean;
   /** Bumped per folder after something was made in it or moved in or out:
    *  that folder reads its entries again and opens. */
@@ -38,8 +38,7 @@ export interface TreeShared {
         isDir: boolean,
       ) => void)
     | null;
-  /** ⌘/Ctrl-click on a file: it opens in a window of its own (#348).
-   *  Desktop only. */
+  /** ⌘/Ctrl-click on a file opens it in a window of its own. Desktop only. */
   openInNewWindow: ((path: string) => void) | null;
   /** True once, for the click that ends a drag. */
   takeDragClick: () => boolean;
@@ -54,7 +53,7 @@ export function useTree(): TreeShared {
 }
 
 /** Where a move is allowed: not where it already is, and a folder not
- *  into itself or below it (commands/tree_ops.rs refuses the same). */
+ *  into itself or below it. */
 export function canMoveInto(
   path: string,
   isDir: boolean,
@@ -63,4 +62,12 @@ export function canMoveInto(
   if (parentDir(path) === into) return false;
   if (isDir && (into === path || isInside(into, path))) return false;
   return true;
+}
+
+/** The backend's refusal in the user's words. */
+export function failureText(t: Strings, err: unknown, name: string): string {
+  const reason = err instanceof Error ? err.message : String(err);
+  if (reason.includes("Already exists"))
+    return t.treeNameTaken.replace("{name}", name);
+  return t.treeActionFailed.replace("{reason}", reason);
 }

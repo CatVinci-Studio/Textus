@@ -3,10 +3,7 @@ import { blockIds, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * An edit of one sentence inside a paragraph: its margin card shows that
- * sentence from its first frame, the model's fields in either order. Its
- * text whole before the call's own arguments, it used to be decidable at
- * once and was one card for the whole paragraph for a moment, the
- * sentence's only once the arguments came (1.2.1).
+ * sentence from its first frame, whatever order the model's fields come in.
  */
 const DOC =
   "The keeper woke before dawn. He climbed the stairs slowly. The lamp was still warm.\n\nA gull cried far off.";

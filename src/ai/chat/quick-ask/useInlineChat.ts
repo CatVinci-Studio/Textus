@@ -12,24 +12,19 @@ import {
 import { chatSelectionRange } from "./chat-selection-plugin";
 import type { EditorRunner } from "../../../editor/useEditorRunner";
 
-/** The document position right after the top-level block containing `pos` -
- *  where the Quick Ask zone widget goes (quick-ask-widget-plugin), both when
- *  the chat first opens (relative to the selection) and when the review nav
- *  bar moves it to follow a pending edit (relative to the edit's `from`). A
- *  real ProseMirror position, so it maps through edits like any other one. */
+/** The document position right after the top-level block containing `pos`:
+ *  where the Quick Ask zone widget goes. Maps through edits like any other. */
 export function blockPositionAfter(doc: ProseNode, pos: number): number {
   const $pos = doc.resolve(Math.min(pos, doc.content.size));
   if ($pos.depth >= 1) return $pos.after(1);
-  // Between two top-level blocks - where an anchored proposal's preview
-  // starts: the block that begins here. (This used to be the document's
-  // end, which sent Quick Ask to the bottom of the page.)
+  // Between two top-level blocks, where an anchored proposal's preview
+  // starts: the block that begins here.
   const next = $pos.nodeAfter;
   return next ? $pos.pos + next.nodeSize : doc.content.size;
 }
 
 export interface InlineChatInfo {
-  /** The whole document as MARKDOWN SOURCE - see doc-markdown.ts for why
-   *  every AI path works in markdown rather than flattened text. */
+  /** The whole document as markdown source. */
   document: DocumentSnapshot;
   /** The selection as plain text. Display only (the composer's "{n} chars
    *  selected" chip); never sent to the model, which sees the markdown. */
@@ -42,43 +37,28 @@ export interface InlineChatInfo {
   /** Caret position at open time - what "insert at cursor" targets. */
   anchor: number;
   /** The document position right after the top-level block the selection
-   *  ends in - where quick-ask-widget-plugin places the panel. A real
-   *  ProseMirror position, so it maps through edits like any other one
-   *  (unlike the old floating popup's screen coordinates, which never
-   *  followed the document). */
+   *  ends in, where the panel goes. Maps through edits like any other. */
   widgetPos: number;
 }
 
 /**
  * State + actions for the Quick Ask bar. Opening captures the document, the
- * selection (plain + markdown + bounds), and the block position the panel
- * should render after - the range a `replace_selection` proposal targets,
- * and what usePendingEdits re-checks for staleness before writing.
- *
- * Nothing here writes to the document. A reply reaches the document only as a
- * pending preview the user accepts (usePendingEdits.ts) - there is no
- * second, direct-apply path.
+ * selection and the panel's position. Nothing here writes to the document:
+ * a reply reaches it only as a pending preview the user accepts.
  */
 export function useInlineChat(run: EditorRunner) {
   const [chatInfo, setChatInfo] = useState<InlineChatInfo | null>(null);
   // Whether the PANEL is on screen. Separate from chatInfo because detaching
-  // into a window hides the panel while the context must survive: proposals
-  // arriving from the detached window still resolve against the selection and
-  // document captured when this request was made.
+  // hides the panel while the captured context must survive.
   const [visible, setVisible] = useState(false);
-  // Read from callbacks registered once (the detached-chat bridge), which
-  // would otherwise close over a stale chatInfo.
-  // Writable (unlike useLatest) because open/sendContext update it in the
-  // same tick as setChatInfo, before the re-render that would sync it.
+  // Read from callbacks registered once. Writable (unlike useLatest) because
+  // open/sendContext update it in the same tick as setChatInfo.
   const chatInfoRef = useRef<InlineChatInfo | null>(chatInfo);
   chatInfoRef.current = chatInfo;
 
-  /** Opens the bar, or keeps it open. Opened again over a DIFFERENT
-   *  selection, it retargets: the new passage becomes what it is about, and
-   *  the returned position is where the panel should move to (null: it
-   *  stays put). Asking AI about paragraph 9 used to leave the panel - and
-   *  its rewrites - on paragraph 1. The conversation itself carries on;
-   *  the caller decides whether it is fresh or a restored history entry. */
+  /** Opens the bar, or keeps it open. Over a different selection it
+   *  retargets, returning where the panel should move (null: it stays put).
+   *  The conversation itself carries on. */
   const open = useCallback((): number | null => {
     setVisible(true);
     return (
@@ -114,11 +94,9 @@ export function useInlineChat(run: EditorRunner) {
     setChatInfo(null);
   }, []);
 
-  /** What a send writes against: the document as it reads NOW, and the
-   *  captured selection as it reads now - its range mapped through every
-   *  edit since (chat-selection-plugin), so "make it shorter" -> Accept ->
-   *  "now more formal" works on the text the first rewrite left behind
-   *  instead of quoting text that no longer exists. */
+  /** What a send writes against: the document as it reads now, and the
+   *  captured selection mapped through every edit since, so a follow-up
+   *  works on the text the last rewrite left. */
   const sendContext = useCallback(async () => {
     const info = chatInfoRef.current;
     if (!info) return null;

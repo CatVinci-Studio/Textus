@@ -53,7 +53,13 @@ const labels = {
   attachmentNoVision: "No images",
   modeWrite: "Write",
   modeReview: "Review",
+  modeCreate: "Create",
+  modeWriteHint: "Writes and changes the document",
+  modeReviewHint: "Reads and leaves notes",
+  modeCreateHint: "Makes themes, plugins and skills",
   modeLabel: "Mode",
+  modelLabel: "Model",
+  modeAndModelLabel: "Mode and model",
   webSearch: "Web search",
   deepThinking: "Deep thinking",
   deepThinkingHint:
@@ -90,7 +96,7 @@ describe("the composer on a phone", () => {
     const modes = screen.getByRole("radiogroup", { name: "Mode" });
     expect(
       [...modes.querySelectorAll('[role="radio"]')].map((m) => m.textContent),
-    ).toEqual(["Write", "Review"]);
+    ).toEqual(["Write", "Review", "Create"]);
     expect(screen.getByRole("radio", { name: "Write" })).toHaveAttribute(
       "aria-checked",
       "true",

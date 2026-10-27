@@ -95,7 +95,6 @@ describe("the tour", () => {
   });
 
   it("links to the clips Rust lets it open, and only those", () => {
-    // src-tauri/src/commands/links.rs builds the URL from its own list.
     const rust = readFileSync("src-tauri/src/commands/links.rs", "utf8");
     const list = /const TUTORIAL_CLIPS: &\[&str\] = &\[([^\]]*)\]/.exec(rust);
     const clips = [...(list?.[1] ?? "").matchAll(/"([^"]+)"/g)].map(

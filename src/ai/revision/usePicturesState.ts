@@ -14,12 +14,8 @@ const subscribe = (listener: () => void) => {
   };
 };
 
-/**
- * Where the pictures being made in `markdown` are (picturesState): what an
- * Accept waits on - its button says the picture is coming until then - and
- * a picture that wasn't made, left out of the text. Asks for each picture,
- * so the answer comes whether or not its frame is on screen.
- */
+/** Where the pictures being made in `markdown` are, which an Accept waits on.
+ *  Asks for each, so the answer comes whether or not its frame is on screen. */
 export function usePicturesState(markdown: string): PictureState {
   useEffect(() => {
     for (const id of generatedIdsIn(markdown)) void loadGeneratedImage(id);

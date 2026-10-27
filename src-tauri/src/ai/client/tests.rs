@@ -698,8 +698,7 @@ fn overlapping_fixes_keep_the_first() {
 #[test]
 fn the_reply_is_the_last_issue_array_in_it() {
     let p = "昨日は映画を見ました。面白かったでしだ。";
-    // Notes before the array, and a corrected second array after a
-    // first one - the shape that used to fail to parse twice.
+    // Notes before the array, and a corrected second array after a first one.
     let raw = "Checking the paragraph:\n[{\"original\": \"かったでした\", \"suggestion\": \"かったでした\", \"issue\": \"x\"}]\nWait - that quote is wrong. Corrected:\n[{\"original\": \"かったでしだ\", \"suggestion\": \"かったでした\", \"issue\": \"誤字\"}]";
     let out = parse_grammar_reply(raw, p).unwrap();
     assert_eq!(out.len(), 1);

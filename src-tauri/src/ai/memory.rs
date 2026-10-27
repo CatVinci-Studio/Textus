@@ -1,37 +1,7 @@
-//! What Textus AI remembers by itself (docs/design/ai-concepts.md, "AI
-//! memories"): the user's standing requirements, preferences and style,
-//! kept with the `remember` tool in any conversation and sent with every
-//! later one - so "it remembers your style and what you ask for" holds.
-//!
-//! One memory per Markdown file, written only by Textus AI and kept apart
-//! from the files the user writes (agent.md, style.md), which it never
-//! changes:
-//!
-//! ```text
-//! <global config folder>/memory/<slug>.md   <- personal: the user's habits
-//! <project folder>/.textus/memory/<slug>.md <- about this work
-//! <project folder>/.textus/library/<name>.md
-//!                       <- a fact about the work (a person, place, term),
-//!                          in the library, marked `remembered-by`
-//! ```
-//!
-//! ```text
-//! ---
-//! kind: preference          # requirement | preference | style
-//! remembered-by: textus-ai
-//! created: 2026-10-18T09:30:00Z
-//! updated: 2026-10-18T09:30:00Z
-//! source-conversation: <conversation id>
-//! source-title: "Tighten the opening"
-//! source-document: /path/to/chapter-1.md
-//! ---
-//! Keep sentences short; no semicolons.
-//! ```
-//!
-//! A memory is named by its id, `<scope>/<folder>/<file stem>`
-//! (`personal/memory/no-semicolons`, `project/library/lin-wan`): what the
-//! model sees next to each memory and passes back to update one, and what
-//! the chat's chip and the Memory tab undo, move and delete by.
+//! What Textus AI remembers by itself: the user's standing requirements,
+//! preferences and style, one Markdown file each under `memory/` (personal or
+//! the project's), facts about the work in the library. Named by id, e.g.
+//! `personal/memory/no-semicolons`.
 
 use crate::ai::project::{read_library, LibraryEntry};
 use crate::ai::workspace::{
@@ -59,29 +29,23 @@ pub use pass::*;
 pub use skill_offer::*;
 pub use tidy::*;
 
-/// Most memory text sent with one request, in characters (not bytes, so
-/// Chinese and Japanese get as much as English): about 40 memories of a
-/// sentence or two. Past it the oldest are left out - and the Memory tab
-/// says so.
+/// Most memory text sent with one request, in characters (not bytes, so CJK
+/// gets as much). Past it the oldest are left out, and the Memory tab says so.
 pub const MAX_MEMORY_CHARS: usize = 4_000;
 
 /// A memory is a sentence or a few, not a document.
 const MAX_TEXT_CHARS: usize = 600;
 
-/// The settings.json field of Settings > Textus AI > Remember
-/// automatically (`rememberAutomatically` in SettingsContext.tsx). Missing
-/// means on.
+/// The settings.json field of Settings > Textus AI > Remember automatically.
+/// Missing means on.
 pub(crate) const REMEMBER_SETTING: &str = "rememberAutomatically";
 
 /// The front-matter mark on what Textus AI wrote.
 const MARK_KEY: &str = "remembered-by";
 const MARK: &str = "textus-ai";
 
-/// The log of accepted and rejected kinds of revision that suggestions are
-/// learned from (`ChoiceLog` in src/ai/revision/revision-learning.ts,
-/// which owns its shape and keeps it bounded). One hidden file beside the
-/// personal memories - not a memory, so the Memory tab and the prompt never
-/// list it, and it is never sent anywhere.
+/// The frontend-owned log of accepted and rejected kinds of revision. One
+/// hidden file beside the personal memories: never listed, never sent.
 const CHOICES_FILE: &str = ".revision-choices.json";
 
 /// A few hundred short entries fit many times over; past this a write is
@@ -98,9 +62,8 @@ pub fn remember_enabled(app: &tauri::AppHandle) -> bool {
         .unwrap_or(true)
 }
 
-/// What a memory is about. Facts about the work are not a kind: they go
-/// into the library, where the existing matching sends each only when it
-/// comes up.
+/// What a memory is about. Facts about the work are not a kind: they go into
+/// the library.
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -159,16 +122,15 @@ impl Scope {
     }
 }
 
-/// Where and when something was remembered. Serialised camelCase for the
-/// Memory tab (`Remembered` in src/platform/bindings/ai-project.ts).
+/// Where and when something was remembered, serialised camelCase for the
+/// Memory tab.
 #[derive(Serialize, Clone, Debug, Default, PartialEq)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Remembered {
     pub created: String,
     pub updated: String,
-    /// The conversation it came from (useAgentConversation's id) and its
-    /// title, and the document open then.
+    /// The conversation it came from and its title, and the document open then.
     pub conversation: Option<String>,
     pub title: Option<String>,
     pub document: Option<String>,
@@ -229,8 +191,7 @@ fn quoted(value: &str) -> String {
     format!("\"{}\"", line.replace('\\', "\\\\").replace('"', "\\\""))
 }
 
-/// One memory, as the Memory tab and the prompt see it. Serialised
-/// camelCase (`Memory` in src/platform/bindings/ai-project.ts).
+/// One memory, as the Memory tab and the prompt see it. Serialised camelCase.
 #[derive(Serialize, Clone, Debug)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -261,10 +222,8 @@ pub struct Memories {
     pub forgotten: Vec<Forgotten>,
 }
 
-/// Where something is remembered from, for the record: the conversation
-/// as ai_agent_message gets it (`conversation: {id, title}` in
-/// platform/ipc.ts) and the document open in it. Generated as
-/// MemorySource (JSON never carries a struct's name).
+/// Where something is remembered from, for the record: the conversation as
+/// ai_agent_message gets it and the document open in it.
 #[derive(Deserialize, Clone, Debug, Default)]
 #[cfg_attr(test, derive(specta::Type), serde(rename = "MemorySource"))]
 pub struct Source {
@@ -290,10 +249,8 @@ pub(crate) struct Located {
     path: PathBuf,
 }
 
-/// What a remember call did - the tool's result, which the chat's chip
-/// reads to show it and to undo it (`RememberResult` in
-/// src/ai/chat/MemoryChip.tsx). `previous` is the file as it was before an
-/// update, for Undo to put back.
+/// What a remember call did, which the chat's chip shows and undoes.
+/// `previous` is the file as it was before an update, for Undo to put back.
 #[derive(Serialize, Debug, PartialEq)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -307,8 +264,8 @@ pub struct Remembering {
     /// body) doesn't say.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    /// What was remembered was taken back (memory::pass): `text` is what
-    /// it said, `previous` the file Undo puts back.
+    /// What was remembered was taken back: `text` is what it said, `previous` the
+    /// file Undo puts back.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub forgot: bool,
 }
@@ -329,8 +286,8 @@ pub(crate) struct RememberArgs {
 }
 
 impl MemoryDirs {
-    /// One memory kept as it was asked for - a suggestion's Remember
-    /// (memory_remember), a live eval's memories from before.
+    /// One memory kept as it was asked for: a suggestion's Remember, or a live
+    /// eval's memories from before.
     pub fn keep(
         &self,
         kind: &str,
@@ -350,9 +307,7 @@ impl MemoryDirs {
 
 // ----------------------------------------------------------------- commands
 
-/// memory_pass's inputs, the keys of `ai.memoryPass`'s invoke in
-/// platform/ipc.ts - generated into src/platform/bindings/ai-memory.ts, which
-/// types that call with it (the command itself, taking `Args`, can't be).
+/// memory_pass's inputs, the keys of `ai.memoryPass`'s invoke.
 #[derive(Deserialize)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -365,9 +320,9 @@ pub struct PassRequest {
     exchange: Exchange,
 }
 
-/// After each exchange (memory::pass): what to remember, update or forget,
-/// decided by the conversation's own model and made - each change for a
-/// chip under the reply. Nothing while Remember automatically is off.
+/// After each exchange: what to remember, update or forget, decided by the
+/// conversation's own model, each change for a chip under the reply. Nothing
+/// while Remember automatically is off.
 #[tauri::command]
 pub async fn memory_pass(
     app: tauri::AppHandle,
@@ -394,8 +349,8 @@ pub async fn memory_pass(
         crate::ai::client::call(&app, &provider, instructions, input, model.as_deref()).await
     };
     let mut made = run_pass(&dirs, &exchange, &source, call).await?;
-    // Now and then, the whole memory tidied (memory::tidy). Its failing
-    // takes nothing from the exchange's own changes.
+    // Now and then, the whole memory tidied. Its failing takes nothing from the
+    // exchange's own changes.
     made.extend(tidy_if_due(&dirs, &source, call).await.unwrap_or_default());
     Ok(made)
 }
@@ -412,8 +367,8 @@ pub struct OfferRequest {
     exchange: Exchange,
 }
 
-/// After an exchange (memory::skill_offer): its request offered as a skill
-/// to save, when it was a procedure of its own - or none.
+/// After an exchange: its request offered as a skill to save, when it was a
+/// procedure of its own.
 #[tauri::command]
 pub async fn ai_offer_skill(
     app: tauri::AppHandle,
@@ -438,9 +393,8 @@ pub async fn ai_offer_skill(
     .await
 }
 
-/// The offered skill saved: for every document (`personal`, the global
-/// config folder's skills/) or this project's (its .textus/skills/). Its
-/// file's path.
+/// The offered skill saved, for every document or this project's. Returns
+/// its file's path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn save_offered_skill(
@@ -450,6 +404,8 @@ pub async fn save_offered_skill(
     scope: String,
     doc_path: Option<String>,
     workspace_root: Option<String>,
+    // The panel modes it is to apply in.
+    modes: Vec<crate::ai::agent::AgentMode>,
 ) -> Result<String, String> {
     let dir = match Scope::parse(&scope).ok_or("Unknown scope.")? {
         Scope::Personal => global_agent_dir(&app)?.join("skills"),
@@ -459,7 +415,7 @@ pub async fn save_offered_skill(
         )
         .join("skills"),
     };
-    tauri::async_runtime::spawn_blocking(move || save_offer_in(&dir, &offer))
+    tauri::async_runtime::spawn_blocking(move || save_offer_in(&dir, &offer, &modes))
         .await
         .map_err(|e| e.to_string())?
         .map(|p| p.to_string_lossy().into_owned())
@@ -537,11 +493,9 @@ pub async fn memory_delete(
     .map_err(|e| e.to_string())?
 }
 
-/// "Remember" on a suggestion learned from revision choices
-/// (src/ai/revision/RevisionLearning.tsx): one memory the user asked for
-/// with a click, written as memory::pass writes one - so it is listed,
-/// moved and deleted in the Memory tab like any other. A click, not the
-/// model: it saves whether or not Remember automatically is on.
+/// "Remember" on a suggestion learned from revision choices: one memory
+/// written as the pass writes one. A click, not the model, so it saves even
+/// while Remember automatically is off.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn memory_remember(

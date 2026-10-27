@@ -1,8 +1,6 @@
 /**
- * A code block's line numbers beside lines that wrap (#353): each number
- * as tall as its line, which may run onto several rows of the block. The
- * line's top is its first character's - a newline for an empty line - so
- * the text is measured as drawn, highlighting spans and all.
+ * A code block's line numbers beside lines that wrap: each number as tall as
+ * its line, measured from the line's first character as drawn.
  */
 
 /** Sets each number's height in `gutter` from the lines of `code`. */
@@ -15,15 +13,19 @@ export function fitGutter(gutter: HTMLElement, code: HTMLElement): void {
     for (const number of numbers) number.style.removeProperty("height");
     return;
   }
+  // Measured on screen, set in CSS pixels: undone, the document's zoom
+  // drifted the numbers off their lines.
+  const style = getComputedStyle(code);
+  const zoom = box.height / (parseFloat(style.height) || box.height);
   // Lines with no character of their own - after a last newline - are a
   // row each, the block's line height.
-  const row = parseFloat(getComputedStyle(code).lineHeight) || 0;
+  const row = parseFloat(style.lineHeight) || 0;
   const unmeasured = numbers.length - tops.length;
-  const end = box.bottom - Math.max(0, unmeasured) * row;
+  const end = box.bottom - Math.max(0, unmeasured) * row * zoom;
   numbers.forEach((number, i) => {
     const height =
       i < tops.length
-        ? (i + 1 < tops.length ? tops[i + 1] : end) - tops[i]
+        ? ((i + 1 < tops.length ? tops[i + 1] : end) - tops[i]) / zoom
         : row;
     number.style.height = `${Math.max(0, height)}px`;
   });

@@ -1,14 +1,14 @@
 import { $view } from "@milkdown/kit/utils";
 import { codeBlockSchema } from "@milkdown/kit/preset/commonmark";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import { TextSelection } from "@milkdown/kit/prose/state";
 import type { Decoration } from "@milkdown/kit/prose/view";
 import { recordClipboardEntry } from "../../clipboard/history";
 import { LINE_NUMBERS_SPEC } from "./code-line-numbers-plugin";
+import { mountLanguagePicker } from "./code-language-picker";
 import { fitGutter } from "./gutter-fit";
 
-// A curated common subset rather than refractor's full ~40-language list -
-// enough to cover what people actually fence code with, in a menu that
-// still fits on screen.
+// A common subset, so the menu still fits on screen.
 const LANGUAGES = [
   "",
   "javascript",
@@ -41,8 +41,8 @@ const LANGUAGES = [
 /** How long the copy button says it copied. */
 const COPIED_MS = 1500;
 
-/** The block's line count as the gutter numbers it: a trailing newline
- *  starts a line of its own, which the block shows. */
+/** The line count as the gutter numbers it: a trailing newline starts a
+ *  line of its own. */
 function lineCount(node: ProseNode): number {
   let lines = 1;
   for (const char of node.textContent) if (char === "\n") lines++;
@@ -50,22 +50,18 @@ function lineCount(node: ProseNode): number {
 }
 
 /**
- * Code blocks otherwise render via codeBlockSchema's plain toDOM (a bare
- * <pre><code>), which has no way to change the fence's language after the
- * fact. This NodeView wraps that same <pre><code> (still the real
- * contentDOM, so typing/highlighting decorations work exactly as before)
- * with a small header beside it: a button that copies the code and the
- * language picker. A Mermaid block's source, and with it this header, is
- * hidden while its diagram shows; the button copies the source once the
- * block is opened for editing. With line numbers on
- * (code-line-numbers-plugin.ts) a gutter sits inside the <pre>, before
- * the code.
+ * Wraps the code block's own <pre><code> (still the contentDOM) with a
+ * header at its top right holding the language picker and buttons that
+ * copy and select the code, and with line numbers on, a gutter inside the
+ * <pre>.
  */
 export function createCodeBlockView(
   labels: () => {
     copy: string;
     copied: string;
+    selectAll: string;
     language: string;
+    languageSearch: string;
   },
 ) {
   return $view(
@@ -73,13 +69,18 @@ export function createCodeBlockView(
     () => (initialNode, view, getPos, decorations) => {
       let node = initialNode;
       const wrapper = document.createElement("div");
-      // md-fences: Typora's class for a code block, so imported Typora
-      // themes' code-block rules reach it (see theme/typora-compat.ts).
+      // md-fences: Typora's class, so imported Typora themes' code-block rules
+      // reach it.
       wrapper.className = "code-block-wrapper md-fences";
 
       const header = document.createElement("div");
       header.className = "code-block-header";
       header.contentEditable = "false";
+      const actions = document.createElement("div");
+      actions.className = "code-block-actions";
+      const picker = document.createElement("div");
+      picker.className = "code-block-language";
+      header.append(actions);
 
       const copy = document.createElement("button");
       copy.type = "button";
@@ -95,8 +96,8 @@ export function createCodeBlockView(
         const text = node.textContent;
         void navigator.clipboard.writeText(text).then(
           () => {
-            // navigator.clipboard bypasses the copy event the clipboard
-            // history listens for (as useEditorClipboard's Copy does).
+            // navigator.clipboard bypasses the copy event the clipboard history
+            // listens for.
             recordClipboardEntry(text);
             copy.textContent = labels().copied;
             copy.classList.add("is-copied");
@@ -112,55 +113,64 @@ export function createCodeBlockView(
         );
       });
 
-      const select = document.createElement("select");
-      select.className = "code-block-language-select";
-      select.setAttribute("aria-label", labels().language);
-      for (const lang of LANGUAGES) {
-        const opt = document.createElement("option");
-        opt.value = lang;
-        opt.textContent = lang === "" ? "plain text" : lang;
-        select.appendChild(opt);
-      }
-
-      function syncSelectValue(currentNode: ProseNode) {
-        const lang = (currentNode.attrs.language as string) ?? "";
-        // A fence's own spelling (`js`, `sh`, `mermaid`, ...) outside the
-        // curated list gets an option of its own: falling back to "plain
-        // text" mislabelled a block that is in fact highlighted, and
-        // picking from the menu would then have rewritten its fence.
-        if (lang && !Array.from(select.options).some((o) => o.value === lang)) {
-          const opt = document.createElement("option");
-          opt.value = lang;
-          opt.textContent = lang;
-          select.appendChild(opt);
-        }
-        select.value = lang;
-      }
-      syncSelectValue(node);
-
-      select.addEventListener("mousedown", (e) => e.stopPropagation());
-      select.addEventListener("change", () => {
+      const selectAll = document.createElement("button");
+      selectAll.type = "button";
+      selectAll.className = "code-block-select-all";
+      selectAll.textContent = labels().selectAll;
+      selectAll.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      selectAll.addEventListener("click", () => {
         const pos = getPos();
         if (pos == null) return;
-        // Only the language: the fence's meta (` title="a.js"`) stays.
-        const tr = view.state.tr.setNodeAttribute(
-          pos,
-          "language",
-          select.value,
+        const { tr } = view.state;
+        view.dispatch(
+          tr.setSelection(
+            TextSelection.create(tr.doc, pos + 1, pos + node.nodeSize - 1),
+          ),
         );
-        view.dispatch(tr);
         view.focus();
       });
+      actions.append(picker, copy, selectAll);
 
-      header.append(copy, select);
+      // Mounted on first hover or focus: a long document has many blocks.
+      let languagePicker: ReturnType<typeof mountLanguagePicker> | null = null;
+      let shownLanguage: string | null = null;
+      function syncPicker() {
+        const value = (node.attrs.language as string) ?? "";
+        if (!languagePicker || value === shownLanguage) return;
+        shownLanguage = value;
+        languagePicker.render({
+          value,
+          languages: LANGUAGES,
+          label: labels().language,
+          searchLabel: labels().languageSearch,
+          onOpenChange: (open) =>
+            wrapper.classList.toggle("is-picking-language", open),
+          onChange: (language) => {
+            const pos = getPos();
+            if (pos == null) return;
+            // Only the language: the fence's meta (` title="a.js"`) stays.
+            view.dispatch(
+              view.state.tr.setNodeAttribute(pos, "language", language),
+            );
+            view.focus();
+          },
+        });
+      }
+      const showPicker = () => {
+        if (languagePicker) return;
+        languagePicker = mountLanguagePicker(picker);
+        syncPicker();
+      };
 
       const pre = document.createElement("pre");
       const code = document.createElement("code");
       pre.appendChild(code);
 
-      // Line numbers: one per line of the block, redrawn only when the
-      // count changes, each as tall as its line - which wraps - after any
-      // change to the text or the block's width (gutter-fit.ts).
+      // Line numbers: redrawn only when the count changes, each as tall as its
+      // (wrapping) line after any change to the text or width.
       const gutter = document.createElement("span");
       gutter.className = "code-line-gutter";
       gutter.contentEditable = "false";
@@ -171,8 +181,6 @@ export function createCodeBlockView(
         cancelAnimationFrame(fitting);
         fitting = requestAnimationFrame(() => fitGutter(gutter, code));
       };
-      // Made when the numbers are first shown: a block without them has
-      // nothing to fit.
       let resized: ResizeObserver | null = null;
       function syncGutter(
         currentNode: ProseNode,
@@ -208,6 +216,8 @@ export function createCodeBlockView(
 
       wrapper.appendChild(header);
       wrapper.appendChild(pre);
+      wrapper.addEventListener("pointerenter", showPicker);
+      wrapper.addEventListener("focusin", showPicker);
 
       return {
         dom: wrapper,
@@ -215,10 +225,12 @@ export function createCodeBlockView(
         update(updatedNode, updatedDecorations) {
           if (updatedNode.type !== node.type) return false;
           node = updatedNode;
-          syncSelectValue(updatedNode);
+          syncPicker();
           syncGutter(updatedNode, updatedDecorations);
           return true;
         },
+        // Keys on the header's buttons aren't the editor's.
+        stopEvent: (event) => header.contains(event.target as Node),
         // The header's label and the gutter change under the view's
         // DOM observer; only the code is the document's.
         ignoreMutation(mutation) {
@@ -229,6 +241,7 @@ export function createCodeBlockView(
           clearTimeout(copiedTimer);
           cancelAnimationFrame(fitting);
           resized?.disconnect();
+          languagePicker?.destroy();
         },
       };
     },

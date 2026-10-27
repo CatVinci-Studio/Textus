@@ -3,7 +3,6 @@
   min-width: 170px;
   max-height: min(70vh, 480px);
   overflow-y: auto;
-  /* The Agent lesson intentionally teaches this real entry point. */
   z-index: var(--z-popover);
   transform-origin: var(--transform-origin, top left);
   animation: motion-pop-in var(--dur-base) var(--ease-out);
@@ -18,7 +17,7 @@
   width: 100%;
 }
 
-/* Doubled class: design-system.css's shared menu-item colour loads later. */
+/* Doubled class: the shared menu-item colour loads later. */
 .context-menu-item.context-menu-item-danger {
   color: var(--danger);
 }
@@ -37,4 +36,25 @@
 
 .context-menu-check-off {
   visibility: hidden;
+}
+
+/* A row that opens a submenu: its chevron at the far end. */
+.context-menu-item.context-menu-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.context-menu-chevron {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.context-menu-item.context-menu-group[aria-expanded="true"] {
+  background: var(--sidebar-hover);
+}
+
+.context-submenu {
+  animation: none;
 }

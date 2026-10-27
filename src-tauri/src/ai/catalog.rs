@@ -1,13 +1,6 @@
-//! The provider catalog: one entry per supported AI service, as data instead
-//! of scattered `match provider.as_str()` special cases. `ai::route`'s
-//! resolve_* functions turn an entry plus stored credentials into a concrete
-//! request target.
-//!
-//! Mirrored on the TS side by `src/ai/provider-catalog.ts` (kept in sync by
-//! hand - comments on both sides point here). Labels are brand names, shared
-//! across languages, so they live here rather than in i18n - the exceptions
-//! are "custom", "doubao" and the two MiniMax platforms, whose labels the
-//! frontend localizes.
+//! The provider catalog: one entry per supported AI service, as data. Keep in
+//! step with `src/ai/provider-catalog.ts`. Labels are brand names, so they
+//! live here rather than in i18n, except the few the frontend localizes.
 
 use serde::Serialize;
 
@@ -15,51 +8,38 @@ use serde::Serialize;
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ProviderCatalogEntry {
-    /// Matches `Settings.aiProvider` on the TS side and the `provider`
-    /// string every ai_* command dispatches on.
+    /// Matches `Settings.aiProvider` and the `provider` string every ai_*
+    /// command dispatches on.
     pub id: &'static str,
     pub label: &'static str,
     /// The wire format this provider speaks: "openai-responses",
     /// "anthropic-messages", or "openai-chat-completions".
     pub dialect: &'static str,
-    /// Auth methods the provider supports, in preference order:
-    /// "oauth" (browser PKCE login), "api_key", "custom" (user-supplied
-    /// endpoint config).
+    /// Auth methods in preference order: "oauth" (browser PKCE login),
+    /// "api_key", "custom" (user-supplied endpoint config).
     pub auth: &'static [&'static str],
     /// Fixed endpoint for chat-completions providers; None when the dialect
     /// implies it (OpenAI/Anthropic) or the user supplies it ("custom").
     pub base_url: Option<&'static str>,
-    /// Low-cost model used by writing completion and grammar checking until
-    /// the user picks one in Settings. Agent chat has its own, generally
-    /// stronger default below.
+    /// Low-cost model for writing completion and grammar checking until the user
+    /// picks one. Agent chat has its own default below.
     pub default_model: Option<&'static str>,
-    /// Model used by Agent chat until the user picks one in Settings. Keeping
-    /// this separate from `default_model` prevents inline writing helpers
-    /// from silently inheriting a more expensive Agent model.
+    /// Model used by Agent chat until the user picks one. Kept apart so inline
+    /// helpers don't silently inherit a more expensive model.
     pub agent_default_model: Option<&'static str>,
     /// True for local servers (Ollama) that work without a key.
     pub key_optional: bool,
-    /// Whether this provider's API accepts image content parts at all, which
-    /// is what gates the chat's image attachments (aicompat's per-dialect
-    /// `turns_to_*`). Deliberately a PROVIDER-level, not model-level, claim:
-    /// whether the model the user picked can actually see is between them and
-    /// the provider, and a model that can't says so in its own error. What
-    /// this flag exists to prevent is offering images to an endpoint whose
-    /// API rejects the request shape outright - so it is false only where
-    /// that is known to be the case, and true wherever the user's own model
-    /// choice decides (Ollama, custom endpoints).
+    /// Its "oauth" sign-in isn't offered to other apps; Settings says so.
+    pub oauth_unofficial: bool,
+    /// Whether this provider's API accepts image parts at all, which gates chat
+    /// attachments. Provider-level on purpose: false only where the API rejects the
+    /// request shape; a model that can't see says so in its own error.
     pub supports_vision: bool,
-    /// False when a live GET /models call is known not to work for this
-    /// provider (verified against the real endpoint - see the doc comment on
-    /// `KNOWN_MODELS` below) - the frontend hides the "Fetch Models" action
-    /// and relies solely on `known_models` instead of also offering a button
-    /// that can only ever fail.
+    /// False when a live GET /models is known not to work for this provider: the
+    /// frontend then hides "Fetch Models" and relies on `known_models`.
     pub models_listable: bool,
     /// The model ids offered before the user fetches the provider's own list:
-    /// just the two defaults (agent first). Everything newer comes from the
-    /// live listing (Settings' "Fetch models", tidied by aicompat::models),
-    /// so this list doesn't need chasing every release - only the defaults
-    /// do, and scripts/sync-models.mjs checks those weekly.
+    /// just the two defaults (agent first), checked weekly by a script.
     pub known_models: &'static [&'static str],
 }
 
@@ -73,6 +53,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("gpt-6-luna"),
         agent_default_model: Some("gpt-6.1-sol"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["gpt-6.1-sol", "gpt-6-luna"],
@@ -84,11 +65,11 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         auth: &["oauth", "api_key"],
         base_url: None,
         default_model: Some("claude-haiku-5-5"),
-        // Thinks by default; agent.rs never replays thinking blocks, which
-        // the preserved-thinking check always accepts (dropping all of them
-        // is a "leading run"), so newer accounts can't hit its 400.
+        // Thinks by default; thinking blocks are never replayed, which the
+        // preserved-thinking check always accepts, so it can't 400.
         agent_default_model: Some("claude-sonnet-5-5"),
         key_optional: false,
+        oauth_unofficial: true,
         supports_vision: true,
         models_listable: true,
         known_models: &["claude-sonnet-5-5", "claude-haiku-5-5"],
@@ -102,6 +83,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("gemini-3.5-flash-lite"),
         agent_default_model: Some("gemini-3.8-flash"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         // Gemini's OpenAI compatibility API now implements GET /models with
         // the standard OpenAI list shape, so the generic model fetch works.
@@ -117,6 +99,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("deepseek-flash"),
         agent_default_model: Some("deepseek-v4-pro"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: false,
         models_listable: true,
         known_models: &["deepseek-v4-pro", "deepseek-flash"],
@@ -130,6 +113,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("grok-4.3"),
         agent_default_model: Some("grok-4.7"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["grok-4.7", "grok-4.3"],
@@ -143,6 +127,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("mistral-small-latest"),
         agent_default_model: Some("mistral-large-latest"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["mistral-large-latest", "mistral-small-latest"],
@@ -156,6 +141,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("openai/gpt-oss-20b"),
         agent_default_model: Some("openai/gpt-oss-120b"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["openai/gpt-oss-120b", "openai/gpt-oss-20b"],
@@ -169,10 +155,10 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("openrouter/free"),
         agent_default_model: Some("openrouter/auto"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
-        // The one third-party catalog with a genuinely public /models list
-        // (no key required) - still worth a known_models seed for the
-        // instant-render case before that request resolves.
+        // The one third-party catalog with a public /models list, still seeded
+        // for the instant render before that request resolves.
         models_listable: true,
         known_models: &["openrouter/auto", "openrouter/free"],
     },
@@ -185,6 +171,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("kimi-k2.6"),
         agent_default_model: Some("kimi-k3"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["kimi-k3", "kimi-k2.6"],
@@ -198,6 +185,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("glm-4.7-flash"),
         agent_default_model: Some("glm-5.3"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["glm-5.3", "glm-4.7-flash"],
@@ -211,6 +199,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("qwen3.8-flash"),
         agent_default_model: Some("qwen3.7-plus"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["qwen3.7-plus", "qwen3.8-flash"],
@@ -224,11 +213,11 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         // Volcengine Ark. With an API key, `model` takes the Model ID
         // itself, so no inference endpoint (ep-...) has to be created first.
         base_url: Some("https://ark.cn-beijing.volces.com/api/v3"),
-        // Turbo is Ark's low-latency tier; aicompat turns its thinking off
-        // for writing (see custom::Vendor::Ark).
+        // Turbo is Ark's low-latency tier; its thinking is turned off for writing.
         default_model: Some("doubao-seed-2-1-turbo-260628"),
         agent_default_model: Some("doubao-seed-2-1-pro-260628"),
         key_optional: false,
+        oauth_unofficial: false,
         // Every current Seed model reads images.
         supports_vision: true,
         models_listable: true,
@@ -251,6 +240,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("MiniMax-M3.1-Flash"),
         agent_default_model: Some("MiniMax-M3"),
         key_optional: false,
+        oauth_unofficial: false,
         // Its Chat Completions takes text only.
         supports_vision: false,
         models_listable: true,
@@ -265,6 +255,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("MiniMax-M3.1-Flash"),
         agent_default_model: Some("MiniMax-M3"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: false,
         models_listable: true,
         known_models: &["MiniMax-M3", "MiniMax-M3.1-Flash"],
@@ -278,10 +269,10 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: None,
         agent_default_model: None,
         key_optional: true,
+        oauth_unofficial: false,
         supports_vision: true,
-        // Whatever's installed locally, which only the user's own server
-        // knows - there's no sensible fixed seed list, but the local
-        // /v1/models route does work, so fetching is still worthwhile.
+        // Whatever's installed locally: no fixed seed list, but the local
+        // /v1/models route works.
         models_listable: true,
         known_models: &[],
     },
@@ -294,6 +285,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: None,
         agent_default_model: None,
         key_optional: true,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &[],
@@ -311,9 +303,7 @@ pub fn list_providers() -> Vec<ProviderCatalogEntry> {
 }
 
 /// Whether the chat composer offers Deep thinking for this provider and
-/// Agent model (None: the provider's agent default) - aicompat's capability
-/// table decides (`capabilities::can_think_deeper`). Mirrored by
-/// `ai.canThinkDeeper` in platform/ipc.ts.
+/// Agent model (None: the provider's agent default).
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn ai_can_think_deeper(provider: String, model: Option<String>) -> bool {
@@ -321,8 +311,8 @@ pub fn ai_can_think_deeper(provider: String, model: Option<String>) -> bool {
         .filter(|m| !m.is_empty())
         .or_else(|| find(&provider)?.agent_default_model.map(str::to_string))
     else {
-        // No model to look up (a custom endpoint's comes from its own
-        // config): the table's answer for one it doesn't know.
+        // No model to look up (a custom endpoint's comes from its config): the
+        // table's answer for one it doesn't know.
         return aicompat::capabilities::can_think_deeper(&provider, "");
     };
     aicompat::capabilities::can_think_deeper(&provider, &model)

@@ -1,7 +1,6 @@
 //! SiliconFlow: OpenAI's path, but `image_size` instead of `size` and the
-//! picture as a link under `images` that expires within the hour. Each model
-//! makes its own list of sizes; Kolors only square and upright ones, so a
-//! wide request gets its square. The visible "AI 生成" mark is left on.
+//! picture as a link under `images` that expires within the hour. Kolors
+//! makes only square and upright sizes, so a wide request gets its square.
 
 use super::{join, Aspect, ImageError, Reply, Request};
 use serde_json::{json, Value};

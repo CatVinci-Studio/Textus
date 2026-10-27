@@ -3,7 +3,7 @@ import { SettingRow } from "../sections/controls";
 import { showConfirm } from "../../ui/app-dialog";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
-import { projectRoot } from "../../plugins/plugin-settings";
+import { projectRoot } from "../../plugins/store/plugin-settings";
 
 /** "12.3 KB", the way a file manager says it. */
 export function sizeText(bytes: number): string {
@@ -18,8 +18,8 @@ export function sizeText(bytes: number): string {
   return `${n < 10 ? n.toFixed(1) : Math.round(n)} ${units[i]}`;
 }
 
-/** What the plugin keeps (store.rs), for every document and in the open
- *  project, and a way to empty it; nothing while it keeps nothing. */
+/** What the plugin keeps, for every document and in the open project, and
+ *  a way to empty it; nothing while it keeps nothing. */
 export function PluginData({
   id,
   name,

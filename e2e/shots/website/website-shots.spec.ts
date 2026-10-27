@@ -1,59 +1,7 @@
 /**
- * The website's app screenshots: the app as the site shows it - the light
- * appearance and the Default theme (a white page, like the site's), a
- * 1440x900 window at 2x, on a Mac - one set per site language. Not a test:
- * nothing is compared. Run `npm run screenshots:website` after a visible UI
- * change and copy the images into the site.
- *
- * Each shot is <out>/<lang>/<name>.png (2880x1800) with a 1920-wide
- * <name>.webp beside it:
- *   hero      a classic text and a reader's note on it, the AI panel beside
- *             them with one proposed edit to the note (its reason and its
- *             two sentences, in the margin as well when there is room) and
- *             one review comment on the classic
- *   split     split view: the Markdown source beside the page
- *   zen       zen mode, the passage being read lit
- *   math      a KaTeX formula block, inline math and a Mermaid mind map
- *   math-live the same with the caret in the formula: its source open, the
- *             live preview under the caret
- *   markdown  the Markdown tour: headings, bold, italic, underline,
- *             strikethrough, highlight, inline code, a link, the three
- *             kinds of list, a quote, a GitHub alert, a
- *             highlighted code block and a rule, all rendered at once (the
- *             document zoomed out a step, so it fits one screen)
- *   settings  Settings, the AI page, its list of providers open
- *   plugins   a folder of linked notes with three official plugins on:
- *             one note beside the folder's graph (Split Panes, Graph
- *             View), a link in it showing the note it points to (Quick
- *             Preview, its card pinned). The plugins come from the
- *             textus-plugins checkout the dev server serves.
- *
- * Fonts: where a Mac draws San Francisco the shots draw Inter, and code is
- * in JetBrains Mono (second in the app's monospace stack), when their files
- * are on this machine; KaTeX's own fonts are served even when node_modules
- * is a link to another checkout (a worktree), which Vite refuses to serve.
- *
- * Environment:
- *   LANGS           site language codes, comma-separated (default en,zh,ja;
- *                   any of en zh zh-hant ja ko es fr de ru pt). The UI is in
- *                   that language where the app has it, and English where
- *                   it doesn't yet.
- *   SAMPLES_JSON    a JSON file of { "<lang>": Sample } (see Sample below):
- *                   the texts of languages beyond the built-in three, or
- *                   fields that replace built-in ones. A shot whose texts a
- *                   language lacks is skipped. e2e/shots/website/site-samples.json
- *                   has the other seven site languages, each on the site's
- *                   own classic for that language.
- *   SHOTS_OUT       where the images go (default ../assets/site-assets/
- *                   app, beside the main checkout).
- *   SHOTS_FONT_DIR  a folder with Inter's .otf files (Inter-Regular.otf
- *                   etc.), drawn where a Mac draws San Francisco. Found in
- *                   TeX Live's fonts when it is installed; without it the UI
- *                   is in this machine's own fallback.
- *   SHOTS_CJK_FONT_DIR  the Simplified Chinese, Traditional Chinese and
- *                   Japanese Noto Sans CJK faces as separate files, for the
- *                   zh, zh-hant and ja shots (see CJK_REGION below; default
- *                   ../assets/fonts/noto-cjk-faces beside the checkout).
+ * The website's app screenshots: light, Default theme, 1440x900 at 2x on a
+ * Mac, one set per site language, as PNG plus a 1920-wide WebP. Not a test.
+ * Env: LANGS, SAMPLES_JSON, SHOTS_OUT, SHOTS_FONT_DIR, SHOTS_CJK_FONT_DIR.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -78,9 +26,8 @@ interface Sample {
   doc: string;
   /** What the user asks the AI panel. */
   ask: string;
-  /** The passage the proposed edit replaces, and its replacement. The
-   *  first and last sentences change and the middle one stays: two
-   *  changes, so the sentence picker has two rows. */
+  /** The passage the proposed edit replaces, and its replacement. Only the
+   *  first and last sentences change, so the sentence picker has two rows. */
   anchor: string;
   edited: string;
   /** Why, as the proposal gives it. */
@@ -102,9 +49,8 @@ interface Sample {
   /** Plain words in the tour where the caret rests - away from every
    *  mark, so none of them shows its Markdown. */
   tourCaret: string;
-  /** The AI panel's width in the hero, as a user drags it (optional; the
-   *  app's default otherwise): wider where the language's labels need it
-   *  to keep the proposal's buttons on one row. */
+  /** The AI panel's width in the hero, wider where the labels need it to
+   *  keep the proposal's buttons on one row. */
   panelWidth?: number;
   /** The notes of the plugins shot, by title (each <title>.md in the
    *  folder), linked to each other with [[title]]: the first is open. */
@@ -139,12 +85,8 @@ const NEEDS = {
 } satisfies Record<string, (keyof Sample)[]>;
 type Shot = keyof typeof NEEDS;
 
-/** The app draws diagrams in mermaid's "neutral" theme, whose first
- *  branch colour (cScale1) is #f4f4f4: a mind map's first branch comes out
- *  as white boxes joined by white lines on the light diagram box. Each
- *  mermaid block in a math document gets a config that gives that branch a
- *  grey of the same scale instead - as any user can write in a diagram,
- *  and hidden in these shots, where the caret is away from it. */
+/** Mermaid's "neutral" theme draws a mind map's first branch white on the
+ *  light box; each mermaid block gets a config that makes it grey. */
 function mindmapColours(doc: string): string {
   return doc.replace(
     /^```mermaid\n(?!---)/gm,
@@ -624,22 +566,18 @@ function mainCheckout(): string {
 }
 const CHECKOUT = mainCheckout();
 
-/** The folder the images go in: ../assets/site-assets/app beside the
- *  main checkout. */
+/** The folder the images go in. */
 const OUT = process.env.SHOTS_OUT
   ? path.resolve(process.env.SHOTS_OUT)
   : path.resolve(CHECKOUT, "..", "assets", "site-assets", "app");
 
-/** The Markdown tour's document zoom (Settings' zoom, View > Zoom Out). */
+/** The Markdown tour's document zoom, one step out. */
 const TOUR_ZOOM = 0.85;
 const WEBP_WIDTH = 1920;
 const WEBP_QUALITY = 0.85;
 
-/** Fonts a Mac has and this machine may not, as @font-face rules over the
- *  files that stand in for them: Inter where a Mac draws San Francisco
- *  (the UI's stack starts with -apple-system, "SF Pro Text"), and
- *  JetBrains Mono, second in the app's monospace stack, for code. Each is
- *  used when its files are found. */
+/** Stand-ins for fonts a Mac has: Inter for San Francisco, JetBrains Mono for
+ *  code. Each is used when its files are found. */
 interface StandInFont {
   family: string;
   weight: number;
@@ -701,23 +639,9 @@ function standInFonts(): StandInFont[] {
 }
 const FONT_FACES = standInFonts();
 
-/** The Chinese and Japanese faces, one region each. Noto Sans CJK comes as
- *  a collection (.ttc) of every region's face, and Chromium on Linux draws
- *  the first face whichever region the stack names: Traditional Chinese
- *  came out with Simplified punctuation at the bottom left of its square,
- *  where Taiwan centres it. SHOTS_CJK_FONT_DIR (default
- *  ../assets/fonts/noto-cjk-faces beside the main checkout) holds the
- *  faces split out of the collections, one file each, served under the
- *  name the app's stack gives them:
- *    python -m venv v && v/bin/pip install fonttools && v/bin/python -c '
- *    from fontTools.ttLib import TTCollection
- *    for w in "Regular","Medium","Bold":
- *      for f in TTCollection(f"/usr/share/fonts/noto-cjk/NotoSansCJK-{w}.ttc").fonts:
- *        r = f["name"].getDebugName(1)[14:16]
- *        if r in ("SC","TC","JP"): f.save(f"NotoSansCJK{r.lower()}-{w}.otf")'
- *  The same face also draws the curly quotes, the ellipsis and the dash in
- *  the UI's Latin face, as a Chinese Mac draws them: full width, the
- *  ellipsis centred, instead of narrow Latin quotes and six low dots. */
+/** The CJK faces, one file per region: from a .ttc collection, Chromium on
+ *  Linux draws the first face whatever region the stack names. They also
+ *  draw curly quotes and the ellipsis full width, as a Chinese Mac does. */
 const CJK_REGION: Record<string, { family: string; tag: string }> = {
   zh: { family: "Noto Sans CJK SC", tag: "sc" },
   "zh-hant": { family: "Noto Sans CJK TC", tag: "tc" },
@@ -767,15 +691,13 @@ function fontFacesFor(lang: string): StandInFont[] {
   return [...FONT_FACES, ...found];
 }
 
-/** A Mac: the app leaves the top-left corner of its title row to the
- *  traffic lights (see .window-bar in App.css), and names Cmd in its
+/** A Mac: the app leaves room for the traffic lights and names Cmd in its
  *  shortcuts. */
 const MAC_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 
-/** The provider catalog as Rust serves it (list_providers), read from
- *  catalog.rs: the dev shim answers null, and the frontend's fallback
- *  catalog names only three providers. */
+/** The provider catalog as the backend serves it: the dev shim answers null
+ *  and the frontend's fallback names only three providers. */
 function providerCatalog() {
   const source = readFileSync("src-tauri/src/ai/catalog.rs", "utf8");
   const start = source.indexOf("pub const PROVIDER_CATALOG");
@@ -802,6 +724,7 @@ function providerCatalog() {
     defaultModel: optional(block, "default_model"),
     agentDefaultModel: optional(block, "agent_default_model"),
     keyOptional: flag(block, "key_optional"),
+    oauthUnofficial: flag(block, "oauth_unofficial"),
     supportsVision: flag(block, "supports_vision"),
     modelsListable: flag(block, "models_listable"),
     knownModels: list(block, "known_models"),
@@ -812,9 +735,8 @@ function providerCatalog() {
 }
 const PROVIDERS = providerCatalog();
 
-/** Answers backend commands with canned values from the first instant,
- *  before the app's startup reads them (unlike mockInvoke, which comes
- *  after). Merged with what is already there. */
+/** Answers backend commands with canned values before the app's startup
+ *  reads them. Merged with what is already there. */
 async function cannedFromStart(page: Page, results: Record<string, unknown>) {
   await page.addInitScript((r) => {
     const w = window as unknown as { __devInvokeResults?: object };
@@ -848,9 +770,8 @@ async function launch(page: Page, options: Launch) {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "platform", { get: () => "MacIntel" });
   });
-  // Files outside the dev server's root - KaTeX's fonts, when node_modules
-  // is a link to another checkout's, as in a worktree - which Vite refuses
-  // to serve; without them every formula is drawn in a fallback serif.
+  // Vite refuses to serve KaTeX's fonts when node_modules is a link outside
+  // its root, as in a worktree.
   await page.route(/\/@fs\/[^?]+\.(woff2?|ttf|otf)(\?.*)?$/, (route) => {
     const file = decodeURIComponent(
       new URL(route.request().url()).pathname.slice("/@fs".length),
@@ -928,8 +849,8 @@ async function launch(page: Page, options: Launch) {
   await expect(page.locator(".window-bar-title")).toHaveText(
     path.basename(options.file.path),
   );
-  // A UI language the app doesn't have yet falls back to English
-  // (normaliseSettings); the document stays in its own language.
+  // A UI language the app doesn't have falls back to English; the document
+  // stays in its own language.
   const ui = LANGUAGES[options.lang].ui;
   const shown = await page.evaluate(() => document.documentElement.lang);
   if (!shown.toLowerCase().startsWith(ui.toLowerCase().slice(0, 2)))
@@ -937,9 +858,8 @@ async function launch(page: Page, options: Launch) {
       type: "ui",
       description: `English UI: the app has no "${ui}" UI yet`,
     });
-  // The traffic lights macOS draws over the title row, where the app leaves
-  // room for them: 12px, 8px apart, centred in the 28px row. Gone in zen
-  // mode, which is full screen.
+  // The traffic lights macOS draws over the title row; gone in full-screen
+  // zen mode.
   await page.evaluate(() => {
     const lights = document.createElement("div");
     lights.className = "shots-traffic-lights";
@@ -958,10 +878,8 @@ async function launch(page: Page, options: Launch) {
       .zen .shots-traffic-lights { display: none; }
     `,
   });
-  // Korean is broken between words, at the spaces, not between any two
-  // syllables. The app does that for its own UI only (App.css leaves the
-  // document out, since keep-all would stop Chinese or Japanese text in a
-  // Korean UI from breaking); these documents are all Korean.
+  // Korean breaks at spaces. The app applies keep-all to its UI only, since
+  // it would stop CJK text from breaking; these documents are all Korean.
   if (options.lang === "ko")
     await page.addStyleTag({
       content: `
@@ -982,9 +900,8 @@ async function emit(page: Page, event: string, payload?: unknown) {
   );
 }
 
-/** Puts the caret right after `words` (plain text in the document; its
- *  first occurrence, or its last), where no Markdown mark is revealed: a
- *  document opens with the caret on its title, which then shows its "#". */
+/** Puts the caret right after `words`, where no Markdown mark is revealed:
+ *  on the title, the caret would show its "#". */
 async function caretAfter(page: Page, words: string, last = false) {
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await editor.focus();
@@ -1024,8 +941,8 @@ async function caretAtEnd(page: Page) {
   await caretAfter(page, text.trim().slice(-12), true);
 }
 
-/** Downscales a PNG and encodes it as WebP, in the browser - no image
- *  tooling needed beyond Playwright's own Chromium. */
+/** Downscales a PNG and encodes it as WebP in the browser, so no other image
+ *  tooling is needed. */
 async function toWebp(browser: Browser, png: Buffer): Promise<Buffer> {
   const page = await browser.newPage();
   try {
@@ -1067,8 +984,7 @@ async function toWebp(browser: Browser, png: Buffer): Promise<Buffer> {
   }
 }
 
-/** Takes the shot once nothing is still settling, and writes it as PNG and
- *  WebP. */
+/** Takes the shot once nothing is settling and writes it as PNG and WebP. */
 async function shoot(page: Page, browser: Browser, lang: string, name: Shot) {
   // No pointer resting on anything, no stray focus ring.
   await page.mouse.move(0, 450);
@@ -1245,12 +1161,8 @@ for (const lang of LANGS) {
       await expect(
         page.locator(".milkdown .mermaid-preview svg"),
       ).toBeVisible();
-      // Into the formula, as a click on it does: its source opens for
-      // editing, and the live preview follows the caret.
       await page.locator(".milkdown .math-block-rendered").click();
-      // At its end, as when typing it: the preview opens under the caret,
-      // clear of the text below (in the middle of the formula, it covered
-      // the next line's).
+      // At its end the preview opens under the caret, clear of the text below.
       await page.keyboard.press("End");
       await expect(page.locator(".math-float-preview")).toBeVisible();
       // ...over nothing but the page.
@@ -1287,11 +1199,17 @@ for (const lang of LANGS) {
         file: { path: fileIn(s.folder, s.tourTitle), content: s.tourDoc },
         // View > Zoom Out, so the whole tour is on one screen.
         settings: { zoom: TOUR_ZOOM },
+        // Its outline open in the sidebar, as a long document is written.
+        storage: {
+          "textus-sidebar-open": "1",
+          "textus-sidebar-tab": "outline",
+        },
       });
       const doc = page.locator('[data-active-tab="true"] .milkdown');
       await expect(doc.locator("blockquote.md-alert")).toHaveCount(1);
       await expect(doc.locator('li[data-item-type="task"]')).toHaveCount(2);
       await expect(doc.locator("hr")).toHaveCount(1);
+      await expect(page.locator(".outline-row").first()).toBeVisible();
       await caretAfter(page, s.tourCaret);
       // All of it at once: the last block ends above the window's edge.
       const last = await doc
@@ -1331,9 +1249,9 @@ for (const lang of LANGS) {
         file: { path: fileIn(s.folder, titles[0]), content: "" },
         plugins: {
           plugins: {
-            "catvinci.graph": ["workspace.read", "document.read"],
+            "catvinci.graph": ["files.read", "editor.read"],
             "catvinci.split-panes": [],
-            "catvinci.quick-preview": ["document.read", "workspace.read"],
+            "catvinci.quick-preview": ["editor.read", "files.read"],
           },
           folder,
         },

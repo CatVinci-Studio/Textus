@@ -1,11 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// The sidebar's file tree as a small file manager (sidebar/FileTree.tsx):
-// up by the parent folder's name, sort and filter, New Document and New
-// Folder from the right-click menu, and dragging a row into a folder. The
-// dev shim's in-memory folder (window.__devFs) stands in for the disk
-// (commands/tree_ops.rs in the app).
+// The sidebar's file tree as a small file manager: up to the parent, sort and
+// filter, New Document and New Folder, and dragging a row into a folder. The
+// dev shim's in-memory folder (window.__devFs) stands in for the disk.
 
 const FILES: Record<string, string> = {
   "/work/notes/b.md": "# Bravo",
@@ -289,4 +287,49 @@ test("hidden files stay out of the tree until it shows them (#357)", async ({
   expect(
     await page.evaluate(() => localStorage.getItem("textus-file-tree-hidden")),
   ).toBe("1");
+});
+
+test("Open to the Side shows a document beside the one in front", async ({
+  page,
+}) => {
+  await open(page);
+  await row(page, "b.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Open to the Side" }).click();
+  const panes = page.locator(".main-pane-split > .split-pane");
+  await expect(panes).toHaveCount(2);
+  await expect(page.locator('.split-pane[data-pane="first"] h1')).toContainText(
+    "Alpha",
+  );
+  await expect(
+    page.locator('.split-pane[data-pane="second"] h1'),
+  ).toContainText("Bravo");
+});
+
+test("a file dragged onto the lower half of the document opens below it", async ({
+  page,
+}) => {
+  await open(page);
+  const from = (await row(page, "b.md").boundingBox())!;
+  const main = (await page.locator(".main-pane").boundingBox())!;
+  await page.mouse.move(from.x + 20, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(main.x + main.width / 2, main.y + main.height - 30, {
+    steps: 8,
+  });
+  await expect(page.locator(".split-drop-hint")).toBeVisible();
+  await page.mouse.up();
+  const panes = page.locator(".main-pane-split > .split-pane");
+  await expect(panes).toHaveCount(2);
+  await expect(page.locator('.split-pane[data-pane="first"] h1')).toContainText(
+    "Alpha",
+  );
+  await expect(
+    page.locator('.split-pane[data-pane="second"] h1'),
+  ).toContainText("Bravo");
+  await expect(page.locator(".main-pane-split")).toHaveAttribute(
+    "data-split",
+    "column",
+  );
+  // The file stays where it was.
+  expect(await files(page)).toContain("/work/notes/b.md");
 });

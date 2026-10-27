@@ -6,16 +6,15 @@ import { useAppUpdate } from "./useAppUpdate";
 import { useZoom } from "./useZoom";
 import { useDraftAutosave } from "../document/draft-autosave";
 import { useTextusAi, useTextusAiResume } from "../ai/TextusAiSwitch";
-import { useTabState } from "./useTabState";
+import { useTabState } from "./tabs/useTabState";
 import { useSidePanels } from "./useSidePanels";
 import { useWordImported } from "./AppNotices";
 import type { PendingClose } from "./close-flow";
 import type { Settings, useSettings } from "../settings/SettingsContext";
 
 /**
- * A window's frame (App.tsx): its tabs, the close prompt's state, Textus
- * AI's switch, the side panels, Settings' opening, updates, zoom, the
- * tour, and the drafts kept for unsaved tabs.
+ * A window's frame: tabs, the close prompt, Textus AI's switch, side panels,
+ * Settings, updates, zoom, the tour and draft recovery.
  */
 export function useWindowShell({
   settings,
@@ -25,7 +24,7 @@ export function useWindowShell({
   setSettings: ReturnType<typeof useSettings>["setSettings"];
 }) {
   const tabState = useTabState();
-  // The one save/discard/cancel prompt (close-flow.ts's PendingClose).
+  // The one save/discard/cancel prompt.
   const [pendingClose, setPendingClose] = useState<PendingClose | null>(null);
   const textusAi = useTextusAi();
   useTextusAiResume();

@@ -1,10 +1,6 @@
 /**
- * The time a reply spent thinking, and what the provider let us read of it -
- * the "Thinking · 8 seconds" row above a reply (ThoughtRow). An exchange can
- * think more than once (before each tool step), so the row adds the phases
- * up: a phase starts with the first thinking event and ends with the first
- * event that isn't one (prose, a tool call, a landed turn). Kept for the
- * session only, never in the saved conversation.
+ * The time a reply spent thinking, and what the provider let us read of it.
+ * An exchange can think more than once, so the phases add up. Session only.
  */
 export interface Thought {
   /** Readable reasoning, as streamed; empty where the provider shows none. */

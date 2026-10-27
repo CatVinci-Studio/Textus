@@ -3,29 +3,16 @@ import { ReplaceStep } from "@milkdown/kit/prose/transform";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 
-/**
- * The grey suggestion as the plugin holds it (ghost-text-plugin.ts): its
- * text and alternatives, the widget it is drawn with, and what is left of
- * it as the writer types its next characters.
- */
+/** The grey inline suggestion's state and widget. */
 
-/**
- * The suggestion is rendered via CSS generated content (data-suggestion +
- * ::after) instead of as real text inside the span: WebKit canonicalizes a
- * collapsed caret sitting before a contentEditable=false element that
- * contains text to a visible position AFTER it, painting the caret at the
- * end of the ghost text instead of where the user is actually typing.
- * Generated content offers no caret positions at all, so the caret stays
- * painted at the true insertion point.
- */
+/** Drawn as CSS generated content, not text: WebKit paints a caret before a
+ *  non-editable span with text after that text instead of where it is. */
 export function ghostDecoration(
   doc: ProseNode,
   cursorPos: number,
   suggestion: string | string[],
   index = 0,
-  /** A suggestion appearing, rather than the rest of one already on show
-   *  (after Ctrl+Right) or its next alternative: only that fades in - a
-   *  continuing one stays put, it must not flash. */
+  /** A new suggestion, which fades in; a continuing one must not flash. */
   fresh = true,
 ): Extract<GhostMeta, { type: "set" }> {
   const candidates = Array.isArray(suggestion) ? suggestion : [suggestion];
@@ -77,8 +64,6 @@ export function ghostDecoration(
   };
 }
 
-/** Tagged union (like pending-edit-plugin's PendingMeta) so the "set" arm
- *  carries its payload as required fields - no assertions at the read site. */
 export type GhostMeta =
   | {
       type: "set";
@@ -100,8 +85,7 @@ export interface GhostState {
   from: number;
 }
 
-/** The no-suggestion state - shared by init, clear, and the edit-invalidated
- *  branch. Immutable by convention (never mutated, only replaced). */
+/** The no-suggestion state. Never mutated, only replaced. */
 export const CLEARED: GhostState = {
   decoration: DecorationSet.empty,
   suggestion: null,
@@ -110,13 +94,8 @@ export const CLEARED: GhostState = {
   from: 0,
 };
 
-/**
- * The suggestion left after an edit that typed exactly its next characters
- * at its spot (" w" of " works" leaves "orks"), or null when the edit was
- * anything else. Alternatives that don't start with the typed text drop
- * out. An IME's preedit never matches (pinyin isn't the Chinese it turns
- * into); its commit can.
- */
+/** The suggestion left after an edit that typed exactly its next characters
+ *  (" w" of " works" leaves "orks"), else null. An IME's preedit never matches. */
 export function typedThrough(
   tr: Transaction,
   prev: Pick<GhostState, "suggestion" | "candidates" | "index" | "from">,

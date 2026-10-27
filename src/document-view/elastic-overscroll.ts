@@ -3,10 +3,7 @@ import { motionAllowed } from "../ui/motion";
 /** How far the page can be pulled past an end, at most. */
 const MAX_PULL = 80;
 /** How long after the last wheel event the page lets go. A finger held
- *  still on the trackpad sends nothing, the same as one lifted without
- *  moving; at 120 ms a pull paused for a moment sprang back under the
- *  finger. A finger lifted while moving is told by its momentum instead
- *  (COASTING_STEPS), at once. */
+ *  still sends nothing, so shorter springs back under a paused pull. */
 const RELEASE_MS = 450;
 /** A wheel step this large is a mouse's notch or a hard flick, not a
  *  trackpad's finger; a Mac doesn't stretch the page for those. */
@@ -18,16 +15,9 @@ const COASTING_STEPS = 4;
 const NEW_SWIPE_MS = 80;
 
 /**
- * The give a Mac page has at either end, for the document's own scroll
- * box: a swipe past the top or the bottom pulls the text after the finger,
- * harder the further it goes, and it springs back when the swipe ends.
- *
- * WKWebView doesn't stretch a scroll box inside the page - it hands the
- * overscroll to the page itself, which bounced the whole window, sidebar
- * and title bar along (held still since 1.2.0-rc.5,
- * document-view/ai-notice.css). So the stretch is drawn here, on
- * `content`'s `translate` (FLIP's glides use `transform`, which it
- * composes with), never its layout. Returns the cleanup.
+ * The give a Mac page has at either end, for the document's own scroll box.
+ * WKWebView hands inner overscroll to the page, bouncing the whole window,
+ * so the stretch is drawn here on `content`'s `translate`. Returns cleanup.
  */
 export function elasticOverscroll(
   scroller: HTMLElement,
@@ -102,8 +92,7 @@ export function elasticOverscroll(
     // Past an end it stretches; back the other way it gives the stretch
     // back first, before the box scrolls again.
     if (!pastEnd && travel === 0) return;
-    // The finger has lifted: the text springs back now, rather than riding
-    // the momentum out and hanging there until it ends.
+    // The finger has lifted: spring back now rather than ride the momentum.
     if (coasting) {
       window.clearTimeout(release);
       if (pull) letGo();

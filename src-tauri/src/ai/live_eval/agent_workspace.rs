@@ -1,31 +1,7 @@
-//! The project folder, its `.textus/` folder and the style profile,
-//! exercised on real folders. The names are docs/design/ai-concepts.md's; the case
-//! ids keep their round-2 groups (`workspace/` is the project folder) so
-//! runs stay comparable.
-//!
-//! **Project folder** (in code, the workspace root): the folder the AI may
-//! read - the open document's own folder by default, or a chosen one (the
-//! override) - holding project files (read_file / search_files /
-//! find_files) and its `.textus/` folder: the library
-//! (`.textus/library/*.md`, entries picked by name or alias), the writing
-//! instructions (`.textus/agent.md`) and skills (`.textus/skills/*.md`); plus
-//! the global config folder (the app config dir's `textus/`), whose writing
-//! instructions and skills apply to every document - the project's come
-//! after the global ones and shadow same-named skills. Every case here
-//! builds those folders on disk and loads them through
-//! workspace::load_from, the app's own loader - so comment stripping, skill
-//! parsing, shadowing, the chosen folder, the unsaved-draft case (no folder
-//! at all) and the sandbox boundary are what is measured, not a hand-made
-//! struct.
-//!
-//! **Style profile and "Learn my style"**: learning (project.rs's
-//! learn_style) turns picked samples into `.textus/style.md`, which the
-//! agent and the inline completion then follow. The cases learn a profile from three
-//! samples (zh, en) and check it captured the samples' habits without
-//! inventing; then edit and complete under the learned profile and under
-//! hand-written ones with hard rules (a sentence-length limit, banned
-//! words, a punctuation habit), including a profile written in one language
-//! applied to a document in another.
+//! The project folder, its `.textus/` folder and the style profile, exercised
+//! on real folders loaded through the app's own loader. Covers reading files,
+//! writing instructions, library, skills and their shadowing, the unsaved
+//! draft, the sandbox, and learning and following a style profile.
 
 use super::agent_everyday::{in_selection, no_new_numbers};
 use super::agent_matrix::{
@@ -42,16 +18,36 @@ use std::sync::Arc;
 
 /// A fresh folder for one case under the system temp dir.
 pub fn scratch(name: &str) -> PathBuf {
-    // A fresh folder per call: unit tests build the case list concurrently,
-    // and a shared one was emptied by one test while another loaded it.
+    // A fresh folder per call: unit tests build the case list concurrently.
     static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    let dir = std::env::temp_dir()
-        .join(format!("textus-eval-ws-{}", std::process::id()))
+    let dir = scratch_root()
+        .join(std::process::id().to_string())
         .join(format!("{n}-{name}"));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).expect("scratch dir");
     dir
+}
+
+/// Under the build folder rather than the system temp dir: each run writes
+/// thousands of small files, which used up a tmpfs /tmp's inodes. Folders left
+/// by earlier runs are cleared once per run.
+fn scratch_root() -> PathBuf {
+    static ROOT: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+    ROOT.get_or_init(|| {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("target/textus-eval-ws");
+        let alive = |pid: &str| Path::new("/proc").join(pid).exists();
+        if Path::new("/proc/self").exists() {
+            for entry in std::fs::read_dir(&root).into_iter().flatten().flatten() {
+                let pid = entry.file_name().to_string_lossy().into_owned();
+                if pid.parse::<u32>().is_ok() && !alive(&pid) {
+                    let _ = std::fs::remove_dir_all(entry.path());
+                }
+            }
+        }
+        root
+    })
+    .clone()
 }
 
 pub fn put(dir: &Path, rel: &str, text: &str) -> PathBuf {
@@ -79,9 +75,8 @@ fn says_cannot(reply: &str, words: &[&str]) -> Result<(), String> {
         .ok_or_else(|| "the reply doesn't say the file can't be read".into())
 }
 
-/// The unsaved-draft reply names the cause (the document isn't saved) or
-/// the way out (save it, or choose a project folder) - not
-/// just "I can't open it from here".
+/// The unsaved-draft reply names the cause (the document isn't saved) or the
+/// way out (save it, or choose a project folder).
 fn mentions(reply: &str, words: &[&str]) -> Result<(), String> {
     let lower = reply.to_lowercase();
     words
@@ -377,10 +372,8 @@ pub fn cases() -> Vec<AgentCase> {
     c
 }
 
-/// A requirement remembered from revision choices
-/// (src/ai/revision/revision-learning.ts): the Remember button writes it
-/// to the global config folder's memory/ in these words, and the next
-/// request must follow it. The documents are the writer's own notes.
+/// A requirement remembered from revision choices, written to the global
+/// memory/ in these words; the next request must follow it.
 fn learned_cases() -> Vec<AgentCase> {
     let mut c = Vec::new();
     let memory = |text: &str| {
@@ -780,9 +773,8 @@ fn style_cases() -> Vec<AgentCase> {
     c
 }
 
-/// Names the UI retired (docs/design/ai-concepts.md): "Workspace Folder" and
-/// friends in en, zh and ja. A reply that uses one sends the user looking
-/// for a label that no longer exists.
+/// Names the UI retired ("Workspace Folder" and friends in en, zh and ja): a
+/// reply using one sends the user looking for a label that no longer exists.
 const RETIRED_NAMES: &[&str] = &[
     "workspace",
     "工作区",
@@ -876,10 +868,9 @@ fn uses_ui_names(
     }
 }
 
-/// Questions about the concepts themselves, asked in the panel's default
-/// Review mode from a saved document: the agent must answer with the names,
-/// menu items and Settings rows the user's UI shows, in the user's
-/// language (agent.rs's workspace_section tells it them in en, zh, ja).
+/// Questions about the concepts themselves, asked in Review mode from a saved
+/// document: the answer must use the names, menu items and Settings rows the
+/// user's UI shows, in the user's language.
 fn concept_cases() -> Vec<AgentCase> {
     let mut c = Vec::new();
 

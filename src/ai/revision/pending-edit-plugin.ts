@@ -58,50 +58,30 @@ export function hasPendingEdits(state: EditorState): boolean {
   return (pendingEditKey.getState(state)?.previews.length ?? 0) > 0;
 }
 
-/**
- * Shows agent propose_edit proposals as live decorations in the document
- * instead of only a chat-panel diff card - the pending-insert/pending-delete
- * pair is this plugin's whole job; the actual document mutation on accept
- * happens outside it (usePendingEdits.ts), the same way ghost-text-plugin's
- * widget is separate from the Tab keystroke that commits it.
- *
- * Mirrors grammar-check-plugin's staleness handling: every docChanged maps
- * each preview's range through the transaction and drops it if the mapped
- * range's text no longer matches what was resolved - an edit inside or
- * around a pending change invalidates it rather than risk applying to the
- * wrong text later.
- */
+/** Shows proposals as decorations in the document; accepting happens
+ *  outside it. A preview whose mapped text no longer matches is dropped
+ *  rather than risk applying it to the wrong text. */
 export function createPendingEditPlugin(options: {
-  /** Accept/reject via ⌘Enter / ⌘Backspace. Wired to the same accept/reject
-   *  usePendingEdits.ts exposes for the button path, so the two can't
-   *  drift. Targets `getFocusedCallId()` when it names a still-pending
-   *  preview (kept in sync with the Quick Ask nav bar's "current" pointer),
-   *  falling back to the first preview otherwise - e.g. before any preview
-   *  has been focused yet, or in the detached window, which has no nav bar
-   *  and so never supplies this. */
+  /** Accept/reject via ⌘Enter / ⌘Backspace, on `getFocusedCallId()`'s
+   *  preview when still pending, else the first one. */
   onAccept?: (callId: string) => void;
   onReject?: (callId: string) => void;
-  /** Fired whenever the live preview list changes (add/remove/clear, or a
-   *  docChanged that drops a stale one) - the plugin's only way to reach
-   *  React, since nothing else polls ProseMirror state. Drives the
-   *  in-document accept/reject controls and the chat panel's proposal
-   *  status chips. */
+  /** Fired whenever the live preview list changes: the plugin's only way to
+   *  reach React. */
   onPreviewsChange?: (previews: PendingPreview[], applied: string[]) => void;
-  /** Whether the green widget types its text in (Settings toggle, read live
-   *  per decoration build). Off, or unset: the text appears at once. */
+  /** Whether the green widget types its text in, read live. Off, or unset:
+   *  the text appears at once. */
   animationEnabled?: () => boolean;
-  /** Live read of the Quick Ask nav bar's current pointer (usePendingEdits'
-   *  `focusedPreview`) - see `onAccept`/`onReject` above. */
+  /** Live read of the Quick Ask nav bar's current pointer. */
   getFocusedCallId?: () => string | null;
-  /** A ✓ / ✕ in the text was clicked (usePendingEdits.decide). */
+  /** A ✓ / ✕ in the text was clicked. */
   onDecide?: (callId: string, index: number, take: boolean | null) => void;
   /** The ✓ / ✕ buttons' names, read live (the UI language can change). */
   sentenceLabels?: () => SentencePickLabels;
-  /** The sentence the review bar points at (usePendingEdits). */
+  /** The sentence the review bar points at. */
   getFocusedSentence?: () => { callId: string; index: number } | null;
-  /** How a rewrite is drawn, already fallen back to "inline" where there
-   *  is no margin - read live; any transaction (a "refocus" meta after it
-   *  changes) puts it on the editor (`syncDisplay`). */
+  /** How a rewrite is drawn, already fallen back where there's no margin;
+   *  read live, applied on the next transaction. */
   revisionDisplay?: () => RevisionDisplay;
 }) {
   const animate = () => options.animationEnabled?.() ?? false;
@@ -129,21 +109,17 @@ export function createPendingEditPlugin(options: {
       const keep = prev.previews.filter(
         (p) => !meta.previews.some((n) => n.callId === p.callId),
       );
-      // A final (non-streaming) add for a callId whose typewriter is
-      // still revealing keeps the streaming state - the settle meta,
-      // not the add, is what makes the preview decidable.
+      // A final add while the typewriter still reveals keeps the streaming
+      // state: only the settle meta makes the preview decidable.
       const previews = [
         ...keep,
         ...meta.previews.map((p) => {
-          // Found again around the writer's edit (usePendingEdits'
-          // rebasedSentences): drawn as its settled changes, with nothing
-          // left to type out - its stream's reveal would hold it
-          // undecidable for good.
+          // Rebased around the writer's edit: drawn settled, as its stream's
+          // reveal would hold it undecidable for good.
           if (p.rebased && !p.streaming) dropAnimation(p.callId);
           const revealing = stillRevealing(p.callId);
-          // The same proposal with new text and no typewriter to grow it
-          // (a draft streamed without the animation, its final add) is
-          // drawn anew: its widget's key would otherwise keep the old one.
+          // New text with no typewriter to grow it is drawn anew, or the
+          // widget's key would keep the old one.
           const old = prev.previews.find((o) => o.callId === p.callId);
           const revision =
             old && !revealing && old.replacement !== p.replacement
@@ -200,11 +176,8 @@ export function createPendingEditPlugin(options: {
     }
     if (meta?.type === "remove") {
       const rest = prev.previews.filter((p) => p.callId !== meta.callId);
-      // Accepting a proposal applies it and removes its preview in
-      // one transaction (usePendingEdits.ts): the others still have
-      // to be mapped through that edit. Left at their old positions,
-      // every preview below a grown or shrunk block drifted off its
-      // text, and its Accept then refused.
+      // An Accept applies and removes its preview in one transaction; the
+      // others still have to be mapped through that edit.
       const previews = tr.docChanged ? mapPreviews(rest, tr).survivors : rest;
       dropRemovedAnimations(prev.previews, previews);
       return {
@@ -221,13 +194,8 @@ export function createPendingEditPlugin(options: {
     if (tr.docChanged && prev.previews.length > 0) {
       const { survivors, changed } = mapPreviews(prev.previews, tr);
       if (!changed) {
-        // Typing below the last pending edit - the common case while
-        // a preview sits mid-document. Keeping the ARRAY's identity
-        // is what stops view.update's `previews !== last` check from
-        // re-notifying React (and, downstream, re-emitting the
-        // statuses IPC push) on every keystroke; mapping the
-        // existing DecorationSet instead of rebuilding it is the
-        // same pattern quick-ask-widget-plugin uses.
+        // Typing elsewhere keeps the array's identity, so React isn't
+        // re-notified on every keystroke.
         return {
           previews: prev.previews,
           decoration: prev.decoration.map(tr.mapping, tr.doc),
@@ -325,49 +293,51 @@ export function createPendingEditPlugin(options: {
             }
             return set;
           },
-          handleKeyDown(view, event) {
-            const mod = event.metaKey || event.ctrlKey;
-            if (!mod) return false;
-            const previews =
-              pendingEditKey.getState(view.state)?.previews ?? [];
-            if (previews.length === 0) return false;
-            const focused = options.getFocusedCallId?.() ?? null;
-            const targetId =
-              (focused && previews.some((p) => p.callId === focused)
-                ? focused
-                : null) ?? previews[0].callId;
-            // The sentence the review bar points at (‹ › or F7) is the
-            // one decided, as its ✓ / ✕ would.
-            const sentence = options.getFocusedSentence?.() ?? null;
-            const pointed =
-              sentence && sentence.index >= 0 && sentence.callId === targetId
-                ? sentence
-                : null;
-            if (event.key === "Enter") {
-              event.preventDefault();
-              if (pointed)
-                options.onDecide?.(pointed.callId, pointed.index, true);
-              else options.onAccept?.(targetId);
-              return true;
-            }
-            if (event.key === "Backspace") {
-              // Ctrl+Backspace (Windows/Linux) and Cmd+Backspace (macOS)
-              // are everyday "delete word/line" keys, so they only mean
-              // Reject with the caret on a preview itself - anywhere else
-              // they used to throw a suggestion away mid-sentence.
-              const { selection } = view.state;
-              if (!selection.empty) return false;
-              const here = previews.find(
-                (p) => selection.from >= p.from && selection.from <= p.to,
-              );
-              if (!here) return false;
-              event.preventDefault();
-              if (pointed && pointed.callId === here.callId)
-                options.onDecide?.(pointed.callId, pointed.index, false);
-              else options.onReject?.(here.callId);
-              return true;
-            }
-            return false;
+          // Before every plugin's handleKeyDown: on a preview these keys
+          // decide it, ahead of the editor's own Mod+Enter and Mod+Backspace.
+          handleDOMEvents: {
+            keydown(view, event) {
+              const mod = event.metaKey || event.ctrlKey;
+              if (!mod) return false;
+              const previews =
+                pendingEditKey.getState(view.state)?.previews ?? [];
+              if (previews.length === 0) return false;
+              const focused = options.getFocusedCallId?.() ?? null;
+              const targetId =
+                (focused && previews.some((p) => p.callId === focused)
+                  ? focused
+                  : null) ?? previews[0].callId;
+              // The sentence the review bar points at (‹ › or F7) is the
+              // one decided, as its ✓ / ✕ would.
+              const sentence = options.getFocusedSentence?.() ?? null;
+              const pointed =
+                sentence && sentence.index >= 0 && sentence.callId === targetId
+                  ? sentence
+                  : null;
+              if (event.key === "Enter") {
+                event.preventDefault();
+                if (pointed)
+                  options.onDecide?.(pointed.callId, pointed.index, true);
+                else options.onAccept?.(targetId);
+                return true;
+              }
+              if (event.key === "Backspace") {
+                // Ctrl/Cmd+Backspace are everyday delete keys, so they reject
+                // only with the caret on a preview itself.
+                const { selection } = view.state;
+                if (!selection.empty) return false;
+                const here = previews.find(
+                  (p) => selection.from >= p.from && selection.from <= p.to,
+                );
+                if (!here) return false;
+                event.preventDefault();
+                if (pointed && pointed.callId === here.callId)
+                  options.onDecide?.(pointed.callId, pointed.index, false);
+                else options.onReject?.(here.callId);
+                return true;
+              }
+              return false;
+            },
           },
         },
         view(editorView) {
@@ -397,17 +367,15 @@ export function createPendingEditPlugin(options: {
               syncDisplay(view, display());
               const state = pendingEditKey.getState(view.state);
               const previews = state?.previews ?? [];
-              // Also when only the previews changed: a rewrite streaming in
-              // may have nothing drawn yet (an empty set is always the
-              // same one).
+              // Also when only the previews changed: a streaming rewrite may
+              // have nothing drawn yet, and an empty set is always the same.
               if (
                 state &&
                 (state.decoration !== lastDecoration || previews !== last)
               )
                 syncStreaming(view, previews);
-              // After any rebuild ("refocus" included), not only when the
-              // pointer moves: a redrawn widget comes back without the
-              // classes.
+              // After any rebuild, not only when the pointer moves: a
+              // redrawn widget comes back without the classes.
               if (
                 state &&
                 (state.hot !== lastHot || state.decoration !== lastDecoration)

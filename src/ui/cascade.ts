@@ -1,21 +1,10 @@
 import { animate, duration, motionAllowed } from "./motion";
 
 /**
- * Written text coming in a word at a time, each word fading in a step
- * after the one before it - as a reply streams in Claude's apps - for text
- * drawn anew whenever more of it arrives: the AI's reply in the chat, a
- * proposal landing in the document. Drawn again (innerHTML), the words
- * already in come back as they were, and a word still fading carries on
- * from where it was rather than starting over: each word keeps the moment
- * it began, by its place in the text. A word fades in place: a span of
- * inline text takes no transform, and one made inline-block would change
- * where the lines break.
- *
- * The step is --dur-stagger, shortened so a run of words never takes more
- * than --dur-cascade: a whole paragraph landing at once comes in quickly,
- * a few words a little at a time. Only opacity moves
- * (docs/design/design-language.md, Motion); with motion off the words are
- * simply there.
+ * Streaming text coming in a word at a time, each fading in a step after the
+ * last, for text redrawn (innerHTML) whenever more arrives. Each word keeps
+ * the moment it began by its place, so a redraw doesn't restart the fade.
+ * Only opacity moves: a transform would change where inline lines break.
  */
 
 /** What a word is cut by: the writing system's own word breaks - Chinese
@@ -78,19 +67,12 @@ export class Cascade {
   }
 }
 
-/** Whether `el` has words to come in (else it enters whole: a picture, a
- *  rule, a diagram). */
-export function hasWords(el: Element): boolean {
-  return textWords(el).length > 0;
-}
-
 interface WordAt {
   node: Text;
   start: number;
   end: number;
 }
 
-/** The words of `root`'s text, in order, where each stands. */
 function textWords(root: Element): WordAt[] {
   const out: WordAt[] = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
@@ -113,7 +95,6 @@ function textWords(root: Element): WordAt[] {
   return out;
 }
 
-/** A word's text in a span of its own. */
 function wrap({ node, start, end }: WordAt): HTMLElement | null {
   if (!node.parentNode) return null;
   const range = document.createRange();

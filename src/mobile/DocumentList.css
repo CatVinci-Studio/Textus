@@ -1,11 +1,10 @@
-/* The iPhone document list (DocumentList.tsx): a full-screen page over the
-   editor, opened from the phone menu, laid out like the Files app - rows
-   or a grid of page thumbnails. 44pt rows and buttons. */
+/* The iPhone document list: a full-screen page over the editor, rows or a
+   grid of page thumbnails like the Files app. 44pt rows and buttons. */
 
 .document-list {
   position: fixed;
   inset: 0;
-  /* Over the find bar, under the alerts it opens (mobile/styles/base.css). */
+  /* Over the find bar, under the alerts it opens. */
   z-index: var(--z-phone-page, 350);
   display: flex;
   flex-direction: column;
@@ -159,8 +158,8 @@
   overflow: hidden;
   aspect-ratio: 3 / 4;
   border-radius: var(--radius-small);
-  /* The page's colour where the list's own surface doesn't name one: a
-     white fallback put near-white dark-mode text on white sheets. */
+  /* The page's colour where the list's surface doesn't name one: a white
+     fallback put dark-mode text on white sheets. */
   background: var(--editor-bg, var(--bg));
   box-shadow:
     0 0 0 0.5px color-mix(in srgb, var(--chrome-text, #000) 18%, transparent),
@@ -185,8 +184,7 @@
   border-radius: var(--radius-surface);
 }
 
-/* A document that turns up in an open list; one that goes fades where it
-   was (DocumentList.tsx's ListMotion). */
+/* A document that turns up in an open list; one that goes fades where it was. */
 .document-item-new {
   animation: motion-pop-in var(--dur-base) var(--ease-out);
 }

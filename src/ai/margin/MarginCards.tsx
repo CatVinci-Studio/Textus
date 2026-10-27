@@ -18,25 +18,22 @@ import {
   wholeBlockKind,
 } from "../revision/markdown-forms";
 
-/** A change's new text on its card: a whole block other than a picture
- *  (which the card shows) by what it is (blockSummary). */
 /** A sentence as a card shows it on a line: a title's text without the
  *  `# ` that makes it one. */
 function plainLine(text: string): string {
   return text.trim().replace(/^#{1,6}\s+/, "");
 }
 
+/** A change's new text on its card: a whole block other than a picture by
+ *  what it is. */
 function revisionText(after: string, labels: ReviewMarginLabels): string {
   const text = after.trim();
   if (wholeBlockKind(text) === "picture") return text;
   return blockSummary(text, blockNames(labels)) ?? text;
 }
 
-/**
- * The margin's cards (ReviewMargin.tsx): a revision with its sentences to
- * keep or drop, a note with its question, and the note popover a phone
- * shows instead.
- */
+/** The margin's cards: revisions, notes, and the note popover a phone shows
+ *  instead. */
 
 export const CHECK = (
   <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -53,16 +50,16 @@ export const CROSS = (
  *  callbacks, which keep their identity across renders. */
 export interface CardPlace {
   hot: boolean;
-  /** Its place in the margin, or null in a group's list (MarginGroup). */
+  /** Its place in the margin, or null in a group's list. */
   top: CardSpot;
-  /** The height it is cut to beside its passage (stackCards), or null:
-   *  it opens whole over the cards below while hot or focused. */
+  /** The height it is cut to beside its passage, or null: it opens whole
+   *  over the cards below while hot or focused. */
   cut: number | null;
   /** Cut to one line: a chip, its own short form. */
   chip: boolean;
   /** Opened by a click, or pointed at by a bar: a cut card is whole. */
   open: boolean;
-  /** A click on a cut card opens it (useOpenedCard). */
+  /** A click on a cut card opens it. */
   onOpen: (key: string | null) => void;
   labels: ReviewMarginLabels;
   left: number;
@@ -98,15 +95,9 @@ function cutClass(cut: number | null, chip: boolean, open: boolean): string {
   return chip ? " review-note-chip" : " review-note-cut";
 }
 
-/**
- * A card's box: its height, reported for the stack, and the glide when
- * the stack moves it. Its place changes at once and the card slides there
- * from where it was, on `translate` - its `transform` is the hover nudge
- * and the entrance - so the margin is laid out once, not on every frame
- * of a `top` transition. Moved again mid-glide, it goes on from where it
- * shows. A cut card's height isn't reported: the stack wants a card's
- * whole height, and one opened over the others mustn't restack them.
- */
+/** A card's box: its height for the stack, and its glide on `translate` so
+ *  the margin is laid out once, not every frame. A cut card's height isn't
+ *  reported, so one opened over the others doesn't restack them. */
 export function useCardBox(
   key: string,
   top: CardSpot,
@@ -184,18 +175,15 @@ export const RevisionCard = memo(
     onDecide: (callId: string, index: number, take: boolean | null) => void;
   }) {
     const ref = useCardBox(item.key, top, onHeight, cut !== null);
-    // It comes in with its new text, on its change's beat - drawn a frame
-    // or two after it, it came in after it (pending-widgets' changeBeat).
+    // It comes in on its change's beat, with its new text.
     useLayoutEffect(() => {
       if (ref.current) joinBeat(ref.current, item.key);
     }, [ref, item.key]);
     const state =
       item.take === false ? "kept" : item.take === true ? "taken" : "open";
     const closed = chip && !open;
-    // What the card's text is, said in its heading beside the number, the
-    // text itself on the line under it - a chip's too, cut to one line:
-    // what Result only keeps out of the document, or a sentence with no
-    // original. A chip had the text in its heading, a card under it.
+    // What the card's text is, said in its heading; the text on the line
+    // under it, a chip's too.
     const original = item.shows === "new" && !!item.before.trim();
     const what = original
       ? labels.proposalDeletedSentence
@@ -219,8 +207,7 @@ export const RevisionCard = memo(
         }}
       >
         <div className="review-note-by">
-          {/* The writer's own change (own-revision-plugin): Me, not a
-              number in the AI's review. */}
+          {/* The writer's own change: Me, not a number in the AI's review. */}
           {item.callId === OWN_CHANGES ? (
             <span
               className="review-note-mark review-note-mark-me"
@@ -325,9 +312,8 @@ export const RevisionCard = memo(
       </div>
     );
   },
-  // The items are made afresh whenever a pending edit changes, and their
-  // positions in the text (from, to) move as it is typed in: what the card
-  // shows is what counts.
+  // Items are remade and their positions move as text is typed: only what
+  // the card shows counts.
   (a, b) =>
     a.hot === b.hot &&
     a.focused === b.focused &&
@@ -389,9 +375,8 @@ export const NoteCard = memo(function NoteCard({
       data-note={note.id}
       onMouseEnter={() => onHot(itemKey, true)}
       onMouseLeave={() => onHot(itemKey, false)}
-      // Picking, the whole card picks it; else a click selects it - its
-      // passage lit and brought into view, a cut card opened whole. Its
-      // own buttons aside.
+      // Picking, the whole card picks it; else a click selects it, its own
+      // buttons aside.
       onClick={(e) => {
         if ((e.target as HTMLElement).closest("button")) return;
         if (picked !== null) onPick(note.id);
@@ -431,9 +416,7 @@ export const NoteCard = memo(function NoteCard({
   );
 });
 
-/** Who wrote a note, at the head of its card: Me for the writer's own
- *  (useOwnNotes), else the number of the AI's note - its badge's in the
- *  text, its card's in the chat - as a revision's is. */
+/** Who wrote a note: Me for the writer's own, else the AI note's number. */
 function NoteMark({
   note,
   labels,
@@ -452,9 +435,8 @@ function NoteMark({
   );
 }
 
-/** A note's card: who wrote it, the note, and its actions - asking the AI
- *  about it, and marking it done (an own note: editing it, deleting it) -
- *  in the margin and in the popover its badge opens. */
+/** A note's card: who wrote it, the note, and its actions, in the margin
+ *  and in the popover its badge opens. */
 function NoteBody({
   note,
   labels,
@@ -494,10 +476,8 @@ function NoteBody({
   );
 }
 
-/** A change on its chip. A small one (a comma, a word): the words that
- *  go, struck, and those that come, with a little of the sentence either
- *  side - the whole sentence read as the same sentence twice. A rewrite:
- *  the side of it the card shows. */
+/** A change on its chip: a small one as what goes and what comes with a
+ *  little context; a rewrite as the side the card shows. */
 function ChangeGlimpse({
   before,
   after,
@@ -552,8 +532,7 @@ export function NotePopover({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  // Kept within the document's column: in a narrow window it reached
-  // across the divider into the AI panel.
+  // Kept within the document's column, off the AI panel.
   const pos = useViewportClamp(ref, x, y, {
     right: () =>
       document

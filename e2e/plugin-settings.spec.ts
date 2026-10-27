@@ -3,12 +3,8 @@ import { openApp } from "./helpers";
 import { openWithPlugins } from "./plugin-helpers";
 
 /**
- * Settings › Plugins with the catalog the dev server serves from the
- * textus-plugins checkout (vite.dev-plugins.ts): nothing comes installed,
- * Get plugins offers the catalog's plugins with who made them and a search
- * over them, the list kept from last time shows when a fresh one can't be
- * had, installing one turns it on, each installed plugin is a card that
- * opens its own page, and a plugin that needs a setting on asks for it.
+ * Settings › Plugins, with the catalog the dev server serves from the
+ * textus-plugins checkout.
  */
 
 const emit = (page: Page, event: string) =>
@@ -47,8 +43,10 @@ test("nothing comes installed, and the catalog offers the official plugins", asy
   await expect(graph).toContainText("Graph View");
   await expect(graph.locator(".plugin-official")).toHaveText("Official");
   await expect(graph).toContainText("by CatVinci Studio");
-  // No plugin's artwork among Settings' rows.
-  await expect(page.locator(".settings-panel img")).toHaveCount(0);
+  // No plugin's artwork among Settings' rows, apart from a card's picture.
+  await expect(
+    page.locator(".settings-panel img:not(.plugin-card-shot)"),
+  ).toHaveCount(0);
 });
 
 test("installing from the list turns the plugin on, behind its permissions", async ({
@@ -106,17 +104,15 @@ test("Get plugins searches the catalog by name, what it does and who made it", a
 }) => {
   await openApp(page, { settings: { language: "en" } });
   await openGetPlugins(page);
-  const cards = page.locator(".plugin-get-page .plugin-card");
+  const cards = page.locator(".plugin-get-page .plugin-card[data-catalog]");
   const all = await cards.count();
   expect(all).toBeGreaterThan(3);
-  const search = page.getByRole("searchbox", {
-    name: "Search plugins, themes, skills and servers",
-  });
+  const search = page.getByRole("searchbox", { name: "Search" });
   await search.fill("kanban");
   await expect(cards).toHaveCount(1);
   await expect(cards).toHaveAttribute("data-catalog", "catvinci.kanban");
   // Every word has to match, in any field.
-  await search.fill("catvinci graph");
+  await search.fill("catvinci graph view");
   await expect(cards).toHaveCount(1);
   await search.fill("CatVinci Studio");
   await expect(cards).toHaveCount(all);
@@ -163,11 +159,39 @@ test("the list kept from last time shows when a fresh one can't be had", async (
   ).toBeVisible();
 });
 
+test("a pack installs its plugins one after another, each asking for what it needs", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await openGetPlugins(page);
+  const pack = page.locator('.plugin-card[data-pack="research"]');
+  await expect(pack).toContainText("Research");
+  await expect(pack).toContainText("PDF");
+  const button = pack.getByRole("button");
+  await expect(button).toHaveText(/Install all \(\d\)/);
+  await button.click();
+  // Each plugin asks for its permissions; no guide opens in between.
+  const dialog = page.locator(".app-dialog");
+  for (let i = 0; i < 8; i++) {
+    if ((await button.textContent())?.includes("All installed")) break;
+    if (await dialog.isVisible())
+      await dialog
+        .getByRole("button", { name: /Allow|Later/ })
+        .first()
+        .click();
+    await page.waitForTimeout(150);
+  }
+  await expect(button).toHaveText("All installed");
+  await expect(page.locator(".settings-panel")).toBeVisible();
+});
+
 test("a card opens the plugin's own page: its settings, what it adds, its permissions", async ({
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.daily-notes": ["workspace.read", "workspace.write"] },
+    plugins: {
+      "catvinci.daily-notes": ["files.read", "files.write", "editor.read"],
+    },
   });
   await openPluginsPage(page);
   await page
@@ -229,7 +253,7 @@ test("a command picked in the tray with no window open runs in the window opened
       "catvinci.quick-notes.capture";
   });
   await openWithPlugins(page, {
-    plugins: { "catvinci.quick-notes": ["document.propose"] },
+    plugins: { "catvinci.quick-notes": ["editor.propose"] },
   });
   await expect(page.locator(".app-dialog")).toContainText(
     "Note something down",
@@ -240,7 +264,9 @@ test("a plugin's setting can be the project's own, over the general one", async 
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.daily-notes": ["workspace.read", "workspace.write"] },
+    plugins: {
+      "catvinci.daily-notes": ["files.read", "files.write", "editor.read"],
+    },
     folder: { "/work/notes/a.md": "# A\n" },
   });
   await page.evaluate(() =>

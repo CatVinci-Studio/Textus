@@ -7,27 +7,11 @@ import {
   type SentenceHunk,
 } from "./sentence-diff";
 
-/**
- * A rewrite diffed as the document is built: blocks first, then sentences.
- * The finished rewrite (diffSentences) and one still streaming in
- * (sentence-stream.ts) both come through diffUnits, so a rule for a kind
- * of block is written once.
- */
+/** A rewrite diffed as the document is built: blocks first, then sentences,
+ *  the same for a finished rewrite and a streaming one. */
 
-/**
- * What a rewrite is compared by: its sentences, and each block that isn't
- * sentences (wholeBlockKind: a picture, a table, a code block…) as one
- * unit. Joined, the units are `text` again. Split into "sentences", a
- * block was paired with the paragraphs beside it - a table's rows shown as
- * words, a picture's change with no text to find in the document - and a
- * rewrite of a whole document with one in it became one block and one
- * card (rc.6).
- *
- * The blocks are doc-blocks.ts's textParagraphs. A unit is
- * whole exactly when wholeBlockKind says so: a line of a paragraph that
- * reads like one (a picture on its own line under a caption) stays with
- * the sentence before it.
- */
+/** What a rewrite is compared by: its sentences, and each non-prose block as
+ *  one unit. Joined, the units are `text` again. */
 export function splitUnits(text: string): string[] {
   const blocks = textParagraphs(text);
   if (blocks.length === 0) return text ? [text] : [];
@@ -60,28 +44,16 @@ export function splitUnits(text: string): string[] {
 }
 
 /** Aligns the run of changed units that ends what a stream has reached:
- *  `before` are originals from `start` on (sentence-stream.ts). */
+ *  `before` are originals from `start` on. */
 export type AlignTail = (
   before: string[],
   after: string[],
   start: number,
 ) => { before: string; after: string }[];
 
-/**
- * The hunks of a rewrite: the units (splitUnits) of `a` against those of
- * `b`, every hunk the same or a change.
- *
- * Whole blocks are where the two sides meet: with the same such blocks in
- * the same order on each side, the sentences between two of them are
- * diffed against the sentences between the same two, and each block is a
- * hunk of its own - kept, or changed whole. A finished rewrite that added
- * or dropped one is met at the blocks it kept (diffByBlocks): never one
- * change for the whole of it.
- *
- * `tail`: `b` is a stream so far. Its blocks need only start the same way,
- * and the run of changes it ends with is aligned by `tail`, which leaves
- * out the originals not reached yet instead of calling them deleted.
- */
+/** The hunks of `a`'s units against `b`'s, whole blocks being where the two
+ *  sides meet. `tail`: `b` is a stream so far, and originals not reached yet
+ *  aren't called deleted. */
 export function diffUnits(
   a: string[],
   b: string[],
@@ -140,16 +112,8 @@ export function diffSentences(before: string, after: string): SentenceHunk[] {
   return diffUnits(splitUnits(before), splitUnits(after));
 }
 
-/**
- * A finished rewrite whose whole blocks don't line up with the original's
- * - it added or dropped a table, a code block - met at the blocks it kept:
- * the most blocks of the same kinds, in order, on both sides, one written
- * the same counting for more (keptPairs). Between two of them, the
- * sentences are diffed as between any two blocks, and a block only one
- * side has is a change of its own: dropped, or added. Diffed in one
- * instead, a dropped block and the paragraphs around it were one change,
- * and a whole document one card.
- */
+/** A finished rewrite that added or dropped whole blocks, met at the blocks
+ *  it kept; a block only one side has is a change of its own. */
 function diffByBlocks(a: string[], b: string[]): SentenceHunk[] {
   const wholeA = wholeIndices(a);
   const wholeB = wholeIndices(b);
@@ -178,11 +142,8 @@ function wholeIndices(units: string[]): number[] {
   return units.flatMap((u, i) => (wholeBlockKind(u) ? [i] : []));
 }
 
-/**
- * The blocks of `a` and `b` paired in order, the pairing that scores most:
- * a pair of one kind 1, written the same 2 - so a kept block meets its
- * copy, not a changed block of its kind beside it.
- */
+/** The blocks of `a` and `b` paired in order, scoring an identical pair
+ *  above a same-kind one, so a kept block meets its copy. */
 function keptPairs(a: string[], b: string[]): [number, number][] {
   const score = (x: number, y: number) =>
     wholeBlockKind(a[x]) !== wholeBlockKind(b[y])
@@ -215,15 +176,8 @@ function keptPairs(a: string[], b: string[]): [number, number][] {
   return pairs;
 }
 
-/**
- * Units between two blocks both sides kept, with blocks only one side has.
- * Each side is its paragraphs, with its blocks standing between them; the
- * two are laid on one line from start to end, as far through their
- * paragraphs as each block stands, and cut at every block of either side.
- * Each stretch's paragraphs are diffed against the other side's, and each
- * block is dropped or added where it stands - so no change runs across a
- * block, and both sides read in their order.
- */
+/** Units between two kept blocks, with blocks only one side has. Both sides
+ *  are cut at every block of either, so no change runs across a block. */
 function diffBetween(a: string[], b: string[]): SentenceHunk[] {
   const sideA = paragraphsAndBlocks(a);
   const sideB = paragraphsAndBlocks(b);

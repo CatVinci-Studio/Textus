@@ -12,25 +12,11 @@ interface Snapshot {
 }
 
 /**
- * Best-effort crash/force-quit recovery (2.4): every dirty tab's content is
- * snapshotted to disk a few seconds after typing settles, or at least every
- * 30s during a long unbroken typing burst. A tab drops out of tracking the
- * moment it becomes clean (saved) or disappears from `tabs` (closed, or
- * handed off to another window in a tab drag) - in every case its on-disk
- * snapshot is cleared, since whatever it protected against has been
- * resolved one way or another. Restoring these at startup is App.tsx's job
- * (see the mount-time drain effect); this hook only ever writes.
- *
- * `enabled` is Settings > Privacy > Draft Recovery - while off, no new
- * snapshots are scheduled (existing on-disk ones are left as they are; the
- * privacy section's own "Clear" button is what removes them).
- *
- * Returns a cancel function that drops every scheduled-but-unflushed
- * snapshot write. For the window-teardown paths in app/close-flow.ts
- * (whole-window close, last-tab removeTab): those clear the on-disk
- * snapshots and then destroy() the window, and a debounce timer firing in
- * that gap would silently re-save what was just cleared - resurrecting a
- * discarded document as a "recovered draft" on the next launch.
+ * Crash recovery: every dirty tab is snapshotted a few seconds after typing
+ * settles, or every 30s during a long burst; the snapshot is cleared when the
+ * tab is saved or leaves. `enabled` off schedules no new snapshots. Returns a
+ * cancel for window teardown, where a late timer would resurrect a
+ * discarded document.
  */
 export function useDraftAutosave(tabs: DocTab[], enabled: boolean): () => void {
   const [timers] = useState(() =>

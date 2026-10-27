@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { Schema, type Mark } from "@milkdown/kit/prose/model";
-import { issuesToDecorations, touchesCode } from "./grammar-check-plugin";
+import {
+  checkedText,
+  issuesToDecorations,
+  touchesCode,
+} from "./grammar-check-plugin";
 
 const schema = new Schema({
   nodes: {
@@ -27,6 +31,15 @@ function paragraph() {
     text(" guide."),
   ]);
 }
+
+describe("checkedText", () => {
+  it("masks inline code one unit apiece and keeps the rest", () => {
+    const para = paragraph();
+    const checked = checkedText(para);
+    expect(checked).toBe("Run •••••••••• and read the offical guide.");
+    expect(checked.length).toBe(para.textContent.length);
+  });
+});
 
 describe("touchesCode", () => {
   it("is true only for ranges that reach into inline code", () => {

@@ -6,10 +6,8 @@ export const zenFocusKey = new PluginKey("zen-focus");
 
 /**
  * Zen mode's focus: marks the top-level block the caret is in as
- * `.zen-current`; CSS (milkdown-theme.css) dims every other block while
- * the document root carries `.zen`. One decoration, whatever the document
- * length. App toggles `.zen` and fires ZEN_MODE_EVENT, on which the editor
- * dispatches a no-op transaction so this recomputes.
+ * `.zen-current`, and CSS dims the rest while the root carries `.zen`. One
+ * decoration, whatever the document length.
  */
 export const zenFocusPlugin = $prose(
   () =>

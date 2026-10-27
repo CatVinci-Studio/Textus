@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { AgentSkill } from "../types";
 import { ai, type SkillListItem } from "../../platform/ipc";
 import type { PickerLabels } from "./ComposerPicker";
+import type { AgentMode } from "../../settings/settings-types";
 import {
   SKILL_TRIGGER,
   listFromWorkspace,
@@ -11,9 +12,7 @@ import {
 } from "./skill-picker";
 
 /**
- * The skills the composer offers (ChatComposer.tsx): the workspace's, read
- * when the chat opens, and the `/` menu's full list, read each time the
- * menu opens - and whether `input` has the menu open.
+ * The skills the composer offers, and whether `input` has the `/` menu open.
  */
 export function useComposerSkills({
   docPath,
@@ -21,6 +20,7 @@ export function useComposerSkills({
   input,
   dismissedInput,
   lang,
+  mode,
 }: {
   docPath: string | null;
   workspaceRoot: string | null;
@@ -28,14 +28,15 @@ export function useComposerSkills({
   /** The input Escape closed the menu for; typing reopens it. */
   dismissedInput: string | null;
   lang: PickerLabels["lang"];
+  /** Only this mode's skills are offered. */
+  mode: AgentMode;
 }) {
   const [skills, setSkills] = useState<AgentSkill[]>([]);
   const [skillList, setSkillList] = useState<SkillListItem[] | null>(null);
   const [recent, setRecent] = useState<string[]>(recentSkills);
 
-  // Skills come from the agent workspace on disk (global dir + the workspace
-  // root's .textus/skills). Loaded fresh each time the chat opens, so editing
-  // a skill file takes effect on the next chat without a restart.
+  // Loaded fresh each time the chat opens, so an edited skill file takes
+  // effect on the next chat without a restart.
   useEffect(() => {
     let cancelled = false;
     ai.loadAgentWorkspace(docPath, workspaceRoot)
@@ -48,9 +49,8 @@ export function useComposerSkills({
     };
   }, [docPath, workspaceRoot]);
 
-  // The `/` menu's list - built-ins included, with their groups and which
-  // are on - fetched again each time the menu opens, so a skill turned off
-  // in Settings a moment ago is already gone from it.
+  // Fetched again each time the menu opens, so a skill installed or moved a
+  // moment ago is already there.
   const skillTrigger = SKILL_TRIGGER.exec(input);
   const skillMenuOpen = !!skillTrigger && dismissedInput !== input;
   useEffect(() => {
@@ -68,14 +68,13 @@ export function useComposerSkills({
     };
   }, [skillMenuOpen, docPath, workspaceRoot]);
 
-  // The list, plus any workspace skill it lacks (an older backend lists
-  // none): what the menu offers and what a typed /word resolves against.
+  // Plus any workspace skill the list lacks (an older backend lists none).
   const available: PickerSkill[] = useMemo(() => {
     const listed = skillList ?? [];
     const names = new Set(listed.map((s) => s.name));
     const extra = listFromWorkspace(skills.filter((s) => !names.has(s.name)));
-    return pickerSkills([...listed, ...extra], lang);
-  }, [skillList, skills, lang]);
+    return pickerSkills([...listed, ...extra], lang, mode);
+  }, [skillList, skills, lang, mode]);
 
   return {
     skills,

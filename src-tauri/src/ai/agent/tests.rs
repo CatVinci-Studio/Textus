@@ -229,9 +229,8 @@ fn compacted_history_is_the_same_on_every_send() {
     }
 }
 
-/// Over budget, the history's first message moves once per block of
-/// growth, not on every send - and between moves each send's history
-/// starts with the previous one's, so the cached prefix survives.
+/// Over budget, the history's first message moves once per block of growth,
+/// not on every send, so the cached prefix survives.
 #[test]
 fn over_budget_the_oldest_exchanges_go_in_blocks() {
     let mut history = Vec::new();
@@ -258,10 +257,8 @@ fn over_budget_the_oldest_exchanges_go_in_blocks() {
     assert!(moves > 0);
 }
 
-/// An attached file inlined into a message can make one exchange bigger
-/// than a block. Rounding the cut up to the next block end would then
-/// drop it with everything before it, though the budget only needs the
-/// oldest two exchanges gone - so it isn't rounded that far.
+/// An attached file can make one exchange bigger than a block; the cut isn't
+/// rounded past it when the budget needs only the oldest two gone.
 #[test]
 fn over_budget_a_long_attachment_is_not_dropped_early() {
     let mut history = Vec::new();
@@ -336,7 +333,7 @@ fn the_message_header_names_the_language_the_user_typed() {
 fn short_document_is_embedded_verbatim() {
     let doc = "# Title\n\nJust a short document.";
     let section = document_section(&md(doc), true, None);
-    // Whole, each block marked with its id (doc_blocks.rs).
+    // Whole, each block marked with its id.
     let blocks = md(doc).blocks;
     assert_eq!(
         section,
@@ -364,8 +361,8 @@ fn long_document_is_truncated_with_outline_and_excerpts() {
 
 #[test]
 fn the_document_tools_are_for_a_document_shown_in_part() {
-    // agent::run_agent takes search_document and read_document out when
-    // the whole document is in the message.
+    // The document tools are taken out when the whole document is in the
+    // message.
     assert!(context::shown_whole("# Title\n\nOne paragraph.", true));
     assert!(!context::shown_whole(
         &"x".repeat(FULL_DOCUMENT_LIMIT + 1),
@@ -389,9 +386,8 @@ fn excerpts_are_char_boundary_safe_for_cjk() {
     assert!(section.contains('中'));
 }
 
-/// A Chinese document is about a token a character: past a third of the
-/// limit it is outlined, with the section being edited, where the
-/// model can read on - and sent whole where it can't.
+/// A Chinese document is outlined past a third of the limit where the model
+/// can read on, and sent whole where it can't.
 #[test]
 fn a_long_cjk_document_is_outlined_by_its_token_weight() {
     let mut doc = String::from("# 报告\n\n");
@@ -491,7 +487,7 @@ fn a_built_in_skill_is_indexed_by_when_to_use_it() {
 fn the_app_guide_is_loaded_on_demand_where_skills_can_be() {
     let plain = AgentWorkspace::default();
     assert!(workspace_section(&plain, "en").contains("What the app calls the things"));
-    let with_skills = crate::ai::workspace::load_layers(None, None, None, &[]);
+    let with_skills = crate::ai::workspace::load_layers(None, None, None);
     assert!(with_skills.has_usable_skills());
     let section = workspace_section(&with_skills, "en");
     assert!(!section.contains("What the app calls the things"));
@@ -502,7 +498,7 @@ fn the_app_guide_is_loaded_on_demand_where_skills_can_be() {
 #[test]
 fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     use crate::ai::workspace::{AgentSkill, SkillSource};
-    let mut ws = crate::ai::workspace::load_layers(None, None, None, &["describe".to_string()]);
+    let mut ws = crate::ai::workspace::load_layers(None, None, None);
     ws.skills.push(AgentSkill {
         name: "house-headline".into(),
         description: "Titles in the house style".into(),
@@ -517,36 +513,36 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
         source: SkillSource::Global,
         ..AgentSkill::default()
     });
-    let index = skill_index(&ws, "en");
+    let index = skill_index(&ws, AgentMode::Write, "en");
     let lines: Vec<&str> = index.lines().collect();
     assert!(lines[0].starts_with("- house-headline (project): "));
     assert!(lines[1].starts_with("- my-tone (yours): ") && lines[1].ends_with('…'));
     assert!(lines[1].chars().count() < 540, "a long description is cut");
     // A built-in says when to use it, without the request words in
     // eight languages; the user's own keep their description.
-    assert_eq!(
-        lines[2],
-        "- continue-story: Use when asked to continue the story, write the next part or chapter, or what happens next. Not for non-fiction drafts or for questions about inline completion."
+    assert!(
+        lines[2].starts_with("- translate: Use when asked to translate"),
+        "{}",
+        lines[2]
     );
     // In another UI a built-in carries that UI's name for it.
-    let zh = skill_index(&ws, "zh");
+    let zh = skill_index(&ws, AgentMode::Review, "zh");
     assert!(
         zh.contains("- continuity [/检查前后一致 in their UI]: "),
         "{zh}"
     );
-    assert!(zh.contains("- house-headline (project): "));
-    // /name-only skills and turned-off ones aren't offered.
-    for absent in ["tighten", "expand", "change-tone", "summarize", "describe"] {
+    // Only the mode's skills: Review's built-ins, not Write's - nor the
+    // user's, which are Write's unless they say.
+    assert!(!zh.contains("- house-headline") && !zh.contains("- translate:"));
+    let create = skill_index(&ws, AgentMode::Create, "en");
+    for name in ["theme", "plugin", "skill"] {
+        assert!(create.contains(&format!("- {name}:")), "{name}");
+    }
+    assert!(!create.contains("- proofread:"));
+    // /name-only skills aren't offered.
+    for absent in ["tighten", "expand", "summarize", "proofread"] {
         assert!(!index.contains(&format!("- {absent}:")), "{absent}");
     }
-    // Built-ins by menu category: write before revise before check
-    // before format.
-    let at = |name: &str| index.find(&format!("- {name}:")).unwrap();
-    assert!(
-        at("dialogue") < at("de-ai")
-            && at("de-ai") < at("proofread")
-            && at("proofread") < at("email")
-    );
     // The system prompt carries it, the preference rule and the packs,
     // the same whatever the document.
     let a = build_instructions(&ws, &md("# One"), true, AgentMode::Write, "hi", "en");
@@ -563,28 +559,11 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     assert!(a.contains("standards-zh-hant") && !a.contains("contract,"));
     // Nothing to offer, no index.
     let mut none = ws.clone();
-    none.skills.iter_mut().for_each(|s| s.enabled = false);
+    none.skills.clear();
     assert!(
         !build_instructions(&none, &md(""), true, AgentMode::Write, "", "en")
             .contains("---available skills---")
     );
-}
-
-#[test]
-fn the_academic_skill_is_indexed_in_one_line() {
-    let ws = crate::ai::workspace::load_layers(None, None, None, &[]);
-    let zh = skill_index(&ws, "zh");
-    let line = zh
-        .lines()
-        .find(|l| l.starts_with("- academic-polish [/学术润色 in their UI]: "))
-        .unwrap_or_else(|| panic!("{zh}"));
-    // Sent with every request: one line, under the 500 cap uncut, and
-    // it names grant proposals so they route here.
-    assert!(
-        !line.ends_with('…') && line.contains("grant proposal"),
-        "{line}"
-    );
-    assert!(!zh.contains("research-writing"));
 }
 
 #[test]
@@ -638,11 +617,8 @@ fn the_workspace_section_says_which_folder_and_why() {
 
 #[test]
 fn the_prompt_names_things_exactly_as_the_ui_does() {
-    // Every UI label the agent is told about must be the one the user
-    // sees, in each language, or the agent sends people to menu items
-    // that don't exist. Read from the frontend's files, so a language
-    // still to be translated - no help guide of its own yet - is simply
-    // not there.
+    // Every UI label the agent is told about must be the one the user sees,
+    // in each language. Read from the frontend's files.
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
     let read = |path: &str| std::fs::read_to_string(repo.join(path)).unwrap_or_default();
     let names_ts = read("src/i18n/names.ts");
@@ -806,9 +782,8 @@ fn interaction_mode_is_explicit_in_every_message() {
     );
 }
 
-/// Saving a memory must not change the system prompt or the tool list:
-/// it rewrote the whole cached prefix and the history after it
-/// (docs/design/ai-tokens.md).
+/// Saving a memory must not change the system prompt or the tool list,
+/// which would rewrite the cached prefix.
 #[test]
 fn the_cached_prefix_survives_a_new_memory() {
     use crate::ai::memory::{Memories, Memory, MemoryKind, Scope};
@@ -904,8 +879,8 @@ fn remembered_memories_follow_the_users_instructions() {
         ..AgentWorkspace::default()
     };
     let prompt = build_instructions(&ws, &md("draft"), true, AgentMode::Review, "", "en");
-    // What to remember is decided after the exchange (memory::pass): the
-    // request has no remember tool to be told about.
+    // What to remember is decided after the exchange: the request has no
+    // remember tool to be told about.
     assert!(!prompt.contains("remember tool"));
     // What is remembered comes with the message, after the user's own
     // instructions (in the system prompt).
@@ -1037,8 +1012,8 @@ fn proposed_edits(turns: &[AgentTurn]) -> usize {
 
 #[test]
 fn a_comment_and_a_sentence_before_any_edit_is_asked_on() {
-    // DeepSeek, 1.2.0-rc.6: "Translated it all" with a comment, and no
-    // edit - the edits it meant to send next were never asked for.
+    // A comment saying "Translated it all" and no edit: the edits it meant to
+    // send next were never asked for.
     let document = "# 借雨\n\n雨夜。";
     let (turns, steps) = scripted_revise(
         document,
@@ -1093,4 +1068,33 @@ fn a_whole_document_rewritten_in_one_replace_ends_in_one_step() {
     );
     assert_eq!(steps, 1);
     assert_eq!(proposed_edits(&turns), 1);
+}
+
+/// A request's events reach any EventSink, not only the window's channel.
+#[test]
+fn events_go_to_any_sink() {
+    struct Recorded(std::sync::Mutex<Vec<String>>);
+    impl EventSink for Recorded {
+        fn send(&self, event: StreamEvent) {
+            let json = serde_json::to_value(&event).unwrap();
+            self.0
+                .lock()
+                .unwrap()
+                .push(json["type"].as_str().unwrap().to_string());
+        }
+    }
+    let sink = Recorded(Default::default());
+    let web = WebPlan::new(false, None, None, &[]);
+    forward(&sink, &web, None, ProviderEvent::Text("Hi"));
+    forward(
+        &sink,
+        &web,
+        None,
+        ProviderEvent::ToolStart {
+            call_id: "c1",
+            name: "propose_edit",
+        },
+    );
+    report(&sink)(LoopEvent::Retry);
+    assert_eq!(*sink.0.lock().unwrap(), ["delta", "toolStart", "retry"]);
 }

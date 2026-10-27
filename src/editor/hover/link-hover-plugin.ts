@@ -1,6 +1,9 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
-import { hasHoverProviders, provideHover } from "../../plugins/hover-providers";
+import {
+  hasHoverProviders,
+  provideHover,
+} from "../../plugins/contributions/hover-providers";
 import {
   floatingCardKey,
   hideHoverCard,
@@ -9,15 +12,15 @@ import {
   showHoverCard,
 } from "./hover-card";
 import { hoverSpot } from "./hover-target";
+import { getWindowAccess } from "../../plugins/app-bridge";
 
 /** How long the pointer rests before a card is asked for. */
 const REST_MS = 450;
 
 /**
- * Quick looks at what a link points to: the pointer resting on a link, a
- * wikilink or a citation asks the plugins with a hover provider
- * (textus.editor.registerHoverProvider) for a card, shown beside it
- * (hover-card.ts). Nothing is asked while no plugin provides one.
+ * Quick looks at what a link, wikilink or citation points to: a resting
+ * pointer asks the plugins' hover providers for a card. Nothing is asked
+ * while no plugin provides one.
  */
 export function createLinkHoverPlugin(docPath: () => string | null) {
   return $prose(() => {
@@ -50,7 +53,18 @@ export function createLinkHoverPlugin(docPath: () => string | null) {
                   const card = target && (await provideHover(target));
                   if (waiting?.key !== key) return;
                   waiting = null;
-                  if (card) showHoverCard(key, spot.rect, card);
+                  if (!card) return;
+                  // A document's card opens it, at the section linked to.
+                  const open =
+                    target.type === "document"
+                      ? () =>
+                          void getWindowAccess()?.openFile(target.path, {
+                            place: target.heading
+                              ? { heading: target.heading }
+                              : undefined,
+                          })
+                      : undefined;
+                  showHoverCard(key, spot.rect, { ...card, open });
                 })();
               }, REST_MS),
             };
@@ -74,8 +88,8 @@ export function createLinkHoverPlugin(docPath: () => string | null) {
         },
       },
       view: () => {
-        // The document scrolled under the card: it no longer sits by its
-        // link. (Captured: scrolling doesn't bubble.)
+        // The card no longer sits by its link once the document scrolls.
+        // Captured: scrolling doesn't bubble.
         const scrolled = (event: Event) => {
           // The card's own text scrolling keeps it.
           if ((event.target as Element | null)?.closest?.(".hover-card"))

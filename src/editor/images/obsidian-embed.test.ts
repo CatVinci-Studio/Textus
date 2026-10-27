@@ -68,7 +68,6 @@ describe("parseEmbed", () => {
   );
 
   it("takes the same file types for images as the backend searches for", () => {
-    // src-tauri/src/commands/vault.rs indexes the vault by its own list.
     const rust = readFileSync("src-tauri/src/commands/vault.rs", "utf8");
     const list = /const IMAGE_EXTENSIONS: &\[&str\] = &\[([^\]]*)\]/.exec(rust);
     const types = [...(list?.[1] ?? "").matchAll(/"([^"]+)"/g)].map(

@@ -1,10 +1,6 @@
-//! Pure checks for the built-in skill suite (agent_builtin.rs; catalogue
-//! §5.10): platform counts (`measured`), politeness register in Japanese
-//! and Korean (`register_consistent`), borrowing from a style sample
-//! (`max_overlap`), punctuation-only edits (`changed_chars_only_punct`),
-//! paired CJK marks, list items in a reply and where an edit landed. Kept
-//! apart from checks.rs so the suite's helpers sit together; like those,
-//! they are unit-tested and run in CI.
+//! Pure checks for the built-in skill suite: platform counts, Japanese and
+//! Korean register, borrowing from a style sample, punctuation-only edits,
+//! paired CJK marks, list items in a reply and where an edit landed.
 
 use super::checks;
 
@@ -22,8 +18,7 @@ pub fn cjk_chars(text: &str) -> usize {
 
 // ------------------------------------------------------------------ measure
 
-/// The counts `measure_text` gives the model (catalogue §5.4), as far as
-/// the eval needs them.
+/// The counts `measure_text` gives the model, as far as the eval needs them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Metric {
     /// Unicode scalars of the trimmed text.
@@ -32,9 +27,8 @@ pub enum Metric {
     CjkChars,
     /// checks::word_count: CJK characters plus whitespace-separated words.
     Words,
-    /// X's weighted length (twitter-text v3): 1 for Latin and general
-    /// punctuation ranges, 2 for everything else (CJK, most symbols), 2 for
-    /// a whole emoji sequence, 23 for every URL.
+    /// X's weighted length: 1 for Latin and general punctuation, 2 for everything
+    /// else and for a whole emoji sequence, 23 for every URL.
     XWeighted,
 }
 

@@ -5,22 +5,12 @@ import {
 } from "mdast-util-to-markdown";
 import type { MathData, Phrasing } from "./span-output";
 
-/**
- * Plain text and line breaks written back: alert markers and LaTeX left
- * unescaped, escapes only where needed, soft and hard breaks in the
- * document's own style, and the display width tables are padded by
- * (markdown-output.ts).
- */
+/** Plain text and line breaks written back so they read the same. */
 
 /**
- * A callout's marker - `> [!NOTE]` and its kin, opening a quote - is
- * written as it was typed. remark escapes the bracket ("\\[!NOTE]") in case
- * it starts a reference link, which Textus still reads as an alert
- * (github-alert-plugin.ts) but GitHub and every other tool no longer do.
- * Any type word in any case counts, with Obsidian's fold sign after it
- * (`[!tip]-`): Obsidian has callout types of its own (`[!question]`), which
- * Textus shows as a plain quote but must not break for the tools that
- * read them.
+ * A callout's marker opening a quote (`> [!NOTE]`, any type word, with
+ * Obsidian's fold sign) is written as typed: remark escapes the bracket,
+ * which GitHub and Obsidian then no longer read as a callout.
  */
 export const ALERT_MARKER = /^\\(\[![A-Za-z]+\])/;
 
@@ -36,11 +26,9 @@ export function keepAlertMarker(text: Handle): Handle {
 }
 
 /**
- * Text ending in a space is escaped like any other. Milkdown's text
- * handler returns such text as it is, to keep the space from being written
- * `&#x20;`, and so wrote `# bar ` at the start of a line unescaped - a
- * heading on reopening - once the word after it was deleted or made bold;
- * a `- ` or `1. ` likewise became a list. The space is still kept as it is.
+ * Text ending in a space is escaped like any other: Milkdown returns it
+ * as is, so `# bar ` at a line's start became a heading on reopening. The
+ * space itself is still kept.
  */
 export function escapingBeforeSpaces(text: Handle): Handle {
   return (node, parent, state, info) => {
@@ -51,9 +39,8 @@ export function escapingBeforeSpaces(text: Handle): Handle {
     const spaces = value.slice(body.length);
     if (body)
       return state.safe(body, { ...info, after: spaces, encode: [] }) + spaces;
-    // Spaces alone, at the start of a line with more after them, are
-    // encoded: a tab there opens indented code. A line of spaces only
-    // stays as it is.
+    // Spaces alone at a line's start with more after them are encoded: a tab
+    // there opens indented code.
     const lineStart = !info.before || /[\r\n]$/.test(info.before);
     const more = info.after !== undefined && !/^[\r\n]?$/.test(info.after);
     return lineStart && more && !/[\r\n]/.test(spaces)
@@ -70,8 +57,8 @@ export const REFERENCES: Record<string, string> = {
   ")": "&#41;",
 };
 
-/** Text nodes with a formula written `\\[...\\]` or `\\(...\\)` after them
- *  in their paragraph, heading or cell, by its opening bracket. */
+/** Text nodes with a LaTeX-bracket formula after them in their block, by
+ *  its opening bracket. */
 export const latexAhead = new WeakMap<Phrasing, Set<string>>();
 export const PHRASING_BLOCKS = new Set(["paragraph", "heading", "tableCell"]);
 
@@ -99,16 +86,10 @@ export function markLatexAhead(node: Phrasing): void {
 }
 
 /**
- * Brackets escaped as text never pair into LaTeX math. Textus reads
- * `\\[...\\]` and `\\(...\\)` as maths (latex-math-syntax.ts), and remark
- * escapes both brackets of a link text's `[b]` - so editing
- * `[Tech [Episodes]](u)` saved `[Tech \\[Episodes\\]](u)`, which read back
- * as a formula. Every escaped closer after an escaped opener is written as
- * a character reference instead, which reads as the bracket everywhere.
- * So is an escaped opener with a formula in LaTeX's brackets after it in
- * its block: before `\\[x\\]`, a `\\[` the text was written with opened a
- * formula that ran to that one's end (`[['\\[', '\\]']` in a config
- * snippet, once edited).
+ * Brackets escaped as text never pair into LaTeX math: Textus reads `\\[`
+ * `\\]` as maths, and remark escapes a link text's `[b]`. An escaped closer
+ * after an escaped opener, or an escaped opener with a LaTeX formula after
+ * it, is written as a character reference instead.
  */
 export function withoutLatexPairs(text: Handle): Handle {
   return (node, parent, state, info) => {
@@ -130,11 +111,8 @@ export function withoutLatexPairs(text: Handle): Handle {
 }
 
 /**
- * Line ends in a paragraph's text, Milkdown's soft breaks, as Markdown can
- * hold them: one at a time, and not at the paragraph's ends. Each is shown
- * as a space; deleting the one word on a line left two in a row, which were
- * written as a blank line and split the paragraph in two, and one at the
- * end of a paragraph (its last line's words deleted) was a stray line.
+ * A paragraph's soft breaks as Markdown can hold them: one at a time and not
+ * at its ends. Two in a row would write a blank line and split it.
  */
 export function withSingleLineEnds(text: Handle): Handle {
   return (node, parent, state, info) => {
@@ -156,13 +134,9 @@ export function withSingleLineEnds(text: Handle): Handle {
 }
 
 /**
- * A hard line break as Markdown can hold it. At the end of a paragraph it
- * is nothing: `\\` there is a literal backslash, so a Shift+Enter left at
- * the end of a line came back as one. Before a line end that is already in
- * the text (a `<br>` at the end of a line, br-hardbreak-plugin.ts) it is
- * the backslash alone: its own line end and that one made a blank line,
- * which split the paragraph. In a table cell it is `<br>`, and nothing
- * at the cell's end, as at a paragraph's.
+ * A hard line break as Markdown can hold it: nothing at a paragraph's end
+ * (`\\` there is a literal backslash), the backslash alone before a line end
+ * already in the text, and `<br>` in a table cell.
  */
 export const hardBreak: Handle = (node, parent, state, info) => {
   const siblings = (parent?.children ?? []) as {
@@ -178,9 +152,7 @@ export const hardBreak: Handle = (node, parent, state, info) => {
     )
   )
     return "";
-  // A table row is one line: a break in a cell is written as the HTML
-  // one, read back as a break (br-hardbreak-plugin.ts). remark wrote a
-  // space.
+  // A table row is one line: a break in a cell is written as `<br>`.
   if (state.stack.includes("tableCell")) return "<br>";
   const out = defaultHandlers.break(node, parent, state, info);
   return rest[0]?.type === "text" && rest[0].value?.startsWith("\n")
@@ -189,8 +161,7 @@ export const hardBreak: Handle = (node, parent, state, info) => {
 };
 
 /** A hard break as two spaces at the line's end, for a document written
- *  that way (documentBreaks) - after text only: spaces opening a line are
- *  nothing, and a break there stays a backslash. */
+ *  that way. After text only: spaces opening a line are nothing. */
 export const hardBreakAsSpaces: Handle = (node, parent, state, info) => {
   const out = hardBreak(node, parent, state, info);
   const siblings = (parent?.children ?? []) as Phrasing[];
@@ -204,10 +175,8 @@ export const hardBreakAsSpaces: Handle = (node, parent, state, info) => {
 };
 
 /**
- * How the document's own hard breaks are written, by majority: a
- * backslash or two spaces at the end of the line. remark writes the
- * backslash, so an edit to a paragraph with a two-space break rewrote it.
- * Lines inside fenced code don't count.
+ * How the document's own hard breaks are written, by majority, so an edit
+ * doesn't rewrite them. Lines inside fenced code don't count.
  */
 export function documentBreaks(markdown: string): "backslash" | "spaces" {
   let spaces = 0;
@@ -228,10 +197,8 @@ export function documentBreaks(markdown: string): "backslash" | "spaces" {
 }
 
 /**
- * How wide a table cell's text is in a monospaced editor, for padding the
- * columns of a table written back: Chinese, Japanese and Korean
- * characters, full-width forms and most emoji take two columns. Counted as
- * one, a column of Chinese came out ragged in every source view.
+ * How wide a table cell's text is in a monospaced editor, for padding
+ * columns: CJK, full-width forms and most emoji take two.
  */
 export function displayWidth(text: string): number {
   let width = 0;

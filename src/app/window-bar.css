@@ -1,17 +1,6 @@
-/* The window's title strip, drawn by the app because the native title bar is
-   either overlaid (macOS) or gone entirely (Windows) - see
-   build_with_app_chrome in src-tauri/src/lib.rs. One strip holding everything
-   that used to float separately up here: the drag region, the filename, and
-   the document's status readouts.
-
-   Floats over the content on the theme background. Opacity is the whole
-   point: the strip this replaces was fully TRANSPARENT, so text scrolling
-   under it stayed perfectly legible and collided with the centered filename.
-   Solid, that text simply ends at the strip - and with no content theme
-   active the fill matches the editor behind it, so the bar itself reads as
-   nothing more than the top margin of the page.
-
-   Below every overlay (find bar, popovers) so it never steals their clicks. */
+/* The window's title strip, drawn by the app: the drag region, the filename
+   and the status readouts. Opaque, so scrolling text ends at it instead of
+   colliding with the title. Below every overlay so it never steals clicks. */
 .window-bar {
   position: fixed;
   top: 0;
@@ -27,39 +16,26 @@
   background: var(--bg);
 }
 
-/* Where the app owns the whole frame (Windows - main.tsx sets the attribute
-   from platform/window-chrome.ts), that left inset holds no traffic lights: the
-   menu button takes it, and the caption buttons take the right edge. Both
-   are flush to the window edge, so the row's own padding gets out of their
-   way and the components cancel what's left with a negative margin. The
-   HEIGHT deliberately does not change - .tab-bar and .sidebar-header clear
-   this bar with hardcoded offsets, and one row of chrome at one height on
-   both platforms is the point of the exercise. */
+/* Where the app owns the frame, the menu button and caption buttons sit
+   flush to the edges. The height stays: other bars clear it with fixed
+   offsets. */
 :root[data-window-chrome="app"] .window-bar {
   padding: 0 12px 0 12px;
 }
 
-/* macOS centres the traffic lights in a native title bar, not in this row:
-   28pt tall up to macOS 15, so the two agreed, but 32pt from macOS 26, where
-   the lights sat 2pt below the title. The row keeps its 28px height for the
-   reason above; its contents drop to the lights' centre instead. The boot
-   script sets the variable (native_titlebar_height in src-tauri/src/lib.rs). */
+/* macOS 26 centres the traffic lights in a 32pt title bar; the row keeps
+   28px and drops its contents to the lights' centre. */
 :root[data-window-chrome="native"] .window-bar {
   padding-top: max(0px, var(--native-titlebar-height, 28px) - 28px);
 }
 
-/* In full screen a Mac shows the traffic lights only with the menu bar,
-   over the window: their corner is free, and the sidebar's toggle takes it
-   (useFullscreenMark marks the root), 12px from the edge instead of the
-   lights' 78px. It moves there at once, with no slide: the lights don't
-   slide either, and one that followed the window's animation never kept
-   pace with it. */
+/* In full screen the lights' corner is free, and the sidebar's toggle takes
+   it at once, with no slide: it never kept pace with the window's. */
 :root[data-window-chrome="native"][data-window-fullscreen] .window-bar {
   padding-left: 12px;
 }
 
-/* The row's first control, before the title (WindowBar): the sidebar's
-   toggle, a step past the menu button where the app draws that one. */
+/* The row's first control: the sidebar's toggle. */
 .window-bar-sidebar-toggle {
   flex-shrink: 0;
 }
@@ -69,12 +45,8 @@
   margin-left: 2px;
 }
 
-/* Modal backdrops stop at the window bar instead of covering it. Where the
-   app draws the caption (Windows/Linux) that bar holds the only minimize/
-   maximize/close buttons and the window's drag area, so a full-window
-   backdrop left the window impossible to move or close while Settings or a
-   prompt was open; macOS kept its traffic lights but lost the drag. `:root`
-   for the weight to beat each component's own `inset: 0`. */
+/* Modal backdrops stop at the window bar, or the window can't be moved or
+   closed while one is open. `:root` beats each component's `inset: 0`. */
 :root
   :is(
     .settings-backdrop,
@@ -87,10 +59,7 @@
   top: 28px;
 }
 
-/* Centered on the WINDOW (not on the space left over after the traffic-light
-   inset), which is where a native title sits. Absolute rather than a flex
-   child for that reason; the status group below stays in flow on the right
-   and the two only meet on a very narrow window, where the title ellipses. */
+/* Centered on the window, where a native title sits, hence absolute. */
 .window-bar-title {
   position: absolute;
   left: 50%;
@@ -112,9 +81,7 @@
   text-overflow: ellipsis;
 }
 
-/* Same centring, but bounded so it can never slide under the caption buttons
-   the app draws on the right (3 x 46px) - the title is positioned on the
-   window, so on a narrow window it would otherwise run straight into them. */
+/* Bounded so it never slides under the app-drawn caption buttons. */
 :root[data-window-chrome="app"] .window-bar-title {
   max-width: max(0px, calc(100% - 300px));
 }
@@ -229,8 +196,8 @@
   padding: 6px;
 }
 
-/* 4.1: shown while ghost text / grammar check / live Mermaid preview are
-   paused for a large document (see editor/large-doc.ts). */
+/* Shown while ghost text, grammar check and live Mermaid preview are paused
+   for a large document. */
 .large-doc-badge {
   font-size: var(--text-xs);
   color: var(--editor-muted);

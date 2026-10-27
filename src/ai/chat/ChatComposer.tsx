@@ -27,7 +27,7 @@ import {
   SearchIcon,
 } from "../../ui/icons";
 import { rememberDeepThinking } from "./deep-thinking";
-import { Select } from "../../ui/Select";
+import { ModeAndModelPicker, ModePicker, type ModeChoice } from "./ModePicker";
 import { Tooltip } from "../../ui/Tooltip";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 
@@ -46,6 +46,12 @@ import {
   type ChatComposerProps,
 } from "./composer-types";
 
+/** A tablet's sheet has no room for the model: it is picked in Settings
+ *  there, as on a phone. */
+function mobileChrome() {
+  return document.documentElement.dataset.windowChrome === "mobile";
+}
+
 export type {
   ChatComposerHandle,
   ChatComposerLabels,
@@ -54,10 +60,8 @@ export type {
 } from "./composer-types";
 
 /**
- * The input row: auto-growing textarea, attach button, selection chip, send
- * button, and the /name skill picker it drives. Self-contained input state
- * (what's typed, staged attachments) - InlineChat only hears about a
- * finished, resolved message via onSend.
+ * The input row: textarea, attachments, selection chip, send button and the
+ * `/` and `@` pickers. Owns its input state; the caller hears only onSend.
  */
 export function ChatComposer({
   docPath,
@@ -75,7 +79,7 @@ export function ChatComposer({
   focusOnOpen = true,
   defaultWebSearch,
   dockActions,
-  modelSwitcher,
+  switchModels = false,
   onSend,
   onSkillUsed,
   onStop,
@@ -115,13 +119,11 @@ export function ChatComposer({
     input,
     dismissedInput,
     lang: picker.lang,
+    mode,
   });
 
-  // @-mention picker: "@" (or the full-width "＠" a CJK IME types) plus a
-  // partial path at the end of the input lists matching project files
-  // (ai::project); picking one attaches its text as a chip and removes the
-  // "@query" from the message. The list is fetched on the first "@", not on
-  // mount - most messages never mention a file.
+  // @-mention picker ("@", or the "＠" a CJK IME types): picking a project
+  // file attaches it and drops the "@query". Fetched on the first "@".
   const mentionQuery = skillTrigger ? null : MENTION_TRIGGER.exec(input);
   const mentionMenuOpen = !!mentionQuery && dismissedInput !== input;
   const projectFiles = useProjectFiles(mentionMenuOpen, docPath, workspaceRoot);
@@ -150,17 +152,15 @@ export function ChatComposer({
     inputRef.current?.focus();
   }
 
-  // Skill picker: open while the input is a single /token still being typed
-  // (no space yet), filtered by that prefix. Purely derived from the input,
-  // so it closes itself once the name is completed or the slash is deleted.
+  // Skill picker: open while the input is a single /token with no space yet,
+  // so it closes itself once the name is complete or the slash is gone.
   function pickSkill(skill: PickerSkill) {
     setInput(`/${skill.name} `);
     setPickerIndex(0);
   }
 
-  // What the open picker shows: its sections of rows, or the lines that
-  // explain an empty one. Never nothing - an empty menu that rendered
-  // nothing looked like a dead key.
+  // What the open picker shows. Never nothing: an empty menu looks like a
+  // dead key.
   let pickerSections: PickerSection[] = [];
   let pickerEmpty: string[] = [];
   if (skillMenuOpen && skillTrigger) {
@@ -223,7 +223,7 @@ export function ChatComposer({
   function submit() {
     const typed = input.trim();
     const message = resolveSkillMessage(typed, skills, resolveName);
-    // While a reply is coming the message joins the queue (ChatBody).
+    // While a reply is coming the message joins the queue.
     if (!message) return;
     if (message !== typed) {
       const token = SKILL_COMMAND.exec(typed)?.[1];
@@ -252,15 +252,12 @@ export function ChatComposer({
   }
 
   function onKeyDown(e: React.KeyboardEvent) {
-    // Keys pressed while an IME composition is active belong to the IME
-    // (Enter confirms the composed characters, arrows navigate candidates) -
-    // acting on them here sent half-typed CJK messages. WebKit can also fire
-    // the confirming keydown just after compositionend with isComposing
-    // already false but the legacy keyCode still 229, so check both.
+    // Keys during an IME composition belong to the IME. WebKit can fire the
+    // confirming keydown after compositionend with isComposing false but
+    // keyCode still 229, so check both.
     if (e.nativeEvent.isComposing || e.keyCode === 229) return;
-    // While a picker is open, the navigation keys drive it instead of the
-    // chat (Enter completes the name rather than sending), and Escape
-    // closes it rather than the chat.
+    // While a picker is open, the navigation keys, Enter and Escape drive it
+    // instead of the chat.
     if (pickerOpen) {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -303,16 +300,32 @@ export function ChatComposer({
   // The suggested next message, while the box is empty.
   const offered = !busy && input === "" ? suggestion : null;
 
-  const modeLabels: Record<AgentMode, string> = {
-    write: labels.modeWrite,
-    review: labels.modeReview,
+  const modeLabels: Record<AgentMode, [string, string]> = {
+    write: [labels.modeWrite, labels.modeWriteHint],
+    review: [labels.modeReview, labels.modeReviewHint],
+    create: [labels.modeCreate, labels.modeCreateHint],
   };
-  const modes = AGENT_MODES.map((m) => [m, modeLabels[m]] as const);
+  // Quick Ask works on the selection: it writes or reviews, never creates.
+  const modes: ModeChoice[] = AGENT_MODES.filter(
+    (m) => !compact || m !== "create",
+  ).map((value) => ({
+    value,
+    label: modeLabels[value][0],
+    hint: modeLabels[value][1],
+  }));
+  const pickerProps = {
+    mode,
+    modes,
+    onMode: setMode,
+    labels: {
+      mode: labels.modeLabel,
+      model: labels.modelLabel,
+      picker: switchModels ? labels.modeAndModelLabel : labels.modeLabel,
+    },
+  };
 
-  // On a phone, the composer's buttons leave focus - and so the keyboard -
-  // in the textarea: a tap's default is to blur it, which drops the
-  // keyboard under the finger mid-message (and moves the docked Quick Ask
-  // with it). The click still runs.
+  // On a phone the buttons leave focus, and the keyboard, in the textarea:
+  // a tap would blur it mid-message. The click still runs.
   const holdFocus = phone
     ? { onMouseDown: (e: React.MouseEvent) => e.preventDefault() }
     : {};
@@ -345,9 +358,8 @@ export function ChatComposer({
       )}
       {dockActions !== undefined && (
         <div className="quick-ask-dock-head">
-          {/* The passage itself, on one line, rather than a count of its
-              characters: on a phone the keyboard and this panel cover most
-              of the document, so the panel says what it is about. */}
+          {/* The passage itself, not a count: on a phone the keyboard and
+              this panel cover most of the document. */}
           <span className="quick-ask-dock-quote">
             {showSelection ? selectedText : labels.atCursor}
           </span>
@@ -359,25 +371,22 @@ export function ChatComposer({
         {attachError && (
           <div className="inline-chat-attach-error">{attachError}</div>
         )}
-        {/* The field: what is attached, the text and its controls, one box
-            in the panel and the detached window (inline-chat.css). */}
+        {/* The field: what is attached, the text and its controls, one box. */}
         <div className="inline-chat-field">
           {attachments.length > 0 && (
             <div className="inline-chat-attachments">
               {attachments.map((file, i) => (
                 <span key={i} className="inline-chat-attachment">
-                  {/* The two kinds reach the model in completely different
-                    ways - extracted text in the prompt, or a native image
-                    part - so the chip says which this is. */}
+                  {/* Extracted text and a native image part reach the model
+                    differently, so the chip says which this is. */}
                   {file.kind === "image" ? (
                     <ImageFileIcon className="inline-chat-attachment-kind" />
                   ) : (
                     <GenericFileIcon className="inline-chat-attachment-kind" />
                   )}
                   {file.name}
-                  {/* A file cut at the extraction cap must say so - otherwise
-                    a partial answer looks like the model misread the whole
-                    document rather than having seen only part of it. */}
+                  {/* A file cut at the extraction cap says so, or a partial
+                    answer looks like the model misread the document. */}
                   {file.kind === "text" && file.truncated && (
                     <span className="inline-chat-attachment-note">
                       {labels.attachmentTruncated}
@@ -414,15 +423,14 @@ export function ChatComposer({
           />
           <div className="inline-chat-toolbar">
             {phone ? (
-              // Three short words: they all fit in a row, and a
-              // segmented control shows which one is on and switches in one
-              // tap, where a select is a trip through the system's picker.
+              // Three short words fit in a row, and a segmented control
+              // switches in one tap where a select needs the system picker.
               <div
                 className="chat-mode-segments"
                 role="radiogroup"
                 aria-label={labels.modeLabel}
               >
-                {modes.map(([value, label]) => (
+                {modes.map(({ value, label }) => (
                   <button
                     key={value}
                     type="button"
@@ -436,19 +444,10 @@ export function ChatComposer({
                   </button>
                 ))}
               </div>
+            ) : switchModels && !mobileChrome() ? (
+              <ModeAndModelPicker {...pickerProps} />
             ) : (
-              <Select
-                className="inline-chat-mode"
-                value={mode}
-                aria-label={labels.modeLabel}
-                onChange={(event) => setMode(event.target.value as AgentMode)}
-              >
-                {modes.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </Select>
+              <ModePicker {...pickerProps} />
             )}
             {!compact && (
               <>
@@ -520,7 +519,6 @@ export function ChatComposer({
                     </button>
                   </Tooltip>
                 )}
-                {modelSwitcher}
               </>
             )}
             {selectedText && !selectionDropped && dockActions === undefined && (

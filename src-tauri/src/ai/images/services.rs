@@ -3,15 +3,14 @@
 
 use super::*;
 
-/// One service Settings › Textus AI › Image model offers. Mirrored by
-/// `ImageProviderEntry` in src/ai/image-models.ts.
+/// One service Settings offers as Image model. Keep in step with the frontend's
+/// `ImageProviderEntry`.
 #[derive(Serialize, Clone, Copy)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ImageProviderEntry {
     pub id: &'static str,
-    /// A brand name; "custom", "doubao" and MiniMax's two are localized by
-    /// the frontend.
+    /// A brand name; a few are localized by the frontend.
     pub label: &'static str,
     pub api: ImageApi,
     /// None for the compatible endpoint, whose address the user gives.
@@ -30,15 +29,13 @@ pub struct ImageProviderEntry {
 
 pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
     ImageProviderEntry {
-        // The ChatGPT sign-in's own pictures, on the plan's allowance:
-        // experimental, since it is the backend ChatGPT's apps use, not a
-        // published API (aicompat openai_codex::generate_image).
+        // The ChatGPT sign-in's own pictures, on the plan's allowance: experimental,
+        // since it is the backend ChatGPT's apps use, not a published API.
         id: "openai-chatgpt",
         label: "OpenAI (ChatGPT sign-in)",
         api: ImageApi::ChatGpt,
         base_url: None,
-        // No key: the sign-in's credential, which Settings › Textus AI
-        // keeps under the chat provider.
+        // No key: the sign-in's credential, kept under the chat provider.
         key_id: "",
         models: &["gpt-image"],
         sign_in_for: Some("openai"),
@@ -50,7 +47,7 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
         base_url: Some("https://api.openai.com/v1"),
         // An API key: the ChatGPT sign-in has no Images API.
         key_id: "openai",
-        // About $0.05 and $0.01 a picture at medium quality (2026-10).
+        // About $0.05 and $0.01 a picture at medium quality.
         models: &["gpt-image-2", "gpt-image-1-mini"],
         sign_in_for: None,
     },
@@ -139,9 +136,8 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
 pub const FOLLOW_CHAT: &str = "chat";
 
 /// The image service that goes with a chat provider: OpenAI's through the
-/// ChatGPT sign-in while there is one (as chat prefers it, route.rs), else
-/// the provider's own pictures with the same key; None for a chat provider
-/// that makes none, and so no generate_image.
+/// ChatGPT sign-in while there is one, else the provider's own on the same
+/// key; None for a chat provider that makes none.
 pub fn following_chat(chat_provider: &str, chatgpt_signed_in: bool) -> Option<&'static str> {
     if chatgpt_signed_in {
         if let Some(entry) = IMAGE_PROVIDERS
@@ -161,8 +157,8 @@ pub fn find(id: &str) -> Option<&'static ImageProviderEntry> {
     IMAGE_PROVIDERS.iter().find(|e| e.id == id)
 }
 
-/// The image model setting as a request carries it. Mirrors `ImageModel`
-/// in src/ai/image-models.ts.
+/// The image model setting as a request carries it. Keep in step with the
+/// frontend's `ImageModel`.
 #[derive(Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ImageModel {
@@ -172,15 +168,13 @@ pub struct ImageModel {
     /// The compatible endpoint's address.
     #[serde(default)]
     pub base_url: String,
-    /// At most this many pictures per send (Settings › Textus AI ›
-    /// Pictures per request); `PER_SEND` when unset.
+    /// At most this many pictures per send; `PER_SEND` when unset.
     #[serde(default)]
     pub limit: Option<usize>,
 }
 
-/// At most this many pictures per send by default, a retry of a refused one
-/// included: each costs money, and a reply that wants more is asked to say
-/// so. The setting may raise it to `MAX_PER_SEND`.
+/// At most this many pictures per send by default, retries included: each
+/// costs money. The setting may raise it to `MAX_PER_SEND`.
 pub(crate) const PER_SEND: usize = 2;
 
 pub(crate) const MAX_PER_SEND: usize = 8;

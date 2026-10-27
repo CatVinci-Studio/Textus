@@ -26,7 +26,7 @@ Grammar check uses only the writing conventions and the library's names.
 | AI remembered        | AI 记住的          | AIが覚えたこと           | What Textus AI keeps by itself from conversations: your requirements, preferences, style. |
 | Skills               | 技能               | スキル                   | Named, reusable instructions, called with `/name`.                                        |
 | Global config folder | 全局配置文件夹     | グローバル設定フォルダー | The app's folder for the writing instructions and skills that apply to every document.    |
-| Built-in skills      | 内置技能           | 組み込みスキル           | The 19 skills that come with the app; each can be turned off, customized or reset.        |
+| Built-in skills      | 内置技能           | 組み込みスキル           | Each mode's own skills, always on (9 in all); each can be customized or reset.            |
 | Writing conventions  | 写作规范           | 表記ルール               | The punctuation, spacing and number norms followed, per document language.                |
 | Modes                | 写作 / 审阅 / 修订 | 執筆 / レビュー / 推敲   | What a conversation may do to the document: add text, nothing, or change it.              |
 
@@ -201,18 +201,27 @@ Textus AI never changes them.
 calls with `/name` or Textus AI loads by itself when a request matches its
 description.**
 
-- **On disk:** built-in: 19 skills bundled with the app
+- **On disk:** built-in: 9 skills bundled with the app, each panel
+  mode's own and always on - Write: expand, tighten, translate, summarize;
+  Review: proofread, continuity; Create: theme, plugin, skill
   (`src-tauri/src/ai/skills/*.md`, read-only); global: `skills/*.md` in the
-  global config folder; project: `.textus/skills/*.md`. Frontmatter `name`
-  and `description` (block scalars allowed), Textus-only keys under
-  `metadata:` (`textus-invocation`, `textus-category`, `textus-packs`,
+  global config folder, where the market's skills install
+  (textus-plugins/skills); project: `.textus/skills/*.md`. Frontmatter
+  `name` and `description` (block scalars allowed), Textus-only keys under
+  `metadata:` (`textus-invocation`, `textus-category`, `textus-modes`,
+  `textus-packs`, `textus-label-<lang>`, `textus-hint-<lang>`,
   `textus-aliases-<lang>`, `textus-version`, `textus-based-on`), then the
   instructions. `<!-- -->` comments in the instructions are never sent.
-- **Create / edit:** **Settings > Textus AI > Skills > Import Skill…** copies
-  a file into the global skills; **Customize…** on a built-in copies it
-  there with `textus-based-on` (so **Reset to built-in** may delete it); or
-  by hand in either folder. A built-in can be turned off
-  (`settings.disabledBuiltinSkills`).
+- **Modes:** a skill applies in the modes its `textus-modes` names (Write
+  when it says none); the `/` menu and the skill index offer only the
+  current mode's. The user changes a non-built-in skill's modes in
+  **Settings > Extensions > Skills**, which rewrites the line.
+- **Create / edit:** **Import Skill…** copies a file into the global
+  skills; **Get more** installs one from the market; Create mode's `skill`
+  writes one in the reply and **Save this skill** keeps it with the modes
+  ticked; **Customize…** on a built-in copies it there with
+  `textus-based-on` (so **Reset to built-in** may delete it); or by hand in
+  either folder.
 - **Reference packs:** `contract`, `craft` and `standards-<lang>` for ten
   languages (`src-tauri/src/ai/skills/packs/`), never listed or called with
   `/`. A skill's `textus-packs` sections (`standards#dialogue` = the

@@ -1,42 +1,44 @@
-/**
- * The built-in writing skills the app ships (src-tauri/src/ai/skills/, the
- * catalogue's §1), as far as the frontend needs to know them: the name, the
- * `/` menu's group, and whether the model may pick one up by itself. Their
- * words for people - label, one-line hint, the aliases typed after `/` -
- * live in src/i18n/skills/<code>.ts, one file per UI language.
- *
- * The backend's skill list (`list_skills`) is the authority on which exist
- * and which are on; this list is the order Settings shows them in and the
- * fallback when a list comes without them.
- */
+import type { AgentMode } from "../../settings/settings-types";
 
-export const SKILL_CATEGORIES = ["write", "revise", "check", "format"] as const;
+/** The built-in skills as the frontend needs them. The backend's list decides
+ *  which exist; this one sets Settings' order and is the fallback. */
+
+export const SKILL_CATEGORIES = [
+  "write",
+  "revise",
+  "check",
+  "format",
+  "create",
+] as const;
 export type SkillCategory = (typeof SKILL_CATEGORIES)[number];
 
+/** Each mode's own skills, always on; every other skill comes from the
+ *  market. Keep in step with the backend's skill files. */
 export const BUILTIN_SKILLS = [
-  { name: "continue-story", category: "write", invocation: "both" },
-  { name: "describe", category: "write", invocation: "both" },
-  { name: "dialogue", category: "write", invocation: "both" },
-  { name: "imitate-style", category: "write", invocation: "both" },
-  { name: "expand", category: "revise", invocation: "userOnly" },
-  { name: "tighten", category: "revise", invocation: "userOnly" },
-  { name: "change-tone", category: "revise", invocation: "userOnly" },
-  { name: "de-ai", category: "revise", invocation: "both" },
-  { name: "translate", category: "revise", invocation: "both" },
-  { name: "proofread", category: "check", invocation: "both" },
-  { name: "continuity", category: "check", invocation: "both" },
-  { name: "email", category: "format", invocation: "both" },
-  { name: "notice", category: "format", invocation: "both" },
-  { name: "minutes", category: "format", invocation: "both" },
-  { name: "academic-polish", category: "format", invocation: "both" },
-  { name: "social-post", category: "format", invocation: "both" },
-  { name: "headline", category: "format", invocation: "both" },
-  { name: "summarize", category: "format", invocation: "userOnly" },
-  { name: "theme", category: "format", invocation: "both" },
+  { name: "expand", category: "revise", invocation: "userOnly", mode: "write" },
+  {
+    name: "tighten",
+    category: "revise",
+    invocation: "userOnly",
+    mode: "write",
+  },
+  { name: "translate", category: "revise", invocation: "both", mode: "write" },
+  {
+    name: "summarize",
+    category: "format",
+    invocation: "userOnly",
+    mode: "write",
+  },
+  { name: "proofread", category: "check", invocation: "both", mode: "review" },
+  { name: "continuity", category: "check", invocation: "both", mode: "review" },
+  { name: "theme", category: "create", invocation: "both", mode: "create" },
+  { name: "plugin", category: "create", invocation: "both", mode: "create" },
+  { name: "skill", category: "create", invocation: "both", mode: "create" },
 ] as const satisfies readonly {
   name: string;
   category: SkillCategory;
   invocation: "both" | "userOnly";
+  mode: AgentMode;
 }[];
 
 export type BuiltinSkillName = (typeof BUILTIN_SKILLS)[number]["name"];

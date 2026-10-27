@@ -1,36 +1,24 @@
-//! Shared HTTP client construction for every provider request.
-//!
-//! Some users (notably behind restrictive networks) can only reach the AI
-//! providers through a proxy, and a GUI app launched from Finder doesn't
-//! inherit shell env vars like HTTPS_PROXY - so the proxy is an explicit,
-//! app-level setting mirrored here from the frontend. HTTPS itself needs no
-//! setting: every request already goes over TLS (rustls).
+//! Shared HTTP client construction for every provider request. A GUI app
+//! launched from Finder doesn't inherit HTTPS_PROXY, so the proxy is an
+//! app-level setting mirrored here from the frontend.
 
 use std::sync::RwLock;
 use std::time::Duration;
 
 static PROXY_URL: RwLock<Option<String>> = RwLock::new(None);
 
-/// Total request timeout (connect + send + receive the full response).
-/// Previously unset entirely, so a provider that stopped responding mid-way
-/// because of a dead proxy or a hung custom endpoint could hold the request
-/// forever, leaving the frontend no recovery short of restarting the app.
-///
-/// 120s comfortably covers a slow model's full response for the
-/// whole-body paths (completion, grammar, model lists). Streamed agent
-/// requests use `streaming_client()` instead - a healthy stream can easily
-/// outlive a total cap, so it trades this for a per-read idle timeout.
+/// Total request timeout for whole-body paths, so a hung proxy or endpoint
+/// can't hold a request forever. Streamed requests use a per-read idle
+/// timeout instead, since a healthy stream can outlive any total cap.
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(120);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 /// Max silence between two chunks of a streamed body before giving up -
 /// generous enough for a model thinking between tokens, short enough that
 /// a dead proxy doesn't hold a request forever.
 const STREAM_READ_TIMEOUT: Duration = Duration::from_secs(120);
-/// Max time a stream may go without a single event: bytes alone - an SSE
-/// comment, a keep-alive ping - don't count, so a provider that keeps the
-/// connection warm while the model has stopped can't hold a request
-/// forever, as it did with the ChatGPT model (1.2.0-rc.5). Well past the
-/// longest thinking a reply needs.
+/// Max time a stream may go without a single event. Keep-alive bytes don't
+/// count, so a provider keeping the connection warm after the model stopped
+/// can't hold a request forever. Well past the longest thinking a reply needs.
 const STREAM_EVENT_TIMEOUT: Duration = if cfg!(test) {
     Duration::from_secs(1)
 } else {
@@ -38,9 +26,7 @@ const STREAM_EVENT_TIMEOUT: Duration = if cfg!(test) {
 };
 
 /// Sets (or clears, with None/empty) the proxy all provider requests route
-/// through. Accepts whatever `reqwest::Proxy::all` does - http://, https://,
-/// and socks5:// / socks5h:// URLs - and rejects unparseable ones so a typo
-/// fails here, visibly, instead of silently at request time.
+/// through. Unparseable URLs are rejected here so a typo fails visibly.
 pub fn set_proxy(url: Option<String>) -> Result<(), String> {
     let url = url.map(|u| u.trim().to_string()).filter(|u| !u.is_empty());
     if let Some(u) = &url {
@@ -50,9 +36,7 @@ pub fn set_proxy(url: Option<String>) -> Result<(), String> {
     Ok(())
 }
 
-/// The proxy set with [`set_proxy`], for requests that build their own
-/// client (the main crate's web_fetch, which pins addresses and handles
-/// redirects itself).
+/// The proxy set with [`set_proxy`], for requests that build their own client.
 pub fn proxy_url() -> Option<String> {
     PROXY_URL.read().unwrap().clone()
 }
@@ -74,18 +58,14 @@ fn with_proxy(build: impl Fn() -> reqwest::ClientBuilder) -> reqwest::Client {
         .unwrap_or_default()
 }
 
-/// The client every whole-body provider request uses: plain by default, or
-/// routed through the configured proxy. Falls back to a direct (still
-/// timed-out) client if the stored proxy somehow fails to build - a broken
-/// proxy setting shouldn't make the app's AI features unreachable in both
-/// directions.
+/// The client every whole-body provider request uses. Falls back to a direct
+/// (still timed-out) client if the stored proxy fails to build.
 pub(crate) fn client() -> reqwest::Client {
     with_proxy(builder)
 }
 
-/// The client for SSE-streamed agent requests: same proxy handling, but no
-/// total timeout (a long healthy stream must not be cut off mid-answer) -
-/// only the per-read idle timeout guards against a hung connection.
+/// The client for SSE-streamed agent requests: no total timeout, only the
+/// per-read idle timeout.
 pub(crate) fn streaming_client() -> reqwest::Client {
     with_proxy(streaming_builder)
 }
@@ -99,7 +79,6 @@ pub(crate) fn proxy() -> Option<reqwest::Proxy> {
         .and_then(|u| reqwest::Proxy::all(u).ok())
 }
 
-/// `builder` with the whole-body request timeouts.
 pub(crate) fn with_timeouts(builder: reqwest::ClientBuilder) -> reqwest::ClientBuilder {
     builder
         .connect_timeout(CONNECT_TIMEOUT)
@@ -117,10 +96,8 @@ pub(crate) fn long_client(timeout: Duration) -> reqwest::Client {
     with_proxy(builder)
 }
 
-/// Reassembles `data:` payload lines from raw SSE body chunks, whose
-/// boundaries can land anywhere - mid-line, even mid-way through a
-/// multi-byte UTF-8 character - so bytes are buffered and only complete
-/// lines (which SSE guarantees are whole UTF-8 units) get decoded.
+/// Reassembles `data:` lines from raw SSE chunks, whose boundaries can land
+/// mid-character, so bytes are buffered and only complete lines decoded.
 #[derive(Default)]
 struct SseLineBuffer {
     buf: Vec<u8>,
@@ -147,11 +124,9 @@ impl SseLineBuffer {
     }
 }
 
-/// Whether `data` is the payload that ends a stream in one of the
-/// dialects: Chat Completions' `[DONE]`, Anthropic's `message_stop`, the
-/// Responses API's `response.completed`/`failed`/`incomplete`. Nothing
-/// that matters comes after it, and a server that kept the connection open
-/// past it held the request until the read timed out.
+/// Whether `data` is a stream-ending payload (`[DONE]`, `message_stop`,
+/// `response.completed`/`failed`/`incomplete`). A server may keep the
+/// connection open past it, so the stream stops here.
 fn ends_stream(data: &str) -> bool {
     if data.trim() == "[DONE]" {
         return true;
@@ -168,10 +143,8 @@ fn ends_stream(data: &str) -> bool {
     })
 }
 
-/// Incrementally consumes an SSE response body, calling `on_data` with each
-/// complete `data:` payload as it arrives off the wire. Returns the error
-/// body as Err when the response status isn't a success. Shared by every
-/// streaming dialect - they differ only in how they interpret payloads.
+/// Consumes an SSE body, calling `on_data` with each complete `data:` payload.
+/// Returns the error body as Err when the status isn't a success.
 pub(crate) async fn read_sse(
     res: reqwest::Response,
     provider_label: &str,
@@ -270,7 +243,7 @@ mod tests {
         );
         let started = std::time::Instant::now();
         let mut seen = Vec::new();
-        let result = tauri::async_runtime::block_on(async {
+        let result = crate::block_on(async {
             let res = reqwest::get(&url).await.unwrap();
             read_sse(res, "Test", |data| seen.push(data.to_string())).await
         });
@@ -286,7 +259,7 @@ mod tests {
     #[test]
     fn a_stream_that_sends_only_keep_alives_gives_up() {
         let url = lingering_server("data: {\"type\":\"response.created\"}\n\n");
-        let result = tauri::async_runtime::block_on(async {
+        let result = crate::block_on(async {
             let res = reqwest::get(&url).await.unwrap();
             read_sse(res, "Test", |_| {}).await
         });

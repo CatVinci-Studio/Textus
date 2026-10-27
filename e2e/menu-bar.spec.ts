@@ -2,11 +2,9 @@ import { expect, test } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
 /**
- * The menu bar (app/MenuBar.tsx), where the app draws the window frame -
- * Windows and Linux, so these runs: off by default (the ☰ and the
- * sidebar's button), on from Settings › Editor & Appearance; then File,
- * Edit, View… along the bar, each opening its list, the pointer or ← / →
- * moving between them, and the ☰ back in a window too narrow for them.
+ * The menu bar, where the app draws the window frame (Windows and Linux): off
+ * by default, on from Settings; each title opens its list, the pointer or
+ * ← / → moves between them, and the ☰ returns in a window too narrow.
  */
 
 const bar = '[role="menubar"]';
@@ -49,7 +47,7 @@ test("each title opens its list; the pointer and ← / → move along", async ({
   await expect(menubar.getByRole("menuitem").first()).toHaveText("File");
   await menubar.getByRole("menuitem", { name: "File" }).click();
   const list = page.locator(".app-menu");
-  await expect(list.getByRole("menuitem", { name: /New File/ })).toBeVisible();
+  await expect(list.getByRole("menuitem", { name: /New Tab/ })).toBeVisible();
   // Its own list only: no other top-level title in it.
   await expect(list.getByRole("menuitem", { name: "Edit" })).toHaveCount(0);
 
@@ -61,7 +59,7 @@ test("each title opens its list; the pointer and ← / → move along", async ({
   );
 
   await page.keyboard.press("ArrowLeft");
-  await expect(list.getByRole("menuitem", { name: /New File/ })).toBeVisible();
+  await expect(list.getByRole("menuitem", { name: /New Tab/ })).toBeVisible();
   await page.keyboard.press("ArrowRight");
   await expect(list.getByRole("menuitem", { name: /Undo/ })).toBeVisible();
 
@@ -81,7 +79,7 @@ test("each title opens its list; the pointer and ← / → move along", async ({
 
   await menubar.getByRole("menuitem", { name: "File" }).click();
   // The list takes the focus, for the arrow keys; Escape closes it.
-  await expect(list.getByRole("menuitem", { name: /New File/ })).toBeFocused();
+  await expect(list.getByRole("menuitem", { name: /New Tab/ })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.locator(".app-menu")).toHaveCount(0);
 });

@@ -1,97 +1,75 @@
-import { isDesktop, isIOSPlatform, isLinuxPlatform, isMacPlatform } from "./os";
+import {
+  isDesktop,
+  isIOSPlatform,
+  isLinuxPlatform,
+  isMacPlatform,
+  isWindowsPlatform,
+} from "./os";
 
 /**
- * What this build of the app can do - the ONE place the desktop/iOS split
- * is decided on the frontend. Call sites read these flags instead of asking
- * which OS they're on, so the policy can change here without hunting
- * through components.
- *
- * Mirrors the `#[cfg(desktop)]` gating in src-tauri (see
- * docs/dev/ios-code-map.md): every flag below that is false on iOS stands for
- * Rust commands, plugins or window APIs that are not compiled or not
- * registered there, so calling them would only ever reject. The desktop-only
- * command wrappers in platform/ipc.ts check {@link isDesktopApp} as a backstop.
- *
- * Read once at module load: a webview does not change platforms, and a
- * hook would only re-render consumers for a value that cannot change.
+ * What this build can do: the one place the desktop/iOS split is decided on
+ * the frontend. Flags false on iOS stand for Rust APIs behind `#[cfg(desktop)]`.
  */
 
 /** macOS, Windows or Linux - Rust's `cfg(desktop)`. */
 export const isDesktopApp = isDesktop();
 export const isIOSApp = isIOSPlatform();
 
-/** More than one OS window, and the window itself as something the app
- *  manages: its title, closing/destroying it, remembering its size, and
- *  restoring each window's documents on the next launch (session.rs).
- *  iOS has one full-screen webview the app never opens or closes. */
+/** More than one OS window, and windows as something the app manages
+ *  (title, close, size, session restore). iOS has one fixed webview. */
 export const canUseWindows = isDesktopApp;
 
-/** A menu bar (native on macOS, app-drawn on Windows/Linux - menu.rs) and
- *  everything that arrives through it: Help docs in a fresh window,
- *  File > Open Recent, menu accelerators. */
+/** A menu bar and everything that arrives through it. */
 export const hasAppMenu = isDesktopApp;
 
-/** The menu bar is the OS's own (macOS), built in Rust: it follows the UI
- *  language only by being sent the labels (menu.rs's set_menu_labels). */
+/** The menu bar is the OS's own (macOS), so it gets UI-language labels sent. */
 export const hasNativeMenuBar = isDesktopApp && isMacPlatform();
 
-/** Tabs dragged out of one window into another, or into a new one
- *  (tab_drag.rs). Tear-off needs global cursor and window positions, which
- *  only macOS gives reliably; on Linux, above all under Wayland, the drag
- *  could only fail and cancel the reorder with it. The whole-window drag
- *  onto another window's tab row is on every desktop. */
-export const canDragTabsBetweenWindows = isDesktopApp && isMacPlatform();
+/** Tabs dragged out of one window into another, or into a new one, with
+ *  the window following the pointer: macOS and Windows give the global
+ *  cursor and window positions this needs. Linux, Wayland above all,
+ *  doesn't. */
+export const canDragTabsBetweenWindows =
+  isDesktopApp && (isMacPlatform() || isWindowsPlatform());
 
-/** A web page tab's page as a native webview laid over the tab
- *  (commands/web_page.rs), which opens every site. macOS and Windows
- *  place a window's second webview where they are told; GTK (Linux) packs
- *  it below the window's own, so Linux keeps the framed page. */
+/** Web page tabs as a native webview over the tab. GTK can't place a second
+ *  webview, so Linux keeps the framed page. */
 export const hasNativeWebPages = isDesktopApp && !isLinuxPlatform();
 
-/** The Agent conversation popped out into its own OS window
- *  (chat_window.rs). */
+/** The Agent conversation popped out into its own OS window. */
 export const canDetachChat = canUseWindows;
 
 /** Toggling OS fullscreen (zen mode, View > Toggle Full Screen). */
 export const canToggleFullscreen = isDesktopApp;
 
-/** The self-updater (tauri-plugin-updater + process relaunch). iOS updates
- *  come from the App Store; the plugins aren't even built there. */
+/** The self-updater. iOS updates come from the App Store. */
 export const canAutoUpdate = isDesktopApp;
 
-/** File > Export as PDF: an offscreen render through each desktop
- *  webview's own PDF backend (export.rs). */
+/** File > Export as PDF, through each desktop webview's PDF backend. */
 export const canExportPdf = isDesktopApp;
 
-/** Export through a user-installed pandoc - an external process, which iOS
- *  cannot spawn. */
+/** Export through pandoc, an external process iOS can't spawn. */
 export const canExportWithPandoc = isDesktopApp;
 
 /** Showing a file or folder in Finder/Explorer/the file manager. */
 export const canRevealInFileManager = isDesktopApp;
 
-/** A picker for an image file on disk ("Choose image…" on a missing
- *  image's card). iOS has only the Files app's document picker, whose
- *  files the image store can't read by path. */
+/** A picker for an image file on disk. iOS's Files picker gives files the
+ *  image store can't read by path. */
 export const canPickImageFile = isDesktopApp;
 
-/** A folder picker: the dialog plugin's on desktop, the Files app's
- *  (platform/ios-files.ts) on iOS. */
+/** A folder picker: the dialog plugin's on desktop, Files' on iOS. */
 export const canPickFolder = isDesktopApp || isIOSApp;
 
-/** File > Open Folder…: the sidebar rooted at a folder, with its file-name
- *  search (commands/folder.rs). Not on iOS: a folder picked in Files is a
- *  security-scoped URL the backend can't walk for the search, and the
- *  sidebar there keeps the app's Documents folder it always had. */
+/** File > Open Folder. Not on iOS: a Files folder is a security-scoped URL
+ *  the backend can't walk for the search. */
 export const canOpenFolder = isDesktopApp;
 
-/** Settings' "install the `textus` terminal command" (cli.rs). */
+/** Settings' "install the `textus` terminal command". */
 export const canInstallCliCommand = isDesktopApp;
 
-/** Moving a replaced picture's file to the system's Trash
- *  (commands/fs.rs move_picture_to_trash). */
+/** Moving a replaced picture's file to the Trash. */
 export const canTrashFiles = isDesktopApp;
 
-/** Settings' "Default Markdown editor" (default_editor.rs). iOS opens
- *  documents through the Files app, which has no default app to set. */
+/** Settings' "Default Markdown editor". iOS has no default app to set. */
 export const canSetDefaultEditor = isDesktopApp;

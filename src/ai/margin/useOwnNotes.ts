@@ -25,14 +25,8 @@ function setNotes(view: EditorView, notes: ReviewNote[]) {
   );
 }
 
-/**
- * The writer's own notes (`by: "me"`): put in the same margin as the AI's,
- * through the same plugin, which keeps them on their passage as the text
- * changes. Loaded when the document opens, and written beside the app's
- * data a moment after any change - one added, edited or deleted, or its
- * passage edited (own_notes.rs). A new document keeps them in memory until
- * it is saved; one saved under a new name takes them along.
- */
+/** The writer's own notes, in the same margin and plugin as the AI's. Kept in
+ *  the app's data; an unsaved document holds them in memory until saved. */
 export function useOwnNotes({
   run,
   filePath,

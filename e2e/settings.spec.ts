@@ -1,11 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, PHONE, openPhone } from "./helpers";
 
-// The Settings panel: the AI page's layout and the focus/state bugs fixed
-// with it.
+// The Settings panel.
 
-// The English labels these tests look for, as in src/i18n/locales/en.ts
-// (the e2e project can't import it). AI_NAME is src/i18n/names.ts's.
+// Keep in step with the English locale; e2e can't import it.
 const AI_NAME = "Textus AI";
 const t = {
   settingsTitle: "Settings",
@@ -81,7 +79,7 @@ const defaultEditorStatus = {
   appImage: { supported: false, isDefault: false, chooseInSettings: false },
 };
 
-/** The canned commands Settings sent, in order (dev-tauri-shim). */
+/** The canned commands Settings sent, in order. */
 function invokeCalls(page: Page) {
   return page.evaluate(() =>
     (
@@ -108,8 +106,7 @@ test.describe("desktop", () => {
   }) => {
     await openApp(page, { settings: { language: "en" } });
     const panel = await openSettings(page);
-    // Six categories: AI service and Agent are one page now, and plugins
-    // have theirs.
+    // Six categories, plugins among them.
     await expect(panel.locator(".settings-nav-item")).toHaveText([
       t.navGeneral,
       t.navEditor,
@@ -155,7 +152,7 @@ test.describe("desktop", () => {
     await expect(
       panel.getByRole("checkbox", { name: t.webSearchLabel, exact: true }),
     ).not.toBeChecked();
-    // The UI never says "Agent" any more.
+    // The UI never says "Agent".
     await expect(panel).not.toContainText(/\bAgent\b/);
 
     // Turning the chat off hides the two groups below it.
@@ -289,7 +286,7 @@ test.describe("desktop", () => {
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: t.navAi, exact: true }).click();
     // Nothing to list for a custom endpoint: a field to type the name in,
-    // which used to become a one-option select after the first character.
+    // which stays a field after the first character.
     for (const label of [t.writingModelLabel, t.agentModelLabel]) {
       const field = panel.getByRole("textbox", { name: label });
       await field.pressSequentially("mock-model-1");
@@ -318,6 +315,44 @@ test.describe("desktop", () => {
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
   });
+  test("a beta set back to Stable can go back to the stable version", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await mockInvoke(page, {
+      "plugin:app|version": "1.3.0-beta.1",
+      check_for_update: null,
+    });
+    const panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.aboutTextus }).click();
+    const goBack = panel.getByRole("button", { name: "Go Back to Stable" });
+    await expect(goBack).toBeVisible();
+    await expect(panel).toContainText("You're using a beta (1.3.0-beta.1).");
+    // Nothing stable on offer: it says so.
+    await goBack.click();
+    await expect(panel.getByRole("status")).toHaveText(
+      "There's no stable version to go back to right now.",
+    );
+    // On Beta, there is nothing to go back from.
+    const channel = panel.getByRole("combobox", { name: t.updateChannel });
+    await channel.click();
+    await page.getByRole("option", { name: t.updateChannelBeta }).click();
+    await expect(goBack).toHaveCount(0);
+  });
+
+  test("a stable install has no way back to offer", async ({ page }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await mockInvoke(page, { "plugin:app|version": "1.2.1" });
+    const panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.aboutTextus }).click();
+    await expect(
+      panel.getByRole("combobox", { name: t.updateChannel }),
+    ).toBeVisible();
+    await expect(
+      panel.getByRole("button", { name: "Go Back to Stable" }),
+    ).toHaveCount(0);
+  });
+
   test("the update channel sits under the update button and is remembered", async ({
     page,
   }) => {
@@ -449,8 +484,8 @@ test.describe("desktop", () => {
   test("every page is as wide as the others, whichever category is chosen", async ({
     page,
   }) => {
-    // Russian: its longest name ("Editor & Appearance") sets the nav's
-    // width, and that one turning bold once narrowed the page beside it.
+    // Russian: its longest name sets the nav's width, and turning bold
+    // must not narrow the page beside it.
     await openApp(page, { settings: { language: "ru" } });
     await openSettings(page);
     const panel = page.locator(".settings-panel");
@@ -554,10 +589,11 @@ test.describe("desktop", () => {
       t.shortcutHeadingsGroupLabel,
       t.shortcutFixedGroupLabel,
     ]);
-    // Finding, in the document and among the folder's files, comes first.
+    // Finding - commands, in the document, among the folder's files - first.
     await expect(
       panel.locator(".settings-group").first().locator(".settings-row-label"),
     ).toHaveText([
+      "Command Palette",
       "Find & replace",
       "Search file names",
       "Next tab",

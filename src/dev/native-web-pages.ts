@@ -1,8 +1,6 @@
 /**
- * The dev browser's stand-in for native web pages (commands/web_page.rs):
- * a frame laid over the page's place as the native webview would be - so
- * an e2e test sees where the app put it, and what it shows - with the
- * address it arrives at sent back as `web-page-navigated`.
+ * The dev browser's stand-in for native web pages: a frame laid where the
+ * native webview would be, so e2e sees it, sending `web-page-navigated` back.
  */
 
 type Bounds = { x: number; y: number; width: number; height: number };

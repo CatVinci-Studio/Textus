@@ -1,14 +1,5 @@
-/**
- * Learning from revision choices: every ✓ / ✕ (or Accept / Reject) of a
- * change whose kind change-kind.ts can name is kept in a small log, and
- * when the writer has turned the same kind down again and again, one quiet
- * suggestion offers to remember it as a requirement (RevisionLearning.tsx).
- *
- * The log holds kinds, not text - a swapped word or mark at most - lives
- * beside the personal memories (`revision_choices_*` in ai/memory.rs) and
- * is never sent anywhere. Only "Remember" writes a memory, which the
- * Memory tab lists and the AI then follows.
- */
+/** Learning from revision choices: a kind turned down again and again is
+ *  offered as a requirement. The log holds kinds, not text, and stays local. */
 
 import { classifyChange, kindKey, type ChangeKind } from "./change-kind";
 
@@ -24,8 +15,7 @@ export interface Choice {
 
 export type Answer = "remembered" | "later" | "never";
 
-/** The log as stored (`revision_choices_read/write` in ai/memory.rs, which
- *  keeps it as given). */
+/** The log as stored. */
 export interface ChoiceLog {
   choices: Choice[];
   /** What the writer said to a suggestion, by kind. */
@@ -119,11 +109,8 @@ export function answer(
   return { ...log, answers: Object.fromEntries(answers) };
 }
 
-/** The kind to suggest remembering now, or null: one rejected at least
- *  REJECTIONS times in a row (no acceptance of it in between) across at
- *  least PROPOSALS proposals, never answered "remembered" or "never" - and
- *  after "Not now", only on new evidence - with no suggestion shown in the
- *  last COOLDOWN_MS. Of several, the longest run. */
+/** The kind to suggest remembering now, or null: rejected REJECTIONS times
+ *  in a row across PROPOSALS proposals, unanswered, outside the cooldown. */
 export function suggestion(log: ChoiceLog, now: number): string | null {
   if (log.lastAsked !== null && now - log.lastAsked < COOLDOWN_MS) return null;
   const runs = new Map<string, { count: number; proposals: Set<string> }>();
@@ -152,8 +139,7 @@ export function suggestion(log: ChoiceLog, now: number): string | null {
   return best;
 }
 
-/** The words a suggestion and the memory it saves are made of
- *  (i18n/locales: learn*). */
+/** The words a suggestion and the memory it saves are made of. */
 export interface LearnLabels {
   learnQuoted: string;
   learnSwap: string;

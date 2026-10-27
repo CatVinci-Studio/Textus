@@ -2,11 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { hasPlugin, openPath, openWithPlugins } from "./plugin-helpers";
 
 /**
- * Completions a plugin suggests as you type (contributes.completions,
- * textus.editor.registerCompletionProvider; editor/completion/), with the
- * official LaTeX Completion plugin: a backslash in a formula lists the
- * commands, the arrows choose, Enter writes one with the caret in its
- * braces, and outside a formula nothing is asked.
+ * Completions a plugin suggests as you type, with the official LaTeX
+ * Completion plugin: a backslash in a formula lists commands.
  */
 
 test.skip(
@@ -18,7 +15,7 @@ const list = (page: Page) => page.locator(".completion-list:not([hidden])");
 const formula = (page: Page) =>
   page.locator('[data-active-tab="true"] .math-inline').first();
 
-async function open(page: Page, granted = ["document.read"]) {
+async function open(page: Page, granted = ["editor.read"]) {
   await openWithPlugins(page, {
     plugins: { "catvinci.latex-completion": granted },
     folder: { "/notes/maths.md": "Area $x$ here.\n\nPlain words.\n" },

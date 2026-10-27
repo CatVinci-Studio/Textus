@@ -3,10 +3,8 @@
 
 use super::*;
 
-/// Whether `alias` is too short to stand for a name: one Chinese or
-/// Japanese character (晚 for 林晚, which every 晚上 would match and send
-/// her entry along), or one or two letters. The library sends an entry
-/// whenever an alias appears in the text (project::relevant_library).
+/// Whether `alias` is too short to stand for a name: one CJK character (晚 for
+/// 林晚 would match every 晚上), or one or two letters.
 pub(crate) fn too_short_an_alias(alias: &str) -> bool {
     let chars = alias.chars().count();
     let unspaced = alias

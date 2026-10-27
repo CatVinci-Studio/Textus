@@ -4,12 +4,9 @@
 
 use super::*;
 
-/// One live fragment of an in-flight `ai_agent_message`, pushed to the
-/// invoking window over a Tauri channel while the agent loop runs. Purely
-/// additive display data: the command still resolves with the complete turn
-/// list, which remains the authoritative result the frontend appends to its
-/// history - a dropped or ignored event costs liveness, never correctness.
-/// Generated into src/platform/bindings/ai-agent.ts.
+/// One live fragment of an in-flight `ai_agent_message`. Display only: the
+/// command still resolves with the complete turn list, so a dropped event costs
+/// liveness, never correctness.
 #[derive(Clone, Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(
@@ -26,9 +23,8 @@ pub enum StreamEvent {
     ToolArgsDelta { call_id: String, delta: String },
     /// A completed intermediate turn (ToolCall/ToolResult) as it lands.
     Turn { turn: AgentTurn },
-    /// The step being streamed came back garbled and is asked for again
-    /// (aicompat's run_agent_loop): drop what it streamed - its prose and
-    /// its proposal drafts - and show the new attempt instead.
+    /// The step being streamed came back garbled and is asked for again: drop
+    /// what it streamed and show the new attempt instead.
     Retry,
     /// The model is thinking: a fragment of its reasoning, or "" when the
     /// provider only says that it is. Shown above the reply, never kept.
@@ -45,19 +41,29 @@ pub enum StreamEvent {
     },
 }
 
-/// Forwards a provider-level fragment onto the frontend channel. Send
-/// failures are ignored deliberately - a closed webview mid-request must
-/// not fail the agent loop, which still returns turns for the history.
-/// A native search citation goes to the request's sources instead (it is
-/// shown with the finished reply).
+/// Where a request's live events go: the window's channel on the desktop,
+/// a test's or a server's own sink elsewhere.
+pub(crate) trait EventSink: Send + Sync {
+    /// Never fails the request: a closed window only stops the show.
+    fn send(&self, event: StreamEvent);
+}
+
+impl EventSink for Channel<StreamEvent> {
+    fn send(&self, event: StreamEvent) {
+        let _ = Channel::send(self, event);
+    }
+}
+
+/// Forwards a provider-level fragment to `channel`. A native search
+/// citation goes to the request's sources instead.
 pub(crate) fn forward(
-    channel: &Channel<StreamEvent>,
+    channel: &dyn EventSink,
     web: &WebPlan,
     pictures: Option<&InlinePictures<'_>>,
     event: ProviderEvent<'_>,
 ) {
     for picture in pictures.map(|p| p.observe(&event)).unwrap_or_default() {
-        let _ = channel.send(picture);
+        channel.send(picture);
     }
     let event = match event {
         ProviderEvent::Citation { url, title } => {
@@ -79,12 +85,12 @@ pub(crate) fn forward(
             text: text.to_string(),
         },
     };
-    let _ = channel.send(event);
+    channel.send(event);
 }
 
-/// Forwards what the agent loop reports onto the frontend channel, each
-/// turn as the frontend's history keeps it (see `forward` on send errors).
-pub(crate) fn report(channel: &Channel<StreamEvent>) -> impl FnMut(LoopEvent<'_>) + '_ {
+/// Forwards what the agent loop reports onto the frontend channel, each turn as
+/// the frontend's history keeps it.
+pub(crate) fn report(channel: &dyn EventSink) -> impl FnMut(LoopEvent<'_>) + '_ {
     move |event| {
         let event = match event {
             LoopEvent::Turn(turn) => StreamEvent::Turn {
@@ -92,6 +98,6 @@ pub(crate) fn report(channel: &Channel<StreamEvent>) -> impl FnMut(LoopEvent<'_>
             },
             LoopEvent::Retry => StreamEvent::Retry,
         };
-        let _ = channel.send(event);
+        channel.send(event);
     }
 }

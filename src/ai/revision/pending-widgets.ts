@@ -19,12 +19,8 @@ import {
 } from "./pending-animation";
 import { type SentenceHooks } from "./pending-decorations";
 
-/**
- * The pieces a proposal is drawn with: the green text widget, a sentence's
- * strike and its ✓ / ✕, a change drawn whole, and a completed change
- * coming in while its rewrite streams (the rest of a streaming rewrite is
- * stream-widgets.ts's).
- */
+/** The pieces a proposal is drawn with: the green text widget, a sentence's
+ *  strike and its ✓ / ✕, and a change drawn whole. */
 
 export function textWidget(
   p: PendingPreview,
@@ -36,19 +32,15 @@ export function textWidget(
   return Decoration.widget(
     pos,
     (view) => {
-      // Between two blocks (an append, text after a paragraph), the new
-      // text is blocks of its own (fillPendingBlocks); inside a paragraph,
-      // the run of text it goes into - unless it is blocks itself (Write
-      // at the caret, after a paragraph's last word): drawn as a run of
-      // text, its headings showed their `##` and its lists their `-`.
+      // Between blocks, or when it is blocks itself, the new text is drawn
+      // as blocks; as inline text, headings would show their `##`.
       const blocks =
         view.state.doc.resolve(pos).parent.type ===
           view.state.schema.topNodeType || hasBlocks(p.proposal.text ?? "");
       const span = document.createElement(blocks ? "div" : "span");
       if (blocks) span.dataset.blocks = "true";
-      // `pending-replaces`: there is an original, which the margin views
-      // can show instead. New text alone (Write) has none, and stays in
-      // the text, green, in every view but "final".
+      // `pending-replaces`: there is an original the margin views can show
+      // instead; new text alone stays in the text.
       span.className = `pending-insert pending-whole${replaces ? " pending-replaces" : ""}${blocks ? " pending-blocks" : ""}`;
       // Read as an insertion, not as text of the document.
       span.setAttribute("role", "insertion");
@@ -81,9 +73,8 @@ export function textWidget(
     {
       side,
       part: "text",
-      // Decorations are rebuilt wholesale on every docChanged; the key
-      // makes ProseMirror keep the DOM node across rebuilds, so the
-      // typewriter isn't restarted by unrelated keystrokes.
+      // The key keeps the DOM node across rebuilds, so typing elsewhere
+      // doesn't restart the typewriter.
       key: `pending-insert-${p.callId}-${p.revision ?? 0}`,
       destroy: (node) => {
         const anim = animations.get(p.callId);
@@ -96,25 +87,6 @@ export function textWidget(
   );
 }
 
-/**
- * One preview's decorations: a struck-through/red-tinted `.pending-delete`
- * span over the text being removed, plus a green `.pending-insert`
- * ghost-text widget carrying the new markdown - shown as source text, not
- * parsed nodes, because parsing only happens once (on accept, via
- * apply-edit.ts's parserCtx path) to avoid a second, divergent render path.
- *
- * The widget shows `proposal.text` (what the model actually wrote) rather
- * than the full `replacement`, which for a sub-block edit would repeat the
- * untouched prefix/suffix back at the reader.
- *
- * `strikeFrom`/`strikeTo`, when present, narrow the strike (and the
- * `replace` widget's anchor point) from the whole re-parsed block down to
- * just the actually-changed text - see PendingPreview's doc comment. `p.to`
- * remains the fallback for BOTH the strike extent and the widget position:
- * a struck whole block with the new text tacked on at its very end is a
- * safe, if coarser, degradation of the same "old text struck, new text
- * follows immediately" reading.
- */
 export const CHECK_SVG =
   '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
 export const CROSS_SVG =
@@ -125,23 +97,9 @@ export interface SentencePickLabels {
   keep: string;
 }
 
-/**
- * A sentence-by-sentence preview: each changed sentence struck where it
- * stands, its replacement right after it, and a ✓ / ✕ pair to take it or
- * keep the original. Kept sentences read as the original again (the new
- * text dims and is struck instead). Unchanged sentences get nothing.
- *
- * Every view's parts are drawn whatever the view: the struck original, the
- * new text, the ✓ / ✕ and the marks where a pure insertion or deletion
- * stands. The view is an attribute on the editor (`syncDisplay`) and the
- * stylesheet shows the parts it needs, so switching views redraws nothing:
- * a widget keyed by the view was drawn again on every switch, and the text
- * came back from nothing (1.1.0-rc.6).
- *
- * The widgets' keys carry the decision, so a decision redraws them and
- * their CSS entrance runs as the change of state; `--i` staggers the
- * first appearance sentence by sentence.
- */
+/** A sentence-by-sentence preview: each change struck with its replacement
+ *  and ✓ / ✕. Every view's parts are drawn and CSS picks, so switching views
+ *  redraws nothing; keys carry the decision, so deciding replays the entrance. */
 export function sentenceDecorations(
   p: PendingPreview,
   changes: PendingSentence[],
@@ -149,9 +107,8 @@ export function sentenceDecorations(
 ): Decoration[] {
   const labels = hooks.labels();
   const focused = hooks.focused();
-  // Streamed in sentence by sentence: its parts are on screen already, so
-  // its settled decorations match them (no stagger), and only its ✓ / ✕
-  // change: they start taking clicks.
+  // Streamed in: its parts are on screen already, so no stagger; only its
+  // ✓ / ✕ change, starting to take clicks.
   const streamed = !!animations.get(p.callId)?.stream;
   return changes.flatMap((c, index) =>
     changeDecorations(p.callId, index, c, {
@@ -178,13 +135,8 @@ export interface ChangeDraw {
   doc?: ProseNode;
 }
 
-/**
- * Where a streaming change's new text goes, when that is inside a heading
- * it isn't one of - a story's first paragraph written where its title
- * stood: after the heading, as a block. It was drawn in the title's type
- * until the rewrite settled, then dropped to its own (the standard flow's
- * translation, 1.2.1); settled, a change is laid out so already.
- */
+/** Where a streaming change's new text goes when it lands inside a heading
+ *  it isn't part of: after the heading, as a block, as it will settle. */
 function outOfHeading(
   doc: ProseNode | undefined,
   at: number,
@@ -209,13 +161,8 @@ export function changeDecorations(
   const state = c.take === false ? "kept" : c.take === true ? "taken" : "open";
   const stagger = `--i: ${draw.stagger}`;
   const focus = draw.focused ? " pending-sentence-focus" : "";
-  // Sentence by sentence, and the space between them: a sentence a stream
-  // later finds dropped and joins to this change is struck beside the
-  // others, which stay as they are - one decoration over all of them was a
-  // new one, and the strike drew in again over the sentences already
-  // struck.
-  // A whole block's original is struck as the blocks it is: a picture or a
-  // table has no words to draw a line through.
+  // Struck sentence by sentence, so one joined later doesn't redraw the
+  // others' strikes. A whole block is struck as its blocks.
   if (c.block) {
     // An added block has no original to strike.
     // Several paragraphs changed as one are struck each as its node.
@@ -229,9 +176,8 @@ export function changeDecorations(
   const below = outOfHeading(draw.doc, c.at ?? c.to, c.after);
   const block = c.block || below !== null;
   const at = below ?? c.at ?? c.to;
-  // While the rewrite streams in, everything a change will have once it
-  // settles is drawn already, so the settle moves nothing: the ✓ / ✕ faint
-  // and inert (`pending-streaming`, which syncStreaming takes off).
+  // While streaming, everything is drawn already, the ✓ / ✕ faint and inert,
+  // so the settle moves nothing.
   const streaming = draw.stream ? " pending-streaming" : "";
   // Where a pure insertion goes, for the view that leaves its new text to
   // the margin ("original").
@@ -368,9 +314,8 @@ export function sentenceStrike(
   focus: string,
   stagger: string,
 ): Decoration {
-  // Streamed in: its strike draws in from the plugin view (`drawStrikesIn`),
-  // not from CSS - ProseMirror may draw a span again as the sentences
-  // around it change, and a CSS entrance played again each time.
+  // Streamed in: its strike draws in from the plugin view, not CSS, since
+  // ProseMirror may redraw the span and replay a CSS entrance.
   const streamed = animations.get(callId)?.stream ? " pending-streamed" : "";
   return Decoration.inline(
     range.from,
@@ -388,8 +333,7 @@ export function sentenceStrike(
   );
 }
 
-/** A block of a whole-block change's original, struck as one (the
- *  struck blocks of a join, `pending-whole`). */
+/** A block of a whole-block change's original, struck as one. */
 function blockStrike(
   callId: string,
   index: number,
@@ -405,21 +349,14 @@ function blockStrike(
   });
 }
 
-/** The beat a change enters on: its new text in the text and its card in
- *  the margin (the card's key, useReviewNotes) share it. */
+/** The beat a change enters on, shared by its new text and its card. */
 export function changeBeat(callId: string, index: number): string {
   return `rev:${callId}:${index}`;
 }
 
-/**
- * How a completed change's new text comes in while the rewrite streams: a
- * paragraph rewritten whole lands at once, all its changes on one beat
- * with their cards (`landedAt`) - fading in where they stand, a whole block
- * rising into place, as new writing does. The sentence the partial span
- * was just writing (a long one cut at a pause) is already on screen as it
- * is: no entrance. One a re-alignment changed or moved - a sentence the
- * rewrite dropped joins the change before it - comes in again.
- */
+/** How a completed change's new text comes in while streaming: a paragraph's
+ *  changes on one beat with their cards. One already on screen from the
+ *  partial span gets no entrance; one realigned comes in again. */
 export function streamEntrance(
   span: HTMLElement,
   s: StreamState,
@@ -447,9 +384,8 @@ export function streamEntrance(
     distance: "md",
     duration: "--dur-slow",
   });
-  // A whole block pushes the text below it down: that glides there. Once
-  // it is in the document (a widget is drawn after it is made), before the
-  // frame is painted.
+  // A whole block pushes the text below down, which glides there once the
+  // widget is in the document, before the frame is painted.
   if (span.dataset.blocks !== "true") return;
   queueMicrotask(() => {
     const root = span.closest(".ProseMirror");

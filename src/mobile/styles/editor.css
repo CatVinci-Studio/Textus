@@ -1,11 +1,8 @@
-/* The editor's own controls at iPhone width. The desktop reaches several
-   of them by hover, at sizes made for a pointer; a finger gets their
-   commands on the keyboard toolbar instead (KeyboardToolbar.tsx), and what
-   stays in the page is sized for a touch. */
+/* The editor's own controls at iPhone width: hover controls move to the
+   keyboard toolbar, and what stays in the page is sized for a touch. */
 @media (max-width: 760px) {
-  /* A table's "+" strips (table-hover-view.ts) show on hover, which a
-     touch never gives, and are 16px targets; the toolbar's table buttons
-     add rows and columns where the caret is. */
+  /* A table's "+" strips show on hover, which a touch never gives; the toolbar
+     adds rows and columns instead. */
   :root[data-window-chrome="mobile"]
     :is(.table-add-row-btn, .table-add-col-btn) {
     display: none;
@@ -17,29 +14,24 @@
     display: none;
   }
 
-  /* A code block's copy button and language picker
-     (code-block-language-view.ts), shown while the caret is in the block:
-     44pt targets in text that reads at arm's length - 16px, below which
-     iOS zooms the page into a focused control. */
+  /* A code block's copy and select buttons and language picker: 44pt
+     targets, and 16px text, below which iOS zooms into a focused control. */
   :root[data-window-chrome="mobile"]
-    :is(.code-block-language-select, .code-block-copy) {
+    :is(.code-block-language-select, .code-block-copy, .code-block-select-all) {
     min-height: 44px;
     padding: 0 12px;
     font-size: 16px;
   }
 }
 
-/* Completion is accepted with a tap on the suggestion (ghost-text-plugin.ts)
-   rather than Tab, so it has to receive the touch. */
+/* Completion is accepted with a tap on the suggestion, so it takes the touch. */
 :root[data-window-chrome="mobile"] .ghost-text {
   pointer-events: auto;
 }
 
-/* A tap on a list marker, a code block's edge, a formula or a rule makes
-   ProseMirror select the whole block, which its stock stylesheet rings in
-   a light blue (#8cf) whatever the theme - the stray box around a line or
-   several. On a phone the selection is shown as a faint wash in the
-   theme's accent instead; an image keeps its own ring (milkdown-theme.css). */
+/* A tapped list marker, code block edge, formula or rule selects the block,
+   which ProseMirror rings in light blue whatever the theme. Here it is a faint
+   accent wash; an image keeps its own ring. */
 :root[data-window-chrome="mobile"]
   .milkdown
   .ProseMirror-selectednode:not(.image-view) {

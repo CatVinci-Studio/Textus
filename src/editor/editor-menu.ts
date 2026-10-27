@@ -7,7 +7,7 @@ import {
   wrapInHeadingCommand,
 } from "@milkdown/kit/preset/commonmark";
 import { insertTableCommand } from "@milkdown/kit/preset/gfm";
-import type { ContextMenuItem } from "./ContextMenu";
+import type { ContextMenuEntry, ContextMenuItem } from "./ContextMenu";
 import { contributedMenuItems } from "./editor-menu-items";
 export {
   registerEditorMenuItems,
@@ -22,8 +22,8 @@ import type { Strings } from "../i18n/strings";
 import {
   inTable,
   moveCaretToClickedCell,
-  tableEditItems,
   tableLayoutItems,
+  tableMenuItems,
 } from "./editor-menu-tables";
 import { imageFileItems, imageWidthItems } from "./editor-menu-images";
 export {
@@ -37,11 +37,10 @@ export {
   deleteImage,
   setImageWidth,
 } from "./editor-menu-images";
-// The editor commands behind the right-click menu, the native Format menu
-// and the app-drawn Edit menu, and the right-click menu itself - plain
-// functions over the editor runner, pulled out of MilkdownEditor.
+// The editor commands behind the right-click, Format and Edit menus, and
+// the right-click menu itself.
 
-export type MenuEntry = ContextMenuItem | "separator";
+export type MenuEntry = ContextMenuEntry;
 
 // CmdKey<any>: the preset command keys vary in payload type (some
 // unknown, some undefined) and all are called here without a payload.
@@ -69,22 +68,14 @@ export function insertHeading(run: EditorRunner, level: number) {
 export interface ContextMenuTarget {
   /** The image node's doc position, for the width items. */
   imagePos: number | null;
-  /** Where the picture's file is - an image's or an Obsidian embed's -
-   *  for Show in folder and Copy image path. */
+  /** Where the picture's file is, for Show in folder and Copy image path. */
   imageLocation: ImageLocation | null;
 }
 
 /**
  * Prepares the editor for a right-click and reports the image under the
- * pointer, if any.
- *
- * macOS WebKit selects the word under the pointer while handling a right
- * click in editable content - inside the engine, before any DOM event, so
- * it can't be prevented. But by the time contextmenu fires, only the DOM
- * selection has moved; ProseMirror's state still holds the real selection
- * (its readback is async). Pushing the state's selection back into the DOM
- * here undoes the word-select before it's ever painted or read back, so AI
- * context capture and the completion cursor never see it.
+ * pointer. macOS WebKit selects the word under the pointer before any DOM
+ * event; pushing the state's selection back into the DOM undoes it.
  */
 export function contextMenuTarget(
   run: EditorRunner,
@@ -108,7 +99,7 @@ export function contextMenuTarget(
           .getSelection()
           ?.setBaseAndExtent(a.node, a.offset, h.node, h.offset);
       } catch {
-        // Selection not representable in the DOM right now - leave it alone.
+        // Not representable in the DOM right now.
       }
 
       const target =
@@ -145,20 +136,18 @@ export interface ContextMenuOptions {
   imageLocation?: ImageLocation | null;
   /** Already filtered down to the AI features that are switched on. */
   aiItems: ContextMenuItem[];
-  /** For the image right-clicked: Textus AI's items for it (changing it),
-   *  among the image's own. */
+  /** Textus AI's items for the image right-clicked. */
   pictureAiItems?: ContextMenuItem[];
   copyOrCut: (cut: boolean) => void;
-  copyAsMarkdown: () => void;
+  copyAsPlainText: () => void;
   paste: () => void;
+  pasteAsPlainText: () => void;
   selectAll: () => void;
   toggleFindReplace: () => void;
   openTableDialog: () => void;
-  /** A note of the writer's own on the selection (useOwnNotes), offered
-   *  while there is one. */
+  /** A note of the writer's own on the selection, offered while there is one. */
   addNote?: () => void;
-  /** The writer's tracked changes, all accepted or all rejected - offered
-   *  while there are some (useOwnRevisions). */
+  /** Accept or reject all of the writer's tracked changes, while there are some. */
   ownChanges?: { acceptAll: () => void; rejectAll: () => void };
 }
 
@@ -172,66 +161,63 @@ export function buildContextMenuItems(
     imageFileItems(t, options.imageLocation ?? null),
     imagePos === null ? [] : (options.pictureAiItems ?? []),
   );
-  if (imageItems.length > 0) imageItems.push("separator");
-  const clipboardItems: MenuEntry[] = [
+  const clipboard: MenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
     { label: t.copy, onSelect: () => options.copyOrCut(false) },
-    { label: t.copyAsMarkdown, onSelect: options.copyAsMarkdown },
+    { label: t.copyAsPlainText, onSelect: options.copyAsPlainText },
     { label: t.paste, onSelect: options.paste },
-    ...withSeparator(
-      options.addNote && selectedText(run)
-        ? [{ label: t.ownNoteAdd, onSelect: options.addNote }]
-        : [],
-    ),
-    ...withSeparator(
-      options.ownChanges
-        ? [
-            { label: t.trackAcceptAll, onSelect: options.ownChanges.acceptAll },
-            { label: t.trackRejectAll, onSelect: options.ownChanges.rejectAll },
-          ]
-        : [],
-    ),
-    ...withSeparator(contributedMenuItems({ selectedText: selectedText(run) })),
-    ...generalItems(options),
+    { label: t.pasteAsPlainText, onSelect: options.pasteAsPlainText },
+    ...(options.addNote && selectedText(run)
+      ? [{ label: t.ownNoteAdd, onSelect: options.addNote }]
+      : []),
   ];
+  const ownChanges: MenuEntry[] = options.ownChanges
+    ? [
+        { label: t.trackAcceptAll, onSelect: options.ownChanges.acceptAll },
+        { label: t.trackRejectAll, onSelect: options.ownChanges.rejectAll },
+      ]
+    : [];
+  // What was clicked on comes first; the rest waits in submenus.
+  const first = inTable(run) ? tableMenuItems(run, t) : imageItems;
+  const insert: MenuEntry[] = inTable(run)
+    ? []
+    : [{ label: t.menuGroupInsert, items: insertItems(run, options) }];
+  return joinGroups(
+    first,
+    clipboard,
+    ownChanges,
+    [...insert, ...grouped(t.menuTextusAi, options.aiItems)],
+    grouped(
+      t.menuPlugins,
+      contributedMenuItems({ selectedText: selectedText(run) }),
+      2,
+    ),
+  );
+}
 
-  if (!inTable(run)) {
-    return [
-      ...imageItems,
-      ...clipboardItems,
-      "separator",
-      ...insertItems(run, options),
-    ];
-  }
-  return [
-    ...imageItems,
-    ...clipboardItems,
-    "separator",
-    ...tableLayoutItems(run, t),
-    "separator",
-    ...tableEditItems(run, t),
-  ];
+/** Items as one submenu once there are more than `max`. */
+function grouped(
+  label: string,
+  items: ContextMenuItem[],
+  max = 1,
+): MenuEntry[] {
+  return items.length > max ? [{ label, items }] : items;
 }
 
 /**
- * The iPhone's "More" sheet (the keyboard toolbar's last button), which
- * stands in for the right-click menu a phone never opens: what that menu
- * offers where the caret is, less what the toolbar already carries there -
- * copy and paste always, the insert and delete buttons in a table, the
- * width presets on an image, lists, quote and code block elsewhere - and
- * Copy as Markdown, which the toolbar lacks. The
- * caller leaves Ask AI out of aiItems: the toolbar has its own button.
+ * The iPhone's "More" sheet, standing in for the right-click menu: what it
+ * offers where the caret is, less what the keyboard toolbar already carries.
+ * The caller leaves Ask AI out of aiItems.
  */
 export function buildPhoneMoreItems(
   run: EditorRunner,
   options: ContextMenuOptions,
 ): MenuEntry[] {
   const { t, imagePos } = options;
-  // The toolbar has Copy, but not the Markdown source: the phone has no
-  // Edit menu to offer it.
+  // The phone has no Edit menu to offer the plain text.
   const clipboard: MenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
-    { label: t.copyAsMarkdown, onSelect: options.copyAsMarkdown },
+    { label: t.copyAsPlainText, onSelect: options.copyAsPlainText },
   ];
   if (inTable(run)) {
     return [
@@ -259,11 +245,6 @@ function joinGroups(...groups: MenuEntry[][]): MenuEntry[] {
     );
 }
 
-/** A group of items with the separator before it, or nothing. */
-function withSeparator(items: ContextMenuItem[]): MenuEntry[] {
-  return items.length > 0 ? ["separator", ...items] : [];
-}
-
 function selectedText(run: EditorRunner): string {
   return (
     run((ctx) => {
@@ -288,8 +269,8 @@ function generalItems(options: ContextMenuOptions): MenuEntry[] {
   ];
 }
 
-/** A list from the Format or Insert menu: the block wrapped in one, or -
- *  in a list of the other kind - that list changed over (convertList). */
+/** A list from the Format or Insert menu: the block wrapped in one, or a
+ *  list of the other kind changed over. */
 export function insertList(
   run: EditorRunner,
   kind: "bullet_list" | "ordered_list",
@@ -306,7 +287,7 @@ export function insertList(
 function insertItems(
   run: EditorRunner,
   options: ContextMenuOptions,
-): MenuEntry[] {
+): ContextMenuItem[] {
   const { t } = options;
   return [
     {

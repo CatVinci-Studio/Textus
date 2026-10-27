@@ -2,10 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 /**
- * While Textus AI writes into the document, the page follows the writing
- * while the reader is with it, and stays where they put it once they
- * scroll away (stream-follow-plugin.ts) - not pulled back to where the
- * writing began.
+ * While Textus AI writes, the page follows the writing until the reader
+ * scrolls away, then stays where they put it.
  */
 
 const scroller = '[data-active-tab="true"] .editor-scroll';
@@ -127,7 +125,7 @@ test("a jump the reader didn't make, while it writes, is undone", async ({
   await page.mouse.wheel(0, -5000);
   await expect.poll(() => top(page)).toBe(0);
   await page.waitForTimeout(900);
-  // As WebKit did: back to the caret, far below.
+  // As WebKit would: back to the caret, far below.
   await page
     .locator(scroller)
     .evaluate((el) => (el.scrollTop = el.scrollHeight));

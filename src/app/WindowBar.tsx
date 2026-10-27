@@ -1,9 +1,9 @@
 import { Fragment, useSyncExternalStore } from "react";
 import { useSettings } from "../settings/SettingsContext";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
-import type { MenuChecks } from "./app-menu-model";
+import type { MenuChecks } from "./menu/app-menu-model";
 import { AppMenuButton } from "./WindowControls";
-import { MenuBar } from "./MenuBar";
+import { MenuBar } from "./menu/MenuBar";
 import { appDrawsWindowFrame } from "../platform/window-chrome";
 import { Tooltip } from "../ui/Tooltip";
 import { TextusAiButton } from "../ai/TextusAiSwitch";
@@ -14,28 +14,12 @@ import { runCommand } from "./commands";
 import {
   statusItemsSnapshot,
   subscribeStatusItems,
-} from "../plugins/status-items";
+} from "../plugins/contributions/status-items";
 
 /**
- * The window's one top strip: traffic-light room, which document this
- * is, and its status. A real row in the layout, not an overlay - the
- * overlay title bar hides the native drag area behind the webview, so
- * the app has to draw this itself, and drawing it as a transparent
- * fixed strip meant the document scrolled underneath and the filename
- * sat on top of the text. It is also the drag region (both for moving
- * the window and for the drag-to-merge gesture in useTabDragMerge).
- *
- * Where the OS supplies no frame at all (Windows), this same row is
- * ALSO the caption and the way into the app menu - the two components
- * below render nothing anywhere else, so this stays one strip on
- * every platform. See platform/window-chrome.ts.
- *
- * The sidebar's toggle leads the row: just past the traffic lights on a
- * Mac, in their corner once they are gone in full screen, beside the menu
- * button on Windows and Linux. It belongs to the bar, not the sidebar, so
- * the sidebar's slide never moves it. With the menu bar shown there
- * (Settings.menuBarShown) the titles take its room: the sidebar is in
- * View, and has its shortcut.
+ * The window's one top strip: a real layout row (an overlay title bar hides
+ * the native drag area) and the drag region. Where the OS draws no frame,
+ * it is also the caption and the app menu.
  */
 export function WindowBar({
   menuChecks,
@@ -75,7 +59,7 @@ export function WindowBar({
       {menuBar ? (
         <>
           <MenuBar checks={menuChecks} />
-          {/* For a window too narrow for the titles (window-controls.css). */}
+          {/* For a window too narrow for the titles. */}
           <span className="window-menu-fallback">
             <AppMenuButton checks={menuChecks} />
           </span>
@@ -97,9 +81,7 @@ export function WindowBar({
           </button>
         </Tooltip>
       )}
-      {/* The unsaved dot leads the title, as a native edited-document
-        title does - in the status group it sat on top of a long title
-        on a narrow window. */}
+      {/* The unsaved dot leads the title, as a native edited title does. */}
       <span className="window-bar-title">
         {dirty && (
           <Tooltip text={t.unsavedIndicator}>
@@ -120,10 +102,10 @@ export function WindowBar({
           </span>
         )}
         <span className="word-count">
-          {words > 0 && `${words} ${t.wordsUnit}`}
+          {words > 0 && `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`}
         </span>
-        {/* Textus AI's one button: the AI panel, struck through while
-          Textus AI is off; right-click pauses or turns it off (#196). */}
+        {/* Struck through while Textus AI is off; right-click pauses or
+          turns it off. */}
         <TextusAiButton
           className="window-bar-toggle"
           panelOpen={agentOpen}
@@ -137,8 +119,8 @@ export function WindowBar({
   );
 }
 
-/** What plugins show here (window.setStatusItem, plugins/status-items.ts):
- *  a text, its tooltip, and a command a click runs. */
+/** What plugins show here: a text, its tooltip, and a command a click
+ *  runs. */
 function PluginStatusItems() {
   const items = useSyncExternalStore(subscribeStatusItems, statusItemsSnapshot);
   return (

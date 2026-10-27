@@ -1,10 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// The app's own select (ui/Select.tsx) opens its list inside the window
-// even when the list is wider than its button: Settings' image models,
-// "OpenAI · gpt-image-…" under a "None" button near the right edge, ran
-// past the window's edge.
+// The app's own select keeps its list inside the window even when the
+// list is wider than its button.
 
 test("a list wider than its button stays inside the window", async ({
   page,

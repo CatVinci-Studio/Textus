@@ -12,11 +12,12 @@ import type { OpenFolder } from "./useOpenFolder";
  *  folder, and its ways to open a file or close the sidebar. */
 export interface SidebarTabProps {
   t: Strings;
-  /** The tree's root and the opened folder (useOpenFolder.ts). */
+  /** The tree's root and the opened folder. */
   openFolder: OpenFolder;
   activePath: string | null;
   activeContent: string;
-  onOpenFile: (path: string) => void;
+  /** `beside`: in a split beside the document in front. */
+  onOpenFile: (path: string, beside?: boolean) => void;
   /** Closes the sidebar (the phone's drawer, once a file is opened). */
   onClose: () => void;
   /** A file or folder was dragged into another folder in the tree. */
@@ -27,11 +28,8 @@ export interface SidebarTabProps {
 }
 
 /**
- * The sidebar's tabs, in the order its header shows them (Sidebar.tsx): an
- * id - what ui-state remembers as the tab last shown - the name its button
- * is called by, its icon, and the panel it opens. The shape a plugin's
- * own tab will take (docs/dev/plugin-api.md): registerSidebarTab adds one
- * after the built-in tabs.
+ * A sidebar tab: an id (what ui-state remembers), its button's name and
+ * icon, and the panel it opens. Plugins add tabs of the same shape.
  */
 export interface SidebarTabDef {
   id: string;
@@ -51,9 +49,7 @@ function FilesPanel({
   onSearchFocusHandled,
 }: SidebarTabProps) {
   if (!openFolder.treeRoot)
-    // An unsaved draft has no folder - an empty panel read as broken.
-    // File > Open Folder… is the way to one; a button for it here sat
-    // oddly under the note.
+    // An unsaved draft has no folder; an empty panel read as broken.
     return <div className="clipboard-empty">{t.treeEmptyDraft}</div>;
   return (
     <FileTree
@@ -61,11 +57,10 @@ function FilesPanel({
       onRootChange={openFolder.setTreeRoot}
       folder={openFolder.folder}
       activePath={activePath}
-      onFileSelect={(path) => {
-        // On a phone the drawer covers the page it just opened
-        // (mobile/styles); a docked one stays.
+      onFileSelect={(path, beside) => {
+        // On a phone the drawer covers the page it just opened.
         if (isIOSApp && window.matchMedia(PHONE_QUERY).matches) onClose();
-        onOpenFile(path);
+        onOpenFile(path, beside);
       }}
       onOpenFolder={canOpenFolder ? openFolder.openFolderDialog : undefined}
       onCloseFolder={openFolder.closeFolder}

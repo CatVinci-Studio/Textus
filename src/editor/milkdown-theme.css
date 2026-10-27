@@ -1,21 +1,6 @@
-/* What makes the editor work: carets, list markers, previews, AI
-   decorations, resize handles, table layout. How document elements LOOK
-   lives in content-base.css, in a cascade layer imported themes can
-   override; nothing here should be restyled away by a theme.
-
-   Layout tokens for the writing area. Every block's outer rhythm comes
-   from these, so blocks sit on one consistent scale instead of each
-   picking its own em literal:
-   - --md-gap: between prose blocks (paragraphs, lists);
-   - --md-gap-box: around boxed blocks (code, tables, quotes, math,
-     diagrams, images), which read as separate objects and need more air;
-   - --md-radius / --md-radius-sm: boxed blocks / inline chips.
-   Margins still collapse between siblings, so two boxed blocks in a row
-   are --md-gap-box apart, not double.
-
-   The document's face, size, leading and colour are look, not function:
-   they live in content-base.css's layer, where a theme or the user's CSS
-   can set them. */
+/* What makes the editor work (carets, markers, previews, AI decorations,
+   tables). How document elements look lives in content-base.css's layer,
+   which themes override; nothing here should be restyled away. */
 .milkdown {
   --md-gap: 0.8em;
   --md-gap-box: 1.1em;
@@ -23,18 +8,9 @@
   --md-radius-sm: var(--radius-small);
 }
 
-/* A click anywhere below the text still lands in it: the page's height,
-   less the column's padding above and below it (app/editor-column.css .editor-content,
-   3rem + 6rem) - with only 6rem off, an empty document scrolled by 48px
-   and showed a scrollbar. Divided by the zoom, which scales this node's
-   lengths (useZoom.ts).
-
-   flow-root keeps the last block's bottom margin inside that height. WebKit
-   on macOS 26 let it collapse through the min-height box and out past the
-   column's padding, so an empty document still scrolled by the empty
-   paragraph's 0.8em (13px) there. A longer document ends the same either
-   way: the margin used to stop at the column's padding, now one box
-   sooner. */
+/* A click below the text still lands in it: the page height less the
+   column's padding, divided by the zoom. flow-root keeps the last block's
+   margin inside, which WebKit on macOS let collapse out into a scrollbar. */
 .milkdown .ProseMirror {
   display: flow-root;
   outline: none;
@@ -47,9 +23,7 @@
     min-height: 0;
   }
 
-  /* Editor-only chrome (code-block-language-view.ts's header and line
-     numbers) - not part of the document, shouldn't end up baked into the
-     PDF. */
+  /* Editor-only chrome, not part of the document. */
   .code-block-header,
   .code-line-gutter,
   .chat-selection-layer {
@@ -57,9 +31,8 @@
   }
 }
 
-/* The suggestion text lives in data-suggestion and is painted as generated
-   content, not DOM text - see ghost-text-plugin.ts's ghostDecoration for why
-   (WebKit would otherwise paint the caret after the ghost text). */
+/* Painted as generated content, not DOM text, or WebKit paints the caret
+   after the ghost text. */
 .ghost-text {
   user-select: none;
   pointer-events: none;
@@ -91,30 +64,20 @@
   white-space: pre-wrap;
 }
 
-/* A suggestion's first appearance fades in; the rest of one already on
-   show (ghost-text-plugin.ts's `fresh`) and its removal are instant -
-   nothing on the typing path moves. */
+/* Only a suggestion's first appearance fades in; nothing on the typing path moves. */
 .ghost-text-enter::after {
   animation: motion-fade-in var(--dur-fast) var(--ease-out);
 }
 
-/* While the caret sits exactly where a suggestion is showing, WKWebView's
-   caret canonicalization paints the native caret AFTER the suggestion (it
-   skips over an inline element with no real text). Painting can't be
-   corrected, so it's replaced: the plugin tags the editor root with
-   .ghost-text-caret (see ghost-text-plugin.ts's view.update), the native
-   caret goes transparent, and an identical blinking one is drawn at the
-   ghost's left edge - the true insertion point. The \200b content gives
-   the pseudo-element real text height, so the bar matches the font. */
+/* At a suggestion, WKWebView paints the native caret AFTER it. So the native
+   caret goes transparent and an identical one is drawn at the ghost's left
+   edge; the \200b content gives it real text height. */
 .milkdown .ProseMirror.ghost-text-caret {
   caret-color: transparent;
 }
 
-/* caret-color INHERITS, and the editor root is an ancestor of every zone
-   widget - so the rule above also blanked the caret of the Quick Ask
-   composer, which is a real textarea living inside the document flow
-   (quick-ask-widget-plugin). Typing worked, nothing blinked. Form fields
-   own their caret; the ghost-text swap only ever meant the document's. */
+/* caret-color inherits, so the rule above also blanked the caret of form
+   fields inside the document (the Quick Ask composer). */
 .milkdown .ProseMirror input,
 .milkdown .ProseMirror textarea {
   caret-color: auto;
@@ -138,14 +101,8 @@
   }
 }
 
-/* Pending agent edits (pending-edit-plugin.ts): the anchor text an action
-   removes is struck through with a red tint; new text is shown ghost-style
-   (like .ghost-text above) but green-tinted so it reads as "about to be
-   added" rather than "already there but faint". Neither is editable -
-   accept/reject (PendingEditControls, or ⌘Enter/⌘Backspace) is what commits
-   or discards them, never direct typing on the decoration itself. Their
-   colours are the --revision-* variables (design-system.css), which a theme
-   can set. */
+/* Pending agent edits: removed text struck in red, new text ghost-style in
+   green. Only accept/reject commits them. Colours are the themable --revision-*. */
 .pending-delete {
   color: var(--revision-delete-text);
   text-decoration: line-through;
@@ -159,21 +116,15 @@
   background: var(--revision-insert-bg);
   border-radius: var(--md-radius-sm);
   padding: 0 2px;
-  /* Renders real markdown (renderMarkdownInlineHtml), not source text - the
-     ProseMirror root's own base stylesheet sets white-space: pre-wrap on
-     the whole editable area (to preserve typed whitespace), which would
-     otherwise double up on the spacing marked's own <br>/paragraph elements
-     already provide, the same fix .raw-html-rendered uses for the same
-     reason. */
+  /* Renders real markdown, so the root's pre-wrap would double the spacing. */
   white-space: normal;
   user-select: none;
   animation: motion-fade-in var(--dur-base) var(--ease-out);
   transition: background var(--dur-instant) var(--ease-standard);
 }
 
-/* With more contrast asked for, or the system drawing the colours, new
-   text is underlined as well as tinted - the tint may be faint or gone -
-   and the original's strike is thicker. */
+/* With more contrast or forced colours, the tint may be faint or gone: new
+   text is underlined too and the strike is thicker. */
 @media (prefers-contrast: more), (forced-colors: active) {
   .pending-insert {
     text-decoration: underline;
@@ -186,10 +137,8 @@
   }
 }
 
-/* New text over several lines (pending-edit-plugin's renderPendingHtml):
-   the tint is on each line's span, the line breaks between them get none -
-   one box over all of them painted its padding at every line end and a
-   stub on an empty line, under the hover tint too. */
+/* Multi-line new text: the tint is per line span, so line ends and empty
+   lines get no stray padding. */
 .pending-insert.pending-insert-lines {
   background: none;
   padding: 0;
@@ -230,18 +179,15 @@
   padding: 0;
 }
 
-/* A line break inside a struck original is struck with it (and hidden with
-   it in the views that take the original out), never painted. */
+/* A line break inside a struck original is struck and hidden with it. */
 br:is(.pending-delete, .pending-sentence-hot) {
   background: none;
 }
 
-/* New text between two blocks (pending-edit-plugin's fillPendingBlocks):
-   the paragraphs, lists and tables it will be, in one tinted box. */
+/* New text between two blocks, in one tinted box. */
 .pending-insert.pending-blocks {
   display: block;
-  /* The tint reaches past the column; the text and a picture keep its
-     width, as they will once accepted. */
+  /* The tint reaches past the column; the content keeps its accepted width. */
   margin-inline: -6px;
   padding: 2px 6px;
 }
@@ -255,9 +201,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 .ProseMirror[data-revision-display="final"] .pending-insert.pending-blocks {
-  /* No tint to bleed past the column, so none of the room made for it:
-     with only the padding gone, new blocks stood 12px wider than the
-     column and moved in when taken. */
+  /* No tint, so no extra room either, or new blocks would jump when taken. */
   margin-inline: 0;
   padding: 0;
 }
@@ -267,9 +211,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   font-size: 0.9em;
 }
 
-/* A picture Textus AI proposes (generate_image) at the size it takes once
-   accepted (.image-view): within the column, however large the service
-   made it. */
+/* A proposed picture at the size it takes once accepted. */
 .pending-insert img {
   max-width: 100%;
   height: auto;
@@ -277,17 +219,9 @@ br:is(.pending-delete, .pending-sentence-hot) {
   border-radius: var(--md-radius);
 }
 
-/* A rewrite shown sentence by sentence (pending-edit-plugin's
-   sentenceDecorations): each changed sentence struck where it stands, its
-   replacement right after, then a ✓ / ✕. Undecided and taken read the
-   same - Accept takes them; a kept sentence turns back into ordinary text
-   and its replacement dims, struck in turn. The first appearance runs
-   sentence by sentence (--i, a step of --dur-instant, at most eight): the
-   strike draws, the new words fade in, the buttons come. One timing for
-   all of it, an entry's (--dur-base, --ease-out), and the hover tints a
-   colour change (--dur-instant). A rewrite that streamed in sentence by
-   sentence has --i 0 throughout: its sentences came in as they were
-   written. */
+/* A rewrite shown sentence by sentence: each changed sentence struck, its
+   replacement after, then ✓ / ✕. The entrance staggers by --i; a streamed
+   rewrite has --i 0, as its sentences came in as written. */
 .pending-sentence {
   border-radius: var(--md-radius-sm);
   transition:
@@ -301,8 +235,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   animation-delay: calc(min(var(--i, 0), 8) * var(--dur-instant));
 }
 
-/* Streamed in: the plugin draws the strike in once (drawStrikesIn), since
-   ProseMirror may draw the span again while the stream goes on. */
+/* Streamed in: the plugin draws the strike once, since ProseMirror may
+   redraw the span mid-stream. */
 .pending-sentence.pending-streamed {
   animation: none;
 }
@@ -331,13 +265,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   animation: pending-fade-kept var(--dur-fast) var(--ease-standard);
 }
 
-/* The review bar's pointer, and the pair under the mouse pointer or whose
-   margin card is (pending-edit-plugin's hotDecorations): both sides stay as
-   they are, their tints a shade darker - the new text a darker green, the
-   original a darker red - as a review note's passage darkens under the
-   pointer (.review-anchor-hot). The result-only view draws the new text
-   untinted, so there the darker green is what shows. Hover never hides or
-   previews anything. */
+/* The hot pair (review bar pointer or mouse): tints a shade darker. Hover
+   never hides or previews anything. */
 :is(.pending-sentence-focus, .pending-sentence-hot):not(.pending-pick) {
   border-radius: var(--radius-small);
   -webkit-box-decoration-break: clone;
@@ -365,9 +294,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   }
 }
 
-/* The text an Accept just wrote (pending-edit-plugin's `landed`): the
-   green it was proposed in fades out where it now stands, so the eye
-   follows it from proposal to text instead of seeing it blink. */
+/* Just-accepted text fades out its green, so the eye follows it. */
 .pending-landed {
   border-radius: var(--md-radius-sm);
   animation: pending-landed var(--dur-slow) var(--ease-out) both;
@@ -388,26 +315,9 @@ br:is(.pending-delete, .pending-sentence-hot) {
   }
 }
 
-/* The revision views (Settings > Show revisions, the review bar's menu),
-   which the editor carries as data-revision-display (pending-edit-plugin's
-   syncDisplay). Every view's parts are always drawn; each view shows its
-   own, so a switch redraws nothing and replays no entrance.
-
-   - inline (and no attribute): both sides in the text, with ✓ / ✕;
-   - original: the original in the text, the new text in the margin - from
-     the moment it is written, never first in the text;
-   - final (Result only, the default): the result, unmarked but for a faint
-     dotted line, so a pending change can still be told from settled text;
-     what a change takes out is in the margin, a deleted sentence's place
-     marked by a thin red line.
-
-   New text with no original (Write's insertions) has nothing to put in the
-   margin: it stays in the text, green, in "original" too, and
-   reads as the result in "final".
-
-   An original taken out of the text is hidden in the flow, not with
-   display: none - shown again, an element that was display: none starts
-   its CSS entrance over, and the strike drew in again on every switch. */
+/* Revision views (data-revision-display): inline, original (new text in
+   the margin), final (result, faintly marked). Every view's parts are always
+   drawn; hidden ones use visibility, since display: none replays entrances. */
 .ProseMirror[data-revision-display]:not([data-revision-display="inline"])
   .pending-pick,
 .pending-insert-mark,
@@ -427,12 +337,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   box-shadow: none;
 }
 
-/* A block whose text is all hidden (pending-edit-plugin's struckBlocks): a
-   paragraph a rewrite joins to the one before it. Out of the flow with it,
-   so the text reads as it will once accepted - left standing, it was a
-   blank line with a paragraph's margins. Taken out of the flow rather
-   than display: none, for the same reason as its text; out of the flow,
-   the margins round it meet as if it weren't there. */
+/* A block whose text is all hidden (a paragraph a rewrite joins to the
+   previous): out of the flow, so it doesn't leave a blank line. */
 .ProseMirror[data-revision-display="final"]
   .pending-struck-block:not(.pending-struck-marked) {
   position: absolute;
@@ -458,8 +364,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-underline-offset: 0.2em;
 }
 
-/* Where a pure insertion goes, or where a deleted sentence was, with its
-   card in the margin. */
+/* Where a pure insertion goes or a deleted sentence was. */
 .ProseMirror[data-revision-display="original"] .pending-insert-mark,
 .ProseMirror[data-revision-display="final"]
   .pending-delete-mark:not(.pending-sentence-kept) {
@@ -475,13 +380,12 @@ br:is(.pending-delete, .pending-sentence-hot) {
   background: var(--danger);
 }
 
-/* What a view switch shows is not new: no entrance (syncDisplay). */
+/* A view switch shows nothing new: no entrance. */
 .ProseMirror .ProseMirror-widget.pending-settled {
   animation: none;
 }
 
-/* The ✓ / ✕ pair after a changed sentence (and in the AI card): outlined
-   while undecided; the choice made fills in. */
+/* The ✓ / ✕ pair: outlined while undecided; the choice made fills in. */
 .pending-pick {
   display: inline-flex;
   gap: 3px;
@@ -499,13 +403,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   animation: none;
 }
 
-/* A rewrite still streaming in (pending-edit-plugin's streamDecorations):
-   a completed sentence's ✓ / ✕ wait faint and inert until the whole
-   rewrite is in. Each completed sentence has its margin card from the
-   start, so in "original" its new text is in the card only, and the
-   sentence being written shows there once it is complete: in the text it
-   would come and go. Drawn already, so the end of the stream moves
-   nothing. */
+/* A rewrite still streaming: completed sentences' ✓ / ✕ wait faint and
+   inert, and in "original" only complete sentences show in the card. */
 .pending-pick.pending-streaming {
   opacity: 0.35;
   pointer-events: none;
@@ -581,8 +480,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   height: 13px;
 }
 
-/* Reduced motion: fades, all at once - no stagger, and the ✓ / ✕ don't
-   grow (--scale-enter is 1 there). */
+/* Reduced motion: fades, all at once, no stagger or growth. */
 @media (prefers-reduced-motion: reduce) {
   .pending-sentence,
   .pending-sentence-new,
@@ -591,11 +489,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   }
 }
 
-/* The progress cursor (pending-edit-plugin's readingDecoration): the
-   original sentence a streaming rewrite is at, tinted - also one it keeps
-   word for word, which shows nothing else, so a light polish moves through
-   the text sentence by sentence rather than standing still. A tint, not an
-   animation: motion here is opacity and transform only (motion.css). */
+/* The progress cursor: the sentence a streaming rewrite is at, tinted even
+   when kept unchanged. A tint, since motion here is opacity and transform only. */
 .pending-reading {
   border-radius: var(--md-radius-sm);
   -webkit-box-decoration-break: clone;
@@ -604,9 +499,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   transition: background var(--dur-instant) var(--ease-standard);
 }
 
-/* While the typewriter is still revealing text (pending-edit-plugin's
-   animation queue), a blinking caret marks the growth point - same
-   blink cadence as the ghost-text caret above. */
+/* A blinking caret at the typewriter's growth point. */
 .pending-insert-typing::after {
   content: "\200b";
   border-left: 1.5px solid var(--diff-caret);
@@ -614,13 +507,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   animation: ghost-caret-blink 1.1s step-end infinite;
 }
 
-/* The passage a chat is about while the composer has the focus
-   (chat-selection-plugin.ts): one box per line in a layer over the text, a
-   calm tint of the accent like a selection - "this is the chat's context",
-   unlike the green and red of a revision or the yellow of a find match.
-   Over the text rather than under it, so code, inline math and table cells
-   with backgrounds of their own are tinted too. The composer's chip has the
-   same tint (inline-chat.css); pointing at it strengthens this one. */
+/* The chat's context passage while the composer is focused: an accent tint
+   per line, in a layer over the text so backgrounds of code and cells tint too. */
 .chat-selection-layer {
   position: absolute;
   top: 0;
@@ -691,9 +579,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   display: none;
 }
 
-/* Obsidian embeds (images/obsidian-embed.ts): the source, quiet like raw
-   HTML's - all that a note embed ever shows, and an image embed's while the
-   caret is on it. */
+/* Obsidian embeds: the source, quiet like raw HTML's. */
 .obsidian-embed-source {
   color: var(--editor-muted);
 }
@@ -702,17 +588,14 @@ br:is(.pending-delete, .pending-sentence-hot) {
   display: none;
 }
 
-/* A reference link's definition, `[ref]: url` (markdown/reference-links.ts):
-   source, quiet like raw HTML's. */
+/* A reference link's definition, `[ref]: url`: quiet source. */
 .link-definition-source {
   color: var(--editor-muted);
   font-family: var(--font-mono);
   font-size: 0.85em;
 }
 
-/* A link shown as its Markdown while the caret is on it
-   (markdown/link-reveal.ts): the text in the link colour, the brackets and
-   what follows the text quiet. */
+/* A link shown as its Markdown while the caret is on it. */
 .link-source {
   color: var(--editor-accent);
 }
@@ -721,16 +604,13 @@ br:is(.pending-delete, .pending-sentence-hot) {
   color: var(--editor-muted);
 }
 
-/* An Obsidian wikilink, `[[Note]]` (markdown/wikilink.ts): its source in
-   the link colour; Ctrl/Cmd+click opens the note. */
+/* An Obsidian wikilink: its source in the link colour. */
 .wikilink {
   color: var(--editor-accent);
 }
 
-/* A picture that won't load (images/missing-image.ts) - a Markdown image or
-   an Obsidian embed: a card with its name, the reason and what to do, in
-   place of the broken-image icon. The picture's own parts stay in the DOM
-   for an export, which drops the card, and for print. */
+/* A picture that won't load: a card in place of the broken-image icon. The
+   picture's own parts stay in the DOM for export and print. */
 @media screen {
   .milkdown .image-view.image-missing > :not(.missing-image-card) {
     display: none;
@@ -808,8 +688,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   color: var(--editor-text);
 }
 
-/* An HTML comment while the caret is away (raw-html-preview-plugin.ts):
-   a note for whoever reads the file, not code. */
+/* An HTML comment while the caret is away. */
 .raw-html-source:has(> .raw-html-comment) {
   font-family: inherit;
   font-size: 0.92em;
@@ -818,23 +697,16 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 .raw-html-rendered {
   cursor: pointer;
-  /* .ProseMirror's own base stylesheet sets white-space: pre-wrap on the
-     whole editable root (to preserve whitespace typed by the user); without
-     overriding it back here, raw newlines/indentation from the HTML source
-     show up as literal line breaks instead of collapsing the way a normal
-     browser-rendered HTML fragment (and GitHub) would. */
+  /* Undo the root's pre-wrap, so HTML source whitespace collapses as in a browser. */
   white-space: normal;
 }
 
-/* An HTML fragment with no block-level tags (a lone <img>, <kbd>x</kbd>)
-   flows with the line it was written in, like GitHub, instead of breaking
-   into its own block. */
+/* An HTML fragment with no block-level tags flows inline, like GitHub. */
 .raw-html-rendered-inline {
   display: inline;
 }
 
-/* An <img> written as inline HTML flows with its line (GitHub does the
-   same - badge rows rely on it). */
+/* An inline-HTML <img> flows with its line (badge rows rely on it). */
 .milkdown .raw-html-rendered-inline img {
   display: inline-block;
   margin: 0;
@@ -843,21 +715,17 @@ br:is(.pending-delete, .pending-sentence-hot) {
   box-shadow: none;
 }
 
-/* <details> (details-fold.ts). Written around markdown, its
-   body is the paragraphs below the head, folded by hiding them, and the
-   closing "</details>" line goes while the caret is away from it. */
-/* A block widget ends its paragraph, and the caret helpers ProseMirror puts
-   after it (a separator image, a trailing <br>) only added an empty line
-   below the table or summary. prosemirror.css shows the separator with
-   !important, hence this one. */
+/* <details>: the body below the head folds by hiding it, and the closing
+   "</details>" line hides while the caret is away. */
+/* ProseMirror's caret helpers after a block widget add an empty line;
+   prosemirror.css shows the separator with !important, hence this one. */
 .milkdown
   p:has(> .raw-html-rendered:not(.raw-html-rendered-inline))
   > :is(br.ProseMirror-trailingBreak, img.ProseMirror-separator) {
   display: none !important;
 }
 
-/* As wide as its text: the row beside it is where a click edits the source
-   instead of folding. */
+/* As wide as its text: the rest of the row edits the source on click. */
 .milkdown .raw-html-rendered summary {
   width: fit-content;
   cursor: pointer;
@@ -868,10 +736,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   display: none;
 }
 
-/* Styling stand-ins for PAIRED inline tags (raw-html-preview-plugin.ts):
-   "<b>", "</b>" etc. are separate markdown nodes, so the rendering can't
-   wrap real elements around the text between them - these classes applied
-   as inline decorations mimic each tag's effect in place. */
+/* Stand-ins for PAIRED inline tags: "<b>" and "</b>" are separate nodes, so
+   decorations mimic each tag's effect on the text between. */
 .rhtml-b {
   font-weight: 600;
 }
@@ -932,8 +798,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   max-width: 100%;
 }
 
-/* A diagram in Textus AI's proposed text (pending-diagram.ts): a box of its
-   own in the green of new text. Until it is drawn it shows its source. */
+/* A diagram in proposed text: a green box; its source until drawn. */
 .pending-insert .pending-diagram {
   cursor: default;
   white-space: pre-wrap;
@@ -946,18 +811,13 @@ br:is(.pending-delete, .pending-sentence-hot) {
   background: var(--editor-code-bg);
 }
 
-/* The parts a growing diagram just gained, as new text comes in; the
-   parts it had stay as they are. */
+/* The parts a growing diagram just gained. */
 .pending-diagram .diagram-part-enter {
   animation: motion-fade-in var(--dur-base) var(--ease-out) both;
 }
 
-/* A diagram Pele drew (Settings › Diagram engine) takes every colour from
-   these variables, so it follows the appearance and the theme - a Typora
-   one too, through the text colour it gives the page - without being drawn
-   again. --pele-bg is the box's own background: edge labels are cut out of
-   the lines with it. The face is left to the one Pele measured with
-   (diagram-engine.ts passes the editor's). */
+/* Pele diagrams take every colour from these, so they follow the theme
+   without a redraw. --pele-bg cuts edge labels out of the lines. */
 .mermaid-preview {
   --pele-bg: var(--editor-code-bg);
   --pele-fg: currentColor;
@@ -973,11 +833,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   --pele-radius: var(--md-radius-sm);
 }
 
-/* Markdown images (image-plugin.ts's node view). The node is inline, so it
-   renders inline-block - an image mid-sentence flows with the text, and the
-   caret's line box stays beside the image instead of opening an empty line
-   under it. An image on a line of its own is laid out as a centred figure by
-   its paragraph (.image-paragraph). */
+/* Markdown images are inline, so inline-block: the caret's line box stays
+   beside the image. An image alone on its line is a centred figure. */
 .milkdown .image-view {
   position: relative;
   display: inline-block;
@@ -995,8 +852,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   box-shadow: var(--shadow-image);
 }
 
-/* A width set by the resize handle or the context menu is a share of the
-   paragraph, carried by the wrapper; the picture fills it. */
+/* A set width is a share of the paragraph, on the wrapper. */
 .milkdown .image-view-sized img {
   width: 100%;
 }
@@ -1016,8 +872,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-align: center;
 }
 
-/* Drag to resize: a slim grip on the right edge, shown while the image is
-   hovered or selected. */
+:root[data-image-align="left"] .milkdown p.image-paragraph {
+  text-align: left;
+}
+
+/* A slim resize grip on the right edge, while hovered or selected. */
 .image-resize-handle {
   position: absolute;
   top: 50%;
@@ -1061,8 +920,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   display: none;
 }
 
-/* Synthesized delimiters ("**", "~~", "==", "`", "$", "$$") revealed while
-   the cursor touches an enclosure node - see enclosure.ts. */
+/* Synthesized delimiters revealed while the cursor touches an enclosure node. */
 .enclosure-delimiter {
   color: var(--editor-muted);
   font-weight: 400;
@@ -1071,13 +929,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   user-select: none;
 }
 
-/* A colour code's swatch (marks/color-swatch-plugin.ts): an element at the
-   start of inline code, or drawn before the first character of a code in
-   plain text - no element there, so nothing for the caret to step over or
-   for a copy to take. The colour is painted over a checkerboard, so a
-   translucent one reads as translucent; the hairline keeps white on a
-   white page and black on a dark one visible. Not a place for the caret:
-   a click on it lands in the code. */
+/* A colour code's swatch, not a caret stop. Painted over a checkerboard so
+   translucency shows; the hairline keeps white-on-white visible. */
 .color-swatch,
 .color-swatch-text::before {
   display: inline-block;
@@ -1099,27 +952,19 @@ br:is(.pending-delete, .pending-sentence-hot) {
   content: "";
 }
 
-/* A colour code is short: kept on one line, it never leaves its swatch at
-   the end of the line above. In plain text the swatch stays with the
-   character it is drawn before. */
+/* Kept on one line, so the swatch never strands at the line end. */
 .md-code-span:has(> .color-swatch),
 .color-swatch-text {
   white-space: nowrap;
 }
 
-/* Block math edits like a fenced block: while the cursor touches it
-   (enclosure.ts adds .math-block-revealed), leaving the source area its own
-   line(s) for the cursor - even when the block is still empty. */
+/* While revealed, block math gives the source its own line(s), even when empty. */
 .math-block {
   white-space: pre-wrap;
 }
 
-/* Editing-state panel for block math - mirrors .math-block-rendered's
-   bordered, centered card below so the block doesn't visually flatten to
-   plain left-aligned text the moment the cursor lands in it. Lands on the
-   node's outer wrapper div (see math-schema.ts's nested toDOM), not the
-   inner .math-block content div. The border itself is the "this is a math
-   block" cue now, so no separate "$$" fence markers on top of it. */
+/* Editing panel for block math, on the outer wrapper so the block doesn't
+   flatten to plain text when the cursor lands in it. */
 .math-block-revealed {
   display: block;
   margin: var(--md-gap-box) 0;
@@ -1145,8 +990,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   animation: motion-pop-in var(--dur-base) var(--ease-out);
 }
 
-/* The room a block formula's preview sits over (math-preview-plugin.ts
-   sizes and shows it). */
+/* The room a block formula's preview sits over. */
 .math-preview-room {
   display: none;
 }
@@ -1166,16 +1010,10 @@ br:is(.pending-delete, .pending-sentence-hot) {
   user-select: none;
 }
 
-/* md_span covers bold/italic/bold+italic/strikethrough/highlight - all real,
-   always-editable nodes (see md-span-schema.ts). How they look (weight,
-   slant, strike, highlight) is in content-base.css's layer, so a theme's
-   or the user's plain `strong {}` wins; only the delimiter reveal below is
-   cursor-dependent. */
+/* md_span's look is in content-base.css's layer, so a theme's plain
+   `strong {}` wins; only the delimiter reveal is here. */
 
-/* No border/box here on purpose - at rest a formula should read as part of
-   the document, not as a distinct UI card. The panel look only appears
-   while actively editing (.math-block-revealed below), triggered by the
-   cursor touching the block. */
+/* No box at rest: a formula reads as part of the document. */
 .math-block-rendered {
   display: block;
   cursor: pointer;
@@ -1184,32 +1022,20 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-align: center;
 }
 
-/* Not drawn yet, being off screen (draw-when-visible.ts): about a display
-   formula's height, so little moves when it is. */
+/* Not drawn yet (off screen): about a display formula's height. */
 .math-block-rendered[data-draw-pending] {
   min-height: 2.6em;
 }
 
-/* Equation numbers - (1), (2), ... after each row of a gather, align or
-   equation - are CSS counters in KaTeX's stylesheet, reset on <body>. The
-   column (.editor-content) is a size container, and container-type brings
-   style containment, which cuts counters off from any reset outside it: each
-   number started a fresh counter and every row read (1) (#182), in the
-   editor and in the HTML/PDF exports, which keep that column. Resetting them
-   on the document itself numbers it as LaTeX does, in order across all its
-   formulas - there and in the split view's preview, also a .milkdown. The
-   live preview of the formula being edited sits outside it, in <body>, and
-   numbers that formula alone. */
+/* KaTeX's equation counters reset on <body>, but the size-container column
+   cuts counters off, so every row read (1). Reset them on the document. */
 .milkdown,
 .math-float-preview {
   counter-reset: katexEqnNo mmlEqnNo;
 }
 
-/* GitHub-style alerts (github-alert-plugin.ts): a blockquote led by
-   [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION] gets the
-   matching accent on its border and a badge in place of the marker.
-   Accent values are GitHub's own; dark variants near the token colors
-   at the end of this file. */
+/* GitHub-style alerts: the matching accent on the border and a badge in
+   place of the marker. Accent values are GitHub's own. */
 .milkdown {
   --md-alert-note: #0969da;
   --md-alert-tip: #1a7f37;
@@ -1259,73 +1085,102 @@ br:is(.pending-delete, .pending-sentence-hot) {
   position: relative;
 }
 
-/* The language picker hangs just below the block's bottom-right corner,
-   outside it, and only while the block is hovered or being edited - the
-   way Typora shows a fence's language. Inside the box it either covered a
-   long first line or (#16) needed a header's worth of padding on top of
-   every block, pushing the code away from the frame (#15). The top padding
-   bridges the gap to the box, so moving the pointer down onto the picker
-   doesn't count as leaving the block. */
+/* Over the block's top-right corner, shown while it is hovered, edited or
+   its language menu is open. */
 .code-block-header {
   position: absolute;
-  top: 100%;
-  right: 0;
+  inset: 0;
   z-index: 2;
+  pointer-events: none;
+}
+
+.code-block-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
   display: flex;
   gap: 4px;
-  padding-top: 2px;
+  user-select: none;
+  -webkit-user-select: none;
   opacity: 0;
-  pointer-events: none;
   transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
-.code-block-wrapper:hover .code-block-header,
-.code-block-wrapper:focus-within .code-block-header {
+.code-block-wrapper:hover .code-block-actions,
+.code-block-wrapper:focus-within .code-block-actions,
+.code-block-wrapper.is-picking-language .code-block-actions {
   opacity: 1;
   pointer-events: auto;
 }
 
-.code-block-language-select,
-.code-block-copy {
+.code-block-language {
+  display: flex;
+}
+
+.code-block-copy,
+.code-block-select-all,
+.code-block-language-select {
+  font: inherit;
   font-size: 0.72em;
+  line-height: 1.6;
   color: var(--editor-muted);
-  /* Opaque: it can overlap the text right below the block. */
+  /* Opaque: it lies over the code, or the text right below the block. */
   background: var(--editor-bg, var(--bg));
   border: 1px solid var(--editor-border);
   border-radius: var(--radius-control);
-  padding: 0.1em 0.3em;
+  padding: 0.1em 0.5em;
   cursor: pointer;
 }
 
-.code-block-language-select:hover,
-.code-block-language-select:focus-visible,
-.code-block-copy:hover,
-.code-block-copy:focus-visible {
-  background: var(--editor-bg, var(--bg));
-  color: var(--editor-text);
+.code-block-language-select {
+  padding-right: 1.9em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.8L5 6.8L8 3.8' stroke='%23888888' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5em center;
+  background-size: 0.8em 0.8em;
 }
 
-.code-block-copy {
-  font-family: inherit;
-  line-height: inherit;
+.code-block-copy:hover,
+.code-block-copy:focus-visible,
+.code-block-select-all:hover,
+.code-block-select-all:focus-visible,
+.code-block-language-select:hover,
+.code-block-language-select:focus-visible,
+.code-block-language-select[aria-expanded="true"] {
+  color: var(--editor-text);
 }
 
 .code-block-copy.is-copied {
   color: var(--editor-accent);
 }
 
-/* Line numbers (code-line-numbers-plugin.ts): the gutter floats at the
-   start of the <pre>, one number per line, and the code beside it is a
-   block of its own (a block doesn't flow under a float), so the numbers
-   stay put and nothing has to paint over the code. Its lines wrap as
-   they do without numbers (#353); each number is as tall as its line
-   (gutter-fit.ts). The code takes the <pre>'s size and line height, as
-   the numbers do: a theme's own size for block code, or the code's font
-   on the <pre>'s baseline, made the lines a pixel taller apiece and the
-   numbers drifted up the block. The <pre>'s start padding moves into
-   the gutter. On screen only: a printed page can't scroll, and the print
-   and export drop the gutter. Id-weighted, as Typora themes style
-   `#write pre`. */
+/* Stays at the top as the list scrolls. */
+.code-language-search {
+  position: sticky;
+  /* Above the options, which are positioned too. */
+  z-index: 1;
+  top: -4px;
+  margin: -4px -4px 4px;
+  padding: 4px;
+  background: var(--bg);
+}
+
+.code-language-search input {
+  width: 100%;
+  min-width: 9em;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  border: 1px solid var(--editor-border, var(--border-color));
+  border-radius: var(--radius-control);
+  background: var(--editor-bg, var(--bg));
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+/* Line numbers: the gutter floats, the code beside it is its own block, so
+   nothing paints over the code. The code shares the <pre>'s size and line
+   height, or the numbers drift. Screen only; id-weighted like Typora themes. */
 @media screen {
   #write .code-block-numbered pre {
     padding-left: 0;
@@ -1358,11 +1213,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   display: block;
 }
 
-/* Typora themes style inline code as `#write code`, which beats
-   content-base.css's layered `.milkdown pre code` and would put a pill
-   background and padding on every line of a code block; in Typora itself a
-   block's text is never a <code>. Unlayered, same id weight, one element
-   more. */
+/* Typora themes' `#write code` would put a pill on every code block line;
+   unlayered, same id weight, one element more. */
 #write pre > code {
   background: none;
   padding: 0;
@@ -1370,6 +1222,19 @@ br:is(.pending-delete, .pending-sentence-hot) {
   border: 0;
   border-radius: 0;
   box-shadow: none;
+}
+
+/* "```" typed on a line of its own: the fence, not inline code
+   (md-span-autopair-plugin.ts). */
+#write code.is-fence {
+  background: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
 }
 
 /* Syntax highlighting tokens (via refractor/Prism token classes) */
@@ -1447,9 +1312,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   --md-alert-caution: #f85149;
 }
 
-/* A one-design imported theme keeps its light page in the dark appearance
-   (SettingsContext sets data-light-page): the dark tokens above would be
-   pale on that white page. */
+/* A one-design theme keeps its light page in dark mode, so the dark tokens
+   would be pale on it. */
 :root[data-light-page] {
   --token-string: #457236;
   --token-number: #8f5a1c;
@@ -1466,53 +1330,25 @@ br:is(.pending-delete, .pending-sentence-hot) {
   --md-alert-caution: #cf222e;
 }
 
-/* List markers are drawn as an out-of-flow ::before instead of the native
-   ::marker. Reason is the caret, not the looks: in WKWebView a caret at the
-   very start of a list item's first line gets painted a few pixels INTO the
-   first glyph rather than in front of it, and it only happens while that
-   line box carries a native marker - the same family as the heading "# "
-   prefix bug (see heading-marker-plugin.ts), and why task items, whose
-   checkbox has always been an absolutely positioned ::before, never showed
-   it. Taking the marker out of the line box removes what the caret was
-   being measured against.
-
-   Numbering is a CSS counter, NOT the item's data-label attribute, which
-   nothing keeps current: Milkdown's syncListOrderPlugin, which did (a
-   keystroke late), is left out of the preset - see reduced-presets.ts for
-   the IME breakage it caused. A counter is derived from the DOM itself and
-   cannot lag; --textus-ol-start carries a list's
-   `start` (see orderedListAttr in MilkdownEditor.tsx), which is the one thing
-   the structure alone doesn't say. Bullets are keyed off the parent element
-   rather than the item's own data-list-type, which can go stale when a list
-   changes type. */
+/* List markers are an out-of-flow ::before, not ::marker: in WKWebView a
+   native marker makes the caret at an item's start paint inside the first
+   glyph. Numbering is a CSS counter, since data-label can lag. */
 .milkdown ol {
-  /* Declared here, not just read with a fallback: custom properties inherit,
-     so a nested list inside an "3. " one would otherwise pick up its parent's
-     start and begin at 4. The inline style the attr writes still wins over
-     this rule for the list that actually has a start. */
+  /* Declared here, or a nested list would inherit its parent's start. */
   --textus-ol-start: 0;
   counter-reset: textus-ol var(--textus-ol-start);
 }
 
-/* No `position: relative` on the item, and that is load-bearing: WebKit
-   (Safari and WebKitGTK alike) commits an IME composition by deleting the
-   preedit first, and when that leaves a POSITIONED element empty it removes
-   the element outright - the <p> and its <li>, the first word typed into a
-   fresh item - so the line split into an empty item plus one with the text
-   (ProseMirror#934; composition-prune-guard-plugin.ts is the fallback). So
-   the markers below are absolutely positioned without a positioned parent:
-   with no top/left they sit at their static position, the start of the
-   item's first line, and margins and a translate place them from there -
-   the same spots the old right: 100% / top offsets gave. prosemirror.css
-   positions every item itself (".ProseMirror li"), hence the override. */
+/* No `position: relative` on the item: WebKit removes a positioned element
+   left empty by an IME commit, splitting the item. Markers sit at their
+   static position instead; this overrides prosemirror.css. */
 .milkdown ol > li,
 .milkdown ul > li {
   list-style: none;
   position: static;
 }
 
-/* A node-selected item still anchors prosemirror.css's outline ::after;
-   there's no composition in progress while a whole item is selected. */
+/* A node-selected item still anchors prosemirror.css's outline ::after. */
 .milkdown li.ProseMirror-selectednode {
   position: relative;
 }
@@ -1521,33 +1357,22 @@ br:is(.pending-delete, .pending-sentence-hot) {
   counter-increment: textus-ol;
 }
 
-/* Deliberately no `color`: a native ::marker paints in the inherited text
-   colour, and anything else here would make lists read as dimmer than the
-   prose around them. */
+/* No `color`: lists would read dimmer than the prose. */
 .milkdown ol > li::before,
 .milkdown ul > li:not([data-item-type="task"])::before {
   position: absolute;
   pointer-events: none;
 }
 
-/* The gap is the trailing NBSP - the same suffix the native marker carries
-   inside its own box, so right-aligning against the content edge (the
-   translate) lands the digits where they used to sit rather than at some
-   hand-picked margin. */
+/* The gap is the trailing NBSP, as in the native marker. */
 .milkdown ol > li::before {
   content: counter(textus-ol) ".\00a0";
   transform: translateX(-100%);
   white-space: nowrap;
 }
 
-/* Bullets are DRAWN, not the font's "•"/"◦"/"▪" glyphs: a native disc
-   marker is a geometric shape WebKit paints itself, noticeably larger than
-   the bullet characters most text fonts carry - swapping in the glyphs
-   visibly shrank every list dot (and made the size depend on the content
-   font). Same box-drawing idiom as the task checkbox below. The margin-top
-   values centre on the first line of a 1.8 line-height row (0.9em minus
-   half the shape); like the checkbox's 0.4em, they assume the .milkdown
-   line-height. */
+/* Bullets are drawn, not glyphs: font bullets are smaller than WebKit's disc
+   and font-dependent. margin-top assumes the .milkdown line-height. */
 .milkdown ul > li:not([data-item-type="task"])::before {
   content: "";
   width: 0.34em;
@@ -1591,9 +1416,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   box-sizing: border-box;
 }
 
-/* The tick is part of the box rather than an ::after of its own: an
-   ::after comes after the item's content, so without a positioned item to
-   place it against it would sit below the text instead of in the box. */
+/* The tick is part of the box: an ::after would land below the text. */
 .milkdown li[data-item-type="task"][data-checked="true"]::before {
   background: var(--editor-accent)
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.4 8.2l3.1 3 6-6.2' fill='none' stroke='white' stroke-width='2.3' stroke-linecap='square'/%3E%3C/svg%3E")
@@ -1606,10 +1429,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-decoration: line-through;
 }
 
-/* Fixed layout so the <colgroup> widths written by column resizing (see
-   table-hover-view.ts) actually take effect; a resized table renders exactly
-   the per-column widths dragged. A table nobody has resized keeps the auto
-   layout, so its columns size to their content (#15). */
+/* Fixed layout so resized <colgroup> widths take effect; an unresized
+   table keeps auto layout and sizes to content. */
 .milkdown table[data-sized] {
   table-layout: fixed;
 }
@@ -1620,8 +1441,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   position: relative;
 }
 
-/* Drag handle prosemirror-tables draws on the right border of each column;
-   .resize-cursor is toggled on the editor while a handle is hovered/dragged. */
+/* prosemirror-tables' column-resize handle. */
 .milkdown .column-resize-handle {
   position: absolute;
   top: 0;
@@ -1637,9 +1457,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   cursor: col-resize;
 }
 
-/* table-hover-view.ts wraps the table in this to anchor the add-row/
-   add-column affordances, which only appear while the pointer is over the
-   table (or the button itself, so moving toward it doesn't dismiss it). */
+/* Anchors the add-row/column buttons, shown while the pointer is over it. */
 .table-wrapper {
   position: relative;
   margin: var(--md-gap-box) 0;
@@ -1649,21 +1467,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   margin: 0;
 }
 
-/* A table whose content can't wrap narrower than the text column (long
-   URLs, many columns, or resized columns adding up past it) scrolls inside
-   it instead of spilling past the page (#15). The "+" buttons stay outside
-   this box, where it can't clip them.
-
-   Sideways only. `overflow-x: auto` alone makes overflow-y auto as well,
-   so the box was a vertical scroller too: the moment its content stood
-   any taller than it, a wheel over the table went to the table and the
-   page under it stopped, and WebKit keeps the rest of a gesture on the box
-   it started on. A suggestion wrapping a cell gives the table odd
-   fractional heights, which is the best explanation found for the page
-   that, on Linux, "wouldn't scroll" over a table after a completion until
-   Escape took the suggestion away. A hidden axis is never a wheel target;
-   overflow-x already clipped both ways, so nothing that showed before is
-   cut off now. */
+/* A table wider than the column scrolls inside it. Sideways only: an
+   overflow-y scroller grabs the wheel and stops the page scrolling. */
 .table-scroll {
   max-width: 100%;
   overflow-x: auto;
@@ -1720,12 +1525,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   height: 100%;
 }
 
-/* Zen mode's focus (zen-focus-plugin.ts): everything but the block being
-   written recedes. It changes only when the caret changes block, never per
-   keystroke. Only once there is a current block: with the caret outside
-   the text, every paragraph at a third read as broken. The fade itself is
-   in content-base.css's layer, outside .zen so leaving zen fades back too,
-   and below a theme's own transitions. */
+/* Zen focus: everything but the current block recedes, changing only per
+   block. The fade is in content-base.css's layer, so leaving zen fades back. */
 .zen .milkdown .ProseMirror:has(> .zen-current) > :not(.zen-current) {
   opacity: 0.32;
 }

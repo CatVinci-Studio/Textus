@@ -1,15 +1,12 @@
 //! What a request is told it remembers: the writer's requirements,
-//! preferences and style, global and the project's. What to remember is
-//! decided after each exchange (memory::pass), not by the request.
+//! preferences and style, global and the project's.
 
 use super::*;
 
 // ------------------------------------------------------------------- prompt
 
-/// The prompt sections for what Textus AI remembered (after the user's
-/// writing instructions): personal first, then the project's, which wins a
-/// conflict - as with agent.md. The facts are library entries, sent with
-/// the library when they come up.
+/// The prompt sections for what Textus AI remembered: personal first, then the
+/// project's, which wins a conflict. Facts go with the library instead.
 pub fn memory_sections(memories: &Memories) -> Vec<String> {
     let line = |m: &Memory| format!("- ({}) {}", m.kind.as_str(), m.text);
     let lines = |scope: Scope| -> Vec<String> {

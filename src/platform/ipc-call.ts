@@ -6,19 +6,19 @@ import { commands as aiAgentCommands } from "./bindings/ai-agent";
 import { commands as aiConventionsCommands } from "./bindings/ai-conventions";
 import { commands as aiMemoryCommands } from "./bindings/ai-memory";
 import { commands as aiProjectCommands } from "./bindings/ai-project";
+import { commands as aiSkillsCommands } from "./bindings/ai-skills";
 import { commands as appCommands } from "./bindings/app";
 import { commands as authCommands } from "./bindings/auth";
 import { commands as fileCommands } from "./bindings/files";
 import { commands as pluginCommands } from "./bindings/plugins";
+import { commands as pluginAccessCommands } from "./bindings/plugin-access";
 
 /**
  * How every backend command is called: errors as IpcError, AI commands
- * refused while AI is off, desktop-only commands answered on mobile
- * (ipc.ts).
+ * refused while AI is off, desktop-only commands answered on mobile.
  */
 
-/** Wraps a rejected `invoke()` with the command name that failed, so a
- *  caught error can be logged/displayed without losing which call it was. */
+/** A rejected `invoke()` with the name of the command that failed. */
 export class IpcError extends Error {
   readonly command: string;
   readonly cause: unknown;
@@ -32,17 +32,19 @@ export class IpcError extends Error {
   }
 }
 
-// The commands whose types are generated from Rust (src-tauri/src/bindings.rs).
+// The commands whose types are generated from Rust.
 const commands = {
   ...aiCommands,
   ...aiAgentCommands,
   ...aiConventionsCommands,
   ...aiMemoryCommands,
   ...aiProjectCommands,
+  ...aiSkillsCommands,
   ...appCommands,
   ...authCommands,
   ...fileCommands,
   ...pluginCommands,
+  ...pluginAccessCommands,
 };
 type Commands = typeof commands;
 /** A backend command with generated types: its name, as Rust registers it. */
@@ -57,10 +59,8 @@ type Answer<K extends Command> = [Awaited<ReturnType<Commands[K]>>] extends [
   : Awaited<ReturnType<Commands[K]>>;
 
 /**
- * Calls a generated command: tsc checks its name, its arguments (in the
- * Rust function's order) and its answer against the Rust signature. The
- * commands not generated - those reading their inputs as one struct, the
- * agent message, raw bytes, iOS-only - still go through `call`.
+ * Calls a generated command, type-checked against the Rust signature.
+ * Commands not generated (struct inputs, raw bytes, iOS-only) use `call`.
  */
 export async function command<K extends Command>(
   name: K,
@@ -84,7 +84,7 @@ export function aiCommand<K extends Command>(
     : Promise.reject(new IpcError(name, AI_OFF));
 }
 
-/** `desktopQuery` for a generated command. */
+/** A desktop-only generated command: answers `fallback` on iOS. */
 export function desktopQueryCommand<K extends Command, F>(
   name: K,
   fallback: F,
@@ -117,11 +117,8 @@ export async function call<T>(command: string, args?: object): Promise<T> {
 }
 
 /**
- * A command that sends something to an AI service - a completion, a
- * grammar check, a conversation, a model list. While Textus AI is off it
- * is refused here, before it reaches Rust (which refuses it too). Every
- * entry point already checks the switch (settings/textus-ai.ts); this is
- * the backstop that keeps a missed one from making a request.
+ * A command that sends something to an AI service, refused here while
+ * Textus AI is off: the backstop for an entry point that missed the switch.
  */
 export function aiCall<T>(command: string, args?: object): Promise<T> {
   return aiRequestsAllowed()
@@ -129,25 +126,7 @@ export function aiCall<T>(command: string, args?: object): Promise<T> {
     : Promise.reject(new IpcError(command, AI_OFF));
 }
 
-/**
- * Commands that exist on desktop only - registered under `#[cfg(desktop)]`
- * in src-tauri/src/lib.rs, so on iOS there is nothing to call.
- *
- * Call sites already avoid these on iOS through src/platform/capabilities.ts;
- * this is the backstop that keeps a missed call site from reaching Rust.
- * `desktopQuery` answers with what the command would report when there is
- * nothing to report (no pending tab, no chat window, no windows) - safe for
- * reads and fire-and-forget bookkeeping. `desktopAction` rejects, for calls
- * whose caller needs to know nothing happened.
- */
-export function desktopQuery<T>(
-  command: string,
-  fallback: T,
-  args?: object,
-): Promise<T> {
-  return isDesktopApp ? call<T>(command, args) : Promise.resolve(fallback);
-}
-
+/** A desktop-only command: rejects on iOS, where Rust doesn't register it. */
 export function desktopAction<T>(command: string, args?: object): Promise<T> {
   return isDesktopApp
     ? call<T>(command, args)
@@ -155,7 +134,3 @@ export function desktopAction<T>(command: string, args?: object): Promise<T> {
         new IpcError(command, new Error("not available on this platform")),
       );
 }
-
-// ---------------------------------------------------------------------------
-// fs (src-tauri/src/commands/fs.rs)
-// ---------------------------------------------------------------------------

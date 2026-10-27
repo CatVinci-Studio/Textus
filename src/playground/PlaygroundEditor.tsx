@@ -25,8 +25,7 @@ import "../theme/content-themes.css";
 export interface EditorHandle {
   /** The document now, including an edit the listener hasn't reported. */
   markdown: () => string | undefined;
-  /** Reports an edit the listener's debounce still holds (the page is
-   *  going away) - nothing when the document is as last reported. */
+  /** Reports an edit the debounce still holds, as the page goes away. */
   flush: () => void;
   /** Replaces the document as one undoable step (an import). */
   replace: (markdown: string) => void;
@@ -43,10 +42,8 @@ interface Props {
 }
 
 /**
- * The app's Markdown editor - the same core plugin chain
- * (editor/editor-extensions.ts) without the AI on top and without the
- * parts that need a disk: a pasted image gets a notice instead, and no
- * clipboard history is kept.
+ * The app's Markdown editor without the AI and the parts that need a disk: a
+ * pasted image gets a notice, and no clipboard history is kept.
  */
 function MarkdownEditor({
   initialValue,

@@ -9,36 +9,40 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	plugins_state: () => __TAURI_INVOKE<PluginsState_Serialize>("plugins_state"),
+	/**  Hands the waiting links to the window that asks, and forgets them. */
+	plugin_take_uris: () => __TAURI_INVOKE<string[]>("plugin_take_uris"),
+	/**  Export for publishing: plugin `id` laid out in `folder` as `publisher`'s. */
+	plugin_export: (id: string, publisher: string, folder: string) => __TAURI_INVOKE<string>("plugin_export", { id, publisher, folder }),
 	/**  Settings › Plugins › Plugins, the switch for all of them. */
 	plugins_set_all: (on: boolean) => __TAURI_INVOKE<null>("plugins_set_all", { on }),
 	/**
-	 *  Turns a plugin on or off with the permissions the user granted it -
-	 *  Settings' switch and the permission dialog. A developer-mode folder is
-	 *  kept.
+	 *  Turns a plugin on or off with the permissions the user granted it. A
+	 *  developer-mode folder is kept.
 	 */
 	plugin_set: (id: string, enabled: boolean, granted: string[]) => __TAURI_INVOKE<null>("plugin_set", { id, enabled, granted }),
 	/**
-	 *  Every installed plugin: the folders under `plugins/` and the developer
-	 *  folders `state.json` names. One whose manifest can't be read is left
-	 *  out; a developer folder wins over an installed copy of the same id.
+	 *  Every installed plugin: `plugins/` and the developer folders in
+	 *  `state.json`. Unreadable manifests are left out; a developer folder wins.
 	 */
 	plugins_installed: () => __TAURI_INVOKE<InstalledPlugin[]>("plugins_installed"),
 	/**
-	 *  Copies a plugin folder, or unpacks a `.textusplugin`, into
-	 *  `plugins/<id>/`, replacing an earlier version. Its switch and grants are
-	 *  left as they were: a new plugin starts off, and the window asks for the
-	 *  permissions of one that wants more than it was granted.
+	 *  Copies a plugin folder or unpacks a `.textusplugin` into `plugins/<id>/`,
+	 *  replacing an earlier version. Its switch and grants are left as they were.
 	 */
 	plugin_install: (path: string) => __TAURI_INVOKE<InstalledPlugin>("plugin_install", { path }),
 	/**
-	 *  Settings › Plugins › Load a plugin folder…: the plugin runs from where it
-	 *  is, so a change to its files shows on reload. It starts off, like any
-	 *  new plugin.
+	 *  Writes `files` into a folder of their own, then installs it as a package
+	 *  is installed, replacing an earlier draft of the same plugin.
+	 */
+	plugin_install_files: (files: PluginFile[]) => __TAURI_INVOKE<InstalledPlugin>("plugin_install_files", { files }),
+	/**
+	 *  Load a plugin folder…: the plugin runs from where it is, so changes show on
+	 *  reload. It starts off, like any new plugin.
 	 */
 	plugin_load_dev: (path: string) => __TAURI_INVOKE<InstalledPlugin>("plugin_load_dev", { path }),
 	/**
-	 *  Removes a plugin: its entry, its storage and - unless it was loaded from
-	 *  a developer's folder, which is theirs - its files.
+	 *  Removes a plugin: its entry, its storage and, unless loaded from a
+	 *  developer's folder, its files.
 	 */
 	plugin_uninstall: (id: string) => __TAURI_INVOKE<null>("plugin_uninstall", { id }),
 	/**
@@ -46,69 +50,30 @@ export const commands = {
 	 *  `folder`, Load a plugin folder….
 	 */
 	plugin_pick_package: (folder: boolean, filterName: string) => __TAURI_INVOKE<string | null>("plugin_pick_package", { folder, filterName }),
-	/**
-	 *  The catalog, fetched now - and kept for the next time
-	 *  (plugin_catalog_cached).
-	 */
+	/**  Settings › Plugins › Open Scripts Folder: made if it isn't there. */
+	plugin_open_scripts_dir: () => __TAURI_INVOKE<null>("plugin_open_scripts_dir"),
+	/**  The catalog, fetched now and kept for next time. */
 	plugin_catalog: () => __TAURI_INVOKE<CatalogEntry_Serialize[]>("plugin_catalog"),
 	/**
-	 *  The catalog as last fetched, if one was kept - shown while a fresh one
-	 *  is fetched. Installing from it works as from a fresh one: a version's
-	 *  package never changes, so its checksum still holds.
+	 *  The catalog as last fetched, shown while a fresh one loads. Installing from
+	 *  it is safe: a version's package never changes, so its checksum holds.
 	 */
 	plugin_catalog_cached: () => __TAURI_INVOKE<CatalogEntry_Serialize[] | null>("plugin_catalog_cached"),
-	/**
-	 *  The skills the catalog last fetched (or kept) lists - after
-	 *  plugin_catalog or plugin_catalog_cached has read it.
-	 */
+	/**  The skills the catalog last fetched (or kept) lists. */
 	skill_catalog: () => __TAURI_INVOKE<SkillEntry_Serialize[]>("skill_catalog"),
 	/**
-	 *  Installs skill `name` from the catalog last fetched: downloads its
-	 *  file, checks it, and puts it in the global config folder's skills/,
-	 *  where it is in the `/` menu of every document. Its path.
+	 *  Installs skill `name` from the catalog last fetched into the global skills/
+	 *  folder, after checking it. Returns its path.
 	 */
 	skill_install_catalog: (name: string) => __TAURI_INVOKE<string>("skill_install_catalog", { name }),
 	/**
-	 *  Installs `id` from the catalog last fetched: downloads its package,
-	 *  checks it, and installs it as a package from a file is - marked
-	 *  Official when the catalog says it is CatVinci's.
+	 *  Installs `id` from the catalog last fetched after checking its package,
+	 *  marked Official when the catalog says it is CatVinci's.
 	 */
 	plugin_install_catalog: (id: string) => __TAURI_INVOKE<InstalledPlugin>("plugin_install_catalog", { id }),
-	/**  A folder's entries, hidden ones left out. */
-	plugin_fs_list: (id: string, root: string, path: string) => __TAURI_INVOKE<FsEntry_Serialize[]>("plugin_fs_list", { id, root, path }),
 	/**
-	 *  Every Markdown document in the folder, in the sidebar's order, with
-	 *  its text.
-	 */
-	plugin_fs_documents: (id: string, root: string) => __TAURI_INVOKE<WorkspaceDocuments>("plugin_fs_documents", { id, root }),
-	/**
-	 *  The folder's documents' lines holding `query`, ignoring case, in the
-	 *  sidebar's order: at most `limit` of them (and never more than
-	 *  MAX_SEARCH_HITS).
-	 */
-	plugin_fs_search: (id: string, root: string, query: string, limit: number | null) => __TAURI_INVOKE<SearchResult>("plugin_fs_search", { id, root, query, limit }),
-	/**
-	 *  Writes a file in the folder, making the folders it is in. `contents` is
-	 *  text, or base64 with `base64`.
-	 */
-	plugin_fs_write: (id: string, root: string, path: string, contents: string, base64: boolean | null) => __TAURI_INVOKE<null>("plugin_fs_write", { id, root, path, contents, base64 }),
-	/**
-	 *  Renames or moves a file or folder within the folder. Refuses to put it
-	 *  over something that is there.
-	 */
-	plugin_fs_rename: (id: string, root: string, from: string, to: string) => __TAURI_INVOKE<null>("plugin_fs_rename", { id, root, from, to }),
-	/**
-	 *  Moves a file or folder in the folder to the system Trash - never a
-	 *  delete the user can't undo.
-	 */
-	plugin_fs_trash: (id: string, root: string, path: string) => __TAURI_INVOKE<null>("plugin_fs_trash", { id, root, path }),
-	/**  Makes a folder (and the folders it is in) in the folder. */
-	plugin_fs_mkdir: (id: string, root: string, path: string) => __TAURI_INVOKE<null>("plugin_fs_mkdir", { id, root, path }),
-	plugin_http: (id: string, request: HttpRequest_Deserialize) => __TAURI_INVOKE<HttpResponse>("plugin_http", { id, request }),
-	/**
-	 *  When a developer's plugin folder last changed: the newest file's time,
-	 *  in ms - the window loads the plugin again when it moves (folders such
-	 *  as node_modules and .git aside). None for a plugin not loaded from one.
+	 *  When a developer's plugin folder last changed (newest file, in ms, ignoring
+	 *  node_modules and .git), so the window reloads it. None for other plugins.
 	 */
 	plugin_dev_stamp: (id: string) => __TAURI_INVOKE<number | null>("plugin_dev_stamp", { id }),
 	/**
@@ -118,39 +83,12 @@ export const commands = {
 	plugin_ai_tools_set: (tools: PluginAiTool[]) => __TAURI_INVOKE<void>("plugin_ai_tools_set", { tools }),
 	/**  What a plugin's tool answered (`text`), or why it couldn't (`error`). */
 	plugin_ai_tool_result: (callId: string, text: string | null, error: string | null) => __TAURI_INVOKE<void>("plugin_ai_tool_result", { callId, text, error }),
-	/**  What the plugin kept under `key`, or null. */
-	plugin_store_get: (id: string, scope: StoreScope, root: string | null, key: string) => __TAURI_INVOKE<Value | null>("plugin_store_get", { id, scope, root, key }),
-	/**  Keeps `value` under `key`; null takes the key away. */
-	plugin_store_set: (id: string, scope: StoreScope, root: string | null, key: string, value: Value) => __TAURI_INVOKE<null>("plugin_store_set", { id, scope, root, key, value }),
-	/**  Every key the plugin keeps there, in order. */
-	plugin_store_keys: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<string[]>("plugin_store_keys", { id, scope, root }),
-	/**  One of the plugin's own files there, as text. */
-	plugin_store_read: (id: string, scope: StoreScope, root: string | null, path: string) => __TAURI_INVOKE<string>("plugin_store_read", { id, scope, root, path }),
-	/**  Writes one of the plugin's own files there. */
-	plugin_store_write: (id: string, scope: StoreScope, root: string | null, path: string, text: string) => __TAURI_INVOKE<null>("plugin_store_write", { id, scope, root, path, text }),
-	/**  The plugin's own files there, as paths under its `files/`. */
-	plugin_store_files: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<string[]>("plugin_store_files", { id, scope, root }),
-	/**  Deletes one of the plugin's own files there. */
-	plugin_store_delete: (id: string, scope: StoreScope, root: string | null, path: string) => __TAURI_INVOKE<null>("plugin_store_delete", { id, scope, root, path }),
 	/**
-	 *  How much a plugin keeps in each place - Settings shows it, and empties
-	 *  it on Clear data. `root` is the open folder, for the project's.
-	 */
-	plugin_store_usage: (id: string, root: string | null) => __TAURI_INVOKE<[number, number]>("plugin_store_usage", { id, root }),
-	/**
-	 *  Empties one of a plugin's places (Settings › its page › Clear data).
-	 *  Asked by the user, not the plugin: it may be off.
-	 */
-	plugin_store_clear: (id: string, scope: StoreScope, root: string | null) => __TAURI_INVOKE<null>("plugin_store_clear", { id, scope, root }),
-	/**
-	 *  The commands the plugins that are on put in the Plugins menu (the
-	 *  frontend's, src/plugins/usePluginMenu.ts), refilled when they change.
+	 *  The commands the enabled plugins put in the Plugins menu, refilled when they
+	 *  change.
 	 */
 	set_plugin_menu: (items: PluginMenuItem[]) => __TAURI_INVOKE<void>("set_plugin_menu", { items }),
-	/**
-	 *  The plugin commands the menu lists (src/plugins/usePluginMenu.ts),
-	 *  refilled when the plugins that are on change.
-	 */
+	/**  The plugin commands the menu lists, refilled when the enabled plugins change. */
 	set_tray_plugin_items: (items: TrayPluginItem[]) => __TAURI_INVOKE<void>("set_tray_plugin_items", { items }),
 	/**  The tray command waiting for a window to run it, taken. */
 	take_pending_plugin_command: () => __TAURI_INVOKE<string | null>("take_pending_plugin_command"),
@@ -162,15 +100,58 @@ export const commands = {
 
 /* Types */
 /**
- *  One plugin in the catalog - generated into
- *  src/platform/bindings/plugins.ts (src/plugins/catalog.ts reads it).
+ *  The conversation's mode, picked in the composer. It decides what
+ *  propose_edit may do, which skills apply and what the prompt says.
  */
-export type CatalogEntry = CatalogEntry_Serialize | CatalogEntry_Deserialize;
+export type AgentMode = AgentMode_Serialize | AgentMode_Deserialize;
 
 /**
- *  One plugin in the catalog - generated into
- *  src/platform/bindings/plugins.ts (src/plugins/catalog.ts reads it).
+ *  The conversation's mode, picked in the composer. It decides what
+ *  propose_edit may do, which skills apply and what the prompt says.
  */
+export type AgentMode_Deserialize = 
+/**  Reads, answers and comments: no propose_edit. */
+"review" | 
+/**
+ *  Adds text and changes the text that is there: every propose_edit action.
+ *  The old Revise mode reads as this one.
+ */
+"write" | 
+/**
+ *  Adds text and changes the text that is there: every propose_edit action.
+ *  The old Revise mode reads as this one.
+ */
+"revise" | 
+/**
+ *  Makes things for the app itself - a theme, a plugin, a skill - as
+ *  files in the reply, which the chat offers to install: no
+ *  propose_edit, no comments.
+ */
+"create";
+
+/**
+ *  The conversation's mode, picked in the composer. It decides what
+ *  propose_edit may do, which skills apply and what the prompt says.
+ */
+export type AgentMode_Serialize = 
+/**  Reads, answers and comments: no propose_edit. */
+"review" | 
+/**
+ *  Adds text and changes the text that is there: every propose_edit action.
+ *  The old Revise mode reads as this one.
+ */
+"write" | 
+/**
+ *  Makes things for the app itself - a theme, a plugin, a skill - as
+ *  files in the reply, which the chat offers to install: no
+ *  propose_edit, no comments.
+ */
+"create";
+
+/**  One plugin in the catalog. */
+export type CatalogEntry = CatalogEntry_Serialize | CatalogEntry_Deserialize;
+
+/**  One plugin in the catalog. */
 export type CatalogEntry_Deserialize = {
 	id: string,
 	version: string,
@@ -180,12 +161,14 @@ export type CatalogEntry_Deserialize = {
 	url: string,
 	sha256: string,
 	size: number,
+	/**
+	 *  Pictures of it at work, for the market (from the repository's releases;
+	 *  any other is left out).
+	 */
+	screenshots?: string[],
 };
 
-/**
- *  One plugin in the catalog - generated into
- *  src/platform/bindings/plugins.ts (src/plugins/catalog.ts reads it).
- */
+/**  One plugin in the catalog. */
 export type CatalogEntry_Serialize = {
 	id: string,
 	version: string,
@@ -195,54 +178,11 @@ export type CatalogEntry_Serialize = {
 	url: string,
 	sha256: string,
 	size: number,
-};
-
-/**  One entry of a folder listing. */
-export type FsEntry = FsEntry_Serialize | FsEntry_Deserialize;
-
-/**  One entry of a folder listing. */
-export type FsEntry_Deserialize = {
-	name: string,
-	path: string,
-	isDir: boolean,
-	size: number,
-	modifiedMs?: number | null,
-};
-
-/**  One entry of a folder listing. */
-export type FsEntry_Serialize = {
-	name: string,
-	path: string,
-	isDir: boolean,
-	size: number,
-	modifiedMs: number | null,
-};
-
-export type HttpRequest = HttpRequest_Serialize | HttpRequest_Deserialize;
-
-export type HttpRequest_Deserialize = {
-	url: string,
-	method?: string | null,
-	headers?: { [key in string]: string },
-	/**  Text, or base64 with `body_base64`. */
-	body?: string | null,
-	bodyBase64?: boolean,
-};
-
-export type HttpRequest_Serialize = {
-	url: string,
-	method: string | null,
-	headers: { [key in string]: string },
-	/**  Text, or base64 with `body_base64`. */
-	body: string | null,
-	bodyBase64: boolean,
-};
-
-export type HttpResponse = {
-	status: number,
-	headers: { [key in string]: string },
-	/**  The body, base64. */
-	body: string,
+	/**
+	 *  Pictures of it at work, for the market (from the repository's releases;
+	 *  any other is left out).
+	 */
+	screenshots: string[],
 };
 
 /**  One installed plugin, as Settings › Plugins lists it. */
@@ -278,15 +218,15 @@ export type PluginEntry = PluginEntry_Serialize | PluginEntry_Deserialize;
 export type PluginEntry_Deserialize = {
 	enabled?: boolean,
 	/**
-	 *  Permissions as the manifest names them: "workspace.read",
+	 *  Permissions as the manifest names them: "files.read",
 	 *  "network:api.zotero.org".
 	 */
 	granted?: string[],
 	/**  A plugin loaded from a folder in developer mode: that folder. */
 	devPath?: string | null,
 	/**
-	 *  Installed from the catalog as CatVinci's own (catalog.rs): Settings
-	 *  marks it Official. Never set by the window.
+	 *  Installed from the catalog as CatVinci's own: Settings marks it Official.
+	 *  Never set by the window.
 	 */
 	official?: boolean,
 };
@@ -294,17 +234,23 @@ export type PluginEntry_Deserialize = {
 export type PluginEntry_Serialize = {
 	enabled: boolean,
 	/**
-	 *  Permissions as the manifest names them: "workspace.read",
+	 *  Permissions as the manifest names them: "files.read",
 	 *  "network:api.zotero.org".
 	 */
 	granted: string[],
 	/**  A plugin loaded from a folder in developer mode: that folder. */
 	devPath?: string,
 	/**
-	 *  Installed from the catalog as CatVinci's own (catalog.rs): Settings
-	 *  marks it Official. Never set by the window.
+	 *  Installed from the catalog as CatVinci's own: Settings marks it Official.
+	 *  Never set by the window.
 	 */
 	official?: boolean,
+};
+
+/**  A plugin's files as text, by path in the plugin, as Textus AI writes them. */
+export type PluginFile = {
+	path: string,
+	text: string,
 };
 
 /**  One command in the Plugins menu, as the frontend sends it. */
@@ -325,21 +271,6 @@ export type PluginsState_Serialize = {
 	/**  Settings › Plugins › Plugins: off stops every plugin at once. */
 	allOn: boolean,
 	plugins: { [key in string]: PluginEntry_Serialize },
-};
-
-/**  A line that holds what was searched for. */
-export type SearchHit = {
-	path: string,
-	rel: string,
-	/**  1-based. */
-	line: number,
-	text: string,
-};
-
-export type SearchResult = {
-	hits: SearchHit[],
-	/**  There may be more: the limit or the time was reached first. */
-	truncated: boolean,
 };
 
 /**  A server's state as Settings shows it. */
@@ -365,18 +296,10 @@ export type ServerStatus_Serialize = {
 	error: string | null,
 };
 
-/**
- *  One skill in the catalog: a skill file (workspace/skills.rs), listed
- *  beside the plugins in the market - generated into
- *  src/platform/bindings/plugins.ts.
- */
+/**  One skill in the catalog, listed beside the plugins in the market. */
 export type SkillEntry = SkillEntry_Serialize | SkillEntry_Deserialize;
 
-/**
- *  One skill in the catalog: a skill file (workspace/skills.rs), listed
- *  beside the plugins in the market - generated into
- *  src/platform/bindings/plugins.ts.
- */
+/**  One skill in the catalog, listed beside the plugins in the market. */
 export type SkillEntry_Deserialize = {
 	/**  What it is called in the `/` menu. */
 	name: string,
@@ -384,16 +307,22 @@ export type SkillEntry_Deserialize = {
 	description: string,
 	author?: string,
 	official?: boolean,
+	/**
+	 *  The panel modes it works in (its file's `textus-modes`); Write's
+	 *  when the catalog doesn't say.
+	 */
+	modes?: AgentMode_Deserialize[],
+	/**
+	 *  Its name and one-line hint by UI language code, for the market to
+	 *  show (its file's `textus-label-<code>`).
+	 */
+	labels?: { [key in string]: SkillLabel },
 	url: string,
 	sha256: string,
 	size: number,
 };
 
-/**
- *  One skill in the catalog: a skill file (workspace/skills.rs), listed
- *  beside the plugins in the market - generated into
- *  src/platform/bindings/plugins.ts.
- */
+/**  One skill in the catalog, listed beside the plugins in the market. */
 export type SkillEntry_Serialize = {
 	/**  What it is called in the `/` menu. */
 	name: string,
@@ -401,13 +330,26 @@ export type SkillEntry_Serialize = {
 	description: string,
 	author: string,
 	official: boolean,
+	/**
+	 *  The panel modes it works in (its file's `textus-modes`); Write's
+	 *  when the catalog doesn't say.
+	 */
+	modes: AgentMode_Serialize[],
+	/**
+	 *  Its name and one-line hint by UI language code, for the market to
+	 *  show (its file's `textus-label-<code>`).
+	 */
+	labels: { [key in string]: SkillLabel },
 	url: string,
 	sha256: string,
 	size: number,
 };
 
-/**  Which of a plugin's two places. */
-export type StoreScope = "global" | "project";
+/**  A skill's name and one-line hint in one UI language. */
+export type SkillLabel = {
+	label: string,
+	hint: string,
+};
 
 /**  One plugin command in the menu, as the window sends it. */
 export type TrayPluginItem = {
@@ -416,8 +358,8 @@ export type TrayPluginItem = {
 };
 
 /**
- *  What a server offers, tried before it is saved: the name it gives and
- *  its tools, or why it can't be reached.
+ *  What a server offers, tried before it is saved: its name and tools, or why
+ *  it can't be reached.
  */
 export type Tried = {
 	server: string,
@@ -425,18 +367,4 @@ export type Tried = {
 };
 
 export type Value = null | boolean | number | string | Value[] | { [key in string]: Value };
-
-/**  One document and its text. */
-export type WorkspaceDocument = {
-	path: string,
-	/**  From the folder, `/`-separated. */
-	rel: string,
-	text: string,
-};
-
-export type WorkspaceDocuments = {
-	documents: WorkspaceDocument[],
-	/**  The folder holds more than was read: a limit was reached. */
-	truncated: boolean,
-};
 

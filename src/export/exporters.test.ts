@@ -123,8 +123,7 @@ describe("cloneEditorContent", () => {
   });
 
   it("puts the markdown folded under a <details> back inside it", () => {
-    // What details-fold.ts draws for "<details><summary>…" +
-    // markdown + "</details>", nested once, the inner one folded.
+    // What the details fold draws for a nested <details>, the inner one folded.
     const root0 = editor(
       '<div class="ProseMirror">' +
         '<p data-head="0"><span class="raw-html-source raw-html-source-hidden">&lt;details&gt;</span></p>' +
@@ -208,9 +207,8 @@ describe("cloneEditorContent", () => {
 
 describe("pdfLayoutCss", () => {
   it("leaves Linux's sheet margins to the GTK page setup", () => {
-    // Any other @page margin made WebKitGTK cut taller pages that still
-    // started below the setup's top margin, so their last lines ran off the
-    // sheet (#68).
+    // Any other @page margin made WebKitGTK cut taller pages whose last
+    // lines ran off the sheet.
     const css = pdfLayoutCss(null, true);
     expect(css).toContain("@page { margin: auto; }");
     expect(css).not.toContain("@page { margin: 0");
@@ -253,6 +251,23 @@ describe("buildStandaloneHtml", () => {
   });
 });
 
+describe("buildStandaloneHtml image alignment", () => {
+  it("keeps the image alignment the document is shown with", () => {
+    const root = document.documentElement;
+    expect(buildStandaloneHtml("a", "<p>x</p>", "")).not.toContain(
+      "data-image-align",
+    );
+    root.setAttribute("data-image-align", "left");
+    try {
+      expect(buildStandaloneHtml("a", "<p>x</p>", "")).toContain(
+        'data-image-align="left"',
+      );
+    } finally {
+      root.removeAttribute("data-image-align");
+    }
+  });
+});
+
 describe("exportPdf", () => {
   const t = {
     pdfPreparing: "Preparing PDF…",
@@ -277,8 +292,7 @@ describe("exportPdf", () => {
       expect.stringContaining("Printer not found"),
       expect.objectContaining({ tone: "error" }),
     );
-    // The overlay sits above the app's dialogs: left up, it covered the
-    // message and its button, and the spinner never stopped (#62).
+    // The overlay sits above the app's dialogs, so it must go first.
     expect(overlayUnderMessage).toBeNull();
     expect(document.querySelector(".pdf-export-overlay")).toBeNull();
   });
@@ -291,12 +305,38 @@ describe("exportPdf", () => {
     mocks.exportDoc.revealInDir.mockResolvedValue(undefined);
 
     await exportPdf(tab, t);
-    await exportPdf(tab, t, true);
+    await exportPdf(tab, t, { pageNumbers: true });
 
     const calls = mocks.exportDoc.exportPdfNative.mock.calls;
     expect(calls.map(([args]) => args.pageNumbers)).toEqual([false, true]);
     // The page itself is rendered the same either way.
     expect(calls[0][0].html).toBe(calls[1][0].html);
+  });
+
+  it("prints a dark theme in its light colours on macOS only when asked", async () => {
+    vi.resetModules();
+    vi.doMock("../platform/os", async (original) => ({
+      ...(await original<object>()),
+      isMacPlatform: () => true,
+    }));
+    const mac = await import("./exporters");
+    document.documentElement.setAttribute("data-theme", "dark");
+    document.body.innerHTML =
+      '<div data-active-tab="true"><div class="milkdown"><p>x</p></div></div>';
+    mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/a.pdf");
+    mocks.exportDoc.exportPdfNative.mockReset().mockResolvedValue(undefined);
+    try {
+      await mac.exportPdf(tab, t);
+      await mac.exportPdf(tab, t, { lightColors: true });
+    } finally {
+      document.documentElement.removeAttribute("data-theme");
+      vi.doUnmock("../platform/os");
+    }
+    const [dark, light] = mocks.exportDoc.exportPdfNative.mock.calls.map(
+      ([args]) => args.html as string,
+    );
+    expect(dark).toContain('data-theme="dark"');
+    expect(light).toContain('data-theme="light"');
   });
 
   it("embeds a local image read from the document's folder", async () => {
@@ -321,8 +361,7 @@ describe("exportPdf", () => {
   });
 });
 
-// The editor's image as image-plugin.ts shows it: an asset: URL, with the
-// src the markdown has kept beside it.
+// The editor's image as shown: an asset: URL, with the markdown's src beside it.
 const activeEditorWithImage =
   '<div data-active-tab="true"><div class="milkdown"><p>' +
   '<img src="asset://localhost/%2Fdocs%2Fassets%2Fmy%20pic.png" data-doc-src="assets/my%20pic.png">' +

@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
-// A drawn diagram's corner button opens it in a viewer over the window
-// (editor/diagram-zoom.ts): the wheel zooms, Escape closes it, and the
-// press on the button doesn't put the caret into the diagram's source.
+// A drawn diagram's corner button opens it in a viewer over the window: the
+// wheel zooms, Escape closes it, and the press doesn't put the caret into the
+// diagram's source.
 
 const FLOW =
   "Before.\n\n```mermaid\nflowchart LR\n  A[Start] --> B[Middle] --> C[Finish]\n```\n\nEnd.";

@@ -1,17 +1,7 @@
-//! Edits and comments travel as lists: the model sends all of a reply's
-//! edits in one propose_edit call (`edits`) and all its comments in one
-//! add_comment call (`comments`). A service that holds a step's parallel
-//! calls back until the step ends - ChatGPT's, with no argument deltas
-//! for any of them (2026-10: ten edits, thirty notes, all at once at the
-//! end) - still streams a single call's arguments, so each edit and note
-//! can show as soon as it is written.
-//!
-//! Everything past the model still sees one call per edit or comment, as
-//! before: the stream (`ListStream`) and the step (`split_calls`) are split
-//! into one call per item, `<call>#<n>`, which the tools, the history the
-//! frontend keeps and the frontend itself handle as they always have; the
-//! history sent back to the model is joined again (`join_calls`), each list
-//! as the model wrote it, with one result.
+//! Edits and comments travel as lists (one propose_edit call with `edits`, one
+//! add_comment with `comments`), so a service that holds parallel calls back
+//! still streams each item. Past the model they are split into one call per
+//! item (`<call>#<n>`), and joined again in the history sent back.
 
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -41,9 +31,8 @@ fn list_of(item: &str) -> Option<(&str, usize)> {
     Some((call_id, n.parse().ok()?))
 }
 
-/// A step's list calls as one call per item. A call without its list (an
-/// older shape, or one the model got wrong) stays as it came, for its tool
-/// to answer.
+/// A step's list calls as one call per item. A call without its list stays as
+/// it came, for its tool to answer.
 pub(crate) fn split_calls(result: StepResult) -> StepResult {
     let StepResult::ToolCalls(calls) = result else {
         return result;

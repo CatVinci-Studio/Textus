@@ -15,10 +15,9 @@ import type { TourAi } from "../utils/events";
 import { useLatest } from "../utils/hooks/useLatest";
 
 /**
- * One tab's editor itself (MilkdownEditor): the plugin chain, built once
- * and reading live values through refs; the runner every action goes
- * through; what the document reports to its tab; the clipboard; the AI
- * notice; completion and the grammar check; Quick Ask's state.
+ * One tab's editor itself: the plugin chain, the runner every action goes
+ * through, document reporting, the clipboard, completion, grammar and Quick
+ * Ask's state.
  */
 export function useEditorSetup({
   tabId,
@@ -45,15 +44,11 @@ export function useEditorSetup({
 }) {
   const { imageNameRequest, requestImageName, closeImageNameDialog } =
     useImageNameRequest();
-  // The Quick Ask zone widget's DOM container (quick-ask-widget-plugin) -
-  // null whenever no widget is in the document. InlineChat portals into it,
-  // so the panel's actual pixels sit wherever ProseMirror placed the
-  // decoration (in the document flow, pushing content below it down).
+  // The Quick Ask zone widget's container, null when none is in the
+  // document. InlineChat portals into it, in the document flow.
   const [quickAskEl, setQuickAskEl] = useState<HTMLElement | null>(null);
 
-  // The editor plugin chain (useTextusEditor) is only built once, so
-  // plugins read these refs to see live settings instead of the value
-  // captured at construction time.
+  // The chain is built once, so plugins read live settings through refs.
   const settingsRef = useLatest(settings);
   const filePathRef = useLatest(filePath);
   const docTitleRef = useLatest(docTitle);
@@ -61,7 +56,7 @@ export function useEditorSetup({
   const tourRef = useLatest(tour);
   const tRef = useLatest(t);
   const reporting = useDocumentReporting(initialValue, onChange);
-  // Set by useEditorPopups (the grammar card); read through a ref here.
+  // Set by useEditorPopups; read through a ref here.
   const grammarCaretRef = useRef<() => void>(() => {});
 
   const {
@@ -74,6 +69,7 @@ export function useEditorSetup({
     reporting,
     settingsRef,
     filePathRef,
+    isActiveRef,
     tourRef,
     tRef,
     setQuickAskEl,

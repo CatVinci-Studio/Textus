@@ -3,9 +3,10 @@ import { ai } from "../../platform/ipc";
 import type { SkillOffer } from "../../platform/bindings/ai-memory";
 import { useSettings } from "../../settings/SettingsContext";
 import { errorText } from "../../utils/error-text";
+import type { AgentMode } from "../../settings/settings-types";
+import { ModeChoice } from "./ModeChoice";
 
-/** The call an offer stands in the conversation as (memory-pass.ts's
- *  skillOfferTurns). */
+/** The call an offer stands in the conversation as. */
 export const OFFER_SKILL = "offer_skill";
 
 /** The offer a turn's output holds, or null. */
@@ -27,9 +28,8 @@ export function parseSkillOffer(output: string): SkillOffer | null {
 }
 
 /**
- * Under a reply whose request was a procedure of its own
- * (ai/memory/skill_offer.rs): the offer to keep it as a skill - for every
- * document, or this project's - and, saved, the /name it goes by.
+ * Under a reply whose request was a procedure of its own: the offer to keep
+ * it as a skill, and once saved, the /name it goes by.
  */
 export function SkillOfferChip({
   offer,
@@ -41,11 +41,12 @@ export function SkillOfferChip({
   docPath: string | null;
 }) {
   const { t } = useSettings();
+  const [modes, setModes] = useState<AgentMode[]>(["write"]);
   const [state, setState] = useState<
     { kind: "offered" } | { kind: "saved" } | { kind: "failed"; why: string }
   >({ kind: "offered" });
   const save = (scope: "personal" | "project") => {
-    ai.saveOfferedSkill(offer, scope, docPath, null).then(
+    ai.saveOfferedSkill(offer, scope, docPath, null, modes).then(
       () => setState({ kind: "saved" }),
       (err: unknown) => setState({ kind: "failed", why: errorText(err) }),
     );
@@ -63,6 +64,7 @@ export function SkillOfferChip({
       )}
       {state.kind !== "saved" && (
         <span className="agent-memory-chip-actions">
+          <ModeChoice t={t} modes={modes} onChange={setModes} />
           <button type="button" onClick={() => save("personal")}>
             {t.skillOfferSave}
           </button>

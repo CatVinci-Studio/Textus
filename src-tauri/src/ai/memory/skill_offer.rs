@@ -1,10 +1,6 @@
 //! A task worth doing again, offered as a skill: after an exchange whose
-//! request was a procedure of its own - several particular requirements
-//! for a kind of task the user is likely to ask for again (a house style
-//! for translations, a checklist for weekly reports) - one small request
-//! decides whether to offer it, and the chat shows the offer under the
-//! reply. Saved (save_offered_skill), it is a skill like any other, in the
-//! `/` menu from then on. Nothing is saved unasked.
+//! request was a procedure of its own, one small request decides whether to
+//! offer it. Nothing is saved unasked.
 
 use super::*;
 use crate::ai::workspace::{skill_file_path, AgentSkill};
@@ -108,7 +104,14 @@ pub(crate) fn skill_file(offer: &SkillOffer) -> String {
 
 /// Writes `offer` into `skills_dir`, never over a skill already there (a
 /// number is added to the file's name instead). Its path.
-pub(crate) fn save_offer_in(skills_dir: &Path, offer: &SkillOffer) -> Result<PathBuf, String> {
+pub(crate) fn save_offer_in(
+    skills_dir: &Path,
+    offer: &SkillOffer,
+    modes: &[crate::ai::agent::AgentMode],
+) -> Result<PathBuf, String> {
+    if modes.is_empty() {
+        return Err("A skill needs at least one mode.".to_string());
+    }
     std::fs::create_dir_all(skills_dir).map_err(|e| e.to_string())?;
     let mut named = offer.clone();
     let mut path = skill_file_path(skills_dir, &named.name)?;
@@ -118,7 +121,9 @@ pub(crate) fn save_offer_in(skills_dir: &Path, offer: &SkillOffer) -> Result<Pat
         path = skill_file_path(skills_dir, &named.name)?;
         n += 1;
     }
-    std::fs::write(&path, skill_file(&named)).map_err(|e| e.to_string())?;
+    let words: Vec<String> = modes.iter().map(|m| m.to_string()).collect();
+    let text = crate::ai::workspace::with_metadata(&skill_file(&named), "modes", &words.join(" "));
+    std::fs::write(&path, text).map_err(|e| e.to_string())?;
     Ok(path)
 }
 
@@ -178,8 +183,12 @@ mod tests {
             description: "Turns notes into the weekly report: \"done\", next, risks.".into(),
             instructions: "Three sections: Done, Next, Risks.".into(),
         };
-        let first = save_offer_in(dir.path(), &offer).unwrap();
-        let second = save_offer_in(dir.path(), &offer).unwrap();
+        let review = [crate::ai::agent::AgentMode::Review];
+        let first = save_offer_in(dir.path(), &offer, &review).unwrap();
+        let second = save_offer_in(dir.path(), &offer, &review).unwrap();
+        let saved =
+            crate::ai::workspace::parse_skill_file("x", &std::fs::read_to_string(&first).unwrap());
+        assert_eq!(saved.modes, review);
         assert_ne!(first, second);
         let skills = crate::ai::workspace::read_skill_files(dir.path());
         let mut names: Vec<&str> = skills.iter().map(|(_, s)| s.name.as_str()).collect();

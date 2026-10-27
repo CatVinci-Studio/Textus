@@ -1,26 +1,6 @@
-//! Settings, UI state and the two histories, as plain JSON files owned by
-//! Rust - docs/dev/storage.md lists every file.
-//!
-//! They are not kept in each webview's localStorage, for two reasons:
-//!
-//! - localStorage belongs to the webview engine, keyed by app identifier and
-//!   stored in a different format on every platform (SQLite under WebKitGTK
-//!   and WKWebView, LevelDB under WebView2): plain files can be backed up,
-//!   read and repaired by hand.
-//! - Every window would write the WHOLE settings object (and whole history
-//!   arrays) back on every change, so two windows changing different things
-//!   race and the slower one silently undoes the other.
-//!
-//! So each file is held here in memory, changed through small commands that
-//! merge one top-level field (settings, UI state) or one entry (histories)
-//! at a time, broadcast to every window, and written back shortly after
-//! (debounced, flushed on exit) with the crate's atomic writer.
-//!
-//! Before any window exists, `init` loads everything, and `boot_script`
-//! hands each new webview a snapshot (`window.__BOOT__`) through an
-//! initialization script, so the first frame already has the right theme
-//! and the frontend can read settings synchronously - see
-//! src/storage/boot.ts for the other end.
+//! Settings, UI state and the two histories as plain JSON files owned by Rust:
+//! hand-repairable, and patched per field so windows can't undo each other.
+//! Held in memory, broadcast, written back debounced; webviews get a boot snapshot.
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -39,10 +19,6 @@ mod stores;
 pub(crate) use stores::*;
 mod app;
 pub(crate) use app::*;
-
-// ---------------------------------------------------------------------------
-// Commands
-// ---------------------------------------------------------------------------
 
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
@@ -67,7 +43,7 @@ pub fn settings_get(stores: tauri::State<Stores>) -> Snapshot {
 }
 
 /// Changes the given top-level settings fields and tells every window
-/// ("settings-changed"; each skips the event its own patch caused).
+/// ("settings-changed").
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn settings_patch(
@@ -80,8 +56,7 @@ pub fn settings_patch(
     if patch.contains_key("theme") {
         theme_changed(&app);
     }
-    // Background mode's tray, built or dropped as the setting changes; its
-    // menu follows the UI language.
+    // Background mode's tray follows the setting and the UI language.
     #[cfg(desktop)]
     if patch.contains_key(crate::background::ENABLED_SETTING) {
         crate::background::apply(&app, crate::background::Change::Settings);
@@ -100,11 +75,8 @@ pub fn settings_patch(
     rev
 }
 
-/// Writes out the frontend's defaults for whatever settings fields are
-/// missing - never over a field that's set (`Stores::fill_missing_settings`)
-/// - and answers with the live settings either way, which the window then
-/// adopts in place of its (empty, possibly stale) boot snapshot. Fields it
-/// added are broadcast like any other change.
+/// Writes out the frontend's defaults for missing settings fields, never over a
+/// set one, and answers with the live settings for the window to adopt.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn settings_fill_defaults(
@@ -134,9 +106,8 @@ pub fn ui_state_get(stores: tauri::State<Stores>) -> Value {
     stores.ui_state.snapshot().0
 }
 
-/// Same top-level merge as settings. Not broadcast: these are remembered
-/// for the next window or launch (panel width, tutorial step, recents),
-/// never pushed into windows already open.
+/// Same top-level merge as settings. Not broadcast: remembered for the next
+/// window or launch only.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn ui_state_patch(stores: tauri::State<Stores>, patch: Map<String, Value>) {
@@ -176,10 +147,8 @@ pub fn history_list(stores: tauri::State<Stores>, kind: HistoryKind) -> Value {
     }
 }
 
-/// Adds an entry, or replaces the one with the same key, and moves it to
-/// the front. One entry per call, never the whole list: two windows saving
-/// different conversations at once both land. A conversation is announced
-/// to the windows as its summary, the form their lists hold.
+/// Adds an entry, or replaces the one with the same key, and moves it to the
+/// front. One entry per call, so two windows saving at once both land.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn history_upsert(
@@ -262,8 +231,7 @@ pub fn history_clear(
     );
 }
 
-/// One saved conversation whole, turns included - what restoring it from
-/// the history list loads. `None` when its file is gone.
+/// One saved conversation whole, turns included. `None` when its file is gone.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn chat_history_get(stores: tauri::State<Stores>, id: String) -> Option<Value> {
@@ -285,8 +253,7 @@ pub fn chat_history_archived(stores: tauri::State<Stores>) -> usize {
     stores.chat.archived()
 }
 
-/// A document Textus saved under a new path (Save As, a rename): its
-/// conversations follow it, and every window lists them again.
+/// A document saved under a new path: its conversations follow it.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn chat_history_move_document(

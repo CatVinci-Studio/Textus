@@ -37,6 +37,7 @@ const providerMocks = vi.hoisted(() => ({
       defaultModel: "gpt-6-luna",
       agentDefaultModel: "gpt-6.1-sol",
       keyOptional: false,
+      oauthUnofficial: false,
       supportsVision: true,
       modelsListable: true,
       knownModels: [],
@@ -87,7 +88,6 @@ function Harness({
 }: {
   language?: Lang;
   phone?: boolean;
-  /** Hands the tour's state out, to act as the app would. */
   onTutorial?: (tutorial: Tutorial) => void;
 }) {
   const tutorial = useTutorial();
