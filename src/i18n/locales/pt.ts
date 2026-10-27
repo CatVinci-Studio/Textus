@@ -784,6 +784,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuSettings: "Ajustes…",
   menuExit: "Sair",
   menuNewFile: "Novo Arquivo",
+  menuNewTab: "Nova Aba",
   menuOpenFile: "Abrir…",
   menuOpenRecent: "Abrir Recente",
   menuRecentNone: "Nenhum Arquivo Recente",

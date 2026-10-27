@@ -716,6 +716,7 @@ export default {
   menuSettings: "设置…",
   menuExit: "退出",
   menuNewFile: "新建文件",
+  menuNewTab: "新建标签页",
   menuOpenFile: "打开…",
   menuOpenRecent: "最近打开",
   menuRecentNone: "暂无最近文件",

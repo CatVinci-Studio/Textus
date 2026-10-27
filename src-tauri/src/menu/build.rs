@@ -99,7 +99,7 @@ pub(crate) fn build(
     // menu accelerators.
     // Cmd+T, Cmd+N and Cmd+Shift+T as in a browser: a new tab, a new window,
     // the tab just closed.
-    let new_file_builder = MenuItemBuilder::with_id(NEW_FILE_ID, l(NEW_FILE_ID, "New File"));
+    let new_file_builder = MenuItemBuilder::with_id(NEW_FILE_ID, l(NEW_FILE_ID, "New Tab"));
     #[cfg(not(windows))]
     let new_file_builder = new_file_builder.accelerator("CmdOrCtrl+T");
     let new_file_item = new_file_builder.build(app)?;

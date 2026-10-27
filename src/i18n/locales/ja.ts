@@ -750,6 +750,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuSettings: "設定…",
   menuExit: "終了",
   menuNewFile: "新規ファイル",
+  menuNewTab: "新規タブ",
   menuOpenFile: "開く…",
   menuOpenRecent: "最近使った項目",
   menuRecentNone: "最近使ったファイルはありません",

@@ -793,6 +793,7 @@ export default {
   menuSettings: "Настройки…",
   menuExit: "Выход",
   menuNewFile: "Новый файл",
+  menuNewTab: "Новая вкладка",
   menuOpenFile: "Открыть…",
   menuOpenRecent: "Открыть недавние",
   menuRecentNone: "Нет недавних файлов",

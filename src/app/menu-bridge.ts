@@ -98,8 +98,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow<string>("menu-plugin-command", (event) =>
         runCommand(event.payload),
       ),
-      // Only arrives in tab mode - in window mode the Rust menu handler opens
-      // a fresh window itself instead of emitting this.
+      // File > New Tab (menu.rs).
       listenToThisWindow("menu-new-file", () => h().addBlankTab()),
       listenToThisWindow("menu-open-file", () => void h().openFileDialog()),
       listenToThisWindow<string>(

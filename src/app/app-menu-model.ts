@@ -272,7 +272,7 @@ export function buildAppMenu(
       label: t.menuFile,
       submenu: [
         {
-          label: t.menuNewFile,
+          label: t.menuNewTab,
           accel: "mod+t",
           action: { native: "new-file" },
         },
