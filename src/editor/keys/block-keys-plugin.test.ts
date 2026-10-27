@@ -10,6 +10,7 @@ import {
   enterInTable,
   leaveBlockquote,
   leaveTextBlockOnEmptyLastLine,
+  newlineInCode,
   parsePipeRow,
   pipeRowToTable,
   frontMatterFromFirstLine,
@@ -35,6 +36,8 @@ const schema = new Schema({
       attrs: { level: { default: 1 } },
     },
     blockquote: { group: "block", content: "block+" },
+    bullet_list: { group: "block", content: "list_item+" },
+    list_item: { content: "paragraph block*" },
     code_block: { group: "block", content: "text*", code: true },
     frontmatter: { group: "block", content: "text*", code: true },
     text: { group: "inline" },
@@ -216,14 +219,13 @@ describe("leaveTextBlockOnEmptyLastLine", () => {
     expect(next.selection.$from.parent).toBe(next.doc.child(1));
   });
 
-  it("treats a last line holding only carried-over indentation as empty", () => {
-    const doc = docOf(code("  if x:\n    y\n    "), p("after"));
-    const next = run(
-      leaveTextBlockOnEmptyLastLine,
-      stateAt(doc, "  if x:\n    y\n    "),
-    )!;
-    expect(next.doc.child(0).textContent).toBe("  if x:\n    y");
-    expect(next.selection.$from.parent).toBe(next.doc.child(1));
+  it("keeps a last line of only indentation: Enter there carries it on", () => {
+    expect(
+      run(
+        leaveTextBlockOnEmptyLastLine,
+        stateAt(docOf(code("  if x:\n    y\n    ")), "  if x:\n    y\n    "),
+      ),
+    ).toBeNull();
   });
 
   it("keeps a last line with text after the indentation", () => {
@@ -363,5 +365,37 @@ describe("spacesAfterCaret", () => {
       state.tr.setSelection(TextSelection.create(state.doc, 2)),
     );
     expect(spacesAfterCaret(at)).toBeNull();
+  });
+});
+
+describe("newlineInCode", () => {
+  it("starts the new line indented as the one above", () => {
+    const next = run(
+      newlineInCode,
+      stateAt(docOf(code("if x:\n    y")), "if x:\n    y"),
+    )!;
+    expect(cursorText(next)).toBe("if x:\n    y\n    ");
+  });
+
+  it("leaves a line of only indentation empty and carries the indentation on", () => {
+    const next = run(
+      newlineInCode,
+      stateAt(docOf(code("if x:\n    ")), "if x:\n    "),
+    )!;
+    expect(cursorText(next)).toBe("if x:\n\n    ");
+    expect(next.selection.$from.parentOffset).toBe(cursorText(next).length);
+  });
+
+  it("is a new line in a code block in a list, not a new item", () => {
+    const list = n.bullet_list.create(null, [
+      n.list_item.create(null, [p("item"), code("x")]),
+    ]);
+    const next = run(newlineInCode, stateAt(docOf(list), "x"))!;
+    expect(next.doc.child(0).childCount).toBe(1);
+    expect(cursorText(next)).toBe("x\n");
+  });
+
+  it("leaves other blocks alone", () => {
+    expect(run(newlineInCode, stateAt(docOf(p("text")), "text"))).toBeNull();
   });
 });

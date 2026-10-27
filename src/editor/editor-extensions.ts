@@ -92,7 +92,6 @@ import {
   escapeTrailingBlockPlugin,
   tableEdgeArrowPlugin,
 } from "./markdown/escape-trailing-block-plugin";
-import { codeBlockIndentPlugin } from "./code/code-block-indent-plugin";
 import { pasteMarkdownSourcePlugin } from "./markdown/paste-markdown-plugin";
 import { imageInputRule, linkInputRule } from "./markdown/link-input-rule";
 import { linkSettlePlugin } from "./markdown/link-settle";
@@ -388,7 +387,6 @@ export function withEditorCore(
       .use(tabExtendPlugin)
       .use(tabStaysPlugin)
       .use(escapeTrailingBlockPlugin)
-      .use(codeBlockIndentPlugin)
       .use(findReplacePlugin)
       .use(zenFocusPlugin)
       .use(keyboardRevealPlugin)

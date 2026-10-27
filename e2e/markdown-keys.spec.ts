@@ -359,3 +359,20 @@ test("~~ and == stay as typed until their closing pair makes a strikethrough or 
   await expect(page.locator(`${editor} mark`)).toHaveText("kept");
   expect(await sourceOf(page)).toBe("~~gone~~ and ==kept== ok");
 });
+
+test("Enter in a code block in a list adds a line, and an indented blank line keeps the block", async ({
+  page,
+}) => {
+  await open(page, "- item\n\n  ```py\n  def f():\n      x = 1\n  ```");
+  await page.locator(`${editor} pre code`).click();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
+  );
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("y = 2", { delay: 20 });
+  expect(await sourceOf(page)).toBe(
+    "- item\n\n  ```py\n  def f():\n      x = 1\n\n      y = 2\n  ```",
+  );
+});
