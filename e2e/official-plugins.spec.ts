@@ -79,6 +79,53 @@ test("a PDF opens in the PDF Viewer, its words there to select", async ({
   await expect(frame.locator("#zoom")).not.toHaveText(before);
 });
 
+test("a pinch zooms the PDF in place: the page never goes blank, then is drawn sharp", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: { "catvinci.pdf-viewer": [] },
+    binary: { "/notes/paper.pdf": minimalPdf("Hello PDF") },
+  });
+  await openPath(page, "/notes/paper.pdf");
+  const frame = tabFrame(page);
+  await expect(frame.locator(".page canvas")).toHaveCount(1, {
+    timeout: 15_000,
+  });
+  // Whether a page was ever without its picture while zooming.
+  await frame.locator("#viewer").evaluate((viewer) => {
+    const w = window as unknown as { blank: boolean; redrawn: number };
+    w.blank = false;
+    w.redrawn = 0;
+    new MutationObserver(() => {
+      const page = viewer.querySelector(".page");
+      if (!page?.querySelector("canvas")) w.blank = true;
+      else w.redrawn++;
+    }).observe(viewer, { childList: true, subtree: true });
+  });
+  const width = () =>
+    frame.locator(".page").evaluate((d) => d.getBoundingClientRect().width);
+  const before = await width();
+  const box = (await frame.locator(".page").boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + 40);
+  await page.keyboard.down("Control");
+  for (let i = 0; i < 4; i++) await page.mouse.wheel(0, -10);
+  await page.keyboard.up("Control");
+  expect(await width()).toBeGreaterThan(before * 1.3);
+  await expect
+    .poll(() =>
+      frame.locator("#viewer").evaluate(() => {
+        return (window as unknown as { redrawn: number }).redrawn;
+      }),
+    )
+    .toBeGreaterThan(0);
+  expect(
+    await frame
+      .locator("#viewer")
+      .evaluate(() => (window as unknown as { blank: boolean }).blank),
+  ).toBe(false);
+  await expect(frame.locator(".textLayer")).toContainText("Hello PDF");
+});
+
 test("Find in the PDF tints the words and says when there are none; the zoom is kept", async ({
   page,
 }) => {
