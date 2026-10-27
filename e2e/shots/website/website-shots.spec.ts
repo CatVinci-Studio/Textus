@@ -724,6 +724,7 @@ function providerCatalog() {
     defaultModel: optional(block, "default_model"),
     agentDefaultModel: optional(block, "agent_default_model"),
     keyOptional: flag(block, "key_optional"),
+    oauthUnofficial: flag(block, "oauth_unofficial"),
     supportsVision: flag(block, "supports_vision"),
     modelsListable: flag(block, "models_listable"),
     knownModels: list(block, "known_models"),

@@ -191,6 +191,8 @@ export type ProviderCatalogEntry_Deserialize = {
 	agentDefaultModel?: string | null,
 	/**  True for local servers (Ollama) that work without a key. */
 	keyOptional: boolean,
+	/**  Its "oauth" sign-in isn't offered to other apps; Settings says so. */
+	oauthUnofficial: boolean,
 	/**
 	 *  Whether this provider's API accepts image parts at all, which gates chat
 	 *  attachments. Provider-level on purpose: false only where the API rejects the
@@ -243,6 +245,8 @@ export type ProviderCatalogEntry_Serialize = {
 	agentDefaultModel: string | null,
 	/**  True for local servers (Ollama) that work without a key. */
 	keyOptional: boolean,
+	/**  Its "oauth" sign-in isn't offered to other apps; Settings says so. */
+	oauthUnofficial: boolean,
 	/**
 	 *  Whether this provider's API accepts image parts at all, which gates chat
 	 *  attachments. Provider-level on purpose: false only where the API rejects the

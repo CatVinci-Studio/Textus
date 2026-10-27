@@ -421,6 +421,10 @@ pub fn run() {
             #[cfg(desktop)]
             commands::chat_window::current_chat_window,
             #[cfg(desktop)]
+            commands::clipboard::paste_natively,
+            #[cfg(desktop)]
+            commands::clipboard::clipboard_text,
+            #[cfg(desktop)]
             background::background_status,
             #[cfg(desktop)]
             update_session_paths,

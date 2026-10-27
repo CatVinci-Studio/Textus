@@ -363,3 +363,178 @@ test("~~ and == stay as typed until their closing pair makes a strikethrough or 
   await expect(page.locator(`${editor} mark`)).toHaveText("kept");
   expect(await sourceOf(page)).toBe("~~gone~~ and ==kept== ok");
 });
+
+test("Backspace at a code block's start and Delete before it move the caret, leaving the block whole", async ({
+  page,
+}) => {
+  await open(page, "Before\n\n```js\none\ntwo\n```");
+  await page.locator(`${editor} pre code`).getByText("one").click();
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowLeft" : "Home",
+  );
+  await selectionRead(page);
+  await page.keyboard.press("Backspace");
+  await page.keyboard.type("!", { delay: 20 });
+  await page.keyboard.press("Delete");
+  await page.keyboard.type("x", { delay: 20 });
+  expect(await sourceOf(page)).toBe("Before!\n\n```js\nxone\ntwo\n```");
+});
+
+test("Delete before a table goes into its first cell", async ({ page }) => {
+  await open(page, "Before\n\n| a | b |\n| - | - |\n| c | d |");
+  await page.locator(`${editor} p`).getByText("Before").click();
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
+  );
+  await page.keyboard.press("Delete");
+  await page.keyboard.type("x", { delay: 20 });
+  expect(await sourceOf(page)).toBe(
+    "Before\n\n| xa | b |\n| -- | - |\n| c  | d |",
+  );
+});
+
+test("Delete before a quote joins its first line", async ({ page }) => {
+  await open(page, "Above\n\n> one\n>\n> two");
+  await page.locator(`${editor} p`).getByText("Above").click();
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
+  );
+  await page.keyboard.press("Delete");
+  expect(await sourceOf(page)).toBe("Aboveone\n\n> two");
+});
+
+test("Enter in a code block in a list adds a line, and an indented blank line keeps the block", async ({
+  page,
+}) => {
+  await open(page, "- item\n\n  ```py\n  def f():\n      x = 1\n  ```");
+  await page.locator(`${editor} pre code`).click();
+  // The caret after "x = 1", the code's last line.
+  await page.evaluate((sel) => {
+    const code = document.querySelector(`${sel} pre code`)!;
+    const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+    let last: Text | null = null;
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) last = n as Text;
+    getSelection()!.collapse(last!, last!.data.length);
+  }, editor);
+  await selectionRead(page);
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("y = 2", { delay: 20 });
+  expect(await sourceOf(page)).toBe(
+    "- item\n\n  ```py\n  def f():\n      x = 1\n\n      y = 2\n  ```",
+  );
+});
+
+test("typing over a selection that ends in a code block keeps the code block", async ({
+  page,
+}) => {
+  await open(page, "Before\n\n```js\none\ntwo\n```");
+  await page.locator(`${editor} p`).getByText("Before").click();
+  // From the start of "Before" to the end of "one".
+  await page.evaluate((sel) => {
+    const p = document.querySelector(`${sel} p`)!.firstChild!;
+    const code = document.querySelector(`${sel} pre code`)!;
+    const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+    let one = walker.nextNode() as Text;
+    while (!one.data.includes("one")) one = walker.nextNode() as Text;
+    getSelection()!.setBaseAndExtent(p, 0, one, one.data.indexOf("one") + 3);
+  }, editor);
+  await selectionRead(page);
+  await page.keyboard.type("Z", { delay: 20 });
+  expect(await sourceOf(page)).toBe("Z\n\n```js\n\ntwo\n```");
+});
+
+test("Delete before a callout puts the caret at its text, keeping the callout", async ({
+  page,
+}) => {
+  await open(page, "Above\n\n> [!NOTE]\n> body");
+  await page.locator(`${editor} p`).getByText("Above").click();
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
+  );
+  await page.keyboard.press("Delete");
+  await page.keyboard.type("x", { delay: 20 });
+  expect(await sourceOf(page)).toBe("Above\n\n> [!NOTE]\n> xbody");
+});
+
+test("``` and $$ typed in a list item start a code block and a maths block in it", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("- item", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("```js", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("x", { delay: 20 });
+  await expect(page.locator(`${editor} li pre`)).toHaveCount(1);
+  expect(await sourceOf(page)).toBe("* item\n* ```js\n  x\n  ```");
+
+  await open(page);
+  await page.keyboard.type("- item", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("$$", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("y", { delay: 20 });
+  await expect(page.locator(`${editor} li .math-block`)).toHaveCount(1);
+  expect(await sourceOf(page)).toBe("* item\n* $$\n  y\n  $$");
+});
+
+test("Backspace right after a link takes one character of its source, not the link", async ({
+  page,
+}) => {
+  await open(page, "see [Textus](https://a.com) end");
+  await expect(page.locator(`${editor} a`)).toHaveCount(1);
+  // The caret where ProseMirror puts it just after the link.
+  await page.evaluate((sel) => {
+    const pm = document.querySelector(sel) as HTMLElement & {
+      pmViewDesc: {
+        node: { firstChild: { child: (i: number) => { nodeSize: number } } };
+        domFromPos: (
+          pos: number,
+          side: number,
+        ) => { node: Node; offset: number };
+      };
+    };
+    const paragraph = pm.pmViewDesc.node.firstChild;
+    const after = 1 + paragraph.child(0).nodeSize + paragraph.child(1).nodeSize;
+    const { node, offset } = pm.pmViewDesc.domFromPos(after, 0);
+    pm.focus();
+    getSelection()!.collapse(node, offset);
+  }, editor);
+  await selectionRead(page);
+  await page.keyboard.press("Backspace");
+  await expect(page.locator(editor)).toContainText(
+    "[Textus](https://a.com end",
+  );
+});
+
+test("--- and Enter make a rule with the caret on the one line below it", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("above", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("---", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("below", { delay: 20 });
+  expect(await sourceOf(page)).toBe("above\n\n---\n\nbelow");
+});
+
+test("``` typed on a line of its own reads as a fence, not as code", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("```", { delay: 20 });
+  const span = page.locator(`${editor} .md-code-span`);
+  await expect(span).toHaveClass(/is-fence/);
+  const look = await span.evaluate(
+    (el) => getComputedStyle(el).backgroundColor,
+  );
+  expect(look).toBe("rgba(0, 0, 0, 0)");
+  await open(page);
+  await page.keyboard.type("a `x`", { delay: 20 });
+  await expect(page.locator(`${editor} .md-code-span`)).toHaveCount(1);
+  await expect(page.locator(`${editor} .md-code-span`)).not.toHaveClass(
+    /is-fence/,
+  );
+});

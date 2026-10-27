@@ -79,7 +79,7 @@ describe("the fixed shortcuts in Settings", () => {
 
   it("match the macOS menu bar's accelerators in menu.rs", () => {
     const native = nativeAccelerators();
-    expect(native).toContain("mod+shift+n");
+    expect(native).toContain("mod+shift+t");
     const mac = fixedCombos("macos");
     // Both ways. The rest are muda's predefined Edit items, the editor's own
     // keys and the tab keys.

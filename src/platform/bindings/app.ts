@@ -84,6 +84,16 @@ export const commands = {
 	 */
 	current_chat_window: () => __TAURI_INVOKE<string | null>("current_chat_window"),
 	/**
+	 *  Pastes into the focused webview as Cmd+V does. False where the page
+	 *  reads the clipboard itself (everywhere but macOS).
+	 */
+	paste_natively: () => __TAURI_INVOKE<boolean>("paste_natively"),
+	/**
+	 *  The clipboard's plain text, read without the webview's paste callout.
+	 *  None where the page reads it itself (everywhere but macOS).
+	 */
+	clipboard_text: () => __TAURI_INVOKE<string | null>("clipboard_text"),
+	/**
 	 *  Runs a menu id exactly as clicking that native item would; the way in for
 	 *  the app-drawn menu. Unknown ids do nothing. Async because creating or
 	 *  closing windows from the calling webview's IPC callback freezes Windows.

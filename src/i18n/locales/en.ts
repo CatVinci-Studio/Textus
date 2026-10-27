@@ -118,6 +118,7 @@ type /name in a conversation to use one.
   diagramViewerHint:
     "Scroll or pinch to zoom · drag to move · double-click to fit",
   codeBlockLanguage: "Code language",
+  codeBlockLanguageSearch: "Search languages",
   announceAiWriting: `${AI_NAME} is writing…`,
   announceAiDone: `${AI_NAME} is done.`,
   announceChangesProposed: {
@@ -600,6 +601,7 @@ type /name in a conversation to use one.
   accountNotConnected: "Not connected",
   accountConnectedAs: "Connected",
   signInTemplate: "Sign in with {name}",
+  signInExperimental: "Experimental - use with care.",
   logoutButton: "Sign out",
   loggingIn: "Waiting for browser login…",
   loginLinkHint:
@@ -729,7 +731,8 @@ type /name in a conversation to use one.
   chatSelectedPicture: "Picture selected",
   cut: "Cut",
   copy: "Copy",
-  copyAsMarkdown: "Copy as Markdown",
+  copyAsPlainText: "Copy as Plain Text",
+  pasteAsPlainText: "Paste as Plain Text",
   paste: "Paste",
   selectAll: "Select All",
   findReplace: "Find & Replace",
@@ -841,6 +844,7 @@ type /name in a conversation to use one.
   menuSettings: "Settings…",
   menuExit: "Exit",
   menuNewFile: "New File",
+  menuNewTab: "New Tab",
   menuOpenFile: "Open…",
   menuOpenRecent: "Open Recent",
   menuRecentNone: "No Recent Files",
@@ -861,6 +865,7 @@ type /name in a conversation to use one.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Close Tab",
+  menuReopenClosedTab: "Reopen Closed Tab",
   splitDivider: "Divider between the documents",
   hoverCard: "Preview",
   hoverPin: "Pin",

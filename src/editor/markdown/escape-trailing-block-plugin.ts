@@ -93,14 +93,16 @@ function backspaceOutOfLeadingEmptyCodeBlock(view: EditorView): boolean {
 }
 
 /**
- * Backspace at the start of a line inside a blockquote takes that line out
- * of the quote; the default join has nothing sensible to merge it into.
+ * Backspace at the start of a quote's first line takes it out of the
+ * quote; the default join has nothing to merge it into. A later line
+ * joins the one above, as by default.
  */
 function backspaceOutOfBlockquote(view: EditorView): boolean {
   const { state } = view;
   const { $from, empty } = state.selection;
   if (!empty || $from.parentOffset !== 0 || $from.depth < 2) return false;
   if ($from.node($from.depth - 1).type.name !== "blockquote") return false;
+  if ($from.index($from.depth - 1) > 0) return false;
   const range = $from.blockRange();
   const target = range && liftTarget(range);
   if (range == null || target == null) return false;

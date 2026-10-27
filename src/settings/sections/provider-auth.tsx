@@ -66,6 +66,7 @@ export function ProviderAuthPanel({
           t={t}
           providerId={entry.id}
           label={label}
+          unofficial={entry.oauthUnofficial}
           onStatusChange={onStatusChange}
         />
       )}
@@ -86,11 +87,13 @@ export function OauthPanel({
   t,
   providerId,
   label,
+  unofficial = false,
   onStatusChange,
 }: {
   t: Strings;
   providerId: string;
   label: string;
+  unofficial?: boolean;
   onStatusChange?: (configured: boolean) => void;
 }) {
   const [configured, setConfiguredState] = useState(false);
@@ -154,6 +157,11 @@ export function OauthPanel({
                 ? t.accountConnectedAs
                 : t.accountNotConnected}
           </div>
+          {unofficial && (
+            <div className="settings-row-hint settings-signin-unofficial">
+              {t.signInExperimental}
+            </div>
+          )}
         </div>
         {configured ? (
           <button

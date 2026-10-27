@@ -53,10 +53,7 @@ export function EditorOverlays({
         illustrateParagraph={review.illustrateParagraph}
         triggerCompletion={setup.triggerCompletion}
         triggerGrammarCheck={setup.triggerGrammarCheck}
-        copyOrCut={clipboard.copyOrCut}
-        copyAsMarkdown={clipboard.copyAsMarkdown}
-        paste={clipboard.paste}
-        selectAll={clipboard.selectAll}
+        clipboard={clipboard}
         toggleFindReplace={findReplace.toggle}
         openTableDialog={() => setTableDialogOpen(true)}
         own={review.notes.menu}

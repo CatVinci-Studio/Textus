@@ -126,6 +126,7 @@ para usar una.
   diagramViewerHint:
     "Desplaza o pellizca para hacer zoom · arrastra para mover · doble clic para ajustar",
   codeBlockLanguage: "Lenguaje del código",
+  codeBlockLanguageSearch: "Buscar lenguaje",
   announceAiWriting: `${AI_NAME} está escribiendo…`,
   announceAiDone: `${AI_NAME} ha terminado.`,
   announceChangesProposed: {
@@ -619,6 +620,7 @@ para usar una.
   accountNotConnected: "Sin conectar",
   accountConnectedAs: "Conectado",
   signInTemplate: "Iniciar sesión con {name}",
+  signInExperimental: "Función experimental: úsala con cuidado.",
   logoutButton: "Cerrar sesión",
   loggingIn: "Esperando el inicio de sesión en el navegador…",
   loginLinkHint:
@@ -759,7 +761,8 @@ para usar una.
   chatSelectedPicture: "Imagen seleccionada",
   cut: "Cortar",
   copy: "Copiar",
-  copyAsMarkdown: "Copiar como Markdown",
+  copyAsPlainText: "Copiar como texto sin formato",
+  pasteAsPlainText: "Pegar como texto sin formato",
   paste: "Pegar",
   selectAll: "Seleccionar todo",
   findReplace: "Buscar y reemplazar",
@@ -871,6 +874,7 @@ para usar una.
   menuSettings: "Ajustes…",
   menuExit: "Salir",
   menuNewFile: "Nuevo archivo",
+  menuNewTab: "Nueva pestaña",
   menuOpenFile: "Abrir…",
   menuOpenRecent: "Abrir recientes",
   menuRecentNone: "No hay archivos recientes",
@@ -891,6 +895,7 @@ para usar una.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Cerrar pestaña",
+  menuReopenClosedTab: "Reabrir pestaña cerrada",
   splitDivider: "Separador entre los documentos",
   hoverCard: "Vista previa",
   hoverPin: "Fijar",

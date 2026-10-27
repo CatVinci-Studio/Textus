@@ -1,7 +1,9 @@
-import { Plugin } from "@milkdown/kit/prose/state";
+import { Plugin, type EditorState } from "@milkdown/kit/prose/state";
+import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { fenceLineToBlock } from "../markdown/fence-line";
 import {
   COMPOSE_RELOCATE_DELAY_MS,
   caretAt,
@@ -312,14 +314,32 @@ export const createMdSpanAutopairPlugin = (options: {
 
             const codeBlock = state.schema.nodes.code_block;
             if (!codeBlock) return false;
-            const paragraphPos = $from.before($from.depth);
-            const tr = state.tr
-              .delete(paragraphPos + 1, paragraphPos + 1 + parent.content.size)
-              .setNodeMarkup(paragraphPos, codeBlock, { language });
-            view.dispatch(caretAt(tr, paragraphPos + 1));
+            view.dispatch(
+              fenceLineToBlock(state, $from.before(), codeBlock, { language }),
+            );
             event.preventDefault();
             return true;
           },
+          decorations: fenceDecoration,
         },
       }),
   );
+
+/** The backtick between "```" on a line of its own is the fence, waiting
+ *  for a language, not code: drawn as plain text (.is-fence). */
+function fenceDecoration(state: EditorState): DecorationSet | null {
+  const { $from } = state.selection;
+  for (let depth = $from.depth; depth > 0; depth--) {
+    const block = $from.node(depth);
+    if (!block.isTextblock) continue;
+    if (block.type.name !== "paragraph" || codeFenceLanguage(block) === null)
+      return null;
+    const first = block.firstChild;
+    if (first?.type.name !== "md_code_span") return null;
+    const start = $from.start(depth);
+    return DecorationSet.create(state.doc, [
+      Decoration.node(start, start + first.nodeSize, { class: "is-fence" }),
+    ]);
+  }
+  return null;
+}

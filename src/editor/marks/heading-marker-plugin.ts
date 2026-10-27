@@ -86,25 +86,6 @@ export const headingMarkerPlugin = $prose(
             return true;
           }
 
-          // Cmd+Backspace: WebKit's line-start computation stalls against the
-          // revealed "# " widget, so the deletion is done on the document directly.
-          if (
-            event.key === "Backspace" &&
-            event.metaKey &&
-            !event.altKey &&
-            !event.ctrlKey
-          ) {
-            const state = stateWithLiveSelection(view);
-            const { $from, empty } = state.selection;
-            if ($from.parent.type.name !== "heading") return false;
-            if (!empty || $from.parentOffset === 0) return false;
-            event.preventDefault();
-            view.dispatch(
-              view.state.tr.delete($from.start(), state.selection.from),
-            );
-            return true;
-          }
-
           if (event.key !== "ArrowLeft") return false;
           if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
             return false;
