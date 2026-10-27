@@ -5,7 +5,11 @@ import {
   TextSelection,
   type Command,
 } from "@milkdown/kit/prose/state";
-import { backspaceIntoSource, deleteIntoSource } from "./inline-source-plugin";
+import {
+  backspaceIntoSource,
+  clickOutsideBrackets,
+  deleteIntoSource,
+} from "./inline-source-plugin";
 
 const schema = new Schema({
   nodes: {
@@ -17,6 +21,7 @@ const schema = new Schema({
       content: "text*",
       code: true,
     },
+    wikilink: { group: "inline", inline: true, content: "text*", code: true },
     text: { group: "inline" },
   },
 });
@@ -48,5 +53,32 @@ describe("Backspace and Delete beside a link's source", () => {
   it("leave a caret beside plain text to the default", () => {
     expect(run(backspaceIntoSource, 5)).toBeNull();
     expect(run(deleteIntoSource, linkEnd)).toBeNull();
+  });
+});
+
+describe("a click at a wikilink's brackets", () => {
+  // "go ", then [[Note]] from 4 to 14.
+  const linked = n.doc.create(null, [
+    n.paragraph.create(null, [
+      schema.text("go "),
+      n.wikilink.create(null, schema.text("[[Note]]")),
+    ]),
+  ]);
+  const caretAfter = (pos: number, pointer: boolean) => {
+    const state = EditorState.create({ schema, doc: linked });
+    const tr = state.tr.setSelection(TextSelection.create(linked, pos));
+    if (pointer) tr.setMeta("pointer", true);
+    const next = state.apply(tr);
+    return clickOutsideBrackets([tr], next)?.selection.from ?? null;
+  };
+
+  it("lands outside the link, so what is typed next isn't part of it", () => {
+    expect(caretAfter(13, true)).toBe(14);
+    expect(caretAfter(5, true)).toBe(4);
+  });
+
+  it("leaves a click within its name, and the arrow keys, alone", () => {
+    expect(caretAfter(9, true)).toBeNull();
+    expect(caretAfter(13, false)).toBeNull();
   });
 });
