@@ -411,3 +411,35 @@ test("Enter in a code block in a list adds a line, and an indented blank line ke
     "- item\n\n  ```py\n  def f():\n      x = 1\n\n      y = 2\n  ```",
   );
 });
+
+test("typing over a selection that ends in a code block keeps the code block", async ({
+  page,
+}) => {
+  await open(page, "Before\n\n```js\none\ntwo\n```");
+  await page.locator(`${editor} p`).getByText("Before").click();
+  // From the start of "Before" to the end of "one".
+  await page.evaluate((sel) => {
+    const p = document.querySelector(`${sel} p`)!.firstChild!;
+    const code = document.querySelector(`${sel} pre code`)!;
+    const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+    let one = walker.nextNode() as Text;
+    while (!one.data.includes("one")) one = walker.nextNode() as Text;
+    getSelection()!.setBaseAndExtent(p, 0, one, one.data.indexOf("one") + 3);
+  }, editor);
+  await selectionRead(page);
+  await page.keyboard.type("Z", { delay: 20 });
+  expect(await sourceOf(page)).toBe("Z\n\n```js\n\ntwo\n```");
+});
+
+test("Delete before a callout puts the caret at its text, keeping the callout", async ({
+  page,
+}) => {
+  await open(page, "Above\n\n> [!NOTE]\n> body");
+  await page.locator(`${editor} p`).getByText("Above").click();
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
+  );
+  await page.keyboard.press("Delete");
+  await page.keyboard.type("x", { delay: 20 });
+  expect(await sourceOf(page)).toBe("Above\n\n> [!NOTE]\n> xbody");
+});
