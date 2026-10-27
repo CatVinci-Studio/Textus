@@ -5,8 +5,9 @@ name: CI
 #
 #   check    npm run check         types, lint, unit tests, formatting,
 #                                  README/version/updater checks; and the build
-#   e2e      npm run test:e2e      the Playwright flows, desktop and phone -
-#                                  split by test across four machines
+#   e2e      npm run test:e2e      the Playwright flows in Chromium, split by
+#                                  test across four machines; e2e-webkit runs
+#                                  the WebKit ones (not yet required)
 #   native   npm run check:native  rustfmt, clippy, Rust tests - on Linux,
 #                                  macOS and Windows; and npm test on macOS
 #                                  and Windows
@@ -162,9 +163,12 @@ jobs:
       # The official plugins, which no longer ship with the app: the dev
       # server serves them from this checkout (vite.dev-plugins.ts), and
       # the plugin flows install them from it.
+      # Pinned: a plugin release moving to a new API broke the flows once.
+      # Bump it on purpose, with the app change that needs it.
       - uses: actions/checkout@v7
         with:
           repository: CatVinci-Studio/textus-plugins
+          ref: a6ba662c29c4be554c7cb1ffc10f5aeae35fd124
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       # Chromium comes from the cache when this Playwright version's is there;
@@ -213,9 +217,43 @@ jobs:
           test "$CHANGES" = success
           test "$RESULT" = success || test "$RESULT" = skipped
 
+  # The flows macOS, iOS and Linux users meet in WebKit
+  # (playwright.config.ts's WEBKIT_SPECS). Not required until it has run
+  # green for a while.
+  e2e-webkit:
+    needs: changes
+    if: needs.changes.outputs.e2e == 'true'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - uses: actions/checkout@v7
+        with:
+          repository: CatVinci-Studio/textus-plugins
+          ref: a6ba662c29c4be554c7cb1ffc10f5aeae35fd124
+          path: textus-plugins
+      - run: npm ci --prefix textus-plugins
+      - run: npx playwright install --with-deps webkit
+      - run: npx playwright test --project=webkit --ignore-snapshots
+        env:
+          E2E_WEBKIT: "1"
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-webkit-test-results
+          path: test-results/
+          retention-days: 7
+
+  # Unit tests on macOS and Windows run for frontend changes too (path and
+  # line-ending code); the Rust steps only where Rust can change.
   native-platform:
     needs: changes
-    if: needs.changes.outputs.native == 'true'
+    if: needs.changes.outputs.native == 'true' || needs.changes.outputs.e2e == 'true'
     name: native (${{ matrix.name }})
     strategy:
       fail-fast: false
@@ -237,11 +275,11 @@ jobs:
             os: macos-26
             rust: true
             unit: true
-          - name: windows-latest
-            os: windows-latest
+          - name: windows-2025
+            os: windows-2025
             rust: true
-          - name: windows-latest, unit tests
-            os: windows-latest
+          - name: windows-2025, unit tests
+            os: windows-2025
             unit: true
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -252,16 +290,19 @@ jobs:
       CARGO_PROFILE_DEV_DEBUG: "0"
     steps:
       - uses: actions/checkout@v7
+        if: matrix.unit || needs.changes.outputs.native == 'true'
       - name: Install Linux dependencies
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && needs.changes.outputs.native == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
       - uses: actions/setup-node@v7
+        if: matrix.unit || needs.changes.outputs.native == 'true'
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+        if: matrix.unit || needs.changes.outputs.native == 'true'
       # The rest of `check` doesn't differ between platforms, nor does the
       # save round trip, which `check` runs once.
       - if: matrix.unit
@@ -269,31 +310,34 @@ jobs:
         env:
           TEXTUS_SKIP_ROUNDTRIP: "1"
       # Installs the toolchain src-tauri/rust-toolchain.toml names.
-      - if: matrix.rust
+      - if: matrix.rust && needs.changes.outputs.native == 'true'
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - if: matrix.rust
+      - if: matrix.rust && needs.changes.outputs.native == 'true'
         uses: swatinem/rust-cache@v2
         with:
           workspaces: "./src-tauri -> target"
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - if: matrix.rust
+      - if: matrix.rust && needs.changes.outputs.native == 'true'
         run: npm run check:native
 
   # One required check for the three platforms: passes only when all of
   # them passed (or were skipped together, when the change can't reach the
   # Rust build).
   native:
-    needs: native-platform
+    needs: [changes, native-platform]
     if: always()
     runs-on: ubuntu-22.04
     timeout-minutes: 5
     steps:
       - name: Require every platform
         env:
+          CHANGES: ${{ needs.changes.result }}
           RESULT: ${{ needs.native-platform.result }}
-        run: test "$RESULT" = success || test "$RESULT" = skipped
+        run: |
+          test "$CHANGES" = success
+          test "$RESULT" = success || test "$RESULT" = skipped
 
   # iOS: proves the shared code and the #[cfg(desktop)] gating compile for
   # the iOS simulator (docs/dev/ios-code-map.md). No secrets and no signing: the
