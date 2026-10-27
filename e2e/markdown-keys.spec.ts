@@ -359,3 +359,38 @@ test("~~ and == stay as typed until their closing pair makes a strikethrough or 
   await expect(page.locator(`${editor} mark`)).toHaveText("kept");
   expect(await sourceOf(page)).toBe("~~gone~~ and ==kept== ok");
 });
+
+test("Backspace at a code block's start and Delete before it move the caret, leaving the block whole", async ({
+  page,
+}) => {
+  await open(page, "Before\n\n```js\none\ntwo\n```");
+  await page.locator(`${editor} pre code`).getByText("one").click();
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowLeft" : "Home",
+  );
+  await selectionRead(page);
+  await page.keyboard.press("Backspace");
+  await page.keyboard.type("!", { delay: 20 });
+  await page.keyboard.press("Delete");
+  await page.keyboard.type("x", { delay: 20 });
+  expect(await sourceOf(page)).toBe("Before!\n\n```js\nxone\ntwo\n```");
+});
+
+test("Delete before a table goes into it, and Delete before a quote joins its first line", async ({
+  page,
+}) => {
+  await open(
+    page,
+    "Before\n\n| a | b |\n| - | - |\n| c | d |\n\nAbove\n\n> one\n>\n> two",
+  );
+  await page.locator(`${editor} p`).getByText("Before").click();
+  await page.keyboard.press("End");
+  await page.keyboard.press("Delete");
+  await page.keyboard.type("x", { delay: 20 });
+  await page.locator(`${editor} p`).getByText("Above").click();
+  await page.keyboard.press("End");
+  await page.keyboard.press("Delete");
+  expect(await sourceOf(page)).toBe(
+    "Before\n\n| xa | b |\n| -- | - |\n| c  | d |\n\nAboveone\n\n> two",
+  );
+});

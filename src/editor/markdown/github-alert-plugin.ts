@@ -77,7 +77,7 @@ function buildTitle(
  *  much of the first paragraph is hidden behind the badge - the marker,
  *  the spaces after it and the line break ending its line. Null when the
  *  quote isn't an alert. */
-function alertMarker(
+export function alertMarker(
   quote: ProseNode,
 ): { type: AlertType; length: number; hidden: number } | null {
   // GitHub's syntax: the marker must be the blockquote's very first line,
