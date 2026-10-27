@@ -147,3 +147,24 @@ function codeLineMiddles(page: Page): Promise<number[]> {
     return middles.sort((a, b) => a - b);
   });
 }
+
+test("Select All in a document that opens with a code block selects its text", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "```js\n" + CODE + "\n```");
+  await page.locator(`${block} code`).click();
+  // Edit > Select All, as the macOS menu sends it.
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new CustomEvent("textus:edit-action", { detail: "select-all" }),
+    ),
+  );
+  // WebKit highlights a selection between characters, not one beside the
+  // block's buttons.
+  const ends = await page.evaluate(() => {
+    const s = getSelection()!;
+    return [s.anchorNode?.nodeType, s.focusNode?.nodeType, s.toString()];
+  });
+  expect(ends).toEqual([3, 3, CODE]);
+});
