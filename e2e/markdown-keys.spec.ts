@@ -471,12 +471,6 @@ test("``` and $$ typed in a list item start a code block and a maths block in it
   await page.keyboard.type("$$", { delay: 20 });
   await page.keyboard.press("Enter");
   await page.keyboard.type("y", { delay: 20 });
-  await expect(
-    page
-      .locator(
-        `${editor} li .math-block, ${editor} li [data-type="math_block"]`,
-      )
-      .first(),
-  ).toBeAttached();
+  await expect(page.locator(`${editor} li .math-block`)).toHaveCount(1);
   expect(await sourceOf(page)).toBe("* item\n* $$\n  y\n  $$");
 });

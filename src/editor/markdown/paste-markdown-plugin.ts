@@ -3,7 +3,7 @@ import { Slice } from "@milkdown/kit/prose/model";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { parseMarkdownSource } from "./parse-markdown-source";
-import { joinLinesForTableCell } from "./paste-slice";
+import { inTableCell, joinLinesForTableCell } from "./paste-slice";
 import { wordListsToHtml } from "./word-lists";
 import { keepPastedLines } from "./paste-lines";
 import { cleanPastedHtml } from "./paste-html";
@@ -106,20 +106,22 @@ export function keepPastedSpans(slice: Slice, selection: Selection): Slice {
     : new Slice(slice.content, openStart, openEnd);
 }
 
+/** Blocks a paste keeps whole, rather than pouring into the line. */
+const WHOLE_BLOCKS = new Set(["blockquote", "code_block", "math_block"]);
 const keepsItsShape = (node: ProseNode | null) =>
-  !!node && (node.type.name === "blockquote" || !!node.type.spec.code);
+  !!node && WHOLE_BLOCKS.has(node.type.name);
 
-/** A pasted quote or code block closed at its ends, so it stays one:
- *  opened, it was poured into the line it landed on - a quote that began
- *  with a list came in as the bare list, code as plain text, and the rest
- *  of the line went into the code. Copied from Textus only at the start of
- *  an empty line, as a piece of a code block pasted into text is text. */
+/** Opened, a quote or code block was poured into the line: a quote starting
+ *  with a list lost its quote, and code became text. Copies from Textus
+ *  keep it only on an empty line, as a piece of code pasted into text is
+ *  text. A table cell holds one paragraph, so there it stays poured. */
 export function keepPastedBlock(
   slice: Slice,
   $pos: ResolvedPos,
   onAnyLine: boolean,
 ): Slice {
   if (!$pos.parent.isTextblock || $pos.parent.type.spec.code) return slice;
+  if (inTableCell($pos)) return slice;
   const { firstChild, lastChild } = slice.content;
   const openStart =
     keepsItsShape(firstChild) && (onAnyLine || $pos.parent.content.size === 0)

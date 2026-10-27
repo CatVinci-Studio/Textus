@@ -90,7 +90,7 @@ export const newlineInCode: Command = (state, dispatch) => {
   const indent = leadingWhitespaceOfLastLine(before);
   const after = block.textBetween($to.parentOffset, block.content.size);
   const line = before.slice(before.lastIndexOf("\n") + 1);
-  const blankLine = line === indent && !/^[^\n]/.test(after);
+  const blankLine = line === indent && (after === "" || after.startsWith("\n"));
   const from = blankLine ? $from.pos - indent.length : $from.pos;
   dispatch(state.tr.insertText("\n" + indent, from, $to.pos).scrollIntoView());
   return true;
