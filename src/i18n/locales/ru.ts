@@ -869,6 +869,7 @@ export default {
   menuSettings: "Настройки…",
   menuExit: "Выход",
   menuNewFile: "Новый файл",
+  menuNewTab: "Новая вкладка",
   menuOpenFile: "Открыть…",
   menuOpenRecent: "Открыть недавние",
   menuRecentNone: "Нет недавних файлов",
@@ -889,6 +890,7 @@ export default {
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Закрыть вкладку",
+  menuReopenClosedTab: "Открыть закрытую вкладку",
   readOnlyRefused:
     "Документ только для чтения. Чтобы изменить его, выключите Вид › Только чтение.",
   menuToggleReadOnly: "Только чтение",

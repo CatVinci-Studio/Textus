@@ -888,6 +888,7 @@ utiliser une.
   menuSettings: "Réglages…",
   menuExit: "Quitter",
   menuNewFile: "Nouveau fichier",
+  menuNewTab: "Nouvel onglet",
   menuOpenFile: "Ouvrir…",
   menuOpenRecent: "Ouvrir l'élément récent",
   menuRecentNone: "Aucun fichier récent",
@@ -908,6 +909,7 @@ utiliser une.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Fermer l'onglet",
+  menuReopenClosedTab: "Rouvrir l'onglet fermé",
   readOnlyRefused:
     "Ce document est en lecture seule. Désactivez Présentation › Lecture seule pour le modifier.",
   menuToggleReadOnly: "Lecture seule",

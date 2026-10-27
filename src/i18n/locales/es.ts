@@ -876,6 +876,7 @@ para usar una.
   menuSettings: "Ajustes…",
   menuExit: "Salir",
   menuNewFile: "Nuevo archivo",
+  menuNewTab: "Nueva pestaña",
   menuOpenFile: "Abrir…",
   menuOpenRecent: "Abrir recientes",
   menuRecentNone: "No hay archivos recientes",
@@ -896,6 +897,7 @@ para usar una.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Cerrar pestaña",
+  menuReopenClosedTab: "Reabrir pestaña cerrada",
   readOnlyRefused:
     "Este documento es de solo lectura. Desactiva Visualización › Solo lectura para cambiarlo.",
   menuToggleReadOnly: "Solo lectura",

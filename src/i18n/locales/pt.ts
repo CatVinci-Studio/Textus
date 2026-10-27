@@ -860,6 +860,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuSettings: "Ajustes…",
   menuExit: "Sair",
   menuNewFile: "Novo Arquivo",
+  menuNewTab: "Nova Aba",
   menuOpenFile: "Abrir…",
   menuOpenRecent: "Abrir Recente",
   menuRecentNone: "Nenhum Arquivo Recente",
@@ -880,6 +881,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Fechar Aba",
+  menuReopenClosedTab: "Reabrir Aba Fechada",
   readOnlyRefused:
     "Este documento é só de leitura. Desative Visualizar › Só leitura para alterá-lo.",
   menuToggleReadOnly: "Só leitura",

@@ -825,6 +825,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuSettings: "設定…",
   menuExit: "終了",
   menuNewFile: "新規ファイル",
+  menuNewTab: "新規タブ",
   menuOpenFile: "開く…",
   menuOpenRecent: "最近使った項目",
   menuRecentNone: "最近使ったファイルはありません",
@@ -845,6 +846,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "タブを閉じる",
+  menuReopenClosedTab: "閉じたタブを再度開く",
   readOnlyRefused:
     "この書類は読み取り専用です。変更するには「表示 › 読み取り専用」をオフにしてください。",
   menuToggleReadOnly: "読み取り専用",

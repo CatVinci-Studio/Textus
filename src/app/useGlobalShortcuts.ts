@@ -46,7 +46,6 @@ const LINUX_MENU_ACCELERATORS: Record<string, string> = {
   "mod+shift++": "zoom-in",
   "mod+-": "zoom-out",
   "mod+0": "zoom-reset",
-  "mod+shift+n": "new-window",
   "mod+shift+w": "close-window",
   "mod+q": "quit",
 };
@@ -54,7 +53,9 @@ const LINUX_MENU_ACCELERATORS: Record<string, string> = {
 /** File commands routed through the backend where the app draws the window
  *  frame, so they work while focus is in the webview. */
 const WEBVIEW_FILE_COMMANDS: Record<string, string> = {
-  "mod+n": "new-file",
+  "mod+t": "new-file",
+  "mod+n": "new-window",
+  "mod+shift+t": "reopen-closed-tab",
   "mod+o": "open-file",
   "mod+p": "export-pdf",
   "mod+,": "settings",

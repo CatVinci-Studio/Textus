@@ -66,12 +66,11 @@ describe("the Windows app menu", () => {
     expect(entries.map((entry) => entry.accel)).not.toContain("mod+q");
   });
 
-  it("opens a new window with Ctrl+Shift+N, leaving Ctrl+T alone", () => {
-    // Ctrl+T reads as "new tab" on Windows and this app has tabs.
-    expect(accelOf(t.menuNewWindow)).toBe("mod+shift+n");
-    expect(entries.map((entry) => entry.accel)).not.toContain("mod+t");
-    // Still distinct from New File, which keeps the plain Ctrl+N.
-    expect(accelOf(t.menuNewFile)).toBe("mod+n");
+  it("keeps a browser's tab keys: Ctrl+T, Ctrl+N, Ctrl+W, Ctrl+Shift+T", () => {
+    expect(accelOf(t.menuNewTab)).toBe("mod+t");
+    expect(accelOf(t.menuNewWindow)).toBe("mod+n");
+    expect(accelOf(t.menuCloseTab)).toBe("mod+w");
+    expect(accelOf(t.menuReopenClosedTab)).toBe("mod+shift+t");
   });
 
   it("shows Ctrl+Y for Redo", () => {

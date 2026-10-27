@@ -846,6 +846,7 @@ type /name in a conversation to use one.
   menuSettings: "Settings…",
   menuExit: "Exit",
   menuNewFile: "New File",
+  menuNewTab: "New Tab",
   menuOpenFile: "Open…",
   menuOpenRecent: "Open Recent",
   menuRecentNone: "No Recent Files",
@@ -866,6 +867,7 @@ type /name in a conversation to use one.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Close Tab",
+  menuReopenClosedTab: "Reopen Closed Tab",
   readOnlyRefused:
     "This document is read-only. Turn off View › Read Only to change it.",
   menuToggleReadOnly: "Read Only",

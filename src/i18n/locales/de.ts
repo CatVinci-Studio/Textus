@@ -860,6 +860,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuSettings: "Einstellungen…",
   menuExit: "Beenden",
   menuNewFile: "Neue Datei",
+  menuNewTab: "Neuer Tab",
   menuOpenFile: "Öffnen…",
   menuOpenRecent: "Zuletzt geöffnet",
   menuRecentNone: "Keine zuletzt geöffneten Dateien",
@@ -880,6 +881,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Tab schließen",
+  menuReopenClosedTab: "Geschlossenen Tab wieder öffnen",
   readOnlyRefused:
     "Dieses Dokument ist schreibgeschützt. Schalte Ansicht › Schreibgeschützt aus, um es zu ändern.",
   menuToggleReadOnly: "Schreibgeschützt",
