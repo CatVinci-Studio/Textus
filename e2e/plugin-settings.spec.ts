@@ -111,6 +111,7 @@ test("Get plugins searches the catalog by name, what it does and who made it", a
   await openApp(page, { settings: { language: "en" } });
   await openGetPlugins(page);
   const cards = page.locator(".plugin-get-page .plugin-card[data-catalog]");
+  await expect(cards.first()).toBeVisible();
   const all = await cards.count();
   expect(all).toBeGreaterThan(3);
   const search = page.getByRole("searchbox", { name: "Search" });
@@ -187,7 +188,10 @@ test("Get more lists the most installed first, or the latest or by name", async 
   await expect(cards.first()).toHaveAttribute("data-catalog", "catvinci.vim");
   await page.getByRole("combobox", { name: "Sort by" }).click();
   await page.getByRole("option", { name: "Name" }).click();
-  await expect(cards.first()).toContainText("ABC");
+  const names = await page
+    .locator(".plugin-get-page .plugin-card-name")
+    .allTextContents();
+  expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
 });
 
 test("a card opens the plugin's own page: its settings, what it adds, its permissions", async ({
