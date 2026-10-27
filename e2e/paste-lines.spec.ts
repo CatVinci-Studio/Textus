@@ -101,6 +101,29 @@ test("a code block pasted on an empty list item stays a code block", async ({
   await expect(page.locator(`${editor} li pre`)).toContainText("x\ny");
 });
 
+test("a code block pasted in the middle of a line stays a code block between its halves", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.locator(editor).click();
+  await page.keyboard.type("beforeafter", { delay: 20 });
+  for (let i = 0; i < 5; i++) await page.keyboard.press("ArrowLeft");
+  // At the caret, not after a click (pasteText).
+  await page.evaluate((sel) => {
+    const data = new DataTransfer();
+    data.setData("text/plain", "```js\nx\ny\n```");
+    document.querySelector(sel)!.dispatchEvent(
+      new ClipboardEvent("paste", {
+        clipboardData: data,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  }, editor);
+  await expect(page.locator(`${editor} pre`)).toContainText("x\ny");
+  await expect(page.locator(`${editor} > p`)).toHaveText(["before", "after"]);
+});
+
 test("plain pasted lines keep their breaks", async ({ page }) => {
   await openApp(page, { settings: { language: "en" } });
   await pasteText(page, "Dear Sam,\nThanks for the notes.\nSee you Monday.");

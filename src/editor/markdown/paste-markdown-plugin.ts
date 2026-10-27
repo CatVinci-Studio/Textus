@@ -106,15 +106,29 @@ export function keepPastedSpans(slice: Slice, selection: Selection): Slice {
     : new Slice(slice.content, openStart, openEnd);
 }
 
-/** A pasted quote or code block landing on an empty line, closed at its
- *  start: opened, a quote that began with a list came in as the bare list,
- *  and code in a list item as a paragraph. */
-export function keepPastedBlock(slice: Slice, $pos: ResolvedPos): Slice {
-  const first = slice.content.firstChild;
-  if (slice.openStart === 0 || !first) return slice;
-  if (first.type.name !== "blockquote" && !first.type.spec.code) return slice;
-  if (!$pos.parent.isTextblock || $pos.parent.content.size > 0) return slice;
-  return new Slice(slice.content, 0, slice.openEnd);
+const keepsItsShape = (node: ProseNode | null) =>
+  !!node && (node.type.name === "blockquote" || !!node.type.spec.code);
+
+/** A pasted quote or code block closed at its ends, so it stays one:
+ *  opened, it was poured into the line it landed on - a quote that began
+ *  with a list came in as the bare list, code as plain text, and the rest
+ *  of the line went into the code. Copied from Textus only at the start of
+ *  an empty line, as a piece of a code block pasted into text is text. */
+export function keepPastedBlock(
+  slice: Slice,
+  $pos: ResolvedPos,
+  onAnyLine: boolean,
+): Slice {
+  if (!$pos.parent.isTextblock || $pos.parent.type.spec.code) return slice;
+  const { firstChild, lastChild } = slice.content;
+  const openStart =
+    keepsItsShape(firstChild) && (onAnyLine || $pos.parent.content.size === 0)
+      ? 0
+      : slice.openStart;
+  const openEnd = onAnyLine && keepsItsShape(lastChild) ? 0 : slice.openEnd;
+  return openStart === slice.openStart && openEnd === slice.openEnd
+    ? slice
+    : new Slice(slice.content, openStart, openEnd);
 }
 
 /**
@@ -148,7 +162,7 @@ export const pasteMarkdownSourcePlugin = $prose(
         transformPasted: (slice, view) =>
           joinLinesForTableCell(
             keepPastedSpans(
-              keepPastedBlock(slice, view.state.selection.$from),
+              keepPastedBlock(slice, view.state.selection.$from, false),
               view.state.selection,
             ),
             view.state.selection.$from,
@@ -182,7 +196,7 @@ export const pasteMarkdownSourcePlugin = $prose(
           const parsed = Slice.maxOpen(doc.content);
           const slice = joinLinesForTableCell(
             keepPastedSpans(
-              keepPastedBlock(parsed, view.state.selection.$from),
+              keepPastedBlock(parsed, view.state.selection.$from, true),
               view.state.selection,
             ),
             view.state.selection.$from,
