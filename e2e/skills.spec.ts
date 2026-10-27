@@ -204,12 +204,18 @@ test.describe("Settings › Extensions › Skills", () => {
     await expect(
       tab.getByRole("group", { name: "Review" }).locator("[data-skill]"),
     ).toHaveCount(2);
-    // The user's skill: in Write, and the last mode can't be unticked.
+    // The user's skill: in Write; its modes are ticked in a menu, several at
+    // once, and the last can't be unticked.
     const own = tab.locator('.settings-skill-item[data-skill="house-style"]');
-    await expect(own.getByRole("checkbox", { name: "Write" })).toBeChecked();
-    await expect(own.getByRole("checkbox", { name: "Write" })).toBeDisabled();
-    await own.getByRole("checkbox", { name: "Review" }).click();
-    await expect(own.getByRole("checkbox", { name: "Review" })).toBeChecked();
+    const modes = own.getByRole("button", { name: /Modes it works in/ });
+    await expect(modes).toHaveText("Write");
+    await modes.click();
+    const menu = own.getByRole("menu");
+    await expect(
+      menu.getByRole("menuitemcheckbox", { name: "Write" }),
+    ).toBeDisabled();
+    await menu.getByRole("menuitemcheckbox", { name: "Review" }).click();
+    await expect(modes).toHaveText("Write · Review");
     expect(
       await page.evaluate(
         () =>
