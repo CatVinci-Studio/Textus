@@ -8,11 +8,18 @@
   gap: 2px;
   padding: 34px 10px 6px;
   overflow-x: auto;
+  /* A scrollbar would make the bar taller than its neighbours' rows; it
+     scrolls by trackpad or wheel all the same. */
+  scrollbar-width: none;
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
   /* Pill drags must never read as a text selection. */
   user-select: none;
   -webkit-user-select: none;
+}
+
+.tab-bar::-webkit-scrollbar {
+  display: none;
 }
 
 /* An arriving pill takes its full width at once while neighbours slide

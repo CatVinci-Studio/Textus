@@ -153,8 +153,23 @@
 
 .sidebar-header {
   /* Clears the window bar floating over the top of the window. */
-  padding: 38px 10px 10px;
+  padding: 34px 10px 0;
   border-bottom: 1px solid var(--border-color);
+}
+
+/* Every column's top row ends on one line: the sidebar's, each pane's tab
+   bar and the AI panel's header (which starts below the 28px window bar). */
+:root {
+  --chrome-line: 69px;
+}
+
+:root:not([data-window-chrome="mobile"]) :is(.sidebar-header, .tab-bar) {
+  box-sizing: border-box;
+  height: var(--chrome-line);
+}
+
+:root:not([data-window-chrome="mobile"]) .agent-panel-header {
+  height: calc(var(--chrome-line) - 28px);
 }
 
 .sidebar-body {

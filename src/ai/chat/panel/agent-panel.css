@@ -55,7 +55,6 @@
   align-items: center;
   gap: 8px;
   min-height: 40px;
-  /* 41px high in all, so its line meets the tab bar's. */
   padding: 4px 8px 4px 14px;
   border-bottom: 1px solid var(--chat-hairline, var(--border-color));
 }
