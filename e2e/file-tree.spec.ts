@@ -311,6 +311,18 @@ test("a file dragged over a plugin's frame still splits where it is let go", asy
   await expect(page.locator(".main-pane-split > .split-pane")).toHaveCount(2);
 });
 
+test("a file clicked opens in a tab of its own, and an open one comes to the front", async ({
+  page,
+}) => {
+  await open(page);
+  await row(page, "b.md").click();
+  await expect(page.locator(`${editor} h1`)).toContainText("Bravo");
+  await expect(page.locator(".tab-pill-title")).toHaveText(["a.md", "b.md"]);
+  await row(page, "a.md").click();
+  await expect(page.locator(`${editor} h1`)).toContainText("Alpha");
+  await expect(page.locator(".tab-pill-title")).toHaveCount(2);
+});
+
 test("Open to the Side shows a document beside the one in front", async ({
   page,
 }) => {

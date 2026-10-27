@@ -85,6 +85,9 @@ test("opening the same Word document again shows the tab it opened", async ({
   page,
 }) => {
   await open(page, "tab");
+  // A draft written in stays beside it.
+  await page.locator(editor).click();
+  await page.keyboard.type("Draft");
   await emit(page, "menu-open-file");
   await expect(page.locator(".tab-pill-active .tab-pill-title")).toHaveText(
     "Report",

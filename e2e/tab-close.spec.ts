@@ -21,7 +21,9 @@ async function openFiles(page: Page, names: string[]) {
         position: { x: 0, y: 0 },
       });
     }, `/notes/${name}`);
-    await expect(page.locator(titles, { hasText: name })).toHaveCount(1);
+    await expect(
+      page.locator('[data-active-tab="true"] .ProseMirror'),
+    ).toContainText(`/notes/${name}`);
   }
 }
 
@@ -44,21 +46,15 @@ test("a middle click closes a tab, and the tab menu closes those to its right, l
   });
   await openFiles(page, ["a.md", "b.md", "c.md", "d.md", "e.md"]);
   await tab(page, "e.md").click({ button: "middle" });
-  // The window's first, untitled tab stays where it was.
+  // The window's untouched first tab gave way to a.md.
   await expect(page.locator(titles)).toHaveText([
-    "Untitled",
     "a.md",
     "b.md",
     "c.md",
     "d.md",
   ]);
   await fromMenu(page, "c.md", "Close Tabs to the Right");
-  await expect(page.locator(titles)).toHaveText([
-    "Untitled",
-    "a.md",
-    "b.md",
-    "c.md",
-  ]);
+  await expect(page.locator(titles)).toHaveText(["a.md", "b.md", "c.md"]);
   await fromMenu(page, "b.md", "Close Tabs to the Left");
   await expect(page.locator(titles)).toHaveText(["b.md", "c.md"]);
   await fromMenu(page, "c.md", "Close Others");

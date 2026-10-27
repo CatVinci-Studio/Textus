@@ -73,8 +73,6 @@ export function useWindowDocuments({
   );
   const opening = useFileOpening({
     tabState,
-    newDocumentMode: settings.newDocumentMode,
-    setPendingClose,
     dialogFilters,
     restoreCarets: settings.restoreSessionOnStartup,
     t,

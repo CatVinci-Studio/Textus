@@ -9,12 +9,8 @@ import { useModalDialog } from "../ui/useModalDialog";
 import { useLatest } from "../utils/hooks/useLatest";
 import type { TabState } from "./tabs/useTabState";
 
-// What the save/discard/cancel prompt is guarding: a tab, the whole window,
-// or replacing a tab's document in place.
-export type PendingClose =
-  | { kind: "tab"; tabId: string }
-  | { kind: "window" }
-  | { kind: "replace"; tabId: string; path: string };
+// What the save/discard/cancel prompt is guarding: a tab or the whole window.
+export type PendingClose = { kind: "tab"; tabId: string } | { kind: "window" };
 
 /** The documents closed in this window, the latest last. */
 const closedPaths: string[] = [];
@@ -130,7 +126,6 @@ export function useClosePrompt(opts: {
   cancelDraftFlushes: () => void;
   saveTab: (tabId: string) => Promise<boolean>;
   removeTab: (tabId: string) => void;
-  replaceTabWithFile: (tabId: string, path: string) => Promise<void>;
 }) {
   const {
     pendingClose,
@@ -139,7 +134,6 @@ export function useClosePrompt(opts: {
     cancelDraftFlushes,
     saveTab,
     removeTab,
-    replaceTabWithFile,
   } = opts;
   const { tabsRef, liveTabs } = tabState;
 
@@ -170,19 +164,15 @@ export function useClosePrompt(opts: {
       await clearWindowDrafts();
       await flushPendingWrites();
       await thisWindow().destroy();
-    } else if (action.kind === "tab") {
-      if (!(await saveTab(action.tabId))) return;
-      removeTab(action.tabId);
     } else {
       if (!(await saveTab(action.tabId))) return;
-      await replaceTabWithFile(action.tabId, action.path);
+      removeTab(action.tabId);
     }
   }, [
     pendingClose,
     setPendingClose,
     saveTab,
     removeTab,
-    replaceTabWithFile,
     clearWindowDrafts,
     liveTabs,
   ]);
@@ -195,13 +185,11 @@ export function useClosePrompt(opts: {
       await clearWindowDrafts();
       await flushPendingWrites();
       await thisWindow().destroy();
-    } else if (action.kind === "tab") removeTab(action.tabId);
-    else await replaceTabWithFile(action.tabId, action.path);
+    } else removeTab(action.tabId);
   }, [
     pendingClose,
     setPendingClose,
     removeTab,
-    replaceTabWithFile,
     clearWindowDrafts,
   ]);
 

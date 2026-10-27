@@ -61,6 +61,9 @@ test("a file opened again opens where it was last read, at another width too (#3
   await openApp(page, {
     settings: { language: "en", newDocumentMode: "tab" },
   });
+  // Another document stays open when this one closes.
+  await drop(page, "/notes/short.md", "Short.");
+  await expect(page.locator(editor)).toContainText("Short.");
   await drop(page, "/notes/long.md", LONG);
   await expect(page.locator(editor)).toContainText("Paragraph 399");
   const line = page.locator(`${editor} p`, { hasText: "Paragraph 300 of" });

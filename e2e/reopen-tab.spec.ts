@@ -44,15 +44,16 @@ test("closed tabs reopen, the latest first", async ({ page }) => {
   await drop(page, "/notes/one.md", "# One");
   await drop(page, "/notes/two.md", "# Two");
   await drop(page, "/notes/three.md", "# Three");
-  // Beside the blank document the window opened with.
-  await expect(page.locator(tabs)).toHaveCount(4);
+  // The first in place of the blank document the window opened with.
+  await expect(page.locator(tabs)).toHaveCount(3);
   await emit(page, "menu-close-tab");
   await page.locator(tabs, { hasText: "one.md" }).click();
   await emit(page, "menu-close-tab");
-  await expect(page.locator(tabs)).toHaveCount(2);
+  // One tab left: the bar steps aside.
+  await expect(page.locator(tabs)).toHaveCount(0);
 
   await emit(page, "menu-reopen-closed-tab");
-  await expect(page.locator(tabs)).toHaveCount(3);
+  await expect(page.locator(tabs)).toHaveCount(2);
   await expect(page.locator(`${tabs}[aria-selected="true"]`)).toContainText(
     "one.md",
   );
@@ -62,5 +63,5 @@ test("closed tabs reopen, the latest first", async ({ page }) => {
   );
   // Nothing left closed: nothing happens.
   await emit(page, "menu-reopen-closed-tab");
-  await expect(page.locator(tabs)).toHaveCount(4);
+  await expect(page.locator(tabs)).toHaveCount(3);
 });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { installClipboardCapture } from "../clipboard/history";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
@@ -22,8 +22,6 @@ import {
   useTutorialTabRecovery,
   useWindowLessons,
 } from "./onboarding-wiring";
-import { tabIsUntouchedDraft } from "../document/doc-tabs";
-import { useLatest } from "../utils/hooks/useLatest";
 import { setDocumentDrop } from "../ui/document-drop";
 import { fileDropOnDocuments } from "./split/split-drop";
 import type { WindowShell } from "./useWindowShell";
@@ -95,12 +93,7 @@ export function useWindowWiring({
 
   // The same, pushed to an already-running window.
   useOpenPathsPush(openPathInTab);
-  const activeTabRef = useLatest(activeTab);
-  const activeIsUntouchedDraft = useCallback(
-    () => tabIsUntouchedDraft(activeTabRef.current),
-    [activeTabRef],
-  );
-  useFileDrop(openFile, openPathInTab, activeIsUntouchedDraft);
+  useFileDrop(openFile, openPathInTab);
   // A file from the sidebar dragged over the documents opens where it is
   // let go.
   useEffect(() => {
@@ -205,7 +198,6 @@ export function useWindowWiring({
     cancelDraftFlushes: shell.cancelDraftFlushes,
     saveTab: docs.saveTab,
     removeTab: docs.removeTab,
-    replaceTabWithFile: docs.replaceTabWithFile,
   });
 
   return { ...actions, menuChecks, sidebarLesson, close };
