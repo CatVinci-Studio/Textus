@@ -519,3 +519,22 @@ test("--- and Enter make a rule with the caret on the one line below it", async 
   await page.keyboard.type("below", { delay: 20 });
   expect(await sourceOf(page)).toBe("above\n\n---\n\nbelow");
 });
+
+test("``` typed on a line of its own reads as a fence, not as code", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("```", { delay: 20 });
+  const span = page.locator(`${editor} .md-code-span`);
+  await expect(span).toHaveClass(/is-fence/);
+  const look = await span.evaluate(
+    (el) => getComputedStyle(el).backgroundColor,
+  );
+  expect(look).toBe("rgba(0, 0, 0, 0)");
+  await open(page);
+  await page.keyboard.type("a `x`", { delay: 20 });
+  await expect(page.locator(`${editor} .md-code-span`)).toHaveCount(1);
+  await expect(page.locator(`${editor} .md-code-span`)).not.toHaveClass(
+    /is-fence/,
+  );
+});

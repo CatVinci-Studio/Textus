@@ -119,7 +119,12 @@ export function useFloatingList(
     if (!open || !list) return;
     const item = list.querySelector<HTMLElement>(`[data-index="${active}"]`);
     if (!item) return;
-    if (item.offsetTop < list.scrollTop) list.scrollTop = item.offsetTop;
+    // A row pinned at the top (a search box) covers what scrolls under it.
+    const pinned =
+      list.querySelector<HTMLElement>(":scope > [data-pinned]")?.offsetHeight ??
+      0;
+    if (item.offsetTop - pinned < list.scrollTop)
+      list.scrollTop = item.offsetTop - pinned;
     else if (
       item.offsetTop + item.offsetHeight >
       list.scrollTop + list.clientHeight

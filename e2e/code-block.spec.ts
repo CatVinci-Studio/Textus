@@ -62,6 +62,23 @@ test("the language, copy and select buttons sit in the block's top-right corner"
   expect(await page.evaluate(() => getSelection()!.toString())).toBe(CODE);
 });
 
+test("the language search stays on top of the list as it scrolls", async ({
+  page,
+}) => {
+  await openWithCode(page, {}, "print(1)");
+  await page.locator(block).hover();
+  await page.locator(`${block} .code-block-language-select`).click();
+  const list = page.getByRole("listbox");
+  await list.evaluate((el) => (el.scrollTop = 40));
+  const search = page.locator(".code-language-search input");
+  const box = (await search.boundingBox())!;
+  const top = await page.evaluate(
+    ([x, y]) => document.elementFromPoint(x, y)?.tagName,
+    [box.x + box.width / 2, box.y + box.height / 2],
+  );
+  expect(top).toBe("INPUT");
+});
+
 test("the language is picked from the app's own menu, and the colours follow at once", async ({
   page,
 }) => {
