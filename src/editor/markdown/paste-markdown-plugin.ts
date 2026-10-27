@@ -106,14 +106,13 @@ export function keepPastedSpans(slice: Slice, selection: Selection): Slice {
     : new Slice(slice.content, openStart, openEnd);
 }
 
-/** A pasted quote landing on an empty line, closed at its start: opened,
- *  a quote that began with a list came in as the bare list. */
-export function keepPastedQuote(slice: Slice, $pos: ResolvedPos): Slice {
-  if (
-    slice.openStart === 0 ||
-    slice.content.firstChild?.type.name !== "blockquote"
-  )
-    return slice;
+/** A pasted quote or code block landing on an empty line, closed at its
+ *  start: opened, a quote that began with a list came in as the bare list,
+ *  and code in a list item as a paragraph. */
+export function keepPastedBlock(slice: Slice, $pos: ResolvedPos): Slice {
+  const first = slice.content.firstChild;
+  if (slice.openStart === 0 || !first) return slice;
+  if (first.type.name !== "blockquote" && !first.type.spec.code) return slice;
   if (!$pos.parent.isTextblock || $pos.parent.content.size > 0) return slice;
   return new Slice(slice.content, 0, slice.openEnd);
 }
@@ -149,7 +148,7 @@ export const pasteMarkdownSourcePlugin = $prose(
         transformPasted: (slice, view) =>
           joinLinesForTableCell(
             keepPastedSpans(
-              keepPastedQuote(slice, view.state.selection.$from),
+              keepPastedBlock(slice, view.state.selection.$from),
               view.state.selection,
             ),
             view.state.selection.$from,
@@ -183,7 +182,7 @@ export const pasteMarkdownSourcePlugin = $prose(
           const parsed = Slice.maxOpen(doc.content);
           const slice = joinLinesForTableCell(
             keepPastedSpans(
-              keepPastedQuote(parsed, view.state.selection.$from),
+              keepPastedBlock(parsed, view.state.selection.$from),
               view.state.selection,
             ),
             view.state.selection.$from,

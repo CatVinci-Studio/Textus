@@ -89,6 +89,18 @@ test("a quote that starts with a list stays a quote", async ({ page }) => {
   await expect(quote.locator("li")).toHaveText(["one", "two"]);
 });
 
+test("a code block pasted on an empty list item stays a code block", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.locator(editor).click();
+  await page.keyboard.type("- item", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await pasteText(page, "```js\nx\ny\n```");
+  await expect(page.locator(`${editor} li pre`)).toHaveCount(1);
+  await expect(page.locator(`${editor} li pre`)).toContainText("x\ny");
+});
+
 test("plain pasted lines keep their breaks", async ({ page }) => {
   await openApp(page, { settings: { language: "en" } });
   await pasteText(page, "Dear Sam,\nThanks for the notes.\nSee you Monday.");
