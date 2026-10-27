@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
@@ -22,6 +22,16 @@ const old = (id: string, permissions: string[]) => ({
   dev: false,
   files: { "host.js": "exports.activate = function () {};" },
 });
+
+/** The version the catalog the dev server serves offers. */
+async function catalogVersion(page: Page, id: string): Promise<string> {
+  const index = await (
+    await page.request.get("/dev-plugins/index.json")
+  ).json();
+  return (index.plugins as { id: string; version: string }[]).find(
+    (p) => p.id === id,
+  )!.version;
+}
 
 test("old official plugins are replaced by their rewrites, and Split Panes goes", async ({
   page,
@@ -70,7 +80,9 @@ test("old official plugins are replaced by their rewrites, and Split Panes goes"
     });
   await expect
     .poll(async () => (await state()).installed)
-    .toEqual(["catvinci.tasks@0.1.0"]);
+    .toEqual([
+      `catvinci.tasks@${await catalogVersion(page, "catvinci.tasks")}`,
+    ]);
   expect((await state()).tasks).toMatchObject({
     enabled: true,
     granted: ["files.read", "files.write"],
