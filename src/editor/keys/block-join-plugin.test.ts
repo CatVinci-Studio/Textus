@@ -203,6 +203,17 @@ describe("deleteKeepingApart", () => {
   });
 });
 
+describe("deleteKeepingApart before a callout", () => {
+  it("lands at the callout's text, past its hidden marker line", () => {
+    const callout = quote(p("[!NOTE]"), p("body"));
+    const doc = docOf(p("text"), callout);
+    const next = run(deleteKeepingApart, at(doc, "text", true))!;
+    expect(next.doc.eq(doc)).toBe(true);
+    expect(caretLine(next)).toBe("body");
+    expect(next.selection.$from.parentOffset).toBe(0);
+  });
+});
+
 describe("deleteJoiningText", () => {
   it("joins a quote's first line onto the line above", () => {
     const doc = docOf(p("text"), quote(p("aaa"), p("bbb")));

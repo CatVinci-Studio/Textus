@@ -376,23 +376,27 @@ test("Backspace at a code block's start and Delete before it move the caret, lea
   expect(await sourceOf(page)).toBe("Before!\n\n```js\nxone\ntwo\n```");
 });
 
-test("Delete before a table goes into it, and Delete before a quote joins its first line", async ({
-  page,
-}) => {
-  await open(
-    page,
-    "Before\n\n| a | b |\n| - | - |\n| c | d |\n\nAbove\n\n> one\n>\n> two",
-  );
+test("Delete before a table goes into its first cell", async ({ page }) => {
+  await open(page, "Before\n\n| a | b |\n| - | - |\n| c | d |");
   await page.locator(`${editor} p`).getByText("Before").click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
+  );
   await page.keyboard.press("Delete");
   await page.keyboard.type("x", { delay: 20 });
-  await page.locator(`${editor} p`).getByText("Above").click();
-  await page.keyboard.press("End");
-  await page.keyboard.press("Delete");
   expect(await sourceOf(page)).toBe(
-    "Before\n\n| xa | b |\n| -- | - |\n| c  | d |\n\nAboveone\n\n> two",
+    "Before\n\n| xa | b |\n| -- | - |\n| c  | d |",
   );
+});
+
+test("Delete before a quote joins its first line", async ({ page }) => {
+  await open(page, "Above\n\n> one\n>\n> two");
+  await page.locator(`${editor} p`).getByText("Above").click();
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
+  );
+  await page.keyboard.press("Delete");
+  expect(await sourceOf(page)).toBe("Aboveone\n\n> two");
 });
 
 test("typing over a selection that ends in a code block keeps the code block", async ({
