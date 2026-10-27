@@ -132,7 +132,7 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/ja/settings.png" alt="LLMは、お好きなものを" width="860" />
 </p>
 
-## プラグイン
+## プラグイン（テスト中、1.3 ベータ）
 
 必要なものだけを足せます。ノートとリンクを描いたグラフ、リンク先を見せるカード、二つの文書を並べる分割表示、カンバン、バージョン履歴、タブで開く PDF と Word、Zotero からの引用――どれも**設定 › 拡張機能 › さらに入手**に、テーマやスキルと並んでいます。プラグインは何かを使う前に必ず尋ねます。
 

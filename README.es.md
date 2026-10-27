@@ -132,7 +132,7 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/es/settings.png" alt="El LLM que prefieras." width="860" />
 </p>
 
-## Complementos
+## Complementos (en pruebas, beta 1.3)
 
 Añade lo que necesites, y nada más. Un grafo de tus notas y los enlaces entre ellas, una tarjeta que muestra adónde lleva un enlace, dos documentos lado a lado, tableros kanban, historial de versiones, PDF y Word en una pestaña, citas de Zotero: todo en **Ajustes › Extensiones › Conseguir más**, junto a los temas y las habilidades. Cada complemento pregunta antes de usar nada.
 

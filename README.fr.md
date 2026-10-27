@@ -132,7 +132,7 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/fr/settings.png" alt="Le LLM de votre choix." width="860" />
 </p>
 
-## Extensions
+## Extensions (en test, bêta 1.3)
 
 Ajoutez ce dont vous avez besoin, et rien d’autre. Un graphe de vos notes et des liens entre elles, une carte qui montre où mène un lien, deux documents côte à côte, des tableaux kanban, l’historique des versions, les PDF et fichiers Word dans un onglet, les citations Zotero – tout est dans **Réglages › Extensions › En obtenir plus**, à côté des thèmes et des compétences. Chaque extension demande avant d’utiliser quoi que ce soit.
 

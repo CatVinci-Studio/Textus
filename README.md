@@ -136,7 +136,7 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
   <img src="docs/images/readme/en/settings.png" alt="Any LLM you like." width="860" />
 </p>
 
-## Plugins
+## Plugins (in testing, 1.3 beta)
 
 Add what you need, and nothing else. A graph of your notes and the links between them, a card that shows where a link leads, two documents side by side, kanban boards, version history, PDFs and Word files in a tab, citations from Zotero – all in **Settings › Extensions › Get more**, beside the themes and skills. Each plugin asks before it uses anything.
 
