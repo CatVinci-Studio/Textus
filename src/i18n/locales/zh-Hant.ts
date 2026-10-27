@@ -1292,6 +1292,8 @@ export default {
   pluginsInstalledGroup: "已安裝",
   pluginOpenOffer: "外掛「{name}」可以開啟「{file}」。要安裝並開啟嗎？",
   pluginOpenInstall: "安裝並開啟",
+  backlinksOffer:
+    "這份文件用 [[雙向連結]] 連接筆記。「{name}」可以顯示哪些筆記連結到這裡。",
   pluginOpenTurnOn:
     "外掛「{name}」可以開啟「{file}」，但它目前已關閉。要開啟外掛並開啟這個檔案嗎？",
   pluginOpenTurnOnButton: "開啟並開啟檔案",

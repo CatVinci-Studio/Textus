@@ -48,6 +48,8 @@ export interface UiState {
   fileTreeHidden: string;
   /** The documents left read-only (View › Read Only), by path. */
   readOnlyPaths: string[];
+  /** Backlinks was offered for a document with [[wikilinks]], once. */
+  linkPluginOffered: boolean;
   /** The split the window was left in, by its two documents' paths; null when
    *  it showed one. */
   splitLayout: {
@@ -154,6 +156,11 @@ const LOCAL: {
     key: "textus-file-tree-sort",
     decode: (raw) => raw,
     encode: (value) => value,
+  },
+  linkPluginOffered: {
+    key: "textus-link-plugin-offered",
+    decode: (raw) => raw === "1",
+    encode: (value) => (value ? "1" : "0"),
   },
   readOnlyPaths: {
     key: "textus-read-only-paths",

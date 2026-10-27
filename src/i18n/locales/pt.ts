@@ -1402,6 +1402,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginOpenOffer:
     "O plugin {name} abre “{file}”. Instalá-lo e abrir o arquivo?",
   pluginOpenInstall: "Instalar e abrir",
+  backlinksOffer:
+    "Este documento liga notas com [[wikilinks]]. {name} mostra quais notas apontam para cá.",
   pluginOpenTurnOn:
     "O plugin {name} abre “{file}”, mas está desligado. Ligá-lo e abrir o arquivo?",
   pluginOpenTurnOnButton: "Ligar e abrir",

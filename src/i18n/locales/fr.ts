@@ -1445,6 +1445,8 @@ utiliser une.
   pluginOpenOffer:
     "L’extension {name} ouvre « {file} ». L’installer et ouvrir le fichier ?",
   pluginOpenInstall: "Installer et ouvrir",
+  backlinksOffer:
+    "Ce document relie des notes par des [[liens wiki]]. {name} montre quelles notes renvoient ici.",
   pluginOpenTurnOn:
     "L’extension {name} ouvre « {file} », mais elle est désactivée. L’activer et ouvrir le fichier ?",
   pluginOpenTurnOnButton: "Activer et ouvrir",

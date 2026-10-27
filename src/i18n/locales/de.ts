@@ -1411,6 +1411,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginOpenOffer:
     "Das Plugin {name} öffnet „{file}“. Installieren und die Datei öffnen?",
   pluginOpenInstall: "Installieren und öffnen",
+  backlinksOffer:
+    "Dieses Dokument verbindet Notizen mit [[Wikilinks]]. {name} zeigt, welche Notizen hierher verlinken.",
   pluginOpenTurnOn:
     "Das Plugin {name} öffnet „{file}“, ist aber aus. Einschalten und die Datei öffnen?",
   pluginOpenTurnOnButton: "Einschalten und öffnen",

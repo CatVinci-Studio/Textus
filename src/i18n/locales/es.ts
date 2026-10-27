@@ -1421,6 +1421,8 @@ para usar una.
   pluginOpenOffer:
     "El complemento {name} abre «{file}». ¿Instalarlo y abrir el archivo?",
   pluginOpenInstall: "Instalar y abrir",
+  backlinksOffer:
+    "Este documento enlaza notas con [[wikilinks]]. {name} muestra qué notas enlazan aquí.",
   pluginOpenTurnOn:
     "El complemento {name} abre «{file}», pero está desactivado. ¿Activarlo y abrir el archivo?",
   pluginOpenTurnOnButton: "Activar y abrir",

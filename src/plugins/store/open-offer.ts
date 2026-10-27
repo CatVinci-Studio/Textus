@@ -1,6 +1,8 @@
 import { basename } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";
 import { showConfirm } from "../../ui/app-dialog";
+import { showNotice } from "../../ui/notices";
+import { getUiState, setUiState } from "../../storage/ui-state";
 import {
   catalogSnapshot,
   installFromCatalog,
@@ -61,4 +63,33 @@ export async function offerPluginToOpen(
   if (installed) await setPluginEnabled(item.id, true);
   else await installFromCatalog(item.id);
   return pluginRecord(item.id)?.status === "on";
+}
+
+const BACKLINKS = "catvinci.backlinks";
+const WIKILINK = /\[\[[^[\]\n]+\]\]/;
+
+/** A document written with [[wikilinks]], opened without Backlinks
+ *  installed: a note offers it, once ever. */
+export async function offerBacklinks(content: string, t: Strings) {
+  if (!WIKILINK.test(content) || getUiState("linkPluginOffered") === true)
+    return;
+  if (pluginRecord(BACKLINKS)) return;
+  await loadCatalog().catch(() => {});
+  const catalog = catalogSnapshot();
+  if (catalog.status !== "ready") return;
+  const item = catalog.items.find((i) => i.id === BACKLINKS);
+  if (!item || pluginRecord(BACKLINKS)) return;
+  setUiState("linkPluginOffered", true);
+  showNotice(
+    t.backlinksOffer.replace(
+      "{name}",
+      pluginName({ id: item.id, manifest: item.manifest }),
+    ),
+    {
+      action: {
+        label: t.pluginInstall,
+        run: () => void installFromCatalog(item.id).catch(() => {}),
+      },
+    },
+  );
 }
