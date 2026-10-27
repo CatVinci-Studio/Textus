@@ -27,7 +27,7 @@ import {
   updateFor,
 } from "../../plugins/store/catalog";
 import { canSwitch } from "../../plugins/store/lifecycle";
-import { openUsageGuide } from "../../plugins/store/usage-guide";
+import { PluginIcon } from "./PluginArt";
 
 /**
  * Settings › Extensions › Plugins. Nothing comes installed: Get more offers
@@ -60,11 +60,8 @@ export function PluginsPage({
       const path = await pluginsIpc.pickPackage(folder, t.pluginPackageFilter);
       if (!path) return;
       if (folder) return setOpen(await loadDevPlugin(path));
-      const id = await installPlugin(path);
-      // Installed, it shows how it is used, as from Get more; without a
-      // guide, its page.
-      if (await openUsageGuide(id)) onClose();
-      else setOpen(id);
+      // Installed, its page, with its README.
+      setOpen(await installPlugin(path));
     });
 
   const openRecord = open
@@ -96,11 +93,6 @@ export function PluginsPage({
         update={updateFor(openRecord.id, catalog)}
         installing={installing === openRecord.id}
         onBack={() => setOpen(null)}
-        onGuide={() =>
-          void openUsageGuide(openRecord.id).then((opened) => {
-            if (opened) onClose();
-          })
-        }
         onEditWithAi={() => {
           onClose();
           askAi(editRequest(openRecord, t), "create");
@@ -195,30 +187,33 @@ function PluginCard({
     <div className="settings-row plugin-card" data-plugin={record.id}>
       <button
         type="button"
-        className="plugin-card-open"
+        className="plugin-card-open plugin-card-with-icon"
         aria-label={t.pluginOpenDetails.replace("{name}", name)}
         onClick={onOpen}
       >
-        <span className="settings-row-label plugin-card-name">{name}</span>
-        {manifest?.description && (
-          <span className="settings-row-hint plugin-card-description">
-            {pluginText(record, manifest.description)}
-          </span>
-        )}
-        {manifest && (
-          <Byline
-            manifest={manifest}
-            official={record.official}
-            dev={record.origin === "dev"}
-            t={t}
-          />
-        )}
-        {update && (
-          <span className="plugin-update-note">
-            {t.pluginUpdate.replace("{version}", update)}
-          </span>
-        )}
-        {status && <span className="settings-error">{status}</span>}
+        <PluginIcon id={record.id} manifest={manifest} origin={record.origin} />
+        <span className="plugin-card-text">
+          <span className="settings-row-label plugin-card-name">{name}</span>
+          {manifest?.description && (
+            <span className="settings-row-hint plugin-card-description">
+              {pluginText(record, manifest.description)}
+            </span>
+          )}
+          {manifest && (
+            <Byline
+              manifest={manifest}
+              official={record.official}
+              dev={record.origin === "dev"}
+              t={t}
+            />
+          )}
+          {update && (
+            <span className="plugin-update-note">
+              {t.pluginUpdate.replace("{version}", update)}
+            </span>
+          )}
+          {status && <span className="settings-error">{status}</span>}
+        </span>
       </button>
       <input
         type="checkbox"

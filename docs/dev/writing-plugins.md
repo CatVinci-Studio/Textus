@@ -417,12 +417,14 @@ another plugin's data, run native code, or reach the network or files
 beyond what it was granted. A plugin that stops answering, or throws more
 than ten errors a minute, is turned off and the user is told.
 
-## A usage guide
+## Its README
 
-Put a `USAGE.md` beside the manifest - and `USAGE.zh.md`, `USAGE.ja.md`
+Put a `README.md` beside the manifest - and `README.zh.md`, `README.ja.md`
 and so on for other languages - saying in a few lines what the plugin does
-and how to reach it. Textus opens it when the plugin is installed, and its
-page in Settings has **How to use** to open it again.
+and how to reach it. **Get more** shows it on the plugin's page before it
+is installed, and its page in Settings shows it after; Textus picks the
+reader's language, English otherwise. The manifest's `icon` (an SVG or PNG)
+is drawn beside its name on a tile of its own.
 
 ## Screenshots
 

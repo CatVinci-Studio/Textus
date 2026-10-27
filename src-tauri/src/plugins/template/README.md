@@ -12,7 +12,9 @@ Plugins › Install from file…** and pick it.
 
 ## Use
 
-See [USAGE.md](USAGE.md).
+Say here what it does and how to reach it, in a few lines: Textus shows
+this README on the plugin's page, before it is installed and after. Add
+`README.zh.md` and so on for other languages.
 
 ## Publish a new version
 

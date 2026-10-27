@@ -59,6 +59,12 @@ export const commands = {
 	 *  it is safe: a version's package never changes, so its checksum holds.
 	 */
 	plugin_catalog_cached: () => __TAURI_INVOKE<CatalogEntry_Serialize[] | null>("plugin_catalog_cached"),
+	/**
+	 *  The README of plugin `id` in the catalog last fetched, in `language`
+	 *  where it has one ("zh-Hant", then "zh"), else in English; None when it
+	 *  has none.
+	 */
+	plugin_catalog_readme: (id: string, language: string) => __TAURI_INVOKE<string | null>("plugin_catalog_readme", { id, language }),
 	/**  The skills the catalog last fetched (or kept) lists. */
 	skill_catalog: () => __TAURI_INVOKE<SkillEntry_Serialize[]>("skill_catalog"),
 	/**
@@ -166,6 +172,18 @@ export type CatalogEntry_Deserialize = {
 	 *  any other is left out).
 	 */
 	screenshots?: string[],
+	/**
+	 *  Its README by language code ("en" for README.md), for its page in
+	 *  the market; fetched by `plugin_catalog_readme`.
+	 */
+	readme?: { [key in string]: string },
+	/**  Its icon (SVG or PNG), from the repository's releases. */
+	icon?: string | null,
+	/**  How many times its packages were downloaded, every version's. */
+	installs?: number | null,
+	/**  When its first and latest versions came out (YYYY-MM-DD). */
+	published?: string | null,
+	updated?: string | null,
 };
 
 /**  One plugin in the catalog. */
@@ -183,6 +201,18 @@ export type CatalogEntry_Serialize = {
 	 *  any other is left out).
 	 */
 	screenshots: string[],
+	/**
+	 *  Its README by language code ("en" for README.md), for its page in
+	 *  the market; fetched by `plugin_catalog_readme`.
+	 */
+	readme: { [key in string]: string },
+	/**  Its icon (SVG or PNG), from the repository's releases. */
+	icon: string | null,
+	/**  How many times its packages were downloaded, every version's. */
+	installs: number | null,
+	/**  When its first and latest versions came out (YYYY-MM-DD). */
+	published: string | null,
+	updated: string | null,
 };
 
 /**  One installed plugin, as Settings › Plugins lists it. */

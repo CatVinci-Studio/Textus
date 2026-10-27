@@ -43,9 +43,16 @@ test("nothing comes installed, and the catalog offers the official plugins", asy
   await expect(graph).toContainText("Graph View");
   await expect(graph.locator(".plugin-official")).toHaveText("Official");
   await expect(graph).toContainText("by CatVinci Studio");
-  // No plugin's artwork among Settings' rows, apart from a card's picture.
+  // Each plugin on a tile of its own: its icon, or its name's first letter.
+  const tiles = page.locator(".plugin-get-page .plugin-card .plugin-icon");
+  await expect(tiles).toHaveCount(
+    await page.locator(".plugin-get-page .plugin-card").count(),
+  );
+  // No other artwork among Settings' rows, apart from a card's picture.
   await expect(
-    page.locator(".settings-panel img:not(.plugin-card-shot)"),
+    page.locator(
+      ".settings-panel img:not(.plugin-card-shot, .plugin-icon img)",
+    ),
   ).toHaveCount(0);
 });
 
@@ -61,42 +68,41 @@ test("installing from the list turns the plugin on, behind its permissions", asy
   const dialog = page.locator(".app-dialog");
   await expect(dialog).toContainText("asks to:");
   await dialog.getByRole("button", { name: "Allow" }).click();
-  // Installed, it shows how it is used: its USAGE.md in a tab, a clean
-  // draft, with Settings out of the way.
-  await expect(page.locator(".settings-panel")).toHaveCount(0);
-  const guide = page.locator('[data-active-tab="true"] .ProseMirror');
-  await expect(guide.locator("h1")).toContainText("Tasks");
-  await expect(guide).toContainText("Every task in your folder");
-  const tabs = page.locator(".tab-bar [role=tab]");
-  const count = await tabs.count();
+  // Installed in place: nothing opens, Settings stays, the next can follow.
+  const listed = page.locator('.plugin-card[data-catalog="catvinci.tasks"]');
+  await expect(
+    listed.getByRole("button", { name: "Installed" }),
+  ).toBeDisabled();
+  await expect(page.locator(".plugin-get-page")).toBeVisible();
   await openPluginsPage(page);
   const card = page.locator('.plugin-card[data-plugin="catvinci.tasks"]');
   await expect(card).toBeVisible();
   await expect(card.getByRole("checkbox")).toBeChecked();
   await expect(card.locator(".plugin-official")).toHaveText("Official");
-  // Its page opens the guide again - the tab already open, not another.
+  // Its page has its guide, its README.
   await card.locator(".plugin-card-open").click();
-  await page.getByRole("button", { name: "How to use" }).click();
-  await expect(page.locator(".settings-panel")).toHaveCount(0);
-  await expect(guide.locator("h1")).toContainText("Tasks");
-  await expect(tabs).toHaveCount(count);
+  await expect(page.locator(".plugin-readme")).toContainText("Tasks");
 });
 
-test("the guide comes in the UI's language", async ({ page }) => {
+test("a plugin's page in Get more has its README, in the UI's language", async ({
+  page,
+}) => {
   await openApp(page, { settings: { language: "zh" } });
   await emit(page, "menu-manage-plugins");
   await page.getByRole("button", { name: "获取更多" }).click();
   await page
-    .locator('.plugin-card[data-catalog="catvinci.tasks"]')
-    .getByRole("button", { name: "安装" })
+    .locator('.plugin-card[data-catalog="catvinci.tasks"] .plugin-card-open')
     .click();
+  const own = page.locator('[data-market-page="catvinci.tasks"]');
+  await expect(own.locator(".plugin-page-title")).toHaveText("任务");
+  await expect(own.locator(".plugin-readme")).toContainText("任务");
+  await expect(own).toContainText("读取打开的文件夹中的文件");
+  await own.getByRole("button", { name: "安装" }).click();
   await page
     .locator(".app-dialog")
     .getByRole("button", { name: "允许" })
     .click();
-  await expect(
-    page.locator('[data-active-tab="true"] .ProseMirror h1'),
-  ).toContainText("任务");
+  await expect(own.getByRole("button", { name: "已安装" })).toBeDisabled();
 });
 
 test("Get plugins searches the catalog by name, what it does and who made it", async ({
@@ -159,30 +165,29 @@ test("the list kept from last time shows when a fresh one can't be had", async (
   ).toBeVisible();
 });
 
-test("a pack installs its plugins one after another, each asking for what it needs", async ({
+test("Get more lists the most installed first, or the latest or by name", async ({
   page,
 }) => {
+  await page.addInitScript(() => {
+    (window as unknown as Record<string, unknown>).__devCatalogStats = {
+      "catvinci.kanban": { installs: 900, updated: "2026-10-01" },
+      "catvinci.vim": { installs: 40, updated: "2026-10-25" },
+    };
+  });
   await openApp(page, { settings: { language: "en" } });
   await openGetPlugins(page);
-  const pack = page.locator('.plugin-card[data-pack="research"]');
-  await expect(pack).toContainText("Research");
-  await expect(pack).toContainText("PDF");
-  const button = pack.getByRole("button");
-  await expect(button).toHaveText(/Install all \(\d\)/);
-  await button.click();
-  // Each plugin asks for its permissions; no guide opens in between.
-  const dialog = page.locator(".app-dialog");
-  for (let i = 0; i < 8; i++) {
-    if ((await button.textContent())?.includes("All installed")) break;
-    if (await dialog.isVisible())
-      await dialog
-        .getByRole("button", { name: /Allow|Later/ })
-        .first()
-        .click();
-    await page.waitForTimeout(150);
-  }
-  await expect(button).toHaveText("All installed");
-  await expect(page.locator(".settings-panel")).toBeVisible();
+  const cards = page.locator(".plugin-get-page .plugin-card[data-catalog]");
+  await expect(cards.first()).toHaveAttribute(
+    "data-catalog",
+    "catvinci.kanban",
+  );
+  await expect(cards.first()).toContainText("900 installs");
+  await page.getByRole("combobox", { name: "Sort by" }).click();
+  await page.getByRole("option", { name: "Recently updated" }).click();
+  await expect(cards.first()).toHaveAttribute("data-catalog", "catvinci.vim");
+  await page.getByRole("combobox", { name: "Sort by" }).click();
+  await page.getByRole("option", { name: "Name" }).click();
+  await expect(cards.first()).toContainText("ABC");
 });
 
 test("a card opens the plugin's own page: its settings, what it adds, its permissions", async ({
@@ -232,8 +237,6 @@ test("Quick Notes asks for background mode, and its page says when it is on", as
     "Quick Notes needs “Keep running in the background”",
   );
   await dialog.getByRole("button", { name: "Turn on" }).click();
-  // Its guide opens over Settings closed; back to its page.
-  await expect(page.locator(".settings-panel")).toHaveCount(0);
   await openPluginsPage(page);
   await page
     .locator(

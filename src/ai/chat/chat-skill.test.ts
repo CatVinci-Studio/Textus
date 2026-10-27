@@ -48,8 +48,8 @@ describe("a skill in a reply", () => {
   });
 
   it("is nothing without front matter or instructions", () => {
-    // A plugin's USAGE.md is a guide, not a skill.
-    expect(skillsInReply("```markdown USAGE.md\n# Guide\n```")).toEqual([]);
+    // A plugin's README.md is a guide, not a skill.
+    expect(skillsInReply("```markdown README.md\n# Guide\n```")).toEqual([]);
     expect(skillsInReply("```markdown x.md\n---\nname: x\n---\n\n```")).toEqual(
       [],
     );

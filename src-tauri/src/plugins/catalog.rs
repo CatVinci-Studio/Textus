@@ -25,7 +25,7 @@ const DOWNLOAD_HOSTS: [&str; 3] = [
 const MAX_PACKAGE: u64 = 200 * 1024 * 1024;
 
 /// One plugin in the catalog.
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogEntry {
@@ -42,6 +42,21 @@ pub struct CatalogEntry {
     /// any other is left out).
     #[serde(default)]
     pub screenshots: Vec<String>,
+    /// Its README by language code ("en" for README.md), for its page in
+    /// the market; fetched by `plugin_catalog_readme`.
+    #[serde(default)]
+    pub readme: std::collections::BTreeMap<String, String>,
+    /// Its icon (SVG or PNG), from the repository's releases.
+    #[serde(default)]
+    pub icon: Option<String>,
+    /// How many times its packages were downloaded, every version's.
+    #[serde(default)]
+    pub installs: Option<u64>,
+    /// When its first and latest versions came out (YYYY-MM-DD).
+    #[serde(default)]
+    pub published: Option<String>,
+    #[serde(default)]
+    pub updated: Option<String>,
 }
 
 /// One skill in the catalog, listed beside the plugins in the market.
@@ -128,6 +143,8 @@ fn parse_all(text: &str) -> Result<(Vec<CatalogEntry>, Vec<SkillEntry>), String>
         .filter(|p| super::require_id(&p.id).is_ok() && p.url.starts_with(PACKAGE_PREFIX))
         .map(|mut p| {
             p.screenshots.retain(|url| url.starts_with(PACKAGE_PREFIX));
+            p.readme.retain(|_, url| url.starts_with(PACKAGE_PREFIX));
+            p.icon = p.icon.filter(|url| url.starts_with(PACKAGE_PREFIX));
             p
         })
         .collect();
@@ -262,6 +279,45 @@ async fn download(url: &str, what: &str) -> Result<Vec<u8>, String> {
     Ok(response.bytes().await.map_err(|e| e.to_string())?.to_vec())
 }
 
+/// A README this large is not a README.
+const MAX_README: usize = 512 * 1024;
+
+/// The README of plugin `id` in the catalog last fetched, in `language`
+/// where it has one ("zh-Hant", then "zh"), else in English; None when it
+/// has none.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn plugin_catalog_readme(id: String, language: String) -> Result<Option<String>, String> {
+    let readme = FETCHED
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .iter()
+        .find(|e| e.id == id)
+        .map(|e| e.readme.clone())
+        .unwrap_or_default();
+    let Some(url) = readme_for(&readme, &language) else {
+        return Ok(None);
+    };
+    let bytes = download(&url, &id).await?;
+    if bytes.len() > MAX_README {
+        return Err(format!("{id}'s README is too large to show."));
+    }
+    Ok(Some(String::from_utf8_lossy(&bytes).into_owned()))
+}
+
+/// The README for `language` among `readme`'s: the language itself, its
+/// base ("zh" for "zh-Hant"), then English.
+fn readme_for(
+    readme: &std::collections::BTreeMap<String, String>,
+    language: &str,
+) -> Option<String> {
+    let base = language.split('-').next().unwrap_or(language);
+    [language, base, "en"]
+        .iter()
+        .find_map(|lang| readme.get(*lang))
+        .cloned()
+}
+
 /// The error when a skill of that name exists already; it is never overwritten.
 pub const SKILL_EXISTS: &str = "SKILL_EXISTS";
 
@@ -367,6 +423,34 @@ mod tests {
     use super::*;
 
     #[test]
+    fn a_readme_is_in_the_language_asked_for_its_base_or_english() {
+        let readme: std::collections::BTreeMap<String, String> = [
+            ("en", "en.md"),
+            ("zh", "zh.md"),
+            ("zh-Hant", "hant.md"),
+        ]
+        .into_iter()
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect();
+        assert_eq!(readme_for(&readme, "zh-Hant").as_deref(), Some("hant.md"));
+        assert_eq!(readme_for(&readme, "zh").as_deref(), Some("zh.md"));
+        assert_eq!(readme_for(&readme, "ja").as_deref(), Some("en.md"));
+        assert_eq!(readme_for(&Default::default(), "en"), None);
+    }
+
+    #[test]
+    fn a_plugin_s_readme_and_icon_come_only_from_the_catalog_s_address() {
+        let ok = format!("{PACKAGE_PREFIX}catalog/readme-a.b.en.md");
+        let text = format!(
+            r#"{{"schema": 1, "plugins": [{{"id": "a.b", "version": "0.1.1", "manifest": {{}}, "url": "{PACKAGE_PREFIX}a.b-v0.1.1/a.b-0.1.1.zip", "sha256": "ab", "size": 1, "readme": {{"en": "{ok}", "zh": "https://example.com/x.md"}}, "icon": "https://example.com/i.svg", "installs": 12}}]}}"#
+        );
+        let (plugins, _) = parse_all(&text).unwrap();
+        assert_eq!(plugins[0].readme.keys().collect::<Vec<_>>(), ["en"]);
+        assert_eq!(plugins[0].icon, None);
+        assert_eq!(plugins[0].installs, Some(12));
+    }
+
+    #[test]
     fn the_catalog_lists_skills_beside_plugins_and_an_older_one_none() {
         let url = format!("{PACKAGE_PREFIX}catalog/skill-press-release.md");
         let text = format!(
@@ -401,7 +485,7 @@ mod tests {
             url: format!("{PACKAGE_PREFIX}catvinci.tasks-v1.0.0/catvinci.tasks-1.0.0.zip"),
             sha256: hex(&Sha256::digest(bytes)),
             size: bytes.len() as u64,
-            screenshots: Vec::new(),
+            ..Default::default()
         }
     }
 
