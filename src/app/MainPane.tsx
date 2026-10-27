@@ -91,6 +91,25 @@ export function MainPane({
   const paneOf = (id: string) =>
     split?.panes[0] === id ? "first" : split?.panes[1] === id ? "second" : null;
   const byId = new Map(tabs.map((tab) => [tab.id, tab]));
+  // The saved tabs close; one with unsaved changes stays, its dot showing,
+  // rather than a prompt for each.
+  const closeSaved = (list: DocTab[]) => {
+    for (const tab of list) if (!tabIsDirty(tab)) onClose(tab.id);
+  };
+  const closeManyItems = (list: DocTab[], id: string) => {
+    const at = list.findIndex((tab) => tab.id === id);
+    const groups: [string, DocTab[]][] = [
+      [t.closeOtherTabs, list.filter((tab) => tab.id !== id)],
+      [t.closeTabsToLeft, list.slice(0, at)],
+      [t.closeTabsToRight, list.slice(at + 1)],
+    ];
+    return groups
+      .filter(([, closing]) => closing.length > 0)
+      .map(([label, closing]) => ({
+        label,
+        onSelect: () => closeSaved(closing),
+      }));
+  };
   const tabBar = (
     list: DocTab[],
     active: string,
@@ -151,6 +170,7 @@ export function MainPane({
           : []),
         "separator",
         { label: t.menuCloseTab, onSelect: () => onClose(id) },
+        ...closeManyItems(list, id),
         ...pluginTabItems(byId.get(id)?.path ?? null),
       ]}
       labels={{
