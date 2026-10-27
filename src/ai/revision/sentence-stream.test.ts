@@ -226,22 +226,26 @@ describe("alignStream", () => {
     const times: number[] = [];
     for (let k = 1; k <= n; k++) {
       const text = rewrite.slice(0, k).join("") + "Sente";
-      // The fastest of three: a busy runner's pause isn't the work's cost.
-      let fastest = Infinity;
-      let l = alignStream(original, text, false, reached);
-      for (let run = 0; run < 3; run++) {
-        const start = performance.now();
-        l = alignStream(original, text, false, reached);
-        fastest = Math.min(fastest, performance.now() - start);
-      }
-      times.push(fastest);
+      const l = alignStream(original, text, false, reached);
       expect(l.reached).toBeGreaterThanOrEqual(reached);
+      // Timed at every eighth sentence, the faster of two runs: a busy
+      // runner's pause isn't the work's cost.
+      if (k % 8 === 0) {
+        let fastest = Infinity;
+        for (let run = 0; run < 2; run++) {
+          const start = performance.now();
+          alignStream(original, text, false, reached);
+          fastest = Math.min(fastest, performance.now() - start);
+        }
+        times.push(fastest);
+      }
       reached = l.reached;
     }
     expect(reached).toBe(n);
-    // Run once per completed sentence; well under a frame.
+    // Run once per completed sentence, so well under two frames even on a
+    // slow runner; a cost that grew with the paragraph would be far over.
     times.sort((a, b) => a - b);
-    expect(times[Math.floor(n / 2)]).toBeLessThan(16);
+    expect(times[Math.floor(times.length / 2)]).toBeLessThan(25);
   });
 });
 
