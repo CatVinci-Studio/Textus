@@ -474,3 +474,32 @@ test("``` and $$ typed in a list item start a code block and a maths block in it
   await expect(page.locator(`${editor} li .math-block`)).toHaveCount(1);
   expect(await sourceOf(page)).toBe("* item\n* $$\n  y\n  $$");
 });
+
+test("Backspace right after a link takes one character of its source, not the link", async ({
+  page,
+}) => {
+  await open(page, "see [Textus](https://a.com) end");
+  await expect(page.locator(`${editor} a`)).toHaveCount(1);
+  // The caret where ProseMirror puts it just after the link.
+  await page.evaluate((sel) => {
+    const pm = document.querySelector(sel) as HTMLElement & {
+      pmViewDesc: {
+        node: { firstChild: { child: (i: number) => { nodeSize: number } } };
+        domFromPos: (
+          pos: number,
+          side: number,
+        ) => { node: Node; offset: number };
+      };
+    };
+    const paragraph = pm.pmViewDesc.node.firstChild;
+    const after = 1 + paragraph.child(0).nodeSize + paragraph.child(1).nodeSize;
+    const { node, offset } = pm.pmViewDesc.domFromPos(after, 0);
+    pm.focus();
+    getSelection()!.collapse(node, offset);
+  }, editor);
+  await selectionRead(page);
+  await page.keyboard.press("Backspace");
+  await expect(page.locator(editor)).toContainText(
+    "[Textus](https://a.com end",
+  );
+});
