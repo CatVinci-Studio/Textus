@@ -143,8 +143,9 @@ export interface ContextMenuOptions {
    *  among the image's own. */
   pictureAiItems?: ContextMenuItem[];
   copyOrCut: (cut: boolean) => void;
-  copyAsMarkdown: () => void;
+  copyAsPlainText: () => void;
   paste: () => void;
+  pasteAsPlainText: () => void;
   selectAll: () => void;
   toggleFindReplace: () => void;
   openTableDialog: () => void;
@@ -164,8 +165,9 @@ export function buildContextMenuItems(
   const clipboardItems: MenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
     { label: t.copy, onSelect: () => options.copyOrCut(false) },
-    { label: t.copyAsMarkdown, onSelect: options.copyAsMarkdown },
+    { label: t.copyAsPlainText, onSelect: options.copyAsPlainText },
     { label: t.paste, onSelect: options.paste },
+    { label: t.pasteAsPlainText, onSelect: options.pasteAsPlainText },
     ...withSeparator(contributedMenuItems({ selectedText: selectedText(run) })),
     ...generalItems(options),
   ];
@@ -194,7 +196,7 @@ export function buildContextMenuItems(
  * offers where the caret is, less what the toolbar already carries there -
  * copy and paste always, the insert and delete buttons in a table, the
  * width presets on an image, lists, quote and code block elsewhere - and
- * Copy as Markdown, which the toolbar lacks. The
+ * Copy as Plain Text, which the toolbar lacks. The
  * caller leaves Ask AI out of aiItems: the toolbar has its own button.
  */
 export function buildPhoneMoreItems(
@@ -202,11 +204,11 @@ export function buildPhoneMoreItems(
   options: ContextMenuOptions,
 ): MenuEntry[] {
   const { t, imagePos } = options;
-  // The toolbar has Copy, but not the Markdown source: the phone has no
-  // Edit menu to offer it.
+  // The toolbar has Copy, but not the plain text: the phone has no Edit
+  // menu to offer it.
   const clipboard: MenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
-    { label: t.copyAsMarkdown, onSelect: options.copyAsMarkdown },
+    { label: t.copyAsPlainText, onSelect: options.copyAsPlainText },
   ];
   if (inTable(run)) {
     return [
