@@ -1,5 +1,6 @@
+import { schemaCtx, serializerCtx } from "@milkdown/kit/core";
 import { Plugin } from "@milkdown/kit/prose/state";
-import type { Slice } from "@milkdown/kit/prose/model";
+import type { Fragment, Slice } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 
 /** The text a copy from inside one code block, formula or inline code
@@ -15,18 +16,38 @@ export function codeTextOf(slice: Slice): string | null {
   return null;
 }
 
+/** One run of plain text and nothing else, which copies as it is: as
+ *  Markdown its * and _ would come out escaped. */
+function isBareText(content: Fragment): boolean {
+  while (content.childCount === 1) {
+    const node = content.firstChild!;
+    if (node.isText) return true;
+    content = node.content;
+  }
+  return false;
+}
+
 /**
- * A copy's plain text is its Markdown source, which milkdown's clipboard
- * plugin writes: Markdown apps get the marks, and apps that take
- * formatting read the HTML instead. Code copied from inside a code block is
- * the code alone (codeTextOf). ProseMirror takes the first serializer
- * giving text, so this comes before milkdown's clipboard plugin.
+ * A copy's plain text is its Markdown source: Markdown apps get the marks,
+ * and apps that take formatting read the HTML instead. Code copied from
+ * inside a code block is the code alone (codeTextOf). Registered before
+ * milkdown's clipboard plugin, whose serializer this replaces: it ended
+ * the text with a line break.
  */
-export const codeCopyTextPlugin = $prose(
-  () =>
+export const copyTextPlugin = $prose(
+  (ctx) =>
     new Plugin({
       props: {
-        clipboardTextSerializer: (slice) => codeTextOf(slice) ?? "",
+        clipboardTextSerializer: (slice) => {
+          const code = codeTextOf(slice);
+          if (code !== null) return code;
+          if (isBareText(slice.content))
+            return slice.content.textBetween(0, slice.content.size, "\n\n");
+          const doc = ctx
+            .get(schemaCtx)
+            .topNodeType.createAndFill(undefined, slice.content);
+          return doc ? ctx.get(serializerCtx)(doc).trimEnd() : "";
+        },
       },
     }),
 );

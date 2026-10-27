@@ -276,9 +276,7 @@ test("a copy's plain text is its Markdown source, and code copied inside a code 
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.press("ControlOrMeta+c");
   const clip = await clipboardNow(page);
-  expect(clip["text/plain"].trimEnd()).toBe(
-    LINKED + "\n\n```js\nlet x = 1;\n```",
-  );
+  expect(clip["text/plain"]).toBe(LINKED + "\n\n```js\nlet x = 1;\n```");
   // The formatting travels in the HTML, for apps that take it.
   expect(clip["text/html"]).toContain('href="https://textus.catvinci.com');
 
@@ -308,7 +306,7 @@ test("Copy as Plain Text gives the words as they read; an old copy setting chang
   await first.click();
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.press("ControlOrMeta+c");
-  expect((await clipboardNow(page))["text/plain"].trimEnd()).toBe(LINKED);
+  expect((await clipboardNow(page))["text/plain"]).toBe(LINKED);
   await first.click({ button: "right" });
   await page
     .locator(".context-menu-item")
@@ -340,7 +338,7 @@ test("the context menu's Copy and Paste keep the formatting, as Cmd+C and Cmd+V 
   await expect
     .poll(() =>
       clipboardNow(page)
-        .then((c) => c["text/plain"].trimEnd())
+        .then((c) => c["text/plain"])
         .catch(() => ""),
     )
     .toBe(LINKED + "\n\nEnd.");
