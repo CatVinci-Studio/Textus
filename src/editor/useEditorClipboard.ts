@@ -1,6 +1,5 @@
 import { useCallback } from "react";
-import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
-import type { Ctx } from "@milkdown/kit/ctx";
+import { editorViewCtx } from "@milkdown/kit/core";
 import { Slice } from "@milkdown/kit/prose/model";
 import { AllSelection } from "@milkdown/kit/prose/state";
 import type { EditorRunner } from "./useEditorRunner";
@@ -49,34 +48,19 @@ async function clipboardData(): Promise<DataTransfer | null> {
   return data.items.length > 0 ? data : null;
 }
 
-/** The selection as Markdown source; its bare text if that won't
- *  serialize. */
-function selectionMarkdown(ctx: Ctx): string {
-  const { state } = ctx.get(editorViewCtx);
-  const { from, to } = state.selection;
-  try {
-    return ctx.get(serializerCtx)(state.doc.cut(from, to)).trimEnd();
-  } catch {
-    return state.doc.textBetween(from, to, "\n");
-  }
-}
-
 export function useEditorClipboard(run: EditorRunner): EditorClipboard {
   const copyOrCut = useCallback(
     (cut: boolean) => {
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
         const { state } = view;
-        // The history keeps the Markdown source, as for Cmd+C
-        // (clipboard/history-plugin.ts).
-        const markdown = selectionMarkdown(ctx);
-        // The clipboard gets what Cmd+C puts there: the formatted HTML, and
-        // the Markdown source as plain text (copy-text-plugin.ts).
+        // What Cmd+C puts there: the formatted HTML, and the Markdown
+        // source as plain text (copy-text-plugin.ts).
         const { dom, text } = view.serializeForClipboard(
           state.selection.content(),
         );
         void (async () => {
-          if (markdown) {
+          if (text) {
             try {
               await navigator.clipboard.write([
                 new ClipboardItem({
@@ -90,7 +74,7 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
             }
             // navigator.clipboard bypasses the DOM copy event the history's
             // document-level capture listens on - record explicitly.
-            recordClipboardEntry(markdown);
+            recordClipboardEntry(text);
           }
           if (cut) view.dispatch(view.state.tr.deleteSelection());
           view.focus();
