@@ -2,6 +2,7 @@ import { Plugin, type EditorState } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import { fenceLineToBlock } from "../markdown/fence-line";
 import {
   caretAt,
   findRunClose,
@@ -251,11 +252,13 @@ export const mathAutopairPlugin = $prose(
             $from.parentOffset === parent.content.size &&
             isMathFenceLine(parent)
           ) {
-            const paragraphPos = $from.before($from.depth);
-            const tr = state.tr
-              .delete(paragraphPos + 1, paragraphPos + 1 + parent.content.size)
-              .setNodeMarkup(paragraphPos, state.schema.nodes.math_block);
-            view.dispatch(caretAt(tr, paragraphPos + 1));
+            view.dispatch(
+              fenceLineToBlock(
+                state,
+                $from.before(),
+                state.schema.nodes.math_block,
+              ),
+            );
             event.preventDefault();
             return true;
           }
@@ -285,12 +288,13 @@ export const mathAutopairPlugin = $prose(
           // a longer line can't hijack Enter.
           if (!isMathFenceLine(paragraph)) return false;
 
-          const paragraphPos = $from.before(paragraphDepth);
-          const mathBlock = state.schema.nodes.math_block;
-          const tr = state.tr
-            .delete(paragraphPos + 1, paragraphPos + 1 + paragraph.content.size)
-            .setNodeMarkup(paragraphPos, mathBlock);
-          view.dispatch(caretAt(tr, paragraphPos + 1));
+          view.dispatch(
+            fenceLineToBlock(
+              state,
+              $from.before(paragraphDepth),
+              state.schema.nodes.math_block,
+            ),
+          );
           event.preventDefault();
           return true;
         },

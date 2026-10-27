@@ -359,3 +359,31 @@ test("~~ and == stay as typed until their closing pair makes a strikethrough or 
   await expect(page.locator(`${editor} mark`)).toHaveText("kept");
   expect(await sourceOf(page)).toBe("~~gone~~ and ==kept== ok");
 });
+
+test("``` and $$ typed in a list item start a code block and a maths block in it", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("- item", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("```js", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("x", { delay: 20 });
+  await expect(page.locator(`${editor} li pre`)).toHaveCount(1);
+  expect(await sourceOf(page)).toBe("* item\n* ```js\n  x\n  ```");
+
+  await open(page);
+  await page.keyboard.type("- item", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("$$", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("y", { delay: 20 });
+  await expect(
+    page
+      .locator(
+        `${editor} li .math-block, ${editor} li [data-type="math_block"]`,
+      )
+      .first(),
+  ).toBeAttached();
+  expect(await sourceOf(page)).toBe("* item\n* $$\n  y\n  $$");
+});
