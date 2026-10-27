@@ -6,13 +6,9 @@ import {
   type ResolvedPos,
 } from "@milkdown/kit/prose/model";
 
-export function inTableCell($pos: ResolvedPos): boolean {
-  for (let d = $pos.depth; d > 0; d--) {
-    const role = $pos.node(d).type.spec.tableRole as string | undefined;
-    if (role === "cell" || role === "header_cell") return true;
-  }
-  return false;
-}
+import { inTableCell } from "../tables/table-pos";
+
+export { inTableCell };
 
 /**
  * Lines pasted into a table cell joined into one paragraph, formatting kept:
