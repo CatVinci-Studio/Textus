@@ -359,3 +359,22 @@ test("~~ and == stay as typed until their closing pair makes a strikethrough or 
   await expect(page.locator(`${editor} mark`)).toHaveText("kept");
   expect(await sourceOf(page)).toBe("~~gone~~ and ==kept== ok");
 });
+
+test("``` typed on a line of its own reads as a fence, not as code", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("```", { delay: 20 });
+  const span = page.locator(`${editor} .md-code-span`);
+  await expect(span).toHaveClass(/is-fence/);
+  const look = await span.evaluate(
+    (el) => getComputedStyle(el).backgroundColor,
+  );
+  expect(look).toBe("rgba(0, 0, 0, 0)");
+  await open(page);
+  await page.keyboard.type("a `x`", { delay: 20 });
+  await expect(page.locator(`${editor} .md-code-span`)).toHaveCount(1);
+  await expect(page.locator(`${editor} .md-code-span`)).not.toHaveClass(
+    /is-fence/,
+  );
+});
