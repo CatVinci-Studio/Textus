@@ -24,6 +24,10 @@ interface Request {
   items: QuickPickItem[];
   placeholder: string;
   multiple: boolean;
+  /** The text in the box to start with; what follows it filters too. */
+  query: string;
+  /** Enter on text that matches nothing resolves { typed: text }. */
+  typed: boolean;
   resolve: (value: unknown) => void;
 }
 
@@ -40,7 +44,7 @@ function publish() {
 export function showQuickPick(
   items: QuickPickItem[],
   placeholder: string,
-  options: { multiple?: boolean } = {},
+  options: { multiple?: boolean; query?: string; typed?: boolean } = {},
 ): Promise<unknown> {
   return new Promise((resolve) => {
     queue = [
@@ -50,6 +54,8 @@ export function showQuickPick(
         items,
         placeholder,
         multiple: options.multiple === true,
+        query: options.query ?? "",
+        typed: options.typed === true,
         resolve,
       },
     ];
@@ -112,16 +118,21 @@ function QuickPick({
   emptyLabel: string;
   okLabel: string;
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(request.query);
   const [index, setIndex] = useState(0);
   const [ticked, setTicked] = useState(
     () => new Set(request.items.filter((i) => i.picked)),
   );
   const listRef = useRef<HTMLUListElement>(null);
-  const shown = useMemo(
-    () => request.items.filter((item) => quickPickMatches(item, query)),
-    [request.items, query],
-  );
+  const shown = useMemo(() => {
+    // ":sa" finds Save as well as ":saveas".
+    const rest = query.startsWith(request.query)
+      ? query.slice(request.query.length)
+      : query;
+    return request.items.filter(
+      (item) => quickPickMatches(item, query) || quickPickMatches(item, rest),
+    );
+  }, [request.items, request.query, query]);
   const dialog = useModalDialog(
     () => answer(request, null),
     true,
@@ -184,7 +195,9 @@ function QuickPick({
             } else if (e.key === "Enter") {
               e.preventDefault();
               if (request.multiple) done();
-              else choose(shown[index]);
+              else if (shown[index]) choose(shown[index]);
+              else if (request.typed && query.trim())
+                answer(request, { typed: query.trim() });
             } else if (e.key === " " && request.multiple && !query) {
               e.preventDefault();
               choose(shown[index]);

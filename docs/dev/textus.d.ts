@@ -204,10 +204,19 @@ declare global {
         placeholder?: string;
       }): Promise<string | null>;
       /** The picked item's `value` (its label without one), or null. With
-       *  `multiple`, the picked values, or null. */
+       *  `multiple`, the picked values, or null. `value` is the text in the
+       *  box to start with. With `commands`, the items come first among the
+       *  command palette's: one of the palette's runs and gives null, and
+       *  Enter on text nothing matches gives `{ typed: text }` (Textus
+       *  1.3.0-beta.3). */
       pick(
         items: (string | PickItem)[],
-        options?: { placeholder?: string; multiple?: boolean },
+        options?: {
+          placeholder?: string;
+          multiple?: boolean;
+          value?: string;
+          commands?: boolean;
+        },
       ): Promise<unknown>;
       /** A small form: the values by key, or null when cancelled. */
       form(options: {
