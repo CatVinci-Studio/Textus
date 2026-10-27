@@ -14,10 +14,10 @@
     display: none;
   }
 
-  /* A code block's copy button and language picker: 44pt targets, and 16px
-     text, below which iOS zooms into a focused control. */
+  /* A code block's copy and select buttons and language picker: 44pt
+     targets, and 16px text, below which iOS zooms into a focused control. */
   :root[data-window-chrome="mobile"]
-    :is(.code-block-language-select, .code-block-copy) {
+    :is(.code-block-language-select, .code-block-copy, .code-block-select-all) {
     min-height: 44px;
     padding: 0 12px;
     font-size: 16px;

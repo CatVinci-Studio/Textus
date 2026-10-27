@@ -29,6 +29,8 @@ pub struct ProviderCatalogEntry {
     pub agent_default_model: Option<&'static str>,
     /// True for local servers (Ollama) that work without a key.
     pub key_optional: bool,
+    /// Its "oauth" sign-in isn't offered to other apps; Settings says so.
+    pub oauth_unofficial: bool,
     /// Whether this provider's API accepts image parts at all, which gates chat
     /// attachments. Provider-level on purpose: false only where the API rejects the
     /// request shape; a model that can't see says so in its own error.
@@ -51,6 +53,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("gpt-6-luna"),
         agent_default_model: Some("gpt-6.1-sol"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["gpt-6.1-sol", "gpt-6-luna"],
@@ -66,6 +69,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         // preserved-thinking check always accepts, so it can't 400.
         agent_default_model: Some("claude-sonnet-5-5"),
         key_optional: false,
+        oauth_unofficial: true,
         supports_vision: true,
         models_listable: true,
         known_models: &["claude-sonnet-5-5", "claude-haiku-5-5"],
@@ -79,6 +83,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("gemini-3.5-flash-lite"),
         agent_default_model: Some("gemini-3.8-flash"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         // Gemini's OpenAI compatibility API now implements GET /models with
         // the standard OpenAI list shape, so the generic model fetch works.
@@ -94,6 +99,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("deepseek-flash"),
         agent_default_model: Some("deepseek-v4-pro"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: false,
         models_listable: true,
         known_models: &["deepseek-v4-pro", "deepseek-flash"],
@@ -107,6 +113,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("grok-4.3"),
         agent_default_model: Some("grok-4.7"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["grok-4.7", "grok-4.3"],
@@ -120,6 +127,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("mistral-small-latest"),
         agent_default_model: Some("mistral-large-latest"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["mistral-large-latest", "mistral-small-latest"],
@@ -133,6 +141,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("openai/gpt-oss-20b"),
         agent_default_model: Some("openai/gpt-oss-120b"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["openai/gpt-oss-120b", "openai/gpt-oss-20b"],
@@ -146,6 +155,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("openrouter/free"),
         agent_default_model: Some("openrouter/auto"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         // The one third-party catalog with a public /models list, still seeded
         // for the instant render before that request resolves.
@@ -161,6 +171,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("kimi-k2.6"),
         agent_default_model: Some("kimi-k3"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["kimi-k3", "kimi-k2.6"],
@@ -174,6 +185,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("glm-4.7-flash"),
         agent_default_model: Some("glm-5.3"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["glm-5.3", "glm-4.7-flash"],
@@ -187,6 +199,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("qwen3.8-flash"),
         agent_default_model: Some("qwen3.7-plus"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &["qwen3.7-plus", "qwen3.8-flash"],
@@ -204,6 +217,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("doubao-seed-2-1-turbo-260628"),
         agent_default_model: Some("doubao-seed-2-1-pro-260628"),
         key_optional: false,
+        oauth_unofficial: false,
         // Every current Seed model reads images.
         supports_vision: true,
         models_listable: true,
@@ -226,6 +240,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("MiniMax-M3.1-Flash"),
         agent_default_model: Some("MiniMax-M3"),
         key_optional: false,
+        oauth_unofficial: false,
         // Its Chat Completions takes text only.
         supports_vision: false,
         models_listable: true,
@@ -240,6 +255,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: Some("MiniMax-M3.1-Flash"),
         agent_default_model: Some("MiniMax-M3"),
         key_optional: false,
+        oauth_unofficial: false,
         supports_vision: false,
         models_listable: true,
         known_models: &["MiniMax-M3", "MiniMax-M3.1-Flash"],
@@ -253,6 +269,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: None,
         agent_default_model: None,
         key_optional: true,
+        oauth_unofficial: false,
         supports_vision: true,
         // Whatever's installed locally: no fixed seed list, but the local
         // /v1/models route works.
@@ -268,6 +285,7 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         default_model: None,
         agent_default_model: None,
         key_optional: true,
+        oauth_unofficial: false,
         supports_vision: true,
         models_listable: true,
         known_models: &[],

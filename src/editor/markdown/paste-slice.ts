@@ -5,7 +5,7 @@ import {
   type ResolvedPos,
 } from "@milkdown/kit/prose/model";
 
-function inTableCell($pos: ResolvedPos): boolean {
+export function inTableCell($pos: ResolvedPos): boolean {
   for (let d = $pos.depth; d > 0; d--) {
     const role = $pos.node(d).type.spec.tableRole as string | undefined;
     if (role === "cell" || role === "header_cell") return true;

@@ -25,7 +25,8 @@ export type NativeMenuId =
   | "close-window"
   | "quit"
   | "find-replace"
-  | "copy-as-markdown"
+  | "copy-as-plain-text"
+  | "paste-as-plain-text"
   | "toggle-source-mode"
   | "toggle-typewriter-mode"
   | "track-changes"
@@ -300,8 +301,13 @@ export function buildAppMenu(
         "separator",
         { label: t.cut, accel: "mod+x", action: { local: "cut" } },
         { label: t.copy, accel: "mod+c", action: { local: "copy" } },
-        { label: t.copyAsMarkdown, action: { native: "copy-as-markdown" } },
+        { label: t.copyAsPlainText, action: { native: "copy-as-plain-text" } },
         { label: t.paste, accel: "mod+v", action: { local: "paste" } },
+        {
+          label: t.pasteAsPlainText,
+          accel: "mod+shift+v",
+          action: { native: "paste-as-plain-text" },
+        },
         { label: t.selectAll, accel: "mod+a", action: { local: "select-all" } },
         "separator",
         {

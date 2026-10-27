@@ -153,10 +153,16 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-split-right", () => splitEditor("row")),
       listenToThisWindow("menu-split-down", () => splitEditor("column")),
       listenToThisWindow("menu-close-split", () => closeSplit()),
+      // Edit > Copy and Paste as Plain Text run in the editor on screen.
       listenToThisWindow("menu-select-all", selectAllInFocus),
-      listenToThisWindow("menu-copy-as-markdown", () =>
+      listenToThisWindow("menu-copy-as-plain-text", () =>
         window.dispatchEvent(
-          new CustomEvent(EDIT_ACTION_EVENT, { detail: "copy-as-markdown" }),
+          new CustomEvent(EDIT_ACTION_EVENT, { detail: "copy-as-plain-text" }),
+        ),
+      ),
+      listenToThisWindow("menu-paste-as-plain-text", () =>
+        window.dispatchEvent(
+          new CustomEvent(EDIT_ACTION_EVENT, { detail: "paste-as-plain-text" }),
         ),
       ),
       listenToThisWindow("menu-find-replace", () =>

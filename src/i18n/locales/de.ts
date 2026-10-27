@@ -120,6 +120,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   diagramViewerHint:
     "Scrollen oder Zwei-Finger-Zoom · ziehen zum Verschieben · Doppelklick zum Einpassen",
   codeBlockLanguage: "Sprache des Codes",
+  codeBlockLanguageSearch: "Sprache suchen",
   announceAiWriting: `${AI_NAME} schreibt…`,
   announceAiDone: `${AI_NAME} ist fertig.`,
   announceChangesProposed: {
@@ -606,6 +607,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   accountNotConnected: "Nicht verbunden",
   accountConnectedAs: "Verbunden",
   signInTemplate: "Mit {name} anmelden",
+  signInExperimental: "Experimentell – mit Vorsicht verwenden.",
   logoutButton: "Abmelden",
   loggingIn: "Warte auf die Anmeldung im Browser…",
   loginLinkHint:
@@ -741,7 +743,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatSelectedPicture: "Bild ausgewählt",
   cut: "Ausschneiden",
   copy: "Kopieren",
-  copyAsMarkdown: "Als Markdown kopieren",
+  copyAsPlainText: "Als reinen Text kopieren",
+  pasteAsPlainText: "Als reinen Text einfügen",
   paste: "Einfügen",
   selectAll: "Alles auswählen",
   findReplace: "Suchen & Ersetzen",

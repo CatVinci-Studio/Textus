@@ -6,6 +6,7 @@ import {
 } from "@milkdown/kit/preset/commonmark";
 import { undoCommand, redoCommand } from "@milkdown/kit/plugin/history";
 import type { EditorRunner } from "../editor/useEditorRunner";
+import type { EditorClipboard } from "../editor/useEditorClipboard";
 import {
   deleteImage,
   insertHeading,
@@ -48,6 +49,17 @@ import {
   type TourAi,
 } from "../utils/events";
 
+/** The Edit menu's clipboard items, as the right-click menu runs them. */
+const CLIPBOARD_ACTIONS: Record<string, (clipboard: EditorClipboard) => void> =
+  {
+    cut: (c) => c.copyOrCut(true),
+    copy: (c) => c.copyOrCut(false),
+    "copy-as-plain-text": (c) => c.copyAsPlainText(),
+    paste: (c) => c.paste(),
+    "paste-as-plain-text": (c) => c.pasteAsPlainText(),
+    "select-all": (c) => c.selectAll(),
+  };
+
 /** The window events one tab's editor answers: menu commands, shortcuts,
  *  the iPhone keyboard toolbar and the sidebar panels. */
 export function useEditorWindowEvents({
@@ -58,11 +70,7 @@ export function useEditorWindowEvents({
   triggerGrammarCheck,
   toggleAgentConversation,
   findReplace,
-  insertText,
-  copyOrCut,
-  copyAsMarkdown,
-  paste,
-  selectAll,
+  clipboard,
   openTableDialog,
   setMenu,
   conversation,
@@ -77,11 +85,7 @@ export function useEditorWindowEvents({
   triggerGrammarCheck: () => void;
   toggleAgentConversation: () => void;
   findReplace: FindReplace;
-  insertText: (text: string) => void;
-  copyOrCut: (cut: boolean) => void;
-  copyAsMarkdown: () => void;
-  paste: () => void;
-  selectAll: () => void;
+  clipboard: EditorClipboard;
   openTableDialog: () => void;
   setMenu: (menu: EditorMenuState) => void;
   conversation: AgentConversation;
@@ -131,7 +135,7 @@ export function useEditorWindowEvents({
   useWindowEvent(INSERT_CLIPBOARD_TEXT_EVENT, (e) => {
     if (!isOnScreen()) return;
     const text = (e as CustomEvent<string>).detail;
-    if (typeof text === "string" && text) insertText(text);
+    if (typeof text === "string" && text) clipboard.insertText(text);
   });
 
   // Native Format menu clicks and the heading shortcuts ("paragraph" for
@@ -237,21 +241,8 @@ export function useEditorWindowEvents({
       case "redo":
         runCommand(run, redoCommand.key);
         break;
-      case "cut":
-        copyOrCut(true);
-        break;
-      case "copy":
-        copyOrCut(false);
-        break;
-      case "copy-as-markdown":
-        copyAsMarkdown();
-        break;
-      case "paste":
-        paste();
-        break;
-      case "select-all":
-        selectAll();
-        break;
+      default:
+        CLIPBOARD_ACTIONS[(e as CustomEvent<string>).detail]?.(clipboard);
     }
   });
 

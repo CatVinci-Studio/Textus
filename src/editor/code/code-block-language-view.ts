@@ -1,9 +1,11 @@
 import { $view } from "@milkdown/kit/utils";
 import { codeBlockSchema } from "@milkdown/kit/preset/commonmark";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import { TextSelection } from "@milkdown/kit/prose/state";
 import type { Decoration } from "@milkdown/kit/prose/view";
 import { recordClipboardEntry } from "../../clipboard/history";
 import { LINE_NUMBERS_SPEC } from "./code-line-numbers-plugin";
+import { mountLanguagePicker } from "./code-language-picker";
 import { fitGutter } from "./gutter-fit";
 
 // A common subset, so the menu still fits on screen.
@@ -49,14 +51,17 @@ function lineCount(node: ProseNode): number {
 
 /**
  * Wraps the code block's own <pre><code> (still the contentDOM) with a
- * header holding a copy button and a language picker, and with line numbers
- * on, a gutter inside the <pre>.
+ * header at its top right holding the language picker and buttons that
+ * copy and select the code, and with line numbers on, a gutter inside the
+ * <pre>.
  */
 export function createCodeBlockView(
   labels: () => {
     copy: string;
     copied: string;
+    selectAll: string;
     language: string;
+    languageSearch: string;
   },
 ) {
   return $view(
@@ -71,6 +76,11 @@ export function createCodeBlockView(
       const header = document.createElement("div");
       header.className = "code-block-header";
       header.contentEditable = "false";
+      const actions = document.createElement("div");
+      actions.className = "code-block-actions";
+      const picker = document.createElement("div");
+      picker.className = "code-block-language";
+      header.append(actions);
 
       const copy = document.createElement("button");
       copy.type = "button";
@@ -103,45 +113,57 @@ export function createCodeBlockView(
         );
       });
 
-      const select = document.createElement("select");
-      select.className = "code-block-language-select";
-      select.setAttribute("aria-label", labels().language);
-      for (const lang of LANGUAGES) {
-        const opt = document.createElement("option");
-        opt.value = lang;
-        opt.textContent = lang === "" ? "plain text" : lang;
-        select.appendChild(opt);
-      }
-
-      function syncSelectValue(currentNode: ProseNode) {
-        const lang = (currentNode.attrs.language as string) ?? "";
-        // A fence's own spelling outside the list gets an option of its own;
-        // "plain text" would mislabel it and rewrite its fence on a pick.
-        if (lang && !Array.from(select.options).some((o) => o.value === lang)) {
-          const opt = document.createElement("option");
-          opt.value = lang;
-          opt.textContent = lang;
-          select.appendChild(opt);
-        }
-        select.value = lang;
-      }
-      syncSelectValue(node);
-
-      select.addEventListener("mousedown", (e) => e.stopPropagation());
-      select.addEventListener("change", () => {
+      const selectAll = document.createElement("button");
+      selectAll.type = "button";
+      selectAll.className = "code-block-select-all";
+      selectAll.textContent = labels().selectAll;
+      selectAll.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      selectAll.addEventListener("click", () => {
         const pos = getPos();
         if (pos == null) return;
-        // Only the language: the fence's meta (` title="a.js"`) stays.
-        const tr = view.state.tr.setNodeAttribute(
-          pos,
-          "language",
-          select.value,
+        const { tr } = view.state;
+        view.dispatch(
+          tr.setSelection(
+            TextSelection.create(tr.doc, pos + 1, pos + node.nodeSize - 1),
+          ),
         );
-        view.dispatch(tr);
         view.focus();
       });
+      actions.append(picker, copy, selectAll);
 
-      header.append(copy, select);
+      // Mounted on first hover or focus: a long document has many blocks.
+      let languagePicker: ReturnType<typeof mountLanguagePicker> | null = null;
+      let shownLanguage: string | null = null;
+      function syncPicker() {
+        const value = (node.attrs.language as string) ?? "";
+        if (!languagePicker || value === shownLanguage) return;
+        shownLanguage = value;
+        languagePicker.render({
+          value,
+          languages: LANGUAGES,
+          label: labels().language,
+          searchLabel: labels().languageSearch,
+          onOpenChange: (open) =>
+            wrapper.classList.toggle("is-picking-language", open),
+          onChange: (language) => {
+            const pos = getPos();
+            if (pos == null) return;
+            // Only the language: the fence's meta (` title="a.js"`) stays.
+            view.dispatch(
+              view.state.tr.setNodeAttribute(pos, "language", language),
+            );
+            view.focus();
+          },
+        });
+      }
+      const showPicker = () => {
+        if (languagePicker) return;
+        languagePicker = mountLanguagePicker(picker);
+        syncPicker();
+      };
 
       const pre = document.createElement("pre");
       const code = document.createElement("code");
@@ -194,6 +216,8 @@ export function createCodeBlockView(
 
       wrapper.appendChild(header);
       wrapper.appendChild(pre);
+      wrapper.addEventListener("pointerenter", showPicker);
+      wrapper.addEventListener("focusin", showPicker);
 
       return {
         dom: wrapper,
@@ -201,10 +225,12 @@ export function createCodeBlockView(
         update(updatedNode, updatedDecorations) {
           if (updatedNode.type !== node.type) return false;
           node = updatedNode;
-          syncSelectValue(updatedNode);
+          syncPicker();
           syncGutter(updatedNode, updatedDecorations);
           return true;
         },
+        // Keys on the header's buttons aren't the editor's.
+        stopEvent: (event) => header.contains(event.target as Node),
         // The header's label and the gutter change under the view's
         // DOM observer; only the code is the document's.
         ignoreMutation(mutation) {
@@ -215,6 +241,7 @@ export function createCodeBlockView(
           clearTimeout(copiedTimer);
           cancelAnimationFrame(fitting);
           resized?.disconnect();
+          languagePicker?.destroy();
         },
       };
     },

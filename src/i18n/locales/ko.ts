@@ -116,6 +116,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   diagramViewerHint:
     "스크롤하거나 손가락을 오므려 확대·축소 · 끌어서 이동 · 두 번 클릭하면 맞춤",
   codeBlockLanguage: "코드 언어",
+  codeBlockLanguageSearch: "언어 검색",
   announceAiWriting: `${AI_NAME}가 쓰는 중…`,
   announceAiDone: `${AI_NAME}가 다 썼습니다.`,
   announceChangesProposed: { other: "{n}곳 수정을 제안했습니다." },
@@ -577,6 +578,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   accountNotConnected: "연결 안 됨",
   accountConnectedAs: "연결됨",
   signInTemplate: "{name} 계정으로 로그인",
+  signInExperimental: "실험적 기능입니다. 주의해서 사용하세요.",
   logoutButton: "로그아웃",
   loggingIn: "브라우저 로그인을 기다리는 중…",
   loginLinkHint:
@@ -700,7 +702,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   chatSelectedPicture: "이미지 선택됨",
   cut: "잘라내기",
   copy: "복사",
-  copyAsMarkdown: "Markdown으로 복사",
+  copyAsPlainText: "일반 텍스트로 복사",
+  pasteAsPlainText: "일반 텍스트로 붙여넣기",
   paste: "붙여넣기",
   selectAll: "모두 선택",
   findReplace: "찾기 및 바꾸기",

@@ -86,6 +86,20 @@ describe("keepPastedLines", () => {
     );
   });
 
+  it("pastes fenced code as it is, in a paragraph's width or not", () => {
+    const code = [
+      "```js",
+      ...Array.from({ length: 8 }, (_, i) =>
+        i % 2 ? `  // 第 ${i} 行，中文注释 mixed` : `call(${i}); // line`,
+      ),
+      "• not a bullet ⼀ ﬁ",
+      "```",
+    ].join("\n");
+    expect(keepPastedLines(code)).toBe(code);
+    const around = "这是一段很长的中文说明文字，用来撑开宽度。\n\n" + code;
+    expect(keepPastedLines(around)).toBe(around);
+  });
+
   it("makes a terminal's output a code block, its spacing kept", () => {
     const df =
       "Filesystem      Size  Used Avail Use% Mounted on\n/dev/nvme0n1p2  468G  301G  144G  68% /\ntmpfs            16G  1.2M   16G   1% /tmp";

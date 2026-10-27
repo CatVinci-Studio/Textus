@@ -1,4 +1,5 @@
 import type { EditorRunner } from "../editor/useEditorRunner";
+import type { EditorClipboard } from "../editor/useEditorClipboard";
 import {
   buildContextMenuItems,
   buildPhoneMoreItems,
@@ -38,10 +39,7 @@ export function EditorContextMenu({
   illustrateParagraph,
   triggerCompletion,
   triggerGrammarCheck,
-  copyOrCut,
-  copyAsMarkdown,
-  paste,
-  selectAll,
+  clipboard,
   toggleFindReplace,
   openTableDialog,
   own,
@@ -58,10 +56,7 @@ export function EditorContextMenu({
   illustrateParagraph: (at: { x: number; y: number }) => void;
   triggerCompletion: () => void;
   triggerGrammarCheck: () => void;
-  copyOrCut: (cut: boolean) => void;
-  copyAsMarkdown: () => void;
-  paste: () => void;
-  selectAll: () => void;
+  clipboard: EditorClipboard;
   toggleFindReplace: () => void;
   openTableDialog: () => void;
   /** The writer's own items: a note on the selection, and accepting or
@@ -132,10 +127,7 @@ export function EditorContextMenu({
                     ]
                   : []),
               ],
-              copyOrCut,
-              copyAsMarkdown,
-              paste,
-              selectAll,
+              ...clipboard,
               toggleFindReplace,
               openTableDialog,
               ...own,

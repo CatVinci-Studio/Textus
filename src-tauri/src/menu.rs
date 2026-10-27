@@ -66,8 +66,10 @@ const ZOOM_IN_ID: &str = "zoom-in";
 const ZOOM_OUT_ID: &str = "zoom-out";
 const ZOOM_RESET_ID: &str = "zoom-reset";
 const FIND_REPLACE_ID: &str = "find-replace";
-/// Edit > Copy as Markdown: the selection's Markdown source.
-const COPY_AS_MARKDOWN_ID: &str = "copy-as-markdown";
+/// Edit > Copy as Plain Text and Paste as Plain Text: the words without the
+/// Markdown marks Copy's plain text carries, and the clipboard's text as is.
+const COPY_AS_PLAIN_TEXT_ID: &str = "copy-as-plain-text";
+const PASTE_AS_PLAIN_TEXT_ID: &str = "paste-as-plain-text";
 /// Edit > Select All on macOS, in place of the predefined item, whose
 /// selectAll: with no text field focused selected the whole window.
 #[cfg(target_os = "macos")]
@@ -361,8 +363,10 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-split-down");
     } else if id == CLOSE_SPLIT_ID {
         emit_to_focused(app_handle, "menu-close-split");
-    } else if id == COPY_AS_MARKDOWN_ID {
-        emit_to_focused(app_handle, "menu-copy-as-markdown");
+    } else if id == COPY_AS_PLAIN_TEXT_ID {
+        emit_to_focused(app_handle, "menu-copy-as-plain-text");
+    } else if id == PASTE_AS_PLAIN_TEXT_ID {
+        emit_to_focused(app_handle, "menu-paste-as-plain-text");
     } else if cfg!(target_os = "macos") && id == "select-all" {
         emit_to_focused(app_handle, "menu-select-all");
     } else if id == FIND_REPLACE_ID {
