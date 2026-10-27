@@ -23,9 +23,11 @@ test("a picture opens in the Image Viewer's tab", async ({ page }) => {
   await openPath(page, "/notes/dot.png");
   const frame = tabFrame(page);
   await expect(frame.locator("#info")).toContainText("1 × 1");
-  await expect(frame.locator("#fit")).toHaveText("Fit");
-  await frame.locator("#actual").click();
+  // The figure switches between fitted and the picture's own size.
+  await expect(frame.locator("#zoom")).toHaveAttribute("title", "Actual size");
+  await frame.locator("#zoom").click();
   await expect(frame.locator("#zoom")).toHaveText("100%");
+  await expect(frame.locator("#zoom")).toHaveAttribute("title", "Fit");
   await frame.locator("#zoom-in").click();
   await expect(frame.locator("#zoom")).toHaveText("125%");
 });

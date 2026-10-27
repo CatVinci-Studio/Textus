@@ -299,6 +299,8 @@ test("saves close together are one version, listed under Today", async ({
 test("each save is a version, shown against the text now and restorable", async ({
   page,
 }) => {
+  // Saves within a quarter of an hour are one version: the clock moves on.
+  await page.clock.install();
   await openWithPlugins(page, {
     plugins: {
       "catvinci.version-history": [
@@ -308,7 +310,6 @@ test("each save is a version, shown against the text now and restorable", async 
       ],
     },
     folder: { "/notes/essay.md": "First line\n" },
-    settings: { "catvinci.version-history": { every: "0" } },
   });
   await openPath(page, "/notes/essay.md");
   const save = () =>
@@ -323,6 +324,7 @@ test("each save is a version, shown against the text now and restorable", async 
   await save();
   const history = await openSidebarTab(page, "History");
   await expect(history.locator("#versions > li:not(.day-head)")).toHaveCount(1);
+  await page.clock.fastForward("16:00");
   await page.locator(editor).click();
   await page.keyboard.press("End");
   await page.keyboard.type(" again");
