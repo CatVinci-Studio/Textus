@@ -842,7 +842,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "タブを閉じる",
-  readOnlyRefused: "この書類は読み取り専用です。変更するには「表示 › 読み取り専用」をオフにしてください。",
+  readOnlyRefused:
+    "この書類は読み取り専用です。変更するには「表示 › 読み取り専用」をオフにしてください。",
   menuToggleReadOnly: "読み取り専用",
   readOnlyLock: "読み取り専用：クリックで編集を許可",
   closeOtherTabs: "他のタブを閉じる",

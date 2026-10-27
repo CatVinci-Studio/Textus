@@ -905,7 +905,8 @@ utiliser une.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Fermer l'onglet",
-  readOnlyRefused: "Ce document est en lecture seule. Désactivez Présentation › Lecture seule pour le modifier.",
+  readOnlyRefused:
+    "Ce document est en lecture seule. Désactivez Présentation › Lecture seule pour le modifier.",
   menuToggleReadOnly: "Lecture seule",
   readOnlyLock: "Lecture seule : cliquez pour autoriser les modifications",
   closeOtherTabs: "Fermer les autres",

@@ -885,7 +885,8 @@ export default {
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Закрыть вкладку",
-  readOnlyRefused: "Документ только для чтения. Чтобы изменить его, выключите Вид › Только чтение.",
+  readOnlyRefused:
+    "Документ только для чтения. Чтобы изменить его, выключите Вид › Только чтение.",
   menuToggleReadOnly: "Только чтение",
   readOnlyLock: "Только чтение: нажмите, чтобы разрешить изменения",
   closeOtherTabs: "Закрыть другие",

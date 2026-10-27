@@ -893,7 +893,8 @@ para usar una.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Cerrar pestaña",
-  readOnlyRefused: "Este documento es de solo lectura. Desactiva Visualización › Solo lectura para cambiarlo.",
+  readOnlyRefused:
+    "Este documento es de solo lectura. Desactiva Visualización › Solo lectura para cambiarlo.",
   menuToggleReadOnly: "Solo lectura",
   readOnlyLock: "Solo lectura: haz clic para permitir cambios",
   closeOtherTabs: "Cerrar las demás",

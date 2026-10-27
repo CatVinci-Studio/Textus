@@ -863,7 +863,8 @@ type /name in a conversation to use one.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Close Tab",
-  readOnlyRefused: "This document is read-only. Turn off View › Read Only to change it.",
+  readOnlyRefused:
+    "This document is read-only. Turn off View › Read Only to change it.",
   menuToggleReadOnly: "Read Only",
   readOnlyLock: "Read-only: click to allow changes",
   closeOtherTabs: "Close Others",

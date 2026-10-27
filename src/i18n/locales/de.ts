@@ -877,7 +877,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Tab schließen",
-  readOnlyRefused: "Dieses Dokument ist schreibgeschützt. Schalte Ansicht › Schreibgeschützt aus, um es zu ändern.",
+  readOnlyRefused:
+    "Dieses Dokument ist schreibgeschützt. Schalte Ansicht › Schreibgeschützt aus, um es zu ändern.",
   menuToggleReadOnly: "Schreibgeschützt",
   readOnlyLock: "Schreibgeschützt: klicken, um Änderungen zu erlauben",
   closeOtherTabs: "Andere schließen",
