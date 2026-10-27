@@ -392,6 +392,8 @@ test("Delete before a table goes into it, and Delete before a quote joins its fi
   await page.keyboard.press("Delete");
   expect(await sourceOf(page)).toBe(
     "Before\n\n| xa | b |\n| -- | - |\n| c  | d |\n\nAboveone\n\n> two",
+  );
+});
 
 test("Enter in a code block in a list adds a line, and an indented blank line keeps the block", async ({
   page,
