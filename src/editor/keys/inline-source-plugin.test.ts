@@ -64,17 +64,27 @@ describe("a click at a wikilink's brackets", () => {
       n.wikilink.create(null, schema.text("[[Note]]")),
     ]),
   ]);
-  const caretAfter = (pos: number, pointer: boolean) => {
-    const state = EditorState.create({ schema, doc: linked });
+  // `from`: the caret before the click, away from the link unless said.
+  const caretAfter = (pos: number, pointer: boolean, from = 1) => {
+    const start = EditorState.create({ schema, doc: linked });
+    const state = start.apply(
+      start.tr.setSelection(TextSelection.create(linked, from)),
+    );
     const tr = state.tr.setSelection(TextSelection.create(linked, pos));
     if (pointer) tr.setMeta("pointer", true);
     const next = state.apply(tr);
-    return clickOutsideBrackets([tr], next)?.selection.from ?? null;
+    return clickOutsideBrackets([tr], state, next)?.selection.from ?? null;
   };
 
   it("lands outside the link, so what is typed next isn't part of it", () => {
     expect(caretAfter(13, true)).toBe(14);
     expect(caretAfter(5, true)).toBe(4);
+  });
+
+  it("at the name's ends while the brackets are hidden, lands outside too", () => {
+    expect(caretAfter(11, true)).toBe(14);
+    expect(caretAfter(7, true)).toBe(4);
+    expect(caretAfter(11, true, 9)).toBeNull();
   });
 
   it("leaves a click within its name, and the arrow keys, alone", () => {

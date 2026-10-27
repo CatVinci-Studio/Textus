@@ -89,6 +89,7 @@ import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
 import { blockJoinPlugin } from "./keys/block-join-plugin";
 import { inlineSourcePlugin } from "./keys/inline-source-plugin";
+import { wikilinkRevealPlugin } from "./markdown/wikilink-reveal";
 import { tabExtendPlugin, tabStaysPlugin } from "./keys/tab-extend-plugin";
 import {
   escapeTrailingBlockPlugin,
@@ -232,6 +233,7 @@ export function withEditorCore(
       .use(remarkWikilinkPlugin)
       .use(wikilinkSchema)
       .use(wikilinkInputRule)
+      .use(wikilinkRevealPlugin)
       .use(
         createObsidianEmbedPreviewPlugin({
           docPath: () => docPath.current,

@@ -609,6 +609,10 @@ br:is(.pending-delete, .pending-sentence-hot) {
   color: var(--editor-accent);
 }
 
+.wikilink-source-hidden {
+  display: none;
+}
+
 /* A picture that won't load: a card in place of the broken-image icon. The
    picture's own parts stay in the DOM for export and print. */
 @media screen {
