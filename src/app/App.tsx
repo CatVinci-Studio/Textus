@@ -49,6 +49,7 @@ import { useZenMode } from "./useZenMode";
 import { useSourceModes } from "./useSourceModes";
 import { useDocumentActions } from "./useDocumentActions";
 import {
+  takeClosedPath,
   useClosePrompt,
   useTabRemoval,
   useWindowCloseGuard,
@@ -373,6 +374,12 @@ function App() {
     saveTabAs,
     toggleSourceMode,
     requestCloseTab,
+    reopenClosedTab: () => {
+      const path = takeClosedPath((p) =>
+        liveTabs().some((tb) => tb.path === p),
+      );
+      if (path) void openPathInTab(path, { restoreCaret: true });
+    },
     openHelpTab,
     startWelcomeTutorial,
     openCommunity: () => void links.openCommunityPage(settings.language),

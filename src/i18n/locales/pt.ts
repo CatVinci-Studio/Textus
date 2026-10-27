@@ -801,6 +801,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Fechar Aba",
+  menuReopenClosedTab: "Reabrir Aba Fechada",
   menuUndo: "Desfazer",
   menuRedo: "Refazer",
   menuFindReplace: "Buscar e Substituir…",

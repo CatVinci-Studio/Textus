@@ -759,6 +759,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "탭 닫기",
+  menuReopenClosedTab: "닫은 탭 다시 열기",
   menuUndo: "실행 취소",
   menuRedo: "다시 실행",
   menuFindReplace: "찾기 및 바꾸기…",

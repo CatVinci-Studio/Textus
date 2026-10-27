@@ -17,6 +17,19 @@ export type PendingClose =
   | { kind: "window" }
   | { kind: "replace"; tabId: string; path: string };
 
+/** The documents closed in this window, the latest last. */
+const closedPaths: string[] = [];
+
+/** File > Reopen Closed Tab's document: the latest closed that isn't open
+ *  again already. */
+export function takeClosedPath(isOpen: (path: string) => boolean) {
+  while (closedPaths.length) {
+    const path = closedPaths.pop()!;
+    if (!isOpen(path)) return path;
+  }
+  return null;
+}
+
 /** Taking tabs away: outright (removeTab) or behind the prompt when the
  *  tab has unsaved changes (requestCloseTab) - which, with Save
  *  Automatically on, are written first, so only what that couldn't save
@@ -69,6 +82,7 @@ export function useTabRemoval(opts: {
     async (id: string) => {
       await flushAutosave([id]);
       const tab = liveTabs().find((tb) => tb.id === id);
+      if (tab?.path) closedPaths.push(tab.path);
       if (!tab || !tabIsDirty(tab)) {
         removeTab(id);
         return;

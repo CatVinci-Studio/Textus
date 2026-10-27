@@ -827,6 +827,7 @@ utiliser une.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Fermer l'onglet",
+  menuReopenClosedTab: "Rouvrir l'onglet fermé",
   menuUndo: "Annuler",
   menuRedo: "Rétablir",
   menuFindReplace: "Rechercher et remplacer…",

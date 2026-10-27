@@ -97,9 +97,11 @@ pub(crate) fn build(
     // accelerators there as well risks either losing them while editor focus
     // is active or firing both paths. macOS/Linux keep their visible native
     // menu accelerators.
+    // Cmd+T, Cmd+N and Cmd+Shift+T as in a browser: a new tab, a new window,
+    // the tab just closed.
     let new_file_builder = MenuItemBuilder::with_id(NEW_FILE_ID, l(NEW_FILE_ID, "New File"));
     #[cfg(not(windows))]
-    let new_file_builder = new_file_builder.accelerator("CmdOrCtrl+N");
+    let new_file_builder = new_file_builder.accelerator("CmdOrCtrl+T");
     let new_file_item = new_file_builder.build(app)?;
 
     let open_file_builder = MenuItemBuilder::with_id(OPEN_FILE_ID, l(OPEN_FILE_ID, "Open…"));
@@ -156,6 +158,12 @@ pub(crate) fn build(
     let close_tab_item = MenuItemBuilder::with_id(CLOSE_TAB_ID, l(CLOSE_TAB_ID, "Close Tab"))
         .accelerator("CmdOrCtrl+W")
         .build(app)?;
+    let reopen_closed_tab_item = MenuItemBuilder::with_id(
+        REOPEN_CLOSED_TAB_ID,
+        l(REOPEN_CLOSED_TAB_ID, "Reopen Closed Tab"),
+    )
+    .accelerator("CmdOrCtrl+Shift+T")
+    .build(app)?;
 
     let file_menu = SubmenuBuilder::new(app, l("menu:file", "File"))
         .item(&new_file_item)
@@ -170,6 +178,7 @@ pub(crate) fn build(
         .item(&export_menu)
         .separator()
         .item(&close_tab_item)
+        .item(&reopen_closed_tab_item)
         .build()?;
 
     // No fixed accelerator - the combo is user-configurable and
@@ -295,10 +304,8 @@ pub(crate) fn build(
         builder.build()?
     };
 
-    // Cmd/Ctrl+Shift+N everywhere: what file managers, browsers and VS Code
-    // open a window with. Cmd+T read as "new tab" to anyone coming from a
-    // browser, and this app has tabs (Cmd+N opens a new document in one).
-    const NEW_WINDOW_ACCEL: &str = "CmdOrCtrl+Shift+N";
+    // Cmd/Ctrl+N, as a browser opens a window (New Tab has Cmd+T).
+    const NEW_WINDOW_ACCEL: &str = "CmdOrCtrl+N";
     let new_window_item = item(NEW_WINDOW_ID, "New Window")
         .accelerator(NEW_WINDOW_ACCEL)
         .build(app)?;

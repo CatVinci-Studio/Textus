@@ -809,6 +809,7 @@ export default {
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Закрыть вкладку",
+  menuReopenClosedTab: "Открыть закрытую вкладку",
   menuUndo: "Отменить",
   menuRedo: "Повторить",
   menuFindReplace: "Найти и заменить…",

@@ -817,6 +817,7 @@ para usar una.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Cerrar pestaña",
+  menuReopenClosedTab: "Reabrir pestaña cerrada",
   menuUndo: "Deshacer",
   menuRedo: "Rehacer",
   menuFindReplace: "Buscar y reemplazar…",

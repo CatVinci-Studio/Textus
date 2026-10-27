@@ -71,6 +71,8 @@ const RESERVED_COMBOS = new Set([
   "mod+s",
   "mod+shift+s",
   "mod+n",
+  "mod+t",
+  "mod+shift+t",
   "mod+o",
   "mod+w",
   "mod+shift+w",
@@ -120,7 +122,6 @@ const MAC_RESERVED_COMBOS = new Set([
 export function isReservedCombo(combo: string): boolean {
   return (
     RESERVED_COMBOS.has(combo) ||
-    combo === "mod+shift+n" ||
     (modIsMeta() ? MAC_RESERVED_COMBOS.has(combo) : combo === "alt+f4")
   );
 }
