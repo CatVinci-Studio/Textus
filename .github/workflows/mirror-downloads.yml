@@ -44,7 +44,7 @@ jobs:
       - name: Copy the installers to textus.catvinci.com/download
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "::warning::CLOUDFLARE_API_TOKEN is not set: the website still downloads the previous version. Run scripts/mirror-downloads.sh $RELEASE_TAG by hand."
-            exit 0
+            echo "::error::CLOUDFLARE_API_TOKEN is not set: the website still downloads the previous version. Run scripts/mirror-downloads.sh $RELEASE_TAG by hand."
+            exit 1
           fi
           scripts/mirror-downloads.sh "$RELEASE_TAG"

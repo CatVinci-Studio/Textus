@@ -249,32 +249,29 @@ fn layers_override_built_ins_by_name() {
     let global = root.join("agent");
     let project = root.join("novel");
     write(
-        &global.join("skills/tighten.md"),
-        "---\nname: tighten\ndescription: Mine\n---\nCut hard.",
+        &global.join("skills/proofread.md"),
+        "---\nname: proofread\ndescription: Mine\n---\nCut hard.",
     );
     write(
-        &global.join("skills/summarize.md"),
-        "---\nname: summarize\ndescription: Global summary\n---\nGlobal.",
+        &global.join("skills/theme.md"),
+        "---\nname: theme\ndescription: Global summary\n---\nGlobal.",
     );
     write(
-        &project.join(".textus/skills/summarize.md"),
-        "---\nname: summarize\ndescription: House style\n---\nAt most 6 words.",
+        &project.join(".textus/skills/theme.md"),
+        "---\nname: theme\ndescription: House style\n---\nAt most 6 words.",
     );
     write(&project.join("chapter.md"), "# One");
     let doc = project.join("chapter.md");
     let ws = load_layers(Some(&global), doc.to_str(), None);
     let get = |name: &str| ws.skills.iter().find(|s| s.name == name).unwrap();
-    assert_eq!(
-        ws.skills.iter().filter(|s| s.name == "summarize").count(),
-        1
-    );
-    let summarize = get("summarize");
-    assert_eq!(summarize.source, SkillSource::Project);
-    assert!(summarize.overrides_builtin && summarize.prompt.contains("6 words"));
-    let tighten = get("tighten");
-    assert_eq!(tighten.source, SkillSource::Global);
-    assert!(tighten.overrides_builtin);
-    assert_eq!(get("proofread").source, SkillSource::Builtin);
+    assert_eq!(ws.skills.iter().filter(|s| s.name == "theme").count(), 1);
+    let theme = get("theme");
+    assert_eq!(theme.source, SkillSource::Project);
+    assert!(theme.overrides_builtin && theme.prompt.contains("6 words"));
+    let proofread = get("proofread");
+    assert_eq!(proofread.source, SkillSource::Global);
+    assert!(proofread.overrides_builtin);
+    assert_eq!(get("skill").source, SkillSource::Builtin);
     assert_eq!(ws.skills.len(), builtin::skills().len());
     assert!(
         !ws.skills.iter().any(|s| s.name.starts_with("standards")),
@@ -287,39 +284,37 @@ fn layers_override_built_ins_by_name() {
 fn customize_copies_and_reset_deletes_only_copies() {
     let root = scratch("customize");
     let skills = root.join("skills");
-    let path = customize_in(&skills, "tighten").unwrap();
-    assert_eq!(path, skills.join("tighten.md"));
+    let path = customize_in(&skills, "proofread").unwrap();
+    assert_eq!(path, skills.join("proofread.md"));
     let copy = std::fs::read_to_string(&path).unwrap();
-    assert!(copy.contains("textus-based-on: \"tighten@1\""));
+    assert!(copy.contains("textus-based-on: \"proofread@1\""));
     // The copy now shadows the built-in, marked as such.
     let ws = load_layers(Some(&root), None, None);
-    let tighten = ws.skills.iter().find(|s| s.name == "tighten").unwrap();
-    assert_eq!(tighten.source, SkillSource::Global);
-    assert!(tighten.overrides_builtin && !tighten.builtin_updated);
-    assert_eq!(tighten.based_on.as_deref(), Some("tighten@1"));
+    let proofread = ws.skills.iter().find(|s| s.name == "proofread").unwrap();
+    assert_eq!(proofread.source, SkillSource::Global);
+    assert!(proofread.overrides_builtin && !proofread.builtin_updated);
+    assert_eq!(proofread.based_on.as_deref(), Some("proofread@1"));
     // Customizing again never overwrites the user's edits.
-    std::fs::write(&path, copy.replace("Cut words", "Cut WORDS")).unwrap();
-    assert_eq!(customize_in(&skills, "tighten").unwrap(), path);
-    assert!(std::fs::read_to_string(&path)
-        .unwrap()
-        .contains("Cut WORDS"));
+    std::fs::write(&path, copy.replace("## Scope", "## SCOPE")).unwrap();
+    assert_eq!(customize_in(&skills, "proofread").unwrap(), path);
+    assert!(std::fs::read_to_string(&path).unwrap().contains("## SCOPE"));
     // An older copy is flagged once the built-in moves on.
-    std::fs::write(&path, copy.replace("tighten@1", "tighten@0")).unwrap();
+    std::fs::write(&path, copy.replace("proofread@1", "proofread@0")).unwrap();
     let ws = load_layers(Some(&root), None, None);
     assert!(
         ws.skills
             .iter()
-            .find(|s| s.name == "tighten")
+            .find(|s| s.name == "proofread")
             .unwrap()
             .builtin_updated
     );
     // Reset deletes the copy, and says which file went (for the tab).
     assert_eq!(
-        reset_in(&skills, "tighten").unwrap(),
+        reset_in(&skills, "proofread").unwrap(),
         vec![path.to_string_lossy().to_string()]
     );
     assert!(!path.exists());
-    assert!(reset_in(&skills, "tighten").unwrap().is_empty());
+    assert!(reset_in(&skills, "proofread").unwrap().is_empty());
     // A hand-written skill of the same name is the user's own.
     write(
         &skills.join("mine.md"),
@@ -332,13 +327,10 @@ fn customize_copies_and_reset_deletes_only_copies() {
         skills.join("mine.md")
     );
     // A file with the stem but another skill inside keeps its name.
-    write(
-        &skills.join("summarize.md"),
-        "---\nname: my-summary\n---\nx",
-    );
+    write(&skills.join("theme.md"), "---\nname: my-theme\n---\nx");
     assert_eq!(
-        customize_in(&skills, "summarize").unwrap(),
-        skills.join("summarize-2.md")
+        customize_in(&skills, "theme").unwrap(),
+        skills.join("theme-2.md")
     );
     assert_eq!(customize_in(&skills, "nope").unwrap_err(), UNKNOWN_BUILTIN);
     assert_eq!(reset_in(&skills, "nope").unwrap_err(), UNKNOWN_BUILTIN);
@@ -433,8 +425,6 @@ fn skill_list_serialises_the_interface_the_frontend_reads() {
     assert!(v["basedOn"].is_null());
     assert_eq!(v["builtinUpdated"], false);
     assert!(v.get("targetPacks").is_none());
-    let tighten = serde_json::to_value(builtin::find("tighten").unwrap()).unwrap();
-    assert_eq!(tighten["invocation"], "userOnly");
 }
 
 #[test]

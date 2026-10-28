@@ -4,7 +4,7 @@ import { thisWindow } from "../platform/this-window";
 import { canOpenFolder } from "../platform/capabilities";
 import { fs, session, windowIpc } from "../platform/ipc";
 import { getUiState, setUiState } from "../storage/ui-state";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { showMessage } from "../ui/app-dialog";
 import { dirname } from "../utils/path";
 import {

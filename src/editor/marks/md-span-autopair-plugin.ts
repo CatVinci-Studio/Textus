@@ -6,15 +6,14 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { fenceLineToBlock } from "../markdown/fence-line";
 import {
   COMPOSE_RELOCATE_DELAY_MS,
-  caretAt,
   findRunClose,
   hasPendingRunOpen,
-  isImeKeyEvent,
   literalTextAfter,
   literalTextBefore,
   redirectMisattributedInput,
-  stateWithLiveSelection,
 } from "./enclosure";
+import { caretAt, stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "../keys/ime";
 import {
   ONLY_CLOSERS,
   SPECS,

@@ -1,12 +1,9 @@
 import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import {
-  hasCompletionSources,
-  provideCompletions,
-  type CompletionResult,
-} from "../../plugins/contributions/completion-sources";
+import { editorExtensions, type CompletionResult } from "../extension-points";
 import { CompletionList } from "./completion-list";
+import { isImeKeydown } from "../../utils/ime";
 
 /** The most text before the caret a plugin is shown. */
 const CONTEXT_CHARS = 200;
@@ -70,7 +67,7 @@ export function createCompletionPlugin() {
             const token = ++asked;
             const at = view.state.selection.from;
             const doc = view.state.doc;
-            const result = await provideCompletions(
+            const result = await editorExtensions().provideCompletions(
               context.text,
               context.inMath,
             );
@@ -99,7 +96,8 @@ export function createCompletionPlugin() {
           });
           return {
             update(view, previous) {
-              if (!hasCompletionSources() || view.composing) return close();
+              if (!editorExtensions().hasCompletionSources() || view.composing)
+                return close();
               if (view.state.doc === previous.doc) {
                 if (!view.state.selection.eq(previous.selection)) close();
                 return;
@@ -115,7 +113,7 @@ export function createCompletionPlugin() {
         },
         props: {
           handleKeyDown(view, event) {
-            if (event.isComposing || event.metaKey || event.ctrlKey)
+            if (isImeKeydown(event) || event.metaKey || event.ctrlKey)
               return false;
             if (!completionViews.get(view)?.key(event.key)) return false;
             event.preventDefault();

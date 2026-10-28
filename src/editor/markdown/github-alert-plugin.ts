@@ -4,7 +4,8 @@ import { $prose } from "@milkdown/kit/utils";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import { escapeHtml } from "../../utils/html";
-import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
+import { stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "../keys/ime";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   applyReveal,

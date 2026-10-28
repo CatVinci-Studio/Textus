@@ -60,12 +60,13 @@ fn a_new_profile_has_no_moved_skills_to_bring_over_and_an_old_one_does() {
     let moved = crate::plugins::moved_skills::MOVED_KEY;
     let dir = temp_dir();
     let stores = Stores::load(&dir, &dir);
-    assert_eq!(stores.settings.snapshot().0[moved], json!(true));
+    let all = crate::plugins::moved_skills::all_seen_to();
+    assert_eq!(stores.settings.snapshot().0[moved], all);
     // Written out with the first change, as any setting.
     stores.patch_settings(&obj(json!({ "theme": "dark" })));
     stores.flush_all();
     let file = read_file(&settings_path(&dir));
-    assert_eq!(file["settings"][moved], json!(true));
+    assert_eq!(file["settings"][moved], all);
     // A settings file from before the move: its skills still to install.
     let old = temp_dir();
     std::fs::write(

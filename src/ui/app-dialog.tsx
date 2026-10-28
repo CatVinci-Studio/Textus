@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useModalDialog } from "./useModalDialog";
 import { usePresence } from "./usePresence";
+import { isImeKeydown } from "../utils/ime";
 
 /**
  * The app's own alert, confirm and prompt boxes, in place of OS dialogs.
@@ -161,7 +162,7 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
             defaultValue={shown.input}
             placeholder={shown.placeholder}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.nativeEvent.isComposing) ok();
+              if (e.key === "Enter" && !isImeKeydown(e)) ok();
             }}
           />
         )}

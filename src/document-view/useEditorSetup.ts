@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useDocumentReporting, useEditorFlush } from "./useDocumentReporting";
 import { useTextusEditor } from "./useTextusEditor";
 import { useAiNotice } from "./useAiNotice";
@@ -6,13 +6,14 @@ import { useQuickAskDecorations } from "./useQuickAskDecorations";
 import { useSettingsRedraw } from "./useSettingsRedraw";
 import { useImageNameRequest } from "../editor/images/useImageNameRequest";
 import { useEditorRunner } from "../editor/useEditorRunner";
-import { useEditorClipboard } from "../editor/useEditorClipboard";
+import { useEditorClipboard } from "../editor/clipboard/useEditorClipboard";
 import { useAiActions } from "../ai/writing/useAiActions";
 import { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import { useLatest } from "../utils/hooks/useLatest";
+import { useEditorReadOnly } from "./useEditorReadOnly";
 
 /**
  * One tab's editor itself: the plugin chain, the runner every action goes
@@ -30,6 +31,7 @@ export function useEditorSetup({
   settings,
   t,
   phone,
+  readOnly,
 }: {
   tabId: string;
   filePath: string | null;
@@ -41,6 +43,7 @@ export function useEditorSetup({
   settings: Settings;
   t: Strings;
   phone: boolean;
+  readOnly: boolean;
 }) {
   const { imageNameRequest, requestImageName, closeImageNameDialog } =
     useImageNameRequest();
@@ -81,6 +84,15 @@ export function useEditorSetup({
   useEditorFlush(tabId, run, reporting);
 
   const notice = useAiNotice();
+  const { showAiNotice } = notice;
+  useEditorReadOnly(
+    run,
+    readOnly,
+    useCallback(
+      () => showAiNotice(tRef.current.readOnlyRefused),
+      [showAiNotice, tRef],
+    ),
+  );
 
   const { triggerCompletion, triggerGrammarCheck } = useAiActions(
     run,

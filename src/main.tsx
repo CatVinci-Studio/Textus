@@ -2,7 +2,8 @@ import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./app/App";
 import { lazyComponent } from "./lazy/lazy-component";
-import { loadSettings, SettingsProvider } from "./settings/SettingsContext";
+import { loadSettings, SettingsProvider } from "./prefs/SettingsContext";
+import { AppearanceSync } from "./theme/apply-appearance";
 import { loadLocale } from "./i18n/strings";
 import { lazyModule, startWarming } from "./lazy/lazy-module";
 import { installDevTauriShim } from "./dev/tauri-shim";
@@ -53,6 +54,7 @@ void loadLocale(loadSettings().language)
     ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <React.StrictMode>
         <SettingsProvider>
+          <AppearanceSync />
           {view === "chat" ? (
             <Suspense fallback={null}>
               <ChatWindowApp />

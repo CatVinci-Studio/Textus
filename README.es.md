@@ -51,100 +51,52 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 Gratuito y de código abierto, con licencia MIT.
 
-| Plataforma            | Descargar                                                                                                   |
-| --------------------- | ----------------------------------------------------------------------------------------------------------- |
-| macOS · Apple Silicon | [Descargar .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                                 |
-| macOS · Intel         | [Descargar .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                                 |
-| Windows · x64         | [Descargar .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                                 |
-| Linux · x64           | [Descargar .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · También como .deb · .rpm |
+| Plataforma | Descargar | Otras formas de instalar |
+| --- | --- | --- |
+| macOS · Apple Silicon | [Descargar .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew: `brew install --cask textus` |
+| macOS · Intel | [Descargar .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew: `brew install --cask textus` |
+| Windows · x64 | [Descargar .exe](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
+| Linux · x64 | [Descargar .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · También como .deb · .rpm | Arch Linux: el [repositorio `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
 
-O instálalo con Homebrew:
+> iOS y iPadOS, muy pronto.
 
-```sh
-brew install --cask textus
-```
-
-Arch Linux con el repositorio de pacman firmado [`[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) (una sola vez; después `sudo pacman -Syu` mantiene Textus al día):
-
-```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/CatVinci-Studio/arch-repo/main/install.sh) textus-bin
-```
-
-iPhone y iPad: muy pronto. [Todas las versiones en GitHub](https://github.com/CatVinci-Studio/Textus/releases)
-
-¿Quieres las versiones nuevas antes? En **Ajustes › General › Acerca de Textus**, pon el **Canal de actualizaciones** en **Beta** para recibir también las versiones candidatas; puedes volver a **Estable** cuando quieras, y te quedas en tu versión hasta que salga una estable más nueva.
+Beta: en **Ajustes › General › Acerca de Textus**, pon el **Canal de actualizaciones** en **Beta**.
 
 ## Escritura
 
-Todo el Markdown, con formato mientras escribes. Pasa el puntero por una línea para ver su código.
+Lo que ves es lo que obtienes: Markdown que se maqueta mientras escribes. Exporta a PDF, Word, HTML y más.
 
 <p align="center">
-  <img src="docs/images/readme/es/markdown.png" alt="Lo que ves es lo que obtienes." width="860" />
+  <img src="docs/images/readme/es/markdown.webp" alt="Un documento con todas las marcas de Markdown (títulos, negrita y cursiva, citas, listas, tareas, enlaces, una nota), ya maquetado" width="860" />
 </p>
 
-Las fórmulas se muestran mientras escribes, las tablas se alinean solas y unas pocas líneas de texto bastan para un diagrama.
-
-<p align="center">
-  <img src="docs/images/readme/es/math.png" alt="Fórmulas, tablas y diagramas, en un instante." width="860" />
-</p>
-
-### ¿Tu estilo de escritura? Tú decides
-
-Cuatro modos de escritura y el tema que prefieras, incluidos los de Typora.
-
-| Modos de escritura       | Qué hace                                                 |
-| ------------------------ | -------------------------------------------------------- |
-| Modo zen                 | Todo se aparta salvo tus palabras                        |
-| Modo máquina de escribir | La línea que escribes se queda siempre a la misma altura |
-| Vista dividida           | Markdown a un lado, la página terminada al otro          |
-| Modo código fuente       | Todo el documento en Markdown sin formato                |
-
-<p align="center">
-  <img src="docs/images/readme/es/split.png" alt="Vista dividida" width="49%" />
-  <img src="docs/images/readme/es/zen.png" alt="Modo zen" width="49%" />
-</p>
-
-Exporta a PDF, Word, HTML y más.
+| Bloques de código | Tablas |
+| :---: | :---: |
+| <img src="docs/images/readme/es/code.webp" alt="Un bloque de código, coloreado según su lenguaje" width="420" /> | <img src="docs/images/readme/es/table.webp" alt="Una tabla con las columnas alineadas" width="420" /> |
+| **Matemáticas** | **Diagramas** |
+| <img src="docs/images/readme/es/formula.webp" alt="Fórmulas que se dibujan mientras las escribes" width="420" /> | <img src="docs/images/readme/es/diagram.webp" alt="Un diagrama de flujo de Mermaid" width="420" /> |
 
 ## Textus AI
 
-Tu asistente de escritura. Escribe contigo.
+Funciona con LLM en línea y locales por igual: una IA que acelera tu escritura.
 
-### Mientras escribes
+| Continuación | Erratas y gramática | Ediciones propuestas |
+| :---: | :---: | :---: |
+| <img src="docs/images/readme/es/ai-continue.webp" alt="Las siguientes palabras en gris cuando haces una pausa; Tab las acepta" width="280" /> | <img src="docs/images/readme/es/ai-grammar.webp" alt="Un desliz subrayado, corregido con Alt+Enter" width="280" /> | <img src="docs/images/readme/es/ai-revise.webp" alt="Ediciones frase a frase, cada una con su motivo" width="280" /> |
+| **Comentarios de revisión** | **Habilidades con /** | **Cualquier modelo** |
+| <img src="docs/images/readme/es/ai-review.webp" alt="Un comentario fijado a su frase" width="280" /> | <img src="docs/images/readme/es/ai-skills.webp" alt="El menú de habilidades, abierto con /" width="280" /> | <img src="docs/images/readme/es/ai-models.webp" alt="Elegir un proveedor en Ajustes" width="280" /> |
 
-Haz una pausa y las palabras siguientes aparecen en gris. Pulsa Tab para aceptarlas. Detecta erratas y errores gramaticales mientras escribes, y comprueba tus normas de escritura. Alt+Enter los corrige.
+## Complementos (en pruebas, 1.3 beta)
 
-### Cuando lo pides
+No solo escribir: los complementos añaden todo lo demás que necesites.
 
-Los cambios llegan como propuestas, cada una con su motivo. Acéptalas enteras o frase a frase. Notas junto a la línea a la que se refieren. Comenta, no reescribe. Condensar, corregir, traducir, cambiar el tono y más, con solo teclear /.
+| Vista de grafo | Vim |
+| :---: | :---: |
+| <img src="docs/images/readme/es/plugin-graph.webp" alt="Las notas y sus enlaces dibujados como un grafo" width="420" /> | <img src="docs/images/readme/es/plugin-vim.webp" alt="Las etiquetas de salto de Vim y su modo en la barra de la ventana" width="420" /> |
+| **Vista rápida** | **Historial de versiones** |
+| <img src="docs/images/readme/es/plugin-preview.webp" alt="Al detenerte sobre un enlace, esa nota aparece en una tarjeta" width="420" /> | <img src="docs/images/readme/es/plugin-history.webp" alt="Las versiones anteriores de una nota, a su lado" width="420" /> |
 
-### Te conoce
-
-Aprende tu estilo, recuerda a tus personajes y lugares, y sigue tus instrucciones.
-
-### El LLM que prefieras
-
-Textus funciona con más de 20 LLM y con cualquier LLM que ofrezca una API compatible con OpenAI.
-
-OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Doubao · Ollama · Cualquier servicio compatible con OpenAI
-
-<p align="center">
-  <img src="docs/images/readme/es/settings.png" alt="El LLM que prefieras." width="860" />
-</p>
-
-## Complementos (en pruebas, beta 1.3)
-
-Añade lo que necesites, y nada más. Un grafo de tus notas y los enlaces entre ellas, una tarjeta que muestra adónde lleva un enlace, dos documentos lado a lado, tableros kanban, historial de versiones, PDF y Word en una pestaña, citas de Zotero: todo en **Ajustes › Extensiones › Conseguir más**, junto a los temas y las habilidades. Cada complemento pregunta antes de usar nada.
-
-<p align="center">
-  <img src="docs/images/readme/es/plugins.png" alt="Notas sobre el Quijote junto al grafo de sus enlaces, con la nota a la que lleva un enlace abierta en una tarjeta." width="860" />
-</p>
-
-## Lo que escribes es solo tuyo
-
-Lo que escribes es tuyo. Textus está hecho para que siga siéndolo, y su código es abierto para que cualquiera lo compruebe.
-
-Los documentos son archivos Markdown normales, guardados donde tú elijas. Las claves de API y los inicios de sesión se guardan solo en tu ordenador. Las peticiones de IA van directamente de tu dispositivo al proveedor que elijas. Descárgalo y escribe. No hay nada en lo que registrarse. Sin analíticas, sin telemetría, sin anuncios. Con licencia MIT y abierto línea a línea: cualquiera puede comprobar todo esto. Con un modelo local a través de Ollama, tus palabras nunca salen de tu ordenador.
+Tableros kanban, PDF y Word en una pestaña, citas de Zotero, gráficos de todo tipo y más están en **Ajustes › Extensiones › Conseguir más**.
 
 ## Preguntas frecuentes
 
@@ -158,7 +110,14 @@ Sí. Es gratuito y de código abierto, con licencia MIT, sin cuenta ni suscripci
 <details>
 <summary><strong>¿En qué sistemas funciona?</strong></summary>
 
-En macOS (Apple Silicon e Intel), Windows y Linux. Pronto llegará a iPhone y iPad.
+En macOS (Apple Silicon e Intel), Windows y Linux. iOS y iPadOS llegarán muy pronto.
+
+</details>
+
+<details>
+<summary><strong>¿Cuánta memoria usa?</strong></summary>
+
+Nos importa mucho la memoria y la medimos en cada versión. Una ventana ocupa unos 110 MB, y cada ventana más, unos 55 MB adicionales. Los complementos solo se cargan cuando se usan, y una página web que queda en segundo plano se libera y vuelve a cargarse cuando regresas a ella.
 
 </details>
 
@@ -182,15 +141,6 @@ El editor, sí, por completo. Textus AI necesita conectarse a tu proveedor, salv
 Sí: archivos .md normales, con tablas, listas de tareas, notas al pie, fórmulas y Mermaid. Exporta a PDF, Word, HTML y más.
 
 </details>
-
-## Primeros pasos
-
-1. Abre Textus. Empieza con un borrador en blanco; solo necesitas un archivo al guardar.
-2. Abre **Ajustes → Textus AI**, elige un proveedor e inicia sesión o pega una clave en **Acceso y credenciales**.
-3. Empieza a escribir. Cuando haces una pausa, la continuación aparece en gris; Tab la acepta.
-4. Abre el Panel de IA con el botón **Textus AI** (la pluma) de la barra de la ventana. **Ayuda → Guía de funciones de IA** explica el resto.
-
-Todos los atajos se pueden ver y cambiar en **Ajustes → Atajos de teclado**.
 
 ## Comunidad
 

@@ -487,17 +487,47 @@ button.agent-context-chip:hover {
 }
 
 /* The modes a skill is saved in, before Save. */
+/* The modes a skill applies in, quiet until clicked; ticked in a menu
+   beside it, which stays open for another. */
 .skill-mode-choice {
+  position: relative;
   display: inline-flex;
-  gap: 8px;
   margin-right: 8px;
-  color: var(--editor-muted);
 }
 
-.skill-mode-choice label {
+.skill-mode-choice-button {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+  padding: 2px 6px;
+  border: none;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--editor-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.skill-mode-choice-button:hover,
+.skill-mode-choice-button[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--editor-text) 6%, transparent);
+  color: var(--editor-text);
+}
+
+.skill-mode-choice-chevron {
+  transform: rotate(90deg);
+}
+
+.skill-mode-choice-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  padding: 4px;
 }
 
 .agent-memory-chip-actions button + button::before,

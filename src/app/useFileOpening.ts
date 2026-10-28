@@ -8,7 +8,7 @@ import {
 import {
   makeBlankTab,
   readDocFromDisk,
-  tabIsDirty,
+  tabIsUntouchedDraft,
   windowIsUntouched,
   type DocTab,
 } from "../document/doc-tabs";
@@ -35,8 +35,6 @@ import { useLatest } from "../utils/hooks/useLatest";
 import { openBeside } from "./split/split-layout";
 import { errorText } from "../utils/error-text";
 import type { Strings } from "../i18n/strings";
-import type { NewDocumentMode } from "../settings/SettingsContext";
-import type { PendingClose } from "./close-flow";
 import type { TabState } from "./tabs/useTabState";
 import { splitForDrop, type DropTarget } from "./split/split-drop";
 
@@ -97,12 +95,10 @@ function pluginTab(
 
 /**
  * Every way a file on disk becomes an open document in this window: a new
- * tab, or the active tab's document replaced, behind the save prompt.
+ * tab, or the tab it is in already.
  */
 export function useFileOpening(opts: {
   tabState: TabState;
-  newDocumentMode: NewDocumentMode;
-  setPendingClose: (close: PendingClose) => void;
   /** File > Open's file-type names besides Markdown, in the UI language. */
   dialogFilters: { textFilter: string; wordFilter: string; allFilter: string };
   /** Whether reopening a document goes to its last caret. */
@@ -111,15 +107,8 @@ export function useFileOpening(opts: {
   /** A Word document was opened as a new document. */
   onWordDocumentOpened: (path: string) => void;
 }) {
-  const {
-    tabState,
-    newDocumentMode,
-    setPendingClose,
-    dialogFilters,
-    restoreCarets,
-    t,
-    onWordDocumentOpened,
-  } = opts;
+  const { tabState, dialogFilters, restoreCarets, t, onWordDocumentOpened } =
+    opts;
   const { tabsRef, liveTabs, setTabs, activeTabId, setActiveTabId, updateTab } =
     tabState;
 
@@ -165,6 +154,9 @@ export function useFileOpening(opts: {
       }
       const { content, diskMtime } = disk;
       void session.addRecentFile(path);
+      void import("../plugins/store/open-offer").then((offer) =>
+        offer.offerForContent(content, t),
+      );
       return {
         path,
         content,
@@ -255,30 +247,29 @@ export function useFileOpening(opts: {
     [tabsRef, updateTab, restoreCarets, readDocument],
   );
 
+  // One rule in the window: a file open already comes to the front, an
+  // untouched draft in front gives way to it, anything else gets a tab of
+  // its own; nothing written is replaced. (The setting only says where files
+  // from outside go: startup-restore and the native side.)
   const openFile = useCallback(
     async (path: string, open: OpenOptions = {}) => {
-      // Beside the one in front is a tab of its own in either mode.
-      if (newDocumentMode === "tab" || open.where === "beside" || open.drop) {
-        await openPathInTab(path, open);
-        return;
-      }
-      // Window mode: replace in place, unless that would lose unsaved edits;
-      // then the close prompt steps in first.
-      const activeTab = tabsRef.current.find((tb) => tb.id === activeTabId);
-      if (activeTab && tabIsDirty(activeTab)) {
-        setPendingClose({ kind: "replace", tabId: activeTabId, path });
-        return;
-      }
-      await replaceTabWithFile(activeTabId, path, open);
+      // Live: an edit still being debounced is no longer untouched.
+      const tabs = liveTabs();
+      const front = tabs.find((tab) => tab.id === activeTabId);
+      const alreadyOpen = tabs.some(
+        (tab) => tab.path === path || tab.importedFrom === path,
+      );
+      if (
+        front &&
+        tabIsUntouchedDraft(front) &&
+        !alreadyOpen &&
+        !open.where &&
+        !open.drop
+      )
+        await replaceTabWithFile(activeTabId, path, open);
+      else await openPathInTab(path, open);
     },
-    [
-      newDocumentMode,
-      activeTabId,
-      openPathInTab,
-      replaceTabWithFile,
-      tabsRef,
-      setPendingClose,
-    ],
+    [activeTabId, openPathInTab, replaceTabWithFile, liveTabs],
   );
 
   // Project-bar entries and followed links always open in a new tab, never
@@ -354,7 +345,6 @@ export function useOpenPathsPush(
 export function useFileDrop(
   openFile: (path: string) => Promise<void>,
   openPathInTab: (path: string) => Promise<void>,
-  activeIsUntouchedDraft: () => boolean,
 ): void {
   useEffect(() => {
     if (isIOSApp) return;
@@ -377,12 +367,10 @@ export function useFileDrop(
           }),
         );
       // A file that can't be read as text opens nothing, as in File > Open.
-      for (const [i, path] of documents.entries()) {
-        const open =
-          i === 0 && activeIsUntouchedDraft() ? openFile : openPathInTab;
-        await open(path).catch(() => undefined);
-      }
+      // Only the first may take an untouched draft's place.
+      for (const [i, path] of documents.entries())
+        await (i === 0 ? openFile : openPathInTab)(path).catch(() => undefined);
     });
     return unlistenAll(unlisten);
-  }, [openFile, openPathInTab, activeIsUntouchedDraft]);
+  }, [openFile, openPathInTab]);
 }

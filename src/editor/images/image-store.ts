@@ -6,7 +6,7 @@ import { resolveStrings } from "../../i18n/strings";
 import { showMessage } from "../../ui/app-dialog";
 import { errorText } from "../../utils/error-text";
 import { fs } from "../../platform/ipc";
-import type { Settings, ImageNamingMode } from "../../settings/SettingsContext";
+import type { Settings, ImageNamingMode } from "../../prefs/SettingsContext";
 import { IMAGE_FILE_EXTENSIONS, imageMimeForPath } from "./pasted-files";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
 

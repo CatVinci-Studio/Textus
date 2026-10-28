@@ -1,7 +1,7 @@
 import { currentStrings } from "../i18n/current";
 import type { Strings } from "../i18n/strings";
-import type { Settings } from "../settings/SettingsContext";
-import { loadSettings } from "../settings/settings-store";
+import type { Settings } from "../prefs/SettingsContext";
+import { loadSettings } from "../prefs/settings-store";
 import { showQuickPick, type QuickPickItem } from "../ui/quick-pick";
 import { commands, commandShortcut, runCommand } from "./commands";
 import { runMenuAction } from "./menu/app-menu-actions";
@@ -86,17 +86,42 @@ function currentEntries(
 
 /** Opens the palette; the entry picked runs. */
 export async function openCommandPalette(): Promise<void> {
+  await pickWithCommands([], "");
+}
+
+/**
+ * The palette with a plugin's own items first (Vim's Ex commands), for
+ * textus.ui.pick's `commands`: one of those resolves its value, an entry of
+ * the palette runs and resolves null, and Enter on text that matches nothing
+ * resolves { typed: text }.
+ */
+export async function pickWithCommands(
+  own: QuickPickItem[],
+  query: string,
+  placeholder?: string,
+): Promise<unknown> {
   const t = currentStrings();
   const entries = currentEntries(t, loadSettings());
-  const items: QuickPickItem[] = entries.map((entry, i) => ({
-    label: entry.label,
-    description: entry.where,
-    keys: entry.keys,
-    value: i,
-  }));
-  const picked = await showQuickPick(items, t.commandPalettePlaceholder);
-  if (typeof picked !== "number") return;
-  const { run } = entries[picked];
+  const items: QuickPickItem[] = [
+    ...own.map((item) => ({ ...item, value: { own: item } })),
+    ...entries.map((entry, i) => ({
+      label: entry.label,
+      description: entry.where,
+      keys: entry.keys,
+      value: { entry: i },
+    })),
+  ];
+  const picked = (await showQuickPick(
+    items,
+    placeholder ?? t.commandPalettePlaceholder,
+    { query, typed: own.length > 0 || query !== "" },
+  )) as { own: QuickPickItem } | { entry: number } | { typed: string } | null;
+  if (!picked) return null;
+  if ("typed" in picked) return picked;
+  if ("own" in picked)
+    return picked.own.value === undefined ? picked.own.label : picked.own.value;
+  const { run } = entries[picked.entry];
   if ("command" in run) runCommand(run.command);
   else runMenuAction(run.menu);
+  return null;
 }

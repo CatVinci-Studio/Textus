@@ -81,6 +81,22 @@
   text-overflow: ellipsis;
 }
 
+/* A read-only document's padlock: quiet, and the one part of the title
+   that takes a click. */
+.window-bar-lock {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border: 0;
+  background: none;
+  color: var(--editor-muted);
+  pointer-events: auto;
+}
+
+.window-bar-lock:hover {
+  color: var(--editor-text);
+}
+
 /* Bounded so it never slides under the app-drawn caption buttons. */
 :root[data-window-chrome="app"] .window-bar-title {
   max-width: max(0px, calc(100% - 300px));
@@ -137,8 +153,23 @@
 
 .sidebar-header {
   /* Clears the window bar floating over the top of the window. */
-  padding: 38px 10px 10px;
+  padding: 34px 10px 0;
   border-bottom: 1px solid var(--border-color);
+}
+
+/* Every column's top row ends on one line: the sidebar's, each pane's tab
+   bar and the AI panel's header (which starts below the 28px window bar). */
+:root {
+  --chrome-line: 69px;
+}
+
+:root:not([data-window-chrome="mobile"]) :is(.sidebar-header, .tab-bar) {
+  box-sizing: border-box;
+  height: var(--chrome-line);
+}
+
+:root:not([data-window-chrome="mobile"]) .agent-panel-header {
+  height: calc(var(--chrome-line) - 28px);
 }
 
 .sidebar-body {

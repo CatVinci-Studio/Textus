@@ -17,13 +17,21 @@ pub struct PageBounds {
     pub height: f64,
 }
 
-/// A page went somewhere: the address its tab's bar shows.
+/// A page started to load an address, or finished: the address its tab's
+/// bar shows. A load that never finishes is one that failed.
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct Navigated {
     id: String,
     url: String,
+    loading: bool,
 }
+
+/// What a page is told it runs in on macOS. WKWebView's own name stops before
+/// Safari's "Version/… Safari/…", and sites read that as an old browser: a
+/// plain Google, Bilibili's "your browser is too old".
+#[cfg(target_os = "macos")]
+const SAFARI_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15";
 
 /// The event a window's tabs hear their pages' addresses by.
 const NAVIGATED: &str = "web-page-navigated";
@@ -101,19 +109,19 @@ pub fn web_page_show(
                 NewWindowResponse::Deny
             }
         })
-        .on_page_load(move |page, payload| {
-            if payload.event() != PageLoadEvent::Finished {
-                return;
-            }
+        .on_page_load(move |_, payload| {
             let _ = navigated_app.emit_to(
                 window_label.as_str(),
                 NAVIGATED,
                 Navigated {
                     id: tab.clone(),
-                    url: page.url().map(|u| u.to_string()).unwrap_or_default(),
+                    url: payload.url().to_string(),
+                    loading: payload.event() == PageLoadEvent::Started,
                 },
             );
         });
+    #[cfg(target_os = "macos")]
+    let builder = builder.user_agent(SAFARI_USER_AGENT);
     window
         .add_child(builder, position, size)
         .map(|_| ())

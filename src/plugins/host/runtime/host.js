@@ -458,6 +458,8 @@
           items: plain(items),
           placeholder: options && options.placeholder,
           multiple: !!(options && options.multiple),
+          value: options && options.value,
+          commands: !!(options && options.commands),
         });
       },
       form: function (options) {

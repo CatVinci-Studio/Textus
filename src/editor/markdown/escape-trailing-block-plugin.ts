@@ -3,7 +3,8 @@ import { TextSelection } from "@milkdown/kit/prose/state";
 import { liftTarget } from "@milkdown/kit/prose/transform";
 import { $prose } from "@milkdown/kit/utils";
 import { isInTable, selectedRect } from "@milkdown/kit/prose/tables";
-import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
+import { stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "../keys/ime";
 import type { Node, ResolvedPos } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 

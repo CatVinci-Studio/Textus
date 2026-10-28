@@ -1,4 +1,4 @@
-import { loadSettings } from "../settings/SettingsContext";
+import { loadSettings } from "../prefs/SettingsContext";
 import { createPersistedList } from "../storage/persisted-list";
 
 /**

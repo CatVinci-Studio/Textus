@@ -418,7 +418,7 @@ fn the_revision_choices_log_sits_beside_the_personal_memories_unlisted() {
 #[test]
 fn the_setting_is_the_field_settings_writes_on_by_default() {
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
-    let settings = std::fs::read_to_string(repo.join("src/settings/settings-types.ts")).unwrap();
+    let settings = std::fs::read_to_string(repo.join("src/prefs/settings-types.ts")).unwrap();
     assert!(settings.contains(&format!("  {REMEMBER_SETTING}: true,\n")));
 }
 

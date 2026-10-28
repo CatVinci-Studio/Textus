@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Strings, TextKey } from "../../i18n/strings";
 import type { ProviderCatalogEntry } from "../../ai/provider-catalog";
 import { auth } from "../../platform/ipc";
-import type { AiProvider } from "../SettingsContext";
+import type { AiProvider } from "../../prefs/SettingsContext";
 
 /** Whether each AI provider is connected (by account, key or custom
  *  endpoint), and its name as Settings shows it. */

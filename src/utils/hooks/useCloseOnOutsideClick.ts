@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { isImeKeydown } from "../ime";
 
 /// "Click outside (or press Escape) to close" for menus and popovers; attach
 /// the ref to the element holding both the overlay and its opener. `open`
@@ -39,7 +40,7 @@ export function useCloseOnOutsideClick<T extends HTMLElement>(
       }
     }
     function onKeyDown(e: KeyboardEvent) {
-      if (e.isComposing || e.keyCode === 229) return;
+      if (isImeKeydown(e)) return;
       if (e.key !== "Escape") return;
       // One Escape closes one thing: the overlay, not also the find bar.
       e.stopPropagation();

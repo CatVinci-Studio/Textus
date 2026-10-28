@@ -14,7 +14,7 @@ import { resolveStrings } from "../../i18n/strings";
 const memoryUndo = vi.fn();
 const memoryMove = vi.fn();
 
-vi.mock("../../settings/SettingsContext", () => ({
+vi.mock("../../prefs/SettingsContext", () => ({
   useSettings: () => ({ settings: { agentWorkspaceRoot: "" } }),
 }));
 vi.mock("../../platform/ipc", async () => {

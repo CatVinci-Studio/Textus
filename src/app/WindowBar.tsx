@@ -1,5 +1,5 @@
 import { Fragment, useSyncExternalStore } from "react";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./menu/app-menu-model";
 import { AppMenuButton } from "./WindowControls";
@@ -8,7 +8,7 @@ import { appDrawsWindowFrame } from "../platform/window-chrome";
 import { Tooltip } from "../ui/Tooltip";
 import { TextusAiButton } from "../ai/TextusAiSwitch";
 import { isIOSApp } from "../platform/capabilities";
-import { SidebarToggleIcon } from "../ui/icons";
+import { LockIcon, SidebarToggleIcon } from "../ui/icons";
 import { useFullscreenMark } from "./useFullscreenMark";
 import { runCommand } from "./commands";
 import {
@@ -34,6 +34,7 @@ export function WindowBar({
   agentOpen,
   agentShortcut,
   onToggleAgent,
+  onToggleReadOnly,
 }: {
   menuChecks: MenuChecks;
   title: string;
@@ -50,6 +51,8 @@ export function WindowBar({
   /** The AI panel's shortcut, as shown in the button's tooltip. */
   agentShortcut: string;
   onToggleAgent: () => void;
+  /** The padlock beside a read-only document's title turns it off. */
+  onToggleReadOnly: () => void;
 }) {
   const { t, settings } = useSettings();
   useFullscreenMark();
@@ -93,6 +96,18 @@ export function WindowBar({
           </Tooltip>
         )}
         <span className="window-bar-title-text">{title}</span>
+        {menuChecks.readOnly && (
+          <Tooltip text={t.readOnlyLock}>
+            <button
+              type="button"
+              className="window-bar-lock"
+              aria-label={t.readOnlyLock}
+              onClick={onToggleReadOnly}
+            >
+              <LockIcon />
+            </button>
+          </Tooltip>
+        )}
       </span>
       <div className="window-bar-status">
         <PluginStatusItems />

@@ -1,4 +1,4 @@
-import type { CompletionItem } from "../../plugins/contributions/completion-sources";
+import type { CompletionItem } from "../extension-points";
 import "./completion-list.css";
 
 /** On the page while a list is open, so a formula's preview steps aside. */

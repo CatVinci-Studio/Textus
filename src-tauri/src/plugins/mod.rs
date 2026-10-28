@@ -11,6 +11,7 @@ pub mod install;
 pub mod metadata;
 pub mod moved_skills;
 pub mod read_tool;
+pub mod scheme;
 pub mod scripts;
 pub mod state;
 pub mod store;
@@ -31,6 +32,7 @@ macro_rules! with_plugin_commands {
             $crate::plugins::install::plugin_install_files,
             $crate::plugins::catalog::plugin_catalog,
             $crate::plugins::catalog::plugin_catalog_cached,
+            $crate::plugins::catalog::plugin_catalog_readme,
             $crate::plugins::catalog::skill_catalog,
             $crate::plugins::catalog::skill_install_catalog,
             $crate::plugins::access::plugin_fs_rename,

@@ -10,7 +10,6 @@ import {
 } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
 import { errorText } from "../../utils/error-text";
-import { openUsageGuide } from "../../plugins/store/usage-guide";
 import { MarketPage, type MarketKind } from "./MarketPage";
 
 import {
@@ -45,20 +44,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
   const openMarket = (kind: MarketKind) => setMarket(kind);
   const skillProps = { t, onOpenFile, onFilesDeleted, onClose };
   if (market)
-    return (
-      <MarketPage
-        t={t}
-        kind={market}
-        onBack={() => setMarket(null)}
-        // A plugin just installed shows how it is used: its guide in a
-        // tab, Settings out of the way.
-        onInstalled={(id) =>
-          void openUsageGuide(id).then((opened) => {
-            if (opened) onClose();
-          })
-        }
-      />
-    );
+    return <MarketPage t={t} kind={market} onBack={() => setMarket(null)} />;
   return (
     <>
       <div

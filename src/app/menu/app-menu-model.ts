@@ -1,6 +1,6 @@
 import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 import type { Strings } from "../../i18n/strings";
-import type { HeadingAction, Shortcuts } from "../../settings/SettingsContext";
+import type { HeadingAction, Shortcuts } from "../../prefs/SettingsContext";
 import { basename } from "../../utils/path";
 
 /**
@@ -35,6 +35,7 @@ export type NativeMenuId =
   | "toggle-agent-panel"
   | "toggle-textus-ai"
   | "toggle-split-view"
+  | "toggle-read-only"
   | "toggle-zen-mode"
   | "split-right"
   | "split-down"
@@ -90,6 +91,8 @@ export interface MenuChecks {
   splitView?: boolean;
   typewriter?: boolean;
   zen?: boolean;
+  /** The document on screen can't be changed. */
+  readOnly?: boolean;
   /** The document on screen tracks the writer's changes (Edit). */
   trackChanges?: boolean;
   fullscreen?: boolean;
@@ -112,6 +115,7 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
     "toggle-split-view": !!checks.splitView,
     "toggle-typewriter-mode": !!checks.typewriter,
     "toggle-zen-mode": !!checks.zen,
+    "toggle-read-only": !!checks.readOnly,
     "track-changes": !!checks.trackChanges,
   };
 }
@@ -370,6 +374,11 @@ export function buildAppMenu(
           accel: shortcuts.toggleZenMode,
           action: { native: "toggle-zen-mode" },
           checked: !!checks.zen,
+        },
+        {
+          label: t.menuToggleReadOnly,
+          action: { native: "toggle-read-only" },
+          checked: !!checks.readOnly,
         },
         "separator",
         {

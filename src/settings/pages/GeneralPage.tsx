@@ -1,6 +1,6 @@
 import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
-import { type NewDocumentMode } from "../SettingsContext";
+import { type NewDocumentMode } from "../../prefs/SettingsContext";
 import { LANGS, LANG_NAMES, type Lang } from "../../i18n/strings";
 import { LinkRow, SettingRow, ToggleRow } from "../sections/controls";
 import { CliCommandSection, DefaultEditorSection } from "../sections/general";

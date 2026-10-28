@@ -8,9 +8,10 @@ import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { SourceTextarea } from "../editor/modes/SourceTextarea";
 import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
+import { tabReadOnly } from "../document/read-only";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
-import type { AgentMode } from "../settings/SettingsContext";
+import type { AgentMode } from "../prefs/SettingsContext";
 import {
   PluginListPane,
   PluginTabPane,
@@ -28,7 +29,7 @@ import {
   type PaneIndex,
 } from "./split/split-layout";
 import { pullTab } from "./split/split-drop";
-import type { ContextMenuItem } from "../editor/ContextMenu";
+import type { ContextMenuItem } from "../ui/ContextMenu";
 import { contributedContextItems } from "../ui/context-menu-items";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
@@ -57,6 +58,7 @@ export function MainPane({
   onAdd,
   onDetach,
   onMoveToNewWindow,
+  onToggleReadOnly,
   onReorder,
   previewTab,
   onChange,
@@ -73,6 +75,7 @@ export function MainPane({
   /** A tab pulled out of the window leaves for a window of its own (macOS). */
   onDetach: (tabId: string) => void;
   onMoveToNewWindow: (tabId: string) => void;
+  onToggleReadOnly: (tabId: string) => void;
   onReorder: (tabId: string, index: number) => void;
   previewTab: TabBarProps["previewTab"];
   onChange: (tabId: string, markdown: string) => void;
@@ -91,6 +94,36 @@ export function MainPane({
   const paneOf = (id: string) =>
     split?.panes[0] === id ? "first" : split?.panes[1] === id ? "second" : null;
   const byId = new Map(tabs.map((tab) => [tab.id, tab]));
+  // The saved tabs close; one with unsaved changes stays, its dot showing,
+  // rather than a prompt for each.
+  const closeSaved = (list: DocTab[]) => {
+    for (const tab of list) if (!tabIsDirty(tab)) onClose(tab.id);
+  };
+  const readOnlyItem = (id: string) => {
+    const tab = byId.get(id);
+    if (!tab || tab.view) return [];
+    return [
+      {
+        label: t.menuToggleReadOnly,
+        checked: tabReadOnly(tab),
+        onSelect: () => onToggleReadOnly(id),
+      },
+    ];
+  };
+  const closeManyItems = (list: DocTab[], id: string) => {
+    const at = list.findIndex((tab) => tab.id === id);
+    const groups: [string, DocTab[]][] = [
+      [t.closeOtherTabs, list.filter((tab) => tab.id !== id)],
+      [t.closeTabsToLeft, list.slice(0, at)],
+      [t.closeTabsToRight, list.slice(at + 1)],
+    ];
+    return groups
+      .filter(([, closing]) => closing.length > 0)
+      .map(([label, closing]) => ({
+        label,
+        onSelect: () => closeSaved(closing),
+      }));
+  };
   const tabBar = (
     list: DocTab[],
     active: string,
@@ -149,8 +182,10 @@ export function MainPane({
               },
             ]
           : []),
+        ...readOnlyItem(id),
         "separator",
         { label: t.menuCloseTab, onSelect: () => onClose(id) },
+        ...closeManyItems(list, id),
         ...pluginTabItems(byId.get(id)?.path ?? null),
       ]}
       labels={{
@@ -233,6 +268,7 @@ export function MainPane({
                   filePath={tab.path}
                   typewriter={typewriter}
                   onChange={(markdown) => onChange(tab.id, markdown)}
+                  readOnly={tabReadOnly(tab)}
                 />
               </Suspense>
             ) : tab.sourceMode ? (
@@ -240,6 +276,7 @@ export function MainPane({
                 value={tab.content}
                 typewriter={typewriter}
                 onChange={(markdown) => onChange(tab.id, markdown)}
+                readOnly={tabReadOnly(tab)}
               />
             ) : (
               <EditorPane
@@ -252,6 +289,7 @@ export function MainPane({
                 isActive={tab.id === activeTabId}
                 tour={tour && tab.id === tour.tabId ? tour.ai : null}
                 tourMode={tour && tab.id === tour.tabId ? tour.mode : null}
+                readOnly={tabReadOnly(tab)}
               />
             )}
           </div>

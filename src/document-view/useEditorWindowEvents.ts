@@ -6,7 +6,7 @@ import {
 } from "@milkdown/kit/preset/commonmark";
 import { undoCommand, redoCommand } from "@milkdown/kit/plugin/history";
 import type { EditorRunner } from "../editor/useEditorRunner";
-import type { EditorClipboard } from "../editor/useEditorClipboard";
+import type { EditorClipboard } from "../editor/clipboard/useEditorClipboard";
 import {
   deleteImage,
   insertHeading,
@@ -28,7 +28,7 @@ import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
 import { claimChatRestore } from "../ai/chat/chat-restore";
 import { useLatest } from "../utils/hooks/useLatest";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../settings/textus-ai";
 import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import {

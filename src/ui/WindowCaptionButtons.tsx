@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { thisWindow } from "../platform/this-window";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import {
   WindowCloseIcon,
   WindowMaximizeIcon,

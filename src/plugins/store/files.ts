@@ -1,8 +1,10 @@
 import { plugins as pluginsIpc } from "../../platform/ipc";
+import { pluginFilesBase } from "../../platform/file-src";
 
 /**
- * A plugin's own files, and how a webview gets them: no app URL reaches a
- * sandboxed frame, so each `textus-resource:` becomes a `data:` URL.
+ * A plugin's own files, and how a webview gets them: each
+ * `textus-resource:` becomes a `textus-plugin:` URL of that file
+ * (plugins/scheme.rs), or a `data:` URL where there is no such scheme.
  */
 
 /** Where a plugin's files are: installed (from the catalog or a file),
@@ -78,12 +80,21 @@ export function dataUrl(path: string, bytes: Uint8Array): string {
 
 const RESOURCE = /textus-resource:([A-Za-z0-9._~\-/]+)/g;
 
-/** `html` with each `textus-resource:<path>` replaced by that file of the
- *  plugin's, as a `data:` URL. */
+/** `html` with each `textus-resource:<path>` replaced by the URL of that
+ *  file of plugin `id`'s. A big file as a `data:` URL took WebKit gigabytes
+ *  to load, so it is one only where nothing serves the files. */
 export async function withResources(
   html: string,
+  id: string,
   read: (rel: string) => Promise<Uint8Array>,
 ): Promise<string> {
+  const base = pluginFilesBase();
+  if (base)
+    return html.replace(
+      RESOURCE,
+      (_, rel: string) =>
+        `${base}${encodeURIComponent(id)}/${rel.split("/").map(encodeURIComponent).join("/")}`,
+    );
   const paths = [...new Set([...html.matchAll(RESOURCE)].map((m) => m[1]))];
   const urls = new Map<string, string>();
   await Promise.all(

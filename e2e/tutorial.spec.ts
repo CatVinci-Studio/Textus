@@ -27,7 +27,7 @@ const UI = {
     tutorialRevisionTitle: "Revision",
     tutorialGrammarTitle: "Grammar check",
     tutorialContinuationTitle: "Continuation",
-    tutorialSkillsTitle: "Built-in skills",
+    tutorialSkillsTitle: "Skills",
     tutorialDoneTitle: "All done",
     tutorialWatchNote: "Connect an AI later in",
     tutorialDoneMemory:
@@ -53,7 +53,7 @@ const UI = {
     tutorialRevisionTitle: "修订",
     tutorialGrammarTitle: "语法检查",
     tutorialContinuationTitle: "续写",
-    tutorialSkillsTitle: "内置技能",
+    tutorialSkillsTitle: "技能",
     tutorialDoneTitle: "完成",
     tutorialWatchNote: "之后在",
     tutorialDoneMemory:
@@ -343,7 +343,7 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
     [t.tutorialRevisionTitle, "revision", "Write", "Make it more concise"],
     [t.tutorialGrammarTitle, "grammar", null, notes.slip],
     [t.tutorialContinuationTitle, "continuation", null, "What really stops"],
-    [t.tutorialSkillsTitle, "skills", "Write", "/tighten"],
+    [t.tutorialSkillsTitle, "skills", "Review", "/proofread"],
   ];
   for (const [title, clip, modeName, says] of aiLessons) {
     const card = lesson(page, title);
@@ -451,7 +451,7 @@ const LIVE: LiveRun[] = [
       typed: "What really stops Hamlet is",
       text: " the fear of what comes after.",
     },
-    skill: "/tighten",
+    skill: "/proofread",
   },
   {
     lang: "zh",
@@ -470,7 +470,7 @@ const LIVE: LiveRun[] = [
     },
     grammar: { wrong: "的", right: "得", issue: "补语前应用“得”。" },
     continuation: { typed: "宝玉和黛玉的缘分", text: "，早在第一回就已写定。" },
-    skill: "/精简",
+    skill: "/校对",
   },
 ];
 
@@ -620,7 +620,7 @@ test.describe("connected", () => {
       // Skills: a note selected, a message sent through the skill.
       const skills = lesson(page, t.tutorialSkillsTitle);
       await expect(mode.locator(".mode-picker-value")).toHaveText(
-        run.mode.write,
+        run.mode.review,
       );
       await answer(page, {
         ai_agent_message: [
@@ -646,7 +646,7 @@ test.describe("connected", () => {
         "write",
         "review",
         "write",
-        "write",
+        "review",
       ]);
       // And the classic is as it was quoted.
       await expect(editor(page).locator("blockquote").first()).toContainText(

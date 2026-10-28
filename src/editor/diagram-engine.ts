@@ -1,7 +1,7 @@
 // How a ```mermaid block becomes a picture, wherever one is drawn: by
 // Mermaid, or by Pele when the user picked it, with Mermaid behind it.
 
-import type { DiagramEngine } from "../settings/SettingsContext";
+import type { DiagramEngine } from "../prefs/SettingsContext";
 import { lazyModule } from "../lazy/lazy-module";
 
 export type MermaidApi = (typeof import("mermaid"))["default"];

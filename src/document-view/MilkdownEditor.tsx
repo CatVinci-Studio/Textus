@@ -7,7 +7,7 @@ import { EditorMarginLayer } from "./EditorMarginLayer";
 import { EditorOverlays } from "./EditorOverlays";
 import { EditorChatPortals } from "./EditorChatPortals";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
-import { useSettings, type AgentMode } from "../settings/SettingsContext";
+import { useSettings, type AgentMode } from "../prefs/SettingsContext";
 import type { TourAi } from "../utils/events";
 import { Milkdown } from "@milkdown/react";
 import "@milkdown/kit/prose/view/style/prosemirror.css";
@@ -32,6 +32,8 @@ interface MilkdownEditorProps {
   tour?: TourAi | null;
   /** The AI panel's mode the tour's lesson needs, on its practice tab. */
   tourMode?: AgentMode | null;
+  /** Nothing may change the document (View › Read Only). */
+  readOnly?: boolean;
 }
 
 /**
@@ -47,6 +49,7 @@ export function MilkdownEditor({
   isActive = true,
   tour = null,
   tourMode = null,
+  readOnly = false,
 }: MilkdownEditorProps) {
   // iPhone: Quick Ask docks at the bottom of the screen instead.
   const phone = usePhoneLayout();
@@ -59,6 +62,7 @@ export function MilkdownEditor({
     initialValue,
     onChange,
     tour,
+    readOnly,
     ...context,
   });
   const chat = useEditorChat({ setup, docTitle, ...context });

@@ -18,7 +18,7 @@ import { canDetachChat } from "../platform/capabilities";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { useState } from "react";
 import { ModeIcon } from "../ai/chat/mode-icons";
-import type { AgentMode, Settings } from "../settings/SettingsContext";
+import type { AgentMode, Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /** The panel always asks for the document as it is now; this stands until

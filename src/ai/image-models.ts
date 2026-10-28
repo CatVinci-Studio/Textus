@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ai, auth } from "../platform/ipc";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 
 /** A service Settings offers as the image model, from the backend's list. */
 export interface ImageProviderEntry {

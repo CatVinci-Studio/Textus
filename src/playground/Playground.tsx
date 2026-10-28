@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import { APP_NAME, resolveStrings, type Lang } from "../i18n/strings";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import { SourceTextarea } from "../editor/modes/SourceTextarea";
 import {
   applyTextareaCaret,
@@ -25,7 +25,7 @@ import {
   readMarkdownFile,
 } from "./markdown-file";
 import { documentName, useWebDocuments } from "./useWebDocuments";
-import { ContextMenu } from "../editor/ContextMenu";
+import { ContextMenu } from "../ui/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import { ChevronIcon } from "../ui/icons";
 import sampleEn from "./samples/en.md?raw";

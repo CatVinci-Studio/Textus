@@ -16,7 +16,7 @@ import {
   peleMayDraw,
   resetPeleRefusals,
 } from "./diagram-engine";
-import { normaliseSettings } from "../settings/SettingsContext";
+import { normaliseSettings } from "../prefs/SettingsContext";
 
 const FLOW = "flowchart LR\n  A --> B";
 

@@ -71,8 +71,7 @@ use tauri::{EventTarget, WebviewUrl, WebviewWindowBuilder};
 
 mod launch;
 pub(crate) use launch::*;
-mod editor_windows;
-pub(crate) use editor_windows::*;
+pub(crate) mod editor_windows;
 
 /// Everything the builder needs on desktop only: the updater, window/tab/session
 /// state, window lifecycle, and startup's argv, session restore and menu bar.
@@ -131,9 +130,9 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
 #[cfg(desktop)]
 fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_os = "linux")]
-    detect_wayland();
+    crate::editor_windows::detect_wayland();
     #[cfg(target_os = "macos")]
-    watch_fullscreen(app.handle());
+    crate::editor_windows::watch_fullscreen(app.handle());
     // textus:// links for plugins.
     plugins::uri::listen(app.handle());
     // Windows/Linux pass an associated file as argv; macOS parks its launch files
@@ -162,7 +161,7 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     // The menu bar was set by install() after build_with_app_chrome could hide
     // it, so hide it on every existing window now.
     for (_, window) in app.webview_windows() {
-        hide_native_menu_bar(&window);
+        crate::editor_windows::hide_native_menu_bar(&window);
     }
 
     // Background mode costs one settings read while off.
@@ -189,15 +188,19 @@ pub fn run() {
         if paths.is_empty() && !editor_open {
             // Launched again while running in the background with no
             // window: the same documents a fresh launch would restore.
-            reopen_without_windows(app);
+            crate::editor_windows::reopen_without_windows(app);
         } else if paths.is_empty() {
             // Launched again from the app menu or dock: a fresh window.
-            let _ = open_new_window(app);
+            let _ = crate::editor_windows::open_new_window(app);
         } else {
             queue_paths_to_open(app, paths);
         }
     }));
     let builder = builder
+        .register_asynchronous_uri_scheme_protocol(
+            plugins::scheme::SCHEME,
+            |ctx, request, responder| plugins::scheme::handle(ctx.app_handle(), request, responder),
+        )
         .manage(plugins::uri::PendingUris::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
@@ -214,7 +217,7 @@ pub fn run() {
             tauri::async_runtime::spawn(plugins::moved_skills::install_moved_skills(
                 app.handle().clone(),
             ));
-            build_main_window(app)?;
+            crate::editor_windows::build_main_window(app)?;
             #[cfg(desktop)]
             desktop_setup(app)?;
             Ok(())
@@ -424,6 +427,7 @@ pub fn run() {
             commands::clipboard::paste_natively,
             #[cfg(desktop)]
             commands::clipboard::clipboard_text,
+            commands::input_source::set_roman_input,
             #[cfg(desktop)]
             background::background_status,
             #[cfg(desktop)]
@@ -491,7 +495,7 @@ pub fn run() {
                 ..
             } = event
             {
-                reopen_without_windows(app_handle);
+                crate::editor_windows::reopen_without_windows(app_handle);
             }
             // Finder "Open With" arrives as an Apple open-documents event (never argv);
             // iOS delivers "Open in Textus" the same way.

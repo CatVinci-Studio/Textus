@@ -1,13 +1,13 @@
 import type { EditorRunner } from "../editor/useEditorRunner";
-import type { EditorClipboard } from "../editor/useEditorClipboard";
+import type { EditorClipboard } from "../editor/clipboard/useEditorClipboard";
 import {
   buildContextMenuItems,
   buildPhoneMoreItems,
   type ContextMenuOptions,
 } from "../editor/editor-menu";
-import { ContextMenu } from "../editor/ContextMenu";
+import { ContextMenu } from "../ui/ContextMenu";
 import { Presence } from "../ui/usePresence";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../settings/textus-ai";
 import type { Strings } from "../i18n/strings";
 import type { ImageLocation } from "../editor/images/missing-image";

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useSettings } from "../../settings/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { menuIpc } from "../../platform/ipc";
 import { formatCombo } from "../../utils/shortcuts";
 import { useViewportClamp } from "../../utils/hooks/useViewportClamp";

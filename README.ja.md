@@ -51,100 +51,52 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 無料のオープンソース。MITライセンスで公開しています。
 
-| プラットフォーム          | ダウンロード                                                                                             |
-| ----------------- | -------------------------------------------------------------------------------------------------- |
-| macOS · Appleシリコン | [.dmgをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest)                           |
-| macOS · Intel     | [.dmgをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest)                           |
-| Windows · x64     | [.exeをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest)                           |
-| Linux · x64       | [.AppImageをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) · ほかの形式も .deb · .rpm |
+| プラットフォーム | ダウンロード | その他のインストール方法 |
+| --- | --- | --- |
+| macOS · Appleシリコン | [.dmgをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew：`brew install --cask textus` |
+| macOS · Intel | [.dmgをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew：`brew install --cask textus` |
+| Windows · x64 | [.exeをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
+| Linux · x64 | [.AppImageをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) · ほかの形式も .deb · .rpm | Arch Linux：[`[catvinci]` リポジトリ](https://github.com/CatVinci-Studio/arch-repo) |
 
-Homebrewでもインストールできます：
+> iOS版とiPadOS版も、まもなく登場します。
 
-```sh
-brew install --cask textus
-```
-
-Arch Linux は署名付きの [`[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) pacman リポジトリで（設定は一度だけ。以後は `sudo pacman -Syu` で Textus も最新に保たれます）：
-
-```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/CatVinci-Studio/arch-repo/main/install.sh) textus-bin
-```
-
-iPhone版とiPad版も、まもなく登場します。[すべてのリリースをGitHubで見る](https://github.com/CatVinci-Studio/Textus/releases)
-
-新しいバージョンをいち早く使いたい場合は、**設定 › 一般 › Textus について** で **アップデートチャンネル** を **ベータ版** にすると、リリース候補版も届きます。いつでも **安定版** に戻せます。戻したあとは、より新しい安定版が出るまで今のバージョンのままです。
+ベータ版：**設定 › 一般 › Textus について** で **アップデートチャンネル** を **ベータ版** にします。
 
 ## 執筆
 
-Markdownの記法は、書いたそばから仕上がりの姿に。行にポインタを合わせると、元の記法が現れます。
+見たまま、書ける。入力するそばからMarkdownで整います。PDF、Word、HTMLなどに書き出せます。
 
 <p align="center">
-  <img src="docs/images/readme/ja/markdown.png" alt="見たまま、書ける。" width="860" />
+  <img src="docs/images/readme/ja/markdown.webp" alt="見出し、太字と斜体、引用、リスト、タスク、リンク、注釈など、Markdownの記法をすべて使った文書が整って表示されている" width="860" />
 </p>
 
-数式はその場で表示され、表はきれいに揃います。数行のテキストが、そのまま図になります。
-
-<p align="center">
-  <img src="docs/images/readme/ja/math.png" alt="数式も、表も、図も、すぐできる" width="860" />
-</p>
-
-### 書き方は？お好きなように
-
-4つの書き方を自在に切り替え、テーマもすぐに変えられます。Typoraのテーマもそのまま使えます。
-
-| 執筆モード      | どうなるか                   |
-| ---------- | ----------------------- |
-| 禅モード       | 文字以外のすべてが退きます           |
-| タイプライターモード | 書いている行がいつも同じ高さにとどまります   |
-| 分割表示       | Markdown と仕上がりを並べて見られます |
-| ソースコードモード  | 文書全体を Markdown のまま扱えます  |
-
-<p align="center">
-  <img src="docs/images/readme/ja/split.png" alt="分割表示" width="49%" />
-  <img src="docs/images/readme/ja/zen.png" alt="禅モード" width="49%" />
-</p>
-
-PDF、Word、HTMLなどに書き出せます。
+| コードブロック | 表 |
+| :---: | :---: |
+| <img src="docs/images/readme/ja/code.webp" alt="言語に合わせて色分けされたコードブロック" width="420" /> | <img src="docs/images/readme/ja/table.webp" alt="列がきれいに揃った表" width="420" /> |
+| **数式** | **ダイアグラム** |
+| <img src="docs/images/readme/ja/formula.webp" alt="入力するそばから描かれる数式" width="420" /> | <img src="docs/images/readme/ja/diagram.webp" alt="Mermaidのフローチャート" width="420" /> |
 
 ## Textus AI
 
-あなたの執筆アシスタント。一緒に書いていきます。
+オンラインのLLMにもローカルのLLMにも対応。AIが執筆を加速します。
 
-### 書いているとき
+| 続きの提案 | 誤字と文法 | 修正の提案 |
+| :---: | :---: | :---: |
+| <img src="docs/images/readme/ja/ai-continue.webp" alt="手を止めると続きが灰色で現れ、Tabで採用" width="280" /> | <img src="docs/images/readme/ja/ai-grammar.webp" alt="誤りに下線、Alt+Enterで修正" width="280" /> | <img src="docs/images/readme/ja/ai-revise.webp" alt="一文ずつの修正案、それぞれに理由つき" width="280" /> |
+| **レビューコメント** | **スラッシュスキル** | **好きなモデルで** |
+| <img src="docs/images/readme/ja/ai-review.webp" alt="該当する文に付いたコメント" width="280" /> | <img src="docs/images/readme/ja/ai-skills.webp" alt="/ で開くスキルメニュー" width="280" /> | <img src="docs/images/readme/ja/ai-models.webp" alt="設定でプロバイダーを選ぶ" width="280" /> |
 
-手を止めると、続きの言葉が灰色で現れます。Tabキーで採用。誤字や文法の誤りを、書きながら指摘。あなたの表記ルールも確かめます。Alt+Enterで修正。
+## プラグイン（テスト中、1.3 beta）
 
-### 頼んだとき
+書くだけでなく、必要なものはプラグインで足せます。
 
-修正は、理由を添えた提案として届きます。まとめて適用することも、一文ずつ選ぶこともできます。コメントは、該当する行に付きます。書き直すのではなく、助言として。簡潔にする、校正、翻訳、口調を変えるなど。スラッシュひとつで呼び出せます。
+| グラフビュー | Vim |
+| :---: | :---: |
+| <img src="docs/images/readme/ja/plugin-graph.webp" alt="ノートとそのリンクをグラフで表示" width="420" /> | <img src="docs/images/readme/ja/plugin-vim.webp" alt="Vimのジャンプラベルと、ウィンドウバーのモード表示" width="420" /> |
+| **クイックプレビュー** | **バージョン履歴** |
+| <img src="docs/images/readme/ja/plugin-preview.webp" alt="リンクにポインタを置くと、リンク先のノートがカードで表示される" width="420" /> | <img src="docs/images/readme/ja/plugin-history.webp" alt="ノートの過去のバージョンを横に表示" width="420" /> |
 
-### あなたを知っている
-
-あなたの文体を学び、人物や場所の設定を覚え、執筆の指示に従います。
-
-### LLMは、お好きなものを
-
-Textus は20種類以上のLLMに対応し、OpenAI互換のAPIを備えたLLMならどれでも使えます。
-
-OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Doubao · Ollama · OpenAI互換のあらゆるエンドポイント
-
-<p align="center">
-  <img src="docs/images/readme/ja/settings.png" alt="LLMは、お好きなものを" width="860" />
-</p>
-
-## プラグイン（テスト中、1.3 ベータ）
-
-必要なものだけを足せます。ノートとリンクを描いたグラフ、リンク先を見せるカード、二つの文書を並べる分割表示、カンバン、バージョン履歴、タブで開く PDF と Word、Zotero からの引用――どれも**設定 › 拡張機能 › さらに入手**に、テーマやスキルと並んでいます。プラグインは何かを使う前に必ず尋ねます。
-
-<p align="center">
-  <img src="docs/images/readme/ja/plugins.png" alt="『吾輩は猫である』の人物ノートとそのリンクのグラフ。リンク先のノートがカードで開いている。" width="860" />
-</p>
-
-## あなたが書いたものは、あなただけのもの
-
-あなたの文章は、あなたのもの。Textusはそのために設計され、コードもすべて公開しています。
-
-文書は普通のMarkdownファイル。置き場所はあなたが決めます。APIキーとサインイン情報は、あなたのコンピューターにだけ保存されます。AIへのリクエストは、デバイスから選んだプロバイダーへ直接届きます。ダウンロードして、書くだけ。登録するものは何もありません。分析も、テレメトリーも、広告もありません。MITライセンスで一行残らず公開。ここに書いたことは、誰でも確かめられます。 Ollamaでローカルモデルを使えば、あなたの言葉がコンピューターの外へ出ることはありません。
+カンバン、タブで開くPDFとWord、Zoteroからの引用、さまざまなグラフなどは **設定 › 拡張機能 › さらに入手** にあります。
 
 ## よくある質問
 
@@ -158,7 +110,14 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
 <details>
 <summary><strong>どの環境で使えますか？</strong></summary>
 
-macOS（AppleシリコンとIntel）、Windows、Linuxです。iPhone版とiPad版も準備中です。
+macOS（AppleシリコンとIntel）、Windows、Linuxです。iOS版とiPadOS版も、まもなく登場します。
+
+</details>
+
+<details>
+<summary><strong>メモリはどれくらい使いますか？</strong></summary>
+
+メモリ使用量はとても重視していて、リリースのたびに計測しています。ウィンドウ1つで約110 MB、ウィンドウを1つ増やすごとに約55 MB増えます。プラグインは使うときだけ読み込まれ、バックグラウンドに置いたWebページは解放されて、戻ったときに読み込み直されます。
 
 </details>
 
@@ -182,15 +141,6 @@ macOS（AppleシリコンとIntel）、Windows、Linuxです。iPhone版とiPad�
 はい、普通の.mdファイルです。表、タスクリスト、脚注、数式、Mermaidに対応し、PDF、Word、HTMLなどに書き出せます。
 
 </details>
-
-## はじめかた
-
-1. Textus を起動します。白紙の下書きから始まり、ファイルが必要になるのは保存するときだけです。
-2. **設定 → Textus AI** を開いてプロバイダーを選び、**ログインと認証** でサインインするかキーを貼り付けます。
-3. 書き始めましょう。手を止めると続きが灰色で現れ、Tab で採用できます。
-4. ウィンドウバーの **Textus AI** ボタン（羽ペン）でAIパネルを開きます。詳しくは **ヘルプ → AI 機能ガイド** を。
-
-ショートカットの一覧と変更は **設定 → ショートカット** から行えます。
 
 ## コミュニティ
 

@@ -60,16 +60,30 @@ export function uiHandlers(p: PluginScope) {
         cancelLabel: p.t().pluginCancel,
         placeholder: optionalStr(placeholder),
       }),
-    "ui.pick": ({ items, placeholder, multiple }: Params) =>
-      showQuickPick(
-        (Array.isArray(items) ? items : []).map((item) =>
-          typeof item === "string"
-            ? { label: item, value: item }
-            : (item as QuickPickItem),
-        ),
-        optionalStr(placeholder) ?? "",
-        { multiple: multiple === true },
-      ),
+    "ui.pick": async ({
+      items,
+      placeholder,
+      multiple,
+      value,
+      commands,
+    }: Params) => {
+      const list = (Array.isArray(items) ? items : []).map((item) =>
+        typeof item === "string"
+          ? { label: item, value: item }
+          : (item as QuickPickItem),
+      );
+      // A command line: the items among the palette's (Vim's ":").
+      if (commands === true)
+        return p.deps.pickWithCommands(
+          list,
+          optionalStr(value) ?? "",
+          optionalStr(placeholder),
+        );
+      return showQuickPick(list, optionalStr(placeholder) ?? "", {
+        multiple: multiple === true,
+        query: optionalStr(value),
+      });
+    },
     "ui.form": ({ title, okLabel, fields }: Params) =>
       showPluginForm({
         title: optionalStr(title) ?? p.name(),

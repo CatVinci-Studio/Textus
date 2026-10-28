@@ -84,7 +84,7 @@ describe("the tour", () => {
       write: "write",
       review: "review",
       revision: "write",
-      skills: "write",
+      skills: "review",
     });
   });
 

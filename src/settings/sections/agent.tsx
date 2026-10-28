@@ -11,7 +11,7 @@ import {
   SEARCH_SERVICES,
   useSettings,
   type SearchService,
-} from "../SettingsContext";
+} from "../../prefs/SettingsContext";
 import { localeOf, type Strings, type TextKey } from "../../i18n/strings";
 import { SIGN_IN_MODELS, type SignInModels } from "../agent-models";
 import {

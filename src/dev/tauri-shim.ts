@@ -24,46 +24,11 @@ import { webPageCommand } from "./native-web-pages";
 /** The built-in skills as `list_skills` reports them (descriptions abridged). */
 const DEV_BUILTIN_SKILLS: [string, string, string, string, string][] = [
   [
-    "expand",
-    "revise",
-    "userOnly",
-    "write",
-    "Makes a passage fuller without adding facts.",
-  ],
-  [
-    "tighten",
-    "revise",
-    "userOnly",
-    "write",
-    "Cuts a passage down without losing its meaning.",
-  ],
-  [
-    "translate",
-    "revise",
-    "both",
-    "write",
-    "Translates the selection or the document.",
-  ],
-  [
-    "summarize",
-    "format",
-    "userOnly",
-    "write",
-    "Sums up the document or a passage.",
-  ],
-  [
     "proofread",
     "check",
     "both",
     "review",
     "Fixes typos, grammar and punctuation.",
-  ],
-  [
-    "continuity",
-    "check",
-    "both",
-    "review",
-    "Checks names, facts and timelines against the library.",
   ],
   [
     "theme",
@@ -446,7 +411,7 @@ export function installDevTauriShim(): void {
     return null;
   }
 
-  // Skills in memory: the 9 built-ins and one of the user's own.
+  // Skills in memory: the 4 built-ins and one of the user's own.
   // `window.__devSkills` exposes the state.
   const skills = {
     ownModes: ["write"] as string[],
@@ -726,7 +691,8 @@ export function installDevTauriShim(): void {
   // Plugins in memory. Folder calls read `window.__devFs` (a lone document,
   // `__devFiles`); installed plugins are `__devPlugins`, and `__devPluginState`
   // starts some on. The catalog is served at /dev-plugins/; see also
-  // `__devCatalogInstalled`, `__devCatalogCache` and `__devCatalogFails`.
+  // `__devCatalogInstalled`, `__devCatalogCache`, `__devCatalogFails` and
+  // `__devCatalogStats`.
   type DevPluginEntry = {
     enabled: boolean;
     granted: string[];
@@ -738,13 +704,25 @@ export function installDevTauriShim(): void {
     allOn: true,
     plugins: {} as Record<string, DevPluginEntry>,
   };
-  type CatalogEntry = { id: string; official: boolean; manifest: unknown };
+  type CatalogEntry = {
+    id: string;
+    official: boolean;
+    manifest: unknown;
+    readme?: Record<string, string>;
+  };
   let catalogEntries: Promise<CatalogEntry[]> | null = null;
   const devCatalog = () =>
     (catalogEntries ??= fetch("/dev-plugins/index.json").then((r) =>
       r.ok
-        ? (r.json() as Promise<{ plugins: CatalogEntry[] }>).then(
-            (c) => c.plugins,
+        ? (r.json() as Promise<{ plugins: CatalogEntry[] }>).then((c) =>
+            // `__devCatalogStats`: installs and dates by id, as the
+            // release's daily count adds them.
+            c.plugins.map((p) => ({
+              ...p,
+              ...((w.__devCatalogStats as Record<string, object> | undefined)?.[
+                p.id
+              ] ?? {}),
+            })),
           )
         : Promise.reject(new Error("No textus-plugins checkout to list.")),
     ));
@@ -847,6 +825,16 @@ export function installDevTauriShim(): void {
         );
       case "plugin_install_catalog":
         return installFromDevCatalog(id);
+      // As Rust picks it: the language, its base, then English.
+      case "plugin_catalog_readme":
+        return devCatalog().then((entries) => {
+          const readme = entries.find((e) => e.id === id)?.readme ?? {};
+          const lang = String(args.language);
+          const url = [lang, lang.split("-")[0], "en"]
+            .map((l) => readme[l])
+            .find(Boolean);
+          return url ? fetch(url).then((r) => r.text()) : null;
+        });
       // The catalog's skills: `window.__devCatalogSkills`, installed into
       // `window.__devInstalledSkills`.
       case "skill_catalog":
@@ -1089,8 +1077,11 @@ export function installDevTauriShim(): void {
     },
     // Tauri's Windows form of an asset URL, which a test can answer with
     // page.route - a custom scheme never reaches the network.
+    // No plugin files are served here: their frames get data: URLs.
     convertFileSrc: (path: string, protocol = "asset") =>
-      `http://${protocol}.localhost/${encodeURIComponent(path)}`,
+      protocol === "textus-plugin"
+        ? ""
+        : `http://${protocol}.localhost/${encodeURIComponent(path)}`,
     invoke: (cmd: string, args?: { event?: string; handler?: number }) => {
       log(cmd);
       // Pages and links opened in the browser: `window.__devLinks`.

@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
-import { useSettings } from "../../settings/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { usePluginMenuEntries } from "../../plugins/contributions/usePluginMenu";
 import { Presence } from "../../ui/usePresence";

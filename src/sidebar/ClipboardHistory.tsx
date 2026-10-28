@@ -1,4 +1,4 @@
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { CopyIcon } from "../ui/icons";
 import {
   useClipboardHistory,

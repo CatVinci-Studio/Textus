@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { usePresenceProps } from "./usePresence";
 import "./ActionSheet.css";
 

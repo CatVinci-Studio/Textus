@@ -52,100 +52,52 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 免費開源，採用 MIT 授權。
 
-| 平台               | 下載                                                                                          |
-| ---------------- | ------------------------------------------------------------------------------------------- |
-| macOS · Apple 晶片 | [下載 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                        |
-| macOS · Intel    | [下載 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest)                        |
-| Windows · x64    | [下載 .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                        |
-| Linux · x64      | [下載 .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · 另提供 .deb · .rpm |
+| 平台 | 下載 | 其他安裝方式 |
+| --- | --- | --- |
+| macOS · Apple 晶片 | [下載 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew：`brew install --cask textus` |
+| macOS · Intel | [下載 .dmg](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew：`brew install --cask textus` |
+| Windows · x64 | [下載 .exe](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
+| Linux · x64 | [下載 .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · 另提供 .deb · .rpm | Arch Linux：[`[catvinci]` 軟體庫](https://github.com/CatVinci-Studio/arch-repo) |
 
-或透過 Homebrew 安裝：
+> iOS 與 iPadOS 版即將推出。
 
-```sh
-brew install --cask textus
-```
-
-Arch Linux 可以使用帶簽章的 [`[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) pacman 軟體庫（只需設定一次，之後 `sudo pacman -Syu` 會讓 Textus 保持最新）：
-
-```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/CatVinci-Studio/arch-repo/main/install.sh) textus-bin
-```
-
-iPhone 與 iPad 版即將推出。[在 GitHub 查看所有版本](https://github.com/CatVinci-Studio/Textus/releases)
-
-想搶先用上新版本？在 **設定 › 一般 › 關於 Textus** 中把 **更新通道** 改為 **測試版**，就會一併收到候選版本；隨時可以改回 **正式版**，之後會停在目前的版本，直到有更新的正式版推出。
+測試版：在 **設定 › 一般 › 關於 Textus** 中把 **更新通道** 改為 **測試版**。
 
 ## 寫作
 
-所有 Markdown 標記，邊寫邊排版。將指標移到任一行，就⁠能⁠看⁠到⁠原⁠始⁠寫⁠法⁠。
+所見即所得，用 Markdown 快速排版。支援多種匯出格式，包括 PDF、Word、HTML。
 
 <p align="center">
-  <img src="docs/images/readme/zh-hant/markdown.png" alt="所見即所得" width="860" />
+  <img src="docs/images/readme/zh-hant/markdown.webp" alt="一篇文件用到了全部 Markdown 標記：標題、粗體斜體、引用、清單、待辦事項、連結、註腳，都已排好" width="860" />
 </p>
 
-公式隨打隨現，表格自動對齊，幾⁠行⁠文⁠字⁠就⁠能⁠畫⁠成⁠圖⁠表⁠。
-
-<p align="center">
-  <img src="docs/images/readme/zh-hant/math.png" alt="公式、表格、圖表，一鍵搞定" width="860" />
-</p>
-
-### 寫作風格？隨你喜歡
-
-四種寫作模式隨心切換，主題一鍵更換，Typora 主題也能直接用。
-
-| 寫作模式  | 作用                  |
-| ----- | ------------------- |
-| 禪模式   | 除了文字，其餘一切都退到幕後      |
-| 打字機模式 | 正在寫的那一行始終停在同一高度     |
-| 分割檢視  | 一邊寫 Markdown，一邊看排版  |
-| 原始碼模式 | 整份文件以 Markdown 原文呈現 |
-
-<p align="center">
-  <img src="docs/images/readme/zh-hant/split.png" alt="分割檢視" width="49%" />
-  <img src="docs/images/readme/zh-hant/zen.png" alt="禪模式" width="49%" />
-</p>
-
-匯出為 PDF、Word、HTML 等格式。
+| 程式碼區塊 | 表格 |
+| :---: | :---: |
+| <img src="docs/images/readme/zh-hant/code.webp" alt="依程式語言上色的程式碼區塊" width="420" /> | <img src="docs/images/readme/zh-hant/table.webp" alt="欄位自動對齊的表格" width="420" /> |
+| **數學公式** | **圖表** |
+| <img src="docs/images/readme/zh-hant/formula.webp" alt="邊打邊出現的數學公式" width="420" /> | <img src="docs/images/readme/zh-hant/diagram.webp" alt="Mermaid 流程圖" width="420" /> |
 
 ## Textus AI
 
-你的寫作助手，和你一起寫。
+支援線上、本機等多種 LLM 模型服務，讓 AI 加速你的寫作。
 
-### 寫的時候
-
-停下筆，下文便以灰字浮現，按 Tab 接⁠受⁠。邊寫邊標出錯字與語病，並⁠對⁠照⁠你⁠的⁠寫⁠作⁠規⁠範⁠。Alt+Enter 一⁠鍵⁠修⁠正⁠。
-
-### 需要幫忙時
-
-修改以建議呈現，各附理由。可以整段接受，也⁠可⁠以⁠逐⁠句⁠取⁠捨⁠。批註就留在對應的句子旁。只提意見，不⁠動⁠你⁠的⁠原⁠稿⁠。精簡、校對、翻譯、調整語氣……輸⁠入 / 就⁠能⁠使⁠用⁠。
-
-### 懂你
-
-學習你的文風，記住筆下的人物與地點，遵⁠循⁠你⁠的⁠寫⁠作⁠指⁠示⁠。
-
-### 不同 LLM，隨你喜歡
-
-Textus 支援超過 20 種不同的 LLM，以及任何提供 OpenAI 相容介面的 LLM。
-
-OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · 豆包 · Ollama · 任何相容 OpenAI 介面的服務
-
-<p align="center">
-  <img src="docs/images/readme/zh-hant/settings.png" alt="不同 LLM，隨你喜歡" width="860" />
-</p>
+| 續寫 | 錯字與語病 | 修改提議 |
+| :---: | :---: | :---: |
+| <img src="docs/images/readme/zh-hant/ai-continue.webp" alt="停筆時出現灰色的下文，按 Tab 接受" width="280" /> | <img src="docs/images/readme/zh-hant/ai-grammar.webp" alt="錯字和語病被標出，按 Alt+Enter 修正" width="280" /> | <img src="docs/images/readme/zh-hant/ai-revise.webp" alt="逐句的修改提議，各附理由" width="280" /> |
+| **審閱註解** | **斜線技能** | **任選模型** |
+| <img src="docs/images/readme/zh-hant/ai-review.webp" alt="註解釘在對應的句子旁" width="280" /> | <img src="docs/images/readme/zh-hant/ai-skills.webp" alt="輸入 / 叫出技能選單" width="280" /> | <img src="docs/images/readme/zh-hant/ai-models.webp" alt="在設定裡選擇服務供應商" width="280" /> |
 
 ## 外掛程式（測試中，1.3 beta）
 
-需要什麼就裝什麼。筆記和連結畫成的知識圖譜、停在連結上就能看到內容的卡片、兩篇文件並排、看板、版本紀錄、在分頁裡看 PDF 和 Word、從 Zotero 插入引用——都在**設定 › 擴充功能 › 取得更多**裡，和主題、技能放在一起。每個外掛程式用到什麼，都會先問你。
+不只是寫作，透過外掛程式實現更多功能。
 
-<p align="center">
-  <img src="docs/images/readme/zh-hant/plugins.png" alt="《西遊記》的人物筆記和它們的知識圖譜並排，一條連結指向的筆記顯示在卡片裡。" width="860" />
-</p>
+| 知識圖譜 | Vim |
+| :---: | :---: |
+| <img src="docs/images/readme/zh-hant/plugin-graph.webp" alt="筆記和連結畫成的知識圖譜" width="420" /> | <img src="docs/images/readme/zh-hant/plugin-vim.webp" alt="Vim 的跳轉標記，視窗列顯示目前模式" width="420" /> |
+| **快速預覽** | **版本紀錄** |
+| <img src="docs/images/readme/zh-hant/plugin-preview.webp" alt="停在連結上，卡片顯示那篇筆記" width="420" /> | <img src="docs/images/readme/zh-hant/plugin-history.webp" alt="一篇筆記的歷史版本並排在旁" width="420" /> |
 
-## 你寫的東西，只屬於你
-
-你寫的內容只屬於你。Textus 從⁠設⁠計⁠上⁠確⁠保⁠這⁠一⁠點⁠，程⁠式⁠碼⁠也⁠完⁠全⁠公⁠開⁠，任⁠何⁠人⁠都⁠能⁠查⁠證⁠。
-
-文件是一般的 Markdown 檔案，存⁠放⁠在⁠你⁠指⁠定⁠的⁠位⁠置⁠。API 金鑰與登入資訊，只⁠儲⁠存⁠在⁠你⁠的⁠電⁠腦⁠上⁠。AI 請求從你的裝置直接送往你⁠選⁠擇⁠的⁠服⁠務⁠供⁠應⁠商⁠。下載就能寫，不⁠必⁠註⁠冊⁠任⁠何⁠東⁠西⁠。沒有數據分析，沒有遙測，也⁠沒⁠有⁠廣⁠告⁠。每一行程式碼都以 MIT 授權公開。以⁠上⁠種⁠種⁠，任⁠何⁠人⁠都⁠能⁠查⁠證⁠。 透過 Ollama 使用本機模型時，你⁠的⁠文⁠字⁠完⁠全⁠不⁠會⁠離⁠開⁠電⁠腦⁠。
+還有看板、在分頁中閱讀 PDF 與 Word、Zotero 引用、各類圖表等，都在 **設定 › 擴充功能 › 取得更多**。
 
 ## 常見問題
 
@@ -159,7 +111,14 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
 <details>
 <summary><strong>支援哪些平台？</strong></summary>
 
-支援 macOS（Apple 晶片與 Intel）、Windows 與 Linux。iPhone 與 iPad 版即將推出。
+支援 macOS（Apple 晶片與 Intel）、Windows 與 Linux。iOS 與 iPadOS 版即將推出。
+
+</details>
+
+<details>
+<summary><strong>佔用記憶體多嗎？</strong></summary>
+
+我們非常在意記憶體用量，每個版本都會實測。開一個視窗約 110 MB，每多開一個視窗約再多 55 MB。外掛程式用到時才載入；放在背景的網頁會自動釋放，回來時再重新載入。
 
 </details>
 
@@ -184,19 +143,10 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
 
 </details>
 
-## 快速上手
-
-1. 開啟 Textus。它從一份空白草稿開始，儲存時才需要選擇檔案。
-2. 開啟 **設定 → Textus AI**，選擇服務供應商，在 **登入與憑證** 中登入或填入金鑰。
-3. 開始寫作。停筆時，續寫會以灰色文字出現，按 Tab 接受。
-4. 點視窗列裡的 **Textus AI** 按鈕（羽毛筆）開啟 AI 面板。其餘功能請見 **說明 → AI 功能指南**。
-
-所有快速鍵都可以在 **設定 → 快速鍵** 中查看和修改。
-
 ## 社群
 
 - [QQ 群](https://textus.catvinci.com/qq)：1128285004
-- [微信群](https://textus.catvinci.com/wechat)：掃碼加入（QR 碼每週更新）
+- [微信群](https://textus.catvinci.com/wechat)：掃碼加入
 - [Discord](https://textus.catvinci.com/discord)：英文交流
 
 錯誤回報與功能建議也歡迎提到 [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues)。

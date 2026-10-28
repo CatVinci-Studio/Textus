@@ -1,7 +1,4 @@
-import {
-  storedAgentMode,
-  type AgentMode,
-} from "../../settings/SettingsContext";
+import { storedAgentMode, type AgentMode } from "../../prefs/SettingsContext";
 import { LOCAL_KEYS, readLocalJson, writeLocal } from "../../storage/local";
 
 /**

@@ -2,6 +2,7 @@ import { isLinuxPlatform } from "../../platform/os";
 import { Plugin } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
+import { isImeKeydown } from "../../utils/ime";
 
 // WebKitGTK reports Apple's vendor, so prosemirror-view applies Safari's
 // rule of dropping the first keydown within 500ms of a compositionend. Linux
@@ -20,7 +21,7 @@ export const linuxImeEnterPlugin = $prose(
         handleDOMEvents: {
           keydown(view: EditorView, event: KeyboardEvent) {
             if (!isLinuxWebKit || view.composing) return false;
-            if (event.isComposing || event.keyCode === 229) return false;
+            if (isImeKeydown(event)) return false;
             // A private field, but the only one the rule reads; the value is what
             // prosemirror-view itself resets it to.
             const input = (view as ViewInput).input;

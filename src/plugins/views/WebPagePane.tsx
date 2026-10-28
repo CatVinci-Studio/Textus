@@ -71,7 +71,7 @@ function NativeWebPage({
   const [shown, setShown] = useState(url);
   const [typed, setTyped] = useState(url);
   const holder = useRef<HTMLDivElement>(null);
-  useNativeWebPage(tabId, url, holder, (address) => {
+  const { failed, retry } = useNativeWebPage(tabId, url, holder, (address) => {
     setShown(address);
     setTyped(address);
   });
@@ -87,11 +87,29 @@ function NativeWebPage({
           setShown(next);
           void webPages.navigate(tabId, next).catch(() => {});
         }}
-        onReload={() => void webPages.reload(tabId).catch(() => {})}
+        onReload={retry}
         onOutside={() => void links.openWebLink(shown)}
         t={t}
       />
-      <div ref={holder} className="web-page-native" />
+      <div ref={holder} className="web-page-native">
+        {failed && (
+          <div className="web-page-failed" role="alert">
+            <p>{t.webPageFailed}</p>
+            <div className="web-page-failed-actions">
+              <button type="button" className="text-button" onClick={retry}>
+                {t.webPageReload}
+              </button>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => void links.openWebLink(shown)}
+              >
+                {t.webPageOpenInBrowser}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

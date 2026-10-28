@@ -1,6 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { askAi } from "../../ai/chat/ask-ai";
-import { DescribePlugin } from "./DescribePlugin";
 import type { SettingsPageProps } from "./types";
 import { Byline, PluginPage, statusText } from "./PluginPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
@@ -27,7 +26,8 @@ import {
   updateFor,
 } from "../../plugins/store/catalog";
 import { canSwitch } from "../../plugins/store/lifecycle";
-import { openUsageGuide } from "../../plugins/store/usage-guide";
+import { pluginMatches } from "../../plugins/store/plugin-records";
+import { PluginIcon } from "./PluginArt";
 
 /**
  * Settings › Extensions › Plugins. Nothing comes installed: Get more offers
@@ -44,6 +44,7 @@ export function PluginsPage({
   const { installing, install, attempt, settings, setSettings } =
     usePluginInstall(t);
   const [open, setOpen] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
   useEffect(() => {
     void loadCatalog();
   }, []);
@@ -60,11 +61,8 @@ export function PluginsPage({
       const path = await pluginsIpc.pickPackage(folder, t.pluginPackageFilter);
       if (!path) return;
       if (folder) return setOpen(await loadDevPlugin(path));
-      const id = await installPlugin(path);
-      // Installed, it shows how it is used, as from Get more; without a
-      // guide, its page.
-      if (await openUsageGuide(id)) onClose();
-      else setOpen(id);
+      // Installed, its page, with its README.
+      setOpen(await installPlugin(path));
     });
 
   const openRecord = open
@@ -74,8 +72,9 @@ export function PluginsPage({
   // heading.
   const isMine = (r: (typeof snapshot.records)[number]) =>
     r.manifest?.publisher === "local";
-  const mine = snapshot.records.filter(isMine);
-  const others = snapshot.records.filter((r) => !isMine(r));
+  const shown = snapshot.records.filter((r) => pluginMatches(r, query));
+  const mine = shown.filter(isMine);
+  const others = shown.filter((r) => !isMine(r));
   const card = (record: (typeof snapshot.records)[number]) => (
     <PluginCard
       key={record.id}
@@ -96,11 +95,6 @@ export function PluginsPage({
         update={updateFor(openRecord.id, catalog)}
         installing={installing === openRecord.id}
         onBack={() => setOpen(null)}
-        onGuide={() =>
-          void openUsageGuide(openRecord.id).then((opened) => {
-            if (opened) onClose();
-          })
-        }
         onEditWithAi={() => {
           onClose();
           askAi(editRequest(openRecord, t), "create");
@@ -145,7 +139,14 @@ export function PluginsPage({
       installed={
         snapshot.records.length ? (
           <>
-            <DescribePlugin t={t} onAsked={onClose} />
+            <input
+              type="search"
+              className="plugin-search"
+              placeholder={t.marketSearch}
+              aria-label={t.marketSearch}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
             <ToggleRow
               label={t.pluginsAllLabel}
               help={t.pluginsAllHelp}
@@ -161,10 +162,7 @@ export function PluginsPage({
             )}
           </>
         ) : (
-          <>
-            <DescribePlugin t={t} onAsked={onClose} />
-            <p className="plugin-empty">{t.pluginsNone}</p>
-          </>
+          <p className="plugin-empty">{t.pluginsNone}</p>
         )
       }
     />
@@ -195,30 +193,33 @@ function PluginCard({
     <div className="settings-row plugin-card" data-plugin={record.id}>
       <button
         type="button"
-        className="plugin-card-open"
+        className="plugin-card-open plugin-card-with-icon"
         aria-label={t.pluginOpenDetails.replace("{name}", name)}
         onClick={onOpen}
       >
-        <span className="settings-row-label plugin-card-name">{name}</span>
-        {manifest?.description && (
-          <span className="settings-row-hint plugin-card-description">
-            {pluginText(record, manifest.description)}
-          </span>
-        )}
-        {manifest && (
-          <Byline
-            manifest={manifest}
-            official={record.official}
-            dev={record.origin === "dev"}
-            t={t}
-          />
-        )}
-        {update && (
-          <span className="plugin-update-note">
-            {t.pluginUpdate.replace("{version}", update)}
-          </span>
-        )}
-        {status && <span className="settings-error">{status}</span>}
+        <PluginIcon id={record.id} manifest={manifest} origin={record.origin} />
+        <span className="plugin-card-text">
+          <span className="settings-row-label plugin-card-name">{name}</span>
+          {manifest?.description && (
+            <span className="settings-row-hint plugin-card-description">
+              {pluginText(record, manifest.description)}
+            </span>
+          )}
+          {manifest && (
+            <Byline
+              manifest={manifest}
+              official={record.official}
+              dev={record.origin === "dev"}
+              t={t}
+            />
+          )}
+          {update && (
+            <span className="plugin-update-note">
+              {t.pluginUpdate.replace("{version}", update)}
+            </span>
+          )}
+          {status && <span className="settings-error">{status}</span>}
+        </span>
       </button>
       <input
         type="checkbox"

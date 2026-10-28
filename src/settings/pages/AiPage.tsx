@@ -8,7 +8,7 @@ import {
   type ProxyType,
   REVISION_DISPLAYS,
   type RevisionDisplay,
-} from "../SettingsContext";
+} from "../../prefs/SettingsContext";
 import {
   marginViewBlocked,
   revisionDisplayName,

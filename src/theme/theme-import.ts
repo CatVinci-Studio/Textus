@@ -1,5 +1,5 @@
 import { fs, themes } from "../platform/ipc";
-import type { UserThemeMeta } from "../settings/SettingsContext";
+import type { UserThemeMeta } from "../prefs/SettingsContext";
 
 /// Typora themes often `@import` a sibling stylesheet and use relative
 /// `url(...)` assets, neither of which resolves in a runtime `<style>`. So

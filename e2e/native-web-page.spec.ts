@@ -75,3 +75,48 @@ test("closing the tab lets its page go", async ({ page }) => {
   await page.keyboard.press("Delete");
   await expect(native(page)).toHaveCount(0);
 });
+
+const emit = (page: Page, payload: unknown) =>
+  page.evaluate(
+    (p) =>
+      (
+        window as unknown as {
+          __devEmitTauriEvent: (n: string, payload: unknown) => void;
+        }
+      ).__devEmitTauriEvent("web-page-navigated", p),
+    payload,
+  );
+
+test("a page that doesn't finish loading says so, and Reload tries again", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await openPage(page);
+  const id = await page
+    .locator('[data-active-tab="true"]')
+    .getAttribute("data-tab-id");
+  // A load starts and never finishes (a refused certificate, no network).
+  await emit(page, { id, url: "https://example.test/page", loading: true });
+  await page.clock.fastForward(16_000);
+  const failed = page.locator(".web-page-failed");
+  await expect(failed).toBeVisible();
+  await expect(native(page)).toBeHidden();
+  await failed.getByRole("button", { name: "Reload" }).click();
+  await expect(failed).toHaveCount(0);
+  await expect(native(page)).toBeVisible();
+});
+
+test("a page long out of sight is let go, and loads again when shown", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await openPage(page);
+  await page.locator(".tab-bar [role='tab']").first().click();
+  await expect(native(page)).toBeHidden();
+  await page.clock.fastForward(5 * 60_000 + 1_000);
+  await expect(native(page)).toHaveCount(0);
+  await page.locator(".tab-bar [role='tab']").last().click();
+  await expect(
+    page.frameLocator(".dev-native-web-page").locator("h1"),
+  ).toHaveText("Example page");
+});

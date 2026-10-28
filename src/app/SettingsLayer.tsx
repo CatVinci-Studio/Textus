@@ -16,17 +16,24 @@ const SettingsPanel = lazyComponent(
 /** The page Settings opens at: General, or Plugins from that menu. */
 type SettingsStart = "general" | "extensions";
 
-/** Whether Settings is open, and at which page. */
+/** Whether Settings is open, and at which page. Each request counts, so
+ *  one made while Settings is open goes to its page from wherever it was. */
 export function useSettingsOpening() {
-  const [open, setOpen] = useState<SettingsStart | null>(null);
+  const [state, setState] = useState<{
+    open: SettingsStart | null;
+    request: number;
+  }>({ open: null, request: 0 });
+  const request = (open: SettingsStart | null) =>
+    setState((s) => ({ open, request: s.request + 1 }));
   return {
-    open,
-    openSettings: () => setOpen("general"),
+    open: state.open,
+    request: state.request,
+    openSettings: () => request("general"),
     openPluginSettings: () => {
       openExtensionsTab("plugins");
-      setOpen("extensions");
+      request("extensions");
     },
-    close: () => setOpen(null),
+    close: () => request(null),
   };
 }
 
@@ -37,13 +44,18 @@ export function SettingsLayer({
 }: Omit<SettingsPanelProps, "onClose" | "initialCategory"> & {
   opening: ReturnType<typeof useSettingsOpening>;
 }) {
-  const { open, close } = opening;
+  const { open, request, close } = opening;
   return (
     // The longest exit is the phone's: the page going back down.
     <Presence show={open !== null} exitMs={320}>
       {open && (
         <Suspense fallback={null}>
-          <SettingsPanel {...props} onClose={close} initialCategory={open} />
+          <SettingsPanel
+            key={request}
+            {...props}
+            onClose={close}
+            initialCategory={open}
+          />
         </Suspense>
       )}
     </Presence>

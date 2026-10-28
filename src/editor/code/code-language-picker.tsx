@@ -5,6 +5,7 @@ import { isIOSApp } from "../../platform/capabilities";
 import { Select } from "../../ui/Select";
 import { usePresence, useMergedRef } from "../../ui/usePresence";
 import { useFloatingList } from "../../ui/useFloatingList";
+import { isImeKeydown } from "../../utils/ime";
 
 export interface LanguagePickerProps {
   /** "" for plain text. */
@@ -120,7 +121,7 @@ function LanguageMenu({
   }
 
   function onKey(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.nativeEvent.isComposing) return;
+    if (isImeKeydown(e)) return;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
       const step = e.key === "ArrowDown" ? 1 : -1;

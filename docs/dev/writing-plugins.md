@@ -36,9 +36,8 @@ of typing. The design behind the system is
 3. Change `host.js` and save: a folder you loaded is read again as it
    changes. Its page in Settings shows what it logged (`ctx.log`).
 
-Or ask Textus AI: **Settings › Extensions › Plugins › Make your own**, or
-"a plugin that …" in **Create** mode, writes one you can install from the
-reply and change in the next message.
+Or ask Textus AI: "a plugin that …" in **Create** mode writes one you can
+install from the reply and change in the next message.
 
 ### A script: a plugin in one file
 
@@ -139,6 +138,7 @@ made when they are first shown.
 | `views`         | `{ id, title, type }`: the same, opened in a tab of its own (`textus.layout.openView`).                                                                                                                                                                                                                                |
 | `customEditors` | `{ viewType, displayName, filenamePatterns: ["*.pdf"], priority }`: a file type opened in the plugin's tab instead of as a document.                                                                                                                                                                                   |
 | `codeBlocks`    | `{ language, title }`: fenced blocks in that language drawn by the plugin (`views.registerCodeBlock`). Textus's own languages (mermaid, math…) can't be taken.                                                                                                                                                         |
+| `suggestFor`    | `["wikilinks"]`: what a document can hold that the plugin works with. An official one is suggested, once, for a document that holds it while no installed plugin does.                                                                                                                                                 |
 | `completions`   | `{ id, where: "math" \| "text" \| "any", pattern }`: completions as you type when what is before the caret matches `pattern` (`editor.registerCompletion`).                                                                                                                                                            |
 | `aiTools`       | `{ name, description, parameters }`: tools Textus AI can call (`ai.registerTool`); `parameters` is a JSON schema.                                                                                                                                                                                                      |
 | `links`         | `{ pattern, command }`: web links Ctrl/Cmd+clicked in a document whose URL matches `pattern` run `command` with the URL.                                                                                                                                                                                               |
@@ -417,12 +417,14 @@ another plugin's data, run native code, or reach the network or files
 beyond what it was granted. A plugin that stops answering, or throws more
 than ten errors a minute, is turned off and the user is told.
 
-## A usage guide
+## Its README
 
-Put a `USAGE.md` beside the manifest - and `USAGE.zh.md`, `USAGE.ja.md`
+Put a `README.md` beside the manifest - and `README.zh.md`, `README.ja.md`
 and so on for other languages - saying in a few lines what the plugin does
-and how to reach it. Textus opens it when the plugin is installed, and its
-page in Settings has **How to use** to open it again.
+and how to reach it. **Get more** shows it on the plugin's page before it
+is installed, and its page in Settings shows it after; Textus picks the
+reader's language, English otherwise. The manifest's `icon` (an SVG or PNG)
+is drawn beside its name on a tile of its own.
 
 ## Screenshots
 

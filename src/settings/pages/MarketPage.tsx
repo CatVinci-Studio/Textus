@@ -6,6 +6,8 @@ import {
   subscribeCatalog,
 } from "../../plugins/store/catalog";
 import { MarketPlugins } from "./MarketPlugins";
+import { MarketPluginPage } from "./MarketPluginPage";
+import { pluginsSnapshot, subscribePlugins } from "../../plugins/manager";
 import { ThemeGallerySection } from "../sections/theme-gallery";
 import { MarketSkills } from "../sections/market-skills";
 import { links } from "../../platform/ipc";
@@ -16,23 +18,23 @@ export type MarketKind = "themes" | "plugins" | "skills";
 const KINDS: MarketKind[] = ["themes", "plugins", "skills"];
 
 /** Settings › Extensions › Get more: themes, plugins and skills to add, a
- *  tab per kind with its search. Fetched only when this page opens. */
+ *  tab per kind with its search; a plugin opens its own page. Fetched only
+ *  when this page opens. */
 export function MarketPage({
   t,
   kind: initialKind,
   onBack,
-  onInstalled,
 }: {
   t: Strings;
   kind: MarketKind;
   onBack: () => void;
-  /** A plugin installed from here. */
-  onInstalled: (id: string) => void;
 }) {
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
-  const { installing, install } = usePluginInstall(t, onInstalled);
+  const plugins = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
+  const { installing, install } = usePluginInstall(t);
   const [kind, setKind] = useState<MarketKind>(initialKind);
   const [query, setQuery] = useState("");
+  const [open, setOpen] = useState<string | null>(null);
   useEffect(() => {
     void loadCatalog();
   }, []);
@@ -41,6 +43,22 @@ export function MarketPage({
     plugins: t.extensionsTabPlugins,
     skills: t.extensionsTabSkills,
   };
+  const installed = new Set(plugins.records.map((r) => r.id));
+  const item =
+    open && catalog.status === "ready"
+      ? catalog.items.find((i) => i.id === open)
+      : undefined;
+  if (item)
+    return (
+      <MarketPluginPage
+        item={item}
+        t={t}
+        installed={installed.has(item.id)}
+        installing={installing === item.id}
+        onInstall={() => void install(item)}
+        onBack={() => setOpen(null)}
+      />
+    );
   return (
     <div className="plugin-page plugin-get-page market-page">
       <button type="button" className="plugin-back" onClick={onBack}>
@@ -85,8 +103,10 @@ export function MarketPage({
             t={t}
             catalog={catalog}
             query={query}
+            installed={installed}
             installing={installing}
-            onInstall={install}
+            onInstall={(i) => void install(i)}
+            onOpen={(i) => setOpen(i.id)}
           />
         </section>
       )}

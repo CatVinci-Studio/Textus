@@ -415,6 +415,13 @@
               }
             }
           }
+        },
+        "suggestFor": {
+          "type": "array",
+          "description": "What a document can hold that the plugin works with. An official plugin is suggested, once, for a document that holds one when no installed plugin works with it.",
+          "items": {
+            "enum": ["wikilinks"]
+          }
         }
       }
     },

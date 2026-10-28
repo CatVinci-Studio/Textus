@@ -53,9 +53,10 @@ test("Create mode makes a skill, saved in the modes picked", async ({
 
   const chip = panel.locator('.skill-offer-chip[data-skill="weekly-report"]');
   await expect(chip).toContainText("Weekly report");
-  const modes = chip.getByRole("group", { name: "Modes it works in" });
-  await expect(modes.getByRole("checkbox", { name: "Write" })).toBeChecked();
-  await modes.getByRole("checkbox", { name: "Review" }).click();
+  const modes = chip.getByRole("button", { name: /Modes it works in/ });
+  await expect(modes).toHaveText("Write");
+  await modes.click();
+  await chip.getByRole("menuitemcheckbox", { name: "Review" }).click();
   await chip.getByRole("button", { name: "Save this skill" }).click();
   await expect(chip).toContainText("Kept as /weekly-report");
   const log = await page.evaluate(

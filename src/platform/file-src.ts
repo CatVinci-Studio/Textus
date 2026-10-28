@@ -6,3 +6,9 @@ import { inBrowser } from "./runtime";
 export function fileSrc(path: string): string {
   return inBrowser ? "about:blank" : convertFileSrc(path);
 }
+
+/** Where a plugin's own files are served (plugins/scheme.rs), ending in "/";
+ *  null where nothing serves them (the browser, the dev browser's shim). */
+export function pluginFilesBase(): string | null {
+  return inBrowser ? null : convertFileSrc("", "textus-plugin") || null;
+}

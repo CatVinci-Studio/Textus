@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ai, type MemoryScope } from "../../platform/ipc";
-import { useSettings } from "../../settings/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { errorText } from "../../utils/error-text";
 import { useAgentPanel } from "./panel/agent-panel";
 import { focusMemory } from "./panel/memory-focus";

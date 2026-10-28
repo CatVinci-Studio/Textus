@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
 import { AppMenu } from "./menu/AppMenu";
 import type { MenuChecks } from "./menu/app-menu-model";

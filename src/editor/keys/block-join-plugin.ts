@@ -7,15 +7,14 @@ import {
   type Transaction,
 } from "@milkdown/kit/prose/state";
 import type { Node, ResolvedPos } from "@milkdown/kit/prose/model";
-import { cellAround } from "@milkdown/kit/prose/tables";
+import { inTableCell } from "../tables/table-pos";
 import { $prose } from "@milkdown/kit/utils";
-import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
+import { stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "./ime";
 import { alertMarker } from "../markdown/github-alert-plugin";
 
 /** Code, maths, front matter: text kept as written. */
 const isVerbatim = (node: Node) => node.isTextblock && !!node.type.spec.code;
-
-const inTable = ($pos: ResolvedPos) => cellAround($pos) != null;
 
 /** The hidden `[!NOTE]` line an alert starts with. */
 const opensAlert = ($pos: ResolvedPos) =>
@@ -29,7 +28,7 @@ const opensAlert = ($pos: ResolvedPos) =>
 const keptApart = ($a: ResolvedPos, $b: ResolvedPos) =>
   isVerbatim($a.parent) ||
   isVerbatim($b.parent) ||
-  inTable($a) !== inTable($b) ||
+  inTableCell($a) !== inTableCell($b) ||
   opensAlert($b);
 
 /** The caret position at the near end of the next textblock in `dir`,
@@ -114,11 +113,11 @@ export const deleteKeepingApart: Command = (state, dispatch) => {
  *  the next line out of its quote or list. An empty line there goes. */
 export const deleteJoiningText: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
-  if (!empty || !$from.parent.isTextblock || inTable($from)) return false;
+  if (!empty || !$from.parent.isTextblock || inTableCell($from)) return false;
   if ($from.parentOffset !== $from.parent.content.size) return false;
   const $next = neighbour($from, 1);
   // Lines side by side join by default.
-  if (!$next || inTable($next) || $next.node(-1) === $from.node(-1))
+  if (!$next || inTableCell($next) || $next.node(-1) === $from.node(-1))
     return false;
   // A list item with more in it keeps a first line: let the default lift it.
   const host = $next.node(-1);

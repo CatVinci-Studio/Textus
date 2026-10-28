@@ -11,6 +11,13 @@ exports.activate = function () {
   textus.commands.register("test.palette.hello", function () {
     textus.ui.notice("Hello from the palette");
   });
+  textus.commands.register("test.palette.line", async function () {
+    const got = await textus.ui.pick([":write", ":quit"], {
+      commands: true,
+      value: ":",
+    });
+    textus.ui.notice("Line: " + JSON.stringify(got));
+  });
 };
 `;
 
@@ -26,7 +33,10 @@ const ENTRY = {
     engines: { textus: "^1.3.0" },
     main: "host.js",
     contributes: {
-      commands: [{ command: "test.palette.hello", title: "Say Hello" }],
+      commands: [
+        { command: "test.palette.hello", title: "Say Hello" },
+        { command: "test.palette.line", title: "Command Line" },
+      ],
     },
   }),
   dev: false,
@@ -78,4 +88,60 @@ test("the palette finds a menu item and a plugin's command, and runs them", asyn
   await expect(page.locator("[role=status]").first()).toContainText(
     "Hello from the palette",
   );
+});
+
+test("a plugin's command line lists its own commands among the palette's, and hands back what was typed", async ({
+  page,
+}) => {
+  await page.addInitScript((entry) => {
+    if (window.top !== window) return;
+    const w = window as unknown as Record<string, unknown>;
+    w.__devPlugins = [entry];
+    w.__devPluginState = {
+      allOn: true,
+      plugins: { [entry.id]: { enabled: true, granted: [] } },
+    };
+  }, ENTRY);
+  await openApp(page, { settings: { language: "en" } });
+  // The backend's menu dispatch: an item run sends its event.
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, args?: Record<string, unknown>) => unknown;
+      };
+      __devEmitTauriEvent: (n: string) => void;
+    };
+    const invoke = w.__TAURI_INTERNALS__.invoke;
+    w.__TAURI_INTERNALS__.invoke = (cmd, args) => {
+      if (cmd !== "trigger_menu_item") return invoke(cmd, args);
+      w.__devEmitTauriEvent(`menu-${String(args?.id)}`);
+      return Promise.resolve();
+    };
+  });
+  const palette = page.getByRole("dialog", { name: "Type a command…" });
+  const line = async () => {
+    await page.keyboard.press("ControlOrMeta+Shift+P");
+    await page.keyboard.type("command line");
+    await page.keyboard.press("Enter");
+    await expect(palette.getByRole("combobox")).toHaveValue(":");
+  };
+  const status = page.locator("[role=status]").first();
+
+  await line();
+  await page.keyboard.type("qu");
+  await expect(palette.getByRole("option").first()).toContainText(":quit");
+  await page.keyboard.press("Enter");
+  await expect(status).toContainText('Line: ":quit"');
+
+  await line();
+  await page.keyboard.type("999");
+  await expect(palette.getByRole("option")).toHaveCount(0);
+  await page.keyboard.press("Enter");
+  await expect(status).toContainText('Line: {"typed":":999"}');
+
+  // ":split right" finds the menu's Split Right, which runs.
+  await line();
+  await page.keyboard.type("split right");
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".split-pane")).toHaveCount(2);
 });

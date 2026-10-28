@@ -105,13 +105,20 @@ export default tseslint.config(
     rules: above([...SHELL, ...FEATURES, "ui"], { tauri: true }),
   },
   {
+    // The settings model: what every layer above reads.
+    files: ["src/prefs/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([...SHELL, ...FEATURES, "ui"]),
+  },
+  {
     files: ["src/ui/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
-    rules: above([...SHELL, ...FEATURES.filter((f) => f !== "settings")]),
+    rules: above([...SHELL, ...FEATURES]),
   },
   {
     files: ["src/editor/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
+    // Plugins add to the editor through editor/extension-points.ts.
     rules: above([
       ...SHELL,
       "ai",
@@ -119,6 +126,7 @@ export default tseslint.config(
       "export",
       "mobile",
       "onboarding",
+      "plugins",
       "sidebar",
     ]),
   },

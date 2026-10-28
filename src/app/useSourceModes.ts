@@ -7,10 +7,12 @@ import {
   takePendingCaret,
 } from "../editor/modes/mode-switch";
 import type { DocTab } from "../document/doc-tabs";
+import { keepReadOnly, tabReadOnly } from "../document/read-only";
 import type { TabState } from "./tabs/useTabState";
 
 /** Switching the active tab between the rich editor, plain source mode and
- *  split view, with the caret carried across each switch. */
+ *  split view, with the caret carried across each switch; and a tab's
+ *  read-only mode. */
 export function useSourceModes(tabState: TabState) {
   const { tabs, activeTabId, liveTabs, updateTab } = tabState;
 
@@ -71,6 +73,18 @@ export function useSourceModes(tabState: TabState) {
     }
   }, [activeTabId, updateTab, liveTabs, leaveSourceMode]);
 
+  // View › Read Only, or a tab's own menu: kept by the file's path.
+  const toggleReadOnly = useCallback(
+    (id: string = activeTabId) => {
+      const tab = liveTabs().find((tb) => tb.id === id);
+      if (!tab || tab.view) return;
+      const next = !tabReadOnly(tab);
+      if (tab.path) keepReadOnly(tab.path, next);
+      updateTab(tab.id, { readOnly: next });
+    },
+    [activeTabId, updateTab, liveTabs],
+  );
+
   // The source view just mounted: put the caret the editor left there.
   const activeSourceMode =
     tabs.find((tb) => tb.id === activeTabId)?.sourceMode ?? false;
@@ -93,5 +107,5 @@ export function useSourceModes(tabState: TabState) {
     return () => cancelAnimationFrame(frame);
   }, [activeSourceMode, activeTabId]);
 
-  return { toggleSourceMode, toggleSplitView };
+  return { toggleSourceMode, toggleSplitView, toggleReadOnly };
 }

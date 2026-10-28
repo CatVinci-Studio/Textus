@@ -4,7 +4,7 @@ import type {
   ThinkingLevel as Thinking,
   WebSource as Source,
 } from "../platform/bindings/ai-agent";
-import type { AgentMode } from "../settings/settings-types";
+import type { AgentMode } from "../prefs/settings-types";
 
 /** The operations a propose_edit call can carry. Keep in step with the
  *  backend's EDIT_ACTIONS, which validates proposals against it. */

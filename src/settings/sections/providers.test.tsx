@@ -50,8 +50,8 @@ const providerMocks = vi.hoisted(() => ({
   ],
 }));
 
-vi.mock("../SettingsContext", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../SettingsContext")>()),
+vi.mock("../../prefs/SettingsContext", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../prefs/SettingsContext")>()),
   useSettings: () => ({
     settings: { aiProvider: "google" },
     setSettings: settingsMocks.setSettings,

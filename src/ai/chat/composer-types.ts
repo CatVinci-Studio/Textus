@@ -2,7 +2,7 @@ import type { ReactNode, RefObject } from "react";
 import type { ChatAttachment, ThinkingLevel } from "../types";
 import { resolveStrings } from "../../i18n/strings";
 import { pickerLabels, type PickerLabels } from "./ComposerPicker";
-import type { AgentMode } from "../../settings/SettingsContext";
+import type { AgentMode } from "../../prefs/SettingsContext";
 
 // What ChatComposer is given, apart from the component so the hooks and
 // windows that only pass these along needn't import it.

@@ -45,8 +45,8 @@ const providerMocks = vi.hoisted(() => ({
   ],
 }));
 
-vi.mock("../settings/SettingsContext", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../settings/SettingsContext")>()),
+vi.mock("../prefs/SettingsContext", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../prefs/SettingsContext")>()),
   useSettings: () => ({
     settings: {
       textusAi: true,

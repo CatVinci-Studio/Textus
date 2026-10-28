@@ -13,7 +13,7 @@ import { useTabJump } from "../editor/useTabJump";
 import { useTabCaret } from "../editor/useTabCaret";
 import { useFocusModeRefresh } from "../editor/modes/useFocusModeRefresh";
 import { useGrammarPopover } from "../ai/writing/useGrammarPopover";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import { revealPlace } from "./plugins/plugin-edits";

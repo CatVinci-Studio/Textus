@@ -50,7 +50,7 @@ jobs:
       - name: Point textus-beta.json at the release
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "::warning::CLOUDFLARE_API_TOKEN is not set: beta users still get the previous version. Run scripts/update-beta-manifest.sh $RELEASE_TAG by hand."
-            exit 0
+            echo "::error::CLOUDFLARE_API_TOKEN is not set: beta users still get the previous version. Run scripts/update-beta-manifest.sh $RELEASE_TAG by hand."
+            exit 1
           fi
           scripts/update-beta-manifest.sh "$RELEASE_TAG"

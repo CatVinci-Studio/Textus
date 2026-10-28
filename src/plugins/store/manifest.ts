@@ -184,6 +184,10 @@ export interface LinkContribution {
   command: string;
 }
 
+/** What a document can hold that a plugin works with, so Textus suggests it
+ *  for a document that does: [[wikilinks]]. */
+export type SuggestKind = "wikilinks";
+
 export interface Contributes {
   commands: CommandContribution[];
   keybindings: KeybindingContribution[];
@@ -199,6 +203,8 @@ export interface Contributes {
   completions: CompletionContribution[];
   links: LinkContribution[];
   codeBlocks: CodeBlockContribution[];
+  /** Suggested, once, for a document with these. */
+  suggestFor: SuggestKind[];
 }
 
 export interface PluginManifest {

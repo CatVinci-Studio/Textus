@@ -6,7 +6,7 @@ import {
   splitLayout,
   type SplitDirection,
 } from "./split-layout";
-import type { DocumentDrop } from "../../ui/document-drop";
+import { setDragging, type DocumentDrop } from "../../ui/document-drop";
 import "./split-drop.css";
 
 /**
@@ -48,6 +48,8 @@ export function dropTargetAt(x: number, y: number): DropTarget | null {
       ?.dataset.tabId;
   }
   if (!tabId || !inside(rect, x, y)) return null;
+  // Split already, a drop only joins the pane: its edges split nothing.
+  if (panes.length > 1) return { zone: "center", tabId, rect };
   const fx = (x - rect.left) / rect.width;
   const fy = (y - rect.top) / rect.height;
   const near = Math.min(fx, 1 - fx, fy, 1 - fy);
@@ -159,7 +161,7 @@ export function pullTab(
   ghost.textContent = title;
   ghost.setAttribute("aria-hidden", "true");
   document.body.append(ghost);
-  document.body.classList.add("tab-pulling");
+  setDragging(true);
   const outside = (e: PointerEvent) =>
     e.clientX < 0 ||
     e.clientY < 0 ||
@@ -195,7 +197,7 @@ export function pullTab(
     window.removeEventListener("pointercancel", stop);
     window.removeEventListener("keydown", key, true);
     ghost.remove();
-    document.body.classList.remove("tab-pulling");
+    setDragging(false);
     showDropHint(null);
   }
   window.addEventListener("pointermove", move);

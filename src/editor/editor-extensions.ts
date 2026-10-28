@@ -75,7 +75,7 @@ import { createMathPreviewPlugin } from "./math/math-preview-plugin";
 import { headingMarkerPlugin } from "./marks/heading-marker-plugin";
 import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
 import { dragAutoscrollPlugin } from "./keys/drag-autoscroll-plugin";
-import { editorInputPlugin } from "../plugins/contributions/editor-input";
+import { editorExtensions } from "./extension-points";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,
@@ -89,12 +89,13 @@ import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
 import { blockJoinPlugin } from "./keys/block-join-plugin";
 import { inlineSourcePlugin } from "./keys/inline-source-plugin";
+import { wikilinkRevealPlugin } from "./markdown/wikilink-reveal";
 import { tabExtendPlugin, tabStaysPlugin } from "./keys/tab-extend-plugin";
 import {
   escapeTrailingBlockPlugin,
   tableEdgeArrowPlugin,
 } from "./markdown/escape-trailing-block-plugin";
-import { pasteMarkdownSourcePlugin } from "./markdown/paste-markdown-plugin";
+import { pasteMarkdownSourcePlugin } from "./clipboard/paste-markdown-plugin";
 import { imageInputRule, linkInputRule } from "./markdown/link-input-rule";
 import { linkSettlePlugin } from "./markdown/link-settle";
 import { remarkLinkSourcePlugin } from "./markdown/link-source";
@@ -103,13 +104,13 @@ import {
   footnoteInputRule,
   htmlTagInputRule,
 } from "./markdown/source-input-rules";
-import { pasteUrlPlugin } from "./markdown/paste-url";
+import { pasteUrlPlugin } from "./clipboard/paste-url";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { createLinkHoverPlugin } from "./hover/link-hover-plugin";
 import { createCompletionPlugin } from "./completion/completion-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
-import { copyTextPlugin } from "./markdown/copy-text-plugin";
-import { pastePlainTextKeyPlugin } from "./markdown/paste-plain";
+import { copyTextPlugin } from "./clipboard/copy-text-plugin";
+import { pastePlainTextKeyPlugin } from "./clipboard/paste-plain";
 import { createImagePlugin } from "./images/image-plugin";
 import {
   obsidianEmbedInputRule,
@@ -122,8 +123,9 @@ import { zenFocusPlugin } from "./modes/zen-focus-plugin";
 import { keyboardRevealPlugin } from "./keys/keyboard-reveal-plugin";
 import { createPlaceholderPlugin } from "./placeholder-plugin";
 import { findReplacePlugin } from "./find/find-replace-plugin";
+import { readOnlyPlugin } from "./read-only-plugin";
 import { resolveStrings } from "../i18n/strings";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 
 /** Where the editor mounts and what it opens with, plus the DOM details the
  *  stylesheets rely on. `label` is read on every update, so a language
@@ -190,7 +192,7 @@ export function withEditorCore(
       .use(openedParseRecorder)
       .use(linksOnSpansSerializer)
       // A plugin holding the keyboard (Vim's normal mode) has its keys first.
-      .use(editorInputPlugin)
+      .use(editorExtensions().keyInput)
       // A plugin's completions take Enter, Tab and the arrows while open.
       .use(createCompletionPlugin())
       .use(macNavigationPlugin)
@@ -231,6 +233,7 @@ export function withEditorCore(
       .use(remarkWikilinkPlugin)
       .use(wikilinkSchema)
       .use(wikilinkInputRule)
+      .use(wikilinkRevealPlugin)
       .use(
         createObsidianEmbedPreviewPlugin({
           docPath: () => docPath.current,
@@ -356,7 +359,9 @@ export function withEditorCore(
       .use(disk ? createLinkClickPlugin(() => docPath.current) : [])
       .use(disk ? createLinkHoverPlugin(() => docPath.current) : [])
       .use(listener)
-      // Ahead of the other key handlers and the preset keymaps.
+      // The block keys: after the inline ones above (enclosures, autopairs,
+      // headings, callouts), ahead of the preset keymaps, which Milkdown adds
+      // last. The order is pinned in editor-extensions.test.ts.
       .use(blockKeysPlugin)
       .use(tabExtendPlugin)
       .use(tabStaysPlugin)
@@ -364,6 +369,7 @@ export function withEditorCore(
       .use(blockJoinPlugin)
       .use(inlineSourcePlugin)
       .use(findReplacePlugin)
+      .use(readOnlyPlugin)
       .use(zenFocusPlugin)
       .use(keyboardRevealPlugin)
       .use(

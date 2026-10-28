@@ -4,15 +4,14 @@ import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { fenceLineToBlock } from "../markdown/fence-line";
 import {
-  caretAt,
   findRunClose,
   findRunOpen,
-  isImeKeyEvent,
   literalTextAfter,
   literalTextBefore,
   redirectMisattributedInput,
-  stateWithLiveSelection,
 } from "../marks/enclosure";
+import { caretAt, stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "../keys/ime";
 
 const DOLLAR = "$";
 

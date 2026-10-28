@@ -1,4 +1,4 @@
-import { useSettings } from "../../settings/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import {
   useProviderCatalog,
   type ProviderCatalogEntry,

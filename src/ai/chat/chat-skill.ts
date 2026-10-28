@@ -1,5 +1,5 @@
-import type { AgentMode } from "../../settings/settings-types";
-import { storedAgentMode } from "../../settings/settings-types";
+import type { AgentMode } from "../../prefs/settings-types";
+import { storedAgentMode } from "../../prefs/settings-types";
 
 /**
  * A skill Textus AI wrote in a reply: one fenced block such as

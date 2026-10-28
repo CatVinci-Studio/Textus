@@ -62,6 +62,10 @@ export const plugins = {
   catalog: () => command("plugin_catalog"),
   /** The catalog as last fetched, if one was kept. */
   cachedCatalog: () => command("plugin_catalog_cached"),
+  /** A catalog plugin's README in `language` (else English), before it is
+   *  installed; null when it has none. */
+  catalogReadme: (id: string, language: string) =>
+    command("plugin_catalog_readme", id, language),
   /** Downloads one from the catalog, checks it and installs it. */
   installFromCatalog: (id: string) => command("plugin_install_catalog", id),
   /** The skills the catalog last read lists. */

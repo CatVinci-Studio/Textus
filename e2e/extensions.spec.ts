@@ -97,11 +97,11 @@ test("built-in skills stay on; Get more lists the market's, not them", async ({
   await openApp(page, { settings: { language: "en" } });
   const panel = await openExtensions(page);
   await panel.getByRole("tab", { name: "Skills" }).click();
-  const translate = panel.locator('[data-skill="translate"]');
-  await expect(translate).toContainText("Built-in");
-  await expect(translate.getByRole("checkbox")).toHaveCount(0);
+  const proofread = panel.locator('[data-skill="proofread"]');
+  await expect(proofread).toContainText("Built-in");
+  await expect(proofread.getByRole("checkbox")).toHaveCount(0);
   await panel.getByRole("button", { name: "Get more" }).click();
-  await expect(panel.locator('[data-skill="translate"]')).toHaveCount(0);
+  await expect(panel.locator('[data-skill="proofread"]')).toHaveCount(0);
 });
 
 test("Textus AI's Skills row opens Extensions on its Skills tab", async ({

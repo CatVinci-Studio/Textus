@@ -1,6 +1,6 @@
 import { themeGallery } from "../platform/ipc";
 import type { GalleryTheme_Serialize as GalleryThemeAnswer } from "../platform/bindings/app";
-import type { UserThemeMeta } from "../settings/SettingsContext";
+import type { UserThemeMeta } from "../prefs/SettingsContext";
 import { saveUserTheme } from "./theme-import";
 
 /// The public theme gallery: what Settings lists, and installing a theme as a

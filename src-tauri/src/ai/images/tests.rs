@@ -1,13 +1,17 @@
 use super::*;
 
 fn run() -> ImageRun {
+    // Nothing listens here: a picture asked for fails to connect.
+    run_at("https://127.0.0.1:1")
+}
+
+/// A run whose pictures go to `base_url`.
+fn run_at(base_url: &str) -> ImageRun {
     ImageRun {
         job: ImageJob {
             app: None,
             api: ImageApi::OpenAi,
-            // Nothing listens here: a picture asked for fails to
-            // connect.
-            base_url: "https://127.0.0.1:1".into(),
+            base_url: base_url.into(),
             api_key: "sk".into(),
             model: "gpt-image-2".into(),
         },
@@ -515,16 +519,18 @@ fn a_redone_picture_is_read_from_the_document_folder() {
 
 #[test]
 fn a_picture_that_was_not_made_is_asked_for_again_by_itself() {
-    // Nothing listens at the offline run's address: each try fails.
-    let run = run();
+    // A server that takes the connection and never answers: a picture
+    // asked for again is still being made while the test looks.
+    let silent = std::net::TcpListener::bind("127.0.0.1:0").expect("listen");
+    let run = run_at(&format!("https://{}", silent.local_addr().expect("addr")));
     let (failing, _) = run.start("A red boat".into(), Aspect::Square, None);
     let (other, _) = run.start("A blue boat".into(), Aspect::Square, None);
-    assert!(picture(&failing).is_err());
-    assert!(picture(&other).is_err());
+    finish(&failing, Slot::Failed("offline".into()));
+    finish(&other, Slot::Failed("offline".into()));
     ai_retry_generated_image(failing.clone()).expect("asked again");
     // Being made again: retried twice at once, the second is refused.
+    assert!(look(&failing).is_none());
     assert!(ai_retry_generated_image(failing.clone()).is_err());
-    assert!(picture(&failing).is_err());
     // The other picture was left as it was.
     assert!(matches!(look(&other), Some(Err(_))));
     assert!(ai_retry_generated_image("gone00".into()).is_err());

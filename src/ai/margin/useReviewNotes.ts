@@ -26,7 +26,7 @@ import {
   type PendingPreview,
   type PendingSentence,
 } from "../revision/pending-edit-plugin";
-import type { RevisionDisplay } from "../../settings/SettingsContext";
+import type { RevisionDisplay } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useNotesBar } from "./useNotesBar";

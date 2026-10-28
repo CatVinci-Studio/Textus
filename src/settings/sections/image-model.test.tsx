@@ -25,8 +25,8 @@ const state = vi.hoisted(() => ({
   setSettings: vi.fn(),
 }));
 
-vi.mock("../SettingsContext", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../SettingsContext")>()),
+vi.mock("../../prefs/SettingsContext", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../prefs/SettingsContext")>()),
   useSettings: () => ({
     settings: state.settings,
     setSettings: state.setSettings,

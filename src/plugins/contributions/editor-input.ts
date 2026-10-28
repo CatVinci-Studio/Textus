@@ -19,6 +19,8 @@ import {
 } from "./editor-text";
 import { findFlash, type FlashLabel } from "./editor-flash";
 import { keyName } from "./editor-keys";
+import { isImeKeydown } from "../../utils/ime";
+import { inputSourceIpc } from "../../platform/ipc-app";
 
 /**
  * A plugin that takes over the editor's keyboard (Vim, Emacs). A sandboxed
@@ -61,6 +63,19 @@ function visualSelection(state: EditorState, anchor: number, head: number) {
     : TextSelection.create(doc, after(anchor), head);
 }
 
+let roman = false;
+
+/** While every key is a command (Vim's normal mode), an input method would
+ *  make text of them: the window takes Roman input only, the user's own
+ *  source coming back once the editor has its keys again or loses focus. */
+function syncRomanInput(again = false) {
+  const want =
+    owner?.capture.mode === "all" && !!lastView && lastView.hasFocus();
+  if (want === roman && !again) return;
+  roman = want;
+  void inputSourceIpc.setRoman(want).catch(() => {});
+}
+
 /** Gives `plugin` the keys `capture` names, delivered to `deliver`; null
  *  gives the keyboard back. */
 export function setKeyCapture(
@@ -71,9 +86,11 @@ export function setKeyCapture(
   if (!capture) {
     if (owner?.plugin === plugin) owner = null;
     setCursorStyle("bar");
+    syncRomanInput();
     return;
   }
   owner = { plugin, capture, deliver, lastKeyAt: owner?.lastKeyAt ?? 0 };
+  syncRomanInput();
 }
 
 /** Lets go of whatever `plugin` held: it stopped. */
@@ -82,13 +99,14 @@ export function releaseKeys(plugin: string): void {
   owner = null;
   setCursorStyle("bar");
   clearFlash();
+  syncRomanInput();
 }
 
 /** How long after a key it was handed a plugin's actions are taken. */
 const ACT_WITHIN_MS = 3000;
 
 function captures(event: KeyboardEvent, capture: KeyCapture): string | null {
-  if (event.isComposing || event.keyCode === 229) return null;
+  if (isImeKeydown(event)) return null;
   if (["Shift", "Control", "Alt", "Meta", "CapsLock"].includes(event.key))
     return null;
   const name = keyName(event);
@@ -116,9 +134,15 @@ interface InputState {
 
 const inputKey = new PluginKey<InputState>("plugin-editor-input");
 
+/** The cursor the plugin with the keys asked for, kept for an editor that
+ *  wasn't there yet (Vim starts before one has the focus) or opens later. */
+let cursorStyle: "bar" | "block" = "bar";
+
 function setCursorStyle(style: "bar" | "block") {
+  cursorStyle = style;
   const view = lastView;
   if (!view || view.isDestroyed) return;
+  if (inputKey.getState(view.state)?.cursor === style) return;
   view.dispatch(view.state.tr.setMeta(inputKey, { cursor: style }));
 }
 
@@ -130,104 +154,113 @@ function clearFlash() {
 
 const NO_FLASH: Partial<InputState> = { labels: [], matches: [] };
 
-export const editorInputPlugin = $prose(
-  () =>
-    new Plugin<InputState>({
-      key: inputKey,
-      state: {
-        init: () => ({ cursor: "bar", labels: [], matches: [] }),
-        apply(tr, prev) {
-          const meta = tr.getMeta(inputKey) as Partial<InputState> | undefined;
-          const next = meta ? { ...prev, ...meta } : prev;
-          if (tr.docChanged && (next.labels.length || next.matches.length))
-            return { ...next, ...NO_FLASH };
-          return next;
+export const createEditorInputPlugin = () =>
+  new Plugin<InputState>({
+    key: inputKey,
+    state: {
+      init: () => ({ cursor: cursorStyle, labels: [], matches: [] }),
+      apply(tr, prev) {
+        const meta = tr.getMeta(inputKey) as Partial<InputState> | undefined;
+        const next = meta ? { ...prev, ...meta } : prev;
+        if (tr.docChanged && (next.labels.length || next.matches.length))
+          return { ...next, ...NO_FLASH };
+        return next;
+      },
+    },
+    props: {
+      handleKeyDown(view, event) {
+        if (!owner) return false;
+        const name = captures(event, owner.capture);
+        if (!name) return false;
+        lastView = view;
+        owner.lastKeyAt = Date.now();
+        owner.deliver(name);
+        return true;
+      },
+      handleDOMEvents: {
+        focus(view) {
+          lastView = view;
+          setCursorStyle(cursorStyle);
+          // WebKit lets every input source in again as an element takes
+          // the focus: after it has.
+          setTimeout(() => syncRomanInput(true), 50);
+          return false;
+        },
+        blur() {
+          // After the blur, when the focus has gone.
+          setTimeout(syncRomanInput);
+          return false;
         },
       },
-      props: {
-        handleKeyDown(view, event) {
-          if (!owner) return false;
-          const name = captures(event, owner.capture);
-          if (!name) return false;
-          lastView = view;
-          owner.lastKeyAt = Date.now();
-          owner.deliver(name);
-          return true;
-        },
-        handleDOMEvents: {
-          focus(view) {
-            lastView = view;
-            return false;
-          },
-        },
-        attributes(state): Record<string, string> {
-          const s = inputKey.getState(state);
-          return s?.cursor === "block" ? { class: "plugin-cursor-block" } : {};
-        },
-        decorations(state) {
-          const s = inputKey.getState(state);
-          if (!s) return null;
-          const decos: Decoration[] = [];
-          const { selection, doc } = state;
-          if (s.cursor === "block" && selection.empty) {
-            const at = selection.head;
-            const next =
-              at < doc.content.size
-                ? doc.textBetween(at, at + 1, "\n", "\n")
-                : "";
-            if (next && next !== "\n")
-              decos.push(
-                Decoration.inline(at, at + 1, { class: "plugin-block-cursor" }),
-              );
-            else
-              decos.push(
-                Decoration.widget(
-                  at,
-                  () => {
-                    const span = document.createElement("span");
-                    span.className =
-                      "plugin-block-cursor plugin-block-cursor-empty";
-                    span.textContent = " ";
-                    return span;
-                  },
-                  { side: 1, key: "plugin-block-cursor" },
-                ),
-              );
-          }
-          for (const { from, to } of s.matches)
+      attributes(state): Record<string, string> {
+        const s = inputKey.getState(state);
+        return s?.cursor === "block" ? { class: "plugin-cursor-block" } : {};
+      },
+      decorations(state) {
+        const s = inputKey.getState(state);
+        if (!s) return null;
+        const decos: Decoration[] = [];
+        const { selection, doc } = state;
+        if (s.cursor === "block" && selection.empty) {
+          const at = selection.head;
+          const next =
+            at < doc.content.size
+              ? doc.textBetween(at, at + 1, "\n", "\n")
+              : "";
+          if (next && next !== "\n")
             decos.push(
-              Decoration.inline(from, to, { class: "plugin-flash-match" }),
+              Decoration.inline(at, at + 1, { class: "plugin-block-cursor" }),
             );
-          // A label goes over the character after its match, so the match stays readable.
-          for (const { pos, label } of s.labels)
+          else
             decos.push(
               Decoration.widget(
-                pos,
+                at,
                 () => {
-                  const anchor = document.createElement("span");
-                  anchor.className = "plugin-flash-anchor";
                   const span = document.createElement("span");
-                  span.className = "plugin-flash-label";
-                  span.textContent = label;
-                  anchor.append(span);
-                  return anchor;
+                  span.className =
+                    "plugin-block-cursor plugin-block-cursor-empty";
+                  span.textContent = " ";
+                  return span;
                 },
-                { side: -1, key: `flash-${pos}-${label}` },
+                { side: 1, key: "plugin-block-cursor" },
               ),
             );
-          return decos.length ? DecorationSet.create(doc, decos) : null;
+        }
+        for (const { from, to } of s.matches)
+          decos.push(
+            Decoration.inline(from, to, { class: "plugin-flash-match" }),
+          );
+        // A label goes over the character after its match, so the match stays readable.
+        for (const { pos, label } of s.labels)
+          decos.push(
+            Decoration.widget(
+              pos,
+              () => {
+                const anchor = document.createElement("span");
+                anchor.className = "plugin-flash-anchor";
+                const span = document.createElement("span");
+                span.className = "plugin-flash-label";
+                span.textContent = label;
+                anchor.append(span);
+                return anchor;
+              },
+              { side: -1, key: `flash-${pos}-${label}` },
+            ),
+          );
+        return decos.length ? DecorationSet.create(doc, decos) : null;
+      },
+    },
+    view(view) {
+      lastView = view;
+      return {
+        destroy() {
+          if (lastView === view) lastView = null;
         },
-      },
-      view(view) {
-        lastView = view;
-        return {
-          destroy() {
-            if (lastView === view) lastView = null;
-          },
-        };
-      },
-    }),
-);
+      };
+    },
+  });
+
+export const editorInputPlugin = $prose(createEditorInputPlugin);
 
 export type EditorOp =
   | {
@@ -248,7 +281,7 @@ export type EditorOp =
   | { op: "deleteLines"; count?: number }
   | { op: "copy" }
   | { op: "copyLines"; count?: number }
-  | { op: "deleteChars"; count?: number; back?: boolean }
+  | { op: "deleteChars"; count?: number; back?: boolean; copy?: boolean }
   | { op: "insertText"; text: string }
   | { op: "pasteLines"; text: string; above?: boolean }
   | { op: "openLine"; above?: boolean }
@@ -290,8 +323,12 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
     throw new Error(
       "Only the plugin that has the keyboard acts in the editor.",
     );
+  if (action.op === "cursor") {
+    setCursorStyle(action.style);
+    return { empty: true };
+  }
   // Changing the cursor's look or clearing flash needs no key before it.
-  const looks = action.op === "cursor" || action.op === "flashClear";
+  const looks = action.op === "flashClear";
   if (!looks && Date.now() - owner.lastKeyAt > ACT_WITHIN_MS)
     throw new Error("Editor actions follow a key the user pressed.");
   const view = lastView;
@@ -419,7 +456,7 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
         const from = posOf(flat, a);
         const to = posOf(flat, b);
         result.text = state.doc.textBetween(from, to, "\n");
-        copyText(result.text);
+        if (action.copy !== false) copyText(result.text);
         dispatch(state.tr.delete(from, to));
       }
       break;
@@ -502,9 +539,6 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
       break;
     case "redo":
       redo(state, view.dispatch);
-      break;
-    case "cursor":
-      view.dispatch(state.tr.setMeta(inputKey, { cursor: action.style }));
       break;
     case "flash": {
       const found = findFlash(view, action.query);

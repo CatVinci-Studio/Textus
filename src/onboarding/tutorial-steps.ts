@@ -1,5 +1,5 @@
 import type { TextKey } from "../i18n/strings";
-import type { AgentMode } from "../settings/SettingsContext";
+import type { AgentMode } from "../prefs/SettingsContext";
 import {
   GRAMMAR_PART,
   LESSON_DONE,
@@ -279,7 +279,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     tasks: [{ key: "tutorialSkillsTask" }],
     clip: "skills",
     ai: true,
-    agentMode: "write",
+    agentMode: "review",
   },
   {
     id: "done",

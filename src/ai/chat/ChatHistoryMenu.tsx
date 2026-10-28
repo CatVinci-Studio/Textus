@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useSettings } from "../../settings/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { localeOf } from "../../i18n/strings";
 import {
   useChatHistory,

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useModalDialog } from "../../ui/useModalDialog";
 import { usePresenceProps } from "../../ui/usePresence";
 import "./InsertTableDialog.css";
+import { isImeKeydown } from "../../utils/ime";
 
 interface InsertTableDialogProps {
   title: string;
@@ -52,8 +53,7 @@ export function InsertTableDialog({
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           modal.onKeyDown(e);
-          if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229)
-            return;
+          if (isImeKeydown(e)) return;
           if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
             e.preventDefault();
             submit();

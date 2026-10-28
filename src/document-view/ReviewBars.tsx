@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { Presence } from "../ui/usePresence";
 import { ReviewBar } from "../ai/revision/ReviewBar";
 import {

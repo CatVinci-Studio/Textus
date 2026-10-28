@@ -4,7 +4,6 @@ use crate::ai::workspace::split_frontmatter;
 const UI_CODES: &[&str] = &[
     "en", "zh", "zh-Hant", "ja", "ko", "es", "fr", "de", "ru", "pt",
 ];
-const USER_ONLY: &[&str] = &["expand", "tighten", "change-tone", "summarize"];
 const STANDARD_SECTIONS: &[&str] = &[
     "typography",
     "numbers",
@@ -46,11 +45,8 @@ fn every_mode_has_its_built_in_skills() {
             .map(|s| s.name.as_str())
             .collect()
     };
-    assert_eq!(
-        of(AgentMode::Write),
-        ["expand", "tighten", "translate", "summarize"]
-    );
-    assert_eq!(of(AgentMode::Review), ["proofread", "continuity"]);
+    assert!(of(AgentMode::Write).is_empty());
+    assert_eq!(of(AgentMode::Review), ["proofread"]);
     assert_eq!(of(AgentMode::Create), ["theme", "plugin", "skill"]);
     for name in MOVED_TO_MARKET {
         assert!(find(name).is_none(), "{name} is in the market now");
@@ -78,7 +74,7 @@ fn every_bundled_file_is_listed() {
     let mut listed: Vec<String> = PACK_FILES.iter().map(|(s, _)| s.to_string()).collect();
     listed.sort();
     assert_eq!(stems(dir.join("packs")), listed);
-    assert_eq!(SKILL_FILES.len(), 9);
+    assert_eq!(SKILL_FILES.len(), 4);
     assert_eq!(PACK_FILES.len(), 12);
 }
 
@@ -121,12 +117,7 @@ fn every_builtin_skill_parses_and_follows_the_format() {
             CATEGORY_ORDER.contains(&skill.category.as_deref().unwrap_or("")),
             "{stem}: category"
         );
-        let expected = if USER_ONLY.contains(stem) {
-            Invocation::UserOnly
-        } else {
-            Invocation::Both
-        };
-        assert_eq!(skill.invocation, expected, "{stem}: invocation");
+        assert_eq!(skill.invocation, Invocation::Both, "{stem}: invocation");
         assert!(
             skill.packs.contains(&"contract".to_string()),
             "{stem}: the contract"
@@ -522,8 +513,13 @@ fn expansion_appends_the_declared_packs_for_the_documents_language() {
 }
 
 #[test]
-fn translate_attaches_the_target_language() {
-    let skill = find("translate").unwrap();
+fn a_translating_skill_attaches_the_target_language() {
+    // As the market's Translate says it: its packs follow the target.
+    let skill = parse_skill_file(
+        "translate",
+        "---\nname: translate\ndescription: d\nmetadata:\n  textus-packs: \"contract\"\n  textus-target-packs: \"typography numbers register\"\n---\nBody.\n",
+    );
+    let skill = &skill;
     let text = expand_skill(skill, doc_zh(), "zh", "译成日语", None);
     assert!(text.contains("Target language: Japanese"));
     for label in [
@@ -664,10 +660,10 @@ fn packs_load_by_name_and_section() {
 
 #[test]
 fn customized_copies_say_what_they_came_from() {
-    let raw = raw("tighten").unwrap();
-    let copy = with_based_on(raw, "tighten@1");
-    let parsed = parse_skill_file("tighten", &copy);
-    assert_eq!(parsed.based_on.as_deref(), Some("tighten@1"));
-    assert_eq!(parsed.prompt, find("tighten").unwrap().prompt);
-    assert_eq!(parsed.invocation, Invocation::UserOnly);
+    let raw = raw("proofread").unwrap();
+    let copy = with_based_on(raw, "proofread@1");
+    let parsed = parse_skill_file("proofread", &copy);
+    assert_eq!(parsed.based_on.as_deref(), Some("proofread@1"));
+    assert_eq!(parsed.prompt, find("proofread").unwrap().prompt);
+    assert_eq!(parsed.invocation, Invocation::Both);
 }

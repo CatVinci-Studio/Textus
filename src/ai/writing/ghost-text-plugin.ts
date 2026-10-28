@@ -1,7 +1,7 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
-import { isImeKeyEvent } from "../../editor/marks/enclosure";
+import { isImeKeyEvent } from "../../editor/keys/ime";
 import { pausesFeatures } from "../../editor/large-doc";
 import { createDebouncedTask } from "./debounced-task";
 import { hasPendingEdits } from "../revision/pending-edit-plugin";

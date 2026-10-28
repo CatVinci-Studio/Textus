@@ -1,5 +1,5 @@
 import type { DirEntryInfo } from "./fs-types";
-import type { ImageHost } from "../settings/SettingsContext";
+import type { ImageHost } from "../prefs/SettingsContext";
 import type * as Generated from "./bindings/files";
 import { isIOSApp } from "./capabilities";
 import { iosFiles, isScopedUrl, newDocumentPath } from "./ios-files";

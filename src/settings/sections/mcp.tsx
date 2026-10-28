@@ -7,7 +7,7 @@ import {
 } from "../../platform/ipc";
 import { showConfirm } from "../../ui/app-dialog";
 import { errorText } from "../../utils/error-text";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { ExtensionsTabLayout } from "../pages/ExtensionsTabLayout";
 import { SettingsGroup } from "../pages/SettingsGroup";
 import {
@@ -16,7 +16,7 @@ import {
   parsePairs,
   splitCommandLine,
   type McpServer,
-} from "../mcp";
+} from "../../prefs/mcp";
 
 /** Settings › Extensions › MCP: the servers Textus AI may use, each a card
  *  with its switch and state, and a form to add, change or try one. The

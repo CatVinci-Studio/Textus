@@ -7,7 +7,7 @@ import {
   wrapInHeadingCommand,
 } from "@milkdown/kit/preset/commonmark";
 import { insertTableCommand } from "@milkdown/kit/preset/gfm";
-import type { ContextMenuEntry, ContextMenuItem } from "./ContextMenu";
+import type { ContextMenuEntry, ContextMenuItem } from "../ui/ContextMenu";
 import { contributedMenuItems } from "./editor-menu-items";
 export {
   registerEditorMenuItems,

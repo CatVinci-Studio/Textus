@@ -32,10 +32,25 @@ function catalog(root: string) {
         const manifest = JSON.parse(
           readFileSync(join(plugins, id, "textus-plugin.json"), "utf8"),
         );
+        const files = readdirSync(join(plugins, id));
+        // As the catalog release has them: README.md and README.<lang>.md,
+        // and the icon the manifest names.
+        const readme = Object.fromEntries(
+          files.flatMap((name) => {
+            const m = /^README(?:\.([\w-]+))?\.md$/.exec(name);
+            return m ? [[m[1] ?? "en", `/dev-plugins/${id}/${name}`]] : [];
+          }),
+        );
+        const icon =
+          typeof manifest.icon === "string" && files.includes(manifest.icon)
+            ? `/dev-plugins/${id}/${manifest.icon}`
+            : undefined;
         return {
           id,
           version: manifest.version,
           official: manifest.publisher === "catvinci",
+          readme,
+          icon,
           manifest,
           url: `/dev-plugins/${id}`,
           sha256: "",

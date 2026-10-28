@@ -26,6 +26,10 @@ const EVERYTHING =
 const NATIVE =
   /(^src-tauri\/|(^|\/)Cargo\.(toml|lock)$|(^|\/)\.cargo\/|(^|\/)rust-toolchain(\.toml)?$|^scripts\/check-native\.mjs$|^scripts\/ios-)/;
 
+/** Frontend files a Rust test reads from disk, so not embedded: the
+ *  generated bindings it compares against its own. */
+const RUST_TESTED = /^src\/platform\/bindings\//;
+
 /** The native files the browser does see: icons, boot.js and the Tauri
  *  configs. */
 const BROWSER_NATIVE =
@@ -101,7 +105,10 @@ export function classify({ files, push, read, rustReads = [] }) {
   if (push || rest.some((file) => EVERYTHING.test(file))) return all;
   return {
     e2e: rest.some((file) => !NATIVE.test(file) || BROWSER_NATIVE.test(file)),
-    native: rest.some((file) => NATIVE.test(file) || rustReads.includes(file)),
+    native: rest.some(
+      (file) =>
+        NATIVE.test(file) || RUST_TESTED.test(file) || rustReads.includes(file),
+    ),
   };
 }
 

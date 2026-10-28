@@ -46,6 +46,10 @@ export interface UiState {
   fileTreeSort: string;
   /** "1" when the file tree shows hidden files. */
   fileTreeHidden: string;
+  /** The documents left read-only (View › Read Only), by path. */
+  readOnlyPaths: string[];
+  /** The kinds (contributes.suggestFor) a plugin was offered for, once each. */
+  pluginsOfferedFor: string[];
   /** The split the window was left in, by its two documents' paths; null when
    *  it showed one. */
   splitLayout: {
@@ -152,6 +156,16 @@ const LOCAL: {
     key: "textus-file-tree-sort",
     decode: (raw) => raw,
     encode: (value) => value,
+  },
+  pluginsOfferedFor: {
+    key: "textus-plugins-offered-for",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  readOnlyPaths: {
+    key: "textus-read-only-paths",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
   },
   lastCarets: {
     key: "textus-last-carets",

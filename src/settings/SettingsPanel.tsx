@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useSettings } from "./SettingsContext";
+import { useSettings } from "../prefs/SettingsContext";
 import { useMarginAvailable } from "../ai/margin/margin-room";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { localeOf } from "../i18n/strings";

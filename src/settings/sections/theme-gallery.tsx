@@ -11,7 +11,7 @@ import {
 import { withUserTheme } from "../../theme/theme-import";
 import { errorText } from "../../utils/error-text";
 import { useLatest } from "../../utils/hooks/useLatest";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { SettingRow } from "./controls";
 
 /** The themes whose name, author or description hold every word of

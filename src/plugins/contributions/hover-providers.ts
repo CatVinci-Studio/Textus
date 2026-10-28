@@ -4,18 +4,8 @@
  * that answers is shown.
  */
 
-export type HoverTarget =
-  | { type: "document"; path: string; heading: string | null }
-  | { type: "link"; url: string }
-  | { type: "citation"; key: string };
-
-export interface HoverCard {
-  title: string | null;
-  /** Shown as Markdown, with no pictures. */
-  markdown: string;
-  /** The app's, never a plugin's: Open on a document's card goes to it. */
-  open?: () => void;
-}
+import type { HoverCard, HoverTarget } from "../../editor/extension-points";
+export type { HoverCard, HoverTarget };
 
 type Provide = (target: HoverTarget) => Promise<HoverCard | null>;
 

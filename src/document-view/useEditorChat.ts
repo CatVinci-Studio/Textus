@@ -9,7 +9,7 @@ import type { EditorSetup } from "./useEditorSetup";
 import type { SelectionChipHandlers } from "../ai/chat/ChatComposer";
 import { useAgentPanel } from "../ai/chat/panel/agent-panel";
 import { useRevisionLearning } from "../ai/revision/RevisionLearning";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /**

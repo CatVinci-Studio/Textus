@@ -38,7 +38,7 @@ metadata:
 - A plugin can mark the text (highlights, underlines, badges), draw its own fenced code blocks, add commands, menus, sidebar tabs, views, file viewers and tools for the app's AI. It can't change how the editor itself works, run native code, or reach files outside the open folder. When the request needs one of those, say so and offer what a plugin can do.
 
 ## Files
-- `textus-plugin.json` (the manifest), `host.js` (the code), `USAGE.md` (a short guide in the user's language: what it does, how to reach it, 3-5 bullets - the app opens it once installed). A webview panel or view adds its `.html` (and `.css`/`.js` if long); a list needs none.
+- `textus-plugin.json` (the manifest), `host.js` (the code), `README.md` (a short guide in the user's language: a line on what it does, then 3-5 bullets on how to reach and use it - its page in Settings shows it). A webview panel or view adds its `.html` (and `.css`/`.js` if long); a list needs none.
 - Keep the whole plugin small: a few KB.
 
 ## The manifest
@@ -91,5 +91,5 @@ CommonJS with `textus` in scope; `exports.activate = function (ctx) { … }` reg
 
 ## Deliver
 1. One or two sentences: what the plugin does and how to reach it.
-2. Each file in its own fenced block whose info string is the language and the file's path: ```` ```json textus-plugin.json ````, ```` ```js host.js ````, ```` ```html panel.html ````, ```` ```markdown USAGE.md ````. Write every file in full - no "unchanged" parts.
+2. Each file in its own fenced block whose info string is the language and the file's path: ```` ```json textus-plugin.json ````, ```` ```js host.js ````, ```` ```html panel.html ````, ```` ```markdown README.md ````. Write every file in full - no "unchanged" parts.
 3. Nothing after the files but, at most, one line on what to try first.

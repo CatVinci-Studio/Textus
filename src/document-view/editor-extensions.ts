@@ -4,7 +4,7 @@ import { withAiPlugins, type PendingEditCallbacks } from "../ai/editor-plugins";
 import { pluginCodeBlocks } from "./plugins/plugin-code-blocks";
 import { pluginDecorations } from "./plugins/plugin-decorations";
 import type { ReviewNote } from "../ai/margin/review-notes-plugin";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import type { TourAi } from "../utils/events";
 
 export type { PendingEditCallbacks };

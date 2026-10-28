@@ -14,7 +14,7 @@ import { readChatContext } from "../ai/chat/live-context";
 import type { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
 import type { SelectionTarget } from "../ai/revision/usePendingEdits";
 import type { SelectionChipHandlers } from "../ai/chat/ChatComposer";
-import type { Settings } from "../settings/SettingsContext";
+import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
 

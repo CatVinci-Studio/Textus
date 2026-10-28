@@ -1,6 +1,6 @@
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { caretAt } from "./enclosure";
+import { caretAt } from "../live-selection";
 
 /**
  * Bold (rung 2) and italic (rung 1) for the iPhone keyboard toolbar. They

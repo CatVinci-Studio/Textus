@@ -134,6 +134,13 @@ export const clipboardIpc = {
   text: () => desktopQueryCommand("clipboard_text", null),
 };
 
+/** Roman input sources only while a plugin takes every key as a command
+ *  (commands/input_source.rs; macOS). */
+export const inputSourceIpc = {
+  setRoman: (on: boolean) =>
+    desktopQueryCommand("set_roman_input", undefined, on),
+};
+
 // Links and export
 
 /** Our own pages, opened in the system browser. URLs are fixed in Rust,

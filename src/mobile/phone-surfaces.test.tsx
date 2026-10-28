@@ -9,7 +9,7 @@ vi.mock("../platform/capabilities", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   isIOSApp: true,
 }));
-vi.mock("../settings/SettingsContext", () => ({
+vi.mock("../prefs/SettingsContext", () => ({
   useSettings: () => ({ t: { cancel: "Cancel" } }),
 }));
 beforeAll(() => {
@@ -21,7 +21,7 @@ beforeAll(() => {
 });
 afterEach(cleanup);
 
-const { ContextMenu } = await import("../editor/ContextMenu");
+const { ContextMenu } = await import("../ui/ContextMenu");
 const { Select } = await import("../ui/Select");
 
 describe("on a phone", () => {

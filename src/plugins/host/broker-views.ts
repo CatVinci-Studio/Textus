@@ -39,7 +39,7 @@ export function viewHandlers(p: PluginScope) {
       const record = p.ownWebview(str(id, "webview"));
       setWebviewHtml(
         record.id,
-        await withResources(str(html, "html"), p.readOwnFile),
+        await withResources(str(html, "html"), p.id, p.readOwnFile),
       );
     },
     "webview.postMessage": ({ webview: id, message }: Params) => {

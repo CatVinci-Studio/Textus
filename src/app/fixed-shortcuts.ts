@@ -1,5 +1,5 @@
 import { APP_NAME, type Strings } from "../i18n/strings";
-import { defaultShortcuts, type Shortcuts } from "../settings/SettingsContext";
+import { defaultShortcuts, type Shortcuts } from "../prefs/SettingsContext";
 import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
 
 /**

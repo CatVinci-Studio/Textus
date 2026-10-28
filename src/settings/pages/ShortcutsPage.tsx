@@ -1,6 +1,9 @@
 import type { SettingsPageProps, ShortcutCommand } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
-import { type HeadingAction, type ShortcutAction } from "../SettingsContext";
+import {
+  type HeadingAction,
+  type ShortcutAction,
+} from "../../prefs/SettingsContext";
 import {
   CommandShortcutRow,
   ShortcutRow,

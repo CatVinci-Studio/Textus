@@ -19,6 +19,7 @@ pub mod export;
 pub mod folder;
 pub mod fs;
 pub mod image_host;
+pub mod input_source;
 pub mod links;
 pub mod own_notes;
 #[cfg(desktop)]

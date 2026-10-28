@@ -20,7 +20,7 @@ import {
 } from "../../utils/events";
 import type { DocTab, HelpDoc } from "../../document/doc-tabs";
 import type { Strings } from "../../i18n/strings";
-import type { DiagramEngine, Shortcuts } from "../../settings/SettingsContext";
+import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
 import { closeSplit, splitEditor } from "../split/split-layout";
 import { openCommandPalette } from "../command-palette";
 
@@ -40,6 +40,7 @@ export interface MenuBridgeHandlers {
   onToggleAgentPanel: () => void;
   onToggleTextusAi: () => void;
   onToggleSplitView: () => void;
+  onToggleReadOnly: () => void;
   onToggleZenMode: () => void;
   addBlankTab: () => void;
   openFileDialog: () => Promise<void>;
@@ -147,6 +148,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-toggle-split-view", () =>
         h().onToggleSplitView(),
       ),
+      listenToThisWindow("menu-toggle-read-only", () => h().onToggleReadOnly()),
       listenToThisWindow("menu-toggle-zen-mode", () => h().onToggleZenMode()),
       listenToThisWindow(
         "menu-command-palette",

@@ -10,7 +10,7 @@ import { useTabState } from "./tabs/useTabState";
 import { useSidePanels } from "./useSidePanels";
 import { useWordImported } from "./AppNotices";
 import type { PendingClose } from "./close-flow";
-import type { Settings, useSettings } from "../settings/SettingsContext";
+import type { Settings, useSettings } from "../prefs/SettingsContext";
 
 /**
  * A window's frame: tabs, the close prompt, Textus AI's switch, side panels,

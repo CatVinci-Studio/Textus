@@ -17,12 +17,9 @@ import {
 import { redoDepth } from "@milkdown/kit/prose/history";
 import { $nodeSchema, $prose } from "@milkdown/kit/utils";
 import { changedRanges } from "../changed-ranges";
-import {
-  COMPOSE_RELOCATE_DELAY_MS,
-  cursorTouches,
-  isImeKeyEvent,
-  liveCaretPos,
-} from "../marks/enclosure";
+import { COMPOSE_RELOCATE_DELAY_MS, cursorTouches } from "../marks/enclosure";
+import { liveCaretPos } from "../live-selection";
+import { isImeKeyEvent } from "../keys/ime";
 import { readLinkSource } from "./link-source";
 import { linksOnSpansIn } from "./markdown-output";
 import {

@@ -14,7 +14,7 @@ import {
 } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { announce } from "../../ui/announce";
-import { useSettings, type AgentMode } from "../../settings/SettingsContext";
+import { useSettings, type AgentMode } from "../../prefs/SettingsContext";
 import { imageModelOf } from "../image-models";
 import { parsePartialToolArgs } from "./partial-tool-args";
 import { resolveBlockTarget } from "../doc-blocks";

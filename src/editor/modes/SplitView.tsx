@@ -3,7 +3,7 @@ import { renderDocumentHtml } from "../markdown/render-html";
 import { useKatexHtml } from "../math/useKatexHtml";
 import { resolveImageSrc } from "../images/image-plugin";
 import { diagramRenderer } from "../diagram-engine";
-import { useSettings } from "../../settings/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { SourceTextarea } from "./SourceTextarea";
 import "./SplitView.css";
 
@@ -17,11 +17,13 @@ export function SplitView({
   filePath,
   typewriter,
   onChange,
+  readOnly,
 }: {
   content: string;
   filePath: string | null;
   typewriter: boolean;
   onChange: (markdown: string) => void;
+  readOnly: boolean;
 }) {
   const sourceRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -109,6 +111,7 @@ export function SplitView({
         value={content}
         typewriter={typewriter}
         onChange={onChange}
+        readOnly={readOnly}
         onScroll={(e) =>
           previewRef.current &&
           follow(e.currentTarget, previewRef.current, "source")

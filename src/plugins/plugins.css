@@ -113,6 +113,101 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-card-name {
   font-weight: 600;
 }
+/* With its icon: the icon, then the text in a column. */
+.plugin-card-with-icon {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.plugin-card-text {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+/* A plugin's icon on a tile of one size, whatever its artwork. */
+.plugin-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-surface);
+  background: color-mix(in srgb, var(--editor-muted) 7%, var(--bg));
+  overflow: hidden;
+}
+.plugin-icon img {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+}
+.plugin-icon-large {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-dialog);
+}
+.plugin-icon-letter {
+  color: var(--editor-muted);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+.plugin-install.is-installed {
+  color: var(--editor-muted);
+}
+.plugin-installs {
+  font-variant-numeric: tabular-nums;
+}
+/* Get more's sort, over the list's right edge. */
+.market-sort {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 var(--space-2);
+}
+/* A catalog plugin's page: icon, name and Install in a row; its pictures,
+   README and permissions below. */
+.market-plugin-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+/* Settings' buttons fill their row; this one keeps its own width. */
+.market-plugin-head .plugin-install {
+  flex: none;
+  width: auto;
+  margin: 0;
+}
+.market-plugin-title {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+.market-plugin-title .plugin-page-title {
+  margin: 0;
+}
+.market-plugin-shots {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  overflow-x: auto;
+}
+.market-plugin-shots .plugin-card-shot {
+  margin-top: 0;
+  max-height: 220px;
+}
+.plugin-readme {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-surface);
+  font-size: var(--text-md);
+  line-height: 1.6;
+}
 .plugin-card-description {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -334,6 +429,29 @@ button.plugin-card-open:hover .plugin-card-name {
 .web-page-chevron-down {
   transform: rotate(90deg);
 }
+/* A page that didn't load: said in the page's place, which it no longer
+   covers. */
+.web-page-failed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--space-4);
+  color: var(--editor-muted);
+  text-align: center;
+}
+
+.web-page-failed-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.web-page-failed .text-button {
+  width: auto;
+}
+
 .web-page-bar-folded {
   justify-content: center;
   height: 10px;

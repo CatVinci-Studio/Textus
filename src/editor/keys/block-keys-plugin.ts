@@ -16,7 +16,8 @@ import {
 import { splitBlock } from "@milkdown/kit/prose/commands";
 import { splitListItem } from "@milkdown/kit/prose/schema-list";
 import { $prose } from "@milkdown/kit/utils";
-import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
+import { stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "./ime";
 import { modIsMeta } from "../../platform/os";
 import { paragraphToRule } from "../marks/md-span-blocks";
 import { leadingWhitespaceOfLastLine } from "../code/code-indent";

@@ -1,5 +1,5 @@
 import { diagramRenderer, type MermaidApi } from "../editor/diagram-engine";
-import type { DiagramEngine } from "../settings/SettingsContext";
+import type { DiagramEngine } from "../prefs/SettingsContext";
 
 // Word, OpenDocument and EPUB don't know mermaid blocks, so each diagram is
 // drawn as a PNG data URL before pandoc. One that can't be drawn keeps its

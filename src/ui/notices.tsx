@@ -15,10 +15,13 @@ export interface Notice {
   progress?: { fraction: number | null; message?: string };
   cancelLabel?: string;
   onCancel?: () => void;
+  /** A button that does what the note suggests, and closes it. */
+  action?: { label: string; run: () => void };
 }
 
-/** How long a note stays: long enough to read a line. */
+/** How long a note stays: long enough to read a line, or to act on one. */
 const NOTICE_MS = 4500;
+const ACTION_NOTICE_MS = 12000;
 /** At most this many at once; an older one gives way. */
 const MAX_SHOWN = 3;
 
@@ -53,16 +56,28 @@ function add(notice: Omit<Notice, "id">): number {
 
 export function showNotice(
   text: string,
-  options: { tone?: Notice["tone"]; source?: string } = {},
+  options: {
+    tone?: Notice["tone"];
+    source?: string;
+    action?: Notice["action"];
+  } = {},
 ): void {
+  const { action } = options;
   const id = add({
     text,
     tone: options.tone ?? "info",
     source: options.source,
+    action: action && {
+      label: action.label,
+      run: () => {
+        remove(id);
+        action.run();
+      },
+    },
   });
   timers.set(
     id,
-    setTimeout(() => remove(id), NOTICE_MS),
+    setTimeout(() => remove(id), action ? ACTION_NOTICE_MS : NOTICE_MS),
   );
 }
 
@@ -160,6 +175,15 @@ export function NoticeHost() {
                 }
               />
             </div>
+          )}
+          {notice.action && (
+            <button
+              type="button"
+              className="notice-cancel"
+              onClick={notice.action.run}
+            >
+              {notice.action.label}
+            </button>
           )}
           {notice.onCancel && notice.cancelLabel && (
             <button

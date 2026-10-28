@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { ContextMenu } from "../../editor/ContextMenu";
+import { ContextMenu } from "../../ui/ContextMenu";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { runCommand } from "../../app/commands";
 import {
@@ -30,6 +30,7 @@ import {
 } from "../contributions/list-views";
 import { windowInfo } from "../store/plugin-records";
 import "./PluginListView.css";
+import { isImeKeydown } from "../../utils/ime";
 
 /** A list item as a plugin gives it. */
 export interface PluginListItem {
@@ -150,7 +151,7 @@ export function PluginListPane({
   }, [items, children, open, query]);
 
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.nativeEvent.isComposing || !rows.length) return;
+    if (isImeKeydown(e) || !rows.length) return;
     const row = rows[Math.min(active, rows.length - 1)];
     if (e.key === "ArrowDown") {
       e.preventDefault();

@@ -111,7 +111,10 @@ impl Stores {
     fn seed_new_profile(&self) {
         let mut inner = self.settings.inner.lock().unwrap();
         let mut seed = Map::new();
-        seed.insert(crate::plugins::moved_skills::MOVED_KEY.into(), json!(true));
+        seed.insert(
+            crate::plugins::moved_skills::MOVED_KEY.into(),
+            crate::plugins::moved_skills::all_seen_to(),
+        );
         merge_top_level(&mut inner.payload, &seed);
     }
 

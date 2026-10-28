@@ -8,9 +8,10 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { SettingsProvider, useSettings } from "./SettingsContext";
+import { SettingsProvider, useSettings } from "../prefs/SettingsContext";
 import { themes } from "../platform/ipc";
 import { applyThemeChrome } from "../theme/theme-chrome";
+import { AppearanceSync } from "../theme/apply-appearance";
 vi.mock("../platform/ipc", () => ({
   ai: { setAiProxy: vi.fn().mockResolvedValue(null) },
   themes: { loadThemeCss: vi.fn() },
@@ -59,6 +60,7 @@ it("applies imported chrome and removes both styles on returning to default", as
   vi.mocked(themes.loadThemeCss).mockResolvedValue("body { color: green; }");
   render(
     <SettingsProvider>
+      <AppearanceSync />
       <Controls />
     </SettingsProvider>,
   );
@@ -86,6 +88,7 @@ it("does not let a late light-theme response replace a newer dark selection", as
   );
   render(
     <SettingsProvider>
+      <AppearanceSync />
       <Controls />
     </SettingsProvider>,
   );
@@ -114,6 +117,7 @@ it("does not restore an import after switching to a built-in theme", async () =>
   );
   render(
     <SettingsProvider>
+      <AppearanceSync />
       <Controls />
     </SettingsProvider>,
   );

@@ -1,4 +1,4 @@
-import type { AgentMode } from "../../settings/SettingsContext";
+import type { AgentMode } from "../../prefs/SettingsContext";
 import { CreateModeIcon, ReviewModeIcon, WriteModeIcon } from "../../ui/icons";
 
 const ICONS = {

@@ -25,13 +25,12 @@ import {
   COMPOSE_RELOCATE_DELAY_MS,
   type CompositionAnchor,
   applyDeleteAction,
-  caretAt,
   pinDomCaretForComposition,
   relocateComposedText,
-  setCaret,
   snapshotAdjacentEnclosures,
-  stateWithLiveSelection,
 } from "./enclosure-caret";
+import { caretAt, setCaret, stateWithLiveSelection } from "../live-selection";
+import { isImeKeyEvent } from "../keys/ime";
 export {
   isEnclosureName,
   cursorTouches,
@@ -46,12 +45,7 @@ export {
   type DeleteAction,
   computeCharDeleteBesideEnclosure,
 } from "./enclosure-moves";
-export {
-  caretAt,
-  liveCaretPos,
-  stateWithLiveSelection,
-  COMPOSE_RELOCATE_DELAY_MS,
-} from "./enclosure-caret";
+export { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure-caret";
 /**
  * Shared model for delimiter-enclosed syntax (md_span, md_code_span, math):
  * real nodes with editable text, their delimiters synthesized as widgets.
@@ -99,15 +93,6 @@ export function redirectMisattributedInput(
   );
   if (!handled) view.dispatch(deflt());
   return true;
-}
-
-/**
- * Whether a keydown belongs to an active IME composition. Every
- * handleKeyDown must bail on these, or the raw preedit is committed;
- * keyCode 229 covers WebKit keydowns where isComposing lags.
- */
-export function isImeKeyEvent(view: EditorView, event: KeyboardEvent): boolean {
-  return view.composing || event.isComposing || event.keyCode === 229;
 }
 
 function makeDelimiterEl(delimiter: string): HTMLElement {

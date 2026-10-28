@@ -7,7 +7,11 @@ import {
   setUiState,
   type ThemeChromeCache,
 } from "../storage/ui-state";
-import type { Settings, ThemeMode } from "../settings/SettingsContext";
+import {
+  useSettings,
+  type Settings,
+  type ThemeMode,
+} from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
 import { applyThemeChrome, clearThemeChrome } from "./theme-chrome";
 import { adaptTyporaCss } from "./typora-compat";
@@ -232,4 +236,12 @@ export function useApplyAppearance(
       mq?.removeEventListener("change", applyUserTheme);
     };
   }, [settings.themeId, settings.theme, settings.userThemes, setSettingsRef]);
+}
+
+/** Applies the settings' look to the window: rendered once, inside the
+ *  settings provider. */
+export function AppearanceSync(): null {
+  const { settings, setSettings } = useSettings();
+  useApplyAppearance(settings, setSettings);
+  return null;
 }

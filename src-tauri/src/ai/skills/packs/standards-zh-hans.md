@@ -118,4 +118,5 @@ metadata:
 ## ai-tells
 - Strong (edit on one sighting): 不是 X 而是 Y / 并非…而是… / 不在于…而在于… / 不只是…更是… used as a shell (keep when it corrects a real belief); 让我们深入看看 / 下面我们来看 openers; 标志着…新时代 inflation; 彰显了… tails; 客服腔 (希望对您有帮助！); 总而言之…让我们拭目以待 closers; empty 随着…的发展 / 在…的时代背景下 openers.
 - Weak (only in clusters): 赋能, 至关重要, 深入探讨, 无缝, 闭环 used vaguely; mechanical 首先…其次…最后; forced triads; 四字词排比 that says nothing; dashes as all-purpose links; stacked hedges (可能也许); chains of 的; 进行 + verb (fine in formal text); stacked 被; 正确的废话.
+- Hard to read (edit when it slows the reader): 主语前一长串定语（把从句拆开或后置）; 三个以上名词连用作定语; 让事物做人的动作（数据告诉我们、这首歌邀请你）, unless the author means the figure; 主语和谓语之间插入很长的成分; 生造的搭配. Each is rewritten to the plain sentence it stands for. [Clark, Martin & Mahowald 2026, adapted]
 - Sources: [Humanizer-zh #1, #4, #6, #8, #9, #12, #13, #15, #22, #26–#31 (MIT); 科普中国 2025 (summarised); ra-人话 (ideas only)]

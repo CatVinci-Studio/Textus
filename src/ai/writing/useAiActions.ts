@@ -4,7 +4,7 @@ import { triggerGhostTextNow } from "./ghost-text-plugin";
 import { triggerGrammarCheckNow } from "./grammar-check-plugin";
 import { buildCompletionStyle } from "./completion-style";
 import type { EditorRunner } from "../../editor/useEditorRunner";
-import type { Settings } from "../../settings/SettingsContext";
+import type { Settings } from "../../prefs/SettingsContext";
 import type { Strings, TextKey } from "../../i18n/strings";
 import {
   AiNoticeError,

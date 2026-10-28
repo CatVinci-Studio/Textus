@@ -172,9 +172,11 @@ test("a tab dragged onto the other pane moves into its tab bar", async ({
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
   await page.mouse.down();
   await page.mouse.move(from.x + from.width / 2, from.y + 120, { steps: 5 });
-  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, {
-    steps: 8,
-  });
+  // Near its top edge: the light still takes the whole pane, as the drop
+  // does.
+  await page.mouse.move(to.x + to.width / 2, to.y + 20, { steps: 8 });
+  const hint = (await page.locator(".split-drop-hint").boundingBox())!;
+  expect(Math.round(hint.height)).toBe(Math.round(to.height));
   await page.mouse.up();
   await expect(bars.last().locator('[role="tab"]')).toHaveCount(2);
   await expect(bars.first().locator('[role="tab"]')).toHaveCount(1);

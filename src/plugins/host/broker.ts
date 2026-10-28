@@ -1,3 +1,4 @@
+import type { QuickPickItem } from "../../ui/quick-pick";
 import { logPluginError, logPluginMessage } from "../store/plugin-log";
 import type { Strings } from "../../i18n/strings";
 import {
@@ -54,6 +55,13 @@ export interface BrokerDeps {
   setSetting(id: string, key: string, value: unknown): Promise<void>;
   /** Runs any command - the app's, or a plugin's. */
   runCommand(command: string, args: unknown[]): Promise<unknown>;
+  /** The command palette with the plugin's items first (ui.pick's
+   *  `commands`): the item's value, `{ typed }`, or null. */
+  pickWithCommands(
+    items: QuickPickItem[],
+    query: string,
+    placeholder?: string,
+  ): Promise<unknown>;
   /** The plugin's code registered a command (`editor`: only with a
    *  document open). */
   commandRegistered(id: string, command: string, editor: boolean): void;

@@ -73,7 +73,7 @@ test("dd deletes a line and p puts it back below", async ({ page }) => {
   ]);
 });
 
-test("flash: s and two letters label each place, and a label jumps there", async ({
+test("flash: s and a letter label each place, and a label jumps there", async ({
   page,
 }) => {
   await open(page, "the cat sat on the mat by the hat");
@@ -124,4 +124,19 @@ test("~ flips the case under the caret, and U and u recase a selection", async (
   await expect(firstParagraph(page)).toHaveText("Hello WORLD");
   await keys(page, ["$", "v", "b", "u"]);
   await expect(firstParagraph(page)).toHaveText("Hello world");
+});
+
+test("the block cursor is there from the start, and in a tab opened later", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: { "catvinci.vim": ["editor.input"] },
+  });
+  // Vim starts before the editor has had the focus.
+  await expect(page.locator(status)).toContainText("NORMAL");
+  await page.locator(editor).click();
+  await expect(page.locator(editor)).toHaveClass(/plugin-cursor-block/);
+  await page.keyboard.press("ControlOrMeta+t");
+  await page.locator(editor).click();
+  await expect(page.locator(editor)).toHaveClass(/plugin-cursor-block/);
 });

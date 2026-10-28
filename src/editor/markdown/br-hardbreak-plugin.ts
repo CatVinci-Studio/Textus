@@ -1,6 +1,7 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, PluginKey, type Transaction } from "@milkdown/kit/prose/state";
 import { $prose, $remark } from "@milkdown/kit/utils";
+import { inTableCell, isTableCell } from "../tables/table-pos";
 
 // Attributed `<br clear="all">` too (Word/Notion paste); a bare `<br>` is
 // stripped earlier by Milkdown's remark-preserve-empty-line.
@@ -8,7 +9,6 @@ const BR_RE = /^<br(\s[^<>]*)?\/?>$/i;
 
 // GFM tables can't hold a real hardbreak, so `<br>` is the only line break
 // in a table cell.
-const TABLE_CELL_TYPES = new Set(["table_cell", "table_header"]);
 
 /** `<br>`, `<br/>` or `<br />`, with no attributes. */
 const PLAIN_BR_RE = /^<br\s*\/?>$/i;
@@ -71,10 +71,7 @@ export const brToHardbreakPlugin = $prose(() => {
 
       const targets: { from: number; to: number }[] = [];
       const visit = (node: ProseNode, pos: number) => {
-        if (
-          node.isTextblock &&
-          TABLE_CELL_TYPES.has(newState.doc.resolve(pos).parent.type.name)
-        ) {
+        if (node.isTextblock && isTableCell(newState.doc.resolve(pos).parent)) {
           const pieces: { node: ProseNode; pos: number }[] = [];
           node.forEach((child, offset) =>
             pieces.push({ node: child, pos: pos + 1 + offset }),
@@ -92,9 +89,7 @@ export const brToHardbreakPlugin = $prose(() => {
         if (node.type.name !== "html" || !BR_RE.test(node.textContent.trim()))
           return true;
         const $pos = newState.doc.resolve(pos);
-        for (let d = $pos.depth; d >= 0; d--) {
-          if (TABLE_CELL_TYPES.has($pos.node(d).type.name)) return true;
-        }
+        if (inTableCell($pos)) return true;
         const next = $pos.parent.maybeChild($pos.index() + 1);
         if (!next || $pos.index() === 0) return true;
         const to =

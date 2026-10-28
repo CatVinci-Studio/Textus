@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { AgentTurn } from "../types";
 import { userMessageBody } from "./user-message";
-import { loadSettings } from "../../settings/SettingsContext";
+import { loadSettings } from "../../prefs/SettingsContext";
 import { createPersistedList } from "../../storage/persisted-list";
 import { readBoot } from "../../storage/boot";
 import { trackWrite } from "../../storage/pending-writes";

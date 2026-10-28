@@ -3,7 +3,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { exportDoc, fs, links } from "../../platform/ipc";
 import { isScopedUrl } from "../../platform/ios-files";
-import { openLinkInPlugin } from "../../plugins/contributions/link-handlers";
+import { editorExtensions } from "../extension-points";
 import { modIsMeta } from "../../platform/os";
 import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import { revealHeading } from "./heading-jump";
@@ -40,7 +40,7 @@ async function follow(view: EditorView, target: LinkTarget): Promise<void> {
   }
   if (target.kind === "web") {
     // A plugin that opens such links shows it in Textus.
-    if (openLinkInPlugin(target.url)) return;
+    if (editorExtensions().openLink(target.url)) return;
     return links.openWebLink(target.url);
   }
   // A link to a file that isn't there opens nothing.

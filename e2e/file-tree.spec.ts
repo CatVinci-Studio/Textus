@@ -289,6 +289,40 @@ test("hidden files stay out of the tree until it shows them (#357)", async ({
   ).toBe("1");
 });
 
+test("a file dragged over a plugin's frame still splits where it is let go", async ({
+  page,
+}) => {
+  await open(page);
+  // A plugin's view (a PDF) is an iframe over the document.
+  await page.evaluate(() => {
+    const frame = document.createElement("iframe");
+    frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%";
+    document.querySelector(".main-pane")!.append(frame);
+  });
+  const from = (await row(page, "b.md").boundingBox())!;
+  const main = (await page.locator(".main-pane").boundingBox())!;
+  await page.mouse.move(from.x + 20, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(main.x + main.width - 30, main.y + main.height / 2, {
+    steps: 8,
+  });
+  await expect(page.locator(".split-drop-hint")).toBeVisible();
+  await page.mouse.up();
+  await expect(page.locator(".main-pane-split > .split-pane")).toHaveCount(2);
+});
+
+test("a file clicked opens in a tab of its own, and an open one comes to the front", async ({
+  page,
+}) => {
+  await open(page);
+  await row(page, "b.md").click();
+  await expect(page.locator(`${editor} h1`)).toContainText("Bravo");
+  await expect(page.locator(".tab-pill-title")).toHaveText(["a.md", "b.md"]);
+  await row(page, "a.md").click();
+  await expect(page.locator(`${editor} h1`)).toContainText("Alpha");
+  await expect(page.locator(".tab-pill-title")).toHaveCount(2);
+});
+
 test("Open to the Side shows a document beside the one in front", async ({
   page,
 }) => {

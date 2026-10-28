@@ -18,10 +18,17 @@ permissions:
 
 jobs:
   audit:
+    # The stable line ships too, with its own lockfiles.
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: [main, release/1.2.x]
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ matrix.ref }}
 
       - uses: actions/setup-node@v7
         with:
@@ -52,7 +59,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          title="Security advisories in dependencies"
+          title="Security advisories in dependencies (${{ matrix.ref }})"
           {
             echo "The weekly audit found advisories ([run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}))."
             echo

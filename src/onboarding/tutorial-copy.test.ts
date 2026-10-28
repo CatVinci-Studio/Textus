@@ -32,16 +32,16 @@ describe.each(LANGS)("the tour in %s", (lang) => {
           modes: [skill.mode],
         }) as unknown as SkillListItem,
     );
-    const available = pickerSkills(items, lang, "write");
+    const available = pickerSkills(items, lang, "review");
     const words = [...t.tutorialSkillsTask.matchAll(/`([^`]+)`/g)].map(
       (m) => m[1],
     );
-    expect(words).toHaveLength(2);
+    expect(words).toHaveLength(1);
     const names = words.map((word) => {
       const token = SKILL_COMMAND.exec(word)?.[1] ?? "";
       return resolveSkillName(token, available);
     });
-    expect(names).toEqual(["tighten", "translate"]);
+    expect(names).toEqual(["proofread"]);
   });
 
   it("finds the sidebar through the View menu's own labels", () => {

@@ -51,100 +51,52 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 MIT 라이선스로 공개된 무료 오픈 소스입니다.
 
-| 플랫폼               | 다운로드                                                                                         |
-| ----------------- | -------------------------------------------------------------------------------------------- |
-| macOS · Apple 실리콘 | [.dmg 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest)                       |
-| macOS · Intel     | [.dmg 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest)                       |
-| Windows · x64     | [.exe 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest)                       |
-| Linux · x64       | [.AppImage 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest) · 또는 .deb · .rpm |
+| 플랫폼 | 다운로드 | 다른 설치 방법 |
+| --- | --- | --- |
+| macOS · Apple 실리콘 | [.dmg 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew: `brew install --cask textus` |
+| macOS · Intel | [.dmg 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest) | Homebrew: `brew install --cask textus` |
+| Windows · x64 | [.exe 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
+| Linux · x64 | [.AppImage 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest) · 또는 .deb · .rpm | Arch Linux: [`[catvinci]` 저장소](https://github.com/CatVinci-Studio/arch-repo) |
 
-Homebrew로도 설치할 수 있습니다:
+> iOS·iPadOS 버전도 곧 나옵니다.
 
-```sh
-brew install --cask textus
-```
-
-Arch Linux는 서명된 [`[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) pacman 저장소로(한 번만 설정하면 이후 `sudo pacman -Syu`로 Textus도 최신 상태가 됩니다):
-
-```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/CatVinci-Studio/arch-repo/main/install.sh) textus-bin
-```
-
-iPhone·iPad 버전도 곧 나옵니다. [GitHub에서 모든 릴리스 보기](https://github.com/CatVinci-Studio/Textus/releases)
-
-새 버전을 먼저 써 보고 싶다면 **설정 › 일반 › Textus 정보**에서 **업데이트 채널**을 **베타**로 바꾸세요. 출시 후보 버전도 받게 됩니다. 언제든 **안정 버전**으로 되돌릴 수 있으며, 되돌린 뒤에는 더 새로운 안정 버전이 나올 때까지 지금 버전을 유지합니다.
+베타: **설정 › 일반 › Textus 정보**에서 **업데이트 채널**을 **베타**로 바꾸세요.
 
 ## 글쓰기
 
-어떤 Markdown 표기든 쓰는 즉시 서식으로 바뀝니다. 줄을 가리키면 원래 표기가 보입니다.
+보이는 그대로, 입력하는 대로 Markdown 서식이 잡힙니다. PDF, Word, HTML 등으로 내보낼 수 있습니다.
 
 <p align="center">
-  <img src="docs/images/readme/ko/markdown.png" alt="보이는 그대로" width="860" />
+  <img src="docs/images/readme/ko/markdown.webp" alt="제목, 굵게와 기울임, 인용, 목록, 할 일, 링크, 각주 등 모든 Markdown 표기를 쓴 문서가 서식대로 보인다" width="860" />
 </p>
 
-수식은 입력하는 대로 그려지고, 표는 저절로 줄을 맞춥니다. 글 몇 줄이면 다이어그램이 됩니다.
-
-<p align="center">
-  <img src="docs/images/readme/ko/math.png" alt="수식, 표, 다이어그램을 한 번에" width="860" />
-</p>
-
-### 글 쓰는 방식은? 마음 가는 대로
-
-네 가지 쓰기 모드를 자유롭게 오가고, Typora 테마까지 원하는 테마로 바로 바꿀 수 있습니다.
-
-| 쓰기 모드    | 하는 일                                  |
-| -------- | ------------------------------------- |
-| 젠 모드     | 글 외의 모든 것이 물러납니다                      |
-| 타자기 모드   | 지금 쓰는 줄이 늘 같은 높이에 머뭅니다                |
-| 분할 보기    | 한쪽에서 Markdown을 쓰고, 다른 쪽에서 완성된 모습을 봅니다 |
-| 소스 코드 모드 | 문서 전체를 Markdown 원문 그대로 다룹니다           |
-
-<p align="center">
-  <img src="docs/images/readme/ko/split.png" alt="분할 보기" width="49%" />
-  <img src="docs/images/readme/ko/zen.png" alt="젠 모드" width="49%" />
-</p>
-
-PDF, Word, HTML 등으로 내보낼 수 있습니다.
+| 코드 블록 | 표 |
+| :---: | :---: |
+| <img src="docs/images/readme/ko/code.webp" alt="언어에 맞게 색이 입혀진 코드 블록" width="420" /> | <img src="docs/images/readme/ko/table.webp" alt="열이 맞춰진 표" width="420" /> |
+| **수식** | **다이어그램** |
+| <img src="docs/images/readme/ko/formula.webp" alt="입력하는 대로 그려지는 수식" width="420" /> | <img src="docs/images/readme/ko/diagram.webp" alt="Mermaid 순서도" width="420" /> |
 
 ## Textus AI
 
-당신의 글쓰기 도우미, 함께 씁니다.
+온라인 LLM도 로컬 LLM도 지원합니다. AI가 글쓰기에 속도를 더합니다.
 
-### 쓰는 동안
+| 이어 쓰기 | 오타와 문법 | 수정 제안 |
+| :---: | :---: | :---: |
+| <img src="docs/images/readme/ko/ai-continue.webp" alt="멈추면 다음 말이 회색으로 나타나고, Tab으로 수락" width="280" /> | <img src="docs/images/readme/ko/ai-grammar.webp" alt="잘못된 곳에 밑줄, Alt+Enter로 수정" width="280" /> | <img src="docs/images/readme/ko/ai-revise.webp" alt="문장별 수정 제안, 각각 이유와 함께" width="280" /> |
+| **검토 댓글** | **슬래시 스킬** | **원하는 모델** |
+| <img src="docs/images/readme/ko/ai-review.webp" alt="해당 문장에 붙은 댓글" width="280" /> | <img src="docs/images/readme/ko/ai-skills.webp" alt="/로 여는 스킬 메뉴" width="280" /> | <img src="docs/images/readme/ko/ai-models.webp" alt="설정에서 제공업체 선택" width="280" /> |
 
-손을 멈추면 다음 말이 회색으로 떠오릅니다. Tab 키로 수락하세요. 쓰는 동안 오타와 문법 오류를 짚어 주고, 내 표기 규칙도 함께 확인합니다. Alt+Enter로 바로 고칩니다.
+## 플러그인 (테스트 중, 1.3 beta)
 
-### 부탁하면
+글쓰기만이 아닙니다. 필요한 나머지는 플러그인으로 더하세요.
 
-고칠 곳은 이유와 함께 제안으로 옵니다. 통째로 수락하거나 문장별로 고르세요. 댓글이 해당 문장 옆에 붙습니다. 글을 고치지 않고 의견만 남깁니다. 간결하게, 교정, 번역, 어조 바꾸기까지. 슬래시(/) 하나면 됩니다.
+| 그래프 보기 | Vim |
+| :---: | :---: |
+| <img src="docs/images/readme/ko/plugin-graph.webp" alt="노트와 링크를 그린 그래프" width="420" /> | <img src="docs/images/readme/ko/plugin-vim.webp" alt="Vim의 점프 라벨과 창 막대의 모드 표시" width="420" /> |
+| **빠른 미리보기** | **버전 기록** |
+| <img src="docs/images/readme/ko/plugin-preview.webp" alt="링크 위에 멈추면 그 노트가 카드로 보인다" width="420" /> | <img src="docs/images/readme/ko/plugin-history.webp" alt="노트의 이전 버전을 옆에 표시" width="420" /> |
 
-### 나를 아는 AI
-
-내 문체를 익히고, 인물과 장소를 기억하며, 내가 정한 지침을 따릅니다.
-
-### 원하는 LLM으로
-
-Textus는 20개가 넘는 LLM을 지원하며, OpenAI 호환 API를 제공하는 LLM이라면 무엇이든 쓸 수 있습니다.
-
-OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Doubao · Ollama · OpenAI 호환 엔드포인트
-
-<p align="center">
-  <img src="docs/images/readme/ko/settings.png" alt="원하는 LLM으로" width="860" />
-</p>
-
-## 플러그인 (테스트 중, 1.3 베타)
-
-필요한 것만 더하세요. 노트와 링크를 그린 그래프, 링크가 가리키는 곳을 보여 주는 카드, 두 문서를 나란히 보는 화면 분할, 칸반 보드, 버전 기록, 탭에서 여는 PDF와 Word, Zotero 인용까지 – 모두 **설정 › 확장 › 더 받기**에 테마, 스킬과 함께 있습니다. 플러그인은 무엇이든 쓰기 전에 먼저 묻습니다.
-
-<p align="center">
-  <img src="docs/images/readme/ko/plugins.png" alt="「메밀꽃 필 무렵」 인물 노트와 그 링크 그래프. 링크가 가리키는 노트가 카드로 열려 있다." width="860" />
-</p>
-
-## 당신이 쓴 글은 오직 당신의 것
-
-내 글은 내 것입니다. Textus는 처음부터 그렇게 설계되었고, 코드는 누구나 확인할 수 있습니다.
-
-문서는 원하는 곳에 저장하는 일반 Markdown 파일입니다. API 키와 로그인 정보는 내 컴퓨터에만 저장됩니다. AI 요청은 내 기기에서 내가 고른 제공업체로 바로 전송됩니다. 내려받아 바로 쓰면 됩니다. 가입할 필요가 없습니다. 분석도, 원격 측정도, 광고도 없습니다. MIT 라이선스로 모든 코드를 공개합니다. 위의 내용은 누구나 확인할 수 있습니다. Ollama로 로컬 모델을 쓰면 글이 내 컴퓨터 밖으로 나가지 않습니다.
+칸반 보드, 탭에서 여는 PDF와 Word, Zotero 인용, 다양한 차트 등은 **설정 › 확장 › 더 받기**에 있습니다.
 
 ## 자주 묻는 질문
 
@@ -158,7 +110,14 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
 <details>
 <summary><strong>어떤 운영체제에서 쓸 수 있나요?</strong></summary>
 
-macOS(Apple 실리콘·Intel), Windows, Linux에서 쓸 수 있습니다. iPhone·iPad 버전도 준비 중입니다.
+macOS(Apple 실리콘·Intel), Windows, Linux에서 쓸 수 있습니다. iOS·iPadOS 버전도 곧 나옵니다.
+
+</details>
+
+<details>
+<summary><strong>메모리는 얼마나 쓰나요?</strong></summary>
+
+저희는 메모리 사용량을 매우 중요하게 여기고, 릴리스마다 측정합니다. 창 하나에 약 110 MB, 창을 하나 더 열 때마다 약 55 MB가 늘어납니다. 플러그인은 쓸 때만 불러오고, 백그라운드에 둔 웹 페이지는 메모리에서 내려졌다가 다시 돌아오면 새로 불러옵니다.
 
 </details>
 
@@ -182,15 +141,6 @@ macOS(Apple 실리콘·Intel), Windows, Linux에서 쓸 수 있습니다. iPhone
 네. 일반 .md 파일이며 표, 할 일 목록, 각주, 수식, Mermaid를 지원합니다. PDF, Word, HTML 등으로 내보낼 수 있습니다.
 
 </details>
-
-## 빠른 시작
-
-1. Textus를 실행합니다. 빈 초안에서 시작하며, 파일은 저장할 때만 정하면 됩니다.
-2. **설정 → Textus AI**를 열어 제공업체를 고르고, **로그인 및 인증 정보**에서 로그인하거나 키를 붙여 넣습니다.
-3. 쓰기 시작하세요. 잠시 멈추면 다음 문장이 회색으로 나타나고, Tab으로 받아들입니다.
-4. 창 막대의 **Textus AI** 버튼(깃펜)으로 AI 패널을 엽니다. 나머지는 **도움말 → AI 기능 가이드**에 있습니다.
-
-모든 단축키는 **설정 → 단축키**에서 확인하고 바꿀 수 있습니다.
 
 ## 커뮤니티
 

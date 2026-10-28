@@ -1,8 +1,9 @@
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { installClipboardCapture } from "../clipboard/history";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
 import { useExternalChangeReload } from "../document/useExternalChangeReload";
+import { tabReadOnly } from "../document/read-only";
 import {
   useMenuBridge,
   useNativeMenuAccelerators,
@@ -21,13 +22,11 @@ import {
   useTutorialTabRecovery,
   useWindowLessons,
 } from "./onboarding-wiring";
-import { tabIsUntouchedDraft } from "../document/doc-tabs";
-import { useLatest } from "../utils/hooks/useLatest";
 import { setDocumentDrop } from "../ui/document-drop";
 import { fileDropOnDocuments } from "./split/split-drop";
 import type { WindowShell } from "./useWindowShell";
 import type { WindowDocuments } from "./useWindowDocuments";
-import type { Settings, useSettings } from "../settings/SettingsContext";
+import type { Settings, useSettings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /** Everything that reaches a window from outside its own controls. */
@@ -94,12 +93,7 @@ export function useWindowWiring({
 
   // The same, pushed to an already-running window.
   useOpenPathsPush(openPathInTab);
-  const activeTabRef = useLatest(activeTab);
-  const activeIsUntouchedDraft = useCallback(
-    () => tabIsUntouchedDraft(activeTabRef.current),
-    [activeTabRef],
-  );
-  useFileDrop(openFile, openPathInTab, activeIsUntouchedDraft);
+  useFileDrop(openFile, openPathInTab);
   // A file from the sidebar dragged over the documents opens where it is
   // let go.
   useEffect(() => {
@@ -135,6 +129,7 @@ export function useWindowWiring({
     splitView: !!activeTab.sourceMode && !!activeTab.splitView,
     typewriter: settings.typewriterMode,
     zen: docs.zenMode,
+    readOnly: tabReadOnly(activeTab),
     folderOpen: openFolder.folder !== null,
   };
   useNativeMenuChecks(menuChecks);
@@ -155,6 +150,7 @@ export function useWindowWiring({
     onToggleAgentPanel: panels.toggleAgentPanel,
     onToggleTextusAi: textusAi.toggle,
     onToggleSplitView: docs.toggleSplitView,
+    onToggleReadOnly: () => docs.toggleReadOnly(),
     onToggleZenMode: docs.toggleZenMode,
     addBlankTab: tabState.addBlankTab,
     openFileDialog: docs.openFileDialog,
@@ -202,7 +198,6 @@ export function useWindowWiring({
     cancelDraftFlushes: shell.cancelDraftFlushes,
     saveTab: docs.saveTab,
     removeTab: docs.removeTab,
-    replaceTabWithFile: docs.replaceTabWithFile,
   });
 
   return { ...actions, menuChecks, sidebarLesson, close };
