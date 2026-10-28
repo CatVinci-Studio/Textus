@@ -70,18 +70,48 @@ test("installing from the list turns the plugin on, behind its permissions", asy
   await dialog.getByRole("button", { name: "Allow" }).click();
   // Installed in place: nothing opens, Settings stays, the next can follow.
   const listed = page.locator('.plugin-card[data-catalog="catvinci.tasks"]');
+  // Its button turns it off now; the menu beside it uninstalls.
+  await expect(listed.getByRole("button", { name: "Turn Off" })).toBeVisible();
+  const more = listed.getByRole("button", { name: "More for Tasks" });
+  await more.click();
   await expect(
-    listed.getByRole("button", { name: "Installed" }),
-  ).toBeDisabled();
+    listed.getByRole("menuitem", { name: "Uninstall" }),
+  ).toBeVisible();
+  await more.click();
   await expect(page.locator(".plugin-get-page")).toBeVisible();
   await openPluginsPage(page);
   const card = page.locator('.plugin-card[data-plugin="catvinci.tasks"]');
   await expect(card).toBeVisible();
-  await expect(card.getByRole("checkbox")).toBeChecked();
+  await expect(card.getByRole("button", { name: "Turn Off" })).toBeVisible();
   await expect(card.locator(".plugin-official")).toHaveText("Official");
   // Its page has its guide, its README.
   await card.locator(".plugin-card-open").click();
   await expect(page.locator(".plugin-readme")).toContainText("Tasks");
+});
+
+test("uninstalled from its button's menu, a plugin is offered to install again", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await openGetPlugins(page);
+  const listed = page.locator('.plugin-card[data-catalog="catvinci.tasks"]');
+  await listed.getByRole("button", { name: "Install" }).click();
+  await page
+    .locator(".app-dialog")
+    .getByRole("button", { name: "Allow" })
+    .click();
+  await listed.getByRole("button", { name: "Turn Off" }).click();
+  await expect(listed.getByRole("button", { name: "Turn On" })).toBeVisible();
+  await listed.getByRole("button", { name: "More for Tasks" }).click();
+  await listed.getByRole("menuitem", { name: "Uninstall" }).click();
+  await page
+    .locator(".app-dialog")
+    .getByRole("button", { name: "Uninstall" })
+    .click();
+  await expect(listed.getByRole("button", { name: "Install" })).toBeVisible();
+  await expect(
+    listed.getByRole("button", { name: "More for Tasks" }),
+  ).toHaveCount(0);
 });
 
 test("a plugin's page in Get more has its README, in the UI's language", async ({
@@ -102,7 +132,7 @@ test("a plugin's page in Get more has its README, in the UI's language", async (
     .locator(".app-dialog")
     .getByRole("button", { name: "允许" })
     .click();
-  await expect(own.getByRole("button", { name: "已安装" })).toBeDisabled();
+  await expect(own.getByRole("button", { name: "停用" })).toBeVisible();
 });
 
 test("Get plugins searches the catalog by name, what it does and who made it", async ({

@@ -1475,6 +1475,9 @@ utiliser une.
   pluginRepository: "Source",
   pluginReload: "Recharger",
   pluginUninstall: "Désinstaller",
+  pluginTurnOn: "Activer",
+  pluginTurnOff: "Désactiver",
+  pluginMoreFor: "Plus pour {name}",
   pluginExport: "Exporter pour publier…",
   pluginExportPrompt:
     "Votre nom d’éditeur : minuscules, chiffres et tirets. Votre nom GitHub convient bien. Il remplace « local » dans l’id de l’extension.",

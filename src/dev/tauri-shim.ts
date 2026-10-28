@@ -798,7 +798,9 @@ export function installDevTauriShim(): void {
         pluginState.allOn = !!args.on;
         return Promise.resolve(null);
       case "plugin_set":
+        // As Rust does: the rest of its entry (official) stays.
         pluginState.plugins[id] = {
+          ...pluginState.plugins[id],
           enabled: !!args.enabled,
           granted: [...((args.granted as string[]) ?? [])],
         };

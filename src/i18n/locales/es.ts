@@ -1450,6 +1450,9 @@ para usar una.
   pluginRepository: "Código fuente",
   pluginReload: "Recargar",
   pluginUninstall: "Desinstalar",
+  pluginTurnOn: "Activar",
+  pluginTurnOff: "Desactivar",
+  pluginMoreFor: "Más para {name}",
   pluginExport: "Exportar para publicar…",
   pluginExportPrompt:
     "Tu nombre como editor: minúsculas, números y guiones. Tu usuario de GitHub va bien. Sustituye a «local» en el id del complemento.",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Byline } from "./PluginPage";
 import { PluginIcon } from "./PluginArt";
 import type { Strings } from "../../i18n/strings";
@@ -21,18 +21,14 @@ export function MarketPlugins({
   t,
   catalog,
   query,
-  installed,
-  installing,
-  onInstall,
+  actionFor,
   onOpen,
 }: {
   t: Strings;
   catalog: CatalogState;
   query: string;
-  /** The ids of the plugins installed already. */
-  installed: ReadonlySet<string>;
-  installing: string | null;
-  onInstall: (item: CatalogItem) => void;
+  /** A plugin's button (PluginAction). */
+  actionFor: (id: string) => ReactNode;
   onOpen: (item: CatalogItem) => void;
 }) {
   const [sort, setSort] = useState<CatalogSort>("popular");
@@ -80,9 +76,7 @@ export function MarketPlugins({
               key={item.id}
               item={item}
               t={t}
-              installed={installed.has(item.id)}
-              installing={installing === item.id}
-              onInstall={() => onInstall(item)}
+              action={actionFor(item.id)}
               onOpen={() => onOpen(item)}
             />
           ))
@@ -117,50 +111,17 @@ export function installsText(item: CatalogItem, t: Strings): string | null {
   return t.pluginInstalls.replace("{n}", item.installs.toLocaleString());
 }
 
-/** Install, or Installed once it is - in place, so several can be
- *  installed one after another. */
-export function InstallButton({
-  t,
-  installed,
-  installing,
-  onInstall,
-}: {
-  t: Strings;
-  installed: boolean;
-  installing: boolean;
-  onInstall: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={`text-button plugin-install${installed ? " is-installed" : ""}`}
-      disabled={installed || installing}
-      onClick={onInstall}
-    >
-      {installed
-        ? t.pluginInstalled
-        : installing
-          ? t.pluginInstalling
-          : t.pluginInstall}
-    </button>
-  );
-}
-
 /** A plugin the catalog offers: its icon, name, line and installs, opening
- *  its page; Install beside it. */
+ *  its page; its button beside it. */
 function CatalogCard({
   item,
   t,
-  installed,
-  installing,
-  onInstall,
+  action,
   onOpen,
 }: {
   item: CatalogItem;
   t: Strings;
-  installed: boolean;
-  installing: boolean;
-  onInstall: () => void;
+  action: ReactNode;
   onOpen: () => void;
 }) {
   const name = pluginName({ id: item.id, manifest: item.manifest });
@@ -184,14 +145,7 @@ function CatalogCard({
           </Byline>
         </span>
       </button>
-      <div className="settings-row-control">
-        <InstallButton
-          t={t}
-          installed={installed}
-          installing={installing}
-          onInstall={onInstall}
-        />
-      </div>
+      <div className="settings-row-control">{action}</div>
     </div>
   );
 }

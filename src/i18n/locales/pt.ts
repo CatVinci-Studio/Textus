@@ -1431,6 +1431,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginRepository: "Código-fonte",
   pluginReload: "Recarregar",
   pluginUninstall: "Desinstalar",
+  pluginTurnOn: "Ativar",
+  pluginTurnOff: "Desativar",
+  pluginMoreFor: "Mais para {name}",
   pluginExport: "Exportar para publicar…",
   pluginExportPrompt:
     "O seu nome como editor: minúsculas, números e hífenes. O seu nome no GitHub serve bem. Substitui “local” no id do plugin.",

@@ -1371,6 +1371,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginRepository: "소스",
   pluginReload: "다시 불러오기",
   pluginUninstall: "제거",
+  pluginTurnOn: "켜기",
+  pluginTurnOff: "끄기",
+  pluginMoreFor: "{name} 더 보기",
   pluginExport: "게시용으로 내보내기…",
   pluginExportPrompt:
     "게시자 이름을 입력하세요(소문자, 숫자, 하이픈). GitHub 사용자 이름을 쓰면 좋습니다. 플러그인 ID의 “local”을 이 이름으로 바꿉니다.",
