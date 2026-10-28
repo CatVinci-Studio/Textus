@@ -57,6 +57,9 @@ export interface UiState {
   fileSearchScope: string;
   /** The file tree's order: "name" or "modified" (sidebar/FileTree.tsx). */
   fileTreeSort: string;
+  /** The view last switched to, "rich", "source" or "split", which new
+   *  documents open in (editor/modes/view-mode.ts). */
+  viewMode: string;
 }
 
 export interface ThemeChromeCache {
@@ -146,6 +149,11 @@ const LOCAL: {
   },
   fileTreeSort: {
     key: "textus-file-tree-sort",
+    decode: (raw) => raw,
+    encode: (value) => value,
+  },
+  viewMode: {
+    key: "textus-view-mode",
     decode: (raw) => raw,
     encode: (value) => value,
   },

@@ -21,6 +21,7 @@ import {
 } from "../utils/events";
 import { setTabJump, type TabJump } from "../editor/tab-jump";
 import { lastCaret } from "../document/last-carets";
+import { lastViewMode } from "../editor/modes/view-mode";
 import { isIOSApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
@@ -168,7 +169,12 @@ export function useFileOpening(opts: {
       }
       const doc = await readDocument(path, open.asDocument);
       if (!doc) return;
-      const newTab: DocTab = { ...makeBlankTab(), ...doc };
+      // A plugin's tab has no source to show.
+      const newTab: DocTab = {
+        ...makeBlankTab(),
+        ...(doc.view ? {} : lastViewMode()),
+        ...doc,
+      };
       const jump =
         newTab.path && openingJump(open, path, newTab.diskMtime, restoreCarets);
       if (jump) setTabJump(newTab.id, jump);
