@@ -34,8 +34,8 @@ fn os_version() -> String {
 
 #[cfg(windows)]
 fn os_version() -> String {
-    let Ok(key) = windows_registry::LOCAL_MACHINE
-        .open(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion")
+    let Ok(key) =
+        windows_registry::LOCAL_MACHINE.open(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion")
     else {
         return "Windows".into();
     };
