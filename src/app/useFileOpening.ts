@@ -309,12 +309,14 @@ export function useOpenPathsPush(
  * never puts a document in place of the one being read (in window mode
  * File > Open does, and a dropped file replaced the document on screen);
  * only an untouched Untitled tab gives way to it. Dropped images go to the
- * editor on screen, at the drop point (images/image-plugin.ts).
+ * editor on screen, at the drop point (images/image-plugin.ts), and a
+ * dropped folder opens in the sidebar, as Open Folder does.
  */
 export function useFileDrop(
   openFile: (path: string) => Promise<void>,
   openPathInTab: (path: string) => Promise<void>,
   activeIsUntouchedDraft: () => boolean,
+  openFolder: (path: string) => void,
 ): void {
   useEffect(() => {
     if (isIOSApp) return;
@@ -336,14 +338,24 @@ export function useFileDrop(
             },
           }),
         );
-      // A file that can't be read as text (a folder, a binary) opens
-      // nothing, the same as when it is picked in File > Open.
+      // What can't be read as text is a folder, opened in the sidebar, or
+      // a file that opens nothing, the same as when picked in File > Open.
       for (const [i, path] of documents.entries()) {
         const open =
           i === 0 && activeIsUntouchedDraft() ? openFile : openPathInTab;
-        await open(path).catch(() => undefined);
+        await open(path).catch(async () => {
+          if (await isFolder(path)) openFolder(path);
+        });
       }
     });
     return unlistenAll(unlisten);
-  }, [openFile, openPathInTab, activeIsUntouchedDraft]);
+  }, [openFile, openPathInTab, activeIsUntouchedDraft, openFolder]);
+}
+
+/** Whether `path` is a folder: only a folder lists. */
+function isFolder(path: string): Promise<boolean> {
+  return fs.listDir(path).then(
+    () => true,
+    () => false,
+  );
 }
