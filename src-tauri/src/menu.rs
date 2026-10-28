@@ -31,6 +31,7 @@ const NEW_FILE_ID: &str = "new-file";
 const OPEN_FILE_ID: &str = "open-file";
 const OPEN_FOLDER_ID: &str = "open-folder";
 const CLOSE_FOLDER_ID: &str = "close-folder";
+const COPY_PATH_ID: &str = "copy-path";
 const SAVE_FILE_ID: &str = "save-file";
 const SAVE_FILE_AS_ID: &str = "save-file-as";
 const RECENT_CLEAR_ID: &str = "recent-clear";
@@ -315,6 +316,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_or_open_window(app_handle, "menu-open-folder");
     } else if id == CLOSE_FOLDER_ID {
         emit_to_focused(app_handle, "menu-close-folder");
+    } else if id == COPY_PATH_ID {
+        emit_to_focused(app_handle, "menu-copy-path");
     } else if id == SAVE_FILE_ID {
         emit_to_focused(app_handle, "menu-save-file");
     } else if id == SAVE_FILE_AS_ID {

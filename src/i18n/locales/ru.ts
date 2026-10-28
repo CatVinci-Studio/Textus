@@ -419,6 +419,7 @@ export default {
   treeRefresh: "Обновить",
   menuOpenFolder: "Открыть папку…",
   menuCloseFolder: "Закрыть папку",
+  menuCopyPath: "Копировать путь",
   folderTooBroad:
     "Эта папка слишком общая, чтобы её открыть (домашняя папка или целый диск). Выберите более конкретную папку.",
   treeSearchPlaceholder: "Поиск по именам файлов",

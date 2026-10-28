@@ -428,6 +428,7 @@ para usar una.
   treeRefresh: "Actualizar",
   menuOpenFolder: "Abrir carpeta…",
   menuCloseFolder: "Cerrar carpeta",
+  menuCopyPath: "Copiar ruta",
   folderTooBroad:
     "Esta carpeta es demasiado amplia para abrirla (es tu carpeta personal o una unidad entera). Elige una más concreta.",
   treeSearchPlaceholder: "Buscar nombres de archivo",

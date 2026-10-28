@@ -420,6 +420,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeRefresh: "Aktualisieren",
   menuOpenFolder: "Ordner öffnen…",
   menuCloseFolder: "Ordner schließen",
+  menuCopyPath: "Pfad kopieren",
   folderTooBroad:
     "Dieser Ordner ist zu weit gefasst, um ihn zu öffnen (dein Benutzerordner oder ein ganzes Laufwerk). Wähle einen spezifischeren Ordner.",
   treeSearchPlaceholder: "Dateinamen suchen",

@@ -415,6 +415,7 @@ type /name in a conversation to use one.
   treeRefresh: "Refresh",
   menuOpenFolder: "Open Folder…",
   menuCloseFolder: "Close Folder",
+  menuCopyPath: "Copy Path",
   folderTooBroad:
     "This folder is too broad to open (your home folder or a whole drive). Choose a more specific folder.",
   treeSearchPlaceholder: "Search file names",

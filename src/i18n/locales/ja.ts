@@ -400,6 +400,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeRefresh: "更新",
   menuOpenFolder: "フォルダーを開く…",
   menuCloseFolder: "フォルダーを閉じる",
+  menuCopyPath: "パスをコピー",
   folderTooBroad:
     "このフォルダーは範囲が広すぎるため（ホームフォルダーやドライブ全体）、開けません。もっと具体的なフォルダーを選んでください。",
   treeSearchPlaceholder: "ファイル名を検索",

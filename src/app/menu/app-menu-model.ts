@@ -21,6 +21,7 @@ export type NativeMenuId =
   | "save-file-as"
   | "export-pdf"
   | "export-html"
+  | "copy-path"
   | "close-tab"
   | "reopen-closed-tab"
   | "close-window"
@@ -283,6 +284,7 @@ export function buildAppMenu(
           action: { native: "save-file-as" },
         },
         { label: t.menuExport, submenu: exportEntries(t) },
+        { label: t.menuCopyPath, action: { native: "copy-path" } },
         "separator",
         {
           label: t.menuCloseTab,

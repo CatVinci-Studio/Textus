@@ -393,6 +393,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeRefresh: "새로 고침",
   menuOpenFolder: "폴더 열기…",
   menuCloseFolder: "폴더 닫기",
+  menuCopyPath: "경로 복사",
   folderTooBroad:
     "이 폴더는 범위가 너무 넓어(홈 폴더 또는 드라이브 전체) 열 수 없습니다. 더 구체적인 폴더를 선택하세요.",
   treeSearchPlaceholder: "파일 이름 검색",

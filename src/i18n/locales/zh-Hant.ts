@@ -377,6 +377,7 @@ export default {
   treeRefresh: "重新整理",
   menuOpenFolder: "開啟資料夾…",
   menuCloseFolder: "關閉資料夾",
+  menuCopyPath: "複製路徑",
   folderTooBroad:
     "這個資料夾的範圍太大（你的個人資料夾或整個磁碟），無法開啟。改選範圍更小的資料夾。",
   treeSearchPlaceholder: "搜尋檔案名稱",

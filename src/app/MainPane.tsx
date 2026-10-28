@@ -31,6 +31,7 @@ import {
 import { pullTab } from "./split/split-drop";
 import type { ContextMenuItem } from "../ui/ContextMenu";
 import { contributedContextItems } from "../ui/context-menu-items";
+import { copyPathItem } from "../clipboard/copy-path";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 
@@ -99,6 +100,8 @@ export function MainPane({
   const closeSaved = (list: DocTab[]) => {
     for (const tab of list) if (!tabIsDirty(tab)) onClose(tab.id);
   };
+  const pathItem = (path: string | null | undefined) =>
+    path ? [copyPathItem(t, path)] : [];
   const readOnlyItem = (id: string) => {
     const tab = byId.get(id);
     if (!tab || tab.view) return [];
@@ -182,6 +185,7 @@ export function MainPane({
               },
             ]
           : []),
+        ...pathItem(byId.get(id)?.path),
         ...readOnlyItem(id),
         "separator",
         { label: t.menuCloseTab, onSelect: () => onClose(id) },

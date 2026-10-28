@@ -377,6 +377,7 @@ export default {
   treeRefresh: "刷新",
   menuOpenFolder: "打开文件夹…",
   menuCloseFolder: "关闭文件夹",
+  menuCopyPath: "复制路径",
   folderTooBroad:
     "这个文件夹范围太大（主目录或整个磁盘），不能打开，请选择更具体的文件夹。",
   treeSearchPlaceholder: "搜索文件名",

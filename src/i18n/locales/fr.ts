@@ -433,6 +433,7 @@ utiliser une.
   treeRefresh: "Actualiser",
   menuOpenFolder: "Ouvrir un dossier…",
   menuCloseFolder: "Fermer le dossier",
+  menuCopyPath: "Copier le chemin",
   folderTooBroad:
     "Ce dossier est trop vaste pour être ouvert (votre dossier personnel ou un disque entier). Choisissez un dossier plus précis.",
   treeSearchPlaceholder: "Rechercher des noms de fichier",

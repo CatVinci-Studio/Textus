@@ -416,6 +416,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeRefresh: "Atualizar",
   menuOpenFolder: "Abrir Pasta…",
   menuCloseFolder: "Fechar Pasta",
+  menuCopyPath: "Copiar caminho",
   folderTooBroad:
     "Esta pasta é ampla demais para ser aberta (sua pasta pessoal ou um disco inteiro). Escolha uma pasta mais específica.",
   treeSearchPlaceholder: "Buscar nomes de arquivo",
