@@ -42,6 +42,8 @@ interface TabBarProps {
   labels: { tabs: string; close: string; add: string; unsaved: string };
   /** Where it sits in a split's grid. */
   style?: CSSProperties;
+  /** The split pane it is the bar of: a pulled tab is let go onto it. */
+  pane?: number;
 }
 
 // Drag distances to leave the bar (vertical) or start a reorder
@@ -65,6 +67,7 @@ export function TabBar({
   menuFor,
   labels,
   style,
+  pane,
 }: TabBarProps) {
   const barRef = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<{
@@ -139,6 +142,7 @@ export function TabBar({
     <div
       className="tab-bar"
       style={style}
+      data-pane-index={pane}
       ref={barRef}
       role="tablist"
       aria-label={labels.tabs}
@@ -335,6 +339,17 @@ function useIncomingTabPreview(
   return previewRef;
 }
 
+/** Another tab bar than `own` under (x, y). */
+function barAt(x: number, y: number, own: Element | null): Element | null {
+  for (const bar of document.querySelectorAll(".tab-bar")) {
+    if (bar === own) continue;
+    const box = bar.getBoundingClientRect();
+    if (x >= box.left && x <= box.right && y >= box.top && y <= box.bottom)
+      return bar;
+  }
+  return null;
+}
+
 interface PillRect {
   id: string;
   center: number;
@@ -409,6 +424,17 @@ function TabPill({
     if (onPullOut && Math.abs(e.clientY - g.startY) > PULL_OUT_PX) {
       // Pulled out of the bar: neighbours slide home, and the drag is the
       // caller's from here.
+      gesture.current = null;
+      clearInlineStyles();
+      onPullOut(tab.id, title);
+      return;
+    }
+
+    // Across onto another pane's bar: it goes on as a pull, let go there.
+    if (
+      onPullOut &&
+      barAt(e.clientX, e.clientY, elRef.current?.parentElement ?? null)
+    ) {
       gesture.current = null;
       clearInlineStyles();
       onPullOut(tab.id, title);
