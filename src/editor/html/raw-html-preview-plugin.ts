@@ -182,11 +182,14 @@ function decorateTextblock(
   handled: ReadonlySet<number>,
 ) {
   const all: HtmlChild[] = [];
-  block.forEach((child, offset) => {
+  // Tags inside a span too: **<u>words</u>**.
+  block.descendants((child, offset) => {
+    if (child.type.name !== "html") return true;
     const from = blockPos + 1 + offset;
     // A <details> split around markdown is decorateDetails' to draw.
-    if (child.type.name === "html" && !handled.has(from))
+    if (!handled.has(from))
       all.push({ from, to: from + child.nodeSize, text: child.textContent });
+    return false;
   });
   if (all.length === 0) return;
   const { runs, rest: htmls } = inlineSvgRuns(block, blockPos, all);

@@ -131,4 +131,16 @@ describe("raw HTML in the editor", () => {
     ).find((el) => el.textContent === "red")!;
     expect(styled.getAttribute("style")).toMatch(/^color: red;?$/);
   });
+
+  it("draws a tag pair written inside bold or italic", async () => {
+    const { dom } = await open("**<u>under</u>** and *<b>bold</b>*.\n\nEnd.\n");
+    expect(dom.querySelector(".rhtml-u")?.textContent).toBe("under");
+    expect(dom.querySelector(".rhtml-b")?.textContent).toBe("bold");
+    expect(
+      Array.from(
+        dom.querySelectorAll(".raw-html-source-hidden"),
+        (el) => el.textContent,
+      ),
+    ).toEqual(["<u>", "</u>", "<b>", "</b>"]);
+  });
 });
