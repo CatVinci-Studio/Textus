@@ -370,7 +370,7 @@ async function isolate(targets: Locator[]): Promise<() => Promise<void>> {
       .ProseMirror { caret-color: transparent !important; }
     `,
   });
-  return () => style.evaluate((el) => el.remove());
+  return () => style.evaluate((el) => (el as Element).remove());
 }
 
 /** Every small card: one size, whichever grid it is in. */

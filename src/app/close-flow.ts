@@ -186,12 +186,7 @@ export function useClosePrompt(opts: {
       await flushPendingWrites();
       await thisWindow().destroy();
     } else removeTab(action.tabId);
-  }, [
-    pendingClose,
-    setPendingClose,
-    removeTab,
-    clearWindowDrafts,
-  ]);
+  }, [pendingClose, setPendingClose, removeTab, clearWindowDrafts]);
 
   const cancelClose = () => {
     setPendingClose(null);
