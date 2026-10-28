@@ -1,5 +1,9 @@
 import { useCallback, useEffect } from "react";
-import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
+import {
+  listenToThisWebview,
+  listenToThisWindow,
+  unlistenAll,
+} from "../utils/tauri-events";
 import {
   CHAT_TO_EDITOR,
   onWindowEvent,
@@ -314,7 +318,7 @@ export function useFileDrop(
 ): void {
   useEffect(() => {
     if (isIOSApp) return;
-    const unlisten = listenToThisWindow<{
+    const unlisten = listenToThisWebview<{
       paths: string[];
       position: { x: number; y: number };
     }>("tauri://drag-drop", async (event) => {
