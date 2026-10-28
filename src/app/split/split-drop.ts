@@ -2,8 +2,10 @@ import {
   moveToPane,
   pairLayout,
   paneOf,
+  reorderInPane,
   setSplitLayout,
   splitLayout,
+  type PaneIndex,
   type SplitDirection,
 } from "./split-layout";
 import { setDragging, type DocumentDrop } from "../../ui/document-drop";
@@ -64,6 +66,30 @@ export function dropTargetAt(x: number, y: number): DropTarget | null {
             ? "top"
             : "bottom";
   return { zone, tabId, rect };
+}
+
+/** A split pane's tab bar under (x, y), and the slot there: how many of
+ *  its other tabs lie left of x. */
+function barDropAt(
+  x: number,
+  y: number,
+  tabId: string,
+): { pane: PaneIndex; index: number; rect: DOMRect } | null {
+  const bar = [
+    ...document.querySelectorAll<HTMLElement>(".tab-bar[data-pane-index]"),
+  ].find((el) => inside(el.getBoundingClientRect(), x, y));
+  if (!bar) return null;
+  const index = [...bar.querySelectorAll<HTMLElement>("[data-flip-id]")].filter(
+    (pill) => {
+      const box = pill.getBoundingClientRect();
+      return pill.dataset.flipId !== tabId && box.left + box.width / 2 < x;
+    },
+  ).length;
+  return {
+    pane: Number(bar.dataset.paneIndex) as PaneIndex,
+    index,
+    rect: bar.getBoundingClientRect(),
+  };
 }
 
 function inside(rect: DOMRect, x: number, y: number): boolean {
@@ -142,8 +168,9 @@ export function splitForDrop(
 
 /**
  * A tab pulled down out of the tab bar, followed to its drop: over a
- * document it splits there, out of the window it tears off where possible.
- * Escape cancels.
+ * document it splits there, onto a pane's tab bar it joins that pane where
+ * it is let go, out of the window it tears off where possible. Escape
+ * cancels.
  */
 export function pullTab(
   tabId: string,
@@ -168,19 +195,38 @@ export function pullTab(
     e.clientX > window.innerWidth ||
     e.clientY > window.innerHeight;
   const move = (e: PointerEvent) => {
+    // Let go where no pointerup reached the page (WebView2 can lose it).
+    if (e.buttons === 0) {
+      up(e);
+      return;
+    }
     if (opts.detach && outside(e)) {
       stop();
       opts.detach(tabId);
       return;
     }
     ghost.style.transform = `translate(${e.clientX + 12}px, ${e.clientY + 8}px)`;
-    showDropHint(dropTargetAt(e.clientX, e.clientY));
+    const bar = barDropAt(e.clientX, e.clientY, tabId);
+    showDropHint(
+      bar
+        ? { zone: "center", tabId, rect: bar.rect }
+        : dropTargetAt(e.clientX, e.clientY),
+    );
   };
   const up = (e: PointerEvent) => {
+    const bar = barDropAt(e.clientX, e.clientY, tabId);
     const target = dropTargetAt(e.clientX, e.clientY);
     stop();
     if (opts.releaseOutside && outside(e)) {
       opts.releaseOutside(tabId);
+      return;
+    }
+    if (bar) {
+      opts.activate(tabId);
+      requestAnimationFrame(() => {
+        moveToPane(tabId, bar.pane);
+        reorderInPane(bar.pane, tabId, bar.index);
+      });
       return;
     }
     if (!target) return;

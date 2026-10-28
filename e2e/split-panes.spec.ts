@@ -184,6 +184,86 @@ test("a tab dragged onto the other pane moves into its tab bar", async ({
   await expect(page.locator(pane("first"))).toContainText("Two");
 });
 
+/** Split with Three in front of the first pane, beside Two. */
+async function splitThree(page: Page) {
+  await openTwo(page);
+  await page.locator('[data-active-tab="true"] .ProseMirror').click();
+  await expect(async () => {
+    await page.keyboard.press("ControlOrMeta+Alt+s");
+    await expect(page.locator(panes)).toHaveCount(2, { timeout: 500 });
+  }).toPass();
+  await emit(page, "menu-new-file");
+  await pasteMarkdown(page, "# Three");
+}
+
+/** Each pane's tab titles: its bar's, in order. */
+async function barTitles(page: Page) {
+  const bars = page.locator(".main-pane-split > .tab-bar");
+  return [
+    await bars.first().locator('[role="tab"]').allTextContents(),
+    await bars.last().locator('[role="tab"]').allTextContents(),
+  ];
+}
+
+for (const way of ["along the bars", "down and across"])
+  test(`a tab dragged ${way} onto the other pane's bar joins it where let go`, async ({
+    page,
+  }) => {
+    await splitThree(page);
+    const bars = page.locator(".main-pane-split > .tab-bar");
+    const three = bars.first().locator('[role="tab"][aria-selected="true"]');
+    const from = (await three.boundingBox())!;
+    const before = (await bars.last().locator('[role="tab"]').boundingBox())!;
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    if (way === "down and across")
+      await page.mouse.move(from.x + from.width / 2, from.y + 120, {
+        steps: 5,
+      });
+    // Just before the other pane's one tab.
+    await page.mouse.move(before.x + 4, before.y + before.height / 2, {
+      steps: 12,
+    });
+    await page.mouse.up();
+    await expect(bars.last().locator('[role="tab"]')).toHaveCount(2);
+    await expect(bars.last().locator('[role="tab"]').first()).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await expect(page.locator(pane("second"))).toContainText("Three");
+    await expect(page.locator(".tab-pull-ghost")).toHaveCount(0);
+  });
+
+test("a pulled tab whose release the page never heard is let go at the next move", async ({
+  page,
+}) => {
+  await splitThree(page);
+  const bars = page.locator(".main-pane-split > .tab-bar");
+  const three = bars.first().locator('[role="tab"][aria-selected="true"]');
+  const from = (await three.boundingBox())!;
+  const to = (await bars.last().boundingBox())!;
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + from.width / 2, from.y + 120, { steps: 5 });
+  await page.mouse.move(to.x + to.width - 30, to.y + to.height / 2, {
+    steps: 8,
+  });
+  await expect(page.locator(".tab-pull-ghost")).toHaveCount(1);
+  // The release lost on its way, as WebView2 can lose it.
+  await page.evaluate(() =>
+    document.addEventListener("pointerup", (e) => e.stopPropagation(), {
+      capture: true,
+      once: true,
+    }),
+  );
+  await page.mouse.up();
+  await page.mouse.move(to.x + to.width - 32, to.y + to.height / 2);
+  await expect(page.locator(".tab-pull-ghost")).toHaveCount(0);
+  expect((await barTitles(page)).map((titles) => titles.length)).toEqual([
+    1, 2,
+  ]);
+});
+
 test("with one tab, Split Right opens a blank one beside it", async ({
   page,
 }) => {
