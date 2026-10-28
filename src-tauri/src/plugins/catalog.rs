@@ -324,12 +324,19 @@ pub async fn plugin_catalog_icon(id: String) -> Result<Option<String>, String> {
     let Some(url) = icon else {
         return Ok(None);
     };
-    let mime = if url.ends_with(".svg") { "image/svg+xml" } else { "image/png" };
+    let mime = if url.ends_with(".svg") {
+        "image/svg+xml"
+    } else {
+        "image/png"
+    };
     let bytes = download(&url, &id).await?;
     if bytes.len() > MAX_ICON {
         return Ok(None);
     }
-    Ok(Some(format!("data:{mime};base64,{}", STANDARD.encode(bytes))))
+    Ok(Some(format!(
+        "data:{mime};base64,{}",
+        STANDARD.encode(bytes)
+    )))
 }
 
 /// The README for `language` among `readme`'s: the language itself, its
