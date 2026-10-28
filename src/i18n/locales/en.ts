@@ -114,6 +114,8 @@ type /name in a conversation to use one.
   diagramZoom: "Enlarge diagram",
   codeBlockEditSource: "Edit Source",
   diagramViewerLabel: "Diagram",
+  pictureZoom: "Enlarge picture",
+  pictureViewerLabel: "Picture",
   diagramViewerClose: "Close",
   diagramViewerHint:
     "Scroll or pinch to zoom · drag to move · double-click to fit",

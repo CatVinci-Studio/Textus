@@ -107,6 +107,8 @@ export default {
   diagramZoom: "放大圖表",
   codeBlockEditSource: "編輯原始碼",
   diagramViewerLabel: "圖表",
+  pictureZoom: "放大圖片",
+  pictureViewerLabel: "圖片",
   diagramViewerClose: "關閉",
   diagramViewerHint: "捲動或雙指縮放 · 拖曳移動 · 按兩下恢復",
   codeBlockLanguage: "程式碼語言",

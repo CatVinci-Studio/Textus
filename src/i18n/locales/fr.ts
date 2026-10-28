@@ -122,6 +122,8 @@ utiliser une.
   diagramZoom: "Agrandir le diagramme",
   codeBlockEditSource: "Modifier la source",
   diagramViewerLabel: "Diagramme",
+  pictureZoom: "Agrandir l'image",
+  pictureViewerLabel: "Image",
   diagramViewerClose: "Fermer",
   diagramViewerHint:
     "Faites défiler ou pincez pour zoomer · faites glisser pour déplacer · double-cliquez pour ajuster",

@@ -114,6 +114,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   diagramZoom: "Ampliar diagrama",
   codeBlockEditSource: "Editar o código",
   diagramViewerLabel: "Diagrama",
+  pictureZoom: "Ampliar imagem",
+  pictureViewerLabel: "Imagem",
   diagramViewerClose: "Fechar",
   diagramViewerHint:
     "Role ou faça pinça para dar zoom · arraste para mover · clique duas vezes para ajustar",
