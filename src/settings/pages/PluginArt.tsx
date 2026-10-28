@@ -1,12 +1,14 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { dataUrl, readPluginFile } from "../../plugins/store/files";
+import { plugins as pluginsIpc } from "../../platform/ipc";
 import type { PluginManifest } from "../../plugins/store/manifest";
 import type { PluginOrigin } from "../../plugins/store/files";
 import { catalogReadme, installedReadme } from "../../plugins/store/readme";
 
 /**
  * A plugin's icon on a rounded tile, the same size whatever the artwork:
- * from the catalog (`url`) before it is installed, from its files after.
+ * from the catalog before it is installed (`url` says it has one), from
+ * its files after.
  * Without one, the first letter of its name.
  */
 export function PluginIcon({
@@ -24,19 +26,23 @@ export function PluginIcon({
   large?: boolean;
 }) {
   const file = manifest?.icon;
-  const [read, setRead] = useState<string | null>(null);
+  const [read, setRead] = useState<string | null>(() =>
+    url ? (catalogIcons.get(id) ?? null) : null,
+  );
   const [broken, setBroken] = useState(false);
   useEffect(() => {
-    if (url || !origin || !file) return;
     let live = true;
-    readPluginFile(id, origin, file)
-      .then((bytes) => live && setRead(dataUrl(file, bytes)))
-      .catch(() => {});
+    const shown = (src: string | null) => live && src && setRead(src);
+    if (url) catalogIcon(id).then(shown, () => {});
+    else if (origin && file)
+      readPluginFile(id, origin, file)
+        .then((bytes) => shown(dataUrl(file, bytes)))
+        .catch(() => {});
     return () => {
       live = false;
     };
   }, [id, origin, file, url]);
-  const src = broken ? null : (url ?? read);
+  const src = broken ? null : read;
   // From the id, which is Latin in every language: a name's first character
   // could be one of its script's (函 for 函数图像).
   const letter = (id.split(".")[1] ?? id).charAt(0).toUpperCase() || "?";
@@ -52,6 +58,20 @@ export function PluginIcon({
       )}
     </span>
   );
+}
+
+/** Catalog icons by plugin id, fetched once a session: through Rust, since
+ *  GitHub serves them as application/octet-stream, which an <img> won't
+ *  draw as an SVG. */
+const catalogIcons = new Map<string, string>();
+
+function catalogIcon(id: string): Promise<string | null> {
+  const kept = catalogIcons.get(id);
+  if (kept) return Promise.resolve(kept);
+  return pluginsIpc.catalogIcon(id).then((src) => {
+    if (src) catalogIcons.set(id, src);
+    return src;
+  });
 }
 
 // The Markdown renderer (and KaTeX behind it) only once a README shows: a
