@@ -189,7 +189,7 @@ shots["catvinci.cjk-spacing"] = async (page) => {
     ["editor.read", "editor.write"],
     {
       "/notes/笔记.md":
-        "# 读书笔记\n\n今天读完了Virginia Woolf的《到灯塔去》，一共用了3个晚上。\n\n书里写Ramsay一家在Skye岛上的两个夏天，中间隔了10年。\n",
+        "# 读书笔记\n\n今天读完了Virginia Woolf的《到灯塔去》，一共用了3个晚上。\n\n书里写Ramsay一家在Skye岛上的两个夏天，中间隔了10年。第一部分叫The Window，写的只是一个下午。\n\n## 摘抄\n\n- Lily Briscoe在第3部分终于画完了那幅画。\n- 灯塔每隔15秒亮一次。\n\n## 想法\n\n下次用Markdown整理成一篇500字左右的短评，发到Notion和GitHub上。\n",
     },
     "/notes/笔记.md",
     { language: "zh" },
@@ -363,7 +363,32 @@ shots["catvinci.graph"] = async (page) => {
   );
   await run(page, "catvinci.graph.open");
   await expect(tabFrame(page).locator("canvas")).toBeVisible();
+  await tabFrame(page).locator("#settings").click();
+  await expect(tabFrame(page).locator("#panel")).toBeVisible();
   await page.waitForTimeout(2500);
+};
+
+shots["catvinci.backlinks"] = async (page) => {
+  await open(
+    page,
+    "catvinci.backlinks",
+    ["editor.read", "files.read", "files.write"],
+    {
+      "/notes/Lighthouse.md":
+        "# Lighthouse\n\nThe light on the west cliff of the island, first lit in 1874. Kept by [[Mara]] since the winter.\n\n## The lamp\n\nIt turns once every fifteen seconds and can be seen twenty miles out. In fog the horn sounds twice a minute.\n\n## The log\n\nEvery keeper wrote the weather down at dusk. Most of the entries are about the wind; see [[Storms]].\n",
+      "/notes/Island.md":
+        "# Island\n\nThe [[Lighthouse]] stands on the west cliff.\n",
+      "/notes/Mara.md":
+        "# Mara\n\nShe climbs to the [[Lighthouse]] at dusk to light the lamp.\n",
+      "/notes/Ferry.md":
+        "# Ferry\n\nFrom the deck you can see the lighthouse long before the harbour.\n",
+      "/notes/Storms.md": "# Storms\n\nFrom the west, every few days.\n",
+    },
+    "/notes/Lighthouse.md",
+  );
+  await expect(page.locator(editor)).toContainText("Kept by");
+  const list = await openSidebarList(page, "Backlinks");
+  await expect(list.locator(".plugin-list-group")).toHaveCount(3);
 };
 
 shots["catvinci.quick-preview"] = async (page) => {
@@ -393,16 +418,15 @@ shots["catvinci.latex-completion"] = async (page) => {
     "catvinci.latex-completion",
     ["editor.read"],
     {
-      "/notes/Maths.md":
-        "# Maths\n\nThe area under the curve is $x$ here.\n\nPlain words.\n",
+      "/notes/Maths.md": "# Maths\n\nArea $x$ here.\n\nPlain words.\n",
     },
     "/notes/Maths.md",
   );
   await page
-    .locator(`${editor} p`, { hasText: "area" })
+    .locator(`${editor} p`, { hasText: "Area" })
     .click({ position: { x: 2, y: 8 } });
   await page.keyboard.press("Home");
-  for (let i = 0; i < "The area under the curve is x".length + 1; i++)
+  for (let i = 0; i < "Area x".length + 1; i++)
     await page.keyboard.press("ArrowRight");
   await page.keyboard.type(" = \\in");
   await expect(
@@ -543,10 +567,15 @@ for (const [id, shoot] of Object.entries(shots)) {
     test.skip(!hasPlugin(id), `${id} is not in this checkout`);
     test.setTimeout(90_000);
     // On a Mac, Web View opens a native page the browser can't show.
-    if (id !== "catvinci.web-view")
-      await page.addInitScript(() => {
-        Object.defineProperty(navigator, "platform", { get: () => "MacIntel" });
-      });
+    // This browser may itself run on a Mac, so the platform is always set.
+    // Notes suggesting other plugins stay out of the picture.
+    await page.addInitScript(
+      (platform) => {
+        Object.defineProperty(navigator, "platform", { get: () => platform });
+        localStorage.setItem("textus-plugins-offered-for", '["wikilinks"]');
+      },
+      id === "catvinci.web-view" ? "Linux x86_64" : "MacIntel",
+    );
     await shoot(page);
     await page.waitForTimeout(700);
     const dir = join(pluginsCheckout()!, "plugins", id, "screenshots");
