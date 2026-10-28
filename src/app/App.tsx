@@ -314,7 +314,12 @@ function App() {
     () => tabIsUntouchedDraft(activeTabRef.current),
     [activeTabRef],
   );
-  useFileDrop(openFile, openPathInTab, activeIsUntouchedDraft);
+  useFileDrop(
+    openFile,
+    openPathInTab,
+    activeIsUntouchedDraft,
+    openFolder.openFolder,
+  );
 
   useWindowCloseGuard(liveTabs, flushAutosave, setPendingClose);
 
