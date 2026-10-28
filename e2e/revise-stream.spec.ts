@@ -405,6 +405,35 @@ test("two rewrites in a row each stream in by sentence", async ({ page }) => {
   }
 });
 
+test("asked again before deciding, an edit of the rewrite's new text shows in it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await openApp(page, {
+    settings: { language: "en", revisionDisplay: "inline" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(page, ORIGINAL);
+  await streamRevise(page, [REVISE]);
+  await send(page);
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor).toContainText("one by one");
+  // Anchored in text only the undecided rewrite holds.
+  await streamRevise(page, [
+    {
+      id: "r2",
+      args: {
+        action: "replace",
+        anchor: "He climbed the stairs one by one.",
+        text: "He climbed the stairs two at a time.",
+      },
+    },
+  ]);
+  await send(page);
+  await expect(editor).toContainText("two at a time");
+  await expect(editor).not.toContainText("one by one");
+});
+
 test("with motion on, each strike draws in once and each new text comes in once", async ({
   page,
 }) => {

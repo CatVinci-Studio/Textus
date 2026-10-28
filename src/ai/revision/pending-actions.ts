@@ -346,14 +346,25 @@ export function makePendingActions(env: PendingEnv) {
         const old = host.proposal.text ?? "";
         const text = rewrite(old);
         if (text === null || !host.replacement.includes(old)) continue;
+        // Placed again, so its sentence-by-sentence view is of the new text.
+        const proposal = { ...host.proposal, text };
+        const [placed] = placeProposals(
+          ctx,
+          state,
+          [{ callId: host.callId, proposal }],
+          null,
+        ).placed;
         view.dispatch(
           state.tr.setMeta(pendingEditKey, {
             type: "add",
             previews: [
               {
                 ...host,
-                proposal: { ...host.proposal, text },
-                replacement: host.replacement.replace(old, () => text),
+                ...(placed ?? {
+                  proposal,
+                  replacement: host.replacement.replace(old, () => text),
+                  sentences: undefined,
+                }),
                 revision: (host.revision ?? 0) + 1,
               },
             ],
