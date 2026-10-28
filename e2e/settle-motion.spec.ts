@@ -45,7 +45,7 @@ async function propose(page: Page, display: string) {
   await composer.fill("go");
   await composer.press("Enter");
   await expect(page.locator(".review-bar-accept")).toBeEnabled();
-  await page.keyboard.press("Control+Shift+L");
+  await page.keyboard.press("ControlOrMeta+Shift+L");
   if (display !== "inline")
     await expect(
       page.locator(".review-margin > .revision-note").first(),
@@ -197,7 +197,7 @@ test("Accept all with many proposals leaves no copies behind, and undo brings on
   });
   // Undone, the proposal comes back coming in, not standing there at once.
   await page.locator(".milkdown .ProseMirror").click();
-  await page.keyboard.press("Control+z");
+  await page.keyboard.press("ControlOrMeta+z");
   const parts = page.locator(
     ".milkdown :is(.pending-delete, .pending-sentence-new)",
   );

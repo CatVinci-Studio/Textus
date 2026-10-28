@@ -2,13 +2,13 @@ import type { Page } from "@playwright/test";
 
 /**
  * The backend streaming propose_edit `calls` in `chunk`-sized fragments
- * every `every` ms. `hold`: stop after this many fragments and wait for
- * ai_cancel.
+ * every `every` ms. `hold`: stop after this many fragments, or once the
+ * arguments streamed so far have this text, and wait for ai_cancel.
  */
 export async function streamRevise(
   page: Page,
   calls: { id: string; args: object }[],
-  options: { chunk?: number; every?: number; hold?: number } = {},
+  options: { chunk?: number; every?: number; hold?: number | string } = {},
 ) {
   await page.evaluate(
     ({ calls, chunk, every, hold }) => {
@@ -38,12 +38,13 @@ export async function streamRevise(
         const steps: (() => void)[] = [];
         const turns: unknown[] = [];
         let fragments = 0;
+        let streamed = "";
         // The fragment `hold` stops at, in the named arguments: as far into
         // them as `hold` fragments reach into the first call's own.
         let holdAt = hold;
         for (const call of calls) {
           const json = JSON.stringify(w.__devNameCall(blocks, call.args));
-          if (hold !== null && call === calls[0])
+          if (typeof hold === "number" && call === calls[0])
             holdAt = Math.ceil(
               (hold * chunk + json.length - JSON.stringify(call.args).length) /
                 chunk,
@@ -55,6 +56,7 @@ export async function streamRevise(
             const delta = json.slice(from, from + chunk);
             steps.push(() => {
               fragments++;
+              streamed += delta;
               send({ type: "toolArgsDelta", callId: call.id, delta });
             });
           }
@@ -83,7 +85,12 @@ export async function streamRevise(
             reject("cancelled");
           };
           const next = () => {
-            if (holdAt !== null && fragments >= holdAt) return;
+            if (
+              typeof holdAt === "string"
+                ? streamed.includes(holdAt)
+                : holdAt !== null && fragments >= holdAt
+            )
+              return;
             const step = steps.shift();
             if (!step) {
               resolve([{ kind: "User", text: message }, ...turns]);

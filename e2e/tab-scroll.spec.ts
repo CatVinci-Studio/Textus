@@ -70,7 +70,7 @@ test("a file opened again opens where it was last read, at another width too (#3
   await line.evaluate((el) => el.scrollIntoView({ block: "start" }));
   await page.waitForTimeout(400);
   // Closed, and opened again in a narrower window.
-  await page.keyboard.press("Control+w");
+  await page.keyboard.press("ControlOrMeta+w");
   await expect(page.locator(editor)).not.toContainText("Paragraph 399");
   await page.setViewportSize({ width: 900, height: 700 });
   await drop(page, "/notes/long.md", LONG);

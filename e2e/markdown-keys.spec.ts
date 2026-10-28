@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { END, HOME, openApp, selectionRead } from "./helpers";
 
 // Typing Markdown by hand and the keys around blocks: what each keystroke
 // leaves in the document, read back from source mode.
@@ -76,7 +76,7 @@ test("Shift+Enter in a heading starts a new line below it, in a code block a new
 }) => {
   await open(page, "# Title\n\n```\ncode\n```");
   await page.locator(`${editor} h1`).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.down("Shift");
   // Held, not pressed with Enter (SHIFT_OVERLAP_MS).
   await page.waitForTimeout(150);
@@ -84,7 +84,7 @@ test("Shift+Enter in a heading starts a new line below it, in a code block a new
   await page.keyboard.up("Shift");
   await page.keyboard.type("body", { delay: 20 });
   await page.locator(`${editor} pre code`).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.down("Shift");
   await page.waitForTimeout(150);
   await page.keyboard.press("Enter");
@@ -106,23 +106,14 @@ test("text typed after a wikilink or inside inline code at Enter stays out of th
   expect(await sourceOf(page)).toBe("See [[Note]] here\n\nA `sp`\n\n`lit` b");
 });
 
-/** Once ProseMirror has read a selection made by the keyboard - it does
- *  from the selectionchange event that follows. */
-const selectionRead = (page: Page) =>
-  page.evaluate(
-    () =>
-      new Promise((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(resolve)),
-      ),
-  );
-
 /** The caret at the start of the code block's first line, from the
  *  paragraph above it. */
 async function toCodeStart(page: Page) {
   await page.locator(`${editor} p`).getByText("Before").click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.press("ArrowDown");
-  await page.keyboard.press("Home");
+  await page.keyboard.press(HOME);
+  await selectionRead(page);
 }
 
 test("Tab and Shift+Tab indent and outdent the selected lines of a code block, keeping the focus", async ({
@@ -148,11 +139,11 @@ test("the arrows leave a table that starts or ends the document from any cell", 
 }) => {
   await open(page, "| a | b |\n| - | - |\n| c | d |");
   await page.locator(`${editor} td p`).first().click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.press("ArrowDown");
   await page.keyboard.type("below", { delay: 20 });
   await page.locator(`${editor} th p`).last().click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.press("ArrowUp");
   await page.keyboard.type("above", { delay: 20 });
   expect(await sourceOf(page)).toBe(
@@ -187,12 +178,15 @@ test("Backspace at a heading's start makes it text; at a callout's first line it
 }) => {
   await open(page, "### Title\n\n> [!NOTE]\n> Body text\n");
   await page.locator(`${editor} h3`).click();
-  await page.keyboard.press("Home");
+  await selectionRead(page);
+  await page.keyboard.press(HOME);
+  await selectionRead(page);
   await page.keyboard.press("Backspace");
   await expect(page.locator(`${editor} h3`)).toHaveCount(0);
   // Down onto the callout's body line, the marker hidden above it.
   await page.keyboard.press("ArrowDown");
-  await page.keyboard.press("Home");
+  await page.keyboard.press(HOME);
+  await selectionRead(page);
   await page.keyboard.press("Backspace");
   await expect(page.locator(`${editor} .md-alert`)).toHaveCount(1);
   await expect(page.locator(`${editor} p`).first()).toHaveText("Title");
@@ -252,8 +246,13 @@ test("one Right from before bold-italic is inside it, all its marks showing", as
 }) => {
   await open(page, "ab ***XY*** cd\n");
   await page.locator(`${editor} p`).first().click();
-  await page.keyboard.press("Home");
-  for (let i = 0; i < 3; i++) await page.keyboard.press("ArrowRight");
+  await selectionRead(page);
+  await page.keyboard.press(HOME);
+  await selectionRead(page);
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press("ArrowRight");
+    await selectionRead(page);
+  }
   await expect(page.locator(`${editor} .enclosure-delimiter`)).toHaveText([
     "*",
     "**",
@@ -261,6 +260,7 @@ test("one Right from before bold-italic is inside it, all its marks showing", as
     "*",
   ]);
   await page.keyboard.press("ArrowRight");
+  await selectionRead(page);
   await page.keyboard.type("!", { delay: 20 });
   expect(await sourceOf(page)).toBe("ab ***!XY*** cd");
 });
@@ -270,8 +270,13 @@ test("Enter before a space starts the new line without it", async ({
 }) => {
   await open(page, "one two\n");
   await page.locator(`${editor} p`).first().click();
-  await page.keyboard.press("Home");
-  for (let i = 0; i < 3; i++) await page.keyboard.press("ArrowRight");
+  await selectionRead(page);
+  await page.keyboard.press(HOME);
+  await selectionRead(page);
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press("ArrowRight");
+    await selectionRead(page);
+  }
   await page.keyboard.press("Enter");
   expect(await sourceOf(page)).toBe("one\n\ntwo");
 });
@@ -369,9 +374,8 @@ test("Backspace at a code block's start and Delete before it move the caret, lea
 }) => {
   await open(page, "Before\n\n```js\none\ntwo\n```");
   await page.locator(`${editor} pre code`).getByText("one").click();
-  await page.keyboard.press(
-    process.platform === "darwin" ? "Meta+ArrowLeft" : "Home",
-  );
+  await selectionRead(page);
+  await page.keyboard.press(HOME);
   await selectionRead(page);
   await page.keyboard.press("Backspace");
   await page.keyboard.type("!", { delay: 20 });
@@ -383,9 +387,7 @@ test("Backspace at a code block's start and Delete before it move the caret, lea
 test("Delete before a table goes into its first cell", async ({ page }) => {
   await open(page, "Before\n\n| a | b |\n| - | - |\n| c | d |");
   await page.locator(`${editor} p`).getByText("Before").click();
-  await page.keyboard.press(
-    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
-  );
+  await page.keyboard.press(END);
   await page.keyboard.press("Delete");
   await page.keyboard.type("x", { delay: 20 });
   expect(await sourceOf(page)).toBe(
@@ -396,9 +398,7 @@ test("Delete before a table goes into its first cell", async ({ page }) => {
 test("Delete before a quote joins its first line", async ({ page }) => {
   await open(page, "Above\n\n> one\n>\n> two");
   await page.locator(`${editor} p`).getByText("Above").click();
-  await page.keyboard.press(
-    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
-  );
+  await page.keyboard.press(END);
   await page.keyboard.press("Delete");
   expect(await sourceOf(page)).toBe("Aboveone\n\n> two");
 });
@@ -449,9 +449,7 @@ test("Delete before a callout puts the caret at its text, keeping the callout", 
 }) => {
   await open(page, "Above\n\n> [!NOTE]\n> body");
   await page.locator(`${editor} p`).getByText("Above").click();
-  await page.keyboard.press(
-    process.platform === "darwin" ? "Meta+ArrowRight" : "End",
-  );
+  await page.keyboard.press(END);
   await page.keyboard.press("Delete");
   await page.keyboard.type("x", { delay: 20 });
   expect(await sourceOf(page)).toBe("Above\n\n> [!NOTE]\n> xbody");

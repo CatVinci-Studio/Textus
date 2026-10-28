@@ -172,9 +172,10 @@ test("the context menu opens from the keyboard, walks and gives the focus back",
   expect(await focusedIn(page, editor)).toBe(true);
 });
 
-test("Escape closes the topmost thing, and the focus goes back", async ({
+test("Escape closes the window menu, and the focus goes back", async ({
   page,
 }) => {
+  test.skip(process.platform === "darwin", "a Mac's menu bar is native");
   await open(page);
   await page.locator(".window-menu-button").focus();
   await page.keyboard.press("Enter");
@@ -183,7 +184,12 @@ test("Escape closes the topmost thing, and the focus goes back", async ({
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   await expect(page.locator(".window-menu-button")).toBeFocused();
+});
 
+test("Escape closes the topmost thing in Settings, and the focus goes back", async ({
+  page,
+}) => {
+  await open(page);
   await page.locator(editor).click();
   await emit(page, "menu-open-settings");
   const settings = page.getByRole("dialog", { name: "Settings" });

@@ -143,12 +143,7 @@ test("the view switched while a rewrite streams shows what has landed its own wa
 }) => {
   await open(page, "final");
   // Held while the second rewrite is being written: the first is in.
-  const second = JSON.stringify(CALLS[1].args);
-  const first = JSON.stringify(CALLS[0].args);
-  const hold = Math.ceil(
-    (first.length + 40 + second.indexOf("The tide was on") + 4) / 6,
-  );
-  await streamRevise(page, CALLS, { hold });
+  await streamRevise(page, CALLS, { hold: "The tide was on" });
   await send(page);
   const fresh = page.locator(`${editor} .pending-sentence-new`, {
     hasText: "He climbed the stairs one by one.",
@@ -211,7 +206,7 @@ test("Result only with no room for the margin shows everything in the text, and 
     "All in the text",
   );
   // Room again: Result only comes back by itself.
-  await page.keyboard.press("Control+Shift+L");
+  await page.keyboard.press("ControlOrMeta+Shift+L");
   await expect(page.locator(".review-margin > .revision-note")).not.toHaveCount(
     0,
   );

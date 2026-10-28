@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { END, openApp, pasteMarkdown } from "./helpers";
 
 // A code block's copy and select buttons, its language picker, and the
 // line numbers Settings › Editor & Appearance can turn on (off by default).
@@ -198,7 +198,7 @@ test("a line typed into the block gets its number", async ({ page }) => {
   // The editor reads a moved caret on the next selectionchange: a key
   // pressed at once would act where the caret was before.
   await page.waitForTimeout(100);
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.waitForTimeout(100);
   await page.keyboard.press("Enter");
   await page.keyboard.type("return 2;");

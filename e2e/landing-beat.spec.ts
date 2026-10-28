@@ -18,7 +18,12 @@ const REWRITE = [
   "A gull cried, far off. The tide was on the turn.",
 ].join("\n\n");
 
-type Pair = { key: string; text: number | null; card: number | null };
+type Pair = {
+  key: string;
+  text: number | null;
+  card: number | null;
+  frame: number;
+};
 
 test("a landed paragraph's text and cards enter on one beat", async ({
   page,
@@ -46,6 +51,7 @@ test("a landed paragraph's text and cards enter on one beat", async ({
     w.__pairs = [];
     w.__on = true;
     const seen = new Set<string>();
+    let last = performance.now();
     // How far into its entrance an element is, in ms: its effect's time
     // less the delay it was set back by (a part joining a beat late starts
     // partway in) - once it is playing, null before.
@@ -58,6 +64,9 @@ test("a landed paragraph's text and cards enter on one beat", async ({
     };
     const tick = () => {
       if (!w.__on) return;
+      const now = performance.now();
+      const frame = now - last;
+      last = now;
       for (const card of document.querySelectorAll<HTMLElement>(
         ".review-margin > .revision-note",
       )) {
@@ -69,7 +78,7 @@ test("a landed paragraph's text and cards enter on one beat", async ({
         const text = document.querySelector(
           `.milkdown .pending-sentence-new[data-index="${index}"]`,
         );
-        w.__pairs.push({ key: label, text: at(text), card: at(card) });
+        w.__pairs.push({ key: label, text: at(text), card: at(card), frame });
       }
       requestAnimationFrame(tick);
     };
@@ -78,7 +87,7 @@ test("a landed paragraph's text and cards enter on one beat", async ({
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("Tighten it");
   await composer.press("Enter");
-  await page.keyboard.press("Control+Shift+L");
+  await page.keyboard.press("ControlOrMeta+Shift+L");
   await expect(page.locator(".review-bar-accept")).toBeEnabled({
     timeout: 20_000,
   });
@@ -92,9 +101,12 @@ test("a landed paragraph's text and cards enter on one beat", async ({
   });
   console.log("PAIRS", JSON.stringify(pairs));
   // Each card came in with its text, not after it: as far into its
-  // entrance as its text, however late it was drawn.
+  // entrance as its text, however late it was drawn - give or take a
+  // couple of frames, long on a busy machine.
   const both = pairs.filter((p) => p.text !== null && p.card !== null);
   expect(both.length).toBeGreaterThan(2);
   for (const p of both)
-    expect(Math.abs(p.text! - p.card!), p.key).toBeLessThan(40);
+    expect(Math.abs(p.text! - p.card!), p.key).toBeLessThan(
+      Math.max(40, 2 * p.frame),
+    );
 });
