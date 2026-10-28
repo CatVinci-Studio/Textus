@@ -23,6 +23,7 @@ import type { Strings } from "../../i18n/strings";
 import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
 import { closeSplit, splitEditor } from "../split/split-layout";
 import { openCommandPalette } from "../command-palette";
+import { openReportProblem } from "../report/ReportProblem";
 
 export interface MenuBridgeHandlers {
   activeTabId: string;
@@ -101,6 +102,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         h().openFolder(event.payload),
       ),
       listenToThisWindow("menu-close-folder", () => h().closeFolder()),
+      listenToThisWindow("menu-help-report", openReportProblem),
       listenToThisWindow("menu-documents", () => h().onOpenDocuments()),
       listenToThisWindow("menu-share", () => void h().shareActiveTab()),
       listenToThisWindow(

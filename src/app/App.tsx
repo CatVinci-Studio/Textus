@@ -33,6 +33,7 @@ import { PluginFormHost } from "../plugins/views/plugin-form";
 import { NoticeHost } from "../ui/notices";
 import "../plugins/plugins.css";
 import "./App.css";
+import { ReportProblemHost } from "./report/ReportProblem";
 
 /**
  * One window: its tabs, the panels around them, and the prompts and notices
@@ -226,6 +227,7 @@ function App() {
           )}
         </Presence>
         <AppDialogHost okLabel={t.dialogOk} />
+        <ReportProblemHost t={t} language={settings.language} />
         <QuickPickHost
           emptyLabel={t.pluginQuickPickEmpty}
           okLabel={t.pluginOk}

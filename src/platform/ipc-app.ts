@@ -134,6 +134,11 @@ export const clipboardIpc = {
   text: () => desktopQueryCommand("clipboard_text", null),
 };
 
+/** The system, its version and the webview's, for a problem report. */
+export const systemIpc = {
+  info: () => command("system_info"),
+};
+
 /** Roman input sources only while a plugin takes every key as a command
  *  (commands/input_source.rs; macOS). */
 export const inputSourceIpc = {

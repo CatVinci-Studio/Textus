@@ -98,6 +98,7 @@ export const commands = {
 	 *  Nothing where the input method can't be set from here (all but macOS).
 	 */
 	set_roman_input: (on: boolean) => __TAURI_INVOKE<void>("set_roman_input", { on }),
+	system_info: () => __TAURI_INVOKE<SystemInfo>("system_info"),
 	/**
 	 *  Runs a menu id exactly as clicking that native item would; the way in for
 	 *  the app-drawn menu. Unknown ids do nothing. Async because creating or
@@ -312,6 +313,14 @@ export type Status = {
 	 *  library: the process still stays).
 	 */
 	tray: string,
+};
+
+export type SystemInfo = {
+	/**  The system and its version: "macOS 26.1", "Windows 11 24H2 (26100)". */
+	os: string,
+	arch: string,
+	/**  The webview's own version: WebKit's, WebView2's or WebKitGTK's. */
+	webview: string,
 };
 
 /**
