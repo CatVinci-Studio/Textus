@@ -309,8 +309,9 @@ declare global {
       openExternal(url: string): Promise<void>;
       activeTab(): Promise<TabInfo | null>;
       tabs(): Promise<TabInfo[]>;
-      /** Two panes side by side ("row") or one above the other
-       *  ("column"), and the tab each shows; or one. */
+      /** How the panes run at the outermost, side by side ("row") or
+       *  one above the other ("column"), and the tab each pane shows, in
+       *  reading order; or one. */
       split(): Promise<{
         direction: "row" | "column" | null;
         panes: string[];

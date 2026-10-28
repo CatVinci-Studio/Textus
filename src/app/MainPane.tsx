@@ -19,14 +19,14 @@ import {
 } from "../plugins/views/plugin-views";
 import { TabBar } from "./tabs/TabBar";
 import { useSplitPanes } from "./split/useSplitPanes";
-import { SplitDivider, splitGridStyles } from "./split/SplitDivider";
+import { SplitDivider } from "./split/SplitDivider";
+import { panesOf, splitGrid } from "./split/split-tree";
 import "./split/split-panes.css";
 import {
   focusPane,
   openBeside,
   reorderInPane,
   splitEditor,
-  type PaneIndex,
 } from "./split/split-layout";
 import { pullTab } from "./split/split-drop";
 import type { ContextMenuItem } from "../ui/ContextMenu";
@@ -46,6 +46,9 @@ function pluginTabItems(
   const added = contributedContextItems("tab/context", { path });
   return added.length ? ["separator", ...added] : [];
 }
+
+/** Panes named in reading order, for tests and styles to find. */
+const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth"];
 
 /** The document column: the tab bar over every open tab's editor. */
 
@@ -90,9 +93,14 @@ export function MainPane({
     activeTabId,
     onAdd,
   );
-  const grid = split && splitGridStyles(split);
-  const paneOf = (id: string) =>
-    split?.panes[0] === id ? "first" : split?.panes[1] === id ? "second" : null;
+  const grid = split && splitGrid(split.root);
+  const panes = split ? panesOf(split.root) : [];
+  // Each pane shows its tab in front; its place in reading order names it.
+  const shownIn = new Map(
+    panes.flatMap((p, i) =>
+      p.front ? [[p.front, { id: p.id, name: ORDINALS[i] ?? `${i + 1}` }]] : [],
+    ),
+  );
   const byId = new Map(tabs.map((tab) => [tab.id, tab]));
   // The saved tabs close; one with unsaved changes stays, its dot showing,
   // rather than a prompt for each.
@@ -127,13 +135,15 @@ export function MainPane({
   const tabBar = (
     list: DocTab[],
     active: string,
-    pane: PaneIndex | null,
+    pane: string | null,
     style?: CSSProperties,
+    inner = false,
   ) => (
     <TabBar
       key={pane ?? "window"}
       style={style}
-      pane={pane ?? undefined}
+      paneId={pane ?? undefined}
+      inner={inner}
       tabs={list.map((tab) => ({
         id: tab.id,
         title: tabTitle(tab, t),
@@ -164,7 +174,7 @@ export function MainPane({
           ? onReorder
           : (id, index) => reorderInPane(pane, id, index)
       }
-      previewTab={pane === 1 ? null : previewTab}
+      previewTab={pane === null || pane === panes[0]?.id ? previewTab : null}
       menuFor={(id) => [
         {
           label: t.openBeside,
@@ -197,21 +207,21 @@ export function MainPane({
       }}
     />
   );
-  const paneTabs = (pane: PaneIndex) =>
-    (split?.groups[pane] ?? []).flatMap((id) => byId.get(id) ?? []);
+
   return (
     <main
       className={split ? "main-pane main-pane-split" : "main-pane"}
-      data-split={split?.direction}
+      data-split={split?.root.direction}
       style={grid?.column}
     >
       {split && grid
-        ? ([0, 1] as const).map((pane) =>
+        ? panes.map((p) =>
             tabBar(
-              paneTabs(pane),
-              split.panes[pane] ?? "",
-              pane,
-              grid.bars[pane],
+              p.tabs.flatMap((id) => byId.get(id) ?? []),
+              p.front ?? "",
+              p.id,
+              grid.bars.get(p.id),
+              !grid.top.has(p.id),
             ),
           )
         : showTabBar && tabBar(tabs, activeTabId, null)}
@@ -220,17 +230,18 @@ export function MainPane({
         undo history, scroll position and in-flight AI state. */}
       {/* In a split, a click or focus in a pane brings its tab to the front. */}
       {tabs.map((tab) => {
-        const pane = paneOf(tab.id);
+        const pane = shownIn.get(tab.id);
         return (
           <div
             key={tab.id}
             data-active-tab={tab.id === activeTabId}
             data-tab-id={tab.id}
-            data-pane={pane ?? undefined}
+            data-pane={pane?.name}
+            data-pane-id={pane?.id}
             className={pane ? "split-pane" : undefined}
             style={
               pane && grid
-                ? grid[pane]
+                ? grid.bodies.get(pane.id)
                 : { display: tab.id === activeTabId ? "contents" : "none" }
             }
             onPointerDownCapture={
@@ -296,9 +307,16 @@ export function MainPane({
           </div>
         );
       })}
-      {split && grid && (
-        <SplitDivider layout={split} style={grid.divider} t={t} />
-      )}
+      {split &&
+        grid?.dividers.map(({ line, style }) => (
+          <SplitDivider
+            key={`${line.path.join(".")}:${line.index}`}
+            layout={split}
+            line={line}
+            style={style}
+            t={t}
+          />
+        ))}
     </main>
   );
 }
