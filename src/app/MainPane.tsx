@@ -133,6 +133,7 @@ export function MainPane({
     <TabBar
       key={pane ?? "window"}
       style={style}
+      pane={pane ?? undefined}
       tabs={list.map((tab) => ({
         id: tab.id,
         title: tabTitle(tab, t),
