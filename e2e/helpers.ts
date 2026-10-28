@@ -33,18 +33,34 @@ export const END = process.platform === "darwin" ? "Meta+ArrowRight" : "End";
 
 /** Has ProseMirror read the selection a click or a key made. It reads it
  *  on the selectionchange that follows, which in WebKit the next key sent
- *  at once can overtake; this does that read now (dev-only view, see
- *  enclosure.ts), then waits a frame for what it draws. */
+ *  at once can overtake; and 20ms after it hears the editor focused it puts
+ *  its own caret back, undoing a key pressed before - on a busy machine the
+ *  focus comes late. So: focused, past that, the read done now (dev-only
+ *  view, see enclosure.ts), and a frame for what it draws. */
 export async function selectionRead(page: Page) {
   await page.evaluate(
     () =>
       new Promise((resolve) => {
-        (
+        const view = (
           window as unknown as {
-            __pmView?: { domObserver: { flush(): void } };
+            __pmView?: {
+              focused: boolean;
+              dom: HTMLElement;
+              domObserver: { flush(): void };
+            };
           }
-        ).__pmView?.domObserver.flush();
-        requestAnimationFrame(resolve);
+        ).__pmView;
+        const settle = () =>
+          setTimeout(() => {
+            view?.domObserver.flush();
+            requestAnimationFrame(resolve);
+          }, 30);
+        if (!view || view.focused) settle();
+        else {
+          view.dom.addEventListener("focus", settle, { once: true });
+          // Never focused (a key aimed elsewhere): on anyway.
+          setTimeout(settle, 1000);
+        }
       }),
   );
 }
