@@ -1,6 +1,6 @@
 <!-- The English README is the reference: every README.<lang>.md follows its
-     structure section by section (scripts/check-readmes.mjs). It follows the
-     website: hero, download, writing, Textus AI, privacy, questions. -->
+     structure section by section (scripts/check-readmes.mjs): hero, download,
+     writing, Textus AI, plugins, questions. -->
 
 <p align="center">
   <img src="src-tauri/icons/icon.png" alt="Textus" width="120" height="120" />
