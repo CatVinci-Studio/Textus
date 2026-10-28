@@ -7,6 +7,7 @@ import {
   wrapInHeadingCommand,
 } from "@milkdown/kit/preset/commonmark";
 import { insertTableCommand } from "@milkdown/kit/preset/gfm";
+import { NodeSelection } from "@milkdown/kit/prose/state";
 import type { ContextMenuItem } from "./ContextMenu";
 import { imageLocation, type ImageLocation } from "./images/missing-image";
 import { embedFileAt } from "./images/obsidian-embed-preview";
@@ -118,6 +119,10 @@ export function contextMenuTarget(
         const pos = view.posAtDOM(target, 0);
         const node = view.state.doc.nodeAt(pos);
         if (node?.type.name !== "image") return none;
+        // Selected, so Copy and Cut take the picture right-clicked.
+        view.dispatch(
+          view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos)),
+        );
         return {
           imagePos: pos,
           imageLocation: imageLocation(

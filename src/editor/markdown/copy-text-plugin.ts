@@ -1,6 +1,6 @@
 import { schemaCtx, serializerCtx } from "@milkdown/kit/core";
 import { Plugin } from "@milkdown/kit/prose/state";
-import type { Fragment, Slice } from "@milkdown/kit/prose/model";
+import { Fragment, type Slice } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 
 /** The text a copy from inside one code block, formula or inline code
@@ -43,9 +43,12 @@ export const copyTextPlugin = $prose(
           if (code !== null) return code;
           if (isBareText(slice.content))
             return slice.content.textBetween(0, slice.content.size, "\n\n");
-          const doc = ctx
-            .get(schemaCtx)
-            .topNodeType.createAndFill(undefined, slice.content);
+          const schema = ctx.get(schemaCtx);
+          // An inline node selected alone, a picture: in a paragraph.
+          const content = slice.content.firstChild?.isInline
+            ? Fragment.from(schema.nodes.paragraph.create(null, slice.content))
+            : slice.content;
+          const doc = schema.topNodeType.createAndFill(undefined, content);
           return doc ? ctx.get(serializerCtx)(doc).trimEnd() : "";
         },
       },

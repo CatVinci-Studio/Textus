@@ -107,6 +107,7 @@ import { pasteUrlPlugin } from "./markdown/paste-url";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
 import { copyTextPlugin } from "./markdown/copy-text-plugin";
+import { pictureCopyPlugin } from "./images/picture-clipboard";
 import { pastePlainTextKeyPlugin } from "./markdown/paste-plain";
 import { createImagePlugin } from "./images/image-plugin";
 import {
@@ -380,6 +381,7 @@ export function withEditorCore(
       .use(pasteUrlPlugin)
       .use(pasteMarkdownSourcePlugin)
       .use(copyTextPlugin)
+      .use(pictureCopyPlugin)
       .use(pastePlainTextKeyPlugin)
       .use(clipboard)
       .use(disk ? clipboardHistoryPlugin : [])

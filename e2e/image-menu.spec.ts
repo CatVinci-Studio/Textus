@@ -87,3 +87,37 @@ test("an Obsidian embed's menu uses the file found in the vault", async ({
     .poll(() => calls(page, "clipboard"))
     .toEqual([{ cmd: "clipboard", args: { text: file } }]);
 });
+
+for (const how of ["Copy", "ControlOrMeta+c"])
+  test(`${how} on a right-clicked picture puts the picture on the clipboard with its Markdown`, async ({
+    page,
+  }) => {
+    await page
+      .context()
+      .grantPermissions(["clipboard-read", "clipboard-write"]);
+    const doc = await openDoc(page, "Before.\n\n![A cat](assets/cat.png)\n", {
+      existing: ["/home/me/notes/assets/cat.png"],
+      loadable: ["/home/me/notes/assets/cat.png"],
+    });
+    const img = doc.locator(".image-view img");
+    await expect(img).toBeVisible();
+    await img.click({ button: "right" });
+    if (how === "Copy")
+      await menuItems(page)
+        .filter({ hasText: /^Copy$/ })
+        .click();
+    else {
+      await page.keyboard.press("Escape");
+      await page.keyboard.press(how);
+    }
+    await expect
+      .poll(() =>
+        page.evaluate(async () => {
+          const [item] = await navigator.clipboard.read();
+          return item ? [...item.types].sort() : [];
+        }),
+      )
+      .toEqual(["image/png", "text/html", "text/plain"]);
+    const text = await page.evaluate(() => navigator.clipboard.readText());
+    expect(text).toBe("![A cat](assets/cat.png)");
+  });

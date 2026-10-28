@@ -957,7 +957,10 @@ export function installDevTauriShim(): void {
     // page.route - a custom scheme never reaches the network.
     convertFileSrc: (path: string, protocol = "asset") =>
       `http://${protocol}.localhost/${encodeURIComponent(path)}`,
-    invoke: (cmd: string, args?: { event?: string; handler?: number }) => {
+    invoke: (
+      cmd: string,
+      args?: { event?: string; handler?: number; target?: { kind?: string } },
+    ) => {
       log(cmd);
       // Pages and links opened in the browser (platform/ipc.ts's `links`),
       // with what was asked for: `window.__devLinks` for assertions.
@@ -1022,10 +1025,16 @@ export function installDevTauriShim(): void {
         args?.event &&
         typeof args.handler === "number"
       ) {
-        listeners.set(args.event, [
-          ...(listeners.get(args.event) ?? []),
-          args.handler,
-        ]);
+        // Tauri's own drag events go to the webview, which a label alone
+        // (AnyLabel) doesn't hear in the app either.
+        const target = args.target as { kind?: string } | undefined;
+        if (!(
+          args.event.startsWith("tauri://drag") && target?.kind === "AnyLabel"
+        ))
+          listeners.set(args.event, [
+            ...(listeners.get(args.event) ?? []),
+            args.handler,
+          ]);
         // The listener id unlisten() later passes to unregisterListener -
         // returning null here would make every unlisten a no-op and stale
         // StrictMode handlers would double-fire events.

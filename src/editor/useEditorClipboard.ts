@@ -13,6 +13,10 @@ import { pastePlainText } from "./markdown/paste-plain";
 import { clipboardIpc } from "../platform/ipc";
 import { plainTextOf } from "./markdown/plain-text";
 import { bareUrl, insertUrlLink } from "./markdown/paste-url";
+import {
+  selectedPictureAsPng,
+  writeClipboard,
+} from "./images/picture-clipboard";
 
 export interface EditorClipboard {
   copyOrCut: (cut: boolean) => void;
@@ -80,19 +84,10 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
         const { dom, text } = view.serializeForClipboard(
           state.selection.content(),
         );
+        const png = selectedPictureAsPng(view);
         void (async () => {
           if (text) {
-            try {
-              await navigator.clipboard.write([
-                new ClipboardItem({
-                  "text/html": new Blob([dom.innerHTML], { type: "text/html" }),
-                  "text/plain": new Blob([text], { type: "text/plain" }),
-                }),
-              ]);
-            } catch {
-              // A webview without ClipboardItem: the plain text alone.
-              await navigator.clipboard.writeText(text);
-            }
+            await writeClipboard(dom.innerHTML, text, png);
             // navigator.clipboard bypasses the DOM copy event the history's
             // document-level capture listens on - record explicitly.
             recordClipboardEntry(text);

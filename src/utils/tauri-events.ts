@@ -18,10 +18,10 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
  * a file opened in tab mode landed in each window, a menu command ran once
  * per window, a dragged tab was received by windows it was never dropped on.
  *
- * Passing a label narrows the listener to `AnyLabel`, which matches the
- * Window/Webview/WebviewWindow forms of that same label (so it still catches
- * `emit_to` from Rust and `emitTo` from another window's JS) and nothing
- * addressed elsewhere. Every event in this app is window-addressed - Rust
+ * Passing a label narrows the listener to `AnyLabel`, which catches
+ * `emit_to` from Rust and `emitTo` from another window's JS by that label,
+ * and nothing addressed elsewhere - nor what Tauri itself addresses to the
+ * webview (listenToThisWebview). Every event in this app is window-addressed - Rust
  * only ever calls `emit_to`, never the broadcasting `emit` - so there is
  * nothing left that legitimately wants the catch-all.
  */
@@ -33,6 +33,20 @@ export function listenToThisWindow<T>(
     // Read per call, not once at module scope: the dev browser shim
     // (tauri-shim.ts) installs the metadata this reads at startup.
     target: getCurrentWebviewWindow().label,
+  });
+}
+
+/**
+ * Listen to an event Tauri addresses to this window's webview, such as a
+ * file drop (`tauri://drag-drop`). listenToThisWindow's label never hears
+ * those: a drop went unnoticed on every platform.
+ */
+export function listenToThisWebview<T>(
+  event: string,
+  handler: EventCallback<T>,
+): Promise<UnlistenFn> {
+  return listen<T>(event, handler, {
+    target: { kind: "Webview", label: getCurrentWebviewWindow().label },
   });
 }
 
