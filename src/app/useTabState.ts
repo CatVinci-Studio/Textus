@@ -8,6 +8,7 @@ import {
 } from "react";
 import { flushEditor } from "../editor/editor-flush";
 import { makeBlankTab, type DocTab } from "../document/doc-tabs";
+import { lastViewMode } from "../editor/modes/view-mode";
 
 export interface TabState {
   tabs: DocTab[];
@@ -72,7 +73,7 @@ export function useTabState(): TabState {
   }, []);
 
   const addBlankTab = useCallback(() => {
-    const blank = makeBlankTab();
+    const blank = { ...makeBlankTab(), ...lastViewMode() };
     setTabs((prev) => [...prev, blank]);
     setActiveTabId(blank.id);
   }, []);
