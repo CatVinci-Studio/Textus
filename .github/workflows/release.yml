@@ -106,6 +106,18 @@ jobs:
           echo "::error::CI on $sha did not finish within 45 minutes (or never ran: was this commit pushed to main or a release/ branch?)."
           exit 1
 
+      # The builds each upload to the tag's draft, made by whichever found
+      # none; two starting together made two and split the files between
+      # them (v1.2.5). Made here once, before any build, they share it.
+      - name: One draft for the builds to share
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then exit 0; fi
+          gh release create "$RELEASE_TAG" --draft --verify-tag \
+            --title "$PRODUCT_NAME $RELEASE_TAG" --notes "" \
+            $([[ "$RELEASE_TAG" == *-* ]] && echo --prerelease)
+
   build:
     needs: preflight
     name: build (${{ matrix.target || matrix.platform }})
