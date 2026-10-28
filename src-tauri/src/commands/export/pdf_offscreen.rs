@@ -82,7 +82,7 @@ pub async fn export(
                 .build()
                 .inspect(|_window| {
                     #[cfg(target_os = "linux")]
-                    crate::end_web_process_with_window(_window);
+                    crate::editor_windows::end_web_process_with_window(_window);
                 })
                 .map_err(|e| e.to_string())
         })

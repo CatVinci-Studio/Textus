@@ -130,7 +130,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
 #[cfg(desktop)]
 fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_os = "linux")]
-    detect_wayland();
+    crate::editor_windows::detect_wayland();
     #[cfg(target_os = "macos")]
     crate::editor_windows::watch_fullscreen(app.handle());
     // textus:// links for plugins.

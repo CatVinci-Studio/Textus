@@ -151,7 +151,7 @@ pub fn detach_chat_window(
     // Wayland ignores the position and always_on_top; as a transient of its
     // editor the chat floats (niri) or stays above it.
     #[cfg(target_os = "linux")]
-    let builder = if crate::is_wayland() {
+    let builder = if crate::editor_windows::is_wayland() {
         builder.parent(&window).map_err(|err| err.to_string())?
     } else {
         builder
