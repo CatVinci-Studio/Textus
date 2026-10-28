@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { END, HOME, mockInvoke, openApp, selectionRead } from "./helpers";
 
 // A link the caret is on shows as its Markdown, edited in place; leave it and
 // it is a link again, as edited. Ctrl/Cmd+click still opens it. The file is
@@ -42,17 +42,13 @@ async function openDoc(page: Page) {
   await expect(page.locator(`${editor} a`)).toHaveCount(KINDS.length);
 }
 
-/** Presses `key` `times` times, a frame apart: pressed back to back,
- *  Playwright's WebKit loses some arrow presses. */
+/** Presses `key` `times` times, each once the selection before it is read:
+ *  pressed back to back, WebKit loses some arrow presses. */
 async function press(page: Page, key: string, times = 1) {
   for (let i = 0; i < times; i++) {
+    await selectionRead(page);
     await page.keyboard.press(key);
-    await page.evaluate(
-      () =>
-        new Promise((resolve) =>
-          requestAnimationFrame(() => requestAnimationFrame(resolve)),
-        ),
-    );
+    await selectionRead(page);
   }
 }
 
@@ -79,7 +75,7 @@ async function clickAfterChar(page: Page, label: string, index: number) {
 /** The caret at the start of the paragraph holding `label`. */
 async function caretAtLineStart(page: Page, label: string) {
   await line(page, label).click({ position: { x: 2, y: 8 } });
-  await press(page, "Home");
+  await press(page, HOME);
 }
 
 async function leave(page: Page) {
@@ -137,7 +133,7 @@ for (const [kind, label, markdown] of KINDS) {
     await press(page, "ArrowLeft");
     await expect(page.locator(source)).toHaveCount(0);
     // From the other side: past " link." to the link's end.
-    await press(page, "End");
+    await press(page, END);
     await press(page, "ArrowLeft", AFTER.length);
     await expect(page.locator(source)).toHaveText(markdown);
     await press(page, "ArrowRight");
@@ -193,11 +189,11 @@ test("the URL and the text are edited in place, and saved as typed", async ({
   page,
 }) => {
   await page.locator(`${editor} a`, { hasText: "resource" }).click();
-  await press(page, "End");
+  await press(page, END);
   // Before the link's closing parenthesis.
   await press(page, "ArrowLeft", AFTER.length + 1);
   await page.keyboard.type("/x");
-  await press(page, "Home");
+  await press(page, HOME);
   await press(page, "ArrowRight", 3);
   await page.keyboard.type("New ");
   await expect(page.locator(source)).toHaveText(
@@ -243,7 +239,7 @@ test("one undo takes back an edited URL, and a redo puts it back", async ({
   page,
 }) => {
   await page.locator(`${editor} a`, { hasText: "resource" }).click();
-  await press(page, "End");
+  await press(page, END);
   await press(page, "ArrowLeft", AFTER.length + 1);
   await page.keyboard.type("/x");
   await leave(page);

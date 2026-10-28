@@ -26,13 +26,36 @@ console.log("a fairly long first line of code to see whether the language label 
 - 再制定方案
 `;
 
-/** Opens the app with onboarding done and the given extra localStorage,
- *  and makes rendering deterministic (no animations, no blinking caret).
- *  `animations: true` leaves the motion on, for the specs that test it. */
+/** A line's start and end: on a Mac Home and End scroll, and Cmd+Left and
+ *  Cmd+Right move the caret. */
+export const HOME = process.platform === "darwin" ? "Meta+ArrowLeft" : "Home";
+export const END = process.platform === "darwin" ? "Meta+ArrowRight" : "End";
+
+/** Has ProseMirror read the selection a click or a key made. It reads it
+ *  on the selectionchange that follows, which in WebKit the next key sent
+ *  at once can overtake; this does that read now (dev-only view, see
+ *  enclosure.ts), then waits a frame for what it draws. */
+export async function selectionRead(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        (
+          window as unknown as {
+            __pmView?: { domObserver: { flush(): void } };
+          }
+        ).__pmView?.domObserver.flush();
+        requestAnimationFrame(resolve);
+      }),
+  );
+}
+
 /** For the first wait on something KaTeX draws: the dev server bundles KaTeX
  *  on its first request, which on a CI runner can exceed the default 5s. */
 export const FIRST_LOAD = { timeout: 20_000 };
 
+/** Opens the app with onboarding done and the given extra localStorage,
+ *  and makes rendering deterministic (no animations, no blinking caret).
+ *  `animations: true` leaves the motion on, for the specs that test it. */
 export async function openApp(
   page: Page,
   options: {

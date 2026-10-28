@@ -152,7 +152,7 @@ test("a rewrite from Quick Ask lands where its selection was", async ({
     },
   ]);
   await page.locator(`${editor} p`).first().click({ clickCount: 3 });
-  await page.keyboard.press("Control+Shift+K");
+  await page.keyboard.press("ControlOrMeta+Shift+K");
   const composer = page.locator(".inline-chat textarea");
   await composer.fill("Tighten it");
   await composer.press("Enter");

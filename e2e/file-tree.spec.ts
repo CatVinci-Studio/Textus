@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { END, openApp } from "./helpers";
 
 // The sidebar's file tree as a small file manager: up to the parent, sort and
 // filter, New Document and New Folder, and dragging a row into a folder. The
@@ -237,7 +237,7 @@ test("a row dragged onto a folder moves into it, and its open tab follows", asyn
   // drafts, and saving writes it there.
   await expect(page.locator(".window-bar-title-text")).toHaveText("a.md");
   await page.locator(editor).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" moved");
   await page.keyboard.press("ControlOrMeta+s");
   await expect

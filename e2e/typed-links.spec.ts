@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { END, HOME, openApp } from "./helpers";
 
 // A link or image typed, pasted or committed by an input method becomes a
 // working link or image, and is saved without escaping backslashes.
@@ -177,15 +177,15 @@ test("a link written as []() first, then filled in, is one once the caret leaves
   await paste(page, "https://a.org");
   // Still inside its parentheses: still being written.
   await expect(page.locator(LINKED)).toHaveText("https://a.org");
-  await press(page, "End");
+  await press(page, END);
   await expect(page.locator(LINKED)).toHaveText("Textus");
   // An undo takes the link back to its text, which then stays text.
   await press(page, "ControlOrMeta+z");
   await expect(page.locator(LINKED)).toHaveText("https://a.org");
-  await press(page, "Home");
+  await press(page, HOME);
   await expect(page.locator(LINKED)).toHaveText("https://a.org");
   await press(page, "ControlOrMeta+Shift+z");
-  await press(page, "End");
+  await press(page, END);
   await press(page, "Enter");
   expect(await sourceOf(page)).toBe("See [Textus](https://a.org) now");
 });
@@ -197,9 +197,9 @@ test("escaped brackets read from a file stay text when the paragraph is edited",
   await expect(page.locator(`${editor} p`).first()).toHaveText(
     "Write [a](b) literally.",
   );
-  await press(page, "End");
+  await press(page, END);
   await page.keyboard.type(" Done");
-  await press(page, "Home");
+  await press(page, HOME);
   await expect(page.locator(`${editor} a`)).toHaveCount(0);
 });
 

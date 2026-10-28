@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { END, HOME, openApp, pasteMarkdown } from "./helpers";
 
 function emit(page: Page, name: string) {
   return page.evaluate(
@@ -77,7 +77,7 @@ test("a typed [text](url) still becomes a link", async ({ page }) => {
 
 // The ")" is already there: the address typed, the caret moves on - an
 // arrow, End, Home, Enter - without typing it.
-for (const leave of ["ArrowRight", "End", "Enter", "Home"])
+for (const leave of ["ArrowRight", END, "Enter", HOME])
   test(`[text](url with its ")" put in becomes a link on ${leave}`, async ({
     page,
   }) => {
