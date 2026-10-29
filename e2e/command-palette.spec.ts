@@ -6,8 +6,12 @@ import { openApp } from "./helpers";
  * list, found by typing; Enter runs the one picked.
  */
 
+// A bundled Markdown parser's rules hold both "<!--" and "<script": the
+// host's page must still run all of the plugin's code.
 const HOST = `
+const HTML_OPENERS = ["<!--", "<script>"];
 exports.activate = function () {
+  if (HTML_OPENERS.length !== 2) throw new Error("cut short");
   textus.commands.register("test.palette.hello", function () {
     textus.ui.notice("Hello from the palette");
   });

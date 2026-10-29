@@ -11,9 +11,13 @@ import { createEndpoint, type Endpoint, type Handlers } from "./rpc";
 /** The RPC endpoint as source, for the frames' runtimes. */
 export const RPC_SOURCE = `var createEndpoint = ${createEndpoint.toString()};`;
 
-/** Text inside a `<script>`/`<style>` element can't hold its end tag. */
+/** Text inside a `<script>`/`<style>` element can't hold its end tag; a
+ *  script can't hold "<!--" and "<script" either, which take the HTML
+ *  parser past its end (a bundled Markdown parser has both in its rules).
+ *  `\x3C` reads as "<" in a string, a template or a regex alike. */
 export function inElement(code: string, tag: "script" | "style"): string {
-  return code.replace(new RegExp(`</(${tag})`, "gi"), "<\\/$1");
+  const ended = code.replace(new RegExp(`</(${tag})`, "gi"), "<\\/$1");
+  return tag === "script" ? ended.replace(/<(?=!--|script)/gi, "\\x3C") : ended;
 }
 
 /** The plugins' own files, as served on macOS and Linux, and on Windows. */
