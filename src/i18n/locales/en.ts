@@ -392,6 +392,7 @@ type /name in a conversation to use one.
   aiErrorAuth: `The service rejected the credentials. Check the API key (or sign in again) in Settings > ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "This Anthropic key isn't tied to a workspace. Create a key inside a workspace in the Anthropic Console and use that one.",
+  aiErrorBalance: `Your balance or quota with this service has run out. Top up or check your plan on the provider's site, or pick another service in Settings > ${AI_NAME}.`,
   aiErrorRateLimit:
     "The service is busy or you've hit a rate limit. Wait a moment and retry.",
   aiErrorServer:

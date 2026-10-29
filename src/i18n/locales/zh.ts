@@ -358,6 +358,7 @@ export default {
   aiErrorAuth: `服务拒绝了凭据，请在「设置 > ${AI_NAME}」中检查 API Key 或重新登录。`,
   aiErrorWorkspaceKey:
     "这个 Anthropic Key 不属于任何工作区。请在 Anthropic Console 的工作区里新建一个 Key 再使用。",
+  aiErrorBalance: `该服务的余额或额度已用完。请到服务商网站充值或查看套餐，或在「设置 > ${AI_NAME}」中换用其他服务。`,
   aiErrorRateLimit: "服务繁忙或已达到频率限制，请稍等片刻再重试。",
   aiErrorServer: "服务端出了问题，请过一会儿再试。",
   aiErrorTimeout: "请求超时，请检查网络后重试。",

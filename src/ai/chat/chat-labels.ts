@@ -3,6 +3,7 @@ import { blockNames } from "../revision/markdown-forms";
 import type { InlineChatLabels } from "./quick-ask/InlineChat";
 import { pickerLabels } from "./ComposerPicker";
 import { permissionLabel } from "../../plugins/store/permissions";
+import { aiErrorTexts } from "../error-messages";
 
 /**
  * The chat's user-facing strings, built once for every chat surface so no
@@ -94,16 +95,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     pluginCantInstall: t.chatPluginCantInstall,
     permission: (p) => permissionLabel(p, t),
     language: lang,
-    aiErrors: {
-      notConfigured: t.aiErrorNotConfigured,
-      auth: t.aiErrorAuth,
-      workspaceKey: t.aiErrorWorkspaceKey,
-      rateLimit: t.aiErrorRateLimit,
-      server: t.aiErrorServer,
-      timeout: t.aiErrorTimeout,
-      network: t.aiErrorNetwork,
-      model: t.aiErrorModel,
-    },
+    aiErrors: aiErrorTexts(t),
     toolActivity: {
       search_document: t.toolSearchDocument,
       read_document: t.toolReadDocument,

@@ -409,6 +409,7 @@ utiliser une.
   aiErrorAuth: `Le service a refusé les identifiants. Vérifiez la clé API (ou reconnectez-vous) dans Réglages > ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "Cette clé Anthropic n'est rattachée à aucun espace de travail. Créez une clé dans un espace de travail de la console Anthropic et utilisez-la.",
+  aiErrorBalance: `Le solde ou le quota de ce service est épuisé. Rechargez ou vérifiez votre offre sur le site du fournisseur, ou choisissez un autre service dans Réglages > ${AI_NAME}.`,
   aiErrorRateLimit:
     "Le service est surchargé ou vous avez atteint une limite de requêtes. Patientez un instant, puis réessayez.",
   aiErrorServer:

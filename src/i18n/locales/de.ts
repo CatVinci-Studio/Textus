@@ -396,6 +396,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   aiErrorAuth: `Der Dienst hat die Zugangsdaten abgelehnt. Prüfe den API-Schlüssel (oder melde dich erneut an) unter Einstellungen > ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "Dieser Anthropic-Schlüssel gehört zu keinem Workspace. Erstelle in der Anthropic Console einen Schlüssel innerhalb eines Workspaces und verwende diesen.",
+  aiErrorBalance: `Guthaben oder Kontingent bei diesem Dienst sind aufgebraucht. Lade beim Anbieter auf oder prüfe deinen Tarif, oder wähle unter Einstellungen > ${AI_NAME} einen anderen Dienst.`,
   aiErrorRateLimit:
     "Der Dienst ist ausgelastet oder du hast ein Anfragelimit erreicht. Warte kurz und versuch es dann noch einmal.",
   aiErrorServer:
