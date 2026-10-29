@@ -709,6 +709,7 @@ export function installDevTauriShim(): void {
     official: boolean;
     manifest: unknown;
     readme?: Record<string, string>;
+    icon?: string;
   };
   let catalogEntries: Promise<CatalogEntry[]> | null = null;
   const devCatalog = () =>
@@ -825,6 +826,17 @@ export function installDevTauriShim(): void {
         );
       case "plugin_install_catalog":
         return installFromDevCatalog(id);
+      case "plugin_catalog_icon":
+        return devCatalog().then(async (entries) => {
+          const url = entries.find((e) => e.id === id)?.icon;
+          if (!url) return null;
+          const blob = await (await fetch(url)).blob();
+          return new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+        });
       // As Rust picks it: the language, its base, then English.
       case "plugin_catalog_readme":
         return devCatalog().then((entries) => {

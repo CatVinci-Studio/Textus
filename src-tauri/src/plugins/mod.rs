@@ -33,6 +33,7 @@ macro_rules! with_plugin_commands {
             $crate::plugins::catalog::plugin_catalog,
             $crate::plugins::catalog::plugin_catalog_cached,
             $crate::plugins::catalog::plugin_catalog_readme,
+            $crate::plugins::catalog::plugin_catalog_icon,
             $crate::plugins::catalog::skill_catalog,
             $crate::plugins::catalog::skill_install_catalog,
             $crate::plugins::access::plugin_fs_rename,
