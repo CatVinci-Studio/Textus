@@ -17,7 +17,7 @@ const t = {
   imageFolderSameFolder: "Same folder as the document",
   imageFolderNameLabel: "Subfolder name",
   imageFolderInvalid: "Use a folder inside the document's folder, such as img.",
-  imageHostLabel: "Service",
+  imageHostLabel: "Image host",
   imagePicgoEndpointLabel: "Server address",
   imageSmmsTokenLabel: "API token",
   imagePasteFailedMessage: "Couldn't save the pasted image.",
