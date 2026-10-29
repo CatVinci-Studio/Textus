@@ -102,6 +102,34 @@ const INSERT_BLOCK_PREFIX: &str = "insert-block:";
 
 /// Emit a menu event only to the focused window. `emit_to`, not `emit` on a
 /// window handle: that one looks scoped but broadcasts to every window.
+/// Edit > Undo and Redo: the editor window's page decides when it has the
+/// keyboard; a web page tab's or a chat window's own webview undoes natively.
+#[cfg(target_os = "macos")]
+fn undo_in_focus(app: &tauri::AppHandle, redo: bool) {
+    use objc2::rc::Retained;
+    use objc2_app_kit::NSWindow;
+    let Some(window) = focused_editor_window(app).and_then(|l| app.get_webview_window(&l)) else {
+        commands::clipboard::send_to_first_responder(redo);
+        return;
+    };
+    let app = app.clone();
+    let label = window.label().to_string();
+    let _ = window.with_webview(move |page| {
+        // SAFETY: wry hands out its window and WKWebView, alive for this call.
+        let ns_window = unsafe { &*(page.ns_window() as *const NSWindow) };
+        let in_page = ns_window.isKeyWindow()
+            && ns_window.firstResponder().is_some_and(|responder| {
+                std::ptr::eq(Retained::as_ptr(&responder).cast(), page.inner())
+            });
+        if in_page {
+            let event = if redo { "menu-redo" } else { "menu-undo" };
+            let _ = app.emit_to(EventTarget::webview_window(&label), event, ());
+        } else {
+            commands::clipboard::send_to_first_responder(redo);
+        }
+    });
+}
+
 fn emit_to_focused(app: &tauri::AppHandle, event: &str) {
     emit_to_focused_payload(app, event, ());
 }
@@ -387,7 +415,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     } else if cfg!(target_os = "macos") && id == "select-all" {
         emit_to_focused(app_handle, "menu-select-all");
     } else if cfg!(target_os = "macos") && (id == "undo" || id == "redo") {
-        emit_to_focused(app_handle, &format!("menu-{id}"));
+        #[cfg(target_os = "macos")]
+        undo_in_focus(app_handle, id == "redo");
     } else if id == FIND_REPLACE_ID {
         emit_to_focused(app_handle, "menu-find-replace");
     } else if id == ZOOM_IN_ID {

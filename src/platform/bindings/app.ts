@@ -89,6 +89,12 @@ export const commands = {
 	 */
 	paste_natively: () => __TAURI_INVOKE<boolean>("paste_natively"),
 	/**
+	 *  Undoes or redoes in the focused webview's text field or frame, as the
+	 *  predefined Edit items did. False where the page does it itself (everywhere
+	 *  but macOS).
+	 */
+	undo_natively: (redo: boolean) => __TAURI_INVOKE<boolean>("undo_natively", { redo }),
+	/**
 	 *  The clipboard's plain text, read without the webview's paste callout.
 	 *  None where the page reads it itself (everywhere but macOS).
 	 */

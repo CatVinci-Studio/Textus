@@ -89,6 +89,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::chat_window::focus_chat_window,
                 crate::commands::chat_window::current_chat_window,
                 crate::commands::clipboard::paste_natively,
+                crate::commands::clipboard::undo_natively,
                 crate::commands::clipboard::clipboard_text,
                 crate::commands::input_source::set_roman_input,
                 crate::commands::system_info::system_info,

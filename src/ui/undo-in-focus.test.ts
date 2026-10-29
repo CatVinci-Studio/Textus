@@ -24,14 +24,16 @@ describe("undoInFocus", () => {
     expect(seen).toEqual(["undo", "redo"]);
   });
 
-  it("leaves a focused field to its own history", () => {
+  it("leaves a focused field to its own history", async () => {
     const seen = editActions();
     document.execCommand = vi.fn(() => true);
     const field = document.createElement("textarea");
     document.body.append(field);
     field.focus();
     undoInFocus("undo");
-    expect(document.execCommand).toHaveBeenCalledWith("undo");
+    await vi.waitFor(() =>
+      expect(document.execCommand).toHaveBeenCalledWith("undo"),
+    );
     expect(seen).toEqual([]);
   });
 });

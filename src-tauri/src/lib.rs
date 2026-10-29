@@ -425,6 +425,7 @@ pub fn run() {
             commands::chat_window::current_chat_window,
             #[cfg(desktop)]
             commands::clipboard::paste_natively,
+            commands::clipboard::undo_natively,
             #[cfg(desktop)]
             commands::clipboard::clipboard_text,
             commands::input_source::set_roman_input,

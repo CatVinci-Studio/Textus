@@ -130,6 +130,10 @@ export const menuIpc = {
 export const clipboardIpc = {
   /** Cmd+V's paste into this window; false where the page pastes itself. */
   pasteNatively: () => desktopQueryCommand("paste_natively", false),
+  /** Undo or Redo in the focused text field or frame; false where the page
+   *  does it itself. */
+  undoNatively: (redo: boolean) =>
+    desktopQueryCommand("undo_natively", false, redo),
   /** The clipboard's plain text; null where the page reads it itself. */
   text: () => desktopQueryCommand("clipboard_text", null),
 };
