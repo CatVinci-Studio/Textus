@@ -4,6 +4,7 @@ import { useModalDialog } from "./useModalDialog";
 import "./quick-pick.css";
 import { isImeKeydown } from "../utils/ime";
 import { mayBePinyin, pinyinIndexOf, readings } from "../utils/pinyin";
+import { searchFold } from "../utils/search-fold";
 
 /** A list to choose one item from, or several ticked, filtered by what is
  *  typed: the command palette's and a plugin's textus.ui.pick. Requests queue. */
@@ -76,11 +77,12 @@ function answer(request: Request, value: unknown) {
 
 const labelReadings = new Map<string, string[][] | null>();
 
-/** Whether every word typed is in the item's label or description, or the
+/** Whether every word typed is in the item's label or description (case
+ *  and accents aside), or the
  *  label is a Chinese one the query spells in pinyin. */
 export function quickPickMatches(item: QuickPickItem, query: string): boolean {
-  const haystack = `${item.label} ${item.description ?? ""}`.toLowerCase();
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const haystack = searchFold(`${item.label} ${item.description ?? ""}`);
+  const words = searchFold(query).split(/\s+/).filter(Boolean);
   if (words.every((word) => haystack.includes(word))) return true;
   if (!mayBePinyin(query)) return false;
   if (!labelReadings.has(item.label))

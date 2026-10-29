@@ -55,6 +55,7 @@ describe("file name search", () => {
 
   it("matches a decomposed name with a composed query", () => {
     expect(names("café")).toEqual(["café".normalize("NFD") + ".md"]);
+    expect(names("cafe")).toEqual(["café".normalize("NFD") + ".md"]);
   });
 
   it("compares names only, not the folders they are in", () => {

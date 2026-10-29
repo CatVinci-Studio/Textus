@@ -8,5 +8,8 @@ describe("the quick pick's filter", () => {
     expect(quickPickMatches(item, "daochu")).toBe(true);
     expect(quickPickMatches(item, "dc")).toBe(true);
     expect(quickPickMatches(item, "dk")).toBe(false);
+    expect(
+      quickPickMatches({ label: "Thème de l’éditeur…" }, "theme edi"),
+    ).toBe(true);
   });
 });
