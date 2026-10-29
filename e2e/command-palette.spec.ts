@@ -170,3 +170,16 @@ test("the palette changes the appearance, the editor theme and Textus AI", async
     /off|disabled/,
   );
 });
+
+test("in Chinese, the palette finds a command typed in pinyin", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "zh", theme: "light" } });
+  await page.keyboard.press("ControlOrMeta+Shift+P");
+  await page.keyboard.type("waiguan");
+  await expect(page.getByRole("option", { name: "外观…" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("ControlOrMeta+Shift+P");
+  await page.keyboard.type("wg");
+  await expect(page.getByRole("option", { name: "外观…" })).toBeVisible();
+});
