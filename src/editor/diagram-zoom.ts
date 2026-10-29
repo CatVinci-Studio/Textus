@@ -14,23 +14,28 @@ export function nextScale(scale: number, deltaY: number): number {
 }
 
 /**
- * A diagram's drawing in a zoomable, draggable viewer over the window. The
- * drawing is a copy: nothing here touches the document.
+ * A diagram's drawing, or a picture, in a zoomable, draggable viewer over
+ * the window. It shows a copy: nothing here touches the document.
  */
 export function openDiagramViewer(
-  svg: SVGSVGElement,
+  source: SVGSVGElement | HTMLImageElement,
   frame: HTMLElement,
 ): () => void {
   const t = currentStrings();
+  const picture = source instanceof HTMLImageElement;
   const layer = document.createElement("div");
   layer.className = "diagram-viewer";
   layer.setAttribute("role", "dialog");
   layer.setAttribute("aria-modal", "true");
-  layer.setAttribute("aria-label", t.diagramViewerLabel);
+  layer.setAttribute(
+    "aria-label",
+    picture ? t.pictureViewerLabel : t.diagramViewerLabel,
+  );
   const stage = document.createElement("div");
   stage.className = "diagram-viewer-stage";
-  const drawing = svg.cloneNode(true) as SVGSVGElement;
+  const drawing = source.cloneNode(true) as SVGSVGElement | HTMLImageElement;
   drawing.removeAttribute("style");
+  if (drawing instanceof HTMLImageElement) drawing.draggable = false;
   drawing.classList.add("diagram-viewer-drawing");
   stage.append(drawing);
   // A Pele drawing takes its colours from its frame's variables, Mermaid's
@@ -58,10 +63,14 @@ export function openDiagramViewer(
     drawing.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
   };
   const fit = () => {
-    const box = svg.getBoundingClientRect();
+    // A picture at its own size, a drawing at the size it is drawn.
+    const box = picture
+      ? { width: source.naturalWidth, height: source.naturalHeight }
+      : source.getBoundingClientRect();
     const room = stage.getBoundingClientRect();
+    // A picture opens no larger than it is: stretched, it blurs.
     scale = Math.min(
-      MAX_SCALE,
+      picture ? 1 : MAX_SCALE,
       Math.max(
         MIN_SCALE,
         Math.min(
@@ -147,13 +156,21 @@ export function openDiagramViewer(
   return dismiss;
 }
 
-/** The button in a drawn diagram's corner that opens it in the viewer. A
- *  press on it isn't the frame's: that one puts the caret in the source. */
-export function zoomButton(frame: HTMLElement): HTMLButtonElement {
+/** The button in a drawn diagram's corner, or a picture's, that opens it in
+ *  the viewer. A press on it isn't the frame's: that one puts the caret in
+ *  the source. */
+export function zoomButton(
+  frame: HTMLElement,
+  shown: () => SVGSVGElement | HTMLImageElement | null = () =>
+    frame.querySelector<SVGSVGElement>(":scope > svg"),
+): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "mermaid-zoom";
-  const label = currentStrings().diagramZoom;
+  const t = currentStrings();
+  const label = frame.querySelector(":scope > img")
+    ? t.pictureZoom
+    : t.diagramZoom;
   button.setAttribute("aria-label", label);
   button.title = label;
   // Drawn by CSS, not an <svg>: the frame's one svg is the diagram, which
@@ -169,8 +186,8 @@ export function zoomButton(frame: HTMLElement): HTMLButtonElement {
   button.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    const svg = frame.querySelector<SVGSVGElement>(":scope > svg");
-    if (svg) openDiagramViewer(svg, frame);
+    const drawing = shown();
+    if (drawing) openDiagramViewer(drawing, frame);
   });
   return button;
 }

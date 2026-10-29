@@ -112,6 +112,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   diagramZoom: "다이어그램 크게 보기",
   codeBlockEditSource: "소스 편집",
   diagramViewerLabel: "다이어그램",
+  pictureZoom: "이미지 확대",
+  pictureViewerLabel: "이미지",
   diagramViewerClose: "닫기",
   diagramViewerHint:
     "스크롤하거나 손가락을 오므려 확대·축소 · 끌어서 이동 · 두 번 클릭하면 맞춤",

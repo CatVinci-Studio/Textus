@@ -115,6 +115,8 @@ export default {
   diagramZoom: "Увеличить диаграмму",
   codeBlockEditSource: "Изменить исходный код",
   diagramViewerLabel: "Диаграмма",
+  pictureZoom: "Увеличить изображение",
+  pictureViewerLabel: "Изображение",
   diagramViewerClose: "Закрыть",
   diagramViewerHint:
     "Прокрутка или щипок — масштаб · перетаскивание — сдвиг · двойной щелчок — вписать",
