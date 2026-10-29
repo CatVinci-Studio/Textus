@@ -22,6 +22,13 @@ describe("countWords", () => {
     expect(countWords("聊天都在codex上面").words).toBe(7);
   });
 
+  it("leaves an image's turn and width out of its title", () => {
+    expect(countWords('![a](a.png "Shot {textus-rotate=90}")').words).toBe(
+      countWords('![a](a.png "Shot")').words,
+    );
+    expect(countWords("x {textus-width=50% textus-rotate=180}").words).toBe(1);
+  });
+
   it("leaves fenced code out", () => {
     expect(countWords("一二\n```\nlet x = 1;\n```\n三").words).toBe(3);
   });
