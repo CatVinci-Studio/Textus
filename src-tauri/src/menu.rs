@@ -84,12 +84,15 @@ const FIND_REPLACE_ID: &str = "find-replace";
 /// pasted as it is (src/editor/useEditorClipboard.ts).
 const COPY_AS_PLAIN_TEXT_ID: &str = "copy-as-plain-text";
 const PASTE_AS_PLAIN_TEXT_ID: &str = "paste-as-plain-text";
-/// Edit > Select All on macOS, in place of the predefined item: that one
-/// sends WebKit's own selectAll:, which with the caret in no text field
-/// selected the whole window - the sidebar's notes, the empty document's
-/// box. The focused window picks what to select (app/app-menu-actions.ts).
-#[cfg(target_os = "macos")]
-const SELECT_ALL_ID: &str = "select-all";
+/// Edit items macOS gets as the app's own, in place of the predefined ones:
+/// undo: and redo: reach WebKit's history, never the editor's, and
+/// selectAll: with no field focused takes the whole window. Each runs in the
+/// focused window as "menu-<id>": (id, English label, accelerator).
+const MAC_EDIT_ITEMS: [(&str, &str, &str); 3] = [
+    ("undo", "Undo", "CmdOrCtrl+Z"),
+    ("redo", "Redo", "CmdOrCtrl+Shift+Z"),
+    ("select-all", "Select All", "CmdOrCtrl+A"),
+];
 const NEW_WINDOW_ID: &str = "new-window";
 /// Help menu ids carry the bundled doc they open: "help-doc:<doc>", where
 /// <doc> is the frontend's HelpDoc id ("markdown" | "agent" | "welcome").
@@ -442,8 +445,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-copy-as-plain-text");
     } else if id == PASTE_AS_PLAIN_TEXT_ID {
         emit_to_focused(app_handle, "menu-paste-as-plain-text");
-    } else if cfg!(target_os = "macos") && id == "select-all" {
-        emit_to_focused(app_handle, "menu-select-all");
+    } else if cfg!(target_os = "macos") && MAC_EDIT_ITEMS.iter().any(|(item, ..)| *item == id) {
+        emit_to_focused(app_handle, &format!("menu-{id}"));
     } else if id == FIND_REPLACE_ID {
         emit_to_focused(app_handle, "menu-find-replace");
     } else if id == ZOOM_IN_ID {

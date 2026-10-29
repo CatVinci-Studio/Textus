@@ -25,6 +25,8 @@ pub mod fs;
 pub mod image_host;
 pub mod links;
 #[cfg(desktop)]
+pub mod native_edit;
+#[cfg(desktop)]
 pub mod pdf_page_numbers;
 #[cfg(desktop)]
 pub mod prefs;

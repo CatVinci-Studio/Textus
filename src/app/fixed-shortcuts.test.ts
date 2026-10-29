@@ -61,6 +61,8 @@ function nativeAccelerators(): string[] {
   const written = [
     ...source.matchAll(/\.accelerator\("([^"]+)"\)/g),
     ...source.matchAll(/const \w+_ACCEL: &str = "([^"]+)"/g),
+    // MAC_EDIT_ITEMS rows: (id, label, accelerator).
+    ...source.matchAll(/\("[\w-]+", "[^"]+", "(CmdOrCtrl[^"]*)"\)/g),
   ].map((match) => match[1]);
   return written.map((accel) =>
     accel.toLowerCase().replace("cmdorctrl", "mod"),
@@ -86,8 +88,6 @@ describe("the fixed shortcuts in Settings", () => {
     // predefined Edit items, the editor's own keys and the tab keys.
     expect(mac).toEqual(expect.arrayContaining(native));
     const outsideMenuRs = new Set([
-      "mod+z",
-      "mod+shift+z",
       "mod+x",
       "mod+c",
       "mod+v",

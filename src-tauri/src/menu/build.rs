@@ -199,9 +199,21 @@ pub(crate) fn build(
     .accelerator("CmdOrCtrl+Shift+V")
     .build(app)?;
 
-    let edit_menu = SubmenuBuilder::new(app, l("menu:edit", "Edit"))
+    #[cfg(target_os = "macos")]
+    let [undo_item, redo_item, select_all_item] = MAC_EDIT_ITEMS.map(|(id, label, accelerator)| {
+        MenuItemBuilder::with_id(id, l(&format!("predefined:{id}"), label))
+            .accelerator(accelerator)
+            .build(app)
+    });
+
+    let edit_menu = SubmenuBuilder::new(app, l("menu:edit", "Edit"));
+    #[cfg(target_os = "macos")]
+    let edit_menu = edit_menu.item(&undo_item?).item(&redo_item?);
+    #[cfg(not(target_os = "macos"))]
+    let edit_menu = edit_menu
         .undo_with_text(l("predefined:undo", "Undo"))
-        .redo_with_text(l("predefined:redo", "Redo"))
+        .redo_with_text(l("predefined:redo", "Redo"));
+    let edit_menu = edit_menu
         .separator()
         .cut_with_text(l("predefined:cut", "Cut"))
         .copy_with_text(l("predefined:copy", "Copy"))
@@ -209,11 +221,7 @@ pub(crate) fn build(
         .paste_with_text(l("predefined:paste", "Paste"))
         .item(&paste_as_plain_text_item);
     #[cfg(target_os = "macos")]
-    let edit_menu = edit_menu.item(
-        &MenuItemBuilder::with_id(SELECT_ALL_ID, l("predefined:select-all", "Select All"))
-            .accelerator("CmdOrCtrl+A")
-            .build(app)?,
-    );
+    let edit_menu = edit_menu.item(&select_all_item?);
     #[cfg(not(target_os = "macos"))]
     let edit_menu = edit_menu.select_all_with_text(l("predefined:select-all", "Select All"));
     let edit_menu = edit_menu.separator().item(&find_replace_item).build()?;

@@ -447,7 +447,7 @@ pub fn run() {
             #[cfg(desktop)]
             commands::chat_window::current_chat_window,
             #[cfg(desktop)]
-            commands::clipboard::paste_natively,
+            commands::native_edit::edit_natively,
             #[cfg(desktop)]
             commands::clipboard::clipboard_text,
             #[cfg(desktop)]
