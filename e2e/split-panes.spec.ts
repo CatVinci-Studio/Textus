@@ -291,8 +291,9 @@ test("a tab dragged onto another pane's edge opens in a new pane on that side", 
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
   await page.mouse.down();
   await page.mouse.move(from.x + from.width / 2, from.y + 120, { steps: 5 });
-  // Near the second pane's bottom edge: its lower half lights.
-  await page.mouse.move(to.x + to.width / 2, to.y + to.height - 20, {
+  // Near the second pane's bottom edge, short of the window's: its lower
+  // half lights.
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height - 70, {
     steps: 8,
   });
   const hint = (await page.locator(".split-drop-hint").boundingBox())!;
@@ -307,6 +308,47 @@ test("a tab dragged onto another pane's edge opens in a new pane on that side", 
   expect(third.y).toBeGreaterThan(second.y + second.height - 1);
   const first = (await page.locator(pane("first")).boundingBox())!;
   expect(first.y + first.height).toBeGreaterThan(third.y);
+});
+
+test("a tab dragged to the split's outer edge opens beside all its panes, the full height", async ({
+  page,
+}) => {
+  await openTwo(page);
+  await emit(page, "menu-split-down");
+  await expect(page.locator(panes)).toHaveCount(2);
+  await emit(page, "menu-new-file");
+  await pasteMarkdown(page, "# Three");
+  // The pane with both tabs gives up the one in front.
+  const bar = page
+    .locator(".main-pane-split > .tab-bar")
+    .filter({ has: page.locator('[role="tab"]').nth(1) });
+  await expect(bar).toHaveCount(1);
+  const from = (await bar
+    .locator('[role="tab"][aria-selected="true"]')
+    .boundingBox())!;
+  const top = (await page.locator(pane("first")).boundingBox())!;
+  const bottom = (await page.locator(pane("second")).boundingBox())!;
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + from.width / 2, from.y + 120, { steps: 5 });
+  // At the right edge, halfway down the top pane: the window's right half
+  // lights, top to bottom.
+  const edge = top.x + top.width - 10;
+  await page.mouse.move(edge, top.y + top.height / 2, { steps: 8 });
+  const hint = (await page.locator(".split-drop-hint").boundingBox())!;
+  expect(Math.round(hint.y)).toBe(Math.round(top.y));
+  expect(Math.round(hint.y + hint.height)).toBe(
+    Math.round(bottom.y + bottom.height),
+  );
+  await page.mouse.up();
+  await expect(page.locator(panes)).toHaveCount(3);
+  const right = (await page.locator(pane("third")).boundingBox())!;
+  const left = (await page.locator(pane("first")).boundingBox())!;
+  expect(right.x).toBeGreaterThan(left.x + left.width - 1);
+  expect(Math.round(right.y + right.height)).toBe(
+    Math.round(bottom.y + bottom.height),
+  );
+  await expect(page.locator(pane("third"))).toContainText("Three");
 });
 
 test("Split Down in a split splits the pane in use again, and its divider resizes those two", async ({

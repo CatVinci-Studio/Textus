@@ -7,11 +7,13 @@ import {
   paneWithTab,
   resizeAt,
   splitPane,
+  splitWhole,
   swapAt,
   tidy,
   turnAt,
   type Branch,
   type Path,
+  type Side,
   type SplitDirection,
 } from "./split-tree";
 
@@ -157,6 +159,23 @@ export function splitBeside(
     };
   });
   const root = tidy(splitPane(without, id, side, added));
+  if (!root || root.kind === "pane") return;
+  setSplitLayout({ root, focus: added.id });
+}
+
+/** `tabId` in a new pane beside the whole layout on `side`. */
+export function splitAtEdge(tabId: string, side: Side): void {
+  if (!layout) return;
+  const added = pane([tabId]);
+  const without = mapPanes(layout.root, (p) => {
+    const tabs = p.tabs.filter((t) => t !== tabId);
+    return {
+      ...p,
+      tabs,
+      front: p.front === tabId ? (tabs[0] ?? null) : p.front,
+    };
+  });
+  const root = tidy(splitWhole(without, side, added));
   if (!root || root.kind === "pane") return;
   setSplitLayout({ root, focus: added.id });
 }

@@ -6,6 +6,7 @@ import {
   resizeAt,
   splitGrid,
   splitPane,
+  splitWhole,
   swapAt,
   tidy,
   turnAt,
@@ -46,6 +47,28 @@ describe("splitting a pane", () => {
       sizes: [0.5, 0.5],
     });
     expect(fronts(next)).toEqual(["a", "c", "b"]);
+  });
+});
+
+describe("splitting beside the whole layout", () => {
+  const stacked = (): Branch => ({
+    kind: "split",
+    direction: "column",
+    children: [pane(["a"]), pane(["b"])],
+    sizes: [0.5, 0.5],
+  });
+
+  it("puts a full-height pane beside panes stacked one above the other", () => {
+    const next = splitWhole(stacked(), "right", pane(["c"]));
+    expect(next).toMatchObject({ direction: "row", sizes: [0.5, 0.5] });
+    expect(next.children[0]).toMatchObject({ direction: "column" });
+    expect(fronts(next)).toEqual(["a", "b", "c"]);
+  });
+
+  it("adds to a layout running the same way with an even share", () => {
+    const next = splitWhole(stacked(), "top", pane(["c"]));
+    expect(fronts(next)).toEqual(["c", "a", "b"]);
+    expect(next.sizes.map((s) => +s.toFixed(3))).toEqual([0.333, 0.333, 0.333]);
   });
 });
 

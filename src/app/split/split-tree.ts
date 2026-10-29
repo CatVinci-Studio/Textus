@@ -155,6 +155,26 @@ export function splitPane(
   };
 }
 
+/** `added` beside the whole layout on `side`: the full height or width,
+ *  its share what each of the others would have. */
+export function splitWhole(root: LayoutNode, side: Side, added: Pane): Branch {
+  const direction: SplitDirection =
+    side === "left" || side === "right" ? "row" : "column";
+  const before = side === "left" || side === "top";
+  const [children, sizes] =
+    root.kind === "split" && root.direction === direction
+      ? [root.children, root.sizes]
+      : [[root], [1]];
+  const share = 1 / (children.length + 1);
+  const kept = sizes.map((size) => size * (1 - share));
+  return {
+    kind: "split",
+    direction,
+    children: before ? [added, ...children] : [...children, added],
+    sizes: before ? [share, ...kept] : [...kept, share],
+  };
+}
+
 /** The pane next to pane `id` on `side`, in the branch it sits in. */
 export function paneBeside(
   node: LayoutNode,
