@@ -1,7 +1,7 @@
 # Releasing
 
 Maintainers only. Releases are tags: the next minor version's on `main`,
-the current stable version's fixes on its `release/X.Y.x` line. The desktop app ships from a `vX.Y.Z` tag through
+the current stable version's fixes on `stable`. The desktop app ships from a `vX.Y.Z` tag through
 `.github/workflows/release.yml`; the iOS app ships from an `ios-vX.Y.Z` tag
 through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md)).
 The browser playground isn't released: it deploys from `main` on every
@@ -9,47 +9,52 @@ change ([infrastructure.md](infrastructure.md#playground)).
 
 ## Branches
 
-Two lines, each with its own tags:
+Two long-lived branches, each with its own tags:
 
-| Branch          | What it is                                     | Tagged there                   |
-| --------------- | ---------------------------------------------- | ------------------------------ |
-| `main`          | The next minor version: new features land here | `vX.Y.0-beta.N`, then `vX.Y.0` |
-| `release/X.Y.x` | The current stable version: fixes only         | `vX.Y.1`, `vX.Y.2`…            |
+| Branch   | What it is                                     | Tagged there                   |
+| -------- | ---------------------------------------------- | ------------------------------ |
+| `main`   | The next minor version: new features land here | `vX.Y.0-beta.N`, then `vX.Y.0` |
+| `stable` | The version people have installed: fixes only  | `vX.Y.1`, `vX.Y.2`…            |
 
-- Every change is a short-lived branch (`feat/…`, `fix/…`, `docs/…`,
-  `chore/…`) and a pull request. Branch protection on `main` and
-  `release/**` requires the `check`, `e2e` and `native` CI jobs (and
-  `ci-config`, which only a fork's pull request runs). It doesn't require
-  the branch to be up to date: a pull request that passed is merged as it
-  is, and the CI run after the merge catches the rare case where two changes
-  only break together.
-- **The line is cut at the minor version's release**: `vX.Y.0` is tagged
-  on `main`, and `release/X.Y.x` is branched from that tag. From then on
-  `main` is the next minor version. (1.2 is the exception: its line was cut
-  at its last release candidate, 1.2.0-rc.6, so `main` could start on 1.3.)
-- **Betas, then the release.** From 1.3 a minor version is tried out as
+Everything else is short-lived and deleted on merge (the repository does
+it):
+
+| Branch                                 | For                                                                             | Merges into        |
+| -------------------------------------- | ------------------------------------------------------------------------------- | ------------------ |
+| `feat/…`, `fix/…`, `docs/…`, `chore/…` | One change                                                                      | `main` or `stable` |
+| `feat/<name>` as an integration branch | A large feature built in several pull requests (below)                          | `main`             |
+| `release/vX.Y.Z`                       | One release: the version bump and its notes, or a patch's fixes tested together | `main` or `stable` |
+
+- Branch protection on `main` and `stable` requires the `check`, `e2e` and
+  `native` CI jobs (and `ci-config`, which only a fork's pull request
+  runs). It doesn't require the branch to be up to date: a pull request
+  that passed is merged as it is, and the CI run after the merge catches
+  the rare case where two changes only break together.
+- **Betas, then the release.** A minor version is tried out as
   `vX.Y.0-beta.N`, tagged on `main` while its features land, and released
-  as `vX.Y.0` when they hold up. 1.2 was the last to use release
-  candidates (`-rc.N`); they come back only if a release ever needs a
-  frozen candidate stage of its own.
-- **Fixes are patch releases**: `vX.Y.1`, `vX.Y.2`… from `release/X.Y.x`,
+  as `vX.Y.0` when they hold up.
+- **Fixes are patch releases**: `vX.Y.1`, `vX.Y.2`… from `stable`,
   released as they are, with no beta first.
 - **A fix goes where the bug is.** One the stable version has is a pull
-  request to `release/X.Y.x`; one only `main` has goes to `main`. New
-  features never go to a release line.
-- **After every release from a line, merge the line back into `main`**
+  request to `stable` (an outside contributor's goes to `main`, and is
+  carried over); one only `main` has goes to `main`. New features never go
+  to `stable`.
+- **After every release from `stable`, merge it back into `main`**
   (a merge commit, not a cherry-pick), in a pull request of its own:
   keep `main`'s side of the version lines; where `main` has restructured
-  the code a fix touches, carry the fix over by hand. Done release by
-  release, each merge holds a fix or two.
-- **One line at a time.** When `X.(Y+1).0` ships, `release/X.Y.x` stops
-  and is deleted: its last tag keeps it (`v1.1.2`, and `v0.9.8` for Levis).
-- Merged branches are deleted (the repository does it on merge), so the
-  branches on GitHub are `main`, the current `release/X.Y.x` and work in
-  progress.
+  the code a fix touches, carry the fix over by hand.
+- **`stable` moves on at each minor release.** Once `vX.Y.0` is tagged on
+  `main`, `stable` is fast-forwarded to that tag (it can be, since every
+  patch was merged back), and the next fixes are `vX.Y.1`… The last patch
+  of the line before stays as its tag (`v1.2.8`, `v1.1.2`; `v0.9.8` for
+  Levis).
+- **Integration branches.** A feature too large for one pull request
+  (multiple panes, say) gets a `feat/<name>` branch from `main`; its steps
+  are pull requests into that branch, `main` is merged into it at least
+  weekly, and the finished feature is one pull request into `main`. Small
+  features never need one.
 - Small, unrelated fixes can share one branch and one pull request, one
   commit per fix, so CI runs once.
-- Large features that are not ready stay on their own branch until they are.
 
 Both lines can release in the same week. A stable tag becomes GitHub's
 "Latest" release - the one the updater, the website's downloads, Homebrew,
@@ -167,29 +172,29 @@ repository. `scripts/updater-manifest.mjs` (`platformKeys`) and
 `scripts/mirror-keys.mjs` map the file names to the keys; their tests
 list every name above.
 
-## A patch release from a release line
+## A patch release from `stable`
 
-The same steps as [Desktop release](#desktop-release), on `release/X.Y.x`
+The same steps as [Desktop release](#desktop-release), on `stable`
 instead of `main`:
 
-1. Each fix is a `fix/…` branch from `origin/release/X.Y.x` and a pull
-   request to `release/X.Y.x`, with its release-note fragment. A fix sent
+1. Each fix is a `fix/…` branch from `origin/stable` and a pull
+   request to `stable`, with its release-note fragment. A fix sent
    to `main` that the stable version also needs is carried over in a
    branch of its own, its author credited (`Co-authored-by:`).
-2. The version bump (`X.Y.Z`, its notes built from the fragments) is a pull
-   request to `release/X.Y.x`.
+2. The version bump (`X.Y.Z`, its notes built from the fragments) is a
+   `release/vX.Y.Z` branch and a pull request to `stable`.
 3. Tag the merged line, after the same check:
 
    ```sh
    git fetch origin
-   node scripts/check-versions.mjs --tag vX.Y.Z   # on a checkout of origin/release/X.Y.x
-   git tag -a vX.Y.Z origin/release/X.Y.x -m "Textus X.Y.Z"
+   node scripts/check-versions.mjs --tag vX.Y.Z   # on a checkout of origin/stable
+   git tag -a vX.Y.Z origin/stable -m "Textus X.Y.Z"
    git push origin vX.Y.Z
    ```
 
 4. Verify it as any release.
-5. Merge `release/X.Y.x` into `main` in a pull request
-   (`chore: merge release/X.Y.x after vX.Y.Z`), keeping `main`'s version
+5. Merge `stable` into `main` in a pull request
+   (`chore: merge stable after vX.Y.Z`), keeping `main`'s version
    lines; the notes file `docs/releases/X.Y.Z.md` comes along.
 
 ## Pre-releases

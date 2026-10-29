@@ -143,11 +143,12 @@ exercised by hand.
 **Send every pull request to `main`.** That is the one rule; the rest of this
 section explains the other branches you may see.
 
-| Branch                                | What it is                                                                                           | Pull requests?   |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------- |
-| `main`                                | The next version, including its betas. Features and fixes land here.                                 | Yes, all of them |
-| `release/X.Y.x` (now `release/1.2.x`) | The version people have installed. Takes bug fixes only, copied over from `main` by the maintainers. | No               |
-| anything else                         | A maintainer's work in progress, deleted once merged.                                                | No               |
+| Branch                                 | What it is                                                                                      | Pull requests?   |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------- |
+| `main`                                 | The next version, including its betas. Features and fixes land here.                            | Yes, all of them |
+| `stable`                               | The version people have installed. Takes bug fixes only, carried over from `main` by us.        | No               |
+| `release/v…`                           | One release being put together, deleted once it is out.                                         | No               |
+| anything else (`feat/…`, `fix/…`, ...) | Work in progress, deleted once merged. A large feature may have its own branch others build on. | Only if asked    |
 
 Older versions are kept as tags (`v1.1.2`, `v1.0.4`), not branches.
 
@@ -159,7 +160,7 @@ To start:
    merge it into your branch; you don't need to rebase.
 
 If your pull request fixes a bug in the released version, say which version
-in the description (the template asks). We bring the fix to `release/X.Y.x`
+in the description (the template asks). We bring the fix to `stable`
 ourselves, with you credited. New features ship in the next minor version,
 never in a patch release.
 
@@ -187,7 +188,7 @@ friendly nudge on the pull request is welcome - it usually means it slipped
 past us, not that we're ignoring you.
 
 Releases are tags: betas and minor versions on `main`, patch releases on
-`release/X.Y.x`. See [docs/dev/releasing.md](docs/dev/releasing.md).
+`stable`. See [docs/dev/releasing.md](docs/dev/releasing.md).
 
 ## Commits
 

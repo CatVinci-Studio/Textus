@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ref: [main, release/1.2.x]
+        ref: [main, stable]
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     steps:
