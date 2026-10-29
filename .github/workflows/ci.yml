@@ -42,7 +42,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, "release/**"]
+    branches: [main, stable]
 
 permissions:
   contents: read

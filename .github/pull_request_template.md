@@ -11,7 +11,7 @@ proof that it builds.
 ## Released version
 
 <!-- A bug fix: does the version people have installed have the bug? Say
-     which (1.2.1), and we bring the fix to its release line too. A new
+     which (1.2.1), and we bring the fix to `stable` too. A new
      feature: leave this out - features ship in the next minor version.
      Send the pull request to `main` either way (CONTRIBUTING.md). -->
 

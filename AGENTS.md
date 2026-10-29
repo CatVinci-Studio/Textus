@@ -44,12 +44,18 @@ If another copy of the e2e suite may be running (another worktree), set
   pull request to `main`, and don't merge it yourself unless asked. One
   feature or fix per branch and pull request; the steps of that one change
   are commits in it.
-- `main` is the next minor version; the stable version is maintained on
-  `release/X.Y.x`, fixes only (docs/dev/releasing.md#branches). When asked
-  to fix a bug the released version has, branch from `origin/release/X.Y.x`
-  and open the pull request there; the line is merged back into `main`
-  after its release. Never put a new feature on a release line, and never
-  push to `main` or a release line directly.
+- Two long-lived branches (docs/dev/releasing.md#branches): `main` is the
+  next minor version, with its betas; `stable` is the released version,
+  fixes only. When asked to fix a bug the released version has, branch from
+  `origin/stable` and open the pull request there; `stable` is merged back
+  into `main` after each patch release. Never put a new feature on
+  `stable`, and never push to `main` or `stable` directly.
+- Branch names: `feat/…`, `fix/…`, `docs/…`, `chore/…` for one change;
+  `release/vX.Y.Z` for putting one release together. A feature too large
+  for one pull request gets an integration branch `feat/<name>`: its steps
+  are pull requests into it, `main` is merged into it at least weekly, and
+  it goes to `main` as one pull request when done. Don't open one unless
+  asked.
 - Don't stack pull requests by default: each one starts from `main`, so any
   of them can merge in any order. When a change depends on another that
   hasn't merged, wait for it, or put the dependent steps in one pull request
