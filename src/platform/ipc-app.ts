@@ -69,7 +69,7 @@ export const windowIpc = {
   /** One file in a window of its own, tab mode or not. */
   openPathInNewWindow: (path: string) =>
     desktopActionCommand("open_path_in_new_window", path),
-  takePendingOpenPath: () => command("take_pending_open_path"),
+  takePendingWindowPaths: () => command("take_pending_window_paths"),
   takePendingOpenPaths: () => command("take_pending_open_paths"),
   /** Pops the chat panel into its own OS window and resolves to its label.
    *  One per editor window: if it exists it is focused, and `state` is

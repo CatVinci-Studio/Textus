@@ -8,9 +8,9 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	take_pending_open_path: () => __TAURI_INVOKE<string | null>("take_pending_open_path"),
+	take_pending_window_paths: () => __TAURI_INVOKE<string[]>("take_pending_window_paths"),
 	/**
-	 *  Tab-mode counterpart to take_pending_open_path: drains the whole queue so
+	 *  Tab-mode counterpart to take_pending_window_paths: drains the whole queue so
 	 *  one window opens every path as a tab.
 	 */
 	take_pending_open_paths: () => __TAURI_INVOKE<string[]>("take_pending_open_paths"),

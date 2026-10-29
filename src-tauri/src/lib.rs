@@ -145,14 +145,14 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     );
     #[cfg(target_os = "macos")]
     arg_paths.extend(LAUNCH_OPENED.lock().unwrap().take().unwrap_or_default());
-    let startup_paths = if !arg_paths.is_empty() {
-        arg_paths
+    if !arg_paths.is_empty() {
+        queue_paths_to_open(app.handle(), arg_paths);
     } else if commands::prefs::read_restore_session_on_startup(app.handle()) {
-        commands::session::read_session_paths(app.handle())
-    } else {
-        Vec::new()
-    };
-    queue_paths_to_open(app.handle(), startup_paths);
+        queue_windows_to_open(
+            app.handle(),
+            commands::session::read_session_windows(app.handle()),
+        );
+    }
 
     commands::cli::try_silent_install();
 
@@ -226,7 +226,7 @@ pub fn run() {
         // registered on iOS, where the frontend never calls them.
         .invoke_handler(crate::with_plugin_commands![
             // Shared: desktop and iOS.
-            take_pending_open_path,
+            take_pending_window_paths,
             take_pending_open_paths,
             settings::settings_get,
             settings::settings_patch,

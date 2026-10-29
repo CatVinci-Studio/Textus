@@ -1280,6 +1280,8 @@ export function installDevTauriShim(): void {
           truncated: false,
         } satisfies ChatAttachment);
       }
+      // Nothing waiting to open in this window.
+      if (cmd === "take_pending_window_paths") return Promise.resolve([]);
       return Promise.resolve(null);
     },
     // As the real runtime: the callback is parked on window under `_<id>`.
