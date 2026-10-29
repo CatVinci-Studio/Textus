@@ -50,6 +50,47 @@ export function reportDetails(facts: ReportFacts): string {
   ].join("\n");
 }
 
+/** What a report is, what it is about and, for a bug, how bad it is: the
+ *  labels its issue gets (services/feedback/issue.ts). */
+export const REPORT_KINDS = ["bug", "idea", "question"] as const;
+export const REPORT_AREAS = [
+  "editor",
+  "ai",
+  "plugins",
+  "panes",
+  "export",
+  "files",
+  "other",
+] as const;
+export const REPORT_SEVERITIES = ["blocker", "major", "minor"] as const;
+
+export interface ReportChoice {
+  kind: (typeof REPORT_KINDS)[number];
+  area: (typeof REPORT_AREAS)[number];
+  severity: (typeof REPORT_SEVERITIES)[number];
+}
+
+/** What is sent to be filed: a severity only for a bug, a contact only
+ *  when one was given. */
+export function reportPayload(
+  facts: ReportFacts,
+  choice: ReportChoice,
+  description: string,
+  details: string,
+  contact: string,
+) {
+  return {
+    kind: choice.kind,
+    area: choice.area,
+    severity: choice.kind === "bug" ? choice.severity : null,
+    description: description.trim(),
+    details,
+    contact: contact.trim() || null,
+    version: APP_VERSION,
+    language: facts.language,
+  };
+}
+
 /** The bug report form on GitHub, its fields filled: what the user wrote
  *  and the details, the system and the version. */
 export function reportUrl(

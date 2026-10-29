@@ -134,9 +134,12 @@ export const clipboardIpc = {
   text: () => desktopQueryCommand("clipboard_text", null),
 };
 
-/** The system, its version and the webview's, for a problem report. */
+/** Help > Report a Problem: the system, its version and the webview's,
+ *  and sending the report to be filed. */
 export const systemIpc = {
   info: () => command("system_info"),
+  sendReport: (report: Generated.ProblemReport_Deserialize) =>
+    command("send_problem_report", report),
 };
 
 /** Roman input sources only while a plugin takes every key as a command

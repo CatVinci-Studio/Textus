@@ -429,6 +429,7 @@ pub fn run() {
             commands::clipboard::clipboard_text,
             commands::input_source::set_roman_input,
             commands::system_info::system_info,
+            commands::system_info::send_problem_report,
             #[cfg(desktop)]
             background::background_status,
             #[cfg(desktop)]
