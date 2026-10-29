@@ -1,7 +1,7 @@
 import type { Node as ProseNode, Schema } from "@milkdown/kit/prose/model";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { findRunOpen, literalTextAfter } from "./enclosure";
+import { findRunClose, findRunOpen, literalTextAfter } from "./enclosure";
 import { caretAt } from "../live-selection";
 
 /** The spans a typed delimiter pairs, and the text run a closing one turns
@@ -105,6 +105,39 @@ export function closeOpenRun(
     return true;
   }
   return false;
+}
+
+/**
+ * An opening run typed in front of content whose closing run sits ahead
+ * ("**" before "hello**"): the typed run's length picks the rung.
+ * `textBefore` ends before the run's last character, which is at
+ * `contentStart` - 1 once in the document, or about to go in at `contentStart`.
+ */
+export function openRunBeforeContent(
+  view: EditorView,
+  spec: SpanSpec,
+  textBefore: string,
+  contentStart: number,
+  inDoc: boolean,
+): boolean {
+  let typedRun = 1;
+  while (
+    typedRun - 1 < textBefore.length &&
+    textBefore[textBefore.length - typedRun] === spec.char
+  )
+    typedRun++;
+  if (typedRun < spec.minRung || typedRun > spec.maxRung) return false;
+  const { state } = view;
+  const $pos = state.doc.resolve(contentStart);
+  const { text: textAfter } = literalTextAfter($pos, runsHoldAtoms(spec));
+  const close = findRunClose(textBefore, textAfter, spec.char, typedRun);
+  if (!close) return false;
+  const openStart = contentStart - (inDoc ? typedRun : typedRun - 1);
+  const contentEnd = contentStart + close.valueLen;
+  const node = spanAround(state, spec, typedRun, contentStart, contentEnd);
+  const tr = state.tr.replaceWith(openStart, contentEnd + typedRun, node);
+  view.dispatch(caretAt(tr, openStart + 1));
+  return true;
 }
 
 /** Italic written with underscores, only ever closed, never opened as an

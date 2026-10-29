@@ -6,9 +6,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { fenceLineToBlock } from "../markdown/fence-line";
 import {
   COMPOSE_RELOCATE_DELAY_MS,
-  findRunClose,
   hasPendingRunOpen,
-  literalTextAfter,
   literalTextBefore,
   redirectMisattributedInput,
 } from "./enclosure";
@@ -19,9 +17,9 @@ import {
   SPECS,
   closeOpenRun,
   closeUnderscoreRun,
+  openRunBeforeContent,
   pairsIn,
   runsHoldAtoms,
-  spanAround,
   spanNode,
   threeLiteral,
   upgradeRung,
@@ -201,10 +199,9 @@ export const createMdSpanAutopairPlugin = (options: {
 
             if (!pairsIn(parent, spec)) return false;
 
-            const withAtoms = runsHoldAtoms(spec);
             const { text: textBefore, from: runStart } = literalTextBefore(
               $pos,
-              withAtoms,
+              runsHoldAtoms(spec),
             );
 
             if (closeOpenRun(view, spec, textBefore, runStart, to)) return true;
@@ -221,40 +218,8 @@ export const createMdSpanAutopairPlugin = (options: {
             )
               return false;
 
-            // An opening run typed in front of content whose closing run sits ahead
-            // ("**" before "hello**"): the typed run's length picks the rung.
-            let typedRun = 1;
-            while (
-              typedRun - 1 < textBefore.length &&
-              textBefore[textBefore.length - typedRun] === spec.char
-            )
-              typedRun++;
-            if (typedRun >= spec.minRung && typedRun <= spec.maxRung) {
-              const { text: textAfter } = literalTextAfter($pos, withAtoms);
-              const close = findRunClose(
-                textBefore,
-                textAfter,
-                spec.char,
-                typedRun,
-              );
-              if (close) {
-                const openStart = from - (typedRun - 1);
-                const node = spanAround(
-                  state,
-                  spec,
-                  typedRun,
-                  to,
-                  to + close.valueLen,
-                );
-                const tr = state.tr.replaceWith(
-                  openStart,
-                  to + close.valueLen + typedRun,
-                  node,
-                );
-                view.dispatch(caretAt(tr, openStart + 1));
-                return true;
-              }
-            }
+            if (openRunBeforeContent(view, spec, textBefore, to, false))
+              return true;
 
             // With content after the caret, never open an empty shell mid-text. Closers
             // don't count: "(**" should open bold inside the autopaired ")".
