@@ -9,7 +9,7 @@ import {
 } from "./chat-bridge";
 import { windowIpc } from "../../../platform/ipc";
 import { listenToThisWindow, unlistenAll } from "../../../platform/events";
-import { selectAllInFocus } from "../../../ui/select-all";
+import { editInFocus } from "../../../ui/edit-in-focus";
 import { useLatest } from "../../../utils/hooks/useLatest";
 import type { Settings } from "../../../prefs/SettingsContext";
 
@@ -88,7 +88,10 @@ export function useChatWindowHandoff(settings: Settings) {
   // Edit › Select All in this window too: macOS's menu sends it to the
   // focused window.
   useEffect(
-    () => unlistenAll(listenToThisWindow("menu-select-all", selectAllInFocus)),
+    () =>
+      unlistenAll(
+        listenToThisWindow("menu-select-all", () => editInFocus("select-all")),
+      ),
     [],
   );
 

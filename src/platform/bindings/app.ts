@@ -84,16 +84,10 @@ export const commands = {
 	 */
 	current_chat_window: () => __TAURI_INVOKE<string | null>("current_chat_window"),
 	/**
-	 *  Pastes into the focused webview as Cmd+V does. False where the page
-	 *  reads the clipboard itself (everywhere but macOS).
+	 *  Sends `action` to whatever has the keyboard. False where the page acts
+	 *  itself (everywhere but macOS).
 	 */
-	paste_natively: () => __TAURI_INVOKE<boolean>("paste_natively"),
-	/**
-	 *  Undoes or redoes in the focused webview's text field or frame, as the
-	 *  predefined Edit items did. False where the page does it itself (everywhere
-	 *  but macOS).
-	 */
-	undo_natively: (redo: boolean) => __TAURI_INVOKE<boolean>("undo_natively", { redo }),
+	edit_natively: (action: NativeEdit) => __TAURI_INVOKE<boolean>("edit_natively", { action }),
 	/**
 	 *  The clipboard's plain text, read without the webview's paste callout.
 	 *  None where the page reads it itself (everywhere but macOS).
@@ -315,6 +309,8 @@ export type GalleryTheme_Serialize = {
 	/**  Repository-relative screenshots. */
 	previews: string[],
 };
+
+export type NativeEdit = "paste" | "undo" | "redo" | "select-all";
 
 /**
  *  Where the page goes in its window, in CSS pixels from the window's
