@@ -79,8 +79,8 @@ export const canPickFolder = isDesktopApp || isIOSApp;
  *  sidebar there keeps the app's Documents folder it always had. */
 export const canOpenFolder = isDesktopApp;
 
-/** Settings' "install the `textus` terminal command" (cli.rs). */
-export const canInstallCliCommand = isDesktopApp;
+/** Settings' "install the `textus` terminal command" (cli.rs, macOS only). */
+export const canInstallCliCommand = isDesktopApp && isMacPlatform();
 
 /** Moving a replaced picture's file to the system's Trash
  *  (commands/fs.rs move_picture_to_trash). */
