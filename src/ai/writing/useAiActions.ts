@@ -6,6 +6,7 @@ import { buildCompletionStyle } from "./completion-style";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import type { Settings } from "../../settings/SettingsContext";
 import type { Strings, TextKey } from "../../i18n/strings";
+import { explainAiError } from "../error-messages";
 import {
   AiNoticeError,
   errorText,
@@ -55,7 +56,7 @@ export function useAiActions(
           onNotice(
             err instanceof AiNoticeError
               ? (t[NOTICE_TEXT[err.code]] as string)
-              : errorText(err),
+              : explainAiError(errorText(err), t),
           );
         },
       );
