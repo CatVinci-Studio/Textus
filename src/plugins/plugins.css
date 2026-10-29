@@ -168,15 +168,17 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: 0;
   white-space: nowrap;
 }
-.plugin-action-main.is-split {
+/* One button in two halves. Through the parent: the buttons' shared rule
+   (design-system.css) outranks a single class. */
+.plugin-action > .plugin-action-main.is-split {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-.plugin-action-more {
+.plugin-action > .plugin-action-more {
   display: flex;
   align-items: center;
-  margin-left: -1px !important;
-  padding: 0 6px;
+  margin-left: -1px;
+  padding: 0 8px;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
