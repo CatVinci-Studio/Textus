@@ -86,10 +86,13 @@ export function openDiagramViewer(
     apply();
   };
 
-  stage.addEventListener(
+  // Over the whole layer, and no further: a pinch is a wheel event, and the
+  // window's own zoom would take it too.
+  layer.addEventListener(
     "wheel",
     (event) => {
       event.preventDefault();
+      event.stopPropagation();
       const room = stage.getBoundingClientRect();
       const px = event.clientX - room.left;
       const py = event.clientY - room.top;
@@ -119,6 +122,13 @@ export function openDiagramViewer(
     drag = null;
     stage.classList.remove("diagram-viewer-dragging");
   };
+  // WebKit's pinch gestures belong to the viewer too, not the window's zoom
+  // (its ctrl-wheel events scale the picture above).
+  for (const type of ["gesturestart", "gesturechange", "gestureend"])
+    layer.addEventListener(type, (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
   stage.addEventListener("pointerup", endDrag);
   stage.addEventListener("pointercancel", endDrag);
   stage.addEventListener("dblclick", fit);
