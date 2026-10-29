@@ -46,30 +46,27 @@ pub fn paste_natively(window: tauri::WebviewWindow) -> bool {
 pub fn undo_natively(window: tauri::WebviewWindow, redo: bool) -> bool {
     #[cfg(target_os = "macos")]
     {
+        use objc2::sel;
+        use objc2_app_kit::NSApplication;
+        use objc2_foundation::MainThreadMarker;
         window
-            .run_on_main_thread(move || send_to_first_responder(redo))
+            .run_on_main_thread(move || {
+                let Some(mtm) = MainThreadMarker::new() else {
+                    return;
+                };
+                let action = if redo { sel!(redo:) } else { sel!(undo:) };
+                // SAFETY: both take the sender; nil targets the first
+                // responder, the field or page with the caret.
+                unsafe {
+                    NSApplication::sharedApplication(mtm).sendAction_to_from(action, None, None);
+                }
+            })
             .is_ok()
     }
     #[cfg(not(target_os = "macos"))]
     {
         let _ = (window, redo);
         false
-    }
-}
-
-/// undo: or redo: to the first responder, on the main thread.
-#[cfg(target_os = "macos")]
-pub(crate) fn send_to_first_responder(redo: bool) {
-    use objc2::sel;
-    use objc2_app_kit::NSApplication;
-    use objc2_foundation::MainThreadMarker;
-    let Some(mtm) = MainThreadMarker::new() else {
-        return;
-    };
-    let action = if redo { sel!(redo:) } else { sel!(undo:) };
-    // SAFETY: both take the sender; nil targets the first responder.
-    unsafe {
-        NSApplication::sharedApplication(mtm).sendAction_to_from(action, None, None);
     }
 }
 

@@ -1,12 +1,13 @@
 import { clipboardIpc } from "../platform/ipc-app";
 import { EDIT_ACTION_EVENT } from "../utils/events";
 
-/** Edit › Undo or Redo, wherever the keyboard is: a text field's or a
- *  plugin frame's own history, nothing behind an open dialog, else the
- *  document's. */
+/** Edit › Undo or Redo, wherever the keyboard is: the own history of a
+ *  text field, a plugin frame, a web page tab or the chat window, nothing
+ *  behind an open dialog, else the document's. */
 export function undoInFocus(action: "undo" | "redo"): void {
   const focused = document.activeElement;
   if (
+    !document.hasFocus() ||
     focused instanceof HTMLInputElement ||
     focused instanceof HTMLTextAreaElement ||
     focused instanceof HTMLIFrameElement
