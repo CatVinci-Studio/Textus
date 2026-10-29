@@ -536,3 +536,17 @@ test("``` typed on a line of its own reads as a fence, not as code", async ({
     /is-fence/,
   );
 });
+
+test("Alt+Up and Alt+Down move a list item, caret along", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("- one", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("two", { delay: 20 });
+  await page.keyboard.press("Alt+ArrowUp");
+  await page.keyboard.type("!");
+  await expect(page.locator(`${editor} li`)).toHaveText(["two!", "one"]);
+  await page.keyboard.press("Alt+ArrowDown");
+  await expect(page.locator(`${editor} li`)).toHaveText(["one", "two!"]);
+});
