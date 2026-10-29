@@ -11,11 +11,10 @@ change ([infrastructure.md](infrastructure.md#playground)).
 
 Two lines, each with its own tags:
 
-| Branch          | What it is                                                     | Tagged there                   |
-| --------------- | -------------------------------------------------------------- | ------------------------------ |
-| `main`          | The next minor version: new features land here                 | `vX.Y.0-beta.N`, then `vX.Y.0` |
-| `release/X.Y.x` | The current stable version: fixes only                         | `vX.Y.1`, `vX.Y.2`…            |
-| `archive/*`     | A line no longer maintained, and `archive/levis` (Levis 0.9.8) | -                              |
+| Branch          | What it is                                     | Tagged there                   |
+| --------------- | ---------------------------------------------- | ------------------------------ |
+| `main`          | The next minor version: new features land here | `vX.Y.0-beta.N`, then `vX.Y.0` |
+| `release/X.Y.x` | The current stable version: fixes only         | `vX.Y.1`, `vX.Y.2`…            |
 
 - Every change is a short-lived branch (`feat/…`, `fix/…`, `docs/…`,
   `chore/…`) and a pull request. Branch protection on `main` and
@@ -43,8 +42,11 @@ Two lines, each with its own tags:
   keep `main`'s side of the version lines; where `main` has restructured
   the code a fix touches, carry the fix over by hand. Done release by
   release, each merge holds a fix or two.
-- **One line at a time.** When `X.(Y+1).0` ships, `release/X.Y.x` stops:
-  it is renamed `archive/X.Y.x` and nothing more is released from it.
+- **One line at a time.** When `X.(Y+1).0` ships, `release/X.Y.x` stops
+  and is deleted: its last tag keeps it (`v1.1.2`, and `v0.9.8` for Levis).
+- Merged branches are deleted (the repository does it on merge), so the
+  branches on GitHub are `main`, the current `release/X.Y.x` and work in
+  progress.
 - Small, unrelated fixes can share one branch and one pull request, one
   commit per fix, so CI runs once.
 - Large features that are not ready stay on their own branch until they are.
