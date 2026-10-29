@@ -21,6 +21,7 @@ export type NativeMenuId =
   | "save-file-as"
   | "export-pdf"
   | "export-html"
+  | "copy-path"
   | "close-tab"
   | "reopen-closed-tab"
   | "close-window"
@@ -49,6 +50,7 @@ export type NativeMenuId =
   | `insert-block:${string}`
   | `help-doc:${string}`
   | "help-community"
+  | "help-report"
   | "help-tutorials"
   | "manage-plugins"
   | "command-palette"
@@ -283,6 +285,7 @@ export function buildAppMenu(
           action: { native: "save-file-as" },
         },
         { label: t.menuExport, submenu: exportEntries(t) },
+        { label: t.menuCopyPath, action: { native: "copy-path" } },
         "separator",
         {
           label: t.menuCloseTab,
@@ -434,6 +437,7 @@ export function buildAppMenu(
           label: t.menuHelpCommunity,
           action: { native: "help-community" },
         },
+        { label: t.menuHelpReport, action: { native: "help-report" } },
       ],
     },
     "separator",

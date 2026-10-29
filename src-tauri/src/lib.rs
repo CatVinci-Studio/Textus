@@ -428,6 +428,7 @@ pub fn run() {
             #[cfg(desktop)]
             commands::clipboard::clipboard_text,
             commands::input_source::set_roman_input,
+            commands::system_info::system_info,
             #[cfg(desktop)]
             background::background_status,
             #[cfg(desktop)]

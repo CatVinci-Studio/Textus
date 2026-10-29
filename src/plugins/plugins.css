@@ -157,6 +157,43 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-install.is-installed {
   color: var(--editor-muted);
 }
+/* A plugin's button, and the menu beside it when it has one. */
+.plugin-action {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.plugin-action > .text-button {
+  width: auto;
+  margin: 0;
+  white-space: nowrap;
+}
+.plugin-action-main.is-split {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.plugin-action-more {
+  display: flex;
+  align-items: center;
+  margin-left: -1px !important;
+  padding: 0 6px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.plugin-action-more svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+}
+.plugin-action .extensions-more-menu {
+  min-width: 140px;
+}
+/* Turned off: its words and icon quieter. */
+.plugin-card.is-off .plugin-card-open {
+  opacity: 0.6;
+}
 .plugin-installs {
   font-variant-numeric: tabular-nums;
 }
@@ -173,12 +210,6 @@ button.plugin-card-open:hover .plugin-card-name {
   align-items: flex-start;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
-}
-/* Settings' buttons fill their row; this one keeps its own width. */
-.market-plugin-head .plugin-install {
-  flex: none;
-  width: auto;
-  margin: 0;
 }
 .market-plugin-title {
   display: flex;
@@ -233,10 +264,6 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-version {
   font-variant-numeric: tabular-nums;
 }
-.plugin-update-note {
-  color: var(--ui-primary);
-  font-size: var(--text-xs);
-}
 .plugin-group-help {
   margin: 0;
   padding: var(--space-2) 0;
@@ -245,15 +272,16 @@ button.plugin-card-open:hover .plugin-card-name {
 }
 
 /* One plugin's page. */
+/* Back to the page before: a button of its own, easy to find. */
 .plugin-back {
   margin: 0 0 var(--space-3);
-  padding: 2px var(--space-2);
-  border: 0;
-  border-radius: var(--radius-small);
+  padding: 4px 12px 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
   background: none;
-  color: var(--ui-primary);
+  color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
   cursor: pointer;
 }
 .plugin-back:hover {

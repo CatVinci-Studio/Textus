@@ -31,6 +31,7 @@ const NEW_FILE_ID: &str = "new-file";
 const OPEN_FILE_ID: &str = "open-file";
 const OPEN_FOLDER_ID: &str = "open-folder";
 const CLOSE_FOLDER_ID: &str = "close-folder";
+const COPY_PATH_ID: &str = "copy-path";
 const SAVE_FILE_ID: &str = "save-file";
 const SAVE_FILE_AS_ID: &str = "save-file-as";
 const RECENT_CLEAR_ID: &str = "recent-clear";
@@ -84,6 +85,8 @@ const NEW_WINDOW_ID: &str = "new-window";
 const HELP_DOC_PREFIX: &str = "help-doc:";
 /// Help > Join the Community, in the UI's language (the focused window knows it).
 const COMMUNITY_ID: &str = "help-community";
+/// Help > Report a Problem, the window's own dialog.
+const REPORT_ID: &str = "help-report";
 /// Help > Video Tutorials, opened the same way as Join the Community.
 const TUTORIALS_ID: &str = "help-tutorials";
 /// Format menu ids carry the block kind to insert: "insert-block:<kind>".
@@ -315,6 +318,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_or_open_window(app_handle, "menu-open-folder");
     } else if id == CLOSE_FOLDER_ID {
         emit_to_focused(app_handle, "menu-close-folder");
+    } else if id == COPY_PATH_ID {
+        emit_to_focused(app_handle, "menu-copy-path");
     } else if id == SAVE_FILE_ID {
         emit_to_focused(app_handle, "menu-save-file");
     } else if id == SAVE_FILE_AS_ID {
@@ -409,6 +414,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         } else {
             let _ = commands::links::open_community(app_handle, None);
         }
+    } else if id == REPORT_ID {
+        emit_to_focused(app_handle, "menu-help-report");
     } else if id == TUTORIALS_ID {
         if let Some(label) = focused_editor_window(app_handle) {
             let _ = app_handle.emit_to(

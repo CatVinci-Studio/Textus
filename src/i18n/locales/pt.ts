@@ -114,6 +114,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   diagramZoom: "Ampliar diagrama",
   codeBlockEditSource: "Editar o código",
   diagramViewerLabel: "Diagrama",
+  pictureZoom: "Ampliar imagem",
+  pictureViewerLabel: "Imagem",
   diagramViewerClose: "Fechar",
   diagramViewerHint:
     "Role ou faça pinça para dar zoom · arraste para mover · clique duas vezes para ajustar",
@@ -391,6 +393,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   aiErrorAuth: `O serviço recusou as credenciais. Verifique a chave de API (ou entre de novo) em Ajustes > ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "Esta chave da Anthropic não pertence a um workspace. Crie uma chave dentro de um workspace no Anthropic Console e use-a.",
+  aiErrorBalance: `O saldo ou a cota deste serviço acabou. Recarregue ou verifique seu plano no site do provedor, ou escolha outro serviço em Ajustes > ${AI_NAME}.`,
   aiErrorRateLimit:
     "O serviço está ocupado ou você atingiu o limite de requisições. Aguarde um pouco e tente de novo.",
   aiErrorServer:
@@ -416,6 +419,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeRefresh: "Atualizar",
   menuOpenFolder: "Abrir Pasta…",
   menuCloseFolder: "Fechar Pasta",
+  menuCopyPath: "Copiar caminho",
   folderTooBroad:
     "Esta pasta é ampla demais para ser aberta (sua pasta pessoal ou um disco inteiro). Escolha uma pasta mais específica.",
   treeSearchPlaceholder: "Buscar nomes de arquivo",
@@ -447,6 +451,27 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeTrashConfirm: "Mover “{name}” para a lixeira? Dá para recuperar de lá.",
   treeTrashFolderConfirm:
     "Mover a pasta “{name}” e tudo o que ela contém para a lixeira? Dá para recuperar de lá.",
+  errorPermission:
+    "O Textus não tem permissão para abrir este arquivo ou pasta. Verifique as permissões ou escolha outro local.",
+  errorNotFound:
+    "O arquivo ou a pasta não está mais lá. Pode ter sido movido, renomeado ou excluído.",
+  errorDiskFull: "O disco está cheio. Libere espaço e tente de novo.",
+  errorReadOnly: "Este local é somente leitura. Escolha outra pasta.",
+  errorFileBusy:
+    "Outro programa está usando este arquivo. Feche-o lá e tente de novo.",
+  errorTimeout: "Demorou demais. Verifique sua conexão e tente de novo.",
+  errorNetwork:
+    "Não foi possível conectar. Verifique sua conexão com a internet ou as configurações de proxy.",
+  errorFileTooBig: "Este arquivo é grande demais para abrir no Textus.",
+  errorNotDocument: "O Textus não consegue ler este arquivo como documento.",
+  errorBadName:
+    "Esse nome não pode ser usado. Um nome não pode ficar vazio nem conter / ou \\.",
+  errorMoveIntoItself: "Uma pasta não pode ser movida para dentro dela mesma.",
+  errorPluginTooBig: "Este plugin é grande demais para instalar.",
+  errorCatalogNewer:
+    "A loja de plugins precisa de uma versão mais nova do Textus. Atualize o Textus para vê-la.",
+  errorImageTooBig: "A imagem está vazia ou tem mais de 25 MB.",
+  errorNoFolder: "Abra uma pasta primeiro.",
   treeNameTaken: "Já existe algo chamado “{name}” aqui.",
   treeActionFailed: "Não deu certo: {reason}",
   shortcutSearchFiles: "Buscar nomes de arquivo",
@@ -916,6 +941,13 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuHelpMarkdown: "Guia de Markdown",
   menuHelpAgent: "Guia dos Recursos de IA",
   menuHelpCommunity: "Participe da comunidade",
+  menuHelpReport: "Relatar um problema…",
+  reportTitle: "Relatar um problema",
+  reportWhat: "O que aconteceu e o que você esperava?",
+  reportDetails: "Enviado junto",
+  reportCopy: "Copiar",
+  reportCopied: "Copiado",
+  reportOnGithub: "Enviar no GitHub",
   menuHelpTutorials: "Tutoriais em vídeo",
   windowMinimize: "Minimizar",
   windowMaximize: "Maximizar",
@@ -1431,6 +1463,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginRepository: "Código-fonte",
   pluginReload: "Recarregar",
   pluginUninstall: "Desinstalar",
+  pluginTurnOn: "Ativar",
+  pluginTurnOff: "Desativar",
+  pluginMoreFor: "Mais para {name}",
   pluginExport: "Exportar para publicar…",
   pluginExportPrompt:
     "O seu nome como editor: minúsculas, números e hífenes. O seu nome no GitHub serve bem. Substitui “local” no id do plugin.",

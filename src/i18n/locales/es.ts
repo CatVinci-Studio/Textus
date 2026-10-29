@@ -122,6 +122,8 @@ para usar una.
   diagramZoom: "Ampliar diagrama",
   codeBlockEditSource: "Editar el código",
   diagramViewerLabel: "Diagrama",
+  pictureZoom: "Ampliar imagen",
+  pictureViewerLabel: "Imagen",
   diagramViewerClose: "Cerrar",
   diagramViewerHint:
     "Desplaza o pellizca para hacer zoom · arrastra para mover · doble clic para ajustar",
@@ -402,6 +404,7 @@ para usar una.
   aiErrorAuth: `El servicio rechazó las credenciales. Revisa la clave de API (o vuelve a iniciar sesión) en Ajustes > ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "Esta clave de Anthropic no está vinculada a ningún espacio de trabajo. Crea una clave dentro de un espacio de trabajo en la Anthropic Console y úsala.",
+  aiErrorBalance: `Se ha agotado el saldo o la cuota de este servicio. Recarga o revisa tu plan en la web del proveedor, o elige otro servicio en Ajustes > ${AI_NAME}.`,
   aiErrorRateLimit:
     "El servicio está saturado o se alcanzó el límite de solicitudes. Espera un momento y vuelve a intentarlo.",
   aiErrorServer:
@@ -428,6 +431,7 @@ para usar una.
   treeRefresh: "Actualizar",
   menuOpenFolder: "Abrir carpeta…",
   menuCloseFolder: "Cerrar carpeta",
+  menuCopyPath: "Copiar ruta",
   folderTooBroad:
     "Esta carpeta es demasiado amplia para abrirla (es tu carpeta personal o una unidad entera). Elige una más concreta.",
   treeSearchPlaceholder: "Buscar nombres de archivo",
@@ -460,6 +464,28 @@ para usar una.
     "¿Mover «{name}» a la papelera? Podrás recuperarlo desde allí.",
   treeTrashFolderConfirm:
     "¿Mover la carpeta «{name}» y todo su contenido a la papelera? Podrás recuperarla desde allí.",
+  errorPermission:
+    "Textus no tiene permiso para abrir este archivo o carpeta. Revisa sus permisos o elige otra ubicación.",
+  errorNotFound:
+    "El archivo o la carpeta ya no está. Puede que se haya movido, renombrado o eliminado.",
+  errorDiskFull:
+    "El disco está lleno. Libera algo de espacio y vuelve a intentarlo.",
+  errorReadOnly: "Esta ubicación es de solo lectura. Elige otra carpeta.",
+  errorFileBusy:
+    "Otro programa está usando este archivo. Ciérralo allí y vuelve a intentarlo.",
+  errorTimeout: "Tardó demasiado. Revisa tu conexión y vuelve a intentarlo.",
+  errorNetwork:
+    "No se pudo conectar. Revisa tu conexión a internet o la configuración del proxy.",
+  errorFileTooBig: "Este archivo es demasiado grande para abrirlo en Textus.",
+  errorNotDocument: "Textus no puede leer este archivo como documento.",
+  errorBadName:
+    "Ese nombre no se puede usar. Un nombre no puede estar vacío ni contener / o \\.",
+  errorMoveIntoItself: "Una carpeta no se puede mover dentro de sí misma.",
+  errorPluginTooBig: "Este plugin es demasiado grande para instalarlo.",
+  errorCatalogNewer:
+    "La tienda de plugins necesita una versión más reciente de Textus. Actualiza Textus para verla.",
+  errorImageTooBig: "La imagen está vacía o supera los 25 MB.",
+  errorNoFolder: "Abre primero una carpeta.",
   treeNameTaken: "Ya hay algo llamado «{name}» aquí.",
   treeActionFailed: "No se pudo: {reason}",
   shortcutSearchFiles: "Buscar nombres de archivo",
@@ -932,6 +958,13 @@ para usar una.
   menuHelpMarkdown: "Guía de Markdown",
   menuHelpAgent: "Guía de funciones de IA",
   menuHelpCommunity: "Únete a la comunidad",
+  menuHelpReport: "Informar de un problema…",
+  reportTitle: "Informar de un problema",
+  reportWhat: "¿Qué pasó y qué esperabas?",
+  reportDetails: "Se envía con ello",
+  reportCopy: "Copiar",
+  reportCopied: "Copiado",
+  reportOnGithub: "Enviar en GitHub",
   menuHelpTutorials: "Videotutoriales",
   windowMinimize: "Minimizar",
   windowMaximize: "Maximizar",
@@ -1450,6 +1483,9 @@ para usar una.
   pluginRepository: "Código fuente",
   pluginReload: "Recargar",
   pluginUninstall: "Desinstalar",
+  pluginTurnOn: "Activar",
+  pluginTurnOff: "Desactivar",
+  pluginMoreFor: "Más para {name}",
   pluginExport: "Exportar para publicar…",
   pluginExportPrompt:
     "Tu nombre como editor: minúsculas, números y guiones. Tu usuario de GitHub va bien. Sustituye a «local» en el id del complemento.",

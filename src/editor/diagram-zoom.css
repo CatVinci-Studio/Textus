@@ -1,5 +1,5 @@
-/* A drawn diagram's enlarge button, shown while the pointer is over the
-   diagram or the button has focus. */
+/* A drawn diagram's or a picture's enlarge button, shown while the
+   pointer is over it or the button has focus. */
 .mermaid-preview {
   position: relative;
 }
@@ -21,6 +21,7 @@
   transition: opacity var(--dur-fast) var(--ease-out);
 }
 .mermaid-preview:hover .mermaid-zoom,
+.image-view:hover > .mermaid-zoom,
 .mermaid-zoom:focus-visible {
   opacity: 1;
 }

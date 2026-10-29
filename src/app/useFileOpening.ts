@@ -1,5 +1,9 @@
 import { useCallback, useEffect } from "react";
-import { listenToThisWindow, unlistenAll } from "../platform/events";
+import {
+  listenToThisWebview,
+  listenToThisWindow,
+  unlistenAll,
+} from "../platform/events";
 import {
   CHAT_TO_EDITOR,
   onWindowEvent,
@@ -21,6 +25,7 @@ import {
 } from "../utils/events";
 import { setTabJump, type TabJump } from "../editor/tab-jump";
 import { lastCaret } from "../document/last-carets";
+import { lastViewMode } from "../editor/modes/view-mode";
 import { isIOSApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
@@ -33,10 +38,10 @@ import { customEditorFor } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
 import { useLatest } from "../utils/hooks/useLatest";
 import { openBeside } from "./split/split-layout";
-import { errorText } from "../utils/error-text";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";
 import { splitForDrop, type DropTarget } from "./split/split-drop";
+import { explainError } from "../utils/error-explain";
 
 /** How a document opens, beyond which file. */
 export interface OpenOptions {
@@ -132,7 +137,7 @@ export function useFileOpening(opts: {
           return { ...doc, view: undefined };
         } catch (err) {
           void showMessage(
-            `${t.wordImportFailed.replace("{name}", basename(path))}\n${errorText(err)}`,
+            `${t.wordImportFailed.replace("{name}", basename(path))}\n${explainError(err, t)}`,
             { tone: "error" },
           );
           return null;
@@ -212,7 +217,12 @@ export function useFileOpening(opts: {
       }
       const doc = await readDocument(path, open.asDocument, open.place);
       if (!doc) return;
-      const newTab: DocTab = { ...makeBlankTab(), ...doc };
+      // A plugin's tab has no source to show.
+      const newTab: DocTab = {
+        ...makeBlankTab(),
+        ...(doc.view ? {} : lastViewMode()),
+        ...doc,
+      };
       const jump =
         newTab.path && openingJump(open, path, newTab.diskMtime, restoreCarets);
       if (jump) setTabJump(newTab.id, jump);
@@ -340,15 +350,17 @@ export function useOpenPathsPush(
 /**
  * Files dropped on this window from a file manager. Each document gets its
  * own tab, never replacing the one being read; only an untouched Untitled
- * tab gives way. Images go to the editor at the drop point.
+ * tab gives way. Images go to the editor at the drop point, and a folder
+ * opens in the sidebar, as Open Folder does.
  */
 export function useFileDrop(
   openFile: (path: string) => Promise<void>,
   openPathInTab: (path: string) => Promise<void>,
+  openFolder: (path: string) => void,
 ): void {
   useEffect(() => {
     if (isIOSApp) return;
-    const unlisten = listenToThisWindow<{
+    const unlisten = listenToThisWebview<{
       paths: string[];
       position: { x: number; y: number };
     }>("tauri://drag-drop", async (event) => {
@@ -366,11 +378,22 @@ export function useFileDrop(
             },
           }),
         );
-      // A file that can't be read as text opens nothing, as in File > Open.
-      // Only the first may take an untouched draft's place.
+      // What can't be read as text is a folder, opened in the sidebar, or a
+      // file that opens nothing, as in File > Open. Only the first may take
+      // an untouched draft's place.
       for (const [i, path] of documents.entries())
-        await (i === 0 ? openFile : openPathInTab)(path).catch(() => undefined);
+        await (i === 0 ? openFile : openPathInTab)(path).catch(async () => {
+          if (await isFolder(path)) openFolder(path);
+        });
     });
     return unlistenAll(unlisten);
-  }, [openFile, openPathInTab]);
+  }, [openFile, openPathInTab, openFolder]);
+}
+
+/** Whether `path` is a folder: only a folder lists. */
+function isFolder(path: string): Promise<boolean> {
+  return fs.listDir(path).then(
+    () => true,
+    () => false,
+  );
 }

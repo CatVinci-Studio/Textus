@@ -47,6 +47,7 @@ import {
   storeBlobImages,
   swapStoredBlobs,
 } from "./image-store";
+import { openDiagramViewer, zoomButton } from "../diagram-zoom";
 export {
   safeImageStem,
   imageStemForMode,
@@ -150,6 +151,13 @@ function createImageView(
   handle.className = "image-resize-handle";
   handle.setAttribute("aria-hidden", "true");
   dom.append(img, handle);
+  // Loaded, it opens in the viewer from its corner or a double click.
+  const loaded = () => (img.naturalWidth > 0 ? img : null);
+  const zoom = zoomButton(dom, loaded);
+  img.addEventListener("dblclick", () => {
+    if (loaded()) openDiagramViewer(img, dom);
+  });
+  dom.append(zoom);
 
   let current = node;
   // Which picture is on show: its src, in this document.
@@ -264,9 +272,11 @@ function createImageView(
     selectNode: () => dom.classList.add("ProseMirror-selectednode"),
     deselectNode: () => dom.classList.remove("ProseMirror-selectednode"),
     // The handle's drag is ours, not ProseMirror's (which would start a
-    // node drag or move the selection); so are the card's buttons.
+    // node drag or move the selection); so are the zoom and card buttons.
     stopEvent: (event: Event) =>
-      event.target === handle || isMissingCardAction(event),
+      event.target === handle ||
+      zoom.contains(event.target as Node) ||
+      isMissingCardAction(event),
     // Everything inside is written by this view - the live width while
     // resizing included - never by the user typing.
     ignoreMutation: () => true,

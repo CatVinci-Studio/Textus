@@ -1,4 +1,3 @@
-import { errorText } from "../../utils/error-text";
 import { useEffect, useId, useState } from "react";
 import { imageHostAuth } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
@@ -16,6 +15,7 @@ import {
 } from "../../prefs/image-folder";
 import { Select } from "../../ui/Select";
 import { RowHelp, SecretInput, SettingRow, VERBATIM_INPUT } from "./controls";
+import { explainError } from "../../utils/error-explain";
 
 /** Settings > Images: one choice - this computer or an image host - and
  *  then only what that choice needs. */
@@ -263,7 +263,7 @@ function ImageHostTokenRow({ host, t }: { host: ImageHost; t: Strings }) {
       setTokenConfigured(true);
       setError(null);
     } catch (err) {
-      setError(errorText(err));
+      setError(explainError(err, t));
     }
   }
 
@@ -273,7 +273,7 @@ function ImageHostTokenRow({ host, t }: { host: ImageHost; t: Strings }) {
       setTokenConfigured(false);
       setError(null);
     } catch (err) {
-      setError(errorText(err));
+      setError(explainError(err, t));
     }
   }
 

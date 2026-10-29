@@ -93,7 +93,7 @@ export function useWindowWiring({
 
   // The same, pushed to an already-running window.
   useOpenPathsPush(openPathInTab);
-  useFileDrop(openFile, openPathInTab);
+  useFileDrop(openFile, openPathInTab, openFolder.openFolder);
   // A file from the sidebar dragged over the documents opens where it is
   // let go.
   useEffect(() => {

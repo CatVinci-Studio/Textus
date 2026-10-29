@@ -122,6 +122,8 @@ utiliser une.
   diagramZoom: "Agrandir le diagramme",
   codeBlockEditSource: "Modifier la source",
   diagramViewerLabel: "Diagramme",
+  pictureZoom: "Agrandir l'image",
+  pictureViewerLabel: "Image",
   diagramViewerClose: "Fermer",
   diagramViewerHint:
     "Faites défiler ou pincez pour zoomer · faites glisser pour déplacer · double-cliquez pour ajuster",
@@ -407,6 +409,7 @@ utiliser une.
   aiErrorAuth: `Le service a refusé les identifiants. Vérifiez la clé API (ou reconnectez-vous) dans Réglages > ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "Cette clé Anthropic n'est rattachée à aucun espace de travail. Créez une clé dans un espace de travail de la console Anthropic et utilisez-la.",
+  aiErrorBalance: `Le solde ou le quota de ce service est épuisé. Rechargez ou vérifiez votre offre sur le site du fournisseur, ou choisissez un autre service dans Réglages > ${AI_NAME}.`,
   aiErrorRateLimit:
     "Le service est surchargé ou vous avez atteint une limite de requêtes. Patientez un instant, puis réessayez.",
   aiErrorServer:
@@ -433,6 +436,7 @@ utiliser une.
   treeRefresh: "Actualiser",
   menuOpenFolder: "Ouvrir un dossier…",
   menuCloseFolder: "Fermer le dossier",
+  menuCopyPath: "Copier le chemin",
   folderTooBroad:
     "Ce dossier est trop vaste pour être ouvert (votre dossier personnel ou un disque entier). Choisissez un dossier plus précis.",
   treeSearchPlaceholder: "Rechercher des noms de fichier",
@@ -465,6 +469,30 @@ utiliser une.
     "Mettre « {name} » à la corbeille ? Vous pourrez l’en sortir.",
   treeTrashFolderConfirm:
     "Mettre le dossier « {name} » et tout son contenu à la corbeille ? Vous pourrez l’en sortir.",
+  errorPermission:
+    "Textus n'a pas l'autorisation d'ouvrir ce fichier ou ce dossier. Vérifiez ses autorisations ou choisissez un autre emplacement.",
+  errorNotFound:
+    "Le fichier ou le dossier n'est plus là. Il a peut-être été déplacé, renommé ou supprimé.",
+  errorDiskFull: "Le disque est plein. Libérez de l'espace, puis réessayez.",
+  errorReadOnly:
+    "Cet emplacement est en lecture seule. Choisissez un autre dossier.",
+  errorFileBusy:
+    "Un autre programme utilise ce fichier. Fermez-le là-bas, puis réessayez.",
+  errorTimeout:
+    "Cela a pris trop de temps. Vérifiez votre connexion, puis réessayez.",
+  errorNetwork:
+    "Connexion impossible. Vérifiez votre connexion Internet ou vos réglages de proxy.",
+  errorFileTooBig:
+    "Ce fichier est trop volumineux pour être ouvert dans Textus.",
+  errorNotDocument: "Textus ne peut pas lire ce fichier comme un document.",
+  errorBadName:
+    "Ce nom ne peut pas être utilisé. Un nom ne peut pas être vide ni contenir / ou \\.",
+  errorMoveIntoItself: "Un dossier ne peut pas être déplacé dans lui-même.",
+  errorPluginTooBig: "Ce plugin est trop volumineux pour être installé.",
+  errorCatalogNewer:
+    "La boutique de plugins nécessite une version plus récente de Textus. Mettez Textus à jour pour la voir.",
+  errorImageTooBig: "L'image est vide ou dépasse 25 Mo.",
+  errorNoFolder: "Ouvrez d'abord un dossier.",
   treeNameTaken: "Il y a déjà un élément nommé « {name} » ici.",
   treeActionFailed: "Impossible : {reason}",
   shortcutSearchFiles: "Rechercher des noms de fichier",
@@ -944,6 +972,13 @@ utiliser une.
   menuHelpMarkdown: "Guide Markdown",
   menuHelpAgent: "Guide des fonctions IA",
   menuHelpCommunity: "Rejoindre la communauté",
+  menuHelpReport: "Signaler un problème…",
+  reportTitle: "Signaler un problème",
+  reportWhat: "Que s'est-il passé, et qu'attendiez-vous ?",
+  reportDetails: "Envoyé avec",
+  reportCopy: "Copier",
+  reportCopied: "Copié",
+  reportOnGithub: "Envoyer sur GitHub",
   menuHelpTutorials: "Tutoriels vidéo",
   windowMinimize: "Réduire",
   windowMaximize: "Agrandir",
@@ -1475,6 +1510,9 @@ utiliser une.
   pluginRepository: "Source",
   pluginReload: "Recharger",
   pluginUninstall: "Désinstaller",
+  pluginTurnOn: "Activer",
+  pluginTurnOff: "Désactiver",
+  pluginMoreFor: "Plus pour {name}",
   pluginExport: "Exporter pour publier…",
   pluginExportPrompt:
     "Votre nom d’éditeur : minuscules, chiffres et tirets. Votre nom GitHub convient bien. Il remplace « local » dans l’id de l’extension.",

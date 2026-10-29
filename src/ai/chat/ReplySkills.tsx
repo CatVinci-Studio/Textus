@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { ai } from "../../platform/ipc";
 import { useSettings } from "../../prefs/SettingsContext";
-import { errorText } from "../../utils/error-text";
 import { skillsInReply, type ReplySkill } from "./chat-skill";
 import { ModeChoice } from "./ModeChoice";
+import { explainError } from "../../utils/error-explain";
 
 /**
  * Save this skill, under a reply that wrote one: pick its modes and save it
@@ -45,7 +45,7 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
   const save = () =>
     ai.saveWrittenSkill(skill.text, modes).then(
       () => setState({ kind: "saved" }),
-      (err: unknown) => setState({ kind: "failed", why: errorText(err) }),
+      (err: unknown) => setState({ kind: "failed", why: explainError(err, t) }),
     );
   const label =
     skill.labels[settings.language] ?? skill.labels.en ?? `/${skill.name}`;

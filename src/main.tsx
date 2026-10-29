@@ -18,6 +18,7 @@ import { markEngineQuirks } from "./ui/engine-quirks";
 import { flushWhenHidden } from "./storage/pending-writes";
 import { exposePluginApiForDevelopment } from "./plugin-api";
 import "./mobile/styles/index.css";
+import { watchErrors } from "./app/report/recent-errors";
 
 installPolyfills();
 installDevTauriShim();
@@ -45,6 +46,9 @@ const ChatWindowApp = lazyComponent(
   lazyModule("chat-window", () => import("./ai/chat/window/ChatWindowApp")),
   (m) => m.ChatWindowApp,
 );
+
+// For Help > Report a Problem, from the first moment.
+watchErrors();
 
 // The UI's language loads first, so the first frame is already in it; one
 // that fails to load shows in English.

@@ -7,11 +7,13 @@ import {
   takePendingCaret,
 } from "../editor/modes/mode-switch";
 import type { DocTab } from "../document/doc-tabs";
+import { rememberViewMode } from "../editor/modes/view-mode";
 import { keepReadOnly, tabReadOnly } from "../document/read-only";
 import type { TabState } from "./tabs/useTabState";
 
 /** Switching the active tab between the rich editor, plain source mode and
- *  split view, with the caret carried across each switch; and a tab's
+ *  split view, with the caret carried across each switch (the view switched
+ *  to is the one new documents open in, view-mode.ts); and a tab's
  *  read-only mode. */
 export function useSourceModes(tabState: TabState) {
   const { tabs, activeTabId, liveTabs, updateTab } = tabState;
@@ -30,6 +32,7 @@ export function useSourceModes(tabState: TabState) {
         splitView: false,
         reloadKey: tab.reloadKey + 1,
       });
+      rememberViewMode({ sourceMode: false });
     },
     [updateTab],
   );
@@ -44,11 +47,13 @@ export function useSourceModes(tabState: TabState) {
       // Split view shows Source Mode as off, so turning it on means plain
       // source mode: the preview goes.
       updateTab(activeTabId, { splitView: false });
+      rememberViewMode({ sourceMode: true });
     } else if (tab.sourceMode) {
       leaveSourceMode(tab);
     } else {
       setPendingCaret(captureEditorCaret(tab.content));
       updateTab(activeTabId, { content: tab.content, sourceMode: true });
+      rememberViewMode({ sourceMode: true });
     }
   }, [activeTabId, updateTab, liveTabs, leaveSourceMode]);
 
@@ -61,15 +66,14 @@ export function useSourceModes(tabState: TabState) {
     if (!tab || tab.view) return;
     if (tab.sourceMode && tab.splitView) {
       leaveSourceMode(tab);
-    } else if (tab.sourceMode) {
-      updateTab(activeTabId, { splitView: true });
     } else {
-      setPendingCaret(captureEditorCaret(tab.content));
+      if (!tab.sourceMode) setPendingCaret(captureEditorCaret(tab.content));
       updateTab(activeTabId, {
         content: tab.content,
         sourceMode: true,
         splitView: true,
       });
+      rememberViewMode({ sourceMode: true, splitView: true });
     }
   }, [activeTabId, updateTab, liveTabs, leaveSourceMode]);
 

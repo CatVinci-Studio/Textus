@@ -113,6 +113,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   diagramZoom: "図を拡大",
   codeBlockEditSource: "ソースを編集",
   diagramViewerLabel: "図",
+  pictureZoom: "画像を拡大",
+  pictureViewerLabel: "画像",
   diagramViewerClose: "閉じる",
   diagramViewerHint:
     "スクロールかピンチで拡大縮小 · ドラッグで移動 · ダブルクリックで全体表示",
@@ -375,6 +377,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   aiErrorAuth: `サービスが認証情報を拒否しました。「設定 > ${AI_NAME}」でAPIキーを確認するか、再度サインインしてください。`,
   aiErrorWorkspaceKey:
     "このAnthropicキーはワークスペースに属していません。Anthropic Consoleのワークスペース内でキーを作成して使ってください。",
+  aiErrorBalance: `このサービスの残高または利用枠がなくなりました。プロバイダのサイトでチャージするかプランを確認するか、「設定 > ${AI_NAME}」で別のサービスを選んでください。`,
   aiErrorRateLimit:
     "サービスが混み合っているか、レート制限に達しました。少し待ってから再試行してください。",
   aiErrorServer:
@@ -400,6 +403,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeRefresh: "更新",
   menuOpenFolder: "フォルダーを開く…",
   menuCloseFolder: "フォルダーを閉じる",
+  menuCopyPath: "パスをコピー",
   folderTooBroad:
     "このフォルダーは範囲が広すぎるため（ホームフォルダーやドライブ全体）、開けません。もっと具体的なフォルダーを選んでください。",
   treeSearchPlaceholder: "ファイル名を検索",
@@ -431,6 +435,29 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeTrashConfirm: "「{name}」をゴミ箱に入れますか？ゴミ箱から元に戻せます。",
   treeTrashFolderConfirm:
     "フォルダ「{name}」とその中身をすべてゴミ箱に入れますか？ゴミ箱から元に戻せます。",
+  errorPermission:
+    "Textus にはこのファイルまたはフォルダへのアクセス権がありません。権限を確認するか、別の場所を選んでください。",
+  errorNotFound:
+    "ファイルまたはフォルダが見つかりません。移動、名前の変更、または削除された可能性があります。",
+  errorDiskFull:
+    "ディスクがいっぱいです。空き容量を作ってから、もう一度お試しください。",
+  errorReadOnly: "この場所は読み取り専用です。別のフォルダを選んでください。",
+  errorFileBusy:
+    "別のアプリがこのファイルを使用中です。そちらで閉じてから、もう一度お試しください。",
+  errorTimeout:
+    "時間がかかりすぎました。接続を確認して、もう一度お試しください。",
+  errorNetwork:
+    "接続できませんでした。インターネット接続またはプロキシ設定を確認してください。",
+  errorFileTooBig: "このファイルは大きすぎて Textus で開けません。",
+  errorNotDocument: "Textus はこのファイルを文書として読み込めません。",
+  errorBadName:
+    "この名前は使えません。名前は空にできず、/ や \\ も含められません。",
+  errorMoveIntoItself: "フォルダをそれ自身の中には移動できません。",
+  errorPluginTooBig: "このプラグインは大きすぎてインストールできません。",
+  errorCatalogNewer:
+    "プラグインストアには新しい Textus が必要です。Textus をアップデートしてください。",
+  errorImageTooBig: "画像が空か、25 MB を超えています。",
+  errorNoFolder: "先にフォルダを開いてください。",
   treeNameTaken: "ここにはすでに「{name}」という名前のものがあります。",
   treeActionFailed: "できませんでした: {reason}",
   shortcutSearchFiles: "ファイル名を検索",
@@ -881,6 +908,13 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuHelpMarkdown: "Markdown ガイド",
   menuHelpAgent: "AI 機能ガイド",
   menuHelpCommunity: "コミュニティに参加",
+  menuHelpReport: "問題を報告…",
+  reportTitle: "問題を報告",
+  reportWhat: "何が起きましたか？本来はどうなるはずでしたか？",
+  reportDetails: "一緒に送られる情報",
+  reportCopy: "コピー",
+  reportCopied: "コピーしました",
+  reportOnGithub: "GitHub で送信",
   menuHelpTutorials: "動画チュートリアル",
   windowMinimize: "最小化",
   windowMaximize: "最大化",
@@ -1383,6 +1417,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginRepository: "ソース",
   pluginReload: "再読み込み",
   pluginUninstall: "アンインストール",
+  pluginTurnOn: "オンにする",
+  pluginTurnOff: "オフにする",
+  pluginMoreFor: "{name} のその他の操作",
   pluginExport: "公開用に書き出す…",
   pluginExportPrompt:
     "公開者名を入力してください（小文字・数字・ハイフン）。GitHub のユーザー名がおすすめです。プラグイン ID の「local」がこの名前に置き換わります。",

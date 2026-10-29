@@ -1,5 +1,7 @@
 import { ai, type GeneratedImageData } from "../../platform/ipc";
 import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../types";
+import { explainAiError } from "../error-messages";
+import { currentStrings } from "../../i18n/current";
 
 /** Proposed pictures: kept in the backend's memory until Accept saves them.
  *  Until then the Markdown names each by a placeholder src, and only the
@@ -262,6 +264,12 @@ export function withoutPicture(markdown: string, id: string): string {
 /** Why a picture wasn't made, once its load has said so. */
 export function generatedImageFailure(id: string): string | null {
   return failed.get(id) ?? null;
+}
+
+/** The same, said to the user in their language. */
+export function shownImageFailure(id: string): string | null {
+  const why = failed.get(id);
+  return why ? explainAiError(why, currentStrings()) : null;
 }
 
 /** A picture's shape as CSS aspect-ratio ("16 / 9"), for a frame drawn

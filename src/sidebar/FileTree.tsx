@@ -39,6 +39,7 @@ import {
 import { useRowDrag } from "./useRowDrag";
 import { DirNode } from "./TreeNodes";
 import "./FileTree.css";
+import { copyPathItem } from "../clipboard/copy-path";
 export type { TreeSort } from "./tree-shared";
 
 interface FileTreeProps {
@@ -454,9 +455,9 @@ function useRowMenu(
         },
         { label: t.treeNewFolder, onSelect: () => void create(dir, "folder") },
       );
+      items.push("separator", copyPathItem(t, path));
       if (path !== root)
         items.push(
-          "separator",
           { label: t.treeRenameItem, onSelect: () => void rename(path) },
           {
             label: t.treeTrashItem,

@@ -115,6 +115,8 @@ export default {
   diagramZoom: "Увеличить диаграмму",
   codeBlockEditSource: "Изменить исходный код",
   diagramViewerLabel: "Диаграмма",
+  pictureZoom: "Увеличить изображение",
+  pictureViewerLabel: "Изображение",
   diagramViewerClose: "Закрыть",
   diagramViewerHint:
     "Прокрутка или щипок — масштаб · перетаскивание — сдвиг · двойной щелчок — вписать",
@@ -393,6 +395,7 @@ export default {
   aiErrorAuth: `Сервис отклонил учётные данные. Проверьте API-ключ (или войдите снова) в разделе «Настройки > ${AI_NAME}».`,
   aiErrorWorkspaceKey:
     "Этот ключ Anthropic не привязан к рабочему пространству. Создайте ключ внутри рабочего пространства в Anthropic Console и используйте его.",
+  aiErrorBalance: `Баланс или квота этого сервиса исчерпаны. Пополните счёт или проверьте тариф на сайте провайдера либо выберите другой сервис в разделе «Настройки > ${AI_NAME}».`,
   aiErrorRateLimit:
     "Сервис перегружен или превышен лимит запросов. Подождите немного и повторите попытку.",
   aiErrorServer:
@@ -419,6 +422,7 @@ export default {
   treeRefresh: "Обновить",
   menuOpenFolder: "Открыть папку…",
   menuCloseFolder: "Закрыть папку",
+  menuCopyPath: "Копировать путь",
   folderTooBroad:
     "Эта папка слишком общая, чтобы её открыть (домашняя папка или целый диск). Выберите более конкретную папку.",
   treeSearchPlaceholder: "Поиск по именам файлов",
@@ -450,6 +454,28 @@ export default {
   treeTrashConfirm: "Переместить «{name}» в корзину? Оттуда его можно вернуть.",
   treeTrashFolderConfirm:
     "Переместить папку «{name}» со всем содержимым в корзину? Оттуда её можно вернуть.",
+  errorPermission:
+    "У Textus нет доступа к этому файлу или папке. Проверьте права доступа или выберите другое место.",
+  errorNotFound:
+    "Файла или папки больше нет. Возможно, их переместили, переименовали или удалили.",
+  errorDiskFull: "Диск заполнен. Освободите место и попробуйте снова.",
+  errorReadOnly: "Это место доступно только для чтения. Выберите другую папку.",
+  errorFileBusy:
+    "Этот файл использует другая программа. Закройте его там и попробуйте снова.",
+  errorTimeout:
+    "Слишком долгое ожидание. Проверьте подключение и попробуйте снова.",
+  errorNetwork:
+    "Не удалось подключиться. Проверьте подключение к интернету или настройки прокси.",
+  errorFileTooBig: "Этот файл слишком большой, чтобы открыть его в Textus.",
+  errorNotDocument: "Textus не может прочитать этот файл как документ.",
+  errorBadName:
+    "Такое имя нельзя использовать. Имя не может быть пустым или содержать / или \\.",
+  errorMoveIntoItself: "Папку нельзя переместить внутрь неё самой.",
+  errorPluginTooBig: "Этот плагин слишком большой для установки.",
+  errorCatalogNewer:
+    "Для магазина плагинов нужна более новая версия Textus. Обновите Textus.",
+  errorImageTooBig: "Изображение пустое или больше 25 МБ.",
+  errorNoFolder: "Сначала откройте папку.",
   treeNameTaken: "Здесь уже есть что-то с именем «{name}».",
   treeActionFailed: "Не получилось: {reason}",
   shortcutSearchFiles: "Поиск по именам файлов",
@@ -925,6 +951,13 @@ export default {
   menuHelpMarkdown: "Руководство по Markdown",
   menuHelpAgent: "Руководство по ИИ",
   menuHelpCommunity: "Сообщество",
+  menuHelpReport: "Сообщить о проблеме…",
+  reportTitle: "Сообщить о проблеме",
+  reportWhat: "Что случилось и чего вы ожидали?",
+  reportDetails: "Отправится вместе с этим",
+  reportCopy: "Копировать",
+  reportCopied: "Скопировано",
+  reportOnGithub: "Отправить на GitHub",
   menuHelpTutorials: "Видеоуроки",
   windowMinimize: "Свернуть",
   windowMaximize: "Развернуть",
@@ -1440,6 +1473,9 @@ export default {
   pluginRepository: "Исходный код",
   pluginReload: "Перезагрузить",
   pluginUninstall: "Удалить",
+  pluginTurnOn: "Включить",
+  pluginTurnOff: "Выключить",
+  pluginMoreFor: "Ещё для {name}",
   pluginExport: "Экспортировать для публикации…",
   pluginExportPrompt:
     "Ваше имя как издателя — строчные буквы, цифры и дефисы. Хорошо подойдёт имя на GitHub. Оно заменит «local» в id плагина.",

@@ -66,6 +66,9 @@ export const plugins = {
    *  installed; null when it has none. */
   catalogReadme: (id: string, language: string) =>
     command("plugin_catalog_readme", id, language),
+  /** A catalog plugin's icon as a data: URL, before it is installed; null
+   *  when it has none. */
+  catalogIcon: (id: string) => command("plugin_catalog_icon", id),
   /** Downloads one from the catalog, checks it and installs it. */
   installFromCatalog: (id: string) => command("plugin_install_catalog", id),
   /** The skills the catalog last read lists. */

@@ -1,4 +1,3 @@
-import { errorText } from "../../utils/error-text";
 import { useId, useRef, useState } from "react";
 import { useSettings, THEME_MODES } from "../../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../../theme/builtin-themes";
@@ -17,6 +16,8 @@ import { Select } from "../../ui/Select";
 import { LinkRow, RowHelp, SettingRow } from "./controls";
 import { ThemeGallerySection } from "./theme-gallery";
 import { ExtensionsTabLayout } from "../pages/ExtensionsTabLayout";
+import { currentStrings } from "../../i18n/current";
+import { explainError } from "../../utils/error-explain";
 
 const CUSTOM_CSS_PLACEHOLDER = `#write > p {
   text-indent: 2em;
@@ -120,7 +121,10 @@ ${customCss.trim() ? `\n/* Custom CSS */\n${customCss}\n` : ""}`;
     await fs.writeTextFile(picked, css);
     void exportDoc.revealInDir(picked);
   } catch (err) {
-    await showMessage(`${t.exportFailed} ${errorText(err)}`, { tone: "error" });
+    await showMessage(
+      `${t.exportFailed} ${explainError(err, currentStrings())}`,
+      { tone: "error" },
+    );
   }
 }
 
@@ -138,7 +142,7 @@ function useThemeAction() {
     try {
       await action();
     } catch (err) {
-      setError(errorText(err));
+      setError(explainError(err, currentStrings()));
     } finally {
       working.current = false;
       setBusy(false);

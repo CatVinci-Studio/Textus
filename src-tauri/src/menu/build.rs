@@ -135,6 +135,8 @@ pub(crate) fn build(
         export_menu_builder = export_menu_builder.item(&item);
     }
     let export_menu = export_menu_builder.build()?;
+    let copy_path_item =
+        MenuItemBuilder::with_id(COPY_PATH_ID, l(COPY_PATH_ID, "Copy Path")).build(app)?;
 
     // Cmd+W closes the current tab; Close Window owns Cmd+Shift+W.
     let close_tab_item = MenuItemBuilder::with_id(CLOSE_TAB_ID, l(CLOSE_TAB_ID, "Close Tab"))
@@ -158,6 +160,7 @@ pub(crate) fn build(
         .item(&save_file_as_item)
         .separator()
         .item(&export_menu)
+        .item(&copy_path_item)
         .separator()
         .item(&close_tab_item)
         .item(&reopen_closed_tab_item)
@@ -348,6 +351,7 @@ pub(crate) fn build(
         .text(TUTORIALS_ID, l(TUTORIALS_ID, "Video Tutorials"))
         .separator()
         .text(COMMUNITY_ID, l(COMMUNITY_ID, "Join the Community"))
+        .text(REPORT_ID, l(REPORT_ID, "Report a Problem…"))
         .build()?;
 
     // Filled by rebuild_plugin_menu from the enabled plugins; none where plugins

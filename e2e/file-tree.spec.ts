@@ -367,3 +367,39 @@ test("a file dragged onto the lower half of the document opens below it", async 
   // The file stays where it was.
   expect(await files(page)).toContain("/work/notes/b.md");
 });
+
+test("Copy Path in the tree's and a tab's right-click menus and in File copies the full path", async ({
+  page,
+}) => {
+  // What is written, read back the same in WebKit, which has no clipboard
+  // permissions to grant.
+  await page.addInitScript(() => {
+    const w = window as unknown as { __copied: string };
+    w.__copied = "";
+    navigator.clipboard.writeText = async (text: string) => {
+      w.__copied = text;
+    };
+  });
+  await open(page);
+  const clipboard = () =>
+    page.evaluate(() => (window as unknown as { __copied: string }).__copied);
+
+  await row(page, "b.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Copy Path" }).click();
+  await expect.poll(clipboard).toBe("/work/notes/b.md");
+
+  // A second tab, so the tab bar shows.
+  await row(page, "b.md").click();
+  await page
+    .locator(".tab-pill", { hasText: "a.md" })
+    .click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Copy Path" }).click();
+  await expect.poll(clipboard).toBe("/work/notes/a.md");
+
+  // File > Copy Path: the document in front, b.md.
+  await page.evaluate(() => Object.assign(window, { __copied: "" }));
+  await expect(page.locator(".window-bar-title-text")).toHaveText("b.md");
+  // As the native menu sends it (Rust's menu.rs does for the drawn one).
+  await emit(page, "menu-copy-path");
+  await expect.poll(clipboard).toBe("/work/notes/b.md");
+});

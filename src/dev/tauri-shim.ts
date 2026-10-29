@@ -546,6 +546,11 @@ export function installDevTauriShim(): void {
       case "add_recent_folder":
         pushRecent(recents.folders, String(args.path));
         return Promise.resolve(null);
+      // `window.__devSystem` stands in for the system a report names.
+      case "system_info":
+        return Promise.resolve(
+          w.__devSystem ?? { os: "Linux", arch: "x86_64", webview: "dev" },
+        );
       case "list_recent_files":
         return Promise.resolve([...recents.files]);
       case "list_recent_folders":
@@ -709,6 +714,7 @@ export function installDevTauriShim(): void {
     official: boolean;
     manifest: unknown;
     readme?: Record<string, string>;
+    icon?: string;
   };
   let catalogEntries: Promise<CatalogEntry[]> | null = null;
   const devCatalog = () =>
@@ -798,7 +804,9 @@ export function installDevTauriShim(): void {
         pluginState.allOn = !!args.on;
         return Promise.resolve(null);
       case "plugin_set":
+        // As Rust does: the rest of its entry (official) stays.
         pluginState.plugins[id] = {
+          ...pluginState.plugins[id],
           enabled: !!args.enabled,
           granted: [...((args.granted as string[]) ?? [])],
         };
@@ -825,6 +833,17 @@ export function installDevTauriShim(): void {
         );
       case "plugin_install_catalog":
         return installFromDevCatalog(id);
+      case "plugin_catalog_icon":
+        return devCatalog().then(async (entries) => {
+          const url = entries.find((e) => e.id === id)?.icon;
+          if (!url) return null;
+          const blob = await (await fetch(url)).blob();
+          return new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+        });
       // As Rust picks it: the language, its base, then English.
       case "plugin_catalog_readme":
         return devCatalog().then((entries) => {
@@ -1082,7 +1101,10 @@ export function installDevTauriShim(): void {
       protocol === "textus-plugin"
         ? ""
         : `http://${protocol}.localhost/${encodeURIComponent(path)}`,
-    invoke: (cmd: string, args?: { event?: string; handler?: number }) => {
+    invoke: (
+      cmd: string,
+      args?: { event?: string; handler?: number; target?: { kind?: string } },
+    ) => {
       log(cmd);
       // Pages and links opened in the browser: `window.__devLinks`.
       if (cmd.startsWith("open_") && /_(page|link)$/.test(cmd))
@@ -1163,10 +1185,16 @@ export function installDevTauriShim(): void {
         args?.event &&
         typeof args.handler === "number"
       ) {
-        listeners.set(args.event, [
-          ...(listeners.get(args.event) ?? []),
-          args.handler,
-        ]);
+        // Tauri's own drag events go to the webview, which a label alone
+        // (AnyLabel) doesn't hear in the app either.
+        if (!(
+          args.event.startsWith("tauri://drag") &&
+          args.target?.kind === "AnyLabel"
+        ))
+          listeners.set(args.event, [
+            ...(listeners.get(args.event) ?? []),
+            args.handler,
+          ]);
         // Without a real id every unlisten is a no-op and stale StrictMode handlers
         // double-fire.
         return Promise.resolve(args.handler);

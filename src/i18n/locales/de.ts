@@ -116,6 +116,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   diagramZoom: "Diagramm vergrößern",
   codeBlockEditSource: "Quelltext bearbeiten",
   diagramViewerLabel: "Diagramm",
+  pictureZoom: "Bild vergrößern",
+  pictureViewerLabel: "Bild",
   diagramViewerClose: "Schließen",
   diagramViewerHint:
     "Scrollen oder Zwei-Finger-Zoom · ziehen zum Verschieben · Doppelklick zum Einpassen",
@@ -394,6 +396,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   aiErrorAuth: `Der Dienst hat die Zugangsdaten abgelehnt. Prüfe den API-Schlüssel (oder melde dich erneut an) unter Einstellungen > ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "Dieser Anthropic-Schlüssel gehört zu keinem Workspace. Erstelle in der Anthropic Console einen Schlüssel innerhalb eines Workspaces und verwende diesen.",
+  aiErrorBalance: `Guthaben oder Kontingent bei diesem Dienst sind aufgebraucht. Lade beim Anbieter auf oder prüfe deinen Tarif, oder wähle unter Einstellungen > ${AI_NAME} einen anderen Dienst.`,
   aiErrorRateLimit:
     "Der Dienst ist ausgelastet oder du hast ein Anfragelimit erreicht. Warte kurz und versuch es dann noch einmal.",
   aiErrorServer:
@@ -420,6 +423,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeRefresh: "Aktualisieren",
   menuOpenFolder: "Ordner öffnen…",
   menuCloseFolder: "Ordner schließen",
+  menuCopyPath: "Pfad kopieren",
   folderTooBroad:
     "Dieser Ordner ist zu weit gefasst, um ihn zu öffnen (dein Benutzerordner oder ein ganzes Laufwerk). Wähle einen spezifischeren Ordner.",
   treeSearchPlaceholder: "Dateinamen suchen",
@@ -452,6 +456,30 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "„{name}“ in den Papierkorb legen? Von dort lässt es sich zurücklegen.",
   treeTrashFolderConfirm:
     "Den Ordner „{name}“ mit allem darin in den Papierkorb legen? Von dort lässt er sich zurücklegen.",
+  errorPermission:
+    "Textus darf diese Datei oder diesen Ordner nicht öffnen. Prüfe die Zugriffsrechte oder wähle einen anderen Ort.",
+  errorNotFound:
+    "Die Datei oder der Ordner ist nicht mehr da. Vielleicht wurde sie verschoben, umbenannt oder gelöscht.",
+  errorDiskFull:
+    "Der Datenträger ist voll. Schaffe etwas Platz und versuche es erneut.",
+  errorReadOnly: "Dieser Ort ist schreibgeschützt. Wähle einen anderen Ordner.",
+  errorFileBusy:
+    "Ein anderes Programm verwendet diese Datei. Schließe sie dort und versuche es erneut.",
+  errorTimeout:
+    "Das hat zu lange gedauert. Prüfe deine Verbindung und versuche es erneut.",
+  errorNetwork:
+    "Keine Verbindung möglich. Prüfe deine Internetverbindung oder Proxy-Einstellungen.",
+  errorFileTooBig: "Diese Datei ist zu groß, um sie in Textus zu öffnen.",
+  errorNotDocument: "Textus kann diese Datei nicht als Dokument lesen.",
+  errorBadName:
+    "Dieser Name geht nicht. Ein Name darf nicht leer sein und kein / oder \\ enthalten.",
+  errorMoveIntoItself:
+    "Ein Ordner kann nicht in sich selbst verschoben werden.",
+  errorPluginTooBig: "Dieses Plugin ist zu groß für die Installation.",
+  errorCatalogNewer:
+    "Der Plugin-Store braucht eine neuere Textus-Version. Aktualisiere Textus, um ihn zu sehen.",
+  errorImageTooBig: "Das Bild ist leer oder größer als 25 MB.",
+  errorNoFolder: "Öffne zuerst einen Ordner.",
   treeNameTaken: "Hier gibt es schon etwas namens „{name}“.",
   treeActionFailed: "Das hat nicht geklappt: {reason}",
   shortcutSearchFiles: "Dateinamen suchen",
@@ -916,6 +944,13 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuHelpMarkdown: "Markdown-Anleitung",
   menuHelpAgent: "Anleitung zu KI-Funktionen",
   menuHelpCommunity: "Zur Community",
+  menuHelpReport: "Problem melden…",
+  reportTitle: "Problem melden",
+  reportWhat: "Was ist passiert, und was hast du erwartet?",
+  reportDetails: "Wird mitgeschickt",
+  reportCopy: "Kopieren",
+  reportCopied: "Kopiert",
+  reportOnGithub: "Auf GitHub senden",
   menuHelpTutorials: "Video-Tutorials",
   windowMinimize: "Minimieren",
   windowMaximize: "Maximieren",
@@ -1440,6 +1475,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginRepository: "Quellcode",
   pluginReload: "Neu laden",
   pluginUninstall: "Deinstallieren",
+  pluginTurnOn: "Einschalten",
+  pluginTurnOff: "Ausschalten",
+  pluginMoreFor: "Mehr zu {name}",
   pluginExport: "Zum Veröffentlichen exportieren…",
   pluginExportPrompt:
     "Ihr Name als Herausgeber – Kleinbuchstaben, Ziffern und Bindestriche. Ihr GitHub-Name passt gut. Er ersetzt „local“ in der Plugin-ID.",

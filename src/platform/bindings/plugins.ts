@@ -65,6 +65,12 @@ export const commands = {
 	 *  has none.
 	 */
 	plugin_catalog_readme: (id: string, language: string) => __TAURI_INVOKE<string | null>("plugin_catalog_readme", { id, language }),
+	/**
+	 *  Plugin `id`'s icon in the catalog last fetched, as a data: URL; None when
+	 *  it has none. Fetched here: GitHub serves release files as
+	 *  application/octet-stream, which an <img> won't draw as an SVG.
+	 */
+	plugin_catalog_icon: (id: string) => __TAURI_INVOKE<string | null>("plugin_catalog_icon", { id }),
 	/**  The skills the catalog last fetched (or kept) lists. */
 	skill_catalog: () => __TAURI_INVOKE<SkillEntry_Serialize[]>("skill_catalog"),
 	/**

@@ -1,6 +1,7 @@
 import { Byline } from "./PluginPage";
 import { PluginIcon, PluginReadme } from "./PluginArt";
-import { InstallButton, installsText } from "./MarketPlugins";
+import type { ReactNode } from "react";
+import { installsText } from "./MarketPlugins";
 import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow } from "../sections/controls";
 import type { Strings } from "../../i18n/strings";
@@ -14,15 +15,14 @@ export function MarketPluginPage({
   item,
   t,
   installed,
-  installing,
-  onInstall,
+  action,
   onBack,
 }: {
   item: CatalogItem;
   t: Strings;
   installed: boolean;
-  installing: boolean;
-  onInstall: () => void;
+  /** Its button (PluginAction). */
+  action: ReactNode;
   onBack: () => void;
 }) {
   const record = { id: item.id, manifest: item.manifest };
@@ -52,12 +52,7 @@ export function MarketPluginPage({
             )}
           </Byline>
         </div>
-        <InstallButton
-          t={t}
-          installed={installed}
-          installing={installing}
-          onInstall={onInstall}
-        />
+        {action}
       </div>
       {item.screenshots.length > 0 && (
         <div className="market-plugin-shots">

@@ -23,6 +23,8 @@ import type { Strings } from "../../i18n/strings";
 import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
 import { closeSplit, splitEditor } from "../split/split-layout";
 import { openCommandPalette } from "../command-palette";
+import { copyPath } from "../../clipboard/copy-path";
+import { openReportProblem } from "../report/ReportProblem";
 
 export interface MenuBridgeHandlers {
   activeTabId: string;
@@ -101,6 +103,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         h().openFolder(event.payload),
       ),
       listenToThisWindow("menu-close-folder", () => h().closeFolder()),
+      listenToThisWindow("menu-help-report", openReportProblem),
       listenToThisWindow("menu-documents", () => h().onOpenDocuments()),
       listenToThisWindow("menu-share", () => void h().shareActiveTab()),
       listenToThisWindow(
@@ -111,6 +114,10 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         "menu-save-file-as",
         () => void h().saveTabAs(h().activeTabId),
       ),
+      listenToThisWindow("menu-copy-path", () => {
+        const path = activeTabNow()?.path;
+        if (path) copyPath(path);
+      }),
       listenToThisWindow("menu-export-pdf", () => {
         const tab = activeTabNow();
         if (tab)

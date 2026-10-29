@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { errorText } from "../../utils/error-text";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings, TextKey } from "../../i18n/strings";
 import { skillText } from "../../ai/skills/texts";
@@ -19,6 +18,8 @@ import {
   conventionsProfileName,
   isConventionsValue,
 } from "../writing-conventions";
+import { errorText } from "../../utils/error-text";
+import { explainError } from "../../utils/error-explain";
 
 // Settings > Textus AI: skills and the Writing conventions row. Skills are
 // files, so these rows mirror and open them rather than embedding an editor.
@@ -74,7 +75,7 @@ export function AgentSkillsSection({ t }: { t: Strings }) {
           onClick={() =>
             importSkill().then(
               () => setError(null),
-              (err: unknown) => setError(errorText(err)),
+              (err: unknown) => setError(explainError(err, t)),
             )
           }
         >
@@ -111,7 +112,7 @@ export function OwnSkillsList({ t }: { t: Strings }) {
       announceChange();
     } catch (err) {
       setList(before);
-      setError(errorText(err));
+      setError(explainError(err, t));
     }
   }
 
@@ -199,7 +200,7 @@ export function BuiltinSkillsSection({
         ? t.agentSkillsNotACopy
         : text === "UNKNOWN_BUILTIN"
           ? t.agentSkillsUnknownBuiltin
-          : text,
+          : explainError(err, t),
     );
   };
 

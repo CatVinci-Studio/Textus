@@ -1,5 +1,5 @@
 import {
-  generatedImageFailure,
+  shownImageFailure,
   generatedImageId,
   generatedImageSize,
   generatedImageUrl,
@@ -68,7 +68,7 @@ function settle(el: HTMLElement, id: string, alt: string, made: boolean) {
   el.replaceChildren();
   const why = document.createElement("span");
   why.className = "pending-picture-why";
-  why.textContent = generatedImageFailure(id) ?? "";
+  why.textContent = shownImageFailure(id) ?? "";
   // This picture alone is asked for again; the frame paints meanwhile.
   const retry = button(
     "pending-picture-retry",

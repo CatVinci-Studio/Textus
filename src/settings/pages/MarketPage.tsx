@@ -11,7 +11,7 @@ import { pluginsSnapshot, subscribePlugins } from "../../plugins/manager";
 import { ThemeGallerySection } from "../sections/theme-gallery";
 import { MarketSkills } from "../sections/market-skills";
 import { links } from "../../platform/ipc";
-import { usePluginInstall } from "./usePluginInstall";
+import { usePluginActions } from "./PluginAction";
 
 export type MarketKind = "themes" | "plugins" | "skills";
 
@@ -31,7 +31,7 @@ export function MarketPage({
 }) {
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
   const plugins = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
-  const { installing, install } = usePluginInstall(t);
+  const { actionFor } = usePluginActions(t);
   const [kind, setKind] = useState<MarketKind>(initialKind);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<string | null>(null);
@@ -54,8 +54,7 @@ export function MarketPage({
         item={item}
         t={t}
         installed={installed.has(item.id)}
-        installing={installing === item.id}
-        onInstall={() => void install(item)}
+        action={actionFor(item.id)}
         onBack={() => setOpen(null)}
       />
     );
@@ -103,9 +102,7 @@ export function MarketPage({
             t={t}
             catalog={catalog}
             query={query}
-            installed={installed}
-            installing={installing}
-            onInstall={(i) => void install(i)}
+            actionFor={actionFor}
             onOpen={(i) => setOpen(i.id)}
           />
         </section>

@@ -9,8 +9,9 @@ import {
 import { localize, type Permission } from "../../plugins/store/manifest";
 import { openReadme } from "../../plugins/store/readme";
 import { showMessage } from "../../ui/app-dialog";
-import { errorText } from "../../utils/error-text";
 import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
+import { currentStrings } from "../../i18n/current";
+import { explainError } from "../../utils/error-explain";
 
 export interface ReplyPluginLabels {
   installPlugin: string;
@@ -78,7 +79,7 @@ function ReplyPluginChip({
       const id = await installPlugin(plugin.files);
       await setPluginEnabled(id, true);
     } catch (err) {
-      await showMessage(errorText(err), { tone: "error" });
+      await showMessage(explainError(err, currentStrings()), { tone: "error" });
     } finally {
       working.current = false;
       setBusy(false);

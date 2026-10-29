@@ -112,6 +112,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   diagramZoom: "다이어그램 크게 보기",
   codeBlockEditSource: "소스 편집",
   diagramViewerLabel: "다이어그램",
+  pictureZoom: "이미지 확대",
+  pictureViewerLabel: "이미지",
   diagramViewerClose: "닫기",
   diagramViewerHint:
     "스크롤하거나 손가락을 오므려 확대·축소 · 끌어서 이동 · 두 번 클릭하면 맞춤",
@@ -368,6 +370,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   aiErrorAuth: `서비스가 인증 정보를 거부했습니다. 설정 > ${AI_NAME}에서 API 키를 확인하거나 다시 로그인하세요.`,
   aiErrorWorkspaceKey:
     "이 Anthropic 키는 워크스페이스에 속해 있지 않습니다. Anthropic Console의 워크스페이스 안에서 키를 만들어 사용하세요.",
+  aiErrorBalance: `이 서비스의 잔액 또는 사용 한도가 소진되었습니다. 제공업체 사이트에서 충전하거나 요금제를 확인하거나, 설정 > ${AI_NAME}에서 다른 서비스를 선택하세요.`,
   aiErrorRateLimit:
     "서비스가 혼잡하거나 요청 한도에 도달했습니다. 잠시 기다린 다음 다시 시도하세요.",
   aiErrorServer: "서비스 측에 문제가 생겼습니다. 잠시 후 다시 시도하세요.",
@@ -393,6 +396,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeRefresh: "새로 고침",
   menuOpenFolder: "폴더 열기…",
   menuCloseFolder: "폴더 닫기",
+  menuCopyPath: "경로 복사",
   folderTooBroad:
     "이 폴더는 범위가 너무 넓어(홈 폴더 또는 드라이브 전체) 열 수 없습니다. 더 구체적인 폴더를 선택하세요.",
   treeSearchPlaceholder: "파일 이름 검색",
@@ -425,6 +429,27 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "“{name}”을(를) 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
   treeTrashFolderConfirm:
     "폴더 “{name}”와(과) 그 안의 모든 항목을 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
+  errorPermission:
+    "Textus에 이 파일 또는 폴더에 접근할 권한이 없습니다. 권한을 확인하거나 다른 위치를 선택하세요.",
+  errorNotFound:
+    "파일 또는 폴더가 더 이상 없습니다. 이동되었거나 이름이 바뀌었거나 삭제되었을 수 있습니다.",
+  errorDiskFull: "디스크가 가득 찼습니다. 공간을 확보한 뒤 다시 시도하세요.",
+  errorReadOnly: "이 위치는 읽기 전용입니다. 다른 폴더를 선택하세요.",
+  errorFileBusy:
+    "다른 프로그램이 이 파일을 사용 중입니다. 그 프로그램에서 닫은 뒤 다시 시도하세요.",
+  errorTimeout:
+    "시간이 너무 오래 걸렸습니다. 연결을 확인한 뒤 다시 시도하세요.",
+  errorNetwork: "연결할 수 없습니다. 인터넷 연결이나 프록시 설정을 확인하세요.",
+  errorFileTooBig: "이 파일은 너무 커서 Textus에서 열 수 없습니다.",
+  errorNotDocument: "Textus가 이 파일을 문서로 읽을 수 없습니다.",
+  errorBadName:
+    "이 이름은 사용할 수 없습니다. 이름은 비워 둘 수 없고 / 또는 \\를 포함할 수 없습니다.",
+  errorMoveIntoItself: "폴더를 자기 자신 안으로 옮길 수 없습니다.",
+  errorPluginTooBig: "이 플러그인은 너무 커서 설치할 수 없습니다.",
+  errorCatalogNewer:
+    "플러그인 스토어를 보려면 최신 Textus가 필요합니다. Textus를 업데이트하세요.",
+  errorImageTooBig: "그림이 비어 있거나 25MB보다 큽니다.",
+  errorNoFolder: "먼저 폴더를 여세요.",
   treeNameTaken: "여기에 이미 “{name}”(이)라는 항목이 있습니다.",
   treeActionFailed: "할 수 없습니다: {reason}",
   shortcutSearchFiles: "파일 이름 검색",
@@ -873,6 +898,13 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuHelpMarkdown: "Markdown 가이드",
   menuHelpAgent: "AI 기능 가이드",
   menuHelpCommunity: "커뮤니티 참여",
+  menuHelpReport: "문제 신고…",
+  reportTitle: "문제 신고",
+  reportWhat: "무슨 일이 있었나요? 원래 어떻게 되어야 했나요?",
+  reportDetails: "함께 보내는 정보",
+  reportCopy: "복사",
+  reportCopied: "복사됨",
+  reportOnGithub: "GitHub에 제출",
   menuHelpTutorials: "동영상 튜토리얼",
   windowMinimize: "최소화",
   windowMaximize: "최대화",
@@ -1371,6 +1403,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginRepository: "소스",
   pluginReload: "다시 불러오기",
   pluginUninstall: "제거",
+  pluginTurnOn: "켜기",
+  pluginTurnOff: "끄기",
+  pluginMoreFor: "{name} 더 보기",
   pluginExport: "게시용으로 내보내기…",
   pluginExportPrompt:
     "게시자 이름을 입력하세요(소문자, 숫자, 하이픈). GitHub 사용자 이름을 쓰면 좋습니다. 플러그인 ID의 “local”을 이 이름으로 바꿉니다.",

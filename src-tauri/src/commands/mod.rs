@@ -29,6 +29,7 @@ pub mod prefs;
 pub mod recents;
 #[cfg(desktop)]
 pub mod session;
+pub mod system_info;
 pub mod theme_gallery;
 pub mod themes;
 #[cfg(desktop)]

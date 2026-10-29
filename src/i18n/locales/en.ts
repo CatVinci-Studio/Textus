@@ -114,6 +114,8 @@ type /name in a conversation to use one.
   diagramZoom: "Enlarge diagram",
   codeBlockEditSource: "Edit Source",
   diagramViewerLabel: "Diagram",
+  pictureZoom: "Enlarge picture",
+  pictureViewerLabel: "Picture",
   diagramViewerClose: "Close",
   diagramViewerHint:
     "Scroll or pinch to zoom · drag to move · double-click to fit",
@@ -390,6 +392,7 @@ type /name in a conversation to use one.
   aiErrorAuth: `The service rejected the credentials. Check the API key (or sign in again) in Settings > ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "This Anthropic key isn't tied to a workspace. Create a key inside a workspace in the Anthropic Console and use that one.",
+  aiErrorBalance: `Your balance or quota with this service has run out. Top up or check your plan on the provider's site, or pick another service in Settings > ${AI_NAME}.`,
   aiErrorRateLimit:
     "The service is busy or you've hit a rate limit. Wait a moment and retry.",
   aiErrorServer:
@@ -415,6 +418,7 @@ type /name in a conversation to use one.
   treeRefresh: "Refresh",
   menuOpenFolder: "Open Folder…",
   menuCloseFolder: "Close Folder",
+  menuCopyPath: "Copy Path",
   folderTooBroad:
     "This folder is too broad to open (your home folder or a whole drive). Choose a more specific folder.",
   treeSearchPlaceholder: "Search file names",
@@ -447,6 +451,27 @@ type /name in a conversation to use one.
     "Move “{name}” to the Trash? You can put it back from there.",
   treeTrashFolderConfirm:
     "Move the folder “{name}” and everything in it to the Trash? You can put it back from there.",
+  errorPermission:
+    "Textus isn't allowed to open this file or folder. Check its permissions, or choose another location.",
+  errorNotFound:
+    "The file or folder isn't there any more. It may have been moved, renamed or deleted.",
+  errorDiskFull: "The disk is full. Free up some space, then try again.",
+  errorReadOnly: "This location is read-only. Choose another folder.",
+  errorFileBusy:
+    "Another program is using this file. Close it there, then try again.",
+  errorTimeout: "It took too long. Check your connection, then try again.",
+  errorNetwork:
+    "Couldn't connect. Check your internet connection or proxy settings.",
+  errorFileTooBig: "This file is too large to open in Textus.",
+  errorNotDocument: "Textus can't read this file as a document.",
+  errorBadName:
+    "That name can't be used. A name can't be empty or contain / or \\.",
+  errorMoveIntoItself: "A folder can't be moved into itself.",
+  errorPluginTooBig: "This plugin is too large to install.",
+  errorCatalogNewer:
+    "The plugin store needs a newer Textus. Update Textus to see it.",
+  errorImageTooBig: "The picture is empty or larger than 25 MB.",
+  errorNoFolder: "Open a folder first.",
   treeNameTaken: "There is already something named “{name}” here.",
   treeActionFailed: "That didn’t work: {reason}",
   shortcutSearchFiles: "Search file names",
@@ -902,6 +927,13 @@ type /name in a conversation to use one.
   menuHelpMarkdown: "Markdown Guide",
   menuHelpAgent: "AI Features Guide",
   menuHelpCommunity: "Join the Community",
+  menuHelpReport: "Report a Problem…",
+  reportTitle: "Report a Problem",
+  reportWhat: "What happened, and what did you expect?",
+  reportDetails: "Sent with it",
+  reportCopy: "Copy",
+  reportCopied: "Copied",
+  reportOnGithub: "Submit on GitHub",
   menuHelpTutorials: "Video Tutorials",
   windowMinimize: "Minimize",
   windowMaximize: "Maximize",
@@ -1414,6 +1446,9 @@ type /name in a conversation to use one.
   pluginRepository: "Source",
   pluginReload: "Reload",
   pluginUninstall: "Uninstall",
+  pluginTurnOn: "Turn On",
+  pluginTurnOff: "Turn Off",
+  pluginMoreFor: "More for {name}",
   pluginExport: "Export for Publishing…",
   pluginExportPrompt:
     "Your name as its publisher - lowercase letters, digits and dashes. Your GitHub name works well. It replaces “local” in the plugin's id.",

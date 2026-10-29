@@ -127,3 +127,20 @@ test("a dropped image lands where it was dropped, not at the caret", async ({
     source.indexOf("Second"),
   );
 });
+
+test("a dropped folder opens in the sidebar, as Open Folder does", async ({
+  page,
+}) => {
+  await page.evaluate(() =>
+    Object.assign(window, {
+      __devFs: {
+        "/notes/trip/day1.md": "# Day one",
+        "/notes/trip/day2.md": "# Day two",
+      },
+    }),
+  );
+  await drop(page, ["/notes/trip"]);
+  const tree = page.locator(".sidebar .tree-main .tree-row");
+  await expect(tree.filter({ hasText: "day1.md" })).toBeVisible();
+  await expect(tree.filter({ hasText: "day2.md" })).toBeVisible();
+});
