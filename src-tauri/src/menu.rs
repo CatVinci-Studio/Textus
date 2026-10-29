@@ -85,6 +85,8 @@ const NEW_WINDOW_ID: &str = "new-window";
 const HELP_DOC_PREFIX: &str = "help-doc:";
 /// Help > Join the Community, in the UI's language (the focused window knows it).
 const COMMUNITY_ID: &str = "help-community";
+/// Help > Report a Problem, the window's own dialog.
+const REPORT_ID: &str = "help-report";
 /// Help > Video Tutorials, opened the same way as Join the Community.
 const TUTORIALS_ID: &str = "help-tutorials";
 /// Format menu ids carry the block kind to insert: "insert-block:<kind>".
@@ -412,6 +414,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         } else {
             let _ = commands::links::open_community(app_handle, None);
         }
+    } else if id == REPORT_ID {
+        emit_to_focused(app_handle, "menu-help-report");
     } else if id == TUTORIALS_ID {
         if let Some(label) = focused_editor_window(app_handle) {
             let _ = app_handle.emit_to(

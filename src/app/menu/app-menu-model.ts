@@ -50,6 +50,7 @@ export type NativeMenuId =
   | `insert-block:${string}`
   | `help-doc:${string}`
   | "help-community"
+  | "help-report"
   | "help-tutorials"
   | "manage-plugins"
   | "command-palette"
@@ -436,6 +437,7 @@ export function buildAppMenu(
           label: t.menuHelpCommunity,
           action: { native: "help-community" },
         },
+        { label: t.menuHelpReport, action: { native: "help-report" } },
       ],
     },
     "separator",

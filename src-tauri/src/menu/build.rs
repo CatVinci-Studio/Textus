@@ -351,6 +351,7 @@ pub(crate) fn build(
         .text(TUTORIALS_ID, l(TUTORIALS_ID, "Video Tutorials"))
         .separator()
         .text(COMMUNITY_ID, l(COMMUNITY_ID, "Join the Community"))
+        .text(REPORT_ID, l(REPORT_ID, "Report a Problem…"))
         .build()?;
 
     // Filled by rebuild_plugin_menu from the enabled plugins; none where plugins

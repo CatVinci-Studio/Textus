@@ -1,0 +1,32 @@
+/* Help > Report a Problem: the user's words, then what goes with them. */
+.report-problem {
+  width: min(520px, calc(100vw - 32px));
+}
+.report-problem-text {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  font: inherit;
+}
+.report-problem-label {
+  margin: var(--space-3) 0 var(--space-1);
+  color: var(--editor-muted);
+  font-size: var(--text-sm);
+}
+.report-problem-details {
+  max-height: 140px;
+  margin: 0;
+  padding: var(--space-2);
+  overflow: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  color: var(--editor-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  white-space: pre-wrap;
+  user-select: text;
+}
+.report-problem .close-prompt-buttons {
+  margin-top: var(--space-4);
+}

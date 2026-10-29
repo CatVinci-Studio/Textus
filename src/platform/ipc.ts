@@ -54,6 +54,7 @@ export {
   windowIpc,
   menuIpc,
   clipboardIpc,
+  systemIpc,
   links,
   webPages,
   exportDoc,
