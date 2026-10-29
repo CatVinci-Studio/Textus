@@ -69,8 +69,12 @@ export function splitBefore(el: Element, node: Node, offset?: number): Element {
     const columns = el.querySelector(":scope > colgroup");
     if (columns) rest.prepend(columns.cloneNode(true));
   } else if (el.tagName === "OL") {
-    const before = el.querySelectorAll(":scope > li").length;
-    rest.setAttribute("start", String((el as HTMLOListElement).start + before));
+    const start =
+      (el as HTMLOListElement).start +
+      el.querySelectorAll(":scope > li").length;
+    rest.setAttribute("start", String(start));
+    // The editor's list counter, which the numbers are drawn from.
+    rest.style.setProperty("--textus-ol-start", String(start - 1));
   } else if (el.tagName === "P") {
     // The rest of a paragraph, not a new one.
     rest.style.textIndent = "0";
