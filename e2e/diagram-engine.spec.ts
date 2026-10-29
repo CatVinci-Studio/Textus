@@ -40,6 +40,10 @@ async function chooseEngine(page: Page, name: string) {
   await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.getByRole("button", { name: "Editor & Appearance" }).click();
+  // Under Advanced, folded until opened.
+  const advanced = panel.locator(".settings-advanced");
+  if ((await advanced.getAttribute("open")) === null)
+    await advanced.locator("summary").click();
   await panel.getByRole("combobox", { name: "Diagram engine" }).click();
   await page.getByRole("option", { name }).click();
   await page.keyboard.press("Escape");

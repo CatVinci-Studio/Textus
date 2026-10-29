@@ -295,6 +295,10 @@ test.describe("Settings › Extensions › Skills", () => {
     await openApp(page, { settings: { language: "zh" } });
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: AI_NAME, exact: true }).click();
+    // Under Advanced, folded until opened.
+    const advanced = panel.locator(".settings-advanced > summary").last();
+    await advanced.scrollIntoViewIfNeeded();
+    await advanced.click();
     const select = panel.getByRole("combobox", { name: "写作规范" });
     await expect(select).toHaveText("自动");
     // Scrolled to first: the list closes when the page scrolls under it.
