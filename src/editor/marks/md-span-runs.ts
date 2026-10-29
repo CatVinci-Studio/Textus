@@ -1,7 +1,12 @@
 import type { Node as ProseNode, Schema } from "@milkdown/kit/prose/model";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { caretAt, findRunClose, findRunOpen, literalTextAfter } from "./enclosure";
+import {
+  caretAt,
+  findRunClose,
+  findRunOpen,
+  literalTextAfter,
+} from "./enclosure";
 
 /**
  * The spans a typed delimiter pairs - `**`, `*`, `_`, `~~`, `==`, `` ` ``,
