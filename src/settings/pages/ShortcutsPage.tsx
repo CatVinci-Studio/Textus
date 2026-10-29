@@ -9,6 +9,7 @@ import {
   ShortcutRow,
   FixedShortcutList,
   headingLabels,
+  plain,
 } from "../sections/shortcut-rows";
 
 /** Shortcuts: the ones that can be changed, by group - the plugins'
@@ -32,7 +33,7 @@ export function ShortcutsPage({
             t.shortcutEditorGroupLabel,
             [
               ["commandPalette", t.shortcutCommandPalette],
-              ["findReplace", t.shortcutFindReplace],
+              ["findReplace", plain(t.menuFindReplace)],
               ["searchFiles", t.shortcutSearchFiles],
               ["nextTab", t.shortcutNextTab],
               ["previousTab", t.shortcutPreviousTab],
@@ -41,12 +42,12 @@ export function ShortcutsPage({
           [
             t.settingsViewGroup,
             [
-              ["toggleSidebar", t.shortcutToggleSidebar],
-              ["toggleAgentPanel", t.shortcutToggleAgentPanel],
-              ["toggleSplitView", t.shortcutToggleSplitView],
-              ["toggleSourceMode", t.shortcutToggleSourceMode],
-              ["toggleTypewriterMode", t.shortcutToggleTypewriterMode],
-              ["toggleZenMode", t.shortcutToggleZenMode],
+              ["toggleSidebar", t.menuToggleSidebar],
+              ["toggleAgentPanel", t.menuToggleAgentPanel],
+              ["toggleSplitView", t.menuToggleSplitView],
+              ["toggleSourceMode", t.menuViewSource],
+              ["toggleTypewriterMode", t.menuViewTypewriter],
+              ["toggleZenMode", t.menuToggleZenMode],
               ["splitEditor", t.shortcutSplitEditor],
             ],
           ],

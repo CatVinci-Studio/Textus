@@ -28,7 +28,6 @@ export default {
   agentPanelSheet: "Agrandir ou réduire le panneau IA",
   agentExpandWindowLabel:
     "Ouvrir les conversations complètes dans une fenêtre séparée",
-  shortcutToggleAgentPanel: "Afficher/masquer le panneau IA",
   menuToggleAgentPanel: "Panneau IA",
   agentPanelEmptyWrite: "Commencez à écrire",
   agentPanelEmptyReview: "Obtenez plus de suggestions",
@@ -368,9 +367,7 @@ utiliser une.
   toolWebFetch: "Lecture de {arg}",
   webSources: "Sources",
   proposalSourcesAsFootnotes: "Ajouter les sources en notes de bas de page",
-  menuToggleSplitView: "Vue partagée",
-  shortcutToggleSplitView:
-    "Activer/désactiver la vue partagée (source | aperçu)",
+  menuToggleSplitView: "Source et aperçu",
   menuToggleZenMode: "Mode zen",
   menuSplitRight: "Partager à droite",
   menuCommandPalette: "Palette de commandes…",
@@ -392,7 +389,6 @@ utiliser une.
   toolbarBold: "Gras",
   toolbarItalic: "Italique",
   toolbarMore: "Plus",
-  shortcutToggleZenMode: "Activer/désactiver le mode zen",
   zenExitHint: "Esc pour quitter le mode zen",
   zenExitButton: "Quitter le mode zen",
   openDialogText: "Fichiers texte",
@@ -834,10 +830,6 @@ utiliser une.
   shortcutTriggerCompletion: "Suggérer une complétion",
   shortcutTriggerGrammarCheck: "Vérifier la grammaire",
   shortcutToggleFloatingChat: "Question rapide",
-  shortcutToggleSidebar: "Afficher/masquer la barre latérale",
-  shortcutToggleSourceMode: "Activer/désactiver le mode source",
-  shortcutToggleTypewriterMode: "Activer/désactiver le mode machine à écrire",
-  shortcutFindReplace: "Rechercher et remplacer",
   shortcutRecording: "Tapez le raccourci…",
   shortcutConflict:
     "Déjà utilisé par «\u00a0{action}\u00a0». Choisissez un autre raccourci.",
@@ -1275,7 +1267,7 @@ utiliser une.
   imageFolderNameLabel: "Nom du sous-dossier",
   imageFolderInvalid:
     "Indiquez un dossier situé dans celui du document, comme img.",
-  imageHostLabel: "Service",
+  imageHostLabel: "Hébergeur d'images",
   imageHostCustom: "Personnalisé",
   imagePicgoEndpointLabel: "Adresse du serveur",
   imagePicgoEndpointHint:

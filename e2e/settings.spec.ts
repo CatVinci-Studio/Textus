@@ -594,7 +594,7 @@ test.describe("desktop", () => {
       panel.locator(".settings-group").first().locator(".settings-row-label"),
     ).toHaveText([
       "Command Palette",
-      "Find & replace",
+      "Find & Replace",
       "Search file names",
       "Next tab",
       "Previous tab",

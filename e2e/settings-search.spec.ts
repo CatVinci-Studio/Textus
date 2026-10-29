@@ -33,7 +33,7 @@ test.describe("in English", () => {
     // Its shortcut, on a page of its own.
     await expect(
       results.getByRole("group", { name: "Shortcuts" }),
-    ).toContainText("Toggle zen mode");
+    ).toContainText("Zen Mode");
     await expect(box).toHaveAttribute(
       "aria-activedescendant",
       (await results.getByRole("option").first().getAttribute("id")) ?? "",
