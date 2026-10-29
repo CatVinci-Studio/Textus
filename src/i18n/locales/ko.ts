@@ -368,6 +368,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   aiErrorAuth: `서비스가 인증 정보를 거부했습니다. 설정 > ${AI_NAME}에서 API 키를 확인하거나 다시 로그인하세요.`,
   aiErrorWorkspaceKey:
     "이 Anthropic 키는 워크스페이스에 속해 있지 않습니다. Anthropic Console의 워크스페이스 안에서 키를 만들어 사용하세요.",
+  aiErrorBalance: `이 서비스의 잔액 또는 사용 한도가 소진되었습니다. 제공업체 사이트에서 충전하거나 요금제를 확인하거나, 설정 > ${AI_NAME}에서 다른 서비스를 선택하세요.`,
   aiErrorRateLimit:
     "서비스가 혼잡하거나 요청 한도에 도달했습니다. 잠시 기다린 다음 다시 시도하세요.",
   aiErrorServer: "서비스 측에 문제가 생겼습니다. 잠시 후 다시 시도하세요.",

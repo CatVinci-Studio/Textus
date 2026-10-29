@@ -391,6 +391,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   aiErrorAuth: `O serviço recusou as credenciais. Verifique a chave de API (ou entre de novo) em Ajustes > ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "Esta chave da Anthropic não pertence a um workspace. Crie uma chave dentro de um workspace no Anthropic Console e use-a.",
+  aiErrorBalance: `O saldo ou a cota deste serviço acabou. Recarregue ou verifique seu plano no site do provedor, ou escolha outro serviço em Ajustes > ${AI_NAME}.`,
   aiErrorRateLimit:
     "O serviço está ocupado ou você atingiu o limite de requisições. Aguarde um pouco e tente de novo.",
   aiErrorServer:

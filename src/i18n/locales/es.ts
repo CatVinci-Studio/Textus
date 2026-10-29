@@ -402,6 +402,7 @@ para usar una.
   aiErrorAuth: `El servicio rechazó las credenciales. Revisa la clave de API (o vuelve a iniciar sesión) en Ajustes > ${AI_NAME}.`,
   aiErrorWorkspaceKey:
     "Esta clave de Anthropic no está vinculada a ningún espacio de trabajo. Crea una clave dentro de un espacio de trabajo en la Anthropic Console y úsala.",
+  aiErrorBalance: `Se ha agotado el saldo o la cuota de este servicio. Recarga o revisa tu plan en la web del proveedor, o elige otro servicio en Ajustes > ${AI_NAME}.`,
   aiErrorRateLimit:
     "El servicio está saturado o se alcanzó el límite de solicitudes. Espera un momento y vuelve a intentarlo.",
   aiErrorServer:
