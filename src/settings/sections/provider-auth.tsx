@@ -1,4 +1,3 @@
-import { errorText } from "../../utils/error-text";
 import { useCallback, useEffect, useState } from "react";
 import { useLatest } from "../../utils/hooks/useLatest";
 import type { Strings } from "../../i18n/strings";
@@ -12,6 +11,7 @@ import {
   VERBATIM_INPUT,
 } from "./controls";
 import { type ConnectedState, localizedLabel } from "./provider-connection";
+import { explainError } from "../../utils/error-explain";
 
 /** Signing in to one AI provider: the account and API-key panels, and the
  *  custom endpoint's address, key and model. */
@@ -130,7 +130,7 @@ export function OauthPanel({
       const status = await auth.oauthLogin(providerId, setLoginUrl);
       setConfigured(status.configured);
     } catch (err) {
-      setError(errorText(err));
+      setError(explainError(err, t));
     } finally {
       setLoggingIn(false);
       setLoginUrl(null);
@@ -314,7 +314,7 @@ export function CustomProviderPanel({
       if (!selectedModel && list.length > 0) setSelectedModel(list[0]);
     } catch (err) {
       setStatus("error");
-      setStatusMessage(errorText(err));
+      setStatusMessage(explainError(err, t));
     }
   }
 
@@ -327,7 +327,7 @@ export function CustomProviderPanel({
       setStatusMessage(t.customTestSuccess);
     } catch (err) {
       setStatus("error");
-      setStatusMessage(errorText(err));
+      setStatusMessage(explainError(err, t));
     }
   }
 

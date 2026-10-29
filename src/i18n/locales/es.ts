@@ -464,6 +464,28 @@ para usar una.
     "¿Mover «{name}» a la papelera? Podrás recuperarlo desde allí.",
   treeTrashFolderConfirm:
     "¿Mover la carpeta «{name}» y todo su contenido a la papelera? Podrás recuperarla desde allí.",
+  errorPermission:
+    "Textus no tiene permiso para abrir este archivo o carpeta. Revisa sus permisos o elige otra ubicación.",
+  errorNotFound:
+    "El archivo o la carpeta ya no está. Puede que se haya movido, renombrado o eliminado.",
+  errorDiskFull:
+    "El disco está lleno. Libera algo de espacio y vuelve a intentarlo.",
+  errorReadOnly: "Esta ubicación es de solo lectura. Elige otra carpeta.",
+  errorFileBusy:
+    "Otro programa está usando este archivo. Ciérralo allí y vuelve a intentarlo.",
+  errorTimeout: "Tardó demasiado. Revisa tu conexión y vuelve a intentarlo.",
+  errorNetwork:
+    "No se pudo conectar. Revisa tu conexión a internet o la configuración del proxy.",
+  errorFileTooBig: "Este archivo es demasiado grande para abrirlo en Textus.",
+  errorNotDocument: "Textus no puede leer este archivo como documento.",
+  errorBadName:
+    "Ese nombre no se puede usar. Un nombre no puede estar vacío ni contener / o \\.",
+  errorMoveIntoItself: "Una carpeta no se puede mover dentro de sí misma.",
+  errorPluginTooBig: "Este plugin es demasiado grande para instalarlo.",
+  errorCatalogNewer:
+    "La tienda de plugins necesita una versión más reciente de Textus. Actualiza Textus para verla.",
+  errorImageTooBig: "La imagen está vacía o supera los 25 MB.",
+  errorNoFolder: "Abre primero una carpeta.",
   treeNameTaken: "Ya hay algo llamado «{name}» aquí.",
   treeActionFailed: "No se pudo: {reason}",
   shortcutSearchFiles: "Buscar nombres de archivo",

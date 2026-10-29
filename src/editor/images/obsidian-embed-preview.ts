@@ -13,7 +13,6 @@ import { fs } from "../../platform/ipc";
 import { isScopedUrl } from "../../platform/ios-files";
 import type { Settings } from "../../prefs/SettingsContext";
 import { showMessage } from "../../ui/app-dialog";
-import { errorText } from "../../utils/error-text";
 import { basename, dirname, isInside } from "../../utils/path";
 import { localPath } from "../markdown/link-target";
 import {
@@ -33,6 +32,7 @@ import {
   type MissingReason,
 } from "./missing-image";
 import { parseEmbed, withEmbedPath, type EmbedTarget } from "./obsidian-embed";
+import { explainError } from "../../utils/error-explain";
 
 const embedPreviewKey = new PluginKey<RevealState>("obsidian-embed-preview");
 
@@ -87,7 +87,7 @@ async function replaceEmbed(
       ),
     );
   } catch (err) {
-    void showMessage(`${t.missingImageChooseFailed}\n${errorText(err)}`, {
+    void showMessage(`${t.missingImageChooseFailed}\n${explainError(err, t)}`, {
       tone: "error",
     });
   }

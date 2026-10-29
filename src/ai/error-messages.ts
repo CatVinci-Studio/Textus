@@ -1,4 +1,5 @@
 import type { Strings, TextKey } from "../i18n/strings";
+import { explainError } from "../utils/error-explain";
 
 /**
  * What kind of failure a provider error is, so Textus can say what to do in
@@ -22,7 +23,7 @@ const PATTERNS: [AiErrorKind, RegExp][] = [
   // Before rate limits: some services send a used-up balance as a 429.
   [
     "balance",
-    /\(402|payment required|insufficient[_ ](balance|quota|credits?|funds)|credit balance is too low|exceeded your current quota|exceeded_current_quota|arrearage|overdue|余额不足|欠费/i,
+    /\(402|payment required|insufficient[_ ](balance|quota|credits?|funds)|credit balance is too low|exceeded your current quota|exceeded_current_quota|arrearage|overdue|quota or balance ran out|余额不足|欠费/i,
   ],
   [
     "auth",
@@ -68,8 +69,9 @@ export function aiErrorTexts(t: Strings): Record<AiErrorKind, string> {
   ) as Record<AiErrorKind, string>;
 }
 
-/** The provider's message with what to do above it, when Textus knows. */
+/** The provider's message with what to do above it, when Textus knows;
+ *  other failures as {@link explainError} says them. */
 export function explainAiError(text: string, t: Strings): string {
   const kind = classifyAiError(text);
-  return kind ? `${t[TEXT[kind]]}\n${text}` : text;
+  return kind ? `${t[TEXT[kind]]}\n${text}` : explainError(text, t);
 }

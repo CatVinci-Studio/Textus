@@ -2,9 +2,9 @@ import { useState } from "react";
 import { ai } from "../../platform/ipc";
 import type { SkillOffer } from "../../platform/bindings/ai-memory";
 import { useSettings } from "../../prefs/SettingsContext";
-import { errorText } from "../../utils/error-text";
 import type { AgentMode } from "../../prefs/settings-types";
 import { ModeChoice } from "./ModeChoice";
+import { explainError } from "../../utils/error-explain";
 
 /** The call an offer stands in the conversation as. */
 export const OFFER_SKILL = "offer_skill";
@@ -48,7 +48,7 @@ export function SkillOfferChip({
   const save = (scope: "personal" | "project") => {
     ai.saveOfferedSkill(offer, scope, docPath, null, modes).then(
       () => setState({ kind: "saved" }),
-      (err: unknown) => setState({ kind: "failed", why: errorText(err) }),
+      (err: unknown) => setState({ kind: "failed", why: explainError(err, t) }),
     );
   };
   return (

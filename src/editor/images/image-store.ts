@@ -4,11 +4,12 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { closeHistory } from "@milkdown/kit/prose/history";
 import { resolveStrings } from "../../i18n/strings";
 import { showMessage } from "../../ui/app-dialog";
-import { errorText } from "../../utils/error-text";
 import { fs } from "../../platform/ipc";
 import type { Settings, ImageNamingMode } from "../../prefs/SettingsContext";
 import { IMAGE_FILE_EXTENSIONS, imageMimeForPath } from "./pasted-files";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
+import { currentStrings } from "../../i18n/current";
+import { explainError } from "../../utils/error-explain";
 
 /** Pictures pasted, dropped or picked, saved where the writer keeps them. */
 
@@ -142,7 +143,7 @@ export function reportFailure(
 ): void {
   console.error("saving pasted image failed:", err);
   // The reason underneath ("PicGo isn't running") is something the user can fix.
-  void showMessage(`${message}\n${errorText(err)}`, {
+  void showMessage(`${message}\n${explainError(err, currentStrings())}`, {
     tone: "error",
   });
 }

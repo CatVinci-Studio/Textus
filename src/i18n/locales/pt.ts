@@ -451,6 +451,27 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeTrashConfirm: "Mover “{name}” para a lixeira? Dá para recuperar de lá.",
   treeTrashFolderConfirm:
     "Mover a pasta “{name}” e tudo o que ela contém para a lixeira? Dá para recuperar de lá.",
+  errorPermission:
+    "O Textus não tem permissão para abrir este arquivo ou pasta. Verifique as permissões ou escolha outro local.",
+  errorNotFound:
+    "O arquivo ou a pasta não está mais lá. Pode ter sido movido, renomeado ou excluído.",
+  errorDiskFull: "O disco está cheio. Libere espaço e tente de novo.",
+  errorReadOnly: "Este local é somente leitura. Escolha outra pasta.",
+  errorFileBusy:
+    "Outro programa está usando este arquivo. Feche-o lá e tente de novo.",
+  errorTimeout: "Demorou demais. Verifique sua conexão e tente de novo.",
+  errorNetwork:
+    "Não foi possível conectar. Verifique sua conexão com a internet ou as configurações de proxy.",
+  errorFileTooBig: "Este arquivo é grande demais para abrir no Textus.",
+  errorNotDocument: "O Textus não consegue ler este arquivo como documento.",
+  errorBadName:
+    "Esse nome não pode ser usado. Um nome não pode ficar vazio nem conter / ou \\.",
+  errorMoveIntoItself: "Uma pasta não pode ser movida para dentro dela mesma.",
+  errorPluginTooBig: "Este plugin é grande demais para instalar.",
+  errorCatalogNewer:
+    "A loja de plugins precisa de uma versão mais nova do Textus. Atualize o Textus para vê-la.",
+  errorImageTooBig: "A imagem está vazia ou tem mais de 25 MB.",
+  errorNoFolder: "Abra uma pasta primeiro.",
   treeNameTaken: "Já existe algo chamado “{name}” aqui.",
   treeActionFailed: "Não deu certo: {reason}",
   shortcutSearchFiles: "Buscar nomes de arquivo",

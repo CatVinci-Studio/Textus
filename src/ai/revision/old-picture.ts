@@ -2,8 +2,8 @@ import { canTrashFiles } from "../../platform/capabilities";
 import { fs } from "../../platform/ipc";
 import { imageLocation } from "../../editor/images/missing-image";
 import { showConfirm, showMessage } from "../../ui/app-dialog";
-import { errorText } from "../../utils/error-text";
 import type { Strings } from "../../i18n/strings";
+import { explainError } from "../../utils/error-explain";
 
 /** Offers to move a replaced picture's old file to the Trash, if it is a
  *  local file nothing in the document still shows. Keeping it is the default. */
@@ -31,7 +31,7 @@ export async function offerOldPictureTrash(
   try {
     await fs.movePictureToTrash(docPath, location.path);
   } catch (err) {
-    await showMessage(`${t.oldPictureTrashFailed}\n${errorText(err)}`, {
+    await showMessage(`${t.oldPictureTrashFailed}\n${explainError(err, t)}`, {
       tone: "error",
     });
   }

@@ -35,13 +35,13 @@ import {
   noteBegunPicture,
   withBegunPictures,
 } from "../ai/revision/generated-images";
-import { errorText } from "../utils/error-text";
 import { resolveStrings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
 import { announce } from "../ui/announce";
 import { plural } from "../i18n/plural";
 import { usePluginDocumentAccess } from "./plugins/usePluginDocumentAccess";
 import { useKeptProposals } from "../ai/revision/useKeptProposals";
+import { explainError } from "../utils/error-explain";
 
 /** The editor's side of AI edits: pending previews, the two conversations
  *  that propose them, and streaming proposals into the document. */
@@ -90,7 +90,7 @@ export function useEditorProposals({
       ),
     onImageError: (err) => {
       const t = resolveStrings(settingsRef.current.language);
-      void showMessage(`${t.imageSaveFailed}\n${errorText(err)}`, {
+      void showMessage(`${t.imageSaveFailed}\n${explainError(err, t)}`, {
         tone: "error",
       });
     },

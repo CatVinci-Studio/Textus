@@ -1,5 +1,4 @@
 import { escapeHtml } from "../utils/html";
-import { errorText } from "../utils/error-text";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import type { Strings } from "../i18n/strings";
 import { basename, dirname } from "../utils/path";
@@ -37,6 +36,7 @@ export {
   cloneEditorContent,
   buildStandaloneHtml,
 } from "./standalone-html";
+import { explainError } from "../utils/error-explain";
 // File > Export: HTML serializes the live editor DOM, PDF prints a themed
 // render, everything else converts through a user-installed pandoc.
 
@@ -225,7 +225,7 @@ export async function exportPdf(
   } catch (err) {
     // Off before the message: the overlay sits above the app's dialogs.
     overlay.remove();
-    await showMessage(`${t.pdfFailed} ${errorText(err)}`, {
+    await showMessage(`${t.pdfFailed} ${explainError(err, t)}`, {
       title: t.exportFailedTitle,
       tone: "error",
     });
@@ -335,7 +335,7 @@ export async function exportViaPandoc(
     });
     void exportDoc.revealInDir(picked);
   } catch (err) {
-    await showMessage(`${t.exportFailed} ${errorText(err)}`, {
+    await showMessage(`${t.exportFailed} ${explainError(err, t)}`, {
       title: t.exportFailedTitle,
       tone: "error",
     });

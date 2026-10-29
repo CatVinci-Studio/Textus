@@ -469,6 +469,30 @@ utiliser une.
     "Mettre « {name} » à la corbeille ? Vous pourrez l’en sortir.",
   treeTrashFolderConfirm:
     "Mettre le dossier « {name} » et tout son contenu à la corbeille ? Vous pourrez l’en sortir.",
+  errorPermission:
+    "Textus n'a pas l'autorisation d'ouvrir ce fichier ou ce dossier. Vérifiez ses autorisations ou choisissez un autre emplacement.",
+  errorNotFound:
+    "Le fichier ou le dossier n'est plus là. Il a peut-être été déplacé, renommé ou supprimé.",
+  errorDiskFull: "Le disque est plein. Libérez de l'espace, puis réessayez.",
+  errorReadOnly:
+    "Cet emplacement est en lecture seule. Choisissez un autre dossier.",
+  errorFileBusy:
+    "Un autre programme utilise ce fichier. Fermez-le là-bas, puis réessayez.",
+  errorTimeout:
+    "Cela a pris trop de temps. Vérifiez votre connexion, puis réessayez.",
+  errorNetwork:
+    "Connexion impossible. Vérifiez votre connexion Internet ou vos réglages de proxy.",
+  errorFileTooBig:
+    "Ce fichier est trop volumineux pour être ouvert dans Textus.",
+  errorNotDocument: "Textus ne peut pas lire ce fichier comme un document.",
+  errorBadName:
+    "Ce nom ne peut pas être utilisé. Un nom ne peut pas être vide ni contenir / ou \\.",
+  errorMoveIntoItself: "Un dossier ne peut pas être déplacé dans lui-même.",
+  errorPluginTooBig: "Ce plugin est trop volumineux pour être installé.",
+  errorCatalogNewer:
+    "La boutique de plugins nécessite une version plus récente de Textus. Mettez Textus à jour pour la voir.",
+  errorImageTooBig: "L'image est vide ou dépasse 25 Mo.",
+  errorNoFolder: "Ouvrez d'abord un dossier.",
   treeNameTaken: "Il y a déjà un élément nommé « {name} » ici.",
   treeActionFailed: "Impossible : {reason}",
   shortcutSearchFiles: "Rechercher des noms de fichier",

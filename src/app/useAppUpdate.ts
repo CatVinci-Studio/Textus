@@ -1,4 +1,3 @@
-import { errorText } from "../utils/error-text";
 import { useEffect, useState } from "react";
 import type { Update } from "../platform/app-info";
 import { relaunchApp } from "../platform/app-info";
@@ -6,6 +5,8 @@ import { checkChannel, selfUpdateAllowed } from "../platform/distribution";
 import { flushPendingWrites } from "../storage/pending-writes";
 import { canAutoUpdate } from "../platform/capabilities";
 import { updater, type UpdateChannel } from "../platform/ipc";
+import { currentStrings } from "../i18n/current";
+import { explainError } from "../utils/error-explain";
 
 export type UpdateStatus = "idle" | "available" | "downloading" | "error";
 
@@ -63,7 +64,7 @@ export function useAppUpdate(channel: UpdateChannel) {
       await updater.releaseInstance();
       await relaunchApp();
     } catch (err) {
-      setError(errorText(err));
+      setError(explainError(err, currentStrings()));
       setStatus("error");
     }
   }

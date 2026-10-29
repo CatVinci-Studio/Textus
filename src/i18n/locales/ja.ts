@@ -435,6 +435,29 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeTrashConfirm: "「{name}」をゴミ箱に入れますか？ゴミ箱から元に戻せます。",
   treeTrashFolderConfirm:
     "フォルダ「{name}」とその中身をすべてゴミ箱に入れますか？ゴミ箱から元に戻せます。",
+  errorPermission:
+    "Textus にはこのファイルまたはフォルダへのアクセス権がありません。権限を確認するか、別の場所を選んでください。",
+  errorNotFound:
+    "ファイルまたはフォルダが見つかりません。移動、名前の変更、または削除された可能性があります。",
+  errorDiskFull:
+    "ディスクがいっぱいです。空き容量を作ってから、もう一度お試しください。",
+  errorReadOnly: "この場所は読み取り専用です。別のフォルダを選んでください。",
+  errorFileBusy:
+    "別のアプリがこのファイルを使用中です。そちらで閉じてから、もう一度お試しください。",
+  errorTimeout:
+    "時間がかかりすぎました。接続を確認して、もう一度お試しください。",
+  errorNetwork:
+    "接続できませんでした。インターネット接続またはプロキシ設定を確認してください。",
+  errorFileTooBig: "このファイルは大きすぎて Textus で開けません。",
+  errorNotDocument: "Textus はこのファイルを文書として読み込めません。",
+  errorBadName:
+    "この名前は使えません。名前は空にできず、/ や \\ も含められません。",
+  errorMoveIntoItself: "フォルダをそれ自身の中には移動できません。",
+  errorPluginTooBig: "このプラグインは大きすぎてインストールできません。",
+  errorCatalogNewer:
+    "プラグインストアには新しい Textus が必要です。Textus をアップデートしてください。",
+  errorImageTooBig: "画像が空か、25 MB を超えています。",
+  errorNoFolder: "先にフォルダを開いてください。",
   treeNameTaken: "ここにはすでに「{name}」という名前のものがあります。",
   treeActionFailed: "できませんでした: {reason}",
   shortcutSearchFiles: "ファイル名を検索",

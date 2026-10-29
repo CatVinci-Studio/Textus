@@ -4,7 +4,8 @@ import { themesInReply, type ReplyTheme } from "../../theme/chat-theme";
 import { saveUserTheme, withUserTheme } from "../../theme/theme-import";
 import { showMessage } from "../../ui/app-dialog";
 import { useLatest } from "../../utils/hooks/useLatest";
-import { errorText } from "../../utils/error-text";
+import { currentStrings } from "../../i18n/current";
+import { explainError } from "../../utils/error-explain";
 
 export interface ReplyThemeLabels {
   useTheme: string;
@@ -69,7 +70,7 @@ function ReplyThemeChip({
         themeId: meta.id,
       });
     } catch (err) {
-      await showMessage(errorText(err), { tone: "error" });
+      await showMessage(explainError(err, currentStrings()), { tone: "error" });
     } finally {
       working.current = false;
       setBusy(false);
