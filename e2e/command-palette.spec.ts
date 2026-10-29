@@ -145,3 +145,24 @@ test("a plugin's command line lists its own commands among the palette's, and ha
   await page.keyboard.press("Enter");
   await expect(page.locator(".split-pane")).toHaveCount(2);
 });
+
+test("the palette changes the appearance, the editor theme and Textus AI", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en", theme: "light" } });
+  const palette = page.getByRole("dialog", { name: "Type a command…" });
+  await page.keyboard.press("ControlOrMeta+Shift+P");
+  await page.keyboard.type("appearance");
+  await page.keyboard.press("Enter");
+  await expect(palette).toBeHidden();
+  // The choices come up in a pick of their own.
+  await page.getByRole("option", { name: "Dark" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+  await page.keyboard.press("ControlOrMeta+Shift+P");
+  await page.keyboard.type("textus ai on or off");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: "Textus AI" })).toHaveClass(
+    /off|disabled/,
+  );
+});

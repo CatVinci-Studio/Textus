@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { appVersion } from "../../platform/app-info";
 import { showConfirm } from "../../ui/app-dialog";
 import type { Update } from "../../platform/app-info";
@@ -23,7 +23,13 @@ import { explainError } from "../../utils/error-explain";
  * The manual "Check for Updates" button. Unlike the silent background check,
  * it answers "already latest" and failures explicitly.
  */
-export function UpdateButton({ t }: { t: Strings }) {
+export function UpdateButton({
+  t,
+  checkOnOpen = false,
+}: {
+  t: Strings;
+  checkOnOpen?: boolean;
+}) {
   const [phase, setPhase] = useState<
     "idle" | "checking" | "latest" | "available" | "downloading" | "error"
   >("idle");
@@ -35,6 +41,14 @@ export function UpdateButton({ t }: { t: Strings }) {
   useEffect(() => {
     if (canAutoUpdate) void selfUpdateAllowed().then(setSelfUpdate);
   }, []);
+
+  // Opened by Check for Updates…, once.
+  const checked = useRef(false);
+  useEffect(() => {
+    if (!checkOnOpen || checked.current) return;
+    checked.current = true;
+    void checkNow();
+  });
 
   async function checkNow() {
     setPhase("checking");

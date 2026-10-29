@@ -87,6 +87,8 @@ const HELP_DOC_PREFIX: &str = "help-doc:";
 const COMMUNITY_ID: &str = "help-community";
 /// Help > Report a Problem, the window's own dialog.
 const REPORT_ID: &str = "help-report";
+/// Textus > Check for Updates… (macOS): Settings › About, checking.
+const UPDATES_ID: &str = "check-updates";
 /// Help > Video Tutorials, opened the same way as Join the Community.
 const TUTORIALS_ID: &str = "help-tutorials";
 /// Format menu ids carry the block kind to insert: "insert-block:<kind>".
@@ -416,6 +418,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         }
     } else if id == REPORT_ID {
         emit_to_focused(app_handle, "menu-help-report");
+    } else if id == UPDATES_ID {
+        emit_to_focused(app_handle, "menu-check-updates");
     } else if id == TUTORIALS_ID {
         if let Some(label) = focused_editor_window(app_handle) {
             let _ = app_handle.emit_to(

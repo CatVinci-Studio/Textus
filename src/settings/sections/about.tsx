@@ -7,7 +7,16 @@ import appIcon from "../../../src-tauri/icons/128x128@2x.png";
 
 /** Settings › General › About Textus: the app, its version and updates,
  *  its code, where to talk with us, and who made it. */
-export function AboutSection({ t, language }: { t: Strings; language: Lang }) {
+export function AboutSection({
+  t,
+  language,
+  checkNow = false,
+}: {
+  t: Strings;
+  language: Lang;
+  /** Opened from Check for Updates…: check at once. */
+  checkNow?: boolean;
+}) {
   const [version, setVersion] = useState("");
 
   useEffect(() => {
@@ -52,7 +61,7 @@ export function AboutSection({ t, language }: { t: Strings; language: Lang }) {
         >
           {t.menuHelpCommunity}
         </button>
-        <UpdateButton t={t} />
+        <UpdateButton t={t} checkOnOpen={checkNow} />
       </div>
       <UpdateChannelRow t={t} />
       <div className="settings-about-credit">{t.aboutMadeBy}</div>

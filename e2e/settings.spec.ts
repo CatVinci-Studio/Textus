@@ -353,6 +353,23 @@ test.describe("desktop", () => {
     ).toHaveCount(0);
   });
 
+  test("Check for Updates… opens About and checks at once", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await page.evaluate(() =>
+      (
+        window as unknown as { __devEmitTauriEvent: (n: string) => void }
+      ).__devEmitTauriEvent("menu-check-updates"),
+    );
+    const panel = page.getByRole("dialog", { name: "Settings" });
+    // The check ran without a click: the button no longer says Check.
+    await expect(
+      panel.getByRole("button", { name: t.updateCheckButton }),
+    ).toHaveCount(0);
+    await expect(panel.locator(".settings-about")).toBeVisible();
+  });
+
   test("the update channel sits under the update button and is remembered", async ({
     page,
   }) => {

@@ -176,7 +176,11 @@ export function SettingsPanel({
 
   const renderSubpage = (s: Subpage) =>
     s === "about" ? (
-      <AboutSection t={t} language={settings.language} />
+      <AboutSection
+        t={t}
+        language={settings.language}
+        checkNow={initialCategory === "updates"}
+      />
     ) : (
       <>
         <h1 className="settings-category-title">{subpageTitles[s]}</h1>
@@ -366,8 +370,14 @@ export function SettingsPanel({
 /** Which page Settings shows: a category, and possibly a subpage inside it
  *  with a way back. A picked search result sets `jump` to go to its row. */
 function useSettingsNav(initialCategory: Category) {
-  const [category, setCategory] = useState<Category>(initialCategory);
-  const [subpage, setSubpage] = useState<Subpage | null>(null);
+  // "updates" is General › About.
+  const updates = initialCategory === "updates";
+  const [category, setCategory] = useState<Category>(
+    updates ? "general" : initialCategory,
+  );
+  const [subpage, setSubpage] = useState<Subpage | null>(
+    updates ? "about" : null,
+  );
   const [jump, setJump] = useState<SearchEntry | null>(null);
   const content = useRef<HTMLDivElement>(null);
 
