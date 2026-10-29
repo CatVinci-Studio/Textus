@@ -1433,3 +1433,33 @@ test("Enter on an empty nested task lifts it a level as a task, not a bullet (#3
     "  * [ ] two\n    * [ ] three\n  * [ ] four",
   );
 });
+
+test("the view last switched to is the one new documents open in (#424)", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "# One");
+  await emit(page, "menu-toggle-split-view");
+  const active = '[data-active-tab="true"]';
+  await expect(page.locator(`${active} .split-source`)).toBeVisible();
+  // A new tab, and a file opened (into that untouched tab): split view.
+  await emit(page, "menu-new-file");
+  await expect(page.locator(".tab-pill")).toHaveCount(2);
+  await expect(page.locator(`${active} .split-source`)).toBeVisible();
+  await page.evaluate(() =>
+    Object.assign(window, { __devFiles: { "/notes/two.md": "# Two" } }),
+  );
+  await emit(page, "tauri://drag-drop", {
+    paths: ["/notes/two.md"],
+    position: { x: 0, y: 0 },
+  });
+  await expect(page.locator(`${active} .split-preview h1`)).toHaveText("Two");
+  // Back to the rich editor: so are the next ones.
+  await emit(page, "menu-toggle-split-view");
+  await expect(page.locator(`${active} .split-source`)).toHaveCount(0);
+  const tabs = await page.locator(".tab-pill").count();
+  await emit(page, "menu-new-file");
+  await expect(page.locator(".tab-pill")).toHaveCount(tabs + 1);
+  await expect(page.locator(`${active} .ProseMirror`)).toBeVisible();
+  await expect(page.locator(`${active} .split-source`)).toHaveCount(0);
+});

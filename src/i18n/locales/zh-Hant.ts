@@ -322,6 +322,7 @@ export default {
   aiErrorAuth: `服務拒絕了這組憑證。在「設定 > ${AI_NAME}」中檢查 API 金鑰，或重新登入。`,
   aiErrorWorkspaceKey:
     "這組 Anthropic 金鑰不屬於任何工作區。在 Anthropic Console 的工作區中建立金鑰，再改用那組金鑰。",
+  aiErrorBalance: `這個服務的餘額或額度已用完。請到服務商網站儲值或查看方案，或在「設定 > ${AI_NAME}」中改用其他服務。`,
   aiErrorRateLimit: "服務忙碌中，或已達到速率限制。稍候片刻再重試。",
   aiErrorServer: "服務本身發生問題。過一會兒再重試。",
   aiErrorTimeout: "要求逾時。檢查網路連線後再重試。",
