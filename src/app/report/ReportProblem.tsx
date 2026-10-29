@@ -3,6 +3,7 @@ import type { Strings } from "../../i18n/strings";
 import { links, systemIpc } from "../../platform/ipc";
 import { usePresence } from "../../ui/usePresence";
 import { useModalDialog } from "../../ui/useModalDialog";
+import type { Settings } from "../../prefs/settings-types";
 import { reportDetails, reportUrl, type ReportFacts } from "./report";
 import "./ReportProblem.css";
 
@@ -20,10 +21,10 @@ export function openReportProblem(): void {
  */
 export function ReportProblemHost({
   t,
-  language,
+  settings,
 }: {
   t: Strings;
-  language: string;
+  settings: Settings;
 }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
@@ -41,8 +42,10 @@ export function ReportProblemHost({
     systemIpc
       .info()
       .catch(() => ({ os: navigator.platform, arch: "", webview: "" }))
-      .then((info) => setFacts({ ...info, language }));
-  }, [open, language]);
+      .then((info) =>
+        setFacts({ ...info, language: settings.language, settings }),
+      );
+  }, [open, settings]);
   const close = () => setOpen(false);
   const presence = usePresence(open, { exitMs: 150 });
   const dialog = useModalDialog(close, open, ".report-problem-text");

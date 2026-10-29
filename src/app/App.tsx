@@ -227,7 +227,7 @@ function App() {
           )}
         </Presence>
         <AppDialogHost okLabel={t.dialogOk} />
-        <ReportProblemHost t={t} language={settings.language} />
+        <ReportProblemHost t={t} settings={settings} />
         <QuickPickHost
           emptyLabel={t.pluginQuickPickEmpty}
           okLabel={t.pluginOk}
