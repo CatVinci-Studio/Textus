@@ -84,10 +84,16 @@ function barDropAt(
       return pill.dataset.flipId !== tabId && box.left + box.width / 2 < x;
     },
   ).length;
+  const pane = bar.dataset.paneId!;
+  // Lit where the document will show, not over the bar (and the title bar
+  // a top pane's bar reaches under).
+  const body = document.querySelector<HTMLElement>(
+    `.split-pane[data-pane-id="${CSS.escape(pane)}"]`,
+  );
   return {
-    pane: bar.dataset.paneId!,
+    pane,
     index,
-    rect: bar.getBoundingClientRect(),
+    rect: (body ?? bar).getBoundingClientRect(),
   };
 }
 

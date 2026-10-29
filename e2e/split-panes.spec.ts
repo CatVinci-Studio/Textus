@@ -233,6 +233,13 @@ for (const way of ["along the bars", "down and across"])
     await page.mouse.move(before.x + 4, before.y + before.height / 2, {
       steps: 12,
     });
+    if (way === "down and across") {
+      // The pane the tab will join lights up, not its tab bar.
+      const hint = (await page.locator(".split-drop-hint").boundingBox())!;
+      const body = (await page.locator(pane("second")).boundingBox())!;
+      expect(Math.round(hint.y)).toBe(Math.round(body.y));
+      expect(Math.round(hint.height)).toBe(Math.round(body.height));
+    }
     await page.mouse.up();
     await expect(bars.last().locator('[role="tab"]')).toHaveCount(2);
     await expect(bars.last().locator('[role="tab"]').first()).toHaveAttribute(
