@@ -1101,7 +1101,10 @@ export function installDevTauriShim(): void {
       protocol === "textus-plugin"
         ? ""
         : `http://${protocol}.localhost/${encodeURIComponent(path)}`,
-    invoke: (cmd: string, args?: { event?: string; handler?: number }) => {
+    invoke: (
+      cmd: string,
+      args?: { event?: string; handler?: number; target?: { kind?: string } },
+    ) => {
       log(cmd);
       // Pages and links opened in the browser: `window.__devLinks`.
       if (cmd.startsWith("open_") && /_(page|link)$/.test(cmd))
@@ -1182,10 +1185,16 @@ export function installDevTauriShim(): void {
         args?.event &&
         typeof args.handler === "number"
       ) {
-        listeners.set(args.event, [
-          ...(listeners.get(args.event) ?? []),
-          args.handler,
-        ]);
+        // Tauri's own drag events go to the webview, which a label alone
+        // (AnyLabel) doesn't hear in the app either.
+        if (!(
+          args.event.startsWith("tauri://drag") &&
+          args.target?.kind === "AnyLabel"
+        ))
+          listeners.set(args.event, [
+            ...(listeners.get(args.event) ?? []),
+            args.handler,
+          ]);
         // Without a real id every unlisten is a no-op and stale StrictMode handlers
         // double-fire.
         return Promise.resolve(args.handler);

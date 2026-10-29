@@ -25,6 +25,18 @@ export function listenToThisWindow<T>(
   });
 }
 
+/** Listen to an event Tauri addresses to this window's webview, such as a
+ *  file drop (`tauri://drag-drop`), which listenToThisWindow never hears. */
+export function listenToThisWebview<T>(
+  event: string,
+  handler: EventCallback<T>,
+): Promise<UnlistenFn> {
+  if (inBrowser) return Promise.resolve(() => {});
+  return listen<T>(event, handler, {
+    target: { kind: "Webview", label: getCurrentWebviewWindow().label },
+  });
+}
+
 /** Sends `event` to one window: a label, or a target such as
  *  `{ kind: "WebviewWindow", label }`. */
 export function emitToWindow(

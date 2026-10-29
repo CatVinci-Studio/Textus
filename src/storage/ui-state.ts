@@ -57,6 +57,9 @@ export interface UiState {
     ratio: number;
     paths: [string, string];
   } | null;
+  /** The view last switched to, "rich", "source" or "split", which new
+   *  documents open in (editor/modes/view-mode.ts). */
+  viewMode: string;
 }
 
 export interface ThemeChromeCache {
@@ -166,6 +169,11 @@ const LOCAL: {
     key: "textus-read-only-paths",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
+  },
+  viewMode: {
+    key: "textus-view-mode",
+    decode: (raw) => raw,
+    encode: (value) => value,
   },
   lastCarets: {
     key: "textus-last-carets",

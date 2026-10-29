@@ -111,6 +111,7 @@ import { createCompletionPlugin } from "./completion/completion-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
 import { copyTextPlugin } from "./clipboard/copy-text-plugin";
 import { pastePlainTextKeyPlugin } from "./clipboard/paste-plain";
+import { pictureCopyPlugin } from "./images/picture-clipboard";
 import { createImagePlugin } from "./images/image-plugin";
 import {
   obsidianEmbedInputRule,
@@ -352,6 +353,7 @@ export function withEditorCore(
       .use(pasteUrlPlugin)
       .use(pasteMarkdownSourcePlugin)
       .use(copyTextPlugin)
+      .use(pictureCopyPlugin)
       .use(pastePlainTextKeyPlugin)
       .use(clipboard)
       .use(disk ? clipboardHistoryPlugin : [])
