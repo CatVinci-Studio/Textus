@@ -7,7 +7,7 @@ routes = [{ pattern = "textus.catvinci.com/api/feedback", zone_name = "catvinci.
 [vars]
 REPO = "CatVinci-Studio/Textus"
 MAIL_FROM = "feedback@catvinci.com"
-MAIL_TO = "studio@catvinci.com"
+MAIL_TO = "chengaoshen2002@gmail.com"
 
 [[kv_namespaces]]
 binding = "LIMITS"
@@ -15,7 +15,7 @@ id = "ea148873c2d4450b845500685a0cfdd4"
 
 [[send_email]]
 name = "MAIL"
-destination_address = "studio@catvinci.com"
+destination_address = "chengaoshen2002@gmail.com"
 
 # Secrets (wrangler secret put): APP_ID, and APP_KEY - the GitHub App's
 # private key as PKCS#8 PEM.

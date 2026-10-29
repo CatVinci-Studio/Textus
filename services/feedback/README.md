@@ -23,3 +23,7 @@ The tests run with the app's unit tests (`npx vitest run services`).
    private key converted to PKCS#8:
    `openssl pkcs8 -topk8 -nocrypt -in key.pem | npx wrangler@4 secret put APP_KEY`.
 3. `npx wrangler@4 deploy` from this folder.
+
+To check it without filing a public issue, set a `TEST_KEY` secret and send
+it in an `x-textus-test` header: the report is checked and a contact
+mailed, and nothing goes to GitHub.

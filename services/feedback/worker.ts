@@ -16,6 +16,9 @@ interface Env {
   MAIL: SendEmail;
   MAIL_FROM: string;
   MAIL_TO: string;
+  /** A request with this in `x-textus-test` files nothing: for checking the
+   *  Worker without a public issue. */
+  TEST_KEY?: string;
 }
 
 const PER_SENDER_A_DAY = 5;
@@ -35,6 +38,13 @@ export default {
     }
     const report = readReport(parsed);
     if (typeof report === "string") return reply(400, { error: report });
+
+    const test = request.headers.get("x-textus-test");
+    if (env.TEST_KEY && test === env.TEST_KEY) {
+      const url = `https://github.com/${env.REPO}/issues/0`;
+      if (report.contact) await mailContact(env, report, url);
+      return reply(201, { url, number: 0 });
+    }
 
     const sender = await hash(request.headers.get("CF-Connecting-IP") ?? "");
     if (!(await allowed(env.LIMITS, sender)))
@@ -164,7 +174,8 @@ async function mailContact(env: Env, report: Report, url: string) {
   ].join("\r\n");
   try {
     await env.MAIL.send(new EmailMessage(env.MAIL_FROM, env.MAIL_TO, raw));
-  } catch {
+  } catch (err) {
     // The issue is filed; a contact that can't be mailed is lost, not leaked.
+    console.error("contact mail failed", String(err));
   }
 }
