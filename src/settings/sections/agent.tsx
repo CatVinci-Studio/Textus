@@ -1,4 +1,3 @@
-import { errorText } from "../../utils/error-text";
 import {
   formatContext,
   modelInfo,
@@ -22,6 +21,7 @@ import {
 import { ai, auth } from "../../platform/ipc";
 import { Select } from "../../ui/Select";
 import { SecretInput, SettingRow, VERBATIM_INPUT } from "./controls";
+import { explainError } from "../../utils/error-explain";
 
 // The AI category's model pickers, and rows for the project folder, global
 // writing instructions, skills and config folder. Those are files, so these
@@ -237,7 +237,7 @@ export function ModelListRow({ t }: { t: Strings }) {
       writeFetchedModels(provider, list);
       window.dispatchEvent(new Event(MODELS_FETCHED_EVENT));
     } catch (err) {
-      setError(errorText(err));
+      setError(explainError(err, t));
     } finally {
       setLoading(false);
     }
@@ -277,7 +277,7 @@ export function AgentWorkspaceSection({ t }: { t: Strings }) {
       // The starter agent.md, in the UI language, if there is none yet.
       await ai.openGlobalAgentDir(t.agentInstructionsTemplate);
     } catch (err) {
-      setError(errorText(err));
+      setError(explainError(err, t));
     }
   }
 
@@ -307,7 +307,7 @@ export function AgentWorkspaceRootSection({ t }: { t: Strings }) {
       const picked = await ai.pickWorkspaceRoot();
       if (picked) setSettings({ agentWorkspaceRoot: picked });
     } catch (err) {
-      setError(errorText(err));
+      setError(explainError(err, t));
     }
   }
 
@@ -359,7 +359,7 @@ export function AgentSystemPromptSection({
       onClose(); // the editor is behind the settings panel
       onOpenFile(path);
     } catch (err) {
-      setError(errorText(err));
+      setError(explainError(err, t));
     }
   }
 

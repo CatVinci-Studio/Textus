@@ -15,7 +15,6 @@ import {
   resolveSkillName,
   type PickerSkill,
 } from "./skill-picker";
-import { errorText } from "../../utils/error-text";
 import { basename } from "../../utils/path";
 import { AGENT_MODES, type AgentMode } from "../../prefs/SettingsContext";
 import {
@@ -59,6 +58,8 @@ export type {
   SelectionChip,
   SelectionChipHandlers,
 } from "./composer-types";
+import { currentStrings } from "../../i18n/current";
+import { explainError } from "../../utils/error-explain";
 
 /**
  * The input row: textarea, attachments, selection chip, send button and the
@@ -148,7 +149,7 @@ export function ChatComposer({
           : [...prev, { kind: "text", name: path, content, truncated: false }],
       );
     } catch (err) {
-      setAttachError(errorText(err));
+      setAttachError(explainError(err, currentStrings()));
     }
     inputRef.current?.focus();
   }

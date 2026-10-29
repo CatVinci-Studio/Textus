@@ -9,10 +9,10 @@ import {
   type GalleryTheme,
 } from "../../theme/theme-gallery";
 import { withUserTheme } from "../../theme/theme-import";
-import { errorText } from "../../utils/error-text";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useSettings } from "../../prefs/SettingsContext";
 import { SettingRow } from "./controls";
+import { explainError } from "../../utils/error-explain";
 
 /** The themes whose name, author or description hold every word of
  *  `query`. */
@@ -56,7 +56,7 @@ export function ThemeGallerySection({
         ...(installed ? {} : { themeId: meta.id }),
       });
     } catch (err) {
-      setError(`${t.themeGalleryInstallFailed} ${errorText(err)}`);
+      setError(`${t.themeGalleryInstallFailed} ${explainError(err, t)}`);
     } finally {
       working.current = false;
       setBusy(false);

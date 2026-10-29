@@ -7,6 +7,7 @@ import {
 import type { SearchScope } from "./file-search";
 import type { Strings } from "../i18n/strings";
 import { isInside, parentDir } from "../utils/path";
+import { explainError } from "../utils/error-explain";
 
 // What the file tree and its rows share.
 
@@ -69,5 +70,5 @@ export function failureText(t: Strings, err: unknown, name: string): string {
   const reason = err instanceof Error ? err.message : String(err);
   if (reason.includes("Already exists"))
     return t.treeNameTaken.replace("{name}", name);
-  return t.treeActionFailed.replace("{reason}", reason);
+  return t.treeActionFailed.replace("{reason}", explainError(err, t));
 }

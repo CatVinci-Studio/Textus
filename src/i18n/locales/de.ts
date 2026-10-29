@@ -453,6 +453,30 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "„{name}“ in den Papierkorb legen? Von dort lässt es sich zurücklegen.",
   treeTrashFolderConfirm:
     "Den Ordner „{name}“ mit allem darin in den Papierkorb legen? Von dort lässt er sich zurücklegen.",
+  errorPermission:
+    "Textus darf diese Datei oder diesen Ordner nicht öffnen. Prüfe die Zugriffsrechte oder wähle einen anderen Ort.",
+  errorNotFound:
+    "Die Datei oder der Ordner ist nicht mehr da. Vielleicht wurde sie verschoben, umbenannt oder gelöscht.",
+  errorDiskFull:
+    "Der Datenträger ist voll. Schaffe etwas Platz und versuche es erneut.",
+  errorReadOnly: "Dieser Ort ist schreibgeschützt. Wähle einen anderen Ordner.",
+  errorFileBusy:
+    "Ein anderes Programm verwendet diese Datei. Schließe sie dort und versuche es erneut.",
+  errorTimeout:
+    "Das hat zu lange gedauert. Prüfe deine Verbindung und versuche es erneut.",
+  errorNetwork:
+    "Keine Verbindung möglich. Prüfe deine Internetverbindung oder Proxy-Einstellungen.",
+  errorFileTooBig: "Diese Datei ist zu groß, um sie in Textus zu öffnen.",
+  errorNotDocument: "Textus kann diese Datei nicht als Dokument lesen.",
+  errorBadName:
+    "Dieser Name geht nicht. Ein Name darf nicht leer sein und kein / oder \\ enthalten.",
+  errorMoveIntoItself:
+    "Ein Ordner kann nicht in sich selbst verschoben werden.",
+  errorPluginTooBig: "Dieses Plugin ist zu groß für die Installation.",
+  errorCatalogNewer:
+    "Der Plugin-Store braucht eine neuere Textus-Version. Aktualisiere Textus, um ihn zu sehen.",
+  errorImageTooBig: "Das Bild ist leer oder größer als 25 MB.",
+  errorNoFolder: "Öffne zuerst einen Ordner.",
   treeNameTaken: "Hier gibt es schon etwas namens „{name}“.",
   treeActionFailed: "Das hat nicht geklappt: {reason}",
   shortcutSearchFiles: "Dateinamen suchen",

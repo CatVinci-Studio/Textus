@@ -426,6 +426,27 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "“{name}”을(를) 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
   treeTrashFolderConfirm:
     "폴더 “{name}”와(과) 그 안의 모든 항목을 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
+  errorPermission:
+    "Textus에 이 파일 또는 폴더에 접근할 권한이 없습니다. 권한을 확인하거나 다른 위치를 선택하세요.",
+  errorNotFound:
+    "파일 또는 폴더가 더 이상 없습니다. 이동되었거나 이름이 바뀌었거나 삭제되었을 수 있습니다.",
+  errorDiskFull: "디스크가 가득 찼습니다. 공간을 확보한 뒤 다시 시도하세요.",
+  errorReadOnly: "이 위치는 읽기 전용입니다. 다른 폴더를 선택하세요.",
+  errorFileBusy:
+    "다른 프로그램이 이 파일을 사용 중입니다. 그 프로그램에서 닫은 뒤 다시 시도하세요.",
+  errorTimeout:
+    "시간이 너무 오래 걸렸습니다. 연결을 확인한 뒤 다시 시도하세요.",
+  errorNetwork: "연결할 수 없습니다. 인터넷 연결이나 프록시 설정을 확인하세요.",
+  errorFileTooBig: "이 파일은 너무 커서 Textus에서 열 수 없습니다.",
+  errorNotDocument: "Textus가 이 파일을 문서로 읽을 수 없습니다.",
+  errorBadName:
+    "이 이름은 사용할 수 없습니다. 이름은 비워 둘 수 없고 / 또는 \\를 포함할 수 없습니다.",
+  errorMoveIntoItself: "폴더를 자기 자신 안으로 옮길 수 없습니다.",
+  errorPluginTooBig: "이 플러그인은 너무 커서 설치할 수 없습니다.",
+  errorCatalogNewer:
+    "플러그인 스토어를 보려면 최신 Textus가 필요합니다. Textus를 업데이트하세요.",
+  errorImageTooBig: "그림이 비어 있거나 25MB보다 큽니다.",
+  errorNoFolder: "먼저 폴더를 여세요.",
   treeNameTaken: "여기에 이미 “{name}”(이)라는 항목이 있습니다.",
   treeActionFailed: "할 수 없습니다: {reason}",
   shortcutSearchFiles: "파일 이름 검색",

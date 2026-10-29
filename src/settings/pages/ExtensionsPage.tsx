@@ -9,7 +9,6 @@ import {
   importSkill,
 } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
-import { errorText } from "../../utils/error-text";
 import { MarketPage, type MarketKind } from "./MarketPage";
 
 import {
@@ -18,6 +17,7 @@ import {
   openExtensionsTab,
   type ExtensionsTab,
 } from "./extensions-tab";
+import { explainError } from "../../utils/error-explain";
 
 const TABS = extensionsTabs();
 
@@ -85,7 +85,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
                   onSelect: () =>
                     void importSkill().then(
                       () => setSkillError(null),
-                      (err: unknown) => setSkillError(errorText(err)),
+                      (err: unknown) => setSkillError(explainError(err, t)),
                     ),
                 },
               ]}

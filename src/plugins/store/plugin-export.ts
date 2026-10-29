@@ -1,7 +1,7 @@
 import { currentStrings } from "../../i18n/current";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { showMessage, showPrompt } from "../../ui/app-dialog";
-import { errorText } from "../../utils/error-text";
+import { explainError } from "../../utils/error-explain";
 
 /** The publisher name typed last, offered again. */
 let lastPublisher = "";
@@ -29,6 +29,6 @@ export async function exportPluginForPublishing(id: string): Promise<void> {
       title: t.pluginExport,
     });
   } catch (err) {
-    await showMessage(errorText(err), { tone: "error" });
+    await showMessage(explainError(err, t), { tone: "error" });
   }
 }

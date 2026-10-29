@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import {
-  generatedImageFailure,
+  shownImageFailure,
   generatedImageId,
   generatedImageRatio,
   generatedImageUrl,
@@ -42,7 +42,7 @@ function NotePicture({ src, alt }: { src: string; alt: string }) {
   if (id) {
     if (made)
       return <img className="revision-note-picture" src={made} alt={alt} />;
-    const why = generatedImageFailure(id);
+    const why = shownImageFailure(id);
     if (why) return <span className="revision-note-picture-why">{why}</span>;
     return (
       <span

@@ -1,4 +1,3 @@
-import { errorText } from "../../utils/error-text";
 import { useEffect, useState } from "react";
 import { appVersion } from "../../platform/app-info";
 import { showConfirm } from "../../ui/app-dialog";
@@ -18,6 +17,7 @@ import { canAutoUpdate } from "../../platform/capabilities";
 import { useSettings } from "../../prefs/SettingsContext";
 import { Select } from "../../ui/Select";
 import { SettingRow } from "./controls";
+import { explainError } from "../../utils/error-explain";
 
 /**
  * The manual "Check for Updates" button. Unlike the silent background check,
@@ -58,7 +58,7 @@ export function UpdateButton({ t }: { t: Strings }) {
       }
     } catch (err) {
       setPhase("error");
-      setMessage(`${t.updateFailed} ${errorText(err)}`);
+      setMessage(`${t.updateFailed} ${explainError(err, t)}`);
     }
   }
 
@@ -70,7 +70,7 @@ export function UpdateButton({ t }: { t: Strings }) {
       await installAndRelaunch(update);
     } catch (err) {
       setPhase("error");
-      setMessage(`${t.updateFailed} ${errorText(err)}`);
+      setMessage(`${t.updateFailed} ${explainError(err, t)}`);
     }
   }
 
@@ -163,7 +163,7 @@ function BackToStable({ t }: { t: Strings }) {
       await installAndRelaunch(found);
     } catch (err) {
       setPhase("error");
-      setMessage(`${t.updateFailed} ${errorText(err)}`);
+      setMessage(`${t.updateFailed} ${explainError(err, t)}`);
     }
   }
 
@@ -259,7 +259,7 @@ export function CliCommandSection({ t }: { t: Strings }) {
       setPhase("idle");
     } catch (err) {
       setPhase("error");
-      setError(errorText(err));
+      setError(explainError(err, t));
     }
   }
 
@@ -317,7 +317,7 @@ export function DefaultEditorSection({ t }: { t: Strings }) {
       if (status?.chooseInSettings) setOpened(true);
       else setStatus(await defaultEditor.status());
     } catch (err) {
-      setError(errorText(err));
+      setError(explainError(err, t));
     } finally {
       setBusy(false);
     }

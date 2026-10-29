@@ -448,6 +448,27 @@ type /name in a conversation to use one.
     "Move “{name}” to the Trash? You can put it back from there.",
   treeTrashFolderConfirm:
     "Move the folder “{name}” and everything in it to the Trash? You can put it back from there.",
+  errorPermission:
+    "Textus isn't allowed to open this file or folder. Check its permissions, or choose another location.",
+  errorNotFound:
+    "The file or folder isn't there any more. It may have been moved, renamed or deleted.",
+  errorDiskFull: "The disk is full. Free up some space, then try again.",
+  errorReadOnly: "This location is read-only. Choose another folder.",
+  errorFileBusy:
+    "Another program is using this file. Close it there, then try again.",
+  errorTimeout: "It took too long. Check your connection, then try again.",
+  errorNetwork:
+    "Couldn't connect. Check your internet connection or proxy settings.",
+  errorFileTooBig: "This file is too large to open in Textus.",
+  errorNotDocument: "Textus can't read this file as a document.",
+  errorBadName:
+    "That name can't be used. A name can't be empty or contain / or \\.",
+  errorMoveIntoItself: "A folder can't be moved into itself.",
+  errorPluginTooBig: "This plugin is too large to install.",
+  errorCatalogNewer:
+    "The plugin store needs a newer Textus. Update Textus to see it.",
+  errorImageTooBig: "The picture is empty or larger than 25 MB.",
+  errorNoFolder: "Open a folder first.",
   treeNameTaken: "There is already something named “{name}” here.",
   treeActionFailed: "That didn’t work: {reason}",
   shortcutSearchFiles: "Search file names",

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { showConfirm, showMessage } from "../../ui/app-dialog";
 import { useSettings } from "../../prefs/SettingsContext";
-import { errorText } from "../../utils/error-text";
 import type { Strings } from "../../i18n/strings";
 import { pluginName, pluginText, pluginsSnapshot } from "../../plugins/manager";
 import {
@@ -14,6 +13,7 @@ import {
   turnOnRequirement,
 } from "../../plugins/store/requirements";
 import type { Attempt } from "./PluginPage";
+import { explainError } from "../../utils/error-explain";
 
 /** Installs a plugin from the catalog: fetched and checked in Rust, turned
  *  on with its permissions asked, and what it needs offered. Nothing opens
@@ -27,7 +27,7 @@ export function usePluginInstall(t: Strings) {
     try {
       await work();
     } catch (err) {
-      void showMessage(errorText(err), {
+      void showMessage(explainError(err, t), {
         title: t.pluginsTitle,
         tone: "error",
       });

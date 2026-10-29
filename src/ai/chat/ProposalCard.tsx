@@ -13,7 +13,7 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { diffLines } from "./line-diff";
 import type { PendingSentence } from "../revision/pending-edit-plugin";
 import {
-  generatedImageFailure,
+  shownImageFailure,
   loadGeneratedImage,
   generatedImageRatio,
   generatedImageUrl,
@@ -64,7 +64,7 @@ export function ProposedPicture({ id, alt }: { id: string; alt: string }) {
     generatedImageUrl(id),
   );
   const failure = useSyncExternalStore(onPictureSettled, () =>
-    generatedImageFailure(id),
+    shownImageFailure(id),
   );
   useEffect(() => {
     if (!url && !failure) void loadGeneratedImage(id);

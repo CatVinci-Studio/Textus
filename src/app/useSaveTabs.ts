@@ -2,7 +2,6 @@ import { useCallback, useRef } from "react";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import { migrateDraftImages } from "../editor/images/image-migration";
 import { basename } from "../utils/path";
-import { errorText } from "../utils/error-text";
 import {
   statMtime,
   tabIsDirty,
@@ -18,6 +17,8 @@ import { emitPluginEvent, openDocumentAt } from "../plugins/app-bridge";
 import { hasWillSave, runWillSave } from "../plugins/contributions/will-save";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";
+import { errorText } from "../utils/error-text";
+import { explainError } from "../utils/error-explain";
 
 /** Save and Save As for this window's tabs. Both resolve true only when the
  *  document actually reached disk. */
@@ -38,12 +39,11 @@ export function useSaveTabs(opts: {
         await writeDocFile(path, content);
         return true;
       } catch (err) {
-        const reason = errorText(err);
         const lines = [
           t.saveFailedMessage.replace("{name}", basename(path)),
-          /read-only|permission denied/i.test(reason)
+          /read-only|permission denied/i.test(errorText(err))
             ? t.saveReadOnlyHint
-            : reason,
+            : explainError(err, t),
         ];
         await showMessage(lines.join("\n"), {
           title: t.saveFailedTitle,

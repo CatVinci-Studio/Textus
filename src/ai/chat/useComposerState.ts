@@ -8,7 +8,6 @@ import {
 } from "react";
 import type { ChatAttachment, ThinkingLevel } from "../types";
 import { ai } from "../../platform/ipc";
-import { errorText } from "../../utils/error-text";
 import { useActiveProvider, useWebSearchStatus } from "../provider-catalog";
 import type { AgentMode } from "../../prefs/SettingsContext";
 import { initialMode, rememberMode } from "./last-mode";
@@ -19,6 +18,8 @@ import type {
   ChatComposerProps,
   SelectionChipHandlers,
 } from "./composer-types";
+import { currentStrings } from "../../i18n/current";
+import { explainError } from "../../utils/error-explain";
 
 /** The composer's state, one hook per concern. */
 
@@ -92,7 +93,7 @@ export function useAttachments(noVisionMessage: string) {
       }
       setAttachments((prev) => [...prev, file]);
     } catch (err) {
-      setAttachError(errorText(err));
+      setAttachError(explainError(err, currentStrings()));
     }
   }
 
