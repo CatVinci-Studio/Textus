@@ -266,6 +266,7 @@ export default {
     "没有生成图片：还没有设置图片模型。请在设置的“{setting}”里选择。",
   imageSaveFailed: "无法保存图片。",
   imageServiceLabel: "图片服务",
+  imageGenerationGroupLabel: "图片生成",
   imageServiceFollowChat: "跟随聊天（{name}）",
   imageServiceFollowChatBare: "跟随聊天",
   imageServiceFollowNoPictures:
@@ -473,6 +474,7 @@ export default {
   navAi: AI_NAME,
   navPrivacy: "隐私",
   navAbout: "关于",
+  navGuides: "使用指南",
   aboutTextus: "关于 Textus",
   aboutVersion: "版本 {version}",
   aboutMadeBy: "由 CatVinci Studio 制作",

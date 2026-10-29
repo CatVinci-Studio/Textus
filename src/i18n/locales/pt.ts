@@ -298,6 +298,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Nenhuma imagem criada: não há nenhum modelo de imagem configurado. Escolha um nas Definições, em «{setting}».",
   imageSaveFailed: "Não foi possível salvar a imagem.",
   imageServiceLabel: "Serviço de imagens",
+  imageGenerationGroupLabel: "Criação de imagens",
   imageServiceFollowChat: "Igual ao chat ({name})",
   imageServiceFollowChatBare: "Igual ao chat",
   imageServiceFollowNoPictures:
@@ -522,6 +523,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   navAi: AI_NAME,
   navPrivacy: "Privacidade",
   navAbout: "Sobre",
+  navGuides: "Guias",
   aboutTextus: "Sobre o Textus",
   aboutVersion: "Versão {version}",
   aboutMadeBy: "Feito pela CatVinci Studio",

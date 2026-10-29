@@ -297,6 +297,7 @@ type /name in a conversation to use one.
     "No picture made: no image model is set up. Choose one in Settings under “{setting}”.",
   imageSaveFailed: "Couldn't save the picture.",
   imageServiceLabel: "Image service",
+  imageGenerationGroupLabel: "Pictures",
   imageServiceFollowChat: "Same as chat ({name})",
   imageServiceFollowChatBare: "Same as chat",
   imageServiceFollowNoPictures:
@@ -518,6 +519,7 @@ type /name in a conversation to use one.
   navAi: AI_NAME,
   navPrivacy: "Privacy",
   navAbout: "About",
+  navGuides: "Guides",
   aboutTextus: "About Textus",
   aboutVersion: "Version {version}",
   aboutMadeBy: "Made by CatVinci Studio",

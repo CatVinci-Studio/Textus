@@ -283,6 +283,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "画像は生成されませんでした：画像モデルが設定されていません。設定の「{setting}」で選んでください。",
   imageSaveFailed: "画像を保存できませんでした。",
   imageServiceLabel: "画像サービス",
+  imageGenerationGroupLabel: "画像の生成",
   imageServiceFollowChat: "チャットと同じ（{name}）",
   imageServiceFollowChatBare: "チャットと同じ",
   imageServiceFollowNoPictures:
@@ -504,6 +505,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   navAi: AI_NAME,
   navPrivacy: "プライバシー",
   navAbout: "について",
+  navGuides: "使い方ガイド",
   aboutTextus: "Textus について",
   aboutVersion: "バージョン {version}",
   aboutMadeBy: "CatVinci Studio 制作",

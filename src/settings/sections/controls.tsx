@@ -68,6 +68,22 @@ export function RowHelp({
   );
 }
 
+/** A page's rarely needed settings, folded away at its foot. */
+export function AdvancedFold({
+  t,
+  children,
+}: {
+  t: Strings;
+  children: ReactNode;
+}) {
+  return (
+    <details className="settings-advanced">
+      <summary>{t.agentAdvancedGroupLabel}</summary>
+      <div className="settings-advanced-body">{children}</div>
+    </details>
+  );
+}
+
 /** A row that opens something - a guide as a document, a page of Settings:
  *  the whole row is the button. */
 export function LinkRow({

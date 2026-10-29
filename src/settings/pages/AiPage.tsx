@@ -14,7 +14,12 @@ import {
   revisionDisplayName,
 } from "../../ai/revision/revision-display";
 import { type TextKey } from "../../i18n/strings";
-import { SettingRow, ToggleRow, VERBATIM_INPUT } from "../sections/controls";
+import {
+  AdvancedFold,
+  SettingRow,
+  ToggleRow,
+  VERBATIM_INPUT,
+} from "../sections/controls";
 import { ProviderListPanel } from "../sections/providers";
 import { ImageModelSection } from "../sections/image-model";
 import {
@@ -69,46 +74,6 @@ export function AiPage({
         <>
           <SettingsGroup title={t.aiAccountLabel}>
             <ProviderListPanel t={t} />
-            <SettingRow label={t.proxyLabel}>
-              <Select
-                className="settings-select"
-                aria-label={t.proxyLabel}
-                value={settings.proxyType}
-                onChange={(e) =>
-                  setSettings({ proxyType: e.target.value as ProxyType })
-                }
-              >
-                <option value="none">{t.proxyTypeNone}</option>
-                <option value="http">HTTP</option>
-                <option value="https">HTTPS</option>
-                <option value="socks5">SOCKS5</option>
-              </Select>
-            </SettingRow>
-            {settings.proxyType !== "none" && (
-              <div className="settings-proxy-row">
-                <input
-                  type="text"
-                  inputMode="url"
-                  {...VERBATIM_INPUT}
-                  className="settings-text-input settings-proxy-host"
-                  placeholder={t.proxyHostPlaceholder}
-                  aria-label={t.proxyHostPlaceholder}
-                  value={settings.proxyHost}
-                  onChange={(e) => setSettings({ proxyHost: e.target.value })}
-                />
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  {...VERBATIM_INPUT}
-                  className="settings-text-input settings-proxy-port"
-                  placeholder={t.proxyPortPlaceholder}
-                  aria-label={t.proxyPortPlaceholder}
-                  value={settings.proxyPort}
-                  onChange={(e) => setSettings({ proxyPort: e.target.value })}
-                />
-              </div>
-            )}
-            <ModelListRow t={t} />
           </SettingsGroup>
 
           <SettingsGroup title={t.writingFeaturesLabel}>
@@ -163,7 +128,6 @@ export function AiPage({
                 </Select>
               </SettingRow>
             )}
-            <WritingConventionsRow t={t} />
           </SettingsGroup>
 
           <SettingsGroup title={t.aiAskLabel}>
@@ -224,11 +188,16 @@ export function AiPage({
                   checked={settings.enableWebSearch}
                   onChange={(v) => setSettings({ enableWebSearch: v })}
                 />
-                <ImageModelSection t={t} />
                 <SearchServiceSection t={t} />
               </>
             )}
           </SettingsGroup>
+
+          {settings.enableAskAi && (
+            <SettingsGroup title={t.imageGenerationGroupLabel}>
+              <ImageModelSection t={t} />
+            </SettingsGroup>
+          )}
 
           {/* Project files, instructions and skills only reach conversations, so
               with chat off there is nothing here to set. */}
@@ -243,12 +212,6 @@ export function AiPage({
                   help={t.rememberAutomaticallyHint}
                   checked={settings.rememberAutomatically}
                   onChange={(v) => setSettings({ rememberAutomatically: v })}
-                />
-                <ToggleRow
-                  label={t.suggestNextMessageLabel}
-                  help={t.suggestNextMessageHint}
-                  checked={settings.suggestNextMessage}
-                  onChange={(v) => setSettings({ suggestNextMessage: v })}
                 />
                 <AgentSystemPromptSection
                   t={t}
@@ -276,7 +239,6 @@ export function AiPage({
                     </button>
                   </SettingRow>
                 )}
-                {canRevealInFileManager && <AgentWorkspaceSection t={t} />}
               </SettingsGroup>
 
               {isIOSApp && (
@@ -287,26 +249,78 @@ export function AiPage({
                   onClose={onClose}
                 />
               )}
-
-              <details className="settings-advanced">
-                <summary>{t.agentAdvancedGroupLabel}</summary>
-                <div className="settings-advanced-body">
-                  <ToggleRow
-                    label={t.editAnimationLabel}
-                    checked={settings.enableEditAnimation}
-                    onChange={(v) => setSettings({ enableEditAnimation: v })}
-                  />
-                  {canDetachChat && (
-                    <ToggleRow
-                      label={t.agentExpandWindowLabel}
-                      checked={settings.agentExpandToWindow}
-                      onChange={(v) => setSettings({ agentExpandToWindow: v })}
-                    />
-                  )}
-                </div>
-              </details>
             </>
           )}
+
+          {/* Rarely changed: the network, the model list, the writing
+              conventions and how the conversation behaves. */}
+          <AdvancedFold t={t}>
+            <SettingRow label={t.proxyLabel}>
+              <Select
+                className="settings-select"
+                aria-label={t.proxyLabel}
+                value={settings.proxyType}
+                onChange={(e) =>
+                  setSettings({ proxyType: e.target.value as ProxyType })
+                }
+              >
+                <option value="none">{t.proxyTypeNone}</option>
+                <option value="http">HTTP</option>
+                <option value="https">HTTPS</option>
+                <option value="socks5">SOCKS5</option>
+              </Select>
+            </SettingRow>
+            {settings.proxyType !== "none" && (
+              <div className="settings-proxy-row">
+                <input
+                  type="text"
+                  inputMode="url"
+                  {...VERBATIM_INPUT}
+                  className="settings-text-input settings-proxy-host"
+                  placeholder={t.proxyHostPlaceholder}
+                  aria-label={t.proxyHostPlaceholder}
+                  value={settings.proxyHost}
+                  onChange={(e) => setSettings({ proxyHost: e.target.value })}
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  {...VERBATIM_INPUT}
+                  className="settings-text-input settings-proxy-port"
+                  placeholder={t.proxyPortPlaceholder}
+                  aria-label={t.proxyPortPlaceholder}
+                  value={settings.proxyPort}
+                  onChange={(e) => setSettings({ proxyPort: e.target.value })}
+                />
+              </div>
+            )}
+            <ModelListRow t={t} />
+            <WritingConventionsRow t={t} />
+            {settings.enableAskAi && (
+              <>
+                <ToggleRow
+                  label={t.suggestNextMessageLabel}
+                  help={t.suggestNextMessageHint}
+                  checked={settings.suggestNextMessage}
+                  onChange={(v) => setSettings({ suggestNextMessage: v })}
+                />
+
+                <ToggleRow
+                  label={t.editAnimationLabel}
+                  checked={settings.enableEditAnimation}
+                  onChange={(v) => setSettings({ enableEditAnimation: v })}
+                />
+                {canDetachChat && (
+                  <ToggleRow
+                    label={t.agentExpandWindowLabel}
+                    checked={settings.agentExpandToWindow}
+                    onChange={(v) => setSettings({ agentExpandToWindow: v })}
+                  />
+                )}
+                {canRevealInFileManager && <AgentWorkspaceSection t={t} />}
+              </>
+            )}
+          </AdvancedFold>
         </>
       )}
     </>

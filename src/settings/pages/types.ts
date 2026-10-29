@@ -4,7 +4,10 @@ import type { Settings, useSettings } from "../../prefs/SettingsContext";
 
 /** A page's own page within its category (General › About Textus; on the
  *  phone, Editor & Appearance › More themes). */
-export type Subpage = "about" | "themes";
+/** What Help opens as a document (or, the welcome, as the tour). */
+export type HelpGuide = "welcome" | "markdown" | "agent";
+
+export type Subpage = "about" | "guides" | "themes";
 
 /** A plugin's command, for Settings › Shortcuts: its own key, if any. */
 export interface ShortcutCommand {
@@ -30,7 +33,7 @@ export interface SettingsPageProps {
    *  Extensions). */
   openPage: (id: string) => void;
   /** Opens a guide as a document, closing Settings first. */
-  openHelp: (doc: "markdown" | "agent") => void;
+  openHelp: (doc: HelpGuide) => void;
   /** Opens a document in the editor. */
   onOpenFile: (path: string) => void;
   /** Closes Settings (a page whose action opens something behind it). */

@@ -1,4 +1,5 @@
 import { AboutSection } from "./sections/about";
+import { GuidesSection } from "./sections/guides";
 import {
   useCallback,
   useDeferredValue,
@@ -37,6 +38,7 @@ import { settingsPage, settingsPages } from "./settings-pages";
 import type {
   SettingsPageProps,
   ShortcutCommand,
+  HelpGuide,
   Subpage,
 } from "./pages/types";
 import { useModalDialog } from "../ui/useModalDialog";
@@ -69,6 +71,7 @@ type Category = string;
  *  only on the phone: elsewhere its rows are Extensions › Themes. */
 const SEARCHED_SUBPAGES: [Subpage, Category][] = [
   ["about", "general"],
+  ["guides", "general"],
   ...(isIOSApp ? [["themes", "editor"] as [Subpage, Category]] : []),
 ];
 
@@ -127,7 +130,7 @@ export function SettingsPanel({
   const { matches, searchInput, listId } = search;
 
   // The guides open as documents, behind this panel - so it gives way.
-  const openHelp = (doc: "markdown" | "agent") => {
+  const openHelp = (doc: HelpGuide) => {
     onClose();
     emitMenuEvent(`help-doc:${doc}`);
   };
@@ -139,6 +142,7 @@ export function SettingsPanel({
 
   const subpageTitles: Record<Subpage, string> = {
     about: t.navAbout,
+    guides: t.navGuides,
     themes: t.themeMoreLabel,
   };
 
@@ -172,11 +176,19 @@ export function SettingsPanel({
 
   const renderSubpage = (s: Subpage) =>
     s === "about" ? (
-      <AboutSection t={t} />
+      <AboutSection t={t} language={settings.language} />
     ) : (
       <>
         <h1 className="settings-category-title">{subpageTitles[s]}</h1>
-        <ThemeLibrarySection t={t} />
+        {s === "guides" ? (
+          <GuidesSection
+            t={t}
+            language={settings.language}
+            openHelp={openHelp}
+          />
+        ) : (
+          <ThemeLibrarySection t={t} />
+        )}
       </>
     );
 

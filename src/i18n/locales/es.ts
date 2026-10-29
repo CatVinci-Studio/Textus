@@ -310,6 +310,7 @@ para usar una.
     "No se creó la imagen: no hay ningún modelo de imagen configurado. Elige uno en Ajustes, en «{setting}».",
   imageSaveFailed: "No se pudo guardar la imagen.",
   imageServiceLabel: "Servicio de imágenes",
+  imageGenerationGroupLabel: "Creación de imágenes",
   imageServiceFollowChat: "Igual que el chat ({name})",
   imageServiceFollowChatBare: "Igual que el chat",
   imageServiceFollowNoPictures:
@@ -536,6 +537,7 @@ para usar una.
   navAi: AI_NAME,
   navPrivacy: "Privacidad",
   navAbout: "Acerca de",
+  navGuides: "Guías",
   aboutTextus: "Acerca de Textus",
   aboutVersion: "Versión {version}",
   aboutMadeBy: "Hecho por CatVinci Studio",

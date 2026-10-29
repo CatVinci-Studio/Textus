@@ -302,6 +302,7 @@ export default {
     "Изображение не создано: модель изображений не настроена. Выберите её в Настройках, в пункте «{setting}».",
   imageSaveFailed: "Не удалось сохранить изображение.",
   imageServiceLabel: "Сервис изображений",
+  imageGenerationGroupLabel: "Создание изображений",
   imageServiceFollowChat: "Как в чате ({name})",
   imageServiceFollowChatBare: "Как в чате",
   imageServiceFollowNoPictures:
@@ -527,6 +528,7 @@ export default {
   navAi: AI_NAME,
   navPrivacy: "Конфиденциальность",
   navAbout: "О программе",
+  navGuides: "Руководства",
   aboutTextus: "О Textus",
   aboutVersion: "Версия {version}",
   aboutMadeBy: "Сделано в CatVinci Studio",

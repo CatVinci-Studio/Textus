@@ -300,6 +300,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Kein Bild erstellt: Es ist kein Bildmodell eingerichtet. Wähle eines in den Einstellungen unter „{setting}“.",
   imageSaveFailed: "Das Bild konnte nicht gespeichert werden.",
   imageServiceLabel: "Bilddienst",
+  imageGenerationGroupLabel: "Bilder erzeugen",
   imageServiceFollowChat: "Wie der Chat ({name})",
   imageServiceFollowChatBare: "Wie der Chat",
   imageServiceFollowNoPictures:
@@ -526,6 +527,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   navAi: AI_NAME,
   navPrivacy: "Datenschutz",
   navAbout: "Über",
+  navGuides: "Anleitungen",
   aboutTextus: "Über Textus",
   aboutVersion: "Version {version}",
   aboutMadeBy: "Von CatVinci Studio",

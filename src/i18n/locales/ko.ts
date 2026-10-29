@@ -277,6 +277,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     '그림을 만들지 못했습니다: 이미지 모델이 설정되지 않았습니다. 설정의 "{setting}"에서 선택하세요.',
   imageSaveFailed: "그림을 저장하지 못했습니다.",
   imageServiceLabel: "이미지 서비스",
+  imageGenerationGroupLabel: "그림 생성",
   imageServiceFollowChat: "채팅과 같게 ({name})",
   imageServiceFollowChatBare: "채팅과 같게",
   imageServiceFollowNoPictures:
@@ -496,6 +497,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   navAi: AI_NAME,
   navPrivacy: "개인정보 보호",
   navAbout: "정보",
+  navGuides: "사용 안내",
   aboutTextus: "Textus 정보",
   aboutVersion: "버전 {version}",
   aboutMadeBy: "CatVinci Studio 제작",

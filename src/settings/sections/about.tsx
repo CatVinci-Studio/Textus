@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { appVersion } from "../../platform/app-info";
-import type { Strings } from "../../i18n/strings";
+import type { Lang, Strings } from "../../i18n/strings";
 import { links } from "../../platform/ipc";
 import { UpdateButton, UpdateChannelRow } from "./general";
 import appIcon from "../../../src-tauri/icons/128x128@2x.png";
 
 /** Settings › General › About Textus: the app, its version and updates,
  *  its code, where to talk with us, and who made it. */
-export function AboutSection({ t }: { t: Strings }) {
+export function AboutSection({ t, language }: { t: Strings; language: Lang }) {
   const [version, setVersion] = useState("");
 
   useEffect(() => {
@@ -44,6 +44,13 @@ export function AboutSection({ t }: { t: Strings }) {
           onClick={() => void links.openAboutLink("qq")}
         >
           {t.aboutQq}
+        </button>
+        <button
+          type="button"
+          className="text-button settings-about-link"
+          onClick={() => void links.openCommunityPage(language)}
+        >
+          {t.menuHelpCommunity}
         </button>
         <UpdateButton t={t} />
       </div>
