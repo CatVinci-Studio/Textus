@@ -81,6 +81,8 @@
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
   font-family: var(--font-mono);
+  /* As in code (content-base.css): no fi drawn as one glyph. */
+  font-variant-ligatures: no-common-ligatures;
   /* The rich editor's size at the standard column (content-base.css), so
      switching modes doesn't drop the text to UI size. rem, so an imported
      theme's `html { font-size }` reaches it; zoom scales it as above. */

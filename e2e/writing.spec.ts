@@ -991,6 +991,30 @@ test("h4 to h6 are never smaller than the text, and h6 is lighter than h5 (#58)"
   expect(h6.color).not.toBe(h5.color);
 });
 
+test("no fi drawn as one glyph where the font is monospaced, so the caret can stop between them", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "An `fi` here.\n\n```\nfile\n```");
+  const active = '[data-active-tab="true"]';
+  const ligatures = (selector: string) =>
+    page
+      .locator(selector)
+      .first()
+      .evaluate((el) => {
+        const cs = getComputedStyle(el);
+        return [cs.fontVariantLigatures, cs.fontFeatureSettings];
+      });
+  // A coding font's => and != (calt) stay.
+  const kept = ["no-common-ligatures", '"calt"'];
+  expect(await ligatures(`${active} .milkdown p code`)).toEqual(kept);
+  expect(await ligatures(`${active} .milkdown pre code`)).toEqual(kept);
+  await emit(page, "menu-toggle-source-mode");
+  expect((await ligatures(`${active} textarea.source-view`))[0]).toBe(
+    "no-common-ligatures",
+  );
+});
+
 test("source mode: body-sized text, centred on a whole pixel, unchanged by focus (#61)", async ({
   page,
 }) => {
