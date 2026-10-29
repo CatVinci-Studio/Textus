@@ -148,15 +148,15 @@ Para ver uma imagem de perto, clique duas vezes nela ou clique em **Ampliar imag
 
 Além do editor WYSIWYG e do modo código-fonte (`Cmd+/`), o Textus tem três maneiras de escrever (no Windows e no Linux, use `Ctrl` no lugar de `Cmd`; Ajustes → Atalhos mostra as combinações atuais):
 
-- **Visualização dividida** (`Cmd+Shift+E`): o código-fonte Markdown à esquerda e a prévia renderizada à direita, rolando juntos.
-- **Modo máquina de escrever** (Ajustes → Editor e aparência → Visualização): a linha que você está digitando fica no meio da janela, no editor, no modo código-fonte e na visualização dividida.
+- **Código e pré-visualização** (`Cmd+Shift+E`): o código-fonte Markdown à esquerda e a prévia renderizada à direita, rolando juntos.
+- **Modo máquina de escrever**: a linha que você está digitando fica no meio da janela, no editor, no modo código-fonte e em Código e pré-visualização.
 - **Modo zen** (`Cmd+Shift+J`): esconde tudo menos o texto e esmaece todos os parágrafos, menos o que você está escrevendo. Pressione `Esc` para sair.
 
-Os três também estão no menu **Visualizar**. A visualização que você escolhe permanece: novas abas e documentos que você abre aparecem nela.
+Todos estão no menu **Visualizar** e em **Ajustes → Editor e aparência → Visualização**. Cada um é um único ajuste para todo o Textus: mude em qualquer janela e todas as abas de todas as janelas mudam junto, os documentos que você abrir em seguida aparecem nele, e o Textus volta a abrir nele da próxima vez.
 
 **Visualizar → Só leitura** (também no menu de contexto de uma aba) impede que um documento seja alterado, seja digitando, colando, soltando, desfazendo, pela Textus AI ou por plugins. Um cadeado ao lado do título indica isso; clique nele para tornar o documento editável de novo.
 
-**Visualizar → Paleta de comandos…** (`Cmd+Shift+P`) encontra tudo o que os menus fazem, e cada comando que um plugin adiciona, digitando algumas letras do nome.
+**Visualizar → Paleta de comandos…** (`Cmd+Shift+P`) encontra tudo o que os menus fazem, e cada comando que um plugin adiciona, digitando algumas letras do nome. Ela também muda a aparência (clara, escura ou a do sistema) e o tema do editor, e liga ou desliga a Textus AI.
 
 A aba **Estrutura** da barra lateral lista os títulos do documento; clique em um para ir até ele. Clique com o botão direito na estrutura para **Expandir tudo** e **Recolher tudo**, ou clique com `Option` (`Alt`) na seta de um título para recolher ou expandir todos de uma vez.
 
@@ -201,7 +201,9 @@ Ative **Ajustes → Geral → Aplicativo → Continuar em segundo plano** e, ao 
 
 ## Obter ajuda
 
-**Ajuda → Relatar um problema…** (também em **Ajustes → Geral**, em Ajuda) abre um formulário curto: diga o que deu errado, e o Textus acrescenta a versão dele, o seu sistema, os seus plugins, os seus ajustes sem nada privado e os erros recentes, tudo mostrado antes de qualquer envio. **Enviar no GitHub** abre o formulário de bugs do GitHub já preenchido; **Copiar** coloca tudo na área de transferência para um chat ou um e-mail. **Ajuda → Participe da comunidade** abre a página da comunidade.
+**Ajuda → Relatar um problema…** (também em **Ajustes → Geral**, em Ajuda) abre um formulário curto. Diga que tipo de relato é, de que parte do Textus se trata e, para um bug, qual a gravidade, e depois o que deu errado; o Textus acrescenta a versão dele, o seu sistema, os seus plugins, os seus ajustes sem nada privado e os erros recentes, tudo mostrado antes de qualquer envio. **Enviar** registra o relato como issue no GitHub para você, sem precisar de conta no GitHub, e informa o número; **Enviar no GitHub** abre o formulário do GitHub em vez disso; **Copiar** coloca tudo na área de transferência para um chat ou um e-mail. O que você escreve vira uma issue pública; um e-mail ou WeChat que você deixar, caso possamos perguntar mais, vai só para a equipe.
+
+**Ajustes → Geral → Ajuda** também reabre o tutorial de boas-vindas, abre os guias e leva a **Sobre o Textus**, com a versão e **Verificar Atualizações** (no Mac, também **Textus → Verificar Atualizações…**). **Ajuda → Participe da comunidade** abre a página da comunidade.
 
 ## Notas de rodapé e linhas horizontais
 

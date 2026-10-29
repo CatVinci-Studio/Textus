@@ -148,15 +148,15 @@ Pour regarder une image de près, double-cliquez dessus ou appuyez sur **Agrandi
 
 Outre l'éditeur WYSIWYG et le mode source (`Cmd+/`), Textus offre trois façons d'écrire (sous Windows et Linux, utilisez `Ctrl` au lieu de `Cmd` ; Réglages → Raccourcis indique les raccourcis en vigueur) :
 
-- **Vue partagée** (`Cmd+Shift+E`) : la source Markdown à gauche, l'aperçu mis en forme à droite, qui défilent ensemble.
-- **Mode machine à écrire** (Réglages → Éditeur et apparence → Affichage) : la ligne que vous tapez reste au milieu de la fenêtre, dans l'éditeur, en mode source comme en vue partagée.
+- **Source et aperçu** (`Cmd+Shift+E`) : la source Markdown à gauche, l'aperçu mis en forme à droite, qui défilent ensemble.
+- **Mode machine à écrire** : la ligne que vous tapez reste au milieu de la fenêtre, dans l'éditeur, en mode source comme en Source et aperçu.
 - **Mode zen** (`Cmd+Shift+J`) : masque tout sauf le texte et atténue tous les paragraphes sauf celui que vous écrivez. Appuyez sur `Esc` pour en sortir.
 
-Les trois se trouvent aussi dans le menu **Présentation**. La vue choisie reste : les nouveaux onglets et les documents que vous ouvrez s'y affichent.
+Tous se trouvent dans le menu **Présentation** et dans **Réglages → Éditeur et apparence → Affichage**. Chacun est un seul réglage pour tout Textus : changez-le dans n'importe quelle fenêtre et chaque onglet de chaque fenêtre change avec lui, les documents que vous ouvrez ensuite s'y affichent, et Textus s'y rouvre la fois suivante.
 
 **Présentation → Lecture seule** (aussi dans le menu contextuel d'un onglet) empêche toute modification d'un document : frappe, collage, dépôt, annulation, Textus AI ou extensions. Un cadenas à côté du titre l'indique ; cliquez dessus pour rendre le document de nouveau modifiable.
 
-**Présentation → Palette de commandes…** (`Cmd+Shift+P`) trouve tout ce que font les menus, ainsi que chaque commande ajoutée par une extension, en tapant quelques lettres de son nom.
+**Présentation → Palette de commandes…** (`Cmd+Shift+P`) trouve tout ce que font les menus, ainsi que chaque commande ajoutée par une extension, en tapant quelques lettres de son nom. Elle change aussi l'apparence (claire, sombre ou celle du système) et le thème de l'éditeur, et active ou désactive Textus AI.
 
 L'onglet **Plan** de la barre latérale liste les titres du document ; cliquez sur l'un d'eux pour vous y rendre. Un clic droit sur le plan propose **Tout déplier** et **Tout replier**, ou `Option`-clic (`Alt`-clic) sur la flèche d'un titre les déplie ou les replie tous d'un coup.
 
@@ -201,7 +201,9 @@ Activez **Réglages → Général → Application → Rester ouvert en arrière-
 
 ## Obtenir de l'aide
 
-**Aide → Signaler un problème…** (aussi dans **Réglages → Général**, sous Aide) ouvre un court formulaire : dites ce qui n'a pas marché, et Textus ajoute sa version, votre système, vos extensions, vos réglages sans rien de privé et les erreurs récentes, le tout affiché avant tout envoi. **Envoyer sur GitHub** ouvre le formulaire de bug de GitHub déjà rempli ; **Copier** le met dans le presse-papiers pour une discussion ou un e-mail. **Aide → Rejoindre la communauté** ouvre la page de la communauté.
+**Aide → Signaler un problème…** (aussi dans **Réglages → Général**, sous Aide) ouvre un court formulaire. Indiquez de quel type de signalement il s'agit, quelle partie de Textus il concerne et, pour un bug, sa gravité, puis ce qui n'a pas marché ; Textus ajoute sa version, votre système, vos extensions, vos réglages sans rien de privé et les erreurs récentes, le tout affiché avant tout envoi. **Envoyer** le dépose pour vous comme ticket sur GitHub, sans compte GitHub, et vous donne son numéro ; **Envoyer sur GitHub** ouvre plutôt le formulaire de GitHub ; **Copier** le met dans le presse-papiers pour une discussion ou un e-mail. Ce que vous écrivez devient un ticket public ; l'e-mail ou l'identifiant WeChat que vous laissez, si nous pouvons vous poser d'autres questions, ne va qu'à l'équipe.
+
+**Réglages → Général → Aide** permet aussi de revoir le tutoriel de bienvenue, d'ouvrir les guides et d'accéder à **À propos de Textus**, avec la version et **Rechercher les mises à jour** (sur Mac, aussi **Textus → Rechercher les mises à jour…**). **Aide → Rejoindre la communauté** ouvre la page de la communauté.
 
 ## Notes de bas de page et filets
 
