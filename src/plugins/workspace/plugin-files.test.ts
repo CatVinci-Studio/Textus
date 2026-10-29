@@ -117,4 +117,59 @@ describe("links after a rename", () => {
     const text = "[a](https://e.com/plan.md) [b](#plan) [c](other.md)";
     expect(rewriteLinks(text, "/r/x.md", "/r/plan.md", "/r/p.md")).toBe(text);
   });
+
+  it.each([
+    ["inline code", "`[plan](plan.md) [[plan]] ![plan](plan.md)`"],
+    ["longer code spans", "``a ` [plan](plan.md) [[plan]]``"],
+    ["multiline code spans", "`example\n[plan](plan.md) [[plan]]`"],
+    ["backtick fences", "```md\n[plan](plan.md) [[plan]]\n```"],
+    ["tilde fences", "~~~md\n[plan](plan.md) [[plan]]\n~~~"],
+    ["longer fences", "````md\n```\n[plan](plan.md) [[plan]]\n````"],
+    ["indented code", "    [plan](plan.md) [[plan]]"],
+    ["quoted code", "> ```md\n> [plan](plan.md) [[plan]]\n> ```"],
+    [
+      "code in a list",
+      "- Example:\n\n  ```md\n  [plan](plan.md) [[plan]]\n  ```",
+    ],
+    ["Windows line endings", "```md\r\n[plan](plan.md) [[plan]]\r\n```"],
+  ])(
+    "keeps %s unchanged while links around it follow the rename",
+    (_, code) => {
+      const before = "See [计划](plan.md#goals).\n\n";
+      const after = "\n\nSee [[plan#Goals|the goals]].";
+      expect(
+        rewriteLinks(
+          before + code + after,
+          "/r/x.md",
+          "/r/plan.md",
+          "/r/Roadmap.md",
+        ),
+      ).toBe(
+        "See [计划](Roadmap.md#goals).\n\n" +
+          code +
+          "\n\nSee [[Roadmap#Goals|the goals]].",
+      );
+    },
+  );
+
+  it("keeps an unclosed fence unchanged through the end of the document", () => {
+    const text = "[plan](plan.md)\n\n```md\n[plan](plan.md) [[plan]]";
+    expect(rewriteLinks(text, "/r/x.md", "/r/plan.md", "/r/p.md")).toBe(
+      "[plan](p.md)\n\n```md\n[plan](plan.md) [[plan]]",
+    );
+  });
+
+  it("updates a link whose label contains code", () => {
+    const text = "[`plan`](plan.md) and `[[plan]]` and [[plan]]";
+    expect(rewriteLinks(text, "/r/x.md", "/r/plan.md", "/r/Roadmap.md")).toBe(
+      "[`plan`](Roadmap.md) and `[[plan]]` and [[Roadmap]]",
+    );
+  });
+
+  it("updates links beside unmatched or escaped backticks", () => {
+    const text = "` [plan](plan.md) [[plan]]\n\n\\` [plan](plan.md) [[plan]]";
+    expect(rewriteLinks(text, "/r/x.md", "/r/plan.md", "/r/p.md")).toBe(
+      "` [plan](p.md) [[p]]\n\n\\` [plan](p.md) [[p]]",
+    );
+  });
 });
