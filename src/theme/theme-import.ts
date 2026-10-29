@@ -107,15 +107,18 @@ export async function importThemeCss(path: string): Promise<string> {
 }
 
 /// Saves a self-contained stylesheet as a user theme, new or over `replacing`
-/// (a gallery update), and returns its settings entry.
+/// (a gallery update), with its dark form when it has one, and returns its
+/// settings entry.
 export async function saveUserTheme(
   css: string,
   meta: Omit<UserThemeMeta, "id" | "hasDark">,
   replacing?: string,
+  darkCss?: string,
 ): Promise<UserThemeMeta> {
   const id = replacing ?? `user-${crypto.randomUUID()}`;
   await themes.saveThemeCss(id, "light", css);
-  return { ...meta, id, hasDark: false };
+  if (darkCss) await themes.saveThemeCss(id, "dark", darkCss);
+  return { ...meta, id, hasDark: !!darkCss };
 }
 
 /// `userThemes` with `meta` in it: in its old place when it replaces a

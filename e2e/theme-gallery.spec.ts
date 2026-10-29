@@ -82,6 +82,17 @@ test.describe("theme gallery", () => {
     await expect(dialog.getByLabel("Editor theme")).toContainText("Paper Mint");
   });
 
+  test("a theme with a dark form follows the appearance", async ({ page }) => {
+    const dialog = await openGallery(page);
+    const mint = dialog.getByRole("group", { name: "Paper Mint" });
+    await mint.getByRole("button", { name: "Install" }).click();
+    await expect.poll(() => injectedTheme(page)).toContain("#eef7f1");
+    await page.emulateMedia({ colorScheme: "dark" });
+    await expect.poll(() => injectedTheme(page)).toContain("#10241b");
+    await page.emulateMedia({ colorScheme: "light" });
+    await expect.poll(() => injectedTheme(page)).toContain("#eef7f1");
+  });
+
   test("offers an update when the catalog has a newer version", async ({
     page,
   }) => {

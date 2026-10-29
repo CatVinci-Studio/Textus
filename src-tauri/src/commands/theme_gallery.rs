@@ -42,6 +42,10 @@ pub struct GalleryTheme {
     pub updated: String,
     /// Repository-relative, e.g. `themes/plain/theme.css`.
     pub css: String,
+    /// Its dark form, e.g. `themes/plain/theme-dark.css`; none for a theme
+    /// with one design for both appearances.
+    #[serde(default)]
+    pub dark_css: Option<String>,
     /// Repository-relative screenshots.
     #[serde(default)]
     pub previews: Vec<String>,
@@ -115,6 +119,13 @@ fn parse_catalog(bytes: &[u8]) -> Result<Vec<GalleryTheme>, String> {
             || themes.iter().any(|t| t.id == theme.id)
         {
             continue;
+        }
+        if theme
+            .dark_css
+            .as_deref()
+            .is_some_and(|p| css_url(p).is_none())
+        {
+            theme.dark_css = None;
         }
         theme.previews.retain(|p| preview_url(p).is_some());
         theme.previews.truncate(MAX_PREVIEWS);
@@ -299,7 +310,7 @@ mod tests {
                  "description": "Default look.", "license": "MIT",
                  "source": "https://github.com/CatVinci-Studio/textus-themes",
                  "created": "2026-10-18T04:55:06Z", "updated": "2026-10-18T04:55:06Z",
-                 "css": "themes/plain/theme.css",
+                 "css": "themes/plain/theme.css", "darkCss": "themes/plain/theme-dark.css",
                  "previews": ["themes/plain/preview.png", "https://evil.test/x.png", "themes/plain/b.jpg", "themes/plain/c.webp"]},
                 {"id": "evil", "name": "Evil", "updated": "2026-10-18T00:00:00Z",
                  "css": "https://evil.test/theme.css"},
@@ -311,6 +322,7 @@ mod tests {
                  "css": "themes/plain/theme.css"},
                 {"id": "minimal", "name": "Minimal", "updated": "2026-10-17T00:00:00Z",
                  "css": "themes/minimal/theme.css", "source": "javascript:alert(1)",
+                 "darkCss": "https://evil.test/dark.css",
                  "extra": "ignored"}
             ]
         }"#;
@@ -324,6 +336,12 @@ mod tests {
         );
         assert_eq!(themes[1].source, "");
         assert!(themes[1].previews.is_empty());
+        // A dark form only from the gallery itself.
+        assert_eq!(
+            themes[0].dark_css.as_deref(),
+            Some("themes/plain/theme-dark.css")
+        );
+        assert_eq!(themes[1].dark_css, None);
     }
 
     #[test]

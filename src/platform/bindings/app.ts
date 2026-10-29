@@ -280,6 +280,11 @@ export type GalleryTheme_Deserialize = {
 	updated: string,
 	/**  Repository-relative, e.g. `themes/plain/theme.css`. */
 	css: string,
+	/**
+	 *  Its dark form, e.g. `themes/plain/theme-dark.css`; none for a theme
+	 *  with one design for both appearances.
+	 */
+	darkCss?: string | null,
 	/**  Repository-relative screenshots. */
 	previews?: string[],
 };
@@ -296,6 +301,11 @@ export type GalleryTheme_Serialize = {
 	updated: string,
 	/**  Repository-relative, e.g. `themes/plain/theme.css`. */
 	css: string,
+	/**
+	 *  Its dark form, e.g. `themes/plain/theme-dark.css`; none for a theme
+	 *  with one design for both appearances.
+	 */
+	darkCss: string | null,
 	/**  Repository-relative screenshots. */
 	previews: string[],
 };
