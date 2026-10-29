@@ -91,11 +91,84 @@ function wholeSpan(
   return null;
 }
 
+/** What of each textblock a selection over several holds, trimmed of edge
+ *  whitespace: the ranges a shortcut wraps or unwraps. Code, maths and
+ *  enclosure blocks are left out. */
+function blockRanges(state: EditorState): { from: number; to: number }[] {
+  const { from, to } = state.selection;
+  const ranges: { from: number; to: number }[] = [];
+  state.doc.nodesBetween(from, to, (node, pos) => {
+    if (!node.isTextblock) return true;
+    if (node.type.spec.code || isEnclosureName(node.type.name)) return false;
+    const start = Math.max(from, pos + 1);
+    const end = Math.min(to, pos + 1 + node.content.size);
+    // Only a text node's edge whitespace stays outside: spaces in code are code.
+    const part = state.doc.slice(start, end).content;
+    const edge = (child: ProseNode | null, pattern: RegExp) =>
+      child?.isText ? pattern.exec(child.text!)![0].length : 0;
+    const lead = edge(part.firstChild, /^\s*/);
+    const trail = edge(part.lastChild, /\s*$/);
+    if (start + lead < end - trail)
+      ranges.push({ from: start + lead, to: end - trail });
+    return false;
+  });
+  return ranges;
+}
+
+/**
+ * A selection over several textblocks: each block's part made bold or
+ * italic on its own, as in Typora, or, when every part already is, each
+ * taken off. One step to undo. Null when a part holds what can't be wrapped.
+ */
+function acrossBlocks(
+  state: EditorState,
+  spec: FormatSpec,
+): Transaction | null {
+  const ranges = blockRanges(state);
+  if (ranges.length === 0) return null;
+  const spanOf = ({ from, to }: { from: number; to: number }) => {
+    const node = state.doc.nodeAt(from);
+    return node?.type.name === "md_span" &&
+      node.attrs.delim === spec.delim &&
+      node.attrs.rung === spec.rung &&
+      from + node.nodeSize === to
+      ? node
+      : null;
+  };
+  const tr = state.tr;
+  const allOn = ranges.every((range) => spanOf(range));
+  for (const range of [...ranges].reverse()) {
+    if (allOn) {
+      tr.replaceWith(range.from, range.to, spanOf(range)!.content);
+      continue;
+    }
+    if (spanOf(range)) continue;
+    const fragment = state.doc.slice(range.from, range.to).content;
+    for (let i = 0; i < fragment.childCount; i++) {
+      const child = fragment.child(i);
+      if (!child.isText && !WRAPPABLE.has(child.type.name)) return null;
+    }
+    tr.replaceWith(
+      range.from,
+      range.to,
+      state.schema.nodes.md_span.create(
+        { delim: spec.delim, rung: spec.rung },
+        fragment,
+      ),
+    );
+  }
+  const { from, to } = state.selection;
+  return tr.setSelection(
+    TextSelection.create(tr.doc, tr.mapping.map(from, -1), tr.mapping.map(to)),
+  );
+}
+
 /**
  * Cmd/Ctrl+B and Cmd/Ctrl+I on md_span nodes (the schema has no strong/em
  * marks). No selection opens an empty shell, as typing "**" does; a
  * selection in one textblock is wrapped, edge whitespace left outside so it
- * serializes; inside code/math or another shell, nothing.
+ * serializes; one over several textblocks, each block's part; inside
+ * code/math or another shell, nothing.
  */
 export const formatShortcutPlugin = $prose(
   () =>
@@ -141,8 +214,15 @@ export const formatShortcutPlugin = $prose(
             return true;
           }
 
+          // Over several blocks, or all of the document (Select All).
+          if (!$from.sameParent($to) || !parent.inlineContent) {
+            const tr = acrossBlocks(state, spec);
+            if (!tr) return false;
+            view.dispatch(tr);
+            event.preventDefault();
+            return true;
+          }
           if (!(state.selection instanceof TextSelection)) return false;
-          if (!$from.sameParent($to)) return false;
 
           // All of a bold span selected, Mod+I makes it one `***` span, and the
           // other way round.
