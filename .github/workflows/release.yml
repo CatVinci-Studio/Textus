@@ -75,7 +75,7 @@ jobs:
           fi
           echo "::warning::$notes is missing at $RELEASE_TAG; the release keeps its current notes."
 
-      # The tests ran in CI on the tagged commit (it reached main or a
+      # The tests ran in CI on the tagged commit (it reached main or
       # stable through a pull request); the builds below don't run
       # them again. Waits while that CI is still going, and stops the release
       # if any of the required jobs failed. A rebuild of an old tag
