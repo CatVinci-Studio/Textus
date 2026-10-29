@@ -42,3 +42,20 @@ test("a report opens GitHub's bug form filled with the words, the system and the
   expect(url.searchParams.get("description")).toContain("拖文件进来没有反应");
   expect(url.searchParams.get("description")).toContain("WebView 622.1");
 });
+
+test("Settings' Help group opens the report too, closing Settings", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-open-settings"),
+  );
+  const settings = page.getByRole("dialog", { name: "Settings" });
+  await settings.getByRole("button", { name: "Report a Problem…" }).click();
+  await expect(settings).toHaveCount(0);
+  await expect(
+    page.getByRole("dialog", { name: "Report a Problem" }),
+  ).toBeVisible();
+});

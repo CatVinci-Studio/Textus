@@ -11,7 +11,9 @@ import {
   canInstallCliCommand,
   canSetDefaultEditor,
   canUseWindows,
+  isDesktopApp,
 } from "../../platform/capabilities";
+import { emitMenuEvent } from "../../platform/menu-events";
 
 /** General: language, documents and disk, system integrations, About, and
  *  the guides. */
@@ -21,6 +23,7 @@ export function GeneralPage({
   setSettings,
   setSubpage,
   openHelp,
+  onClose,
 }: SettingsPageProps) {
   return (
     <>
@@ -106,6 +109,16 @@ export function GeneralPage({
           label={t.menuHelpCommunity}
           onOpen={() => void links.openCommunityPage(settings.language)}
         />
+        {/* The dialog is the window's, behind this panel. */}
+        {isDesktopApp && (
+          <LinkRow
+            label={t.menuHelpReport}
+            onOpen={() => {
+              onClose();
+              emitMenuEvent("help-report");
+            }}
+          />
+        )}
       </SettingsGroup>
     </>
   );
