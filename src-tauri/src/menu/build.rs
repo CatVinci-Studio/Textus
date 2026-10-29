@@ -184,9 +184,24 @@ pub(crate) fn build(
     .accelerator("CmdOrCtrl+Shift+V")
     .build(app)?;
 
-    let edit_menu = SubmenuBuilder::new(app, l("menu:edit", "Edit"))
+    let edit_menu = SubmenuBuilder::new(app, l("menu:edit", "Edit"));
+    #[cfg(target_os = "macos")]
+    let edit_menu = edit_menu
+        .item(
+            &MenuItemBuilder::with_id(UNDO_ID, l("predefined:undo", "Undo"))
+                .accelerator("CmdOrCtrl+Z")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id(REDO_ID, l("predefined:redo", "Redo"))
+                .accelerator("CmdOrCtrl+Shift+Z")
+                .build(app)?,
+        );
+    #[cfg(not(target_os = "macos"))]
+    let edit_menu = edit_menu
         .undo_with_text(l("predefined:undo", "Undo"))
-        .redo_with_text(l("predefined:redo", "Redo"))
+        .redo_with_text(l("predefined:redo", "Redo"));
+    let edit_menu = edit_menu
         .separator()
         .cut_with_text(l("predefined:cut", "Cut"))
         .copy_with_text(l("predefined:copy", "Copy"))

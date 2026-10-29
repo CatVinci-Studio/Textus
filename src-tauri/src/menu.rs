@@ -80,6 +80,12 @@ const PASTE_AS_PLAIN_TEXT_ID: &str = "paste-as-plain-text";
 /// selectAll: with no text field focused selected the whole window.
 #[cfg(target_os = "macos")]
 const SELECT_ALL_ID: &str = "select-all";
+/// Edit > Undo and Redo on macOS, in place of the predefined items: their
+/// undo: and redo: reach WebKit's own history, never the editor's.
+#[cfg(target_os = "macos")]
+const UNDO_ID: &str = "undo";
+#[cfg(target_os = "macos")]
+const REDO_ID: &str = "redo";
 const NEW_WINDOW_ID: &str = "new-window";
 /// Help menu ids carry the bundled doc they open: "help-doc:<doc>".
 const HELP_DOC_PREFIX: &str = "help-doc:";
@@ -380,6 +386,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-paste-as-plain-text");
     } else if cfg!(target_os = "macos") && id == "select-all" {
         emit_to_focused(app_handle, "menu-select-all");
+    } else if cfg!(target_os = "macos") && (id == "undo" || id == "redo") {
+        emit_to_focused(app_handle, &format!("menu-{id}"));
     } else if id == FIND_REPLACE_ID {
         emit_to_focused(app_handle, "menu-find-replace");
     } else if id == ZOOM_IN_ID {

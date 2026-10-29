@@ -1,5 +1,6 @@
 import { thisWindow } from "../../platform/this-window";
 import { selectAllInFocus } from "../../ui/select-all";
+import { undoInFocus } from "../../ui/undo-in-focus";
 import { EDIT_ACTION_EVENT } from "../../utils/events";
 import type { LocalMenuAction, MenuAction } from "./app-menu-model";
 import { canToggleFullscreen, hasAppMenu } from "../../platform/capabilities";
@@ -21,6 +22,10 @@ export function runMenuAction(action: MenuAction): void {
 export function runLocalMenuAction(action: LocalMenuAction): void {
   if (action === "select-all") {
     selectAllInFocus();
+    return;
+  }
+  if (action === "undo" || action === "redo") {
+    undoInFocus(action);
     return;
   }
   if (action === "fullscreen") {

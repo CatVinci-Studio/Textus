@@ -7,6 +7,7 @@ import {
 import { TRACK_CHANGES_EVENT } from "../../utils/events";
 import { menuIpc, windowIpc } from "../../platform/ipc";
 import { selectAllInFocus } from "../../ui/select-all";
+import { undoInFocus } from "../../ui/undo-in-focus";
 import { hasNativeMenuBar } from "../../platform/capabilities";
 import { nativeMenuChecks, type MenuChecks } from "./app-menu-model";
 import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";
@@ -169,6 +170,8 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-close-split", () => closeSplit()),
       // Edit > Copy and Paste as Plain Text run in the editor on screen.
       listenToThisWindow("menu-select-all", selectAllInFocus),
+      listenToThisWindow("menu-undo", () => undoInFocus("undo")),
+      listenToThisWindow("menu-redo", () => undoInFocus("redo")),
       listenToThisWindow("menu-copy-as-plain-text", () =>
         window.dispatchEvent(
           new CustomEvent(EDIT_ACTION_EVENT, { detail: "copy-as-plain-text" }),
