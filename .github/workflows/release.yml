@@ -76,7 +76,7 @@ jobs:
           echo "::warning::$notes is missing at $RELEASE_TAG; the release keeps its current notes."
 
       # The tests ran in CI on the tagged commit (it reached main or a
-      # release/ branch through a pull request); the builds below don't run
+      # stable through a pull request); the builds below don't run
       # them again. Waits while that CI is still going, and stops the release
       # if any of the required jobs failed. A rebuild of an old tag
       # (workflow_dispatch) predates these job names and skips the gate.
@@ -103,7 +103,7 @@ jobs:
             echo "Waiting for CI on $sha ($passed of 3 done)..."
             sleep 30
           done
-          echo "::error::CI on $sha did not finish within 45 minutes (or never ran: was this commit pushed to main or a release/ branch?)."
+          echo "::error::CI on $sha did not finish within 45 minutes (or never ran: was this commit pushed to main or stable?)."
           exit 1
 
       # The builds each upload to the tag's draft, made by whichever found
