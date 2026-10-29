@@ -743,6 +743,8 @@ export default {
   shortcutLeaveBlock: "跳出代码块、表格或引用",
   shortcutMoveBlockUp: "段落或列表项上移",
   shortcutMoveBlockDown: "段落或列表项下移",
+  shortcutNavBack: "后退",
+  shortcutNavForward: "前进",
   shortcutKeyboardGroupLabel: "键盘导航",
   shortcutCycleRegions: "在窗口各区域间移动",
   shortcutTakeChange: "采纳审阅条指向的修改",

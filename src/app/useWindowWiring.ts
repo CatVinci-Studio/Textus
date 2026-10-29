@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { installClipboardCapture } from "../clipboard/history";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
+import { useNavHistory } from "./useNavHistory";
 import { useExternalChangeReload } from "../document/useExternalChangeReload";
 import { tabReadOnly } from "../document/read-only";
 import {
@@ -64,6 +65,7 @@ export function useWindowWiring({
     toggleTextusAi: textusAi.toggle,
   });
 
+  useNavHistory({ tabsRef, activeTabId, setActiveTabId });
   useEffect(() => installClipboardCapture(), []);
 
   useTutorialTabRecovery(tutorial, tabState, docs.claimPracticeTab);

@@ -828,6 +828,8 @@ export default {
   shortcutLeaveBlock: "Выйти из блока кода, таблицы или цитаты",
   shortcutMoveBlockUp: "Переместить абзац или пункт списка вверх",
   shortcutMoveBlockDown: "Переместить абзац или пункт списка вниз",
+  shortcutNavBack: "Назад",
+  shortcutNavForward: "Вперёд",
   shortcutKeyboardGroupLabel: "Навигация с клавиатуры",
   shortcutCycleRegions: "Переход между областями окна",
   shortcutTakeChange: "Принять правку, на которую указывает панель проверки",

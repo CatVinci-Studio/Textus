@@ -8,6 +8,7 @@ import { useTreeKeys } from "../ui/useTreeKeys";
 import { Tooltip } from "../ui/Tooltip";
 import { ContextMenu } from "../ui/ContextMenu";
 import { Presence } from "../ui/usePresence";
+import { noteJump } from "../utils/nav-history";
 import "./FileTree.css";
 
 interface OutlineProps {
@@ -45,7 +46,10 @@ function scrollToHeading(index: number) {
   const heading = root?.querySelectorAll(HEADINGS)[index];
   // One inside a folded <details> opens it first: hidden, it had no place
   // to scroll to.
-  if (heading) unfoldElement(heading);
+  if (heading) {
+    noteJump();
+    unfoldElement(heading);
+  }
   heading?.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
 }
 

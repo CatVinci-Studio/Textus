@@ -847,6 +847,8 @@ utiliser une.
     "Sortir d'un bloc de code, d'un tableau ou d'une citation",
   shortcutMoveBlockUp: "Monter le paragraphe ou l’élément de liste",
   shortcutMoveBlockDown: "Descendre le paragraphe ou l’élément de liste",
+  shortcutNavBack: "Précédent",
+  shortcutNavForward: "Suivant",
   shortcutKeyboardGroupLabel: "Navigation au clavier",
   shortcutCycleRegions: "Passer d’une zone de la fenêtre à l’autre",
   shortcutTakeChange:

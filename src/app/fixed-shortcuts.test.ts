@@ -95,6 +95,8 @@ describe("the fixed shortcuts in Settings", () => {
       "mod+enter",
       "alt+arrowup",
       "alt+arrowdown",
+      "ctrl+-",
+      "ctrl+shift+-",
       MAC_NEXT_TAB,
       MAC_PREVIOUS_TAB,
       // The window's own keys.

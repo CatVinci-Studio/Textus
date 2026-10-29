@@ -785,6 +785,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   shortcutLeaveBlock: "コードブロック・表・引用から抜ける",
   shortcutMoveBlockUp: "段落・リスト項目を上へ移動",
   shortcutMoveBlockDown: "段落・リスト項目を下へ移動",
+  shortcutNavBack: "戻る",
+  shortcutNavForward: "進む",
   shortcutKeyboardGroupLabel: "キーボード操作",
   shortcutCycleRegions: "ウインドウの領域間を移動",
   shortcutTakeChange: "レビューバーが指す変更を採用",

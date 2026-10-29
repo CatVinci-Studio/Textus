@@ -111,6 +111,15 @@ export function fixedShortcutGroups(
   groups.push({
     title: t.shortcutKeyboardGroupLabel,
     items: [
+      // Ctrl+- on a Mac, where Cmd+[ outdents a list item (useNavHistory.ts).
+      {
+        label: t.shortcutNavBack,
+        combos: [mac ? "ctrl+-" : "alt+arrowleft"],
+      },
+      {
+        label: t.shortcutNavForward,
+        combos: [mac ? "ctrl+shift+-" : "alt+arrowright"],
+      },
       { label: t.shortcutCycleRegions, combos: ["f6", "shift+f6"] },
       { label: t.quickAskNextEdit, combos: ["f7"] },
       { label: t.quickAskPrevEdit, combos: ["shift+f7"] },

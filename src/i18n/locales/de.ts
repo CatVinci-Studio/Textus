@@ -820,6 +820,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   shortcutLeaveBlock: "Codeblock, Tabelle oder Zitat verlassen",
   shortcutMoveBlockUp: "Absatz oder Listenpunkt nach oben",
   shortcutMoveBlockDown: "Absatz oder Listenpunkt nach unten",
+  shortcutNavBack: "Zurück",
+  shortcutNavForward: "Vorwärts",
   shortcutKeyboardGroupLabel: "Tastaturnavigation",
   shortcutCycleRegions: "Zwischen den Bereichen des Fensters wechseln",
   shortcutTakeChange:

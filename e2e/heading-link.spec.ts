@@ -104,3 +104,23 @@ test("a heading the file doesn't have opens it at its top", async ({
   await page.waitForTimeout(300);
   expect(await page.locator(scroller).evaluate((el) => el.scrollTop)).toBe(0);
 });
+
+test("Back returns to the tab a link left, and Forward goes on again", async ({
+  page,
+}) => {
+  const mac = await page.evaluate(() => /Mac/.test(navigator.platform));
+  const back = mac ? "Control+Minus" : "Alt+ArrowLeft";
+  const forward = mac ? "Control+Shift+Minus" : "Alt+ArrowRight";
+  const activeTitle = page.locator(".tab-pill-active .tab-pill-title");
+  await follow(page, "Part two");
+  await expect.poll(() => headingOnScreen(page, "Part two")).toBe(true);
+  const down = await page.locator(scroller).evaluate((el) => el.scrollTop);
+
+  await page.keyboard.press(back);
+  await expect(activeTitle).toHaveText(/index/);
+  await page.keyboard.press(forward);
+  await expect(activeTitle).toHaveText(/ch1/);
+  await expect
+    .poll(() => page.locator(scroller).evaluate((el) => el.scrollTop))
+    .toBe(down);
+});
