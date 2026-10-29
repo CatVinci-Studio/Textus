@@ -10,14 +10,14 @@ it.
 
 All under the [CatVinci-Studio](https://github.com/CatVinci-Studio) organization.
 
-| Repository                                                                | What it is                                                                                        |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| [Textus](https://github.com/CatVinci-Studio/Textus)                       | The app. `main` is the working branch; `dev` is a locked snapshot; `archive/levis` is Levis 0.9.8 |
-| [textus-themes](https://github.com/CatVinci-Studio/textus-themes)         | The theme gallery: themes shared through issue #1, reviewed with `/approve`                       |
-| [homebrew-tap](https://github.com/CatVinci-Studio/homebrew-tap)           | Retired: its `tap_migrations.json` moves old tap installs to Homebrew's official `textus` cask    |
-| [arch-repo](https://github.com/CatVinci-Studio/arch-repo)                 | The signed `[catvinci]` pacman repository that serves `textus-bin`                                |
-| [levis-homepage](https://github.com/CatVinci-Studio/levis-homepage)       | textus.catvinci.com (the old name stuck)                                                          |
-| [catvinci-homepage](https://github.com/CatVinci-Studio/catvinci-homepage) | catvinci.com                                                                                      |
+| Repository                                                                | What it is                                                                                                             |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| [Textus](https://github.com/CatVinci-Studio/Textus)                       | The app. `main` is the next version, `release/X.Y.x` the stable one; older versions are tags (Levis 0.9.8 is `v0.9.8`) |
+| [textus-themes](https://github.com/CatVinci-Studio/textus-themes)         | The theme gallery: themes shared through issue #1, reviewed with `/approve`                                            |
+| [homebrew-tap](https://github.com/CatVinci-Studio/homebrew-tap)           | Retired: its `tap_migrations.json` moves old tap installs to Homebrew's official `textus` cask                         |
+| [arch-repo](https://github.com/CatVinci-Studio/arch-repo)                 | The signed `[catvinci]` pacman repository that serves `textus-bin`                                                     |
+| [levis-homepage](https://github.com/CatVinci-Studio/levis-homepage)       | textus.catvinci.com (the old name stuck)                                                                               |
+| [catvinci-homepage](https://github.com/CatVinci-Studio/catvinci-homepage) | catvinci.com                                                                                                           |
 
 ## Automation
 
