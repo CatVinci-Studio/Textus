@@ -1,3 +1,5 @@
+import { fromMarkdown } from "mdast-util-from-markdown";
+import type { Nodes } from "mdast";
 import { basename, dirname } from "../../utils/path";
 
 /**
@@ -39,6 +41,19 @@ function encodeLink(path: string): string {
   return path.replace(/ /g, "%20");
 }
 
+function codeRanges(text: string): [number, number][] {
+  const ranges: [number, number][] = [];
+  const visit = (node: Nodes) => {
+    if (node.type === "code" || node.type === "inlineCode") {
+      const start = node.position?.start.offset;
+      const end = node.position?.end.offset;
+      if (start !== undefined && end !== undefined) ranges.push([start, end]);
+    } else if ("children" in node) node.children.forEach(visit);
+  };
+  visit(fromMarkdown(text));
+  return ranges;
+}
+
 /**
  * `text` (the document at `docPath`) with its links to `from` pointing at
  * `to`; the same text when none did.
@@ -53,10 +68,14 @@ export function rewriteLinks(
   const oldPath = sep(from);
   const fromStem = stem(basename(from));
   const toStem = stem(basename(to));
+  let code = codeRanges(text);
+  const inCode = (offset: number) =>
+    code.some(([start, end]) => start <= offset && offset < end);
   // [label](target "title") and ![alt](target), outside code.
   let out = text.replace(
     /(!?\[[^\]\n]*\]\()(<[^>\n]+>|[^)\s]+)((?:\s+"[^"\n]*")?\))/g,
-    (all, open: string, target: string, close: string) => {
+    (all, open: string, target: string, close: string, offset: number) => {
+      if (inCode(offset)) return all;
       const bare = target.startsWith("<") ? target.slice(1, -1) : target;
       if (/^[a-z][a-z0-9+.-]*:/i.test(bare) || bare.startsWith("#")) return all;
       const [file, hash = ""] = bare.split(/(?=#)/);
@@ -73,10 +92,13 @@ export function rewriteLinks(
   );
   // [[name]], [[name#heading]], [[name|label]]: a wiki link names the file
   // without its folder; only a change of name changes it.
-  if (fromStem !== toStem)
+  if (fromStem !== toStem) {
+    // The first pass can change lengths before a code span or block.
+    if (out !== text) code = codeRanges(out);
     out = out.replace(
       /\[\[([^\]|#\n]+)((?:#[^\]|\n]*)?)((?:\|[^\]\n]*)?)\]\]/g,
-      (all, name: string, heading: string, label: string) => {
+      (all, name: string, heading: string, label: string, offset: number) => {
+        if (inCode(offset)) return all;
         const trimmed = name.trim();
         const slash = trimmed.lastIndexOf("/");
         if (
@@ -87,5 +109,6 @@ export function rewriteLinks(
         return `[[${trimmed.slice(0, slash + 1)}${toStem}${heading}${label}]]`;
       },
     );
+  }
   return out;
 }

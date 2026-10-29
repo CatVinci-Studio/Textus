@@ -309,3 +309,78 @@ test("a plugin's strings come in the UI's language, from its manifest", async ({
   await panel.locator("#l10n").click();
   await expect(panel.locator("#out")).toHaveText("來自host的問候");
 });
+
+test("a plugin's rename updates links without changing code examples", async ({
+  page,
+}) => {
+  const examples = [
+    "`[plan](plan.md) [[plan]]`",
+    "```md\n[plan](plan.md) [[plan]]\n```",
+    "~~~md\n[plan](plan.md) [[plan]]\n~~~",
+  ].join("\n\n");
+  const document = "See [plan](plan.md).\n\n" + examples + "\n\nSee [[plan]].";
+  await page.addInitScript((text) => {
+    if (window.top !== window) return;
+    const w = window as unknown as Record<string, unknown>;
+    const manifest = {
+      id: "test.rename",
+      name: "Rename",
+      version: "1.0.0",
+      publisher: "test",
+      description: "Renames a note and updates its links.",
+      engines: { textus: "^1.3.0" },
+      main: "host.js",
+      permissions: ["files.read", "files.write"],
+      contributes: {
+        commands: [{ command: "test.rename.run", title: "Rename plan" }],
+      },
+    };
+    w.__devPlugins = [
+      {
+        id: manifest.id,
+        dir: "/plugins/test.rename",
+        manifest: JSON.stringify(manifest),
+        dev: false,
+        files: {
+          "host.js": `exports.activate = function () {
+            textus.commands.register("test.rename.run", async function () {
+              await textus.files.rename("/work/notes/plan.md", "/work/notes/roadmap.md", { updateLinks: true });
+              await textus.ui.notice("Links updated");
+            });
+          };`,
+        },
+      },
+    ];
+    w.__devPluginState = {
+      allOn: true,
+      plugins: {
+        [manifest.id]: { enabled: true, granted: manifest.permissions },
+      },
+    };
+    w.__devFs = {
+      "/work/notes/index.md": text,
+      "/work/notes/plan.md": "# Plan",
+    };
+    w.__devPickFolder = "/work/notes";
+  }, document);
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-open-folder");
+  await expect(page.locator(".sidebar .tree-root-label")).toHaveText("notes");
+  await page.evaluate(() =>
+    (
+      window as unknown as {
+        __devEmitTauriEvent: (name: string, payload: string) => void;
+      }
+    ).__devEmitTauriEvent("menu-plugin-command", "test.rename.run"),
+  );
+  await expect(page.locator("[role=status]")).toContainText("Links updated");
+  const saved = await page.evaluate(
+    () =>
+      (window as unknown as { __devFs: Record<string, string> }).__devFs[
+        "/work/notes/index.md"
+      ],
+  );
+  expect(saved).toBe(
+    "See [plan](roadmap.md).\n\n" + examples + "\n\nSee [[roadmap]].",
+  );
+});
