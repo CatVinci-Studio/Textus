@@ -54,9 +54,6 @@ export interface UiState {
    *  paths (app/split/split-restore.ts); null when it showed one. Read
    *  loosely: earlier versions kept a pair. */
   splitLayout: { tree: unknown } | null;
-  /** The view last switched to, "rich", "source" or "split", which new
-   *  documents open in (editor/modes/view-mode.ts). */
-  viewMode: string;
 }
 
 export interface ThemeChromeCache {
@@ -166,11 +163,6 @@ const LOCAL: {
     key: "textus-read-only-paths",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
-  },
-  viewMode: {
-    key: "textus-view-mode",
-    decode: (raw) => raw,
-    encode: (value) => value,
   },
   lastCarets: {
     key: "textus-last-carets",

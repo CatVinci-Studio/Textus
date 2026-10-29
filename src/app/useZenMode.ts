@@ -1,14 +1,23 @@
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect } from "react";
 import { ZEN_MODE_EVENT } from "../utils/events";
 import { isImeKeydown } from "../utils/ime";
+import { useSettings } from "../prefs/SettingsContext";
 
 /**
  * Zen mode: only the text. Chrome goes away and every paragraph but the
- * current one dims. Esc leaves.
+ * current one dims. Esc leaves. One for every window (Settings' zenMode).
  */
 export function useZenMode() {
-  const [zenMode, setZenMode] = useState(false);
-  const toggleZenMode = useCallback(() => setZenMode((on) => !on), []);
+  const { settings, setSettings } = useSettings();
+  const zenMode = settings.zenMode;
+  const setZenMode = useCallback(
+    (on: boolean) => setSettings({ zenMode: on }),
+    [setSettings],
+  );
+  const toggleZenMode = useCallback(
+    () => setZenMode(!zenMode),
+    [zenMode, setZenMode],
+  );
   // Before paint: the text column's glide measures the layout this class
   // makes.
   useLayoutEffect(() => {
@@ -34,7 +43,7 @@ export function useZenMode() {
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [zenMode]);
+  }, [zenMode, setZenMode]);
 
   return { zenMode, setZenMode, toggleZenMode };
 }

@@ -42,7 +42,6 @@ import type {
 import { useModalDialog } from "../ui/useModalDialog";
 import { usePresenceProps } from "../ui/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
-import type { MenuChecks } from "../app/menu/app-menu-model";
 import { isIOSApp } from "../platform/capabilities";
 
 // The settings dialog shell: navigation, search and subpages, for every
@@ -56,8 +55,6 @@ export interface SettingsPanelProps {
   /** Files a settings action deleted (Reset on a customized skill), for
    *  the editor to close their tabs. */
   onFilesDeleted?: (paths: string[]) => void;
-  /** Which of the window's view modes are on, for Editor > View. */
-  viewChecks?: Pick<MenuChecks, "sourceMode" | "zen">;
   /** The shortcuts that can't be changed, listed under the ones that can. */
   fixedShortcuts?: FixedShortcutGroup[];
   /** The commands plugins add, under Shortcuts' own. */
@@ -105,7 +102,6 @@ export function SettingsPanel({
   onClose,
   onOpenFile,
   onFilesDeleted,
-  viewChecks = {},
   fixedShortcuts = [],
   pluginCommands = [],
   initialCategory = "general",
@@ -163,7 +159,6 @@ export function SettingsPanel({
     onOpenFile,
     onFilesDeleted,
     onClose,
-    viewChecks,
     fixedShortcuts,
     pluginCommands,
   };

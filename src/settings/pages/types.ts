@@ -1,6 +1,5 @@
 import type { Strings } from "../../i18n/strings";
 import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
-import type { MenuChecks } from "../../app/menu/app-menu-model";
 import type { Settings, useSettings } from "../../prefs/SettingsContext";
 
 /** A page's own page within its category (General › About Textus; on the
@@ -38,8 +37,6 @@ export interface SettingsPageProps {
   onClose: () => void;
   /** Files a settings action deleted, for the editor to close their tabs. */
   onFilesDeleted?: (paths: string[]) => void;
-  /** Which of the window's view modes are on, for Editor › View. */
-  viewChecks: Pick<MenuChecks, "sourceMode" | "zen">;
   /** The shortcuts that can't be changed. */
   fixedShortcuts: FixedShortcutGroup[];
   /** The commands plugins add, whose keys can be set. */

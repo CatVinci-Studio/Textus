@@ -12,7 +12,6 @@ import { SettingRow, ToggleRow } from "../sections/controls";
 import { ThemeSection } from "../sections/theme";
 import { ImageStorageSection } from "../sections/images";
 import { Select } from "../../ui/Select";
-import { emitMenuEvent } from "../../platform/menu-events";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canExportPdf, isIOSApp } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
@@ -27,7 +26,6 @@ export function EditorPage({
   percent,
   setSubpage,
   openPage,
-  viewChecks,
 }: SettingsPageProps) {
   return (
     <>
@@ -104,10 +102,16 @@ export function EditorPage({
             onChange={(on) => setSettings({ menuBarShown: on })}
           />
         )}
+        {/* One view for every document in every window. */}
         <ToggleRow
           label={t.menuViewSource}
-          checked={!!viewChecks.sourceMode}
-          onChange={() => emitMenuEvent("toggle-source-mode")}
+          checked={settings.viewMode === "source"}
+          onChange={(on) => setSettings({ viewMode: on ? "source" : "rich" })}
+        />
+        <ToggleRow
+          label={t.menuToggleSplitView}
+          checked={settings.viewMode === "split"}
+          onChange={(on) => setSettings({ viewMode: on ? "split" : "rich" })}
         />
         <ToggleRow
           label={t.menuViewTypewriter}
@@ -116,8 +120,8 @@ export function EditorPage({
         />
         <ToggleRow
           label={t.menuToggleZenMode}
-          checked={!!viewChecks.zen}
-          onChange={() => emitMenuEvent("toggle-zen-mode")}
+          checked={settings.zenMode}
+          onChange={(on) => setSettings({ zenMode: on })}
         />
       </SettingsGroup>
       {/* What the document shows, then how typing behaves. */}
