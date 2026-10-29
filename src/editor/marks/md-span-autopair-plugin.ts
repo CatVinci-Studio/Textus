@@ -7,10 +7,8 @@ import { fenceLineToBlock } from "../markdown/fence-line";
 import {
   COMPOSE_RELOCATE_DELAY_MS,
   caretAt,
-  findRunClose,
   hasPendingRunOpen,
   isImeKeyEvent,
-  literalTextAfter,
   literalTextBefore,
   redirectMisattributedInput,
   stateWithLiveSelection,
@@ -20,9 +18,9 @@ import {
   SPECS,
   closeOpenRun,
   closeUnderscoreRun,
+  openRunBeforeContent,
   pairsIn,
   runsHoldAtoms,
-  spanAround,
   spanNode,
   threeLiteral,
   upgradeRung,
@@ -219,10 +217,9 @@ export const createMdSpanAutopairPlugin = (options: {
 
             if (!pairsIn(parent, spec)) return false;
 
-            const withAtoms = runsHoldAtoms(spec);
             const { text: textBefore, from: runStart } = literalTextBefore(
               $pos,
-              withAtoms,
+              runsHoldAtoms(spec),
             );
 
             if (closeOpenRun(view, spec, textBefore, runStart, to)) return true;
@@ -241,44 +238,8 @@ export const createMdSpanAutopairPlugin = (options: {
             )
               return false;
 
-            // Complete an opening run typed in FRONT of existing content whose
-            // matching closing run already sits ahead in the literal text -
-            // the forward mirror of the findRunOpen path above ("**" typed
-            // before "hello**" forms bold on the second "*"). The typed run's
-            // length picks the rung; see findRunClose for the exact-length
-            // matching rule.
-            let typedRun = 1;
-            while (
-              typedRun - 1 < textBefore.length &&
-              textBefore[textBefore.length - typedRun] === spec.char
-            )
-              typedRun++;
-            if (typedRun >= spec.minRung && typedRun <= spec.maxRung) {
-              const { text: textAfter } = literalTextAfter($pos, withAtoms);
-              const close = findRunClose(
-                textBefore,
-                textAfter,
-                spec.char,
-                typedRun,
-              );
-              if (close) {
-                const openStart = from - (typedRun - 1);
-                const node = spanAround(
-                  state,
-                  spec,
-                  typedRun,
-                  to,
-                  to + close.valueLen,
-                );
-                const tr = state.tr.replaceWith(
-                  openStart,
-                  to + close.valueLen + typedRun,
-                  node,
-                );
-                view.dispatch(caretAt(tr, openStart + 1));
-                return true;
-              }
-            }
+            if (openRunBeforeContent(view, spec, textBefore, to, false))
+              return true;
 
             // With content still following the caret the character is being
             // typed into the middle of existing text - never spawn a fresh
