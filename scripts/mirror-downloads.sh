@@ -9,6 +9,9 @@
 #
 #   scripts/mirror-downloads.sh v1.0.0
 #
+# Only the newest KEEP stable versions stay in the bucket; every version is
+# still on GitHub.
+#
 # release.yml runs it after publishing, with CLOUDFLARE_API_TOKEN (R2 edit)
 # from the repository secrets. By hand it needs gh logged in and wrangler
 # logged in to the "ChengAo Home" account.
@@ -16,6 +19,7 @@ set -euo pipefail
 tag="${1:?usage: mirror-downloads.sh vX.Y.Z}"
 repo=CatVinci-Studio/Textus
 bucket=textus-downloads
+keep=3
 export CLOUDFLARE_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-49abb4d436c552f6e4497b1782fc9beb}"
 
 work="$(mktemp -d)"
@@ -51,3 +55,26 @@ done
 cat "$manifest"
 put manifest.json "$manifest" application/json
 echo "mirrored $tag"
+
+# Older versions' files, listed through the API: wrangler can't list a
+# bucket. Never fails the mirror.
+prune() {
+  local api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/r2/buckets/$bucket/objects"
+  local old key
+  old="$(gh release list --repo "$repo" --exclude-pre-releases --limit 100 \
+    --json tagName -q '.[].tagName' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' |
+    sort -rV | tail -n +$((keep + 1)))"
+  for old_tag in $old; do
+    for key in $(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+      "$api?prefix=releases/$old_tag/&per_page=100" |
+      node -e 'for (const o of JSON.parse(require("fs").readFileSync(0)).result) console.log(o.key)'); do
+      echo "removing $key"
+      npx -y wrangler@4 r2 object delete "$bucket/$key" --remote >/dev/null
+    done
+  done
+}
+if [ -n "${CLOUDFLARE_API_TOKEN:-}" ]; then
+  prune || echo "pruning older versions failed; the mirror is complete"
+else
+  echo "no CLOUDFLARE_API_TOKEN: older versions left in place"
+fi
