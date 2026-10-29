@@ -1323,6 +1323,9 @@ export default {
   pluginRepository: "原始碼",
   pluginReload: "重新載入",
   pluginUninstall: "解除安裝",
+  pluginTurnOn: "啟用",
+  pluginTurnOff: "停用",
+  pluginMoreFor: "{name} 的更多操作",
   pluginExport: "匯出以發佈…",
   pluginExportPrompt:
     "填寫發佈者名稱（小寫字母、數字和連字號），用你的 GitHub 使用者名稱就很好。它會取代外掛程式 id 裡的「local」。",

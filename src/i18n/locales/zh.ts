@@ -1316,6 +1316,9 @@ export default {
   pluginRepository: "源代码",
   pluginReload: "重新加载",
   pluginUninstall: "卸载",
+  pluginTurnOn: "启用",
+  pluginTurnOff: "停用",
+  pluginMoreFor: "{name} 的更多操作",
   pluginExport: "导出以发布…",
   pluginExportPrompt:
     "填写发布者名字（小写字母、数字和短横线），用你的 GitHub 用户名就很好。它会替换插件 id 里的“local”。",

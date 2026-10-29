@@ -3,7 +3,14 @@ import { showConfirm, showMessage } from "../../ui/app-dialog";
 import { useSettings } from "../../prefs/SettingsContext";
 import { errorText } from "../../utils/error-text";
 import type { Strings } from "../../i18n/strings";
-import { pluginName, pluginText, pluginsSnapshot } from "../../plugins/manager";
+import {
+  pluginName,
+  pluginText,
+  pluginsSnapshot,
+  setPluginEnabled,
+  uninstallPlugin,
+  type PluginRecord,
+} from "../../plugins/manager";
 import {
   installFromCatalog,
   type CatalogItem,
@@ -45,7 +52,43 @@ export function usePluginInstall(t: Strings) {
       }
     });
 
-  return { installing, install, attempt, settings, setSettings };
+  /** Turns a plugin on, then offers to turn on what it needs. */
+  const enable = (record: PluginRecord, on: boolean) =>
+    attempt(async () => {
+      await setPluginEnabled(record.id, on);
+      if (on) await askForRequirements(record.id, t, settings, setSettings);
+    });
+
+  /** Uninstalls a plugin, or unloads a folder loaded in development, once
+   *  confirmed; true when it is gone. */
+  const uninstall = async (record: PluginRecord) => {
+    let gone = false;
+    await attempt(async () => {
+      const ok = await showConfirm(
+        t.pluginUninstallAsk.replace("{name}", pluginName(record)),
+        {
+          title: t.pluginsTitle,
+          okLabel: t.pluginUninstall,
+          cancelLabel: t.pluginCancel,
+          danger: true,
+        },
+      );
+      if (!ok) return;
+      await uninstallPlugin(record.id);
+      gone = true;
+    });
+    return gone;
+  };
+
+  return {
+    installing,
+    install,
+    enable,
+    uninstall,
+    attempt,
+    settings,
+    setSettings,
+  };
 }
 
 /** What a plugin needs that is off: asked to turn each on, once, in the

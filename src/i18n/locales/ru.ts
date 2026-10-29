@@ -1441,6 +1441,9 @@ export default {
   pluginRepository: "Исходный код",
   pluginReload: "Перезагрузить",
   pluginUninstall: "Удалить",
+  pluginTurnOn: "Включить",
+  pluginTurnOff: "Выключить",
+  pluginMoreFor: "Ещё для {name}",
   pluginExport: "Экспортировать для публикации…",
   pluginExportPrompt:
     "Ваше имя как издателя — строчные буквы, цифры и дефисы. Хорошо подойдёт имя на GitHub. Оно заменит «local» в id плагина.",

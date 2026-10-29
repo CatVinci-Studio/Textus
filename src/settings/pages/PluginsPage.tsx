@@ -1,9 +1,14 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { askAi } from "../../ai/chat/ask-ai";
 import type { SettingsPageProps } from "./types";
 import { Byline, PluginPage, statusText } from "./PluginPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
-import { askForRequirements, usePluginInstall } from "./usePluginInstall";
+import { usePluginActions } from "./PluginAction";
 import { ToggleRow } from "../sections/controls";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { isDesktopApp } from "../../platform/capabilities";
@@ -15,7 +20,6 @@ import {
   pluginText,
   pluginsSnapshot,
   setAllPlugins,
-  setPluginEnabled,
   subscribePlugins,
   type PluginRecord,
 } from "../../plugins/manager";
@@ -25,7 +29,6 @@ import {
   subscribeCatalog,
   updateFor,
 } from "../../plugins/store/catalog";
-import { canSwitch } from "../../plugins/store/lifecycle";
 import { pluginMatches } from "../../plugins/store/plugin-records";
 import { PluginIcon } from "./PluginArt";
 
@@ -41,20 +44,13 @@ export function PluginsPage({
 }: SettingsPageProps & { onGetMore: () => void }) {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
-  const { installing, install, attempt, settings, setSettings } =
-    usePluginInstall(t);
+  const { installing, install, enable, attempt, actionFor } =
+    usePluginActions(t);
   const [open, setOpen] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   useEffect(() => {
     void loadCatalog();
   }, []);
-
-  /** Turns a plugin on, then offers to turn on what it needs. */
-  const enable = (record: PluginRecord, on: boolean) =>
-    attempt(async () => {
-      await setPluginEnabled(record.id, on);
-      if (on) await askForRequirements(record.id, t, settings, setSettings);
-    });
 
   const installFile = (folder: boolean) =>
     attempt(async () => {
@@ -81,9 +77,8 @@ export function PluginsPage({
       record={record}
       t={t}
       allOn={snapshot.allOn}
-      update={updateFor(record.id, catalog)}
+      action={actionFor(record.id)}
       onOpen={() => setOpen(record.id)}
-      onEnable={(on) => void enable(record, on)}
     />
   );
   if (openRecord)
@@ -169,28 +164,29 @@ export function PluginsPage({
   );
 }
 
-/** An installed plugin: opens its page; the switch turns it on or off. */
+/** An installed plugin: opens its page; its button turns it off or on,
+ *  updates or uninstalls it (PluginAction). */
 function PluginCard({
   record,
   t,
   allOn,
-  update,
+  action,
   onOpen,
-  onEnable,
 }: {
   record: PluginRecord;
   t: Strings;
   allOn: boolean;
-  update: string | null;
+  action: ReactNode;
   onOpen: () => void;
-  onEnable: (on: boolean) => void;
 }) {
   const name = pluginName(record);
   const manifest = record.manifest;
   const status = statusText(record, allOn, t);
-  const switchable = !!manifest && canSwitch(record.status);
   return (
-    <div className="settings-row plugin-card" data-plugin={record.id}>
+    <div
+      className={`settings-row plugin-card${record.status === "on" ? "" : " is-off"}`}
+      data-plugin={record.id}
+    >
       <button
         type="button"
         className="plugin-card-open plugin-card-with-icon"
@@ -213,21 +209,10 @@ function PluginCard({
               t={t}
             />
           )}
-          {update && (
-            <span className="plugin-update-note">
-              {t.pluginUpdate.replace("{version}", update)}
-            </span>
-          )}
           {status && <span className="settings-error">{status}</span>}
         </span>
       </button>
-      <input
-        type="checkbox"
-        aria-label={t.pluginEnableLabel.replace("{name}", name)}
-        disabled={!switchable}
-        checked={record.status === "on"}
-        onChange={(e) => onEnable(e.target.checked)}
-      />
+      <div className="settings-row-control">{action}</div>
     </div>
   );
 }

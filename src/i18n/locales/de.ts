@@ -1441,6 +1441,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginRepository: "Quellcode",
   pluginReload: "Neu laden",
   pluginUninstall: "Deinstallieren",
+  pluginTurnOn: "Einschalten",
+  pluginTurnOff: "Ausschalten",
+  pluginMoreFor: "Mehr zu {name}",
   pluginExport: "Zum Veröffentlichen exportieren…",
   pluginExportPrompt:
     "Ihr Name als Herausgeber – Kleinbuchstaben, Ziffern und Bindestriche. Ihr GitHub-Name passt gut. Er ersetzt „local“ in der Plugin-ID.",

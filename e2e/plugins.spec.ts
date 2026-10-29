@@ -136,7 +136,7 @@ async function turnOn(page: Page) {
   await openPluginsPage(page);
   const row = page.locator('.plugin-card[data-plugin="test.hello"]');
   await expect(row).toContainText("Says hello.");
-  await row.getByRole("checkbox", { name: "Turn on Hello" }).click();
+  await row.getByRole("button", { name: "Turn On" }).click();
   const dialog = page.locator(".app-dialog");
   await expect(dialog).toContainText("Hello asks to:");
   await expect(dialog).toContainText(
@@ -144,7 +144,7 @@ async function turnOn(page: Page) {
   );
   await expect(dialog).toContainText("Suggest edits to the document");
   await dialog.getByRole("button", { name: "Allow" }).click();
-  await expect(row.getByRole("checkbox")).toBeChecked();
+  await expect(row.getByRole("button", { name: "Turn Off" })).toBeVisible();
   await page.keyboard.press("Escape");
 }
 
@@ -209,12 +209,12 @@ test("refusing its permissions leaves a plugin off", async ({ page }) => {
   await open(page);
   await openPluginsPage(page);
   const row = page.locator('.plugin-card[data-plugin="test.hello"]');
-  await row.getByRole("checkbox", { name: "Turn on Hello" }).click();
+  await row.getByRole("button", { name: "Turn On" }).click();
   await page
     .locator(".app-dialog")
     .getByRole("button", { name: "Cancel" })
     .click();
-  await expect(row.getByRole("checkbox")).not.toBeChecked();
+  await expect(row.getByRole("button", { name: "Turn On" })).toBeVisible();
   await page.keyboard.press("Escape");
   await emit(page, "menu-toggle-sidebar");
   await expect(

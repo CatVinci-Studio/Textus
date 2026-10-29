@@ -1415,6 +1415,9 @@ type /name in a conversation to use one.
   pluginRepository: "Source",
   pluginReload: "Reload",
   pluginUninstall: "Uninstall",
+  pluginTurnOn: "Turn On",
+  pluginTurnOff: "Turn Off",
+  pluginMoreFor: "More for {name}",
   pluginExport: "Export for Publishing…",
   pluginExportPrompt:
     "Your name as its publisher - lowercase letters, digits and dashes. Your GitHub name works well. It replaces “local” in the plugin's id.",
