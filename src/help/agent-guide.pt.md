@@ -39,10 +39,12 @@ A conversa completa fica em um painel no lado direito do editor. Abra ou feche o
 - **Modos**: o campo de mensagem tem dois. **Escrever** trabalha no documento: redige texto novo (uma continuação, um parágrafo ou uma seção nova) e altera o texto que já existe (reescrever, traduzir, cortar). Com texto selecionado, uma mudança nele o substitui, e texto novo vai depois dele. **Revisar** responde, conversa e deixa comentários sem mudar nada. Cada mudança de Escrever é uma proposta que você aceita ou rejeita. O painel começa no modo definido em **Ajustes > Textus AI > Chat da Textus AI > Modo padrão**.
 - **Menções com @**: digite `@` no campo para escolher um arquivo de texto da pasta do projeto; ele é anexado à mensagem.
 - **Anexar arquivos**: o botão **+** à esquerda do campo anexa à mensagem um PDF, um documento do Word, uma apresentação do PowerPoint, uma planilha, um livro EPUB, um arquivo RTF ou HTML, uma imagem ou um arquivo de texto simples. Tudo, menos as imagens, é convertido em texto no seu computador e vai dentro da mensagem; as imagens são enviadas como imagens de verdade aos provedores que conseguem vê-las (os que não conseguem avisam na hora, em vez de descartá-las sem dizer nada). Um arquivo longo é enviado só em parte, e o anexo mostra “(parcial)” quando isso acontece.
+- **Modelo**: o botão entre os controles do campo mostra o modelo para o qual vai a sua próxima mensagem; clique nele para trocar por outro modelo de qualquer serviço que você configurou em **Ajustes > Textus AI**. Com um só modelo configurado, ele apenas mostra o nome.
 - **Busca na web**: o botão da lupa ao lado do campo de texto deixa a Textus AI buscar na web quando um pedido precisar; veja **7. Busca na web** abaixo.
 - **Raciocínio profundo**: o botão ao lado da busca na web (a lâmpada) pede ao modelo que pense bem na resposta antes de responder — mais lento e mais caro, para perguntas difíceis e reescritas maiores. Ele fica ligado, também em outros documentos, até você tocar nele de novo. Enquanto o modelo pensa, o painel mostra "Pensando · 8 segundos" e depois "Pensou por 12 segundos", que você pode clicar para ler o raciocínio quando o provedor o compartilha. O botão só aparece para modelos que conseguem pensar mais a fundo; a Pergunta rápida sempre pede uma resposta rápida.
-- **Histórico**: o botão **Histórico** (o relógio), no topo do painel de IA, lista as conversas anteriores agrupadas por pasta. Clique em uma para reabri-la com o documento dela e continuar.
-- **Erros**: quando uma solicitação falha, o chat diz que tipo de problema houve e o que fazer (verificar a chave, esperar um pouco, escolher outro modelo), acima da mensagem do próprio provedor.
+- **Histórico**: o botão **Histórico** (o relógio), no topo do painel de IA, lista as conversas anteriores agrupadas por pasta, com **Pesquisar conversas** no topo para achar aquelas em que certas palavras foram ditas. Clique em uma para reabri-la com o documento dela e continuar. Quando você se refere a uma conversa anterior, a Textus AI também pesquisa nelas.
+- **Erros**: quando uma solicitação falha, o Textus diz no seu idioma que tipo de problema houve e o que fazer (verificar a chave, recarregar um saldo que acabou, esperar um pouco, escolher outro modelo), acima da mensagem do próprio provedor — no chat e também no autocompletar e na verificação gramatical.
+- **Documentos longos**: quando você pede para traduzir ou reescrever um documento longo capítulo por capítulo, a Textus AI entrega cada capítulo a um ajudante próprio, com uma lista comum de como os nomes e termos recorrentes são escritos, e assim o documento inteiro muda de uma vez.
 
 **Abrir em uma janela separada**, no cabeçalho do painel, leva a conversa para uma janela própria, o que ajuda quando você tem um segundo monitor. Essa janela acompanha você: troque de aba ou de janela e o documento, o título e a seleção mudam junto, e as edições que ela propõe vão para o arquivo que você está editando de fato. Há no máximo uma dessas janelas por janela do editor; **📌**, no cabeçalho dela, a mantém na frente do editor.
 
@@ -62,6 +64,8 @@ O chat nunca escreve direto no seu documento. Quando você pede a um provedor co
 - **Só algumas frases**: quando uma proposta reescreve várias frases, o cartão oferece **Escolher frases (N)**; marque as que você quer e clique no botão de aceitar, que passa a mostrar quantas você marcou (por exemplo, **Aceitar 2 de 3**).
 - **No cursor**: sem nada selecionado, a Textus AI sabe onde está o seu cursor, então “escreva uma transição aqui” insere o texto exatamente ali.
 - **Comentários em vez de edições**: peça uma revisão (“o que está fraco aqui?”) e a Textus AI fixa comentários nos trechos sem alterá-los. Cada cartão de comentário tem **Mostrar no documento**, que seleciona o trecho a que ele se refere.
+- **As suas próprias notas**: selecione algumas palavras, clique com o botão direito e escolha **Adicionar nota**: a sua nota vai para a margem ao lado das da Textus AI, marcada como Eu. As notas ficam junto aos dados do próprio Textus, não no seu Markdown.
+- **Controlar minhas alterações** (menu Editar): enquanto está ligado, as suas próprias edições também aparecem como alterações (o que você apagou, riscado; o que você acrescentou, marcado), cada uma com um cartão na margem, marcado como Eu, para aceitar ou rejeitar.
 
 ### 6. Imagens
 
@@ -69,6 +73,7 @@ A Textus AI pode criar uma imagem para o seu documento assim que você escolher 
 
 - Peça no modo Escrever ("adicione uma imagem do porto depois do primeiro parágrafo"), ou clique com o botão direito num parágrafo e escolha **Ilustrar este parágrafo**.
 - A imagem chega como uma proposta no lugar, como qualquer inserção. Nada é salvo até você aceitar: aí ela é salva como **Ajustes > Imagens** diz para uma imagem colada e inserida como imagem Markdown. Rejeitar não deixa nada.
+- Para que uma imagem proposta seja desenhada de novo, aponte para ela e escolha **Redesenhar…**, depois diga o que deve mudar; só aquela imagem é redesenhada. As imagens de um mesmo texto mantêm as mesmas pessoas e o mesmo visual: quem aparece de novo é descrito com as mesmas palavras e, quando o modelo de imagem aceita uma imagem de referência, uma nova imagem dessa pessoa parte de uma anterior.
 - Se o serviço recusar a descrição, o painel mostra o motivo que ele deu. Cada pedido cria no máximo duas imagens.
 
 ### 7. Busca na web
@@ -193,7 +198,7 @@ As instruções de escrita valem só para as conversas. O autocompletar não as 
 - **Este projeto**: o que é sobre esta obra, em `.textus/memory/`; fatos sobre pessoas, lugares e termos vão para a biblioteca.
 - **Para todos os projetos**: os seus hábitos gerais, em `memory/` na pasta de configuração global. Sem pasta do projeto, tudo vai para cá.
 
-A aba **Projeto** do painel de IA lista tudo em **Memória**, com quando e em qual conversa cada item foi lembrado: **Editar** abre, **Apagar** remove. As suas próprias instruções de escrita vencem quando as duas discordam, e a Textus AI nunca altera o seu `agent.md` nem o seu perfil de estilo. Quando há memórias demais para enviar, as mais antigas ficam de fora e a aba Projeto avisa. **Ajustes > Textus AI > Lembrar automaticamente** desativa o recurso.
+A aba **Projeto** do painel de IA lista tudo em **Memória**, com quando e em qual conversa cada item foi lembrado: **Editar** abre, **Apagar** remove. De tempos em tempos, a Textus AI organiza a memória, juntando memórias que dizem a mesma coisa e descartando uma regra que outra mais nova anulou; o que ela descartou fica em **Esquecido recentemente**, para você recuperar. As suas próprias instruções de escrita vencem quando as duas discordam, e a Textus AI nunca altera o seu `agent.md` nem o seu perfil de estilo. Quando há memórias demais para enviar, as mais antigas ficam de fora e a aba Projeto avisa. **Ajustes > Textus AI > Lembrar automaticamente** desativa o recurso.
 
 **Também aprende com as suas escolhas de revisão.** Quando você recusa várias vezes o mesmo tipo de alteração — 「」 trocadas por “”, uma palavra trocada por outra, frases divididas, uma vírgula de Oxford acrescentada —, a Textus AI oferece, ao fim da revisão, lembrar isso como requisito: **Lembrar** guarda em **Memória**, **Agora não** espera por mais casos e **Não perguntar mais** deixa de perguntar sobre esse tipo. Pergunta no máximo uma vez por dia, e nada é guardado sem o seu clique, também com Lembrar automaticamente desligado. O que conta é só uma nota curta dos tipos de alteração que você aceitou ou recusou, guardada neste computador junto às suas memórias e nunca enviada.
 
@@ -216,6 +221,8 @@ Há duas maneiras de usar uma habilidade:
 
 1. **Chamar pelo nome**: digite `/` no campo do chat e escolha a habilidade no menu, ou digite o nome dela seguido do seu pedido: `/polir dê mais uma olhada nisto`.
 2. **Só pedir** (apenas em provedores com chamada de ferramentas): a Textus AI conhece o nome e a descrição de cada habilidade e, quando o seu pedido corresponde a uma delas, carrega as instruções completas e as segue por conta própria.
+
+Quando o que você pediu era um procedimento seu, passos que você vai querer de novo, a Textus AI oferece, abaixo da resposta, guardá-lo como habilidade, para todos os documentos ou só para este projeto. Nada é guardado a menos que você escolha.
 
 As habilidades ficam nos mesmos dois níveis que as instruções de escrita: as globais na pasta `skills/` da pasta de configuração global (**Ajustes > Textus AI > Habilidades > Importar Habilidade…** copia um arquivo de habilidade para lá) e as do projeto em `.textus/skills/` (uma pasta oculta; no Finder do macOS, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> a mostra). Uma habilidade do projeto com o mesmo nome de uma global substitui a global.
 
