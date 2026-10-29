@@ -147,8 +147,9 @@ section explains the other branches you may see.
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------- |
 | `main`                                | The next version, including its betas. Features and fixes land here.                                 | Yes, all of them |
 | `release/X.Y.x` (now `release/1.2.x`) | The version people have installed. Takes bug fixes only, copied over from `main` by the maintainers. | No               |
-| `archive/...`                         | Old lines kept for reference.                                                                        | No               |
 | anything else                         | A maintainer's work in progress, deleted once merged.                                                | No               |
+
+Older versions are kept as tags (`v1.1.2`, `v1.0.4`), not branches.
 
 To start:
 
