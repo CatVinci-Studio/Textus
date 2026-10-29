@@ -148,15 +148,15 @@ To look at a picture closely, double-click it or press **Enlarge picture** in it
 
 Besides the WYSIWYG editor and source mode (`Cmd+/`), Textus has three ways to write (on Windows and Linux use `Ctrl` for `Cmd`; Settings → Shortcuts has the current bindings):
 
-- **Split view** (`Cmd+Shift+E`): the Markdown source on the left, the rendered preview on the right, scrolling together.
-- **Typewriter mode** (Settings → Editor & Appearance → Theme): the line you are typing stays in the middle of the window — in the editor, source mode and split view.
+- **Source and Preview** (`Cmd+Shift+E`): the Markdown source on the left, the rendered preview on the right, scrolling together.
+- **Typewriter mode**: the line you are typing stays in the middle of the window — in the editor, source mode and Source and Preview.
 - **Zen mode** (`Cmd+Shift+J`): hides everything but the text and dims every paragraph except the one you are writing. Press `Esc` to leave.
 
-All three are also in the **View** menu. The view you switch to stays: new tabs and documents you open come up in it.
+All of them are in the **View** menu and in **Settings → Editor & Appearance → View**. Each is one setting for all of Textus: switch it in any window and every tab of every window switches with it, the documents you open next come up in it, and Textus opens in it again next time.
 
 **View → Read Only** (also in a tab's right-click menu) keeps a document from being changed - by typing, pasting, dropping, undo, Textus AI or plugins. A padlock beside the title shows it; click it to make the document editable again.
 
-**View → Command Palette…** (`Cmd+Shift+P`) finds anything the menus do, and every command a plugin adds, by typing a few letters of its name.
+**View → Command Palette…** (`Cmd+Shift+P`) finds anything the menus do, and every command a plugin adds, by typing a few letters of its name. It also changes the appearance (light, dark or the system's) and the editor theme, and turns Textus AI on or off.
 
 The **Outline** tab of the sidebar lists the document's headings; click one to go there. Right-click the outline for **Expand All** and **Collapse All**, or `Option`-click (`Alt`-click) a heading's arrow to fold or unfold them all at once.
 
@@ -201,7 +201,9 @@ Turn on **Settings → General → Application → Keep running in the backgroun
 
 ## Getting help
 
-**Help → Report a Problem…** (also in **Settings → General**, under Help) opens a short form: say what went wrong, and Textus adds its version, your system, your plugins, your settings without anything private, and recent errors - all shown before anything is sent. **Submit** opens GitHub's bug form already filled in; **Copy** puts it on the clipboard for a chat or an email. **Help → Join the Community** opens the community page.
+**Help → Report a Problem…** (also in **Settings → General**, under Help) opens a short form. Say what kind of report it is, what part of Textus it is about and, for a bug, how bad it is, then what went wrong; Textus adds its version, your system, your plugins, your settings without anything private, and recent errors - all shown before anything is sent. **Send** files it as an issue on GitHub for you, with no GitHub account needed, and tells you its number; **Submit on GitHub** opens GitHub's form instead; **Copy** puts it on the clipboard for a chat or an email. What you write becomes a public issue; an email or WeChat you leave, if we may ask you more, goes to the team only.
+
+**Settings → General → Help** also replays the welcome tour, opens the guides, and leads to **About Textus**, with the version and **Check for Updates** (on a Mac also **Textus → Check for Updates…**). **Help → Join the Community** opens the community page.
 
 ## Footnotes and rules
 
