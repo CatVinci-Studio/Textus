@@ -103,6 +103,21 @@ describe("delimiters committed by an IME (#134)", () => {
     expect(convertRunClosedBeforeCaret(view, "~")).toBe(false);
   });
 
+  it("converts an opening run committed in front of its content", async () => {
+    for (const [doc, run, saved] of [
+      ["前斜体*后", "*", "前*斜体*后\n"],
+      ["前粗体**后", "**", "前**粗体**后\n"],
+    ]) {
+      const { view, save } = await openView(doc);
+      view.dispatch(
+        view.state.tr.setSelection(TextSelection.create(view.state.doc, 2)),
+      );
+      commit(view, run);
+      expect(convertRunClosedBeforeCaret(view, run)).toBe(true);
+      expect(save()).toBe(saved);
+    }
+  });
+
   it("doesn't convert a closing run the commit didn't end with", async () => {
     const { view } = await openView();
     caretToEndOfFirstBlock(view);

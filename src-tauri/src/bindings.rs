@@ -67,7 +67,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
         (
             "app.ts",
             builder().commands(collect_commands![
-                crate::launch::take_pending_open_path,
+                crate::launch::take_pending_window_paths,
                 crate::launch::take_pending_open_paths,
                 crate::launch::take_pending_show_help,
                 crate::launch::take_pending_menu_event,
@@ -92,6 +92,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::clipboard::clipboard_text,
                 crate::commands::input_source::set_roman_input,
                 crate::commands::system_info::system_info,
+                crate::commands::system_info::send_problem_report,
                 crate::menu::trigger_menu_item,
                 crate::menu::list_recent_files,
                 crate::menu::list_recent_folders,

@@ -371,10 +371,14 @@ export function installDevTauriShim(): void {
       created: "2026-10-17T00:00:00Z",
       updated: "2026-10-17T00:00:00Z",
       css: `themes/${id}/theme.css`,
+      // Paper Mint has a dark form, as every gallery theme should.
+      darkCss: id === "paper-mint" ? `themes/${id}/theme-dark.css` : null,
       previews: [`themes/${id}/preview.png`],
     });
     gallery.files[`themes/${id}/theme.css`] =
       `:root { --editor-bg: ${bg}; --editor-text: ${text}; --editor-accent: ${accent}; }`;
+    gallery.files[`themes/${id}/theme-dark.css`] =
+      `:root { --editor-bg: #10241b; --editor-text: ${bg}; --editor-accent: ${accent}; }`;
     gallery.files[`themes/${id}/preview.png`] =
       `data:image/svg+xml,${encodeURIComponent(
         `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="100"><rect width="160" height="100" fill="${bg}"/><rect x="16" y="18" width="80" height="10" fill="${accent}"/><rect x="16" y="40" width="128" height="6" fill="${text}" opacity=".4"/></svg>`,
@@ -1280,6 +1284,8 @@ export function installDevTauriShim(): void {
           truncated: false,
         } satisfies ChatAttachment);
       }
+      // Nothing waiting to open in this window.
+      if (cmd === "take_pending_window_paths") return Promise.resolve([]);
       return Promise.resolve(null);
     },
     // As the real runtime: the callback is parked on window under `_<id>`.

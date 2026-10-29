@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { installClipboardCapture } from "../clipboard/history";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
+import { useNavHistory } from "./useNavHistory";
 import { useExternalChangeReload } from "../document/useExternalChangeReload";
 import { tabReadOnly } from "../document/read-only";
 import {
@@ -11,6 +12,7 @@ import {
 } from "./menu/menu-bridge";
 import { useStartupRestore } from "../document/startup-restore";
 import { useOpenPathsPush, useFileDrop } from "./useFileOpening";
+import { useSettingsCommands } from "./useSettingsCommands";
 import { useDocumentActions } from "./useDocumentActions";
 import {
   takeClosedPath,
@@ -47,6 +49,7 @@ export function useWindowWiring({
   const { tabsRef, activeTabId, setActiveTabId, setTabs, liveTabs } = tabState;
   const { activeTab, openFolder, openFile, openPathInTab } = docs;
 
+  useSettingsCommands(settings, setSettings);
   useGlobalShortcuts({
     tabsRef,
     activeTabId,
@@ -62,6 +65,7 @@ export function useWindowWiring({
     toggleTextusAi: textusAi.toggle,
   });
 
+  useNavHistory({ tabsRef, activeTabId, setActiveTabId });
   useEffect(() => installClipboardCapture(), []);
 
   useTutorialTabRecovery(tutorial, tabState, docs.claimPracticeTab);
@@ -143,6 +147,7 @@ export function useWindowWiring({
     pdfLightColors: settings.pdfLightColors,
     diagramEngine: settings.diagramEngine,
     onOpenSettings: shell.settingsOpening.openSettings,
+    onCheckUpdates: shell.settingsOpening.openUpdates,
     onOpenPluginSettings: shell.settingsOpening.openPluginSettings,
     onToggleTypewriter: () =>
       setSettings({ typewriterMode: !settings.typewriterMode }),

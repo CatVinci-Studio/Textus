@@ -69,7 +69,7 @@ export const windowIpc = {
   /** One file in a window of its own, tab mode or not. */
   openPathInNewWindow: (path: string) =>
     desktopActionCommand("open_path_in_new_window", path),
-  takePendingOpenPath: () => command("take_pending_open_path"),
+  takePendingWindowPaths: () => command("take_pending_window_paths"),
   takePendingOpenPaths: () => command("take_pending_open_paths"),
   /** Pops the chat panel into its own OS window and resolves to its label.
    *  One per editor window: if it exists it is focused, and `state` is
@@ -134,9 +134,12 @@ export const clipboardIpc = {
   text: () => desktopQueryCommand("clipboard_text", null),
 };
 
-/** The system, its version and the webview's, for a problem report. */
+/** Help > Report a Problem: the system, its version and the webview's,
+ *  and sending the report to be filed. */
 export const systemIpc = {
   info: () => command("system_info"),
+  sendReport: (report: Generated.ProblemReport_Deserialize) =>
+    command("send_problem_report", report),
 };
 
 /** Roman input sources only while a plugin takes every key as a command

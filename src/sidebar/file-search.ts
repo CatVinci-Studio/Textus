@@ -1,4 +1,6 @@
 import type { IndexedFile } from "../platform/ipc";
+import { mayBePinyin, pinyinIndexOf, readings } from "../utils/pinyin";
+import { searchFold } from "../utils/search-fold";
 
 /** Most results the sidebar draws: past this the list is a wall, and the
  *  answer is a longer query. */
@@ -23,12 +25,8 @@ export interface SearchEntry extends IndexedFile {
   folder: string;
   isDocument: boolean;
   key: string;
-}
-
-/** Case and Unicode form folded away: macOS hands names over decomposed,
- *  a typed query arrives composed. */
-function fold(text: string): string {
-  return text.normalize("NFC").toLowerCase();
+  /** A Chinese name's readings, for a query typed in pinyin. */
+  pinyin: string[][] | null;
 }
 
 /** The index in result order: by name as `collator` sorts, then by folder. */
@@ -45,7 +43,8 @@ export function searchEntries(
         name,
         folder: slash >= 0 ? file.rel.slice(0, slash) : "",
         isDocument: isDocumentName(name),
-        key: fold(name),
+        key: searchFold(name),
+        pinyin: readings(name),
       };
     })
     .sort(
@@ -56,9 +55,9 @@ export function searchEntries(
 }
 
 /**
- * The files whose name contains `query`, ignoring case: documents first,
- * then names starting with the query, each group in index order. At most
- * `limit`; an empty query matches nothing.
+ * The files whose name contains `query`, ignoring case and accents, or spells it in
+ * pinyin: documents first, then names starting with the query, each group
+ * in index order. At most `limit`; an empty query matches nothing.
  */
 export function matchFiles(
   entries: SearchEntry[],
@@ -66,13 +65,16 @@ export function matchFiles(
   scope: SearchScope = "all",
   limit = MAX_SHOWN_MATCHES,
 ): SearchEntry[] {
-  const needle = fold(query.trim());
+  const needle = searchFold(query.trim());
   if (!needle) return [];
+  const pinyin = mayBePinyin(needle);
   // [document starts, document contains, other starts, other contains]
   const groups: SearchEntry[][] = [[], [], [], []];
   for (const entry of entries) {
     if (scope === "documents" && !entry.isDocument) continue;
-    const at = entry.key.indexOf(needle);
+    let at = entry.key.indexOf(needle);
+    if (at < 0 && pinyin && entry.pinyin)
+      at = pinyinIndexOf(entry.pinyin, needle);
     if (at < 0) continue;
     const group = groups[(entry.isDocument ? 0 : 2) + (at === 0 ? 0 : 1)];
     if (group.length < limit) group.push(entry);

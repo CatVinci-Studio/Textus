@@ -37,6 +37,7 @@ export function nativeMenuLabels(t: Strings): Record<string, string> {
     "menu:window": t.menuWindow,
     "menu:help": t.menuHelp,
     "predefined:about": named(t.menuAbout),
+    "check-updates": `${t.updateCheckButton}…`,
     "predefined:hide": named(t.menuHide),
     "predefined:hide-others": t.menuHideOthers,
     "predefined:show-all": t.menuShowAll,

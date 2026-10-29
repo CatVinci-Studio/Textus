@@ -20,6 +20,7 @@ const theme = (updated: string): GalleryTheme => ({
   created: "2026-10-17T00:00:00Z",
   updated,
   css: "themes/lumen/theme.css",
+  darkCss: null,
   previews: [],
 });
 

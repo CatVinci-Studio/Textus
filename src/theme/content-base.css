@@ -179,10 +179,10 @@
 
   .milkdown code {
     font-family: var(--font-mono);
-    font-variant-ligatures: normal;
-    font-feature-settings:
-      "liga" 1,
-      "calt" 1;
+    /* A coding font's => and != (calt), never an fi drawn as one glyph the
+       caret can't stop inside. */
+    font-variant-ligatures: no-common-ligatures;
+    font-feature-settings: "calt" 1;
     font-size: 0.9em;
     background: var(--editor-code-bg);
     padding: 0.1em 0.35em;
@@ -208,10 +208,8 @@
 
   .milkdown pre code {
     font-family: var(--font-mono);
-    font-variant-ligatures: normal;
-    font-feature-settings:
-      "liga" 1,
-      "calt" 1;
+    font-variant-ligatures: no-common-ligatures;
+    font-feature-settings: "calt" 1;
     font-size: 1em;
     background: none;
     padding: 0;

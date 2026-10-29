@@ -787,7 +787,7 @@ export async function launch(page: Page, options: Launch) {
   const project = options.project;
   if (options.plugins) await pluginsAtStart(page, options.plugins);
   await cannedFromStart(page, {
-    take_pending_open_path: options.file.path,
+    take_pending_window_paths: [options.file.path],
     ...(options.plugins ? {} : { read_text_file: options.file.content }),
     file_mtime_ms: 1_760_000_000_000,
     // The canned dev-shim issue would underline every first letter.

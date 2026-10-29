@@ -225,15 +225,15 @@ pub(crate) fn reopen_without_windows(app: &tauri::AppHandle) {
         let _ = window.set_focus();
         return;
     }
-    let paths = if commands::prefs::read_restore_session_on_startup(app) {
-        commands::session::read_session_paths(app)
+    let windows = if commands::prefs::read_restore_session_on_startup(app) {
+        commands::session::read_session_windows(app)
     } else {
         Vec::new()
     };
-    if paths.is_empty() {
+    if windows.is_empty() {
         let _ = open_new_window(app);
     } else {
-        queue_paths_to_open(app, paths);
+        queue_windows_to_open(app, windows);
     }
 }
 

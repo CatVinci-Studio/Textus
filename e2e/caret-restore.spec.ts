@@ -26,7 +26,7 @@ async function session(
       w.__devFileMtimes = Object.fromEntries(
         Object.keys(files).map((p) => [p, mtime]),
       );
-      w.__devInvokeResults = { take_pending_open_path: path };
+      w.__devInvokeResults = { take_pending_window_paths: [path] };
     },
     {
       files: options.files ?? { [PATH]: DOC },

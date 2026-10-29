@@ -8,7 +8,8 @@ import { openPath, openWithPlugins, pluginsAtStart } from "./plugin-helpers";
  */
 
 const panes = ".main-pane-split > .split-pane";
-const pane = (which: "first" | "second") => `.split-pane[data-pane="${which}"]`;
+const pane = (which: "first" | "second" | "third") =>
+  `.split-pane[data-pane="${which}"]`;
 
 /** A View menu item, as the native menu sends it. */
 async function emit(page: Page, name: string) {
@@ -172,9 +173,10 @@ test("a tab dragged onto the other pane moves into its tab bar", async ({
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
   await page.mouse.down();
   await page.mouse.move(from.x + from.width / 2, from.y + 120, { steps: 5 });
-  // Near its top edge: the light still takes the whole pane, as the drop
-  // does.
-  await page.mouse.move(to.x + to.width / 2, to.y + 20, { steps: 8 });
+  // In its middle: the light takes the whole pane, as the drop does.
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, {
+    steps: 8,
+  });
   const hint = (await page.locator(".split-drop-hint").boundingBox())!;
   expect(Math.round(hint.height)).toBe(Math.round(to.height));
   await page.mouse.up();
@@ -193,7 +195,14 @@ async function splitThree(page: Page) {
     await expect(page.locator(panes)).toHaveCount(2, { timeout: 500 });
   }).toPass();
   await emit(page, "menu-new-file");
+  // The new tab in front first, or the paste goes into Two.
+  await expect(
+    page.locator(".main-pane-split > .tab-bar").first().locator('[role="tab"]'),
+  ).toHaveCount(2);
   await pasteMarkdown(page, "# Three");
+  await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
+    "Three",
+  );
 }
 
 /** Each pane's tab titles: its bar's, in order. */
@@ -224,6 +233,13 @@ for (const way of ["along the bars", "down and across"])
     await page.mouse.move(before.x + 4, before.y + before.height / 2, {
       steps: 12,
     });
+    if (way === "down and across") {
+      // The pane the tab will join lights up, not its tab bar.
+      const hint = (await page.locator(".split-drop-hint").boundingBox())!;
+      const body = (await page.locator(pane("second")).boundingBox())!;
+      expect(Math.round(hint.y)).toBe(Math.round(body.y));
+      expect(Math.round(hint.height)).toBe(Math.round(body.height));
+    }
     await page.mouse.up();
     await expect(bars.last().locator('[role="tab"]')).toHaveCount(2);
     await expect(bars.last().locator('[role="tab"]').first()).toHaveAttribute(
@@ -262,6 +278,104 @@ test("a pulled tab whose release the page never heard is let go at the next move
   expect((await barTitles(page)).map((titles) => titles.length)).toEqual([
     1, 2,
   ]);
+});
+
+test("a tab dragged onto another pane's edge opens in a new pane on that side", async ({
+  page,
+}) => {
+  await splitThree(page);
+  const bars = page.locator(".main-pane-split > .tab-bar");
+  const three = bars.first().locator('[role="tab"][aria-selected="true"]');
+  const from = (await three.boundingBox())!;
+  const to = (await page.locator(pane("second")).boundingBox())!;
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + from.width / 2, from.y + 120, { steps: 5 });
+  // Near the second pane's bottom edge, short of the window's: its lower
+  // half lights.
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height - 70, {
+    steps: 8,
+  });
+  const hint = (await page.locator(".split-drop-hint").boundingBox())!;
+  expect(Math.round(hint.height)).toBe(Math.round(to.height / 2));
+  await page.mouse.up();
+  await expect(page.locator(panes)).toHaveCount(3);
+  await expect(page.locator(pane("third"))).toContainText("Three");
+  const second = (await page.locator(pane("second")).boundingBox())!;
+  const third = (await page.locator(pane("third")).boundingBox())!;
+  // Below the second, the same width; the first stays the full height.
+  expect(Math.round(third.x)).toBe(Math.round(second.x));
+  expect(third.y).toBeGreaterThan(second.y + second.height - 1);
+  const first = (await page.locator(pane("first")).boundingBox())!;
+  expect(first.y + first.height).toBeGreaterThan(third.y);
+});
+
+test("a tab dragged to the split's outer edge opens beside all its panes, the full height", async ({
+  page,
+}) => {
+  await openTwo(page);
+  await emit(page, "menu-split-down");
+  await expect(page.locator(panes)).toHaveCount(2);
+  await emit(page, "menu-new-file");
+  await pasteMarkdown(page, "# Three");
+  // The pane with both tabs gives up the one in front.
+  const bar = page
+    .locator(".main-pane-split > .tab-bar")
+    .filter({ has: page.locator('[role="tab"]').nth(1) });
+  await expect(bar).toHaveCount(1);
+  const from = (await bar
+    .locator('[role="tab"][aria-selected="true"]')
+    .boundingBox())!;
+  const top = (await page.locator(pane("first")).boundingBox())!;
+  const bottom = (await page.locator(pane("second")).boundingBox())!;
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + from.width / 2, from.y + 120, { steps: 5 });
+  // At the right edge, halfway down the top pane: the window's right half
+  // lights, top to bottom.
+  const edge = top.x + top.width - 10;
+  await page.mouse.move(edge, top.y + top.height / 2, { steps: 8 });
+  const hint = (await page.locator(".split-drop-hint").boundingBox())!;
+  expect(Math.round(hint.y)).toBe(Math.round(top.y));
+  expect(Math.round(hint.y + hint.height)).toBe(
+    Math.round(bottom.y + bottom.height),
+  );
+  await page.mouse.up();
+  await expect(page.locator(panes)).toHaveCount(3);
+  const right = (await page.locator(pane("third")).boundingBox())!;
+  const left = (await page.locator(pane("first")).boundingBox())!;
+  expect(right.x).toBeGreaterThan(left.x + left.width - 1);
+  expect(Math.round(right.y + right.height)).toBe(
+    Math.round(bottom.y + bottom.height),
+  );
+  await expect(page.locator(pane("third"))).toContainText("Three");
+});
+
+test("Split Down in a split splits the pane in use again, and its divider resizes those two", async ({
+  page,
+}) => {
+  await splitThree(page);
+  // Three in front of the first pane, Two beside it in the same pane.
+  await page.locator(pane("first")).click();
+  await emit(page, "menu-split-down");
+  await expect(page.locator(panes)).toHaveCount(3);
+  const dividers = page.getByRole("separator", {
+    name: "Divider between the documents",
+  });
+  await expect(dividers).toHaveCount(2);
+  const lower = page.locator(pane("second"));
+  const before = (await lower.boundingBox())!;
+  const line = page.locator('.split-divider[aria-orientation="horizontal"]');
+  const box = (await line.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + 1);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y - 80, { steps: 5 });
+  await page.mouse.up();
+  const after = (await lower.boundingBox())!;
+  expect(after.height).toBeGreaterThan(before.height + 40);
+  // The third pane, beside them, didn't change.
+  const right = (await page.locator(pane("third")).boundingBox())!;
+  expect(Math.round(right.y)).toBeLessThan(Math.round(before.y));
 });
 
 test("with one tab, Split Right opens a blank one beside it", async ({

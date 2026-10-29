@@ -132,10 +132,12 @@ describe("splitBefore", () => {
   it("goes on counting an ordered list", () => {
     const list = document.createElement("ol");
     list.start = 3;
+    list.style.setProperty("--textus-ol-start", "2");
     list.innerHTML = "<li>a</li><li>b</li><li>c</li>";
     document.body.replaceChildren(list);
     const rest = splitBefore(list, list.children[2]) as HTMLOListElement;
     expect(rest.start).toBe(5);
+    expect(rest.style.getPropertyValue("--textus-ol-start")).toBe("4");
     expect(rest.textContent).toBe("c");
   });
 

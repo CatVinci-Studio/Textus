@@ -17,6 +17,9 @@ export type NewDocumentMode = "window" | "tab";
  *  keeps the classic fixed measure, "full" uses the whole pane. */
 export type ContentWidth = "auto" | "standard" | "full";
 export type ImageAlign = "center" | "left";
+/** How every document shows: the rich editor, its Markdown source, or the
+ *  source beside a preview. One for all windows. */
+export type ViewMode = "rich" | "source" | "split";
 export type ProxyType = "none" | "http" | "https" | "socks5";
 
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
@@ -223,6 +226,10 @@ export interface Settings {
   proxyHost: string;
   proxyPort: string;
   typewriterMode: boolean;
+  /** The view every document is in, in every window. */
+  viewMode: ViewMode;
+  /** Zen mode in every window. */
+  zenMode: boolean;
   contentWidth: ContentWidth;
   /** How an image on a line of its own sits. Display only: the file is
    *  not changed. */
@@ -334,6 +341,8 @@ export const DEFAULT_SETTINGS: Settings = {
   proxyHost: "",
   proxyPort: "",
   typewriterMode: false,
+  viewMode: "rich",
+  zenMode: false,
   contentWidth: "auto",
   imageAlign: "center",
   menuBarShown: false,

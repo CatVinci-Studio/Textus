@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useLayoutEffect } from "react";
 import {
   applyTextareaCaret,
   captureEditorCaret,
@@ -6,76 +6,71 @@ import {
   setPendingCaret,
   takePendingCaret,
 } from "../editor/modes/mode-switch";
-import type { DocTab } from "../document/doc-tabs";
-import { rememberViewMode } from "../editor/modes/view-mode";
+import {
+  setCurrentViewMode,
+  viewModeFields,
+  viewModeOf,
+} from "../editor/modes/view-mode";
 import { keepReadOnly, tabReadOnly } from "../document/read-only";
+import { useSettings } from "../prefs/SettingsContext";
+import type { ViewMode } from "../prefs/settings-types";
 import type { TabState } from "./tabs/useTabState";
 
-/** Switching the active tab between the rich editor, plain source mode and
- *  split view, with the caret carried across each switch (the view switched
- *  to is the one new documents open in, view-mode.ts); and a tab's
- *  read-only mode. */
+/** The rich editor, plain source mode and split view, one for every tab of
+ *  every window (Settings' viewMode): switching in one window switches them
+ *  all, the caret carried across in the tab in front; and a tab's read-only
+ *  mode. */
 export function useSourceModes(tabState: TabState) {
   const { tabs, activeTabId, liveTabs, updateTab } = tabState;
+  const { settings, setSettings } = useSettings();
+  const mode = settings.viewMode;
 
-  // Back to the rich editor, from plain source mode or split view alike.
-  const leaveSourceMode = useCallback(
-    (tab: DocTab) => {
-      // The view being left records its caret; the one entered places it.
-      const textarea = document.querySelector<HTMLTextAreaElement>(
-        '[data-active-tab="true"] textarea.source-view',
-      );
-      setPendingCaret(textarea ? readTextareaCaret(textarea) : null);
-      // Remount the rich editor so it picks up the raw text.
-      updateTab(tab.id, {
-        sourceMode: false,
-        splitView: false,
-        reloadKey: tab.reloadKey + 1,
-      });
-      rememberViewMode({ sourceMode: false });
-    },
-    [updateTab],
+  // Before the tabs below, which a new one copies.
+  useLayoutEffect(() => setCurrentViewMode(mode), [mode]);
+
+  // Every tab of this window to the view all documents are in.
+  useEffect(() => {
+    for (const tab of liveTabs()) {
+      // A plugin's tab has no Markdown to show as source.
+      if (tab.view || viewModeOf(tab) === mode) continue;
+      const front = tab.id === activeTabId;
+      if (mode === "rich") {
+        // The view being left records its caret; the one entered places it.
+        if (front) {
+          const textarea = document.querySelector<HTMLTextAreaElement>(
+            '[data-active-tab="true"] textarea.source-view',
+          );
+          setPendingCaret(textarea ? readTextareaCaret(textarea) : null);
+        }
+        // Remount the rich editor so it picks up the raw text.
+        updateTab(tab.id, {
+          ...viewModeFields(mode),
+          reloadKey: tab.reloadKey + 1,
+        });
+      } else {
+        // Live content: entering source mode unmounts the editor and any
+        // edit its debounce still holds.
+        if (front && !tab.sourceMode)
+          setPendingCaret(captureEditorCaret(tab.content));
+        updateTab(tab.id, { content: tab.content, ...viewModeFields(mode) });
+      }
+    }
+  }, [mode, tabs, activeTabId, liveTabs, updateTab]);
+
+  const switchTo = useCallback(
+    (next: ViewMode) => setSettings({ viewMode: next }),
+    [setSettings],
   );
-
-  const toggleSourceMode = useCallback(() => {
-    // Live content: entering source mode unmounts the editor and any edit
-    // its debounce still holds.
-    const tab = liveTabs().find((tb) => tb.id === activeTabId);
-    // A plugin's tab has no Markdown to show as source.
-    if (!tab || tab.view) return;
-    if (tab.sourceMode && tab.splitView) {
-      // Split view shows Source Mode as off, so turning it on means plain
-      // source mode: the preview goes.
-      updateTab(activeTabId, { splitView: false });
-      rememberViewMode({ sourceMode: true });
-    } else if (tab.sourceMode) {
-      leaveSourceMode(tab);
-    } else {
-      setPendingCaret(captureEditorCaret(tab.content));
-      updateTab(activeTabId, { content: tab.content, sourceMode: true });
-      rememberViewMode({ sourceMode: true });
-    }
-  }, [activeTabId, updateTab, liveTabs, leaveSourceMode]);
-
-  // Split view = source mode with a live preview. From the rich editor it
-  // enters source mode; from split view it returns; from plain source mode
-  // it adds the preview.
-  const toggleSplitView = useCallback(() => {
-    const tab = liveTabs().find((tb) => tb.id === activeTabId);
-    // A plugin's tab has no Markdown to show as source.
-    if (!tab || tab.view) return;
-    if (tab.sourceMode && tab.splitView) {
-      leaveSourceMode(tab);
-    } else {
-      if (!tab.sourceMode) setPendingCaret(captureEditorCaret(tab.content));
-      updateTab(activeTabId, {
-        content: tab.content,
-        sourceMode: true,
-        splitView: true,
-      });
-      rememberViewMode({ sourceMode: true, splitView: true });
-    }
-  }, [activeTabId, updateTab, liveTabs, leaveSourceMode]);
+  // Source mode from the rich editor or split view (whose preview goes);
+  // back to the rich editor from source mode.
+  const toggleSourceMode = useCallback(
+    () => switchTo(mode === "source" ? "rich" : "source"),
+    [mode, switchTo],
+  );
+  const toggleSplitView = useCallback(
+    () => switchTo(mode === "split" ? "rich" : "split"),
+    [mode, switchTo],
+  );
 
   // View › Read Only, or a tab's own menu: kept by the file's path.
   const toggleReadOnly = useCallback(

@@ -4,10 +4,12 @@ import {
   paneOf,
   reorderInPane,
   setSplitLayout,
+  splitAtEdge,
+  splitBeside,
   splitLayout,
-  type PaneIndex,
   type SplitDirection,
 } from "./split-layout";
+import { paneById } from "./split-tree";
 import { setDragging, type DocumentDrop } from "../../ui/document-drop";
 import "./split-drop.css";
 
@@ -21,12 +23,44 @@ export interface DropTarget {
   zone: DropZone;
   /** The tab whose document is under the pointer. */
   tabId: string;
-  /** Where that document is drawn. */
+  /** Where that document is drawn, or all of them for `whole`. */
   rect: DOMRect;
+  /** On the outer edge of a split: beside all its panes, not just one. */
+  whole?: boolean;
 }
 
 /** How near an edge (a share of the width or height) still counts as it. */
 const EDGE = 0.3;
+/** How near the split's outer edge (px, and at most a share of it) puts a
+ *  drop beside every pane. */
+const OUTER = 48;
+const OUTER_SHARE = 0.1;
+
+/** The split's outer edge under (x, y), if it is near one. */
+function outerEdge(
+  area: DOMRect,
+  x: number,
+  y: number,
+): "left" | "right" | "top" | "bottom" | null {
+  const across = Math.min(OUTER, area.width * OUTER_SHARE);
+  const down = Math.min(OUTER, area.height * OUTER_SHARE);
+  const sides = [
+    ["left", (x - area.left) / across],
+    ["right", (area.right - x) / across],
+    ["top", (y - area.top) / down],
+    ["bottom", (area.bottom - y) / down],
+  ] as const;
+  const [side, near] = sides.reduce((a, b) => (b[1] < a[1] ? b : a));
+  return near < 1 ? side : null;
+}
+
+function union(rects: DOMRect[]): DOMRect {
+  const left = Math.min(...rects.map((r) => r.left));
+  const top = Math.min(...rects.map((r) => r.top));
+  const right = Math.max(...rects.map((r) => r.right));
+  const bottom = Math.max(...rects.map((r) => r.bottom));
+  return new DOMRect(left, top, right - left, bottom - top);
+}
 
 /** The zone of the document under (x, y); null off the documents. */
 export function dropTargetAt(x: number, y: number): DropTarget | null {
@@ -37,7 +71,11 @@ export function dropTargetAt(x: number, y: number): DropTarget | null {
   let tabId: string | undefined;
   if (panes.length) {
     const pane = panes.find((p) => inside(p.getBoundingClientRect(), x, y));
-    if (!pane) return null;
+    if (!pane?.dataset.tabId) return null;
+    const area = union(panes.map((p) => p.getBoundingClientRect()));
+    const edge = outerEdge(area, x, y);
+    if (edge)
+      return { zone: edge, tabId: pane.dataset.tabId, rect: area, whole: true };
     rect = pane.getBoundingClientRect();
     tabId = pane.dataset.tabId;
   } else {
@@ -50,8 +88,6 @@ export function dropTargetAt(x: number, y: number): DropTarget | null {
       ?.dataset.tabId;
   }
   if (!tabId || !inside(rect, x, y)) return null;
-  // Split already, a drop only joins the pane: its edges split nothing.
-  if (panes.length > 1) return { zone: "center", tabId, rect };
   const fx = (x - rect.left) / rect.width;
   const fy = (y - rect.top) / rect.height;
   const near = Math.min(fx, 1 - fx, fy, 1 - fy);
@@ -74,9 +110,9 @@ function barDropAt(
   x: number,
   y: number,
   tabId: string,
-): { pane: PaneIndex; index: number; rect: DOMRect } | null {
+): { pane: string; index: number; rect: DOMRect } | null {
   const bar = [
-    ...document.querySelectorAll<HTMLElement>(".tab-bar[data-pane-index]"),
+    ...document.querySelectorAll<HTMLElement>(".tab-bar[data-pane-id]"),
   ].find((el) => inside(el.getBoundingClientRect(), x, y));
   if (!bar) return null;
   const index = [...bar.querySelectorAll<HTMLElement>("[data-flip-id]")].filter(
@@ -85,15 +121,30 @@ function barDropAt(
       return pill.dataset.flipId !== tabId && box.left + box.width / 2 < x;
     },
   ).length;
+  const pane = bar.dataset.paneId!;
+  // Lit where the document will show, not over the bar (and the title bar
+  // a top pane's bar reaches under).
+  const body = document.querySelector<HTMLElement>(
+    `.split-pane[data-pane-id="${CSS.escape(pane)}"]`,
+  );
   return {
-    pane: Number(bar.dataset.paneIndex) as PaneIndex,
+    pane,
     index,
-    rect: bar.getBoundingClientRect(),
+    rect: (body ?? bar).getBoundingClientRect(),
   };
 }
 
 function inside(rect: DOMRect, x: number, y: number): boolean {
   return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+}
+
+/** The share a pane added beside the whole split on `zone` gets. */
+function wholeShare(zone: DropZone): number {
+  const root = splitLayout()?.root;
+  const direction = zone === "left" || zone === "right" ? "row" : "column";
+  return root?.kind === "split" && root.direction === direction
+    ? 1 / (root.children.length + 1)
+    : 0.5;
 }
 
 let hint: HTMLDivElement | null = null;
@@ -113,10 +164,12 @@ export function showDropHint(target: DropTarget | null): void {
     document.body.append(hint);
   }
   const { rect, zone } = target;
-  const half = (w: number) => w / 2;
+  // Beside every pane, the new one takes what each of those beside it will.
+  const share = target.whole ? wholeShare(zone) : 0.5;
+  const half = (w: number) => w * share;
   const box = {
-    left: zone === "right" ? rect.left + half(rect.width) : rect.left,
-    top: zone === "bottom" ? rect.top + half(rect.height) : rect.top,
+    left: zone === "right" ? rect.right - half(rect.width) : rect.left,
+    top: zone === "bottom" ? rect.bottom - half(rect.height) : rect.top,
     width: zone === "left" || zone === "right" ? half(rect.width) : rect.width,
     height:
       zone === "top" || zone === "bottom" ? half(rect.height) : rect.height,
@@ -130,10 +183,10 @@ export function showDropHint(target: DropTarget | null): void {
 }
 
 /**
- * Puts `tabId` where it was dropped. Already split, it moves into the pane
- * it was dropped on (an edge counts as that side's pane). Otherwise an edge
- * splits the window, and a tab dropped on its own document pairs with a
- * neighbour. Call once `tabId` is among the window's tabs and in front.
+ * Puts `tabId` where it was dropped: on a pane's edge, into a new pane on
+ * that side of it; in its middle, into that pane. With one document an
+ * edge splits the window, and a tab dropped on its own document pairs with
+ * a neighbour. Call once `tabId` is among the window's tabs and in front.
  */
 export function splitForDrop(
   tabId: string,
@@ -141,9 +194,16 @@ export function splitForDrop(
   tabIds: readonly string[],
 ): void {
   const now = splitLayout();
-  if (now?.panes[1]) {
-    const pane = paneOf(now, target.tabId);
-    if (pane !== null) moveToPane(tabId, pane);
+  if (now && target.whole && target.zone !== "center") {
+    splitAtEdge(tabId, target.zone);
+    return;
+  }
+  const pane = paneOf(now, target.tabId);
+  if (now && pane !== null) {
+    if (target.zone === "center") moveToPane(tabId, pane);
+    // A pane's only tab dropped on its own edge stays where it is.
+    else if (paneById(now.root, pane)?.tabs.some((id) => id !== tabId))
+      splitBeside(tabId, pane, target.zone);
     return;
   }
   if (target.zone === "center") return;
@@ -162,7 +222,10 @@ export function splitForDrop(
   const layout = first
     ? pairLayout(direction, tabId, other, 1)
     : pairLayout(direction, other, tabId, 0);
-  layout.groups = first ? [[tabId], rest] : [rest, [tabId]];
+  const [a, b] = layout.root.children;
+  if (a.kind === "pane" && b.kind === "pane") {
+    (first ? b : a).tabs = rest;
+  }
   setSplitLayout(layout);
 }
 

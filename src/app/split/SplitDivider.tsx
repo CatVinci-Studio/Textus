@@ -2,119 +2,80 @@ import { useRef, useState, type CSSProperties } from "react";
 import { ContextMenu } from "../../ui/ContextMenu";
 import type { Strings } from "../../i18n/strings";
 import { Presence } from "../../ui/usePresence";
-import {
-  arrangeSplit,
-  clampRatio,
-  closeSplit,
-  setSplitLayout,
-  splitLayout,
-  type SplitLayout,
-} from "./split-layout";
+import { arrangeBranch, closeSplit, type SplitLayout } from "./split-layout";
+import { nodeAt, panesOf, type Divider } from "./split-tree";
 
-/** How far one arrow key press moves the divider. */
+/** How far one arrow key press moves the divider, as a share of the two
+ *  panes it parts. */
 const KEY_STEP = 0.05;
 
-/**
- * The split's grid in the document column. Every tab's editor stays a child
- * of the column, so a tab moving into a pane keeps its undo and scroll.
- */
-export function splitGridStyles(layout: SplitLayout): {
-  column: CSSProperties;
-  bars: [CSSProperties, CSSProperties];
-  first: CSSProperties;
-  divider: CSSProperties;
-  second: CSSProperties;
-} {
-  const a = `minmax(0, ${layout.ratio}fr)`;
-  const b = `minmax(0, ${1 - layout.ratio}fr)`;
-  // Each pane is its tab bar over its document.
-  if (layout.direction === "row")
-    return {
-      column: {
-        gridTemplateColumns: `${a} 1px ${b}`,
-        gridTemplateRows: "auto minmax(0, 1fr)",
-      },
-      bars: [
-        { gridColumn: 1, gridRow: 1 },
-        { gridColumn: 3, gridRow: 1 },
-      ],
-      first: { gridColumn: 1, gridRow: 2 },
-      divider: { gridColumn: 2, gridRow: "1 / span 2" },
-      second: { gridColumn: 3, gridRow: 2 },
-    };
+/** Where the panes on one side of a divider are drawn, together. */
+function extent(layout: SplitLayout, line: Divider, child: number) {
+  const node = nodeAt(layout.root, [...line.path, child]);
+  const rects = (node ? panesOf(node) : []).flatMap((p) =>
+    [
+      ...document.querySelectorAll<HTMLElement>(
+        `.main-pane-split > [data-pane-id="${CSS.escape(p.id)}"]`,
+      ),
+    ].map((el) => el.getBoundingClientRect()),
+  );
+  const row = line.direction === "row";
   return {
-    column: {
-      gridTemplateColumns: "minmax(0, 1fr)",
-      gridTemplateRows: `auto ${a} 1px auto ${b}`,
-    },
-    bars: [{ gridRow: 1 }, { gridRow: 4 }],
-    first: { gridRow: 2 },
-    divider: { gridRow: 3 },
-    second: { gridRow: 5 },
+    start: Math.min(...rects.map((r) => (row ? r.left : r.top))),
+    end: Math.max(...rects.map((r) => (row ? r.right : r.bottom))),
   };
 }
 
-/** The line between the panes: drag or arrow keys resize, double click
- *  halves, right-click turns, swaps or closes the split. */
+/** The line between two panes (or groups of them): drag or arrow keys
+ *  resize the two, double click evens them, right-click turns their
+ *  branch, swaps them or closes the split. */
 export function SplitDivider({
   layout,
+  line,
   style,
   t,
 }: {
   layout: SplitLayout;
+  line: Divider;
   style: CSSProperties;
   t: Strings;
 }) {
-  const row = layout.direction === "row";
+  const row = line.direction === "row";
   const drag = useRef<{ start: number; size: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
-  const share = (ratio: number) => {
-    const now = splitLayout();
-    if (now) setSplitLayout({ ...now, ratio: clampRatio(ratio) });
-  };
+  const branch = nodeAt(layout.root, line.path);
+  const sizes = branch?.kind === "split" ? branch.sizes : [0.5, 0.5];
+  const current =
+    sizes[line.index] / (sizes[line.index] + sizes[line.index + 1]);
+  const share = (value: number) =>
+    arrangeBranch(line.path, { index: line.index, share: value });
   const end = () => {
     drag.current = null;
     setDragging(false);
   };
-  const turn = () => {
-    const now = splitLayout();
-    if (now)
-      setSplitLayout({
-        ...now,
-        direction: now.direction === "row" ? "column" : "row",
-      });
-  };
   return (
     <>
       <div
-        className={`split-divider${dragging ? " split-divider-active" : ""}`}
+        className={`split-divider split-divider-${line.direction}${dragging ? " split-divider-active" : ""}`}
         style={style}
         role="separator"
         aria-orientation={row ? "vertical" : "horizontal"}
         aria-label={t.splitDivider}
-        aria-valuenow={Math.round(layout.ratio * 100)}
-        aria-valuemin={20}
-        aria-valuemax={80}
+        aria-valuenow={Math.round(current * 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
         tabIndex={0}
         onPointerDown={(e) => {
           if (e.button !== 0) return;
           e.preventDefault();
           e.currentTarget.setPointerCapture(e.pointerId);
-          // The panes' span: from the first's start to the second's end.
-          const panes =
-            e.currentTarget.parentElement?.querySelectorAll<HTMLElement>(
-              ":scope > .split-pane",
-            );
-          const rects = [...(panes ?? [])].map((p) =>
-            p.getBoundingClientRect(),
-          );
-          if (rects.length < 2) return;
-          const start = Math.min(...rects.map((r) => (row ? r.left : r.top)));
-          const finish = Math.max(
-            ...rects.map((r) => (row ? r.right : r.bottom)),
-          );
-          drag.current = { start, size: finish - start };
+          const before = extent(layout, line, line.index);
+          const after = extent(layout, line, line.index + 1);
+          drag.current = {
+            start: before.start,
+            size: after.end - before.start,
+          };
           setDragging(true);
         }}
         onPointerMove={(e) => {
@@ -133,8 +94,8 @@ export function SplitDivider({
         onKeyDown={(e) => {
           const back = row ? "ArrowLeft" : "ArrowUp";
           const on = row ? "ArrowRight" : "ArrowDown";
-          if (e.key === back) share(layout.ratio - KEY_STEP);
-          else if (e.key === on) share(layout.ratio + KEY_STEP);
+          if (e.key === back) share(current - KEY_STEP);
+          else if (e.key === on) share(current + KEY_STEP);
           else return;
           e.preventDefault();
         }}
@@ -145,10 +106,13 @@ export function SplitDivider({
             x={menu.x}
             y={menu.y}
             items={[
-              { label: t.splitTurn, onSelect: turn },
+              {
+                label: t.splitTurn,
+                onSelect: () => arrangeBranch(line.path, "turn"),
+              },
               {
                 label: t.splitSwap,
-                onSelect: () => arrangeSplit({ swap: true }),
+                onSelect: () => arrangeBranch(line.path, { swap: line.index }),
               },
               { label: t.splitEven, onSelect: () => share(0.5) },
               "separator",

@@ -60,7 +60,7 @@ Passe o ponteiro sobre uma tabela para adicionar ou remover linhas e colunas. Di
 
 ## Blocos de código
 
-Blocos de código delimitados, com realce de sintaxe (troque a linguagem no canto superior direito do bloco). Enter na última linha, quando ela está vazia, sai do bloco, assim como Ctrl/⌘+Enter a qualquer momento; o mesmo vale para as citações. O botão **Copiar**, ao lado da linguagem, copia o código do bloco, e **Ajustes → Editor e aparência → Números de linha nos blocos de código** numera as linhas; nenhum dos dois aparece nas exportações nem na impressão.
+Blocos de código delimitados, com realce de sintaxe (troque a linguagem no canto superior direito do bloco). Enter na última linha, quando ela está vazia, sai do bloco, assim como Ctrl/⌘+Enter a qualquer momento; o mesmo vale para as citações. **Copiar** e **Selecionar Tudo**, ao lado da linguagem, copiam ou selecionam o código do bloco, e **Ajustes → Editor e aparência → Números de linha nos blocos de código** numera as linhas; nenhum dos dois aparece nas exportações nem na impressão.
 
 ```python
 def fib(n: int) -> int:
@@ -138,17 +138,42 @@ Ou escreva a referência à mão:
 
 Incorporações do Obsidian, como `![[image.png]]` ou `![[attachments/image.png|300]]`, também mostram a imagem: o Textus procura o arquivo no cofre do Obsidian ao qual o documento pertence e salva a incorporação exatamente como foi escrita.
 
+Para ver uma imagem de perto, clique duas vezes nela ou clique em **Ampliar imagem** no canto superior direito (os diagramas têm o mesmo botão): role ou faça o gesto de pinça para dar zoom, arraste para mover, clique duas vezes para ajustá-la de novo e pressione `Esc` para fechar. Arraste a alça na borda direita de uma imagem para redimensioná-la. **Ajustes → Editor e aparência → Imagens em linha própria** coloca as imagens que ficam sozinhas numa linha no centro ou à esquerda, no editor e nas exportações em HTML e PDF.
+
+## Copiar e colar
+
+**Copiar** põe o Markdown no texto simples da área de transferência e a formatação ao lado, de modo que GitHub, Obsidian, VS Code e apps de chat recebem Markdown, enquanto Word, Pages, e-mail e Notion colam o texto formatado. Uma imagem que você copia com o botão direito vai para a área de transferência como a própria imagem, pronta para colar num chat ou num documento. **Editar → Colar como texto simples** (`Cmd+Shift+V`) cola o texto da área de transferência exatamente como está, sem interpretar o Markdown que houver nele.
+
 ## Visualizações e modos
 
 Além do editor WYSIWYG e do modo código-fonte (`Cmd+/`), o Textus tem três maneiras de escrever (no Windows e no Linux, use `Ctrl` no lugar de `Cmd`; Ajustes → Atalhos mostra as combinações atuais):
 
-- **Visualização dividida** (`Cmd+Shift+E`): o código-fonte Markdown à esquerda e a prévia renderizada à direita, rolando juntos.
-- **Modo máquina de escrever** (Ajustes → Editor e aparência → Visualização): a linha que você está digitando fica no meio da janela, no editor, no modo código-fonte e na visualização dividida.
+- **Código e pré-visualização** (`Cmd+Shift+E`): o código-fonte Markdown à esquerda e a prévia renderizada à direita, rolando juntos.
+- **Modo máquina de escrever**: a linha que você está digitando fica no meio da janela, no editor, no modo código-fonte e em Código e pré-visualização.
 - **Modo zen** (`Cmd+Shift+J`): esconde tudo menos o texto e esmaece todos os parágrafos, menos o que você está escrevendo. Pressione `Esc` para sair.
 
-Os três também estão no menu **Visualizar**.
+Todos estão no menu **Visualizar** e em **Ajustes → Editor e aparência → Visualização**. Cada um é um único ajuste para todo o Textus: mude em qualquer janela e todas as abas de todas as janelas mudam junto, os documentos que você abrir em seguida aparecem nele, e o Textus volta a abrir nele da próxima vez.
+
+**Visualizar → Só leitura** (também no menu de contexto de uma aba) impede que um documento seja alterado, seja digitando, colando, soltando, desfazendo, pela Textus AI ou por plugins. Um cadeado ao lado do título indica isso; clique nele para tornar o documento editável de novo.
+
+**Visualizar → Paleta de comandos…** (`Cmd+Shift+P`) encontra tudo o que os menus fazem, e cada comando que um plugin adiciona, digitando algumas letras do nome. Ela também muda a aparência (clara, escura ou a do sistema) e o tema do editor, e liga ou desliga a Textus AI.
+
+A aba **Estrutura** da barra lateral lista os títulos do documento; clique em um para ir até ele. Clique com o botão direito na estrutura para **Expandir tudo** e **Recolher tudo**, ou clique com `Option` (`Alt`) na seta de um título para recolher ou expandir todos de uma vez.
 
 **Ajustes → Editor e aparência → Tamanho do texto da interface** aumenta ou diminui o texto da barra lateral, das abas, dos menus, do painel de IA e dos Ajustes; o documento mantém o próprio zoom. `Ctrl+Tab` e `Ctrl+Shift+Tab` vão para a próxima aba e para a anterior.
+
+## Vários documentos ao mesmo tempo
+
+**Visualizar → Dividir à direita** (`Cmd+Option+S`) mostra o documento em primeiro plano ao lado de outro, e **Visualizar → Dividir para baixo** coloca um acima do outro. Cada painel tem as próprias abas: um documento que você abre vai para o painel em que você está, e Dividir à direita ou Dividir para baixo dividem esse painel de novo, quantas vezes você quiser.
+
+- Arraste uma aba (ou um arquivo da barra lateral) até a borda de um painel, e ela abre em um novo painel desse lado. Arraste até a borda externa do editor e ela abre ao lado de todos os painéis: na borda direita de dois painéis um acima do outro, ela ocupa o lado direito de cima a baixo. Solte-a sobre as abas de outro painel para movê-la para lá.
+- Arraste a linha entre dois painéis para redimensioná-los; clique duas vezes nela para deixá-los iguais. Clique com o botão direito nela para passá-los de lado a lado para um acima do outro, trocá-los de lugar ou fechar a divisão.
+- **Abrir ao lado**, no menu de contexto de uma aba, mostra-a ao lado da que está em primeiro plano.
+- Feche a última aba de um painel e o painel some. O layout inteiro volta quando você reabre o Textus.
+
+## Abas e janelas
+
+`Cmd+T` abre uma nova aba, `Cmd+N` uma nova janela, e **Arquivo → Reabrir Aba Fechada** (`Cmd+Shift+T`) traz de volta os documentos que você fechou, do mais recente para o mais antigo. Um clique com o botão do meio fecha uma aba; o menu de contexto de uma aba tem **Fechar as outras**, **Fechar abas à esquerda** e **Fechar abas à direita** (abas com alterações não salvas continuam abertas), **Copiar caminho** e **Mover para nova janela**. Você também pode arrastar uma aba para fora da janela para dar a ela uma janela própria. Quando o Textus reabre, cada janela volta com as suas próprias abas.
 
 ## Pastas e busca de arquivos
 
@@ -156,11 +181,29 @@ Os três também estão no menu **Visualizar**.
 
 A árvore também é um pequeno gerenciador de arquivos. O nome da pasta superior, acima dela, leva você um nível acima. **Ordenar** a organiza por nome ou por data de modificação, e o filtro ao lado da caixa de busca, **Todos os arquivos** ou **Só documentos**, vale para a árvore e para a busca. Clique com o botão direito em uma pasta, um arquivo ou no espaço vazio abaixo para criar ali um **Novo documento** ou uma **Nova pasta**, e arraste um arquivo ou uma pasta sobre outra pasta para movê-lo; um documento aberto vai junto para o novo lugar. Nada é substituído: um nome já usado é recusado.
 
+Arraste arquivos do Finder ou do Explorador de Arquivos para a janela para abri-los: documentos abrem em abas, imagens entram no documento onde você as solta e uma pasta abre na barra lateral. **Arquivo → Copiar caminho** copia o caminho completo do documento em primeiro plano.
+
+Num terminal, `textus notas.md` abre um arquivo no Textus; **Ajustes → Geral** instala o comando `textus` se ele ainda não estiver lá.
+
 **Arquivo → Abrir…** também abre um documento do Word (`.docx`), assim como soltá-lo na janela: ele vira um novo documento Markdown com o mesmo nome, ainda não salvo, com seus títulos, listas, tabelas, links, notas de rodapé e imagens. As imagens vão, ao salvar, para onde **Ajustes → Editor e aparência → Imagens** coloca as coladas, e **Salvar** sugere um arquivo `.md` ao lado do arquivo do Word. Parte da formatação pode ficar diferente; o arquivo do Word nunca é alterado. Só no computador.
 
 ## Continuar em segundo plano
 
 Ative **Ajustes → Geral → Aplicativo → Continuar em segundo plano** e, ao fechar a última janela, o Textus continua aberto, com o ícone na área de notificação (Windows), na bandeja do sistema (Linux) ou na barra de menus (Mac). **Abrir o Textus** no menu do ícone traz seus documentos de volta; **Encerrar Textus** ali encerra o Textus de vez. O GNOME só mostra o ícone de bandeja com a extensão AppIndicator.
+
+## Exportar
+
+**Arquivo → Exportar** salva o documento como HTML ou PDF; com o [Pandoc](https://pandoc.org) instalado, também como Word (`.docx`), OpenDocument, RTF, EPUB, LaTeX e outros. No Mac, **Ajustes → Editor e aparência → Exportar PDFs em cores claras** gera um PDF em fundo branco com as cores claras do seu tema, mesmo enquanto você escreve no modo escuro.
+
+## Plugins, temas e habilidades
+
+**Ajustes → Extensões → Obter mais** lista plugins, temas e habilidades para adicionar: teclas do Vim e do Emacs, um leitor de PDF, gráficos, um grafo de conhecimento, ferramentas de escrita e mais. Cada um tem um só botão (**Instalar**, depois **Atualizar**, **Desativar** ou **Ativar**) e **Desinstalar** no menu ao lado. A página de um plugin mostra como usá-lo, e os comandos dele aparecem no menu **Plugins** e na paleta de comandos.
+
+## Obter ajuda
+
+**Ajuda → Relatar um problema…** (também em **Ajustes → Geral**, em Ajuda) abre um formulário curto. Diga que tipo de relato é, de que parte do Textus se trata e, para um bug, qual a gravidade, e depois o que deu errado; o Textus acrescenta a versão dele, o seu sistema, os seus plugins, os seus ajustes sem nada privado e os erros recentes, tudo mostrado antes de qualquer envio. **Enviar** registra o relato como issue no GitHub para você, sem precisar de conta no GitHub, e informa o número; **Enviar no GitHub** abre o formulário do GitHub em vez disso; **Copiar** coloca tudo na área de transferência para um chat ou um e-mail. O que você escreve vira uma issue pública; um e-mail ou WeChat que você deixar, caso possamos perguntar mais, vai só para a equipe.
+
+**Ajustes → Geral → Ajuda** também reabre o tutorial de boas-vindas, abre os guias e leva a **Sobre o Textus**, com a versão e **Verificar Atualizações** (no Mac, também **Textus → Verificar Atualizações…**). **Ajuda → Participe da comunidade** abre a página da comunidade.
 
 ## Notas de rodapé e linhas horizontais
 

@@ -108,6 +108,10 @@ test("no block taller than a page runs into a page's top or bottom margin", asyn
       headers: root.querySelectorAll("tr[data-is-header]").length,
       quotePieces: root.querySelectorAll("blockquote").length,
       listStarts: Array.from(root.querySelectorAll("ol")).map((ol) => ol.start),
+      // The numbers drawn: the editor's counter, one before each piece's first.
+      listCounters: Array.from(root.querySelectorAll("ol")).map(
+        (ol) => Number(ol.style.getPropertyValue("--textus-ol-start") || 0) + 1,
+      ),
       codeText: Array.from(root.querySelectorAll("pre"))
         .map((pre) => pre.textContent)
         .join(""),
@@ -122,6 +126,7 @@ test("no block taller than a page runs into a page's top or bottom margin", asyn
   expect(result.quotePieces).toBeGreaterThan(1);
   expect(result.listStarts.length).toBeGreaterThan(1);
   expect(result.listStarts[0]).toBe(1);
+  expect(result.listCounters).toEqual(result.listStarts);
   // Cut between lines: every line once, each still highlighted.
   expect(result.codeText.split("\n")).toHaveLength(150);
   expect(result.highlighted).toBe(150);

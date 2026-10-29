@@ -61,6 +61,10 @@ export function FixedShortcutList({
   );
 }
 
+/** A menu item's name as an action's: without the "…" of one that asks
+ *  for more. The shortcuts use the menu's names, so the two never differ. */
+export const plain = (label: string) => label.replace(/…$/, "");
+
 /** Every action's name, for a conflict's message. */
 function actionLabels(t: Strings): Record<ShortcutAction, string> {
   return {
@@ -68,15 +72,15 @@ function actionLabels(t: Strings): Record<ShortcutAction, string> {
     triggerGrammarCheck: t.shortcutTriggerGrammarCheck,
     toggleFloatingChat: t.shortcutToggleFloatingChat,
     toggleTextusAi: t.shortcutToggleTextusAi,
-    findReplace: t.shortcutFindReplace,
-    toggleSidebar: t.shortcutToggleSidebar,
-    toggleAgentPanel: t.shortcutToggleAgentPanel,
-    toggleSplitView: t.shortcutToggleSplitView,
-    toggleZenMode: t.shortcutToggleZenMode,
+    findReplace: plain(t.menuFindReplace),
+    toggleSidebar: t.menuToggleSidebar,
+    toggleAgentPanel: t.menuToggleAgentPanel,
+    toggleSplitView: t.menuToggleSplitView,
+    toggleZenMode: t.menuToggleZenMode,
     splitEditor: t.shortcutSplitEditor,
     commandPalette: t.shortcutCommandPalette,
-    toggleSourceMode: t.shortcutToggleSourceMode,
-    toggleTypewriterMode: t.shortcutToggleTypewriterMode,
+    toggleSourceMode: t.menuViewSource,
+    toggleTypewriterMode: t.menuViewTypewriter,
     searchFiles: t.shortcutSearchFiles,
     nextTab: t.shortcutNextTab,
     previousTab: t.shortcutPreviousTab,

@@ -187,12 +187,18 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           return;
         }
       } else {
-        const pending = await windowIpc.takePendingOpenPath();
+        // This window's documents: one opened from outside, or the tabs it
+        // had last session.
+        const [pending, ...rest] = await windowIpc.takePendingWindowPaths();
         if (pending) {
           opts.stopTutorial();
           const recovered = recoveredFor(pending);
           if (recovered) loadRecoveredIntoInitialTab(recovered);
           else await opts.openFile(pending, { restoreCaret: true });
+          for (const p of rest) {
+            if (recoveredFor(p)) continue;
+            await opts.openPathInTab(p, { restoreCaret: true });
+          }
           return;
         }
       }

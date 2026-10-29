@@ -45,7 +45,9 @@ test("split view shows source and preview", async ({ page }) => {
   await openApp(page);
   await pasteMarkdown(page, SAMPLE_DOC);
   await page.keyboard.press("Control+Shift+E");
-  await expect(page.locator(".split-view")).toBeVisible();
+  await expect(
+    page.locator('[data-active-tab="true"] .split-view'),
+  ).toBeVisible();
   await expect(page.locator(".split-preview h1")).toHaveText(
     "老城区更新的几点思考",
   );
@@ -628,7 +630,9 @@ test("menu events: New File opens one tab after edits, Zen and Split View respon
   await expect(page.locator(".zen-hint")).toHaveCount(0);
 
   await emit("menu-toggle-split-view");
-  await expect(page.locator(".split-view")).toBeVisible();
+  await expect(
+    page.locator('[data-active-tab="true"] .split-view'),
+  ).toBeVisible();
 });
 
 test("Enter turns a pipe row into a table, adds rows at the end and leaves from an empty one", async ({

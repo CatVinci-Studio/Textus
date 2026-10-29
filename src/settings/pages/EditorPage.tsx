@@ -8,11 +8,10 @@ import {
   type ColorSwatchMode,
   type DiagramEngine,
 } from "../../prefs/SettingsContext";
-import { SettingRow, ToggleRow } from "../sections/controls";
+import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
 import { ThemeSection } from "../sections/theme";
 import { ImageStorageSection } from "../sections/images";
 import { Select } from "../../ui/Select";
-import { emitMenuEvent } from "../../platform/menu-events";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canExportPdf, isIOSApp } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
@@ -27,7 +26,6 @@ export function EditorPage({
   percent,
   setSubpage,
   openPage,
-  viewChecks,
 }: SettingsPageProps) {
   return (
     <>
@@ -43,8 +41,7 @@ export function EditorPage({
           }}
         />
       </SettingsGroup>
-      {/* On a phone, whose menu is kept short, the view modes are switched
-            here, through the same event as their menu items. */}
+      {/* The window's layout, then the view every document is in. */}
       <SettingsGroup title={t.settingsViewGroup}>
         <SettingRow label={t.contentWidthLabel}>
           <Select
@@ -60,19 +57,6 @@ export function EditorPage({
             <option value="auto">{t.contentWidthAuto}</option>
             <option value="standard">{t.contentWidthStandard}</option>
             <option value="full">{t.contentWidthFull}</option>
-          </Select>
-        </SettingRow>
-        <SettingRow label={t.imageAlignLabel}>
-          <Select
-            className="settings-select"
-            aria-label={t.imageAlignLabel}
-            value={settings.imageAlign}
-            onChange={(e) =>
-              setSettings({ imageAlign: e.target.value as ImageAlign })
-            }
-          >
-            <option value="center">{t.imageAlignCenter}</option>
-            <option value="left">{t.imageAlignLeft}</option>
           </Select>
         </SettingRow>
         {/* A phone's UI is sized by iOS's own text styles instead. */}
@@ -104,10 +88,16 @@ export function EditorPage({
             onChange={(on) => setSettings({ menuBarShown: on })}
           />
         )}
+        {/* One view for every document in every window. */}
         <ToggleRow
           label={t.menuViewSource}
-          checked={!!viewChecks.sourceMode}
-          onChange={() => emitMenuEvent("toggle-source-mode")}
+          checked={settings.viewMode === "source"}
+          onChange={(on) => setSettings({ viewMode: on ? "source" : "rich" })}
+        />
+        <ToggleRow
+          label={t.menuToggleSplitView}
+          checked={settings.viewMode === "split"}
+          onChange={(on) => setSettings({ viewMode: on ? "split" : "rich" })}
         />
         <ToggleRow
           label={t.menuViewTypewriter}
@@ -116,8 +106,8 @@ export function EditorPage({
         />
         <ToggleRow
           label={t.menuToggleZenMode}
-          checked={!!viewChecks.zen}
-          onChange={() => emitMenuEvent("toggle-zen-mode")}
+          checked={settings.zenMode}
+          onChange={(on) => setSettings({ zenMode: on })}
         />
       </SettingsGroup>
       {/* What the document shows, then how typing behaves. */}
@@ -132,6 +122,53 @@ export function EditorPage({
           checked={settings.enableMermaid}
           onChange={(v) => setSettings({ enableMermaid: v })}
         />
+        <ToggleRow
+          label={t.codeLineNumbersLabel}
+          checked={settings.codeLineNumbers}
+          onChange={(v) => setSettings({ codeLineNumbers: v })}
+        />
+        <ToggleRow
+          label={t.autoCloseBracketsLabel}
+          checked={settings.autoCloseBrackets}
+          onChange={(v) => setSettings({ autoCloseBrackets: v })}
+        />
+      </SettingsGroup>
+      <SettingsGroup title={t.imageStorageGroupLabel}>
+        <SettingRow label={t.imageAlignLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.imageAlignLabel}
+            value={settings.imageAlign}
+            onChange={(e) =>
+              setSettings({ imageAlign: e.target.value as ImageAlign })
+            }
+          >
+            <option value="center">{t.imageAlignCenter}</option>
+            <option value="left">{t.imageAlignLeft}</option>
+          </Select>
+        </SettingRow>
+        <ImageStorageSection t={t} />
+      </SettingsGroup>
+      {/* No PDF export on the phone, so no group there either. */}
+      {canExportPdf && (
+        <SettingsGroup title={t.menuExport}>
+          <ToggleRow
+            label={t.pdfPageNumbersLabel}
+            checked={settings.pdfPageNumbers}
+            onChange={(v) => setSettings({ pdfPageNumbers: v })}
+          />
+          {isMacPlatform() && (
+            <ToggleRow
+              label={t.pdfLightColorsLabel}
+              checked={settings.pdfLightColors}
+              onChange={(v) => setSettings({ pdfLightColors: v })}
+            />
+          )}
+        </SettingsGroup>
+      )}
+      {/* Rarely changed: how diagrams are drawn, colour swatches, and the
+       ** and ` pairs. */}
+      <AdvancedFold t={t}>
         {settings.enableMermaid && (
           <SettingRow label={t.diagramEngineLabel} help={t.diagramEngineHint}>
             <Select
@@ -149,11 +186,6 @@ export function EditorPage({
             </Select>
           </SettingRow>
         )}
-        <ToggleRow
-          label={t.codeLineNumbersLabel}
-          checked={settings.codeLineNumbers}
-          onChange={(v) => setSettings({ codeLineNumbers: v })}
-        />
         <SettingRow label={t.colorSwatchesLabel}>
           <Select
             className="settings-select"
@@ -175,32 +207,7 @@ export function EditorPage({
           checked={settings.autoCloseMarks}
           onChange={(v) => setSettings({ autoCloseMarks: v })}
         />
-        <ToggleRow
-          label={t.autoCloseBracketsLabel}
-          checked={settings.autoCloseBrackets}
-          onChange={(v) => setSettings({ autoCloseBrackets: v })}
-        />
-      </SettingsGroup>
-      <SettingsGroup title={t.imageStorageGroupLabel}>
-        <ImageStorageSection t={t} />
-      </SettingsGroup>
-      {/* No PDF export on the phone, so no group there either. */}
-      {canExportPdf && (
-        <SettingsGroup title={t.menuExport}>
-          <ToggleRow
-            label={t.pdfPageNumbersLabel}
-            checked={settings.pdfPageNumbers}
-            onChange={(v) => setSettings({ pdfPageNumbers: v })}
-          />
-          {isMacPlatform() && (
-            <ToggleRow
-              label={t.pdfLightColorsLabel}
-              checked={settings.pdfLightColors}
-              onChange={(v) => setSettings({ pdfLightColors: v })}
-            />
-          )}
-        </SettingsGroup>
-      )}
+      </AdvancedFold>
     </>
   );
 }

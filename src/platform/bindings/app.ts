@@ -8,9 +8,9 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	take_pending_open_path: () => __TAURI_INVOKE<string | null>("take_pending_open_path"),
+	take_pending_window_paths: () => __TAURI_INVOKE<string[]>("take_pending_window_paths"),
 	/**
-	 *  Tab-mode counterpart to take_pending_open_path: drains the whole queue so
+	 *  Tab-mode counterpart to take_pending_window_paths: drains the whole queue so
 	 *  one window opens every path as a tab.
 	 */
 	take_pending_open_paths: () => __TAURI_INVOKE<string[]>("take_pending_open_paths"),
@@ -99,6 +99,11 @@ export const commands = {
 	 */
 	set_roman_input: (on: boolean) => __TAURI_INVOKE<void>("set_roman_input", { on }),
 	system_info: () => __TAURI_INVOKE<SystemInfo>("system_info"),
+	/**
+	 *  Files `report`. "LIMIT" when this computer has sent its share today;
+	 *  otherwise the connection's or the service's error.
+	 */
+	send_problem_report: (report: ProblemReport_Deserialize) => __TAURI_INVOKE<SentReport>("send_problem_report", { report }),
 	/**
 	 *  Runs a menu id exactly as clicking that native item would; the way in for
 	 *  the app-drawn menu. Unknown ids do nothing. Async because creating or
@@ -275,6 +280,11 @@ export type GalleryTheme_Deserialize = {
 	updated: string,
 	/**  Repository-relative, e.g. `themes/plain/theme.css`. */
 	css: string,
+	/**
+	 *  Its dark form, e.g. `themes/plain/theme-dark.css`; none for a theme
+	 *  with one design for both appearances.
+	 */
+	darkCss?: string | null,
 	/**  Repository-relative screenshots. */
 	previews?: string[],
 };
@@ -291,6 +301,11 @@ export type GalleryTheme_Serialize = {
 	updated: string,
 	/**  Repository-relative, e.g. `themes/plain/theme.css`. */
 	css: string,
+	/**
+	 *  Its dark form, e.g. `themes/plain/theme-dark.css`; none for a theme
+	 *  with one design for both appearances.
+	 */
+	darkCss: string | null,
 	/**  Repository-relative screenshots. */
 	previews: string[],
 };
@@ -304,6 +319,39 @@ export type PageBounds = {
 	y: number | null,
 	width: number | null,
 	height: number | null,
+};
+
+/**  A report as services/feedback/issue.ts reads it. */
+export type ProblemReport = ProblemReport_Serialize | ProblemReport_Deserialize;
+
+/**  A report as services/feedback/issue.ts reads it. */
+export type ProblemReport_Deserialize = {
+	kind: string,
+	area: string,
+	severity?: string | null,
+	description: string,
+	details: string,
+	contact?: string | null,
+	version: string,
+	language: string,
+};
+
+/**  A report as services/feedback/issue.ts reads it. */
+export type ProblemReport_Serialize = {
+	kind: string,
+	area: string,
+	severity: string | null,
+	description: string,
+	details: string,
+	contact: string | null,
+	version: string,
+	language: string,
+};
+
+/**  The issue a report became. */
+export type SentReport = {
+	url: string,
+	number: number,
 };
 
 /**  The tray, for Settings. */

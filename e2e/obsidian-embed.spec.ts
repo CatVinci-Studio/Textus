@@ -24,7 +24,7 @@ async function openVaultDoc(page: Page, resolved: string | null) {
         r;
     },
     {
-      take_pending_open_path: "/vault/notes/trip.md",
+      take_pending_window_paths: ["/vault/notes/trip.md"],
       read_text_file: DOC,
       file_mtime_ms: 1_760_000_000_000,
       resolve_vault_image: resolved,

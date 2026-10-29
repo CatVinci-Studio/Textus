@@ -8,6 +8,7 @@ import {
   SPECS,
   closeOpenRun,
   closeUnderscoreRun,
+  openRunBeforeContent,
   pairsIn,
   runsHoldAtoms,
 } from "./md-span-runs";
@@ -138,6 +139,10 @@ export function convertRunClosedBeforeCaret(
   if (!textBefore.endsWith(spec.char)) return false;
   // The caret sits inside a longer delimiter run - not a finished closer.
   if (literalTextAfter($pos).text.startsWith(spec.char)) return false;
-  // findRunOpen expects the last closing character as "the one being typed".
-  return closeOpenRun(view, spec, textBefore.slice(0, -1), runStart, sel.from);
+  // Both expect the last delimiter as "the one being typed".
+  const typedBefore = textBefore.slice(0, -1);
+  return (
+    closeOpenRun(view, spec, typedBefore, runStart, sel.from) ||
+    openRunBeforeContent(view, spec, typedBefore, sel.from, true)
+  );
 }

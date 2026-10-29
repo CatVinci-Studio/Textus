@@ -7,6 +7,7 @@ import { editorExtensions } from "../extension-points";
 import { modIsMeta } from "../../platform/os";
 import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import { revealHeading } from "./heading-jump";
+import { noteJump } from "../../utils/nav-history";
 import { revealedLinkHref } from "./link-reveal";
 import { linkTarget, type LinkTarget } from "./link-target";
 import { parseWikilink } from "./wikilink";
@@ -35,6 +36,7 @@ function isFollowClick(event: MouseEvent): boolean {
 
 async function follow(view: EditorView, target: LinkTarget): Promise<void> {
   if (target.kind === "heading") {
+    noteJump();
     revealHeading(view, target.anchor);
     return;
   }
@@ -66,7 +68,10 @@ async function followWikilink(
   const target = parseWikilink(source);
   if (!target) return;
   if (!target.note) {
-    if (target.heading) revealHeading(view, target.heading);
+    if (target.heading) {
+      noteJump();
+      revealHeading(view, target.heading);
+    }
     return;
   }
   if (!docPath) return;

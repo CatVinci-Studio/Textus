@@ -6,8 +6,12 @@ import { openApp } from "./helpers";
  * list, found by typing; Enter runs the one picked.
  */
 
+// A bundled Markdown parser's rules hold both "<!--" and "<script": the
+// host's page must still run all of the plugin's code.
 const HOST = `
+const HTML_OPENERS = ["<!--", "<script>"];
 exports.activate = function () {
+  if (HTML_OPENERS.length !== 2) throw new Error("cut short");
   textus.commands.register("test.palette.hello", function () {
     textus.ui.notice("Hello from the palette");
   });
@@ -144,4 +148,38 @@ test("a plugin's command line lists its own commands among the palette's, and ha
   await page.keyboard.type("split right");
   await page.keyboard.press("Enter");
   await expect(page.locator(".split-pane")).toHaveCount(2);
+});
+
+test("the palette changes the appearance, the editor theme and Textus AI", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en", theme: "light" } });
+  const palette = page.getByRole("dialog", { name: "Type a command…" });
+  await page.keyboard.press("ControlOrMeta+Shift+P");
+  await page.keyboard.type("appearance");
+  await page.keyboard.press("Enter");
+  await expect(palette).toBeHidden();
+  // The choices come up in a pick of their own.
+  await page.getByRole("option", { name: "Dark" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+  await page.keyboard.press("ControlOrMeta+Shift+P");
+  await page.keyboard.type("textus ai on or off");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: "Textus AI" })).toHaveClass(
+    /off|disabled/,
+  );
+});
+
+test("in Chinese, the palette finds a command typed in pinyin", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "zh", theme: "light" } });
+  await page.keyboard.press("ControlOrMeta+Shift+P");
+  await page.keyboard.type("waiguan");
+  await expect(page.getByRole("option", { name: "外观…" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("ControlOrMeta+Shift+P");
+  await page.keyboard.type("wg");
+  await expect(page.getByRole("option", { name: "外观…" })).toBeVisible();
 });

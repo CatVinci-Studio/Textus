@@ -988,6 +988,30 @@ test("h4 to h6 are never smaller than the text, and h6 is lighter than h5 (#58)"
   expect(h6.color).not.toBe(h5.color);
 });
 
+test("no fi drawn as one glyph where the font is monospaced, so the caret can stop between them", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "An `fi` here.\n\n```\nfile\n```");
+  const active = '[data-active-tab="true"]';
+  const ligatures = (selector: string) =>
+    page
+      .locator(selector)
+      .first()
+      .evaluate((el) => {
+        const cs = getComputedStyle(el);
+        return [cs.fontVariantLigatures, cs.fontFeatureSettings];
+      });
+  // A coding font's => and != (calt) stay.
+  const kept = ["no-common-ligatures", '"calt"'];
+  expect(await ligatures(`${active} .milkdown p code`)).toEqual(kept);
+  expect(await ligatures(`${active} .milkdown pre code`)).toEqual(kept);
+  await emit(page, "menu-toggle-source-mode");
+  expect((await ligatures(`${active} textarea.source-view`))[0]).toBe(
+    "no-common-ligatures",
+  );
+});
+
 test("source mode: body-sized text, centred on a whole pixel, unchanged by focus (#61)", async ({
   page,
 }) => {
@@ -1457,32 +1481,42 @@ test("the outline folds and unfolds every heading from its menu, or with Option-
   await expect(rows).toHaveText(["One", "Two"]);
 });
 
-test("the view last switched to is the one new documents open in (#424)", async ({
+test("one view for every document: switching it switches every tab, and new ones open in it", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
   await pasteMarkdown(page, "# One");
-  await emit(page, "menu-toggle-split-view");
-  const active = '[data-active-tab="true"]';
-  await expect(page.locator(`${active} .split-source`)).toBeVisible();
-  // A new tab, and a file opened (into that untouched tab): split view.
   await emit(page, "menu-new-file");
   await expect(page.locator(".tab-pill")).toHaveCount(2);
-  await expect(page.locator(`${active} .split-source`)).toBeVisible();
+  await pasteMarkdown(page, "# Two");
+  const active = '[data-active-tab="true"]';
+  await emit(page, "menu-toggle-split-view");
+  await expect(page.locator(`${active} .split-preview h1`)).toHaveText("Two");
+  // The tab behind switched with it.
+  await page.locator(".tab-pill").first().click();
+  await expect(page.locator(`${active} .split-preview h1`)).toHaveText("One");
+  // A file opened comes up in it too.
   await page.evaluate(() =>
-    Object.assign(window, { __devFiles: { "/notes/two.md": "# Two" } }),
+    Object.assign(window, { __devFiles: { "/notes/three.md": "# Three" } }),
   );
   await emit(page, "tauri://drag-drop", {
-    paths: ["/notes/two.md"],
+    paths: ["/notes/three.md"],
     position: { x: 0, y: 0 },
   });
-  await expect(page.locator(`${active} .split-preview h1`)).toHaveText("Two");
-  // Back to the rich editor: so are the next ones.
-  await emit(page, "menu-toggle-split-view");
-  await expect(page.locator(`${active} .split-source`)).toHaveCount(0);
-  const tabs = await page.locator(".tab-pill").count();
-  await emit(page, "menu-new-file");
-  await expect(page.locator(".tab-pill")).toHaveCount(tabs + 1);
-  await expect(page.locator(`${active} .ProseMirror`)).toBeVisible();
-  await expect(page.locator(`${active} .split-source`)).toHaveCount(0);
+  await expect(page.locator(`${active} .split-preview h1`)).toHaveText("Three");
+  // Back to the rich editor, from Settings: every tab follows.
+  await emit(page, "menu-open-settings");
+  const settings = page.getByRole("dialog", { name: "Settings" });
+  await settings.getByRole("button", { name: "Editor & Appearance" }).click();
+  const split = settings.getByRole("checkbox", { name: "Source and Preview" });
+  await expect(split).toBeChecked();
+  await split.click();
+  await expect(split).not.toBeChecked();
+  await settings.getByRole("button", { name: "Close" }).click();
+  await expect(settings).toHaveCount(0);
+  for (const i of [0, 1, 2]) {
+    await page.locator(".tab-pill").nth(i).click();
+    await expect(page.locator(`${active} .ProseMirror`)).toBeVisible();
+    await expect(page.locator(`${active} .split-source`)).toHaveCount(0);
+  }
 });

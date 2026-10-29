@@ -32,6 +32,21 @@ test("a diagram opens in the viewer, zooms with the wheel and closes with Escape
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.wheel(0, -400);
   await expect.poll(scaleOf).toBeGreaterThan(before * 1.5);
+  // A pinch (ctrl-wheel), in the margin too, is the viewer's: the window
+  // behind keeps its zoom.
+  const windowZoom = () =>
+    page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--content-zoom",
+      ),
+    );
+  const zoomBefore = await windowZoom();
+  await page.keyboard.down("Control");
+  await page.mouse.move(box.x - 10, box.y + box.height / 2);
+  await page.mouse.wheel(0, -200);
+  await page.keyboard.up("Control");
+  await page.waitForTimeout(100);
+  expect(await windowZoom()).toBe(zoomBefore);
 
   await page.keyboard.press("Escape");
   await expect(viewer).toHaveCount(0);

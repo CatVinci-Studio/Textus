@@ -16,7 +16,7 @@ async function openDraft(page: Page, kept?: string) {
     ({ path, doc, kept }) => {
       const w = window as unknown as Record<string, unknown>;
       w.__devFiles = { [path]: doc };
-      w.__devInvokeResults = { take_pending_open_path: path };
+      w.__devInvokeResults = { take_pending_window_paths: [path] };
       if (kept) w.__devOwnNotes = { [`notes:${path}`]: kept };
     },
     { path: PATH, doc: DOC, kept },

@@ -6,6 +6,7 @@ import { mockInvoke, openApp, PHONE, openPhone } from "./helpers";
 // Keep in step with the English locale; e2e can't import it.
 const AI_NAME = "Textus AI";
 const t = {
+  imageGenerationGroupLabel: "Pictures",
   settingsTitle: "Settings",
   settingsDone: "Done",
   windowClose: "Close",
@@ -122,6 +123,7 @@ test.describe("desktop", () => {
       t.aiAccountLabel,
       t.writingFeaturesLabel,
       t.aiAskLabel,
+      t.imageGenerationGroupLabel,
       t.agentPersonalizationGroupLabel,
     ]);
     await expect(
@@ -155,7 +157,7 @@ test.describe("desktop", () => {
     // The UI never says "Agent".
     await expect(panel).not.toContainText(/\bAgent\b/);
 
-    // Turning the chat off hides the two groups below it.
+    // Turning the chat off hides the groups below it.
     const chat = panel.getByRole("checkbox", { name: t.aiAskToggleLabel });
     await expect(chat).toBeChecked();
     await chat.click();
@@ -167,13 +169,14 @@ test.describe("desktop", () => {
       t.writingFeaturesLabel,
       t.aiAskLabel,
     ]);
-    await expect(panel.locator(".settings-advanced")).toHaveCount(0);
+    // What isn't the chat's stays under Advanced: the proxy, the model list.
+    await expect(panel.locator(".settings-advanced")).toHaveCount(1);
     // The chat's own rows go with it; writing assistance stays.
     await expect(panel.getByText(t.agentModelLabel)).toHaveCount(0);
     await expect(panel.getByText(t.writingModelLabel)).toBeVisible();
 
     await chat.click();
-    await expect(panel.locator(".settings-group-title")).toHaveCount(5);
+    await expect(panel.locator(".settings-group-title")).toHaveCount(6);
 
     // Textus AI itself off: only its own switch is left.
     const textusAi = panel.getByRole("checkbox", {
@@ -186,7 +189,7 @@ test.describe("desktop", () => {
     ]);
     await expect(panel.getByText(t.textusAiOffHint)).toBeVisible();
     await textusAi.click();
-    await expect(panel.locator(".settings-group-title")).toHaveCount(5);
+    await expect(panel.locator(".settings-group-title")).toHaveCount(6);
     await expect(chat).toBeChecked();
   });
 
@@ -353,6 +356,23 @@ test.describe("desktop", () => {
     ).toHaveCount(0);
   });
 
+  test("Check for Updates… opens About and checks at once", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await page.evaluate(() =>
+      (
+        window as unknown as { __devEmitTauriEvent: (n: string) => void }
+      ).__devEmitTauriEvent("menu-check-updates"),
+    );
+    const panel = page.getByRole("dialog", { name: "Settings" });
+    // The check ran without a click: the button no longer says Check.
+    await expect(
+      panel.getByRole("button", { name: t.updateCheckButton }),
+    ).toHaveCount(0);
+    await expect(panel.locator(".settings-about")).toBeVisible();
+  });
+
   test("the update channel sits under the update button and is remembered", async ({
     page,
   }) => {
@@ -509,6 +529,8 @@ test.describe("desktop", () => {
     await openApp(page, { settings: { language: "en" } });
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: t.navEditor }).click();
+    // The diagram engine is among the rarely changed, under Advanced.
+    await panel.locator(".settings-advanced > summary").click();
     // Not on the page as grey text under the row.
     await expect(panel.getByText(t.diagramEngineHint)).toBeHidden();
     const help = panel.getByRole("button", {
@@ -594,7 +616,7 @@ test.describe("desktop", () => {
       panel.locator(".settings-group").first().locator(".settings-row-label"),
     ).toHaveText([
       "Command Palette",
-      "Find & replace",
+      "Find & Replace",
       "Search file names",
       "Next tab",
       "Previous tab",
@@ -626,7 +648,8 @@ test.describe("desktop", () => {
 
     // The page is taller than the card and scrolls inside it.
     const content = panel.locator(".settings-content");
-    const last = content.locator(".settings-row").last();
+    // The page's foot: the Advanced fold, closed.
+    const last = content.locator(".settings-advanced > summary").last();
     await expect(last).not.toBeInViewport();
     await content.evaluate((el) => (el.scrollTop = el.scrollHeight));
     await expect(last).toBeInViewport({ ratio: 1 });
@@ -690,6 +713,9 @@ test.describe("phone", () => {
     await openPhone(page, { settings: { language: "en" } });
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: t.navEditor, exact: true }).tap();
+    const advanced = panel.locator(".settings-advanced > summary");
+    await advanced.scrollIntoViewIfNeeded();
+    await advanced.tap();
     const help = panel.getByRole("button", {
       name: more(t.diagramEngineLabel),
     });

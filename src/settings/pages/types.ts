@@ -1,11 +1,13 @@
 import type { Strings } from "../../i18n/strings";
 import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
-import type { MenuChecks } from "../../app/menu/app-menu-model";
 import type { Settings, useSettings } from "../../prefs/SettingsContext";
 
 /** A page's own page within its category (General › About Textus; on the
  *  phone, Editor & Appearance › More themes). */
-export type Subpage = "about" | "themes";
+/** What Help opens as a document (or, the welcome, as the tour). */
+export type HelpGuide = "welcome" | "markdown" | "agent";
+
+export type Subpage = "about" | "guides" | "themes";
 
 /** A plugin's command, for Settings › Shortcuts: its own key, if any. */
 export interface ShortcutCommand {
@@ -31,15 +33,13 @@ export interface SettingsPageProps {
    *  Extensions). */
   openPage: (id: string) => void;
   /** Opens a guide as a document, closing Settings first. */
-  openHelp: (doc: "markdown" | "agent") => void;
+  openHelp: (doc: HelpGuide) => void;
   /** Opens a document in the editor. */
   onOpenFile: (path: string) => void;
   /** Closes Settings (a page whose action opens something behind it). */
   onClose: () => void;
   /** Files a settings action deleted, for the editor to close their tabs. */
   onFilesDeleted?: (paths: string[]) => void;
-  /** Which of the window's view modes are on, for Editor › View. */
-  viewChecks: Pick<MenuChecks, "sourceMode" | "zen">;
   /** The shortcuts that can't be changed. */
   fixedShortcuts: FixedShortcutGroup[];
   /** The commands plugins add, whose keys can be set. */

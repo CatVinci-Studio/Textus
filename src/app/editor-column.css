@@ -62,6 +62,8 @@
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
   font-family: var(--font-mono);
+  /* As in code (content-base.css): no fi drawn as one glyph. */
+  font-variant-ligatures: no-common-ligatures;
   /* The rich editor's size at the standard column. rem, so an imported
      theme's `html { font-size }` reaches it. */
   font-size: 1.03125rem;

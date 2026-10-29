@@ -109,7 +109,7 @@ describe("resetting a shortcut", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Reset: Heading 2" }));
     expect(screen.getByRole("alert")).toHaveTextContent(
-      resolveStrings("en").shortcutToggleZenMode,
+      resolveStrings("en").menuToggleZenMode,
     );
     expect(save).not.toHaveBeenCalled();
   });

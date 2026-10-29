@@ -411,6 +411,8 @@ test("In code only draws swatches in inline code, and each choice in Settings ap
   await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.getByRole("button", { name: "Editor & Appearance" }).click();
+  // The swatches are under Advanced, folded until opened.
+  await panel.locator(".settings-advanced > summary").click();
   const select = panel.getByRole("combobox", {
     name: "Swatches before colour codes",
   });

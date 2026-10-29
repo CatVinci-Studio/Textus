@@ -60,7 +60,7 @@ Bewege den Zeiger über eine Tabelle, um Zeilen und Spalten hinzuzufügen oder z
 
 ## Codeblöcke
 
-Umgrenzte Codeblöcke mit Syntaxhervorhebung (die Sprache stellst du oben rechts im Block um). Enter in der leeren letzten Zeile verlässt den Block, Ctrl/⌘+Enter jederzeit; dasselbe gilt für Zitate. Die Schaltfläche **Kopieren** neben der Sprache kopiert den Code des Blocks, und **Einstellungen → Editor & Design → Zeilennummern in Codeblöcken** nummeriert seine Zeilen; beides erscheint weder in Exporten noch im Ausdruck.
+Umgrenzte Codeblöcke mit Syntaxhervorhebung (die Sprache stellst du oben rechts im Block um). Enter in der leeren letzten Zeile verlässt den Block, Ctrl/⌘+Enter jederzeit; dasselbe gilt für Zitate. **Kopieren** und **Alles auswählen** neben der Sprache kopieren oder markieren den Code des Blocks, und **Einstellungen → Editor & Design → Zeilennummern in Codeblöcken** nummeriert seine Zeilen; beides erscheint weder in Exporten noch im Ausdruck.
 
 ```python
 def fib(n: int) -> int:
@@ -138,17 +138,42 @@ Oder schreib den Verweis von Hand:
 
 Obsidian-Einbettungen wie `![[image.png]]` oder `![[attachments/image.png|300]]` zeigen ebenfalls das Bild: Textus sucht die Datei im Obsidian-Tresor des Dokuments und speichert die Einbettung genau so, wie sie geschrieben ist.
 
+Um ein Bild genau anzusehen, doppelklicke darauf oder drücke **Bild vergrößern** oben rechts darin (Diagramme haben dieselbe Schaltfläche): Scrollen oder Aufziehen zoomt, Ziehen verschiebt, ein Doppelklick passt es wieder ein, und `Esc` schließt es. Zieh den Griff am rechten Rand eines Bildes, um seine Größe zu ändern. **Einstellungen → Editor & Design → Bilder in eigener Zeile** setzt Bilder, die allein in einer Zeile stehen, in die Mitte oder an den linken Rand – im Editor und in HTML- und PDF-Exporten.
+
+## Kopieren und Einfügen
+
+**Kopieren** legt das Markdown als reinen Text in die Zwischenablage und die Formatierung daneben, sodass GitHub, Obsidian, VS Code und Chat-Apps Markdown bekommen, während Word, Pages, Mail und Notion es formatiert einfügen. Ein Bild, das du per Rechtsklick kopierst, kommt als Bild selbst in die Zwischenablage, bereit zum Einfügen in einen Chat oder ein Dokument. **Bearbeiten → Als reinen Text einfügen** (`Cmd+Shift+V`) fügt den Text der Zwischenablage genau so ein, wie er ist, ohne Markdown darin zu lesen.
+
 ## Ansichten und Modi
 
 Neben dem WYSIWYG-Editor und dem Quellcodemodus (`Cmd+/`) bietet Textus drei Arten zu schreiben (unter Windows und Linux `Ctrl` statt `Cmd`; die aktuellen Belegungen stehen unter Einstellungen → Tastenkürzel):
 
-- **Geteilte Ansicht** (`Cmd+Shift+E`): links der Markdown-Quelltext, rechts die gerenderte Vorschau, beide scrollen gemeinsam.
-- **Schreibmaschinenmodus** (Einstellungen → Editor & Design → Ansicht): Die Zeile, in der du tippst, bleibt in der Mitte des Fensters – im Editor, im Quellcodemodus und in der geteilten Ansicht.
+- **Quelltext und Vorschau** (`Cmd+Shift+E`): links der Markdown-Quelltext, rechts die gerenderte Vorschau, beide scrollen gemeinsam.
+- **Schreibmaschinenmodus**: Die Zeile, in der du tippst, bleibt in der Mitte des Fensters – im Editor, im Quellcodemodus und in Quelltext und Vorschau.
 - **Zen-Modus** (`Cmd+Shift+J`): blendet alles außer dem Text aus und dimmt jeden Absatz außer dem, an dem du gerade schreibst. Mit `Esc` verlässt du ihn.
 
-Alle drei findest du auch im Menü **Ansicht**.
+Alle findest du im Menü **Ansicht** und unter **Einstellungen → Editor & Design → Ansicht**. Jeder ist eine Einstellung für ganz Textus: Schaltest du ihn in einem Fenster um, wechselt jeder Tab in jedem Fenster mit, die Dokumente, die du als Nächstes öffnest, erscheinen darin, und Textus öffnet sich beim nächsten Mal wieder darin.
+
+**Ansicht → Schreibgeschützt** (auch im Rechtsklickmenü eines Tabs) schützt ein Dokument vor Änderungen – durch Tippen, Einfügen, Ablegen, Rückgängig, Textus AI oder Plugins. Ein Vorhängeschloss neben dem Titel zeigt es an; ein Klick darauf macht das Dokument wieder bearbeitbar.
+
+**Ansicht → Befehlspalette…** (`Cmd+Shift+P`) findet alles, was die Menüs können, und jeden Befehl, den ein Plugin hinzufügt, wenn du ein paar Buchstaben seines Namens tippst. Sie wechselt außerdem das Erscheinungsbild (hell, dunkel oder wie das System) und das Editor-Design und schaltet Textus AI ein oder aus.
+
+Der Tab **Gliederung** der Seitenleiste listet die Überschriften des Dokuments auf; ein Klick auf eine führt dorthin. Ein Rechtsklick auf die Gliederung bietet **Alle aufklappen** und **Alle zuklappen**, oder klappe mit `Option`-Klick (`Alt`-Klick) auf den Pfeil einer Überschrift alle auf einmal auf oder zu.
 
 **Einstellungen → Editor & Design → Schriftgröße der Oberfläche** vergrößert oder verkleinert den Text von Seitenleiste, Tabs, Menüs, KI-Bereich und Einstellungen; das Dokument behält seinen eigenen Zoom. `Ctrl+Tab` und `Ctrl+Shift+Tab` wechseln zum nächsten und zum vorigen Tab.
+
+## Mehrere Dokumente gleichzeitig
+
+**Ansicht → Rechts teilen** (`Cmd+Option+S`) zeigt das vordere Dokument neben einem anderen, und **Ansicht → Unten teilen** setzt eines über das andere. Jeder Bereich hat seine eigenen Tabs: Ein Dokument, das du öffnest, kommt in den Bereich, in dem du bist, und Rechts teilen oder Unten teilen teilt diesen Bereich erneut, so oft du willst.
+
+- Zieh einen Tab – oder eine Datei aus der Seitenleiste – an den Rand eines Bereichs, und er öffnet sich in einem neuen Bereich auf dieser Seite. Ziehst du ihn an den äußeren Rand des Editors, öffnet er sich neben allen Bereichen: Am rechten Rand zweier übereinanderliegender Bereiche füllt er die rechte Seite von oben bis unten. Lege ihn auf den Tabs eines anderen Bereichs ab, um ihn dorthin zu verschieben.
+- Zieh die Linie zwischen zwei Bereichen, um ihre Größe zu ändern; ein Doppelklick darauf macht sie gleich groß. Ein Rechtsklick darauf ordnet sie übereinander statt nebeneinander an, vertauscht sie oder hebt die Teilung auf.
+- **Daneben öffnen** im Rechtsklickmenü eines Tabs zeigt ihn neben dem vorderen.
+- Schließt du den letzten Tab eines Bereichs, verschwindet der Bereich. Die ganze Anordnung kommt zurück, wenn du Textus wieder öffnest.
+
+## Tabs und Fenster
+
+`Cmd+T` öffnet einen neuen Tab, `Cmd+N` ein neues Fenster, und **Datei → Geschlossenen Tab wieder öffnen** (`Cmd+Shift+T`) holt die Dokumente zurück, die du geschlossen hast, das zuletzt geschlossene zuerst. Ein Mittelklick schließt einen Tab; das Rechtsklickmenü eines Tabs hat **Andere schließen**, **Tabs links schließen** und **Tabs rechts schließen** (Tabs mit ungespeicherten Änderungen bleiben offen), **Pfad kopieren** und **In neues Fenster verschieben**. Du kannst einen Tab auch aus dem Fenster ziehen, um ihm ein eigenes Fenster zu geben. Wenn Textus wieder öffnet, kommt jedes Fenster mit seinen eigenen Tabs zurück.
 
 ## Ordner und Dateisuche
 
@@ -156,11 +181,29 @@ Alle drei findest du auch im Menü **Ansicht**.
 
 Der Baum ist auch eine kleine Dateiverwaltung. Der Name des übergeordneten Ordners darüber führt eine Ebene hinauf. **Sortieren** ordnet ihn nach Name oder nach Änderungsdatum, und der Filter neben dem Suchfeld, **Alle Dateien** oder **Nur Dokumente**, gilt für den Baum wie für die Suche. Ein Rechtsklick auf einen Ordner, eine Datei oder die leere Fläche darunter legt dort ein **Neues Dokument** oder einen **Neuen Ordner** an, und eine Datei oder ein Ordner, auf einen anderen Ordner gezogen, wird dorthin verschoben; ein geöffnetes Dokument folgt an den neuen Ort. Nichts wird ersetzt: Ein vergebener Name wird abgelehnt.
 
+Zieh Dateien aus dem Finder oder dem Datei-Explorer auf das Fenster, um sie zu öffnen: Dokumente öffnen sich in Tabs, Bilder kommen dort ins Dokument, wo du sie loslässt, und ein Ordner öffnet sich in der Seitenleiste. **Datei → Pfad kopieren** kopiert den vollständigen Pfad des vorderen Dokuments.
+
+Im Terminal öffnet `textus notizen.md` eine Datei in Textus; **Einstellungen → Allgemein** installiert den Befehl `textus`, falls er noch fehlt.
+
 **Datei → Öffnen…** öffnet auch ein Word-Dokument (`.docx`), ebenso das Ablegen auf dem Fenster: Es wird ein neues, noch nicht gespeichertes Markdown-Dokument gleichen Namens mit seinen Überschriften, Listen, Tabellen, Links, Fußnoten und Bildern. Die Bilder kommen beim Speichern dorthin, wo **Einstellungen → Editor & Design → Bilder** eingefügte Bilder ablegt, und **Speichern** schlägt eine `.md`-Datei neben der Word-Datei vor. Manche Formatierung kann anders aussehen; die Word-Datei selbst wird nie verändert. Nur auf dem Desktop.
 
 ## Im Hintergrund weiterlaufen
 
 Schalte **Einstellungen → Allgemein → Anwendung → Im Hintergrund weiterlaufen** ein, dann läuft Textus nach dem Schließen des letzten Fensters weiter, mit seinem Symbol im Infobereich (Windows), im System-Tray (Linux) oder in der Menüleiste (Mac). **Textus öffnen** im Menü des Symbols bringt deine Dokumente zurück; **Textus beenden** dort beendet Textus wirklich. GNOME zeigt das Tray-Symbol nur mit der AppIndicator-Erweiterung.
+
+## Exportieren
+
+**Datei → Exportieren** speichert das Dokument als HTML oder PDF; mit installiertem [Pandoc](https://pandoc.org) auch als Word (`.docx`), OpenDocument, RTF, EPUB, LaTeX und mehr. Auf dem Mac druckt **Einstellungen → Editor & Design → PDFs in hellen Farben exportieren** ein PDF auf Weiß in den hellen Farben deines Themes, auch wenn du im dunklen Modus schreibst.
+
+## Plugins, Themes und Skills
+
+**Einstellungen → Erweiterungen → Mehr holen** listet Plugins, Themes und Skills zum Hinzufügen auf: Vim- und Emacs-Tasten, einen PDF-Reader, Diagramme, einen Wissensgraphen, Schreibwerkzeuge und mehr. Jedes hat eine Schaltfläche – **Installieren**, dann **Aktualisieren**, **Ausschalten** oder **Einschalten** – und **Deinstallieren** im Menü daneben. Die Seite eines Plugins zeigt, wie es benutzt wird, und seine Befehle erscheinen im Menü **Plugins** und in der Befehlspalette.
+
+## Hilfe bekommen
+
+**Hilfe → Problem melden…** (auch unter **Einstellungen → Allgemein**, bei Hilfe) öffnet ein kurzes Formular. Gib an, welche Art von Meldung es ist, welchen Teil von Textus sie betrifft und bei einem Fehler, wie schlimm er ist, und beschreibe dann, was schiefgegangen ist; Textus fügt seine Version, dein System, deine Plugins, deine Einstellungen ohne alles Private und die letzten Fehler hinzu – alles wird dir gezeigt, bevor etwas gesendet wird. **Senden** legt sie für dich als Issue auf GitHub an, ganz ohne GitHub-Konto, und nennt dir die Nummer; **Auf GitHub senden** öffnet stattdessen das Formular von GitHub; **Kopieren** legt sie in die Zwischenablage, für einen Chat oder eine E-Mail. Was du schreibst, wird ein öffentliches Issue; eine E-Mail-Adresse oder WeChat-ID, die du hinterlässt, falls wir nachfragen dürfen, geht nur an das Team.
+
+Unter **Einstellungen → Allgemein → Hilfe** kannst du außerdem die Einführung noch einmal ansehen, die Anleitungen öffnen und **Über Textus** aufrufen, mit der Version und **Nach Updates suchen** (auf dem Mac auch **Textus → Nach Updates suchen…**). **Hilfe → Zur Community** öffnet die Community-Seite.
 
 ## Fußnoten und Trennlinien
 

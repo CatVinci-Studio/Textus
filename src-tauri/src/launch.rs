@@ -3,9 +3,10 @@
 
 use super::*;
 
-/// Files handed to the app from the OS queue here; each window drains one on
-/// mount. A queue, not an event: the request usually arrives before any listener.
-pub(crate) struct PendingOpenPaths(pub(crate) Mutex<Vec<String>>);
+/// Files handed to the app from the OS queue here, in the windows they open
+/// in; each window drains one on mount. A queue, not an event: the request
+/// usually arrives before any listener.
+pub(crate) struct PendingOpenPaths(pub(crate) Mutex<Vec<Vec<String>>>);
 
 /// Whether any window's frontend has mounted. Before that the initial window
 /// drains the queue; after it, an OS open needs a fresh window per file.
@@ -23,7 +24,31 @@ pub(crate) fn queue_pending(app: &tauri::AppHandle, paths: Vec<String>) {
         .0
         .lock()
         .unwrap()
-        .extend(paths);
+        .extend(paths.into_iter().map(|path| vec![path]));
+}
+
+/// The last session's windows, each with its documents as tabs; one window
+/// for them all in tab mode.
+#[cfg(desktop)]
+pub(crate) fn queue_windows_to_open(app: &tauri::AppHandle, windows: Vec<Vec<String>>) {
+    if windows.is_empty() {
+        return;
+    }
+    if commands::prefs::read_new_document_mode(app) == "tab" {
+        queue_paths_to_open(app, windows.concat());
+        return;
+    }
+    let ui_ready = UI_READY.load(Ordering::Relaxed);
+    let count = windows.len();
+    app.state::<PendingOpenPaths>()
+        .0
+        .lock()
+        .unwrap()
+        .extend(windows);
+    let extra_windows = if ui_ready { count } else { count - 1 };
+    for _ in 0..extra_windows {
+        let _ = crate::editor_windows::open_new_window(app);
+    }
 }
 
 #[cfg(desktop)]
@@ -160,22 +185,22 @@ pub(crate) fn open_path_in_new_window(app: tauri::AppHandle, path: String) {
 
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub(crate) fn take_pending_open_path(pending: State<PendingOpenPaths>) -> Option<String> {
+pub(crate) fn take_pending_window_paths(pending: State<PendingOpenPaths>) -> Vec<String> {
     UI_READY.store(true, Ordering::Relaxed);
-    let mut paths = pending.0.lock().unwrap();
-    if paths.is_empty() {
-        None
+    let mut windows = pending.0.lock().unwrap();
+    if windows.is_empty() {
+        Vec::new()
     } else {
-        Some(paths.remove(0))
+        windows.remove(0)
     }
 }
 
-/// Tab-mode counterpart to take_pending_open_path: drains the whole queue so
+/// Tab-mode counterpart to take_pending_window_paths: drains the whole queue so
 /// one window opens every path as a tab.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub(crate) fn take_pending_open_paths(pending: State<PendingOpenPaths>) -> Vec<String> {
     UI_READY.store(true, Ordering::Relaxed);
-    let mut paths = pending.0.lock().unwrap();
-    std::mem::take(&mut *paths)
+    let mut windows = pending.0.lock().unwrap();
+    std::mem::take(&mut *windows).concat()
 }

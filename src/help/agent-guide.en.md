@@ -39,10 +39,12 @@ The full conversation lives in a panel on the right side of the editor. Open or 
 - **Modes**: the composer has two. **Write** works on the document: it drafts new text (a continuation, a new paragraph or section) and changes the text that is there (a rewrite, a translation, a cut). With text selected, a change to it replaces it and more text goes after it. **Review** answers, discusses and leaves comments without changing anything. Every change Write makes is a proposal you accept or reject. The panel starts in the mode set under **Settings > Textus AI > Textus AI Chat > Default mode**.
 - **@-mentions**: type `@` in the input to pick a text file from the project folder; it is attached to the message.
 - **Attach files**: the **+** button on the left of the input attaches a PDF, Word document, PowerPoint deck, spreadsheet, EPUB e-book, RTF or HTML file, image, or plain text file to that message. Everything except images is extracted to text locally and travels inside the message; images are sent as real images to providers that can see (ones that can't say so up front rather than dropping them silently). A long file is sent only in part, and the chip says "(shortened)" when that happens.
+- **Model**: the button among the input's controls names the model your next message goes to; click it to switch to another model of any service you have set up in **Settings > Textus AI**. With only one model set up, it just shows its name.
 - **Web search**: the magnifier button next to the input lets Textus AI search the web when a request needs it — see **7. Web search** below.
 - **Deep thinking**: the button beside web search (the light bulb) asks the model to think its answer through before it replies — slower and more expensive, for hard questions and bigger rewrites. It stays on, across documents, until you press it again. While the model thinks, the panel shows "Thinking · 8 seconds"; afterwards "Thought for 12 seconds", which you can click to read the reasoning where the provider shares it. The button only appears for models that can think harder; Quick Ask always asks for a quick answer.
-- **History**: the **History** button (the clock) in the AI panel's header lists past conversations, grouped by folder. Click one to reopen it with its document and continue.
-- **Errors**: when a request fails, the chat says what kind of problem it is and what to do (check the key, wait a moment, pick another model) above the provider's own message.
+- **History**: the **History** button (the clock) in the AI panel's header lists past conversations, grouped by folder, with **Search conversations** at the top to find the ones where some words were said. Click one to reopen it with its document and continue. When you refer to an earlier conversation, Textus AI searches them too.
+- **Errors**: when a request fails, Textus says in your language what kind of problem it is and what to do (check the key, top up a balance that has run out, wait a moment, pick another model) above the provider's own message - in the chat, and for completion and grammar checking too.
+- **Long documents**: asked to translate or rewrite a long document chapter by chapter, Textus AI hands each chapter to a helper of its own, with a shared list of how recurring names and terms are written, so the whole document changes at once.
 
 **Open in a separate window** in the panel's header moves the conversation into its own window — handy on a second monitor. That window follows you: switch tabs or windows and its document, title and selection follow, and the edits it proposes land in whichever file you are actually editing. There is only ever one per editor window; **📌** in its header keeps it above the editor.
 
@@ -62,6 +64,8 @@ The chat never writes to your document directly. When you ask a tool-calling pro
 - **Only some sentences**: when a proposal rewrites several sentences, its card offers "N sentence changes · choose" — tick the ones you want and press **Accept selected**.
 - **At the cursor**: with nothing selected, Textus AI knows where your cursor is, so "write a transition here" inserts exactly there.
 - **Comments instead of edits**: ask for a review ("what's weak here?") and Textus AI pins comments to passages without changing them. Each comment card has **Show in document**, which selects the passage it is about.
+- **Your own notes**: select some words, right-click and choose **Add Note**: your note goes into the margin beside Textus AI's, marked Me. Notes are kept beside Textus's own data, not in your Markdown.
+- **Track My Changes** (Edit menu): while it is on, your own edits show as changes too - what you deleted struck through, what you added marked - each with a card in the margin, marked Me, to accept or reject.
 
 ### 6. Pictures
 
@@ -70,6 +74,7 @@ Textus AI can make pictures for your document. **Settings > Textus AI > Image se
 - Ask in Write mode ("add a picture of the harbour after the first paragraph"), or right-click a paragraph and choose **Illustrate this paragraph**.
 - Writing and pictures come together: the text appears as it is written, and each picture shows as a softly moving frame in its place until it is ready. You can accept it before it is finished; it is saved when it arrives.
 - Nothing is saved until you accept: then the picture is stored the way **Settings > Images** says for a pasted image and inserted as a Markdown image. Reject leaves nothing behind.
+- To have a proposed picture drawn again, point at it and choose **Redraw…**, then say what should change; only that picture is redrawn. Pictures in one piece keep the same people and look: someone who comes back is described in the same words, and where the image model takes a picture to work from, a new picture of them starts from an earlier one.
 - To change a picture, right-click it and choose **Change this picture with Textus AI…**, then say how. The new one is proposed in its place; once you accept it, you are asked whether the old file should go to the Trash - it stays unless you say so.
 - Say how many pictures you want and Textus AI makes that many, up to **Pictures per request** (two unless you change it). If the service turns a description down, the picture's place shows the reason it gave.
 
@@ -195,7 +200,7 @@ Writing instructions apply to conversations only. Completion doesn't read them; 
 - **This project**: what is about this work, in `.textus/memory/`; facts about people, places and terms go into the library.
 - **For all projects**: your general habits, in `memory/` in the global config folder. Without a project folder, everything goes here.
 
-The AI panel's **Project** tab lists it all under **Memory**, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and the Project tab says so. **Settings > Textus AI > Remember automatically** turns it off.
+The AI panel's **Project** tab lists it all under **Memory**, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Now and then Textus AI tidies its memory, merging memories that say the same thing and dropping a rule a newer one overturned; what it dropped is under **Recently forgotten**, to bring back. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and the Project tab says so. **Settings > Textus AI > Remember automatically** turns it off.
 
 **It also learns from your revision choices.** When you turn down the same kind of change several times — 「」 made “”, one word swapped for another, sentences split, an Oxford comma added — Textus AI offers, once the review is done, to remember it as a requirement: **Remember** saves it under **Memory**, **Not now** waits for more, and **Never ask for this** stops asking about that kind. It asks at most once a day, and only your click saves anything, also with Remember automatically off. What it counts is a short note of the kinds of change you accepted or rejected, kept on this computer beside your memories and never sent.
 
@@ -218,6 +223,8 @@ Use a skill in either of two ways:
 
 1. **Call it**: type `/` in the chat input and pick it from the menu, or type its name followed by your request: `/polish take another look at this`.
 2. **Just ask** (tool-calling providers only): Textus AI knows every skill's name and description, and when your request matches one, it loads the full instructions and follows them by itself.
+
+When what you asked for was a procedure of your own - steps you'll want again - Textus AI offers under its reply to keep it as a skill, for every document or for this project only. Nothing is saved unless you choose to.
 
 Skills live at the same two levels as writing instructions: global skills in the `skills/` folder of the global config folder (**Settings > Textus AI > Skills > Import Skill…** copies a skill file there), project skills in `.textus/skills/` (a hidden folder — in macOS Finder, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> shows it). A project skill with the same name as a global one replaces it.
 

@@ -46,8 +46,16 @@ describe("file name search", () => {
     expect(names("章")).toHaveLength(2);
   });
 
+  it("matches Chinese names typed in pinyin, whole or by initials", () => {
+    expect(names("dierzhang")).toEqual(["第二章.txt"]);
+    expect(names("cg")).toEqual(["第一章 草稿.md"]);
+    expect(names("dz")).toEqual([]);
+    expect(names("dyz")).toEqual(["第一章 草稿.md"]);
+  });
+
   it("matches a decomposed name with a composed query", () => {
     expect(names("café")).toEqual(["café".normalize("NFD") + ".md"]);
+    expect(names("cafe")).toEqual(["café".normalize("NFD") + ".md"]);
   });
 
   it("compares names only, not the folders they are in", () => {

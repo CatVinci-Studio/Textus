@@ -4,14 +4,16 @@ import { type NewDocumentMode } from "../../prefs/SettingsContext";
 import { LANGS, LANG_NAMES, type Lang } from "../../i18n/strings";
 import { LinkRow, SettingRow, ToggleRow } from "../sections/controls";
 import { CliCommandSection, DefaultEditorSection } from "../sections/general";
-import { links } from "../../platform/ipc";
 import { BackgroundSection } from "../sections/background";
 import { Select } from "../../ui/Select";
 import {
   canInstallCliCommand,
   canSetDefaultEditor,
   canUseWindows,
+  isDesktopApp,
 } from "../../platform/capabilities";
+import { emitMenuEvent } from "../../platform/menu-events";
+import { links } from "../../platform/ipc";
 
 /** General: language, documents and disk, system integrations, About, and
  *  the guides. */
@@ -21,6 +23,7 @@ export function GeneralPage({
   setSettings,
   setSubpage,
   openHelp,
+  onClose,
 }: SettingsPageProps) {
   return (
     <>
@@ -87,25 +90,33 @@ export function GeneralPage({
         {canUseWindows && <BackgroundSection t={t} />}
         {canSetDefaultEditor && <DefaultEditorSection t={t} />}
         {canInstallCliCommand && <CliCommandSection t={t} />}
-        <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
       </SettingsGroup>
 
       {/* Last: links out rather than settings. A phone's menu is kept short,
             so there this is where they are. */}
       <SettingsGroup title={t.settingsHelpGroup}>
-        <LinkRow
-          label={t.menuHelpMarkdown}
-          onOpen={() => openHelp("markdown")}
-        />
-        <LinkRow label={t.menuHelpAgent} onOpen={() => openHelp("agent")} />
-        <LinkRow
-          label={t.menuHelpTutorials}
-          onOpen={() => void links.openTutorialsPage(settings.language)}
-        />
+        {isDesktopApp && (
+          <LinkRow
+            label={t.menuHelpWelcome}
+            onOpen={() => openHelp("welcome")}
+          />
+        )}
+        <LinkRow label={t.navGuides} onOpen={() => setSubpage("guides")} />
+        {/* The dialog is the window's, behind this panel. */}
+        {isDesktopApp && (
+          <LinkRow
+            label={t.menuHelpReport}
+            onOpen={() => {
+              onClose();
+              emitMenuEvent("help-report");
+            }}
+          />
+        )}
         <LinkRow
           label={t.menuHelpCommunity}
           onOpen={() => void links.openCommunityPage(settings.language)}
         />
+        <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
       </SettingsGroup>
     </>
   );

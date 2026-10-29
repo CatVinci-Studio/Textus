@@ -103,12 +103,23 @@ export function fixedShortcutGroups(
       { label: t.toolbarBold, combos: ["mod+b"] },
       { label: t.toolbarItalic, combos: ["mod+i"] },
       { label: t.shortcutLeaveBlock, combos: ["mod+enter"] },
+      { label: t.shortcutMoveBlockUp, combos: ["alt+arrowup"] },
+      { label: t.shortcutMoveBlockDown, combos: ["alt+arrowdown"] },
     ],
   });
   // The keyboard's way round the window and through Textus AI's changes.
   groups.push({
     title: t.shortcutKeyboardGroupLabel,
     items: [
+      // Ctrl+- on a Mac, where Cmd+[ outdents a list item (useNavHistory.ts).
+      {
+        label: t.shortcutNavBack,
+        combos: [mac ? "ctrl+-" : "alt+arrowleft"],
+      },
+      {
+        label: t.shortcutNavForward,
+        combos: [mac ? "ctrl+shift+-" : "alt+arrowright"],
+      },
       { label: t.shortcutCycleRegions, combos: ["f6", "shift+f6"] },
       { label: t.quickAskNextEdit, combos: ["f7"] },
       { label: t.quickAskPrevEdit, combos: ["shift+f7"] },

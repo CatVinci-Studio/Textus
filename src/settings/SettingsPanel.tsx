@@ -1,4 +1,5 @@
 import { AboutSection } from "./sections/about";
+import { GuidesSection } from "./sections/guides";
 import {
   useCallback,
   useDeferredValue,
@@ -37,12 +38,12 @@ import { settingsPage, settingsPages } from "./settings-pages";
 import type {
   SettingsPageProps,
   ShortcutCommand,
+  HelpGuide,
   Subpage,
 } from "./pages/types";
 import { useModalDialog } from "../ui/useModalDialog";
 import { usePresenceProps } from "../ui/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
-import type { MenuChecks } from "../app/menu/app-menu-model";
 import { isIOSApp } from "../platform/capabilities";
 
 // The settings dialog shell: navigation, search and subpages, for every
@@ -56,8 +57,6 @@ export interface SettingsPanelProps {
   /** Files a settings action deleted (Reset on a customized skill), for
    *  the editor to close their tabs. */
   onFilesDeleted?: (paths: string[]) => void;
-  /** Which of the window's view modes are on, for Editor > View. */
-  viewChecks?: Pick<MenuChecks, "sourceMode" | "zen">;
   /** The shortcuts that can't be changed, listed under the ones that can. */
   fixedShortcuts?: FixedShortcutGroup[];
   /** The commands plugins add, under Shortcuts' own. */
@@ -72,6 +71,7 @@ type Category = string;
  *  only on the phone: elsewhere its rows are Extensions › Themes. */
 const SEARCHED_SUBPAGES: [Subpage, Category][] = [
   ["about", "general"],
+  ["guides", "general"],
   ...(isIOSApp ? [["themes", "editor"] as [Subpage, Category]] : []),
 ];
 
@@ -105,7 +105,6 @@ export function SettingsPanel({
   onClose,
   onOpenFile,
   onFilesDeleted,
-  viewChecks = {},
   fixedShortcuts = [],
   pluginCommands = [],
   initialCategory = "general",
@@ -131,7 +130,7 @@ export function SettingsPanel({
   const { matches, searchInput, listId } = search;
 
   // The guides open as documents, behind this panel - so it gives way.
-  const openHelp = (doc: "markdown" | "agent") => {
+  const openHelp = (doc: HelpGuide) => {
     onClose();
     emitMenuEvent(`help-doc:${doc}`);
   };
@@ -143,6 +142,7 @@ export function SettingsPanel({
 
   const subpageTitles: Record<Subpage, string> = {
     about: t.navAbout,
+    guides: t.navGuides,
     themes: t.themeMoreLabel,
   };
 
@@ -163,7 +163,6 @@ export function SettingsPanel({
     onOpenFile,
     onFilesDeleted,
     onClose,
-    viewChecks,
     fixedShortcuts,
     pluginCommands,
   };
@@ -177,11 +176,19 @@ export function SettingsPanel({
 
   const renderSubpage = (s: Subpage) =>
     s === "about" ? (
-      <AboutSection t={t} />
+      <AboutSection t={t} checkNow={initialCategory === "updates"} />
     ) : (
       <>
         <h1 className="settings-category-title">{subpageTitles[s]}</h1>
-        <ThemeLibrarySection t={t} />
+        {s === "guides" ? (
+          <GuidesSection
+            t={t}
+            language={settings.language}
+            openHelp={openHelp}
+          />
+        ) : (
+          <ThemeLibrarySection t={t} />
+        )}
       </>
     );
 
@@ -359,8 +366,14 @@ export function SettingsPanel({
 /** Which page Settings shows: a category, and possibly a subpage inside it
  *  with a way back. A picked search result sets `jump` to go to its row. */
 function useSettingsNav(initialCategory: Category) {
-  const [category, setCategory] = useState<Category>(initialCategory);
-  const [subpage, setSubpage] = useState<Subpage | null>(null);
+  // "updates" is General › About.
+  const updates = initialCategory === "updates";
+  const [category, setCategory] = useState<Category>(
+    updates ? "general" : initialCategory,
+  );
+  const [subpage, setSubpage] = useState<Subpage | null>(
+    updates ? "about" : null,
+  );
   const [jump, setJump] = useState<SearchEntry | null>(null);
   const content = useRef<HTMLDivElement>(null);
 

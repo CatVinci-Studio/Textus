@@ -43,7 +43,9 @@ interface TabBarProps {
   /** Where it sits in a split's grid. */
   style?: CSSProperties;
   /** The split pane it is the bar of: a pulled tab is let go onto it. */
-  pane?: number;
+  paneId?: string;
+  /** A pane's bar below another pane: no room kept for the window bar. */
+  inner?: boolean;
 }
 
 // Drag distances to leave the bar (vertical) or start a reorder
@@ -67,7 +69,8 @@ export function TabBar({
   menuFor,
   labels,
   style,
-  pane,
+  paneId,
+  inner,
 }: TabBarProps) {
   const barRef = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<{
@@ -140,9 +143,9 @@ export function TabBar({
 
   return (
     <div
-      className="tab-bar"
+      className={inner ? "tab-bar tab-bar-inner" : "tab-bar"}
       style={style}
-      data-pane-index={pane}
+      data-pane-id={paneId}
       ref={barRef}
       role="tablist"
       aria-label={labels.tabs}

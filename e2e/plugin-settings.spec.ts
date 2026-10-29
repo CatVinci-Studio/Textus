@@ -73,6 +73,20 @@ test("installing from the list turns the plugin on, behind its permissions", asy
   // Its button turns it off now; the menu beside it uninstalls.
   await expect(listed.getByRole("button", { name: "Turn Off" })).toBeVisible();
   const more = listed.getByRole("button", { name: "More for Tasks" });
+  // One button in two halves: square where they meet, touching.
+  const main = listed.getByRole("button", { name: "Turn Off" });
+  const [left, right] = await Promise.all([
+    main.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return [r.right, getComputedStyle(el).borderTopRightRadius];
+    }),
+    more.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return [r.left, getComputedStyle(el).borderTopLeftRadius];
+    }),
+  ]);
+  expect(Math.abs((left[0] as number) - (right[0] as number))).toBeLessThan(2);
+  expect([left[1], right[1]]).toEqual(["0px", "0px"]);
   await more.click();
   await expect(
     listed.getByRole("menuitem", { name: "Uninstall" }),

@@ -1,6 +1,10 @@
-//! What a problem report says Textus runs on (Help > Report a Problem).
+//! Help > Report a Problem: what Textus runs on, and sending the report.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::time::Duration;
+
+/// The Worker that files a report as a GitHub issue (services/feedback).
+const FEEDBACK_URL: &str = "https://textus.catvinci.com/api/feedback";
 
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
@@ -19,6 +23,49 @@ pub fn system_info() -> SystemInfo {
         os: os_version(),
         arch: std::env::consts::ARCH.to_string(),
         webview: tauri::webview_version().unwrap_or_default(),
+    }
+}
+
+/// A report as services/feedback/issue.ts reads it.
+#[derive(Serialize, Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
+pub struct ProblemReport {
+    pub kind: String,
+    pub area: String,
+    pub severity: Option<String>,
+    pub description: String,
+    pub details: String,
+    pub contact: Option<String>,
+    pub version: String,
+    pub language: String,
+}
+
+/// The issue a report became.
+#[derive(Serialize, Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
+pub struct SentReport {
+    pub url: String,
+    pub number: u32,
+}
+
+/// Files `report`. "LIMIT" when this computer has sent its share today;
+/// otherwise the connection's or the service's error.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn send_problem_report(report: ProblemReport) -> Result<SentReport, String> {
+    let client = crate::net::client(Duration::from_secs(10), Duration::from_secs(30))
+        .build()
+        .map_err(|e| e.to_string())?;
+    let response = client
+        .post(FEEDBACK_URL)
+        .json(&report)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    match response.status().as_u16() {
+        201 => response.json().await.map_err(|e| e.to_string()),
+        429 => Err("LIMIT".into()),
+        status => Err(format!("The feedback service answered {status}.")),
     }
 }
 

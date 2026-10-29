@@ -93,6 +93,14 @@ const RESERVED_COMBOS = new Set([
   "mod+shift+arrowright",
   "mod+shift+arrowup",
   "mod+shift+arrowdown",
+  // Move a paragraph or list item.
+  "alt+arrowup",
+  "alt+arrowdown",
+  // Back and Forward.
+  "alt+arrowleft",
+  "alt+arrowright",
+  "ctrl+-",
+  "ctrl+shift+-",
   // Fixed AI keys: accept a pending edit, apply a grammar fix, cycle
   // completion candidates.
   "mod+enter",
