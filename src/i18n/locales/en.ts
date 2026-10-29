@@ -930,7 +930,7 @@ type /name in a conversation to use one.
   reportTitle: "Report a Problem",
   reportWhat: "What happened, and what did you expect?",
   reportDetails: "Sent with it",
-  reportCopy: "Copy",
+  reportCopy: "Copy report",
   reportCopied: "Copied",
   reportOnGithub: "Submit on GitHub",
   reportKindLabel: "Type",
@@ -951,8 +951,6 @@ type /name in a conversation to use one.
   reportSeverityMinor: "A small thing",
   reportContact:
     "Email or WeChat, if we may ask you more (optional, only the team sees it)",
-  reportPublic:
-    "What you write and the details below become a public issue on GitHub.",
   reportSend: "Send",
   reportSending: "Sending…",
   reportSent: "Sent as #{number}. Thank you!",

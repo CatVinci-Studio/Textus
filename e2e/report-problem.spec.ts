@@ -92,7 +92,6 @@ test("a report is sent from the app, labelled by what it is, and says which issu
     .getByRole("textbox", { name: "What happened" })
     .fill("Let tabs be pinned");
   await dialog.getByRole("textbox", { name: /Email or WeChat/ }).fill("me@x");
-  await expect(dialog.getByText(/public issue on GitHub/)).toBeVisible();
   await send.click();
   await expect(dialog).toContainText("Sent as #7");
   const sent = await page.evaluate(

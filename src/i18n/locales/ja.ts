@@ -911,7 +911,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   reportTitle: "問題を報告",
   reportWhat: "何が起きましたか？本来はどうなるはずでしたか？",
   reportDetails: "一緒に送られる情報",
-  reportCopy: "コピー",
+  reportCopy: "レポートをコピー",
   reportCopied: "コピーしました",
   reportOnGithub: "GitHub で送信",
   reportKindLabel: "種類",
@@ -932,7 +932,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   reportSeverityMinor: "小さな問題",
   reportContact:
     "追加で質問してもよければメールアドレスなど（任意、チームだけが見ます）",
-  reportPublic: "書いた内容と下の情報は、GitHub の公開 issue になります。",
   reportSend: "送信",
   reportSending: "送信中…",
   reportSent: "#{number} として送信しました。ありがとうございます！",

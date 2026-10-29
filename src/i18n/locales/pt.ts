@@ -944,7 +944,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   reportTitle: "Relatar um problema",
   reportWhat: "O que aconteceu e o que você esperava?",
   reportDetails: "Enviado junto",
-  reportCopy: "Copiar",
+  reportCopy: "Copiar relatório",
   reportCopied: "Copiado",
   reportOnGithub: "Enviar no GitHub",
   reportKindLabel: "Tipo",
@@ -965,8 +965,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   reportSeverityMinor: "Um detalhe",
   reportContact:
     "E-mail ou WeChat, se pudermos perguntar mais (opcional, só a equipe vê)",
-  reportPublic:
-    "O que você escrever e os dados abaixo viram uma issue pública no GitHub.",
   reportSend: "Enviar",
   reportSending: "Enviando…",
   reportSent: "Enviado como #{number}. Obrigado!",

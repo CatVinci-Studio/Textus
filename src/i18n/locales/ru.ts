@@ -954,7 +954,7 @@ export default {
   reportTitle: "Сообщить о проблеме",
   reportWhat: "Что случилось и чего вы ожидали?",
   reportDetails: "Отправится вместе с этим",
-  reportCopy: "Копировать",
+  reportCopy: "Копировать отчёт",
   reportCopied: "Скопировано",
   reportOnGithub: "Отправить на GitHub",
   reportKindLabel: "Тип",
@@ -975,7 +975,6 @@ export default {
   reportSeverityMinor: "Мелочь",
   reportContact:
     "Email или WeChat, если можно задать вопросы (необязательно, видит только команда)",
-  reportPublic: "Ваш текст и данные ниже станут публичным issue на GitHub.",
   reportSend: "Отправить",
   reportSending: "Отправка…",
   reportSent: "Отправлено как #{number}. Спасибо!",

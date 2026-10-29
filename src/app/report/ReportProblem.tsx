@@ -173,7 +173,11 @@ function ReportForm({
   ) => (
     <label className="report-problem-choice">
       <span>{label}</span>
-      <Select value={value} onChange={(e) => set(e.target.value)}>
+      <Select
+        className="settings-select"
+        value={value}
+        onChange={(e) => set(e.target.value)}
+      >
         {options.map((option) => (
           <option key={option} value={option}>
             {t[names[option]]}
@@ -219,9 +223,11 @@ function ReportForm({
       />
       <div className="report-problem-label">{t.reportDetails}</div>
       <pre className="report-problem-details">{details}</pre>
-      <p className="report-problem-note" role="status">
-        {phase.state === "failed" ? phase.why : t.reportPublic}
-      </p>
+      {phase.state === "failed" && (
+        <p className="report-problem-note" role="status">
+          {phase.why}
+        </p>
+      )}
       <div className="close-prompt-buttons">
         <button
           disabled={!facts}

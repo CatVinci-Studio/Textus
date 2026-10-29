@@ -13,6 +13,7 @@ import {
   isDesktopApp,
 } from "../../platform/capabilities";
 import { emitMenuEvent } from "../../platform/menu-events";
+import { links } from "../../platform/ipc";
 
 /** General: language, documents and disk, system integrations, About, and
  *  the guides. */
@@ -111,6 +112,10 @@ export function GeneralPage({
             }}
           />
         )}
+        <LinkRow
+          label={t.menuHelpCommunity}
+          onOpen={() => void links.openCommunityPage(settings.language)}
+        />
         <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
       </SettingsGroup>
     </>

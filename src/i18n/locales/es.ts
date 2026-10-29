@@ -961,7 +961,7 @@ para usar una.
   reportTitle: "Informar de un problema",
   reportWhat: "¿Qué pasó y qué esperabas?",
   reportDetails: "Se envía con ello",
-  reportCopy: "Copiar",
+  reportCopy: "Copiar informe",
   reportCopied: "Copiado",
   reportOnGithub: "Enviar en GitHub",
   reportKindLabel: "Tipo",
@@ -982,8 +982,6 @@ para usar una.
   reportSeverityMinor: "Un detalle",
   reportContact:
     "Correo o WeChat, si podemos preguntarte más (opcional, solo lo ve el equipo)",
-  reportPublic:
-    "Lo que escribas y los datos de abajo serán una incidencia pública en GitHub.",
   reportSend: "Enviar",
   reportSending: "Enviando…",
   reportSent: "Enviado como #{number}. ¡Gracias!",

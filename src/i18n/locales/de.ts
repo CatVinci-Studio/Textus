@@ -947,7 +947,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reportTitle: "Problem melden",
   reportWhat: "Was ist passiert, und was hast du erwartet?",
   reportDetails: "Wird mitgeschickt",
-  reportCopy: "Kopieren",
+  reportCopy: "Bericht kopieren",
   reportCopied: "Kopiert",
   reportOnGithub: "Auf GitHub senden",
   reportKindLabel: "Art",
@@ -968,8 +968,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reportSeverityMinor: "Eine Kleinigkeit",
   reportContact:
     "E-Mail oder WeChat, falls wir nachfragen dürfen (optional, nur das Team sieht es)",
-  reportPublic:
-    "Was du schreibst und die Angaben unten werden ein öffentliches Issue auf GitHub.",
   reportSend: "Senden",
   reportSending: "Wird gesendet…",
   reportSent: "Als #{number} gesendet. Danke!",

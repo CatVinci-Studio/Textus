@@ -21,12 +21,12 @@ beforeEach(() => vi.clearAllMocks());
 
 describe("About", () => {
   it("shows the app's version", async () => {
-    render(<AboutSection t={t} language="en" />);
+    render(<AboutSection t={t} />);
     expect(await screen.findByText("Version 1.0.4")).toBeInTheDocument();
   });
 
   it("opens each of its pages by name", () => {
-    render(<AboutSection t={t} language="en" />);
+    render(<AboutSection t={t} />);
     fireEvent.click(screen.getByRole("button", { name: "GitHub" }));
     fireEvent.click(screen.getByRole("button", { name: "Discord" }));
     fireEvent.click(screen.getByRole("button", { name: t.aboutQq }));

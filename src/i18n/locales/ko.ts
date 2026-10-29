@@ -901,7 +901,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   reportTitle: "문제 신고",
   reportWhat: "무슨 일이 있었나요? 원래 어떻게 되어야 했나요?",
   reportDetails: "함께 보내는 정보",
-  reportCopy: "복사",
+  reportCopy: "보고서 복사",
   reportCopied: "복사됨",
   reportOnGithub: "GitHub에 제출",
   reportKindLabel: "유형",
@@ -922,7 +922,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   reportSeverityMinor: "사소한 문제",
   reportContact:
     "더 여쭤봐도 된다면 이메일 등 연락처(선택, 팀만 볼 수 있습니다)",
-  reportPublic: "작성한 내용과 아래 정보는 GitHub의 공개 이슈가 됩니다.",
   reportSend: "보내기",
   reportSending: "보내는 중…",
   reportSent: "#{number}번으로 보냈습니다. 감사합니다!",

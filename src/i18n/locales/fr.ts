@@ -974,7 +974,7 @@ utiliser une.
   reportTitle: "Signaler un problème",
   reportWhat: "Que s'est-il passé, et qu'attendiez-vous ?",
   reportDetails: "Envoyé avec",
-  reportCopy: "Copier",
+  reportCopy: "Copier le rapport",
   reportCopied: "Copié",
   reportOnGithub: "Envoyer sur GitHub",
   reportKindLabel: "Type",
@@ -995,8 +995,6 @@ utiliser une.
   reportSeverityMinor: "Un détail",
   reportContact:
     "E-mail ou WeChat, si nous pouvons vous recontacter (facultatif, seule l'équipe le voit)",
-  reportPublic:
-    "Ce que vous écrivez et les détails ci-dessous deviennent un ticket public sur GitHub.",
   reportSend: "Envoyer",
   reportSending: "Envoi…",
   reportSent: "Envoyé sous le n° #{number}. Merci !",
