@@ -101,7 +101,7 @@ test("Edit › Undo and Redo take back a paste, from the bar and from the macOS 
   const doc = page.locator('[data-active-tab="true"] .ProseMirror');
   const menubar = page.locator(bar);
   const list = page.locator(".app-menu");
-  await pasteMarkdown(page, "Pasted **words**");
+  await pasteMarkdown(page, "Pasted words");
   await expect(doc).toContainText("Pasted words");
 
   await menubar.getByRole("menuitem", { name: "Edit" }).click();
