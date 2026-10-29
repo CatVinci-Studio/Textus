@@ -60,6 +60,9 @@
   --find-match-bg: rgb(255 212 0 / 40%);
   --find-match-active-bg: rgb(255 140 0 / 55%);
   --overlay-bg: rgb(20 27 40 / 30%);
+  /* Behind a picture or diagram in the viewer: darker than a dialog's veil,
+     so the document doesn't read as its surroundings. */
+  --viewer-bg: rgb(0 0 0 / 60%);
   --shadow-popover: 0 4px 16px rgb(20 27 40 / 10%);
   --shadow-dialog: 0 16px 48px rgb(20 27 40 / 16%);
   /* A phone sheet's edge over the page, a drawer's over the editor. */
@@ -121,6 +124,7 @@
     --danger: #f18b99;
     --danger-fill: #c43d51;
     --overlay-bg: rgb(0 0 0 / 48%);
+    --viewer-bg: rgb(0 0 0 / 72%);
     --shadow-popover: 0 4px 16px rgb(0 0 0 / 24%);
     --shadow-dialog: 0 16px 48px rgb(0 0 0 / 32%);
     --shadow-sheet: 0 -8px 24px rgb(0 0 0 / 40%);
@@ -136,6 +140,7 @@
   --danger: #f18b99;
   --danger-fill: #c43d51;
   --overlay-bg: rgb(0 0 0 / 48%);
+  --viewer-bg: rgb(0 0 0 / 72%);
   --shadow-popover: 0 4px 16px rgb(0 0 0 / 24%);
   --shadow-dialog: 0 16px 48px rgb(0 0 0 / 32%);
   --shadow-sheet: 0 -8px 24px rgb(0 0 0 / 40%);

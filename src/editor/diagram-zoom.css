@@ -43,9 +43,7 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-modal);
-  /* Darker than a dialog's veil: the document mustn't read as the picture's
-     surroundings. */
-  background: rgb(0 0 0 / 60%);
+  background: var(--viewer-bg);
   animation: motion-fade-in var(--dur-base) var(--ease-out) both;
 }
 .diagram-viewer-leaving {
