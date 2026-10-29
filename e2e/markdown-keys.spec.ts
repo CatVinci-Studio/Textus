@@ -537,9 +537,7 @@ test("``` typed on a line of its own reads as a fence, not as code", async ({
   );
 });
 
-test("Alt+Up and Alt+Down move a list item, caret along", async ({
-  page,
-}) => {
+test("Alt+Up and Alt+Down move a list item, caret along", async ({ page }) => {
   await open(page);
   await page.keyboard.type("- one", { delay: 20 });
   await page.keyboard.press("Enter");
