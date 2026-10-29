@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * The menu bar, where the app draws the window frame (Windows and Linux): off
@@ -92,4 +92,37 @@ test("a window too narrow for the titles has the ☰ back", async ({ page }) => 
   await expect(
     page.locator(".app-menu").getByRole("menuitem", { name: "File" }),
   ).toBeVisible();
+});
+
+test("Edit › Undo and Redo take back a paste, from the bar and from the macOS menu", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en", menuBarShown: true } });
+  const doc = page.locator('[data-active-tab="true"] .ProseMirror');
+  const menubar = page.locator(bar);
+  const list = page.locator(".app-menu");
+  await pasteMarkdown(page, "Pasted **words**");
+  await expect(doc).toContainText("Pasted words");
+
+  await menubar.getByRole("menuitem", { name: "Edit" }).click();
+  await list.getByRole("menuitem", { name: /Undo/ }).click();
+  await expect(doc).not.toContainText("Pasted");
+  await menubar.getByRole("menuitem", { name: "Edit" }).click();
+  await list.getByRole("menuitem", { name: /Redo/ }).click();
+  await expect(doc).toContainText("Pasted words");
+
+  // The macOS menu bar's items arrive as events.
+  const emit = (name: string) =>
+    page.evaluate(
+      (n) =>
+        (
+          window as unknown as { __devEmitTauriEvent: (n: string) => void }
+        ).__devEmitTauriEvent(n),
+      name,
+    );
+  await doc.focus();
+  await emit("menu-undo");
+  await expect(doc).not.toContainText("Pasted");
+  await emit("menu-redo");
+  await expect(doc).toContainText("Pasted words");
 });
