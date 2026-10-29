@@ -861,6 +861,48 @@ br:is(.pending-delete, .pending-sentence-hot) {
   width: 100%;
 }
 
+/* A quarter turn ({textus-rotate=D} in the title, image-rotation.ts). A
+   half turn keeps the footprint; a quarter turn swaps it, so the wrapper
+   takes the turned aspect ratio and the picture is laid across it.
+   `rotate` and `translate` rather than `transform`: only the turn
+   animates; the re-centring of a quarter-turned picture applies at once. */
+.milkdown .image-view img {
+  transition: rotate var(--dur-medium) var(--ease-spring);
+}
+
+.milkdown .image-view[data-rotate="180"] img {
+  rotate: 180deg;
+}
+
+.milkdown .image-view-turned {
+  container-type: inline-size;
+  aspect-ratio: calc(1 / var(--image-ratio, 1));
+}
+
+.milkdown .image-view-turned:not(.image-view-sized) {
+  width: min(100%, var(--image-turned-width, 320px));
+}
+
+.milkdown .image-view-turned img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(100cqw * var(--image-ratio, 1));
+  max-width: none;
+  translate: -50% -50%;
+  rotate: 90deg;
+}
+
+.milkdown .image-view-turned[data-rotate="270"] img {
+  rotate: -90deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .milkdown .image-view img {
+    transition: none;
+  }
+}
+
 .milkdown .image-view.ProseMirror-selectednode img {
   outline: 2px solid var(--editor-accent);
   outline-offset: 3px;

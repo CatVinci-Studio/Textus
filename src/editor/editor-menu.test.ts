@@ -11,6 +11,7 @@ import type { Ctx } from "@milkdown/kit/ctx";
 import {
   buildContextMenuItems,
   buildPhoneMoreItems,
+  rotateImage,
   runTableAction,
   selectedImagePos,
   setImageWidth,
@@ -61,7 +62,7 @@ const doc = n.doc.create(null, [
 ]);
 
 /** A runner over a bare state: the menu's commands only reach for the
- *  view's state, dispatch and focus. */
+ *  view's state, dispatch and focus (and nodeDOM: no picture has loaded). */
 function editorAt(position: (state: EditorState) => EditorState) {
   const view = {
     state: position(EditorState.create({ doc })),
@@ -69,6 +70,7 @@ function editorAt(position: (state: EditorState) => EditorState) {
       view.state = view.state.apply(tr);
     },
     focus() {},
+    nodeDOM: () => null,
   };
   const ctx = { get: () => view } as unknown as Ctx;
   const run = (<T>(fn: (ctx: Ctx) => T) => fn(ctx)) as EditorRunner;
@@ -183,6 +185,23 @@ describe("the editor menu", () => {
         }),
       ).slice(0, 4),
     ).toEqual([t.imageReveal, t.imageCopyPath, "-", t.cut]);
+  });
+
+  it("turns a picture a quarter at a time, keeping it selected", () => {
+    const { view, run } = editorAt(imageSelected);
+    const items = labels(buildContextMenuItems(run, options(imagePos)));
+    // Not loaded yet: nothing to view large, but it can still turn.
+    expect(items).not.toContain(t.imageViewLarge);
+    expect(items).toContain(t.imageRotateLeft);
+    expect(items).toContain(t.imageRotateRight);
+
+    rotateImage(run, imagePos, 1);
+    expect(view.state.doc.nodeAt(imagePos)?.attrs.title).toBe(
+      "{textus-rotate=90}",
+    );
+    expect(view.state.selection).toBeInstanceOf(NodeSelection);
+    rotateImage(run, imagePos, -1);
+    expect(view.state.doc.nodeAt(imagePos)?.attrs.title).toBe("");
   });
 
   it("gives the phone's More only what its toolbar lacks", () => {

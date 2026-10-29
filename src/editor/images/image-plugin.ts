@@ -32,6 +32,7 @@ import {
   readImagePresentation,
   withImageWidth,
 } from "./image-html";
+import { imageRotationView } from "./image-rotation";
 import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
 import { decorateAll, redecorateChanged } from "../changed-ranges";
 import { isLargeDoc } from "../large-doc";
@@ -158,6 +159,7 @@ function createImageView(
     if (loaded()) openDiagramViewer(img, dom);
   });
   dom.append(zoom);
+  const showRotation = imageRotationView(dom, img);
 
   let current = node;
   // Which picture is on show: its src, in this document.
@@ -217,6 +219,7 @@ function createImageView(
     else img.removeAttribute("title");
     dom.style.width = width ? cssWidth(width) : "";
     dom.classList.toggle("image-view-sized", width !== null);
+    showRotation(n.attrs.title as string);
   };
   apply(node);
 

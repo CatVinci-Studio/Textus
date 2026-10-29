@@ -36,10 +36,15 @@ function countText(text: string): number {
 const PARAGRAPHS_KEPT = 50_000;
 const paragraphCounts = new Map<string, number>();
 
+/** An image's turn or width kept in its title (`{textus-rotate=90}`,
+ *  images/image-rotation.ts): layout, not words. */
+const IMAGE_TITLE_METADATA =
+  /\{(?:\s*(?:textus|levis)-(?:width|rotate)=[^\s}]*)+\s*\}/g;
+
 function countParagraph(text: string): number {
   let words = paragraphCounts.get(text);
   if (words === undefined) {
-    words = countText(text);
+    words = countText(text.replace(IMAGE_TITLE_METADATA, ""));
     if (paragraphCounts.size >= PARAGRAPHS_KEPT) paragraphCounts.clear();
     paragraphCounts.set(text, words);
   }

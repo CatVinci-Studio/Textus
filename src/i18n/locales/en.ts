@@ -1226,6 +1226,9 @@ type /name in a conversation to use one.
   // image card's button.
   imageReveal: "Show in folder",
   imageCopyPath: "Copy image path",
+  imageViewLarge: "View Image",
+  imageRotateLeft: "Rotate Left",
+  imageRotateRight: "Rotate Right",
   imageWidthShortAuto: "Auto",
   deleteImage: "Delete Image",
   privacyChatHistoryLabel: "Chat History",
