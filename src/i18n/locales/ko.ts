@@ -773,6 +773,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   shortcutParagraph: "본문",
   shortcutFixedGroupLabel: "고정 단축키",
   shortcutLeaveBlock: "코드 블록, 표, 인용에서 나가기",
+  shortcutMoveBlockUp: "단락 또는 목록 항목을 위로 이동",
+  shortcutMoveBlockDown: "단락 또는 목록 항목을 아래로 이동",
   shortcutKeyboardGroupLabel: "키보드 탐색",
   shortcutCycleRegions: "창의 영역 사이 이동",
   shortcutTakeChange: "검토 막대가 가리키는 수정 받아들이기",

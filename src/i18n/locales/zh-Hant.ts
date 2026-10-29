@@ -742,6 +742,8 @@ export default {
   shortcutParagraph: "內文",
   shortcutFixedGroupLabel: "固定快速鍵",
   shortcutLeaveBlock: "跳出程式碼區塊、表格或引用區塊",
+  shortcutMoveBlockUp: "段落或清單項目上移",
+  shortcutMoveBlockDown: "段落或清單項目下移",
   shortcutKeyboardGroupLabel: "鍵盤導覽",
   shortcutCycleRegions: "在視窗各區域間移動",
   shortcutTakeChange: "採納審閱列指向的修改",

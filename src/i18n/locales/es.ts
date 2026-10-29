@@ -833,6 +833,8 @@ para usar una.
   shortcutParagraph: "Párrafo",
   shortcutFixedGroupLabel: "Atajos fijos",
   shortcutLeaveBlock: "Salir de un bloque de código, una tabla o una cita",
+  shortcutMoveBlockUp: "Subir párrafo o elemento de lista",
+  shortcutMoveBlockDown: "Bajar párrafo o elemento de lista",
   shortcutKeyboardGroupLabel: "Navegación con el teclado",
   shortcutCycleRegions: "Moverse entre las zonas de la ventana",
   shortcutTakeChange: "Aceptar el cambio que señala la barra de revisión",

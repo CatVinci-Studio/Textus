@@ -816,6 +816,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   shortcutParagraph: "Parágrafo",
   shortcutFixedGroupLabel: "Atalhos fixos",
   shortcutLeaveBlock: "Sair de um bloco de código, tabela ou citação",
+  shortcutMoveBlockUp: "Mover parágrafo ou item de lista para cima",
+  shortcutMoveBlockDown: "Mover parágrafo ou item de lista para baixo",
   shortcutKeyboardGroupLabel: "Navegação pelo teclado",
   shortcutCycleRegions: "Mover entre as áreas da janela",
   shortcutTakeChange: "Aceitar a alteração que a barra de revisão indica",

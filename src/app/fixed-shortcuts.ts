@@ -103,6 +103,8 @@ export function fixedShortcutGroups(
       { label: t.toolbarBold, combos: ["mod+b"] },
       { label: t.toolbarItalic, combos: ["mod+i"] },
       { label: t.shortcutLeaveBlock, combos: ["mod+enter"] },
+      { label: t.shortcutMoveBlockUp, combos: ["alt+arrowup"] },
+      { label: t.shortcutMoveBlockDown, combos: ["alt+arrowdown"] },
     ],
   });
   // The keyboard's way round the window and through Textus AI's changes.

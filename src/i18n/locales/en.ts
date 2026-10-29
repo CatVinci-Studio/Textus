@@ -801,6 +801,8 @@ type /name in a conversation to use one.
   shortcutParagraph: "Paragraph",
   shortcutFixedGroupLabel: "Fixed Shortcuts",
   shortcutLeaveBlock: "Leave a code block, table or quote",
+  shortcutMoveBlockUp: "Move paragraph or list item up",
+  shortcutMoveBlockDown: "Move paragraph or list item down",
   shortcutKeyboardGroupLabel: "Keyboard Navigation",
   shortcutCycleRegions: "Move between window regions",
   shortcutTakeChange: "Take the change the review bar points at",
