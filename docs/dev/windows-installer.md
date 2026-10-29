@@ -107,6 +107,15 @@ other) and opens **Default apps** at Textus
 an app make itself the default - the user's choice is a hashed `UserChoice`
 only the Settings app writes - so the user picks Textus there.
 
+## The `textus` command
+
+Textus installs it itself on startup, and again from **Settings › General**
+(`src-tauri/src/commands/cli.rs`): `bin\textus.cmd` beside `Textus.exe`, and
+that folder on the user's `PATH` (`HKCU\Environment`). The script runs
+`start "" "%~dp0..\Textus.exe" %*`, so the terminal gets its prompt back at
+once. The uninstaller removes both, unless the `PATH` is longer than NSIS'
+strings, which would come back cut short.
+
 ## Changing things
 
 **The artwork** - `src-tauri/installer/header.bmp` (150x57, top strip) and

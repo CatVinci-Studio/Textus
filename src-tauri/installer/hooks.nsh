@@ -56,6 +56,21 @@
     DeleteRegKey HKCU "${TEXTUS_CAPABILITIES}"
     DeleteRegKey /ifempty HKCU "Software\Textus"
 
+    ; The `textus` command Textus installs itself (src-tauri/src/commands/cli.rs).
+    ; A PATH as long as NSIS' strings comes back cut short, so it's left alone.
+    Delete "$INSTDIR\bin\textus.cmd"
+    RMDir "$INSTDIR\bin"
+    ReadRegStr $R0 HKCU "Environment" "Path"
+    StrLen $R1 $R0
+    IntOp $R1 $R1 + 1
+    ${If} $R1 < ${NSIS_MAX_STRLEN}
+      ${WordAdd} $R0 ";" "-$INSTDIR\bin" $R2
+      ${If} $R2 != $R0
+        WriteRegExpandStr HKCU "Environment" "Path" $R2
+        SendMessage ${HWND_BROADCAST} ${WM_SETTINGCHANGE} 0 "STR:Environment" /TIMEOUT=5000
+      ${EndIf}
+    ${EndIf}
+
     ; Up to 1.1.0-rc.6 Textus' ProgID was "Markdown", a name other editors
     ; share. Removed only while it still opens this copy of Textus.
     ReadRegStr $R0 HKCU "Software\Classes\Markdown\shell\open\command" ""
