@@ -26,7 +26,11 @@ import {
   tableLayoutItems,
   tableMenuItems,
 } from "./editor-menu-tables";
-import { imageFileItems, imageWidthItems } from "./editor-menu-images";
+import {
+  imageFileItems,
+  imageTurnItems,
+  imageWidthItems,
+} from "./editor-menu-images";
 export {
   TABLE_ACTIONS,
   type TableAction,
@@ -37,6 +41,7 @@ export {
   selectImage,
   deleteImage,
   setImageWidth,
+  rotateImage,
 } from "./editor-menu-images";
 // The editor commands behind the right-click, Format and Edit menus, and
 // the right-click menu itself.
@@ -164,6 +169,7 @@ export function buildContextMenuItems(
   const imageItems = joinGroups(
     imagePos === null ? [] : imageWidthItems(run, t, imagePos),
     imageFileItems(t, options.imageLocation ?? null),
+    imagePos === null ? [] : imageTurnItems(run, t, imagePos),
     imagePos === null ? [] : (options.pictureAiItems ?? []),
   );
   const clipboard: MenuEntry[] = [

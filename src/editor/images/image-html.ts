@@ -2,6 +2,7 @@ import { $remark } from "@milkdown/kit/utils";
 import type { Attrs } from "@milkdown/kit/prose/model";
 import { escapeHtml } from "../../utils/html";
 import { sanitizeDimension, sanitizeStyle } from "../html/html-policy";
+import { keepRotation, splitImageTitle } from "./image-rotation";
 
 /**
  * A sized image is written as `<img ... width="50%">`, the one width form
@@ -84,26 +85,14 @@ export function imageMarkdownHtml(attrs: ImageAttrs): string | null {
   return `<img ${parts.join(" ")}>`;
 }
 
-/** `{textus-width=N%}` at the end of the title: an older form of an image's
- *  width, still read. */
-const IMAGE_WIDTH_METADATA = /\s*\{textus-width=(\d{1,3})%\}\s*$/;
-
-/** An image title split into its caption and the older title-kept width. */
+/** An image title split into its caption and the older title-kept width
+ *  (`{textus-width=N%}`); a rotation there is left out of the caption too. */
 export function readImagePresentation(title: string | null | undefined): {
   title: string;
   widthPercent: number | null;
 } {
-  const value = title ?? "";
-  const match = IMAGE_WIDTH_METADATA.exec(value);
-  if (!match) return { title: value, widthPercent: null };
-
-  const widthPercent = Number(match[1]);
-  if (widthPercent < 1 || widthPercent > 100)
-    return { title: value, widthPercent: null };
-  return {
-    title: value.slice(0, match.index).trimEnd(),
-    widthPercent,
-  };
+  const { title: caption, widthPercent } = splitImageTitle(title);
+  return { title: caption, widthPercent };
 }
 
 /** The width an image shows at, as HTML writes it, or null for its own
@@ -125,7 +114,10 @@ export function withImageWidth(
 ): Attrs {
   return {
     ...attrs,
-    title: readImagePresentation(attrs.title as string).title,
+    title: keepRotation(
+      attrs.title as string,
+      readImagePresentation(attrs.title as string).title,
+    ),
     width:
       widthPercent === null
         ? ""

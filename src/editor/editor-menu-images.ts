@@ -1,6 +1,8 @@
 import { editorViewCtx } from "@milkdown/kit/core";
 import { NodeSelection } from "@milkdown/kit/prose/state";
 import { imageWidthOf, withImageWidth } from "./images/image-html";
+import { turnedTitle } from "./images/image-rotation";
+import { openDiagramViewer } from "./diagram-zoom";
 import { revealNearest, type ImageLocation } from "./images/missing-image";
 import { canRevealInFileManager } from "../platform/capabilities";
 import type { EditorRunner } from "./useEditorRunner";
@@ -91,6 +93,60 @@ export function imageWidthItems(
     widthItem(50, t.imageWidth50),
     widthItem(70, t.imageWidth70),
     widthItem(100, t.imageWidth100),
+  ];
+}
+
+/** A quarter turn clockwise (1) or counter-clockwise (-1), as one undoable
+ *  step. A width still kept in the title moves to `width` on the way. */
+export function rotateImage(run: EditorRunner, pos: number, turns: number) {
+  run((ctx) => {
+    const view = ctx.get(editorViewCtx);
+    const node = view.state.doc.nodeAt(pos);
+    if (node?.type.name !== "image") return;
+    const tr = view.state.tr.setNodeMarkup(pos, undefined, {
+      ...node.attrs,
+      title: turnedTitle(node.attrs.title as string, turns),
+      width: imageWidthOf(node.attrs) ?? "",
+    });
+    // Still selected, so turning again needs no new click.
+    tr.setSelection(NodeSelection.create(tr.doc, pos));
+    view.dispatch(tr);
+    view.focus();
+  });
+}
+
+/** View Image (once the picture has loaded) and the quarter turns. */
+export function imageTurnItems(
+  run: EditorRunner,
+  t: Strings,
+  imagePos: number,
+): MenuEntry[] {
+  const shown =
+    run((ctx) => {
+      const dom = ctx.get(editorViewCtx).nodeDOM(imagePos);
+      // 1: an element (no DOM globals where tests run).
+      if (dom?.nodeType !== 1) return null;
+      const wrapper = dom as HTMLElement;
+      const img = wrapper.querySelector("img");
+      return img && img.naturalWidth > 0 ? { dom: wrapper, img } : null;
+    }) ?? null;
+  return [
+    ...(shown
+      ? [
+          {
+            label: t.imageViewLarge,
+            onSelect: () => openDiagramViewer(shown.img, shown.dom),
+          },
+        ]
+      : []),
+    {
+      label: t.imageRotateLeft,
+      onSelect: () => rotateImage(run, imagePos, -1),
+    },
+    {
+      label: t.imageRotateRight,
+      onSelect: () => rotateImage(run, imagePos, 1),
+    },
   ];
 }
 
