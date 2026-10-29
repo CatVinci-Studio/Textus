@@ -1,5 +1,6 @@
 import { links } from "../../platform/ipc";
 import { splitLayout } from "../../app/split/split-layout";
+import { panesOf } from "../../app/split/split-tree";
 import { getWindowAccess, type PluginLocation } from "../app-bridge";
 import { localize } from "../store/manifest";
 import { webviewsOf } from "../views/webviews";
@@ -116,9 +117,13 @@ export function layoutHandlers(p: PluginScope) {
     "layout.activeTab": () => access().activeTab(),
     "layout.tabs": () => access().tabs(),
     "layout.split": () => {
+      // The outermost way the panes run, and each pane's tab in front.
       const layout = splitLayout();
-      return layout?.panes[1]
-        ? { direction: layout.direction, panes: layout.panes }
+      return layout
+        ? {
+            direction: layout.root.direction,
+            panes: panesOf(layout.root).map((p) => p.front),
+          }
         : { direction: null, panes: [] };
     },
   };

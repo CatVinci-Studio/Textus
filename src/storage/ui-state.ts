@@ -50,13 +50,10 @@ export interface UiState {
   readOnlyPaths: string[];
   /** The kinds (contributes.suggestFor) a plugin was offered for, once each. */
   pluginsOfferedFor: string[];
-  /** The split the window was left in, by its two documents' paths; null when
-   *  it showed one. */
-  splitLayout: {
-    direction: "row" | "column";
-    ratio: number;
-    paths: [string, string];
-  } | null;
+  /** The split the window was left in, its panes by their documents'
+   *  paths (app/split/split-restore.ts); null when it showed one. Read
+   *  loosely: earlier versions kept a pair. */
+  splitLayout: { tree: unknown } | null;
   /** The view last switched to, "rich", "source" or "split", which new
    *  documents open in (editor/modes/view-mode.ts). */
   viewMode: string;

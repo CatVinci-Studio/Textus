@@ -1,12 +1,18 @@
-/* Two documents at once: the document column becomes a grid of the tab
-   bar, the panes and the line between them. */
+/* Several documents at once: the document column becomes a grid of the
+   panes' tab bars and documents (split-tree.ts's splitGrid), the lines
+   between them laid over their edges. */
 .main-pane.main-pane-split {
   display: grid;
 }
 
-/* A pane's own tab bar, over its document. */
+/* A pane's own tab bar, over its document; one below another pane keeps
+   no room for the window bar. */
 .main-pane-split > .tab-bar {
   min-width: 0;
+}
+.main-pane.main-pane-split > .tab-bar.tab-bar-inner {
+  height: calc(var(--chrome-line) - 28px);
+  padding-top: 6px;
 }
 
 /* A pane holds its tab's editor as the column did: a column of its own,
@@ -20,13 +26,24 @@
   overflow: hidden;
 }
 
-/* The line between them, its hit area a few px wider either side. */
+/* The line between them, on the edge where the next pane starts, its hit
+   area a few px wider either side. */
 .split-divider {
   position: relative;
   z-index: 5;
   background: var(--border-color);
   touch-action: none;
   outline: none;
+}
+
+.split-divider-row {
+  justify-self: start;
+  width: 1px;
+}
+
+.split-divider-column {
+  align-self: start;
+  height: 1px;
 }
 
 .split-divider::before {
@@ -37,7 +54,7 @@
   transition: background-color var(--dur-fast) var(--ease-standard);
 }
 
-.main-pane-split[data-split="column"] > .split-divider::before {
+.split-divider-column::before {
   inset: -3px 0;
   cursor: row-resize;
 }
