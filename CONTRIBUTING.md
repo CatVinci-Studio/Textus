@@ -140,16 +140,27 @@ exercised by hand.
 
 ## Branches and pull requests
 
-Fork the repository (or branch from `main` if you have write access), make
-your change, and open a pull request against `main`. A branch name that says
-what it does helps: `fix/pdf-margins`, `feat/sidebar-width`.
+**Send every pull request to `main`.** That is the one rule; the rest of this
+section explains the other branches you may see.
 
-`main` is the next version. The version people have installed is
-maintained on its own line, `release/X.Y.x` (`release/1.2.x`), which takes
-fixes only. You don't need to pick: send every pull request to `main`, and
-if it fixes a bug in the released version, say which version in the
-description - we bring the fix to the release line too, with you credited.
-New features ship in the next minor version, never in a patch release.
+| Branch                                | What it is                                                                                           | Pull requests?   |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------- |
+| `main`                                | The next version, including its betas. Features and fixes land here.                                 | Yes, all of them |
+| `release/X.Y.x` (now `release/1.2.x`) | The version people have installed. Takes bug fixes only, copied over from `main` by the maintainers. | No               |
+| `archive/...`                         | Old lines kept for reference.                                                                        | No               |
+| anything else                         | A maintainer's work in progress, deleted once merged.                                                | No               |
+
+To start:
+
+1. Fork the repository, or branch from `main` if you have write access.
+2. Name the branch after what it does: `fix/pdf-margins`, `feat/sidebar-width`.
+3. Open the pull request against `main`. If `main` moves on while you work,
+   merge it into your branch; you don't need to rebase.
+
+If your pull request fixes a bug in the released version, say which version
+in the description (the template asks). We bring the fix to `release/X.Y.x`
+ourselves, with you credited. New features ship in the next minor version,
+never in a patch release.
 
 A few things make a pull request easy for us to say yes to:
 
@@ -174,7 +185,8 @@ every pull request. We try to answer within a few days. If we haven't, a
 friendly nudge on the pull request is welcome - it usually means it slipped
 past us, not that we're ignoring you.
 
-Releases are tags on `main` - see [docs/dev/releasing.md](docs/dev/releasing.md).
+Releases are tags: betas and minor versions on `main`, patch releases on
+`release/X.Y.x`. See [docs/dev/releasing.md](docs/dev/releasing.md).
 
 ## Commits
 
