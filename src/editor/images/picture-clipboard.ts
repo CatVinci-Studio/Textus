@@ -41,9 +41,10 @@ async function asPng(blob: Blob): Promise<Blob> {
   );
 }
 
-/** Writes the HTML and the plain text, with the picture when there is one;
- *  a picture that can't be read is left out, and a webview without
- *  ClipboardItem gets the plain text alone. */
+/** Writes the HTML and the plain text, or a picture alone: beside its
+ *  Markdown, chat apps such as WeChat paste the text. A picture that can't
+ *  be read gives way to the text, and a webview without ClipboardItem gets
+ *  the plain text alone. */
 export async function writeClipboard(
   html: string,
   text: string,
@@ -53,7 +54,7 @@ export async function writeClipboard(
     "text/html": new Blob([html], { type: "text/html" }),
     "text/plain": new Blob([text], { type: "text/plain" }),
   };
-  const tries = png ? [{ ...parts, "image/png": png }, parts] : [parts];
+  const tries = png ? [{ "image/png": png }, parts] : [parts];
   for (const item of tries) {
     try {
       await navigator.clipboard.write([new ClipboardItem(item)]);
@@ -65,8 +66,7 @@ export async function writeClipboard(
   await navigator.clipboard.writeText(text);
 }
 
-/** Cmd+C on a selected picture: after the usual copy, the picture joins
- *  it. */
+/** Cmd+C on a selected picture: the picture replaces the usual copy. */
 export const pictureCopyPlugin = $prose(
   () =>
     new Plugin({
