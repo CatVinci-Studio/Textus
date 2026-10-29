@@ -114,7 +114,7 @@ test("a picture opens in the viewer from its corner button or a double click", a
 });
 
 for (const how of ["Copy", "ControlOrMeta+c"])
-  test(`${how} on a right-clicked picture puts the picture on the clipboard with its Markdown`, async ({
+  test(`${how} on a right-clicked picture puts the picture alone on the clipboard, so chat apps paste it`, async ({
     page,
   }) => {
     await page
@@ -142,7 +142,5 @@ for (const how of ["Copy", "ControlOrMeta+c"])
           return item ? [...item.types].sort() : [];
         }),
       )
-      .toEqual(["image/png", "text/html", "text/plain"]);
-    const text = await page.evaluate(() => navigator.clipboard.readText());
-    expect(text).toBe("![A cat](assets/cat.png)");
+      .toEqual(["image/png"]);
   });
