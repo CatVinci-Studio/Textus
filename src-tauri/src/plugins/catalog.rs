@@ -513,17 +513,5 @@ pub(super) fn installed_version(root: &std::path::Path, id: &str) -> Option<Stri
     Some(manifest.get("version")?.as_str()?.to_string())
 }
 
-/// Whether the catalog, as last fetched or kept, lists plugin `id`: only
-/// those are counted, never a plugin of the user's own.
-pub(super) fn lists(app: &tauri::AppHandle, id: &str) -> bool {
-    let listed = |entries: &[CatalogEntry]| entries.iter().any(|e| e.id == id);
-    let kept = || {
-        let text = std::fs::read_to_string(cache_file(app).ok()?).ok()?;
-        Some(parse_all(&text).ok()?.0)
-    };
-    listed(&FETCHED.lock().unwrap_or_else(|e| e.into_inner()))
-        || kept().is_some_and(|entries| listed(&entries))
-}
-
 #[cfg(test)]
 mod tests;

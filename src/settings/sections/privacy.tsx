@@ -119,17 +119,6 @@ export function PrivacySection({ t }: { t: Strings }) {
         </div>
       </section>
 
-      <section className="settings-group">
-        <h2 className="settings-group-title">{t.privacyStatsLabel}</h2>
-        <div className="settings-group-body">
-          <ToggleRow
-            label={t.privacyStatsToggle}
-            help={t.privacyStatsHelp}
-            checked={settings.anonymousStats}
-            onChange={(v) => setSettings({ anonymousStats: v })}
-          />
-        </div>
-      </section>
     </>
   );
 }

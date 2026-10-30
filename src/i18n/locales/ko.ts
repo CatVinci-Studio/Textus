@@ -1238,10 +1238,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   privacyClearChatHistory: "채팅 기록 지우기",
   privacyClearClipboard: "클립보드 기록 지우기",
   privacyClearDrafts: "복구용 초안 삭제",
-  privacyStatsLabel: "설치 통계",
-  privacyStatsToggle: "익명 설치 통계 보내기",
-  privacyStatsHelp:
-    "플러그인, 테마, 스킬을 설치·업데이트·제거하면 Textus가 스토어의 설치 수로 한 번 셉니다. 보내는 것은 어떤 확장인지, 무엇을 했는지, 사용 중인 시스템과 Textus 버전뿐이며 사용자나 이 기기를 식별할 수 있는 정보는 없습니다. 끄면 확장은 GitHub에서 바로 내려받고 아무것도 보내지 않습니다.",
   clipboardTab: "클립보드",
   clipboardEmpty: "복사하거나 붙여넣은 텍스트가 여기에 표시됩니다.",
   clipboardClear: "지우기",

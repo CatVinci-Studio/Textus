@@ -1,15 +1,13 @@
 /**
  * textus-ext-stats: how often plugins, themes and skills are installed.
  * The app downloads through /api/ext/download, which adds one to a daily
- * total and redirects to the package; an uninstall is posted to
- * /api/ext/event. /api/ext/stats gives the totals the catalogs show. Only
- * daily totals are kept: no address, no identifier. See README.md.
+ * total and redirects to the package; /api/ext/stats gives the totals the
+ * catalogs show. Only daily totals are kept: no address, no identifier.
+ * See README.md.
  */
 import {
   ADD_SQL,
   COUNT_FIELDS,
-  DOWNLOAD_EVENTS,
-  OTHER_EVENTS,
   dayOf,
   fromApp,
   packageUrl,
@@ -26,7 +24,6 @@ interface Env {
 
 /** How long the totals are served from the cache. */
 const STATS_MAX_AGE = 3600;
-const MAX_BODY = 2_000;
 
 export default {
   async fetch(
@@ -36,7 +33,6 @@ export default {
   ): Promise<Response> {
     const path = new URL(request.url).pathname.replace(/\/+$/, "");
     if (path.endsWith("/api/ext/download")) return download(request, env, ctx);
-    if (path.endsWith("/api/ext/event")) return event(request, env);
     if (path.endsWith("/api/ext/stats")) return stats(request, env, ctx);
     return reply(404, { error: "path" });
   },
@@ -53,7 +49,7 @@ async function download(
   const target = packageUrl(fields);
   if (!target) return reply(404, { error: "package" });
   const count = fromApp(request.headers.get("user-agent"))
-    ? readCount(fields, DOWNLOAD_EVENTS)
+    ? readCount(fields)
     : null;
   // Counting must not hold up the download, nor fail it.
   if (count) ctx.waitUntil(add(env.DB, count).catch(logged));
@@ -61,25 +57,6 @@ async function download(
     status: 302,
     headers: { location: target, "cache-control": "no-store" },
   });
-}
-
-async function event(request: Request, env: Env): Promise<Response> {
-  if (request.method !== "POST") return reply(405, { error: "method" });
-  const raw = await request.text();
-  if (raw.length > MAX_BODY) return reply(413, { error: "size" });
-  let fields: unknown;
-  try {
-    fields = JSON.parse(raw);
-  } catch {
-    return reply(400, { error: "json" });
-  }
-  const count =
-    fields && typeof fields === "object"
-      ? readCount(fields as Record<string, unknown>, OTHER_EVENTS)
-      : null;
-  if (!count) return reply(400, { error: "event" });
-  if (fromApp(request.headers.get("user-agent"))) await add(env.DB, count);
-  return new Response(null, { status: 204 });
 }
 
 async function stats(

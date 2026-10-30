@@ -1,9 +1,8 @@
-//! Anonymous install counts for plugins, themes and skills
-//! (services/ext-stats). A download goes through the counting endpoint,
-//! which redirects to the package; an uninstall is posted to it. Nothing
-//! names the device: only the extension, the event, the OS and the app's
-//! version. Settings › Privacy turns it off (`anonymousStats`); then, or when
-//! the endpoint fails, the package is downloaded straight from its address.
+//! Download counts for plugins, themes and skills (services/ext-stats): a
+//! download goes through the store's counting address, which redirects to
+//! the package. It says which extension and version, and whether it is a
+//! first install, a reinstall or an update - nothing about the device. When
+//! the address fails, the package is downloaded straight from its own.
 
 use reqwest::redirect::Policy;
 use reqwest::Url;
@@ -13,7 +12,6 @@ use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 
 const ENDPOINT: &str = "https://textus.catvinci.com/api/ext/";
-const SETTING: &str = "anonymousStats";
 /// Which extensions were ever installed on this device, so a second install
 /// counts as a reinstall. Kept in app data, never synced.
 const RECORD: &str = "ext-installed.json";
@@ -40,7 +38,6 @@ pub(crate) enum Event {
     Install,
     Reinstall,
     Update,
-    Uninstall,
 }
 
 impl Event {
@@ -49,7 +46,6 @@ impl Event {
             Event::Install => "install",
             Event::Reinstall => "reinstall",
             Event::Update => "update",
-            Event::Uninstall => "uninstall",
         }
     }
 }
@@ -77,19 +73,6 @@ fn endpoint() -> Option<String> {
     }
 }
 
-fn enabled(app: &AppHandle) -> bool {
-    crate::settings::read_setting(app, SETTING)
-        .and_then(|v| v.as_bool())
-        .unwrap_or(true)
-}
-
-fn os() -> &'static str {
-    match std::env::consts::OS {
-        "macos" => "mac",
-        other => other,
-    }
-}
-
 fn event_for(update: bool, before: bool) -> Event {
     if update {
         Event::Update
@@ -106,9 +89,7 @@ pub(crate) fn download_url(base: &str, d: &Download, event: Event) -> Option<Str
         .append_pair("kind", d.kind.name())
         .append_pair("id", d.id)
         .append_pair("version", d.version)
-        .append_pair("event", event.name())
-        .append_pair("os", os())
-        .append_pair("app", env!("CARGO_PKG_VERSION"));
+        .append_pair("event", event.name());
     // A theme's stylesheet may be named otherwise.
     if d.kind == Kind::Theme {
         let file = d.direct.rsplit('/').next().unwrap_or_default();
@@ -117,10 +98,10 @@ pub(crate) fn download_url(base: &str, d: &Download, event: Event) -> Option<Str
     Some(url.into())
 }
 
-/// Where to download `d` from to count it; None when counts are off, or for
-/// a package that isn't on the web (a test catalog's file:// one).
+/// Where to download `d` from to count it; None for a package that isn't on
+/// the web (a test catalog's file:// one).
 pub fn counted_url(app: &AppHandle, d: &Download) -> Option<String> {
-    if !d.direct.starts_with("https://") || !enabled(app) {
+    if !d.direct.starts_with("https://") {
         return None;
     }
     let before = d.present || record_file(app).is_some_and(|f| seen_in(&f, d.kind, d.id));
@@ -201,37 +182,11 @@ pub fn redirects(direct: &str, then: fn(&Url) -> bool) -> Policy {
     })
 }
 
-/// Notes `id` as installed on this device. Kept whether counts are on or not:
-/// it never leaves the device.
+/// Notes `id` as installed on this device; it never leaves the device.
 pub fn installed(app: &AppHandle, kind: Kind, id: &str) {
     if let Some(file) = record_file(app) {
         remember_in(&file, kind, id);
     }
-}
-
-/// Counts an uninstall, in the background; nothing waits for it.
-pub fn uninstalled(app: &AppHandle, kind: Kind, id: &str, version: &str) {
-    installed(app, kind, id);
-    let Some(url) = endpoint().and_then(|base| Url::parse(&base).ok()?.join("event").ok()) else {
-        return;
-    };
-    if !enabled(app) {
-        return;
-    }
-    let body = serde_json::json!({
-        "kind": kind.name(),
-        "id": id,
-        "version": version,
-        "event": Event::Uninstall.name(),
-        "os": os(),
-        "app": env!("CARGO_PKG_VERSION"),
-    });
-    tauri::async_runtime::spawn(async move {
-        let timeout = std::time::Duration::from_secs(10);
-        if let Ok(client) = crate::net::client(timeout, timeout).build() {
-            let _ = client.post(url).json(&body).send().await;
-        }
-    });
 }
 
 fn record_file(app: &AppHandle) -> Option<PathBuf> {
@@ -307,7 +262,7 @@ mod tests {
     }
 
     #[test]
-    fn a_counted_download_names_the_extension_event_os_and_app_and_nothing_else() {
+    fn a_counted_download_names_the_extension_and_the_event_and_nothing_else() {
         let url = download_url(ENDPOINT, &plugin(), Event::Install).unwrap();
         let url = Url::parse(&url).unwrap();
         assert_eq!(
@@ -317,11 +272,10 @@ mod tests {
         let fields: BTreeMap<String, String> = url.query_pairs().into_owned().collect();
         assert_eq!(
             fields.keys().collect::<Vec<_>>(),
-            ["app", "event", "id", "kind", "os", "version"]
+            ["event", "id", "kind", "version"]
         );
         assert_eq!(fields["kind"], "plugin");
         assert_eq!(fields["event"], "install");
-        assert_eq!(fields["app"], env!("CARGO_PKG_VERSION"));
         let theme = Download {
             kind: Kind::Theme,
             id: "plain",

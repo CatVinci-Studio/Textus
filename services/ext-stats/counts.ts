@@ -1,5 +1,5 @@
-/** What a download or an uninstall adds to, where a download goes, and the
- *  totals the catalogs read. No request is kept: only these counts. */
+/** What a download adds to, where it goes, and the totals the catalogs
+ *  read. No request is kept: only these counts. */
 
 const PLUGINS =
   "https://github.com/CatVinci-Studio/textus-plugins/releases/download/";
@@ -7,9 +7,7 @@ const THEMES =
   "https://raw.githubusercontent.com/CatVinci-Studio/textus-themes/main/themes/";
 
 const KINDS = ["plugin", "theme", "skill"] as const;
-const OSES = ["mac", "windows", "linux", "ios"] as const;
-export const DOWNLOAD_EVENTS = ["install", "reinstall", "update"] as const;
-export const OTHER_EVENTS = ["uninstall"] as const;
+const EVENTS = ["install", "reinstall", "update"] as const;
 
 type Kind = (typeof KINDS)[number];
 
@@ -27,9 +25,6 @@ export interface Count {
   id: string;
   version: string;
   event: string;
-  os: string;
-  /** The app's minor version, "1.3". */
-  app: string;
 }
 
 export const COUNT_FIELDS = [
@@ -37,14 +32,12 @@ export const COUNT_FIELDS = [
   "id",
   "version",
   "event",
-  "os",
-  "app",
 ] as const satisfies readonly (keyof Count)[];
 
 /** Adds one to a day's total: ?1 the day, then COUNT_FIELDS. */
-export const ADD_SQL = `INSERT INTO daily (day, kind, id, version, event, os, app, count)
-  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 1)
-  ON CONFLICT (day, kind, id, version, event, os, app)
+export const ADD_SQL = `INSERT INTO daily (day, kind, id, version, event, count)
+  VALUES (?1, ?2, ?3, ?4, ?5, 1)
+  ON CONFLICT (day, kind, id, version, event)
   DO UPDATE SET count = count + 1`;
 
 /** Every total as a Row, `recent` from day ?1 on. */
@@ -80,26 +73,15 @@ export function packageUrl(fields: Fields): string | null {
   return CSS_FILE.test(file) ? `${THEMES}${id}/${file}` : null;
 }
 
-/** "1.3" for "1.3.0-beta.7". */
-export function appMinor(version: string): string | null {
-  return /^(\d{1,3}\.\d{1,3})\.\d/.exec(version)?.[1] ?? null;
-}
-
-/** The count `fields` adds to, or null for one that isn't one of `events`
- *  or is malformed. */
-export function readCount(
-  fields: Fields,
-  events: readonly string[],
-): Count | null {
+/** The download `fields` count as, or null for a malformed one. */
+export function readCount(fields: Fields): Count | null {
   const kind = oneOf(KINDS, text(fields, "kind"));
   const id = text(fields, "id");
   const version = text(fields, "version");
-  const event = oneOf(events, text(fields, "event"));
-  const os = oneOf(OSES, text(fields, "os"));
-  const app = appMinor(text(fields, "app"));
-  if (!kind || !validId(kind, id) || !VERSION.test(version)) return null;
-  if (!event || !os || !app) return null;
-  return { kind, id, version, event, os, app };
+  const event = oneOf(EVENTS, text(fields, "event"));
+  if (!kind || !validId(kind, id) || !VERSION.test(version) || !event)
+    return null;
+  return { kind, id, version, event };
 }
 
 /** Only the app counts: it names itself in its User-Agent, a crawler
@@ -124,7 +106,6 @@ export interface ExtensionStats {
   installs: number;
   installs30: number;
   updates30: number;
-  uninstalls: number;
   /** The last 30 days' updates, by the version updated to. */
   updates30ByVersion: Record<string, number>;
 }
@@ -140,14 +121,11 @@ export function summarize(rows: Row[]): Stats {
       installs: 0,
       installs30: 0,
       updates30: 0,
-      uninstalls: 0,
       updates30ByVersion: {},
     });
     if (row.event === "install") {
       s.installs += row.total;
       s.installs30 += row.recent;
-    } else if (row.event === "uninstall") {
-      s.uninstalls += row.total;
     } else if (row.event === "update" && row.recent > 0) {
       s.updates30 += row.recent;
       s.updates30ByVersion[row.version] =

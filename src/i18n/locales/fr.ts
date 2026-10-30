@@ -1339,10 +1339,6 @@ utiliser une.
   privacyClearChatHistory: "Effacer l'historique des discussions",
   privacyClearClipboard: "Effacer l'historique du presse-papiers",
   privacyClearDrafts: "Supprimer les brouillons de récupération",
-  privacyStatsLabel: "Nombre d'installations",
-  privacyStatsToggle: "Envoyer des statistiques d'installation anonymes",
-  privacyStatsHelp:
-    "Quand vous installez, mettez à jour ou supprimez un plugin, un thème ou une compétence, Textus le compte pour les chiffres d'installation de la boutique : seulement l'extension, l'action, votre système et la version de Textus, rien qui vous identifie, vous ou cet appareil. Désactivé, les extensions sont téléchargées directement depuis GitHub et rien n'est envoyé.",
   clipboardTab: "Presse-papiers",
   clipboardEmpty: "Le texte copié et collé apparaîtra ici.",
   clipboardClear: "Effacer",

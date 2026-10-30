@@ -1187,10 +1187,6 @@ export default {
   privacyClearChatHistory: "清除對話紀錄",
   privacyClearClipboard: "清除剪貼簿紀錄",
   privacyClearDrafts: "刪除復原草稿",
-  privacyStatsLabel: "安裝統計",
-  privacyStatsToggle: "傳送匿名安裝統計",
-  privacyStatsHelp:
-    "安裝、更新或移除外掛、主題或技能時，Textus 會為商店的安裝數計一次：只包括是哪個擴充、發生了什麼、你的系統和 Textus 版本，不包含任何能識別你或這台裝置的資訊。關閉後，擴充直接從 GitHub 下載，不傳送任何內容。",
   clipboardTab: "剪貼簿",
   clipboardEmpty: "複製和貼上過的文字會顯示在這裡。",
   clipboardClear: "清除",

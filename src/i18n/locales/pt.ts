@@ -1297,10 +1297,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   privacyClearChatHistory: "Limpar histórico de conversas",
   privacyClearClipboard: "Limpar histórico da área de transferência",
   privacyClearDrafts: "Apagar rascunhos de recuperação",
-  privacyStatsLabel: "Contagem de instalações",
-  privacyStatsToggle: "Enviar contagens de instalação anônimas",
-  privacyStatsHelp:
-    "Quando você instala, atualiza ou remove um plugin, tema ou habilidade, o Textus conta isso para os números de instalação da loja: apenas qual extensão, o que aconteceu, seu sistema e a versão do Textus, nada que identifique você ou este dispositivo. Desativado, as extensões são baixadas diretamente do GitHub e nada é enviado.",
   clipboardTab: "Área de transferência",
   clipboardEmpty: "O texto que você copiar e colar aparecerá aqui.",
   clipboardClear: "Limpar",

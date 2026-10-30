@@ -1281,10 +1281,6 @@ type /name in a conversation to use one.
   privacyClearChatHistory: "Clear Chat History",
   privacyClearClipboard: "Clear Clipboard History",
   privacyClearDrafts: "Delete Recovery Drafts",
-  privacyStatsLabel: "Install Counts",
-  privacyStatsToggle: "Send anonymous install counts",
-  privacyStatsHelp:
-    "When you install, update or remove a plugin, theme or skill, Textus counts it for the store's install numbers: only which extension, what happened, your system and the Textus version - nothing that identifies you or this device. Turned off, extensions download straight from GitHub and nothing is sent.",
   clipboardTab: "Clipboard",
   clipboardEmpty: "Copied and pasted text will show up here.",
   clipboardClear: "Clear",

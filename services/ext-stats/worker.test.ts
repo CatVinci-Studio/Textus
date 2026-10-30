@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { appMinor, packageUrl, readCount, summarize } from "./counts";
+import { packageUrl, readCount, summarize } from "./counts";
 import worker from "./worker";
 
 const PLUGINS =
@@ -43,9 +43,7 @@ const download = (query: string, headers: Record<string, string> = APP) =>
   call(`download?${query}`, { headers, redirect: "manual" });
 
 const totals = () =>
-  store.db
-    .prepare("SELECT event, os, app, count FROM daily ORDER BY event")
-    .all();
+  store.db.prepare("SELECT event, count FROM daily ORDER BY event").all();
 
 beforeEach(() => {
   store = d1();
@@ -56,8 +54,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-const plugin =
-  "kind=plugin&id=catvinci.tasks&version=0.1.1&os=mac&app=1.3.0-beta.7";
+const plugin = "kind=plugin&id=catvinci.tasks&version=0.1.1";
 
 describe("a download through the endpoint", () => {
   it("adds one to the day's total and goes on to the package", async () => {
@@ -69,8 +66,8 @@ describe("a download through the endpoint", () => {
     await download(`${plugin}&event=install`);
     await download(`${plugin}&event=update`);
     expect(totals()).toEqual([
-      { event: "install", os: "mac", app: "1.3", count: 2 },
-      { event: "update", os: "mac", app: "1.3", count: 1 },
+      { event: "install", count: 2 },
+      { event: "update", count: 1 },
     ]);
   });
 
@@ -80,9 +77,7 @@ describe("a download through the endpoint", () => {
     });
     expect(crawler.status).toBe(302);
     expect((await download(`${plugin}&event=uninstall`)).status).toBe(302);
-    expect((await download(`${plugin}&event=install&os=amiga`)).status).toBe(
-      302,
-    );
+    expect((await download(`${plugin}&event=`)).status).toBe(302);
     expect(totals()).toEqual([]);
   });
 
@@ -114,30 +109,8 @@ describe("the package a download asks for", () => {
   });
 });
 
-describe("an uninstall", () => {
-  const body = {
-    kind: "theme",
-    id: "plain",
-    version: "2026-10-18T04:55:06Z",
-    event: "uninstall",
-    os: "windows",
-    app: "1.3.0",
-  };
-  const post = (fields: unknown, headers = APP) =>
-    call("event", { method: "POST", headers, body: JSON.stringify(fields) });
-
-  it("is counted once posted by the app, and only an uninstall is", async () => {
-    expect((await post(body)).status).toBe(204);
-    expect((await post({ ...body, event: "install" })).status).toBe(400);
-    expect((await post(body, { "user-agent": "curl/8" })).status).toBe(204);
-    expect(totals()).toEqual([
-      { event: "uninstall", os: "windows", app: "1.3", count: 1 },
-    ]);
-  });
-});
-
 describe("the totals", () => {
-  it("give installs ever and lately, recent updates by version, and uninstalls", async () => {
+  it("give installs ever and lately, and recent updates by version", async () => {
     const add = (
       day: string,
       id: string,
@@ -146,9 +119,7 @@ describe("the totals", () => {
       n: number,
     ) =>
       store.db
-        .prepare(
-          "INSERT INTO daily VALUES (?, 'plugin', ?, ?, ?, 'mac', '1.3', ?)",
-        )
+        .prepare("INSERT INTO daily VALUES (?, 'plugin', ?, ?, ?, ?)")
         .run(day, id, version, event, n);
     const today = new Date().toISOString().slice(0, 10);
     add("2020-01-01", "catvinci.tasks", "0.1.0", "install", 5);
@@ -156,7 +127,6 @@ describe("the totals", () => {
     add(today, "catvinci.tasks", "0.1.1", "reinstall", 7);
     add(today, "catvinci.tasks", "0.1.1", "update", 3);
     add("2020-01-01", "catvinci.tasks", "0.1.0", "update", 9);
-    add(today, "catvinci.tasks", "0.1.1", "uninstall", 1);
     const response = await call("stats");
     expect(response.headers.get("cache-control")).toContain("max-age");
     const stats = await response.json();
@@ -164,13 +134,12 @@ describe("the totals", () => {
       installs: 7,
       installs30: 2,
       updates30: 3,
-      uninstalls: 1,
       updates30ByVersion: { "0.1.1": 3 },
     });
     expect(stats.theme).toEqual({});
   });
 
-  it("are summed per extension whatever the platform", () => {
+  it("are summed per extension across its versions", () => {
     const row = {
       kind: "skill",
       id: "tighten",
@@ -187,29 +156,28 @@ describe("the totals", () => {
 });
 
 describe("a count's fields", () => {
-  it("keep the app's minor version only", () => {
-    expect(appMinor("1.3.0-beta.7")).toBe("1.3");
-    expect(appMinor("12.40.1")).toBe("12.40");
-    expect(appMinor("x")).toBeNull();
+  it("are the extension, its version and what happened, and nothing else", () => {
     expect(
-      readCount(
-        {
-          kind: "skill",
-          id: "tighten",
-          version: "1.0.0",
-          event: "install",
-          os: "ios",
-          app: "1.3.0",
-        },
-        ["install"],
-      ),
+      readCount({
+        kind: "skill",
+        id: "tighten",
+        version: "1.0.0",
+        event: "install",
+        os: "ios",
+      }),
     ).toEqual({
       kind: "skill",
       id: "tighten",
       version: "1.0.0",
       event: "install",
-      os: "ios",
-      app: "1.3",
     });
+    expect(
+      readCount({
+        kind: "skill",
+        id: "tighten",
+        version: "1.0.0",
+        event: "uninstall",
+      }),
+    ).toBeNull();
   });
 });

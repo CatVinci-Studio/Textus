@@ -1181,10 +1181,6 @@ export default {
   privacyClearChatHistory: "清空聊天记录",
   privacyClearClipboard: "清空剪贴板历史",
   privacyClearDrafts: "删除恢复草稿",
-  privacyStatsLabel: "安装统计",
-  privacyStatsToggle: "发送匿名安装统计",
-  privacyStatsHelp:
-    "安装、更新或移除插件、主题或技能时，Textus 会为商店的安装数计一次：只包括是哪个扩展、发生了什么、你的系统和 Textus 版本，不包含任何能识别你或这台设备的信息。关闭后，扩展直接从 GitHub 下载，不发送任何内容。",
   clipboardTab: "剪贴板",
   clipboardEmpty: "复制或粘贴过的文本会出现在这里。",
   clipboardClear: "清空",
