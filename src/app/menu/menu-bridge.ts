@@ -12,7 +12,7 @@ import { nativeMenuChecks, type MenuChecks } from "./app-menu-model";
 import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";
 import { listenToThisWindow, unlistenAll } from "../../platform/events";
 import { runCommand } from "../commands";
-import { exportHtml, exportPdf, exportViaPandoc } from "../../export/exporters";
+import { lazyModule } from "../../lazy/lazy-module";
 import {
   EDIT_ACTION_EVENT,
   TOGGLE_FIND_REPLACE_EVENT,
@@ -70,6 +70,12 @@ export interface MenuBridgeHandlers {
   shareActiveTab: () => Promise<void>;
 }
 
+// Export loads the first time it is asked for, not with the window.
+const exporters = lazyModule(
+  "exporters",
+  () => import("../../export/exporters"),
+);
+
 /** Subscribes the frontend's handlers to the menu events from Rust. */
 export function useMenuBridge(handlers: MenuBridgeHandlers): void {
   // Subscribed once: re-subscribing raced Tauri's async unlisten, so one
@@ -124,20 +130,26 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-export-pdf", () => {
         const tab = activeTabNow();
         if (tab)
-          void exportPdf(tab, h().t, {
-            pageNumbers: h().pdfPageNumbers,
-            lightColors: h().pdfLightColors,
-          });
+          void exporters.load().then((m) =>
+            m.exportPdf(tab, h().t, {
+              pageNumbers: h().pdfPageNumbers,
+              lightColors: h().pdfLightColors,
+            }),
+          );
       }),
       listenToThisWindow("menu-export-html", () => {
         const tab = activeTabNow();
-        if (tab) void exportHtml(tab, h().t);
+        if (tab) void exporters.load().then((m) => m.exportHtml(tab, h().t));
       }),
       // Payload is the pandoc writer name (docx, epub, ...) from the menu id.
       listenToThisWindow<string>("menu-export-pandoc", (event) => {
         const tab = activeTabNow();
         if (tab)
-          void exportViaPandoc(tab, event.payload, h().t, h().diagramEngine);
+          void exporters
+            .load()
+            .then((m) =>
+              m.exportViaPandoc(tab, event.payload, h().t, h().diagramEngine),
+            );
       }),
       listenToThisWindow("menu-toggle-source-mode", () =>
         h().toggleSourceMode(),
