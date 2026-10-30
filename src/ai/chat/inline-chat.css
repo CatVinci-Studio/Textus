@@ -137,8 +137,7 @@
   --composer-control: var(--control-height-sm);
   --composer-inset: 6px;
   gap: 6px;
-  padding: var(--composer-inset) var(--composer-inset) var(--composer-inset)
-    8px;
+  padding: var(--composer-inset) var(--composer-inset) var(--composer-inset) 8px;
   border: 1px solid var(--editor-border, var(--border-color));
   border-radius: calc(
     var(--composer-control) / 2 + var(--composer-inset) + 1px
