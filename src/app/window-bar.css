@@ -177,8 +177,8 @@
   /* `*` does not reach pseudo-elements: without this the 1px edge would sit
      outside the sidebar's width and overhang its border by a pixel. */
   box-sizing: border-box;
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--border-color);
+  background: var(--ui-subtle);
+  border-right: 1px solid var(--ui-border);
   z-index: -1;
   transform: translateX(calc(-100% * var(--motion-travel)));
   opacity: var(--motion-travel-fade);
