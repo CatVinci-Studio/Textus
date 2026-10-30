@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { setReadOnlyShown } from "./read-only-state";
+import { setReadOnlyShown } from "../document/read-only-state";
 import { installClipboardCapture } from "../clipboard/history";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
