@@ -1243,7 +1243,6 @@ export default {
   extensionsThemesNone: "还没有添加主题。内置主题在“{page}”里选择。",
   extensionsThemesInstalled: "你的主题",
   extensionsAvailable: "可安装",
-  extensionsShowMore: "再显示 {n} 个",
   extensionsFold: "收起",
   extensionsUnfold: "展开",
   themePreviewEnlarge: "查看大图",

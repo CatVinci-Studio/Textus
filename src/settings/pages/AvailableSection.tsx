@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
 import { getUiState, setUiState } from "../../storage/ui-state";
 
-/** Rows shown at first, and how many more each "Show more" adds. */
+/** Rows shown at first, and how many more come as the list's end
+ *  scrolls into sight. */
 const FIRST = 8;
 const MORE = 12;
 
@@ -12,7 +13,7 @@ function foldedKinds(): string[] {
 }
 
 /** Below what is installed: what could be. Folds away, remembered per
- *  kind; a long list comes a page at a time. `head` sits beside the title
+ *  kind; a long list grows as it is scrolled. `head` sits beside the title
  *  (a sort), `message` stands in for the rows (loading, a fetch failed). */
 export function AvailableSection({
   t,
@@ -43,6 +44,16 @@ export function AvailableSection({
   };
   const shown = searching ? rows : rows.slice(0, limit);
   const left = rows.length - shown.length;
+  const end = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = end.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) setLimit((n) => n + MORE);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [left, folded]);
   return (
     <section className="settings-group extensions-available">
       <div className="extensions-available-head">
@@ -65,16 +76,7 @@ export function AvailableSection({
           {!message && note}
           {message ?? shown}
           {!message && left > 0 && (
-            <button
-              type="button"
-              className="text-button settings-inline-button extensions-more-rows"
-              onClick={() => setLimit((n) => n + MORE)}
-            >
-              {t.extensionsShowMore.replace(
-                "{n}",
-                String(Math.min(MORE, left)),
-              )}
-            </button>
+            <div ref={end} className="extensions-more-rows" aria-hidden />
           )}
         </div>
       )}

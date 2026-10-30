@@ -1373,7 +1373,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Noch keine Themes hinzugefügt. Die eingebauten wählst du unter {page}.",
   extensionsThemesInstalled: "Deine Themes",
   extensionsAvailable: "Verfügbar",
-  extensionsShowMore: "{n} weitere anzeigen",
   extensionsFold: "Ausblenden",
   extensionsUnfold: "Einblenden",
   themePreviewEnlarge: "Größer anzeigen",

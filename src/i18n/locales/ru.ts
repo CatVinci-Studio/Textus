@@ -1371,7 +1371,6 @@ export default {
     "Вы ещё не добавили тем. Встроенные выбираются в разделе «{page}».",
   extensionsThemesInstalled: "Ваши темы",
   extensionsAvailable: "Доступные",
-  extensionsShowMore: "Показать ещё {n}",
   extensionsFold: "Свернуть",
   extensionsUnfold: "Развернуть",
   themePreviewEnlarge: "Увеличить",

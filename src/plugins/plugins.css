@@ -645,9 +645,12 @@ button.plugin-card-open:hover .plugin-card-name {
 .extensions-available-head .market-sort {
   margin: 0;
 }
+/* Where the list's end comes into sight: the next rows come. */
 .extensions-more-rows {
-  align-self: center;
-  margin-top: var(--space-2);
+  height: 1px;
+}
+.market-listing {
+  padding-left: 4px;
 }
 /* Plugin features off: everything under the switch, quieter. */
 .extensions-off .settings-group,

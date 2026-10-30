@@ -1346,7 +1346,6 @@ type /name in a conversation to use one.
     "No themes added yet. The built-in ones are picked in {page}.",
   extensionsThemesInstalled: "Your themes",
   extensionsAvailable: "Available",
-  extensionsShowMore: "Show {n} more",
   extensionsFold: "Hide",
   extensionsUnfold: "Show",
   themePreviewEnlarge: "View larger",

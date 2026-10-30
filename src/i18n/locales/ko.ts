@@ -1302,7 +1302,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "아직 추가한 테마가 없습니다. 내장 테마는 ‘{page}’에서 고릅니다.",
   extensionsThemesInstalled: "내 테마",
   extensionsAvailable: "설치 가능",
-  extensionsShowMore: "{n}개 더 보기",
   extensionsFold: "접기",
   extensionsUnfold: "펼치기",
   themePreviewEnlarge: "크게 보기",

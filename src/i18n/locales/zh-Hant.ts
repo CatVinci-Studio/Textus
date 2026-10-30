@@ -1249,7 +1249,6 @@ export default {
   extensionsThemesNone: "還沒有加入主題。內建主題在「{page}」裡選擇。",
   extensionsThemesInstalled: "你的主題",
   extensionsAvailable: "可安裝",
-  extensionsShowMore: "再顯示 {n} 個",
   extensionsFold: "收合",
   extensionsUnfold: "展開",
   themePreviewEnlarge: "檢視大圖",

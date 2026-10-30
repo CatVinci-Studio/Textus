@@ -1362,7 +1362,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Nenhum tema adicionado ainda. Os incluídos são escolhidos em {page}.",
   extensionsThemesInstalled: "Seus temas",
   extensionsAvailable: "Disponíveis",
-  extensionsShowMore: "Mostrar mais {n}",
   extensionsFold: "Ocultar",
   extensionsUnfold: "Mostrar",
   themePreviewEnlarge: "Ver maior",

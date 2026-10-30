@@ -1315,7 +1315,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "追加したテーマはまだありません。内蔵テーマは「{page}」で選べます。",
   extensionsThemesInstalled: "あなたのテーマ",
   extensionsAvailable: "インストール可能",
-  extensionsShowMore: "さらに {n} 件表示",
   extensionsFold: "閉じる",
   extensionsUnfold: "開く",
   themePreviewEnlarge: "拡大表示",

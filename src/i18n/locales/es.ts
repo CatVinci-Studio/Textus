@@ -1381,7 +1381,6 @@ para usar una.
     "Aún no has añadido temas. Los incluidos se eligen en {page}.",
   extensionsThemesInstalled: "Tus temas",
   extensionsAvailable: "Disponibles",
-  extensionsShowMore: "Mostrar {n} más",
   extensionsFold: "Ocultar",
   extensionsUnfold: "Mostrar",
   themePreviewEnlarge: "Ver más grande",

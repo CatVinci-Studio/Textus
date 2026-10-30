@@ -27,14 +27,18 @@ async function openPluginsPage(page: Page) {
   await showAll(page);
 }
 
-/** Every page of the catalog's list, once it has come. */
+/** All of the catalog's list, scrolled to its end until no more comes. */
 async function showAll(page: Page) {
   const more = page.locator(".extensions-more-rows");
   // The count shows once the list (not a loading line) is there.
   await expect(
     page.locator(".extensions-available .extensions-count"),
   ).toBeVisible();
-  while (await more.count()) await more.click();
+  while (await more.count()) {
+    const before = await page.locator(AVAILABLE).count();
+    await more.scrollIntoViewIfNeeded();
+    await expect(page.locator(AVAILABLE)).not.toHaveCount(before);
+  }
 }
 
 test("nothing comes installed, and the catalog offers the official plugins", async ({
@@ -381,4 +385,15 @@ test("a plugin's setting can be the project's own, over the general one", async 
     .first()
     .click();
   await expect(folder()).toHaveValue("Daily");
+});
+
+test("the catalog's list grows as it is scrolled, eight at first", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-manage-plugins");
+  const cards = page.locator(AVAILABLE);
+  await expect(cards).toHaveCount(8);
+  await page.locator(".extensions-more-rows").scrollIntoViewIfNeeded();
+  await expect(cards).toHaveCount(20);
 });

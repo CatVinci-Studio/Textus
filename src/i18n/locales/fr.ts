@@ -1406,7 +1406,6 @@ utiliser une.
     "Aucun thème ajouté pour l’instant. Les thèmes intégrés se choisissent dans {page}.",
   extensionsThemesInstalled: "Vos thèmes",
   extensionsAvailable: "Disponibles",
-  extensionsShowMore: "Afficher {n} de plus",
   extensionsFold: "Masquer",
   extensionsUnfold: "Afficher",
   themePreviewEnlarge: "Agrandir",
