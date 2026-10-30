@@ -7,6 +7,7 @@ import { CheckIcon } from "../../ui/icons";
 import { clearAllConversations } from "../../ai/chat/chat-history";
 import { clearClipboardHistory } from "../../clipboard/history";
 import { drafts } from "../../platform/ipc";
+import { hasTextusAi } from "../../platform/capabilities";
 
 // Settings > Privacy: a switch per kind of local history, plus a clear. A
 // switch off only stops new writes; a clear can't be undone, so it asks first.
@@ -57,22 +58,24 @@ export function PrivacySection({ t }: { t: Strings }) {
 
   return (
     <>
-      <section className="settings-group">
-        <h2 className="settings-group-title">{t.privacyChatHistoryLabel}</h2>
-        <div className="settings-group-body">
-          <ToggleRow
-            label={t.privacyChatHistoryToggle}
-            checked={settings.enableChatHistory}
-            onChange={(v) => setSettings({ enableChatHistory: v })}
-          />
-          <ClearRow
-            label={t.privacyClearChatHistory}
-            warning={t.privacyChatHistoryClearHint}
-            t={t}
-            onClear={clearAllConversations}
-          />
-        </div>
-      </section>
+      {hasTextusAi && (
+        <section className="settings-group">
+          <h2 className="settings-group-title">{t.privacyChatHistoryLabel}</h2>
+          <div className="settings-group-body">
+            <ToggleRow
+              label={t.privacyChatHistoryToggle}
+              checked={settings.enableChatHistory}
+              onChange={(v) => setSettings({ enableChatHistory: v })}
+            />
+            <ClearRow
+              label={t.privacyClearChatHistory}
+              warning={t.privacyChatHistoryClearHint}
+              t={t}
+              onClear={clearAllConversations}
+            />
+          </div>
+        </section>
+      )}
 
       <section className="settings-group">
         <h2 className="settings-group-title">

@@ -1,5 +1,6 @@
 import type { TextKey } from "../i18n/strings";
 import type { AgentMode } from "../prefs/SettingsContext";
+import { hasTextusAi } from "../platform/capabilities";
 import {
   GRAMMAR_PART,
   LESSON_DONE,
@@ -89,7 +90,7 @@ export interface TutorialStep {
   optional?: boolean;
 }
 
-export const TUTORIAL_CHAPTERS: TutorialChapter[] = [
+const ALL_CHAPTERS: TutorialChapter[] = [
   { id: "start", titleKey: "tutorialChapterStart" },
   { id: "writing", titleKey: "tutorialChapterWriting" },
   { id: "connect", titleKey: "tutorialChapterConnect" },
@@ -97,7 +98,7 @@ export const TUTORIAL_CHAPTERS: TutorialChapter[] = [
   { id: "done", titleKey: "tutorialChapterDone" },
 ];
 
-export const TUTORIAL_STEPS: TutorialStep[] = [
+const ALL_STEPS: TutorialStep[] = [
   {
     id: "welcome",
     chapter: "start",
@@ -302,6 +303,14 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     bodyKey: "tutorialDoneBody",
   },
 ];
+
+/** Without Textus AI (capabilities.ts) the tour ends after the writing
+ *  lessons. */
+const offered = (chapter: TutorialChapterId) =>
+  hasTextusAi || (chapter !== "connect" && chapter !== "ai");
+
+export const TUTORIAL_CHAPTERS = ALL_CHAPTERS.filter((c) => offered(c.id));
+export const TUTORIAL_STEPS = ALL_STEPS.filter((s) => offered(s.chapter));
 
 export function stepIndexOf(id: TutorialStepId): number {
   return TUTORIAL_STEPS.findIndex((step) => step.id === id);

@@ -82,3 +82,16 @@ mod ios {
 
 #[cfg(target_os = "ios")]
 pub use ios::init;
+
+#[cfg(target_os = "ios")]
+extern "C" {
+    fn textus_ai_unavailable() -> bool;
+}
+
+/// Textus AI isn't offered on this install: one from the App Store in
+/// mainland China (ios/Sources/Storefront.swift).
+#[cfg(target_os = "ios")]
+pub fn ai_unavailable() -> bool {
+    // SAFETY: a Swift function with no arguments that returns a C bool.
+    unsafe { textus_ai_unavailable() }
+}
