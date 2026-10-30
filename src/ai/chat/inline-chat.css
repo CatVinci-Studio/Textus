@@ -70,7 +70,7 @@
 
 .inline-chat-header-button {
   flex-shrink: 0;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   line-height: 1;
 }
 
@@ -84,7 +84,7 @@
 }
 
 .inline-chat-confirm-message {
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-text);
 }
 
@@ -209,7 +209,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-text);
   border: 1px solid color-mix(in srgb, var(--editor-accent) 30%, transparent);
   border-radius: var(--radius-pill);
@@ -303,7 +303,7 @@
   padding: 2px 6px;
   border: 1px solid var(--editor-border);
   border-radius: var(--radius-pill);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
 }
 
@@ -335,7 +335,7 @@
 /* Why an attachment could not be used. */
 .inline-chat-attach-error {
   padding: 4px 8px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--danger);
 }
 
@@ -362,7 +362,7 @@
   background: transparent;
   color: var(--editor-text);
   cursor: pointer;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   text-align: left;
   min-width: 0;
 }
@@ -410,7 +410,7 @@
 .composer-picker-group-title {
   padding: 8px 8px 3px;
   color: var(--editor-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -441,11 +441,11 @@
   flex-shrink: 0;
   color: var(--editor-muted);
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
 }
 
 .composer-picker-item .inline-chat-skill-preview {
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
 }
 
 .composer-picker-keys {
@@ -453,14 +453,14 @@
   padding: 4px 12px 5px;
   border-top: 1px solid var(--editor-border);
   color: var(--editor-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
 }
 
 /* Nothing to list: what the key does, and how to get something here. */
 .composer-picker-empty {
   padding: 9px 12px;
   color: var(--editor-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   line-height: 1.5;
 }
 
@@ -484,7 +484,7 @@
   background: transparent;
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   /* A whole number of pixels, not a 1.5 ratio: the auto-resize sets integer
      heights, and a half-pixel taller line box makes WebKit show scrollbars
      around an empty input. */
@@ -570,7 +570,7 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-muted);
 }
 
@@ -588,7 +588,7 @@
   min-width: 0;
   max-height: 8.2em;
   overflow: hidden;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   line-height: 1.6;
   color: var(--editor-text);
   -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent);
@@ -625,7 +625,7 @@
   border: 1px solid var(--chat-hairline, var(--editor-border));
   border-radius: var(--radius-surface);
   background: var(--chat-card-bg, transparent);
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   transition: border-color var(--dur-fast) var(--ease-standard);
 }
 
@@ -689,12 +689,12 @@
   padding-left: 4px;
   white-space: nowrap;
   align-self: center;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-accent);
 }
 
 .agent-proposal-title {
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--editor-muted);
@@ -712,7 +712,7 @@
   overflow: hidden;
   animation: motion-disclose-in var(--dur-fast) var(--ease-out);
   font-family: var(--editor-mono-font, var(--font-mono));
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -758,7 +758,7 @@
   background: none;
   padding: 2px 0;
   font-family: var(--editor-mono-font, var(--font-mono));
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   cursor: pointer;
   color: var(--editor-muted);
 }
@@ -796,7 +796,7 @@
 /* Once resolved, the buttons give way to a compact status line; the diff
    stays, so scrolling back still shows what each edit did. */
 .agent-proposal-status {
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   color: var(--editor-muted);
   animation: motion-fade-in var(--dur-fast) var(--ease-out);
 }
@@ -830,7 +830,7 @@
   background: none;
   padding: 2px 0;
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-muted);
   cursor: pointer;
 }
@@ -853,7 +853,7 @@
   align-items: center;
   gap: 4px 8px;
   padding: 6px 10px 6px 14px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-text);
   /* Over the panel's own colour rather than see-through: on the phone the
      sheet's composer area passes over the message list while it moves. */
@@ -905,7 +905,7 @@
 
 .inline-chat-pending-actions .inline-chat-action {
   padding: 2px 8px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 /* Quick Ask's review-one-at-a-time bar, pinned like the full variant's bar. */
@@ -915,7 +915,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 5px 8px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-text);
   background: color-mix(in srgb, var(--editor-accent) 10%, transparent);
 }
@@ -929,7 +929,7 @@
 
 .quick-ask-pending-nav-button {
   flex-shrink: 0;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   line-height: 1;
 }
 
@@ -995,14 +995,14 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-muted);
 }
 
 /* How long the model thought: one grey line under the question, which opens
    to the reasoning when the provider shared it. */
 .agent-thought {
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-muted);
 }
 
@@ -1041,7 +1041,7 @@
   margin-top: 4px;
   padding-left: 10px;
   border-left: 2px solid var(--editor-border);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   line-height: 1.55;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -1091,7 +1091,7 @@
    digits one width so the count doesn't jiggle as it ticks. */
 .agent-thinking-waited {
   margin-left: 2px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   font-variant-numeric: tabular-nums;
   opacity: 0.75;
 }
@@ -1304,7 +1304,7 @@
 /* Proposal card: the model's one-line reason, and the per-sentence choice
    list. */
 .agent-proposal-reason {
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   line-height: 1.5;
   color: var(--editor-text);
 }
@@ -1314,7 +1314,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
   cursor: pointer;
 }
@@ -1354,7 +1354,7 @@
   background: none;
   padding: 0;
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1.5;
   color: var(--editor-text);
   text-align: start;
@@ -1453,7 +1453,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
 
 .agent-comment .agent-proposal-show {
   margin-left: auto;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-accent);
 }
 
@@ -1461,7 +1461,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   margin: 0;
   padding: 0 0 0 8px;
   border-left: 2px solid var(--review-note-line);
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-muted);
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -1470,7 +1470,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
 }
 
 .agent-comment-text {
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   line-height: 1.55;
 }
 
@@ -1507,7 +1507,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   border-left: 2px solid var(--review-note-line);
   background: none;
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-muted);
   text-align: start;
   cursor: pointer;
@@ -1534,7 +1534,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
 
 .agent-error-detail {
   font-family: var(--editor-mono-font, var(--font-mono));
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
 }
 
@@ -1545,7 +1545,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   flex-direction: column;
   gap: 2px;
   padding: 6px 10px 6px 14px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-text);
   border-top: 1px solid var(--chat-hairline, var(--editor-border));
 }
@@ -1554,7 +1554,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   align-items: center;
   gap: 8px;
   color: var(--editor-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
 }
 .chat-queue-item {
   display: flex;
@@ -1600,7 +1600,7 @@ button.chat-queue-action:hover {
 
 .agent-proposal-group-status {
   flex: none;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
 }
 
@@ -1623,7 +1623,7 @@ button.chat-queue-action:hover {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
 }
 
@@ -1635,7 +1635,7 @@ button.chat-queue-action:hover {
   background: none;
   padding: 2px 4px;
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
   cursor: pointer;
 }

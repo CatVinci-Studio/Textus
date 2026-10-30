@@ -23,7 +23,7 @@
   border-radius: var(--radius-dialog);
   background: var(--bg);
   box-shadow: var(--shadow-dialog);
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
 }
 
 .close-prompt p {
@@ -35,7 +35,7 @@
 .app-dialog p {
   white-space: pre-line;
   overflow-wrap: anywhere;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   color: var(--editor-text);
 }
 
@@ -52,7 +52,7 @@
   background: var(--bg);
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 .app-dialog-input:focus-visible {
@@ -62,7 +62,7 @@
 
 .app-dialog-title {
   margin: 0 0 8px;
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
   font-weight: 600;
 }
 

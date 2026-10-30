@@ -18,22 +18,35 @@
   --control-height: 32px;
   /* Buttons inside panels, bars and toasts. */
   --control-height-sm: 26px;
-  /* Type scale for the app's own UI, times --ui-text-scale (Interface Text
-     Size). A px font size in the UI should multiply by it too. */
-  --text-xs: calc(11px * var(--ui-text-scale, 1));
-  --text-sm: calc(12px * var(--ui-text-scale, 1));
-  --text-md: calc(13px * var(--ui-text-scale, 1));
-  --text-lg: calc(14px * var(--ui-text-scale, 1));
-  /* Display steps, for titles only: a sheet's, a panel's or the phone's
-     navigation title (iOS "headline"), and a welcome or empty state. */
-  --text-xl: calc(17px * var(--ui-text-scale, 1));
-  --text-2xl: calc(22px * var(--ui-text-scale, 1));
-  /* The phone's text styles (iOS Dynamic Type at its default size). */
-  --ios-body: 17px;
-  --ios-callout: 16px;
-  --ios-subhead: 15px;
-  --ios-footnote: 13px;
-  --ios-caption: 12px;
+  /* The app's own text, by role: a component names what its text is,
+     never a size. The desktop's sizes are here, the phone's (iOS's text
+     styles) under :root[data-window-chrome="mobile"] below; both times
+     --ui-text-scale (Interface Text Size), as any other UI size should be.
+     The document's own text is the theme's, in em. */
+  /* A badge, a count, a key on a keycap. */
+  --text-caption: calc(11px * var(--ui-text-scale, 1));
+  /* What explains: a hint, a note, a group's title, an empty state. */
+  --text-footnote: calc(12px * var(--ui-text-scale, 1));
+  /* What sits beside or under the main text in a dense surface: a card's
+     text, a list's entries, a field in a bar. */
+  --text-secondary: calc(12px * var(--ui-text-scale, 1));
+  /* A control's label: buttons, segments, selects. */
+  --text-control: calc(13px * var(--ui-text-scale, 1));
+  /* The main text of a panel, a menu, a list or a field. */
+  --text-body: calc(13px * var(--ui-text-scale, 1));
+  /* The main text where there is room: Settings' rows, a dialog's. */
+  --text-body-large: calc(14px * var(--ui-text-scale, 1));
+  /* A sheet's, a panel's or a navigation bar's title. */
+  --text-title: calc(17px * var(--ui-text-scale, 1));
+  /* A page's own title, a welcome. */
+  --text-large-title: calc(22px * var(--ui-text-scale, 1));
+  /* The size names plugins' webviews were given (plugins/views/theme-vars.ts). */
+  --text-xs: var(--text-caption);
+  --text-sm: var(--text-footnote);
+  --text-md: var(--text-body);
+  --text-lg: var(--text-body-large);
+  --text-xl: var(--text-title);
+  --text-2xl: var(--text-large-title);
   /* Spacing on a 4-point grid, 8 the default step. */
   --space-1: 4px;
   --space-2: 8px;
@@ -115,6 +128,18 @@
   );
 }
 
+/* iOS's text styles at their default size. */
+:root[data-window-chrome="mobile"] {
+  --text-caption: calc(12px * var(--ui-text-scale, 1));
+  --text-footnote: calc(13px * var(--ui-text-scale, 1));
+  --text-secondary: calc(15px * var(--ui-text-scale, 1));
+  --text-control: calc(15px * var(--ui-text-scale, 1));
+  --text-body: calc(17px * var(--ui-text-scale, 1));
+  --text-body-large: calc(17px * var(--ui-text-scale, 1));
+  --text-title: calc(17px * var(--ui-text-scale, 1));
+  --text-large-title: calc(34px * var(--ui-text-scale, 1));
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --chrome-subtle: #20242c;
@@ -180,7 +205,7 @@
    ignore Interface Text Size. */
 :where(button, input, select, textarea) {
   font-family: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
 }
 
 :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
@@ -334,7 +359,7 @@
   border: 1px solid var(--editor-border, var(--border-color));
   border-radius: var(--radius-button);
   background: transparent;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   line-height: 1.2;
   cursor: pointer;
   transition:
@@ -353,7 +378,7 @@
 ) {
   min-height: var(--control-height-sm);
   padding: 0 10px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 /* The hover arrives in 80ms and leaves at the 120ms of the base rule. */
@@ -592,7 +617,7 @@
   background-size: 10px 10px;
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   cursor: pointer;
   transition: border-color var(--dur-fast) var(--ease-standard);
 }
@@ -600,7 +625,7 @@
 :is(.inline-chat-mode, .file-search-scope) {
   min-height: var(--control-height-sm);
   padding-left: 8px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 :is(.settings-select, .inline-chat-mode, .file-search-scope):hover {
@@ -694,7 +719,7 @@
 /* Menus: one panel padding, one item size, one hover. */
 :is(.app-menu-list, .context-menu, .project-bar-menu, .quick-ask-split-menu) {
   padding: 4px;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 :is(

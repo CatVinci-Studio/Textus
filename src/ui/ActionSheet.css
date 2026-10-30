@@ -53,7 +53,7 @@
 .action-sheet-title {
   padding: 12px 16px;
   text-align: center;
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   color: var(--editor-muted);
   border-bottom: 1px solid var(--editor-border, var(--border-color));
 }
@@ -71,7 +71,7 @@
   background: none;
   color: var(--editor-accent);
   font: inherit;
-  font-size: var(--ios-body, 17px);
+  font-size: var(--text-body);
   text-align: center;
   /* iOS's highlight: on at the touch, fading out after it. */
   transition: background-color var(--dur-base) var(--ease-standard);

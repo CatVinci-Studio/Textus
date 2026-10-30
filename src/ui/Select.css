@@ -27,7 +27,7 @@
   padding: 4px;
   list-style: none;
   overflow-y: auto;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   outline: none;
   transform-origin: var(--transform-origin, top left);
   animation: motion-pop-in var(--dur-base) var(--ease-out);
@@ -59,7 +59,7 @@
 .ui-select-group {
   padding: 8px 10px 3px;
   color: var(--editor-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   font-weight: 600;
   white-space: nowrap;
   cursor: default;

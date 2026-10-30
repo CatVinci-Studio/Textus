@@ -649,7 +649,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   padding: 10px 14px;
   border-radius: var(--md-radius);
   font-family: var(--font-sans);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   font-weight: 400;
   line-height: 1.45;
   text-align: left;
@@ -678,7 +678,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 .missing-image-reason {
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
 }
 
 .missing-image-actions {
@@ -1221,7 +1221,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 /* Line numbers: the gutter floats, the code beside it is its own block, so

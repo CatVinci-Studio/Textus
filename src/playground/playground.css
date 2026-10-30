@@ -28,7 +28,7 @@ body {
   padding: var(--space-2) var(--space-4);
   border-bottom: 1px solid var(--border-color);
   color: var(--chrome-text);
-  font-size: var(--text-md);
+  font-size: var(--text-control);
 }
 
 .playground-brand {
@@ -44,7 +44,7 @@ body {
 
 .playground-name {
   font-weight: 600;
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
 }
 
 .playground-tag {
@@ -52,7 +52,7 @@ body {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-pill);
   color: var(--chrome-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
 }
 
 .playground-note {
@@ -60,7 +60,7 @@ body {
   min-width: 0;
   margin: 0;
   color: var(--chrome-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
 }
 
 .playground-actions {
@@ -119,7 +119,7 @@ body {
   z-index: 220;
   padding: var(--space-2) var(--space-3);
   color: var(--editor-text);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 /* A phone: the note gets a line of its own under the brand and buttons,

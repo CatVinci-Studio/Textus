@@ -44,7 +44,7 @@
 
 .language-welcome-eyebrow {
   color: var(--editor-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   letter-spacing: 0.04em;
 }
 
@@ -57,7 +57,7 @@
 .language-welcome > p {
   margin: 0 0 24px;
   color: var(--editor-muted);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 /* The dropdown takes the whole width, at the height of the Continue button
@@ -70,7 +70,7 @@
   gap: 8px;
   width: 100%;
   margin-top: 18px;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   cursor: pointer;
 }
 

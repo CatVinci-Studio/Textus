@@ -19,7 +19,7 @@
 
 .chat-history-empty {
   padding: 16px 12px;
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   color: var(--editor-muted);
 }
 
@@ -33,7 +33,7 @@
 
 .chat-history-group-title {
   padding: 10px 8px 4px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -46,7 +46,7 @@
 /* Older conversations were moved to the trash folder (beyond the cap). */
 .chat-history-archived {
   padding: 6px 8px 2px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
 }
 
@@ -57,7 +57,7 @@
   padding: 6px 8px;
   border-radius: var(--radius-control);
   cursor: pointer;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-text);
   line-height: 1.45;
 }
@@ -85,7 +85,7 @@
 }
 
 .chat-history-entry-meta {
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -136,7 +136,7 @@
   background: var(--bg);
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 .chat-history-search:focus-visible {
@@ -149,6 +149,6 @@
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-text);
 }

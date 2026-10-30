@@ -1,7 +1,7 @@
 /* The user's words are the quiet reference and the reply is what is read,
    so the two differ by weight and alignment, not by two coloured bubbles. */
 .agent-message {
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   line-height: 1.55;
   padding: 8px 10px;
   border-radius: var(--radius-surface);
@@ -41,7 +41,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   line-height: 1.4;
   padding: 2px 6px;
   border-radius: var(--radius-pill);
@@ -80,7 +80,7 @@ button.agent-context-chip:hover {
    sent never costs more than a few lines of the transcript. */
 .agent-message-selection {
   margin: 0;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
@@ -263,7 +263,7 @@ button.agent-context-chip:hover {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
   padding: 0 2px;
 }
@@ -276,7 +276,7 @@ button.agent-context-chip:hover {
 
 .agent-tool-result {
   align-self: flex-start;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
   max-width: 92%;
   padding: 0 2px;
@@ -333,7 +333,7 @@ button.agent-context-chip:hover {
 
 .agent-thinking {
   align-self: flex-start;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-muted);
   /* Upright: a slanted CJK label is a faked italic, and reads as broken. */
   padding: 4px 6px;
@@ -352,7 +352,7 @@ button.agent-context-chip:hover {
   border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
   border-radius: var(--radius-surface);
   background: color-mix(in srgb, var(--danger) 7%, transparent);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   line-height: 1.5;
   color: var(--editor-text);
   word-break: break-word;
@@ -369,7 +369,7 @@ button.agent-context-chip:hover {
   padding: 8px 10px;
   border: 1px solid var(--editor-border);
   border-radius: var(--radius-surface);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   line-height: 1.5;
   color: var(--editor-muted);
 }
@@ -454,7 +454,7 @@ button.agent-context-chip:hover {
   border-radius: var(--radius-surface);
   background: color-mix(in srgb, var(--editor-accent) 8%, transparent);
   color: var(--editor-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   line-height: 1.45;
 }
 
@@ -505,7 +505,7 @@ button.agent-context-chip:hover {
   background: transparent;
   color: var(--editor-muted);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   cursor: pointer;
 }
 
@@ -570,7 +570,7 @@ button.agent-context-chip:hover {
   align-items: center;
   gap: 4px;
   margin-top: 6px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
 }
 

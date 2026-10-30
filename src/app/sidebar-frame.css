@@ -118,7 +118,7 @@
   background: transparent;
   color: var(--editor-muted);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   cursor: pointer;
 }
 

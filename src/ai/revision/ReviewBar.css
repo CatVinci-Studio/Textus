@@ -13,7 +13,7 @@
      with the theme (a dark or imported theme gets a light bar). */
   background: color-mix(in srgb, var(--ui-primary) 94%, transparent);
   color: var(--ui-on-primary);
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1;
   white-space: nowrap;
   box-shadow: var(--shadow-bar);
@@ -146,7 +146,7 @@
 }
 
 .review-bar-view-name {
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
 }
 
 .review-bar-view-button:hover,
@@ -165,7 +165,7 @@
   min-width: 250px;
   padding: 4px;
   color: var(--editor-text);
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   animation: motion-pop-in var(--dur-base) var(--ease-out);
 }
 
@@ -217,7 +217,7 @@
   padding: 7px 10px 5px 26px;
   border-top: 1px solid var(--editor-border, var(--border-color));
   color: var(--editor-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   line-height: 1.4;
   white-space: normal;
 }
@@ -301,7 +301,7 @@
   border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   box-shadow: var(--shadow-sheet);
   transform: none;
   animation: motion-sheet-in var(--dur-sheet, var(--dur-slow))
@@ -344,7 +344,7 @@
   border-radius: var(--radius-control);
   border-color: var(--editor-border, var(--border-color));
   color: var(--editor-text);
-  font-size: var(--text-md);
+  font-size: var(--text-control);
 }
 
 .review-bar-phone .review-bar-accept {

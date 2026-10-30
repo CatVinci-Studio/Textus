@@ -15,7 +15,7 @@
   margin: var(--space-3);
   padding: var(--space-2) var(--space-3);
   font: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   color: var(--editor-text);
   background: var(--bg);
   border: 1px solid var(--border-color);
@@ -38,7 +38,7 @@
   gap: var(--space-2);
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-small);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   cursor: pointer;
   flex-wrap: wrap;
 }
@@ -53,11 +53,11 @@
 .quick-pick-detail {
   flex-basis: 100%;
   color: var(--chrome-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
 }
 .quick-pick-description {
   color: var(--chrome-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -65,11 +65,11 @@
 .quick-pick-empty {
   padding: var(--space-3);
   color: var(--chrome-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
 }
 .quick-pick-keys {
   margin-left: auto;
   color: var(--chrome-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   font-family: inherit;
 }

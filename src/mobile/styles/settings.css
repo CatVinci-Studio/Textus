@@ -10,7 +10,7 @@
   border: none;
   background: none;
   color: var(--editor-accent);
-  font-size: var(--ios-body);
+  font-size: var(--text-body);
 }
 
 @media (max-width: 760px) {
@@ -71,7 +71,7 @@
     justify-content: center;
     min-height: 44px;
     padding: 0 16px;
-    font-size: var(--ios-body);
+    font-size: var(--text-body);
     font-weight: 600;
   }
 
@@ -112,7 +112,7 @@
   }
 
   :root[data-window-chrome="mobile"] .settings-group-title {
-    font-size: var(--ios-footnote);
+    font-size: var(--text-footnote);
   }
 
   :root[data-window-chrome="mobile"] .settings-row {
@@ -144,11 +144,11 @@
       button.settings-link-row,
       .settings-advanced > summary
     ) {
-    font-size: var(--ios-callout);
+    font-size: var(--text-body);
   }
 
   :root[data-window-chrome="mobile"] .settings-row-hint {
-    font-size: var(--ios-footnote);
+    font-size: var(--text-footnote);
   }
 
   /* Controls a finger can hit: 36pt tall, in the body's 15pt type. */
@@ -156,7 +156,7 @@
     .settings-panel
     :is(.settings-select, button.settings-inline-button, .appearance-option) {
     min-height: 36px;
-    font-size: var(--ios-subhead);
+    font-size: var(--text-secondary);
   }
 
   :root[data-window-chrome="mobile"] .settings-search {

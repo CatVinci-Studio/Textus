@@ -37,7 +37,7 @@
 .document-list-header h2 {
   margin: 0;
   /* A navigation title, as Settings' on the phone. */
-  font-size: var(--text-xl);
+  font-size: var(--text-title);
   font-weight: 600;
   text-align: center;
 }
@@ -70,7 +70,7 @@
   color: var(--chrome-accent);
   font: inherit;
   /* A navigation bar button, as Settings' Done. */
-  font-size: var(--ios-body);
+  font-size: var(--text-body);
 }
 
 .document-list-body {
@@ -86,7 +86,7 @@
   margin: 48px 24px;
   text-align: center;
   color: var(--chrome-muted, var(--editor-muted));
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 .document-list-toolbar {
@@ -97,7 +97,7 @@
 }
 
 .document-list-count {
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   color: var(--chrome-muted, var(--editor-muted));
 }
 
@@ -215,11 +215,11 @@
 
 .document-item-name {
   overflow: hidden;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 .document-item-detail {
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   color: var(--chrome-muted, var(--editor-muted));
 }
 
@@ -303,13 +303,13 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
 
 .document-list-grid .document-item-detail {
-  font-size: var(--text-xs, 11px);
+  font-size: var(--text-caption);
 }
 
 .document-list-grid .document-item-active .document-page {

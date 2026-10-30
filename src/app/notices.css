@@ -12,7 +12,7 @@
   border-radius: var(--radius-surface);
   background: var(--bg);
   box-shadow: var(--shadow-popover);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 .update-toast-secondary {
@@ -35,7 +35,7 @@
   border-radius: var(--radius-surface);
   background: var(--bg);
   box-shadow: var(--shadow-popover);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 .unsaved-dot {

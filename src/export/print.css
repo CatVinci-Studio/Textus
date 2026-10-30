@@ -151,6 +151,6 @@
 }
 
 .pdf-export-text {
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
   font-weight: 600;
 }

@@ -41,7 +41,7 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
   /* The row is the window's drag handle; the label must not swallow that. */
   pointer-events: none;
@@ -92,7 +92,7 @@
   justify-content: center;
   padding: 24px;
   text-align: center;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   color: var(--editor-muted);
   background: var(--editor-bg);
 }

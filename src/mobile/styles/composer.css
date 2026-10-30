@@ -37,7 +37,7 @@
   background: none;
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   font-weight: 500;
 }
 
@@ -57,7 +57,7 @@
   :root[data-window-chrome="mobile"] .inline-chat-send {
     min-height: 44px;
     padding: 0 18px;
-    font-size: var(--text-md);
+    font-size: var(--text-control);
   }
 
   /* The chips stay small to look at; their x reaches past their edges. */
@@ -79,7 +79,7 @@
   :root[data-window-chrome="mobile"] .inline-chat-skill-item {
     align-items: center;
     min-height: 44px;
-    font-size: var(--text-md);
+    font-size: var(--text-body);
   }
 
   :root[data-window-chrome="mobile"] .inline-chat-skill-menu {

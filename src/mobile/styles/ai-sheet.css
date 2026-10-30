@@ -97,7 +97,7 @@
 
   :root[data-window-chrome="mobile"] .agent-panel-tabs button {
     padding: 8px 14px;
-    font-size: var(--text-md);
+    font-size: var(--text-control);
   }
 
   /* History, new conversation and close: finger-sized, like every other

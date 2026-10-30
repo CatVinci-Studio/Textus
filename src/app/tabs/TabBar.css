@@ -36,7 +36,7 @@
   max-width: 200px;
   padding: 5px 8px;
   border-radius: var(--radius-control);
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-muted);
   cursor: pointer;
   white-space: nowrap;
@@ -119,7 +119,7 @@
   background: none;
   cursor: pointer;
   color: var(--editor-muted);
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
   padding: 4px 10px;
   border-radius: var(--radius-control);
 }
@@ -129,7 +129,7 @@
 }
 
 .word-count {
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   color: var(--editor-muted);
   white-space: nowrap;
   min-width: 1px;

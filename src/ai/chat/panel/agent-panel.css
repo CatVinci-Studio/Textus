@@ -89,7 +89,7 @@
   background: none;
   color: var(--editor-muted);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   font-weight: 600;
   cursor: pointer;
   transition: color var(--dur-fast) var(--ease-standard);
@@ -214,7 +214,7 @@
 .agent-panel-empty-text {
   max-width: 26em;
   margin: 0;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   line-height: 1.55;
   color: var(--editor-muted);
   text-wrap: pretty;
@@ -264,7 +264,7 @@
 .project-bar {
   padding: 5px 10px;
   border-bottom: 1px solid var(--chat-hairline, var(--border-color));
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 .project-bar-empty {
@@ -324,7 +324,7 @@
   background: none;
   color: var(--editor-muted);
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   cursor: pointer;
 }
 
@@ -384,7 +384,7 @@
   gap: 10px;
   padding: 24px;
   text-align: center;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   color: var(--editor-muted);
 }
 

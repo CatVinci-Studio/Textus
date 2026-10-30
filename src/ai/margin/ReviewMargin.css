@@ -64,7 +64,7 @@
   background: var(--review-note-bg);
   color: var(--editor-text);
   font-family: var(--font-ui, inherit);
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1.55;
   box-shadow: var(--shadow-card);
   /* A card glides on `translate`, never `top`, which would lay the margin
@@ -107,7 +107,7 @@
   align-items: center;
   gap: 6px;
   margin-bottom: 2px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
 }
 
@@ -165,7 +165,7 @@
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   cursor: pointer;
 }
 
@@ -583,7 +583,7 @@ del .revision-note-picture {
 
 .revision-note-picture-why {
   display: block;
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   color: var(--editor-muted);
 }
 

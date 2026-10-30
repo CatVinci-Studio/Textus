@@ -44,7 +44,7 @@
 }
 
 .bottom-card-body {
-  font-size: var(--text-lg, 16px);
+  font-size: var(--text-body-large);
   line-height: 1.6;
   margin-bottom: 16px;
 }
@@ -62,7 +62,7 @@
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   font-weight: 600;
 }
 
@@ -78,7 +78,7 @@
   align-items: center;
   gap: 6px;
   margin-bottom: 6px;
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   color: var(--editor-muted);
 }
 
@@ -86,7 +86,7 @@
   margin: 0 0 8px;
   padding-left: 9px;
   border-left: 2px solid var(--review-note-line, var(--editor-accent));
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;

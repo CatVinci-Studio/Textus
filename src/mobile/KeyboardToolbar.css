@@ -65,7 +65,7 @@
   background: none;
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--ios-body);
+  font-size: var(--text-body);
   /* iOS's highlight: on at the touch, fading out after it. */
   transition: background-color var(--dur-base) var(--ease-standard);
 }
@@ -97,7 +97,7 @@
 
 /* An image's widths, written out. */
 .kbt-text {
-  font-size: var(--ios-subhead);
+  font-size: var(--text-secondary);
   white-space: nowrap;
 }
 
@@ -108,7 +108,7 @@
 
 .keyboard-toolbar-ai {
   color: var(--chrome-accent);
-  font-size: var(--ios-subhead);
+  font-size: var(--text-secondary);
   font-weight: 600;
   white-space: nowrap;
 }

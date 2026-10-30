@@ -106,7 +106,7 @@
 }
 
 .pending-picture-why {
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   color: var(--editor-muted);
   text-align: center;
 }
@@ -119,7 +119,7 @@
   background: none;
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   cursor: pointer;
 }
 
@@ -148,7 +148,7 @@
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   cursor: pointer;
   opacity: 0;
   transition: opacity var(--dur-fast) var(--ease-out);
@@ -188,7 +188,7 @@
 
 .agent-proposal-picture-failed {
   display: block;
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   color: var(--editor-muted);
 }
 

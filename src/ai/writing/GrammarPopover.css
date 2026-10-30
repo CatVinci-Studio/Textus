@@ -9,7 +9,7 @@
   min-width: 240px;
   max-width: 340px;
   padding: 10px 12px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1.45;
   transform-origin: var(--transform-origin, top left);
   animation: motion-pop-in var(--dur-base) var(--ease-out);
@@ -30,7 +30,7 @@
   flex: none;
   padding: 1px 7px;
   border-radius: var(--radius-pill);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   font-weight: 600;
   letter-spacing: 0.02em;
   background: color-mix(in srgb, var(--danger) 12%, transparent);
@@ -46,7 +46,7 @@
 .grammar-popover-fix {
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
 }
 
 .grammar-popover-fix s {
@@ -65,7 +65,7 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -113,7 +113,7 @@
   background: var(--ui-primary);
   color: var(--ui-on-primary);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   font-weight: 600;
   cursor: pointer;
 }
@@ -130,7 +130,7 @@
 }
 
 .grammar-popover-error {
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   color: var(--danger);
 }
 
@@ -141,7 +141,7 @@
   background: none;
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   cursor: pointer;
 }
 
@@ -165,6 +165,6 @@
 }
 
 .grammar-card-issue {
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-muted);
 }

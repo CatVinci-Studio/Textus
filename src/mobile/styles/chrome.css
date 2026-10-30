@@ -62,7 +62,7 @@
     margin: 0;
     padding: 19px 16px 0;
     color: var(--editor-text);
-    font-size: var(--ios-body);
+    font-size: var(--text-body);
     font-weight: 600;
     line-height: 1.3;
   }
@@ -70,7 +70,7 @@
   :root[data-window-chrome="mobile"] .app-dialog p {
     margin: 0;
     padding: 4px 16px 19px;
-    font-size: var(--ios-footnote);
+    font-size: var(--text-footnote);
     line-height: 1.4;
   }
 
@@ -117,7 +117,7 @@
     border-radius: 0;
     background: none;
     color: var(--editor-accent);
-    font-size: var(--ios-body);
+    font-size: var(--text-body);
     font-weight: 400;
     opacity: 1;
     /* iOS's highlight: on at the touch, fading out after it. */
@@ -189,7 +189,7 @@
     min-height: 44px;
     padding: 0 16px;
     border-radius: 0;
-    font-size: var(--ios-body);
+    font-size: var(--text-body);
   }
 
   /* From the list: without a parent, the sibling rule restyled the editor's
@@ -284,7 +284,7 @@
   :root[data-window-chrome="mobile"] .find-replace-toggle {
     width: 30px;
     height: 30px;
-    font-size: var(--ios-caption) !important;
+    font-size: var(--text-caption) !important;
   }
 
   :root[data-window-chrome="mobile"] .find-replace-nav {
@@ -302,7 +302,7 @@
   :root[data-window-chrome="mobile"] .find-replace-nav .find-replace-text {
     padding: 0 8px;
     color: var(--editor-accent);
-    font-size: var(--ios-subhead);
+    font-size: var(--text-secondary);
   }
 
   :root[data-window-chrome="mobile"]
@@ -348,7 +348,7 @@
     gap: 0;
     /* The close button's 44pt reaches past the pill's 36. */
     overflow: visible;
-    font-size: var(--ios-subhead);
+    font-size: var(--text-secondary);
   }
 
   :root[data-window-chrome="mobile"] .tab-pill-dirty-dot {

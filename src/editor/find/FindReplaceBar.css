@@ -9,7 +9,7 @@
   flex-direction: column;
   gap: 4px;
   padding: 6px 8px;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   animation: motion-drop-in var(--dur-base) var(--ease-out);
 }
 
@@ -80,7 +80,7 @@
 .find-replace-count {
   flex: none;
   color: var(--editor-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   white-space: nowrap;
   /* Counts change in place without their digits shifting. */
   font-variant-numeric: tabular-nums;
@@ -107,7 +107,7 @@
   border: 1px solid var(--editor-border);
   border-radius: var(--radius-control);
   padding: 4px 7px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   cursor: pointer;
   background: transparent;
   color: var(--editor-text);
@@ -129,7 +129,7 @@
   padding: 0 !important;
   border: none !important;
   border-radius: var(--radius-control) !important;
-  font-size: var(--text-xs) !important;
+  font-size: var(--text-caption) !important;
   line-height: 1;
   color: var(--editor-muted);
 }

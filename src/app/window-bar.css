@@ -68,7 +68,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-muted);
   pointer-events: none;
   user-select: none;
@@ -181,7 +181,7 @@
 /* Shown while ghost text, grammar check and live Mermaid preview are paused
    for a large document. */
 .large-doc-badge {
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
   white-space: nowrap;
   padding: 2px 7px;

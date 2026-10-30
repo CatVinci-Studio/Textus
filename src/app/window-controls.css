@@ -30,7 +30,7 @@
   background: none;
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   opacity: 0.8;
   cursor: default;
   transition:

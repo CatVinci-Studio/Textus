@@ -33,18 +33,18 @@
   align-items: center;
   gap: 8px;
   margin: 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   font-weight: 600;
   color: var(--editor-text);
 }
 
 .memory-section h4 button {
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
 }
 
 .memory-hint {
   margin: 2px 0 10px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   line-height: 1.5;
   color: var(--editor-muted);
 }
@@ -69,7 +69,7 @@
 .memory-link {
   display: block;
   margin: 8px 0 0;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
 }
 
 .memory-count {
@@ -90,7 +90,7 @@
 
 .memory-lines li {
   padding: 8px 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1.5;
   animation: motion-fade-in var(--dur-base) var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 40ms);
@@ -109,7 +109,7 @@
 .memory-scope {
   margin-left: auto;
   flex: none;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
 }
 
@@ -130,7 +130,7 @@
   background: var(--chat-card-bg, var(--editor-bg));
   color: var(--editor-muted);
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   line-height: 1.45;
   text-align: start;
   cursor: pointer;
@@ -145,7 +145,7 @@
 }
 
 .memory-entry b {
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   color: var(--editor-text);
 }
 
@@ -185,7 +185,7 @@
   border: 1px dashed var(--chat-hairline, var(--editor-border));
   border-radius: var(--radius-surface);
   color: var(--editor-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   line-height: 1.55;
 }
 
@@ -207,7 +207,7 @@
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   font-weight: 600;
   cursor: pointer;
 }
@@ -285,7 +285,7 @@
   align-items: baseline;
   gap: 8px;
   margin: 0 0 6px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   font-weight: 500;
   color: var(--editor-muted);
 }
@@ -315,7 +315,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
   cursor: pointer;
 }
@@ -331,7 +331,7 @@
   background: transparent;
   color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 .memory-search:focus {
@@ -341,13 +341,13 @@
 
 /* A library entry the AI wrote: who noted it, and when. */
 .memory-by-ai {
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
 }
 
 .memory-remembered-list li {
   padding: 8px 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -361,7 +361,7 @@
   align-items: baseline;
   gap: 6px;
   margin-top: 2px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
 }
 
@@ -387,7 +387,7 @@
   background: none;
   color: var(--editor-accent);
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   cursor: pointer;
 }
 
@@ -397,7 +397,7 @@
 
 .memory-note {
   margin: 8px 0 0;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   line-height: 1.5;
   color: var(--editor-muted);
 }

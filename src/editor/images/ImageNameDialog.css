@@ -20,7 +20,7 @@
   background: var(--bg);
   box-shadow: var(--shadow-dialog);
   color: var(--editor-text);
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
 }
 
 .image-name-title {
@@ -33,7 +33,7 @@
   flex-direction: column;
   gap: 6px;
   color: var(--editor-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 .image-name-input-row {
@@ -61,7 +61,7 @@
 .image-name-error {
   margin-top: 7px;
   color: var(--danger);
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
 }
 
 .image-name-buttons {

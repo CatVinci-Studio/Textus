@@ -21,7 +21,7 @@
   gap: 6px 10px;
   width: 100%;
   padding: 8px 12px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-text);
   pointer-events: auto;
   animation: notice-in var(--dur-base) var(--ease-out) both;
@@ -50,7 +50,7 @@
 .notice-detail {
   flex-basis: 100%;
   color: var(--editor-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
 }
 
 .notice-bar {
@@ -75,7 +75,7 @@
 
 .notice-cancel {
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   color: var(--editor-muted);
   background: none;
   border: none;

@@ -63,7 +63,7 @@
 .app-menu-accel {
   flex-shrink: 0;
   color: var(--editor-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   font-variant-numeric: tabular-nums;
 }
 
