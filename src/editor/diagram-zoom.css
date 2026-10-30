@@ -15,7 +15,8 @@
   color: var(--editor-muted);
   background: var(--editor-bg, var(--bg));
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   cursor: zoom-in;
   opacity: 0;
   transition: opacity var(--dur-fast) var(--ease-out);
@@ -53,7 +54,7 @@
   position: absolute;
   inset: 3rem;
   overflow: hidden;
-  border-radius: var(--radius-card, 10px);
+  border-radius: var(--shape-l);
   cursor: grab;
   touch-action: none;
 }
@@ -79,6 +80,7 @@
   background: var(--bg);
   border: 1px solid var(--border-color);
   border-radius: 50%;
+  corner-shape: round;
   cursor: pointer;
 }
 .diagram-viewer-hint {
@@ -90,6 +92,7 @@
   color: var(--text-muted, var(--text));
   background: var(--bg);
   padding: 0.2rem 0.6rem;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   pointer-events: none;
 }

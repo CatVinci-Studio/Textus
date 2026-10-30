@@ -65,7 +65,8 @@
   position: relative;
   display: inline-flex;
   padding: 2px;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--editor-text) 6%, transparent);
 }
 
@@ -74,7 +75,8 @@
   top: 2px;
   bottom: 2px;
   left: 2px;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--editor-bg, var(--bg));
   box-shadow: var(--shadow-raised);
   transition:
@@ -84,12 +86,13 @@
 
 .agent-panel-tabs button {
   position: relative;
-  padding: 5px 12px;
+  min-height: calc(var(--control-height-sm) - 4px);
+  padding: 0 var(--space-3);
   border: 0;
   background: none;
   color: var(--editor-muted);
   font: inherit;
-  font-size: var(--text-secondary);
+  font-size: var(--text-footnote);
   font-weight: 600;
   cursor: pointer;
   transition: color var(--dur-fast) var(--ease-standard);
@@ -102,7 +105,8 @@
 .agent-panel-tabs button:focus-visible {
   outline: 2px solid var(--editor-accent);
   outline-offset: -2px;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .agent-panel-actions {
@@ -201,7 +205,8 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--editor-accent) 12%, transparent);
   color: var(--editor-accent);
 }
@@ -287,7 +292,7 @@
   max-width: 60%;
   padding: 3px 6px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: none;
   color: inherit;
   font: inherit;
@@ -320,7 +325,8 @@
   flex-shrink: 0;
   padding: 1px 7px;
   border: 1px solid var(--editor-border, var(--border-color));
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   color: var(--editor-muted);
   font: inherit;
@@ -359,7 +365,8 @@
   min-width: 0;
   padding: 4px 8px;
   border: 1px solid var(--editor-border, var(--border-color));
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--editor-bg, var(--bg));
   color: inherit;
   font: inherit;

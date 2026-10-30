@@ -57,7 +57,8 @@
 
 .sidebar-body::-webkit-scrollbar-thumb {
   background: transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .sidebar-body:hover::-webkit-scrollbar-thumb {
@@ -87,7 +88,7 @@
   justify-content: center;
   padding: 6px 4px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: transparent;
   color: var(--editor-muted);
   cursor: pointer;
@@ -114,7 +115,8 @@
   align-items: center;
   padding: 4px 6px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
   color: var(--editor-muted);
   font: inherit;

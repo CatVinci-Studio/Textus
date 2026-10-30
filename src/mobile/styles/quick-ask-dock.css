@@ -24,7 +24,7 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
   border-width: 1px 0 0;
   border-color: var(--editor-border);
-  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  border-radius: var(--shape-l) var(--shape-l) 0 0;
   background: var(--page-bg, var(--editor-bg));
   box-shadow: var(--shadow-sheet);
   /* It rises with the keyboard, from the bottom edge. */

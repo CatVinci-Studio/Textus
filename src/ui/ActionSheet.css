@@ -41,7 +41,7 @@
 .action-sheet-group,
 .action-sheet-cancel {
   overflow: hidden;
-  border-radius: var(--radius-sheet);
+  border-radius: var(--shape-l);
   background: var(--editor-bg, var(--bg));
 }
 

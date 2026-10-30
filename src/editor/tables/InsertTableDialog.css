@@ -17,7 +17,7 @@
   min-width: 260px;
   padding: 18px 20px;
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-dialog);
+  border-radius: var(--shape-l);
   background: var(--bg);
   box-shadow: var(--shadow-dialog);
   font-size: var(--text-body-large);
@@ -46,7 +46,8 @@
   width: 70px;
   padding: 5px 8px;
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
   color: var(--editor-text);
   font: inherit;

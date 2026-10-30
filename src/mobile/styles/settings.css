@@ -93,7 +93,8 @@
   :root[data-window-chrome="mobile"] .settings-nav-item {
     min-height: 36px;
     padding: 0 8px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--shape-pill);
+    corner-shape: round;
     font-size: 14px;
   }
 

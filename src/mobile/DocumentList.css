@@ -50,7 +50,8 @@
   height: 44px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   color: inherit;
 }
@@ -107,7 +108,8 @@
   position: relative;
   display: flex;
   padding: 2px;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(
     in srgb,
     var(--chrome-text, currentColor) 8%,
@@ -123,7 +125,8 @@
   left: 2px;
   width: calc(50% - 2px);
   /* Concentric with the track: its radius less the 2px inset. */
-  border-radius: calc(var(--radius-control) - 2px);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--page-bg, var(--bg));
   box-shadow: var(--shadow-raised);
   transition: transform var(--dur-medium) var(--ease-spring);
@@ -157,7 +160,7 @@
   flex: none;
   overflow: hidden;
   aspect-ratio: 3 / 4;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
   /* The page's colour where the list's surface doesn't name one: a white
      fallback put dark-mode text on white sheets. */
   background: var(--editor-bg, var(--bg));
@@ -181,7 +184,7 @@
 
 .document-item {
   position: relative;
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
 }
 
 /* A document that turns up in an open list; one that goes fades where it was. */

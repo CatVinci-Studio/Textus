@@ -20,7 +20,7 @@
     padding-top: 0;
     border-left: none;
     border-top: 1px solid var(--border-color);
-    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    border-radius: var(--shape-l) var(--shape-l) 0 0;
     box-shadow: var(--shadow-sheet);
     flex-direction: column;
     /* Whatever the conversation's length, the composer stays on screen:
@@ -95,11 +95,6 @@
     pointer-events: auto;
   }
 
-  :root[data-window-chrome="mobile"] .agent-panel-tabs button {
-    padding: 8px 14px;
-    font-size: var(--text-control);
-  }
-
   /* History, new conversation and close: finger-sized, like every other
      button on the phone. */
   :root[data-window-chrome="mobile"]
@@ -144,6 +139,7 @@
 :root[data-window-chrome="mobile"] .agent-panel-grip span {
   width: 36px;
   height: 5px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--editor-text) 25%, transparent);
 }

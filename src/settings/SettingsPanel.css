@@ -27,7 +27,7 @@
   flex-direction: column;
   background: var(--bg);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-dialog);
+  border-radius: var(--shape-l);
   box-shadow: var(--shadow-dialog);
   overflow: hidden;
 }
@@ -86,7 +86,8 @@
   height: var(--control-height-sm);
   padding: 0 8px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--bg);
   color: var(--editor-muted);
 }
@@ -107,6 +108,8 @@
   width: 100%;
   padding: 0;
   border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
   color: var(--editor-text);
   font: inherit;
@@ -131,7 +134,7 @@
 .settings-search-result.is-active {
   background: var(--sidebar-hover);
   box-shadow: 0 0 0 8px var(--sidebar-hover);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
 }
 
 .settings-search-context {
@@ -155,7 +158,7 @@
   content: "";
   position: absolute;
   inset: 0 -8px;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: color-mix(in srgb, var(--chrome-accent) 14%, transparent);
   pointer-events: none;
   opacity: 0;
@@ -179,7 +182,7 @@
   padding: 9px 12px;
   font-size: var(--text-body);
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: transparent;
   color: var(--sidebar-text, var(--editor-muted));
   cursor: pointer;
@@ -231,7 +234,7 @@
 .settings-advanced {
   margin-top: 24px;
   border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   background: var(--chrome-subtle);
   overflow: hidden;
 }
@@ -292,7 +295,7 @@
   padding: 2px 16px;
   background: var(--chrome-subtle);
   border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
 }
 
 /* The one divider: an inset hairline between adjacent rows of a card.
@@ -417,7 +420,8 @@ button.settings-danger-button {
   margin: 0;
   position: relative;
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--editor-muted) 38%, var(--bg));
   font-size: var(--text-body-large);
   cursor: pointer;
@@ -434,6 +438,7 @@ button.settings-danger-button {
   width: var(--switch-thumb);
   height: var(--switch-thumb);
   border-radius: 50%;
+  corner-shape: round;
   background: var(--on-fill);
   box-shadow: var(--shadow-thumb);
   transform-origin: left center;
@@ -539,7 +544,7 @@ button.settings-inline-button {
   padding: 8px 10px;
   margin: 8px 0;
   border-left: 2px solid var(--danger);
-  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  border-radius: 0 var(--shape-s) var(--shape-s) 0;
   background: color-mix(in srgb, var(--danger) 10%, transparent);
   color: var(--danger);
   font-size: var(--text-body);
@@ -550,7 +555,7 @@ button.settings-inline-button {
   padding: 8px 10px;
   margin: 8px 0;
   border-left: 2px solid var(--success-color);
-  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  border-radius: 0 var(--shape-s) var(--shape-s) 0;
   background: color-mix(in srgb, var(--success-color) 10%, transparent);
   color: var(--success-color);
   font-size: var(--text-body);
@@ -575,7 +580,8 @@ button.settings-inline-button {
   min-width: 0;
   padding: 5px 10px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--bg);
   color: var(--editor-text);
   font-size: var(--text-body);
@@ -686,7 +692,7 @@ button.settings-inline-button {
   flex-direction: column;
   background: var(--bg);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   box-shadow: var(--shadow-popover);
   overflow: hidden;
 }
@@ -717,7 +723,7 @@ button.settings-inline-button {
   width: 100%;
   padding: 8px 10px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: none;
   color: inherit;
   font: inherit;
@@ -761,6 +767,7 @@ button.settings-inline-button {
   width: 6px;
   height: 6px;
   border-radius: 50%;
+  corner-shape: round;
   background: var(--success-color);
   flex-shrink: 0;
 }
@@ -791,13 +798,15 @@ button.settings-inline-button {
   padding: 2px;
   background: var(--sidebar-bg);
   border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .auth-tab {
   padding: 4px 12px;
   border: none;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
   color: var(--editor-muted);
   font-size: var(--text-control);
@@ -913,7 +922,8 @@ button.settings-inline-button {
   display: inline-block;
   margin-left: 8px;
   padding: 0 6px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--editor-muted) 14%, transparent);
   color: var(--editor-muted);
   font-size: var(--text-caption);
@@ -967,7 +977,8 @@ button.settings-skill-action {
   margin: 0;
   padding: 4px 6px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
   color: var(--editor-accent);
   font: inherit;
@@ -1172,7 +1183,7 @@ button.settings-skill-action:focus-visible {
 
 .shortcut-fixed-row kbd {
   padding: 1px 6px;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
   background: color-mix(in srgb, var(--editor-muted) 12%, transparent);
   color: var(--editor-text);
   font-family: var(--font-mono);
@@ -1189,16 +1200,22 @@ button.settings-skill-action:focus-visible {
   gap: 2px;
   padding: var(--segment-inset);
   border: 1px solid var(--border-color);
-  border-radius: calc(var(--radius-control) + var(--segment-inset) + 1px);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--sidebar-bg);
 }
 
 .appearance-option {
   position: relative;
-  padding: 9px 10px;
-  border-radius: var(--radius-control);
+  display: inline-flex;
+  align-items: center;
+  min-height: calc(var(--control-height-sm) - 2 * var(--segment-inset));
+  padding: 0 var(--space-3);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   color: var(--editor-muted);
-  font-size: var(--text-secondary);
+  font-size: var(--text-footnote);
+  font-weight: 500;
   cursor: pointer;
 }
 
@@ -1235,7 +1252,7 @@ button.settings-skill-action:focus-visible {
   box-sizing: border-box;
   padding: 8px 10px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: var(--bg);
   color: var(--editor-text);
   font-family: var(--font-mono);
@@ -1342,7 +1359,7 @@ button.settings-skill-action:focus-visible {
   aspect-ratio: 16 / 10;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: var(--bg);
 }
 
@@ -1407,7 +1424,7 @@ button.settings-skill-action:focus-visible {
 /* A command name inside a row label (General › the textus command). */
 .settings-inline-code {
   padding: 0.05em 0.35em;
-  border-radius: 4px;
+  border-radius: var(--shape-xs);
   background: var(--editor-code-bg, rgba(0, 0, 0, 0.06));
   font-family: var(--font-mono);
   font-size: 0.92em;

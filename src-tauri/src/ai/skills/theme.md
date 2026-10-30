@@ -46,7 +46,7 @@ One CSS file the app loads after its own styles, Typora-compatible: `#write` is 
 3. `body { background-color: var(--editor-bg); color: var(--editor-text); }`, for Typora.
 4. `#write` with `color`, `font-family: var(--editor-font)`, `font-size` (16-18px or about 1.0625rem), `line-height` (1.6-1.9), and the page's own colours for code and alerts, so they read on this page in either appearance:
    - syntax: `--token-string`, `--token-number`, `--token-keyword`, `--token-function`, `--token-tag`, each readable on `--editor-code-bg`;
-   - alerts: `--md-alert-note`, `--md-alert-tip`, `--md-alert-important`, `--md-alert-warning`, `--md-alert-caution`;
+   - alerts: `--doc-alert-note`, `--doc-alert-tip`, `--doc-alert-important`, `--doc-alert-warning`, `--doc-alert-caution`;
    - `color-scheme: dark` on a dark page.
 5. Element rules, each under `#write`: `h1`-`h6` (sizes, weight, colour; the app's own heading rules, quote tint and rule marks switch off under an imported theme, so style what the design wants), `p`, `a` and `a:hover`, `strong`, `em`, `blockquote`, `code`, `pre` and `.md-fences` (code blocks), `pre code`, `table`, `th`, `td`, `hr`, `mark`, `img`, and `li::marker` if the markers take the accent.
 

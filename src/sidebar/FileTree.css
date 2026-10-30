@@ -30,7 +30,7 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   white-space: nowrap;
 }
 
@@ -105,7 +105,8 @@
   max-width: 45%;
   padding: 2px 4px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   color: var(--chrome-muted);
   font: inherit;
@@ -139,7 +140,7 @@
    pointer. */
 .tree-body {
   flex: 1;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
 }
 
 .file-tree-dragging,
@@ -184,7 +185,8 @@
   height: var(--control-height-sm);
   padding: 0 8px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--bg);
 }
 

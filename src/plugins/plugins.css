@@ -135,7 +135,7 @@ button.plugin-card-open:hover .plugin-card-name {
   width: 40px;
   height: 40px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   background: color-mix(in srgb, var(--editor-muted) 7%, var(--bg));
   overflow: hidden;
 }
@@ -147,7 +147,7 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-icon-large {
   width: 56px;
   height: 56px;
-  border-radius: var(--radius-dialog);
+  border-radius: var(--shape-l);
 }
 .plugin-icon-letter {
   color: var(--editor-muted);
@@ -237,7 +237,7 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: 0 0 var(--space-4);
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   font-size: var(--text-body);
   line-height: 1.6;
 }
@@ -257,7 +257,8 @@ button.plugin-card-open:hover .plugin-card-name {
 }
 .plugin-official {
   padding: 0 6px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--ui-primary) 12%, transparent);
   color: var(--ui-primary);
   font-weight: 600;
@@ -279,7 +280,8 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: 0 0 var(--space-3);
   padding: 4px 12px 4px 8px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   color: var(--editor-text);
   font: inherit;
@@ -307,7 +309,8 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: var(--space-2) 0 var(--space-3);
   padding: 6px 10px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--bg);
   color: var(--editor-text);
   font: inherit;
@@ -333,7 +336,7 @@ button.plugin-card-open:hover .plugin-card-name {
   min-height: 240px;
   margin: var(--space-2) var(--space-3);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-block);
+  border-radius: var(--shape-m);
   overflow: hidden;
 }
 .plugin-webview-settings {
@@ -349,7 +352,7 @@ button.plugin-card-open:hover .plugin-card-name {
   max-height: 160px;
   margin-top: var(--space-2);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
   object-fit: cover;
   object-position: top left;
 }
@@ -365,7 +368,8 @@ button.plugin-card-open:hover .plugin-card-name {
   height: 24px;
   padding: 0;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
 }
 /* A setting of several lines: its box under its title, the row's width. */
@@ -442,7 +446,8 @@ button.plugin-card-open:hover .plugin-card-name {
   text-overflow: ellipsis;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 .web-page-address:hover {
   background: color-mix(in srgb, currentColor 6%, transparent);
@@ -496,7 +501,7 @@ button.plugin-card-open:hover .plugin-card-name {
   height: 10px;
   padding: 0;
   border: 0;
-  border-radius: 0 0 var(--radius-small) var(--radius-small);
+  border-radius: 0 0 var(--shape-xs) var(--shape-xs);
   background: color-mix(in srgb, currentColor 8%, transparent);
   color: var(--editor-muted);
   opacity: 0.6;
@@ -535,7 +540,8 @@ button.plugin-card-open:hover .plugin-card-name {
   pointer-events: auto;
   padding: 0 6px;
   border: 0;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   font: inherit;
   font-size: var(--text-secondary);
@@ -552,7 +558,8 @@ button.plugin-card-open:hover .plugin-card-name {
   caret-color: transparent;
 }
 .plugin-block-cursor {
-  border-radius: 1px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--editor-text) 72%, transparent);
   color: var(--editor-bg, var(--bg));
 }
@@ -563,7 +570,7 @@ button.plugin-card-open:hover .plugin-card-name {
 /* Flash: what was found, lit; each label over the character after its
    match, from a zero-width anchor so the line doesn't move. */
 .plugin-flash-match {
-  border-radius: 2px;
+  border-radius: var(--doc-radius-sm);
   background: color-mix(in srgb, var(--ui-primary) 22%, transparent);
 }
 .plugin-flash-anchor {
@@ -580,7 +587,7 @@ button.plugin-card-open:hover .plugin-card-name {
   bottom: -0.2em;
   min-width: 0.6em;
   padding: 0 2px;
-  border-radius: 3px;
+  border-radius: var(--shape-xs);
   background: var(--ui-primary);
   color: var(--ui-on-primary);
   font-family: var(--font-mono);
@@ -697,7 +704,8 @@ button.plugin-card-open:hover .plugin-card-name {
 }
 .mcp-tool {
   padding: 0 6px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--sidebar-bg);
   color: var(--chrome-muted);
   font-family: var(--font-mono);

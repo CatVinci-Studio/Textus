@@ -83,11 +83,11 @@ describe("the theme skill and its sample", () => {
     "--token-keyword",
     "--token-function",
     "--token-tag",
-    "--md-alert-note",
-    "--md-alert-tip",
-    "--md-alert-important",
-    "--md-alert-warning",
-    "--md-alert-caution",
+    "--doc-alert-note",
+    "--doc-alert-tip",
+    "--doc-alert-important",
+    "--doc-alert-warning",
+    "--doc-alert-caution",
   ];
   // Listed too, for a theme that wants them; not part of every theme.
   const revisionVariables = [

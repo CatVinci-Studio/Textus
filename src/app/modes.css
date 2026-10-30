@@ -68,7 +68,8 @@
   transform: translateX(-50%);
   z-index: 60;
   padding: 4px 12px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   /* Opaque: it sits over the first line of text until it fades. */
   background: color-mix(
     in srgb,

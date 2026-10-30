@@ -6,7 +6,7 @@
   width: min(360px, calc(100vw - 16px));
   max-height: min(320px, calc(100vh - 16px));
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   background: var(--bg);
   color: var(--editor-text);
   box-shadow: var(--shadow-popover);
@@ -49,7 +49,8 @@
 .hover-card-button {
   padding: 1px 10px;
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   color: var(--editor-text);
   font: inherit;

@@ -124,7 +124,8 @@
   height: 20px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   color: inherit;
   opacity: 0.6;
@@ -185,7 +186,8 @@
   color: var(--editor-muted);
   white-space: nowrap;
   padding: 2px 7px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   border: 1px solid var(--editor-border);
   cursor: default;
 }

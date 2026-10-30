@@ -59,7 +59,7 @@
 
   .md-span[data-delim="="] {
     background: var(--editor-highlight-bg);
-    border-radius: var(--md-radius-sm);
+    border-radius: var(--doc-radius-sm);
     padding: 0 0.15em;
   }
 
@@ -120,11 +120,11 @@
   }
 
   .milkdown p {
-    margin: var(--md-gap) 0;
+    margin: var(--doc-gap) 0;
   }
 
   .milkdown blockquote {
-    margin: var(--md-gap-box) 0;
+    margin: var(--doc-gap-box) 0;
     padding: 0 1em;
     border-left: 4px solid var(--editor-border);
   }
@@ -139,7 +139,7 @@
   }
 
   .milkdown hr {
-    margin: calc(var(--md-gap-box) * 1.5) 0;
+    margin: calc(var(--doc-gap-box) * 1.5) 0;
     height: 0;
     border: none;
     border-top: 1px solid var(--editor-border);
@@ -186,14 +186,14 @@
     font-size: 0.9em;
     background: var(--editor-code-bg);
     padding: 0.1em 0.35em;
-    border-radius: var(--md-radius-sm);
+    border-radius: var(--doc-radius-sm);
   }
 
   .code-block-wrapper {
     background: var(--editor-code-bg);
     border: 1px solid var(--editor-border);
-    border-radius: var(--md-radius);
-    margin: var(--md-gap-box) 0;
+    border-radius: var(--doc-radius);
+    margin: var(--doc-gap-box) 0;
   }
 
   /* Size and line height live on the <pre>: its strut sets each line's minimum
@@ -290,6 +290,7 @@
     height: 0.4em;
     margin-right: 0.5em;
     border-radius: 50%;
+    corner-shape: round;
     background: var(--editor-accent);
     vertical-align: middle;
   }
@@ -303,7 +304,7 @@
     color: var(--editor-muted);
     padding: 0.55em 1em;
     border-left: 3px solid var(--editor-quote-border);
-    border-radius: 0 var(--md-radius) var(--md-radius) 0;
+    border-radius: 0 var(--doc-radius) var(--doc-radius) 0;
     background: var(--editor-code-bg);
   }
 
@@ -330,7 +331,7 @@
     border-collapse: separate;
     border-spacing: 0;
     border: 1px solid var(--editor-border);
-    border-radius: var(--md-radius);
+    border-radius: var(--doc-radius);
   }
 
   :root:not([data-user-theme]) .milkdown :is(th, td) {
@@ -346,19 +347,19 @@
   }
 
   :root:not([data-user-theme]) .milkdown tr:first-child > :first-child {
-    border-top-left-radius: calc(var(--md-radius) - 1px);
+    border-top-left-radius: calc(var(--doc-radius) - 1px);
   }
 
   :root:not([data-user-theme]) .milkdown tr:first-child > :last-child {
-    border-top-right-radius: calc(var(--md-radius) - 1px);
+    border-top-right-radius: calc(var(--doc-radius) - 1px);
   }
 
   :root:not([data-user-theme]) .milkdown tr:last-child > :first-child {
-    border-bottom-left-radius: calc(var(--md-radius) - 1px);
+    border-bottom-left-radius: calc(var(--doc-radius) - 1px);
   }
 
   :root:not([data-user-theme]) .milkdown tr:last-child > :last-child {
-    border-bottom-right-radius: calc(var(--md-radius) - 1px);
+    border-bottom-right-radius: calc(var(--doc-radius) - 1px);
   }
 
   :root:not([data-user-theme]) .milkdown th {

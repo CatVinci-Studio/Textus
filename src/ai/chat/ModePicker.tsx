@@ -1,4 +1,4 @@
-import { Fragment, useId, useState, type KeyboardEvent } from "react";
+import { Fragment, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import type { AgentMode } from "../../prefs/SettingsContext";
 import { useMergedRef, usePresence } from "../../ui/usePresence";
@@ -68,14 +68,21 @@ export function ModePicker({
   const presence = usePresence(open, { exitMs: 120 });
   const presenceRef = useMergedRef(listRef, presence.ref);
 
+  // The list takes focus while open; with holdFocus it goes back to where
+  // it was (the message), not to the trigger.
+  const focusBefore = useRef<HTMLElement | null>(null);
+
   function openMenu() {
+    focusBefore.current = document.activeElement as HTMLElement | null;
     setActive(Math.max(0, items.findIndex(isSelected)));
     setOpen(true);
   }
 
-  function close(refocus = !holdFocus) {
+  function close(refocus = true) {
     setOpen(false);
-    if (refocus) triggerRef.current?.focus();
+    if (!refocus) return;
+    if (holdFocus) focusBefore.current?.focus({ preventScroll: true });
+    else triggerRef.current?.focus();
   }
 
   function choose(index: number) {

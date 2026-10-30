@@ -48,7 +48,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 10px 6px 26px;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   color: var(--editor-text);
   white-space: nowrap;
   cursor: pointer;

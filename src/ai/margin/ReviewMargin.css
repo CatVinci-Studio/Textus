@@ -59,7 +59,7 @@
   position: absolute;
   box-sizing: border-box;
   padding: 9px 12px 9px;
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   border: 1px solid var(--review-note-border);
   background: var(--review-note-bg);
   color: var(--editor-text);
@@ -117,6 +117,7 @@
   width: calc(16px * var(--ui-text-scale, 1));
   height: calc(16px * var(--ui-text-scale, 1));
   border-radius: 50%;
+  corner-shape: round;
   background: color-mix(in srgb, var(--editor-accent) 14%, transparent);
   color: var(--editor-accent);
   font-size: calc(8.5px * var(--ui-text-scale, 1));
@@ -160,7 +161,8 @@
 
 .review-note-actions button {
   padding: 2px 10px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   border: 1px solid var(--review-note-border);
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
@@ -227,7 +229,7 @@
    new text in the green box - not plain text, as a note's chip is. */
 .revision-note.review-note-chip .review-note-chip-text {
   padding: 0 4px;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
   background: var(--revision-insert-bg);
 }
 
@@ -319,7 +321,7 @@
 .review-anchor {
   background: var(--review-anchor-bg);
   box-shadow: inset 0 -1.5px 0 var(--review-note-line);
-  border-radius: 2px;
+  border-radius: var(--doc-radius-sm);
   transition: background var(--dur-fast) var(--ease-standard);
 }
 
@@ -337,7 +339,8 @@
   padding: 0 4px;
   vertical-align: 0.2em;
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--review-note-line);
   color: var(--on-fill);
   font: 700 10.5px/1 var(--font-ui, sans-serif);
@@ -446,7 +449,8 @@
   min-width: calc(16px * var(--ui-text-scale, 1));
   height: calc(16px * var(--ui-text-scale, 1));
   padding-inline: calc(4px * var(--ui-text-scale, 1));
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--success-color);
   color: var(--on-fill);
   font-size: calc(9.5px * var(--ui-text-scale, 1));
@@ -467,7 +471,7 @@
 .revision-note-text {
   padding: 1px 4px;
   margin: 0 -4px;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
   background: var(--revision-insert-bg);
   overflow-wrap: anywhere;
   /* A change of whole paragraphs keeps them apart. */
@@ -547,7 +551,8 @@
   height: 1.1em;
   margin: 0 1px;
   vertical-align: -0.15em;
-  border-radius: 1px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--success-color);
 }
 
@@ -562,7 +567,7 @@
   max-width: 100%;
   max-height: 96px;
   margin: 4px 0;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
   object-fit: contain;
   object-position: left center;
 }
@@ -591,7 +596,7 @@ del .revision-note-picture {
 .own-insert {
   background: var(--revision-insert-bg);
   color: var(--revision-insert-text);
-  border-radius: 2px;
+  border-radius: var(--doc-radius-sm);
 }
 
 .own-delete {
@@ -599,7 +604,7 @@ del .revision-note-picture {
   background: var(--revision-delete-bg);
   text-decoration: line-through;
   text-decoration-color: var(--revision-delete-strike);
-  border-radius: 2px;
+  border-radius: var(--doc-radius-sm);
   user-select: none;
 }
 

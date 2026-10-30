@@ -23,7 +23,7 @@ body {
   background: var(--bg);
   color: var(--editor-text);
   font-family: var(--font-sans);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   line-height: 1.5;
 }
 
@@ -42,11 +42,12 @@ a {
 button,
 .button {
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   min-height: var(--control-height-sm);
   padding: 0 var(--space-3);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--bg);
   color: var(--chrome-text);
   cursor: pointer;
@@ -74,12 +75,18 @@ input,
 select,
 textarea {
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   color: var(--editor-text);
   background: var(--bg);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   padding: var(--space-1) var(--space-2);
+}
+/* Text in lines is a container, not a control. */
+textarea {
+  border-radius: var(--shape-s);
+  corner-shape: superellipse(1.25);
 }
 input:focus,
 select:focus,
@@ -113,7 +120,7 @@ button:focus-visible {
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-s);
   color: var(--sidebar-text);
 }
 .list > li.clickable:hover,
@@ -139,17 +146,17 @@ h3 {
   font-weight: 600;
 }
 h2 {
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
 }
 h3 {
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 code,
 pre {
   font-family: var(--font-mono);
   background: var(--editor-code-bg);
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
 }
 
 .danger {
@@ -241,5 +248,5 @@ pre {
    taken off, never faded. */
 .motion-mark {
   background-color: var(--motion-mark-bg);
-  border-radius: 2px;
+  border-radius: var(--shape-xs);
 }

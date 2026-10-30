@@ -91,21 +91,18 @@ function renderComposer(
 }
 
 describe("the composer on a phone", () => {
-  it("picks the mode with a segmented control, and sends with it", () => {
+  it("picks the mode in the picker on the toolbar's row, and sends with it", () => {
     const { onSend } = renderComposer();
-    const modes = screen.getByRole("radiogroup", { name: "Mode" });
+    const picker = screen.getByRole("combobox", { name: "Mode" });
+    expect(picker).toHaveTextContent("Write");
+    fireEvent.click(picker);
     expect(
-      [...modes.querySelectorAll('[role="radio"]')].map((m) => m.textContent),
+      [...document.querySelectorAll(".mode-picker-mode-name")].map(
+        (m) => m.textContent,
+      ),
     ).toEqual(["Write", "Review", "Create"]);
-    expect(screen.getByRole("radio", { name: "Write" })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
-    fireEvent.click(screen.getByRole("radio", { name: "Review" }));
-    expect(screen.getByRole("radio", { name: "Review" })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
+    fireEvent.click(screen.getByRole("option", { name: "Review" }));
+    expect(picker).toHaveTextContent("Review");
     fireEvent.change(screen.getByPlaceholderText("Ask anything"), {
       target: { value: "why?" },
     });

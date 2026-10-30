@@ -20,7 +20,7 @@
   overflow-y: auto;
   padding: var(--space-4) var(--space-5);
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-dialog);
+  border-radius: var(--shape-l);
   background: var(--bg);
   box-shadow: var(--shadow-dialog);
   font-size: var(--text-body-large);
@@ -48,7 +48,8 @@
   margin: 0 0 16px;
   padding: 6px 10px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--bg);
   color: var(--editor-text);
   font: inherit;

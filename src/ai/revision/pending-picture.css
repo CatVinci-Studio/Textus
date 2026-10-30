@@ -7,7 +7,7 @@
   max-width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
-  border-radius: var(--md-radius);
+  border-radius: var(--doc-radius);
   background: color-mix(
     in srgb,
     var(--editor-text) 5%,
@@ -21,6 +21,7 @@
   width: 70%;
   aspect-ratio: 1;
   border-radius: 50%;
+  corner-shape: round;
   /* Soft edges from the gradient itself: no blur to run every frame. */
   background: radial-gradient(
     closest-side,
@@ -115,7 +116,8 @@
 .pending-picture-retry {
   padding: 2px 12px;
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   color: var(--editor-text);
   font: inherit;
@@ -144,7 +146,8 @@
   right: 8px;
   padding: 2px 12px;
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
   font: inherit;
@@ -183,7 +186,7 @@
   width: auto;
   height: 120px;
   max-width: 100%;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
 }
 
 .agent-proposal-picture-failed {
@@ -198,7 +201,8 @@
   position: relative;
   display: inline-block;
   overflow: hidden;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .pending-redraw img {

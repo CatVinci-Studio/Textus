@@ -35,7 +35,8 @@
   min-width: 90px;
   max-width: 200px;
   padding: 5px 8px;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   font-size: var(--text-secondary);
   color: var(--editor-muted);
   cursor: pointer;
@@ -90,6 +91,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
+  corner-shape: round;
   background: currentColor;
   flex-shrink: 0;
   opacity: 0.7;
@@ -105,7 +107,8 @@
   align-items: center;
   padding: 0 2px;
   line-height: 1;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .tab-pill-close:hover {
@@ -121,7 +124,8 @@
   color: var(--editor-muted);
   font-size: var(--text-body-large);
   padding: 4px 10px;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .tab-bar-add:hover {

@@ -61,7 +61,8 @@
 :root[data-window-chrome="mobile"] .window-bar-toggle {
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 /* A touch leaves :hover stuck on the last thing tapped. */

@@ -39,7 +39,7 @@ body {
 
 .playground-brand img {
   display: block;
-  border-radius: 5px;
+  border-radius: var(--shape-xs);
 }
 
 .playground-name {
@@ -50,7 +50,8 @@ body {
 .playground-tag {
   padding: 1px 8px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   color: var(--chrome-muted);
   font-size: var(--text-footnote);
 }
@@ -86,7 +87,8 @@ body {
   align-items: center;
   min-height: var(--control-height-sm);
   padding: 0 12px;
-  border-radius: var(--radius-button);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--ui-primary);
   color: var(--ui-on-primary);
   font-weight: 600;

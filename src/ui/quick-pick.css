@@ -19,7 +19,8 @@
   color: var(--editor-text);
   background: var(--bg);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 .quick-pick-input:focus {
   outline: 2px solid var(--chrome-accent);
@@ -37,7 +38,7 @@
   align-items: baseline;
   gap: var(--space-2);
   padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-s);
   font-size: var(--text-body);
   cursor: pointer;
   flex-wrap: wrap;

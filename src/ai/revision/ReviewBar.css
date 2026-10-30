@@ -8,7 +8,8 @@
   align-items: center;
   gap: 10px;
   padding: 5px 5px 5px 14px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   /* Ink of the page's own theme: the primary button's colours, inverted
      with the theme (a dark or imported theme gets a light bar). */
   background: color-mix(in srgb, var(--ui-primary) 94%, transparent);
@@ -94,6 +95,7 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
+  corner-shape: round;
   background: none;
   color: inherit;
   opacity: 0.85;
@@ -123,6 +125,7 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
+  corner-shape: round;
   background: none;
   color: inherit;
   opacity: 0.85;
@@ -142,7 +145,8 @@
   gap: 5px;
   width: auto;
   padding: 0 9px 0 6px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .review-bar-view-name {
@@ -175,7 +179,7 @@
   gap: 8px;
   padding: 7px 10px 7px 26px;
   border: 0;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: none;
   color: inherit;
   text-align: start;
@@ -202,6 +206,7 @@
   height: 8px;
   margin-top: -4px;
   border-radius: 50%;
+  corner-shape: round;
   background: var(--editor-accent);
 }
 
@@ -247,7 +252,8 @@
 
 .review-bar-button {
   padding: 6px 13px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   border: 1px solid color-mix(in srgb, var(--ui-on-primary) 26%, transparent);
   background: transparent;
   color: var(--ui-on-primary);
@@ -298,7 +304,7 @@
   align-items: stretch;
   gap: 10px;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
-  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  border-radius: var(--shape-l) var(--shape-l) 0 0;
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
   font-size: var(--text-body);
@@ -341,7 +347,8 @@
 .review-bar-phone .review-bar-button {
   flex: 1;
   padding: 12px;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   border-color: var(--editor-border, var(--border-color));
   color: var(--editor-text);
   font-size: var(--text-control);

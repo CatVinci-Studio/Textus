@@ -15,7 +15,7 @@
 
 .plugin-mark-highlight {
   background: color-mix(in srgb, var(--plugin-tone) 18%, transparent);
-  border-radius: 2px;
+  border-radius: var(--doc-radius-sm);
 }
 
 .plugin-mark-underline {
@@ -32,7 +32,8 @@
   display: inline-block;
   margin-inline-start: 0.4em;
   padding: 0 0.45em;
-  border-radius: 999px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--plugin-tone) 14%, transparent);
   color: var(--plugin-tone);
   font-size: 0.75em;

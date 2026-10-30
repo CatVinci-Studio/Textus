@@ -127,7 +127,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1.75rem 2.25rem;
-  border-radius: var(--radius-dialog);
+  border-radius: var(--shape-l);
   background: var(--bg);
   color: var(--editor-text);
   border: 1px solid var(--border-color);
@@ -139,6 +139,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
+  corner-shape: round;
   border: 3px solid var(--editor-border);
   border-top-color: var(--editor-accent);
   animation: pdf-export-spin 0.7s linear infinite;

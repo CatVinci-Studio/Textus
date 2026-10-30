@@ -94,8 +94,8 @@ derives them from its page, and its own `:root` may set any of them (see
 `--token-string`, `--token-number`, `--token-keyword`, `--token-function`,
 `--token-tag` — code-block syntax highlighting.
 
-`--md-alert-note`, `--md-alert-tip`, `--md-alert-important`,
-`--md-alert-warning`, `--md-alert-caution`, `--md-alert-accent` — GitHub-style
+`--doc-alert-note`, `--doc-alert-tip`, `--doc-alert-important`,
+`--doc-alert-warning`, `--doc-alert-caution`, `--doc-alert-accent` — GitHub-style
 alert blocks.
 
 Both follow the same three-block light/dark structure. Built-in content themes

@@ -61,7 +61,8 @@
   height: 44px;
   padding: 0 4px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   color: var(--editor-text);
   font: inherit;

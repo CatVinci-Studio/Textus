@@ -60,7 +60,8 @@
   min-width: 0;
   padding: 2px 4px;
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .find-replace-input {
@@ -68,7 +69,8 @@
   min-width: 0;
   padding: 3px 2px;
   border: none;
-  border-radius: calc(var(--radius-control) - 3px);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
   color: var(--editor-text);
   font: inherit;
@@ -106,7 +108,8 @@
 
 .find-replace-bar button {
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   padding: 4px 7px;
   font-size: var(--text-secondary);
   cursor: pointer;
@@ -129,7 +132,8 @@
   height: 22px;
   padding: 0 !important;
   border: none !important;
-  border-radius: var(--radius-control) !important;
+  border-radius: var(--shape-pill) !important;
+  corner-shape: round;
   font-size: var(--text-caption) !important;
   line-height: 1;
   color: var(--editor-muted);
@@ -153,7 +157,7 @@
 
 .find-match {
   background: var(--find-match-bg);
-  border-radius: var(--md-radius-sm);
+  border-radius: var(--doc-radius-sm);
 }
 
 .find-match-active {

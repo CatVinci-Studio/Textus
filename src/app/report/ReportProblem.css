@@ -46,7 +46,7 @@
   padding: var(--space-2);
   overflow: auto;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   color: var(--editor-muted);
   font-family: var(--font-mono);
   font-size: var(--text-caption);

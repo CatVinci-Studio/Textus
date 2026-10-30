@@ -3,7 +3,7 @@
   position: fixed;
   z-index: 50;
   pointer-events: none;
-  border-radius: 6px;
+  border-radius: var(--shape-m);
   background: color-mix(in srgb, var(--chrome-accent) 16%, transparent);
   outline: 2px solid color-mix(in srgb, var(--chrome-accent) 45%, transparent);
   outline-offset: -2px;
@@ -18,7 +18,8 @@
   max-width: 220px;
   padding: 3px 10px;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--surface-floating);
   box-shadow: var(--shadow-floating);
   font-size: 12px;

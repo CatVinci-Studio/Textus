@@ -33,11 +33,11 @@ body {
   --token-keyword: #c3a6ff;
   --token-function: #7fb8f0;
   --token-tag: #f19a9a;
-  --md-alert-note: #7fb8f0;
-  --md-alert-tip: #7fd1a0;
-  --md-alert-important: #c3a6ff;
-  --md-alert-warning: #e8b45c;
-  --md-alert-caution: #f08c8c;
+  --doc-alert-note: #7fb8f0;
+  --doc-alert-tip: #7fd1a0;
+  --doc-alert-important: #c3a6ff;
+  --doc-alert-warning: #e8b45c;
+  --doc-alert-caution: #f08c8c;
 }
 
 #write h1,

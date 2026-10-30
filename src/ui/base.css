@@ -240,6 +240,6 @@
   font-family: var(--font-sans);
   background: var(--bg);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   box-shadow: var(--shadow-popover);
 }

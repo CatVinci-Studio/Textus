@@ -78,6 +78,7 @@ test("the mode picker is a compact button on the toolbar's row on a phone", asyn
   await openPhone(page);
   const dock = await openQuickAsk(page);
   const picker = dock.getByRole("combobox", { name: "Mode" });
+  await dock.locator("textarea").tap();
   // Quick Ask: Write (on) and Review.
   await expect(picker.locator(".mode-picker-value")).toHaveText("Write");
   await picker.tap();

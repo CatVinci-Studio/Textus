@@ -25,7 +25,7 @@
   flex-direction: column;
   gap: 14px;
   overflow: hidden;
-  border-radius: var(--radius-dialog);
+  border-radius: var(--shape-l);
   box-shadow: var(--shadow-dialog);
   --enter-y: var(--motion-distance-sm);
   --enter-scale: var(--scale-enter);
@@ -71,7 +71,8 @@
 .tutorial-chapter {
   padding: 2px 8px;
   border: 1px solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   color: var(--editor-muted);
   font-size: var(--text-caption);
   font-weight: 600;
@@ -97,7 +98,8 @@
 
 .tutorial-progress-segment {
   height: 3px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--border-color);
   transition:
     background-color var(--dur-base) var(--ease-standard),
@@ -131,7 +133,7 @@
   height: 42px;
   flex: 0 0 42px;
   border: 1px solid var(--tutorial-line);
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   color: var(--editor-accent);
   background: var(--tutorial-soft);
   font: 600 19px/1 var(--font-mono);
@@ -173,7 +175,7 @@
 .tutorial-task {
   padding: 10px 12px;
   border: 1px solid var(--tutorial-line);
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   background: var(--chrome-subtle);
   color: var(--editor-text);
   font-size: var(--text-body);
@@ -199,7 +201,7 @@
 
 .tutorial-task code {
   padding: 1px 5px;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
   background: var(--tutorial-soft);
   color: var(--editor-accent);
   font: 600 0.92em / 1.4 var(--font-mono);
@@ -214,6 +216,7 @@
   margin-top: 1px;
   border: 1px solid var(--tutorial-line);
   border-radius: 50%;
+  corner-shape: round;
   color: var(--editor-accent);
   background: var(--bg);
   font-size: var(--text-caption);
@@ -275,6 +278,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
+  corner-shape: round;
   color: var(--editor-accent);
   background: var(--tutorial-soft);
   font-size: 8px;
@@ -411,7 +415,8 @@
   margin-left: auto;
   flex-shrink: 0;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   padding: 5px 8px;
   background: var(--bg);
   color: var(--editor-muted);
@@ -436,7 +441,7 @@
 .tutorial-step-connect .provider-picker {
   padding: 0 14px;
   border: 1px solid var(--tutorial-line);
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   background: var(--chrome-subtle);
 }
 

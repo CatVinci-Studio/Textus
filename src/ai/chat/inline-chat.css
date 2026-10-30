@@ -21,7 +21,7 @@
   /* A command bar, not a second text column: on a wide column it stays at a
      comfortable width instead of stretching past 1000px. */
   max-width: min(100%, 720px);
-  margin: var(--md-gap-box, 1.1em) auto;
+  margin: var(--doc-gap-box, 1.1em) auto;
   /* Room the first text row leaves for Quick Ask's floating header buttons:
      4px edge + three 22px buttons with 2px gaps, plus 6px of air. */
   --quick-ask-actions-width: 80px;
@@ -132,30 +132,17 @@
 /* In the panel and the detached window the field is one rounded box on the
    panel's foot, lit at its edge on focus. Quick Ask keeps the open layout. */
 :is(.agent-panel-body, .chat-window-body) .inline-chat-field {
-  /* A large box keeps a calm corner; the controls in its bottom corners
-     take theirs from it, less the inset and the border, to be concentric. */
-  --composer-radius: var(--radius-dialog);
-  --composer-inset: 6px;
-  gap: 6px;
-  padding: var(--composer-inset) var(--composer-inset) var(--composer-inset) 8px;
+  /* A medium container with capsule controls, kept a padding clear of its
+     corners. */
+  gap: var(--space-2);
+  padding: var(--space-2);
   border: 1px solid var(--editor-border, var(--border-color));
-  border-radius: var(--composer-radius);
+  border-radius: var(--shape-m);
   background: var(--editor-bg, var(--bg));
   box-shadow: var(--shadow-raised);
   transition:
     border-color var(--dur-fast) var(--ease-standard),
     box-shadow var(--dur-fast) var(--ease-standard);
-}
-
-:is(.agent-panel-body, .chat-window-body)
-  .inline-chat-field
-  :is(
-    .inline-chat-attach,
-    .inline-chat-toggle,
-    .inline-chat-mode,
-    .inline-chat-send
-  ) {
-  border-radius: calc(var(--composer-radius) - var(--composer-inset) - 1px);
 }
 
 :is(.agent-panel-body, .chat-window-body) .inline-chat-field:focus-within {
@@ -227,7 +214,8 @@
   font-size: var(--text-caption);
   color: var(--editor-text);
   border: 1px solid color-mix(in srgb, var(--editor-accent) 30%, transparent);
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--editor-accent) 12%, transparent);
   padding: 2px 6px;
   white-space: nowrap;
@@ -301,6 +289,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
+  corner-shape: round;
   background: var(--danger);
 }
 
@@ -317,7 +306,8 @@
   gap: 4px;
   padding: 2px 6px;
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   font-size: var(--text-caption);
   color: var(--editor-muted);
 }
@@ -373,7 +363,7 @@
   gap: 8px;
   padding: 5px 8px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: transparent;
   color: var(--editor-text);
   cursor: pointer;
@@ -638,7 +628,7 @@
   gap: 8px;
   padding: 10px 12px 12px;
   border: 1px solid var(--chat-hairline, var(--editor-border));
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   background: var(--chat-card-bg, transparent);
   font-size: var(--text-secondary);
   transition: border-color var(--dur-fast) var(--ease-standard);
@@ -668,7 +658,7 @@
   place-items: center;
   width: 18px;
   height: 18px;
-  border-radius: 5px;
+  border-radius: var(--shape-xs);
   background: color-mix(in srgb, var(--success-color) 14%, transparent);
   color: var(--success-color);
 }
@@ -722,7 +712,7 @@
   flex-direction: column;
   padding: 4px 0;
   border: 1px solid var(--chat-hairline, var(--editor-border));
-  border-radius: var(--radius-block);
+  border-radius: var(--shape-s);
   background: var(--editor-bg, var(--bg));
   overflow: hidden;
   animation: motion-disclose-in var(--dur-fast) var(--ease-out);
@@ -781,7 +771,8 @@
 .agent-diff-chip {
   padding: 1px 6px;
   line-height: 1.4;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   /* Counts change in place without their digits shifting. */
   font-variant-numeric: tabular-nums;
 }
@@ -1115,6 +1106,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
+  corner-shape: round;
   background: currentColor;
   animation: agent-thinking-pulse 1.2s ease-in-out infinite;
 }
@@ -1149,7 +1141,8 @@
   height: 1.05em;
   margin-left: 2px;
   vertical-align: -0.15em;
-  border-radius: 1px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--editor-accent);
   animation: agent-caret-pulse 1s var(--ease-standard) infinite;
 }
@@ -1313,7 +1306,7 @@
   max-width: 100%;
   max-height: 120px;
   object-fit: contain;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
 }
 
 /* Proposal card: the model's one-line reason, and the per-sentence choice
@@ -1351,7 +1344,7 @@
   align-items: flex-start;
   gap: 6px;
   padding: 5px 6px 5px 4px;
-  border-radius: var(--radius-block);
+  border-radius: var(--shape-s);
   transition: background var(--dur-fast) var(--ease-standard);
 }
 
@@ -1387,7 +1380,8 @@
   height: calc(18px * var(--ui-text-scale, 1));
   padding-inline: calc(4px * var(--ui-text-scale, 1));
   margin-top: 1px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--success-color);
   color: var(--on-fill);
   font-size: calc(10.5px * var(--ui-text-scale, 1));
@@ -1420,7 +1414,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
 .agent-comment {
   padding: 10px 12px 12px;
   border: 1px solid var(--chat-hairline, var(--editor-border));
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   background: var(--chat-card-bg, transparent);
 }
 
@@ -1436,7 +1430,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   place-items: center;
   width: 18px;
   height: 18px;
-  border-radius: 5px;
+  border-radius: var(--shape-xs);
   background: var(--review-anchor-bg);
   color: var(--review-note-line);
 }
@@ -1459,7 +1453,8 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   min-width: calc(18px * var(--ui-text-scale, 1));
   height: calc(18px * var(--ui-text-scale, 1));
   padding-inline: calc(4px * var(--ui-text-scale, 1));
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--review-note-line);
   color: var(--on-fill);
   font: 700 calc(10.5px * var(--ui-text-scale, 1)) / 1

@@ -7,9 +7,9 @@
 
 .plugin-code-block {
   position: relative;
-  margin: var(--md-gap-box) 0;
+  margin: var(--doc-gap-box) 0;
   border: 1px solid var(--editor-border);
-  border-radius: var(--md-radius);
+  border-radius: var(--doc-radius);
   background: var(--editor-code-bg);
   overflow: hidden;
 }
@@ -33,7 +33,7 @@
   z-index: 1;
   padding: 2px 6px;
   border: 1px solid var(--editor-border);
-  border-radius: var(--md-radius-sm);
+  border-radius: var(--doc-radius-sm);
   background: var(--editor-bg);
   color: var(--text-muted);
   font: 12px var(--font-mono);

@@ -27,7 +27,7 @@
   width: min(520px, 100%);
   padding: 34px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-dialog);
+  border-radius: var(--shape-l);
   background: var(--bg);
   color: var(--editor-text);
   box-shadow: var(--shadow-dialog);

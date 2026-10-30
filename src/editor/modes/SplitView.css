@@ -46,8 +46,8 @@
 .split-preview-body pre {
   background: var(--editor-code-bg);
   border: 1px solid var(--editor-border);
-  border-radius: var(--md-radius);
-  margin: var(--md-gap-box) 0;
+  border-radius: var(--doc-radius);
+  margin: var(--doc-gap-box) 0;
 }
 
 /* Narrow windows stack the panes instead of squeezing both. */

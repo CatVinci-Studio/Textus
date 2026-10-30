@@ -74,7 +74,8 @@
 
 .memory-count {
   padding: 0 6px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--editor-text) 7%, transparent);
   font-variant-numeric: tabular-nums;
 }
@@ -84,7 +85,7 @@
   padding: 2px 12px;
   list-style: none;
   border: 1px solid var(--chat-hairline, var(--editor-border));
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   background: var(--chat-card-bg, var(--editor-bg));
 }
 
@@ -126,7 +127,7 @@
   gap: 3px;
   padding: 10px 12px;
   border: 1px solid var(--chat-hairline, var(--editor-border));
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   background: var(--chat-card-bg, var(--editor-bg));
   color: var(--editor-muted);
   font: inherit;
@@ -163,7 +164,8 @@
 
 .memory-aliases span {
   padding: 0 6px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--editor-text) 7%, transparent);
 }
 
@@ -183,7 +185,7 @@
 .memory-empty {
   padding: 12px 14px;
   border: 1px dashed var(--chat-hairline, var(--editor-border));
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   color: var(--editor-muted);
   font-size: var(--text-footnote);
   line-height: 1.55;
@@ -202,7 +204,8 @@
 
 .memory-empty-actions button {
   padding: 5px 12px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   border: 1px solid var(--editor-border, var(--border-color));
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
@@ -248,7 +251,8 @@
   height: 20px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   color: var(--editor-muted);
   font: inherit;
@@ -327,7 +331,8 @@
   margin: 0 0 12px;
   padding: 6px 10px;
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
   color: var(--editor-text);
   font: inherit;
@@ -371,7 +376,8 @@
 
 .memory-badge {
   padding: 0 6px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--editor-text) 7%, transparent);
 }
 

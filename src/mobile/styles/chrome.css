@@ -44,7 +44,7 @@
     padding: 0;
     overflow: hidden;
     border: none;
-    border-radius: var(--radius-dialog);
+    border-radius: var(--shape-l);
     text-align: center;
     animation: motion-alert-in var(--dur-medium) var(--ease-out);
   }
@@ -175,7 +175,7 @@
     min-width: 250px;
     max-width: min(320px, calc(100vw - 16px));
     padding: 0;
-    border-radius: var(--radius-dialog);
+    border-radius: var(--shape-l);
   }
 
   /* Out of the menu button on a spring, as UIMenu opens. */
@@ -269,7 +269,7 @@
     min-height: 36px;
     padding: 0 4px 0 8px;
     border: none;
-    border-radius: var(--radius-surface);
+    border-radius: var(--shape-m);
     background: color-mix(in srgb, var(--editor-text) 7%, transparent);
   }
 

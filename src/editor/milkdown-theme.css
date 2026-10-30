@@ -2,10 +2,10 @@
    tables). How document elements look lives in content-base.css's layer,
    which themes override; nothing here should be restyled away. */
 .milkdown {
-  --md-gap: 0.8em;
-  --md-gap-box: 1.1em;
-  --md-radius: var(--radius-block);
-  --md-radius-sm: var(--radius-small);
+  --doc-gap: 0.8em;
+  --doc-gap-box: 1.1em;
+  --doc-radius: var(--shape-s);
+  --doc-radius-sm: var(--shape-xs);
 }
 
 /* A click below the text still lands in it: the page height less the
@@ -48,7 +48,8 @@
   margin-left: 0.5em;
   padding: 0 0.35em;
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   color: var(--editor-muted);
   font-size: 0.72em;
   font-style: normal;
@@ -114,7 +115,7 @@
 .pending-insert {
   color: var(--revision-insert-text);
   background: var(--revision-insert-bg);
-  border-radius: var(--md-radius-sm);
+  border-radius: var(--doc-radius-sm);
   padding: 0 2px;
   /* Renders real markdown, so the root's pre-wrap would double the spacing. */
   white-space: normal;
@@ -147,7 +148,7 @@
 
 .pending-insert-lines > .pending-line {
   background: var(--revision-insert-bg);
-  border-radius: var(--md-radius-sm);
+  border-radius: var(--doc-radius-sm);
   padding: 0 2px;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
@@ -216,14 +217,14 @@ br:is(.pending-delete, .pending-sentence-hot) {
   max-width: 100%;
   height: auto;
   vertical-align: bottom;
-  border-radius: var(--md-radius);
+  border-radius: var(--doc-radius);
 }
 
 /* A rewrite shown sentence by sentence: each changed sentence struck, its
    replacement after, then ✓ / ✕. The entrance staggers by --i; a streamed
    rewrite has --i 0, as its sentences came in as written. */
 .pending-sentence {
-  border-radius: var(--md-radius-sm);
+  border-radius: var(--doc-radius-sm);
   transition:
     color var(--dur-instant) var(--ease-standard),
     background var(--dur-instant) var(--ease-standard);
@@ -268,7 +269,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 /* The hot pair (review bar pointer or mouse): tints a shade darker. Hover
    never hides or previews anything. */
 :is(.pending-sentence-focus, .pending-sentence-hot):not(.pending-pick) {
-  border-radius: var(--radius-small);
+  border-radius: var(--doc-radius-sm);
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
@@ -296,7 +297,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 /* Just-accepted text fades out its green, so the eye follows it. */
 .pending-landed {
-  border-radius: var(--md-radius-sm);
+  border-radius: var(--doc-radius-sm);
   animation: pending-landed var(--dur-slow) var(--ease-out) both;
 }
 
@@ -376,7 +377,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   height: 1.1em;
   margin: 0 1px;
   vertical-align: -0.15em;
-  border-radius: 1px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--danger);
 }
 
@@ -417,6 +419,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   height: 20px;
   padding: 0;
   border-radius: 50%;
+  corner-shape: round;
   border: 1px solid var(--editor-border, var(--border-color));
   background: var(--editor-bg, var(--bg));
   cursor: pointer;
@@ -492,7 +495,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 /* The progress cursor: the sentence a streaming rewrite is at, tinted even
    when kept unchanged. A tint, since motion here is opacity and transform only. */
 .pending-reading {
-  border-radius: var(--md-radius-sm);
+  border-radius: var(--doc-radius-sm);
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   background: var(--revision-reading-bg);
@@ -523,13 +526,13 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 .chat-selection:first-child {
-  border-top-left-radius: var(--md-radius-sm);
-  border-top-right-radius: var(--md-radius-sm);
+  border-top-left-radius: var(--doc-radius-sm);
+  border-top-right-radius: var(--doc-radius-sm);
 }
 
 .chat-selection:last-child {
-  border-bottom-left-radius: var(--md-radius-sm);
-  border-bottom-right-radius: var(--md-radius-sm);
+  border-bottom-left-radius: var(--doc-radius-sm);
+  border-bottom-right-radius: var(--doc-radius-sm);
 }
 
 .chat-selection-layer.is-hot .chat-selection {
@@ -552,10 +555,10 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 .frontmatter-block {
-  margin: 0 0 var(--md-gap-box);
+  margin: 0 0 var(--doc-gap-box);
   padding: 0.7em 1em;
   border: 1px solid var(--editor-border);
-  border-radius: var(--md-radius);
+  border-radius: var(--doc-radius);
   background: var(--editor-code-bg);
   color: var(--editor-muted);
   font-family: var(--font-mono);
@@ -647,7 +650,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   box-sizing: border-box;
   max-width: 100%;
   padding: 10px 14px;
-  border-radius: var(--md-radius);
+  border-radius: var(--doc-radius);
   font-family: var(--font-sans);
   font-size: var(--text-body);
   font-weight: 400;
@@ -764,7 +767,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 .rhtml-mark {
   background: var(--editor-highlight-bg, #fff8c5);
-  border-radius: var(--md-radius-sm);
+  border-radius: var(--doc-radius-sm);
 }
 .rhtml-small {
   font-size: 0.85em;
@@ -778,7 +781,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   font-family: var(--code-font, var(--font-mono));
   font-size: 0.85em;
   background: var(--editor-code-bg);
-  border-radius: var(--md-radius-sm);
+  border-radius: var(--doc-radius-sm);
   padding: 0.1em 0.35em;
 }
 .rhtml-kbd {
@@ -788,10 +791,10 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 .mermaid-preview {
   cursor: pointer;
-  margin: var(--md-gap-box) 0;
+  margin: var(--doc-gap-box) 0;
   padding: 1.1em;
   border: 1px solid var(--editor-border);
-  border-radius: var(--md-radius);
+  border-radius: var(--doc-radius);
   background: var(--editor-code-bg);
   overflow-x: auto;
   display: flex;
@@ -834,7 +837,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   --pele-critical: var(--danger);
   --pele-error: var(--danger);
   --pele-font-mono: var(--font-mono);
-  --pele-radius: var(--md-radius-sm);
+  --pele-radius: var(--doc-radius-sm);
 }
 
 /* Markdown images are inline, so inline-block: the caret's line box stays
@@ -845,14 +848,14 @@ br:is(.pending-delete, .pending-sentence-hot) {
   max-width: 100%;
   vertical-align: bottom;
   line-height: 0;
-  border-radius: var(--md-radius);
+  border-radius: var(--doc-radius);
 }
 
 .milkdown .image-view img {
   display: block;
   max-width: 100%;
   margin: 0;
-  border-radius: var(--md-radius);
+  border-radius: var(--doc-radius);
   box-shadow: var(--shadow-image);
 }
 
@@ -914,7 +917,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 .milkdown p.image-paragraph {
-  margin: var(--md-gap-box) 0;
+  margin: var(--doc-gap-box) 0;
   text-align: center;
 }
 
@@ -931,7 +934,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   height: 36px;
   max-height: 60%;
   transform: translateY(-50%);
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
   background: var(--editor-accent);
   box-shadow: 0 0 0 2px var(--editor-bg, var(--bg));
   cursor: ew-resize;
@@ -984,7 +987,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   height: 0.8em;
   margin-right: 0.3em;
   vertical-align: -0.05em;
-  border-radius: 2px;
+  border-radius: var(--shape-xs);
   background:
     linear-gradient(var(--color-swatch), var(--color-swatch)),
     var(--transparency-checker) 0 0 / 0.4em 0.4em;
@@ -1013,10 +1016,10 @@ br:is(.pending-delete, .pending-sentence-hot) {
    flatten to plain text when the cursor lands in it. */
 .math-block-revealed {
   display: block;
-  margin: var(--md-gap-box) 0;
+  margin: var(--doc-gap-box) 0;
   padding: 0.35em 0.7em;
   border: 1px solid var(--editor-border);
-  border-radius: var(--md-radius);
+  border-radius: var(--doc-radius);
   text-align: center;
 }
 
@@ -1026,7 +1029,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   max-width: 420px;
   padding: 0.5em 0.7em;
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   background: var(--bg);
   box-shadow: var(--shadow-popover);
   pointer-events: none;
@@ -1063,7 +1066,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 .math-block-rendered {
   display: block;
   cursor: pointer;
-  margin: var(--md-gap-box) 0;
+  margin: var(--doc-gap-box) 0;
   overflow-x: auto;
   text-align: center;
 }
@@ -1083,31 +1086,31 @@ br:is(.pending-delete, .pending-sentence-hot) {
 /* GitHub-style alerts: the matching accent on the border and a badge in
    place of the marker. Accent values are GitHub's own. */
 .milkdown {
-  --md-alert-note: #0969da;
-  --md-alert-tip: #1a7f37;
-  --md-alert-important: #8250df;
-  --md-alert-warning: #9a6700;
-  --md-alert-caution: #cf222e;
+  --doc-alert-note: #0969da;
+  --doc-alert-tip: #1a7f37;
+  --doc-alert-important: #8250df;
+  --doc-alert-warning: #9a6700;
+  --doc-alert-caution: #cf222e;
 }
 
 .milkdown blockquote.md-alert-note {
-  --md-alert-accent: var(--md-alert-note);
+  --doc-alert-accent: var(--doc-alert-note);
 }
 .milkdown blockquote.md-alert-tip {
-  --md-alert-accent: var(--md-alert-tip);
+  --doc-alert-accent: var(--doc-alert-tip);
 }
 .milkdown blockquote.md-alert-important {
-  --md-alert-accent: var(--md-alert-important);
+  --doc-alert-accent: var(--doc-alert-important);
 }
 .milkdown blockquote.md-alert-warning {
-  --md-alert-accent: var(--md-alert-warning);
+  --doc-alert-accent: var(--doc-alert-warning);
 }
 .milkdown blockquote.md-alert-caution {
-  --md-alert-accent: var(--md-alert-caution);
+  --doc-alert-accent: var(--doc-alert-caution);
 }
 
 .milkdown blockquote.md-alert {
-  border-left-color: var(--md-alert-accent);
+  border-left-color: var(--doc-alert-accent);
 }
 
 .md-alert-title {
@@ -1115,7 +1118,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   align-items: center;
   gap: 0.5em;
   font-weight: 600;
-  color: var(--md-alert-accent);
+  color: var(--doc-alert-accent);
 }
 
 .md-alert-title svg {
@@ -1144,8 +1147,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
    follow it. */
 .code-block-actions {
   position: absolute;
-  top: var(--radius-block);
-  right: var(--radius-block);
+  top: var(--shape-s);
+  right: var(--shape-s);
   display: flex;
   gap: 4px;
   user-select: none;
@@ -1175,7 +1178,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   /* Opaque: it lies over the code, or the text right below the block. */
   background: var(--editor-bg, var(--bg));
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   padding: 0.1em 0.5em;
   cursor: pointer;
 }
@@ -1219,7 +1223,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   box-sizing: border-box;
   padding: 4px 8px;
   border: 1px solid var(--editor-border, var(--border-color));
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
   font: inherit;
@@ -1336,11 +1341,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
     --token-tag: #e08a97;
   }
   :root:not([data-theme="light"]) .milkdown {
-    --md-alert-note: #4493f8;
-    --md-alert-tip: #3fb950;
-    --md-alert-important: #ab7df8;
-    --md-alert-warning: #d29922;
-    --md-alert-caution: #f85149;
+    --doc-alert-note: #4493f8;
+    --doc-alert-tip: #3fb950;
+    --doc-alert-important: #ab7df8;
+    --doc-alert-warning: #d29922;
+    --doc-alert-caution: #f85149;
   }
 }
 
@@ -1353,11 +1358,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 :root[data-theme="dark"] .milkdown {
-  --md-alert-note: #4493f8;
-  --md-alert-tip: #3fb950;
-  --md-alert-important: #ab7df8;
-  --md-alert-warning: #d29922;
-  --md-alert-caution: #f85149;
+  --doc-alert-note: #4493f8;
+  --doc-alert-tip: #3fb950;
+  --doc-alert-important: #ab7df8;
+  --doc-alert-warning: #d29922;
+  --doc-alert-caution: #f85149;
 }
 
 /* A one-design theme keeps its light page in dark mode, so the dark tokens
@@ -1371,11 +1376,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 :root[data-light-page] .milkdown {
-  --md-alert-note: #0969da;
-  --md-alert-tip: #1a7f37;
-  --md-alert-important: #8250df;
-  --md-alert-warning: #9a6700;
-  --md-alert-caution: #cf222e;
+  --doc-alert-note: #0969da;
+  --doc-alert-tip: #1a7f37;
+  --doc-alert-important: #8250df;
+  --doc-alert-warning: #9a6700;
+  --doc-alert-caution: #cf222e;
 }
 
 /* List markers are an out-of-flow ::before, not ::marker: in WKWebView a
@@ -1428,6 +1433,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   margin-top: 0.73em;
   transform: translateX(calc(-100% - 0.4em));
   border-radius: 50%;
+  corner-shape: round;
   background: currentColor;
   box-sizing: border-box;
 }
@@ -1459,7 +1465,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   width: 0.95em;
   height: 0.95em;
   border: 1.5px solid var(--editor-muted);
-  border-radius: var(--md-radius-sm);
+  border-radius: var(--doc-radius-sm);
   cursor: pointer;
   box-sizing: border-box;
 }
@@ -1508,7 +1514,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 /* Anchors the add-row/column buttons, shown while the pointer is over it. */
 .table-wrapper {
   position: relative;
-  margin: var(--md-gap-box) 0;
+  margin: var(--doc-gap-box) 0;
 }
 
 .table-wrapper table {
@@ -1530,7 +1536,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--editor-border);
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--editor-bg, var(--bg));
   color: var(--editor-muted);
   line-height: 1;
