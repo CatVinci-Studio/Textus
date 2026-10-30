@@ -15,6 +15,8 @@ export interface CommandDef {
   shortcut?: string;
   /** Whether it can run now; left out, always. */
   enabled?: () => boolean;
+  /** False for one that needs arguments: the palette leaves it out. */
+  palette?: false;
 }
 
 const registered: CommandDef[] = [];

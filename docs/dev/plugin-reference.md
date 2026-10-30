@@ -152,11 +152,11 @@ Values kept for one document.
 
 ## Commands
 
-| Member                                                                                                |                                                                                                                    |
-| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `register(id: string, run: (...args: unknown[]) => unknown): Disposable`                              | A command of the manifest's `contributes.commands`, or one of the plugin's own beyond them (`<plugin id>.<name>`). |
-| `registerEditorCommand(id: string, run: (editor: Editor, ...args: unknown[]) => unknown): Disposable` | A command that works on the document in front: only offered with a document open, and given the editor.            |
-| `execute(id: string, ...args: unknown[]): Promise<unknown>`                                           | A command of Textus's ("textus.save", "textus.closeTab") or of a plugin's.                                         |
+| Member                                                                                                |                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `register(id: string, run: (...args: unknown[]) => unknown): Disposable`                              | A command of the manifest's `contributes.commands`, or one of the plugin's own beyond them (`<plugin id>.<name>`).                                                                                                                                                                                                         |
+| `registerEditorCommand(id: string, run: (editor: Editor, ...args: unknown[]) => unknown): Disposable` | A command that works on the document in front: only offered with a document open, and given the editor.                                                                                                                                                                                                                    |
+| `execute(id: string, ...args: unknown[]): Promise<unknown>`                                           | A command of Textus's or of a plugin's. Textus's: "textus.save", "textus.closeTab" ({ save: true } closes once saved) and "textus.insertBlock" with a Format menu block at the caret - "h1" to "h6", "paragraph", "bullet-list", "ordered-list", "task-list", "blockquote", "code-block", "math-block", "rule" or "table". |
 
 ## Ui
 

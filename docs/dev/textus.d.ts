@@ -180,8 +180,11 @@ declare global {
         id: string,
         run: (editor: Editor, ...args: unknown[]) => unknown,
       ): Disposable;
-      /** A command of Textus's ("textus.save", "textus.closeTab") or of a
-       *  plugin's. */
+      /** A command of Textus's or of a plugin's. Textus's: "textus.save",
+       *  "textus.closeTab" ({ save: true } closes once saved) and
+       *  "textus.insertBlock" with a Format menu block at the caret - "h1"
+       *  to "h6", "paragraph", "bullet-list", "ordered-list", "task-list",
+       *  "blockquote", "code-block", "math-block", "rule" or "table". */
       execute(id: string, ...args: unknown[]): Promise<unknown>;
     }
 

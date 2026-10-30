@@ -18,6 +18,11 @@ import {
 } from "../editor/editor-menu";
 import { toggleSpan } from "../editor/marks/span-commands";
 import {
+  insertMathBlock,
+  insertRule,
+  makeTasks,
+} from "../editor/insert-blocks";
+import {
   cycleHeading,
   toggleBlockquote,
   toggleList,
@@ -165,6 +170,18 @@ export function useEditorWindowEvents({
         break;
       case "code-block":
         runCommand(run, createCodeBlockCommand.key);
+        break;
+      case "task-list":
+        insertList(run, "bullet_list");
+        run((ctx) => makeTasks(ctx.get(editorViewCtx)));
+        break;
+      case "math-block":
+        run((ctx) => insertMathBlock(ctx.get(editorViewCtx)));
+        run((ctx) => ctx.get(editorViewCtx).focus());
+        break;
+      case "rule":
+        run((ctx) => insertRule(ctx.get(editorViewCtx)));
+        run((ctx) => ctx.get(editorViewCtx).focus());
         break;
       case "table":
         openTableDialog();
