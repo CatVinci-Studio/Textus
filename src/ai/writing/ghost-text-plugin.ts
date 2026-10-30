@@ -26,6 +26,7 @@ import {
   ghostDecoration,
   typedThrough,
 } from "./ghost-state";
+import { markChangeSource } from "../../editor/change-source";
 export { typedThrough } from "./ghost-state";
 export {
   tidySuggestion,
@@ -205,6 +206,7 @@ export function createGhostTextPlugin(options: {
               event.preventDefault();
               const tr = view.state.tr.insertText(state.suggestion, state.from);
               tr.setMeta(ghostTextKey, { type: "clear" });
+              markChangeSource(tr, "ai");
               accepted = true;
               view.dispatch(tr);
               options.onAccept?.();
@@ -264,7 +266,10 @@ export function createGhostTextPlugin(options: {
               event.preventDefault();
               const chunk = nextWordChunk(state.suggestion);
               const rest = state.suggestion.slice(chunk.length);
-              const tr = view.state.tr.insertText(chunk, state.from);
+              const tr = markChangeSource(
+                view.state.tr.insertText(chunk, state.from),
+                "ai",
+              );
               // Built against the document after the insertion.
               tr.setMeta(
                 ghostTextKey,
@@ -285,6 +290,7 @@ export function createGhostTextPlugin(options: {
             event.preventDefault();
             const tr = view.state.tr.insertText(state.suggestion, state.from);
             tr.setMeta(ghostTextKey, { type: "clear" });
+            markChangeSource(tr, "ai");
             accepted = true;
             view.dispatch(tr);
             options.onAccept?.();

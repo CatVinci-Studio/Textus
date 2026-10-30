@@ -50,10 +50,15 @@ export interface UiState {
   readOnlyPaths: string[];
   /** The kinds (contributes.suggestFor) a plugin was offered for, once each. */
   pluginsOfferedFor: string[];
+  /** The plugins whose first scheduled job brought up the notice about
+   *  background mode, once each. */
+  pluginsToldOfSchedule: string[];
   /** The split the window was left in, its panes by their documents'
    *  paths (app/split/split-restore.ts); null when it showed one. Read
    *  loosely: earlier versions kept a pair. */
   splitLayout: { tree: unknown } | null;
+  /** Settings › Extensions: the kinds whose Available list is folded. */
+  extensionsFolded: string[];
 }
 
 export interface ThemeChromeCache {

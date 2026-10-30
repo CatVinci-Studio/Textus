@@ -1,6 +1,73 @@
 # Testing map
 
-Five suites, from cheapest to most expensive:
+A test lives in the lowest layer that can catch the mistake it is about.
+Lower layers run in milliseconds and fail for one reason; a browser flow
+takes seconds, and can fail because a machine was busy.
+
+## Which layer a test belongs in
+
+| Layer                 | Where                                         | Catches                                                                                    |
+| --------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 1. Unit               | `src/**/*.test.ts`, next to the code          | Pure logic: a function's answer for its inputs                                             |
+| 1. Editor integration | `src/**/*.test.ts`, with `editor-view-kit.ts` | What keys, typing and pastes do to a real editor's document, and what is saved             |
+| 2. E2E, Chromium      | `e2e/*.spec.ts`                               | What needs a real browser: focus, menus, dialogs, scrolling, layout, clicks, the clipboard |
+| 3. E2E, WebKit        | `WEBKIT_SPECS` in `playwright.config.ts`      | Where WebKit behaves differently: input methods, selection, paste events                   |
+| 4. The built app      | by hand, on the platform                      | What no browser has: native menus and their keys, windows, file dialogs, input methods     |
+
+Start at the top and go down only when the layer above can't see the
+mistake:
+
+- **Logic in a function of its own** (parsing, diffing, where a card
+  stands, what a setting means): a unit test.
+- **A key, a typed character or a paste, and what the document becomes**:
+  an editor integration test. `src/document-view/editor-view-kit.ts` opens
+  the app's whole editor in jsdom (`openView(markdown)`), presses keys
+  through its keymaps (`press("Mod+b")`, `press("Shift+Tab")`), types
+  through its input rules (`type("**bold**")`), pastes plain text or HTML
+  (`paste(text, html)`), places the caret (`caretAt("word", 2)`) and reads
+  back what the app would save (`markdown()`) or the editor's DOM
+  (`view.dom`). `src/editor/keys/markdown-keys.test.ts` is an example.
+- **Only a browser can tell**: an e2e flow in Chromium. Arrow keys, Home
+  and End, and clicks move the caret natively, which jsdom doesn't; focus
+  moving between regions, a menu or dialog opening, something scrolling into
+  view, a layout measured in pixels, the system clipboard.
+- **WebKit does it its own way**: add the spec to `WEBKIT_SPECS`, but only
+  for what differs there - an input method's events, how a selection is
+  read, a paste event. Not animation timing: a busy machine, not the
+  engine, decides that.
+- **Native**: a menu's key equivalent on macOS (the menu takes the key
+  before the page does), the system's undo or copy, an input method,
+  windows. Check it in the built app, and say what you ran in the pull
+  request.
+
+A test that only exercises editor logic doesn't need a browser, even when
+the bug was found in one: write it as an editor integration test, and
+check that it fails without the fix.
+
+`src/app/key-table.test.ts` holds one table of every shortcut, with who
+answers it on each platform: the native menu (read from
+`src-tauri/src/menu.rs` and `menu/build.rs`), the window's handler
+(`useGlobalShortcuts.ts`) or the editor (asked key by key). A new shortcut
+goes into that table; the test fails if two features claim one key, or if
+a key the macOS menu takes reaches nothing.
+
+## Running each layer
+
+```sh
+npm test                                   # every unit and editor integration test
+npx vitest run src/editor/keys/            # some of them
+npx vitest src/editor/keys/markdown-keys.test.ts   # one file, rerun on save
+npm run test:e2e                           # the e2e flows, Chromium (first time: npm run setup:e2e)
+npx playwright test e2e/code-block.spec.ts -g "copy button"   # one flow
+E2E_WEBKIT=1 npx playwright test --project=webkit             # the WebKit flows (npx playwright install webkit once)
+```
+
+On macOS the e2e flows don't behave as on CI: Home and End scroll, the
+fonts differ, and some key handling is the platform's. Run them in
+Playwright's Linux image (`mcr.microsoft.com/playwright`, the version in
+`package-lock.json`) to see what CI sees.
+
+## Every suite
 
 ```sh
 npm run check                          # typecheck, lint, vitest, prettier, README structure
@@ -28,8 +95,9 @@ a release. The e2e flows need Chromium once: `npm run setup:e2e`.
 `npm run test:visual` adds the screenshot comparison of `e2e/visual.spec.ts`
 against Linux baselines (they depend on the fonts of the machine that took
 them). `E2E_WEBKIT=1 npm run test:e2e` adds a WebKit project for the few
-flows that broke in WebKit only (`WEBKIT_SPECS` in `playwright.config.ts`);
-it needs `npx playwright install webkit` once, and CI doesn't run it.
+flows where WebKit differs (`WEBKIT_SPECS` in `playwright.config.ts`); it
+needs `npx playwright install webkit` once. CI runs it in a job of its own,
+`e2e-webkit`, not yet required.
 `playwright.webview.config.ts` runs the flows in an old Chromium you point
 it at, the oldest WebView2 Textus supports
 ([webview-support.md](webview-support.md#testing)); CI doesn't run it
@@ -65,6 +133,7 @@ skipped.
 | `changes`                             | `scripts/ci-changes.mjs`: which of the jobs below to run            | always                         |
 | `check`                               | `npm run check`, then `vite build` of the app and of the playground | always                         |
 | `e2e (1/4)` to `e2e (4/4)`            | `npm run test:e2e -- --shard=N/4`                                   | the change reaches the browser |
+| `e2e-webkit`                          | the `WEBKIT_SPECS` flows in WebKit (not required yet)               | the change reaches the browser |
 | `native (ubuntu-22.04)`               | `npm run check:native`                                              | the change reaches Rust        |
 | `native (macos-26)`                   | `npm test`, then `npm run check:native`                             | the change reaches Rust        |
 | `native (windows-latest)`             | `npm run check:native`                                              | the change reaches Rust        |
@@ -136,6 +205,24 @@ test.beforeEach(async ({ page }) => {
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 6 });
 });
 ```
+
+The usual causes, from the flakes fixed so far:
+
+- **A key sent before the last one was read.** ProseMirror reads the
+  selection a click or an arrow made on the `selectionchange` after it; a
+  key sent at once can overtake it, in WebKit most of all. Call
+  `selectionRead(page)` (`e2e/helpers.ts`) between a caret move and the
+  next key, or check the selection with `expect.poll` before going on.
+- **An event sent before anything listens.** The dev shim drops a backend
+  event no listener has asked for yet; wait for the listener
+  (`openPath` in `e2e/plugin-helpers.ts` does).
+- **A mode a plugin switches a moment later.** A plugin answers from its
+  sandbox: wait for what shows the new mode before the next key.
+- **A long stream against the default 5s.** Give the wait the time the
+  stream takes on a slow machine.
+- **Timing compared frame by frame.** On a busy runner frames are long;
+  assert where things end up, and leave timing to the Chromium run or
+  `npm run bench:motion`.
 
 When you fix one, wait for the thing the assertion depends on - an element
 being focused, a CSS variable reaching its value, an event having fired -

@@ -1345,6 +1345,10 @@ type /name in a conversation to use one.
   extensionsThemesNone:
     "No themes added yet. The built-in ones are picked in {page}.",
   extensionsThemesInstalled: "Your themes",
+  extensionsAvailable: "Available",
+  extensionsFold: "Hide",
+  extensionsUnfold: "Show",
+  themePreviewEnlarge: "View larger",
   extensionsThemesGet: "Get themes",
   extensionsSkillsHelp: `A skill tells ${AI_NAME} how to do one kind of task well. Each one on is offered to ${AI_NAME} and in the / menu; a new installation starts with five on, and you add the rest here.`,
   extensionsSkillsMoved:
@@ -1387,15 +1391,10 @@ type /name in a conversation to use one.
   pluginsCatalogRetry: "Try again",
   pluginsCatalogAllInstalled: "You have every plugin listed here.",
   pluginsSearchNone: "No plugin matches “{query}”.",
-  marketGetMore: "Get more",
-  marketTitle: "Get more",
-  marketHelp:
-    "Themes, plugins and skills for Textus. Each one asks before it is installed what it may do.",
   marketSearch: "Search",
   marketListYours: "Made one of your own?",
   marketListingRules: "How to list it",
   marketSkillFailed: "It wasn't installed.",
-  marketSkillInstalled: "Installed",
   marketSkillsNone: "No skills are listed yet.",
   pluginsCatalogKept:
     "Showing the list from last time - couldn’t get a newer one: {reason}",
@@ -1406,6 +1405,7 @@ type /name in a conversation to use one.
   pluginsSortNewest: "Recently updated",
   pluginsSortName: "Name",
   pluginInstalls: "{n} installs",
+  pluginInstalls30: "+{n} in 30 days",
   pluginInstalled: "Installed",
   pluginUpdatedOn: "Updated {date}",
   pluginReadmeLabel: "About {name}",
@@ -1438,7 +1438,7 @@ type /name in a conversation to use one.
   pluginEditWithAi: "Edit with AI",
   pluginEditWithAiAsk: "Change the {name} plugin ({id}): ",
   pluginEditWithAiError: "it stopped with this error - fix it: {error}\n",
-  pluginsAllLabel: "All plugins",
+  pluginsAllLabel: "Plugin features",
   pluginsAllHelp:
     "Off, no plugin runs and nothing they add is shown. Your plugins and their settings stay as they are.",
   pluginsInstallHelp:
@@ -1516,6 +1516,10 @@ type /name in a conversation to use one.
   pluginPermProjectData:
     "Keep its own data in the open folder, in .textus/plugins",
   pluginPermAiTools: "Give Textus AI tools of its own to use",
+  pluginPermNotifications: "Show system notifications",
+  pluginPermBackground: "Run code on a schedule, even with every window closed",
+  pluginScheduleNotice:
+    "{name} scheduled something. It only runs while Textus is running: turn on “{setting}” so it also runs with every window closed.",
   pluginPermNetwork: "Connect to {host}",
   pluginPermNetworkAny: "Connect to any website",
   menuPlugins: "Plugins",

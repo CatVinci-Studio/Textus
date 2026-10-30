@@ -2,8 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp } from "./helpers";
 
 /**
- * Settings › Extensions › Get more: plugins, themes and skills, one search
- * and a filter by kind; a skill installed from the catalog is the user's.
+ * Settings › Extensions › Skills: the user's skills, then the catalog's
+ * others under Available; one search goes through both, and a skill
+ * installed from the catalog moves up among the user's.
  */
 
 const SKILLS = [
@@ -29,7 +30,7 @@ const SKILLS = [
   },
 ];
 
-async function openMarket(page: Page) {
+async function openSkills(page: Page) {
   await page.addInitScript((skills) => {
     (window as unknown as Record<string, unknown>).__devCatalogSkills = skills;
   }, SKILLS);
@@ -42,23 +43,24 @@ async function openMarket(page: Page) {
   );
   await page.getByRole("button", { name: "Extensions" }).click();
   await page.getByRole("tab", { name: "Skills" }).click();
-  await page.getByRole("button", { name: "Get more" }).click();
 }
 
-test("the market's skills install with a click, and say so once installed", async ({
+test("a catalog skill installs with a click and leaves the Available list", async ({
   page,
 }) => {
-  await openMarket(page);
-  // Opened on its kind, from the Skills tab.
-  await expect(page.getByRole("tab", { name: "Skills" })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
-  const card = page.locator('[data-skill="press-release"]');
+  await openSkills(page);
+  const available = page.locator(".extensions-available");
+  const card = available.locator('[data-skill="press-release"]');
   await expect(card).toContainText("/press-release");
   await expect(card).toContainText("Official");
+  // From here on the backend lists it as the user's.
+  await mockInvoke(page, {
+    list_skills: [
+      { name: "press-release", source: "global", description: "", modes: [] },
+    ],
+  });
   await card.getByRole("button", { name: "Install" }).click();
-  await expect(card).toContainText("Installed");
+  await expect(card).toHaveCount(0);
   const installed = await page.evaluate(
     () =>
       (window as unknown as { __devInstalledSkills: string[] })
@@ -67,24 +69,24 @@ test("the market's skills install with a click, and say so once installed", asyn
   expect(installed).toEqual(["press-release"]);
 });
 
-test("Get more has a tab per kind - themes, plugins, skills - each with its search", async ({
+test("one search goes through the installed skills and the available ones", async ({
   page,
 }) => {
-  await openMarket(page);
-  await expect(page.locator(".market-kinds").getByRole("tab")).toHaveText([
-    "Themes",
-    "Plugins",
-    "Skills",
-  ]);
-  await page.getByRole("tab", { name: "Themes" }).click();
-  await expect(page.getByRole("region", { name: "Themes" })).toBeVisible();
-  // The themes in one box - not a box in a box.
-  await expect(page.locator(".theme-gallery-item")).toHaveCount(2);
-  await expect(page.locator(".settings-group .settings-group")).toHaveCount(0);
-  await expect(page.getByRole("region", { name: "Skills" })).toHaveCount(0);
-  await page.getByRole("tab", { name: "Skills" }).click();
+  await openSkills(page);
   const search = page.getByRole("searchbox", { name: "Search" });
   await search.fill("cover letter");
-  await expect(page.locator("[data-skill]")).toHaveCount(1);
+  await expect(page.locator(".extensions-available [data-skill]")).toHaveCount(
+    1,
+  );
   await expect(page.locator('[data-skill="cover-letter"]')).toBeVisible();
+  // Built-in skills that don't match are filtered out too.
+  await expect(page.locator(".settings-builtin-skill")).toHaveCount(0);
+  // Folded, the list stays folded the next time.
+  await page
+    .locator(".extensions-available")
+    .getByRole("button", { name: "Hide" })
+    .click();
+  await expect(page.locator(".extensions-available [data-skill]")).toHaveCount(
+    0,
+  );
 });

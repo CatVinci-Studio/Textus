@@ -103,6 +103,7 @@ export function useTextusEditor({
               documentChangedForPlugins(
                 isActiveRef.current,
                 filePathRef.current,
+                ctx,
               );
             })
             // Every new selection reaches the detached chat window as a fresh

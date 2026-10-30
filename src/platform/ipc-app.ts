@@ -247,7 +247,9 @@ export const themes = {
  *  never by URL. */
 export const themeGallery = {
   catalog: () => command("theme_gallery_catalog"),
-  css: (path: string) => command("theme_gallery_css", path),
+  /** With `install`, fetched to install the theme, which counts it. */
+  css: (path: string, install?: Generated.GalleryInstall) =>
+    command("theme_gallery_css", path, install ?? null),
   /** A screenshot, as a `data:` URL. */
   preview: (path: string) => command("theme_gallery_preview", path),
 };

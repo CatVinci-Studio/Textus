@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 // The theme gallery against the dev shim's canned one: install, pick again,
@@ -22,9 +22,12 @@ async function openGallery(page: Page) {
     .click();
   await dialog.getByRole("button", { name: "Get more themes" }).click();
   await expect(dialog.getByRole("tabpanel", { name: "Themes" })).toBeVisible();
-  await dialog.getByRole("button", { name: "Get more" }).click();
   return dialog;
 }
+
+/** One of the user's themes, in the Installed list above the gallery. */
+const installedRow = (dialog: Locator, name: string) =>
+  dialog.locator(".plugin-card[data-user-theme]", { hasText: name });
 
 /** Takes the gallery off- or online, or publishes a new version of its
  *  first theme. */
@@ -57,18 +60,25 @@ test.describe("theme gallery", () => {
     page,
   }) => {
     const dialog = await openGallery(page);
-    const mint = dialog.getByRole("group", { name: "Paper Mint" });
-    const dusk = dialog.getByRole("group", { name: "Dusk" });
-    await expect(mint.locator("img")).toHaveAttribute("src", /^data:image\//);
+    const offered = (name: string) => dialog.getByRole("group", { name });
+    await expect(offered("Paper Mint").locator("img")).toHaveAttribute(
+      "src",
+      /^data:image\//,
+    );
 
-    await mint.getByRole("button", { name: "Install" }).click();
+    // Installed, a theme moves up among the user's, in use.
+    await offered("Paper Mint")
+      .getByRole("button", { name: "Install" })
+      .click();
+    await expect(offered("Paper Mint")).toHaveCount(0);
+    const mint = installedRow(dialog, "Paper Mint");
     await expect(mint).toContainText("In use");
     await expect(page.locator("html")).toHaveAttribute("data-user-theme", "");
     await expect.poll(() => injectedTheme(page)).toContain("#eef7f1");
 
-    await dusk.getByRole("button", { name: "Install" }).click();
-    await expect(dusk).toContainText("In use");
-    await expect(mint).toContainText("Installed");
+    await offered("Dusk").getByRole("button", { name: "Install" }).click();
+    await expect(installedRow(dialog, "Dusk")).toContainText("In use");
+    await expect(mint).not.toContainText("In use");
     await expect.poll(() => injectedTheme(page)).toContain("#23202b");
 
     await mint.getByRole("button", { name: "Use" }).click();
@@ -84,8 +94,10 @@ test.describe("theme gallery", () => {
 
   test("a theme with a dark form follows the appearance", async ({ page }) => {
     const dialog = await openGallery(page);
-    const mint = dialog.getByRole("group", { name: "Paper Mint" });
-    await mint.getByRole("button", { name: "Install" }).click();
+    await dialog
+      .getByRole("group", { name: "Paper Mint" })
+      .getByRole("button", { name: "Install" })
+      .click();
     await expect.poll(() => injectedTheme(page)).toContain("#eef7f1");
     await page.emulateMedia({ colorScheme: "dark" });
     await expect.poll(() => injectedTheme(page)).toContain("#10241b");
@@ -97,8 +109,11 @@ test.describe("theme gallery", () => {
     page,
   }) => {
     let dialog = await openGallery(page);
-    const mint = () => dialog.getByRole("group", { name: "Paper Mint" });
-    await mint().getByRole("button", { name: "Install" }).click();
+    const mint = () => installedRow(dialog, "Paper Mint");
+    await dialog
+      .getByRole("group", { name: "Paper Mint" })
+      .getByRole("button", { name: "Install" })
+      .click();
     await expect(mint()).toContainText("In use");
     const settingsBefore = await page.evaluate(() =>
       JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}"),
@@ -151,5 +166,17 @@ test.describe("theme gallery", () => {
     await changeGallery(page, { offline: false });
     await dialog.getByRole("button", { name: "Try again" }).click();
     await expect(dialog.getByRole("group", { name: "Dusk" })).toBeVisible();
+  });
+
+  test("a theme's picture opens large, and Escape closes only the picture", async ({
+    page,
+  }) => {
+    const dialog = await openGallery(page);
+    await dialog.getByRole("button", { name: "View larger: Dusk" }).click();
+    const viewer = page.locator(".diagram-viewer");
+    await expect(viewer.locator("img")).toHaveAttribute("src", /^data:image\//);
+    await page.keyboard.press("Escape");
+    await expect(viewer).toHaveCount(0);
+    await expect(dialog).toBeVisible();
   });
 });

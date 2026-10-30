@@ -86,12 +86,16 @@ export function applyContributions(
         title: () => text(command.title),
         shortcut: keybindings.find((k) => k.command === command.command)?.key,
         run: (...args) =>
-          void deps.runPluginCommand(id, command.command, args).catch((err) =>
-            showMessage(String((err as Error)?.message ?? err), {
-              title: text(manifest.name),
-              tone: "error",
-            }),
-          ),
+          command.runs
+            ? runCommand(command.runs.command, command.runs.args)
+            : void deps
+                .runPluginCommand(id, command.command, args)
+                .catch((err) =>
+                  showMessage(String((err as Error)?.message ?? err), {
+                    title: text(manifest.name),
+                    tone: "error",
+                  }),
+                ),
       }),
     );
   const editorItems = menus["editor/context"] ?? [];
@@ -119,6 +123,11 @@ export function applyContributions(
         slashItems.map((item) => ({
           label: titleOf(item.command),
           detail: text(manifest.name),
+          keywords: localize(
+            manifest,
+            commands.find((c) => c.command === item.command)?.title ?? "",
+            "en",
+          ),
           shown: () => evaluateWhen(item.when, whenContext()),
           run: () => runCommand(item.command),
         })),

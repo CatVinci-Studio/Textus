@@ -1361,6 +1361,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   extensionsThemesNone:
     "Nenhum tema adicionado ainda. Os incluídos são escolhidos em {page}.",
   extensionsThemesInstalled: "Seus temas",
+  extensionsAvailable: "Disponíveis",
+  extensionsFold: "Ocultar",
+  extensionsUnfold: "Mostrar",
+  themePreviewEnlarge: "Ver maior",
   extensionsThemesGet: "Obter temas",
   extensionsSkillsHelp: `Uma habilidade diz ao ${AI_NAME} como fazer bem um tipo de tarefa. As ativadas são oferecidas ao ${AI_NAME} e no menu /; uma instalação nova começa com cinco ativadas, e você adiciona as outras aqui.`,
   extensionsSkillsMoved:
@@ -1403,15 +1407,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsCatalogRetry: "Tentar de novo",
   pluginsCatalogAllInstalled: "Você já tem todos os plugins da lista.",
   pluginsSearchNone: "Nenhum plugin corresponde a “{query}”.",
-  marketGetMore: "Obter mais",
-  marketTitle: "Obter mais",
-  marketHelp:
-    "Temas, plugins e habilidades para o Textus. Cada um pergunta antes de ser instalado o que poderá fazer.",
   marketSearch: "Pesquisar",
   marketListYours: "Criou um seu?",
   marketListingRules: "Como publicar",
   marketSkillFailed: "Não foi instalado.",
-  marketSkillInstalled: "Instalada",
   marketSkillsNone: "Ainda não há habilidades publicadas.",
   pluginsCatalogKept:
     "Mostrando a lista da última vez - não foi possível obter uma mais recente: {reason}",
@@ -1422,6 +1421,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsSortNewest: "Atualizados recentemente",
   pluginsSortName: "Nome",
   pluginInstalls: "{n} instalações",
+  pluginInstalls30: "+{n} em 30 dias",
   pluginInstalled: "Instalado",
   pluginUpdatedOn: "Atualizado em {date}",
   pluginReadmeLabel: "Sobre {name}",
@@ -1454,7 +1454,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginEditWithAi: "Editar com IA",
   pluginEditWithAiAsk: "Altere o plugin {name} ({id}): ",
   pluginEditWithAiError: "parou com este erro; corrija-o: {error}\n",
-  pluginsAllLabel: "Todos os plugins",
+  pluginsAllLabel: "Recursos de plugins",
   pluginsAllHelp:
     "Desativados, nenhum plugin é executado e nada do que adicionam é mostrado. Seus plugins e as configurações deles são mantidos.",
   pluginsInstallHelp:
@@ -1532,6 +1532,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermProjectData:
     "Guardar os próprios dados na pasta aberta, em .textus/plugins",
   pluginPermAiTools: "Dar ao Textus AI ferramentas próprias para usar",
+  pluginPermNotifications: "Mostrar notificações do sistema",
+  pluginPermBackground:
+    "Executar código num horário, mesmo com todas as janelas fechadas",
+  pluginScheduleNotice:
+    "{name} agendou uma tarefa. Ela só é executada enquanto o Textus está aberto: ative “{setting}” para que também seja executada com todas as janelas fechadas.",
   pluginPermNetwork: "Conectar-se a {host}",
   pluginPermNetworkAny: "Conectar-se a qualquer site",
   menuPlugins: "Plugins",

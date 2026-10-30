@@ -1,7 +1,7 @@
 import { Byline } from "./PluginPage";
 import { PluginIcon, PluginReadme } from "./PluginArt";
 import type { ReactNode } from "react";
-import { installsText } from "./MarketPlugins";
+import { installsText } from "./installs-text";
 import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow } from "../sections/controls";
 import type { Strings } from "../../i18n/strings";
@@ -31,7 +31,7 @@ export function MarketPluginPage({
   return (
     <div className="plugin-page market-plugin-page" data-market-page={item.id}>
       <button type="button" className="plugin-back" onClick={onBack}>
-        ‹ {t.marketTitle}
+        ‹ {t.pluginBackToList}
       </button>
       <div className="market-plugin-head">
         <PluginIcon

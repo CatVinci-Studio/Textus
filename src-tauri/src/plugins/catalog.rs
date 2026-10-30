@@ -3,6 +3,7 @@
 //! package's SHA-256, so "Official" is decided here, not by the window.
 
 use super::{install, state};
+use crate::ext_stats;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -49,9 +50,12 @@ pub struct CatalogEntry {
     /// Its icon (SVG or PNG), from the repository's releases.
     #[serde(default)]
     pub icon: Option<String>,
-    /// How many times its packages were downloaded, every version's.
+    /// How many devices installed it, ever and in the last 30 days (counted
+    /// by services/ext-stats; not reinstalls or updates).
     #[serde(default)]
     pub installs: Option<u64>,
+    #[serde(default)]
+    pub installs30: Option<u64>,
     /// When its first and latest versions came out (YYYY-MM-DD).
     #[serde(default)]
     pub published: Option<String>,
@@ -83,6 +87,11 @@ pub struct SkillEntry {
     pub url: String,
     pub sha256: String,
     pub size: u64,
+    /// As a plugin's.
+    #[serde(default)]
+    pub installs: Option<u64>,
+    #[serde(default)]
+    pub installs30: Option<u64>,
 }
 
 fn write_mode() -> Vec<crate::ai::agent::AgentMode> {
@@ -105,22 +114,27 @@ static FETCHED_SKILLS: Mutex<Vec<SkillEntry>> = Mutex::new(Vec::new());
 /// A skill file this large is not a skill.
 const MAX_SKILL: u64 = 256 * 1024;
 
+fn download_host(url: &reqwest::Url) -> bool {
+    url.scheme() == "https" && url.host_str().is_some_and(|h| DOWNLOAD_HOSTS.contains(&h))
+}
+
 fn client() -> Result<reqwest::Client, String> {
+    client_with(reqwest::redirect::Policy::custom(|attempt| {
+        if download_host(attempt.url()) && attempt.previous().len() < 5 {
+            attempt.follow()
+        } else {
+            attempt.stop()
+        }
+    }))
+}
+
+fn client_with(redirects: reqwest::redirect::Policy) -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
         .user_agent(crate::app_identity::APP_NAME)
+        // Soon, so an unreachable counting endpoint falls back quickly.
+        .connect_timeout(std::time::Duration::from_secs(10))
         .timeout(std::time::Duration::from_secs(120))
-        .redirect(reqwest::redirect::Policy::custom(|attempt| {
-            let allowed = attempt.url().scheme() == "https"
-                && attempt
-                    .url()
-                    .host_str()
-                    .is_some_and(|h| DOWNLOAD_HOSTS.contains(&h));
-            if allowed && attempt.previous().len() < 5 {
-                attempt.follow()
-            } else {
-                attempt.stop()
-            }
-        }))
+        .redirect(redirects)
         .build()
         .map_err(|e| e.to_string())
 }
@@ -262,14 +276,35 @@ fn hex(bytes: &[u8]) -> String {
 
 /// Downloads `url` from the catalog's own address.
 async fn download(url: &str, what: &str) -> Result<Vec<u8>, String> {
+    download_with(client()?, url, what).await
+}
+
+/// Downloads a package, through the counting endpoint when counts are on.
+async fn download_counted(
+    app: &tauri::AppHandle,
+    package: ext_stats::Download<'_>,
+    what: &str,
+) -> Result<Vec<u8>, String> {
+    let direct = package.direct;
+    let counted = ext_stats::counted_url(app, &package);
+    let client = client_with(ext_stats::redirects(direct, download_host))?;
+    ext_stats::counted_or_direct(counted, direct, |url| {
+        let client = client.clone();
+        async move { download_with(client, &url, what).await }
+    })
+    .await
+}
+
+async fn download_with(client: reqwest::Client, url: &str, what: &str) -> Result<Vec<u8>, String> {
     if let Some(path) = url.strip_prefix("file://") {
         return std::fs::read(path).map_err(|e| e.to_string());
     }
-    let response = client()?
+    let response = client
         .get(url)
         .send()
         .await
         .map_err(|e| format!("Couldn't download {what}: {e}"))?;
+    ext_stats::check_redirected(&response)?;
     if !response.status().is_success() {
         return Err(format!(
             "The download of {what} answered {}.",
@@ -367,7 +402,15 @@ pub async fn skill_install_catalog(app: tauri::AppHandle, name: String) -> Resul
         .find(|s| s.name == name)
         .cloned()
         .ok_or_else(|| format!("{name} isn't in the catalog."))?;
-    let bytes = download(&entry.url, &name).await?;
+    let package = ext_stats::Download {
+        kind: ext_stats::Kind::Skill,
+        id: &entry.name,
+        version: &entry.version,
+        update: false,
+        present: false,
+        direct: &entry.url,
+    };
+    let bytes = download_counted(&app, package, &name).await?;
     if bytes.len() as u64 != entry.size
         || !hex(&Sha256::digest(&bytes)).eq_ignore_ascii_case(&entry.sha256)
     {
@@ -376,12 +419,13 @@ pub async fn skill_install_catalog(app: tauri::AppHandle, name: String) -> Resul
         ));
     }
     let text = String::from_utf8(bytes).map_err(|_| format!("{name} isn't a skill file."))?;
-    install_skill_in(
+    let path = install_skill_in(
         &crate::ai::workspace::global_agent_dir(&app)?.join("skills"),
         &entry.name,
         &text,
-    )
-    .map(|p| p.to_string_lossy().into_owned())
+    )?;
+    ext_stats::installed(&app, ext_stats::Kind::Skill, &entry.name);
+    Ok(path.to_string_lossy().into_owned())
 }
 
 /// Writes a skill file named `name` into `dir`, never over one there.
@@ -425,9 +469,18 @@ pub async fn plugin_install_catalog(
     if entry.size > MAX_PACKAGE {
         return Err(format!("{id}'s package is too large to install."));
     }
-    let bytes = download(&entry.url, &id).await?;
-    checked(&entry, &bytes)?;
     let root = super::plugins_root(&app)?;
+    let present = installed_version(&root, &id);
+    let package = ext_stats::Download {
+        kind: ext_stats::Kind::Plugin,
+        id: &id,
+        version: &entry.version,
+        update: present.as_ref().is_some_and(|v| *v != entry.version),
+        present: present.is_some(),
+        direct: &entry.url,
+    };
+    let bytes = download_counted(&app, package, &id).await?;
+    checked(&entry, &bytes)?;
     std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
     let package = root.join(format!(".download-{id}.zip"));
     std::fs::write(&package, &bytes).map_err(|e| e.to_string())?;
@@ -449,143 +502,16 @@ pub async fn plugin_install_catalog(
     state::update(&app, |state| {
         state.plugins.entry(id.clone()).or_default().official = entry.official;
     })?;
+    ext_stats::installed(&app, ext_stats::Kind::Plugin, &id);
     Ok(installed)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn a_readme_is_in_the_language_asked_for_its_base_or_english() {
-        let readme: std::collections::BTreeMap<String, String> =
-            [("en", "en.md"), ("zh", "zh.md"), ("zh-Hant", "hant.md")]
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect();
-        assert_eq!(readme_for(&readme, "zh-Hant").as_deref(), Some("hant.md"));
-        assert_eq!(readme_for(&readme, "zh").as_deref(), Some("zh.md"));
-        assert_eq!(readme_for(&readme, "ja").as_deref(), Some("en.md"));
-        assert_eq!(readme_for(&Default::default(), "en"), None);
-    }
-
-    #[test]
-    fn a_plugin_s_readme_and_icon_come_only_from_the_catalog_s_address() {
-        let ok = format!("{PACKAGE_PREFIX}catalog/readme-a.b.en.md");
-        let text = format!(
-            r#"{{"schema": 1, "plugins": [{{"id": "a.b", "version": "0.1.1", "manifest": {{}}, "url": "{PACKAGE_PREFIX}a.b-v0.1.1/a.b-0.1.1.zip", "sha256": "ab", "size": 1, "readme": {{"en": "{ok}", "zh": "https://example.com/x.md"}}, "icon": "https://example.com/i.svg", "installs": 12}}]}}"#
-        );
-        let (plugins, _) = parse_all(&text).unwrap();
-        assert_eq!(plugins[0].readme.keys().collect::<Vec<_>>(), ["en"]);
-        assert_eq!(plugins[0].icon, None);
-        assert_eq!(plugins[0].installs, Some(12));
-    }
-
-    #[test]
-    fn the_catalog_lists_skills_beside_plugins_and_an_older_one_none() {
-        let url = format!("{PACKAGE_PREFIX}catalog/skill-press-release.md");
-        let text = format!(
-            r#"{{"schema": 1, "plugins": [], "skills": [{{"name": "press-release", "version": "1.0.0", "description": "Writes a press release.", "url": "{url}", "sha256": "ab", "size": 10}}, {{"name": "elsewhere", "version": "1", "description": "x", "url": "https://example.com/x.md", "sha256": "ab", "size": 10}}]}}"#
-        );
-        let (_, skills) = parse_all(&text).unwrap();
-        assert_eq!(skills.len(), 1, "only from the catalog's own address");
-        assert_eq!(skills[0].name, "press-release");
-        let (_, none) = parse_all(r#"{"schema": 1, "plugins": []}"#).unwrap();
-        assert!(none.is_empty());
-    }
-
-    #[test]
-    fn a_skill_installs_once_and_never_over_one_there() {
-        let dir = tempfile::tempdir().unwrap();
-        let text = "---\nname: press-release\ndescription: Writes a press release.\n---\n\nWrite it as a press release.";
-        let path = install_skill_in(dir.path(), "press-release", text).unwrap();
-        assert!(path.exists());
-        assert_eq!(
-            install_skill_in(dir.path(), "press-release", text).unwrap_err(),
-            SKILL_EXISTS
-        );
-        assert!(install_skill_in(dir.path(), "empty", "---\nname: empty\n---\n").is_err());
-    }
-
-    fn entry(bytes: &[u8]) -> CatalogEntry {
-        CatalogEntry {
-            id: "catvinci.tasks".into(),
-            version: "1.0.0".into(),
-            official: true,
-            manifest: Value::Null,
-            url: format!("{PACKAGE_PREFIX}catvinci.tasks-v1.0.0/catvinci.tasks-1.0.0.zip"),
-            sha256: hex(&Sha256::digest(bytes)),
-            size: bytes.len() as u64,
-            ..Default::default()
-        }
-    }
-
-    #[test]
-    fn a_screenshot_from_anywhere_else_is_left_out() {
-        let text = format!(
-            r#"{{"schema": 1, "plugins": [{{"id": "catvinci.tasks", "version": "1.0.0", "manifest": null, "url": "{PACKAGE_PREFIX}t/t.zip", "sha256": "ab", "size": 1, "screenshots": ["{PACKAGE_PREFIX}catalog/shot-catvinci.tasks-1.png", "https://example.com/x.png"]}}]}}"#
-        );
-        let (plugins, _) = parse_all(&text).unwrap();
-        assert_eq!(
-            plugins[0].screenshots,
-            vec![format!("{PACKAGE_PREFIX}catalog/shot-catvinci.tasks-1.png")]
-        );
-    }
-
-    #[test]
-    fn a_package_must_be_the_one_the_catalog_lists() {
-        let good = b"the package";
-        assert!(checked(&entry(good), good).is_ok());
-        assert!(checked(&entry(good), b"the packagE")
-            .unwrap_err()
-            .contains("isn't the package"));
-        assert!(checked(&entry(good), b"short")
-            .unwrap_err()
-            .contains("bytes"));
-    }
-
-    /// The published catalog, and one package from it, through the same checks an
-    /// install uses. Needs the network.
-    #[test]
-    #[ignore = "network: the published catalog"]
-    fn the_published_catalog_and_its_packages_check_out() {
-        tauri::async_runtime::block_on(async {
-            let entries = parse(&fetch().await.expect("the catalog")).expect("readable");
-            assert!(entries.len() >= 11, "{} plugins", entries.len());
-            let tasks = entries.iter().find(|e| e.id == "catvinci.tasks").unwrap();
-            assert!(tasks.official);
-            let bytes = client()
-                .unwrap()
-                .get(&tasks.url)
-                .send()
-                .await
-                .unwrap()
-                .bytes()
-                .await
-                .unwrap();
-            checked(tasks, &bytes).expect("the package the catalog lists");
-        });
-    }
-
-    #[test]
-    fn the_catalog_keeps_only_packages_from_its_own_releases() {
-        let text = serde_json::json!({
-            "schema": 1,
-            "plugins": [
-                {"id": "catvinci.tasks", "version": "1.0.0", "official": true, "manifest": {},
-                 "url": format!("{PACKAGE_PREFIX}catvinci.tasks-v1.0.0/a.zip"), "sha256": "00", "size": 1},
-                {"id": "someone.else", "version": "1.0.0", "manifest": {},
-                 "url": "https://example.com/else.zip", "sha256": "00", "size": 1},
-                {"id": "../escape", "version": "1.0.0", "manifest": {},
-                 "url": format!("{PACKAGE_PREFIX}x/x.zip"), "sha256": "00", "size": 1}
-            ]
-        })
-        .to_string();
-        let entries = parse(&text).unwrap();
-        assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].id, "catvinci.tasks");
-        assert!(parse(r#"{"schema": 2, "plugins": []}"#)
-            .unwrap_err()
-            .contains("newer Textus"));
-    }
+/// The version of plugin `id` installed in `root`, if one is.
+pub(super) fn installed_version(root: &std::path::Path, id: &str) -> Option<String> {
+    let text = std::fs::read_to_string(root.join(id).join(super::MANIFEST)).ok()?;
+    let manifest: Value = serde_json::from_str(&text).ok()?;
+    Some(manifest.get("version")?.as_str()?.to_string())
 }
+
+#[cfg(test)]
+mod tests;

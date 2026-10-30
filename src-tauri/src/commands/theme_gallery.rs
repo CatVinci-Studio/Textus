@@ -49,6 +49,23 @@ pub struct GalleryTheme {
     /// Repository-relative screenshots.
     #[serde(default)]
     pub previews: Vec<String>,
+    /// How many devices installed it, ever and in the last 30 days (counted
+    /// by services/ext-stats).
+    #[serde(default)]
+    pub installs: Option<u64>,
+    #[serde(default)]
+    pub installs30: Option<u64>,
+}
+
+/// A stylesheet fetched to install the theme, which counts the install.
+#[derive(Debug, Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GalleryInstall {
+    /// The catalog's `updated`, which stands for a theme's version.
+    pub version: String,
+    /// It replaces the installed copy.
+    pub update: bool,
 }
 
 /// A gallery theme id: what the gallery's own check allows (lowercase
@@ -216,12 +233,21 @@ fn image_mime(bytes: &[u8]) -> Option<&'static str> {
 }
 
 async fn fetch(url: &str, limit: usize) -> Result<Vec<u8>, String> {
+    // The allow-list is the URL asked for; a redirect would leave it.
+    fetch_with(url, limit, reqwest::redirect::Policy::none()).await
+}
+
+async fn fetch_with(
+    url: &str,
+    limit: usize,
+    redirects: reqwest::redirect::Policy,
+) -> Result<Vec<u8>, String> {
     let client = crate::net::client(CONNECT_TIMEOUT, REQUEST_TIMEOUT)
-        // The allow-list is the URL asked for; a redirect would leave it.
-        .redirect(reqwest::redirect::Policy::none())
+        .redirect(redirects)
         .build()
         .map_err(|e| e.to_string())?;
     let response = client.get(url).send().await.map_err(|e| e.to_string())?;
+    crate::ext_stats::check_redirected(&response)?;
     let status = response.status();
     if !status.is_success() {
         return Err(format!("the gallery answered {status}"));
@@ -239,12 +265,44 @@ pub async fn theme_gallery_catalog() -> Result<Vec<GalleryTheme>, String> {
     parse_catalog(&bytes)
 }
 
-/// A gallery theme's stylesheet, by its catalog path.
+/// A gallery theme's stylesheet, by its catalog path. With `install`, the
+/// download counts as that theme's install.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn theme_gallery_css(path: String) -> Result<String, String> {
+pub async fn theme_gallery_css(
+    app: tauri::AppHandle,
+    path: String,
+    install: Option<GalleryInstall>,
+) -> Result<String, String> {
+    use crate::ext_stats;
     let url = css_url(&path).ok_or("not a gallery theme stylesheet")?;
-    let bytes = fetch(&url, MAX_CSS_BYTES).await?;
+    // css_url checked it is themes/<id>/<file>.
+    let id = path.split('/').nth(1).unwrap_or_default();
+    let counted = install.as_ref().and_then(|i| {
+        let theme = ext_stats::Download {
+            kind: ext_stats::Kind::Theme,
+            id,
+            version: &i.version,
+            update: i.update,
+            present: i.update,
+            direct: &url,
+        };
+        ext_stats::counted_url(&app, &theme)
+    });
+    let direct = &url;
+    // From the endpoint, only to this stylesheet; nowhere further.
+    let bytes = ext_stats::counted_or_direct(counted, direct, |from| async move {
+        fetch_with(
+            &from,
+            MAX_CSS_BYTES,
+            ext_stats::redirects(direct, |_| false),
+        )
+        .await
+    })
+    .await?;
+    if install.is_some() {
+        ext_stats::installed(&app, ext_stats::Kind::Theme, id);
+    }
     let css = String::from_utf8(bytes).map_err(|_| "the theme is not UTF-8 text")?;
     check_self_contained(&css)?;
     Ok(css)

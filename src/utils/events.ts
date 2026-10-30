@@ -25,9 +25,15 @@ export const EDIT_ACTION_EVENT = "textus:edit-action";
 export const TRACK_CHANGES_EVENT = "textus:track-changes";
 export type TrackChangesAction = "toggle" | "accept-all" | "reject-all";
 
-/// detail: the block kind to insert at the cursor: "h1".."h6", "bullet-list",
-/// "ordered-list", "blockquote", "code-block", "table" or "paragraph".
+/// detail: the block kind to insert at the cursor: "h1".."h6", "paragraph",
+/// "bullet-list", "ordered-list", "task-list", "blockquote", "code-block",
+/// "math-block", "rule" or "table".
 export const INSERT_BLOCK_EVENT = "textus:insert-block";
+export const INSERT_BLOCK_KINDS: readonly string[] = [
+  ...["h1", "h2", "h3", "h4", "h5", "h6", "paragraph"],
+  ...["bullet-list", "ordered-list", "task-list", "blockquote"],
+  ...["code-block", "math-block", "rule", "table"],
+];
 
 /// detail: "heading" | "bullet-list" | "ordered-list" | "blockquote"; these
 /// toggle rather than only insert.
@@ -91,3 +97,6 @@ export const ZEN_MODE_EVENT = "textus:zen-mode";
 /** A file was written from inside the window, not by its tab's save
  *  (detail: its path); open tabs of it check the disk. */
 export const FILE_WRITTEN_EVENT = "textus:file-written";
+
+/** A tab took its file's new text from disk (detail: its path). */
+export const FILE_RELOADED_EVENT = "textus:file-reloaded";

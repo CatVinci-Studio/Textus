@@ -20,6 +20,7 @@ import type { SentBlock } from "../ai/doc-blocks";
 import { namedCall, settledArguments, settledTurns } from "./settle-calls";
 import { forgetShimSecrets, pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";
+import { makeDevSchedule } from "./schedule-shim";
 
 /** The built-in skills as `list_skills` reports them (descriptions abridged). */
 const DEV_BUILTIN_SKILLS: [string, string, string, string, string][] = [
@@ -374,6 +375,8 @@ export function installDevTauriShim(): void {
       // Paper Mint has a dark form, as every gallery theme should.
       darkCss: id === "paper-mint" ? `themes/${id}/theme-dark.css` : null,
       previews: [`themes/${id}/preview.png`],
+      installs: null,
+      installs30: null,
     });
     gallery.files[`themes/${id}/theme.css`] =
       `:root { --editor-bg: ${bg}; --editor-text: ${text}; --editor-accent: ${accent}; }`;
@@ -764,6 +767,15 @@ export function installDevTauriShim(): void {
       ),
     ));
   const encoded = (text: string) => new TextEncoder().encode(text).buffer;
+  // Plugins' jobs and notifications: `window.__devSchedule` fires and clicks.
+  const schedule = makeDevSchedule({
+    allows: (plugin, permission) =>
+      pluginState.allOn &&
+      !!pluginState.plugins[plugin]?.enabled &&
+      !!pluginState.plugins[plugin]?.granted.includes(permission),
+    emit: (event, payload) => emitSoon(event, payload),
+  });
+  w.__devSchedule = schedule.devSchedule;
   function pluginCommand(
     cmd: string,
     args: Record<string, unknown> = {},
@@ -789,6 +801,8 @@ export function installDevTauriShim(): void {
         !!pluginState.plugins[id]?.granted.includes(permission),
     });
     if (api) return api;
+    const scheduled = schedule.command(cmd, args);
+    if (scheduled) return scheduled;
     const fileText = (p: string) =>
       p in binary
         ? Promise.resolve(
@@ -945,8 +959,30 @@ export function installDevTauriShim(): void {
           ? atob(String(args.contents))
           : String(args.contents);
         return Promise.resolve(null);
-      case "plugin_http":
-        return Promise.reject("The dev shim has no network.");
+      case "plugin_http": {
+        const request = args.request as {
+          url: string;
+          method?: string;
+          body?: string;
+        };
+        // Every request, its body as text, in `window.__devHttpLog`;
+        // answers canned by URL: `window.__devHttp[url] = { status?, body }`.
+        ((w.__devHttpLog ??= []) as unknown[]).push({
+          url: request.url,
+          method: request.method ?? "GET",
+          body: request.body ? textOf(request.body) : null,
+        });
+        const canned = (
+          w.__devHttp as
+            Record<string, { status?: number; body: string }> | undefined
+        )?.[request.url];
+        if (!canned) return Promise.reject("The dev shim has no network.");
+        return Promise.resolve({
+          status: canned.status ?? 200,
+          headers: { "content-type": "text/html" },
+          body: btoa(unescape(encodeURIComponent(canned.body))),
+        });
+      }
       // A plugin's global store and the project's per open folder, each
       // `{ kv, files }`: `window.__devPluginStore`.
       case "plugin_store_get":
@@ -1310,6 +1346,8 @@ export function installDevTauriShim(): void {
   // For an e2e mock that plays the model: calls named and settled as the backend would.
   w.__devNameCall = namedCall;
   w.__devSettle = settledArguments;
+  // Whether anything listens for `event` yet: one sent before is lost.
+  w.__devListening = (event: string) => (listeners.get(event) ?? []).length > 0;
   w.__devEmitTauriEvent = (event: string, payload?: unknown) => {
     for (const id of listeners.get(event) ?? []) {
       (w[`_${id}`] as ((e: unknown) => void) | undefined)?.({
@@ -1319,4 +1357,15 @@ export function installDevTauriShim(): void {
       });
     }
   };
+}
+
+/** A request body's base64 as text, or null when it isn't UTF-8 text. */
+function textOf(base64: string): string | null {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(
+      Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)),
+    );
+  } catch {
+    return null;
+  }
 }

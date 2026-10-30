@@ -1,5 +1,5 @@
 /**
- * The Textus plugin API, 1.0: the `textus` object a plugin's code is given
+ * The Textus plugin API, 1.1: the `textus` object a plugin's code is given
  * (src/plugins/host/runtime/host.js), the context its `activate` receives, and
  * `acquireTextusApi()` in its webviews (runtime/webview.js). The one source
  * of truth: docs/dev/writing-plugins.md explains it, the reference pages are
@@ -147,13 +147,21 @@ declare global {
       plugins: Plugins;
       uri: Uri;
       export: Export;
+      /** 1.1: jobs Textus fires on time (notifications, background). */
+      schedule: Schedule;
+      /** 1.1: system notifications (notifications). */
+      notify: Notify;
+      /** 1.1: whether Textus is in front, behind, or has no window. */
+      app: App;
     }
 
     interface Env {
       /** Textus's UI language ("en", "zh", "zh-Hant", ...). */
       readonly language: string;
       readonly appVersion: string;
-      /** This API's version: "1.0". */
+      /** This API's version: "1.1". Check it before using what 1.1 added
+       *  (schedule, notify, app, change sources), or set engines.textus to
+       *  ">=1.3.0-beta.8". */
       readonly apiVersion: string;
       readonly platform: "macos" | "windows" | "linux" | "ios";
       readonly theme: "light" | "dark";
@@ -180,8 +188,11 @@ declare global {
         id: string,
         run: (editor: Editor, ...args: unknown[]) => unknown,
       ): Disposable;
-      /** A command of Textus's ("textus.save", "textus.closeTab") or of a
-       *  plugin's. */
+      /** A command of Textus's or of a plugin's. Textus's: "textus.save",
+       *  "textus.closeTab" ({ save: true } closes once saved) and
+       *  "textus.insertBlock" with a Format menu block at the caret - "h1"
+       *  to "h6", "paragraph", "bullet-list", "ordered-list", "task-list",
+       *  "blockquote", "code-block", "math-block", "rule" or "table". */
       execute(id: string, ...args: unknown[]): Promise<unknown>;
     }
 
@@ -515,8 +526,14 @@ declare global {
       }): Disposable;
       /** Another document came to the front (or none). */
       onDidChangeActive: Event<{ path: string | null }>;
-      /** Its text changed: once typing pauses, not on every key. */
-      onDidChange: Event<{ path: string | null }>;
+      /** Its text changed: once typing pauses, not on every key. 1.1:
+       *  `source` says who changed it - "user" (typing, pasting, the
+       *  keyboard), "ai" (Textus AI: an accepted proposal, a completion, a
+       *  grammar fix), "disk" (the file changed and was read again),
+       *  "plugin" (a plugin through this API) or "history" (undo, redo).
+       *  When several did since the last event, "user" wins, then history,
+       *  ai, plugin, disk. */
+      onDidChange: Event<{ path: string | null; source: ChangeSource }>;
       onDidChangeSelection: Event<{ text: string }>;
       /** The keyboard, for plugins that are a way of typing - Vim, Emacs
        *  (editor.input). */
@@ -705,7 +722,13 @@ declare global {
           text: string;
         }) => string | void | Promise<string | void>,
       ): Disposable;
-      onDidSave: Event<{ path: string; text: string }>;
+      /** 1.1: `trigger` is "manual" for File › Save or Save As, "auto" for
+       *  autosave. */
+      onDidSave: Event<{
+        path: string;
+        text: string;
+        trigger: "manual" | "auto";
+      }>;
       onDidChangeRoot: Event<{ path: string | null }>;
     }
 
@@ -875,6 +898,93 @@ declare global {
           query: Record<string, string>;
         }) => void | Promise<void>,
       ): Disposable;
+    }
+
+    /** Who changed the document (editor.onDidChange). */
+    type ChangeSource = "user" | "ai" | "disk" | "plugin" | "history";
+
+    /**
+     * A job Textus keeps for the plugin and fires on time while it runs -
+     * with a window open or, in background mode, with none - even after a
+     * restart. One of `at`, `every`, `daily`; then `notify`, `run` or both.
+     *
+     * - `at`: once, "2026-11-02T09:00" (local) or with an offset.
+     * - `every`: "15m", "1h", "1h30m", "1d": 15 minutes at least, counted
+     *   from when it was set.
+     * - `daily`: "HH:MM", local time; across daylight saving it keeps the
+     *   time on the clock.
+     * - `catchUp`: a time missed while Textus wasn't running fires once on
+     *   its next start ("once", the default) or is let go ("skip").
+     * - `notify`: shown as a system notification (needs notifications).
+     * - `run`: the name of a function the manifest's `background` code
+     *   exports, called as `exports[run](job, ctx)` (needs background).
+     */
+    interface Job {
+      at?: string;
+      every?: string;
+      daily?: string;
+      catchUp?: "once" | "skip";
+      notify?: Notification;
+      run?: string;
+    }
+
+    /** A job as Textus keeps it: what was set, when it is due next (Unix
+     *  ms; null once an `at` fired) and when it last fired. */
+    interface ScheduledJob extends Job {
+      id: string;
+      catchUp: "once" | "skip";
+      nextDue: number | null;
+      lastFired: number | null;
+    }
+
+    /**
+     * A system notification. A click brings Textus up with `open.path` (a
+     * file of the open folder - or, from a job, of the folder open when it
+     * was set - absolute or relative to it; needs files.read) open at
+     * `open.line`. macOS asks the user to allow notifications the first time.
+     */
+    interface Notification {
+      title: string;
+      body?: string;
+      open?: { path: string; line?: number };
+    }
+
+    interface Schedule {
+      /** Adds the job, or replaces the plugin's job of that id (letters,
+       *  digits, `-`, `_`, `.`; at most 32 jobs a plugin). */
+      set(id: string, job: Job): Promise<ScheduledJob>;
+      /** Whether there was one to take away. */
+      clear(id: string): Promise<boolean>;
+      list(): Promise<ScheduledJob[]>;
+    }
+
+    interface Notify {
+      show(notification: Notification): Promise<void>;
+    }
+
+    interface App {
+      /** "active": a Textus window has the focus; "inactive": windows are
+       *  open, none focused; "background": no window (background code, or
+       *  every window closed in background mode). */
+      readonly state: "active" | "inactive" | "background";
+      onDidChangeState: Event<"active" | "inactive" | "background">;
+    }
+
+    /**
+     * What a job's `run` is given, in the manifest's `background` code: a
+     * frame of its own, started for the run and stopped after it (30
+     * seconds at most). That code reaches `files` (in the folder open when
+     * the job was set), `net`, `settings.get`, `schedule`, `notify`, `app`,
+     * `l10n`, `env` and the context's storage, secrets and log - not the
+     * editor, UI, layout, views, commands or metadata.
+     *
+     *     exports.remind = async (job, ctx) => { ... };
+     */
+    interface JobRun {
+      /** The job's id. */
+      id: string;
+      /** When it was due: well before now for one caught up after a start. */
+      due: Date;
     }
 
     // ---------------------------------------------------------------

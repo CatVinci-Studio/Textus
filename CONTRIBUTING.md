@@ -109,18 +109,22 @@ backend (`src-tauri/`) skips `e2e`
 
 ## Tests
 
-[docs/dev/testing.md](docs/dev/testing.md) maps what each suite covers and
-what is deliberately not covered. In short:
+[docs/dev/testing.md](docs/dev/testing.md) says which layer a new test
+belongs in, how to run each, and what is deliberately not covered. A test
+goes in the lowest layer that can catch its mistake: what a key or a paste
+does to the document is an editor integration test in vitest, and an e2e
+flow is for what only a browser shows - focus, menus, scrolling, layout. In
+short:
 
-| Kind                  | Where                                   | Runs                                      |
-| --------------------- | --------------------------------------- | ----------------------------------------- |
-| Unit (frontend)       | `src/**/*.test.ts(x)`, next to the code | `npm test`, in `check`, CI                |
-| Unit (Rust)           | `#[cfg(test)] mod tests` in the module  | `check:native`, CI                        |
-| E2E flows             | `e2e/*.spec.ts`                         | `npm run test:e2e`, CI                    |
-| Visual baselines      | `e2e/visual.spec.ts-snapshots/`         | `npm run test:visual`, Linux, by hand     |
-| Screenshot generators | `e2e/shots/`                            | `npm run screenshots:*`, by hand          |
-| Built-app smoke test  | `scripts/smoke-linux.sh --build`        | by hand, before a release                 |
-| Live AI evaluation    | `src-tauri/src/ai/live_eval*`           | by hand, needs an API key and costs money |
+| Kind                     | Where                                   | Runs                                      |
+| ------------------------ | --------------------------------------- | ----------------------------------------- |
+| Unit and editor (vitest) | `src/**/*.test.ts(x)`, next to the code | `npm test`, in `check`, CI                |
+| Unit (Rust)              | `#[cfg(test)] mod tests` in the module  | `check:native`, CI                        |
+| E2E flows                | `e2e/*.spec.ts`                         | `npm run test:e2e`, CI                    |
+| Visual baselines         | `e2e/visual.spec.ts-snapshots/`         | `npm run test:visual`, Linux, by hand     |
+| Screenshot generators    | `e2e/shots/`                            | `npm run screenshots:*`, by hand          |
+| Built-app smoke test     | `scripts/smoke-linux.sh --build`        | by hand, before a release                 |
+| Live AI evaluation       | `src-tauri/src/ai/live_eval*`           | by hand, needs an API key and costs money |
 
 Name a test as the claim it makes, not as the function it calls:
 

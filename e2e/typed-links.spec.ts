@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, HOME, openApp } from "./helpers";
+import { openApp } from "./helpers";
 
-// A link or image typed, pasted or committed by an input method becomes a
-// working link or image, and is saved without escaping backslashes.
+// A link or image committed by an input method becomes a working link or
+// image, and is saved without escaping backslashes.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const URL = "http://www.baidu.com";
@@ -34,26 +34,6 @@ async function sourceOf(page: Page): Promise<string> {
   return value.trim();
 }
 
-/** Pastes `text` as plain text, as copying from another app does. */
-async function paste(page: Page, text: string) {
-  await page.evaluate(
-    ([selector, t]) => {
-      const target = document.querySelector<HTMLElement>(selector)!;
-      const transfer = new DataTransfer();
-      transfer.setData("text/plain", t);
-      target.dispatchEvent(
-        new ClipboardEvent("paste", {
-          clipboardData: transfer,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-    },
-    [editor, text],
-  );
-  await page.waitForTimeout(100);
-}
-
 /** Commits `text` through an input method, as one composition. */
 async function imeCommit(page: Page, text: string) {
   const cdp = await page.context().newCDPSession(page);
@@ -67,18 +47,9 @@ async function imeCommit(page: Page, text: string) {
   await page.waitForTimeout(50);
 }
 
+// Typed and pasted ones are tested in vitest
+// (src/editor/markdown/typed-links.test.ts).
 const ways: [string, (page: Page, line: string) => Promise<void>][] = [
-  ["typed", (page, line) => page.keyboard.type(line)],
-  [
-    "typed with the URL pasted in",
-    async (page, line) => {
-      const open = line.indexOf("](") + 2;
-      await page.keyboard.type(line.slice(0, open));
-      await paste(page, line.slice(open, -1));
-      await page.keyboard.type(")");
-    },
-  ],
-  ["pasted", paste],
   [
     "typed with a Chinese input method",
     async (page, line) => {
@@ -118,101 +89,3 @@ for (const [way, write] of ways) {
     expect(await sourceOf(page)).toBe(`${LINK}\n\n${IMAGE}`);
   });
 }
-
-test("an image typed mid-sentence goes in where it was typed", async ({
-  page,
-}) => {
-  await page.keyboard.type("See ![](assets/a.png) here");
-  await expect(page.locator(`${editor} img[src="assets/a.png"]`)).toHaveCount(
-    1,
-  );
-  expect(await sourceOf(page)).toBe("See ![](assets/a.png) here");
-});
-
-/** Presses `key` `times` times, a frame apart, as a writer does: pressed
- *  back to back, the editor's selection sometimes trails the browser's. */
-async function press(page: Page, key: string, times = 1) {
-  for (let i = 0; i < times; i++) {
-    await page.keyboard.press(key);
-    await page.evaluate(
-      () =>
-        new Promise((resolve) =>
-          requestAnimationFrame(() => requestAnimationFrame(resolve)),
-        ),
-    );
-  }
-}
-
-const LINKED = `${editor} a[href="https://a.org"]`;
-
-test("words typed after a pasted link are not part of it", async ({ page }) => {
-  await page.keyboard.type("See ");
-  await paste(page, "[Textus](https://a.org)");
-  await page.keyboard.type(" now");
-  await expect(page.locator(LINKED)).toHaveText("Textus");
-  await press(page, "Enter");
-  expect(await sourceOf(page)).toBe("See [Textus](https://a.org) now");
-});
-
-test("a URL pasted between the parentheses autopair put in makes the link", async ({
-  page,
-}) => {
-  await page.keyboard.type("See [Textus](");
-  await paste(page, "https://a.org");
-  // Past the ")" the autopair put in, rather than typing it.
-  await press(page, "ArrowRight");
-  await page.keyboard.type(" now");
-  await expect(page.locator(LINKED)).toHaveText("Textus");
-  await press(page, "Enter");
-  expect(await sourceOf(page)).toBe("See [Textus](https://a.org) now");
-});
-
-test("a link written as []() first, then filled in, is one once the caret leaves", async ({
-  page,
-}) => {
-  await page.keyboard.type("See []() now");
-  await press(page, "ArrowLeft", 7);
-  await page.keyboard.type("Textus");
-  await press(page, "ArrowRight", 2);
-  await paste(page, "https://a.org");
-  // Still inside its parentheses: still being written.
-  await expect(page.locator(LINKED)).toHaveText("https://a.org");
-  await press(page, END);
-  await expect(page.locator(LINKED)).toHaveText("Textus");
-  // An undo takes the link back to its text, which then stays text.
-  await press(page, "ControlOrMeta+z");
-  await expect(page.locator(LINKED)).toHaveText("https://a.org");
-  await press(page, HOME);
-  await expect(page.locator(LINKED)).toHaveText("https://a.org");
-  await press(page, "ControlOrMeta+Shift+z");
-  await press(page, END);
-  await press(page, "Enter");
-  expect(await sourceOf(page)).toBe("See [Textus](https://a.org) now");
-});
-
-test("escaped brackets read from a file stay text when the paragraph is edited", async ({
-  page,
-}) => {
-  await paste(page, "Write \\[a](b) literally.");
-  await expect(page.locator(`${editor} p`).first()).toHaveText(
-    "Write [a](b) literally.",
-  );
-  await press(page, END);
-  await page.keyboard.type(" Done");
-  await press(page, HOME);
-  await expect(page.locator(`${editor} a`)).toHaveCount(0);
-});
-
-test("a URL typed out is a link once a space follows it", async ({ page }) => {
-  await page.keyboard.type("See https://a.org");
-  // Still being typed: not yet.
-  await expect(page.locator(`${editor} a`)).toHaveCount(0);
-  await page.keyboard.type(" now. Or www.b.org.");
-  await expect(page.locator(LINKED)).toHaveText("https://a.org");
-  // The full stop ending the sentence isn't part of it.
-  await press(page, "Enter");
-  await expect(page.locator(`${editor} a[href="http://www.b.org"]`)).toHaveText(
-    "www.b.org",
-  );
-  expect(await sourceOf(page)).toBe("See <https://a.org> now. Or www.b.org.");
-});

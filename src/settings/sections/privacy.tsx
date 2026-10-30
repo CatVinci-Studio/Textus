@@ -10,6 +10,7 @@ import { drafts } from "../../platform/ipc";
 
 // Settings > Privacy: a switch per kind of local history, plus a clear. A
 // switch off only stops new writes; a clear can't be undone, so it asks first.
+// Last, whether installs are counted.
 
 function ClearRow({
   label,

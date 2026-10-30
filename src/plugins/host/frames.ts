@@ -132,3 +132,16 @@ export function connectFrame(
     endpoint = null;
   };
 }
+
+/** Where the hosts' frames live: out of sight, still running. */
+export function hostsContainer(): HTMLElement {
+  let box = document.getElementById("plugin-hosts");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "plugin-hosts";
+    box.className = "plugin-hosts";
+    box.setAttribute("aria-hidden", "true");
+    document.body.append(box);
+  }
+  return box;
+}

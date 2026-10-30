@@ -12,6 +12,7 @@ mod background;
 mod bindings;
 mod commands;
 mod distribution;
+mod ext_stats;
 mod extract;
 #[cfg(desktop)]
 mod mcp;
@@ -19,6 +20,7 @@ mod mcp;
 mod menu;
 mod net;
 mod plugins;
+mod schedule;
 mod settings;
 #[cfg(desktop)]
 mod tab_drag;
@@ -97,6 +99,12 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
             let app = window.app_handle();
+            if matches!(
+                event,
+                tauri::WindowEvent::Focused(_) | tauri::WindowEvent::Destroyed
+            ) {
+                schedule::app_state::changed(app);
+            }
             if matches!(event, tauri::WindowEvent::Destroyed) {
                 let no_other_windows = app
                     .webview_windows()
@@ -133,6 +141,9 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     crate::editor_windows::detect_wayland();
     #[cfg(target_os = "macos")]
     crate::editor_windows::watch_fullscreen(app.handle());
+    // Plugins' jobs and notifications: before the links, one of which may be
+    // a notification's click that started Textus.
+    schedule::start(app.handle());
     // textus:// links for plugins.
     plugins::uri::listen(app.handle());
     // Windows/Linux pass an associated file as argv; macOS parks its launch files
@@ -432,6 +443,22 @@ pub fn run() {
             commands::system_info::send_problem_report,
             #[cfg(desktop)]
             background::background_status,
+            #[cfg(desktop)]
+            schedule::schedule_set,
+            #[cfg(desktop)]
+            schedule::schedule_clear,
+            #[cfg(desktop)]
+            schedule::schedule_list,
+            #[cfg(desktop)]
+            schedule::host::schedule_take_runs,
+            #[cfg(desktop)]
+            schedule::host::background_host_idle,
+            #[cfg(desktop)]
+            schedule::notify::notify_show,
+            #[cfg(desktop)]
+            schedule::notify::notify_take_open,
+            #[cfg(desktop)]
+            schedule::app_state::app_state,
             #[cfg(desktop)]
             update_session_paths,
             #[cfg(desktop)]

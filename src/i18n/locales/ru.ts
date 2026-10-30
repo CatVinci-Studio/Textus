@@ -1370,6 +1370,10 @@ export default {
   extensionsThemesNone:
     "Вы ещё не добавили тем. Встроенные выбираются в разделе «{page}».",
   extensionsThemesInstalled: "Ваши темы",
+  extensionsAvailable: "Доступные",
+  extensionsFold: "Свернуть",
+  extensionsUnfold: "Развернуть",
+  themePreviewEnlarge: "Увеличить",
   extensionsThemesGet: "Получить темы",
   extensionsSkillsHelp: `Навык подсказывает ${AI_NAME}, как хорошо делать определённую работу. Включённые навыки доступны ${AI_NAME} и в меню /; в новой установке включено пять, остальные добавляются здесь.`,
   extensionsSkillsMoved:
@@ -1413,15 +1417,10 @@ export default {
   pluginsCatalogRetry: "Повторить",
   pluginsCatalogAllInstalled: "Все плагины из списка уже установлены.",
   pluginsSearchNone: "Нет плагинов по запросу «{query}».",
-  marketGetMore: "Получить ещё",
-  marketTitle: "Получить ещё",
-  marketHelp:
-    "Темы, плагины и навыки для Textus. Каждый перед установкой спрашивает, что ему можно делать.",
   marketSearch: "Поиск",
   marketListYours: "Сделали свой?",
   marketListingRules: "Как его добавить",
   marketSkillFailed: "Не установлено.",
-  marketSkillInstalled: "Установлен",
   marketSkillsNone: "Навыков пока нет.",
   pluginsCatalogKept:
     "Показан список с прошлого раза - новый получить не удалось: {reason}",
@@ -1432,6 +1431,7 @@ export default {
   pluginsSortNewest: "Недавно обновлённые",
   pluginsSortName: "Название",
   pluginInstalls: "Установок: {n}",
+  pluginInstalls30: "+{n} за 30 дней",
   pluginInstalled: "Установлен",
   pluginUpdatedOn: "Обновлён {date}",
   pluginReadmeLabel: "О плагине {name}",
@@ -1464,7 +1464,7 @@ export default {
   pluginEditWithAi: "Изменить с ИИ",
   pluginEditWithAiAsk: "Измени плагин «{name}» ({id}): ",
   pluginEditWithAiError: "он остановился с этой ошибкой, исправь её: {error}\n",
-  pluginsAllLabel: "Все плагины",
+  pluginsAllLabel: "Функции плагинов",
   pluginsAllHelp:
     "Если выключено, ни один плагин не работает и ничего из добавленного ими не показывается. Плагины и их настройки сохраняются.",
   pluginsInstallHelp:
@@ -1543,6 +1543,11 @@ export default {
   pluginPermProjectData:
     "Хранить свои данные в открытой папке, в .textus/plugins",
   pluginPermAiTools: "Давать Textus AI свои инструменты",
+  pluginPermNotifications: "Показывать системные уведомления",
+  pluginPermBackground:
+    "Запускать код по расписанию, даже когда все окна закрыты",
+  pluginScheduleNotice:
+    "{name} запланировал задачу. Она выполняется, только пока Textus запущен: включите «{setting}», чтобы она выполнялась и при закрытых окнах.",
   pluginPermNetwork: "Подключаться к {host}",
   pluginPermNetworkAny: "Подключаться к любым сайтам",
   menuPlugins: "Плагины",

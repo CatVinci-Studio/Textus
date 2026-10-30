@@ -7,6 +7,9 @@ import { openWithPlugins } from "./plugin-helpers";
  * textus-plugins checkout.
  */
 
+/** The catalog's plugins, under the installed ones. */
+const AVAILABLE = ".extensions-available .plugin-card[data-catalog]";
+
 const emit = (page: Page, event: string) =>
   page.evaluate(
     (name) =>
@@ -21,12 +24,21 @@ async function openPluginsPage(page: Page) {
   await expect(
     page.locator(".settings-nav-item", { hasText: "Extensions" }),
   ).toHaveAttribute("aria-current", /page|true/);
+  await showAll(page);
 }
 
-async function openGetPlugins(page: Page) {
-  await openPluginsPage(page);
-  await page.getByRole("button", { name: "Get more" }).click();
-  await expect(page.locator(".plugin-get-page")).toBeVisible();
+/** All of the catalog's list, scrolled to its end until no more comes. */
+async function showAll(page: Page) {
+  const more = page.locator(".extensions-more-rows");
+  // The count shows once the list (not a loading line) is there.
+  await expect(
+    page.locator(".extensions-available .extensions-count"),
+  ).toBeVisible();
+  while (await more.count()) {
+    const before = await page.locator(AVAILABLE).count();
+    await more.scrollIntoViewIfNeeded();
+    await expect(page.locator(AVAILABLE)).not.toHaveCount(before);
+  }
 }
 
 test("nothing comes installed, and the catalog offers the official plugins", async ({
@@ -34,20 +46,16 @@ test("nothing comes installed, and the catalog offers the official plugins", asy
 }) => {
   await openApp(page, { settings: { language: "en" } });
   await openPluginsPage(page);
-  const installed = page.locator(".settings-group", { hasText: "Installed" });
+  const installed = page.getByRole("region", { name: "Installed" });
   await expect(installed).toContainText("None yet.");
-  // The catalog is a page of its own, not a list under the installed ones.
-  await expect(page.locator(".plugin-card[data-catalog]")).toHaveCount(0);
-  await page.getByRole("button", { name: "Get more" }).click();
+  // The catalog follows, on the same page.
   const graph = page.locator('.plugin-card[data-catalog="catvinci.graph"]');
   await expect(graph).toContainText("Graph View");
   await expect(graph.locator(".plugin-official")).toHaveText("Official");
   await expect(graph).toContainText("by CatVinci Studio");
   // Each plugin on a tile of its own: its icon, or its name's first letter.
-  const tiles = page.locator(".plugin-get-page .plugin-card .plugin-icon");
-  await expect(tiles).toHaveCount(
-    await page.locator(".plugin-get-page .plugin-card").count(),
-  );
+  const tiles = page.locator(`${AVAILABLE} .plugin-icon`);
+  await expect(tiles).toHaveCount(await page.locator(AVAILABLE).count());
   // No other artwork among Settings' rows, apart from a card's picture.
   await expect(
     page.locator(
@@ -60,7 +68,7 @@ test("installing from the list turns the plugin on, behind its permissions", asy
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
-  await openGetPlugins(page);
+  await openPluginsPage(page);
   await page
     .locator('.plugin-card[data-catalog="catvinci.tasks"]')
     .getByRole("button", { name: "Install" })
@@ -68,8 +76,11 @@ test("installing from the list turns the plugin on, behind its permissions", asy
   const dialog = page.locator(".app-dialog");
   await expect(dialog).toContainText("asks to:");
   await dialog.getByRole("button", { name: "Allow" }).click();
-  // Installed in place: nothing opens, Settings stays, the next can follow.
-  const listed = page.locator('.plugin-card[data-catalog="catvinci.tasks"]');
+  // Installed in place: nothing opens; it moves up among the installed.
+  await expect(
+    page.locator('.plugin-card[data-catalog="catvinci.tasks"]'),
+  ).toHaveCount(0);
+  const listed = page.locator('.plugin-card[data-plugin="catvinci.tasks"]');
   // Its button turns it off now; the menu beside it uninstalls.
   await expect(listed.getByRole("button", { name: "Turn Off" })).toBeVisible();
   const more = listed.getByRole("button", { name: "More for Tasks" });
@@ -92,10 +103,7 @@ test("installing from the list turns the plugin on, behind its permissions", asy
     listed.getByRole("menuitem", { name: "Uninstall" }),
   ).toBeVisible();
   await more.click();
-  await expect(page.locator(".plugin-get-page")).toBeVisible();
-  await openPluginsPage(page);
-  const card = page.locator('.plugin-card[data-plugin="catvinci.tasks"]');
-  await expect(card).toBeVisible();
+  const card = listed;
   await expect(card.getByRole("button", { name: "Turn Off" })).toBeVisible();
   await expect(card.locator(".plugin-official")).toHaveText("Official");
   // Its page has its guide, its README.
@@ -107,13 +115,14 @@ test("uninstalled from its button's menu, a plugin is offered to install again",
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
-  await openGetPlugins(page);
-  const listed = page.locator('.plugin-card[data-catalog="catvinci.tasks"]');
-  await listed.getByRole("button", { name: "Install" }).click();
+  await openPluginsPage(page);
+  const offered = page.locator('.plugin-card[data-catalog="catvinci.tasks"]');
+  await offered.getByRole("button", { name: "Install" }).click();
   await page
     .locator(".app-dialog")
     .getByRole("button", { name: "Allow" })
     .click();
+  const listed = page.locator('.plugin-card[data-plugin="catvinci.tasks"]');
   await listed.getByRole("button", { name: "Turn Off" }).click();
   await expect(listed.getByRole("button", { name: "Turn On" })).toBeVisible();
   await listed.getByRole("button", { name: "More for Tasks" }).click();
@@ -122,18 +131,16 @@ test("uninstalled from its button's menu, a plugin is offered to install again",
     .locator(".app-dialog")
     .getByRole("button", { name: "Uninstall" })
     .click();
-  await expect(listed.getByRole("button", { name: "Install" })).toBeVisible();
-  await expect(
-    listed.getByRole("button", { name: "More for Tasks" }),
-  ).toHaveCount(0);
+  await expect(listed).toHaveCount(0);
+  await expect(offered.getByRole("button", { name: "Install" })).toBeVisible();
 });
 
-test("a plugin's page in Get more has its README, in the UI's language", async ({
+test("an available plugin's page has its README, in the UI's language", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "zh" } });
   await emit(page, "menu-manage-plugins");
-  await page.getByRole("button", { name: "获取更多" }).click();
+  await showAll(page);
   await page
     .locator('.plugin-card[data-catalog="catvinci.tasks"] .plugin-card-open')
     .click();
@@ -146,15 +153,19 @@ test("a plugin's page in Get more has its README, in the UI's language", async (
     .locator(".app-dialog")
     .getByRole("button", { name: "允许" })
     .click();
-  await expect(own.getByRole("button", { name: "停用" })).toBeVisible();
+  // Installed from its page: the installed plugin's own page takes over,
+  // the plugin on.
+  const installed = page.locator('[data-plugin-page="catvinci.tasks"]');
+  await expect(installed.locator(".plugin-readme")).toContainText("任务");
+  await expect(installed.getByRole("checkbox").first()).toBeChecked();
 });
 
-test("Get plugins searches the catalog by name, what it does and who made it", async ({
+test("the search finds catalog plugins by name, what they do and who made them", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
-  await openGetPlugins(page);
-  const cards = page.locator(".plugin-get-page .plugin-card[data-catalog]");
+  await openPluginsPage(page);
+  const cards = page.locator(AVAILABLE);
   await expect(cards.first()).toBeVisible();
   const all = await cards.count();
   expect(all).toBeGreaterThan(3);
@@ -169,7 +180,7 @@ test("Get plugins searches the catalog by name, what it does and who made it", a
   await expect(cards).toHaveCount(all);
   await search.fill("no such plugin");
   await expect(cards).toHaveCount(0);
-  await expect(page.locator(".plugin-get-page")).toContainText(
+  await expect(page.locator(".extensions-available")).toContainText(
     "No plugin matches “no such plugin”.",
   );
 });
@@ -190,11 +201,11 @@ test("the list kept from last time shows when a fresh one can't be had", async (
     w.__devCatalogCache = list;
   }, kept);
   await openApp(page, { settings: { language: "en" } });
-  await openGetPlugins(page);
+  await openPluginsPage(page);
   await expect(
     page.locator('.plugin-card[data-catalog="catvinci.tasks"]'),
   ).toBeVisible();
-  await expect(page.locator(".plugin-get-page .plugin-card")).toHaveCount(1);
+  await expect(page.locator(AVAILABLE)).toHaveCount(1);
   const problem = page.locator(".plugin-catalog-problem");
   await expect(problem).toContainText(
     "Showing the list from last time - couldn’t get a newer one: offline",
@@ -205,12 +216,13 @@ test("the list kept from last time shows when a fresh one can't be had", async (
   });
   await problem.getByRole("button", { name: "Try again" }).click();
   await expect(problem).toHaveCount(0);
+  await showAll(page);
   await expect(
     page.locator('.plugin-card[data-catalog="catvinci.graph"]'),
   ).toBeVisible();
 });
 
-test("Get more lists the most installed first, or the latest or by name", async ({
+test("available plugins come the most installed first, or the latest or by name", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -220,8 +232,8 @@ test("Get more lists the most installed first, or the latest or by name", async 
     };
   });
   await openApp(page, { settings: { language: "en" } });
-  await openGetPlugins(page);
-  const cards = page.locator(".plugin-get-page .plugin-card[data-catalog]");
+  await openPluginsPage(page);
+  const cards = page.locator(AVAILABLE);
   await expect(cards.first()).toHaveAttribute(
     "data-catalog",
     "catvinci.kanban",
@@ -232,8 +244,9 @@ test("Get more lists the most installed first, or the latest or by name", async 
   await expect(cards.first()).toHaveAttribute("data-catalog", "catvinci.vim");
   await page.getByRole("combobox", { name: "Sort by" }).click();
   await page.getByRole("option", { name: "Name" }).click();
+  await showAll(page);
   const names = await page
-    .locator(".plugin-get-page .plugin-card-name")
+    .locator(`${AVAILABLE} .plugin-card-name`)
     .allTextContents();
   expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
 });
@@ -274,7 +287,7 @@ test("Quick Notes asks for background mode, and its page says when it is on", as
   page,
 }) => {
   await openWithPlugins(page, { plugins: {} });
-  await openGetPlugins(page);
+  await openPluginsPage(page);
   await page
     .locator('.plugin-card[data-catalog="catvinci.quick-notes"]')
     .getByRole("button", { name: "Install" })
@@ -372,4 +385,15 @@ test("a plugin's setting can be the project's own, over the general one", async 
     .first()
     .click();
   await expect(folder()).toHaveValue("Daily");
+});
+
+test("the catalog's list grows as it is scrolled, eight at first", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-manage-plugins");
+  const cards = page.locator(AVAILABLE);
+  await expect(cards).toHaveCount(8);
+  await page.locator(".extensions-more-rows").scrollIntoViewIfNeeded();
+  await expect(cards).toHaveCount(20);
 });

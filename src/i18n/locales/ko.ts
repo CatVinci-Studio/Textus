@@ -1301,6 +1301,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   extensionsThemesNone:
     "아직 추가한 테마가 없습니다. 내장 테마는 ‘{page}’에서 고릅니다.",
   extensionsThemesInstalled: "내 테마",
+  extensionsAvailable: "설치 가능",
+  extensionsFold: "접기",
+  extensionsUnfold: "펼치기",
+  themePreviewEnlarge: "크게 보기",
   extensionsThemesGet: "테마 받기",
   extensionsSkillsHelp: `스킬은 ${AI_NAME}에게 한 가지 일을 잘하는 방법을 알려 줍니다. 켜 둔 스킬은 ${AI_NAME}와 / 메뉴에서 쓸 수 있고, 새로 설치하면 다섯 개가 켜져 있으며 나머지는 여기서 추가합니다.`,
   extensionsSkillsMoved: "기본 스킬과 직접 만든 스킬은 설정 › 확장에 있습니다.",
@@ -1341,15 +1345,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsCatalogRetry: "다시 시도",
   pluginsCatalogAllInstalled: "목록의 플러그인을 모두 설치했습니다.",
   pluginsSearchNone: "“{query}”와(과) 일치하는 플러그인이 없습니다.",
-  marketGetMore: "더 받기",
-  marketTitle: "더 받기",
-  marketHelp:
-    "Textus의 테마, 플러그인, 스킬. 설치하기 전에 무엇을 할 수 있는지 묻습니다.",
   marketSearch: "검색",
   marketListYours: "직접 만들었나요?",
   marketListingRules: "등록하는 방법",
   marketSkillFailed: "설치하지 못했습니다.",
-  marketSkillInstalled: "설치됨",
   marketSkillsNone: "아직 등록된 스킬이 없습니다.",
   pluginsCatalogKept:
     "지난번 목록을 보여 주고 있습니다. 새 목록을 가져오지 못했습니다: {reason}",
@@ -1360,6 +1359,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsSortNewest: "최근 업데이트",
   pluginsSortName: "이름",
   pluginInstalls: "{n}회 설치",
+  pluginInstalls30: "최근 30일 +{n}",
   pluginInstalled: "설치됨",
   pluginUpdatedOn: "{date} 업데이트",
   pluginReadmeLabel: "{name} 소개",
@@ -1393,7 +1393,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginEditWithAi: "AI로 수정",
   pluginEditWithAiAsk: "{name} 플러그인({id}) 수정: ",
   pluginEditWithAiError: "다음 오류로 멈췄습니다. 고쳐 주세요: {error}\n",
-  pluginsAllLabel: "모든 플러그인",
+  pluginsAllLabel: "플러그인 기능",
   pluginsAllHelp:
     "끄면 어떤 플러그인도 실행되지 않고, 플러그인이 추가한 항목도 표시되지 않습니다. 설치한 플러그인과 설정은 그대로 남습니다.",
   pluginsInstallHelp:
@@ -1469,6 +1469,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermProjectData:
     "열려 있는 폴더(.textus/plugins)에 자체 데이터를 저장하기",
   pluginPermAiTools: "Textus AI에 자체 도구를 제공하기",
+  pluginPermNotifications: "시스템 알림 표시하기",
+  pluginPermBackground: "일정에 따라 코드 실행하기(모든 창을 닫아도)",
+  pluginScheduleNotice:
+    "{name}에서 예약 작업을 설정했습니다. Textus가 실행 중일 때만 동작합니다. “{setting}”을(를) 켜면 모든 창을 닫아도 동작합니다.",
   pluginPermNetwork: "{host}에 연결",
   pluginPermNetworkAny: "모든 웹사이트에 연결",
   menuPlugins: "플러그인",

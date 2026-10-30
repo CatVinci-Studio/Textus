@@ -625,6 +625,38 @@ button.plugin-card-open:hover .plugin-card-name {
   background: var(--ui-primary);
   color: var(--ui-on-primary);
 }
+/* Installed, then Available: a count after each title; Available folds,
+   with its sort and the fold button on its title's line. */
+.extensions-count {
+  margin-left: 6px;
+  color: var(--chrome-muted);
+  font-weight: 400;
+}
+.extensions-available-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 8px;
+}
+.extensions-available-head .settings-group-title {
+  flex: 1;
+  margin: 0;
+}
+.extensions-available-head .market-sort {
+  margin: 0;
+}
+/* Where the list's end comes into sight: the next rows come. */
+.extensions-more-rows {
+  height: 1px;
+}
+.market-listing {
+  padding-left: 4px;
+}
+/* Plugin features off: everything under the switch, quieter. */
+.extensions-off .settings-group,
+.extensions-off .plugin-search {
+  opacity: 0.6;
+}
 .extensions-more {
   position: relative;
 }
@@ -720,7 +752,4 @@ button.mcp-homepage:hover {
 }
 .plugin-subgroup-title:first-child {
   margin-top: 0;
-}
-.market-recommended {
-  margin-bottom: var(--space-2);
 }

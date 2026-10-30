@@ -1,0 +1,11 @@
+# Deploy from this folder: CLOUDFLARE_ACCOUNT_ID=... npx wrangler@4 deploy
+name = "textus-ext-stats"
+main = "worker.ts"
+compatibility_date = "2026-10-01"
+routes = [{ pattern = "textus.catvinci.com/api/ext/*", zone_name = "catvinci.com" }]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "textus-ext-stats"
+database_id = "bd35ac08-fcda-4e69-8990-8ae0951f29e6"
+migrations_dir = "migrations"

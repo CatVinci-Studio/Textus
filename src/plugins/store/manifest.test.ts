@@ -88,6 +88,27 @@ describe("a plugin's manifest", () => {
     expect(() => parseManifest("{nope")).toThrow(/not JSON/);
   });
 
+  it("reads a command that runs one of Textus's own, and only Textus's", () => {
+    const runs = (command: string) =>
+      parseManifest({
+        ...base,
+        contributes: {
+          commands: [
+            {
+              command: "catvinci.example.h2",
+              title: "Heading 2",
+              runs: { command, args: ["h2"] },
+            },
+          ],
+        },
+      });
+    expect(runs("textus.insertBlock").contributes.commands[0].runs).toEqual({
+      command: "textus.insertBlock",
+      args: ["h2"],
+    });
+    expect(() => runs("other.plugin.cmd")).toThrow(/one of Textus's/);
+  });
+
   it("reads where a plugin suggests completions, and refuses a bad pattern", () => {
     const m = parseManifest({
       ...base,
@@ -154,6 +175,20 @@ describe("a plugin's manifest", () => {
     expect(isPermission("network:*")).toBe(true);
     expect(isPermission("network:")).toBe(false);
     expect(isPermission("network:a b")).toBe(false);
+  });
+});
+
+describe("a plugin's background code (API 1.1)", () => {
+  it("is read with the notifications and background permissions", () => {
+    const m = parseManifest({
+      ...base,
+      main: "host.js",
+      background: "background.js",
+      permissions: ["notifications", "background"],
+    });
+    expect(m.background).toBe("background.js");
+    expect(m.permissions).toEqual(["notifications", "background"]);
+    expect(parseManifest(base).background).toBeUndefined();
   });
 });
 

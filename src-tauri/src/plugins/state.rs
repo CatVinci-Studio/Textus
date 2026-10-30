@@ -92,6 +92,9 @@ pub fn update<T>(
     std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
     let json = serde_json::to_vec_pretty(&state).map_err(|e| e.to_string())?;
     crate::atomic::write_sync(&root.join("state.json"), json).map_err(|e| e.to_string())?;
+    // A plugin switched on again: its paused jobs may be due.
+    #[cfg(desktop)]
+    crate::schedule::rearm(app);
     Ok(out)
 }
 

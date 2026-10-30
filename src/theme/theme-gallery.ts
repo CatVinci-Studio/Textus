@@ -45,7 +45,10 @@ export async function installGalleryTheme(
   installed?: UserThemeMeta,
 ): Promise<UserThemeMeta> {
   const [css, darkCss] = await Promise.all([
-    themeGallery.css(theme.css),
+    themeGallery.css(theme.css, {
+      version: theme.updated,
+      update: !!installed,
+    }),
     theme.darkCss ? themeGallery.css(theme.darkCss) : undefined,
   ]);
   return saveUserTheme(

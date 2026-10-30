@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.3.0-beta.7"
+version = "1.3.0-beta.8"
 description = "Textus Markdown Editor"
 authors = ["CatVinci Studio"]
 edition = "2021"
@@ -153,6 +153,12 @@ semver = "1"
 # A picture an accepted AI picture replaced goes to the system's Trash or
 # Recycle Bin when the user says so (commands/images.rs) - never deleted.
 trash = "5"
+# Plugins' scheduled jobs (src/schedule/): local wall-clock times across
+# daylight saving. Already in the tree through trash, with the same features.
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+# A notification's id, which its click names (src/schedule/notify/): random,
+# so a textus:// link from a web page can't name one. In the tree through tauri.
+uuid = { version = "1", features = ["v4"] }
 
 # macOS-native PDF export (commands/export.rs): the themed document is
 # rendered in an offscreen WKWebView with createPDF and cut into A4 sheets
@@ -200,6 +206,20 @@ objc2-app-kit = { version = "0.3", default-features = false, features = [
     "NSTextInputContext",
     "NSTextView",
 ] }
+# Plugins' notifications and their clicks (src/schedule/notify/macos.rs).
+# Already in the lock file; links the system's UserNotifications framework.
+objc2-user-notifications = { version = "0.3", default-features = false, features = [
+    "std",
+    "block2",
+    "UNError",
+    "UNNotification",
+    "UNNotificationContent",
+    "UNNotificationRequest",
+    "UNNotificationResponse",
+    "UNNotificationSound",
+    "UNNotificationTrigger",
+    "UNUserNotificationCenter",
+] }
 objc2-web-kit = { version = "0.3", features = [
     "WKWebView",
     "WKWebViewConfiguration",
@@ -231,9 +251,10 @@ webview2-com = "0.39"
 # tree via hyper-util.
 # Win32_UI_WindowsAndMessaging: the notification area's icon size at the
 # display's scale (src/background/tray.rs).
+# UI_Notifications, Data_Xml_Dom: plugins' toasts (src/schedule/notify/windows.rs).
 # Win32_UI_Input_KeyboardAndMouse, Win32_UI_HiDpi, Win32_Graphics_Gdi: the
 # cursor and its display's scale for a tab dragged out (src/tab_drag.rs).
-windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Foundation", "UI_Notifications", "Data_Xml_Dom"] }
 windows-registry = "0.6"
 
 [target.'cfg(target_os = "linux")'.dependencies]
@@ -244,6 +265,9 @@ gtk = "0.18"
 # use and panics when neither is installed. Already in the tree through
 # libappindicator-sys, at this version.
 libloading = "0.7"
+# Plugins' notifications and their clicks over D-Bus (src/schedule/notify/linux.rs).
+# Already in the tree through tauri-plugin-opener, with the blocking API on.
+zbus = "5"
 
 [target.'cfg(any(windows, target_os = "linux"))'.dependencies]
 # A second launch with a textus:// link hands it to the running app

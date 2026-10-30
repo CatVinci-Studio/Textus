@@ -13,35 +13,44 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { useSettings } from "../../prefs/SettingsContext";
 import { SettingRow } from "./controls";
 import { explainError } from "../../utils/error-explain";
+import { openDiagramViewer } from "../../editor/diagram-zoom";
+import { AvailableSection } from "../pages/AvailableSection";
+import { installsText } from "../pages/installs-text";
+import { matchesWords } from "../../utils/match-words";
 
 /** The themes whose name, author or description hold every word of
  *  `query`. */
 function searchThemes(list: GalleryTheme[], query: string): GalleryTheme[] {
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  if (!words.length) return list;
-  return list.filter((theme) => {
-    const text = [theme.name, theme.author, theme.description]
-      .join("\n")
-      .toLowerCase();
-    return words.every((w) => text.includes(w));
-  });
+  return list.filter((theme) =>
+    matchesWords(
+      [theme.name, theme.author, theme.description].join("\n"),
+      query,
+    ),
+  );
 }
 
-/** The public theme gallery, fetched only when this page opens.
- *  `query` is the market's search. */
-export function ThemeGallerySection({
-  t,
-  query = "",
-}: {
-  t: Strings;
-  query?: string;
-}) {
+/** The user's themes the gallery has a newer version of, by their id. */
+export function galleryUpdates(
+  catalog: GalleryTheme[] | null,
+  userThemes: Parameters<typeof installedCopy>[1],
+): Map<string, GalleryTheme> {
+  const out = new Map<string, GalleryTheme>();
+  for (const theme of catalog ?? []) {
+    const installed = installedCopy(theme, userThemes);
+    if (installed && galleryStatus(theme, installed) === "update")
+      out.set(installed.id, theme);
+  }
+  return out;
+}
+
+/** Installing a gallery theme (or its update) into the user's themes; a
+ *  first install is put to use. */
+export function useGalleryInstall(t: Strings) {
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const working = useRef(false);
-  const { catalog, unreachable, retry } = useGalleryCatalog();
 
   async function install(theme: GalleryTheme) {
     if (working.current) return;
@@ -62,37 +71,17 @@ export function ThemeGallerySection({
       setBusy(false);
     }
   }
+  return { busy, error, install };
+}
 
-  if (unreachable) {
-    return (
-      <div className="theme-gallery-message" role="status">
-        <div className="settings-row-hint">{t.themeGalleryUnreachable}</div>
-        <div className="theme-gallery-message-actions">
-          <button
-            type="button"
-            className="text-button settings-inline-button"
-            onClick={retry}
-          >
-            {t.themeGalleryRetry}
-          </button>
-          <button
-            type="button"
-            className="text-button settings-inline-button"
-            onClick={() => void links.openAboutLink("themes")}
-          >
-            {t.themeGalleryWebsite}
-          </button>
-        </div>
-      </div>
-    );
-  }
-  if (!catalog) {
-    return (
-      <div className="theme-gallery-message settings-row-hint" role="status">
-        {t.themeGalleryLoading}
-      </div>
-    );
-  }
+/** The public theme gallery, fetched only when this page opens - the
+ *  phone's More themes page. */
+export function ThemeGallerySection({ t }: { t: Strings }) {
+  const { settings, setSettings } = useSettings();
+  const { busy, error, install } = useGalleryInstall(t);
+  const { catalog, unreachable, retry } = useGalleryCatalog();
+  if (unreachable) return <GalleryUnreachable t={t} retry={retry} />;
+  if (!catalog) return <GalleryLoading t={t} />;
   return (
     <>
       {error && (
@@ -102,12 +91,7 @@ export function ThemeGallerySection({
       )}
       <div className="settings-group-body">
         {catalog.length === 0 && <SettingRow label={t.themeGalleryEmpty} />}
-        {catalog.length > 0 && searchThemes(catalog, query).length === 0 && (
-          <p className="plugin-empty">
-            {t.pluginsSearchNone.replace("{query}", query.trim())}
-          </p>
-        )}
-        {searchThemes(catalog, query).map((theme) => {
+        {catalog.map((theme) => {
           const installed = installedCopy(theme, settings.userThemes);
           return (
             <GalleryItem
@@ -124,6 +108,94 @@ export function ThemeGallerySection({
         })}
       </div>
     </>
+  );
+}
+
+/** Settings › Extensions › Themes, under the user's themes: the gallery's
+ *  themes not installed yet. */
+export function AvailableThemes({
+  t,
+  query,
+  gallery,
+  install,
+}: {
+  t: Strings;
+  query: string;
+  gallery: ReturnType<typeof useGalleryCatalog>;
+  install: ReturnType<typeof useGalleryInstall>;
+}) {
+  const { settings } = useSettings();
+  const { catalog, unreachable, retry } = gallery;
+  const shown = (catalog ? searchThemes(catalog, query) : []).filter(
+    (theme) => !installedCopy(theme, settings.userThemes),
+  );
+  const message = unreachable ? (
+    <GalleryUnreachable t={t} retry={retry} />
+  ) : !catalog ? (
+    <GalleryLoading t={t} />
+  ) : query.trim() && !shown.length ? (
+    <p className="plugin-empty">
+      {t.pluginsSearchNone.replace("{query}", query.trim())}
+    </p>
+  ) : undefined;
+  return (
+    <AvailableSection
+      t={t}
+      kind="themes"
+      searching={!!query.trim()}
+      message={message}
+      note={
+        install.error && (
+          <div className="settings-error" role="alert">
+            {install.error}
+          </div>
+        )
+      }
+      rows={shown.map((theme) => (
+        <GalleryItem
+          key={theme.id}
+          t={t}
+          theme={theme}
+          status="install"
+          inUse={false}
+          busy={install.busy}
+          onInstall={() => void install.install(theme)}
+          onUse={() => {}}
+        />
+      ))}
+    />
+  );
+}
+
+function GalleryLoading({ t }: { t: Strings }) {
+  return (
+    <div className="theme-gallery-message settings-row-hint" role="status">
+      {t.themeGalleryLoading}
+    </div>
+  );
+}
+
+function GalleryUnreachable({ t, retry }: { t: Strings; retry: () => void }) {
+  return (
+    <div className="theme-gallery-message" role="status">
+      <div className="settings-row-hint">{t.themeGalleryUnreachable}</div>
+      <div className="theme-gallery-message-actions">
+        <button
+          type="button"
+          className="text-button settings-inline-button"
+          onClick={retry}
+        >
+          {t.themeGalleryRetry}
+        </button>
+        <button
+          type="button"
+          className="text-button settings-inline-button"
+          onClick={() => void links.openAboutLink("themes")}
+        >
+          {t.themeGalleryWebsite}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -153,12 +225,19 @@ function GalleryItem({
       role="group"
       title={theme.description}
     >
-      <GalleryPreview path={theme.previews[0]} />
+      <GalleryPreview
+        path={theme.previews[0]}
+        label={`${t.themePreviewEnlarge}: ${theme.name}`}
+      />
       <SettingRow
         label={theme.name}
-        hint={
-          theme.author ? `${byline} · ${theme.description}` : theme.description
-        }
+        hint={[
+          theme.author && byline,
+          installsText(theme, t),
+          theme.description,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
       >
         {status === "install" ? (
           <button
@@ -223,8 +302,15 @@ async function inPreviewSlot<T>(task: () => Promise<T>): Promise<T> {
 }
 
 /** A theme's first screenshot, fetched through the backend as a `data:` URL
- *  once its row scrolls into view; an empty frame until then. */
-function GalleryPreview({ path }: { path: string | undefined }) {
+ *  once its row scrolls into view; an empty frame until then. A click shows
+ *  it large, in the picture viewer. */
+function GalleryPreview({
+  path,
+  label,
+}: {
+  path: string | undefined;
+  label: string;
+}) {
   const frame = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [src, setSrc] = useState<string | null>(null);
@@ -255,14 +341,26 @@ function GalleryPreview({ path }: { path: string | undefined }) {
 
   return (
     <div className="theme-gallery-preview" ref={frame}>
-      {src && <img src={src} alt="" draggable={false} />}
+      {src && (
+        <button
+          type="button"
+          className="theme-gallery-enlarge"
+          aria-label={label}
+          onClick={(e) => {
+            const img = e.currentTarget.querySelector("img");
+            if (img) openDiagramViewer(img, e.currentTarget);
+          }}
+        >
+          <img src={src} alt="" draggable={false} />
+        </button>
+      )}
     </div>
   );
 }
 
 /** The gallery's catalog, fetched as the page opens and again on `retry`;
  *  `unreachable` when the fetch failed. */
-function useGalleryCatalog() {
+export function useGalleryCatalog() {
   const [catalog, setCatalog] = useState<GalleryTheme[] | null>(null);
   const [unreachable, setUnreachable] = useState(false);
   const [attempt, setAttempt] = useState(0);

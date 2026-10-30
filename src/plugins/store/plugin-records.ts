@@ -1,3 +1,4 @@
+import { matchesWords } from "../../utils/match-words";
 import type { Strings } from "../../i18n/strings";
 import type { PluginOrigin } from "./files";
 import { localize, type Permission, type PluginManifest } from "./manifest";
@@ -103,7 +104,6 @@ export function pluginMatches(
   record: Pick<PluginRecord, "id" | "manifest">,
   query: string,
 ): boolean {
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   const m = record.manifest;
   const text = [
     pluginName(record),
@@ -113,8 +113,6 @@ export function pluginMatches(
     m?.author,
     m?.publisher,
     record.id,
-  ]
-    .join("\n")
-    .toLowerCase();
-  return words.every((w) => text.includes(w));
+  ].join("\n");
+  return matchesWords(text, query);
 }

@@ -89,7 +89,8 @@ export interface UserThemeMeta {
   name: string;
   hasDark: boolean;
   /// Set when installed from the theme gallery, so a newer one shows as an
-  /// update. Rust reads only `id` and `hasDark`.
+  /// update. Rust reads only `id`, `hasDark` and, to count an uninstall,
+  /// `gallery` (commands/themes.rs).
   gallery?: GalleryOrigin;
 }
 

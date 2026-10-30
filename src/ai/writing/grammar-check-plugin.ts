@@ -9,6 +9,7 @@ import { pausesFeatures } from "../../editor/large-doc";
 import type { FoldAttention } from "../../editor/html/details-fold";
 import { ai } from "../../platform/ipc";
 import { AiNoticeError } from "../../utils/error-text";
+import { markChangeSource } from "../../editor/change-source";
 
 export const grammarKey = new PluginKey("grammar-check");
 const DEBOUNCE_MS = 1500;
@@ -329,7 +330,10 @@ export function createGrammarCheckPlugin(options: {
               return false;
             event.preventDefault();
             view.dispatch(
-              view.state.tr.insertText(spec.suggestion, deco.from, deco.to),
+              markChangeSource(
+                view.state.tr.insertText(spec.suggestion, deco.from, deco.to),
+                "ai",
+              ),
             );
             return true;
           },

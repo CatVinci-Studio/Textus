@@ -85,6 +85,9 @@ test("j and k go through every block, code blocks too, both ways", async ({
   page,
 }) => {
   await open(page, DOC);
+  // The heading's # shows once the caret is read as in it: a walk started
+  // before would count that as the first step.
+  await expect.poll(() => caretLine(page)).toBe("# Title here");
   expect(await walk(page, "j", 7)).toEqual([
     "First paragraph line.",
     "item one",
@@ -220,8 +223,11 @@ test("vimrc mappings: inoremap jj <Esc> and a leader mapping", async ({
   await expect(page.locator(`${editor} p`).first()).toHaveText("alpha beta");
   // A single j in insert mode is typed, after a moment.
   await page.keyboard.press("a");
+  await expect(page.locator(status)).toContainText("INSERT");
   await page.keyboard.press("j");
   await page.keyboard.press("Escape");
+  // Normal mode's keys only once the plugin has taken them again.
+  await expect(page.locator(status)).toContainText("NORMAL");
   await expect(page.locator(`${editor} p`).first()).toHaveText("alpha betaj");
   await page.keyboard.press("H");
   await page.keyboard.press("x");

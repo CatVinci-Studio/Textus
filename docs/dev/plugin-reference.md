@@ -112,37 +112,40 @@ Values kept for one document.
 
 ## Api
 
-| Member               |     |
-| -------------------- | --- |
-| `env: Env`           |     |
-| `l10n: L10n`         |     |
-| `commands: Commands` |     |
-| `ui: Ui`             |     |
-| `layout: Layout`     |     |
-| `views: Views`       |     |
-| `editor: Editor`     |     |
-| `files: Files`       |     |
-| `metadata: Metadata` |     |
-| `net: Net`           |     |
-| `settings: Settings` |     |
-| `ai: Ai`             |     |
-| `plugins: Plugins`   |     |
-| `uri: Uri`           |     |
-| `export: Export`     |     |
+| Member               |                                                             |
+| -------------------- | ----------------------------------------------------------- |
+| `env: Env`           |                                                             |
+| `l10n: L10n`         |                                                             |
+| `commands: Commands` |                                                             |
+| `ui: Ui`             |                                                             |
+| `layout: Layout`     |                                                             |
+| `views: Views`       |                                                             |
+| `editor: Editor`     |                                                             |
+| `files: Files`       |                                                             |
+| `metadata: Metadata` |                                                             |
+| `net: Net`           |                                                             |
+| `settings: Settings` |                                                             |
+| `ai: Ai`             |                                                             |
+| `plugins: Plugins`   |                                                             |
+| `uri: Uri`           |                                                             |
+| `export: Export`     |                                                             |
+| `schedule: Schedule` | 1.1: jobs Textus fires on time (notifications, background). |
+| `notify: Notify`     | 1.1: system notifications (notifications).                  |
+| `app: App`           | 1.1: whether Textus is in front, behind, or has no window.  |
 
 ## Env
 
-| Member                                                        |                                                       |
-| ------------------------------------------------------------- | ----------------------------------------------------- |
-| `readonly language: string`                                   | Textus's UI language ("en", "zh", "zh-Hant", ...).    |
-| `readonly appVersion: string`                                 |                                                       |
-| `readonly apiVersion: string`                                 | This API's version: "1.0".                            |
-| `readonly platform: "macos" \| "windows" \| "linux" \| "ios"` |                                                       |
-| `readonly theme: "light" \| "dark"`                           |                                                       |
-| `onDidChangeTheme: Event<"light" \| "dark">`                  |                                                       |
-| `onDidChangeLanguage: Event<string>`                          |                                                       |
-| `readClipboard(): Promise<string>`                            | Plain text on the system clipboard (needs clipboard). |
-| `writeClipboard(text: string): Promise<void>`                 |                                                       |
+| Member                                                        |                                                                                                                                                     |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly language: string`                                   | Textus's UI language ("en", "zh", "zh-Hant", ...).                                                                                                  |
+| `readonly appVersion: string`                                 |                                                                                                                                                     |
+| `readonly apiVersion: string`                                 | This API's version: "1.1". Check it before using what 1.1 added (schedule, notify, app, change sources), or set engines.textus to ">=1.3.0-beta.8". |
+| `readonly platform: "macos" \| "windows" \| "linux" \| "ios"` |                                                                                                                                                     |
+| `readonly theme: "light" \| "dark"`                           |                                                                                                                                                     |
+| `onDidChangeTheme: Event<"light" \| "dark">`                  |                                                                                                                                                     |
+| `onDidChangeLanguage: Event<string>`                          |                                                                                                                                                     |
+| `readClipboard(): Promise<string>`                            | Plain text on the system clipboard (needs clipboard).                                                                                               |
+| `writeClipboard(text: string): Promise<void>`                 |                                                                                                                                                     |
 
 ## L10n
 
@@ -152,11 +155,11 @@ Values kept for one document.
 
 ## Commands
 
-| Member                                                                                                |                                                                                                                    |
-| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `register(id: string, run: (...args: unknown[]) => unknown): Disposable`                              | A command of the manifest's `contributes.commands`, or one of the plugin's own beyond them (`<plugin id>.<name>`). |
-| `registerEditorCommand(id: string, run: (editor: Editor, ...args: unknown[]) => unknown): Disposable` | A command that works on the document in front: only offered with a document open, and given the editor.            |
-| `execute(id: string, ...args: unknown[]): Promise<unknown>`                                           | A command of Textus's ("textus.save", "textus.closeTab") or of a plugin's.                                         |
+| Member                                                                                                |                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `register(id: string, run: (...args: unknown[]) => unknown): Disposable`                              | A command of the manifest's `contributes.commands`, or one of the plugin's own beyond them (`<plugin id>.<name>`).                                                                                                                                                                                                         |
+| `registerEditorCommand(id: string, run: (editor: Editor, ...args: unknown[]) => unknown): Disposable` | A command that works on the document in front: only offered with a document open, and given the editor.                                                                                                                                                                                                                    |
+| `execute(id: string, ...args: unknown[]): Promise<unknown>`                                           | A command of Textus's or of a plugin's. Textus's: "textus.save", "textus.closeTab" ({ save: true } closes once saved) and "textus.insertBlock" with a Format menu block at the caret - "h1" to "h6", "paragraph", "bullet-list", "ordered-list", "task-list", "blockquote", "code-block", "math-block", "rule" or "table". |
 
 ## Ui
 
@@ -337,25 +340,25 @@ A code block the plugin draws.
 
 ## Editor
 
-| Member                                                                                                                         |                                                                                                                                                                                            |
-| ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `getPath(): Promise<string \| null>`                                                                                           | Its path; null for an unsaved one, and with no document.                                                                                                                                   |
-| `getText(): Promise<string \| null>`                                                                                           | Its Markdown (editor.read).                                                                                                                                                                |
-| `getSelection(): Promise<{ text: string; markdown: string \| null } \| null>`                                                  |                                                                                                                                                                                            |
-| `getBlocks(): Promise<Block[] \| null>`                                                                                        | Its blocks as Textus AI is shown them (editor.read).                                                                                                                                       |
-| `getOutline(): Promise< { level: number; text: string; line: number }[] \| null >`                                             |                                                                                                                                                                                            |
-| `edit(changes: Change \| Change[]): Promise<boolean>`                                                                          | Changes it at once, as one undo step (editor.write). False when a change can't be placed (a block id from before an edit).                                                                 |
-| `insertText(text: string): Promise<boolean>`                                                                                   | At the caret, or in place of the selection (editor.write).                                                                                                                                 |
-| `replaceSelection(text: string): Promise<boolean>`                                                                             |                                                                                                                                                                                            |
-| `propose(change: Change, options?: { reason?: string }): Promise<boolean>`                                                     | Shown as a proposal the user accepts or rejects, as Textus AI's are (editor.propose).                                                                                                      |
-| `reveal(location: Omit<Location, "path"> & { path?: string }): Promise<boolean>`                                               | Scrolls to a place in it and puts the caret there.                                                                                                                                         |
-| `registerCompletion(id: string, provider: CompletionProvider): Disposable`                                                     | Completions as you type, for one of `contributes.completions` (editor.read): asked when what is before the caret matches its `pattern`. `insert` replaces the match; `$0` marks the caret. |
-| `registerHover(provider: { provideHover(target: HoverTarget): HoverCard \| null \| Promise<HoverCard \| null>; }): Disposable` | A card for what the pointer rests on (editor.read).                                                                                                                                        |
-| `registerDecorations(provider: { decorate(blocks: Block[]): Decoration[] \| Promise<Decoration[]>; }): Disposable`             | Marks over the text (editor.read), asked for the blocks in sight and again when they change.                                                                                               |
-| `onDidChangeActive: Event<{ path: string \| null }>`                                                                           | Another document came to the front (or none).                                                                                                                                              |
-| `onDidChange: Event<{ path: string \| null }>`                                                                                 | Its text changed: once typing pauses, not on every key.                                                                                                                                    |
-| `onDidChangeSelection: Event<{ text: string }>`                                                                                |                                                                                                                                                                                            |
-| `keys: EditorKeys`                                                                                                             | The keyboard, for plugins that are a way of typing - Vim, Emacs (editor.input).                                                                                                            |
+| Member                                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getPath(): Promise<string \| null>`                                                                                           | Its path; null for an unsaved one, and with no document.                                                                                                                                                                                                                                                                                                                                                   |
+| `getText(): Promise<string \| null>`                                                                                           | Its Markdown (editor.read).                                                                                                                                                                                                                                                                                                                                                                                |
+| `getSelection(): Promise<{ text: string; markdown: string \| null } \| null>`                                                  |                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `getBlocks(): Promise<Block[] \| null>`                                                                                        | Its blocks as Textus AI is shown them (editor.read).                                                                                                                                                                                                                                                                                                                                                       |
+| `getOutline(): Promise< { level: number; text: string; line: number }[] \| null >`                                             |                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `edit(changes: Change \| Change[]): Promise<boolean>`                                                                          | Changes it at once, as one undo step (editor.write). False when a change can't be placed (a block id from before an edit).                                                                                                                                                                                                                                                                                 |
+| `insertText(text: string): Promise<boolean>`                                                                                   | At the caret, or in place of the selection (editor.write).                                                                                                                                                                                                                                                                                                                                                 |
+| `replaceSelection(text: string): Promise<boolean>`                                                                             |                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `propose(change: Change, options?: { reason?: string }): Promise<boolean>`                                                     | Shown as a proposal the user accepts or rejects, as Textus AI's are (editor.propose).                                                                                                                                                                                                                                                                                                                      |
+| `reveal(location: Omit<Location, "path"> & { path?: string }): Promise<boolean>`                                               | Scrolls to a place in it and puts the caret there.                                                                                                                                                                                                                                                                                                                                                         |
+| `registerCompletion(id: string, provider: CompletionProvider): Disposable`                                                     | Completions as you type, for one of `contributes.completions` (editor.read): asked when what is before the caret matches its `pattern`. `insert` replaces the match; `$0` marks the caret.                                                                                                                                                                                                                 |
+| `registerHover(provider: { provideHover(target: HoverTarget): HoverCard \| null \| Promise<HoverCard \| null>; }): Disposable` | A card for what the pointer rests on (editor.read).                                                                                                                                                                                                                                                                                                                                                        |
+| `registerDecorations(provider: { decorate(blocks: Block[]): Decoration[] \| Promise<Decoration[]>; }): Disposable`             | Marks over the text (editor.read), asked for the blocks in sight and again when they change.                                                                                                                                                                                                                                                                                                               |
+| `onDidChangeActive: Event<{ path: string \| null }>`                                                                           | Another document came to the front (or none).                                                                                                                                                                                                                                                                                                                                                              |
+| `onDidChange: Event<{ path: string \| null; source: ChangeSource }>`                                                           | Its text changed: once typing pauses, not on every key. 1.1: `source` says who changed it - "user" (typing, pasting, the keyboard), "ai" (Textus AI: an accepted proposal, a completion, a grammar fix), "disk" (the file changed and was read again), "plugin" (a plugin through this API) or "history" (undo, redo). When several did since the last event, "user" wins, then history, ai, plugin, disk. |
+| `onDidChangeSelection: Event<{ text: string }>`                                                                                |                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `keys: EditorKeys`                                                                                                             | The keyboard, for plugins that are a way of typing - Vim, Emacs (editor.input).                                                                                                                                                                                                                                                                                                                            |
 
 ## Block
 
@@ -494,7 +497,7 @@ type EditorOp =
 | `onDidRename: Event<{ from: string; to: string }>`                                                                    |                                                                                                                                                                                                                                                                                      |
 | `onDidDelete: Event<{ path: string }>`                                                                                |                                                                                                                                                                                                                                                                                      |
 | `onWillSave(listener: (e: { path: string; text: string; }) => string \| void \| Promise<string \| void>): Disposable` | A document is about to be saved: return its text changed to save that instead (within a second; files.write).                                                                                                                                                                        |
-| `onDidSave: Event<{ path: string; text: string }>`                                                                    |                                                                                                                                                                                                                                                                                      |
+| `onDidSave: Event<{ path: string; text: string; trigger: "manual" \| "auto"; }>`                                      | 1.1: `trigger` is "manual" for File › Save or Save As, "auto" for autosave.                                                                                                                                                                                                          |
 | `onDidChangeRoot: Event<{ path: string \| null }>`                                                                    |                                                                                                                                                                                                                                                                                      |
 
 ## FileEntry
@@ -594,6 +597,92 @@ Tools for Textus AI (ai.tools): each one named in the manifest's contributes.aiT
 | Member                                                                                                                   |                                                                                                  |
 | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | `registerHandler(handler: (uri: { path: string; query: Record<string, string>; }) => void \| Promise<void>): Disposable` | Links `textus://<plugin id>/<path>?<query>` opened from outside Textus (a browser, another app). |
+
+## ChangeSource
+
+Who changed the document (editor.onDidChange).
+
+```ts
+type ChangeSource = "user" | "ai" | "disk" | "plugin" | "history";
+```
+
+## Job
+
+A job Textus keeps for the plugin and fires on time while it runs - with a window open or, in background mode, with none - even after a restart. One of `at`, `every`, `daily`; then `notify`, `run` or both.
+
+- `at`: once, "2026-11-02T09:00" (local) or with an offset.
+
+- `every`: "15m", "1h", "1h30m", "1d": 15 minutes at least, counted from when it was set.
+
+- `daily`: "HH:MM", local time; across daylight saving it keeps the time on the clock.
+
+- `catchUp`: a time missed while Textus wasn't running fires once on its next start ("once", the default) or is let go ("skip").
+
+- `notify`: shown as a system notification (needs notifications).
+
+- `run`: the name of a function the manifest's `background` code exports, called as `exports[run](job, ctx)` (needs background).
+
+| Member                       |     |
+| ---------------------------- | --- |
+| `at?: string`                |     |
+| `every?: string`             |     |
+| `daily?: string`             |     |
+| `catchUp?: "once" \| "skip"` |     |
+| `notify?: Notification`      |     |
+| `run?: string`               |     |
+
+## ScheduledJob
+
+A job as Textus keeps it: what was set, when it is due next (Unix ms; null once an `at` fired) and when it last fired.
+
+| Member                      |     |
+| --------------------------- | --- |
+| `id: string`                |     |
+| `catchUp: "once" \| "skip"` |     |
+| `nextDue: number \| null`   |     |
+| `lastFired: number \| null` |     |
+
+## Notification
+
+A system notification. A click brings Textus up with `open.path` (a file of the open folder - or, from a job, of the folder open when it was set - absolute or relative to it; needs files.read) open at `open.line`. macOS asks the user to allow notifications the first time.
+
+| Member                                   |     |
+| ---------------------------------------- | --- |
+| `title: string`                          |     |
+| `body?: string`                          |     |
+| `open?: { path: string; line?: number }` |     |
+
+## Schedule
+
+| Member                                             |                                                                                                                   |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `set(id: string, job: Job): Promise<ScheduledJob>` | Adds the job, or replaces the plugin's job of that id (letters, digits, `-`, `_`, `.`; at most 32 jobs a plugin). |
+| `clear(id: string): Promise<boolean>`              | Whether there was one to take away.                                                                               |
+| `list(): Promise<ScheduledJob[]>`                  |                                                                                                                   |
+
+## Notify
+
+| Member                                            |     |
+| ------------------------------------------------- | --- |
+| `show(notification: Notification): Promise<void>` |     |
+
+## App
+
+| Member                                                            |                                                                                                                                                                            |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly state: "active" \| "inactive" \| "background"`          | "active": a Textus window has the focus; "inactive": windows are open, none focused; "background": no window (background code, or every window closed in background mode). |
+| `onDidChangeState: Event<"active" \| "inactive" \| "background">` |                                                                                                                                                                            |
+
+## JobRun
+
+What a job's `run` is given, in the manifest's `background` code: a frame of its own, started for the run and stopped after it (30 seconds at most). That code reaches `files` (in the folder open when the job was set), `net`, `settings.get`, `schedule`, `notify`, `app`, `l10n`, `env` and the context's storage, secrets and log - not the editor, UI, layout, views, commands or metadata.
+
+exports.remind = async (job, ctx) => { ... };
+
+| Member       |                                                                   |
+| ------------ | ----------------------------------------------------------------- |
+| `id: string` | The job's id.                                                     |
+| `due: Date`  | When it was due: well before now for one caught up after a start. |
 
 ## WebviewApi
 

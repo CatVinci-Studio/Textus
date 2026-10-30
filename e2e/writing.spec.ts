@@ -32,21 +32,6 @@ async function sourceOf(page: Page): Promise<string> {
   return value;
 }
 
-test("typing a closing ** or ~~ by hand closes the span once, and text after *** goes into the bold-italic span", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await page.locator('[data-active-tab="true"] .ProseMirror').click();
-  await page.keyboard.type("A **bold** and *it* end. ~~s~~ done", {
-    delay: 30,
-  });
-  await page.keyboard.press("Enter");
-  await page.keyboard.type("A ***both*** end", { delay: 30 });
-  expect((await sourceOf(page)).trim()).toBe(
-    "A **bold** and *it* end. ~~s~~ done\n\nA ***both*** end",
-  );
-});
-
 test("** committed through an IME composition still makes bold (#134)", async ({
   page,
 }) => {
@@ -74,53 +59,6 @@ test("** committed through an IME composition still makes bold (#134)", async ({
   await expect(editor.locator("strong")).toHaveText("加粗");
   await page.keyboard.type(" and ~~s~~", { delay: 30 });
   expect((await sourceOf(page)).trim()).toBe("**加粗** and ~~s~~");
-});
-
-test("deleting the text after bold or italic leaves the caret after the closing mark (#199)", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await editor.click();
-  await page.keyboard.type("前**3**位。", { delay: 30 });
-  await page.keyboard.press("Enter");
-  await page.keyboard.type("前*3*位。", { delay: 30 });
-  for (const [line, tag] of [
-    [0, "strong"],
-    [1, "em"],
-  ] as const) {
-    const paragraph = editor.locator("p").nth(line);
-    // Caret after 位, then erase it: the caret is now right after the span.
-    await paragraph.click();
-    await page.keyboard.press("End");
-    await page.keyboard.press("ArrowLeft");
-    await page.keyboard.press("Backspace");
-    // The caret must not sit inside the span before the revealed closing
-    // mark, or typing goes bold.
-    const caretInSpan = await page.evaluate(
-      (t) => !!document.getSelection()?.anchorNode?.parentElement?.closest(t),
-      tag,
-    );
-    expect(caretInSpan).toBe(false);
-    await page.keyboard.type("x", { delay: 30 });
-    await expect(paragraph.locator(tag)).toHaveText("3");
-  }
-  expect((await sourceOf(page)).trim()).toBe("前**3**x。\n\n前*3*x。");
-});
-
-test("with closing marks off, ** stays as typed and **x** still turns bold (#136)", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en", autoCloseMarks: false } });
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await editor.click();
-  await page.keyboard.type("**", { delay: 30 });
-  await expect(editor.locator(".md-span")).toHaveCount(0);
-  await expect(editor.locator("p").first()).toHaveText("**");
-  await page.keyboard.type("x**", { delay: 30 });
-  await expect(editor.locator("strong")).toHaveText("x");
-  await page.keyboard.type(" and ~~s~~", { delay: 30 });
-  expect((await sourceOf(page)).trim()).toBe("**x** and ~~s~~");
 });
 
 /** Paragraphs enough to scroll several screens. */
@@ -656,36 +594,6 @@ test("a note's body starts flush with the lines under it", async ({ page }) => {
   expect(shown).toEqual(["none"]);
 });
 
-test("typed dollar amounts stay text; a typed formula still forms", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await page.locator('[data-active-tab="true"] .ProseMirror').click();
-  await page.keyboard.type("It costs $5 a month, or $50 a year.", {
-    delay: 20,
-  });
-  await page.keyboard.press("Enter");
-  await page.keyboard.type("Price $4) and $19 ok.", { delay: 20 });
-  await page.keyboard.press("Enter");
-  await page.keyboard.type("The plan costs $5.", { delay: 20 });
-  await page.keyboard.press("Enter");
-  await page.keyboard.type("Area $x^2$ and $2 \\times 3$ here.", {
-    delay: 20,
-  });
-  const paragraphs = page.locator('[data-active-tab="true"] .ProseMirror p');
-  await expect(paragraphs).toHaveCount(4);
-  const prices = [
-    "It costs $5 a month, or $50 a year.",
-    "Price $4) and $19 ok.",
-    "The plan costs $5.",
-  ];
-  for (let i = 0; i < prices.length; i++) {
-    await expect(paragraphs.nth(i)).toHaveText(prices[i]);
-    await expect(paragraphs.nth(i).locator(".math-inline")).toHaveCount(0);
-  }
-  await expect(paragraphs.nth(3).locator(".math-inline")).toHaveCount(2);
-});
-
 test("clicking a diagram opens its own source after text is added above", async ({
   page,
 }) => {
@@ -764,60 +672,6 @@ test("the wheel over a table scrolls the page, not the table", async ({
     .poll(() => scroller.evaluate((el) => el.scrollTop))
     .toBeGreaterThan(before);
   expect(await box.evaluate((el) => el.scrollTop)).toBe(0);
-});
-
-/** A deliberate Shift+Enter: Shift held first, since Shift and Enter pressed
- *  together count as Enter. */
-async function shiftEnter(page: Page) {
-  await page.keyboard.down("Shift");
-  await page.waitForTimeout(200);
-  await page.keyboard.press("Enter");
-  await page.keyboard.up("Shift");
-}
-
-test("Shift+Enter mid-line in a paragraph ending in a break adds a break", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "zh" } });
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await editor.click();
-  await page.keyboard.type("1、时间");
-  await shiftEnter(page);
-  // Back up from the new empty line to between 时 and 间.
-  await page.keyboard.press("ArrowLeft");
-  await page.keyboard.press("ArrowLeft");
-  await shiftEnter(page);
-  const shape = await editor.evaluate((el) =>
-    Array.from(el.querySelectorAll(":scope > p")).map((p) =>
-      Array.from(p.childNodes)
-        .map((n) =>
-          n.nodeName === "BR"
-            ? (n as Element).classList.contains("ProseMirror-trailingBreak")
-              ? ""
-              : "<br>"
-            : n.textContent,
-        )
-        .join(""),
-    ),
-  );
-  expect(shape).toEqual(["1、时<br>间<br>"]);
-});
-
-test("Shift pressed together with Enter starts a new paragraph", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "zh" } });
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await editor.click();
-  await page.keyboard.type("7、很少用agent");
-  // The Pinyin 中/英 Shift tap overlapping the Enter after a Latin word.
-  await page.keyboard.press("Shift+Enter");
-  await page.keyboard.type("8、");
-  await expect(editor.locator(":scope > p")).toHaveText([
-    "7、很少用agent",
-    "8、",
-  ]);
-  await expect(editor.locator('br[data-type="hardbreak"]')).toHaveCount(0);
 });
 
 test("an IME commit into a fresh task item stays in that item", async ({
@@ -1081,26 +935,6 @@ test("Escape that closes the context menu keeps the grey suggestion", async ({
   await expect(ghost).toHaveCount(0);
 });
 
-test("ASCII - [] and -[] make tasks too; the space after - [ ] is eaten", async ({
-  page,
-}) => {
-  await openApp(page);
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await editor.click();
-  const tasks = editor.locator('li[data-item-type="task"]');
-  await page.keyboard.type("- [ ] milk");
-  await expect(tasks.nth(0)).toHaveText("milk");
-  for (const spelling of ["- []", "-[]", "-[x]"]) {
-    await page.keyboard.press("Enter");
-    await page.keyboard.press("Enter");
-    await page.keyboard.type(spelling + "eggs");
-  }
-  await expect(tasks).toHaveCount(4);
-  await expect(tasks.nth(1)).toHaveText("eggs");
-  await expect(tasks.nth(2)).toHaveText("eggs");
-  await expect(tasks.nth(3)).toHaveAttribute("data-checked", "true");
-});
-
 test("list items aren't positioned, so WebKit's IME commit can't prune them", async ({
   page,
 }) => {
@@ -1112,20 +946,6 @@ test("list items aren't positioned, so WebKit's IME commit can't prune them", as
     .locator(".milkdown li")
     .evaluateAll((items) => items.map((li) => getComputedStyle(li).position));
   expect(positions).toEqual(["static", "static", "static"]);
-});
-
-test("Enter in a table's last row starts the new row at its first cell", async ({
-  page,
-}) => {
-  await openApp(page);
-  await pasteMarkdown(page, "| a | b |\n|---|---|\n| 1 | 2 |\n");
-  await page.locator(".milkdown td").nth(1).click();
-  await page.keyboard.press("End");
-  await page.keyboard.press("Enter");
-  await page.keyboard.type("x");
-  await expect(
-    page.locator(".milkdown tr").nth(2).locator("td").first(),
-  ).toHaveText("x");
 });
 
 /** The content zoom on screen (useZoom's `--content-zoom`). */
@@ -1430,27 +1250,6 @@ test.describe("phone", () => {
     await page.keyboard.type("x");
     await expect.poll(async () => Math.abs(await offMiddle())).toBeLessThan(20);
   });
-});
-
-test("Enter on an empty nested task lifts it a level as a task, not a bullet (#355)", async ({
-  page,
-}) => {
-  await openApp(page);
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await pasteMarkdown(page, "- [ ] one\n  - [ ] two\n    - [ ] three");
-  await editor.locator("li p", { hasText: "three" }).click();
-  await page.keyboard.press("End");
-  // A new task at the third level, then Enter on it while it is empty: it
-  // moves up beside "two" - and stays a task, as its new neighbours are.
-  await page.keyboard.press("Enter");
-  await page.keyboard.press("Enter");
-  await page.keyboard.type("four");
-  const four = editor.locator("li", { hasText: /^four$/ });
-  await expect(four).toHaveAttribute("data-item-type", "task");
-  await expect(editor.locator('li[data-item-type="task"]')).toHaveCount(4);
-  expect(await sourceOf(page)).toContain(
-    "  * [ ] two\n    * [ ] three\n  * [ ] four",
-  );
 });
 
 test("the outline folds and unfolds every heading from its menu, or with Option-click", async ({

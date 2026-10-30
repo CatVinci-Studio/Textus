@@ -213,9 +213,10 @@ pub(crate) fn apply_window_backgrounds(app: &AppHandle) {
     };
     let color = pinned_background(&stores.settings.snapshot().0);
     for (label, window) in app.webview_windows() {
-        // Only the windows with_boot builds: not the transparent tab-drag
-        // pill, nor the hidden PDF-export renderers.
+        // Only the windows the user sees: not the transparent tab-drag
+        // pill, the hidden PDF-export renderers or background host.
         if label == crate::tab_drag::DRAG_PILL_LABEL
+            || label == crate::schedule::HOST_LABEL
             || label.starts_with(crate::commands::export::PDF_EXPORT_LABEL_PREFIX)
         {
             continue;

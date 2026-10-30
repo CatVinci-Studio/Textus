@@ -208,6 +208,20 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::plugins::store::plugin_store_clear,
             ]),
         ),
+        (
+            // Plugins' scheduled jobs, notifications, background runs, app state.
+            "schedule.ts",
+            builder().commands(collect_commands![
+                crate::schedule::schedule_set,
+                crate::schedule::schedule_clear,
+                crate::schedule::schedule_list,
+                crate::schedule::host::schedule_take_runs,
+                crate::schedule::host::background_host_idle,
+                crate::schedule::notify::notify_show,
+                crate::schedule::notify::notify_take_open,
+                crate::schedule::app_state::app_state,
+            ]),
+        ),
         // The AI commands, a file per concern (generated files are held to the same
         // 600-line limit).
         (

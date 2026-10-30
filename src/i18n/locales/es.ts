@@ -1380,6 +1380,10 @@ para usar una.
   extensionsThemesNone:
     "Aún no has añadido temas. Los incluidos se eligen en {page}.",
   extensionsThemesInstalled: "Tus temas",
+  extensionsAvailable: "Disponibles",
+  extensionsFold: "Ocultar",
+  extensionsUnfold: "Mostrar",
+  themePreviewEnlarge: "Ver más grande",
   extensionsThemesGet: "Conseguir temas",
   extensionsSkillsHelp: `Una habilidad le dice a ${AI_NAME} cómo hacer bien un tipo de tarea. Las activadas se ofrecen a ${AI_NAME} y en el menú /; una instalación nueva empieza con cinco activadas, y el resto se añade aquí.`,
   extensionsSkillsMoved:
@@ -1423,15 +1427,10 @@ para usar una.
   pluginsCatalogRetry: "Reintentar",
   pluginsCatalogAllInstalled: "Ya tienes todos los complementos de la lista.",
   pluginsSearchNone: "Ningún complemento coincide con «{query}».",
-  marketGetMore: "Conseguir más",
-  marketTitle: "Conseguir más",
-  marketHelp:
-    "Temas, complementos y habilidades para Textus. Cada uno pregunta antes de instalarse qué podrá hacer.",
   marketSearch: "Buscar",
   marketListYours: "¿Has hecho uno propio?",
   marketListingRules: "Cómo publicarlo",
   marketSkillFailed: "No se instaló.",
-  marketSkillInstalled: "Instalada",
   marketSkillsNone: "Todavía no hay habilidades publicadas.",
   pluginsCatalogKept:
     "Se muestra la lista de la última vez; no se pudo obtener una más reciente: {reason}",
@@ -1442,6 +1441,7 @@ para usar una.
   pluginsSortNewest: "Actualizados recientemente",
   pluginsSortName: "Nombre",
   pluginInstalls: "{n} instalaciones",
+  pluginInstalls30: "+{n} en 30 días",
   pluginInstalled: "Instalado",
   pluginUpdatedOn: "Actualizado el {date}",
   pluginReadmeLabel: "Acerca de {name}",
@@ -1474,7 +1474,7 @@ para usar una.
   pluginEditWithAi: "Editar con IA",
   pluginEditWithAiAsk: "Cambia el complemento {name} ({id}): ",
   pluginEditWithAiError: "se detuvo con este error; corrígelo: {error}\n",
-  pluginsAllLabel: "Todos los complementos",
+  pluginsAllLabel: "Funciones de complementos",
   pluginsAllHelp:
     "Desactivados, ningún complemento se ejecuta y no se muestra nada de lo que añaden. Tus complementos y sus ajustes se conservan.",
   pluginsInstallHelp:
@@ -1552,6 +1552,11 @@ para usar una.
   pluginPermProjectData:
     "Guardar sus propios datos en la carpeta abierta, en .textus/plugins",
   pluginPermAiTools: "Dar a Textus AI herramientas propias para usar",
+  pluginPermNotifications: "Mostrar notificaciones del sistema",
+  pluginPermBackground:
+    "Ejecutar código según una programación, incluso con todas las ventanas cerradas",
+  pluginScheduleNotice:
+    "{name} programó una tarea. Solo se ejecuta mientras Textus está abierto: activa «{setting}» para que también se ejecute con todas las ventanas cerradas.",
   pluginPermNetwork: "Conectarse a {host}",
   pluginPermNetworkAny: "Conectarse a cualquier sitio web",
   menuPlugins: "Complementos",

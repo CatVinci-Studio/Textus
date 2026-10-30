@@ -1372,6 +1372,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   extensionsThemesNone:
     "Noch keine Themes hinzugefügt. Die eingebauten wählst du unter {page}.",
   extensionsThemesInstalled: "Deine Themes",
+  extensionsAvailable: "Verfügbar",
+  extensionsFold: "Ausblenden",
+  extensionsUnfold: "Einblenden",
+  themePreviewEnlarge: "Größer anzeigen",
   extensionsThemesGet: "Themes holen",
   extensionsSkillsHelp: `Ein Skill sagt ${AI_NAME}, wie es eine Art von Aufgabe gut erledigt. Eingeschaltete Skills bekommt ${AI_NAME}, und sie stehen im /-Menü; eine neue Installation beginnt mit fünf, den Rest fügst du hier hinzu.`,
   extensionsSkillsMoved:
@@ -1414,15 +1418,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsCatalogRetry: "Erneut versuchen",
   pluginsCatalogAllInstalled: "Alle Plugins der Liste sind installiert.",
   pluginsSearchNone: "Kein Plugin passt zu „{query}“.",
-  marketGetMore: "Mehr holen",
-  marketTitle: "Mehr holen",
-  marketHelp:
-    "Themes, Plugins und Skills für Textus. Jedes fragt vor der Installation, was es tun darf.",
   marketSearch: "Suchen",
   marketListYours: "Selbst eins gemacht?",
   marketListingRules: "So wird es aufgenommen",
   marketSkillFailed: "Es wurde nicht installiert.",
-  marketSkillInstalled: "Installiert",
   marketSkillsNone: "Noch keine Skills aufgenommen.",
   pluginsCatalogKept:
     "Die Liste vom letzten Mal - eine neuere ließ sich nicht laden: {reason}",
@@ -1433,6 +1432,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsSortNewest: "Zuletzt aktualisiert",
   pluginsSortName: "Name",
   pluginInstalls: "{n} Installationen",
+  pluginInstalls30: "+{n} in 30 Tagen",
   pluginInstalled: "Installiert",
   pluginUpdatedOn: "Aktualisiert am {date}",
   pluginReadmeLabel: "Über {name}",
@@ -1467,7 +1467,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginEditWithAiAsk: "Ändere das Plugin {name} ({id}): ",
   pluginEditWithAiError:
     "es ist mit diesem Fehler stehen geblieben, behebe ihn: {error}\n",
-  pluginsAllLabel: "Alle Plugins",
+  pluginsAllLabel: "Plugin-Funktionen",
   pluginsAllHelp:
     "Aus: Kein Plugin läuft, und nichts, was sie hinzufügen, wird angezeigt. Deine Plugins und ihre Einstellungen bleiben erhalten.",
   pluginsInstallHelp:
@@ -1545,6 +1545,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermProjectData:
     "Eigene Daten im geöffneten Ordner ablegen, unter .textus/plugins",
   pluginPermAiTools: "Textus AI eigene Werkzeuge geben",
+  pluginPermNotifications: "Systemmitteilungen anzeigen",
+  pluginPermBackground:
+    "Code nach Zeitplan ausführen, auch wenn alle Fenster geschlossen sind",
+  pluginScheduleNotice:
+    "{name} hat etwas geplant. Es läuft nur, solange Textus läuft: schalte „{setting}“ ein, damit es auch bei geschlossenen Fenstern läuft.",
   pluginPermNetwork: "Mit {host} verbinden",
   pluginPermNetworkAny: "Mit beliebigen Websites verbinden",
   menuPlugins: "Plugins",

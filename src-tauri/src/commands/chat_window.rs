@@ -13,6 +13,7 @@ pub fn is_editor_window(label: &str) -> bool {
     label != crate::tab_drag::DRAG_PILL_LABEL
         && !label.starts_with(CHAT_LABEL_PREFIX)
         && !label.starts_with(crate::commands::export::PDF_EXPORT_LABEL_PREFIX)
+        && label != crate::schedule::HOST_LABEL
 }
 
 /// One detached chat window. Unlike Quick Ask it follows whatever document the

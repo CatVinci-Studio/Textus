@@ -71,7 +71,8 @@ export {
 
 const hosts = new Map<string, PluginHost>();
 
-function platform(): string {
+/** The system as a plugin is told it (textus.env.platform). */
+export function pluginPlatform(): string {
   if (isIOSApp) return "ios";
   if (isMacPlatform()) return "macos";
   if (isWindowsPlatform()) return "windows";
@@ -180,7 +181,7 @@ async function host(record: PluginRecord): Promise<PluginHost> {
         language: () => windowInfo().language(),
         dark: () => windowInfo().dark(),
         appVersion: APP_VERSION,
-        platform: platform(),
+        platform: pluginPlatform(),
         setting: async (id, key) => pluginSetting(id, key),
         setSetting: (id, key, value) => setPluginSetting(id, key, value),
         pickWithCommands,

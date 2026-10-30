@@ -12,81 +12,95 @@ import {
   type CatalogState,
 } from "../../plugins/store/catalog";
 import { Select } from "../../ui/Select";
+import { AvailableSection } from "./AvailableSection";
+import { installsText } from "./installs-text";
 
 const SORTS: CatalogSort[] = ["popular", "newest", "name"];
 
-/** Get more › Plugins: the catalog's plugins, the most installed first (or
+/** The catalog's plugins not installed yet, the most installed first (or
  *  as sorted), each opening its page. */
-export function MarketPlugins({
+export function AvailablePlugins({
   t,
   catalog,
   query,
+  installed,
   actionFor,
   onOpen,
 }: {
   t: Strings;
   catalog: CatalogState;
   query: string;
+  installed: ReadonlySet<string>;
   /** A plugin's button (PluginAction). */
   actionFor: (id: string) => ReactNode;
   onOpen: (item: CatalogItem) => void;
 }) {
   const [sort, setSort] = useState<CatalogSort>("popular");
-  if (catalog.status === "failed")
-    return (
-      <CatalogProblem
-        t={t}
-        text={t.pluginsCatalogFailed.replace("{reason}", catalog.error)}
-      />
-    );
-  if (catalog.status !== "ready")
-    return <p className="plugin-empty">{t.pluginsCatalogLoading}</p>;
-  const shown = sortCatalog(searchCatalog(catalog.items, query), sort);
   const sortLabel: Record<CatalogSort, string> = {
     popular: t.pluginsSortPopular,
     newest: t.pluginsSortNewest,
     name: t.pluginsSortName,
   };
+  const ready = catalog.status === "ready";
+  const shown = ready
+    ? sortCatalog(searchCatalog(catalog.items, query), sort).filter(
+        (item) => !installed.has(item.id),
+      )
+    : [];
+  const message =
+    catalog.status === "failed" ? (
+      <CatalogProblem
+        t={t}
+        text={t.pluginsCatalogFailed.replace("{reason}", catalog.error)}
+      />
+    ) : !ready ? (
+      <p className="plugin-empty">{t.pluginsCatalogLoading}</p>
+    ) : query.trim() && !shown.length ? (
+      <p className="plugin-empty">
+        {t.pluginsSearchNone.replace("{query}", query.trim())}
+      </p>
+    ) : undefined;
   return (
-    <>
-      {catalog.error && (
-        <CatalogProblem
+    <AvailableSection
+      t={t}
+      kind="plugins"
+      searching={!!query.trim()}
+      message={message}
+      head={
+        <div className="market-sort">
+          <Select
+            className="inline-chat-mode"
+            aria-label={t.pluginsSortLabel}
+            value={sort}
+            onChange={(e) => setSort(e.target.value as CatalogSort)}
+          >
+            {SORTS.map((s) => (
+              <option key={s} value={s}>
+                {sortLabel[s]}
+              </option>
+            ))}
+          </Select>
+        </div>
+      }
+      note={
+        ready &&
+        catalog.error && (
+          <CatalogProblem
+            t={t}
+            text={t.pluginsCatalogKept.replace("{reason}", catalog.error)}
+          />
+        )
+      }
+      rows={shown.map((item) => (
+        <CatalogCard
+          key={item.id}
+          item={item}
           t={t}
-          text={t.pluginsCatalogKept.replace("{reason}", catalog.error)}
+          action={actionFor(item.id)}
+          onOpen={() => onOpen(item)}
         />
-      )}
-      <div className="market-sort">
-        <Select
-          className="inline-chat-mode"
-          aria-label={t.pluginsSortLabel}
-          value={sort}
-          onChange={(e) => setSort(e.target.value as CatalogSort)}
-        >
-          {SORTS.map((s) => (
-            <option key={s} value={s}>
-              {sortLabel[s]}
-            </option>
-          ))}
-        </Select>
-      </div>
-      <div className="settings-group-body">
-        {shown.length ? (
-          shown.map((item) => (
-            <CatalogCard
-              key={item.id}
-              item={item}
-              t={t}
-              action={actionFor(item.id)}
-              onOpen={() => onOpen(item)}
-            />
-          ))
-        ) : (
-          <p className="plugin-empty">
-            {t.pluginsSearchNone.replace("{query}", query.trim())}
-          </p>
-        )}
-      </div>
-    </>
+      ))}
+    />
   );
 }
 
@@ -103,12 +117,6 @@ function CatalogProblem({ t, text }: { t: Strings; text: string }) {
       </div>
     </div>
   );
-}
-
-/** "1,234 installs", in the UI language's digits; nothing when uncounted. */
-export function installsText(item: CatalogItem, t: Strings): string | null {
-  if (item.installs === undefined) return null;
-  return t.pluginInstalls.replace("{n}", item.installs.toLocaleString());
 }
 
 /** A plugin the catalog offers: its icon, name, line and installs, opening
