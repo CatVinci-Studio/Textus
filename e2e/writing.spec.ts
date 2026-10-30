@@ -1319,3 +1319,27 @@ test("one view for every document: switching it switches every tab, and new ones
     await expect(page.locator(`${active} .split-source`)).toHaveCount(0);
   }
 });
+
+test("a click in the page's margin beside the text closes the formula being edited", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, PREVIEW_DOC);
+  await page.locator('[data-active-tab="true"] .math-block-rendered').click();
+  const open = page.locator('[data-active-tab="true"] .math-block-revealed');
+  await expect(open).toHaveCount(1);
+  // Beside the column, at the height of the line below the formula.
+  const below = (await page
+    .locator('[data-active-tab="true"] .ProseMirror p')
+    .nth(1)
+    .boundingBox())!;
+  const scroller = (await page
+    .locator('[data-active-tab="true"] .editor-scroll')
+    .boundingBox())!;
+  await page.mouse.click(scroller.x + 12, below.y + below.height / 2);
+  await expect(open).toHaveCount(0);
+  await page.keyboard.type("X");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror p').nth(1),
+  ).toHaveText(/^XA line below the formula/);
+});
