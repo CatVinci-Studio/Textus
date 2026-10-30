@@ -1485,6 +1485,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginPermProjectData:
     "開いているフォルダー（.textus/plugins）に自分のデータを保存する",
   pluginPermAiTools: "Textus AI に独自のツールを提供する",
+  pluginPermNotifications: "システム通知を表示する",
+  pluginPermBackground:
+    "スケジュールに従ってコードを実行する（すべてのウインドウを閉じていても）",
+  pluginScheduleNotice:
+    "{name} が予定を設定しました。Textus の実行中にだけ動きます。「{setting}」をオンにすると、すべてのウインドウを閉じていても動きます。",
   pluginPermNetwork: "{host} に接続する",
   pluginPermNetworkAny: "任意のウェブサイトに接続する",
   menuPlugins: "プラグイン",

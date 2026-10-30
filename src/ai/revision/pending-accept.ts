@@ -26,6 +26,7 @@ import {
 import { composeSentences, trimBreaks } from "./sentence-diff";
 import { findInOrder } from "./sentence-locate";
 import type { CitationStyle } from "./usePendingEdits";
+import { markChangeSource } from "../../editor/change-source";
 
 /** What an Accept did: written, not yet (streaming), or nothing because
  *  every sentence was kept; and the preview it settled. */
@@ -121,7 +122,7 @@ export function writeAccept(
       landed,
     });
     closeHistory(tr);
-    view.dispatch(tr.scrollIntoView());
+    view.dispatch(markChangeSource(tr, "ai").scrollIntoView());
     if (!isIOSApp) view.focus();
     ok = true;
     return done();
@@ -189,7 +190,7 @@ export function writeAccept(
   // Its own undo step, so an undo lands exactly on the replaced text and
   // brings the proposal back.
   closeHistory(tr);
-  view.dispatch(tr.scrollIntoView());
+  view.dispatch(markChangeSource(tr, "ai").scrollIntoView());
   // Another proposal on the same block lost its text to this edit though
   // its words are still there: find them again.
   const after = pendingEditKey.getState(view.state)?.previews ?? [];

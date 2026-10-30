@@ -178,6 +178,20 @@ describe("a plugin's manifest", () => {
   });
 });
 
+describe("a plugin's background code (API 1.1)", () => {
+  it("is read with the notifications and background permissions", () => {
+    const m = parseManifest({
+      ...base,
+      main: "host.js",
+      background: "background.js",
+      permissions: ["notifications", "background"],
+    });
+    expect(m.background).toBe("background.js");
+    expect(m.permissions).toEqual(["notifications", "background"]);
+    expect(parseManifest(base).background).toBeUndefined();
+  });
+});
+
 describe("a plugin's settings", () => {
   const withSettings = (settings: unknown[]) =>
     parseManifest({ ...base, contributes: { settings } });

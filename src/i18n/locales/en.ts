@@ -1516,6 +1516,10 @@ type /name in a conversation to use one.
   pluginPermProjectData:
     "Keep its own data in the open folder, in .textus/plugins",
   pluginPermAiTools: "Give Textus AI tools of its own to use",
+  pluginPermNotifications: "Show system notifications",
+  pluginPermBackground: "Run code on a schedule, even with every window closed",
+  pluginScheduleNotice:
+    "{name} scheduled something. It only runs while Textus is running: turn on “{setting}” so it also runs with every window closed.",
   pluginPermNetwork: "Connect to {host}",
   pluginPermNetworkAny: "Connect to any website",
   menuPlugins: "Plugins",

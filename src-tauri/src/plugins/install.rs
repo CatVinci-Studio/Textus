@@ -392,6 +392,8 @@ pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String>
     state::update(&app, |state| {
         state.plugins.remove(&id);
     })?;
+    #[cfg(desktop)]
+    crate::schedule::forget_plugin(&app, &id);
     let target = plugins_root(&app)?.join(&id);
     if target.is_dir() {
         std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;

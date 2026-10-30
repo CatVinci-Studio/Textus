@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { thisWindow } from "../platform/this-window";
 import { readDocText, statMtime, tabIsDirty, type DocTab } from "./doc-tabs";
 import { unlistenAll } from "../platform/events";
-import { FILE_WRITTEN_EVENT } from "../utils/events";
+import { FILE_RELOADED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
 
 // On focus, or when something in the window wrote a file, clean tabs whose
 // file changed on disk reload; dirty tabs wait for the save-time prompt.
@@ -49,6 +49,9 @@ export function useExternalChangeReload(
             diskMtime: mtime,
             reloadKey: live.reloadKey + 1,
           });
+          window.dispatchEvent(
+            new CustomEvent(FILE_RELOADED_EVENT, { detail: tab.path }),
+          );
         }
       })().finally(() => {
         checking = false;

@@ -1469,6 +1469,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermProjectData:
     "열려 있는 폴더(.textus/plugins)에 자체 데이터를 저장하기",
   pluginPermAiTools: "Textus AI에 자체 도구를 제공하기",
+  pluginPermNotifications: "시스템 알림 표시하기",
+  pluginPermBackground: "일정에 따라 코드 실행하기(모든 창을 닫아도)",
+  pluginScheduleNotice:
+    "{name}에서 예약 작업을 설정했습니다. Textus가 실행 중일 때만 동작합니다. “{setting}”을(를) 켜면 모든 창을 닫아도 동작합니다.",
   pluginPermNetwork: "{host}에 연결",
   pluginPermNetworkAny: "모든 웹사이트에 연결",
   menuPlugins: "플러그인",

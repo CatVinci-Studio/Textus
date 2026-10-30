@@ -92,7 +92,13 @@ pub fn apply(app: &AppHandle, change: Change) {
         update(&handle, |status| status.tray = tray);
         if !on
             && change == Change::Settings
-            && ends_when_turned_off(Os::current(), !handle.webview_windows().is_empty())
+            && ends_when_turned_off(
+                Os::current(),
+                handle
+                    .webview_windows()
+                    .keys()
+                    .any(|l| crate::schedule::app_state::is_user_window(l)),
+            )
         {
             handle.exit(0);
         }

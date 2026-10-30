@@ -50,26 +50,36 @@ const ChatWindowApp = lazyComponent(
 // For Help > Report a Problem, from the first moment.
 watchErrors();
 
-// The UI's language loads first, so the first frame is already in it; one
-// that fails to load shows in English.
-void loadLocale(loadSettings().language)
-  .catch(() => {})
-  .then(() => {
-    ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-      <React.StrictMode>
-        <SettingsProvider>
-          <AppearanceSync />
-          {view === "chat" ? (
-            <Suspense fallback={null}>
-              <ChatWindowApp />
-            </Suspense>
-          ) : (
-            <App />
-          )}
-          <WindowEdges />
-        </SettingsProvider>
-      </React.StrictMode>,
-    );
-    // The parts likely to be opened next load once the window is idle.
-    startWarming();
-  });
+if (view === "background") {
+  // The hidden window Rust opens to run plugins' background code draws
+  // nothing: it runs what is waiting and is closed.
+  void import("./plugins/background/background-host-page").then((m) =>
+    m.runBackgroundHost(),
+  );
+} else {
+  // The UI's language loads first, so the first frame is already in it; one
+  // that fails to load shows in English.
+  void loadLocale(loadSettings().language)
+    .catch(() => {})
+    .then(() => {
+      ReactDOM.createRoot(
+        document.getElementById("root") as HTMLElement,
+      ).render(
+        <React.StrictMode>
+          <SettingsProvider>
+            <AppearanceSync />
+            {view === "chat" ? (
+              <Suspense fallback={null}>
+                <ChatWindowApp />
+              </Suspense>
+            ) : (
+              <App />
+            )}
+            <WindowEdges />
+          </SettingsProvider>
+        </React.StrictMode>,
+      );
+      // The parts likely to be opened next load once the window is idle.
+      startWarming();
+    });
+}

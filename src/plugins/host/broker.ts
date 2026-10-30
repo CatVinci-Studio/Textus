@@ -6,7 +6,7 @@ import {
   onPluginEvent,
   type PluginEventMap,
 } from "../app-bridge";
-import { connectFrame, sandboxedFrame } from "./frames";
+import { connectFrame, hostsContainer, sandboxedFrame } from "./frames";
 import { hostDocument } from "./host-document";
 import { readPluginFile, type PluginOrigin } from "../store/files";
 import {
@@ -20,6 +20,8 @@ import { editorHandlers, stopPluginEditor } from "./broker-editor";
 import { metadataHandlers } from "./broker-metadata";
 import { stopPluginUi, uiHandlers } from "./broker-ui";
 import { viewHandlers } from "./broker-views";
+import { scheduleHandlers } from "./broker-schedule";
+import { currentAppState } from "../background/app-state";
 import { forgetListViews } from "../contributions/list-views";
 import { forgetWillExport } from "../contributions/will-export";
 import { forgetWillSave } from "../contributions/will-save";
@@ -81,20 +83,7 @@ const PING_EVERY_MS = 15_000;
 /** Errors in a minute past which a plugin is turned off. */
 const MAX_ERRORS_PER_MINUTE = 10;
 
-/** Where the hosts' frames live: out of sight, still running. */
-function hostsContainer(): HTMLElement {
-  let box = document.getElementById("plugin-hosts");
-  if (!box) {
-    box = document.createElement("div");
-    box.id = "plugin-hosts";
-    box.className = "plugin-hosts";
-    box.setAttribute("aria-hidden", "true");
-    document.body.append(box);
-  }
-  return box;
-}
-
-function withTimeout<T>(
+export function withTimeout<T>(
   promise: Promise<T>,
   ms: number,
   what: string,
@@ -136,6 +125,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   language: null,
   settings: null,
   editorKey: "editor.input",
+  appState: null,
 };
 
 export class PluginHost {
@@ -249,6 +239,7 @@ export class PluginHost {
             appVersion: this.deps.appVersion,
             platform: this.deps.platform,
             theme: this.deps.dark() ? "dark" : "light",
+            appState: currentAppState(),
             l10n: manifest.l10n,
           },
         }),
@@ -375,6 +366,7 @@ export class PluginHost {
       ...editorHandlers(scope),
       ...fileHandlers(scope),
       ...metadataHandlers(scope),
+      ...scheduleHandlers(scope, () => getWindowAccess()?.rootPath() ?? null),
     };
   }
 }

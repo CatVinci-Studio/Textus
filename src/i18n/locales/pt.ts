@@ -1532,6 +1532,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermProjectData:
     "Guardar os próprios dados na pasta aberta, em .textus/plugins",
   pluginPermAiTools: "Dar ao Textus AI ferramentas próprias para usar",
+  pluginPermNotifications: "Mostrar notificações do sistema",
+  pluginPermBackground:
+    "Executar código num horário, mesmo com todas as janelas fechadas",
+  pluginScheduleNotice:
+    "{name} agendou uma tarefa. Ela só é executada enquanto o Textus está aberto: ative “{setting}” para que também seja executada com todas as janelas fechadas.",
   pluginPermNetwork: "Conectar-se a {host}",
   pluginPermNetworkAny: "Conectar-se a qualquer site",
   menuPlugins: "Plugins",

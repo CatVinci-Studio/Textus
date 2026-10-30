@@ -165,6 +165,8 @@ turning it on, or leaves it off, and can take each back later.
 | `clipboard`      | read and write the clipboard                                                           |
 | `project.data`   | keep its own data in the open folder, in `.textus/plugins/<id>/`                       |
 | `ai.tools`       | give Textus AI tools to call                                                           |
+| `notifications`  | show system notifications, at once or on a schedule (API 1.1)                          |
+| `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)       |
 | `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)   |
 
 Ask for what the plugin's purpose explains, and no more: each permission
@@ -238,7 +240,13 @@ when clicked).
   type, `registerHover({ provideHover(target) })` for a card over a link,
   a wikilink or a citation.
 - Follow it: `onDidChangeActive`, `onDidChange` (once typing pauses),
-  `onDidChangeSelection`; `reveal(location)` scrolls to a place.
+  `onDidChangeSelection`; `reveal(location)` scrolls to a place. From API
+  1.1 `onDidChange` says who made the change, `source`: `"user"` (typing,
+  pasting, the keyboard), `"ai"` (an accepted Textus AI proposal, a
+  completion, a grammar fix), `"disk"` (the file changed and was read
+  again), `"plugin"` (this API) or `"history"` (undo and redo). With
+  several since the last event, `"user"` wins. `files.onDidSave` says
+  whether a save was `trigger: "manual"` or `"auto"`.
 
 ### What a plugin shows - `views`
 
@@ -324,6 +332,53 @@ from)`, `tags()`, `tasks()`, `search(query)`, `onDidChange`. Read this
 another group is named. `when` shows a setting only while another one is
 so: `"legend"` (on, or a list with anything in it), `"!legend"`,
 `"style == dark"`, `"style != dark"`.
+
+### On a schedule - `schedule`, `notify`, `app` (API 1.1)
+
+A plugin can ask Textus to do something later - remind the user, sync -
+without keeping code running. Textus keeps the job (it survives a
+restart) and fires it on time while it runs: with a window open, or with
+none in background mode (Settings › General › Keep running in the
+background; on macOS also until Textus is quit). The first time a
+plugin sets a job with background mode off, Textus says so and offers to
+turn it on.
+
+```js
+// Every morning at nine, a notification that opens the journal.
+await textus.schedule.set("morning", {
+  daily: "09:00", // or at: "2026-11-02T09:00", or every: "1h" (15m at least)
+  catchUp: "once", // a time missed while Textus wasn't running: once, or "skip"
+  notify: {
+    title: "Morning pages",
+    body: "Three pages before anything else.",
+    open: { path: "journal.md", line: 0 }, // needs files.read
+  },
+});
+await textus.schedule.list(); // [{ id: "morning", daily: "09:00", nextDue, ... }]
+await textus.schedule.clear("morning");
+await textus.notify.show({ title: "Exported", body: "notes.pdf" }); // now
+```
+
+- `notify` needs `notifications`; `open.path` is a file of the open folder
+  (relative to it, or absolute inside it) and needs `files.read`. A click
+  on the notification brings Textus up with it open at `open.line`
+  (counted from 0, as `metadata` counts lines). macOS asks the user to
+  allow notifications the first time.
+- `run: "sync"` calls `exports.sync(job, ctx)` in the manifest's
+  `background` file (`"background": "background.js"`, needs the
+  `background` permission). It runs in a sandboxed frame of its own for
+  at most 30 seconds, with `files` (in the folder open when the job was
+  set), `net`, `settings.get`, `schedule`, `notify`, `app` and `ctx`'s
+  storage, secrets and log - no editor, UI, layout, views or commands.
+  The plugin's `main` code isn't started for it.
+- A plugin turned off keeps its jobs, paused; uninstalled, they go. A
+  plugin keeps at most 32.
+- `app.state` is `"active"` (a Textus window has the focus), `"inactive"`
+  (windows open, none focused) or `"background"` (none open);
+  `app.onDidChangeState` follows it.
+- Check `textus.env.apiVersion` (`"1.1"`) before using these, or set
+  `engines.textus` to `">=1.3.0-beta.8"`: Textus doesn't offer a plugin to
+  a version it doesn't fit.
 
 ### The rest
 
