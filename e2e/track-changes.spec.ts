@@ -34,7 +34,9 @@ const toggleTracking = (page: Page) =>
 /** Replaces `word` in the first paragraph by typing over it. */
 async function retype(page: Page, word: string, by: string) {
   await page.locator(editor).evaluate((root, word) => {
-    const text = root.querySelector("p")!.firstChild!;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let text = walker.nextNode()!;
+    while (!text.textContent!.includes(word)) text = walker.nextNode()!;
     const at = text.textContent!.indexOf(word);
     const range = document.createRange();
     range.setStart(text, at);
@@ -86,6 +88,27 @@ test("tracked edits show struck and marked, each to accept or reject", async ({
   await card.getByRole("button", { name: /Keep the original/i }).click();
   await expect(page.locator(".own-delete")).toHaveCount(0);
   await expect(page.locator(editor)).toContainText("was quiet at dawn");
+});
+
+test("the review bar counts the writer's changes, steps through them and decides them all", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 800, height: 700 });
+  await openDraft(page);
+  await toggleTracking(page);
+  await retype(page, "quiet", "still");
+  await retype(page, "dawn", "dusk");
+  const bar = page.getByRole("toolbar", { name: "Revision" });
+  await expect(bar).toContainText("2 changes");
+  await bar.getByRole("button", { name: "Next edit" }).click();
+  await expect(bar).toContainText("1 / 2");
+  await bar.getByRole("button", { name: "Next edit" }).click();
+  await expect(bar).toContainText("2 / 2");
+
+  await bar.getByRole("button", { name: "Accept" }).click();
+  await expect(page.locator(".own-insert, .own-delete")).toHaveCount(0);
+  await expect(bar).toHaveCount(0);
+  await expect(page.locator(editor)).toContainText("was still at dusk");
 });
 
 test("saved, the file keeps the original and the changes are kept beside it, as Textus AI's are", async ({

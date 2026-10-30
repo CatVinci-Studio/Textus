@@ -64,10 +64,11 @@ export function ReviewBar({
   /** Some pending proposal is new text alone, which stays in the text in the
    *  margin views; the menu says so. */
   newText: boolean;
-  /** How revisions show. */
-  display: RevisionDisplay;
-  displayName: (mode: RevisionDisplay) => string;
-  onDisplay: (mode: RevisionDisplay) => void;
+  /** How revisions show; none for the writer's own changes, which show
+   *  one way. */
+  display?: RevisionDisplay;
+  displayName?: (mode: RevisionDisplay) => string;
+  onDisplay?: (mode: RevisionDisplay) => void;
   labels: ReviewBarLabels;
   /** Sentences Accept would take, of all pending ones. */
   taken: number;
@@ -99,7 +100,7 @@ export function ReviewBar({
   const marginAvailable = useMarginAvailable();
   const noMargin = !phone && !marginAvailable;
   const shown = effectiveRevisionDisplay(
-    display,
+    display ?? "final",
     !phone && marginAvailable,
     phone,
   );
@@ -107,7 +108,7 @@ export function ReviewBar({
   const noMarginId = useId();
   const newTextId = useId();
   const newTextNote = newText && !phone;
-  const view = (
+  const view = display && displayName && onDisplay && (
     <div className="review-bar-view" ref={menuRef}>
       <Tooltip
         side="above"
