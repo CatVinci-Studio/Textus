@@ -1471,6 +1471,7 @@ utiliser une.
   pluginsSortNewest: "Mis à jour récemment",
   pluginsSortName: "Nom",
   pluginInstalls: "{n} installations",
+  pluginInstalls30: "+{n} en 30 jours",
   pluginInstalled: "Installé",
   pluginUpdatedOn: "Mis à jour le {date}",
   pluginReadmeLabel: "À propos de {name}",

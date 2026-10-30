@@ -1364,6 +1364,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsSortNewest: "최근 업데이트",
   pluginsSortName: "이름",
   pluginInstalls: "{n}회 설치",
+  pluginInstalls30: "최근 30일 +{n}",
   pluginInstalled: "설치됨",
   pluginUpdatedOn: "{date} 업데이트",
   pluginReadmeLabel: "{name} 소개",

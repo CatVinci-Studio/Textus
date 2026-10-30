@@ -1436,6 +1436,7 @@ export default {
   pluginsSortNewest: "Недавно обновлённые",
   pluginsSortName: "Название",
   pluginInstalls: "Установок: {n}",
+  pluginInstalls30: "+{n} за 30 дней",
   pluginInstalled: "Установлен",
   pluginUpdatedOn: "Обновлён {date}",
   pluginReadmeLabel: "О плагине {name}",

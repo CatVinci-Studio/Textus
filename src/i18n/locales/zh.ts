@@ -1304,6 +1304,7 @@ export default {
   pluginsSortNewest: "最近更新",
   pluginsSortName: "名称",
   pluginInstalls: "{n} 次安装",
+  pluginInstalls30: "近 30 天 +{n}",
   pluginInstalled: "已安装",
   pluginUpdatedOn: "更新于 {date}",
   pluginReadmeLabel: "关于{name}",

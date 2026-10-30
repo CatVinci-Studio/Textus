@@ -1,7 +1,7 @@
 import { Byline } from "./PluginPage";
 import { PluginIcon, PluginReadme } from "./PluginArt";
 import type { ReactNode } from "react";
-import { installsText } from "./AvailablePlugins";
+import { installsText } from "./installs-text";
 import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow } from "../sections/controls";
 import type { Strings } from "../../i18n/strings";

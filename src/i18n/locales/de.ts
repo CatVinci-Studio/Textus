@@ -1437,6 +1437,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsSortNewest: "Zuletzt aktualisiert",
   pluginsSortName: "Name",
   pluginInstalls: "{n} Installationen",
+  pluginInstalls30: "+{n} in 30 Tagen",
   pluginInstalled: "Installiert",
   pluginUpdatedOn: "Aktualisiert am {date}",
   pluginReadmeLabel: "Über {name}",

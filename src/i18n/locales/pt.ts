@@ -1426,6 +1426,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsSortNewest: "Atualizados recentemente",
   pluginsSortName: "Nome",
   pluginInstalls: "{n} instalações",
+  pluginInstalls30: "+{n} em 30 dias",
   pluginInstalled: "Instalado",
   pluginUpdatedOn: "Atualizado em {date}",
   pluginReadmeLabel: "Sobre {name}",

@@ -1410,6 +1410,7 @@ type /name in a conversation to use one.
   pluginsSortNewest: "Recently updated",
   pluginsSortName: "Name",
   pluginInstalls: "{n} installs",
+  pluginInstalls30: "+{n} in 30 days",
   pluginInstalled: "Installed",
   pluginUpdatedOn: "Updated {date}",
   pluginReadmeLabel: "About {name}",

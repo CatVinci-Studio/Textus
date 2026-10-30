@@ -13,6 +13,7 @@ import {
 } from "../../plugins/store/catalog";
 import { Select } from "../../ui/Select";
 import { AvailableSection } from "./AvailableSection";
+import { installsText } from "./installs-text";
 
 const SORTS: CatalogSort[] = ["popular", "newest", "name"];
 
@@ -116,12 +117,6 @@ function CatalogProblem({ t, text }: { t: Strings; text: string }) {
       </div>
     </div>
   );
-}
-
-/** "1,234 installs", in the UI language's digits; nothing when uncounted. */
-export function installsText(item: CatalogItem, t: Strings): string | null {
-  if (item.installs === undefined) return null;
-  return t.pluginInstalls.replace("{n}", item.installs.toLocaleString());
 }
 
 /** A plugin the catalog offers: its icon, name, line and installs, opening

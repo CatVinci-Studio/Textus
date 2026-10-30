@@ -15,6 +15,7 @@ import { SettingRow } from "./controls";
 import { explainError } from "../../utils/error-explain";
 import { openDiagramViewer } from "../../editor/diagram-zoom";
 import { AvailableSection } from "../pages/AvailableSection";
+import { installsText } from "../pages/installs-text";
 import { matchesWords } from "../../utils/match-words";
 
 /** The themes whose name, author or description hold every word of
@@ -230,9 +231,13 @@ function GalleryItem({
       />
       <SettingRow
         label={theme.name}
-        hint={
-          theme.author ? `${byline} · ${theme.description}` : theme.description
-        }
+        hint={[
+          theme.author && byline,
+          installsText(theme, t),
+          theme.description,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
       >
         {status === "install" ? (
           <button

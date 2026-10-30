@@ -6,6 +6,7 @@ import { errorText } from "../../utils/error-text";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { TextKey } from "../../i18n/strings";
 import { AvailableSection } from "../pages/AvailableSection";
+import { installsText } from "../pages/installs-text";
 import { SKILLS_CHANGED_EVENT, announceChange } from "./skills";
 
 /** The error the backend gives for a skill of that name the user already has. */
@@ -135,6 +136,11 @@ export function AvailableSkills({
                   )}
                   {skill.author &&
                     t.themeGalleryBy.replace("{author}", skill.author)}
+                  {installsText(skill, t) && (
+                    <span className="plugin-installs">
+                      {installsText(skill, t)}
+                    </span>
+                  )}
                 </span>
               )}
             </div>

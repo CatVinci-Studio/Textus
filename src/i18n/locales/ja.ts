@@ -1379,6 +1379,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsSortNewest: "最近の更新",
   pluginsSortName: "名前",
   pluginInstalls: "{n} 回インストール",
+  pluginInstalls30: "直近 30 日 +{n}",
   pluginInstalled: "インストール済み",
   pluginUpdatedOn: "{date} に更新",
   pluginReadmeLabel: "{name}について",
