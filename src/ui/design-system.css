@@ -738,11 +738,10 @@
 }
 
 /* On its way to an open submenu, the pointer lights no row it crosses. */
-:is(.app-menu-list, .context-menu)[data-aiming]
-  :is(.app-menu-item, .context-menu-item):hover:not(
-    [aria-expanded="true"],
-    :focus-visible
-  ) {
+:is(
+    .app-menu-list[data-aiming] > .app-menu-row > .app-menu-item,
+    .context-menu[data-aiming] > .context-menu-item
+  ):hover:not([aria-expanded="true"], :focus-visible) {
   background: transparent;
 }
 

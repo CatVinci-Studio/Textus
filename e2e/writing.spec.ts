@@ -1343,3 +1343,22 @@ test("a click in the page's margin beside the text closes the formula being edit
     page.locator('[data-active-tab="true"] .ProseMirror p').nth(1),
   ).toHaveText(/^XA line below the formula/);
 });
+
+test("a shift-click in the page's margin extends the selection there", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "First line.\n\nSecond line.\n\nThird line.");
+  const paras = page.locator('[data-active-tab="true"] .ProseMirror p');
+  await paras.first().click({ position: { x: 1, y: 4 } });
+  const third = (await paras.nth(2).boundingBox())!;
+  const scroller = (await page
+    .locator('[data-active-tab="true"] .editor-scroll')
+    .boundingBox())!;
+  await page.keyboard.down("Shift");
+  await page.mouse.click(scroller.x + 12, third.y + third.height / 2);
+  await page.keyboard.up("Shift");
+  expect(
+    await page.evaluate(() => window.getSelection()?.toString() ?? ""),
+  ).toContain("Second line.");
+});

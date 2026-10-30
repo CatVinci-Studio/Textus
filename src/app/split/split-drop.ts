@@ -11,8 +11,7 @@ import {
 } from "./split-layout";
 import { paneById } from "./split-tree";
 import { setDragging, type DocumentDrop } from "../../ui/document-drop";
-import { PHONE_QUERY } from "../../ui/usePhoneLayout";
-import { isIOSApp } from "../../platform/capabilities";
+import { isPhoneLayout } from "../../ui/usePhoneLayout";
 import "./split-drop.css";
 
 /**
@@ -49,7 +48,7 @@ function outerEdge(
   const sides = [
     ["top", (y - area.top) / down],
     ["bottom", (area.bottom - y) / down],
-    ...(stackOnly()
+    ...(isPhoneLayout()
       ? []
       : ([
           ["left", (x - area.left) / across],
@@ -58,11 +57,6 @@ function outerEdge(
   ] as const;
   const [side, near] = sides.reduce((a, b) => (b[1] < a[1] ? b : a));
   return near < 1 ? side : null;
-}
-
-/** On a phone, documents split only one above the other. */
-function stackOnly(): boolean {
-  return isIOSApp && matchMedia(PHONE_QUERY).matches;
 }
 
 function union(rects: DOMRect[]): DOMRect {
@@ -105,7 +99,7 @@ export function dropTargetAt(x: number, y: number): DropTarget | null {
     ["top", fy],
     ["bottom", 1 - fy],
     // A phone's column is too narrow to share: documents only stack there.
-    ...(stackOnly()
+    ...(isPhoneLayout()
       ? []
       : ([
           ["left", fx],

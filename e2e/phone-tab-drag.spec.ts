@@ -119,3 +119,20 @@ test("a finger that moves at once scrolls the bar: nothing lifts or splits", asy
   await expect(page.locator(panes)).toHaveCount(0);
   await expect(page.getByRole("menu")).toHaveCount(0);
 });
+
+test("after a tab's menu, a tap on its × still closes it", async ({ page }) => {
+  await openTwo(page);
+  const cdp = await page.context().newCDPSession(page);
+  const tab = await centre(page, ".tab-bar .tab-pill-title >> nth=0");
+  await touch(cdp, [tab], 500, page);
+  await page.getByRole("button", { name: "Cancel" }).tap();
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await touch(
+    cdp,
+    [await centre(page, ".tab-bar .tab-pill-close >> nth=0")],
+    0,
+    page,
+  );
+  // One document left, so the bar goes too.
+  await expect(page.locator(".main-pane [data-tab-id]")).toHaveCount(1);
+});

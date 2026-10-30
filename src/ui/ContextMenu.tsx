@@ -119,6 +119,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
       const group = rows[at]?.dataset.group;
       if (group !== undefined) {
         e.preventDefault();
+        aim.hold();
         setOpenGroup({ index: Number(group), focus: true });
       }
       return;
@@ -170,7 +171,10 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
             tabIndex={-1}
             className="context-menu-item context-menu-group"
             onMouseEnter={() => aim.hover(i)}
-            onClick={() => setOpenGroup({ index: i, focus: true })}
+            onClick={() => {
+              aim.hold();
+              setOpenGroup({ index: i, focus: true });
+            }}
           >
             {item.label}
             <ChevronIcon className="context-menu-chevron" />
@@ -193,6 +197,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
           onClose={onClose}
           onBack={() => {
             rowRefs.current.get(openGroup.index)?.focus();
+            aim.hold();
             setOpenGroup(null);
           }}
           onEnter={aim.hold}

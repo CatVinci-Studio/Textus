@@ -11,7 +11,8 @@ function subscribe(onChange: () => void) {
   return () => mq?.removeEventListener("change", onChange);
 }
 
-function snapshot() {
+/** Whether surfaces take their phone form now, outside React. */
+export function isPhoneLayout(): boolean {
   return isIOSApp && (window.matchMedia?.(PHONE_QUERY).matches ?? false);
 }
 
@@ -19,5 +20,5 @@ function snapshot() {
  *  an iPad keeps the desktop's popovers, and a narrow desktop window is still
  *  a desktop. */
 export function usePhoneLayout(): boolean {
-  return useSyncExternalStore(subscribe, snapshot, () => false);
+  return useSyncExternalStore(subscribe, isPhoneLayout, () => false);
 }

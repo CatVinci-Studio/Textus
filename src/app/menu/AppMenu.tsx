@@ -239,8 +239,15 @@ function MenuList({
             // Hovering a row with no submenu closes the open one.
             onHover={() => aim.hover(item.submenu ? i : null)}
             onEnterFlyout={aim.hold}
-            onOpenSubmenu={() => showFlyout(i)}
-            onCloseSubmenu={() => showFlyout(null)}
+            // The keyboard's choice; a hover still pending doesn't undo it.
+            onOpenSubmenu={() => {
+              aim.hold();
+              showFlyout(i);
+            }}
+            onCloseSubmenu={() => {
+              aim.hold();
+              showFlyout(null);
+            }}
             onDismiss={onDismiss}
           />
         ),

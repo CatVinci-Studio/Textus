@@ -106,12 +106,17 @@ export function TabPill({
   useEffect(() => {
     const el = elRef.current;
     const hold = (e: TouchEvent) => holding.current && e.preventDefault();
-    const end = (e: TouchEvent) => lifted.current && e.preventDefault();
+    const end = (e: TouchEvent) => {
+      if (lifted.current) e.preventDefault();
+      lifted.current = false;
+    };
     el?.addEventListener("touchmove", hold, { passive: false });
     el?.addEventListener("touchend", end, { passive: false });
     return () => {
       el?.removeEventListener("touchmove", hold);
       el?.removeEventListener("touchend", end);
+      // A tab gone under the finger doesn't lift afterwards.
+      clearTimeout(gesture.current?.waiting);
     };
   }, []);
 

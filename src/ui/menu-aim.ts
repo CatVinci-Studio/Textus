@@ -96,7 +96,10 @@ export function useMenuAim<T>(
   };
 
   return {
-    move(e: { clientX: number; clientY: number }) {
+    move(e: { clientX: number; clientY: number; target: EventTarget | null }) {
+      // Moves inside the submenu bubble up here too: there, it has arrived.
+      const sub = latest.current.submenu();
+      if (sub && e.target instanceof Node && sub.contains(e.target)) return;
       const s = state.current;
       s.points = [...s.points, { x: e.clientX, y: e.clientY }].slice(-2);
       const menu = latest.current.parent();
