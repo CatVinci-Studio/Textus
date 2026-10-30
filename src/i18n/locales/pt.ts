@@ -830,7 +830,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   contentThemeLabel: "Tema do editor",
   themeDeleteButton: "Apagar Tema",
   themeImportLabel: "Adicionar um tema de um arquivo CSS",
-  themeMoreLabel: "Mais temas",
   themeGetMore: "Obter mais temas",
   themeImportButton: "Importar CSS…",
   themeGalleryLoading: "Carregando temas…",

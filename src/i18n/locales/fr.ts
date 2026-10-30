@@ -861,7 +861,6 @@ utiliser une.
   contentThemeLabel: "Thème de l'éditeur",
   themeDeleteButton: "Supprimer le thème",
   themeImportLabel: "Ajouter un thème depuis un fichier CSS",
-  themeMoreLabel: "Plus de thèmes",
   themeGetMore: "Obtenir d’autres thèmes",
   themeImportButton: "Importer du CSS…",
   themeGalleryLoading: "Chargement des thèmes…",

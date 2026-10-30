@@ -66,28 +66,6 @@ export async function importSkill(): Promise<void> {
 }
 
 /// The Skills row and the user's own skills under it.
-export function AgentSkillsSection({ t }: { t: Strings }) {
-  const [error, setError] = useState<string | null>(null);
-  return (
-    <>
-      <SettingRow label={t.agentSkillsLabel} error={error}>
-        <button
-          className="text-button settings-inline-button"
-          onClick={() =>
-            importSkill().then(
-              () => setError(null),
-              (err: unknown) => setError(explainError(err, t)),
-            )
-          }
-        >
-          {t.agentSkillsImport}
-        </button>
-      </SettingRow>
-      <OwnSkillsList t={t} />
-    </>
-  );
-}
-
 /// The user's own skills, each with the modes it applies in (at least one).
 /// A skill with a built-in's name says it replaces it.
 export function OwnSkillsList({

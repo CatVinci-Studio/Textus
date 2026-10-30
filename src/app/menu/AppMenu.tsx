@@ -16,7 +16,11 @@ import {
   type MenuNode,
 } from "./app-menu-model";
 import { thisWindow } from "../../platform/this-window";
-import { canToggleFullscreen, hasAppMenu } from "../../platform/capabilities";
+import {
+  canToggleFullscreen,
+  hasAppMenu,
+  hasTextusAi,
+} from "../../platform/capabilities";
 import { useMenuAim } from "../../ui/menu-aim";
 import { CheckIcon, ChevronIcon } from "../../ui/icons";
 import { usePresenceProps } from "../../ui/usePresence";
@@ -60,7 +64,7 @@ export function AppMenu({ x, y, onClose, checks, section }: AppMenuProps) {
         { ...checks, fullscreen, trackChanges: trackingShown() },
         pluginEntries,
       )
-    : buildMobileMenu(t, checks);
+    : buildMobileMenu(t, checks, pluginEntries, hasTextusAi);
   const items =
     section === undefined
       ? menu
@@ -75,6 +79,7 @@ export function AppMenu({ x, y, onClose, checks, section }: AppMenuProps) {
         onDismiss={onClose}
         // On a phone a focused first row would only look selected.
         autoFocus={!phone}
+        inline={phone}
       />
     </div>,
     document.body,
@@ -150,8 +155,14 @@ function MenuList({
   onDismiss,
   onLeave,
   autoFocus = false,
+  inline = false,
+  nested = false,
 }: {
   items: MenuNode[];
+  /** Submenus open in place under their row, as on iOS, not beside it. */
+  inline?: boolean;
+  /** Opened in place inside another list: no surface of its own. */
+  nested?: boolean;
   /** Close the whole menu - an item was chosen, or Escape. */
   onDismiss: () => void;
   /** Close just this submenu and hand focus back to the row it hangs off. */
@@ -221,7 +232,7 @@ function MenuList({
   return (
     <div
       ref={listRef}
-      className="app-menu-list floating-surface"
+      className={`app-menu-list${nested ? "" : " floating-surface"}`}
       role="menu"
       onKeyDown={onKeyDown}
       onMouseMove={aim.move}
@@ -236,6 +247,7 @@ function MenuList({
             checkColumn={checkColumn}
             open={openIndex === i}
             instantFlyout={instantFlyout}
+            inline={inline}
             // Hovering a row with no submenu closes the open one.
             onHover={() => aim.hover(item.submenu ? i : null)}
             onEnterFlyout={aim.hold}
@@ -261,6 +273,7 @@ function MenuRow({
   checkColumn,
   open,
   instantFlyout,
+  inline,
   onHover,
   onEnterFlyout,
   onOpenSubmenu,
@@ -273,6 +286,7 @@ function MenuRow({
   open: boolean;
   /** Its flyout appears without sliding. */
   instantFlyout: boolean;
+  inline: boolean;
   onHover: () => void;
   /** The pointer reached its flyout. */
   onEnterFlyout: () => void;
@@ -289,6 +303,7 @@ function MenuRow({
   function activate() {
     if (item.disabled) return;
     if (hasSubmenu) {
+      if (inline && open) return onCloseSubmenu();
       setFocusSubmenu(true);
       onOpenSubmenu();
       return;
@@ -340,7 +355,17 @@ function MenuRow({
         )}
         {hasSubmenu && <ChevronIcon className="app-menu-chevron" />}
       </button>
-      {hasSubmenu && open && (
+      {hasSubmenu && open && inline && (
+        <div className="app-menu-inline">
+          <MenuList
+            items={item.submenu ?? []}
+            onDismiss={onDismiss}
+            inline
+            nested
+          />
+        </div>
+      )}
+      {hasSubmenu && open && !inline && (
         <Flyout
           anchor={rowRef}
           instant={instantFlyout}

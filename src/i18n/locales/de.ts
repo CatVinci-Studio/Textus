@@ -834,7 +834,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   contentThemeLabel: "Editor-Design",
   themeDeleteButton: "Design löschen",
   themeImportLabel: "Design aus einer CSS-Datei hinzufügen",
-  themeMoreLabel: "Weitere Designs",
   themeGetMore: "Weitere Themes holen",
   themeImportButton: "CSS importieren…",
   themeGalleryLoading: "Themes werden geladen…",

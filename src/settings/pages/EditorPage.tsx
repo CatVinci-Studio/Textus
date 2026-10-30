@@ -23,7 +23,7 @@ import { ThemeSection } from "../sections/theme";
 import { ImageStorageSection } from "../sections/images";
 import { Select } from "../../ui/Select";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
-import { canExportPdf, isIOSApp } from "../../platform/capabilities";
+import { canExportPdf } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
 import { openExtensionsTab } from "./extensions-tab";
 
@@ -34,7 +34,6 @@ export function EditorPage({
   setSettings,
   phone,
   percent,
-  setSubpage,
   openPage,
 }: SettingsPageProps) {
   const tracking = useSyncExternalStore(subscribeTracking, trackingShown);
@@ -45,9 +44,6 @@ export function EditorPage({
         <ThemeSection
           t={t}
           onMore={() => {
-            // The phone has no Extensions page: its themes are a page of
-            // their own here.
-            if (isIOSApp) return setSubpage("themes");
             openExtensionsTab("themes");
             openPage("extensions");
           }}

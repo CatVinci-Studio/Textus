@@ -479,6 +479,22 @@ another plugin's data, run native code, or reach the network or files
 beyond what it was granted. A plugin that stops answering, or throws more
 than ten errors a minute, is turned off and the user is told.
 
+## On iPhone and iPad
+
+Plugins run on iOS as on the desktop, from the same catalog, with the same
+API; `textus.env.platform` is `"ios"`. What differs is room and what the
+system allows:
+
+- A phone is a narrow window: a sidebar view is a tab in a drawer about
+  320px wide, and there is no hover or right-click. Keep a view usable by
+  touch at that width, with targets of 44px.
+- The commands of `app/plugins` are under Plugins in the title row's menu.
+  There is no tray (`app/tray`) and no background mode: `background` code
+  and schedules run on the desktop only, and a plugin that needs them says
+  so in its README.
+- Files a user opens from the Files app are reached through iOS's own
+  grants; a plugin reads them through `files` like any other.
+
 ## Its README
 
 Put a `README.md` beside the manifest - and `README.zh.md`, `README.ja.md`

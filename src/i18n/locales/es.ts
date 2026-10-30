@@ -847,7 +847,6 @@ para usar una.
   contentThemeLabel: "Tema del editor",
   themeDeleteButton: "Eliminar tema",
   themeImportLabel: "Añadir un tema desde un archivo CSS",
-  themeMoreLabel: "Más temas",
   themeGetMore: "Conseguir más temas",
   themeImportButton: "Importar CSS…",
   themeGalleryLoading: "Cargando temas…",

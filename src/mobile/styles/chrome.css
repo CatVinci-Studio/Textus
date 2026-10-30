@@ -202,6 +202,32 @@
     border-top: 1px solid var(--ui-border);
   }
 
+  /* A submenu opens in place under its row, its rows set in, as UIMenu's
+     inline submenus do; its chevron turns down. */
+  :root[data-window-chrome="mobile"] .app-menu-inline > .app-menu-list {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    background: color-mix(in srgb, var(--ui-text) 3%, transparent);
+  }
+
+  :root[data-window-chrome="mobile"] .app-menu-inline .app-menu-item {
+    padding-left: 32px;
+    border-top: 1px solid var(--ui-border);
+  }
+
+  :root[data-window-chrome="mobile"]
+    .app-menu-item[aria-expanded="true"]
+    > .app-menu-chevron {
+    transform: rotate(90deg);
+  }
+
+  :root[data-window-chrome="mobile"] .app-menu-chevron {
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+
   /* Groups are set apart by a band, as UIMenu draws its sections. */
   :root[data-window-chrome="mobile"] .app-menu-separator {
     height: 8px;

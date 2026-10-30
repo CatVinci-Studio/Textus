@@ -222,19 +222,17 @@ export function FileTree({
             <span className="tree-root-label" title={root}>
               {basename(root.replace(/[\\/]+$/, "")) || root}
             </span>
-            {!isIOSApp && (
-              <Tooltip text={t.treeSort}>
-                <button
-                  type="button"
-                  className="tree-tool"
-                  aria-label={t.treeSort}
-                  aria-haspopup="menu"
-                  onClick={openSortMenu}
-                >
-                  <SortIcon />
-                </button>
-              </Tooltip>
-            )}
+            <Tooltip text={t.treeSort}>
+              <button
+                type="button"
+                className="tree-tool"
+                aria-label={t.treeSort}
+                aria-haspopup="menu"
+                onClick={openSortMenu}
+              >
+                <SortIcon />
+              </button>
+            </Tooltip>
             {onOpenFolder && (
               <Tooltip text={t.menuOpenFolder}>
                 <button
@@ -437,15 +435,7 @@ function useRowMenu(
       if (path !== root && !isDir)
         items.push(
           { label: t.treeOpen, onSelect: () => onFileSelect(path) },
-          // Not on a phone: one document fills its screen.
-          ...(isIOSApp
-            ? []
-            : [
-                {
-                  label: t.openBeside,
-                  onSelect: () => onFileSelect(path, true),
-                },
-              ]),
+          { label: t.openBeside, onSelect: () => onFileSelect(path, true) },
           "separator",
         );
       items.push(

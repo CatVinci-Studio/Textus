@@ -9,7 +9,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveStrings } from "../../i18n/strings";
-import { ThemeLibrarySection, ThemeSection, ThemesTab } from "./theme";
+import { ThemeSection, ThemesTab } from "./theme";
 import { fs, themes } from "../../platform/ipc";
 const mock = vi.hoisted(() => ({
   setSettings: vi.fn(),
@@ -31,7 +31,6 @@ vi.mock("../../platform/ipc", () => ({
   themes: { deleteTheme: vi.fn(), saveThemeCss: vi.fn() },
 }));
 vi.mock("./theme-gallery", () => ({
-  ThemeGallerySection: () => <p>gallery</p>,
   AvailableThemes: () => <p>available</p>,
   galleryUpdates: () => new Map(),
   useGalleryCatalog: () => ({ catalog: [], unreachable: false, retry() {} }),
@@ -49,7 +48,7 @@ describe("theme settings", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Dark" }));
     expect(mock.setSettings).toHaveBeenCalledWith({ theme: "dark" });
   });
-  it("keeps getting and editing themes in the theme library", () => {
+  it("leaves getting and editing themes to Extensions", () => {
     const t = resolveStrings("en");
     const onMore = vi.fn();
     render(<ThemeSection t={t} onMore={onMore} />);
@@ -61,19 +60,6 @@ describe("theme settings", () => {
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: t.themeGetMore }));
     expect(onMore).toHaveBeenCalled();
-    cleanup();
-    render(<ThemeLibrarySection t={t} />);
-    expect(
-      screen.getByRole("button", { name: t.themeImportButton }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("textbox", { name: t.customCssLabel }),
-    ).toBeInTheDocument();
-    // The gallery is on the same page, under Get themes.
-    expect(
-      screen.getByRole("heading", { name: t.extensionsThemesGet }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("gallery")).toBeInTheDocument();
   });
   it("lists the user's themes on the Extensions tab, the gallery's below, the rest behind ⋯ and Advanced", () => {
     const t = resolveStrings("en");
@@ -101,22 +87,20 @@ describe("theme settings", () => {
     vi.mocked(fs.openCssFileDialog).mockRejectedValueOnce(
       new Error("Cannot open picker"),
     );
-    render(<ThemeLibrarySection t={resolveStrings("en")} />);
-    fireEvent.click(
-      screen.getByRole("button", {
+    render(<ThemesTab t={resolveStrings("en")} />);
+    const importItem = () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: resolveStrings("en").toolbarMore }),
+      );
+      return screen.getByRole("menuitem", {
         name: resolveStrings("en").themeImportButton,
-      }),
-    );
+      });
+    };
+    fireEvent.click(importItem());
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Cannot open picker",
     );
-    await waitFor(() =>
-      expect(
-        screen.getByRole("button", {
-          name: resolveStrings("en").themeImportButton,
-        }),
-      ).toBeEnabled(),
-    );
+    await waitFor(() => expect(importItem()).toBeEnabled());
   });
   it("keeps the selected theme after deletion fails", async () => {
     vi.mocked(themes.deleteTheme).mockRejectedValueOnce(

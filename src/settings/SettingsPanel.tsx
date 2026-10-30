@@ -15,7 +15,7 @@ import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { localeOf } from "../i18n/strings";
 import type { FixedShortcutGroup } from "../app/fixed-shortcuts";
 import { ChevronIcon, CloseIcon } from "../ui/icons";
-import { ThemeLibrarySection, ThemesTab } from "./sections/theme";
+import { ThemesTab } from "./sections/theme";
 import { openExtensionsTab, type ExtensionsTab } from "./pages/extensions-tab";
 import {
   revealEntry,
@@ -67,17 +67,14 @@ export interface SettingsPanelProps {
 
 type Category = string;
 
-/** The subpages the search reads, by the category each is in. More themes
- *  only on the phone: elsewhere its rows are Extensions › Themes. */
+/** The subpages the search reads, by the category each is in. */
 const SEARCHED_SUBPAGES: [Subpage, Category][] = [
   ["about", "general"],
   ["guides", "general"],
-  ...(isIOSApp ? [["themes", "editor"] as [Subpage, Category]] : []),
 ];
 
-/** The Extensions tabs the search reads, each as a page of its own. The
- *  phone has no Extensions. */
-const SEARCHED_TABS: ExtensionsTab[] = isIOSApp ? [] : ["themes"];
+/** The Extensions tabs the search reads, each as a page of its own. */
+const SEARCHED_TABS: ExtensionsTab[] = ["themes"];
 
 /** A searchable page's key: "editor", "editor/themes",
  *  "extensions/tab:themes". */
@@ -145,7 +142,6 @@ export function SettingsPanel({
   const subpageTitles: Record<Subpage, string> = {
     about: t.navAbout,
     guides: t.navGuides,
-    themes: t.themeMoreLabel,
   };
 
   const pageProps: SettingsPageProps = {
@@ -179,15 +175,7 @@ export function SettingsPanel({
     ) : (
       <>
         <h1 className="settings-category-title">{subpageTitles[s]}</h1>
-        {s === "guides" ? (
-          <GuidesSection
-            t={t}
-            language={settings.language}
-            openHelp={openHelp}
-          />
-        ) : (
-          <ThemeLibrarySection t={t} />
-        )}
+        <GuidesSection t={t} language={settings.language} openHelp={openHelp} />
       </>
     );
 

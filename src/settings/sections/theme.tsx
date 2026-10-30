@@ -16,7 +16,6 @@ import { Select } from "../../ui/Select";
 import { LinkRow, RowHelp, SettingRow } from "./controls";
 import {
   AvailableThemes,
-  ThemeGallerySection,
   galleryUpdates,
   useGalleryCatalog,
   useGalleryInstall,
@@ -270,20 +269,6 @@ export function ThemeSection({
   );
 }
 
-/** The phone's Editor & Appearance › More themes, as it has no Extensions:
- *  a CSS file to add, the user's own CSS, and the gallery. */
-export function ThemeLibrarySection({ t }: { t: Strings }) {
-  return (
-    <>
-      <ThemeSourcesSection t={t} />
-      <section className="settings-group">
-        <h2 className="settings-group-title">{t.extensionsThemesGet}</h2>
-        <ThemeGallerySection t={t} />
-      </section>
-    </>
-  );
-}
-
 /** Picks a CSS file, imports it as a theme named after the file and
  *  selects it. */
 function useImportTheme(run: (action: () => Promise<void>) => Promise<void>) {
@@ -432,46 +417,5 @@ export function ThemesTab({ t }: { t: Strings }) {
       }
       advanced={<CustomCssRow t={t} />}
     />
-  );
-}
-
-/** Your themes: a CSS file to add and the user's own CSS - what the
- *  phone's More themes page shows above the gallery. */
-function ThemeSourcesSection({ t }: { t: Strings }) {
-  const { settings } = useSettings();
-  const { busy, error, run } = useThemeAction();
-  const importTheme = useImportTheme(run);
-
-  return (
-    <>
-      {error && (
-        <div className="settings-error" role="alert">
-          {error}
-        </div>
-      )}
-      <section className="settings-group">
-        <h2 className="settings-group-title">{t.extensionsThemesInstalled}</h2>
-        <div className="settings-group-body">
-          <SettingRow label={t.themeImportLabel}>
-            <button
-              className="text-button settings-inline-button"
-              onClick={() => void importTheme()}
-              disabled={busy}
-            >
-              {t.themeImportButton}
-            </button>
-          </SettingRow>
-          <CustomCssRow t={t} />
-          <div className="shortcut-row-controls">
-            <button
-              className="text-button settings-inline-button"
-              onClick={() => void exportThemeCss(t, settings.customCss)}
-            >
-              {t.themeExportButton}
-            </button>
-          </div>
-        </div>
-      </section>
-    </>
   );
 }

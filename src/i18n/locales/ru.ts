@@ -841,7 +841,6 @@ export default {
   contentThemeLabel: "Тема редактора",
   themeDeleteButton: "Удалить тему",
   themeImportLabel: "Добавить тему из файла CSS",
-  themeMoreLabel: "Другие темы",
   themeGetMore: "Другие темы",
   themeImportButton: "Импортировать CSS…",
   themeGalleryLoading: "Загрузка тем…",

@@ -756,7 +756,6 @@ export default {
   contentThemeLabel: "編輯器主題",
   themeDeleteButton: "刪除主題",
   themeImportLabel: "從 CSS 檔案加入主題",
-  themeMoreLabel: "更多主題",
   themeGetMore: "取得更多主題",
   themeImportButton: "匯入 CSS…",
   themeGalleryLoading: "正在載入主題…",

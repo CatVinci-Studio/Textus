@@ -476,6 +476,9 @@ export function menuBarSections(menu: MenuNode[]): MenuBarSection[] {
 export function buildMobileMenu(
   t: Strings,
   checks: MenuChecks = {},
+  plugins: readonly PluginMenuEntry[] = [],
+  /** Textus AI is offered on this install. */
+  ai = true,
 ): MenuNode[] {
   return [
     { label: t.menuDocuments, action: { native: "documents" } },
@@ -490,12 +493,17 @@ export function buildMobileMenu(
       action: { native: "toggle-sidebar" },
       checked: !!checks.sidebar,
     },
-    {
-      label: t.menuTextusAi,
-      action: { native: "toggle-textus-ai" },
-      checked: checks.textusAi !== false,
-    },
+    ...(ai
+      ? [
+          {
+            label: t.menuTextusAi,
+            action: { native: "toggle-textus-ai" },
+            checked: checks.textusAi !== false,
+          } as MenuNode,
+        ]
+      : []),
     "separator",
+    ...pluginsMenu(t, plugins),
     { label: t.menuSettings, action: { native: "settings" } },
   ];
 }

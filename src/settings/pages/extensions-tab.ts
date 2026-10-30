@@ -2,14 +2,22 @@
 // what links there needn't load it.
 
 import { PLUGINS_SHOWN } from "../../plugins/store/availability";
+import { isDesktopApp } from "../../platform/capabilities";
 
 export type ExtensionsTab = "plugins" | "themes" | "skills" | "mcp";
 
-/** The page's tabs, in order; Plugins only where the app shows plugins. */
-export function extensionsTabs(pluginsShown = PLUGINS_SHOWN): ExtensionsTab[] {
-  return pluginsShown
-    ? ["themes", "plugins", "skills", "mcp"]
-    : ["themes", "skills", "mcp"];
+/** The page's tabs, in order; Plugins only where the app shows plugins,
+ *  MCP servers only where the app can run their programs. */
+export function extensionsTabs(
+  pluginsShown = PLUGINS_SHOWN,
+  mcp = isDesktopApp,
+): ExtensionsTab[] {
+  return [
+    "themes",
+    ...(pluginsShown ? (["plugins"] as const) : []),
+    "skills",
+    ...(mcp ? (["mcp"] as const) : []),
+  ];
 }
 
 /** The tab Extensions opens on: the last one shown, or the one another page

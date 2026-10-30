@@ -13,7 +13,9 @@ export function emitMenuEvent(id: NativeMenuId): void {
     ? ["menu-open-help", id.slice("help-doc:".length)]
     : id.startsWith("insert-block:")
       ? ["menu-insert-block", id.slice("insert-block:".length)]
-      : [id === "settings" ? "menu-open-settings" : `menu-${id}`, undefined];
+      : id.startsWith("plugin-command:")
+        ? ["menu-plugin-command", id.slice("plugin-command:".length)]
+        : [id === "settings" ? "menu-open-settings" : `menu-${id}`, undefined];
   // Addressed to the WebviewWindow: a bare label is AnyLabel, which on iOS
   // delivered the event twice, so every toggle undid itself.
   const { label } = getCurrentWebviewWindow();

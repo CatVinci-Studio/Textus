@@ -788,7 +788,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   contentThemeLabel: "편집기 테마",
   themeDeleteButton: "테마 삭제",
   themeImportLabel: "CSS 파일에서 테마 추가",
-  themeMoreLabel: "테마 더 보기",
   themeGetMore: "테마 더 받기",
   themeImportButton: "CSS 가져오기…",
   themeGalleryLoading: "테마를 불러오는 중…",

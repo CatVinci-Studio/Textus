@@ -798,7 +798,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   contentThemeLabel: "エディターのテーマ",
   themeDeleteButton: "テーマを削除",
   themeImportLabel: "CSS ファイルからテーマを追加",
-  themeMoreLabel: "その他のテーマ",
   themeGetMore: "テーマをさらに入手",
   themeImportButton: "CSSをインポート…",
   themeGalleryLoading: "テーマを読み込み中…",

@@ -815,7 +815,6 @@ type /name in a conversation to use one.
   contentThemeLabel: "Editor theme",
   themeDeleteButton: "Delete Theme",
   themeImportLabel: "Add a theme from a CSS file",
-  themeMoreLabel: "More themes",
   themeGetMore: "Get more themes",
   themeImportButton: "Import CSS…",
   themeGalleryLoading: "Loading themes…",
