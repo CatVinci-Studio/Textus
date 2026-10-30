@@ -105,6 +105,12 @@ export async function openView(
       const mods = new Set(parts.map((part) => part.toLowerCase()));
       const event = new KeyboardEvent("keydown", {
         key,
+        // The physical key, as a US keyboard has it: some handlers read it.
+        code: /^[a-z]$/i.test(key)
+          ? `Key${key.toUpperCase()}`
+          : /^[0-9]$/.test(key)
+            ? `Digit${key}`
+            : key,
         bubbles: true,
         cancelable: true,
         shiftKey: mods.has("shift"),
