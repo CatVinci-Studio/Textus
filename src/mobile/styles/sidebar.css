@@ -3,7 +3,7 @@
 
 /* Everything that cleared the desktop's 28px row clears this one. */
 :root[data-window-chrome="mobile"] .sidebar-header {
-  padding-top: calc(var(--mobile-bar) + 10px);
+  padding-top: calc(var(--mobile-bar) + 12px);
 }
 
 @media (max-width: 760px) {

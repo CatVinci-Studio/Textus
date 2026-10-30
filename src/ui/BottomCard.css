@@ -19,7 +19,7 @@
 
 .bottom-card {
   position: relative;
-  padding: 0 18px calc(16px + env(safe-area-inset-bottom, 0px));
+  padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px));
   border-radius: var(--shape-l) var(--shape-l) 0 0;
   background: var(--ui-surface);
   color: var(--ui-text);
@@ -78,15 +78,15 @@
 .bottom-card-kicker {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 8px;
+  margin-bottom: 8px;
   font-size: var(--text-footnote);
   color: var(--ui-muted);
 }
 
 .bottom-card-quote {
   margin: 0 0 8px;
-  padding-left: 9px;
+  padding-left: 8px;
   border-left: 2px solid var(--review-note-line, var(--ui-accent));
   font-size: var(--text-secondary);
   color: var(--ui-muted);

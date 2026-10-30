@@ -27,7 +27,7 @@
 .context-menu-item[role="menuitemradio"] {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .context-menu-check {

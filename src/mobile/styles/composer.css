@@ -14,7 +14,7 @@
 
   :root[data-window-chrome="mobile"] .inline-chat-send {
     min-height: 44px;
-    padding: 0 18px;
+    padding: 0 16px;
     font-size: var(--text-control);
   }
 

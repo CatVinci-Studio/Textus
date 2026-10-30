@@ -70,7 +70,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 8px 10px 14px;
+  padding: 8px 12px 16px;
   overflow-y: auto;
 }
 
@@ -79,7 +79,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin: 14px 10px 0;
+  margin: 16px 12px 0;
   height: var(--control-height-sm);
   padding: 0 8px;
   border: 1px solid var(--ui-border);
@@ -176,7 +176,7 @@
   display: block;
   width: 100%;
   text-align: left;
-  padding: 9px 12px;
+  padding: 8px 12px;
   font-size: var(--text-body);
   border: none;
   border-radius: var(--shape-s);
@@ -240,7 +240,7 @@
 .settings-advanced > summary {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 12px 16px;
   color: var(--ui-muted);
   font-size: var(--text-control);
@@ -390,7 +390,7 @@ button.settings-danger-button {
    wrapping anywhere since it is one long word. */
 .settings-login-url {
   display: block;
-  margin-top: 6px;
+  margin-top: 8px;
   max-width: 420px;
   max-height: 4.5em;
   overflow: auto;
@@ -486,7 +486,7 @@ button.settings-inline-button {
 .settings-inline-buttons {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -533,12 +533,12 @@ button.settings-inline-button {
 .api-key-configured {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-shrink: 0;
 }
 
 .settings-error {
-  padding: 8px 10px;
+  padding: 8px 12px;
   margin: 8px 0;
   border-left: 2px solid var(--ui-danger);
   border-radius: 0 var(--shape-s) var(--shape-s) 0;
@@ -549,7 +549,7 @@ button.settings-inline-button {
 }
 
 .settings-success {
-  padding: 8px 10px;
+  padding: 8px 12px;
   margin: 8px 0;
   border-left: 2px solid var(--ui-success);
   border-radius: 0 var(--shape-s) var(--shape-s) 0;
@@ -636,7 +636,7 @@ button.settings-inline-button {
 .provider-auth-trigger {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   min-height: 48px;
   padding: 8px 0;
@@ -697,7 +697,7 @@ button.settings-inline-button {
 .combobox-search {
   border: none;
   border-bottom: 1px solid var(--ui-border);
-  padding: 10px 12px;
+  padding: 12px;
   font-size: var(--text-body);
   background: transparent;
   color: var(--ui-text);
@@ -718,7 +718,7 @@ button.settings-inline-button {
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 8px 10px;
+  padding: 8px 12px;
   border: none;
   border-radius: var(--shape-s);
   background: none;
@@ -744,7 +744,7 @@ button.settings-inline-button {
 }
 
 .combobox-empty {
-  padding: 10px 12px;
+  padding: 12px;
   font-size: var(--text-body);
   color: var(--ui-muted);
 }
@@ -776,14 +776,14 @@ button.settings-inline-button {
 
 .provider-panel {
   margin: 2px 0 12px 8px;
-  padding: 0 0 0 14px;
+  padding: 0 0 0 16px;
   border-left: 2px solid
     color-mix(in srgb, var(--ui-accent) 35%, var(--ui-border));
 }
 
 .provider-panel .settings-row,
 .provider-panel .settings-field {
-  padding: 9px 0;
+  padding: 8px 0;
 }
 
 /* Account vs API key: a segmented control, which reads as the mode switch
@@ -791,7 +791,7 @@ button.settings-inline-button {
 .auth-tabs {
   display: inline-flex;
   gap: 2px;
-  margin: 10px 0 4px;
+  margin: 12px 0 4px;
   padding: 2px;
   background: var(--ui-subtle);
   border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
@@ -862,7 +862,7 @@ button.settings-inline-button {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   padding: 0;
   border-top: none;
 }
@@ -999,7 +999,7 @@ button.settings-skill-action:focus-visible {
 }
 
 .settings-builtin-skill input[type="checkbox"] {
-  margin-left: 6px;
+  margin-left: 8px;
 }
 
 /* The skills list continues its header row - no hairline between them. */
@@ -1070,7 +1070,7 @@ button.settings-skill-action:focus-visible {
   }
 
   .settings-content {
-    padding: 14px 12px 20px;
+    padding: 16px 12px 20px;
   }
 
   .settings-row {
@@ -1246,7 +1246,7 @@ button.settings-skill-action:focus-visible {
   min-height: 7.5em;
   resize: vertical;
   box-sizing: border-box;
-  padding: 8px 10px;
+  padding: 8px 12px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-s);
   background: var(--ui-bg);
@@ -1266,7 +1266,7 @@ button.settings-skill-action:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 32px 0 24px;
   text-align: center;
 }
@@ -1274,7 +1274,7 @@ button.settings-skill-action:focus-visible {
 .settings-about-icon {
   width: 88px;
   height: 88px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .settings-about-name {
@@ -1297,20 +1297,20 @@ button.settings-skill-action:focus-visible {
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 16px;
 }
 
 /* Two classes: .text-button's own width (100%) comes later in the cascade. */
 .settings-about .settings-about-link {
   width: auto;
-  padding-inline: 18px;
+  padding-inline: 16px;
 }
 
 /* Update channel: an ordinary settings row, under the update button. */
 .settings-about-channel {
   width: 100%;
   max-width: 420px;
-  margin-top: 6px;
+  margin-top: 8px;
   text-align: start;
 }
 
@@ -1331,8 +1331,8 @@ button.settings-skill-action:focus-visible {
 .theme-gallery-item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 10px 0;
+  gap: 16px;
+  padding: 12px 0;
 }
 
 .theme-gallery-item > .settings-row {
@@ -1381,7 +1381,7 @@ button.settings-skill-action:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
   padding: 8px 0;
 }
 
