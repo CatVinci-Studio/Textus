@@ -63,6 +63,10 @@ test("each title opens its list; the pointer and ← / → move along", async ({
   await page.keyboard.press("ArrowRight");
   await expect(list.getByRole("menuitem", { name: /Undo/ })).toBeVisible();
 
+  // Closed first: with a list open, the pointer on View opens it, and the
+  // click that follows closes it again.
+  await page.keyboard.press("Escape");
+  await expect(list).toHaveCount(0);
   // A row runs as from the ☰: View › Sidebar asks the backend for it.
   await mockInvoke(page, { trigger_menu_item: null });
   await menubar.getByRole("menuitem", { name: "View" }).click();
