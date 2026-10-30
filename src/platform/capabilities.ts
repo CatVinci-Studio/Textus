@@ -1,4 +1,5 @@
 import { isDesktop, isIOSPlatform, isMacPlatform } from "./os";
+import { readBoot } from "../storage/boot";
 
 /**
  * What this build of the app can do - the ONE place the desktop/iOS split
@@ -89,3 +90,9 @@ export const canTrashFiles = isDesktopApp;
 /** Settings' "Default Markdown editor" (default_editor.rs). iOS opens
  *  documents through the Files app, which has no default app to set. */
 export const canSetDefaultEditor = isDesktopApp;
+
+/** Textus AI at all: not on an iOS App Store download in mainland China,
+ *  where it would need its own licence. Off, the master switch stays off
+ *  (settings-normalise.ts) and the AI lessons, Settings page and chat
+ *  history go with it. */
+export const hasTextusAi = !readBoot()?.aiUnavailable;

@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import type { Strings } from "../i18n/strings";
-import { isIOSApp } from "../platform/capabilities";
+import { hasTextusAi, isIOSApp } from "../platform/capabilities";
 import { AiPage } from "./pages/AiPage";
 import { EditorPage } from "./pages/EditorPage";
 import { GeneralPage } from "./pages/GeneralPage";
@@ -30,7 +30,12 @@ export interface SettingsPageDef {
 const BUILT_IN: SettingsPageDef[] = [
   { id: "general", label: (t) => t.navGeneral, Page: GeneralPage },
   { id: "editor", label: (t) => t.navEditor, Page: EditorPage },
-  { id: "ai", label: (t) => t.navAi, Page: AiPage },
+  {
+    id: "ai",
+    label: (t) => t.navAi,
+    available: () => hasTextusAi,
+    Page: AiPage,
+  },
   {
     id: "extensions",
     label: (t) => t.navExtensions,

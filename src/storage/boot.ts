@@ -21,6 +21,9 @@ export interface Boot {
   newProfile: boolean;
   /** This window's label, to recognise the events its own changes cause. */
   label: string;
+  /** Textus AI isn't offered on this install (an iOS App Store download
+   *  in mainland China). */
+  aiUnavailable: boolean;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -43,6 +46,7 @@ export function readBoot(): Boot | null {
           uiState: isRecord(raw.uiState) ? raw.uiState : {},
           newProfile: raw.newProfile === true,
           label: typeof raw.label === "string" ? raw.label : "",
+          aiUnavailable: raw.aiUnavailable === true,
         }
       : null;
   return cached;

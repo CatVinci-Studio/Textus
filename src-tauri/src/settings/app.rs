@@ -127,6 +127,10 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
     let titlebar_height = crate::native_titlebar_height();
     #[cfg(not(target_os = "macos"))]
     let titlebar_height: Option<f64> = None;
+    #[cfg(target_os = "ios")]
+    let ai_unavailable = tauri_plugin_textus_files::ai_unavailable();
+    #[cfg(not(target_os = "ios"))]
+    let ai_unavailable = false;
     let boot = json!({
         "settings": settings,
         "rev": rev,
@@ -137,6 +141,7 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         "newProfile": stores.settings.missing_at_load(),
         "label": label,
         "titlebarHeight": titlebar_height,
+        "aiUnavailable": ai_unavailable,
     });
     format!(
         "{}\n;window.__textusBoot({boot}, {theme_css});",
