@@ -959,9 +959,21 @@ export function installDevTauriShim(): void {
           ? atob(String(args.contents))
           : String(args.contents);
         return Promise.resolve(null);
-      // Canned pages by URL: `window.__devHttp[url] = { status?, body }`.
       case "plugin_http": {
-        const request = args.request as { url: string };
+        const request = args.request as {
+          url: string;
+          method?: string;
+          body?: string;
+        };
+        // Every request, its body as text, in `window.__devHttpLog`;
+        // answers canned by URL: `window.__devHttp[url] = { status?, body }`.
+        ((w.__devHttpLog ??= []) as unknown[]).push({
+          url: request.url,
+          method: request.method ?? "GET",
+          body: request.body
+            ? decodeURIComponent(escape(atob(request.body)))
+            : null,
+        });
         const canned = (
           w.__devHttp as
             Record<string, { status?: number; body: string }> | undefined
