@@ -1,3 +1,5 @@
+import { quickPickMatches } from "../../ui/quick-pick";
+
 /**
  * The `/` menu: plugin commands offered at the caret when a word starts with
  * "/". Taking one removes what was typed and runs the command.
@@ -6,6 +8,8 @@ export interface SlashItem {
   label: string;
   /** Whose it is, beside the label. */
   detail: string;
+  /** Also found by: its English name, in another language. */
+  keywords?: string;
   /** Whether it is offered now (its `when`). */
   shown: () => boolean;
   run: () => void;
@@ -35,9 +39,16 @@ export function slashItemsFor(
 ): { replace: number; items: SlashItem[] } | null {
   const match = SLASH.exec(text);
   if (!match) return null;
-  const query = match[2].toLowerCase();
+  const query = match[2];
+  // As the palette finds them: by any word, or a Chinese name by pinyin.
   const found = [...items.values()]
     .flat()
-    .filter((item) => item.label.toLowerCase().includes(query) && item.shown());
+    .filter(
+      (item) =>
+        quickPickMatches(
+          { label: item.label, description: item.keywords },
+          query,
+        ) && item.shown(),
+    );
   return found.length ? { replace: match[1].length, items: found } : null;
 }

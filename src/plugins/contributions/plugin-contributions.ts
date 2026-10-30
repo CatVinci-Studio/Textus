@@ -119,6 +119,11 @@ export function applyContributions(
         slashItems.map((item) => ({
           label: titleOf(item.command),
           detail: text(manifest.name),
+          keywords: localize(
+            manifest,
+            commands.find((c) => c.command === item.command)?.title ?? "",
+            "en",
+          ),
           shown: () => evaluateWhen(item.when, whenContext()),
           run: () => runCommand(item.command),
         })),
