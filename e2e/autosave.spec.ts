@@ -68,7 +68,8 @@ async function openDoc(page: Page) {
 
 async function typeAtEnd(page: Page, text: string) {
   await page.locator(`${editor} p`).last().click();
-  await page.keyboard.press("End");
+  // The document's end, wherever a click under load landed.
+  await page.keyboard.press("ControlOrMeta+End");
   await page.keyboard.type(text);
 }
 

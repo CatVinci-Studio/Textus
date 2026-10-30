@@ -89,18 +89,19 @@ test("Extensions has a tab each for themes, plugins, skills and MCP", async ({
   await expect(panel.getByRole("menu")).toHaveCount(0);
 });
 
-test("built-in skills stay on; Available lists the catalog's, not them", async ({
+test("the Skills tab lists the skills added, never the built-ins, installed or available", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
   const panel = await openExtensions(page);
   await panel.getByRole("tab", { name: "Skills" }).click();
+  await expect(panel.locator('[data-skill="proofread"]')).toHaveCount(0);
+  // They are with Textus AI's settings, always on.
+  await panel.locator(".settings-nav-item", { hasText: "Textus AI" }).click();
+  await panel.locator(".settings-builtin-skills summary").click();
   const proofread = panel.locator('[data-skill="proofread"]');
   await expect(proofread).toContainText("Built-in");
   await expect(proofread.getByRole("checkbox")).toHaveCount(0);
-  await expect(
-    panel.locator('.extensions-available [data-skill="proofread"]'),
-  ).toHaveCount(0);
 });
 
 test("Textus AI's Skills row opens Extensions on its Skills tab", async ({
