@@ -269,6 +269,7 @@ test("Copy as Plain Text gives the words as they read; an old copy setting chang
   await page.keyboard.press("ControlOrMeta+c");
   expect((await clipboardNow(page))["text/plain"]).toBe(LINKED);
   await first.click({ button: "right" });
+  await page.locator(".context-menu-group", { hasText: "Plain Text" }).click();
   await page
     .locator(".context-menu-item")
     .getByText("Copy as Plain Text", { exact: true })
@@ -325,6 +326,7 @@ test("Paste as Plain Text keeps Markdown marks as text", async ({ page }) => {
   await page.locator(editor).click();
   await page.evaluate(() => navigator.clipboard.writeText("**not bold**"));
   await page.locator(editor).click({ button: "right" });
+  await page.locator(".context-menu-group", { hasText: "Plain Text" }).click();
   await page
     .locator(".context-menu-item")
     .getByText("Paste as Plain Text", { exact: true })

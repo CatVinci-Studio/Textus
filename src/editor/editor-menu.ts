@@ -19,6 +19,7 @@ import { imageLocation, type ImageLocation } from "./images/missing-image";
 import { embedFileAt } from "./images/obsidian-embed-preview";
 import type { EditorRunner } from "./useEditorRunner";
 import { convertList } from "./keys/block-toggles";
+import { toggleSpan } from "./marks/span-commands";
 import type { Strings } from "../i18n/strings";
 import {
   inTable,
@@ -172,13 +173,32 @@ export function buildContextMenuItems(
     imagePos === null ? [] : imageTurnItems(run, t, imagePos),
     imagePos === null ? [] : (options.pictureAiItems ?? []),
   );
+  const nothingSelected =
+    run((ctx) => ctx.get(editorViewCtx).state.selection.empty) ?? true;
   const clipboard: MenuEntry[] = [
-    { label: t.cut, onSelect: () => options.copyOrCut(true) },
-    { label: t.copy, onSelect: () => options.copyOrCut(false) },
-    { label: t.copyAsPlainText, onSelect: options.copyAsPlainText },
+    {
+      label: t.cut,
+      disabled: nothingSelected,
+      onSelect: () => options.copyOrCut(true),
+    },
+    {
+      label: t.copy,
+      disabled: nothingSelected,
+      onSelect: () => options.copyOrCut(false),
+    },
     { label: t.paste, onSelect: options.paste },
-    { label: t.pasteAsPlainText, onSelect: options.pasteAsPlainText },
-    ...(options.addNote && selectedText(run)
+    {
+      label: t.menuPlainText,
+      items: [
+        {
+          label: t.copyAsPlainText,
+          disabled: nothingSelected,
+          onSelect: options.copyAsPlainText,
+        },
+        { label: t.pasteAsPlainText, onSelect: options.pasteAsPlainText },
+      ],
+    },
+    ...(options.addNote && !nothingSelected
       ? [{ label: t.ownNoteAdd, onSelect: options.addNote }]
       : []),
   ];
@@ -190,14 +210,14 @@ export function buildContextMenuItems(
     : [];
   // What was clicked on comes first; the rest waits in submenus.
   const first = inTable(run) ? tableMenuItems(run, t) : imageItems;
-  const insert: MenuEntry[] = inTable(run)
-    ? []
-    : [{ label: t.menuGroupInsert, items: insertItems(run, options) }];
+  const format: MenuEntry[] = [
+    { label: t.menuFormat, items: formatItems(run, options, !inTable(run)) },
+  ];
   return joinGroups(
     first,
     clipboard,
     ownChanges,
-    [...insert, ...grouped(t.menuTextusAi, options.aiItems)],
+    [...format, ...grouped(t.menuTextusAi, options.aiItems)],
     grouped(
       t.menuPlugins,
       contributedMenuItems({ selectedText: selectedText(run) }),
@@ -295,12 +315,33 @@ export function insertList(
   );
 }
 
-function insertItems(
+/** Bold and italic, then (outside a table) the block the caret is in made
+ *  a heading, list, quote or code, or a table put in. */
+function formatItems(
   run: EditorRunner,
   options: ContextMenuOptions,
-): ContextMenuItem[] {
+  blocks: boolean,
+): (ContextMenuItem | "separator")[] {
   const { t } = options;
+  const span = (rung: 1 | 2) => () =>
+    run((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      toggleSpan(view, rung);
+      view.focus();
+    });
+  const marks: ContextMenuItem[] = [
+    { label: t.toolbarBold, onSelect: span(2) },
+    { label: t.toolbarItalic, onSelect: span(1) },
+  ];
+  if (!blocks) return marks;
   return [
+    ...marks,
+    "separator",
+    ...[1, 2, 3].map((level) => ({
+      label: t.menuHeadingTemplate.replace("{n}", String(level)),
+      onSelect: () => insertHeading(run, level),
+    })),
+    "separator",
     {
       label: t.insertBulletList,
       onSelect: () => insertList(run, "bullet_list"),

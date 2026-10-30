@@ -32,13 +32,13 @@ test("the keyboard goes into a submenu and back out", async ({ page }) => {
   await openApp(page, { settings: { language: "en" } });
   await pasteMarkdown(page, "Some text");
   await page.locator(`${editor} p`).click({ button: "right" });
-  const insert = item(page, /^Insert$/);
+  const insert = item(page, /^Format$/);
   await insert.focus();
   await page.keyboard.press("ArrowRight");
-  await expect(item(page, "Bullet List")).toBeFocused();
+  await expect(item(page, "Bold")).toBeFocused();
   await page.keyboard.press("ArrowLeft");
   await expect(insert).toBeFocused();
-  await expect(item(page, "Bullet List")).toHaveCount(0);
+  await expect(item(page, "Bold")).toHaveCount(0);
   // Escape from the menu itself closes it.
   await page.keyboard.press("Escape");
   await expect(page.locator(".context-menu")).toHaveCount(0);

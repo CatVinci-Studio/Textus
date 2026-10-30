@@ -24,6 +24,8 @@ export interface ContextMenuItem {
   danger?: boolean;
   /** One choice of several, marked with a check while it is in force. */
   checked?: boolean;
+  /** Shown but not offered now (Copy with nothing selected). */
+  disabled?: boolean;
 }
 
 /** Items shown beside the menu when the row is hovered or opened. */
@@ -106,7 +108,9 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const rows = Array.from(
-      ref.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? [],
+      ref.current?.querySelectorAll<HTMLElement>(
+        '[role^="menuitem"]:not(:disabled)',
+      ) ?? [],
     );
     const at = rows.indexOf(document.activeElement as HTMLElement);
     let next: HTMLElement | undefined;
@@ -271,6 +275,7 @@ function MenuRow({
       role={item.checked === undefined ? "menuitem" : "menuitemradio"}
       aria-checked={item.checked}
       tabIndex={-1}
+      disabled={item.disabled}
       className={`context-menu-item ${item.danger ? "context-menu-item-danger" : ""}`}
       onMouseEnter={onMouseEnter}
       onClick={() => {
@@ -335,7 +340,9 @@ function SubMenu({
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const rows = Array.from(
-      ref.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? [],
+      ref.current?.querySelectorAll<HTMLElement>(
+        '[role^="menuitem"]:not(:disabled)',
+      ) ?? [],
     );
     const at = rows.indexOf(document.activeElement as HTMLElement);
     let next: HTMLElement | undefined;
