@@ -3,6 +3,7 @@ import type { Strings } from "../i18n/strings";
 import type { Settings } from "../prefs/SettingsContext";
 import { loadSettings } from "../prefs/settings-store";
 import { showQuickPick, type QuickPickItem } from "../ui/quick-pick";
+import { sendTourSignal } from "../utils/events";
 import { commands, commandShortcut, runCommand } from "./commands";
 import { runMenuAction } from "./menu/app-menu-actions";
 import {
@@ -123,5 +124,6 @@ export async function pickWithCommands(
   const { run } = entries[picked.entry];
   if ("command" in run) runCommand(run.command);
   else runMenuAction(run.menu);
+  sendTourSignal("palette-command");
   return null;
 }

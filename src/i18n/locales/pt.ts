@@ -1134,6 +1134,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Na barra de menus, escolha Visualizar › Barra Lateral ({shortcut}) e abra Estrutura",
   tutorialSidebarTaskPhone:
     "Toque no menu ☰ no canto superior esquerdo, depois em Barra Lateral, e abra Estrutura",
+  tutorialPaletteTitle: "Paleta de comandos",
+  tutorialPaletteBody:
+    "Todos os comandos dos menus, encontrados com poucas letras.",
+  tutorialPaletteTask:
+    "Pressione {shortcut}, digite algumas letras e Enter para executar um comando",
+  tutorialPaletteTaskPhone: "No computador, abre com Ctrl+Shift+P (⌘⇧P no Mac)",
   tutorialConnectTitle: "Conecte sua IA",
   tutorialConnectBody:
     "Com ela conectada, você pode experimentar de verdade o que vem a seguir.",

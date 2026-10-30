@@ -323,6 +323,15 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
   await expect(page.locator(".sidebar")).toContainText("My notes");
   await sidebar.getByRole("button", { name: "Continue" }).click();
 
+  // The command palette: any command run from it ticks the line.
+  const palette = lesson(page, "Command palette");
+  await expect(palette).toContainText("Press Ctrl+Shift+P");
+  await page.keyboard.press("Control+Shift+P");
+  await page.keyboard.type("Zen Mode");
+  await page.keyboard.press("Enter");
+  await expect(ticked(palette)).toHaveCount(1);
+  await palette.getByRole("button", { name: "Continue" }).click();
+
   // No AI: skip, and the AI lessons are watched.
   const connect = lesson(page, "Connect your AI");
   await expect(
@@ -730,6 +739,11 @@ test.describe("on a phone", () => {
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(PHONE.viewport.width);
     await sidebar.getByRole("button", { name: "Skip this step" }).tap();
+
+    // No shortcut on a phone: the palette is a tip there.
+    const palette = lesson(page, "Command palette");
+    await expect(palette).toContainText("On a computer");
+    await palette.getByRole("button", { name: "Continue" }).tap();
 
     const connect = lesson(page, "Connect your AI");
     const connectBox = (await connect.boundingBox())!;

@@ -1142,6 +1142,12 @@ export default {
     "В строке меню выберите Вид › Боковая панель ({shortcut}) и откройте Оглавление",
   tutorialSidebarTaskPhone:
     "Нажмите меню ☰ слева вверху, затем Боковая панель, и откройте Оглавление",
+  tutorialPaletteTitle: "Палитра команд",
+  tutorialPaletteBody: "Любая команда из меню — по нескольким буквам.",
+  tutorialPaletteTask:
+    "Нажмите {shortcut}, введите несколько букв и Enter, чтобы выполнить команду",
+  tutorialPaletteTaskPhone:
+    "На компьютере она открывается по Ctrl+Shift+P (⌘⇧P на Mac)",
   tutorialConnectTitle: "Подключите ИИ",
   tutorialConnectBody:
     "С подключённым ИИ всё, что дальше, можно попробовать по-настоящему.",

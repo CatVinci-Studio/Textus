@@ -1092,6 +1092,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "メニューバーの「表示 › サイドバー」を選び（{shortcut}）、アウトラインを開く",
   tutorialSidebarTaskPhone:
     "左上のメニュー ☰ から「サイドバー」を選び、アウトラインを開く",
+  tutorialPaletteTitle: "コマンドパレット",
+  tutorialPaletteBody: "メニューのすべてのコマンドを、数文字の入力で探せます。",
+  tutorialPaletteTask:
+    "{shortcut} を押し、数文字入力して Enter でコマンドを実行",
+  tutorialPaletteTaskPhone: "パソコンでは Ctrl+Shift+P（Mac は ⌘⇧P）で開きます",
   tutorialConnectTitle: "AI を接続する",
   tutorialConnectBody: "接続すると、この先の AI 機能を実際に試せます。",
   tutorialConnectTask:

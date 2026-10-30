@@ -1151,6 +1151,12 @@ para usar una.
     "En la barra de menús, elige Visualización › Barra lateral ({shortcut}) y abre Esquema",
   tutorialSidebarTaskPhone:
     "Toca el menú ☰ arriba a la izquierda, luego Barra lateral, y abre Esquema",
+  tutorialPaletteTitle: "Paleta de comandos",
+  tutorialPaletteBody: "Todos los comandos de los menús, a unas pocas letras.",
+  tutorialPaletteTask:
+    "Pulsa {shortcut}, escribe unas letras y pulsa Intro para ejecutar un comando",
+  tutorialPaletteTaskPhone:
+    "En el ordenador se abre con Ctrl+Mayús+P (⌘⇧P en Mac)",
   tutorialConnectTitle: "Conecta tu IA",
   tutorialConnectBody:
     "Con una IA conectada, podrás probar de verdad lo que sigue.",

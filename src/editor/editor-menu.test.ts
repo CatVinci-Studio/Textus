@@ -102,7 +102,7 @@ const options = (pos: number | null): ContextMenuOptions => ({
   pasteAsPlainText: () => {},
   paste: () => {},
   selectAll: () => {},
-  toggleFindReplace: () => {},
+  openFindReplace: () => {},
   openTableDialog: () => {},
 });
 const labels = (items: ReturnType<typeof buildContextMenuItems>): string[] =>

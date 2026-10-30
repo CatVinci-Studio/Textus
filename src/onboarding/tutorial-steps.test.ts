@@ -18,6 +18,7 @@ describe("the tour", () => {
       "blocks",
       "modes-themes",
       "sidebar-export",
+      "palette",
       "connect",
       "write",
       "review",
@@ -64,10 +65,10 @@ describe("the tour", () => {
     ).toEqual(["welcome", "connect", "done"]);
   });
 
-  it("gives every lesson things to do and an animation; the AI ones are AI", () => {
+  it("gives every lesson things to do and, but the palette tip, an animation; the AI ones are AI", () => {
     for (const step of TUTORIAL_STEPS) {
       const lesson = step.layout === "card";
-      expect(!!step.clip, step.id).toBe(lesson);
+      expect(!!step.clip, step.id).toBe(lesson && step.id !== "palette");
       expect(!!step.ai, step.id).toBe(step.chapter === "ai");
       if (lesson) expect(step.tasks?.length, step.id).toBeGreaterThan(0);
     }
@@ -88,10 +89,10 @@ describe("the tour", () => {
     });
   });
 
-  it("locks every lesson until it is done, except formulas and diagrams", () => {
+  it("locks every lesson until it is done, except formulas, diagrams and the palette", () => {
     expect(
       TUTORIAL_STEPS.filter((step) => step.optional).map((step) => step.id),
-    ).toEqual(["blocks"]);
+    ).toEqual(["blocks", "palette"]);
   });
 
   it("links to the clips Rust lets it open, and only those", () => {

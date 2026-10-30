@@ -45,6 +45,7 @@ export function OnboardingLayers({
             shortcuts={{
               agentPanel: formatCombo(settings.shortcuts.toggleAgentPanel),
               sidebar: formatCombo(settings.shortcuts.toggleSidebar),
+              palette: formatCombo(settings.shortcuts.commandPalette),
             }}
             zen={zen}
           />

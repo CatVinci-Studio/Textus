@@ -153,7 +153,7 @@ export interface ContextMenuOptions {
   paste: () => void;
   pasteAsPlainText: () => void;
   selectAll: () => void;
-  toggleFindReplace: () => void;
+  openFindReplace: () => void;
   openTableDialog: () => void;
   /** A note of the writer's own on the selection, offered while there is one. */
   addNote?: () => void;
@@ -275,7 +275,7 @@ function generalItems(options: ContextMenuOptions): MenuEntry[] {
   return [
     { label: t.selectAll, onSelect: options.selectAll },
     "separator",
-    { label: t.findReplace, onSelect: options.toggleFindReplace },
+    { label: t.findReplace, onSelect: options.openFindReplace },
     ...(aiItems.length > 0 ? (["separator", ...aiItems] as MenuEntry[]) : []),
   ];
 }

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
+import { closeHistory } from "@milkdown/kit/prose/history";
+import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { compileQuery, findReplaceKey } from "./find-replace-plugin";
 import { scrollBehavior } from "../../ui/motion";
@@ -62,6 +64,12 @@ export function useFindReplace(run: EditorRunner) {
   const [caseSensitive, setCaseSensitive] = useState(false);
   const [useRegex, setUseRegex] = useState(false);
   const [status, setStatus] = useState<FindReplaceStatus>(IDLE_STATUS);
+  // Bumped when Find is asked for again with the bar open: the bar takes the
+  // focus back and selects its query.
+  const [focusRequest, setFocusRequest] = useState(0);
+  // Stepped through matches since opening: closing leaves the active one
+  // selected, as other editors do.
+  const stepped = useRef(false);
 
   // Any change to the search inputs while open re-runs the search, including
   // a kept query when the bar reopens.
@@ -100,6 +108,7 @@ export function useFindReplace(run: EditorRunner) {
         view.dispatch(
           view.state.tr.setMeta(findReplaceKey, { type: "setActive", index }),
         );
+        stepped.current = true;
         setStatus(readStatus(view));
         scrollToActive(view);
       });
@@ -126,11 +135,14 @@ export function useFindReplace(run: EditorRunner) {
       const s = findReplaceKey.getState(view.state);
       const match = s?.matches[s.activeIndex];
       if (!match) return;
+      // A replacement is an undo step of its own, as in Word.
       view.dispatch(
-        view.state.tr.insertText(
-          makeReplacer()(match.text),
-          match.from,
-          match.to,
+        closeHistory(
+          view.state.tr.insertText(
+            makeReplacer()(match.text),
+            match.from,
+            match.to,
+          ),
         ),
       );
       view.focus();
@@ -150,7 +162,7 @@ export function useFindReplace(run: EditorRunner) {
         const match = s.matches[i];
         tr = tr.insertText(replace(match.text), match.from, match.to);
       }
-      view.dispatch(tr);
+      view.dispatch(closeHistory(tr));
       view.focus();
       setStatus(readStatus(view));
     });
@@ -159,7 +171,12 @@ export function useFindReplace(run: EditorRunner) {
   const close = useCallback(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      view.dispatch(view.state.tr.setMeta(findReplaceKey, { type: "clear" }));
+      const s = findReplaceKey.getState(view.state);
+      const match = stepped.current ? s?.matches[s.activeIndex] : undefined;
+      const tr = view.state.tr.setMeta(findReplaceKey, { type: "clear" });
+      if (match)
+        tr.setSelection(TextSelection.create(tr.doc, match.from, match.to));
+      view.dispatch(tr);
       view.focus();
     });
     setOpen(false);
@@ -178,10 +195,21 @@ export function useFindReplace(run: EditorRunner) {
     setStatus(IDLE_STATUS);
   }, [run, setOpen]);
 
-  const toggle = useCallback(() => {
-    if (openRef.current) close();
-    else setOpen(true);
-  }, [close, setOpen]);
+  /** Find: opens the bar, or takes the focus back to it. Words selected on
+   *  one line become the query. */
+  const show = useCallback(() => {
+    run((ctx) => {
+      const { selection, doc } = ctx.get(editorViewCtx).state;
+      const words = doc.textBetween(selection.from, selection.to, "\n");
+      if (words.trim() && !words.includes("\n") && words.length <= 200)
+        setQuery(words);
+    });
+    if (openRef.current) setFocusRequest((n) => n + 1);
+    else {
+      stepped.current = false;
+      setOpen(true);
+    }
+  }, [run, setOpen]);
 
   // Escape closes the bar even once focus has moved to the editor.
   useEffect(() => {
@@ -202,6 +230,7 @@ export function useFindReplace(run: EditorRunner) {
     caseSensitive,
     useRegex,
     status,
+    focusRequest,
     setQuery,
     setReplacement,
     toggleCaseSensitive,
@@ -212,7 +241,7 @@ export function useFindReplace(run: EditorRunner) {
     replaceAll,
     close,
     dismiss,
-    toggle,
+    show,
   };
 }
 

@@ -63,7 +63,9 @@ export type TourSignal =
   /** The AI finished answering a message without an error. */
   | "reply"
   /** A message went out through a skill (`/name`). */
-  | "skill-sent";
+  | "skill-sent"
+  /** A command ran from the command palette. */
+  | "palette-command";
 
 /// detail: a TourSignal.
 export const TOUR_SIGNAL_EVENT = "textus:tour-signal";

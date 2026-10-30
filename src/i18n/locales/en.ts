@@ -1117,6 +1117,13 @@ type /name in a conversation to use one.
     "Choose View › Sidebar in the menu bar ({shortcut}), then open Outline",
   tutorialSidebarTaskPhone:
     "Tap the menu ☰ at the top left, then Sidebar, then open Outline",
+  tutorialPaletteTitle: "Command palette",
+  tutorialPaletteBody:
+    "Every command in the menus, found by typing a few letters.",
+  tutorialPaletteTask:
+    "Press {shortcut}, type a few letters, then Enter to run a command",
+  tutorialPaletteTaskPhone:
+    "On a computer, it opens with Ctrl+Shift+P (⌘⇧P on a Mac)",
   tutorialConnectTitle: "Connect your AI",
   tutorialConnectBody:
     "Once it's connected, you can really try the AI features that follow.",

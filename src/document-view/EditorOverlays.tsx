@@ -54,7 +54,7 @@ export function EditorOverlays({
         triggerCompletion={setup.triggerCompletion}
         triggerGrammarCheck={setup.triggerGrammarCheck}
         clipboard={clipboard}
-        toggleFindReplace={findReplace.toggle}
+        openFindReplace={findReplace.show}
         openTableDialog={() => setTableDialogOpen(true)}
         own={review.notes.menu}
         onClose={() => popups.setMenu(null)}

@@ -14,7 +14,11 @@ import {
   isTaskDone,
 } from "./tutorial-evaluation";
 import { TutorialOverlay } from "./TutorialOverlay";
-import { TUTORIAL_CHAPTERS, type TutorialTask } from "./tutorial-steps";
+import {
+  TUTORIAL_CHAPTERS,
+  type TutorialStepId,
+  type TutorialTask,
+} from "./tutorial-steps";
 import type { Tutorial } from "./useTutorial";
 
 /** How long the grammar lesson waits for the AI to flag the typed sentence
@@ -27,13 +31,26 @@ interface TutorialExperienceProps {
   language: Lang;
   /** The phone layout: no keyboard shortcuts, taps instead of Tab. */
   phone: boolean;
-  shortcuts: { agentPanel: string; sidebar: string };
+  shortcuts: LessonShortcuts;
   /** Zen mode, for the modes-and-themes lesson's button. */
   zen: { on: boolean; toggle: () => void };
 }
 
 /** Maps tutorial state to the card the learner sees: its copy, gate and
  *  buttons. App owns the events that advance lessons. */
+interface LessonShortcuts {
+  agentPanel: string;
+  sidebar: string;
+  palette: string;
+}
+
+/** The shortcut a lesson's "{shortcut}" names. */
+function lessonShortcut(id: TutorialStepId, shortcuts: LessonShortcuts) {
+  if (id === "sidebar-export") return shortcuts.sidebar;
+  if (id === "palette") return shortcuts.palette;
+  return shortcuts.agentPanel;
+}
+
 export function TutorialExperience({
   tutorial,
   t,
@@ -74,10 +91,7 @@ export function TutorialExperience({
     t[(phone && task.phoneKey) || (mac && task.macKey) || task.key]
       .replace("{title}", notes.title)
       .replace("{slip}", notes.slip)
-      .replace(
-        "{shortcut}",
-        step.id === "sidebar-export" ? shortcuts.sidebar : shortcuts.agentPanel,
-      );
+      .replace("{shortcut}", lessonShortcut(step.id, shortcuts));
   const tasks = step.tasks?.map((task) => ({
     text: lineText(task),
     done:

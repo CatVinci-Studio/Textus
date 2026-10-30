@@ -1167,6 +1167,13 @@ utiliser une.
     "Dans la barre des menus, choisissez Présentation › Barre latérale ({shortcut}), puis ouvrez Plan",
   tutorialSidebarTaskPhone:
     "Touchez le menu ☰ en haut à gauche, puis Barre latérale, et ouvrez Plan",
+  tutorialPaletteTitle: "Palette de commandes",
+  tutorialPaletteBody:
+    "Toutes les commandes des menus, trouvées en tapant quelques lettres.",
+  tutorialPaletteTask:
+    "Appuyez sur {shortcut}, tapez quelques lettres, puis Entrée pour lancer une commande",
+  tutorialPaletteTaskPhone:
+    "Sur ordinateur, elle s’ouvre avec Ctrl+Maj+P (⌘⇧P sur Mac)",
   tutorialConnectTitle: "Connectez votre IA",
   tutorialConnectBody:
     "Une fois connectée, vous pourrez vraiment essayer la suite.",

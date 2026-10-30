@@ -40,7 +40,7 @@ export function EditorContextMenu({
   triggerCompletion,
   triggerGrammarCheck,
   clipboard,
-  toggleFindReplace,
+  openFindReplace,
   openTableDialog,
   own,
   onClose,
@@ -57,7 +57,7 @@ export function EditorContextMenu({
   triggerCompletion: () => void;
   triggerGrammarCheck: () => void;
   clipboard: EditorClipboard;
-  toggleFindReplace: () => void;
+  openFindReplace: () => void;
   openTableDialog: () => void;
   /** The writer's own items: a note on the selection, and accepting or
    *  rejecting all their tracked changes. */
@@ -128,7 +128,7 @@ export function EditorContextMenu({
                   : []),
               ],
               ...clipboard,
-              toggleFindReplace,
+              openFindReplace,
               openTableDialog,
               ...own,
             },

@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Strings } from "../../i18n/strings";
 import type { FindReplace } from "./useFindReplace";
 import { ArrowUpIcon, ChevronIcon, CloseIcon } from "../../ui/icons";
@@ -33,6 +33,13 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
   const { query, replacement, caseSensitive, useRegex, status } = findReplace;
   const presence = usePresenceProps<HTMLDivElement>();
   const dockedWidth = useDockedPanelWidth();
+  const findInput = useRef<HTMLInputElement>(null);
+
+  // On opening and on each Find while open: typing replaces the query.
+  useEffect(() => {
+    findInput.current?.focus();
+    findInput.current?.select();
+  }, [findReplace.focusRequest]);
 
   function onFindKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter") {
@@ -88,11 +95,11 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
         </Tooltip>
         <div className="find-replace-field">
           <input
+            ref={findInput}
             className="find-replace-input"
             type="text"
             value={query}
             placeholder={labels.findPlaceholder}
-            autoFocus
             onChange={(e) => findReplace.setQuery(e.target.value)}
             onKeyDown={onFindKeyDown}
           />
