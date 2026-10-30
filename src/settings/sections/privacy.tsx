@@ -118,7 +118,6 @@ export function PrivacySection({ t }: { t: Strings }) {
           />
         </div>
       </section>
-
     </>
   );
 }
