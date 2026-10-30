@@ -54,6 +54,10 @@
     height: 44px;
   }
 
+  :root[data-window-chrome="mobile"] .inline-chat-field {
+    --composer-control: 44px;
+  }
+
   :root[data-window-chrome="mobile"] .inline-chat-send {
     min-height: 44px;
     padding: 0 18px;

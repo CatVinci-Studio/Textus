@@ -132,15 +132,28 @@
 /* In the panel and the detached window the field is one rounded box on the
    panel's foot, lit at its edge on focus. Quick Ask keeps the open layout. */
 :is(.agent-panel-body, .chat-window-body) .inline-chat-field {
+  /* Its controls are pills in its bottom corners, so its corners are
+     theirs plus the inset and the border: concentric. */
+  --composer-control: var(--control-height-sm);
+  --composer-inset: 6px;
   gap: 6px;
-  padding: 6px 6px 6px 8px;
+  padding: var(--composer-inset) var(--composer-inset) var(--composer-inset)
+    8px;
   border: 1px solid var(--editor-border, var(--border-color));
-  border-radius: var(--radius-surface);
+  border-radius: calc(
+    var(--composer-control) / 2 + var(--composer-inset) + 1px
+  );
   background: var(--editor-bg, var(--bg));
   box-shadow: var(--shadow-raised);
   transition:
     border-color var(--dur-fast) var(--ease-standard),
     box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+:is(.agent-panel-body, .chat-window-body)
+  .inline-chat-field
+  :is(.inline-chat-attach, .inline-chat-toggle, .inline-chat-mode) {
+  border-radius: var(--radius-pill);
 }
 
 :is(.agent-panel-body, .chat-window-body) .inline-chat-field:focus-within {

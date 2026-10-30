@@ -164,13 +164,6 @@
   }
 
   /* UIKit's switch. */
-  :root[data-window-chrome="mobile"] .settings-row input[type="checkbox"] {
-    --switch-thumb: 27px;
-    --switch-travel: 20px;
-    width: 51px;
-    height: 31px;
-  }
-
   /* iOS's inset grouped style: white cards on a grey page (dark grey on black),
      hairlines a device pixel thin. On the root so the safe-area strips match. */
   :root[data-window-chrome="mobile"] {

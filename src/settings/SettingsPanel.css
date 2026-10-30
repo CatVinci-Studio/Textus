@@ -402,21 +402,24 @@ button.settings-danger-button {
   -webkit-user-select: text;
 }
 
-/* Toggles render as switches, not native checkboxes. */
+/* Toggles render as switches, not native checkboxes, sized by the row's
+   text: half again its height, so the switch sits with the label instead of
+   outweighing it, on every platform and at every Interface Text Size. */
 .settings-row input[type="checkbox"] {
-  /* The thumb, and how far it travels (the phone's are UIKit's sizes). */
-  --switch-thumb: 17px;
-  --switch-travel: 15px;
+  --switch-inset: 2px;
+  --switch-thumb: calc(1.5em - 2 * var(--switch-inset));
+  --switch-travel: 1em;
   appearance: none;
   -webkit-appearance: none;
   flex-shrink: 0;
-  width: 36px;
-  height: 21px;
+  width: 2.5em;
+  height: 1.5em;
   margin: 0;
   position: relative;
   border: none;
   border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--editor-muted) 38%, var(--bg));
+  font-size: var(--text-body-large);
   cursor: pointer;
   transition: background-color var(--dur-base) var(--ease-standard);
 }
@@ -426,8 +429,8 @@ button.settings-danger-button {
 .settings-row input[type="checkbox"]::after {
   content: "";
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: var(--switch-inset);
+  left: var(--switch-inset);
   width: var(--switch-thumb);
   height: var(--switch-thumb);
   border-radius: 50%;
@@ -1177,19 +1180,22 @@ button.settings-skill-action:focus-visible {
   white-space: nowrap;
 }
 
+/* A segmented control: the segments' corners concentric with the track's,
+   its radius theirs plus the inset and the border. */
 .appearance-options {
+  --segment-inset: 2px;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  padding: 4px;
+  gap: 2px;
+  padding: var(--segment-inset);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border-radius: calc(var(--radius-control) + var(--segment-inset) + 1px);
   background: var(--sidebar-bg);
 }
 
 .appearance-option {
   position: relative;
-  padding: 7px 10px;
+  padding: 9px 10px;
   border-radius: var(--radius-control);
   color: var(--editor-muted);
   font-size: var(--text-secondary);

@@ -68,6 +68,7 @@
   min-width: 0;
   padding: 3px 2px;
   border: none;
+  border-radius: calc(var(--radius-control) - 3px);
   background: transparent;
   color: var(--editor-text);
   font: inherit;

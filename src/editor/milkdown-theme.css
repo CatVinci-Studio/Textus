@@ -1140,10 +1140,12 @@ br:is(.pending-delete, .pending-sentence-hot) {
   pointer-events: none;
 }
 
+/* Clear of the block's corner curve, so the buttons' own corners needn't
+   follow it. */
 .code-block-actions {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: var(--radius-block);
+  right: var(--radius-block);
   display: flex;
   gap: 4px;
   user-select: none;
