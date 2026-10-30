@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * Edit › Track My Changes: the writer's edits show as marked changes with
+ * View › Track My Changes: the writer's edits show as marked changes with
  * margin cards, and the kept original survives a reopen.
  */
 
@@ -21,7 +21,7 @@ async function openDraft(page: Page, kept?: string) {
     { path: PATH, doc: DOC, kept },
   );
   await openApp(page, { settings: { language: "en" } });
-  await expect(page.locator(editor)).toContainText("quiet at dawn");
+  await expect(page.locator(editor)).toContainText("at dawn");
 }
 
 const toggleTracking = (page: Page) =>
@@ -54,6 +54,23 @@ const kept = (page: Page) =>
     PATH,
   );
 
+/** What the document's file holds. */
+const file = (page: Page) =>
+  page.evaluate(
+    (path) =>
+      (window as unknown as { __devFiles: Record<string, string> }).__devFiles[
+        path
+      ],
+    PATH,
+  );
+
+const save = (page: Page) =>
+  page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-save-file"),
+  );
+
 test("tracked edits show struck and marked, each to accept or reject", async ({
   page,
 }) => {
@@ -62,39 +79,107 @@ test("tracked edits show struck and marked, each to accept or reject", async ({
   await retype(page, "quiet", "still");
   await expect(page.locator(".own-delete")).toHaveText("quiet");
   await expect(page.locator(".own-insert")).toHaveText("still");
-  // The text holds the new words; the old ones are only drawn.
-  await expect(page.locator(editor)).toContainText("The harbour was");
   const card = page.locator(".revision-note", { hasText: "quiet" });
   await expect(card.locator(".review-note-mark-me")).toHaveText("Me");
-
-  // The original is kept beside the app's data.
-  await expect.poll(() => kept(page)).toContain("quiet at dawn");
 
   // Rejected: back to the original.
   await card.getByRole("button", { name: /Keep the original/i }).click();
   await expect(page.locator(".own-delete")).toHaveCount(0);
   await expect(page.locator(editor)).toContainText("was quiet at dawn");
+});
 
-  // Accepted: the new words become the original, no marks.
-  await retype(page, "dawn", "noon");
+test("saved, the file keeps the original and the changes are kept beside it, as Textus AI's are", async ({
+  page,
+}) => {
+  await openDraft(page);
+  await toggleTracking(page);
+  await retype(page, "quiet", "still");
+  await save(page);
+  // The file: the original. Beside it: the original and the changed text.
+  await expect.poll(() => file(page)).toContain("was quiet at dawn");
+  await expect.poll(() => kept(page)).toContain("still at dawn");
+  const sidecar = JSON.parse((await kept(page))!);
+  expect(sidecar.base).toContain("quiet at dawn");
+  expect(sidecar.revised).toContain("still at dawn");
+  // Still shown as a change, to decide.
+  await expect(page.locator(".own-insert")).toHaveText("still");
+
+  // Accepted: into the file at once, nothing left beside it to decide.
   await page
-    .locator(".revision-note", { hasText: "dawn" })
+    .locator(".revision-note", { hasText: "quiet" })
     .getByRole("button", { name: /Take this change/i })
     .click();
   await expect(page.locator(".own-insert, .own-delete")).toHaveCount(0);
-  await expect(page.locator(editor)).toContainText("quiet at noon");
-  await expect.poll(() => kept(page)).toContain("quiet at noon");
+  await expect.poll(() => file(page)).toContain("was still at dawn");
 
-  // Stopping with nothing to review drops the kept original.
+  // Stopped: the sidecar goes, the file holds the text.
   await toggleTracking(page);
   await expect.poll(() => kept(page)).toBeNull();
+  await expect.poll(() => file(page)).toContain("was still at dawn");
 });
 
 test("tracking carries on when the document opens again", async ({ page }) => {
+  // The file holds the original; the changed text is kept beside it.
+  await openDraft(
+    page,
+    JSON.stringify({
+      base: DOC,
+      revised: "The harbour was still at dawn.\n",
+    }),
+  );
+  await expect(page.locator(editor)).toContainText("still at dawn");
+  await expect(page.locator(".own-delete")).toHaveText("quiet");
+  await expect(page.locator(".own-insert")).toHaveText("still");
+});
+
+test("kept from before 1.3, the original alone carries on too", async ({
+  page,
+}) => {
   await openDraft(
     page,
     JSON.stringify({ base: "The harbour was silent at dawn.\n" }),
   );
   await expect(page.locator(".own-delete")).toHaveText("silent");
   await expect(page.locator(".own-insert")).toHaveText("quiet");
+});
+
+test("changes kept for an original the file no longer holds give way", async ({
+  page,
+}) => {
+  await openDraft(
+    page,
+    JSON.stringify({
+      base: "The harbour was empty at dawn.\n",
+      revised: "The harbour was still at dawn.\n",
+    }),
+  );
+  await expect(page.locator(editor)).toHaveText(
+    "The harbour was quiet at dawn.",
+  );
+  await expect(page.locator(".own-insert, .own-delete")).toHaveCount(0);
+});
+
+test("closed with changes still to decide, it says they are kept", async ({
+  page,
+}) => {
+  await openDraft(page);
+  // A second tab, so closing the draft leaves the window open.
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-new-file"),
+  );
+  await page.locator(".tab-bar .tab-pill-title", { hasText: "draft" }).click();
+  await toggleTracking(page);
+  await retype(page, "quiet", "still");
+  await save(page);
+  await expect.poll(() => kept(page)).toContain("still at dawn");
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-close-tab"),
+  );
+  await expect(page.locator(".notice")).toContainText(
+    "Changes to decide in draft.md: 1",
+  );
 });

@@ -133,6 +133,7 @@ export function useWindowDocuments({
     cancelDraftFlushes: shell.cancelDraftFlushes,
     flushAutosave,
     setPendingClose,
+    t,
   });
 
   // Tabs moving between windows, in both directions.

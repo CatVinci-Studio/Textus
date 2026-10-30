@@ -8,6 +8,21 @@ import { flushPendingWrites } from "../storage/pending-writes";
 import { useModalDialog } from "../ui/useModalDialog";
 import { useLatest } from "../utils/hooks/useLatest";
 import type { TabState } from "./tabs/useTabState";
+import { undecidedIn } from "../document/undecided";
+import { showNotice } from "../ui/notices";
+import { basename } from "../utils/path";
+import type { Strings } from "../i18n/strings";
+
+/** Closed with changes still to decide: they are kept, and come back. */
+function tellKept(path: string, t: Strings) {
+  const n = undecidedIn(path);
+  if (n > 0)
+    showNotice(
+      t.closedWithUndecided
+        .replace("{name}", basename(path))
+        .replace("{n}", String(n)),
+    );
+}
 
 // What the save/discard/cancel prompt is guarding: a tab or the whole window.
 export type PendingClose = { kind: "tab"; tabId: string } | { kind: "window" };
@@ -32,8 +47,10 @@ export function useTabRemoval(opts: {
   cancelDraftFlushes: () => void;
   flushAutosave: (ids?: string[]) => Promise<void>;
   setPendingClose: (close: PendingClose) => void;
+  t: Strings;
 }) {
-  const { tabState, cancelDraftFlushes, flushAutosave, setPendingClose } = opts;
+  const { tabState, cancelDraftFlushes, flushAutosave, setPendingClose, t } =
+    opts;
   const { tabsRef, setTabs, setActiveTabId, liveTabs } = tabState;
 
   // No prompt here. Closing the last tab closes the window; the active tab
@@ -74,11 +91,12 @@ export function useTabRemoval(opts: {
       if (tab?.path) closedPaths.push(tab.path);
       if (!tab || !tabIsDirty(tab)) {
         removeTab(id);
+        if (tab?.path) tellKept(tab.path, t);
         return;
       }
       setPendingClose({ kind: "tab", tabId: id });
     },
-    [flushAutosave, removeTab, liveTabs, setPendingClose],
+    [flushAutosave, removeTab, liveTabs, setPendingClose, t],
   );
 
   return { removeTab, requestCloseTab };

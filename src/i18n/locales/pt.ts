@@ -171,6 +171,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   ownNoteDelete: "Excluir",
   menuTrackChanges: "Controlar minhas alterações",
   trackStop: "Parar de controlar",
+  closedWithUndecided:
+    "Alterações por decidir em {name}: {n}. Elas ficam guardadas e voltam quando você o abrir de novo.",
   trackStopConfirm:
     "Parar de controlar suas alterações? Elas ficam no texto; só as marcas somem.",
   trackAcceptAll: "Aceitar todas as minhas alterações",

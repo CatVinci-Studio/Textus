@@ -181,6 +181,8 @@ utiliser une.
   ownNoteDelete: "Supprimer",
   menuTrackChanges: "Suivre mes modifications",
   trackStop: "Arrêter le suivi",
+  closedWithUndecided:
+    "Modifications à décider dans {name} : {n}. Elles sont conservées et reviennent à sa prochaine ouverture.",
   trackStopConfirm:
     "Arrêter de suivre vos modifications ? Elles restent dans le texte ; seules leurs marques disparaissent.",
   trackAcceptAll: "Accepter toutes mes modifications",

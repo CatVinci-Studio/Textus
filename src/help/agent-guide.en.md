@@ -65,7 +65,7 @@ The chat never writes to your document directly. When you ask a tool-calling pro
 - **At the cursor**: with nothing selected, Textus AI knows where your cursor is, so "write a transition here" inserts exactly there.
 - **Comments instead of edits**: ask for a review ("what's weak here?") and Textus AI pins comments to passages without changing them. Each comment card has **Show in document**, which selects the passage it is about.
 - **Your own notes**: select some words, right-click and choose **Add Note**: your note goes into the margin beside Textus AI's, marked Me. Notes are kept beside Textus's own data, not in your Markdown.
-- **Track My Changes** (View menu): while it is on, your own edits show as changes too - what you deleted struck through, what you added marked - each with a card in the margin, marked Me, to accept or reject.
+- **Track My Changes** (View menu): while it is on, your own edits show as changes too - what you deleted struck through, what you added marked - each with a card in the margin, marked Me, to accept or reject. The file keeps the original, with only the changes you accepted; the ones still to decide are kept beside it in the `.textus` folder, as Textus AI's are, and come back when the document opens again - share the folder and they go along.
 
 ### 6. Pictures
 

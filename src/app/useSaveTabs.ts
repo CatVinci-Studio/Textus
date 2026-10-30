@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import { migrateDraftImages } from "../editor/images/image-migration";
 import { basename } from "../utils/path";
@@ -8,6 +8,11 @@ import {
   tabTitle,
   writeDocFile,
 } from "../document/doc-tabs";
+import {
+  fileTextFor,
+  setTrackedWriter,
+  writeRevisions,
+} from "../document/tracked-file";
 import type { SaveOutcome } from "../document/autosave";
 import { fs, session } from "../platform/ipc";
 import { moveConversations } from "../ai/chat/chat-history";
@@ -32,11 +37,17 @@ export function useSaveTabs(opts: {
   const { liveTabs, updateTab, tabsRef } = tabState;
 
   // Writes a document, or says why it couldn't and resolves false; the tab
-  // stays dirty, so nothing is lost.
+  // stays dirty, so nothing is lost. A tracked document's file gets its
+  // original, its changes going beside it; `from` is where it was tracked.
   const writeOrReport = useCallback(
-    async (path: string, content: string): Promise<boolean> => {
+    async (
+      path: string,
+      content: string,
+      from: string | null = path,
+    ): Promise<boolean> => {
       try {
-        await writeDocFile(path, content);
+        await writeDocFile(path, fileTextFor(from, content));
+        await writeRevisions(path, content, from);
         return true;
       } catch (err) {
         const lines = [
@@ -81,7 +92,7 @@ export function useSaveTabs(opts: {
         await showMessage(t.wordSaveRefused, { tone: "warning" });
         return false;
       }
-      if (!(await writeOrReport(picked, tab.content))) return false;
+      if (!(await writeOrReport(picked, tab.content, tab.path))) return false;
       void session.addRecentFile(picked);
       // Pasted images in a first-saved draft move into its image folder with
       // relative paths; saved to another folder, relative images are copied.
@@ -219,6 +230,20 @@ export function useSaveTabs(opts: {
       }),
     [liveTabs, saveToPath, serialized],
   );
+
+  // A tracked document's original moved with nothing unsaved in it: its file
+  // follows at once, as a save would write it.
+  useEffect(() => {
+    setTrackedWriter((path) => {
+      const tab = liveTabs().find((tb) => tb.path === path);
+      if (!tab || tabIsDirty(tab)) return;
+      void serialized(tab.id, async () => {
+        if (await writeOrReport(path, tab.content))
+          await commitSaved(tab.id, path, tab.content, true);
+      });
+    });
+    return () => setTrackedWriter(null);
+  }, [liveTabs, serialized, writeOrReport, commitSaved]);
 
   return { saveTab, saveTabAs, autosaveTab };
 }

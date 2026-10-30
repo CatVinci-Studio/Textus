@@ -170,6 +170,8 @@ type /name in a conversation to use one.
   ownNoteDelete: "Delete",
   menuTrackChanges: "Track My Changes",
   trackStop: "Stop Tracking",
+  closedWithUndecided:
+    "Changes to decide in {name}: {n}. They're kept, and come back when it opens again.",
   trackStopConfirm:
     "Stop tracking your changes? They stay in the text; only their marks go.",
   trackAcceptAll: "Accept All My Changes",

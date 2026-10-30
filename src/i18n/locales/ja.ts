@@ -159,6 +159,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   ownNoteDelete: "削除",
   menuTrackChanges: "変更を記録",
   trackStop: "記録を停止",
+  closedWithUndecided:
+    "「{name}」にはまだ決めていない変更が {n} 件あります。保存されているので、次に開いたときにも残っています。",
   trackStopConfirm:
     "変更の記録を止めますか？変更は本文に残り、印だけが消えます。",
   trackAcceptAll: "自分の変更をすべて承諾",

@@ -171,6 +171,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   ownNoteDelete: "Löschen",
   menuTrackChanges: "Meine Änderungen nachverfolgen",
   trackStop: "Nachverfolgung beenden",
+  closedWithUndecided:
+    "Offene Änderungen in {name}: {n}. Sie bleiben erhalten und sind beim nächsten Öffnen wieder da.",
   trackStopConfirm:
     "Ihre Änderungen nicht mehr nachverfolgen? Sie bleiben im Text, nur ihre Markierungen verschwinden.",
   trackAcceptAll: "Alle meine Änderungen annehmen",

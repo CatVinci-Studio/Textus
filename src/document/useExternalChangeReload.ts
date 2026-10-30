@@ -3,6 +3,7 @@ import { thisWindow } from "../platform/this-window";
 import { readDocText, statMtime, tabIsDirty, type DocTab } from "./doc-tabs";
 import { unlistenAll } from "../platform/events";
 import { FILE_RELOADED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
+import { fileTextFor } from "./tracked-file";
 
 // On focus, or when something in the window wrote a file, clean tabs whose
 // file changed on disk reload; dirty tabs wait for the save-time prompt.
@@ -57,7 +58,10 @@ export function useExternalChangeReload(
           if (!live || tabIsDirty(live)) continue;
           // Touched but unchanged (iCloud re-stamps files): a remount would
           // only throw away the open AI conversation.
-          if (content === live.savedContent) {
+          if (
+            content === live.savedContent ||
+            content === fileTextFor(tab.path, live.savedContent)
+          ) {
             updateTab(tab.id, { diskMtime: mtime });
             continue;
           }

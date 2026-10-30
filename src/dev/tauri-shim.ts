@@ -1166,6 +1166,11 @@ export function installDevTauriShim(): void {
         filePath in ((w.__devBinaryFiles ?? {}) as Record<string, string>)
       )
         return Promise.reject("stream did not contain valid UTF-8");
+      // A save of one of them lands there, for a test to read back.
+      if (files && filePath in files && cmd === "write_text_file") {
+        files[filePath] = String((args as { contents?: unknown }).contents);
+        return Promise.resolve(null);
+      }
       if (files && filePath in files) {
         if (cmd === "read_text_file") return Promise.resolve(files[filePath]);
         if (cmd === "file_mtime_ms")

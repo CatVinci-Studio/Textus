@@ -180,6 +180,8 @@ para usar una.
   ownNoteDelete: "Eliminar",
   menuTrackChanges: "Control de mis cambios",
   trackStop: "Dejar de controlar",
+  closedWithUndecided:
+    "Cambios por decidir en {name}: {n}. Se guardan y vuelven cuando lo abras de nuevo.",
   trackStopConfirm:
     "¿Dejar de controlar tus cambios? Se quedan en el texto; solo desaparecen sus marcas.",
   trackAcceptAll: "Aceptar todos mis cambios",

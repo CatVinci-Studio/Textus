@@ -151,6 +151,8 @@ export default {
   ownNoteDelete: "刪除",
   menuTrackChanges: "修訂模式",
   trackStop: "停止修訂",
+  closedWithUndecided:
+    "「{name}」裡還有 {n} 處修改沒有處理。它們已保存，下次開啟時還在。",
   trackStopConfirm: "要停止記錄你的修改嗎？改動會留在內文裡，只是不再標出來。",
   trackAcceptAll: "接受我的全部修改",
   trackRejectAll: "拒絕我的全部修改",

@@ -157,6 +157,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   ownNoteDelete: "삭제",
   menuTrackChanges: "내 변경 내용 추적",
   trackStop: "추적 중지",
+  closedWithUndecided:
+    "{name}에 아직 결정하지 않은 변경 {n}개가 있습니다. 저장되어 있으며 다시 열면 그대로 있습니다.",
   trackStopConfirm:
     "변경 내용 추적을 멈출까요? 변경한 내용은 본문에 남고 표시만 사라집니다.",
   trackAcceptAll: "내 변경 내용 모두 수락",
