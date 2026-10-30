@@ -1,29 +1,29 @@
 import type { Strings } from "../../i18n/strings";
 import type { Permission } from "./manifest";
 
+/** Each permission's words, but `network:<host>`'s. */
+const LABELS: Record<
+  Exclude<Permission, `network:${string}`>,
+  keyof Strings
+> = {
+  "editor.read": "pluginPermEditorRead",
+  "editor.write": "pluginPermEditorWrite",
+  "editor.propose": "pluginPermEditorPropose",
+  "files.read": "pluginPermFilesRead",
+  "files.write": "pluginPermFilesWrite",
+  clipboard: "pluginPermClipboard",
+  "editor.input": "pluginPermEditorInput",
+  "project.data": "pluginPermProjectData",
+  "ai.tools": "pluginPermAiTools",
+  notifications: "pluginPermNotifications",
+  background: "pluginPermBackground",
+};
+
 /** A permission in plain words, as the install dialog and a plugin's page
  *  in Settings name it. */
 export function permissionLabel(permission: Permission, t: Strings): string {
-  switch (permission) {
-    case "editor.read":
-      return t.pluginPermEditorRead;
-    case "editor.write":
-      return t.pluginPermEditorWrite;
-    case "editor.propose":
-      return t.pluginPermEditorPropose;
-    case "files.read":
-      return t.pluginPermFilesRead;
-    case "files.write":
-      return t.pluginPermFilesWrite;
-    case "clipboard":
-      return t.pluginPermClipboard;
-    case "editor.input":
-      return t.pluginPermEditorInput;
-    case "project.data":
-      return t.pluginPermProjectData;
-    case "ai.tools":
-      return t.pluginPermAiTools;
-  }
+  const label = LABELS[permission as keyof typeof LABELS];
+  if (label) return t[label] as string;
   const host = permission.slice("network:".length);
   return host === "*"
     ? t.pluginPermNetworkAny

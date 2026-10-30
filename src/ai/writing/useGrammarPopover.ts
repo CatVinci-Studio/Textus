@@ -12,6 +12,7 @@ import { grammarKind } from "./grammar-kind";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import type { GrammarPopoverInfo } from "./GrammarPopover";
 import type { EditorRunner } from "../../editor/useEditorRunner";
+import { markChangeSource } from "../../editor/change-source";
 
 /** The popover for one underline, placed at (x, y), with where it stands
  *  among the paragraph's other underlines. */
@@ -237,7 +238,12 @@ export function useGrammarPopover(
       ) {
         return;
       }
-      view.dispatch(state.tr.insertText(suggestion, range.from, range.to));
+      view.dispatch(
+        markChangeSource(
+          state.tr.insertText(suggestion, range.from, range.to),
+          "ai",
+        ),
+      );
       view.focus();
       applied = true;
     });

@@ -32,6 +32,7 @@ import { openBeside } from "../app/split/split-layout";
 import { takePluginUris } from "./plugin-uri";
 import { migrateOfficialPlugins } from "./store/migrate-official";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
+import { useSettings } from "../prefs/SettingsContext";
 
 /**
  * A window's side of the plugins: what it tells the manager, what plugins
@@ -67,6 +68,7 @@ export function usePluginWindow({
   const closeRef = useLatest(closeActiveTab);
   const { tabsRef, setTabs, setActiveTabId } = tabState;
   const activeIdRef = useLatest(tabState.activeTabId);
+  const settingsRef = useLatest(useSettings());
 
   useEffect(() => {
     configurePlugins({
@@ -229,6 +231,16 @@ export function usePluginWindow({
     });
   }, []);
   usePluginMenuSync(language);
+  // Plugins' schedules, after startup: background runs, notifications'
+  // clicks, whether Textus is in front.
+  useEffect(() => {
+    let stop: (() => void) | undefined;
+    const connected = import("./background/schedule-window").then(
+      (m) =>
+        (stop = m.connectScheduleWindow(languageRef, settingsRef, openRef)),
+    );
+    return () => void connected.then(() => stop?.());
+  }, [languageRef, settingsRef, openRef]);
 
   return useSyncExternalStore(subscribePlugins, pluginsSnapshot);
 }

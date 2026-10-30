@@ -1545,6 +1545,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermProjectData:
     "Eigene Daten im geöffneten Ordner ablegen, unter .textus/plugins",
   pluginPermAiTools: "Textus AI eigene Werkzeuge geben",
+  pluginPermNotifications: "Systemmitteilungen anzeigen",
+  pluginPermBackground:
+    "Code nach Zeitplan ausführen, auch wenn alle Fenster geschlossen sind",
+  pluginScheduleNotice:
+    "{name} hat etwas geplant. Es läuft nur, solange Textus läuft: schalte „{setting}“ ein, damit es auch bei geschlossenen Fenstern läuft.",
   pluginPermNetwork: "Mit {host} verbinden",
   pluginPermNetworkAny: "Mit beliebigen Websites verbinden",
   menuPlugins: "Plugins",

@@ -1579,6 +1579,11 @@ utiliser une.
   pluginPermProjectData:
     "Garder ses propres données dans le dossier ouvert, dans .textus/plugins",
   pluginPermAiTools: "Donner à Textus AI ses propres outils",
+  pluginPermNotifications: "Afficher des notifications système",
+  pluginPermBackground:
+    "Exécuter du code selon un horaire, même toutes fenêtres fermées",
+  pluginScheduleNotice:
+    "{name} a programmé une tâche. Elle ne s’exécute que lorsque Textus est ouvert : activez « {setting} » pour qu’elle s’exécute aussi toutes fenêtres fermées.",
   pluginPermNetwork: "Se connecter à {host}",
   pluginPermNetworkAny: "Se connecter à n’importe quel site web",
   menuPlugins: "Extensions",

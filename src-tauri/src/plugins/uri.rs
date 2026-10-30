@@ -24,10 +24,23 @@ pub fn deliver(app: &tauri::AppHandle, url: &str) {
     if !is_textus_uri(url) {
         return;
     }
+    // A notification's click (Windows): no plugin id has no dot.
+    #[cfg(desktop)]
+    if let Some(id) = notification_id(url) {
+        crate::schedule::notify::clicked(app, id);
+        return;
+    }
     if let Some(pending) = app.try_state::<PendingUris>() {
         pending.0.lock().unwrap().push(url.to_string());
     }
     let _ = app.emit("plugin-uri", ());
+}
+
+/// `textus://notification/<id>`: a notification's click, not a plugin's link.
+pub fn notification_id(url: &str) -> Option<&str> {
+    let rest = &url[SCHEME.len() + 3..];
+    rest.strip_prefix("notification/")
+        .filter(|id| !id.is_empty() && id.chars().all(|c| c.is_ascii_hexdigit()))
 }
 
 /// Hands the waiting links to the window that asks, and forgets them.
@@ -71,5 +84,13 @@ mod tests {
         assert!(!is_textus_uri("/home/me/textus://x.md"));
         assert!(!is_textus_uri("notes.md"));
         assert!(!is_textus_uri("tex"));
+    }
+
+    #[test]
+    fn a_notifications_click_is_told_from_a_plugins_link() {
+        assert_eq!(notification_id("textus://notification/0af3"), Some("0af3"));
+        assert_eq!(notification_id("textus://notification/"), None);
+        assert_eq!(notification_id("textus://notification/../x"), None);
+        assert_eq!(notification_id("textus://catvinci.zotero/item"), None);
     }
 }

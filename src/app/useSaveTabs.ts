@@ -120,7 +120,11 @@ export function useSaveTabs(opts: {
       });
       // Its past conversations follow it to the new name.
       if (tab.path) moveConversations(tab.path, picked);
-      emitPluginEvent("didSave", { path: picked, text: content });
+      emitPluginEvent("didSave", {
+        path: picked,
+        text: content,
+        trigger: "manual",
+      });
       return true;
     },
     [updateTab, liveTabs, t, autoSuggestFilename, imageFolder, writeOrReport],
@@ -129,14 +133,18 @@ export function useSaveTabs(opts: {
   // tabsRef is patched as well as the state, so a save right behind this one
   // compares against this write's mtime and doesn't see it as external.
   const commitSaved = useCallback(
-    async (tabId: string, path: string, content: string) => {
+    async (tabId: string, path: string, content: string, auto: boolean) => {
       const patch = { savedContent: content, diskMtime: await statMtime(path) };
       tabsRef.current = tabsRef.current.map((tb) =>
         tb.id === tabId && tb.path === path ? { ...tb, ...patch } : tb,
       );
       updateTab(tabId, patch);
       // Plugins listening for saves (version history) are told.
-      emitPluginEvent("didSave", { path, text: content });
+      emitPluginEvent("didSave", {
+        path,
+        text: content,
+        trigger: auto ? "auto" : "manual",
+      });
     },
     [tabsRef, updateTab],
   );
@@ -163,7 +171,7 @@ export function useSaveTabs(opts: {
       }
       const content = await beforeSave(tab.path, tab.content);
       if (!(await writeOrReport(tab.path, content))) return "failed";
-      await commitSaved(tabId, tab.path, content);
+      await commitSaved(tabId, tab.path, content, auto);
       return "saved";
     },
     [liveTabs, t, writeOrReport, commitSaved],

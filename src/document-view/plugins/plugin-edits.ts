@@ -10,6 +10,7 @@ import { replaceWithMarkdown } from "../../ai/revision/apply-edit";
 import { locatePlainText } from "../../ai/revision/text-locate";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import type { DocumentPlace } from "../../plugins/app-bridge";
+import { markChangeSource } from "../../editor/change-source";
 
 /**
  * A plugin's edits to the document in front, placed by block ids in order
@@ -54,7 +55,7 @@ export function applyPluginEdits(ctx: Ctx, edits: EditProposal[]): boolean {
   }
   if (!tr.docChanged) return true;
   closeHistory(tr);
-  view.dispatch(tr.scrollIntoView());
+  view.dispatch(markChangeSource(tr, "plugin").scrollIntoView());
   return true;
 }
 
@@ -173,6 +174,6 @@ export function replaceDocument(ctx: Ctx, markdown: string): boolean {
   for (let i = start; i < endAfter; i++) nodes.push(after.child(i));
   const tr = view.state.tr.replaceWith(from, to, nodes);
   closeHistory(tr);
-  view.dispatch(tr);
+  view.dispatch(markChangeSource(tr, "plugin"));
   return true;
 }

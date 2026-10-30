@@ -108,6 +108,7 @@ import {
 } from "./markdown/source-input-rules";
 import { pasteUrlPlugin } from "./clipboard/paste-url";
 import { ownUndoStepPlugin } from "./clipboard/own-undo-step";
+import { changeSourcePlugin } from "./change-source";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { createLinkHoverPlugin } from "./hover/link-hover-plugin";
 import { createCompletionPlugin } from "./completion/completion-plugin";
@@ -339,6 +340,7 @@ export function withEditorCore(
       // URL, then markdown source, then milkdown's own clipboard plugin.
       .use(history)
       .use(ownUndoStepPlugin)
+      .use(changeSourcePlugin)
       .use(
         "noDiskImages" in options
           ? options.noDiskImages

@@ -23,6 +23,16 @@ import {
   type PluginDecoration,
 } from "../contributions/decorations";
 import { optionalStr, type Params, type PluginScope } from "./broker-scope";
+import { FILE_RELOADED_EVENT } from "../../utils/events";
+import { emitPluginEvent } from "../app-bridge";
+
+// The document in front read again from disk: plugins hear its new text
+// came from there. Its editor remounts, so it reports no change itself.
+window.addEventListener(FILE_RELOADED_EVENT, (e) => {
+  const path = (e as CustomEvent<string>).detail;
+  if (getActiveDocument()?.path === path)
+    emitPluginEvent("documentChange", { path, source: "disk" });
+});
 
 let proposalCounter = 0;
 

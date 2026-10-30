@@ -1543,6 +1543,11 @@ export default {
   pluginPermProjectData:
     "Хранить свои данные в открытой папке, в .textus/plugins",
   pluginPermAiTools: "Давать Textus AI свои инструменты",
+  pluginPermNotifications: "Показывать системные уведомления",
+  pluginPermBackground:
+    "Запускать код по расписанию, даже когда все окна закрыты",
+  pluginScheduleNotice:
+    "{name} запланировал задачу. Она выполняется, только пока Textus запущен: включите «{setting}», чтобы она выполнялась и при закрытых окнах.",
   pluginPermNetwork: "Подключаться к {host}",
   pluginPermNetworkAny: "Подключаться к любым сайтам",
   menuPlugins: "Плагины",

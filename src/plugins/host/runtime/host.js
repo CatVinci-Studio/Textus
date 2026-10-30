@@ -10,7 +10,7 @@
 /* global createEndpoint */
 (function () {
   "use strict";
-  var API_VERSION = "1.0";
+  var API_VERSION = "1.1";
   var app = null;
   var waiting = [];
   var module = { exports: {} };
@@ -904,7 +904,58 @@
         });
       },
     },
+    // Jobs Rust keeps and fires on time, with Textus's windows open or not.
+    schedule: {
+      set: function (id, job) {
+        return call("schedule.set", { id: String(id), job: plain(job) });
+      },
+      clear: function (id) {
+        return call("schedule.clear", { id: String(id) });
+      },
+      list: function () {
+        return call("schedule.list");
+      },
+    },
+    notify: {
+      show: function (notification) {
+        return call("notify.show", plain(notification));
+      },
+    },
+    app: {
+      // Kept up to date from the first time it is read.
+      get state() {
+        if (!listeners.has("appState")) on("appState")(function () {});
+        return env.appState || "active";
+      },
+      onDidChangeState: on("appState"),
+    },
   };
+
+  // Background code has no editor, UI or layout to reach.
+  if (window.__textusBackground)
+    [
+      "editor",
+      "ui",
+      "layout",
+      "views",
+      "commands",
+      "metadata",
+      "export",
+      "uri",
+      "ai",
+      "plugins",
+    ].forEach(function (name) {
+      textus[name] = new Proxy(
+        {},
+        {
+          get: function () {
+            throw new Error(
+              "textus." + name + " is not available in background code.",
+            );
+          },
+        },
+      );
+    });
 
   // ---------------------------------------------------------------
   // What the window asks of the plugin
@@ -1094,8 +1145,28 @@
         dispose();
       });
     },
+    // A scheduled job's `run`: the background code's export of that name,
+    // given the job and a context of its own.
+    $runJob: async function (params) {
+      var run = module.exports && module.exports[params.run];
+      if (typeof run !== "function")
+        throw new Error("The background code exports no " + params.run + ".");
+      var ctx = makeContext();
+      try {
+        await run({ id: params.job, due: new Date(params.due) }, ctx);
+      } finally {
+        ctx.subscriptions.splice(0).forEach(function (item) {
+          try {
+            item.dispose();
+          } catch (err) {
+            console.error(err);
+          }
+        });
+      }
+    },
     $event: function (params) {
       if (params.name === "theme") env.theme = params.data;
+      if (params.name === "appState") env.appState = params.data;
       if (params.name === "language") env.language = params.data;
       var set = listeners.get(params.name);
       if (set)

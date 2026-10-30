@@ -91,3 +91,6 @@ export const ZEN_MODE_EVENT = "textus:zen-mode";
 /** A file was written from inside the window, not by its tab's save
  *  (detail: its path); open tabs of it check the disk. */
 export const FILE_WRITTEN_EVENT = "textus:file-written";
+
+/** A tab took its file's new text from disk (detail: its path). */
+export const FILE_RELOADED_EVENT = "textus:file-reloaded";

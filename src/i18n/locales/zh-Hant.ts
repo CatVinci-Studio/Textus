@@ -1409,6 +1409,10 @@ export default {
   pluginPermEditorInput: "接管你在編輯器裡的按鍵，並按你的按鍵直接編輯",
   pluginPermProjectData: "在開啟的資料夾裡（.textus/plugins）儲存它自己的資料",
   pluginPermAiTools: "為 Textus AI 提供它自己的工具",
+  pluginPermNotifications: "顯示系統通知",
+  pluginPermBackground: "按排程執行程式碼，關閉所有視窗後也會執行",
+  pluginScheduleNotice:
+    "「{name}」排定了定時工作。它只在 Textus 執行時進行：開啟「{setting}」，關閉所有視窗後也會進行。",
   pluginPermNetwork: "連線至 {host}",
   pluginPermNetworkAny: "連線至任何網站",
   menuPlugins: "外掛程式",

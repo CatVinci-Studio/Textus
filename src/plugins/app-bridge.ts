@@ -1,6 +1,8 @@
 import type { SentBlock } from "../ai/doc-blocks";
 import { moveDocumentData } from "./store/document-data";
 import type { EditProposal } from "../ai/types";
+import type { ChangeSource } from "../editor/change-source";
+import type { AppState } from "../platform/ipc-schedule";
 
 /** Where something opens: a tab of its own, beside the front tab, or in its place. */
 export type Where = "tab" | "beside" | "current";
@@ -144,10 +146,12 @@ export function getWindowAccess(): WindowAccess | null {
 
 /** What plugins can be told of: the event's name and what it carries. */
 export interface PluginEventMap {
-  didSave: { path: string; text: string };
+  /** `trigger`: File › Save (or Save As) is "manual", autosave "auto". */
+  didSave: { path: string; text: string; trigger: "manual" | "auto" };
   activeDocument: { path: string | null };
-  /** The document in front changed, once typing paused. */
-  documentChange: { path: string | null };
+  /** The document in front changed, once typing paused; `source` says who
+   *  changed it (the user's wins when several did meanwhile). */
+  documentChange: { path: string | null; source: ChangeSource };
   selection: { text: string };
   activeTab: PluginTabInfo | null;
   layout: null;
@@ -164,6 +168,8 @@ export interface PluginEventMap {
   settings: { key: string; value: unknown };
   /** A key the editor handed the plugin holding the keyboard, to it only. */
   editorKey: string;
+  /** A Textus window came to the front, went behind, or the last closed. */
+  appState: AppState;
 }
 
 type Listener<K extends keyof PluginEventMap> = (

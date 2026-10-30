@@ -20,6 +20,7 @@ import type { SentBlock } from "../ai/doc-blocks";
 import { namedCall, settledArguments, settledTurns } from "./settle-calls";
 import { forgetShimSecrets, pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";
+import { makeDevSchedule } from "./schedule-shim";
 
 /** The built-in skills as `list_skills` reports them (descriptions abridged). */
 const DEV_BUILTIN_SKILLS: [string, string, string, string, string][] = [
@@ -764,6 +765,15 @@ export function installDevTauriShim(): void {
       ),
     ));
   const encoded = (text: string) => new TextEncoder().encode(text).buffer;
+  // Plugins' jobs and notifications: `window.__devSchedule` fires and clicks.
+  const schedule = makeDevSchedule({
+    allows: (plugin, permission) =>
+      pluginState.allOn &&
+      !!pluginState.plugins[plugin]?.enabled &&
+      !!pluginState.plugins[plugin]?.granted.includes(permission),
+    emit: (event, payload) => emitSoon(event, payload),
+  });
+  w.__devSchedule = schedule.devSchedule;
   function pluginCommand(
     cmd: string,
     args: Record<string, unknown> = {},
@@ -789,6 +799,8 @@ export function installDevTauriShim(): void {
         !!pluginState.plugins[id]?.granted.includes(permission),
     });
     if (api) return api;
+    const scheduled = schedule.command(cmd, args);
+    if (scheduled) return scheduled;
     const fileText = (p: string) =>
       p in binary
         ? Promise.resolve(

@@ -28,6 +28,7 @@ import { PluginCodeBlock } from "../../plugins/views/plugin-views";
 import { webviewPicture } from "../../plugins/views/webviews";
 import { setDrawnBlocks } from "../../export/drawn-blocks";
 import "./plugin-code-blocks.css";
+import { markChangeSource } from "../../editor/change-source";
 
 const key = new PluginKey<DecorationSet>("plugin-code-blocks");
 const BLOCK_CLASS = "plugin-code-block";
@@ -201,10 +202,13 @@ function setSource(
   if (node?.type.name !== "code_block") return false;
   const start = end - node.nodeSize;
   view.dispatch(
-    view.state.tr.replaceWith(
-      start + 1,
-      end - 1,
-      source ? view.state.schema.text(source) : Fragment.empty,
+    markChangeSource(
+      view.state.tr.replaceWith(
+        start + 1,
+        end - 1,
+        source ? view.state.schema.text(source) : Fragment.empty,
+      ),
+      "plugin",
     ),
   );
   return true;

@@ -26,6 +26,8 @@ export type Permission =
   | "editor.input"
   | "project.data"
   | "ai.tools"
+  | "notifications"
+  | "background"
   | `network:${string}`;
 
 const PLAIN_PERMISSIONS = [
@@ -38,6 +40,8 @@ const PLAIN_PERMISSIONS = [
   "editor.input",
   "project.data",
   "ai.tools",
+  "notifications",
+  "background",
 ] as const;
 
 export function isPermission(value: unknown): value is Permission {
@@ -223,6 +227,9 @@ export interface PluginManifest {
   engine: string;
   /** Its code, run in the plugin host; none for a themes-only plugin. */
   main?: string[];
+  /** Code its scheduled jobs run, apart from `main` and without the editor
+   *  or UI; it runs only with the background permission granted. */
+  background?: string;
   activationEvents: string[];
   permissions: Permission[];
   requires: Requirement[];
@@ -280,6 +287,7 @@ export function parseManifest(raw: string | unknown): PluginManifest {
     repository: text(m.repository, "repository", true) || undefined,
     engine: text(engines.textus, "engines.textus"),
     main: parseMain(m.main),
+    background: text(m.background, "background", true) || undefined,
     activationEvents: list(m.activationEvents, "activationEvents").map((e, i) =>
       text(e, `activationEvents[${i}]`),
     ),

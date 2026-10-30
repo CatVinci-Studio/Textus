@@ -65,6 +65,10 @@
         }
       ]
     },
+    "background": {
+      "description": "Code that scheduled jobs with `run` call, with no editor or UI (API 1.1). Needs the \"background\" permission.",
+      "type": "string"
+    },
     "activationEvents": {
       "type": "array",
       "items": {
@@ -87,7 +91,9 @@
               "files.write",
               "clipboard",
               "project.data",
-              "ai.tools"
+              "ai.tools",
+              "notifications",
+              "background"
             ]
           },
           {

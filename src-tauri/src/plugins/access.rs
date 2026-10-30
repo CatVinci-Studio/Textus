@@ -16,7 +16,7 @@ const MAX_READ_BYTES: u64 = 256 * 1024 * 1024;
 /// The most a response from the network may be.
 const MAX_HTTP_BYTES: usize = 32 * 1024 * 1024;
 
-pub(super) fn refused(id: &str, permission: &str) -> String {
+pub(crate) fn refused(id: &str, permission: &str) -> String {
     format!("{id} was not granted {permission}.")
 }
 
