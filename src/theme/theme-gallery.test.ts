@@ -2,13 +2,19 @@ import { describe, expect, it, vi } from "vitest";
 import type { UserThemeMeta } from "../prefs/SettingsContext";
 import {
   galleryStatus,
+  installGalleryTheme,
   installedCopy,
   isNewer,
   type GalleryTheme,
 } from "./theme-gallery";
 import { withUserTheme } from "./theme-import";
 
-vi.mock("../platform/ipc", () => ({ themeGallery: {}, themes: {}, fs: {} }));
+const ipc = vi.hoisted(() => ({
+  themeGallery: { css: vi.fn(async (path: string) => `/* ${path} */`) },
+  themes: { saveThemeCss: vi.fn(async () => null) },
+  fs: {},
+}));
+vi.mock("../platform/ipc", () => ipc);
 
 const theme = (updated: string): GalleryTheme => ({
   id: "lumen",
@@ -22,6 +28,8 @@ const theme = (updated: string): GalleryTheme => ({
   css: "themes/lumen/theme.css",
   darkCss: null,
   previews: [],
+  installs: null,
+  installs30: null,
 });
 
 const installed = (updated: string): UserThemeMeta => ({
@@ -32,6 +40,27 @@ const installed = (updated: string): UserThemeMeta => ({
 });
 
 describe("theme gallery", () => {
+  it("counts an install once, by its stylesheet, and an update as one", async () => {
+    const dark = {
+      ...theme("2026-10-18T00:00:00Z"),
+      darkCss: "themes/lumen/theme-dark.css",
+    };
+    await installGalleryTheme(dark);
+    await installGalleryTheme(dark, installed("2026-10-17T00:00:00Z"));
+    expect(ipc.themeGallery.css.mock.calls).toEqual([
+      [
+        "themes/lumen/theme.css",
+        { version: "2026-10-18T00:00:00Z", update: false },
+      ],
+      ["themes/lumen/theme-dark.css"],
+      [
+        "themes/lumen/theme.css",
+        { version: "2026-10-18T00:00:00Z", update: true },
+      ],
+      ["themes/lumen/theme-dark.css"],
+    ]);
+  });
+
   it("offers Install for a theme with no installed copy", () => {
     expect(galleryStatus(theme("2026-10-17T00:00:00Z"), undefined)).toBe(
       "install",

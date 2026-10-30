@@ -53,6 +53,7 @@ const t = {
   themeGetMore: "Get more themes",
   privacyClearButton: "Clear",
   privacyClearClipboard: "Clear Clipboard History",
+  privacyStatsToggle: "Send anonymous install counts",
   pdfPageNumbersLabel: "Show page numbers in exports",
   aboutTextus: "About Textus",
   aboutMadeBy: "Made by CatVinci Studio",
@@ -318,6 +319,26 @@ test.describe("desktop", () => {
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
   });
+  test("anonymous install counts are on until turned off in Privacy", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    const panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.navPrivacy }).click();
+    const counts = panel.getByLabel(t.privacyStatsToggle, { exact: true });
+    await expect(counts).toBeChecked();
+    await counts.uncheck();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}")
+              .anonymousStats,
+        ),
+      )
+      .toBe(false);
+  });
+
   test("a beta set back to Stable can go back to the stable version", async ({
     page,
   }) => {

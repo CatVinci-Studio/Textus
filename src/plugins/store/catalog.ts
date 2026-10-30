@@ -33,8 +33,10 @@ export interface CatalogItem {
   /** Whether it has a README for its page (pluginReadme). */
   hasReadme: boolean;
   icon?: string;
-  /** Its packages' downloads, every version's; unknown when uncounted. */
+  /** How many devices installed it, ever and in the last 30 days (not
+   *  reinstalls or updates); unknown when uncounted. */
   installs?: number;
+  installs30?: number;
   /** Its latest version's date, YYYY-MM-DD. */
   updated?: string;
 }
@@ -83,6 +85,7 @@ function item(entry: PluginCatalogEntry): CatalogItem | null {
       hasReadme: Object.keys(entry.readme).length > 0,
       icon: entry.icon ?? undefined,
       installs: entry.installs ?? undefined,
+      installs30: entry.installs30 ?? undefined,
       updated: entry.updated ?? undefined,
     };
   } catch {

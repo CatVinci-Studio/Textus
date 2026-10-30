@@ -1315,6 +1315,10 @@ para usar una.
   privacyClearChatHistory: "Borrar historial de chats",
   privacyClearClipboard: "Borrar historial del portapapeles",
   privacyClearDrafts: "Eliminar borradores de recuperación",
+  privacyStatsLabel: "Recuento de instalaciones",
+  privacyStatsToggle: "Enviar recuentos de instalación anónimos",
+  privacyStatsHelp:
+    "Cuando instalas, actualizas o quitas un plugin, tema o habilidad, Textus lo cuenta para las cifras de instalación de la tienda: solo qué extensión, qué ocurrió, tu sistema y la versión de Textus, nada que te identifique a ti ni a este dispositivo. Si lo desactivas, las extensiones se descargan directamente de GitHub y no se envía nada.",
   clipboardTab: "Portapapeles",
   clipboardEmpty: "El texto que copies y pegues aparecerá aquí.",
   clipboardClear: "Borrar",

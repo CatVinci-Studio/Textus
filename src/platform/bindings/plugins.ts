@@ -185,8 +185,12 @@ export type CatalogEntry_Deserialize = {
 	readme?: { [key in string]: string },
 	/**  Its icon (SVG or PNG), from the repository's releases. */
 	icon?: string | null,
-	/**  How many times its packages were downloaded, every version's. */
+	/**
+	 *  How many devices installed it, ever and in the last 30 days (counted
+	 *  by services/ext-stats; not reinstalls or updates).
+	 */
 	installs?: number | null,
+	installs30?: number | null,
 	/**  When its first and latest versions came out (YYYY-MM-DD). */
 	published?: string | null,
 	updated?: string | null,
@@ -214,8 +218,12 @@ export type CatalogEntry_Serialize = {
 	readme: { [key in string]: string },
 	/**  Its icon (SVG or PNG), from the repository's releases. */
 	icon: string | null,
-	/**  How many times its packages were downloaded, every version's. */
+	/**
+	 *  How many devices installed it, ever and in the last 30 days (counted
+	 *  by services/ext-stats; not reinstalls or updates).
+	 */
 	installs: number | null,
+	installs30: number | null,
 	/**  When its first and latest versions came out (YYYY-MM-DD). */
 	published: string | null,
 	updated: string | null,
@@ -356,6 +364,9 @@ export type SkillEntry_Deserialize = {
 	url: string,
 	sha256: string,
 	size: number,
+	/**  As a plugin's. */
+	installs?: number | null,
+	installs30?: number | null,
 };
 
 /**  One skill in the catalog, listed beside the plugins in the market. */
@@ -379,6 +390,9 @@ export type SkillEntry_Serialize = {
 	url: string,
 	sha256: string,
 	size: number,
+	/**  As a plugin's. */
+	installs: number | null,
+	installs30: number | null,
 };
 
 /**  A skill's name and one-line hint in one UI language. */

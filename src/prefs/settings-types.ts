@@ -89,7 +89,8 @@ export interface UserThemeMeta {
   name: string;
   hasDark: boolean;
   /// Set when installed from the theme gallery, so a newer one shows as an
-  /// update. Rust reads only `id` and `hasDark`.
+  /// update. Rust reads only `id`, `hasDark` and, to count an uninstall,
+  /// `gallery` (commands/themes.rs).
   gallery?: GalleryOrigin;
 }
 
@@ -287,6 +288,9 @@ export interface Settings {
   /** Closing a window with unsaved changes keeps them as drafts for the next
    *  launch instead of asking. Needs enableDraftRecovery. */
   keepUnsavedOnClose: boolean;
+  /** Plugin, theme and skill downloads go through the anonymous install
+   *  counter (services/ext-stats). Rust reads it. */
+  anonymousStats: boolean;
   /** Closing the last window leaves the process running with a tray icon.
    *  Desktop only; Rust reads it. */
   runInBackground: boolean;
@@ -367,5 +371,6 @@ export const DEFAULT_SETTINGS: Settings = {
   enableClipboardHistory: true,
   enableDraftRecovery: true,
   keepUnsavedOnClose: false,
+  anonymousStats: true,
   runInBackground: false,
 };
