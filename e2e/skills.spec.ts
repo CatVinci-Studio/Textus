@@ -177,10 +177,18 @@ test.describe("the @ picker", () => {
   });
 });
 
-/** Settings › Extensions › Skills, where the built-ins on are listed. */
+/** Settings › Extensions › Skills, where the user's own skills are. */
 async function openSkillsTab(panel: Locator) {
   await panel.locator(".settings-nav-item", { hasText: "Extensions" }).click();
   await panel.getByRole("tab", { name: "Skills" }).click();
+}
+
+/** Settings › Textus AI › Built-in skills, unfolded. */
+async function openBuiltins(panel: Locator) {
+  await panel.locator(".settings-nav-item", { hasText: AI_NAME }).click();
+  const builtins = panel.locator(".settings-builtin-skills");
+  await builtins.locator("summary").click();
+  return builtins;
 }
 
 test.describe("Settings › Extensions › Skills", () => {
@@ -195,15 +203,18 @@ test.describe("Settings › Extensions › Skills", () => {
     );
     await input.fill("");
     const panel = await openSettings(page);
-    await openSkillsTab(panel);
-    const tab = panel.getByRole("tabpanel");
-    // No switch on a built-in: it says it is built in, under its mode.
-    const proofread = tab.locator('[data-skill="proofread"]');
+    // No switch on a built-in: it says it is built in, under its mode, with
+    // Textus AI's settings rather than among the skills added.
+    const builtins = await openBuiltins(panel);
+    const proofread = builtins.locator('[data-skill="proofread"]');
     await expect(proofread).toContainText("Built-in");
     await expect(proofread.getByRole("checkbox")).toHaveCount(0);
     await expect(
-      tab.getByRole("group", { name: "Review" }).locator("[data-skill]"),
+      builtins.getByRole("group", { name: "Review" }).locator("[data-skill]"),
     ).toHaveCount(1);
+    await openSkillsTab(panel);
+    const tab = panel.getByRole("tabpanel");
+    await expect(tab.locator('[data-skill="proofread"]')).toHaveCount(0);
     // The user's skill: in Write; its modes are ticked in a menu, several at
     // once, and the last can't be unticked.
     const own = tab.locator('.settings-skill-item[data-skill="house-style"]');
@@ -235,7 +246,7 @@ test.describe("Settings › Extensions › Skills", () => {
   }) => {
     await openApp(page, { settings: { language: "en" } });
     let panel = await openSettings(page);
-    await openSkillsTab(panel);
+    await openBuiltins(panel);
     await panel.getByRole("button", { name: "Customize…: Proofread" }).click();
     // Settings gives way to the copy, opened as a document.
     await expect(page.locator(".settings-panel")).toHaveCount(0);
@@ -244,14 +255,9 @@ test.describe("Settings › Extensions › Skills", () => {
     ).toContainText("proofread");
 
     panel = await openSettings(page);
-    await openSkillsTab(panel);
-    const builtins = panel.getByRole("tabpanel");
+    const builtins = await openBuiltins(panel);
     const row = builtins.locator('[data-skill="proofread"]');
     await expect(row).toContainText("Customized");
-    // The copy shows here only, not again among the user's own skills.
-    await expect(panel.locator(".settings-skill-list")).not.toContainText(
-      "/proofread",
-    );
     await row.getByRole("button", { name: "Reset: Proofread" }).click();
     const confirm = page.getByRole("dialog", { name: /Delete your copy/ });
     await expect(confirm).toContainText("“Proofread”");
@@ -281,8 +287,7 @@ test.describe("Settings › Extensions › Skills", () => {
       skills.outdated.add("theme");
     });
     const panel = await openSettings(page);
-    await openSkillsTab(panel);
-    const row = panel.getByRole("tabpanel").locator('[data-skill="theme"]');
+    const row = (await openBuiltins(panel)).locator('[data-skill="theme"]');
     await expect(row.locator(".settings-skill-tag-notice")).toHaveText(
       "Built-in updated",
     );

@@ -3,11 +3,7 @@ import type { SettingsPageProps } from "./types";
 import { PluginsPage } from "./PluginsPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
 import { ThemesTab } from "../sections/theme";
-import {
-  BuiltinSkillsSection,
-  OwnSkillsList,
-  importSkill,
-} from "../sections/skills";
+import { OwnSkillsList, importSkill } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
 import { AvailableSkills } from "../sections/market-skills";
 import {
@@ -32,7 +28,7 @@ const TABS = extensionsTabs();
  * Desktop only, as plugins are.
  */
 export function ExtensionsPage(props: SettingsPageProps) {
-  const { t, onOpenFile, onFilesDeleted, onClose } = props;
+  const { t } = props;
   const [tab, setTabState] = useState<ExtensionsTab>(extensionsStartTab);
   const [skillError, setSkillError] = useState<string | null>(null);
   const [skillQuery, setSkillQuery] = useState("");
@@ -50,7 +46,6 @@ export function ExtensionsPage(props: SettingsPageProps) {
     skills: t.extensionsTabSkills,
     mcp: t.extensionsTabMcp,
   };
-  const skillProps = { t, onOpenFile, onFilesDeleted, onClose };
   return (
     <>
       <div
@@ -94,16 +89,9 @@ export function ExtensionsPage(props: SettingsPageProps) {
               ]}
               error={skillError}
               installedTitle={t.pluginsInstalledGroup}
-              installed={
-                <>
-                  <OwnSkillsList t={t} query={skillQuery} />
-                  <BuiltinSkillsSection
-                    {...skillProps}
-                    query={skillQuery}
-                    flat
-                  />
-                </>
-              }
+              // Only the skills added here; each mode's own, always on,
+              // are under Textus AI.
+              installed={<OwnSkillsList t={t} query={skillQuery} />}
               available={
                 <AvailableSkills t={t} catalog={catalog} query={skillQuery} />
               }

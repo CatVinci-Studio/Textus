@@ -241,14 +241,14 @@ export function AiPage({
                 )}
               </SettingsGroup>
 
-              {isIOSApp && (
-                <BuiltinSkillsSection
-                  t={t}
-                  onOpenFile={onOpenFile}
-                  onFilesDeleted={onFilesDeleted}
-                  onClose={onClose}
-                />
-              )}
+              {/* Each mode's own skills, always on: with the modes, not
+                  among the skills added in Extensions. */}
+              <BuiltinSkillsSection
+                t={t}
+                onOpenFile={onOpenFile}
+                onFilesDeleted={onFilesDeleted}
+                onClose={onClose}
+              />
             </>
           )}
 

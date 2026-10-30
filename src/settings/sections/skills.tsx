@@ -187,19 +187,14 @@ const MODE_LABEL: Record<AgentMode, TextKey> = {
 };
 
 /// The built-in skills by mode, always on. Customize… copies one into the
-/// global skills folder and opens it; Reset deletes the copy. `flat` drops
-/// the disclosure.
+/// global skills folder and opens it; Reset deletes the copy.
 export function BuiltinSkillsSection({
   t,
-  query = "",
-  flat,
   onOpenFile,
   onFilesDeleted,
   onClose,
 }: {
   t: Strings;
-  query?: string;
-  flat?: boolean;
   onOpenFile: (path: string) => void;
   onFilesDeleted?: (paths: string[]) => void;
   onClose: () => void;
@@ -267,11 +262,7 @@ export function BuiltinSkillsSection({
       )}
       {AGENT_MODES.map((mode) => ({
         mode,
-        names: BUILTIN_SKILLS.filter(
-          (s) =>
-            s.mode === mode &&
-            matchesWords(`${s.name}\n${skillText(lang, s.name).label}`, query),
-        ),
+        names: BUILTIN_SKILLS.filter((s) => s.mode === mode),
       }))
         .filter(({ names }) => names.length > 0)
         .map(({ mode, names }) => (
@@ -367,7 +358,6 @@ export function BuiltinSkillsSection({
         ))}
     </>
   );
-  if (flat) return rows;
   return (
     <details className="settings-advanced settings-builtin-skills">
       <summary>
