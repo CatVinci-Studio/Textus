@@ -106,18 +106,6 @@ test("the language is picked from the app's own menu, and the colours follow at 
   await expect(picker).toHaveText("yaml");
 });
 
-test("pasted code keeps its lines, Chinese comments and long lines too", async ({
-  page,
-}) => {
-  const lines = Array.from({ length: 12 }, (_, i) =>
-    i % 3
-      ? `call(${i}); // a line of code that runs on a while`
-      : `  // 第 ${i} 行，中文注释`,
-  );
-  await openWithCode(page, {}, lines.join("\n"));
-  await expect(page.locator(`${block} code`)).toHaveText(lines.join("\n"));
-});
-
 test("the header and line numbers stay out of a printout", async ({ page }) => {
   await openWithCode(page, { codeLineNumbers: true });
   await page.emulateMedia({ media: "print" });

@@ -8,7 +8,8 @@ const ORIGINAL =
 /**
  * The grey completion goes the moment what it continues changes, and a reply
  * that comes after the text moved on is dropped. Typing its own next letters
- * keeps the rest; none is asked for where there's no prose, as after a diagram.
+ * keeps the rest. When one is asked for is tested in vitest
+ * (src/ai/writing/ghost-text-requests.test.ts).
  */
 
 const CANNED = " and this ghost text is a canned dev-shim suggestion.";
@@ -212,107 +213,4 @@ test("a reply landing while a Textus AI edit is on show is dropped", async ({
   await release(page, 0);
   await page.waitForTimeout(200);
   await expect(page.locator(".ghost-text")).toHaveCount(0);
-});
-
-test("no completion is asked for right after a diagram with no prose, and the app's language goes along", async ({
-  page,
-}) => {
-  // The Chinese UI, openApp's default.
-  await openApp(page);
-  await mockInvoke(page, { ai_complete: "继续写" });
-  const calls = () =>
-    page.evaluate(() =>
-      (
-        (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
-          .__devInvokeCalls ?? []
-      ).filter((c) => c.cmd === "ai_complete"),
-    );
-  await pasteMarkdown(page, "```mermaid\ngraph TD\n  A-->B\n```\n\nx");
-  await page.locator(".milkdown p", { hasText: "x" }).click();
-  await page.keyboard.press("End");
-  await page.keyboard.press("Backspace");
-  await page.waitForTimeout(1200);
-  expect(await calls()).toEqual([]);
-  await expect(page.locator(".ghost-text")).toHaveCount(0);
-  await page.keyboard.type("图");
-  await expect.poll(async () => (await calls()).length).toBe(1);
-  const [call] = (await calls()) as unknown as {
-    before: string;
-    hints: { prose: string; uiLanguage: string };
-  }[];
-  expect(call.before).toContain("graph TD");
-  expect(call.hints.prose).toBe("图");
-  expect(call.hints.uiLanguage).toBe("zh");
-});
-
-test("typing in a code block asks for no completion", async ({ page }) => {
-  await openApp(page);
-  await mockInvoke(page, { ai_complete: "x = 1" });
-  await pasteMarkdown(page, "```js\nconst total = count\n```\n\n后面");
-  await page.locator(".milkdown pre code").click();
-  await page.keyboard.press("End");
-  await page.keyboard.type("er");
-  await page.waitForTimeout(1200);
-  expect(await completeCalls(page)).toHaveLength(0);
-  await expect(page.locator(".ghost-text")).toHaveCount(0);
-});
-
-const completeCalls = (page: Page) =>
-  page.evaluate(() =>
-    (
-      (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
-        .__devInvokeCalls ?? []
-    ).filter((c) => c.cmd === "ai_complete"),
-  ) as Promise<unknown[]>;
-
-test("mid-document, at a paragraph's end, a completion leads into what follows", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await mockInvoke(page, { ai_complete: " out before dawn." });
-  await pasteMarkdown(page, "The tide went\n\nThe boats came back at dusk.");
-  await page.locator(".milkdown p", { hasText: "The tide went" }).click();
-  await page.keyboard.press("End");
-  await page.keyboard.type(" ");
-  await expect(page.locator(".ghost-text")).toHaveCount(1);
-  const [call] = (await completeCalls(page)) as { after: string }[];
-  expect(call.after).toContain("The boats came back at dusk.");
-});
-
-test("a pause asks once it has lasted, and an empty new paragraph asks nothing", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await mockInvoke(page, { ai_complete: " out before dawn." });
-  await pasteMarkdown(page, "The tide went");
-  await page.locator(".milkdown p", { hasText: "The tide went" }).click();
-  await page.keyboard.press("End");
-  await page.keyboard.type(" o");
-  // Still a breath between words.
-  await page.waitForTimeout(400);
-  expect(await completeCalls(page)).toHaveLength(0);
-  await expect.poll(async () => (await completeCalls(page)).length).toBe(1);
-  await page.keyboard.press("Escape");
-  await page.keyboard.press("End");
-  await page.keyboard.press("Enter");
-  await page.waitForTimeout(1200);
-  expect(await completeCalls(page)).toHaveLength(1);
-  await expect(page.locator(".ghost-text")).toHaveCount(0);
-});
-
-test("right after a full stop or a comma nothing is asked for; after a word it is", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await mockInvoke(page, { ai_complete: " the boats came in." });
-  await pasteMarkdown(page, "The tide went out");
-  await page.locator(".milkdown p", { hasText: "The tide went out" }).click();
-  await page.keyboard.press("End");
-  for (const mark of [". ", ","]) {
-    await page.keyboard.type(mark);
-    await page.waitForTimeout(1200);
-    expect(await completeCalls(page)).toHaveLength(0);
-  }
-  await page.keyboard.type(" and");
-  await expect.poll(async () => (await completeCalls(page)).length).toBe(1);
 });

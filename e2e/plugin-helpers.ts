@@ -85,9 +85,15 @@ export async function openWithPlugins(
   });
 }
 
-/** Opens `path` as Open Recent would. */
-export const openPath = (page: Page, path: string) =>
-  page.evaluate(
+/** Opens `path` as Open Recent would, once the window listens for it: sent
+ *  before, the event is lost and the file never opens. */
+export async function openPath(page: Page, path: string) {
+  await page.waitForFunction(() =>
+    (
+      window as unknown as { __devListening: (n: string) => boolean }
+    ).__devListening("menu-open-recent"),
+  );
+  await page.evaluate(
     (p) =>
       (
         window as unknown as {
@@ -96,6 +102,7 @@ export const openPath = (page: Page, path: string) =>
       ).__devEmitTauriEvent("menu-open-recent", p),
     path,
   );
+}
 
 /** Opens the sidebar on the tab called `name`; its plugin's frame. */
 export async function openSidebarTab(page: Page, name: string) {

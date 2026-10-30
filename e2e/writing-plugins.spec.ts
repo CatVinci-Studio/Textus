@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { selectionRead } from "./helpers";
 import {
   hasPlugin,
   openPath,
@@ -174,6 +175,11 @@ test("Bookmarks keeps the words selected, listed in the sidebar", async ({
   await page.locator(`${editor} p`).click();
   await page.keyboard.press("End");
   await page.keyboard.press("Shift+Home");
+  // The command reads the editor's selection: once the editor has it.
+  await expect
+    .poll(() => page.evaluate(() => getSelection()?.toString()))
+    .toBe("A remarkable sentence here.");
+  await selectionRead(page);
   await run(page, "catvinci.bookmarks.add");
   const list = await openSidebarList(page, "Bookmarks");
   await expect(list).toContainText("A remarkable sentence here.");

@@ -39,7 +39,7 @@ const HEADING_KINDS: [HeadingAction, string][] = [
 
 /** The native menu's fixed accelerators, for Linux, where the hidden menu
  *  bar doesn't fire them. Keep in step with the Rust menu. */
-const LINUX_MENU_ACCELERATORS: Record<string, string> = {
+export const LINUX_MENU_ACCELERATORS: Record<string, string> = {
   "mod+shift+s": "save-file-as",
   "mod+=": "zoom-in",
   "mod++": "zoom-in",
@@ -52,7 +52,7 @@ const LINUX_MENU_ACCELERATORS: Record<string, string> = {
 
 /** File commands routed through the backend where the app draws the window
  *  frame, so they work while focus is in the webview. */
-const WEBVIEW_FILE_COMMANDS: Record<string, string> = {
+export const WEBVIEW_FILE_COMMANDS: Record<string, string> = {
   "mod+t": "new-file",
   "mod+n": "new-window",
   "mod+shift+t": "reopen-closed-tab",

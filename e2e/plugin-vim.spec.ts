@@ -30,6 +30,11 @@ const keys = async (page: Page, sequence: string[]) => {
   for (const key of sequence) await page.keyboard.press(key);
 };
 
+/** Waits for the mode a key switched to: the plugin takes the keys of the
+ *  new mode a moment after, and a key sent before goes to the old one. */
+const inMode = (page: Page, mode: "NORMAL" | "INSERT") =>
+  expect(page.locator(status)).toContainText(mode);
+
 const firstParagraph = (page: Page) => page.locator(`${editor} p`).first();
 
 test("normal mode's keys move and edit, and never type", async ({ page }) => {
@@ -50,10 +55,10 @@ test("insert mode types, Escape goes back, and dot repeats a change", async ({
 }) => {
   await open(page, "alpha beta gamma delta");
   await keys(page, ["i"]);
-  await expect(page.locator(status)).toContainText("INSERT");
+  await inMode(page, "INSERT");
   await page.keyboard.type("X ");
   await keys(page, ["Escape"]);
-  await expect(page.locator(status)).toContainText("NORMAL");
+  await inMode(page, "NORMAL");
   await expect(firstParagraph(page)).toHaveText("X alpha beta gamma delta");
   await keys(page, ["0", "d", "w"]);
   await expect(firstParagraph(page)).toHaveText("alpha beta gamma delta");
@@ -95,12 +100,16 @@ test("counts, cw, ciw, f and visual mode", async ({ page }) => {
   await keys(page, ["3", "x"]);
   await expect(firstParagraph(page)).toHaveText("def one two three");
   await keys(page, ["w", "c", "w"]);
+  await inMode(page, "INSERT");
   await page.keyboard.type("ONE");
   await keys(page, ["Escape"]);
+  await inMode(page, "NORMAL");
   await expect(firstParagraph(page)).toHaveText("def ONE two three");
   await keys(page, ["w", "l", "c", "i", "w"]);
+  await inMode(page, "INSERT");
   await page.keyboard.type("2");
   await keys(page, ["Escape"]);
+  await inMode(page, "NORMAL");
   await expect(firstParagraph(page)).toHaveText("def ONE 2 three");
   await keys(page, ["0", "d", "f", "E"]);
   await expect(firstParagraph(page)).toHaveText(" 2 three");

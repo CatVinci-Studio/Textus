@@ -1348,6 +1348,8 @@ export function installDevTauriShim(): void {
   // For an e2e mock that plays the model: calls named and settled as the backend would.
   w.__devNameCall = namedCall;
   w.__devSettle = settledArguments;
+  // Whether anything listens for `event` yet: one sent before is lost.
+  w.__devListening = (event: string) => (listeners.get(event) ?? []).length > 0;
   w.__devEmitTauriEvent = (event: string, payload?: unknown) => {
     for (const id of listeners.get(event) ?? []) {
       (w[`_${id}`] as ((e: unknown) => void) | undefined)?.({

@@ -2,7 +2,6 @@
 //
 // isReservedCombo and defaultShortcuts read navigator.platform.
 
-import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveStrings, type Strings } from "../i18n/strings";
 import {
@@ -11,6 +10,7 @@ import {
 } from "../prefs/SettingsContext";
 import { isBindableCombo, isReservedCombo } from "../utils/shortcuts";
 import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
+import { nativeAccelerators } from "./native-menu-keys";
 import {
   fixedShortcutGroups,
   macTabStep,
@@ -53,22 +53,6 @@ function menuCombos(nodes: MenuNode[]): string[] {
   );
 }
 
-/** The native menu's accelerators, as stored combos. */
-function nativeAccelerators(): string[] {
-  const source = ["menu.rs", "menu/build.rs"]
-    .map((file) => readFileSync(`src-tauri/src/${file}`, "utf8"))
-    .join("\n");
-  const written = [
-    ...source.matchAll(/\.accelerator\("([^"]+)"\)/g),
-    ...source.matchAll(/const \w+_ACCEL: &str = "([^"]+)"/g),
-    // MAC_EDIT_ITEMS rows: (id, label, accelerator).
-    ...source.matchAll(/\("[\w-]+", "[^"]+", "(CmdOrCtrl[^"]*)"\)/g),
-  ].map((match) => match[1]);
-  return written.map((accel) =>
-    accel.toLowerCase().replace("cmdorctrl", "mod"),
-  );
-}
-
 describe("the fixed shortcuts in Settings", () => {
   it("list every combo the app menu shows that can't be rebound", () => {
     const unbound = Object.fromEntries(
@@ -80,7 +64,7 @@ describe("the fixed shortcuts in Settings", () => {
   });
 
   it("match the macOS menu bar's accelerators in menu.rs", () => {
-    const native = nativeAccelerators();
+    const native = [...nativeAccelerators("macos").keys()];
     expect(native).toContain("mod+shift+t");
     const mac = fixedCombos("macos");
     // Both ways. The rest are muda's predefined Edit items, the editor's own
