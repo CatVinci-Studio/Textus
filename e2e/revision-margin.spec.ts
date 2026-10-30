@@ -258,7 +258,11 @@ test("a streaming rewrite brings its changes one at a time: text, card and count
     requestAnimationFrame(tick);
   });
   await send(page);
-  await expect(page.locator(".review-bar-accept")).toBeEnabled();
+  // Hundreds of fragments 20ms apart, and timers run late on a loaded machine:
+  // well past the 5s an expect waits by default.
+  await expect(page.locator(".review-bar-accept")).toBeEnabled({
+    timeout: 25_000,
+  });
   await page.waitForTimeout(300);
   const samples = await page.evaluate(() => {
     const w = window as unknown as { __samples: Sample[]; __on: boolean };
