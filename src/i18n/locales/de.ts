@@ -1309,6 +1309,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   privacyClearChatHistory: "Chatverlauf löschen",
   privacyClearClipboard: "Verlauf der Zwischenablage löschen",
   privacyClearDrafts: "Wiederherstellungsdaten löschen",
+  privacyStatsLabel: "Installationszahlen",
+  privacyStatsToggle: "Anonyme Installationszahlen senden",
+  privacyStatsHelp:
+    "Wenn du ein Plugin, Theme oder einen Skill installierst, aktualisierst oder entfernst, zählt Textus das für die Installationszahlen im Store: nur welche Erweiterung, was geschah, dein System und die Textus-Version - nichts, was dich oder dieses Gerät erkennbar macht. Ausgeschaltet werden Erweiterungen direkt von GitHub geladen, und es wird nichts gesendet.",
   clipboardTab: "Zwischenablage",
   clipboardEmpty: "Kopierter und eingefügter Text erscheint hier.",
   clipboardClear: "Leeren",

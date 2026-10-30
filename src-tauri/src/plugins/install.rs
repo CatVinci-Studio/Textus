@@ -389,10 +389,13 @@ fn newest_change(dir: &std::path::Path, depth: usize) -> Option<f64> {
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String> {
     require_id(&id)?;
+    let root = plugins_root(&app)?;
+    let from_catalog =
+        super::catalog::installed_version(&root, &id).filter(|_| super::catalog::lists(&app, &id));
     state::update(&app, |state| {
         state.plugins.remove(&id);
     })?;
-    let target = plugins_root(&app)?.join(&id);
+    let target = root.join(&id);
     if target.is_dir() {
         std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
     }
@@ -406,7 +409,11 @@ pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String>
     if let Some(file) = super::scripts::script_file(&app, &id) {
         trash::delete(&file).map_err(|e| e.to_string())?;
     }
-    super::files::forget_secrets(&app, &id)
+    super::files::forget_secrets(&app, &id)?;
+    if let Some(version) = from_catalog {
+        crate::ext_stats::uninstalled(&app, crate::ext_stats::Kind::Plugin, &id, &version);
+    }
+    Ok(())
 }
 
 /// The picker for Install from file… (a `.textusplugin`) or, with

@@ -12,6 +12,7 @@ mod background;
 mod bindings;
 mod commands;
 mod distribution;
+mod ext_stats;
 mod extract;
 #[cfg(desktop)]
 mod mcp;

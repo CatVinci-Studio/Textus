@@ -1250,6 +1250,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   privacyClearChatHistory: "チャット履歴を消去",
   privacyClearClipboard: "クリップボード履歴を消去",
   privacyClearDrafts: "復元用の下書きを削除",
+  privacyStatsLabel: "インストール数",
+  privacyStatsToggle: "匿名のインストール数を送信",
+  privacyStatsHelp:
+    "プラグイン、テーマ、スキルをインストール・更新・削除すると、Textus はストアのインストール数として 1 回数えます。送るのはどの拡張機能か、何をしたか、お使いのシステムと Textus のバージョンだけで、あなたやこのデバイスを特定できる情報は含みません。オフにすると、拡張機能は GitHub から直接ダウンロードされ、何も送信されません。",
   clipboardTab: "クリップボード",
   clipboardEmpty: "コピーまたは貼り付けたテキストがここに表示されます。",
   clipboardClear: "クリア",

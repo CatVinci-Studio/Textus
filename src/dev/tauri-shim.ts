@@ -374,6 +374,8 @@ export function installDevTauriShim(): void {
       // Paper Mint has a dark form, as every gallery theme should.
       darkCss: id === "paper-mint" ? `themes/${id}/theme-dark.css` : null,
       previews: [`themes/${id}/preview.png`],
+      installs: null,
+      installs30: null,
     });
     gallery.files[`themes/${id}/theme.css`] =
       `:root { --editor-bg: ${bg}; --editor-text: ${text}; --editor-accent: ${accent}; }`;

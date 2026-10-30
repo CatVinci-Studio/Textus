@@ -166,8 +166,11 @@ export const commands = {
 	delete_theme: (id: string) => __TAURI_INVOKE<null>("delete_theme", { id }),
 	/**  The gallery's catalog (index.json). */
 	theme_gallery_catalog: () => __TAURI_INVOKE<GalleryTheme_Serialize[]>("theme_gallery_catalog"),
-	/**  A gallery theme's stylesheet, by its catalog path. */
-	theme_gallery_css: (path: string) => __TAURI_INVOKE<string>("theme_gallery_css", { path }),
+	/**
+	 *  A gallery theme's stylesheet, by its catalog path. With `install`, the
+	 *  download counts as that theme's install.
+	 */
+	theme_gallery_css: (path: string, install: GalleryInstall | null) => __TAURI_INVOKE<string>("theme_gallery_css", { path, install }),
 	/**
 	 *  A gallery screenshot, by its catalog path, as a `data:` URL, so the page
 	 *  never loads from the network itself.
@@ -265,6 +268,14 @@ export type DetachedTab_Serialize = {
 	importedFrom?: string,
 };
 
+/**  A stylesheet fetched to install the theme, which counts the install. */
+export type GalleryInstall = {
+	/**  The catalog's `updated`, which stands for a theme's version. */
+	version: string,
+	/**  It replaces the installed copy. */
+	update: boolean,
+};
+
 /**  One theme of the catalog, as the frontend gets it. */
 export type GalleryTheme = GalleryTheme_Serialize | GalleryTheme_Deserialize;
 
@@ -287,6 +298,12 @@ export type GalleryTheme_Deserialize = {
 	darkCss?: string | null,
 	/**  Repository-relative screenshots. */
 	previews?: string[],
+	/**
+	 *  How many devices installed it, ever and in the last 30 days (counted
+	 *  by services/ext-stats).
+	 */
+	installs?: number | null,
+	installs30?: number | null,
 };
 
 /**  One theme of the catalog, as the frontend gets it. */
@@ -308,6 +325,12 @@ export type GalleryTheme_Serialize = {
 	darkCss: string | null,
 	/**  Repository-relative screenshots. */
 	previews: string[],
+	/**
+	 *  How many devices installed it, ever and in the last 30 days (counted
+	 *  by services/ext-stats).
+	 */
+	installs: number | null,
+	installs30: number | null,
 };
 
 export type NativeEdit = "paste" | "undo" | "redo" | "select-all";
