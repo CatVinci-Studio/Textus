@@ -167,3 +167,34 @@ test("a file changed on disk is not overwritten", async ({ page }) => {
   expect(writes).toEqual([]);
   expect(files[PATH].text).toBe("Changed elsewhere.\n");
 });
+
+test("a file another app changes reloads while the window shows, without a click back", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await openApp(page, { settings: { language: "en" } });
+  await installDisk(page, "# Notes\n\nSaved text.\n");
+  await openDoc(page);
+  await page.evaluate((path) => {
+    const files = (window as unknown as { __disk: Disk }).__disk.files;
+    files[path] = { text: "# Notes\n\nWritten elsewhere.\n", mtime: 50 };
+  }, PATH);
+  await page.clock.runFor(2000);
+  await expect(page.locator(editor)).toContainText("Written elsewhere.");
+});
+
+test("an edited document is left as it is when its file changes elsewhere", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await openApp(page, { settings: { language: "en" } });
+  await installDisk(page, "# Notes\n\nSaved text.\n");
+  await openDoc(page);
+  await typeAtEnd(page, " Mine.");
+  await page.evaluate((path) => {
+    const files = (window as unknown as { __disk: Disk }).__disk.files;
+    files[path] = { text: "# Notes\n\nWritten elsewhere.\n", mtime: 50 };
+  }, PATH);
+  await page.clock.runFor(2000);
+  await expect(page.locator(editor)).toContainText("Saved text. Mine.");
+});
