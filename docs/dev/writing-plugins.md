@@ -432,11 +432,18 @@ textus.views.registerWebview("jane.board.view", {
 - A webview has no network and no storage of the browser's: it asks its
   plugin, with `postMessage`. `api.getState()` / `api.setState(value)`
   keep a little state while Textus runs.
-- The theme's colours and sizes are CSS variables (`--ui-bg`,
-  `--ui-text`, `--ui-accent`, `--ui-border`, `--font-sans`,
-  `--text-sm`, `--space-3`, …) that follow the theme and dark mode;
-  buttons, inputs, `.toolbar`, `.list` and `.empty` look as Textus's own
-  without any CSS of yours.
+- The theme's colours and sizes are CSS variables that follow the theme
+  and dark mode, the same ones Textus draws with
+  ([design-language.md](../design/design-language.md)): the interface's
+  colours `--ui-bg`, `--ui-surface`, `--ui-subtle`, `--ui-text`,
+  `--ui-muted`, `--ui-accent`, `--ui-border`, `--ui-hover`,
+  `--ui-selected`, `--ui-danger`; the document's `--doc-bg`, `--doc-text`,
+  `--doc-accent`, `--doc-code-bg`; text by role, `--text-caption` to
+  `--text-title`; shapes, `--shape-m` for a panel or card, `--shape-s`
+  for a box or row inside one, `--shape-pill` for a button or chip;
+  `--control-height(-sm)`, `--space-1` to `--space-6` and `--font-sans` /
+  `--font-mono`. Buttons, inputs, `.toolbar`, `.list` and `.empty` look as
+  Textus's own without any CSS of yours.
 - Motion is Textus's too: `animation: motion-enter var(--dur-medium)
 var(--ease-out) backwards` for a part arriving, `motion-exit` for one
   leaving, a `motion-cascade` container for items one after another.
