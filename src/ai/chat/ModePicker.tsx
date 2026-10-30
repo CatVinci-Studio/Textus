@@ -29,12 +29,15 @@ export function ModePicker({
   onMode,
   models,
   labels,
+  holdFocus = false,
 }: {
   mode: AgentMode;
   modes: ModeChoice[];
   onMode: (mode: AgentMode) => void;
   models?: ChatModels;
   labels: { mode: string; model: string; picker: string };
+  /** A tap leaves focus, and the phone's keyboard, in the message. */
+  holdFocus?: boolean;
 }) {
   const groups = models?.groups ?? [];
   const items: Item[] = [
@@ -70,7 +73,7 @@ export function ModePicker({
     setOpen(true);
   }
 
-  function close(refocus = true) {
+  function close(refocus = !holdFocus) {
     setOpen(false);
     if (refocus) triggerRef.current?.focus();
   }
@@ -173,6 +176,7 @@ export function ModePicker({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-label={labels.picker}
+        onMouseDown={holdFocus ? (e) => e.preventDefault() : undefined}
         onClick={() => (open ? close() : openMenu())}
         onKeyDown={onTriggerKey}
       >
