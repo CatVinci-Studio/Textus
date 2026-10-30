@@ -405,7 +405,7 @@ button.settings-danger-button {
 /* Toggles render as switches, not native checkboxes, sized by the row's
    text: half again its height, so the switch sits with the label instead of
    outweighing it, on every platform and at every Interface Text Size. */
-.settings-row input[type="checkbox"] {
+:is(.settings-row, .settings-skill-item) input[type="checkbox"] {
   --switch-inset: 2px;
   --switch-thumb: calc(1.5em - 2 * var(--switch-inset));
   --switch-travel: 1em;
@@ -427,7 +427,7 @@ button.settings-danger-button {
 
 /* The thumb lands with UISwitch's slight overshoot; reduced motion jumps
    it, and only the track's colour fades. */
-.settings-row input[type="checkbox"]::after {
+:is(.settings-row, .settings-skill-item) input[type="checkbox"]::after {
   content: "";
   position: absolute;
   top: var(--switch-inset);
@@ -445,31 +445,32 @@ button.settings-danger-button {
 
 /* On: the theme's ink, like a primary button - its thumb in the page's
    colour, so a dark theme's light track still shows it. */
-.settings-row input[type="checkbox"]:checked {
+:is(.settings-row, .settings-skill-item) input[type="checkbox"]:checked {
   background: var(--ui-primary);
 }
 
-.settings-row input[type="checkbox"]:checked::after {
+:is(.settings-row, .settings-skill-item) input[type="checkbox"]:checked::after {
   background: var(--ui-on-primary);
 }
 
-.settings-row input[type="checkbox"]:checked::after {
+:is(.settings-row, .settings-skill-item) input[type="checkbox"]:checked::after {
   transform: translateX(var(--switch-travel));
 }
 
 /* Held down, the thumb stretches toward the side it would go to, as
    UISwitch's does, and springs back when let go. */
-.settings-row input[type="checkbox"]:active::after {
+:is(.settings-row, .settings-skill-item) input[type="checkbox"]:active::after {
   transform: scaleX(1.2);
   transition-duration: calc(var(--dur-fast) * var(--motion-travel));
 }
 
-.settings-row input[type="checkbox"]:checked:active::after {
+:is(.settings-row, .settings-skill-item)
+  input[type="checkbox"]:checked:active::after {
   transform: translateX(calc(var(--switch-travel) - var(--switch-thumb) * 0.2))
     scaleX(1.2);
 }
 
-.settings-row input[type="checkbox"]:focus-visible {
+:is(.settings-row, .settings-skill-item) input[type="checkbox"]:focus-visible {
   outline: 2px solid var(--ui-accent);
   outline-offset: 2px;
 }
@@ -904,6 +905,12 @@ button.settings-inline-button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Off for now: its name and modes step back; the switch stays clear. */
+.settings-skill-item[data-off]
+  :is(.settings-skill-text, .settings-skill-modes) {
+  opacity: 0.5;
 }
 
 /* The modes a skill of the user's works in, at the end of its line. */

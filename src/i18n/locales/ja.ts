@@ -569,7 +569,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   skillPickerAbout:
     "/ を入力するとスキルを使えます。「校正」や「要約」のような、用意された指示です。",
   skillPickerNoMatch: "「{query}」に一致するスキルはありません。",
-  skillPickerHowTo: `組み込みスキルのオン・オフや自分のスキルのインポートは「設定 > ${AI_NAME}」でできます。`,
+  skillPickerHowTo:
+    "スキルの追加や自分のスキルのインポートは「設定」でできます。",
   mentionPickerAbout:
     "@ を入力すると、プロジェクトフォルダーのファイルを添付できます。",
   mentionPickerNoProject:
@@ -1321,7 +1322,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   extensionsThemesGet: "テーマを入手",
   extensionsSkillsHelp: `スキルは ${AI_NAME} に、ある種類の作業をうまくこなす方法を伝えます。オンのスキルは ${AI_NAME} と / メニューで使えます。新しくインストールすると 5 つがオンで、残りはここで追加します。`,
   extensionsSkillsMoved:
-    "組み込みのスキルと自分のスキルは「設定 › 拡張機能」にあります。",
+    "追加したスキルは「設定 › 拡張機能」にあり、組み込みのスキルは下にあります。",
   extensionsSkillsOpen: "開く",
   mcpServersGroup: "MCP サーバー",
   mcpHelp: `MCP サーバーは ${AI_NAME} に道具を増やします：フォルダ、データベース、検索など。オンのサーバーはバックグラウンドで起動し、${AI_NAME} は手伝う間にそのツールを呼び出せます。呼び出しはすべて会話に表示されます。`,

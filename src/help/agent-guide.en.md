@@ -226,13 +226,13 @@ Use a skill in either of two ways:
 
 When what you asked for was a procedure of your own - steps you'll want again - Textus AI offers under its reply to keep it as a skill, for every document or for this project only. Nothing is saved unless you choose to.
 
-Skills live at the same two levels as writing instructions: global skills in the `skills/` folder of the global config folder (**Settings > Textus AI > Skills > Import Skill…** copies a skill file there), project skills in `.textus/skills/` (a hidden folder — in macOS Finder, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> shows it). A project skill with the same name as a global one replaces it.
+Skills live at the same two levels as writing instructions: global skills in the `skills/` folder of the global config folder (**Settings > Extensions > Skills > … > Import Skill…** copies a skill file there), project skills in `.textus/skills/` (a hidden folder — in macOS Finder, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> shows it). A project skill with the same name as a global one replaces it.
 
 ### Built-in skills
 
 Textus comes with four skills. **Proofread**, in Review, checks spelling, grammar, punctuation and numbers against the standards of the text's language. **Design a theme**, **Make a plugin** and **Make a skill**, in Create, make an editor theme, a small plugin or a skill of your own from what you describe. More skills - expand, tighten, translate, summarize, check continuity, email, meeting minutes and others - are in **Settings > Extensions > Skills > Get more**. Type `/` and pick one, or type its name in any of the app's languages: `/proofread`, `/校对` and `/校正` call the same skill. Textus AI also picks a skill by itself when your request matches one. **Design a theme** puts the theme's CSS in the reply: **Use this theme** under it installs it, or save it as a .css file and import it with **Settings > Editor & Appearance > Import CSS…**.
 
-**Settings > Extensions > Skills** lists the skills you have. The built-in ones are always on. **Customize…** copies one into the `skills/` folder of the global config folder and opens the copy, so you can change its instructions; from then on your copy runs instead. **Reset** deletes the copy and brings the built-in version back. A skill you installed or wrote says the modes it works in; click that to change them. A skill of your own with a built-in skill's name replaces the built-in one.
+The built-in skills are under **Settings > Textus AI > Built-in skills**, always on. **Customize…** copies one into the `skills/` folder of the global config folder and opens the copy, so you can change its instructions; from then on your copy runs instead. **Reset** deletes the copy and brings the built-in version back. **Settings > Extensions > Skills** lists the skills you added. Each says the modes it works in - click that to change them - and its switch turns it off for now, its modes kept for when you turn it back on. A skill of your own with a built-in skill's name replaces the built-in one.
 
 ### Writing conventions
 

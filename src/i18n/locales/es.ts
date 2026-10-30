@@ -601,7 +601,7 @@ para usar una.
   skillPickerAbout:
     "Escribe / para usar una habilidad: una instrucción ya preparada, como Corregir o Resumir.",
   skillPickerNoMatch: "Ninguna habilidad coincide con «{query}».",
-  skillPickerHowTo: `Activa las habilidades integradas o importa las tuyas en Ajustes > ${AI_NAME}.`,
+  skillPickerHowTo: "Añade más habilidades o importa las tuyas en Ajustes.",
   mentionPickerAbout:
     "Escribe @ para adjuntar un archivo de la carpeta del proyecto.",
   mentionPickerNoProject:
@@ -1387,7 +1387,7 @@ para usar una.
   extensionsThemesGet: "Conseguir temas",
   extensionsSkillsHelp: `Una habilidad le dice a ${AI_NAME} cómo hacer bien un tipo de tarea. Las activadas se ofrecen a ${AI_NAME} y en el menú /; una instalación nueva empieza con cinco activadas, y el resto se añade aquí.`,
   extensionsSkillsMoved:
-    "Las habilidades integradas y las tuyas están en Ajustes › Extensiones.",
+    "Las habilidades que añadas están en Ajustes › Extensiones; las integradas, abajo.",
   extensionsSkillsOpen: "Abrir",
   mcpServersGroup: "Servidores MCP",
   mcpHelp: `Un servidor MCP da a ${AI_NAME} más herramientas: una carpeta, una base de datos, una búsqueda. Cada uno activado se inicia en segundo plano, y ${AI_NAME} puede usar sus herramientas mientras te ayuda; la conversación muestra cada llamada.`,

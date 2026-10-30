@@ -510,7 +510,11 @@ button.agent-context-chip:hover {
   cursor: pointer;
 }
 
-.skill-mode-choice-button:hover,
+.skill-mode-choice-button:disabled {
+  cursor: default;
+}
+
+.skill-mode-choice-button:hover:not(:disabled),
 .skill-mode-choice-button[aria-expanded="true"] {
   background: color-mix(in srgb, var(--ui-text) 6%, transparent);
   color: var(--ui-text);

@@ -587,7 +587,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   skillPickerAbout:
     "Digite / para usar uma habilidade: uma instrução pronta, como Revisar ou Resumir.",
   skillPickerNoMatch: "Nenhuma habilidade corresponde a “{query}”.",
-  skillPickerHowTo: `Ative as habilidades integradas ou importe as suas em Ajustes > ${AI_NAME}.`,
+  skillPickerHowTo: "Adicione mais habilidades ou importe as suas em Ajustes.",
   mentionPickerAbout: "Digite @ para anexar um arquivo da pasta do projeto.",
   mentionPickerNoProject:
     "Salve o documento ou escolha uma pasta de projeto, e os arquivos dela aparecerão aqui.",
@@ -1368,7 +1368,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   extensionsThemesGet: "Obter temas",
   extensionsSkillsHelp: `Uma habilidade diz ao ${AI_NAME} como fazer bem um tipo de tarefa. As ativadas são oferecidas ao ${AI_NAME} e no menu /; uma instalação nova começa com cinco ativadas, e você adiciona as outras aqui.`,
   extensionsSkillsMoved:
-    "As habilidades integradas e as suas estão em Ajustes › Extensões.",
+    "As habilidades que você adicionar estão em Ajustes › Extensões; as integradas, abaixo.",
   extensionsSkillsOpen: "Abrir",
   mcpServersGroup: "Servidores MCP",
   mcpHelp: `Um servidor MCP dá ao ${AI_NAME} mais ferramentas: uma pasta, um banco de dados, uma busca. Cada um ativado é iniciado em segundo plano, e o ${AI_NAME} pode chamar suas ferramentas enquanto ajuda você; a conversa mostra cada chamada.`,

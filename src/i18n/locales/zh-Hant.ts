@@ -536,7 +536,7 @@ export default {
   pickerKeysHint: "↑↓ 選擇 · Enter 確定 · Esc 關閉",
   skillPickerAbout: "輸入 / 使用技能：現成的寫作指示，例如「校對」「摘要」。",
   skillPickerNoMatch: "沒有符合「{query}」的技能。",
-  skillPickerHowTo: `可在「設定 > ${AI_NAME}」開啟內建技能，或匯入自己的技能。`,
+  skillPickerHowTo: "可在「設定」中加入更多技能，或匯入自己的技能。",
   mentionPickerAbout: "輸入 @ 附加專案資料夾中的檔案。",
   mentionPickerNoProject:
     "儲存文件或選擇專案資料夾後，其中的檔案會出現在這裡。",
@@ -1254,7 +1254,8 @@ export default {
   themePreviewEnlarge: "檢視大圖",
   extensionsThemesGet: "取得主題",
   extensionsSkillsHelp: `Skill 告訴 ${AI_NAME} 怎樣做好某一類事。開著的 Skill 會提供給 ${AI_NAME}，也會出現在 / 選單裡；新安裝預設開五個，其餘的在這裡加入。`,
-  extensionsSkillsMoved: "內建和你自己的 Skill 都在「設定 › 擴充功能」裡。",
+  extensionsSkillsMoved:
+    "你加入的 Skill 在「設定 › 擴充功能」裡，內建的在下面。",
   extensionsSkillsOpen: "打開",
   mcpServersGroup: "MCP 伺服器",
   mcpHelp: `MCP 伺服器給 ${AI_NAME} 更多工具：一個資料夾、一個資料庫、一種搜尋。開著的伺服器會在背景啟動，${AI_NAME} 幫你時可以呼叫它的工具；對話裡會顯示每一次呼叫。`,

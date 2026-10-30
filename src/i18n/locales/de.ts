@@ -592,7 +592,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   skillPickerAbout:
     "Mit / rufst du einen Skill auf: eine fertige Anweisung wie „Korrektur lesen“ oder „Zusammenfassen“.",
   skillPickerNoMatch: "Kein Skill passt zu „{query}“.",
-  skillPickerHowTo: `Unter Einstellungen > ${AI_NAME} kannst du integrierte Skills einschalten oder eigene importieren.`,
+  skillPickerHowTo:
+    "Unter Einstellungen kannst du weitere Skills hinzufügen oder eigene importieren.",
   mentionPickerAbout: "Mit @ hängst du eine Datei aus dem Projektordner an.",
   mentionPickerNoProject:
     "Speichere das Dokument oder wähle einen Projektordner, dann erscheinen seine Dateien hier.",
@@ -1379,7 +1380,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   extensionsThemesGet: "Themes holen",
   extensionsSkillsHelp: `Ein Skill sagt ${AI_NAME}, wie es eine Art von Aufgabe gut erledigt. Eingeschaltete Skills bekommt ${AI_NAME}, und sie stehen im /-Menü; eine neue Installation beginnt mit fünf, den Rest fügst du hier hinzu.`,
   extensionsSkillsMoved:
-    "Eingebaute und eigene Skills sind unter Einstellungen › Erweiterungen.",
+    "Hinzugefügte Skills sind unter Einstellungen › Erweiterungen, die eingebauten weiter unten.",
   extensionsSkillsOpen: "Öffnen",
   mcpServersGroup: "MCP-Server",
   mcpHelp: `Ein MCP-Server gibt ${AI_NAME} weitere Werkzeuge: einen Ordner, eine Datenbank, eine Suche. Jeder eingeschaltete Server startet im Hintergrund, und ${AI_NAME} darf seine Werkzeuge nutzen, während es dir hilft; das Gespräch zeigt jeden Aufruf.`,

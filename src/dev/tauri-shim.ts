@@ -422,6 +422,7 @@ export function installDevTauriShim(): void {
   // `window.__devSkills` exposes the state.
   const skills = {
     ownModes: ["write"] as string[],
+    ownOff: false,
     customized: new Set<string>(),
     // Copies made before the bundled built-in last changed.
     outdated: new Set<string>(),
@@ -445,6 +446,7 @@ export function installDevTauriShim(): void {
           version: null as string | null,
           basedOn: null as string | null,
           builtinUpdated: false,
+          off: false,
           aliases: {},
           labels: {},
         };
@@ -486,6 +488,7 @@ export function installDevTauriShim(): void {
           source: "global",
           overridesBuiltin: false,
           modes: skills.ownModes as AgentSkill_Serialize["modes"],
+          off: skills.ownOff,
         } satisfies AgentSkill_Serialize;
         return Promise.resolve([...builtins, own]);
       }
@@ -497,6 +500,10 @@ export function installDevTauriShim(): void {
       case "set_skill_modes":
         skills.log.push(`${cmd}:${name}:${String(args.modes)}`);
         skills.ownModes = [...((args.modes as string[]) ?? [])];
+        return Promise.resolve(null);
+      case "set_skill_off":
+        skills.log.push(`${cmd}:${name}:${String(args.off)}`);
+        skills.ownOff = !!args.off;
         return Promise.resolve(null);
       case "customize_builtin_skill": {
         skills.log.push(`${cmd}:${name}`);

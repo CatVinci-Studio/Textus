@@ -178,6 +178,8 @@ export interface SkillListItem {
   /** The panel modes it applies in; only those offer it in the `/` menu.
    *  Write's for a skill that doesn't say. */
   modes: AgentMode[];
+  /** Turned off for now in Settings, its modes kept: offered nowhere. */
+  off?: boolean;
   /** A market or user skill's name and one-line hint, by UI language code. */
   labels?: Record<string, SkillLabel>;
   /** Extra words typed after `/` for it, by UI language code. */

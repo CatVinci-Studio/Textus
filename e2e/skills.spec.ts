@@ -94,7 +94,7 @@ test.describe("the / picker", () => {
     await input.fill("/");
     const empty = page.locator(".composer-picker [role=status]");
     await expect(empty).toContainText("输入 / 调用技能");
-    await expect(empty).toContainText(`「设置 > ${AI_NAME}」`);
+    await expect(empty).toContainText("「设置」中添加更多技能");
   });
 
   test("an alias resolves to the skill, and the bubble shows what was typed", async ({
@@ -391,4 +391,39 @@ test.describe("on a phone", () => {
     );
     expect(overflow).toBeLessThanOrEqual(0);
   });
+});
+
+test("a skill of the user's turns off for now and back on, its modes kept", async ({
+  page,
+}) => {
+  const input = await openWithPanel(page, "en", "write");
+  const panel = await openSettings(page);
+  await openSkillsTab(panel);
+  const own = panel.locator('.settings-skill-item[data-skill="house-style"]');
+  const on = own.getByRole("checkbox");
+  await expect(on).toBeChecked();
+  await on.click({ force: true });
+  await expect(on).not.toBeChecked();
+  await expect(own).toHaveAttribute("data-off", "");
+  // Its modes stay as they were, but can't be changed while it is off.
+  const modes = own.getByRole("button", { name: /Modes it works in/ });
+  await expect(modes).toHaveText("Write");
+  await expect(modes).toBeDisabled();
+  await page.getByRole("button", { name: "Close" }).first().click();
+  // Off: the / menu doesn't offer it.
+  await input.fill("/house");
+  await expect(page.locator(".composer-picker")).toBeVisible();
+  await expect(page.locator(".composer-picker")).not.toContainText(
+    "/house-style",
+  );
+  await input.fill("");
+  const again = await openSettings(page);
+  await openSkillsTab(again);
+  await again
+    .locator('.settings-skill-item[data-skill="house-style"]')
+    .getByRole("checkbox")
+    .click({ force: true });
+  await again.getByRole("button", { name: "Close" }).first().click();
+  await input.fill("/house");
+  await expect(page.locator(".composer-picker")).toContainText("/house-style");
 });

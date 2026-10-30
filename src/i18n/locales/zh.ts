@@ -536,7 +536,7 @@ export default {
   pickerKeysHint: "↑↓ 选择 · Enter 确定 · Esc 关闭",
   skillPickerAbout: "输入 / 调用技能：现成的写作指令，比如“校对”“总结摘要”。",
   skillPickerNoMatch: "没有与“{query}”匹配的技能。",
-  skillPickerHowTo: `可在「设置 > ${AI_NAME}」中开启内置技能，或导入自己的技能。`,
+  skillPickerHowTo: "可在「设置」中添加更多技能，或导入自己的技能。",
   mentionPickerAbout: "输入 @ 引用项目文件夹中的文件。",
   mentionPickerNoProject:
     "保存文档或选择项目文件夹后，其中的文件会显示在这里。",
@@ -1248,7 +1248,7 @@ export default {
   themePreviewEnlarge: "查看大图",
   extensionsThemesGet: "获取主题",
   extensionsSkillsHelp: `Skill 告诉 ${AI_NAME} 怎样做好某一类事。开着的 Skill 会提供给 ${AI_NAME}，也会出现在 / 菜单里；新安装默认开五个，其余的在这里添加。`,
-  extensionsSkillsMoved: "内置和你自己的 Skill 都在“设置 › 扩展”里。",
+  extensionsSkillsMoved: "你添加的 Skill 在“设置 › 扩展”里，内置的在下面。",
   extensionsSkillsOpen: "打开",
   mcpServersGroup: "MCP 服务器",
   mcpHelp: `MCP 服务器给 ${AI_NAME} 更多工具：一个文件夹、一个数据库、一种搜索。开着的服务器会在后台启动，${AI_NAME} 帮你时可以调用它的工具；对话里会显示每一次调用。`,

@@ -37,6 +37,11 @@ export const commands = {
 	 */
 	set_skill_modes: (name: string, source: SkillSource, docPath: string | null, workspaceRoot: string | null, modes: AgentMode_Deserialize[]) => __TAURI_INVOKE<null>("set_skill_modes", { name, source, docPath, workspaceRoot, modes }),
 	/**
+	 *  Turns a user's skill off for now, or on again, rewriting `textus-off` in
+	 *  its file. A built-in is always on.
+	 */
+	set_skill_off: (name: string, source: SkillSource, docPath: string | null, workspaceRoot: string | null, off: boolean) => __TAURI_INVOKE<null>("set_skill_off", { name, source, docPath, workspaceRoot, off }),
+	/**
 	 *  Saves a skill a Create-mode reply wrote into the global skills/ with the
 	 *  picked modes, over an earlier version. Returns its path.
 	 */
@@ -117,6 +122,11 @@ export type AgentSkill_Deserialize = {
 	 *  that doesn't say.
 	 */
 	modes: AgentMode_Deserialize[],
+	/**
+	 *  `textus-off`: turned off in Settings for now, its modes kept for when
+	 *  it is turned on again. Neither the model nor the `/` menu offers it.
+	 */
+	off: boolean,
 	invocation: Invocation,
 	source: SkillSource,
 	/**
@@ -171,6 +181,11 @@ export type AgentSkill_Serialize = {
 	 *  that doesn't say.
 	 */
 	modes: AgentMode_Serialize[],
+	/**
+	 *  `textus-off`: turned off in Settings for now, its modes kept for when
+	 *  it is turned on again. Neither the model nor the `/` menu offers it.
+	 */
+	off: boolean,
 	invocation: Invocation,
 	source: SkillSource,
 	/**

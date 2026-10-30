@@ -113,6 +113,21 @@ export function OwnSkillsList({
     ),
   );
 
+  async function setOff(skill: SkillListItem, off: boolean) {
+    setError(null);
+    const before = list;
+    setList(
+      (list ?? []).map((i) => (i.name === skill.name ? { ...i, off } : i)),
+    );
+    try {
+      await ai.setSkillOff(skill.name, skill.source, null, null, off);
+      announceChange();
+    } catch (err) {
+      setList(before);
+      setError(explainError(err, t));
+    }
+  }
+
   async function setModes(skill: SkillListItem, modes: AgentMode[]) {
     if (modes.length === 0) return;
     setError(null);
@@ -147,6 +162,7 @@ export function OwnSkillsList({
             key={skill.name}
             className="settings-skill-item"
             data-skill={skill.name}
+            data-off={skill.off ? "" : undefined}
           >
             <span className="settings-skill-text">
               <span className="settings-skill-title">
@@ -170,9 +186,17 @@ export function OwnSkillsList({
               <ModeChoice
                 t={t}
                 modes={modes}
+                disabled={skill.off}
                 onChange={(next) => void setModes(skill, next)}
               />
             </span>
+            {/* Off for now, its modes kept for when it comes back on. */}
+            <input
+              type="checkbox"
+              aria-label={words?.label ?? skill.name}
+              checked={!skill.off}
+              onChange={(e) => void setOff(skill, !e.target.checked)}
+            />
           </div>
         );
       })}

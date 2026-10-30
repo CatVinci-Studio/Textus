@@ -561,7 +561,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   skillPickerAbout:
     "/를 입력하면 스킬을 쓸 수 있습니다. ‘교정’이나 ‘요약’처럼 미리 준비된 지시입니다.",
   skillPickerNoMatch: "‘{query}’에 맞는 스킬이 없습니다.",
-  skillPickerHowTo: `설정 > ${AI_NAME}에서 내장 스킬을 켜거나 내 스킬을 가져올 수 있습니다.`,
+  skillPickerHowTo:
+    "설정에서 스킬을 더 추가하거나 내 스킬을 가져올 수 있습니다.",
   mentionPickerAbout: "@를 입력하면 프로젝트 폴더의 파일을 첨부할 수 있습니다.",
   mentionPickerNoProject:
     "문서를 저장하거나 프로젝트 폴더를 선택하면 그 안의 파일이 여기에 나타납니다.",
@@ -1307,7 +1308,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   themePreviewEnlarge: "크게 보기",
   extensionsThemesGet: "테마 받기",
   extensionsSkillsHelp: `스킬은 ${AI_NAME}에게 한 가지 일을 잘하는 방법을 알려 줍니다. 켜 둔 스킬은 ${AI_NAME}와 / 메뉴에서 쓸 수 있고, 새로 설치하면 다섯 개가 켜져 있으며 나머지는 여기서 추가합니다.`,
-  extensionsSkillsMoved: "기본 스킬과 직접 만든 스킬은 설정 › 확장에 있습니다.",
+  extensionsSkillsMoved:
+    "추가한 스킬은 설정 › 확장에 있고, 기본 스킬은 아래에 있습니다.",
   extensionsSkillsOpen: "열기",
   mcpServersGroup: "MCP 서버",
   mcpHelp: `MCP 서버는 ${AI_NAME}에게 도구를 더해 줍니다: 폴더, 데이터베이스, 검색 등. 켜 둔 서버는 백그라운드에서 시작되고, ${AI_NAME}는 도와주는 동안 그 도구를 호출할 수 있습니다. 호출은 모두 대화에 표시됩니다.`,

@@ -583,7 +583,7 @@ type /name in a conversation to use one.
   skillPickerAbout:
     "Type / to run a skill: a ready-made instruction such as Proofread or Summarize.",
   skillPickerNoMatch: "No skill matches “{query}”.",
-  skillPickerHowTo: `Turn built-in skills on, or import your own, in Settings > ${AI_NAME}.`,
+  skillPickerHowTo: "Add more skills, or import your own, in Settings.",
   mentionPickerAbout: "Type @ to attach a file from the project folder.",
   mentionPickerNoProject:
     "Save the document or choose a project folder, and its files appear here.",
@@ -1352,7 +1352,7 @@ type /name in a conversation to use one.
   extensionsThemesGet: "Get themes",
   extensionsSkillsHelp: `A skill tells ${AI_NAME} how to do one kind of task well. Each one on is offered to ${AI_NAME} and in the / menu; a new installation starts with five on, and you add the rest here.`,
   extensionsSkillsMoved:
-    "Built-in skills and your own are in Settings › Extensions.",
+    "The skills you add are in Settings › Extensions; the built-in ones are below.",
   extensionsSkillsOpen: "Open",
   mcpServersGroup: "MCP servers",
   mcpHelp: `An MCP server gives ${AI_NAME} more tools: a folder, a database, a search. Each one on is started in the background, and ${AI_NAME} may call its tools while it helps you; the conversation shows each call.`,

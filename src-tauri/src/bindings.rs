@@ -282,6 +282,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::ai::workspace::customize_builtin_skill,
                 crate::ai::workspace::reset_builtin_skill,
                 crate::ai::workspace::set_skill_modes,
+                crate::ai::workspace::set_skill_off,
                 crate::ai::workspace::save_written_skill,
             ]),
         ),

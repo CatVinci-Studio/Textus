@@ -610,7 +610,8 @@ utiliser une.
     "Tapez / pour utiliser une compétence\u00a0: une consigne toute prête, comme Relire et corriger ou Résumer.",
   skillPickerNoMatch:
     "Aucune compétence ne correspond à «\u00a0{query}\u00a0».",
-  skillPickerHowTo: `Activez les compétences intégrées ou importez les vôtres dans Réglages > ${AI_NAME}.`,
+  skillPickerHowTo:
+    "Ajoutez d’autres compétences ou importez les vôtres dans Réglages.",
   mentionPickerAbout: "Tapez @ pour joindre un fichier du dossier du projet.",
   mentionPickerNoProject:
     "Enregistrez le document ou choisissez un dossier de projet, et ses fichiers apparaîtront ici.",
@@ -1412,7 +1413,7 @@ utiliser une.
   extensionsThemesGet: "Obtenir des thèmes",
   extensionsSkillsHelp: `Une compétence indique à ${AI_NAME} comment bien faire un type de tâche. Celles qui sont activées sont proposées à ${AI_NAME} et dans le menu / ; une nouvelle installation en active cinq, et vous ajoutez les autres ici.`,
   extensionsSkillsMoved:
-    "Les compétences intégrées et les vôtres sont dans Réglages › Extensions.",
+    "Les compétences ajoutées sont dans Réglages › Extensions ; les intégrées, ci-dessous.",
   extensionsSkillsOpen: "Ouvrir",
   mcpServersGroup: "Serveurs MCP",
   mcpHelp: `Un serveur MCP donne à ${AI_NAME} d’autres outils : un dossier, une base de données, une recherche. Chaque serveur activé démarre en arrière-plan, et ${AI_NAME} peut appeler ses outils en vous aidant ; la conversation montre chaque appel.`,

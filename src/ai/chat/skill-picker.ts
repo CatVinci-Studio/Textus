@@ -95,6 +95,7 @@ export function pickerSkills(
   return items
     .filter(
       (item) =>
+        !item.off &&
         (item.modes ?? ["write"]).includes(mode) &&
         (item.invocation as string) !== "hidden",
     )

@@ -307,6 +307,7 @@ pub fn run() {
             crate::ai::workspace::customize_builtin_skill,
             crate::ai::workspace::reset_builtin_skill,
             crate::ai::workspace::set_skill_modes,
+            crate::ai::workspace::set_skill_off,
             crate::ai::workspace::save_written_skill,
             crate::ai::builtin::builtin_skills_attribution,
             crate::ai::project::list_project_files,
