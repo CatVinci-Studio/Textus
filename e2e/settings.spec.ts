@@ -698,6 +698,7 @@ test.describe("phone", () => {
       t.navGeneral,
       t.navEditor,
       t.navAi,
+      t.navExtensions,
       t.navPrivacy,
     ]);
     // A list, not a page: none is current, and no page shows beside it.
@@ -723,7 +724,7 @@ test.describe("phone", () => {
 
     // Back: the list again, under the search box.
     await header.getByRole("button", { name: t.settingsTitle }).tap();
-    await expect(items).toHaveCount(4);
+    await expect(items).toHaveCount(5);
     await expect(panel.locator(".settings-search")).toBeVisible();
 
     // A page inside a page goes back to the one that held it.
@@ -753,7 +754,7 @@ test.describe("phone", () => {
       .locator(".settings-header")
       .getByRole("button", { name: t.settingsTitle })
       .tap();
-    await expect(panel.locator(".settings-nav-item")).toHaveCount(4);
+    await expect(panel.locator(".settings-nav-item")).toHaveCount(5);
   });
 
   test("a tap on a ? opens its explanation, a tap outside closes it", async ({

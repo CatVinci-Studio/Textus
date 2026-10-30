@@ -162,11 +162,14 @@ test("the context menu opens from the keyboard, walks and gives the focus back",
   await page.keyboard.press("Shift+F10");
   const menu = page.getByRole("menu");
   await expect(menu).toBeVisible();
-  await expect(menu.getByRole("menuitem").first()).toBeFocused();
+  // Cut and Copy wait, greyed out, for a selection: the walk passes them.
+  const offered = menu.locator('[role^="menuitem"]:not(:disabled)');
+  await expect(offered.first()).toBeFocused();
+  await expect(offered.first()).toHaveText("Paste");
   await page.keyboard.press("ArrowDown");
-  await expect(menu.getByRole("menuitem").nth(1)).toBeFocused();
+  await expect(offered.nth(1)).toBeFocused();
   await page.keyboard.press("End");
-  await expect(menu.getByRole("menuitem").last()).toBeFocused();
+  await expect(offered.last()).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(menu).toHaveCount(0);
   expect(await focusedIn(page, editor)).toBe(true);

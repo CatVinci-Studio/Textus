@@ -232,7 +232,9 @@ function useFocusReturn(
   }, [opener, ref]);
   useEffect(() => {
     if (!opener) return;
-    ref.current?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
+    ref.current
+      ?.querySelector<HTMLElement>('[role^="menuitem"]:not(:disabled)')
+      ?.focus();
     return giveBack;
   }, [opener, ref, giveBack]);
   useEffect(() => {
@@ -335,7 +337,9 @@ function SubMenu({
   }, [anchor, items]);
   useEffect(() => {
     if (focus && pos)
-      ref.current?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
+      ref.current
+        ?.querySelector<HTMLElement>('[role^="menuitem"]:not(:disabled)')
+        ?.focus();
   }, [focus, pos]);
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {

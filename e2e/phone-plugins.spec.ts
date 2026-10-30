@@ -19,7 +19,7 @@ test("a plugin's command opens in place under Plugins in the menu", async ({
   page,
 }) => {
   await page.getByRole("button", { name: "Menu" }).tap();
-  const plugins = page.getByRole("menuitem", { name: "Plugins" });
+  const plugins = page.getByRole("menuitem", { name: "Plugins", exact: true });
   await plugins.tap();
   await expect(plugins).toHaveAttribute("aria-expanded", "true");
   // Under its row, not in a menu of its own beside it.
