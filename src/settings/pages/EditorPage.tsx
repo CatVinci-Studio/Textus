@@ -14,7 +14,10 @@ import {
   subscribeTracking,
   trackingShown,
 } from "../../ai/margin/track-changes-state";
-import { readOnlyShown, subscribeReadOnly } from "../../document/read-only-state";
+import {
+  readOnlyShown,
+  subscribeReadOnly,
+} from "../../document/read-only-state";
 import { emitMenuEvent } from "../../platform/menu-events";
 import { ThemeSection } from "../sections/theme";
 import { ImageStorageSection } from "../sections/images";
