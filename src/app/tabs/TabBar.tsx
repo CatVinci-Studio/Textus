@@ -14,6 +14,8 @@ import { ListMotion, measure, play, type PendingFlip } from "../../ui/flip";
 import { Tooltip } from "../../ui/Tooltip";
 import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
 import { Presence } from "../../ui/usePresence";
+import { iosFiles } from "../../platform/ios-files";
+import { isIOSApp } from "../../platform/capabilities";
 
 interface TabInfo {
   id: string;
@@ -52,6 +54,10 @@ interface TabBarProps {
 // (horizontal). dy always wins, like Chrome.
 const PULL_OUT_PX = 40;
 const REORDER_THRESHOLD_PX = 5;
+// A finger holds a tab this long, this still, to lift it: before that, a
+// move scrolls the bar.
+const LIFT_MS = 300;
+const LIFT_SLOP_PX = 8;
 
 // One slide for every pill making way, so overlapping moves read as one.
 const SLIDE =
@@ -170,12 +176,8 @@ export function TabBar({
           onPullOut={onPullOut}
           onReorder={onReorder}
           captureFlip={captureFlip}
-          onContextMenu={
-            menuFor &&
-            ((e) => {
-              e.preventDefault();
-              setMenu({ x: e.clientX, y: e.clientY, items: menuFor(tab.id) });
-            })
+          onMenu={
+            menuFor && ((x, y) => setMenu({ x, y, items: menuFor(tab.id) }))
           }
         />
       ))}
@@ -369,7 +371,7 @@ function TabPill({
   onPullOut,
   onReorder,
   captureFlip,
-  onContextMenu,
+  onMenu,
 }: {
   tab: TabInfo;
   tabIds: string[];
@@ -380,13 +382,16 @@ function TabPill({
   onPullOut?: (id: string, title: string) => void;
   onReorder: (id: string, index: number) => void;
   captureFlip: (how: { dropped?: string; gone?: string }) => void;
-  onContextMenu?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMenu?: (x: number, y: number) => void;
 }) {
   const elRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<{
     startX: number;
     startY: number;
     reordering: boolean;
+    /** A finger's press, until it has held still long enough to lift. */
+    waiting?: ReturnType<typeof setTimeout>;
+    lifted?: boolean;
     // Resting geometry, measured once; live shifting compares against it.
     rects: PillRect[];
     gap: number;
@@ -408,21 +413,69 @@ function TabPill({
     }
   }
 
+  // Once lifted, the finger drags the tab, not the bar: its moves are kept
+  // from scrolling until it comes off the glass, the pull included. Coming
+  // off, it sends no click: that would land on the menu it just opened.
+  const holding = useRef(false);
+  const lifted = useRef(false);
+  useEffect(() => {
+    const el = elRef.current;
+    const hold = (e: TouchEvent) => holding.current && e.preventDefault();
+    const end = (e: TouchEvent) => lifted.current && e.preventDefault();
+    el?.addEventListener("touchmove", hold, { passive: false });
+    el?.addEventListener("touchend", end, { passive: false });
+    return () => {
+      el?.removeEventListener("touchmove", hold);
+      el?.removeEventListener("touchend", end);
+    };
+  }, []);
+
+  function lift() {
+    const g = gesture.current;
+    if (!g) return;
+    g.waiting = undefined;
+    g.lifted = true;
+    holding.current = true;
+    lifted.current = true;
+    elRef.current?.classList.add("tab-pill-lifted");
+    if (isIOSApp) iosFiles.haptic();
+  }
+
+  function letGo() {
+    const g = gesture.current;
+    if (g?.waiting) clearTimeout(g.waiting);
+    holding.current = false;
+    elRef.current?.classList.remove("tab-pill-lifted");
+  }
+
   function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (e.button !== 0) return;
+    const touch = e.pointerType === "touch";
+    lifted.current = false;
     gesture.current = {
       startX: e.clientX,
       startY: e.clientY,
       reordering: false,
       rects: [],
       gap: 0,
+      waiting: touch ? setTimeout(lift, LIFT_MS) : undefined,
     };
-    e.currentTarget.setPointerCapture(e.pointerId);
+    if (!touch) e.currentTarget.setPointerCapture(e.pointerId);
   }
 
   function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
     const g = gesture.current;
     if (!g) return;
+    if (g.waiting) {
+      // Moved before it lifted: a scroll of the bar, not a drag.
+      if (
+        Math.hypot(e.clientX - g.startX, e.clientY - g.startY) > LIFT_SLOP_PX
+      ) {
+        letGo();
+        gesture.current = null;
+      }
+      return;
+    }
 
     if (onPullOut && Math.abs(e.clientY - g.startY) > PULL_OUT_PX) {
       // Pulled out of the bar: neighbours slide home, and the drag is the
@@ -487,10 +540,15 @@ function TabPill({
 
   function handlePointerUp(e: React.PointerEvent<HTMLDivElement>) {
     const g = gesture.current;
+    letGo();
     gesture.current = null;
     if (!g) return;
     if (!g.reordering) {
-      onActivate(tab.id);
+      // Lifted and let go where it was: the tab's menu, as a long press.
+      if (g.lifted && onMenu) {
+        const box = e.currentTarget.getBoundingClientRect();
+        onMenu(box.left, box.bottom);
+      } else onActivate(tab.id);
       return;
     }
     // The drop index is how many OTHER pills the center passed. FLIP comes
@@ -529,7 +587,18 @@ function TabPill({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onContextMenu={onContextMenu}
+      onPointerCancel={() => {
+        letGo();
+        gesture.current = null;
+        clearInlineStyles();
+      }}
+      onContextMenu={
+        onMenu &&
+        ((e) => {
+          e.preventDefault();
+          onMenu(e.clientX, e.clientY);
+        })
+      }
       // Otherwise WebKit starts a text selection and paints a sweep through
       // the editor once the pill detaches. (And a middle press would scroll.)
       onMouseDown={(e) => e.preventDefault()}

@@ -11,6 +11,8 @@ import {
 } from "./split-layout";
 import { paneById } from "./split-tree";
 import { setDragging, type DocumentDrop } from "../../ui/document-drop";
+import { PHONE_QUERY } from "../../ui/usePhoneLayout";
+import { isIOSApp } from "../../platform/capabilities";
 import "./split-drop.css";
 
 /**
@@ -45,13 +47,22 @@ function outerEdge(
   const across = Math.min(OUTER, area.width * OUTER_SHARE);
   const down = Math.min(OUTER, area.height * OUTER_SHARE);
   const sides = [
-    ["left", (x - area.left) / across],
-    ["right", (area.right - x) / across],
     ["top", (y - area.top) / down],
     ["bottom", (area.bottom - y) / down],
+    ...(stackOnly()
+      ? []
+      : ([
+          ["left", (x - area.left) / across],
+          ["right", (area.right - x) / across],
+        ] as const)),
   ] as const;
   const [side, near] = sides.reduce((a, b) => (b[1] < a[1] ? b : a));
   return near < 1 ? side : null;
+}
+
+/** On a phone, documents split only one above the other. */
+function stackOnly(): boolean {
+  return isIOSApp && matchMedia(PHONE_QUERY).matches;
 }
 
 function union(rects: DOMRect[]): DOMRect {
@@ -90,17 +101,19 @@ export function dropTargetAt(x: number, y: number): DropTarget | null {
   if (!tabId || !inside(rect, x, y)) return null;
   const fx = (x - rect.left) / rect.width;
   const fy = (y - rect.top) / rect.height;
-  const near = Math.min(fx, 1 - fx, fy, 1 - fy);
-  const zone: DropZone =
-    near > EDGE
-      ? "center"
-      : near === fx
-        ? "left"
-        : near === 1 - fx
-          ? "right"
-          : near === fy
-            ? "top"
-            : "bottom";
+  const sides: [DropZone, number][] = [
+    ["top", fy],
+    ["bottom", 1 - fy],
+    // A phone's column is too narrow to share: documents only stack there.
+    ...(stackOnly()
+      ? []
+      : ([
+          ["left", fx],
+          ["right", 1 - fx],
+        ] as [DropZone, number][])),
+  ];
+  const [side, near] = sides.reduce((a, b) => (b[1] < a[1] ? b : a));
+  const zone: DropZone = near > EDGE ? "center" : side;
   return { zone, tabId, rect };
 }
 

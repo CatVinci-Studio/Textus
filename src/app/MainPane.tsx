@@ -1,4 +1,5 @@
 import { Suspense, type ComponentProps, type CSSProperties } from "react";
+import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { EditorPane } from "../document-view/EditorPane";
 import {
   canDragTabsBetweenWindows,
@@ -94,6 +95,7 @@ export function MainPane({
     activeTabId,
     onAdd,
   );
+  const phone = usePhoneLayout();
   const grid = split && splitGrid(split.root);
   const panes = split ? panesOf(split.root) : [];
   // Each pane shows its tab in front; its place in reading order names it.
@@ -180,13 +182,14 @@ export function MainPane({
       previewTab={pane === null || pane === panes[0]?.id ? previewTab : null}
       menuFor={(id) => [
         {
-          label: t.openBeside,
+          // A phone's column only stacks.
+          label: phone ? t.menuSplitDown : t.openBeside,
           // The tab in front splits with its neighbour; another one
           // opens beside it.
           onSelect: () =>
             id === activeTabId && !split
-              ? splitEditor("row")
-              : openBeside(id, activeTabId),
+              ? splitEditor(phone ? "column" : "row")
+              : openBeside(id, activeTabId, phone ? "bottom" : "right"),
         },
         ...(canUseWindows
           ? [

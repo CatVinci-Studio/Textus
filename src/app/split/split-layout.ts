@@ -187,20 +187,26 @@ export function focusPane(id: string): void {
 }
 
 /**
- * Shows `tabId` beside `from`: in the pane to its right if there is one,
- * else in a new pane there; splitting the window when it isn't. Call once
- * both tabs are in the window's tabs.
+ * Shows `tabId` beside `from`: in the pane to its right (or below, on
+ * `bottom`) if there is one, else in a new pane there; splitting the window
+ * when it isn't. Call once both tabs are in the window's tabs.
  */
-export function openBeside(tabId: string, from: string | null): void {
+export function openBeside(
+  tabId: string,
+  from: string | null,
+  side: "right" | "bottom" = "right",
+): void {
   if (!from || from === tabId) return;
   const home = layout && paneWithTab(layout.root, from);
   if (!layout || !home) {
-    setSplitLayout(pairLayout("row", from, tabId, 1));
+    setSplitLayout(
+      pairLayout(side === "right" ? "row" : "column", from, tabId, 1),
+    );
     return;
   }
-  const right = paneBeside(layout.root, home.id, "right");
-  if (right) moveToPane(tabId, right.id);
-  else splitBeside(tabId, home.id, "right");
+  const next = paneBeside(layout.root, home.id, side);
+  if (next) moveToPane(tabId, next.id);
+  else splitBeside(tabId, home.id, side);
 }
 
 /** A branch rearranged: turned the other way, or the two children either

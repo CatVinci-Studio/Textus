@@ -52,6 +52,22 @@
   animation: none;
 }
 
+/* Held by a finger until it lifts: it rises under it, ready to drag, and
+   no callout or selection comes up meanwhile. */
+.tab-pill {
+  -webkit-touch-callout: none;
+}
+
+.tab-pill-lifted {
+  scale: 1.06;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: var(--shadow-popover);
+  transition:
+    scale var(--dur-fast) var(--ease-spring-bouncy),
+    background-color var(--dur-fast) var(--ease-standard);
+}
+
 /* Inside the ring: the bar scrolls, and clips what lies outside it. */
 .tab-pill:focus-visible {
   outline-offset: -2px;
