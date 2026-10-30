@@ -76,7 +76,7 @@ In **GitHub repository › Settings › Secrets and variables › Actions**, add
 
 - **Description, keywords, subtitle, promotional text:** You can adapt them from the "Features" section of the README.
 - **Support URL:** `https://textus.catvinci.com`. **Privacy policy URL:** `https://textus.catvinci.com/privacy/`.
-- **App Privacy** questionnaire: Textus does not collect data, so choose "Data Not Collected". AI requests go to a provider that the user sets up, straight from the device. They do not pass through our servers.
+- **App Privacy** questionnaire: Textus collects one thing, anonymous install counts of plugins, themes and skills (on by default, off in Settings › Privacy). Declare **Usage Data › Product Interaction**, used for **Analytics**, **not linked** to the user and **not used for tracking**, as `src-tauri/PrivacyInfo.ios.xcprivacy` does. AI requests go to a provider that the user sets up, straight from the device. They do not pass through our servers.
 - **Age rating:** 4+.
 - **Export compliance:** The app uses only standard encryption such as HTTPS. `src-tauri/Info.ios.plist` declares `ITSAppUsesNonExemptEncryption = false` (standard encryption such as HTTPS only), so App Store Connect does not ask again after upload.
 - **Review notes:** Explain that the AI features need the user's own API key. Provide a test key, or explain how to use an option such as Ollama. Without a key, the editor itself is fully usable.
