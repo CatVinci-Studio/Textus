@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { menuIpc, windowIpc } from "../platform/ipc";
-import { selectAllInFocus } from "../ui/select-all";
+import { editInFocus } from "../ui/edit-in-focus";
 import { hasNativeMenuBar } from "../platform/capabilities";
 import {
   nativeMenuAccelerators,
@@ -156,7 +156,9 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-toggle-zen-mode", () => h().onToggleZenMode()),
       // Edit > Copy and Paste as Plain Text run where Copy does, in the
       // editor on screen (useEditorWindowEvents.ts).
-      listenToThisWindow("menu-select-all", selectAllInFocus),
+      listenToThisWindow("menu-select-all", () => editInFocus("select-all")),
+      listenToThisWindow("menu-undo", () => editInFocus("undo")),
+      listenToThisWindow("menu-redo", () => editInFocus("redo")),
       listenToThisWindow("menu-copy-as-plain-text", () =>
         window.dispatchEvent(
           new CustomEvent(EDIT_ACTION_EVENT, { detail: "copy-as-plain-text" }),

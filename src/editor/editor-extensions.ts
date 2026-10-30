@@ -104,6 +104,7 @@ import {
   htmlTagInputRule,
 } from "./markdown/source-input-rules";
 import { pasteUrlPlugin } from "./markdown/paste-url";
+import { ownUndoStepPlugin } from "./markdown/own-undo-step";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
 import { copyTextPlugin } from "./markdown/copy-text-plugin";
@@ -362,6 +363,7 @@ export function withEditorCore(
       // order: images (binary, most specific) first, then a lone URL, then
       // markdown-source text, then milkdown's own clipboard plugin.
       .use(history)
+      .use(ownUndoStepPlugin)
       .use(
         "noDiskImages" in options
           ? options.noDiskImages

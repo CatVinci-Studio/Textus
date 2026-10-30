@@ -225,6 +225,10 @@ test("turning every plugin off takes its tab away", async ({ page }) => {
   await expect(tab).toHaveCount(1);
   await openPluginsPage(page);
   await page.getByRole("checkbox", { name: "Plugins" }).uncheck();
+  // Each card quieter, with no note of its own: the switch says it.
+  const card = page.locator('[data-plugin="test.hello"]');
+  await expect(card).toHaveClass(/is-off/);
+  await expect(card.locator(".settings-error")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(tab).toHaveCount(0);
 });

@@ -397,7 +397,10 @@ export function createImagePlugin(options: ImageStore) {
           const blobs = blobImageSrcs(slice);
           if (blobs.length > 0) {
             view.dispatch(
-              view.state.tr.replaceSelection(slice).scrollIntoView(),
+              view.state.tr
+                .replaceSelection(slice)
+                .setMeta("uiEvent", "paste")
+                .scrollIntoView(),
             );
             void storeBlobImages(view, blobs, options, storedBlobs);
             return true;

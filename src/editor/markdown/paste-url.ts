@@ -49,7 +49,7 @@ export function insertUrlLink(view: EditorView, url: string): boolean {
     // The selected words keep their text and take the URL; an old link on
     // them is replaced rather than nested.
     tr.removeMark(from, to, link).addMark(from, to, link.create({ href: url }));
-    view.dispatch(tr.scrollIntoView());
+    view.dispatch(tr.setMeta("uiEvent", "paste").scrollIntoView());
     return true;
   }
   const inLink =
@@ -65,7 +65,7 @@ export function insertUrlLink(view: EditorView, url: string): boolean {
     )
       // Typing straight after the pasted URL should not extend the link.
       .setStoredMarks([]);
-  view.dispatch(tr.scrollIntoView());
+  view.dispatch(tr.setMeta("uiEvent", "paste").scrollIntoView());
   return true;
 }
 
