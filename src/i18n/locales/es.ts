@@ -525,6 +525,7 @@ para usar una.
   settingsSearchResults: "Resultados de la búsqueda",
   settingsSearchNoMatches: "Ningún ajuste coincide.",
   settingsViewGroup: "Visualización",
+  settingsFrontDocumentHint: "Para el documento en primer plano.",
   settingsHelpGroup: "Ayuda",
   settingsDone: "OK",
   navGeneral: "General",

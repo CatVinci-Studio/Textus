@@ -532,6 +532,7 @@ utiliser une.
   settingsSearchResults: "Résultats de la recherche",
   settingsSearchNoMatches: "Aucun réglage ne correspond.",
   settingsViewGroup: "Affichage",
+  settingsFrontDocumentHint: "Pour le document au premier plan.",
   settingsHelpGroup: "Aide",
   settingsDone: "OK",
   navGeneral: "Général",

@@ -516,6 +516,7 @@ export default {
   settingsSearchResults: "Результаты поиска",
   settingsSearchNoMatches: "Нет подходящих настроек.",
   settingsViewGroup: "Вид",
+  settingsFrontDocumentHint: "Для открытого сейчас документа.",
   settingsHelpGroup: "Справка",
   settingsDone: "Готово",
   navGeneral: "Основные",

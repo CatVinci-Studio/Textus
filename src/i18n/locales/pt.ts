@@ -511,6 +511,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   settingsSearchResults: "Resultados da busca",
   settingsSearchNoMatches: "Nenhum ajuste corresponde.",
   settingsViewGroup: "Visualização",
+  settingsFrontDocumentHint: "Para o documento em primeiro plano.",
   settingsHelpGroup: "Ajuda",
   settingsDone: "OK",
   navGeneral: "Geral",

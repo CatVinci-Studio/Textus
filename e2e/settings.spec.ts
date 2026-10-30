@@ -840,3 +840,24 @@ test.describe("phone", () => {
     await expect(editor).toBeFocused();
   });
 });
+
+test("Settings' view switches match the View menu's: Track My Changes and Read Only, for the document in front", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  const panel = await openSettings(page);
+  await panel.getByRole("button", { name: "Editor & Appearance" }).click();
+  const readOnly = panel.getByRole("checkbox", { name: "Read Only" });
+  const tracking = panel.getByRole("checkbox", { name: "Track My Changes" });
+  await expect(readOnly).not.toBeChecked();
+  await expect(tracking).not.toBeChecked();
+  await readOnly.click({ force: true });
+  await expect(readOnly).toBeChecked();
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toHaveAttribute("contenteditable", "false");
+  await readOnly.click({ force: true });
+  await tracking.click({ force: true });
+  await expect(tracking).toBeChecked();
+  await expect(readOnly).not.toBeChecked();
+});

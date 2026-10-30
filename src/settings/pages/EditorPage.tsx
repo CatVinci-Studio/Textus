@@ -9,6 +9,13 @@ import {
   type DiagramEngine,
 } from "../../prefs/SettingsContext";
 import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
+import { useSyncExternalStore } from "react";
+import {
+  subscribeTracking,
+  trackingShown,
+} from "../../ai/margin/track-changes-state";
+import { readOnlyShown, subscribeReadOnly } from "../../app/read-only-state";
+import { emitMenuEvent } from "../../platform/menu-events";
 import { ThemeSection } from "../sections/theme";
 import { ImageStorageSection } from "../sections/images";
 import { Select } from "../../ui/Select";
@@ -27,6 +34,8 @@ export function EditorPage({
   setSubpage,
   openPage,
 }: SettingsPageProps) {
+  const tracking = useSyncExternalStore(subscribeTracking, trackingShown);
+  const readOnly = useSyncExternalStore(subscribeReadOnly, readOnlyShown);
   return (
     <>
       <SettingsGroup title={t.navTheme}>
@@ -108,6 +117,19 @@ export function EditorPage({
           label={t.menuToggleZenMode}
           checked={settings.zenMode}
           onChange={(on) => setSettings({ zenMode: on })}
+        />
+        {/* The document in front's, as the View menu's own. */}
+        <ToggleRow
+          label={t.menuTrackChanges}
+          hint={t.settingsFrontDocumentHint}
+          checked={tracking}
+          onChange={() => emitMenuEvent("track-changes")}
+        />
+        <ToggleRow
+          label={t.menuToggleReadOnly}
+          hint={t.settingsFrontDocumentHint}
+          checked={readOnly}
+          onChange={() => emitMenuEvent("toggle-read-only")}
         />
       </SettingsGroup>
       {/* What the document shows, then how typing behaves. */}

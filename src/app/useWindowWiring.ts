@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { setReadOnlyShown } from "./read-only-state";
 import { installClipboardCapture } from "../clipboard/history";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
@@ -137,6 +138,7 @@ export function useWindowWiring({
     folderOpen: openFolder.folder !== null,
   };
   useNativeMenuChecks(menuChecks);
+  useEffect(() => setReadOnlyShown(menuChecks.readOnly), [menuChecks.readOnly]);
   useNativeMenuAccelerators(settings.shortcuts);
 
   useMenuBridge({

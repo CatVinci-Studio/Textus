@@ -507,6 +507,7 @@ type /name in a conversation to use one.
   settingsSearchResults: "Search results",
   settingsSearchNoMatches: "No settings match.",
   settingsViewGroup: "View",
+  settingsFrontDocumentHint: "For the document in front.",
   settingsHelpGroup: "Help",
   settingsDone: "Done",
   navGeneral: "General",

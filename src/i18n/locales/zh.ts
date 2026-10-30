@@ -462,6 +462,7 @@ export default {
   settingsSearchResults: "搜索结果",
   settingsSearchNoMatches: "没有匹配的设置。",
   settingsViewGroup: "视图",
+  settingsFrontDocumentHint: "作用于当前文档。",
   settingsHelpGroup: "帮助",
   settingsDone: "完成",
   navGeneral: "通用",

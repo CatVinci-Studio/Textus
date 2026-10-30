@@ -462,6 +462,7 @@ export default {
   settingsSearchResults: "搜尋結果",
   settingsSearchNoMatches: "沒有符合的設定。",
   settingsViewGroup: "檢視",
+  settingsFrontDocumentHint: "作用於目前的文件。",
   settingsHelpGroup: "說明",
   settingsDone: "完成",
   navGeneral: "一般",

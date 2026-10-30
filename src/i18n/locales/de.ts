@@ -515,6 +515,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   settingsSearchResults: "Suchergebnisse",
   settingsSearchNoMatches: "Keine Einstellung passt.",
   settingsViewGroup: "Ansicht",
+  settingsFrontDocumentHint: "Für das Dokument im Vordergrund.",
   settingsHelpGroup: "Hilfe",
   settingsDone: "Fertig",
   navGeneral: "Allgemein",

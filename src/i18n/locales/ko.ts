@@ -485,6 +485,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   settingsSearchResults: "검색 결과",
   settingsSearchNoMatches: "일치하는 설정이 없습니다.",
   settingsViewGroup: "보기",
+  settingsFrontDocumentHint: "앞에 있는 문서에 적용됩니다.",
   settingsHelpGroup: "도움말",
   settingsDone: "완료",
   navGeneral: "일반",
