@@ -737,6 +737,15 @@
   outline: none;
 }
 
+/* On its way to an open submenu, the pointer lights no row it crosses. */
+:is(.app-menu-list, .context-menu)[data-aiming]
+  :is(.app-menu-item, .context-menu-item):hover:not(
+    [aria-expanded="true"],
+    :focus-visible
+  ) {
+  background: transparent;
+}
+
 :is(.app-menu-separator, .context-menu-separator, .project-bar-menu-sep) {
   height: 1px;
   margin: 4px 6px;

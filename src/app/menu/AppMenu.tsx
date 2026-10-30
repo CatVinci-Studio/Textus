@@ -17,6 +17,7 @@ import {
 } from "./app-menu-model";
 import { thisWindow } from "../../platform/this-window";
 import { canToggleFullscreen, hasAppMenu } from "../../platform/capabilities";
+import { useMenuAim } from "../../ui/menu-aim";
 import { CheckIcon, ChevronIcon } from "../../ui/icons";
 import { usePresenceProps } from "../../ui/usePresence";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
@@ -171,6 +172,15 @@ function MenuList({
     setInstantFlyout(index !== null && now - lastFlyout.current < 400);
     setOpenIndex(index);
   };
+  // A pointer on its way to the open flyout leaves it open (menu-aim.ts).
+  const aim = useMenuAim<number>(
+    showFlyout,
+    () => listRef.current,
+    () =>
+      listRef.current?.querySelector<HTMLElement>(
+        ":scope > .app-menu-row > .app-menu-flyout",
+      ) ?? null,
+  );
 
   useEffect(() => {
     if (!autoFocus) return;
@@ -214,6 +224,7 @@ function MenuList({
       className="app-menu-list floating-surface"
       role="menu"
       onKeyDown={onKeyDown}
+      onMouseMove={aim.move}
     >
       {items.map((item, i) =>
         item === "separator" ? (
@@ -226,7 +237,8 @@ function MenuList({
             open={openIndex === i}
             instantFlyout={instantFlyout}
             // Hovering a row with no submenu closes the open one.
-            onHover={() => showFlyout(item.submenu ? i : null)}
+            onHover={() => aim.hover(item.submenu ? i : null)}
+            onEnterFlyout={aim.hold}
             onOpenSubmenu={() => showFlyout(i)}
             onCloseSubmenu={() => showFlyout(null)}
             onDismiss={onDismiss}
@@ -243,6 +255,7 @@ function MenuRow({
   open,
   instantFlyout,
   onHover,
+  onEnterFlyout,
   onOpenSubmenu,
   onCloseSubmenu,
   onDismiss,
@@ -254,6 +267,8 @@ function MenuRow({
   /** Its flyout appears without sliding. */
   instantFlyout: boolean;
   onHover: () => void;
+  /** The pointer reached its flyout. */
+  onEnterFlyout: () => void;
   onOpenSubmenu: () => void;
   onCloseSubmenu: () => void;
   onDismiss: () => void;
@@ -319,7 +334,11 @@ function MenuRow({
         {hasSubmenu && <ChevronIcon className="app-menu-chevron" />}
       </button>
       {hasSubmenu && open && (
-        <Flyout anchor={rowRef} instant={instantFlyout}>
+        <Flyout
+          anchor={rowRef}
+          instant={instantFlyout}
+          onMouseEnter={onEnterFlyout}
+        >
           <MenuList
             items={item.submenu ?? []}
             onDismiss={onDismiss}
@@ -341,10 +360,12 @@ function MenuRow({
 function Flyout({
   anchor,
   instant,
+  onMouseEnter,
   children,
 }: {
   anchor: React.RefObject<HTMLButtonElement | null>;
   instant: boolean;
+  onMouseEnter: () => void;
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -373,6 +394,7 @@ function Flyout({
     <div
       ref={ref}
       className={`app-menu-flyout${instant ? " app-menu-flyout-instant" : ""}`}
+      onMouseEnter={onMouseEnter}
       // Painted only once measured.
       style={pos ?? { visibility: "hidden", left: 0, top: 0 }}
     >
