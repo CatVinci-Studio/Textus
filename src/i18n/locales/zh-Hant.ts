@@ -1041,6 +1041,10 @@ export default {
   tutorialSidebarTaskMac:
     "在選單列選「檢視 › 側邊欄」（{shortcut}），再打開「大綱」",
   tutorialSidebarTaskPhone: "點左上角的選單 ☰，選「側邊欄」，再打開「大綱」",
+  tutorialPaletteTitle: "命令面板",
+  tutorialPaletteBody: "選單裡的所有命令，輸入幾個字就能找到。",
+  tutorialPaletteTask: "按 {shortcut}，輸入幾個字，按 Enter 執行一個命令",
+  tutorialPaletteTaskPhone: "在電腦上用 Ctrl+Shift+P（Mac 上是 ⌘⇧P）打開",
   tutorialConnectTitle: "連線你的 AI",
   tutorialConnectBody: "連上之後，下面的 AI 功能可以真的試一試。",
   tutorialConnectTask: "登入或填入金鑰；也可以先略過",

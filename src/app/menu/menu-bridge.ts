@@ -6,7 +6,7 @@ import {
 } from "../../ai/margin/track-changes-state";
 import { TRACK_CHANGES_EVENT } from "../../utils/events";
 import { menuIpc, windowIpc } from "../../platform/ipc";
-import { selectAllInFocus } from "../../ui/select-all";
+import { editInFocus } from "../../ui/edit-in-focus";
 import { hasNativeMenuBar } from "../../platform/capabilities";
 import { nativeMenuChecks, type MenuChecks } from "./app-menu-model";
 import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";
@@ -22,7 +22,7 @@ import type { DocTab, HelpDoc } from "../../document/doc-tabs";
 import type { Strings } from "../../i18n/strings";
 import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
 import { closeSplit, splitEditor } from "../split/split-layout";
-import { openCommandPalette } from "../command-palette";
+import { openCommandPalette } from "../command-palette-entry";
 import { copyPath } from "../../clipboard/copy-path";
 import { openReportProblem } from "../report/ReportProblem";
 
@@ -168,7 +168,9 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-split-down", () => splitEditor("column")),
       listenToThisWindow("menu-close-split", () => closeSplit()),
       // Edit > Copy and Paste as Plain Text run in the editor on screen.
-      listenToThisWindow("menu-select-all", selectAllInFocus),
+      listenToThisWindow("menu-select-all", () => editInFocus("select-all")),
+      listenToThisWindow("menu-undo", () => editInFocus("undo")),
+      listenToThisWindow("menu-redo", () => editInFocus("redo")),
       listenToThisWindow("menu-copy-as-plain-text", () =>
         window.dispatchEvent(
           new CustomEvent(EDIT_ACTION_EVENT, { detail: "copy-as-plain-text" }),

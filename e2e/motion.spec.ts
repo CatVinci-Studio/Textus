@@ -194,7 +194,7 @@ test("reopened during its exit, the find bar takes the focus again", async ({
       window as unknown as { __devEmitTauriEvent: (name: string) => void }
     ).__devEmitTauriEvent;
     const frame = () => new Promise(requestAnimationFrame);
-    emit("menu-find-replace");
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     await frame();
     await frame();
     const closing = !!document.querySelector(

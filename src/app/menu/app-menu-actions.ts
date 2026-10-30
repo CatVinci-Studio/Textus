@@ -1,5 +1,5 @@
 import { thisWindow } from "../../platform/this-window";
-import { selectAllInFocus } from "../../ui/select-all";
+import { editInFocus } from "../../ui/edit-in-focus";
 import { EDIT_ACTION_EVENT } from "../../utils/events";
 import type { LocalMenuAction, MenuAction } from "./app-menu-model";
 import { canToggleFullscreen, hasAppMenu } from "../../platform/capabilities";
@@ -19,8 +19,8 @@ export function runMenuAction(action: MenuAction): void {
 /** Items with no native id to fire (predefined items in the native menu),
  *  run on this side instead. */
 export function runLocalMenuAction(action: LocalMenuAction): void {
-  if (action === "select-all") {
-    selectAllInFocus();
+  if (action === "select-all" || action === "undo" || action === "redo") {
+    editInFocus(action);
     return;
   }
   if (action === "fullscreen") {

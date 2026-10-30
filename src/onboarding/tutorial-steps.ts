@@ -26,6 +26,7 @@ export type TutorialStepId =
   | "blocks"
   | "modes-themes"
   | "sidebar-export"
+  | "palette"
   | "connect"
   | "write"
   | "review"
@@ -184,6 +185,18 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
       },
     ],
     clip: "sidebar-export",
+  },
+  {
+    // A tip more than a lesson: a phone has no shortcut to try it with.
+    id: "palette",
+    chapter: "writing",
+    layout: "card",
+    titleKey: "tutorialPaletteTitle",
+    bodyKey: "tutorialPaletteBody",
+    tasks: [
+      { key: "tutorialPaletteTask", phoneKey: "tutorialPaletteTaskPhone" },
+    ],
+    optional: true,
   },
   {
     // Never a gate: leaving it decides whether the AI lessons are done for real

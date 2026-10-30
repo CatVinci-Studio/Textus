@@ -1081,6 +1081,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "메뉴 막대에서 ‘보기 › 사이드바’를 고르고({shortcut}) 개요를 여세요",
   tutorialSidebarTaskPhone:
     "왼쪽 위 메뉴 ☰에서 ‘사이드바’를 고르고 개요를 여세요",
+  tutorialPaletteTitle: "명령 팔레트",
+  tutorialPaletteBody: "메뉴의 모든 명령을 몇 글자만 입력해 찾을 수 있습니다.",
+  tutorialPaletteTask:
+    "{shortcut}을 누르고 몇 글자 입력한 뒤 Enter로 명령 실행",
+  tutorialPaletteTaskPhone: "컴퓨터에서는 Ctrl+Shift+P(Mac은 ⌘⇧P)로 엽니다",
   tutorialConnectTitle: "AI 연결하기",
   tutorialConnectBody: "연결하면 이어지는 AI 기능을 직접 해 볼 수 있습니다.",
   tutorialConnectTask:

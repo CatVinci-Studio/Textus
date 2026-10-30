@@ -181,10 +181,11 @@ function PluginCard({
 }) {
   const name = pluginName(record);
   const manifest = record.manifest;
-  const status = statusText(record, allOn, t);
+  // All turned off: every card quieter, the switch above says why.
+  const status = statusText(record, true, t);
   return (
     <div
-      className={`settings-row plugin-card${record.status === "on" ? "" : " is-off"}`}
+      className={`settings-row plugin-card${record.status === "on" && allOn ? "" : " is-off"}`}
       data-plugin={record.id}
     >
       <button

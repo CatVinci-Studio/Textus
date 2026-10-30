@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown, selectionRead } from "./helpers";
 
 // What a paste puts in the markdown. The dev shim answers the image
 // commands with canned srcs.
@@ -271,6 +271,8 @@ test("a copy's plain text is its Markdown source, and code copied inside a code 
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await pasteMarkdown(page, LINKED + "\n\n```js\nlet x = 1;\n```");
   await page.locator(`${editor} p`).first().click();
+  // Out of the code block first: there Select All would take its code.
+  await selectionRead(page);
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.press("ControlOrMeta+c");
   const clip = await clipboardNow(page);

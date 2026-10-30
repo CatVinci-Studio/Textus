@@ -1040,6 +1040,10 @@ export default {
   tutorialSidebarTaskMac:
     "在菜单栏选“视图 › 侧边栏”（{shortcut}），再打开“大纲”",
   tutorialSidebarTaskPhone: "点左上角的菜单 ☰，选“侧边栏”，再打开“大纲”",
+  tutorialPaletteTitle: "命令面板",
+  tutorialPaletteBody: "菜单里的所有命令，输入几个字就能找到。",
+  tutorialPaletteTask: "按 {shortcut}，输入几个字，回车运行一个命令",
+  tutorialPaletteTaskPhone: "在电脑上用 Ctrl+Shift+P（Mac 上是 ⌘⇧P）打开",
   tutorialConnectTitle: "连接你的 AI",
   tutorialConnectBody: "连上之后，下面的 AI 功能可以真的试一试。",
   tutorialConnectTask: "登录或填 key；也可以先跳过",

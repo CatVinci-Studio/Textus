@@ -44,6 +44,7 @@ const SIGNAL_LESSONS: Record<TourSignal, TutorialStepId[]> = {
   "review-note": ["review"],
   reply: ["review"],
   "skill-sent": ["skills"],
+  "palette-command": ["palette"],
 };
 
 function loadProgress(): TutorialProgress {

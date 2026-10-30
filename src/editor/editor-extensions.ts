@@ -47,6 +47,7 @@ import { createMdSpanAutopairPlugin } from "./marks/md-span-autopair-plugin";
 import { createColorSwatchPlugin } from "./marks/color-swatch-plugin";
 import { createBracketAutopairPlugin } from "./keys/bracket-autopair-plugin";
 import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
+import { selectAllKeyPlugin } from "./keys/select-all";
 import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
 import { compositionPruneGuardPlugin } from "./keys/composition-prune-guard-plugin";
@@ -106,6 +107,7 @@ import {
   htmlTagInputRule,
 } from "./markdown/source-input-rules";
 import { pasteUrlPlugin } from "./clipboard/paste-url";
+import { ownUndoStepPlugin } from "./clipboard/own-undo-step";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { createLinkHoverPlugin } from "./hover/link-hover-plugin";
 import { createCompletionPlugin } from "./completion/completion-plugin";
@@ -285,6 +287,7 @@ export function withEditorCore(
         }),
       )
       .use(formatShortcutPlugin)
+      .use(selectAllKeyPlugin)
       .use(enclosurePlugin)
       .use(
         createColorSwatchPlugin({
@@ -335,6 +338,7 @@ export function withEditorCore(
       // handlePaste props run in registration order: images first, then a lone
       // URL, then markdown source, then milkdown's own clipboard plugin.
       .use(history)
+      .use(ownUndoStepPlugin)
       .use(
         "noDiskImages" in options
           ? options.noDiskImages

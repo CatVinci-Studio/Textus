@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
-import { TextSelection } from "@milkdown/kit/prose/state";
+import { AllSelection, TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { createTestEditor } from "../../document-view/editor-test-harness";
 
@@ -90,5 +90,44 @@ describe("Ctrl+B and Ctrl+I on their own formatting", () => {
 
   it("keeps the italic half of bold-italic", async () => {
     expect((await pressOver("a ***bi*** c\n", 5, 5)).saved).toBe("a *bi* c\n");
+  });
+});
+
+/** Opens `markdown`, selects all of it as Select All does, presses
+ *  Ctrl+`key` `times` times; what was saved after each press. */
+async function pressOverAll(
+  markdown: string,
+  key: string,
+  times: number,
+): Promise<string[]> {
+  const editor = await createTestEditor(markdown);
+  editors.push(editor);
+  return editor.action((ctx) => {
+    const view: EditorView = ctx.get(editorViewCtx);
+    const saved: string[] = [];
+    view.dispatch(view.state.tr.setSelection(new AllSelection(view.state.doc)));
+    for (let i = 0; i < times; i++) {
+      const event = new KeyboardEvent("keydown", { key, ctrlKey: true });
+      view.someProp("handleKeyDown", (f) => f(view, event));
+      saved.push(ctx.get(serializerCtx)(view.state.doc));
+    }
+    return saved;
+  });
+}
+
+describe("Ctrl+B and Ctrl+I over several blocks", () => {
+  it("formats each block's text after Select All, and takes it off again", async () => {
+    const [on, off] = await pressOverAll(
+      "One line\n\nTwo lines\n\n```\ncode\n```\n",
+      "b",
+      2,
+    );
+    expect(on).toBe("**One line**\n\n**Two lines**\n\n```\ncode\n```\n");
+    expect(off).toBe("One line\n\nTwo lines\n\n```\ncode\n```\n");
+  });
+
+  it("formats a list's items each", async () => {
+    const [on] = await pressOverAll("- one\n- two\n", "i", 1);
+    expect(on).toBe("- *one*\n- *two*\n");
   });
 });

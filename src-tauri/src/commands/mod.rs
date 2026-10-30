@@ -21,6 +21,8 @@ pub mod fs;
 pub mod image_host;
 pub mod input_source;
 pub mod links;
+#[cfg(desktop)]
+pub mod native_edit;
 pub mod own_notes;
 #[cfg(desktop)]
 pub mod pdf_page_numbers;

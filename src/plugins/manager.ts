@@ -14,7 +14,7 @@ import type { PluginFile } from "../platform/ipc";
 import { isIOSApp } from "../platform/capabilities";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
 import { registerCommand, runCommand } from "../app/commands";
-import { pickWithCommands } from "../app/command-palette";
+import { pickWithCommands } from "../app/command-palette-entry";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import { getActiveDocument } from "./app-bridge";
 import type { PluginHost } from "./host/broker";

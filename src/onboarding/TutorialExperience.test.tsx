@@ -98,7 +98,11 @@ function Harness({
       t={resolveStrings(language)}
       language={language}
       phone={phone}
-      shortcuts={{ agentPanel: "Ctrl+Shift+L", sidebar: "Ctrl+\\" }}
+      shortcuts={{
+        agentPanel: "Ctrl+Shift+L",
+        sidebar: "Ctrl+\\",
+        palette: "Ctrl+Shift+P",
+      }}
       zen={{ on: false, toggle: vi.fn() }}
     />
   );

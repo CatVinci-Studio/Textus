@@ -23,7 +23,7 @@ import {
   INSERT_BLOCK_EVENT,
 } from "../utils/events";
 import { closeSplit, splitEditor, splitLayout } from "./split/split-layout";
-import { openCommandPalette } from "./command-palette";
+import { openCommandPalette } from "./command-palette-entry";
 import { isImeKeydown } from "../utils/ime";
 
 /** The heading shortcuts, by the block kind they apply. */

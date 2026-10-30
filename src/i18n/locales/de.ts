@@ -1136,6 +1136,13 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Wähl in der Menüleiste Ansicht › Seitenleiste ({shortcut}) und öffne die Gliederung",
   tutorialSidebarTaskPhone:
     "Tippe oben links auf das Menü ☰, dann auf Seitenleiste, und öffne die Gliederung",
+  tutorialPaletteTitle: "Befehlspalette",
+  tutorialPaletteBody:
+    "Jeder Befehl aus den Menüs, gefunden mit ein paar Buchstaben.",
+  tutorialPaletteTask:
+    "Drücke {shortcut}, tippe ein paar Buchstaben und führe mit Enter einen Befehl aus",
+  tutorialPaletteTaskPhone:
+    "Am Computer öffnet sie sich mit Strg+Umschalt+P (⌘⇧P auf dem Mac)",
   tutorialConnectTitle: "KI verbinden",
   tutorialConnectBody:
     "Ist sie verbunden, kannst du das Folgende wirklich ausprobieren.",

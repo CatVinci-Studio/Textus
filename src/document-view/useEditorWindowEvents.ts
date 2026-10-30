@@ -127,7 +127,7 @@ export function useEditorWindowEvents({
   );
   useWindowEvent(
     TOGGLE_FIND_REPLACE_EVENT,
-    () => isOnScreen() && findReplace.toggle(),
+    () => isOnScreen() && findReplace.show(),
   );
   useWindowEvent(CLOSE_FIND_REPLACE_EVENT, () => findReplace.dismiss());
 
