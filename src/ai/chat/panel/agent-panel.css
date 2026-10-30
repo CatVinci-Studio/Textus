@@ -90,16 +90,16 @@
   padding: 0 var(--space-3);
   border: 0;
   background: none;
-  color: var(--ui-muted);
+  color: var(--ui-text);
   font: inherit;
   font-size: var(--text-footnote);
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: color var(--dur-fast) var(--ease-standard);
 }
 
 .agent-panel-tabs button[aria-selected="true"] {
-  color: var(--ui-text);
+  font-weight: 600;
 }
 
 .agent-panel-tabs button:focus-visible {

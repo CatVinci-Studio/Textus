@@ -1209,7 +1209,7 @@ button.settings-skill-action:focus-visible {
   padding: 0 var(--space-3);
   border-radius: var(--shape-pill);
   corner-shape: round;
-  color: var(--ui-muted);
+  color: var(--ui-text);
   font-size: var(--text-footnote);
   font-weight: 500;
   cursor: pointer;
