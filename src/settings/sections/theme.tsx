@@ -14,10 +14,17 @@ import { exportDoc, fs, themes } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { Select } from "../../ui/Select";
 import { LinkRow, RowHelp, SettingRow } from "./controls";
-import { ThemeGallerySection } from "./theme-gallery";
+import {
+  AvailableThemes,
+  ThemeGallerySection,
+  galleryUpdates,
+  useGalleryCatalog,
+  useGalleryInstall,
+} from "./theme-gallery";
 import { ExtensionsTabLayout } from "../pages/ExtensionsTabLayout";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
+import { matchesWords } from "../../utils/match-words";
 
 const CUSTOM_CSS_PLACEHOLDER = `#write > p {
   text-indent: 2em;
@@ -322,17 +329,18 @@ function CustomCssRow({ t }: { t: Strings }) {
 
 /** Settings › Extensions › Themes: the user's themes, Get more, "⋯" to
  *  import or export, and the user's own CSS folded under Advanced. */
-export function ThemesTab({
-  t,
-  onGetMore,
-}: {
-  t: Strings;
-  onGetMore: () => void;
-}) {
+export function ThemesTab({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
   const { busy, error, run } = useThemeAction();
   const importTheme = useImportTheme(run);
+  const [query, setQuery] = useState("");
+  const gallery = useGalleryCatalog();
+  const install = useGalleryInstall(t);
+  const updates = galleryUpdates(gallery.catalog, settings.userThemes);
+  const mine = settings.userThemes.filter((theme) =>
+    matchesWords(theme.name, query),
+  );
   const remove = (id: string) =>
     run(async () => {
       await themes.deleteTheme(id);
@@ -345,7 +353,8 @@ export function ThemesTab({
     <ExtensionsTabLayout
       t={t}
       intro={t.extensionsIntroThemes}
-      onGetMore={onGetMore}
+      query={query}
+      onQuery={setQuery}
       actions={[
         { label: t.themeImportButton, onSelect: () => void importTheme() },
         {
@@ -355,9 +364,10 @@ export function ThemesTab({
       ]}
       error={error}
       installedTitle={t.extensionsThemesInstalled}
+      installedCount={settings.userThemes.length}
       installed={
-        settings.userThemes.length ? (
-          settings.userThemes.map((theme) => (
+        mine.length ? (
+          mine.map((theme) => (
             <div
               key={theme.id}
               className="settings-row plugin-card"
@@ -369,6 +379,16 @@ export function ThemesTab({
                 </span>
               </div>
               <div className="settings-row-control">
+                {updates.has(theme.id) && (
+                  <button
+                    type="button"
+                    className="text-button settings-inline-button"
+                    disabled={install.busy}
+                    onClick={() => void install.install(updates.get(theme.id)!)}
+                  >
+                    {t.themeGalleryUpdate}
+                  </button>
+                )}
                 {settings.themeId === theme.id ? (
                   <span className="settings-row-value">
                     {t.themeGalleryInUse}
@@ -396,9 +416,19 @@ export function ThemesTab({
           ))
         ) : (
           <p className="plugin-empty">
-            {t.extensionsThemesNone.replace("{page}", t.navEditor)}
+            {query.trim()
+              ? t.pluginsSearchNone.replace("{query}", query.trim())
+              : t.extensionsThemesNone.replace("{page}", t.navEditor)}
           </p>
         )
+      }
+      available={
+        <AvailableThemes
+          t={t}
+          query={query}
+          gallery={gallery}
+          install={install}
+        />
       }
       advanced={<CustomCssRow t={t} />}
     />

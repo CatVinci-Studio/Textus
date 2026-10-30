@@ -1405,6 +1405,11 @@ utiliser une.
   extensionsThemesNone:
     "Aucun thème ajouté pour l’instant. Les thèmes intégrés se choisissent dans {page}.",
   extensionsThemesInstalled: "Vos thèmes",
+  extensionsAvailable: "Disponibles",
+  extensionsShowMore: "Afficher {n} de plus",
+  extensionsFold: "Masquer",
+  extensionsUnfold: "Afficher",
+  themePreviewEnlarge: "Agrandir",
   extensionsThemesGet: "Obtenir des thèmes",
   extensionsSkillsHelp: `Une compétence indique à ${AI_NAME} comment bien faire un type de tâche. Celles qui sont activées sont proposées à ${AI_NAME} et dans le menu / ; une nouvelle installation en active cinq, et vous ajoutez les autres ici.`,
   extensionsSkillsMoved:
@@ -1448,15 +1453,10 @@ utiliser une.
   pluginsCatalogAllInstalled:
     "Toutes les extensions de la liste sont installées.",
   pluginsSearchNone: "Aucune extension ne correspond à « {query} ».",
-  marketGetMore: "En obtenir plus",
-  marketTitle: "En obtenir plus",
-  marketHelp:
-    "Les thèmes, extensions et compétences de Textus. Chacun demande avant d’être installé ce qu’il pourra faire.",
   marketSearch: "Rechercher",
   marketListYours: "Vous en avez créé un ?",
   marketListingRules: "Comment le proposer",
   marketSkillFailed: "Il n’a pas été installé.",
-  marketSkillInstalled: "Installée",
   marketSkillsNone: "Aucune compétence n’est encore proposée.",
   pluginsCatalogKept:
     "Voici la liste de la dernière fois - impossible d’en obtenir une plus récente : {reason}",
@@ -1500,7 +1500,7 @@ utiliser une.
   pluginEditWithAiAsk: "Modifie l’extension {name} ({id}) : ",
   pluginEditWithAiError:
     "elle s’est arrêtée sur cette erreur, corrige-la : {error}\n",
-  pluginsAllLabel: "Toutes les extensions",
+  pluginsAllLabel: "Fonctions des modules",
   pluginsAllHelp:
     "Désactivées, aucune extension ne s’exécute et rien de ce qu’elles ajoutent ne s’affiche. Vos extensions et leurs réglages sont conservés.",
   pluginsInstallHelp:

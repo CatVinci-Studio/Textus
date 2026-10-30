@@ -1380,6 +1380,11 @@ para usar una.
   extensionsThemesNone:
     "Aún no has añadido temas. Los incluidos se eligen en {page}.",
   extensionsThemesInstalled: "Tus temas",
+  extensionsAvailable: "Disponibles",
+  extensionsShowMore: "Mostrar {n} más",
+  extensionsFold: "Ocultar",
+  extensionsUnfold: "Mostrar",
+  themePreviewEnlarge: "Ver más grande",
   extensionsThemesGet: "Conseguir temas",
   extensionsSkillsHelp: `Una habilidad le dice a ${AI_NAME} cómo hacer bien un tipo de tarea. Las activadas se ofrecen a ${AI_NAME} y en el menú /; una instalación nueva empieza con cinco activadas, y el resto se añade aquí.`,
   extensionsSkillsMoved:
@@ -1423,15 +1428,10 @@ para usar una.
   pluginsCatalogRetry: "Reintentar",
   pluginsCatalogAllInstalled: "Ya tienes todos los complementos de la lista.",
   pluginsSearchNone: "Ningún complemento coincide con «{query}».",
-  marketGetMore: "Conseguir más",
-  marketTitle: "Conseguir más",
-  marketHelp:
-    "Temas, complementos y habilidades para Textus. Cada uno pregunta antes de instalarse qué podrá hacer.",
   marketSearch: "Buscar",
   marketListYours: "¿Has hecho uno propio?",
   marketListingRules: "Cómo publicarlo",
   marketSkillFailed: "No se instaló.",
-  marketSkillInstalled: "Instalada",
   marketSkillsNone: "Todavía no hay habilidades publicadas.",
   pluginsCatalogKept:
     "Se muestra la lista de la última vez; no se pudo obtener una más reciente: {reason}",
@@ -1474,7 +1474,7 @@ para usar una.
   pluginEditWithAi: "Editar con IA",
   pluginEditWithAiAsk: "Cambia el complemento {name} ({id}): ",
   pluginEditWithAiError: "se detuvo con este error; corrígelo: {error}\n",
-  pluginsAllLabel: "Todos los complementos",
+  pluginsAllLabel: "Funciones de complementos",
   pluginsAllHelp:
     "Desactivados, ningún complemento se ejecuta y no se muestra nada de lo que añaden. Tus complementos y sus ajustes se conservan.",
   pluginsInstallHelp:

@@ -1314,6 +1314,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   extensionsThemesNone:
     "追加したテーマはまだありません。内蔵テーマは「{page}」で選べます。",
   extensionsThemesInstalled: "あなたのテーマ",
+  extensionsAvailable: "インストール可能",
+  extensionsShowMore: "さらに {n} 件表示",
+  extensionsFold: "閉じる",
+  extensionsUnfold: "開く",
+  themePreviewEnlarge: "拡大表示",
   extensionsThemesGet: "テーマを入手",
   extensionsSkillsHelp: `スキルは ${AI_NAME} に、ある種類の作業をうまくこなす方法を伝えます。オンのスキルは ${AI_NAME} と / メニューで使えます。新しくインストールすると 5 つがオンで、残りはここで追加します。`,
   extensionsSkillsMoved:
@@ -1356,15 +1361,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsCatalogRetry: "再試行",
   pluginsCatalogAllInstalled: "一覧のプラグインはすべてインストール済みです。",
   pluginsSearchNone: "「{query}」に一致するプラグインはありません。",
-  marketGetMore: "さらに入手",
-  marketTitle: "さらに入手",
-  marketHelp:
-    "Textus のテーマ、プラグイン、スキル。インストールの前に、何ができるかを確認します。",
   marketSearch: "検索",
   marketListYours: "自分で作りましたか？",
   marketListingRules: "掲載の方法",
   marketSkillFailed: "インストールできませんでした。",
-  marketSkillInstalled: "インストール済み",
   marketSkillsNone: "掲載されたスキルはまだありません。",
   pluginsCatalogKept:
     "前回の一覧を表示しています。新しい一覧を取得できませんでした：{reason}",
@@ -1407,7 +1407,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginEditWithAi: "AI で修正",
   pluginEditWithAiAsk: "プラグイン「{name}」（{id}）を修正：",
   pluginEditWithAiError: "次のエラーで止まりました。直してください：{error}\n",
-  pluginsAllLabel: "すべてのプラグイン",
+  pluginsAllLabel: "プラグイン機能",
   pluginsAllHelp:
     "オフにすると、プラグインは動作せず、追加した項目も表示されません。プラグインとその設定はそのまま残ります。",
   pluginsInstallHelp:

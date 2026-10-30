@@ -45,11 +45,15 @@ test("Extensions has a tab each for themes, plugins, skills and MCP", async ({
     "aria-selected",
     "true",
   );
-  // Every tab alike: a line of what it holds, Get more, "⋯", Installed.
+  // Every tab alike: a line of what it holds, "⋯", one search, Installed,
+  // then Available.
   for (const tab of ["Themes", "Plugins", "Skills"]) {
     await panel.getByRole("tab", { name: tab }).click();
     await expect(panel.locator(".extensions-intro")).toBeVisible();
-    await expect(panel.getByRole("button", { name: "Get more" })).toBeVisible();
+    await expect(
+      panel.getByRole("searchbox", { name: "Search" }),
+    ).toBeVisible();
+    await expect(panel.locator(".extensions-available")).toBeVisible();
     await expect(
       panel.getByRole("button", { name: "More", exact: true }),
     ).toBeVisible();
@@ -58,7 +62,7 @@ test("Extensions has a tab each for themes, plugins, skills and MCP", async ({
   // MCP suggests nothing: one button adds a server.
   await panel.getByRole("tab", { name: "MCP" }).click();
   await expect(panel.locator(".extensions-intro")).toBeVisible();
-  await expect(panel.getByRole("button", { name: "Get more" })).toHaveCount(0);
+  await expect(panel.locator(".extensions-available")).toHaveCount(0);
   await expect(
     panel.getByRole("button", { name: "Add MCP server" }),
   ).toBeVisible();
@@ -68,9 +72,9 @@ test("Extensions has a tab each for themes, plugins, skills and MCP", async ({
       "No themes added yet. The built-in ones are picked in Editor & Appearance.",
     ),
   ).toBeVisible();
-  // The gallery is in Get more; importing is behind "⋯"; the user's own
-  // CSS is folded under Advanced.
-  await expect(panel.locator(".theme-gallery-item")).toHaveCount(0);
+  // The gallery's themes are under Available; importing is behind "⋯"; the
+  // user's own CSS is folded under Advanced.
+  await expect(panel.locator(".theme-gallery-item")).toHaveCount(2);
   const css = panel.getByRole("textbox", { name: "Custom CSS" });
   await expect(css).toBeHidden();
   await panel.getByText("Advanced").click();
@@ -83,15 +87,9 @@ test("Extensions has a tab each for themes, plugins, skills and MCP", async ({
   // "⋯" again closes it.
   await panel.getByRole("button", { name: "More", exact: true }).click();
   await expect(panel.getByRole("menu")).toHaveCount(0);
-  await panel.getByRole("button", { name: "Get more" }).click();
-  await expect(panel.getByRole("tab", { name: "Themes" })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
-  await expect(panel.locator(".theme-gallery-item")).toHaveCount(2);
 });
 
-test("built-in skills stay on; Get more lists the market's, not them", async ({
+test("built-in skills stay on; Available lists the catalog's, not them", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
@@ -100,8 +98,9 @@ test("built-in skills stay on; Get more lists the market's, not them", async ({
   const proofread = panel.locator('[data-skill="proofread"]');
   await expect(proofread).toContainText("Built-in");
   await expect(proofread.getByRole("checkbox")).toHaveCount(0);
-  await panel.getByRole("button", { name: "Get more" }).click();
-  await expect(panel.locator('[data-skill="proofread"]')).toHaveCount(0);
+  await expect(
+    panel.locator('.extensions-available [data-skill="proofread"]'),
+  ).toHaveCount(0);
 });
 
 test("Textus AI's Skills row opens Extensions on its Skills tab", async ({

@@ -54,6 +54,8 @@ export interface UiState {
    *  paths (app/split/split-restore.ts); null when it showed one. Read
    *  loosely: earlier versions kept a pair. */
   splitLayout: { tree: unknown } | null;
+  /** Settings › Extensions: the kinds whose Available list is folded. */
+  extensionsFolded: string[];
 }
 
 export interface ThemeChromeCache {

@@ -19,6 +19,7 @@ import {
   isConventionsValue,
 } from "../writing-conventions";
 import { errorText } from "../../utils/error-text";
+import { matchesWords } from "../../utils/match-words";
 import { explainError } from "../../utils/error-explain";
 
 // Settings > Textus AI: skills and the Writing conventions row. Skills are
@@ -26,9 +27,9 @@ import { explainError } from "../../utils/error-explain";
 
 /** Fired after a skill changes here, so every section showing the list
  *  reloads it. */
-const SKILLS_CHANGED_EVENT = "textus-skills-changed";
+export const SKILLS_CHANGED_EVENT = "textus-skills-changed";
 
-function announceChange() {
+export function announceChange() {
   window.dispatchEvent(new Event(SKILLS_CHANGED_EVENT));
 }
 
@@ -89,15 +90,28 @@ export function AgentSkillsSection({ t }: { t: Strings }) {
 
 /// The user's own skills, each with the modes it applies in (at least one).
 /// A skill with a built-in's name says it replaces it.
-export function OwnSkillsList({ t }: { t: Strings }) {
+export function OwnSkillsList({
+  t,
+  query = "",
+}: {
+  t: Strings;
+  query?: string;
+}) {
   const { settings } = useSettings();
   const lang = settings.language;
   const { list, setList, workspaceSkills } = useSkillList();
   const [error, setError] = useState<string | null>(null);
-  const own: SkillListItem[] = list
-    ? // Copies made by Customize… show under Built-in skills instead.
-      list.filter((item) => item.source !== "builtin" && !item.basedOn)
-    : listFromWorkspace(workspaceSkills);
+  const own: SkillListItem[] = (
+    list
+      ? // Copies made by Customize… show under Built-in skills instead.
+        list.filter((item) => item.source !== "builtin" && !item.basedOn)
+      : listFromWorkspace(workspaceSkills)
+  ).filter((item) =>
+    matchesWords(
+      `${item.name}\n${(item.labels?.[lang] ?? item.labels?.en)?.label ?? ""}`,
+      query,
+    ),
+  );
 
   async function setModes(skill: SkillListItem, modes: AgentMode[]) {
     if (modes.length === 0) return;
@@ -177,12 +191,14 @@ const MODE_LABEL: Record<AgentMode, TextKey> = {
 /// the disclosure.
 export function BuiltinSkillsSection({
   t,
+  query = "",
   flat,
   onOpenFile,
   onFilesDeleted,
   onClose,
 }: {
   t: Strings;
+  query?: string;
   flat?: boolean;
   onOpenFile: (path: string) => void;
   onFilesDeleted?: (paths: string[]) => void;
@@ -249,95 +265,106 @@ export function BuiltinSkillsSection({
           {error}
         </div>
       )}
-      {AGENT_MODES.map((mode) => (
-        <div
-          key={mode}
-          className="settings-builtin-category"
-          role="group"
-          aria-label={t[MODE_LABEL[mode]]}
-          data-mode={mode}
-        >
-          <div className="settings-builtin-category-title" aria-hidden="true">
-            {t[MODE_LABEL[mode]]}
-          </div>
-          {BUILTIN_SKILLS.filter((s) => s.mode === mode).map(({ name }) => {
-            const text = skillText(lang, name);
-            const current = item(name);
-            const customized = isCopy(current);
-            const own = isOwn(current);
-            // The copy predates the bundled built-in's latest version.
-            const outdated = customized && !!current?.builtinUpdated;
-            return (
-              <div
-                key={name}
-                className="settings-row settings-builtin-skill"
-                data-skill={name}
-              >
-                <div className="settings-row-text">
-                  <div className="settings-row-label">
-                    {text.label}
-                    <span className="settings-skill-tag" data-search-ignore>
-                      {customized
-                        ? t.agentSkillsCustomized
-                        : own
-                          ? t.agentSkillsShadows
-                          : t.agentSkillsBuiltinTag}
-                    </span>
-                    {outdated && (
-                      <span
-                        className="settings-skill-tag settings-skill-tag-notice"
-                        data-search-ignore
-                      >
-                        {t.agentSkillsBuiltinUpdated}
+      {AGENT_MODES.map((mode) => ({
+        mode,
+        names: BUILTIN_SKILLS.filter(
+          (s) =>
+            s.mode === mode &&
+            matchesWords(`${s.name}\n${skillText(lang, s.name).label}`, query),
+        ),
+      }))
+        .filter(({ names }) => names.length > 0)
+        .map(({ mode, names }) => (
+          <div
+            key={mode}
+            className="settings-builtin-category"
+            role="group"
+            aria-label={t[MODE_LABEL[mode]]}
+            data-mode={mode}
+          >
+            <div className="settings-builtin-category-title" aria-hidden="true">
+              {t[MODE_LABEL[mode]]}
+            </div>
+            {names.map(({ name }) => {
+              const text = skillText(lang, name);
+              const current = item(name);
+              const customized = isCopy(current);
+              const own = isOwn(current);
+              // The copy predates the bundled built-in's latest version.
+              const outdated = customized && !!current?.builtinUpdated;
+              return (
+                <div
+                  key={name}
+                  className="settings-row settings-builtin-skill"
+                  data-skill={name}
+                >
+                  <div className="settings-row-text">
+                    <div className="settings-row-label">
+                      {text.label}
+                      <span className="settings-skill-tag" data-search-ignore>
+                        {customized
+                          ? t.agentSkillsCustomized
+                          : own
+                            ? t.agentSkillsShadows
+                            : t.agentSkillsBuiltinTag}
                       </span>
-                    )}
-                  </div>
-                  <div className="settings-row-hint">
-                    <span className="settings-builtin-skill-name">/{name}</span>
-                    {" · "}
-                    {text.hint}
-                  </div>
-                  {outdated && (
-                    <div className="settings-row-hint settings-skill-update-hint">
-                      {t.agentSkillsBuiltinUpdatedHint}
+                      {outdated && (
+                        <span
+                          className="settings-skill-tag settings-skill-tag-notice"
+                          data-search-ignore
+                        >
+                          {t.agentSkillsBuiltinUpdated}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div className="settings-row-control">
-                  <span className="settings-skill-actions">
-                    {own || customized ? (
-                      <button
-                        className="settings-skill-action"
-                        aria-label={`${t.agentSkillsOpen}: ${text.label}`}
-                        onClick={() => openCopy(name)}
-                      >
-                        {t.agentSkillsOpen}
-                      </button>
-                    ) : (
-                      <button
-                        className="settings-skill-action"
-                        aria-label={`${t.agentSkillsCustomize}: ${text.label}`}
-                        onClick={() => openCopy(name)}
-                      >
-                        {t.agentSkillsCustomize}
-                      </button>
+                    <div className="settings-row-hint">
+                      <span className="settings-builtin-skill-name">
+                        /{name}
+                      </span>
+                      {" · "}
+                      {text.hint}
+                    </div>
+                    {outdated && (
+                      <div className="settings-row-hint settings-skill-update-hint">
+                        {t.agentSkillsBuiltinUpdatedHint}
+                      </div>
                     )}
-                    {customized && (
-                      <button
-                        className="settings-skill-action"
-                        aria-label={`${t.agentSkillsReset}: ${text.label}`}
-                        onClick={() => reset(name, text.label)}
-                      >
-                        {t.agentSkillsReset}
-                      </button>
-                    )}
-                  </span>
+                  </div>
+                  <div className="settings-row-control">
+                    <span className="settings-skill-actions">
+                      {own || customized ? (
+                        <button
+                          className="settings-skill-action"
+                          aria-label={`${t.agentSkillsOpen}: ${text.label}`}
+                          onClick={() => openCopy(name)}
+                        >
+                          {t.agentSkillsOpen}
+                        </button>
+                      ) : (
+                        <button
+                          className="settings-skill-action"
+                          aria-label={`${t.agentSkillsCustomize}: ${text.label}`}
+                          onClick={() => openCopy(name)}
+                        >
+                          {t.agentSkillsCustomize}
+                        </button>
+                      )}
+                      {customized && (
+                        <button
+                          className="settings-skill-action"
+                          aria-label={`${t.agentSkillsReset}: ${text.label}`}
+                          onClick={() => reset(name, text.label)}
+                        >
+                          {t.agentSkillsReset}
+                        </button>
+                      )}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      ))}
+              );
+            })}
+          </div>
+        ))}
     </>
   );
   if (flat) return rows;
