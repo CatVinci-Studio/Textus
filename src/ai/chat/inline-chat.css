@@ -832,7 +832,7 @@
 /* Pinned above the composer whenever anything is undecided, since the cards
    scroll away and unresolved edits get forgotten. */
 .inline-chat-pending-bar {
-  animation: pending-bar-in var(--dur-base) var(--ease-out);
+  animation: motion-sheet-in var(--dur-base) var(--ease-out);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -846,27 +846,13 @@
 }
 
 .inline-chat-pending-bar[data-state="closing"] {
-  animation: pending-bar-out var(--dur-fast) var(--ease-in) forwards;
+  animation: motion-sheet-out var(--dur-fast) var(--ease-in) forwards;
 }
 
 /* What follows the bar paints over it while it moves. */
 .inline-chat-pending-bar ~ :is(.inline-chat-bar, .inline-chat-skill-menu) {
   position: relative;
   background: var(--ui-surface);
-}
-
-@keyframes pending-bar-in {
-  from {
-    opacity: var(--motion-travel-fade);
-    transform: translateY(calc(100% * var(--motion-travel)));
-  }
-}
-
-@keyframes pending-bar-out {
-  to {
-    opacity: var(--motion-travel-fade);
-    transform: translateY(calc(100% * var(--motion-travel)));
-  }
 }
 
 /* The buttons drop to a second line before the label gets squeezed into
@@ -1039,21 +1025,14 @@
 /* Under a reply still streaming: it waits, and shows only if the reply
    pauses (re-keyed on every delta). */
 .agent-thinking-after {
-  animation: agent-thinking-after var(--dur-base) var(--ease-out) 1500ms both;
+  animation: motion-fade-in var(--dur-base) var(--ease-out) var(--delay-pause)
+    both;
 }
 
 /* Before anything has come back: a quick answer never flashes the dots. */
 .agent-thinking-soon {
-  animation: agent-thinking-after var(--dur-base) var(--ease-out) 400ms both;
-}
-
-@keyframes agent-thinking-after {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  animation: motion-fade-in var(--dur-base) var(--ease-out) var(--delay-soon)
+    both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1083,15 +1062,15 @@
   border-radius: 50%;
   corner-shape: round;
   background: currentColor;
-  animation: agent-thinking-pulse 1.2s ease-in-out infinite;
+  animation: agent-thinking-pulse var(--dur-pulse) var(--ease-in-out) infinite;
 }
 
 .agent-thinking-dots span:nth-child(2) {
-  animation-delay: 0.2s;
+  animation-delay: calc(var(--dur-pulse) / 6);
 }
 
 .agent-thinking-dots span:nth-child(3) {
-  animation-delay: 0.4s;
+  animation-delay: calc(var(--dur-pulse) / 3);
 }
 
 @keyframes agent-thinking-pulse {
@@ -1119,7 +1098,7 @@
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: var(--ui-accent);
-  animation: agent-caret-pulse 1s var(--ease-standard) infinite;
+  animation: agent-caret-pulse var(--dur-blink) var(--ease-standard) infinite;
 }
 
 @keyframes agent-caret-pulse {
@@ -1137,29 +1116,15 @@
 /* Each new turn's entrance is staggered (--reveal-delay is set inline).
    Streamed text itself never animates, or it would be unreadable. */
 .turn-reveal {
-  animation: turn-reveal-in var(--dur-base) var(--ease-out) both;
+  --enter-y: var(--motion-distance-sm);
+  animation: motion-enter var(--dur-base) var(--ease-out) both;
   animation-delay: var(--reveal-delay, 0ms);
-}
-
-@keyframes turn-reveal-in {
-  from {
-    opacity: 0;
-    transform: translateY(var(--motion-distance-sm));
-  }
 }
 
 /* A proposed edit arrives as a card: it also grows out of its top edge. */
 .agent-proposal.turn-reveal {
   transform-origin: top center;
-  animation-name: proposal-reveal-in;
-}
-
-@keyframes proposal-reveal-in {
-  from {
-    opacity: 0;
-    transform: translateY(var(--motion-distance-sm))
-      scale(var(--scale-enter-dialog));
-  }
+  --enter-scale: var(--scale-enter-dialog);
 }
 
 /* Quick Ask lives inside the editor's .milkdown root, so the document's

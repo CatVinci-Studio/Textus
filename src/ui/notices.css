@@ -24,7 +24,7 @@
   font-size: var(--text-secondary);
   color: var(--ui-text);
   pointer-events: auto;
-  animation: notice-in var(--dur-base) var(--ease-out) both;
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
 }
 
 .notice[data-tone="warning"] {
@@ -71,7 +71,7 @@
 
 .notice-bar-fill.is-indeterminate {
   width: 40%;
-  animation: notice-indeterminate 1.2s var(--ease-in-out) infinite;
+  animation: notice-indeterminate var(--dur-pulse) var(--ease-in-out) infinite;
 }
 
 .notice-cancel {
@@ -88,17 +88,6 @@
   color: var(--ui-text);
 }
 
-@keyframes notice-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 @keyframes notice-indeterminate {
   from {
     transform: translateX(-100%);
@@ -109,7 +98,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .notice,
   .notice-bar-fill.is-indeterminate {
     animation: none;
   }

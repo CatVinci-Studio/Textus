@@ -94,7 +94,7 @@
   font-size: var(--text-secondary);
   line-height: 1.5;
   animation: motion-fade-in var(--dur-base) var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 40ms);
+  animation-delay: calc(var(--i, 0) * var(--dur-stagger-row));
 }
 
 .memory-lines li + li {

@@ -21,7 +21,13 @@
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   transform: translateX(-50%);
-  animation: review-bar-in var(--dur-slow) var(--ease-spring-bouncy) both;
+  --enter-x: -50%;
+  --enter-y: calc(var(--motion-distance-md) * 1.5);
+  --enter-scale: var(--scale-enter);
+  --exit-x: -50%;
+  --exit-y: var(--motion-distance-md);
+  --exit-scale: var(--scale-exit);
+  animation: motion-enter var(--dur-slow) var(--ease-spring-bouncy) both;
 }
 
 /* The notes bar, standing above the review bar when both show. */
@@ -30,24 +36,7 @@
 }
 
 .review-bar[data-state="closing"] {
-  animation: review-bar-out var(--dur-fast) var(--ease-in) both;
-}
-
-/* From the motion tokens, so reduced motion turns both into fades. */
-@keyframes review-bar-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, calc(var(--motion-distance-md) * 1.5))
-      scale(var(--scale-enter));
-  }
-}
-
-@keyframes review-bar-out {
-  to {
-    opacity: 0;
-    transform: translate(-50%, var(--motion-distance-md))
-      scale(var(--scale-exit));
-  }
+  animation: motion-exit var(--dur-fast) var(--ease-in) both;
 }
 
 .review-bar-top,

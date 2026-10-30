@@ -88,7 +88,7 @@
   content: "\200b";
   border-left: 1.5px solid var(--doc-text);
   margin-left: -0.5px;
-  animation: ghost-caret-blink 1.1s step-end infinite;
+  animation: ghost-caret-blink var(--dur-blink) step-end infinite;
 }
 
 @keyframes ghost-caret-blink {
@@ -499,7 +499,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   content: "\200b";
   border-left: 1.5px solid var(--diff-caret);
   margin-left: 1px;
-  animation: ghost-caret-blink 1.1s step-end infinite;
+  animation: ghost-caret-blink var(--dur-blink) step-end infinite;
 }
 
 /* The chat's context passage while the composer is focused: an accent tint

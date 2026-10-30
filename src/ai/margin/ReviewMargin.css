@@ -28,8 +28,8 @@
   stroke-width: 1.2;
   opacity: 0.7;
   stroke-dasharray: 1;
-  animation: review-link-draw 600ms var(--ease-out) both;
-  animation-delay: 160ms;
+  animation: review-link-draw calc(var(--dur-base) * 3) var(--ease-out) both;
+  animation-delay: calc(var(--dur-instant) * 2);
   transition:
     opacity var(--dur-fast) var(--ease-standard),
     stroke-width var(--dur-fast) var(--ease-standard);
@@ -70,7 +70,8 @@
   /* A card glides on `translate`, never `top`, which would lay the margin
      out on every frame. */
   transition: transform var(--dur-fast) var(--ease-out);
-  animation: review-note-in var(--dur-slow) var(--ease-out) both;
+  --enter-x: calc(var(--motion-distance-md) * 1.75);
+  animation: motion-enter var(--dur-slow) var(--ease-out) both;
 }
 
 /* The deeper shadow under the pointer fades in on a layer of its own:
@@ -93,13 +94,6 @@
 
 .review-note-hot::after {
   opacity: 1;
-}
-
-@keyframes review-note-in {
-  from {
-    opacity: 0;
-    transform: translateX(calc(var(--motion-distance-md) * 1.75));
-  }
 }
 
 .review-note-by {
