@@ -7,6 +7,7 @@ import {
   installedCopy,
   type GalleryStatus,
   type GalleryTheme,
+  localizedTheme,
 } from "../../theme/theme-gallery";
 import { withUserTheme } from "../../theme/theme-import";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -361,7 +362,10 @@ function GalleryPreview({
 /** The gallery's catalog, fetched as the page opens and again on `retry`;
  *  `unreachable` when the fetch failed. */
 export function useGalleryCatalog() {
-  const [catalog, setCatalog] = useState<GalleryTheme[] | null>(null);
+  const { settings } = useSettings();
+  const [themes, setCatalog] = useState<GalleryTheme[] | null>(null);
+  const catalog =
+    themes?.map((theme) => localizedTheme(theme, settings.language)) ?? null;
   const [unreachable, setUnreachable] = useState(false);
   const [attempt, setAttempt] = useState(0);
 

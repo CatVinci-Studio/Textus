@@ -11,6 +11,20 @@ export type GalleryTheme = GalleryThemeAnswer;
 
 export type GalleryStatus = "install" | "installed" | "update";
 
+/** A theme as the UI's language shows it: the catalog's words for that
+ *  language, or its base's, over the English. Traditional Chinese reads the
+ *  English, as the gallery has no words of its own for it. */
+export function localizedTheme(theme: GalleryTheme, lang: string) {
+  const base = lang.split("-")[0];
+  const words =
+    theme.l10n?.[lang] ?? (lang === "zh-Hant" ? undefined : theme.l10n?.[base]);
+  return {
+    ...theme,
+    name: words?.name || theme.name,
+    description: words?.description || theme.description,
+  };
+}
+
 export function installedCopy(
   theme: GalleryTheme,
   userThemes: UserThemeMeta[],

@@ -377,6 +377,8 @@ export function installDevTauriShim(): void {
       previews: [`themes/${id}/preview.png`],
       installs: null,
       installs30: null,
+      // In Chinese, as the gallery gives its own themes words there.
+      l10n: { zh: { name: null, description: "开发用的示例主题。" } },
     });
     gallery.files[`themes/${id}/theme.css`] =
       `:root { --doc-bg: ${bg}; --doc-text: ${text}; --doc-accent: ${accent}; }`;

@@ -55,6 +55,20 @@ pub struct GalleryTheme {
     pub installs: Option<u64>,
     #[serde(default)]
     pub installs30: Option<u64>,
+    /// Its name and description in another UI language (`zh`), over the
+    /// English ones.
+    #[serde(default)]
+    pub l10n: std::collections::BTreeMap<String, GalleryText>,
+}
+
+/// A theme's words in one UI language; what is missing stays English.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
+pub struct GalleryText {
+    #[serde(default)]
+    pub name: Option<String>,
+    #[serde(default)]
+    pub description: Option<String>,
 }
 
 /// A stylesheet fetched to install the theme, which counts the install.
