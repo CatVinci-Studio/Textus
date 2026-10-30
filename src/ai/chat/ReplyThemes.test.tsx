@@ -76,7 +76,7 @@ it("installs a reply's css block as a user theme and switches to it", async () =
   const [id, variant, css] = vi.mocked(themes.saveThemeCss).mock.calls[0];
   expect(id).toMatch(/^user-/);
   expect(variant).toBe("light");
-  expect(css).toContain("--editor-accent: #5fc4b4;");
+  expect(css).toContain("--doc-accent: #5fc4b4;");
   expect(screen.getByTestId("current").textContent).toBe(`${id}|Night Harbor`);
 
   // Picking another theme and coming back reuses the saved copy.

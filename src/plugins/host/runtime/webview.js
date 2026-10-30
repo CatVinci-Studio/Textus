@@ -26,7 +26,7 @@
   }
 
   // The window's theme as CSS variables, kept current: a plugin's page
-  // styled with var(--text), var(--bg) follows Textus's theme and dark
+  // styled with var(--ui-text), var(--ui-bg) follows Textus's theme and dark
   // mode.
   function setTheme(css, dark) {
     var style = document.getElementById("textus-theme");

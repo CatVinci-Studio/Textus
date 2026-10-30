@@ -11,8 +11,8 @@
   max-width: 60ch;
   white-space: pre-line;
   padding: var(--space-2) var(--space-3);
-  font-size: var(--text-md);
-  color: var(--editor-text);
+  font-size: var(--text-body);
+  color: var(--ui-text);
 }
 
 html,
@@ -23,7 +23,7 @@ body,
 }
 
 body {
-  background: var(--bg);
+  background: var(--ui-bg);
 }
 
 /* The window never scrolls as a whole. `clip`, not `hidden`: a hidden box

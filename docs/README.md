@@ -22,12 +22,17 @@ where the project is heading.
 | [ios-code-map.md](dev/ios-code-map.md)              | What the desktop and iOS apps share and what is desktop-only; building on a Mac                   |
 | [windows-installer.md](dev/windows-installer.md)    | The NSIS installer, and why there is no MSI                                                       |
 | [webview-support.md](dev/webview-support.md)        | The oldest web engines supported (WebView2 on Chromium 105), what broke below, the check that guards it |
+| [writing-plugins.md](dev/writing-plugins.md)        | Writing a plugin: the manifest, the API, webviews, testing and publishing to the market          |
+| [plugin-reference.md](dev/plugin-reference.md)      | The plugin API, every call and type (made from [textus.d.ts](dev/textus.d.ts))                    |
+| [plugin-api.md](dev/plugin-api.md)                  | Inside the app: the registries plugins and built-in features add to                               |
 
 ## Design (`design/`)
 
 | Document                                         | What it covers                                                                          |
 | ------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| [design-language.md](design/design-language.md)  | Interface rules: radii, type sizes, buttons, menus, dialogs, motion, themes             |
+| [design-language.md](design/design-language.md)  | Interface rules: shapes, type roles, controls, colours, menus, dialogs, motion, themes  |
+| [plugins.md](design/plugins.md)                  | The plugin system and the market: what is built, and why                                |
+| [ai-agent.md](design/ai-agent.md)                | One AI request from start to end: providers, the agent loop, tools, rules for every model |
 | [ai-concepts.md](design/ai-concepts.md)          | The AI concepts: project folder, style profile, library, writing rules, skills, priority |
 | [ai-proposals.md](design/ai-proposals.md)        | An AI edit's life from streaming to the document, and the three chat surfaces            |
 | [ai-eval.md](design/ai-eval.md)                  | Evaluating the AI features against real providers                                       |

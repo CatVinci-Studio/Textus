@@ -9,7 +9,7 @@
   flex-direction: column;
   gap: 4px;
   padding: 6px 8px;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   animation: motion-drop-in var(--dur-base) var(--ease-out);
 }
 
@@ -35,7 +35,7 @@
   height: 26px;
   border: none !important;
   padding: 0 !important;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   background: transparent;
   transition: transform var(--dur-fast) var(--ease-standard);
   display: flex;
@@ -59,8 +59,9 @@
   flex: 1;
   min-width: 0;
   padding: 2px 4px;
-  border: 1px solid var(--editor-border);
-  border-radius: var(--radius-control);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .find-replace-input {
@@ -68,8 +69,10 @@
   min-width: 0;
   padding: 3px 2px;
   border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
 }
 
@@ -79,15 +82,15 @@
 
 .find-replace-count {
   flex: none;
-  color: var(--editor-muted);
-  font-size: var(--text-xs);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
   white-space: nowrap;
   /* Counts change in place without their digits shifting. */
   font-variant-numeric: tabular-nums;
 }
 
 .find-replace-count-error {
-  color: var(--danger);
+  color: var(--ui-danger);
 }
 
 .find-replace-nav {
@@ -104,17 +107,18 @@
 }
 
 .find-replace-bar button {
-  border: 1px solid var(--editor-border);
-  border-radius: var(--radius-control);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   padding: 4px 7px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   cursor: pointer;
   background: transparent;
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .find-replace-bar button:hover:not(:disabled) {
-  background: var(--editor-code-bg);
+  background: var(--doc-code-bg);
 }
 
 .find-replace-bar button:disabled {
@@ -128,22 +132,23 @@
   height: 22px;
   padding: 0 !important;
   border: none !important;
-  border-radius: var(--radius-control) !important;
-  font-size: var(--text-xs) !important;
+  border-radius: var(--shape-pill) !important;
+  corner-shape: round;
+  font-size: var(--text-caption) !important;
   line-height: 1;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .find-replace-toggle-active {
-  background: var(--chrome-primary) !important;
-  color: var(--on-fill) !important;
+  background: var(--ui-accent-fill) !important;
+  color: var(--ui-on-fill) !important;
 }
 
 .find-replace-close {
   border: none !important;
   line-height: 1;
   padding: 4px 6px !important;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .find-replace-arrow-down {
@@ -151,10 +156,10 @@
 }
 
 .find-match {
-  background: var(--find-match-bg);
-  border-radius: var(--md-radius-sm);
+  background: var(--ui-find-match);
+  border-radius: var(--doc-radius-sm);
 }
 
 .find-match-active {
-  background: var(--find-match-active-bg);
+  background: var(--ui-find-match-active);
 }

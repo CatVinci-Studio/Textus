@@ -15,6 +15,7 @@ import {
 import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
 import { applyThemeChrome, clearThemeChrome } from "./theme-chrome";
 import { adaptTyporaCss } from "./typora-compat";
+import { withCurrentVariables } from "./legacy-variables";
 
 // Puts the appearance settings on the page: light or dark, the text width,
 // the content theme and the user's Custom CSS, in that cascade order.
@@ -39,7 +40,7 @@ function rememberThemeChrome(chrome: ThemeChromeCache) {
 
 /**
  * Marks every custom property the user's CSS sets `!important`, since an
- * imported theme's chrome pins `--editor-*` with !important. Custom CSS comes
+ * imported theme's chrome pins `--doc-*` with !important. Custom CSS comes
  * later, so at equal weight it wins. Other properties keep their cascade.
  */
 function promoteCustomProperties(rules: CSSRuleList) {
@@ -122,7 +123,7 @@ export function useApplyAppearance(
       styleEl = document.createElement("style");
       styleEl.id = CUSTOM_CSS_STYLE_ID;
     }
-    styleEl.textContent = settings.customCss;
+    styleEl.textContent = withCurrentVariables(settings.customCss);
     document.head.appendChild(styleEl);
     if (styleEl.sheet) promoteCustomProperties(styleEl.sheet.cssRules);
   }, [settings.customCss]);
@@ -179,8 +180,9 @@ export function useApplyAppearance(
       const variant =
         isEffectiveDark(settings.theme) && theme.hasDark ? "dark" : "light";
       try {
-        const css = await themes.loadThemeCss(theme.id, variant);
+        const loaded = await themes.loadThemeCss(theme.id, variant);
         if (cancelled || request !== revision) return;
+        const css = loaded && withCurrentVariables(loaded);
         let styleEl = document.getElementById(
           STYLE_ID,
         ) as HTMLStyleElement | null;

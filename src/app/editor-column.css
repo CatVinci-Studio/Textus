@@ -59,8 +59,8 @@
   border: none;
   outline: none;
   resize: none;
-  background: var(--editor-bg, var(--bg));
-  color: var(--editor-text);
+  background: var(--doc-bg);
+  color: var(--doc-text);
   font-family: var(--font-mono);
   /* As in code (content-base.css): no fi drawn as one glyph. */
   font-variant-ligatures: no-common-ligatures;

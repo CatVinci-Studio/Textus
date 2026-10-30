@@ -222,12 +222,12 @@ describe("pdfLayoutCss", () => {
   it("prints a white page instead of the theme's page colour", () => {
     const css = pdfLayoutCss(WINDOWS_PAGE, true);
     expect(css).toContain("html, body { margin: 0; background: #fff; }");
-    expect(css).toContain("--editor-bg: #fff !important");
+    expect(css).toContain("--doc-bg: #fff !important");
   });
 
   it("keeps the theme's page colour on macOS", () => {
     const css = pdfLayoutCss(MAC_PAGE);
-    expect(css).toContain("background: var(--editor-bg, var(--bg));");
+    expect(css).toContain("background: var(--doc-bg, var(--ui-bg));");
     expect(css).not.toContain("#fff");
   });
 });

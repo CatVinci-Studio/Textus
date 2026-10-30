@@ -13,14 +13,14 @@
   margin: 0;
   padding: 2.5rem 1.5rem 6rem;
   overflow-y: auto;
-  border-right: 1px solid var(--border-color);
+  border-right: 1px solid var(--ui-border);
 }
 
 .split-preview {
   flex: 1 1 50%;
   min-width: 0;
   overflow-y: auto;
-  background: var(--editor-bg, var(--bg));
+  background: var(--doc-bg, var(--ui-bg));
 }
 
 .split-preview .milkdown {
@@ -44,10 +44,10 @@
 
 /* The preview's plain <pre> gets the editor's code-block box. */
 .split-preview-body pre {
-  background: var(--editor-code-bg);
-  border: 1px solid var(--editor-border);
-  border-radius: var(--md-radius);
-  margin: var(--md-gap-box) 0;
+  background: var(--doc-code-bg);
+  border: 1px solid var(--doc-border);
+  border-radius: var(--doc-radius);
+  margin: var(--doc-gap-box) 0;
 }
 
 /* Narrow windows stack the panes instead of squeezing both. */
@@ -57,6 +57,6 @@
   }
   .split-view .split-source {
     border-right: none;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--ui-border);
   }
 }

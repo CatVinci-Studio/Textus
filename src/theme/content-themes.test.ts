@@ -6,7 +6,7 @@ const css = readFileSync(
   "utf8",
 );
 const blocks = [...css.matchAll(/([^{}]+)\{([^{}]+)\}/g)]
-  .filter((match) => match[2].includes("--editor-bg:"))
+  .filter((match) => match[2].includes("--doc-bg:"))
   .map((match) => ({
     selector: match[1].trim().split("\n").slice(-1)[0],
     values: Object.fromEntries(
@@ -30,18 +30,14 @@ describe("built-in theme display contract", () => {
       expect(variants[1].values).toEqual(variants[2].values);
       for (const block of variants) {
         expect(
-          Object.keys(block.values).every((key) => key.startsWith("--editor-")),
+          Object.keys(block.values).every((key) => key.startsWith("--doc-")),
         ).toBe(true);
       }
     });
     for (const [index, variant] of variants.entries()) {
       it(`${theme} variant ${index}: text, links and hints remain legible`, () => {
-        for (const fg of [
-          "--editor-text",
-          "--editor-muted",
-          "--editor-accent",
-        ]) {
-          for (const bg of ["--editor-bg", "--editor-code-bg"]) {
+        for (const fg of ["--doc-text", "--doc-muted", "--doc-accent"]) {
+          for (const bg of ["--doc-bg", "--doc-code-bg"]) {
             expect(
               contrast(rgb(variant.values[fg]), rgb(variant.values[bg])),
             ).toBeGreaterThanOrEqual(4.5);

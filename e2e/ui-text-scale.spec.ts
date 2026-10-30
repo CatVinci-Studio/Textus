@@ -98,7 +98,7 @@ test("the detached chat window follows Interface Text Size too", async ({
   await page.goto("/?view=chat");
   const textarea = page.locator(".chat-window-body textarea");
   await expect(textarea).toBeVisible();
-  // --text-md, 13px, at 125%.
+  // --text-body, 13px, at 125%.
   expect(
     await textarea.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)),
   ).toBeCloseTo(16.25, 1);

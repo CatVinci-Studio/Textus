@@ -1,7 +1,7 @@
 .settings-backdrop {
   position: fixed;
   inset: 0;
-  background: var(--overlay-bg);
+  background: var(--ui-overlay);
   /* Modal tier: above the find bar, popovers and toasts (200-300), which
      would otherwise draw over the backdrop and take clicks. */
   z-index: 400;
@@ -12,10 +12,7 @@
 
 .settings-panel {
   /* Settings belong to app chrome, independently of document themes. */
-  --editor-text: var(--chrome-text);
-  --editor-muted: var(--chrome-muted);
-  --editor-accent: var(--chrome-accent);
-  color: var(--editor-text);
+  color: var(--ui-text);
   width: calc(100% - 32px);
   max-width: 840px;
   /* vh and %, not dvh: an older WebView2 drops dvh lines entirely, and the
@@ -25,9 +22,9 @@
   max-height: calc(100% - 32px);
   display: flex;
   flex-direction: column;
-  background: var(--bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-dialog);
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-l);
   box-shadow: var(--shadow-dialog);
   overflow: hidden;
 }
@@ -37,8 +34,8 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-3) var(--space-5);
-  border-bottom: 1px solid var(--border-color);
-  font-size: var(--text-xl);
+  border-bottom: 1px solid var(--ui-border);
+  font-size: var(--text-title);
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -66,7 +63,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: var(--sidebar-bg);
+  background: var(--ui-subtle);
 }
 
 .settings-nav {
@@ -85,15 +82,16 @@
   margin: 14px 10px 0;
   height: var(--control-height-sm);
   padding: 0 8px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
-  background: var(--bg);
-  color: var(--editor-muted);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-bg);
+  color: var(--ui-muted);
 }
 
 .settings-search:focus-within {
-  border-color: var(--chrome-accent);
-  box-shadow: inset 0 0 0 1px var(--chrome-accent);
+  border-color: var(--ui-accent);
+  box-shadow: inset 0 0 0 1px var(--ui-accent);
 }
 
 .settings-search-icon {
@@ -107,10 +105,12 @@
   width: 100%;
   padding: 0;
   border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 .settings-search-input:focus,
@@ -129,9 +129,9 @@
 }
 
 .settings-search-result.is-active {
-  background: var(--sidebar-hover);
-  box-shadow: 0 0 0 8px var(--sidebar-hover);
-  border-radius: var(--radius-control);
+  background: var(--ui-hover);
+  box-shadow: 0 0 0 8px var(--ui-hover);
+  border-radius: var(--shape-s);
 }
 
 .settings-search-context {
@@ -155,8 +155,8 @@
   content: "";
   position: absolute;
   inset: 0 -8px;
-  border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--chrome-accent) 14%, transparent);
+  border-radius: var(--shape-s);
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
   pointer-events: none;
   opacity: 0;
   animation: settings-search-hit var(--dur-linger) var(--ease-standard);
@@ -177,23 +177,23 @@
   width: 100%;
   text-align: left;
   padding: 9px 12px;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: transparent;
-  color: var(--sidebar-text, var(--editor-muted));
+  color: var(--ui-text);
   cursor: pointer;
   overflow-wrap: anywhere;
   hyphens: auto;
 }
 
 .settings-nav-item:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 
 .settings-nav-item-active {
-  background: var(--sidebar-active);
-  color: var(--sidebar-active-text);
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
   font-weight: 500;
 }
 
@@ -230,9 +230,9 @@
 
 .settings-advanced {
   margin-top: 24px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
-  border-radius: var(--radius-surface);
-  background: var(--chrome-subtle);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-m);
+  background: var(--ui-subtle);
   overflow: hidden;
 }
 
@@ -242,8 +242,8 @@
   align-items: center;
   gap: 6px;
   padding: 12px 16px;
-  color: var(--editor-muted);
-  font-size: var(--text-md);
+  color: var(--ui-muted);
+  font-size: var(--text-control);
   font-weight: 600;
   cursor: pointer;
   list-style: none;
@@ -268,7 +268,7 @@
 }
 
 .settings-advanced[open] > summary {
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .settings-advanced-body {
@@ -276,30 +276,30 @@
 }
 
 .settings-advanced-body > * + * {
-  border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
 }
 
 .settings-group-title {
   margin: 0 0 8px;
   padding-left: 4px;
-  color: var(--editor-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
   font-weight: 600;
   line-height: 1.4;
 }
 
 .settings-group-body {
   padding: 2px 16px;
-  background: var(--chrome-subtle);
-  border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
-  border-radius: var(--radius-surface);
+  background: var(--ui-subtle);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-m);
 }
 
 /* The one divider: an inset hairline between adjacent rows of a card.
    Fragments flatten sections into direct children, so this covers them all. */
 .settings-group-body > * + *,
 .provider-picker > * + * {
-  border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
 }
 
 /* Every row: the setting's name on the left, its control on the right, one
@@ -312,7 +312,7 @@
   min-height: 48px;
   padding: 8px 0;
   box-sizing: border-box;
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
 }
 
 .settings-row > *:first-child {
@@ -333,8 +333,8 @@
 
 /* A read-out beside a control (installed / not installed). */
 .settings-row-value {
-  color: var(--editor-muted);
-  font-size: var(--text-md);
+  color: var(--ui-muted);
+  font-size: var(--text-body);
 }
 
 /* A row that is itself the button (Help's guides). */
@@ -346,18 +346,18 @@ button.settings-link-row {
   background: none;
   color: inherit;
   font: inherit;
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
   text-align: left;
   cursor: pointer;
 }
 
 .settings-link-chevron {
   flex: none;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 button.settings-danger-button {
-  color: var(--danger);
+  color: var(--ui-danger);
 }
 
 /* Model ids carry their capabilities ("· vision · tools · 400K"), so the
@@ -371,15 +371,15 @@ button.settings-danger-button {
 }
 
 .settings-row-label {
-  color: var(--editor-text);
-  font-size: var(--text-lg);
+  color: var(--ui-text);
+  font-size: var(--text-body-large);
 }
 
 /* Only rows that show a value or a live status have a hint; explanations go
    behind the row's "?". */
 .settings-row-hint {
-  color: var(--editor-muted);
-  font-size: var(--text-md);
+  color: var(--ui-muted);
+  font-size: var(--text-body);
   line-height: 1.45;
   margin-top: 2px;
   max-width: 420px;
@@ -395,28 +395,32 @@ button.settings-danger-button {
   max-height: 4.5em;
   overflow: auto;
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  color: var(--editor-text);
+  font-size: var(--text-footnote);
+  color: var(--ui-text);
   word-break: break-all;
   user-select: text;
   -webkit-user-select: text;
 }
 
-/* Toggles render as switches, not native checkboxes. */
+/* Toggles render as switches, not native checkboxes, sized by the row's
+   text: half again its height, so the switch sits with the label instead of
+   outweighing it, on every platform and at every Interface Text Size. */
 .settings-row input[type="checkbox"] {
-  /* The thumb, and how far it travels (the phone's are UIKit's sizes). */
-  --switch-thumb: 17px;
-  --switch-travel: 15px;
+  --switch-inset: 2px;
+  --switch-thumb: calc(1.5em - 2 * var(--switch-inset));
+  --switch-travel: 1em;
   appearance: none;
   -webkit-appearance: none;
   flex-shrink: 0;
-  width: 36px;
-  height: 21px;
+  width: 2.5em;
+  height: 1.5em;
   margin: 0;
   position: relative;
   border: none;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--editor-muted) 38%, var(--bg));
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-muted) 38%, var(--ui-bg));
+  font-size: var(--text-body-large);
   cursor: pointer;
   transition: background-color var(--dur-base) var(--ease-standard);
 }
@@ -426,12 +430,13 @@ button.settings-danger-button {
 .settings-row input[type="checkbox"]::after {
   content: "";
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: var(--switch-inset);
+  left: var(--switch-inset);
   width: var(--switch-thumb);
   height: var(--switch-thumb);
   border-radius: 50%;
-  background: var(--on-fill);
+  corner-shape: round;
+  background: var(--ui-on-fill);
   box-shadow: var(--shadow-thumb);
   transform-origin: left center;
   transition: transform calc(var(--dur-medium) * var(--motion-travel))
@@ -465,7 +470,7 @@ button.settings-danger-button {
 }
 
 .settings-row input[type="checkbox"]:focus-visible {
-  outline: 2px solid var(--editor-accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: 2px;
 }
 
@@ -474,7 +479,7 @@ button.settings-inline-button {
   margin-bottom: 0;
   flex-shrink: 0;
   white-space: nowrap;
-  background: var(--bg);
+  background: var(--ui-bg);
 }
 
 /* A row with two actions, stacked so a long folder path beside them has room. */
@@ -502,12 +507,12 @@ button.settings-inline-button {
   min-width: 120px;
   text-align: center;
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 .shortcut-capture-active {
-  border-color: var(--editor-accent);
-  color: var(--editor-accent);
+  border-color: var(--ui-accent);
+  color: var(--ui-accent);
 }
 
 .api-key-input-row {
@@ -535,22 +540,22 @@ button.settings-inline-button {
 .settings-error {
   padding: 8px 10px;
   margin: 8px 0;
-  border-left: 2px solid var(--danger);
-  border-radius: 0 var(--radius-control) var(--radius-control) 0;
-  background: color-mix(in srgb, var(--danger) 10%, transparent);
-  color: var(--danger);
-  font-size: var(--text-md);
+  border-left: 2px solid var(--ui-danger);
+  border-radius: 0 var(--shape-s) var(--shape-s) 0;
+  background: color-mix(in srgb, var(--ui-danger) 10%, transparent);
+  color: var(--ui-danger);
+  font-size: var(--text-body);
   word-break: break-word;
 }
 
 .settings-success {
   padding: 8px 10px;
   margin: 8px 0;
-  border-left: 2px solid var(--success-color);
-  border-radius: 0 var(--radius-control) var(--radius-control) 0;
-  background: color-mix(in srgb, var(--success-color) 10%, transparent);
-  color: var(--success-color);
-  font-size: var(--text-md);
+  border-left: 2px solid var(--ui-success);
+  border-radius: 0 var(--shape-s) var(--shape-s) 0;
+  background: color-mix(in srgb, var(--ui-success) 10%, transparent);
+  color: var(--ui-success);
+  font-size: var(--text-body);
 }
 
 /* Inline banners carry their own left accent, so drop the row hairline
@@ -571,16 +576,17 @@ button.settings-inline-button {
   flex: 1;
   min-width: 0;
   padding: 5px 10px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
-  background: var(--bg);
-  color: var(--editor-text);
-  font-size: var(--text-md);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-size: var(--text-body);
 }
 
 .settings-text-input:focus {
   outline: none;
-  border-color: var(--editor-accent);
+  border-color: var(--ui-accent);
 }
 
 .image-settings-row {
@@ -613,7 +619,7 @@ button.settings-inline-button {
      differs. */
   overflow-wrap: anywhere;
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
 }
 
 /* ---- General > AI account: two disclosure rows + expanding panels ---- */
@@ -639,32 +645,32 @@ button.settings-inline-button {
   background: none;
   color: inherit;
   font: inherit;
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
   cursor: pointer;
   text-align: left;
 }
 
 .combobox-trigger:hover,
 .provider-auth-trigger:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 
 /* Read like any other row: the name in the text colour, the current value
    (provider, sign-in state) quieter at the right. */
 .combobox-trigger-label {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .provider-disclosure-label {
   flex: 1;
   min-width: 0;
-  color: var(--editor-text);
-  font-size: var(--text-lg);
+  color: var(--ui-text);
+  font-size: var(--text-body-large);
 }
 
 .combobox-caret {
   flex-shrink: 0;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   transform: rotate(90deg);
   transition: transform var(--dur-fast) var(--ease-standard);
 }
@@ -681,20 +687,20 @@ button.settings-inline-button {
   z-index: 10;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-surface);
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
   box-shadow: var(--shadow-popover);
   overflow: hidden;
 }
 
 .combobox-search {
   border: none;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--ui-border);
   padding: 10px 12px;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   background: transparent;
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .combobox-search:focus {
@@ -714,22 +720,22 @@ button.settings-inline-button {
   width: 100%;
   padding: 8px 10px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: none;
   color: inherit;
   font: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   text-align: left;
   cursor: pointer;
 }
 
 .combobox-option:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 
 .combobox-option-active {
-  background: var(--sidebar-active);
-  color: var(--sidebar-active-text);
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
 }
 
 .combobox-option-label {
@@ -739,26 +745,27 @@ button.settings-inline-button {
 
 .combobox-empty {
   padding: 10px 12px;
-  font-size: var(--text-md);
-  color: var(--editor-muted);
+  font-size: var(--text-body);
+  color: var(--ui-muted);
 }
 
 .status-pill {
   margin-left: auto;
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
   white-space: nowrap;
 }
 
 .status-pill-connected {
-  color: var(--success-color);
+  color: var(--ui-success);
 }
 
 .status-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--success-color);
+  corner-shape: round;
+  background: var(--ui-success);
   flex-shrink: 0;
 }
 
@@ -771,7 +778,7 @@ button.settings-inline-button {
   margin: 2px 0 12px 8px;
   padding: 0 0 0 14px;
   border-left: 2px solid
-    color-mix(in srgb, var(--editor-accent) 35%, var(--border-color));
+    color-mix(in srgb, var(--ui-accent) 35%, var(--ui-border));
 }
 
 .provider-panel .settings-row,
@@ -786,28 +793,30 @@ button.settings-inline-button {
   gap: 2px;
   margin: 10px 0 4px;
   padding: 2px;
-  background: var(--sidebar-bg);
-  border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
-  border-radius: var(--radius-control);
+  background: var(--ui-subtle);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .auth-tab {
   padding: 4px 12px;
   border: none;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
-  color: var(--editor-muted);
-  font-size: var(--text-md);
+  color: var(--ui-muted);
+  font-size: var(--text-control);
   cursor: pointer;
 }
 
 .auth-tab:hover {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .auth-tab-active {
-  background: var(--bg);
-  color: var(--editor-text);
+  background: var(--ui-bg);
+  color: var(--ui-text);
   font-weight: 500;
   box-shadow: none;
 }
@@ -825,8 +834,8 @@ button.settings-inline-button {
 /* Label on top, then the controls, then their note, for controls that need
    the row's width. */
 .settings-field-label {
-  font-size: var(--text-md);
-  color: var(--editor-text);
+  font-size: var(--text-body);
+  color: var(--ui-text);
   flex-shrink: 0;
 }
 
@@ -885,13 +894,13 @@ button.settings-inline-button {
 
 .settings-skill-name {
   flex-shrink: 0;
-  color: var(--editor-text);
-  font-size: var(--text-lg);
+  color: var(--ui-text);
+  font-size: var(--text-body-large);
 }
 
 .settings-skill-desc {
-  color: var(--editor-muted);
-  font-size: var(--text-md);
+  color: var(--ui-muted);
+  font-size: var(--text-body);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -910,10 +919,11 @@ button.settings-inline-button {
   display: inline-block;
   margin-left: 8px;
   padding: 0 6px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--editor-muted) 14%, transparent);
-  color: var(--editor-muted);
-  font-size: var(--text-xs);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-muted) 14%, transparent);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
   font-weight: 500;
   line-height: calc(18px * var(--ui-text-scale, 1));
   vertical-align: 1px;
@@ -923,33 +933,33 @@ button.settings-inline-button {
 /* "Built-in updated": a customized copy older than the bundled skill -
    the one tag that asks for a look, so it takes the accent. */
 .settings-skill-tag-notice {
-  background: color-mix(in srgb, var(--editor-accent) 14%, transparent);
-  color: var(--editor-accent);
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+  color: var(--ui-accent);
 }
 
 /* The built-in skills: a disclosure like Advanced, its count of those
    switched on at the right of the title. */
 .settings-builtin-skills-count {
   margin-left: auto;
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   font-weight: 400;
 }
 
 .settings-builtin-category-title {
   padding: 12px 0 2px;
-  color: var(--editor-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
   font-weight: 600;
 }
 
 .settings-builtin-category > .settings-row + .settings-row,
 .settings-skill-item + .settings-skill-item {
-  border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
 }
 
 .settings-builtin-skill-name {
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 .settings-builtin-skill .settings-row-control {
@@ -964,11 +974,12 @@ button.settings-skill-action {
   margin: 0;
   padding: 4px 6px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   font: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   white-space: nowrap;
   cursor: pointer;
 }
@@ -979,11 +990,11 @@ button.settings-skill-action {
 }
 
 button.settings-skill-action:hover {
-  background: color-mix(in srgb, var(--editor-accent) 10%, transparent);
+  background: color-mix(in srgb, var(--ui-accent) 10%, transparent);
 }
 
 button.settings-skill-action:focus-visible {
-  outline: 2px solid var(--editor-accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: 1px;
 }
 
@@ -1111,10 +1122,10 @@ button.settings-skill-action:focus-visible {
 
 .settings-category-title {
   margin: 0 0 20px;
-  font-size: var(--text-2xl);
+  font-size: var(--text-large-title);
   font-weight: 600;
   line-height: 1.3;
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .shortcut-setting {
@@ -1136,8 +1147,8 @@ button.settings-skill-action:focus-visible {
 
 .shortcut-fixed-title {
   margin: 0 0 var(--space-1);
-  color: var(--editor-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
   font-weight: 600;
 }
 
@@ -1151,7 +1162,7 @@ button.settings-skill-action:focus-visible {
   justify-content: space-between;
   gap: var(--space-4);
   min-height: 30px;
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
 }
 
 .shortcut-fixed-row dt {
@@ -1169,37 +1180,45 @@ button.settings-skill-action:focus-visible {
 
 .shortcut-fixed-row kbd {
   padding: 1px 6px;
-  border-radius: var(--radius-small);
-  background: color-mix(in srgb, var(--editor-muted) 12%, transparent);
-  color: var(--editor-text);
+  border-radius: var(--shape-xs);
+  background: color-mix(in srgb, var(--ui-muted) 12%, transparent);
+  color: var(--ui-text);
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   white-space: nowrap;
 }
 
+/* A segmented control: the segments' corners concentric with the track's,
+   its radius theirs plus the inset and the border. */
 .appearance-options {
+  --segment-inset: 2px;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
-  background: var(--sidebar-bg);
+  gap: 2px;
+  padding: var(--segment-inset);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-text) 6%, transparent);
 }
 
 .appearance-option {
   position: relative;
-  padding: 7px 10px;
-  border-radius: var(--radius-control);
-  color: var(--editor-muted);
-  font-size: var(--text-sm);
+  display: inline-flex;
+  align-items: center;
+  min-height: calc(var(--control-height-sm) - 2 * var(--segment-inset));
+  padding: 0 var(--space-3);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  color: var(--ui-text);
+  font-size: var(--text-footnote);
+  font-weight: 500;
   cursor: pointer;
 }
 
 .appearance-option.is-selected {
-  background: var(--bg);
-  color: var(--editor-text);
-  box-shadow: none;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: var(--shadow-raised);
 }
 
 .appearance-option input {
@@ -1210,7 +1229,7 @@ button.settings-skill-action:focus-visible {
 }
 
 .appearance-option:focus-within {
-  outline: 2px solid var(--editor-accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: 2px;
 }
 
@@ -1228,12 +1247,12 @@ button.settings-skill-action:focus-visible {
   resize: vertical;
   box-sizing: border-box;
   padding: 8px 10px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
-  background: var(--bg);
-  color: var(--editor-text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-s);
+  background: var(--ui-bg);
+  color: var(--ui-text);
   font-family: var(--font-mono);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   line-height: 1.5;
   tab-size: 2;
 }
@@ -1261,12 +1280,12 @@ button.settings-skill-action:focus-visible {
 .settings-about-name {
   font-size: calc(1.35rem * var(--ui-text-scale, 1));
   font-weight: 600;
-  color: var(--chrome-text);
+  color: var(--ui-text);
 }
 
 .settings-about-version {
   font-size: calc(0.85rem * var(--ui-text-scale, 1));
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
   cursor: default;
   user-select: none;
   -webkit-user-select: none;
@@ -1298,13 +1317,13 @@ button.settings-skill-action:focus-visible {
 .settings-about-credit {
   margin-top: 4px;
   font-size: calc(0.8rem * var(--ui-text-scale, 1));
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
 }
 
 /* The Get more themes row sits between other rows; a link row's
    `border: none` would drop the card's hairline above it. */
 .settings-group-body > * + button.theme-more-entry {
-  border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
 }
 
 /* Extensions › Themes › Get themes: each theme is an ordinary settings row
@@ -1335,9 +1354,9 @@ button.settings-skill-action:focus-visible {
   width: 112px;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
-  border-radius: var(--radius-control);
-  background: var(--bg);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-s);
+  background: var(--ui-bg);
 }
 
 .theme-gallery-enlarge {
@@ -1395,14 +1414,14 @@ button.settings-skill-action:focus-visible {
 .settings-about-status {
   flex-basis: 100%;
   font-size: calc(0.8rem * var(--ui-text-scale, 1));
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
 }
 
 /* A command name inside a row label (General › the textus command). */
 .settings-inline-code {
   padding: 0.05em 0.35em;
-  border-radius: 4px;
-  background: var(--editor-code-bg, rgba(0, 0, 0, 0.06));
+  border-radius: var(--shape-xs);
+  background: var(--doc-code-bg, rgba(0, 0, 0, 0.06));
   font-family: var(--font-mono);
   font-size: 0.92em;
 }

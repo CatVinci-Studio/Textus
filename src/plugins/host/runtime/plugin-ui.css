@@ -20,10 +20,10 @@ body {
 html,
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--editor-text);
+  background: var(--ui-bg);
+  color: var(--ui-text);
   font-family: var(--font-sans);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   line-height: 1.5;
 }
 
@@ -32,33 +32,34 @@ body {
 }
 
 a {
-  color: var(--chrome-accent);
+  color: var(--ui-accent);
 }
 
 .muted {
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
 }
 
 button,
 .button {
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   min-height: var(--control-height-sm);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
-  background: var(--bg);
-  color: var(--chrome-text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-bg);
+  color: var(--ui-text);
   cursor: pointer;
 }
 button:hover,
 .button:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 button.primary {
-  background: var(--chrome-accent);
-  border-color: var(--chrome-accent);
-  color: var(--bg);
+  background: var(--ui-accent);
+  border-color: var(--ui-accent);
+  color: var(--ui-bg);
 }
 button:disabled {
   opacity: 0.5;
@@ -74,18 +75,24 @@ input,
 select,
 textarea {
   font: inherit;
-  font-size: var(--text-sm);
-  color: var(--editor-text);
-  background: var(--bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  font-size: var(--text-secondary);
+  color: var(--ui-text);
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   padding: var(--space-1) var(--space-2);
+}
+/* Text in lines is a container, not a control. */
+textarea {
+  border-radius: var(--shape-s);
+  corner-shape: superellipse(1.25);
 }
 input:focus,
 select:focus,
 textarea:focus,
 button:focus-visible {
-  outline: 2px solid var(--chrome-accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: -1px;
 }
 
@@ -94,9 +101,9 @@ button:focus-visible {
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--border-color);
-  background: var(--sidebar-bg);
-  color: var(--sidebar-text);
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-subtle);
+  color: var(--ui-text);
 }
 .toolbar .spacer {
   flex: 1;
@@ -113,47 +120,47 @@ button:focus-visible {
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-small);
-  color: var(--sidebar-text);
+  border-radius: var(--shape-s);
+  color: var(--ui-text);
 }
 .list > li.clickable:hover,
 .row.clickable:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
   cursor: pointer;
 }
 .list > li.active {
-  background: var(--sidebar-active);
-  color: var(--sidebar-active-text);
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
 }
 
 .empty {
   padding: var(--space-6) var(--space-4);
   text-align: center;
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
 }
 
 h1,
 h2,
 h3 {
-  color: var(--chrome-text);
+  color: var(--ui-text);
   font-weight: 600;
 }
 h2 {
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
 }
 h3 {
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 code,
 pre {
   font-family: var(--font-mono);
-  background: var(--editor-code-bg);
-  border-radius: var(--radius-small);
+  background: var(--doc-code-bg);
+  border-radius: var(--shape-xs);
 }
 
 .danger {
-  color: var(--danger);
+  color: var(--ui-danger);
 }
 
 /* The app's moves, for a plugin's own parts: motion-enter and motion-exit,
@@ -241,5 +248,5 @@ pre {
    taken off, never faded. */
 .motion-mark {
   background-color: var(--motion-mark-bg);
-  border-radius: 2px;
+  border-radius: var(--shape-xs);
 }

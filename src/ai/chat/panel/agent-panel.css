@@ -8,9 +8,9 @@
   min-width: 0;
   /* The window bar is a fixed 28px strip over the top of the layout. */
   padding-top: 28px;
-  background: var(--editor-bg, var(--bg));
-  border-left: 1px solid var(--border-color);
-  color: var(--editor-text);
+  background: var(--ui-surface);
+  border-left: 1px solid var(--ui-border);
+  color: var(--ui-text);
   /* Full width at once, sliding in from beside it: a width animation
      reflowed the document every frame. .app-shell is overflow: clip, so
      focusing the composer can't scroll the window mid-slide. */
@@ -56,7 +56,7 @@
   gap: 8px;
   min-height: 40px;
   padding: 4px 8px 4px 14px;
-  border-bottom: 1px solid var(--chat-hairline, var(--border-color));
+  border-bottom: 1px solid var(--chat-hairline, var(--ui-border));
 }
 
 /* Conversation / Memory: a small segmented switch, its pill sliding to the
@@ -65,8 +65,9 @@
   position: relative;
   display: inline-flex;
   padding: 2px;
-  border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--editor-text) 6%, transparent);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-text) 6%, transparent);
 }
 
 .agent-panel-tabs-thumb {
@@ -74,8 +75,9 @@
   top: 2px;
   bottom: 2px;
   left: 2px;
-  border-radius: var(--radius-small);
-  background: var(--editor-bg, var(--bg));
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-surface);
   box-shadow: var(--shadow-raised);
   transition:
     transform var(--dur-slow) var(--ease-spring-bouncy),
@@ -84,25 +86,27 @@
 
 .agent-panel-tabs button {
   position: relative;
-  padding: 5px 12px;
+  min-height: calc(var(--control-height-sm) - 4px);
+  padding: 0 var(--space-3);
   border: 0;
   background: none;
-  color: var(--editor-muted);
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-sm);
-  font-weight: 600;
+  font-size: var(--text-footnote);
+  font-weight: 500;
   cursor: pointer;
   transition: color var(--dur-fast) var(--ease-standard);
 }
 
 .agent-panel-tabs button[aria-selected="true"] {
-  color: var(--editor-text);
+  font-weight: 600;
 }
 
 .agent-panel-tabs button:focus-visible {
-  outline: 2px solid var(--editor-accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: -2px;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .agent-panel-actions {
@@ -150,7 +154,7 @@
 }
 
 .agent-panel-body .inline-chat-skill-menu {
-  border-top: 1px solid var(--chat-hairline, var(--border-color));
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
 }
 
 .agent-panel-body .inline-chat-bar {
@@ -201,9 +205,10 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--editor-accent) 12%, transparent);
-  color: var(--editor-accent);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
+  color: var(--ui-accent);
 }
 
 .agent-panel-empty-mark svg {
@@ -214,9 +219,9 @@
 .agent-panel-empty-text {
   max-width: 26em;
   margin: 0;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   line-height: 1.55;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   text-wrap: pretty;
 }
 
@@ -263,12 +268,12 @@
    library kept in it. */
 .project-bar {
   padding: 5px 10px;
-  border-bottom: 1px solid var(--chat-hairline, var(--border-color));
-  font-size: var(--text-sm);
+  border-bottom: 1px solid var(--chat-hairline, var(--ui-border));
+  font-size: var(--text-secondary);
 }
 
 .project-bar-empty {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .project-bar-row {
@@ -287,7 +292,7 @@
   max-width: 60%;
   padding: 3px 6px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: none;
   color: inherit;
   font: inherit;
@@ -295,7 +300,7 @@
 }
 
 .project-bar-folder:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 
 .project-bar-icon {
@@ -319,12 +324,13 @@
 .project-bar-chip {
   flex-shrink: 0;
   padding: 1px 7px;
-  border: 1px solid var(--editor-border, var(--border-color));
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   cursor: pointer;
 }
 
@@ -358,9 +364,10 @@
   flex: 1;
   min-width: 0;
   padding: 4px 8px;
-  border: 1px solid var(--editor-border, var(--border-color));
-  border-radius: var(--radius-control);
-  background: var(--editor-bg, var(--bg));
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-surface);
   color: inherit;
   font: inherit;
 }
@@ -371,7 +378,7 @@
 
 .project-bar-status {
   margin-top: 4px;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .agent-panel-placeholder {
@@ -384,8 +391,8 @@
   gap: 10px;
   padding: 24px;
   text-align: center;
-  font-size: var(--text-md);
-  color: var(--editor-muted);
+  font-size: var(--text-body);
+  color: var(--ui-muted);
 }
 
 /* The empty state shows the composer's mode: a switch brings in the new

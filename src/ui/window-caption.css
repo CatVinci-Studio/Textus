@@ -26,18 +26,18 @@
   border: none;
   border-radius: 0;
   background: none;
-  color: var(--editor-text);
+  color: var(--ui-text);
   opacity: 0.75;
   cursor: default;
 }
 
 .window-caption-button:hover {
   opacity: 1;
-  background: color-mix(in srgb, var(--editor-text) 12%, transparent);
+  background: color-mix(in srgb, var(--ui-text) 12%, transparent);
 }
 
 .window-caption-button:active {
-  background: color-mix(in srgb, var(--editor-text) 20%, transparent);
+  background: color-mix(in srgb, var(--ui-text) 20%, transparent);
 }
 
 /* Close gets the platform's red, not the theme's accent, as on every other

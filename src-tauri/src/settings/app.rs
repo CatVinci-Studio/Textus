@@ -198,7 +198,7 @@ pub fn with_boot<'a, R: tauri::Runtime, M: Manager<R>>(
 }
 
 /// The colour a window shows before its page has painted, for a pinned
-/// appearance: the page's own `--bg`. On Linux GTK and WebKit otherwise flash
+/// appearance: the page's own `--doc-bg`, which `--ui-bg` follows. On Linux GTK and WebKit otherwise flash
 /// their own colours first. "system" is left alone: guessing wrong would flash.
 #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub(crate) fn pinned_background(settings: &Value) -> Option<tauri::window::Color> {

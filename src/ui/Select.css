@@ -27,7 +27,7 @@
   padding: 4px;
   list-style: none;
   overflow-y: auto;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   outline: none;
   transform-origin: var(--transform-origin, top left);
   animation: motion-pop-in var(--dur-base) var(--ease-out);
@@ -48,8 +48,8 @@
   align-items: center;
   gap: 8px;
   padding: 6px 10px 6px 26px;
-  border-radius: var(--radius-control);
-  color: var(--editor-text);
+  border-radius: var(--shape-s);
+  color: var(--ui-text);
   white-space: nowrap;
   cursor: pointer;
   position: relative;
@@ -58,8 +58,8 @@
 /* An <optgroup>'s name, above its options. */
 .ui-select-group {
   padding: 8px 10px 3px;
-  color: var(--editor-muted);
-  font-size: var(--text-xs);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
   font-weight: 600;
   white-space: nowrap;
   cursor: default;
@@ -70,7 +70,7 @@
 }
 
 .ui-select-option.is-active {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 
 .ui-select-option[aria-selected="true"]::before {
@@ -81,7 +81,7 @@
   width: 10px;
   height: 10px;
   margin-top: -5px;
-  background: var(--chrome-primary);
+  background: var(--ui-accent-fill);
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
     center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
@@ -89,7 +89,7 @@
 }
 
 .ui-select-option[aria-disabled="true"] {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   cursor: default;
 }
 

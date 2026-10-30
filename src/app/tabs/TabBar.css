@@ -11,7 +11,7 @@
   /* A scrollbar would make the bar taller than its neighbours' rows; it
      scrolls by trackpad or wheel all the same. */
   scrollbar-width: none;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--ui-border);
   flex-shrink: 0;
   /* Pill drags must never read as a text selection. */
   user-select: none;
@@ -35,9 +35,10 @@
   min-width: 90px;
   max-width: 200px;
   padding: 5px 8px;
-  border-radius: var(--radius-control);
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -57,7 +58,7 @@
 }
 
 .tab-pill:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 
 .tab-pill-ghost {
@@ -66,8 +67,8 @@
 }
 
 .tab-pill-active {
-  background: var(--sidebar-active);
-  color: var(--sidebar-active-text);
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
 }
 
 /* An incoming tab riding this bar mid-drag. No pop-in: a pill still scaling
@@ -90,6 +91,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
+  corner-shape: round;
   background: currentColor;
   flex-shrink: 0;
   opacity: 0.7;
@@ -105,7 +107,8 @@
   align-items: center;
   padding: 0 2px;
   line-height: 1;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .tab-pill-close:hover {
@@ -118,19 +121,20 @@
   border: none;
   background: none;
   cursor: pointer;
-  color: var(--editor-muted);
-  font-size: var(--text-lg);
+  color: var(--ui-muted);
+  font-size: var(--text-body-large);
   padding: 4px 10px;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 
 .tab-bar-add:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 
 .word-count {
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
   white-space: nowrap;
   min-width: 1px;
   padding: 0 4px;

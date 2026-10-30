@@ -10,7 +10,7 @@
 
 .memory-no-project {
   padding: 18px 16px;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   line-height: 1.6;
 }
 
@@ -25,7 +25,7 @@
 }
 
 .memory-section + .memory-section {
-  border-top: 1px solid var(--chat-hairline, var(--editor-border));
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
 }
 
 .memory-section h4 {
@@ -33,20 +33,20 @@
   align-items: center;
   gap: 8px;
   margin: 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-footnote);
   font-weight: 600;
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .memory-section h4 button {
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
 }
 
 .memory-hint {
   margin: 2px 0 10px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   line-height: 1.5;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .memory-section h4 button,
@@ -55,7 +55,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   font: inherit;
   font-weight: 500;
   cursor: pointer;
@@ -69,13 +69,14 @@
 .memory-link {
   display: block;
   margin: 8px 0 0;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
 }
 
 .memory-count {
   padding: 0 6px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--editor-text) 7%, transparent);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-text) 7%, transparent);
   font-variant-numeric: tabular-nums;
 }
 
@@ -83,21 +84,21 @@
   margin: 0;
   padding: 2px 12px;
   list-style: none;
-  border: 1px solid var(--chat-hairline, var(--editor-border));
-  border-radius: var(--radius-surface);
-  background: var(--chat-card-bg, var(--editor-bg));
+  border: 1px solid var(--chat-hairline, var(--ui-border));
+  border-radius: var(--shape-m);
+  background: var(--chat-card-bg, var(--ui-surface));
 }
 
 .memory-lines li {
   padding: 8px 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1.5;
   animation: motion-fade-in var(--dur-base) var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 40ms);
 }
 
 .memory-lines li + li {
-  border-top: 1px solid var(--chat-hairline, var(--editor-border));
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
 }
 
 .memory-global {
@@ -109,8 +110,8 @@
 .memory-scope {
   margin-left: auto;
   flex: none;
-  font-size: var(--text-xs);
-  color: var(--editor-muted);
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
 }
 
 .memory-library {
@@ -125,12 +126,12 @@
   align-items: flex-start;
   gap: 3px;
   padding: 10px 12px;
-  border: 1px solid var(--chat-hairline, var(--editor-border));
-  border-radius: var(--radius-surface);
-  background: var(--chat-card-bg, var(--editor-bg));
-  color: var(--editor-muted);
+  border: 1px solid var(--chat-hairline, var(--ui-border));
+  border-radius: var(--shape-m);
+  background: var(--chat-card-bg, var(--ui-surface));
+  color: var(--ui-muted);
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   line-height: 1.45;
   text-align: start;
   cursor: pointer;
@@ -140,19 +141,18 @@
 }
 
 .memory-entry:hover {
-  border-color: var(--editor-muted);
+  border-color: var(--ui-muted);
   transform: translateY(-1px);
 }
 
 .memory-entry b {
-  font-size: var(--text-md);
-  color: var(--editor-text);
+  font-size: var(--text-body);
+  color: var(--ui-text);
 }
 
 .memory-entry-used {
-  border-color: color-mix(in srgb, var(--editor-accent) 40%, transparent);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--editor-accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--ui-accent) 40%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-accent) 10%, transparent);
 }
 
 .memory-aliases {
@@ -163,8 +163,9 @@
 
 .memory-aliases span {
   padding: 0 6px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--editor-text) 7%, transparent);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-text) 7%, transparent);
 }
 
 .memory-desc {
@@ -177,15 +178,15 @@
 .memory-used {
   margin-top: 2px;
   font-weight: 600;
-  color: var(--editor-accent);
+  color: var(--ui-accent);
 }
 
 .memory-empty {
   padding: 12px 14px;
-  border: 1px dashed var(--chat-hairline, var(--editor-border));
-  border-radius: var(--radius-surface);
-  color: var(--editor-muted);
-  font-size: var(--text-sm);
+  border: 1px dashed var(--chat-hairline, var(--ui-border));
+  border-radius: var(--shape-m);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
   line-height: 1.55;
 }
 
@@ -202,12 +203,13 @@
 
 .memory-empty-actions button {
   padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--editor-border, var(--border-color));
-  background: var(--editor-bg, var(--bg));
-  color: var(--editor-text);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   font-weight: 600;
   cursor: pointer;
 }
@@ -248,9 +250,10 @@
   height: 20px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font: inherit;
   line-height: 1;
   cursor: pointer;
@@ -264,8 +267,8 @@
 }
 
 .memory-entry-delete:hover {
-  background: color-mix(in srgb, var(--editor-text) 8%, transparent);
-  color: var(--editor-text);
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  color: var(--ui-text);
 }
 
 @media (hover: none) {
@@ -285,9 +288,9 @@
   align-items: baseline;
   gap: 8px;
   margin: 0 0 6px;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   font-weight: 500;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 /* Where a group's files are (the file manager opens on them). */
@@ -296,13 +299,13 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font: inherit;
   cursor: pointer;
 }
 
 .memory-reveal:hover {
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   text-decoration: underline;
 }
 
@@ -315,8 +318,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--text-xs);
-  color: var(--editor-muted);
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
   cursor: pointer;
 }
 
@@ -326,33 +329,34 @@
   box-sizing: border-box;
   margin: 0 0 12px;
   padding: 6px 10px;
-  border: 1px solid var(--editor-border);
-  border-radius: var(--radius-small);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 .memory-search:focus {
   outline: none;
-  border-color: var(--editor-accent);
+  border-color: var(--ui-accent);
 }
 
 /* A library entry the AI wrote: who noted it, and when. */
 .memory-by-ai {
-  font-size: var(--text-xs);
-  color: var(--editor-muted);
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
 }
 
 .memory-remembered-list li {
   padding: 8px 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1.5;
 }
 
 .memory-remembered-list li + li {
-  border-top: 1px solid var(--chat-hairline, var(--editor-border));
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
 }
 
 .memory-remembered-meta {
@@ -361,8 +365,8 @@
   align-items: baseline;
   gap: 6px;
   margin-top: 2px;
-  font-size: var(--text-xs);
-  color: var(--editor-muted);
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
 }
 
 .memory-not-sent .memory-remembered-text {
@@ -371,8 +375,9 @@
 
 .memory-badge {
   padding: 0 6px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--editor-text) 7%, transparent);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-text) 7%, transparent);
 }
 
 .memory-remembered-actions {
@@ -385,9 +390,9 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   cursor: pointer;
 }
 
@@ -397,7 +402,7 @@
 
 .memory-note {
   margin: 8px 0 0;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   line-height: 1.5;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }

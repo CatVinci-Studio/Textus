@@ -11,7 +11,7 @@ body,
 }
 
 body {
-  background: var(--bg);
+  background: var(--ui-bg);
 }
 
 .playground {
@@ -26,9 +26,9 @@ body {
   align-items: center;
   gap: var(--space-2) var(--space-4);
   padding: var(--space-2) var(--space-4);
-  border-bottom: 1px solid var(--border-color);
-  color: var(--chrome-text);
-  font-size: var(--text-md);
+  border-bottom: 1px solid var(--ui-border);
+  color: var(--ui-text);
+  font-size: var(--text-control);
 }
 
 .playground-brand {
@@ -39,28 +39,29 @@ body {
 
 .playground-brand img {
   display: block;
-  border-radius: 5px;
+  border-radius: var(--shape-xs);
 }
 
 .playground-name {
   font-weight: 600;
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
 }
 
 .playground-tag {
   padding: 1px 8px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-pill);
-  color: var(--chrome-muted);
-  font-size: var(--text-sm);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
 }
 
 .playground-note {
   flex: 1;
   min-width: 0;
   margin: 0;
-  color: var(--chrome-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
 }
 
 .playground-actions {
@@ -77,8 +78,8 @@ body {
 }
 
 .playground-actions .text-button[aria-pressed="true"] {
-  border-color: var(--chrome-accent);
-  color: var(--chrome-accent);
+  border-color: var(--ui-accent);
+  color: var(--ui-accent);
 }
 
 .playground-download {
@@ -86,7 +87,8 @@ body {
   align-items: center;
   min-height: var(--control-height-sm);
   padding: 0 12px;
-  border-radius: var(--radius-button);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--ui-primary);
   color: var(--ui-on-primary);
   font-weight: 600;
@@ -94,13 +96,13 @@ body {
 }
 
 .playground-download:hover {
-  background: color-mix(in srgb, var(--ui-primary) 85%, var(--bg));
+  background: color-mix(in srgb, var(--ui-primary) 85%, var(--ui-bg));
 }
 
 .editor-scroll {
   flex: 1;
   overflow-y: auto;
-  background: var(--editor-bg, var(--bg));
+  background: var(--ui-surface);
 }
 
 /* Source mode fills the rest of the page, as the editor does. */
@@ -118,8 +120,8 @@ body {
   margin-inline: auto;
   z-index: 220;
   padding: var(--space-2) var(--space-3);
-  color: var(--editor-text);
-  font-size: var(--text-md);
+  color: var(--ui-text);
+  font-size: var(--text-body);
 }
 
 /* A phone: the note gets a line of its own under the brand and buttons,

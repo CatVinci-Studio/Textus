@@ -34,16 +34,16 @@ const CUSTOM_CSS_PLACEHOLDER = `#write > p {
 /** The variables a theme sets, as the current theme resolves them: the
  *  starting point of an exported theme. */
 const THEME_VARIABLES = [
-  "--editor-bg",
-  "--editor-text",
-  "--editor-muted",
-  "--editor-accent",
-  "--editor-border",
-  "--editor-code-bg",
-  "--editor-quote-border",
-  "--editor-highlight-bg",
-  "--editor-font",
-  "--editor-list-gap",
+  "--doc-bg",
+  "--doc-text",
+  "--doc-muted",
+  "--doc-accent",
+  "--doc-border",
+  "--doc-code-bg",
+  "--doc-quote-border",
+  "--doc-highlight-bg",
+  "--doc-font",
+  "--doc-list-gap",
   // A proposed revision's colours.
   "--revision-insert-bg",
   "--revision-insert-text",
@@ -61,11 +61,11 @@ async function exportThemeCss(t: Strings, customCss: string): Promise<void> {
   const style = getComputedStyle(document.documentElement);
   const write = document.querySelector("#write");
   const writeStyle = write ? getComputedStyle(write) : null;
-  // The Default theme leaves --editor-bg and --editor-font unset, so their
+  // The Default theme leaves --doc-bg and --doc-font unset, so their
   // fallbacks are written; otherwise an import read dark on dark.
   const fallbacks: Record<string, string> = {
-    "--editor-bg": "--bg",
-    "--editor-font": "--font-sans",
+    "--doc-bg": "--ui-bg",
+    "--doc-font": "--font-sans",
   };
   const resolve = (name: string) =>
     style.getPropertyValue(name).trim() ||
@@ -83,7 +83,7 @@ async function exportThemeCss(t: Strings, customCss: string): Promise<void> {
   const fontSize = type ? parseFloat(type.fontSize) : NaN;
   const lineHeight = type ? parseFloat(type.lineHeight) : NaN;
   const typeRules = [
-    "  font-family: var(--editor-font);",
+    "  font-family: var(--doc-font);",
     fontSize > 0 ? `  font-size: ${Math.round(fontSize * 10) / 10}px;` : "",
     fontSize > 0 && lineHeight > 0
       ? `  line-height: ${Math.round((lineHeight / fontSize) * 100) / 100};`

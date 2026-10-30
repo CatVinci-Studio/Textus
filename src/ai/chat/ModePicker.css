@@ -13,7 +13,7 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .mode-picker-model::before {
@@ -45,19 +45,19 @@
 }
 
 .mode-picker-mode-hint {
-  color: var(--editor-muted);
-  font-size: var(--text-xs);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
 }
 
 .mode-picker-models {
   margin-top: 4px;
-  border-top: 1px solid var(--editor-border, var(--border-color));
+  border-top: 1px solid var(--ui-border);
   padding-top: 8px;
 }
 
 .mode-picker-provider {
   padding: 4px 10px 2px 26px;
-  color: var(--editor-muted);
-  font-size: var(--text-xs);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
   cursor: default;
 }

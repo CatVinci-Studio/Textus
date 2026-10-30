@@ -44,7 +44,7 @@
     padding: 0;
     overflow: hidden;
     border: none;
-    border-radius: var(--radius-dialog);
+    border-radius: var(--shape-l);
     text-align: center;
     animation: motion-alert-in var(--dur-medium) var(--ease-out);
   }
@@ -61,8 +61,8 @@
   :root[data-window-chrome="mobile"] .app-dialog-title {
     margin: 0;
     padding: 19px 16px 0;
-    color: var(--editor-text);
-    font-size: var(--ios-body);
+    color: var(--ui-text);
+    font-size: var(--text-body);
     font-weight: 600;
     line-height: 1.3;
   }
@@ -70,7 +70,7 @@
   :root[data-window-chrome="mobile"] .app-dialog p {
     margin: 0;
     padding: 4px 16px 19px;
-    font-size: var(--ios-footnote);
+    font-size: var(--text-footnote);
     line-height: 1.4;
   }
 
@@ -90,7 +90,7 @@
   :root[data-window-chrome="mobile"] .app-dialog .close-prompt-buttons {
     align-items: stretch;
     gap: 0;
-    border-top: 1px solid var(--editor-border);
+    border-top: 1px solid var(--ui-border);
   }
 
   :root[data-window-chrome="mobile"]
@@ -116,8 +116,8 @@
     border: none;
     border-radius: 0;
     background: none;
-    color: var(--editor-accent);
-    font-size: var(--ios-body);
+    color: var(--ui-accent);
+    font-size: var(--text-body);
     font-weight: 400;
     opacity: 1;
     /* iOS's highlight: on at the touch, fading out after it. */
@@ -128,7 +128,7 @@
     .app-dialog.close-prompt
     .close-prompt-buttons
     button:active {
-    background: color-mix(in srgb, var(--editor-text) 8%, transparent);
+    background: color-mix(in srgb, var(--ui-text) 8%, transparent);
     transition-duration: 0s;
   }
 
@@ -139,7 +139,7 @@
     .close-prompt-buttons
     button
     + button {
-    border-left: 1px solid var(--editor-border);
+    border-left: 1px solid var(--ui-border);
   }
 
   :root[data-window-chrome="mobile"]
@@ -147,7 +147,7 @@
     .close-prompt-buttons:has(> button:nth-of-type(3))
     button
     + button {
-    border-top: 1px solid var(--editor-border);
+    border-top: 1px solid var(--ui-border);
     border-left: none;
   }
 
@@ -163,7 +163,7 @@
     .app-dialog.close-prompt
     .close-prompt-buttons
     button.app-dialog-danger {
-    color: var(--danger);
+    color: var(--ui-danger);
   }
 
   /* ---- The title row's menu: a pull-down menu. ---- */
@@ -175,7 +175,7 @@
     min-width: 250px;
     max-width: min(320px, calc(100vw - 16px));
     padding: 0;
-    border-radius: var(--radius-dialog);
+    border-radius: var(--shape-l);
   }
 
   /* Out of the menu button on a spring, as UIMenu opens. */
@@ -189,7 +189,7 @@
     min-height: 44px;
     padding: 0 16px;
     border-radius: 0;
-    font-size: var(--ios-body);
+    font-size: var(--text-body);
   }
 
   /* From the list: without a parent, the sibling rule restyled the editor's
@@ -199,14 +199,14 @@
     > .app-menu-row
     + .app-menu-row
     > .app-menu-item {
-    border-top: 1px solid var(--editor-border);
+    border-top: 1px solid var(--ui-border);
   }
 
   /* Groups are set apart by a band, as UIMenu draws its sections. */
   :root[data-window-chrome="mobile"] .app-menu-separator {
     height: 8px;
     margin: 0;
-    background: color-mix(in srgb, var(--editor-text) 6%, transparent);
+    background: color-mix(in srgb, var(--ui-text) 6%, transparent);
   }
 
   /* The check of an on/off row sits at the trailing edge, as on the
@@ -235,7 +235,7 @@
   }
 
   :root[data-window-chrome="mobile"] .app-menu-item:not(:disabled):active {
-    background: color-mix(in srgb, var(--editor-text) 8%, transparent);
+    background: color-mix(in srgb, var(--ui-text) 8%, transparent);
     transition-duration: 0s;
   }
 
@@ -248,10 +248,10 @@
     gap: 0;
     padding: 0 4px;
     border: none;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--ui-border);
     border-radius: 0;
     box-shadow: none;
-    background: var(--page-bg);
+    background: var(--ui-bg);
   }
 
   :root[data-window-chrome="mobile"] .find-replace-row {
@@ -269,8 +269,8 @@
     min-height: 36px;
     padding: 0 4px 0 8px;
     border: none;
-    border-radius: var(--radius-surface);
-    background: color-mix(in srgb, var(--editor-text) 7%, transparent);
+    border-radius: var(--shape-m);
+    background: color-mix(in srgb, var(--ui-text) 7%, transparent);
   }
 
   /* The grey field is the input's edge; the input itself draws none. */
@@ -284,7 +284,7 @@
   :root[data-window-chrome="mobile"] .find-replace-toggle {
     width: 30px;
     height: 30px;
-    font-size: var(--ios-caption) !important;
+    font-size: var(--text-caption) !important;
   }
 
   :root[data-window-chrome="mobile"] .find-replace-nav {
@@ -301,8 +301,8 @@
      re-checked for every element added to the editor. */
   :root[data-window-chrome="mobile"] .find-replace-nav .find-replace-text {
     padding: 0 8px;
-    color: var(--editor-accent);
-    font-size: var(--ios-subhead);
+    color: var(--ui-accent);
+    font-size: var(--text-secondary);
   }
 
   :root[data-window-chrome="mobile"]
@@ -348,7 +348,7 @@
     gap: 0;
     /* The close button's 44pt reaches past the pill's 36. */
     overflow: visible;
-    font-size: var(--ios-subhead);
+    font-size: var(--text-secondary);
   }
 
   :root[data-window-chrome="mobile"] .tab-pill-dirty-dot {

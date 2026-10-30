@@ -85,12 +85,15 @@ export function GeneralPage({
         />
       </SettingsGroup>
 
-      <SettingsGroup title={t.generalSystemLabel}>
-        {/* A desktop's: the phone has no windows to close. */}
-        {canUseWindows && <BackgroundSection t={t} />}
-        {canSetDefaultEditor && <DefaultEditorSection t={t} />}
-        {canInstallCliCommand && <CliCommandSection t={t} />}
-      </SettingsGroup>
+      {/* A desktop's: the phone has no windows to close, no default editor
+          and no terminal, so no group either. */}
+      {(canUseWindows || canSetDefaultEditor || canInstallCliCommand) && (
+        <SettingsGroup title={t.generalSystemLabel}>
+          {canUseWindows && <BackgroundSection t={t} />}
+          {canSetDefaultEditor && <DefaultEditorSection t={t} />}
+          {canInstallCliCommand && <CliCommandSection t={t} />}
+        </SettingsGroup>
+      )}
 
       {/* Last: links out rather than settings. A phone's menu is kept short,
             so there this is where they are. */}

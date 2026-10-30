@@ -8,11 +8,11 @@
   flex-direction: column;
   gap: 4px;
   margin: 0 0 12px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 .plugin-form-field > label {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .plugin-form-field :is(input:not([type="checkbox"]), textarea) {
@@ -24,5 +24,5 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--editor-text);
+  color: var(--ui-text);
 }

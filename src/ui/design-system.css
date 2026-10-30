@@ -2,38 +2,47 @@
 @import "./motion.css";
 
 :root {
-  /* Corner radii, one scale: the bigger and further forward a surface, the
-     rounder, and anything inside a rounded box is no rounder than the box. */
-  --radius-small: 4px;
-  --radius-control: 6px;
-  --radius-block: 8px;
-  --radius-surface: 10px;
-  --radius-dialog: 14px;
-  /* The phone's sheets: a dialog's corners. */
-  --radius-sheet: var(--radius-dialog);
-  --radius-pill: 999px;
-  /* Buttons are pills: the AI's review bar, its cards and the grammar card
-     set the shape, and every other button follows. */
-  --radius-button: var(--radius-pill);
-  --control-height: 32px;
-  /* Buttons inside panels, bars and toasts. */
-  --control-height-sm: 26px;
-  /* Type scale for the app's own UI, times --ui-text-scale (Interface Text
-     Size). A px font size in the UI should multiply by it too. */
-  --text-xs: calc(11px * var(--ui-text-scale, 1));
-  --text-sm: calc(12px * var(--ui-text-scale, 1));
-  --text-md: calc(13px * var(--ui-text-scale, 1));
-  --text-lg: calc(14px * var(--ui-text-scale, 1));
-  /* Display steps, for titles only: a sheet's, a panel's or the phone's
-     navigation title (iOS "headline"), and a welcome or empty state. */
-  --text-xl: calc(17px * var(--ui-text-scale, 1));
-  --text-2xl: calc(22px * var(--ui-text-scale, 1));
-  /* The phone's text styles (iOS Dynamic Type at its default size). */
-  --ios-body: 17px;
-  --ios-callout: 16px;
-  --ios-subhead: 15px;
-  --ios-footnote: 13px;
-  --ios-caption: 12px;
+  /* Shape (docs/dev/design-tokens.md). Containers are rounded rectangles in
+     three sizes, bigger and further forward rounder; a box inside another
+     takes the outer radius less the padding between them, never below
+     --shape-xs. Controls are capsules (--shape-pill), or circles. */
+  --shape-l: 16px;
+  --shape-m: 12px;
+  --shape-s: 8px;
+  --shape-xs: 4px;
+  --shape-pill: 999px;
+  /* Control heights: in bars, cards and segments; in forms and dialogs. */
+  --control-height-sm: 24px;
+  --control-height: 28px;
+  /* The app's own text, by role: a component names what its text is,
+     never a size. The desktop's sizes are here, the phone's (iOS's text
+     styles) under :root[data-window-chrome="mobile"] below; both times
+     --ui-text-scale (Interface Text Size), as any other UI size should be.
+     The document's own text is the theme's, in em. */
+  /* A badge, a count, a key on a keycap. */
+  --text-caption: calc(11px * var(--ui-text-scale, 1));
+  /* What explains: a hint, a note, a group's title, an empty state. */
+  --text-footnote: calc(12px * var(--ui-text-scale, 1));
+  /* What sits beside or under the main text in a dense surface: a card's
+     text, a list's entries, a field in a bar. */
+  --text-secondary: calc(12px * var(--ui-text-scale, 1));
+  /* A control's label: buttons, segments, selects. */
+  --text-control: calc(13px * var(--ui-text-scale, 1));
+  /* The main text of a panel, a menu, a list or a field. */
+  --text-body: calc(13px * var(--ui-text-scale, 1));
+  /* The main text where there is room: Settings' rows, a dialog's. */
+  --text-body-large: calc(14px * var(--ui-text-scale, 1));
+  /* A sheet's, a panel's or a navigation bar's title. */
+  --text-title: calc(17px * var(--ui-text-scale, 1));
+  /* A page's own title, a welcome. */
+  --text-large-title: calc(22px * var(--ui-text-scale, 1));
+  /* The size names plugins' webviews were given (plugins/views/theme-vars.ts). */
+  --text-xs: var(--text-caption);
+  --text-sm: var(--text-footnote);
+  --text-md: var(--text-body);
+  --text-lg: var(--text-body-large);
+  --text-xl: var(--text-title);
+  --text-2xl: var(--text-large-title);
   /* Spacing on a 4-point grid, 8 the default step. */
   --space-1: 4px;
   --space-2: 8px;
@@ -42,27 +51,27 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
-  --chrome-subtle: #f8f9fb;
-  --chrome-primary: #315ed1;
+  /* The accent as a fill under --ui-on-fill. */
+  --ui-accent-fill: var(--ui-accent);
   /* A primary button is ink on the page's own colours (text colour as fill,
      background as label), so any theme recolours it and a dark theme gets a
      light button. */
-  --ui-primary: var(--editor-text, var(--chrome-text, #24272e));
-  --ui-on-primary: var(--editor-bg, var(--bg, #fff));
-  --success-color: #24734d;
-  --warning-color: #9a6212;
-  --danger-fill: #be364b;
+  --ui-primary: var(--ui-text);
+  --ui-on-primary: var(--ui-surface);
+  --ui-success: #24734d;
+  --ui-warning: #9a6212;
+  --ui-danger-fill: #be364b;
   /* The label on a strong fill - the danger fill, the success colour, the
      accent - in every theme. */
-  --on-fill: #fff;
+  --ui-on-fill: #fff;
   /* Find's matches, and the one it is on: a highlighter's yellow and
      orange, translucent so they read on any page. */
-  --find-match-bg: rgb(255 212 0 / 40%);
-  --find-match-active-bg: rgb(255 140 0 / 55%);
-  --overlay-bg: rgb(20 27 40 / 30%);
+  --ui-find-match: rgb(255 212 0 / 40%);
+  --ui-find-match-active: rgb(255 140 0 / 55%);
+  --ui-overlay: rgb(20 27 40 / 30%);
   /* Behind a picture or diagram in the viewer: darker than a dialog's veil,
      so the document doesn't read as its surroundings. */
-  --viewer-bg: rgb(0 0 0 / 60%);
+  --ui-overlay-strong: rgb(0 0 0 / 60%);
   --shadow-popover: 0 4px 16px rgb(20 27 40 / 10%);
   --shadow-dialog: 0 16px 48px rgb(20 27 40 / 16%);
   /* A phone sheet's edge over the page, a drawer's over the editor. */
@@ -87,22 +96,22 @@
   --transparency-checker: repeating-conic-gradient(#c8c8c8 0 25%, #fff 0 50%);
   /* Proposed edits, in the document and in the AI's diffs: built on the
      success and danger colours, so the dark palette tunes them too. */
-  --diff-insert-bg: color-mix(in srgb, var(--success-color) 16%, transparent);
-  --diff-delete-bg: color-mix(in srgb, var(--danger) 12%, transparent);
-  --diff-delete-line: color-mix(in srgb, var(--danger) 60%, transparent);
-  --diff-caret: var(--success-color);
+  --diff-insert-bg: color-mix(in srgb, var(--ui-success) 16%, transparent);
+  --diff-delete-bg: color-mix(in srgb, var(--ui-danger) 12%, transparent);
+  --diff-delete-line: color-mix(in srgb, var(--ui-danger) 60%, transparent);
+  --diff-caret: var(--ui-success);
   /* A proposed revision in the document and its margin card, what a theme sets
      to recolour revisions. The hover tints, a shade darker, mark the pair under
      the pointer or the review bar. */
   --revision-insert-bg: var(--diff-insert-bg);
   /* What a change is about to replace, marked for a moment before the new
      text comes. */
-  --motion-mark-bg: color-mix(in srgb, var(--warning-color) 26%, transparent);
+  --motion-mark-bg: color-mix(in srgb, var(--ui-warning) 26%, transparent);
   --revision-reading-bg: var(--motion-mark-bg);
   --revision-insert-text: currentColor;
   --revision-insert-hover-bg: color-mix(
     in srgb,
-    var(--success-color) 34%,
+    var(--ui-success) 34%,
     transparent
   );
   --revision-delete-bg: var(--diff-delete-bg);
@@ -110,21 +119,35 @@
   --revision-delete-text: color-mix(in srgb, currentColor 70%, transparent);
   --revision-delete-hover-bg: color-mix(
     in srgb,
-    var(--danger) 28%,
+    var(--ui-danger) 28%,
     transparent
   );
 }
 
+/* iOS's text styles at their default size, and its control sizes. Hit
+   areas reach 44 on their own (mobile/styles). */
+:root[data-window-chrome="mobile"] {
+  --control-height-sm: 32px;
+  --control-height: 36px;
+  --text-caption: calc(12px * var(--ui-text-scale, 1));
+  --text-footnote: calc(13px * var(--ui-text-scale, 1));
+  --text-secondary: calc(15px * var(--ui-text-scale, 1));
+  --text-control: calc(15px * var(--ui-text-scale, 1));
+  --text-body: calc(17px * var(--ui-text-scale, 1));
+  --text-body-large: calc(17px * var(--ui-text-scale, 1));
+  --text-title: calc(17px * var(--ui-text-scale, 1));
+  --text-large-title: calc(34px * var(--ui-text-scale, 1));
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --chrome-subtle: #20242c;
-    --chrome-primary: #4168ce;
-    --success-color: #79cba1;
-    --warning-color: #e3b35f;
-    --danger: #f18b99;
-    --danger-fill: #c43d51;
-    --overlay-bg: rgb(0 0 0 / 48%);
-    --viewer-bg: rgb(0 0 0 / 72%);
+    --ui-accent-fill: color-mix(in srgb, var(--ui-accent) 62%, black);
+    --ui-success: #79cba1;
+    --ui-warning: #e3b35f;
+    --ui-danger: #f18b99;
+    --ui-danger-fill: #c43d51;
+    --ui-overlay: rgb(0 0 0 / 48%);
+    --ui-overlay-strong: rgb(0 0 0 / 72%);
     --shadow-popover: 0 4px 16px rgb(0 0 0 / 24%);
     --shadow-dialog: 0 16px 48px rgb(0 0 0 / 32%);
     --shadow-sheet: 0 -8px 24px rgb(0 0 0 / 40%);
@@ -133,22 +156,20 @@
 }
 
 :root[data-theme="dark"] {
-  --chrome-subtle: #20242c;
-  --chrome-primary: #4168ce;
-  --success-color: #79cba1;
-  --warning-color: #e3b35f;
-  --danger: #f18b99;
-  --danger-fill: #c43d51;
-  --overlay-bg: rgb(0 0 0 / 48%);
-  --viewer-bg: rgb(0 0 0 / 72%);
+  --ui-accent-fill: color-mix(in srgb, var(--ui-accent) 62%, black);
+  --ui-success: #79cba1;
+  --ui-warning: #e3b35f;
+  --ui-danger: #f18b99;
+  --ui-danger-fill: #c43d51;
+  --ui-overlay: rgb(0 0 0 / 48%);
+  --ui-overlay-strong: rgb(0 0 0 / 72%);
   --shadow-popover: 0 4px 16px rgb(0 0 0 / 24%);
   --shadow-dialog: 0 16px 48px rgb(0 0 0 / 32%);
   --shadow-sheet: 0 -8px 24px rgb(0 0 0 / 40%);
   --shadow-drawer: 8px 0 24px rgb(0 0 0 / 40%);
 }
 
-/* Existing component styles use editor aliases; rebind them at UI boundaries
-   rather than relying on stylesheet load order. */
+/* The window's own surfaces: the interface's type and colour. */
 :is(
   .window-bar,
   .sidebar,
@@ -165,13 +186,7 @@
   .pdf-export-card,
   .chat-window
 ) {
-  --editor-text: var(--chrome-text);
-  --editor-muted: var(--chrome-muted);
-  --editor-accent: var(--chrome-accent);
-  --editor-border: var(--border-color);
-  --editor-code-bg: var(--chrome-subtle);
-  --editor-bg: var(--bg);
-  color: var(--chrome-text);
+  color: var(--ui-text);
   font-family: var(--font-sans);
   line-height: 1.5;
 }
@@ -180,11 +195,11 @@
    ignore Interface Text Size. */
 :where(button, input, select, textarea) {
   font-family: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
 }
 
 :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 2px solid var(--chrome-accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: 3px;
 }
 
@@ -225,10 +240,9 @@
   /* Secondary text as strong as the text, and revisions marked by line as well
      as tint: the system asked for contrast. */
   :root:root:root {
-    --border-color: var(--chrome-muted);
-    --chrome-muted: var(--chrome-text);
-    --editor-muted: var(--editor-text);
-    --sidebar-text: var(--chrome-text);
+    --ui-border: var(--ui-muted);
+    --ui-muted: var(--ui-text);
+    --doc-muted: var(--doc-text);
     --revision-delete-text: currentColor;
   }
 }
@@ -331,10 +345,11 @@
   gap: 6px;
   min-height: var(--control-height);
   padding: 0 14px;
-  border: 1px solid var(--editor-border, var(--border-color));
-  border-radius: var(--radius-button);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   line-height: 1.2;
   cursor: pointer;
   transition:
@@ -353,7 +368,7 @@
 ) {
   min-height: var(--control-height-sm);
   padding: 0 10px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 /* The hover arrives in 80ms and leaves at the 120ms of the base rule. */
@@ -465,23 +480,23 @@
 }
 
 /* A destructive confirm: the primary in the danger fill. The fill is its own
-   token, as the dark palette's pale --danger carries no white text. */
+   token, as the dark palette's pale --ui-danger carries no white text. */
 .close-prompt-buttons button.close-prompt-primary.app-dialog-danger {
-  border-color: var(--danger-fill);
-  background: var(--danger-fill);
-  color: var(--on-fill);
+  border-color: var(--ui-danger-fill);
+  background: var(--ui-danger-fill);
+  color: var(--ui-on-fill);
 }
 
 .close-prompt-buttons
   button.close-prompt-primary.app-dialog-danger:not(:disabled):hover {
-  border-color: color-mix(in srgb, var(--danger-fill) 86%, #000);
-  background: color-mix(in srgb, var(--danger-fill) 86%, #000);
+  border-color: color-mix(in srgb, var(--ui-danger-fill) 86%, #000);
+  background: color-mix(in srgb, var(--ui-danger-fill) 86%, #000);
 }
 
 .close-prompt-buttons
   button.close-prompt-primary.app-dialog-danger:not(:disabled):active {
-  border-color: color-mix(in srgb, var(--danger-fill) 80%, #000);
-  background: color-mix(in srgb, var(--danger-fill) 80%, #000);
+  border-color: color-mix(in srgb, var(--ui-danger-fill) 80%, #000);
+  background: color-mix(in srgb, var(--ui-danger-fill) 80%, #000);
 }
 
 /* Icon buttons: no frame, a muted glyph that darkens on hover; the composer
@@ -500,9 +515,10 @@
   flex-shrink: 0;
   padding: 0;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   cursor: pointer;
   transition:
     background-color var(--dur-fast) var(--ease-standard),
@@ -522,7 +538,7 @@
 :is(.inline-chat-attach, .inline-chat-toggle) {
   width: var(--control-height-sm);
   height: var(--control-height-sm);
-  border: 1px solid var(--editor-border, var(--border-color));
+  border: 1px solid var(--ui-border);
 }
 
 :is(
@@ -534,7 +550,7 @@
     .inline-chat-toggle
   ):not(:disabled):hover {
   background: color-mix(in srgb, currentColor 10%, transparent);
-  color: var(--editor-text);
+  color: var(--ui-text);
   transition-duration: var(--dur-instant);
 }
 
@@ -583,16 +599,17 @@
   -webkit-appearance: none;
   min-height: var(--control-height);
   padding: 0 26px 0 10px;
-  border: 1px solid var(--editor-border, var(--border-color));
-  border-radius: var(--radius-control);
-  background-color: var(--editor-bg, var(--bg));
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background-color: var(--ui-surface);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.8L5 6.8L8 3.8' stroke='%23888888' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 8px center;
   background-size: 10px 10px;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   cursor: pointer;
   transition: border-color var(--dur-fast) var(--ease-standard);
 }
@@ -600,15 +617,11 @@
 :is(.inline-chat-mode, .file-search-scope) {
   min-height: var(--control-height-sm);
   padding-left: 8px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 
 :is(.settings-select, .inline-chat-mode, .file-search-scope):hover {
-  border-color: color-mix(
-    in srgb,
-    var(--editor-muted) 45%,
-    var(--editor-border, var(--border-color))
-  );
+  border-color: color-mix(in srgb, var(--ui-muted) 45%, var(--ui-border));
 }
 
 /* Dialogs: the dimming fades in while the card grows out of the middle;
@@ -694,7 +707,7 @@
 /* Menus: one panel padding, one item size, one hover. */
 :is(.app-menu-list, .context-menu, .project-bar-menu, .quick-ask-split-menu) {
   padding: 4px;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 :is(
@@ -706,9 +719,9 @@
   width: 100%;
   padding: 6px 10px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: transparent;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -720,19 +733,19 @@
     .project-bar-menu button,
     .quick-ask-split-menu-item
   ):not(:disabled):is(:hover, :focus-visible) {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
   outline: none;
 }
 
 :is(.app-menu-separator, .context-menu-separator, .project-bar-menu-sep) {
   height: 1px;
   margin: 4px 6px;
-  background: var(--border-color);
+  background: var(--ui-border);
 }
 
 :is(.update-toast button):is(.update-toast-secondary) {
   border-color: transparent;
-  color: var(--editor-muted, inherit);
+  color: var(--ui-muted, inherit);
 }
 
 :where(
@@ -744,11 +757,11 @@
   input:not([type="checkbox"]):not([type="radio"]),
 :where(.settings-panel) select,
 :where(.settings-panel) textarea {
-  background-color: var(--bg);
+  background-color: var(--ui-bg);
 }
 
 .find-replace-field:focus-within {
-  border-color: var(--chrome-accent);
+  border-color: var(--ui-accent);
 }
 
 /* Text fields: one focus look - the border takes the accent - instead of
@@ -760,7 +773,7 @@
   .insert-table-fields input
 ):focus-visible {
   outline: none;
-  border-color: var(--chrome-accent, var(--editor-accent));
+  border-color: var(--ui-accent);
 }
 
 /* Number fields type their number; the native spin arrows were the one
@@ -785,10 +798,9 @@ input[type="checkbox"].ui-check {
   width: 15px;
   height: 15px;
   margin: 0;
-  border: 1px solid
-    color-mix(in srgb, var(--editor-muted) 55%, var(--border-color));
-  border-radius: var(--radius-small);
-  background: var(--editor-bg, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--ui-muted) 55%, var(--ui-border));
+  border-radius: var(--shape-xs);
+  background: var(--ui-surface);
   cursor: pointer;
   transition:
     background-color var(--dur-fast) var(--ease-standard),
@@ -796,8 +808,8 @@ input[type="checkbox"].ui-check {
 }
 
 input[type="checkbox"].ui-check:checked {
-  border-color: var(--chrome-primary);
-  background: var(--chrome-primary)
+  border-color: var(--ui-accent-fill);
+  background: var(--ui-accent-fill)
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
     center / 11px no-repeat;
 }
@@ -815,17 +827,13 @@ input[type="checkbox"].ui-check:checked {
 
 ::-webkit-scrollbar-thumb {
   border: 3px solid transparent;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--chrome-muted, #888) 35%, transparent)
-    padding-box;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-muted) 35%, transparent) padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(
-    in srgb,
-    var(--chrome-muted, #888) 55%,
-    transparent
-  );
+  background-color: color-mix(in srgb, var(--ui-muted) 55%, transparent);
 }
 
 ::-webkit-scrollbar-corner {
@@ -866,8 +874,17 @@ input[type="checkbox"].ui-check:checked {
       .keyboard-toolbar,
       .quick-ask-dock .inline-chat-shell
     ) {
-    background: color-mix(in srgb, var(--page-bg, var(--bg)) 72%, transparent);
+    background: color-mix(in srgb, var(--ui-bg) 72%, transparent);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     backdrop-filter: saturate(180%) blur(20px);
+  }
+}
+
+/* Continuous corners where the engine draws them (Chromium 139+, so
+   WebView2); elsewhere the plain radius stands. Capsules and circles stay
+   round. */
+@supports (corner-shape: superellipse(1.25)) {
+  :where(*) {
+    corner-shape: superellipse(1.25);
   }
 }

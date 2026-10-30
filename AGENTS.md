@@ -93,8 +93,11 @@ If another copy of the e2e suite may be running (another worktree), set
   `src/i18n/locales/` (en, zh, zh-Hant, ja, ko, es, fr, de, ru, pt).
 - Shapes shared by Rust and TypeScript carry a comment on both sides naming
   the other; change both.
-- Interface work follows [docs/design/design-language.md](docs/design/design-language.md)
-  (radii, type sizes, buttons, menus, motion tokens in `src/ui/motion.css`).
+- Interface work follows [docs/design/design-language.md](docs/design/design-language.md):
+  colours as `--ui-*` / `--doc-*`, shapes as `--shape-*` (containers rounded,
+  controls capsules, r = R − p when nested), text by role (`--text-body`, …),
+  the two control heights, a 4 px grid, motion tokens from `src/ui/motion.css`.
+  No raw colour, radius or font size in a component.
 - Commits: Conventional Commits in English (`fix(export): …`); the body says
   why the old behaviour was wrong. No "generated with" trailers, and no
   `Co-authored-by` except to credit an outside contributor whose work the

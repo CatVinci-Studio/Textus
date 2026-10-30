@@ -163,7 +163,7 @@ for (const uiTextScale of [1, 1.25])
 test.describe("on a phone", () => {
   test.use(PHONE);
   for (const language of ["de", "ru"] as const)
-    test(`${language}: the sheet keeps its tools and Send on one row under the modes`, async ({
+    test(`${language}: the sheet keeps the mode, its tools and Send on one row`, async ({
       page,
     }) => {
       await page.addInitScript(() => {
@@ -178,9 +178,6 @@ test.describe("on a phone", () => {
       await page.locator(".window-bar-toggle").tap();
       const view = page.locator(".agent-panel-view");
       await expect(view.locator(".inline-chat-selection-chip")).toBeVisible();
-      await expectOneRow(
-        view.locator(".inline-chat-toolbar"),
-        "chat-mode-segments",
-      );
+      await expectOneRow(view.locator(".inline-chat-toolbar"));
     });
 });

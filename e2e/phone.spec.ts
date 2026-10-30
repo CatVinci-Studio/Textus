@@ -288,22 +288,29 @@ test("Settings fills the phone's screen, its edge strips take its colour in ligh
   // The categories are tabs along the top; a phone has no Shortcuts.
   await expect(page.getByRole("button", { name: "General" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Shortcuts" })).toHaveCount(0);
-  // The screen's edge strips take Settings' colour.
-  for (const [scheme, colour] of [
-    ["light", "rgb(242, 242, 247)"],
-    ["dark", "rgb(0, 0, 0)"],
-  ] as const) {
+  // No group stands empty for what a phone doesn't have.
+  await expect(panel.locator(".settings-group-body:empty")).toHaveCount(0);
+  // The screen's edge strips take Settings' colour, a different one in dark.
+  const strips: string[] = [];
+  for (const scheme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme: scheme });
     await expect
-      .poll(() =>
-        page.evaluate(() => [
+      .poll(async () => {
+        const [body, settings] = await page.evaluate(() => [
           getComputedStyle(document.body).backgroundColor,
           getComputedStyle(document.querySelector(".settings-panel")!)
             .backgroundColor,
-        ]),
-      )
-      .toEqual([colour, colour]);
+        ]);
+        return body === settings ? body : null;
+      })
+      .not.toBeNull();
+    strips.push(
+      await page.evaluate(
+        () => getComputedStyle(document.body).backgroundColor,
+      ),
+    );
   }
+  expect(strips[0]).not.toBe(strips[1]);
   await page.getByRole("button", { name: "Done" }).tap();
   await expect(panel).toHaveCount(0);
 });

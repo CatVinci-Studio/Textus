@@ -7,16 +7,16 @@
 @layer textus-content {
   /* The document's type. The size grows from 16.5px at the 760px standard
      measure to 18px as the column widens; cqi is the column's zoomed width,
-     hence the divide. The face is inherited unless a theme sets --editor-font. */
+     hence the divide. The face is inherited unless a theme sets --doc-font. */
   .milkdown {
-    font-family: var(--editor-font, inherit);
+    font-family: var(--doc-font, inherit);
     font-size: clamp(
       1.03125rem,
       calc(0.80875rem + 0.46875cqi / var(--content-zoom, 1)),
       1.125rem
     );
     line-height: 1.8;
-    color: var(--editor-text);
+    color: var(--doc-text);
   }
 
   /* No column container to measure on an engine whose containers trap
@@ -58,8 +58,8 @@
   }
 
   .md-span[data-delim="="] {
-    background: var(--editor-highlight-bg);
-    border-radius: var(--md-radius-sm);
+    background: var(--doc-highlight-bg);
+    border-radius: var(--doc-radius-sm);
     padding: 0 0.15em;
   }
 
@@ -120,17 +120,17 @@
   }
 
   .milkdown p {
-    margin: var(--md-gap) 0;
+    margin: var(--doc-gap) 0;
   }
 
   .milkdown blockquote {
-    margin: var(--md-gap-box) 0;
+    margin: var(--doc-gap-box) 0;
     padding: 0 1em;
-    border-left: 4px solid var(--editor-border);
+    border-left: 4px solid var(--doc-border);
   }
 
   .milkdown a {
-    color: var(--editor-accent);
+    color: var(--doc-accent);
     text-decoration: none;
   }
 
@@ -139,10 +139,10 @@
   }
 
   .milkdown hr {
-    margin: calc(var(--md-gap-box) * 1.5) 0;
+    margin: calc(var(--doc-gap-box) * 1.5) 0;
     height: 0;
     border: none;
-    border-top: 1px solid var(--editor-border);
+    border-top: 1px solid var(--doc-border);
   }
 
   /* Footnotes: the reference a small raised number, each definition its number
@@ -150,7 +150,7 @@
   .milkdown sup[data-type="footnote_reference"] {
     font-size: 0.75em;
     line-height: 0;
-    color: var(--editor-accent);
+    color: var(--doc-accent);
   }
 
   .milkdown dl[data-type="footnote_definition"] {
@@ -158,7 +158,7 @@
     gap: 0.6em;
     margin: 0.35em 0;
     font-size: 0.9em;
-    color: var(--editor-muted);
+    color: var(--doc-muted);
   }
 
   .milkdown dl[data-type="footnote_definition"] > dt {
@@ -184,16 +184,16 @@
     font-variant-ligatures: no-common-ligatures;
     font-feature-settings: "calt" 1;
     font-size: 0.9em;
-    background: var(--editor-code-bg);
+    background: var(--doc-code-bg);
     padding: 0.1em 0.35em;
-    border-radius: var(--md-radius-sm);
+    border-radius: var(--doc-radius-sm);
   }
 
   .code-block-wrapper {
-    background: var(--editor-code-bg);
-    border: 1px solid var(--editor-border);
-    border-radius: var(--md-radius);
-    margin: var(--md-gap-box) 0;
+    background: var(--doc-code-bg);
+    border: 1px solid var(--doc-border);
+    border-radius: var(--doc-radius);
+    margin: var(--doc-gap-box) 0;
   }
 
   /* Size and line height live on the <pre>: its strut sets each line's minimum
@@ -222,12 +222,12 @@
   }
 
   /* The vertical rhythm of a list. Every item's content is a paragraph, so
-     without this each row carries the prose margin. --editor-list-gap is the
+     without this each row carries the prose margin. --doc-list-gap is the
      theme hook; nested ul/ol are included for their 1em UA margin. */
   .milkdown li > p,
   .milkdown li > ul,
   .milkdown li > ol {
-    margin: var(--editor-list-gap, 0.4em) 0;
+    margin: var(--doc-list-gap, 0.4em) 0;
   }
 
   .milkdown table {
@@ -240,7 +240,7 @@
   .milkdown td {
     padding: 0.35em 0.75em;
     line-height: 1.6;
-    border: 1px solid var(--editor-border);
+    border: 1px solid var(--doc-border);
   }
 
   /* Not `thead th`: Milkdown keeps the header row in <tbody>. Every cell keeps
@@ -267,7 +267,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: color-mix(in srgb, var(--editor-accent) 18%, transparent);
+    background: color-mix(in srgb, var(--doc-accent) 18%, transparent);
     pointer-events: none;
   }
 
@@ -275,12 +275,12 @@
      keep them one selector per rule under this exact prefix. */
   :root:not([data-user-theme]) .milkdown h2 {
     padding-bottom: 0.3em;
-    border-bottom: 1px solid var(--editor-border);
+    border-bottom: 1px solid var(--doc-border);
   }
 
   :root:not([data-user-theme]) .milkdown h3 {
     padding-left: 0.6em;
-    border-left: 4px solid var(--editor-accent);
+    border-left: 4px solid var(--doc-accent);
   }
 
   :root:not([data-user-theme]) .milkdown h4::before {
@@ -290,21 +290,22 @@
     height: 0.4em;
     margin-right: 0.5em;
     border-radius: 50%;
-    background: var(--editor-accent);
+    corner-shape: round;
+    background: var(--doc-accent);
     vertical-align: middle;
   }
 
   /* Lighter than h5, short of the muted grey a footnote takes. */
   :root:not([data-user-theme]) .milkdown h6 {
-    color: color-mix(in srgb, var(--editor-text) 55%, var(--editor-muted));
+    color: color-mix(in srgb, var(--doc-text) 55%, var(--doc-muted));
   }
 
   :root:not([data-user-theme]) .milkdown blockquote {
-    color: var(--editor-muted);
+    color: var(--doc-muted);
     padding: 0.55em 1em;
-    border-left: 3px solid var(--editor-quote-border);
-    border-radius: 0 var(--md-radius) var(--md-radius) 0;
-    background: var(--editor-code-bg);
+    border-left: 3px solid var(--doc-quote-border);
+    border-radius: 0 var(--doc-radius) var(--doc-radius) 0;
+    background: var(--doc-code-bg);
   }
 
   /* A quiet underline, not bold: a bold link read as bold text. */
@@ -313,7 +314,7 @@
     text-decoration-thickness: 1px;
     text-decoration-color: color-mix(
       in srgb,
-      var(--editor-accent) 45%,
+      var(--doc-accent) 45%,
       transparent
     );
     text-underline-offset: 0.2em;
@@ -329,8 +330,8 @@
     font-size: 0.95em;
     border-collapse: separate;
     border-spacing: 0;
-    border: 1px solid var(--editor-border);
-    border-radius: var(--md-radius);
+    border: 1px solid var(--doc-border);
+    border-radius: var(--doc-radius);
   }
 
   :root:not([data-user-theme]) .milkdown :is(th, td) {
@@ -346,22 +347,22 @@
   }
 
   :root:not([data-user-theme]) .milkdown tr:first-child > :first-child {
-    border-top-left-radius: calc(var(--md-radius) - 1px);
+    border-top-left-radius: calc(var(--doc-radius) - 1px);
   }
 
   :root:not([data-user-theme]) .milkdown tr:first-child > :last-child {
-    border-top-right-radius: calc(var(--md-radius) - 1px);
+    border-top-right-radius: calc(var(--doc-radius) - 1px);
   }
 
   :root:not([data-user-theme]) .milkdown tr:last-child > :first-child {
-    border-bottom-left-radius: calc(var(--md-radius) - 1px);
+    border-bottom-left-radius: calc(var(--doc-radius) - 1px);
   }
 
   :root:not([data-user-theme]) .milkdown tr:last-child > :last-child {
-    border-bottom-right-radius: calc(var(--md-radius) - 1px);
+    border-bottom-right-radius: calc(var(--doc-radius) - 1px);
   }
 
   :root:not([data-user-theme]) .milkdown th {
-    background: var(--editor-code-bg);
+    background: var(--doc-code-bg);
   }
 }

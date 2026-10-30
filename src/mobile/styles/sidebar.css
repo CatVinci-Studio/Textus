@@ -29,7 +29,7 @@
     position: fixed;
     inset: 0;
     z-index: 46;
-    background: var(--overlay-bg);
+    background: var(--ui-overlay);
     animation: motion-fade-in var(--dur-slow) var(--ease-standard);
   }
 

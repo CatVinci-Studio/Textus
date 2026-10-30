@@ -15,11 +15,11 @@ describe("ornamentRules", () => {
   /* note */
   :root:not([data-user-theme]) .milkdown h2 {
     padding-bottom: 0.3em;
-    border-bottom: 1px solid var(--editor-border);
+    border-bottom: 1px solid var(--doc-border);
   }
 }`;
     expect(ornamentRules(css)).toBe(
-      "#write h2 {\n  padding-bottom: 0.3em;\n  border-bottom: 1px solid var(--editor-border);\n}",
+      "#write h2 {\n  padding-bottom: 0.3em;\n  border-bottom: 1px solid var(--doc-border);\n}",
     );
   });
 

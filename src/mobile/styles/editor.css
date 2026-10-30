@@ -36,8 +36,8 @@
   .milkdown
   .ProseMirror-selectednode:not(.image-view) {
   outline: none;
-  border-radius: var(--radius-small);
-  background: color-mix(in srgb, var(--editor-accent) 10%, transparent);
+  border-radius: var(--shape-xs);
+  background: color-mix(in srgb, var(--ui-accent) 10%, transparent);
 }
 
 :root[data-window-chrome="mobile"]

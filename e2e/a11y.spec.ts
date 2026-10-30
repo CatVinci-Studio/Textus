@@ -373,10 +373,10 @@ test.describe("the system's contrast settings", () => {
       const style = getComputedStyle(document.documentElement);
       const read = (name: string) => style.getPropertyValue(name).trim();
       return {
-        muted: read("--editor-muted"),
-        text: read("--editor-text"),
-        chromeMuted: read("--chrome-muted"),
-        chromeText: read("--chrome-text"),
+        muted: read("--ui-muted"),
+        text: read("--ui-text"),
+        chromeMuted: read("--ui-muted"),
+        chromeText: read("--ui-text"),
       };
     });
     expect(vars.muted).toBe(vars.text);

@@ -631,7 +631,7 @@ fn the_theme_skill_answers_to_its_name_in_every_ui_language() {
     }
     let message = expand_message("/theme a calm dark page", &skills, "", "en");
     assert!(message.starts_with("<skill name=\"theme\">\n"));
-    assert!(message.contains("`--editor-bg`") && message.ends_with("a calm dark page"));
+    assert!(message.contains("`--doc-bg`") && message.ends_with("a calm dark page"));
 }
 
 #[test]
