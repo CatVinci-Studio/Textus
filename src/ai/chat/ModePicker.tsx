@@ -94,14 +94,16 @@ export function ModePicker({
     else models?.choose(item.provider, item.model);
   }
 
-  function onTriggerKey(e: KeyboardEvent<HTMLButtonElement>) {
+  function onTriggerKey(e: KeyboardEvent<HTMLElement>) {
+    // Keys pressed before the open list has taken focus are its keys.
+    if (open) return onListKey(e);
     if (["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) {
       e.preventDefault();
       openMenu();
     }
   }
 
-  function onListKey(e: KeyboardEvent<HTMLUListElement>) {
+  function onListKey(e: KeyboardEvent<HTMLElement>) {
     if (isImeKeydown(e)) return;
     const n = items.length;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
