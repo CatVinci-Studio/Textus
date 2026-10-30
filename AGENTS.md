@@ -137,6 +137,14 @@ If another copy of the e2e suite may be running (another worktree), set
 - Chinese/Japanese input (IME) on WebKitGTK commits a composition as
   `deleteCompositionText` then `insertFromComposition`; keep that in mind
   when touching input handling (`src/editor/keys/`).
-- iOS shares the frontend; desktop-only code is gated (`#[cfg(desktop)]`,
-  `isDesktopApp`). [docs/dev/ios-code-map.md](docs/dev/ios-code-map.md) has
-  the split.
+- iOS is the same app in a narrower layout: the same features (plugins,
+  themes, skills, tracked changes) through the same code, laid out for a
+  phone by the phone styles and `usePhoneLayout`. Gate only what the
+  platform can't do (more windows, MCP programs, background mode, a menu
+  bar) with `#[cfg(desktop)]` and the flags in `platform/capabilities.ts`,
+  never to hide a feature. State a command registered on iOS reads is
+  managed in the shared part of `run()`: managed only on the desktop, the
+  app aborts on iOS as soon as the page calls it, which
+  `scripts/smoke-ios-sim.sh` (CI's `ios` job) catches. The China App Store
+  build differs only in leaving Textus AI out (`hasTextusAi`).
+  [docs/dev/ios-code-map.md](docs/dev/ios-code-map.md) has the split.

@@ -24,7 +24,7 @@ const EVERYTHING =
 /** What the native jobs build and test: the Rust crates and their toolchain,
  *  the native check script and the iOS project's preparation. */
 const NATIVE =
-  /(^src-tauri\/|(^|\/)Cargo\.(toml|lock)$|(^|\/)\.cargo\/|(^|\/)rust-toolchain(\.toml)?$|^scripts\/check-native\.mjs$|^scripts\/ios-)/;
+  /(^src-tauri\/|(^|\/)Cargo\.(toml|lock)$|(^|\/)\.cargo\/|(^|\/)rust-toolchain(\.toml)?$|^scripts\/check-native\.mjs$|^scripts\/(ios-|smoke-ios-))/;
 
 /** Frontend files a Rust test reads from disk, so not embedded: the
  *  generated bindings it compares against its own. */

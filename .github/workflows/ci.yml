@@ -386,3 +386,15 @@ jobs:
         run: npx tauri ios init --ci && sh scripts/ios-prepare.sh
       - name: Build for the iOS simulator, unsigned
         run: npx tauri ios build --ci --debug --target aarch64-sim --no-sign
+      # Built is not started: a command whose state only the desktop
+      # manages aborts the app once its page calls it.
+      - name: Start it in the simulator
+        run: scripts/smoke-ios-sim.sh src-tauri/gen/apple/build/arm64-sim/Textus.app --screenshot ios-sim.png
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-sim
+          path: |
+            ios-sim.png
+            ~/Library/Logs/DiagnosticReports/Textus*.ips
+          if-no-files-found: ignore
