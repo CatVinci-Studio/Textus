@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--overlay-bg);
+  background: var(--ui-overlay);
 }
 
 .image-name-dialog {
@@ -15,12 +15,12 @@
 
   width: min(390px, calc(100vw - 40px));
   padding: 18px 20px;
-  border: 1px solid var(--editor-border);
-  border-radius: var(--radius-dialog);
-  background: var(--bg);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-l);
+  background: var(--ui-bg);
   box-shadow: var(--shadow-dialog);
-  color: var(--editor-text);
-  font-size: var(--text-lg);
+  color: var(--ui-text);
+  font-size: var(--text-body-large);
 }
 
 .image-name-title {
@@ -32,8 +32,8 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  color: var(--editor-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-secondary);
 }
 
 .image-name-input-row {
@@ -46,22 +46,23 @@
   min-width: 0;
   flex: 1;
   padding: 7px 9px;
-  border: 1px solid var(--editor-border);
-  border-radius: var(--radius-control);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
 }
 
 .image-name-input-row input:focus {
   outline: none;
-  border-color: var(--editor-accent);
+  border-color: var(--ui-accent);
 }
 
 .image-name-error {
   margin-top: 7px;
-  color: var(--danger);
-  font-size: var(--text-sm);
+  color: var(--ui-danger);
+  font-size: var(--text-footnote);
 }
 
 .image-name-buttons {
@@ -72,5 +73,5 @@
 }
 
 .image-name-buttons button {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }

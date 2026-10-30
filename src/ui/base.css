@@ -82,28 +82,32 @@
     var(--font-cjk-sans), monospace;
 
   color-scheme: light;
-  --chrome-text: #24272e;
-  --chrome-muted: #646b77;
-  --chrome-accent: #315ed1;
-  --bg: #ffffff;
-  --editor-text: #24272e;
-  --editor-muted: #6b6b6b;
-  --editor-accent: #315ed1;
-  --editor-border: #e1e4ea;
-  --editor-quote-border: #d8d4cc;
-  --editor-code-bg: #f1efe9;
-  --editor-highlight-bg: #fbe89a;
-  --danger: #be364b;
+  /* The document's colours: what a theme sets. */
+  --doc-bg: #ffffff;
+  --doc-text: #24272e;
+  --doc-muted: #6b6b6b;
+  --doc-accent: #315ed1;
+  --doc-border: #e1e4ea;
+  --doc-quote-border: #d8d4cc;
+  --doc-code-bg: #f1efe9;
+  --doc-highlight-bg: #fbe89a;
+  /* The interface's, from the document's, so any theme recolours the whole
+     window; an imported theme's are derived and contrast-checked in
+     theme/theme-chrome.ts, and a theme may set any of them itself. */
+  --ui-bg: var(--doc-bg);
+  --ui-surface: var(--ui-bg);
+  --ui-text: var(--doc-text);
+  --ui-muted: var(--doc-muted);
+  --ui-accent: var(--doc-accent);
+  --ui-border: color-mix(in srgb, var(--ui-text) 16%, var(--ui-bg));
+  --ui-subtle: color-mix(in srgb, var(--ui-text) 4%, var(--ui-bg));
+  --ui-hover: color-mix(in srgb, var(--ui-text) 7%, transparent);
+  --ui-selected: color-mix(in srgb, var(--ui-accent) 13%, transparent);
+  --ui-selected-text: var(--ui-text);
+  --ui-danger: #be364b;
 
-  --sidebar-bg: #f5f6f8;
-  --sidebar-text: #505866;
-  --sidebar-hover: #e9ecf1;
-  --sidebar-active: #e9effc;
-  --sidebar-active-text: #24272e;
-  --border-color: #e1e4ea;
-
-  color: var(--editor-text);
-  background-color: var(--bg);
+  color: var(--ui-text);
+  background-color: var(--ui-bg);
   font-family: var(--font-sans);
   /* Synthesis only applies to a face lacking the style: many CJK fonts ship no
      italic, and many Linux ones a single weight. */
@@ -184,49 +188,29 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --danger: #f18b99;
-    --chrome-text: #e4e7ed;
-    --chrome-muted: #a2aab8;
-    --chrome-accent: #96b5ff;
-    --bg: #1b1e24;
-    --editor-text: #e4e7ed;
-    --editor-muted: #989da6;
-    --editor-accent: #96b5ff;
-    --editor-border: #333230;
-    --editor-quote-border: #3a3936;
-    --editor-code-bg: #2a2a28;
-    --editor-highlight-bg: #4a3f1f;
-
-    --sidebar-bg: #16191f;
-    --sidebar-text: #b9c0cd;
-    --sidebar-hover: #262b34;
-    --sidebar-active: #293754;
-    --sidebar-active-text: #dce6ff;
-    --border-color: #343a46;
+    --ui-danger: #f18b99;
+    --doc-bg: #1b1e24;
+    --doc-text: #e4e7ed;
+    --doc-muted: #989da6;
+    --doc-accent: #96b5ff;
+    --doc-border: #333230;
+    --doc-quote-border: #3a3936;
+    --doc-code-bg: #2a2a28;
+    --doc-highlight-bg: #4a3f1f;
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --danger: #f18b99;
-  --chrome-text: #e4e7ed;
-  --chrome-muted: #a2aab8;
-  --chrome-accent: #96b5ff;
-  --bg: #1b1e24;
-  --editor-text: #e4e7ed;
-  --editor-muted: #989da6;
-  --editor-accent: #96b5ff;
-  --editor-border: #333230;
-  --editor-quote-border: #3a3936;
-  --editor-code-bg: #2a2a28;
-  --editor-highlight-bg: #4a3f1f;
-
-  --sidebar-bg: #16191f;
-  --sidebar-text: #b9c0cd;
-  --sidebar-hover: #262b34;
-  --sidebar-active: #293754;
-  --sidebar-active-text: #dce6ff;
-  --border-color: #343a46;
+  --ui-danger: #f18b99;
+  --doc-bg: #1b1e24;
+  --doc-text: #e4e7ed;
+  --doc-muted: #989da6;
+  --doc-accent: #96b5ff;
+  --doc-border: #333230;
+  --doc-quote-border: #3a3936;
+  --doc-code-bg: #2a2a28;
+  --doc-highlight-bg: #4a3f1f;
 }
 
 * {
@@ -238,8 +222,8 @@
 .floating-surface {
   /* The app's face, not an imported theme's body font. */
   font-family: var(--font-sans);
-  background: var(--bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-surface);
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
   box-shadow: var(--shadow-popover);
 }

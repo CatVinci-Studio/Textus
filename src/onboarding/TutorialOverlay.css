@@ -6,26 +6,19 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: var(--overlay-bg);
+  background: var(--ui-overlay);
 }
 
 .tutorial-surface.floating-surface {
-  --editor-text: var(--chrome-text);
-  --editor-muted: var(--chrome-muted);
-  --editor-accent: var(--chrome-accent);
-  --editor-code-bg: var(--sidebar-bg);
-  color: var(--editor-text);
-  --tutorial-soft: color-mix(in srgb, var(--editor-accent) 9%, var(--bg));
-  --tutorial-line: color-mix(
-    in srgb,
-    var(--editor-accent) 24%,
-    var(--border-color)
-  );
+  --doc-code-bg: var(--ui-subtle);
+  color: var(--ui-text);
+  --tutorial-soft: color-mix(in srgb, var(--ui-accent) 9%, var(--ui-bg));
+  --tutorial-line: color-mix(in srgb, var(--ui-accent) 24%, var(--ui-border));
   display: flex;
   flex-direction: column;
   gap: 14px;
   overflow: hidden;
-  border-radius: var(--radius-dialog);
+  border-radius: var(--shape-l);
   box-shadow: var(--shadow-dialog);
   --enter-y: var(--motion-distance-sm);
   --enter-scale: var(--scale-enter);
@@ -71,20 +64,21 @@
 .tutorial-chapter {
   padding: 2px 8px;
   border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-  color: var(--editor-muted);
-  font-size: var(--text-xs);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
   font-weight: 600;
   white-space: nowrap;
 }
 
 .tutorial-chapter.is-done {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .tutorial-chapter.is-current {
   border-color: var(--tutorial-line);
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   background: var(--tutorial-soft);
 }
 
@@ -97,19 +91,20 @@
 
 .tutorial-progress-segment {
   height: 3px;
-  border-radius: var(--radius-pill);
-  background: var(--border-color);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-border);
   transition:
     background-color var(--dur-base) var(--ease-standard),
     transform var(--dur-base) var(--ease-standard);
 }
 
 .tutorial-progress-segment.is-done {
-  background: color-mix(in srgb, var(--editor-accent) 45%, var(--border-color));
+  background: color-mix(in srgb, var(--ui-accent) 45%, var(--ui-border));
 }
 
 .tutorial-progress-segment.is-current {
-  background: var(--editor-accent);
+  background: var(--ui-accent);
   transform: scaleY(1.5);
 }
 
@@ -131,8 +126,8 @@
   height: 42px;
   flex: 0 0 42px;
   border: 1px solid var(--tutorial-line);
-  border-radius: var(--radius-surface);
-  color: var(--editor-accent);
+  border-radius: var(--shape-m);
+  color: var(--ui-accent);
   background: var(--tutorial-soft);
   font: 600 19px/1 var(--font-mono);
 }
@@ -145,8 +140,8 @@
 }
 
 .tutorial-step-label {
-  color: var(--editor-muted);
-  font-size: var(--text-xs);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -154,7 +149,7 @@
 
 .tutorial-title {
   margin: 2px 0 0;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font-size: 20px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -164,8 +159,8 @@
 
 .tutorial-body {
   margin: 0;
-  color: var(--editor-muted);
-  font-size: var(--text-lg);
+  color: var(--ui-muted);
+  font-size: var(--text-body-large);
   line-height: 1.55;
 }
 
@@ -173,10 +168,10 @@
 .tutorial-task {
   padding: 10px 12px;
   border: 1px solid var(--tutorial-line);
-  border-radius: var(--radius-surface);
-  background: var(--chrome-subtle);
-  color: var(--editor-text);
-  font-size: var(--text-md);
+  border-radius: var(--shape-m);
+  background: var(--ui-subtle);
+  color: var(--ui-text);
+  font-size: var(--text-body);
   font-weight: 500;
   line-height: 1.5;
 }
@@ -199,9 +194,9 @@
 
 .tutorial-task code {
   padding: 1px 5px;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
   background: var(--tutorial-soft);
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   font: 600 0.92em / 1.4 var(--font-mono);
   user-select: text;
 }
@@ -214,9 +209,10 @@
   margin-top: 1px;
   border: 1px solid var(--tutorial-line);
   border-radius: 50%;
-  color: var(--editor-accent);
-  background: var(--bg);
-  font-size: var(--text-xs);
+  corner-shape: round;
+  color: var(--ui-accent);
+  background: var(--ui-bg);
+  font-size: var(--text-caption);
   font-weight: 700;
   transition:
     color var(--dur-base) var(--ease-standard),
@@ -225,26 +221,26 @@
 }
 
 .tutorial-task-line.is-complete .tutorial-task-icon {
-  border-color: var(--chrome-primary);
-  color: var(--ui-on-primary, #fff);
-  background: var(--chrome-primary);
+  border-color: var(--ui-accent-fill);
+  color: var(--ui-on-primary);
+  background: var(--ui-accent-fill);
 }
 
 .tutorial-status {
-  color: var(--editor-muted);
-  font-size: var(--text-md);
+  color: var(--ui-muted);
+  font-size: var(--text-body);
   line-height: 1.45;
 }
 
 .tutorial-status.is-complete {
-  color: var(--editor-text);
+  color: var(--ui-text);
   font-weight: 500;
 }
 
 .tutorial-note {
   margin: 0;
-  color: var(--editor-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
   line-height: 1.5;
 }
 
@@ -256,10 +252,10 @@
   gap: 7px;
   padding: 2px 0;
   border: 0;
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   background: transparent;
   font: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   font-weight: 600;
   cursor: pointer;
 }
@@ -275,7 +271,8 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  color: var(--editor-accent);
+  corner-shape: round;
+  color: var(--ui-accent);
   background: var(--tutorial-soft);
   font-size: 8px;
 }
@@ -289,8 +286,8 @@
 }
 
 .tutorial-btn[aria-pressed="true"] {
-  border-color: var(--editor-accent);
-  color: var(--editor-accent);
+  border-color: var(--ui-accent);
+  color: var(--ui-accent);
   background: var(--tutorial-soft);
 }
 
@@ -314,7 +311,7 @@
 }
 
 .tutorial-btn {
-  color: var(--editor-text);
+  color: var(--ui-text);
   white-space: nowrap;
 }
 
@@ -324,9 +321,9 @@
 }
 
 .tutorial-btn.tutorial-btn-primary:disabled {
-  border-color: var(--border-color);
-  color: var(--editor-muted);
-  background: var(--editor-code-bg);
+  border-color: var(--ui-border);
+  color: var(--ui-muted);
+  background: var(--doc-code-bg);
   cursor: not-allowed;
   opacity: 0.62;
 }
@@ -334,15 +331,15 @@
 .tutorial-link-btn {
   padding: 5px 2px;
   border: 0;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   background: transparent;
   cursor: pointer;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   white-space: nowrap;
 }
 
 .tutorial-link-btn:hover {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 @media (max-width: 720px) {
@@ -410,25 +407,26 @@
 .tutorial-collapse {
   margin-left: auto;
   flex-shrink: 0;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   padding: 5px 8px;
-  background: var(--bg);
-  color: var(--editor-muted);
+  background: var(--ui-bg);
+  color: var(--ui-muted);
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   cursor: pointer;
 }
 
 .tutorial-surface button:focus-visible {
-  outline: 2px solid var(--editor-accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: 3px;
 }
 
 /* The sidebar lesson points at the real panel rather than a picture of it.
    The ring is there at once: growing a shadow's geometry is not a fade. */
 .sidebar.tutorial-spotlight {
-  box-shadow: inset 0 0 0 2px var(--chrome-accent);
+  box-shadow: inset 0 0 0 2px var(--ui-accent);
 }
 
 /* The Connect lesson embeds Settings' provider rows; framed like a
@@ -436,11 +434,11 @@
 .tutorial-step-connect .provider-picker {
   padding: 0 14px;
   border: 1px solid var(--tutorial-line);
-  border-radius: var(--radius-surface);
-  background: var(--chrome-subtle);
+  border-radius: var(--shape-m);
+  background: var(--ui-subtle);
 }
 
 .tutorial-step-connect
   :is(.combobox-trigger, .provider-auth-trigger, .provider-disclosure-label) {
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }

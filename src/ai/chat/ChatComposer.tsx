@@ -424,32 +424,10 @@ export function ChatComposer({
             autoFocus={focusOnOpen}
           />
           <div className="inline-chat-toolbar">
-            {phone ? (
-              // Three short words fit in a row, and a segmented control
-              // switches in one tap where a select needs the system picker.
-              <div
-                className="chat-mode-segments"
-                role="radiogroup"
-                aria-label={labels.modeLabel}
-              >
-                {modes.map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={mode === value}
-                    className="chat-mode-segment"
-                    {...holdFocus}
-                    onClick={() => setMode(value)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            ) : switchModels && !mobileChrome() ? (
+            {switchModels && !mobileChrome() ? (
               <ModeAndModelPicker {...pickerProps} />
             ) : (
-              <ModePicker {...pickerProps} />
+              <ModePicker {...pickerProps} holdFocus={phone} />
             )}
             {!compact && (
               <>

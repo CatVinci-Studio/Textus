@@ -8,15 +8,15 @@
   z-index: var(--z-phone-page, 350);
   display: flex;
   flex-direction: column;
-  background: var(--page-bg, var(--bg));
-  color: var(--chrome-text, var(--editor-text));
+  background: var(--ui-bg);
+  color: var(--ui-text);
   font-family: var(--font-sans);
   /* A modal sheet, like Settings on the phone: up from the bottom edge,
      and back down when it closes. */
   animation: motion-sheet-in var(--dur-sheet) var(--ease-spring);
   /* The spring overshoots a few points past the top: its own colour
      fills in below its edge, where document text showed. */
-  box-shadow: 0 48px 0 var(--page-bg, var(--bg));
+  box-shadow: 0 48px 0 var(--ui-bg);
 }
 
 .document-list[data-state="closing"] {
@@ -31,13 +31,13 @@
   gap: 4px;
   height: 44px;
   padding: 0 4px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .document-list-header h2 {
   margin: 0;
   /* A navigation title, as Settings' on the phone. */
-  font-size: var(--text-xl);
+  font-size: var(--text-title);
   font-weight: 600;
   text-align: center;
 }
@@ -50,7 +50,8 @@
   height: 44px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   color: inherit;
 }
@@ -67,10 +68,10 @@
   padding: 0 10px;
   border: none;
   background: none;
-  color: var(--chrome-accent);
+  color: var(--ui-accent);
   font: inherit;
   /* A navigation bar button, as Settings' Done. */
-  font-size: var(--ios-body);
+  font-size: var(--text-body);
 }
 
 .document-list-body {
@@ -85,8 +86,8 @@
 .document-list-empty {
   margin: 48px 24px;
   text-align: center;
-  color: var(--chrome-muted, var(--editor-muted));
-  font-size: var(--text-md);
+  color: var(--ui-muted);
+  font-size: var(--text-body);
 }
 
 .document-list-toolbar {
@@ -97,8 +98,8 @@
 }
 
 .document-list-count {
-  font-size: var(--text-sm);
-  color: var(--chrome-muted, var(--editor-muted));
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
 }
 
 /* A small segmented control, as in Files' view switcher. The raised
@@ -107,12 +108,9 @@
   position: relative;
   display: flex;
   padding: 2px;
-  border-radius: var(--radius-control);
-  background: color-mix(
-    in srgb,
-    var(--chrome-text, currentColor) 8%,
-    transparent
-  );
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-text, currentColor) 8%, transparent);
 }
 
 .document-list-views::before {
@@ -123,8 +121,9 @@
   left: 2px;
   width: calc(50% - 2px);
   /* Concentric with the track: its radius less the 2px inset. */
-  border-radius: calc(var(--radius-control) - 2px);
-  background: var(--page-bg, var(--bg));
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-bg);
   box-shadow: var(--shadow-raised);
   transition: transform var(--dur-medium) var(--ease-spring);
 }
@@ -142,12 +141,12 @@
   padding: 0;
   border: none;
   background: none;
-  color: var(--chrome-muted, var(--editor-muted));
+  color: var(--ui-muted);
   transition: color var(--dur-fast) var(--ease-standard);
 }
 
 .document-list-view-button[aria-checked="true"] {
-  color: var(--chrome-text, var(--editor-text));
+  color: var(--ui-text);
 }
 
 /* A page thumbnail: the document's opening lines, tiny, on a sheet. */
@@ -157,12 +156,11 @@
   flex: none;
   overflow: hidden;
   aspect-ratio: 3 / 4;
-  border-radius: var(--radius-small);
-  /* The page's colour where the list's surface doesn't name one: a white
-     fallback put dark-mode text on white sheets. */
-  background: var(--editor-bg, var(--bg));
+  border-radius: var(--shape-xs);
+  /* The document's page, in its theme. */
+  background: var(--doc-bg);
   box-shadow:
-    0 0 0 0.5px color-mix(in srgb, var(--chrome-text, #000) 18%, transparent),
+    0 0 0 0.5px color-mix(in srgb, var(--ui-text) 18%, transparent),
     var(--shadow-tile);
 }
 
@@ -175,13 +173,13 @@
   text-align: left;
   overflow-wrap: anywhere;
   font-family: var(--font-sans);
-  color: var(--editor-text, currentColor);
+  color: var(--ui-text, currentColor);
   opacity: 0.75;
 }
 
 .document-item {
   position: relative;
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
 }
 
 /* A document that turns up in an open list; one that goes fades where it was. */
@@ -215,12 +213,12 @@
 
 .document-item-name {
   overflow: hidden;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 .document-item-detail {
-  font-size: var(--text-sm);
-  color: var(--chrome-muted, var(--editor-muted));
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
 }
 
 /* Rows: small thumbnail, name and detail, "...", hairline between rows
@@ -260,11 +258,11 @@
   top: 0;
   left: 58px;
   right: 0;
-  border-top: 0.5px solid var(--border-color);
+  border-top: 0.5px solid var(--ui-border);
 }
 
 .document-list-list .document-item-active {
-  background: color-mix(in srgb, var(--chrome-accent) 10%, transparent);
+  background: color-mix(in srgb, var(--ui-accent) 10%, transparent);
 }
 
 /* Icons: three across on a phone, more on wider screens; name (two lines,
@@ -303,17 +301,17 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
 
 .document-list-grid .document-item-detail {
-  font-size: var(--text-xs, 11px);
+  font-size: var(--text-caption);
 }
 
 .document-list-grid .document-item-active .document-page {
   box-shadow:
-    0 0 0 2px var(--chrome-accent),
+    0 0 0 2px var(--ui-accent),
     var(--shadow-tile);
 }

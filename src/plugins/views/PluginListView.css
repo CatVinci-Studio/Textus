@@ -4,8 +4,8 @@
   flex-direction: column;
   min-height: 0;
   height: 100%;
-  font-size: var(--text-sm);
-  color: var(--sidebar-text, var(--editor-text));
+  font-size: var(--text-secondary);
+  color: var(--ui-text);
 }
 
 .plugin-list-tab {
@@ -24,8 +24,8 @@
 
 .plugin-list-message {
   padding: 0 var(--space-3) var(--space-1);
-  color: var(--chrome-muted);
-  font-size: var(--text-xs);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
 }
 
 .plugin-list-rows {
@@ -38,13 +38,13 @@
 
 .plugin-list-empty {
   padding: var(--space-3);
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
 }
 
 .plugin-list-group {
   padding: var(--space-3) var(--space-2) var(--space-1);
-  color: var(--chrome-muted);
-  font-size: var(--text-xs);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
   font-weight: 600;
 }
 
@@ -53,21 +53,21 @@
   align-items: flex-start;
   gap: 6px;
   padding: 4px 8px;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-s);
   cursor: pointer;
 }
 
 .plugin-list-row.is-active {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 
 .plugin-list-rows:focus-visible .plugin-list-row.is-active {
-  outline: 2px solid var(--focus-ring, var(--editor-accent));
+  outline: 2px solid var(--focus-ring, var(--ui-accent));
   outline-offset: -2px;
 }
 
 .plugin-list-row.is-done .plugin-list-label {
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
   text-decoration: line-through;
 }
 
@@ -78,7 +78,7 @@
   padding: 0;
   border: none;
   background: none;
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
   cursor: pointer;
 }
 
@@ -100,7 +100,7 @@
   width: 15px;
   height: 15px;
   margin-top: 2px;
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
 }
 
 .plugin-list-text {
@@ -116,7 +116,7 @@
 }
 
 .plugin-list-description {
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -124,31 +124,32 @@
 
 .plugin-list-detail {
   flex-basis: 100%;
-  color: var(--chrome-muted);
-  font-size: var(--text-xs);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
 }
 
 .plugin-list-badge {
   flex: none;
   padding: 0 6px;
-  border-radius: 8px;
-  font-size: var(--text-xs);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  font-size: var(--text-caption);
   line-height: 18px;
-  color: var(--chrome-muted);
-  background: color-mix(in srgb, var(--editor-text) 8%, transparent);
+  color: var(--ui-muted);
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
 }
 
 .plugin-list-badge[data-tone="accent"] {
-  color: var(--editor-accent);
-  background: color-mix(in srgb, var(--editor-accent) 14%, transparent);
+  color: var(--ui-accent);
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
 }
 
 .plugin-list-badge[data-tone="warning"] {
-  color: var(--warning-color);
-  background: color-mix(in srgb, var(--warning-color) 14%, transparent);
+  color: var(--ui-warning);
+  background: color-mix(in srgb, var(--ui-warning) 14%, transparent);
 }
 
 .plugin-list-badge[data-tone="danger"] {
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--ui-danger);
+  background: color-mix(in srgb, var(--ui-danger) 14%, transparent);
 }

@@ -9,7 +9,7 @@
   min-width: 240px;
   max-width: 340px;
   padding: 10px 12px;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1.45;
   transform-origin: var(--transform-origin, top left);
   animation: motion-pop-in var(--dur-base) var(--ease-out);
@@ -29,33 +29,34 @@
 .grammar-kind {
   flex: none;
   padding: 1px 7px;
-  border-radius: var(--radius-pill);
-  font-size: var(--text-xs);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  font-size: var(--text-caption);
   font-weight: 600;
   letter-spacing: 0.02em;
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
-  color: var(--danger);
+  background: color-mix(in srgb, var(--ui-danger) 12%, transparent);
+  color: var(--ui-danger);
 }
 
 .grammar-kind-punctuation,
 .grammar-kind-rules {
-  background: color-mix(in srgb, var(--editor-accent) 12%, transparent);
-  color: var(--editor-accent);
+  background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
+  color: var(--ui-accent);
 }
 
 .grammar-popover-fix {
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
 }
 
 .grammar-popover-fix s {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   text-decoration-color: var(--diff-delete-line);
 }
 
 .grammar-popover-fix b {
-  color: var(--success-color);
+  color: var(--ui-success);
   font-weight: 600;
 }
 
@@ -65,8 +66,8 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  font-size: var(--text-xs);
-  color: var(--editor-muted);
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -78,14 +79,15 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
+  corner-shape: round;
   background: none;
   color: inherit;
   cursor: pointer;
 }
 
 .grammar-popover-nav button:hover {
-  background: color-mix(in srgb, var(--editor-text) 8%, transparent);
-  color: var(--editor-text);
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  color: var(--ui-text);
 }
 
 .grammar-popover-prev {
@@ -93,7 +95,7 @@
 }
 
 .grammar-popover-issue {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   overflow-wrap: anywhere;
 }
 
@@ -109,19 +111,20 @@
   gap: 8px;
   padding: 5px 6px 5px 12px;
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--ui-primary);
   color: var(--ui-on-primary);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   font-weight: 600;
   cursor: pointer;
 }
 
 .grammar-popover-apply kbd {
   padding: 1px 6px;
-  border-radius: var(--radius-small);
-  background: color-mix(in srgb, var(--editor-bg, var(--bg)) 20%, transparent);
+  border-radius: var(--shape-xs);
+  background: color-mix(in srgb, var(--ui-surface) 20%, transparent);
   font: 500 calc(10.5px * var(--ui-text-scale, 1)) var(--font-mono);
 }
 
@@ -130,23 +133,24 @@
 }
 
 .grammar-popover-error {
-  font-size: var(--text-sm);
-  color: var(--danger);
+  font-size: var(--text-footnote);
+  color: var(--ui-danger);
 }
 
 .grammar-popover-ignore {
   padding: 5px 10px;
-  border: 1px solid var(--editor-border, var(--border-color));
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   cursor: pointer;
 }
 
 .grammar-popover-ignore:hover {
-  border-color: var(--editor-muted);
+  border-color: var(--ui-muted);
 }
 
 /* The phone's card (BottomCard): the fix large, the note under it. */
@@ -156,15 +160,15 @@
 }
 
 .grammar-card-fix s {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   text-decoration-color: var(--diff-delete-line);
 }
 
 .grammar-card-fix b {
-  color: var(--success-color);
+  color: var(--ui-success);
 }
 
 .grammar-card-issue {
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
 }

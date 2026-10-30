@@ -72,35 +72,37 @@ test("Quick Ask docks at the bottom of the screen, not in the document", async (
   await expect(dock).toHaveCount(0);
 });
 
-test("the mode picker is a segmented control on a phone", async ({ page }) => {
+test("the mode picker is a compact button on the toolbar's row on a phone", async ({
+  page,
+}) => {
   await openPhone(page);
   const dock = await openQuickAsk(page);
-  const modes = dock.getByRole("radiogroup", { name: "Mode" });
+  const picker = dock.getByRole("combobox", { name: "Mode" });
+  await dock.locator("textarea").tap();
   // Quick Ask: Write (on) and Review.
-  await expect(modes.getByRole("radio")).toHaveText(["Write", "Review"]);
-  await expect(modes.getByRole("radio", { name: "Write" })).toHaveAttribute(
-    "aria-checked",
-    "true",
-  );
-  await modes.getByRole("radio", { name: "Review" }).tap();
-  await expect(modes.getByRole("radio", { name: "Review" })).toHaveAttribute(
-    "aria-checked",
-    "true",
-  );
-  await expect(modes.getByRole("radio", { name: "Write" })).toHaveAttribute(
-    "aria-checked",
-    "false",
-  );
-  await expect(dock.locator("select")).toHaveCount(0);
+  await expect(picker.locator(".mode-picker-value")).toHaveText("Write");
+  await picker.tap();
+  await expect(page.locator(".mode-picker-mode-name")).toHaveText([
+    "Write",
+    "Review",
+  ]);
+  await page.locator(".mode-picker-mode-name", { hasText: "Review" }).tap();
+  await expect(picker.locator(".mode-picker-value")).toHaveText("Review");
+  // The tap left the keyboard up: the message keeps focus.
+  await expect(dock.locator("textarea")).toBeFocused();
   await page.keyboard.press("Escape");
 
   // The Textus AI sheet's composer: the two and Create, and 44pt buttons.
   await page.locator(".window-bar-toggle").tap();
   const sheet = page.locator(".agent-panel");
-  await expect(
-    sheet.getByRole("radiogroup", { name: "Mode" }).getByRole("radio"),
-  ).toHaveText(["Write", "Review", "Create"]);
-  await expectTouchTarget(page, ".agent-panel .chat-mode-segments");
+  await sheet.getByRole("combobox", { name: "Mode" }).tap();
+  await expect(page.locator(".mode-picker-mode-name")).toHaveText([
+    "Write",
+    "Review",
+    "Create",
+  ]);
+  await page.keyboard.press("Escape");
+  await expectTouchTarget(page, ".agent-panel .mode-picker");
   await expectTouchTarget(page, ".agent-panel .inline-chat-attach");
   await expectTouchTarget(page, ".agent-panel .inline-chat-web-search");
 });
@@ -185,7 +187,8 @@ test("continue in panel hands the exchange to the AI sheet", async ({
     ],
   });
   const dock = await openQuickAsk(page);
-  await dock.getByRole("radio", { name: "Review" }).tap();
+  await dock.getByRole("combobox", { name: "Mode" }).tap();
+  await page.locator(".mode-picker-mode-name", { hasText: "Review" }).tap();
   await dock.locator("textarea").fill("what is this about?");
   await dock.locator(".inline-chat-send").tap();
   await expect(dock).toContainText("Fieldwork scope.");

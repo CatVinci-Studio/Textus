@@ -14,13 +14,13 @@ describe("themesInReply", () => {
     const [theme, ...rest] = themesInReply(reply);
     expect(rest).toEqual([]);
     expect(theme.name).toBe("Night Harbor");
-    expect(theme.css).toContain("--editor-bg: #16191d;");
+    expect(theme.css).toContain("--doc-bg: #16191d;");
     expect(theme.css.startsWith("/* Night Harbor")).toBe(true);
   });
 
   it("offers each of a light and a dark version", () => {
     const text = [
-      fence("/* Dune Light - sand */\n:root { --editor-bg: #fff; }"),
+      fence("/* Dune Light - sand */\n:root { --doc-bg: #fff; }"),
       "and",
       fence("/* Dune Dark - night */\n#write { color: #eee; }"),
     ].join("\n\n");
@@ -68,26 +68,26 @@ describe("themeName", () => {
 describe("the theme skill and its sample", () => {
   // The variables the app reads.
   const variables = [
-    "--editor-bg",
-    "--editor-text",
-    "--editor-muted",
-    "--editor-accent",
-    "--editor-border",
-    "--editor-code-bg",
-    "--editor-quote-border",
-    "--editor-highlight-bg",
-    "--editor-font",
-    "--editor-list-gap",
-    "--token-string",
-    "--token-number",
-    "--token-keyword",
-    "--token-function",
-    "--token-tag",
-    "--md-alert-note",
-    "--md-alert-tip",
-    "--md-alert-important",
-    "--md-alert-warning",
-    "--md-alert-caution",
+    "--doc-bg",
+    "--doc-text",
+    "--doc-muted",
+    "--doc-accent",
+    "--doc-border",
+    "--doc-code-bg",
+    "--doc-quote-border",
+    "--doc-highlight-bg",
+    "--doc-font",
+    "--doc-list-gap",
+    "--doc-token-string",
+    "--doc-token-number",
+    "--doc-token-keyword",
+    "--doc-token-function",
+    "--doc-token-tag",
+    "--doc-alert-note",
+    "--doc-alert-tip",
+    "--doc-alert-important",
+    "--doc-alert-warning",
+    "--doc-alert-caution",
   ];
   // Listed too, for a theme that wants them; not part of every theme.
   const revisionVariables = [
@@ -115,7 +115,7 @@ describe("the theme skill and its sample", () => {
 
   it("produced a complete, gallery-ready theme", () => {
     const [{ css }] = themesInReply(reply);
-    for (const name of variables.filter((v) => v !== "--editor-list-gap"))
+    for (const name of variables.filter((v) => v !== "--doc-list-gap"))
       expect(css).toContain(`${name}:`);
     expect(new TextEncoder().encode(css).length).toBeLessThan(200 * 1024);
     expect(css).not.toMatch(/!important|@import|font-synthesis/);

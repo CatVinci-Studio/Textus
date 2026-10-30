@@ -28,7 +28,7 @@
   width: 100%;
   height: 100%;
   border: 0;
-  background: var(--bg);
+  background: var(--ui-bg);
 }
 .plugin-webview-panel {
   height: 100%;
@@ -53,8 +53,8 @@
 
 .plugin-webview-problem {
   padding: var(--space-4);
-  color: var(--danger);
-  font-size: var(--text-sm);
+  color: var(--ui-danger);
+  font-size: var(--text-footnote);
 }
 
 /* The plugin's SVG as a mask, filled with the text colour like the
@@ -85,7 +85,7 @@
   gap: var(--space-3);
 }
 .plugin-card + .plugin-card {
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--ui-border);
 }
 /* The card's text is its button: the whole of it opens the plugin's page,
    the switch beside it stays a switch. */
@@ -134,9 +134,9 @@ button.plugin-card-open:hover .plugin-card-name {
   place-items: center;
   width: 40px;
   height: 40px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-surface);
-  background: color-mix(in srgb, var(--editor-muted) 7%, var(--bg));
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  background: color-mix(in srgb, var(--ui-muted) 7%, var(--ui-bg));
   overflow: hidden;
 }
 .plugin-icon img {
@@ -147,15 +147,15 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-icon-large {
   width: 56px;
   height: 56px;
-  border-radius: var(--radius-dialog);
+  border-radius: var(--shape-l);
 }
 .plugin-icon-letter {
-  color: var(--editor-muted);
-  font-size: var(--text-lg);
+  color: var(--ui-muted);
+  font-size: var(--text-body-large);
   font-weight: 600;
 }
 .plugin-install.is-installed {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 /* A plugin's button, and the menu beside it when it has one. */
 .plugin-action {
@@ -236,9 +236,9 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-readme {
   margin: 0 0 var(--space-4);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-surface);
-  font-size: var(--text-md);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  font-size: var(--text-body);
   line-height: 1.6;
 }
 .plugin-card-description {
@@ -252,12 +252,13 @@ button.plugin-card-open:hover .plugin-card-name {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  color: var(--chrome-muted);
-  font-size: var(--text-xs);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
 }
 .plugin-official {
   padding: 0 6px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: color-mix(in srgb, var(--ui-primary) 12%, transparent);
   color: var(--ui-primary);
   font-weight: 600;
@@ -269,8 +270,8 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-group-help {
   margin: 0;
   padding: var(--space-2) 0;
-  color: var(--chrome-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
 }
 
 /* One plugin's page. */
@@ -278,16 +279,17 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-back {
   margin: 0 0 var(--space-3);
   padding: 4px 12px 4px 8px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   cursor: pointer;
 }
 .plugin-back:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 .plugin-page-head {
   margin-bottom: var(--space-4);
@@ -298,7 +300,7 @@ button.plugin-card-open:hover .plugin-card-name {
 }
 .plugin-page-title {
   margin: 0 0 4px;
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
 }
 /* Get plugins: the search over the catalog, above its cards. */
 .plugin-search {
@@ -306,12 +308,13 @@ button.plugin-card-open:hover .plugin-card-name {
   box-sizing: border-box;
   margin: var(--space-2) 0 var(--space-3);
   padding: 6px 10px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
-  background: var(--bg);
-  color: var(--editor-text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-bg);
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
 }
 .plugin-search:focus {
   outline: none;
@@ -321,8 +324,8 @@ button.plugin-card-open:hover .plugin-card-name {
   margin-top: var(--space-1);
 }
 .plugin-requirement-met {
-  color: var(--chrome-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
 }
 .plugin-detail-actions {
   padding: var(--space-2) 0;
@@ -332,8 +335,8 @@ button.plugin-card-open:hover .plugin-card-name {
   flex-direction: column;
   min-height: 240px;
   margin: var(--space-2) var(--space-3);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-block);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
   overflow: hidden;
 }
 .plugin-webview-settings {
@@ -348,24 +351,25 @@ button.plugin-card-open:hover .plugin-card-name {
   max-width: 100%;
   max-height: 160px;
   margin-top: var(--space-2);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-small);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-xs);
   object-fit: cover;
   object-position: top left;
 }
 /* A heading over a plugin's settings that share a group. */
 .plugin-setting-group {
   margin: var(--space-3) var(--space-3) var(--space-1);
-  color: var(--chrome-muted);
-  font-size: var(--text-xs);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
   font-weight: 600;
 }
 .plugin-setting-color {
   width: 40px;
   height: 24px;
   padding: 0;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
 }
 /* A setting of several lines: its box under its title, the row's width. */
@@ -383,8 +387,8 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-empty {
   margin: 0;
   padding: var(--space-3);
-  color: var(--chrome-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
 }
 /* A plugin's recent errors. */
 .plugin-errors {
@@ -393,10 +397,10 @@ button.plugin-card-open:hover .plugin-card-name {
   padding: var(--space-3);
   max-height: 200px;
   overflow: auto;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   white-space: pre-wrap;
   word-break: break-word;
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
 }
 .plugin-errors-actions {
   display: flex;
@@ -423,8 +427,8 @@ button.plugin-card-open:hover .plugin-card-name {
   gap: 2px;
   height: 34px;
   padding: 0 var(--space-2);
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg);
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bg);
 }
 .web-page-button {
   width: 26px;
@@ -437,20 +441,21 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: 0 var(--space-1);
   padding: 0 var(--space-2);
   font: inherit;
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
   text-overflow: ellipsis;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
 }
 .web-page-address:hover {
   background: color-mix(in srgb, currentColor 6%, transparent);
 }
 .web-page-address:focus {
   outline: none;
-  color: var(--editor-text);
-  background: var(--bg);
+  color: var(--ui-text);
+  background: var(--ui-bg);
   border-color: var(--ui-primary);
 }
 .web-page-chevron-up {
@@ -469,7 +474,7 @@ button.plugin-card-open:hover .plugin-card-name {
   gap: var(--space-3);
   height: 100%;
   padding: var(--space-4);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   text-align: center;
 }
 
@@ -496,9 +501,9 @@ button.plugin-card-open:hover .plugin-card-name {
   height: 10px;
   padding: 0;
   border: 0;
-  border-radius: 0 0 var(--radius-small) var(--radius-small);
+  border-radius: 0 0 var(--shape-xs) var(--shape-xs);
   background: color-mix(in srgb, currentColor 8%, transparent);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   opacity: 0.6;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
@@ -513,20 +518,20 @@ button.plugin-card-open:hover .plugin-card-name {
   flex: 1;
   width: 100%;
   border: 0;
-  background: var(--bg);
+  background: var(--ui-bg);
 }
 /* Where the native page is laid: its size and place are the page's. */
 .web-page-native {
   flex: 1;
   min-height: 0;
-  background: var(--bg);
+  background: var(--ui-bg);
 }
 
 /* A plugin's status in the window bar: read like the word count beside it,
    a button only when it runs something. */
 .plugin-status-item {
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
   white-space: nowrap;
 }
 .plugin-status-button {
@@ -535,15 +540,16 @@ button.plugin-card-open:hover .plugin-card-name {
   pointer-events: auto;
   padding: 0 6px;
   border: 0;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   cursor: pointer;
 }
 .plugin-status-button:hover {
-  background: var(--sidebar-hover);
-  color: var(--editor-text);
+  background: var(--ui-hover);
+  color: var(--ui-text);
 }
 
 /* A plugin holding the keyboard: Vim's block cursor in normal mode, the
@@ -552,9 +558,10 @@ button.plugin-card-open:hover .plugin-card-name {
   caret-color: transparent;
 }
 .plugin-block-cursor {
-  border-radius: 1px;
-  background: color-mix(in srgb, var(--editor-text) 72%, transparent);
-  color: var(--editor-bg, var(--bg));
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-text) 72%, transparent);
+  color: var(--ui-surface);
 }
 .plugin-block-cursor-empty {
   display: inline-block;
@@ -563,7 +570,7 @@ button.plugin-card-open:hover .plugin-card-name {
 /* Flash: what was found, lit; each label over the character after its
    match, from a zero-width anchor so the line doesn't move. */
 .plugin-flash-match {
-  border-radius: 2px;
+  border-radius: var(--doc-radius-sm);
   background: color-mix(in srgb, var(--ui-primary) 22%, transparent);
 }
 .plugin-flash-anchor {
@@ -580,7 +587,7 @@ button.plugin-card-open:hover .plugin-card-name {
   bottom: -0.2em;
   min-width: 0.6em;
   padding: 0 2px;
-  border-radius: 3px;
+  border-radius: var(--shape-xs);
   background: var(--ui-primary);
   color: var(--ui-on-primary);
   font-family: var(--font-mono);
@@ -611,8 +618,8 @@ button.plugin-card-open:hover .plugin-card-name {
   gap: var(--space-1);
   min-width: 0;
   margin: 0;
-  color: var(--chrome-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
 }
 .extensions-head-actions {
   display: flex;
@@ -629,7 +636,7 @@ button.plugin-card-open:hover .plugin-card-name {
    with its sort and the fold button on its title's line. */
 .extensions-count {
   margin-left: 6px;
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
   font-weight: 400;
 }
 .extensions-available-head {
@@ -683,11 +690,11 @@ button.plugin-card-open:hover .plugin-card-name {
 /* An MCP server's card: where it runs, how it is doing, its tools. */
 .mcp-endpoint {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   word-break: break-all;
 }
 .mcp-state-failed {
-  color: var(--danger);
+  color: var(--ui-danger);
 }
 .mcp-tools {
   display: flex;
@@ -697,11 +704,12 @@ button.plugin-card-open:hover .plugin-card-name {
 }
 .mcp-tool {
   padding: 0 6px;
-  border-radius: var(--radius-pill);
-  background: var(--sidebar-bg);
-  color: var(--chrome-muted);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-subtle);
+  color: var(--ui-muted);
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   line-height: 18px;
 }
 .mcp-actions {
@@ -746,8 +754,8 @@ button.mcp-homepage:hover {
 .plugin-subgroup-title {
   margin: var(--space-3) 0 6px;
   padding-left: 4px;
-  color: var(--chrome-muted);
-  font-size: var(--text-xs);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
   font-weight: 600;
 }
 .plugin-subgroup-title:first-child {

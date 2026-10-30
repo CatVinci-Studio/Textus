@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: var(--overlay-bg);
+  background: var(--ui-overlay);
   animation: motion-fade-in var(--dur-slow) var(--ease-standard);
 }
 
@@ -18,18 +18,15 @@
 }
 
 .language-welcome {
-  --editor-text: var(--chrome-text);
-  --editor-muted: var(--chrome-muted);
-  --editor-accent: var(--chrome-accent);
   /* Inside the backdrop's padding, not dvh. */
   max-height: 100%;
   overflow-y: auto;
   width: min(520px, 100%);
   padding: 34px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-dialog);
-  background: var(--bg);
-  color: var(--editor-text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-l);
+  background: var(--ui-bg);
+  color: var(--ui-text);
   box-shadow: var(--shadow-dialog);
   /* The first thing the app shows: it rises in unhurried. */
   animation: motion-rise-in var(--dur-slow) var(--ease-out);
@@ -43,8 +40,8 @@
 }
 
 .language-welcome-eyebrow {
-  color: var(--editor-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
   letter-spacing: 0.04em;
 }
 
@@ -56,8 +53,8 @@
 
 .language-welcome > p {
   margin: 0 0 24px;
-  color: var(--editor-muted);
-  font-size: var(--text-md);
+  color: var(--ui-muted);
+  font-size: var(--text-body);
 }
 
 /* The dropdown takes the whole width, at the height of the Continue button
@@ -70,7 +67,7 @@
   gap: 8px;
   width: 100%;
   margin-top: 18px;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   cursor: pointer;
 }
 
@@ -81,6 +78,6 @@
 }
 
 .language-welcome button:focus-visible {
-  outline: 2px solid var(--editor-accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: 3px;
 }

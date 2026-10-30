@@ -51,7 +51,7 @@ export function themesInReply(markdown: string): ReplyTheme[] {
   const themes: ReplyTheme[] = [];
   for (const m of markdown.matchAll(CSS_FENCE)) {
     const css = m[2].trim();
-    if (!/#write\b|--editor-[a-z]/.test(css) || !isSelfContained(css)) continue;
+    if (!/#write\b|--doc-[a-z]/.test(css) || !isSelfContained(css)) continue;
     themes.push({ css: `${css}\n`, name: themeName(css) });
   }
   return themes;

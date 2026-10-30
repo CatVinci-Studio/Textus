@@ -11,7 +11,7 @@
   min-width: 0;
 }
 .main-pane.main-pane-split > .tab-bar.tab-bar-inner {
-  height: calc(var(--chrome-line) - 28px);
+  height: calc(var(--header-height) - 28px);
   padding-top: 6px;
 }
 
@@ -31,7 +31,7 @@
 .split-divider {
   position: relative;
   z-index: 5;
-  background: var(--border-color);
+  background: var(--ui-border);
   touch-action: none;
   outline: none;
 }
@@ -62,5 +62,5 @@
 .split-divider:hover::before,
 .split-divider:focus-visible::before,
 .split-divider-active::before {
-  background: color-mix(in srgb, var(--chrome-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--ui-accent) 35%, transparent);
 }

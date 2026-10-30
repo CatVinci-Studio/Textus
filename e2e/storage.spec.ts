@@ -354,7 +354,7 @@ test("a window booted with no settings fills in defaults, never over newer value
 /** An imported theme, and the chrome colours last derived from it, as
  *  ui-state.json remembers them. */
 const THEME_CSS = "#write { color: rgb(1, 2, 3); }";
-const CHROME = ":root { --sidebar-bg: rgb(10, 20, 30) !important; }";
+const CHROME = ":root { --ui-subtle: rgb(10, 20, 30) !important; }";
 const themed = (theme: string) => ({
   ...SETTINGS,
   theme,
@@ -397,7 +397,7 @@ test("the imported theme's chrome colours are on the first frame too", async ({
         const ids = Array.from(document.head.children, (el) => el.id);
         const chrome = document.getElementById("textus-imported-chrome");
         return (
-          !!chrome?.textContent?.includes("--editor-bg") &&
+          !!chrome?.textContent?.includes("--ui-surface") &&
           ids.indexOf("textus-imported-chrome") < ids.indexOf("textus-user-css")
         );
       }),
@@ -432,6 +432,6 @@ for (const [name, theme, cache] of [
       .toMatchObject({ id: "mine", dark: theme === "dark" });
     expect(
       ((await devStorage(page)).uiState.themeChrome as { css: string }).css,
-    ).toContain("--sidebar-bg");
+    ).toContain("--ui-subtle");
   });
 }

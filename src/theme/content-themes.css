@@ -1,4 +1,4 @@
-/* Built-in content themes: each overrides only the --editor-* variables,
+/* Built-in content themes: each overrides only the --doc-* variables,
    never the app chrome. Theme and appearance are independent, so each theme
    is three blocks: the light base, dark for "follow system", and dark
    pinned. The two dark blocks are identical. */
@@ -6,147 +6,147 @@
 /* Paper - warm, cream, serif-leaning */
 
 [data-content-theme="paper"] {
-  --editor-bg: #faf6ee;
-  --editor-text: #2b2620;
-  --editor-muted: #706758;
-  --editor-border: #e4dcc8;
-  --editor-quote-border: #b5652f;
-  --editor-accent: #9a5628;
-  --editor-code-bg: #f1e9d8;
+  --doc-bg: #faf6ee;
+  --doc-text: #2b2620;
+  --doc-muted: #706758;
+  --doc-border: #e4dcc8;
+  --doc-quote-border: #b5652f;
+  --doc-accent: #9a5628;
+  --doc-code-bg: #f1e9d8;
   /* The CJK faces follow <html lang>. */
-  --editor-font:
+  --doc-font:
     var(--font-cjk-punct-serif), Georgia, var(--font-cjk-serif), serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"])[data-content-theme="paper"] {
-    --editor-bg: #1f1b16;
-    --editor-text: #e8ddc9;
-    --editor-muted: #9c8f77;
-    --editor-border: #3a3226;
-    --editor-quote-border: #d98b52;
-    --editor-accent: #d98b52;
-    --editor-code-bg: #2b241c;
+    --doc-bg: #1f1b16;
+    --doc-text: #e8ddc9;
+    --doc-muted: #9c8f77;
+    --doc-border: #3a3226;
+    --doc-quote-border: #d98b52;
+    --doc-accent: #d98b52;
+    --doc-code-bg: #2b241c;
   }
 }
 
 :root[data-theme="dark"][data-content-theme="paper"] {
-  --editor-bg: #1f1b16;
-  --editor-text: #e8ddc9;
-  --editor-muted: #9c8f77;
-  --editor-border: #3a3226;
-  --editor-quote-border: #d98b52;
-  --editor-accent: #d98b52;
-  --editor-code-bg: #2b241c;
+  --doc-bg: #1f1b16;
+  --doc-text: #e8ddc9;
+  --doc-muted: #9c8f77;
+  --doc-border: #3a3226;
+  --doc-quote-border: #d98b52;
+  --doc-accent: #d98b52;
+  --doc-code-bg: #2b241c;
 }
 
 /* Slate - cool, minimal, blue accent */
 
 [data-content-theme="slate"] {
-  --editor-bg: #f7f8fa;
-  --editor-text: #1c2128;
-  --editor-muted: #656d77;
-  --editor-border: #d8dee4;
-  --editor-quote-border: #3568d4;
-  --editor-accent: #3467d2;
-  --editor-code-bg: #eef1f5;
-  --editor-font:
+  --doc-bg: #f7f8fa;
+  --doc-text: #1c2128;
+  --doc-muted: #656d77;
+  --doc-border: #d8dee4;
+  --doc-quote-border: #3568d4;
+  --doc-accent: #3467d2;
+  --doc-code-bg: #eef1f5;
+  --doc-font:
     var(--font-cjk-punct), -apple-system, "Inter", var(--font-text-sans),
     sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"])[data-content-theme="slate"] {
-    --editor-bg: #0d1117;
-    --editor-text: #e6edf3;
-    --editor-muted: #8b949e;
-    --editor-border: #30363d;
-    --editor-quote-border: #6ea8fe;
-    --editor-accent: #6ea8fe;
-    --editor-code-bg: #161b22;
+    --doc-bg: #0d1117;
+    --doc-text: #e6edf3;
+    --doc-muted: #8b949e;
+    --doc-border: #30363d;
+    --doc-quote-border: #6ea8fe;
+    --doc-accent: #6ea8fe;
+    --doc-code-bg: #161b22;
   }
 }
 
 :root[data-theme="dark"][data-content-theme="slate"] {
-  --editor-bg: #0d1117;
-  --editor-text: #e6edf3;
-  --editor-muted: #8b949e;
-  --editor-border: #30363d;
-  --editor-quote-border: #6ea8fe;
-  --editor-accent: #6ea8fe;
-  --editor-code-bg: #161b22;
+  --doc-bg: #0d1117;
+  --doc-text: #e6edf3;
+  --doc-muted: #8b949e;
+  --doc-border: #30363d;
+  --doc-quote-border: #6ea8fe;
+  --doc-accent: #6ea8fe;
+  --doc-code-bg: #161b22;
 }
 
 /* Forest - low-saturation green, easy on the eyes */
 
 [data-content-theme="forest"] {
-  --editor-bg: #f5f7f2;
-  --editor-text: #22301f;
-  --editor-muted: #616d5a;
-  --editor-border: #dbe3d3;
-  --editor-quote-border: #4c7a4c;
-  --editor-accent: #487448;
-  --editor-code-bg: #e9efe3;
-  --editor-font:
+  --doc-bg: #f5f7f2;
+  --doc-text: #22301f;
+  --doc-muted: #616d5a;
+  --doc-border: #dbe3d3;
+  --doc-quote-border: #4c7a4c;
+  --doc-accent: #487448;
+  --doc-code-bg: #e9efe3;
+  --doc-font:
     var(--font-cjk-punct), -apple-system, "Inter", var(--font-text-sans),
     sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"])[data-content-theme="forest"] {
-    --editor-bg: #141a12;
-    --editor-text: #dce8d6;
-    --editor-muted: #8ea184;
-    --editor-border: #2a3526;
-    --editor-quote-border: #79b579;
-    --editor-accent: #79b579;
-    --editor-code-bg: #1c2419;
+    --doc-bg: #141a12;
+    --doc-text: #dce8d6;
+    --doc-muted: #8ea184;
+    --doc-border: #2a3526;
+    --doc-quote-border: #79b579;
+    --doc-accent: #79b579;
+    --doc-code-bg: #1c2419;
   }
 }
 
 :root[data-theme="dark"][data-content-theme="forest"] {
-  --editor-bg: #141a12;
-  --editor-text: #dce8d6;
-  --editor-muted: #8ea184;
-  --editor-border: #2a3526;
-  --editor-quote-border: #79b579;
-  --editor-accent: #79b579;
-  --editor-code-bg: #1c2419;
+  --doc-bg: #141a12;
+  --doc-text: #dce8d6;
+  --doc-muted: #8ea184;
+  --doc-border: #2a3526;
+  --doc-quote-border: #79b579;
+  --doc-accent: #79b579;
+  --doc-code-bg: #1c2419;
 }
 
 /* Parchment - aged vellum, sepia ink, handwritten feel */
 
 [data-content-theme="parchment"] {
-  --editor-bg: #f1e6c8;
-  --editor-text: #4a3826;
-  --editor-muted: #6d5b45;
-  --editor-border: #c9b587;
-  --editor-quote-border: #a68a55;
-  --editor-accent: #8c3a2b;
-  --editor-code-bg: #e8dab0;
-  --editor-font:
+  --doc-bg: #f1e6c8;
+  --doc-text: #4a3826;
+  --doc-muted: #6d5b45;
+  --doc-border: #c9b587;
+  --doc-quote-border: #a68a55;
+  --doc-accent: #8c3a2b;
+  --doc-code-bg: #e8dab0;
+  --doc-font:
     "Bradley Hand", "Segoe Script", "STKaiti", "Kaiti SC", "楷体",
     "LXGW WenKai", "AR PL UKai CN", cursive, serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"])[data-content-theme="parchment"] {
-    --editor-bg: #241d13;
-    --editor-text: #d8c9a3;
-    --editor-muted: #9e8c6b;
-    --editor-border: #4a3d28;
-    --editor-quote-border: #5c4a30;
-    --editor-accent: #c97a5c;
-    --editor-code-bg: #2e2517;
+    --doc-bg: #241d13;
+    --doc-text: #d8c9a3;
+    --doc-muted: #9e8c6b;
+    --doc-border: #4a3d28;
+    --doc-quote-border: #5c4a30;
+    --doc-accent: #c97a5c;
+    --doc-code-bg: #2e2517;
   }
 }
 
 :root[data-theme="dark"][data-content-theme="parchment"] {
-  --editor-bg: #241d13;
-  --editor-text: #d8c9a3;
-  --editor-muted: #9e8c6b;
-  --editor-border: #4a3d28;
-  --editor-quote-border: #5c4a30;
-  --editor-accent: #c97a5c;
-  --editor-code-bg: #2e2517;
+  --doc-bg: #241d13;
+  --doc-text: #d8c9a3;
+  --doc-muted: #9e8c6b;
+  --doc-border: #4a3d28;
+  --doc-quote-border: #5c4a30;
+  --doc-accent: #c97a5c;
+  --doc-code-bg: #2e2517;
 }

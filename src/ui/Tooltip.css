@@ -5,9 +5,9 @@
   z-index: var(--z-select);
   max-width: min(280px, calc(100vw - 16px));
   padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-control);
-  color: var(--editor-text);
-  font-size: var(--text-sm);
+  border-radius: var(--shape-s);
+  color: var(--ui-text);
+  font-size: var(--text-footnote);
   font-weight: normal;
   line-height: 1.45;
   white-space: normal;

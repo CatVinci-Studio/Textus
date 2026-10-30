@@ -13,7 +13,7 @@
   /* Left inset is room for the macOS traffic lights, which float over the
      top-left corner. */
   padding: 0 12px 0 78px;
-  background: var(--bg);
+  background: var(--ui-bg);
 }
 
 /* Where the app owns the frame, the menu button and caption buttons sit
@@ -68,8 +68,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
   pointer-events: none;
   user-select: none;
   white-space: nowrap;
@@ -89,12 +89,12 @@
   padding: 2px;
   border: 0;
   background: none;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   pointer-events: auto;
 }
 
 .window-bar-lock:hover {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 /* Bounded so it never slides under the app-drawn caption buttons. */
@@ -127,7 +127,8 @@
   height: 20px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: none;
   color: inherit;
   opacity: 0.6;
@@ -139,7 +140,7 @@
 .window-menu-button:hover,
 .window-bar-toggle-on {
   opacity: 1;
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 
 /* Hover arrives in 80ms; turning on or off changes in 120ms. */
@@ -176,8 +177,8 @@
   /* `*` does not reach pseudo-elements: without this the 1px edge would sit
      outside the sidebar's width and overhang its border by a pixel. */
   box-sizing: border-box;
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--border-color);
+  background: var(--ui-subtle);
+  border-right: 1px solid var(--ui-border);
   z-index: -1;
   transform: translateX(calc(-100% * var(--motion-travel)));
   opacity: var(--motion-travel-fade);
@@ -203,22 +204,22 @@
 .sidebar-header {
   /* Clears the window bar floating over the top of the window. */
   padding: 34px 10px 0;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--ui-border);
 }
 
 /* Every column's top row ends on one line: the sidebar's, each pane's tab
    bar and the AI panel's header (which starts below the 28px window bar). */
 :root {
-  --chrome-line: 69px;
+  --header-height: 69px;
 }
 
 :root:not([data-window-chrome="mobile"]) :is(.sidebar-header, .tab-bar) {
   box-sizing: border-box;
-  height: var(--chrome-line);
+  height: var(--header-height);
 }
 
 :root:not([data-window-chrome="mobile"]) .agent-panel-header {
-  height: calc(var(--chrome-line) - 28px);
+  height: calc(var(--header-height) - 28px);
 }
 
 .sidebar-body {
@@ -230,17 +231,18 @@
 /* Shown while ghost text, grammar check and live Mermaid preview are paused
    for a large document. */
 .large-doc-badge {
-  font-size: var(--text-xs);
-  color: var(--editor-muted);
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
   white-space: nowrap;
   padding: 2px 7px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--editor-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  border: 1px solid var(--ui-border);
   cursor: default;
 }
 
 .editor-scroll {
   flex: 1;
   overflow-y: auto;
-  background: var(--editor-bg, var(--bg));
+  background: var(--doc-bg);
 }

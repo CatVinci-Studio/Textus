@@ -13,8 +13,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  color: var(--editor-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-secondary);
 }
 .report-problem-text,
 .report-problem-contact {
@@ -32,24 +32,24 @@
 /* Where it goes, or why it didn't. */
 .report-problem-note {
   margin: var(--space-3) 0 0;
-  color: var(--editor-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
 }
 .report-problem-label {
   margin: var(--space-3) 0 var(--space-1);
-  color: var(--editor-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
 }
 .report-problem-details {
   max-height: 140px;
   margin: 0;
   padding: var(--space-2);
   overflow: auto;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
-  color: var(--editor-muted);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-s);
+  color: var(--ui-muted);
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   white-space: pre-wrap;
   user-select: text;
 }

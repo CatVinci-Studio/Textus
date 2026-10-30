@@ -14,7 +14,7 @@
   max-width: none;
   margin: 0;
   font-family: var(--font-sans);
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 :root[data-window-chrome="mobile"] .quick-ask-dock .inline-chat-shell {
@@ -23,9 +23,9 @@
   max-height: calc(100dvh - var(--mobile-bar, 44px) - 8px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   border-width: 1px 0 0;
-  border-color: var(--editor-border);
-  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
-  background: var(--page-bg, var(--editor-bg));
+  border-color: var(--ui-border);
+  border-radius: var(--shape-l) var(--shape-l) 0 0;
+  background: var(--ui-bg);
   box-shadow: var(--shadow-sheet);
   /* It rises with the keyboard, from the bottom edge. */
   animation: motion-sheet-in var(--dur-slow) var(--ease-spring);
@@ -44,7 +44,7 @@
 /* Every section under it is ruled off - including the input when there is
    no reply yet. */
 :root[data-window-chrome="mobile"] .quick-ask-dock .inline-chat-shell > * {
-  border-top: 1px solid var(--editor-border);
+  border-top: 1px solid var(--ui-border);
 }
 
 :root[data-window-chrome="mobile"]
@@ -60,12 +60,12 @@
   flex: 1;
   min-width: 0;
   padding-left: 8px;
-  border-left: 2px solid var(--editor-accent);
+  border-left: 2px solid var(--ui-accent);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
 }
 
 :root[data-window-chrome="mobile"] .quick-ask-dock-actions {

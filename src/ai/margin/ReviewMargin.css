@@ -59,12 +59,12 @@
   position: absolute;
   box-sizing: border-box;
   padding: 9px 12px 9px;
-  border-radius: var(--radius-surface);
+  border-radius: var(--shape-m);
   border: 1px solid var(--review-note-border);
   background: var(--review-note-bg);
-  color: var(--editor-text);
+  color: var(--ui-text);
   font-family: var(--font-ui, inherit);
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   line-height: 1.55;
   box-shadow: var(--shadow-card);
   /* A card glides on `translate`, never `top`, which would lay the margin
@@ -107,8 +107,8 @@
   align-items: center;
   gap: 6px;
   margin-bottom: 2px;
-  font-size: var(--text-xs);
-  color: var(--editor-muted);
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
 }
 
 .review-note-mark {
@@ -117,8 +117,9 @@
   width: calc(16px * var(--ui-text-scale, 1));
   height: calc(16px * var(--ui-text-scale, 1));
   border-radius: 50%;
-  background: color-mix(in srgb, var(--editor-accent) 14%, transparent);
-  color: var(--editor-accent);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+  color: var(--ui-accent);
   font-size: calc(8.5px * var(--ui-text-scale, 1));
   font-weight: 700;
 }
@@ -126,8 +127,8 @@
 /* The writer's own note: its mark in the text colour, not the AI's
    accent, so whose note it is reads at a glance. */
 .review-note-mark-me {
-  background: color-mix(in srgb, var(--editor-text) 12%, transparent);
-  color: var(--editor-text);
+  background: color-mix(in srgb, var(--ui-text) 12%, transparent);
+  color: var(--ui-text);
 }
 
 .review-note-text {
@@ -160,12 +161,13 @@
 
 .review-note-actions button {
   padding: 2px 10px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   border: 1px solid var(--review-note-border);
-  background: var(--editor-bg, var(--bg));
-  color: var(--editor-text);
+  background: var(--ui-surface);
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-caption);
   cursor: pointer;
 }
 
@@ -215,25 +217,25 @@
 }
 
 .review-note-chip-text del {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .review-note-chip-text ins {
   text-decoration: none;
-  color: var(--editor-accent);
+  color: var(--ui-accent);
 }
 
 /* A revision cut to its chip keeps the card's look: its number, then its
    new text in the green box - not plain text, as a note's chip is. */
 .revision-note.review-note-chip .review-note-chip-text {
   padding: 0 4px;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
   background: var(--revision-insert-bg);
 }
 
 .revision-note.review-note-chip .review-note-chip-text:has(> s) {
   background: var(--revision-delete-bg);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .revision-note-kept.review-note-chip .review-note-chip-text {
@@ -319,7 +321,7 @@
 .review-anchor {
   background: var(--review-anchor-bg);
   box-shadow: inset 0 -1.5px 0 var(--review-note-line);
-  border-radius: 2px;
+  border-radius: var(--doc-radius-sm);
   transition: background var(--dur-fast) var(--ease-standard);
 }
 
@@ -337,9 +339,10 @@
   padding: 0 4px;
   vertical-align: 0.2em;
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: var(--review-note-line);
-  color: var(--on-fill);
+  color: var(--ui-on-fill);
   font: 700 10.5px/1 var(--font-ui, sans-serif);
   cursor: pointer;
   box-shadow: 0 0 0 3px var(--review-anchor-bg);
@@ -356,32 +359,16 @@
   --review-note-line: #c99a2e;
   --review-anchor-bg: rgb(232 190 80 / 22%);
   --review-anchor-hot-bg: rgb(232 190 80 / 42%);
-  --review-note-bg: color-mix(
-    in srgb,
-    #f6eedb 55%,
-    var(--editor-bg, var(--bg))
-  );
-  --review-note-border: color-mix(
-    in srgb,
-    #d9c79a 45%,
-    var(--editor-bg, var(--bg))
-  );
+  --review-note-bg: color-mix(in srgb, #f6eedb 55%, var(--ui-surface));
+  --review-note-border: color-mix(in srgb, #d9c79a 45%, var(--ui-surface));
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --review-anchor-bg: rgb(232 190 80 / 16%);
     --review-anchor-hot-bg: rgb(232 190 80 / 30%);
-    --review-note-bg: color-mix(
-      in srgb,
-      #4a3f25 35%,
-      var(--editor-bg, var(--bg))
-    );
-    --review-note-border: color-mix(
-      in srgb,
-      #8a7440 40%,
-      var(--editor-bg, var(--bg))
-    );
+    --review-note-bg: color-mix(in srgb, #4a3f25 35%, var(--ui-surface));
+    --review-note-border: color-mix(in srgb, #8a7440 40%, var(--ui-surface));
   }
 }
 
@@ -406,31 +393,15 @@
 :root[data-theme="dark"] {
   --review-anchor-bg: rgb(232 190 80 / 16%);
   --review-anchor-hot-bg: rgb(232 190 80 / 30%);
-  --review-note-bg: color-mix(
-    in srgb,
-    #4a3f25 35%,
-    var(--editor-bg, var(--bg))
-  );
-  --review-note-border: color-mix(
-    in srgb,
-    #8a7440 40%,
-    var(--editor-bg, var(--bg))
-  );
+  --review-note-bg: color-mix(in srgb, #4a3f25 35%, var(--ui-surface));
+  --review-note-border: color-mix(in srgb, #8a7440 40%, var(--ui-surface));
 }
 
 /* A rewrite's changed sentence in the margin, in the editor's own surface
    tone: a revision is a draft of the text itself. */
 .revision-note {
-  background: color-mix(
-    in srgb,
-    var(--editor-text) 3%,
-    var(--editor-bg, var(--bg))
-  );
-  border-color: color-mix(
-    in srgb,
-    var(--editor-border, var(--border-color)) 80%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--ui-text) 3%, var(--ui-surface));
+  border-color: color-mix(in srgb, var(--ui-border) 80%, transparent);
 }
 
 .revision-note .review-note-by {
@@ -446,9 +417,10 @@
   min-width: calc(16px * var(--ui-text-scale, 1));
   height: calc(16px * var(--ui-text-scale, 1));
   padding-inline: calc(4px * var(--ui-text-scale, 1));
-  border-radius: var(--radius-pill);
-  background: var(--success-color);
-  color: var(--on-fill);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-success);
+  color: var(--ui-on-fill);
   font-size: calc(9.5px * var(--ui-text-scale, 1));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -467,7 +439,7 @@
 .revision-note-text {
   padding: 1px 4px;
   margin: 0 -4px;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
   background: var(--revision-insert-bg);
   overflow-wrap: anywhere;
   /* A change of whole paragraphs keeps them apart. */
@@ -481,7 +453,7 @@
 
 .revision-note-delete {
   font-style: italic;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 /* A note's number, in its badge's colour. */
@@ -490,7 +462,7 @@
 }
 
 .revision-note-kept .revision-note-num {
-  background: color-mix(in srgb, var(--editor-muted) 70%, transparent);
+  background: color-mix(in srgb, var(--ui-muted) 70%, transparent);
 }
 
 .revision-note-kept .revision-note-text {
@@ -500,14 +472,14 @@
 }
 
 .review-links path.revision {
-  stroke: color-mix(in srgb, var(--success-color) 70%, transparent);
+  stroke: color-mix(in srgb, var(--ui-success) 70%, transparent);
 }
 
 /* Result only: the card holds what the change takes out, struck, in the
    text's own colour, since muted text on the red fails contrast. */
 .revision-note-original {
   background: var(--revision-delete-bg);
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .revision-note-original s {
@@ -517,7 +489,7 @@
 .revision-note-kept .revision-note-original {
   background: none;
   text-decoration: none;
-  color: var(--editor-text);
+  color: var(--ui-text);
   opacity: 1;
 }
 
@@ -547,8 +519,9 @@
   height: 1.1em;
   margin: 0 1px;
   vertical-align: -0.15em;
-  border-radius: 1px;
-  background: var(--success-color);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-success);
 }
 
 /* A picture on a margin card keeps its shape, its frame too (aspect-ratio
@@ -562,7 +535,7 @@
   max-width: 100%;
   max-height: 96px;
   margin: 4px 0;
-  border-radius: var(--radius-small);
+  border-radius: var(--shape-xs);
   object-fit: contain;
   object-position: left center;
 }
@@ -583,15 +556,15 @@ del .revision-note-picture {
 
 .revision-note-picture-why {
   display: block;
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
 }
 
 /* The writer's own tracked changes, in the AI's revision colours. */
 .own-insert {
   background: var(--revision-insert-bg);
   color: var(--revision-insert-text);
-  border-radius: 2px;
+  border-radius: var(--doc-radius-sm);
 }
 
 .own-delete {
@@ -599,7 +572,7 @@ del .revision-note-picture {
   background: var(--revision-delete-bg);
   text-decoration: line-through;
   text-decoration-color: var(--revision-delete-strike);
-  border-radius: 2px;
+  border-radius: var(--doc-radius-sm);
   user-select: none;
 }
 

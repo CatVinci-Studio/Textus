@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--overlay-bg);
+  background: var(--ui-overlay);
 }
 
 .close-prompt {
@@ -19,11 +19,11 @@
   max-height: calc(100% - 32px);
   overflow-y: auto;
   padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--editor-border);
-  border-radius: var(--radius-dialog);
-  background: var(--bg);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-l);
+  background: var(--ui-bg);
   box-shadow: var(--shadow-dialog);
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
 }
 
 .close-prompt p {
@@ -35,8 +35,8 @@
 .app-dialog p {
   white-space: pre-line;
   overflow-wrap: anywhere;
-  font-size: var(--text-md);
-  color: var(--editor-text);
+  font-size: var(--text-body);
+  color: var(--ui-text);
 }
 
 /* showPrompt's text field (a new file name). */
@@ -47,31 +47,32 @@
   min-height: 32px;
   margin: 0 0 16px;
   padding: 6px 10px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-control);
-  background: var(--bg);
-  color: var(--editor-text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-bg);
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-body);
 }
 
 .app-dialog-input:focus-visible {
-  border-color: var(--chrome-accent);
+  border-color: var(--ui-accent);
   outline: none;
 }
 
 .app-dialog-title {
   margin: 0 0 8px;
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
   font-weight: 600;
 }
 
 .app-dialog-error {
-  color: var(--danger);
+  color: var(--ui-danger);
 }
 
 .app-dialog-warning {
-  color: var(--warning-color);
+  color: var(--ui-warning);
 }
 
 .close-prompt-buttons {
@@ -85,9 +86,9 @@
 }
 
 .close-prompt-buttons button {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .close-prompt-discard {
-  color: var(--danger) !important;
+  color: var(--ui-danger) !important;
 }

@@ -21,18 +21,18 @@
   gap: 6px 10px;
   width: 100%;
   padding: 8px 12px;
-  font-size: var(--text-sm);
-  color: var(--editor-text);
+  font-size: var(--text-secondary);
+  color: var(--ui-text);
   pointer-events: auto;
   animation: notice-in var(--dur-base) var(--ease-out) both;
 }
 
 .notice[data-tone="warning"] {
-  border-left: 3px solid var(--warning-color);
+  border-left: 3px solid var(--ui-warning);
 }
 
 .notice[data-tone="error"] {
-  border-left: 3px solid var(--danger);
+  border-left: 3px solid var(--ui-danger);
 }
 
 .notice-text {
@@ -44,26 +44,27 @@
 }
 
 .notice-source {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .notice-detail {
   flex-basis: 100%;
-  color: var(--editor-muted);
-  font-size: var(--text-xs);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
 }
 
 .notice-bar {
   flex-basis: 100%;
   height: 3px;
   overflow: hidden;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--editor-text) 10%, transparent);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-text) 10%, transparent);
 }
 
 .notice-bar-fill {
   height: 100%;
-  background: var(--editor-accent);
+  background: var(--ui-accent);
   transform-origin: left center;
   transition: transform var(--dur-base) var(--ease-out);
 }
@@ -75,8 +76,8 @@
 
 .notice-cancel {
   font: inherit;
-  font-size: var(--text-xs);
-  color: var(--editor-muted);
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
   background: none;
   border: none;
   cursor: pointer;
@@ -84,7 +85,7 @@
 }
 
 .notice-cancel:hover {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 @keyframes notice-in {

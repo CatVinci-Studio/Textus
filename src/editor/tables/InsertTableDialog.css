@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--overlay-bg);
+  background: var(--ui-overlay);
 }
 
 .insert-table-dialog {
@@ -16,11 +16,11 @@
 
   min-width: 260px;
   padding: 18px 20px;
-  border: 1px solid var(--editor-border);
-  border-radius: var(--radius-dialog);
-  background: var(--bg);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-l);
+  background: var(--ui-bg);
   box-shadow: var(--shadow-dialog);
-  font-size: var(--text-lg);
+  font-size: var(--text-body-large);
 }
 
 .insert-table-title {
@@ -38,17 +38,18 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
 }
 
 .insert-table-fields input {
   width: 70px;
   padding: 5px 8px;
-  border: 1px solid var(--editor-border);
-  border-radius: var(--radius-control);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
   background: transparent;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
 }
 
@@ -63,5 +64,5 @@
 }
 
 .insert-table-buttons button {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }

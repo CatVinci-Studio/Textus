@@ -3,7 +3,7 @@
 .window-menu-button {
   width: 34px;
   margin-left: -8px;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   pointer-events: auto;
 }
 
@@ -28,9 +28,9 @@
   border: none;
   border-radius: 0;
   background: none;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-secondary);
   opacity: 0.8;
   cursor: default;
   transition:
@@ -41,7 +41,7 @@
 .window-menu-bar-title:hover,
 .window-menu-bar-title[aria-expanded="true"] {
   opacity: 1;
-  background: color-mix(in srgb, var(--editor-text) 12%, transparent);
+  background: color-mix(in srgb, var(--ui-text) 12%, transparent);
 }
 
 /* With the titles, the document's name is centred in the room they leave

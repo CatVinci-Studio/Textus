@@ -1,4 +1,4 @@
-import { Fragment, useId, useState, type KeyboardEvent } from "react";
+import { Fragment, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import type { AgentMode } from "../../prefs/SettingsContext";
 import { useMergedRef, usePresence } from "../../ui/usePresence";
@@ -29,12 +29,15 @@ export function ModePicker({
   onMode,
   models,
   labels,
+  holdFocus = false,
 }: {
   mode: AgentMode;
   modes: ModeChoice[];
   onMode: (mode: AgentMode) => void;
   models?: ChatModels;
   labels: { mode: string; model: string; picker: string };
+  /** A tap leaves focus, and the phone's keyboard, in the message. */
+  holdFocus?: boolean;
 }) {
   const groups = models?.groups ?? [];
   const items: Item[] = [
@@ -65,14 +68,21 @@ export function ModePicker({
   const presence = usePresence(open, { exitMs: 120 });
   const presenceRef = useMergedRef(listRef, presence.ref);
 
+  // The list takes focus while open; with holdFocus it goes back to where
+  // it was (the message), not to the trigger.
+  const focusBefore = useRef<HTMLElement | null>(null);
+
   function openMenu() {
+    focusBefore.current = document.activeElement as HTMLElement | null;
     setActive(Math.max(0, items.findIndex(isSelected)));
     setOpen(true);
   }
 
   function close(refocus = true) {
     setOpen(false);
-    if (refocus) triggerRef.current?.focus();
+    if (!refocus) return;
+    if (holdFocus) focusBefore.current?.focus({ preventScroll: true });
+    else triggerRef.current?.focus();
   }
 
   function choose(index: number) {
@@ -84,14 +94,16 @@ export function ModePicker({
     else models?.choose(item.provider, item.model);
   }
 
-  function onTriggerKey(e: KeyboardEvent<HTMLButtonElement>) {
+  function onTriggerKey(e: KeyboardEvent<HTMLElement>) {
+    // Keys pressed before the open list has taken focus are its keys.
+    if (open) return onListKey(e);
     if (["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) {
       e.preventDefault();
       openMenu();
     }
   }
 
-  function onListKey(e: KeyboardEvent<HTMLUListElement>) {
+  function onListKey(e: KeyboardEvent<HTMLElement>) {
     if (isImeKeydown(e)) return;
     const n = items.length;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
@@ -173,6 +185,7 @@ export function ModePicker({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-label={labels.picker}
+        onMouseDown={holdFocus ? (e) => e.preventDefault() : undefined}
         onClick={() => (open ? close() : openMenu())}
         onKeyDown={onTriggerKey}
       >

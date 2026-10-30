@@ -7,8 +7,8 @@
   gap: 10px;
   padding: 24px;
   text-align: center;
-  font-size: var(--text-md);
-  color: var(--editor-muted);
+  font-size: var(--text-body);
+  color: var(--ui-muted);
 }
 
 .textus-ai-off p {

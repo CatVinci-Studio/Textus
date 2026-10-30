@@ -19,8 +19,8 @@
     height: auto;
     padding-top: 0;
     border-left: none;
-    border-top: 1px solid var(--border-color);
-    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    border-top: 1px solid var(--ui-border);
+    border-radius: var(--shape-l) var(--shape-l) 0 0;
     box-shadow: var(--shadow-sheet);
     flex-direction: column;
     /* Whatever the conversation's length, the composer stays on screen:
@@ -55,7 +55,7 @@
     animation: none;
     box-shadow:
       var(--shadow-sheet),
-      0 200px 0 var(--editor-bg, var(--bg));
+      0 200px 0 var(--ui-surface);
     will-change: transform;
   }
 
@@ -64,7 +64,7 @@
     .agent-panel-body
     > :not(.agent-panel-empty, .inline-chat-messages) {
     transform: translateY(var(--sheet-lift, 0px));
-    background-color: var(--editor-bg, var(--bg));
+    background-color: var(--ui-surface);
   }
 
   :root[data-window-chrome="mobile"] .agent-panel .inline-chat-messages {
@@ -93,11 +93,6 @@
   :root[data-window-chrome="mobile"] .agent-panel-actions,
   :root[data-window-chrome="mobile"] .agent-panel-tabs {
     pointer-events: auto;
-  }
-
-  :root[data-window-chrome="mobile"] .agent-panel-tabs button {
-    padding: 8px 14px;
-    font-size: var(--text-md);
   }
 
   /* History, new conversation and close: finger-sized, like every other
@@ -144,6 +139,7 @@
 :root[data-window-chrome="mobile"] .agent-panel-grip span {
   width: 36px;
   height: 5px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--editor-text) 25%, transparent);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-text) 25%, transparent);
 }

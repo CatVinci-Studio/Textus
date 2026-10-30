@@ -303,7 +303,7 @@
    taken off, never faded. Colour only, so reduced motion keeps it. */
 .motion-mark {
   background-color: var(--motion-mark-bg);
-  border-radius: 2px;
+  border-radius: var(--doc-radius-sm);
 }
 
 /* A copy of what a change took away, fading out where it stood: none of its

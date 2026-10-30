@@ -122,7 +122,7 @@ test.describe("theme gallery", () => {
     await changeGallery(page, {
       update: {
         updated: "2026-10-20T00:00:00Z",
-        css: ":root { --editor-bg: #f4fbf6; }",
+        css: ":root { --doc-bg: #f4fbf6; }",
       },
     });
     await page.keyboard.press("Escape");

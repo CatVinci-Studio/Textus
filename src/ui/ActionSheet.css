@@ -15,7 +15,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--overlay-bg);
+  background: var(--ui-overlay);
   animation: motion-fade-in var(--dur-base) var(--ease-standard);
 }
 
@@ -41,8 +41,8 @@
 .action-sheet-group,
 .action-sheet-cancel {
   overflow: hidden;
-  border-radius: var(--radius-sheet);
-  background: var(--editor-bg, var(--bg));
+  border-radius: var(--shape-l);
+  background: var(--ui-surface);
 }
 
 .action-sheet-group {
@@ -53,13 +53,13 @@
 .action-sheet-title {
   padding: 12px 16px;
   text-align: center;
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
-  border-bottom: 1px solid var(--editor-border, var(--border-color));
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .action-sheet-section + .action-sheet-section {
-  border-top: 6px solid color-mix(in srgb, var(--editor-text) 6%, transparent);
+  border-top: 6px solid color-mix(in srgb, var(--ui-text) 6%, transparent);
 }
 
 .action-sheet-item {
@@ -69,29 +69,29 @@
   padding: 0 16px;
   border: none;
   background: none;
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   font: inherit;
-  font-size: var(--ios-body, 17px);
+  font-size: var(--text-body);
   text-align: center;
   /* iOS's highlight: on at the touch, fading out after it. */
   transition: background-color var(--dur-base) var(--ease-standard);
 }
 
 .action-sheet-section .action-sheet-item + .action-sheet-item {
-  border-top: 1px solid var(--editor-border, var(--border-color));
+  border-top: 1px solid var(--ui-border);
 }
 
 .action-sheet-item:active {
-  background: color-mix(in srgb, var(--editor-text) 8%, transparent);
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
   transition-duration: 0s;
 }
 
 .action-sheet-item-danger {
-  color: var(--danger);
+  color: var(--ui-danger);
 }
 
 /* Doubled class: .action-sheet-item's "background: none" comes later. */
 .action-sheet-item.action-sheet-cancel {
-  background: var(--editor-bg, var(--bg));
+  background: var(--ui-surface);
   font-weight: 600;
 }

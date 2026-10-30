@@ -13,16 +13,16 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--overlay-bg);
+  background: var(--ui-overlay);
   animation: motion-fade-in var(--dur-medium) var(--ease-out);
 }
 
 .bottom-card {
   position: relative;
   padding: 0 18px calc(16px + env(safe-area-inset-bottom, 0px));
-  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
-  background: var(--editor-bg, var(--bg));
-  color: var(--editor-text);
+  border-radius: var(--shape-l) var(--shape-l) 0 0;
+  background: var(--ui-surface);
+  color: var(--ui-text);
   box-shadow: var(--shadow-sheet);
   animation: motion-sheet-in var(--dur-sheet) var(--ease-spring);
 }
@@ -39,12 +39,13 @@
   width: 38px;
   height: 5px;
   margin: 8px auto 12px;
-  border-radius: 3px;
-  background: color-mix(in srgb, var(--editor-text) 18%, transparent);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-text) 18%, transparent);
 }
 
 .bottom-card-body {
-  font-size: var(--text-lg, 16px);
+  font-size: var(--text-body-large);
   line-height: 1.6;
   margin-bottom: 16px;
 }
@@ -57,12 +58,13 @@
 .bottom-card-actions button {
   flex: 1;
   padding: 13px 12px;
-  border-radius: var(--radius-control);
-  border: 1px solid var(--editor-border, var(--border-color));
-  background: var(--editor-bg, var(--bg));
-  color: var(--editor-text);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-md);
+  font-size: var(--text-control);
   font-weight: 600;
 }
 
@@ -78,16 +80,16 @@
   align-items: center;
   gap: 6px;
   margin-bottom: 6px;
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
 }
 
 .bottom-card-quote {
   margin: 0 0 8px;
   padding-left: 9px;
-  border-left: 2px solid var(--review-note-line, var(--editor-accent));
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
+  border-left: 2px solid var(--review-note-line, var(--ui-accent));
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

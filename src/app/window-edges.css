@@ -2,7 +2,7 @@
 .window-edge-outline {
   position: fixed;
   inset: 0;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--ui-border);
   pointer-events: none;
   z-index: 2100;
 }
