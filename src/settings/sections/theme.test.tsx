@@ -32,6 +32,10 @@ vi.mock("../../platform/ipc", () => ({
 }));
 vi.mock("./theme-gallery", () => ({
   ThemeGallerySection: () => <p>gallery</p>,
+  AvailableThemes: () => <p>available</p>,
+  galleryUpdates: () => new Map(),
+  useGalleryCatalog: () => ({ catalog: [], unreachable: false, retry() {} }),
+  useGalleryInstall: () => ({ busy: false, error: null, install() {} }),
 }));
 vi.mock("../../theme/theme-import", () => ({
   importThemeCss: vi.fn().mockResolvedValue("body{}"),
@@ -71,13 +75,12 @@ describe("theme settings", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("gallery")).toBeInTheDocument();
   });
-  it("lists the user's themes on the Extensions tab, with the rest behind ⋯ and Advanced", () => {
+  it("lists the user's themes on the Extensions tab, the gallery's below, the rest behind ⋯ and Advanced", () => {
     const t = resolveStrings("en");
-    const onGetMore = vi.fn();
-    render(<ThemesTab t={t} onGetMore={onGetMore} />);
+    render(<ThemesTab t={t} />);
     const row = screen.getByText("Test").closest(".plugin-card");
     expect(row).toHaveTextContent(t.themeGalleryInUse);
-    // Importing and exporting wait behind "⋯"; the gallery is Get more.
+    // Importing and exporting wait behind "⋯"; the gallery's themes follow.
     expect(
       screen.queryByRole("menuitem", { name: t.themeImportButton }),
     ).not.toBeInTheDocument();
@@ -86,9 +89,7 @@ describe("theme settings", () => {
       t.themeImportButton,
       t.themeExportButton,
     ]);
-    expect(screen.queryByText("gallery")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: t.marketGetMore }));
-    expect(onGetMore).toHaveBeenCalled();
+    expect(screen.getByText("available")).toBeInTheDocument();
     // The user's own CSS, folded under Advanced.
     expect(
       screen

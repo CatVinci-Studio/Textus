@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import type { SettingsPageProps } from "./types";
 import { PluginsPage } from "./PluginsPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
@@ -9,7 +9,12 @@ import {
   importSkill,
 } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
-import { MarketPage, type MarketKind } from "./MarketPage";
+import { AvailableSkills } from "../sections/market-skills";
+import {
+  catalogSnapshot,
+  loadCatalog,
+  subscribeCatalog,
+} from "../../plugins/store/catalog";
 
 import {
   extensionsStartTab,
@@ -23,14 +28,18 @@ const TABS = extensionsTabs();
 
 /**
  * Settings › Extensions: themes, plugins, skills and MCP servers, a tab
- * each, all laid out alike. Get more is where everything not installed yet
- * is. Desktop only, as plugins are.
+ * each, all laid out alike: what is installed, then what is available.
+ * Desktop only, as plugins are.
  */
 export function ExtensionsPage(props: SettingsPageProps) {
   const { t, onOpenFile, onFilesDeleted, onClose } = props;
   const [tab, setTabState] = useState<ExtensionsTab>(extensionsStartTab);
-  const [market, setMarket] = useState<MarketKind | null>(null);
   const [skillError, setSkillError] = useState<string | null>(null);
+  const [skillQuery, setSkillQuery] = useState("");
+  const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
+  useEffect(() => {
+    void loadCatalog();
+  }, []);
   const setTab = (next: ExtensionsTab) => {
     openExtensionsTab(next);
     setTabState(next);
@@ -41,10 +50,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
     skills: t.extensionsTabSkills,
     mcp: t.extensionsTabMcp,
   };
-  const openMarket = (kind: MarketKind) => setMarket(kind);
   const skillProps = { t, onOpenFile, onFilesDeleted, onClose };
-  if (market)
-    return <MarketPage t={t} kind={market} onBack={() => setMarket(null)} />;
   return (
     <>
       <div
@@ -67,18 +73,15 @@ export function ExtensionsPage(props: SettingsPageProps) {
       </div>
       {!props.indexing && (
         <div role="tabpanel" aria-label={label[tab]}>
-          {tab === "themes" && (
-            <ThemesTab t={t} onGetMore={() => openMarket("themes")} />
-          )}
-          {tab === "plugins" && (
-            <PluginsPage {...props} onGetMore={() => openMarket("plugins")} />
-          )}
+          {tab === "themes" && <ThemesTab t={t} />}
+          {tab === "plugins" && <PluginsPage {...props} />}
           {tab === "skills" && (
             <ExtensionsTabLayout
               t={t}
               intro={t.extensionsIntroSkills}
               help={t.extensionsSkillsHelp}
-              onGetMore={() => openMarket("skills")}
+              query={skillQuery}
+              onQuery={setSkillQuery}
               actions={[
                 {
                   label: t.agentSkillsImport,
@@ -93,9 +96,16 @@ export function ExtensionsPage(props: SettingsPageProps) {
               installedTitle={t.pluginsInstalledGroup}
               installed={
                 <>
-                  <OwnSkillsList t={t} />
-                  <BuiltinSkillsSection {...skillProps} flat />
+                  <OwnSkillsList t={t} query={skillQuery} />
+                  <BuiltinSkillsSection
+                    {...skillProps}
+                    query={skillQuery}
+                    flat
+                  />
                 </>
+              }
+              available={
+                <AvailableSkills t={t} catalog={catalog} query={skillQuery} />
               }
             />
           )}

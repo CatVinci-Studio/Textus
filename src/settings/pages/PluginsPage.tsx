@@ -10,7 +10,9 @@ import { Byline, PluginPage, statusText } from "./PluginPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
 import { usePluginActions } from "./PluginAction";
 import { ToggleRow } from "../sections/controls";
-import { plugins as pluginsIpc } from "../../platform/ipc";
+import { links, plugins as pluginsIpc } from "../../platform/ipc";
+import { AvailablePlugins } from "./AvailablePlugins";
+import { MarketPluginPage } from "./MarketPluginPage";
 import { isDesktopApp } from "../../platform/capabilities";
 import type { Strings } from "../../i18n/strings";
 import {
@@ -33,20 +35,18 @@ import { pluginMatches } from "../../plugins/store/plugin-records";
 import { PluginIcon } from "./PluginArt";
 
 /**
- * Settings › Extensions › Plugins. Nothing comes installed: Get more offers
- * the catalog, "⋯" installs from a file or loads a folder; each installed
- * plugin is a card opening its own page, and one switch turns them all.
+ * Settings › Extensions › Plugins. Nothing comes installed: one switch for
+ * plugin features, then the installed plugins and, below, the catalog's
+ * others; "⋯" installs from a file or loads a folder. Each card opens its
+ * plugin's page.
  */
-export function PluginsPage({
-  t,
-  onClose,
-  onGetMore,
-}: SettingsPageProps & { onGetMore: () => void }) {
+export function PluginsPage({ t, onClose }: SettingsPageProps) {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
   const { installing, install, enable, attempt, actionFor } =
     usePluginActions(t);
   const [open, setOpen] = useState<string | null>(null);
+  const [openItem, setOpenItem] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   useEffect(() => {
     void loadCatalog();
@@ -61,8 +61,11 @@ export function PluginsPage({
       setOpen(await installPlugin(path));
     });
 
-  const openRecord = open
-    ? snapshot.records.find((r) => r.id === open)
+  // A catalog plugin installed from its page goes on as the installed
+  // plugin's page.
+  const openId = open ?? openItem;
+  const openRecord = openId
+    ? snapshot.records.find((r) => r.id === openId)
     : undefined;
   // Plugins made in Create mode (publisher "local") go last, under their own
   // heading.
@@ -81,6 +84,22 @@ export function PluginsPage({
       onOpen={() => setOpen(record.id)}
     />
   );
+  const item =
+    openItem && catalog.status === "ready"
+      ? catalog.items.find((i) => i.id === openItem)
+      : undefined;
+  const installed = new Set(snapshot.records.map((r) => r.id));
+  // Installed from its page: the installed plugin's page instead.
+  if (item && !installed.has(item.id))
+    return (
+      <MarketPluginPage
+        item={item}
+        t={t}
+        installed={false}
+        action={actionFor(item.id)}
+        onBack={() => setOpenItem(null)}
+      />
+    );
   if (openRecord)
     return (
       <PluginPage
@@ -89,7 +108,10 @@ export function PluginsPage({
         allOn={snapshot.allOn}
         update={updateFor(openRecord.id, catalog)}
         installing={installing === openRecord.id}
-        onBack={() => setOpen(null)}
+        onBack={() => {
+          setOpen(null);
+          setOpenItem(null);
+        }}
         onEditWithAi={() => {
           onClose();
           askAi(editRequest(openRecord, t), "create");
@@ -111,7 +133,6 @@ export function PluginsPage({
       t={t}
       intro={t.extensionsIntroPlugins}
       help={t.pluginsInstallHelp}
-      onGetMore={onGetMore}
       actions={
         isDesktopApp
           ? [
@@ -130,24 +151,27 @@ export function PluginsPage({
             ]
           : []
       }
+      top={
+        <ToggleRow
+          label={t.pluginsAllLabel}
+          help={t.pluginsAllHelp}
+          checked={snapshot.allOn}
+          onChange={(on) => void attempt(() => setAllPlugins(on))}
+        />
+      }
+      off={!snapshot.allOn}
+      query={query}
+      onQuery={setQuery}
       installedTitle={t.pluginsInstalledGroup}
+      installedCount={snapshot.records.length}
       installed={
         snapshot.records.length ? (
           <>
-            <input
-              type="search"
-              className="plugin-search"
-              placeholder={t.marketSearch}
-              aria-label={t.marketSearch}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <ToggleRow
-              label={t.pluginsAllLabel}
-              help={t.pluginsAllHelp}
-              checked={snapshot.allOn}
-              onChange={(on) => void attempt(() => setAllPlugins(on))}
-            />
+            {!shown.length && (
+              <p className="plugin-empty">
+                {t.pluginsSearchNone.replace("{query}", query.trim())}
+              </p>
+            )}
             {others.map(card)}
             {mine.length > 0 && (
               <>
@@ -160,7 +184,34 @@ export function PluginsPage({
           <p className="plugin-empty">{t.pluginsNone}</p>
         )
       }
+      available={
+        <AvailablePlugins
+          t={t}
+          catalog={catalog}
+          query={query}
+          installed={installed}
+          actionFor={actionFor}
+          onOpen={(i) => setOpenItem(i.id)}
+        />
+      }
+      footer={<ListYours t={t} />}
     />
+  );
+}
+
+/** Below the catalog: how to list a plugin of one's own. */
+function ListYours({ t }: { t: Strings }) {
+  return (
+    <p className="plugin-group-help market-listing">
+      {t.marketListYours}{" "}
+      <button
+        type="button"
+        className="text-button settings-inline-button"
+        onClick={() => void links.openAboutLink("listing")}
+      >
+        {t.marketListingRules}
+      </button>
+    </p>
   );
 }
 
@@ -185,7 +236,7 @@ function PluginCard({
   const status = statusText(record, true, t);
   return (
     <div
-      className={`settings-row plugin-card${record.status === "on" && allOn ? "" : " is-off"}`}
+      className={`settings-row plugin-card${record.status === "on" || !allOn ? "" : " is-off"}`}
       data-plugin={record.id}
     >
       <button

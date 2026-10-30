@@ -8,29 +8,43 @@ export interface ExtensionsAction {
   onSelect: () => void;
 }
 
-/** One tab of Settings › Extensions: a line of what it holds, Get more (or
- *  `primary`) and other actions, the installed items, then Advanced, folded. */
+/** One tab of Settings › Extensions: a line of what it holds and its
+ *  actions, `top` (a switch over all of them), one search over both lists,
+ *  what is installed, what is available, then Advanced, folded. */
 export function ExtensionsTabLayout({
   t,
   intro,
   help,
-  onGetMore,
   primary,
   actions = [],
   error,
+  query,
+  onQuery,
+  top,
+  off = false,
   installedTitle,
+  installedCount,
   installed,
+  available,
+  footer,
   advanced,
 }: {
   t: Strings;
   intro: string;
   help?: ReactNode;
-  onGetMore?: () => void;
   primary?: ExtensionsAction;
   actions?: ExtensionsAction[];
   error?: string | null;
+  query?: string;
+  onQuery?: (query: string) => void;
+  top?: ReactNode;
+  /** `top` turned everything off: what's under it is quieter. */
+  off?: boolean;
   installedTitle: string;
+  installedCount?: number;
   installed: ReactNode;
+  available?: ReactNode;
+  footer?: ReactNode;
   advanced?: ReactNode;
 }) {
   return (
@@ -42,15 +56,6 @@ export function ExtensionsTabLayout({
         </p>
         <div className="extensions-head-actions">
           {actions.length > 0 && <MoreMenu t={t} actions={actions} />}
-          {onGetMore && (
-            <button
-              type="button"
-              className="text-button settings-inline-button extensions-get-more"
-              onClick={onGetMore}
-            >
-              {t.marketGetMore}
-            </button>
-          )}
           {primary && (
             <button
               type="button"
@@ -67,10 +72,30 @@ export function ExtensionsTabLayout({
           {error}
         </div>
       )}
-      <section className="settings-group" aria-label={installedTitle}>
-        <h2 className="settings-group-title">{installedTitle}</h2>
-        <div className="settings-group-body">{installed}</div>
-      </section>
+      {top}
+      <div className={off ? "extensions-off" : undefined}>
+        {onQuery && (
+          <input
+            type="search"
+            className="plugin-search"
+            placeholder={t.marketSearch}
+            aria-label={t.marketSearch}
+            value={query}
+            onChange={(e) => onQuery(e.target.value)}
+          />
+        )}
+        <section className="settings-group" aria-label={installedTitle}>
+          <h2 className="settings-group-title">
+            {installedTitle}
+            {!!installedCount && (
+              <span className="extensions-count">{installedCount}</span>
+            )}
+          </h2>
+          <div className="settings-group-body">{installed}</div>
+        </section>
+        {available}
+        {footer}
+      </div>
       {advanced && (
         <details className="settings-advanced extensions-advanced">
           <summary>{t.agentAdvancedGroupLabel}</summary>

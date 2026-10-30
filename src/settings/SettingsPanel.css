@@ -1340,6 +1340,16 @@ button.settings-skill-action:focus-visible {
   background: var(--bg);
 }
 
+.theme-gallery-enlarge {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
 .theme-gallery-preview img {
   display: block;
   width: 100%;

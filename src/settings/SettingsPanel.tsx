@@ -204,7 +204,7 @@ export function SettingsPanel({
       key: tabKey(tab),
       name: `${c.label} › ${tabTitles[tab]}`,
       // Read for the index only: Get more is never pressed here.
-      render: () => <ThemesTab t={t} onGetMore={() => {}} />,
+      render: () => <ThemesTab t={t} />,
     })),
   ]);
   const resultGroups = searchPages
