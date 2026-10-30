@@ -9,10 +9,11 @@ const port = Number(process.env.PLAYWRIGHT_PORT) || 1430;
 const playgroundPort = port + 10;
 /** The specs the opt-in WebKit project runs (projects below). */
 const WEBKIT_SPECS = [
-  // How AI text lands and leaves: timing differs in WebKit.
+  // How AI text lands and leaves: timing differs in WebKit. Not
+  // landing-beat.spec.ts, which compares two animations frame by frame:
+  // a busy runner's frames, not WebKit, decide that there.
   "settle-motion.spec.ts",
   "motion-edge-cases.spec.ts",
-  "landing-beat.spec.ts",
   "translate-stream.spec.ts",
   "insert-in-paragraph.spec.ts",
   "stream-edge-cases.spec.ts",
