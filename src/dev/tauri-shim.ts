@@ -970,9 +970,7 @@ export function installDevTauriShim(): void {
         ((w.__devHttpLog ??= []) as unknown[]).push({
           url: request.url,
           method: request.method ?? "GET",
-          body: request.body
-            ? decodeURIComponent(escape(atob(request.body)))
-            : null,
+          body: request.body ? textOf(request.body) : null,
         });
         const canned = (
           w.__devHttp as
@@ -1359,4 +1357,15 @@ export function installDevTauriShim(): void {
       });
     }
   };
+}
+
+/** A request body's base64 as text, or null when it isn't UTF-8 text. */
+function textOf(base64: string): string | null {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(
+      Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)),
+    );
+  } catch {
+    return null;
+  }
 }
