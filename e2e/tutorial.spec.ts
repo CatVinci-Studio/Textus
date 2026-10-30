@@ -327,6 +327,9 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
   const palette = lesson(page, "Command palette");
   await expect(palette).toContainText("Press Ctrl+Shift+P");
   await page.keyboard.press("Control+Shift+P");
+  await expect(
+    page.getByRole("dialog", { name: "Type a command…" }).getByRole("combobox"),
+  ).toBeFocused();
   await page.keyboard.type("Zen Mode");
   await page.keyboard.press("Enter");
   await expect(ticked(palette)).toHaveCount(1);
