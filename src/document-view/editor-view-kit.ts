@@ -54,12 +54,14 @@ export async function closeViews(): Promise<void> {
   await Promise.all(opened.splice(0).map((editor) => editor.destroy()));
 }
 
-/** `markdown` opened as a file is, the caret at its end. */
+/** `markdown` opened as a file is, the caret at its end. `ai` lets the AI
+ *  features run, as they do outside the tutorial. */
 export async function openView(
   markdown = "",
   settings: Partial<Settings> = {},
+  options: { ai?: boolean } = {},
 ): Promise<TestView> {
-  const editor = await createTestEditor(markdown, settings);
+  const editor = await createTestEditor(markdown, settings, options);
   opened.push(editor);
   const view = editor.ctx.get(editorViewCtx);
   const source = editor.action((ctx) =>

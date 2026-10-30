@@ -4,10 +4,12 @@ import { loadSettings, type Settings } from "../prefs/SettingsContext";
 
 // Test-only: the full editor chain MilkdownEditor builds, mounted in jsdom
 // with no-op callbacks, for tests that need real parsing and serializing.
-// Callers destroy what they create. `settings` overrides the stored ones.
+// Callers destroy what they create. `settings` overrides the stored ones;
+// the AI features stay quiet unless `ai` is set.
 export async function createTestEditor(
   markdown: string,
   settings: Partial<Settings> = {},
+  { ai = false }: { ai?: boolean } = {},
 ): Promise<Editor> {
   const root = document.createElement("div");
   document.body.appendChild(root);
@@ -27,7 +29,7 @@ export async function createTestEditor(
       getFocusedSentence: () => null,
     },
     { onMount() {}, onUnmount() {} },
-    { current: "muted" },
+    { current: ai ? null : "muted" },
     () => "",
     async () => null,
   );
