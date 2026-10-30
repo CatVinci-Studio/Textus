@@ -23,6 +23,36 @@ test("the phone menu opens the sidebar as a drawer over the page", async ({
   expect(pane?.x).toBe(0);
   expect(pane?.width).toBe(430);
 
+  // The screen's edge strips are the page as the scrim dims it, light and dark.
+  for (const scheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    const [strip, dimmed] = await page.evaluate(() => {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      const ctx = canvas.getContext("2d")!;
+      const pixel = (...colours: string[]) => {
+        for (const colour of colours) {
+          ctx.fillStyle = colour;
+          ctx.fillRect(0, 0, 1, 1);
+        }
+        return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+      };
+      const page = getComputedStyle(document.documentElement)
+        .getPropertyValue("--ui-bg")
+        .trim();
+      const scrim = getComputedStyle(
+        document.querySelector(".sidebar-scrim")!,
+      ).backgroundColor;
+      return [
+        pixel(getComputedStyle(document.body).backgroundColor),
+        pixel(page, scrim),
+      ];
+    });
+    strip.forEach((value, i) =>
+      expect(Math.abs(value - dimmed[i])).toBeLessThanOrEqual(2),
+    );
+  }
+
   // A tap beside the drawer closes it.
   await page.locator(".sidebar-scrim").tap({ position: { x: 400, y: 500 } });
   await expect(sidebar).toHaveClass(/sidebar-collapsed/);

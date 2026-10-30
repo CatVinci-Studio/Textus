@@ -101,20 +101,24 @@
 }
 
 /* WebKit paints the safe-area strips from the body's background colour alone.
-   While something covers the page they take its colour, so each translucent
-   scrim is pre-mixed over the page here. A closing surface gives them back. */
+   While something covers the page they take its colour, so each scrim is
+   pre-mixed over the page here: --ui-overlay and --ui-overlay-strong as
+   solid colours. A closing surface gives them back. */
 :root[data-window-chrome="mobile"] {
   --phone-dim-overlay: color-mix(in srgb, var(--ui-bg) 70%, rgb(20 27 40));
+  --phone-dim-strong: color-mix(in srgb, var(--ui-bg) 40%, black);
 }
 
 @media (prefers-color-scheme: dark) {
   :root[data-window-chrome="mobile"]:not([data-theme="light"]) {
     --phone-dim-overlay: color-mix(in srgb, var(--ui-bg) 52%, black);
+    --phone-dim-strong: color-mix(in srgb, var(--ui-bg) 28%, black);
   }
 }
 
 :root[data-window-chrome="mobile"][data-theme="dark"] {
   --phone-dim-overlay: color-mix(in srgb, var(--ui-bg) 52%, black);
+  --phone-dim-strong: color-mix(in srgb, var(--ui-bg) 28%, black);
 }
 
 /* Settings fills the phone's screen with iOS's grouped page colour, which the
@@ -137,12 +141,16 @@
   }
 }
 
-/* The first-launch language card and the tutorial dim the whole screen,
-   strips included. */
+/* Every scrim over the whole screen: the first-launch language card, the
+   tutorial, dialogs, action sheets and bottom cards. */
 :root[data-window-chrome="mobile"]:has(
-    :is(.language-welcome-backdrop, .tutorial-backdrop):not(
-      [data-state="closing"]
-    )
+    :is(
+      .language-welcome-backdrop,
+      .tutorial-backdrop,
+      .close-prompt-overlay,
+      .action-sheet-scrim,
+      .bottom-card-scrim
+    ):not([data-state="closing"])
   )
   body {
   background: var(--phone-dim-overlay);
@@ -154,20 +162,14 @@
       .sidebar-scrim:not([data-state="closing"])
     )
     body {
-    background: color-mix(in srgb, var(--ui-bg) 75%, black);
+    background: var(--phone-dim-overlay);
   }
 }
 
+/* A diagram opened full screen, over the darker scrim. */
 :root[data-window-chrome="mobile"]:has(
-    .close-prompt-overlay:not([data-state="closing"])
+    .diagram-viewer:not(.diagram-viewer-leaving)
   )
   body {
-  background: var(--phone-dim-overlay);
-}
-
-:root[data-window-chrome="mobile"]:has(
-    .action-sheet-scrim:not([data-state="closing"])
-  )
-  body {
-  background: color-mix(in srgb, var(--ui-bg) 70%, black);
+  background: var(--phone-dim-strong);
 }
