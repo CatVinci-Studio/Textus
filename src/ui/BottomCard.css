@@ -57,7 +57,7 @@
 
 .bottom-card-actions button {
   flex: 1;
-  padding: 13px 12px;
+  padding: 12px 12px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   border: 1px solid var(--ui-border);

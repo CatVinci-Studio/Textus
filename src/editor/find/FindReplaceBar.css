@@ -8,7 +8,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 6px 8px;
+  padding: 4px 8px;
   font-size: var(--text-control);
   animation: motion-drop-in var(--dur-base) var(--ease-out);
 }
@@ -26,7 +26,7 @@
 .find-replace-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .find-replace-chevron {
@@ -67,7 +67,7 @@
 .find-replace-input {
   flex: 1;
   min-width: 0;
-  padding: 3px 2px;
+  padding: 4px 2px;
   border: none;
   border-radius: var(--shape-pill);
   corner-shape: round;
@@ -110,7 +110,7 @@
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
-  padding: 4px 7px;
+  padding: 4px 8px;
   font-size: var(--text-secondary);
   cursor: pointer;
   background: transparent;
@@ -147,7 +147,7 @@
 .find-replace-close {
   border: none !important;
   line-height: 1;
-  padding: 4px 6px !important;
+  padding: 4px 4px !important;
   color: var(--ui-muted);
 }
 

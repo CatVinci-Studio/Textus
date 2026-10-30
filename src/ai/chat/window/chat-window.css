@@ -22,7 +22,7 @@
   justify-content: flex-end;
   gap: 4px;
   height: 28px;
-  padding: 0 6px;
+  padding: 0 4px;
 }
 
 /* Level with the traffic lights, as the editor's .window-bar is. */
@@ -33,7 +33,7 @@
 /* This row's padding is 6px, not the editor bar's 12px, so the caption's
    edge-to-edge offset has to be re-cancelled to match. */
 :root[data-window-chrome="app"] .chat-window-header .window-caption {
-  margin-right: -6px;
+  margin-right: -4px;
 }
 
 .chat-window-doc {

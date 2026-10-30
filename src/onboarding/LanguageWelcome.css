@@ -22,7 +22,7 @@
   max-height: 100%;
   overflow-y: auto;
   width: min(520px, 100%);
-  padding: 34px;
+  padding: 32px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-l);
   background: var(--ui-bg);
@@ -46,7 +46,7 @@
 }
 
 .language-welcome h1 {
-  margin: 5px 0 7px;
+  margin: 4px 0 8px;
   font-size: 26px;
   font-weight: 650;
 }
@@ -66,14 +66,14 @@
 .language-welcome-continue {
   gap: 8px;
   width: 100%;
-  margin-top: 18px;
+  margin-top: 20px;
   font-size: var(--text-control);
   cursor: pointer;
 }
 
 @media (max-width: 520px) {
   .language-welcome {
-    padding: 26px 20px;
+    padding: 24px 20px;
   }
 }
 

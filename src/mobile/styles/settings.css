@@ -307,7 +307,7 @@
   :root[data-window-chrome="mobile"] .settings-skill-actions {
     order: 3;
     flex-basis: 100%;
-    margin: 0 0 0 -6px;
+    margin: 0 0 0 -4px;
   }
 
   /* No hover on glass: a tapped row stays as it was. */

@@ -256,7 +256,7 @@ button.plugin-card-open:hover .plugin-card-name {
   font-size: var(--text-caption);
 }
 .plugin-official {
-  padding: 0 6px;
+  padding: 0 4px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: color-mix(in srgb, var(--ui-primary) 12%, transparent);
@@ -307,7 +307,7 @@ button.plugin-card-open:hover .plugin-card-name {
   width: 100%;
   box-sizing: border-box;
   margin: var(--space-2) 0 var(--space-3);
-  padding: 6px 10px;
+  padding: 4px 8px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
@@ -538,7 +538,7 @@ button.plugin-card-open:hover .plugin-card-name {
   /* The status group lets clicks through to the drag region; this one
      takes them. */
   pointer-events: auto;
-  padding: 0 6px;
+  padding: 0 4px;
   border: 0;
   border-radius: var(--shape-pill);
   corner-shape: round;
@@ -635,7 +635,7 @@ button.plugin-card-open:hover .plugin-card-name {
 /* Installed, then Available: a count after each title; Available folds,
    with its sort and the fold button on its title's line. */
 .extensions-count {
-  margin-left: 6px;
+  margin-left: 8px;
   color: var(--ui-muted);
   font-weight: 400;
 }
@@ -703,7 +703,7 @@ button.plugin-card-open:hover .plugin-card-name {
   margin-top: 2px;
 }
 .mcp-tool {
-  padding: 0 6px;
+  padding: 0 4px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: var(--ui-subtle);
@@ -752,7 +752,7 @@ button.mcp-homepage:hover {
 /* "Recommended", "More plugins", "Made by you": a quiet heading over a
    run of cards. */
 .plugin-subgroup-title {
-  margin: var(--space-3) 0 6px;
+  margin: var(--space-3) 0 8px;
   padding-left: 4px;
   color: var(--ui-muted);
   font-size: var(--text-caption);

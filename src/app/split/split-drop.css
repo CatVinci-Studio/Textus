@@ -16,7 +16,7 @@
   left: 0;
   z-index: 51;
   max-width: 220px;
-  padding: 3px 10px;
+  padding: 4px 8px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;

@@ -12,7 +12,7 @@
 }
 .main-pane.main-pane-split > .tab-bar.tab-bar-inner {
   height: calc(var(--header-height) - 28px);
-  padding-top: 6px;
+  padding-top: 4px;
 }
 
 /* A pane holds its tab's editor as the column did: a column of its own,

@@ -342,9 +342,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   min-height: var(--control-height);
-  padding: 0 14px;
+  padding: 0 12px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
@@ -367,7 +367,7 @@
   .inline-chat-send
 ) {
   min-height: var(--control-height-sm);
-  padding: 0 10px;
+  padding: 0 8px;
   font-size: var(--text-secondary);
 }
 
@@ -598,7 +598,7 @@
   appearance: none;
   -webkit-appearance: none;
   min-height: var(--control-height);
-  padding: 0 26px 0 10px;
+  padding: 0 24px 0 8px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
@@ -717,7 +717,7 @@
   .quick-ask-split-menu-item
 ) {
   width: 100%;
-  padding: 6px 10px;
+  padding: 4px 8px;
   border: none;
   border-radius: var(--shape-s);
   background: transparent;
@@ -747,7 +747,7 @@
 
 :is(.app-menu-separator, .context-menu-separator, .project-bar-menu-sep) {
   height: 1px;
-  margin: 4px 6px;
+  margin: 4px 8px;
   background: var(--ui-border);
 }
 

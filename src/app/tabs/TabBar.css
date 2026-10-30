@@ -6,7 +6,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 34px 10px 6px;
+  padding: 32px 8px 4px;
   overflow-x: auto;
   /* A scrollbar would make the bar taller than its neighbours' rows; it
      scrolls by trackpad or wheel all the same. */
@@ -28,13 +28,13 @@
 .tab-pill {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   /* Sized by content up to max-width; when tabs stop fitting they shrink
      together to min-width, then the bar scrolls. */
   flex-shrink: 1;
   min-width: 90px;
   max-width: 200px;
-  padding: 5px 8px;
+  padding: 4px 8px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   font-size: var(--text-secondary);
@@ -139,7 +139,7 @@
   cursor: pointer;
   color: var(--ui-muted);
   font-size: var(--text-body-large);
-  padding: 4px 10px;
+  padding: 4px 8px;
   border-radius: var(--shape-pill);
   corner-shape: round;
 }

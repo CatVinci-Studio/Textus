@@ -4,12 +4,12 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 10px 14px 18px;
+  padding: 8px 12px 16px;
   border-bottom: 0;
 }
 
 .memory-no-project {
-  padding: 18px 16px;
+  padding: 16px 16px;
   color: var(--ui-muted);
   line-height: 1.6;
 }
@@ -17,7 +17,7 @@
 .memory-sections {
   display: flex;
   flex-direction: column;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .memory-section {
@@ -43,7 +43,7 @@
 }
 
 .memory-hint {
-  margin: 2px 0 10px;
+  margin: 2px 0 12px;
   font-size: var(--text-caption);
   line-height: 1.5;
   color: var(--ui-muted);
@@ -73,7 +73,7 @@
 }
 
 .memory-count {
-  padding: 0 6px;
+  padding: 0 4px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: color-mix(in srgb, var(--ui-text) 7%, transparent);
@@ -124,8 +124,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 3px;
-  padding: 10px 12px;
+  gap: 4px;
+  padding: 8px 12px;
   border: 1px solid var(--chat-hairline, var(--ui-border));
   border-radius: var(--shape-m);
   background: var(--chat-card-bg, var(--ui-surface));
@@ -162,7 +162,7 @@
 }
 
 .memory-aliases span {
-  padding: 0 6px;
+  padding: 0 4px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: color-mix(in srgb, var(--ui-text) 7%, transparent);
@@ -182,7 +182,7 @@
 }
 
 .memory-empty {
-  padding: 12px 14px;
+  padding: 12px 12px;
   border: 1px dashed var(--chat-hairline, var(--ui-border));
   border-radius: var(--shape-m);
   color: var(--ui-muted);
@@ -197,12 +197,12 @@
 .memory-empty-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .memory-empty-actions button {
-  padding: 5px 12px;
+  padding: 4px 12px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   border: 1px solid var(--ui-border);
@@ -231,9 +231,9 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 3px;
+  gap: 4px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 0;
   background: none;
   color: inherit;
@@ -280,14 +280,14 @@
 /* "AI remembered": personal, then the project's, each item its text, a
    line of what and when, and its actions. */
 .memory-remembered-group + .memory-remembered-group {
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .memory-remembered-group h5 {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-size: var(--text-caption);
   font-weight: 500;
   color: var(--ui-muted);
@@ -328,7 +328,7 @@
   width: 100%;
   box-sizing: border-box;
   margin: 0 0 12px;
-  padding: 6px 10px;
+  padding: 4px 8px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
@@ -363,7 +363,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
+  gap: 8px;
   margin-top: 2px;
   font-size: var(--text-caption);
   color: var(--ui-muted);
@@ -374,7 +374,7 @@
 }
 
 .memory-badge {
-  padding: 0 6px;
+  padding: 0 4px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: color-mix(in srgb, var(--ui-text) 7%, transparent);

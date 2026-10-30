@@ -58,7 +58,7 @@
 .review-note {
   position: absolute;
   box-sizing: border-box;
-  padding: 9px 12px 9px;
+  padding: 8px 12px 8px;
   border-radius: var(--shape-m);
   border: 1px solid var(--review-note-border);
   background: var(--review-note-bg);
@@ -99,7 +99,7 @@
 .review-note-by {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 2px;
   font-size: var(--text-caption);
   color: var(--ui-muted);
@@ -134,7 +134,7 @@
    card's height would restack the margin on every frame. */
 .review-note-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   max-height: 0;
   margin-top: 0;
   overflow: hidden;
@@ -148,13 +148,13 @@
 .review-note:is(:hover, :focus-within, .review-note-hot, .review-note-popover)
   .review-note-actions {
   max-height: 32px;
-  margin-top: 7px;
+  margin-top: 8px;
   opacity: 1;
   transform: none;
 }
 
 .review-note-actions button {
-  padding: 2px 10px;
+  padding: 2px 8px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   border: 1px solid var(--review-note-border);
@@ -263,8 +263,8 @@
 .review-note-group-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 6px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .review-note-group-list > .review-note {

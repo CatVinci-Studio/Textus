@@ -12,7 +12,7 @@
 }
 
 :root[data-window-chrome="mobile"] .tab-bar {
-  padding-top: calc(var(--mobile-bar) + 6px);
+  padding-top: calc(var(--mobile-bar) + 4px);
 }
 
 :root[data-window-chrome="mobile"]
@@ -352,7 +352,7 @@
   }
 
   :root[data-window-chrome="mobile"] .tab-pill-dirty-dot {
-    margin-right: 6px;
+    margin-right: 8px;
   }
 
   :root[data-window-chrome="mobile"] .tab-pill:hover:not(.tab-pill-active) {
