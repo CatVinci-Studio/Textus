@@ -5,11 +5,7 @@
 /* The chat surfaces' own two tones, set where they are drawn (the editor
    palette can be redefined below :root). */
 :is(.agent-panel-view, .chat-window, .inline-chat) {
-  --chat-card-bg: color-mix(
-    in srgb,
-    var(--ui-text) 3%,
-    var(--ui-surface, var(--ui-bg))
-  );
+  --chat-card-bg: color-mix(in srgb, var(--ui-text) 3%, var(--ui-surface));
   --chat-hairline: color-mix(in srgb, var(--ui-border) 80%, transparent);
 }
 
@@ -31,11 +27,7 @@
 /* A selection that shows in both palettes: the dark one's default was hardly
    apart from the panel. */
 .inline-chat ::selection {
-  background: color-mix(
-    in srgb,
-    var(--ui-accent) 35%,
-    var(--ui-surface, var(--ui-bg))
-  );
+  background: color-mix(in srgb, var(--ui-accent) 35%, var(--ui-surface));
 }
 
 /* It hangs below its paragraph and grows down out of it. */
@@ -134,7 +126,7 @@
   padding: var(--space-2);
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-m);
-  background: var(--ui-surface, var(--ui-bg));
+  background: var(--ui-surface);
   box-shadow: var(--shadow-raised);
   transition:
     border-color var(--dur-fast) var(--ease-standard),
@@ -700,7 +692,7 @@
   padding: 4px 0;
   border: 1px solid var(--chat-hairline, var(--ui-border));
   border-radius: var(--shape-s);
-  background: var(--ui-surface, var(--ui-bg));
+  background: var(--ui-surface);
   overflow: hidden;
   animation: motion-disclose-in var(--dur-fast) var(--ease-out);
   font-family: var(--doc-mono-font, var(--font-mono));
@@ -850,11 +842,7 @@
   color: var(--ui-text);
   /* Over the panel's own colour rather than see-through: on the phone the
      sheet's composer area passes over the message list while it moves. */
-  background: color-mix(
-    in srgb,
-    var(--ui-accent) 10%,
-    var(--ui-surface, var(--ui-bg))
-  );
+  background: color-mix(in srgb, var(--ui-accent) 10%, var(--ui-surface));
 }
 
 .inline-chat-pending-bar[data-state="closing"] {
@@ -864,7 +852,7 @@
 /* What follows the bar paints over it while it moves. */
 .inline-chat-pending-bar ~ :is(.inline-chat-bar, .inline-chat-skill-menu) {
   position: relative;
-  background: var(--ui-surface, var(--ui-bg));
+  background: var(--ui-surface);
 }
 
 @keyframes pending-bar-in {

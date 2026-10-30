@@ -195,5 +195,5 @@
 .editor-scroll {
   flex: 1;
   overflow-y: auto;
-  background: var(--ui-surface, var(--ui-bg));
+  background: var(--doc-bg);
 }

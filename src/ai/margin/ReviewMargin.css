@@ -164,7 +164,7 @@
   border-radius: var(--shape-pill);
   corner-shape: round;
   border: 1px solid var(--review-note-border);
-  background: var(--ui-surface, var(--ui-bg));
+  background: var(--ui-surface);
   color: var(--ui-text);
   font: inherit;
   font-size: var(--text-caption);
@@ -359,32 +359,16 @@
   --review-note-line: #c99a2e;
   --review-anchor-bg: rgb(232 190 80 / 22%);
   --review-anchor-hot-bg: rgb(232 190 80 / 42%);
-  --review-note-bg: color-mix(
-    in srgb,
-    #f6eedb 55%,
-    var(--ui-surface, var(--ui-bg))
-  );
-  --review-note-border: color-mix(
-    in srgb,
-    #d9c79a 45%,
-    var(--ui-surface, var(--ui-bg))
-  );
+  --review-note-bg: color-mix(in srgb, #f6eedb 55%, var(--ui-surface));
+  --review-note-border: color-mix(in srgb, #d9c79a 45%, var(--ui-surface));
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --review-anchor-bg: rgb(232 190 80 / 16%);
     --review-anchor-hot-bg: rgb(232 190 80 / 30%);
-    --review-note-bg: color-mix(
-      in srgb,
-      #4a3f25 35%,
-      var(--ui-surface, var(--ui-bg))
-    );
-    --review-note-border: color-mix(
-      in srgb,
-      #8a7440 40%,
-      var(--ui-surface, var(--ui-bg))
-    );
+    --review-note-bg: color-mix(in srgb, #4a3f25 35%, var(--ui-surface));
+    --review-note-border: color-mix(in srgb, #8a7440 40%, var(--ui-surface));
   }
 }
 
@@ -409,26 +393,14 @@
 :root[data-theme="dark"] {
   --review-anchor-bg: rgb(232 190 80 / 16%);
   --review-anchor-hot-bg: rgb(232 190 80 / 30%);
-  --review-note-bg: color-mix(
-    in srgb,
-    #4a3f25 35%,
-    var(--ui-surface, var(--ui-bg))
-  );
-  --review-note-border: color-mix(
-    in srgb,
-    #8a7440 40%,
-    var(--ui-surface, var(--ui-bg))
-  );
+  --review-note-bg: color-mix(in srgb, #4a3f25 35%, var(--ui-surface));
+  --review-note-border: color-mix(in srgb, #8a7440 40%, var(--ui-surface));
 }
 
 /* A rewrite's changed sentence in the margin, in the editor's own surface
    tone: a revision is a draft of the text itself. */
 .revision-note {
-  background: color-mix(
-    in srgb,
-    var(--ui-text) 3%,
-    var(--ui-surface, var(--ui-bg))
-  );
+  background: color-mix(in srgb, var(--ui-text) 3%, var(--ui-surface));
   border-color: color-mix(in srgb, var(--ui-border) 80%, transparent);
 }
 

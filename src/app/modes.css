@@ -36,7 +36,7 @@
   left: 0;
   right: 0;
   z-index: 1;
-  background: var(--ui-surface, var(--ui-bg));
+  background: var(--ui-surface);
 }
 
 /* A docked panel (the narrow and phone layouts already lie over the
@@ -71,11 +71,7 @@
   border-radius: var(--shape-pill);
   corner-shape: round;
   /* Opaque: it sits over the first line of text until it fades. */
-  background: color-mix(
-    in srgb,
-    var(--ui-text) 8%,
-    var(--ui-surface, var(--ui-bg))
-  );
+  background: color-mix(in srgb, var(--ui-text) 8%, var(--ui-surface));
   color: var(--ui-muted);
   font-size: var(--text-footnote);
   pointer-events: none;

@@ -13,7 +13,7 @@
   height: 1.8em;
   padding: 0;
   color: var(--ui-muted);
-  background: var(--ui-surface, var(--ui-bg));
+  background: var(--ui-surface);
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;

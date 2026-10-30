@@ -181,7 +181,7 @@
   border: none;
   border-radius: var(--shape-s);
   background: transparent;
-  color: var(--ui-text, var(--ui-muted));
+  color: var(--ui-text);
   cursor: pointer;
   overflow-wrap: anywhere;
   hyphens: auto;

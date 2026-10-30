@@ -55,7 +55,7 @@
     animation: none;
     box-shadow:
       var(--shadow-sheet),
-      0 200px 0 var(--ui-surface, var(--ui-bg));
+      0 200px 0 var(--ui-surface);
     will-change: transform;
   }
 
@@ -64,7 +64,7 @@
     .agent-panel-body
     > :not(.agent-panel-empty, .inline-chat-messages) {
     transform: translateY(var(--sheet-lift, 0px));
-    background-color: var(--ui-surface, var(--ui-bg));
+    background-color: var(--ui-surface);
   }
 
   :root[data-window-chrome="mobile"] .agent-panel .inline-chat-messages {

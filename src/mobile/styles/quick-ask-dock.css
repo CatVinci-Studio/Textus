@@ -25,7 +25,7 @@
   border-width: 1px 0 0;
   border-color: var(--ui-border);
   border-radius: var(--shape-l) var(--shape-l) 0 0;
-  background: var(--ui-bg, var(--ui-surface));
+  background: var(--ui-bg);
   box-shadow: var(--shadow-sheet);
   /* It rises with the keyboard, from the bottom edge. */
   animation: motion-sheet-in var(--dur-slow) var(--ease-spring);

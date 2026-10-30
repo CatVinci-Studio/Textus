@@ -157,11 +157,10 @@
   overflow: hidden;
   aspect-ratio: 3 / 4;
   border-radius: var(--shape-xs);
-  /* The page's colour where the list's surface doesn't name one: a white
-     fallback put dark-mode text on white sheets. */
-  background: var(--ui-surface, var(--ui-bg));
+  /* The document's page, in its theme. */
+  background: var(--doc-bg);
   box-shadow:
-    0 0 0 0.5px color-mix(in srgb, var(--ui-text, #000) 18%, transparent),
+    0 0 0 0.5px color-mix(in srgb, var(--ui-text) 18%, transparent),
     var(--shadow-tile);
 }
 

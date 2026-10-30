@@ -561,7 +561,7 @@ button.plugin-card-open:hover .plugin-card-name {
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: color-mix(in srgb, var(--ui-text) 72%, transparent);
-  color: var(--ui-surface, var(--ui-bg));
+  color: var(--ui-surface);
 }
 .plugin-block-cursor-empty {
   display: inline-block;

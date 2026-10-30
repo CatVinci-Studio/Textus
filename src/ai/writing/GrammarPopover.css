@@ -124,11 +124,7 @@
 .grammar-popover-apply kbd {
   padding: 1px 6px;
   border-radius: var(--shape-xs);
-  background: color-mix(
-    in srgb,
-    var(--ui-surface, var(--ui-bg)) 20%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--ui-surface) 20%, transparent);
   font: 500 calc(10.5px * var(--ui-text-scale, 1)) var(--font-mono);
 }
 

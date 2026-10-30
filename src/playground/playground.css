@@ -102,7 +102,7 @@ body {
 .editor-scroll {
   flex: 1;
   overflow-y: auto;
-  background: var(--ui-surface, var(--ui-bg));
+  background: var(--ui-surface);
 }
 
 /* Source mode fills the rest of the page, as the editor does. */

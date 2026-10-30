@@ -602,7 +602,7 @@
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background-color: var(--ui-surface, var(--ui-bg));
+  background-color: var(--ui-surface);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.8L5 6.8L8 3.8' stroke='%23888888' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 8px center;
@@ -800,7 +800,7 @@ input[type="checkbox"].ui-check {
   margin: 0;
   border: 1px solid color-mix(in srgb, var(--ui-muted) 55%, var(--ui-border));
   border-radius: var(--shape-xs);
-  background: var(--ui-surface, var(--ui-bg));
+  background: var(--ui-surface);
   cursor: pointer;
   transition:
     background-color var(--dur-fast) var(--ease-standard),
@@ -829,12 +829,11 @@ input[type="checkbox"].ui-check:checked {
   border: 3px solid transparent;
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: color-mix(in srgb, var(--ui-muted, #888) 35%, transparent)
-    padding-box;
+  background: color-mix(in srgb, var(--ui-muted) 35%, transparent) padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in srgb, var(--ui-muted, #888) 55%, transparent);
+  background-color: color-mix(in srgb, var(--ui-muted) 55%, transparent);
 }
 
 ::-webkit-scrollbar-corner {

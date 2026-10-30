@@ -222,7 +222,7 @@
 
 .tutorial-task-line.is-complete .tutorial-task-icon {
   border-color: var(--ui-accent-fill);
-  color: var(--ui-on-primary, #fff);
+  color: var(--ui-on-primary);
   background: var(--ui-accent-fill);
 }
 
