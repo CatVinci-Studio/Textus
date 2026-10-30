@@ -216,3 +216,12 @@ it("Alt+Up and Alt+Down move a list item, caret along", async () => {
   t.press("Alt+ArrowDown");
   expect(t.markdown()).toBe("* one\n* two!");
 });
+
+it("Enter in a table's last row starts the new row at its first cell", async () => {
+  const t = await open("| a | b |\n|---|---|\n| 1 | 2 |\n");
+  t.caretAt("2", 1);
+  t.press("Enter");
+  t.type("x");
+  const rows = [...t.view.dom.querySelectorAll("tr")];
+  expect(rows[2].querySelector("td")?.textContent).toBe("x");
+});
