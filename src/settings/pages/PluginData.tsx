@@ -61,7 +61,11 @@ export function PluginData({
   };
   return (
     <SettingRow label={t.pluginDataLabel} hint={parts.join(" · ")}>
-      <button type="button" onClick={() => void clear()}>
+      <button
+        type="button"
+        className="text-button settings-inline-button"
+        onClick={() => void clear()}
+      >
         {t.pluginDataClear}
       </button>
     </SettingRow>

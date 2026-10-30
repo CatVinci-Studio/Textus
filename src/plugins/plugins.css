@@ -241,6 +241,10 @@ button.plugin-card-open:hover .plugin-card-name {
   font-size: var(--text-body);
   line-height: 1.6;
 }
+/* As far from the group above it as groups are from each other. */
+* + .plugin-readme {
+  margin-top: var(--space-6);
+}
 .plugin-card-description {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -277,7 +281,7 @@ button.plugin-card-open:hover .plugin-card-name {
 /* One plugin's page. */
 /* Back to the page before: a button of its own, easy to find. */
 .plugin-back {
-  margin: 0 0 var(--space-3);
+  margin: var(--space-3) 0;
   padding: 4px 12px 4px 8px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
@@ -328,7 +332,7 @@ button.plugin-card-open:hover .plugin-card-name {
   font-size: var(--text-footnote);
 }
 .plugin-detail-actions {
-  padding: var(--space-2) 0;
+  padding: var(--space-4) 0 var(--space-2);
 }
 .plugin-settings-page {
   display: flex;
@@ -384,9 +388,10 @@ button.plugin-card-open:hover .plugin-card-name {
   font-family: var(--font-mono);
   resize: vertical;
 }
+/* Inside a group's card, which already keeps the text off its edge. */
 .plugin-empty {
   margin: 0;
-  padding: var(--space-3);
+  padding: var(--space-3) 0;
   color: var(--ui-muted);
   font-size: var(--text-footnote);
 }
