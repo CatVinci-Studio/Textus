@@ -1,7 +1,11 @@
 import { schedule as scheduleIpc } from "../../platform/ipc-schedule";
 import { listenToThisWindow, unlistenAll } from "../../platform/events";
 import type { DocumentPlace } from "../app-bridge";
-import { setNoticeSettings, type SettingsAccess } from "./schedule-notice";
+import {
+  clearNoticeSettings,
+  setNoticeSettings,
+  type SettingsAccess,
+} from "./schedule-notice";
 import { windowIsDark } from "../views/theme-vars";
 import { pluginPlatform } from "../manager";
 import { currentAppState, watchAppState } from "./app-state";
@@ -38,7 +42,8 @@ export function connectScheduleWindow(
           );
       })
       .catch(() => {});
-  setNoticeSettings(() => settings.current);
+  const access = () => settings.current;
+  setNoticeSettings(access);
   run();
   open();
   const stopState = watchAppState();
@@ -47,7 +52,7 @@ export function connectScheduleWindow(
     listenToThisWindow("notification-open", open),
   );
   return () => {
-    setNoticeSettings(null);
+    clearNoticeSettings(access);
     stopState();
     stopEvents();
   };
