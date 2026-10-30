@@ -12,9 +12,9 @@
   width: 1.8em;
   height: 1.8em;
   padding: 0;
-  color: var(--editor-muted);
-  background: var(--editor-bg, var(--bg));
-  border: 1px solid var(--editor-border);
+  color: var(--ui-muted);
+  background: var(--ui-surface, var(--ui-bg));
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
   cursor: zoom-in;
@@ -27,7 +27,7 @@
   opacity: 1;
 }
 .mermaid-zoom:hover {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 /* Two corner arrows pointing out, in the button's text colour. */
 .mermaid-zoom-icon {
@@ -44,7 +44,7 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-modal);
-  background: var(--viewer-bg);
+  background: var(--ui-overlay-strong);
   animation: motion-fade-in var(--dur-base) var(--ease-out) both;
 }
 .diagram-viewer-leaving {
@@ -77,8 +77,8 @@
   font-size: 1.2rem;
   line-height: 1;
   color: var(--text);
-  background: var(--bg);
-  border: 1px solid var(--border-color);
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
   border-radius: 50%;
   corner-shape: round;
   cursor: pointer;
@@ -90,7 +90,7 @@
   transform: translateX(-50%);
   font-size: 0.8rem;
   color: var(--text-muted, var(--text));
-  background: var(--bg);
+  background: var(--ui-bg);
   padding: 0.2rem 0.6rem;
   border-radius: var(--shape-pill);
   corner-shape: round;

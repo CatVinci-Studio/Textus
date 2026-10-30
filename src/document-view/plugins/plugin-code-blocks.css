@@ -8,9 +8,9 @@
 .plugin-code-block {
   position: relative;
   margin: var(--doc-gap-box) 0;
-  border: 1px solid var(--editor-border);
+  border: 1px solid var(--doc-border);
   border-radius: var(--doc-radius);
-  background: var(--editor-code-bg);
+  background: var(--doc-code-bg);
   overflow: hidden;
 }
 
@@ -32,9 +32,9 @@
   inset-inline-end: 6px;
   z-index: 1;
   padding: 2px 6px;
-  border: 1px solid var(--editor-border);
+  border: 1px solid var(--doc-border);
   border-radius: var(--doc-radius-sm);
-  background: var(--editor-bg);
+  background: var(--doc-bg);
   color: var(--text-muted);
   font: 12px var(--font-mono);
   cursor: pointer;

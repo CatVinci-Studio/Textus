@@ -5,8 +5,8 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: var(--editor-bg);
-  color: var(--editor-text);
+  background: var(--ui-surface);
+  color: var(--ui-text);
   overflow: hidden;
 }
 
@@ -42,7 +42,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: var(--text-caption);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   /* The row is the window's drag handle; the label must not swallow that. */
   pointer-events: none;
   user-select: none;
@@ -52,7 +52,7 @@
    like the docked one. Pinned shows by colour; the icon never changes. */
 .chat-window-pin-on,
 .chat-window-pin-on:not(:disabled):hover {
-  color: var(--editor-accent);
+  color: var(--ui-accent);
 }
 
 .chat-window-body {
@@ -78,7 +78,7 @@
 /* The composer is a box of its own; the / and @ lists above it keep their
    rule. */
 .chat-window-body .inline-chat-skill-menu {
-  border-top: 1px solid var(--chat-hairline, var(--editor-border));
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
 }
 
 /* These sit under the header (on Windows it has the only close button), so
@@ -93,13 +93,13 @@
   padding: 24px;
   text-align: center;
   font-size: var(--text-body);
-  color: var(--editor-muted);
-  background: var(--editor-bg);
+  color: var(--ui-muted);
+  background: var(--ui-surface);
 }
 
 /* Textus AI turned off: its note in the same place. */
 .chat-window-ai-off {
   flex: 1;
   min-height: 0;
-  background: var(--editor-bg);
+  background: var(--ui-surface);
 }

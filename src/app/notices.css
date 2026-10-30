@@ -8,16 +8,16 @@
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  border: 1px solid var(--editor-border);
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-m);
-  background: var(--bg);
+  background: var(--ui-bg);
   box-shadow: var(--shadow-popover);
   font-size: var(--text-body);
 }
 
 .update-toast-secondary {
   background: transparent;
-  color: var(--editor-muted, inherit);
+  color: var(--ui-muted, inherit);
 }
 
 /* Startup notice that unsaved content was recovered, in the opposite corner
@@ -31,9 +31,9 @@
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  border: 1px solid var(--editor-border);
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-m);
-  background: var(--bg);
+  background: var(--ui-bg);
   box-shadow: var(--shadow-popover);
   font-size: var(--text-body);
 }
@@ -43,6 +43,6 @@
   height: 8px;
   border-radius: 50%;
   corner-shape: round;
-  background: var(--editor-accent);
+  background: var(--ui-accent);
   flex-shrink: 0;
 }

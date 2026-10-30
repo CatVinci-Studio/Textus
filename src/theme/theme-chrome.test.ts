@@ -34,26 +34,23 @@ describe("imported theme chrome", () => {
     "keeps readable controls for palette %j",
     (background, text, accent) => {
       const p = chromePalette(background, text, accent);
-      expect(parse(p["--bg"])).toEqual(background);
+      expect(parse(p["--ui-bg"])).toEqual(background);
       for (const key of [
-        "--chrome-text",
-        "--chrome-muted",
-        "--chrome-accent",
-        "--danger",
-        "--success-color",
+        "--ui-text",
+        "--ui-muted",
+        "--ui-accent",
+        "--ui-danger",
+        "--ui-success",
       ] as const) {
         expect(contrast(parse(p[key]), background)).toBeGreaterThanOrEqual(
           4.45,
         );
       }
       expect(
-        contrast(parse(p["--chrome-primary"]), [255, 255, 255]),
+        contrast(parse(p["--ui-accent-fill"]), [255, 255, 255]),
       ).toBeGreaterThanOrEqual(4.45);
       expect(
-        contrast(
-          parse(p["--sidebar-active-text"]),
-          parse(p["--sidebar-active"]),
-        ),
+        contrast(parse(p["--ui-selected-text"]), parse(p["--ui-selected"])),
       ).toBeGreaterThanOrEqual(4.45);
     },
   );

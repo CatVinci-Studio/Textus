@@ -20,7 +20,7 @@
 .chat-history-empty {
   padding: 16px 12px;
   font-size: var(--text-footnote);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 /* Entries are hairline-separated: a title and a date line per entry would
@@ -37,7 +37,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -47,7 +47,7 @@
 .chat-history-archived {
   padding: 6px 8px 2px;
   font-size: var(--text-caption);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .chat-history-entry {
@@ -58,16 +58,16 @@
   border-radius: var(--shape-s);
   cursor: pointer;
   font-size: var(--text-secondary);
-  color: var(--editor-text);
+  color: var(--ui-text);
   line-height: 1.45;
 }
 
 .chat-history-entry + .chat-history-entry {
-  border-top: 1px solid var(--editor-border);
+  border-top: 1px solid var(--ui-border);
 }
 
 .chat-history-entry:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 
 .chat-history-entry-main {
@@ -86,7 +86,7 @@
 
 .chat-history-entry-meta {
   font-size: var(--text-caption);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -95,7 +95,7 @@
 .chat-history-entry-delete {
   border: none;
   background: none;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -112,7 +112,7 @@
 }
 
 .chat-history-entry-delete:hover {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 /* A finger has no hover to bring the delete button out, and needs room
@@ -132,18 +132,18 @@
 .chat-history-search {
   margin: 4px 4px 6px;
   padding: 5px 8px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: var(--bg);
-  color: var(--editor-text);
+  background: var(--ui-bg);
+  color: var(--ui-text);
   font: inherit;
   font-size: var(--text-secondary);
 }
 
 .chat-history-search:focus-visible {
   outline: none;
-  border-color: var(--chrome-accent);
+  border-color: var(--ui-accent);
 }
 
 .chat-history-hit {
@@ -152,5 +152,5 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   font-size: var(--text-secondary);
-  color: var(--editor-text);
+  color: var(--ui-text);
 }

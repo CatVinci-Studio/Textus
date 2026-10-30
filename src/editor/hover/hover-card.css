@@ -5,10 +5,10 @@
   flex-direction: column;
   width: min(360px, calc(100vw - 16px));
   max-height: min(320px, calc(100vh - 16px));
-  border: 1px solid var(--editor-border);
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-m);
-  background: var(--bg);
-  color: var(--editor-text);
+  background: var(--ui-bg);
+  color: var(--ui-text);
   box-shadow: var(--shadow-popover);
   opacity: 0;
   transform: translateY(4px);
@@ -28,7 +28,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 8px 6px 12px;
-  border-bottom: 1px solid var(--editor-border);
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .hover-card-pinned .hover-card-head {
@@ -48,19 +48,19 @@
 
 .hover-card-button {
   padding: 1px 10px;
-  border: 1px solid var(--editor-border);
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: none;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
   font-size: var(--text-secondary);
   cursor: pointer;
 }
 
 .hover-card-button:hover {
-  border-color: var(--editor-accent);
-  color: var(--editor-accent);
+  border-color: var(--ui-accent);
+  color: var(--ui-accent);
 }
 
 .hover-card-body {

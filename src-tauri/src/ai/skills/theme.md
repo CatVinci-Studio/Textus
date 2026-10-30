@@ -39,13 +39,13 @@ metadata:
 One CSS file the app loads after its own styles, Typora-compatible: `#write` is the document, `.milkdown` wraps it. In this order:
 1. A first comment: `/* Name - one sentence on the look */`. The app names the theme from it.
 2. `:root` with the variables the app reads for its own parts (source view, find, the window around the page):
-   - `--editor-bg` the page; `--editor-text` body text; `--editor-muted` secondary text (placeholders, code comments, quiet labels);
-   - `--editor-accent` links, the caret, focus rings, active states; `--editor-border` hairlines, table rules, outlines;
-   - `--editor-code-bg` inline code and code blocks; `--editor-quote-border` the quote's rule; `--editor-highlight-bg` ==marked== text and find matches (keep the text readable on it);
-   - `--editor-font` the text's font stack; optionally `--editor-list-gap` (space between list items, default 0.4em).
-3. `body { background-color: var(--editor-bg); color: var(--editor-text); }`, for Typora.
-4. `#write` with `color`, `font-family: var(--editor-font)`, `font-size` (16-18px or about 1.0625rem), `line-height` (1.6-1.9), and the page's own colours for code and alerts, so they read on this page in either appearance:
-   - syntax: `--token-string`, `--token-number`, `--token-keyword`, `--token-function`, `--token-tag`, each readable on `--editor-code-bg`;
+   - `--doc-bg` the page; `--doc-text` body text; `--doc-muted` secondary text (placeholders, code comments, quiet labels);
+   - `--doc-accent` links, the caret, focus rings, active states; `--doc-border` hairlines, table rules, outlines;
+   - `--doc-code-bg` inline code and code blocks; `--doc-quote-border` the quote's rule; `--doc-highlight-bg` ==marked== text and find matches (keep the text readable on it);
+   - `--doc-font` the text's font stack; optionally `--doc-list-gap` (space between list items, default 0.4em).
+3. `body { background-color: var(--doc-bg); color: var(--doc-text); }`, for Typora.
+4. `#write` with `color`, `font-family: var(--doc-font)`, `font-size` (16-18px or about 1.0625rem), `line-height` (1.6-1.9), and the page's own colours for code and alerts, so they read on this page in either appearance:
+   - syntax: `--doc-token-string`, `--doc-token-number`, `--doc-token-keyword`, `--doc-token-function`, `--doc-token-tag`, each readable on `--doc-code-bg`;
    - alerts: `--doc-alert-note`, `--doc-alert-tip`, `--doc-alert-important`, `--doc-alert-warning`, `--doc-alert-caution`;
    - `color-scheme: dark` on a dark page.
 5. Element rules, each under `#write`: `h1`-`h6` (sizes, weight, colour; the app's own heading rules, quote tint and rule marks switch off under an imported theme, so style what the design wants), `p`, `a` and `a:hover`, `strong`, `em`, `blockquote`, `code`, `pre` and `.md-fences` (code blocks), `pre code`, `table`, `th`, `td`, `hr`, `mark`, `img`, and `li::marker` if the markers take the accent.
@@ -55,7 +55,7 @@ The app's revision colours follow the page by themselves (they are built on its 
    - the original: `--revision-delete-bg` its tint; `--revision-delete-text` its text colour (default: the text's own, faded); `--revision-delete-strike` the line through it; `--revision-delete-hover-bg` its darker tint under the pointer and for the change the review bar points at.
 
 ## Do
-- Contrast (WCAG 2.2): body text at least 7:1 on `--editor-bg`; muted text, links and accents at least 4.5:1; code text and every token colour at least 4.5:1 on `--editor-code-bg`; borders visible but quiet (about 1.5:1 to 3:1). Choose values with a clear margin, and on a dark page avoid pure #000 and #fff.
+- Contrast (WCAG 2.2): body text at least 7:1 on `--doc-bg`; muted text, links and accents at least 4.5:1; code text and every token colour at least 4.5:1 on `--doc-code-bg`; borders visible but quiet (about 1.5:1 to 3:1). Choose values with a clear margin, and on a dark page avoid pure #000 and #fff.
 - Fonts: system fonts with fallbacks, ending in a generic family; name CJK faces too ("Songti SC", "Noto Serif CJK SC", "Source Han Serif SC" for a serif; "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei" for a sans), or Chinese and Japanese fall back to a system default. Code in a monospace stack.
 - Keep it short: a few KB, well under the gallery's 200 KB.
 - Use hex or rgb() colours; comment a rule only where the reason isn't obvious.

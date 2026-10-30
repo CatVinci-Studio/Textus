@@ -432,8 +432,8 @@ textus.views.registerWebview("jane.board.view", {
 - A webview has no network and no storage of the browser's: it asks its
   plugin, with `postMessage`. `api.getState()` / `api.setState(value)`
   keep a little state while Textus runs.
-- The theme's colours and sizes are CSS variables (`--bg`,
-  `--editor-text`, `--chrome-accent`, `--border-color`, `--font-sans`,
+- The theme's colours and sizes are CSS variables (`--ui-bg`,
+  `--ui-text`, `--ui-accent`, `--ui-border`, `--font-sans`,
   `--text-sm`, `--space-3`, …) that follow the theme and dark mode;
   buttons, inputs, `.toolbar`, `.list` and `.empty` look as Textus's own
   without any CSS of yours.

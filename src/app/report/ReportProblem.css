@@ -13,7 +13,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-secondary);
 }
 .report-problem-text,
@@ -32,12 +32,12 @@
 /* Where it goes, or why it didn't. */
 .report-problem-note {
   margin: var(--space-3) 0 0;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-footnote);
 }
 .report-problem-label {
   margin: var(--space-3) 0 var(--space-1);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-footnote);
 }
 .report-problem-details {
@@ -45,9 +45,9 @@
   margin: 0;
   padding: var(--space-2);
   overflow: auto;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-s);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-family: var(--font-mono);
   font-size: var(--text-caption);
   white-space: pre-wrap;

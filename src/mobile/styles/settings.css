@@ -9,7 +9,7 @@
   padding: 0 12px;
   border: none;
   background: none;
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   font-size: var(--text-body);
 }
 
@@ -29,7 +29,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: var(--overlay-bg);
+    background: var(--ui-overlay);
     animation: motion-fade-in var(--dur-sheet) var(--ease-standard);
   }
 
@@ -62,7 +62,7 @@
     border-radius: 0;
     /* The spring overshoots a few points past the top: the page's colour
        fills in below its edge, where the document showed. */
-    box-shadow: 0 48px 0 var(--grouped-page);
+    box-shadow: 0 48px 0 var(--ui-grouped-page);
   }
 
   /* A navigation bar: the title centred, Done at the right. */
@@ -87,7 +87,7 @@
   :root[data-window-chrome="mobile"] .settings-nav {
     padding: 8px 8px;
     gap: 2px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--ui-border);
   }
 
   :root[data-window-chrome="mobile"] .settings-nav-item {
@@ -164,31 +164,31 @@
     height: 36px;
   }
 
-  /* UIKit's switch. */
-  /* iOS's inset grouped style: white cards on a grey page (dark grey on black),
-     hairlines a device pixel thin. On the root so the safe-area strips match. */
+  /* iOS's inset grouped style, in the theme's colours: cards on a tinted
+     page (lighter cards on a darker page in dark), hairlines a device pixel
+     thin. On the root so the safe-area strips match. */
   :root[data-window-chrome="mobile"] {
-    --grouped-page: #f2f2f7;
-    --grouped-card: #fff;
+    --ui-grouped-page: color-mix(in srgb, var(--ui-text) 5%, var(--ui-bg));
+    --ui-grouped-card: var(--ui-surface);
   }
 
   :root[data-window-chrome="mobile"] .settings-panel {
-    background: var(--grouped-page);
+    background: var(--ui-grouped-page);
   }
 
   :root[data-window-chrome="mobile"][data-theme="dark"] {
-    --grouped-page: #000;
-    --grouped-card: #1c1c1e;
+    --ui-grouped-page: color-mix(in srgb, var(--ui-bg) 55%, black);
+    --ui-grouped-card: color-mix(in srgb, var(--ui-text) 6%, var(--ui-bg));
   }
 
   :root[data-window-chrome="mobile"] .settings-sidebar {
-    background: var(--grouped-page);
+    background: var(--ui-grouped-page);
   }
 
   :root[data-window-chrome="mobile"]
     :is(.settings-group-body, .settings-advanced) {
     border: none;
-    background: var(--grouped-card);
+    background: var(--ui-grouped-card);
   }
 
   /* A built-in skill: Customize… on its own line under what it does; beside the
@@ -219,8 +219,8 @@
 
 @media (max-width: 760px) and (prefers-color-scheme: dark) {
   :root[data-window-chrome="mobile"]:not([data-theme="light"]) {
-    --grouped-page: #000;
-    --grouped-card: #1c1c1e;
+    --ui-grouped-page: #000;
+    --ui-grouped-card: #1c1c1e;
   }
 }
 

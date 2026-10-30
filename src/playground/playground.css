@@ -11,7 +11,7 @@ body,
 }
 
 body {
-  background: var(--bg);
+  background: var(--ui-bg);
 }
 
 .playground {
@@ -26,8 +26,8 @@ body {
   align-items: center;
   gap: var(--space-2) var(--space-4);
   padding: var(--space-2) var(--space-4);
-  border-bottom: 1px solid var(--border-color);
-  color: var(--chrome-text);
+  border-bottom: 1px solid var(--ui-border);
+  color: var(--ui-text);
   font-size: var(--text-control);
 }
 
@@ -49,10 +49,10 @@ body {
 
 .playground-tag {
   padding: 1px 8px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
   font-size: var(--text-footnote);
 }
 
@@ -60,7 +60,7 @@ body {
   flex: 1;
   min-width: 0;
   margin: 0;
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
   font-size: var(--text-footnote);
 }
 
@@ -78,8 +78,8 @@ body {
 }
 
 .playground-actions .text-button[aria-pressed="true"] {
-  border-color: var(--chrome-accent);
-  color: var(--chrome-accent);
+  border-color: var(--ui-accent);
+  color: var(--ui-accent);
 }
 
 .playground-download {
@@ -96,13 +96,13 @@ body {
 }
 
 .playground-download:hover {
-  background: color-mix(in srgb, var(--ui-primary) 85%, var(--bg));
+  background: color-mix(in srgb, var(--ui-primary) 85%, var(--ui-bg));
 }
 
 .editor-scroll {
   flex: 1;
   overflow-y: auto;
-  background: var(--editor-bg, var(--bg));
+  background: var(--ui-surface, var(--ui-bg));
 }
 
 /* Source mode fills the rest of the page, as the editor does. */
@@ -120,7 +120,7 @@ body {
   margin-inline: auto;
   z-index: 220;
   padding: var(--space-2) var(--space-3);
-  color: var(--editor-text);
+  color: var(--ui-text);
   font-size: var(--text-body);
 }
 

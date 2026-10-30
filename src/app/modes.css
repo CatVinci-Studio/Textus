@@ -36,7 +36,7 @@
   left: 0;
   right: 0;
   z-index: 1;
-  background: var(--editor-bg, var(--bg));
+  background: var(--ui-surface, var(--ui-bg));
 }
 
 /* A docked panel (the narrow and phone layouts already lie over the
@@ -73,10 +73,10 @@
   /* Opaque: it sits over the first line of text until it fades. */
   background: color-mix(
     in srgb,
-    var(--editor-text) 8%,
-    var(--editor-bg, var(--bg))
+    var(--ui-text) 8%,
+    var(--ui-surface, var(--ui-bg))
   );
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-footnote);
   pointer-events: none;
   /* Held long enough to read (a pause, not a movement), then let go. */

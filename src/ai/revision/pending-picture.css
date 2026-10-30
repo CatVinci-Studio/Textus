@@ -10,8 +10,8 @@
   border-radius: var(--doc-radius);
   background: color-mix(
     in srgb,
-    var(--editor-text) 5%,
-    var(--editor-bg, var(--bg))
+    var(--doc-text) 5%,
+    var(--doc-bg, var(--ui-bg))
   );
   user-select: none;
 }
@@ -25,7 +25,7 @@
   /* Soft edges from the gradient itself: no blur to run every frame. */
   background: radial-gradient(
     closest-side,
-    var(--pending-picture-blob, var(--editor-accent, var(--chrome-primary))),
+    var(--pending-picture-blob, var(--doc-accent, var(--ui-accent-fill))),
     transparent
   );
   opacity: 0.4;
@@ -43,8 +43,8 @@
   top: 25%;
   --pending-picture-blob: color-mix(
     in srgb,
-    var(--editor-accent, var(--chrome-primary)) 40%,
-    var(--warning-color)
+    var(--doc-accent, var(--ui-accent-fill)) 40%,
+    var(--ui-warning)
   );
   animation-duration: 8.4s;
 }
@@ -54,8 +54,8 @@
   bottom: -30%;
   --pending-picture-blob: color-mix(
     in srgb,
-    var(--editor-accent, var(--chrome-primary)) 40%,
-    var(--success-color)
+    var(--doc-accent, var(--ui-accent-fill)) 40%,
+    var(--ui-success)
   );
   animation-duration: 9.6s;
 }
@@ -73,7 +73,7 @@
   background: linear-gradient(
     105deg,
     transparent 30%,
-    color-mix(in srgb, var(--editor-bg, var(--bg)) 55%, transparent) 50%,
+    color-mix(in srgb, var(--doc-bg, var(--ui-bg)) 55%, transparent) 50%,
     transparent 70%
   );
   transform: translateX(-100%);
@@ -93,7 +93,7 @@
   align-items: center;
   justify-content: center;
   padding: 12px 16px;
-  border: 1px dashed var(--editor-border);
+  border: 1px dashed var(--doc-border);
   background: none;
 }
 
@@ -108,26 +108,26 @@
 
 .pending-picture-why {
   font-size: var(--text-footnote);
-  color: var(--editor-muted);
+  color: var(--doc-muted);
   text-align: center;
 }
 
 /* Asks for this picture again, by itself. */
 .pending-picture-retry {
   padding: 2px 12px;
-  border: 1px solid var(--editor-border);
+  border: 1px solid var(--doc-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: none;
-  color: var(--editor-text);
+  color: var(--doc-text);
   font: inherit;
   font-size: var(--text-secondary);
   cursor: pointer;
 }
 
 .pending-picture-retry:hover {
-  border-color: var(--editor-accent);
-  color: var(--editor-accent);
+  border-color: var(--doc-accent);
+  color: var(--doc-accent);
 }
 
 /* A made picture, Redraw… over its corner while the pointer is on it. */
@@ -145,11 +145,11 @@
   top: 8px;
   right: 8px;
   padding: 2px 12px;
-  border: 1px solid var(--editor-border);
+  border: 1px solid var(--doc-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: var(--editor-bg, var(--bg));
-  color: var(--editor-text);
+  background: var(--doc-bg, var(--ui-bg));
+  color: var(--doc-text);
   font: inherit;
   font-size: var(--text-secondary);
   cursor: pointer;
@@ -163,8 +163,8 @@
 }
 
 .pending-picture-redraw:hover {
-  border-color: var(--editor-accent);
-  color: var(--editor-accent);
+  border-color: var(--doc-accent);
+  color: var(--doc-accent);
 }
 
 /* No hover on a touch screen: the button stays. */
@@ -192,7 +192,7 @@
 .agent-proposal-picture-failed {
   display: block;
   font-size: var(--text-footnote);
-  color: var(--editor-muted);
+  color: var(--doc-muted);
 }
 
 /* A picture being redone: the old one stays, dimmed under the sheen, until
@@ -217,7 +217,7 @@
   background: linear-gradient(
     105deg,
     transparent 30%,
-    color-mix(in srgb, var(--editor-bg, var(--bg)) 55%, transparent) 50%,
+    color-mix(in srgb, var(--doc-bg, var(--ui-bg)) 55%, transparent) 50%,
     transparent 70%
   );
   transform: translateX(-100%);

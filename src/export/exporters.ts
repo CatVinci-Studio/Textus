@@ -84,11 +84,11 @@ export function pdfLayoutCss(
   whitePage = false,
 ): string {
   const side = Math.round((page?.width ?? 595) * 0.094);
-  const background = whitePage ? "#fff" : "var(--editor-bg, var(--bg))";
+  const background = whitePage ? "#fff" : "var(--doc-bg, var(--ui-bg))";
   return (
     ":root { -webkit-print-color-adjust: exact; print-color-adjust: exact; } " +
     // Whatever paints with the page colour (sticky bars, cut-outs) matches.
-    (whitePage ? ":root { --editor-bg: #fff !important; } " : "") +
+    (whitePage ? ":root { --doc-bg: #fff !important; } " : "") +
     // Only `auto` leaves Linux margins to the GTK page setup: given a CSS
     // margin, WebKitGTK cut pages taller and lost each page's last lines.
     `@page { margin: ${page ? "0" : "auto"}; } ` +

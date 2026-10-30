@@ -34,14 +34,14 @@
   font-size: var(--text-caption);
   font-weight: 600;
   letter-spacing: 0.02em;
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
-  color: var(--danger);
+  background: color-mix(in srgb, var(--ui-danger) 12%, transparent);
+  color: var(--ui-danger);
 }
 
 .grammar-kind-punctuation,
 .grammar-kind-rules {
-  background: color-mix(in srgb, var(--editor-accent) 12%, transparent);
-  color: var(--editor-accent);
+  background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
+  color: var(--ui-accent);
 }
 
 .grammar-popover-fix {
@@ -51,12 +51,12 @@
 }
 
 .grammar-popover-fix s {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   text-decoration-color: var(--diff-delete-line);
 }
 
 .grammar-popover-fix b {
-  color: var(--success-color);
+  color: var(--ui-success);
   font-weight: 600;
 }
 
@@ -67,7 +67,7 @@
   align-items: center;
   gap: 2px;
   font-size: var(--text-caption);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -86,8 +86,8 @@
 }
 
 .grammar-popover-nav button:hover {
-  background: color-mix(in srgb, var(--editor-text) 8%, transparent);
-  color: var(--editor-text);
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  color: var(--ui-text);
 }
 
 .grammar-popover-prev {
@@ -95,7 +95,7 @@
 }
 
 .grammar-popover-issue {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   overflow-wrap: anywhere;
 }
 
@@ -124,7 +124,11 @@
 .grammar-popover-apply kbd {
   padding: 1px 6px;
   border-radius: var(--shape-xs);
-  background: color-mix(in srgb, var(--editor-bg, var(--bg)) 20%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--ui-surface, var(--ui-bg)) 20%,
+    transparent
+  );
   font: 500 calc(10.5px * var(--ui-text-scale, 1)) var(--font-mono);
 }
 
@@ -134,23 +138,23 @@
 
 .grammar-popover-error {
   font-size: var(--text-footnote);
-  color: var(--danger);
+  color: var(--ui-danger);
 }
 
 .grammar-popover-ignore {
   padding: 5px 10px;
-  border: 1px solid var(--editor-border, var(--border-color));
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: none;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
   font-size: var(--text-secondary);
   cursor: pointer;
 }
 
 .grammar-popover-ignore:hover {
-  border-color: var(--editor-muted);
+  border-color: var(--ui-muted);
 }
 
 /* The phone's card (BottomCard): the fix large, the note under it. */
@@ -160,15 +164,15 @@
 }
 
 .grammar-card-fix s {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   text-decoration-color: var(--diff-delete-line);
 }
 
 .grammar-card-fix b {
-  color: var(--success-color);
+  color: var(--ui-success);
 }
 
 .grammar-card-issue {
   font-size: var(--text-secondary);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }

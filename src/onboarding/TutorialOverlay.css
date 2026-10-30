@@ -6,21 +6,14 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: var(--overlay-bg);
+  background: var(--ui-overlay);
 }
 
 .tutorial-surface.floating-surface {
-  --editor-text: var(--chrome-text);
-  --editor-muted: var(--chrome-muted);
-  --editor-accent: var(--chrome-accent);
-  --editor-code-bg: var(--sidebar-bg);
-  color: var(--editor-text);
-  --tutorial-soft: color-mix(in srgb, var(--editor-accent) 9%, var(--bg));
-  --tutorial-line: color-mix(
-    in srgb,
-    var(--editor-accent) 24%,
-    var(--border-color)
-  );
+  --doc-code-bg: var(--ui-subtle);
+  color: var(--ui-text);
+  --tutorial-soft: color-mix(in srgb, var(--ui-accent) 9%, var(--ui-bg));
+  --tutorial-line: color-mix(in srgb, var(--ui-accent) 24%, var(--ui-border));
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -73,19 +66,19 @@
   border: 1px solid transparent;
   border-radius: var(--shape-pill);
   corner-shape: round;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-caption);
   font-weight: 600;
   white-space: nowrap;
 }
 
 .tutorial-chapter.is-done {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .tutorial-chapter.is-current {
   border-color: var(--tutorial-line);
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   background: var(--tutorial-soft);
 }
 
@@ -100,18 +93,18 @@
   height: 3px;
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: var(--border-color);
+  background: var(--ui-border);
   transition:
     background-color var(--dur-base) var(--ease-standard),
     transform var(--dur-base) var(--ease-standard);
 }
 
 .tutorial-progress-segment.is-done {
-  background: color-mix(in srgb, var(--editor-accent) 45%, var(--border-color));
+  background: color-mix(in srgb, var(--ui-accent) 45%, var(--ui-border));
 }
 
 .tutorial-progress-segment.is-current {
-  background: var(--editor-accent);
+  background: var(--ui-accent);
   transform: scaleY(1.5);
 }
 
@@ -134,7 +127,7 @@
   flex: 0 0 42px;
   border: 1px solid var(--tutorial-line);
   border-radius: var(--shape-m);
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   background: var(--tutorial-soft);
   font: 600 19px/1 var(--font-mono);
 }
@@ -147,7 +140,7 @@
 }
 
 .tutorial-step-label {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-caption);
   font-weight: 700;
   letter-spacing: 0.09em;
@@ -156,7 +149,7 @@
 
 .tutorial-title {
   margin: 2px 0 0;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font-size: 20px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -166,7 +159,7 @@
 
 .tutorial-body {
   margin: 0;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-body-large);
   line-height: 1.55;
 }
@@ -176,8 +169,8 @@
   padding: 10px 12px;
   border: 1px solid var(--tutorial-line);
   border-radius: var(--shape-m);
-  background: var(--chrome-subtle);
-  color: var(--editor-text);
+  background: var(--ui-subtle);
+  color: var(--ui-text);
   font-size: var(--text-body);
   font-weight: 500;
   line-height: 1.5;
@@ -203,7 +196,7 @@
   padding: 1px 5px;
   border-radius: var(--shape-xs);
   background: var(--tutorial-soft);
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   font: 600 0.92em / 1.4 var(--font-mono);
   user-select: text;
 }
@@ -217,8 +210,8 @@
   border: 1px solid var(--tutorial-line);
   border-radius: 50%;
   corner-shape: round;
-  color: var(--editor-accent);
-  background: var(--bg);
+  color: var(--ui-accent);
+  background: var(--ui-bg);
   font-size: var(--text-caption);
   font-weight: 700;
   transition:
@@ -228,25 +221,25 @@
 }
 
 .tutorial-task-line.is-complete .tutorial-task-icon {
-  border-color: var(--chrome-primary);
+  border-color: var(--ui-accent-fill);
   color: var(--ui-on-primary, #fff);
-  background: var(--chrome-primary);
+  background: var(--ui-accent-fill);
 }
 
 .tutorial-status {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-body);
   line-height: 1.45;
 }
 
 .tutorial-status.is-complete {
-  color: var(--editor-text);
+  color: var(--ui-text);
   font-weight: 500;
 }
 
 .tutorial-note {
   margin: 0;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-footnote);
   line-height: 1.5;
 }
@@ -259,7 +252,7 @@
   gap: 7px;
   padding: 2px 0;
   border: 0;
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   background: transparent;
   font: inherit;
   font-size: var(--text-body);
@@ -279,7 +272,7 @@
   height: 18px;
   border-radius: 50%;
   corner-shape: round;
-  color: var(--editor-accent);
+  color: var(--ui-accent);
   background: var(--tutorial-soft);
   font-size: 8px;
 }
@@ -293,8 +286,8 @@
 }
 
 .tutorial-btn[aria-pressed="true"] {
-  border-color: var(--editor-accent);
-  color: var(--editor-accent);
+  border-color: var(--ui-accent);
+  color: var(--ui-accent);
   background: var(--tutorial-soft);
 }
 
@@ -318,7 +311,7 @@
 }
 
 .tutorial-btn {
-  color: var(--editor-text);
+  color: var(--ui-text);
   white-space: nowrap;
 }
 
@@ -328,9 +321,9 @@
 }
 
 .tutorial-btn.tutorial-btn-primary:disabled {
-  border-color: var(--border-color);
-  color: var(--editor-muted);
-  background: var(--editor-code-bg);
+  border-color: var(--ui-border);
+  color: var(--ui-muted);
+  background: var(--doc-code-bg);
   cursor: not-allowed;
   opacity: 0.62;
 }
@@ -338,7 +331,7 @@
 .tutorial-link-btn {
   padding: 5px 2px;
   border: 0;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   background: transparent;
   cursor: pointer;
   font-size: var(--text-caption);
@@ -346,7 +339,7 @@
 }
 
 .tutorial-link-btn:hover {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 @media (max-width: 720px) {
@@ -414,26 +407,26 @@
 .tutorial-collapse {
   margin-left: auto;
   flex-shrink: 0;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
   padding: 5px 8px;
-  background: var(--bg);
-  color: var(--editor-muted);
+  background: var(--ui-bg);
+  color: var(--ui-muted);
   font: inherit;
   font-size: var(--text-caption);
   cursor: pointer;
 }
 
 .tutorial-surface button:focus-visible {
-  outline: 2px solid var(--editor-accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: 3px;
 }
 
 /* The sidebar lesson points at the real panel rather than a picture of it.
    The ring is there at once: growing a shadow's geometry is not a fade. */
 .sidebar.tutorial-spotlight {
-  box-shadow: inset 0 0 0 2px var(--chrome-accent);
+  box-shadow: inset 0 0 0 2px var(--ui-accent);
 }
 
 /* The Connect lesson embeds Settings' provider rows; framed like a
@@ -442,7 +435,7 @@
   padding: 0 14px;
   border: 1px solid var(--tutorial-line);
   border-radius: var(--shape-m);
-  background: var(--chrome-subtle);
+  background: var(--ui-subtle);
 }
 
 .tutorial-step-connect

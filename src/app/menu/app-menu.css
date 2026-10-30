@@ -42,12 +42,12 @@
 .app-menu-item:hover:not(:disabled),
 .app-menu-item:focus-visible,
 .app-menu-item[aria-expanded="true"] {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
   outline: none;
 }
 
 .app-menu-item:disabled {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .app-menu-label {
@@ -62,7 +62,7 @@
 /* The shortcut hint: quiet, and never the reason the panel is wide. */
 .app-menu-accel {
   flex-shrink: 0;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-footnote);
   font-variant-numeric: tabular-nums;
 }
@@ -77,13 +77,13 @@
   width: 14px;
   height: 14px;
   margin-left: -6px;
-  color: var(--chrome-accent);
+  color: var(--ui-accent);
 }
 
 .app-menu-chevron {
   flex-shrink: 0;
   margin-right: -2px;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .app-menu-flyout {

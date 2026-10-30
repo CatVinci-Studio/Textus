@@ -9,16 +9,13 @@
     [data-content-theme="slate"],
     [data-content-theme="forest"]
   ) {
-  --editor-font: sans-serif;
+  --doc-font: sans-serif;
 }
 
 :root[data-window-chrome="mobile"] {
   --font-sans: sans-serif;
   --font-mono: Menlo, monospace;
   --mobile-bar: 44px;
-  /* The document's background, resolved at the root: inside the chrome
-     --editor-bg is re-bound to the chrome's colour. */
-  --page-bg: var(--editor-bg, var(--bg));
   /* No grey flash over whatever a finger lands on. */
   -webkit-tap-highlight-color: transparent;
   /* Phone-only layers. A full-screen page covers the find bar (300) and the
@@ -39,7 +36,7 @@
    background: the document's, not the chrome's, so the page runs to both
    edges of the screen. */
 :root[data-window-chrome="mobile"] body {
-  background: var(--page-bg);
+  background: var(--ui-bg);
 }
 
 /* The web view shrinks while the keyboard is up; 100% follows it where 100vh
@@ -54,7 +51,7 @@
   height: var(--mobile-bar);
   padding: 0 4px;
   /* One surface from the status bar down through the page. */
-  background: var(--page-bg);
+  background: var(--ui-bg);
 }
 
 :root[data-window-chrome="mobile"] .window-menu-button,
@@ -79,7 +76,7 @@
    box flush against the screen's edge. */
 :root[data-window-chrome="mobile"] .window-bar-toggle-on {
   background: none;
-  color: var(--chrome-accent);
+  color: var(--ui-accent);
 }
 
 /* Focus rings are for keyboards. WebKit counts a focus the app moves itself
@@ -107,17 +104,17 @@
    While something covers the page they take its colour, so each translucent
    scrim is pre-mixed over the page here. A closing surface gives them back. */
 :root[data-window-chrome="mobile"] {
-  --phone-dim-overlay: color-mix(in srgb, var(--page-bg) 70%, rgb(20 27 40));
+  --phone-dim-overlay: color-mix(in srgb, var(--ui-bg) 70%, rgb(20 27 40));
 }
 
 @media (prefers-color-scheme: dark) {
   :root[data-window-chrome="mobile"]:not([data-theme="light"]) {
-    --phone-dim-overlay: color-mix(in srgb, var(--page-bg) 52%, black);
+    --phone-dim-overlay: color-mix(in srgb, var(--ui-bg) 52%, black);
   }
 }
 
 :root[data-window-chrome="mobile"][data-theme="dark"] {
-  --phone-dim-overlay: color-mix(in srgb, var(--page-bg) 52%, black);
+  --phone-dim-overlay: color-mix(in srgb, var(--ui-bg) 52%, black);
 }
 
 /* Settings fills the phone's screen with iOS's grouped page colour, which the
@@ -127,7 +124,7 @@
       .settings-backdrop:not([data-state="closing"])
     )
     body {
-    background: var(--grouped-page);
+    background: var(--ui-grouped-page);
   }
 }
 
@@ -157,7 +154,7 @@
       .sidebar-scrim:not([data-state="closing"])
     )
     body {
-    background: color-mix(in srgb, var(--page-bg) 75%, black);
+    background: color-mix(in srgb, var(--ui-bg) 75%, black);
   }
 }
 
@@ -172,5 +169,5 @@
     .action-sheet-scrim:not([data-state="closing"])
   )
   body {
-  background: color-mix(in srgb, var(--page-bg) 70%, black);
+  background: color-mix(in srgb, var(--ui-bg) 70%, black);
 }

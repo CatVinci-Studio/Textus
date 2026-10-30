@@ -66,7 +66,7 @@
       .quick-ask-pending-nav-button
     ):not(:disabled, :active):hover {
     background: transparent;
-    color: var(--editor-muted);
+    color: var(--ui-muted);
   }
 
   :root[data-window-chrome="mobile"]
@@ -96,7 +96,7 @@
       .inline-chat-action:not(.inline-chat-action-primary),
       .inline-chat-skill-item
     ):active {
-    background: color-mix(in srgb, var(--editor-text) 12%, transparent);
+    background: color-mix(in srgb, var(--ui-text) 12%, transparent);
   }
 
   :root[data-window-chrome="mobile"]

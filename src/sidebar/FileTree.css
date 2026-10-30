@@ -5,7 +5,7 @@
   flex-direction: column;
   min-height: 100%;
   font-size: var(--text-body);
-  color: var(--sidebar-text);
+  color: var(--ui-text);
   user-select: none;
 }
 
@@ -40,12 +40,12 @@
 }
 
 .tree-row:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 
 .tree-row-active {
-  background: var(--sidebar-active);
-  color: var(--sidebar-active-text);
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
 }
 
 .tree-icon {
@@ -108,14 +108,14 @@
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: none;
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
   font: inherit;
   cursor: pointer;
   opacity: 0.8;
 }
 
 .tree-crumb:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
   opacity: 1;
 }
 
@@ -150,8 +150,8 @@
 
 .tree-row-drop,
 .tree-body-drop {
-  background: var(--sidebar-active);
-  box-shadow: inset 0 0 0 1px var(--chrome-accent);
+  background: var(--ui-selected);
+  box-shadow: inset 0 0 0 1px var(--ui-accent);
 }
 
 .tree-drag-ghost {
@@ -184,17 +184,17 @@
   gap: 6px;
   height: var(--control-height-sm);
   padding: 0 8px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: var(--bg);
+  background: var(--ui-bg);
 }
 
 /* The ring is drawn on the field, inside its border, not around the bare
    input. */
 .file-search-field:focus-within {
-  border-color: var(--chrome-accent);
-  box-shadow: inset 0 0 0 1px var(--chrome-accent);
+  border-color: var(--ui-accent);
+  box-shadow: inset 0 0 0 1px var(--ui-accent);
 }
 
 .file-search-icon {
@@ -208,7 +208,7 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--sidebar-active-text);
+  color: var(--ui-selected-text);
   font: inherit;
   font-size: var(--text-secondary);
 }

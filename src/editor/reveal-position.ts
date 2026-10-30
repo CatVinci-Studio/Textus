@@ -26,7 +26,7 @@ export function revealPosition(view: EditorView, pos: number) {
   for (const running of block.getAnimations?.() ?? [])
     if (running.id === "reveal-pulse") running.cancel();
   const accent = getComputedStyle(block)
-    .getPropertyValue("--editor-accent")
+    .getPropertyValue("--doc-accent")
     .trim();
   animate(
     block,

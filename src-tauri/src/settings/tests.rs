@@ -258,7 +258,7 @@ fn only_a_pinned_appearance_overrides_the_system() {
 #[test]
 fn a_pinned_appearance_gives_windows_the_page_background() {
     // Checked against the page itself: a window must open in exactly the colour
-    // index.html paints first and ui/base.css's --bg keeps.
+    // index.html paints first and ui/base.css's --ui-bg keeps.
     let index = include_str!("../../../index.html");
     let app_css = include_str!("../../../src/ui/base.css");
     for (theme, app_css_rule) in [
@@ -278,7 +278,7 @@ fn a_pinned_appearance_gives_windows_the_page_background() {
             "index.html, {theme}"
         );
         assert_eq!(
-            css_value(app_css, app_css_rule, "--bg:"),
+            css_value(app_css, app_css_rule, "--ui-bg:"),
             hex,
             "ui/base.css, {theme}"
         );

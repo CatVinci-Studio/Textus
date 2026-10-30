@@ -168,7 +168,7 @@
   flex-direction: column;
   min-width: 250px;
   padding: 4px;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font-size: var(--text-control);
   animation: motion-pop-in var(--dur-base) var(--ease-out);
 }
@@ -188,7 +188,7 @@
 }
 
 .review-bar-menu button:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--editor-text) 7%, transparent);
+  background: color-mix(in srgb, var(--ui-text) 7%, transparent);
 }
 
 .review-bar-menu button:disabled {
@@ -207,21 +207,21 @@
   margin-top: -4px;
   border-radius: 50%;
   corner-shape: round;
-  background: var(--editor-accent);
+  background: var(--ui-accent);
 }
 
 /* Chosen, but waiting for room: a ring where the dot will be. */
 .review-bar-menu .review-bar-menu-waiting::before {
   background: none;
-  box-shadow: inset 0 0 0 1.5px var(--editor-accent);
+  box-shadow: inset 0 0 0 1.5px var(--ui-accent);
 }
 
 .review-bar-menu-note {
   max-width: 250px;
   margin: 4px 0 0;
   padding: 7px 10px 5px 26px;
-  border-top: 1px solid var(--editor-border, var(--border-color));
-  color: var(--editor-muted);
+  border-top: 1px solid var(--ui-border);
+  color: var(--ui-muted);
   font-size: var(--text-footnote);
   line-height: 1.4;
   white-space: normal;
@@ -235,7 +235,7 @@
 .review-bar-phone .review-bar-view-button {
   width: 34px;
   height: 34px;
-  background: color-mix(in srgb, var(--editor-text) 6%, transparent);
+  background: color-mix(in srgb, var(--ui-text) 6%, transparent);
 }
 
 .review-bar-phone .review-bar-menu {
@@ -305,8 +305,8 @@
   gap: 10px;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
   border-radius: var(--shape-l) var(--shape-l) 0 0;
-  background: var(--editor-bg, var(--bg));
-  color: var(--editor-text);
+  background: var(--ui-surface, var(--ui-bg));
+  color: var(--ui-text);
   font-size: var(--text-body);
   box-shadow: var(--shadow-sheet);
   transform: none;
@@ -327,7 +327,7 @@
 .review-bar-phone .review-bar-chat {
   width: 34px;
   height: 34px;
-  background: color-mix(in srgb, var(--editor-text) 6%, transparent);
+  background: color-mix(in srgb, var(--ui-text) 6%, transparent);
 }
 
 .review-bar-phone .review-bar-chat {
@@ -349,8 +349,8 @@
   padding: 12px;
   border-radius: var(--shape-pill);
   corner-shape: round;
-  border-color: var(--editor-border, var(--border-color));
-  color: var(--editor-text);
+  border-color: var(--ui-border);
+  color: var(--ui-text);
   font-size: var(--text-control);
 }
 

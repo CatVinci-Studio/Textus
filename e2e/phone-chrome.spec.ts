@@ -48,7 +48,7 @@ test("a confirm is an iOS alert: a narrow centred card over the whole screen", a
   // Destructive in red, bold as the expected answer; nothing focused.
   const danger = await remove.evaluate((el) => {
     const probe = el.appendChild(document.createElement("span"));
-    probe.style.color = "var(--danger)";
+    probe.style.color = "var(--ui-danger)";
     const color = getComputedStyle(probe).color;
     probe.remove();
     return color;

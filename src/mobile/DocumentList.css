@@ -8,15 +8,15 @@
   z-index: var(--z-phone-page, 350);
   display: flex;
   flex-direction: column;
-  background: var(--page-bg, var(--bg));
-  color: var(--chrome-text, var(--editor-text));
+  background: var(--ui-bg);
+  color: var(--ui-text);
   font-family: var(--font-sans);
   /* A modal sheet, like Settings on the phone: up from the bottom edge,
      and back down when it closes. */
   animation: motion-sheet-in var(--dur-sheet) var(--ease-spring);
   /* The spring overshoots a few points past the top: its own colour
      fills in below its edge, where document text showed. */
-  box-shadow: 0 48px 0 var(--page-bg, var(--bg));
+  box-shadow: 0 48px 0 var(--ui-bg);
 }
 
 .document-list[data-state="closing"] {
@@ -31,7 +31,7 @@
   gap: 4px;
   height: 44px;
   padding: 0 4px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .document-list-header h2 {
@@ -68,7 +68,7 @@
   padding: 0 10px;
   border: none;
   background: none;
-  color: var(--chrome-accent);
+  color: var(--ui-accent);
   font: inherit;
   /* A navigation bar button, as Settings' Done. */
   font-size: var(--text-body);
@@ -86,7 +86,7 @@
 .document-list-empty {
   margin: 48px 24px;
   text-align: center;
-  color: var(--chrome-muted, var(--editor-muted));
+  color: var(--ui-muted);
   font-size: var(--text-body);
 }
 
@@ -99,7 +99,7 @@
 
 .document-list-count {
   font-size: var(--text-footnote);
-  color: var(--chrome-muted, var(--editor-muted));
+  color: var(--ui-muted);
 }
 
 /* A small segmented control, as in Files' view switcher. The raised
@@ -110,11 +110,7 @@
   padding: 2px;
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: color-mix(
-    in srgb,
-    var(--chrome-text, currentColor) 8%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--ui-text, currentColor) 8%, transparent);
 }
 
 .document-list-views::before {
@@ -127,7 +123,7 @@
   /* Concentric with the track: its radius less the 2px inset. */
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: var(--page-bg, var(--bg));
+  background: var(--ui-bg);
   box-shadow: var(--shadow-raised);
   transition: transform var(--dur-medium) var(--ease-spring);
 }
@@ -145,12 +141,12 @@
   padding: 0;
   border: none;
   background: none;
-  color: var(--chrome-muted, var(--editor-muted));
+  color: var(--ui-muted);
   transition: color var(--dur-fast) var(--ease-standard);
 }
 
 .document-list-view-button[aria-checked="true"] {
-  color: var(--chrome-text, var(--editor-text));
+  color: var(--ui-text);
 }
 
 /* A page thumbnail: the document's opening lines, tiny, on a sheet. */
@@ -163,9 +159,9 @@
   border-radius: var(--shape-xs);
   /* The page's colour where the list's surface doesn't name one: a white
      fallback put dark-mode text on white sheets. */
-  background: var(--editor-bg, var(--bg));
+  background: var(--ui-surface, var(--ui-bg));
   box-shadow:
-    0 0 0 0.5px color-mix(in srgb, var(--chrome-text, #000) 18%, transparent),
+    0 0 0 0.5px color-mix(in srgb, var(--ui-text, #000) 18%, transparent),
     var(--shadow-tile);
 }
 
@@ -178,7 +174,7 @@
   text-align: left;
   overflow-wrap: anywhere;
   font-family: var(--font-sans);
-  color: var(--editor-text, currentColor);
+  color: var(--ui-text, currentColor);
   opacity: 0.75;
 }
 
@@ -223,7 +219,7 @@
 
 .document-item-detail {
   font-size: var(--text-footnote);
-  color: var(--chrome-muted, var(--editor-muted));
+  color: var(--ui-muted);
 }
 
 /* Rows: small thumbnail, name and detail, "...", hairline between rows
@@ -263,11 +259,11 @@
   top: 0;
   left: 58px;
   right: 0;
-  border-top: 0.5px solid var(--border-color);
+  border-top: 0.5px solid var(--ui-border);
 }
 
 .document-list-list .document-item-active {
-  background: color-mix(in srgb, var(--chrome-accent) 10%, transparent);
+  background: color-mix(in srgb, var(--ui-accent) 10%, transparent);
 }
 
 /* Icons: three across on a phone, more on wider screens; name (two lines,
@@ -317,6 +313,6 @@
 
 .document-list-grid .document-item-active .document-page {
   box-shadow:
-    0 0 0 2px var(--chrome-accent),
+    0 0 0 2px var(--ui-accent),
     var(--shadow-tile);
 }

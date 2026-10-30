@@ -19,7 +19,7 @@
     height: auto;
     padding-top: 0;
     border-left: none;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--ui-border);
     border-radius: var(--shape-l) var(--shape-l) 0 0;
     box-shadow: var(--shadow-sheet);
     flex-direction: column;
@@ -55,7 +55,7 @@
     animation: none;
     box-shadow:
       var(--shadow-sheet),
-      0 200px 0 var(--editor-bg, var(--bg));
+      0 200px 0 var(--ui-surface, var(--ui-bg));
     will-change: transform;
   }
 
@@ -64,7 +64,7 @@
     .agent-panel-body
     > :not(.agent-panel-empty, .inline-chat-messages) {
     transform: translateY(var(--sheet-lift, 0px));
-    background-color: var(--editor-bg, var(--bg));
+    background-color: var(--ui-surface, var(--ui-bg));
   }
 
   :root[data-window-chrome="mobile"] .agent-panel .inline-chat-messages {
@@ -141,5 +141,5 @@
   height: 5px;
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: color-mix(in srgb, var(--editor-text) 25%, transparent);
+  background: color-mix(in srgb, var(--ui-text) 25%, transparent);
 }

@@ -77,7 +77,7 @@ describe("the interface's colours", () => {
         --x: #fff;
         color: var(--x, #fff);
         mask-image: linear-gradient(#000, transparent);
-        background: color-mix(in srgb, var(--danger-fill) 86%, #000);
+        background: color-mix(in srgb, var(--ui-danger-fill) 86%, #000);
         white-space: nowrap;
       }`),
     ).toEqual([]);

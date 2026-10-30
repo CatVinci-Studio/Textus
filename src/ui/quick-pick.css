@@ -16,14 +16,14 @@
   padding: var(--space-2) var(--space-3);
   font: inherit;
   font-size: var(--text-body);
-  color: var(--editor-text);
-  background: var(--bg);
-  border: 1px solid var(--border-color);
+  color: var(--ui-text);
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
 }
 .quick-pick-input:focus {
-  outline: 2px solid var(--chrome-accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: -1px;
 }
 .quick-pick-list {
@@ -44,8 +44,8 @@
   flex-wrap: wrap;
 }
 .quick-pick-item.is-active {
-  background: var(--sidebar-active);
-  color: var(--sidebar-active-text);
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
 }
 .quick-pick-item > input[type="checkbox"] {
   margin: 0;
@@ -53,11 +53,11 @@
 }
 .quick-pick-detail {
   flex-basis: 100%;
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
   font-size: var(--text-caption);
 }
 .quick-pick-description {
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
   font-size: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -65,12 +65,12 @@
 }
 .quick-pick-empty {
   padding: var(--space-3);
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
   font-size: var(--text-footnote);
 }
 .quick-pick-keys {
   margin-left: auto;
-  color: var(--chrome-muted);
+  color: var(--ui-muted);
   font-size: var(--text-caption);
   font-family: inherit;
 }

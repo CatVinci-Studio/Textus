@@ -88,7 +88,7 @@
   .editor-scroll {
     height: auto;
     overflow: visible;
-    background: var(--editor-bg, var(--bg)) !important;
+    background: var(--doc-bg, var(--ui-bg)) !important;
   }
 
   /* Inset the text (page margins are zero for full-bleed). */
@@ -118,7 +118,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--overlay-bg);
+  background: var(--ui-overlay);
 }
 
 .pdf-export-card {
@@ -128,9 +128,9 @@
   gap: 0.75rem;
   padding: 1.75rem 2.25rem;
   border-radius: var(--shape-l);
-  background: var(--bg);
-  color: var(--editor-text);
-  border: 1px solid var(--border-color);
+  background: var(--ui-bg);
+  color: var(--doc-text);
+  border: 1px solid var(--ui-border);
   box-shadow: var(--shadow-dialog);
   text-align: center;
 }
@@ -140,8 +140,8 @@
   height: 28px;
   border-radius: 50%;
   corner-shape: round;
-  border: 3px solid var(--editor-border);
-  border-top-color: var(--editor-accent);
+  border: 3px solid var(--doc-border);
+  border-top-color: var(--doc-accent);
   animation: pdf-export-spin 0.7s linear infinite;
 }
 

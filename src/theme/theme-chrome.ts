@@ -34,26 +34,23 @@ export function chromePalette(background: RGB, foreground: RGB, accent: RGB) {
   const subtle = mix(background, text, 0.035);
   const active = mix(background, readable(accent, background), 0.14);
   return {
-    "--bg": rgb(background),
-    "--chrome-text": rgb(text),
-    "--chrome-muted": rgb(readable(mix(background, text, 0.6), subtle)),
-    "--chrome-accent": rgb(readable(accent, background)),
-    "--chrome-primary": rgb(readable(accent, WHITE)),
-    "--chrome-subtle": rgb(subtle),
-    "--sidebar-bg": rgb(subtle),
-    "--sidebar-text": rgb(text),
-    "--sidebar-hover": rgb(mix(background, text, 0.08)),
-    "--sidebar-active": rgb(
-      mix(background, readable(accent, background), 0.14),
-    ),
-    "--sidebar-active-text": rgb(readable(text, active)),
-    "--border-color": rgb(mix(background, text, 0.18)),
-    "--danger": rgb(readable([190, 54, 75], background)),
-    // A fill that carries --on-fill's white whatever the page.
-    "--danger-fill": rgb(readable([190, 54, 75], WHITE)),
-    "--success-color": rgb(readable([36, 115, 77], background)),
-    "--warning-color": rgb(readable([154, 98, 18], background)),
-    "--overlay-bg": dark ? "rgb(0 0 0 / 48%)" : "rgb(20 27 40 / 30%)",
+    "--ui-bg": rgb(background),
+    "--ui-surface": rgb(background),
+    "--ui-text": rgb(text),
+    "--ui-muted": rgb(readable(mix(background, text, 0.6), subtle)),
+    "--ui-accent": rgb(readable(accent, background)),
+    "--ui-accent-fill": rgb(readable(accent, WHITE)),
+    "--ui-subtle": rgb(subtle),
+    "--ui-hover": rgb(mix(background, text, 0.08)),
+    "--ui-selected": rgb(mix(background, readable(accent, background), 0.14)),
+    "--ui-selected-text": rgb(readable(text, active)),
+    "--ui-border": rgb(mix(background, text, 0.18)),
+    "--ui-danger": rgb(readable([190, 54, 75], background)),
+    // A fill that carries --ui-on-fill's white whatever the page.
+    "--ui-danger-fill": rgb(readable([190, 54, 75], WHITE)),
+    "--ui-success": rgb(readable([36, 115, 77], background)),
+    "--ui-warning": rgb(readable([154, 98, 18], background)),
+    "--ui-overlay": dark ? "rgb(0 0 0 / 48%)" : "rgb(20 27 40 / 30%)",
     "--shadow-popover": dark
       ? "0 4px 16px rgb(0 0 0 / 24%)"
       : "0 4px 16px rgb(20 27 40 / 10%)",
@@ -81,6 +78,13 @@ export function themeColumnWidth(maxWidth: string): string | null {
   return null;
 }
 
+/** Typora's interface variables, as the ones they stand for here. */
+const TYPORA_INTERFACE: Record<string, string> = {
+  "--side-bar-bg-color": "--ui-subtle",
+  "--item-hover-bg-color": "--ui-hover",
+  "--active-file-bg-color": "--ui-selected",
+};
+
 /** Also the id of the boot script's first-frame copy, so applying here
  *  replaces that one. */
 const STYLE_ID = "textus-imported-chrome";
@@ -104,7 +108,7 @@ export function applyThemeChrome(css: string, dark: boolean): string | null {
     if (!doc || !view) return null;
     doc.documentElement.dataset.theme = dark ? "dark" : "light";
     const base = doc.createElement("style");
-    base.textContent = `body { background: var(--bg-color, var(--editor-bg, var(--bg, ${dark ? "#1b1e24" : "#fff"}))); color: var(--text-color, var(--editor-text, ${dark ? "#e4e7ed" : "#24272e"})); } a { color: var(--primary-color, var(--editor-accent, #315ed1)); }`;
+    base.textContent = `body { background: var(--bg-color, var(--ui-surface, var(--ui-bg, ${dark ? "#1b1e24" : "#fff"}))); color: var(--text-color, var(--ui-text, ${dark ? "#e4e7ed" : "#24272e"})); } a { color: var(--primary-color, var(--ui-accent, #315ed1)); }`;
     const theme = doc.createElement("style");
     theme.textContent = css;
     doc.head.append(base, theme);
@@ -146,14 +150,14 @@ export function applyThemeChrome(css: string, dark: boolean): string | null {
     // Typora themes often style body/#write without Textus variables. Supply
     // those variables for source view, code blocks and editor decorations too.
     for (const [key, fallback] of Object.entries({
-      "--editor-bg": palette["--bg"],
-      "--editor-text": palette["--chrome-text"],
-      "--editor-muted": palette["--chrome-muted"],
-      "--editor-accent": palette["--chrome-accent"],
-      "--editor-border": palette["--border-color"],
-      "--editor-code-bg": palette["--chrome-subtle"],
-      "--editor-quote-border": palette["--chrome-accent"],
-      "--editor-highlight-bg": palette["--sidebar-active"],
+      "--doc-bg": palette["--ui-bg"],
+      "--doc-text": palette["--ui-text"],
+      "--doc-muted": palette["--ui-muted"],
+      "--doc-accent": palette["--ui-accent"],
+      "--doc-border": palette["--ui-border"],
+      "--doc-code-bg": palette["--ui-subtle"],
+      "--doc-quote-border": palette["--ui-accent"],
+      "--doc-highlight-bg": palette["--ui-selected"],
     })) {
       palette[key] = documentStyle.getPropertyValue(key).trim() || fallback;
     }
@@ -162,10 +166,19 @@ export function applyThemeChrome(css: string, dark: boolean): string | null {
     // "Adaptive".
     const themeWidth = themeColumnWidth(documentStyle.maxWidth);
     if (themeWidth) palette["--theme-content-width"] = themeWidth;
+    const rootStyle = view.getComputedStyle(doc.documentElement);
+    // A Typora theme's own interface colours, where the text stays readable
+    // on them.
+    const text = read(palette["--ui-text"]);
+    for (const [typora, key] of Object.entries(TYPORA_INTERFACE)) {
+      const raw = rootStyle.getPropertyValue(typora).trim();
+      const value = raw ? read(raw) : null;
+      if (value && text && contrast(value, text) >= 4.5)
+        palette[key] = rgb(value);
+    }
     // A theme may name its own interface colours on :root; only the theme
     // sets variables in this frame, so whatever it names wins over the
     // derived value.
-    const rootStyle = view.getComputedStyle(doc.documentElement);
     for (const key of Object.keys(palette)) {
       const own = rootStyle.getPropertyValue(key).trim();
       if (own) palette[key] = own;

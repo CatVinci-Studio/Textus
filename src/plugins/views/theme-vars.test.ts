@@ -8,11 +8,11 @@ describe("webviewThemeCss", () => {
 
   it("hands a plugin the window's motion with its colours", () => {
     const root = document.documentElement.style;
-    root.setProperty("--bg", "#fff");
+    root.setProperty("--ui-bg", "#fff");
     root.setProperty("--dur-medium", "250ms");
     root.setProperty("--motion-distance-sm", "0px");
     const css = webviewThemeCss();
-    expect(css).toContain("--bg: #fff;");
+    expect(css).toContain("--ui-bg: #fff;");
     expect(css).toContain("--dur-medium: 250ms;");
     // Reduced motion's distances come along as they are.
     expect(css).toContain("--motion-distance-sm: 0px;");

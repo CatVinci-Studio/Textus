@@ -1,6 +1,6 @@
 ---
 name: textus-theme
-description: Author or modify a Textus editor theme - the built-in content themes in src/editor/content-themes.css, or a Typora-compatible CSS file users import. Use when adding a theme, changing theme colours, touching --editor-* / --sidebar-* / --bg CSS variables, debugging why a theme only half-applies or looks wrong in dark mode, or working on the theme picker in Settings.
+description: Author or modify a Textus editor theme - the built-in content themes in src/editor/content-themes.css, or a Typora-compatible CSS file users import. Use when adding a theme, changing theme colours, touching --doc-* / --sidebar-* / --ui-bg CSS variables, debugging why a theme only half-applies or looks wrong in dark mode, or working on the theme picker in Settings.
 ---
 
 # Authoring a Textus theme
@@ -67,21 +67,21 @@ Everything here is scoped to the writing area.
 
 | Variable                | Controls                                                                                                                                |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `--editor-bg`           | Editor background. Falls back to `--bg`, so `default` leaves it unset.                                                                  |
-| `--editor-text`         | Body text.                                                                                                                              |
-| `--editor-muted`        | Secondary text: placeholders, counts, tool lines, most icons. The single most-used variable - it carries the app's whole "quiet" layer. |
-| `--editor-accent`       | Links, the caret, focus rings, active states, accepted-edit highlights. The most visible colour in the app.                             |
-| `--editor-border`       | Hairlines, table rules, input outlines.                                                                                                 |
-| `--editor-code-bg`      | Inline code and code-block background.                                                                                                  |
-| `--editor-quote-border` | The blockquote's leading rule.                                                                                                          |
-| `--editor-highlight-bg` | `==marked==` text and find-match highlights. Defined in `App.css`; built-in content themes leave it alone.                              |
-| `--editor-font`         | Content font stack. Only read once, as `var(--editor-font, var(--font-sans))`. Include CJK families - see _Gotchas_.                    |
-| `--editor-list-gap`     | Vertical gap between list rows: the margin on an item's paragraph and on nested lists. Falls back to `0.4em` (tighter than prose).      |
+| `--doc-bg`           | Editor background. Falls back to `--ui-bg`, so `default` leaves it unset.                                                                  |
+| `--doc-text`         | Body text.                                                                                                                              |
+| `--doc-muted`        | Secondary text: placeholders, counts, tool lines, most icons. The single most-used variable - it carries the app's whole "quiet" layer. |
+| `--doc-accent`       | Links, the caret, focus rings, active states, accepted-edit highlights. The most visible colour in the app.                             |
+| `--doc-border`       | Hairlines, table rules, input outlines.                                                                                                 |
+| `--doc-code-bg`      | Inline code and code-block background.                                                                                                  |
+| `--doc-quote-border` | The blockquote's leading rule.                                                                                                          |
+| `--doc-highlight-bg` | `==marked==` text and find-match highlights. Defined in `App.css`; built-in content themes leave it alone.                              |
+| `--doc-font`         | Content font stack. Only read once, as `var(--doc-font, var(--font-sans))`. Include CJK families - see _Gotchas_.                    |
+| `--doc-list-gap`     | Vertical gap between list rows: the margin on an item's paragraph and on nested lists. Falls back to `0.4em` (tighter than prose).      |
 
 ### Chrome variables — NOT for content themes
 
-`--bg`, `--sidebar-bg`, `--sidebar-text`, `--sidebar-hover`,
-`--sidebar-active`, `--sidebar-active-text`, `--border-color`, `--danger`,
+`--ui-bg`, `--ui-subtle`, `--ui-text`, `--ui-hover`,
+`--ui-selected`, `--ui-selected-text`, `--ui-border`, `--ui-danger`,
 `--font-sans`. These are the window frame. `content-themes.css` deliberately
 never touches them: picking a built-in theme reskins the writing area, not the
 whole app. `ui/base.css` and `ui/design-system.css` set them, in their
@@ -91,8 +91,8 @@ derives them from its page, and its own `:root` may set any of them (see
 
 ### Two more families, in `milkdown-theme.css`
 
-`--token-string`, `--token-number`, `--token-keyword`, `--token-function`,
-`--token-tag` — code-block syntax highlighting.
+`--doc-token-string`, `--doc-token-number`, `--doc-token-keyword`, `--doc-token-function`,
+`--doc-token-tag` — code-block syntax highlighting.
 
 `--doc-alert-note`, `--doc-alert-tip`, `--doc-alert-important`,
 `--doc-alert-warning`, `--doc-alert-caution`, `--doc-alert-accent` — GitHub-style
@@ -118,8 +118,8 @@ theme can set any of them.
 | `--revision-delete-strike`   | The line through the original.                                                                               |
 | `--revision-delete-hover-bg` | The original's darker tint while its pair is under the pointer or the review bar's pointer, and in its card. |
 
-Built-in content themes leave them alone: the tints follow `--success-color`
-and `--danger`, which the dark palette already tunes.
+Built-in content themes leave them alone: the tints follow `--ui-success`
+and `--ui-danger`, which the dark palette already tunes.
 
 ## Adding a built-in theme
 
@@ -193,7 +193,7 @@ rg -o -- '--[a-z-]+\s*:' src --type css | sort -u    # defined
 rg -o -- 'var\(--[a-z-]+' src --type css | sort -u   # used
 ```
 
-**CJK fonts need naming explicitly.** `--editor-font` stacks must list CJK
+**CJK fonts need naming explicitly.** `--doc-font` stacks must list CJK
 families (`"Songti SC"`, `"Noto Serif CJK SC"`, ...) - a Latin-only stack
 silently falls back to a system default for Chinese and Japanese text.
 
@@ -202,8 +202,8 @@ on purpose: PingFang and Noto CJK ship no italic face, so without synthesis
 `*emphasis*` on Chinese/Japanese renders upright. An imported theme that
 turns synthesis off loses CJK italics entirely.
 
-**`--editor-bg` is unset by default.** Consumers read
-`var(--editor-bg, var(--bg))`. If a theme sets it, make sure the dark form
+**`--doc-bg` is unset by default.** Consumers read
+`var(--doc-bg, var(--ui-bg))`. If a theme sets it, make sure the dark form
 sets it too, or dark mode will show a light editor on dark chrome.
 
 **Contrast both ways.** A colour tuned against a light background usually

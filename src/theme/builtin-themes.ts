@@ -1,6 +1,6 @@
 import type { TextKey } from "../i18n/strings";
 
-/// Built-in content themes only override `--editor-*` variables; "default"
+/// Built-in content themes only override `--doc-*` variables; "default"
 /// means none are active.
 export type BuiltinContentThemeId =
   "default" | "paper" | "slate" | "forest" | "parchment";

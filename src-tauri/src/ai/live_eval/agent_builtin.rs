@@ -1078,7 +1078,7 @@ fn create_cases() -> Vec<AgentCase> {
             "create/theme/en/night",
             Lang::En,
             "a calm dark theme for writing at night, warm grey page, amber links",
-            no_edit().check("loads theme", loads("theme")).check("a theme file", reply_block("css", &["--editor-bg"])),
+            no_edit().check("loads theme", loads("theme")).check("a theme file", reply_block("css", &["--doc-bg"])),
             "Create mode: one complete CSS theme in a ```css block - a dark warm-grey page, amber links, readable contrast. No edits.",
         ),
         create(

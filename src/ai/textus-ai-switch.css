@@ -8,7 +8,7 @@
   padding: 24px;
   text-align: center;
   font-size: var(--text-body);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .textus-ai-off p {

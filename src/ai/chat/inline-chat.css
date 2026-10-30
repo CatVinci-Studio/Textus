@@ -7,14 +7,10 @@
 :is(.agent-panel-view, .chat-window, .inline-chat) {
   --chat-card-bg: color-mix(
     in srgb,
-    var(--editor-text) 3%,
-    var(--editor-bg, var(--bg))
+    var(--ui-text) 3%,
+    var(--ui-surface, var(--ui-bg))
   );
-  --chat-hairline: color-mix(
-    in srgb,
-    var(--editor-border, var(--border-color)) 80%,
-    transparent
-  );
+  --chat-hairline: color-mix(in srgb, var(--ui-border) 80%, transparent);
 }
 
 .inline-chat {
@@ -37,8 +33,8 @@
 .inline-chat ::selection {
   background: color-mix(
     in srgb,
-    var(--editor-accent) 35%,
-    var(--editor-bg, var(--bg))
+    var(--ui-accent) 35%,
+    var(--ui-surface, var(--ui-bg))
   );
 }
 
@@ -85,7 +81,7 @@
 
 .inline-chat-confirm-message {
   font-size: var(--text-secondary);
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .inline-chat-confirm-actions {
@@ -104,7 +100,7 @@
 
 /* One rule frames every section boundary inside the shell. */
 .inline-chat-shell > * + * {
-  border-top: 1px solid var(--editor-border);
+  border-top: 1px solid var(--ui-border);
 }
 
 /* ...except right below the header. Said from the shell: a bare
@@ -136,9 +132,9 @@
      corners. */
   gap: var(--space-2);
   padding: var(--space-2);
-  border: 1px solid var(--editor-border, var(--border-color));
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-m);
-  background: var(--editor-bg, var(--bg));
+  background: var(--ui-surface, var(--ui-bg));
   box-shadow: var(--shadow-raised);
   transition:
     border-color var(--dur-fast) var(--ease-standard),
@@ -146,13 +142,8 @@
 }
 
 :is(.agent-panel-body, .chat-window-body) .inline-chat-field:focus-within {
-  border-color: color-mix(
-    in srgb,
-    var(--editor-accent) 55%,
-    var(--editor-border, var(--border-color))
-  );
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--editor-accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--ui-accent) 55%, var(--ui-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-accent) 14%, transparent);
 }
 
 :is(.agent-panel-body, .chat-window-body) .inline-chat-input {
@@ -178,12 +169,12 @@
   min-width: 0;
   border-color: transparent;
   /* The colour only: the chevron is the background image. */
-  background-color: color-mix(in srgb, var(--editor-text) 6%, transparent);
+  background-color: color-mix(in srgb, var(--ui-text) 6%, transparent);
 }
 
 :is(.agent-panel-body, .chat-window-body)
   .ui-select.inline-chat-mode:not(:disabled):hover {
-  background-color: color-mix(in srgb, var(--editor-text) 10%, transparent);
+  background-color: color-mix(in srgb, var(--ui-text) 10%, transparent);
 }
 
 /* Input on top, tool row below, always on one row: the chip gives way
@@ -212,11 +203,11 @@
   align-items: center;
   gap: 4px;
   font-size: var(--text-caption);
-  color: var(--editor-text);
-  border: 1px solid color-mix(in srgb, var(--editor-accent) 30%, transparent);
+  color: var(--ui-text);
+  border: 1px solid color-mix(in srgb, var(--ui-accent) 30%, transparent);
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: color-mix(in srgb, var(--editor-accent) 12%, transparent);
+  background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
   padding: 2px 6px;
   white-space: nowrap;
   overflow: hidden;
@@ -238,7 +229,7 @@
 }
 
 .inline-chat-selection-chip:hover {
-  background: color-mix(in srgb, var(--editor-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--ui-accent) 22%, transparent);
 }
 
 .inline-chat-chip-label {
@@ -271,9 +262,9 @@
 }
 
 .inline-chat-toggle.is-active {
-  border-color: var(--editor-accent);
-  background: color-mix(in srgb, var(--editor-accent) 14%, transparent);
-  color: var(--editor-accent);
+  border-color: var(--ui-accent);
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+  color: var(--ui-accent);
 }
 
 /* On, but nothing can search: a dot on the button, its tooltip says why. */
@@ -290,7 +281,7 @@
   height: 6px;
   border-radius: 50%;
   corner-shape: round;
-  background: var(--danger);
+  background: var(--ui-danger);
 }
 
 .inline-chat-attachments {
@@ -305,11 +296,11 @@
   align-items: center;
   gap: 4px;
   padding: 2px 6px;
-  border: 1px solid var(--editor-border);
+  border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
   font-size: var(--text-caption);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .inline-chat-attachment-remove {
@@ -317,7 +308,7 @@
   align-items: center;
   border: none;
   background: transparent;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   cursor: pointer;
   padding: 0;
 }
@@ -341,7 +332,7 @@
 .inline-chat-attach-error {
   padding: 4px 8px;
   font-size: var(--text-caption);
-  color: var(--danger);
+  color: var(--ui-danger);
 }
 
 /* Skill picker: opens while the input holds a /prefix being typed, between
@@ -365,7 +356,7 @@
   border: none;
   border-radius: var(--shape-s);
   background: transparent;
-  color: var(--editor-text);
+  color: var(--ui-text);
   cursor: pointer;
   font-size: var(--text-secondary);
   text-align: left;
@@ -373,12 +364,12 @@
 }
 
 .inline-chat-skill-item:hover {
-  background: var(--sidebar-hover);
+  background: var(--ui-hover);
 }
 
 /* The keyboard's row: the accent's tint, as a selected list row. */
 .inline-chat-skill-item-active {
-  background: color-mix(in srgb, var(--editor-accent) 13%, transparent);
+  background: color-mix(in srgb, var(--ui-accent) 13%, transparent);
 }
 
 .inline-chat-skill-name {
@@ -387,7 +378,7 @@
 }
 
 .inline-chat-skill-preview {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -414,7 +405,7 @@
 
 .composer-picker-group-title {
   padding: 8px 8px 3px;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-caption);
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -444,7 +435,7 @@
 
 .composer-picker-secondary {
   flex-shrink: 0;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-family: var(--font-mono);
   font-size: var(--text-caption);
 }
@@ -456,15 +447,15 @@
 .composer-picker-keys {
   flex-shrink: 0;
   padding: 4px 12px 5px;
-  border-top: 1px solid var(--editor-border);
-  color: var(--editor-muted);
+  border-top: 1px solid var(--ui-border);
+  color: var(--ui-muted);
   font-size: var(--text-caption);
 }
 
 /* Nothing to list: what the key does, and how to get something here. */
 .composer-picker-empty {
   padding: 9px 12px;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-footnote);
   line-height: 1.5;
 }
@@ -478,7 +469,7 @@
 }
 
 .composer-picker-empty p:first-child {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .inline-chat-input {
@@ -487,7 +478,7 @@
   border: none;
   outline: none;
   background: transparent;
-  color: var(--editor-text);
+  color: var(--ui-text);
   font: inherit;
   font-size: var(--text-body);
   /* A whole number of pixels, not a 1.5 ratio: the auto-resize sets integer
@@ -507,14 +498,14 @@
 /* The hint in the empty field, in the theme's muted ink: left to the
    engine's own grey, WebKitGTK drew it nearly as dark as typed text. */
 .inline-chat-input::placeholder {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   opacity: 1;
 }
 
 /* A suggested next message (Tab takes it) is fainter still: it read as
    something the writer had typed themselves. */
 .inline-chat-input-suggested::placeholder {
-  color: color-mix(in srgb, var(--editor-muted) 60%, transparent);
+  color: color-mix(in srgb, var(--ui-muted) 60%, transparent);
 }
 
 /* The composer shows its caret; a focus ring only boxed in the icons
@@ -576,7 +567,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: var(--text-secondary);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .quick-ask-summary-row {
@@ -595,7 +586,7 @@
   overflow: hidden;
   font-size: var(--text-body);
   line-height: 1.6;
-  color: var(--editor-text);
+  color: var(--ui-text);
   -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent);
   mask-image: linear-gradient(to bottom, #000 72%, transparent);
 }
@@ -617,7 +608,7 @@
 }
 
 .inline-chat-action {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 /* One propose_edit tool call from the agent: what it replaces and with what.
@@ -627,7 +618,7 @@
   flex-direction: column;
   gap: 8px;
   padding: 10px 12px 12px;
-  border: 1px solid var(--chat-hairline, var(--editor-border));
+  border: 1px solid var(--chat-hairline, var(--ui-border));
   border-radius: var(--shape-m);
   background: var(--chat-card-bg, transparent);
   font-size: var(--text-secondary);
@@ -637,11 +628,7 @@
 /* Decided: the card keeps its diff and says what became of it - the edge
    takes the outcome's colour as the status line fades in. */
 .agent-proposal[data-status="accepted"] {
-  border-color: color-mix(
-    in srgb,
-    var(--success-color) 40%,
-    var(--editor-border)
-  );
+  border-color: color-mix(in srgb, var(--ui-success) 40%, var(--ui-border));
 }
 
 /* What it is (an icon and "Revision · 2 changes") on the left; the
@@ -659,8 +646,8 @@
   width: 18px;
   height: 18px;
   border-radius: var(--shape-xs);
-  background: color-mix(in srgb, var(--success-color) 14%, transparent);
-  color: var(--success-color);
+  background: color-mix(in srgb, var(--ui-success) 14%, transparent);
+  color: var(--ui-success);
 }
 
 .agent-proposal-icon svg {
@@ -695,14 +682,14 @@
   white-space: nowrap;
   align-self: center;
   font-size: var(--text-caption);
-  color: var(--editor-accent);
+  color: var(--ui-accent);
 }
 
 .agent-proposal-title {
   font-size: var(--text-caption);
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 /* Line-by-line diff: a +/- gutter, tinted rows, and monospace so markdown
@@ -711,12 +698,12 @@
   display: flex;
   flex-direction: column;
   padding: 4px 0;
-  border: 1px solid var(--chat-hairline, var(--editor-border));
+  border: 1px solid var(--chat-hairline, var(--ui-border));
   border-radius: var(--shape-s);
-  background: var(--editor-bg, var(--bg));
+  background: var(--ui-surface, var(--ui-bg));
   overflow: hidden;
   animation: motion-disclose-in var(--dur-fast) var(--ease-out);
-  font-family: var(--editor-mono-font, var(--font-mono));
+  font-family: var(--doc-mono-font, var(--font-mono));
   font-size: var(--text-secondary);
   line-height: 1.5;
 }
@@ -743,12 +730,12 @@
 
 .agent-diff-remove {
   background: var(--diff-delete-bg);
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .agent-diff-add {
   background: var(--diff-insert-bg);
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 /* The size chips double as the full diff's toggle - the document already
@@ -762,10 +749,10 @@
   border: none;
   background: none;
   padding: 2px 0;
-  font-family: var(--editor-mono-font, var(--font-mono));
+  font-family: var(--doc-mono-font, var(--font-mono));
   font-size: var(--text-caption);
   cursor: pointer;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .agent-diff-chip {
@@ -792,7 +779,7 @@
 }
 
 .agent-diff-summary:hover {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .agent-proposal button {
@@ -803,7 +790,7 @@
    stays, so scrolling back still shows what each edit did. */
 .agent-proposal-status {
   font-size: var(--text-footnote);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   animation: motion-fade-in var(--dur-fast) var(--ease-out);
 }
 
@@ -814,11 +801,11 @@
 }
 
 .agent-proposal-status-accepted {
-  color: var(--editor-accent);
+  color: var(--ui-accent);
 }
 
 .agent-proposal-status-invalid {
-  color: var(--danger);
+  color: var(--ui-danger);
 }
 
 .agent-proposal-actions {
@@ -837,13 +824,13 @@
   padding: 2px 0;
   font: inherit;
   font-size: var(--text-secondary);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   cursor: pointer;
 }
 
 .agent-proposal-link:hover,
 .agent-proposal-link[aria-expanded="true"] {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .agent-proposal-link:hover {
@@ -860,13 +847,13 @@
   gap: 4px 8px;
   padding: 6px 10px 6px 14px;
   font-size: var(--text-secondary);
-  color: var(--editor-text);
+  color: var(--ui-text);
   /* Over the panel's own colour rather than see-through: on the phone the
      sheet's composer area passes over the message list while it moves. */
   background: color-mix(
     in srgb,
-    var(--editor-accent) 10%,
-    var(--editor-bg, var(--bg))
+    var(--ui-accent) 10%,
+    var(--ui-surface, var(--ui-bg))
   );
 }
 
@@ -877,7 +864,7 @@
 /* What follows the bar paints over it while it moves. */
 .inline-chat-pending-bar ~ :is(.inline-chat-bar, .inline-chat-skill-menu) {
   position: relative;
-  background: var(--editor-bg, var(--bg));
+  background: var(--ui-surface, var(--ui-bg));
 }
 
 @keyframes pending-bar-in {
@@ -922,8 +909,8 @@
   gap: 8px;
   padding: 5px 8px;
   font-size: var(--text-secondary);
-  color: var(--editor-text);
-  background: color-mix(in srgb, var(--editor-accent) 10%, transparent);
+  color: var(--ui-text);
+  background: color-mix(in srgb, var(--ui-accent) 10%, transparent);
 }
 
 .quick-ask-pending-nav {
@@ -941,7 +928,7 @@
 
 .quick-ask-pending-position {
   font-variant-numeric: tabular-nums;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   white-space: nowrap;
 }
 
@@ -1002,14 +989,14 @@
   align-items: center;
   gap: 6px;
   font-size: var(--text-secondary);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 /* How long the model thought: one grey line under the question, which opens
    to the reasoning when the provider shared it. */
 .agent-thought {
   font-size: var(--text-secondary);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .agent-thought-toggle {
@@ -1025,7 +1012,7 @@
 }
 
 .agent-thought-toggle:hover {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .agent-thought-chevron {
@@ -1046,7 +1033,7 @@
 .agent-thought-text {
   margin-top: 4px;
   padding-left: 10px;
-  border-left: 2px solid var(--editor-border);
+  border-left: 2px solid var(--ui-border);
   font-size: var(--text-caption);
   line-height: 1.55;
   white-space: pre-wrap;
@@ -1143,7 +1130,7 @@
   vertical-align: -0.15em;
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: var(--editor-accent);
+  background: var(--ui-accent);
   animation: agent-caret-pulse 1s var(--ease-standard) infinite;
 }
 
@@ -1245,7 +1232,7 @@
   blockquote {
   margin: 0.5em 0;
   padding: 0 0 0 8px;
-  border-left: 2px solid var(--editor-border);
+  border-left: 2px solid var(--ui-border);
   border-radius: 0;
   background: none;
 }
@@ -1271,7 +1258,7 @@
 
 .inline-chat :is(.agent-message, .quick-ask-summary) .agent-markdown hr {
   margin: 0.8em 0;
-  border-top: 1px solid var(--editor-border);
+  border-top: 1px solid var(--ui-border);
   opacity: 1;
 }
 
@@ -1314,7 +1301,7 @@
 .agent-proposal-reason {
   font-size: var(--text-body);
   line-height: 1.5;
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 /* A proposal that cites the web: how Accept writes its sources. */
@@ -1323,7 +1310,7 @@
   align-items: center;
   gap: 6px;
   font-size: var(--text-caption);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   cursor: pointer;
 }
 
@@ -1349,7 +1336,7 @@
 }
 
 .agent-proposal-sentences > li:hover {
-  background: color-mix(in srgb, var(--editor-text) 4%, transparent);
+  background: color-mix(in srgb, var(--ui-text) 4%, transparent);
 }
 
 .agent-proposal .agent-proposal-sentence {
@@ -1364,7 +1351,7 @@
   font: inherit;
   font-size: var(--text-secondary);
   line-height: 1.5;
-  color: var(--editor-text);
+  color: var(--ui-text);
   text-align: start;
   cursor: pointer;
 }
@@ -1382,8 +1369,8 @@
   margin-top: 1px;
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: var(--success-color);
-  color: var(--on-fill);
+  background: var(--ui-success);
+  color: var(--ui-on-fill);
   font-size: calc(10.5px * var(--ui-text-scale, 1));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -1391,11 +1378,11 @@
 }
 
 li[data-state="kept"] .agent-proposal-num {
-  background: color-mix(in srgb, var(--editor-muted) 70%, transparent);
+  background: color-mix(in srgb, var(--ui-muted) 70%, transparent);
 }
 
 li[data-state="kept"] .agent-proposal-sentence-text {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 /* A change of whole paragraphs keeps them apart (as its margin card). */
@@ -1413,7 +1400,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
    behind the accent's rule. */
 .agent-comment {
   padding: 10px 12px 12px;
-  border: 1px solid var(--chat-hairline, var(--editor-border));
+  border: 1px solid var(--chat-hairline, var(--ui-border));
   border-radius: var(--shape-m);
   background: var(--chat-card-bg, transparent);
 }
@@ -1456,7 +1443,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: var(--review-note-line);
-  color: var(--on-fill);
+  color: var(--ui-on-fill);
   font: 700 calc(10.5px * var(--ui-text-scale, 1)) / 1
     var(--font-ui, sans-serif);
 }
@@ -1464,7 +1451,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
 .agent-comment .agent-proposal-show {
   margin-left: auto;
   font-size: var(--text-caption);
-  color: var(--editor-accent);
+  color: var(--ui-accent);
 }
 
 .agent-comment-quote {
@@ -1472,7 +1459,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   padding: 0 0 0 8px;
   border-left: 2px solid var(--review-note-line);
   font-size: var(--text-secondary);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -1500,7 +1487,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
 }
 
 .agent-comment-row + .agent-comment-row {
-  border-top: 1px solid var(--chat-hairline, var(--editor-border));
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
 }
 
 .agent-comment-row:first-child {
@@ -1518,13 +1505,13 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   background: none;
   font: inherit;
   font-size: var(--text-secondary);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   text-align: start;
   cursor: pointer;
 }
 
 .agent-comment-row-quote:hover:not(:disabled) {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 .agent-comment-row-quote:disabled {
@@ -1543,9 +1530,9 @@ li[data-state="kept"] .agent-proposal-sentence-text {
 }
 
 .agent-error-detail {
-  font-family: var(--editor-mono-font, var(--font-mono));
+  font-family: var(--doc-mono-font, var(--font-mono));
   font-size: var(--text-caption);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 /* Messages sent while a reply is coming, over the composer: a line each,
@@ -1556,14 +1543,14 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   gap: 2px;
   padding: 6px 10px 6px 14px;
   font-size: var(--text-secondary);
-  color: var(--editor-text);
-  border-top: 1px solid var(--chat-hairline, var(--editor-border));
+  color: var(--ui-text);
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
 }
 .chat-queue-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font-size: var(--text-caption);
 }
 .chat-queue-item {
@@ -1583,12 +1570,12 @@ button.chat-queue-action {
   padding: 0 4px;
   border: 0;
   background: none;
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   font: inherit;
   cursor: pointer;
 }
 button.chat-queue-action:hover {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
 
 /* A run of proposals as one card: a row each, and a decided one says how. */
@@ -1611,13 +1598,13 @@ button.chat-queue-action:hover {
 .agent-proposal-group-status {
   flex: none;
   font-size: var(--text-caption);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 .agent-proposal-group-rows
   > li:not([data-state="pending"])
   .agent-proposal-sentence-text {
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 /* A group's row text, and its own reason under it where the group's
@@ -1634,7 +1621,7 @@ button.chat-queue-action:hover {
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: var(--text-caption);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
 }
 
 /* "Show N more", and a decided group's status line: quiet text buttons
@@ -1646,10 +1633,10 @@ button.chat-queue-action:hover {
   padding: 2px 4px;
   font: inherit;
   font-size: var(--text-caption);
-  color: var(--editor-muted);
+  color: var(--ui-muted);
   cursor: pointer;
 }
 
 .agent-proposal-group-fold:hover {
-  color: var(--editor-text);
+  color: var(--ui-text);
 }
