@@ -92,7 +92,10 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
             // document-level capture listens on - record explicitly.
             recordClipboardEntry(text);
           }
-          if (cut) view.dispatch(view.state.tr.deleteSelection());
+          if (cut)
+            view.dispatch(
+              view.state.tr.deleteSelection().setMeta("uiEvent", "cut"),
+            );
           view.focus();
         })();
       });
@@ -128,11 +131,15 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
           view.dispatch(
             view.state.tr
               .replaceSelection(Slice.maxOpen(doc.content))
+              .setMeta("uiEvent", "paste")
               .scrollIntoView(),
           );
           inserted = true;
         }
-        if (!inserted) view.dispatch(view.state.tr.insertText(text));
+        if (!inserted)
+          view.dispatch(
+            view.state.tr.insertText(text).setMeta("uiEvent", "paste"),
+          );
         view.focus();
       });
     },
