@@ -315,7 +315,7 @@ test("Settings fills the phone's screen, its edge strips take its colour in ligh
     width: 430,
     height: 932,
   });
-  // The categories are tabs along the top; a phone has no Shortcuts.
+  // A list of the categories; a phone has no Shortcuts.
   await expect(page.getByRole("button", { name: "General" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Shortcuts" })).toHaveCount(0);
   // No group stands empty for what a phone doesn't have.

@@ -82,29 +82,129 @@
     min-height: 44px;
   }
 
-  /* Four tabs across one screen: the tightest spacing that still fits them on a
-     375pt iPhone. */
-  :root[data-window-chrome="mobile"] .settings-nav {
-    padding: 8px 8px;
+  /* Back, as iOS writes it: a chevron and the page it goes to. */
+  :root[data-window-chrome="mobile"] .settings-bar-back {
+    position: absolute;
+    top: 0;
+    left: 4px;
+    display: inline-flex;
+    align-items: center;
     gap: 2px;
-    border-bottom: 1px solid var(--ui-border);
+    width: auto;
+    max-width: 30%;
+    min-height: 44px;
+    margin: 0;
+    padding: 0 8px;
+    border: none;
+    background: none;
+    color: var(--ui-accent);
+    font-size: var(--text-body);
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :root[data-window-chrome="mobile"] .settings-bar-back .settings-back-chevron {
+    flex: none;
+    width: 14px;
+    height: 14px;
+  }
+
+  /* The bar has the way back; the page doesn't repeat it. */
+  :root[data-window-chrome="mobile"] .settings-content .settings-back-button {
+    display: none;
+  }
+
+  /* The list of categories: one inset grouped card under the search box,
+     each row leading to its page. */
+  :root[data-window-chrome="mobile"] .settings-sidebar {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  :root[data-window-chrome="mobile"] .settings-search {
+    margin: 8px 16px 0;
+  }
+
+  :root[data-window-chrome="mobile"] .settings-nav {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0;
+    margin: 16px 16px 32px;
+    padding: 0;
+    overflow: hidden;
+    border-radius: var(--shape-m);
+    background: var(--ui-grouped-card);
   }
 
   :root[data-window-chrome="mobile"] .settings-nav-item {
-    min-height: 36px;
-    padding: 0 8px;
-    border-radius: var(--shape-pill);
-    corner-shape: round;
-    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    position: relative;
+    padding: 0 16px;
+    border-radius: 0;
+    font-size: var(--text-body);
+    font-weight: 400;
+    white-space: normal;
   }
 
-  /* The tab says which category this is; no second title under it. */
+  /* The hairline between rows starts where the text does, as iOS's. */
+  :root[data-window-chrome="mobile"]
+    .settings-nav-item
+    + .settings-nav-item::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 16px;
+    right: 0;
+    border-top: 1px solid var(--ui-border);
+  }
+
+  :root[data-window-chrome="mobile"] .settings-nav-item::after {
+    display: none;
+  }
+
+  :root[data-window-chrome="mobile"] .settings-nav-item:active {
+    background: var(--ui-hover);
+  }
+
+  :root[data-window-chrome="mobile"] .settings-nav-chevron {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    color: var(--ui-muted);
+  }
+
+  /* A page pushed in from the right edge; back, the page before returns from
+     a little way to the left, as a navigation stack does. */
+  :root[data-window-chrome="mobile"]
+    .settings-layout[data-nav="push"]
+    > .settings-content {
+    animation: motion-edge-in-end var(--dur-slow) var(--ease-spring);
+  }
+
+  :root[data-window-chrome="mobile"]
+    .settings-layout[data-nav="pop"]
+    > :is(.settings-content, .settings-sidebar) {
+    --enter-x: calc(-30% * var(--motion-travel));
+    animation: motion-enter var(--dur-slow) var(--ease-spring);
+  }
+
+  /* The bar names the page; no second title under it. */
   :root[data-window-chrome="mobile"] .settings-category-title {
     display: none;
   }
 
+  /* Its scrollbar draws over the page, so the cards line up with the list's. */
   :root[data-window-chrome="mobile"] .settings-content {
     padding: 16px 16px 32px;
+    scrollbar-gutter: auto;
   }
 
   :root[data-window-chrome="mobile"] .settings-group + .settings-group,
@@ -210,9 +310,8 @@
     margin: 0 0 0 -6px;
   }
 
-  /* No hover on glass: a tapped tab or row stays as it was. */
-  :root[data-window-chrome="mobile"]
-    .settings-nav-item:hover:not(.settings-nav-item-active) {
+  /* No hover on glass: a tapped row stays as it was. */
+  :root[data-window-chrome="mobile"] .settings-nav-item:hover:not(:active) {
     background: transparent;
   }
 }
@@ -228,6 +327,9 @@
    point, as iOS draws its separators. */
 @media (max-width: 760px) and (min-resolution: 2dppx) {
   :root[data-window-chrome="mobile"] .settings-group-body > * + *,
+  :root[data-window-chrome="mobile"]
+    .settings-nav-item
+    + .settings-nav-item::before,
   :root[data-window-chrome="mobile"] .provider-picker > * + * {
     border-top-width: 0.5px;
   }
