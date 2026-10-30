@@ -218,6 +218,11 @@ test("the surface slides with the sidebar, frame for frame", async ({
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.locator(toggle).click();
   await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
+  // Its opening slide over first: one turned back at its start lasts as
+  // little as it had run.
+  await page.waitForFunction(
+    () => document.querySelector(".sidebar")!.getAnimations().length === 0,
+  );
 
   const slide = await page.evaluate(async () => {
     const bar = document.querySelector(".window-bar")!;
