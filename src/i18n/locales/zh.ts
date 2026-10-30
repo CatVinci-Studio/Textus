@@ -1118,7 +1118,7 @@ export default {
   missingImageFilter: "图片",
   missingImageChooseFailed: "无法使用所选的图片。",
   imageStorageGroupLabel: "图片",
-  imageStorageLabel: "粘贴的图片",
+  imageStorageLabel: "图片存储位置",
   imageStorageLocal: "存到本机",
   imageStorageRemote: "上传到图床",
   imageFolderLabel: "文件夹",

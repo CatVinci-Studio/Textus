@@ -1267,7 +1267,7 @@ utiliser une.
   missingImageFilter: "Images",
   missingImageChooseFailed: "Impossible d'utiliser l'image choisie.",
   imageStorageGroupLabel: "Images",
-  imageStorageLabel: "Enregistrer les images collées",
+  imageStorageLabel: "Emplacement des images",
   imageStorageLocal: "Sur cet ordinateur",
   imageStorageRemote: "Envoyer vers un hébergeur d'images",
   imageFolderLabel: "Dossier",

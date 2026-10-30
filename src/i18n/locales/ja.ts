@@ -1180,7 +1180,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   missingImageFilter: "画像",
   missingImageChooseFailed: "選んだ画像を使えませんでした。",
   imageStorageGroupLabel: "画像",
-  imageStorageLabel: "貼り付けた画像の保存先",
+  imageStorageLabel: "画像の保存先",
   imageStorageLocal: "このコンピューター",
   imageStorageRemote: "画像ホストにアップロード",
   imageFolderLabel: "フォルダー",

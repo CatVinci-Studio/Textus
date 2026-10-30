@@ -1211,7 +1211,7 @@ type /name in a conversation to use one.
   missingImageFilter: "Images",
   missingImageChooseFailed: "Couldn't use the chosen image.",
   imageStorageGroupLabel: "Images",
-  imageStorageLabel: "Save pasted images",
+  imageStorageLabel: "Image storage",
   imageStorageLocal: "On this computer",
   imageStorageRemote: "Upload to an image host",
   imageFolderLabel: "Folder",

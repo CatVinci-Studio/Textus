@@ -1245,7 +1245,7 @@ para usar una.
   missingImageFilter: "Imágenes",
   missingImageChooseFailed: "No se pudo usar la imagen elegida.",
   imageStorageGroupLabel: "Imágenes",
-  imageStorageLabel: "Guardar imágenes pegadas",
+  imageStorageLabel: "Ubicación de las imágenes",
   imageStorageLocal: "En este equipo",
   imageStorageRemote: "Subir a un servidor de imágenes",
   imageFolderLabel: "Carpeta",

@@ -1170,7 +1170,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   missingImageFilter: "이미지",
   missingImageChooseFailed: "선택한 이미지를 사용할 수 없습니다.",
   imageStorageGroupLabel: "이미지",
-  imageStorageLabel: "붙여 넣은 이미지",
+  imageStorageLabel: "이미지 저장 위치",
   imageStorageLocal: "이 컴퓨터에 저장",
   imageStorageRemote: "이미지 호스팅에 업로드",
   imageFolderLabel: "폴더",

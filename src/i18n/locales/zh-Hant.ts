@@ -1121,7 +1121,7 @@ export default {
   missingImageFilter: "圖片",
   missingImageChooseFailed: "無法使用所選的圖片。",
   imageStorageGroupLabel: "圖片",
-  imageStorageLabel: "貼上的圖片",
+  imageStorageLabel: "圖片儲存位置",
   imageStorageLocal: "存到這台電腦",
   imageStorageRemote: "上傳到圖片託管服務",
   imageFolderLabel: "資料夾",

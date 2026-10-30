@@ -1238,7 +1238,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   missingImageChooseFailed:
     "Das ausgewählte Bild konnte nicht verwendet werden.",
   imageStorageGroupLabel: "Bilder",
-  imageStorageLabel: "Eingefügte Bilder speichern",
+  imageStorageLabel: "Bildspeicherort",
   imageStorageLocal: "Auf diesem Computer",
   imageStorageRemote: "Zu einem Bildhoster hochladen",
   imageFolderLabel: "Ordner",

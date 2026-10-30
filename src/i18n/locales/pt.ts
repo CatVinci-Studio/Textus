@@ -1228,7 +1228,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   missingImageFilter: "Imagens",
   missingImageChooseFailed: "Não foi possível usar a imagem escolhida.",
   imageStorageGroupLabel: "Imagens",
-  imageStorageLabel: "Salvar imagens coladas",
+  imageStorageLabel: "Local das imagens",
   imageStorageLocal: "Neste computador",
   imageStorageRemote: "Enviar para uma hospedagem de imagens",
   imageFolderLabel: "Pasta",

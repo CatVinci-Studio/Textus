@@ -1237,7 +1237,7 @@ export default {
   missingImageFilter: "Изображения",
   missingImageChooseFailed: "Не удалось использовать выбранное изображение.",
   imageStorageGroupLabel: "Изображения",
-  imageStorageLabel: "Сохранять вставленные изображения",
+  imageStorageLabel: "Где хранить изображения",
   imageStorageLocal: "На этом компьютере",
   imageStorageRemote: "Загружать на хостинг изображений",
   imageFolderLabel: "Папка",
