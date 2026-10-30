@@ -328,12 +328,6 @@ export function buildAppMenu(
           accel: shortcuts.findReplace,
           action: { native: "find-replace" },
         },
-        "separator",
-        {
-          label: t.menuTrackChanges,
-          action: { native: "track-changes" },
-          checked: !!checks.trackChanges,
-        },
       ],
     },
     { label: t.menuFormat, submenu: formatEntries(t, shortcuts) },
@@ -377,6 +371,11 @@ export function buildAppMenu(
           accel: shortcuts.toggleZenMode,
           action: { native: "toggle-zen-mode" },
           checked: !!checks.zen,
+        },
+        {
+          label: t.menuTrackChanges,
+          action: { native: "track-changes" },
+          checked: !!checks.trackChanges,
         },
         {
           label: t.menuToggleReadOnly,

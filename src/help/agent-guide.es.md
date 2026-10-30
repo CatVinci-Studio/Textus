@@ -65,7 +65,7 @@ El chat nunca escribe directamente en tu documento. Si usas un proveedor que adm
 - **En el cursor**: sin nada seleccionado, Textus AI sabe dónde está tu cursor, así que «escribe aquí una transición» inserta el texto justo ahí.
 - **Comentarios en lugar de cambios**: pide una revisión («¿qué flojea aquí?») y Textus AI fija comentarios a los fragmentos sin cambiarlos. Cada tarjeta de comentario tiene **Mostrar en el documento**, que selecciona el fragmento al que se refiere.
 - **Tus propias notas**: selecciona unas palabras, haz clic derecho y elige **Añadir nota**: tu nota va al margen junto a las de Textus AI, marcada como Yo. Las notas se guardan junto a los datos propios de Textus, no en tu Markdown.
-- **Control de mis cambios** (menú Edición): mientras está activado, tus propios cambios también se muestran como cambios (lo que borraste, tachado; lo que añadiste, marcado), cada uno con una tarjeta en el margen, marcada como Yo, para aceptarlo o rechazarlo.
+- **Control de mis cambios** (menú Visualización): mientras está activado, tus propios cambios también se muestran como cambios (lo que borraste, tachado; lo que añadiste, marcado), cada uno con una tarjeta en el margen, marcada como Yo, para aceptarlo o rechazarlo.
 
 ### 6. Imágenes
 

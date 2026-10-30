@@ -209,16 +209,9 @@ pub(crate) fn build(
     let edit_menu = edit_menu.item(&select_all_item?);
     #[cfg(not(target_os = "macos"))]
     let edit_menu = edit_menu.select_all_with_text(l("predefined:select-all", "Select All"));
-    // On for the document on screen, as the frontend sends.
-    let track_changes_item =
-        CheckMenuItemBuilder::with_id(TRACK_CHANGES_ID, l(TRACK_CHANGES_ID, "Track My Changes"))
-            .checked(checked.get(TRACK_CHANGES_ID).copied().unwrap_or(false))
-            .build(app)?;
     let edit_menu = edit_menu
         .separator()
         .item(&find_replace_item)
-        .separator()
-        .item(&track_changes_item)
         .build()?;
 
     let mut format_menu_builder = SubmenuBuilder::new(app, l("menu:format", "Format"));
@@ -269,6 +262,8 @@ pub(crate) fn build(
     let toggle_agent_panel_item = check(TOGGLE_AGENT_PANEL_ID, "AI Panel")?;
     let toggle_split_view_item = check(TOGGLE_SPLIT_VIEW_ID, "Split View")?;
     let toggle_zen_mode_item = check(TOGGLE_ZEN_MODE_ID, "Zen Mode")?;
+    // On for the document on screen, as the frontend sends.
+    let track_changes_item = check(TRACK_CHANGES_ID, "Track My Changes")?;
     let toggle_read_only_item = check(TOGGLE_READ_ONLY_ID, "Read Only")?;
     let command_palette_item = item(COMMAND_PALETTE_ID, "Command Palette…").build(app)?;
     let split_right_item = item(SPLIT_RIGHT_ID, "Split Right").build(app)?;
@@ -297,6 +292,7 @@ pub(crate) fn build(
             .item(&toggle_split_view_item)
             .item(&toggle_typewriter_mode_item)
             .item(&toggle_zen_mode_item)
+            .item(&track_changes_item)
             .item(&toggle_read_only_item)
             .separator()
             .item(&command_palette_item)

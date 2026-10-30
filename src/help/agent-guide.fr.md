@@ -65,7 +65,7 @@ La discussion n'écrit jamais directement dans votre document. Quand vous demand
 - **Au curseur** : si rien n'est sélectionné, Textus AI sait où se trouve votre curseur ; « écris une transition ici » l'insère exactement à cet endroit.
 - **Des commentaires plutôt que des modifications** : demandez une relecture (« quels sont les points faibles ? ») et Textus AI épingle des commentaires à des passages sans les modifier. Chaque carte de commentaire propose **Afficher dans le document**, qui sélectionne le passage concerné.
 - **Vos propres notes** : sélectionnez quelques mots, faites un clic droit et choisissez **Ajouter une note** : votre note va dans la marge à côté de celles de Textus AI, marquée Moi. Les notes sont gardées à côté des données de Textus, pas dans votre Markdown.
-- **Suivre mes modifications** (menu Édition) : tant que c'est activé, vos propres modifications apparaissent aussi comme des changements (ce que vous avez supprimé barré, ce que vous avez ajouté marqué), chacune avec une carte dans la marge, marquée Moi, pour l'accepter ou la refuser.
+- **Suivre mes modifications** (menu Présentation) : tant que c'est activé, vos propres modifications apparaissent aussi comme des changements (ce que vous avez supprimé barré, ce que vous avez ajouté marqué), chacune avec une carte dans la marge, marquée Moi, pour l'accepter ou la refuser.
 
 ### 6. Images
 

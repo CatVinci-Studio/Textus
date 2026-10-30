@@ -65,7 +65,7 @@ Der Chat schreibt nie direkt in dein Dokument. Bittest du einen Anbieter, der To
 - **Am Cursor**: Wenn nichts ausgewählt ist, weiß Textus AI, wo dein Cursor steht – „schreib hier einen Übergang“ fügt also genau dort ein.
 - **Kommentare statt Änderungen**: Bitte um eine Durchsicht („Was ist hier schwach?“), und Textus AI heftet Kommentare an Textstellen, ohne sie zu ändern. Jede Kommentarkarte hat **Im Dokument anzeigen**, das die betreffende Stelle auswählt.
 - **Eigene Notizen**: Markiere ein paar Wörter, klicke mit rechts und wähle **Notiz hinzufügen**: Deine Notiz kommt an den Rand neben die von Textus AI, markiert mit Ich. Notizen werden neben den eigenen Daten von Textus gespeichert, nicht in deinem Markdown.
-- **Meine Änderungen nachverfolgen** (Menü Bearbeiten): Solange es eingeschaltet ist, erscheinen auch deine eigenen Bearbeitungen als Änderungen – Gelöschtes durchgestrichen, Hinzugefügtes markiert –, jede mit einer Karte am Rand, markiert mit Ich, zum Annehmen oder Ablehnen.
+- **Meine Änderungen nachverfolgen** (Menü Ansicht): Solange es eingeschaltet ist, erscheinen auch deine eigenen Bearbeitungen als Änderungen – Gelöschtes durchgestrichen, Hinzugefügtes markiert –, jede mit einer Karte am Rand, markiert mit Ich, zum Annehmen oder Ablehnen.
 
 ### 6. Bilder
 
