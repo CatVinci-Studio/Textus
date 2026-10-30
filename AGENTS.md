@@ -83,9 +83,12 @@ If another copy of the e2e suite may be running (another worktree), set
   modules of its own, side effects in the hook or command that calls it; at
   most 8 hooks a component and 600 lines a file; provider differences as
   data, never an `if` on a provider's id. `npm run check` holds the limits.
-- Add or update tests with the change: unit tests next to the code
-  (`name.test.ts`, `#[cfg(test)]`), an e2e spec for user-visible flows. Name
-  tests as the claim they make.
+- Add or update tests with the change, each in the lowest layer that can
+  catch its mistake ([docs/dev/testing.md](docs/dev/testing.md)): unit tests
+  next to the code (`name.test.ts`, `#[cfg(test)]`); what keys, typing and
+  pastes do to the document as an editor integration test
+  (`src/document-view/editor-view-kit.ts`), not an e2e flow; an e2e spec
+  only for what needs a browser. Name tests as the claim they make.
 - Every user-visible string goes into all ten locale files in
   `src/i18n/locales/` (en, zh, zh-Hant, ja, ko, es, fr, de, ru, pt).
 - Shapes shared by Rust and TypeScript carry a comment on both sides naming
