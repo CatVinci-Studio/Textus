@@ -174,14 +174,14 @@ describe("where the app owns the frame", () => {
     editor.remove();
   });
 
-  it("opens a submenu on hover", () => {
+  it("opens a submenu on hover, after a beat", async () => {
     appDrawsWindowFrame.value = true;
     render(<AppMenuButton />);
     fireEvent.click(screen.getByLabelText("菜单"));
     fireEvent.mouseEnter(screen.getByRole("menuitem", { name: /文件/ }));
 
     expect(
-      screen.getByRole("menuitem", { name: /新建标签页/ }),
+      await screen.findByRole("menuitem", { name: /新建标签页/ }),
     ).toBeInTheDocument();
   });
 });
