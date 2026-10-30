@@ -7,6 +7,5 @@ routes = [{ pattern = "textus.catvinci.com/api/ext/*", zone_name = "catvinci.com
 [[d1_databases]]
 binding = "DB"
 database_name = "textus-ext-stats"
-# PLACEHOLDER: the id `wrangler d1 create textus-ext-stats` prints (README.md).
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "bd35ac08-fcda-4e69-8990-8ae0951f29e6"
 migrations_dir = "migrations"
