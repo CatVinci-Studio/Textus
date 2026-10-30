@@ -1,4 +1,5 @@
 import { normaliseMcpServers } from "./mcp";
+import { hasTextusAi } from "../platform/capabilities";
 import { detectLang, isLang, localeOf, type Lang } from "../i18n/strings";
 import {
   UPDATE_CHANNELS,
@@ -53,6 +54,11 @@ export function guessLanguage(): Lang {
 /** Stored settings -> a complete, valid `Settings`. Nothing stored at all is
  *  a new installation, which starts in the OS's language. */
 export function normaliseSettings(parsed: Raw | null): Settings {
+  const settings = readSettings(parsed);
+  return hasTextusAi ? settings : { ...settings, textusAi: false };
+}
+
+function readSettings(parsed: Raw | null): Settings {
   if (!parsed || Object.keys(parsed).length === 0)
     return { ...DEFAULT_SETTINGS, language: guessLanguage() };
   try {
