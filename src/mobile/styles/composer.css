@@ -55,7 +55,7 @@
   }
 
   :root[data-window-chrome="mobile"] .inline-chat-field {
-    --composer-control: 44px;
+    --composer-radius: 20px;
   }
 
   :root[data-window-chrome="mobile"] .inline-chat-send {
