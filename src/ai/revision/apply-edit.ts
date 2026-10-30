@@ -1,11 +1,10 @@
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { Ctx } from "@milkdown/kit/ctx";
+import { Fragment, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
-  Fragment,
-  Slice,
-  type Node as ProseNode,
-} from "@milkdown/kit/prose/model";
-import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
+  openToText,
+  parseMarkdownSource,
+} from "../../editor/markdown/parse-markdown-source";
 
 /**
  * Models routinely bullet lists with typographic dots ("•", "●", "◦", "·")
@@ -54,7 +53,7 @@ export function applyEditRange(
       const tr = state.tr.replaceRange(
         from,
         to,
-        Slice.maxOpen(Fragment.from(body)),
+        openToText(Fragment.from(body)),
       );
       return tr.insert(tr.doc.content.size, definitions);
     }
@@ -75,6 +74,6 @@ export function replaceWithMarkdown(
   const text = normalizeAiMarkdown(rawText);
   const parsed = parseMarkdownSource(ctx, text);
   return parsed
-    ? tr.replaceRange(from, to, Slice.maxOpen(parsed.content))
+    ? tr.replaceRange(from, to, openToText(parsed.content))
     : tr.insertText(text, from, to);
 }

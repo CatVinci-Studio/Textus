@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
-import { Slice, type Node as ProseNode } from "@milkdown/kit/prose/model";
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   AllSelection,
   Selection,
@@ -8,7 +8,10 @@ import {
 } from "@milkdown/kit/prose/state";
 import type { EditorRunner } from "./useEditorRunner";
 import { recordClipboardEntry } from "../clipboard/history";
-import { parseMarkdownSource } from "./markdown/parse-markdown-source";
+import {
+  openToText,
+  parseMarkdownSource,
+} from "./markdown/parse-markdown-source";
 import { pastePlainText } from "./markdown/paste-plain";
 import { clipboardIpc } from "../platform/ipc";
 import { plainTextOf } from "./markdown/plain-text";
@@ -130,7 +133,7 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
         if (doc && doc.content.size > 0) {
           view.dispatch(
             view.state.tr
-              .replaceSelection(Slice.maxOpen(doc.content))
+              .replaceSelection(openToText(doc.content))
               .setMeta("uiEvent", "paste")
               .scrollIntoView(),
           );

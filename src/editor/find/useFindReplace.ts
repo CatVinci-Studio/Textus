@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
+import { closeHistory } from "@milkdown/kit/prose/history";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { compileQuery, findReplaceKey } from "./find-replace-plugin";
 import { scrollBehavior } from "../../ui/motion";
@@ -132,11 +133,14 @@ export function useFindReplace(run: EditorRunner) {
       const s = findReplaceKey.getState(view.state);
       const match = s?.matches[s.activeIndex];
       if (!match) return;
+      // A replacement is an undo step of its own, as in Word.
       view.dispatch(
-        view.state.tr.insertText(
-          makeReplacer()(match.text),
-          match.from,
-          match.to,
+        closeHistory(
+          view.state.tr.insertText(
+            makeReplacer()(match.text),
+            match.from,
+            match.to,
+          ),
         ),
       );
       view.focus();
@@ -156,7 +160,7 @@ export function useFindReplace(run: EditorRunner) {
         const match = s.matches[i];
         tr = tr.insertText(replace(match.text), match.from, match.to);
       }
-      view.dispatch(tr);
+      view.dispatch(closeHistory(tr));
       view.focus();
       setStatus(readStatus(view));
     });
