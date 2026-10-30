@@ -1,19 +1,18 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Submenus that stay open while the pointer heads for them. A row hovered on
- * the way, inside the triangle from where the pointer was to the submenu's
- * near edge, doesn't swap the submenu: the swap waits until the pointer
- * leaves that triangle, or stops long enough to mean it.
+ * Submenus that open at once and stay open while the pointer heads for them.
+ * A row hovered on the way, inside the triangle from where the pointer was to
+ * the submenu's near edge, doesn't swap the submenu: the swap waits until the
+ * pointer leaves that triangle or stops there.
  */
 
-/** A hovered row takes effect after this; with no submenu open, sooner. */
-const OPEN_MS = 220;
-const FIRST_OPEN_MS = 120;
 /** How often a row hovered on the way checks whether the pointer moved on. */
-const RECHECK_MS = 80;
-/** A pointer resting on the way this long means the row under it. */
-const REST_MS = 1200;
+const RECHECK_MS = 60;
+/** No move for this long: the pointer has stopped on the row it is over. */
+const STILL_MS = 120;
+/** However it moves, a row hovered this long takes over. */
+const MOST_MS = 1200;
 
 type Point = { x: number; y: number };
 type Box = Pick<DOMRect, "left" | "right" | "top" | "bottom" | "width">;
@@ -72,6 +71,7 @@ export function useMenuAim<T>(
     points: [] as Point[],
     timer: undefined as ReturnType<typeof setTimeout> | undefined,
     since: 0,
+    movedAt: 0,
   });
   const latest = useRef({ apply, parent, submenu });
   latest.current = { apply, parent, submenu };
@@ -102,6 +102,7 @@ export function useMenuAim<T>(
       if (sub && e.target instanceof Node && sub.contains(e.target)) return;
       const s = state.current;
       s.points = [...s.points, { x: e.clientX, y: e.clientY }].slice(-2);
+      s.movedAt = performance.now();
       const menu = latest.current.parent();
       if (!menu) return;
       if (heading()) menu.dataset.aiming = "";
@@ -112,17 +113,19 @@ export function useMenuAim<T>(
       clearTimeout(s.timer);
       s.since = performance.now();
       const check = () => {
-        if (heading() && performance.now() - s.since < REST_MS) {
+        const now = performance.now();
+        if (
+          heading() &&
+          now - s.movedAt < STILL_MS &&
+          now - s.since < MOST_MS
+        ) {
           s.timer = setTimeout(check, RECHECK_MS);
           return;
         }
         delete latest.current.parent()?.dataset.aiming;
         latest.current.apply(next);
       };
-      s.timer = setTimeout(
-        check,
-        latest.current.submenu() ? OPEN_MS : FIRST_OPEN_MS,
-      );
+      check();
     },
     /** The pointer reached the submenu: whatever was pending is dropped. */
     hold() {

@@ -386,9 +386,12 @@ function Flyout({
     const panelBox = panel.getBoundingClientRect();
     const margin = 6;
 
-    let left = rowBox.right + 2;
+    // Beside the list, a small gap from its edge, never over it.
+    const list = (row.closest(".app-menu-list") ?? row).getBoundingClientRect();
+    const gap = 4;
+    let left = list.right + gap;
     if (left + panelBox.width > window.innerWidth - margin) {
-      left = Math.max(margin, rowBox.left - panelBox.width - 2);
+      left = Math.max(margin, list.left - gap - panelBox.width);
     }
     let top = rowBox.top - 5;
     if (top + panelBox.height > window.innerHeight - margin) {

@@ -237,8 +237,8 @@ function useFocusReturn(
 }
 
 /** Which group's submenu is open, and the rows to place it by. Hovering a
- *  row opens its group, or closes the one open, after a beat, and not while
- *  the pointer crosses it on its way to the submenu (menu-aim.ts). */
+ *  row opens its group, or closes the one open, at once - unless the pointer
+ *  is crossing it on its way to the open submenu (menu-aim.ts). */
 function useSubmenu(menu: RefObject<HTMLDivElement | null>) {
   const [openGroup, setOpenGroup] = useState<{
     index: number;
@@ -311,12 +311,17 @@ function SubMenu({
     const el = ref.current;
     if (!el || !anchor) return;
     const row = anchor.getBoundingClientRect();
+    // Beside the menu, a small gap from its edge, never over it.
+    const menu = (
+      anchor.closest(".context-menu") ?? anchor
+    ).getBoundingClientRect();
     const { width, height } = el.getBoundingClientRect();
     const margin = 8;
+    const gap = 4;
     const left =
-      row.right + width + margin <= window.innerWidth
-        ? row.right - 4
-        : Math.max(margin, row.left - width + 4);
+      menu.right + gap + width + margin <= window.innerWidth
+        ? menu.right + gap
+        : Math.max(margin, menu.left - gap - width);
     const top = Math.max(
       margin,
       Math.min(row.top - 4, window.innerHeight - height - margin),

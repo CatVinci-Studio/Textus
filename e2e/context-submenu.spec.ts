@@ -44,7 +44,7 @@ test("the keyboard goes into a submenu and back out", async ({ page }) => {
   await expect(page.locator(".context-menu")).toHaveCount(0);
 });
 
-test("a pointer crossing other rows on its way to a submenu keeps it open, until it stops there", async ({
+test("a submenu opens at once beside its menu, and stays open while the pointer crosses other rows to it", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
@@ -53,19 +53,33 @@ test("a pointer crossing other rows on its way to a submenu keeps it open, until
     .locator(`${editor} td`, { hasText: "a" })
     .click({ button: "right" });
   const row = item(page, /^Row$/);
-  await row.hover();
-  await expect(item(page, "Delete Row")).toBeVisible();
-  // Down and right, over the row below, towards the submenu's edge.
   const from = (await row.boundingBox())!;
-  const next = row.locator("xpath=following-sibling::button[1]");
-  const over = (await next.boundingBox())!;
   await page.mouse.move(from.x + from.width - 40, from.y + from.height / 2);
-  await page.mouse.move(from.x + from.width - 16, over.y + over.height / 2, {
-    steps: 4,
-  });
-  await page.waitForTimeout(400);
+  // No wait: it is there with the pointer.
+  await expect(item(page, "Delete Row")).toBeVisible({ timeout: 100 });
+  // Beside the menu, not over it.
+  const menu = (await page
+    .locator(".context-menu:not(.context-submenu)")
+    .boundingBox())!;
+  const sub = (await page.locator(".context-submenu").boundingBox())!;
+  expect(sub.x).toBeGreaterThanOrEqual(menu.x + menu.width);
+  // Down and right across the rows below, into the submenu's lower part.
+  await page.mouse.move(sub.x + 12, sub.y + sub.height - 12, { steps: 12 });
+  await item(page, "Delete Row").click();
+  await expect(page.locator(`${editor} td`, { hasText: "a" })).toHaveCount(0);
+});
+
+test("a pointer that stops on another row opens that row's own submenu", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "| h1 | h2 |\n|---|---|\n| a | b |\n| c | d |");
+  await page
+    .locator(`${editor} td`, { hasText: "a" })
+    .click({ button: "right" });
+  await item(page, /^Row$/).hover();
   await expect(item(page, "Delete Row")).toBeVisible();
-  await expect(next).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
-  // Resting there, it means that row.
-  await expect(item(page, "Delete Row")).toHaveCount(0, { timeout: 2000 });
+  await item(page, /^Column$/).hover();
+  await expect(item(page, "Delete Row")).toHaveCount(0, { timeout: 500 });
+  await expect(item(page, "Delete Column")).toBeVisible();
 });
