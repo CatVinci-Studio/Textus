@@ -76,7 +76,7 @@ function currentEntries(
   return paletteEntries(
     buildAppMenu(t, shortcuts, NO_RECENTS),
     commands()
-      .filter((c) => c.enabled?.() !== false)
+      .filter((c) => c.palette !== false && c.enabled?.() !== false)
       .map((c) => ({
         id: c.id,
         title: c.title(t),

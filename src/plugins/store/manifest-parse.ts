@@ -168,13 +168,33 @@ function parseSetting(raw: unknown, at: string): SettingContribution {
   };
 }
 
+/** A command's `runs`: one of Textus's own commands ("textus.…") and
+ *  its arguments. */
+function textusRun(
+  raw: unknown,
+  at: string,
+): { command: string; args: unknown[] } {
+  const o = object(raw, at);
+  const command = text(o.command, `${at}.command`);
+  if (!command.startsWith("textus."))
+    throw new Error(`${at}.command must be one of Textus's ("textus.…").`);
+  return {
+    command,
+    args: o.args === undefined ? [] : list(o.args, `${at}.args`),
+  };
+}
+
 export function parseContributes(raw: unknown, id: string): Contributes {
   const c = raw === undefined ? {} : object(raw, "contributes");
   const commands = list(c.commands, "contributes.commands").map((x, i) => {
     const o = object(x, `contributes.commands[${i}]`);
+    const at = `contributes.commands[${i}]`;
     return {
-      command: ownId(o.command, id, `contributes.commands[${i}].command`),
-      title: text(o.title, `contributes.commands[${i}].title`),
+      command: ownId(o.command, id, `${at}.command`),
+      title: text(o.title, `${at}.title`),
+      ...(o.runs === undefined
+        ? {}
+        : { runs: textusRun(o.runs, `${at}.runs`) }),
     };
   });
   const declared = new Set(commands.map((x) => x.command));

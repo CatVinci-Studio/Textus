@@ -50,6 +50,10 @@ export function isPermission(value: unknown): value is Permission {
 export interface CommandContribution {
   command: string;
   title: string;
+  /** Runs one of Textus's commands with these arguments, at once and with
+   *  no code of the plugin's: what a / item or a key must do before the
+   *  next key comes. */
+  runs?: { command: string; args: unknown[] };
 }
 
 export interface KeybindingContribution {

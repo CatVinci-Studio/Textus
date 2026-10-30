@@ -945,8 +945,20 @@ export function installDevTauriShim(): void {
           ? atob(String(args.contents))
           : String(args.contents);
         return Promise.resolve(null);
-      case "plugin_http":
-        return Promise.reject("The dev shim has no network.");
+      // Canned pages by URL: `window.__devHttp[url] = { status?, body }`.
+      case "plugin_http": {
+        const request = args.request as { url: string };
+        const canned = (
+          w.__devHttp as
+            Record<string, { status?: number; body: string }> | undefined
+        )?.[request.url];
+        if (!canned) return Promise.reject("The dev shim has no network.");
+        return Promise.resolve({
+          status: canned.status ?? 200,
+          headers: { "content-type": "text/html" },
+          body: btoa(unescape(encodeURIComponent(canned.body))),
+        });
+      }
       // A plugin's global store and the project's per open folder, each
       // `{ kv, files }`: `window.__devPluginStore`.
       case "plugin_store_get":

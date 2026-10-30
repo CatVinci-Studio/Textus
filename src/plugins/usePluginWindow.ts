@@ -32,6 +32,7 @@ import { openBeside } from "../app/split/split-layout";
 import { takePluginUris } from "./plugin-uri";
 import { migrateOfficialPlugins } from "./store/migrate-official";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
+import { INSERT_BLOCK_EVENT, INSERT_BLOCK_KINDS } from "../utils/events";
 
 /**
  * A window's side of the plugins: what it tells the manager, what plugins
@@ -180,9 +181,22 @@ export function usePluginWindow({
         });
       },
     });
+    // The Format menu's blocks, for plugins that insert them (a / menu).
+    const insertBlock = registerCommand({
+      id: "textus.insertBlock",
+      title: (t) => t.menuFormat,
+      palette: false,
+      run: (kind) => {
+        if (typeof kind === "string" && INSERT_BLOCK_KINDS.includes(kind))
+          window.dispatchEvent(
+            new CustomEvent(INSERT_BLOCK_EVENT, { detail: kind }),
+          );
+      },
+    });
     return () => {
       save();
       close();
+      insertBlock();
     };
   }, [saveRef, closeRef]);
 

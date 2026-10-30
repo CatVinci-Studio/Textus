@@ -88,6 +88,27 @@ describe("a plugin's manifest", () => {
     expect(() => parseManifest("{nope")).toThrow(/not JSON/);
   });
 
+  it("reads a command that runs one of Textus's own, and only Textus's", () => {
+    const runs = (command: string) =>
+      parseManifest({
+        ...base,
+        contributes: {
+          commands: [
+            {
+              command: "catvinci.example.h2",
+              title: "Heading 2",
+              runs: { command, args: ["h2"] },
+            },
+          ],
+        },
+      });
+    expect(runs("textus.insertBlock").contributes.commands[0].runs).toEqual({
+      command: "textus.insertBlock",
+      args: ["h2"],
+    });
+    expect(() => runs("other.plugin.cmd")).toThrow(/one of Textus's/);
+  });
+
   it("reads where a plugin suggests completions, and refuses a bad pattern", () => {
     const m = parseManifest({
       ...base,

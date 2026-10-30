@@ -125,6 +125,21 @@
               },
               "title": {
                 "type": "string"
+              },
+              "runs": {
+                "type": "object",
+                "description": "Runs one of Textus's commands (\"textus.…\") with these arguments, at once and with no code of the plugin's - for a / item or a key that must act before the next key comes. Textus 1.3.0-beta.8.",
+                "required": ["command"],
+                "additionalProperties": false,
+                "properties": {
+                  "command": {
+                    "type": "string",
+                    "pattern": "^textus\\."
+                  },
+                  "args": {
+                    "type": "array"
+                  }
+                }
               }
             }
           }
