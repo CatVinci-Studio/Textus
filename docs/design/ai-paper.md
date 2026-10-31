@@ -100,13 +100,18 @@ it, lazily loaded. Each stage and helper is one run of
   a section. Each faulted section is revised once by its writer, under the
   same checks; a revision that doesn't hold, or a review that fails, leaves
   the drafts. Only then are the sections sent, so no proposal is replaced.
-- **Finish** (`paper/finish.rs`): every diagram, chart, picture and
-  web-picture mark gets a numbered caption under it, counted through the
-  paper (a chart's caption or title, a picture's alt text); a tool-less step
-  writes the title and abstract (the topic alone if its reply can't be read);
-  the reference list holds the sources the text cites, by number. Headings
-  and labels follow the paper's language. Sent as `opening`, the sections,
-  then `references`, and the run ends at `done`.
+- **Finish** (`paper/finish.rs`): picture lines are begun with the user's
+  image model (`images::place_pictures`, up to its per-send limit, which
+  also caps the pictures the outline may plan) and become
+  `textus-generated:` pictures; without an image model they are dropped.
+  Then every diagram, chart, picture and web-picture mark gets a numbered
+  caption, counted through the paper (a chart's caption or title, a
+  picture's alt text); the reference list holds the sources the text cites,
+  by number, and the citations become plain `\[n\]` so the footnote setting
+  leaves them alone; a tool-less step writes the title and abstract (the
+  topic alone if its reply can't be read). Headings and labels follow the
+  paper's language. The whole paper is sent once, as `ready`, to be proposed
+  as one append, and the run ends at `done`.
 - **`ai_paper_run`** (`PaperRequest`): researches the paper, outlines it,
   saves both and stops at `awaitingOutline`. The frontend doesn't call it
   yet.

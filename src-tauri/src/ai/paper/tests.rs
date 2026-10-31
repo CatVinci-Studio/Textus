@@ -871,3 +871,61 @@ async fn the_opening_is_a_title_and_an_abstract_or_the_topic_alone() {
     let fallback = finish::opening(&Opener("Sorry."), &english, &outline(), &[]).await;
     assert_eq!(fallback, "# Green roofs");
 }
+
+#[tokio::test]
+async fn picture_lines_are_begun_up_to_the_limit_and_the_rest_left_out() {
+    let run = crate::ai::images::ImageRun::offline(2);
+    let text = "Intro.\n\n![Roof](textus-picture:16:9 a green roof)\n\nMid.\n\n![Map](textus-picture:4:3 a heat map)\n\n![Third](textus-picture:1:1 one too many)\n\nEnd.";
+    let (placed, unmade) = crate::ai::images::place_pictures(&run, text);
+    assert_eq!(placed.matches("](textus-generated:").count(), 2, "{placed}");
+    assert!(placed.contains("![Roof](textus-generated:"), "{placed}");
+    assert!(!placed.contains("textus-picture:"), "{placed}");
+    assert!(!placed.contains("\n\n\n"), "{placed}");
+    assert_eq!(unmade.len(), 1);
+    assert!(placed.ends_with("End."));
+    assert_eq!(finish::without_pictures(text), "Intro.\n\nMid.\n\nEnd.");
+}
+
+#[test]
+fn the_paper_is_assembled_with_its_own_citation_numbers() {
+    let section = "Cooler [3](https://example.org/study), as [12](https://b.example/x?y=1) found.";
+    assert_eq!(
+        finish::plain_citations(section),
+        "Cooler \\[3\\], as \\[12\\] found."
+    );
+    assert_eq!(
+        finish::assemble(
+            "# Title",
+            &["## One\n\nA.\n".into(), "## Two\n\nB.".into()],
+            Some("## References\n\nR.")
+        ),
+        "# Title\n\n## One\n\nA.\n\n## Two\n\nB.\n\n## References\n\nR."
+    );
+    assert_eq!(finish::assemble("# Title", &[], None), "# Title");
+}
+
+#[test]
+fn a_paper_card_s_turns_are_not_sent_to_the_model() {
+    use aicompat::agent::AgentTurn;
+    let card = AgentTurn::ToolCall {
+        call_id: "paper-1".into(),
+        name: crate::ai::agent::PAPER_TURN.into(),
+        arguments: "{}".into(),
+        reasoning: None,
+    };
+    let result = AgentTurn::ToolResult {
+        call_id: "paper-1".into(),
+        output: "{}".into(),
+        images: Vec::new(),
+    };
+    let kept = crate::ai::agent::without_memory_turns(vec![
+        AgentTurn::User {
+            text: "Write a paper".into(),
+            images: Vec::new(),
+        },
+        card,
+        result,
+        AgentTurn::assistant("Written."),
+    ]);
+    assert_eq!(kept.len(), 2);
+}

@@ -213,3 +213,42 @@ pub(crate) async fn opening(
         None => format!("# {title}"),
     }
 }
+
+/// `section` with each citation `[n](address)` as a plain `[n]`, escaped so
+/// it stays text: the paper's numbering, which its reference list follows.
+pub(crate) fn plain_citations(section: &str) -> String {
+    cited_number().replace_all(section, r"\[$1\]").into_owned()
+}
+
+fn cited_number() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"\[(\d{1,3})\]\(https?://[^)\s]+\)").unwrap())
+}
+
+/// The whole paper: its opening, its sections and its reference list, one
+/// after another.
+pub(crate) fn assemble(opening: &str, sections: &[String], references: Option<&str>) -> String {
+    let mut parts: Vec<&str> = vec![opening];
+    parts.extend(sections.iter().map(String::as_str));
+    parts.extend(references);
+    parts
+        .iter()
+        .map(|p| p.trim())
+        .filter(|p| !p.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n\n")
+}
+
+/// `section` without its picture lines: what is left when no image model
+/// is set.
+pub(crate) fn without_pictures(section: &str) -> String {
+    let kept: Vec<&str> = section
+        .lines()
+        .filter(|l| !picture_line().is_match(l))
+        .collect();
+    let mut text = kept.join("\n");
+    while text.contains("\n\n\n") {
+        text = text.replace("\n\n\n", "\n\n");
+    }
+    text
+}

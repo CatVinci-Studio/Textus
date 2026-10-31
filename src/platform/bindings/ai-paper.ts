@@ -75,6 +75,8 @@ export type DraftRequest_Deserialize = {
 	requestId: string,
 	/**  The paper, outlined and its outline approved. */
 	id: string,
+	/**  The image model the paper's pictures are made with; None for none. */
+	imageModel?: ImageModel_Deserialize | null,
 };
 
 /**
@@ -89,6 +91,8 @@ export type DraftRequest_Serialize = {
 	requestId: string,
 	/**  The paper, outlined and its outline approved. */
 	id: string,
+	/**  The image model the paper's pictures are made with; None for none. */
+	imageModel: ImageModel_Serialize | null,
 };
 
 export type FigureKind = 
@@ -107,6 +111,38 @@ export type FigurePlan = {
 	 *  which notes, or the picture to look for.
 	 */
 	spec: string,
+};
+
+/**
+ *  The image model setting as a request carries it. Keep in step with the
+ *  frontend's `ImageModel`.
+ */
+export type ImageModel = ImageModel_Serialize | ImageModel_Deserialize;
+
+/**
+ *  The image model setting as a request carries it. Keep in step with the
+ *  frontend's `ImageModel`.
+ */
+export type ImageModel_Deserialize = {
+	provider: string,
+	model?: string,
+	/**  The compatible endpoint's address. */
+	baseUrl?: string,
+	/**  At most this many pictures per send; `PER_SEND` when unset. */
+	limit?: number | null,
+};
+
+/**
+ *  The image model setting as a request carries it. Keep in step with the
+ *  frontend's `ImageModel`.
+ */
+export type ImageModel_Serialize = {
+	provider: string,
+	model: string,
+	/**  The compatible endpoint's address. */
+	baseUrl: string,
+	/**  At most this many pictures per send; `PER_SEND` when unset. */
+	limit: number | null,
 };
 
 /**  A picture or a data set a note's source has that a figure could use. */
@@ -199,20 +235,10 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
 /**  Section `index` of the outline is now `status`. */
 { type: "section"; index: number; status: SectionStatus } | { type: "budget"; used: BudgetCounts; remaining: BudgetCounts } | 
 /**
- *  Section `index` is written, its heading first: the next to propose,
- *  sent in the outline's order.
+ *  The paper is written: its title and abstract, its sections and its
+ *  reference list, as one text to propose.
  */
-{ type: "sectionDrafted"; index: number; markdown: string } | 
-/**
- *  The paper's title and abstract: what goes above its first section,
- *  sent before it.
- */
-{ type: "opening"; markdown: string } | 
-/**
- *  The list of the sources the paper cites: what goes below its last
- *  section, sent after it.
- */
-{ type: "references"; markdown: string } | 
+{ type: "ready"; markdown: string } | 
 /**  The outline is ready for the user to edit and approve. */
 { type: "outlineReady"; outline: Outline } | 
 /**  A stage failed; `section` when it was one section's. */
@@ -223,20 +249,10 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
 /**  Section `index` of the outline is now `status`. */
 { type: "section"; index: number; status: SectionStatus } | { type: "budget"; used: BudgetCounts; remaining: BudgetCounts } | 
 /**
- *  Section `index` is written, its heading first: the next to propose,
- *  sent in the outline's order.
+ *  The paper is written: its title and abstract, its sections and its
+ *  reference list, as one text to propose.
  */
-{ type: "sectionDrafted"; index: number; markdown: string } | 
-/**
- *  The paper's title and abstract: what goes above its first section,
- *  sent before it.
- */
-{ type: "opening"; markdown: string } | 
-/**
- *  The list of the sources the paper cites: what goes below its last
- *  section, sent after it.
- */
-{ type: "references"; markdown: string } | 
+{ type: "ready"; markdown: string } | 
 /**  The outline is ready for the user to edit and approve. */
 { type: "outlineReady"; outline: Outline } | 
 /**  A stage failed; `section` when it was one section's. */
@@ -275,6 +291,11 @@ export type PaperRequest_Deserialize = {
 	/**  The language it is written in, a BCP 47 tag. */
 	language: string,
 	targetChars: number,
+	/**
+	 *  The image model, for the pictures the outline may plan; None for
+	 *  none.
+	 */
+	imageModel?: ImageModel_Deserialize | null,
 };
 
 /**
@@ -297,6 +318,11 @@ export type PaperRequest_Serialize = {
 	/**  The language it is written in, a BCP 47 tag. */
 	language: string,
 	targetChars: number,
+	/**
+	 *  The image model, for the pictures the outline may plan; None for
+	 *  none.
+	 */
+	imageModel: ImageModel_Serialize | null,
 };
 
 /**  A paper's limits and what it has used of them. */
