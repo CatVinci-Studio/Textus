@@ -260,6 +260,14 @@ async fn ai_agent_message_inner(
                     run: tools::Run::Async(Box::new(move |call| Box::pin(run.run(call)))),
                 });
             }
+            // The reference library's search, once there is a library.
+            if workspace.root.as_deref().is_some_and(|root| {
+                std::path::Path::new(root)
+                    .join(crate::ai::project::REFERENCES_DIR)
+                    .is_dir()
+            }) {
+                tools.add(tools::references_tool());
+            }
             // A document shown whole needs no tools to read it: offered, they were
             // read again and again instead of edited.
             if context::shown_whole(&document, true) {

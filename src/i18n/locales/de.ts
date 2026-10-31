@@ -354,6 +354,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolWebSearch: "Sucht im Web nach „{arg}“",
   toolWebFetch: "Liest {arg}",
   toolSearchPapers: "Sucht Fachartikel zu „{arg}“",
+  toolSearchReferences: "Sucht in den Quellen nach „{arg}“",
   webSources: "Quellen",
   proposalSourcesAsFootnotes: "Quellen als Fußnoten einfügen",
   menuToggleSplitView: "Quelltext und Vorschau",

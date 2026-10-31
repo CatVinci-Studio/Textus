@@ -21,6 +21,8 @@ mod library;
 pub(crate) use library::*;
 mod style;
 pub(crate) use style::*;
+mod references;
+pub(crate) use references::*;
 
 /// Most library text one request carries, in characters (not bytes, so CJK
 /// gets as much as English).

@@ -353,6 +353,7 @@ export default {
   toolWebSearch: "Поиск в интернете: «{arg}»",
   toolWebFetch: "Чтение {arg}",
   toolSearchPapers: "Поиск статей: «{arg}»",
+  toolSearchReferences: "Поиск в источниках: «{arg}»",
   webSources: "Источники",
   proposalSourcesAsFootnotes: "Добавить источники как сноски",
   menuToggleSplitView: "Исходник и просмотр",

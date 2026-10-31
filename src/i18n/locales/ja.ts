@@ -335,6 +335,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   toolWebSearch: "ウェブで「{arg}」を検索",
   toolWebFetch: "{arg} を読む",
   toolSearchPapers: "論文で「{arg}」を検索",
+  toolSearchReferences: "参考資料で「{arg}」を検索",
   webSources: "出典",
   proposalSourcesAsFootnotes: "出典を脚注として追加",
   menuToggleSplitView: "ソースとプレビュー",

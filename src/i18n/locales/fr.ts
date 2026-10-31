@@ -366,6 +366,7 @@ utiliser une.
   toolWebSearch: "Recherche de « {arg} » sur le web",
   toolWebFetch: "Lecture de {arg}",
   toolSearchPapers: "Recherche d’articles sur « {arg} »",
+  toolSearchReferences: "Recherche de « {arg} » dans les références",
   webSources: "Sources",
   proposalSourcesAsFootnotes: "Ajouter les sources en notes de bas de page",
   menuToggleSplitView: "Source et aperçu",

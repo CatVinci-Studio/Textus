@@ -349,6 +349,7 @@ type /name in a conversation to use one.
   toolWebSearch: "Searching the web for “{arg}”",
   toolWebFetch: "Reading {arg}",
   toolSearchPapers: "Searching papers for “{arg}”",
+  toolSearchReferences: "Searching references for “{arg}”",
   webSources: "Sources",
   proposalSourcesAsFootnotes: "Add sources as footnotes",
   menuToggleSplitView: "Source and Preview",

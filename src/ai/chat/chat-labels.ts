@@ -102,6 +102,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       // No heading named: the whole document, not an empty quote.
       "read_document:whole": t.toolReadWholeDocument,
       search_files: t.toolSearchFiles,
+      search_references: t.toolSearchReferences,
       find_files: t.toolFindFiles,
       // No name: every file (and old chats' list_files).
       "find_files:whole": t.toolListFiles,
