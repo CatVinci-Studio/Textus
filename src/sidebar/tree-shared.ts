@@ -27,6 +27,9 @@ export interface TreeShared {
   /** Bumped per folder after something was made in it or moved in or out:
    *  that folder reads its entries again and opens. */
   versions: Record<string, number>;
+  /** Bumped per folder when something else changed it (a plugin's write):
+   *  it reads its entries again if open, and stays as it is. */
+  stale: Record<string, number>;
   dropInto: string | null;
   /** Desktop only (null on iOS, where the long press has its own menu). */
   onRowMenu:
