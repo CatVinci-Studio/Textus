@@ -285,6 +285,7 @@ pub fn run() {
             ai_grammar_check,
             ai_agent_message,
             ai_cancel,
+            crate::ai::paper::ai_paper_run,
             fetch_agent_models,
             set_ai_proxy,
             crate::ai::catalog::list_providers,

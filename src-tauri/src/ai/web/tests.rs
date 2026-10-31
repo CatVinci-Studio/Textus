@@ -144,7 +144,7 @@ async fn the_search_budget_runs_out() {
         // Nothing listens there: each search fails fast, and still counts.
         endpoint: Some("http://127.0.0.1:9/search".into()),
     }));
-    for i in 0..MAX_SEARCHES {
+    for i in 0..budget::MAX_SEARCHES {
         let out = web
             .execute(
                 WEB_SEARCH_TOOL,
@@ -178,7 +178,9 @@ async fn web_fetch_refuses_this_computer() {
 #[tokio::test]
 async fn the_paper_search_budget_runs_out_before_any_request() {
     let web = plan(None);
-    web.state.lock().unwrap().paper_searches = MAX_PAPER_SEARCHES;
+    for _ in 0..budget::MAX_PAPER_SEARCHES {
+        assert!(web.budget.take(WebUse::Papers));
+    }
     let out = web
         .execute(SEARCH_PAPERS_TOOL, r#"{"query":"tidal energy"}"#, "")
         .await;
