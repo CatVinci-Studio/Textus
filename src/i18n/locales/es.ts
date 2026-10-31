@@ -520,6 +520,8 @@ para usar una.
   alertImportant: "Importante",
   alertWarning: "Advertencia",
   alertCaution: "Precaución",
+  tocLabel: "Índice",
+  tocEmpty: "Aún no hay encabezados",
   settingsTitle: "Ajustes",
   settingsSearchPlaceholder: "Buscar en Ajustes",
   settingsSearchResults: "Resultados de la búsqueda",

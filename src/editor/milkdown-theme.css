@@ -621,6 +621,39 @@ br:is(.pending-delete, .pending-sentence-hot) {
   color: var(--doc-muted);
 }
 
+/* `[TOC]`: the headings as links, indented by level. */
+.md-toc {
+  margin: 0 0 var(--doc-gap-box);
+  padding: 0.5em 1em;
+  border-left: 2px solid var(--doc-border);
+  cursor: default;
+}
+
+.md-toc-item {
+  margin: 0.15em 0;
+  padding-inline-start: calc(var(--md-toc-depth, 0) * 1.25em);
+}
+
+.md-toc-item a {
+  color: var(--doc-accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.md-toc-item a:hover {
+  text-decoration: underline;
+}
+
+.md-toc-empty {
+  margin: 0;
+  color: var(--doc-muted);
+}
+
+.md-toc.ProseMirror-selectednode {
+  outline: 2px solid var(--doc-accent);
+  outline-offset: 2px;
+}
+
 /* An Obsidian wikilink: its source in the link colour. */
 .wikilink {
   color: var(--doc-accent);

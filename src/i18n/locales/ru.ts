@@ -511,6 +511,8 @@ export default {
   alertImportant: "Важно",
   alertWarning: "Предупреждение",
   alertCaution: "Осторожно",
+  tocLabel: "Содержание",
+  tocEmpty: "Заголовков пока нет",
   settingsTitle: "Настройки",
   settingsSearchPlaceholder: "Поиск по настройкам",
   settingsSearchResults: "Результаты поиска",

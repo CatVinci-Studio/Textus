@@ -213,4 +213,6 @@ Fußnoten sehen so aus[^1], und darunter folgt eine horizontale Trennlinie:
 
 [^1]: Der Inhalt der Fußnoten wird am Ende des Dokuments gesammelt.
 
+Tippen Sie `[TOC]` allein in eine Zeile und drücken Sie die Eingabetaste, um ein Inhaltsverzeichnis einzufügen: Es listet die Überschriften des Dokuments auf und folgt Ihren Änderungen; ein Klick springt zur Überschrift.
+
 Viel Freude beim Schreiben.

@@ -213,4 +213,6 @@ Las notas al pie se ven así[^1], y debajo hay una línea horizontal:
 
 [^1]: El contenido de las notas al pie se reúne al final del documento.
 
+Escribe `[TOC]` en una línea aparte y pulsa Intro para insertar un índice: enumera los encabezados del documento y se actualiza mientras escribes; haz clic en uno para ir a él.
+
 Que disfrutes escribiendo.

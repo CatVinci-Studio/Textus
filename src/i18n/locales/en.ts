@@ -502,6 +502,8 @@ type /name in a conversation to use one.
   alertImportant: "Important",
   alertWarning: "Warning",
   alertCaution: "Caution",
+  tocLabel: "Table of contents",
+  tocEmpty: "No headings yet",
   settingsTitle: "Settings",
   settingsSearchPlaceholder: "Search settings",
   settingsSearchResults: "Search results",
