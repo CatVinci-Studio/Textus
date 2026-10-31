@@ -26,6 +26,12 @@ pub enum PaperEvent {
         used: BudgetCounts,
         remaining: BudgetCounts,
     },
+    /// Section `index` is written, its heading first: the next to propose,
+    /// sent in the outline's order.
+    SectionDrafted {
+        index: u32,
+        markdown: String,
+    },
     /// The outline is ready for the user to edit and approve.
     OutlineReady {
         outline: Outline,

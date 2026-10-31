@@ -266,7 +266,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             builder()
                 .commands(collect_commands![
                     crate::ai::paper::ai_paper_run,
-                    crate::ai::paper::ai_paper_save_outline
+                    crate::ai::paper::ai_paper_save_outline,
+                    crate::ai::paper::ai_paper_draft
                 ])
                 .typ::<crate::ai::paper::Dossier>()
                 .typ::<crate::ai::paper::Outline>(),

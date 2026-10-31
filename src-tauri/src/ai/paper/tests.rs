@@ -477,20 +477,174 @@ fn an_edited_outline_drops_what_it_can_t_use_and_needs_titles() {
     assert!(outline::as_edited(Outline::default(), &d).is_err());
 }
 
+fn drafting_dossier() -> Dossier {
+    Dossier {
+        sources: vec![aicompat::agent::Source {
+            n: 3,
+            url: "https://example.org/study".into(),
+            title: "Study".into(),
+        }],
+        ..dossier()
+    }
+}
+
+/// A section of `n` words citing source 3, with `extra` after it.
+fn section_text(n: usize, extra: &str) -> String {
+    format!(
+        "{} roofs cool [3](https://example.org/study).\n\n{extra}",
+        "Green ".repeat(n)
+    )
+}
+
+#[test]
+fn a_section_is_checked_for_length_citations_and_figures() {
+    let mut section = outline().sections.remove(0);
+    section.target_words = 100;
+    section.figures = vec![
+        FigurePlan {
+            kind: FigureKind::Mermaid,
+            spec: "flow".into(),
+        },
+        FigurePlan {
+            kind: FigureKind::Chart,
+            spec: "temps".into(),
+        },
+    ];
+    let sources = vec![(3, "https://example.org/study".to_string())];
+    let chart =
+        "```chart\n{\"type\": \"bar\", \"labels\": [\"a\"], \"series\": [{\"data\": [12]}]}\n```";
+    let good = section_text(
+        97,
+        &format!("```mermaid\nflowchart LR\n  A --> B\n```\n\n{chart}"),
+    );
+    assert_eq!(
+        draft::problems(&good, &section, &sources, "en"),
+        Vec::<String>::new()
+    );
+
+    let bad = format!(
+        "{} cool [3](https://wrong.example/) and [4](https://x.example/) and [3] alone.\n\n```chart\n{{\"type\": \"radar\", \"series\": []}}\n```",
+        "Green ".repeat(20)
+    );
+    let found = draft::problems(&bad, &section, &sources, "en").join("\n");
+    assert!(
+        found.contains("is 25 long; the section is to be about 100"),
+        "{found}"
+    );
+    assert!(
+        found.contains(
+            "[3] links to https://wrong.example/ but source 3 is https://example.org/study"
+        ),
+        "{found}"
+    );
+    assert!(
+        found.contains("[4] isn't one of this section's sources"),
+        "{found}"
+    );
+    assert!(found.contains("written as [n] alone"), "{found}");
+    assert!(found.contains("Chart 1: \"type\" \"radar\""), "{found}");
+    assert!(
+        found.contains("1 planned diagram(s), 0 ```mermaid"),
+        "{found}"
+    );
+    assert!(found.contains("Nothing is cited"), "{found}");
+}
+
+#[test]
+fn chinese_sections_count_characters_and_skip_figures() {
+    assert_eq!(draft::length("屋顶 绿化\n降温", "zh-CN"), 6);
+    assert_eq!(draft::length("Green roofs cool", "en"), 3);
+}
+
+/// Writes every section, the second only on its second try.
+struct Writer(std::sync::atomic::AtomicUsize);
+
+impl research::Model for Writer {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        turns: &'a [aicompat::agent::AgentTurn],
+        _tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        use aicompat::agent::{AgentTurn, StepResult};
+        let AgentTurn::User { text, .. } = &turns[0] else {
+            panic!()
+        };
+        assert!(text.contains("[3](https://example.org/study)"), "{text}");
+        let second = text.contains("\"Second\"");
+        let step = match turns.last() {
+            Some(AgentTurn::User { .. }) => {
+                let words = if second { 10 } else { 97 };
+                let body = section_text(words, "```chart\n{\"series\": [{\"data\": [1]}]}\n```");
+                StepResult::ToolCalls(vec![AgentTurn::ToolCall {
+                    call_id: format!("first-{second}"),
+                    name: draft::SUBMIT_SECTION_TOOL.into(),
+                    arguments: json!({ "markdown": body }).to_string(),
+                    reasoning: None,
+                }])
+            }
+            Some(AgentTurn::ToolResult { output, .. }) if output.contains("Not kept") => {
+                self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                let body = section_text(97, "```chart\n{\"series\": [{\"data\": [1]}]}\n```");
+                StepResult::ToolCalls(vec![AgentTurn::ToolCall {
+                    call_id: "again".into(),
+                    name: draft::SUBMIT_SECTION_TOOL.into(),
+                    arguments: json!({ "markdown": body }).to_string(),
+                    reasoning: None,
+                }])
+            }
+            _ => StepResult::Done("Written.".into()),
+        };
+        Box::pin(async move { Ok(step) })
+    }
+}
+
 #[tokio::test]
-async fn paper_searches_draw_on_the_papers_lookups() {
-    // None left: refused before any request goes out.
-    let shared = Arc::new(SharedBudget::new(ResearchBudget::new(
-        BudgetCounts::default(),
-    )));
-    let web = WebPlan::new(true, None, None, &[]).with_budget(shared.clone());
-    let out = web
-        .execute(
-            crate::ai::web::SEARCH_PAPERS_TOOL,
-            r#"{"query":"tides"}"#,
-            "",
-        )
-        .await;
-    assert!(out.contains("That's the 0 paper searches"), "{out}");
-    assert_eq!(shared.snapshot().used.paper_lookups, 0);
+async fn sections_are_handed_on_in_order_under_their_headings() {
+    let mut plan = outline_of(3, 100);
+    plan.sections[1].title = "Second".into();
+    let english = Paper {
+        language: "en".into(),
+        ..paper()
+    };
+    let writer = Writer(Default::default());
+    let started = std::sync::Mutex::new(Vec::new());
+    let mut handed = Vec::new();
+    draft::draft(
+        &writer,
+        &english,
+        &plan,
+        &drafting_dossier(),
+        &|i| started.lock().unwrap().push(i),
+        &mut |i, md: &str| {
+            handed.push((i, md.lines().next().unwrap().to_string()));
+            Ok(())
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        handed,
+        [
+            (0, "## Mechanism".to_string()),
+            (1, "## Second".to_string()),
+            (2, "## Mechanism".to_string())
+        ]
+    );
+    assert_eq!(writer.0.load(std::sync::atomic::Ordering::SeqCst), 1);
+    let mut started = started.into_inner().unwrap();
+    started.sort();
+    assert_eq!(started, [0, 1, 2]);
+}
+
+#[test]
+fn a_section_draft_is_kept_beside_its_paper() {
+    let root = tempfile::tempdir().unwrap();
+    save_section(root.path(), "abc123", 1, "## Two\n\nText.").unwrap();
+    assert_eq!(
+        load_section(root.path(), "abc123", 1).unwrap().as_deref(),
+        Some("## Two\n\nText.")
+    );
+    assert_eq!(load_section(root.path(), "abc123", 0).unwrap(), None);
+    assert!(save_section(root.path(), "../x", 0, "").is_err());
 }

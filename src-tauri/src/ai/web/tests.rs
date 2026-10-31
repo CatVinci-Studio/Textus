@@ -261,3 +261,18 @@ fn arxiv_entries_become_papers() {
     assert_eq!(paper.doi.as_deref(), Some("10.1000/x"));
     assert_eq!(paper.abstract_text, "We model tides.");
 }
+
+#[tokio::test]
+async fn paper_searches_draw_on_the_papers_lookups() {
+    use crate::ai::paper::{BudgetCounts, ResearchBudget, SharedBudget};
+    // None left: refused before any request goes out.
+    let shared = std::sync::Arc::new(SharedBudget::new(ResearchBudget::new(
+        BudgetCounts::default(),
+    )));
+    let web = WebPlan::new(true, None, None, &[]).with_budget(shared.clone());
+    let out = web
+        .execute(SEARCH_PAPERS_TOOL, r#"{"query":"tides"}"#, "")
+        .await;
+    assert!(out.contains("That's the 0 paper searches"), "{out}");
+    assert_eq!(shared.snapshot().used.paper_lookups, 0);
+}

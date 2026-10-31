@@ -287,6 +287,7 @@ pub fn run() {
             ai_cancel,
             crate::ai::paper::ai_paper_run,
             crate::ai::paper::ai_paper_save_outline,
+            crate::ai::paper::ai_paper_draft,
             fetch_agent_models,
             set_ai_proxy,
             crate::ai::catalog::list_providers,
