@@ -12,7 +12,8 @@ const card = (page: Page) => page.locator(".hover-card");
 
 const NOTES = {
   "/notes/one.md":
-    "# One\n\nSee [the harbour](two.md#the-harbour) and [[two]] for more.\n",
+    "# One\n\nSee [the harbour](two.md#the-harbour) and [[two]] for more.\n\nAlso [the list](three.md#list).\n",
+  "/notes/three.md": `# Three\n\n## List\n\n${Array.from({ length: 40 }, (_, i) => `- Item ${i + 1}`).join("\n")}\n`,
   "/notes/two.md":
     "---\ntags: [boats]\n---\n# Two\n\nThe opening of two.\n\n## The harbour\n\nBoats came in at dusk.\n\n## Later\n\nNothing else.\n",
 };
@@ -60,6 +61,32 @@ test("a wikilink shows the note's opening, without its front matter", async ({
   await expect(card(page).locator(".hover-card-title")).toHaveText("two");
   await expect(card(page)).toContainText("The opening of two.");
   await expect(card(page)).not.toContainText("tags:");
+  // Looked for in the folder the sidebar shows, not only beside the note.
+  const asked = await page.evaluate(() =>
+    (
+      (
+        window as unknown as {
+          __devInvokeCalls?: { cmd: string; folder?: string }[];
+        }
+      ).__devInvokeCalls ?? []
+    ).find((call) => call.cmd === "resolve_vault_note"),
+  );
+  expect(asked?.folder).toBe("/notes");
+});
+
+test("a long list scrolls inside the card, its bullets too", async ({
+  page,
+}) => {
+  await open(page);
+  await restOn(page, page.locator(`${editor} a`, { hasText: "the list" }));
+  await expect(card(page)).toContainText("Item 40");
+  // Bullets are drawn out of the flow: they scroll and clip with the card's
+  // body only if they are placed against it, not against the whole card.
+  const placedAgainst = await card(page)
+    .locator("li")
+    .last()
+    .evaluate((li) => (li as HTMLElement).offsetParent?.className ?? "");
+  expect(placedAgainst).toContain("hover-card-body");
 });
 
 test("Open on a card goes to the document, at the section linked to", async ({
@@ -82,7 +109,7 @@ test("a pinned card stays while the pointer goes, and closes by its button", asy
   await page.waitForTimeout(500);
   await expect(card(page)).toBeVisible();
   // Typing goes on in the document meanwhile.
-  await page.locator(`${editor} p`).click();
+  await page.locator(`${editor} p`).first().click();
   await page.keyboard.type(" Typed.");
   await expect(card(page)).toBeVisible();
   await card(page).getByRole("button", { name: "Close" }).click();

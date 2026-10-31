@@ -88,12 +88,12 @@ export const commands = {
 	 *  Where an Obsidian image embed's file is, as an absolute path for the asset
 	 *  protocol; None when it isn't an image or isn't in the vault.
 	 */
-	resolve_vault_image: (docPath: string, link: string) => __TAURI_INVOKE<string | null>("resolve_vault_image", { docPath, link }),
+	resolve_vault_image: (docPath: string, link: string, folder: string | null) => __TAURI_INVOKE<string | null>("resolve_vault_image", { docPath, link, folder }),
 	/**
 	 *  The note an Obsidian wikilink names, as an absolute path; None when it isn't
 	 *  in the vault.
 	 */
-	resolve_vault_note: (docPath: string, link: string) => __TAURI_INVOKE<string | null>("resolve_vault_note", { docPath, link }),
+	resolve_vault_note: (docPath: string, link: string, folder: string | null) => __TAURI_INVOKE<string | null>("resolve_vault_note", { docPath, link, folder }),
 	open_word_document: (path: string) => __TAURI_INVOKE<WordDocument>("open_word_document", { path }),
 	upload_image: (host: ImageHost, dataBase64: string, mime: string, filename: string, endpoint: string, urlField: string) => __TAURI_INVOKE<UploadedImage>("upload_image", { host, dataBase64, mime, filename, endpoint, urlField }),
 	update_session_paths: (paths: string[]) => __TAURI_INVOKE<void>("update_session_paths", { paths }),

@@ -63,7 +63,10 @@
   color: var(--ui-accent);
 }
 
+/* Positioned: the list bullets, drawn out of the flow, scroll and clip with
+   the body instead of spilling below the card. */
 .hover-card-body {
+  position: relative;
   overflow: auto;
   padding: 8px 12px 8px;
   font-size: var(--text-secondary);
