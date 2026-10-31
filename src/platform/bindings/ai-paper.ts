@@ -9,6 +9,12 @@ import { invoke as __TAURI_INVOKE, Channel } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	ai_paper_run: (request: PaperRequest_Deserialize, channel: Channel<PaperEvent_Deserialize>) => __TAURI_INVOKE<Paper>("ai_paper_run", { request, channel }),
+	/**
+	 *  The outline as the user edited it on the card, kept for drafting. Notes
+	 *  it names that the dossier doesn't have are dropped; it needs a section,
+	 *  and every section a title.
+	 */
+	ai_paper_save_outline: (docPath: string | null, workspaceRoot: string | null, id: string, outline: Outline) => __TAURI_INVOKE<Outline>("ai_paper_save_outline", { docPath, workspaceRoot, id, outline }),
 };
 
 /* Types */

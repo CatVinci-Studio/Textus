@@ -340,6 +340,143 @@ async fn research_that_keeps_nothing_fails_with_a_reason() {
     assert!(err.contains("found nothing to write from"), "{err}");
 }
 
+/// `outline()` with `n` copies of its section, each `words` long.
+fn outline_of(n: usize, words: u32) -> Outline {
+    let mut o = outline();
+    let section = OutlineSection {
+        target_words: words,
+        ..o.sections[0].clone()
+    };
+    o.sections = vec![section; n];
+    o
+}
+
+#[test]
+fn an_outline_is_checked_for_everything_at_once() {
+    let d = dossier();
+    assert_eq!(
+        outline::problems(&outline_of(4, 2000), &d, 8000, 6),
+        Vec::<String>::new()
+    );
+
+    let mut bad = outline_of(4, 2000);
+    bad.thesis = " ".into();
+    bad.sections[1].evidence = vec!["n9".into()];
+    bad.sections[2].key_points = vec![" ".into()];
+    for s in &mut bad.sections {
+        s.figures.clear();
+    }
+    bad.sections[0].figures = vec![
+        FigurePlan {
+            kind: FigureKind::Generated,
+            spec: "a".into(),
+        },
+        FigurePlan {
+            kind: FigureKind::Generated,
+            spec: "b".into(),
+        },
+    ];
+    let found = outline::problems(&bad, &d, 8000, 1).join("\n");
+    assert!(found.contains("`thesis` is empty"), "{found}");
+    assert!(
+        found.contains("notes that don't exist: [\"n9\"]"),
+        "{found}"
+    );
+    assert!(
+        found.contains("Section 3 (\"Mechanism\") has no key points"),
+        "{found}"
+    );
+    assert!(
+        found.contains("2 generated pictures, but only 1"),
+        "{found}"
+    );
+    // Two figures for four sections is enough; lengths add to 8000.
+    assert!(!found.contains("figures for"), "{found}");
+
+    let found = outline::problems(&outline_of(2, 100), &d, 8000, 6).join("\n");
+    assert!(found.contains("2 sections"), "{found}");
+    assert!(found.contains("add up to 200"), "{found}");
+}
+
+#[test]
+fn english_lengths_are_in_words_and_chinese_in_characters() {
+    assert_eq!(outline::target_units(&paper()), 8000);
+    let english = Paper {
+        language: "en-GB".into(),
+        ..paper()
+    };
+    assert_eq!(outline::target_units(&english), 1333);
+}
+
+/// Sends a wrong outline, then the right one.
+struct Outliner(std::sync::atomic::AtomicUsize);
+
+impl research::Model for Outliner {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        turns: &'a [aicompat::agent::AgentTurn],
+        _tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        use aicompat::agent::{AgentTurn, StepResult};
+        let n = self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        let AgentTurn::User { text, .. } = &turns[0] else {
+            panic!()
+        };
+        assert!(
+            text.contains("n1 - Green roofs lower surface temperature"),
+            "{text}"
+        );
+        let submit = |o: &Outline| {
+            StepResult::ToolCalls(vec![AgentTurn::ToolCall {
+                call_id: format!("c{n}"),
+                name: outline::SUBMIT_OUTLINE_TOOL.into(),
+                arguments: serde_json::to_string(o).unwrap(),
+                reasoning: None,
+            }])
+        };
+        let step = match n {
+            0 => submit(&outline_of(1, 8000)),
+            1 => {
+                let AgentTurn::ToolResult { output, .. } = turns.last().unwrap() else {
+                    panic!()
+                };
+                assert!(output.contains("Not kept"), "{output}");
+                submit(&outline_of(4, 2000))
+            }
+            _ => StepResult::Done("Outlined.".into()),
+        };
+        Box::pin(async move { Ok(step) })
+    }
+}
+
+#[tokio::test]
+async fn the_outline_is_sent_back_until_it_holds() {
+    let model = Outliner(Default::default());
+    let made = outline::make_outline(&model, &paper(), &dossier())
+        .await
+        .unwrap();
+    assert_eq!(made.sections.len(), 4);
+}
+
+#[test]
+fn an_edited_outline_drops_what_it_can_t_use_and_needs_titles() {
+    let d = dossier();
+    let mut edited = outline_of(2, 500);
+    edited.sections[0].evidence = vec!["n1".into(), "n42".into()];
+    edited.sections[0].key_points = vec!["Albedo".into(), "  ".into()];
+    edited.sections[1].figures[0].spec = " ".into();
+    let kept = outline::as_edited(edited, &d).unwrap();
+    assert_eq!(kept.sections[0].evidence, ["n1"]);
+    assert_eq!(kept.sections[0].key_points, ["Albedo"]);
+    assert!(kept.sections[1].figures.is_empty());
+
+    let mut untitled = outline_of(1, 500);
+    untitled.sections[0].title = " ".into();
+    assert!(outline::as_edited(untitled, &d).is_err());
+    assert!(outline::as_edited(Outline::default(), &d).is_err());
+}
+
 #[tokio::test]
 async fn paper_searches_draw_on_the_papers_lookups() {
     // None left: refused before any request goes out.

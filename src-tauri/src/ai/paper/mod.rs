@@ -10,6 +10,7 @@
 
 mod budget;
 mod events;
+mod outline;
 mod research;
 mod store;
 
@@ -209,17 +210,47 @@ pub async fn ai_paper_run(
         };
         let dossier = research::research(&agent, &paper, &web, &budget, &send).await?;
         paper.budget = budget.snapshot();
-        save(
-            &root,
-            &PaperFiles {
-                paper: paper.clone(),
-                dossier,
-                outline: None,
-            },
-        )?;
+        // Kept before the outline, so a failed outline doesn't cost the
+        // research.
+        let mut files = PaperFiles {
+            paper: paper.clone(),
+            dossier,
+            outline: None,
+        };
+        save(&root, &files)?;
+        send(PaperEvent::Phase {
+            phase: PaperPhase::Outlining,
+        });
+        let outline = outline::make_outline(&agent, &paper, &files.dossier).await?;
+        files.outline = Some(outline.clone());
+        save(&root, &files)?;
+        send(PaperEvent::OutlineReady { outline });
+        send(PaperEvent::Phase {
+            phase: PaperPhase::AwaitingOutline,
+        });
         Ok(paper)
     })
     .await
+}
+
+/// The outline as the user edited it on the card, kept for drafting. Notes
+/// it names that the dossier doesn't have are dropped; it needs a section,
+/// and every section a title.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn ai_paper_save_outline(
+    doc_path: Option<String>,
+    workspace_root: Option<String>,
+    id: String,
+    outline: Outline,
+) -> Result<Outline, String> {
+    let root = crate::ai::workspace::project_root(doc_path.as_deref(), workspace_root.as_deref())
+        .ok_or_else(|| "NO_PROJECT".to_string())?;
+    let mut files = load(&root, &id)?;
+    let outline = outline::as_edited(outline, &files.dossier)?;
+    files.outline = Some(outline.clone());
+    save(&root, &files)?;
+    Ok(outline)
 }
 
 #[cfg(test)]
