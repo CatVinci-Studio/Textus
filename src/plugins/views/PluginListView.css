@@ -153,3 +153,8 @@
   color: var(--ui-danger);
   background: color-mix(in srgb, var(--ui-danger) 14%, transparent);
 }
+
+/* Where the next page of rows starts drawing as it scrolls into view. */
+.plugin-list-more {
+  height: 1px;
+}
