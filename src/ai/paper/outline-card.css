@@ -1,0 +1,121 @@
+/* The paper's outline card: a card like a proposal's, its sections a
+   numbered list of small boxes. */
+.paper-outline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px 12px;
+  border: 1px solid var(--chat-hairline, var(--ui-border));
+  border-radius: var(--shape-m);
+  background: var(--chat-card-bg, transparent);
+  font-size: var(--text-secondary);
+}
+
+.paper-outline-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.paper-outline-title {
+  font-weight: 600;
+}
+
+.paper-outline-total {
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+
+.paper-outline-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--ui-muted);
+}
+
+.paper-outline-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.paper-outline-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-s);
+  background: var(--ui-subtle);
+}
+
+.paper-outline-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.paper-outline input,
+.paper-outline textarea {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  color: inherit;
+  font: inherit;
+}
+
+.paper-outline input {
+  min-height: var(--control-height-sm);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+}
+
+.paper-outline textarea {
+  width: 100%;
+  border-radius: var(--shape-s);
+  resize: vertical;
+}
+
+.paper-outline-num {
+  flex: none;
+  min-width: calc(16px * var(--ui-text-scale, 1));
+  color: var(--ui-muted);
+  font-weight: 600;
+  text-align: right;
+}
+
+.paper-outline-kind {
+  flex: none;
+}
+
+.paper-outline-figure .inline-chat-action {
+  flex: none;
+}
+
+.paper-outline-section-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.paper-outline-length {
+  width: 80px;
+}
+
+.paper-outline-figure input {
+  flex: 1;
+}
+
+.paper-outline-actions {
+  flex-wrap: wrap;
+}
+
+.paper-outline-foot {
+  display: flex;
+  justify-content: flex-end;
+}
