@@ -45,13 +45,14 @@ export function DirNode({
 }: DirNodeProps) {
   const tree = useTree();
   const version = tree.versions[path] ?? 0;
+  const listing = `${version}:${tree.stale[path] ?? 0}`;
   // The root is always open, and so is a folder on the way down to the open
   // document.
   const [open, setOpen] = useState(
     depth === 0 || (activePath !== null && isInside(activePath, path)),
   );
   const [loaded, setLoaded] = useState<{
-    version: number;
+    listing: string;
     entries: DirEntryInfo[];
   } | null>(null);
   // A document opened further down shows where it is: its folders open, the
@@ -65,17 +66,17 @@ export function DirNode({
   }, [version]);
 
   useEffect(() => {
-    if (!open || loaded?.version === version) return;
+    if (!open || loaded?.listing === listing) return;
     let cancelled = false;
     fs.listDir(path).then(
-      (entries) => !cancelled && setLoaded({ version, entries }),
+      (entries) => !cancelled && setLoaded({ listing, entries }),
       // Unreadable (permissions, vanished): show it empty rather than retry.
-      () => !cancelled && setLoaded({ version, entries: [] }),
+      () => !cancelled && setLoaded({ listing, entries: [] }),
     );
     return () => {
       cancelled = true;
     };
-  }, [open, loaded, version, path]);
+  }, [open, loaded, listing, path]);
   // In the file manager's order for the UI language, not byte order
   // ("第2章" before "第10章"). Folders first.
   const { settings } = useSettings();
