@@ -3,7 +3,13 @@ import { useSettings } from "../prefs/SettingsContext";
 import { localeOf, plural } from "../i18n/strings";
 import { ContextMenu, type ContextMenuItem } from "../ui/ContextMenu";
 import { showConfirm, showMessage, showPrompt } from "../ui/app-dialog";
-import { CloseIcon, GridViewIcon, ListViewIcon, MoreIcon } from "../ui/icons";
+import {
+  CloseIcon,
+  FolderOpenIcon,
+  GridViewIcon,
+  ListViewIcon,
+  MoreIcon,
+} from "../ui/icons";
 import { Presence, usePresenceProps } from "../ui/usePresence";
 import { animate } from "../ui/motion";
 import { ListMotion } from "../ui/flip";
@@ -242,10 +248,11 @@ export function DocumentList({
         <h2>{t.docListTitle}</h2>
         <button
           type="button"
-          className="document-list-text-button"
+          className="document-list-icon-button document-list-open-other"
+          aria-label={t.docListOpenOther}
           onClick={onOpenOther}
         >
-          {t.docListOpenOther}
+          <FolderOpenIcon />
         </button>
       </header>
       <div className="document-list-toolbar">

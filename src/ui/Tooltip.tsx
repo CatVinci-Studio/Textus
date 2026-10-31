@@ -140,6 +140,9 @@ export function Tooltip({
     onFocus: (e) => {
       props.onFocus?.(e);
       if (!e.currentTarget.matches(":focus-visible")) return;
+      // WebKit counts a focus a tap leaves as visible; a touch screen has
+      // no hover to explain anything with.
+      if (window.matchMedia?.("(hover: none)").matches) return;
       anchor.current = e.currentTarget;
       window.clearTimeout(timerRef.current);
       setOpen(true);
