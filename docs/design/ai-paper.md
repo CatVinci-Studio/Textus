@@ -116,10 +116,17 @@ it, lazily loaded. Each stage and helper is one run of
   saves both and stops at `awaitingOutline`. The frontend doesn't call it
   yet.
 
+- **In the app** (`document-view/usePaperWriter.ts`, `ai/paper/paper-store.ts`,
+  the lazy `paper` module): in Write mode the AI panel's empty state offers
+  **Write a paper…**, asking for a topic and a length. The conversation
+  gets the user's ask and a card (`write_paper` turns, which Rust keeps from
+  the model); the card follows the run from the paper store and shows the
+  outline card while the run waits. Approve saves the edited outline and
+  drafts; `ready` becomes one `propose_edit` append - title, abstract,
+  sections, references - accepted or rejected like any proposal. The
+  language is the topic's script's, else the UI's.
+
 ### To come
 
-The entry point that starts a paper, shows its progress and outline card,
-and turns its events into proposals - `opening`, each section, `references`,
-each appended in order. Scholarly search, the reference library, the
-`chart` block and web pictures are independent tools the stages pick up once
-they are registered.
+Web pictures for the `web` figures (`find_image`); the research helpers
+reading the user's `references/` library.

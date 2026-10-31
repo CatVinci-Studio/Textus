@@ -1,4 +1,11 @@
 import { Channel } from "@tauri-apps/api/core";
+import type {
+  DraftRequest,
+  Outline,
+  Paper,
+  PaperEvent,
+  PaperRequest,
+} from "./bindings/ai-paper";
 import type { ProviderCatalogEntry } from "../ai/provider-catalog";
 import type { ImageModel, ImageProviderEntry } from "../ai/image-models";
 import type { SentBlock } from "../ai/doc-blocks";
@@ -249,6 +256,33 @@ export const ai = {
     searxngUrl: string,
   ) => command("web_search_status", provider, model, searchService, searxngUrl),
   cancelAgentMessage: (requestId: string) => command("ai_cancel", requestId),
+  /** A paper researched and outlined (src-tauri/src/ai/paper), its progress
+   *  through `onEvent`; it stops at the outline for the user to approve. */
+  paperRun: (request: PaperRequest, onEvent: (event: PaperEvent) => void) => {
+    const channel = new Channel<PaperEvent>();
+    channel.onmessage = onEvent;
+    return aiCall<Paper>("ai_paper_run", { request, channel });
+  },
+  /** The outline as the user edited it, kept for drafting. */
+  paperSaveOutline: (
+    docPath: string | null,
+    workspaceRoot: string | null,
+    id: string,
+    outline: Outline,
+  ) =>
+    aiCall<Outline>("ai_paper_save_outline", {
+      docPath,
+      workspaceRoot,
+      id,
+      outline,
+    }),
+  /** The approved paper drafted, reviewed and finished; it arrives whole
+   *  as a `ready` event. */
+  paperDraft: (request: DraftRequest, onEvent: (event: PaperEvent) => void) => {
+    const channel = new Channel<PaperEvent>();
+    channel.onmessage = onEvent;
+    return aiCall<null>("ai_paper_draft", { request, channel });
+  },
 
   loadAgentWorkspace: (docPath: string | null, rootOverride: string | null) =>
     command("load_agent_workspace", docPath, rootOverride),

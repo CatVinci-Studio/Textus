@@ -1,5 +1,6 @@
 import { useEditorPane, useReviewBar } from "./useReviewBar";
 import { useIllustrateParagraph } from "./useIllustrateParagraph";
+import { usePaperWriter } from "./usePaperWriter";
 import { useTourSignals } from "./useTourSignals";
 import type { EditorSetup } from "./useEditorSetup";
 import type { EditorChat } from "./useEditorChat";
@@ -86,7 +87,22 @@ export function useEditorReview({
     t,
   });
 
-  return { ...pane, ...bar, notes, onSkillUsed, illustrateParagraph };
+  const writePaper = usePaperWriter({
+    proposals: chat.proposals,
+    agentPanel,
+    settings,
+    filePath,
+    t,
+  });
+
+  return {
+    ...pane,
+    ...bar,
+    notes,
+    onSkillUsed,
+    illustrateParagraph,
+    writePaper,
+  };
 }
 
 export type EditorReview = ReturnType<typeof useEditorReview>;

@@ -67,6 +67,7 @@ export function EditorChatPortals({
             onPopOut={chat.popOutPanel}
             guard={chat.panelGuard}
             setGuard={chat.setPanelGuard}
+            writePaper={review.writePaper}
           />,
           panelContainer,
         )}
