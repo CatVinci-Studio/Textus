@@ -5,12 +5,13 @@ import { normalizeMathDelimiters } from "../../utils/markdown-math";
 import { sanitizeNodes } from "../html/html-policy";
 import { readImagePresentation } from "../images/image-html";
 import { katexNow, mathSourceHtml } from "../math/katex-loader";
+import { renderFormula } from "../math/matrix-rows";
 
 function renderMath(source: string, displayMode: boolean): string {
   const katex = katexNow();
   // Before KaTeX has loaded, the source; callers redraw once it is here.
   if (!katex) return mathSourceHtml(source.trim());
-  return katex.renderToString(source.trim(), {
+  return renderFormula(katex, source.trim(), {
     displayMode,
     // A half-typed formula renders as its source in red rather than throwing
     // away the whole reply.
