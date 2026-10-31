@@ -726,8 +726,10 @@ test.describe("phone", () => {
     // The results stand in for the list.
     await expect(panel.locator(".settings-nav")).toHaveCount(0);
     // Right under the search box, not below half a screen of empty list.
+    const group = panel.locator(".settings-group").first();
+    await expect(group).toBeVisible();
     const box = await panel.locator(".settings-search").boundingBox();
-    const first = await panel.locator(".settings-group").first().boundingBox();
+    const first = await group.boundingBox();
     expect(first!.y - (box!.y + box!.height)).toBeLessThan(40);
     await panel.getByRole("option").first().tap();
     await expect(
