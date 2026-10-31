@@ -3,9 +3,14 @@ import {
   Plugin,
   PluginKey,
   type EditorState,
+  type PluginView,
   type Transaction,
 } from "@milkdown/kit/prose/state";
-import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
+import {
+  Decoration,
+  DecorationSet,
+  type EditorView,
+} from "@milkdown/kit/prose/view";
 import { drawsLazily, keepsDrawingLazily } from "../large-doc";
 
 // Which top-level blocks of a long document are drawn. The document itself
@@ -288,8 +293,11 @@ function apply(
 }
 
 /** Keeps which top-level blocks are drawn; the decorations it provides
- *  mark the blocks that just changed, for the view to draw them anew. */
-export function createLazyBlocksPlugin(): Plugin<LazyBlocksState> {
+ *  mark the blocks that just changed, for the view to draw them anew.
+ *  `view` is what tells it what is on screen. */
+export function createLazyBlocksPlugin(
+  options: { view?: (view: EditorView) => PluginView } = {},
+): Plugin<LazyBlocksState> {
   return new Plugin<LazyBlocksState>({
     key: lazyBlocksKey,
     state: {
@@ -306,5 +314,6 @@ export function createLazyBlocksPlugin(): Plugin<LazyBlocksState> {
     props: {
       decorations: (state) => lazyBlocksKey.getState(state)?.flips,
     },
+    view: options.view,
   });
 }
