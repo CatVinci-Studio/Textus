@@ -52,8 +52,7 @@ fn picture_line() -> &'static Regex {
 }
 
 fn cited() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\[(\d{1,3})\]\(https?://[^)\s]+\)").unwrap())
+    super::draft::cited_link()
 }
 
 /// `sections` with a numbered caption under every figure, counted through
@@ -143,6 +142,18 @@ pub(crate) fn references(sections: &[String], dossier: &Dossier, language: &str)
         .iter()
         .filter_map(|n| dossier.sources.iter().find(|s| s.n == *n))
         .map(|s| {
+            if let Some(path) = super::research::reference_path(&s.url) {
+                let title = if s.title.trim().is_empty() {
+                    &path
+                } else {
+                    &s.title
+                };
+                return format!(
+                    "\\[{}\\] {}. `{path}`",
+                    s.n,
+                    title.trim().trim_end_matches('.')
+                );
+            }
             let title = if s.title.trim().is_empty() {
                 &s.url
             } else {
@@ -221,8 +232,7 @@ pub(crate) fn plain_citations(section: &str) -> String {
 }
 
 fn cited_number() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\[(\d{1,3})\]\(https?://[^)\s]+\)").unwrap())
+    super::draft::cited_link()
 }
 
 /// The whole paper: its opening, its sections and its reference list, one
