@@ -648,3 +648,117 @@ fn a_section_draft_is_kept_beside_its_paper() {
     assert_eq!(load_section(root.path(), "abc123", 0).unwrap(), None);
     assert!(save_section(root.path(), "../x", 0, "").is_err());
 }
+
+#[test]
+fn a_review_report_is_read_in_order_and_capped_per_section() {
+    let issue = |n: u32, p: &str| json!({"section": n, "problem": p, "fix": "fix it"});
+    let args = json!({"issues": [
+        issue(2, "a"), issue(2, "b"), issue(1, "c"), issue(2, "d"), issue(2, "e"), issue(1, " ")
+    ]})
+    .to_string();
+    let issues = review::read_issues(&args, 2).unwrap();
+    let got: Vec<(usize, &str)> = issues
+        .iter()
+        .map(|i| (i.section, i.problem.as_str()))
+        .collect();
+    assert_eq!(got, [(1, "a"), (1, "b"), (0, "c"), (1, "d")]);
+    assert!(
+        review::read_issues(&json!({"issues": [issue(3, "x")]}).to_string(), 2)
+            .unwrap_err()
+            .contains("no section 3")
+    );
+    assert_eq!(review::read_issues(r#"{"issues": []}"#, 2).unwrap(), vec![]);
+    assert!(review::read_issues("{}", 2).is_err());
+}
+
+/// Reviews by faulting sections 1 and 2; revises section 1 well and
+/// section 2 never in a form that holds.
+struct Reviser;
+
+impl research::Model for Reviser {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        turns: &'a [aicompat::agent::AgentTurn],
+        tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        use aicompat::agent::{AgentTurn, StepResult};
+        let AgentTurn::User { text, .. } = &turns[0] else {
+            panic!()
+        };
+        let call = |name: &str, args: serde_json::Value| {
+            StepResult::ToolCalls(vec![AgentTurn::ToolCall {
+                call_id: format!("c{}", turns.len()),
+                name: name.into(),
+                arguments: args.to_string(),
+                reasoning: None,
+            }])
+        };
+        let done = matches!(turns.last(), Some(AgentTurn::ToolResult { output, .. }) if output.starts_with("Kept") || output.starts_with("Reported"));
+        let step = if done || turns.len() > 6 {
+            StepResult::Done("Done.".into())
+        } else if tools[0].name == review::REPORT_ISSUES_TOOL {
+            assert!(text.contains("<section number=\"2\">"), "{text}");
+            call(
+                review::REPORT_ISSUES_TOOL,
+                json!({"issues": [
+                    {"section": 1, "problem": "Repeats section 2", "fix": "Cut the overlap"},
+                    {"section": 2, "problem": "Figure never mentioned", "fix": "Refer to it"}
+                ]}),
+            )
+        } else {
+            assert!(
+                text.contains("A reviewer who read the whole paper"),
+                "{text}"
+            );
+            let words = if text.contains("Cut the overlap") {
+                97
+            } else {
+                5
+            };
+            call(
+                draft::SUBMIT_SECTION_TOOL,
+                json!({"markdown": section_text(words, "```chart\n{\"series\": [{\"data\": [1]}]}\n```")}),
+            )
+        };
+        Box::pin(async move { Ok(step) })
+    }
+}
+
+#[tokio::test]
+async fn faulted_sections_are_revised_once_and_a_failed_revision_keeps_the_draft() {
+    let plan = outline_of(2, 100);
+    let english = Paper {
+        language: "en".into(),
+        ..paper()
+    };
+    let mut sections = vec![
+        "## Mechanism\n\nFirst draft.".to_string(),
+        "## Mechanism\n\nSecond draft.".to_string(),
+    ];
+    let issues = review::review(&Reviser, &english, &plan, &sections)
+        .await
+        .unwrap();
+    assert_eq!(issues.len(), 2);
+    let revising = std::sync::Mutex::new(Vec::new());
+    let changed = review::revise(
+        &Reviser,
+        &english,
+        &plan,
+        &drafting_dossier(),
+        &mut sections,
+        &issues,
+        &|i| revising.lock().unwrap().push(i),
+    )
+    .await;
+    assert_eq!(changed, [0]);
+    assert!(
+        sections[0].starts_with("## Mechanism\n\nGreen Green"),
+        "{}",
+        sections[0]
+    );
+    assert_eq!(sections[1], "## Mechanism\n\nSecond draft.");
+    let mut revising = revising.into_inner().unwrap();
+    revising.sort();
+    assert_eq!(revising, [0, 1]);
+}

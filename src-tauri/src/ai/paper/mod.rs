@@ -13,6 +13,7 @@ mod draft;
 mod events;
 mod outline;
 mod research;
+mod review;
 mod store;
 
 pub(crate) use budget::{BudgetCounts, BudgetKind, ResearchBudget, SharedBudget};
@@ -249,8 +250,10 @@ pub struct DraftRequest {
     pub id: String,
 }
 
-/// Drafts paper `id` from its saved outline: every section written, kept
-/// beside the paper and sent as `sectionDrafted`, in order. Stopped like any
+/// Drafts paper `id` from its saved outline: every section written and kept
+/// beside the paper, the whole reviewed and the sections it faults revised
+/// once, then each sent as `sectionDrafted`, in order - nothing is proposed
+/// before the review, so no proposal is replaced after it. Stopped like any
 /// request, by `ai_cancel` with `request_id`.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -299,11 +302,13 @@ pub async fn ai_paper_draft(
                 status: SectionStatus::Drafting,
             })
         };
+        let mut sections: Vec<String> = Vec::with_capacity(outline.sections.len());
         let mut drafted = |i: usize, markdown: &str| {
             save_section(&root, &files.paper.id, i, markdown)?;
-            send(PaperEvent::SectionDrafted {
+            sections.push(markdown.to_string());
+            send(PaperEvent::Section {
                 index: i as u32,
-                markdown: markdown.to_string(),
+                status: SectionStatus::Drafted,
             });
             Ok(())
         };
@@ -315,7 +320,42 @@ pub async fn ai_paper_draft(
             &started,
             &mut drafted,
         )
-        .await
+        .await?;
+
+        send(PaperEvent::Phase {
+            phase: PaperPhase::Reviewing,
+        });
+        // A review that fails costs the paper nothing: its sections passed
+        // their own checks.
+        let issues = review::review(&agent, &files.paper, &outline, &sections)
+            .await
+            .unwrap_or_default();
+        let revising = |i: usize| {
+            send(PaperEvent::Section {
+                index: i as u32,
+                status: SectionStatus::Revising,
+            })
+        };
+        let changed = review::revise(
+            &agent,
+            &files.paper,
+            &outline,
+            &files.dossier,
+            &mut sections,
+            &issues,
+            &revising,
+        )
+        .await;
+        for i in changed {
+            save_section(&root, &files.paper.id, i, &sections[i])?;
+        }
+        for (i, markdown) in sections.into_iter().enumerate() {
+            send(PaperEvent::SectionDrafted {
+                index: i as u32,
+                markdown,
+            });
+        }
+        Ok(())
     })
     .await
 }

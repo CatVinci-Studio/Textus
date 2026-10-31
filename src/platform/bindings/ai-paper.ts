@@ -16,8 +16,10 @@ export const commands = {
 	 */
 	ai_paper_save_outline: (docPath: string | null, workspaceRoot: string | null, id: string, outline: Outline) => __TAURI_INVOKE<Outline>("ai_paper_save_outline", { docPath, workspaceRoot, id, outline }),
 	/**
-	 *  Drafts paper `id` from its saved outline: every section written, kept
-	 *  beside the paper and sent as `sectionDrafted`, in order. Stopped like any
+	 *  Drafts paper `id` from its saved outline: every section written and kept
+	 *  beside the paper, the whole reviewed and the sections it faults revised
+	 *  once, then each sent as `sectionDrafted`, in order - nothing is proposed
+	 *  before the review, so no proposal is replaced after it. Stopped like any
 	 *  request, by `ai_cancel` with `request_id`.
 	 */
 	ai_paper_draft: (request: DraftRequest_Deserialize, channel: Channel<PaperEvent_Deserialize>) => __TAURI_INVOKE<null>("ai_paper_draft", { request, channel }),

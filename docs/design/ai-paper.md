@@ -91,8 +91,15 @@ it, lazily loaded. Each stage and helper is one run of
   bare `[n]`) and its planned figures: a `mermaid block, a `chart block
   whose JSON the renderer can draw, a `textus-picture:` line, or a
   `<!-- textus-figure web: … -->` mark until a web picture is found. Sections
-  are kept as `section-<n>.md` and sent as `sectionDrafted` in the outline's
-  order; a failed section stops the ones after it, so the paper has no gap.
+  are kept as `section-<n>.md` and, after the review, sent as
+  `sectionDrafted` in the outline's order; a failed section stops the ones after it, so the paper has no gap.
+- **Review** (`paper/review.rs`): once every section is drafted, a reader
+  who sees them all reports with `report_issues` what only the whole shows -
+  repetition, contradictions, an outline point no section makes, a figure
+  never referred to, a claim stronger than its notes - at most three points
+  a section. Each faulted section is revised once by its writer, under the
+  same checks; a revision that doesn't hold, or a review that fails, leaves
+  the drafts. Only then are the sections sent, so no proposal is replaced.
 - **`ai_paper_run`** (`PaperRequest`): researches the paper, outlines it,
   saves both and stops at `awaitingOutline`. The frontend doesn't call it
   yet.
