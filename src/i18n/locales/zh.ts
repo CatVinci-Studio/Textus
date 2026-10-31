@@ -786,6 +786,7 @@ export default {
   codeBlockCopied: "已复制",
   autoCloseMarksLabel: "补全 ** 和 `",
   autoCloseBracketsLabel: "补全 ()、[] 和 “”",
+  plainTextMenuLabel: "右键菜单显示纯文本复制粘贴",
   pdfPageNumbersLabel: "导出时显示页码",
   pdfLightColorsLabel: "导出 PDF 时使用浅色",
   infoTipLabel: "关于“{label}”的说明",

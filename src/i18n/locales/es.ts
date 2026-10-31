@@ -879,6 +879,7 @@ para usar una.
   codeBlockCopied: "Copiado",
   autoCloseMarksLabel: "Cerrar ** y `",
   autoCloseBracketsLabel: "Cerrar (), [] y «»",
+  plainTextMenuLabel: "Copiar y pegar sin formato en el menú contextual",
   pdfPageNumbersLabel: "Mostrar números de página al exportar",
   pdfLightColorsLabel: "Exportar PDF con colores claros",
   infoTipLabel: "Más sobre «{label}»",

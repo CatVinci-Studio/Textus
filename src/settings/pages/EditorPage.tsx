@@ -153,6 +153,11 @@ export function EditorPage({
           checked={settings.autoCloseBrackets}
           onChange={(v) => setSettings({ autoCloseBrackets: v })}
         />
+        <ToggleRow
+          label={t.plainTextMenuLabel}
+          checked={settings.plainTextMenu}
+          onChange={(v) => setSettings({ plainTextMenu: v })}
+        />
       </SettingsGroup>
       <SettingsGroup title={t.imageStorageGroupLabel}>
         <SettingRow label={t.imageAlignLabel}>

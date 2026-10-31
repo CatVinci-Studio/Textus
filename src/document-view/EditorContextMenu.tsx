@@ -128,6 +128,10 @@ export function EditorContextMenu({
                   : []),
               ],
               ...clipboard,
+              ...(!settings.plainTextMenu && {
+                copyAsPlainText: undefined,
+                pasteAsPlainText: undefined,
+              }),
               openFindReplace,
               openTableDialog,
               ...own,

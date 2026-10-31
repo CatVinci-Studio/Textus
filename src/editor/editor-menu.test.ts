@@ -134,6 +134,21 @@ describe("the editor menu", () => {
     ]);
   });
 
+  it("offers plain text only while Settings turns it on", () => {
+    const { run } = editorAt(caretIn("text"));
+    const off = {
+      ...options(null),
+      copyAsPlainText: undefined,
+      pasteAsPlainText: undefined,
+    };
+    expect(labels(buildContextMenuItems(run, off)).slice(0, 4)).toEqual([
+      t.cut,
+      t.copy,
+      t.paste,
+      "-",
+    ]);
+  });
+
   it("keeps the text's menu short: plain text, Format and the AI in submenus", () => {
     const { run } = editorAt(caretIn("text"));
     const ai = ["Ask", "Continue"].map((label) => ({

@@ -244,6 +244,8 @@ export interface Settings {
   /// Typing "(", "[", "{", a quote or a full-width bracket ("（", "【",
   /// "「"...) puts its partner in after the caret, as in Typora.
   autoCloseBrackets: boolean;
+  /// The right-click menu offers copying and pasting as plain text.
+  plainTextMenu: boolean;
   /// The user's own CSS, injected after the theme so it wins ties.
   customCss: string;
   /// Whole-page zoom factor (1 = 100%). Saved so it survives restarts; each
@@ -349,6 +351,7 @@ export const DEFAULT_SETTINGS: Settings = {
   menuBarShown: false,
   autoCloseMarks: true,
   autoCloseBrackets: true,
+  plainTextMenu: false,
   customCss: "",
   zoom: 1,
   uiTextScale: 1,

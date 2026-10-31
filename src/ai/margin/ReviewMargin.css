@@ -577,3 +577,39 @@ del .revision-note-picture {
 .own-delete.own-change-hot {
   background: var(--revision-delete-hover-bg);
 }
+
+/* The revision views, as the AI's edits take them (milkdown-theme.css).
+   Original: the deleted words back in place of the new ones, which only
+   the card shows; text only added stays. */
+.ProseMirror[data-revision-display="original"]
+  .own-insert:not(.own-insert-only) {
+  font-size: 0;
+  background: none;
+}
+
+/* Final: the result, the new words faintly marked; where words were only
+   deleted, a mark. */
+.ProseMirror[data-revision-display="final"] .own-delete:not(.own-delete-only) {
+  display: none;
+}
+
+.ProseMirror[data-revision-display="final"] .own-insert {
+  background: none;
+  color: inherit;
+  text-decoration: underline dotted;
+  text-decoration-color: color-mix(in srgb, var(--ui-success) 55%, transparent);
+  text-underline-offset: 0.2em;
+}
+
+.ProseMirror[data-revision-display="final"] .own-delete-only {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin: 0 1px;
+  overflow: hidden;
+  color: transparent;
+  vertical-align: -0.15em;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-danger);
+}

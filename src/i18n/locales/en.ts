@@ -847,6 +847,7 @@ type /name in a conversation to use one.
   codeBlockCopied: "Copied",
   autoCloseMarksLabel: "Close ** and `",
   autoCloseBracketsLabel: "Close (), [] and “”",
+  plainTextMenuLabel: "Plain text copy and paste in the right-click menu",
   pdfPageNumbersLabel: "Show page numbers in exports",
   pdfLightColorsLabel: "Export PDFs in light colors",
   infoTipLabel: "More about {label}",

@@ -787,6 +787,7 @@ export default {
   codeBlockCopied: "已複製",
   autoCloseMarksLabel: "補全 ** 和 `",
   autoCloseBracketsLabel: "補全 ()、[] 和 「」",
+  plainTextMenuLabel: "右鍵選單顯示純文字複製貼上",
   pdfPageNumbersLabel: "匯出時顯示頁碼",
   pdfLightColorsLabel: "匯出 PDF 時使用淺色",
   infoTipLabel: "關於「{label}」的說明",

@@ -369,8 +369,8 @@ export function useReviewNotes({
         streaming: !!preview.streaming,
       });
     });
-    // The writer's own tracked changes: the text has the new words, so a
-    // card shows what was deleted.
+    // The writer's own tracked changes, a card each in every view (inline
+    // has no ✓ / ✕ in the text for them): it shows what the text doesn't.
     (revisions.changes ?? []).forEach((c, i) =>
       items.push({
         kind: "revision",
@@ -382,7 +382,7 @@ export function useReviewNotes({
         to: c.to,
         after: c.after,
         before: c.before,
-        shows: "new",
+        shows: display === "original" ? "original" : "new",
         take: null,
         streaming: false,
       }),

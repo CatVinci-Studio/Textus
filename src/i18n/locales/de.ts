@@ -866,6 +866,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   codeBlockCopied: "Kopiert",
   autoCloseMarksLabel: "** und ` schließen",
   autoCloseBracketsLabel: "(), [] und „“ schließen",
+  plainTextMenuLabel: "Als reinen Text kopieren/einfügen im Kontextmenü",
   pdfPageNumbersLabel: "Seitenzahlen beim Exportieren anzeigen",
   pdfLightColorsLabel: "PDFs in hellen Farben exportieren",
   infoTipLabel: "Mehr zu „{label}“",

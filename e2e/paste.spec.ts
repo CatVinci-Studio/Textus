@@ -259,7 +259,7 @@ test("Copy as Plain Text gives the words as they read; an old copy setting chang
   // A settings file that still has the old Copy setting loads, and Cmd+C
   // gives the Markdown source.
   await openApp(page, {
-    settings: { language: "en", copyTextMode: "plain" },
+    settings: { language: "en", copyTextMode: "plain", plainTextMenu: true },
   });
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await pasteMarkdown(page, LINKED);
@@ -322,6 +322,8 @@ test("the context menu's Copy and Paste keep the formatting, as Cmd+C and Cmd+V 
 });
 
 test("Paste as Plain Text keeps Markdown marks as text", async ({ page }) => {
+  // Offered in the menu once Settings turns it on.
+  await openApp(page, { settings: { language: "en", plainTextMenu: true } });
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.locator(editor).click();
   await page.evaluate(() => navigator.clipboard.writeText("**not bold**"));

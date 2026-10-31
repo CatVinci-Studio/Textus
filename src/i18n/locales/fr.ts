@@ -893,6 +893,7 @@ utiliser une.
   codeBlockCopied: "Copié",
   autoCloseMarksLabel: "Fermer ** et `",
   autoCloseBracketsLabel: "Fermer (), [] et « »",
+  plainTextMenuLabel: "Copier/coller en texte brut dans le menu contextuel",
   pdfPageNumbersLabel: "Afficher les numéros de page à l’export",
   pdfLightColorsLabel: "Exporter les PDF en couleurs claires",
   infoTipLabel: "En savoir plus sur « {label} »",

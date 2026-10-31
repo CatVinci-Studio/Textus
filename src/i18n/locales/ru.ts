@@ -873,6 +873,7 @@ export default {
   codeBlockCopied: "Скопировано",
   autoCloseMarksLabel: "Закрывать ** и `",
   autoCloseBracketsLabel: "Закрывать (), [] и «»",
+  plainTextMenuLabel: "Копировать/вставить как текст в контекстном меню",
   pdfPageNumbersLabel: "Показывать номера страниц при экспорте",
   pdfLightColorsLabel: "Экспортировать PDF в светлых цветах",
   infoTipLabel: "Подробнее о «{label}»",

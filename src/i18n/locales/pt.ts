@@ -862,6 +862,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   codeBlockCopied: "Copiado",
   autoCloseMarksLabel: "Fechar ** e `",
   autoCloseBracketsLabel: "Fechar (), [] e “”",
+  plainTextMenuLabel: "Copiar/colar como texto simples no menu de contexto",
   pdfPageNumbersLabel: "Mostrar números de página ao exportar",
   pdfLightColorsLabel: "Exportar PDFs em cores claras",
   infoTipLabel: "Mais sobre “{label}”",

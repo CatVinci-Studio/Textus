@@ -111,6 +111,42 @@ test("the review bar counts the writer's changes, steps through them and decides
   await expect(page.locator(editor)).toContainText("was still at dusk");
 });
 
+test("the writer's changes take the review bar's views, as Textus AI's do", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1400, height: 800 });
+  await openDraft(page);
+  await toggleTracking(page);
+  await retype(page, "quiet", "still");
+  const shown = (part: string) =>
+    page
+      .locator(part)
+      .evaluate(
+        (el) =>
+          getComputedStyle(el).display !== "none" &&
+          getComputedStyle(el).fontSize !== "0px",
+      );
+  const card = page.locator(".revision-note");
+  const view = async (name: string) => {
+    await page.locator(".review-bar-view-button").click();
+    await page.getByRole("menuitemradio", { name, exact: true }).click();
+  };
+
+  // Result only (the default): the new word, the original in its card.
+  expect(await shown(".own-delete")).toBe(false);
+  expect(await shown(".own-insert")).toBe(true);
+  await expect(card).toContainText("quiet");
+
+  await view("Original in the text, changes in the margin");
+  expect(await shown(".own-delete")).toBe(true);
+  expect(await shown(".own-insert")).toBe(false);
+  await expect(card).toContainText("still");
+
+  await view("All in the text");
+  expect(await shown(".own-delete")).toBe(true);
+  expect(await shown(".own-insert")).toBe(true);
+});
+
 test("saved, the file keeps the original and the changes are kept beside it, as Textus AI's are", async ({
   page,
 }) => {

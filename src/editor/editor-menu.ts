@@ -150,9 +150,10 @@ export interface ContextMenuOptions {
   /** Textus AI's items for the image right-clicked. */
   pictureAiItems?: ContextMenuItem[];
   copyOrCut: (cut: boolean) => void;
-  copyAsPlainText: () => void;
+  /** Copy and paste as plain text, while Settings offers them. */
+  copyAsPlainText?: () => void;
   paste: () => void;
-  pasteAsPlainText: () => void;
+  pasteAsPlainText?: () => void;
   selectAll: () => void;
   openFindReplace: () => void;
   openTableDialog: () => void;
@@ -187,17 +188,24 @@ export function buildContextMenuItems(
       onSelect: () => options.copyOrCut(false),
     },
     { label: t.paste, onSelect: options.paste },
-    {
-      label: t.menuPlainText,
-      items: [
-        {
-          label: t.copyAsPlainText,
-          disabled: nothingSelected,
-          onSelect: options.copyAsPlainText,
-        },
-        { label: t.pasteAsPlainText, onSelect: options.pasteAsPlainText },
-      ],
-    },
+    ...(options.copyAsPlainText && options.pasteAsPlainText
+      ? [
+          {
+            label: t.menuPlainText,
+            items: [
+              {
+                label: t.copyAsPlainText,
+                disabled: nothingSelected,
+                onSelect: options.copyAsPlainText,
+              },
+              {
+                label: t.pasteAsPlainText,
+                onSelect: options.pasteAsPlainText,
+              },
+            ],
+          },
+        ]
+      : []),
     ...(options.addNote && !nothingSelected
       ? [{ label: t.ownNoteAdd, onSelect: options.addNote }]
       : []),
@@ -248,7 +256,9 @@ export function buildPhoneMoreItems(
   // The phone has no Edit menu to offer the plain text.
   const clipboard: MenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
-    { label: t.copyAsPlainText, onSelect: options.copyAsPlainText },
+    ...(options.copyAsPlainText
+      ? [{ label: t.copyAsPlainText, onSelect: options.copyAsPlainText }]
+      : []),
   ];
   if (inTable(run)) {
     return [
