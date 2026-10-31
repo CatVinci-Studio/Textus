@@ -107,6 +107,18 @@ describe("diagramRenderer", () => {
     ).toBe("mermaid");
   });
 
+  it("draws a chart with its own renderer, touching neither engine", async () => {
+    const draw = diagramRenderer("pele", { width: 600 });
+    const { svg, engine } = await draw('{"data": [1, 2]}', "d1", "chart");
+    expect(engine).toBe("chart");
+    expect(svg).toContain('class="textus-chart"');
+    expect(pele.renderAsync).not.toHaveBeenCalled();
+    expect(mermaid.render).not.toHaveBeenCalled();
+    await expect(draw("{oops", "d2", "chart")).rejects.toThrow(
+      "not valid JSON",
+    );
+  });
+
   it("throws when neither engine can draw the source", async () => {
     pele.renderAsync.mockRejectedValue(new Error("syntax"));
     mermaid.render.mockRejectedValue(new Error("syntax"));

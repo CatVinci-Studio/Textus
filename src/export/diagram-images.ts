@@ -1,7 +1,7 @@
 import { diagramRenderer, type MermaidApi } from "../editor/diagram-engine";
 import type { DiagramEngine } from "../prefs/SettingsContext";
 
-// Word, OpenDocument and EPUB don't know mermaid blocks, so each diagram is
+// Word, OpenDocument and EPUB don't know mermaid or chart blocks, so each is
 // drawn as a PNG data URL before pandoc. One that can't be drawn keeps its
 // source.
 
@@ -103,7 +103,8 @@ export async function diagramsToImages(
   markdown: string,
   engine: DiagramEngine,
 ): Promise<string> {
-  if (!/^ {0,3}(`{3,}|~{3,})\s*mermaid/im.test(markdown)) return markdown;
+  if (!/^ {0,3}(`{3,}|~{3,})\s*(mermaid|chart)/im.test(markdown))
+    return markdown;
   const fontFamily = getComputedStyle(document.body).fontFamily;
   // A page is white, and labels must be SVG text (not HTML) to draw on a
   // canvas. The editor re-applies its own settings before its next render.
@@ -132,8 +133,10 @@ export async function diagramsToImages(
     configure,
   );
   return replaceFencedBlocks(markdown, async (language, code) =>
-    language === "mermaid"
-      ? svgToPng((await draw(code, `export-diagram-${++exportId}`)).svg)
+    language === "mermaid" || language === "chart"
+      ? svgToPng(
+          (await draw(code, `export-diagram-${++exportId}`, language)).svg,
+        )
       : null,
   );
 }
@@ -168,11 +171,11 @@ export async function drawnBlocksToImages(
 }
 
 /** Replaces the SVG of every rendered diagram in editor `html` with what
- *  `draw` makes of its source. Pele's are kept: their CSS-variable colours
- *  adapt to a light page. */
+ *  `draw` makes of its source and language. Pele's are kept: their
+ *  CSS-variable colours adapt to a light page. */
 export async function redrawDiagrams(
   html: string,
-  draw: (code: string) => Promise<string | null>,
+  draw: (code: string, language: string) => Promise<string | null>,
 ): Promise<string> {
   const template = document.createElement("template");
   template.innerHTML = html;
@@ -184,14 +187,18 @@ export async function redrawDiagrams(
     if (!source?.classList.contains("mermaid-source-hidden")) continue;
     if (preview.querySelector(":scope > svg.pele")) continue;
     const code = (source.querySelector("code") ?? source).textContent ?? "";
-    const svg = await draw(code).catch(() => null);
+    const language = preview.querySelector(":scope > svg.textus-chart")
+      ? "chart"
+      : "mermaid";
+    const svg = await draw(code, language).catch(() => null);
     if (svg) preview.innerHTML = svg;
   }
   return template.innerHTML;
 }
 
-/** The editor's Mermaid diagrams redrawn in mermaid's light style for a PDF
- *  on white, where dark-theme lines vanish. Pele's are left as they are. */
+/** The editor's Mermaid diagrams and charts redrawn in their light style for
+ *  a PDF on white, where dark-theme lines vanish. Pele's are left as they
+ *  are. */
 export async function lightDiagrams(
   html: string,
   width: number,
@@ -201,6 +208,7 @@ export async function lightDiagrams(
   const draw = diagramRenderer("mermaid", { width, fontFamily, dark: false });
   return redrawDiagrams(
     html,
-    async (code) => (await draw(code, `export-diagram-${++exportId}`)).svg,
+    async (code, language) =>
+      (await draw(code, `export-diagram-${++exportId}`, language)).svg,
   );
 }
