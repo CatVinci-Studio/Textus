@@ -308,3 +308,31 @@ fn partial_string(json: &str, key: &str) -> Option<(String, bool)> {
 
 #[cfg(test)]
 mod tests;
+
+/// `text` with each picture line begun on `run` and placed as
+/// `![alt](textus-generated:ID)`, for text that didn't stream through a
+/// request (a paper's sections). A line that can't be made - past the
+/// limit, or refused - is left out; why comes back with the text.
+pub(crate) fn place_pictures(run: &ImageRun, text: &str) -> (String, Vec<String>) {
+    let mut out: Vec<String> = Vec::new();
+    let mut unmade = Vec::new();
+    for line in text.split('\n') {
+        let Some(picture) = picture_line(line) else {
+            out.push(line.to_string());
+            continue;
+        };
+        match run.begin_picture(picture.prompt.to_string(), picture.aspect, picture.like) {
+            Ok((id, _)) => out.push(format!(
+                "![{}]({})",
+                picture.alt.replace('[', ""),
+                placeholder_src(&id)
+            )),
+            Err(why) => unmade.push(why),
+        }
+    }
+    let mut placed = out.join("\n");
+    while placed.contains("\n\n\n") {
+        placed = placed.replace("\n\n\n", "\n\n");
+    }
+    (placed, unmade)
+}

@@ -154,6 +154,9 @@ pub struct PaperRequest {
     /// The language it is written in, a BCP 47 tag.
     pub language: String,
     pub target_chars: u32,
+    /// The image model, for the pictures the outline may plan; None for
+    /// none.
+    pub image_model: Option<crate::ai::images::ImageModel>,
 }
 
 #[tauri::command]
@@ -175,12 +178,19 @@ pub async fn ai_paper_run(
         topic,
         language,
         target_chars,
+        image_model,
     } = request;
     let root = crate::ai::workspace::project_root(doc_path.as_deref(), workspace_root.as_deref())
         .ok_or_else(|| "NO_PROJECT".to_string())?;
     let entry = crate::ai::catalog::find(&provider)
         .ok_or_else(|| format!("unknown provider: {provider}"))?;
-    let budget = std::sync::Arc::new(SharedBudget::new(ResearchBudget::for_paper()));
+    // As many pictures as one send may make, the paper's own limit aside:
+    // the outline plans no more than can be drawn.
+    let mut research_budget = ResearchBudget::for_paper();
+    research_budget.limits.images =
+        crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), &provider)
+            .map_or(0, |run| research_budget.limits.images.min(run.limit as u32));
+    let budget = std::sync::Arc::new(SharedBudget::new(research_budget));
     let native = crate::ai::web::native_search(
         &provider,
         model
@@ -249,6 +259,8 @@ pub struct DraftRequest {
     pub request_id: String,
     /// The paper, outlined and its outline approved.
     pub id: String,
+    /// The image model the paper's pictures are made with; None for none.
+    pub image_model: Option<crate::ai::images::ImageModel>,
 }
 
 /// Drafts paper `id` from its saved outline: every section written and kept
@@ -354,19 +366,27 @@ pub async fn ai_paper_draft(
             phase: PaperPhase::Finishing,
         });
         let language = &files.paper.language;
+        // Pictures begun before the figures are numbered, so one that can't
+        // be made leaves no caption behind.
+        let pictures =
+            crate::ai::images::ImageRun::resolve(&app, request.image_model.as_ref(), entry.id)
+                .map(|run| run.in_folder(request.doc_path.as_deref()));
+        for section in &mut sections {
+            *section = match &pictures {
+                Some(run) => crate::ai::images::place_pictures(run, section).0,
+                None => finish::without_pictures(section),
+            };
+        }
         finish::number_figures(&mut sections, language);
-        let opening = finish::opening(&agent, &files.paper, &outline, &sections).await;
         let references = finish::references(&sections, &files.dossier, language);
-        send(PaperEvent::Opening { markdown: opening });
-        for (i, markdown) in sections.into_iter().enumerate() {
-            send(PaperEvent::SectionDrafted {
-                index: i as u32,
-                markdown,
-            });
-        }
-        if let Some(markdown) = references {
-            send(PaperEvent::References { markdown });
-        }
+        let sections: Vec<String> = sections
+            .iter()
+            .map(|s| finish::plain_citations(s))
+            .collect();
+        let opening = finish::opening(&agent, &files.paper, &outline, &sections).await;
+        send(PaperEvent::Ready {
+            markdown: finish::assemble(&opening, &sections, references.as_deref()),
+        });
         send(PaperEvent::Phase {
             phase: PaperPhase::Done,
         });

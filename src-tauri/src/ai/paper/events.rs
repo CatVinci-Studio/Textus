@@ -26,20 +26,9 @@ pub enum PaperEvent {
         used: BudgetCounts,
         remaining: BudgetCounts,
     },
-    /// Section `index` is written, its heading first: the next to propose,
-    /// sent in the outline's order.
-    SectionDrafted {
-        index: u32,
-        markdown: String,
-    },
-    /// The paper's title and abstract: what goes above its first section,
-    /// sent before it.
-    Opening {
-        markdown: String,
-    },
-    /// The list of the sources the paper cites: what goes below its last
-    /// section, sent after it.
-    References {
+    /// The paper is written: its title and abstract, its sections and its
+    /// reference list, as one text to propose.
+    Ready {
         markdown: String,
     },
     /// The outline is ready for the user to edit and approve.

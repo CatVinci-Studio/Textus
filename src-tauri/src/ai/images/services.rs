@@ -160,6 +160,7 @@ pub fn find(id: &str) -> Option<&'static ImageProviderEntry> {
 /// The image model setting as a request carries it. Keep in step with the
 /// frontend's `ImageModel`.
 #[derive(Deserialize, Clone, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ImageModel {
     pub provider: String,

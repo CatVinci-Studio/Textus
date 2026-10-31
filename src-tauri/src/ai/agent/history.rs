@@ -24,12 +24,15 @@ pub(super) fn turn_chars(turn: &AgentTurn) -> usize {
 }
 
 /// Memory chips' turns (a remember call and its result) aren't sent: the model
-/// has no remember tool, and what is remembered comes with every message.
+/// has no remember tool, and what is remembered comes with every message. Nor
+/// are a paper's card turns (PAPER_TURN): the paper's own proposal is.
 pub(crate) fn without_memory_turns(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
     let memory: std::collections::HashSet<String> = history
         .iter()
         .filter_map(|turn| match turn {
-            AgentTurn::ToolCall { call_id, name, .. } if name == MEMORY_TURN => {
+            AgentTurn::ToolCall { call_id, name, .. }
+                if name == MEMORY_TURN || name == PAPER_TURN =>
+            {
                 Some(call_id.clone())
             }
             _ => None,
@@ -48,6 +51,10 @@ pub(crate) fn without_memory_turns(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
 
 /// The name a memory chip's turns go by.
 pub(crate) const MEMORY_TURN: &str = "remember";
+
+/// The name a paper card's turns go by. Keep in step with the frontend's
+/// `PAPER_TURN`.
+pub(crate) const PAPER_TURN: &str = "write_paper";
 
 /// Shrinks the replayed conversation to what a writing agent still needs;
 /// propose_edit results are never cut. Both cuts come out the same on every
