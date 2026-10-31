@@ -492,6 +492,9 @@ export function useAgentConversation(
     retry,
     reset,
     restore,
+    /** Adds turns made outside a request (a paper's card and proposal) to
+     *  the end of the history; a request in flight is left alone. */
+    append: (turns: AgentTurn[]) => setHistory((prev) => [...prev, ...turns]),
   };
 }
 

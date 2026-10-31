@@ -119,3 +119,75 @@
   display: flex;
   justify-content: flex-end;
 }
+
+/* The paper's card in the conversation, and the form that starts one. */
+.paper-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px 12px;
+  border: 1px solid var(--chat-hairline, var(--ui-border));
+  border-radius: var(--shape-m);
+  background: var(--chat-card-bg, transparent);
+  font-size: var(--text-secondary);
+}
+
+.paper-card .paper-outline {
+  padding: 0;
+  border: none;
+}
+
+.paper-card-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paper-card-title {
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+
+.paper-card-topic {
+  font-weight: 600;
+}
+
+.paper-card-progress,
+.paper-card-error {
+  margin: 0;
+}
+
+.paper-card-progress {
+  color: var(--ui-muted);
+}
+
+.paper-card-error {
+  color: var(--ui-danger);
+}
+
+.paper-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.paper-card-spacer {
+  flex: 1;
+}
+
+.paper-start textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-s);
+  background: var(--ui-surface);
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+}
+
+.paper-start {
+  align-self: stretch;
+  text-align: start;
+}

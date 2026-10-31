@@ -1217,6 +1217,16 @@ export function installDevTauriShim(): void {
               ? { ...value, value: settledTurns(blocks, value.value) }
               : (settledTurns(blocks, value) as typeof value);
         }
+        // `{ __events: [...], value }` first sends each event through the
+        // command's Channel (a paper's progress), then answers.
+        if (value && typeof value === "object" && "__events" in value) {
+          const channel = (Object.values(args ?? {}) as unknown[]).find(
+            (v) => !!v && typeof v === "object" && "onmessage" in v,
+          ) as { onmessage?: (event: unknown) => void } | undefined;
+          for (const event of (value as { __events: unknown[] }).__events)
+            channel?.onmessage?.(event);
+          return Promise.resolve((value as { value?: unknown }).value ?? null);
+        }
         // `{ __delay: ms, value }` answers only after a while - a picture
         // still being made - and `{ __delay: ms, __reject }` fails then.
         if (value && typeof value === "object" && "__delay" in value)

@@ -16,7 +16,8 @@ import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { EditProposal } from "../ai/types";
 import { canDetachChat } from "../platform/capabilities";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { PaperStart } from "../ai/paper/lazy";
 import { ModeIcon } from "../ai/chat/mode-icons";
 import type { AgentMode, Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
@@ -48,6 +49,7 @@ export function EditorAgentPanel({
   onPopOut,
   guard,
   setGuard,
+  writePaper,
 }: {
   run: EditorRunner;
   t: Strings;
@@ -78,9 +80,13 @@ export function EditorAgentPanel({
   /** Starting a new conversation asked first (edits still undecided). */
   guard: boolean;
   setGuard: (guard: boolean) => void;
+  /** Starts a paper on a topic (usePaperWriter). */
+  writePaper: (topic: string, targetChars: number) => void;
 }) {
   // The composer's mode: the empty state says what the AI will do in it.
   const [mode, setMode] = useState<AgentMode>(settings.agentDefaultMode);
+  // "Write a paper…" asking for its topic.
+  const [startingPaper, setStartingPaper] = useState(false);
   // The window bar's button opens and closes the panel; only the iPhone's
   // sheet keeps a close button of its own.
   const phone = usePhoneLayout();
@@ -128,6 +134,27 @@ export function EditorAgentPanel({
           <p className="agent-panel-empty-text" key={mode}>
             {emptyText}
           </p>
+          {mode === "write" &&
+            (startingPaper ? (
+              <Suspense fallback={null}>
+                <PaperStart
+                  t={t}
+                  onCancel={() => setStartingPaper(false)}
+                  onStart={(topic, chars) => {
+                    setStartingPaper(false);
+                    writePaper(topic, chars);
+                  }}
+                />
+              </Suspense>
+            ) : (
+              <button
+                type="button"
+                className="inline-chat-action"
+                onClick={() => setStartingPaper(true)}
+              >
+                {t.paperWrite}
+              </button>
+            ))}
         </div>
       )}
       <ChatBody
