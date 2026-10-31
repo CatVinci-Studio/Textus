@@ -5,19 +5,20 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "../helpers";
 import { mixedDoc, plainDoc, type LargeDoc } from "./large-docs";
 
-// The large-document benchmark: measures opening, typing, scrolling, saving
-// and tab switching per generated document. Asserts nothing about the
+// The large-document benchmark: measures opening, memory, typing, scrolling,
+// saving and tab switching per generated document. Asserts nothing about the
 // numbers. Env: PERF_DOCS, PERF_CHARS (default 200), PERF_LABEL.
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..", "..");
 
-// zh-1k is about 50,000 characters; the larger ones show what grows with
-// length.
+// zh-1k is about 50,000 characters, zh-8k about 500,000; the larger ones
+// show what grows with length.
 const ALL: (() => LargeDoc)[] = [
   () => mixedDoc("zh", 1000),
   () => mixedDoc("zh", 5000),
   () => mixedDoc("en", 5000),
+  () => mixedDoc("zh", 8000),
   () => mixedDoc("zh", 20000),
   () => plainDoc(200_000),
 ];
@@ -213,6 +214,25 @@ async function openDoc(page: Page, doc: LargeDoc, path: string) {
     },
     { path, markdown: doc.markdown, firstText: firstLine(doc) },
   );
+}
+
+/** What the page holds once garbage is collected: the JS heap, the DOM
+ *  nodes and the layout objects the renderer keeps for them (Chromium's
+ *  DevTools protocol; null elsewhere). */
+async function memory(page: Page, browserName: string) {
+  if (browserName !== "chromium") return null;
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("HeapProfiler.collectGarbage");
+  await cdp.send("Performance.enable");
+  const { metrics } = await cdp.send("Performance.getMetrics");
+  await cdp.detach();
+  const get = (name: string) =>
+    metrics.find((m) => m.name === name)?.value ?? 0;
+  return {
+    heapMB: Math.round(get("JSHeapUsedSize") / 1048576),
+    nodes: get("Nodes"),
+    layoutObjects: get("LayoutObjects"),
+  };
 }
 
 function firstLine(doc: LargeDoc): string {
@@ -517,6 +537,7 @@ for (const doc of docs) {
 
     const open = await openDoc(page, doc, path);
     await expect(page.locator(editor)).toContainText(doc.lastHeading);
+    const opened = await memory(page, browserName);
 
     const typing = await typeInMiddle(page, doc);
     // Chromium only: the composition is sent through its DevTools protocol.
@@ -526,6 +547,7 @@ for (const doc of docs) {
         : [];
     const enter = await pressEnter(page, 20);
     const frames = await scrollThrough(page);
+    const scrolled = await memory(page, browserName);
     const jump = await jumpToEnd(page);
     await caretToMiddle(page);
     const save = await saveAfterEdit(page, path);
@@ -545,6 +567,11 @@ for (const doc of docs) {
       openVisibleMs: Math.round(open.visible),
       openReadyMs: Math.round(open.ready),
       heapMB: open.heapMB === null ? null : Math.round(open.heapMB),
+      heapAfterGcMB: opened?.heapMB ?? null,
+      domNodes: opened?.nodes ?? null,
+      layoutObjects: opened?.layoutObjects ?? null,
+      heapAfterScrollMB: scrolled?.heapMB ?? null,
+      domNodesAfterScroll: scrolled?.nodes ?? null,
       keyLatencyP50: r1(pct(typing.latencies, 0.5)),
       keyLatencyP95: r1(pct(typing.latencies, 0.95)),
       dispatchP50: r1(pct(typing.dispatch, 0.5)),
