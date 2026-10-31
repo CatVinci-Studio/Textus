@@ -302,7 +302,7 @@ describe("italic typed with underscores", () => {
     type(view, "an _italic_ word");
     const span = view.state.doc.firstChild!.child(1);
     expect(span.type.name).toBe("md_span");
-    expect(span.attrs).toEqual({ delim: "_", rung: 1 });
+    expect(span.attrs).toMatchObject({ delim: "_", rung: 1 });
     expect(save()).toBe("an _italic_ word\n");
   });
 

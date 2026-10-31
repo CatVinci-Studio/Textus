@@ -52,7 +52,8 @@
     font-style: italic;
   }
 
-  .md-span[data-delim="~"] {
+  /* One tilde is a subscript, drawn by its <sub>. */
+  .md-span[data-delim="~"][data-rung="2"] {
     text-decoration: line-through;
     opacity: 0.75;
   }

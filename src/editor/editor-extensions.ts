@@ -43,6 +43,7 @@ import {
 } from "./markdown/br-hardbreak-plugin";
 import {
   remarkHighlightPlugin,
+  remarkSuperscriptPlugin,
   remarkStrikethroughTildesPlugin,
   remarkEmphasisUnderscoresPlugin,
   mdSpanSchema,
@@ -289,9 +290,10 @@ export function withEditorCore(
         ),
       )
 
-      // Bold/italic/strikethrough/highlight/inline code as nodes with
+      // Bold/italic/strikethrough/highlight/sub- and superscript/inline code as nodes with
       // synthesized, Typora-style delimiters.
       .use(remarkHighlightPlugin)
+      .use(remarkSuperscriptPlugin)
       .use(remarkStrikethroughTildesPlugin)
       .use(remarkEmphasisUnderscoresPlugin)
       .use(mdSpanSchema)

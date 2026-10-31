@@ -61,6 +61,7 @@ export function spanAround(
   rung: number,
   from: number,
   to: number,
+  extra: Record<string, unknown> = {},
 ): ProseNode {
   if (spec.nodeType !== "md_span")
     return spanNode(state.schema, spec, rung, state.doc.textBetween(from, to));
@@ -69,7 +70,10 @@ export function spanAround(
     $from.parentOffset,
     $from.parentOffset + to - from,
   );
-  return state.schema.nodes.md_span.create({ delim: spec.char, rung }, content);
+  return state.schema.nodes.md_span.create(
+    { delim: spec.char, rung, ...extra },
+    content,
+  );
 }
 
 /** Whether `spec`'s runs are read across code and maths. */
@@ -86,6 +90,7 @@ export function closeOpenRun(
   textBefore: string,
   runStart: number,
   to: number,
+  extra: Record<string, unknown> = {},
 ): boolean {
   const { state } = view;
   for (let rung = spec.maxRung; rung >= spec.minRung; rung--) {
@@ -99,6 +104,7 @@ export function closeOpenRun(
       rung,
       valueStart,
       valueStart + open.value.length,
+      extra,
     );
     const tr = state.tr.replaceWith(absOpen, to, node);
     view.dispatch(caretAt(tr, absOpen + node.nodeSize));
@@ -148,6 +154,42 @@ export const UNDERSCORE: SpanSpec = {
   minRung: 1,
   maxRung: 1,
 };
+/** Subscript `~x~` and superscript `^x^`: only ever closed, around text
+ *  with no spaces, so `a ~ b` and `2^10` stay as typed; a subscript only
+ *  right after a letter or digit (`H~2~O`), as `~text~` strikes out. */
+export const SUBSCRIPT: SpanSpec = {
+  char: "~",
+  nodeType: "md_span",
+  minRung: 1,
+  maxRung: 1,
+};
+export const SUPERSCRIPT: SpanSpec = {
+  char: "^",
+  nodeType: "md_span",
+  minRung: 1,
+  maxRung: 1,
+};
+
+/** The closing delimiter of a subscript or superscript, as Typora reads
+ *  them: the span forms only around text without spaces. */
+export function closeTightRun(
+  view: EditorView,
+  spec: SpanSpec,
+  textBefore: string,
+  runStart: number,
+  to: number,
+): boolean {
+  if (!pairsIn(view.state.doc.resolve(to).parent, spec)) return false;
+  const open = findRunOpen(textBefore, spec.char, 1);
+  if (!open || /\s/.test(open.value)) return false;
+  if (spec === SUBSCRIPT) {
+    const before = textBefore.slice(0, open.openIdx).slice(-1);
+    if (!LETTER_OR_DIGIT.test(before)) return false;
+    return closeOpenRun(view, spec, textBefore, runStart, to, { sub: true });
+  }
+  return closeOpenRun(view, spec, textBefore, runStart, to);
+}
+
 export const LETTER_OR_DIGIT = /^[\p{L}\p{N}]$/u;
 /** Closing brackets and quotes, and nothing else. */
 export const ONLY_CLOSERS = /^[)\]}"'」』）】》”’]+$/u;
