@@ -488,6 +488,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   alertImportant: "重要",
   alertWarning: "警告",
   alertCaution: "注意",
+  tocLabel: "目次",
+  tocEmpty: "見出しはまだありません",
   settingsTitle: "設定",
   settingsSearchPlaceholder: "設定を検索",
   settingsSearchResults: "検索結果",

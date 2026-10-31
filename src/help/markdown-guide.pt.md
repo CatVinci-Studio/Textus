@@ -213,4 +213,6 @@ Notas de rodapé ficam assim[^1], e logo abaixo há uma linha horizontal:
 
 [^1]: O conteúdo das notas de rodapé fica reunido no fim do documento.
 
+Digite `[TOC]` sozinho numa linha e pressione Enter para inserir um sumário: ele lista os títulos do documento e acompanha o que você escreve; clique num item para ir até ele.
+
 Boa escrita!

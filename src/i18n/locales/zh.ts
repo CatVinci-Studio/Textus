@@ -457,6 +457,8 @@ export default {
   alertImportant: "重要",
   alertWarning: "警告",
   alertCaution: "注意",
+  tocLabel: "目录",
+  tocEmpty: "暂无标题",
   settingsTitle: "设置",
   settingsSearchPlaceholder: "搜索设置",
   settingsSearchResults: "搜索结果",

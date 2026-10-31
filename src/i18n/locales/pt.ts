@@ -506,6 +506,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   alertImportant: "Importante",
   alertWarning: "Aviso",
   alertCaution: "Cuidado",
+  tocLabel: "Sumário",
+  tocEmpty: "Ainda não há títulos",
   settingsTitle: "Ajustes",
   settingsSearchPlaceholder: "Buscar nos ajustes",
   settingsSearchResults: "Resultados da busca",

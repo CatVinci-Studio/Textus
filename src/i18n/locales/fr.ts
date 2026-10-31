@@ -527,6 +527,8 @@ utiliser une.
   alertImportant: "Important",
   alertWarning: "Avertissement",
   alertCaution: "Attention",
+  tocLabel: "Table des matières",
+  tocEmpty: "Aucun titre pour l’instant",
   settingsTitle: "Réglages",
   settingsSearchPlaceholder: "Rechercher dans les réglages",
   settingsSearchResults: "Résultats de la recherche",

@@ -457,6 +457,8 @@ export default {
   alertImportant: "重要",
   alertWarning: "警告",
   alertCaution: "注意",
+  tocLabel: "目錄",
+  tocEmpty: "尚無標題",
   settingsTitle: "設定",
   settingsSearchPlaceholder: "搜尋設定",
   settingsSearchResults: "搜尋結果",

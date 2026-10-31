@@ -480,6 +480,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   alertImportant: "중요",
   alertWarning: "경고",
   alertCaution: "주의",
+  tocLabel: "목차",
+  tocEmpty: "아직 제목이 없습니다",
   settingsTitle: "설정",
   settingsSearchPlaceholder: "설정 검색",
   settingsSearchResults: "검색 결과",
