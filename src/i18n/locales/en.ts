@@ -348,6 +348,7 @@ type /name in a conversation to use one.
   toolMcp: "Using {arg}",
   toolWebSearch: "Searching the web for “{arg}”",
   toolWebFetch: "Reading {arg}",
+  toolSearchPapers: "Searching papers for “{arg}”",
   webSources: "Sources",
   proposalSourcesAsFootnotes: "Add sources as footnotes",
   menuToggleSplitView: "Source and Preview",

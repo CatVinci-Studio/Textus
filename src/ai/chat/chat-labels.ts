@@ -117,6 +117,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       edit_chapters: t.toolEditChapters,
       web_search: t.toolWebSearch,
       web_fetch: t.toolWebFetch,
+      search_papers: t.toolSearchPapers,
       // Any MCP server's tool.
       mcp: t.toolMcp,
       // Any tool without its own line: a word, not its internal name.

@@ -315,6 +315,7 @@ export default {
   toolMcp: "正在使用 {arg}",
   toolWebSearch: "在网上搜索「{arg}」",
   toolWebFetch: "读取 {arg}",
+  toolSearchPapers: "检索论文「{arg}」",
   webSources: "来源",
   proposalSourcesAsFootnotes: "把来源加为脚注",
   menuToggleSplitView: "源码与预览",

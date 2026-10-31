@@ -327,6 +327,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   toolMcp: "{arg} 사용 중",
   toolWebSearch: "웹에서 “{arg}” 검색 중",
   toolWebFetch: "{arg} 읽는 중",
+  toolSearchPapers: "논문에서 “{arg}” 검색 중",
   webSources: "출처",
   proposalSourcesAsFootnotes: "출처를 각주로 추가",
   menuToggleSplitView: "소스와 미리보기",
