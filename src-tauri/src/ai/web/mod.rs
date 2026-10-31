@@ -172,6 +172,24 @@ impl WebPlan {
         specs
     }
 
+    /// The number of the source `cited` names: a number it already has
+    /// ("3", "[3]"), or a page's address, numbered if new. None for a number
+    /// no source has, or anything else.
+    pub(crate) fn source_number(&self, cited: &str) -> Option<u32> {
+        let cited = cited.trim();
+        let mut state = self.state.lock().unwrap();
+        if cited.starts_with("http://") || cited.starts_with("https://") {
+            return Some(state.book.add(cited, ""));
+        }
+        let n: u32 = cited.trim_matches(['[', ']']).trim().parse().ok()?;
+        state.book.has(n).then_some(n)
+    }
+
+    /// Every source found so far, in number order.
+    pub(crate) fn sources(&self) -> Vec<aicompat::agent::Source> {
+        self.state.lock().unwrap().book.all()
+    }
+
     /// What the system prompt says about the web, when search is on.
     pub(crate) fn prompt_section(&self) -> Option<String> {
         if !self.on {

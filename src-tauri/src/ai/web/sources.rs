@@ -92,6 +92,18 @@ impl SourceBook {
         n
     }
 
+    /// Whether some source has number `n`.
+    pub(crate) fn has(&self, n: u32) -> bool {
+        self.sources.iter().any(|s| s.n == n)
+    }
+
+    /// Every source, in number order.
+    pub(crate) fn all(&self) -> Vec<Source> {
+        let mut all = self.sources.clone();
+        all.sort_by_key(|s| s.n);
+        all
+    }
+
     /// A page the provider's own search cited in the step in flight.
     pub(crate) fn cite_native(&mut self, url: &str, title: &str) {
         let n = self.add(url, title);

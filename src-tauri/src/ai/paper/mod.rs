@@ -10,6 +10,7 @@
 
 mod budget;
 mod events;
+mod research;
 mod store;
 
 pub(crate) use budget::{BudgetCounts, BudgetKind, ResearchBudget, SharedBudget};
@@ -41,6 +42,10 @@ pub struct Paper {
 #[serde(rename_all = "camelCase")]
 pub struct Dossier {
     pub notes: Vec<Note>,
+    /// The sources the notes cite, numbered once for the whole paper: what
+    /// `Note::sources` and the text's `[n]` point at, and the reference list.
+    #[serde(default)]
+    pub sources: Vec<aicompat::agent::Source>,
 }
 
 /// One finding: a claim and what supports it.
@@ -124,30 +129,97 @@ pub enum FigureKind {
     Web,
 }
 
-/// Starts writing a paper on `topic`. For now only the paper and its first
-/// phase: the stages that follow arrive with the research branch. Not called
-/// by the frontend yet.
+/// Writes a paper on `topic` in the document's project: for now its
+/// research - the questions planned, the helpers' notes - kept in
+/// `.textus/papers/<id>/`. The outline and drafting follow in later
+/// branches. Stopped like any request, by `ai_cancel` with `request_id`.
+/// What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts.
+#[derive(Deserialize, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PaperRequest {
+    pub provider: String,
+    pub model: Option<String>,
+    pub doc_path: Option<String>,
+    pub workspace_root: Option<String>,
+    /// What web_search uses when the model can't search by itself.
+    pub search_service: Option<String>,
+    pub searxng_url: Option<String>,
+    pub request_id: String,
+    pub topic: String,
+    /// The language it is written in, a BCP 47 tag.
+    pub language: String,
+    pub target_chars: u32,
+}
+
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn ai_paper_run(
     app: tauri::AppHandle,
-    topic: String,
-    language: String,
-    target_chars: u32,
+    request: PaperRequest,
     channel: Channel<PaperEvent>,
 ) -> Result<Paper, String> {
     crate::ai::ensure_on(&app)?;
-    let paper = Paper {
-        id: new_id(),
+    let PaperRequest {
+        provider,
+        model,
+        doc_path,
+        workspace_root,
+        search_service,
+        searxng_url,
+        request_id,
         topic,
         language,
         target_chars,
-        budget: ResearchBudget::for_paper(),
+    } = request;
+    let root = crate::ai::workspace::project_root(doc_path.as_deref(), workspace_root.as_deref())
+        .ok_or_else(|| "NO_PROJECT".to_string())?;
+    let entry = crate::ai::catalog::find(&provider)
+        .ok_or_else(|| format!("unknown provider: {provider}"))?;
+    let budget = std::sync::Arc::new(SharedBudget::new(ResearchBudget::for_paper()));
+    let native = crate::ai::web::native_search(
+        &provider,
+        model
+            .as_deref()
+            .or(entry.agent_default_model)
+            .unwrap_or_default(),
+    );
+    let service =
+        crate::ai::web::resolve_service(&app, search_service.as_deref(), searxng_url.as_deref());
+    let web = crate::ai::web::WebPlan::new(true, native, service, &[]).with_budget(budget.clone());
+    let send = |event: PaperEvent| {
+        let _ = channel.send(event);
     };
-    let _ = channel.send(PaperEvent::Phase {
-        phase: PaperPhase::Planning,
-    });
-    Ok(paper)
+    crate::ai::cancel::cancellable(request_id, async {
+        let agent =
+            crate::ai::route::agent_provider(&app, entry, model, Default::default(), native)
+                .await?
+                .ok_or_else(|| {
+                    format!(
+                        "{} can't call tools, which writing a paper needs.",
+                        entry.label
+                    )
+                })?;
+        let mut paper = Paper {
+            id: new_id(),
+            topic,
+            language,
+            target_chars,
+            budget: budget.snapshot(),
+        };
+        let dossier = research::research(&agent, &paper, &web, &budget, &send).await?;
+        paper.budget = budget.snapshot();
+        save(
+            &root,
+            &PaperFiles {
+                paper: paper.clone(),
+                dossier,
+                outline: None,
+            },
+        )?;
+        Ok(paper)
+    })
+    .await
 }
 
 #[cfg(test)]

@@ -44,6 +44,7 @@ fn dossier() -> Dossier {
                 url: Some("https://example.org/study".into()),
             }],
         }],
+        sources: Vec::new(),
     }
 }
 
@@ -187,4 +188,154 @@ async fn web_plans_sharing_a_budget_spend_it_together() {
     let out = helpers[1].execute(WEB_FETCH_TOOL, fetch, "").await;
     assert!(out.contains("That's the 3 pages"), "{out}");
     assert_eq!(shared.snapshot().remaining().fetches, 0);
+}
+
+#[test]
+fn questions_come_from_a_json_array_or_a_list() {
+    assert_eq!(
+        research::parse_questions("Here:\n[\"What is it?\", \"What is it?\", \"Who uses it?\"]"),
+        ["What is it?", "Who uses it?"]
+    );
+    assert_eq!(
+        research::parse_questions(
+            "1. How do green roofs cool?\n- What do the measurements show?\nok"
+        ),
+        ["How do green roofs cool?", "What do the measurements show?"]
+    );
+}
+
+/// A model that plans two questions, and as each question's helper keeps
+/// one good note, tries two bad ones, then stops.
+struct Scripted;
+
+impl research::Model for Scripted {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        turns: &'a [aicompat::agent::AgentTurn],
+        tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        use aicompat::agent::{AgentTurn, StepResult};
+        let step = if tools.is_empty() {
+            StepResult::Done(
+                r#"["How do green roofs cool a street?", "What do city measurements show?"]"#
+                    .into(),
+            )
+        } else if turns.len() == 1 {
+            let AgentTurn::User { text, .. } = &turns[0] else {
+                panic!()
+            };
+            let call = |id: &str, args: serde_json::Value| AgentTurn::ToolCall {
+                call_id: format!("{id}-{}", text.len()),
+                name: research::ADD_NOTE_TOOL.into(),
+                arguments: args.to_string(),
+                reasoning: None,
+            };
+            StepResult::ToolCalls(vec![
+                call(
+                    "good",
+                    json!({"claim": text, "evidence": "2 °C cooler at noon.", "sources": ["https://example.org/study"], "leads": [{"kind": "data", "description": "hourly table"}]}),
+                ),
+                call(
+                    "unknown",
+                    json!({"claim": "x", "evidence": "y", "sources": ["7"]}),
+                ),
+                call(
+                    "bare",
+                    json!({"claim": "x", "evidence": "y", "sources": []}),
+                ),
+            ])
+        } else {
+            StepResult::Done("Covered.".into())
+        };
+        Box::pin(async move { Ok(step) })
+    }
+}
+
+#[tokio::test]
+async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
+    let budget = Arc::new(SharedBudget::new(ResearchBudget::for_paper()));
+    let web = WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
+    let events = std::sync::Mutex::new(Vec::new());
+    let send = |e: PaperEvent| events.lock().unwrap().push(e);
+    let dossier = research::research(&Scripted, &paper(), &web, &budget, &send)
+        .await
+        .unwrap();
+
+    // One note per question kept; the unknown number and the unsourced one
+    // were refused.
+    assert_eq!(dossier.notes.len(), 2);
+    assert_eq!(dossier.notes[0].id, "n1");
+    assert_eq!(dossier.notes[1].id, "n2");
+    assert_eq!(
+        dossier.notes[0].question,
+        "How do green roofs cool a street?"
+    );
+    assert!(dossier.notes[0]
+        .claim
+        .contains("How do green roofs cool a street?"));
+    assert_eq!(dossier.notes[0].leads[0].kind, LeadKind::Data);
+    // Both helpers cited the same page: one number for the whole paper.
+    assert_eq!(dossier.notes[0].sources, vec![1]);
+    assert_eq!(dossier.notes[1].sources, vec![1]);
+    assert_eq!(dossier.sources.len(), 1);
+    assert_eq!(dossier.sources[0].url, "https://example.org/study");
+
+    let events = events.into_inner().unwrap();
+    assert_eq!(
+        events[0],
+        PaperEvent::Phase {
+            phase: PaperPhase::Planning
+        }
+    );
+    assert_eq!(
+        events[1],
+        PaperEvent::Phase {
+            phase: PaperPhase::Researching
+        }
+    );
+    let budgets = events
+        .iter()
+        .filter(|e| matches!(e, PaperEvent::Budget { .. }))
+        .count();
+    assert_eq!(budgets, 2);
+}
+
+#[tokio::test]
+async fn a_note_s_sources_must_be_known_numbers_or_addresses() {
+    let web = WebPlan::new(true, None, None, &[]);
+    assert_eq!(web.source_number("https://a.example/"), Some(1));
+    assert_eq!(web.source_number("[1]"), Some(1));
+    assert_eq!(web.source_number(" 1 "), Some(1));
+    assert_eq!(web.source_number("2"), None);
+    assert_eq!(web.source_number("a.example"), None);
+}
+
+/// Plans two questions; its helpers keep nothing.
+struct Empty;
+
+impl research::Model for Empty {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        _turns: &'a [aicompat::agent::AgentTurn],
+        tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        let reply = if tools.is_empty() {
+            r#"["First question here?", "Second question here?"]"#
+        } else {
+            "Nothing found."
+        };
+        Box::pin(async move { Ok(aicompat::agent::StepResult::Done(reply.into())) })
+    }
+}
+
+#[tokio::test]
+async fn research_that_keeps_nothing_fails_with_a_reason() {
+    let budget = SharedBudget::new(ResearchBudget::for_paper());
+    let web = WebPlan::new(true, None, None, &[]);
+    let err = research::research(&Empty, &paper(), &web, &budget, &|_| {})
+        .await
+        .unwrap_err();
+    assert!(err.contains("found nothing to write from"), "{err}");
 }
