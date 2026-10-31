@@ -62,7 +62,7 @@ Free and open source, under the MIT license.
 | Windows · x64         | [Download .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                            | —                                                                                   |
 | Linux · x64           | [Download .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · Also as .deb · .rpm | Arch Linux: the [`[catvinci]` repository](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iOS and iPadOS are coming soon.
+> iPhone and iPad: on the App Store soon (not yet in mainland China).
 
 Beta: in **Settings › General › About Textus**, set **Update channel** to **Beta**.
 
@@ -90,7 +90,7 @@ Works with online and local LLMs alike - AI that speeds your writing along.
 | **Review comments** | **Slash skills** | **Any model** |
 | <img src="docs/images/readme/en/ai-review.webp" alt="A comment pinned to its sentence" width="280" /> | <img src="docs/images/readme/en/ai-skills.webp" alt="The skills menu, opened with /" width="280" /> | <img src="docs/images/readme/en/ai-models.webp" alt="Choosing a provider in Settings" width="280" /> |
 
-## Plugins (in testing, 1.3 beta)
+## Plugins
 
 Not just writing: plugins add whatever else you need.
 
@@ -100,7 +100,7 @@ Not just writing: plugins add whatever else you need.
 | **Quick Preview** | **Version History** |
 | <img src="docs/images/readme/en/plugin-preview.webp" alt="Resting on a link shows that note in a card" width="420" /> | <img src="docs/images/readme/en/plugin-history.webp" alt="A note's earlier versions beside it" width="420" /> |
 
-Kanban boards, PDF and Word in a tab, Zotero citations, charts of every kind and more are in **Settings › Extensions › Get more**.
+Mind maps, Marp slides, Kanban boards, PDF and Word in a tab, Zotero citations, charts of every kind and more are in **Settings › Extensions**, on the computer and on iPhone and iPad.
 
 ## Questions
 
@@ -114,7 +114,7 @@ Yes. It is free and open source under the MIT license, with no account and no su
 <details>
 <summary><strong>Which platforms does it run on?</strong></summary>
 
-macOS (Apple Silicon and Intel), Windows and Linux. iOS and iPadOS are coming soon.
+macOS (Apple Silicon and Intel), Windows and Linux, and iPhone and iPad from the App Store (not yet in mainland China).
 
 </details>
 

@@ -59,7 +59,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 | Windows · x64 | [下載 .exe](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
 | Linux · x64 | [下載 .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · 另提供 .deb · .rpm | Arch Linux：[`[catvinci]` 軟體庫](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iOS 與 iPadOS 版即將推出。
+> iPhone 與 iPad 版即將在 App Store 上架（暫不支援中國大陸）。
 
 測試版：在 **設定 › 一般 › 關於 Textus** 中把 **更新通道** 改為 **測試版**。
 
@@ -87,7 +87,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 | **審閱註解** | **斜線技能** | **任選模型** |
 | <img src="docs/images/readme/zh-hant/ai-review.webp" alt="註解釘在對應的句子旁" width="280" /> | <img src="docs/images/readme/zh-hant/ai-skills.webp" alt="輸入 / 叫出技能選單" width="280" /> | <img src="docs/images/readme/zh-hant/ai-models.webp" alt="在設定裡選擇服務供應商" width="280" /> |
 
-## 外掛程式（測試中，1.3 beta）
+## 外掛程式
 
 不只是寫作，透過外掛程式實現更多功能。
 
@@ -97,7 +97,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 | **快速預覽** | **版本紀錄** |
 | <img src="docs/images/readme/zh-hant/plugin-preview.webp" alt="停在連結上，卡片顯示那篇筆記" width="420" /> | <img src="docs/images/readme/zh-hant/plugin-history.webp" alt="一篇筆記的歷史版本並排在旁" width="420" /> |
 
-還有看板、在分頁中閱讀 PDF 與 Word、Zotero 引用、各類圖表等，都在 **設定 › 擴充功能 › 取得更多**。
+還有思維導圖、Marp 投影片、看板、在分頁中閱讀 PDF 與 Word、Zotero 引用、各類圖表等，都在 **設定 › 擴充功能**，電腦和 iPhone、iPad 上都能用。
 
 ## 常見問題
 
@@ -111,7 +111,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 <details>
 <summary><strong>支援哪些平台？</strong></summary>
 
-支援 macOS（Apple 晶片與 Intel）、Windows 與 Linux。iOS 與 iPadOS 版即將推出。
+支援 macOS（Apple 晶片與 Intel）、Windows 與 Linux，iPhone 與 iPad 版在 App Store 提供（暫不支援中國大陸）。
 
 </details>
 

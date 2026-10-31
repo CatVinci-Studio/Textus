@@ -59,7 +59,7 @@ https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
 | Windows · x64    | [下载 .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                       | —                                                                      |
 | Linux · x64      | [下载 .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · 另有 .deb · .rpm | Arch Linux：[`[catvinci]` 软件源](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iOS 与 iPadOS 版即将推出。
+> iPhone 与 iPad 版即将在 App Store 上架（暂不支持中国大陆）。
 
 测试版：在 **设置 › 通用 › 关于 Textus** 中把 **更新通道** 改为 **测试版**。
 
@@ -87,7 +87,7 @@ https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
 | **审阅批注** | **斜杠技能** | **任选模型** |
 | <img src="docs/images/readme/zh/ai-review.webp" alt="批注钉在对应的句子旁" width="280" /> | <img src="docs/images/readme/zh/ai-skills.webp" alt="输入 / 调出技能菜单" width="280" /> | <img src="docs/images/readme/zh/ai-models.webp" alt="在设置里选择模型服务" width="280" /> |
 
-## 插件（测试中，1.3 beta）
+## 插件
 
 不仅是写作，通过插件来实现更多功能。
 
@@ -97,7 +97,7 @@ https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
 | **浮动卡片** | **版本历史** |
 | <img src="docs/images/readme/zh/plugin-preview.webp" alt="停在链接上，卡片显示那篇笔记" width="420" /> | <img src="docs/images/readme/zh/plugin-history.webp" alt="一篇文档的历史版本和差异" width="420" /> |
 
-还有看板、PDF 与 Word 阅读、Zotero 引用、各类图表等，都在 **设置 › 扩展 › 获取更多**。
+还有思维导图、Marp 幻灯片、看板、PDF 与 Word 阅读、Zotero 引用、各类图表等，都在 **设置 › 扩展**，电脑和 iPhone、iPad 上都能用。
 
 ## 常见问题
 
@@ -111,7 +111,7 @@ https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
 <details>
 <summary><strong>支持哪些平台？</strong></summary>
 
-支持 macOS（Apple 芯片和 Intel）、Windows 和 Linux。iOS 与 iPadOS 版即将推出。
+支持 macOS（Apple 芯片和 Intel）、Windows 和 Linux，iPhone 与 iPad 版在 App Store 提供（暂不支持中国大陆）。
 
 </details>
 
