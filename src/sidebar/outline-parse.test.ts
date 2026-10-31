@@ -8,7 +8,7 @@ describe("parseHeadings", () => {
     expect(texts("# A\n```sh\n# comment\n```\n## B")).toEqual(["A", "B"]);
   });
 
-  it("finds headings after a fence opened in a list item (#477)", () => {
+  it("finds headings after a fence opened in a list item", () => {
     const md =
       "### Lists\n\n1. Red\n2. ```\n   Green\n   ```\n3. Blue\n\n### Task List";
     expect(texts(md)).toEqual(["Lists", "Task List"]);
