@@ -58,7 +58,7 @@ Gratuito e de código aberto, sob a licença MIT.
 | Windows · x64 | [Baixar .exe](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
 | Linux · x64 | [Baixar .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · Também em .deb · .rpm | Arch Linux: o [repositório `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iOS e iPadOS chegam em breve.
+> iPhone e iPad: em breve na App Store (ainda não na China continental).
 
 Beta: em **Ajustes › Geral › Sobre o Textus**, mude o **Canal de atualização** para **Beta**.
 
@@ -86,7 +86,7 @@ Funciona com LLMs online e locais – uma IA que acelera a sua escrita.
 | **Comentários de revisão** | **Habilidades com /** | **Qualquer modelo** |
 | <img src="docs/images/readme/pt/ai-review.webp" alt="Um comentário fixado na sua frase" width="280" /> | <img src="docs/images/readme/pt/ai-skills.webp" alt="O menu de habilidades, aberto com /" width="280" /> | <img src="docs/images/readme/pt/ai-models.webp" alt="Escolhendo um provedor nos Ajustes" width="280" /> |
 
-## Plugins (em teste, 1.3 beta)
+## Plugins
 
 Não só escrever: os plugins acrescentam tudo o mais de que você precisa.
 
@@ -96,7 +96,7 @@ Não só escrever: os plugins acrescentam tudo o mais de que você precisa.
 | **Prévia rápida** | **Histórico de versões** |
 | <img src="docs/images/readme/pt/plugin-preview.webp" alt="Parar sobre um link mostra essa nota num cartão" width="420" /> | <img src="docs/images/readme/pt/plugin-history.webp" alt="As versões anteriores de uma nota ao lado dela" width="420" /> |
 
-Quadros kanban, PDF e Word numa aba, citações do Zotero, gráficos de todo tipo e mais estão em **Ajustes › Extensões › Obter mais**.
+Mapas mentais, slides Marp, quadros kanban, PDF e Word numa aba, citações do Zotero, gráficos de todo tipo e mais estão em **Ajustes › Extensões**, no computador e no iPhone e iPad.
 
 ## Perguntas frequentes
 
@@ -110,7 +110,7 @@ Sim. É gratuito e de código aberto, sob a licença MIT, sem conta e sem assina
 <details>
 <summary><strong>Em quais plataformas ele funciona?</strong></summary>
 
-macOS (Apple Silicon e Intel), Windows e Linux. iOS e iPadOS chegam em breve.
+macOS (Apple Silicon e Intel), Windows e Linux, além de iPhone e iPad pela App Store (ainda não na China continental).
 
 </details>
 

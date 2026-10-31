@@ -58,7 +58,7 @@ Kostenlos und quelloffen, unter MIT-Lizenz.
 | Windows · x64 | [.exe laden](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
 | Linux · x64 | [.AppImage laden](https://github.com/CatVinci-Studio/Textus/releases/latest) · Auch als .deb · .rpm | Arch Linux: das [Repository `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iOS und iPadOS kommen bald.
+> iPhone und iPad: bald im App Store (vorerst nicht in Festlandchina).
 
 Beta: Stell unter **Einstellungen › Allgemein › Über Textus** den **Update-Kanal** auf **Beta**.
 
@@ -86,7 +86,7 @@ Arbeitet mit Online- und lokalen LLMs gleichermaßen – KI, die dein Schreiben 
 | **Anmerkungen** | **Slash-Skills** | **Jedes Modell** |
 | <img src="docs/images/readme/de/ai-review.webp" alt="Ein Kommentar, an seinen Satz geheftet" width="280" /> | <img src="docs/images/readme/de/ai-skills.webp" alt="Das Skill-Menü, geöffnet mit /" width="280" /> | <img src="docs/images/readme/de/ai-models.webp" alt="Einen Anbieter in den Einstellungen wählen" width="280" /> |
 
-## Plugins (im Test, 1.3 Beta)
+## Plugins
 
 Nicht nur Schreiben: Plugins ergänzen alles, was du sonst noch brauchst.
 
@@ -96,7 +96,7 @@ Nicht nur Schreiben: Plugins ergänzen alles, was du sonst noch brauchst.
 | **Schnellvorschau** | **Versionsverlauf** |
 | <img src="docs/images/readme/de/plugin-preview.webp" alt="Bleibt der Zeiger auf einem Link, zeigt eine Karte die Notiz" width="420" /> | <img src="docs/images/readme/de/plugin-history.webp" alt="Die früheren Versionen einer Notiz daneben" width="420" /> |
 
-Kanban-Boards, PDF und Word im Tab, Zotero-Zitate, Diagramme aller Art und mehr findest du unter **Einstellungen › Erweiterungen › Mehr holen**.
+Mindmaps, Marp-Folien, Kanban-Boards, PDF und Word im Tab, Zotero-Zitate, Diagramme aller Art und mehr findest du unter **Einstellungen › Erweiterungen** – am Computer und auf iPhone und iPad.
 
 ## Gut zu wissen
 
@@ -110,7 +110,7 @@ Ja. Textus ist kostenlos und quelloffen unter der MIT-Lizenz, ohne Konto und ohn
 <details>
 <summary><strong>Auf welchen Systemen läuft Textus?</strong></summary>
 
-Auf macOS (Apple Silicon und Intel), Windows und Linux. iOS und iPadOS kommen bald.
+Auf macOS (Apple Silicon und Intel), Windows und Linux, dazu auf iPhone und iPad aus dem App Store (vorerst nicht in Festlandchina).
 
 </details>
 

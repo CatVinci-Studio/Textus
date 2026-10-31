@@ -58,7 +58,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 | Windows · x64 | [.exeをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
 | Linux · x64 | [.AppImageをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) · ほかの形式も .deb · .rpm | Arch Linux：[`[catvinci]` リポジトリ](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iOS版とiPadOS版も、まもなく登場します。
+> iPhone版とiPad版は、まもなくApp Storeで公開します（中国本土を除く）。
 
 ベータ版：**設定 › 一般 › Textus について** で **アップデートチャンネル** を **ベータ版** にします。
 
@@ -86,7 +86,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 | **レビューコメント** | **スラッシュスキル** | **好きなモデルで** |
 | <img src="docs/images/readme/ja/ai-review.webp" alt="該当する文に付いたコメント" width="280" /> | <img src="docs/images/readme/ja/ai-skills.webp" alt="/ で開くスキルメニュー" width="280" /> | <img src="docs/images/readme/ja/ai-models.webp" alt="設定でプロバイダーを選ぶ" width="280" /> |
 
-## プラグイン（テスト中、1.3 beta）
+## プラグイン
 
 書くだけでなく、必要なものはプラグインで足せます。
 
@@ -96,7 +96,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 | **クイックプレビュー** | **バージョン履歴** |
 | <img src="docs/images/readme/ja/plugin-preview.webp" alt="リンクにポインタを置くと、リンク先のノートがカードで表示される" width="420" /> | <img src="docs/images/readme/ja/plugin-history.webp" alt="ノートの過去のバージョンを横に表示" width="420" /> |
 
-カンバン、タブで開くPDFとWord、Zoteroからの引用、さまざまなグラフなどは **設定 › 拡張機能 › さらに入手** にあります。
+マインドマップ、Marpのスライド、カンバン、タブで開くPDFとWord、Zoteroからの引用、さまざまなグラフなどは **設定 › 拡張機能** にあります。パソコンでもiPhoneとiPadでも使えます。
 
 ## よくある質問
 
@@ -110,7 +110,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 <details>
 <summary><strong>どの環境で使えますか？</strong></summary>
 
-macOS（AppleシリコンとIntel）、Windows、Linuxです。iOS版とiPadOS版も、まもなく登場します。
+macOS（AppleシリコンとIntel）、Windows、Linux、そしてApp StoreからiPhoneとiPadで使えます（中国本土を除く）。
 
 </details>
 

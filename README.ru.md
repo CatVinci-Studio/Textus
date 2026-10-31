@@ -58,7 +58,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 | Windows · x64 | [Скачать .exe](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
 | Linux · x64 | [Скачать .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · А также .deb · .rpm | Arch Linux: [репозиторий `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
 
-> Версии для iOS и iPadOS — скоро.
+> iPhone и iPad — скоро в App Store (пока не в материковом Китае).
 
 Бета-версии: в **Настройки › Основные › О Textus** переключите **Канал обновлений** на **Бета**.
 
@@ -86,7 +86,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 | **Комментарии** | **Навыки через /** | **Любая модель** |
 | <img src="docs/images/readme/ru/ai-review.webp" alt="Комментарий, прикреплённый к своему предложению" width="280" /> | <img src="docs/images/readme/ru/ai-skills.webp" alt="Меню навыков, открытое через /" width="280" /> | <img src="docs/images/readme/ru/ai-models.webp" alt="Выбор провайдера в настройках" width="280" /> |
 
-## Плагины (в тестировании, 1.3 beta)
+## Плагины
 
 Не только письмо: плагины добавят всё остальное, что вам нужно.
 
@@ -96,7 +96,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 | **Быстрый просмотр** | **История версий** |
 | <img src="docs/images/readme/ru/plugin-preview.webp" alt="Задержите курсор на ссылке — заметка откроется в карточке" width="420" /> | <img src="docs/images/readme/ru/plugin-history.webp" alt="Прежние версии заметки рядом с ней" width="420" /> |
 
-Канбан-доски, PDF и Word во вкладке, цитаты из Zotero, всевозможные диаграммы и многое другое — в **Настройки › Расширения › Получить ещё**.
+Карты мыслей, слайды Marp, канбан-доски, PDF и Word во вкладке, цитаты из Zotero, всевозможные диаграммы и многое другое — в **Настройки › Расширения**, на компьютере и на iPhone и iPad.
 
 ## Вопросы и ответы
 
@@ -110,7 +110,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 <details>
 <summary><strong>На каких платформах работает Textus?</strong></summary>
 
-На macOS (Apple Silicon и Intel), Windows и Linux. Версии для iOS и iPadOS — скоро.
+На macOS (Apple Silicon и Intel), Windows и Linux, а также на iPhone и iPad из App Store (пока не в материковом Китае).
 
 </details>
 

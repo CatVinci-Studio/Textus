@@ -58,7 +58,7 @@ Gratuito y de código abierto, con licencia MIT.
 | Windows · x64 | [Descargar .exe](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
 | Linux · x64 | [Descargar .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · También como .deb · .rpm | Arch Linux: el [repositorio `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
 
-> iOS y iPadOS, muy pronto.
+> iPhone y iPad: muy pronto en la App Store (aún no en China continental).
 
 Beta: en **Ajustes › General › Acerca de Textus**, pon el **Canal de actualizaciones** en **Beta**.
 
@@ -86,7 +86,7 @@ Funciona con LLM en línea y locales por igual: una IA que acelera tu escritura.
 | **Comentarios de revisión** | **Habilidades con /** | **Cualquier modelo** |
 | <img src="docs/images/readme/es/ai-review.webp" alt="Un comentario fijado a su frase" width="280" /> | <img src="docs/images/readme/es/ai-skills.webp" alt="El menú de habilidades, abierto con /" width="280" /> | <img src="docs/images/readme/es/ai-models.webp" alt="Elegir un proveedor en Ajustes" width="280" /> |
 
-## Complementos (en pruebas, 1.3 beta)
+## Complementos
 
 No solo escribir: los complementos añaden todo lo demás que necesites.
 
@@ -96,7 +96,7 @@ No solo escribir: los complementos añaden todo lo demás que necesites.
 | **Vista rápida** | **Historial de versiones** |
 | <img src="docs/images/readme/es/plugin-preview.webp" alt="Al detenerte sobre un enlace, esa nota aparece en una tarjeta" width="420" /> | <img src="docs/images/readme/es/plugin-history.webp" alt="Las versiones anteriores de una nota, a su lado" width="420" /> |
 
-Tableros kanban, PDF y Word en una pestaña, citas de Zotero, gráficos de todo tipo y más están en **Ajustes › Extensiones › Conseguir más**.
+Mapas mentales, diapositivas Marp, tableros kanban, PDF y Word en una pestaña, citas de Zotero, gráficos de todo tipo y más están en **Ajustes › Extensiones**, en el ordenador y en iPhone y iPad.
 
 ## Preguntas frecuentes
 
@@ -110,7 +110,7 @@ Sí. Es gratuito y de código abierto, con licencia MIT, sin cuenta ni suscripci
 <details>
 <summary><strong>¿En qué sistemas funciona?</strong></summary>
 
-En macOS (Apple Silicon e Intel), Windows y Linux. iOS y iPadOS llegarán muy pronto.
+En macOS (Apple Silicon e Intel), Windows y Linux, y en iPhone y iPad desde la App Store (aún no en China continental).
 
 </details>
 
