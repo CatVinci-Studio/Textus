@@ -163,8 +163,9 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       const settings = page.getByRole("dialog", { name: "Settings" });
       await expect(settings).toBeVisible();
       await settled(page.locator(".settings-backdrop"));
-      expect(await settings.boundingBox()).toMatchObject({ y: 0, height: 932 });
-      await page.getByRole("button", { name: "Done" }).tap();
+      // The desktop's card, inside the screen's edges.
+      expect((await settings.boundingBox())!.width).toBe(430 - 16);
+      await page.getByRole("button", { name: "Close" }).tap();
       await expect(page.locator(".settings-backdrop")).toHaveCount(0, GONE);
 
       await page.locator(".window-bar-toggle").tap();
