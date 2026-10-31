@@ -182,6 +182,23 @@ jump to the last heading, a save and a tab switch. It asserts nothing and is not
 opening by hand in the real app, where WebKitGTK, WKWebView and WebView2
 can only be timed by eye. Compare runs on the same machine only.
 
+## Plugin benchmark
+
+```sh
+npm run bench:plugins                          # none, each official plugin, all: ~20 minutes
+PERF_PLUGINS=none,tasks PERF_LABEL=after npm run bench:plugins
+```
+
+`e2e/perf/plugins.perf.ts` opens a folder of 5,000 notes (`e2e/perf/large-folder.ts`:
+front matter, wikilinks, tags, dated tasks) with the 20k-block document in
+front, links, tags, tasks and drawn blocks among its paragraphs. For no
+plugin, each official plugin from the textus-plugins checkout alone, and
+all of them, it opens every sidebar tab a plugin adds and measures opening,
+long tasks while nothing is typed, typing in the middle (p50/p95 and long
+tasks) and switching to a small note, with the errors logged. Plugins'
+frames are kept in the page's process, as in WebKit. Results land in
+`test-results/perf/`; `PERF_NOTES` sets the folder's size.
+
 ## Flaky tests
 
 On CI, a Playwright test that fails is run once more. If the second run
