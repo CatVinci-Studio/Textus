@@ -621,6 +621,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
   color: var(--doc-muted);
 }
 
+/* `:smile:` drawn as its emoji; the caret on it shows the source. */
+.md-emoji-source {
+  display: none;
+}
+
 /* An Obsidian wikilink: its source in the link colour. */
 .wikilink {
   color: var(--doc-accent);

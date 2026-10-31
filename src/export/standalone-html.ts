@@ -20,6 +20,7 @@ import {
   MISSING_IMAGE_CLASS,
 } from "../editor/images/missing-image";
 import { CODE_LINE_NUMBERS_CLASS } from "../editor/code/code-line-numbers-plugin";
+import { EMOJI_SOURCE_CLASS } from "../editor/emoji/emoji-classes";
 import { placeDrawnPictures } from "./drawn-blocks";
 import {
   COLOR_SWATCH_CLASS,
@@ -55,6 +56,7 @@ export function collectInlinedCss(): string {
 // in step with print.css's @media print list.
 export const EDITOR_CHROME_SELECTOR = [
   ".heading-marker",
+  `.${EMOJI_SOURCE_CLASS}`,
   ".enclosure-delimiter",
   ".code-block-header",
   ".mermaid-zoom",
