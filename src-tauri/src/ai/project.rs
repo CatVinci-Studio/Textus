@@ -23,6 +23,8 @@ mod style;
 pub(crate) use style::*;
 mod references;
 pub(crate) use references::*;
+mod references_import;
+pub(crate) use references_import::*;
 
 /// Most library text one request carries, in characters (not bytes, so CJK
 /// gets as much as English).
@@ -147,6 +149,52 @@ pub async fn pick_text_files(window: tauri::WebviewWindow) -> Vec<String> {
     })
     .await
     .unwrap_or_default()
+}
+
+/// "Import references…" and "Import a reference folder…": the picked files
+/// (zips unpacked) or folder copied into the project's references/ folder,
+/// which is then indexed in the background for search_references.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn import_references_picked(
+    window: tauri::WebviewWindow,
+    doc_path: Option<String>,
+    workspace_root: Option<String>,
+    folder: bool,
+) -> Result<Option<ImportedReferences>, String> {
+    let root = project_root(doc_path.as_deref(), workspace_root.as_deref())?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let dialog = crate::commands::fs::window_file_dialog(&window);
+        let picked: Vec<PathBuf> = if folder {
+            #[cfg(desktop)]
+            let one = dialog.blocking_pick_folder();
+            #[cfg(not(desktop))]
+            let one: Option<tauri_plugin_dialog::FilePath> = {
+                drop(dialog);
+                None
+            };
+            one.into_iter().collect::<Vec<_>>()
+        } else {
+            let mut kinds: Vec<&str> = vec!["zip"];
+            kinds.extend(crate::extract::DOCUMENT_EXTENSIONS);
+            kinds.extend(TEXT_EXTENSIONS);
+            dialog
+                .add_filter("References", &kinds)
+                .blocking_pick_files()
+                .unwrap_or_default()
+        }
+        .into_iter()
+        .filter_map(|p| p.into_path().ok())
+        .collect();
+        if picked.is_empty() {
+            return Ok(None);
+        }
+        let done = import_references(&root, &picked)?;
+        std::thread::spawn(move || warm_references(&root));
+        Ok(Some(done))
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 /// "Learn my style": analyses the picked samples and writes `.textus/style.md`

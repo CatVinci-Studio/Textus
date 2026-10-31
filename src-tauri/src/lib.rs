@@ -314,6 +314,7 @@ pub fn run() {
             crate::ai::project::read_project_file,
             crate::ai::project::ensure_project_file,
             crate::ai::project::pick_text_files,
+            crate::ai::project::import_references_picked,
             crate::ai::project::learn_style,
             crate::ai::project::library_use,
             crate::ai::memory::memory_undo,

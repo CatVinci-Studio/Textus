@@ -294,6 +294,13 @@ export const ai = {
     template: string,
   ) => command("ensure_project_file", docPath, workspaceRoot, rel, template),
   pickTextFiles: () => command("pick_text_files"),
+  /** "Import references…": picked files, zips or (`folder`) a folder copied
+   *  into the project's references/ folder; null when nothing was picked. */
+  importReferences: (
+    docPath: string | null,
+    workspaceRoot: string | null,
+    folder: boolean,
+  ) => command("import_references_picked", docPath, workspaceRoot, folder),
   /** After an exchange: what to remember, update or forget, decided by the
    *  conversation's model. Nothing while Remember automatically is off. */
   /** After an exchange: what to remember, update or forget, decided by

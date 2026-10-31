@@ -588,3 +588,87 @@ fn without_a_references_folder_the_search_says_where_they_go() {
     let dir = project(&[("a.md", "Tides.")]);
     assert!(search_references(dir.path(), "tides").contains("no `references/` folder"));
 }
+
+fn zip_of(entries: &[(&str, &str)]) -> Vec<u8> {
+    use std::io::Write;
+    let mut out = std::io::Cursor::new(Vec::new());
+    let mut zip = zip::ZipWriter::new(&mut out);
+    for (name, body) in entries {
+        zip.start_file(*name, zip::write::SimpleFileOptions::default())
+            .unwrap();
+        zip.write_all(body.as_bytes()).unwrap();
+    }
+    zip.finish().unwrap();
+    out.into_inner()
+}
+
+#[test]
+fn a_zip_unpacks_its_readable_files_into_its_own_folder_only() {
+    let dir = project(&[]);
+    let outside = tempfile::tempdir().unwrap();
+    let zip = outside.path().join("Tides 2024.zip");
+    std::fs::write(
+        &zip,
+        zip_of(&[
+            ("papers/a.md", "Tidal barrages."),
+            ("notes.txt", "Notes."),
+            ("../escape.md", "Outside!"),
+            ("__MACOSX/papers/._a.md", "fork"),
+            ("tool.exe", "binary"),
+        ]),
+    )
+    .unwrap();
+    let done = import_references(dir.path(), std::slice::from_ref(&zip)).unwrap();
+    assert_eq!(
+        done,
+        ImportedReferences {
+            imported: 2,
+            skipped: 3
+        }
+    );
+    let refs = dir.path().join("references/Tides 2024");
+    assert!(refs.join("papers/a.md").is_file());
+    assert!(refs.join("notes.txt").is_file());
+    assert!(!dir.path().join("escape.md").exists());
+    assert!(!dir.path().join("references/escape.md").exists());
+
+    // Again: nothing overwritten, a second copy beside it.
+    import_references(dir.path(), &[zip]).unwrap();
+    assert!(refs.join("papers/a (2).md").is_file());
+    assert!(search_references(dir.path(), "tidal barrages").starts_with("references/Tides 2024/"));
+}
+
+#[test]
+fn a_folder_and_single_files_import_and_the_library_itself_is_skipped() {
+    let dir = project(&[("references/kept.md", "Kept.")]);
+    let outside = project(&[
+        ("Sources/one.md", "One."),
+        ("Sources/deep/two.txt", "Two."),
+        ("Sources/.hidden.md", "Hidden."),
+        ("Sources/photo.bin", "x"),
+        ("single.md", "Single."),
+        ("program.exe", "x"),
+    ]);
+    let done = import_references(
+        dir.path(),
+        &[
+            outside.path().join("Sources"),
+            outside.path().join("single.md"),
+            outside.path().join("program.exe"),
+            dir.path().join("references"),
+        ],
+    )
+    .unwrap();
+    assert_eq!(
+        done,
+        ImportedReferences {
+            imported: 3,
+            skipped: 2
+        }
+    );
+    let refs = dir.path().join("references");
+    assert!(refs.join("Sources/one.md").is_file());
+    assert!(refs.join("Sources/deep/two.txt").is_file());
+    assert!(refs.join("single.md").is_file());
+    assert!(!refs.join("Sources/.hidden.md").exists());
+}

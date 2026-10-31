@@ -271,6 +271,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::ai::project::read_project_file,
                 crate::ai::project::ensure_project_file,
                 crate::ai::project::pick_text_files,
+                crate::ai::project::import_references_picked,
                 crate::ai::project::learn_style,
             ]),
         ),
