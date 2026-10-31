@@ -1126,6 +1126,11 @@ type /name in a conversation to use one.
     "Press {shortcut}, type a few letters, then Enter to run a command",
   tutorialPaletteTaskPhone:
     "On a computer, it opens with Ctrl+Shift+P (⌘⇧P on a Mac)",
+  tutorialPluginsTitle: "Plugins",
+  tutorialPluginsBody:
+    "Mind maps, Vim keys, slides, citations and more - add only what you need, from one store.",
+  tutorialPluginsTask:
+    "Open Settings › Extensions to see the plugins, themes and skills",
   tutorialConnectTitle: "Connect your AI",
   tutorialConnectBody:
     "Once it's connected, you can really try the AI features that follow.",

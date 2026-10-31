@@ -1100,6 +1100,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialPaletteTask:
     "{shortcut} を押し、数文字入力して Enter でコマンドを実行",
   tutorialPaletteTaskPhone: "パソコンでは Ctrl+Shift+P（Mac は ⌘⇧P）で開きます",
+  tutorialPluginsTitle: "プラグイン",
+  tutorialPluginsBody:
+    "マインドマップ、Vim キー、スライド、文献の引用など、必要なものだけをひとつのストアから入れられます。",
+  tutorialPluginsTask:
+    "設定 › 拡張機能 を開いて、プラグイン、テーマ、スキルを見てみましょう",
   tutorialConnectTitle: "AI を接続する",
   tutorialConnectBody: "接続すると、この先の AI 機能を実際に試せます。",
   tutorialConnectTask:

@@ -1151,6 +1151,11 @@ export default {
     "Нажмите {shortcut}, введите несколько букв и Enter, чтобы выполнить команду",
   tutorialPaletteTaskPhone:
     "На компьютере она открывается по Ctrl+Shift+P (⌘⇧P на Mac)",
+  tutorialPluginsTitle: "Плагины",
+  tutorialPluginsBody:
+    "Интеллект-карты, клавиши Vim, слайды, цитаты и многое другое — ставьте только нужное, из одного магазина.",
+  tutorialPluginsTask:
+    "Откройте Настройки › Расширения и посмотрите плагины, темы и навыки",
   tutorialConnectTitle: "Подключите ИИ",
   tutorialConnectBody:
     "С подключённым ИИ всё, что дальше, можно попробовать по-настоящему.",

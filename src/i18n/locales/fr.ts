@@ -1177,6 +1177,11 @@ utiliser une.
     "Appuyez sur {shortcut}, tapez quelques lettres, puis Entrée pour lancer une commande",
   tutorialPaletteTaskPhone:
     "Sur ordinateur, elle s’ouvre avec Ctrl+Maj+P (⌘⇧P sur Mac)",
+  tutorialPluginsTitle: "Modules",
+  tutorialPluginsBody:
+    "Cartes mentales, touches Vim, diapositives, citations et plus : n'ajoutez que ce dont vous avez besoin, depuis une seule boutique.",
+  tutorialPluginsTask:
+    "Ouvrez Réglages › Extensions pour voir les modules, thèmes et compétences",
   tutorialConnectTitle: "Connectez votre IA",
   tutorialConnectBody:
     "Une fois connectée, vous pourrez vraiment essayer la suite.",

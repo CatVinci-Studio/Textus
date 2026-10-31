@@ -335,6 +335,11 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
   await expect(ticked(palette)).toHaveCount(1);
   await palette.getByRole("button", { name: "Continue" }).click();
 
+  // Plugins: a pointer to the store, Continue without going there.
+  const plugins = lesson(page, "Plugins");
+  await expect(plugins).toContainText("Settings › Extensions");
+  await plugins.getByRole("button", { name: "Continue" }).click();
+
   // No AI: skip, and the AI lessons are watched.
   const connect = lesson(page, "Connect your AI");
   await expect(
@@ -747,6 +752,9 @@ test.describe("on a phone", () => {
     const palette = lesson(page, "Command palette");
     await expect(palette).toContainText("On a computer");
     await palette.getByRole("button", { name: "Continue" }).tap();
+    await lesson(page, "Plugins")
+      .getByRole("button", { name: "Continue" })
+      .tap();
 
     const connect = lesson(page, "Connect your AI");
     const connectBox = (await connect.boundingBox())!;

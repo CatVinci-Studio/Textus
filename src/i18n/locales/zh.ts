@@ -1046,6 +1046,10 @@ export default {
   tutorialPaletteBody: "菜单里的所有命令，输入几个字就能找到。",
   tutorialPaletteTask: "按 {shortcut}，输入几个字，回车运行一个命令",
   tutorialPaletteTaskPhone: "在电脑上用 Ctrl+Shift+P（Mac 上是 ⌘⇧P）打开",
+  tutorialPluginsTitle: "插件",
+  tutorialPluginsBody:
+    "思维导图、Vim 按键、幻灯片、文献引用……需要什么就装什么，都在一个商店里。",
+  tutorialPluginsTask: "打开 设置 › 扩展，看看有哪些插件、主题和 Skill",
   tutorialConnectTitle: "连接你的 AI",
   tutorialConnectBody: "连上之后，下面的 AI 功能可以真的试一试。",
   tutorialConnectTask: "登录或填 key；也可以先跳过",
