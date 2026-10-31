@@ -14,6 +14,21 @@ const TABLE = `Before the table.
 After the table.
 `;
 
+test("a focus no touch asked for brings no keyboard toolbar; a tap does", async ({
+  page,
+}) => {
+  await openPhone(page);
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  // As WebKit focuses the page on a cold start, with no keyboard.
+  await page.waitForTimeout(1100);
+  await editor.evaluate((el) => (el as HTMLElement).focus());
+  await expect(editor).toBeFocused();
+  const toolbar = page.locator(".keyboard-toolbar");
+  await expect(toolbar).toHaveCount(0);
+  await editor.tap();
+  await expect(toolbar).toBeVisible();
+});
+
 test("in a table the keyboard toolbar adds rows; outside it, formatting is back", async ({
   page,
 }) => {

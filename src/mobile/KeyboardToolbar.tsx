@@ -27,6 +27,7 @@ import {
   TOGGLE_MARK_EVENT,
 } from "../utils/events";
 import { pressKeepingFocus } from "../ui/tap";
+import { keyboardUp } from "./keyboard";
 import "./KeyboardToolbar.css";
 
 /**
@@ -141,8 +142,9 @@ export function KeyboardToolbar() {
     };
   }, [editing, update]);
 
-  // Up while a document editor has focus, which on a phone is while the
-  // keyboard is up.
+  // Up while a document editor has focus and the keyboard is there for it.
+  // A focus no touch or key asked for (WebKit's own, on a cold start) brings
+  // no keyboard, so no strip until a touch, a key or the keyboard comes.
   useEffect(() => {
     // Quick Ask's composer sits inside the editor's DOM, but typing there is not
     // editing the document.
@@ -150,15 +152,31 @@ export function KeyboardToolbar() {
       node instanceof Element &&
       !!node.closest(".milkdown .ProseMirror") &&
       !node.closest(".inline-chat");
-    const onIn = (e: FocusEvent) => setEditing(inEditor(e.target));
+    let lastInput = -Infinity;
+    const asked = () => performance.now() - lastInput < 1000 || keyboardUp();
+    const onIn = (e: FocusEvent) => setEditing(inEditor(e.target) && asked());
     const onOut = (e: FocusEvent) => {
       if (!inEditor(e.relatedTarget)) setEditing(false);
     };
+    const onInput = (e: Event) => {
+      lastInput = performance.now();
+      if (inEditor(e.target) && inEditor(document.activeElement))
+        setEditing(true);
+    };
+    const onResize = () => {
+      if (keyboardUp() && inEditor(document.activeElement)) setEditing(true);
+    };
     document.addEventListener("focusin", onIn);
     document.addEventListener("focusout", onOut);
+    document.addEventListener("pointerdown", onInput, true);
+    document.addEventListener("keydown", onInput, true);
+    window.addEventListener("resize", onResize);
     return () => {
       document.removeEventListener("focusin", onIn);
       document.removeEventListener("focusout", onOut);
+      document.removeEventListener("pointerdown", onInput, true);
+      document.removeEventListener("keydown", onInput, true);
+      window.removeEventListener("resize", onResize);
     };
   }, []);
 
