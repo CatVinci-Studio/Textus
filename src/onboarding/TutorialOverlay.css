@@ -423,12 +423,6 @@
   outline-offset: 3px;
 }
 
-/* The sidebar lesson points at the real panel rather than a picture of it.
-   The ring is there at once: growing a shadow's geometry is not a fade. */
-.sidebar.tutorial-spotlight {
-  box-shadow: inset 0 0 0 2px var(--ui-accent);
-}
-
 /* The Connect lesson embeds Settings' provider rows; framed like a
    Settings group so they read as the same controls. */
 .tutorial-step-connect .provider-picker {

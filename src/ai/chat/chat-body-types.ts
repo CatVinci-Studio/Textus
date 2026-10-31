@@ -49,8 +49,6 @@ export interface ChatBodyProps {
   /** The tour's lesson's mode. */
   tourMode?: AgentMode | null;
   defaultWebSearch: boolean;
-  /** A message went out through a skill. */
-  onSkillUsed?: () => void;
   labels: ChatBodyLabels;
   proposalStatus: (callId: string) => PendingStatus;
   pendingCount: number;

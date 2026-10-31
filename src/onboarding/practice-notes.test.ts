@@ -24,11 +24,6 @@ describe.each(LANGS)("the practice notes in %s", (lang) => {
     expect(evaluateWysiwyg(notes.body)).toBe(0);
   });
 
-  it("leave the grammar slip for the learner to type", () => {
-    expect(notes.body).not.toContain(notes.slip);
-    expect(notes.slip.trim()).toBe(notes.slip);
-  });
-
   it("come back from the editor exactly as written", async () => {
     // The lessons compare the document with the notes line by line.
     const editor = await createTestEditor(notes.body);

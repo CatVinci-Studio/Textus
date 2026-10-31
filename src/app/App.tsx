@@ -64,8 +64,8 @@ function App() {
   const { showTabBar, requestCloseTab, handleTabDetach, dragHoverPreview } =
     docs;
   const { moveTabToNewWindow, toggleReadOnly } = docs;
-  const { toggleSourceMode, zenMode, setZenMode, toggleZenMode } = docs;
-  const { menuChecks, sidebarLesson, entryMoved, skillFilesDeleted } = wiring;
+  const { toggleSourceMode, zenMode, setZenMode } = docs;
+  const { menuChecks, entryMoved, skillFilesDeleted } = wiring;
   const { documentsOpen, setDocumentsOpen, openFromDocuments } = wiring;
   const { documentRenamed, documentDeleted } = wiring;
   const { closeSaving, closeDiscarding, cancelClose, closePrompt } =
@@ -120,7 +120,6 @@ function App() {
           open={panelOpen}
           presence={sidebarPresence}
           closing={sidebarClosing}
-          spotlight={sidebarLesson}
           mode={panelMode}
           onModeChange={setPanelMode}
           width={sidebarWidth}
@@ -251,7 +250,6 @@ function App() {
           tutorial={tutorial}
           settings={settings}
           setSettings={setSettings}
-          zen={{ on: zenMode, toggle: toggleZenMode }}
           t={t}
         />
       </div>

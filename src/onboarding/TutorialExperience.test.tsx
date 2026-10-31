@@ -2,7 +2,6 @@
 
 import "@testing-library/jest-dom/vitest";
 import {
-  act,
   cleanup,
   fireEvent,
   render,
@@ -21,9 +20,8 @@ import {
 import { resolveStrings, type Lang } from "../i18n/strings";
 import { installTestLocalStorage } from "../dev/test-local-storage";
 import { auth, links } from "../platform/ipc";
-import { GRAMMAR_WAIT_MS, TutorialExperience } from "./TutorialExperience";
+import { TutorialExperience } from "./TutorialExperience";
 import { practiceNotes } from "./practice-notes";
-import { GRAMMAR_PART } from "./tutorial-evaluation";
 import { useTutorial, type Tutorial } from "./useTutorial";
 
 const providerMocks = vi.hoisted(() => ({
@@ -100,10 +98,8 @@ function Harness({
       phone={phone}
       shortcuts={{
         agentPanel: "Ctrl+Shift+L",
-        sidebar: "Ctrl+\\",
         palette: "Ctrl+Shift+P",
       }}
-      zen={{ on: false, toggle: vi.fn() }}
     />
   );
 }
@@ -180,31 +176,27 @@ describe("the connect lesson", () => {
 
 describe("watching an AI lesson", () => {
   it("keeps the lines to follow, Continue as the way on, the animation as an extra", () => {
-    resumeAt("revision", { aiMode: "watch" });
+    resumeAt("write", { aiMode: "watch" });
     render(<Harness language="zh" />);
     const zh = resolveStrings("zh");
-    expect(screen.getByText("改得更简洁")).toBeVisible();
+    expect(screen.getByText("接着我的笔记再写一段")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /观看动画/ }));
-    expect(links.openTutorialsPage).toHaveBeenCalledWith("zh", "revision");
+    expect(links.openTutorialsPage).toHaveBeenCalledWith("zh", "ai-panel");
     const next = screen.getByRole("button", { name: zh.tutorialNext });
     expect(next).toBeEnabled();
     fireEvent.click(next);
     expect(
-      screen.getByRole("dialog", { name: zh.tutorialGrammarTitle }),
+      screen.getByRole("dialog", { name: zh.tutorialContinuationTitle }),
     ).toBeInTheDocument();
   });
 });
 
 describe("the lessons' copy", () => {
-  it("fills in the notes' title and slip, and the shortcuts", () => {
+  it("fills in the notes' title and the shortcuts", () => {
     resumeAt("wysiwyg");
     const first = render(<Harness language="zh" />);
     expect(screen.getByText(`# ${practiceNotes("zh").title}`)).toBeVisible();
     first.unmount();
-    resumeAt("grammar", { aiMode: "live" });
-    const second = render(<Harness />);
-    expect(screen.getByText(practiceNotes("en").slip).tagName).toBe("CODE");
-    second.unmount();
     resumeAt("write", { aiMode: "live" });
     render(<Harness />);
     expect(
@@ -214,12 +206,12 @@ describe("the lessons' copy", () => {
     ).toBeVisible();
   });
 
-  it("finds the sidebar through the menu, and its shortcut", () => {
-    resumeAt("sidebar-export");
+  it("names the command palette's shortcut", () => {
+    resumeAt("palette");
     render(<Harness />);
     expect(
       screen.getByText(
-        "Click the menu ☰ at the top left, choose View › Sidebar (Ctrl+\\), then open Outline",
+        "Press Ctrl+Shift+P, type a few letters, then Enter to run a command",
       ),
     ).toBeVisible();
   });
@@ -245,39 +237,12 @@ describe("the lessons' copy", () => {
     expect(links.openCommunityPage).toHaveBeenCalledWith("ko");
   });
 
-  it("never locks the optional formulas and diagrams", () => {
-    resumeAt("blocks");
+  it("never locks the optional tips", () => {
+    resumeAt("plugins");
     render(<Harness />);
     expect(screen.getByRole("button", { name: t.tutorialNext })).toBeEnabled();
     expect(
       screen.queryByRole("button", { name: t.tutorialSkipStep }),
     ).not.toBeInTheDocument();
-  });
-});
-
-describe("the grammar lesson, live", () => {
-  it("waits for the sentence, then gives the AI a while before letting the learner on", () => {
-    vi.useFakeTimers();
-    let tutorial: Tutorial | null = null;
-    resumeAt("grammar", { aiMode: "live" });
-    render(<Harness onTutorial={(tour) => (tutorial = tour)} />);
-    act(() => vi.advanceTimersByTime(GRAMMAR_WAIT_MS + 500));
-    // Nothing typed yet: nothing to wait for.
-    expect(screen.getByRole("button", { name: t.tutorialNext })).toBeDisabled();
-    act(() => tutorial!.setPhase(GRAMMAR_PART.typed));
-    act(() => vi.advanceTimersByTime(GRAMMAR_WAIT_MS));
-    expect(screen.getByText(t.tutorialGrammarQuiet)).toBeVisible();
-    expect(screen.getByRole("button", { name: t.tutorialNext })).toBeEnabled();
-  });
-
-  it("goes on as soon as the card is opened", () => {
-    vi.useFakeTimers();
-    let tutorial: Tutorial | null = null;
-    resumeAt("grammar", { aiMode: "live" });
-    render(<Harness onTutorial={(tour) => (tutorial = tour)} />);
-    act(() => tutorial!.setPhase(GRAMMAR_PART.typed | GRAMMAR_PART.card));
-    expect(screen.getByRole("button", { name: t.tutorialNext })).toBeEnabled();
-    act(() => vi.advanceTimersByTime(GRAMMAR_WAIT_MS));
-    expect(screen.queryByText(t.tutorialGrammarQuiet)).not.toBeInTheDocument();
   });
 });
