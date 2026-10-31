@@ -12,6 +12,7 @@ use aicompat::agent::{
 use futures_util::future::BoxFuture;
 use futures_util::stream::{self, StreamExt};
 use serde_json::{json, Value};
+use std::path::Path;
 use std::sync::Mutex;
 
 /// Helpers researching at once.
@@ -23,6 +24,51 @@ const MIN_QUESTIONS: usize = 4;
 const MAX_QUESTIONS: usize = 10;
 
 pub(crate) const ADD_NOTE_TOOL: &str = "add_note";
+pub(crate) const SEARCH_REFERENCES_TOOL: &str = "search_references";
+pub(crate) const READ_REFERENCE_TOOL: &str = "read_reference";
+
+/// What a path can't hold inside a Markdown link: spaces, brackets,
+/// parentheses, `%` and control characters (and, as always, non-ASCII).
+const LINK_UNSAFE: &percent_encoding::AsciiSet = &percent_encoding::CONTROLS
+    .add(b' ')
+    .add(b'(')
+    .add(b')')
+    .add(b'[')
+    .add(b']')
+    .add(b'<')
+    .add(b'>')
+    .add(b'%');
+
+/// Where a file of the user's reference library is, as a source's address.
+const LIBRARY: &str = "references/";
+
+/// A reference file's address among the paper's sources: its path from the
+/// project, each part percent-encoded so the address has no spaces.
+pub(crate) fn reference_address(path: &str) -> String {
+    let parts: Vec<String> = path
+        .trim_start_matches(LIBRARY)
+        .split('/')
+        .map(|p| percent_encoding::utf8_percent_encode(p, LINK_UNSAFE).to_string())
+        .collect();
+    format!("{LIBRARY}{}", parts.join("/"))
+}
+
+/// The path of the reference file at a source's address, or None for a
+/// web page.
+pub(crate) fn reference_path(address: &str) -> Option<String> {
+    address.starts_with(LIBRARY).then(|| {
+        percent_encoding::percent_decode_str(address)
+            .decode_utf8_lossy()
+            .into_owned()
+    })
+}
+
+/// The project's reference library: the project folder, when it has one.
+fn library_file(root: &Path, cited: &str) -> Option<String> {
+    let path = cited.trim().trim_start_matches("./");
+    let inside = path.starts_with(LIBRARY) && !path.split('/').any(|p| p == "..");
+    (inside && root.join(path).is_file()).then(|| path.to_string())
+}
 
 /// One step of a model: what a stage's run asks of it. A trait, so the
 /// stages run on a scripted model in tests.
@@ -150,7 +196,12 @@ fn add_note_spec() -> ToolSpec {
 
 /// An add_note call as a note, or why it can't be one. Its sources must be
 /// numbers the web plan has, or addresses (numbered here).
-fn read_note(arguments: &str, question: &str, web: &WebPlan) -> Result<Note, String> {
+fn read_note(
+    arguments: &str,
+    question: &str,
+    web: &WebPlan,
+    library: Option<&Path>,
+) -> Result<Note, String> {
     let args: Value = serde_json::from_str(arguments).map_err(|e| e.to_string())?;
     let text = |key: &str| args[key].as_str().unwrap_or("").trim().to_string();
     let (claim, evidence) = (text("claim"), text("evidence"));
@@ -163,10 +214,18 @@ fn read_note(arguments: &str, question: &str, web: &WebPlan) -> Result<Note, Str
         .unwrap_or_default();
     let mut sources = Vec::new();
     for c in &cited {
-        match web.source_number(c) {
+        let local = library.and_then(|root| library_file(root, c));
+        let number = match local {
+            Some(path) => {
+                let name = path.rsplit('/').next().unwrap_or(&path).to_string();
+                Some(web.add_source(&reference_address(&path), &name))
+            }
+            None => web.source_number(c),
+        };
+        match number {
             Some(n) if !sources.contains(&n) => sources.push(n),
             Some(_) => {}
-            None => return Err(format!("No source is numbered {c:?}: cite the number a search or page result has, or the page's full address.")),
+            None => return Err(format!("No source is numbered {c:?}: cite the number a search or page result has, the page's full address, or a reference file's path.")),
         }
     }
     if sources.is_empty() {
@@ -205,27 +264,44 @@ async fn research_question(
     model: &dyn Model,
     paper: &Paper,
     web: &WebPlan,
+    library: Option<&Path>,
     question: &str,
 ) -> Result<Vec<Note>, String> {
     let instructions = format!(
-        "You are one of several researchers gathering material for a paper on \"{}\", written in the language tagged \"{}\". Your part is one question. Search the web and the scholarly literature, read the best pages in full, and keep every finding that answers it with add_note - specific claims with figures, dates, names and results, not generalities; prefer primary and scholarly sources, and say where sources disagree. Aim for four to eight notes, written in the paper's language. Note pictures and data sets a figure could use as leads. When the question is covered, or the searches run out, reply with one short line.",
-        paper.topic, paper.language
+        "You are one of several researchers gathering material for a paper on \"{}\", written in the language tagged \"{}\". Your part is one question. Search the web and the scholarly literature, read the best pages in full, and keep every finding that answers it with add_note - specific claims with figures, dates, names and results, not generalities; prefer primary and scholarly sources, and say where sources disagree. Aim for four to eight notes, written in the paper's language. Note pictures and data sets a figure could use as leads. When the question is covered, or the searches run out, reply with one short line.{}",
+        paper.topic,
+        paper.language,
+        if library.is_some() {
+            " The user has a reference library of their own papers, books and notes: search it first with search_references, read around a passage with read_reference, and cite a file from it by its path (references/...) in add_note's sources - it is the material the user chose."
+        } else {
+            ""
+        }
     );
     let mut specs: Vec<ToolSpec> = web.tools(question).iter().map(|t| t.spec.clone()).collect();
     specs.push(add_note_spec());
+    if library.is_some() {
+        specs.extend(library_specs());
+    }
     let web_tools = web.tools(question);
     let notes = Mutex::new(Vec::new());
     let execute = |call: ToolCall| {
         let (web_tools, notes) = (&web_tools, &notes);
         async move {
             if call.name == ADD_NOTE_TOOL {
-                return ToolOutput::from(match read_note(&call.arguments, question, web) {
-                    Ok(note) => {
-                        notes.lock().unwrap().push(note);
-                        "Kept.".to_string()
-                    }
-                    Err(why) => why,
-                });
+                return ToolOutput::from(
+                    match read_note(&call.arguments, question, web, library) {
+                        Ok(note) => {
+                            notes.lock().unwrap().push(note);
+                            "Kept.".to_string()
+                        }
+                        Err(why) => why,
+                    },
+                );
+            }
+            if let Some(root) = library {
+                if let Some(answer) = library_call(root, &call).await {
+                    return ToolOutput::from(answer);
+                }
             }
             match web_tools
                 .iter()
@@ -268,6 +344,8 @@ pub(crate) async fn research(
     web: &WebPlan,
     budget: &SharedBudget,
     send: &(dyn Fn(PaperEvent) + Sync),
+    // The project folder, when it has a reference library.
+    library: Option<&Path>,
 ) -> Result<Dossier, String> {
     send(PaperEvent::Phase {
         phase: PaperPhase::Planning,
@@ -278,7 +356,7 @@ pub(crate) async fn research(
     });
     let results: Vec<(String, Result<Vec<Note>, String>)> = stream::iter(questions)
         .map(|question| async move {
-            let notes = research_question(model, paper, web, &question).await;
+            let notes = research_question(model, paper, web, library, &question).await;
             let spent = budget.snapshot();
             send(PaperEvent::Budget {
                 used: spent.used,
@@ -307,4 +385,69 @@ pub(crate) async fn research(
     }
     dossier.sources = web.sources();
     Ok(dossier)
+}
+
+/// What the reference library's tools look like to the model.
+fn library_specs() -> Vec<ToolSpec> {
+    vec![
+        ToolSpec {
+            name: SEARCH_REFERENCES_TOOL.into(),
+            description: "Search the user's reference library - the papers, books and notes in the project's references/ folder - for the passages that best answer a question. Each result is `path:first-last` and the passage.".into(),
+            parameters: json!({
+                "type": "object",
+                "properties": {"query": {"type": "string", "description": "What the passages should be about, in the sources' own words"}},
+                "required": ["query"]
+            }),
+        },
+        ToolSpec {
+            name: READ_REFERENCE_TOOL.into(),
+            description: "Read part of a file in the reference library, by the path and lines search_references gave.".into(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string"},
+                    "start_line": {"type": "integer"},
+                    "end_line": {"type": "integer"}
+                },
+                "required": ["path"]
+            }),
+        },
+    ]
+}
+
+/// A library tool's answer, or None for another tool. Run off the async
+/// threads: a first search extracts and indexes the files.
+async fn library_call(root: &Path, call: &ToolCall) -> Option<String> {
+    let args: Value = serde_json::from_str(&call.arguments).unwrap_or_default();
+    let root = root.to_path_buf();
+    let answer = match call.name.as_str() {
+        SEARCH_REFERENCES_TOOL => {
+            let query = args["query"].as_str().unwrap_or("").to_string();
+            tokio::task::spawn_blocking(move || {
+                crate::ai::project::search_references(&root, &query)
+            })
+            .await
+        }
+        READ_REFERENCE_TOOL => {
+            let path = args["path"].as_str().unwrap_or("").trim().to_string();
+            if library_file(&root, &path).is_none() {
+                return Some(format!(
+                    "{path:?} isn't a file in references/: pass a path search_references gave."
+                ));
+            }
+            let range = crate::ai::project::LineRange {
+                start: args["start_line"].as_u64().map(|n| n as usize),
+                end: args["end_line"].as_u64().map(|n| n as usize),
+            };
+            tokio::task::spawn_blocking(move || {
+                crate::ai::project::read_part(&root, &path, range).unwrap_or_else(|why| why)
+            })
+            .await
+        }
+        _ => return None,
+    };
+    let text = answer.unwrap_or_else(|e| e.to_string());
+    Some(format!(
+        "<external-content source=\"reference library\">\n{text}\n</external-content>"
+    ))
 }

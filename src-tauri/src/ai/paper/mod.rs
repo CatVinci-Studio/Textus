@@ -221,7 +221,11 @@ pub async fn ai_paper_run(
             target_chars,
             budget: budget.snapshot(),
         };
-        let dossier = research::research(&agent, &paper, &web, &budget, &send).await?;
+        let library = root
+            .join(crate::ai::project::REFERENCES_DIR)
+            .is_dir()
+            .then_some(root.as_path());
+        let dossier = research::research(&agent, &paper, &web, &budget, &send, library).await?;
         paper.budget = budget.snapshot();
         // Kept before the outline, so a failed outline doesn't cost the
         // research.

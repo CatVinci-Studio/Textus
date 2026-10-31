@@ -126,7 +126,13 @@ it, lazily loaded. Each stage and helper is one run of
   sections, references - accepted or rejected like any proposal. The
   language is the topic's script's, else the UI's.
 
+- **The user's library**: when the project has a `references/` folder, each
+  research helper also has `search_references` and `read_reference`, is
+  told to search it first, and may cite a file by its path in `add_note`.
+  The file becomes a source like a page - its address `references/…`,
+  percent-encoded so a link holds it - cited `[n](references/…)`, accepted
+  by the section checks, and listed by name and path in the references.
+
 ### To come
 
-Web pictures for the `web` figures (`find_image`); the research helpers
-reading the user's `references/` library.
+Web pictures for the `web` figures (`find_image`).

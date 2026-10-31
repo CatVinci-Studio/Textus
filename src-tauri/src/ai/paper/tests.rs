@@ -258,7 +258,7 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
     let web = WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
     let events = std::sync::Mutex::new(Vec::new());
     let send = |e: PaperEvent| events.lock().unwrap().push(e);
-    let dossier = research::research(&Scripted, &paper(), &web, &budget, &send)
+    let dossier = research::research(&Scripted, &paper(), &web, &budget, &send, None)
         .await
         .unwrap();
 
@@ -334,7 +334,7 @@ impl research::Model for Empty {
 async fn research_that_keeps_nothing_fails_with_a_reason() {
     let budget = SharedBudget::new(ResearchBudget::for_paper());
     let web = WebPlan::new(true, None, None, &[]);
-    let err = research::research(&Empty, &paper(), &web, &budget, &|_| {})
+    let err = research::research(&Empty, &paper(), &web, &budget, &|_| {}, None)
         .await
         .unwrap_err();
     assert!(err.contains("found nothing to write from"), "{err}");
@@ -928,4 +928,135 @@ fn a_paper_card_s_turns_are_not_sent_to_the_model() {
         AgentTurn::assistant("Written."),
     ]);
     assert_eq!(kept.len(), 2);
+}
+
+#[test]
+fn a_reference_file_s_address_has_no_spaces_and_reads_back() {
+    let address = research::reference_address("references/Tides 2024/潮汐.md");
+    assert!(!address.contains(' '), "{address}");
+    assert!(address.starts_with("references/Tides%202024/"), "{address}");
+    assert_eq!(
+        research::reference_path(&address).as_deref(),
+        Some("references/Tides 2024/潮汐.md")
+    );
+    assert_eq!(research::reference_path("https://a.example/"), None);
+}
+
+/// Searches the library, reads around the hit, keeps a note citing the
+/// file, and tries to read outside the library.
+struct Librarian;
+
+impl research::Model for Librarian {
+    fn step<'a>(
+        &'a self,
+        instructions: &'a str,
+        turns: &'a [aicompat::agent::AgentTurn],
+        tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        use aicompat::agent::{AgentTurn, StepResult};
+        let call = |id: &str, name: &str, args: serde_json::Value| AgentTurn::ToolCall {
+            call_id: id.into(),
+            name: name.into(),
+            arguments: args.to_string(),
+            reasoning: None,
+        };
+        let step = if tools.is_empty() {
+            StepResult::Done(
+                r#"["How do tidal barrages store energy?", "Second question about it?"]"#.into(),
+            )
+        } else if turns.len() == 1 {
+            assert!(instructions.contains("reference library"), "{instructions}");
+            StepResult::ToolCalls(vec![
+                call(
+                    "s",
+                    research::SEARCH_REFERENCES_TOOL,
+                    json!({"query": "tidal barrages"}),
+                ),
+                call(
+                    "r",
+                    research::READ_REFERENCE_TOOL,
+                    json!({"path": "references/../secret.md"}),
+                ),
+            ])
+        } else if !turns.iter().any(
+            |t| matches!(t, AgentTurn::ToolCall { name, .. } if name == research::ADD_NOTE_TOOL),
+        ) {
+            let results: Vec<&str> = turns
+                .iter()
+                .filter_map(|t| match t {
+                    AgentTurn::ToolResult { output, .. } => Some(output.as_str()),
+                    _ => None,
+                })
+                .collect();
+            assert!(
+                results[0].contains("references/Tides 2024/a.md:1-1"),
+                "{}",
+                results[0]
+            );
+            assert!(results[0].contains("<external-content"), "{}", results[0]);
+            assert!(
+                results[1].contains("isn't a file in references/"),
+                "{}",
+                results[1]
+            );
+            StepResult::ToolCalls(vec![call(
+                "n",
+                research::ADD_NOTE_TOOL,
+                json!({"claim": "Barrages store energy at high tide.", "evidence": "As the notes say.", "sources": ["references/Tides 2024/a.md"]}),
+            )])
+        } else {
+            StepResult::Done("Covered.".into())
+        };
+        Box::pin(async move { Ok(step) })
+    }
+}
+
+#[tokio::test]
+async fn helpers_search_the_user_s_library_and_cite_its_files() {
+    let root = tempfile::tempdir().unwrap();
+    let file = root.path().join("references/Tides 2024/a.md");
+    std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+    std::fs::write(&file, "Tidal barrages store energy at high tide.\n").unwrap();
+    std::fs::write(root.path().join("secret.md"), "Not for the paper.").unwrap();
+    let budget = Arc::new(SharedBudget::new(ResearchBudget::for_paper()));
+    let web = WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
+    let dossier = research::research(
+        &Librarian,
+        &paper(),
+        &web,
+        &budget,
+        &|_| {},
+        Some(root.path()),
+    )
+    .await
+    .unwrap();
+    assert_eq!(dossier.notes.len(), 2);
+    assert_eq!(dossier.notes[0].sources, vec![1]);
+    assert_eq!(dossier.notes[1].sources, vec![1]);
+    assert_eq!(dossier.sources.len(), 1);
+    assert_eq!(dossier.sources[0].url, "references/Tides%202024/a.md");
+    assert_eq!(dossier.sources[0].title, "a.md");
+
+    // Written and listed like any source.
+    let mut section = outline().sections.remove(0);
+    section.target_words = 10;
+    section.figures.clear();
+    let cited = format!(
+        "Barrages store energy at high tide, by the notes [1]({}).",
+        dossier.sources[0].url
+    );
+    let sources = vec![(1, dossier.sources[0].url.clone())];
+    assert_eq!(
+        draft::problems(&cited, &section, &sources, "en"),
+        Vec::<String>::new()
+    );
+    let listed = finish::references(std::slice::from_ref(&cited), &dossier, "en").unwrap();
+    assert!(
+        listed.ends_with("\\[1\\] a.md. `references/Tides 2024/a.md`"),
+        "{listed}"
+    );
+    assert_eq!(
+        finish::plain_citations(&cited),
+        "Barrages store energy at high tide, by the notes \\[1\\]."
+    );
 }

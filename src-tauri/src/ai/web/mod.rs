@@ -205,6 +205,12 @@ impl WebPlan {
         state.book.has(n).then_some(n)
     }
 
+    /// The number of the source at `address` (a file of the user's, say),
+    /// given one with `title` if it has none.
+    pub(crate) fn add_source(&self, address: &str, title: &str) -> u32 {
+        self.state.lock().unwrap().book.add(address, title)
+    }
+
     /// Every source found so far, in number order.
     pub(crate) fn sources(&self) -> Vec<aicompat::agent::Source> {
         self.state.lock().unwrap().book.all()

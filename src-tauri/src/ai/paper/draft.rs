@@ -26,9 +26,11 @@ const LONGEST: f64 = 1.5;
 /// Where a web picture goes until one is found for it.
 pub(crate) const WEB_FIGURE_MARK: &str = "<!-- textus-figure web:";
 
-fn cited_link() -> &'static Regex {
+/// A citation as the paper writes it, `[n](address)`: a web page's address,
+/// or a file in the user's reference library (`references/…`).
+pub(crate) fn cited_link() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\[(\d{1,3})\]\((https?://[^)\s]+)\)").unwrap())
+    RE.get_or_init(|| Regex::new(r"\[(\d{1,3})\]\(((?:https?://|references/)[^)\s]+)\)").unwrap())
 }
 
 /// `[n]` not followed by `(`: a citation without its link.
