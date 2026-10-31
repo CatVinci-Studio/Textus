@@ -1354,6 +1354,7 @@ export default {
   pluginsMine: "我做的插件",
   pluginsNone: "还没有。",
   pluginStatusBroken: "无法读取：{reason}",
+  pluginStatusDesktopOnly: "只能在电脑上使用，不支持 iPhone 和 iPad。",
   pluginStatusIncompatible: "为其他版本的 Textus 制作（{range}）。",
   pluginStatusFailed: "已关闭：{reason}",
   pluginStatusAllOff: "插件已全部关闭。",

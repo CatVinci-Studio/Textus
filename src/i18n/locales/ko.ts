@@ -1419,6 +1419,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsMine: "직접 만든 플러그인",
   pluginsNone: "아직 없습니다.",
   pluginStatusBroken: "읽을 수 없음: {reason}",
+  pluginStatusDesktopOnly:
+    "컴퓨터에서만 사용할 수 있으며 iPhone과 iPad에서는 사용할 수 없습니다.",
   pluginStatusIncompatible: "다른 버전의 Textus용입니다({range}).",
   pluginStatusFailed: "꺼짐: {reason}",
   pluginStatusAllOff: "플러그인이 꺼져 있습니다.",

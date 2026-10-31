@@ -1525,6 +1525,8 @@ utiliser une.
   pluginsMine: "Créées par vous",
   pluginsNone: "Aucune pour l’instant.",
   pluginStatusBroken: "Illisible : {reason}",
+  pluginStatusDesktopOnly:
+    "Fonctionne uniquement sur ordinateur, pas sur iPhone ni iPad.",
   pluginStatusIncompatible:
     "Conçue pour une autre version de Textus ({range}).",
   pluginStatusFailed: "Désactivée : {reason}",

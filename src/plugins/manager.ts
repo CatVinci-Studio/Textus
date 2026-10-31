@@ -24,6 +24,7 @@ import {
   engineSatisfied,
   parseManifest,
   type Permission,
+  type PluginManifest,
 } from "./store/manifest";
 import { permissionLabel } from "./store/permissions";
 import {
@@ -79,6 +80,11 @@ export function pluginPlatform(): string {
   return "linux";
 }
 
+/** Whether a plugin runs on this system (its manifest's platforms). */
+export function runsHere(manifest: PluginManifest): boolean {
+  return manifest.platforms.includes(isIOSApp ? "ios" : "desktop");
+}
+
 // ---------------------------------------------------------------------------
 // Loading
 // ---------------------------------------------------------------------------
@@ -96,7 +102,8 @@ function makeRecord(
     const manifest = parseManifest(text);
     if (manifest.id !== id)
       throw new Error(`id "${manifest.id}" is not its folder's, "${id}".`);
-    const compatible = engineSatisfied(manifest.engine, APP_VERSION);
+    const compatible =
+      engineSatisfied(manifest.engine, APP_VERSION) && runsHere(manifest);
     return {
       id,
       origin,

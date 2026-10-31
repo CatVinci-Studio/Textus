@@ -1362,6 +1362,7 @@ export default {
   pluginsMine: "我做的外掛",
   pluginsNone: "尚無。",
   pluginStatusBroken: "無法讀取：{reason}",
+  pluginStatusDesktopOnly: "只能在電腦上使用，不支援 iPhone 和 iPad。",
   pluginStatusIncompatible: "為其他版本的 Textus 製作（{range}）。",
   pluginStatusFailed: "已關閉：{reason}",
   pluginStatusAllOff: "外掛程式已全部關閉。",

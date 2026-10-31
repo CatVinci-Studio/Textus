@@ -1489,6 +1489,8 @@ export default {
   pluginsMine: "Созданные вами",
   pluginsNone: "Пока нет.",
   pluginStatusBroken: "Не удаётся прочитать: {reason}",
+  pluginStatusDesktopOnly:
+    "Работает только на компьютере, не на iPhone и iPad.",
   pluginStatusIncompatible: "Сделан для другой версии Textus ({range}).",
   pluginStatusFailed: "Выключен: {reason}",
   pluginStatusAllOff: "Плагины выключены.",

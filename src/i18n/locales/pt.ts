@@ -1478,6 +1478,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsMine: "Feitos por você",
   pluginsNone: "Nenhum ainda.",
   pluginStatusBroken: "Não foi possível ler: {reason}",
+  pluginStatusDesktopOnly:
+    "Funciona só no computador, não no iPhone nem no iPad.",
   pluginStatusIncompatible: "Feito para outra versão do Textus ({range}).",
   pluginStatusFailed: "Desativado: {reason}",
   pluginStatusAllOff: "Os plugins estão desativados.",

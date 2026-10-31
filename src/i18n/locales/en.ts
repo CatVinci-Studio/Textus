@@ -1462,6 +1462,7 @@ type /name in a conversation to use one.
   pluginsMine: "Made by you",
   pluginsNone: "None yet.",
   pluginStatusBroken: "Can’t be read: {reason}",
+  pluginStatusDesktopOnly: "Works on the computer only, not on iPhone or iPad.",
   pluginStatusIncompatible: "Made for another version of Textus ({range}).",
   pluginStatusFailed: "Turned off: {reason}",
   pluginStatusAllOff: "Plugins are off.",

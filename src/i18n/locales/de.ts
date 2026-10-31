@@ -1492,6 +1492,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsMine: "Von dir erstellt",
   pluginsNone: "Noch keine.",
   pluginStatusBroken: "Nicht lesbar: {reason}",
+  pluginStatusDesktopOnly:
+    "Nur am Computer nutzbar, nicht auf iPhone oder iPad.",
   pluginStatusIncompatible: "Für eine andere Textus-Version gemacht ({range}).",
   pluginStatusFailed: "Ausgeschaltet: {reason}",
   pluginStatusAllOff: "Plugins sind aus.",

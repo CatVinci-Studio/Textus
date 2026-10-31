@@ -50,6 +50,12 @@
         }
       }
     },
+    "platforms": {
+      "description": "Where it runs: desktop (macOS, Windows, Linux) and ios (iPhone, iPad). Left out, everywhere - unless it works in the background (background code, or requiring runInBackground), which only the desktop does. Textus elsewhere doesn't list or load it.",
+      "type": "array",
+      "items": { "enum": ["desktop", "ios"] },
+      "uniqueItems": true
+    },
     "main": {
       "description": "The host code, or several files run in order.",
       "oneOf": [

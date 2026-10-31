@@ -1432,6 +1432,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsMine: "自分で作ったもの",
   pluginsNone: "まだありません。",
   pluginStatusBroken: "読み込めません：{reason}",
+  pluginStatusDesktopOnly: "パソコン専用です。iPhone と iPad では使えません。",
   pluginStatusIncompatible: "別のバージョンの Textus 用です（{range}）。",
   pluginStatusFailed: "オフになりました：{reason}",
   pluginStatusAllOff: "プラグインはオフです。",

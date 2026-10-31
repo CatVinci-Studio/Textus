@@ -1498,6 +1498,8 @@ para usar una.
   pluginsMine: "Hechos por ti",
   pluginsNone: "Ninguno todavía.",
   pluginStatusBroken: "No se puede leer: {reason}",
+  pluginStatusDesktopOnly:
+    "Solo funciona en el ordenador, no en iPhone ni iPad.",
   pluginStatusIncompatible: "Hecho para otra versión de Textus ({range}).",
   pluginStatusFailed: "Desactivado: {reason}",
   pluginStatusAllOff: "Los complementos están desactivados.",

@@ -490,8 +490,16 @@ system allows:
   touch at that width, with targets of 44px.
 - The commands of `app/plugins` are under Plugins in the title row's menu.
   There is no tray (`app/tray`) and no background mode: `background` code
-  and schedules run on the desktop only, and a plugin that needs them says
-  so in its README.
+  and schedules run on the desktop only.
+- **Say where your plugin runs.** A plugin left without `platforms` is
+  offered everywhere. One that can't work on iOS (it needs a program on the
+  computer such as Zotero or a local server, or opens any web page) sets
+  `"platforms": ["desktop"]`, and Textus on iOS neither lists nor loads it.
+  A plugin that works in the background, with `background` code or
+  `requires` Keep running in the background (`runInBackground`), is
+  desktop-only by default, and naming `ios` beside it is an error. Check a
+  plugin you offer on iOS in a phone-sized window, or the simulator, before
+  you publish.
 - Files a user opens from the Files app are reached through iOS's own
   grants; a plugin reads them through `files` like any other.
 

@@ -192,6 +192,35 @@ describe("a plugin's background code (API 1.1)", () => {
   });
 });
 
+describe("where a plugin runs", () => {
+  it("is everywhere unless it says, and the desktop alone when it works in the background", () => {
+    expect(parseManifest(base).platforms).toEqual(["desktop", "ios"]);
+    expect(
+      parseManifest({ ...base, platforms: ["desktop"] }).platforms,
+    ).toEqual(["desktop"]);
+    expect(parseManifest({ ...base, background: "jobs.js" }).platforms).toEqual(
+      ["desktop"],
+    );
+    expect(
+      parseManifest({ ...base, requires: [{ setting: "runInBackground" }] })
+        .platforms,
+    ).toEqual(["desktop"]);
+  });
+
+  it("refuses a system it doesn't know, and the background on iOS", () => {
+    expect(() => parseManifest({ ...base, platforms: ["android"] })).toThrow(
+      ManifestError,
+    );
+    expect(() =>
+      parseManifest({
+        ...base,
+        background: "jobs.js",
+        platforms: ["desktop", "ios"],
+      }),
+    ).toThrow(/desktop's only/);
+  });
+});
+
 describe("a plugin's settings", () => {
   const withSettings = (settings: unknown[]) =>
     parseManifest({ ...base, contributes: { settings } });

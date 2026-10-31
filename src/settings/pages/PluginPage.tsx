@@ -15,6 +15,7 @@ import {
   revokePermission,
   uninstallPlugin,
   type PluginRecord,
+  runsHere,
 } from "../../plugins/manager";
 import {
   requirementLabel,
@@ -39,6 +40,8 @@ export function statusText(
     case "broken":
       return t.pluginStatusBroken.replace("{reason}", record.problem ?? "");
     case "incompatible":
+      if (record.manifest && !runsHere(record.manifest))
+        return t.pluginStatusDesktopOnly;
       return t.pluginStatusIncompatible.replace(
         "{range}",
         record.problem ?? "",

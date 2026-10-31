@@ -10,6 +10,7 @@ import {
 } from "./manifest";
 import {
   loadPlugins,
+  runsHere,
   pluginName,
   pluginRecord,
   setPluginEnabled,
@@ -93,8 +94,11 @@ function item(entry: PluginCatalogEntry): CatalogItem | null {
   }
 }
 
+/** The catalog's plugins that run on this system. */
 const items = (entries: PluginCatalogEntry[]) =>
-  entries.map(item).filter((i): i is CatalogItem => i !== null);
+  entries
+    .map(item)
+    .filter((i): i is CatalogItem => i !== null && runsHere(i.manifest));
 
 let fetching: Promise<void> | null = null;
 
