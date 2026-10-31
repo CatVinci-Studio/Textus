@@ -223,6 +223,7 @@ objc2-user-notifications = { version = "0.3", default-features = false, features
 objc2-web-kit = { version = "0.3", features = [
     "WKWebView",
     "WKWebViewConfiguration",
+    "WKPreferences",
     "WKNavigation",
     "WKNavigationDelegate",
     "WKPDFConfiguration",
