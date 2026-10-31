@@ -74,6 +74,13 @@
     background: var(--ui-bg);
   }
 
+  /* Searching, the list keeps only its search box and the results below
+     take the rest. */
+  :root[data-window-chrome="mobile"]
+    .settings-sidebar:has(+ .settings-content) {
+    flex: none;
+  }
+
   :root[data-window-chrome="mobile"] .settings-search {
     margin: 8px 16px 0;
   }
@@ -213,6 +220,12 @@
 
   :root[data-window-chrome="mobile"] .settings-search {
     height: 36px;
+  }
+
+  /* The arrow keys' pick; under a finger it only spilled past the card. */
+  :root[data-window-chrome="mobile"] .settings-search-result.is-active {
+    background: none;
+    box-shadow: none;
   }
 
   /* A built-in skill: Customize… on its own line under what it does; beside the

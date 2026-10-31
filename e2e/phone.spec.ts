@@ -344,3 +344,17 @@ test("opening the sidebar closes the find bar, without bringing the keyboard up"
   );
   expect(editorFocused).toBe(false);
 });
+
+test("the first line of a document starts below the title row", async ({
+  page,
+}) => {
+  await openPhone(page);
+  // An iPhone's status bar, which Chromium's env() doesn't have.
+  await page.evaluate(() =>
+    document.documentElement.style.setProperty("--safe-top", "59px"),
+  );
+  await pasteMarkdown(page, "# First line\n\nMore text.");
+  const bar = await page.locator(".window-bar").boundingBox();
+  const line = await page.locator(".ProseMirror > h1").boundingBox();
+  expect(line!.y).toBeGreaterThanOrEqual(bar!.y + bar!.height);
+});

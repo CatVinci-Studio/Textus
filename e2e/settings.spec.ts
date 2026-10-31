@@ -725,6 +725,10 @@ test.describe("phone", () => {
     await panel.locator(".settings-search input").fill("source mode");
     // The results stand in for the list.
     await expect(panel.locator(".settings-nav")).toHaveCount(0);
+    // Right under the search box, not below half a screen of empty list.
+    const box = await panel.locator(".settings-search").boundingBox();
+    const first = await panel.locator(".settings-group").first().boundingBox();
+    expect(first!.y - (box!.y + box!.height)).toBeLessThan(40);
     await panel.getByRole("option").first().tap();
     await expect(
       panel.getByRole("checkbox", { name: "Source Mode" }),
