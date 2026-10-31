@@ -1350,7 +1350,11 @@ test("a shift-click in the page's margin extends the selection there", async ({
   await openApp(page, { settings: { language: "en" } });
   await pasteMarkdown(page, "First line.\n\nSecond line.\n\nThird line.");
   const paras = page.locator('[data-active-tab="true"] .ProseMirror p');
-  await paras.first().click({ position: { x: 1, y: 4 } });
+  // The caret at the start, settled before the shift-click extends from it.
+  await page.keyboard.press("ControlOrMeta+Home");
+  await expect
+    .poll(() => page.evaluate(() => window.getSelection()?.anchorOffset))
+    .toBe(0);
   const third = (await paras.nth(2).boundingBox())!;
   const scroller = (await page
     .locator('[data-active-tab="true"] .editor-scroll')
