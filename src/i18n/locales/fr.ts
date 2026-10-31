@@ -365,6 +365,7 @@ utiliser une.
   toolMcp: "Utilisation de {arg}",
   toolWebSearch: "Recherche de « {arg} » sur le web",
   toolWebFetch: "Lecture de {arg}",
+  toolSearchPapers: "Recherche d’articles sur « {arg} »",
   webSources: "Sources",
   proposalSourcesAsFootnotes: "Ajouter les sources en notes de bas de page",
   menuToggleSplitView: "Source et aperçu",

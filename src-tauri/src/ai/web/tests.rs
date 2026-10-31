@@ -45,7 +45,7 @@ fn a_native_search_gets_web_fetch_only_and_off_gets_nothing() {
         .iter()
         .map(|s| s.name.to_string())
         .collect();
-    assert_eq!(names, vec![WEB_FETCH_TOOL]);
+    assert_eq!(names, vec![WEB_FETCH_TOOL, SEARCH_PAPERS_TOOL]);
 
     let own = plan(service.clone());
     let names: Vec<_> = own
@@ -53,7 +53,10 @@ fn a_native_search_gets_web_fetch_only_and_off_gets_nothing() {
         .iter()
         .map(|s| s.name.to_string())
         .collect();
-    assert_eq!(names, vec![WEB_SEARCH_TOOL, WEB_FETCH_TOOL]);
+    assert_eq!(
+        names,
+        vec![WEB_SEARCH_TOOL, WEB_FETCH_TOOL, SEARCH_PAPERS_TOOL]
+    );
 
     let off = WebPlan::new(false, Some(NativeSearch::AnthropicTool), service, &[]);
     assert!(off.tool_specs().is_empty());
@@ -170,4 +173,89 @@ async fn web_fetch_refuses_this_computer() {
         )
         .await;
     assert!(out.contains("private network"), "{out}");
+}
+
+#[tokio::test]
+async fn the_paper_search_budget_runs_out_before_any_request() {
+    let web = plan(None);
+    web.state.lock().unwrap().paper_searches = MAX_PAPER_SEARCHES;
+    let out = web
+        .execute(SEARCH_PAPERS_TOOL, r#"{"query":"tidal energy"}"#, "")
+        .await;
+    assert!(
+        out.contains("paper searches this request may make"),
+        "{out}"
+    );
+    let out = plan(None)
+        .execute(SEARCH_PAPERS_TOOL, r#"{"query":" "}"#, "")
+        .await;
+    assert!(out.contains("Pass `query`"), "{out}");
+}
+
+#[test]
+fn openalex_works_become_papers_with_their_abstract_in_order() {
+    let body = json!({"results": [{
+        "id": "https://openalex.org/W1",
+        "doi": "https://doi.org/10.1000/tides",
+        "title": "Tidal Power at Scale",
+        "publication_year": 2021,
+        "authorships": [
+            {"author": {"display_name": "Ada Lovelace"}},
+            {"author": {"display_name": "Charles Babbage"}},
+            {"author": {"display_name": "Mary Somerville"}}
+        ],
+        "primary_location": {"source": {"display_name": "Ocean Energy"}},
+        "abstract_inverted_index": {"turn": [1], "Tides": [0], "twice": [2]},
+        "cited_by_count": 42
+    }, {"id": "https://openalex.org/W2", "title": null}]});
+    let papers = scholar::openalex_papers(&body);
+    assert_eq!(papers.len(), 1);
+    let paper = &papers[0];
+    assert_eq!(paper.url, "https://doi.org/10.1000/tides");
+    assert_eq!(paper.doi.as_deref(), Some("10.1000/tides"));
+    assert_eq!(paper.abstract_text, "Tides turn twice");
+    assert_eq!(
+        paper.byline(),
+        "Ada Lovelace, Charles Babbage et al. (2021)"
+    );
+    let described = paper.describe(3);
+    assert!(
+        described.starts_with("[3] Tidal Power at Scale\n"),
+        "{described}"
+    );
+    assert!(
+        described.contains("Ocean Energy · cited by 42"),
+        "{described}"
+    );
+}
+
+#[test]
+fn arxiv_entries_become_papers() {
+    let atom = br#"<?xml version="1.0"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>ArXiv Query</title>
+  <entry>
+    <id>http://arxiv.org/abs/2101.00001v2</id>
+    <published>2021-01-01T00:00:00Z</published>
+    <title>Modelling   Tides
+      &amp; Currents</title>
+    <summary>  We model tides. </summary>
+    <author><name>Grace Hopper</name></author>
+    <arxiv:doi>10.1000/x</arxiv:doi>
+    <link href="http://arxiv.org/pdf/2101.00001v2" rel="related" type="application/pdf"/>
+  </entry>
+</feed>"#;
+    assert_eq!(
+        scholar::arxiv_query(" tidal  energy "),
+        "all:tidal AND all:energy"
+    );
+    let papers = scholar::arxiv_papers(atom);
+    assert_eq!(papers.len(), 1);
+    let paper = &papers[0];
+    assert_eq!(paper.title, "Modelling Tides & Currents");
+    assert_eq!(paper.url, "https://arxiv.org/abs/2101.00001v2");
+    assert_eq!(paper.year, Some(2021));
+    assert_eq!(paper.authors, vec!["Grace Hopper"]);
+    assert_eq!(paper.doi.as_deref(), Some("10.1000/x"));
+    assert_eq!(paper.abstract_text, "We model tides.");
 }
