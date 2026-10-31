@@ -1089,6 +1089,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialPaletteTask:
     "{shortcut}을 누르고 몇 글자 입력한 뒤 Enter로 명령 실행",
   tutorialPaletteTaskPhone: "컴퓨터에서는 Ctrl+Shift+P(Mac은 ⌘⇧P)로 엽니다",
+  tutorialPluginsTitle: "플러그인",
+  tutorialPluginsBody:
+    "마인드맵, Vim 키, 슬라이드, 문헌 인용 등 필요한 것만 하나의 스토어에서 설치하세요.",
+  tutorialPluginsTask: "설정 › 확장을 열어 플러그인, 테마, 스킬을 둘러보세요",
   tutorialConnectTitle: "AI 연결하기",
   tutorialConnectBody: "연결하면 이어지는 AI 기능을 직접 해 볼 수 있습니다.",
   tutorialConnectTask:

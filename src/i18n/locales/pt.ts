@@ -1142,6 +1142,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialPaletteTask:
     "Pressione {shortcut}, digite algumas letras e Enter para executar um comando",
   tutorialPaletteTaskPhone: "No computador, abre com Ctrl+Shift+P (⌘⇧P no Mac)",
+  tutorialPluginsTitle: "Plugins",
+  tutorialPluginsBody:
+    "Mapas mentais, teclas do Vim, slides, citações e mais: adicione só o que precisar, de uma única loja.",
+  tutorialPluginsTask:
+    "Abra Ajustes › Extensões para ver os plugins, temas e habilidades",
   tutorialConnectTitle: "Conecte sua IA",
   tutorialConnectBody:
     "Com ela conectada, você pode experimentar de verdade o que vem a seguir.",

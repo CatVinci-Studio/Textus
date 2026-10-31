@@ -1159,6 +1159,11 @@ para usar una.
     "Pulsa {shortcut}, escribe unas letras y pulsa Intro para ejecutar un comando",
   tutorialPaletteTaskPhone:
     "En el ordenador se abre con Ctrl+Mayús+P (⌘⇧P en Mac)",
+  tutorialPluginsTitle: "Complementos",
+  tutorialPluginsBody:
+    "Mapas mentales, teclas de Vim, diapositivas, citas y más: añade solo lo que necesites, desde una sola tienda.",
+  tutorialPluginsTask:
+    "Abre Ajustes › Extensiones para ver los complementos, temas y habilidades",
   tutorialConnectTitle: "Conecta tu IA",
   tutorialConnectBody:
     "Con una IA conectada, podrás probar de verdad lo que sigue.",

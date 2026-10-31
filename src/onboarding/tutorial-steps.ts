@@ -28,6 +28,7 @@ export type TutorialStepId =
   | "modes-themes"
   | "sidebar-export"
   | "palette"
+  | "plugins"
   | "connect"
   | "write"
   | "review"
@@ -197,6 +198,16 @@ const ALL_STEPS: TutorialStep[] = [
     tasks: [
       { key: "tutorialPaletteTask", phoneKey: "tutorialPaletteTaskPhone" },
     ],
+    optional: true,
+  },
+  {
+    // A pointer to the store, nothing to do there.
+    id: "plugins",
+    chapter: "writing",
+    layout: "card",
+    titleKey: "tutorialPluginsTitle",
+    bodyKey: "tutorialPluginsBody",
+    tasks: [{ key: "tutorialPluginsTask" }],
     optional: true,
   },
   {

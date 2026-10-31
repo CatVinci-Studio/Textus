@@ -1047,6 +1047,10 @@ export default {
   tutorialPaletteBody: "選單裡的所有命令，輸入幾個字就能找到。",
   tutorialPaletteTask: "按 {shortcut}，輸入幾個字，按 Enter 執行一個命令",
   tutorialPaletteTaskPhone: "在電腦上用 Ctrl+Shift+P（Mac 上是 ⌘⇧P）打開",
+  tutorialPluginsTitle: "外掛程式",
+  tutorialPluginsBody:
+    "心智圖、Vim 按鍵、投影片、文獻引用……需要什麼就裝什麼，都在一個商店裡。",
+  tutorialPluginsTask: "打開 設定 › 擴充功能，看看有哪些外掛程式、主題和 Skill",
   tutorialConnectTitle: "連線你的 AI",
   tutorialConnectBody: "連上之後，下面的 AI 功能可以真的試一試。",
   tutorialConnectTask: "登入或填入金鑰；也可以先略過",

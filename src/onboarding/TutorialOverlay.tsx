@@ -81,6 +81,7 @@ const STEP_GLYPHS: Record<Exclude<TutorialStepId, "welcome">, string> = {
   "modes-themes": "◐",
   "sidebar-export": "◧",
   palette: "❯",
+  plugins: "⊞",
   connect: "⇄",
   write: "✦",
   review: "❝",

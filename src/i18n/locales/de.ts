@@ -1146,6 +1146,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Drücke {shortcut}, tippe ein paar Buchstaben und führe mit Enter einen Befehl aus",
   tutorialPaletteTaskPhone:
     "Am Computer öffnet sie sich mit Strg+Umschalt+P (⌘⇧P auf dem Mac)",
+  tutorialPluginsTitle: "Plugins",
+  tutorialPluginsBody:
+    "Mindmaps, Vim-Tasten, Folien, Zitate und mehr – füg nur hinzu, was du brauchst, aus einem Store.",
+  tutorialPluginsTask:
+    "Öffne Einstellungen › Erweiterungen und sieh dir Plugins, Themes und Skills an",
   tutorialConnectTitle: "KI verbinden",
   tutorialConnectBody:
     "Ist sie verbunden, kannst du das Folgende wirklich ausprobieren.",
