@@ -261,6 +261,14 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 .typ::<aicompat::capabilities::ThinkingLevel>(),
         ),
         (
+            // The long-form paper agent (ai::paper): not used by the frontend yet.
+            "ai-paper.ts",
+            builder()
+                .commands(collect_commands![crate::ai::paper::ai_paper_run])
+                .typ::<crate::ai::paper::Dossier>()
+                .typ::<crate::ai::paper::Outline>(),
+        ),
+        (
             "ai-project.ts",
             builder().commands(collect_commands![
                 crate::ai::workspace::load_agent_workspace,

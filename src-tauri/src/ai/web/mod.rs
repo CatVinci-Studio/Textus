@@ -2,6 +2,7 @@
 //! it has one, else Textus's `web_search` on a search service; `web_fetch` with
 //! either. Every page cited gets one number for the whole conversation.
 
+mod budget;
 pub(crate) mod extract;
 mod fetch;
 pub(crate) mod search;
@@ -14,20 +15,17 @@ use search::{Backend, Hit, Service};
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tauri::AppHandle;
 
+pub(crate) use budget::{WebBudget, WebUse};
 pub(crate) use sources::with_sources_in_text;
 use sources::{host, SourceBook};
 
 pub(crate) const WEB_SEARCH_TOOL: &str = "web_search";
 pub(crate) const WEB_FETCH_TOOL: &str = "web_fetch";
 
-/// Per request: searches and page reads the model may make before it is told
-/// to answer with what it has.
-const MAX_SEARCHES: usize = 5;
-const MAX_FETCHES: usize = 5;
 const MAX_QUERIES: usize = 3;
 const RESULTS_PER_QUERY: usize = 8;
 const SNIPPET_CHARS: usize = 300;
@@ -76,14 +74,13 @@ pub(crate) struct WebPlan {
     pub native: Option<NativeSearch>,
     /// Textus's own web_search - only without a native search.
     service: Option<Service>,
+    budget: Arc<dyn WebBudget>,
     state: Mutex<State>,
 }
 
 #[derive(Default)]
 struct State {
     book: SourceBook,
-    searches: usize,
-    fetches: usize,
 }
 
 impl WebPlan {
@@ -98,11 +95,20 @@ impl WebPlan {
             on,
             native,
             service: service.filter(|_| on && native.is_none()),
+            budget: Arc::new(budget::PerRequest::default()),
             state: Mutex::new(State {
                 book: SourceBook::from_history(history),
-                ..State::default()
             }),
         }
+    }
+
+    /// Counts searches and page reads against `budget` instead of this
+    /// request's own five of each.
+    // Used by the paper agent's research helpers, from a later branch.
+    #[allow(dead_code)]
+    pub(crate) fn with_budget(mut self, budget: Arc<dyn WebBudget>) -> Self {
+        self.budget = budget;
+        self
     }
 
     /// The tools this request offers the model, in every mode. `question`
@@ -178,10 +184,14 @@ impl WebPlan {
             (Some(_), _) => format!(
                 "---web---\nYou can search the web; the provider runs the search, and Textus numbers the pages your reply cites and lists them under it, so don't add a list of sources yourself. web_fetch reads one page in full when you have its address. {fetched} Search only when the request needs facts that are current or that you aren't sure of - not to write or revise text that doesn't depend on them. {proposals} {untrusted}"
             ),
-            (None, Some(service)) => format!(
-                "---web---\nYou can search the web with web_search (queries go to {}) and read a page in full with web_fetch. Search only when the request needs facts that are current or that you aren't sure of - not to write or revise text that doesn't depend on them; at most {MAX_SEARCHES} searches and {MAX_FETCHES} page reads per request. Every fact you take from the web is cited with the number its result or page has, in brackets right after it - [1], or [2][3] - in your reply; never make up a number or a source, and don't add a list of sources: Textus lists them under your reply. {proposals} {untrusted}",
+            (None, Some(service)) => {
+                let searches = self.budget.limit(WebUse::Search);
+                let fetches = self.budget.limit(WebUse::Fetch);
+                format!(
+                "---web---\nYou can search the web with web_search (queries go to {}) and read a page in full with web_fetch. Search only when the request needs facts that are current or that you aren't sure of - not to write or revise text that doesn't depend on them; at most {searches} searches and {fetches} page reads per request. Every fact you take from the web is cited with the number its result or page has, in brackets right after it - [1], or [2][3] - in your reply; never make up a number or a source, and don't add a list of sources: Textus lists them under your reply. {proposals} {untrusted}",
                 service.backend.label()
-            ),
+            )
+            }
             (None, None) => format!(
                 "---web---\nWeb search is on, but this model can't search by itself and no search service is set up, so you have no web_search. web_fetch still reads a page whose address the user gives. {fetched} When a request needs a search, say in one sentence that a search service is needed and that it is chosen in Settings > {} > Search service - then answer from what you know, saying it may be out of date. {proposals} {untrusted}",
                 crate::ai::agent::AI_NAME
@@ -292,12 +302,9 @@ impl WebPlan {
         if queries.is_empty() {
             return "Pass `queries`: one to three search queries.".to_string();
         }
-        {
-            let mut state = self.state.lock().unwrap();
-            if state.searches >= MAX_SEARCHES {
-                return format!("That's the {MAX_SEARCHES} searches this request may make - answer with what the earlier results gave.");
-            }
-            state.searches += 1;
+        if !self.budget.take(WebUse::Search) {
+            let n = self.budget.limit(WebUse::Search);
+            return format!("That's the {n} searches this request may make - answer with what the earlier results gave.");
         }
         let mut sections = Vec::new();
         for query in &queries {
@@ -333,12 +340,11 @@ impl WebPlan {
         let Some(url) = args.get("url").and_then(Value::as_str).map(str::trim) else {
             return "Pass `url`: the page's address.".to_string();
         };
-        {
-            let mut state = self.state.lock().unwrap();
-            if state.fetches >= MAX_FETCHES {
-                return format!("That's the {MAX_FETCHES} pages this request may read - answer with what you have.");
-            }
-            state.fetches += 1;
+        if !self.budget.take(WebUse::Fetch) {
+            let n = self.budget.limit(WebUse::Fetch);
+            return format!(
+                "That's the {n} pages this request may read - answer with what you have."
+            );
         }
         let page = match cached_fetch(url).await {
             Ok(fetch::Fetched::Page(page)) => page,

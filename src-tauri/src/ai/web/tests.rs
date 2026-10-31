@@ -141,7 +141,7 @@ async fn the_search_budget_runs_out() {
         // Nothing listens there: each search fails fast, and still counts.
         endpoint: Some("http://127.0.0.1:9/search".into()),
     }));
-    for i in 0..MAX_SEARCHES {
+    for i in 0..budget::MAX_SEARCHES {
         let out = web
             .execute(
                 WEB_SEARCH_TOOL,
