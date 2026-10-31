@@ -281,6 +281,8 @@ pub(crate) async fn write_section(
     outline: &Outline,
     index: usize,
     dossier: &Dossier,
+    // A revision: the earlier draft and the reviewer's points against it.
+    revision: Option<(&str, &[String])>,
 ) -> Result<String, String> {
     let section = &outline.sections[index];
     let unit = if length("字", &paper.language) == 1 {
@@ -325,7 +327,14 @@ pub(crate) async fn write_section(
     run_agent_loop(
         Vec::new(),
         AgentTurn::User {
-            text: writer_message(paper, outline, index, dossier),
+            text: match revision {
+                None => writer_message(paper, outline, index, dossier),
+                Some((earlier, points)) => format!(
+                    "{}\n\nYou wrote this section before:\n<draft>\n{earlier}\n</draft>\n\nA reviewer who read the whole paper asks for these changes:\n- {}\n\nRevise the section to meet them, keeping what works, and hand over the whole section again.",
+                    writer_message(paper, outline, index, dossier),
+                    points.join("\n- ")
+                ),
+            },
             images: Vec::new(),
         },
         WRITER_STEPS,
@@ -360,7 +369,10 @@ pub(crate) async fn draft(
     let mut sections = stream::iter(0..outline.sections.len())
         .map(|i| async move {
             started(i);
-            (i, write_section(model, paper, outline, i, dossier).await)
+            (
+                i,
+                write_section(model, paper, outline, i, dossier, None).await,
+            )
         })
         .buffered(AT_ONCE);
     while let Some((i, written)) = sections.next().await {
