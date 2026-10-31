@@ -46,6 +46,9 @@ interface TriggerProps {
 /** The hint over an icon-only button, replacing `title`, which WebKitGTK shows
  *  late or not at all. Never on touch; never takes focus or the pointer. In a
  *  portal on <body>, so no ancestor's transform or clip traps it. */
+/** A screen with no pointer that hovers: a phone's. */
+const noHover = () => !!window.matchMedia?.("(hover: none)").matches;
+
 export function Tooltip({
   text,
   description = text,
@@ -116,7 +119,8 @@ export function Tooltip({
     "aria-describedby": describedBy,
     onPointerEnter: (e) => {
       props.onPointerEnter?.(e);
-      if (e.pointerType !== "mouse") return;
+      // iOS WebKit follows a tap with a mouse's enter, which never leaves.
+      if (e.pointerType !== "mouse" || noHover()) return;
       anchor.current = e.currentTarget;
       window.clearTimeout(timerRef.current);
       if (warm()) setOpen(true);
@@ -142,7 +146,7 @@ export function Tooltip({
       if (!e.currentTarget.matches(":focus-visible")) return;
       // WebKit counts a focus a tap leaves as visible; a touch screen has
       // no hover to explain anything with.
-      if (window.matchMedia?.("(hover: none)").matches) return;
+      if (noHover()) return;
       anchor.current = e.currentTarget;
       window.clearTimeout(timerRef.current);
       setOpen(true);
