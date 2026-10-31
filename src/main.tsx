@@ -19,6 +19,7 @@ import { flushWhenHidden } from "./storage/pending-writes";
 import { exposePluginApiForDevelopment } from "./plugin-api";
 import "./mobile/styles/index.css";
 import { watchErrors } from "./app/report/recent-errors";
+import { AppErrorBoundary } from "./app/report/AppErrorBoundary";
 
 installPolyfills();
 installDevTauriShim();
@@ -66,17 +67,19 @@ if (view === "background") {
         document.getElementById("root") as HTMLElement,
       ).render(
         <React.StrictMode>
-          <SettingsProvider>
-            <AppearanceSync />
-            {view === "chat" ? (
-              <Suspense fallback={null}>
-                <ChatWindowApp />
-              </Suspense>
-            ) : (
-              <App />
-            )}
-            <WindowEdges />
-          </SettingsProvider>
+          <AppErrorBoundary>
+            <SettingsProvider>
+              <AppearanceSync />
+              {view === "chat" ? (
+                <Suspense fallback={null}>
+                  <ChatWindowApp />
+                </Suspense>
+              ) : (
+                <App />
+              )}
+              <WindowEdges />
+            </SettingsProvider>
+          </AppErrorBoundary>
         </React.StrictMode>,
       );
       // The parts likely to be opened next load once the window is idle.
