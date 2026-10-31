@@ -15,6 +15,12 @@ export const commands = {
 	 *  and every section a title.
 	 */
 	ai_paper_save_outline: (docPath: string | null, workspaceRoot: string | null, id: string, outline: Outline) => __TAURI_INVOKE<Outline>("ai_paper_save_outline", { docPath, workspaceRoot, id, outline }),
+	/**
+	 *  Drafts paper `id` from its saved outline: every section written, kept
+	 *  beside the paper and sent as `sectionDrafted`, in order. Stopped like any
+	 *  request, by `ai_cancel` with `request_id`.
+	 */
+	ai_paper_draft: (request: DraftRequest_Deserialize, channel: Channel<PaperEvent_Deserialize>) => __TAURI_INVOKE<null>("ai_paper_draft", { request, channel }),
 };
 
 /* Types */
@@ -47,6 +53,40 @@ export type Dossier_Serialize = {
 	 *  `Note::sources` and the text's `[n]` point at, and the reference list.
 	 */
 	sources: WebSource[],
+};
+
+/**
+ *  What drafting an outlined paper takes. Mirrored in
+ *  src/platform/bindings/ai-paper.ts.
+ */
+export type DraftRequest = DraftRequest_Serialize | DraftRequest_Deserialize;
+
+/**
+ *  What drafting an outlined paper takes. Mirrored in
+ *  src/platform/bindings/ai-paper.ts.
+ */
+export type DraftRequest_Deserialize = {
+	provider: string,
+	model?: string | null,
+	docPath?: string | null,
+	workspaceRoot?: string | null,
+	requestId: string,
+	/**  The paper, outlined and its outline approved. */
+	id: string,
+};
+
+/**
+ *  What drafting an outlined paper takes. Mirrored in
+ *  src/platform/bindings/ai-paper.ts.
+ */
+export type DraftRequest_Serialize = {
+	provider: string,
+	model: string | null,
+	docPath: string | null,
+	workspaceRoot: string | null,
+	requestId: string,
+	/**  The paper, outlined and its outline approved. */
+	id: string,
 };
 
 export type FigureKind = 
@@ -156,6 +196,11 @@ export type PaperEvent = PaperEvent_Serialize | PaperEvent_Deserialize;
 export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } | 
 /**  Section `index` of the outline is now `status`. */
 { type: "section"; index: number; status: SectionStatus } | { type: "budget"; used: BudgetCounts; remaining: BudgetCounts } | 
+/**
+ *  Section `index` is written, its heading first: the next to propose,
+ *  sent in the outline's order.
+ */
+{ type: "sectionDrafted"; index: number; markdown: string } | 
 /**  The outline is ready for the user to edit and approve. */
 { type: "outlineReady"; outline: Outline } | 
 /**  A stage failed; `section` when it was one section's. */
@@ -165,6 +210,11 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
 export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } | 
 /**  Section `index` of the outline is now `status`. */
 { type: "section"; index: number; status: SectionStatus } | { type: "budget"; used: BudgetCounts; remaining: BudgetCounts } | 
+/**
+ *  Section `index` is written, its heading first: the next to propose,
+ *  sent in the outline's order.
+ */
+{ type: "sectionDrafted"; index: number; markdown: string } | 
 /**  The outline is ready for the user to edit and approve. */
 { type: "outlineReady"; outline: Outline } | 
 /**  A stage failed; `section` when it was one section's. */

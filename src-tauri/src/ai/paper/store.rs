@@ -60,6 +60,33 @@ pub(crate) fn save(root: &Path, files: &PaperFiles) -> Result<(), String> {
     Ok(())
 }
 
+/// Section `index`'s draft, as `section-<index + 1>.md` beside the paper,
+/// for review and for a run that stopped to go on from.
+pub(crate) fn save_section(
+    root: &Path,
+    id: &str,
+    index: usize,
+    markdown: &str,
+) -> Result<(), String> {
+    let dir = paper_dir(root, id)?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    crate::atomic::write_sync(
+        &dir.join(format!("section-{}.md", index + 1)),
+        markdown.as_bytes(),
+    )
+    .map_err(|e| e.to_string())
+}
+
+/// Section `index`'s draft, if it was written.
+pub(crate) fn load_section(root: &Path, id: &str, index: usize) -> Result<Option<String>, String> {
+    let path = paper_dir(root, id)?.join(format!("section-{}.md", index + 1));
+    match std::fs::read_to_string(path) {
+        Ok(text) => Ok(Some(text)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 /// The paper `id` kept in `root`'s `.textus/`.
 pub(crate) fn load(root: &Path, id: &str) -> Result<PaperFiles, String> {
     let dir = paper_dir(root, id)?;

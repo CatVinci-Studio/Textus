@@ -83,6 +83,16 @@ it, lazily loaded. Each stage and helper is one run of
   else words) - and sends back every problem until it holds.
   `ai_paper_save_outline` keeps the user's edit, dropping notes the dossier
   doesn't have.
+- **Drafting** (`paper/draft.rs`, `ai_paper_draft`): a writer per section,
+  three at once, given the thesis, what the other sections cover, and its
+  notes with their sources' numbers and addresses. It hands the section over
+  with `submit_section`, checked for length (60-150% of its target, prose
+  only), citations (`[n](address)` for this section's sources only, never a
+  bare `[n]`) and its planned figures: a `mermaid block, a `chart block
+  whose JSON the renderer can draw, a `textus-picture:` line, or a
+  `<!-- textus-figure web: … -->` mark until a web picture is found. Sections
+  are kept as `section-<n>.md` and sent as `sectionDrafted` in the outline's
+  order; a failed section stops the ones after it, so the paper has no gap.
 - **`ai_paper_run`** (`PaperRequest`): researches the paper, outlines it,
   saves both and stops at `awaitingOutline`. The frontend doesn't call it
   yet.

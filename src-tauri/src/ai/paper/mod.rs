@@ -9,6 +9,7 @@
 #![allow(dead_code, unused_imports)]
 
 mod budget;
+mod draft;
 mod events;
 mod outline;
 mod research;
@@ -16,7 +17,7 @@ mod store;
 
 pub(crate) use budget::{BudgetCounts, BudgetKind, ResearchBudget, SharedBudget};
 pub(crate) use events::{PaperEvent, PaperPhase, SectionStatus};
-pub(crate) use store::{load, new_id, save, PaperFiles};
+pub(crate) use store::{load, load_section, new_id, save, save_section, PaperFiles};
 
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Channel;
@@ -229,6 +230,92 @@ pub async fn ai_paper_run(
             phase: PaperPhase::AwaitingOutline,
         });
         Ok(paper)
+    })
+    .await
+}
+
+/// What drafting an outlined paper takes. Mirrored in
+/// src/platform/bindings/ai-paper.ts.
+#[derive(Deserialize, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct DraftRequest {
+    pub provider: String,
+    pub model: Option<String>,
+    pub doc_path: Option<String>,
+    pub workspace_root: Option<String>,
+    pub request_id: String,
+    /// The paper, outlined and its outline approved.
+    pub id: String,
+}
+
+/// Drafts paper `id` from its saved outline: every section written, kept
+/// beside the paper and sent as `sectionDrafted`, in order. Stopped like any
+/// request, by `ai_cancel` with `request_id`.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn ai_paper_draft(
+    app: tauri::AppHandle,
+    request: DraftRequest,
+    channel: Channel<PaperEvent>,
+) -> Result<(), String> {
+    crate::ai::ensure_on(&app)?;
+    let root = crate::ai::workspace::project_root(
+        request.doc_path.as_deref(),
+        request.workspace_root.as_deref(),
+    )
+    .ok_or_else(|| "NO_PROJECT".to_string())?;
+    let files = load(&root, &request.id)?;
+    let outline = files
+        .outline
+        .clone()
+        .ok_or_else(|| "This paper has no outline yet.".to_string())?;
+    let entry = crate::ai::catalog::find(&request.provider)
+        .ok_or_else(|| format!("unknown provider: {}", request.provider))?;
+    let send = |event: PaperEvent| {
+        let _ = channel.send(event);
+    };
+    crate::ai::cancel::cancellable(request.request_id.clone(), async {
+        let agent = crate::ai::route::agent_provider(
+            &app,
+            entry,
+            request.model.clone(),
+            Default::default(),
+            None,
+        )
+        .await?
+        .ok_or_else(|| {
+            format!(
+                "{} can't call tools, which writing a paper needs.",
+                entry.label
+            )
+        })?;
+        send(PaperEvent::Phase {
+            phase: PaperPhase::Drafting,
+        });
+        let started = |i: usize| {
+            send(PaperEvent::Section {
+                index: i as u32,
+                status: SectionStatus::Drafting,
+            })
+        };
+        let mut drafted = |i: usize, markdown: &str| {
+            save_section(&root, &files.paper.id, i, markdown)?;
+            send(PaperEvent::SectionDrafted {
+                index: i as u32,
+                markdown: markdown.to_string(),
+            });
+            Ok(())
+        };
+        draft::draft(
+            &agent,
+            &files.paper,
+            &outline,
+            &files.dossier,
+            &started,
+            &mut drafted,
+        )
+        .await
     })
     .await
 }
