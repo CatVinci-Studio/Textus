@@ -160,6 +160,18 @@ fn refresh(index: &mut Index, dir: &Path, deadline: Instant) -> usize {
     waiting
 }
 
+/// Indexes all of `root`'s references now, however long it takes: after an
+/// import, so the first search finds them ready.
+pub(crate) fn warm_references(root: &Path) {
+    let dir = root.join(REFERENCES_DIR);
+    let mut indexes = INDEXES.lock().unwrap_or_else(|e| e.into_inner());
+    let index = indexes
+        .get_or_insert_with(HashMap::new)
+        .entry(root.to_path_buf())
+        .or_default();
+    refresh(index, &dir, Instant::now() + Duration::from_secs(600));
+}
+
 /// The passages of `root`'s references that best answer `query`, best first,
 /// as `references/<file>:<first>-<last>` and the passage.
 pub fn search_references(root: &Path, query: &str) -> String {
