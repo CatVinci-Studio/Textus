@@ -35,7 +35,41 @@ pub(crate) fn build_with_app_chrome(
     hide_native_menu_bar(&window);
     #[cfg(target_os = "linux")]
     end_web_process_with_window(&window);
+    #[cfg(target_os = "macos")]
+    draw_at_full_frame_rate(&window);
     Ok(window)
+}
+
+/// macOS: the page draws at the screen's own rate. WebKit holds rendering
+/// near 60 fps by default, half a 120 Hz ProMotion display's frames for
+/// typing and animation (scrolling runs on its own). The switch is in
+/// WebKit's feature list (SPI); a WebKit without it is left as it is.
+#[cfg(target_os = "macos")]
+fn draw_at_full_frame_rate(window: &tauri::WebviewWindow) {
+    use objc2::runtime::{AnyClass, AnyObject, NSObjectProtocol};
+    use objc2::{msg_send, sel};
+    use objc2_foundation::{NSArray, NSString};
+    use objc2_web_kit::WKWebView;
+    let _ = window.with_webview(|webview| unsafe {
+        let view: &WKWebView = &*webview.inner().cast();
+        let prefs = view.configuration().preferences();
+        let Some(class) = AnyClass::get(c"WKPreferences") else {
+            return;
+        };
+        if !class.responds_to(sel!(_features))
+            || !prefs.respondsToSelector(sel!(_setEnabled:forFeature:))
+        {
+            return;
+        }
+        let features: Option<objc2::rc::Retained<NSArray<AnyObject>>> = msg_send![class, _features];
+        let wanted = NSString::from_str("PreferPageRenderingUpdatesNear60FPSEnabled");
+        for feature in features.iter().flat_map(|list| list.iter()) {
+            let key: Option<objc2::rc::Retained<NSString>> = msg_send![&*feature, key];
+            if key.is_some_and(|key| key.isEqualToString(&wanted)) {
+                let _: () = msg_send![&*prefs, _setEnabled: false, forFeature: &*feature];
+            }
+        }
+    });
 }
 
 /// Linux: a window's web process ends with the window. WebKitGTK otherwise
