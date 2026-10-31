@@ -16,6 +16,11 @@ import {
   highlightSyntax,
   highlightToMarkdown,
 } from "./highlight-syntax";
+import {
+  superscriptFromMarkdown,
+  superscriptSyntax,
+  superscriptToMarkdown,
+} from "./superscript-syntax";
 
 // Registers "==highlighted==" with remark the way remark-math registers
 // "$...$": extensions pushed onto the processor's shared `data()`.
@@ -34,6 +39,21 @@ const remarkHighlight: RemarkPluginRaw<unknown> = function (
 export const remarkHighlightPlugin = $remark(
   "remark-highlight",
   () => remarkHighlight,
+);
+
+// "^superscript^", the same way.
+const remarkSuperscript: RemarkPluginRaw<unknown> = function (
+  this: ThisParameterType<RemarkPluginRaw<unknown>>,
+) {
+  const data = this.data();
+  (data.micromarkExtensions ??= []).push(superscriptSyntax());
+  (data.fromMarkdownExtensions ??= []).push(superscriptFromMarkdown());
+  (data.toMarkdownExtensions ??= []).push(superscriptToMarkdown());
+};
+
+export const remarkSuperscriptPlugin = $remark(
+  "remark-superscript",
+  () => remarkSuperscript,
 );
 
 interface MdastNode {
@@ -121,7 +141,9 @@ function mdSpanDOM(node: ProseNode, forClipboard: boolean): DOMOutputSpec {
     "data-syntax": spanDelimText(node),
     class: "md-span",
   };
-  if (delim === "~") return ["del", attrs, 0];
+  // One tilde is Pandoc's and Typora's subscript, `H~2~O`; two strike out.
+  if (delim === "~") return [rung === 1 ? "sub" : "del", attrs, 0];
+  if (delim === "^") return ["sup", attrs, 0];
   if (delim === "=") return ["mark", attrs, 0];
   if (rung === 3)
     return forClipboard ? ["strong", attrs, ["em", 0]] : ["strong", attrs, 0];
@@ -142,7 +164,8 @@ export const mdSpanClipboardPlugin = $prose((ctx) => {
 
 // One node type for every repeated-delimiter wrapper. For "*" the rung is
 // the style (1 italic, 2 bold, 3 both); for "~" how many tildes the file had;
-// "=" is always rung 2; "_" is italic written `_text_`, rung 1.
+// "=" is always rung 2; "_" is italic written `_text_`, rung 1; "^" is
+// superscript, rung 1.
 export const mdSpanSchema = $nodeSchema("md_span", () => ({
   content: "inline*",
   group: "inline",
@@ -182,6 +205,8 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
     { tag: "s", priority: 40, getAttrs: () => ({ delim: "~", rung: 2 }) },
     { tag: "strike", priority: 40, getAttrs: () => ({ delim: "~", rung: 2 }) },
     { tag: "mark", priority: 40, getAttrs: () => ({ delim: "=", rung: 2 }) },
+    { tag: "sub", priority: 40, getAttrs: () => ({ delim: "~", rung: 1 }) },
+    { tag: "sup", priority: 40, getAttrs: () => ({ delim: "^", rung: 1 }) },
   ],
   toDOM: (node) => mdSpanDOM(node, false),
   parseMarkdown: {
@@ -189,7 +214,8 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
       node.type === "strong" ||
       node.type === "emphasis" ||
       node.type === "delete" ||
-      node.type === "mark",
+      node.type === "mark" ||
+      node.type === "superscript",
     runner: (state, node, type) => {
       const attrs =
         node.type === "strong"
@@ -198,7 +224,9 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
             ? { delim: markerOf(node) === "_" ? "_" : "*", rung: 1 }
             : node.type === "delete"
               ? { delim: "~", rung: tildesOf(node) === 1 ? 1 : 2 }
-              : { delim: "=", rung: 2 };
+              : node.type === "superscript"
+                ? { delim: "^", rung: 1 }
+                : { delim: "=", rung: 2 };
       state.openNode(type, attrs);
       state.next(node.children);
       state.closeNode();
@@ -229,7 +257,9 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
                 : "emphasis"
               : delim === "~"
                 ? "delete"
-                : "mark",
+                : delim === "^"
+                  ? "superscript"
+                  : "mark",
             children,
             undefined,
             delim === "~" && rung === 1 ? { data: { tildes: 1 } } : undefined,
