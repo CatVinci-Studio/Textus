@@ -203,6 +203,16 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
  *  sent in the outline's order.
  */
 { type: "sectionDrafted"; index: number; markdown: string } | 
+/**
+ *  The paper's title and abstract: what goes above its first section,
+ *  sent before it.
+ */
+{ type: "opening"; markdown: string } | 
+/**
+ *  The list of the sources the paper cites: what goes below its last
+ *  section, sent after it.
+ */
+{ type: "references"; markdown: string } | 
 /**  The outline is ready for the user to edit and approve. */
 { type: "outlineReady"; outline: Outline } | 
 /**  A stage failed; `section` when it was one section's. */
@@ -217,6 +227,16 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
  *  sent in the outline's order.
  */
 { type: "sectionDrafted"; index: number; markdown: string } | 
+/**
+ *  The paper's title and abstract: what goes above its first section,
+ *  sent before it.
+ */
+{ type: "opening"; markdown: string } | 
+/**
+ *  The list of the sources the paper cites: what goes below its last
+ *  section, sent after it.
+ */
+{ type: "references"; markdown: string } | 
 /**  The outline is ready for the user to edit and approve. */
 { type: "outlineReady"; outline: Outline } | 
 /**  A stage failed; `section` when it was one section's. */
