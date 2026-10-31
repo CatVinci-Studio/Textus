@@ -100,13 +100,21 @@ it, lazily loaded. Each stage and helper is one run of
   a section. Each faulted section is revised once by its writer, under the
   same checks; a revision that doesn't hold, or a review that fails, leaves
   the drafts. Only then are the sections sent, so no proposal is replaced.
+- **Finish** (`paper/finish.rs`): every diagram, chart, picture and
+  web-picture mark gets a numbered caption under it, counted through the
+  paper (a chart's caption or title, a picture's alt text); a tool-less step
+  writes the title and abstract (the topic alone if its reply can't be read);
+  the reference list holds the sources the text cites, by number. Headings
+  and labels follow the paper's language. Sent as `opening`, the sections,
+  then `references`, and the run ends at `done`.
 - **`ai_paper_run`** (`PaperRequest`): researches the paper, outlines it,
   saves both and stops at `awaitingOutline`. The frontend doesn't call it
   yet.
 
 ### To come
 
-The outline card, drafting, review and the entry point, each a
-branch stacked on the one before; scholarly search, the reference library,
-the `chart` block and web pictures are independent tools the stages pick up
-once they are registered.
+The entry point that starts a paper, shows its progress and outline card,
+and turns its events into proposals - `opening`, each section, `references`,
+each appended in order. Scholarly search, the reference library, the
+`chart` block and web pictures are independent tools the stages pick up once
+they are registered.

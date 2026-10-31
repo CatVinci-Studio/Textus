@@ -11,6 +11,7 @@
 mod budget;
 mod draft;
 mod events;
+mod finish;
 mod outline;
 mod research;
 mod review;
@@ -349,12 +350,26 @@ pub async fn ai_paper_draft(
         for i in changed {
             save_section(&root, &files.paper.id, i, &sections[i])?;
         }
+        send(PaperEvent::Phase {
+            phase: PaperPhase::Finishing,
+        });
+        let language = &files.paper.language;
+        finish::number_figures(&mut sections, language);
+        let opening = finish::opening(&agent, &files.paper, &outline, &sections).await;
+        let references = finish::references(&sections, &files.dossier, language);
+        send(PaperEvent::Opening { markdown: opening });
         for (i, markdown) in sections.into_iter().enumerate() {
             send(PaperEvent::SectionDrafted {
                 index: i as u32,
                 markdown,
             });
         }
+        if let Some(markdown) = references {
+            send(PaperEvent::References { markdown });
+        }
+        send(PaperEvent::Phase {
+            phase: PaperPhase::Done,
+        });
         Ok(())
     })
     .await

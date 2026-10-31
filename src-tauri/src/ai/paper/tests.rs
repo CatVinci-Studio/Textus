@@ -762,3 +762,112 @@ async fn faulted_sections_are_revised_once_and_a_failed_revision_keeps_the_draft
     revising.sort();
     assert_eq!(revising, [0, 1]);
 }
+
+#[test]
+fn figures_are_numbered_through_the_paper_and_captioned_by_what_they_show() {
+    let mut sections = vec![
+        "## One\n\nText.\n\n```mermaid\nflowchart LR\n  A --> B\n```\n\n```rust\nfn main() {}\n```".to_string(),
+        "## Two\n\n```chart\n{\"title\": \"Temperatures\", \"caption\": \"Roof surfaces at noon\", \"series\": [{\"data\": [1]}]}\n```\n\n![A green roof in Basel](textus-picture:16:9 a roof)\n\n<!-- textus-figure web: satellite heat map -->".to_string(),
+    ];
+    assert_eq!(finish::number_figures(&mut sections, "zh-CN"), 4);
+    assert!(
+        sections[0].contains("```\n\n*图 1*\n\n```rust"),
+        "{}",
+        sections[0]
+    );
+    assert!(!sections[0].contains("图 2"), "a code block is no figure");
+    assert!(
+        sections[1].contains("```\n\n*图 2　Roof surfaces at noon*"),
+        "{}",
+        sections[1]
+    );
+    assert!(
+        sections[1].contains("(textus-picture:16:9 a roof)\n\n*图 3　A green roof in Basel*"),
+        "{}",
+        sections[1]
+    );
+    assert!(
+        sections[1].ends_with("-->\n\n*图 4　satellite heat map*"),
+        "{}",
+        sections[1]
+    );
+
+    let mut english = vec!["```chart\n{\"title\": \"Temps\", \"series\": []}\n```".to_string()];
+    finish::number_figures(&mut english, "en");
+    assert!(english[0].ends_with("*Figure 1. Temps*"), "{}", english[0]);
+}
+
+#[test]
+fn the_references_list_only_what_the_text_cites_in_number_order() {
+    let mut d = drafting_dossier();
+    d.sources.push(aicompat::agent::Source {
+        n: 1,
+        url: "https://a.example/".into(),
+        title: String::new(),
+    });
+    d.sources.push(aicompat::agent::Source {
+        n: 9,
+        url: "https://unused.example/".into(),
+        title: "Unused".into(),
+    });
+    let sections = vec![
+        "Cool [3](https://example.org/study).".to_string(),
+        "Again [3](https://example.org/study) and [1](https://a.example/).".to_string(),
+    ];
+    assert_eq!(
+        finish::references(&sections, &d, "zh").unwrap(),
+        "## 参考文献\n\n\\[1\\] https://a.example/. <https://a.example/>\n\n\\[3\\] Study. <https://example.org/study>"
+    );
+    assert!(finish::references(&sections, &d, "zh-Hant")
+        .unwrap()
+        .starts_with("## 參考文獻"));
+    assert!(finish::references(&sections, &d, "en-US")
+        .unwrap()
+        .starts_with("## References"));
+    assert_eq!(
+        finish::references(&["No citations.".to_string()], &d, "en"),
+        None
+    );
+}
+
+/// Answers the opening step with `reply`.
+struct Opener(&'static str);
+
+impl research::Model for Opener {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        _turns: &'a [aicompat::agent::AgentTurn],
+        _tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        let reply = self.0.to_string();
+        Box::pin(async move { Ok(aicompat::agent::StepResult::Done(reply)) })
+    }
+}
+
+#[tokio::test]
+async fn the_opening_is_a_title_and_an_abstract_or_the_topic_alone() {
+    let made = finish::opening(
+        &Opener("Here: {\"title\": \"屋顶绿化如何为城市降温\", \"abstract\": \"本文综述……\"}"),
+        &paper(),
+        &outline(),
+        &[],
+    )
+    .await;
+    assert_eq!(made, "# 屋顶绿化如何为城市降温\n\n**摘要**：本文综述……");
+    let english = Paper {
+        language: "en".into(),
+        topic: "Green roofs".into(),
+        ..paper()
+    };
+    let made = finish::opening(
+        &Opener("{\"title\": \"Cooler roofs\", \"abstract\": \"We review…\"}"),
+        &english,
+        &outline(),
+        &[],
+    )
+    .await;
+    assert_eq!(made, "# Cooler roofs\n\n**Abstract:** We review…");
+    let fallback = finish::opening(&Opener("Sorry."), &english, &outline(), &[]).await;
+    assert_eq!(fallback, "# Green roofs");
+}
