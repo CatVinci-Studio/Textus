@@ -8,6 +8,10 @@ import { scrollBehavior } from "../../ui/motion";
 import { unfoldRange } from "../html/details-fold";
 import type { EditorRunner } from "../useEditorRunner";
 import { isImeKeydown } from "../../utils/ime";
+import {
+  SMOOTH_SCROLL_MS,
+  drawAround,
+} from "../lazy-blocks/lazy-blocks-drawer";
 
 export interface FindReplaceStatus {
   matchCount: number;
@@ -39,6 +43,8 @@ function scrollToActive(view: EditorView, behavior = scrollBehavior()) {
   if (!match) return;
   // A match in a folded <details> opens it.
   unfoldRange(view, match.from, match.to);
+  // In a long document the match may be out of sight, not yet drawn.
+  drawAround(view, match.from, behavior === "smooth" ? SMOOTH_SCROLL_MS : 0);
   try {
     const dom = view.domAtPos(match.from).node;
     const el = dom instanceof Element ? dom : dom.parentElement;

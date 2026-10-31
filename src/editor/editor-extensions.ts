@@ -129,6 +129,10 @@ import { zenFocusPlugin } from "./modes/zen-focus-plugin";
 import { keyboardRevealPlugin } from "./keys/keyboard-reveal-plugin";
 import { createPlaceholderPlugin } from "./placeholder-plugin";
 import { findReplacePlugin } from "./find/find-replace-plugin";
+import {
+  lazyBlocksPlugin,
+  withLazyBlockViews,
+} from "./lazy-blocks/lazy-blocks-editor";
 import { readOnlyPlugin } from "./read-only-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../prefs/SettingsContext";
@@ -145,14 +149,17 @@ export function configureEditorRoot(
   ctx.set(rootCtx, root);
   ctx.set(defaultValueCtx, initialValue);
   // Typora-compatible themes style their content under `#write`.
-  ctx.set(editorViewOptionsCtx, {
-    attributes: () => ({
-      id: "write",
-      role: "textbox",
-      "aria-multiline": "true",
-      "aria-label": label(),
+  ctx.set(
+    editorViewOptionsCtx,
+    withLazyBlockViews(ctx, {
+      attributes: () => ({
+        id: "write",
+        role: "textbox",
+        "aria-multiline": "true",
+        "aria-label": label(),
+      }),
     }),
-  });
+  );
   // A list's start ("3. ") isn't in the DOM structure the CSS counter reads,
   // so it rides along as a custom property; minus one because counter-reset
   // sets the value before the first increment.
@@ -381,6 +388,8 @@ export function withEditorCore(
       .use(blockJoinPlugin)
       .use(inlineSourcePlugin)
       .use(findReplacePlugin)
+      // A long document's blocks out of sight are placeholders.
+      .use(lazyBlocksPlugin)
       .use(readOnlyPlugin)
       .use(zenFocusPlugin)
       .use(keyboardRevealPlugin)

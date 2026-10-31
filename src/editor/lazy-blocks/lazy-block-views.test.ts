@@ -4,7 +4,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Schema } from "@milkdown/kit/prose/model";
 import { EditorState, TextSelection } from "@milkdown/kit/prose/state";
 import { EditorView, type NodeViewConstructor } from "@milkdown/kit/prose/view";
-import { LazyBlocksDrawer, plan } from "./lazy-blocks-drawer";
+import {
+  LazyBlocksDrawer,
+  drawAllBlocks,
+  drawAround,
+  drawnForJump,
+  plan,
+} from "./lazy-blocks-drawer";
 import { lazyBlockNodeViews, rememberHeight } from "./lazy-block-views";
 import { createLazyBlocksPlugin, lazyBlocksKey } from "./lazy-blocks-state";
 
@@ -208,5 +214,54 @@ describe("what is on screen decides what is drawn", () => {
       startOf(view, 3),
       startOf(view, 4),
     ]);
+  });
+});
+
+describe("a jump or an export reaching blocks out of sight", () => {
+  it("draws the block a jump goes to and those around it", () => {
+    vi.stubGlobal("requestAnimationFrame", () => 1);
+    const view = open(2000, true);
+    drawAround(view, startOf(view, 1500) + 3);
+    expect(view.dom.children[1500].nodeName).toBe("P");
+    expect(view.dom.children[1486].nodeName).toBe("P");
+    expect(view.dom.children[1514].nodeName).toBe("P");
+    expect(view.dom.children[1520].className).toBe("lazy-block");
+  });
+
+  it("gives the outline a heading's drawn block for its placeholder", () => {
+    vi.stubGlobal("requestAnimationFrame", () => 1);
+    const view = open(2000, true);
+    const placeholder = view.dom.children[1200];
+    const drawn = drawnForJump(placeholder, 0);
+    expect(drawn?.textContent).toBe(line(1200));
+    expect(drawn?.isConnected).toBe(true);
+  });
+
+  it("draws every block for an export, until the user scrolls again", () => {
+    let frame: FrameRequestCallback | null = null;
+    vi.stubGlobal("requestAnimationFrame", (f: FrameRequestCallback) => {
+      frame = f;
+      return 1;
+    });
+    const view = open(2000, true);
+    drawAllBlocks(view.dom);
+    expect(placeholders(view)).toBe(0);
+    // A frame on, nothing is released while the export copies the page.
+    // Every block far below a 500 px screen.
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: Element) {
+        return (
+          this === view.dom.parentElement
+            ? { top: 0, bottom: 500, height: 500 }
+            : { top: 99_999, bottom: 99_999, height: 0 }
+        ) as DOMRect;
+      },
+    );
+    view.dispatch(view.state.tr);
+    (frame as FrameRequestCallback | null)?.(0);
+    expect(placeholders(view)).toBe(0);
+    view.dom.parentElement!.dispatchEvent(new Event("wheel"));
+    (frame as FrameRequestCallback | null)?.(0);
+    expect(placeholders(view)).toBeGreaterThan(1500);
   });
 });

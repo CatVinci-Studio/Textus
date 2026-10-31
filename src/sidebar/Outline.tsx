@@ -4,6 +4,11 @@ import { ChevronIcon } from "../ui/icons";
 import { useSettings } from "../prefs/SettingsContext";
 import { scrollBehavior } from "../ui/motion";
 import { unfoldElement } from "../editor/html/details-fold";
+import {
+  SMOOTH_SCROLL_MS,
+  drawnForJump,
+} from "../editor/lazy-blocks/lazy-blocks-drawer";
+import { HEADING_PLACEHOLDER } from "../editor/lazy-blocks/lazy-block-views";
 import { useTreeKeys } from "../ui/useTreeKeys";
 import { Tooltip } from "../ui/Tooltip";
 import { ContextMenu } from "../ui/ContextMenu";
@@ -15,7 +20,8 @@ interface OutlineProps {
   content: string;
 }
 
-const HEADINGS = ":scope > :is(h1, h2, h3, h4, h5, h6)";
+// A long document's headings out of sight are placeholders, in their place.
+const HEADINGS = `:scope > :is(h1, h2, h3, h4, h5, h6, ${HEADING_PLACEHOLDER})`;
 
 /** The index of the section being read in the active editor: the last
  *  top-level heading just below the scroller's top, or -1 above the first. */
@@ -43,14 +49,18 @@ function scrollToHeading(index: number) {
   const root = document.querySelector(
     '[data-active-tab="true"] .editor-content .ProseMirror',
   );
-  const heading = root?.querySelectorAll(HEADINGS)[index];
+  const found = root?.querySelectorAll(HEADINGS)[index];
+  const behavior = scrollBehavior();
+  // Drawn first if it is a placeholder, and what is around it.
+  const heading =
+    found && drawnForJump(found, behavior === "smooth" ? SMOOTH_SCROLL_MS : 0);
   // One inside a folded <details> opens it first: hidden, it had no place
   // to scroll to.
   if (heading) {
     noteJump();
     unfoldElement(heading);
   }
-  heading?.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
+  heading?.scrollIntoView({ behavior, block: "start" });
 }
 
 /** A heading's source as it reads in the document: inline code, emphasis

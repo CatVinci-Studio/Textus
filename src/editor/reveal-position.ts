@@ -1,5 +1,6 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { animate, duration, glideScroll } from "../ui/motion";
+import { drawAround } from "./lazy-blocks/lazy-blocks-drawer";
 
 /**
  * Brings `pos` into view in one eased stroke of fixed length (the browser's
@@ -8,6 +9,8 @@ import { animate, duration, glideScroll } from "../ui/motion";
  */
 export function revealPosition(view: EditorView, pos: number) {
   const scroller = view.dom.closest<HTMLElement>(".editor-scroll");
+  // In a long document `pos` may be out of sight, not yet drawn.
+  drawAround(view, pos, duration("--dur-sheet"));
   const at = view.coordsAtPos(pos);
   if (scroller) {
     const box = scroller.getBoundingClientRect();

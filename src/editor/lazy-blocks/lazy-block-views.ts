@@ -26,6 +26,10 @@ import {
 /** Marks a placeholder, for the view that finds them on screen. */
 export const PLACEHOLDER_CLASS = "lazy-block";
 
+/** On a heading's placeholder, so the outline still finds every top-level
+ *  heading in the DOM, in order. */
+export const HEADING_PLACEHOLDER = `.${PLACEHOLDER_CLASS}[data-heading]`;
+
 type NodeViews = Record<string, NodeViewConstructor>;
 
 interface Sizes {
@@ -90,6 +94,7 @@ function placeholderView(initial: ProseNode, view: EditorView): NodeView {
   const dom = document.createElement("div");
   dom.className = PLACEHOLDER_CLASS;
   dom.style.height = `${heightOf(view, node)}px`;
+  if (node.type.name === "heading") dom.dataset.heading = "";
   blockNodes.set(dom, node);
   return {
     dom,

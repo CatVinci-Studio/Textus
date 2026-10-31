@@ -141,13 +141,85 @@ function keepInPlace(view: EditorView, scroller: Element, anchor: Anchor) {
   if (Math.abs(moved) >= 0.5) scroller.scrollTop += moved;
 }
 
+const drawers = new WeakMap<Element, LazyBlocksDrawer>();
+
+/** About how long the browser's smooth scrollIntoView takes, for holding
+ *  the drawer off while one runs. */
+export const SMOOTH_SCROLL_MS = 700;
+
+/** Blocks either side of a jump's target drawn before it is measured: a
+ *  screen of short paragraphs, so where it lands is drawn as it will be. */
+const AROUND_JUMP = 15;
+
+/**
+ * Before code measures `pos` to scroll there (the outline, find, a review
+ * note): its block and those around it drawn, and nothing else drawn or
+ * released for `glideMs` while the scroller glides there, since blocks
+ * drawn on the way would move where it lands. Nothing for a short document.
+ */
+export function drawAround(view: EditorView, pos: number, glideMs = 0): void {
+  const drawer = drawers.get(view.dom);
+  const state = lazyBlocksKey.getState(view.state);
+  if (!drawer || !state?.active) return;
+  const { doc } = view.state;
+  const starts = topLevelStarts(doc);
+  const at = topLevelIndex(doc, Math.min(pos, doc.content.size));
+  const draw = starts.slice(
+    Math.max(0, at - AROUND_JUMP),
+    at + AROUND_JUMP + 1,
+  );
+  view.dispatch(
+    view.state.tr
+      .setMeta(lazyBlocksKey, { draw })
+      .setMeta("addToHistory", false),
+  );
+  drawer.pause(glideMs);
+}
+
+/**
+ * For a jump to a top-level block found in the DOM (the outline's
+ * headings): `el` itself when it is drawn, else its block drawn and
+ * returned, either way with the blocks around it drawn and the drawer held
+ * off for the `glideMs` of the scroll there (see drawAround).
+ */
+export function drawnForJump(el: Element, glideMs: number): Element | null {
+  const root = el.parentElement;
+  const drawer = root && drawers.get(root);
+  const node = blockNodes.get(el);
+  if (!drawer || !node) return el;
+  const { view } = drawer;
+  const children = view.dom.children;
+  const index = blockIndexOf(
+    view.state.doc,
+    Array.prototype.indexOf.call(children, el),
+    node,
+  );
+  if (index === null) return el;
+  drawAround(view, topLevelStarts(view.state.doc)[index], glideMs);
+  return elementOf(view.dom.children, index, node);
+}
+
+/** Every block of the editor `editorDom` drawn, for an export that copies
+ *  the page; kept drawn until the user next scrolls or types. */
+export function drawAllBlocks(editorDom: Element): void {
+  const drawer = drawers.get(editorDom);
+  if (drawer) drawer.drawAll();
+}
+
+/** Input that means the user is back at the page, not an export. */
+const USER_INPUT = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+
 export class LazyBlocksDrawer implements PluginView {
   private frame = 0;
+  private pausedUntil = 0;
+  private resume: ReturnType<typeof setTimeout> | undefined;
+  /** Set by drawAll: blocks are drawn, never released, until user input. */
+  private holding = false;
   private readonly scroller: Element | null;
   private readonly resize: ResizeObserver | null;
   private width = 0;
 
-  constructor(private readonly view: EditorView) {
+  constructor(readonly view: EditorView) {
     this.scroller =
       view.dom.closest(".editor-scroll") ?? view.dom.parentElement;
     this.scroller?.addEventListener("scroll", this.schedule, {
@@ -158,6 +230,9 @@ export class LazyBlocksDrawer implements PluginView {
         ? null
         : new ResizeObserver(this.onResize);
     this.resize?.observe(view.dom);
+    for (const type of USER_INPUT)
+      this.scroller?.addEventListener(type, this.letGo, { passive: true });
+    drawers.set(view.dom, this);
     this.schedule();
   }
 
@@ -173,13 +248,36 @@ export class LazyBlocksDrawer implements PluginView {
   destroy(): void {
     cancelAnimationFrame(this.frame);
     this.frame = 0;
+    clearTimeout(this.resume);
     this.scroller?.removeEventListener("scroll", this.schedule);
+    for (const type of USER_INPUT)
+      this.scroller?.removeEventListener(type, this.letGo);
     this.resize?.disconnect();
+    drawers.delete(this.view.dom);
+  }
+
+  /** Nothing drawn or released for `ms`; then what the screen shows. */
+  pause(ms: number): void {
+    if (ms <= 0) return;
+    this.pausedUntil = performance.now() + ms;
+    clearTimeout(this.resume);
+    this.resume = setTimeout(this.schedule, ms);
+  }
+
+  drawAll(): void {
+    if (!lazyBlocksKey.getState(this.view.state)?.active) return;
+    this.holding = true;
+    this.view.dispatch(
+      this.view.state.tr
+        .setMeta(lazyBlocksKey, { drawAll: true })
+        .setMeta("addToHistory", false),
+    );
   }
 
   /** Draws and releases what the layout asks for now, at once. */
   drawNow(): void {
-    if (this.view.isDestroyed || !this.scroller) return;
+    if (this.view.isDestroyed || !this.scroller || this.holding) return;
+    if (performance.now() < this.pausedUntil) return;
     const next = plan(this.view, this.scroller);
     if (!next) return;
     this.view.dispatch(
@@ -198,6 +296,12 @@ export class LazyBlocksDrawer implements PluginView {
         this.view.props.nodeViews ?? {},
       ),
     });
+  };
+
+  private readonly letGo = () => {
+    if (!this.holding) return;
+    this.holding = false;
+    this.schedule();
   };
 
   private readonly onResize = (entries: ResizeObserverEntry[]) => {
