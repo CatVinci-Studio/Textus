@@ -45,6 +45,7 @@ import {
 } from "./marks/md-span-schema";
 import { createMdSpanAutopairPlugin } from "./marks/md-span-autopair-plugin";
 import { createColorSwatchPlugin } from "./marks/color-swatch-plugin";
+import { emojiShortcodePlugin } from "./emoji/emoji-shortcode-plugin";
 import { createBracketAutopairPlugin } from "./keys/bracket-autopair-plugin";
 import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
 import { selectAllKeyPlugin } from "./keys/select-all";
@@ -297,6 +298,8 @@ export function withEditorCore(
           mode: () => settings.current.colorSwatches,
         }),
       )
+
+      .use(emojiShortcodePlugin)
 
       .use(remarkMathPlugin)
       .use(mathInlineSchema)
