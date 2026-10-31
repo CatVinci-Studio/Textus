@@ -3,7 +3,7 @@ import { mockInvoke, openApp } from "./helpers";
 
 // The revision views: Write adds paragraphs, then rewrites them across
 // paragraphs, shown sentence by sentence in every view. New text with no
-// original stays a green block in the margin views.
+// original goes to its card in the original's view, a mark in its place.
 
 const STORY =
   "The lighthouse keeper woke before dawn. He climbed the stairs slowly. The lamp was still warm.\n\nOutside, the sea was calm. A gull cried somewhere far off.";
@@ -154,7 +154,7 @@ test("after Write's text is accepted, every view applies to its rewrite across p
   ]);
 });
 
-test("Write's new text has no original: a green block in every view but the result, and the menu says so", async ({
+test("Write's new text has no original: in the original's view it waits in its card, a mark where it goes", async ({
   page,
 }) => {
   await open(page);
@@ -177,14 +177,11 @@ test("Write's new text has no original: a green block in every view but the resu
   expect(tint).not.toBe("rgba(0, 0, 0, 0)");
 
   await view(page, "original");
-  await expect(block).toBeVisible();
-  expect(await green()).toBe(tint);
-  await expect(page.locator(".revision-note")).toHaveCount(0);
-  await page.locator(".review-bar-view-button").click();
-  await expect(page.locator(".review-bar-menu-note")).toHaveText(
-    "New text has no original: it stays in the text, in green, in these views",
+  // A thin mark, its text in the card.
+  expect((await block.boundingBox())!.width).toBeLessThan(6);
+  await expect(page.locator(".revision-note")).toContainText(
+    "The lighthouse keeper",
   );
-  await page.locator(".review-bar-view-button").click();
 
   await view(page, "final");
   await expect(block).toBeVisible();

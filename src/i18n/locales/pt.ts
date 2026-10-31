@@ -152,8 +152,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   revisionDisplayOriginal: "Original no texto, alterações na margem",
   revisionDisplayFinal: "Só o resultado, original na margem",
   revisionDisplayNoRoom: "Sem espaço: feche a barra lateral ou o painel de IA",
-  revisionDisplayNewText:
-    "Texto novo não tem original: nestas vistas ele fica no texto, em verde",
   proposalDeletedSentence: "Original",
   proposalAddedSentence: "Adicionado",
   reviewBarLabel: "Revisão",

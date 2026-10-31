@@ -319,8 +319,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   .pending-pick,
 .pending-insert-mark,
 .pending-delete-mark,
-.ProseMirror[data-revision-display="original"]
-  :is(.pending-sentence-new, .pending-insert.pending-replaces),
+.ProseMirror[data-revision-display="original"] .pending-sentence-new,
 .ProseMirror[data-revision-display="final"]
   .pending-sentence-new.pending-sentence-kept {
   display: none;
@@ -355,6 +354,29 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-decoration: underline dotted;
   text-decoration-color: color-mix(in srgb, var(--ui-success) 55%, transparent);
   text-underline-offset: 0.2em;
+}
+
+/* The original's view: new text waits in its card. In place of new text
+   alone, a mark where it goes; hidden by size, not display, so switching
+   views replays no entrance. */
+.ProseMirror[data-revision-display="original"]
+  .pending-insert.pending-replaces {
+  display: none;
+}
+
+.ProseMirror[data-revision-display="original"]
+  .pending-insert.pending-whole:not(.pending-replaces) {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin: 0 1px;
+  padding: 0;
+  overflow: hidden;
+  color: transparent;
+  vertical-align: -0.15em;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-success);
 }
 
 /* Where a pure insertion goes or a deleted sentence was. */

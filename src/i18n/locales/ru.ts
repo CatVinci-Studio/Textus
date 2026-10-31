@@ -157,8 +157,6 @@ export default {
   revisionDisplayFinal: "Только результат, оригинал на полях",
   revisionDisplayNoRoom:
     "Не хватает места: закройте боковую панель или панель ИИ",
-  revisionDisplayNewText:
-    "У нового текста нет оригинала: в этих режимах он остаётся в тексте, зелёным",
   proposalDeletedSentence: "Оригинал",
   proposalAddedSentence: "Добавлено",
   reviewBarLabel: "Правка",

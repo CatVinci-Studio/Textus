@@ -19,7 +19,6 @@ import "./ReviewBar.css";
 export interface ReviewBarLabels {
   revisionDisplayLabel: string;
   revisionDisplayNoRoom: string;
-  revisionDisplayNewText: string;
   reviewBarLabel: string;
   reviewBarOpenChat: string;
   proposalAccept: string;
@@ -51,7 +50,6 @@ export function ReviewBar({
   display,
   displayName,
   onDisplay,
-  newText,
   streaming,
   painting,
 }: {
@@ -61,9 +59,6 @@ export function ReviewBar({
   /** A rewrite is still streaming in: Accept / Reject wait until it is all
    *  in, though its changes can be stepped through as they come. */
   streaming: boolean;
-  /** Some pending proposal is new text alone, which stays in the text in the
-   *  margin views; the menu says so. */
-  newText: boolean;
   /** How revisions show. */
   display: RevisionDisplay;
   displayName: (mode: RevisionDisplay) => string;
@@ -105,8 +100,6 @@ export function ReviewBar({
   );
   const waiting = noMargin && shown !== display;
   const noMarginId = useId();
-  const newTextId = useId();
-  const newTextNote = newText && !phone;
   const view = (
     <div className="review-bar-view" ref={menuRef}>
       <Tooltip
@@ -151,13 +144,9 @@ export function ReviewBar({
               aria-checked={shown === mode}
               disabled={marginViewBlocked(mode, { phone, marginAvailable })}
               aria-describedby={
-                [
-                  marginViewBlocked(mode, { phone, marginAvailable }) &&
-                    noMarginId,
-                  newTextNote && needsMargin(mode) && newTextId,
-                ]
-                  .filter(Boolean)
-                  .join(" ") || undefined
+                marginViewBlocked(mode, { phone, marginAvailable })
+                  ? noMarginId
+                  : undefined
               }
               className={
                 waiting && mode === display
@@ -175,11 +164,6 @@ export function ReviewBar({
           {noMargin && (
             <p id={noMarginId} className="review-bar-menu-note">
               {labels.revisionDisplayNoRoom}
-            </p>
-          )}
-          {newTextNote && (
-            <p id={newTextId} className="review-bar-menu-note">
-              {labels.revisionDisplayNewText}
             </p>
           )}
         </div>

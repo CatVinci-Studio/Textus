@@ -162,8 +162,6 @@ utiliser une.
   revisionDisplayFinal: "Résultat seul, original dans la marge",
   revisionDisplayNoRoom:
     "Pas assez de place : fermez la barre latérale ou le panneau IA",
-  revisionDisplayNewText:
-    "Le nouveau texte n'a pas d'original : dans ces vues, il reste dans le texte, en vert",
   proposalDeletedSentence: "Original",
   proposalAddedSentence: "Ajout",
   reviewBarLabel: "Révision",

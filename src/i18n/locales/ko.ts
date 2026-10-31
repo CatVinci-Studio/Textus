@@ -138,8 +138,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   revisionDisplayOriginal: "본문에 원문, 여백에 수정",
   revisionDisplayFinal: "결과만, 원문은 여백에",
   revisionDisplayNoRoom: "공간이 부족합니다: 사이드바나 AI 패널을 닫아 주세요",
-  revisionDisplayNewText:
-    "새로 추가된 글에는 원문이 없어 이 보기에서도 초록색으로 본문에 남습니다",
   proposalDeletedSentence: "원문",
   proposalAddedSentence: "추가",
   reviewBarLabel: "수정",

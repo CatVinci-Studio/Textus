@@ -2,10 +2,7 @@ import { createPortal } from "react-dom";
 import { useSettings } from "../prefs/SettingsContext";
 import { Presence } from "../ui/usePresence";
 import { ReviewBar } from "../ai/revision/ReviewBar";
-import {
-  addsTextOnly,
-  revisionDisplayName,
-} from "../ai/revision/revision-display";
+import { revisionDisplayName } from "../ai/revision/revision-display";
 import { NotesBar } from "../ai/margin/NotesBar";
 import type { usePendingEdits } from "../ai/revision/usePendingEdits";
 import type { NotesBarState } from "../ai/margin/useNotesBar";
@@ -70,9 +67,6 @@ export function ReviewBars({
             display={settings.revisionDisplay}
             displayName={(mode) => revisionDisplayName(t, mode)}
             onDisplay={(mode) => setSettings({ revisionDisplay: mode })}
-            newText={pendingEdits.decidable.some((p) =>
-              addsTextOnly(p.proposal),
-            )}
             streaming={pendingEdits.reviewStreaming}
             painting={pendingEdits.picturesPainting}
           />
@@ -94,7 +88,6 @@ export function ReviewBars({
             display={settings.revisionDisplay}
             displayName={(mode) => revisionDisplayName(t, mode)}
             onDisplay={(mode) => setSettings({ revisionDisplay: mode })}
-            newText={false}
             streaming={false}
             painting={false}
           />

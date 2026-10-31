@@ -35,6 +35,7 @@ import { useOwnNotes } from "./useOwnNotes";
 import { useOwnRevisions } from "./useOwnRevisions";
 import { OWN_CHANGES, ownRevisionKey } from "./own-revision-plugin";
 import { duration } from "../../ui/motion";
+import { addsTextOnly } from "../revision/revision-display";
 import { asDrawn, zoomedRectScale } from "../../ui/zoomed-rects";
 import { noteOfAnchor } from "./review-notes-plugin";
 
@@ -42,6 +43,15 @@ import { noteOfAnchor } from "./review-notes-plugin";
  *  with what. Null for new text alone, which has no original. */
 function wholeChange(p: PendingPreview): PendingSentence | null {
   const { action, anchor, text } = p.proposal;
+  // New text alone: nothing replaced, so no original.
+  if (addsTextOnly(p.proposal))
+    return {
+      from: p.from,
+      to: p.from,
+      before: "",
+      after: text ?? "",
+      take: null,
+    };
   if (
     action !== "replace" &&
     action !== "replace_selection" &&
@@ -334,8 +344,7 @@ export function useReviewNotes({
     });
   }
 
-  // The notes, then each pending sentence in the review bar's order. New text
-  // alone has no original, so it gets no card.
+  // The notes, then each pending sentence in the review bar's order.
   const marginItems = useMemo<MarginItem[]>(() => {
     const items: MarginItem[] = notes.map((note) => ({
       kind: "note",
