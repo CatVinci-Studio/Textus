@@ -621,6 +621,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
   color: var(--doc-muted);
 }
 
+/* `:smile:` drawn as its emoji; the caret on it shows the source. */
+.md-emoji-source {
+  display: none;
+}
+
 /* `[TOC]`: the headings as links, indented by level. */
 .md-toc {
   margin: 0 0 var(--doc-gap-box);

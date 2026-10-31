@@ -57,6 +57,17 @@ describe("cloneEditorContent", () => {
     expect(html).toContain("<pre>x</pre>");
   });
 
+  it("keeps a shortcode's emoji and drops its hidden source", () => {
+    const html = cloneEditorContent(
+      editor(
+        '<p>Go <span class="md-emoji" contenteditable="false">🚀</span>' +
+          '<span class="md-emoji-source">:rocket:</span></p>',
+      ),
+    );
+    expect(html).toContain("🚀");
+    expect(html).not.toContain(":rocket:");
+  });
+
   it("drops a code block's copy button and line numbers, and lets its lines wrap again", () => {
     const html = cloneEditorContent(
       editor(

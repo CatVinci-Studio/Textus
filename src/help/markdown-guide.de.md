@@ -25,6 +25,8 @@ Hinweise im GitHub-Stil:
 
 **Fett** (`**Text**`), *kursiv* (`*Text*`), ***fett und kursiv***, ~~durchgestrichen~~ (`~~Text~~`), ==hervorgehoben== (`==Text==`) und `Inline-Code`.
 
+Emoji-Kurzcodes wie auf GitHub erscheinen als Emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). Die Datei behält den Kurzcode; setzen Sie den Cursor darauf, um ihn zu bearbeiten.
+
 Tief- und Hochstellung wie in Typora und Pandoc: H~2~O (`H~2~O`), x^2^ (`x^2^`); ohne Leerzeichen dazwischen.
 
 Tippst du `(`, `[`, `{`, ein Anführungszeichen oder eine Klammer aus einer chinesischen oder japanischen Eingabemethode wie `（`, `【` oder `「`, kommt das schließende Gegenstück hinter den Cursor: Das getippte Schlusszeichen springt darüber, Rücktaste direkt nach dem öffnenden löscht beide, und markierter Text wird eingeschlossen. **Einstellungen → Editor & Design → (), [] und „“ schließen** schaltet das ab.

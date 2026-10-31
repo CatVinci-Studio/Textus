@@ -25,6 +25,8 @@ GitHub-style alerts:
 
 **Bold** (`**text**`), *italic* (`*text*`), ***bold italic***, ~~strikethrough~~ (`~~text~~`), ==highlight== (`==text==`), and `inline code`.
 
+Emoji shortcodes as on GitHub show as their emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). The file keeps the shortcode; put the caret on one to edit it.
+
 Subscript and superscript as in Typora and Pandoc: H~2~O (`H~2~O`), x^2^ (`x^2^`); no spaces inside.
 
 Typing `(`, `[`, `{`, a quote, or a bracket from a Chinese or Japanese input method such as `（`, `【` or `「` puts its closing partner in after the caret: typing the closer steps over it, Backspace right after the opener takes both, and with text selected the pair goes around it. **Settings → Editor & Appearance → Close (), [] and “”** turns this off.

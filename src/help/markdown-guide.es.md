@@ -25,6 +25,8 @@ Alertas al estilo de GitHub:
 
 **Negrita** (`**texto**`), *cursiva* (`*texto*`), ***negrita y cursiva***, ~~tachado~~ (`~~texto~~`), ==resaltado== (`==texto==`) y `código en línea`.
 
+Los códigos cortos de emoji de GitHub se muestran como su emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). El archivo guarda el código; pon el cursor encima para editarlo.
+
 Subíndices y superíndices como en Typora y Pandoc: H~2~O (`H~2~O`), x^2^ (`x^2^`); sin espacios dentro.
 
 Al escribir `(`, `[`, `{`, unas comillas o un paréntesis de un método de entrada chino o japonés, como `（`, `【` o `「`, se añade su pareja de cierre tras el cursor: escribir el cierre lo salta, Retroceso justo después de la apertura borra los dos y, con texto seleccionado, la pareja lo rodea. **Ajustes → Editor y aspecto → Cerrar (), [] y «»** lo desactiva.

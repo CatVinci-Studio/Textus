@@ -25,6 +25,8 @@ Les encadrés de style GitHub :
 
 **Gras** (`**texte**`), *italique* (`*texte*`), ***gras italique***, ~~barré~~ (`~~texte~~`), ==surligné== (`==texte==`) et `code en ligne`.
 
+Les codes courts d’emoji de GitHub s’affichent en emoji : :tada: (`:tada:`), :rocket: (`:rocket:`). Le fichier garde le code ; placez le curseur dessus pour le modifier.
+
 Indices et exposants comme dans Typora et Pandoc : H~2~O (`H~2~O`), x^2^ (`x^2^`) ; sans espace à l’intérieur.
 
 Taper `(`, `[`, `{`, un guillemet ou une parenthèse d'une méthode de saisie chinoise ou japonaise, comme `（`, `【` ou `「`, ajoute son partenaire fermant après le curseur : taper le fermant passe par-dessus, Retour arrière juste après l'ouvrant efface les deux, et avec du texte sélectionné la paire l'entoure. **Réglages → Éditeur et apparence → Fermer (), [] et « »** le désactive.
