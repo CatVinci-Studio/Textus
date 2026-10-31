@@ -12,4 +12,5 @@ permissions = [
   "allow-remembered",
   "allow-begin-access",
   "allow-share",
+  "allow-haptic",
 ]

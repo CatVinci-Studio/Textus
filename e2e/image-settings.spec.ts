@@ -10,7 +10,7 @@ const t = {
   settingsTitle: "Settings",
   windowClose: "Close",
   navEditor: "Editor & Appearance",
-  imageStorageLabel: "Save pasted images",
+  imageStorageLabel: "Image storage",
   imageStorageRemote: "Upload to an image host",
   imageFolderLabel: "Folder",
   imageFolderSubfolder: "Subfolder",

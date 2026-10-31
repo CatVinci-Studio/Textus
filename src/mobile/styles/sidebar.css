@@ -1,9 +1,9 @@
 /* The sidebar on a phone: a drawer over the page rather than a column
    beside it, with rows a finger can hit. */
 
-/* Everything that cleared the desktop's 28px row clears this one. */
+/* Docked on an iPad, the sidebar clears the title row. */
 :root[data-window-chrome="mobile"] .sidebar-header {
-  padding-top: calc(var(--mobile-bar) + 10px);
+  padding-top: calc(var(--mobile-top) + 12px);
 }
 
 @media (max-width: 760px) {
@@ -12,6 +12,7 @@
   :root[data-window-chrome="mobile"] .sidebar {
     position: fixed;
     z-index: 47;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     width: min(320px, 85vw);
     box-shadow: var(--shadow-drawer);
   }
@@ -22,6 +23,11 @@
     .sidebar:not(.sidebar-collapsed)
     ~ .main-pane {
     margin-left: 0;
+  }
+
+  /* Over the title row, the drawer clears only the status bar. */
+  :root[data-window-chrome="mobile"] .sidebar-header {
+    padding-top: calc(var(--safe-top) + 12px);
   }
 
   /* The scrim fades with the drawer's slide. */

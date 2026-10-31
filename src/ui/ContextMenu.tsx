@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
 import { useViewportClamp } from "../utils/hooks/useViewportClamp";
 import { ActionSheet } from "./ActionSheet";
+import { useMenuAim } from "./menu-aim";
 import { usePhoneLayout } from "./usePhoneLayout";
 import { usePresenceProps, usePresenceState } from "./usePresence";
 import { CheckIcon, ChevronIcon } from "./icons";
@@ -23,6 +24,8 @@ export interface ContextMenuItem {
   danger?: boolean;
   /** One choice of several, marked with a check while it is in force. */
   checked?: boolean;
+  /** Shown but not offered now (Copy with nothing selected). */
+  disabled?: boolean;
 }
 
 /** Items shown beside the menu when the row is hovered or opened. */
@@ -105,7 +108,9 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const rows = Array.from(
-      ref.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? [],
+      ref.current?.querySelectorAll<HTMLElement>(
+        '[role^="menuitem"]:not(:disabled)',
+      ) ?? [],
     );
     const at = rows.indexOf(document.activeElement as HTMLElement);
     let next: HTMLElement | undefined;
@@ -118,6 +123,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
       const group = rows[at]?.dataset.group;
       if (group !== undefined) {
         e.preventDefault();
+        aim.hold();
         setOpenGroup({ index: Number(group), focus: true });
       }
       return;
@@ -137,7 +143,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
     next?.focus();
   }
 
-  const { openGroup, setOpenGroup, rowRefs, hover, holdHover } = useSubmenu();
+  const { openGroup, setOpenGroup, rowRefs, aim } = useSubmenu(ref);
   const group = openGroup ? items[openGroup.index] : undefined;
 
   return (
@@ -147,6 +153,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
       role="menu"
       style={{ ...pos, ...origin }}
       onKeyDown={onKeyDown}
+      onMouseMove={aim.move}
       // A press on an item doesn't take the focus: on Linux the button kept it,
       // and once the menu closed it fell to the page.
       onMouseDown={(e) => e.preventDefault()}
@@ -167,8 +174,11 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
             data-group={i}
             tabIndex={-1}
             className="context-menu-item context-menu-group"
-            onMouseEnter={() => hover(i)}
-            onClick={() => setOpenGroup({ index: i, focus: true })}
+            onMouseEnter={() => aim.hover(i)}
+            onClick={() => {
+              aim.hold();
+              setOpenGroup({ index: i, focus: true });
+            }}
           >
             {item.label}
             <ChevronIcon className="context-menu-chevron" />
@@ -178,7 +188,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
             key={i}
             item={item}
             onClose={onClose}
-            onMouseEnter={() => hover(null)}
+            onMouseEnter={() => aim.hover(null)}
             checkShown={anyChecked(items)}
           />
         ),
@@ -191,9 +201,10 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
           onClose={onClose}
           onBack={() => {
             rowRefs.current.get(openGroup.index)?.focus();
+            aim.hold();
             setOpenGroup(null);
           }}
-          onEnter={holdHover}
+          onEnter={aim.hold}
         />
       )}
     </div>
@@ -221,7 +232,9 @@ function useFocusReturn(
   }, [opener, ref]);
   useEffect(() => {
     if (!opener) return;
-    ref.current?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
+    ref.current
+      ?.querySelector<HTMLElement>('[role^="menuitem"]:not(:disabled)')
+      ?.focus();
     return giveBack;
   }, [opener, ref, giveBack]);
   useEffect(() => {
@@ -230,25 +243,20 @@ function useFocusReturn(
 }
 
 /** Which group's submenu is open, and the rows to place it by. Hovering a
- *  row opens its group, or closes the one open, after a beat: a pointer
- *  crossing to the submenu passes over other rows. */
-function useSubmenu() {
+ *  row opens its group, or closes the one open, at once - unless the pointer
+ *  is crossing it on its way to the open submenu (menu-aim.ts). */
+function useSubmenu(menu: RefObject<HTMLDivElement | null>) {
   const [openGroup, setOpenGroup] = useState<{
     index: number;
     focus: boolean;
   } | null>(null);
   const rowRefs = useRef(new Map<number, HTMLButtonElement>());
-  const hoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(hoverTimer.current), []);
-  const hover = (index: number | null) => {
-    clearTimeout(hoverTimer.current);
-    hoverTimer.current = setTimeout(
-      () => setOpenGroup(index === null ? null : { index, focus: false }),
-      120,
-    );
-  };
-  const holdHover = () => clearTimeout(hoverTimer.current);
-  return { openGroup, setOpenGroup, rowRefs, hover, holdHover };
+  const aim = useMenuAim<number>(
+    (index) => setOpenGroup(index === null ? null : { index, focus: false }),
+    () => menu.current,
+    () => document.querySelector<HTMLElement>(".context-submenu"),
+  );
+  return { openGroup, setOpenGroup, rowRefs, aim };
 }
 
 function MenuRow({
@@ -269,6 +277,7 @@ function MenuRow({
       role={item.checked === undefined ? "menuitem" : "menuitemradio"}
       aria-checked={item.checked}
       tabIndex={-1}
+      disabled={item.disabled}
       className={`context-menu-item ${item.danger ? "context-menu-item-danger" : ""}`}
       onMouseEnter={onMouseEnter}
       onClick={() => {
@@ -309,12 +318,17 @@ function SubMenu({
     const el = ref.current;
     if (!el || !anchor) return;
     const row = anchor.getBoundingClientRect();
+    // Beside the menu, a small gap from its edge, never over it.
+    const menu = (
+      anchor.closest(".context-menu") ?? anchor
+    ).getBoundingClientRect();
     const { width, height } = el.getBoundingClientRect();
     const margin = 8;
+    const gap = 4;
     const left =
-      row.right + width + margin <= window.innerWidth
-        ? row.right - 4
-        : Math.max(margin, row.left - width + 4);
+      menu.right + gap + width + margin <= window.innerWidth
+        ? menu.right + gap
+        : Math.max(margin, menu.left - gap - width);
     const top = Math.max(
       margin,
       Math.min(row.top - 4, window.innerHeight - height - margin),
@@ -323,12 +337,16 @@ function SubMenu({
   }, [anchor, items]);
   useEffect(() => {
     if (focus && pos)
-      ref.current?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
+      ref.current
+        ?.querySelector<HTMLElement>('[role^="menuitem"]:not(:disabled)')
+        ?.focus();
   }, [focus, pos]);
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const rows = Array.from(
-      ref.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? [],
+      ref.current?.querySelectorAll<HTMLElement>(
+        '[role^="menuitem"]:not(:disabled)',
+      ) ?? [],
     );
     const at = rows.indexOf(document.activeElement as HTMLElement);
     let next: HTMLElement | undefined;

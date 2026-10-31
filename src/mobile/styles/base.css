@@ -1,21 +1,20 @@
 /* The phone layout's foundation: tokens, fonts and the title row, and the
    rules that hold for any touch (iPhone and iPad alike). */
 
-/* iOS WebKit renders CJK as missing-glyph boxes in -apple-system/system-ui,
-   and a missing family sends Latin to Times. Single generic families cascade
-   to PingFang correctly, so iOS gets stacks of fonts it has. */
-/* The Slate and Forest content themes lead with -apple-system too. */
-:root[data-window-chrome="mobile"]:is(
-    [data-content-theme="slate"],
-    [data-content-theme="forest"]
-  ) {
-  --doc-font: sans-serif;
+/* iOS 26 WebKit stops at -apple-system and system-ui, drawing CJK as
+   missing-glyph boxes; named, the system face falls back as any font does.
+   Every stack - the interface's and the themes' - takes it from these. */
+:root[data-platform="ios"] {
+  --font-apple-system: "SF Pro Text";
+  --font-system-ui: "SF Pro Text";
 }
 
 :root[data-window-chrome="mobile"] {
-  --font-sans: sans-serif;
-  --font-mono: Menlo, monospace;
   --mobile-bar: 44px;
+  /* The page runs under the status bar: the title row takes its height, and
+     whatever clears the row clears both. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --mobile-top: calc(var(--safe-top) + var(--mobile-bar));
   /* No grey flash over whatever a finger lands on. */
   -webkit-tap-highlight-color: transparent;
   /* Phone-only layers. A full-screen page covers the find bar (300) and the
@@ -32,9 +31,8 @@
   font-size: max(16px, 1em);
 }
 
-/* The strips under the status bar and the home indicator are page
-   background: the document's, not the chrome's, so the page runs to both
-   edges of the screen. */
+/* The page runs under the status bar and the home indicator: what shows
+   there is its own background. */
 :root[data-window-chrome="mobile"] body {
   background: var(--ui-bg);
 }
@@ -48,8 +46,8 @@
 /* Title row: 44pt, Apple's minimum touch target, with the menu at the left
    edge (no traffic lights to make room for) and the AI toggle at the right. */
 :root[data-window-chrome="mobile"] .window-bar {
-  height: var(--mobile-bar);
-  padding: 0 4px;
+  height: var(--mobile-top);
+  padding: var(--safe-top) 4px 0;
   /* One surface from the status bar down through the page. */
   background: var(--ui-bg);
 }
@@ -98,76 +96,4 @@
   svg {
   width: 20px;
   height: 20px;
-}
-
-/* WebKit paints the safe-area strips from the body's background colour alone.
-   While something covers the page they take its colour, so each translucent
-   scrim is pre-mixed over the page here. A closing surface gives them back. */
-:root[data-window-chrome="mobile"] {
-  --phone-dim-overlay: color-mix(in srgb, var(--ui-bg) 70%, rgb(20 27 40));
-}
-
-@media (prefers-color-scheme: dark) {
-  :root[data-window-chrome="mobile"]:not([data-theme="light"]) {
-    --phone-dim-overlay: color-mix(in srgb, var(--ui-bg) 52%, black);
-  }
-}
-
-:root[data-window-chrome="mobile"][data-theme="dark"] {
-  --phone-dim-overlay: color-mix(in srgb, var(--ui-bg) 52%, black);
-}
-
-/* Settings fills the phone's screen with iOS's grouped page colour, which the
-   strips take too. On an iPad it is a dialog over the dimmed page. */
-@media (max-width: 760px) {
-  :root[data-window-chrome="mobile"]:has(
-      .settings-backdrop:not([data-state="closing"])
-    )
-    body {
-    background: var(--ui-grouped-page);
-  }
-}
-
-@media (min-width: 761px) {
-  :root[data-window-chrome="mobile"]:has(
-      .settings-backdrop:not([data-state="closing"])
-    )
-    body {
-    background: var(--phone-dim-overlay);
-  }
-}
-
-/* The first-launch language card and the tutorial dim the whole screen,
-   strips included. */
-:root[data-window-chrome="mobile"]:has(
-    :is(.language-welcome-backdrop, .tutorial-backdrop):not(
-      [data-state="closing"]
-    )
-  )
-  body {
-  background: var(--phone-dim-overlay);
-}
-
-/* The drawer's scrim is drawn at phone width only. */
-@media (max-width: 760px) {
-  :root[data-window-chrome="mobile"]:has(
-      .sidebar-scrim:not([data-state="closing"])
-    )
-    body {
-    background: color-mix(in srgb, var(--ui-bg) 75%, black);
-  }
-}
-
-:root[data-window-chrome="mobile"]:has(
-    .close-prompt-overlay:not([data-state="closing"])
-  )
-  body {
-  background: var(--phone-dim-overlay);
-}
-
-:root[data-window-chrome="mobile"]:has(
-    .action-sheet-scrim:not([data-state="closing"])
-  )
-  body {
-  background: color-mix(in srgb, var(--ui-bg) 70%, black);
 }

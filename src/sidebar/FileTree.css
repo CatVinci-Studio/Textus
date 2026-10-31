@@ -22,7 +22,7 @@
 .tree-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
   padding: 4px 8px;
   background: none;
@@ -157,7 +157,7 @@
 .tree-drag-ghost {
   position: fixed;
   z-index: 100;
-  padding: 3px 8px;
+  padding: 4px 8px;
   font-size: var(--text-footnote);
   pointer-events: none;
   white-space: nowrap;
@@ -168,7 +168,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  margin: 0 2px 6px;
+  margin: 0 2px 8px;
 }
 
 .file-search-scope {
@@ -181,7 +181,7 @@
   flex: 1;
   min-width: 0;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   height: var(--control-height-sm);
   padding: 0 8px;
   border: 1px solid var(--ui-border);
@@ -249,7 +249,7 @@
 }
 
 .file-search-note {
-  padding: 8px 10px;
+  padding: 8px 8px;
   font-size: var(--text-footnote);
   opacity: 0.65;
   user-select: text;

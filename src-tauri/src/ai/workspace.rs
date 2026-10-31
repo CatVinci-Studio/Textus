@@ -75,6 +75,9 @@ pub struct AgentSkill {
     /// `textus-modes`: the panel modes the skill applies in. Write for a skill
     /// that doesn't say.
     pub modes: Vec<AgentMode>,
+    /// `textus-off`: turned off in Settings for now, its modes kept for when
+    /// it is turned on again. Neither the model nor the `/` menu offers it.
+    pub off: bool,
     pub invocation: Invocation,
     pub source: SkillSource,
     /// A global or project skill with a built-in skill's name, which it
@@ -111,6 +114,7 @@ impl Default for AgentSkill {
             prompt: String::new(),
             category: None,
             modes: vec![AgentMode::Write],
+            off: false,
             invocation: Invocation::Both,
             source: SkillSource::Global,
             overrides_builtin: false,
@@ -363,6 +367,31 @@ pub async fn set_skill_modes(
         ),
     };
     tauri::async_runtime::spawn_blocking(move || set_modes_in(&dir.join("skills"), &name, &modes))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+/// Turns a user's skill off for now, or on again, rewriting `textus-off` in
+/// its file. A built-in is always on.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn set_skill_off(
+    app: AppHandle,
+    name: String,
+    source: SkillSource,
+    doc_path: Option<String>,
+    workspace_root: Option<String>,
+    off: bool,
+) -> Result<(), String> {
+    let dir = match source {
+        SkillSource::Builtin => return Err(UNKNOWN_BUILTIN.to_string()),
+        SkillSource::Global => global_agent_dir(&app)?,
+        SkillSource::Project => project_dir(
+            &project_root(doc_path.as_deref(), workspace_root.as_deref())
+                .ok_or("No project folder.")?,
+        ),
+    };
+    tauri::async_runtime::spawn_blocking(move || set_off_in(&dir.join("skills"), &name, off))
         .await
         .map_err(|e| e.to_string())?
 }

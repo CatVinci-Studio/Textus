@@ -17,10 +17,13 @@ const MODE_LABEL: Record<AgentMode, TextKey> = {
 export function ModeChoice({
   t,
   modes,
+  disabled,
   onChange,
 }: {
   t: Strings;
   modes: AgentMode[];
+  /** The skill is off: its modes show, kept, but can't be changed. */
+  disabled?: boolean;
   onChange: (modes: AgentMode[]) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -40,6 +43,7 @@ export function ModeChoice({
         aria-label={`${t.agentSkillsModes}: ${label}`}
         aria-haspopup="menu"
         aria-expanded={open}
+        disabled={disabled}
         onClick={() => setOpen((v) => !v)}
       >
         {label}

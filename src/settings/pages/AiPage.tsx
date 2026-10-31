@@ -32,7 +32,6 @@ import {
   AgentSystemPromptSection,
 } from "../sections/agent";
 import {
-  AgentSkillsSection,
   BuiltinSkillsSection,
   WritingConventionsRow,
 } from "../sections/skills";
@@ -41,7 +40,6 @@ import {
   canDetachChat,
   canPickFolder,
   canRevealInFileManager,
-  isIOSApp,
 } from "../../platform/capabilities";
 import { openExtensionsTab } from "./extensions-tab";
 
@@ -218,37 +216,32 @@ export function AiPage({
                   onOpenFile={onOpenFile}
                   onClose={onClose}
                 />
-                {isIOSApp ? (
-                  <AgentSkillsSection t={t} />
-                ) : (
-                  // On the desktop skills are extensions, beside plugins,
-                  // themes and MCP servers.
-                  <SettingRow
-                    label={t.agentSkillsLabel}
-                    hint={t.extensionsSkillsMoved}
+                {/* Skills are extensions, beside plugins and themes. */}
+                <SettingRow
+                  label={t.agentSkillsLabel}
+                  hint={t.extensionsSkillsMoved}
+                >
+                  <button
+                    type="button"
+                    className="text-button settings-inline-button"
+                    onClick={() => {
+                      openExtensionsTab("skills");
+                      openPage("extensions");
+                    }}
                   >
-                    <button
-                      type="button"
-                      className="text-button settings-inline-button"
-                      onClick={() => {
-                        openExtensionsTab("skills");
-                        openPage("extensions");
-                      }}
-                    >
-                      {t.extensionsSkillsOpen}
-                    </button>
-                  </SettingRow>
-                )}
+                    {t.extensionsSkillsOpen}
+                  </button>
+                </SettingRow>
               </SettingsGroup>
 
-              {isIOSApp && (
-                <BuiltinSkillsSection
-                  t={t}
-                  onOpenFile={onOpenFile}
-                  onFilesDeleted={onFilesDeleted}
-                  onClose={onClose}
-                />
-              )}
+              {/* Each mode's own skills, always on: with the modes, not
+                  among the skills added in Extensions. */}
+              <BuiltinSkillsSection
+                t={t}
+                onOpenFile={onOpenFile}
+                onFilesDeleted={onFilesDeleted}
+                onClose={onClose}
+              />
             </>
           )}
 

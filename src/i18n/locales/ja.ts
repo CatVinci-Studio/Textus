@@ -140,8 +140,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   revisionDisplayFinal: "結果だけ、元の文は余白に",
   revisionDisplayNoRoom:
     "余白が足りません：サイドバーか AIパネルを閉じてください",
-  revisionDisplayNewText:
-    "追加された文には元の文がないため、この表示でも緑色のまま本文に残ります",
   proposalDeletedSentence: "元の文",
   proposalAddedSentence: "追加",
   reviewBarLabel: "修正",
@@ -159,6 +157,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   ownNoteDelete: "削除",
   menuTrackChanges: "変更を記録",
   trackStop: "記録を停止",
+  closedWithUndecided:
+    "「{name}」にはまだ決めていない変更が {n} 件あります。保存されているので、次に開いたときにも残っています。",
   trackStopConfirm:
     "変更の記録を止めますか？変更は本文に残り、印だけが消えます。",
   trackAcceptAll: "自分の変更をすべて承諾",
@@ -493,8 +493,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   settingsSearchResults: "検索結果",
   settingsSearchNoMatches: "一致する設定はありません。",
   settingsViewGroup: "表示",
+  settingsFrontDocumentHint: "前面の書類に適用されます。",
   settingsHelpGroup: "ヘルプ",
-  settingsDone: "完了",
   navGeneral: "一般",
   navEditor: "編集と外観",
   navTheme: "テーマ",
@@ -569,7 +569,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   skillPickerAbout:
     "/ を入力するとスキルを使えます。「校正」や「要約」のような、用意された指示です。",
   skillPickerNoMatch: "「{query}」に一致するスキルはありません。",
-  skillPickerHowTo: `組み込みスキルのオン・オフや自分のスキルのインポートは「設定 > ${AI_NAME}」でできます。`,
+  skillPickerHowTo:
+    "スキルの追加や自分のスキルのインポートは「設定」でできます。",
   mentionPickerAbout:
     "@ を入力すると、プロジェクトフォルダーのファイルを添付できます。",
   mentionPickerNoProject:
@@ -637,7 +638,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   alignRight: "右揃え",
   selectRow: "行を選択",
   selectColumn: "列を選択",
-  menuGroupInsert: "挿入",
   tableRowGroup: "行",
   tableColumnGroup: "列",
   insertRowAbove: "上に行を挿入",
@@ -739,6 +739,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   chatSelectedPicture: "画像を選択中",
   cut: "切り取り",
   copy: "コピー",
+  menuPlainText: "プレーンテキストでコピー/ペースト",
+  appErrorTitle: "問題が発生しました",
+  appErrorReload: "再読み込み",
   copyAsPlainText: "プレーンテキストとしてコピー",
   pasteAsPlainText: "プレーンテキストとしてペースト",
   paste: "貼り付け",
@@ -794,7 +797,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   contentThemeLabel: "エディターのテーマ",
   themeDeleteButton: "テーマを削除",
   themeImportLabel: "CSS ファイルからテーマを追加",
-  themeMoreLabel: "その他のテーマ",
   themeGetMore: "テーマをさらに入手",
   themeImportButton: "CSSをインポート…",
   themeGalleryLoading: "テーマを読み込み中…",
@@ -826,6 +828,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   codeBlockCopied: "コピーしました",
   autoCloseMarksLabel: "** と ` を補完",
   autoCloseBracketsLabel: "()、[]、「」を補完",
+  plainTextMenuLabel: "右クリックメニューにプレーンテキストでコピー/ペースト",
   pdfPageNumbersLabel: "書き出し時にページ番号を表示",
   pdfLightColorsLabel: "PDF を明るい配色で書き出す",
   infoTipLabel: "「{label}」について",
@@ -1180,7 +1183,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   missingImageFilter: "画像",
   missingImageChooseFailed: "選んだ画像を使えませんでした。",
   imageStorageGroupLabel: "画像",
-  imageStorageLabel: "貼り付けた画像の保存先",
+  imageStorageLabel: "画像の保存先",
   imageStorageLocal: "このコンピューター",
   imageStorageRemote: "画像ホストにアップロード",
   imageFolderLabel: "フォルダー",
@@ -1321,7 +1324,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   extensionsThemesGet: "テーマを入手",
   extensionsSkillsHelp: `スキルは ${AI_NAME} に、ある種類の作業をうまくこなす方法を伝えます。オンのスキルは ${AI_NAME} と / メニューで使えます。新しくインストールすると 5 つがオンで、残りはここで追加します。`,
   extensionsSkillsMoved:
-    "組み込みのスキルと自分のスキルは「設定 › 拡張機能」にあります。",
+    "追加したスキルは「設定 › 拡張機能」にあり、組み込みのスキルは下にあります。",
   extensionsSkillsOpen: "開く",
   mcpServersGroup: "MCP サーバー",
   mcpHelp: `MCP サーバーは ${AI_NAME} に道具を増やします：フォルダ、データベース、検索など。オンのサーバーはバックグラウンドで起動し、${AI_NAME} は手伝う間にそのツールを呼び出せます。呼び出しはすべて会話に表示されます。`,
@@ -1429,6 +1432,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsMine: "自分で作ったもの",
   pluginsNone: "まだありません。",
   pluginStatusBroken: "読み込めません：{reason}",
+  pluginStatusDesktopOnly: "パソコン専用です。iPhone と iPad では使えません。",
   pluginStatusIncompatible: "別のバージョンの Textus 用です（{range}）。",
   pluginStatusFailed: "オフになりました：{reason}",
   pluginStatusAllOff: "プラグインはオフです。",

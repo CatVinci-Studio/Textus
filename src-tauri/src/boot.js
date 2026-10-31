@@ -1,4 +1,4 @@
-/* global window, document, MutationObserver */
+/* global window, document, navigator, MutationObserver */
 // Runs in every app webview before the page's own scripts (settings.rs's
 // boot_script appends the call with the snapshot). Two jobs:
 //
@@ -107,6 +107,26 @@ window.__textusBoot = function (boot, themeCss) {
         /\bthead\b(?:\s*>?\s*tr\b)?/g,
         "tr[data-is-header]",
       );
+      // namedSystemFonts() in src/theme/typora-compat.ts, on iOS.
+      var ios =
+        /^(iPhone|iPad|iPod)/.test(navigator.platform) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      if (ios) {
+        var faces = {
+          "-apple-system": '"SF Pro Text"',
+          "system-ui": '"SF Pro Text"',
+          "ui-sans-serif": '"SF Pro Text"',
+          "ui-serif": '"New York"',
+          "ui-monospace": '"SF Mono"',
+          "ui-rounded": '"SF Pro Rounded"',
+        };
+        css = css.replace(
+          /(?<=[\s,:])(-apple-system|system-ui|ui-sans-serif|ui-serif|ui-monospace|ui-rounded)(?=\s*[,;}!]|\s*$)/gm,
+          function (name) {
+            return faces[name];
+          },
+        );
+      }
       addStyle("textus-custom-theme", css);
       // The app's own colours (sidebar, background, accents) as the
       // frontend last derived them from this stylesheet in this appearance

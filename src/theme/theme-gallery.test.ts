@@ -3,6 +3,7 @@ import type { UserThemeMeta } from "../prefs/SettingsContext";
 import {
   galleryStatus,
   installGalleryTheme,
+  localizedTheme,
   installedCopy,
   isNewer,
   type GalleryTheme,
@@ -30,6 +31,7 @@ const theme = (updated: string): GalleryTheme => ({
   previews: [],
   installs: null,
   installs30: null,
+  l10n: {},
 });
 
 const installed = (updated: string): UserThemeMeta => ({
@@ -109,5 +111,25 @@ describe("theme gallery", () => {
     const next = installed("2026-10-18T00:00:00Z");
     expect(withUserTheme([old, other], next)).toEqual([next, other]);
     expect(withUserTheme([other], old)).toEqual([other, old]);
+  });
+});
+
+describe("a gallery theme in the UI's language", () => {
+  const words = {
+    ...theme("2026-10-17T00:00:00Z"),
+    description: "Bright and calm.",
+    l10n: { zh: { name: null, description: "明亮而安静。" } },
+  };
+  it("takes its words for the language, keeping what they leave out", () => {
+    expect(localizedTheme(words, "zh")).toMatchObject({
+      name: "Lumen",
+      description: "明亮而安静。",
+    });
+  });
+  it("reads English elsewhere, Traditional Chinese included", () => {
+    expect(localizedTheme(words, "en").description).toBe("Bright and calm.");
+    expect(localizedTheme(words, "zh-Hant").description).toBe(
+      "Bright and calm.",
+    );
   });
 });

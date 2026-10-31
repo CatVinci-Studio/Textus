@@ -1319,3 +1319,50 @@ test("one view for every document: switching it switches every tab, and new ones
     await expect(page.locator(`${active} .split-source`)).toHaveCount(0);
   }
 });
+
+test("a click in the page's margin beside the text closes the formula being edited", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, PREVIEW_DOC);
+  await page.locator('[data-active-tab="true"] .math-block-rendered').click();
+  const open = page.locator('[data-active-tab="true"] .math-block-revealed');
+  await expect(open).toHaveCount(1);
+  // Beside the column, at the height of the line below the formula.
+  const below = (await page
+    .locator('[data-active-tab="true"] .ProseMirror p')
+    .nth(1)
+    .boundingBox())!;
+  const scroller = (await page
+    .locator('[data-active-tab="true"] .editor-scroll')
+    .boundingBox())!;
+  await page.mouse.click(scroller.x + 12, below.y + below.height / 2);
+  await expect(open).toHaveCount(0);
+  await page.keyboard.type("X");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror p').nth(1),
+  ).toHaveText(/^XA line below the formula/);
+});
+
+test("a shift-click in the page's margin extends the selection there", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "First line.\n\nSecond line.\n\nThird line.");
+  const paras = page.locator('[data-active-tab="true"] .ProseMirror p');
+  // The caret at the start, settled before the shift-click extends from it.
+  await page.keyboard.press("ControlOrMeta+Home");
+  await expect
+    .poll(() => page.evaluate(() => window.getSelection()?.anchorOffset))
+    .toBe(0);
+  const third = (await paras.nth(2).boundingBox())!;
+  const scroller = (await page
+    .locator('[data-active-tab="true"] .editor-scroll')
+    .boundingBox())!;
+  await page.keyboard.down("Shift");
+  await page.mouse.click(scroller.x + 12, third.y + third.height / 2);
+  await page.keyboard.up("Shift");
+  expect(
+    await page.evaluate(() => window.getSelection()?.toString() ?? ""),
+  ).toContain("Second line.");
+});

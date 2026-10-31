@@ -20,7 +20,7 @@
 :root[data-window-chrome="mobile"] .quick-ask-dock .inline-chat-shell {
   /* Never taller than the page below the title row; the reply area gives
      way first (below). */
-  max-height: calc(100dvh - var(--mobile-bar, 44px) - 8px);
+  max-height: calc(100dvh - var(--mobile-top, 44px) - 8px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   border-width: 1px 0 0;
   border-color: var(--ui-border);

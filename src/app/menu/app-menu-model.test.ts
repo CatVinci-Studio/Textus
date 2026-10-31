@@ -108,7 +108,7 @@ describe("the View menu's on/off items", () => {
         view === undefined || view === "separator" ? [] : (view.submenu ?? []),
       );
       const onOff = items.filter((item) => item.checked !== undefined);
-      expect(onOff).toHaveLength(8);
+      expect(onOff).toHaveLength(9);
       for (const item of items) expect(item.label).not.toMatch(TOGGLE_WORDS);
       const phone = flatten(buildMobileMenu(strings));
       for (const item of phone) expect(item.label).not.toMatch(TOGGLE_WORDS);
@@ -151,6 +151,19 @@ describe("the View menu's on/off items", () => {
     expect(phone.find((item) => item.label === t.menuTextusAi)?.checked).toBe(
       false,
     );
+  });
+
+  it("give the phone its plugins' commands, and Textus AI only where it is offered", () => {
+    const plugins = [{ label: "New Quick Note…", command: "notes.new" }];
+    const phone = flatten(buildMobileMenu(t, {}, plugins));
+    expect(
+      phone.find((item) => item.label === "New Quick Note…")?.action,
+    ).toEqual({ native: "plugin-command:notes.new" });
+    expect(phone.map((item) => item.label)).toContain(t.menuManagePlugins);
+    expect(phone.map((item) => item.label)).toContain(t.menuTextusAi);
+    const china = flatten(buildMobileMenu(t, {}, plugins, false));
+    expect(china.map((item) => item.label)).not.toContain(t.menuTextusAi);
+    expect(china.map((item) => item.label)).toContain(t.menuManagePlugins);
   });
 
   it("send the macOS bar every native on/off item by id", () => {

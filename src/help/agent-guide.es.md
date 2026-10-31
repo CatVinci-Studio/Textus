@@ -65,7 +65,7 @@ El chat nunca escribe directamente en tu documento. Si usas un proveedor que adm
 - **En el cursor**: sin nada seleccionado, Textus AI sabe dónde está tu cursor, así que «escribe aquí una transición» inserta el texto justo ahí.
 - **Comentarios en lugar de cambios**: pide una revisión («¿qué flojea aquí?») y Textus AI fija comentarios a los fragmentos sin cambiarlos. Cada tarjeta de comentario tiene **Mostrar en el documento**, que selecciona el fragmento al que se refiere.
 - **Tus propias notas**: selecciona unas palabras, haz clic derecho y elige **Añadir nota**: tu nota va al margen junto a las de Textus AI, marcada como Yo. Las notas se guardan junto a los datos propios de Textus, no en tu Markdown.
-- **Control de mis cambios** (menú Edición): mientras está activado, tus propios cambios también se muestran como cambios (lo que borraste, tachado; lo que añadiste, marcado), cada uno con una tarjeta en el margen, marcada como Yo, para aceptarlo o rechazarlo.
+- **Control de mis cambios** (menú Visualización): mientras está activado, tus propios cambios también se muestran como cambios (lo que borraste, tachado; lo que añadiste, marcado), cada uno con una tarjeta en el margen, marcada como Yo, para aceptarlo o rechazarlo. El archivo guarda el original con solo los cambios que aceptaste; los que quedan por decidir se guardan a su lado, en la carpeta `.textus`, como los de Textus AI, y vuelven cuando abres el documento de nuevo: comparte la carpeta y van con ella.
 
 ### 6. Imágenes
 
@@ -224,13 +224,13 @@ Puedes usar una habilidad de dos maneras:
 
 Cuando lo que pediste era un procedimiento propio, unos pasos que querrás repetir, Textus AI ofrece bajo su respuesta guardarlo como habilidad, para todos los documentos o solo para este proyecto. No se guarda nada a menos que lo elijas.
 
-Las habilidades están en los mismos dos niveles que las instrucciones de escritura: las globales, en la carpeta `skills/` de la carpeta de configuración global (**Ajustes > Textus AI > Habilidades > Importar habilidad…** copia ahí un archivo de habilidad), y las del proyecto, en `.textus/skills/` (una carpeta oculta; en el Finder de macOS, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> la muestra). Una habilidad del proyecto con el mismo nombre que una global la reemplaza.
+Las habilidades están en los mismos dos niveles que las instrucciones de escritura: las globales, en la carpeta `skills/` de la carpeta de configuración global (**Ajustes > Extensiones > Habilidades > … > Importar habilidad…** copia ahí un archivo de habilidad), y las del proyecto, en `.textus/skills/` (una carpeta oculta; en el Finder de macOS, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> la muestra). Una habilidad del proyecto con el mismo nombre que una global la reemplaza.
 
 ### Habilidades integradas
 
 Textus trae cuatro habilidades. **Corregir**, en Revisar, comprueba la ortografía, la gramática, la puntuación y los números según las normas del idioma del texto. **Diseñar un tema**, **Crear un complemento** y **Crear una habilidad**, en Crear, hacen un tema para el editor, un pequeño complemento o una habilidad propia a partir de lo que describas. Hay más habilidades —ampliar, condensar, traducir, resumir, revisar continuidad, correo, acta de reunión y otras— en **Ajustes > Extensiones > Habilidades > Conseguir más**. Escribe `/` y elige una, o escribe su nombre en cualquiera de los idiomas de la aplicación: `/proofread`, `/校对` y `/校正` llaman a la misma habilidad. Textus AI también elige una por su cuenta cuando tu petición encaja. **Diseñar un tema** pone el CSS del tema en la respuesta: **Usar este tema**, debajo, lo instala; o guárdalo como archivo .css e impórtalo con **Ajustes > Editor y aspecto > Importar CSS…**.
 
-**Ajustes > Extensiones > Habilidades** muestra las habilidades que tienes. Las integradas están siempre activas. **Personalizar…** copia una en la carpeta `skills/` de la carpeta de configuración global y abre la copia para que cambies sus instrucciones; a partir de entonces se usa tu copia. **Restablecer** borra la copia y recupera la versión integrada. Una habilidad que instalaste o escribiste indica los modos en que funciona; haz clic ahí para cambiarlos. Una habilidad tuya con el nombre de una integrada la sustituye.
+Las habilidades integradas están en **Ajustes > Textus AI > Habilidades integradas** y siempre están activas. **Personalizar…** copia una en la carpeta `skills/` de la carpeta de configuración global y abre la copia para que cambies sus instrucciones; a partir de entonces se usa tu copia. **Restablecer** borra la copia y recupera la versión integrada. **Ajustes > Extensiones > Habilidades** muestra las habilidades que añadiste. Cada una indica los modos en que funciona (haz clic para cambiarlos), y su interruptor la desactiva por ahora; sus modos se guardan para cuando la vuelvas a activar. Una habilidad tuya con el nombre de una integrada la reemplaza.
 
 ### Normas de escritura
 

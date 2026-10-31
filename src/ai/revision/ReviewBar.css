@@ -6,8 +6,8 @@
   z-index: 30;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 5px 5px 5px 14px;
+  gap: 12px;
+  padding: 4px 4px 4px 12px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   /* Ink of the page's own theme: the primary button's colours, inverted
@@ -21,7 +21,13 @@
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   transform: translateX(-50%);
-  animation: review-bar-in var(--dur-slow) var(--ease-spring-bouncy) both;
+  --enter-x: -50%;
+  --enter-y: calc(var(--motion-distance-md) * 1.5);
+  --enter-scale: var(--scale-enter);
+  --exit-x: -50%;
+  --exit-y: var(--motion-distance-md);
+  --exit-scale: var(--scale-exit);
+  animation: motion-enter var(--dur-slow) var(--ease-spring-bouncy) both;
 }
 
 /* The notes bar, standing above the review bar when both show. */
@@ -30,24 +36,7 @@
 }
 
 .review-bar[data-state="closing"] {
-  animation: review-bar-out var(--dur-fast) var(--ease-in) both;
-}
-
-/* From the motion tokens, so reduced motion turns both into fades. */
-@keyframes review-bar-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, calc(var(--motion-distance-md) * 1.5))
-      scale(var(--scale-enter));
-  }
-}
-
-@keyframes review-bar-out {
-  to {
-    opacity: 0;
-    transform: translate(-50%, var(--motion-distance-md))
-      scale(var(--scale-exit));
-  }
+  animation: motion-exit var(--dur-fast) var(--ease-in) both;
 }
 
 .review-bar-top,
@@ -63,7 +52,7 @@
 
 /* "Writing the edit" and its dots, in the bar's own type and colour. */
 .review-bar-working .agent-thinking {
-  gap: 5px;
+  gap: 4px;
   font-size: inherit;
   color: inherit;
 }
@@ -142,9 +131,9 @@
 /* The chosen view waits for room: the eye names what shows meanwhile. */
 .review-bar-view-waiting {
   display: inline-flex;
-  gap: 5px;
+  gap: 4px;
   width: auto;
-  padding: 0 9px 0 6px;
+  padding: 0 8px 0 4px;
   border-radius: var(--shape-pill);
   corner-shape: round;
 }
@@ -177,7 +166,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 10px 7px 26px;
+  padding: 8px 8px 8px 24px;
   border: 0;
   border-radius: var(--shape-s);
   background: none;
@@ -219,7 +208,7 @@
 .review-bar-menu-note {
   max-width: 250px;
   margin: 4px 0 0;
-  padding: 7px 10px 5px 26px;
+  padding: 8px 8px 4px 24px;
   border-top: 1px solid var(--ui-border);
   color: var(--ui-muted);
   font-size: var(--text-footnote);
@@ -251,7 +240,7 @@
 }
 
 .review-bar-button {
-  padding: 6px 13px;
+  padding: 4px 12px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   border: 1px solid color-mix(in srgb, var(--ui-on-primary) 26%, transparent);
@@ -302,7 +291,7 @@
   bottom: 0;
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
+  gap: 12px;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
   border-radius: var(--shape-l) var(--shape-l) 0 0;
   background: var(--ui-surface);
@@ -371,7 +360,7 @@
 .learn-bar {
   width: max-content;
   max-width: min(620px, calc(100% - 32px));
-  padding-block: 7px;
+  padding-block: 8px;
   line-height: 1.4;
   white-space: normal;
 }
@@ -381,7 +370,7 @@
 }
 
 .learn-bar-never {
-  padding: 6px 4px;
+  padding: 4px 4px;
   border: 0;
   background: none;
   color: inherit;

@@ -27,7 +27,7 @@
   /* Fades the last button out at the edge on narrower iPhones, where the
      row scrolls - a hint there is more. */
   mask-image: linear-gradient(to left, transparent, #000 28px);
-  padding-right: 10px;
+  padding-right: 12px;
 }
 
 .keyboard-toolbar-format::-webkit-scrollbar {
@@ -41,8 +41,8 @@
 
 /* A hairline between groups: edit, text style, blocks. */
 .keyboard-toolbar-group + .keyboard-toolbar-group {
-  margin-left: 3px;
-  padding-left: 3px;
+  margin-left: 4px;
+  padding-left: 4px;
   border-left: 1px solid var(--ui-border);
 }
 
@@ -117,5 +117,5 @@
 /* The document's scroller ends at the strip: the editor keeps the caret inside
    its scroller, so a line being typed would otherwise stop behind the strip. */
 :root.has-keyboard-toolbar .editor-scroll {
-  margin-bottom: 45px;
+  margin-bottom: 44px;
 }

@@ -35,11 +35,23 @@ import { useOwnNotes } from "./useOwnNotes";
 import { useOwnRevisions } from "./useOwnRevisions";
 import { OWN_CHANGES, ownRevisionKey } from "./own-revision-plugin";
 import { duration } from "../../ui/motion";
+import { addsTextOnly } from "../revision/revision-display";
+import { asDrawn, zoomedRectScale } from "../../ui/zoomed-rects";
+import { noteOfAnchor } from "./review-notes-plugin";
 
 /** A proposal shown whole as a margin card's change: what it replaces and
  *  with what. Null for new text alone, which has no original. */
 function wholeChange(p: PendingPreview): PendingSentence | null {
   const { action, anchor, text } = p.proposal;
+  // New text alone: nothing replaced, so no original.
+  if (addsTextOnly(p.proposal))
+    return {
+      from: p.from,
+      to: p.from,
+      before: "",
+      after: text ?? "",
+      take: null,
+    };
   if (
     action !== "replace" &&
     action !== "replace_selection" &&
@@ -110,7 +122,8 @@ export function useReviewNotes({
     reviewNotesRef.current = {
       onChange: setNotes,
       onBadge: (id, el) => {
-        const r = el.getBoundingClientRect();
+        // In the text, so inside the document's zoom.
+        const r = asDrawn(el.getBoundingClientRect(), zoomedRectScale(el));
         setOpenNote({ id, x: r.left, y: r.bottom + 6 });
       },
     };
@@ -197,8 +210,9 @@ export function useReviewNotes({
     const sentence = target.closest?.(
       "[data-call][data-index]",
     ) as HTMLElement | null;
-    const key = anchor?.dataset.note
-      ? `note:${anchor.dataset.note}`
+    const note = anchor && noteOfAnchor(anchor, notes);
+    const key = note
+      ? `note:${note}`
       : sentence?.dataset.call
         ? `rev:${sentence.dataset.call}:${sentence.dataset.index}`
         : null;
@@ -330,8 +344,7 @@ export function useReviewNotes({
     });
   }
 
-  // The notes, then each pending sentence in the review bar's order. New text
-  // alone has no original, so it gets no card.
+  // The notes, then each pending sentence in the review bar's order.
   const marginItems = useMemo<MarginItem[]>(() => {
     const items: MarginItem[] = notes.map((note) => ({
       kind: "note",
@@ -365,24 +378,25 @@ export function useReviewNotes({
         streaming: !!preview.streaming,
       });
     });
-    // The writer's own tracked changes: the text has the new words, so a
-    // card shows what was deleted.
-    (revisions.changes ?? []).forEach((c, i) =>
-      items.push({
-        kind: "revision",
-        key: `rev:${OWN_CHANGES}:${c.index}`,
-        callId: OWN_CHANGES,
-        index: c.index,
-        num: i + 1,
-        from: c.from,
-        to: c.to,
-        after: c.after,
-        before: c.before,
-        shows: "new",
-        take: null,
-        streaming: false,
-      }),
-    );
+    // The writer's own tracked changes, as the AI's: in the margin views a
+    // card shows what the text doesn't; inline, all is in the text.
+    if (display !== "inline")
+      (revisions.changes ?? []).forEach((c, i) =>
+        items.push({
+          kind: "revision",
+          key: `rev:${OWN_CHANGES}:${c.index}`,
+          callId: OWN_CHANGES,
+          index: c.index,
+          num: i + 1,
+          from: c.from,
+          to: c.to,
+          after: c.after,
+          before: c.before,
+          shows: display === "original" ? "original" : "new",
+          take: null,
+          streaming: false,
+        }),
+      );
     return items;
   }, [
     notes,
@@ -439,8 +453,14 @@ export function useReviewNotes({
   function selectCard(key: string | null) {
     setClicked(key ? { key, over: pointed } : null);
     const item = key ? marginItems.find((i) => i.key === key) : undefined;
-    if (!item) return;
-    const from = item.kind === "note" ? item.note.from : item.from;
+    // A change of the writer's own has no card in the inline view.
+    const from = item
+      ? item.kind === "note"
+        ? item.note.from
+        : item.from
+      : revisions.changes?.find((c) => `rev:${OWN_CHANGES}:${c.index}` === key)
+          ?.from;
+    if (from === undefined) return;
     run((ctx) => revealPosition(ctx.get(editorViewCtx), from));
   }
 

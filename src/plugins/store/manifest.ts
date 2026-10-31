@@ -30,6 +30,9 @@ export type Permission =
   | "background"
   | `network:${string}`;
 
+export const PLUGIN_PLATFORMS = ["desktop", "ios"] as const;
+export type PluginPlatform = (typeof PLUGIN_PLATFORMS)[number];
+
 const PLAIN_PERMISSIONS = [
   "editor.read",
   "editor.write",
@@ -229,6 +232,9 @@ export interface PluginManifest {
   repository?: string;
   /** The Textus versions it works with: "^1.2.0", ">=1.2.0". */
   engine: string;
+  /** Where it runs. Unset, everywhere, unless it works in the background
+   *  (background code, or requiring runInBackground): the desktop's only. */
+  platforms: readonly PluginPlatform[];
   /** Its code, run in the plugin host; none for a themes-only plugin. */
   main?: string[];
   /** Code its scheduled jobs run, apart from `main` and without the editor
@@ -269,6 +275,38 @@ export function parseManifest(raw: string | unknown): PluginManifest {
       throw new ManifestError(`No permission "${String(p)}".`);
     return p;
   });
+  const background = text(m.background, "background", true) || undefined;
+  const requires = list(m.requires, "requires").map((r, i) => {
+    const need = object(r, `requires[${i}]`);
+    const setting = text(need.setting, `requires[${i}].setting`);
+    if (!(REQUIRED_SETTINGS as readonly string[]).includes(setting))
+      throw new ManifestError(
+        `requires[${i}].setting "${setting}" is not one of ${REQUIRED_SETTINGS.join(", ")}.`,
+      );
+    return {
+      setting: setting as RequiredSetting,
+      reason: text(need.reason, `requires[${i}].reason`, true) || undefined,
+    };
+  });
+  // Background code, or Textus kept running in the background: the desktop's.
+  const inBackground =
+    !!background || requires.some((r) => r.setting === "runInBackground");
+  const platforms: readonly PluginPlatform[] =
+    m.platforms === undefined
+      ? inBackground
+        ? ["desktop"]
+        : PLUGIN_PLATFORMS
+      : list(m.platforms, "platforms").map((p) => {
+          if (!(PLUGIN_PLATFORMS as readonly unknown[]).includes(p))
+            throw new ManifestError(
+              `No platform "${String(p)}": desktop or ios.`,
+            );
+          return p as PluginPlatform;
+        });
+  if (inBackground && platforms.includes("ios"))
+    throw new ManifestError(
+      "The background is the desktop's only: platforms can't name ios.",
+    );
   const l10n: PluginManifest["l10n"] = {};
   if (m.l10n !== undefined)
     for (const [lang, table] of Object.entries(object(m.l10n, "l10n"))) {
@@ -290,24 +328,14 @@ export function parseManifest(raw: string | unknown): PluginManifest {
     license: text(m.license, "license", true) || undefined,
     repository: text(m.repository, "repository", true) || undefined,
     engine: text(engines.textus, "engines.textus"),
+    platforms,
     main: parseMain(m.main),
-    background: text(m.background, "background", true) || undefined,
+    background,
     activationEvents: list(m.activationEvents, "activationEvents").map((e, i) =>
       text(e, `activationEvents[${i}]`),
     ),
     permissions,
-    requires: list(m.requires, "requires").map((r, i) => {
-      const need = object(r, `requires[${i}]`);
-      const setting = text(need.setting, `requires[${i}].setting`);
-      if (!(REQUIRED_SETTINGS as readonly string[]).includes(setting))
-        throw new ManifestError(
-          `requires[${i}].setting "${setting}" is not one of ${REQUIRED_SETTINGS.join(", ")}.`,
-        );
-      return {
-        setting: setting as RequiredSetting,
-        reason: text(need.reason, `requires[${i}].reason`, true) || undefined,
-      };
-    }),
+    requires,
     contributes: parseContributes(m.contributes, id),
     l10n,
   };

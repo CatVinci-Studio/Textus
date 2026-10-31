@@ -8,16 +8,17 @@
 /* With 44pt rows and the recent documents, the phone menu is taller than
    the desktop's 560px cap; it may use the screen below the title row. */
 :root[data-window-chrome="mobile"] .app-menu-list {
-  max-height: calc(100vh - var(--mobile-bar) - 24px);
+  max-height: calc(100vh - var(--mobile-top) - 24px);
 }
 
 :root[data-window-chrome="mobile"] .tab-bar {
-  padding-top: calc(var(--mobile-bar) + 6px);
+  padding-top: calc(var(--mobile-top) + 4px);
 }
 
 :root[data-window-chrome="mobile"]
   :is(
     .settings-backdrop,
+    .language-welcome-backdrop,
     .tutorial-backdrop,
     .insert-table-overlay,
     .image-name-overlay,
@@ -60,7 +61,7 @@
      tints it, a destructive answer is shown on its button instead. */
   :root[data-window-chrome="mobile"] .app-dialog-title {
     margin: 0;
-    padding: 19px 16px 0;
+    padding: 20px 16px 0;
     color: var(--ui-text);
     font-size: var(--text-body);
     font-weight: 600;
@@ -69,19 +70,19 @@
 
   :root[data-window-chrome="mobile"] .app-dialog p {
     margin: 0;
-    padding: 4px 16px 19px;
+    padding: 4px 16px 20px;
     font-size: var(--text-footnote);
     line-height: 1.4;
   }
 
   :root[data-window-chrome="mobile"] .app-dialog > p:first-child {
-    padding-top: 19px;
+    padding-top: 20px;
   }
 
   :root[data-window-chrome="mobile"] .app-dialog-input {
     width: calc(100% - 32px);
     min-height: 36px;
-    margin: -7px 16px 16px;
+    margin: -8px 16px 16px;
     text-align: left;
   }
 
@@ -120,7 +121,7 @@
     font-size: var(--text-body);
     font-weight: 400;
     opacity: 1;
-    /* iOS's highlight: on at the touch, fading out after it. */
+    /* A row lights at the touch and fades out after it. */
     transition: background-color var(--dur-base) var(--ease-standard);
   }
 
@@ -168,45 +169,42 @@
 
   /* ---- The title row's menu: a pull-down menu. ---- */
 
-  /* UIMenu's width, grown for a longer label; a long name still ellipsizes at
-     the cap. */
+  /* The desktop's menu, wide and tall enough for a finger; a long name
+     still ellipsizes at the cap. */
   :root[data-window-chrome="mobile"] .app-menu-list {
     width: max-content;
-    min-width: 250px;
+    min-width: 240px;
     max-width: min(320px, calc(100vw - 16px));
-    padding: 0;
-    border-radius: var(--shape-l);
-  }
-
-  /* Out of the menu button on a spring, as UIMenu opens. */
-  :root[data-window-chrome="mobile"] .app-menu > .app-menu-list {
-    animation-duration: var(--dur-medium);
-    animation-timing-function: var(--ease-spring);
   }
 
   :root[data-window-chrome="mobile"] .app-menu-item {
-    position: relative;
     min-height: 44px;
-    padding: 0 16px;
-    border-radius: 0;
+    padding: 0 12px;
     font-size: var(--text-body);
   }
 
-  /* From the list: without a parent, the sibling rule restyled the editor's
-     blocks whenever one was added. */
-  :root[data-window-chrome="mobile"]
-    .app-menu-list
-    > .app-menu-row
-    + .app-menu-row
-    > .app-menu-item {
-    border-top: 1px solid var(--ui-border);
+  /* A submenu opens in place under its row, its rows set in; its chevron
+     turns down. */
+  :root[data-window-chrome="mobile"] .app-menu-inline > .app-menu-list {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    max-height: none;
+    padding: 0;
   }
 
-  /* Groups are set apart by a band, as UIMenu draws its sections. */
-  :root[data-window-chrome="mobile"] .app-menu-separator {
-    height: 8px;
-    margin: 0;
-    background: color-mix(in srgb, var(--ui-text) 6%, transparent);
+  :root[data-window-chrome="mobile"] .app-menu-inline .app-menu-item {
+    padding-left: 28px;
+  }
+
+  :root[data-window-chrome="mobile"]
+    .app-menu-item[aria-expanded="true"]
+    > .app-menu-chevron {
+    transform: rotate(90deg);
+  }
+
+  :root[data-window-chrome="mobile"] .app-menu-chevron {
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
   /* The check of an on/off row sits at the trailing edge, as on the
@@ -229,7 +227,7 @@
     background: none;
   }
 
-  /* iOS's highlight: on at the touch, fading out after it. */
+  /* A row lights at the touch and fades out after it. */
   :root[data-window-chrome="mobile"] .app-menu-item {
     transition: background-color var(--dur-base) var(--ease-standard);
   }
@@ -242,7 +240,7 @@
   /* ---- Find and replace: a bar across the top, under the title row. ---- */
 
   :root[data-window-chrome="mobile"] .find-replace-bar {
-    top: var(--mobile-bar);
+    top: var(--mobile-top);
     right: 0;
     left: 0;
     gap: 0;
@@ -352,7 +350,7 @@
   }
 
   :root[data-window-chrome="mobile"] .tab-pill-dirty-dot {
-    margin-right: 6px;
+    margin-right: 8px;
   }
 
   :root[data-window-chrome="mobile"] .tab-pill:hover:not(.tab-pill-active) {

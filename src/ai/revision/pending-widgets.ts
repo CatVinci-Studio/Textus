@@ -40,7 +40,7 @@ export function textWidget(
       const span = document.createElement(blocks ? "div" : "span");
       if (blocks) span.dataset.blocks = "true";
       // `pending-replaces`: there is an original the margin views can show
-      // instead; new text alone stays in the text.
+      // instead; new text alone leaves a mark where it goes.
       span.className = `pending-insert pending-whole${replaces ? " pending-replaces" : ""}${blocks ? " pending-blocks" : ""}`;
       // Read as an insertion, not as text of the document.
       span.setAttribute("role", "insertion");

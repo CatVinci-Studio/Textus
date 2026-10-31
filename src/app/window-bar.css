@@ -12,7 +12,7 @@
   align-items: center;
   /* Left inset is room for the macOS traffic lights, which float over the
      top-left corner. */
-  padding: 0 12px 0 78px;
+  padding: 0 12px 0 76px;
   background: var(--ui-bg);
 }
 
@@ -67,7 +67,7 @@
   max-width: 45%;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: var(--text-secondary);
   color: var(--ui-muted);
   pointer-events: none;
@@ -203,7 +203,7 @@
 
 .sidebar-header {
   /* Clears the window bar floating over the top of the window. */
-  padding: 34px 10px 0;
+  padding: 32px 8px 0;
   border-bottom: 1px solid var(--ui-border);
 }
 
@@ -225,7 +225,7 @@
 .sidebar-body {
   flex: 1;
   overflow-y: auto;
-  padding: 6px;
+  padding: 4px;
 }
 
 /* Shown while ghost text, grammar check and live Mermaid preview are paused
@@ -234,7 +234,7 @@
   font-size: var(--text-caption);
   color: var(--ui-muted);
   white-space: nowrap;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   border: 1px solid var(--ui-border);

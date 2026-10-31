@@ -91,9 +91,9 @@ https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
 
 不仅是写作，通过插件来实现更多功能。
 
-| 知识图谱 | Vim |
+| 关系图谱 | Vim |
 | :---: | :---: |
-| <img src="docs/images/readme/zh/plugin-graph.webp" alt="笔记和链接画成的知识图谱" width="420" /> | <img src="docs/images/readme/zh/plugin-vim.webp" alt="Vim 的普通模式和命令面板" width="420" /> |
+| <img src="docs/images/readme/zh/plugin-graph.webp" alt="笔记和链接画成的关系图谱" width="420" /> | <img src="docs/images/readme/zh/plugin-vim.webp" alt="Vim 的普通模式和命令面板" width="420" /> |
 | **浮动卡片** | **版本历史** |
 | <img src="docs/images/readme/zh/plugin-preview.webp" alt="停在链接上，卡片显示那篇笔记" width="420" /> | <img src="docs/images/readme/zh/plugin-history.webp" alt="一篇文档的历史版本和差异" width="420" /> |
 

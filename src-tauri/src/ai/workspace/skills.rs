@@ -71,6 +71,7 @@ pub(crate) fn parse_skill_file(file_stem: &str, content: &str) -> AgentSkill {
             skill.modes = list;
         }
     }
+    skill.off = meta("off") == Some("true");
     skill.version = meta("version").map(str::to_string);
     skill.based_on = meta("based-on").map(str::to_string);
     let words = |v: Option<&str>| {
@@ -398,5 +399,16 @@ pub(crate) fn set_modes_in(
     let raw = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
     let words: Vec<String> = modes.iter().map(|m| m.to_string()).collect();
     let text = with_metadata(&raw, "modes", &words.join(" "));
+    crate::atomic::write_sync(&path, text).map_err(|e| e.to_string())
+}
+
+/// Turns the skill `name` in `skills_dir` off, or on again.
+pub(crate) fn set_off_in(skills_dir: &Path, name: &str, off: bool) -> Result<(), String> {
+    let (path, _) = read_skill_files(skills_dir)
+        .into_iter()
+        .find(|(_, s)| s.name == name)
+        .ok_or_else(|| format!("No skill called {name}."))?;
+    let raw = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    let text = with_metadata(&raw, "off", if off { "true" } else { "false" });
     crate::atomic::write_sync(&path, text).map_err(|e| e.to_string())
 }

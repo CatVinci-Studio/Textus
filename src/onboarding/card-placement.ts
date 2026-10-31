@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
+import { phoneTitleRowBottom } from "../ui/usePhoneLayout";
 
 /**
  * Places a lesson card so it never hides what the lesson is about, folding
@@ -151,7 +152,8 @@ export function useCardPlacement(
       const css = getComputedStyle(card);
       const docked =
         parseFloat(css.getPropertyValue("--docked-panel-width")) || 0;
-      const bar = parseFloat(css.getPropertyValue("--mobile-bar")) || 0;
+      // A phone's title row, status bar included; none on the desktop.
+      const bar = phoneTitleRowBottom();
       const narrow = window.innerWidth <= 720;
       const gap = narrow ? 12 : 18;
       const area: Box = {

@@ -23,6 +23,23 @@
      may take: more words, a shorter step. */
   --dur-stagger: 18ms;
   --dur-cascade: 700ms;
+  /* Between one row and the next as a list comes in. */
+  --dur-stagger-row: 40ms;
+  /* One turn of a "working" loop: a caret's blink, the thinking dots and a
+     progress bar's sweep, a spinner, the sheen over a picture being made,
+     and the slow drift under it. */
+  --dur-blink: 1.1s;
+  --dur-pulse: 1.2s;
+  --dur-spin: 0.7s;
+  --dur-sheen: 2.4s;
+  --dur-drift: 7.2s;
+
+  /* Waits before something shows or goes: an indicator that would only flash
+     on a quick answer, one shown once a reply pauses, a hint held long
+     enough to read. */
+  --delay-soon: 400ms;
+  --delay-pause: 1500ms;
+  --delay-read: 3s;
   /* The exits of the last two. */
   --dur-slow-exit: calc(var(--dur-slow) * 0.7);
   --dur-sheet-exit: calc(var(--dur-sheet) * 0.7);
@@ -114,6 +131,17 @@
       1.007,
       1
     );
+  }
+}
+
+/* iOS WebKit hands an animation to Core Animation, off the page's thread,
+   only when its curve is a cubic: a linear() spring runs frame by frame on
+   the page's thread, and stutters while a page is being built under it.
+   There the springs stay the cubic fallbacks. */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root[data-platform="ios"] {
+    --ease-spring: var(--ease-out);
+    --ease-spring-bouncy: cubic-bezier(0.34, 1.3, 0.64, 1);
   }
 }
 

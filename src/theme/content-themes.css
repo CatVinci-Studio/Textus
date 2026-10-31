@@ -51,8 +51,8 @@
   --doc-accent: #3467d2;
   --doc-code-bg: #eef1f5;
   --doc-font:
-    var(--font-cjk-punct), -apple-system, "Inter", var(--font-text-sans),
-    sans-serif;
+    var(--font-cjk-punct), var(--font-apple-system), "Inter",
+    var(--font-text-sans), sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -88,8 +88,8 @@
   --doc-accent: #487448;
   --doc-code-bg: #e9efe3;
   --doc-font:
-    var(--font-cjk-punct), -apple-system, "Inter", var(--font-text-sans),
-    sans-serif;
+    var(--font-cjk-punct), var(--font-apple-system), "Inter",
+    var(--font-text-sans), sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {

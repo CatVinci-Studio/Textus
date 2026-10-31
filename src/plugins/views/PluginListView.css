@@ -51,7 +51,7 @@
 .plugin-list-row {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: 8px;
   padding: 4px 8px;
   border-radius: var(--shape-s);
   cursor: pointer;
@@ -92,7 +92,7 @@
 
 .plugin-list-check {
   flex: none;
-  margin: 3px 0 0;
+  margin: 4px 0 0;
 }
 
 .plugin-list-icon {
@@ -107,7 +107,7 @@
   display: flex;
   flex: 1;
   flex-wrap: wrap;
-  gap: 0 6px;
+  gap: 0 8px;
   min-width: 0;
 }
 
@@ -130,7 +130,7 @@
 
 .plugin-list-badge {
   flex: none;
-  padding: 0 6px;
+  padding: 0 4px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   font-size: var(--text-caption);

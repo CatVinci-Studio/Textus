@@ -56,6 +56,7 @@ mod ios {
         remembered => "remembered",
         begin_access => "beginAccess",
         share => "share",
+        haptic => "haptic",
     }
 
     pub fn init<R: Runtime>() -> TauriPlugin<R> {
@@ -69,7 +70,8 @@ mod ios {
                 list_folder,
                 remembered,
                 begin_access,
-                share
+                share,
+                haptic
             ])
             .setup(|app, api| {
                 let handle = api.register_ios_plugin(init_plugin_textus_files)?;

@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { createPortal } from "react-dom";
-import { ReviewBars } from "./ReviewBars";
+import { ReviewBars, type OwnReview } from "./ReviewBars";
+import { OWN_CHANGES } from "../ai/margin/own-revision-plugin";
 import type { EditorChat } from "./useEditorChat";
 import type { EditorReview } from "./useEditorReview";
 import { RevisionLearningBar } from "../ai/revision/RevisionLearning";
@@ -27,6 +29,36 @@ export function EditorMarginLayer({
 }) {
   const { notes, paneEl, scrollEl, contentEl, reviewBarShown } = review;
   const { pendingEdits, agentPanel } = chat;
+  const changes = notes.revisions.changes ?? [];
+  const ownKey = (i: number) => `rev:${OWN_CHANGES}:${changes[i].index}`;
+  // The change stepped to; a card picked since points the bar there.
+  const [stepped, setStepped] = useState(-1);
+  const picked = changes.findIndex((_, i) => ownKey(i) === notes.focusedItem);
+  const position =
+    picked >= 0 ? picked : stepped < changes.length ? stepped : -1;
+  const own: OwnReview | null =
+    isActive &&
+    !reviewBarShown &&
+    !quickAskVisible &&
+    !(phone && chat.panelContainer) &&
+    changes.length > 0
+      ? {
+          stops: changes.length,
+          position,
+          step: (by) => {
+            const next =
+              position < 0
+                ? by > 0
+                  ? 0
+                  : changes.length - 1
+                : (position + by + changes.length) % changes.length;
+            setStepped(next);
+            notes.selectCard(ownKey(next));
+          },
+          acceptAll: notes.revisions.acceptAll,
+          rejectAll: notes.revisions.rejectAll,
+        }
+      : null;
   return (
     <>
       {isActive && scrollEl && contentEl && (
@@ -71,11 +103,13 @@ export function EditorMarginLayer({
         notes={notes.bar}
         stepReview={review.stepReview}
         onOpenChat={() => agentPanel.setOpen(true)}
+        own={own}
       />
       {/* What revision choices taught, once the review is done. */}
       {paneEl &&
         isActive &&
         !reviewBarShown &&
+        !own &&
         pendingEdits.reviewed.length === 0 &&
         !quickAskVisible &&
         !(phone && chat.panelContainer) &&

@@ -1,4 +1,5 @@
 import type { Strings } from "../i18n/strings";
+import { openedText } from "./tracked-file";
 import { basename } from "../utils/path";
 import { lazyModule } from "../lazy/lazy-module";
 import { fs } from "../platform/ipc";
@@ -177,7 +178,7 @@ export async function readDocText(path: string): Promise<string> {
 export async function readDocFromDisk(
   path: string,
 ): Promise<{ content: string; diskMtime: number | null }> {
-  const content = await readDocText(path);
+  const content = await openedText(path, await readDocText(path));
   return { content, diskMtime: await statMtime(path) };
 }
 

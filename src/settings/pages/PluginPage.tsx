@@ -15,6 +15,7 @@ import {
   revokePermission,
   uninstallPlugin,
   type PluginRecord,
+  runsHere,
 } from "../../plugins/manager";
 import {
   requirementLabel,
@@ -39,6 +40,8 @@ export function statusText(
     case "broken":
       return t.pluginStatusBroken.replace("{reason}", record.problem ?? "");
     case "incompatible":
+      if (record.manifest && !runsHere(record.manifest))
+        return t.pluginStatusDesktopOnly;
       return t.pluginStatusIncompatible.replace(
         "{range}",
         record.problem ?? "",
@@ -181,6 +184,7 @@ export function PluginPage({
                 ) : (
                   <button
                     type="button"
+                    className="text-button settings-inline-button"
                     onClick={() => setSettings(turnOnRequirement(need))}
                   >
                     {t.pluginRequiresTurnOn}
@@ -223,7 +227,12 @@ export function PluginPage({
       {manifest && <PluginAbout record={record} t={t} attempt={attempt} />}
       <div className="plugin-detail-actions">
         {update && (
-          <button type="button" disabled={installing} onClick={onUpdate}>
+          <button
+            type="button"
+            className="text-button settings-inline-button"
+            disabled={installing}
+            onClick={onUpdate}
+          >
             {installing
               ? t.pluginInstalling
               : t.pluginUpdate.replace("{version}", update)}
@@ -232,6 +241,7 @@ export function PluginPage({
         {manifest?.repository && (
           <button
             type="button"
+            className="text-button settings-inline-button"
             onClick={() => void links.openWebLink(manifest.repository!)}
           >
             {t.pluginRepository}
@@ -240,6 +250,7 @@ export function PluginPage({
         {record.origin === "dev" && (
           <button
             type="button"
+            className="text-button settings-inline-button"
             onClick={() => void attempt(() => reloadPlugin(record.id))}
           >
             {t.pluginReload}
@@ -248,6 +259,7 @@ export function PluginPage({
         {(record.origin === "dev" || record.id.startsWith("local.")) && (
           <button
             type="button"
+            className="text-button settings-inline-button"
             onClick={() => void exportPluginForPublishing(record.id)}
           >
             {t.pluginExport}
@@ -255,7 +267,7 @@ export function PluginPage({
         )}
         <button
           type="button"
-          className="danger"
+          className="text-button settings-inline-button danger"
           onClick={() =>
             void attempt(async () => {
               const ok = await showConfirm(
@@ -323,6 +335,7 @@ function PluginAbout({
             {granted && (
               <button
                 type="button"
+                className="text-button settings-inline-button"
                 onClick={() =>
                   void attempt(() => revokePermission(record.id, permission))
                 }

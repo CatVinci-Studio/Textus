@@ -152,8 +152,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   revisionDisplayFinal: "Nur das Ergebnis, Original am Rand",
   revisionDisplayNoRoom:
     "Nicht genug Platz - schließen Sie die Seitenleiste oder den KI-Bereich",
-  revisionDisplayNewText:
-    "Neuer Text hat kein Original: In diesen Ansichten bleibt er grün im Text",
   proposalDeletedSentence: "Original",
   proposalAddedSentence: "Neu",
   reviewBarLabel: "Überarbeitung",
@@ -171,6 +169,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   ownNoteDelete: "Löschen",
   menuTrackChanges: "Meine Änderungen nachverfolgen",
   trackStop: "Nachverfolgung beenden",
+  closedWithUndecided:
+    "Offene Änderungen in {name}: {n}. Sie bleiben erhalten und sind beim nächsten Öffnen wieder da.",
   trackStopConfirm:
     "Ihre Änderungen nicht mehr nachverfolgen? Sie bleiben im Text, nur ihre Markierungen verschwinden.",
   trackAcceptAll: "Alle meine Änderungen annehmen",
@@ -515,8 +515,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   settingsSearchResults: "Suchergebnisse",
   settingsSearchNoMatches: "Keine Einstellung passt.",
   settingsViewGroup: "Ansicht",
+  settingsFrontDocumentHint: "Für das Dokument im Vordergrund.",
   settingsHelpGroup: "Hilfe",
-  settingsDone: "Fertig",
   navGeneral: "Allgemein",
   navEditor: "Editor & Design",
   navTheme: "Design",
@@ -592,7 +592,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   skillPickerAbout:
     "Mit / rufst du einen Skill auf: eine fertige Anweisung wie „Korrektur lesen“ oder „Zusammenfassen“.",
   skillPickerNoMatch: "Kein Skill passt zu „{query}“.",
-  skillPickerHowTo: `Unter Einstellungen > ${AI_NAME} kannst du integrierte Skills einschalten oder eigene importieren.`,
+  skillPickerHowTo:
+    "Unter Einstellungen kannst du weitere Skills hinzufügen oder eigene importieren.",
   mentionPickerAbout: "Mit @ hängst du eine Datei aus dem Projektordner an.",
   mentionPickerNoProject:
     "Speichere das Dokument oder wähle einen Projektordner, dann erscheinen seine Dateien hier.",
@@ -658,7 +659,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   alignRight: "Rechtsbündig",
   selectRow: "Zeile auswählen",
   selectColumn: "Spalte auswählen",
-  menuGroupInsert: "Einfügen",
   tableRowGroup: "Zeile",
   tableColumnGroup: "Spalte",
   insertRowAbove: "Zeile oberhalb einfügen",
@@ -772,6 +772,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatSelectedPicture: "Bild ausgewählt",
   cut: "Ausschneiden",
   copy: "Kopieren",
+  menuPlainText: "Als reinen Text kopieren/einfügen",
+  appErrorTitle: "Etwas ist schiefgelaufen",
+  appErrorReload: "Neu laden",
   copyAsPlainText: "Als reinen Text kopieren",
   pasteAsPlainText: "Als reinen Text einfügen",
   paste: "Einfügen",
@@ -830,7 +833,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   contentThemeLabel: "Editor-Design",
   themeDeleteButton: "Design löschen",
   themeImportLabel: "Design aus einer CSS-Datei hinzufügen",
-  themeMoreLabel: "Weitere Designs",
   themeGetMore: "Weitere Themes holen",
   themeImportButton: "CSS importieren…",
   themeGalleryLoading: "Themes werden geladen…",
@@ -862,6 +864,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   codeBlockCopied: "Kopiert",
   autoCloseMarksLabel: "** und ` schließen",
   autoCloseBracketsLabel: "(), [] und „“ schließen",
+  plainTextMenuLabel: "Als reinen Text kopieren/einfügen im Kontextmenü",
   pdfPageNumbersLabel: "Seitenzahlen beim Exportieren anzeigen",
   pdfLightColorsLabel: "PDFs in hellen Farben exportieren",
   infoTipLabel: "Mehr zu „{label}“",
@@ -1238,7 +1241,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   missingImageChooseFailed:
     "Das ausgewählte Bild konnte nicht verwendet werden.",
   imageStorageGroupLabel: "Bilder",
-  imageStorageLabel: "Eingefügte Bilder speichern",
+  imageStorageLabel: "Bildspeicherort",
   imageStorageLocal: "Auf diesem Computer",
   imageStorageRemote: "Zu einem Bildhoster hochladen",
   imageFolderLabel: "Ordner",
@@ -1379,7 +1382,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   extensionsThemesGet: "Themes holen",
   extensionsSkillsHelp: `Ein Skill sagt ${AI_NAME}, wie es eine Art von Aufgabe gut erledigt. Eingeschaltete Skills bekommt ${AI_NAME}, und sie stehen im /-Menü; eine neue Installation beginnt mit fünf, den Rest fügst du hier hinzu.`,
   extensionsSkillsMoved:
-    "Eingebaute und eigene Skills sind unter Einstellungen › Erweiterungen.",
+    "Hinzugefügte Skills sind unter Einstellungen › Erweiterungen, die eingebauten weiter unten.",
   extensionsSkillsOpen: "Öffnen",
   mcpServersGroup: "MCP-Server",
   mcpHelp: `Ein MCP-Server gibt ${AI_NAME} weitere Werkzeuge: einen Ordner, eine Datenbank, eine Suche. Jeder eingeschaltete Server startet im Hintergrund, und ${AI_NAME} darf seine Werkzeuge nutzen, während es dir hilft; das Gespräch zeigt jeden Aufruf.`,
@@ -1489,6 +1492,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsMine: "Von dir erstellt",
   pluginsNone: "Noch keine.",
   pluginStatusBroken: "Nicht lesbar: {reason}",
+  pluginStatusDesktopOnly:
+    "Nur am Computer nutzbar, nicht auf iPhone oder iPad.",
   pluginStatusIncompatible: "Für eine andere Textus-Version gemacht ({range}).",
   pluginStatusFailed: "Ausgeschaltet: {reason}",
   pluginStatusAllOff: "Plugins sind aus.",

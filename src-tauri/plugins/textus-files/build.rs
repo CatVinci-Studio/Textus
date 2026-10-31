@@ -10,6 +10,7 @@ const COMMANDS: &[&str] = &[
     "remembered",
     "begin_access",
     "share",
+    "haptic",
 ];
 
 fn main() {

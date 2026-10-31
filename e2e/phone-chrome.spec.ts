@@ -131,14 +131,14 @@ test("tabs have a close button a finger can hit; closing an edited tab asks with
   await expect(page.locator(".tab-pill")).toHaveCount(0);
 });
 
-test("the menu is a pull-down menu and a tap beside it closes it", async ({
+test("the menu drops from its button, rows a finger can hit, and a tap beside it closes it", async ({
   page,
 }) => {
   await openPhone(page);
   await page.locator(".window-menu-button").tap();
   const list = page.locator(".app-menu-list");
   await expect(list).toBeVisible();
-  expect((await list.boundingBox())!.width).toBe(250);
+  expect((await list.boundingBox())!.width).toBeGreaterThanOrEqual(240);
   const row = (await page.getByRole("menuitem").first().boundingBox())!;
   expect(row.height).toBeGreaterThanOrEqual(44);
   // No row starts out looking selected.

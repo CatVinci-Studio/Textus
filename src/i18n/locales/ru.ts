@@ -157,8 +157,6 @@ export default {
   revisionDisplayFinal: "Только результат, оригинал на полях",
   revisionDisplayNoRoom:
     "Не хватает места: закройте боковую панель или панель ИИ",
-  revisionDisplayNewText:
-    "У нового текста нет оригинала: в этих режимах он остаётся в тексте, зелёным",
   proposalDeletedSentence: "Оригинал",
   proposalAddedSentence: "Добавлено",
   reviewBarLabel: "Правка",
@@ -176,6 +174,8 @@ export default {
   ownNoteDelete: "Удалить",
   menuTrackChanges: "Отслеживать мои правки",
   trackStop: "Остановить отслеживание",
+  closedWithUndecided:
+    "В «{name}» осталось нерешённых правок: {n}. Они сохранены и вернутся, когда вы снова откроете документ.",
   trackStopConfirm:
     "Перестать отслеживать ваши правки? Они останутся в тексте, исчезнут только пометки.",
   trackAcceptAll: "Принять все мои правки",
@@ -516,8 +516,8 @@ export default {
   settingsSearchResults: "Результаты поиска",
   settingsSearchNoMatches: "Нет подходящих настроек.",
   settingsViewGroup: "Вид",
+  settingsFrontDocumentHint: "Для открытого сейчас документа.",
   settingsHelpGroup: "Справка",
-  settingsDone: "Готово",
   navGeneral: "Основные",
   navEditor: "Редактор и оформление",
   navTheme: "Тема",
@@ -591,7 +591,8 @@ export default {
   skillPickerAbout:
     "Введите /, чтобы применить навык — готовую инструкцию вроде «Вычитать» или «Кратко изложить».",
   skillPickerNoMatch: "Нет навыков по запросу «{query}».",
-  skillPickerHowTo: `Включить встроенные навыки или импортировать свои можно в разделе «Настройки > ${AI_NAME}».`,
+  skillPickerHowTo:
+    "Добавить навыки или импортировать свои можно в «Настройках».",
   mentionPickerAbout: "Введите @, чтобы приложить файл из папки проекта.",
   mentionPickerNoProject:
     "Сохраните документ или выберите папку проекта — и её файлы появятся здесь.",
@@ -658,7 +659,6 @@ export default {
   alignRight: "По правому краю",
   selectRow: "Выделить строку",
   selectColumn: "Выделить столбец",
-  menuGroupInsert: "Вставить",
   tableRowGroup: "Строка",
   tableColumnGroup: "Столбец",
   insertRowAbove: "Вставить строку выше",
@@ -781,6 +781,9 @@ export default {
   chatSelectedPicture: "Выбрана картинка",
   cut: "Вырезать",
   copy: "Скопировать",
+  menuPlainText: "Копировать/вставить как текст",
+  appErrorTitle: "Что-то пошло не так",
+  appErrorReload: "Перезагрузить",
   copyAsPlainText: "Копировать как обычный текст",
   pasteAsPlainText: "Вставить как обычный текст",
   paste: "Вставить",
@@ -837,7 +840,6 @@ export default {
   contentThemeLabel: "Тема редактора",
   themeDeleteButton: "Удалить тему",
   themeImportLabel: "Добавить тему из файла CSS",
-  themeMoreLabel: "Другие темы",
   themeGetMore: "Другие темы",
   themeImportButton: "Импортировать CSS…",
   themeGalleryLoading: "Загрузка тем…",
@@ -869,6 +871,7 @@ export default {
   codeBlockCopied: "Скопировано",
   autoCloseMarksLabel: "Закрывать ** и `",
   autoCloseBracketsLabel: "Закрывать (), [] и «»",
+  plainTextMenuLabel: "Копировать/вставить как текст в контекстном меню",
   pdfPageNumbersLabel: "Показывать номера страниц при экспорте",
   pdfLightColorsLabel: "Экспортировать PDF в светлых цветах",
   infoTipLabel: "Подробнее о «{label}»",
@@ -1237,7 +1240,7 @@ export default {
   missingImageFilter: "Изображения",
   missingImageChooseFailed: "Не удалось использовать выбранное изображение.",
   imageStorageGroupLabel: "Изображения",
-  imageStorageLabel: "Сохранять вставленные изображения",
+  imageStorageLabel: "Где хранить изображения",
   imageStorageLocal: "На этом компьютере",
   imageStorageRemote: "Загружать на хостинг изображений",
   imageFolderLabel: "Папка",
@@ -1377,7 +1380,7 @@ export default {
   extensionsThemesGet: "Получить темы",
   extensionsSkillsHelp: `Навык подсказывает ${AI_NAME}, как хорошо делать определённую работу. Включённые навыки доступны ${AI_NAME} и в меню /; в новой установке включено пять, остальные добавляются здесь.`,
   extensionsSkillsMoved:
-    "Встроенные и ваши навыки — в «Настройки › Расширения».",
+    "Добавленные навыки — в «Настройки › Расширения», встроенные — ниже.",
   extensionsSkillsOpen: "Открыть",
   mcpServersGroup: "MCP-серверы",
   mcpHelp: `MCP-сервер даёт ${AI_NAME} больше инструментов: папку, базу данных, поиск. Каждый включённый сервер запускается в фоне, и ${AI_NAME} может вызывать его инструменты, пока помогает вам; каждый вызов виден в разговоре.`,
@@ -1486,6 +1489,8 @@ export default {
   pluginsMine: "Созданные вами",
   pluginsNone: "Пока нет.",
   pluginStatusBroken: "Не удаётся прочитать: {reason}",
+  pluginStatusDesktopOnly:
+    "Работает только на компьютере, не на iPhone и iPad.",
   pluginStatusIncompatible: "Сделан для другой версии Textus ({range}).",
   pluginStatusFailed: "Выключен: {reason}",
   pluginStatusAllOff: "Плагины выключены.",

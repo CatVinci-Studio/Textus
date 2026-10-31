@@ -13,6 +13,7 @@ Everything Textus's iOS document access needs.
 - `allow-remembered`
 - `allow-begin-access`
 - `allow-share`
+- `allow-haptic`
 
 ## Permission Table
 
@@ -45,6 +46,32 @@ Enables the begin_access command without any pre-configured scope.
 <td>
 
 Denies the begin_access command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:allow-haptic`
+
+</td>
+<td>
+
+Enables the haptic command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`textus-files:deny-haptic`
+
+</td>
+<td>
+
+Denies the haptic command without any pre-configured scope.
 
 </td>
 </tr>

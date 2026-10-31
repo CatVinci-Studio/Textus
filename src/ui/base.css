@@ -63,16 +63,20 @@
     "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", SimSun;
   --font-cjk-sans: var(--font-cjk-sans-sc);
   --font-cjk-serif: var(--font-cjk-serif-sc);
+  /* The system's own face, by its two generic names. iOS 26 WebKit stops at
+     either, drawing CJK as boxes, so there both are the face's own name. */
+  --font-apple-system: -apple-system;
+  --font-system-ui: system-ui;
   /* Without -apple-system, the CJK face leads for a CJK UI so punctuation is
      full-width; elsewhere a Latin face leads, or ’ “ ” go full-width too. */
-  --font-text-sans: Inter, system-ui, var(--font-cjk-sans);
+  --font-text-sans: Inter, var(--font-system-ui), var(--font-cjk-sans);
   /* A family that doesn't exist: outside a Chinese or Japanese UI the
      punctuation faces above stay out of the stacks. */
   --font-cjk-punct: "Textus No Punct";
   --font-cjk-punct-serif: "Textus No Punct";
   --font-sans:
-    var(--font-cjk-punct), -apple-system, "SF Pro Text", var(--font-text-sans),
-    sans-serif;
+    var(--font-cjk-punct), var(--font-apple-system), "SF Pro Text",
+    var(--font-text-sans), sans-serif;
   /* A mono face every platform has comes before the CJK faces, or Latin would
      be drawn proportional; the CJK faces come before the generic, which a
      Chinese Windows resolves to NSimSun. */
@@ -165,7 +169,7 @@
 }
 
 :root:is(:lang(zh), :lang(ja), :lang(ko)) {
-  --font-text-sans: var(--font-cjk-sans), Inter, system-ui;
+  --font-text-sans: var(--font-cjk-sans), Inter, var(--font-system-ui);
 }
 
 :root:lang(zh) {

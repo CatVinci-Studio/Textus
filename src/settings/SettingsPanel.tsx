@@ -15,7 +15,7 @@ import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { localeOf } from "../i18n/strings";
 import type { FixedShortcutGroup } from "../app/fixed-shortcuts";
 import { ChevronIcon, CloseIcon } from "../ui/icons";
-import { ThemeLibrarySection, ThemesTab } from "./sections/theme";
+import { ThemesTab } from "./sections/theme";
 import { openExtensionsTab, type ExtensionsTab } from "./pages/extensions-tab";
 import {
   revealEntry,
@@ -44,11 +44,10 @@ import type {
 import { useModalDialog } from "../ui/useModalDialog";
 import { usePresenceProps } from "../ui/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
-import { isIOSApp } from "../platform/capabilities";
 
 // The settings dialog shell: navigation, search and subpages, for every
-// platform. On a phone the same panel fills the screen with the categories
-// as tabs along the top.
+// platform. On a phone the same panel fills the screen as iOS's Settings
+// does: a list of the categories, each pushing its page.
 
 export interface SettingsPanelProps {
   onClose: () => void;
@@ -67,17 +66,14 @@ export interface SettingsPanelProps {
 
 type Category = string;
 
-/** The subpages the search reads, by the category each is in. More themes
- *  only on the phone: elsewhere its rows are Extensions › Themes. */
+/** The subpages the search reads, by the category each is in. */
 const SEARCHED_SUBPAGES: [Subpage, Category][] = [
   ["about", "general"],
   ["guides", "general"],
-  ...(isIOSApp ? [["themes", "editor"] as [Subpage, Category]] : []),
 ];
 
-/** The Extensions tabs the search reads, each as a page of its own. The
- *  phone has no Extensions. */
-const SEARCHED_TABS: ExtensionsTab[] = isIOSApp ? [] : ["themes"];
+/** The Extensions tabs the search reads, each as a page of its own. */
+const SEARCHED_TABS: ExtensionsTab[] = ["themes"];
 
 /** A searchable page's key: "editor", "editor/themes",
  *  "extensions/tab:themes". */
@@ -123,8 +119,10 @@ export function SettingsPanel({
   const modal = useModalDialog(onClose, true, undefined, false);
   // Rendered inside a Presence: it goes the way it came.
   const presence = usePresenceProps<HTMLDivElement>();
-  const { category, setCategory, subpage, setSubpage, content, setJump } =
-    useSettingsNav(initialCategory);
+  const nav = useSettingsNav(initialCategory);
+  const { category, subpage, setSubpage, content, setJump } = nav;
+  // A phone opened at General starts on the list instead.
+  const atHome = phone && nav.home;
   const search = useSettingsSearch();
   const { query, setQuery, searching, setEntries, active, setActive } = search;
   const { matches, searchInput, listId } = search;
@@ -143,7 +141,6 @@ export function SettingsPanel({
   const subpageTitles: Record<Subpage, string> = {
     about: t.navAbout,
     guides: t.navGuides,
-    themes: t.themeMoreLabel,
   };
 
   const pageProps: SettingsPageProps = {
@@ -155,10 +152,7 @@ export function SettingsPanel({
     marginAvailable,
     noMargin,
     setSubpage,
-    openPage: (id) => {
-      setSubpage(null);
-      setCategory(id);
-    },
+    openPage: nav.open,
     openHelp,
     onOpenFile,
     onFilesDeleted,
@@ -180,15 +174,7 @@ export function SettingsPanel({
     ) : (
       <>
         <h1 className="settings-category-title">{subpageTitles[s]}</h1>
-        {s === "guides" ? (
-          <GuidesSection
-            t={t}
-            language={settings.language}
-            openHelp={openHelp}
-          />
-        ) : (
-          <ThemeLibrarySection t={t} />
-        )}
+        <GuidesSection t={t} language={settings.language} openHelp={openHelp} />
       </>
     );
 
@@ -223,10 +209,15 @@ export function SettingsPanel({
     const page = pageOfKey(match.entry.page);
     if (page.tab) openExtensionsTab(page.tab);
     setQuery("");
-    setCategory(page.category);
-    setSubpage(page.subpage);
+    nav.open(page.category, page.subpage);
     setJump(match.entry);
   };
+  const categoryLabel = categories.find((c) => c.id === category)?.label;
+  // On a phone the bar names the page and goes back; Done stays.
+  const pushed = phone && !atHome && !searching;
+  const backLabel = subpage ? categoryLabel : t.settingsTitle;
+  // The phone's list leads to pages; it has no current one.
+  const current = (id: Category) => !phone && !searching && category === id;
 
   return (
     <div {...presence} className="settings-backdrop" onClick={onClose}>
@@ -239,72 +230,79 @@ export function SettingsPanel({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="settings-header">
-          <span>{t.settingsTitle}</span>
-          {isIOSApp ? (
-            // iOS closes a sheet like this with a word, not a cross.
+          {pushed && (
             <button
-              className="text-button settings-done-button"
-              onClick={onClose}
+              type="button"
+              className="icon-button settings-bar-back"
+              aria-label={backLabel}
+              onClick={nav.back}
             >
-              {t.settingsDone}
-            </button>
-          ) : (
-            <button
-              className="icon-button settings-close-button"
-              aria-label={t.windowClose}
-              onClick={onClose}
-            >
-              <CloseIcon />
+              <ChevronIcon className="settings-back-chevron" />
             </button>
           )}
+          <span>
+            {pushed
+              ? subpage
+                ? subpageTitles[subpage]
+                : categoryLabel
+              : t.settingsTitle}
+          </span>
+          <button
+            className="icon-button settings-close-button"
+            aria-label={t.windowClose}
+            onClick={onClose}
+          >
+            <CloseIcon />
+          </button>
         </div>
 
-        <div className="settings-layout">
-          <div className="settings-sidebar">
-            <SettingsSearchField
-              t={t}
-              inputRef={searchInput}
-              query={query}
-              listId={listId}
-              activeId={flatMatches.length ? optionId(activeIndex) : undefined}
-              onQueryChange={(next) => {
-                setQuery(next);
-                setActive(0);
-              }}
-              onMove={(step) =>
-                flatMatches.length &&
-                setActive(
-                  (activeIndex + step + flatMatches.length) %
-                    flatMatches.length,
-                )
-              }
-              onPick={() => pick(flatMatches[activeIndex])}
-            />
-            <nav className="settings-nav">
-              {categories.map((c) => (
-                <button
-                  key={c.id}
-                  aria-current={
-                    !searching && category === c.id ? "page" : undefined
-                  }
-                  data-label={c.label}
-                  className={`settings-nav-item ${!searching && category === c.id ? "settings-nav-item-active" : ""}`}
-                  onClick={(e) => {
-                    setQuery("");
-                    setCategory(c.id);
-                    setSubpage(null);
-                    // The phone's tabs scroll sideways; the chosen one can be half out of view.
-                    e.currentTarget.scrollIntoView?.({
-                      block: "nearest",
-                      inline: "nearest",
-                    });
-                  }}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </nav>
-          </div>
+        <div className="settings-layout" data-nav={nav.direction ?? undefined}>
+          {!pushed && (
+            <div className="settings-sidebar" key={atHome ? "home" : "side"}>
+              <SettingsSearchField
+                t={t}
+                inputRef={searchInput}
+                query={query}
+                listId={listId}
+                activeId={
+                  flatMatches.length ? optionId(activeIndex) : undefined
+                }
+                onQueryChange={(next) => {
+                  setQuery(next);
+                  setActive(0);
+                }}
+                onMove={(step) =>
+                  flatMatches.length &&
+                  setActive(
+                    (activeIndex + step + flatMatches.length) %
+                      flatMatches.length,
+                  )
+                }
+                onPick={() => pick(flatMatches[activeIndex])}
+              />
+              {(!phone || !searching) && (
+                <nav className="settings-nav">
+                  {categories.map((c) => (
+                    <button
+                      key={c.id}
+                      aria-current={current(c.id) ? "page" : undefined}
+                      data-label={c.label}
+                      className={`settings-nav-item ${current(c.id) ? "settings-nav-item-active" : ""}`}
+                      onClick={() => {
+                        setQuery("");
+                        nav.open(c.id);
+                      }}
+                    >
+                      {c.label}
+                      {phone && (
+                        <ChevronIcon className="settings-nav-chevron" />
+                      )}
+                    </button>
+                  ))}
+                </nav>
+              )}
+            </div>
+          )}
 
           {searching ? (
             <div
@@ -322,7 +320,7 @@ export function SettingsPanel({
                 onPick={pick}
               />
             </div>
-          ) : subpage ? (
+          ) : atHome ? null : subpage ? (
             <div
               ref={content}
               className="settings-content"
@@ -333,7 +331,7 @@ export function SettingsPanel({
               <button
                 type="button"
                 className="text-button settings-back-button"
-                onClick={() => setSubpage(null)}
+                onClick={nav.back}
               >
                 <ChevronIcon className="settings-back-chevron" />
                 {categories.find((c) => c.id === category)?.label}
@@ -346,11 +344,9 @@ export function SettingsPanel({
               className="settings-content"
               key={category}
               role="region"
-              aria-label={categories.find((c) => c.id === category)?.label}
+              aria-label={categoryLabel}
             >
-              <h1 className="settings-category-title">
-                {categories.find((c) => c.id === category)?.label}
-              </h1>
+              <h1 className="settings-category-title">{categoryLabel}</h1>
               {renderCategory(category)}
             </div>
           )}
@@ -364,7 +360,9 @@ export function SettingsPanel({
 }
 
 /** Which page Settings shows: a category, and possibly a subpage inside it
- *  with a way back. A picked search result sets `jump` to go to its row. */
+ *  with a way back. A picked search result sets `jump` to go to its row.
+ *  `home` is the phone's list of categories, which General is opened from;
+ *  `direction` says whether the last move went in or back. */
 function useSettingsNav(initialCategory: Category) {
   // "updates" is General › About.
   const updates = initialCategory === "updates";
@@ -375,6 +373,8 @@ function useSettingsNav(initialCategory: Category) {
     updates ? "about" : null,
   );
   const [jump, setJump] = useState<SearchEntry | null>(null);
+  const [home, setHome] = useState(initialCategory === "general");
+  const [direction, setDirection] = useState<"push" | "pop" | null>(null);
   const content = useRef<HTMLDivElement>(null);
 
   // Once the row's page is on screen, go to the row. A row that waits on
@@ -396,7 +396,33 @@ function useSettingsNav(initialCategory: Category) {
     return () => cancelAnimationFrame(frame);
   }, [jump]);
 
-  return { category, setCategory, subpage, setSubpage, content, setJump };
+  const open = (id: Category, inner: Subpage | null = null) => {
+    setCategory(id);
+    setSubpage(inner);
+    setHome(false);
+    setDirection("push");
+  };
+  const back = () => {
+    if (subpage) setSubpage(null);
+    else setHome(true);
+    setDirection("pop");
+  };
+  const goSubpage = (inner: Subpage | null) => {
+    setSubpage(inner);
+    setDirection(inner ? "push" : "pop");
+  };
+
+  return {
+    category,
+    subpage,
+    setSubpage: goSubpage,
+    content,
+    setJump,
+    home,
+    direction,
+    open,
+    back,
+  };
 }
 
 /** The search box: while it holds a query its results stand in for the page,

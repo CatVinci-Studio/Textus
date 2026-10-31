@@ -122,6 +122,7 @@ function PluginSettingRow({
     scope === "project" && own ? (
       <button
         type="button"
+        className="text-button settings-inline-button"
         onClick={() =>
           void setPluginSetting(record.id, setting.key, undefined, "project")
         }

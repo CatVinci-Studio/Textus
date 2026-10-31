@@ -56,7 +56,10 @@ function build(
   notes.forEach((note) => {
     decos.push(
       Decoration.inline(note.from, note.to, {
-        class: `review-anchor${hot === note.id ? " review-anchor-hot" : ""}`,
+        // The id in the class too: where a pending edit's sentence covers
+        // the same text, the two share one element, classes joined and the
+        // edit's data-* taking the place of the note's.
+        class: `review-anchor ${noteAnchorClass(note.id)}${hot === note.id ? " review-anchor-hot" : ""}`,
         "data-note": note.id,
       }),
     );
@@ -218,4 +221,20 @@ export function commentCalls(
     }
   }
   return out;
+}
+
+/** The class naming the note a passage's anchor belongs to. */
+export function noteAnchorClass(id: string): string {
+  return `review-anchor-of-${id.replace(/[^\w-]/g, "_")}`;
+}
+
+/** Which of `notes` an anchor element belongs to, by its class. */
+export function noteOfAnchor(
+  el: Element,
+  notes: readonly ReviewNote[],
+): string | null {
+  return (
+    notes.find((note) => el.classList.contains(noteAnchorClass(note.id)))?.id ??
+    null
+  );
 }

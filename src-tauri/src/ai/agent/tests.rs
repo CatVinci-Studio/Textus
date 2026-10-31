@@ -513,6 +513,15 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
         source: SkillSource::Global,
         ..AgentSkill::default()
     });
+    // Turned off for now: not offered.
+    ws.skills.push(AgentSkill {
+        name: "resting".into(),
+        description: "Off".into(),
+        prompt: "x".into(),
+        source: SkillSource::Global,
+        off: true,
+        ..AgentSkill::default()
+    });
     let index = skill_index(&ws, AgentMode::Write, "en");
     let lines: Vec<&str> = index.lines().collect();
     assert!(lines[0].starts_with("- house-headline (project): "));

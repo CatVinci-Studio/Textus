@@ -45,3 +45,19 @@
   li.ProseMirror-selectednode::after {
   border: none;
 }
+
+/* The title row here is the status bar plus 44pt, not the desktop's 28px, so
+   the column's 3rem no longer clears it. A tab bar, when shown, clears it
+   already. */
+:root[data-window-chrome="mobile"]
+  .main-pane:not(:has(> .tab-bar))
+  :is(.editor-content:not(.typewriter-active), .source-view) {
+  padding-top: calc(var(--mobile-top) + 1.5rem);
+}
+
+:root[data-window-chrome="mobile"]
+  .editor-content
+  .ProseMirror
+  > :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: calc(var(--mobile-top) + 16px);
+}

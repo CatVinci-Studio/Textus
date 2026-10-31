@@ -12,7 +12,7 @@ takes seconds, and can fail because a machine was busy.
 | 1. Editor integration | `src/**/*.test.ts`, with `editor-view-kit.ts` | What keys, typing and pastes do to a real editor's document, and what is saved             |
 | 2. E2E, Chromium      | `e2e/*.spec.ts`                               | What needs a real browser: focus, menus, dialogs, scrolling, layout, clicks, the clipboard |
 | 3. E2E, WebKit        | `WEBKIT_SPECS` in `playwright.config.ts`      | Where WebKit behaves differently: input methods, selection, paste events                   |
-| 4. The built app      | by hand, on the platform                      | What no browser has: native menus and their keys, windows, file dialogs, input methods     |
+| 4. The built app      | smoke scripts; by hand, on the platform       | What no browser has: the app starting, native menus and their keys, windows, file dialogs  |
 
 Start at the top and go down only when the layer above can't see the
 mistake:
@@ -119,7 +119,11 @@ anything else.
 
 CI also builds the iOS app for the simulator, unsigned, on macOS (the `ios`
 job) - proof that the desktop/iOS split in `docs/dev/ios-code-map.md` still
-compiles. Running it on a device is a manual step on a Mac.
+compiles - and starts it there (`scripts/smoke-ios-sim.sh`): a returning
+user's launch, failing if the app is gone 20 seconds later, with the crash
+report's stack in the log. Compiling can't show a command registered on iOS
+whose state only the desktop manages; starting it does. Running it on a
+device is a manual step on a Mac.
 
 ## How CI is laid out
 
@@ -315,6 +319,10 @@ entry (takes files, claims Markdown); the app starting on a file; a second
 launch handing its file to the running instance and exiting. Runs with
 throwaway config/data directories. Window checks need niri; `--screenshot`
 also needs the screen unlocked.
+
+`scripts/smoke-ios-sim.sh <Textus.app>` does the same for iOS in the
+simulator: past onboarding, so the window loads its plugins and menus as at
+every later launch, and alive 20 seconds on. CI's `ios` job runs it.
 
 ### 7. Live (`ai::live_eval`, ignored by default)
 

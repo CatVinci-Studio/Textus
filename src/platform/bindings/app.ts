@@ -276,6 +276,21 @@ export type GalleryInstall = {
 	update: boolean,
 };
 
+/**  A theme's words in one UI language; what is missing stays English. */
+export type GalleryText = GalleryText_Serialize | GalleryText_Deserialize;
+
+/**  A theme's words in one UI language; what is missing stays English. */
+export type GalleryText_Deserialize = {
+	name?: string | null,
+	description?: string | null,
+};
+
+/**  A theme's words in one UI language; what is missing stays English. */
+export type GalleryText_Serialize = {
+	name: string | null,
+	description: string | null,
+};
+
 /**  One theme of the catalog, as the frontend gets it. */
 export type GalleryTheme = GalleryTheme_Serialize | GalleryTheme_Deserialize;
 
@@ -304,6 +319,11 @@ export type GalleryTheme_Deserialize = {
 	 */
 	installs?: number | null,
 	installs30?: number | null,
+	/**
+	 *  Its name and description in another UI language (`zh`), over the
+	 *  English ones.
+	 */
+	l10n?: { [key in string]: GalleryText_Deserialize },
 };
 
 /**  One theme of the catalog, as the frontend gets it. */
@@ -331,6 +351,11 @@ export type GalleryTheme_Serialize = {
 	 */
 	installs: number | null,
 	installs30: number | null,
+	/**
+	 *  Its name and description in another UI language (`zh`), over the
+	 *  English ones.
+	 */
+	l10n: { [key in string]: GalleryText_Serialize },
 };
 
 export type NativeEdit = "paste" | "undo" | "redo" | "select-all";

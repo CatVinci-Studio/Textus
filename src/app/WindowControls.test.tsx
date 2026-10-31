@@ -174,7 +174,7 @@ describe("where the app owns the frame", () => {
     editor.remove();
   });
 
-  it("opens a submenu on hover", () => {
+  it("opens a submenu on hover, at once", () => {
     appDrawsWindowFrame.value = true;
     render(<AppMenuButton />);
     fireEvent.click(screen.getByLabelText("菜单"));

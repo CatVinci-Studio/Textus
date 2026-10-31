@@ -6,9 +6,9 @@ import { mockInvoke, openApp, PHONE, openPhone } from "./helpers";
 // Keep in step with the English locale; e2e can't import it.
 const AI_NAME = "Textus AI";
 const t = {
+  navAbout: "About",
   imageGenerationGroupLabel: "Pictures",
   settingsTitle: "Settings",
-  settingsDone: "Done",
   windowClose: "Close",
   navGeneral: "General",
   navEditor: "Editor & Appearance",
@@ -662,32 +662,12 @@ test.describe("desktop", () => {
   });
 });
 
-test.describe("iPad", () => {
-  test.use({ viewport: { width: 1032, height: 1376 }, hasTouch: true });
-
-  test("Done is a word at the right of the title, not a bar across it", async ({
-    page,
-  }) => {
-    await page.addInitScript(() => {
-      Object.defineProperty(navigator, "platform", { get: () => "iPad" });
-    });
-    await openApp(page, { settings: { language: "en" } });
-    const panel = await openSettings(page);
-    const done = panel.getByRole("button", { name: t.settingsDone });
-    const header = await panel.locator(".settings-header").boundingBox();
-    const box = await done.boundingBox();
-    expect(box!.width).toBeLessThan(120);
-    // Its right edge near the header's right edge.
-    expect(header!.x + header!.width - (box!.x + box!.width)).toBeLessThan(40);
-    await expect(done).toHaveCSS("border-top-style", "none");
-  });
-});
-
 test.describe("phone", () => {
   test.use(PHONE);
 
-  test("four categories fit across the screen", async ({ page }) => {
-    // The narrowest current iPhone width, in English, the longest labels.
+  test("Settings opens on a list of its pages, each pushed in with a way back", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await openPhone(page);
     const panel = await openSettings(page);
@@ -696,15 +676,70 @@ test.describe("phone", () => {
       t.navGeneral,
       t.navEditor,
       t.navAi,
+      t.navExtensions,
       t.navPrivacy,
     ]);
-    // Nothing to scroll sideways to.
-    const nav = panel.locator(".settings-nav");
-    const { scroll, client } = await nav.evaluate((el) => ({
-      scroll: el.scrollWidth,
-      client: el.clientWidth,
-    }));
-    expect(scroll).toBeLessThanOrEqual(client);
+    // A list, not a page: none is current, and no page shows beside it.
+    await expect(panel.locator("[aria-current]")).toHaveCount(0);
+    await expect(panel.locator(".settings-content")).toHaveCount(0);
+    // Rows the width of the card, one above the other.
+    const boxes = await items.evaluateAll((els) =>
+      els.map((el) => el.getBoundingClientRect()),
+    );
+    for (const [a, b] of boxes.slice(1).map((box, i) => [boxes[i], box]))
+      expect(b.top).toBeGreaterThanOrEqual(a.bottom - 1);
+    // The card inside the panel, itself inset from the screen.
+    expect(boxes[0].width).toBeGreaterThan(375 - 60);
+
+    // In: the bar names the page and offers the way back; the list is gone.
+    await items.filter({ hasText: t.navEditor }).tap();
+    const header = panel.locator(".settings-header");
+    await expect(header).toContainText(t.navEditor);
+    await expect(panel.locator(".settings-nav")).toHaveCount(0);
+    await expect(panel.locator(".settings-search")).toHaveCount(0);
+    await expect(
+      panel.getByRole("checkbox", { name: "Source Mode" }),
+    ).toBeVisible();
+
+    // Back: the list again, under the search box.
+    await header.getByRole("button", { name: t.settingsTitle }).tap();
+    await expect(items).toHaveCount(5);
+    await expect(panel.locator(".settings-search")).toBeVisible();
+
+    // A page inside a page goes back to the one that held it.
+    await items.filter({ hasText: t.navGeneral }).tap();
+    await panel.getByRole("button", { name: t.aboutTextus }).tap();
+    await expect(header).toContainText(t.navAbout);
+    await header.getByRole("button", { name: t.navGeneral }).tap();
+    await expect(header).toContainText(t.navGeneral);
+    await expect(
+      header.getByRole("button", { name: t.settingsTitle }),
+    ).toBeVisible();
+  });
+
+  test("a search result on the phone opens its page, with the way back to the list", async ({
+    page,
+  }) => {
+    await openPhone(page, { settings: { language: "en" } });
+    const panel = await openSettings(page);
+    await panel.locator(".settings-search input").fill("source mode");
+    // The results stand in for the list.
+    await expect(panel.locator(".settings-nav")).toHaveCount(0);
+    // Right under the search box, not below half a screen of empty list.
+    const group = panel.locator(".settings-group").first();
+    await expect(group).toBeVisible();
+    const box = await panel.locator(".settings-search").boundingBox();
+    const first = await group.boundingBox();
+    expect(first!.y - (box!.y + box!.height)).toBeLessThan(40);
+    await panel.getByRole("option").first().tap();
+    await expect(
+      panel.getByRole("checkbox", { name: "Source Mode" }),
+    ).toBeVisible();
+    await panel
+      .locator(".settings-header")
+      .getByRole("button", { name: t.settingsTitle })
+      .tap();
+    await expect(panel.locator(".settings-nav-item")).toHaveCount(5);
   });
 
   test("a tap on a ? opens its explanation, a tap outside closes it", async ({
@@ -734,16 +769,22 @@ test.describe("phone", () => {
       default_editor_status: defaultEditorStatus.mac,
     });
     const panel = await openSettings(page);
+    const back = panel
+      .locator(".settings-header")
+      .getByRole("button", { name: t.settingsTitle });
     // No default editor row: iOS has no default app to set.
+    await panel.getByRole("button", { name: t.navGeneral }).tap();
     await expect(panel.getByText(t.aboutTextus)).toBeVisible();
     await expect(panel.getByText(t.defaultEditorLabel)).toHaveCount(0);
 
     // No PDF page number switch, with no PDF export.
+    await back.tap();
     await panel.getByRole("button", { name: t.navEditor }).tap();
     await expect(panel.getByText(t.menuViewSource)).toBeVisible();
     await expect(panel.getByText(t.pdfPageNumbersLabel)).toHaveCount(0);
 
     // No update button or channel: the App Store updates the app.
+    await back.tap();
     await panel.getByRole("button", { name: t.navGeneral }).tap();
     await panel.getByRole("button", { name: t.aboutTextus }).tap();
     await expect(panel.getByText(t.aboutMadeBy)).toBeVisible();
@@ -757,7 +798,7 @@ test.describe("phone", () => {
     await openPhone(page);
     await page.locator('[data-active-tab="true"] .ProseMirror').focus();
     const panel = await openSettings(page);
-    await panel.getByRole("button", { name: t.settingsDone }).tap();
+    await panel.getByRole("button", { name: "Close" }).tap();
     await expect(panel).toHaveCount(0);
     expect(
       await page.evaluate(
@@ -784,4 +825,25 @@ test.describe("phone", () => {
     await expect(dialog).toHaveCount(0);
     await expect(editor).toBeFocused();
   });
+});
+
+test("Settings' view switches match the View menu's: Track My Changes and Read Only, for the document in front", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  const panel = await openSettings(page);
+  await panel.getByRole("button", { name: "Editor & Appearance" }).click();
+  const readOnly = panel.getByRole("checkbox", { name: "Read Only" });
+  const tracking = panel.getByRole("checkbox", { name: "Track My Changes" });
+  await expect(readOnly).not.toBeChecked();
+  await expect(tracking).not.toBeChecked();
+  await readOnly.click({ force: true });
+  await expect(readOnly).toBeChecked();
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toHaveAttribute("contenteditable", "false");
+  await readOnly.click({ force: true });
+  await tracking.click({ force: true });
+  await expect(tracking).toBeChecked();
+  await expect(readOnly).not.toBeChecked();
 });

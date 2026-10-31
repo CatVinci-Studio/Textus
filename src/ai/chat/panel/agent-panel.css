@@ -55,7 +55,7 @@
   align-items: center;
   gap: 8px;
   min-height: 40px;
-  padding: 4px 8px 4px 14px;
+  padding: 4px 8px 4px 12px;
   border-bottom: 1px solid var(--chat-hairline, var(--ui-border));
 }
 
@@ -158,7 +158,7 @@
 }
 
 .agent-panel-body .inline-chat-bar {
-  padding: 8px 10px 10px;
+  padding: 8px 8px 8px;
 }
 
 /* Nothing said yet: the spark and what to do, in the middle of the
@@ -267,7 +267,7 @@
 /* The project bar: which folder the agent works in, and the style profile /
    library kept in it. */
 .project-bar {
-  padding: 5px 10px;
+  padding: 4px 8px;
   border-bottom: 1px solid var(--chat-hairline, var(--ui-border));
   font-size: var(--text-secondary);
 }
@@ -280,17 +280,17 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
 
 .project-bar-folder {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   min-width: 0;
   max-width: 60%;
-  padding: 3px 6px;
+  padding: 4px 4px;
   border: none;
   border-radius: var(--shape-s);
   background: none;
@@ -323,7 +323,7 @@
 
 .project-bar-chip {
   flex-shrink: 0;
-  padding: 1px 7px;
+  padding: 1px 8px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
@@ -356,8 +356,8 @@
 
 .project-bar-naming {
   display: flex;
-  gap: 6px;
-  margin-top: 6px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .project-bar-naming input {
@@ -388,7 +388,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   padding: 24px;
   text-align: center;
   font-size: var(--text-body);

@@ -39,6 +39,8 @@ export const iosFiles = {
     inDocuments((await call<Picked>("pick_document")).url),
   readText: async (url: string): Promise<string> =>
     (await call<{ text: string }>("read_text", { url })).text,
+  /** A tap felt under the finger, as something lifts. Never fails. */
+  haptic: (): void => void call<void>("haptic").catch(() => {}),
   /** The share sheet for a saved document, by path or picked URL. */
   share: (path: string): Promise<void> => call<void>("share", { path }),
   readBase64: async (url: string): Promise<string> =>

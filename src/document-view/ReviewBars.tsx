@@ -2,17 +2,25 @@ import { createPortal } from "react-dom";
 import { useSettings } from "../prefs/SettingsContext";
 import { Presence } from "../ui/usePresence";
 import { ReviewBar } from "../ai/revision/ReviewBar";
-import {
-  addsTextOnly,
-  revisionDisplayName,
-} from "../ai/revision/revision-display";
+import { revisionDisplayName } from "../ai/revision/revision-display";
 import { NotesBar } from "../ai/margin/NotesBar";
 import type { usePendingEdits } from "../ai/revision/usePendingEdits";
 import type { NotesBarState } from "../ai/margin/useNotesBar";
 
+/** The writer's own tracked changes, for the review bar while no AI edits
+ *  are pending. */
+export interface OwnReview {
+  stops: number;
+  position: number;
+  step: (by: 1 | -1) => void;
+  acceptAll: () => void;
+  rejectAll: () => void;
+}
+
 /**
  * The bars over the bottom of the document: the review bar while edits are
- * pending, and the notes bar above it while there are review notes.
+ * pending (the AI's, else the writer's own), and the notes bar above it
+ * while there are review notes.
  */
 export function ReviewBars({
   paneEl,
@@ -24,6 +32,7 @@ export function ReviewBars({
   notes,
   stepReview,
   onOpenChat,
+  own,
 }: {
   paneEl: HTMLElement | null;
   reviewBarShown: boolean;
@@ -35,6 +44,7 @@ export function ReviewBars({
   notes: NotesBarState;
   stepReview: (by: 1 | -1) => void;
   onOpenChat: () => void;
+  own: OwnReview | null;
 }) {
   const { t, settings, setSettings } = useSettings();
   if (!paneEl) return null;
@@ -57,11 +67,29 @@ export function ReviewBars({
             display={settings.revisionDisplay}
             displayName={(mode) => revisionDisplayName(t, mode)}
             onDisplay={(mode) => setSettings({ revisionDisplay: mode })}
-            newText={pendingEdits.decidable.some((p) =>
-              addsTextOnly(p.proposal),
-            )}
             streaming={pendingEdits.reviewStreaming}
             painting={pendingEdits.picturesPainting}
+          />
+        )}
+      </Presence>
+      <Presence show={!!own} exitMs={200}>
+        {own && (
+          <ReviewBar
+            labels={t}
+            taken={own.stops}
+            total={own.stops}
+            position={own.position}
+            stops={own.stops}
+            phone={phone}
+            onPrevious={() => own.step(-1)}
+            onNext={() => own.step(1)}
+            onAccept={own.acceptAll}
+            onReject={own.rejectAll}
+            display={settings.revisionDisplay}
+            displayName={(mode) => revisionDisplayName(t, mode)}
+            onDisplay={(mode) => setSettings({ revisionDisplay: mode })}
+            streaming={false}
+            painting={false}
           />
         )}
       </Presence>
@@ -70,7 +98,7 @@ export function ReviewBars({
           <NotesBar
             bar={notes}
             labels={t}
-            raised={reviewBarShown}
+            raised={reviewBarShown || !!own}
             canPick={!noMargin}
           />
         )}

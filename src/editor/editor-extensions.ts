@@ -77,6 +77,7 @@ import { headingMarkerPlugin } from "./marks/heading-marker-plugin";
 import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
 import { dragAutoscrollPlugin } from "./keys/drag-autoscroll-plugin";
 import { editorExtensions } from "./extension-points";
+import { marginClickPlugin } from "./keys/margin-click-plugin";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,
@@ -202,6 +203,7 @@ export function withEditorCore(
       .use(createCompletionPlugin())
       .use(macNavigationPlugin)
       .use(dragAutoscrollPlugin)
+      .use(marginClickPlugin)
       .use(linuxImeEnterPlugin)
       .use(compositionPruneGuardPlugin)
       // Commonmark/GFM with bold/italic/strike marks stripped: those are nodes.

@@ -31,7 +31,7 @@
   top: 6px;
   inset-inline-end: 6px;
   z-index: 1;
-  padding: 2px 6px;
+  padding: 2px 4px;
   border: 1px solid var(--doc-border);
   border-radius: var(--doc-radius-sm);
   background: var(--doc-bg);

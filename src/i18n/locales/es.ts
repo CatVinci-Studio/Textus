@@ -161,8 +161,6 @@ para usar una.
   revisionDisplayFinal: "Solo el resultado, original en el margen",
   revisionDisplayNoRoom:
     "No hay espacio: cierra la barra lateral o el panel de IA",
-  revisionDisplayNewText:
-    "El texto nuevo no tiene original: en estas vistas sigue en el texto, en verde",
   proposalDeletedSentence: "Original",
   proposalAddedSentence: "Añadido",
   reviewBarLabel: "Revisión",
@@ -180,6 +178,8 @@ para usar una.
   ownNoteDelete: "Eliminar",
   menuTrackChanges: "Control de mis cambios",
   trackStop: "Dejar de controlar",
+  closedWithUndecided:
+    "Cambios por decidir en {name}: {n}. Se guardan y vuelven cuando lo abras de nuevo.",
   trackStopConfirm:
     "¿Dejar de controlar tus cambios? Se quedan en el texto; solo desaparecen sus marcas.",
   trackAcceptAll: "Aceptar todos mis cambios",
@@ -525,8 +525,8 @@ para usar una.
   settingsSearchResults: "Resultados de la búsqueda",
   settingsSearchNoMatches: "Ningún ajuste coincide.",
   settingsViewGroup: "Visualización",
+  settingsFrontDocumentHint: "Para el documento en primer plano.",
   settingsHelpGroup: "Ayuda",
-  settingsDone: "OK",
   navGeneral: "General",
   navEditor: "Editor y aspecto",
   navTheme: "Tema",
@@ -601,7 +601,7 @@ para usar una.
   skillPickerAbout:
     "Escribe / para usar una habilidad: una instrucción ya preparada, como Corregir o Resumir.",
   skillPickerNoMatch: "Ninguna habilidad coincide con «{query}».",
-  skillPickerHowTo: `Activa las habilidades integradas o importa las tuyas en Ajustes > ${AI_NAME}.`,
+  skillPickerHowTo: "Añade más habilidades o importa las tuyas en Ajustes.",
   mentionPickerAbout:
     "Escribe @ para adjuntar un archivo de la carpeta del proyecto.",
   mentionPickerNoProject:
@@ -669,7 +669,6 @@ para usar una.
   alignRight: "Alinear a la derecha",
   selectRow: "Seleccionar fila",
   selectColumn: "Seleccionar columna",
-  menuGroupInsert: "Insertar",
   tableRowGroup: "Fila",
   tableColumnGroup: "Columna",
   insertRowAbove: "Insertar fila arriba",
@@ -788,6 +787,9 @@ para usar una.
   chatSelectedPicture: "Imagen seleccionada",
   cut: "Cortar",
   copy: "Copiar",
+  menuPlainText: "Copiar/pegar sin formato",
+  appErrorTitle: "Algo salió mal",
+  appErrorReload: "Recargar",
   copyAsPlainText: "Copiar como texto sin formato",
   pasteAsPlainText: "Pegar como texto sin formato",
   paste: "Pegar",
@@ -844,7 +846,6 @@ para usar una.
   contentThemeLabel: "Tema del editor",
   themeDeleteButton: "Eliminar tema",
   themeImportLabel: "Añadir un tema desde un archivo CSS",
-  themeMoreLabel: "Más temas",
   themeGetMore: "Conseguir más temas",
   themeImportButton: "Importar CSS…",
   themeGalleryLoading: "Cargando temas…",
@@ -876,6 +877,7 @@ para usar una.
   codeBlockCopied: "Copiado",
   autoCloseMarksLabel: "Cerrar ** y `",
   autoCloseBracketsLabel: "Cerrar (), [] y «»",
+  plainTextMenuLabel: "Copiar y pegar sin formato en el menú contextual",
   pdfPageNumbersLabel: "Mostrar números de página al exportar",
   pdfLightColorsLabel: "Exportar PDF con colores claros",
   infoTipLabel: "Más sobre «{label}»",
@@ -1245,7 +1247,7 @@ para usar una.
   missingImageFilter: "Imágenes",
   missingImageChooseFailed: "No se pudo usar la imagen elegida.",
   imageStorageGroupLabel: "Imágenes",
-  imageStorageLabel: "Guardar imágenes pegadas",
+  imageStorageLabel: "Ubicación de las imágenes",
   imageStorageLocal: "En este equipo",
   imageStorageRemote: "Subir a un servidor de imágenes",
   imageFolderLabel: "Carpeta",
@@ -1387,7 +1389,7 @@ para usar una.
   extensionsThemesGet: "Conseguir temas",
   extensionsSkillsHelp: `Una habilidad le dice a ${AI_NAME} cómo hacer bien un tipo de tarea. Las activadas se ofrecen a ${AI_NAME} y en el menú /; una instalación nueva empieza con cinco activadas, y el resto se añade aquí.`,
   extensionsSkillsMoved:
-    "Las habilidades integradas y las tuyas están en Ajustes › Extensiones.",
+    "Las habilidades que añadas están en Ajustes › Extensiones; las integradas, abajo.",
   extensionsSkillsOpen: "Abrir",
   mcpServersGroup: "Servidores MCP",
   mcpHelp: `Un servidor MCP da a ${AI_NAME} más herramientas: una carpeta, una base de datos, una búsqueda. Cada uno activado se inicia en segundo plano, y ${AI_NAME} puede usar sus herramientas mientras te ayuda; la conversación muestra cada llamada.`,
@@ -1496,6 +1498,8 @@ para usar una.
   pluginsMine: "Hechos por ti",
   pluginsNone: "Ninguno todavía.",
   pluginStatusBroken: "No se puede leer: {reason}",
+  pluginStatusDesktopOnly:
+    "Solo funciona en el ordenador, no en iPhone ni iPad.",
   pluginStatusIncompatible: "Hecho para otra versión de Textus ({range}).",
   pluginStatusFailed: "Desactivado: {reason}",
   pluginStatusAllOff: "Los complementos están desactivados.",

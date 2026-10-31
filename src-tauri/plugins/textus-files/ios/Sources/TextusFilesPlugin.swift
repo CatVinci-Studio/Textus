@@ -264,6 +264,15 @@ class TextusFilesPlugin: Plugin, UIDocumentPickerDelegate {
     }
   }
 
+  /// The tap a finger feels as something lifts under it (a tab held to
+  /// drag). Not about files, but the app's one native plugin.
+  @objc public func haptic(_ invoke: Invoke) throws {
+    DispatchQueue.main.async {
+      UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+      invoke.resolve()
+    }
+  }
+
   @objc public func writeText(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs(WriteArgs.self)
     guard let url = URL(string: args.url) else { return invoke.reject("Invalid URL") }

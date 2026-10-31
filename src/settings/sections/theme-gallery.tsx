@@ -7,6 +7,7 @@ import {
   installedCopy,
   type GalleryStatus,
   type GalleryTheme,
+  localizedTheme,
 } from "../../theme/theme-gallery";
 import { withUserTheme } from "../../theme/theme-import";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -72,43 +73,6 @@ export function useGalleryInstall(t: Strings) {
     }
   }
   return { busy, error, install };
-}
-
-/** The public theme gallery, fetched only when this page opens - the
- *  phone's More themes page. */
-export function ThemeGallerySection({ t }: { t: Strings }) {
-  const { settings, setSettings } = useSettings();
-  const { busy, error, install } = useGalleryInstall(t);
-  const { catalog, unreachable, retry } = useGalleryCatalog();
-  if (unreachable) return <GalleryUnreachable t={t} retry={retry} />;
-  if (!catalog) return <GalleryLoading t={t} />;
-  return (
-    <>
-      {error && (
-        <div className="settings-error" role="alert">
-          {error}
-        </div>
-      )}
-      <div className="settings-group-body">
-        {catalog.length === 0 && <SettingRow label={t.themeGalleryEmpty} />}
-        {catalog.map((theme) => {
-          const installed = installedCopy(theme, settings.userThemes);
-          return (
-            <GalleryItem
-              key={theme.id}
-              t={t}
-              theme={theme}
-              status={galleryStatus(theme, installed)}
-              inUse={!!installed && installed.id === settings.themeId}
-              busy={busy}
-              onInstall={() => void install(theme)}
-              onUse={() => installed && setSettings({ themeId: installed.id })}
-            />
-          );
-        })}
-      </div>
-    </>
-  );
 }
 
 /** Settings › Extensions › Themes, under the user's themes: the gallery's
@@ -361,7 +325,10 @@ function GalleryPreview({
 /** The gallery's catalog, fetched as the page opens and again on `retry`;
  *  `unreachable` when the fetch failed. */
 export function useGalleryCatalog() {
-  const [catalog, setCatalog] = useState<GalleryTheme[] | null>(null);
+  const { settings } = useSettings();
+  const [themes, setCatalog] = useState<GalleryTheme[] | null>(null);
+  const catalog =
+    themes?.map((theme) => localizedTheme(theme, settings.language)) ?? null;
   const [unreachable, setUnreachable] = useState(false);
   const [attempt, setAttempt] = useState(0);
 

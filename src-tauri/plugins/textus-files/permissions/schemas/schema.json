@@ -307,6 +307,18 @@
           "markdownDescription": "Denies the begin_access command without any pre-configured scope."
         },
         {
+          "description": "Enables the haptic command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-haptic",
+          "markdownDescription": "Enables the haptic command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the haptic command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-haptic",
+          "markdownDescription": "Denies the haptic command without any pre-configured scope."
+        },
+        {
           "description": "Enables the list_folder command without any pre-configured scope.",
           "type": "string",
           "const": "allow-list-folder",
@@ -403,10 +415,10 @@
           "markdownDescription": "Denies the write_text command without any pre-configured scope."
         },
         {
-          "description": "Everything Textus's iOS document access needs.\n#### This default permission set includes:\n\n- `allow-pick-document`\n- `allow-pick-folder`\n- `allow-read-text`\n- `allow-read-data`\n- `allow-write-text`\n- `allow-list-folder`\n- `allow-remembered`\n- `allow-begin-access`\n- `allow-share`",
+          "description": "Everything Textus's iOS document access needs.\n#### This default permission set includes:\n\n- `allow-pick-document`\n- `allow-pick-folder`\n- `allow-read-text`\n- `allow-read-data`\n- `allow-write-text`\n- `allow-list-folder`\n- `allow-remembered`\n- `allow-begin-access`\n- `allow-share`\n- `allow-haptic`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Everything Textus's iOS document access needs.\n#### This default permission set includes:\n\n- `allow-pick-document`\n- `allow-pick-folder`\n- `allow-read-text`\n- `allow-read-data`\n- `allow-write-text`\n- `allow-list-folder`\n- `allow-remembered`\n- `allow-begin-access`\n- `allow-share`"
+          "markdownDescription": "Everything Textus's iOS document access needs.\n#### This default permission set includes:\n\n- `allow-pick-document`\n- `allow-pick-folder`\n- `allow-read-text`\n- `allow-read-data`\n- `allow-write-text`\n- `allow-list-folder`\n- `allow-remembered`\n- `allow-begin-access`\n- `allow-share`\n- `allow-haptic`"
         }
       ]
     }

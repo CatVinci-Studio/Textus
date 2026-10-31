@@ -9,11 +9,21 @@ import {
   type DiagramEngine,
 } from "../../prefs/SettingsContext";
 import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
+import { useSyncExternalStore } from "react";
+import {
+  subscribeTracking,
+  trackingShown,
+} from "../../ai/margin/track-changes-state";
+import {
+  readOnlyShown,
+  subscribeReadOnly,
+} from "../../document/read-only-state";
+import { emitMenuEvent } from "../../platform/menu-events";
 import { ThemeSection } from "../sections/theme";
 import { ImageStorageSection } from "../sections/images";
 import { Select } from "../../ui/Select";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
-import { canExportPdf, isIOSApp } from "../../platform/capabilities";
+import { canExportPdf } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
 import { openExtensionsTab } from "./extensions-tab";
 
@@ -24,18 +34,16 @@ export function EditorPage({
   setSettings,
   phone,
   percent,
-  setSubpage,
   openPage,
 }: SettingsPageProps) {
+  const tracking = useSyncExternalStore(subscribeTracking, trackingShown);
+  const readOnly = useSyncExternalStore(subscribeReadOnly, readOnlyShown);
   return (
     <>
       <SettingsGroup title={t.navTheme}>
         <ThemeSection
           t={t}
           onMore={() => {
-            // The phone has no Extensions page: its themes are a page of
-            // their own here.
-            if (isIOSApp) return setSubpage("themes");
             openExtensionsTab("themes");
             openPage("extensions");
           }}
@@ -109,6 +117,19 @@ export function EditorPage({
           checked={settings.zenMode}
           onChange={(on) => setSettings({ zenMode: on })}
         />
+        {/* The document in front's, as the View menu's own. */}
+        <ToggleRow
+          label={t.menuTrackChanges}
+          hint={t.settingsFrontDocumentHint}
+          checked={tracking}
+          onChange={() => emitMenuEvent("track-changes")}
+        />
+        <ToggleRow
+          label={t.menuToggleReadOnly}
+          hint={t.settingsFrontDocumentHint}
+          checked={readOnly}
+          onChange={() => emitMenuEvent("toggle-read-only")}
+        />
       </SettingsGroup>
       {/* What the document shows, then how typing behaves. */}
       <SettingsGroup title={t.navMarkdown}>
@@ -131,6 +152,11 @@ export function EditorPage({
           label={t.autoCloseBracketsLabel}
           checked={settings.autoCloseBrackets}
           onChange={(v) => setSettings({ autoCloseBrackets: v })}
+        />
+        <ToggleRow
+          label={t.plainTextMenuLabel}
+          checked={settings.plainTextMenu}
+          onChange={(v) => setSettings({ plainTextMenu: v })}
         />
       </SettingsGroup>
       <SettingsGroup title={t.imageStorageGroupLabel}>

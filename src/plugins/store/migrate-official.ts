@@ -1,4 +1,3 @@
-import { isIOSApp } from "../../platform/capabilities";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { installFromCatalog, loadCatalog, catalogSnapshot } from "./catalog";
 import { loadPlugins, uninstallPlugin } from "../manager";
@@ -38,7 +37,6 @@ export function renamedGrants(granted: readonly string[]): string[] {
 }
 
 export async function migrateOfficialPlugins(): Promise<void> {
-  if (isIOSApp) return;
   const [state, installed] = await Promise.all([
     pluginsIpc.state(),
     pluginsIpc.installed(),

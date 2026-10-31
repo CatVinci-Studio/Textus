@@ -124,6 +124,11 @@ export type AgentSkill_Deserialize = {
 	 *  that doesn't say.
 	 */
 	modes: AgentMode_Deserialize[],
+	/**
+	 *  `textus-off`: turned off in Settings for now, its modes kept for when
+	 *  it is turned on again. Neither the model nor the `/` menu offers it.
+	 */
+	off: boolean,
 	invocation: Invocation,
 	source: SkillSource,
 	/**
@@ -178,6 +183,11 @@ export type AgentSkill_Serialize = {
 	 *  that doesn't say.
 	 */
 	modes: AgentMode_Serialize[],
+	/**
+	 *  `textus-off`: turned off in Settings for now, its modes kept for when
+	 *  it is turned on again. Neither the model nor the `/` menu offers it.
+	 */
+	off: boolean,
 	invocation: Invocation,
 	source: SkillSource,
 	/**

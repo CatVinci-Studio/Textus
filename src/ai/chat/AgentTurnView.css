@@ -3,7 +3,7 @@
 .agent-message {
   font-size: var(--text-body);
   line-height: 1.55;
-  padding: 8px 10px;
+  padding: 8px 8px;
   border-radius: var(--shape-m);
   max-width: 92%;
   word-break: break-word;
@@ -14,13 +14,13 @@
 .agent-message-user {
   align-self: flex-end;
   max-width: 86%;
-  padding: 7px 12px;
+  padding: 8px 12px;
   border-bottom-right-radius: var(--shape-xs);
   background: var(--ui-selected);
   color: var(--ui-selected-text);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 /* Plain text, not rendered markdown: literal newlines still break lines.
@@ -43,7 +43,7 @@
   gap: 4px;
   font-size: var(--text-caption);
   line-height: 1.4;
-  padding: 2px 6px;
+  padding: 2px 4px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   border: none;
@@ -87,7 +87,7 @@ button.agent-context-chip:hover {
   word-break: break-word;
   max-height: 160px;
   overflow-y: auto;
-  padding: 6px 8px;
+  padding: 4px 8px;
   border-radius: var(--shape-s);
   background: color-mix(in srgb, var(--ui-selected-text) 12%, transparent);
 }
@@ -136,7 +136,7 @@ button.agent-context-chip:hover {
 .agent-markdown pre {
   background: var(--doc-code-bg);
   border-radius: var(--shape-s);
-  padding: 6px 8px;
+  padding: 4px 8px;
   overflow-x: auto;
 }
 
@@ -263,7 +263,7 @@ button.agent-context-chip:hover {
   align-self: flex-start;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: var(--text-caption);
   color: var(--ui-muted);
   padding: 0 2px;
@@ -288,7 +288,7 @@ button.agent-context-chip:hover {
 .agent-tool-result > summary {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   list-style: none;
   cursor: pointer;
   opacity: 0.8;
@@ -303,7 +303,7 @@ button.agent-context-chip:hover {
   content: "";
   width: 0;
   height: 0;
-  margin: 0 2px 0 3px;
+  margin: 0 2px 0 4px;
   border-left: 4px solid currentColor;
   border-top: 3.5px solid transparent;
   border-bottom: 3.5px solid transparent;
@@ -324,7 +324,7 @@ button.agent-context-chip:hover {
   word-break: break-word;
   background: var(--doc-code-bg);
   border-radius: var(--shape-s);
-  padding: 6px 8px;
+  padding: 4px 8px;
   margin: 4px 0 0;
   /* A long result scrolls in its own box, so the summary that closes it
      stays close at hand. */
@@ -337,7 +337,7 @@ button.agent-context-chip:hover {
   font-size: var(--text-secondary);
   color: var(--ui-muted);
   /* Upright: a slanted CJK label is a faked italic, and reads as broken. */
-  padding: 4px 6px;
+  padding: 4px 4px;
 }
 
 /* A failed request: the same card shape as a proposal or a comment, tinted
@@ -347,9 +347,9 @@ button.agent-context-chip:hover {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
-  margin: 6px 0;
-  padding: 8px 10px;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px 8px;
   border: 1px solid color-mix(in srgb, var(--ui-danger) 30%, transparent);
   border-radius: var(--shape-m);
   background: color-mix(in srgb, var(--ui-danger) 7%, transparent);
@@ -365,9 +365,9 @@ button.agent-context-chip:hover {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
-  margin: 6px 0;
-  padding: 8px 10px;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px 8px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-m);
   font-size: var(--text-body);
@@ -450,7 +450,7 @@ button.agent-context-chip:hover {
   align-items: baseline;
   gap: 2px 8px;
   max-width: 100%;
-  padding: 4px 10px;
+  padding: 4px 8px;
   border-radius: var(--shape-m);
   background: color-mix(in srgb, var(--ui-accent) 8%, transparent);
   color: var(--ui-muted);
@@ -499,7 +499,7 @@ button.agent-context-chip:hover {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 6px;
+  padding: 2px 4px;
   border: none;
   border-radius: var(--shape-pill);
   corner-shape: round;
@@ -510,7 +510,11 @@ button.agent-context-chip:hover {
   cursor: pointer;
 }
 
-.skill-mode-choice-button:hover,
+.skill-mode-choice-button:disabled {
+  cursor: default;
+}
+
+.skill-mode-choice-button:hover:not(:disabled),
 .skill-mode-choice-button[aria-expanded="true"] {
   background: color-mix(in srgb, var(--ui-text) 6%, transparent);
   color: var(--ui-text);
@@ -552,7 +556,7 @@ button.agent-context-chip:hover {
 /* Inside the reply, under the code block it installs. */
 .agent-theme-chip {
   display: inline-flex;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .agent-theme-chip-name {
@@ -570,7 +574,7 @@ button.agent-context-chip:hover {
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: var(--text-caption);
   color: var(--ui-muted);
 }
@@ -584,7 +588,7 @@ button.agent-context-chip:hover {
   align-items: center;
   gap: 4px;
   max-width: 100%;
-  padding: 2px 8px 2px 3px;
+  padding: 2px 8px 2px 4px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;

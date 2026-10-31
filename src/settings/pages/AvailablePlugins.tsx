@@ -111,7 +111,11 @@ function CatalogProblem({ t, text }: { t: Strings; text: string }) {
         <div className="settings-error">{text}</div>
       </div>
       <div className="settings-row-control">
-        <button type="button" onClick={() => void loadCatalog(true)}>
+        <button
+          type="button"
+          className="text-button settings-inline-button"
+          onClick={() => void loadCatalog(true)}
+        >
           {t.pluginsCatalogRetry}
         </button>
       </div>

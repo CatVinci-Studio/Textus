@@ -27,7 +27,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px 6px 12px;
+  padding: 4px 8px 4px 12px;
   border-bottom: 1px solid var(--ui-border);
 }
 
@@ -47,7 +47,7 @@
 }
 
 .hover-card-button {
-  padding: 1px 10px;
+  padding: 1px 8px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
@@ -65,7 +65,7 @@
 
 .hover-card-body {
   overflow: auto;
-  padding: 8px 12px 10px;
+  padding: 8px 12px 8px;
   font-size: var(--text-secondary);
   line-height: 1.55;
 }

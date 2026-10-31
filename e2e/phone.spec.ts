@@ -23,6 +23,12 @@ test("the phone menu opens the sidebar as a drawer over the page", async ({
   expect(pane?.x).toBe(0);
   expect(pane?.width).toBe(430);
 
+  // The scrim dims the whole screen, the status bar's strip too.
+  expect(await page.locator(".sidebar-scrim").boundingBox()).toMatchObject({
+    y: 0,
+    height: 932,
+  });
+
   // A tap beside the drawer closes it.
   await page.locator(".sidebar-scrim").tap({ position: { x: 400, y: 500 } });
   await expect(sidebar).toHaveClass(/sidebar-collapsed/);
@@ -42,6 +48,7 @@ test("the phone menu is short; the view modes are switched in Settings", async (
     "Find & Replace…",
     "Sidebar",
     "Textus AI",
+    "Plugins",
     "Settings…",
   ]);
   await page.getByRole("menuitem", { name: "Settings…" }).tap();
@@ -272,46 +279,29 @@ test("with the keyboard up, the AI sheet rises once it has gone", async ({
   expect(Math.round(box.y + box.height)).toBe(932);
 });
 
-test("Settings fills the phone's screen, its edge strips take its colour in light and dark, and Done closes it", async ({
+test("Settings is the desktop's card over the phone's screen, and its cross closes it", async ({
   page,
 }) => {
   await openPhone(page);
   await page.locator(".window-menu-button").tap();
   await page.getByRole("menuitem", { name: "Settings…" }).tap();
   const panel = page.getByRole("dialog", { name: "Settings" });
-  expect(await panel.boundingBox()).toMatchObject({
-    x: 0,
-    y: 0,
-    width: 430,
-    height: 932,
-  });
-  // The categories are tabs along the top; a phone has no Shortcuts.
+  // Inset from the screen's edges, with the desktop panel's rounded corners.
+  const box = (await panel.boundingBox())!;
+  expect(box.x).toBe(8);
+  expect(box.width).toBe(430 - 16);
+  expect(box.height).toBeGreaterThan(932 - 40);
+  expect(
+    parseFloat(
+      await panel.evaluate((el) => getComputedStyle(el).borderTopLeftRadius),
+    ),
+  ).toBeGreaterThan(0);
+  // A list of the categories; a phone has no Shortcuts.
   await expect(page.getByRole("button", { name: "General" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Shortcuts" })).toHaveCount(0);
   // No group stands empty for what a phone doesn't have.
   await expect(panel.locator(".settings-group-body:empty")).toHaveCount(0);
-  // The screen's edge strips take Settings' colour, a different one in dark.
-  const strips: string[] = [];
-  for (const scheme of ["light", "dark"] as const) {
-    await page.emulateMedia({ colorScheme: scheme });
-    await expect
-      .poll(async () => {
-        const [body, settings] = await page.evaluate(() => [
-          getComputedStyle(document.body).backgroundColor,
-          getComputedStyle(document.querySelector(".settings-panel")!)
-            .backgroundColor,
-        ]);
-        return body === settings ? body : null;
-      })
-      .not.toBeNull();
-    strips.push(
-      await page.evaluate(
-        () => getComputedStyle(document.body).backgroundColor,
-      ),
-    );
-  }
-  expect(strips[0]).not.toBe(strips[1]);
-  await page.getByRole("button", { name: "Done" }).tap();
+  await panel.getByRole("button", { name: "Close" }).tap();
   await expect(panel).toHaveCount(0);
 });
 
@@ -353,4 +343,18 @@ test("opening the sidebar closes the find bar, without bringing the keyboard up"
     () => !!document.activeElement?.closest(".ProseMirror"),
   );
   expect(editorFocused).toBe(false);
+});
+
+test("the first line of a document starts below the title row", async ({
+  page,
+}) => {
+  await openPhone(page);
+  // An iPhone's status bar, which Chromium's env() doesn't have.
+  await page.evaluate(() =>
+    document.documentElement.style.setProperty("--safe-top", "59px"),
+  );
+  await pasteMarkdown(page, "# First line\n\nMore text.");
+  const bar = await page.locator(".window-bar").boundingBox();
+  const line = await page.locator(".ProseMirror > h1").boundingBox();
+  expect(line!.y).toBeGreaterThanOrEqual(bar!.y + bar!.height);
 });

@@ -11,16 +11,14 @@
   background: var(--ui-bg);
   color: var(--ui-text);
   font-family: var(--font-sans);
-  /* A modal sheet, like Settings on the phone: up from the bottom edge,
-     and back down when it closes. */
-  animation: motion-sheet-in var(--dur-sheet) var(--ease-spring);
-  /* The spring overshoots a few points past the top: its own colour
-     fills in below its edge, where document text showed. */
-  box-shadow: 0 48px 0 var(--ui-bg);
+  /* Clear of the status bar and the home indicator it runs under. */
+  padding: var(--safe-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  /* As the app's dialogs open: grown out of the middle as it fades in. */
+  animation: motion-dialog-in var(--dur-base) var(--ease-out);
 }
 
 .document-list[data-state="closing"] {
-  animation: motion-sheet-out var(--dur-sheet-exit) var(--ease-in) forwards;
+  animation: motion-shrink-out var(--dur-fast) var(--ease-in) forwards;
 }
 
 /* Title centred on the screen whatever the two buttons' widths. */
@@ -62,16 +60,9 @@
   height: 22px;
 }
 
-.document-list-text-button {
+/* Open from Files: a symbol in the bar's right corner, as the × in its left. */
+.document-list-open-other {
   justify-self: end;
-  height: 44px;
-  padding: 0 10px;
-  border: none;
-  background: none;
-  color: var(--ui-accent);
-  font: inherit;
-  /* A navigation bar button, as Settings' Done. */
-  font-size: var(--text-body);
 }
 
 .document-list-body {
@@ -80,7 +71,7 @@
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 6px 0 24px;
+  padding: 8px 0 24px;
 }
 
 .document-list-empty {
@@ -234,7 +225,7 @@
   align-items: center;
   gap: 12px;
   min-height: 64px;
-  padding: 8px 8px 8px 10px;
+  padding: 8px 8px 8px 12px;
   text-align: left;
 }
 
@@ -271,8 +262,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   align-content: start;
-  gap: 20px 14px;
-  padding: 12px 18px 32px;
+  gap: 20px 16px;
+  padding: 12px 16px 32px;
 }
 
 .document-list-grid .document-item-main {

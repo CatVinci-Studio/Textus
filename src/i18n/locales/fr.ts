@@ -162,8 +162,6 @@ utiliser une.
   revisionDisplayFinal: "Résultat seul, original dans la marge",
   revisionDisplayNoRoom:
     "Pas assez de place : fermez la barre latérale ou le panneau IA",
-  revisionDisplayNewText:
-    "Le nouveau texte n'a pas d'original : dans ces vues, il reste dans le texte, en vert",
   proposalDeletedSentence: "Original",
   proposalAddedSentence: "Ajout",
   reviewBarLabel: "Révision",
@@ -181,6 +179,8 @@ utiliser une.
   ownNoteDelete: "Supprimer",
   menuTrackChanges: "Suivre mes modifications",
   trackStop: "Arrêter le suivi",
+  closedWithUndecided:
+    "Modifications à décider dans {name} : {n}. Elles sont conservées et reviennent à sa prochaine ouverture.",
   trackStopConfirm:
     "Arrêter de suivre vos modifications ? Elles restent dans le texte ; seules leurs marques disparaissent.",
   trackAcceptAll: "Accepter toutes mes modifications",
@@ -532,8 +532,8 @@ utiliser une.
   settingsSearchResults: "Résultats de la recherche",
   settingsSearchNoMatches: "Aucun réglage ne correspond.",
   settingsViewGroup: "Affichage",
+  settingsFrontDocumentHint: "Pour le document au premier plan.",
   settingsHelpGroup: "Aide",
-  settingsDone: "OK",
   navGeneral: "Général",
   navEditor: "Éditeur et apparence",
   navTheme: "Thème",
@@ -610,7 +610,8 @@ utiliser une.
     "Tapez / pour utiliser une compétence\u00a0: une consigne toute prête, comme Relire et corriger ou Résumer.",
   skillPickerNoMatch:
     "Aucune compétence ne correspond à «\u00a0{query}\u00a0».",
-  skillPickerHowTo: `Activez les compétences intégrées ou importez les vôtres dans Réglages > ${AI_NAME}.`,
+  skillPickerHowTo:
+    "Ajoutez d’autres compétences ou importez les vôtres dans Réglages.",
   mentionPickerAbout: "Tapez @ pour joindre un fichier du dossier du projet.",
   mentionPickerNoProject:
     "Enregistrez le document ou choisissez un dossier de projet, et ses fichiers apparaîtront ici.",
@@ -677,7 +678,6 @@ utiliser une.
   alignRight: "Aligner à droite",
   selectRow: "Sélectionner la ligne",
   selectColumn: "Sélectionner la colonne",
-  menuGroupInsert: "Insérer",
   tableRowGroup: "Ligne",
   tableColumnGroup: "Colonne",
   insertRowAbove: "Insérer une ligne au-dessus",
@@ -798,6 +798,9 @@ utiliser une.
   chatSelectedPicture: "Image sélectionnée",
   cut: "Couper",
   copy: "Copier",
+  menuPlainText: "Copier/coller en texte brut",
+  appErrorTitle: "Un problème est survenu",
+  appErrorReload: "Recharger",
   copyAsPlainText: "Copier en texte brut",
   pasteAsPlainText: "Coller en texte brut",
   paste: "Coller",
@@ -857,7 +860,6 @@ utiliser une.
   contentThemeLabel: "Thème de l'éditeur",
   themeDeleteButton: "Supprimer le thème",
   themeImportLabel: "Ajouter un thème depuis un fichier CSS",
-  themeMoreLabel: "Plus de thèmes",
   themeGetMore: "Obtenir d’autres thèmes",
   themeImportButton: "Importer du CSS…",
   themeGalleryLoading: "Chargement des thèmes…",
@@ -889,6 +891,7 @@ utiliser une.
   codeBlockCopied: "Copié",
   autoCloseMarksLabel: "Fermer ** et `",
   autoCloseBracketsLabel: "Fermer (), [] et « »",
+  plainTextMenuLabel: "Copier/coller en texte brut dans le menu contextuel",
   pdfPageNumbersLabel: "Afficher les numéros de page à l’export",
   pdfLightColorsLabel: "Exporter les PDF en couleurs claires",
   infoTipLabel: "En savoir plus sur « {label} »",
@@ -1267,7 +1270,7 @@ utiliser une.
   missingImageFilter: "Images",
   missingImageChooseFailed: "Impossible d'utiliser l'image choisie.",
   imageStorageGroupLabel: "Images",
-  imageStorageLabel: "Enregistrer les images collées",
+  imageStorageLabel: "Emplacement des images",
   imageStorageLocal: "Sur cet ordinateur",
   imageStorageRemote: "Envoyer vers un hébergeur d'images",
   imageFolderLabel: "Dossier",
@@ -1412,7 +1415,7 @@ utiliser une.
   extensionsThemesGet: "Obtenir des thèmes",
   extensionsSkillsHelp: `Une compétence indique à ${AI_NAME} comment bien faire un type de tâche. Celles qui sont activées sont proposées à ${AI_NAME} et dans le menu / ; une nouvelle installation en active cinq, et vous ajoutez les autres ici.`,
   extensionsSkillsMoved:
-    "Les compétences intégrées et les vôtres sont dans Réglages › Extensions.",
+    "Les compétences ajoutées sont dans Réglages › Extensions ; les intégrées, ci-dessous.",
   extensionsSkillsOpen: "Ouvrir",
   mcpServersGroup: "Serveurs MCP",
   mcpHelp: `Un serveur MCP donne à ${AI_NAME} d’autres outils : un dossier, une base de données, une recherche. Chaque serveur activé démarre en arrière-plan, et ${AI_NAME} peut appeler ses outils en vous aidant ; la conversation montre chaque appel.`,
@@ -1522,6 +1525,8 @@ utiliser une.
   pluginsMine: "Créées par vous",
   pluginsNone: "Aucune pour l’instant.",
   pluginStatusBroken: "Illisible : {reason}",
+  pluginStatusDesktopOnly:
+    "Fonctionne uniquement sur ordinateur, pas sur iPhone ni iPad.",
   pluginStatusIncompatible:
     "Conçue pour une autre version de Textus ({range}).",
   pluginStatusFailed: "Désactivée : {reason}",

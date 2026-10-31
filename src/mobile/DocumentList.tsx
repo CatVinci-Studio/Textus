@@ -3,7 +3,13 @@ import { useSettings } from "../prefs/SettingsContext";
 import { localeOf, plural } from "../i18n/strings";
 import { ContextMenu, type ContextMenuItem } from "../ui/ContextMenu";
 import { showConfirm, showMessage, showPrompt } from "../ui/app-dialog";
-import { CloseIcon, GridViewIcon, ListViewIcon, MoreIcon } from "../ui/icons";
+import {
+  CloseIcon,
+  FolderOpenIcon,
+  GridViewIcon,
+  ListViewIcon,
+  MoreIcon,
+} from "../ui/icons";
 import { Presence, usePresenceProps } from "../ui/usePresence";
 import { animate } from "../ui/motion";
 import { ListMotion } from "../ui/flip";
@@ -79,18 +85,31 @@ export interface DocumentListProps {
 function useRecentDocuments() {
   const [entries, setEntries] = useState<Entry[] | null>(null);
 
+  // The list at once; each document's date and opening lines as they are
+  // read, which for a file picked in Files goes through the system.
   const reload = useCallback(async () => {
     const paths = await recentIOSDocuments();
+    const local = await Promise.all(paths.map(inIOSDocuments));
     setEntries(
-      await Promise.all(
-        paths.map(async (path) => ({
-          path,
-          local: await inIOSDocuments(path),
-          mtime: await fs.fileMtimeMs(path).catch(() => null),
-          preview: previewText(await fs.readTextFile(path).catch(() => "")),
-        })),
-      ),
+      paths.map((path, i) => ({
+        path,
+        local: local[i],
+        mtime: null,
+        preview: "",
+      })),
     );
+    for (const path of paths)
+      void Promise.all([
+        fs.fileMtimeMs(path).catch(() => null),
+        fs.readTextFile(path).then(previewText, () => ""),
+      ]).then(([mtime, preview]) =>
+        setEntries(
+          (now) =>
+            now?.map((entry) =>
+              entry.path === path ? { ...entry, mtime, preview } : entry,
+            ) ?? now,
+        ),
+      );
   }, []);
   const seen = useRef<Set<string> | null>(null);
   useEffect(() => {
@@ -229,10 +248,11 @@ export function DocumentList({
         <h2>{t.docListTitle}</h2>
         <button
           type="button"
-          className="document-list-text-button"
+          className="document-list-icon-button document-list-open-other"
+          aria-label={t.docListOpenOther}
           onClick={onOpenOther}
         >
-          {t.docListOpenOther}
+          <FolderOpenIcon />
         </button>
       </header>
       <div className="document-list-toolbar">

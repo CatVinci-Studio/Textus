@@ -377,6 +377,8 @@ export function installDevTauriShim(): void {
       previews: [`themes/${id}/preview.png`],
       installs: null,
       installs30: null,
+      // In Chinese, as the gallery gives its own themes words there.
+      l10n: { zh: { name: null, description: "开发用的示例主题。" } },
     });
     gallery.files[`themes/${id}/theme.css`] =
       `:root { --doc-bg: ${bg}; --doc-text: ${text}; --doc-accent: ${accent}; }`;
@@ -422,6 +424,7 @@ export function installDevTauriShim(): void {
   // `window.__devSkills` exposes the state.
   const skills = {
     ownModes: ["write"] as string[],
+    ownOff: false,
     customized: new Set<string>(),
     // Copies made before the bundled built-in last changed.
     outdated: new Set<string>(),
@@ -445,6 +448,7 @@ export function installDevTauriShim(): void {
           version: null as string | null,
           basedOn: null as string | null,
           builtinUpdated: false,
+          off: false,
           aliases: {},
           labels: {},
         };
@@ -486,6 +490,7 @@ export function installDevTauriShim(): void {
           source: "global",
           overridesBuiltin: false,
           modes: skills.ownModes as AgentSkill_Serialize["modes"],
+          off: skills.ownOff,
         } satisfies AgentSkill_Serialize;
         return Promise.resolve([...builtins, own]);
       }
@@ -497,6 +502,10 @@ export function installDevTauriShim(): void {
       case "set_skill_modes":
         skills.log.push(`${cmd}:${name}:${String(args.modes)}`);
         skills.ownModes = [...((args.modes as string[]) ?? [])];
+        return Promise.resolve(null);
+      case "set_skill_off":
+        skills.log.push(`${cmd}:${name}:${String(args.off)}`);
+        skills.ownOff = !!args.off;
         return Promise.resolve(null);
       case "customize_builtin_skill": {
         skills.log.push(`${cmd}:${name}`);
@@ -1159,6 +1168,11 @@ export function installDevTauriShim(): void {
         filePath in ((w.__devBinaryFiles ?? {}) as Record<string, string>)
       )
         return Promise.reject("stream did not contain valid UTF-8");
+      // A save of one of them lands there, for a test to read back.
+      if (files && filePath in files && cmd === "write_text_file") {
+        files[filePath] = String((args as { contents?: unknown }).contents);
+        return Promise.resolve(null);
+      }
       if (files && filePath in files) {
         if (cmd === "read_text_file") return Promise.resolve(files[filePath]);
         if (cmd === "file_mtime_ms")

@@ -142,7 +142,7 @@
   corner-shape: round;
   border: 3px solid var(--doc-border);
   border-top-color: var(--doc-accent);
-  animation: pdf-export-spin 0.7s linear infinite;
+  animation: pdf-export-spin var(--dur-spin) linear infinite;
 }
 
 @keyframes pdf-export-spin {

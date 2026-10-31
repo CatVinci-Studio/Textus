@@ -21,6 +21,7 @@ import {
 } from "./margin-layout";
 import { NoteCard, RevisionCard } from "./MarginCards";
 import { MarginGroup } from "./MarginGroup";
+import { asDrawn, zoomedRectScale } from "../../ui/zoomed-rects";
 export { type ReviewMarginLabels, type MarginItem } from "./margin-layout";
 export { NotePopover } from "./MarginCards";
 
@@ -98,11 +99,15 @@ export function ReviewMargin({
       const box = scrollEl.getBoundingClientRect();
       const top0 = box.top - scrollEl.scrollTop;
       // Horizontal positions are taken from the column, wherever its glide
-      // has it right now, and placed where it is going.
+      // has it right now, and placed where it is going. The text's boxes,
+      // inside the document's zoom, as drawn.
+      const scale = zoomedRectScale(pm);
       const column = contentEl.getBoundingClientRect();
       const columnLeft = natural - shift;
       const textEdge =
-        pm.getBoundingClientRect().right - column.left + columnLeft;
+        asDrawn(pm.getBoundingClientRect(), scale).right -
+        column.left +
+        columnLeft;
       const placed: Placed[] = [];
       for (const item of items) {
         // The marked passage's own boxes: a position's coordinates are
@@ -112,12 +117,17 @@ export function ReviewMargin({
           .flatMap((m) => [...m.getClientRects()])
           .filter((r) => r.width > 0 || r.height > 0);
         let first: { top: number; right: number; bottom: number };
+        const shown = rects.length > 0 ? null : drawnAround(marks[0]);
         if (rects.length > 0) {
-          first = rects[0];
+          first = asDrawn(rects[0], scale);
+        } else if (shown) {
+          // Its passage hidden - a pending edit's replaced text, in the
+          // final view: beside what holds it.
+          first = asDrawn(shown, scale);
         } else {
           const from = item.kind === "note" ? item.note.from : item.from;
           try {
-            first = view.coordsAtPos(from, 1);
+            first = asDrawn(view.coordsAtPos(from, 1), scale);
           } catch {
             continue;
           }
@@ -307,4 +317,17 @@ export function ReviewMargin({
     </div>,
     scrollEl,
   );
+}
+
+/** The first box drawn for the nearest element around `el` that has one:
+ *  for a passage hidden from view, where it would be. */
+function drawnAround(el: Element | undefined): DOMRect | null {
+  for (let at = el?.parentElement; at; at = at.parentElement) {
+    if (at.classList.contains("ProseMirror")) return null;
+    const box = [...at.getClientRects()].find(
+      (r) => r.width > 0 || r.height > 0,
+    );
+    if (box) return box;
+  }
+  return null;
 }

@@ -31,9 +31,6 @@ const BUILT_IN: SettingsPageDef[] = [
   {
     id: "extensions",
     label: (t) => t.navExtensions,
-    // Desktop only: a phone has no plugin files or MCP programs, and its tabs
-    // have room for four.
-    available: () => !isIOSApp,
     Page: ExtensionsPage,
   },
   {

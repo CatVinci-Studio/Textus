@@ -16,7 +16,12 @@ import {
   type MenuNode,
 } from "./app-menu-model";
 import { thisWindow } from "../../platform/this-window";
-import { canToggleFullscreen, hasAppMenu } from "../../platform/capabilities";
+import {
+  canToggleFullscreen,
+  hasAppMenu,
+  hasTextusAi,
+} from "../../platform/capabilities";
+import { useMenuAim } from "../../ui/menu-aim";
 import { CheckIcon, ChevronIcon } from "../../ui/icons";
 import { usePresenceProps } from "../../ui/usePresence";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
@@ -59,7 +64,7 @@ export function AppMenu({ x, y, onClose, checks, section }: AppMenuProps) {
         { ...checks, fullscreen, trackChanges: trackingShown() },
         pluginEntries,
       )
-    : buildMobileMenu(t, checks);
+    : buildMobileMenu(t, checks, pluginEntries, hasTextusAi);
   const items =
     section === undefined
       ? menu
@@ -74,6 +79,7 @@ export function AppMenu({ x, y, onClose, checks, section }: AppMenuProps) {
         onDismiss={onClose}
         // On a phone a focused first row would only look selected.
         autoFocus={!phone}
+        inline={phone}
       />
     </div>,
     document.body,
@@ -149,8 +155,14 @@ function MenuList({
   onDismiss,
   onLeave,
   autoFocus = false,
+  inline = false,
+  nested = false,
 }: {
   items: MenuNode[];
+  /** Submenus open in place under their row, as on iOS, not beside it. */
+  inline?: boolean;
+  /** Opened in place inside another list: no surface of its own. */
+  nested?: boolean;
   /** Close the whole menu - an item was chosen, or Escape. */
   onDismiss: () => void;
   /** Close just this submenu and hand focus back to the row it hangs off. */
@@ -171,6 +183,15 @@ function MenuList({
     setInstantFlyout(index !== null && now - lastFlyout.current < 400);
     setOpenIndex(index);
   };
+  // A pointer on its way to the open flyout leaves it open (menu-aim.ts).
+  const aim = useMenuAim<number>(
+    showFlyout,
+    () => listRef.current,
+    () =>
+      listRef.current?.querySelector<HTMLElement>(
+        ":scope > .app-menu-row > .app-menu-flyout",
+      ) ?? null,
+  );
 
   useEffect(() => {
     if (!autoFocus) return;
@@ -211,9 +232,10 @@ function MenuList({
   return (
     <div
       ref={listRef}
-      className="app-menu-list floating-surface"
+      className={`app-menu-list${nested ? "" : " floating-surface"}`}
       role="menu"
       onKeyDown={onKeyDown}
+      onMouseMove={aim.move}
     >
       {items.map((item, i) =>
         item === "separator" ? (
@@ -225,10 +247,19 @@ function MenuList({
             checkColumn={checkColumn}
             open={openIndex === i}
             instantFlyout={instantFlyout}
+            inline={inline}
             // Hovering a row with no submenu closes the open one.
-            onHover={() => showFlyout(item.submenu ? i : null)}
-            onOpenSubmenu={() => showFlyout(i)}
-            onCloseSubmenu={() => showFlyout(null)}
+            onHover={() => aim.hover(item.submenu ? i : null)}
+            onEnterFlyout={aim.hold}
+            // The keyboard's choice; a hover still pending doesn't undo it.
+            onOpenSubmenu={() => {
+              aim.hold();
+              showFlyout(i);
+            }}
+            onCloseSubmenu={() => {
+              aim.hold();
+              showFlyout(null);
+            }}
             onDismiss={onDismiss}
           />
         ),
@@ -242,7 +273,9 @@ function MenuRow({
   checkColumn,
   open,
   instantFlyout,
+  inline,
   onHover,
+  onEnterFlyout,
   onOpenSubmenu,
   onCloseSubmenu,
   onDismiss,
@@ -253,7 +286,10 @@ function MenuRow({
   open: boolean;
   /** Its flyout appears without sliding. */
   instantFlyout: boolean;
+  inline: boolean;
   onHover: () => void;
+  /** The pointer reached its flyout. */
+  onEnterFlyout: () => void;
   onOpenSubmenu: () => void;
   onCloseSubmenu: () => void;
   onDismiss: () => void;
@@ -267,6 +303,7 @@ function MenuRow({
   function activate() {
     if (item.disabled) return;
     if (hasSubmenu) {
+      if (inline && open) return onCloseSubmenu();
       setFocusSubmenu(true);
       onOpenSubmenu();
       return;
@@ -318,8 +355,22 @@ function MenuRow({
         )}
         {hasSubmenu && <ChevronIcon className="app-menu-chevron" />}
       </button>
-      {hasSubmenu && open && (
-        <Flyout anchor={rowRef} instant={instantFlyout}>
+      {hasSubmenu && open && inline && (
+        <div className="app-menu-inline">
+          <MenuList
+            items={item.submenu ?? []}
+            onDismiss={onDismiss}
+            inline
+            nested
+          />
+        </div>
+      )}
+      {hasSubmenu && open && !inline && (
+        <Flyout
+          anchor={rowRef}
+          instant={instantFlyout}
+          onMouseEnter={onEnterFlyout}
+        >
           <MenuList
             items={item.submenu ?? []}
             onDismiss={onDismiss}
@@ -341,10 +392,12 @@ function MenuRow({
 function Flyout({
   anchor,
   instant,
+  onMouseEnter,
   children,
 }: {
   anchor: React.RefObject<HTMLButtonElement | null>;
   instant: boolean;
+  onMouseEnter: () => void;
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -358,9 +411,12 @@ function Flyout({
     const panelBox = panel.getBoundingClientRect();
     const margin = 6;
 
-    let left = rowBox.right + 2;
+    // Beside the list, a small gap from its edge, never over it.
+    const list = (row.closest(".app-menu-list") ?? row).getBoundingClientRect();
+    const gap = 4;
+    let left = list.right + gap;
     if (left + panelBox.width > window.innerWidth - margin) {
-      left = Math.max(margin, rowBox.left - panelBox.width - 2);
+      left = Math.max(margin, list.left - gap - panelBox.width);
     }
     let top = rowBox.top - 5;
     if (top + panelBox.height > window.innerHeight - margin) {
@@ -373,6 +429,7 @@ function Flyout({
     <div
       ref={ref}
       className={`app-menu-flyout${instant ? " app-menu-flyout-instant" : ""}`}
+      onMouseEnter={onMouseEnter}
       // Painted only once measured.
       style={pos ?? { visibility: "hidden", left: 0, top: 0 }}
     >

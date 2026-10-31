@@ -32,7 +32,7 @@
 }
 
 .chat-history-group-title {
-  padding: 10px 8px 4px;
+  padding: 8px 8px 4px;
   font-size: var(--text-caption);
   font-weight: 600;
   text-transform: uppercase;
@@ -45,7 +45,7 @@
 
 /* Older conversations were moved to the trash folder (beyond the cap). */
 .chat-history-archived {
-  padding: 6px 8px 2px;
+  padding: 4px 8px 2px;
   font-size: var(--text-caption);
   color: var(--ui-muted);
 }
@@ -54,7 +54,7 @@
   display: flex;
   align-items: flex-start;
   gap: 4px;
-  padding: 6px 8px;
+  padding: 4px 8px;
   border-radius: var(--shape-s);
   cursor: pointer;
   font-size: var(--text-secondary);
@@ -123,15 +123,15 @@
     justify-content: center;
     min-width: 32px;
     min-height: 32px;
-    margin: -6px -6px -6px 0;
+    margin: -4px -4px -4px 0;
   }
 }
 
 /* Searching what was said: the field on top, and each conversation found
    with the words it was found by. */
 .chat-history-search {
-  margin: 4px 4px 6px;
-  padding: 5px 8px;
+  margin: 4px 4px 8px;
+  padding: 4px 8px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;

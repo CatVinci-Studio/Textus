@@ -20,16 +20,27 @@ export type SettingsAccess = () => {
 };
 /** The window's settings, while it is connected (schedule-window.ts). */
 let windowSettings: SettingsAccess | null = null;
+/** Plugins that scheduled before the window's settings were connected. */
+const waiting = new Set<string>();
 
-export function setNoticeSettings(access: SettingsAccess | null): void {
+export function setNoticeSettings(access: SettingsAccess): void {
   windowSettings = access;
+  for (const id of waiting) pluginScheduled(id);
+  waiting.clear();
+}
+
+/** Lets go of `access`, unless a later connection has replaced it: a
+ *  window's connections can end after the next one has begun. */
+export function clearNoticeSettings(access: SettingsAccess): void {
+  if (windowSettings === access) windowSettings = null;
 }
 
 /** A plugin scheduled a job, from its code or its background code. */
 export function pluginScheduled(id: string): void {
   const record = pluginRecord(id);
   const access = windowSettings?.();
-  if (record && access)
+  if (!access) waiting.add(id);
+  else if (record)
     tellOfScheduling(
       id,
       pluginName(record),

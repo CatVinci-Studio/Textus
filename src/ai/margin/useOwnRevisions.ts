@@ -8,6 +8,7 @@ import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source
 import { ownNotes as ownNotesIpc } from "../../platform/ipc";
 import { showConfirm } from "../../ui/app-dialog";
 import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
+import { useLatest } from "../../utils/hooks/useLatest";
 import {
   TRACK_CHANGES_EVENT,
   type TrackChangesAction,
@@ -15,19 +16,20 @@ import {
 import type { Strings } from "../../i18n/strings";
 import {
   ownRevisionKey,
+  setOwnPicker,
   watchOwnChanges,
   type OwnChange,
 } from "./own-revision-plugin";
 import { setTrackingShown } from "./track-changes-state";
-
-/** A moment after the last change, the original is written. */
-const WRITE_AFTER = 400;
+import { originalChanged, trackFile } from "../../document/tracked-file";
+import { reportUndecided } from "../../document/undecided";
 
 const onScreen = (view: EditorView) =>
   !!view.dom.closest('[data-active-tab="true"]');
 
-/** Track My Changes for one document. Its original is kept in the app's
- *  data so tracking carries on when it reopens; the file holds the new text. */
+/** Track My Changes for one document. The file holds the original with the
+ *  changes accepted; the changes still undecided are kept beside it
+ *  (document/tracked-file.ts), so tracking carries on when it reopens. */
 export function useOwnRevisions({
   run,
   filePath,
@@ -40,7 +42,8 @@ export function useOwnRevisions({
   // Null while the document isn't tracking.
   const [changes, setChanges] = useState<OwnChange[] | null>(null);
   const loadedFor = useRef<string | null>(null);
-  const written = useRef<{ base: ProseNode | null; text: string } | null>(null);
+  // The original last seen, so only a change to it writes the file.
+  const baseSeen = useRef<ProseNode | null>(null);
 
   const view = run((ctx) => ctx.get(editorViewCtx)) ?? null;
   useEffect(() => {
@@ -48,18 +51,29 @@ export function useOwnRevisions({
     return watchOwnChanges(view, setChanges);
   }, [view]);
 
+  // The ✓ / ✕ in the text.
+  const decideRef = useLatest(decide);
+  useEffect(() => {
+    if (!view) return;
+    return setOwnPicker(view, {
+      labels: { take: t.proposalTakeSentence, keep: t.proposalKeepSentence },
+      decide: (index, take) => decideRef.current(index, take),
+    });
+  }, [view, t, decideRef]);
+
   // The menu's check mark follows the document on screen.
   useEffect(() => {
     if (!view || !onScreen(view)) return;
     setTrackingShown(changes !== null);
   });
 
+  // The original kept beside the file: tracking carries on where the file
+  // still holds it and the editor opened with the revised text.
   useEffect(() => {
     if (!filePath || !view || loadedFor.current === filePath) return;
     if (loadedFor.current !== null || changes !== null) {
       // Saved under a new name: its tracking goes along.
       loadedFor.current = filePath;
-      written.current = null;
       return;
     }
     let alive = true;
@@ -69,25 +83,25 @@ export function useOwnRevisions({
       .then((text) => {
         if (!alive) return;
         loadedFor.current = filePath;
-        let markdown: unknown = null;
+        let saved: { base?: unknown; revised?: unknown } = {};
         try {
-          markdown = text
-            ? (JSON.parse(text) as { base?: unknown }).base
-            : null;
+          saved = text ? JSON.parse(text) : {};
         } catch {
-          markdown = null;
+          saved = {};
         }
-        if (typeof markdown !== "string") {
-          written.current = { base: null, text: "{}" };
-          return;
-        }
+        if (typeof saved.base !== "string") return;
         run((ctx) => {
-          const base = parseMarkdownSource(ctx, markdown as string);
+          const shown = ctx.get(serializerCtx)(view.state.doc);
+          // Revised from an original the file no longer holds: it gives way,
+          // as a proposal does.
+          if (typeof saved.revised === "string" && saved.revised !== shown)
+            return;
+          const base = parseMarkdownSource(ctx, saved.base as string);
           if (!base || typeof base === "string") return;
           view.dispatch(
             view.state.tr.setMeta(ownRevisionKey, { type: "base", base }),
           );
-          written.current = { base, text: text ?? "" };
+          baseSeen.current = base;
         });
       });
     return () => {
@@ -96,22 +110,26 @@ export function useOwnRevisions({
   }, [filePath, view, run, changes]);
 
   useEffect(() => {
+    if (filePath) reportUndecided(filePath, "own", changes?.length ?? 0);
+  }, [filePath, changes]);
+
+  // What the file holds while tracked: the original.
+  useEffect(() => {
+    if (!filePath || !view) return;
+    return trackFile(filePath, () => {
+      const base = ownRevisionKey.getState(view.state)?.base;
+      return base ? (run((ctx) => ctx.get(serializerCtx)(base)) ?? null) : null;
+    });
+  }, [filePath, view, run]);
+
+  // A change accepted, or tracking started or stopped: the file follows.
+  useEffect(() => {
     if (!filePath || !view || loadedFor.current !== filePath) return;
     const base = ownRevisionKey.getState(view.state)?.base ?? null;
-    if (written.current?.base === base) return;
-    const timer = window.setTimeout(() => {
-      const text = base
-        ? JSON.stringify({
-            base: run((ctx) => ctx.get(serializerCtx)(base)) ?? "",
-          })
-        : "{}";
-      written.current = { base, text };
-      void ownNotesIpc.write(filePath, "revisions", text).catch(() => {
-        written.current = null;
-      });
-    }, WRITE_AFTER);
-    return () => window.clearTimeout(timer);
-  }, [filePath, view, run, changes]);
+    if (baseSeen.current === base) return;
+    baseSeen.current = base;
+    originalChanged(filePath);
+  }, [filePath, view, changes]);
 
   const state = () => (view ? ownRevisionKey.getState(view.state) : undefined);
 

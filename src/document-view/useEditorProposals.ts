@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { reportUndecided } from "../document/undecided";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { PendingEditCallbacks } from "./editor-extensions";
@@ -118,6 +119,10 @@ export function useEditorProposals({
       );
     },
   });
+  const undecided = pendingEdits.decidable.length;
+  useEffect(() => {
+    if (filePath) reportUndecided(filePath, "ai", undecided);
+  }, [filePath, undecided]);
   // The document's undecided proposals outlive closing it.
   useKeptProposals({
     run,

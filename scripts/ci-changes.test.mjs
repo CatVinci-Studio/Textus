@@ -126,6 +126,7 @@ describe("which CI jobs a pull request needs", () => {
         "src-tauri/crates/aicompat/src/lib.rs",
         "src-tauri/rust-toolchain.toml",
         "scripts/ios-prepare.sh",
+        "scripts/smoke-ios-sim.sh",
       ]),
     ).toEqual(NATIVE);
   });

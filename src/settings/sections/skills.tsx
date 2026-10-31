@@ -66,28 +66,6 @@ export async function importSkill(): Promise<void> {
 }
 
 /// The Skills row and the user's own skills under it.
-export function AgentSkillsSection({ t }: { t: Strings }) {
-  const [error, setError] = useState<string | null>(null);
-  return (
-    <>
-      <SettingRow label={t.agentSkillsLabel} error={error}>
-        <button
-          className="text-button settings-inline-button"
-          onClick={() =>
-            importSkill().then(
-              () => setError(null),
-              (err: unknown) => setError(explainError(err, t)),
-            )
-          }
-        >
-          {t.agentSkillsImport}
-        </button>
-      </SettingRow>
-      <OwnSkillsList t={t} />
-    </>
-  );
-}
-
 /// The user's own skills, each with the modes it applies in (at least one).
 /// A skill with a built-in's name says it replaces it.
 export function OwnSkillsList({
@@ -112,6 +90,21 @@ export function OwnSkillsList({
       query,
     ),
   );
+
+  async function setOff(skill: SkillListItem, off: boolean) {
+    setError(null);
+    const before = list;
+    setList(
+      (list ?? []).map((i) => (i.name === skill.name ? { ...i, off } : i)),
+    );
+    try {
+      await ai.setSkillOff(skill.name, skill.source, null, null, off);
+      announceChange();
+    } catch (err) {
+      setList(before);
+      setError(explainError(err, t));
+    }
+  }
 
   async function setModes(skill: SkillListItem, modes: AgentMode[]) {
     if (modes.length === 0) return;
@@ -147,6 +140,7 @@ export function OwnSkillsList({
             key={skill.name}
             className="settings-skill-item"
             data-skill={skill.name}
+            data-off={skill.off ? "" : undefined}
           >
             <span className="settings-skill-text">
               <span className="settings-skill-title">
@@ -170,9 +164,17 @@ export function OwnSkillsList({
               <ModeChoice
                 t={t}
                 modes={modes}
+                disabled={skill.off}
                 onChange={(next) => void setModes(skill, next)}
               />
             </span>
+            {/* Off for now, its modes kept for when it comes back on. */}
+            <input
+              type="checkbox"
+              aria-label={words?.label ?? skill.name}
+              checked={!skill.off}
+              onChange={(e) => void setOff(skill, !e.target.checked)}
+            />
           </div>
         );
       })}
@@ -187,19 +189,14 @@ const MODE_LABEL: Record<AgentMode, TextKey> = {
 };
 
 /// The built-in skills by mode, always on. Customize… copies one into the
-/// global skills folder and opens it; Reset deletes the copy. `flat` drops
-/// the disclosure.
+/// global skills folder and opens it; Reset deletes the copy.
 export function BuiltinSkillsSection({
   t,
-  query = "",
-  flat,
   onOpenFile,
   onFilesDeleted,
   onClose,
 }: {
   t: Strings;
-  query?: string;
-  flat?: boolean;
   onOpenFile: (path: string) => void;
   onFilesDeleted?: (paths: string[]) => void;
   onClose: () => void;
@@ -267,11 +264,7 @@ export function BuiltinSkillsSection({
       )}
       {AGENT_MODES.map((mode) => ({
         mode,
-        names: BUILTIN_SKILLS.filter(
-          (s) =>
-            s.mode === mode &&
-            matchesWords(`${s.name}\n${skillText(lang, s.name).label}`, query),
-        ),
+        names: BUILTIN_SKILLS.filter((s) => s.mode === mode),
       }))
         .filter(({ names }) => names.length > 0)
         .map(({ mode, names }) => (
@@ -367,7 +360,6 @@ export function BuiltinSkillsSection({
         ))}
     </>
   );
-  if (flat) return rows;
   return (
     <details className="settings-advanced settings-builtin-skills">
       <summary>

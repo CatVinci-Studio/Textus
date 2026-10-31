@@ -1,0 +1,39 @@
+.app-error {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-family: var(--font-sans);
+  text-align: center;
+}
+
+.app-error h1 {
+  margin: 0;
+  font-size: var(--text-title);
+  font-weight: 600;
+}
+
+.app-error-detail {
+  max-width: 480px;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.app-error-reload {
+  min-height: 36px;
+  padding: 0 20px;
+  border: none;
+  border-radius: var(--shape-pill);
+  background: var(--ui-text);
+  color: var(--ui-bg);
+  font: inherit;
+  font-weight: 600;
+}

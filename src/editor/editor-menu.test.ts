@@ -18,6 +18,7 @@ import {
   type ContextMenuOptions,
 } from "./editor-menu";
 import type { EditorRunner } from "./useEditorRunner";
+import type { ContextMenuItem } from "../ui/ContextMenu";
 import { resolveStrings } from "../i18n/strings";
 
 // The node names commonmark/gfm register, with just enough spec for the
@@ -126,13 +127,29 @@ describe("the editor menu", () => {
       "-",
       t.cut,
       t.copy,
-      t.copyAsPlainText,
       t.paste,
-      t.pasteAsPlainText,
+      `${t.menuPlainText} › ${t.copyAsPlainText} | ${t.pasteAsPlainText}`,
+      "-",
+      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic}`,
     ]);
   });
 
-  it("keeps the text's menu short: Insert and the AI in submenus", () => {
+  it("offers plain text only while Settings turns it on", () => {
+    const { run } = editorAt(caretIn("text"));
+    const off = {
+      ...options(null),
+      copyAsPlainText: undefined,
+      pasteAsPlainText: undefined,
+    };
+    expect(labels(buildContextMenuItems(run, off)).slice(0, 4)).toEqual([
+      t.cut,
+      t.copy,
+      t.paste,
+      "-",
+    ]);
+  });
+
+  it("keeps the text's menu short: plain text, Format and the AI in submenus", () => {
     const { run } = editorAt(caretIn("text"));
     const ai = ["Ask", "Continue"].map((label) => ({
       label,
@@ -143,13 +160,25 @@ describe("the editor menu", () => {
     ).toEqual([
       t.cut,
       t.copy,
-      t.copyAsPlainText,
       t.paste,
-      t.pasteAsPlainText,
+      `${t.menuPlainText} › ${t.copyAsPlainText} | ${t.pasteAsPlainText}`,
       "-",
-      `${t.menuGroupInsert} › ${t.insertBulletList} | ${t.insertOrderedList} | ${t.insertBlockquote} | ${t.insertCodeBlock} | ${t.insertTable}`,
+      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | - | ${[1, 2, 3].map((n) => t.menuHeadingTemplate.replace("{n}", String(n))).join(" | ")} | - | ${t.insertBulletList} | ${t.insertOrderedList} | ${t.insertBlockquote} | ${t.insertCodeBlock} | ${t.insertTable}`,
       `${t.menuTextusAi} › Ask | Continue`,
     ]);
+  });
+
+  it("offers Cut and Copy only with something selected", () => {
+    const disabled = (run: ReturnType<typeof editorAt>["run"]) =>
+      buildContextMenuItems(run, options(null))
+        .filter(
+          (item): item is ContextMenuItem =>
+            item !== "separator" && !("items" in item),
+        )
+        .filter((item) => item.disabled)
+        .map((item) => item.label);
+    expect(disabled(editorAt(caretIn("text")).run)).toEqual([t.cut, t.copy]);
+    expect(disabled(editorAt(imageSelected).run)).toEqual([]);
   });
 
   it("offers a picture's file next to its width, as far as it has one", () => {

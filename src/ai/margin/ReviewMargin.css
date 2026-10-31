@@ -28,8 +28,8 @@
   stroke-width: 1.2;
   opacity: 0.7;
   stroke-dasharray: 1;
-  animation: review-link-draw 600ms var(--ease-out) both;
-  animation-delay: 160ms;
+  animation: review-link-draw calc(var(--dur-base) * 3) var(--ease-out) both;
+  animation-delay: calc(var(--dur-instant) * 2);
   transition:
     opacity var(--dur-fast) var(--ease-standard),
     stroke-width var(--dur-fast) var(--ease-standard);
@@ -58,7 +58,7 @@
 .review-note {
   position: absolute;
   box-sizing: border-box;
-  padding: 9px 12px 9px;
+  padding: 8px 12px 8px;
   border-radius: var(--shape-m);
   border: 1px solid var(--review-note-border);
   background: var(--review-note-bg);
@@ -70,7 +70,8 @@
   /* A card glides on `translate`, never `top`, which would lay the margin
      out on every frame. */
   transition: transform var(--dur-fast) var(--ease-out);
-  animation: review-note-in var(--dur-slow) var(--ease-out) both;
+  --enter-x: calc(var(--motion-distance-md) * 1.75);
+  animation: motion-enter var(--dur-slow) var(--ease-out) both;
 }
 
 /* The deeper shadow under the pointer fades in on a layer of its own:
@@ -95,17 +96,10 @@
   opacity: 1;
 }
 
-@keyframes review-note-in {
-  from {
-    opacity: 0;
-    transform: translateX(calc(var(--motion-distance-md) * 1.75));
-  }
-}
-
 .review-note-by {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 2px;
   font-size: var(--text-caption);
   color: var(--ui-muted);
@@ -140,7 +134,7 @@
    card's height would restack the margin on every frame. */
 .review-note-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   max-height: 0;
   margin-top: 0;
   overflow: hidden;
@@ -154,13 +148,13 @@
 .review-note:is(:hover, :focus-within, .review-note-hot, .review-note-popover)
   .review-note-actions {
   max-height: 32px;
-  margin-top: 7px;
+  margin-top: 8px;
   opacity: 1;
   transform: none;
 }
 
 .review-note-actions button {
-  padding: 2px 10px;
+  padding: 2px 8px;
   border-radius: var(--shape-pill);
   corner-shape: round;
   border: 1px solid var(--review-note-border);
@@ -269,8 +263,8 @@
 .review-note-group-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 6px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .review-note-group-list > .review-note {
@@ -582,4 +576,39 @@ del .revision-note-picture {
 
 .own-delete.own-change-hot {
   background: var(--revision-delete-hover-bg);
+}
+
+/* The revision views, as the AI's edits take them (milkdown-theme.css).
+   Original: the deleted words back in place of the new ones, which only
+   the card shows. */
+.ProseMirror[data-revision-display="original"] .own-insert {
+  font-size: 0;
+  background: none;
+}
+
+/* Final: the result, the new words faintly marked; where words were only
+   deleted, a mark. */
+.ProseMirror[data-revision-display="final"] .own-delete:not(.own-delete-only) {
+  display: none;
+}
+
+.ProseMirror[data-revision-display="final"] .own-insert {
+  background: none;
+  color: inherit;
+  text-decoration: underline dotted;
+  text-decoration-color: color-mix(in srgb, var(--ui-success) 55%, transparent);
+  text-underline-offset: 0.2em;
+}
+
+.ProseMirror[data-revision-display="final"] .own-delete-only {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin: 0 1px;
+  overflow: hidden;
+  color: transparent;
+  vertical-align: -0.15em;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-danger);
 }

@@ -405,6 +405,15 @@ fn setting_a_skills_modes_rewrites_its_file() {
     assert!(text.ends_with("Body.\n"));
     assert!(set_modes_in(&skills, "weekly", &[]).is_err());
     assert!(set_modes_in(&skills, "nope", &[AgentMode::Write]).is_err());
+    // Off for now, its modes kept; on again, as it was.
+    set_off_in(&skills, "weekly", true).unwrap();
+    assert!(read("weekly").1.off);
+    assert_eq!(read("weekly").1.modes, [AgentMode::Write]);
+    set_off_in(&skills, "weekly", false).unwrap();
+    assert!(!read("weekly").1.off);
+    let text = std::fs::read_to_string(read("weekly").0).unwrap();
+    assert_eq!(text.matches("textus-off").count(), 1);
+    assert!(set_off_in(&skills, "nope", true).is_err());
     std::fs::remove_dir_all(&root).ok();
 }
 

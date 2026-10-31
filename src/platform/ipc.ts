@@ -434,5 +434,13 @@ export const ai = {
     workspaceRoot: string | null,
     modes: AgentMode[],
   ) => command("set_skill_modes", name, source, docPath, workspaceRoot, modes),
+  /** Turns a user skill off for now, or on again; a built-in is always on. */
+  setSkillOff: (
+    name: string,
+    source: SkillListItem["source"],
+    docPath: string | null,
+    workspaceRoot: string | null,
+    off: boolean,
+  ) => command("set_skill_off", name, source, docPath, workspaceRoot, off),
   pickAttachmentFile: () => command("pick_attachment_file"),
 };

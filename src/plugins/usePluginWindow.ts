@@ -247,13 +247,19 @@ export function usePluginWindow({
   usePluginMenuSync(language);
   // Plugins' schedules, after startup: background runs, notifications'
   // clicks, whether Textus is in front.
+  // One ended before its module came connects nothing: it would outlast
+  // the connection that replaced it.
   useEffect(() => {
     let stop: (() => void) | undefined;
-    const connected = import("./background/schedule-window").then(
-      (m) =>
-        (stop = m.connectScheduleWindow(languageRef, settingsRef, openRef)),
-    );
-    return () => void connected.then(() => stop?.());
+    let ended = false;
+    void import("./background/schedule-window").then((m) => {
+      if (!ended)
+        stop = m.connectScheduleWindow(languageRef, settingsRef, openRef);
+    });
+    return () => {
+      ended = true;
+      stop?.();
+    };
   }, [languageRef, settingsRef, openRef]);
 
   return useSyncExternalStore(subscribePlugins, pluginsSnapshot);

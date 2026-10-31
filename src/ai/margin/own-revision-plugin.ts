@@ -6,12 +6,14 @@ import {
 } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { StepMap } from "@milkdown/kit/prose/transform";
-import {
-  ChangeSet,
-  simplifyChanges,
-  type Change,
-} from "@milkdown/kit/prose/changeset";
+import { ChangeSet } from "@milkdown/kit/prose/changeset";
 import { $prose } from "@milkdown/kit/utils";
+import { shownChanges, type ChangeSpan } from "./own-change-spans";
+import {
+  CHECK_SVG,
+  CROSS_SVG,
+  type SentencePickLabels,
+} from "../revision/pending-widgets";
 
 /** Track My Changes: the writer's edits shown against the text as tracking
  *  began. The document holds the new text; the original never enters it. */
@@ -32,9 +34,8 @@ export interface OwnChange {
 interface OwnRevisionState {
   base: ProseNode | null;
   set: ChangeSet | null;
-  /** The changes as shown, each grown to whole words ("quiet" for "still",
-   *  not "quie" for "stil"). */
-  shown: readonly Change[];
+  /** The changes as shown (own-change-spans.ts). */
+  shown: readonly ChangeSpan[];
   hot: number | null;
   decoration: DecorationSet;
 }
@@ -59,7 +60,7 @@ export function diff(base: ProseNode, doc: ProseNode): ChangeSet {
 
 export function ownChanges(
   base: ProseNode,
-  shown: readonly Change[],
+  shown: readonly ChangeSpan[],
   doc: ProseNode,
 ): OwnChange[] {
   return shown.map((c, index) => ({
@@ -73,7 +74,7 @@ export function ownChanges(
 
 function build(
   base: ProseNode,
-  shown: readonly Change[],
+  shown: readonly ChangeSpan[],
   doc: ProseNode,
   hot: number | null,
 ): DecorationSet {
@@ -90,7 +91,7 @@ function build(
           c.fromB,
           () => {
             const del = document.createElement("del");
-            del.className = `own-delete${lit}`;
+            del.className = `own-delete${c.toB > c.fromB ? "" : " own-delete-only"}${lit}`;
             Object.assign(del.dataset, { call: OWN_CHANGES, index });
             del.textContent = base.textBetween(c.fromA, c.toA, " ", " ");
             return del;
@@ -102,15 +103,67 @@ function build(
           },
         ),
       );
+    // Its ✓ / ✕, shown in the "all in the text" view as the AI's are.
+    decos.push(
+      Decoration.widget(c.toB, (view) => pick(view, index), {
+        side: 2,
+        key: `own-pick-${index}`,
+        ignoreSelection: true,
+        stopEvent: () => true,
+      }),
+    );
     if (c.toB > c.fromB)
       decos.push(
         Decoration.inline(c.fromB, c.toB, {
-          class: `own-insert${lit}`,
+          class: `own-insert${c.toA > c.fromA ? "" : " own-insert-only"}${lit}`,
           ...attrs,
         }),
       );
   });
   return DecorationSet.create(doc, decos);
+}
+
+/** How a change's ✓ / ✕ in the text decide it, by editor. */
+export interface OwnPicker {
+  labels: SentencePickLabels;
+  decide: (index: number, take: boolean) => void;
+}
+
+const pickers = new WeakMap<EditorView, OwnPicker>();
+
+/** Lets `view`'s changes be decided from the text. */
+export function setOwnPicker(view: EditorView, picker: OwnPicker) {
+  pickers.set(view, picker);
+  return () => {
+    if (pickers.get(view) === picker) pickers.delete(view);
+  };
+}
+
+function pick(view: EditorView, index: number): HTMLElement {
+  const box = document.createElement("span");
+  box.className = "pending-pick pending-pick-open own-pick";
+  box.contentEditable = "false";
+  Object.assign(box.dataset, { call: OWN_CHANGES, index });
+  const button = (take: boolean) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = take ? "pending-pick-take" : "pending-pick-keep";
+    b.innerHTML = take ? CHECK_SVG : CROSS_SVG;
+    const picker = pickers.get(view);
+    const label = picker ? picker.labels[take ? "take" : "keep"] : "";
+    b.title = label;
+    b.setAttribute("aria-label", label);
+    // A click decides; the caret stays where it was.
+    b.addEventListener("mousedown", (e) => e.preventDefault());
+    b.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      pickers.get(view)?.decide(index, take);
+    });
+    return b;
+  };
+  box.append(button(true), button(false));
+  return box;
 }
 
 /** Who hears of the changes, by editor. */
@@ -162,8 +215,8 @@ export const ownRevisionPlugin = $prose(
           const shown =
             set === prev.set
               ? prev.shown
-              : set
-                ? simplifyChanges(set.changes, tr.doc)
+              : set && base
+                ? shownChanges(set.changes, base, tr.doc)
                 : [];
           return {
             base,

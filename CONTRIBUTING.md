@@ -124,6 +124,7 @@ short:
 | Visual baselines         | `e2e/visual.spec.ts-snapshots/`         | `npm run test:visual`, Linux, by hand     |
 | Screenshot generators    | `e2e/shots/`                            | `npm run screenshots:*`, by hand          |
 | Built-app smoke test     | `scripts/smoke-linux.sh --build`        | by hand, before a release                 |
+| iOS simulator smoke test | `scripts/smoke-ios-sim.sh <app>`        | CI (`ios` job), on a Mac by hand          |
 | Live AI evaluation       | `src-tauri/src/ai/live_eval*`           | by hand, needs an API key and costs money |
 
 Name a test as the claim it makes, not as the function it calls:

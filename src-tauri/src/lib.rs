@@ -94,8 +94,6 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(background::BackgroundStatus::default())
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
-        .manage(plugins::ai_tools::PluginAiTools::default())
-        .manage(plugins::metadata::MetadataIndex::default())
         .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
             let app = window.app_handle();
@@ -213,6 +211,8 @@ pub fn run() {
             |ctx, request, responder| plugins::scheme::handle(ctx.app_handle(), request, responder),
         )
         .manage(plugins::uri::PendingUris::default())
+        .manage(plugins::ai_tools::PluginAiTools::default())
+        .manage(plugins::metadata::MetadataIndex::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(PendingOpenPaths(Mutex::new(Vec::new())));
@@ -307,6 +307,7 @@ pub fn run() {
             crate::ai::workspace::customize_builtin_skill,
             crate::ai::workspace::reset_builtin_skill,
             crate::ai::workspace::set_skill_modes,
+            crate::ai::workspace::set_skill_off,
             crate::ai::workspace::save_written_skill,
             crate::ai::builtin::builtin_skills_attribution,
             crate::ai::project::list_project_files,

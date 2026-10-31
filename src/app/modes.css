@@ -76,7 +76,8 @@
   font-size: var(--text-footnote);
   pointer-events: none;
   /* Held long enough to read (a pause, not a movement), then let go. */
-  animation: motion-fade-out var(--dur-sheet) var(--ease-in) 3s forwards;
+  animation: motion-fade-out var(--dur-sheet) var(--ease-in) var(--delay-read)
+    forwards;
 }
 
 .zen-hint-button {
