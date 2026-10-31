@@ -17,6 +17,9 @@ import {
   SPECS,
   closeOpenRun,
   closeUnderscoreRun,
+  closeTightRun,
+  SUBSCRIPT,
+  SUPERSCRIPT,
   openRunBeforeContent,
   pairsIn,
   runsHoldAtoms,
@@ -121,6 +124,14 @@ export const createMdSpanAutopairPlugin = (options: {
               return closeUnderscoreRun(view, before, runStart, to);
             }
 
+            if (text === "^") {
+              const { text: before, from: runStart } = literalTextBefore(
+                view.state.doc.resolve(from),
+                true,
+              );
+              return closeTightRun(view, SUPERSCRIPT, before, runStart, to);
+            }
+
             const spec = SPECS.find((s) => s.char === text);
             if (!spec) return false;
 
@@ -217,6 +228,13 @@ export const createMdSpanAutopairPlugin = (options: {
               )
             )
               return false;
+
+            // One tilde closing `H~2`: a subscript.
+            if (
+              spec.char === "~" &&
+              closeTightRun(view, SUBSCRIPT, textBefore, runStart, to)
+            )
+              return true;
 
             if (openRunBeforeContent(view, spec, textBefore, to, false))
               return true;

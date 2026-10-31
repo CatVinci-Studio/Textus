@@ -148,6 +148,36 @@ export const UNDERSCORE: SpanSpec = {
   minRung: 1,
   maxRung: 1,
 };
+/** Subscript `~x~` and superscript `^x^`: only ever closed, around text
+ *  with no spaces, so `a ~ b` and `2^10` stay as typed. */
+export const SUBSCRIPT: SpanSpec = {
+  char: "~",
+  nodeType: "md_span",
+  minRung: 1,
+  maxRung: 1,
+};
+export const SUPERSCRIPT: SpanSpec = {
+  char: "^",
+  nodeType: "md_span",
+  minRung: 1,
+  maxRung: 1,
+};
+
+/** The closing delimiter of a subscript or superscript, as Typora reads
+ *  them: the span forms only around text without spaces. */
+export function closeTightRun(
+  view: EditorView,
+  spec: SpanSpec,
+  textBefore: string,
+  runStart: number,
+  to: number,
+): boolean {
+  if (!pairsIn(view.state.doc.resolve(to).parent, spec)) return false;
+  const open = findRunOpen(textBefore, spec.char, 1);
+  if (!open || /\s/.test(open.value)) return false;
+  return closeOpenRun(view, spec, textBefore, runStart, to);
+}
+
 export const LETTER_OR_DIGIT = /^[\p{L}\p{N}]$/u;
 /** Closing brackets and quotes, and nothing else. */
 export const ONLY_CLOSERS = /^[)\]}"'」』）】》”’]+$/u;
