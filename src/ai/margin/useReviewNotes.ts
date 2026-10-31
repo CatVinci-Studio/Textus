@@ -35,6 +35,8 @@ import { useOwnNotes } from "./useOwnNotes";
 import { useOwnRevisions } from "./useOwnRevisions";
 import { OWN_CHANGES, ownRevisionKey } from "./own-revision-plugin";
 import { duration } from "../../ui/motion";
+import { asDrawn, zoomedRectScale } from "../../ui/zoomed-rects";
+import { noteOfAnchor } from "./review-notes-plugin";
 
 /** A proposal shown whole as a margin card's change: what it replaces and
  *  with what. Null for new text alone, which has no original. */
@@ -110,7 +112,8 @@ export function useReviewNotes({
     reviewNotesRef.current = {
       onChange: setNotes,
       onBadge: (id, el) => {
-        const r = el.getBoundingClientRect();
+        // In the text, so inside the document's zoom.
+        const r = asDrawn(el.getBoundingClientRect(), zoomedRectScale(el));
         setOpenNote({ id, x: r.left, y: r.bottom + 6 });
       },
     };
@@ -197,8 +200,9 @@ export function useReviewNotes({
     const sentence = target.closest?.(
       "[data-call][data-index]",
     ) as HTMLElement | null;
-    const key = anchor?.dataset.note
-      ? `note:${anchor.dataset.note}`
+    const note = anchor && noteOfAnchor(anchor, notes);
+    const key = note
+      ? `note:${note}`
       : sentence?.dataset.call
         ? `rev:${sentence.dataset.call}:${sentence.dataset.index}`
         : null;

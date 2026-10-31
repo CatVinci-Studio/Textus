@@ -773,7 +773,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   chatSelectedPicture: "Imagem selecionada",
   cut: "Recortar",
   copy: "Copiar",
-  menuPlainText: "Texto simples",
+  menuPlainText: "Copiar/colar como texto simples",
   appErrorTitle: "Algo deu errado",
   appErrorReload: "Recarregar",
   copyAsPlainText: "Copiar como texto simples",

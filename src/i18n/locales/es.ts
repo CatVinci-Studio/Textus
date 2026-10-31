@@ -789,7 +789,7 @@ para usar una.
   chatSelectedPicture: "Imagen seleccionada",
   cut: "Cortar",
   copy: "Copiar",
-  menuPlainText: "Texto sin formato",
+  menuPlainText: "Copiar/pegar sin formato",
   appErrorTitle: "Algo salió mal",
   appErrorReload: "Recargar",
   copyAsPlainText: "Copiar como texto sin formato",

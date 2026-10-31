@@ -758,7 +758,7 @@ type /name in a conversation to use one.
   chatSelectedPicture: "Picture selected",
   cut: "Cut",
   copy: "Copy",
-  menuPlainText: "Plain Text",
+  menuPlainText: "Plain Text Copy & Paste",
   appErrorTitle: "Something went wrong",
   appErrorReload: "Reload",
   copyAsPlainText: "Copy as Plain Text",

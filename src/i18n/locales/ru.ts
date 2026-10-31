@@ -783,7 +783,7 @@ export default {
   chatSelectedPicture: "Выбрана картинка",
   cut: "Вырезать",
   copy: "Скопировать",
-  menuPlainText: "Обычный текст",
+  menuPlainText: "Копировать/вставить как текст",
   appErrorTitle: "Что-то пошло не так",
   appErrorReload: "Перезагрузить",
   copyAsPlainText: "Копировать как обычный текст",

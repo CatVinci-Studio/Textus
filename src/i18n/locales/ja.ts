@@ -741,7 +741,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   chatSelectedPicture: "画像を選択中",
   cut: "切り取り",
   copy: "コピー",
-  menuPlainText: "プレーンテキスト",
+  menuPlainText: "プレーンテキストでコピー/ペースト",
   appErrorTitle: "問題が発生しました",
   appErrorReload: "再読み込み",
   copyAsPlainText: "プレーンテキストとしてコピー",

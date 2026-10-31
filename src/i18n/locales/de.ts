@@ -774,7 +774,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatSelectedPicture: "Bild ausgewählt",
   cut: "Ausschneiden",
   copy: "Kopieren",
-  menuPlainText: "Reiner Text",
+  menuPlainText: "Als reinen Text kopieren/einfügen",
   appErrorTitle: "Etwas ist schiefgelaufen",
   appErrorReload: "Neu laden",
   copyAsPlainText: "Als reinen Text kopieren",

@@ -730,7 +730,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   chatSelectedPicture: "이미지 선택됨",
   cut: "잘라내기",
   copy: "복사",
-  menuPlainText: "일반 텍스트",
+  menuPlainText: "일반 텍스트로 복사/붙여넣기",
   appErrorTitle: "문제가 발생했습니다",
   appErrorReload: "다시 불러오기",
   copyAsPlainText: "일반 텍스트로 복사",

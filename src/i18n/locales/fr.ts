@@ -800,7 +800,7 @@ utiliser une.
   chatSelectedPicture: "Image sélectionnée",
   cut: "Couper",
   copy: "Copier",
-  menuPlainText: "Texte brut",
+  menuPlainText: "Copier/coller en texte brut",
   appErrorTitle: "Un problème est survenu",
   appErrorReload: "Recharger",
   copyAsPlainText: "Copier en texte brut",

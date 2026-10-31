@@ -698,7 +698,7 @@ export default {
   chatSelectedPicture: "已选中图片",
   cut: "剪切",
   copy: "复制",
-  menuPlainText: "纯文本",
+  menuPlainText: "纯文本复制粘贴",
   appErrorTitle: "出了点问题",
   appErrorReload: "重新加载",
   copyAsPlainText: "复制为纯文本",

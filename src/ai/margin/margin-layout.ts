@@ -5,6 +5,8 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { flip } from "../../ui/flip";
 import { marginRoom } from "./margin-room";
 import "./ReviewMargin.css";
+import { zoomedRectScale } from "../../ui/zoomed-rects";
+import { noteAnchorClass } from "./review-notes-plugin";
 
 /** Where the margin goes and its cards stand, each level with its passage
  *  and stacked clear of the one above. */
@@ -101,18 +103,18 @@ export interface Placed {
   ay: number;
 }
 
-/** marginRoom for this editor as it is laid out now. */
+/** marginRoom for this editor as it is laid out now, every width as drawn:
+ *  the text is inside the document's zoom, and a width from before the
+ *  zoom put a zoomed page's cards over its text. */
 export function measureRoom(
   scrollEl: HTMLElement,
   contentEl: HTMLElement,
   view: EditorView,
 ) {
   const pm = view.dom as HTMLElement;
-  return marginRoom(
-    scrollEl.clientWidth,
-    contentEl.offsetWidth,
-    contentEl.offsetWidth - pm.offsetWidth,
-  );
+  const column = contentEl.getBoundingClientRect().width;
+  const text = pm.getBoundingClientRect().width * zoomedRectScale(pm);
+  return marginRoom(scrollEl.clientWidth, column, column - text);
 }
 
 /** Sets the column's left edge to `marginLeft` ("" for centred) at once and
@@ -222,7 +224,7 @@ export function sameLayout(a: Layout | null, b: Layout): boolean {
 /** The marked text an item is about, in the document. */
 export function anchorSelector(item: MarginItem): string {
   return item.kind === "note"
-    ? `.review-anchor[data-note="${CSS.escape(item.note.id)}"]`
+    ? `.${noteAnchorClass(item.note.id)}`
     : `[data-call="${CSS.escape(item.callId)}"][data-index="${item.index}"]`;
 }
 
