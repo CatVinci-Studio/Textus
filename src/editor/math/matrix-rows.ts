@@ -3,7 +3,7 @@ import type { KatexOptions } from "katex";
 type Katex = typeof import("katex").default;
 
 // KaTeX stacks a matrix's rows as LaTeX does, with no gap beyond a strut, so
-// rows of fractions touch (#476). Typora (MathJax) leaves room between them;
+// rows of fractions touch. Typora (MathJax) leaves room between them;
 // matrices here get a taller \arraystretch, unless the formula sets its own.
 // Only matrices: aligned and cases read \arraystretch too, and look right.
 const MATRIX_STRETCH = "1.4";
