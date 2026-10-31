@@ -45,7 +45,6 @@ export function EditorMarginLayer({
       ? {
           stops: changes.length,
           position,
-          newText: changes.some((c) => !c.before),
           step: (by) => {
             const next =
               position < 0

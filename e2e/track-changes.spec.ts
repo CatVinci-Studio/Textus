@@ -145,6 +145,30 @@ test("the writer's changes take the review bar's views, as Textus AI's do", asyn
   await view("All in the text");
   expect(await shown(".own-delete")).toBe(true);
   expect(await shown(".own-insert")).toBe(true);
+  // Everything in the text, the ✓ / ✕ too: no card repeats it.
+  await expect(card).toHaveCount(0);
+  await page.locator(".own-pick .pending-pick-take").click();
+  await expect(page.locator(".own-insert, .own-delete")).toHaveCount(0);
+  await expect(page.locator(editor)).toContainText("was still at dawn");
+});
+
+test("in the original's view, text only added waits in its card", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1400, height: 800 });
+  await openDraft(page);
+  await toggleTracking(page);
+  await page.locator(editor).click();
+  await page.keyboard.press("ControlOrMeta+End");
+  await page.keyboard.type(" Gulls cried.");
+  await page.locator(".review-bar-view-button").click();
+  await page
+    .getByRole("menuitemradio", {
+      name: "Original in the text, changes in the margin",
+    })
+    .click();
+  await expect(page.locator(".own-insert")).toHaveCSS("font-size", "0px");
+  await expect(page.locator(".revision-note")).toContainText("Gulls cried.");
 });
 
 test("saved, the file keeps the original and the changes are kept beside it, as Textus AI's are", async ({

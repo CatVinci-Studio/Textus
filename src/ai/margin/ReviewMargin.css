@@ -580,9 +580,8 @@ del .revision-note-picture {
 
 /* The revision views, as the AI's edits take them (milkdown-theme.css).
    Original: the deleted words back in place of the new ones, which only
-   the card shows; text only added stays. */
-.ProseMirror[data-revision-display="original"]
-  .own-insert:not(.own-insert-only) {
+   the card shows. */
+.ProseMirror[data-revision-display="original"] .own-insert {
   font-size: 0;
   background: none;
 }

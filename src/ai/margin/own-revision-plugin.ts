@@ -9,6 +9,11 @@ import { StepMap } from "@milkdown/kit/prose/transform";
 import { ChangeSet } from "@milkdown/kit/prose/changeset";
 import { $prose } from "@milkdown/kit/utils";
 import { shownChanges, type ChangeSpan } from "./own-change-spans";
+import {
+  CHECK_SVG,
+  CROSS_SVG,
+  type SentencePickLabels,
+} from "../revision/pending-widgets";
 
 /** Track My Changes: the writer's edits shown against the text as tracking
  *  began. The document holds the new text; the original never enters it. */
@@ -98,6 +103,15 @@ function build(
           },
         ),
       );
+    // Its ✓ / ✕, shown in the "all in the text" view as the AI's are.
+    decos.push(
+      Decoration.widget(c.toB, (view) => pick(view, index), {
+        side: 2,
+        key: `own-pick-${index}`,
+        ignoreSelection: true,
+        stopEvent: () => true,
+      }),
+    );
     if (c.toB > c.fromB)
       decos.push(
         Decoration.inline(c.fromB, c.toB, {
@@ -107,6 +121,49 @@ function build(
       );
   });
   return DecorationSet.create(doc, decos);
+}
+
+/** How a change's ✓ / ✕ in the text decide it, by editor. */
+export interface OwnPicker {
+  labels: SentencePickLabels;
+  decide: (index: number, take: boolean) => void;
+}
+
+const pickers = new WeakMap<EditorView, OwnPicker>();
+
+/** Lets `view`'s changes be decided from the text. */
+export function setOwnPicker(view: EditorView, picker: OwnPicker) {
+  pickers.set(view, picker);
+  return () => {
+    if (pickers.get(view) === picker) pickers.delete(view);
+  };
+}
+
+function pick(view: EditorView, index: number): HTMLElement {
+  const box = document.createElement("span");
+  box.className = "pending-pick pending-pick-open own-pick";
+  box.contentEditable = "false";
+  Object.assign(box.dataset, { call: OWN_CHANGES, index });
+  const button = (take: boolean) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = take ? "pending-pick-take" : "pending-pick-keep";
+    b.innerHTML = take ? CHECK_SVG : CROSS_SVG;
+    const picker = pickers.get(view);
+    const label = picker ? picker.labels[take ? "take" : "keep"] : "";
+    b.title = label;
+    b.setAttribute("aria-label", label);
+    // A click decides; the caret stays where it was.
+    b.addEventListener("mousedown", (e) => e.preventDefault());
+    b.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      pickers.get(view)?.decide(index, take);
+    });
+    return b;
+  };
+  box.append(button(true), button(false));
+  return box;
 }
 
 /** Who hears of the changes, by editor. */

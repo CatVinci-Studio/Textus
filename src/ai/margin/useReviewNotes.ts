@@ -369,24 +369,25 @@ export function useReviewNotes({
         streaming: !!preview.streaming,
       });
     });
-    // The writer's own tracked changes, a card each in every view (inline
-    // has no ✓ / ✕ in the text for them): it shows what the text doesn't.
-    (revisions.changes ?? []).forEach((c, i) =>
-      items.push({
-        kind: "revision",
-        key: `rev:${OWN_CHANGES}:${c.index}`,
-        callId: OWN_CHANGES,
-        index: c.index,
-        num: i + 1,
-        from: c.from,
-        to: c.to,
-        after: c.after,
-        before: c.before,
-        shows: display === "original" ? "original" : "new",
-        take: null,
-        streaming: false,
-      }),
-    );
+    // The writer's own tracked changes, as the AI's: in the margin views a
+    // card shows what the text doesn't; inline, all is in the text.
+    if (display !== "inline")
+      (revisions.changes ?? []).forEach((c, i) =>
+        items.push({
+          kind: "revision",
+          key: `rev:${OWN_CHANGES}:${c.index}`,
+          callId: OWN_CHANGES,
+          index: c.index,
+          num: i + 1,
+          from: c.from,
+          to: c.to,
+          after: c.after,
+          before: c.before,
+          shows: display === "original" ? "original" : "new",
+          take: null,
+          streaming: false,
+        }),
+      );
     return items;
   }, [
     notes,
@@ -443,8 +444,14 @@ export function useReviewNotes({
   function selectCard(key: string | null) {
     setClicked(key ? { key, over: pointed } : null);
     const item = key ? marginItems.find((i) => i.key === key) : undefined;
-    if (!item) return;
-    const from = item.kind === "note" ? item.note.from : item.from;
+    // A change of the writer's own has no card in the inline view.
+    const from = item
+      ? item.kind === "note"
+        ? item.note.from
+        : item.from
+      : revisions.changes?.find((c) => `rev:${OWN_CHANGES}:${c.index}` === key)
+          ?.from;
+    if (from === undefined) return;
     run((ctx) => revealPosition(ctx.get(editorViewCtx), from));
   }
 

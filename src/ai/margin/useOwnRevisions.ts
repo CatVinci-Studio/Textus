@@ -8,6 +8,7 @@ import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source
 import { ownNotes as ownNotesIpc } from "../../platform/ipc";
 import { showConfirm } from "../../ui/app-dialog";
 import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
+import { useLatest } from "../../utils/hooks/useLatest";
 import {
   TRACK_CHANGES_EVENT,
   type TrackChangesAction,
@@ -15,6 +16,7 @@ import {
 import type { Strings } from "../../i18n/strings";
 import {
   ownRevisionKey,
+  setOwnPicker,
   watchOwnChanges,
   type OwnChange,
 } from "./own-revision-plugin";
@@ -48,6 +50,16 @@ export function useOwnRevisions({
     if (!view) return;
     return watchOwnChanges(view, setChanges);
   }, [view]);
+
+  // The ✓ / ✕ in the text.
+  const decideRef = useLatest(decide);
+  useEffect(() => {
+    if (!view) return;
+    return setOwnPicker(view, {
+      labels: { take: t.proposalTakeSentence, keep: t.proposalKeepSentence },
+      decide: (index, take) => decideRef.current(index, take),
+    });
+  }, [view, t, decideRef]);
 
   // The menu's check mark follows the document on screen.
   useEffect(() => {

@@ -15,8 +15,6 @@ import type { NotesBarState } from "../ai/margin/useNotesBar";
 export interface OwnReview {
   stops: number;
   position: number;
-  /** Some change only adds text, which stays in the text in every view. */
-  newText: boolean;
   step: (by: 1 | -1) => void;
   acceptAll: () => void;
   rejectAll: () => void;
@@ -96,7 +94,7 @@ export function ReviewBars({
             display={settings.revisionDisplay}
             displayName={(mode) => revisionDisplayName(t, mode)}
             onDisplay={(mode) => setSettings({ revisionDisplay: mode })}
-            newText={own.newText}
+            newText={false}
             streaming={false}
             painting={false}
           />
