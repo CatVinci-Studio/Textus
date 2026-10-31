@@ -35,16 +35,11 @@ const IDLE_PROGRESS: TutorialProgress = {
 const CONNECT = stepIndexOf("connect");
 const FIRST_AI = stepIndexOf("write");
 
-/** The lessons each signal from the practice tab completes. New text from
- *  Write and a rewrite from Revise are both decided in the review bar. */
-const SIGNAL_LESSONS: Record<TourSignal, TutorialStepId[]> = {
-  "completion-accepted": ["continuation"],
-  "grammar-card": ["grammar"],
-  "revision-decided": ["write", "revision"],
-  "review-note": ["review"],
-  reply: ["review"],
-  "skill-sent": ["skills"],
-  "palette-command": ["palette"],
+/** The lesson each signal from the practice tab completes. */
+const SIGNAL_LESSONS: Record<TourSignal, TutorialStepId> = {
+  "completion-accepted": "continuation",
+  "revision-decided": "write",
+  "palette-command": "palette",
 };
 
 function loadProgress(): TutorialProgress {
@@ -135,8 +130,8 @@ export function useTutorial(
   useEffect(() => {
     if (!active) return;
     const handler = (e: Event) => {
-      const lessons = SIGNAL_LESSONS[(e as CustomEvent<TourSignal>).detail];
-      if (lessons?.includes(step.id)) setPhase((p) => p | LESSON_DONE);
+      const lesson = SIGNAL_LESSONS[(e as CustomEvent<TourSignal>).detail];
+      if (lesson === step.id) setPhase((p) => p | LESSON_DONE);
     };
     window.addEventListener(TOUR_SIGNAL_EVENT, handler);
     return () => window.removeEventListener(TOUR_SIGNAL_EVENT, handler);

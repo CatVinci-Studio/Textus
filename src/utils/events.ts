@@ -60,16 +60,8 @@ export type TourAi = "muted" | "live";
 export type TourSignal =
   /** A completion suggestion was taken (Tab, or a tap on a phone). */
   | "completion-accepted"
-  /** A grammar card opened on an underline. */
-  | "grammar-card"
   /** An AI revision was accepted or rejected, all of it decided. */
   | "revision-decided"
-  /** A review note was pinned to the text. */
-  | "review-note"
-  /** The AI finished answering a message without an error. */
-  | "reply"
-  /** A message went out through a skill (`/name`). */
-  | "skill-sent"
   /** A command ran from the command palette. */
   | "palette-command";
 

@@ -23,7 +23,7 @@ import {
 import {
   usePracticeNotes,
   useTutorialTabRecovery,
-  useWindowLessons,
+  useWriteLesson,
 } from "./onboarding-wiring";
 import { setDocumentDrop } from "../ui/document-drop";
 import { fileDropOnDocuments } from "./split/split-drop";
@@ -183,19 +183,10 @@ export function useWindowWiring({
     shareActiveTab: actions.shareActiveTab,
   });
 
-  const sidebarLesson = useWindowLessons({
+  useWriteLesson({
     tutorial,
     languageChosen: settings.languageChosen,
-    panelOpen: panels.panelOpen,
-    panelMode: panels.panelMode,
     agentPanelOpen: panels.agentPanel.open,
-    writingMode: [
-      docs.zenMode,
-      settings.typewriterMode,
-      !!activeTab.sourceMode,
-      !!activeTab.splitView,
-    ].join(),
-    look: `${settings.themeId} ${settings.theme}`,
   });
 
   const close = useClosePrompt({
@@ -207,5 +198,5 @@ export function useWindowWiring({
     removeTab: docs.removeTab,
   });
 
-  return { ...actions, menuChecks, sidebarLesson, close };
+  return { ...actions, menuChecks, close };
 }

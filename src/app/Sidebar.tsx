@@ -14,7 +14,6 @@ export function Sidebar({
   open,
   presence,
   closing,
-  spotlight,
   mode,
   onModeChange,
   width,
@@ -32,8 +31,6 @@ export function Sidebar({
   open: boolean;
   presence: PresenceHandle;
   closing: boolean;
-  /** The tour's sidebar lesson is on. */
-  spotlight: boolean;
   mode: PanelMode;
   onModeChange: (mode: PanelMode) => void;
   width: ReturnType<typeof useSidebarWidth>;
@@ -64,7 +61,7 @@ export function Sidebar({
       <aside
         ref={presence.ref}
         aria-label={t.menuToggleSidebar}
-        className={`sidebar ${open ? "" : "sidebar-collapsed"} ${spotlight ? "tutorial-spotlight" : ""}`}
+        className={`sidebar ${open ? "" : "sidebar-collapsed"}`}
       >
         {/* Contents render only while open, and are inert while sliding
           away, so Tab can't land on a collapsed sidebar's buttons. */}

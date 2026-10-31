@@ -74,7 +74,7 @@ export function MilkdownEditor({
     typewriter: settings.typewriterMode,
   });
   const popups = useEditorPopups({ setup, chat, tour, ...context });
-  const review = useEditorReview({ setup, chat, popups, tour, ...context });
+  const review = useEditorReview({ setup, chat, tour, ...context });
   const { grammar, lastTouchRef } = popups;
   // "Edit with AI" on a plugin's page: this panel, in Create mode.
   const askedMode = useAskAi(isActive, chat.agentPanel.setOpen);

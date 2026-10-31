@@ -34,6 +34,7 @@ import { migrateOfficialPlugins } from "./store/migrate-official";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
 import { INSERT_BLOCK_EVENT, INSERT_BLOCK_KINDS } from "../utils/events";
 import { useSettings } from "../prefs/SettingsContext";
+import { setWindowFolderSource } from "../platform/window-folder";
 
 /**
  * A window's side of the plugins: what it tells the manager, what plugins
@@ -160,7 +161,11 @@ export function usePluginWindow({
           : null;
       },
     });
-    return () => setWindowAccess(null);
+    setWindowFolderSource(() => rootRef.current);
+    return () => {
+      setWindowAccess(null);
+      setWindowFolderSource(null);
+    };
   }, [rootRef, openRef, tabsRef, setTabs, setActiveTabId, activeIdRef, tRef]);
 
   // File › Save and Close Tab for plugins with their own keys (Vim's :w, :q).

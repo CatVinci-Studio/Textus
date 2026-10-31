@@ -1344,7 +1344,11 @@ export function installDevTauriShim(): void {
       w[`_${id}`] = cb ?? (() => {});
       return id;
     },
-    unregisterCallback: () => {},
+    // As the real runtime, a callback let go is gone: kept, it held its
+    // listener's closure - a closed editor with all its document - for good.
+    unregisterCallback: (id: number) => {
+      delete w[`_${id}`];
+    },
     plugins: {},
   };
   // Without this, StrictMode's remount leaves stale handlers that one emit
@@ -1355,6 +1359,7 @@ export function installDevTauriShim(): void {
         event,
         (listeners.get(event) ?? []).filter((h) => h !== id),
       );
+      delete w[`_${id}`];
     },
   };
   // For an e2e mock that plays the model: calls named and settled as the backend would.

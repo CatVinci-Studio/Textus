@@ -27,6 +27,8 @@ Alertas no estilo do GitHub:
 
 Códigos curtos de emoji como no GitHub aparecem como o emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). O arquivo mantém o código; coloque o cursor sobre ele para editá-lo.
 
+Subscrito e sobrescrito como no Typora e no Pandoc: H~2~O (`H~2~O`), x^2^ (`x^2^`); sem espaços dentro.
+
 Ao digitar `(`, `[`, `{`, aspas ou um parêntese de um método de entrada chinês ou japonês, como `（`, `【` ou `「`, o par de fechamento entra depois do cursor: digitar o fechamento passa por cima dele, Backspace logo depois da abertura apaga os dois e, com texto selecionado, o par o envolve. **Ajustes → Editor e aparência → Fechar (), [] e “”** desativa isso.
 
 Links ficam assim: [o repositório do Textus](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+clique segue um link: um link da web abre no navegador, um link para outro arquivo Markdown o abre em uma aba e um link para `#um-titulo` rola até ele. Um clique simples põe o cursor no link e mostra seu Markdown, `[texto](url)`, para editar ali mesmo; quando o cursor sai, ele volta a ser um link. HTML no meio do texto também é renderizado, por exemplo as teclas <kbd>Cmd</kbd> + <kbd>S</kbd>. Também funcionam blocos recolhíveis `<details>`, tabelas HTML, alguns estilos inline (cor, fundo, tamanho, peso, alinhamento, sublinhado e tachado) e `<svg>` no meio do texto, que aparece como imagem. Scripts e o resto do HTML ficam como código-fonte. Um link para um título em outro arquivo, como `[veja](notas.md#um-titulo)`, abre esse arquivo nesse título. Os wikilinks do Obsidian (`[[Nota]]`, `[[Nota|texto]]` e `[[Nota#Título]]`) abrem do mesmo jeito, a partir da pasta do documento ou de qualquer lugar do cofre; eles e as `#tags` no início de uma linha são salvos exatamente como foram escritos.
@@ -214,5 +216,7 @@ Notas de rodapé ficam assim[^1], e logo abaixo há uma linha horizontal:
 ---
 
 [^1]: O conteúdo das notas de rodapé fica reunido no fim do documento.
+
+Digite `[TOC]` sozinho numa linha e pressione Enter para inserir um sumário: ele lista os títulos do documento e acompanha o que você escreve; clique num item para ir até ele.
 
 Boa escrita!

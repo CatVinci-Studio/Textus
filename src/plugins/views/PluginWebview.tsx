@@ -26,8 +26,8 @@ import {
   type WebviewRecord,
 } from "./webviews";
 
-/** The tallest a frame that fits its page grows; past it, it scrolls. */
-const MAX_FIT_HEIGHT = 1200;
+/** The tallest a code block's frame grows; past it, it scrolls. */
+const MAX_CODE_BLOCK_HEIGHT = 1200;
 
 /**
  * Where a plugin's webview is drawn: a sandboxed frame rebuilt on new HTML,
@@ -40,8 +40,8 @@ export function PluginWebview({
 }: {
   id: string;
   className?: string;
-  /** The frame as tall as its page, up to a limit. */
-  fitHeight?: boolean;
+  /** The frame as tall as its page, up to this many pixels. */
+  fitHeight?: number;
 }) {
   useSyncExternalStore(subscribeWebviews, webviewsVersion);
   const record = webview(id);
@@ -74,7 +74,7 @@ export function PluginWebview({
           setWebviewState(current.key, state),
         height: ({ height }: { height: unknown }) => {
           if (fitHeight && typeof height === "number")
-            frame.style.height = `${Math.min(Math.max(height, 24), MAX_FIT_HEIGHT)}px`;
+            frame.style.height = `${Math.min(Math.max(height, 24), fitHeight)}px`;
         },
       },
       () => ({
@@ -195,11 +195,14 @@ export function PluginSettingsWebview({ plugin }: { plugin: string }) {
     `${plugin}:settings`,
     {},
   );
+  if (error) return <div className="plugin-webview-problem">{error}</div>;
+  if (!record) return null;
+  // As tall as the page: Settings scrolls, not a box inside it.
   return (
-    <WebviewOrProblem
-      record={record}
-      error={error}
+    <PluginWebview
+      id={record.id}
       className="plugin-webview-settings"
+      fitHeight={Infinity}
     />
   );
 }
@@ -324,7 +327,7 @@ export function PluginCodeBlock({
     <PluginWebview
       id={record.id}
       className="plugin-code-block-frame"
-      fitHeight
+      fitHeight={MAX_CODE_BLOCK_HEIGHT}
     />
   );
 }

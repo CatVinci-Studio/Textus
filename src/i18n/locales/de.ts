@@ -510,6 +510,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   alertImportant: "Wichtig",
   alertWarning: "Warnung",
   alertCaution: "Vorsicht",
+  tocLabel: "Inhaltsverzeichnis",
+  tocEmpty: "Noch keine Überschriften",
   settingsTitle: "Einstellungen",
   settingsSearchPlaceholder: "Einstellungen durchsuchen",
   settingsSearchResults: "Suchergebnisse",
@@ -1109,36 +1111,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialWysiwygList: "Eine Liste: `- Gregor Samsa`, Enter, `Grete`",
   tutorialWysiwygNumbered: "Eine nummerierte Liste: `1. Kapitel I`",
   tutorialWysiwygTaskItem: "Eine Aufgabe: `- [ ] Kapitel III lesen`",
-  tutorialMarksTitle: "Fett, Zitate, Code und Links",
-  tutorialMarksBody:
-    "Darunter stehen deine Notizen zu Kapitel I; tippe diese Zeilen ans Ende.",
-  tutorialMarksEmphasis: "Fett und kursiv: `Grete ist **mutig** und *still*.`",
-  tutorialMarksQuote: "Ein Zitat: `> Es war kein Traum.`",
-  tutorialMarksCode: "Code: ``Das `Kapitel I` noch einmal lesen.``",
-  tutorialMarksLink: "Ein Link: `[Gutenberg](https://gutenberg.org)`",
-  tutorialTableTitle: "Tabellen",
-  tutorialTableBody:
-    "Eine Zeile mit Zellen zwischen | wird mit Enter zur Tabelle.",
-  tutorialTableHeader: "Tippe `| Figur | Eindruck |`, dann Enter",
-  tutorialTableRow: "Füll eine Zeile aus: `Gregor`, Tab, `Pflichtbewusst`",
-  tutorialBlocksTitle: "Formeln und Diagramme",
-  tutorialBlocksBody:
-    "Optional: Ein paar Zeichen ergeben eine Formel, ein paar Zeilen ein Diagramm.",
-  tutorialBlocksFormula: "Eine Formel: `$E=mc^2$`",
-  tutorialBlocksDiagram:
-    "Ein Diagramm: ```` ```mermaid ````, Enter, dann `graph LR; A-->B`",
-  tutorialModesTitle: "Schreibmodi und Designs",
-  tutorialModesBody: "Anders schreiben, anders aussehen.",
-  tutorialModesTask: "Schalte den Zen-Modus ein und wähl ein anderes Design.",
-  tutorialSidebarTitle: "Seitenleiste und Export",
-  tutorialSidebarBody:
-    "In der Seitenleiste sind deine Dateien, die Gliederung und die Zwischenablage; exportieren kannst du über Datei › Exportieren.",
-  tutorialSidebarTask:
-    "Klick oben links auf das Menü ☰, wähl Ansicht › Seitenleiste ({shortcut}) und öffne die Gliederung",
-  tutorialSidebarTaskMac:
-    "Wähl in der Menüleiste Ansicht › Seitenleiste ({shortcut}) und öffne die Gliederung",
-  tutorialSidebarTaskPhone:
-    "Tippe oben links auf das Menü ☰, dann auf Seitenleiste, und öffne die Gliederung",
   tutorialPaletteTitle: "Befehlspalette",
   tutorialPaletteBody:
     "Jeder Befehl aus den Menüs, gefunden mit ein paar Buchstaben.",
@@ -1166,26 +1138,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Öffne den KI-Bereich: Tippe oben auf das Federsymbol",
   tutorialWriteSend:
     "Sende `Schreib meine Notizen um einen Absatz weiter` und klick auf Annehmen",
-  tutorialReviewTitle: "Lektorat",
-  tutorialReviewBody:
-    "Im Modus Prüfen kommentiert sie am Rand und lässt deinen Text in Ruhe.",
-  tutorialReviewTask:
-    "Sende `Kommentiere meine Notizen` und lies die Notizen am Rand",
-  tutorialRevisionTitle: "Überarbeiten",
-  tutorialRevisionBody:
-    "Im Modus Schreiben schreibt sie auch um, und du entscheidest Satz für Satz.",
-  tutorialRevisionSelect: "Markiere den ersten Satz deiner Notizen",
-  tutorialRevisionSend:
-    "Sende `Mach ihn knapper` und wähl Annehmen oder Ablehnen",
-  tutorialGrammarTitle: "Grammatikprüfung",
-  tutorialGrammarBody: "Flüchtigkeitsfehler werden beim Tippen unterstrichen.",
-  tutorialGrammarType: "Tippe am Ende in einer neuen Zeile `{slip}`",
-  tutorialGrammarApply:
-    "Warte auf die Unterstreichung, zeig darauf und klick auf Übernehmen",
-  tutorialGrammarApplyPhone:
-    "Warte auf die Unterstreichung, tippe darauf und dann auf Übernehmen",
-  tutorialGrammarQuiet:
-    "Diesmal hat die KI nichts zu korrigieren gefunden. Du kannst weitermachen.",
   tutorialContinuationTitle: "Vervollständigung",
   tutorialContinuationBody:
     "Halte kurz inne, und sie schreibt für dich weiter.",
@@ -1193,12 +1145,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und drück Tab",
   tutorialContinuationTaskPhone:
     "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und tippe auf den grauen Text",
-  tutorialSkillsTitle: "Skills",
-  tutorialSkillsBody:
-    "Tippe / im KI-Bereich, um einen auszuwählen, oder hol dir weitere unter Erweiterungen.",
-  tutorialSkillsTask: "Markiere eine deiner Notizen und sende `/korrektur`",
   tutorialDoneTitle: "Fertig",
-  tutorialDoneBody: "Jetzt schreib dein Eigenes.",
+  tutorialDoneBody:
+    "Jetzt schreib dein Eigenes; Tabellen, Formeln, Themes, Überarbeiten und der Rest sind in den Video-Tutorials.",
   tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Projekt nach.`,
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",
   closePromptSave: "Speichern",

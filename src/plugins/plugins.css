@@ -337,14 +337,11 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-settings-page {
   display: flex;
   flex-direction: column;
-  min-height: 240px;
-  margin: var(--space-2) var(--space-3);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  overflow: hidden;
+  margin: var(--space-2) 0 0;
+  border-top: 1px solid var(--ui-border);
 }
 .plugin-webview-settings {
-  min-height: 220px;
+  min-height: 120px;
 }
 .plugin-setting-input {
   width: 220px;

@@ -11,6 +11,7 @@ import { noteJump } from "../../utils/nav-history";
 import { revealedLinkHref } from "./link-reveal";
 import { linkTarget, type LinkTarget } from "./link-target";
 import { parseWikilink } from "./wikilink";
+import { windowFolder } from "../../platform/window-folder";
 
 /** The link under a mouse event in this editor, if any. */
 function linkAt(view: EditorView, event: MouseEvent): HTMLAnchorElement | null {
@@ -75,7 +76,7 @@ async function followWikilink(
     return;
   }
   if (!docPath) return;
-  const path = await fs.resolveVaultNote(docPath, target.note);
+  const path = await fs.resolveVaultNote(docPath, target.note, windowFolder());
   if (path)
     window.dispatchEvent(
       new CustomEvent<OpenFileInTab>(OPEN_FILE_IN_TAB_EVENT, {

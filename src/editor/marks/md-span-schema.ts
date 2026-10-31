@@ -16,6 +16,11 @@ import {
   highlightSyntax,
   highlightToMarkdown,
 } from "./highlight-syntax";
+import {
+  superscriptFromMarkdown,
+  superscriptSyntax,
+  superscriptToMarkdown,
+} from "./superscript-syntax";
 
 // Registers "==highlighted==" with remark the way remark-math registers
 // "$...$": extensions pushed onto the processor's shared `data()`.
@@ -36,8 +41,24 @@ export const remarkHighlightPlugin = $remark(
   () => remarkHighlight,
 );
 
+// "^superscript^", the same way.
+const remarkSuperscript: RemarkPluginRaw<unknown> = function (
+  this: ThisParameterType<RemarkPluginRaw<unknown>>,
+) {
+  const data = this.data();
+  (data.micromarkExtensions ??= []).push(superscriptSyntax());
+  (data.fromMarkdownExtensions ??= []).push(superscriptFromMarkdown());
+  (data.toMarkdownExtensions ??= []).push(superscriptToMarkdown());
+};
+
+export const remarkSuperscriptPlugin = $remark(
+  "remark-superscript",
+  () => remarkSuperscript,
+);
+
 interface MdastNode {
   type: string;
+  value?: unknown;
   data?: Record<string, unknown>;
   children?: MdastNode[];
   position?: { start: { offset?: number } };
@@ -46,25 +67,39 @@ interface MdastNode {
 /**
  * How many tildes a strikethrough was written with: remark-gfm keeps no
  * count, so a Pandoc subscript `H~2~O` was saved as strikethrough `H~~2~~O`.
+ * One tilde is a subscript only right after a letter or digit, around text
+ * with no spaces (`H~2~O`, `CO~2~`); elsewhere `~text~` is GitHub's
+ * strikethrough.
  */
 const remarkStrikethroughTildes: RemarkPluginRaw<unknown> = () => {
   return (tree: unknown, file: { value: unknown }) => {
     const source = String(file.value);
-    const walk = (node: MdastNode) => {
+    const walk = (node: MdastNode, before?: MdastNode) => {
       const start = node.position?.start.offset;
-      if (node.type === "delete" && start !== undefined)
-        node.data = {
-          ...node.data,
-          tildes: source.startsWith("~~", start) ? 2 : 1,
-        };
-      node.children?.forEach(walk);
+      if (node.type === "delete" && start !== undefined) {
+        const tildes = source.startsWith("~~", start) ? 2 : 1;
+        const subscript =
+          tildes === 1 &&
+          before?.type === "text" &&
+          /[\p{L}\p{N}]$/u.test(String(before.value)) &&
+          !/\s/.test(textOf(node));
+        node.data = { ...node.data, tildes, ...(subscript && { subscript }) };
+      }
+      node.children?.forEach((child, i, all) => walk(child, all[i - 1]));
     };
     walk(tree as MdastNode);
   };
 };
 
+const textOf = (node: MdastNode): string =>
+  typeof node.value === "string"
+    ? node.value
+    : (node.children ?? []).map(textOf).join("");
+
 const tildesOf = (node: { data?: unknown }) =>
   (node.data as { tildes?: number } | undefined)?.tildes;
+const subscriptOf = (node: { data?: unknown }) =>
+  (node.data as { subscript?: boolean } | undefined)?.subscript === true;
 
 export const remarkStrikethroughTildesPlugin = $remark(
   "remark-strikethrough-tildes",
@@ -118,10 +153,12 @@ function mdSpanDOM(node: ProseNode, forClipboard: boolean): DOMOutputSpec {
     "data-type": "md_span",
     "data-delim": delim,
     "data-rung": String(rung),
+    ...(node.attrs.sub ? { "data-sub": "true" } : {}),
     "data-syntax": spanDelimText(node),
     class: "md-span",
   };
-  if (delim === "~") return ["del", attrs, 0];
+  if (delim === "~") return [node.attrs.sub ? "sub" : "del", attrs, 0];
+  if (delim === "^") return ["sup", attrs, 0];
   if (delim === "=") return ["mark", attrs, 0];
   if (rung === 3)
     return forClipboard ? ["strong", attrs, ["em", 0]] : ["strong", attrs, 0];
@@ -142,7 +179,8 @@ export const mdSpanClipboardPlugin = $prose((ctx) => {
 
 // One node type for every repeated-delimiter wrapper. For "*" the rung is
 // the style (1 italic, 2 bold, 3 both); for "~" how many tildes the file had;
-// "=" is always rung 2; "_" is italic written `_text_`, rung 1.
+// "=" is always rung 2; "_" is italic written `_text_`, rung 1; "^" is
+// superscript, rung 1.
 export const mdSpanSchema = $nodeSchema("md_span", () => ({
   content: "inline*",
   group: "inline",
@@ -150,6 +188,8 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
   attrs: {
     delim: { default: "*" },
     rung: { default: 1 },
+    // One tilde written as a subscript (`H~2~O`), not struck through.
+    sub: { default: false },
   },
   parseDOM: [
     {
@@ -159,6 +199,7 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
       getAttrs: (dom) => ({
         delim: (dom as HTMLElement).dataset.delim || "*",
         rung: Number((dom as HTMLElement).dataset.rung) || 1,
+        sub: (dom as HTMLElement).dataset.sub === "true",
       }),
       // A copied bold+italic span's inner <em> is what the rung already says:
       // read past it rather than nest an italic span inside.
@@ -182,6 +223,12 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
     { tag: "s", priority: 40, getAttrs: () => ({ delim: "~", rung: 2 }) },
     { tag: "strike", priority: 40, getAttrs: () => ({ delim: "~", rung: 2 }) },
     { tag: "mark", priority: 40, getAttrs: () => ({ delim: "=", rung: 2 }) },
+    {
+      tag: "sub",
+      priority: 40,
+      getAttrs: () => ({ delim: "~", rung: 1, sub: true }),
+    },
+    { tag: "sup", priority: 40, getAttrs: () => ({ delim: "^", rung: 1 }) },
   ],
   toDOM: (node) => mdSpanDOM(node, false),
   parseMarkdown: {
@@ -189,7 +236,8 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
       node.type === "strong" ||
       node.type === "emphasis" ||
       node.type === "delete" ||
-      node.type === "mark",
+      node.type === "mark" ||
+      node.type === "superscript",
     runner: (state, node, type) => {
       const attrs =
         node.type === "strong"
@@ -197,8 +245,14 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
           : node.type === "emphasis"
             ? { delim: markerOf(node) === "_" ? "_" : "*", rung: 1 }
             : node.type === "delete"
-              ? { delim: "~", rung: tildesOf(node) === 1 ? 1 : 2 }
-              : { delim: "=", rung: 2 };
+              ? {
+                  delim: "~",
+                  rung: tildesOf(node) === 1 ? 1 : 2,
+                  sub: subscriptOf(node),
+                }
+              : node.type === "superscript"
+                ? { delim: "^", rung: 1 }
+                : { delim: "=", rung: 2 };
       state.openNode(type, attrs);
       state.next(node.children);
       state.closeNode();
@@ -229,7 +283,9 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
                 : "emphasis"
               : delim === "~"
                 ? "delete"
-                : "mark",
+                : delim === "^"
+                  ? "superscript"
+                  : "mark",
             children,
             undefined,
             delim === "~" && rung === 1 ? { data: { tildes: 1 } } : undefined,

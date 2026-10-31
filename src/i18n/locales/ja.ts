@@ -488,6 +488,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   alertImportant: "重要",
   alertWarning: "警告",
   alertCaution: "注意",
+  tocLabel: "目次",
+  tocEmpty: "見出しはまだありません",
   settingsTitle: "設定",
   settingsSearchPlaceholder: "設定を検索",
   settingsSearchResults: "検索結果",
@@ -1067,34 +1069,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialWysiwygList: "リスト：`- 吾輩`、Enter、`苦沙弥`",
   tutorialWysiwygNumbered: "番号付きリスト：`1. 第一章`",
   tutorialWysiwygTaskItem: "タスク：`- [ ] 十一まで読む`",
-  tutorialMarksTitle: "太字、引用、コード、リンク",
-  tutorialMarksBody:
-    "下にある「一」の読書ノートの末尾に、次の行を入力しましょう。",
-  tutorialMarksEmphasis: "太字と斜体：`迷亭は**ほら吹き**で、*憎めない*。`",
-  tutorialMarksQuote: "引用：`> 吾輩はここで始めて人間というものを見た。`",
-  tutorialMarksCode: "コード：`` `一` をもう一度読む。 ``",
-  tutorialMarksLink: "リンク：`[青空文庫](https://www.aozora.gr.jp)`",
-  tutorialTableTitle: "表",
-  tutorialTableBody: "| で区切った 1 行は、Enter を押すと表になります。",
-  tutorialTableHeader: "`| 人物 | 印象 |` と入力して Enter",
-  tutorialTableRow: "1 行埋める：`迷亭`、Tab、`ほら吹き`",
-  tutorialBlocksTitle: "数式と図",
-  tutorialBlocksBody: "任意：数文字で数式に、数行で図になります。",
-  tutorialBlocksFormula: "数式：`$E=mc^2$`",
-  tutorialBlocksDiagram:
-    "図：```` ```mermaid ````、Enter、続けて `graph LR; A-->B`",
-  tutorialModesTitle: "執筆モードとテーマ",
-  tutorialModesBody: "書き方も、見た目も変えられます。",
-  tutorialModesTask: "禅モードをオンにして、別のテーマを選びましょう。",
-  tutorialSidebarTitle: "サイドバーと書き出し",
-  tutorialSidebarBody:
-    "サイドバーにはファイル、アウトライン、クリップボードがあり、書き出しは「ファイル › 書き出す」からです。",
-  tutorialSidebarTask:
-    "左上のメニュー ☰ から「表示 › サイドバー」を選び（{shortcut}）、アウトラインを開く",
-  tutorialSidebarTaskMac:
-    "メニューバーの「表示 › サイドバー」を選び（{shortcut}）、アウトラインを開く",
-  tutorialSidebarTaskPhone:
-    "左上のメニュー ☰ から「サイドバー」を選び、アウトラインを開く",
   tutorialPaletteTitle: "コマンドパレット",
   tutorialPaletteBody: "メニューのすべてのコマンドを、数文字の入力で探せます。",
   tutorialPaletteTask:
@@ -1117,33 +1091,15 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialWriteOpen: "右上の羽ペンのアイコン（{shortcut}）で AIパネルを開く",
   tutorialWriteOpenPhone: "上部の羽ペンのアイコンをタップして AIパネルを開く",
   tutorialWriteSend: "`ノートの続きを一段落書いて` と送り、「適用」をクリック",
-  tutorialReviewTitle: "レビュー",
-  tutorialReviewBody:
-    "レビューモードでは、文章には手を触れず、余白にコメントを残します。",
-  tutorialReviewTask: "`ノートにコメントして` と送り、余白のコメントを読む",
-  tutorialRevisionTitle: "推敲",
-  tutorialRevisionBody: "執筆モードでは書き直しもでき、一文ずつ決められます。",
-  tutorialRevisionSelect: "ノートの最初の一文を選択",
-  tutorialRevisionSend: "`もっと簡潔にして` と送り、「適用」か「却下」を選ぶ",
-  tutorialGrammarTitle: "文法チェック",
-  tutorialGrammarBody: "書いているそばから、書き間違いに下線が引かれます。",
-  tutorialGrammarType: "末尾で改行して `{slip}` と入力",
-  tutorialGrammarApply: "下線が出たらポインタを合わせ、「適用」をクリック",
-  tutorialGrammarApplyPhone: "下線が出たらタップし、「適用」をタップ",
-  tutorialGrammarQuiet:
-    "今回は直すところが見つかりませんでした。先へ進めます。",
   tutorialContinuationTitle: "文章の補完",
   tutorialContinuationBody: "手を止めると、続きを書いてくれます。",
   tutorialContinuationTask:
     "末尾に `猫の目から見ると、人間は` と入力し、手を止めて Tab を押す",
   tutorialContinuationTaskPhone:
     "末尾に `猫の目から見ると、人間は` と入力し、手を止めて灰色の文字をタップ",
-  tutorialSkillsTitle: "スキル",
-  tutorialSkillsBody:
-    "AIパネルで / を入力すると選べ、「拡張機能」でさらに入手できます。",
-  tutorialSkillsTask: "ノートを一つ選択し、`/校正` を送る",
   tutorialDoneTitle: "完了",
-  tutorialDoneBody: "さあ、あなた自身の文章を書きましょう。",
+  tutorialDoneBody:
+    "さあ、あなた自身の文章を書きましょう、表・数式・テーマ・レビューなどは動画チュートリアルにあります。",
   tutorialDoneMemory: `${AI_NAME} はあなたの求めることや文体を少しずつ覚えていき、AIパネルの「プロジェクト」で確かめられます。`,
   closePromptMessage: "この文書には保存されていない変更があります。",
   closePromptSave: "保存",

@@ -520,6 +520,8 @@ para usar una.
   alertImportant: "Importante",
   alertWarning: "Advertencia",
   alertCaution: "Precaución",
+  tocLabel: "Índice",
+  tocEmpty: "Aún no hay encabezados",
   settingsTitle: "Ajustes",
   settingsSearchPlaceholder: "Buscar en Ajustes",
   settingsSearchResults: "Resultados de la búsqueda",
@@ -1121,38 +1123,6 @@ para usar una.
   tutorialWysiwygList: "Una lista: `- don Quijote`, Intro, `Sancho Panza`",
   tutorialWysiwygNumbered: "Una lista numerada: `1. Capítulo primero`",
   tutorialWysiwygTaskItem: "Una tarea: `- [ ] Terminar la primera parte`",
-  tutorialMarksTitle: "Negrita, citas, código y enlaces",
-  tutorialMarksBody:
-    "Debajo están tus notas del capítulo primero; escribe estas líneas al final.",
-  tutorialMarksEmphasis:
-    "Negrita y cursiva: `Sancho es **práctico** y *fiel*.`",
-  tutorialMarksQuote:
-    "Una cita: `> Con estas razones perdía el pobre caballero el juicio.`",
-  tutorialMarksCode: "Código: ``Releer el `capítulo I`.``",
-  tutorialMarksLink: "Un enlace: `[Gutenberg](https://gutenberg.org)`",
-  tutorialTableTitle: "Tablas",
-  tutorialTableBody:
-    "Una línea de celdas entre | se convierte en tabla al pulsar Intro.",
-  tutorialTableHeader: "Escribe `| Personaje | Impresión |` y pulsa Intro",
-  tutorialTableRow: "Rellena una fila: `Sancho`, Tab, `Práctico`",
-  tutorialBlocksTitle: "Fórmulas y diagramas",
-  tutorialBlocksBody:
-    "Opcional: unos caracteres hacen una fórmula, unas líneas un diagrama.",
-  tutorialBlocksFormula: "Una fórmula: `$E=mc^2$`",
-  tutorialBlocksDiagram:
-    "Un diagrama: ```` ```mermaid ````, Intro y luego `graph LR; A-->B`",
-  tutorialModesTitle: "Modos de escritura y temas",
-  tutorialModesBody: "Escribe de otra manera, míralo con otro aspecto.",
-  tutorialModesTask: "Activa el modo zen y elige otro tema.",
-  tutorialSidebarTitle: "Barra lateral y exportación",
-  tutorialSidebarBody:
-    "La barra lateral tiene tus archivos, el esquema y el portapapeles; para exportar, usa Archivo › Exportar.",
-  tutorialSidebarTask:
-    "Haz clic en el menú ☰ arriba a la izquierda, elige Visualización › Barra lateral ({shortcut}) y abre Esquema",
-  tutorialSidebarTaskMac:
-    "En la barra de menús, elige Visualización › Barra lateral ({shortcut}) y abre Esquema",
-  tutorialSidebarTaskPhone:
-    "Toca el menú ☰ arriba a la izquierda, luego Barra lateral, y abre Esquema",
   tutorialPaletteTitle: "Paleta de comandos",
   tutorialPaletteBody: "Todos los comandos de los menús, a unas pocas letras.",
   tutorialPaletteTask:
@@ -1178,36 +1148,15 @@ para usar una.
     "Abre el panel de IA: toca el icono de la pluma, arriba",
   tutorialWriteSend:
     "Envía `Continúa mis notas con un párrafo más` y haz clic en Aceptar",
-  tutorialReviewTitle: "Comentarios",
-  tutorialReviewBody:
-    "En el modo Revisar, comenta en el margen y no toca tu texto.",
-  tutorialReviewTask:
-    "Envía `Comenta mis notas` y lee los comentarios del margen",
-  tutorialRevisionTitle: "Revisión",
-  tutorialRevisionBody:
-    "El modo Escribir también reescribe, y tú decides frase a frase.",
-  tutorialRevisionSelect: "Selecciona la primera frase de tus notas",
-  tutorialRevisionSend: "Envía `Hazla más concisa` y elige Aceptar o Rechazar",
-  tutorialGrammarTitle: "Revisión gramatical",
-  tutorialGrammarBody: "Los despistes se subrayan mientras escribes.",
-  tutorialGrammarType: "En una línea nueva al final, escribe `{slip}`",
-  tutorialGrammarApply:
-    "Espera el subrayado, pasa el puntero por encima y haz clic en Aplicar",
-  tutorialGrammarApplyPhone: "Espera el subrayado, tócalo y toca Aplicar",
-  tutorialGrammarQuiet:
-    "Esta vez la IA no encontró nada que corregir. Puedes continuar.",
   tutorialContinuationTitle: "Autocompletado",
   tutorialContinuationBody: "Haz una pausa y sigue escribiendo por ti.",
   tutorialContinuationTask:
     "Al final, escribe `Lo que de verdad enloquece al hidalgo es`, haz una pausa y pulsa Tab",
   tutorialContinuationTaskPhone:
     "Al final, escribe `Lo que de verdad enloquece al hidalgo es`, haz una pausa y toca el texto gris",
-  tutorialSkillsTitle: "Habilidades",
-  tutorialSkillsBody:
-    "Escribe / en el panel de IA para elegir una, o consigue más en Extensiones.",
-  tutorialSkillsTask: "Selecciona una de tus notas y envía `/corregir`",
   tutorialDoneTitle: "¡Listo!",
-  tutorialDoneBody: "Ahora empieza a escribir lo tuyo.",
+  tutorialDoneBody:
+    "Ahora empieza a escribir lo tuyo; tablas, fórmulas, temas, revisión y lo demás están en los Videotutoriales.",
   tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en la pestaña Proyecto del panel de IA.`,
   closePromptMessage: "Este documento tiene cambios sin guardar.",
   closePromptSave: "Guardar",

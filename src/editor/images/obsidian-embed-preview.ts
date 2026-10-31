@@ -33,6 +33,7 @@ import {
 } from "./missing-image";
 import { parseEmbed, withEmbedPath, type EmbedTarget } from "./obsidian-embed";
 import { explainError } from "../../utils/error-explain";
+import { windowFolder } from "../../platform/window-folder";
 
 const embedPreviewKey = new PluginKey<RevealState>("obsidian-embed-preview");
 
@@ -141,7 +142,7 @@ function embedWidget(
       el.classList.add(MISSING_IMAGE_CLASS);
       el.replaceChildren(name, card);
     };
-    fs.resolveVaultImage(docPath, embed.path)
+    fs.resolveVaultImage(docPath, embed.path, windowFolder())
       .then((file) => {
         if (!file) return missing("notInVault", localPath(embed.path, docPath));
         embedFiles.set(el, file);

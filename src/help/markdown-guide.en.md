@@ -27,6 +27,8 @@ GitHub-style alerts:
 
 Emoji shortcodes as on GitHub show as their emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). The file keeps the shortcode; put the caret on one to edit it.
 
+Subscript and superscript as in Typora and Pandoc: H~2~O (`H~2~O`), x^2^ (`x^2^`); no spaces inside.
+
 Typing `(`, `[`, `{`, a quote, or a bracket from a Chinese or Japanese input method such as `（`, `【` or `「` puts its closing partner in after the caret: typing the closer steps over it, Backspace right after the opener takes both, and with text selected the pair goes around it. **Settings → Editor & Appearance → Close (), [] and “”** turns this off.
 
 Links look like this: [the Textus repository](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+click one to follow it: a web link opens in your browser, a link to another Markdown file opens it in a tab, and a link to `#a-heading` scrolls there. A plain click puts the caret in a link and shows its Markdown, `[text](url)`, to edit in place; move the caret away and it is a link again. Inline HTML renders too, e.g. keyboard keys <kbd>Cmd</kbd> + <kbd>S</kbd>. So do `<details>` folds, HTML tables, a few inline styles (colour, background, size, weight, alignment, underline and strikethrough) and inline `<svg>`, which shows as a picture. Scripts and other HTML stay as source. A link to a heading in another file, such as `[see](notes.md#a-heading)`, opens that file at the heading. Obsidian wikilinks (`[[Note]]`, `[[Note|text]]` and `[[Note#Heading]]`) open the same way, from the document's folder or anywhere in its vault; they and `#tags` at the start of a line are saved exactly as written.
@@ -214,5 +216,7 @@ Footnotes look like this[^1], and below is a horizontal rule:
 ---
 
 [^1]: Footnote content is collected at the end of the document.
+
+Type `[TOC]` on a line of its own and press Enter for a table of contents: it lists the document's headings and follows them as you write; click one to jump to it.
 
 Happy writing!

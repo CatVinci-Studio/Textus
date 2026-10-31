@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -18,7 +19,8 @@ import { fs, windowIpc } from "../platform/ipc";
 const openInNewWindow = (path: string) =>
   void windowIpc.openPathInNewWindow(path);
 import { useSettings } from "../prefs/SettingsContext";
-import { basename, parentDir } from "../utils/path";
+import { basename, isInside, parentDir } from "../utils/path";
+import { FILE_WRITTEN_EVENT } from "../utils/events";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { ContextMenu, type ContextMenuItem } from "../ui/ContextMenu";
 import { contributedContextItems } from "../ui/context-menu-items";
@@ -85,7 +87,7 @@ export function FileTree({
   onSearchFocusHandled,
 }: FileTreeProps) {
   const { t } = useSettings();
-  const view = useTreeView();
+  const view = useTreeView(folder ?? root);
   const { generation, setGeneration, query, setQuery } = view;
   const { sort, setSort, scope, setScope, versions, reload } = view;
   const { showHidden, setShowHidden } = view;
@@ -119,6 +121,7 @@ export function FileTree({
       scope,
       showHidden,
       versions,
+      stale: view.stale,
       dropInto: drag?.into ?? null,
       onRowMenu: desktop ? onRowMenu : null,
       onRowPointerDown: desktop ? onRowPointerDown : null,
@@ -130,6 +133,7 @@ export function FileTree({
       scope,
       showHidden,
       versions,
+      view.stale,
       drag?.into,
       desktop,
       onRowMenu,
@@ -316,8 +320,9 @@ export function FileTree({
 
 /** What the tree shows: its sort, the search's query and scope, and
  *  `generation`, bumped by Refresh to remount every node and re-index.
- *  `reload` re-reads only the folders named. */
-function useTreeView() {
+ *  `reload` re-reads only the folders named and opens them; `refresh`
+ *  re-reads them as they are. */
+function useTreeView(base: string) {
   const [generation, setGeneration] = useState(0);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<TreeSort>(savedSort);
@@ -327,12 +332,13 @@ function useTreeView() {
   );
   const [versions, setVersions] = useState<Record<string, number>>({});
   const reload = useCallback((...dirs: string[]) => {
-    setVersions((prev) => {
-      const next = { ...prev };
-      for (const dir of dirs) next[dir] = (next[dir] ?? 0) + 1;
-      return next;
-    });
+    setVersions((prev) => bump(prev, dirs));
   }, []);
+  const [stale, setStale] = useState<Record<string, number>>({});
+  const refresh = useCallback((dirs: string[]) => {
+    setStale((prev) => bump(prev, dirs));
+  }, []);
+  usePluginWrites(base, refresh);
   return {
     generation,
     setGeneration,
@@ -346,7 +352,49 @@ function useTreeView() {
     setShowHidden,
     versions,
     reload,
+    stale,
+    refresh,
   };
+}
+
+function bump(counts: Record<string, number>, dirs: string[]) {
+  const next = { ...counts };
+  for (const dir of dirs) next[dir] = (next[dir] ?? 0) + 1;
+  return next;
+}
+
+/** What a plugin wrote, moved or trashed shows in the folders it touched,
+ *  read again together a moment later. `base` is the opened folder, which a
+ *  plugin's relative paths are in. */
+function usePluginWrites(base: string, refresh: (dirs: string[]) => void) {
+  useEffect(() => {
+    const dirs = new Set<string>();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onWritten = (e: Event) => {
+      const path = (e as CustomEvent<unknown>).detail;
+      if (typeof path !== "string") return;
+      const sep = base.includes("\\") ? "\\" : "/";
+      const full = /^([\\/]|[A-Za-z]:)/.test(path)
+        ? path
+        : `${base.replace(/[\\/]+$/, "")}${sep}${path}`;
+      for (
+        let dir = parentDir(full);
+        dir && (dir === base || isInside(dir, base));
+        dir = parentDir(dir)
+      )
+        dirs.add(dir);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        refresh([...dirs]);
+        dirs.clear();
+      }, 150);
+    };
+    window.addEventListener(FILE_WRITTEN_EVENT, onWritten);
+    return () => {
+      window.removeEventListener(FILE_WRITTEN_EVENT, onWritten);
+      clearTimeout(timer);
+    };
+  }, [base, refresh]);
 }
 
 type TreeMenu = {

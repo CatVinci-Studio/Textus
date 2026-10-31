@@ -480,6 +480,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   alertImportant: "중요",
   alertWarning: "경고",
   alertCaution: "주의",
+  tocLabel: "목차",
+  tocEmpty: "아직 제목이 없습니다",
   settingsTitle: "설정",
   settingsSearchPlaceholder: "설정 검색",
   settingsSearchResults: "검색 결과",
@@ -1057,33 +1059,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialWysiwygList: "목록: `- 허 생원`, Enter, `동이`",
   tutorialWysiwygNumbered: "번호 목록: `1. 봉평 장터`",
   tutorialWysiwygTaskItem: "할 일: `- [ ] 끝까지 읽기`",
-  tutorialMarksTitle: "굵게, 인용, 코드, 링크",
-  tutorialMarksBody: "아래 독서 노트의 끝에 다음 줄을 하나씩 입력하세요.",
-  tutorialMarksEmphasis: "굵게와 기울임: `허 생원은 **외롭고** *다정하다*.`",
-  tutorialMarksQuote: "인용: `> 짐승 같은 달의 숨소리가 손에 잡힐 듯이 들리며`",
-  tutorialMarksCode: "코드: `` `메밀꽃` 장면을 다시 읽기. ``",
-  tutorialMarksLink: "링크: `[위키문헌](https://ko.wikisource.org)`",
-  tutorialTableTitle: "표",
-  tutorialTableBody: "|로 나눈 한 줄은 Enter를 누르면 표가 됩니다.",
-  tutorialTableHeader: "`| 인물 | 인상 |` 입력 후 Enter",
-  tutorialTableRow: "한 행 채우기: `허 생원`, Tab, `외로움`",
-  tutorialBlocksTitle: "수식과 다이어그램",
-  tutorialBlocksBody: "선택: 몇 글자면 수식이, 몇 줄이면 다이어그램이 됩니다.",
-  tutorialBlocksFormula: "수식: `$E=mc^2$`",
-  tutorialBlocksDiagram:
-    "다이어그램: ```` ```mermaid ````, Enter, 이어서 `graph LR; A-->B`",
-  tutorialModesTitle: "쓰기 모드와 테마",
-  tutorialModesBody: "쓰는 방식도, 보이는 모습도 바꿀 수 있습니다.",
-  tutorialModesTask: "젠 모드를 켜고 다른 테마를 골라 보세요.",
-  tutorialSidebarTitle: "사이드바와 내보내기",
-  tutorialSidebarBody:
-    "사이드바에는 파일, 개요, 클립보드가 있고, 내보내기는 ‘파일 › 내보내기’에 있습니다.",
-  tutorialSidebarTask:
-    "왼쪽 위 메뉴 ☰에서 ‘보기 › 사이드바’를 고르고({shortcut}) 개요를 여세요",
-  tutorialSidebarTaskMac:
-    "메뉴 막대에서 ‘보기 › 사이드바’를 고르고({shortcut}) 개요를 여세요",
-  tutorialSidebarTaskPhone:
-    "왼쪽 위 메뉴 ☰에서 ‘사이드바’를 고르고 개요를 여세요",
   tutorialPaletteTitle: "명령 팔레트",
   tutorialPaletteBody: "메뉴의 모든 명령을 몇 글자만 입력해 찾을 수 있습니다.",
   tutorialPaletteTask:
@@ -1105,34 +1080,15 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialWriteOpen: "오른쪽 위 깃펜 아이콘({shortcut})으로 AI 패널 열기",
   tutorialWriteOpenPhone: "위쪽 깃펜 아이콘을 탭해 AI 패널 열기",
   tutorialWriteSend: "`내 노트를 한 문단 더 이어 써 줘`를 보내고 ‘수락’ 클릭",
-  tutorialReviewTitle: "검토",
-  tutorialReviewBody:
-    "검토 모드에서는 글은 그대로 두고 여백에 의견을 남깁니다.",
-  tutorialReviewTask: "`내 노트에 의견을 달아 줘`를 보내고 여백의 의견 읽기",
-  tutorialRevisionTitle: "고쳐 쓰기",
-  tutorialRevisionBody:
-    "쓰기 모드에서는 고쳐 쓰기도 하며, 당신이 문장마다 결정합니다.",
-  tutorialRevisionSelect: "노트의 첫 문장 선택",
-  tutorialRevisionSend:
-    "`더 간결하게 고쳐 줘`를 보내고 ‘수락’ 또는 ‘거부’ 선택",
-  tutorialGrammarTitle: "문법 검사",
-  tutorialGrammarBody: "쓰는 동안 실수에 밑줄이 그어집니다.",
-  tutorialGrammarType: "끝에서 줄을 바꿔 `{slip}` 입력",
-  tutorialGrammarApply: "밑줄이 나타나면 포인터를 올리고 ‘적용’ 클릭",
-  tutorialGrammarApplyPhone: "밑줄이 나타나면 탭하고 ‘적용’ 탭",
-  tutorialGrammarQuiet: "이번에는 고칠 곳을 찾지 못했습니다. 계속해도 됩니다.",
   tutorialContinuationTitle: "이어 쓰기",
   tutorialContinuationBody: "잠시 멈추면 이어서 써 줍니다.",
   tutorialContinuationTask:
     "끝에 `달밤의 메밀밭은`을 입력하고 잠시 멈춘 뒤 Tab",
   tutorialContinuationTaskPhone:
     "끝에 `달밤의 메밀밭은`을 입력하고 잠시 멈춘 뒤 회색 글자를 탭",
-  tutorialSkillsTitle: "스킬",
-  tutorialSkillsBody:
-    "AI 패널에서 /를 입력해 고르고, 「확장」에서 더 받을 수 있습니다.",
-  tutorialSkillsTask: "노트 하나를 선택하고 `/교정` 보내기",
   tutorialDoneTitle: "완료",
-  tutorialDoneBody: "이제 당신의 글을 써 보세요.",
+  tutorialDoneBody:
+    "이제 당신의 글을 써 보세요, 표·수식·테마·검토 같은 나머지는 동영상 튜토리얼에 있습니다.",
   tutorialDoneMemory: `${AI_NAME}는 당신의 요청과 문체를 차츰 기억하며, AI 패널의 ‘프로젝트’에서 확인할 수 있습니다.`,
   closePromptMessage: "이 문서에 저장하지 않은 변경 사항이 있습니다.",
   closePromptSave: "저장",

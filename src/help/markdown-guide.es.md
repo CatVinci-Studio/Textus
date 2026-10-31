@@ -27,6 +27,8 @@ Alertas al estilo de GitHub:
 
 Los códigos cortos de emoji de GitHub se muestran como su emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). El archivo guarda el código; pon el cursor encima para editarlo.
 
+Subíndices y superíndices como en Typora y Pandoc: H~2~O (`H~2~O`), x^2^ (`x^2^`); sin espacios dentro.
+
 Al escribir `(`, `[`, `{`, unas comillas o un paréntesis de un método de entrada chino o japonés, como `（`, `【` o `「`, se añade su pareja de cierre tras el cursor: escribir el cierre lo salta, Retroceso justo después de la apertura borra los dos y, con texto seleccionado, la pareja lo rodea. **Ajustes → Editor y aspecto → Cerrar (), [] y «»** lo desactiva.
 
 Los enlaces se ven así: [el repositorio de Textus](https://github.com/CatVinci-Studio/Textus). Con Ctrl/⌘+clic se sigue un enlace: uno web se abre en el navegador, uno a otro archivo Markdown lo abre en una pestaña y uno a `#un-encabezado` desplaza hasta él. Un clic normal pone el cursor en el enlace y muestra su Markdown, `[texto](url)`, para editarlo ahí mismo; al salir el cursor vuelve a ser un enlace. También se representa el HTML en línea, como las teclas <kbd>Cmd</kbd> + <kbd>S</kbd>. También se representan los bloques plegables `<details>`, las tablas HTML, algunos estilos en línea (color, fondo, tamaño, grosor, alineación, subrayado y tachado) y el `<svg>` en línea, que se muestra como imagen. Los scripts y el resto del HTML se quedan como código. Un enlace a un encabezado de otro archivo, como `[ver](notas.md#un-encabezado)`, abre ese archivo en ese encabezado. Los wikilinks de Obsidian (`[[Nota]]`, `[[Nota|texto]]` y `[[Nota#Encabezado]]`) se abren igual, desde la carpeta del documento o desde cualquier parte de su bóveda; ellos y las `#etiquetas` al principio de una línea se guardan tal como se escribieron.
@@ -214,5 +216,7 @@ Las notas al pie se ven así[^1], y debajo hay una línea horizontal:
 ---
 
 [^1]: El contenido de las notas al pie se reúne al final del documento.
+
+Escribe `[TOC]` en una línea aparte y pulsa Intro para insertar un índice: enumera los encabezados del documento y se actualiza mientras escribes; haz clic en uno para ir a él.
 
 Que disfrutes escribiendo.
