@@ -213,4 +213,6 @@ Footnotes look like this[^1], and below is a horizontal rule:
 
 [^1]: Footnote content is collected at the end of the document.
 
+Type `[TOC]` on a line of its own and press Enter for a table of contents: it lists the document's headings and follows them as you write; click one to jump to it.
+
 Happy writing!

@@ -213,4 +213,6 @@ Les notes de bas de page s'écrivent ainsi[^1], et voici un filet horizontal :
 
 [^1]: Le contenu des notes est regroupé à la fin du document.
 
+Tapez `[TOC]` seul sur une ligne et appuyez sur Entrée pour insérer une table des matières : elle liste les titres du document et suit vos modifications ; cliquez sur un titre pour y aller.
+
 Bonne écriture.

@@ -510,6 +510,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   alertImportant: "Wichtig",
   alertWarning: "Warnung",
   alertCaution: "Vorsicht",
+  tocLabel: "Inhaltsverzeichnis",
+  tocEmpty: "Noch keine Überschriften",
   settingsTitle: "Einstellungen",
   settingsSearchPlaceholder: "Einstellungen durchsuchen",
   settingsSearchResults: "Suchergebnisse",

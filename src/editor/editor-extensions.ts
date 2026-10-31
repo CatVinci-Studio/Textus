@@ -28,6 +28,11 @@ import {
   headingIdPlugin,
   headingIdsOnParse,
 } from "./markdown/heading-id-plugin";
+import {
+  createTocPlugin,
+  remarkTocPlugin,
+  tocSchema,
+} from "./markdown/toc-plugin";
 import { rawHtmlSchema } from "./html/raw-html-schema";
 import { remarkHtmlImages } from "./images/image-html";
 import { createRawHtmlPreviewPlugin } from "./html/raw-html-preview-plugin";
@@ -213,6 +218,15 @@ export function withEditorCore(
       .use(orderedListInputRule)
       .use(headingIdsOnParse)
       .use(headingIdPlugin)
+      // `[TOC]`: its Enter ahead of the block keys.
+      .use(remarkTocPlugin)
+      .use(tocSchema)
+      .use(
+        createTocPlugin(() => {
+          const t = resolveStrings(settings.current.language);
+          return { label: t.tocLabel, empty: t.tocEmpty };
+        }),
+      )
       // Ahead of gfm's table keys.
       .use(tableEdgeArrowPlugin)
       .use(gfmWithoutStrikethrough)
