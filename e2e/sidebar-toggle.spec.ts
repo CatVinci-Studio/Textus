@@ -12,6 +12,12 @@ const sidebar = ".sidebar";
 const left = (page: Page, selector: string) =>
   page.locator(selector).evaluate((el) => el.getBoundingClientRect().left);
 
+const centre = (page: Page, selector: string) =>
+  page.locator(selector).evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    return box.left + box.width / 2;
+  });
+
 /** The things the eye compares between two controls: the box - its size and
  *  its rounding - how far it is dimmed, what it fills with, and how fast
  *  that changes. */
@@ -75,6 +81,25 @@ test("the sidebar's slide leaves the toggle where it is", async ({ page }) => {
     return seen;
   }, toggle);
   expect(new Set(frames)).toEqual(new Set([at]));
+});
+
+test("the title is centred over the document column, not the window", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  expect(await centre(page, ".window-bar-title")).toBeCloseTo(
+    await centre(page, ".main-pane"),
+    0,
+  );
+
+  // The sidebar takes its width from the column, so the title moves with it
+  // rather than staying at the window's centre.
+  await page.locator(toggle).click();
+  await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
+  expect(await centre(page, ".window-bar-title")).toBeCloseTo(
+    await centre(page, ".main-pane"),
+    0,
+  );
 });
 
 test.describe("on a Mac", () => {

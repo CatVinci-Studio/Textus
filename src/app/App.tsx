@@ -98,6 +98,14 @@ function App() {
             ...(!isIOSApp && {
               "--sidebar-width": `${sidebarWidth.width}px`,
             }),
+            // Half the document column's offset from the window, so the
+            // window bar's title can sit over the column rather than the
+            // window: the sidebar and the AI panel take their width from it.
+            "--window-bar-title-shift": `${
+              ((panelOpen ? sidebarWidth.width : 0) -
+                (agentPresence.mounted ? agentPanel.width : 0)) /
+              2
+            }px`,
           } as React.CSSProperties
         }
       >

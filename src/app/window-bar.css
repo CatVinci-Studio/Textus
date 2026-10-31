@@ -102,6 +102,14 @@
   max-width: max(0px, calc(100% - 300px));
 }
 
+/* Centred in the document column rather than the window: with the sidebar
+   or the AI panel open, the window's centre is not the page's, and the title
+   would sit off the column it names. The shift jumps with the layout, as the
+   panels' own rows do. */
+:root:not([data-window-chrome="mobile"], .zen) .window-bar-title {
+  left: calc(50% + var(--window-bar-title-shift, 0px));
+}
+
 .window-bar-status {
   margin-left: auto;
   display: flex;
