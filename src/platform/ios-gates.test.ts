@@ -41,6 +41,8 @@ const ALLOWED: Record<string, string> = {
   "settings/settings-pages.tsx": "no keyboard to bind shortcuts on",
   "sidebar/FileTree.tsx": "nothing above Documents or a granted folder",
   "sidebar/TreeNodes.tsx": "a long press for the row's menu",
+  "theme/apply-appearance.ts":
+    "its WebKit draws CJK as boxes under generic system fonts",
   "ui/Select.tsx": "the system's picker",
   "ui/usePhoneLayout.ts": "the phone layout itself",
 };

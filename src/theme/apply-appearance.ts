@@ -14,7 +14,8 @@ import {
 } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
 import { applyThemeChrome, clearThemeChrome } from "./theme-chrome";
-import { adaptTyporaCss } from "./typora-compat";
+import { adaptTyporaCss, namedSystemFonts } from "./typora-compat";
+import { isIOSApp } from "../platform/capabilities";
 import { withCurrentVariables } from "./legacy-variables";
 
 // Puts the appearance settings on the page: light or dark, the text width,
@@ -190,7 +191,8 @@ export function useApplyAppearance(
           styleEl = document.createElement("style");
           styleEl.id = STYLE_ID;
         }
-        styleEl.textContent = adaptTyporaCss(css ?? "");
+        const adapted = adaptTyporaCss(css ?? "");
+        styleEl.textContent = isIOSApp ? namedSystemFonts(adapted) : adapted;
         document.head.appendChild(styleEl);
         const dark = isEffectiveDark(settings.theme);
         let chrome: string | null;

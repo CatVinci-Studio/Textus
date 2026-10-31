@@ -134,6 +134,17 @@
   }
 }
 
+/* iOS WebKit hands an animation to Core Animation, off the page's thread,
+   only when its curve is a cubic: a linear() spring runs frame by frame on
+   the page's thread, and stutters while a page is being built under it.
+   There the springs stay the cubic fallbacks. */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root[data-platform="ios"] {
+    --ease-spring: var(--ease-out);
+    --ease-spring-bouncy: cubic-bezier(0.34, 1.3, 0.64, 1);
+  }
+}
+
 /* The shared entrances and exits. Written with the tokens, so under
    reduced motion each one turns into a plain fade by itself. */
 @keyframes motion-fade-in {

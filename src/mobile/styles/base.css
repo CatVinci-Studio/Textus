@@ -1,20 +1,15 @@
 /* The phone layout's foundation: tokens, fonts and the title row, and the
    rules that hold for any touch (iPhone and iPad alike). */
 
-/* iOS WebKit renders CJK as missing-glyph boxes in -apple-system/system-ui,
-   and a missing family sends Latin to Times. Single generic families cascade
-   to PingFang correctly, so iOS gets stacks of fonts it has. */
-/* The Slate and Forest content themes lead with -apple-system too. */
-:root[data-window-chrome="mobile"]:is(
-    [data-content-theme="slate"],
-    [data-content-theme="forest"]
-  ) {
-  --doc-font: sans-serif;
+/* iOS 26 WebKit stops at -apple-system and system-ui, drawing CJK as
+   missing-glyph boxes; named, the system face falls back as any font does.
+   Every stack - the interface's and the themes' - takes it from these. */
+:root[data-platform="ios"] {
+  --font-apple-system: "SF Pro Text";
+  --font-system-ui: "SF Pro Text";
 }
 
 :root[data-window-chrome="mobile"] {
-  --font-sans: sans-serif;
-  --font-mono: Menlo, monospace;
   --mobile-bar: 44px;
   /* No grey flash over whatever a finger lands on. */
   -webkit-tap-highlight-color: transparent;

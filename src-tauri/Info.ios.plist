@@ -29,6 +29,10 @@
     <string>ru</string>
     <string>pt-BR</string>
   </array>
+  <!-- ProMotion: without it an iPhone app's animations are held to 60 fps,
+       which reads as stutter on a 120 Hz screen. -->
+  <key>CADisableMinimumFrameDurationOnPhone</key>
+  <true/>
   <key>UIFileSharingEnabled</key>
   <true/>
   <key>LSSupportsOpeningDocumentsInPlace</key>
