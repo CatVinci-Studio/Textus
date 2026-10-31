@@ -8,9 +8,6 @@ import { mockInvoke, openApp, openPhone, PHONE } from "./helpers";
 /** The copy the tour shows, as the learner reads it. */
 const UI = {
   en: {
-    appMenu: "Menu",
-    menuView: "View",
-    menuToggleSidebar: "Sidebar",
     tutorialStart: "Start",
     tutorialNext: "Continue",
     tutorialSkipStep: "Skip this step",
@@ -18,25 +15,14 @@ const UI = {
     tutorialConnected: "Connected.",
     tutorialConnectTitle: "Connect your AI",
     tutorialWysiwygTitle: "What you see is what you get",
-    tutorialMarksTitle: "Bold, quotes, code and links",
-    tutorialTableTitle: "Tables",
-    tutorialBlocksTitle: "Formulas and diagrams",
-    tutorialSidebarTitle: "Sidebar and export",
     tutorialWriteTitle: "AI writing",
-    tutorialReviewTitle: "Review",
-    tutorialRevisionTitle: "Revision",
-    tutorialGrammarTitle: "Grammar check",
     tutorialContinuationTitle: "Continuation",
-    tutorialSkillsTitle: "Skills",
     tutorialDoneTitle: "All done",
     tutorialWatchNote: "Connect an AI later in",
     tutorialDoneMemory:
       "Textus AI remembers your requirements and style over time; see the Project tab in the AI panel.",
   },
   zh: {
-    appMenu: "菜单",
-    menuView: "视图",
-    menuToggleSidebar: "侧边栏",
     tutorialStart: "开始",
     tutorialNext: "继续",
     tutorialSkipStep: "跳过此步",
@@ -44,16 +30,8 @@ const UI = {
     tutorialConnected: "已连接。",
     tutorialConnectTitle: "连接你的 AI",
     tutorialWysiwygTitle: "所见即所得",
-    tutorialMarksTitle: "加粗、引用、代码和链接",
-    tutorialTableTitle: "表格",
-    tutorialBlocksTitle: "公式与图表",
-    tutorialSidebarTitle: "侧边栏与导出",
     tutorialWriteTitle: "AI 写作",
-    tutorialReviewTitle: "审阅",
-    tutorialRevisionTitle: "修订",
-    tutorialGrammarTitle: "语法检查",
     tutorialContinuationTitle: "续写",
-    tutorialSkillsTitle: "技能",
     tutorialDoneTitle: "完成",
     tutorialWatchNote: "之后在",
     tutorialDoneMemory:
@@ -65,19 +43,9 @@ const UI = {
 const NOTES = {
   en: {
     excerpt: "To be, or not to be, that is the question:",
-    firstNote:
-      "Hamlet's question is not really only about whether to live or to die, if you think about it.",
-    secondNote:
-      "In the end, it seems to be the fear of what might come after death that is the thing that keeps him from acting.",
-    slip: "Hamlet and Horatio was friends at Wittenberg.",
   },
   zh: {
     excerpt: "黛玉一见，便吃一大惊",
-    firstNote:
-      "这一句其实是在呼应第一回的前世姻缘，可以说是全书爱情线的一个起点。",
-    secondNote:
-      "宝玉初见黛玉便觉似曾相识，作者就某种意义而言是借这句话点明了木石前盟。",
-    slip: "宝玉说这话时笑的很开心。",
   },
 };
 
@@ -222,7 +190,6 @@ function agentReply(prompt: string, tool: string, args: object, said: string) {
 
 test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
   const t = UI.en;
-  const notes = NOTES.en;
   await openApp(page, { settings: { language: "en" }, storage: at("welcome") });
 
   await expect(lesson(page, "Welcome to Textus")).toContainText(
@@ -232,6 +199,8 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
 
   // Headings and lists, each line ticked as it is typed.
   const wysiwyg = lesson(page, t.tutorialWysiwygTitle);
+  // The tour is short: eight steps.
+  await expect(wysiwyg).toContainText("Step 2 of 8");
   await expect(wysiwyg).toContainText("A heading: # Notes on Hamlet");
   const next = wysiwyg.getByRole("button", { name: "Continue" });
   await expect(next).toBeDisabled();
@@ -244,84 +213,12 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
   await expect(ticked(wysiwyg)).toHaveCount(4);
   await next.click();
 
-  // The notes arrive under what was typed; the marks go in at the end.
-  const marks = lesson(page, t.tutorialMarksTitle);
+  // The notes arrive under what was typed.
   await expect(editor(page)).toContainText("My notes");
   await expect(editor(page).locator("blockquote").first()).toContainText(
     "To be, or not to be",
   );
   await expect(editor(page).locator("h1")).toHaveCount(1);
-  // The classic's own quote doesn't count as the learner's.
-  await expect(ticked(marks)).toHaveCount(0);
-  await newLineAtEnd(page);
-  await typeLines(page, [
-    "Horatio is **loyal** and *calm*.",
-    "> Something is rotten in the state of Denmark.",
-    "",
-    "Read `Act I` again.",
-  ]);
-  await page.keyboard.type("[Gutenberg](https://gutenberg.org)");
-  await expect(editor(page).locator("a", { hasText: "Gutenberg" })).toHaveCount(
-    1,
-  );
-  await expect(ticked(marks)).toHaveCount(4);
-  await marks.getByRole("button", { name: "Continue" }).click();
-
-  // A table from one typed line.
-  const table = lesson(page, t.tutorialTableTitle);
-  await newLineAtEnd(page);
-  await page.keyboard.type("| Character | Impression |");
-  await page.keyboard.press("Enter");
-  await expect(ticked(table)).toHaveCount(1);
-  await page.keyboard.type("Hamlet");
-  await page.keyboard.press("Tab");
-  await page.keyboard.type("Torn");
-  await expect(editor(page).locator("table")).toContainText("Torn");
-  await expect(ticked(table)).toHaveCount(2);
-  await table.getByRole("button", { name: "Continue" }).click();
-
-  // Formulas and diagrams are optional.
-  const blocks = lesson(page, t.tutorialBlocksTitle);
-  await expect(blocks).toContainText("```mermaid");
-  await blocks.getByRole("button", { name: "Continue" }).click();
-
-  // A writing mode and a theme, from the card's own controls.
-  const modes = lesson(page, "Writing modes and themes");
-  await modes.getByRole("button", { name: "Zen Mode" }).click();
-  await expect(modes.getByRole("button", { name: "Zen Mode" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await modes.getByRole("button", { name: "Zen Mode" }).click();
-  await modes.getByRole("combobox", { name: "Editor theme" }).click();
-  await page.getByRole("option", { name: "Paper" }).click();
-  await modes.getByRole("button", { name: "Continue" }).click();
-
-  // The sidebar, found through the menu the card names.
-  const sidebar = lesson(page, t.tutorialSidebarTitle);
-  await expect(sidebar).toContainText(
-    "Click the menu ☰ at the top left, choose View › Sidebar (Ctrl+\\)",
-  );
-  await page.getByRole("button", { name: t.appMenu, exact: true }).click();
-  await page.getByRole("menuitem", { name: t.menuView }).click();
-  await expect(
-    page.getByRole("menuitemcheckbox", {
-      name: new RegExp(t.menuToggleSidebar),
-    }),
-  ).toBeVisible();
-  await page.keyboard.press("Escape");
-  await page.keyboard.press("Escape");
-  // The item goes through Rust, which sends the window this event back.
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-toggle-sidebar"),
-  );
-  await page.getByRole("button", { name: "Outline" }).click();
-  await expect(page.locator(".sidebar")).toContainText("My notes");
-  await sidebar.getByRole("button", { name: "Continue" }).click();
 
   // The command palette: any command run from it ticks the line.
   const palette = lesson(page, "Command palette");
@@ -356,11 +253,7 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
     .getByRole("combobox", { name: "Mode" });
   const aiLessons: [string, string, string | null, string][] = [
     [t.tutorialWriteTitle, "ai-panel", "Write", "Continue my notes"],
-    [t.tutorialReviewTitle, "review", "Review", "Comment on my notes"],
-    [t.tutorialRevisionTitle, "revision", "Write", "Make it more concise"],
-    [t.tutorialGrammarTitle, "grammar", null, notes.slip],
     [t.tutorialContinuationTitle, "continuation", null, "What really stops"],
-    [t.tutorialSkillsTitle, "skills", "Review", "/proofread"],
   ];
   for (const [title, clip, modeName, says] of aiLessons) {
     const card = lesson(page, title);
@@ -404,28 +297,27 @@ test("in Chinese: the notes, the copy and the links follow the language", async 
   page,
 }) => {
   const zh = UI.zh;
-  await openApp(page, { storage: at("marks") });
-  const marks = lesson(page, zh.tutorialMarksTitle);
-  await expect(marks).toContainText("下面是你的第三回笔记");
-  await expect(marks).toContainText("`第三回` 值得重读。");
-  await expect(editor(page).locator("h1")).toContainText("《红楼梦》读书笔记");
-  await expect(editor(page).locator("blockquote").first()).toContainText(
-    "倒象在那里见过一般",
-  );
-  await expect(editor(page)).toContainText("我的笔记");
-  await marks.getByRole("button", { name: /观看动画/ }).click();
+  await openApp(page, { storage: at("wysiwyg") });
+  const wysiwyg = lesson(page, zh.tutorialWysiwygTitle);
+  await expect(wysiwyg).toContainText("# 《红楼梦》读书笔记");
+  await wysiwyg.getByRole("button", { name: /观看动画/ }).click();
   await expect
     .poll(async () => (await opened(page)).at(-1))
     .toEqual({ cmd: "open_tutorials_page", language: "zh", clip: "wysiwyg" });
+  await wysiwyg.getByRole("button", { name: zh.tutorialSkipStep }).click();
+  await expect(editor(page)).toContainText("我的笔记");
+  await expect(editor(page).locator("blockquote").first()).toContainText(
+    "倒象在那里见过一般",
+  );
 });
 
 test("an AI lesson resumes in the mode it was left in", async ({ page }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: at("review", { aiMode: "watch" }),
+    storage: at("continuation", { aiMode: "watch" }),
   });
-  const review = lesson(page, "Review");
-  await expect(review).toContainText("Connect an AI later");
+  const continuation = lesson(page, "Continuation");
+  await expect(continuation).toContainText("Connect an AI later");
   // The notes are back in the new practice tab.
   await expect(editor(page)).toContainText("My notes");
 });
@@ -435,11 +327,7 @@ interface LiveRun {
   lang: Lang;
   mode: { label: string; write: string; review: string };
   write: { prompt: string; text: string };
-  review: { prompt: string; comment: string };
-  revise: { prompt: string; text: string };
-  grammar: { wrong: string; right: string; issue: string };
   continuation: { typed: string; text: string };
-  skill: string;
 }
 
 const LIVE: LiveRun[] = [
@@ -450,25 +338,10 @@ const LIVE: LiveRun[] = [
       prompt: "Continue my notes with one more paragraph",
       text: "Hamlet thinks where others would act; the question itself becomes his way of waiting.",
     },
-    review: {
-      prompt: "Comment on my notes",
-      comment:
-        "Say which reading you take: life and death, or acting and not acting.",
-    },
-    revise: {
-      prompt: "Make it more concise",
-      text: "Hamlet's question is not only whether to live or die.",
-    },
-    grammar: {
-      wrong: "was",
-      right: "were",
-      issue: "“Hamlet and Horatio” takes “were”.",
-    },
     continuation: {
       typed: "What really stops Hamlet is",
       text: " the fear of what comes after.",
     },
-    skill: "/proofread",
   },
   {
     lang: "zh",
@@ -477,17 +350,7 @@ const LIVE: LiveRun[] = [
       prompt: "接着我的笔记再写一段",
       text: "黛玉觉得眼熟，宝玉说曾见过，两人一见如故，正是木石前盟在今生的回响。",
     },
-    review: {
-      prompt: "评一评我的笔记",
-      comment: "可以点明“前世姻缘”具体指第一回的哪段情节。",
-    },
-    revise: {
-      prompt: "改得更简洁",
-      text: "这一句呼应第一回的前世姻缘，是全书爱情线的起点。",
-    },
-    grammar: { wrong: "的", right: "得", issue: "补语前应用“得”。" },
     continuation: { typed: "宝玉和黛玉的缘分", text: "，早在第一回就已写定。" },
-    skill: "/校对",
   },
 ];
 
@@ -497,7 +360,7 @@ test.describe("connected", () => {
       test.setTimeout(90_000);
       const t = UI[run.lang];
       const notes = NOTES[run.lang];
-      const { firstNote, secondNote, excerpt } = notes;
+      const { excerpt } = notes;
       const next = (card: ReturnType<typeof lesson>) =>
         card.getByRole("button", { name: t.tutorialNext });
       const mode = page
@@ -544,83 +407,6 @@ test.describe("connected", () => {
       await expect(editor(page)).toContainText(run.write.text);
       await next(write).click();
 
-      // Review: a note in the margin, on the learner's notes.
-      const review = lesson(page, t.tutorialReviewTitle);
-      await expect(mode.locator(".mode-picker-value")).toHaveText(
-        run.mode.review,
-      );
-      await answer(page, {
-        ai_agent_message: agentReply(
-          run.review.prompt,
-          "add_comment",
-          { anchor: firstNote, comment: run.review.comment },
-          "OK",
-        ),
-      });
-      await composer(page).fill(run.review.prompt);
-      await composer(page).press("Enter");
-      await expect(page.locator(".review-anchor").first()).toBeVisible();
-      await expectCardClearOf(page, ".review-note");
-      await next(review).click();
-
-      // Revision: the notes' first sentence reworked, then decided.
-      const revision = lesson(page, t.tutorialRevisionTitle);
-      await expect(mode.locator(".mode-picker-value")).toHaveText(
-        run.mode.write,
-      );
-      await answer(page, {
-        ai_agent_message: agentReply(
-          run.revise.prompt,
-          "propose_edit",
-          { action: "replace", anchor: firstNote, text: run.revise.text },
-          "OK",
-        ),
-      });
-      await editor(page)
-        .locator("p", { hasText: firstNote.slice(0, 12) })
-        .click({ clickCount: 3 });
-      await composer(page).fill(run.revise.prompt);
-      await composer(page).press("Enter");
-      await expect(next(revision)).toBeDisabled();
-      await expectCardClearOf(
-        page,
-        ".pending-edit, .pending-delete, .review-note, .review-bar",
-      );
-      await page.locator(".review-bar-accept").click();
-      await expect(editor(page)).toContainText(run.revise.text);
-      await next(revision).click();
-
-      // Grammar: the learner types the sentence with the slip.
-      const grammar = lesson(page, t.tutorialGrammarTitle);
-      await expect(grammar).toContainText(notes.slip);
-      // Offsets count Unicode scalars.
-      const slipAt = Array.from(
-        notes.slip.slice(0, notes.slip.indexOf(run.grammar.wrong)),
-      ).length;
-      await answer(page, {
-        ai_grammar_check: [
-          {
-            start: slipAt,
-            end: slipAt + Array.from(run.grammar.wrong).length,
-            issue: run.grammar.issue,
-            suggestion: run.grammar.right,
-            original: run.grammar.wrong,
-          },
-        ],
-      });
-      await newLineAtEnd(page);
-      await page.keyboard.type(notes.slip);
-      await expect(ticked(grammar)).toHaveCount(1);
-      const underline = editor(page).locator(".grammar-issue");
-      await expect(underline).toHaveText(run.grammar.wrong);
-      await expectCardClearOf(page, ".grammar-issue");
-      await underline.hover();
-      await page.locator(".grammar-popover-apply").click();
-      await expect(editor(page)).toContainText(
-        notes.slip.replace(run.grammar.wrong, run.grammar.right),
-      );
-      await next(grammar).click();
-
       // Continuation: type at the end, pause, Tab.
       const continuation = lesson(page, t.tutorialContinuationTitle);
       await answer(page, { ai_complete: run.continuation.text });
@@ -634,37 +420,11 @@ test.describe("connected", () => {
       );
       await next(continuation).click();
 
-      // Skills: a note selected, a message sent through the skill.
-      const skills = lesson(page, t.tutorialSkillsTitle);
-      await expect(mode.locator(".mode-picker-value")).toHaveText(
-        run.mode.review,
-      );
-      await answer(page, {
-        ai_agent_message: [
-          { kind: "User", text: run.skill },
-          { kind: "Assistant", text: "OK" },
-        ],
-      });
-      await editor(page)
-        .locator("p", { hasText: secondNote.slice(0, 12) })
-        .click({ clickCount: 3 });
-      await composer(page).fill(run.skill);
-      await expect(page.locator(".composer-picker")).toBeVisible();
-      await composer(page).press("Enter");
-      await composer(page).press("Enter");
-      await expect(next(skills)).toBeEnabled();
-      await next(skills).click();
-
       await expect(lesson(page, t.tutorialDoneTitle)).toContainText(
         t.tutorialDoneMemory,
       );
-      // Each lesson's request went out in its own mode.
-      expect(await sentModes(page)).toEqual([
-        "write",
-        "review",
-        "write",
-        "review",
-      ]);
+      // The request went out in Write mode.
+      expect(await sentModes(page)).toEqual(["write"]);
       // And the classic is as it was quoted.
       await expect(editor(page).locator("blockquote").first()).toContainText(
         excerpt,
@@ -672,47 +432,25 @@ test.describe("connected", () => {
     });
   }
 
-  test("grammar lets the learner on when the AI finds nothing", async ({
-    page,
-  }) => {
-    await page.clock.install();
-    await openApp(page, {
-      settings: { language: "en", aiProvider: "anthropic" },
-      storage: at("grammar", { aiMode: "live" }),
-    });
-    await answer(page, { ai_grammar_check: [] });
-    const grammar = lesson(page, "Grammar check");
-    const next = grammar.getByRole("button", { name: "Continue" });
-    await expect(next).toBeDisabled();
-    await newLineAtEnd(page);
-    await page.keyboard.type(NOTES.en.slip);
-    await expect(ticked(grammar)).toHaveCount(1);
-    await page.clock.runFor(20_000);
-    await expect(grammar).toContainText(
-      "The AI found nothing to fix this time.",
-    );
-    await expect(next).toBeEnabled();
-  });
-
   test("a provider error shows as usual and the lesson can be skipped", async ({
     page,
   }) => {
     await openApp(page, {
       settings: { language: "en", aiProvider: "anthropic" },
-      storage: at("review", { aiMode: "live" }),
+      storage: at("write", { aiMode: "live" }),
     });
     await answer(page, {
       ai_agent_message: { __reject: "The provider is unavailable." },
     });
     await page.keyboard.press("Control+Shift+L");
-    await composer(page).fill("Comment on my notes");
+    await composer(page).fill("Continue my notes");
     await composer(page).press("Enter");
     await expect(page.locator(".agent-panel")).toContainText(
       "The provider is unavailable.",
     );
-    const review = lesson(page, "Review");
-    await review.getByRole("button", { name: "Skip this step" }).click();
-    await expect(lesson(page, "Revision")).toBeVisible();
+    const write = lesson(page, "AI writing");
+    await write.getByRole("button", { name: "Skip this step" }).click();
+    await expect(lesson(page, "Continuation")).toBeVisible();
   });
 });
 
@@ -740,17 +478,13 @@ test.describe("on a phone", () => {
   test.use(PHONE);
 
   test("lessons fit the screen and speak of taps", async ({ page }) => {
-    await openPhone(page, { storage: at("sidebar-export") });
-    const sidebar = lesson(page, "Sidebar and export");
-    await expect(sidebar).toContainText("Tap the menu ☰ at the top left");
-    const box = (await sidebar.boundingBox())!;
-    expect(box.x).toBeGreaterThanOrEqual(0);
-    expect(box.x + box.width).toBeLessThanOrEqual(PHONE.viewport.width);
-    await sidebar.getByRole("button", { name: "Skip this step" }).tap();
-
+    await openPhone(page, { storage: at("palette") });
     // No shortcut on a phone: the palette is a tip there.
     const palette = lesson(page, "Command palette");
     await expect(palette).toContainText("On a computer");
+    const box = (await palette.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(PHONE.viewport.width);
     await palette.getByRole("button", { name: "Continue" }).tap();
     await lesson(page, "Plugins")
       .getByRole("button", { name: "Continue" })
@@ -765,14 +499,7 @@ test.describe("on a phone", () => {
 
     const write = lesson(page, "AI writing");
     await expect(write).toContainText("tap the quill icon at the top");
-    for (const title of ["AI writing", "Review", "Revision"])
-      await lesson(page, title).getByRole("button", { name: "Continue" }).tap();
-    await expect(lesson(page, "Grammar check")).toContainText(
-      "tap it, and tap Apply",
-    );
-    await lesson(page, "Grammar check")
-      .getByRole("button", { name: "Continue" })
-      .tap();
+    await write.getByRole("button", { name: "Continue" }).tap();
     await expect(lesson(page, "Continuation")).toContainText(
       "tap the gray text",
     );

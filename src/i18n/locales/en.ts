@@ -1088,37 +1088,6 @@ type /name in a conversation to use one.
   tutorialWysiwygList: "A list: `- Hamlet`, Enter, `Horatio`",
   tutorialWysiwygNumbered: "A numbered list: `1. Act I`",
   tutorialWysiwygTaskItem: "A task: `- [ ] Finish Act V`",
-  tutorialMarksTitle: "Bold, quotes, code and links",
-  tutorialMarksBody:
-    "Your notes on Act III are below; type these lines at the end.",
-  tutorialMarksEmphasis: "Bold and italic: `Horatio is **loyal** and *calm*.`",
-  tutorialMarksQuote:
-    "A quote: `> Something is rotten in the state of Denmark.`",
-  tutorialMarksCode: "Code: ``Read `Act I` again.``",
-  tutorialMarksLink: "A link: `[Gutenberg](https://gutenberg.org)`",
-  tutorialTableTitle: "Tables",
-  tutorialTableBody:
-    "A line of cells between | marks becomes a table when you press Enter.",
-  tutorialTableHeader: "Type `| Character | Impression |`, then Enter",
-  tutorialTableRow: "Fill in a row: `Hamlet`, Tab, `Torn`",
-  tutorialBlocksTitle: "Formulas and diagrams",
-  tutorialBlocksBody:
-    "Optional: a few characters make a formula, a few lines a diagram.",
-  tutorialBlocksFormula: "A formula: `$E=mc^2$`",
-  tutorialBlocksDiagram:
-    "A diagram: ```` ```mermaid ````, Enter, then `graph LR; A-->B`",
-  tutorialModesTitle: "Writing modes and themes",
-  tutorialModesBody: "Write a different way, see a different look.",
-  tutorialModesTask: "Turn on Zen Mode, then pick another theme.",
-  tutorialSidebarTitle: "Sidebar and export",
-  tutorialSidebarBody:
-    "The sidebar holds your files, the outline and the clipboard; to export, use File › Export.",
-  tutorialSidebarTask:
-    "Click the menu ☰ at the top left, choose View › Sidebar ({shortcut}), then open Outline",
-  tutorialSidebarTaskMac:
-    "Choose View › Sidebar in the menu bar ({shortcut}), then open Outline",
-  tutorialSidebarTaskPhone:
-    "Tap the menu ☰ at the top left, then Sidebar, then open Outline",
   tutorialPaletteTitle: "Command palette",
   tutorialPaletteBody:
     "Every command in the menus, found by typing a few letters.",
@@ -1144,36 +1113,15 @@ type /name in a conversation to use one.
   tutorialWriteOpenPhone: "Open the AI panel: tap the quill icon at the top",
   tutorialWriteSend:
     "Send `Continue my notes with one more paragraph`, then click Accept",
-  tutorialReviewTitle: "Review",
-  tutorialReviewBody:
-    "In Review mode, it comments in the margin and leaves your text alone.",
-  tutorialReviewTask:
-    "Send `Comment on my notes`, then read the notes in the margin",
-  tutorialRevisionTitle: "Revision",
-  tutorialRevisionBody:
-    "Write mode rewrites too, and you decide sentence by sentence.",
-  tutorialRevisionSelect: "Select the first sentence of your notes",
-  tutorialRevisionSend:
-    "Send `Make it more concise`, then choose Accept or Reject",
-  tutorialGrammarTitle: "Grammar check",
-  tutorialGrammarBody: "Slips are underlined as you type.",
-  tutorialGrammarType: "On a new line at the end, type `{slip}`",
-  tutorialGrammarApply: "Wait for the underline, point at it, and click Apply",
-  tutorialGrammarApplyPhone: "Wait for the underline, tap it, and tap Apply",
-  tutorialGrammarQuiet:
-    "The AI found nothing to fix this time. You can continue.",
   tutorialContinuationTitle: "Continuation",
   tutorialContinuationBody: "Pause, and it writes on for you.",
   tutorialContinuationTask:
     "At the end, type `What really stops Hamlet is`, pause, then press Tab",
   tutorialContinuationTaskPhone:
     "At the end, type `What really stops Hamlet is`, pause, then tap the gray text",
-  tutorialSkillsTitle: "Skills",
-  tutorialSkillsBody:
-    "Type / in the AI panel to pick one, or get more from Extensions.",
-  tutorialSkillsTask: "Select one of your notes, then send `/proofread`",
   tutorialDoneTitle: "All done",
-  tutorialDoneBody: "Now start writing your own.",
+  tutorialDoneBody:
+    "Now start writing your own; tables, formulas, themes, review and the rest are in the Video Tutorials.",
   tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see the Project tab in the AI panel.`,
   closePromptMessage: "This document has unsaved changes.",
   closePromptSave: "Save",

@@ -7,28 +7,6 @@ test("first run asks for a language", async ({ page }) => {
   await expect(page).toHaveScreenshot("first-run-language.png");
 });
 
-test("the tutorial's sidebar lesson highlights the sidebar's outline", async ({
-  page,
-}) => {
-  await openApp(page, {
-    storage: {
-      "textus-tutorial-progress": JSON.stringify({
-        active: true,
-        stepId: "sidebar-export",
-        tabId: null,
-      }),
-    },
-  });
-  await page.keyboard.press("Control+\\");
-  await expect(page.locator(".sidebar.tutorial-spotlight")).toBeVisible();
-  // The notes' outline completes the lesson.
-  await page.getByRole("button", { name: "大纲" }).click();
-  await expect(page.locator(".tutorial-card .tutorial-task-line")).toHaveClass(
-    /is-complete/,
-  );
-  await expect(page).toHaveScreenshot("tutorial-sidebar-lesson.png");
-});
-
 for (const colorScheme of ["light", "dark"] as const) {
   test(`document content renders (${colorScheme})`, async ({ page }) => {
     await openApp(page, { colorScheme });

@@ -11,9 +11,6 @@ export interface PracticeNotes {
   /** Everything under it. No level-one heading, list, table, inline mark or
    *  link of its own: those are what the writing lessons ask the learner to add. */
   body: string;
-  /** The grammar lesson's sentence, with one slip in it, for the learner to
-   *  type. An input method types the slip as written. */
-  slip: string;
 }
 
 const NOTES: Record<Lang, PracticeNotes> = {
@@ -33,7 +30,6 @@ Hamlet's question is not really only about whether to live or to die, if you thi
 
 In the end, it seems to be the fear of what might come after death that is the thing that keeps him from acting.
 `,
-    slip: "Hamlet and Horatio was friends at Wittenberg.",
   },
   zh: {
     title: "《红楼梦》读书笔记",
@@ -49,7 +45,6 @@ In the end, it seems to be the fear of what might come after death that is the t
 
 宝玉初见黛玉便觉似曾相识，作者就某种意义而言是借这句话点明了木石前盟。
 `,
-    slip: "宝玉说这话时笑的很开心。",
   },
   "zh-Hant": {
     title: "《西遊記》讀書筆記",
@@ -65,7 +60,6 @@ In the end, it seems to be the fear of what might come after death that is the t
 
 就某種意義而言，孫悟空天生就帶著天地的氣數，這也就是他後來敢大鬧天宮的一個伏筆。
 `,
-    slip: "石猴跳的比誰都高。",
   },
   ja: {
     title: "『吾輩は猫である』読書ノート",
@@ -81,7 +75,6 @@ In the end, it seems to be the fear of what might come after death that is the t
 
 そういった意味で、人間を外から眺めるという、この作品全体の視点がここで決まっているのだと言えるだろう。
 `,
-    slip: "猫は人間をを外から眺めている。",
   },
   ko: {
     title: "메밀꽃 필 무렵 독서 노트",
@@ -97,7 +90,6 @@ In the end, it seems to be the fear of what might come after death that is the t
 
 어떤 의미에서 보면, 이 풍경이 허 생원으로 하여금 그날 밤의 추억을 털어놓게 만드는 일종의 계기가 되는 것이라고 볼 수 있다.
 `,
-    slip: "메밀꽃이 소금을 뿌린 듯 하다.",
   },
   es: {
     title: "Notas sobre el Quijote",
@@ -111,7 +103,6 @@ En realidad, el comienzo es, por así decirlo, un retrato del hidalgo hecho con 
 
 Podría decirse que lo conocemos por lo que tiene antes que por lo que hace.
 `,
-    slip: "Cervantes no nos da su nombre, solo su rocin.",
   },
   fr: {
     title: "Notes sur Les Misérables",
@@ -127,7 +118,6 @@ En fait, Hugo ouvre son roman, pour ainsi dire, sur un évêque et non sur Valje
 
 On pourrait dire que toute l’histoire commence par une réputation.
 `,
-    slip: "Hugo nous présante un évêque.",
   },
   de: {
     title: "Notizen zur Verwandlung",
@@ -141,7 +131,6 @@ Eigentlich ist der erste Satz gewissermaßen schon die ganze Erzählung.
 
 Im Grunde geht es also gar nicht um das Warum, sondern um das Weiterleben.
 `,
-    slip: "Kafka erkärt die Verwandlung nie.",
   },
   ru: {
     title: "Заметки: Анна Каренина",
@@ -155,7 +144,6 @@ Im Grunde geht es also gar nicht um das Warum, sondern um das Weiterleben.
 
 Как мне кажется, весь роман и есть проверка этой фразы.
 `,
-    slip: "Толстой переходет к одной семье.",
   },
   pt: {
     title: "Notas sobre Dom Casmurro",
@@ -169,7 +157,6 @@ Na verdade, o capítulo que abre o livro é, por assim dizer, uma espécie de pi
 
 De certa forma, poderíamos dizer que já aqui ele se mostra como alguém que conta a história do seu jeito.
 `,
-    slip: "O rapaz do trem fica ofendito.",
   },
 };
 

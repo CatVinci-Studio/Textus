@@ -1105,37 +1105,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialWysiwygList: "Uma lista: `- Bentinho`, Enter, `Capitu`",
   tutorialWysiwygNumbered: "Uma lista numerada: `1. Do título`",
   tutorialWysiwygTaskItem: "Uma tarefa: `- [ ] Terminar o livro`",
-  tutorialMarksTitle: "Negrito, citações, código e links",
-  tutorialMarksBody:
-    "Suas notas sobre o capítulo I estão abaixo; digite estas linhas no fim.",
-  tutorialMarksEmphasis:
-    "Negrito e itálico: `Capitu é **esperta** e *misteriosa*.`",
-  tutorialMarksQuote: "Uma citação: `> Não consultes diccionarios.`",
-  tutorialMarksCode: "Código: ``Reler o `capítulo I`.``",
-  tutorialMarksLink: "Um link: `[Gutenberg](https://gutenberg.org)`",
-  tutorialTableTitle: "Tabelas",
-  tutorialTableBody:
-    "Uma linha de células entre | vira tabela quando você pressiona Enter.",
-  tutorialTableHeader: "Digite `| Personagem | Impressão |` e pressione Enter",
-  tutorialTableRow: "Preencha uma linha: `Capitu`, Tab, `Enigmática`",
-  tutorialBlocksTitle: "Fórmulas e diagramas",
-  tutorialBlocksBody:
-    "Opcional: poucos caracteres fazem uma fórmula, poucas linhas um diagrama.",
-  tutorialBlocksFormula: "Uma fórmula: `$E=mc^2$`",
-  tutorialBlocksDiagram:
-    "Um diagrama: ```` ```mermaid ````, Enter e depois `graph LR; A-->B`",
-  tutorialModesTitle: "Modos de escrita e temas",
-  tutorialModesBody: "Escreva de outro jeito, veja com outra cara.",
-  tutorialModesTask: "Ative o Modo Zen e escolha outro tema.",
-  tutorialSidebarTitle: "Barra lateral e exportação",
-  tutorialSidebarBody:
-    "A barra lateral tem seus arquivos, a estrutura e a área de transferência; para exportar, use Arquivo › Exportar.",
-  tutorialSidebarTask:
-    "Clique no menu ☰ no canto superior esquerdo, escolha Visualizar › Barra Lateral ({shortcut}) e abra Estrutura",
-  tutorialSidebarTaskMac:
-    "Na barra de menus, escolha Visualizar › Barra Lateral ({shortcut}) e abra Estrutura",
-  tutorialSidebarTaskPhone:
-    "Toque no menu ☰ no canto superior esquerdo, depois em Barra Lateral, e abra Estrutura",
   tutorialPaletteTitle: "Paleta de comandos",
   tutorialPaletteBody:
     "Todos os comandos dos menus, encontrados com poucas letras.",
@@ -1160,38 +1129,15 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialWriteOpenPhone: "Abra o painel de IA: toque no ícone da pena no topo",
   tutorialWriteSend:
     "Envie `Continue minhas notas com mais um parágrafo` e clique em Aceitar",
-  tutorialReviewTitle: "Comentários",
-  tutorialReviewBody:
-    "No modo Revisar, ele comenta na margem e não mexe no seu texto.",
-  tutorialReviewTask:
-    "Envie `Comente minhas notas` e leia os comentários na margem",
-  tutorialRevisionTitle: "Revisão",
-  tutorialRevisionBody:
-    "O modo Escrever também reescreve, e você decide frase por frase.",
-  tutorialRevisionSelect: "Selecione a primeira frase das suas notas",
-  tutorialRevisionSend:
-    "Envie `Deixe mais conciso` e escolha Aceitar ou Rejeitar",
-  tutorialGrammarTitle: "Verificação gramatical",
-  tutorialGrammarBody: "Os deslizes ficam sublinhados enquanto você escreve.",
-  tutorialGrammarType: "Numa linha nova no fim, digite `{slip}`",
-  tutorialGrammarApply:
-    "Espere o sublinhado, passe o ponteiro sobre ele e clique em Aplicar",
-  tutorialGrammarApplyPhone:
-    "Espere o sublinhado, toque nele e toque em Aplicar",
-  tutorialGrammarQuiet:
-    "Desta vez a IA não achou nada para corrigir. Você pode continuar.",
   tutorialContinuationTitle: "Continuação",
   tutorialContinuationBody: "Faça uma pausa e ele continua por você.",
   tutorialContinuationTask:
     "No fim, digite `O que Bentinho esconde é`, faça uma pausa e pressione Tab",
   tutorialContinuationTaskPhone:
     "No fim, digite `O que Bentinho esconde é`, faça uma pausa e toque no texto cinza",
-  tutorialSkillsTitle: "Habilidades",
-  tutorialSkillsBody:
-    "Digite / no painel de IA para escolher uma, ou obtenha mais em Extensões.",
-  tutorialSkillsTask: "Selecione uma das suas notas e envie `/revisar`",
   tutorialDoneTitle: "Pronto",
-  tutorialDoneBody: "Agora comece a escrever o seu.",
+  tutorialDoneBody:
+    "Agora comece a escrever o seu; tabelas, fórmulas, temas, revisão e o resto estão nos Tutoriais em vídeo.",
   tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja a aba Projeto no painel de IA.`,
   closePromptMessage: "Este documento tem alterações não salvas.",
   closePromptSave: "Salvar",

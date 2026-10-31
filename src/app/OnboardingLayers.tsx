@@ -23,13 +23,11 @@ export function OnboardingLayers({
   tutorial,
   settings,
   setSettings,
-  zen,
   t,
 }: {
   tutorial: Tutorial;
   settings: Settings;
   setSettings: (patch: Partial<Settings>) => void;
-  zen: { on: boolean; toggle: () => void };
   t: Strings;
 }) {
   const phone = usePhoneLayout();
@@ -44,10 +42,8 @@ export function OnboardingLayers({
             phone={phone}
             shortcuts={{
               agentPanel: formatCombo(settings.shortcuts.toggleAgentPanel),
-              sidebar: formatCombo(settings.shortcuts.toggleSidebar),
               palette: formatCombo(settings.shortcuts.commandPalette),
             }}
-            zen={zen}
           />
         </Suspense>
       )}

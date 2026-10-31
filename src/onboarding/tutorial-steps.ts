@@ -1,20 +1,13 @@
 import type { TextKey } from "../i18n/strings";
 import type { AgentMode } from "../prefs/SettingsContext";
 import { hasTextusAi } from "../platform/capabilities";
-import {
-  GRAMMAR_PART,
-  LESSON_DONE,
-  MARKS_PART,
-  MODES_PART,
-  TABLE_PART,
-  WRITE_PART,
-  WYSIWYG_PART,
-} from "./tutorial-evaluation";
+import { LESSON_DONE, WRITE_PART, WYSIWYG_PART } from "./tutorial-evaluation";
 
 /**
- * The first-run tour, on reading notes about a classic: Markdown typed for
- * real, the window, connecting an AI, then Textus AI working on the
- * learner's notes, never on the classic. Each lesson is one card.
+ * The first-run tour, short on purpose: Markdown typed for real, the command
+ * palette and the store, connecting an AI, then Textus AI working on the
+ * learner's notes about a classic, never on the classic. Each lesson is one
+ * card; the rest is on the website's tutorials page.
  */
 
 type TutorialChapterId = "start" | "writing" | "connect" | "ai" | "done";
@@ -22,20 +15,11 @@ type TutorialChapterId = "start" | "writing" | "connect" | "ai" | "done";
 export type TutorialStepId =
   | "welcome"
   | "wysiwyg"
-  | "marks"
-  | "table"
-  | "blocks"
-  | "modes-themes"
-  | "sidebar-export"
   | "palette"
   | "plugins"
   | "connect"
   | "write"
-  | "review"
-  | "revision"
-  | "grammar"
   | "continuation"
-  | "skills"
   | "done";
 
 /** The clips on the website's tutorials page. Rust opens the page and
@@ -123,72 +107,6 @@ const ALL_STEPS: TutorialStep[] = [
     clip: "wysiwyg",
   },
   {
-    // The practice notes arrive here, under what was typed.
-    id: "marks",
-    chapter: "writing",
-    layout: "card",
-    titleKey: "tutorialMarksTitle",
-    bodyKey: "tutorialMarksBody",
-    tasks: [
-      { key: "tutorialMarksEmphasis", part: MARKS_PART.emphasis },
-      { key: "tutorialMarksQuote", part: MARKS_PART.quote },
-      { key: "tutorialMarksCode", part: MARKS_PART.code },
-      { key: "tutorialMarksLink", part: MARKS_PART.link },
-    ],
-    clip: "wysiwyg",
-  },
-  {
-    id: "table",
-    chapter: "writing",
-    layout: "card",
-    titleKey: "tutorialTableTitle",
-    bodyKey: "tutorialTableBody",
-    tasks: [
-      { key: "tutorialTableHeader", part: TABLE_PART.table },
-      { key: "tutorialTableRow", part: TABLE_PART.row },
-    ],
-    clip: "blocks",
-  },
-  {
-    id: "blocks",
-    chapter: "writing",
-    layout: "card",
-    titleKey: "tutorialBlocksTitle",
-    bodyKey: "tutorialBlocksBody",
-    tasks: [
-      { key: "tutorialBlocksFormula", part: LESSON_DONE },
-      { key: "tutorialBlocksDiagram", part: LESSON_DONE },
-    ],
-    clip: "blocks",
-    optional: true,
-  },
-  {
-    id: "modes-themes",
-    chapter: "writing",
-    layout: "card",
-    titleKey: "tutorialModesTitle",
-    bodyKey: "tutorialModesBody",
-    tasks: [
-      { key: "tutorialModesTask", part: MODES_PART.mode | MODES_PART.theme },
-    ],
-    clip: "modes-themes",
-  },
-  {
-    id: "sidebar-export",
-    chapter: "writing",
-    layout: "card",
-    titleKey: "tutorialSidebarTitle",
-    bodyKey: "tutorialSidebarBody",
-    tasks: [
-      {
-        key: "tutorialSidebarTask",
-        macKey: "tutorialSidebarTaskMac",
-        phoneKey: "tutorialSidebarTaskPhone",
-      },
-    ],
-    clip: "sidebar-export",
-  },
-  {
     // A tip more than a lesson: a phone has no shortcut to try it with.
     id: "palette",
     chapter: "writing",
@@ -241,46 +159,6 @@ const ALL_STEPS: TutorialStep[] = [
     agentMode: "write",
   },
   {
-    id: "review",
-    chapter: "ai",
-    layout: "card",
-    titleKey: "tutorialReviewTitle",
-    bodyKey: "tutorialReviewBody",
-    tasks: [{ key: "tutorialReviewTask" }],
-    clip: "review",
-    ai: true,
-    agentMode: "review",
-  },
-  {
-    id: "revision",
-    chapter: "ai",
-    layout: "card",
-    titleKey: "tutorialRevisionTitle",
-    bodyKey: "tutorialRevisionBody",
-    tasks: [{ key: "tutorialRevisionSelect" }, { key: "tutorialRevisionSend" }],
-    clip: "revision",
-    ai: true,
-    agentMode: "write",
-  },
-  {
-    // The slip is in a sentence the learner types, never in the classic.
-    id: "grammar",
-    chapter: "ai",
-    layout: "card",
-    titleKey: "tutorialGrammarTitle",
-    bodyKey: "tutorialGrammarBody",
-    tasks: [
-      { key: "tutorialGrammarType", part: GRAMMAR_PART.typed },
-      {
-        key: "tutorialGrammarApply",
-        phoneKey: "tutorialGrammarApplyPhone",
-        part: GRAMMAR_PART.card,
-      },
-    ],
-    clip: "grammar",
-    ai: true,
-  },
-  {
     id: "continuation",
     chapter: "ai",
     layout: "card",
@@ -294,17 +172,6 @@ const ALL_STEPS: TutorialStep[] = [
     ],
     clip: "continuation",
     ai: true,
-  },
-  {
-    id: "skills",
-    chapter: "ai",
-    layout: "card",
-    titleKey: "tutorialSkillsTitle",
-    bodyKey: "tutorialSkillsBody",
-    tasks: [{ key: "tutorialSkillsTask" }],
-    clip: "skills",
-    ai: true,
-    agentMode: "review",
   },
   {
     id: "done",

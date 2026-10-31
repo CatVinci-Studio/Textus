@@ -1,18 +1,12 @@
-import { useCallback, useEffect, type ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 import type { Lang, Strings } from "../i18n/strings";
 import { links } from "../platform/ipc";
 import { isMacPlatform } from "../platform/os";
 import { ProviderListPanel } from "../settings/sections/providers";
 import { TextusAiOffNote } from "../ai/TextusAiSwitch";
 import { useSettings } from "../prefs/SettingsContext";
-import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
-import { Select } from "../ui/Select";
 import { practiceNotes } from "./practice-notes";
-import {
-  GRAMMAR_PART,
-  isLessonComplete,
-  isTaskDone,
-} from "./tutorial-evaluation";
+import { isLessonComplete, isTaskDone } from "./tutorial-evaluation";
 import { TutorialOverlay } from "./TutorialOverlay";
 import {
   TUTORIAL_CHAPTERS,
@@ -21,10 +15,6 @@ import {
 } from "./tutorial-steps";
 import type { Tutorial } from "./useTutorial";
 
-/** How long the grammar lesson waits for the AI to flag the typed sentence
- *  before letting the learner on: a careful model may find nothing. */
-export const GRAMMAR_WAIT_MS = 20_000;
-
 interface TutorialExperienceProps {
   tutorial: Tutorial;
   t: Strings;
@@ -32,21 +22,17 @@ interface TutorialExperienceProps {
   /** The phone layout: no keyboard shortcuts, taps instead of Tab. */
   phone: boolean;
   shortcuts: LessonShortcuts;
-  /** Zen mode, for the modes-and-themes lesson's button. */
-  zen: { on: boolean; toggle: () => void };
 }
 
 /** Maps tutorial state to the card the learner sees: its copy, gate and
  *  buttons. App owns the events that advance lessons. */
 interface LessonShortcuts {
   agentPanel: string;
-  sidebar: string;
   palette: string;
 }
 
 /** The shortcut a lesson's "{shortcut}" names. */
 function lessonShortcut(id: TutorialStepId, shortcuts: LessonShortcuts) {
-  if (id === "sidebar-export") return shortcuts.sidebar;
   if (id === "palette") return shortcuts.palette;
   return shortcuts.agentPanel;
 }
@@ -57,11 +43,9 @@ export function TutorialExperience({
   language,
   phone,
   shortcuts,
-  zen,
 }: TutorialExperienceProps) {
   const { step, phase, setPhase, watching } = tutorial;
   const { settings } = useSettings();
-  const live = tutorial.practiceAi === "live";
   const notes = practiceNotes(language);
 
   // The connect lesson's phase mirrors its provider's connection (1 / 0),
@@ -71,26 +55,10 @@ export function TutorialExperience({
     [setPhase],
   );
 
-  const grammarWaiting =
-    live &&
-    step.id === "grammar" &&
-    (phase & GRAMMAR_PART.typed) !== 0 &&
-    (phase & GRAMMAR_PART.card) === 0;
-  useEffect(() => {
-    if (!grammarWaiting) return;
-    const quiet = window.setTimeout(
-      () =>
-        setPhase((p) => (p & GRAMMAR_PART.card ? p : p | GRAMMAR_PART.quiet)),
-      GRAMMAR_WAIT_MS,
-    );
-    return () => window.clearTimeout(quiet);
-  }, [grammarWaiting, setPhase]);
-
   const mac = isMacPlatform();
   const lineText = (task: TutorialTask) =>
     t[(phone && task.phoneKey) || (mac && task.macKey) || task.key]
       .replace("{title}", notes.title)
-      .replace("{slip}", notes.slip)
       .replace("{shortcut}", lessonShortcut(step.id, shortcuts));
   const tasks = step.tasks?.map((task) => ({
     text: lineText(task),
@@ -124,10 +92,6 @@ export function TutorialExperience({
     ) : (
       <TextusAiOffNote />
     );
-  } else if (step.id === "grammar" && phase & GRAMMAR_PART.quiet) {
-    status = t.tutorialGrammarQuiet;
-  } else if (step.id === "modes-themes") {
-    controls = <ModesThemesControls t={t} zen={zen} />;
   } else if (step.id === "done") {
     note = t.tutorialDoneMemory;
     controls = (
@@ -206,46 +170,5 @@ export function TutorialExperience({
     >
       {controls}
     </TutorialOverlay>
-  );
-}
-
-/** Zen mode, the first writing mode to hand, and the built-in themes - the
- *  same choice Settings › Theme makes. */
-function ModesThemesControls({
-  t,
-  zen,
-}: {
-  t: Strings;
-  zen: TutorialExperienceProps["zen"];
-}) {
-  const { settings, setSettings } = useSettings();
-  return (
-    <div className="tutorial-controls">
-      <button
-        type="button"
-        className="tutorial-btn"
-        aria-pressed={zen.on}
-        onClick={zen.toggle}
-      >
-        {t.menuToggleZenMode}
-      </button>
-      <Select
-        className="settings-select"
-        aria-label={t.contentThemeLabel}
-        value={settings.themeId}
-        onChange={(e) => setSettings({ themeId: e.target.value })}
-      >
-        {BUILTIN_CONTENT_THEMES.map((theme) => (
-          <option key={theme.id} value={theme.id}>
-            {t[theme.nameKey]}
-          </option>
-        ))}
-        {settings.userThemes.map((theme) => (
-          <option key={theme.id} value={theme.id}>
-            {theme.name}
-          </option>
-        ))}
-      </Select>
-    </div>
   );
 }

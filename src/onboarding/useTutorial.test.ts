@@ -107,21 +107,21 @@ describe("the AI mode", () => {
   });
 
   it("survives a relaunch with the step", () => {
-    const live = resumeAt("revision", { aiMode: "live" });
-    expect(live.current.step.id).toBe("revision");
+    const live = resumeAt("continuation", { aiMode: "live" });
+    expect(live.current.step.id).toBe("continuation");
     expect(live.current.practiceAi).toBe("live");
-    const watched = resumeAt("revision", { aiMode: "watch" });
+    const watched = resumeAt("continuation", { aiMode: "watch" });
     expect(watched.current.watching).toBe(true);
   });
 
   it("keeps the practice tab's AI muted through the writing lessons", () => {
-    const result = resumeAt("blocks", { aiMode: "live" });
+    const result = resumeAt("plugins", { aiMode: "live" });
     expect(result.current.practiceAi).toBe("muted");
     expect(result.current.watching).toBe(false);
   });
 
   it("starts over with no mode", () => {
-    const result = resumeAt("skills", { aiMode: "live" });
+    const result = resumeAt("continuation", { aiMode: "live" });
     act(() => result.current.start("practice"));
     expect(result.current.aiMode).toBeNull();
     expect(result.current.stepIndex).toBe(0);
@@ -133,17 +133,11 @@ describe("the AI panel's mode", () => {
     expect(resumeAt("write", { aiMode: "live" }).current.agentMode).toBe(
       "write",
     );
-    expect(resumeAt("review", { aiMode: "watch" }).current.agentMode).toBe(
-      "review",
-    );
-    expect(resumeAt("revision", { aiMode: "live" }).current.agentMode).toBe(
-      "write",
-    );
-    expect(resumeAt("grammar", { aiMode: "live" }).current.agentMode).toBe(
+    expect(resumeAt("continuation", { aiMode: "live" }).current.agentMode).toBe(
       null,
     );
-    const result = resumeAt("skills", { aiMode: "live" });
-    expect(result.current.agentMode).toBe("review");
+    const result = resumeAt("write", { aiMode: "watch" });
+    expect(result.current.agentMode).toBe("write");
     act(() => result.current.exit());
     expect(result.current.agentMode).toBe(null);
   });
@@ -153,11 +147,7 @@ describe("the AI lessons' signals", () => {
   it.each([
     ["write", "revision-decided"],
     ["continuation", "completion-accepted"],
-    ["grammar", "grammar-card"],
-    ["revision", "revision-decided"],
-    ["review", "review-note"],
-    ["review", "reply"],
-    ["skills", "skill-sent"],
+    ["palette", "palette-command"],
   ] as const)("complete %s on %s", (stepId, signal) => {
     const result = resumeAt(stepId, { aiMode: "live" });
     expect(result.current.phase).toBe(0);
@@ -166,17 +156,17 @@ describe("the AI lessons' signals", () => {
   });
 
   it("keep the parts already done", () => {
-    const result = resumeAt("grammar", { aiMode: "live" });
+    const result = resumeAt("write", { aiMode: "live" });
     act(() => result.current.setPhase(2));
-    act(() => sendTourSignal("grammar-card"));
+    act(() => sendTourSignal("revision-decided"));
     expect(result.current.phase).toBe(3);
   });
 
   it("only complete the lesson they belong to", () => {
-    const result = resumeAt("revision", { aiMode: "live" });
+    const result = resumeAt("write", { aiMode: "live" });
     act(() => sendTourSignal("completion-accepted"));
-    act(() => sendTourSignal("skill-sent"));
+    act(() => sendTourSignal("palette-command"));
     expect(result.current.phase).toBe(0);
-    expect(stepIndexOf("revision")).toBe(result.current.stepIndex);
+    expect(stepIndexOf("write")).toBe(result.current.stepIndex);
   });
 });
