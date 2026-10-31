@@ -35,6 +35,7 @@ test("a window opens in its language with only that language's strings", async (
     now.filter((name) => name.startsWith("locale:") && name !== "locale:zh"),
   ).toEqual([]);
   expect(now).not.toContain("mermaid");
+  expect(now).not.toContain("chart");
   expect(now).not.toContain("katex");
 });
 
@@ -80,6 +81,25 @@ test("a diagram loads its engine when one is drawn", async ({ page }) => {
     ),
   ).toHaveCount(1, { timeout: 10_000 });
   expect(await loaded(page)).toContain("mermaid");
+});
+
+test("a chart loads its renderer, and not Mermaid, when one is drawn", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  expect(await loaded(page)).not.toContain("chart");
+  await pasteMarkdown(
+    page,
+    '```chart\n{"type": "bar", "labels": ["a", "b"], "data": [1, 2]}\n```\n\nEnd.',
+  );
+  await expect(
+    page.locator(
+      '[data-active-tab="true"] .ProseMirror .mermaid-preview > svg.textus-chart',
+    ),
+  ).toHaveCount(1, { timeout: 10_000 });
+  const now = await loaded(page);
+  expect(now).toContain("chart");
+  expect(now).not.toContain("mermaid");
 });
 
 test("an installed plugin starts, and its views load, only once it is needed", async ({

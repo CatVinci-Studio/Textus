@@ -14,7 +14,12 @@ import { fnv1a } from "../utils/hash";
 import { zoomButton } from "./diagram-zoom";
 import { isLargeDoc, pausesFeatures } from "./large-doc";
 import { registerDrawAll } from "./draw-when-visible";
-import { appearanceIsDark, diagramRenderer } from "./diagram-engine";
+import {
+  appearanceIsDark,
+  diagramRenderer,
+  DIAGRAM_LANGUAGES,
+  type DrawnDiagram,
+} from "./diagram-engine";
 import {
   redrawPendingDiagrams,
   registerPendingDrawer,
@@ -33,7 +38,7 @@ let renderIdCounter = 0;
 /** A diagram as the preview last drew it. */
 interface Drawn {
   svg: string;
-  engine: DiagramEngine;
+  engine: DrawnDiagram["engine"];
   /** What it was drawn for (the render pass's `styleOf`). */
   style: string;
   /** Part of its widget's key: with the source alone, ProseMirror kept the old
@@ -45,20 +50,31 @@ interface MermaidBlock {
   from: number;
   to: number;
   code: string;
+  language: string;
+  /** What its drawing is kept under. */
+  key: string;
 }
 
 const isCodeBlock = (node: ProseNode) => node.type.name === "code_block";
 const isMermaid = (node: ProseNode) =>
-  isCodeBlock(node) && node.attrs.language === "mermaid";
+  isCodeBlock(node) && DIAGRAM_LANGUAGES.includes(node.attrs.language);
+
+/** A drawing's cache key: its source, and a chart's language with it, so a
+ *  chart and a diagram of the same text never share a drawing. */
+const drawingKey = (language: string, code: string) =>
+  language === "mermaid" ? code : `${language}\n${code}`;
 
 function collectMermaidBlocks(doc: ProseNode): MermaidBlock[] {
   const blocks: MermaidBlock[] = [];
   doc.descendants((node, pos) => {
     if (isMermaid(node)) {
+      const language = node.attrs.language as string;
       blocks.push({
         from: pos,
         to: pos + node.nodeSize,
         code: node.textContent,
+        language,
+        key: drawingKey(language, node.textContent),
       });
     }
   });
@@ -66,9 +82,9 @@ function collectMermaidBlocks(doc: ProseNode): MermaidBlock[] {
 }
 
 /**
- * A live diagram preview below every ```mermaid block. While the cursor is
- * away from a drawn block its source hides; moving back in, or clicking the
- * diagram, reveals it.
+ * A live diagram preview below every ```mermaid and ```chart block. While
+ * the cursor is away from a drawn block its source hides; moving back in, or
+ * clicking the diagram, reveals it.
  */
 export function createMermaidPreviewPlugin(options: {
   enabled: () => boolean;
@@ -95,7 +111,7 @@ export function createMermaidPreviewPlugin(options: {
       touches: Touches,
     ): Decoration[] {
       if (!options.enabled() || !isMermaid(node)) return [];
-      const code = node.textContent;
+      const code = drawingKey(node.attrs.language, node.textContent);
       const to = from + node.nodeSize;
       const drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
       if (!drawn) return [];
@@ -170,7 +186,7 @@ export function createMermaidPreviewPlugin(options: {
           // A Pele drawing takes its colours from CSS variables, so an appearance
           // switch keeps it; a Mermaid one has its palette baked in.
           const layout = `${width}|${fontFamily}|${engine}`;
-          const styleOf = (by: DiagramEngine) =>
+          const styleOf = (by: Drawn["engine"]) =>
             by === "pele" ? layout : `${layout}|${dark}`;
           // The editor's largest optional dependencies, fetched only when a real
           // diagram has to be drawn.
@@ -179,21 +195,23 @@ export function createMermaidPreviewPlugin(options: {
         }
 
         // A proposal's diagram, drawn as the document's are.
-        registerPendingDrawer(editorView.dom, async (code) => {
+        registerPendingDrawer(editorView.dom, async (code, language) => {
           if (!options.enabled() || editorView.dom.clientWidth === 0)
             throw new Error("diagrams are not drawn here");
           const { draw, styleOf } = drawing();
-          let drawn = pendingDrawn.get(code) ?? lastRenders.get(code);
+          const key = drawingKey(language, code);
+          let drawn = pendingDrawn.get(key) ?? lastRenders.get(key);
           if (!drawn || drawn.style !== styleOf(drawn.engine)) {
             const id = ++renderIdCounter;
             const { svg, engine: by } = await draw(
               code,
               `mermaid-preview-${id}`,
+              language,
             );
             drawn = { svg, engine: by, style: styleOf(by), id };
           }
-          pendingDrawn.delete(code);
-          pendingDrawn.set(code, drawn);
+          pendingDrawn.delete(key);
+          pendingDrawn.set(key, drawn);
           if (pendingDrawn.size > PENDING_KEPT)
             pendingDrawn.delete(pendingDrawn.keys().next().value as string);
           return { svg: drawn.svg, idPrefix: `mermaid-preview-${drawn.id}` };
@@ -262,13 +280,13 @@ export function createMermaidPreviewPlugin(options: {
           const rendered = new Map<string, Drawn>();
           let offScreen = false;
           const large = isLargeDoc(editorView.state.doc);
-          for (const { from, code } of blocks) {
-            if (!code.trim() || rendered.has(code)) continue;
+          for (const { from, code, language, key } of blocks) {
+            if (!code.trim() || rendered.has(key)) continue;
             // A pass only draws sources it hasn't drawn for the same width, face and
             // engine.
-            const cached = lastRenders.get(code) ?? pendingDrawn.get(code);
+            const cached = lastRenders.get(key) ?? pendingDrawn.get(key);
             if (cached && cached.style === styleOf(cached.engine)) {
-              rendered.set(code, cached);
+              rendered.set(key, cached);
               continue;
             }
             if (!all && large && !nearView(from)) {
@@ -280,9 +298,10 @@ export function createMermaidPreviewPlugin(options: {
               const { svg, engine: by } = await draw(
                 code,
                 `mermaid-preview-${id}`,
+                language,
               );
               if (mySeq !== renderSeq) return;
-              rendered.set(code, { svg, engine: by, style: styleOf(by), id });
+              rendered.set(key, { svg, engine: by, style: styleOf(by), id });
             } catch {
               // Invalid or half-typed diagram syntax: skip this block.
             }

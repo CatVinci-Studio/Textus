@@ -1,4 +1,4 @@
-// A ```mermaid block in an AI proposal not yet in the document, drawn as a
+// A ```mermaid (or ```chart) block in an AI proposal not yet in the document, drawn as a
 // diagram that grows as the proposal streams in, new parts fading in. The
 // editor's own drawer draws it, so it matches the document's diagrams.
 
@@ -10,6 +10,8 @@ export type DiagramPart =
   | { kind: "text"; text: string }
   | {
       kind: "diagram";
+      /** The fence's language: "mermaid" or "chart". */
+      language: string;
       /** What to draw: the fence's body, or while it is still open, its
        *  complete lines; a half line would only fail to parse. */
       code: string;
@@ -17,10 +19,10 @@ export type DiagramPart =
       raw: string;
     };
 
-const OPENING = /^```mermaid[ \t]*$/m;
+const OPENING = /^```(mermaid|chart)[ \t]*$/m;
 const CLOSING = /^```[ \t]*$/m;
 
-/** `markdown` cut into text and ```mermaid fences, including one still open
+/** `markdown` cut into text and ```mermaid and ```chart fences, including one still open
  *  at its end. Null when there is no fence. */
 export function splitMermaidFences(markdown: string): DiagramPart[] | null {
   if (!OPENING.test(markdown)) return null;
@@ -40,6 +42,7 @@ export function splitMermaidFences(markdown: string): DiagramPart[] | null {
     if (!close) {
       parts.push({
         kind: "diagram",
+        language: open[1],
         code: body.slice(0, body.lastIndexOf("\n") + 1).trimEnd(),
         raw: rest.slice(open.index),
       });
@@ -48,6 +51,7 @@ export function splitMermaidFences(markdown: string): DiagramPart[] | null {
     const end = open.index + open[0].length + 1 + close.index + close[0].length;
     parts.push({
       kind: "diagram",
+      language: open[1],
       code: body.slice(0, close.index).trimEnd(),
       raw: rest.slice(open.index, end),
     });
@@ -67,6 +71,7 @@ export function splitMermaidFences(markdown: string): DiagramPart[] | null {
  *  can't be drawn. `idPrefix`: the render id the SVG's own ids start with. */
 export type PendingDrawer = (
   code: string,
+  language: string,
 ) => Promise<{ svg: string; idPrefix: string }>;
 
 // By editor root: a widget finds its editor's drawer from where it stands.
@@ -85,8 +90,9 @@ export function registerPendingDrawer(
 const THROTTLE_MS = 200;
 
 interface DiagramState {
-  /** The source to draw next. */
+  /** The source to draw next, and its fence's language. */
   wanted: string;
+  language: string;
   /** The source of the drawing on screen (null: none yet, `raw` shows). */
   shown: string | null;
   raw: string;
@@ -117,6 +123,7 @@ export function pendingDiagram(
     el.className = "mermaid-preview pending-diagram";
     state = {
       wanted: "",
+      language: part.language,
       shown: null,
       raw: "",
       keys: new Set(),
@@ -130,8 +137,9 @@ export function pendingDiagram(
   if (state.shown === null && part.raw !== state.raw)
     el.innerHTML = renderMarkdownInlineHtml(part.raw);
   state.raw = part.raw;
-  if (part.code !== state.wanted) {
+  if (part.code !== state.wanted || part.language !== state.language) {
     state.wanted = part.code;
+    state.language = part.language;
     schedule(el, state);
   }
   return el;
@@ -171,7 +179,7 @@ async function draw(el: HTMLElement, state: DiagramState) {
   state.busy = true;
   state.last = performance.now();
   try {
-    const { svg, idPrefix } = await drawer(code);
+    const { svg, idPrefix } = await drawer(code, state.language);
     if (el.isConnected) {
       showDrawing(el, state, svg, idPrefix);
       state.shown = code;
