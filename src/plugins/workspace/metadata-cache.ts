@@ -6,6 +6,7 @@ import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import { basename, dirname } from "../../utils/path";
 import {
   emitPluginEvent,
+  getWindowAccess,
   onPluginEvent,
   type PluginLocation,
 } from "../app-bridge";
@@ -207,8 +208,9 @@ export function tasksIn(
 // Keeping it up to date
 // ---------------------------------------------------------------------------
 
-/** The plugins listening for changes, and the folder they asked about. */
-const watchers = new Map<string, string>();
+/** The plugins listening for changes: kept for the window's folder as it
+ *  is when something changes, so one opened or switched later counts too. */
+const watchers = new Set<string>();
 let timer: ReturnType<typeof setTimeout> | null = null;
 let stopWatching: (() => void) | null = null;
 
@@ -216,14 +218,15 @@ function soon() {
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {
     timer = null;
-    const [asker, root] = [...watchers][0] ?? [];
+    const [asker] = watchers;
+    const root = getWindowAccess()?.rootPath();
     if (asker && root) void folderIndex(asker, root).catch(() => {});
   }, 400);
 }
 
-/** A plugin listens to metadata.onDidChange for `root`. */
-export function watchMetadata(plugin: string, root: string): void {
-  watchers.set(plugin, root);
+/** A plugin listens to metadata.onDidChange, a folder open or not yet. */
+export function watchMetadata(plugin: string): void {
+  watchers.add(plugin);
   if (stopWatching) return;
   const onWritten = () => soon();
   window.addEventListener(FILE_WRITTEN_EVENT, onWritten);

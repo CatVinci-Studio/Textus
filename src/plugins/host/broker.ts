@@ -329,10 +329,7 @@ export class PluginHost {
         const needs = PLUGIN_EVENT_NEEDS[event];
         if (needs) this.need(needs);
         if (this.subscriptions.has(event)) return;
-        if (event === "metadata") {
-          const root = scope.root();
-          watchMetadata(this.id, root);
-        }
+        if (event === "metadata") watchMetadata(this.id);
         this.subscriptions.set(
           event,
           event === "settings" || event === "editorKey"
