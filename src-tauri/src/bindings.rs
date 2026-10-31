@@ -264,7 +264,10 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             // The long-form paper agent (ai::paper): not used by the frontend yet.
             "ai-paper.ts",
             builder()
-                .commands(collect_commands![crate::ai::paper::ai_paper_run])
+                .commands(collect_commands![
+                    crate::ai::paper::ai_paper_run,
+                    crate::ai::paper::ai_paper_save_outline
+                ])
                 .typ::<crate::ai::paper::Dossier>()
                 .typ::<crate::ai::paper::Outline>(),
         ),

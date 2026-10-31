@@ -75,8 +75,17 @@ it, lazily loaded. Each stage and helper is one run of
   The helpers share one `WebPlan`: one source numbering for the paper (kept
   as `Dossier::sources`, for the reference list) and one budget. The stages
   run on the `Model` trait, so tests drive them with a scripted model.
-- **`ai_paper_run`** (`PaperRequest`): plans and researches the paper and
-  saves it with its dossier. The frontend doesn't call it yet.
+- **Outline** (`paper/outline.rs`): the model hands it over with
+  `submit_outline`, which checks it whole - a thesis, 3-12 sections with
+  titles and key points, notes that exist, at least one figure for every
+  two sections, no more generated pictures than the budget allows, lengths
+  that add up to the paper's (characters for Chinese, Japanese and Korean,
+  else words) - and sends back every problem until it holds.
+  `ai_paper_save_outline` keeps the user's edit, dropping notes the dossier
+  doesn't have.
+- **`ai_paper_run`** (`PaperRequest`): researches the paper, outlines it,
+  saves both and stops at `awaitingOutline`. The frontend doesn't call it
+  yet.
 
 ### To come
 
