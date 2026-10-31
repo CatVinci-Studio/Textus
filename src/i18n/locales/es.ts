@@ -361,6 +361,7 @@ para usar una.
   toolMcp: "Usando {arg}",
   toolWebSearch: "Buscando «{arg}» en la web",
   toolWebFetch: "Leyendo {arg}",
+  toolSearchReferences: "Buscando «{arg}» en las referencias",
   webSources: "Fuentes",
   proposalSourcesAsFootnotes: "Añadir las fuentes como notas al pie",
   menuToggleSplitView: "Código y vista previa",

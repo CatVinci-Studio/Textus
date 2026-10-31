@@ -353,6 +353,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolMcp: "Nutzt {arg}",
   toolWebSearch: "Sucht im Web nach „{arg}“",
   toolWebFetch: "Liest {arg}",
+  toolSearchReferences: "Sucht in den Quellen nach „{arg}“",
   webSources: "Quellen",
   proposalSourcesAsFootnotes: "Quellen als Fußnoten einfügen",
   menuToggleSplitView: "Quelltext und Vorschau",

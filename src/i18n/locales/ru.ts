@@ -352,6 +352,7 @@ export default {
   toolMcp: "Использую {arg}",
   toolWebSearch: "Поиск в интернете: «{arg}»",
   toolWebFetch: "Чтение {arg}",
+  toolSearchReferences: "Поиск в источниках: «{arg}»",
   webSources: "Источники",
   proposalSourcesAsFootnotes: "Добавить источники как сноски",
   menuToggleSplitView: "Исходник и просмотр",

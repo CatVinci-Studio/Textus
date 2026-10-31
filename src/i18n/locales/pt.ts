@@ -350,6 +350,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   toolMcp: "Usando {arg}",
   toolWebSearch: "Buscando “{arg}” na web",
   toolWebFetch: "Lendo {arg}",
+  toolSearchReferences: "Buscando “{arg}” nas referências",
   webSources: "Fontes",
   proposalSourcesAsFootnotes: "Adicionar as fontes como notas de rodapé",
   menuToggleSplitView: "Código e pré-visualização",

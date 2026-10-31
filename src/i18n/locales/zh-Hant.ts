@@ -315,6 +315,7 @@ export default {
   toolMcp: "正在使用 {arg}",
   toolWebSearch: "在網路上搜尋「{arg}」",
   toolWebFetch: "讀取 {arg}",
+  toolSearchReferences: "在參考資料中檢索「{arg}」",
   webSources: "來源",
   proposalSourcesAsFootnotes: "把來源加為註腳",
   menuToggleSplitView: "原始碼與預覽",
