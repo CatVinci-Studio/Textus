@@ -1123,10 +1123,6 @@ button.settings-skill-action:focus-visible {
   }
 }
 
-.settings-done-button {
-  font-weight: 600;
-}
-
 .settings-category-title {
   margin: 0 0 20px;
   font-size: var(--text-large-title);

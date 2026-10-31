@@ -11,6 +11,7 @@ import { flushSync } from "react-dom";
 import { getUiState, setUiState } from "../../../storage/ui-state";
 import { animate, duration } from "../../../ui/motion";
 import type { AgentPanelTab } from "./AgentPanelView";
+import { phoneTitleRowBottom } from "../../../ui/usePhoneLayout";
 import "./agent-panel.css";
 import "../inline-chat.css";
 
@@ -143,7 +144,7 @@ interface SheetCarry {
 }
 
 function carryOf(sheet: HTMLElement): SheetCarry {
-  const max = maxSheetHeight(sheet);
+  const max = maxSheetHeight();
   return {
     sheet,
     max,
@@ -396,9 +397,6 @@ export function AgentPanelSheetGrip({
 }
 
 /** The sheet's full height: the screen below the title row. */
-function maxSheetHeight(sheet: HTMLElement): number {
-  const bar = parseFloat(
-    getComputedStyle(sheet).getPropertyValue("--mobile-bar") || "44",
-  );
-  return window.innerHeight - (Number.isFinite(bar) ? bar : 44);
+function maxSheetHeight(): number {
+  return window.innerHeight - phoneTitleRowBottom();
 }

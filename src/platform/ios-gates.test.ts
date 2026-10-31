@@ -36,7 +36,6 @@ const ALLOWED: Record<string, string> = {
   "platform/ipc.ts": "desktop-only commands answer empty",
   "platform/mobile-viewport.ts": "the keyboard resizes the page",
   "plugins/manager.ts": "textus.env.platform tells plugins it is iOS",
-  "settings/SettingsPanel.tsx": "Done, not a cross, closes Settings",
   "settings/sections/providers.tsx": "no keyboard raised on its own",
   "settings/settings-pages.tsx": "no keyboard to bind shortcuts on",
   "sidebar/FileTree.tsx": "nothing above Documents or a granted folder",

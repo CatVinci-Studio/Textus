@@ -139,7 +139,9 @@ If another copy of the e2e suite may be running (another worktree), set
   when touching input handling (`src/editor/keys/`).
 - iOS is the same app in a narrower layout: the same features (plugins,
   themes, skills, tracked changes) through the same code, laid out for a
-  phone by the phone styles and `usePhoneLayout`. Gate only what the
+  phone by the phone styles and `usePhoneLayout`, in Textus's own design
+  language (cards, capsules, rounded menus, the theme's fonts and colours),
+  not UIKit's look. Gate only what the
   platform can't do (more windows, MCP programs, background mode, a menu
   bar) with `#[cfg(desktop)]` and the flags in `platform/capabilities.ts`,
   never to hide a feature. State a command registered on iOS reads is

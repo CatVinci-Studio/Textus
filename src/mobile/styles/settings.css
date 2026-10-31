@@ -1,56 +1,15 @@
-/* Settings on a phone: the desktop's panel filling the screen, so there is
-   no second settings page to keep in step. Only its frame and sizes change. */
-
-/* Done, as iOS writes it: a word in the accent colour. As a .text-button its
-   sidebar rule would stretch it across the header. */
-:root[data-window-chrome="mobile"] .settings-done-button {
-  width: auto;
-  margin: 0;
-  padding: 0 12px;
-  border: none;
-  background: none;
-  color: var(--ui-accent);
-  font-size: var(--text-body);
-}
+/* Settings on a phone: the desktop's panel, its card filling the screen
+   inside the safe area, so there is no second settings page to keep in step.
+   Only its frame and sizes change; it opens as the desktop's dialog does. */
 
 @media (max-width: 760px) {
-  /* The whole screen, title row included, coming up from the bottom as an iOS
-     modal sheet over a dimming page. */
+  /* Over the whole screen, the card kept clear of the status bar and the
+     home indicator. */
   :root[data-window-chrome="mobile"] .settings-backdrop {
     top: 0;
     z-index: var(--z-phone-page);
-    /* The dimming is its own layer so it fades while the sheet stays opaque;
-       faded together, the page showed through the rising sheet. */
-    background: none;
-    animation: none;
-  }
-
-  :root[data-window-chrome="mobile"] .settings-backdrop::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: var(--ui-overlay);
-    animation: motion-fade-in var(--dur-sheet) var(--ease-standard);
-  }
-
-  :root[data-window-chrome="mobile"] .settings-panel {
-    position: relative;
-    animation: motion-sheet-in var(--dur-sheet) var(--ease-spring);
-  }
-
-  :root[data-window-chrome="mobile"] .settings-backdrop[data-state="closing"] {
-    animation: none;
-  }
-
-  :root[data-window-chrome="mobile"]
-    .settings-backdrop[data-state="closing"]::before {
-    animation: motion-fade-out var(--dur-sheet-exit) var(--ease-in) forwards;
-  }
-
-  :root[data-window-chrome="mobile"]
-    .settings-backdrop[data-state="closing"]
-    > .settings-panel {
-    animation: motion-sheet-out var(--dur-sheet-exit) var(--ease-in) forwards;
+    padding: calc(var(--safe-top) + 8px) 8px
+      calc(env(safe-area-inset-bottom, 0px) + 8px);
   }
 
   :root[data-window-chrome="mobile"] .settings-panel {
@@ -58,11 +17,6 @@
     max-width: none;
     height: 100%;
     max-height: none;
-    border: none;
-    border-radius: 0;
-    /* The spring overshoots a few points past the top: the page's colour
-       fills in below its edge, where the document showed. */
-    box-shadow: 0 48px 0 var(--ui-grouped-page);
   }
 
   /* A navigation bar: the title centred, Done at the right. */
@@ -75,40 +29,33 @@
     font-weight: 600;
   }
 
-  :root[data-window-chrome="mobile"] .settings-done-button {
+  :root[data-window-chrome="mobile"] .settings-close-button {
     position: absolute;
     top: 0;
     right: 4px;
-    min-height: 44px;
+    width: 44px;
+    height: 44px;
   }
 
-  /* Back, as iOS writes it: a chevron and the page it goes to. */
+  /* The bar's symbol size, as the title row's. */
+  :root[data-window-chrome="mobile"] .settings-close-button svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Back: a chevron in the bar's left corner, as the × is in its right. */
   :root[data-window-chrome="mobile"] .settings-bar-back {
     position: absolute;
     top: 0;
     left: 4px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    width: auto;
-    max-width: 30%;
-    min-height: 44px;
+    width: 44px;
+    height: 44px;
     margin: 0;
-    padding: 0 8px;
-    border: none;
-    background: none;
-    color: var(--ui-accent);
-    font-size: var(--text-body);
-    font-weight: 400;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   :root[data-window-chrome="mobile"] .settings-bar-back .settings-back-chevron {
-    flex: none;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
   }
 
   /* The bar has the way back; the page doesn't repeat it. */
@@ -116,12 +63,15 @@
     display: none;
   }
 
-  /* The list of categories: one inset grouped card under the search box,
-     each row leading to its page. */
+  /* The list of categories: one card under the search box, as the
+     settings' own cards are, each row leading to its page. */
+  /* On its own the list is the page, in the panel's colour: the card of
+     categories stands out on it as the settings' cards do. */
   :root[data-window-chrome="mobile"] .settings-sidebar {
     flex: 1;
     overflow-y: auto;
     overscroll-behavior: contain;
+    background: var(--ui-bg);
   }
 
   :root[data-window-chrome="mobile"] .settings-search {
@@ -135,8 +85,9 @@
     margin: 16px 16px 32px;
     padding: 0;
     overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
     border-radius: var(--shape-m);
-    background: var(--ui-grouped-card);
+    background: var(--ui-subtle);
   }
 
   :root[data-window-chrome="mobile"] .settings-nav-item {
@@ -264,33 +215,6 @@
     height: 36px;
   }
 
-  /* iOS's inset grouped style, in the theme's colours: cards on a tinted
-     page (lighter cards on a darker page in dark), hairlines a device pixel
-     thin. On the root so the safe-area strips match. */
-  :root[data-window-chrome="mobile"] {
-    --ui-grouped-page: color-mix(in srgb, var(--ui-text) 5%, var(--ui-bg));
-    --ui-grouped-card: var(--ui-surface);
-  }
-
-  :root[data-window-chrome="mobile"] .settings-panel {
-    background: var(--ui-grouped-page);
-  }
-
-  :root[data-window-chrome="mobile"][data-theme="dark"] {
-    --ui-grouped-page: color-mix(in srgb, var(--ui-bg) 55%, black);
-    --ui-grouped-card: color-mix(in srgb, var(--ui-text) 6%, var(--ui-bg));
-  }
-
-  :root[data-window-chrome="mobile"] .settings-sidebar {
-    background: var(--ui-grouped-page);
-  }
-
-  :root[data-window-chrome="mobile"]
-    :is(.settings-group-body, .settings-advanced) {
-    border: none;
-    background: var(--ui-grouped-card);
-  }
-
   /* A built-in skill: Customize… on its own line under what it does; beside the
      switch it squeezed the text and was cut short. */
   :root[data-window-chrome="mobile"] .settings-builtin-skill {
@@ -313,13 +237,6 @@
   /* No hover on glass: a tapped row stays as it was. */
   :root[data-window-chrome="mobile"] .settings-nav-item:hover:not(:active) {
     background: transparent;
-  }
-}
-
-@media (max-width: 760px) and (prefers-color-scheme: dark) {
-  :root[data-window-chrome="mobile"]:not([data-theme="light"]) {
-    --ui-grouped-page: #000;
-    --ui-grouped-card: #1c1c1e;
   }
 }
 

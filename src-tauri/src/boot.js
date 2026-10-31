@@ -1,4 +1,4 @@
-/* global window, document, MutationObserver */
+/* global window, document, navigator, MutationObserver */
 // Runs in every app webview before the page's own scripts (settings.rs's
 // boot_script appends the call with the snapshot). Two jobs:
 //

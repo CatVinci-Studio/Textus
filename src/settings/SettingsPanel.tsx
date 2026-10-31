@@ -44,7 +44,6 @@ import type {
 import { useModalDialog } from "../ui/useModalDialog";
 import { usePresenceProps } from "../ui/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
-import { isIOSApp } from "../platform/capabilities";
 
 // The settings dialog shell: navigation, search and subpages, for every
 // platform. On a phone the same panel fills the screen as iOS's Settings
@@ -234,11 +233,11 @@ export function SettingsPanel({
           {pushed && (
             <button
               type="button"
-              className="text-button settings-bar-back"
+              className="icon-button settings-bar-back"
+              aria-label={backLabel}
               onClick={nav.back}
             >
               <ChevronIcon className="settings-back-chevron" />
-              {backLabel}
             </button>
           )}
           <span>
@@ -248,23 +247,13 @@ export function SettingsPanel({
                 : categoryLabel
               : t.settingsTitle}
           </span>
-          {isIOSApp ? (
-            // iOS closes a sheet like this with a word, not a cross.
-            <button
-              className="text-button settings-done-button"
-              onClick={onClose}
-            >
-              {t.settingsDone}
-            </button>
-          ) : (
-            <button
-              className="icon-button settings-close-button"
-              aria-label={t.windowClose}
-              onClick={onClose}
-            >
-              <CloseIcon />
-            </button>
-          )}
+          <button
+            className="icon-button settings-close-button"
+            aria-label={t.windowClose}
+            onClick={onClose}
+          >
+            <CloseIcon />
+          </button>
         </div>
 
         <div className="settings-layout" data-nav={nav.direction ?? undefined}>

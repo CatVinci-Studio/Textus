@@ -11,16 +11,14 @@
   background: var(--ui-bg);
   color: var(--ui-text);
   font-family: var(--font-sans);
-  /* A modal sheet, like Settings on the phone: up from the bottom edge,
-     and back down when it closes. */
-  animation: motion-sheet-in var(--dur-sheet) var(--ease-spring);
-  /* The spring overshoots a few points past the top: its own colour
-     fills in below its edge, where document text showed. */
-  box-shadow: 0 48px 0 var(--ui-bg);
+  /* Clear of the status bar and the home indicator it runs under. */
+  padding: var(--safe-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  /* As the app's dialogs open: grown out of the middle as it fades in. */
+  animation: motion-dialog-in var(--dur-base) var(--ease-out);
 }
 
 .document-list[data-state="closing"] {
-  animation: motion-sheet-out var(--dur-sheet-exit) var(--ease-in) forwards;
+  animation: motion-shrink-out var(--dur-fast) var(--ease-in) forwards;
 }
 
 /* Title centred on the screen whatever the two buttons' widths. */

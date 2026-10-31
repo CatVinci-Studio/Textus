@@ -24,6 +24,11 @@ final class KeyboardFit {
     // that leaves the page pulled up under the status bar.
     webview.scrollView.isScrollEnabled = false
     webview.scrollView.bounces = false
+    // The page runs under the status bar and the home indicator and keeps
+    // clear of them itself (env(safe-area-inset-*)), so its title row and
+    // what covers it reach the screen's edges; inset, the strips were the
+    // web view's own white.
+    webview.scrollView.contentInsetAdjustmentBehavior = .never
     Self.hideFormAccessory(in: webview)
     // The page never scrolls as a whole - everything that scrolls does so
     // inside it - yet raising the keyboard still had WebKit move it: its
@@ -98,9 +103,8 @@ final class KeyboardFit {
     if let subclass = subclass { object_setClass(content, subclass) }
   }
 
-  /// The page's resting position. Not zero: the scroll view insets the
-  /// page below the status bar, so "the top" is minus that inset - an
-  /// offset of zero pushed the title row and the text under the clock.
+  /// The page's resting position: its top, less any inset the scroll view
+  /// still adds.
   private func pinToTop() {
     guard let scroll = webview?.scrollView else { return }
     scroll.setContentOffset(

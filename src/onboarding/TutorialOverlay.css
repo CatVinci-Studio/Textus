@@ -354,7 +354,7 @@
 
   /* The AI panel is a sheet from the bottom here: the card goes up. */
   .app-shell:has(> .agent-panel) .tutorial-card {
-    top: calc(var(--mobile-bar, 0px) + 12px);
+    top: calc(var(--mobile-top, 0px) + 12px);
     bottom: auto;
     max-height: 38vh;
   }

@@ -9,7 +9,6 @@ const t = {
   navAbout: "About",
   imageGenerationGroupLabel: "Pictures",
   settingsTitle: "Settings",
-  settingsDone: "Done",
   windowClose: "Close",
   navGeneral: "General",
   navEditor: "Editor & Appearance",
@@ -663,27 +662,6 @@ test.describe("desktop", () => {
   });
 });
 
-test.describe("iPad", () => {
-  test.use({ viewport: { width: 1032, height: 1376 }, hasTouch: true });
-
-  test("Done is a word at the right of the title, not a bar across it", async ({
-    page,
-  }) => {
-    await page.addInitScript(() => {
-      Object.defineProperty(navigator, "platform", { get: () => "iPad" });
-    });
-    await openApp(page, { settings: { language: "en" } });
-    const panel = await openSettings(page);
-    const done = panel.getByRole("button", { name: t.settingsDone });
-    const header = await panel.locator(".settings-header").boundingBox();
-    const box = await done.boundingBox();
-    expect(box!.width).toBeLessThan(120);
-    // Its right edge near the header's right edge.
-    expect(header!.x + header!.width - (box!.x + box!.width)).toBeLessThan(40);
-    await expect(done).toHaveCSS("border-top-style", "none");
-  });
-});
-
 test.describe("phone", () => {
   test.use(PHONE);
 
@@ -710,7 +688,8 @@ test.describe("phone", () => {
     );
     for (const [a, b] of boxes.slice(1).map((box, i) => [boxes[i], box]))
       expect(b.top).toBeGreaterThanOrEqual(a.bottom - 1);
-    expect(boxes[0].width).toBeGreaterThan(375 - 40);
+    // The card inside the panel, itself inset from the screen.
+    expect(boxes[0].width).toBeGreaterThan(375 - 60);
 
     // In: the bar names the page and offers the way back; the list is gone.
     await items.filter({ hasText: t.navEditor }).tap();
@@ -813,7 +792,7 @@ test.describe("phone", () => {
     await openPhone(page);
     await page.locator('[data-active-tab="true"] .ProseMirror').focus();
     const panel = await openSettings(page);
-    await panel.getByRole("button", { name: t.settingsDone }).tap();
+    await panel.getByRole("button", { name: "Close" }).tap();
     await expect(panel).toHaveCount(0);
     expect(
       await page.evaluate(

@@ -72,7 +72,7 @@
   }
 
   :root[data-window-chrome="mobile"] .agent-panel-sheet-full {
-    top: var(--mobile-bar);
+    top: var(--mobile-top);
   }
 
   :root[data-window-chrome="mobile"] .agent-panel-resizer {
@@ -117,11 +117,11 @@
 
   /* The docked column clears the taller title row. */
   :root[data-window-chrome="mobile"] .agent-panel {
-    padding-top: var(--mobile-bar);
+    padding-top: var(--mobile-top);
   }
 
   :root[data-window-chrome="mobile"] .agent-panel-placeholder {
-    inset: var(--mobile-bar) 0 0;
+    inset: var(--mobile-top) 0 0;
   }
 }
 

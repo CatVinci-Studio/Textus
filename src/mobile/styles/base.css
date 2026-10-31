@@ -11,6 +11,10 @@
 
 :root[data-window-chrome="mobile"] {
   --mobile-bar: 44px;
+  /* The page runs under the status bar: the title row takes its height, and
+     whatever clears the row clears both. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --mobile-top: calc(var(--safe-top) + var(--mobile-bar));
   /* No grey flash over whatever a finger lands on. */
   -webkit-tap-highlight-color: transparent;
   /* Phone-only layers. A full-screen page covers the find bar (300) and the
@@ -27,9 +31,8 @@
   font-size: max(16px, 1em);
 }
 
-/* The strips under the status bar and the home indicator are page
-   background: the document's, not the chrome's, so the page runs to both
-   edges of the screen. */
+/* The page runs under the status bar and the home indicator: what shows
+   there is its own background. */
 :root[data-window-chrome="mobile"] body {
   background: var(--ui-bg);
 }
@@ -43,8 +46,8 @@
 /* Title row: 44pt, Apple's minimum touch target, with the menu at the left
    edge (no traffic lights to make room for) and the AI toggle at the right. */
 :root[data-window-chrome="mobile"] .window-bar {
-  height: var(--mobile-bar);
-  padding: 0 4px;
+  height: var(--mobile-top);
+  padding: var(--safe-top) 4px 0;
   /* One surface from the status bar down through the page. */
   background: var(--ui-bg);
 }
@@ -93,78 +96,4 @@
   svg {
   width: 20px;
   height: 20px;
-}
-
-/* WebKit paints the safe-area strips from the body's background colour alone.
-   While something covers the page they take its colour, so each scrim is
-   pre-mixed over the page here: --ui-overlay and --ui-overlay-strong as
-   solid colours. A closing surface gives them back. */
-:root[data-window-chrome="mobile"] {
-  --phone-dim-overlay: color-mix(in srgb, var(--ui-bg) 70%, rgb(20 27 40));
-  --phone-dim-strong: color-mix(in srgb, var(--ui-bg) 40%, black);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root[data-window-chrome="mobile"]:not([data-theme="light"]) {
-    --phone-dim-overlay: color-mix(in srgb, var(--ui-bg) 52%, black);
-    --phone-dim-strong: color-mix(in srgb, var(--ui-bg) 28%, black);
-  }
-}
-
-:root[data-window-chrome="mobile"][data-theme="dark"] {
-  --phone-dim-overlay: color-mix(in srgb, var(--ui-bg) 52%, black);
-  --phone-dim-strong: color-mix(in srgb, var(--ui-bg) 28%, black);
-}
-
-/* Settings fills the phone's screen with iOS's grouped page colour, which the
-   strips take too. On an iPad it is a dialog over the dimmed page. */
-@media (max-width: 760px) {
-  :root[data-window-chrome="mobile"]:has(
-      .settings-backdrop:not([data-state="closing"])
-    )
-    body {
-    background: var(--ui-grouped-page);
-  }
-}
-
-@media (min-width: 761px) {
-  :root[data-window-chrome="mobile"]:has(
-      .settings-backdrop:not([data-state="closing"])
-    )
-    body {
-    background: var(--phone-dim-overlay);
-  }
-}
-
-/* Every scrim over the whole screen: the first-launch language card, the
-   tutorial, dialogs, action sheets and bottom cards. */
-:root[data-window-chrome="mobile"]:has(
-    :is(
-      .language-welcome-backdrop,
-      .tutorial-backdrop,
-      .close-prompt-overlay,
-      .action-sheet-scrim,
-      .bottom-card-scrim
-    ):not([data-state="closing"])
-  )
-  body {
-  background: var(--phone-dim-overlay);
-}
-
-/* The drawer's scrim is drawn at phone width only. */
-@media (max-width: 760px) {
-  :root[data-window-chrome="mobile"]:has(
-      .sidebar-scrim:not([data-state="closing"])
-    )
-    body {
-    background: var(--phone-dim-overlay);
-  }
-}
-
-/* A diagram opened full screen, over the darker scrim. */
-:root[data-window-chrome="mobile"]:has(
-    .diagram-viewer:not(.diagram-viewer-leaving)
-  )
-  body {
-  background: var(--phone-dim-strong);
 }
