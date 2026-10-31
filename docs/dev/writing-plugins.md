@@ -491,8 +491,8 @@ system allows:
 - The commands of `app/plugins` are under Plugins in the title row's menu.
   There is no tray (`app/tray`) and no background mode: `background` code
   and schedules run on the desktop only.
-- **Say where your plugin runs.** A plugin left without `platforms` is
-  offered everywhere. One that can't work on iOS (it needs a program on the
+- **Say where your plugin runs.** Name `platforms` in every manifest (the
+  catalog requires it); one left without it is offered everywhere. One that can't work on iOS (it needs a program on the
   computer such as Zotero or a local server, or opens any web page) sets
   `"platforms": ["desktop"]`, and Textus on iOS neither lists nor loads it.
   A plugin that works in the background, with `background` code or
