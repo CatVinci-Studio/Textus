@@ -3,6 +3,7 @@ import { fs } from "../../platform/ipc";
 import type { HoverTarget } from "../extension-points";
 import { linkTarget } from "../markdown/link-target";
 import { parseWikilink } from "../markdown/wikilink";
+import { windowFolder } from "../../platform/window-folder";
 
 /** A citation as Pandoc and Zotero write it: `[@key]`, `[@key, p. 4]`,
  *  `[see @key]`, or several in one, `[@a; @b]`. */
@@ -33,7 +34,11 @@ export function hoverSpot(
       resolve: async () => {
         const parsed = parseWikilink(source);
         if (!parsed?.note || !docPath) return null;
-        const path = await fs.resolveVaultNote(docPath, parsed.note);
+        const path = await fs.resolveVaultNote(
+          docPath,
+          parsed.note,
+          windowFolder(),
+        );
         return path
           ? { type: "document", path, heading: parsed.heading || null }
           : null;

@@ -36,13 +36,13 @@ fn touch(root: &Path, rel: &str) -> PathBuf {
 }
 
 fn resolve(doc: &Path, link: &str) -> Option<PathBuf> {
-    resolve_with(doc, link, LinkKind::Image, &mut |root, _| {
+    resolve_with(doc, None, link, LinkKind::Image, &mut |root, _| {
         Arc::new(index_vault(root))
     })
 }
 
 fn resolve_note(doc: &Path, link: &str) -> Option<PathBuf> {
-    resolve_with(doc, link, LinkKind::Note, &mut |root, _| {
+    resolve_with(doc, None, link, LinkKind::Note, &mut |root, _| {
         Arc::new(index_vault(root))
     })
 }
@@ -84,14 +84,39 @@ fn the_vault_is_the_nearest_folder_with_dot_obsidian() {
     let vault = dir.path().join("vault");
     fs::create_dir_all(vault.join(".obsidian")).unwrap();
     let doc = touch(&vault, "notes/deep/a.md");
-    assert_eq!(vault_root(&doc), Some(vault));
+    assert_eq!(vault_root(&doc, None), Some(vault));
 }
 
 #[test]
 fn without_dot_obsidian_the_documents_folder_is_the_vault() {
     let dir = tempdir("without_dot_obsidian_the_documents_folder_is_the_vault");
     let doc = touch(dir.path(), "notes/a.md");
-    assert_eq!(vault_root(&doc), Some(dir.path().join("notes")));
+    assert_eq!(vault_root(&doc, None), Some(dir.path().join("notes")));
+}
+
+#[test]
+fn without_dot_obsidian_the_open_folder_holding_the_document_is_the_vault() {
+    let dir = tempdir("without_dot_obsidian_the_open_folder_holding_the_document_is_the_vault");
+    let doc = touch(dir.path(), "notes/deep/a.md");
+    let other = touch(dir.path(), "people/Ann.md");
+    assert_eq!(
+        vault_root(&doc, Some(dir.path())),
+        Some(dir.path().to_path_buf())
+    );
+    let found = resolve_with(
+        &doc,
+        Some(dir.path()),
+        "Ann",
+        LinkKind::Note,
+        &mut |root, _| Arc::new(index_vault(root)),
+    );
+    assert_eq!(found, Some(other));
+    // A folder the document isn't in is no vault for it.
+    let elsewhere = dir.path().join("people");
+    assert_eq!(
+        vault_root(&doc, Some(&elsewhere)),
+        Some(dir.path().join("notes/deep"))
+    );
 }
 
 #[test]
@@ -225,14 +250,20 @@ fn a_new_file_is_found_after_a_miss_rebuilds_the_index() {
     let stale = Arc::new(Vec::new());
     let mut asked_fresh = false;
     let image = touch(dir.path(), "late/new.png");
-    let found = resolve_with(&doc, "new.png", LinkKind::Image, &mut |root, fresh| {
-        if fresh {
-            asked_fresh = true;
-            Arc::new(index_vault(root))
-        } else {
-            stale.clone()
-        }
-    });
+    let found = resolve_with(
+        &doc,
+        None,
+        "new.png",
+        LinkKind::Image,
+        &mut |root, fresh| {
+            if fresh {
+                asked_fresh = true;
+                Arc::new(index_vault(root))
+            } else {
+                stale.clone()
+            }
+        },
+    );
     assert!(asked_fresh);
     assert_eq!(found, Some(image));
 }
