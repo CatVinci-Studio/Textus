@@ -17,6 +17,14 @@ describe("subscript and superscript", () => {
     expect(t.markdown()).toBe(source);
   });
 
+  it("strikes out one tilde each side away from a word, as GitHub does", async () => {
+    const source = "Was ~wrong~ and ~two words~; CO~2~ and H~2~O stay.";
+    const t = await openView(source);
+    expect(tags(t.view.dom, "del")).toEqual(["wrong", "two words"]);
+    expect(tags(t.view.dom, "sub")).toEqual(["2", "2"]);
+    expect(t.markdown()).toBe(source);
+  });
+
   it("leaves a caret with a space before its partner as text", async () => {
     const t = await openView("2^10 and 3^4 are powers.");
     expect(t.view.dom.querySelector("sup")).toBeNull();
@@ -48,6 +56,12 @@ describe("subscript and superscript", () => {
     t.type("H~2~O");
     expect(tags(t.view.dom, "sub")).toEqual(["2"]);
     expect(t.markdown()).toBe("H~2~O");
+  });
+
+  it("makes no subscript of tildes typed away from a word", async () => {
+    const t = await openView("");
+    t.type("so ~gone~ now");
+    expect(t.view.dom.querySelector("sub")).toBeNull();
   });
 
   it("keeps typed text with spaces between tildes or carets as text", async () => {
