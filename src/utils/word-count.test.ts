@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { countWords } from "./word-count";
 
 describe("countWords", () => {
@@ -37,5 +37,29 @@ describe("countWords", () => {
     const doc = "Two words.\n\n红楼梦\n\n```\ncode\n```\n\nthree more words";
     expect(countWords(doc).words).toBe(2 + 3 + 3);
     expect(countWords(doc.replace("Two", "Now two")).words).toBe(3 + 3 + 3);
+  });
+
+  describe("its paragraph cache", () => {
+    const segments = () => vi.spyOn(Intl.Segmenter.prototype, "segment");
+    afterEach(() => vi.restoreAllMocks());
+    const doc = (tag: string, n: number) =>
+      Array.from({ length: n }, (_, i) => `${tag} ${i}`).join("\n\n");
+
+    it("keeps a document counted while another one is", () => {
+      const big = doc("big", 30_000);
+      countWords(big);
+      countWords(doc("small", 10));
+      const spy = segments();
+      expect(countWords(big).words).toBe(60_000);
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it("recounts only the edited paragraph past 50,000 paragraphs", () => {
+      const long = doc("long", 60_000);
+      countWords(long);
+      const spy = segments();
+      expect(countWords(long + " more").words).toBe(120_001);
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
   });
 });

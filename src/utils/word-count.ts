@@ -32,7 +32,11 @@ function countText(text: string): number {
 }
 
 // Each paragraph's count, cached by its text: segmenting a long document
-// whole after every edit was slow, and no word crosses a line break.
+// whole after every edit was slow, and no word crosses a line break. Kept to
+// PARAGRAPHS_KEPT or twice the last count's paragraphs, whichever is more;
+// past that only the last count's paragraphs stay. (Cleared at a fixed cap,
+// a longer document was recounted whole on every edit; keeping only the last
+// count, switching back from another tab recounted it whole.)
 const PARAGRAPHS_KEPT = 50_000;
 const paragraphCounts = new Map<string, number>();
 
@@ -45,7 +49,6 @@ function countParagraph(text: string): number {
   let words = paragraphCounts.get(text);
   if (words === undefined) {
     words = countText(text.replace(IMAGE_TITLE_METADATA, ""));
-    if (paragraphCounts.size >= PARAGRAPHS_KEPT) paragraphCounts.clear();
     paragraphCounts.set(text, words);
   }
   return words;
@@ -59,8 +62,12 @@ export function countWords(markdown: string): WordCount {
   let words = 0;
   let paragraph = "";
   let inFence = false;
+  const paragraphs: string[] = [];
   const flush = () => {
-    if (paragraph) words += countParagraph(paragraph);
+    if (paragraph) {
+      words += countParagraph(paragraph);
+      paragraphs.push(paragraph);
+    }
     paragraph = "";
   };
   for (const line of markdown.split("\n")) {
@@ -74,5 +81,12 @@ export function countWords(markdown: string): WordCount {
     else paragraph += line + "\n";
   }
   flush();
+  if (paragraphCounts.size > Math.max(PARAGRAPHS_KEPT, 2 * paragraphs.length)) {
+    const kept = paragraphs.map(
+      (text) => [text, paragraphCounts.get(text)!] as const,
+    );
+    paragraphCounts.clear();
+    for (const [text, count] of kept) paragraphCounts.set(text, count);
+  }
   return { words };
 }
