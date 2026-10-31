@@ -8,12 +8,7 @@ import { invoke as __TAURI_INVOKE, Channel } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	/**
-	 *  Starts writing a paper on `topic`. For now only the paper and its first
-	 *  phase: the stages that follow arrive with the research branch. Not called
-	 *  by the frontend yet.
-	 */
-	ai_paper_run: (topic: string, language: string, targetChars: number, channel: Channel<PaperEvent_Deserialize>) => __TAURI_INVOKE<Paper>("ai_paper_run", { topic, language, targetChars, channel }),
+	ai_paper_run: (request: PaperRequest_Deserialize, channel: Channel<PaperEvent_Deserialize>) => __TAURI_INVOKE<Paper>("ai_paper_run", { request, channel }),
 };
 
 /* Types */
@@ -31,11 +26,21 @@ export type Dossier = Dossier_Serialize | Dossier_Deserialize;
 /**  What the research helpers found. Kept as `dossier.json`. */
 export type Dossier_Deserialize = {
 	notes: Note_Deserialize[],
+	/**
+	 *  The sources the notes cite, numbered once for the whole paper: what
+	 *  `Note::sources` and the text's `[n]` point at, and the reference list.
+	 */
+	sources?: WebSource[],
 };
 
 /**  What the research helpers found. Kept as `dossier.json`. */
 export type Dossier_Serialize = {
 	notes: Note_Serialize[],
+	/**
+	 *  The sources the notes cite, numbered once for the whole paper: what
+	 *  `Note::sources` and the text's `[n]` point at, and the reference list.
+	 */
+	sources: WebSource[],
 };
 
 export type FigureKind = 
@@ -163,6 +168,59 @@ export type PaperPhase = "planning" | "researching" | "outlining" |
 /**  Waiting for the user to approve the outline. */
 "awaitingOutline" | "drafting" | "illustrating" | "reviewing" | "finishing" | "done";
 
+/**
+ *  Writes a paper on `topic` in the document's project: for now its
+ *  research - the questions planned, the helpers' notes - kept in
+ *  `.textus/papers/<id>/`. The outline and drafting follow in later
+ *  branches. Stopped like any request, by `ai_cancel` with `request_id`.
+ *  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts.
+ */
+export type PaperRequest = PaperRequest_Serialize | PaperRequest_Deserialize;
+
+/**
+ *  Writes a paper on `topic` in the document's project: for now its
+ *  research - the questions planned, the helpers' notes - kept in
+ *  `.textus/papers/<id>/`. The outline and drafting follow in later
+ *  branches. Stopped like any request, by `ai_cancel` with `request_id`.
+ *  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts.
+ */
+export type PaperRequest_Deserialize = {
+	provider: string,
+	model?: string | null,
+	docPath?: string | null,
+	workspaceRoot?: string | null,
+	/**  What web_search uses when the model can't search by itself. */
+	searchService?: string | null,
+	searxngUrl?: string | null,
+	requestId: string,
+	topic: string,
+	/**  The language it is written in, a BCP 47 tag. */
+	language: string,
+	targetChars: number,
+};
+
+/**
+ *  Writes a paper on `topic` in the document's project: for now its
+ *  research - the questions planned, the helpers' notes - kept in
+ *  `.textus/papers/<id>/`. The outline and drafting follow in later
+ *  branches. Stopped like any request, by `ai_cancel` with `request_id`.
+ *  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts.
+ */
+export type PaperRequest_Serialize = {
+	provider: string,
+	model: string | null,
+	docPath: string | null,
+	workspaceRoot: string | null,
+	/**  What web_search uses when the model can't search by itself. */
+	searchService: string | null,
+	searxngUrl: string | null,
+	requestId: string,
+	topic: string,
+	/**  The language it is written in, a BCP 47 tag. */
+	language: string,
+	targetChars: number,
+};
+
 /**  A paper's limits and what it has used of them. */
 export type ResearchBudget = {
 	limits: BudgetCounts,
@@ -174,4 +232,11 @@ export type SectionStatus = "waiting" | "drafting" |
 "drafted" | 
 /**  Sent to the document as a proposal. */
 "proposed" | "revising" | "failed";
+
+/**  One web page a reply cites as `[n]`. Exported as WebSource. */
+export type WebSource = {
+	n: number,
+	url: string,
+	title: string,
+};
 

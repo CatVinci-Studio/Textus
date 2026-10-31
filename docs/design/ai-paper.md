@@ -67,12 +67,20 @@ it, lazily loaded. Each stage and helper is one run of
   `dossier.json`, `outline.json` in the project folder, each written
   atomically, so a stopped paper can resume and the user can read the
   research. An id is lowercase letters and digits only.
-- **`ai_paper_run`**: a stub that makes the paper and sends its first
-  phase. The frontend doesn't call it yet.
+- **Research** (`paper/research.rs`): one tool-less step plans 4-10
+  questions; a helper per question, four at a time, searches and reads and
+  keeps findings with `add_note` - a claim, its evidence, an optional quote,
+  its sources and leads to pictures or data. A note must cite a number a
+  result has or a page's address, so nothing unsourced enters the dossier.
+  The helpers share one `WebPlan`: one source numbering for the paper (kept
+  as `Dossier::sources`, for the reference list) and one budget. The stages
+  run on the `Model` trait, so tests drive them with a scripted model.
+- **`ai_paper_run`** (`PaperRequest`): plans and researches the paper and
+  saves it with its dossier. The frontend doesn't call it yet.
 
 ### To come
 
-Research, the outline card, drafting, review and the entry point, each a
+The outline card, drafting, review and the entry point, each a
 branch stacked on the one before; scholarly search, the reference library,
 the `chart` block and web pictures are independent tools the stages pick up
 once they are registered.
