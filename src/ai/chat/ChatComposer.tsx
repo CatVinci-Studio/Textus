@@ -16,7 +16,7 @@ import {
   type PickerSkill,
 } from "./skill-picker";
 import { basename } from "../../utils/path";
-import { AGENT_MODES, type PanelMode } from "../../prefs/SettingsContext";
+import type { PanelMode } from "../../prefs/SettingsContext";
 import {
   CloseIcon,
   GenericFileIcon,
@@ -316,10 +316,13 @@ export function ChatComposer({
     research: [labels.modeResearch, labels.modeResearchHint],
   };
   // Quick Ask works on the selection: it writes or reviews, never creates.
-  // Research is the panel's, where its paper is followed.
+  // Research is the panel's, where its paper is followed; it sits before
+  // Create, which makes things for the app rather than the document.
   const modes: ModeChoice[] = [
-    ...AGENT_MODES.filter((m) => !compact || m !== "create"),
+    "write" as const,
+    "review" as const,
     ...(onResearch ? (["research"] as const) : []),
+    ...(compact ? [] : (["create"] as const)),
   ].map((value) => ({
     value,
     label: modeLabels[value][0],

@@ -349,7 +349,7 @@ describe("ChatComposer selection chip", () => {
           (option) =>
             option.querySelector(".mode-picker-mode-name")?.textContent,
         ),
-    ).toEqual(["Write", "Review", "Create", "Research"]);
+    ).toEqual(["Write", "Review", "Research", "Create"]);
     fireEvent.click(screen.getByRole("option", { name: "Research" }));
     const box = screen.getByPlaceholderText("What the paper is about");
     fireEvent.change(box, { target: { value: "  Green roofs " } });
