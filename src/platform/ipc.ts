@@ -332,7 +332,8 @@ export const ai = {
    *  `modes`, over an earlier version. Its path. */
   saveWrittenSkill: (text: string, modes: AgentMode[]) =>
     command("save_written_skill", text, modes),
-  /** What the writer will probably say next after a reply, or null. */
+  /** What the writer will probably say next after a reply: up to three
+   *  messages, most likely first (Rust: ai/next_message.rs). */
   suggestNextMessage: (args: {
     provider: string;
     model: string | null;

@@ -295,8 +295,9 @@ utiliser une.
   learnLabel: "Appris de vos choix de révision",
   suggestNextMessageLabel: "Suggérer le message suivant",
   suggestNextMessageHint:
-    "Après chaque réponse, ce que vous direz sans doute ensuite s'affiche en gris dans la zone de saisie ; Tab le reprend. Cela coûte une courte requête de plus.",
+    "Après chaque réponse, jusqu'à trois choses que vous direz sans doute ensuite s'affichent en boutons au-dessus de la zone de saisie, la plus probable aussi en gris dedans ; un clic l'envoie, Tab reprend celle en gris. Cela coûte une courte requête de plus.",
   composerSuggestionTab: "Tab",
+  composerFollowUps: "Messages suivants suggérés",
   rememberAutomaticallyLabel: "Retenir automatiquement",
   rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le dans l'onglet Mémoire. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
   toolRemember: "Mémorisation",

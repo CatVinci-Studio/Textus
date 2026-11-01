@@ -13,6 +13,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
   return {
     placeholder: t.agentInputPlaceholder,
     suggestionTab: t.composerSuggestionTab,
+    followUps: t.composerFollowUps,
     queued: t.agentQueued,
     queuedPaused: t.agentQueuedPaused,
     queueContinue: t.agentQueueContinue,

@@ -485,8 +485,8 @@ export function useAgentConversation(
     error,
     retryable,
     lastOptions: () => lastOptionsRef.current,
-    /** What the writer will probably say next. */
-    suggestion: next.suggestion,
+    /** What the writer will probably say next, most likely first. */
+    suggestions: next.suggestions,
     send,
     stop,
     retry,

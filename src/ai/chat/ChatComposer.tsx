@@ -28,6 +28,7 @@ import {
 import { rememberDeepThinking } from "./deep-thinking";
 import { ModeAndModelPicker, ModePicker, type ModeChoice } from "./ModePicker";
 import { Tooltip } from "../../ui/Tooltip";
+import { FollowUpChips } from "./FollowUpChips";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 
 import { useComposerSkills } from "./useComposerSkills";
@@ -87,7 +88,7 @@ export function ChatComposer({
   onEscape,
   onModeChange,
   handle,
-  suggestion = null,
+  suggestions = [],
 }: ChatComposerProps) {
   const phone = usePhoneLayout();
   const picker = labels.picker ?? defaultPickerLabels();
@@ -221,8 +222,9 @@ export function ChatComposer({
   /** The skill a typed /word names, by its name or any alias. */
   const resolveName = (token: string) => resolveSkillName(token, available);
 
-  function submit() {
-    const typed = input.trim();
+  /** Sends what is typed, or a suggested next message picked instead. */
+  function submit(text: string = input) {
+    const typed = text.trim();
     const message = resolveSkillMessage(typed, skills, resolveName);
     // While a reply is coming the message joins the queue.
     if (!message) return;
@@ -297,8 +299,10 @@ export function ChatComposer({
     if (e.key === "Escape") onEscape();
   }
 
-  // The suggested next message, while the box is empty.
-  const offered = !busy && input === "" ? suggestion : null;
+  // The suggested next messages, while the box is empty: the likeliest grey
+  // in it, all as buttons over it (not in Quick Ask's one-line box).
+  const followUps = !busy && input === "" ? suggestions : [];
+  const offered = followUps[0] ?? null;
 
   const modeLabels: Record<AgentMode, [string, string]> = {
     write: [labels.modeWrite, labels.modeWriteHint],
@@ -366,6 +370,14 @@ export function ChatComposer({
           {showSelection && dropSelectionButton}
           <span className="quick-ask-dock-actions">{dockActions}</span>
         </div>
+      )}
+      {!compact && followUps.length > 0 && (
+        <FollowUpChips
+          suggestions={followUps}
+          label={labels.followUps}
+          holdFocus={phone}
+          onPick={submit}
+        />
       )}
       <div className="inline-chat-bar">
         {attachError && (
@@ -522,7 +534,7 @@ export function ChatComposer({
             <button
               className="inline-chat-send"
               {...holdFocus}
-              onClick={busy ? onStop : submit}
+              onClick={busy ? onStop : () => submit()}
               disabled={!busy && !input.trim()}
             >
               {busy ? labels.stop : labels.send}

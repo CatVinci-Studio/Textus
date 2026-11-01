@@ -249,8 +249,9 @@ export default {
   learnLabel: "从修订取舍中学到的",
   suggestNextMessageLabel: "预测下一句",
   suggestNextMessageHint:
-    "每次回复后，在输入框里用灰字显示你接下来可能要说的话，按 Tab 采用。会多一次简短请求。",
+    "每次回复后，在输入框上方以按钮列出最多三句你接下来可能要说的话，最可能的一句也用灰字显示在输入框里；点一下就发送，按 Tab 采用灰字。会多一次简短请求。",
   composerSuggestionTab: "Tab 采用",
+  composerFollowUps: "建议的下一句",
   rememberAutomaticallyLabel: "自动记住",
   rememberAutomaticallyHint: `${AI_NAME} 会记下你的要求和写作习惯，供以后的对话使用；可以在“记忆”里查看、修改或撤销。每次回复后，会再向同一个模型发一次简短请求，决定记下什么。`,
   toolRemember: "记下来",

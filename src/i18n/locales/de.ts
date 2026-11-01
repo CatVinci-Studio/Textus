@@ -283,8 +283,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   learnLabel: "Aus deinen Überarbeitungen gelernt",
   suggestNextMessageLabel: "Nächste Nachricht vorschlagen",
   suggestNextMessageHint:
-    "Nach jeder Antwort steht grau im Eingabefeld, was du wahrscheinlich als Nächstes schreibst; Tab übernimmt es. Kostet eine weitere kurze Anfrage.",
+    "Nach jeder Antwort stehen bis zu drei Dinge, die du wahrscheinlich als Nächstes schreibst, als Schaltflächen über dem Eingabefeld, das wahrscheinlichste auch grau darin; ein Klick sendet es, Tab übernimmt das graue. Kostet eine weitere kurze Anfrage.",
   composerSuggestionTab: "Tab",
+  composerFollowUps: "Vorgeschlagene nächste Nachrichten",
   rememberAutomaticallyLabel: "Automatisch merken",
   rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Im Tab Gedächtnis kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
   toolRemember: "Merkt sich das",

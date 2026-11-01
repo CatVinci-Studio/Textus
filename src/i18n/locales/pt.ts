@@ -281,8 +281,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   learnLabel: "Aprendido com as suas escolhas de revisão",
   suggestNextMessageLabel: "Sugerir a próxima mensagem",
   suggestNextMessageHint:
-    "Depois de cada resposta, o que você provavelmente dirá a seguir aparece em cinza na caixa de mensagem; Tab usa. Custa mais um pedido curto.",
+    "Depois de cada resposta, até três coisas que você provavelmente dirá a seguir aparecem como botões acima da caixa de mensagem, a mais provável também em cinza dentro dela; clique numa para enviá-la, ou use Tab para a cinza. Custa mais um pedido curto.",
   composerSuggestionTab: "Tab",
+  composerFollowUps: "Próximas mensagens sugeridas",
   rememberAutomaticallyLabel: "Lembrar automaticamente",
   rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça na aba Memória. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
   toolRemember: "Lembrando isto",

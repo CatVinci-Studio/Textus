@@ -293,8 +293,9 @@ para usar una.
   learnLabel: "Aprendido de tus decisiones de revisión",
   suggestNextMessageLabel: "Sugerir el siguiente mensaje",
   suggestNextMessageHint:
-    "Tras cada respuesta, lo que probablemente dirás después aparece en gris en el cuadro de mensaje; Tab lo usa. Cuesta una petición breve más.",
+    "Tras cada respuesta, hasta tres cosas que probablemente dirás después aparecen como botones sobre el cuadro de mensaje, la más probable también en gris dentro; haz clic en una para enviarla, o pulsa Tab para usar la gris. Cuesta una petición breve más.",
   composerSuggestionTab: "Tab",
+  composerFollowUps: "Siguientes mensajes sugeridos",
   rememberAutomaticallyLabel: "Recordar automáticamente",
   rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en la pestaña Memoria. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
   toolRemember: "Recordando esto",
