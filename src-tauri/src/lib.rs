@@ -325,6 +325,7 @@ pub fn run() {
             crate::ai::memory::save_offered_skill,
             crate::ai::memory::ai_offer_skill,
             crate::ai::next_message::suggest_next_message,
+            crate::ai::doc_title::suggest_doc_title,
             crate::ai::memory::revision_choices_read,
             crate::ai::memory::revision_choices_write,
             crate::ai::kept_proposals::kept_proposals_read,

@@ -5,6 +5,7 @@ pub mod catalog;
 pub mod client;
 pub mod conventions;
 pub mod doc_blocks;
+pub mod doc_title;
 pub mod images;
 pub mod kept_proposals;
 #[cfg(test)]

@@ -117,6 +117,9 @@ export function useWindowDocuments({
     t,
     autoSuggestFilename: settings.autoSuggestFilename,
     imageFolder: settings.imageFolder,
+    aiTitleProvider:
+      settings.textusAi && settings.aiNameUntitled ? settings.aiProvider : null,
+    aiTitleModel: settings.writingModels[settings.aiProvider] || null,
   });
   const flushAutosave = useAutosave({
     tabs,

@@ -28,6 +28,11 @@ export const commands = {
 	web_search_status: (provider: string, model: string | null, searchService: string | null, searxngUrl: string | null) => __TAURI_INVOKE<WebSearchStatus_Serialize>("web_search_status", { provider, model, searchService, searxngUrl }),
 	/**  The message the writer will probably send next, or None. */
 	suggest_next_message: (provider: string, model: string | null, exchange: Exchange) => __TAURI_INVOKE<string | null>("suggest_next_message", { provider, model, exchange }),
+	/**
+	 *  A short title for a document from its first few thousand characters, or
+	 *  None.
+	 */
+	suggest_doc_title: (provider: string, model: string | null, excerpt: string) => __TAURI_INVOKE<string | null>("suggest_doc_title", { provider, model, excerpt }),
 };
 
 /* Types */

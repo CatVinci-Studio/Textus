@@ -247,6 +247,9 @@ export default {
   learnNever: "不再询问",
   learnSaved: "已记住。可以在“记忆”里查看或删除。",
   learnLabel: "从修订取舍中学到的",
+  aiNameUntitledLabel: "用 AI 为未命名文档起名",
+  aiNameUntitledHint:
+    "另存为时，若新文档没有一级标题，会建议一个简短标题作为文件名，而不是第一行。这会把文档开头发送给 AI，作一次简短请求。",
   suggestNextMessageLabel: "预测下一句",
   suggestNextMessageHint:
     "每次回复后，在输入框里用灰字显示你接下来可能要说的话，按 Tab 采用。会多一次简短请求。",

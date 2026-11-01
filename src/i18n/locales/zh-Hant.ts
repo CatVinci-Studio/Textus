@@ -247,6 +247,9 @@ export default {
   learnNever: "不再詢問",
   learnSaved: "已記住。可以在「記憶」裡查看或刪除。",
   learnLabel: "從修訂取捨中學到的",
+  aiNameUntitledLabel: "用 AI 為未命名文件命名",
+  aiNameUntitledHint:
+    "另存新檔時，若新文件沒有一級標題，會建議一個簡短標題作為檔名，而不是第一行。這會把文件開頭傳送給 AI，作一次簡短請求。",
   suggestNextMessageLabel: "預測下一句",
   suggestNextMessageHint:
     "每次回覆後，在輸入框裡用灰字顯示你接下來可能要說的話，按 Tab 採用。會多一次簡短請求。",

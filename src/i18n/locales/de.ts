@@ -281,6 +281,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   learnNever: "Nicht mehr fragen",
   learnSaved: "Gemerkt. Im Tab Gedächtnis kannst du es ansehen oder löschen.",
   learnLabel: "Aus deinen Überarbeitungen gelernt",
+  aiNameUntitledLabel: "Unbenannte Dokumente mit KI benennen",
+  aiNameUntitledHint:
+    "Speichern unter schlägt für ein neues Dokument ohne Überschrift erster Ebene einen kurzen Titel statt der ersten Zeile vor. Dazu wird der Anfang des Dokuments in einer kurzen Anfrage gesendet.",
   suggestNextMessageLabel: "Nächste Nachricht vorschlagen",
   suggestNextMessageHint:
     "Nach jeder Antwort steht grau im Eingabefeld, was du wahrscheinlich als Nächstes schreibst; Tab übernimmt es. Kostet eine weitere kurze Anfrage.",

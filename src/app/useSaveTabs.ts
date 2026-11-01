@@ -3,6 +3,7 @@ import { showConfirm, showMessage } from "../ui/app-dialog";
 import { migrateDraftImages } from "../editor/images/image-migration";
 import { basename } from "../utils/path";
 import {
+  type DocTab,
   statMtime,
   tabIsDirty,
   tabTitle,
@@ -14,7 +15,7 @@ import {
   writeRevisions,
 } from "../document/tracked-file";
 import type { SaveOutcome } from "../document/autosave";
-import { fs, session } from "../platform/ipc";
+import { ai, fs, session } from "../platform/ipc";
 import { moveConversations } from "../ai/chat/chat-history";
 import { defaultMarkdownFilename } from "../document/save-default-name";
 import { isWordDocument, wordSaveSuggestion } from "../document/word-import";
@@ -32,8 +33,19 @@ export function useSaveTabs(opts: {
   t: Strings;
   autoSuggestFilename: boolean;
   imageFolder: string;
+  /** The writing model that names an untitled document with no heading;
+   *  null while that is off. */
+  aiTitleProvider: string | null;
+  aiTitleModel: string | null;
 }) {
-  const { tabState, t, autoSuggestFilename, imageFolder } = opts;
+  const {
+    tabState,
+    t,
+    autoSuggestFilename,
+    imageFolder,
+    aiTitleProvider,
+    aiTitleModel,
+  } = opts;
   const { liveTabs, updateTab, tabsRef } = tabState;
 
   // Writes a document, or says why it couldn't and resolves false; the tab
@@ -66,6 +78,30 @@ export function useSaveTabs(opts: {
     [t],
   );
 
+  // An untitled document's name: its H1 or first line, or a title the
+  // writing model gives it when it has no H1 (loaded only then).
+  const untitledName = useCallback(
+    async (tab: DocTab): Promise<string> => {
+      const fallback = tab.helpDoc ? tabTitle(tab, t) : t.untitledTab;
+      const firstLine = defaultMarkdownFilename(
+        tab.content,
+        fallback,
+        autoSuggestFilename,
+      );
+      if (!autoSuggestFilename || tab.helpDoc || !aiTitleProvider)
+        return firstLine;
+      const { aiMarkdownFilename } = await import("../ai/doc-title");
+      return aiMarkdownFilename(tab.content, firstLine, fallback, (excerpt) =>
+        ai.suggestDocTitle({
+          provider: aiTitleProvider,
+          model: aiTitleModel,
+          excerpt,
+        }),
+      );
+    },
+    [t, autoSuggestFilename, aiTitleProvider, aiTitleModel],
+  );
+
   // Always asks where to write. Resolves true only when the document reached
   // disk, so a cancelled dialog doesn't close the tab.
   const saveTabAs = useCallback(
@@ -79,12 +115,7 @@ export function useSaveTabs(opts: {
         : null;
       const defaultName = tab.path
         ? basename(tab.path)
-        : (fromWord?.name ??
-          defaultMarkdownFilename(
-            tab.content,
-            tab.helpDoc ? tabTitle(tab, t) : t.untitledTab,
-            autoSuggestFilename,
-          ));
+        : (fromWord?.name ?? (await untitledName(tab)));
       const picked = await fs.saveFileDialog(defaultName, fromWord?.dir);
       if (!picked) return false;
       // Markdown written into a .docx would destroy the Word document.
@@ -138,7 +169,7 @@ export function useSaveTabs(opts: {
       });
       return true;
     },
-    [updateTab, liveTabs, t, autoSuggestFilename, imageFolder, writeOrReport],
+    [updateTab, liveTabs, t, imageFolder, writeOrReport, untitledName],
   );
 
   // tabsRef is patched as well as the state, so a save right behind this one

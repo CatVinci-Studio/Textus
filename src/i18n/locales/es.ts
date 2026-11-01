@@ -291,6 +291,9 @@ para usar una.
   learnNever: "No volver a preguntar",
   learnSaved: "Recordado. Puedes verlo o eliminarlo en la pestaña Memoria.",
   learnLabel: "Aprendido de tus decisiones de revisión",
+  aiNameUntitledLabel: "Nombrar con IA los documentos sin título",
+  aiNameUntitledHint:
+    "Guardar como propone un título breve para un documento nuevo sin encabezado de nivel uno, en lugar de su primera línea. Envía el comienzo del documento en una petición breve.",
   suggestNextMessageLabel: "Sugerir el siguiente mensaje",
   suggestNextMessageHint:
     "Tras cada respuesta, lo que probablemente dirás después aparece en gris en el cuadro de mensaje; Tab lo usa. Cuesta una petición breve más.",

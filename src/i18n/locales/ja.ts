@@ -264,6 +264,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   learnNever: "今後たずねない",
   learnSaved: "覚えました。「記憶」タブで確認・削除できます。",
   learnLabel: "修正の採否から学んだこと",
+  aiNameUntitledLabel: "名前のない書類に AI で名前を付ける",
+  aiNameUntitledHint:
+    "見出し 1 のない新しい書類を別名で保存するとき、最初の行ではなく短いタイトルをファイル名に提案します。書類の冒頭を短いリクエストで 1 回送信します。",
   suggestNextMessageLabel: "次のメッセージを予測",
   suggestNextMessageHint:
     "返答のたびに、次に送りそうな言葉を入力欄に灰色で表示し、Tab で使えます。短い依頼が一回増えます。",

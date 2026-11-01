@@ -3,13 +3,14 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useSaveTabs } from "./useSaveTabs";
 import { useTabState } from "./tabs/useTabState";
-import { fs } from "../platform/ipc";
+import { ai, fs } from "../platform/ipc";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import en from "../i18n/locales/en";
 import type { DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 
 vi.mock("../platform/ipc", () => ({
+  ai: { suggestDocTitle: vi.fn() },
   fs: {
     fileMtimeMs: vi.fn(),
     readTextFile: vi.fn(),
@@ -41,7 +42,7 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-function setup(tab: DocTab) {
+function setup(tab: DocTab, aiTitleProvider: string | null = null) {
   const { result } = renderHook(() => {
     const tabState = useTabState();
     const saves = useSaveTabs({
@@ -49,6 +50,8 @@ function setup(tab: DocTab) {
       t: en as Strings,
       autoSuggestFilename: true,
       imageFolder: "assets",
+      aiTitleProvider,
+      aiTitleModel: null,
     });
     return { tabState, ...saves };
   });
@@ -165,5 +168,45 @@ describe("saveTabAs", () => {
       content: "![](assets/p.png)\n",
       reloadKey: 1,
     });
+  });
+});
+
+describe("saveTabAs", () => {
+  const untitled = {
+    ...doc,
+    path: null,
+    diskMtime: null,
+    content: "Notes from the meeting with the garden club",
+  };
+
+  it("proposes the AI's title for an untitled document with no heading", async () => {
+    vi.mocked(ai.suggestDocTitle).mockResolvedValue("Garden club meeting");
+    vi.mocked(fs.saveFileDialog).mockResolvedValue(null);
+    const result = setup(untitled, "anthropic");
+    await act(async () => {
+      await result.current.saveTabAs("a");
+    });
+    expect(ai.suggestDocTitle).toHaveBeenCalledWith({
+      provider: "anthropic",
+      model: null,
+      excerpt: untitled.content,
+    });
+    expect(fs.saveFileDialog).toHaveBeenCalledWith(
+      "Garden club meeting.md",
+      undefined,
+    );
+  });
+
+  it("proposes the first line without asking while AI naming is off", async () => {
+    vi.mocked(fs.saveFileDialog).mockResolvedValue(null);
+    const result = setup(untitled);
+    await act(async () => {
+      await result.current.saveTabAs("a");
+    });
+    expect(ai.suggestDocTitle).not.toHaveBeenCalled();
+    expect(fs.saveFileDialog).toHaveBeenCalledWith(
+      `${untitled.content}.md`,
+      undefined,
+    );
   });
 });
