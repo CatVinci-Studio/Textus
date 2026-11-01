@@ -90,15 +90,24 @@ pub(crate) fn number_figures(sections: &mut [String], language: &str) -> usize {
                 }
                 Some((lang, _)) if trimmed.starts_with("```") => {
                     if lang == "mermaid" || lang == "chart" {
-                        let spec: Value =
+                        let mut spec: Value =
                             serde_json::from_str(&fence_body(&out)).unwrap_or_default();
                         let shows = spec["caption"]
                             .as_str()
                             .or(spec["title"].as_str())
-                            .unwrap_or("");
+                            .unwrap_or("")
+                            .to_string();
+                        // The caption goes under the chart, numbered, and
+                        // only there: drawn in it too, it said it twice.
+                        if let Some(map) = spec.as_object_mut() {
+                            if map.remove("caption").is_some() {
+                                without_body(&mut out);
+                                out.insert(out.len() - 1, spec.to_string());
+                            }
+                        }
                         n += 1;
                         out.push(String::new());
-                        out.push(caption(language, n, shows));
+                        out.push(caption(language, n, &shows));
                     }
                 }
                 Some((lang, mut body)) => {
@@ -110,6 +119,17 @@ pub(crate) fn number_figures(sections: &mut [String], language: &str) -> usize {
         *section = out.join("\n");
     }
     n
+}
+
+/// `out` with the body of the fence it has just closed taken out, the
+/// fences left.
+fn without_body(out: &mut Vec<String>) {
+    let close = out.len() - 1;
+    let open = out[..close]
+        .iter()
+        .rposition(|l| l.trim_start().starts_with("```"))
+        .unwrap_or(close);
+    out.drain(open + 1..close);
 }
 
 /// The body of the fence `out` has just closed: its lines between the
