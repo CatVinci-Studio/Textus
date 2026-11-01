@@ -8,6 +8,7 @@ import {
   paperRun,
   parsePaperCard,
   PAPER_TURN,
+  RECENT_ACTIVITY,
 } from "./paper-store";
 
 describe("the paper store", () => {
@@ -43,6 +44,49 @@ describe("the paper store", () => {
     expect(run.phase).toBe("researching");
     expect(run.sections).toEqual({ 1: "drafted" });
     expect(run.outline?.thesis).toBe("T");
+  });
+
+  it("follows the research question by question", () => {
+    applyPaperEvent("k4", { type: "thinking", text: "First the background" });
+    expect(paperRun("k4")!.thinking).toBe("First the background");
+    applyPaperEvent("k4", { type: "questions", questions: ["A?", "B?"] });
+    applyPaperEvent("k4", { type: "phase", phase: "researching" });
+    expect(paperRun("k4")!.thinking).toBe("");
+    applyPaperEvent("k4", {
+      type: "activity",
+      question: 1,
+      kind: "search",
+      detail: "green roofs",
+    });
+    for (let i = 0; i < RECENT_ACTIVITY + 1; i++) {
+      applyPaperEvent("k4", {
+        type: "activity",
+        question: 0,
+        kind: "note",
+        detail: `claim ${i}`,
+      });
+    }
+    // An event for a question the run doesn't have changes nothing.
+    applyPaperEvent("k4", {
+      type: "questionDone",
+      question: 9,
+      notes: 1,
+      failed: false,
+    });
+    applyPaperEvent("k4", {
+      type: "questionDone",
+      question: 1,
+      notes: 0,
+      failed: true,
+    });
+    const run = paperRun("k4")!;
+    expect(run.questions).toEqual([
+      { text: "A?", state: "active", notes: RECENT_ACTIVITY + 1 },
+      { text: "B?", state: "failed", notes: 0 },
+    ]);
+    expect(run.recent).toHaveLength(RECENT_ACTIVITY);
+    expect(run.recent[0].detail).toBe(`claim ${RECENT_ACTIVITY}`);
+    expect(new Set(run.recent.map((a) => a.id)).size).toBe(RECENT_ACTIVITY);
   });
 
   it("proposes the paper as one append", () => {

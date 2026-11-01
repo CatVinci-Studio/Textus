@@ -191,3 +191,81 @@
   align-self: stretch;
   text-align: start;
 }
+
+/* What the run is doing in detail, under its progress line. */
+.paper-card-progress {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.paper-card-elapsed {
+  margin-left: auto;
+  font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
+}
+
+.paper-card-thinking {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  font-style: italic;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.paper-card-list,
+.paper-card-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-footnote);
+}
+
+.paper-card-item,
+.paper-card-recent li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.paper-card-item-text,
+.paper-card-recent-detail {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paper-card-item-status,
+.paper-card-recent-kind {
+  flex: none;
+  color: var(--ui-muted);
+}
+
+.paper-card-item[data-state="waiting"] .paper-card-item-text {
+  color: var(--ui-muted);
+}
+
+.paper-card-item[data-state="active"] .paper-card-item-status,
+.paper-card-item[data-state="drafting"] .paper-card-item-status,
+.paper-card-item[data-state="revising"] .paper-card-item-status {
+  color: var(--ui-accent, var(--ui-text));
+}
+
+.paper-card-item[data-state="failed"] .paper-card-item-status {
+  color: var(--ui-danger);
+}
+
+.paper-card-recent {
+  padding-top: 4px;
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
+  color: var(--ui-muted);
+}
