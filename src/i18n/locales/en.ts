@@ -1067,6 +1067,15 @@ type /name in a conversation to use one.
   restoreSessionLabel: "Restore previous session on startup",
   autoSuggestFilenameLabel: "Suggest a filename when saving a new file",
   autosaveLabel: "Save automatically",
+  settingsFileLabel: "Settings file",
+  settingsFileHint:
+    "Back up your settings or carry them to another computer. API keys and MCP tokens stay here.",
+  settingsFileExport: "Export…",
+  settingsFileImport: "Import…",
+  settingsFileImportConfirm:
+    "Replace your settings with the ones in this file? API keys and MCP tokens on this computer are kept.",
+  settingsFileImportReplace: "Replace",
+  settingsFileNotSettings: "This file isn’t Textus settings.",
   untitledTab: "Untitled",
   markdownGuideTab: "Markdown Guide",
   agentGuideTab: "AI Features Guide",

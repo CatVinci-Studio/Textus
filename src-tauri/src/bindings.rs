@@ -18,6 +18,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             builder().commands(collect_commands![
                 crate::commands::fs::open_file_dialog,
                 crate::commands::fs::open_css_file_dialog,
+                crate::commands::fs::open_settings_file_dialog,
+                crate::commands::fs::save_settings_file_dialog,
                 crate::commands::fs::open_image_file_dialog,
                 crate::commands::fs::save_file_dialog,
                 crate::commands::fs::list_dir,

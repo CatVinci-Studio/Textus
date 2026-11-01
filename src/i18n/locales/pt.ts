@@ -1082,6 +1082,15 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   restoreSessionLabel: "Restaurar a sessão anterior ao iniciar",
   autoSuggestFilenameLabel: "Sugerir um nome ao salvar um arquivo novo",
   autosaveLabel: "Salvar automaticamente",
+  settingsFileLabel: "Arquivo de ajustes",
+  settingsFileHint:
+    "Faça backup dos seus ajustes ou leve-os para outro computador. Chaves de API e tokens de MCP ficam aqui.",
+  settingsFileExport: "Exportar…",
+  settingsFileImport: "Importar…",
+  settingsFileImportConfirm:
+    "Substituir seus ajustes pelos deste arquivo? As chaves de API e os tokens de MCP deste computador são mantidos.",
+  settingsFileImportReplace: "Substituir",
+  settingsFileNotSettings: "Este arquivo não contém ajustes do Textus.",
   untitledTab: "Sem título",
   markdownGuideTab: "Guia de Markdown",
   agentGuideTab: "Guia dos Recursos de IA",

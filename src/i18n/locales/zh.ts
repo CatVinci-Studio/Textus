@@ -997,6 +997,15 @@ export default {
   restoreSessionLabel: "启动时恢复上次会话",
   autoSuggestFilenameLabel: "新文件保存时自动建议文件名",
   autosaveLabel: "自动保存",
+  settingsFileLabel: "设置文件",
+  settingsFileHint:
+    "备份设置，或带到另一台电脑上。API 密钥和 MCP 令牌留在本机。",
+  settingsFileExport: "导出…",
+  settingsFileImport: "导入…",
+  settingsFileImportConfirm:
+    "用这个文件里的设置替换现在的设置吗？本机的 API 密钥和 MCP 令牌会保留。",
+  settingsFileImportReplace: "替换",
+  settingsFileNotSettings: "这个文件不是 Textus 的设置。",
   untitledTab: "未命名",
   markdownGuideTab: "Markdown 指南",
   agentGuideTab: "AI 功能指南",

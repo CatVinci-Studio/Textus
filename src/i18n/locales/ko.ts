@@ -1036,6 +1036,15 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   restoreSessionLabel: "시작할 때 이전 세션 복원",
   autoSuggestFilenameLabel: "새 파일을 저장할 때 파일 이름 제안",
   autosaveLabel: "자동 저장",
+  settingsFileLabel: "설정 파일",
+  settingsFileHint:
+    "설정을 백업하거나 다른 컴퓨터로 옮깁니다. API 키와 MCP 토큰은 이 컴퓨터에 남습니다.",
+  settingsFileExport: "내보내기…",
+  settingsFileImport: "가져오기…",
+  settingsFileImportConfirm:
+    "이 파일의 설정으로 지금 설정을 바꿀까요? 이 컴퓨터의 API 키와 MCP 토큰은 그대로 둡니다.",
+  settingsFileImportReplace: "바꾸기",
+  settingsFileNotSettings: "이 파일은 Textus 설정이 아닙니다.",
   untitledTab: "제목 없음",
   markdownGuideTab: "Markdown 가이드",
   agentGuideTab: "AI 기능 가이드",

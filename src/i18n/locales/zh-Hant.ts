@@ -998,6 +998,15 @@ export default {
   restoreSessionLabel: "啟動時恢復上次的工作階段",
   autoSuggestFilenameLabel: "儲存新檔案時建議檔名",
   autosaveLabel: "自動儲存",
+  settingsFileLabel: "設定檔",
+  settingsFileHint:
+    "備份設定，或帶到另一台電腦上。API 金鑰和 MCP 權杖留在本機。",
+  settingsFileExport: "匯出…",
+  settingsFileImport: "匯入…",
+  settingsFileImportConfirm:
+    "要用這個檔案裡的設定取代現在的設定嗎？本機的 API 金鑰和 MCP 權杖會保留。",
+  settingsFileImportReplace: "取代",
+  settingsFileNotSettings: "這個檔案不是 Textus 的設定。",
   untitledTab: "未命名",
   markdownGuideTab: "Markdown 指南",
   agentGuideTab: "AI 功能指南",

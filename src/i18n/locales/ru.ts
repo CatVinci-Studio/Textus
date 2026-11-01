@@ -1092,6 +1092,15 @@ export default {
   restoreSessionLabel: "Восстанавливать прошлый сеанс при запуске",
   autoSuggestFilenameLabel: "Предлагать имя при сохранении нового файла",
   autosaveLabel: "Сохранять автоматически",
+  settingsFileLabel: "Файл настроек",
+  settingsFileHint:
+    "Сохраните настройки или перенесите их на другой компьютер. Ключи API и токены MCP остаются здесь.",
+  settingsFileExport: "Экспортировать…",
+  settingsFileImport: "Импортировать…",
+  settingsFileImportConfirm:
+    "Заменить ваши настройки настройками из этого файла? Ключи API и токены MCP на этом компьютере сохранятся.",
+  settingsFileImportReplace: "Заменить",
+  settingsFileNotSettings: "В этом файле нет настроек Textus.",
   untitledTab: "Без названия",
   markdownGuideTab: "Руководство по Markdown",
   agentGuideTab: "Руководство по ИИ",

@@ -1086,6 +1086,15 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   autoSuggestFilenameLabel:
     "Dateinamen beim Speichern neuer Dateien vorschlagen",
   autosaveLabel: "Automatisch speichern",
+  settingsFileLabel: "Einstellungsdatei",
+  settingsFileHint:
+    "Sichern Sie Ihre Einstellungen oder nehmen Sie sie auf einen anderen Computer mit. API-Schlüssel und MCP-Token bleiben hier.",
+  settingsFileExport: "Exportieren…",
+  settingsFileImport: "Importieren…",
+  settingsFileImportConfirm:
+    "Ihre Einstellungen durch die aus dieser Datei ersetzen? API-Schlüssel und MCP-Token auf diesem Computer bleiben erhalten.",
+  settingsFileImportReplace: "Ersetzen",
+  settingsFileNotSettings: "Diese Datei enthält keine Textus-Einstellungen.",
   untitledTab: "Unbenannt",
   markdownGuideTab: "Markdown-Anleitung",
   agentGuideTab: "Anleitung zu KI-Funktionen",

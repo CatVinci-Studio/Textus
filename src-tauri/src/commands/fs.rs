@@ -111,6 +111,40 @@ pub async fn open_css_file_dialog(window: tauri::WebviewWindow) -> Option<String
     .flatten()
 }
 
+/// Picks a settings file to import (Settings › General).
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn open_settings_file_dialog(window: tauri::WebviewWindow) -> Option<String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        window_file_dialog(&window)
+            .add_filter("JSON", &["json"])
+            .blocking_pick_file()
+            .map(|p| p.to_string())
+    })
+    .await
+    .ok()
+    .flatten()
+}
+
+/// Asks where to export the settings to, as `default_name`.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn save_settings_file_dialog(
+    window: tauri::WebviewWindow,
+    default_name: String,
+) -> Option<String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        window_file_dialog(&window)
+            .set_file_name(default_name)
+            .add_filter("JSON", &["json"])
+            .blocking_save_file()
+            .map(|p| with_default_extension(p.to_string(), "json"))
+    })
+    .await
+    .ok()
+    .flatten()
+}
+
 /// Opens a native file picker for one image, for a missing image's card. The
 /// frontend names the filter and lists the image types.
 #[tauri::command]
