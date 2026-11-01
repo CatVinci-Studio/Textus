@@ -301,7 +301,7 @@ pub(crate) async fn write_section(
         "words"
     };
     let instructions = format!(
-        "You write one section of a paper, in the language tagged \"{}\": substantial, specific prose for an informed reader - the notes' figures, dates, names and findings, explained and connected into an argument that serves the thesis, not a list of facts. Say where sources disagree and what the evidence can't show. Don't repeat what the other sections cover; you may point to them. Mark every fact from a note with its source right after it as [n](address), exactly as the note gives it, and cite nothing else. Use ### subheadings if the section is long; don't write the section's own heading. Its length counts {unit}, figures and code aside. Put each planned figure where it belongs, with a sentence in the text that refers to it. Hand it over with submit_section.",
+        "You write one section of a paper, in the language tagged \"{}\": substantial, specific prose for an informed reader - the notes' figures, dates, names and findings, explained and connected into an argument that serves the thesis, not a list of facts. Say where sources disagree and what the evidence can't show. Don't repeat what the other sections cover; you may point to them. Mark every fact from a note with its source right after it as [n](address), exactly as the note gives it, and cite nothing else. Use ### subheadings if the section is long; don't write the section's own heading. Its length counts {unit}, figures and code aside. Put each planned figure where it belongs, with a sentence in the text that refers to it. Hand it over by calling submit_section with the whole section - never write the section in your reply.",
         paper.language
     );
     let sources: Vec<(u32, String)> = dossier
@@ -348,7 +348,7 @@ pub(crate) async fn write_section(
             }
         }
     };
-    run_agent_loop(
+    let turns = run_agent_loop(
         Vec::new(),
         AgentTurn::User {
             text: match revision {
@@ -375,8 +375,43 @@ pub(crate) async fn write_section(
         .into_inner()
         .unwrap()
         .or(soft.into_inner().unwrap())
+        .or_else(|| replied_section(&turns, section, &sources, &paper.language))
         .ok_or_else(|| format!("\"{}\" wasn't written in a form that holds.", section.title))?;
     Ok(format!("## {}\n\n{body}", section.title))
+}
+
+/// A writer that answered with its section as its reply instead of handing
+/// it over (some models do): the reply, under the same checks - kept if
+/// nothing is wrong with it but its length or a missing figure. Its own
+/// heading, if it wrote one, is left off.
+fn replied_section(
+    turns: &[AgentTurn],
+    section: &OutlineSection,
+    sources: &[(u32, String)],
+    language: &str,
+) -> Option<String> {
+    let reply = turns.iter().rev().find_map(|t| match t {
+        AgentTurn::Assistant { text, .. } => Some(text.trim()),
+        _ => None,
+    })?;
+    let body = match reply.split_once('\n') {
+        Some((first, rest)) if first.trim_start().starts_with('#') => rest.trim(),
+        _ => reply,
+    };
+    let wrong = problems(body, section, sources, language);
+    if cfg!(test) {
+        eprintln!(
+            "paper: \"{}\" came as a reply ({} chars){}",
+            section.title,
+            body.chars().count(),
+            if wrong.is_empty() {
+                String::new()
+            } else {
+                format!(": {}", wrong.join(" | "))
+            }
+        );
+    }
+    wrong.iter().all(|p| is_soft(p)).then(|| body.to_string())
 }
 
 /// Every section of `outline` written, three at a time, and handed to

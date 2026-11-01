@@ -1228,3 +1228,39 @@ async fn a_section_whose_only_problem_is_its_length_is_kept_after_the_tries() {
         "{written}"
     );
 }
+
+/// Writes the section as its reply, never calling submit_section.
+struct Replier;
+
+impl research::Model for Replier {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        _turns: &'a [aicompat::agent::AgentTurn],
+        _tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        let reply = format!(
+            "## Mechanism\n\n{}",
+            section_text(97, "```chart\n{\"series\": [{\"data\": [1]}]}\n```")
+        );
+        Box::pin(async move { Ok(aicompat::agent::StepResult::Done(reply)) })
+    }
+}
+
+#[tokio::test]
+async fn a_section_written_as_the_reply_is_checked_and_kept() {
+    let plan = outline_of(1, 100);
+    let english = Paper {
+        language: "en".into(),
+        ..paper()
+    };
+    let written = draft::write_section(&Replier, &english, &plan, 0, &drafting_dossier(), None)
+        .await
+        .unwrap();
+    // Its own heading is dropped; the outline's goes on.
+    assert!(
+        written.starts_with("## Mechanism\n\nGreen Green"),
+        "{written}"
+    );
+    assert_eq!(written.matches("## Mechanism").count(), 1);
+}
