@@ -16,6 +16,7 @@ mod outline;
 mod research;
 mod review;
 mod store;
+mod web_figures;
 
 pub(crate) use budget::{BudgetCounts, BudgetKind, ResearchBudget, SharedBudget};
 pub(crate) use events::{PaperEvent, PaperPhase, SectionStatus};
@@ -380,6 +381,9 @@ pub async fn ai_paper_draft(
                 Some(run) => crate::ai::images::place_pictures(run, section).0,
                 None => finish::without_pictures(section),
             };
+        }
+        for section in &mut sections {
+            *section = web_figures::resolve(section, web_figures::find_on_commons).await;
         }
         finish::number_figures(&mut sections, language);
         let references = finish::references(&sections, &files.dossier, language);
