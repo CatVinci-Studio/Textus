@@ -15,6 +15,11 @@ import type { PaperSources } from "./paper-document";
  *  the model. */
 export const PAPER_TURN = "write_paper";
 
+/** A paper's error once its model calls are spent, and how many each run
+ *  of them is; in step with paper/budget.rs. */
+export const PAPER_STEPS_SPENT = "PAPER_STEPS_SPENT";
+export const PAPER_MODEL_STEPS = 120;
+
 /** What the conversation keeps of a paper: enough to draw its card. */
 export interface PaperCardInfo {
   /** This paper's card, in this session's store. */

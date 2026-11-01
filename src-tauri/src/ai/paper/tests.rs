@@ -155,6 +155,7 @@ fn the_budget_refuses_once_a_kind_is_spent_and_leaves_the_others() {
         fetches: 1,
         paper_lookups: 0,
         images: 1,
+        model_steps: 0,
     });
     assert!(budget.take(BudgetKind::Search));
     assert!(budget.take(BudgetKind::Search));
@@ -167,6 +168,7 @@ fn the_budget_refuses_once_a_kind_is_spent_and_leaves_the_others() {
             fetches: 1,
             paper_lookups: 0,
             images: 1,
+            model_steps: 0,
         }
     );
     assert_eq!(budget.used.searches, 2);
@@ -1325,6 +1327,7 @@ fn each_question_gets_an_even_share_of_the_research() {
             fetches: 60,
             paper_lookups: 30,
             images: 0,
+            model_steps: 0,
         },
         7,
     );
@@ -1980,4 +1983,35 @@ fn a_timeline_written_top_down_keeps_each_periods_events_together() {
         timeline::upright_timelines(written),
         "```mermaid\nflowchart TB\n    subgraph s1[\"Fish\"]\n        p1[\"<b>2021-09</b><br>Edited #quot;sea bream#quot; filed<br>Edible part 1.2x\"]\n        p2[\"<b>2021-10</b><br>Puffer approved<br>a second event\"]\n    end\n    p1 --> p2\n```"
     );
+}
+
+#[tokio::test]
+async fn a_paper_stops_to_ask_once_its_model_calls_are_spent() {
+    let budget = SharedBudget::new(ResearchBudget::new(BudgetCounts {
+        model_steps: 1,
+        ..Default::default()
+    }));
+    let metered = model::Metered {
+        inner: &Scripted,
+        budget: &budget,
+    };
+    use research::Model as _;
+    assert!(metered.step("", &[], &[]).await.is_ok());
+    assert!(metered.spent());
+    assert_eq!(
+        metered.step("", &[], &[]).await.err().as_deref(),
+        Some(budget::STEPS_SPENT)
+    );
+}
+
+#[test]
+fn going_on_gives_a_spent_paper_its_model_calls_again() {
+    let mut spent = ResearchBudget::for_paper();
+    spent.used.model_steps = spent.limits.model_steps;
+    let renewed = spent.renewed();
+    assert_eq!(renewed.remaining().model_steps, budget::MODEL_STEPS);
+    // A paper stopped with calls left keeps its limit.
+    let mut stopped = ResearchBudget::for_paper();
+    stopped.used.model_steps = 50;
+    assert_eq!(stopped.renewed(), stopped);
 }

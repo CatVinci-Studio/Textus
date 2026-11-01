@@ -386,6 +386,8 @@ export default {
   paperEnded: "这篇论文的写作已结束。",
   paperPause: "暂停",
   paperContinue: "继续",
+  paperStepsSpent:
+    "这篇论文已用完 {n} 次模型调用，先暂停了。点「继续」再给 {n} 次。",
   paperPaused: "已暂停，可随时继续。",
   paperUnitCharacters: "字",
   paperUnitWords: "词",

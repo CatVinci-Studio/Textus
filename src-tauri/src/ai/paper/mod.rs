@@ -221,7 +221,7 @@ pub async fn ai_paper_run(
     // the outline plans no more than can be drawn.
     let mut research_budget = kept
         .as_ref()
-        .map_or_else(ResearchBudget::for_paper, |f| f.paper.budget);
+        .map_or_else(ResearchBudget::for_paper, |f| f.paper.budget.renewed());
     let images = research_budget.limits.images;
     research_budget.limits.images =
         crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), &provider)
@@ -254,6 +254,10 @@ pub async fn ai_paper_run(
                         entry.label
                     )
                 })?;
+        let agent = model::Metered {
+            inner: &agent,
+            budget: &budget,
+        };
         let mut files = kept.unwrap_or_else(|| PaperFiles {
             paper: Paper {
                 id: id.unwrap_or_else(new_id),
@@ -281,8 +285,13 @@ pub async fn ai_paper_run(
                 .join(crate::ai::project::REFERENCES_DIR)
                 .is_dir()
                 .then_some(root.as_path());
-            files.dossier =
+            let dossier =
                 research::research(&agent, &files.paper, &web, &budget, &send, library).await?;
+            // Questions cut short would leave it thin: going on researches again.
+            if agent.spent() {
+                return Err(budget::STEPS_SPENT.to_string());
+            }
+            files.dossier = dossier;
             files.paper.budget = keep_spent.spent();
             // Kept before the outline, so a failed outline doesn't cost the
             // research.
@@ -373,6 +382,18 @@ pub async fn ai_paper_draft(
                 entry.label
             )
         })?;
+        let budget = std::sync::Arc::new(SharedBudget::new(files.paper.budget.renewed()));
+        let mut keep_spent = KeepSpent {
+            root: &root,
+            id: files.paper.id.clone(),
+            budget: budget.clone(),
+            images: files.paper.budget.limits.images,
+            done: false,
+        };
+        let agent = model::Metered {
+            inner: &agent,
+            budget: &budget,
+        };
         send(PaperEvent::Sources {
             heading: finish::references_heading(&files.paper.language).into(),
             sources: files
@@ -459,6 +480,9 @@ pub async fn ai_paper_draft(
                     text: sections[i].clone(),
                 });
             }
+            if agent.spent() {
+                return Err(budget::STEPS_SPENT.to_string());
+            }
             let mut reviewed = files.clone();
             reviewed.paper.stage = PaperStage::Reviewed;
             save(&root, &reviewed)?;
@@ -498,7 +522,9 @@ pub async fn ai_paper_draft(
         });
         let mut files = files;
         files.paper.stage = PaperStage::Done;
+        files.paper.budget = keep_spent.spent();
         save(&root, &files)?;
+        keep_spent.done = true;
         send(PaperEvent::Phase {
             phase: PaperPhase::Done,
         });

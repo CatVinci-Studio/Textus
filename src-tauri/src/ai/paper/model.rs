@@ -2,6 +2,7 @@
 //! to the card as thinking and activity. A trait, so the stages run on a
 //! scripted model in tests.
 
+use super::budget::{BudgetKind, SharedBudget, STEPS_SPENT};
 use super::research::{READ_REFERENCE_TOOL, SEARCH_REFERENCES_TOOL};
 use super::{ActivityKind, PaperEvent};
 use aicompat::agent::{AgentTurn, StepResult, ToolCall, ToolSpec};
@@ -62,6 +63,57 @@ impl Model for aicompat::providers::AgentProvider {
             aicompat::providers::AgentProvider::step(self, instructions, turns, tools, &on_event)
                 .await
                 .map(|(step, _)| step)
+        })
+    }
+}
+
+/// A model whose every step counts against the paper's budget: with none
+/// left, a step fails with STEPS_SPENT and the paper stops to ask.
+pub(crate) struct Metered<'a, M: Model> {
+    pub(crate) inner: &'a M,
+    pub(crate) budget: &'a SharedBudget,
+}
+
+impl<M: Model> Metered<'_, M> {
+    fn take(&self) -> Result<(), String> {
+        if self.budget.take(BudgetKind::ModelStep) {
+            Ok(())
+        } else {
+            Err(STEPS_SPENT.to_string())
+        }
+    }
+
+    /// Whether the budget ran out on this run.
+    pub(crate) fn spent(&self) -> bool {
+        self.budget.snapshot().remaining().model_steps == 0
+    }
+}
+
+impl<M: Model> Model for Metered<'_, M> {
+    fn step<'a>(
+        &'a self,
+        instructions: &'a str,
+        turns: &'a [AgentTurn],
+        tools: &'a [ToolSpec],
+    ) -> BoxFuture<'a, Result<StepResult, String>> {
+        Box::pin(async move {
+            self.take()?;
+            self.inner.step(instructions, turns, tools).await
+        })
+    }
+
+    fn step_watched<'a>(
+        &'a self,
+        instructions: &'a str,
+        turns: &'a [AgentTurn],
+        tools: &'a [ToolSpec],
+        watch: Watch<'a>,
+    ) -> BoxFuture<'a, Result<StepResult, String>> {
+        Box::pin(async move {
+            self.take()?;
+            self.inner
+                .step_watched(instructions, turns, tools, watch)
+                .await
         })
     }
 }

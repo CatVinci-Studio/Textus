@@ -399,6 +399,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   paperEnded: "이 논문 작성은 끝났습니다.",
   paperPause: "일시 정지",
   paperContinue: "계속",
+  paperStepsSpent:
+    "이 논문은 모델 호출 {n}회를 모두 써서 일시 중지했습니다. 「계속」을 누르면 {n}회를 더 씁니다.",
   paperPaused: "일시 정지했습니다. 언제든 계속할 수 있습니다.",
   paperUnitCharacters: "자",
   paperUnitWords: "단어",

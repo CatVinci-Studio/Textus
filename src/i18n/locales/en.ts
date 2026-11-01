@@ -422,6 +422,8 @@ type /name in a conversation to use one.
   paperEnded: "This paper's run has ended.",
   paperPause: "Pause",
   paperContinue: "Continue",
+  paperStepsSpent:
+    "This paper has made its {n} model calls and paused. Continue allows {n} more.",
   paperPaused: "Paused - continue whenever you like.",
   paperUnitCharacters: "characters",
   paperUnitWords: "words",

@@ -386,6 +386,8 @@ export default {
   paperEnded: "這篇論文的寫作已結束。",
   paperPause: "暫停",
   paperContinue: "繼續",
+  paperStepsSpent:
+    "這篇論文已用完 {n} 次模型呼叫，先暫停了。點「繼續」再給 {n} 次。",
   paperPaused: "已暫停，可隨時繼續。",
   paperUnitCharacters: "字",
   paperUnitWords: "詞",

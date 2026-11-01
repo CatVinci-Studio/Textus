@@ -438,6 +438,8 @@ utiliser une.
   paperEnded: "La rédaction de cet article est terminée.",
   paperPause: "Mettre en pause",
   paperContinue: "Continuer",
+  paperStepsSpent:
+    "Cet article a utilisé ses {n} appels au modèle et s’est mis en pause. « Continuer » en autorise {n} de plus.",
   paperPaused: "En pause : reprenez quand vous voulez.",
   paperUnitCharacters: "caractères",
   paperUnitWords: "mots",

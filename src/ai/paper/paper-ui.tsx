@@ -8,6 +8,8 @@ import type {
   SectionStatus,
 } from "../../platform/bindings/ai-paper";
 import {
+  PAPER_MODEL_STEPS,
+  PAPER_STEPS_SPENT,
   paperActions,
   restorePaperCard,
   usePaperRun,
@@ -286,7 +288,9 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
       )}
       {run?.error ? (
         <p className="paper-card-error" role="alert">
-          {run.error}
+          {run.error === PAPER_STEPS_SPENT
+            ? t.paperStepsSpent.replace(/{n}/g, String(PAPER_MODEL_STEPS))
+            : run.error}
         </p>
       ) : (
         line && (

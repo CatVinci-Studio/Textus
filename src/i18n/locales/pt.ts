@@ -424,6 +424,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   paperEnded: "A escrita deste artigo terminou.",
   paperPause: "Pausar",
   paperContinue: "Continuar",
+  paperStepsSpent:
+    "Este artigo usou as suas {n} chamadas ao modelo e pausou. «Continuar» permite mais {n}.",
   paperPaused: "Em pausa: continue quando quiser.",
   paperUnitCharacters: "caracteres",
   paperUnitWords: "palavras",

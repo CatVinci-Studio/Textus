@@ -427,6 +427,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   paperEnded: "Das Schreiben dieses Aufsatzes ist beendet.",
   paperPause: "Pausieren",
   paperContinue: "Fortsetzen",
+  paperStepsSpent:
+    "Dieser Aufsatz hat seine {n} Modellaufrufe verbraucht und pausiert. „Fortsetzen“ erlaubt {n} weitere.",
   paperPaused: "Pausiert – jederzeit fortsetzbar.",
   paperUnitCharacters: "Zeichen",
   paperUnitWords: "Wörter",

@@ -55,6 +55,8 @@ export type BudgetCounts = {
 	fetches: number,
 	paperLookups: number,
 	images: number,
+	/**  Calls to the writing model, in every stage together. */
+	modelSteps: number,
 };
 
 /**  What the research helpers found. Kept as `dossier.json`. */

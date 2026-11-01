@@ -5,6 +5,13 @@ use crate::ai::web::{WebBudget, WebUse};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
+/// Model calls a paper may make before it stops to ask: an ordinary paper
+/// takes 60-100.
+pub(crate) const MODEL_STEPS: u32 = 120;
+
+/// A paper's error when its model calls are spent; the card says so.
+pub(crate) const STEPS_SPENT: &str = "PAPER_STEPS_SPENT";
+
 /// A count of each thing research spends.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[cfg_attr(test, derive(specta::Type))]
@@ -14,6 +21,8 @@ pub struct BudgetCounts {
     pub fetches: u32,
     pub paper_lookups: u32,
     pub images: u32,
+    /// Calls to the writing model, in every stage together.
+    pub model_steps: u32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -23,6 +32,8 @@ pub(crate) enum BudgetKind {
     PaperLookup,
     /// A picture made by the image service.
     Image,
+    /// One call to the writing model.
+    ModelStep,
 }
 
 impl BudgetCounts {
@@ -32,6 +43,7 @@ impl BudgetCounts {
             BudgetKind::Fetch => self.fetches,
             BudgetKind::PaperLookup => self.paper_lookups,
             BudgetKind::Image => self.images,
+            BudgetKind::ModelStep => self.model_steps,
         }
     }
 
@@ -41,6 +53,7 @@ impl BudgetCounts {
             BudgetKind::Fetch => &mut self.fetches,
             BudgetKind::PaperLookup => &mut self.paper_lookups,
             BudgetKind::Image => &mut self.images,
+            BudgetKind::ModelStep => &mut self.model_steps,
         }
     }
 }
@@ -69,7 +82,17 @@ impl ResearchBudget {
             fetches: 60,
             paper_lookups: 30,
             images: 6,
+            model_steps: MODEL_STEPS,
         })
+    }
+
+    /// A paper that spent its model calls is given as many again when it is
+    /// gone on with: going on is the user's yes to spending them.
+    pub(crate) fn renewed(mut self) -> Self {
+        if self.used.model_steps >= self.limits.model_steps {
+            self.limits.model_steps = self.used.model_steps + MODEL_STEPS;
+        }
+        self
     }
 
     /// Counts one use of `kind`; false, and nothing counted, when none is left.
@@ -90,6 +113,7 @@ impl ResearchBudget {
             fetches: left(BudgetKind::Fetch),
             paper_lookups: left(BudgetKind::PaperLookup),
             images: left(BudgetKind::Image),
+            model_steps: left(BudgetKind::ModelStep),
         }
     }
 }

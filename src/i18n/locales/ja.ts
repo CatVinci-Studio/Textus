@@ -407,6 +407,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   paperEnded: "この論文の執筆は終了しました。",
   paperPause: "一時停止",
   paperContinue: "続ける",
+  paperStepsSpent:
+    "この論文はモデル呼び出し {n} 回を使い切ったため一時停止しました。「続ける」でさらに {n} 回使えます。",
   paperPaused: "一時停止中です。いつでも続けられます。",
   paperUnitCharacters: "字",
   paperUnitWords: "語",
