@@ -57,6 +57,9 @@ export interface PaperRunState {
   approving: boolean;
   /** Why the run stopped, when it failed. */
   error: string | null;
+  /** Paused by the user, or found stopped when its card came back: it
+   *  goes on from what was kept. */
+  paused: boolean;
   /** The paper is written in the document for good. */
   written: boolean;
   /** Its pictures still to come into the document. */
@@ -93,6 +96,7 @@ const NEW_RUN: PaperRunState = {
   outline: null,
   approving: false,
   error: null,
+  paused: false,
   written: false,
   picturesLeft: 0,
   unit: "",
@@ -220,13 +224,40 @@ export function usePaperRun(key: string): PaperRunState | undefined {
 /** What a card's buttons do, registered by the editor that runs papers. */
 export interface PaperActions {
   approve: (key: string, outline: Outline) => void;
+  /** Pauses the run: what it kept stays, to go on from. */
   stop: (key: string) => void;
+  /** Goes on with a paused or failed paper from what it kept. */
+  resume: (key: string) => void;
+  /** A card with no run - the app was restarted - learns how far its
+   *  paper came. */
+  restore: (key: string, topic: string) => void;
+}
+
+/** A new paper's card key, which is also its id in `.textus/papers/`:
+ *  lowercase hex of the time, as Rust's `new_id`, so ids sort by age. */
+export function newPaperId(): string {
+  const nanos =
+    BigInt(Date.now()) * 1_000_000n + BigInt(Math.floor(Math.random() * 1e6));
+  return nanos.toString(16);
 }
 
 let actions: PaperActions | null = null;
 
+/** Cards that asked to be restored before the editor that runs papers
+ *  was there to hear it - a card's effects run before its editor's. */
+const toRestore = new Map<string, string>();
+
 export function setPaperActions(next: PaperActions | null) {
   actions = next;
+  if (!next) return;
+  for (const [key, topic] of toRestore) next.restore(key, topic);
+  toRestore.clear();
+}
+
+/** Asks how far card `key`'s paper came, now or once papers can run. */
+export function restorePaperCard(key: string, topic: string) {
+  if (actions) actions.restore(key, topic);
+  else toRestore.set(key, topic);
 }
 
 export function paperActions(): PaperActions | null {

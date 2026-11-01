@@ -12,7 +12,12 @@ import {
 } from "../ai/revision/generated-images";
 import type { GeneratedImageData } from "../platform/ipc";
 import { paperDraft } from "../ai/paper/paper-document";
-import { beginPaper, settlePaper, writePaper } from "../ai/paper/paper-write";
+import {
+  beginPaper,
+  settlePaper,
+  writePaper,
+  writtenPaper,
+} from "../ai/paper/paper-write";
 
 interface Live {
   key: string;
@@ -87,12 +92,22 @@ export function usePaperDocument(
     [run],
   );
 
-  /** Gives paper `key` its place in the document and writes its headings.
-   *  A paper still being written there is settled first. */
+  /** Gives paper `key` its place in the document and writes its headings;
+   *  going on after a pause, the place of what was written of it. A paper
+   *  still being written there is settled first. */
   const begin = useCallback(
-    (key: string) => {
+    (key: string, goingOn = false) => {
       if (live.current) settle(live.current.key);
-      const original = run((ctx) => beginPaper(ctx.get(editorViewCtx)));
+      const state = paperRun(key);
+      const firstTitle = state?.outline?.sections[0]?.title;
+      const original = run((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const place =
+          goingOn && state && firstTitle
+            ? writtenPaper(view.state.doc, state.topic, firstTitle)
+            : null;
+        return beginPaper(view, place);
+      });
       if (!original) return;
       live.current = { key, original, frame: 0 };
       draw();

@@ -4,6 +4,7 @@ import type {
   Outline,
   Paper,
   PaperEvent,
+  PaperProgress,
   PaperRequest,
 } from "./bindings/ai-paper";
 import type { ProviderCatalogEntry } from "../ai/provider-catalog";
@@ -276,6 +277,12 @@ export const ai = {
       id,
       outline,
     }),
+  /** How far a kept paper came: its stage, outline and sections written. */
+  paperStatus: (
+    docPath: string | null,
+    workspaceRoot: string | null,
+    id: string,
+  ) => aiCall<PaperProgress>("ai_paper_status", { docPath, workspaceRoot, id }),
   /** The approved paper drafted, reviewed and finished; it arrives whole
    *  as a `ready` event. */
   paperDraft: (request: DraftRequest, onEvent: (event: PaperEvent) => void) => {

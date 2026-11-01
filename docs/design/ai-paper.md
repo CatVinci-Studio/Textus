@@ -127,6 +127,14 @@ it, lazily loaded. Each stage and helper is one run of
   written; `ai_paper_draft` hands on the sections already written as they
   are and writes only the rest, so a paper stopped - or the app quit -
   mid-draft costs only the sections being written.
+  On the card, **Pause** stops the run (a stop is no error) and
+  **Continue** - also offered after a failure - asks `ai_paper_status` and
+  goes on: drafting again for a paper being drafted, which takes back the
+  place of what was written of it (its `# topic` title over its first
+  section's heading) instead of writing it twice; research and outline
+  otherwise. A card's key is its paper's id, so a card back after a restart
+  asks how far its paper came: its outline to approve, Continue, or
+  written.
 
 - **In the app** (`document-view/usePaperWriter.ts`, `ai/paper/paper-store.ts`,
   the lazy `paper` module): the AI panel's fourth mode, **Research**, takes

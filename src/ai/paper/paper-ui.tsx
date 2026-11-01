@@ -9,6 +9,7 @@ import type {
 } from "../../platform/bindings/ai-paper";
 import {
   paperActions,
+  restorePaperCard,
   usePaperRun,
   type PaperCardInfo,
   type PaperRunState,
@@ -20,6 +21,7 @@ import "./outline-card.css";
 
 /** One line of what the run is doing now. */
 function progressLine(run: PaperRunState, t: Strings): string {
+  if (run.paused) return t.paperPaused;
   const sections = run.outline?.sections.length ?? 0;
   const written = Object.values(run.sections).filter(
     (s) => s === "drafted" || s === "revising",
@@ -254,9 +256,15 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
 export function PaperCard({ info }: { info: PaperCardInfo }) {
   const { t } = useSettings();
   const run = usePaperRun(info.key);
+  // A card back from History, or after a restart, asks how far its paper
+  // came.
+  useEffect(() => {
+    if (!run) restorePaperCard(info.key, info.topic);
+  }, [run, info.key, info.topic]);
   const running =
     run &&
     !run.error &&
+    !run.paused &&
     (!run.written || run.picturesLeft > 0) &&
     (run.phase !== "awaitingOutline" || run.approving);
   const line = run ? progressLine(run, t) : t.paperEnded;
@@ -300,16 +308,30 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
           </p>
         )}
       {run && busy && <PaperActivityView run={run} t={t} />}
-      {running && (
+      {running ? (
         <div className="paper-card-actions">
           <button
             type="button"
             className="inline-chat-action"
             onClick={() => paperActions()?.stop(info.key)}
           >
-            {t.paperStop}
+            {t.paperPause}
           </button>
         </div>
+      ) : (
+        run?.paperId &&
+        (run.paused || run.error) &&
+        !run.written && (
+          <div className="paper-card-actions">
+            <button
+              type="button"
+              className="inline-chat-action"
+              onClick={() => paperActions()?.resume(info.key)}
+            >
+              {t.paperContinue}
+            </button>
+          </div>
+        )
       )}
     </div>
   );

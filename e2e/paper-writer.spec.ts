@@ -150,3 +150,87 @@ test("a paper is researched, its outline approved, and written into the document
   await page.keyboard.press("ControlOrMeta+z");
   await expect(editor).not.toContainText("Cooler Roofs");
 });
+
+test("a paused paper goes on from what it kept, in place of what it wrote", async ({
+  page,
+}) => {
+  await page.addInitScript(
+    ({ outline }) => {
+      (
+        window as unknown as { __devInvokeResults: unknown }
+      ).__devInvokeResults = {
+        ai_paper_run: {
+          __events: [
+            { type: "outlineReady", outline },
+            { type: "phase", phase: "awaitingOutline" },
+          ],
+          value: { id: "abc123", topic: "Green roofs" },
+        },
+        ai_paper_save_outline: outline,
+        // Paused while its first section is written.
+        ai_paper_draft: { __delay: 300, __reject: "cancelled" },
+      };
+    },
+    { outline },
+  );
+  await openApp(page, {
+    settings: { language: "en", agentDefaultMode: "write" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  const panel = page.locator(".agent-panel-view");
+  await panel.getByRole("combobox", { name: /^Mode/ }).click();
+  await page.getByRole("option", { name: "Research" }).click();
+  await panel.locator("textarea").fill("Green roofs");
+  await panel.locator("textarea").press("Enter");
+  const card = page.locator(".paper-card");
+  await page.getByRole("button", { name: "Approve and write" }).click();
+
+  await expect(card).toContainText("Paused");
+  await expect(card).not.toHaveAttribute("role", "alert");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor.locator("h2").first()).toHaveText("How roofs cool");
+
+  const key = await page.evaluate(() => {
+    const w = window as unknown as {
+      __devInvokeResults: Record<string, unknown>;
+      __devInvokeCalls: { cmd: string; request?: { id?: string } }[];
+    };
+    const id = w.__devInvokeCalls.find((c) => c.cmd === "ai_paper_run")!
+      .request!.id!;
+    w.__devInvokeResults.ai_paper_status = {
+      paper: { id, topic: "Green roofs", stage: "drafting", targetChars: 8000 },
+      outline: (w.__devInvokeResults.ai_paper_save_outline as object) ?? null,
+      drafted: 1,
+    };
+    w.__devInvokeResults.ai_paper_draft = {
+      __events: [
+        { type: "phase", phase: "drafting" },
+        { type: "sectionText", index: 0, text: "Kept before." },
+        { type: "sectionText", index: 1, text: "Written now." },
+        {
+          type: "ready",
+          markdown: "# Cooler Roofs\n\n## How roofs cool\n\nKept before.",
+        },
+        { type: "phase", phase: "done" },
+      ],
+      value: null,
+    };
+    return id;
+  });
+  // The card's key is the paper's id, so it finds the paper after a restart.
+  expect(key).toMatch(/^[0-9a-f]{1,32}$/);
+  await card.getByRole("button", { name: "Continue" }).click();
+  await expect(card).toContainText("Written in the document.");
+  // What was written before the pause gave way to the paper, not kept
+  // above it.
+  await expect(editor.locator("h1")).toHaveCount(1);
+  await expect(editor.locator("h1")).toHaveText("Cooler Roofs");
+  await expect(editor.locator("h2")).toHaveCount(1);
+  const drafts = await page.evaluate(
+    () =>
+      (
+        window as unknown as { __devInvokeCalls: { cmd: string }[] }
+      ).__devInvokeCalls.filter((c) => c.cmd === "ai_paper_draft").length,
+  );
+  expect(drafts).toBe(2);
+});
