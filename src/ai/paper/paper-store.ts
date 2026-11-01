@@ -83,7 +83,14 @@ export function applyPaperEvent(key: string, event: PaperEvent) {
         // A helper's failure costs one question, not the run: shown only
         // if the run then fails.
         return {};
+      // The activity events are drawn by the activity card, a later branch.
       case "ready":
+      case "thinking":
+      case "questions":
+      case "activity":
+      case "questionDone":
+      case "outlineDraft":
+      case "sectionText":
         return {};
     }
   });

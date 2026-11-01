@@ -40,6 +40,63 @@ pub enum PaperEvent {
         message: String,
         section: Option<u32>,
     },
+    /// What the planner is thinking or writing, as it comes: the tail of
+    /// it so far, sent a few times a second at most.
+    Thinking {
+        text: String,
+    },
+    /// The research questions the topic was split into, in the order the
+    /// helpers take them.
+    Questions {
+        questions: Vec<String>,
+    },
+    /// A research helper did something: what question `question` (its
+    /// index) searched, read or kept.
+    Activity {
+        question: u32,
+        kind: ActivityKind,
+        detail: String,
+    },
+    /// The outline as the outliner writes it: its thesis once whole, and
+    /// the titles of the sections given so far. `attempt` counts its tries;
+    /// a try after the first follows one that was sent back.
+    OutlineDraft {
+        attempt: u32,
+        thesis: Option<String>,
+        titles: Vec<String>,
+    },
+    /// What section `index`'s writer has written so far, as it writes it:
+    /// its tail, sent a few times a second at most. A try that starts over
+    /// starts the text over.
+    SectionText {
+        index: u32,
+        text: String,
+    },
+    /// Question `question`'s helper finished, keeping `notes` notes;
+    /// `failed` when it stopped on an error.
+    QuestionDone {
+        question: u32,
+        notes: u32,
+        failed: bool,
+    },
+}
+
+/// What a research helper's step was.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub enum ActivityKind {
+    /// A web search; `detail` is its queries.
+    Search,
+    /// A page read; `detail` is its address.
+    Read,
+    /// A scholarly search; `detail` is its query.
+    Papers,
+    /// The user's reference library searched or read; `detail` is the query
+    /// or the path.
+    Library,
+    /// A note kept; `detail` is its claim.
+    Note,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]

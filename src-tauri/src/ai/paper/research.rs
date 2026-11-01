@@ -4,7 +4,9 @@
 //! WebPlan, so a source has one number for the whole paper and the paper's
 //! budget is spent by all of them together.
 
-use super::{Dossier, Lead, LeadKind, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
+use super::{
+    ActivityKind, Dossier, Lead, LeadKind, Note, Paper, PaperEvent, PaperPhase, SharedBudget,
+};
 use crate::ai::web::WebPlan;
 use aicompat::agent::{
     run_agent_loop, AgentTurn, StepResult, ToolCall, ToolOutput, ToolRun, ToolSpec,
@@ -97,6 +99,18 @@ pub(crate) trait Model: Sync {
         turns: &'a [AgentTurn],
         tools: &'a [ToolSpec],
     ) -> BoxFuture<'a, Result<StepResult, String>>;
+
+    /// `step`, with what it streams passed to `watch` as it comes. A model
+    /// that doesn't stream just steps.
+    fn step_watched<'a>(
+        &'a self,
+        instructions: &'a str,
+        turns: &'a [AgentTurn],
+        tools: &'a [ToolSpec],
+        _watch: Watch<'a>,
+    ) -> BoxFuture<'a, Result<StepResult, String>> {
+        self.step(instructions, turns, tools)
+    }
 }
 
 impl Model for aicompat::providers::AgentProvider {
@@ -106,13 +120,132 @@ impl Model for aicompat::providers::AgentProvider {
         turns: &'a [AgentTurn],
         tools: &'a [ToolSpec],
     ) -> BoxFuture<'a, Result<StepResult, String>> {
-        // A helper's text and thinking aren't shown: the progress card is.
+        // A helper's text and thinking aren't shown: its activity is.
+        self.step_watched(instructions, turns, tools, &|_| {})
+    }
+
+    fn step_watched<'a>(
+        &'a self,
+        instructions: &'a str,
+        turns: &'a [AgentTurn],
+        tools: &'a [ToolSpec],
+        watch: Watch<'a>,
+    ) -> BoxFuture<'a, Result<StepResult, String>> {
+        use aicompat::agent::ProviderEvent;
         Box::pin(async move {
-            aicompat::providers::AgentProvider::step(self, instructions, turns, tools, &|_| {})
+            let on_event = |event: ProviderEvent<'_>| match event {
+                ProviderEvent::Thinking(text) => watch(Streamed::Thinking(text)),
+                ProviderEvent::Text(text) => watch(Streamed::Text(text)),
+                ProviderEvent::ToolStart { .. } => watch(Streamed::ToolStart),
+                ProviderEvent::ToolArgs { delta, .. } => watch(Streamed::ToolArgs(delta)),
+                ProviderEvent::Citation { .. } => {}
+            };
+            aicompat::providers::AgentProvider::step(self, instructions, turns, tools, &on_event)
                 .await
                 .map(|(step, _)| step)
         })
     }
+}
+
+/// A piece of what a step streams, as a stage watching it sees it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum Streamed<'a> {
+    /// A fragment of the model's thinking.
+    Thinking(&'a str),
+    /// A fragment of the model's reply.
+    Text(&'a str),
+    /// A tool call began: the arguments that follow are its own.
+    ToolStart,
+    /// A fragment of a tool call's JSON arguments.
+    ToolArgs(&'a str),
+}
+
+pub(crate) type Watch<'a> = &'a (dyn Fn(Streamed<'_>) + Send + Sync);
+
+/// How much of the planner's stream a Thinking event carries: its tail.
+const THINKING_TAIL: usize = 160;
+/// The least time between two Thinking events.
+const THINKING_EVERY: std::time::Duration = std::time::Duration::from_millis(250);
+
+/// Gathers a stream's fragments and sends their tail as Thinking, a few
+/// times a second at most: the planner's tokens arrive far faster than a
+/// card needs to redraw.
+pub(crate) struct ThinkingTail<'a> {
+    send: &'a (dyn Fn(PaperEvent) + Sync),
+    state: Mutex<(String, Option<std::time::Instant>)>,
+}
+
+impl<'a> ThinkingTail<'a> {
+    pub(crate) fn new(send: &'a (dyn Fn(PaperEvent) + Sync)) -> Self {
+        Self {
+            send,
+            state: Mutex::new((String::new(), None)),
+        }
+    }
+
+    pub(crate) fn push(&self, fragment: &str) {
+        let text = {
+            let mut state = self.state.lock().unwrap();
+            let (text, last) = &mut *state;
+            text.push_str(fragment);
+            // Keep the buffer bounded: only its tail is ever sent.
+            if text.len() > THINKING_TAIL * 8 {
+                *text = tail(text, THINKING_TAIL * 2).to_string();
+            }
+            if last.is_some_and(|at| at.elapsed() < THINKING_EVERY) {
+                return;
+            }
+            *last = Some(std::time::Instant::now());
+            tail(text, THINKING_TAIL).to_string()
+        };
+        let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+        if !text.is_empty() {
+            (self.send)(PaperEvent::Thinking { text });
+        }
+    }
+}
+
+/// The last `chars` characters of `text`.
+pub(crate) fn tail(text: &str, chars: usize) -> &str {
+    let skip = text.chars().count().saturating_sub(chars);
+    text.char_indices()
+        .nth(skip)
+        .map_or(text, |(i, _)| &text[i..])
+}
+
+/// A helper's tool call as the card tells it, or None for one it doesn't.
+pub(crate) fn activity(call: &ToolCall) -> Option<(ActivityKind, String)> {
+    use crate::ai::web::{SEARCH_PAPERS_TOOL, WEB_FETCH_TOOL, WEB_SEARCH_TOOL};
+    let args: Value = serde_json::from_str(&call.arguments).unwrap_or_default();
+    let text = |key: &str| args[key].as_str().unwrap_or("").trim().to_string();
+    let (kind, detail) = match call.name.as_str() {
+        WEB_SEARCH_TOOL => {
+            let queries: Vec<&str> = match &args["queries"] {
+                Value::Array(list) => list.iter().filter_map(Value::as_str).collect(),
+                Value::String(one) => vec![one.as_str()],
+                _ => args["query"].as_str().into_iter().collect(),
+            };
+            (ActivityKind::Search, queries.join(" · "))
+        }
+        WEB_FETCH_TOOL => (ActivityKind::Read, text("url")),
+        SEARCH_PAPERS_TOOL => (ActivityKind::Papers, text("query")),
+        SEARCH_REFERENCES_TOOL => (ActivityKind::Library, text("query")),
+        READ_REFERENCE_TOOL => (ActivityKind::Library, text("path")),
+        _ => return None,
+    };
+    Some((kind, detail))
+}
+
+/// The longest an activity's detail is sent: the card shows one line.
+const DETAIL_CHARS: usize = 120;
+
+pub(crate) fn clip(text: &str) -> String {
+    let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    if text.chars().count() <= DETAIL_CHARS {
+        return text;
+    }
+    let cut: String = text.chars().take(DETAIL_CHARS - 1).collect();
+    format!("{cut}…")
 }
 
 fn user(text: String) -> AgentTurn {
@@ -126,16 +259,18 @@ fn user(text: String) -> AgentTurn {
 pub(crate) async fn plan_questions(
     model: &dyn Model,
     paper: &Paper,
+    watch: Watch<'_>,
 ) -> Result<Vec<String>, String> {
     let instructions = format!(
         "You plan the research for a paper of about {} characters, written in the language tagged \"{}\". Split its topic into {MIN_QUESTIONS}-{MAX_QUESTIONS} research questions that together cover it in breadth and depth: background and definitions, how it works, the state of the art, the evidence and data, disputes and limits, cases, and where it is heading - as fits the topic. Each question is one sentence, specific enough to search for, and none repeats another. Reply with a JSON array of the questions as strings and nothing else.",
         paper.target_chars, paper.language
     );
     let reply = match model
-        .step(
+        .step_watched(
             &instructions,
             &[user(format!("Topic: {}", paper.topic))],
             &[],
+            watch,
         )
         .await?
     {
@@ -291,13 +426,16 @@ fn read_note(
 }
 
 /// One question's helper: its notes, in the order it kept them.
+#[allow(clippy::too_many_arguments)]
 async fn research_question(
     model: &dyn Model,
     paper: &Paper,
     web: &WebPlan,
+    budget: &SharedBudget,
     library: Option<&Path>,
-    question: &str,
+    (index, question): (u32, &str),
     share: Share,
+    send: &(dyn Fn(PaperEvent) + Sync),
 ) -> Result<Vec<Note>, String> {
     let instructions = format!(
         "You are one of several researchers gathering material for a paper on \"{}\", written in the language tagged \"{}\". Your part is one question. Search the web and the scholarly literature, read the best pages in full, and keep every finding that answers it with add_note - specific claims with figures, dates, names and results, not generalities; prefer primary and scholarly sources, and say where sources disagree. Aim for four to eight notes, written in the paper's language. Note pictures and data sets a figure could use as leads. When the question is covered, or the searches run out, reply with one short line.{}",
@@ -320,10 +458,18 @@ async fn research_question(
     let execute = |call: ToolCall| {
         let (web_tools, notes, spent) = (&web_tools, &notes, &spent);
         async move {
+            let tell = |kind, detail: &str| {
+                send(PaperEvent::Activity {
+                    question: index,
+                    kind,
+                    detail: clip(detail),
+                })
+            };
             if call.name == ADD_NOTE_TOOL {
                 return ToolOutput::from(
                     match read_note(&call.arguments, question, web, library) {
                         Ok(note) => {
+                            tell(ActivityKind::Note, &note.claim);
                             notes.lock().unwrap().push(note);
                             "Kept.".to_string()
                         }
@@ -331,7 +477,13 @@ async fn research_question(
                     },
                 );
             }
+            let told = activity(&call);
             if let Some(root) = library {
+                if let Some((kind, detail)) =
+                    told.as_ref().filter(|(k, _)| *k == ActivityKind::Library)
+                {
+                    tell(*kind, detail);
+                }
                 if let Some(answer) = library_call(root, &call).await {
                     return ToolOutput::from(answer);
                 }
@@ -339,14 +491,25 @@ async fn research_question(
             if let Some(refused) = share.spend(&call.name, &mut spent.lock().unwrap()) {
                 return ToolOutput::from(refused);
             }
-            match web_tools
+            if let Some((kind, detail)) = &told {
+                tell(*kind, detail);
+            }
+            let output = match web_tools
                 .iter()
                 .find(|t| t.spec.name == call.name)
                 .map(|t| &t.run)
             {
                 Some(crate::ai::tools::Run::Async(run)) => run(call).await,
                 _ => ToolOutput::from(format!("Unknown tool: {}", call.name)),
+            };
+            if told.is_some() {
+                let spent = budget.snapshot();
+                send(PaperEvent::Budget {
+                    used: spent.used,
+                    remaining: spent.remaining(),
+                });
             }
+            output
         }
     };
     run_agent_loop(
@@ -386,18 +549,43 @@ pub(crate) async fn research(
     send(PaperEvent::Phase {
         phase: PaperPhase::Planning,
     });
-    let questions = plan_questions(model, paper).await?;
+    let thinking = ThinkingTail::new(send);
+    let questions = plan_questions(model, paper, &|streamed| {
+        if let Streamed::Thinking(text) | Streamed::Text(text) = streamed {
+            thinking.push(text)
+        }
+    })
+    .await?;
     let share = Share::of(budget.snapshot().limits, questions.len());
+    send(PaperEvent::Questions {
+        questions: questions.clone(),
+    });
     send(PaperEvent::Phase {
         phase: PaperPhase::Researching,
     });
     let results: Vec<(String, Result<Vec<Note>, String>)> = stream::iter(questions)
-        .map(|question| async move {
-            let notes = research_question(model, paper, web, library, &question, share).await;
+        .enumerate()
+        .map(|(i, question)| async move {
+            let notes = research_question(
+                model,
+                paper,
+                web,
+                budget,
+                library,
+                (i as u32, &question),
+                share,
+                send,
+            )
+            .await;
             let spent = budget.snapshot();
             send(PaperEvent::Budget {
                 used: spent.used,
                 remaining: spent.remaining(),
+            });
+            send(PaperEvent::QuestionDone {
+                question: i as u32,
+                notes: notes.as_ref().map_or(0, |n| n.len() as u32),
+                failed: notes.is_err(),
             });
             (question, notes)
         })

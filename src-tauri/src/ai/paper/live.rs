@@ -126,7 +126,7 @@ fn live_paper() {
             ..paper.clone()
         };
         let t = Instant::now();
-        let outline = outline::make_outline(&agent, &paper, &dossier)
+        let outline = outline::make_outline(&agent, &paper, &dossier, &send)
             .await
             .expect("outline");
         lap(&mut stats, "outline", t);
@@ -153,6 +153,7 @@ fn live_paper() {
                 sections.push(md.to_string());
                 Ok(())
             },
+            &|_| {},
         )
         .await
         .expect("drafting");
@@ -178,6 +179,7 @@ fn live_paper() {
             &dossier,
             &mut sections,
             &issues,
+            &|_| {},
             &|_| {},
         )
         .await;

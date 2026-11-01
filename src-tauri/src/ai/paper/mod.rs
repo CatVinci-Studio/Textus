@@ -19,7 +19,7 @@ mod store;
 mod web_figures;
 
 pub(crate) use budget::{BudgetCounts, BudgetKind, ResearchBudget, SharedBudget};
-pub(crate) use events::{PaperEvent, PaperPhase, SectionStatus};
+pub(crate) use events::{ActivityKind, PaperEvent, PaperPhase, SectionStatus};
 pub(crate) use store::{load, load_section, new_id, save, save_section, PaperFiles};
 
 use serde::{Deserialize, Serialize};
@@ -239,7 +239,7 @@ pub async fn ai_paper_run(
         send(PaperEvent::Phase {
             phase: PaperPhase::Outlining,
         });
-        let outline = outline::make_outline(&agent, &paper, &files.dossier).await?;
+        let outline = outline::make_outline(&agent, &paper, &files.dossier, &send).await?;
         files.outline = Some(outline.clone());
         save(&root, &files)?;
         send(PaperEvent::OutlineReady { outline });
@@ -337,6 +337,7 @@ pub async fn ai_paper_draft(
             &files.dossier,
             &started,
             &mut drafted,
+            &send,
         )
         .await?;
 
@@ -362,6 +363,7 @@ pub async fn ai_paper_draft(
             &mut sections,
             &issues,
             &revising,
+            &send,
         )
         .await;
         for i in changed {

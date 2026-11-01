@@ -5,8 +5,8 @@
 //! sends back what is wrong. Sections are handed on in the outline's order,
 //! each as it and those before it are done.
 
-use super::research::Model;
-use super::{Dossier, FigureKind, FigurePlan, Outline, OutlineSection, Paper};
+use super::research::{Model, Streamed};
+use super::{Dossier, FigureKind, FigurePlan, Outline, OutlineSection, Paper, PaperEvent};
 use aicompat::agent::{run_agent_loop, AgentTurn, ToolCall, ToolOutput, ToolRun, ToolSpec};
 use futures_util::stream::{self, StreamExt};
 use regex::Regex;
@@ -346,7 +346,9 @@ pub(crate) async fn write_section(
     dossier: &Dossier,
     // A revision: the earlier draft and the reviewer's points against it.
     revision: Option<(&str, &[String])>,
+    send: &(dyn Fn(PaperEvent) + Sync),
 ) -> Result<String, String> {
+    let watch = SectionWatch::new(index as u32, send);
     let section = &outline.sections[index];
     let unit = if length("字", &paper.language) == 1 {
         "characters"
@@ -417,7 +419,12 @@ pub(crate) async fn write_section(
         WRITER_STEPS,
         |turns: Vec<AgentTurn>| {
             let (instructions, specs) = (&instructions, &specs);
-            async move { model.step(instructions, &turns, specs).await }
+            let watch = &watch;
+            async move {
+                model
+                    .step_watched(instructions, &turns, specs, &|s| watch.push(s))
+                    .await
+            }
         },
         execute,
         |_| ToolRun::InOrder,
@@ -478,13 +485,14 @@ pub(crate) async fn draft(
     dossier: &Dossier,
     started: &(dyn Fn(usize) + Sync),
     drafted: &mut (dyn FnMut(usize, &str) -> Result<(), String> + Send),
+    send: &(dyn Fn(PaperEvent) + Sync),
 ) -> Result<(), String> {
     let mut sections = stream::iter(0..outline.sections.len())
         .map(|i| async move {
             started(i);
             (
                 i,
-                write_section(model, paper, outline, i, dossier, None).await,
+                write_section(model, paper, outline, i, dossier, None, send).await,
             )
         })
         .buffered(AT_ONCE);
@@ -492,4 +500,116 @@ pub(crate) async fn draft(
         drafted(i, &written?)?;
     }
     Ok(())
+}
+
+/// How much of a section a SectionText event carries: its tail.
+const SECTION_TAIL: usize = 2000;
+/// The least time between two SectionText events for one section.
+const SECTION_EVERY: std::time::Duration = std::time::Duration::from_millis(300);
+
+/// Watches a writer's stream and sends what it has written so far as
+/// SectionText: the `markdown` of the submit_section call it is making, or
+/// its reply when it writes the section there instead.
+pub(crate) struct SectionWatch<'a> {
+    index: u32,
+    send: &'a (dyn Fn(PaperEvent) + Sync),
+    state: Mutex<WatchState>,
+}
+
+#[derive(Default)]
+struct WatchState {
+    args: String,
+    reply: String,
+    sent: usize,
+    last: Option<std::time::Instant>,
+}
+
+impl<'a> SectionWatch<'a> {
+    pub(crate) fn new(index: u32, send: &'a (dyn Fn(PaperEvent) + Sync)) -> Self {
+        Self {
+            index,
+            send,
+            state: Mutex::new(WatchState::default()),
+        }
+    }
+
+    pub(crate) fn push(&self, streamed: Streamed<'_>) {
+        let text = {
+            let mut state = self.state.lock().unwrap();
+            match streamed {
+                Streamed::Thinking(_) => return,
+                Streamed::Text(text) => state.reply.push_str(text),
+                Streamed::ToolStart => {
+                    *state = WatchState {
+                        last: state.last,
+                        ..WatchState::default()
+                    }
+                }
+                Streamed::ToolArgs(delta) => state.args.push_str(delta),
+            }
+            if state.last.is_some_and(|at| at.elapsed() < SECTION_EVERY) {
+                return;
+            }
+            // Decoded only when due: a few times a second, not per token.
+            let text = if state.args.is_empty() {
+                state.reply.trim().to_string()
+            } else {
+                partial_string_value(&state.args, "\"markdown\"")
+            };
+            if text.len() == state.sent || text.trim().is_empty() {
+                return;
+            }
+            state.sent = text.len();
+            state.last = Some(std::time::Instant::now());
+            text
+        };
+        let skip = text.chars().count().saturating_sub(SECTION_TAIL);
+        let text = match text.char_indices().nth(skip) {
+            Some((at, _)) if skip > 0 => text[at..].to_string(),
+            _ => text,
+        };
+        (self.send)(PaperEvent::SectionText {
+            index: self.index,
+            text,
+        });
+    }
+}
+
+/// The string value of `key` in JSON that is still arriving, unescaped as
+/// far as it has come: an escape cut in half is left for the next time.
+pub(crate) fn partial_string_value(json: &str, key: &str) -> String {
+    let Some(at) = json.find(key) else {
+        return String::new();
+    };
+    let rest = json[at + key.len()..].trim_start();
+    let Some(rest) = rest.strip_prefix(':').map(str::trim_start) else {
+        return String::new();
+    };
+    let Some(body) = rest.strip_prefix('"') else {
+        return String::new();
+    };
+    let mut out = String::with_capacity(body.len());
+    let mut chars = body.chars();
+    while let Some(c) = chars.next() {
+        match c {
+            '"' => break,
+            '\\' => match chars.next() {
+                Some('n') => out.push('\n'),
+                Some('t') => out.push('\t'),
+                Some('r') => {}
+                Some('u') => {
+                    let hex: String = chars.by_ref().take(4).collect();
+                    match u32::from_str_radix(&hex, 16).ok().and_then(char::from_u32) {
+                        Some(c) if hex.len() == 4 => out.push(c),
+                        // A surrogate pair or a cut escape: left out.
+                        _ => {}
+                    }
+                }
+                Some(other) => out.push(other),
+                None => break,
+            },
+            c => out.push(c),
+        }
+    }
+    out
 }
