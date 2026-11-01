@@ -868,6 +868,39 @@ async fn faulted_sections_are_revised_once_and_a_failed_revision_keeps_the_draft
 }
 
 #[test]
+fn a_chart_s_categories_labels_and_source_are_checked() {
+    let mut section = outline().sections.remove(0);
+    section.target_words = 100;
+    section.figures = vec![FigurePlan {
+        kind: FigureKind::Chart,
+        spec: "votes".into(),
+    }];
+    let found = |chart: &str| {
+        draft::problems(
+            &section_text(97, &format!("```chart\n{chart}\n```")),
+            &section,
+            &[(3, "https://example.org/study".to_string())],
+            "en",
+        )
+        .join("\n")
+    };
+    assert!(
+        found(r#"{"x": ["Mayor", "President"], "series": [{"data": [57, 50]}]}"#)
+            .contains("the categories go in \"labels\"")
+    );
+    assert!(found(r#"{"labels": ["a"], "series": [{"data": [1, 2]}]}"#)
+        .contains("1 \"labels\" for 2 data points"));
+    assert!(
+        found(r#"{"labels": ["a"], "series": [{"data": [1]}], "source": "n28、n9"}"#)
+            .contains("by their numbers")
+    );
+    assert_eq!(
+        found(r#"{"labels": ["a"], "series": [{"data": [1]}], "source": "Election commission"}"#),
+        ""
+    );
+}
+
+#[test]
 fn figures_are_numbered_through_the_paper_and_captioned_by_what_they_show() {
     let mut sections = vec![
         "## One\n\nText.\n\n```mermaid\nflowchart LR\n  A --> B\n```\n\n```rust\nfn main() {}\n```".to_string(),
@@ -882,6 +915,13 @@ fn figures_are_numbered_through_the_paper_and_captioned_by_what_they_show() {
     assert!(!sections[0].contains("图 2"), "a code block is no figure");
     assert!(
         sections[1].contains("```\n\n*图 2　Roof surfaces at noon*"),
+        "{}",
+        sections[1]
+    );
+    // Said once, under the chart, not drawn in it as well.
+    assert!(!sections[1].contains("\"caption\""), "{}", sections[1]);
+    assert!(
+        sections[1].contains("\"title\":\"Temperatures\""),
         "{}",
         sections[1]
     );

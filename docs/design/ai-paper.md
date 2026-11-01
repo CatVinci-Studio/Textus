@@ -106,7 +106,8 @@ it, lazily loaded. Each stage and helper is one run of
   `textus-generated:` pictures; without an image model they are dropped.
   Then every diagram, chart, picture and web-picture mark gets a numbered
   caption, counted through the paper (a chart's caption or title, a
-  picture's alt text); the reference list holds the sources the text cites,
+  picture's alt text; a chart's caption then leaves its JSON, so it is
+  said once); the reference list holds the sources the text cites,
   by number, and each citation becomes `\[n\]` linked to its entry there
   (`#ref-n`, which the editor finds by the entry's leading `[n]`), escaped so
   the footnote setting leaves it alone - a bare `[n]` inside a chart, whose

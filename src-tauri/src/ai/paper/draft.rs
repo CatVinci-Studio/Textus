@@ -148,7 +148,43 @@ fn chart_holds(body: &str) -> Result<(), String> {
     {
         return Err("every series needs a non-empty \"data\" list".into());
     }
+    if spec["x"].is_array() {
+        return Err("\"x\" is the x axis' title, one text; the categories go in \"labels\"".into());
+    }
+    for key in ["title", "x", "y", "caption", "source"] {
+        if !spec[key].is_null() && !spec[key].is_string() {
+            return Err(format!("\"{key}\" must be text"));
+        }
+    }
+    let points = series
+        .iter()
+        .filter_map(|s| s["data"].as_array().map(Vec::len))
+        .max()
+        .unwrap_or(0);
+    if kind != "scatter" {
+        if let Some(labels) = spec["labels"].as_array() {
+            if labels.len() < points {
+                return Err(format!(
+                    "{} \"labels\" for {points} data points: one label each",
+                    labels.len()
+                ));
+            }
+        }
+    }
+    if spec["source"]
+        .as_str()
+        .is_some_and(|s| note_id().is_match(s))
+    {
+        return Err("\"source\" names notes by their ids; name the sources by their numbers, as [3](address)".into());
+    }
     Ok(())
+}
+
+/// A note's id, as the dossier numbers them ("n12"): for the reader, the
+/// sources are what is cited, never the notes.
+fn note_id() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"(?:^|[^A-Za-z0-9])n\d+(?:$|[^A-Za-z0-9])").unwrap())
 }
 
 /// What is wrong with `markdown` as section `section` of `paper`, all at once.
@@ -266,7 +302,7 @@ pub(crate) fn problems(
 fn figure_line(figure: &FigurePlan) -> String {
     let how = match figure.kind {
         FigureKind::Mermaid => "a ```mermaid block",
-        FigureKind::Chart => "a ```chart block: JSON {\"type\": \"bar\"|\"line\"|\"area\"|\"pie\"|\"scatter\", \"title\", \"x\", \"y\", \"labels\": [...], \"series\": [{\"name\", \"data\": [numbers]}], \"caption\", \"source\"}, with the notes' own numbers only",
+        FigureKind::Chart => "a ```chart block: JSON {\"type\": \"bar\"|\"line\"|\"area\"|\"pie\"|\"scatter\", \"title\", \"x\", \"y\", \"labels\": [...], \"series\": [{\"name\", \"data\": [numbers]}], \"caption\", \"source\"}, with the notes' own numbers only - \"x\" and \"y\" are the axes' titles, \"labels\" one category per number, \"source\" the sources cited as [n](address), never the notes' ids",
         FigureKind::Generated => "a line ![caption](textus-picture:16:9 what the picture shows, in detail)",
         FigureKind::Web => "a line <!-- textus-figure web: caption | a few English words to search Wikimedia Commons for --> where it goes; a real photograph or figure is found for it there later, so ask for something Commons would have (a place, an object, a species, a historical image), not an abstract idea",
     };
