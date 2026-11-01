@@ -3,7 +3,13 @@
 // cheap defaults: no judge, a $1 budget, keys from .env.local. Also
 // `compare <before> <after>` and `baseline <run-dir> <provider>`.
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -25,6 +31,7 @@ const PROVIDERS = [
   "minimax",
   "doubao",
   "vertex",
+  "opencode-go",
 ];
 
 function flags(args) {
@@ -67,6 +74,8 @@ function run(opts) {
     TEXTUS_EVAL_BUDGET_USD: opts.budget ?? "1",
     TEXTUS_EVAL_SPEND_FILE: join(out, "spend.json"),
     TEXTUS_EVAL_OUT: out,
+    // A missing key fails the run instead of passing it untested.
+    TEXTUS_EVAL_REQUIRE_KEY: "1",
   };
   if (provider !== "anthropic") env.TEXTUS_EVAL_PROVIDER = provider;
   if (opts.set === "core") {
@@ -97,8 +106,16 @@ export function results(path) {
       ...b.failed.map((id) => [id, false]),
     ]);
   }
-  const file = join(path, "agent.jsonl");
-  if (!existsSync(file)) fail(`No agent.jsonl in ${path}`);
+  // agent.jsonl, or the one suite file a builtin, completion or grammar run
+  // writes.
+  const suites = readdirSync(path).filter((f) => f.endsWith(".jsonl"));
+  const file = join(
+    path,
+    suites.includes("agent.jsonl")
+      ? "agent.jsonl"
+      : (suites[0] ?? "agent.jsonl"),
+  );
+  if (!existsSync(file)) fail(`No .jsonl results in ${path}`);
   const map = new Map();
   for (const line of readFileSync(file, "utf8").split("\n")) {
     if (!line.trim()) continue;

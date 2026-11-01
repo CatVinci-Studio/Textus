@@ -238,6 +238,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       JSON.parse(
         readFileSync(join(root, "package.json"), "utf8"),
       ).version.split("-")[0];
+    // A slip like "1.3" would name the notes wrongly and still use up the
+    // fragments.
+    if (!/^\d+\.\d+\.\d+(-beta\.\d+)?$/.test(version)) {
+      console.error(`build takes a version like 1.3.3, not "${version}"`);
+      process.exit(1);
+    }
     const { problems, file, names } = build(root, version);
     if (problems.length > 0) {
       for (const p of problems) console.error(`  ${p}`);

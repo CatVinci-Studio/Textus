@@ -52,6 +52,12 @@ fn env_file_value(text: &str, name: &str) -> Option<String> {
     })
 }
 
+/// A run through scripts/live-eval.mjs sets TEXTUS_EVAL_REQUIRE_KEY: there a
+/// missing key is a mistake, not a reason to pass without testing anything.
+fn key_required() -> bool {
+    std::env::var("TEXTUS_EVAL_REQUIRE_KEY").is_ok_and(|v| v == "1")
+}
+
 pub fn auth() -> Option<AnthropicAuth> {
     if let Some(key) = secret("ANTHROPIC_API_KEY") {
         return Some(AnthropicAuth::ApiKey(key));
@@ -62,6 +68,10 @@ pub fn auth() -> Option<AnthropicAuth> {
     match std::fs::read_to_string(&path) {
         Ok(key) if !key.trim().is_empty() => Some(AnthropicAuth::ApiKey(key.trim().to_string())),
         _ => {
+            assert!(
+                !key_required(),
+                "live_eval: no ANTHROPIC_API_KEY in the environment or .env.local, and no key at {path}"
+            );
             eprintln!("live_eval: no ANTHROPIC_API_KEY in the environment or .env.local, and no key at {path} - skipping");
             None
         }
@@ -93,7 +103,7 @@ fn on_vertex() -> bool {
     std::env::var("TEXTUS_EVAL_PROVIDER").is_ok_and(|v| v == "vertex")
 }
 
-/// TEXTUS_EVAL_PROVIDER: doubao, deepseek or minimax run the agent cases on
+/// TEXTUS_EVAL_PROVIDER: doubao, deepseek, minimax or opencode-go run the agent cases on
 /// that provider (the judge stays Claude); chatgpt uses this machine's app
 /// sign-in, read in place and never copied, printed or refreshed.
 pub fn agent_provider_id() -> &'static str {
@@ -101,9 +111,12 @@ pub fn agent_provider_id() -> &'static str {
         Ok("doubao") => "doubao",
         Ok("deepseek") => "deepseek",
         Ok("minimax") => "minimax",
+        Ok("opencode-go") => "opencode-go",
         Ok("chatgpt") => "openai",
         Ok("vertex") => "google",
-        _ => "anthropic",
+        Ok("anthropic") | Err(_) => "anthropic",
+        // A typo must not quietly run every case on paid Claude.
+        Ok(other) => panic!("TEXTUS_EVAL_PROVIDER={other} is not a provider the eval knows"),
     }
 }
 
@@ -144,13 +157,14 @@ pub(crate) fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
                 originator: crate::app_identity::ORIGINATOR.to_string(),
             }
         }
-        id @ ("doubao" | "deepseek" | "minimax") => {
+        id @ ("doubao" | "deepseek" | "minimax" | "opencode-go") => {
             let base_url = crate::ai::catalog::find(id)
                 .and_then(|e| e.base_url)
                 .expect("the provider has a base_url");
             let key = match id {
                 "doubao" => "VOLCENGINE_ARK_API_KEY",
                 "deepseek" => "DEEPSEEK_API_KEY",
+                "opencode-go" => "OPENCODE_GO_API_KEY",
                 _ => "MINIMAX_API_KEY",
             };
             Endpoint::ChatCompletions {
@@ -359,6 +373,9 @@ pub fn price(model: &str) -> [f64; 4] {
         "claude-sonnet-5-5" => [2.0, 2.5, 0.20, 10.0],
         // On the ChatGPT sign-in a request is the plan's, not billed.
         m if m.starts_with("gpt-") && agent_provider_id() == "openai" => [0.0; 4],
+        // OpenCode Go's subscription covers the agent's model, and only it:
+        // the judge and the writing model are still priced.
+        m if agent_provider_id() == "opencode-go" && m == agent_model() => [0.0; 4],
         // Approximate, from Ark's yuan list prices.
         m if m.starts_with("doubao-") => [0.55, 0.0, 0.11, 2.2],
         // The highest listed rates, so the guard stops early.
