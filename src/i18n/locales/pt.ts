@@ -420,6 +420,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   paperWritten:
     "O artigo está escrito no documento. Edite-o como qualquer texto; Desfazer o remove.",
   paperWrittenCard: "Escrito no documento.",
+  paperAddingPictures: "Adicionando imagens, faltam {n}…",
   paperEnded: "A escrita deste artigo terminou.",
   paperStop: "Parar",
   paperUnitCharacters: "caracteres",

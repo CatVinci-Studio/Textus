@@ -382,6 +382,7 @@ export default {
     "沒有可用的網頁搜尋，這篇論文的研究只會檢索學術論文（OpenAlex、arXiv）和你的資料庫。",
   paperWritten: "論文已寫進文件，可以像一般文字一樣直接修改；復原會整篇移除。",
   paperWrittenCard: "已寫進文件。",
+  paperAddingPictures: "正在加圖，還剩 {n} 張…",
   paperEnded: "這篇論文的寫作已結束。",
   paperStop: "停止",
   paperUnitCharacters: "字",

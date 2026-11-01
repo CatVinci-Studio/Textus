@@ -431,6 +431,7 @@ para usar una.
   paperWritten:
     "El artículo está escrito en el documento. Edítalo allí como cualquier texto; Deshacer lo quita.",
   paperWrittenCard: "Escrito en el documento.",
+  paperAddingPictures: "Añadiendo imágenes, faltan {n}…",
   paperEnded: "La redacción de este artículo ha terminado.",
   paperStop: "Detener",
   paperUnitCharacters: "caracteres",

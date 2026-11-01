@@ -434,6 +434,7 @@ utiliser une.
   paperWritten:
     "L’article est écrit dans le document. Modifiez-le comme n’importe quel texte ; Annuler le retire.",
   paperWrittenCard: "Écrit dans le document.",
+  paperAddingPictures: "Ajout des images, encore {n}…",
   paperEnded: "La rédaction de cet article est terminée.",
   paperStop: "Arrêter",
   paperUnitCharacters: "caractères",

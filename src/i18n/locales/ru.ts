@@ -421,6 +421,7 @@ export default {
   paperWritten:
     "Статья написана в документе. Правьте её как обычный текст; отмена убирает её целиком.",
   paperWrittenCard: "Написано в документе.",
+  paperAddingPictures: "Добавляются рисунки, осталось {n}…",
   paperEnded: "Работа над этой статьёй завершена.",
   paperStop: "Остановить",
   paperUnitCharacters: "знаков",

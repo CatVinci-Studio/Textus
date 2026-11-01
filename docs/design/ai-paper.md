@@ -135,7 +135,10 @@ it, lazily loaded. Each stage and helper is one run of
   revision rewrites its section the same way. `ready` puts the finished
   paper - title, abstract, sections, references - in that place as one
   step, so one Undo takes it out; a run that stops keeps what was written.
-  Nothing is proposed. The
+  Nothing is proposed. The text goes in without its pictures; each is then
+  saved beside the document as it is made (`paper-pictures.ts`) and put
+  above its numbered caption, a step of its own, the card counting those
+  to come. A picture whose caption the user has removed is left out. The
   language is the topic's script's, else the UI's.
 
 - **The user's library**: when the project has a `references/` folder, each

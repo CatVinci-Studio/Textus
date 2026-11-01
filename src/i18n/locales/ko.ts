@@ -395,6 +395,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   paperWritten:
     "논문을 문서에 썼습니다. 다른 글처럼 바로 고칠 수 있고, 실행 취소하면 논문 전체가 빠집니다.",
   paperWrittenCard: "문서에 썼습니다.",
+  paperAddingPictures: "그림을 넣는 중, {n}장 남음…",
   paperEnded: "이 논문 작성은 끝났습니다.",
   paperStop: "중지",
   paperUnitCharacters: "자",
