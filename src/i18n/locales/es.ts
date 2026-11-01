@@ -430,9 +430,9 @@ para usar una.
     "Versión {n}: la anterior no pasó las comprobaciones; se está rehaciendo…",
   paperPapersOnly:
     "No hay búsqueda web disponible: la investigación solo busca artículos académicos (OpenAlex, arXiv) y tu biblioteca.",
-  paperProposed:
-    "El artículo está propuesto al final del documento. Revísalo allí y acéptalo o recházalo.",
-  paperProposedCard: "Propuesto al final del documento.",
+  paperWritten:
+    "El artículo está escrito en el documento. Edítalo allí como cualquier texto; Deshacer lo quita.",
+  paperWrittenCard: "Escrito en el documento.",
   paperEnded: "La redacción de este artículo ha terminado.",
   paperStop: "Detener",
   paperUnitCharacters: "caracteres",

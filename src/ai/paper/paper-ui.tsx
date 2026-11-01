@@ -48,7 +48,7 @@ function progressLine(run: PaperRunState, t: Strings): string {
     case "finishing":
       return t.paperFinishing;
     case "done":
-      return run.proposed ? t.paperProposedCard : t.paperFinishing;
+      return run.written ? t.paperWrittenCard : t.paperFinishing;
   }
 }
 
@@ -241,7 +241,7 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
   const running =
     run &&
     !run.error &&
-    !run.proposed &&
+    !run.written &&
     (run.phase !== "awaitingOutline" || run.approving);
   const line = run ? progressLine(run, t) : t.paperEnded;
   const busy = Boolean(running) && run?.phase !== "awaitingOutline";

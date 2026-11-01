@@ -394,9 +394,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   paperOutlineRetry: "{n}번째 안: 이전 안이 검사를 통과하지 못해 다시 짜는 중…",
   paperPapersOnly:
     "웹 검색을 쓸 수 없어 이 논문의 조사는 학술 논문(OpenAlex, arXiv)과 자료실만 검색합니다.",
-  paperProposed:
-    "논문을 문서 끝에 제안했습니다. 거기서 확인한 뒤 승인하거나 거절하세요.",
-  paperProposedCard: "문서 끝에 제안했습니다.",
+  paperWritten:
+    "논문을 문서에 썼습니다. 다른 글처럼 바로 고칠 수 있고, 실행 취소하면 논문 전체가 빠집니다.",
+  paperWrittenCard: "문서에 썼습니다.",
   paperEnded: "이 논문 작성은 끝났습니다.",
   paperStop: "중지",
   paperUnitCharacters: "자",

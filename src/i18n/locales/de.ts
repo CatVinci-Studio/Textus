@@ -421,9 +421,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Entwurf {n}: Der letzte hat die Prüfung nicht bestanden und wird neu erstellt…",
   paperPapersOnly:
     "Keine Websuche verfügbar – die Recherche durchsucht nur Fachartikel (OpenAlex, arXiv) und deine Bibliothek.",
-  paperProposed:
-    "Der Aufsatz ist am Ende des Dokuments vorgeschlagen. Prüfen Sie ihn dort und übernehmen oder verwerfen Sie ihn.",
-  paperProposedCard: "Am Ende des Dokuments vorgeschlagen.",
+  paperWritten:
+    "Der Aufsatz steht im Dokument. Bearbeiten Sie ihn dort wie jeden Text; Rückgängig entfernt ihn.",
+  paperWrittenCard: "Im Dokument geschrieben.",
   paperEnded: "Das Schreiben dieses Aufsatzes ist beendet.",
   paperStop: "Stoppen",
   paperUnitCharacters: "Zeichen",

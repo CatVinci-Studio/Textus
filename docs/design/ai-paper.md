@@ -28,9 +28,9 @@ topic, files ─► ① plan research ─► ② research helpers ─► dossier
    edits and approves it on a card in the chat.
 4. **Drafting**: one helper per section, up to three at once, given the
    outline, its notes and the sections before it in summary. Sections are
-   held until those before them are done, then proposed in order with
-   `propose_edit`'s `append`, one proposal each - every change stays a
-   proposal the user accepts (ai-proposals.md).
+   written into the document as they come - each under its heading as its
+   writer writes it - with nothing to accept: the user asked for the paper,
+   and one Undo takes it out.
 5. **Figures**: generated pictures (`textus-picture:`), Mermaid, ```chart
    blocks from the dossier's data, and pictures found on the web with their
    source and licence.
@@ -122,8 +122,16 @@ it, lazily loaded. Each stage and helper is one run of
   gets the user's ask and a card (`write_paper` turns, which Rust keeps from
   the model); the card follows the run from the paper store and shows the
   outline card while the run waits. Approve saves the edited outline and
-  drafts; `ready` becomes one `propose_edit` append - title, abstract,
-  sections, references - accepted or rejected like any proposal. The
+  drafts straight into the document (`usePaperDocument`, `paper-write.ts`):
+  the whole document when it is empty, else after its end, a place
+  `paperRegionPlugin` keeps while the user edits around it. The topic and
+  the section headings go in at once, and each section fills in under its
+  heading from `sectionText` - its whole text, sent again as kept - at most
+  once a frame, only the top-level blocks that changed replaced; a
+  revision rewrites its section the same way. `ready` puts the finished
+  paper - title, abstract, sections, references - in that place as one
+  step, so one Undo takes it out; a run that stops keeps what was written.
+  Nothing is proposed. The
   language is the topic's script's, else the UI's.
 
 - **The user's library**: when the project has a `references/` folder, each

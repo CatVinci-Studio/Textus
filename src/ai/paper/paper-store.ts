@@ -45,6 +45,8 @@ export const RECENT_ACTIVITY = 4;
  *  History has none, and says its run has ended. */
 export interface PaperRunState {
   phase: PaperPhase | "starting";
+  /** What the paper is on: its title until the finished paper has one. */
+  topic: string;
   /** The paper's id in `.textus/papers/`, once research has made it. */
   paperId: string | null;
   sections: Record<number, SectionStatus>;
@@ -54,8 +56,8 @@ export interface PaperRunState {
   approving: boolean;
   /** Why the run stopped, when it failed. */
   error: string | null;
-  /** The paper was proposed. */
-  proposed: boolean;
+  /** The paper is written in the document for good. */
+  written: boolean;
   /** "characters" or "words", in the UI language: the outline's lengths. */
   unit: string;
   /** The tail of what the planner is thinking, while it plans. */
@@ -71,7 +73,7 @@ export interface PaperRunState {
     thesis: string | null;
     titles: string[];
   } | null;
-  /** The tail of what each section's writer has written so far. */
+  /** What each section's writer has written so far. */
   sectionText: Record<number, string>;
   /** False when research can't search the web; null until it says. */
   webSearch: boolean | null;
@@ -79,13 +81,14 @@ export interface PaperRunState {
 
 const NEW_RUN: PaperRunState = {
   phase: "starting",
+  topic: "",
   paperId: null,
   sections: {},
   used: null,
   outline: null,
   approving: false,
   error: null,
-  proposed: false,
+  written: false,
   unit: "",
   thinking: "",
   questions: [],
@@ -259,24 +262,9 @@ export function parsePaperCard(
   }
 }
 
-/** The finished paper as one proposal: appended to the document, like
- *  any proposal the AI makes. */
-export function paperProposalTurns(
-  key: string,
-  markdown: string,
-  reply: string,
-): AgentTurn[] {
-  const callId = `paper-${key}#0`;
-  return [
-    {
-      kind: "ToolCall",
-      call_id: callId,
-      name: "propose_edit",
-      arguments: JSON.stringify({ action: "append", text: markdown }),
-    },
-    { kind: "ToolResult", call_id: callId, output: "Edit proposed" },
-    { kind: "Assistant", text: reply },
-  ];
+/** What the conversation says once the paper is in the document. */
+export function paperWrittenTurns(reply: string): AgentTurn[] {
+  return [{ kind: "Assistant", text: reply }];
 }
 
 /** The language a paper on `topic` is written in: Chinese for a topic in

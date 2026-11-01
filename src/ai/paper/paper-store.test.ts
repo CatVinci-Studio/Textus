@@ -4,7 +4,7 @@ import {
   applyPaperEvent,
   paperCardTurns,
   paperLanguage,
-  paperProposalTurns,
+  paperWrittenTurns,
   paperRun,
   parsePaperCard,
   PAPER_TURN,
@@ -118,16 +118,10 @@ describe("the paper store", () => {
     expect(paperRun("k6")!.webSearch).toBe(false);
   });
 
-  it("proposes the paper as one append", () => {
-    const found = proposalsFromTurns(
-      paperProposalTurns("k3", "# Title\n\nText.", "Proposed."),
-    );
-    expect(found).toHaveLength(1);
-    expect(found[0].callId).toBe("paper-k3#0");
-    expect(found[0].proposal).toMatchObject({
-      action: "append",
-      text: "# Title\n\nText.",
-    });
+  it("proposes nothing: the paper is already in the document", () => {
+    const turns = paperWrittenTurns("Written.");
+    expect(proposalsFromTurns(turns)).toHaveLength(0);
+    expect(turns).toEqual([{ kind: "Assistant", text: "Written." }]);
   });
 
   it("writes in the topic's script, else the UI's language", () => {

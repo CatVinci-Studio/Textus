@@ -382,9 +382,8 @@ export default {
   paperOutlineRetry: "第 {n} 稿：上一稿未通過檢查，正在重擬…",
   paperPapersOnly:
     "沒有可用的網頁搜尋，這篇論文的研究只會檢索學術論文（OpenAlex、arXiv）和你的資料庫。",
-  paperProposed:
-    "論文已作為修改建議放在文件末尾。請在那裡檢視，再決定接受或拒絕。",
-  paperProposedCard: "已放在文件末尾。",
+  paperWritten: "論文已寫進文件，可以像一般文字一樣直接修改；復原會整篇移除。",
+  paperWrittenCard: "已寫進文件。",
   paperEnded: "這篇論文的寫作已結束。",
   paperStop: "停止",
   paperUnitCharacters: "字",
