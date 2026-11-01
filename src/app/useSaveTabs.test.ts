@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useSaveTabs } from "./useSaveTabs";
 import { useTabState } from "./tabs/useTabState";
 import { fs } from "../platform/ipc";
+import { documentsDir } from "../platform/documents-path";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import en from "../i18n/locales/en";
 import type { DocTab } from "../document/doc-tabs";
@@ -18,6 +19,9 @@ vi.mock("../platform/ipc", () => ({
     migrateDraftImages: vi.fn(),
   },
   session: { addRecentFile: vi.fn() },
+}));
+vi.mock("../platform/documents-path", () => ({
+  documentsDir: vi.fn(),
 }));
 vi.mock("../ui/app-dialog", () => ({
   showConfirm: vi.fn(),
@@ -41,7 +45,7 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-function setup(tab: DocTab) {
+function setup(tab: DocTab, folder: string | null = null) {
   const { result } = renderHook(() => {
     const tabState = useTabState();
     const saves = useSaveTabs({
@@ -49,6 +53,7 @@ function setup(tab: DocTab) {
       t: en as Strings,
       autoSuggestFilename: true,
       imageFolder: "assets",
+      folder,
     });
     return { tabState, ...saves };
   });
@@ -76,13 +81,85 @@ describe("autosaveTab", () => {
     });
   });
 
-  it("never asks where to save an untitled document", async () => {
-    const result = setup({ ...doc, path: null, diskMtime: null });
-    await act(async () => {
-      expect(await result.current.autosaveTab("a")).toBe("skipped");
+  describe("an untitled document", () => {
+    const draft: DocTab = {
+      ...doc,
+      path: null,
+      content: "# Trip plan\n\nday one",
+      savedContent: "",
+      diskMtime: null,
+    };
+    const onDisk = (taken: string[]) =>
+      vi
+        .mocked(fs.fileMtimeMs)
+        .mockImplementation(async (p) => (taken.includes(p) ? 7 : null));
+    // A new file: written with the editor's own line endings.
+    beforeEach(() => {
+      vi.mocked(fs.readTextFile).mockRejectedValue(new Error("not found"));
     });
-    expect(fs.saveFileDialog).not.toHaveBeenCalled();
-    expect(fs.writeTextFile).not.toHaveBeenCalled();
+
+    it("is saved into the open folder under its heading, without a dialog", async () => {
+      onDisk(["/work/Trip plan.md"]);
+      const result = setup(draft, "/work");
+      await act(async () => {
+        expect(await result.current.autosaveTab("a")).toBe("saved");
+      });
+      expect(fs.saveFileDialog).not.toHaveBeenCalled();
+      // The taken name is numbered, never overwritten.
+      expect(fs.writeTextFile).toHaveBeenCalledWith(
+        "/work/Trip plan 2.md",
+        draft.content,
+      );
+      expect(result.current.tabState.tabs[0]).toMatchObject({
+        path: "/work/Trip plan 2.md",
+        savedContent: draft.content,
+      });
+    });
+
+    it("goes to Documents with no folder open", async () => {
+      onDisk([]);
+      vi.mocked(documentsDir).mockResolvedValue("/home/me/Documents/");
+      const result = setup(draft);
+      await act(async () => {
+        expect(await result.current.autosaveTab("a")).toBe("saved");
+      });
+      expect(fs.writeTextFile).toHaveBeenCalledWith(
+        "/home/me/Documents/Trip plan.md",
+        draft.content,
+      );
+    });
+
+    it("stays a draft with nowhere to go, or nothing in it", async () => {
+      vi.mocked(documentsDir).mockRejectedValue(new Error("no Documents"));
+      const nowhere = setup(draft);
+      const blank = setup({ ...draft, content: " \n" }, "/work");
+      await act(async () => {
+        expect(await nowhere.current.autosaveTab("a")).toBe("skipped");
+        expect(await blank.current.autosaveTab("a")).toBe("skipped");
+      });
+      expect(fs.writeTextFile).not.toHaveBeenCalled();
+    });
+
+    it("takes the next number when two drafts of one name save together", async () => {
+      const written: string[] = [];
+      vi.mocked(fs.fileMtimeMs).mockImplementation(async (p) =>
+        written.includes(p) ? 7 : null,
+      );
+      vi.mocked(fs.writeTextFile).mockImplementation(async (p) => {
+        written.push(p);
+      });
+      const result = setup(draft, "/work");
+      act(() =>
+        result.current.tabState.setTabs([draft, { ...draft, id: "b" }]),
+      );
+      await act(async () => {
+        await Promise.all([
+          result.current.autosaveTab("a"),
+          result.current.autosaveTab("b"),
+        ]);
+      });
+      expect(written).toEqual(["/work/Trip plan.md", "/work/Trip plan 2.md"]);
+    });
   });
 
   it("keeps a file changed on disk unless the user chooses to overwrite", async () => {

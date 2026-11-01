@@ -1036,6 +1036,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   restoreSessionLabel: "시작할 때 이전 세션 복원",
   autoSuggestFilenameLabel: "새 파일을 저장할 때 파일 이름 제안",
   autosaveLabel: "자동 저장",
+  autosaveHint: "제목 없는 문서도 열린 폴더나 문서 폴더에 저장합니다.",
   untitledTab: "제목 없음",
   markdownGuideTab: "Markdown 가이드",
   agentGuideTab: "AI 기능 가이드",

@@ -997,6 +997,7 @@ export default {
   restoreSessionLabel: "启动时恢复上次会话",
   autoSuggestFilenameLabel: "新文件保存时自动建议文件名",
   autosaveLabel: "自动保存",
+  autosaveHint: "未命名文档也会保存，存到打开的文件夹或“文档”文件夹。",
   untitledTab: "未命名",
   markdownGuideTab: "Markdown 指南",
   agentGuideTab: "AI 功能指南",
