@@ -12,6 +12,7 @@ import { aiErrorTexts } from "../error-messages";
 export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
   return {
     placeholder: t.agentInputPlaceholder,
+    researchPlaceholder: t.paperTopicPlaceholder,
     suggestionTab: t.composerSuggestionTab,
     queued: t.agentQueued,
     queuedPaused: t.agentQueuedPaused,
@@ -146,9 +147,11 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     modeWrite: t.agentModeWrite,
     modeReview: t.agentModeReview,
     modeCreate: t.agentModeCreate,
+    modeResearch: t.agentModeResearch,
     modeWriteHint: t.agentModeWriteHint,
     modeReviewHint: t.agentModeReviewHint,
     modeCreateHint: t.agentModeCreateHint,
+    modeResearchHint: t.agentModeResearchHint,
     modeLabel: t.chatModeLabel,
     modelLabel: t.chatModelLabel,
     modeAndModelLabel: t.chatModeModelLabel,

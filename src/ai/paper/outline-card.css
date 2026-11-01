@@ -305,23 +305,6 @@
   flex: 1;
 }
 
-.paper-start textarea {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 4px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-s);
-  background: var(--ui-surface);
-  color: inherit;
-  font: inherit;
-  resize: vertical;
-}
-
-.paper-start {
-  align-self: stretch;
-  text-align: start;
-}
-
 /* What the run is doing in detail, under its progress line. */
 .paper-card-progress {
   display: flex;

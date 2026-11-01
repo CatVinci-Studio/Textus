@@ -9,7 +9,7 @@ import {
 import type { ChatAttachment, ThinkingLevel } from "../types";
 import { ai } from "../../platform/ipc";
 import { useActiveProvider, useWebSearchStatus } from "../provider-catalog";
-import type { AgentMode } from "../../prefs/SettingsContext";
+import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
 import { initialMode, rememberMode } from "./last-mode";
 import { deepThinkingOn, useCanThinkDeeper } from "./deep-thinking";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -120,7 +120,7 @@ export function useComposerMode({
   defaultMode: AgentMode;
   onModeChange: ChatComposerProps["onModeChange"];
 }) {
-  const [mode, setModeState] = useState<AgentMode>(
+  const [mode, setModeState] = useState<PanelMode>(
     () => tourMode ?? (carryMode ? initialMode(defaultMode) : defaultMode),
   );
   useEffect(() => {
@@ -128,9 +128,10 @@ export function useComposerMode({
   }, [tourMode]);
   const onModeChangeRef = useLatest(onModeChange);
   useEffect(() => onModeChangeRef.current?.(mode), [mode, onModeChangeRef]);
-  const setMode = (next: AgentMode) => {
+  const setMode = (next: PanelMode) => {
     setModeState(next);
-    if (carryMode) rememberMode(next, defaultMode);
+    // A paper is one request; the next conversation starts in an agent mode.
+    if (carryMode && next !== "research") rememberMode(next, defaultMode);
   };
   return { mode, setMode };
 }

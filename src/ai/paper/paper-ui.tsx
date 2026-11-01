@@ -14,10 +14,8 @@ import {
   type PaperRunState,
   type QuestionState,
 } from "./paper-store";
+import { PAPER_LENGTHS } from "./paper-lengths";
 import "./outline-card.css";
-
-/** The paper's lengths offered, in characters. */
-export const PAPER_LENGTHS = [5000, 8000, 10000] as const;
 
 /** One line of what the run is doing now. */
 function progressLine(run: PaperRunState, t: Strings): string {
@@ -293,67 +291,35 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
   );
 }
 
-/** What starting a paper asks: its topic and its length. */
-export function PaperStart({
+/** Research mode's choice of the paper's length; the topic is the
+ *  message sent. */
+export function PaperLength({
   t,
-  onStart,
-  onCancel,
+  value,
+  onChange,
 }: {
   t: Strings;
-  onStart: (topic: string, targetChars: number) => void;
-  onCancel: () => void;
+  value: number;
+  onChange: (chars: number) => void;
 }) {
-  const [topic, setTopic] = useState("");
-  const [length, setLength] = useState<number>(PAPER_LENGTHS[1]);
-  const lengthLabel = (n: number) =>
+  const label = (n: number) =>
     n === PAPER_LENGTHS[0]
       ? t.paperLengthShort
       : n === PAPER_LENGTHS[1]
         ? t.paperLengthMedium
         : t.paperLengthLong;
   return (
-    <form
-      className="paper-card paper-start"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (topic.trim()) onStart(topic.trim(), length);
-      }}
+    <Select
+      className="paper-length"
+      aria-label={t.paperLength}
+      value={String(value)}
+      onChange={(e) => onChange(Number(e.target.value))}
     >
-      <label className="paper-outline-field">
-        <span>{t.paperTopic}</span>
-        <textarea
-          rows={3}
-          autoFocus
-          placeholder={t.paperTopicPlaceholder}
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-        />
-      </label>
-      <div className="paper-card-actions">
-        <Select
-          className="paper-outline-kind"
-          aria-label={t.paperLength}
-          value={String(length)}
-          onChange={(e) => setLength(Number(e.target.value))}
-        >
-          {PAPER_LENGTHS.map((n) => (
-            <option key={n} value={String(n)}>
-              {lengthLabel(n)}
-            </option>
-          ))}
-        </Select>
-        <span className="paper-card-spacer" />
-        <button type="button" className="inline-chat-action" onClick={onCancel}>
-          {t.cancel}
-        </button>
-        <button
-          type="submit"
-          className="inline-chat-action inline-chat-action-primary"
-          disabled={!topic.trim()}
-        >
-          {t.paperStart}
-        </button>
-      </div>
-    </form>
+      {PAPER_LENGTHS.map((n) => (
+        <option key={n} value={String(n)}>
+          {label(n)}
+        </option>
+      ))}
+    </Select>
   );
 }

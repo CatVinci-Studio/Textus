@@ -30,6 +30,8 @@ export default {
   agentPanelEmptyWrite: "Fang an zu schreiben",
   agentPanelEmptyReview: "Mehr Vorschläge erhalten",
   agentPanelEmptyCreate: "Ein Theme, Plugin oder eine Fähigkeit erstellen",
+  agentPanelEmptyResearch:
+    "Ein Thema recherchieren und einen Aufsatz schreiben",
   aiWorkingCompletion: "Fortsetzung wird geschrieben…",
   aiWorkingGrammar: "Absatz wird geprüft…",
   noticeCompletionNeedsCaret:
@@ -385,14 +387,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   paperOutlineLess: "Weniger",
   paperOutlineApprove: "Freigeben und schreiben",
   paperOutlineApproving: "Schreiben beginnt…",
-  paperWrite: "Einen Aufsatz schreiben…",
-  paperTopic: "Thema",
   paperTopicPlaceholder: "Worum es geht und was der Aufsatz abdecken soll",
   paperLength: "Länge",
   paperLengthShort: "Kurz (etwa 5.000 Zeichen)",
   paperLengthMedium: "Mittel (etwa 8.000 Zeichen)",
   paperLengthLong: "Lang (etwa 10.000 Zeichen)",
-  paperStart: "Starten",
   paperAsk: "Einen Aufsatz schreiben: {topic}",
   paperCardTitle: "Aufsatz",
   paperPlanning: "Recherche wird geplant…",
@@ -767,6 +766,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentModeWriteHint: "Schreibt und ändert das Dokument",
   agentModeReviewHint: "Liest es und hinterlässt Notizen; ändert nichts",
   agentModeCreateHint: "Erstellt Themes, Plugins und Skills",
+  agentModeResearch: "Recherche",
+  agentModeResearchHint:
+    "Recherchiert ein Thema und schreibt einen Aufsatz ins Dokument",
   agentPersonalizationGroupLabel: "Schreibanweisungen & Skills",
   agentAdvancedGroupLabel: "Erweitert",
   writingModelLabel: "Assistenzmodell",

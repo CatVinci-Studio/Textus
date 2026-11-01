@@ -30,6 +30,7 @@ const en = {
   agentPanelEmptyWrite: "Start writing",
   agentPanelEmptyReview: "Get more suggestions",
   agentPanelEmptyCreate: "Make a theme, plugin or skill",
+  agentPanelEmptyResearch: "Research a topic and write a paper",
   aiWorkingCompletion: "Writing a continuation…",
   aiWorkingGrammar: "Checking this paragraph…",
   noticeCompletionNeedsCaret:
@@ -380,15 +381,12 @@ type /name in a conversation to use one.
   paperOutlineLess: "Show less",
   paperOutlineApprove: "Approve and write",
   paperOutlineApproving: "Starting to write…",
-  paperWrite: "Write a paper…",
-  paperTopic: "Topic",
   paperTopicPlaceholder:
     "What the paper is about, and anything it should cover",
   paperLength: "Length",
   paperLengthShort: "Short (about 5,000 characters)",
   paperLengthMedium: "Medium (about 8,000 characters)",
   paperLengthLong: "Long (about 10,000 characters)",
-  paperStart: "Start",
   paperAsk: "Write a paper: {topic}",
   paperCardTitle: "Paper",
   paperPlanning: "Planning the research…",
@@ -758,6 +756,9 @@ type /name in a conversation to use one.
   agentModeWriteHint: "Writes and changes the document",
   agentModeReviewHint: "Reads it and leaves notes; changes nothing",
   agentModeCreateHint: "Makes themes, plugins and skills",
+  agentModeResearch: "Research",
+  agentModeResearchHint:
+    "Researches a topic and writes a paper into the document",
   agentPersonalizationGroupLabel: "Writing Instructions & Skills",
   agentAdvancedGroupLabel: "Advanced",
   writingModelLabel: "Assist model",

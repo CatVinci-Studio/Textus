@@ -110,6 +110,10 @@ export type ImageNamingMode = "auto" | "original" | "ask";
  *  reads and comments, Create makes a theme, plugin or skill. In composer order. */
 export type AgentMode = "write" | "review" | "create";
 export const AGENT_MODES: readonly AgentMode[] = ["write", "review", "create"];
+/** The AI panel's modes: the agent's, then Research, which researches a
+ *  topic and writes a paper (docs/design/ai-paper.md). Research never
+ *  reaches the agent, so it is no skill's mode and no default. */
+export type PanelMode = AgentMode | "research";
 
 /** A stored mode, or null for anything that isn't one of today's; the old
  *  Revise mode reads as Write. */

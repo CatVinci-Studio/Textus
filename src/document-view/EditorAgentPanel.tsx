@@ -17,9 +17,10 @@ import type { EditProposal } from "../ai/types";
 import { canDetachChat } from "../platform/capabilities";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { Suspense, useState } from "react";
-import { PaperStart } from "../ai/paper/lazy";
+import { PaperLength } from "../ai/paper/lazy";
+import { DEFAULT_PAPER_LENGTH } from "../ai/paper/paper-lengths";
 import { ModeIcon } from "../ai/chat/mode-icons";
-import type { AgentMode, Settings } from "../prefs/SettingsContext";
+import type { AgentMode, PanelMode, Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /** The panel always asks for the document as it is now; this stands until
@@ -84,9 +85,9 @@ export function EditorAgentPanel({
   writePaper: (topic: string, targetChars: number) => void;
 }) {
   // The composer's mode: the empty state says what the AI will do in it.
-  const [mode, setMode] = useState<AgentMode>(settings.agentDefaultMode);
-  // "Write a paper…" asking for its topic.
-  const [startingPaper, setStartingPaper] = useState(false);
+  const [mode, setMode] = useState<PanelMode>(settings.agentDefaultMode);
+  // Research mode's paper length; the message sent is its topic.
+  const [paperChars, setPaperChars] = useState(DEFAULT_PAPER_LENGTH);
   // The window bar's button opens and closes the panel; only the iPhone's
   // sheet keeps a close button of its own.
   const phone = usePhoneLayout();
@@ -94,6 +95,7 @@ export function EditorAgentPanel({
     write: t.agentPanelEmptyWrite,
     review: t.agentPanelEmptyReview,
     create: t.agentPanelEmptyCreate,
+    research: t.agentPanelEmptyResearch,
   }[mode];
   return (
     <AgentPanelView
@@ -134,27 +136,11 @@ export function EditorAgentPanel({
           <p className="agent-panel-empty-text" key={mode}>
             {emptyText}
           </p>
-          {mode === "write" &&
-            (startingPaper ? (
-              <Suspense fallback={null}>
-                <PaperStart
-                  t={t}
-                  onCancel={() => setStartingPaper(false)}
-                  onStart={(topic, chars) => {
-                    setStartingPaper(false);
-                    writePaper(topic, chars);
-                  }}
-                />
-              </Suspense>
-            ) : (
-              <button
-                type="button"
-                className="inline-chat-action"
-                onClick={() => setStartingPaper(true)}
-              >
-                {t.paperWrite}
-              </button>
-            ))}
+          {mode === "research" && (
+            <Suspense fallback={null}>
+              <PaperLength t={t} value={paperChars} onChange={setPaperChars} />
+            </Suspense>
+          )}
         </div>
       )}
       <ChatBody
@@ -188,6 +174,7 @@ export function EditorAgentPanel({
         onRejectAll={pendingEdits.rejectAll}
         onRevealPending={onRevealPending}
         onModeChange={setMode}
+        onResearch={(topic) => writePaper(topic, paperChars)}
         footer={
           guard && (
             <CloseConfirmBar
