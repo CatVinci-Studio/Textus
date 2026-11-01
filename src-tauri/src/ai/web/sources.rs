@@ -92,6 +92,14 @@ impl SourceBook {
         n
     }
 
+    /// The address of source `n`, if there is one.
+    pub(crate) fn address(&self, n: u32) -> Option<String> {
+        self.sources
+            .iter()
+            .find(|s| s.n == n)
+            .map(|s| s.url.clone())
+    }
+
     /// Whether some source has number `n`.
     pub(crate) fn has(&self, n: u32) -> bool {
         self.sources.iter().any(|s| s.n == n)

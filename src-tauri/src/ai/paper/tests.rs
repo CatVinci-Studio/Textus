@@ -1360,3 +1360,109 @@ fn an_address_with_parentheses_is_cited_whole() {
         Vec::<String>::new()
     );
 }
+
+#[test]
+fn search_pages_and_search_apis_are_not_sources() {
+    for page in [
+        "https://html.duckduckgo.com/html/?q=green+roof",
+        "https://lite.duckduckgo.com/lite/?q=green+roof",
+        "https://www.google.com/search?q=green+roof",
+        "https://www.bing.com/search?q=green+roof",
+        "https://www.baidu.com/s?wd=屋顶绿化",
+        "https://api.crossref.org/works?query.bibliographic=green+roof",
+        "https://api.openalex.org/works?search=green+roof",
+        "https://export.arxiv.org/api/query?search_query=all:roof",
+        "https://commons.wikimedia.org/w/api.php?action=query",
+    ] {
+        assert!(research::is_search_page(page), "{page}");
+    }
+    for source in [
+        "https://www.epa.gov/heatislands/using-green-roofs-reduce-heat-islands",
+        "https://doi.org/10.3390/su9081451",
+        "https://en.wikipedia.org/wiki/Green_roof",
+        "https://www.google.com/about/",
+        "https://arxiv.org/abs/2607.15677v1",
+    ] {
+        assert!(!research::is_search_page(source), "{source}");
+    }
+}
+
+/// Keeps one note citing a search page by address, one by its number.
+struct SearchCiter;
+
+impl research::Model for SearchCiter {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        turns: &'a [aicompat::agent::AgentTurn],
+        tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        use aicompat::agent::{AgentTurn, StepResult};
+        let note = |id: &str, source: &str| AgentTurn::ToolCall {
+            call_id: format!("{id}{}", turns.len()),
+            name: research::ADD_NOTE_TOOL.into(),
+            arguments: json!({"claim": "c", "evidence": "e", "sources": [source]}).to_string(),
+            reasoning: None,
+        };
+        let step = if tools.is_empty() {
+            StepResult::Done(r#"["First question here?", "Second question here?"]"#.into())
+        } else if turns.len() == 1 {
+            StepResult::ToolCalls(vec![
+                note("a", "https://lite.duckduckgo.com/lite/?q=green+roof"),
+                note("b", "https://www.epa.gov/heatislands/"),
+            ])
+        } else if turns.len() == 5 {
+            let refused = turns.iter().any(|t| matches!(t, AgentTurn::ToolResult { output, .. } if output.contains("is a search page")));
+            assert!(refused, "the search page was taken as a source");
+            StepResult::ToolCalls(vec![note("c", "1")])
+        } else {
+            StepResult::Done("Covered.".into())
+        };
+        Box::pin(async move { Ok(step) })
+    }
+}
+
+#[tokio::test]
+async fn a_note_can_t_rest_on_a_search_page_by_address_or_number() {
+    let budget = SharedBudget::new(ResearchBudget::for_paper());
+    let web = WebPlan::new(true, None, None, &[]);
+    // Number 1 is the search page, as a helper's earlier read left it.
+    assert_eq!(
+        web.source_number("https://lite.duckduckgo.com/lite/?q=green+roof"),
+        Some(1)
+    );
+    let dossier = research::research(&SearchCiter, &paper(), &web, &budget, &|_| {}, None)
+        .await
+        .unwrap();
+    assert!(
+        dossier.notes.iter().all(|n| n.sources == vec![2]),
+        "{:?}",
+        dossier.notes
+    );
+    assert!(dossier
+        .sources
+        .iter()
+        .all(|s| !research::is_search_page(&s.url)));
+}
+
+#[test]
+fn a_figure_named_by_number_is_sent_back_and_a_slash_doesn_t_matter() {
+    let mut section = outline().sections.remove(0);
+    section.target_words = 10;
+    section.figures.clear();
+    let sources = vec![(3, "https://example.org/study".to_string())];
+    let numbered =
+        "Roofs cool by day, as 图1 shows, and so on here [3](https://example.org/study/).";
+    let found = draft::problems(numbered, &section, &sources, "en").join(" ");
+    assert!(
+        found.contains("\"图1\" names a figure by a number"),
+        "{found}"
+    );
+    assert!(!draft::is_soft(&found));
+    let fine =
+        "Roofs cool by day, as the chart below shows and more [3](https://example.org/study/).";
+    assert_eq!(
+        draft::problems(fine, &section, &sources, "en"),
+        Vec::<String>::new()
+    );
+}
