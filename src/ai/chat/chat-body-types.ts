@@ -77,6 +77,8 @@ export interface ChatBodyProps {
   onModeChange?: (mode: PanelMode) => void;
   /** The panel: Research is offered, its message a paper's topic. */
   onResearch?: (topic: string) => void;
+  /** Research mode's choices, in the composer's toolbar. */
+  researchControls?: React.ReactNode;
   /** Rendered above the composer - the popup's close-confirmation bar. */
   footer?: React.ReactNode;
   /** Jumps the editor to a pending edit. Absent in the detached window,

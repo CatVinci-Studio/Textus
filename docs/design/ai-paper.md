@@ -121,8 +121,8 @@ it, lazily loaded. Each stage and helper is one run of
 
 - **In the app** (`document-view/usePaperWriter.ts`, `ai/paper/paper-store.ts`,
   the lazy `paper` module): the AI panel's fourth mode, **Research**, takes
-  the message as the paper's topic, at the length picked in the empty
-  panel; it never reaches the chat agent, so it is no skill's mode and
+  the message as the paper's topic, at the length picked beside the mode
+  under the message box; it never reaches the chat agent, so it is no skill's mode and
   not a default. The conversation
   gets the user's ask and a card (`write_paper` turns, which Rust keeps from
   the model); the card follows the run from the paper store and shows the
