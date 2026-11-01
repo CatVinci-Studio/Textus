@@ -1,3 +1,4 @@
+use super::budget::BudgetKind;
 use super::*;
 use crate::ai::web::{WebPlan, WEB_FETCH_TOOL};
 use serde_json::json;
@@ -395,9 +396,9 @@ fn the_planner_s_stream_is_sent_as_its_tail_a_few_times_a_second() {
             text: "First the background.".into()
         }]
     );
-    assert_eq!(research::tail("abcdef", 3), "def");
-    assert_eq!(research::tail("绿化城市", 2), "城市");
-    assert_eq!(research::tail("ab", 5), "ab");
+    assert_eq!(model::tail("abcdef", 3), "def");
+    assert_eq!(model::tail("绿化城市", 2), "城市");
+    assert_eq!(model::tail("ab", 5), "ab");
 }
 
 #[tokio::test]

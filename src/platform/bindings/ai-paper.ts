@@ -8,6 +8,11 @@ import { invoke as __TAURI_INVOKE, Channel } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
+	/**
+	 *  Researches and outlines a paper on `topic` in the document's project,
+	 *  kept in `.textus/papers/<id>/`; a paper begun before goes on from what
+	 *  it kept. Stopped like any request, by `ai_cancel` with `request_id`.
+	 */
 	ai_paper_run: (request: PaperRequest_Deserialize, channel: Channel<PaperEvent_Deserialize>) => __TAURI_INVOKE<Paper_Serialize>("ai_paper_run", { request, channel }),
 	/**
 	 *  The outline as the user edited it on the card, kept for drafting. Notes
@@ -358,7 +363,7 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
 
 export type PaperPhase = "planning" | "researching" | "outlining" | 
 /**  Waiting for the user to approve the outline. */
-"awaitingOutline" | "drafting" | "illustrating" | "reviewing" | "finishing" | "done";
+"awaitingOutline" | "drafting" | "reviewing" | "finishing" | "done";
 
 /**  How far a kept paper has come: what its card offers to go on with. */
 export type PaperProgress = PaperProgress_Serialize | PaperProgress_Deserialize;
@@ -379,22 +384,10 @@ export type PaperProgress_Serialize = {
 	drafted: number,
 };
 
-/**
- *  Writes a paper on `topic` in the document's project: for now its
- *  research - the questions planned, the helpers' notes - kept in
- *  `.textus/papers/<id>/`. The outline and drafting follow in later
- *  branches. Stopped like any request, by `ai_cancel` with `request_id`.
- *  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts.
- */
+/**  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts. */
 export type PaperRequest = PaperRequest_Serialize | PaperRequest_Deserialize;
 
-/**
- *  Writes a paper on `topic` in the document's project: for now its
- *  research - the questions planned, the helpers' notes - kept in
- *  `.textus/papers/<id>/`. The outline and drafting follow in later
- *  branches. Stopped like any request, by `ai_cancel` with `request_id`.
- *  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts.
- */
+/**  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts. */
 export type PaperRequest_Deserialize = {
 	provider: string,
 	model?: string | null,
@@ -420,13 +413,7 @@ export type PaperRequest_Deserialize = {
 	imageModel?: ImageModel_Deserialize | null,
 };
 
-/**
- *  Writes a paper on `topic` in the document's project: for now its
- *  research - the questions planned, the helpers' notes - kept in
- *  `.textus/papers/<id>/`. The outline and drafting follow in later
- *  branches. Stopped like any request, by `ai_cancel` with `request_id`.
- *  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts.
- */
+/**  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts. */
 export type PaperRequest_Serialize = {
 	provider: string,
 	model: string | null,
@@ -514,11 +501,7 @@ export type ResearchBudget = {
 	used: BudgetCounts,
 };
 
-export type SectionStatus = "waiting" | "drafting" | 
-/**  Written, held until the sections before it are proposed. */
-"drafted" | 
-/**  Sent to the document as a proposal. */
-"proposed" | "revising" | "failed";
+export type SectionStatus = "drafting" | "drafted" | "revising";
 
 /**
  *  A source of the paper: its number in the research's numbering, and its

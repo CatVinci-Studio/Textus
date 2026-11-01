@@ -134,7 +134,6 @@ pub enum PaperPhase {
     /// Waiting for the user to approve the outline.
     AwaitingOutline,
     Drafting,
-    Illustrating,
     Reviewing,
     Finishing,
     Done,
@@ -144,12 +143,7 @@ pub enum PaperPhase {
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum SectionStatus {
-    Waiting,
     Drafting,
-    /// Written, held until the sections before it are proposed.
     Drafted,
-    /// Sent to the document as a proposal.
-    Proposed,
     Revising,
-    Failed,
 }

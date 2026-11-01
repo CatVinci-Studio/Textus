@@ -294,3 +294,25 @@ pub(crate) async fn doi_title(doi: &str) -> Option<String> {
     let paper = openalex_papers(&serde_json::json!({ "results": [work] })).pop()?;
     Some(format!("{} - {}", paper.title, paper.byline()))
 }
+
+/// What search_papers looks like to the model.
+pub(crate) fn search_papers_spec() -> aicompat::agent::ToolSpec {
+    aicompat::agent::ToolSpec {
+        name: SEARCH_PAPERS_TOOL.into(),
+        description: "Search scholarly literature - journal and conference papers, books and arXiv preprints - for research, evidence and figures a claim can rest on. Pass one short query in English, the language most papers are indexed in, and optionally `since`, the earliest year wanted. Results come back numbered like web results, with authors, year, venue, citation count and the abstract; cite what you use by its number. Read an open-access paper in full with web_fetch on its address.".into(),
+        parameters: serde_json::json!({
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "What the papers are about, in a few keywords"
+                },
+                "since": {
+                    "type": "integer",
+                    "description": "The earliest publication year wanted"
+                }
+            },
+            "required": ["query"],
+        }),
+    }
+}

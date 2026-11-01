@@ -56,7 +56,7 @@
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-s);
   background: var(--ui-subtle);
-  animation: paper-enter 0.2s ease-out both;
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
 }
 
 .paper-outline-row {
@@ -183,7 +183,7 @@
 .paper-outline-section .paper-outline-row .paper-outline-edit,
 .paper-outline-thesis .paper-outline-edit {
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity var(--dur-fast);
 }
 
 .paper-outline-section:hover .paper-outline-edit,
@@ -393,7 +393,7 @@
   border: 1.5px solid var(--ui-border);
   border-top-color: var(--ui-accent, var(--ui-text));
   border-radius: 50%;
-  animation: paper-spin 0.9s linear infinite;
+  animation: paper-spin var(--dur-spin) linear infinite;
 }
 
 .paper-card-mark {
@@ -410,12 +410,11 @@
 .paper-card-mark[data-state="revising"] {
   border-color: var(--ui-accent, var(--ui-text));
   background: var(--ui-accent, var(--ui-text));
-  animation: paper-breathe 1.2s ease-in-out infinite;
+  animation: paper-breathe var(--dur-pulse) var(--ease-in-out) infinite;
 }
 
 .paper-card-mark[data-state="done"],
-.paper-card-mark[data-state="drafted"],
-.paper-card-mark[data-state="proposed"] {
+.paper-card-mark[data-state="drafted"] {
   border-color: var(--ui-muted);
   background: var(--ui-muted);
 }
@@ -426,11 +425,11 @@
 }
 
 .paper-card-enter {
-  animation: paper-enter 0.28s ease-out both;
+  animation: motion-rise-in var(--dur-medium) var(--ease-out) both;
 }
 
 .paper-card-thinking {
-  animation: paper-enter 0.28s ease-out both;
+  animation: motion-rise-in var(--dur-medium) var(--ease-out) both;
 }
 
 .paper-card-thesis,
@@ -462,14 +461,14 @@
   justify-content: flex-end;
   max-height: 7.5em;
   overflow: hidden;
-  margin-left: 14px;
+  margin-left: 16px;
   padding: 4px 8px;
   border-radius: var(--shape-s);
   background: var(--ui-subtle);
   font-size: var(--text-footnote);
   line-height: 1.5;
   mask-image: linear-gradient(to bottom, transparent, black 45%);
-  animation: paper-enter 0.28s ease-out both;
+  animation: motion-rise-in var(--dur-medium) var(--ease-out) both;
 }
 
 .paper-card-preview p {
@@ -486,13 +485,6 @@
 @keyframes paper-breathe {
   50% {
     opacity: 0.35;
-  }
-}
-
-@keyframes paper-enter {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
   }
 }
 

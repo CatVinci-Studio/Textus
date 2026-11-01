@@ -5,9 +5,12 @@
 //! are generated into src/platform/bindings/ai-paper.ts (`npm run bindings`).
 
 mod budget;
+mod checks;
 mod draft;
 mod events;
 mod finish;
+mod library;
+mod model;
 mod outline;
 mod research;
 mod review;
@@ -15,7 +18,8 @@ mod store;
 mod timeline;
 mod web_figures;
 
-pub(crate) use budget::{BudgetCounts, BudgetKind, ResearchBudget, SharedBudget};
+use budget::KeepSpent;
+pub(crate) use budget::{BudgetCounts, ResearchBudget, SharedBudget};
 pub(crate) use events::{ActivityKind, PaperEvent, PaperPhase, SectionStatus, SourceEntry};
 pub(crate) use store::{
     clear_sections, load, load_section, new_id, save, save_section, PaperFiles,
@@ -179,37 +183,6 @@ pub struct PaperRequest {
     /// The image model, for the pictures the outline may plan; None for
     /// none.
     pub image_model: Option<crate::ai::images::ImageModel>,
-}
-
-/// Writes what research has spent into the kept paper when it ends short -
-/// stopped, failed - so going on doesn't begin again with a full budget.
-struct KeepSpent<'a> {
-    root: &'a std::path::Path,
-    id: String,
-    budget: std::sync::Arc<SharedBudget>,
-    /// The paper's own picture limit, not this run's image model's.
-    images: u32,
-    done: bool,
-}
-
-impl KeepSpent<'_> {
-    fn spent(&self) -> ResearchBudget {
-        let mut spent = self.budget.snapshot();
-        spent.limits.images = self.images;
-        spent
-    }
-}
-
-impl Drop for KeepSpent<'_> {
-    fn drop(&mut self) {
-        if self.done {
-            return;
-        }
-        if let Ok(mut files) = load(self.root, &self.id) {
-            files.paper.budget = self.spent();
-            let _ = save(self.root, &files);
-        }
-    }
 }
 
 /// Researches and outlines a paper on `topic` in the document's project,

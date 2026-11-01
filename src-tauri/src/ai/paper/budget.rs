@@ -129,3 +129,34 @@ impl WebBudget for SharedBudget {
         self.0.lock().unwrap().limits.get(web_kind(kind)) as usize
     }
 }
+
+/// Writes what research has spent into the kept paper when it ends short -
+/// stopped, failed - so going on doesn't begin again with a full budget.
+pub(super) struct KeepSpent<'a> {
+    pub(super) root: &'a std::path::Path,
+    pub(super) id: String,
+    pub(super) budget: std::sync::Arc<SharedBudget>,
+    /// The paper's own picture limit, not this run's image model's.
+    pub(super) images: u32,
+    pub(super) done: bool,
+}
+
+impl KeepSpent<'_> {
+    pub(super) fn spent(&self) -> ResearchBudget {
+        let mut spent = self.budget.snapshot();
+        spent.limits.images = self.images;
+        spent
+    }
+}
+
+impl Drop for KeepSpent<'_> {
+    fn drop(&mut self) {
+        if self.done {
+            return;
+        }
+        if let Ok(mut files) = super::load(self.root, &self.id) {
+            files.paper.budget = self.spent();
+            let _ = super::save(self.root, &files);
+        }
+    }
+}

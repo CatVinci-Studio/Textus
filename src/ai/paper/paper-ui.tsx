@@ -44,7 +44,6 @@ function progressLine(run: PaperRunState, t: Strings): string {
         .replace("{n}", String(written))
         .replace("{of}", String(sections));
     case "reviewing":
-    case "illustrating":
       return t.paperReviewing;
     case "finishing":
       return t.paperFinishing;
@@ -98,19 +97,18 @@ function questionStatus(q: QuestionState, t: Strings): string {
   }
 }
 
-function sectionStatus(status: SectionStatus, t: Strings): string {
+/** A section's state on the card: as the run last said, or waiting for
+ *  its writer. */
+function sectionStatus(status: SectionStatus | "waiting", t: Strings): string {
   switch (status) {
     case "waiting":
       return t.paperSectionWaiting;
     case "drafting":
       return t.paperSectionDrafting;
     case "drafted":
-    case "proposed":
       return t.paperSectionDrafted;
     case "revising":
       return t.paperSectionRevising;
-    case "failed":
-      return t.paperSectionFailed;
   }
 }
 
@@ -220,7 +218,8 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
     return (
       <ol className="paper-card-list">
         {run.outline.sections.map((section, i) => {
-          const status = run.sections[i] ?? "waiting";
+          const status: SectionStatus | "waiting" =
+            run.sections[i] ?? "waiting";
           const writing = status === "drafting" || status === "revising";
           const text = writing
             ? previewText(
