@@ -2,8 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
 /**
- * What a plugin writes in the open folder shows in the sidebar, and its
- * settings page is as tall as what it shows.
+ * What a plugin writes in the open folder shows in the sidebar, its
+ * settings page is as tall as what it shows, and a setting of several
+ * lines sits in a box, not a pill.
  */
 
 const HOST = `
@@ -57,6 +58,15 @@ async function open(page: Page) {
           contributes: {
             commands: [{ command: "test.sync.pull", title: "Pull" }],
             settingsPage: { title: "Sync" },
+            settings: [
+              {
+                key: "ignore",
+                type: "string",
+                title: "Ignore",
+                multiline: true,
+                default: "",
+              },
+            ],
           },
         }),
         dev: false,
@@ -107,4 +117,18 @@ test("a plugin's settings page is as tall as its page, not a box to scroll", asy
   await expect
     .poll(async () => (await frame.boundingBox())?.height ?? 0)
     .toBeGreaterThan(900);
+});
+
+test("a setting of several lines is a box, not a pill", async ({ page }) => {
+  await open(page);
+  await emit(page, "menu-manage-plugins");
+  await page
+    .locator('.plugin-card[data-plugin="test.sync"] .plugin-card-open')
+    .click();
+  const box = page.getByRole("textbox", { name: "Ignore" });
+  await expect(box).toBeVisible();
+  const radius = await box.evaluate((el) =>
+    parseFloat(getComputedStyle(el).borderTopLeftRadius),
+  );
+  expect(radius).toBeLessThan(20);
 });

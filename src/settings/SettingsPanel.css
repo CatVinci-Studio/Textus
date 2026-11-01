@@ -590,6 +590,12 @@ button.settings-inline-button {
   border-color: var(--ui-accent);
 }
 
+/* Text in lines is a container, not a control. */
+textarea.settings-text-input {
+  border-radius: var(--shape-s);
+  corner-shape: superellipse(1.25);
+}
+
 .image-settings-row {
   align-items: flex-start;
 }
