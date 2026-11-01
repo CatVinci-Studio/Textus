@@ -258,6 +258,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   learnNever: "다시 묻지 않기",
   learnSaved: "기억했습니다. ‘기억’ 탭에서 보거나 삭제할 수 있습니다.",
   learnLabel: "수정 선택에서 배운 것",
+  aiNameUntitledLabel: "제목 없는 문서에 AI로 이름 붙이기",
+  aiNameUntitledHint:
+    "제목 1이 없는 새 문서를 다른 이름으로 저장할 때 첫 줄 대신 짧은 제목을 파일 이름으로 제안합니다. 문서 앞부분을 짧은 요청 한 번으로 보냅니다.",
   suggestNextMessageLabel: "다음 메시지 예측",
   suggestNextMessageHint:
     "답변마다 다음에 보낼 것 같은 말을 입력창에 회색으로 보여 주며, Tab으로 사용합니다. 짧은 요청이 한 번 더 듭니다.",

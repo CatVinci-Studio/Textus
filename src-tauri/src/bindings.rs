@@ -234,6 +234,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::ai::client::set_ai_proxy,
                     crate::ai::web::web_search_status,
                     crate::ai::next_message::suggest_next_message,
+                    crate::ai::doc_title::suggest_doc_title,
                 ])
                 // Commands reading their inputs as one struct can't be generated; their
                 // input types are.
