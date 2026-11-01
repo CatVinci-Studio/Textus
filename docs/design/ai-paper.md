@@ -155,7 +155,13 @@ it, lazily loaded. Each stage and helper is one run of
   last try, and is sent back beyond; writers are told their most. Sources
   cited by a DOI alone get their title from OpenAlex, an untitled source is
   listed by its address once, and addresses are stored link-safe (a DOI
-  with parentheses had cut its citation short). `paper/live.rs` runs a whole paper on a real provider
+  with parentheses had cut its citation short). A fourth run came in at
+  1.4 times its length with a Commons photo; from it, a note can't rest on
+  a search page or a search API's answer (helpers without a search service
+  had read DuckDuckGo's results pages); writers never write about the
+  research and never number figures (a hard check catches "图 1" or
+  "Figure 1"); untitled pages get their own title; a trailing slash no
+  longer splits a source. `paper/live.rs` runs a whole paper on a real provider
   (`cargo test --lib live_paper -- --ignored --nocapture`), printing every
   rejection.
 

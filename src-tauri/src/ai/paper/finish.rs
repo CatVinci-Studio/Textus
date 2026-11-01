@@ -264,20 +264,23 @@ fn doi_of(url: &str) -> Option<&str> {
     (rest.starts_with("10.")).then_some(rest)
 }
 
-/// `dossier`'s sources cited by a DOI's address alone given the work's title
-/// and authors, from OpenAlex, so the reference list names them.
+/// `dossier`'s sources cited by their address alone given a title, so the
+/// reference list names them: a DOI's work, with its authors, from OpenAlex;
+/// a page's own title, read as web_fetch reads it.
 pub(crate) async fn title_sources(dossier: &mut Dossier) {
     for source in &mut dossier.sources {
         if !source.title.trim().is_empty() && source.title != source.url {
             continue;
         }
-        let Some(doi) = doi_of(&source.url) else {
-            continue;
-        };
-        let doi = percent_encoding::percent_decode_str(doi)
+        let address = percent_encoding::percent_decode_str(&source.url)
             .decode_utf8_lossy()
             .into_owned();
-        if let Some(title) = crate::ai::web::doi_title(&doi).await {
+        let title = match doi_of(&address) {
+            Some(doi) => crate::ai::web::doi_title(doi).await,
+            None if address.starts_with("http") => crate::ai::web::page_title(&address).await,
+            None => None,
+        };
+        if let Some(title) = title {
             source.title = title;
         }
     }

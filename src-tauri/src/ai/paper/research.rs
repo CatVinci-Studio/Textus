@@ -238,7 +238,20 @@ fn read_note(
                 let name = path.rsplit('/').next().unwrap_or(&path).to_string();
                 Some(web.add_source(&reference_address(&path), &name))
             }
-            None => web.source_number(c),
+            None => {
+                let address = if c.trim().starts_with("http") {
+                    Some(c.trim().to_string())
+                } else {
+                    c.trim_matches(['[', ']', ' '])
+                        .parse()
+                        .ok()
+                        .and_then(|n| web.source_address(n))
+                };
+                if address.as_deref().is_some_and(is_search_page) {
+                    return Err(format!("{c:?} is a search page, not a source: read the page or paper a result points to, and cite that."));
+                }
+                web.source_number(c)
+            }
         };
         match number {
             Some(n) if !sources.contains(&n) => sources.push(n),
@@ -522,4 +535,37 @@ impl Share {
         spent[kind] += 1;
         None
     }
+}
+
+/// Whether `url` is a search engine's results or a search API's answer: a
+/// list of other pages, which a note cites instead of what they list.
+pub(crate) fn is_search_page(url: &str) -> bool {
+    let Ok(parsed) = reqwest::Url::parse(url) else {
+        return false;
+    };
+    let host = parsed.host_str().unwrap_or("").trim_start_matches("www.");
+    let path = parsed.path();
+    let engine = [
+        "duckduckgo.com",
+        "html.duckduckgo.com",
+        "lite.duckduckgo.com",
+        "search.yahoo.com",
+        "yandex.com",
+        "search.brave.com",
+    ]
+    .contains(&host)
+        || ((host.starts_with("google.") || host == "bing.com" || host == "cn.bing.com")
+            && path.starts_with("/search"))
+        || (host == "baidu.com" && path == "/s")
+        || (host == "scholar.google.com");
+    let api = [
+        "api.crossref.org",
+        "api.openalex.org",
+        "api.semanticscholar.org",
+        "export.arxiv.org",
+    ]
+    .contains(&host)
+        || (host.ends_with("wikipedia.org") || host.ends_with("wikimedia.org"))
+            && path.ends_with("/api.php");
+    engine || api
 }

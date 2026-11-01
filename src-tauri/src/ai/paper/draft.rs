@@ -32,10 +32,10 @@ pub(crate) fn most(target: u32) -> u32 {
 }
 
 /// Whether two addresses are one, written with or without percent-escapes
-/// ("(" or "%28").
+/// ("(" or "%28") or a trailing slash.
 fn same_address(a: &str, b: &str) -> bool {
     let plain = |s: &str| {
-        percent_encoding::percent_decode_str(s)
+        percent_encoding::percent_decode_str(s.trim_end_matches('/'))
             .decode_utf8_lossy()
             .into_owned()
     };
@@ -50,6 +50,15 @@ pub(crate) const WEB_FIGURE_MARK: &str = "<!-- textus-figure web:";
 pub(crate) fn cited_link() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"\[(\d{1,3})\]\(((?:https?://|references/)[^)\s]+)\)").unwrap())
+}
+
+/// A figure named by a number, "图 2" or "Figure 2": the writers' own
+/// numbers, which the paper's numbering would contradict.
+fn numbered_figure() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"(?:图|圖|図|Figure|Fig\.|Abbildung|Figura|Рисунок|그림)\s*\d+").unwrap()
+    })
 }
 
 /// `[n]` not followed by `(`: a citation without its link.
@@ -196,6 +205,12 @@ pub(crate) fn problems(
                 .into(),
         );
     }
+    if let Some(found) = numbered_figure().find(&prose(markdown)) {
+        out.push(format!(
+            "\"{}\" names a figure by a number: the figures are numbered afterwards - call it the diagram, chart or picture below or above.",
+            found.as_str()
+        ));
+    }
     if cited == 0 && !sources.is_empty() {
         out.push(
             "Nothing is cited: mark each fact from the notes with its source, [n](address).".into(),
@@ -339,7 +354,7 @@ pub(crate) async fn write_section(
         "words"
     };
     let instructions = format!(
-        "You write one section of a paper, in the language tagged \"{}\": substantial, specific prose for an informed reader - the notes' figures, dates, names and findings, explained and connected into an argument that serves the thesis, not a list of facts. Say where sources disagree and what the evidence can't show. Don't repeat what the other sections cover; you may point to them. Mark every fact from a note with its source right after it as [n](address), exactly as the note gives it, and cite nothing else. Use ### subheadings if the section is long; don't write the section's own heading. Its length counts {unit}, figures and code aside. Put each planned figure where it belongs, with a sentence in the text that refers to it. Hand it over by calling submit_section with the whole section - never write the section in your reply.",
+        "You write one section of a paper, in the language tagged \"{}\": substantial, specific prose for an informed reader - the notes' figures, dates, names and findings, explained and connected into an argument that serves the thesis, not a list of facts. Say where sources disagree and what the evidence can't show. Don't repeat what the other sections cover; you may point to them. Mark every fact from a note with its source right after it as [n](address), exactly as the note gives it, and cite nothing else. Use ### subheadings if the section is long; don't write the section's own heading. Its length counts {unit}, figures and code aside. Put each planned figure where it belongs, with a sentence in the text that refers to it as the diagram, chart or picture below or above - never by a number, since the figures are numbered afterwards. Write only about the topic, never about how it was researched: no searches, budgets, sources that couldn't be read or checked, or keywords to look up; with few notes, write a shorter section rather than fill it. Hand it over by calling submit_section with the whole section - never write the section in your reply.",
         paper.language
     );
     let sources: Vec<(u32, String)> = dossier

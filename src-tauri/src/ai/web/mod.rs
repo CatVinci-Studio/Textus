@@ -206,6 +206,11 @@ impl WebPlan {
         state.book.has(n).then_some(n)
     }
 
+    /// The address of source `n`, if there is one.
+    pub(crate) fn source_address(&self, n: u32) -> Option<String> {
+        self.state.lock().unwrap().book.address(n)
+    }
+
     /// The number of the source at `address` (a file of the user's, say),
     /// given one with `title` if it has none.
     pub(crate) fn add_source(&self, address: &str, title: &str) -> u32 {
@@ -528,6 +533,17 @@ async fn cached_papers(query: &str, since: Option<u32>) -> Result<Vec<scholar::P
         .unwrap()
         .insert(key, (Instant::now(), papers.clone()));
     Ok(papers)
+}
+
+/// A public page's title, as web_fetch reads it; None when it can't be read
+/// or has none.
+pub(crate) async fn page_title(url: &str) -> Option<String> {
+    match cached_fetch(url).await {
+        Ok(fetch::Fetched::Page(page)) => {
+            Some(page.title.trim().to_string()).filter(|t| !t.is_empty())
+        }
+        _ => None,
+    }
 }
 
 async fn cached_fetch(url: &str) -> Result<fetch::Fetched, String> {
