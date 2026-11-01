@@ -1114,6 +1114,8 @@ utiliser une.
   autoSuggestFilenameLabel:
     "Suggérer un nom de fichier au premier enregistrement",
   autosaveLabel: "Enregistrer automatiquement",
+  autosaveHint:
+    "Aussi les documents sans titre : dans le dossier ouvert, ou Documents.",
   untitledTab: "Sans titre",
   markdownGuideTab: "Guide Markdown",
   agentGuideTab: "Guide des fonctions IA",

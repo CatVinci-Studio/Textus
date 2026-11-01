@@ -54,8 +54,13 @@ function render(
 const settle = () => act(() => vi.advanceTimersByTimeAsync(AUTOSAVE_IDLE_MS));
 
 describe("which tabs autosave writes", () => {
-  it("leaves an untitled document to draft recovery", () => {
-    expect(autosaveWants({ ...saved, path: null }, undefined)).toBe(false);
+  it("writes an untitled document with text in it", () => {
+    expect(autosaveWants({ ...saved, path: null }, undefined)).toBe(true);
+  });
+  it("leaves an empty untitled document and the tour's practice tab alone", () => {
+    const draft = { ...saved, path: null, savedContent: "" };
+    expect(autosaveWants({ ...draft, content: "  \n" }, undefined)).toBe(false);
+    expect(autosaveWants(draft, undefined, "a")).toBe(false);
   });
   it("skips a document with nothing new", () => {
     expect(autosaveWants({ ...saved, content: "original" }, undefined)).toBe(
@@ -93,8 +98,23 @@ describe("autosave scheduling", () => {
     expect(autosaveTab).not.toHaveBeenCalled();
   });
 
-  it("never writes an untitled document, even on a flush", async () => {
-    const { autosaveTab, result } = render([{ ...saved, path: null }]);
+  it("writes an untitled document once typing has rested", async () => {
+    const { autosaveTab } = render([{ ...saved, path: null }]);
+    await settle();
+    expect(autosaveTab).toHaveBeenCalledWith("a");
+  });
+
+  it("never writes the tour's practice tab, even on a flush", async () => {
+    const autosaveTab = vi.fn(() => Promise.resolve<SaveOutcome>("saved"));
+    const { result } = renderHook(() =>
+      useAutosave({
+        tabs: [{ ...saved, path: null }],
+        activeTabId: "a",
+        enabled: true,
+        practiceTabId: "a",
+        autosaveTab,
+      }),
+    );
     await settle();
     await act(() => result.current());
     expect(autosaveTab).not.toHaveBeenCalled();

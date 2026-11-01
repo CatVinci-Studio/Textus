@@ -1086,6 +1086,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   autoSuggestFilenameLabel:
     "Dateinamen beim Speichern neuer Dateien vorschlagen",
   autosaveLabel: "Automatisch speichern",
+  autosaveHint:
+    "Auch unbenannte Dokumente: in den geöffneten Ordner, sonst in Dokumente.",
   untitledTab: "Unbenannt",
   markdownGuideTab: "Markdown-Anleitung",
   agentGuideTab: "Anleitung zu KI-Funktionen",

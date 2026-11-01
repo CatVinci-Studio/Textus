@@ -117,11 +117,13 @@ export function useWindowDocuments({
     t,
     autoSuggestFilename: settings.autoSuggestFilename,
     imageFolder: settings.imageFolder,
+    folder: openFolder.folder,
   });
   const flushAutosave = useAutosave({
     tabs,
     activeTabId,
     enabled: settings.autosave,
+    practiceTabId: tutorial.active ? tutorial.tabId : null,
     autosaveTab: saving.autosaveTab,
   });
 

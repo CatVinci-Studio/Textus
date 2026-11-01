@@ -3,6 +3,7 @@ import { thisWindow } from "../platform/this-window";
 import { tabIsDirty, type DocTab } from "./doc-tabs";
 import { createTabIdleTimers } from "./tab-idle-timers";
 import { unlistenAll } from "../platform/events";
+import { untitledAutosavable } from "./autosave-untitled";
 
 /** What one save of a tab came to. "conflict": the user kept the changed
  *  disk version; "failed": the user was told why. */
@@ -35,28 +36,42 @@ function pauseResolved(tab: DocTab, pause: AutosavePause): boolean {
   );
 }
 
-/** Whether autosave writes a tab: it has a file, has changed, and isn't
- *  paused. Untitled documents are left to draft recovery. */
+/** Whether autosave may write a tab at all: one with a file, or an untitled
+ *  draft with something in it, which gets a file of its own. */
+function autosaveCovers(tab: DocTab, practiceTabId: string | null): boolean {
+  if (tab.path) return true;
+  return tab.id !== practiceTabId && untitledAutosavable(tab);
+}
+
+/** Whether autosave writes a tab: it is covered, has changed, and isn't
+ *  paused. The tour's practice tab stays a draft. */
 export function autosaveWants(
   tab: DocTab,
   pause: AutosavePause | undefined,
+  practiceTabId: string | null = null,
 ): boolean {
-  if (!tab.path || !tabIsDirty(tab)) return false;
+  if (!autosaveCovers(tab, practiceTabId) || !tabIsDirty(tab)) return false;
   return !pause || pauseResolved(tab, pause);
 }
 
 /**
- * Save Automatically: writes a file-backed document after typing rests, on
- * blur, hide or tab switch. A conflict Cancel or failed write pauses the tab,
- * so the prompt shows once. `flush(ids?)` writes now; closing waits on it.
+ * Save Automatically: writes a document after typing rests, on blur, hide or
+ * tab switch, an untitled one into a file of its own (autosaveTab decides
+ * where). A conflict Cancel or failed write pauses the tab, so the prompt
+ * shows once. `flush(ids?)` writes now; closing waits on it.
  */
 export function useAutosave(opts: {
   tabs: DocTab[];
   activeTabId: string;
   enabled: boolean;
+  /** The onboarding tour's practice tab, never written to a file. */
+  practiceTabId?: string | null;
   autosaveTab: (tabId: string) => Promise<SaveOutcome>;
 }): (ids?: string[]) => Promise<void> {
   const { tabs, activeTabId, enabled, autosaveTab } = opts;
+  const practiceTabId = opts.practiceTabId ?? null;
+  const practiceRef = useRef(practiceTabId);
+  practiceRef.current = practiceTabId;
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
   const enabledRef = useRef(enabled);
@@ -82,7 +97,8 @@ export function useAutosave(opts: {
         const tab = tabsRef.current.find((tb) => tb.id === id);
         // Not checked for dirtiness here: the editor may still hold an edit
         // it hasn't reported, which autosaveTab pulls in before judging.
-        if (!tab?.path) return;
+        // Nor for text: autosaveTab judges an untitled draft once pulled in.
+        if (!tab || (!tab.path && tab.id === practiceRef.current)) return;
         const outcome = await saveRef.current(id);
         if (outcome === "conflict" || outcome === "failed") {
           const now = tabsRef.current.find((tb) => tb.id === id) ?? tab;
@@ -122,11 +138,11 @@ export function useAutosave(opts: {
       return;
     }
     for (const tab of tabs) {
-      if (autosaveWants(tab, paused.current.get(tab.id)))
+      if (autosaveWants(tab, paused.current.get(tab.id), practiceTabId))
         timers.schedule(tab.id, tab.content, () => void saveNow(tab.id));
       else timers.cancel(tab.id);
     }
-  }, [tabs, enabled, timers, saveNow]);
+  }, [tabs, enabled, practiceTabId, timers, saveNow]);
 
   // Choosing another tab writes the one left behind.
   const previousActive = useRef(activeTabId);
