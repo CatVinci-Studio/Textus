@@ -1,21 +1,14 @@
 import type { TextKey } from "../i18n/strings";
 
-/// Built-in content themes only override `--doc-*` variables; "default"
-/// means none are active.
-export type BuiltinContentThemeId =
-  "default" | "paper" | "slate" | "forest" | "parchment";
+/// The one built-in content theme: Textus's own look. Other looks are themes
+/// from the gallery or imported CSS; a setting naming a withdrawn built-in
+/// (Paper, Slate, Forest, Parchment) falls back to this one.
+export type BuiltinContentThemeId = "default";
 
 /// `nameKey` gives the picker label in the app language; `name` is the
-/// English fallback. Each defines a light and a dark palette, identical when
-/// the theme has one design, so switching appearance never half-applies.
+/// English fallback.
 export const BUILTIN_CONTENT_THEMES: {
   id: BuiltinContentThemeId;
   name: string;
   nameKey: TextKey;
-}[] = [
-  { id: "default", name: "Default", nameKey: "themeNameDefault" },
-  { id: "paper", name: "Paper", nameKey: "themeNamePaper" },
-  { id: "slate", name: "Slate", nameKey: "themeNameSlate" },
-  { id: "forest", name: "Forest", nameKey: "themeNameForest" },
-  { id: "parchment", name: "Parchment", nameKey: "themeNameParchment" },
-];
+}[] = [{ id: "default", name: "Default", nameKey: "themeNameDefault" }];

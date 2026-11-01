@@ -8,6 +8,16 @@
   --doc-radius-sm: var(--shape-xs);
 }
 
+/* The reader's own text size and line spacing (Settings) win over any
+   theme's, an imported one's #write rules included: they are the reader's
+   eyes, not the theme's look. */
+:root[data-doc-size] :is(.milkdown, #write) {
+  font-size: var(--doc-font-size) !important;
+}
+:root[data-doc-leading] :is(.milkdown, #write) {
+  line-height: var(--doc-line-height) !important;
+}
+
 /* A click below the text still lands in it: the page height less the
    column's padding, divided by the zoom. flow-root keeps the last block's
    margin inside, which WebKit on macOS let collapse out into a scrollbar. */

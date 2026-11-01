@@ -1,5 +1,6 @@
 /* Application UI contract. Content themes remain scoped to the document. */
 @import "./motion.css";
+@import "./components.css";
 
 :root {
   /* Shape (docs/dev/design-tokens.md). Containers are rounded rectangles in
@@ -332,6 +333,7 @@
   .tutorial-btn,
   .language-welcome-continue,
   .text-button,
+  .tx-button,
   .inline-chat-action,
   .update-toast button,
   .draft-restored-toast button,
@@ -364,7 +366,8 @@
   .draft-restored-toast button,
   .project-bar-naming button,
   .missing-image-actions button,
-  .inline-chat-send
+  .inline-chat-send,
+  .tx-button.small
 ) {
   min-height: var(--control-height-sm);
   padding: 0 8px;
@@ -378,6 +381,7 @@
     .insert-table-buttons button,
     .tutorial-btn,
     .text-button,
+    .tx-button,
     .inline-chat-action,
     .update-toast button,
     .draft-restored-toast button,
@@ -396,7 +400,8 @@
   .language-welcome-continue,
   .inline-chat-action,
   .update-toast button,
-  .inline-chat-send
+  .inline-chat-send,
+  .tx-button
 ):is(
   .close-prompt-primary,
   .image-name-primary,
@@ -405,7 +410,8 @@
   .language-welcome-continue,
   .inline-chat-action-primary,
   .update-toast-primary,
-  .inline-chat-send
+  .inline-chat-send,
+  .tx-button.primary
 ) {
   border-color: var(--ui-primary);
   background: var(--ui-primary);
@@ -421,7 +427,8 @@
     .language-welcome-continue,
     .inline-chat-action,
     .update-toast button,
-    .inline-chat-send
+    .inline-chat-send,
+    .tx-button
   ):is(
     .close-prompt-primary,
     .image-name-primary,
@@ -430,7 +437,8 @@
     .language-welcome-continue,
     .inline-chat-action-primary,
     .update-toast-primary,
-    .inline-chat-send
+    .inline-chat-send,
+    .tx-button.primary
   ):not(:disabled):hover {
   border-color: color-mix(in srgb, var(--ui-primary) 86%, var(--ui-on-primary));
   background: color-mix(in srgb, var(--ui-primary) 86%, var(--ui-on-primary));
@@ -445,6 +453,7 @@
     .insert-table-buttons button,
     .tutorial-btn,
     .text-button,
+    .tx-button,
     .inline-chat-action,
     .update-toast button,
     .draft-restored-toast button,
@@ -463,7 +472,8 @@
     .language-welcome-continue,
     .inline-chat-action,
     .update-toast button,
-    .inline-chat-send
+    .inline-chat-send,
+    .tx-button
   ):is(
     .close-prompt-primary,
     .image-name-primary,
@@ -472,7 +482,8 @@
     .language-welcome-continue,
     .inline-chat-action-primary,
     .update-toast-primary,
-    .inline-chat-send
+    .inline-chat-send,
+    .tx-button.primary
   ):not(:disabled):active {
   border-color: color-mix(in srgb, var(--ui-primary) 78%, var(--ui-on-primary));
   background: color-mix(in srgb, var(--ui-primary) 78%, var(--ui-on-primary));
@@ -506,6 +517,7 @@
   .quick-ask-pending-nav-button,
   .tree-tool,
   .icon-button,
+  .tx-icon-button,
   .inline-chat-attach,
   .inline-chat-toggle
 ) {
@@ -525,7 +537,12 @@
     color var(--dur-fast) var(--ease-standard);
 }
 
-:is(.inline-chat-header-button, .quick-ask-pending-nav-button, .tree-tool) {
+:is(
+  .inline-chat-header-button,
+  .quick-ask-pending-nav-button,
+  .tree-tool,
+  .tx-icon-button
+) {
   width: 24px;
   height: 24px;
 }
@@ -546,6 +563,7 @@
     .quick-ask-pending-nav-button,
     .tree-tool,
     .icon-button,
+    .tx-icon-button,
     .inline-chat-attach,
     .inline-chat-toggle
   ):not(:disabled):hover {
@@ -559,6 +577,7 @@
     .quick-ask-pending-nav-button,
     .tree-tool,
     .icon-button,
+    .tx-icon-button,
     .inline-chat-attach,
     .inline-chat-toggle
   ):not(:disabled):active {
@@ -575,6 +594,7 @@
       .insert-table-buttons button,
       .tutorial-btn,
       .text-button,
+      .tx-button,
       .inline-chat-action,
       .update-toast button,
       .draft-restored-toast button,
@@ -583,6 +603,7 @@
       .quick-ask-pending-nav-button,
       .tree-tool,
       .icon-button,
+      .tx-icon-button,
       .inline-chat-attach,
       .inline-chat-toggle,
       .inline-chat-send,

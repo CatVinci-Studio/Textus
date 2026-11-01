@@ -266,6 +266,24 @@ fails if the updater endpoint, the beta channel's endpoint or the workflow
 drifts back. The beta manifest is `textus-beta.json` and lives only on the
 download bucket, never on a GitHub release.
 
+## Secrets
+
+The signing, notarizing, upload and deploy secrets live in the repository's
+**release** environment (Settings › Environments › release), not in the
+repository's own secrets: `APPLE_*`, `TAURI_SIGNING_PRIVATE_KEY`,
+`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_PLAYGROUND_TOKEN` and
+`ARCH_REPO_DEPLOY_KEY`. The jobs that use them (`release.yml` build,
+`ios-release.yml`, `mirror-downloads.yml`, `update-beta-manifest.yml`,
+`update-arch-repo.yml`, `deploy-playground.yml`) name the environment, and it
+admits only `v*` and `ios-v*` tags. So a job run by hand - a retried mirror,
+a rebuilt Arch package - is started from the release's tag, not from main:
+
+```sh
+gh workflow run mirror-downloads.yml --ref v1.3.2 -f tag=v1.3.2
+```
+
+A copy of each secret is kept off GitHub by the maintainer.
+
 ## Rebuilds
 
 Running the Release workflow by hand on an existing tag rebuilds and

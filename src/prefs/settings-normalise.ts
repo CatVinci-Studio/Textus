@@ -23,6 +23,10 @@ import {
   type ThemeMode,
   UI_TEXT_SCALES,
   type UiTextScale,
+  DOC_TEXT_SIZES,
+  type DocTextSize,
+  DOC_LINE_SPACINGS,
+  type DocLineSpacing,
   storedAgentMode,
 } from "./settings-types";
 
@@ -111,6 +115,14 @@ function readSettings(parsed: Raw | null): Settings {
       uiTextScale: UI_TEXT_SCALES.includes(parsed.uiTextScale as UiTextScale)
         ? (parsed.uiTextScale as UiTextScale)
         : DEFAULT_SETTINGS.uiTextScale,
+      docTextSize: DOC_TEXT_SIZES.includes(parsed.docTextSize as DocTextSize)
+        ? (parsed.docTextSize as DocTextSize)
+        : DEFAULT_SETTINGS.docTextSize,
+      docLineSpacing: DOC_LINE_SPACINGS.includes(
+        parsed.docLineSpacing as DocLineSpacing,
+      )
+        ? (parsed.docLineSpacing as DocLineSpacing)
+        : DEFAULT_SETTINGS.docLineSpacing,
       // An unknown language (a newer build's, a hand edit) is English, not
       // a string table that isn't there.
       language: isLang(parsed.language) ? parsed.language : "en",

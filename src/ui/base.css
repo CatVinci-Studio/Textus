@@ -231,3 +231,76 @@
   border-radius: var(--shape-m);
   box-shadow: var(--shadow-popover);
 }
+
+/* Tones: the categorical colours (tags, board lists, chart series, graph
+   groups), in the order plugins assign them. Fixed hues, lightness and
+   chroma per appearance; a theme with a palette of its own sets them. Each
+   has a -text form readable on the background and a -tint for fills.
+   Zero specificity (:where), so a theme's own always wins. */
+:where(:root) {
+  --tone-blue: #4081d2;
+  --tone-green: #319751;
+  --tone-orange: #be6517;
+  --tone-purple: #8e6ac7;
+  --tone-red: #c65954;
+  --tone-teal: #00989a;
+  --tone-yellow: #a17a00;
+  --tone-pink: #bc598c;
+  --tone-gray: #77818c;
+  --tone-blue-text: color-mix(in srgb, var(--tone-blue) 72%, var(--ui-text));
+  --tone-blue-tint: color-mix(in srgb, var(--tone-blue) 16%, transparent);
+  --tone-green-text: color-mix(in srgb, var(--tone-green) 72%, var(--ui-text));
+  --tone-green-tint: color-mix(in srgb, var(--tone-green) 16%, transparent);
+  --tone-orange-text: color-mix(
+    in oklch,
+    var(--tone-orange) 72%,
+    var(--ui-text)
+  );
+  --tone-orange-tint: color-mix(in srgb, var(--tone-orange) 16%, transparent);
+  --tone-purple-text: color-mix(
+    in oklch,
+    var(--tone-purple) 72%,
+    var(--ui-text)
+  );
+  --tone-purple-tint: color-mix(in srgb, var(--tone-purple) 16%, transparent);
+  --tone-red-text: color-mix(in srgb, var(--tone-red) 72%, var(--ui-text));
+  --tone-red-tint: color-mix(in srgb, var(--tone-red) 16%, transparent);
+  --tone-teal-text: color-mix(in srgb, var(--tone-teal) 72%, var(--ui-text));
+  --tone-teal-tint: color-mix(in srgb, var(--tone-teal) 16%, transparent);
+  --tone-yellow-text: color-mix(
+    in oklch,
+    var(--tone-yellow) 72%,
+    var(--ui-text)
+  );
+  --tone-yellow-tint: color-mix(in srgb, var(--tone-yellow) 16%, transparent);
+  --tone-pink-text: color-mix(in srgb, var(--tone-pink) 72%, var(--ui-text));
+  --tone-pink-tint: color-mix(in srgb, var(--tone-pink) 16%, transparent);
+  --tone-gray-text: color-mix(in srgb, var(--tone-gray) 72%, var(--ui-text));
+  --tone-gray-tint: color-mix(in srgb, var(--tone-gray) 16%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :where(:root:not([data-theme="light"])) {
+    --tone-blue: #7aaeef;
+    --tone-green: #76be86;
+    --tone-orange: #e09865;
+    --tone-purple: #b59be6;
+    --tone-red: #e88f87;
+    --tone-teal: #3fc0c0;
+    --tone-yellow: #c6a853;
+    --tone-pink: #df8db5;
+    --tone-gray: #a2acb7;
+  }
+}
+
+:where(:root[data-theme="dark"]) {
+  --tone-blue: #7aaeef;
+  --tone-green: #76be86;
+  --tone-orange: #e09865;
+  --tone-purple: #b59be6;
+  --tone-red: #e88f87;
+  --tone-teal: #3fc0c0;
+  --tone-yellow: #c6a853;
+  --tone-pink: #df8db5;
+  --tone-gray: #a2acb7;
+}

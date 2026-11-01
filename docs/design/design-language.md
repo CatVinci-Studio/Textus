@@ -22,7 +22,7 @@ These are decision rules, used to settle cases the sections below don't cover.
 5. **Other products are references, not templates.** A pattern from another app is adopted only as a principle (its density, its order of interaction) and drawn with this standard's tokens and components. If the standard lacks something, the standard is extended first.
 6. **Every rule that can be checked is checked** (section 18.3).
 
-## 2. Tokens - In force (tiers and the `--tone-*` set: Planned)
+## 2. Tokens - In force (the `--ref-*` tier: Planned)
 
 ### 2.1 Tiers
 
@@ -46,7 +46,7 @@ These are decision rules, used to settle cases the sections below don't cover.
 
 Existing names stay as they are. A new name MUST be built from this vocabulary; a word outside it needs this section amended first.
 
-## 3. Colour - In force (3.4 tones: Planned)
+## 3. Colour - In force
 
 ### 3.1 Inputs and derivation
 
@@ -88,7 +88,7 @@ Each interface colour has exactly one job. A new surface MUST pick its colours f
 - Body and secondary text MUST reach 4.5:1 against its background in every built-in theme, light and dark (3:1 for text 18 px and up). Lower emphasis is made with a lighter colour, never with `opacity` on text.
 - `prefers-contrast: more` turns secondary colours into the text colour and thickens rings and hairlines; `forced-colors: active` gives cards and bars a `CanvasText` border.
 
-### 3.4 Tones: categorical colours - Planned (work: tone tokens in `base.css`, passed to plugin pages)
+### 3.4 Tones: categorical colours - In force (Textus 1.3.2)
 
 Tags, board columns, graph groups, chart series, timelines and mind-map branches need several distinguishable colours. They MUST come from the tone set, never from a plugin's own palette or a library's default:
 
@@ -98,7 +98,7 @@ Tags, board columns, graph groups, chart series, timelines and mind-map branches
 
 Rules:
 
-1. **The theme's palette comes first.** A theme with a signature palette (Dracula, Nord, Catppuccin, One Dark…) SHOULD set the tones from it, so everything in the window - tags, charts, the graph - speaks its colours. A theme that sets none gets tones derived from its five alert colours (`--doc-alert-note`, `-tip`, `-important`, `-warning`, `-caution`) and fixed hue angles, with lightness and chroma taken from its background and text.
+1. **The theme's palette comes first.** A theme with a signature palette (Dracula, Nord, Catppuccin, One Dark…) SHOULD set the tones from it, so everything in the window - tags, charts, the graph - speaks its colours. A theme that sets none gets the defaults in `src/ui/base.css`: fixed hues at one lightness for light appearances and another for dark. The `-text` and `-tint` forms are derived from the tone (mixed toward `--ui-text`, and 16% over the background), so a theme sets only the nine `--tone-{name}` values.
 2. **Order is fixed**: blue, green, orange, purple, red, teal, yellow, pink, gray. Series 1 and 2 always differ strongly. A plugin assigns tones in that order (an option's tone is its position among the property's options), not by hashing names.
 3. Chart plugins MUST pass the tones to their library as its default palette, and the interface text, border and muted colours as its axis, grid and label colours.
 
@@ -129,11 +129,13 @@ Text names a role, never a size. Sizes are set in `src/ui/design-system.css` and
 | `large-title`     | 22      | 34    | 1.2         | 600     | A page's own title                                                                |
 
 - Weights are 400, 500 and 600 only.
-- The line heights and weights in the table are the rule for new work; they become tokens with the shared stylesheet (Planned, 15.3). Today the base sets 1.5 for text and 1.2 for controls.
+- The line heights and weights in the table are the rule for new work; they become tokens later (Planned). Today the base sets 1.5 for text and 1.2 for controls.
 - A size written in px instead of a role MUST be `calc(Npx * var(--ui-text-scale, 1))`, and a fixed box around text scales with it.
 - CSS `zoom` MUST NOT be used for text size (WebKit leaves popovers and pointer coordinates unzoomed).
 
 ### 4.3 Document typography (theme guidance)
+
+The document's size and spacing are two variables: `--doc-font-size` (default: 16.5 px at the standard measure, growing to 18 px as the column widens) and `--doc-line-height` (default 1.8). A theme MAY set them. The reader's **Settings › Editor & Appearance › Document text size** and **Line spacing** (14–24 px; compact 1.55, standard 1.8, relaxed 2.05) set them on the root and win over every theme, an imported one included. Headings and other elements MUST be sized in `em` from the body so they follow.
 
 Themes SHOULD keep: a measure of 60–75 Latin characters (about 35–40 CJK characters); body line height 1.6–1.8; paragraph spacing about 0.8 line; headings with more space above than below. Table headers (and, in new themes, headings) MUST NOT break inside a CJK word (`word-break: keep-all`); table cells keep a minimum width of 3.5em.
 
@@ -194,12 +196,12 @@ Two heights: `--control-height` 28 (36) for forms, dialogs and a Settings row's 
 - Shadows MUST appear only on overlays, each paired with its surface.
 - Blur materials are only for overlays with content scrolling underneath, and only on macOS and iOS (`<html data-platform>`). Overlays only darken what is under them; they never blur it.
 
-## 8. Icons - In force (export to plugins by name: Planned)
+## 8. Icons - In force
 
 - One set (`src/ui/icons.tsx`): stroked line art on a 16-unit grid, 1.4 stroke, round caps and joins, `currentColor`.
 - Sizes follow the text role beside them: 16 with `body`, 14 with `secondary`, 12 with `caption`.
 - A new icon is added to the set on the same grid and stroke; a surface MUST NOT draw a one-off icon for something the set has.
-- Plugins name icons (`icon: "calendar"` in a list item; `<span class="tx-icon" data-icon="filter">` in a page - planned) instead of drawing their own.
+- Plugins name icons (`icon: "calendar"` in a list item; `<span class="tx-icon" data-icon="filter">` in a page, names in 15.4) instead of drawing their own.
 - Emoji are content, not icons; the interface MUST NOT use emoji as icons.
 
 ## 9. States and focus - In force
@@ -220,7 +222,7 @@ Two heights: `--control-height` 28 (36) for forms, dialogs and a Settings row's 
 - Nothing moves while the user types: input, the caret, the selection, completions, typewriter scrolling, find highlights and counts change instantly.
 - Under reduced motion, offsets and scales become 0, springs become the standard curve, slow motion becomes a 150 ms fade, loops stop and smooth scrolling is instant (`ui/motion.ts`: `prefersReducedMotion()`, `motionAllowed()`).
 
-## 11. Components - In force (shared stylesheet for plugin pages: Planned)
+## 11. Components - In force
 
 | Component                | Rule                                                                                                                                                                                                                                                                        |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -264,7 +266,7 @@ Only the open and save file dialogs and the macOS system menu bar stay native.
 
 ### 14.1 What a theme may change
 
-- MAY: every `--doc-*` variable (colours, fonts, the document's typography), the interface inputs through them (3.1), any `--ui-*` colour, the tones (3.4), and `--revision-*` (how a proposed AI change is drawn).
+- MAY: every `--doc-*` variable (colours, fonts, the document's typography, its default `--doc-font-size` and `--doc-line-height`), the interface inputs through them (3.1), any `--ui-*` colour, the tones (3.4), and `--revision-*` (how a proposed AI change is drawn).
 - MUST NOT: sizes, spacing, radii, elevation, motion, or the editor's structure (the caret, the selection, revision marks, plugin block frames).
 - A theme with only one colour scheme keeps it; it is not forced into dark.
 - Remote `@import`, image backgrounds and layouts that depend on Typora's DOM are outside the compatibility promise.
@@ -287,7 +289,7 @@ Every theme's preview is drawn from one fixed sample document (Latin and CJK tex
 
 The official gallery keeps one theme per distinct character (a calm default, warm paper for reading, academic paper, typewriter manuscript, monospace, rich heading hierarchy, card sections, compact, high contrast, and well-known palettes). A theme that differs from another mainly by its accent colour SHOULD be merged into it. A theme withdrawn from the list stays installable for those who have it.
 
-## 15. Plugins - In force (15.3–15.4: Planned)
+## 15. Plugins - In force
 
 ### 15.1 Tiers, most preferred first
 
@@ -306,13 +308,110 @@ A plugin MUST use the lowest tier that can do the job.
 - Every control has a name; the page works from the keyboard.
 - A code block page reports its content height (the runtime does this) and never sizes itself to 100% of its frame.
 
-### 15.3 Shared components for plugin pages - Planned (work: one framework-free stylesheet)
+### 15.3 What a plugin page is given - In force (Textus 1.3.2)
 
-One stylesheet of `tx-` classes (buttons, icon buttons, fields, select, checkbox, switch, segmented control, tabs, tags, chips, list rows, tables, cards, empty state, bars, settings rows), used by the app's own React components and injected unchanged into every plugin page. No React or other framework kit is offered to plugins.
+Every plugin page (a sidebar tab, a tab view, a code block, a settings page) gets, before its own HTML and with no setup:
 
-### 15.4 Popups drawn by Textus - Planned (work: plugin API)
+1. **The tokens**: every role token on the list in `src/plugins/views/theme-vars.ts` - colours (tones included), type roles, spacing, shapes, control heights, durations and curves, the popover shadow - kept current when the theme or appearance changes.
+2. **The app's own stylesheets**: `src/ui/motion.css`, `src/ui/design-system.css` and `src/ui/components.css`, the same files the window loads. A `tx-` class in a page is the app's control from the same rule, not a copy.
+3. **Base element styles** (`src/plugins/host/runtime/plugin-ui.css`): bare `button`, `input`, `select`, `textarea`, headings, links, `.toolbar`, `.list`, `.empty` already look like Textus.
+4. **Attributes on `<html>`**: `data-theme` (`light` | `dark`), `data-platform`, and `data-window-chrome="mobile"` on a phone, so controls take the phone's sizes there.
+5. **The page API** from `acquireTextusApi()` (or `textus`): `t()`, `postMessage`, `onMessage`, `getState` / `setState`, `onExport`, and `menu()` (15.5).
 
-`api.menu(items, { at })` (context and dropdown menus), `api.select(...)` and `data-tooltip` let a plugin page open Textus's own menus, selects and tooltips, so they look, move and respond to keys as the app's do. A plugin page MUST NOT draw its own menu once these exist.
+A plugin MUST NOT ship its own copy of any of these, and MUST NOT restyle a `tx-` class.
+
+### 15.4 The components, and how to write them - In force (Textus 1.3.2)
+
+Class names are public API (2.1). Write them exactly as below; combine only the modifiers listed.
+
+| Component                         | Markup                                                                                                                                      | Notes                                                                                                                                                                                                                                                                                            |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Button                            | `<button class="tx-button">Cancel</button>`                                                                                                 | Secondary: light border. Add `small` in bars and cards (24 high).                                                                                                                                                                                                                                |
+| Primary button                    | `<button class="tx-button primary">Save</button>`                                                                                           | Ink. At most one per group, last in its row.                                                                                                                                                                                                                                                     |
+| Icon button                       | `<button class="tx-icon-button" aria-label="Filter"><span class="tx-icon" data-icon="filter"></span></button>`                              | A 24 circle. `aria-label` is required.                                                                                                                                                                                                                                                           |
+| Icon                              | `<span class="tx-icon" data-icon="calendar"></span>`                                                                                        | Names: `text`, `number`, `select`, `multi`, `date`, `checkbox`, `url`, `page`, `filter`, `sort`, `plus`, `more`, `table`, `board`, `calendar`, `gallery`, `open`, `chevron`, `left`, `right`, `search`, `close`, `check`, `eye-off`, `trash`, `rename`, `sliders`, `refresh`, `minus`, `rotate`. |
+| Field                             | `<input class="tx-input" placeholder="Search">`                                                                                             | A capsule. `<textarea class="tx-input">` is an 8-radius box.                                                                                                                                                                                                                                     |
+| Checkbox                          | `<input type="checkbox" class="ui-check">`                                                                                                  | The app's own checkbox.                                                                                                                                                                                                                                                                          |
+| Segmented control (view switcher) | `<div class="tx-segmented" role="tablist"><button class="tx-segment" role="tab" aria-selected="true">Table</button>…</div>`                 | The chosen segment raised. Use for 2–5 views or modes.                                                                                                                                                                                                                                           |
+| Bar                               | `<div class="tx-bar">…<span class="tx-spacer"></span>…</div>`                                                                               | 32 high: navigation and view switching first, actions last, the primary button last of all.                                                                                                                                                                                                      |
+| Chip (a rule in force)            | `<button class="tx-chip">Status is Done <span class="tx-icon" data-icon="chevron"></span></button>`                                         | Opens the rule it shows.                                                                                                                                                                                                                                                                         |
+| Tag                               | `<span class="tx-tag" data-tone="green">Done</span>`; with `class="tx-tag status"` a dot before it                                          | Tones in their order (3.4): `blue`, `green`, `orange`, `purple`, `red`, `teal`, `yellow`, `pink`, `gray`; none for neutral.                                                                                                                                                                      |
+| Table                             | `<div class="tx-table-frame"><table class="tx-table">…</table></div>`                                                                       | The document's table look. `<th>` may start with a `tx-icon`.                                                                                                                                                                                                                                    |
+| Card                              | `<div class="tx-card">…</div>`                                                                                                              | Hairline, no shadow; pad it 12.                                                                                                                                                                                                                                                                  |
+| Settings group and row            | `<div class="tx-group-title">General</div><div class="tx-group"><div class="tx-row"><span>Label</span><input class="tx-input"></div></div>` | Exactly Settings' look. Prefer declared settings (15.1).                                                                                                                                                                                                                                         |
+| Empty state                       | `<div class="tx-empty">No tasks yet.<button class="tx-button">New task</button></div>`                                                      | One sentence, at most one button.                                                                                                                                                                                                                                                                |
+
+Layout around the components uses the spacing tokens (`gap: var(--space-2)`), never fixed pixels. Nothing in a page draws a shadow except through Textus's popups.
+
+### 15.5 Menus - In force (Textus 1.3.2)
+
+A right-click menu or a dropdown in a page MUST be Textus's own:
+
+```js
+const api = acquireTextusApi();
+button.addEventListener("click", async (event) => {
+  const choice = await api.menu(
+    [
+      { label: api.t("sortAscending"), value: "asc" },
+      {
+        label: api.t("sortDescending"),
+        value: "desc",
+        checked: sort === "desc",
+      },
+      "separator",
+      { label: api.t("type"), items: [{ label: "Text", value: "text" }] },
+      { label: api.t("delete"), value: "delete", danger: true },
+    ],
+    event.currentTarget, // or { x: event.clientX, y: event.clientY } for a right-click
+  );
+  if (choice === null) return; // closed without a choice
+});
+```
+
+Items: `{ label, value, checked, danger, disabled }`, `"separator"`, or `{ label, items }` for one level of submenu. The promise resolves to the chosen item's `value` (its `label` when it has none) or `null`. On a phone the same call shows an action sheet. Free text a menu can't hold - a name, a search - goes in a field in the page, or in `textus.ui.input` from the plugin's host code.
+
+Planned: `api.select()` for a field's dropdown and `data-tooltip` for the app's tooltips. Until then use `menu()` with `checked` for a choice, and give an icon button a `title` as well as its `aria-label` (the one hint a page can show); `title` goes when `data-tooltip` comes.
+
+### 15.6 Colours in a plugin page
+
+- Use tokens by their job (3.2). The page's background is `--ui-bg` (a panel) or `--doc-bg` (a tab view, a block in the document).
+- Categorical colour is a tone: assign tones in their order, by position (an option's place among its property's options), so the same list gets the same colours every time.
+- A chart, graph or canvas library gets the tones as its palette and `--ui-text`, `--ui-muted` and `--ui-border` for its labels, axes and grid. Read them with `getComputedStyle(document.documentElement).getPropertyValue("--tone-blue")`, and again when the page gets the `theme` update (the `<html data-theme>` attribute changes).
+- A theme with a signature palette sets the tones (14.3), so a plugin that follows these rules takes the theme's colours without knowing it.
+
+### 15.7 A plugin page, start to finish
+
+```html
+<div class="tx-bar">
+  <div class="tx-segmented" role="tablist">
+    <button class="tx-segment" role="tab" aria-selected="true">Table</button>
+    <button class="tx-segment" role="tab" aria-selected="false">Board</button>
+  </div>
+  <span class="tx-spacer"></span>
+  <button class="tx-icon-button" id="filter" aria-label="Filter">
+    <span class="tx-icon" data-icon="filter"></span>
+  </button>
+  <button class="tx-button small primary">New</button>
+</div>
+<div class="tx-table-frame">
+  <table class="tx-table">
+    <thead>
+      <tr>
+        <th><span class="tx-icon" data-icon="text"></span>Name</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Draft the outline</td>
+        <td><span class="tx-tag status" data-tone="blue">Doing</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+```
+
+No `<style>` is needed for any of it. A page's own CSS is for layout only (grid, flex, widths), with token values.
 
 ## 16. Front-end architecture - In force (16.2 layout: Planned)
 
@@ -343,7 +442,7 @@ Files move there as they are touched, not in one rewrite.
 
 ### 16.3 Enforcement
 
-- In force: `spacing-grid.test.ts`, `theme-reach.test.ts`, `motion-tokens.test.ts`, `motion-properties.test.ts`, `style-invalidation.test.ts`, `e2e/a11y.spec.ts`, the contrast tests in `src/theme/content-themes.test.ts` and `theme-chrome.test.ts`.
+- In force: `spacing-grid.test.ts`, `theme-reach.test.ts`, `motion-tokens.test.ts`, `motion-properties.test.ts`, `style-invalidation.test.ts`, `e2e/a11y.spec.ts`, the contrast tests in `src/theme/theme-chrome.test.ts`.
 - Planned: a Stylelint configuration banning literal colours, px font sizes, off-grid spacing, raw radii and raw durations, run on the app and official plugins and offered to third-party authors; the plugin listing review warns on a page that breaks it; a test that every public token resolves in every built-in theme; a component gallery page in dev mode, drawn in the current theme, that is also the visual regression target.
 
 ## 17. Review checklist

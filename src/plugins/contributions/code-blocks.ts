@@ -5,6 +5,8 @@
 
 /** Language -> the plugin that draws it. */
 const languages = new Map<string, string>();
+/** Languages drawn without the box round them. */
+const frameless = new Set<string>();
 const languageListeners = new Set<() => void>();
 
 function languagesChanged() {
@@ -15,14 +17,23 @@ function languagesChanged() {
 export function addCodeBlockLanguage(
   language: string,
   plugin: string,
+  frame?: "none",
 ): () => void {
   languages.set(language, plugin);
+  if (frame === "none") frameless.add(language);
+  else frameless.delete(language);
   languagesChanged();
   return () => {
     if (languages.get(language) !== plugin) return;
     languages.delete(language);
+    frameless.delete(language);
     languagesChanged();
   };
+}
+
+/** Whether `language`'s blocks go without the box round them. */
+export function codeBlockFrameless(language: string): boolean {
+  return frameless.has(language.toLowerCase());
 }
 
 /** The plugin that draws `language`, if one does. */

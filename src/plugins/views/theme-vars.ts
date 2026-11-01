@@ -10,6 +10,10 @@ export const WEBVIEW_THEME_VARS = [
   "--ui-text",
   "--ui-muted",
   "--ui-accent",
+  "--ui-accent-fill",
+  "--ui-primary",
+  "--ui-on-primary",
+  "--ui-on-fill",
   "--ui-border",
   "--ui-hover",
   "--ui-selected",
@@ -21,6 +25,16 @@ export const WEBVIEW_THEME_VARS = [
   "--doc-text",
   "--doc-accent",
   "--doc-code-bg",
+  "--doc-border",
+  "--doc-radius",
+  "--doc-muted",
+  // The five alert colours: a plugin's tags take them, so a theme
+  // recolours those too.
+  "--doc-alert-note",
+  "--doc-alert-tip",
+  "--doc-alert-important",
+  "--doc-alert-warning",
+  "--doc-alert-caution",
   "--doc-highlight-bg",
   "--font-sans",
   "--font-mono",
@@ -37,6 +51,35 @@ export const WEBVIEW_THEME_VARS = [
   "--shape-s",
   "--shape-xs",
   "--shape-pill",
+  "--shadow-popover",
+  // Tones: the categorical colours, the theme's palette when it has one.
+  "--tone-blue",
+  "--tone-blue-text",
+  "--tone-blue-tint",
+  "--tone-green",
+  "--tone-green-text",
+  "--tone-green-tint",
+  "--tone-orange",
+  "--tone-orange-text",
+  "--tone-orange-tint",
+  "--tone-purple",
+  "--tone-purple-text",
+  "--tone-purple-tint",
+  "--tone-red",
+  "--tone-red-text",
+  "--tone-red-tint",
+  "--tone-teal",
+  "--tone-teal-text",
+  "--tone-teal-tint",
+  "--tone-yellow",
+  "--tone-yellow-text",
+  "--tone-yellow-tint",
+  "--tone-pink",
+  "--tone-pink-text",
+  "--tone-pink-tint",
+  "--tone-gray",
+  "--tone-gray-text",
+  "--tone-gray-tint",
   "--control-height",
   "--control-height-sm",
   "--space-1",
@@ -68,8 +111,12 @@ export function windowIsDark(): boolean {
 /** A `:root {…}` rule giving each variable its value in the window now. */
 export function webviewThemeCss(): string {
   const style = getComputedStyle(document.documentElement);
+  // The alert colours are the document's, set on the editor.
+  const editor = document.querySelector(".milkdown");
+  const doc = editor ? getComputedStyle(editor) : style;
   const body = WEBVIEW_THEME_VARS.map((name) => {
-    const value = style.getPropertyValue(name).trim();
+    const from = name.startsWith("--doc-alert-") ? doc : style;
+    const value = from.getPropertyValue(name).trim();
     return value ? `  ${name}: ${value};` : "";
   })
     .filter(Boolean)

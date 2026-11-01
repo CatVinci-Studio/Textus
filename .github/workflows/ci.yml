@@ -168,7 +168,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: CatVinci-Studio/textus-plugins
-          ref: a41c608ebd2324d451abdbc15c90ed036d30930e
+          ref: 4aaf49c24f122cb59284a647ce33f10040d3a664
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       # Chromium comes from the cache when this Playwright version's is there;
@@ -235,7 +235,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: CatVinci-Studio/textus-plugins
-          ref: a41c608ebd2324d451abdbc15c90ed036d30930e
+          ref: 4aaf49c24f122cb59284a647ce33f10040d3a664
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       - run: npx playwright install --with-deps webkit

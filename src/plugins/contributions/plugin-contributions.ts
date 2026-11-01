@@ -190,7 +190,7 @@ export function applyContributions(
       }),
     );
   for (const block of codeBlocks)
-    undo.push(addCodeBlockLanguage(block.language, id));
+    undo.push(addCodeBlockLanguage(block.language, id, block.frame));
   contributions.set(id, undo);
   const events = manifest.activationEvents;
   if (events.includes("onStartupFinished") || events.includes("*"))

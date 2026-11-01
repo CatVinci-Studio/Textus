@@ -14,6 +14,9 @@ import { trackCodeBlock, untrackCodeBlock } from "../contributions/code-blocks";
 import type { CodeBlockSeen } from "../manager";
 import { windowInfo } from "../store/plugin-records";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
+import { pageMenuEntries } from "./webview-menu";
+import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
+import { Presence } from "../../ui/usePresence";
 import {
   createWebview,
   setWebviewState,
@@ -47,6 +50,14 @@ export function PluginWebview({
   const record = webview(id);
   const html = record?.html ?? null;
   const boxRef = useRef<HTMLDivElement>(null);
+  const closeMenuRef = useRef<(() => void) | null>(null);
+  // A menu the page asked for, drawn by the app over the page.
+  const [menu, setMenu] = useState<{
+    x: number;
+    y: number;
+    items: ContextMenuEntry[];
+    close: () => void;
+  } | null>(null);
 
   useEffect(() => {
     const box = boxRef.current;
@@ -72,6 +83,25 @@ export function PluginWebview({
           webviewMessage(id, message),
         state: ({ state }: { state: unknown }) =>
           setWebviewState(current.key, state),
+        menu: ({ items, x, y }: { items: unknown; x: unknown; y: unknown }) =>
+          new Promise<unknown>((resolve) => {
+            let done = false;
+            const finish = (value: unknown) => {
+              if (done) return;
+              done = true;
+              setMenu(null);
+              resolve(value);
+            };
+            const box = frame.getBoundingClientRect();
+            closeMenuRef.current = () => finish(null);
+            setMenu({
+              x: box.left + (typeof x === "number" ? x : 0),
+              y: box.top + (typeof y === "number" ? y : 0),
+              items: pageMenuEntries(items, finish),
+              close: () => finish(null),
+            });
+          }),
+        menuClose: () => closeMenuRef.current?.(),
         height: ({ height }: { height: unknown }) => {
           if (fitHeight && typeof height === "number")
             frame.style.height = `${Math.min(Math.max(height, 24), fitHeight)}px`;
@@ -102,11 +132,23 @@ export function PluginWebview({
   }, [id, html, fitHeight]);
 
   return (
-    <div
-      ref={boxRef}
-      className={`plugin-webview ${className ?? ""}`}
-      data-webview-id={id}
-    />
+    <>
+      <div
+        ref={boxRef}
+        className={`plugin-webview ${className ?? ""}`}
+        data-webview-id={id}
+      />
+      <Presence show={menu !== null} exitMs={120}>
+        {menu && (
+          <ContextMenu
+            x={menu.x}
+            y={menu.y}
+            items={menu.items}
+            onClose={menu.close}
+          />
+        )}
+      </Presence>
+    </>
   );
 }
 
