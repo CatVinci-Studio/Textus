@@ -407,13 +407,20 @@ pub(crate) async fn write_section(
     // The latest section handed over whose problems were all soft: kept at
     // the end if no try holds.
     let soft: Mutex<Option<String>> = Mutex::new(None);
+    // The latest section handed over at all: kept, repaired, if no try
+    // holds or is only soft - a paper with one weaker section beats one
+    // that stops there.
+    let last: Mutex<Option<String>> = Mutex::new(None);
     let specs = vec![submit_section_spec()];
     let execute = |call: ToolCall| {
-        let (kept, soft, sources) = (&kept, &soft, &sources);
+        let (kept, soft, last, sources) = (&kept, &soft, &last, &sources);
         async move {
             let args: Value = serde_json::from_str(&call.arguments).unwrap_or_default();
             let markdown = args["markdown"].as_str().unwrap_or("").trim().to_string();
             let wrong = problems(&markdown, section, sources, &paper.language);
+            if !markdown.is_empty() {
+                *last.lock().unwrap() = Some(markdown.clone());
+            }
             if !wrong.is_empty() {
                 // Seen in a live run's output, never in the app's.
                 if cfg!(test) {
@@ -472,6 +479,18 @@ pub(crate) async fn write_section(
         .unwrap()
         .or(soft.into_inner().unwrap())
         .or_else(|| replied_section(&turns, section, &sources, &paper.language))
+        // A revision that never holds keeps the draft it would replace.
+        .or_else(|| {
+            revision.is_none().then_some(())?;
+            let text = last
+                .into_inner()
+                .unwrap()
+                .or_else(|| reply_body(&turns).map(str::to_string))?;
+            if cfg!(test) {
+                eprintln!("paper: \"{}\" kept repaired", section.title);
+            }
+            Some(repaired(&text, &sources))
+        })
         .ok_or_else(|| format!("\"{}\" wasn't written in a form that holds.", section.title))?;
     Ok(format!("## {}\n\n{body}", section.title))
 }
@@ -486,14 +505,7 @@ fn replied_section(
     sources: &[(u32, String)],
     language: &str,
 ) -> Option<String> {
-    let reply = turns.iter().rev().find_map(|t| match t {
-        AgentTurn::Assistant { text, .. } => Some(text.trim()),
-        _ => None,
-    })?;
-    let body = match reply.split_once('\n') {
-        Some((first, rest)) if first.trim_start().starts_with('#') => rest.trim(),
-        _ => reply,
-    };
+    let body = reply_body(turns)?;
     let wrong = problems(body, section, sources, language);
     if cfg!(test) {
         eprintln!(
@@ -508,6 +520,76 @@ fn replied_section(
         );
     }
     wrong.iter().all(|p| is_soft(p)).then(|| body.to_string())
+}
+
+/// The writer's last reply, without the heading it may have given it; None
+/// when it wrote nothing.
+fn reply_body(turns: &[AgentTurn]) -> Option<&str> {
+    let reply = turns.iter().rev().find_map(|t| match t {
+        AgentTurn::Assistant { text, .. } => Some(text.trim()),
+        _ => None,
+    })?;
+    let body = match reply.split_once('\n') {
+        Some((first, rest)) if first.trim_start().starts_with('#') => rest.trim(),
+        _ => reply,
+    };
+    (!body.is_empty()).then_some(body)
+}
+
+/// A section whose writer never got it to hold, made safe to keep: each
+/// citation linked to its source's address, or left out when it names no
+/// source of the section, and each chart that can't be drawn taken out.
+/// Its length and its figures stay as written.
+pub(crate) fn repaired(markdown: &str, sources: &[(u32, String)]) -> String {
+    let address = |n: &str| {
+        let n: u32 = n.parse().ok()?;
+        sources.iter().find(|(m, _)| *m == n).map(|(_, url)| url)
+    };
+    let linked = cited_link().replace_all(markdown, |c: &regex::Captures| match address(&c[1]) {
+        Some(url) => format!("[{}]({url})", &c[1]),
+        None => String::new(),
+    });
+    let mut out: Vec<String> = Vec::new();
+    let mut chart: Option<Vec<String>> = None;
+    let mut in_fence = false;
+    for line in linked.split('\n') {
+        let fence = line.trim_start().starts_with("```");
+        if let Some(block) = chart.as_mut() {
+            block.push(line.to_string());
+            if fence {
+                let body = block[1..block.len() - 1].join("\n");
+                let block = chart.take().unwrap();
+                if chart_holds(&body).is_ok() {
+                    out.extend(block);
+                }
+            }
+            continue;
+        }
+        if fence && !in_fence && line.trim_start().trim_start_matches('`').trim() == "chart" {
+            chart = Some(vec![line.to_string()]);
+            continue;
+        }
+        if fence {
+            in_fence = !in_fence;
+        }
+        if in_fence || fence {
+            out.push(line.to_string());
+            continue;
+        }
+        out.push(
+            bare_number()
+                .replace_all(line, |c: &regex::Captures| match address(&c[1]) {
+                    Some(url) => format!("[{}]({url}){}", &c[1], &c[2]),
+                    None => c[2].to_string(),
+                })
+                .into_owned(),
+        );
+    }
+    let mut text = out.join("\n");
+    while text.contains("\n\n\n") {
+        text = text.replace("\n\n\n", "\n\n");
+    }
+    text.trim().to_string()
 }
 
 /// Every section of `outline` written, three at a time, and handed to

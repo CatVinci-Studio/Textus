@@ -92,7 +92,7 @@ it, lazily loaded. Each stage and helper is one run of
   whose JSON the renderer can draw, a `textus-picture:` line, or a
   `<!-- textus-figure web: … -->` mark until a web picture is found. Sections
   are kept as `section-<n>.md` and, after the review, sent as
-  `sectionDrafted` in the outline's order; a failed section stops the ones after it, so the paper has no gap.
+  `sectionDrafted` in the outline's order; a section whose writer fails (its model's error; a section handed over at all is kept) stops the ones after it, so the paper has no gap.
 - **Review** (`paper/review.rs`): once every section is drafted, a reader
   who sees them all reports with `report_issues` what only the whole shows -
   repetition, contradictions, an outline point no section makes, a figure
@@ -167,8 +167,12 @@ it, lazily loaded. Each stage and helper is one run of
   characters, at most a figure per section plus one, web pictures at most a
   third of the sections (it had planned 12 sections and 15 figures); a
   section whose last try has only soft problems (its length, a missing
-  planned figure) is kept rather than lose the paper, while a wrong citation
-  or a broken chart still fails it; the dossier keeps only the sources its
+  planned figure) is kept rather than lose the paper; one that never gets
+  past a wrong citation or a broken chart is kept too, repaired - its
+  citations linked to their sources' addresses or left out, its broken
+  charts taken out - since a run stopping at its eighth section on a chart
+  lost the paper's remaining sections (a revision that never holds keeps
+  the draft it was to replace); the dossier keeps only the sources its
   notes cite. A third run wrote a whole paper but three times too long, so a
   section now holds at 70-120% of its target, is kept at 50-140% only as a
   last try, and is sent back beyond; writers are told their most. Sources
