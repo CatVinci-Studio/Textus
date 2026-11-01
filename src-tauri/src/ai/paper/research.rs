@@ -100,14 +100,14 @@ pub(crate) trait Model: Sync {
         tools: &'a [ToolSpec],
     ) -> BoxFuture<'a, Result<StepResult, String>>;
 
-    /// `step`, with its thinking and text passed to `watch` as they stream.
-    /// A model that doesn't stream just steps.
+    /// `step`, with what it streams passed to `watch` as it comes. A model
+    /// that doesn't stream just steps.
     fn step_watched<'a>(
         &'a self,
         instructions: &'a str,
         turns: &'a [AgentTurn],
         tools: &'a [ToolSpec],
-        _watch: &'a (dyn Fn(&str) + Send + Sync),
+        _watch: Watch<'a>,
     ) -> BoxFuture<'a, Result<StepResult, String>> {
         self.step(instructions, turns, tools)
     }
@@ -129,13 +129,17 @@ impl Model for aicompat::providers::AgentProvider {
         instructions: &'a str,
         turns: &'a [AgentTurn],
         tools: &'a [ToolSpec],
-        watch: &'a (dyn Fn(&str) + Send + Sync),
+        watch: Watch<'a>,
     ) -> BoxFuture<'a, Result<StepResult, String>> {
         use aicompat::agent::ProviderEvent;
         Box::pin(async move {
             let on_event = |event: ProviderEvent<'_>| match event {
-                ProviderEvent::Thinking(text) | ProviderEvent::Text(text) => watch(text),
-                _ => {}
+                ProviderEvent::Thinking(text) | ProviderEvent::Text(text) => {
+                    watch(Streamed::Thought(text))
+                }
+                ProviderEvent::ToolStart { .. } => watch(Streamed::ToolStart),
+                ProviderEvent::ToolArgs { delta, .. } => watch(Streamed::ToolArgs(delta)),
+                ProviderEvent::Citation { .. } => {}
             };
             aicompat::providers::AgentProvider::step(self, instructions, turns, tools, &on_event)
                 .await
@@ -143,6 +147,19 @@ impl Model for aicompat::providers::AgentProvider {
         })
     }
 }
+
+/// A piece of what a step streams, as a stage watching it sees it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum Streamed<'a> {
+    /// A fragment of the model's thinking or prose.
+    Thought(&'a str),
+    /// A tool call began: the arguments that follow are its own.
+    ToolStart,
+    /// A fragment of a tool call's JSON arguments.
+    ToolArgs(&'a str),
+}
+
+pub(crate) type Watch<'a> = &'a (dyn Fn(Streamed<'_>) + Send + Sync);
 
 /// How much of the planner's stream a Thinking event carries: its tail.
 const THINKING_TAIL: usize = 160;
@@ -241,7 +258,7 @@ fn user(text: String) -> AgentTurn {
 pub(crate) async fn plan_questions(
     model: &dyn Model,
     paper: &Paper,
-    watch: &(dyn Fn(&str) + Send + Sync),
+    watch: Watch<'_>,
 ) -> Result<Vec<String>, String> {
     let instructions = format!(
         "You plan the research for a paper of about {} characters, written in the language tagged \"{}\". Split its topic into {MIN_QUESTIONS}-{MAX_QUESTIONS} research questions that together cover it in breadth and depth: background and definitions, how it works, the state of the art, the evidence and data, disputes and limits, cases, and where it is heading - as fits the topic. Each question is one sentence, specific enough to search for, and none repeats another. Reply with a JSON array of the questions as strings and nothing else.",
@@ -519,7 +536,12 @@ pub(crate) async fn research(
         phase: PaperPhase::Planning,
     });
     let thinking = ThinkingTail::new(send);
-    let questions = plan_questions(model, paper, &|text| thinking.push(text)).await?;
+    let questions = plan_questions(model, paper, &|streamed| {
+        if let Streamed::Thought(text) = streamed {
+            thinking.push(text)
+        }
+    })
+    .await?;
     let share = Share::of(budget.snapshot().limits, questions.len());
     send(PaperEvent::Questions {
         questions: questions.clone(),

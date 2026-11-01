@@ -275,6 +275,12 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
  */
 { type: "activity"; question: number; kind: ActivityKind; detail: string } | 
 /**
+ *  The outline as the outliner writes it: its thesis once whole, and
+ *  the titles of the sections given so far. `attempt` counts its tries;
+ *  a try after the first follows one that was sent back.
+ */
+{ type: "outlineDraft"; attempt: number; thesis?: string | null; titles: string[] } | 
+/**
  *  Question `question`'s helper finished, keeping `notes` notes;
  *  `failed` when it stopped on an error.
  */
@@ -308,6 +314,12 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
  *  index) searched, read or kept.
  */
 { type: "activity"; question: number; kind: ActivityKind; detail: string } | 
+/**
+ *  The outline as the outliner writes it: its thesis once whole, and
+ *  the titles of the sections given so far. `attempt` counts its tries;
+ *  a try after the first follows one that was sent back.
+ */
+{ type: "outlineDraft"; attempt: number; thesis: string | null; titles: string[] } | 
 /**
  *  Question `question`'s helper finished, keeping `notes` notes;
  *  `failed` when it stopped on an error.

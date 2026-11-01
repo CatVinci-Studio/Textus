@@ -57,6 +57,14 @@ pub enum PaperEvent {
         kind: ActivityKind,
         detail: String,
     },
+    /// The outline as the outliner writes it: its thesis once whole, and
+    /// the titles of the sections given so far. `attempt` counts its tries;
+    /// a try after the first follows one that was sent back.
+    OutlineDraft {
+        attempt: u32,
+        thesis: Option<String>,
+        titles: Vec<String>,
+    },
     /// Question `question`'s helper finished, keeping `notes` notes;
     /// `failed` when it stopped on an error.
     QuestionDone {

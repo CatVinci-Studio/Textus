@@ -3,8 +3,8 @@
 //! hands it over with submit_outline, which checks it and sends back what is
 //! wrong until it holds; the user then edits and approves it.
 
-use super::research::Model;
-use super::{Dossier, FigureKind, Outline, Paper};
+use super::research::{Model, Streamed, ThinkingTail};
+use super::{Dossier, FigureKind, Outline, Paper, PaperEvent};
 use aicompat::agent::{run_agent_loop, AgentTurn, ToolCall, ToolOutput, ToolRun, ToolSpec};
 use serde_json::json;
 use std::sync::Mutex;
@@ -225,6 +225,7 @@ pub(crate) async fn make_outline(
     model: &dyn Model,
     paper: &Paper,
     dossier: &Dossier,
+    send: &(dyn Fn(PaperEvent) + Sync),
 ) -> Result<Outline, String> {
     let target = target_units(paper);
     let unit = if counts_characters(&paper.language) {
@@ -249,6 +250,7 @@ pub(crate) async fn make_outline(
         paper.topic,
         dossier_text(dossier)
     );
+    let watch = OutlineWatch::new(send);
     let kept: Mutex<Option<Outline>> = Mutex::new(None);
     let specs = vec![submit_outline_spec()];
     let execute = |call: ToolCall| {
@@ -290,7 +292,12 @@ pub(crate) async fn make_outline(
         OUTLINE_STEPS,
         |turns: Vec<AgentTurn>| {
             let (instructions, specs) = (&instructions, &specs);
-            async move { model.step(instructions, &turns, specs).await }
+            let watch = &watch;
+            async move {
+                model
+                    .step_watched(instructions, &turns, specs, &|s| watch.push(s))
+                    .await
+            }
         },
         execute,
         |_| ToolRun::InOrder,
@@ -321,4 +328,137 @@ pub(crate) fn as_edited(mut outline: Outline, dossier: &Dossier) -> Result<Outli
         section.figures.retain(|f| !f.spec.trim().is_empty());
     }
     Ok(outline)
+}
+
+/// The least time between two OutlineDraft events.
+const DRAFT_EVERY: std::time::Duration = std::time::Duration::from_millis(250);
+
+/// Watches the outliner's stream: its thinking sent as Thinking, and the
+/// outline it is writing as OutlineDraft - read from submit_outline's
+/// arguments as they stream, a few times a second at most.
+pub(crate) struct OutlineWatch<'a> {
+    send: &'a (dyn Fn(PaperEvent) + Sync),
+    thinking: ThinkingTail<'a>,
+    state: Mutex<DraftState>,
+}
+
+#[derive(Default)]
+struct DraftState {
+    attempt: u32,
+    args: String,
+    /// Where scanning `args` picks up: everything before it is read.
+    scanned: usize,
+    thesis: Option<String>,
+    titles: Vec<String>,
+    sent: (Option<String>, usize),
+    last: Option<std::time::Instant>,
+}
+
+impl<'a> OutlineWatch<'a> {
+    pub(crate) fn new(send: &'a (dyn Fn(PaperEvent) + Sync)) -> Self {
+        Self {
+            send,
+            thinking: ThinkingTail::new(send),
+            state: Mutex::new(DraftState::default()),
+        }
+    }
+
+    pub(crate) fn push(&self, streamed: Streamed<'_>) {
+        let event = {
+            let mut state = self.state.lock().unwrap();
+            match streamed {
+                Streamed::Thought(text) => {
+                    drop(state);
+                    self.thinking.push(text);
+                    return;
+                }
+                Streamed::ToolStart => {
+                    let attempt = state.attempt + 1;
+                    *state = DraftState {
+                        attempt,
+                        ..DraftState::default()
+                    };
+                }
+                Streamed::ToolArgs(delta) => state.args.push_str(delta),
+            }
+            state.scan();
+            let changed = state.sent != (state.thesis.clone(), state.titles.len());
+            let due = state.last.is_none_or(|at| at.elapsed() >= DRAFT_EVERY);
+            if !changed || !due {
+                return;
+            }
+            state.last = Some(std::time::Instant::now());
+            state.sent = (state.thesis.clone(), state.titles.len());
+            PaperEvent::OutlineDraft {
+                attempt: state.attempt,
+                thesis: state.thesis.clone(),
+                titles: state.titles.clone(),
+            }
+        };
+        (self.send)(event);
+    }
+}
+
+impl DraftState {
+    /// Reads the whole `"thesis"` and `"title"` strings that arrived since
+    /// the last scan. Each fragment is scanned once, from the last key on,
+    /// so a long outline costs no more than its length.
+    fn scan(&mut self) {
+        loop {
+            let rest = &self.args[self.scanned..];
+            let Some((key, at)) = ["\"thesis\"", "\"title\""]
+                .iter()
+                .filter_map(|k| rest.find(k).map(|i| (*k, i)))
+                .min_by_key(|(_, i)| *i)
+            else {
+                // Keep the tail that may be a key cut in half.
+                self.scanned = self.args.len().saturating_sub(8);
+                while !self.args.is_char_boundary(self.scanned) {
+                    self.scanned -= 1;
+                }
+                return;
+            };
+            let start = self.scanned + at;
+            let Some((value, end)) = json_string_after(&self.args[start + key.len()..]) else {
+                // The value hasn't all arrived: wait for more from the key.
+                self.scanned = start;
+                return;
+            };
+            match value {
+                Some(thesis) if key == "\"thesis\"" => {
+                    self.thesis = Some(thesis).filter(|t| !t.trim().is_empty());
+                }
+                Some(title) => self.titles.push(title),
+                None => {}
+            }
+            self.scanned = start + key.len() + end;
+        }
+    }
+}
+
+/// The value after a key at the start of `text`: Some((Some(string),
+/// end)) for a whole string, unescaped; Some((None, end)) for anything
+/// else, skipped; None while the string is still arriving.
+fn json_string_after(text: &str) -> Option<(Option<String>, usize)> {
+    let colon = text.find(|c: char| !c.is_whitespace())?;
+    if !text[colon..].starts_with(':') {
+        return Some((None, colon));
+    }
+    let open = colon + 1 + text[colon + 1..].find(|c: char| !c.is_whitespace())?;
+    if !text[open..].starts_with('"') {
+        return Some((None, open));
+    }
+    let mut escaped = false;
+    for (i, c) in text[open + 1..].char_indices() {
+        match c {
+            _ if escaped => escaped = false,
+            '\\' => escaped = true,
+            '"' => {
+                let end = open + 1 + i + 1;
+                return Some((serde_json::from_str(&text[open..end]).ok(), end));
+            }
+            _ => {}
+        }
+    }
+    None
 }

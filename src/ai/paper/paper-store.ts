@@ -89,6 +89,7 @@ export function applyPaperEvent(key: string, event: PaperEvent) {
       case "questions":
       case "activity":
       case "questionDone":
+      case "outlineDraft":
         return {};
     }
   });

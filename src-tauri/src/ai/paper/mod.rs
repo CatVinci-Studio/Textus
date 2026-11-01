@@ -239,7 +239,7 @@ pub async fn ai_paper_run(
         send(PaperEvent::Phase {
             phase: PaperPhase::Outlining,
         });
-        let outline = outline::make_outline(&agent, &paper, &files.dossier).await?;
+        let outline = outline::make_outline(&agent, &paper, &files.dossier, &send).await?;
         files.outline = Some(outline.clone());
         save(&root, &files)?;
         send(PaperEvent::OutlineReady { outline });

@@ -557,7 +557,7 @@ impl research::Model for Outliner {
 #[tokio::test]
 async fn the_outline_is_sent_back_until_it_holds() {
     let model = Outliner(Default::default());
-    let made = outline::make_outline(&model, &paper(), &dossier())
+    let made = outline::make_outline(&model, &paper(), &dossier(), &|_| {})
         .await
         .unwrap();
     assert_eq!(made.sections.len(), 9);
@@ -1456,5 +1456,50 @@ fn an_address_with_parentheses_is_cited_whole() {
     assert_eq!(
         draft::problems(&cited, &section, &[(66, doi.to_string())], "en"),
         Vec::<String>::new()
+    );
+}
+
+#[test]
+fn the_outline_is_told_as_its_arguments_stream() {
+    use research::Streamed;
+    let events = std::sync::Mutex::new(Vec::new());
+    let send = |e: PaperEvent| events.lock().unwrap().push(e);
+    let watch = outline::OutlineWatch::new(&send);
+    watch.push(Streamed::ToolStart);
+    // Fragments cut anywhere: inside a key, inside a value, inside an escape.
+    for part in [
+        r#"{"the"#,
+        r##"sis": "Green \"cools\"""##,
+        r#", "sec"#,
+        r#"tions": [{"tit"#,
+        r#"le": "一、背"#,
+        r#"景", "targetWords": 700, "figures": [{"kind": "chart", "spec": "title"}]}"#,
+    ] {
+        watch.push(Streamed::ToolArgs(part));
+    }
+    let first = events.lock().unwrap().clone();
+    assert_eq!(
+        first,
+        [PaperEvent::OutlineDraft {
+            attempt: 1,
+            thesis: Some("Green \"cools\"".into()),
+            titles: vec![]
+        }]
+    );
+    // Held back while too soon after the last; the next try starts over.
+    watch.push(Streamed::ToolStart);
+    watch.push(Streamed::ToolArgs(
+        r#"{"sections": [{"title": "A"}, {"title": 3}]}"#,
+    ));
+    std::thread::sleep(std::time::Duration::from_millis(260));
+    watch.push(Streamed::ToolArgs(r#"[{"title": "B"}"#));
+    let events = events.into_inner().unwrap();
+    assert_eq!(
+        events.last(),
+        Some(&PaperEvent::OutlineDraft {
+            attempt: 2,
+            thesis: None,
+            titles: vec!["A".into(), "B".into()]
+        })
     );
 }

@@ -126,7 +126,7 @@ fn live_paper() {
             ..paper.clone()
         };
         let t = Instant::now();
-        let outline = outline::make_outline(&agent, &paper, &dossier)
+        let outline = outline::make_outline(&agent, &paper, &dossier, &send)
             .await
             .expect("outline");
         lap(&mut stats, "outline", t);
