@@ -107,8 +107,10 @@ it, lazily loaded. Each stage and helper is one run of
   Then every diagram, chart, picture and web-picture mark gets a numbered
   caption, counted through the paper (a chart's caption or title, a
   picture's alt text); the reference list holds the sources the text cites,
-  by number, and the citations become plain `\[n\]` so the footnote setting
-  leaves them alone; a tool-less step writes the title and abstract (the
+  by number, and each citation becomes `\[n\]` linked to its entry there
+  (`#ref-n`, which the editor finds by the entry's leading `[n]`), escaped so
+  the footnote setting leaves it alone - a bare `[n]` inside a chart, whose
+  JSON has no `\[`; a tool-less step writes the title and abstract (the
   topic alone if its reply can't be read). Headings and labels follow the
   paper's language. The whole paper is sent once, as `ready`, to be proposed
   as one append, and the run ends at `done`.

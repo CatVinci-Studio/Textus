@@ -148,7 +148,7 @@ fn live_paper() {
                 eprintln!(
                     "live_paper: section {} written ({} long)",
                     i + 1,
-                    draft::length(&finish::plain_citations(md), &paper.language)
+                    draft::prose_length(md, &paper.language)
                 );
                 sections.push(md.to_string());
                 Ok(())
