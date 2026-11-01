@@ -67,6 +67,7 @@ const labels = {
   atCursor: "At the cursor",
   placeholder: "Ask anything",
   suggestionTab: "Tab",
+  followUps: "Suggested next messages",
   send: "Send",
   stop: "Stop",
   attachFile: "Attach a file",
@@ -645,7 +646,7 @@ describe("ChatComposer suggested next message", () => {
         labels={labels}
         defaultMode="review"
         defaultWebSearch={false}
-        suggestion="Translate the next chapter too"
+        suggestions={["Translate the next chapter too"]}
         onSend={() => {}}
         onStop={() => {}}
         onEscape={() => {}}
@@ -670,7 +671,7 @@ describe("ChatComposer suggested next message", () => {
         labels={labels}
         defaultMode="review"
         defaultWebSearch={false}
-        suggestion="Translate the next chapter too"
+        suggestions={["Translate the next chapter too"]}
         onSend={() => {}}
         onStop={() => {}}
         onEscape={() => {}}
@@ -680,5 +681,80 @@ describe("ChatComposer suggested next message", () => {
     expect(box.placeholder).toBe("Ask anything");
     fireEvent.keyDown(box, { key: "Tab" });
     expect(box.value).toBe("");
+  });
+});
+
+describe("ChatComposer suggested follow-ups", () => {
+  function renderFollowUps(busy = false, compact = false) {
+    const onSend = vi.fn();
+    const props = {
+      docPath: null,
+      workspaceRoot: null,
+      selectedText: null,
+      labels,
+      defaultMode: "write" as const,
+      defaultWebSearch: false,
+      compact,
+      suggestions: ["Shorten this section", "Add a summary at the top"],
+      onSend,
+      onStop: () => {},
+      onEscape: () => {},
+    };
+    const view = render(<ChatComposer {...props} busy={busy} />);
+    const rerender = (next: boolean) =>
+      view.rerender(<ChatComposer {...props} busy={next} />);
+    return { onSend, rerender };
+  }
+
+  const chips = () =>
+    screen
+      .queryByRole("group", { name: "Suggested next messages" })
+      ?.querySelectorAll("button") ?? [];
+
+  it("offers each as a button that sends it, the first also grey in the box", () => {
+    const { onSend } = renderFollowUps();
+    expect([...chips()].map((c) => c.textContent)).toEqual([
+      "Shorten this section",
+      "Add a summary at the top",
+    ]);
+    const box = screen.getByRole("textbox") as HTMLTextAreaElement;
+    expect(box.placeholder).toBe("Shorten this section  (Tab)");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Add a summary at the top" }),
+    );
+    expect(onSend).toHaveBeenCalledWith(
+      "Add a summary at the top",
+      [],
+      true,
+      { mode: "write", webSearch: false, thinking: "auto" },
+      "Add a summary at the top",
+    );
+  });
+
+  it("is one tab stop, walked with the arrow keys", () => {
+    renderFollowUps();
+    const [first, second] = chips();
+    expect(first).toHaveAttribute("tabindex", "0");
+    expect(second).toHaveAttribute("tabindex", "-1");
+    first.focus();
+    fireEvent.keyDown(first, { key: "ArrowRight" });
+    expect(document.activeElement).toBe(second);
+    fireEvent.keyDown(second, { key: "ArrowRight" });
+    expect(document.activeElement).toBe(first);
+  });
+
+  it("goes while the writer types or a reply is coming", () => {
+    const { rerender } = renderFollowUps();
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "N" } });
+    expect(chips()).toHaveLength(0);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "" } });
+    expect(chips()).toHaveLength(2);
+    rerender(true);
+    expect(chips()).toHaveLength(0);
+  });
+
+  it("stays out of Quick Ask's one-line box", () => {
+    renderFollowUps(false, true);
+    expect(chips()).toHaveLength(0);
   });
 });

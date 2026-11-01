@@ -110,6 +110,26 @@
   padding: 8px 8px 8px;
 }
 
+/* The suggested next messages, between the last reply and the box: small
+   capsules that wrap, each cut short rather than widening the panel. */
+.inline-chat-follow-ups {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 8px 0;
+}
+
+.inline-chat-follow-up {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ui-text);
+  animation: motion-enter var(--dur-fast) var(--ease-out);
+}
+
 .inline-chat-field {
   display: flex;
   flex-direction: column;

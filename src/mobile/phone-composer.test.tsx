@@ -44,6 +44,7 @@ const labels = {
   atCursor: "At the cursor",
   placeholder: "Ask anything",
   suggestionTab: "Tab",
+  followUps: "Suggested next messages",
   send: "Send",
   stop: "Stop",
   attachFile: "Attach a file",
@@ -117,6 +118,26 @@ describe("the composer on a phone", () => {
         thinking: "auto",
       },
       "why?",
+    );
+  });
+
+  it("sends a suggested next message with a tap, keeping the keyboard up", () => {
+    const { onSend } = renderComposer({
+      suggestions: ["Shorten this section", "Add a summary"],
+    });
+    const box = screen.getByPlaceholderText(/Shorten this section/);
+    box.focus();
+    const chip = screen.getByRole("button", { name: "Add a summary" });
+    // The tap's mousedown is held, so the textarea (and keyboard) stay.
+    expect(fireEvent.mouseDown(chip)).toBe(false);
+    fireEvent.click(chip);
+    expect(document.activeElement).toBe(box);
+    expect(onSend).toHaveBeenCalledWith(
+      "Add a summary",
+      [],
+      true,
+      { mode: "write", webSearch: false, thinking: "auto" },
+      "Add a summary",
     );
   });
 

@@ -266,8 +266,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   learnLabel: "修正の採否から学んだこと",
   suggestNextMessageLabel: "次のメッセージを予測",
   suggestNextMessageHint:
-    "返答のたびに、次に送りそうな言葉を入力欄に灰色で表示し、Tab で使えます。短い依頼が一回増えます。",
+    "返答のたびに、次に送りそうな言葉を最大 3 つ入力欄の上にボタンで表示し、いちばん可能性の高いものは入力欄に灰色でも表示します。クリックで送信、Tab で灰色のものを使えます。短い依頼が一回増えます。",
   composerSuggestionTab: "Tab で使う",
+  composerFollowUps: "次のメッセージの候補",
   rememberAutomaticallyLabel: "自動で覚える",
   rememberAutomaticallyHint: `${AI_NAME}が、あなたの指示や書き方を今後の会話のために覚えます。「記憶」タブで確認・編集・取り消しができます。返答のたびに、同じモデルへ短い依頼をもう一度送り、何を記録するか決めます。`,
   toolRemember: "覚えています",

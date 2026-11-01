@@ -22,6 +22,8 @@ export interface ChatComposerHandle {
 export interface ChatComposerLabels {
   /** After a suggestion in the empty box: the key that takes it. */
   suggestionTab: string;
+  /** Accessible name of the suggested next messages' buttons, as a group. */
+  followUps: string;
   /** Accessible name of the selection chip's remove button. */
   dropSelection: string;
   /** The docked Quick Ask's context line when nothing is selected. */
@@ -96,9 +98,9 @@ export function defaultPickerLabels(): PickerLabels {
 export const FILE_LIMIT = 30;
 
 export interface ChatComposerProps {
-  /** What the writer will probably say next: grey in the empty box, Tab
-   *  takes it. */
-  suggestion?: string | null;
+  /** What the writer will probably say next, most likely first: the first
+   *  grey in the empty box (Tab takes it), all as buttons that send it. */
+  suggestions?: string[];
   /** Resolves the agent workspace (skills) - re-loaded whenever it changes. */
   docPath: string | null;
   /** Explicit workspace root, or null for the document's own folder. Skills

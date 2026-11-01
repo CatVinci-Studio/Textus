@@ -280,8 +280,9 @@ type /name in a conversation to use one.
   learnLabel: "Learned from your revision choices",
   suggestNextMessageLabel: "Suggest your next message",
   suggestNextMessageHint:
-    "After each reply, what you will probably say next shows grey in the message box; Tab takes it. It costs one more short request.",
+    "After each reply, up to three things you will probably say next show as buttons over the message box, the likeliest also grey in it; click one to send it, or Tab to take the grey one. It costs one more short request.",
   composerSuggestionTab: "Tab",
+  composerFollowUps: "Suggested next messages",
   rememberAutomaticallyLabel: "Remember automatically",
   rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it in the Memory tab. After each reply it asks the same model once more, briefly, what to keep.`,
   toolRemember: "Remembering this",
