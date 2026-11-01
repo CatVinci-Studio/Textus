@@ -72,8 +72,9 @@ pub enum PaperEvent {
         titles: Vec<String>,
     },
     /// What section `index`'s writer has written so far, as it writes it:
-    /// its tail, sent a few times a second at most. A try that starts over
-    /// starts the text over.
+    /// the whole of it, sent a few times a second at most. A try that starts
+    /// over starts the text over. Sent once more with the section as kept
+    /// when it is drafted or revised.
     SectionText {
         index: u32,
         text: String,

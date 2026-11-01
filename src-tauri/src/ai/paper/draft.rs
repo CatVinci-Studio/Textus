@@ -502,13 +502,11 @@ pub(crate) async fn draft(
     Ok(())
 }
 
-/// How much of a section a SectionText event carries: its tail.
-const SECTION_TAIL: usize = 2000;
 /// The least time between two SectionText events for one section.
 const SECTION_EVERY: std::time::Duration = std::time::Duration::from_millis(300);
 
-/// Watches a writer's stream and sends what it has written so far as
-/// SectionText: the `markdown` of the submit_section call it is making, or
+/// Watches a writer's stream and sends what it has written so far, whole,
+/// as SectionText - the document shows it as it comes: the `markdown` of the submit_section call it is making, or
 /// its reply when it writes the section there instead.
 pub(crate) struct SectionWatch<'a> {
     index: u32,
@@ -562,11 +560,6 @@ impl<'a> SectionWatch<'a> {
             state.sent = text.len();
             state.last = Some(std::time::Instant::now());
             text
-        };
-        let skip = text.chars().count().saturating_sub(SECTION_TAIL);
-        let text = match text.char_indices().nth(skip) {
-            Some((at, _)) if skip > 0 => text[at..].to_string(),
-            _ => text,
         };
         (self.send)(PaperEvent::SectionText {
             index: self.index,

@@ -108,6 +108,10 @@ function sectionStatus(status: SectionStatus, t: Strings): string {
   }
 }
 
+/** How much of a section the card shows as it is written: its last words;
+ *  the document has the whole. */
+const PREVIEW_TAIL = 600;
+
 /** A section's text as the preview shows it: plain, its citations as
  *  bare numbers and its Markdown marks dropped. */
 export function previewText(markdown: string): string {
@@ -201,7 +205,9 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
         {run.outline.sections.map((section, i) => {
           const status = run.sections[i] ?? "waiting";
           const writing = status === "drafting" || status === "revising";
-          const text = writing ? previewText(run.sectionText[i] ?? "") : "";
+          const text = writing
+            ? previewText((run.sectionText[i] ?? "").slice(-PREVIEW_TAIL))
+            : "";
           return (
             <li key={i} className="paper-card-section" data-state={status}>
               <div className="paper-card-item" data-state={status}>
