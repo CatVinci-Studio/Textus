@@ -29,9 +29,6 @@ permissions:
 
 jobs:
   update-beta-manifest:
-    # Its secrets are the release environment's: only a release tag
-    # (v*, ios-v*) runs it with them.
-    environment: release
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     # The Cloudflare token lives in the release environment, which only

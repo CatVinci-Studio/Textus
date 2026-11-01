@@ -26,9 +26,6 @@ permissions:
 
 jobs:
   update-arch-repo:
-    # Its secrets are the release environment's: only a release tag
-    # (v*, ios-v*) runs it with them.
-    environment: release
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     # The arch-repo deploy key lives in the release environment, which only

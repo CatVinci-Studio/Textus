@@ -27,9 +27,6 @@ permissions:
 
 jobs:
   deploy:
-    # Its secrets are the release environment's: only a release tag
-    # (v*, ios-v*) runs it with them.
-    environment: release
     # Not in forks: they have neither the token nor the Worker.
     if: github.repository == 'CatVinci-Studio/Textus'
     runs-on: ubuntu-22.04

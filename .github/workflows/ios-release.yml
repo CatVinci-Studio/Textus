@@ -33,9 +33,6 @@ concurrency:
 
 jobs:
   testflight:
-    # Its secrets are the release environment's: only a release tag
-    # (v*, ios-v*) runs it with them.
-    environment: release
     # macos-26 is what macos-latest points at today (same arm64 pool);
     # pinned, with the Xcode chosen below, so the SDK the upload is built
     # with only changes on purpose.
