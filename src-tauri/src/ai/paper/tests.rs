@@ -991,11 +991,28 @@ async fn picture_lines_are_begun_up_to_the_limit_and_the_rest_left_out() {
 }
 
 #[test]
+fn a_citation_in_a_chart_stays_valid_json() {
+    let section = "See [3](https://a.example/x).\n\n```chart\n{\"type\": \"bar\", \"x\": [\"a\"], \"series\": [{\"name\": \"n\", \"data\": [1]}], \"source\": \"Survey [3](https://a.example/x)\"}\n```\n\nAfter [3](https://a.example/x).";
+    let plain = finish::plain_citations(section);
+    assert!(plain.starts_with("See [\\[3\\]](#ref-3)."), "{plain}");
+    assert!(plain.ends_with("After [\\[3\\]](#ref-3)."), "{plain}");
+    let body = plain
+        .split("```chart\n")
+        .nth(1)
+        .unwrap()
+        .split("\n```")
+        .next()
+        .unwrap();
+    let spec: serde_json::Value = serde_json::from_str(body).expect(body);
+    assert_eq!(spec["source"], "Survey [3]");
+}
+
+#[test]
 fn the_paper_is_assembled_with_its_own_citation_numbers() {
     let section = "Cooler [3](https://example.org/study), as [12](https://b.example/x?y=1) found.";
     assert_eq!(
         finish::plain_citations(section),
-        "Cooler \\[3\\], as \\[12\\] found."
+        "Cooler [\\[3\\]](#ref-3), as [\\[12\\]](#ref-12) found."
     );
     assert_eq!(
         finish::assemble(
@@ -1161,7 +1178,7 @@ async fn helpers_search_the_user_s_library_and_cite_its_files() {
     );
     assert_eq!(
         finish::plain_citations(&cited),
-        "Barrages store energy at high tide, by the notes \\[1\\]."
+        "Barrages store energy at high tide, by the notes [\\[1\\]](#ref-1)."
     );
 }
 

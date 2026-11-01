@@ -220,10 +220,30 @@ pub(crate) async fn opening(
     }
 }
 
-/// `section` with each citation `[n](address)` as a plain `[n]`, escaped so
-/// it stays text: the paper's numbering, which its reference list follows.
+/// `section` with each citation `[n](address)` as `[n]` in the paper's
+/// numbering, linked to its entry in the reference list (`#ref-n`, which
+/// the editor finds by the entry's leading `[n]`). The brackets are escaped
+/// so they stay text. Inside a code block it is a bare `[n]`, since there a
+/// backslash is no escape: in a chart's JSON `\[` is invalid and the chart
+/// isn't drawn.
 pub(crate) fn plain_citations(section: &str) -> String {
-    cited_number().replace_all(section, r"\[$1\]").into_owned()
+    let mut in_fence = false;
+    let lines: Vec<String> = section
+        .split('\n')
+        .map(|line| {
+            if line.trim_start().starts_with("```") {
+                in_fence = !in_fence;
+                return line.to_string();
+            }
+            let plain = if in_fence {
+                "[$1]"
+            } else {
+                r"[\[$1\]](#ref-$1)"
+            };
+            cited_number().replace_all(line, plain).into_owned()
+        })
+        .collect();
+    lines.join("\n")
 }
 
 fn cited_number() -> &'static Regex {
