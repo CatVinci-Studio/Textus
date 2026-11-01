@@ -144,3 +144,22 @@ test("a dropped folder opens in the sidebar, as Open Folder does", async ({
   await expect(tree.filter({ hasText: "day1.md" })).toBeVisible();
   await expect(tree.filter({ hasText: "day2.md" })).toBeVisible();
 });
+
+test("the sidebar opens beside a document dropped in with no folder open", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await openApp(page, { settings: { language: "en", newDocumentMode: "tab" } });
+  await page.evaluate(() => {
+    (window as unknown as Record<string, unknown>).__devFiles = {
+      "/notes/dropped.md": "# Dropped\n\nIt opens.",
+    };
+  });
+  await drop(page, ["/notes/dropped.md"]);
+  await expect(page.locator(editor)).toContainText("It opens.");
+  await emit(page, "menu-toggle-sidebar");
+  await expect(page.locator(".sidebar-tab").first()).toBeVisible();
+  await expect(page.getByText("Something went wrong")).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
