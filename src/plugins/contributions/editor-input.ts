@@ -17,7 +17,7 @@ import {
   selectionText,
   verticalMove,
 } from "./editor-text";
-import { scrollerOf } from "../../editor/modes/mode-switch";
+import { scrollCaretTo } from "./editor-scroll";
 import { findFlash, type FlashLabel } from "./editor-flash";
 import { keyName } from "./editor-keys";
 import { isImeKeydown } from "../../utils/ime";
@@ -314,24 +314,6 @@ export interface EditorOpResult {
   letters?: string;
   /** Whether the selection is empty now. */
   empty: boolean;
-}
-
-/** Room kept above or below the caret's line at the top or the bottom. */
-const SCROLL_MARGIN = 24;
-
-function scrollCaretTo(view: EditorView, to: "center" | "top" | "bottom") {
-  const scroller = scrollerOf(view.dom);
-  if (!scroller) return;
-  const line = view.coordsAtPos(view.state.selection.head);
-  const box = scroller.getBoundingClientRect();
-  const height = line.bottom - line.top;
-  const target =
-    to === "top"
-      ? SCROLL_MARGIN
-      : to === "bottom"
-        ? box.height - height - SCROLL_MARGIN
-        : (box.height - height) / 2;
-  scroller.scrollTop += line.top - box.top - target;
 }
 
 function copyText(text: string) {
