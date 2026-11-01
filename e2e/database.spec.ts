@@ -81,12 +81,12 @@ test("a table of the folder's pages, a cell edited into its page's front matter"
   await expect(db.locator(rows)).toHaveCount(3);
   await expect(db.locator("thead th")).toHaveText([
     "Page",
-    "start ↑",
+    "start",
     "end",
     "focus",
     "status",
     "rate",
-    "+",
+    "",
   ]);
   await expect(db.locator(rows).nth(2)).toContainText("Research");
   await expect(db.locator("#count")).toHaveText("3 pages");
@@ -100,24 +100,31 @@ test("a table of the folder's pages, a cell edited into its page's front matter"
   await expect(db.locator(rows).first().locator(".stars")).toHaveText("★★★☆☆");
 });
 
+/** Textus's own menu, which the page opens over itself. */
+const menu = (page: Page) => page.locator(".context-menu").last();
+const pick = async (page: Page, name: string) => {
+  await menu(page).getByRole("menuitem", { name, exact: true }).click();
+};
+
 test("a column's menu sorts it; Filter keeps only the pages that match", async ({
   page,
 }) => {
   const db = await open(page);
   await db.locator("thead th", { hasText: "rate" }).click();
-  await db.getByRole("button", { name: "↓ Descending" }).click();
+  await pick(page, "Descending");
   await expect.poll(() => docText(page)).toContain("sort: -rate");
   await expect(db.locator(rows).first()).toContainText("Week2");
 
+  // A filter by menus: the property, how it compares, one of its options.
   await db.locator("#filter").click();
-  const rule = db.locator(".pop .rule").first();
-  await rule.locator("select").first().selectOption("status");
-  await rule.locator("select").nth(2).selectOption("Done");
+  await pick(page, "status");
+  await pick(page, "is");
+  await pick(page, "Done");
   await expect(db.locator(rows)).toHaveCount(1);
   await expect.poll(() => docText(page)).toContain("filter: status = Done");
-  // The menu stays open while it is changed; its chip shows what it does.
-  await expect(db.locator("#rules")).toContainText("status is Done");
-  await rule.getByRole("button", { name: "Remove" }).click();
+  const chip = db.locator("#rules .tx-chip", { hasText: "status is Done" });
+  await chip.click();
+  await pick(page, "Remove");
   await expect(db.locator(rows)).toHaveCount(3);
 });
 
@@ -127,9 +134,12 @@ test("a select's options are picked or made from its cell", async ({
   const db = await open(page);
   const status = db.locator(rows).first().locator('td[data-key="status"]');
   await status.click();
-  await expect(db.locator(".pop .options .tag")).toHaveText(["Doing", "Done"]);
-  await db.locator(".pop input").fill("Review");
-  await db.locator(".pop input").press("Enter");
+  await expect(
+    menu(page).getByRole("menuitemradio").or(menu(page).getByRole("menuitem")),
+  ).toContainText(["Doing", "Done"]);
+  await pick(page, "Create…");
+  await page.locator(".app-dialog-input").fill("Review");
+  await page.locator(".app-dialog-input").press("Enter");
   await expect
     .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
     .toContain("status: Review");
@@ -140,14 +150,17 @@ test("properties are added, renamed across the pages, and pages made in the tabl
 }) => {
   const db = await open(page);
   await db.locator("thead th.plus").click();
-  await db.locator(".pop input").fill("owner");
-  await db.getByRole("button", { name: "Select", exact: true }).click();
+  await menu(page).getByRole("menuitem", { name: "New property" }).hover();
+  await pick(page, "Select");
+  await page.locator(".app-dialog-input").fill("owner");
+  await page.locator(".app-dialog-input").press("Enter");
   await expect.poll(() => docText(page)).toContain("types: owner=select");
   await expect(db.locator("thead th", { hasText: "owner" })).toBeVisible();
 
   await db.locator("thead th", { hasText: "focus" }).click();
-  await db.locator('.pop input[aria-label="Rename"]').fill("area");
-  await db.locator('.pop input[aria-label="Rename"]').press("Enter");
+  await pick(page, "Rename…");
+  await page.locator(".app-dialog-input").fill("area");
+  await page.locator(".app-dialog-input").press("Enter");
   await expect
     .poll(() => fileText(page, "/work/2026 Calendar/Week3.md"))
     .toContain("area:");
@@ -168,12 +181,12 @@ test("the board groups pages by a select, as Notion's by status; the view is kep
 }) => {
   const db = await open(page);
   await db.getByRole("tab", { name: "Board" }).click();
-  await expect(db.locator(".lane-head .tag")).toHaveText(["Doing", "Done"]);
-  await expect(db.locator('.lane[data-value="Doing"] .card')).toHaveCount(2);
+  await expect(db.locator(".lane-head .tx-tag")).toHaveText(["Doing", "Done"]);
+  await expect(db.locator('.lane[data-value="Doing"] .record')).toHaveCount(2);
   // In the document, as an edit of its block: saved with it.
   await expect.poll(() => docText(page)).toContain("view: board");
   await db
-    .locator('.lane[data-value="Doing"] .card', { hasText: "Week1" })
+    .locator('.lane[data-value="Doing"] .record', { hasText: "Week1" })
     .dragTo(db.locator('.lane[data-value="Done"]'));
   await expect
     .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
@@ -183,7 +196,7 @@ test("the board groups pages by a select, as Notion's by status; the view is kep
 test("the calendar puts each week on its days", async ({ page }) => {
   const db = await open(page);
   await db.getByRole("tab", { name: "Calendar" }).click();
-  await expect(db.locator(".nav strong")).toContainText("2026");
+  await expect(db.locator(".month-bar strong")).toContainText("2026");
   // Week1 runs from the 1st to the 4th: its name, then three days more.
   await expect(db.locator(".chip", { hasText: "Week1" })).toHaveCount(4);
   await expect(db.locator(".chip.cont", { hasText: "Week1" })).toHaveCount(3);

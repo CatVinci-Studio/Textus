@@ -95,6 +95,9 @@ textarea.tx-input {
 
 .appearance-option,
 .tx-segment {
+  border: none;
+  background: transparent;
+  font: inherit;
   position: relative;
   display: inline-flex;
   align-items: center;

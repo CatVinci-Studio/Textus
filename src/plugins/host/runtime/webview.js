@@ -36,6 +36,18 @@
     });
   }
 
+  // A press or Escape in the page closes the app's menu over it: the
+  // window can't see them, the page's events stay in its frame.
+  var menuOpen = false;
+  function closeMenu(event) {
+    if (!menuOpen) return;
+    if (event.type === "keydown" && event.key !== "Escape") return;
+    menuOpen = false;
+    send("menuClose", {});
+  }
+  window.addEventListener("pointerdown", closeMenu, true);
+  window.addEventListener("keydown", closeMenu, true);
+
   // Where a menu opens: under an element, or at a point of the page.
   function anchor(at) {
     if (at && typeof at.getBoundingClientRect === "function") {
@@ -131,7 +143,13 @@
     // the chosen item's value (its label without one), or null.
     menu: function (items, at) {
       var point = anchor(at);
-      return call("menu", { items: items, x: point.x, y: point.y });
+      menuOpen = true;
+      return call("menu", { items: items, x: point.x, y: point.y }).then(
+        function (choice) {
+          menuOpen = false;
+          return choice;
+        },
+      );
     },
     // How the page looks as a picture, asked when the document is
     // exported: an SVG's markup or an image's data: URL.

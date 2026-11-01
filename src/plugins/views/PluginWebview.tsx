@@ -50,6 +50,7 @@ export function PluginWebview({
   const record = webview(id);
   const html = record?.html ?? null;
   const boxRef = useRef<HTMLDivElement>(null);
+  const closeMenuRef = useRef<(() => void) | null>(null);
   // A menu the page asked for, drawn by the app over the page.
   const [menu, setMenu] = useState<{
     x: number;
@@ -92,6 +93,7 @@ export function PluginWebview({
               resolve(value);
             };
             const box = frame.getBoundingClientRect();
+            closeMenuRef.current = () => finish(null);
             setMenu({
               x: box.left + (typeof x === "number" ? x : 0),
               y: box.top + (typeof y === "number" ? y : 0),
@@ -99,6 +101,7 @@ export function PluginWebview({
               close: () => finish(null),
             });
           }),
+        menuClose: () => closeMenuRef.current?.(),
         height: ({ height }: { height: unknown }) => {
           if (fitHeight && typeof height === "number")
             frame.style.height = `${Math.min(Math.max(height, 24), fitHeight)}px`;

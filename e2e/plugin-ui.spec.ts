@@ -107,4 +107,11 @@ test("a plugin page's controls are the app's, and its menu is the app's menu", a
   await expect(menu).toBeVisible();
   await menu.getByRole("menuitem", { name: "Delete" }).click();
   await expect(panel.locator("#out")).toHaveText("delete");
+
+  // Escape in the page closes it: no choice.
+  await panel.locator("#more").click();
+  await expect(menu).toBeVisible();
+  await panel.locator("#more").press("Escape");
+  await expect(menu).toBeHidden();
+  await expect(panel.locator("#out")).toHaveText("null");
 });
