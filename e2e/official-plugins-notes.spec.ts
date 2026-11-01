@@ -35,7 +35,12 @@ test("a quick note is kept, and Insert writes it into the document", async ({
   await page.locator(".sidebar-tabs").getByRole("button").first().click();
   const again = await openSidebarTab(page, "Quick Notes");
   await expect(again.locator("textarea")).toHaveValue("Call the printer");
-  await again.getByRole("button", { name: "Insert" }).click();
+  // A note's actions are Textus's own menu.
+  await again.getByRole("button", { name: "Actions" }).click();
+  await page
+    .locator(".context-menu")
+    .getByRole("menuitem", { name: "Insert" })
+    .click();
   // Written at once, one undo away - asked for by the click.
   await expect(page.locator(editor)).toContainText("Call the printer");
   await expect(page.locator(`${editor} .pending-insert`)).toHaveCount(0);
@@ -51,7 +56,11 @@ test("a deleted quick note comes back with Undo, and an empty one goes by itself
   await panel.getByRole("button", { name: "New" }).click();
   await panel.locator("textarea").fill("Keep me");
   await page.waitForTimeout(400);
-  await panel.getByRole("button", { name: "Delete" }).click();
+  await panel.getByRole("button", { name: "Actions" }).click();
+  await page
+    .locator(".context-menu")
+    .getByRole("menuitem", { name: "Delete" })
+    .click();
   await expect(panel.locator("textarea")).toHaveCount(0);
   await panel.getByRole("button", { name: "Undo" }).click();
   await expect(panel.locator("textarea")).toHaveValue("Keep me");
@@ -248,7 +257,7 @@ test("a board opens as lists of cards, and a card moved is written back", async 
     .locator(".card", { hasText: "Outline" })
     .dragTo(frame.locator(".list").nth(1).locator(".cards"));
   await expect(frame.locator(".list").nth(1).locator(".card")).toHaveText([
-    "Outline✕",
+    "Outline",
   ]);
   await expect(frame.locator("#state")).toHaveText("Saved");
   const file = await page.evaluate(
