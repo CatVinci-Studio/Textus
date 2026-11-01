@@ -512,19 +512,25 @@ fn replied_section(
 
 /// Every section of `outline` written, three at a time, and handed to
 /// `drafted` in order: section n once it and every one before it is done.
+/// One `written` has already (by a run that stopped) is handed on as it is.
 /// `started` hears of each as its writer begins. A section that fails stops
 /// the ones after it from being handed on, since the paper would have a gap.
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn draft(
     model: &dyn Model,
     paper: &Paper,
     outline: &Outline,
     dossier: &Dossier,
+    written: &[Option<String>],
     started: &(dyn Fn(usize) + Sync),
     drafted: &mut (dyn FnMut(usize, &str) -> Result<(), String> + Send),
     send: &(dyn Fn(PaperEvent) + Sync),
 ) -> Result<(), String> {
     let mut sections = stream::iter(0..outline.sections.len())
         .map(|i| async move {
+            if let Some(text) = written.get(i).cloned().flatten() {
+                return (i, Ok(text));
+            }
             started(i);
             (
                 i,

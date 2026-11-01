@@ -77,6 +77,22 @@ pub(crate) fn save_section(
     .map_err(|e| e.to_string())
 }
 
+/// Every section draft kept beside paper `id`, taken away.
+pub(crate) fn clear_sections(root: &Path, id: &str) -> Result<(), String> {
+    let dir = paper_dir(root, id)?;
+    let Ok(entries) = std::fs::read_dir(&dir) else {
+        return Ok(());
+    };
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if name.starts_with("section-") && name.ends_with(".md") {
+            std::fs::remove_file(entry.path()).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+
 /// Section `index`'s draft, if it was written.
 pub(crate) fn load_section(root: &Path, id: &str, index: usize) -> Result<Option<String>, String> {
     let path = paper_dir(root, id)?.join(format!("section-{}.md", index + 1));

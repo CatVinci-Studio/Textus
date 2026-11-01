@@ -10,6 +10,7 @@ fn paper() -> Paper {
         language: "zh".into(),
         target_chars: 8000,
         budget: ResearchBudget::for_paper(),
+        stage: PaperStage::Researching,
     }
 }
 
@@ -719,6 +720,7 @@ async fn sections_are_handed_on_in_order_under_their_headings() {
         &english,
         &plan,
         &drafting_dossier(),
+        &[],
         &|i| started.lock().unwrap().push(i),
         &mut |i, md: &str| {
             handed.push((i, md.lines().next().unwrap().to_string()));
@@ -1749,4 +1751,68 @@ fn a_section_is_shown_as_its_writer_streams_it() {
             text: long.clone()
         }]
     );
+}
+
+#[tokio::test]
+async fn a_draft_goes_on_from_the_sections_already_written() {
+    let mut plan = outline_of(3, 100);
+    plan.sections[1].title = "Second".into();
+    let english = Paper {
+        language: "en".into(),
+        ..paper()
+    };
+    let started = std::sync::Mutex::new(Vec::new());
+    let mut handed = Vec::new();
+    draft::draft(
+        &Writer(Default::default()),
+        &english,
+        &plan,
+        &drafting_dossier(),
+        &[Some("## Kept\n\nAs it was.".into()), None],
+        &|i| started.lock().unwrap().push(i),
+        &mut |i, md: &str| {
+            handed.push((i, md.lines().next().unwrap().to_string()));
+            Ok(())
+        },
+        &|_| {},
+    )
+    .await
+    .unwrap();
+    assert_eq!(handed[0], (0, "## Kept".to_string()));
+    assert_eq!(handed.len(), 3);
+    let mut started = started.into_inner().unwrap();
+    started.sort();
+    assert_eq!(started, [1, 2], "the kept section isn't written again");
+}
+
+#[test]
+fn a_kept_paper_says_how_far_it_came_and_a_new_outline_drops_old_sections() {
+    let root = tempfile::tempdir().unwrap();
+    let mut files = PaperFiles {
+        paper: paper(),
+        dossier: drafting_dossier(),
+        outline: Some(outline_of(3, 100)),
+    };
+    files.paper.stage = PaperStage::Drafting;
+    save(root.path(), &files).unwrap();
+    save_section(root.path(), "abc123", 0, "## One").unwrap();
+    save_section(root.path(), "abc123", 2, "## Three").unwrap();
+    let progress = super::progress(root.path(), "abc123").unwrap();
+    assert_eq!(progress.drafted, 2);
+    assert_eq!(progress.paper.stage, PaperStage::Drafting);
+    assert_eq!(progress.outline.unwrap().sections.len(), 3);
+
+    clear_sections(root.path(), "abc123").unwrap();
+    assert_eq!(super::progress(root.path(), "abc123").unwrap().drafted, 0);
+    assert!(
+        load(root.path(), "abc123").is_ok(),
+        "the paper itself stays"
+    );
+    // A paper kept before it had a stage reads as begun.
+    let old: Paper = serde_json::from_value(json!({
+        "id": "abc123", "topic": "t", "language": "en", "targetChars": 1000,
+        "budget": ResearchBudget::for_paper()
+    }))
+    .unwrap();
+    assert_eq!(old.stage, PaperStage::Researching);
 }

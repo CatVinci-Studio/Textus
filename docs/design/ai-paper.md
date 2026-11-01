@@ -116,8 +116,17 @@ it, lazily loaded. Each stage and helper is one run of
   paper's language. The whole paper is sent once, as `ready`, to be proposed
   as one append, and the run ends at `done`.
 - **`ai_paper_run`** (`PaperRequest`): researches the paper, outlines it,
-  saves both and stops at `awaitingOutline`. The frontend doesn't call it
-  yet.
+  saves both and stops at `awaitingOutline`. Given the `id` of a paper kept
+  before, it goes on from what that kept: its research and its outline are
+  not made again.
+- **Going on later**: a paper keeps its `stage` in `paper.json` -
+  `researching` (kept at once, its research only when whole, so a stop there
+  researches again), `outlined`, `drafting` (set when the outline is
+  approved, which drops sections drafted from an earlier outline), `done`.
+  `ai_paper_status` reads it with the outline and how many sections are
+  written; `ai_paper_draft` hands on the sections already written as they
+  are and writes only the rest, so a paper stopped - or the app quit -
+  mid-draft costs only the sections being written.
 
 - **In the app** (`document-view/usePaperWriter.ts`, `ai/paper/paper-store.ts`,
   the lazy `paper` module): the AI panel's fourth mode, **Research**, takes
