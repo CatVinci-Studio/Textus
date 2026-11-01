@@ -1093,6 +1093,8 @@ export default {
   restoreSessionLabel: "Восстанавливать прошлый сеанс при запуске",
   autoSuggestFilenameLabel: "Предлагать имя при сохранении нового файла",
   autosaveLabel: "Сохранять автоматически",
+  autosaveHint:
+    "Если открыта папка, безымянные документы тоже сохраняются в ней под своим заголовком.",
   untitledTab: "Без названия",
   markdownGuideTab: "Руководство по Markdown",
   agentGuideTab: "Руководство по ИИ",

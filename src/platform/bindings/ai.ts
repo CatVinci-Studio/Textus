@@ -31,6 +31,11 @@ export const commands = {
 	 *  empty when there is no clear next step.
 	 */
 	suggest_next_message: (provider: string, model: string | null, exchange: Exchange) => __TAURI_INVOKE<string[]>("suggest_next_message", { provider, model, exchange }),
+	/**
+	 *  A short title for a document from its first few thousand characters, or
+	 *  None.
+	 */
+	suggest_doc_title: (provider: string, model: string | null, excerpt: string) => __TAURI_INVOKE<string | null>("suggest_doc_title", { provider, model, excerpt }),
 };
 
 /* Types */

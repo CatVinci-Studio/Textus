@@ -1046,6 +1046,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   restoreSessionLabel: "起動時に前回のセッションを復元",
   autoSuggestFilenameLabel: "新規ファイルの保存時にファイル名を提案",
   autosaveLabel: "自動保存",
+  autosaveHint:
+    "フォルダを開いているときは、名称未設定の書類もタイトルを名前にしてそのフォルダに保存します。",
   untitledTab: "無題",
   markdownGuideTab: "Markdownガイド",
   agentGuideTab: "AI機能ガイド",

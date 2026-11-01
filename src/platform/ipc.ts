@@ -340,6 +340,12 @@ export const ai = {
     exchange: { messages: string[]; reply: string };
   }) =>
     aiCommand("suggest_next_message", args.provider, args.model, args.exchange),
+  /** A short title for an untitled document from its start, or null. */
+  suggestDocTitle: (args: {
+    provider: string;
+    model: string | null;
+    excerpt: string;
+  }) => aiCommand("suggest_doc_title", args.provider, args.model, args.excerpt),
   memoryUndo: (
     docPath: string | null,
     workspaceRoot: string | null,

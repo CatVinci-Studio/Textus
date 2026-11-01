@@ -999,6 +999,7 @@ export default {
   restoreSessionLabel: "啟動時恢復上次的工作階段",
   autoSuggestFilenameLabel: "儲存新檔案時建議檔名",
   autosaveLabel: "自動儲存",
+  autosaveHint: "開啟資料夾時，未命名文件也會以標題為名存進這個資料夾。",
   untitledTab: "未命名",
   markdownGuideTab: "Markdown 指南",
   agentGuideTab: "AI 功能指南",

@@ -1068,6 +1068,8 @@ type /name in a conversation to use one.
   restoreSessionLabel: "Restore previous session on startup",
   autoSuggestFilenameLabel: "Suggest a filename when saving a new file",
   autosaveLabel: "Save automatically",
+  autosaveHint:
+    "With a folder open, untitled documents get a file there too, named after their title.",
   untitledTab: "Untitled",
   markdownGuideTab: "Markdown Guide",
   agentGuideTab: "AI Features Guide",

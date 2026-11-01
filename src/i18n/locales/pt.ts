@@ -1083,6 +1083,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   restoreSessionLabel: "Restaurar a sessão anterior ao iniciar",
   autoSuggestFilenameLabel: "Sugerir um nome ao salvar um arquivo novo",
   autosaveLabel: "Salvar automaticamente",
+  autosaveHint:
+    "Com uma pasta aberta, documentos sem título também são salvos nela, com o título como nome.",
   untitledTab: "Sem título",
   markdownGuideTab: "Guia de Markdown",
   agentGuideTab: "Guia dos Recursos de IA",

@@ -1100,6 +1100,8 @@ para usar una.
   restoreSessionLabel: "Restaurar la sesión anterior al iniciar",
   autoSuggestFilenameLabel: "Sugerir un nombre al guardar un archivo nuevo",
   autosaveLabel: "Guardar automáticamente",
+  autosaveHint:
+    "Con una carpeta abierta, los documentos sin título también se guardan en ella, con su título como nombre.",
   untitledTab: "Sin título",
   markdownGuideTab: "Guía de Markdown",
   agentGuideTab: "Guía de funciones de IA",
