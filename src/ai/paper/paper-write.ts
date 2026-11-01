@@ -11,17 +11,53 @@ import { paperRegion, setPaperRegion } from "./paper-region-plugin";
 // paperRegionPlugin, rewritten as the sections come, and settled as one
 // step Undo can take back.
 
-/** Gives the paper its place: the whole document when that is empty, so no
- *  blank line is left above it, else after the end. Returns what the place
- *  held, which settling puts back before the paper goes in for good. */
-export function beginPaper(view: EditorView): Slice {
+/** A paper written so far on `topic` - its title, `# topic`, right above
+ *  its first section's heading - and the blocks after it up to the next
+ *  title: what a paper going on after a pause takes back. */
+export function writtenPaper(
+  doc: ProseNode,
+  topic: string,
+  firstTitle: string,
+): { from: number; to: number } | null {
+  const heading = (node: ProseNode | null, level: number, text: string) =>
+    node?.type.name === "heading" &&
+    node.attrs.level === level &&
+    node.textContent.trim() === text.trim();
+  let pos = 0;
+  let from = -1;
+  for (let i = 0; i < doc.childCount; i++) {
+    const node = doc.child(i);
+    if (from < 0) {
+      if (
+        heading(node, 1, topic) &&
+        heading(i + 1 < doc.childCount ? doc.child(i + 1) : null, 2, firstTitle)
+      )
+        from = pos;
+    } else if (node.type.name === "heading" && node.attrs.level === 1) {
+      return { from, to: pos };
+    }
+    pos += node.nodeSize;
+  }
+  return from < 0 ? null : { from, to: doc.content.size };
+}
+
+/** Gives the paper its place: `place` when it is given, the paper written
+ *  so far; else the whole document when that is empty, so no blank line is
+ *  left above it, else after the end. Returns what the place held, which
+ *  settling puts back before the paper goes in for good. */
+export function beginPaper(
+  view: EditorView,
+  place: { from: number; to: number } | null = null,
+): Slice {
   const { doc } = view.state;
   const first = doc.firstChild;
   const empty =
     doc.childCount === 1 && first?.isTextblock && first.content.size === 0;
-  const region = empty
-    ? { from: 0, to: doc.content.size }
-    : { from: doc.content.size, to: doc.content.size };
+  const region =
+    place ??
+    (empty
+      ? { from: 0, to: doc.content.size }
+      : { from: doc.content.size, to: doc.content.size });
   const tr = setPaperRegion(view.state.tr, region);
   view.dispatch(tr.setMeta("addToHistory", false));
   return doc.slice(region.from, region.to);

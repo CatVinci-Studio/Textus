@@ -3,12 +3,42 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { undo } from "@milkdown/kit/prose/history";
 import { closeViews, openView } from "../../document-view/editor-view-kit";
-import { beginPaper, settlePaper, writePaper } from "./paper-write";
+import {
+  beginPaper,
+  settlePaper,
+  writePaper,
+  writtenPaper,
+} from "./paper-write";
 import { paperRegion } from "./paper-region-plugin";
 
 afterEach(closeViews);
 
 describe("a paper written into the document", () => {
+  it("going on after a pause, takes back what was written of it", async () => {
+    const t = await openView(
+      "Notes.\n\n# Roofs\n\n## Cooling\n\nHalf a sec\n\n# Later\n\nMine.",
+    );
+    const { doc } = t.view.state;
+    const place = writtenPaper(doc, "Roofs", "Cooling");
+    expect(place).not.toBeNull();
+    expect(writtenPaper(doc, "Roofs", "Costs")).toBeNull();
+    const original = beginPaper(t.view, place);
+    t.editor.action((ctx) =>
+      writePaper(
+        t.view,
+        ctx,
+        "# Roofs\n\n## Cooling\n\nHalf a section, whole.",
+      ),
+    );
+    expect(t.markdown()).toBe(
+      "Notes.\n\n# Roofs\n\n## Cooling\n\nHalf a section, whole.\n\n# Later\n\nMine.",
+    );
+    t.editor.action((ctx) => settlePaper(t.view, ctx, null, original));
+    expect(t.markdown()).toBe(
+      "Notes.\n\n# Roofs\n\n## Cooling\n\nHalf a sec\n\n# Later\n\nMine.",
+    );
+  });
+
   it("takes an empty document whole, with no blank line above it", async () => {
     const t = await openView("");
     const original = beginPaper(t.view);

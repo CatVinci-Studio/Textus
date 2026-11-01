@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { proposalsFromTurns } from "../chat/chat-body-types";
 import {
   applyPaperEvent,
+  newPaperId,
   paperCardTurns,
   paperLanguage,
   paperWrittenTurns,
@@ -12,6 +13,13 @@ import {
 } from "./paper-store";
 
 describe("the paper store", () => {
+  it("keys a new card by an id the paper can be kept under", () => {
+    const a = newPaperId();
+    // Rust's valid_id: lowercase letters and digits, at most 32.
+    expect(a).toMatch(/^[0-9a-f]{1,32}$/);
+    expect(newPaperId()).not.toBe(a);
+  });
+
   it("puts a card in the conversation that parses back", () => {
     const turns = paperCardTurns(
       "k1",
