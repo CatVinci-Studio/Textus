@@ -460,6 +460,11 @@ export type PaperStage =
 "outlined" | 
 /**  Its outline approved: being drafted, its sections kept as written. */
 "drafting" | 
+/**
+ *  Drafted, reviewed and revised: only finishing is left, so going on
+ *  doesn't review and revise it again.
+ */
+"reviewed" | 
 /**  Written into its document. */
 "done";
 

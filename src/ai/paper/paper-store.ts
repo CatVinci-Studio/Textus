@@ -247,11 +247,17 @@ let actions: PaperActions | null = null;
  *  was there to hear it - a card's effects run before its editor's. */
 const toRestore = new Map<string, string>();
 
-export function setPaperActions(next: PaperActions | null) {
+/** The active editor's controls: the cards on show are its conversation's.
+ *  Every tab's editor stays mounted, so only the active one may hold them. */
+export function setPaperActions(next: PaperActions) {
   actions = next;
-  if (!next) return;
   for (const [key, topic] of toRestore) next.restore(key, topic);
   toRestore.clear();
+}
+
+/** Lets `mine` go, unless another editor has taken over since. */
+export function clearPaperActions(mine: PaperActions) {
+  if (actions === mine) actions = null;
 }
 
 /** Asks how far card `key`'s paper came, now or once papers can run. */

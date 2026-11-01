@@ -24,15 +24,39 @@ export function setPaperRegion(
   return tr.setMeta(paperRegionKey, region);
 }
 
+/** Whether `tr` changes anything inside `region`, as it stood before. */
+function touches(tr: Transaction, region: PaperRegion): boolean {
+  let { from, to } = region;
+  for (const map of tr.mapping.maps) {
+    let inside = false;
+    map.forEach((start, end) => {
+      if (start < to && end > from) inside = true;
+    });
+    if (inside) return true;
+    from = map.map(from, 1);
+    to = Math.max(from, map.map(to, -1));
+  }
+  return false;
+}
+
 /**
  * Follows the paper's place while the user edits around it, so each write
- * replaces the paper and nothing else (usePaperDocument). Two numbers mapped
- * per transaction, and nothing at all while no paper is being written.
+ * replaces the paper and nothing else (usePaperDocument). Inside it, the
+ * paper is the writer's until it settles: an edit there would be written
+ * over a moment later, so it is refused. Nothing at all while no paper is
+ * being written.
  */
 export const paperRegionPlugin = $prose(
   () =>
     new Plugin<PaperRegion | null>({
       key: paperRegionKey,
+      filterTransaction(tr, state) {
+        const region = paperRegionKey.getState(state);
+        if (!region || !tr.docChanged) return true;
+        // The writer's own steps say where the paper is now.
+        if (tr.getMeta(paperRegionKey) !== undefined) return true;
+        return !touches(tr, region);
+      },
       state: {
         init: () => null,
         apply(tr, region) {

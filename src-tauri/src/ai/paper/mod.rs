@@ -4,10 +4,6 @@
 //! outline, the research budget - and how they are kept on disk. Its shapes
 //! are generated into src/platform/bindings/ai-paper.ts (`npm run bindings`).
 
-// The stages that use the store, the budget and most events arrive in later
-// branches.
-#![allow(dead_code, unused_imports)]
-
 mod budget;
 mod draft;
 mod events;
@@ -60,6 +56,9 @@ pub enum PaperStage {
     Outlined,
     /// Its outline approved: being drafted, its sections kept as written.
     Drafting,
+    /// Drafted, reviewed and revised: only finishing is left, so going on
+    /// doesn't review and revise it again.
+    Reviewed,
     /// Written into its document.
     Done,
 }
@@ -157,10 +156,6 @@ pub enum FigureKind {
     Web,
 }
 
-/// Writes a paper on `topic` in the document's project: for now its
-/// research - the questions planned, the helpers' notes - kept in
-/// `.textus/papers/<id>/`. The outline and drafting follow in later
-/// branches. Stopped like any request, by `ai_cancel` with `request_id`.
 /// What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts.
 #[derive(Deserialize, Debug)]
 #[cfg_attr(test, derive(specta::Type))]
@@ -186,6 +181,40 @@ pub struct PaperRequest {
     pub image_model: Option<crate::ai::images::ImageModel>,
 }
 
+/// Writes what research has spent into the kept paper when it ends short -
+/// stopped, failed - so going on doesn't begin again with a full budget.
+struct KeepSpent<'a> {
+    root: &'a std::path::Path,
+    id: String,
+    budget: std::sync::Arc<SharedBudget>,
+    /// The paper's own picture limit, not this run's image model's.
+    images: u32,
+    done: bool,
+}
+
+impl KeepSpent<'_> {
+    fn spent(&self) -> ResearchBudget {
+        let mut spent = self.budget.snapshot();
+        spent.limits.images = self.images;
+        spent
+    }
+}
+
+impl Drop for KeepSpent<'_> {
+    fn drop(&mut self) {
+        if self.done {
+            return;
+        }
+        if let Ok(mut files) = load(self.root, &self.id) {
+            files.paper.budget = self.spent();
+            let _ = save(self.root, &files);
+        }
+    }
+}
+
+/// Researches and outlines a paper on `topic` in the document's project,
+/// kept in `.textus/papers/<id>/`; a paper begun before goes on from what
+/// it kept. Stopped like any request, by `ai_cancel` with `request_id`.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn ai_paper_run(
@@ -220,6 +249,7 @@ pub async fn ai_paper_run(
     let mut research_budget = kept
         .as_ref()
         .map_or_else(ResearchBudget::for_paper, |f| f.paper.budget);
+    let images = research_budget.limits.images;
     research_budget.limits.images =
         crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), &provider)
             .map_or(0, |run| research_budget.limits.images.min(run.limit as u32));
@@ -266,6 +296,13 @@ pub async fn ai_paper_run(
         // Kept at once, so a paper stopped while researching is found and
         // begun again.
         save(&root, &files)?;
+        let mut keep_spent = KeepSpent {
+            root: &root,
+            id: files.paper.id.clone(),
+            budget: budget.clone(),
+            images,
+            done: false,
+        };
         if files.dossier.notes.is_empty() {
             let library = root
                 .join(crate::ai::project::REFERENCES_DIR)
@@ -273,7 +310,7 @@ pub async fn ai_paper_run(
                 .then_some(root.as_path());
             files.dossier =
                 research::research(&agent, &files.paper, &web, &budget, &send, library).await?;
-            files.paper.budget = budget.snapshot();
+            files.paper.budget = keep_spent.spent();
             // Kept before the outline, so a failed outline doesn't cost the
             // research.
             save(&root, &files)?;
@@ -291,7 +328,9 @@ pub async fn ai_paper_run(
         if files.paper.stage == PaperStage::Researching {
             files.paper.stage = PaperStage::Outlined;
         }
+        files.paper.budget = keep_spent.spent();
         save(&root, &files)?;
+        keep_spent.done = true;
         send(PaperEvent::OutlineReady { outline });
         send(PaperEvent::Phase {
             phase: PaperPhase::AwaitingOutline,
@@ -413,37 +452,43 @@ pub async fn ai_paper_draft(
         )
         .await?;
 
-        send(PaperEvent::Phase {
-            phase: PaperPhase::Reviewing,
-        });
-        // A review that fails costs the paper nothing: its sections passed
-        // their own checks.
-        let issues = review::review(&agent, &files.paper, &outline, &sections)
-            .await
-            .unwrap_or_default();
-        let revising = |i: usize| {
-            send(PaperEvent::Section {
-                index: i as u32,
-                status: SectionStatus::Revising,
-            })
-        };
-        let changed = review::revise(
-            &agent,
-            &files.paper,
-            &outline,
-            &files.dossier,
-            &mut sections,
-            &issues,
-            &revising,
-            &send,
-        )
-        .await;
-        for i in changed {
-            save_section(&root, &files.paper.id, i, &sections[i])?;
-            send(PaperEvent::SectionText {
-                index: i as u32,
-                text: sections[i].clone(),
+        // Reviewed before a stop: its kept sections are the revised ones.
+        if files.paper.stage != PaperStage::Reviewed {
+            send(PaperEvent::Phase {
+                phase: PaperPhase::Reviewing,
             });
+            // A review that fails costs the paper nothing: its sections
+            // passed their own checks.
+            let issues = review::review(&agent, &files.paper, &outline, &sections)
+                .await
+                .unwrap_or_default();
+            let revising = |i: usize| {
+                send(PaperEvent::Section {
+                    index: i as u32,
+                    status: SectionStatus::Revising,
+                })
+            };
+            let changed = review::revise(
+                &agent,
+                &files.paper,
+                &outline,
+                &files.dossier,
+                &mut sections,
+                &issues,
+                &revising,
+                &send,
+            )
+            .await;
+            for i in changed {
+                save_section(&root, &files.paper.id, i, &sections[i])?;
+                send(PaperEvent::SectionText {
+                    index: i as u32,
+                    text: sections[i].clone(),
+                });
+            }
+            let mut reviewed = files.clone();
+            reviewed.paper.stage = PaperStage::Reviewed;
+            save(&root, &reviewed)?;
         }
         send(PaperEvent::Phase {
             phase: PaperPhase::Finishing,

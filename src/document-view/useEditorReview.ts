@@ -88,6 +88,7 @@ export function useEditorReview({
     agentPanel,
     settings,
     filePath,
+    isActive,
     t,
   });
 

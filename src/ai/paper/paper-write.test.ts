@@ -75,6 +75,19 @@ describe("a paper written into the document", () => {
     expect(t.markdown()).toBe("My Notes.");
   });
 
+  it("keeps the paper the writer's while it is written", async () => {
+    // A word typed into a section being written would be written over.
+    const t = await openView("Notes.");
+    beginPaper(t.view);
+    t.editor.action((ctx) => writePaper(t.view, ctx, "## One\n\nA."));
+    t.select(t.view.state.doc.content.size - 2);
+    t.type("mine ");
+    expect(t.markdown()).toBe("Notes.\n\n## One\n\nA.");
+    t.select(1);
+    t.type("My ");
+    expect(t.markdown()).toBe("My Notes.\n\n## One\n\nA.");
+  });
+
   it("rewrites only the blocks that changed", async () => {
     const t = await openView("");
     beginPaper(t.view);

@@ -16,6 +16,7 @@ import {
   paperLanguage,
   paperRun,
   paperWrittenTurns,
+  clearPaperActions,
   setPaperActions,
   updatePaperRun,
 } from "../ai/paper/paper-store";
@@ -36,6 +37,7 @@ export function usePaperWriter({
   agentPanel,
   settings,
   filePath,
+  isActive,
   t,
 }: {
   run: EditorRunner;
@@ -48,6 +50,8 @@ export function usePaperWriter({
   agentPanel: ReturnType<typeof useAgentPanel>;
   settings: Settings;
   filePath: string | null;
+  /** This editor's tab is showing: its conversation's cards are on show. */
+  isActive: boolean;
   t: Strings;
 }) {
   const paperDocument = usePaperDocument(run, storePicture);
@@ -203,6 +207,9 @@ export function usePaperWriter({
     (key: string) => {
       const run = paperRun(key);
       if (!run || requests.current.has(key)) return;
+      // Held until the run's own request replaces it: a second Continue
+      // while the paper's state is read starts nothing.
+      requests.current.set(key, "");
       updatePaperRun(key, () => ({
         paused: false,
         error: null,
@@ -210,7 +217,10 @@ export function usePaperWriter({
       }));
       void status(key)
         .then(({ paper, outline }) => {
-          if (paper.stage === "drafting" && outline) {
+          if (
+            (paper.stage === "drafting" || paper.stage === "reviewed") &&
+            outline
+          ) {
             updatePaperRun(key, () => ({
               outline,
               approving: true,
@@ -220,6 +230,8 @@ export function usePaperWriter({
             draft(key, paper.id, Promise.resolve(true));
           } else if (paper.stage !== "done") {
             research(key, paper.topic, paper.targetChars);
+          } else {
+            requests.current.delete(key);
           }
         })
         .catch((err) => fail(key, err));
@@ -256,9 +268,11 @@ export function usePaperWriter({
   );
 
   useEffect(() => {
-    setPaperActions({ approve, stop, resume, restore });
-    return () => setPaperActions(null);
-  }, [approve, stop, resume, restore]);
+    if (!isActive) return;
+    const mine = { approve, stop, resume, restore };
+    setPaperActions(mine);
+    return () => clearPaperActions(mine);
+  }, [isActive, approve, stop, resume, restore]);
 
   /** Starts a paper on `topic` of about `targetChars` characters. Its
    *  card's key is its id, so the card finds it again after a restart. */

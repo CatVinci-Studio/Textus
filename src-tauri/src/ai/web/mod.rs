@@ -108,7 +108,6 @@ impl WebPlan {
     /// Counts searches and page reads against `budget` instead of this
     /// request's own five of each.
     // Used by the paper agent's research helpers, from a later branch.
-    #[allow(dead_code)]
     pub(crate) fn with_budget(mut self, budget: Arc<dyn WebBudget>) -> Self {
         self.budget = budget;
         self
