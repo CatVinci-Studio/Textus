@@ -355,7 +355,12 @@ fn outline_of(n: usize, words: u32) -> Outline {
 fn an_outline_is_checked_for_everything_at_once() {
     let d = dossier();
     assert_eq!(
-        outline::problems(&outline_of(4, 2000), &d, 8000, 6),
+        outline::problems(
+            &outline_of(4, 2000),
+            &d,
+            8000,
+            &outline::Shape::new(3200, 6)
+        ),
         Vec::<String>::new()
     );
 
@@ -376,7 +381,7 @@ fn an_outline_is_checked_for_everything_at_once() {
             spec: "b".into(),
         },
     ];
-    let found = outline::problems(&bad, &d, 8000, 1).join("\n");
+    let found = outline::problems(&bad, &d, 8000, &outline::Shape::new(3200, 1)).join("\n");
     assert!(found.contains("`thesis` is empty"), "{found}");
     assert!(
         found.contains("notes that don't exist: [\"n9\"]"),
@@ -393,7 +398,8 @@ fn an_outline_is_checked_for_everything_at_once() {
     // Two figures for four sections is enough; lengths add to 8000.
     assert!(!found.contains("figures for"), "{found}");
 
-    let found = outline::problems(&outline_of(2, 100), &d, 8000, 6).join("\n");
+    let found =
+        outline::problems(&outline_of(2, 100), &d, 8000, &outline::Shape::new(3200, 6)).join("\n");
     assert!(found.contains("2 sections"), "{found}");
     assert!(found.contains("add up to 200"), "{found}");
 }
@@ -442,7 +448,7 @@ impl research::Model for Outliner {
                     panic!()
                 };
                 assert!(output.contains("Not kept"), "{output}");
-                submit(&outline_of(4, 2000))
+                submit(&outline_of(9, 900))
             }
             _ => StepResult::Done("Outlined.".into()),
         };
@@ -456,7 +462,7 @@ async fn the_outline_is_sent_back_until_it_holds() {
     let made = outline::make_outline(&model, &paper(), &dossier())
         .await
         .unwrap();
-    assert_eq!(made.sections.len(), 4);
+    assert_eq!(made.sections.len(), 9);
 }
 
 #[test]
@@ -711,15 +717,13 @@ impl research::Model for Reviser {
                 text.contains("A reviewer who read the whole paper"),
                 "{text}"
             );
-            let words = if text.contains("Cut the overlap") {
-                97
+            // Section 2's revision cites nothing: a hard problem, never kept.
+            let markdown = if text.contains("Cut the overlap") {
+                section_text(97, "```chart\n{\"series\": [{\"data\": [1]}]}\n```")
             } else {
-                5
+                "Roofs cool.".to_string()
             };
-            call(
-                draft::SUBMIT_SECTION_TOOL,
-                json!({"markdown": section_text(words, "```chart\n{\"series\": [{\"data\": [1]}]}\n```")}),
-            )
+            call(draft::SUBMIT_SECTION_TOOL, json!({ "markdown": markdown }))
         };
         Box::pin(async move { Ok(step) })
     }
@@ -1115,5 +1119,112 @@ async fn web_picture_marks_become_kept_pictures_with_credits_or_are_left_out() {
         sections[0].contains(")\n\n*Figure 1. A roof in Basel*\n\n*Ann · CC BY 4.0"),
         "{}",
         sections[0]
+    );
+}
+
+#[test]
+fn an_outline_s_shape_follows_the_paper_s_length() {
+    let short = outline::Shape::new(5000, 2);
+    assert_eq!((short.min_sections, short.max_sections), (4, 6));
+    assert_eq!((short.max_figures, short.max_web), (7, 2));
+    let long = outline::Shape::new(10000, 0);
+    assert_eq!((long.min_sections, long.max_sections), (10, 12));
+    assert_eq!(outline::Shape::new(1000, 0).max_sections, 3);
+
+    // Twelve sections and seven web pictures for 5,000 characters, as the
+    // first real run planned, is sent back.
+    let mut crowded = outline_of(12, 400);
+    for s in crowded.sections.iter_mut().take(7) {
+        s.figures = vec![FigurePlan {
+            kind: FigureKind::Web,
+            spec: "roof".into(),
+        }];
+    }
+    let found = outline::problems(&crowded, &dossier(), 5000, &short).join("\n");
+    assert!(
+        found.contains("12 sections: a paper this long has 4-6"),
+        "{found}"
+    );
+    assert!(found.contains("12 figures: at most 7"), "{found}");
+    assert!(found.contains("7 web pictures: at most 2"), "{found}");
+}
+
+#[test]
+fn each_question_gets_an_even_share_of_the_research() {
+    let share = research::Share::of(
+        BudgetCounts {
+            searches: 40,
+            fetches: 60,
+            paper_lookups: 30,
+            images: 0,
+        },
+        7,
+    );
+    let mut spent = [0usize; 3];
+    for _ in 0..5 {
+        assert_eq!(
+            share.spend(crate::ai::web::SEARCH_PAPERS_TOOL, &mut spent),
+            None
+        );
+    }
+    let refused = share
+        .spend(crate::ai::web::SEARCH_PAPERS_TOOL, &mut spent)
+        .unwrap();
+    assert!(refused.contains("share of paper searches (5)"), "{refused}");
+    assert_eq!(
+        share.spend(crate::ai::web::WEB_FETCH_TOOL, &mut spent),
+        None
+    );
+    assert_eq!(share.spend(research::ADD_NOTE_TOOL, &mut spent), None);
+    assert_eq!(spent, [0, 1, 5]);
+}
+
+#[test]
+fn only_length_and_missing_figures_are_soft() {
+    assert!(draft::is_soft(
+        "It is 900 long; the section is to be about 400."
+    ));
+    assert!(draft::is_soft("1 planned chart(s), 0 ```chart block(s)."));
+    assert!(!draft::is_soft("[4] isn't one of this section's sources."));
+    assert!(!draft::is_soft("Chart 1: its JSON doesn't parse (x)."));
+    assert!(!draft::is_soft(
+        "Nothing is cited: mark each fact from the notes with its source, [n](address)."
+    ));
+}
+
+/// Always hands over a section three times too long, citing its source.
+struct Verbose;
+
+impl research::Model for Verbose {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        turns: &'a [aicompat::agent::AgentTurn],
+        _tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        use aicompat::agent::{AgentTurn, StepResult};
+        let step = StepResult::ToolCalls(vec![AgentTurn::ToolCall {
+            call_id: format!("c{}", turns.len()),
+            name: draft::SUBMIT_SECTION_TOOL.into(),
+            arguments: json!({"markdown": section_text(300, "```chart\n{\"series\": [{\"data\": [1]}]}\n```")}).to_string(),
+            reasoning: None,
+        }]);
+        Box::pin(async move { Ok(step) })
+    }
+}
+
+#[tokio::test]
+async fn a_section_whose_only_problem_is_its_length_is_kept_after_the_tries() {
+    let plan = outline_of(1, 100);
+    let english = Paper {
+        language: "en".into(),
+        ..paper()
+    };
+    let written = draft::write_section(&Verbose, &english, &plan, 0, &drafting_dossier(), None)
+        .await
+        .unwrap();
+    assert!(
+        written.starts_with("## Mechanism\n\nGreen Green"),
+        "{written}"
     );
 }

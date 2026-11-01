@@ -119,6 +119,14 @@ fn chart_holds(body: &str) -> Result<(), String> {
 
 /// What is wrong with `markdown` as section `section` of `paper`, all at once.
 /// `sources`: the numbers this section may cite, with their addresses.
+/// Whether a problem `problems` found is soft: the length off its target,
+/// or a planned figure missing. A section with only these is kept rather
+/// than lose the paper; a wrong citation or a chart that can't be drawn is
+/// never kept.
+pub(crate) fn is_soft(problem: &str) -> bool {
+    problem.starts_with("It is ") || problem.contains(" planned ")
+}
+
 pub(crate) fn problems(
     markdown: &str,
     section: &OutlineSection,
@@ -305,14 +313,28 @@ pub(crate) async fn write_section(
         .map(|s| (s.n, s.url.clone()))
         .collect();
     let kept: Mutex<Option<String>> = Mutex::new(None);
+    // The latest section handed over whose problems were all soft: kept at
+    // the end if no try holds.
+    let soft: Mutex<Option<String>> = Mutex::new(None);
     let specs = vec![submit_section_spec()];
     let execute = |call: ToolCall| {
-        let (kept, sources) = (&kept, &sources);
+        let (kept, soft, sources) = (&kept, &soft, &sources);
         async move {
             let args: Value = serde_json::from_str(&call.arguments).unwrap_or_default();
             let markdown = args["markdown"].as_str().unwrap_or("").trim().to_string();
             let wrong = problems(&markdown, section, sources, &paper.language);
             if !wrong.is_empty() {
+                // Seen in a live run's output, never in the app's.
+                if cfg!(test) {
+                    eprintln!(
+                        "paper: \"{}\" not kept: {}",
+                        section.title,
+                        wrong.join(" | ")
+                    );
+                }
+                if !markdown.is_empty() && wrong.iter().all(|p| is_soft(p)) {
+                    *soft.lock().unwrap() = Some(markdown);
+                }
                 return ToolOutput::from(format!(
                     "Not kept - fix these and send the whole section again:\n- {}",
                     wrong.join("\n- ")
@@ -352,6 +374,7 @@ pub(crate) async fn write_section(
     let body = kept
         .into_inner()
         .unwrap()
+        .or(soft.into_inner().unwrap())
         .ok_or_else(|| format!("\"{}\" wasn't written in a form that holds.", section.title))?;
     Ok(format!("## {}\n\n{body}", section.title))
 }
