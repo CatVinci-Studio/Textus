@@ -7,19 +7,29 @@
 export function fitGutter(gutter: HTMLElement, code: HTMLElement): void {
   const numbers = Array.from(gutter.children) as HTMLElement[];
   if (!numbers.length) return;
-  const tops = lineTops(code);
   const box = code.getBoundingClientRect();
+  // Measured on screen, set in CSS pixels: undone, the document's zoom
+  // drifted the numbers off their lines.
+  const style = getComputedStyle(code);
+  const laidHeight = parseFloat(style.height) || box.height;
+  const zoom = box.height / laidHeight;
+  // Every line is at least a row, the block's line height. Lines with no
+  // character of their own - after a last newline - are exactly one.
+  const row = parseFloat(style.lineHeight) || 0;
+  // No line wraps: a row each, nothing to measure. WebKitGTK measured a line
+  // starting with a space, or an empty one, a row too high (#513).
+  if (row && Math.abs(laidHeight - numbers.length * row) < 1) {
+    for (const number of numbers) number.style.height = `${row}px`;
+    return;
+  }
+  const tops = lineTops(code);
   if (!tops.length || !box.height) {
     for (const number of numbers) number.style.removeProperty("height");
     return;
   }
-  // Measured on screen, set in CSS pixels: undone, the document's zoom
-  // drifted the numbers off their lines.
-  const style = getComputedStyle(code);
-  const zoom = box.height / (parseFloat(style.height) || box.height);
-  // Lines with no character of their own - after a last newline - are a
-  // row each, the block's line height.
-  const row = parseFloat(style.lineHeight) || 0;
+  // A line starts at least a row below the one before it.
+  for (let i = 1; i < tops.length; i++)
+    tops[i] = Math.max(tops[i], tops[i - 1] + row * zoom);
   const unmeasured = numbers.length - tops.length;
   const end = box.bottom - Math.max(0, unmeasured) * row * zoom;
   numbers.forEach((number, i) => {
