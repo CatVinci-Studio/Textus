@@ -413,6 +413,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   paperSectionDrafted: "Geschrieben",
   paperSectionRevising: "Wird überarbeitet",
   paperSectionFailed: "Fehlgeschlagen",
+  paperOutlineRetry:
+    "Entwurf {n}: Der letzte hat die Prüfung nicht bestanden und wird neu erstellt…",
   paperProposed:
     "Der Aufsatz ist am Ende des Dokuments vorgeschlagen. Prüfen Sie ihn dort und übernehmen oder verwerfen Sie ihn.",
   paperProposedCard: "Am Ende des Dokuments vorgeschlagen.",

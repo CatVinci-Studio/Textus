@@ -409,6 +409,8 @@ type /name in a conversation to use one.
   paperSectionDrafted: "Written",
   paperSectionRevising: "Revising",
   paperSectionFailed: "Failed",
+  paperOutlineRetry:
+    "Draft {n}: the last one didn't pass its checks, so it is being redone…",
   paperProposed:
     "The paper is proposed at the end of the document. Review it there, then accept or reject it.",
   paperProposedCard: "Proposed at the end of the document.",

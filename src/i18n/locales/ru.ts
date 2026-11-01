@@ -412,6 +412,8 @@ export default {
   paperSectionDrafted: "Написано",
   paperSectionRevising: "Правится",
   paperSectionFailed: "Ошибка",
+  paperOutlineRetry:
+    "Вариант {n}: предыдущий не прошёл проверку, план составляется заново…",
   paperProposed:
     "Статья предложена в конце документа. Просмотрите её там и примите или отклоните.",
   paperProposedCard: "Предложено в конце документа.",

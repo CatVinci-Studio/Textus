@@ -425,6 +425,8 @@ utiliser une.
   paperSectionDrafted: "Rédigé",
   paperSectionRevising: "Révision",
   paperSectionFailed: "Échec",
+  paperOutlineRetry:
+    "Version {n} : la précédente n'a pas passé les vérifications, elle est refaite…",
   paperProposed:
     "L’article est proposé à la fin du document. Relisez-le, puis acceptez-le ou rejetez-le.",
   paperProposedCard: "Proposé à la fin du document.",

@@ -422,6 +422,8 @@ para usar una.
   paperSectionDrafted: "Redactado",
   paperSectionRevising: "Revisando",
   paperSectionFailed: "Falló",
+  paperOutlineRetry:
+    "Versión {n}: la anterior no pasó las comprobaciones; se está rehaciendo…",
   paperProposed:
     "El artículo está propuesto al final del documento. Revísalo allí y acéptalo o recházalo.",
   paperProposedCard: "Propuesto al final del documento.",

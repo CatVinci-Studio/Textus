@@ -411,6 +411,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   paperSectionDrafted: "Escrito",
   paperSectionRevising: "Revisando",
   paperSectionFailed: "Falhou",
+  paperOutlineRetry:
+    "Versão {n}: a anterior não passou nas verificações; está sendo refeita…",
   paperProposed:
     "O artigo foi proposto no fim do documento. Revise-o lá e aceite ou rejeite.",
   paperProposedCard: "Proposto no fim do documento.",

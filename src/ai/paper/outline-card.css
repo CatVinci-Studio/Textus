@@ -195,7 +195,7 @@
 /* What the run is doing in detail, under its progress line. */
 .paper-card-progress {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
 }
 
@@ -268,4 +268,127 @@
   padding-top: 4px;
   border-top: 1px solid var(--chat-hairline, var(--ui-border));
   color: var(--ui-muted);
+}
+
+/* Motion: a spinner while the run works, a mark per item that breathes
+   while it is being worked on, and new lines that slide in. Transform and
+   opacity only. */
+.paper-card-spinner {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--ui-border);
+  border-top-color: var(--ui-accent, var(--ui-text));
+  border-radius: 50%;
+  animation: paper-spin 0.9s linear infinite;
+}
+
+.paper-card-mark {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--ui-muted);
+  border-radius: 50%;
+  transform: translateY(-1px);
+}
+
+.paper-card-mark[data-state="active"],
+.paper-card-mark[data-state="drafting"],
+.paper-card-mark[data-state="revising"] {
+  border-color: var(--ui-accent, var(--ui-text));
+  background: var(--ui-accent, var(--ui-text));
+  animation: paper-breathe 1.2s ease-in-out infinite;
+}
+
+.paper-card-mark[data-state="done"],
+.paper-card-mark[data-state="drafted"],
+.paper-card-mark[data-state="proposed"] {
+  border-color: var(--ui-muted);
+  background: var(--ui-muted);
+}
+
+.paper-card-mark[data-state="failed"] {
+  border-color: var(--ui-danger);
+  background: var(--ui-danger);
+}
+
+.paper-card-enter {
+  animation: paper-enter 0.28s ease-out both;
+}
+
+.paper-card-thinking {
+  animation: paper-enter 0.28s ease-out both;
+}
+
+.paper-card-thesis,
+.paper-card-note {
+  margin: 0;
+  font-size: var(--text-footnote);
+}
+
+.paper-card-thesis {
+  padding-left: 8px;
+  border-left: 2px solid var(--ui-accent, var(--ui-border));
+}
+
+.paper-card-note {
+  color: var(--ui-muted);
+}
+
+.paper-card-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* The words a writer is writing: the newest at the bottom, the older ones
+   fading out at the top. */
+.paper-card-preview {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  max-height: 7.5em;
+  overflow: hidden;
+  margin-left: 14px;
+  padding: 4px 8px;
+  border-radius: var(--shape-s);
+  background: var(--ui-subtle);
+  font-size: var(--text-footnote);
+  line-height: 1.5;
+  mask-image: linear-gradient(to bottom, transparent, black 45%);
+  animation: paper-enter 0.28s ease-out both;
+}
+
+.paper-card-preview p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+@keyframes paper-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes paper-breathe {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes paper-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paper-card-spinner,
+  .paper-card-mark,
+  .paper-card-enter,
+  .paper-card-thinking,
+  .paper-card-preview {
+    animation: none;
+  }
 }

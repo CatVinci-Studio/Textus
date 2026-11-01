@@ -65,6 +65,14 @@ export interface PaperRunState {
   recent: PaperActivity[];
   /** When the run entered its phase, for the time it has spent there. */
   phaseSince: number;
+  /** The outline as the outliner writes it, before it is whole. */
+  outlineDraft: {
+    attempt: number;
+    thesis: string | null;
+    titles: string[];
+  } | null;
+  /** The tail of what each section's writer has written so far. */
+  sectionText: Record<number, string>;
 }
 
 const NEW_RUN: PaperRunState = {
@@ -81,6 +89,8 @@ const NEW_RUN: PaperRunState = {
   questions: [],
   recent: [],
   phaseSince: 0,
+  outlineDraft: null,
+  sectionText: {},
 };
 
 const runs = new Map<string, PaperRunState>();
@@ -118,9 +128,19 @@ export function applyPaperEvent(key: string, event: PaperEvent) {
         // if the run then fails.
         return {};
       case "ready":
-      case "outlineDraft":
-      case "sectionText":
         return {};
+      case "outlineDraft":
+        return {
+          outlineDraft: {
+            attempt: event.attempt,
+            thesis: event.thesis ?? null,
+            titles: event.titles,
+          },
+        };
+      case "sectionText":
+        return {
+          sectionText: { ...run.sectionText, [event.index]: event.text },
+        };
       case "thinking":
         return { thinking: event.text };
       case "questions":

@@ -89,6 +89,28 @@ describe("the paper store", () => {
     expect(new Set(run.recent.map((a) => a.id)).size).toBe(RECENT_ACTIVITY);
   });
 
+  it("keeps the outline and each section as they are written", () => {
+    applyPaperEvent("k5", {
+      type: "outlineDraft",
+      attempt: 2,
+      thesis: "Green cools",
+      titles: ["Intro"],
+    });
+    applyPaperEvent("k5", { type: "sectionText", index: 1, text: "So far" });
+    applyPaperEvent("k5", {
+      type: "sectionText",
+      index: 1,
+      text: "So far, more",
+    });
+    const run = paperRun("k5")!;
+    expect(run.outlineDraft).toEqual({
+      attempt: 2,
+      thesis: "Green cools",
+      titles: ["Intro"],
+    });
+    expect(run.sectionText).toEqual({ 1: "So far, more" });
+  });
+
   it("proposes the paper as one append", () => {
     const found = proposalsFromTurns(
       paperProposalTurns("k3", "# Title\n\nText.", "Proposed."),

@@ -394,6 +394,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   paperSectionDrafted: "執筆済み",
   paperSectionRevising: "修正中",
   paperSectionFailed: "失敗",
+  paperOutlineRetry:
+    "第 {n} 稿：前の案がチェックを通らなかったため、作り直しています…",
   paperProposed:
     "論文を文書の末尾に提案しました。そこで確認して、承認するか却下してください。",
   paperProposedCard: "文書の末尾に提案しました。",

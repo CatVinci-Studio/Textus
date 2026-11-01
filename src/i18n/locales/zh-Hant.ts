@@ -375,6 +375,7 @@ export default {
   paperSectionDrafted: "已寫完",
   paperSectionRevising: "修改中",
   paperSectionFailed: "失敗",
+  paperOutlineRetry: "第 {n} 稿：上一稿未通過檢查，正在重擬…",
   paperProposed:
     "論文已作為修改建議放在文件末尾。請在那裡檢視，再決定接受或拒絕。",
   paperProposedCard: "已放在文件末尾。",
