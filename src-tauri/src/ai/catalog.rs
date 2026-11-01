@@ -163,6 +163,28 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         known_models: &["openrouter/auto", "openrouter/free"],
     },
     ProviderCatalogEntry {
+        id: "opencode-go",
+        label: "OpenCode Go",
+        dialect: "openai-chat-completions",
+        auth: &["api_key"],
+        // The subscription's OpenAI-compatible endpoint. Its MiniMax and
+        // Qwen models answer only on the Anthropic-style one beside it, so
+        // the models offered are the ones this endpoint serves.
+        base_url: Some("https://opencode.ai/zen/go/v1"),
+        default_model: Some("deepseek-v4.1-flash"),
+        agent_default_model: Some("deepseek-v4-pro"),
+        key_optional: false,
+        oauth_unofficial: false,
+        supports_vision: true,
+        models_listable: true,
+        known_models: &[
+            "deepseek-v4-pro",
+            "deepseek-v4.1-flash",
+            "kimi-k2.7-code",
+            "glm-5.2",
+        ],
+    },
+    ProviderCatalogEntry {
         id: "moonshot",
         label: "Moonshot Kimi",
         dialect: "openai-chat-completions",
