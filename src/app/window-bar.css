@@ -166,7 +166,8 @@
    so the sidebar's own contents do not move into the bar. It slides on the
    sidebar's curves, and fades where it rests under reduced motion. Mobile's
    44pt bar stays one page-coloured surface, and zen hides the sidebar, so
-   the copy goes with it. */
+   the copy goes with it. With the menu bar in the row, the row is the
+   menu's: the copy stays off, so no edge of the sidebar's cuts the titles. */
 .window-bar::before {
   content: "";
   position: absolute;
@@ -199,6 +200,15 @@
     transform var(--dur-slow) var(--ease-spring),
     opacity var(--dur-slow) var(--ease-out),
     visibility 0s;
+}
+
+/* The menu bar's titles run the width of the row, so the sidebar's fill stops
+   at the bar's underside instead of running up through them: otherwise the
+   copy's fill and its right edge split the menu in two. */
+:root:not([data-window-chrome="mobile"], .zen)
+  .app-shell:has(> .sidebar:not(.sidebar-collapsed))
+  .window-bar:has(> .window-menu-bar)::before {
+  display: none;
 }
 
 .sidebar-header {
