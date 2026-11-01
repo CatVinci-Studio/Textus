@@ -571,8 +571,14 @@ export function installDevTauriShim(): void {
         return Promise.resolve([...recents.files]);
       case "list_recent_folders":
         return Promise.resolve([...recents.folders]);
+      // Files opened from outside before the window was ready: none here. The
+      // native side always answers with a list.
+      case "take_pending_open_paths":
+        return Promise.resolve([]);
     }
-    if (!files) return null;
+    // No fake folder: the folder of a document opened anyway (dropped in,
+    // `__devFiles`) lists as empty, as the native side never answers null.
+    if (!files) return cmd === "list_dir" ? Promise.resolve([]) : null;
     const path = String(args.path ?? args.root ?? "");
     switch (cmd) {
       case "read_text_file":
