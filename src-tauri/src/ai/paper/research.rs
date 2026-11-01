@@ -266,6 +266,7 @@ async fn research_question(
     web: &WebPlan,
     library: Option<&Path>,
     question: &str,
+    share: Share,
 ) -> Result<Vec<Note>, String> {
     let instructions = format!(
         "You are one of several researchers gathering material for a paper on \"{}\", written in the language tagged \"{}\". Your part is one question. Search the web and the scholarly literature, read the best pages in full, and keep every finding that answers it with add_note - specific claims with figures, dates, names and results, not generalities; prefer primary and scholarly sources, and say where sources disagree. Aim for four to eight notes, written in the paper's language. Note pictures and data sets a figure could use as leads. When the question is covered, or the searches run out, reply with one short line.{}",
@@ -284,8 +285,9 @@ async fn research_question(
     }
     let web_tools = web.tools(question);
     let notes = Mutex::new(Vec::new());
+    let spent = Mutex::new([0usize; 3]);
     let execute = |call: ToolCall| {
-        let (web_tools, notes) = (&web_tools, &notes);
+        let (web_tools, notes, spent) = (&web_tools, &notes, &spent);
         async move {
             if call.name == ADD_NOTE_TOOL {
                 return ToolOutput::from(
@@ -302,6 +304,9 @@ async fn research_question(
                 if let Some(answer) = library_call(root, &call).await {
                     return ToolOutput::from(answer);
                 }
+            }
+            if let Some(refused) = share.spend(&call.name, &mut spent.lock().unwrap()) {
+                return ToolOutput::from(refused);
             }
             match web_tools
                 .iter()
@@ -351,12 +356,13 @@ pub(crate) async fn research(
         phase: PaperPhase::Planning,
     });
     let questions = plan_questions(model, paper).await?;
+    let share = Share::of(budget.snapshot().limits, questions.len());
     send(PaperEvent::Phase {
         phase: PaperPhase::Researching,
     });
     let results: Vec<(String, Result<Vec<Note>, String>)> = stream::iter(questions)
         .map(|question| async move {
-            let notes = research_question(model, paper, web, library, &question).await;
+            let notes = research_question(model, paper, web, library, &question, share).await;
             let spent = budget.snapshot();
             send(PaperEvent::Budget {
                 used: spent.used,
@@ -383,7 +389,17 @@ pub(crate) async fn research(
     for (i, note) in dossier.notes.iter_mut().enumerate() {
         note.id = format!("n{}", i + 1);
     }
-    dossier.sources = web.sources();
+    // Only what the notes cite: everything a search showed would bury them.
+    let cited: std::collections::HashSet<u32> = dossier
+        .notes
+        .iter()
+        .flat_map(|n| n.sources.iter().copied())
+        .collect();
+    dossier.sources = web
+        .sources()
+        .into_iter()
+        .filter(|s| cited.contains(&s.n))
+        .collect();
     Ok(dossier)
 }
 
@@ -450,4 +466,38 @@ async fn library_call(root: &Path, call: &ToolCall) -> Option<String> {
     Some(format!(
         "<external-content source=\"reference library\">\n{text}\n</external-content>"
     ))
+}
+
+/// One question's share of the paper's searches, page reads and paper
+/// lookups: an even split, so the helpers that run first can't leave the
+/// last questions nothing to research with.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct Share([usize; 3]);
+
+impl Share {
+    pub(crate) fn of(limits: super::BudgetCounts, questions: usize) -> Self {
+        let each = |limit: u32| (limit as usize).div_ceil(questions.max(1)).max(1);
+        Share([
+            each(limits.searches),
+            each(limits.fetches),
+            each(limits.paper_lookups),
+        ])
+    }
+
+    /// Counts a call against the share, in `spent`; why it is refused once
+    /// its kind's share is used. Other tools are not counted.
+    pub(crate) fn spend(&self, tool: &str, spent: &mut [usize; 3]) -> Option<String> {
+        use crate::ai::web::{SEARCH_PAPERS_TOOL, WEB_FETCH_TOOL, WEB_SEARCH_TOOL};
+        let (kind, what) = match tool {
+            WEB_SEARCH_TOOL => (0, "web searches"),
+            WEB_FETCH_TOOL => (1, "page reads"),
+            SEARCH_PAPERS_TOOL => (2, "paper searches"),
+            _ => return None,
+        };
+        if spent[kind] >= self.0[kind] {
+            return Some(format!("That's this question's share of {what} ({}) - the other questions need the rest. Keep notes from what you have read, or use another kind of search.", self.0[kind]));
+        }
+        spent[kind] += 1;
+        None
+    }
 }

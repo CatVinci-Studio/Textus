@@ -11,9 +11,42 @@ use std::sync::Mutex;
 
 pub(crate) const SUBMIT_OUTLINE_TOOL: &str = "submit_outline";
 
-/// Sections a paper has, at least and at most.
+/// Sections a paper has, at least and at most, whatever its length.
 const MIN_SECTIONS: usize = 3;
 const MAX_SECTIONS: usize = 12;
+/// About this many characters a section: fewer, longer sections read as an
+/// argument; many short ones as a list.
+const CHARS_PER_SECTION: u32 = 800;
+
+/// The outline a paper of a given length is to have: how many sections,
+/// and how many figures in all and from the web.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct Shape {
+    pub min_sections: usize,
+    pub max_sections: usize,
+    pub max_figures: usize,
+    /// Web pictures: each needs a match on Commons, and too many crowd out
+    /// the figures that carry the paper's own data.
+    pub max_web: usize,
+    /// Generated pictures the budget still allows.
+    pub images: u32,
+}
+
+impl Shape {
+    /// The shape of a paper of `target_chars` characters with `images`
+    /// generated pictures left: about one section per CHARS_PER_SECTION.
+    pub(crate) fn new(target_chars: u32, images: u32) -> Self {
+        let n = ((target_chars + CHARS_PER_SECTION / 2) / CHARS_PER_SECTION) as usize;
+        let max_sections = n.clamp(MIN_SECTIONS, MAX_SECTIONS);
+        Shape {
+            min_sections: max_sections.saturating_sub(2).max(MIN_SECTIONS),
+            max_sections,
+            max_figures: max_sections + 1,
+            max_web: max_sections.div_ceil(3),
+            images,
+        }
+    }
+}
 /// Tries at an outline that holds.
 const OUTLINE_STEPS: usize = 5;
 
@@ -35,13 +68,14 @@ pub(crate) fn target_units(paper: &Paper) -> u32 {
 }
 
 /// What is wrong with `outline` for this paper, every problem at once, or
-/// nothing. `images_left`: the generated pictures the budget still allows.
+/// nothing, for a paper of `target` units shaped as `shape` says.
 pub(crate) fn problems(
     outline: &Outline,
     dossier: &Dossier,
     target: u32,
-    images_left: u32,
+    shape: &Shape,
 ) -> Vec<String> {
+    let images_left = shape.images;
     let mut out = Vec::new();
     if outline.thesis.trim().is_empty() {
         out.push(
@@ -50,9 +84,10 @@ pub(crate) fn problems(
         );
     }
     let n = outline.sections.len();
-    if !(MIN_SECTIONS..=MAX_SECTIONS).contains(&n) {
+    if !(shape.min_sections..=shape.max_sections).contains(&n) {
         out.push(format!(
-            "{n} sections: a paper this long has {MIN_SECTIONS}-{MAX_SECTIONS}."
+            "{n} sections: a paper this long has {}-{}, each long enough to develop its point.",
+            shape.min_sections, shape.max_sections
         ));
     }
     let known = |id: &String| dossier.notes.iter().any(|note| &note.id == id);
@@ -85,6 +120,20 @@ pub(crate) fn problems(
             "{} figures for {n} sections: plan at least {} - diagrams, charts of the dossier's data, pictures.",
             figures.len(),
             n.div_ceil(2)
+        ));
+    }
+    if figures.len() > shape.max_figures {
+        out.push(format!(
+            "{} figures: at most {} for a paper this long - keep the ones that carry the most.",
+            figures.len(),
+            shape.max_figures
+        ));
+    }
+    let web = figures.iter().filter(|f| f.kind == FigureKind::Web).count();
+    if web > shape.max_web {
+        out.push(format!(
+            "{web} web pictures: at most {} - make the rest diagrams or charts of the notes' data.",
+            shape.max_web
         ));
     }
     let generated = figures
@@ -183,9 +232,16 @@ pub(crate) async fn make_outline(
     } else {
         "words"
     };
-    let images_left = paper.budget.remaining().images;
+    let shape = Shape::new(paper.target_chars, paper.budget.remaining().images);
+    let (images_left, min_sections, max_sections, max_figures, max_web) = (
+        shape.images,
+        shape.min_sections,
+        shape.max_sections,
+        shape.max_figures,
+        shape.max_web,
+    );
     let instructions = format!(
-        "You outline a paper on \"{}\", written in the language tagged \"{}\", of about {target} {unit}, from the research notes the user's researchers gathered. Give it a thesis and {MIN_SECTIONS}-{MAX_SECTIONS} sections in an order that builds an argument: from context to mechanism, evidence, disputes and outlook, as the topic needs - not a list of the questions. Every section draws on the notes that support it, by id; use every strong note somewhere, and give no section points the notes can't support. Its `targetWords` is its length in {unit}; together about {target}. Plan figures that carry information, at least one for every two sections: `mermaid` for a process, structure, timeline or comparison (say what it shows); `chart` for numbers in the notes (name the notes and the numbers); `web` for a real photograph or figure a note's image lead points to (say which); `generated` for an illustration only a picture can give (describe it), at most {images_left} of them. Write titles, key points and specs in the paper's language. Hand it over with submit_outline.",
+        "You outline a paper on \"{}\", written in the language tagged \"{}\", of about {target} {unit}, from the research notes the user's researchers gathered. Give it a thesis and {min_sections}-{max_sections} sections, each long enough to develop its point, in an order that builds an argument: from context to mechanism, evidence, disputes and outlook, as the topic needs - not a list of the questions. Every section draws on the notes that support it, by id; use every strong note somewhere, and give no section points the notes can't support. Its `targetWords` is its length in {unit}; together about {target}. Plan figures that carry information - at least one for every two sections and at most {max_figures} in all: `mermaid` for a process, structure, timeline or comparison (say what it shows); `chart` for numbers in the notes (name the notes and the numbers); `web` for a real photograph of something Wikimedia Commons would have, at most {max_web}; `generated` for an illustration only a picture can give (describe it), at most {images_left} of them. Write titles, key points and specs in the paper's language. Hand it over with submit_outline.",
         paper.topic, paper.language
     );
     let message = format!(
@@ -206,8 +262,12 @@ pub(crate) async fn make_outline(
                     ))
                 }
             };
-            let wrong = problems(&outline, dossier, target, images_left);
+            let wrong = problems(&outline, dossier, target, &shape);
             if !wrong.is_empty() {
+                // Seen in a live run's output, never in the app's.
+                if cfg!(test) {
+                    eprintln!("paper: outline not kept: {}", wrong.join(" | "));
+                }
                 return ToolOutput::from(format!(
                     "Not kept - fix these and send the whole outline again:\n- {}",
                     wrong.join("\n- ")

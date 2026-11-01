@@ -142,6 +142,18 @@ it, lazily loaded. Each stage and helper is one run of
   after its caption: author, licence and a link to its Commons page. A mark
   nothing is found for is left out.
 
+- **Tuned on a real run** (MiniMax, 5,000 characters): each question's helper
+  gets an even share of the research budget (the first helpers had spent it
+  all); the outline's shape follows the length - about one section per 800
+  characters, at most a figure per section plus one, web pictures at most a
+  third of the sections (it had planned 12 sections and 15 figures); a
+  section whose last try has only soft problems (its length, a missing
+  planned figure) is kept rather than lose the paper, while a wrong citation
+  or a broken chart still fails it; the dossier keeps only the sources its
+  notes cite. `paper/live.rs` runs a whole paper on a real provider
+  (`cargo test --lib live_paper -- --ignored --nocapture`), printing every
+  rejection.
+
 ### To come
 
-A real run, to tune the prompts, the checks' tolerances and the budgets.
+Further real runs, on other providers and lengths.

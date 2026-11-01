@@ -424,4 +424,6 @@ pub async fn ai_paper_save_outline(
 }
 
 #[cfg(test)]
+mod live;
+#[cfg(test)]
 mod tests;
