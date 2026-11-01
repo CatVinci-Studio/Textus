@@ -126,12 +126,6 @@ export function AiPage({
                 </Select>
               </SettingRow>
             )}
-            <ToggleRow
-              label={t.aiNameUntitledLabel}
-              help={t.aiNameUntitledHint}
-              checked={settings.aiNameUntitled}
-              onChange={(v) => setSettings({ aiNameUntitled: v })}
-            />
           </SettingsGroup>
 
           <SettingsGroup title={t.aiAskLabel}>

@@ -293,9 +293,6 @@ utiliser une.
   learnSaved:
     "Retenu. Vous pouvez le voir ou le supprimer dans l'onglet Mémoire.",
   learnLabel: "Appris de vos choix de révision",
-  aiNameUntitledLabel: "Nommer avec l’IA les documents sans titre",
-  aiNameUntitledHint:
-    "Enregistrer sous propose un titre court pour un nouveau document sans titre de niveau un, au lieu de sa première ligne. Le début du document est envoyé en une courte requête.",
   suggestNextMessageLabel: "Suggérer le message suivant",
   suggestNextMessageHint:
     "Après chaque réponse, ce que vous direz sans doute ensuite s'affiche en gris dans la zone de saisie ; Tab le reprend. Cela coûte une courte requête de plus.",
@@ -1118,7 +1115,7 @@ utiliser une.
     "Suggérer un nom de fichier au premier enregistrement",
   autosaveLabel: "Enregistrer automatiquement",
   autosaveHint:
-    "Aussi les documents sans titre : dans le dossier ouvert, ou Documents.",
+    "Avec un dossier ouvert, les documents sans titre y sont aussi enregistrés, nommés d’après leur titre.",
   untitledTab: "Sans titre",
   markdownGuideTab: "Guide Markdown",
   agentGuideTab: "Guide des fonctions IA",

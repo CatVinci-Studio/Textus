@@ -228,9 +228,6 @@ export interface Settings {
   /// After each reply, a likely next message, grey in the empty box for Tab
   /// to take.
   suggestNextMessage: boolean;
-  /// Save As proposes a title the writing model gives an untitled document
-  /// with no level-one heading, instead of its first line.
-  aiNameUntitled: boolean;
   /// Whether an agent edit's in-document preview types itself in or appears
   /// complete at once.
   enableEditAnimation: boolean;
@@ -363,7 +360,6 @@ export const DEFAULT_SETTINGS: Settings = {
   mcpServers: [],
   plugins: {},
   suggestNextMessage: true,
-  aiNameUntitled: true,
   enableEditAnimation: true,
   agentExpandToWindow: false,
   pinAgentWindow: false,

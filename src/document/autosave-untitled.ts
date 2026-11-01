@@ -1,8 +1,8 @@
 import type { DocTab } from "./doc-tabs";
 
 /**
- * Where Save Automatically puts an untitled document the first time, with no
- * dialog to ask: what decides the folder and the file's name.
+ * How Save Automatically gives an untitled document a file in the open
+ * folder, with no dialog to ask: when, and under what name.
  */
 
 /** Whether autosave may give an untitled tab a file of its own: a plain
@@ -19,15 +19,11 @@ export function untitledAutosavable(tab: DocTab): boolean {
   );
 }
 
-/** The folder open in the window, as New Document in the sidebar uses;
- *  else the Documents folder the Save dialog starts in; else nowhere (a
- *  Linux desktop may have no Documents folder). */
-export async function untitledFolder(
-  openFolder: string | null,
-  documents: () => Promise<string>,
-): Promise<string | null> {
-  if (openFolder) return openFolder;
-  return (await documents().catch(() => null)) || null;
+/** Whether a draft's title is written: something follows its first line.
+ *  Until then autosave waits longer, so a half-typed line doesn't name the
+ *  file. */
+export function titleSettled(markdown: string): boolean {
+  return /\S[^\n]*\n\s*\S/.test(markdown);
 }
 
 /** "Notes.md" as the `n`th of its name: "Notes.md", "Notes 2.md", … */

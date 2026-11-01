@@ -291,9 +291,6 @@ para usar una.
   learnNever: "No volver a preguntar",
   learnSaved: "Recordado. Puedes verlo o eliminarlo en la pestaña Memoria.",
   learnLabel: "Aprendido de tus decisiones de revisión",
-  aiNameUntitledLabel: "Nombrar con IA los documentos sin título",
-  aiNameUntitledHint:
-    "Guardar como propone un título breve para un documento nuevo sin encabezado de nivel uno, en lugar de su primera línea. Envía el comienzo del documento en una petición breve.",
   suggestNextMessageLabel: "Sugerir el siguiente mensaje",
   suggestNextMessageHint:
     "Tras cada respuesta, lo que probablemente dirás después aparece en gris en el cuadro de mensaje; Tab lo usa. Cuesta una petición breve más.",
@@ -1103,7 +1100,7 @@ para usar una.
   autoSuggestFilenameLabel: "Sugerir un nombre al guardar un archivo nuevo",
   autosaveLabel: "Guardar automáticamente",
   autosaveHint:
-    "También los documentos sin título: en la carpeta abierta o en Documentos.",
+    "Con una carpeta abierta, los documentos sin título también se guardan en ella, con su título como nombre.",
   untitledTab: "Sin título",
   markdownGuideTab: "Guía de Markdown",
   agentGuideTab: "Guía de funciones de IA",

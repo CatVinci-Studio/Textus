@@ -278,9 +278,6 @@ type /name in a conversation to use one.
   learnNever: "Never ask for this",
   learnSaved: "Remembered. See or delete it in the Memory tab.",
   learnLabel: "Learned from your revision choices",
-  aiNameUntitledLabel: "Name untitled documents with AI",
-  aiNameUntitledHint:
-    "Save As proposes a short title for a new document with no level-one heading, instead of its first line. It sends the start of the document in one short request.",
   suggestNextMessageLabel: "Suggest your next message",
   suggestNextMessageHint:
     "After each reply, what you will probably say next shows grey in the message box; Tab takes it. It costs one more short request.",
@@ -1070,7 +1067,8 @@ type /name in a conversation to use one.
   restoreSessionLabel: "Restore previous session on startup",
   autoSuggestFilenameLabel: "Suggest a filename when saving a new file",
   autosaveLabel: "Save automatically",
-  autosaveHint: "Untitled documents too: into the open folder, or Documents.",
+  autosaveHint:
+    "With a folder open, untitled documents get a file there too, named after their title.",
   untitledTab: "Untitled",
   markdownGuideTab: "Markdown Guide",
   agentGuideTab: "AI Features Guide",

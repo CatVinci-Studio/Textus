@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useSaveTabs } from "./useSaveTabs";
 import { useTabState } from "./tabs/useTabState";
 import { fs } from "../platform/ipc";
-import { documentsDir } from "../platform/documents-path";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import en from "../i18n/locales/en";
 import type { DocTab } from "../document/doc-tabs";
@@ -17,11 +16,9 @@ vi.mock("../platform/ipc", () => ({
     writeTextFile: vi.fn(),
     saveFileDialog: vi.fn(),
     migrateDraftImages: vi.fn(),
+    renameEntry: vi.fn(),
   },
   session: { addRecentFile: vi.fn() },
-}));
-vi.mock("../platform/documents-path", () => ({
-  documentsDir: vi.fn(),
 }));
 vi.mock("../ui/app-dialog", () => ({
   showConfirm: vi.fn(),
@@ -45,7 +42,11 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-function setup(tab: DocTab, folder: string | null = null) {
+function setup(
+  tab: DocTab,
+  folder: string | null = null,
+  aiTitleFor?: (tab: DocTab) => string | null,
+) {
   const { result } = renderHook(() => {
     const tabState = useTabState();
     const saves = useSaveTabs({
@@ -54,6 +55,7 @@ function setup(tab: DocTab, folder: string | null = null) {
       autoSuggestFilename: true,
       imageFolder: "assets",
       folder,
+      aiTitleFor,
     });
     return { tabState, ...saves };
   });
@@ -116,21 +118,8 @@ describe("autosaveTab", () => {
       });
     });
 
-    it("goes to Documents with no folder open", async () => {
+    it("stays a draft with no folder open, or nothing in it", async () => {
       onDisk([]);
-      vi.mocked(documentsDir).mockResolvedValue("/home/me/Documents/");
-      const result = setup(draft);
-      await act(async () => {
-        expect(await result.current.autosaveTab("a")).toBe("saved");
-      });
-      expect(fs.writeTextFile).toHaveBeenCalledWith(
-        "/home/me/Documents/Trip plan.md",
-        draft.content,
-      );
-    });
-
-    it("stays a draft with nowhere to go, or nothing in it", async () => {
-      vi.mocked(documentsDir).mockRejectedValue(new Error("no Documents"));
       const nowhere = setup(draft);
       const blank = setup({ ...draft, content: " \n" }, "/work");
       await act(async () => {
@@ -138,6 +127,56 @@ describe("autosaveTab", () => {
         expect(await blank.current.autosaveTab("a")).toBe("skipped");
       });
       expect(fs.writeTextFile).not.toHaveBeenCalled();
+    });
+
+    it("is named by the AI's title when it has no heading", async () => {
+      onDisk([]);
+      const untitled = {
+        ...draft,
+        content: "some thoughts on the garden\n\nmore",
+      };
+      const result = setup(untitled, "/work", () => "Spring garden");
+      await act(async () => {
+        await result.current.autosaveTab("a");
+      });
+      expect(fs.writeTextFile).toHaveBeenCalledWith(
+        "/work/Spring garden.md",
+        untitled.content,
+      );
+    });
+
+    it("has its file follow the title until it is named by hand", async () => {
+      onDisk([]);
+      vi.mocked(fs.renameEntry).mockImplementation(
+        async (_from, name) => `/work/${name}`,
+      );
+      const result = setup(draft, "/work");
+      await act(async () => {
+        await result.current.autosaveTab("a");
+      });
+      const retitle = (content: string) =>
+        act(() => result.current.tabState.updateTab("a", { content }));
+      retitle("# Kyoto trip\n\nday one");
+      await act(async () => {
+        expect(await result.current.autosaveTab("a")).toBe("saved");
+      });
+      expect(fs.renameEntry).toHaveBeenCalledWith(
+        "/work/Trip plan.md",
+        "Kyoto trip.md",
+      );
+      expect(result.current.tabState.tabs[0].path).toBe("/work/Kyoto trip.md");
+
+      // Saved As: the user chose the name, and it stays.
+      vi.mocked(fs.saveFileDialog).mockResolvedValue("/work/Mine.md");
+      await act(async () => {
+        await result.current.saveTabAs("a");
+      });
+      retitle("# Osaka\n\nday one");
+      await act(async () => {
+        await result.current.autosaveTab("a");
+      });
+      expect(fs.renameEntry).toHaveBeenCalledTimes(1);
+      expect(result.current.tabState.tabs[0].path).toBe("/work/Mine.md");
     });
 
     it("takes the next number when two drafts of one name save together", async () => {

@@ -3,8 +3,8 @@ import {
   freeFilePath,
   joinFile,
   numberedFilename,
+  titleSettled,
   untitledAutosavable,
-  untitledFolder,
 } from "./autosave-untitled";
 import type { DocTab } from "./doc-tabs";
 
@@ -35,17 +35,15 @@ describe("which untitled tabs autosave gives a file", () => {
   });
 });
 
-describe("the folder an untitled document is autosaved into", () => {
-  const documents = () => Promise.resolve("/home/me/Documents");
-  it("is the folder open in the window first", async () => {
-    expect(await untitledFolder("/work", documents)).toBe("/work");
+describe("whether a draft's title is written", () => {
+  it("is not while the draft is its first line alone", () => {
+    expect(titleSettled("Trip pl")).toBe(false);
+    expect(titleSettled("Trip plan\n")).toBe(false);
+    expect(titleSettled("\n\n# Trip plan\n\n")).toBe(false);
   });
-  it("is Documents with no folder open", async () => {
-    expect(await untitledFolder(null, documents)).toBe("/home/me/Documents");
-  });
-  it("is nowhere when there is no Documents folder either", async () => {
-    const none = () => Promise.reject(new Error("unknown"));
-    expect(await untitledFolder(null, none)).toBeNull();
+  it("is once anything follows the first line", () => {
+    expect(titleSettled("Trip plan\n\nDay one")).toBe(true);
+    expect(titleSettled("# Trip plan\n- a")).toBe(true);
   });
 });
 

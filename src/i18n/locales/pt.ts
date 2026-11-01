@@ -279,9 +279,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   learnNever: "Não perguntar mais",
   learnSaved: "Lembrado. Veja ou apague na aba Memória.",
   learnLabel: "Aprendido com as suas escolhas de revisão",
-  aiNameUntitledLabel: "Nomear documentos sem título com IA",
-  aiNameUntitledHint:
-    "Salvar como propõe um título curto para um documento novo sem título de nível um, em vez da primeira linha. O início do documento é enviado numa solicitação curta.",
   suggestNextMessageLabel: "Sugerir a próxima mensagem",
   suggestNextMessageHint:
     "Depois de cada resposta, o que você provavelmente dirá a seguir aparece em cinza na caixa de mensagem; Tab usa. Custa mais um pedido curto.",
@@ -1086,7 +1083,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   autoSuggestFilenameLabel: "Sugerir um nome ao salvar um arquivo novo",
   autosaveLabel: "Salvar automaticamente",
   autosaveHint:
-    "Também documentos sem título: na pasta aberta ou em Documentos.",
+    "Com uma pasta aberta, documentos sem título também são salvos nela, com o título como nome.",
   untitledTab: "Sem título",
   markdownGuideTab: "Guia de Markdown",
   agentGuideTab: "Guia dos Recursos de IA",

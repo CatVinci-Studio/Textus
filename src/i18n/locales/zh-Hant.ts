@@ -247,9 +247,6 @@ export default {
   learnNever: "不再詢問",
   learnSaved: "已記住。可以在「記憶」裡查看或刪除。",
   learnLabel: "從修訂取捨中學到的",
-  aiNameUntitledLabel: "用 AI 為未命名文件命名",
-  aiNameUntitledHint:
-    "另存新檔時，若新文件沒有一級標題，會建議一個簡短標題作為檔名，而不是第一行。這會把文件開頭傳送給 AI，作一次簡短請求。",
   suggestNextMessageLabel: "預測下一句",
   suggestNextMessageHint:
     "每次回覆後，在輸入框裡用灰字顯示你接下來可能要說的話，按 Tab 採用。會多一次簡短請求。",
@@ -1001,7 +998,7 @@ export default {
   restoreSessionLabel: "啟動時恢復上次的工作階段",
   autoSuggestFilenameLabel: "儲存新檔案時建議檔名",
   autosaveLabel: "自動儲存",
-  autosaveHint: "未命名文件也會儲存，存到開啟的資料夾或「文件」資料夾。",
+  autosaveHint: "開啟資料夾時，未命名文件也會以標題為名存進這個資料夾。",
   untitledTab: "未命名",
   markdownGuideTab: "Markdown 指南",
   agentGuideTab: "AI 功能指南",

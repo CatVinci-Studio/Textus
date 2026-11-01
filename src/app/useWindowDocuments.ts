@@ -9,6 +9,7 @@ import { useSessionPaths, useWindowTitle } from "./useWindowSession";
 import { useFileOpening } from "./useFileOpening";
 import { useHelpTabs } from "./useHelpTabs";
 import { useSaveTabs } from "./useSaveTabs";
+import { useDraftTitles } from "../ai/doc-title";
 import { useZenMode } from "./useZenMode";
 import { useSourceModes } from "./useSourceModes";
 import { useTabRemoval } from "./close-flow";
@@ -112,23 +113,26 @@ export function useWindowDocuments({
     [updateTab, evaluateTutorialDocumentChange],
   );
 
+  const aiTitleFor = useDraftTitles(
+    tabs,
+    settings.textusAi && settings.autoSuggestFilename
+      ? settings.aiProvider
+      : null,
+    settings.writingModels[settings.aiProvider] || null,
+  );
   const saving = useSaveTabs({
     tabState,
     t,
     autoSuggestFilename: settings.autoSuggestFilename,
     imageFolder: settings.imageFolder,
-<<<<<<< HEAD
     folder: openFolder.folder,
-=======
-    aiTitleProvider:
-      settings.textusAi && settings.aiNameUntitled ? settings.aiProvider : null,
-    aiTitleModel: settings.writingModels[settings.aiProvider] || null,
->>>>>>> pr/510
+    aiTitleFor,
   });
   const flushAutosave = useAutosave({
     tabs,
     activeTabId,
     enabled: settings.autosave,
+    untitledToFile: openFolder.folder !== null,
     practiceTabId: tutorial.active ? tutorial.tabId : null,
     autosaveTab: saving.autosaveTab,
   });

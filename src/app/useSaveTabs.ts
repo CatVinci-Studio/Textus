@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import { migrateDraftImages } from "../editor/images/image-migration";
-import { basename } from "../utils/path";
+import { basename, parentDir } from "../utils/path";
 import {
   statMtime,
   tabIsDirty,
@@ -12,9 +12,7 @@ import {
 import {
   freeFilePath,
   untitledAutosavable,
-  untitledFolder,
 } from "../document/autosave-untitled";
-import { documentsDir } from "../platform/documents-path";
 import {
   fileTextFor,
   setTrackedWriter,
@@ -23,9 +21,16 @@ import {
 import type { SaveOutcome } from "../document/autosave";
 import { fs, session } from "../platform/ipc";
 import { moveConversations } from "../ai/chat/chat-history";
-import { defaultMarkdownFilename } from "../document/save-default-name";
+import {
+  defaultMarkdownFilename,
+  markdownFilename,
+} from "../document/save-default-name";
 import { isWordDocument, wordSaveSuggestion } from "../document/word-import";
-import { emitPluginEvent, openDocumentAt } from "../plugins/app-bridge";
+import {
+  emitPluginEvent,
+  notePathMoved,
+  openDocumentAt,
+} from "../plugins/app-bridge";
 import { hasWillSave, runWillSave } from "../plugins/contributions/will-save";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";
@@ -42,10 +47,13 @@ export function useSaveTabs(opts: {
   t: Strings;
   autoSuggestFilename: boolean;
   imageFolder: string;
-  /** The folder open in the window, where untitled drafts are autosaved. */
+  /** The folder open in the window, where untitled drafts are autosaved;
+   *  with none they are left to draft recovery. */
   folder?: string | null;
+  /** The title the AI gave an untitled draft, if it has one yet. */
+  aiTitleFor?: (tab: DocTab) => string | null;
 }) {
-  const { tabState, t, autoSuggestFilename, imageFolder } = opts;
+  const { tabState, t, autoSuggestFilename, imageFolder, aiTitleFor } = opts;
   const folder = opts.folder ?? null;
   const { liveTabs, updateTab, tabsRef } = tabState;
 
@@ -142,14 +150,19 @@ export function useSaveTabs(opts: {
   );
 
   const suggestedName = useCallback(
-    (tab: DocTab): string =>
-      defaultMarkdownFilename(
-        tab.content,
-        tab.helpDoc ? tabTitle(tab, t) : t.untitledTab,
-        autoSuggestFilename,
-      ),
-    [t, autoSuggestFilename],
+    (tab: DocTab): string => {
+      const fallback = tab.helpDoc ? tabTitle(tab, t) : t.untitledTab;
+      const title = autoSuggestFilename ? aiTitleFor?.(tab) : null;
+      return title
+        ? markdownFilename(title, fallback)
+        : defaultMarkdownFilename(tab.content, fallback, autoSuggestFilename);
+    },
+    [t, autoSuggestFilename, aiTitleFor],
   );
+
+  // Files autosave named itself, by tab: they follow the title until the
+  // user names them (Save As, or a rename that moves the tab elsewhere).
+  const autoNamed = useRef(new Map<string, string>());
 
   // Always asks where to write. Resolves true only when the document reached
   // disk, so a cancelled dialog doesn't close the tab.
@@ -172,6 +185,7 @@ export function useSaveTabs(opts: {
         await showMessage(t.wordSaveRefused, { tone: "warning" });
         return false;
       }
+      autoNamed.current.delete(tabId);
       return adoptFile(tab, picked, false);
     },
     [liveTabs, t, suggestedName, adoptFile],
@@ -255,24 +269,66 @@ export function useSaveTabs(opts: {
     [liveTabs, saveTabAs, saveToPath, serialized],
   );
 
-  // An untitled draft's first autosave: into the window's open folder, else
-  // Documents, named as Save As would suggest and numbered rather than
-  // overwriting. One at a time across tabs, so two drafts of the same name
-  // can't both take it. "skipped" with nowhere to put it: it stays a draft.
+  // An untitled draft's first autosave: into the window's open folder,
+  // named as Save As would suggest and numbered rather than overwriting. One
+  // at a time across tabs, so two drafts of the same name can't both take
+  // it. With no folder open it stays a draft.
   const autosaveUntitled = useCallback(
     (tab: DocTab): Promise<SaveOutcome> =>
       serialized(UNTITLED_QUEUE, async () => {
-        const dir = await untitledFolder(folder, documentsDir);
-        if (!dir) return "skipped";
+        if (!folder) return "skipped";
         const path = await freeFilePath(
-          dir,
+          folder,
           suggestedName(tab),
           async (p) => (await statMtime(p)) !== null,
         );
         if (!path) return "skipped";
-        return (await adoptFile(tab, path, true)) ? "saved" : "failed";
+        if (!(await adoptFile(tab, path, true))) return "failed";
+        autoNamed.current.set(tab.id, path);
+        return "saved";
       }),
     [serialized, folder, suggestedName, adoptFile],
+  );
+
+  // A file autosave named: renamed after the title as it changes. Anything
+  // in the way (a rename refused, the name taken) leaves it where it is.
+  const followTitle = useCallback(
+    async (tabId: string) => {
+      const tab = liveTabs().find((tb) => tb.id === tabId);
+      const from = tab?.path;
+      const dir = from && parentDir(from);
+      if (!tab || !from || !dir || autoNamed.current.get(tabId) !== from) {
+        autoNamed.current.delete(tabId);
+        return;
+      }
+      const wanted = suggestedName(tab);
+      if (wanted === basename(from)) return;
+      // Its own file is no obstacle, in any case (macOS ignores it).
+      const to = await freeFilePath(
+        dir,
+        wanted,
+        async (p) =>
+          p.toLowerCase() !== from.toLowerCase() &&
+          (await statMtime(p)) !== null,
+      );
+      if (!to || to === from) return;
+      let moved: string;
+      try {
+        moved = await fs.renameEntry(from, basename(to));
+      } catch {
+        autoNamed.current.delete(tabId);
+        return;
+      }
+      autoNamed.current.set(tabId, moved);
+      tabsRef.current = tabsRef.current.map((tb) =>
+        tb.id === tabId ? { ...tb, path: moved } : tb,
+      );
+      updateTab(tabId, { path: moved });
+      moveConversations(from, moved);
+      void notePathMoved(from, moved);
+      void session.addRecentFile(moved);
+    },
+    [liveTabs, tabsRef, updateTab, suggestedName],
   );
 
   /** Autosave: File > Save for a changed document that has a file, never a
@@ -285,9 +341,11 @@ export function useSaveTabs(opts: {
         if (!tab || !tabIsDirty(tab)) return "skipped";
         if (!tab.path)
           return untitledAutosavable(tab) ? autosaveUntitled(tab) : "skipped";
-        return saveToPath(tabId, true);
+        const outcome = await saveToPath(tabId, true);
+        if (outcome === "saved") await followTitle(tabId);
+        return outcome;
       }),
-    [liveTabs, saveToPath, serialized, autosaveUntitled],
+    [liveTabs, saveToPath, serialized, autosaveUntitled, followTitle],
   );
 
   // A tracked document's original moved with nothing unsaved in it: its file
