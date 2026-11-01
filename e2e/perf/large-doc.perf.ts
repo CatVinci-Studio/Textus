@@ -145,8 +145,8 @@ async function scrollThrough(page: Page) {
   });
 }
 
-/** Scrolls the last heading to the top, as the outline does, and waits
- *  for it to stay put. */
+/** Puts the caret in the last heading and scrolls it to the top, as the
+ *  outline does, and waits for it to stay put. */
 async function jumpToEnd(page: Page) {
   return page.evaluate(async () => {
     const scroller = document.querySelector<HTMLElement>(
@@ -154,19 +154,46 @@ async function jumpToEnd(page: Page) {
     )!;
     scroller.scrollTop = 0;
     await new Promise((r) => setTimeout(r, 300));
-    const headings = scroller.querySelectorAll(
-      ".ProseMirror > :is(h1, h2, h3)",
-    );
-    const last = headings[headings.length - 1] as HTMLElement;
+    type PMNode = {
+      type: { name: string };
+      nodeSize: number;
+      forEach: (f: (node: PMNode, pos: number) => void) => void;
+      resolve: (pos: number) => unknown;
+    };
+    const view = (window as unknown as Record<string, unknown>).__pmView as {
+      state: {
+        doc: PMNode;
+        tr: { setSelection: (s: unknown) => { scrollIntoView: () => unknown } };
+        selection: { constructor: { near: (p: unknown) => unknown } };
+      };
+      dispatch: (tr: unknown) => void;
+      domAtPos: (pos: number) => { node: Node };
+    };
+    const { doc } = view.state;
+    let last = 0;
+    doc.forEach((node, pos) => {
+      if (node.type.name === "heading") last = pos + 1;
+    });
     const start = performance.now();
-    last.scrollIntoView({ block: "start" });
-    let top = last.getBoundingClientRect().top;
+    view.dispatch(
+      view.state.tr
+        .setSelection(view.state.selection.constructor.near(doc.resolve(last)))
+        .scrollIntoView(),
+    );
+    // Drawn now it holds the caret; scrolled to as the outline does
+    // (ProseMirror's own scrollIntoView doesn't move this scroller).
+    const at = view.domAtPos(last).node;
+    const heading = (at instanceof Element ? at : at.parentElement)!;
+    heading.scrollIntoView({ block: "start" });
+    let top = heading.getBoundingClientRect().top;
     let stable = 0;
     await new Promise((r) => requestAnimationFrame(r));
     let settledAt = performance.now();
     while (stable < 3 && performance.now() - start < 3000) {
       await new Promise((r) => requestAnimationFrame(r));
-      const now = last.getBoundingClientRect().top;
+      const now = heading.isConnected
+        ? heading.getBoundingClientRect().top
+        : top + 1;
       if (Math.abs(now - top) < 1) stable++;
       else {
         stable = 0;
@@ -290,7 +317,21 @@ for (const doc of docs) {
     const path = `/bench/${doc.name}.md`;
 
     const open = await openDoc(page, doc, path);
-    await expect(page.locator(editor)).toContainText(doc.lastHeading);
+    // Opened whole: the end is in the document (a long one draws only the
+    // blocks near the screen).
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (text) =>
+            (
+              (window as unknown as Record<string, unknown>).__pmView as {
+                state: { doc: { textContent: string } };
+              }
+            ).state.doc.textContent.includes(text),
+          doc.lastHeading,
+        ),
+      )
+      .toBe(true);
 
     const typing = await typeInMiddle(page, doc);
     // Chromium only: the composition is sent through its DevTools protocol.

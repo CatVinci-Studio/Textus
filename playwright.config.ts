@@ -31,6 +31,7 @@ const WEBKIT_SPECS = [
   "file-tree.spec.ts",
   "user-css.spec.ts",
   "plugins.spec.ts",
+  "large-doc-lazy.spec.ts",
 ];
 
 export default defineConfig({
