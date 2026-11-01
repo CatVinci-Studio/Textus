@@ -3,6 +3,7 @@ import type { BlockNames } from "../revision/markdown-forms";
 import { OUT_OF_STEPS } from "./out-of-steps";
 import {
   Fragment,
+  Suspense,
   useEffect,
   useMemo,
   useRef,
@@ -34,6 +35,8 @@ import { CommentCard, CommentGroup, noteRunsOf } from "./CommentCard";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { memoryRunsOf } from "./memory-pass";
 import { OFFER_SKILL, SkillOfferChip, parseSkillOffer } from "./SkillOfferChip";
+import { PAPER_TURN, parsePaperCard } from "../paper/paper-store";
+import { PaperCard } from "../paper/lazy";
 
 /** The statuses a card reaches by being decided, which collapse it. */
 const DECIDED: ReadonlySet<PendingStatus> = new Set([
@@ -443,6 +446,23 @@ export function ChatMessages({
               style={style}
             >
               <SkillOfferChip offer={offer} docPath={docPath} />
+            </div>
+          );
+        // A paper's card: its result says which paper.
+        if (turn.kind === "ToolCall" && turn.name === PAPER_TURN) return null;
+        const paper =
+          turn.kind === "ToolResult" &&
+          parsePaperCard(turn.call_id, turn.output);
+        if (paper)
+          return (
+            <div
+              key={i}
+              className={reveal ? "turn-reveal" : undefined}
+              style={style}
+            >
+              <Suspense fallback={null}>
+                <PaperCard info={paper} />
+              </Suspense>
             </div>
           );
         // A remember call shows as its result's chip; one that saved

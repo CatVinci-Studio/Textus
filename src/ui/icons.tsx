@@ -1092,3 +1092,36 @@ export function ReviewModeIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+/** Research: a magnifier over a page - a topic looked into, then written. */
+export function ResearchModeIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M9.6 14H3.4C2.63 14 2 13.37 2 12.6V3.4C2 2.63 2.63 2 3.4 2H10.6C11.37 2 12 2.63 12 3.4V5.6"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4.6 5H9.4M4.6 7.4H7.4"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <circle cx="11" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.2" />
+      <path
+        d="M12.8 11.8L14.4 13.4"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

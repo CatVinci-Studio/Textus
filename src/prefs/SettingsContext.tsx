@@ -64,6 +64,7 @@ export {
   type ImageHost,
   type ImageNamingMode,
   type AgentMode,
+  type PanelMode,
   AGENT_MODES,
   storedAgentMode,
   type Settings,

@@ -145,23 +145,44 @@ export interface DiagramLayout {
 
 export interface DrawnDiagram {
   svg: string;
-  /** A Pele diagram follows a theme switch through CSS; a Mermaid one has to
-   *  be drawn again. */
-  engine: DiagramEngine;
+  /** A Pele diagram follows a theme switch through CSS; a Mermaid one, and a
+   *  chart's series colours, have to be drawn again. */
+  engine: DiagramEngine | "chart";
 }
 
+type ChartApi = typeof import("./chart/chart-svg");
+const chartModule = lazyModule("chart", () => import("./chart/chart-svg"));
+
+/** The ```chart renderer, loaded the first time a chart is drawn. */
+export function loadChart(): Promise<ChartApi> {
+  return chartModule.load();
+}
+
+/** A ```chart block's SVG; throws when its spec is wrong. */
+export async function drawChart(
+  code: string,
+  layout: DiagramLayout,
+): Promise<DrawnDiagram> {
+  const chart = await loadChart();
+  return { svg: chart.renderChart(code, layout), engine: "chart" };
+}
+
+/** The fenced-block languages drawn as pictures. */
+export const DIAGRAM_LANGUAGES = ["mermaid", "chart"];
+
 /**
- * A drawing function for one render pass: Pele first when chosen and able,
- * else Mermaid, loaded only when first needed. Throws when neither can draw.
+ * A drawing function for one render pass: a chart by its own renderer; a
+ * diagram by Pele first when chosen and able, else Mermaid, loaded only when first needed. Throws when neither can draw.
  */
 export function diagramRenderer(
   engine: DiagramEngine,
   layout: DiagramLayout,
   configure: (mermaid: MermaidApi) => void = (mermaid) =>
     configureMermaid(mermaid, layout.width, layout.fontFamily, layout.dark),
-): (code: string, id: string) => Promise<DrawnDiagram> {
+): (code: string, id: string, language?: string) => Promise<DrawnDiagram> {
   let mermaid: Promise<MermaidApi> | null = null;
-  return async (code, id) => {
+  return async (code, id, language = "mermaid") => {
+    if (language === "chart") return drawChart(code, layout);
     if (engine === "pele" && peleMayDraw(code)) {
       const svg = await drawWithPele(code, layout);
       if (svg) return { svg, engine: "pele" };

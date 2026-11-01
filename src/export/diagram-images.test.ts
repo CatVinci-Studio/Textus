@@ -76,6 +76,19 @@ describe("redrawDiagrams", () => {
     expect(draw).not.toHaveBeenCalled();
   });
 
+  it("redraws a chart as a chart", async () => {
+    const draw = vi.fn(async () => "<svg>light</svg>");
+    await redrawDiagrams(
+      diagram('{"data": [1]}', '<svg class="textus-chart">dark</svg>') +
+        diagram("graph LR", "<svg>dark</svg>"),
+      draw,
+    );
+    expect(draw.mock.calls).toEqual([
+      ['{"data": [1]}', "chart"],
+      ["graph LR", "mermaid"],
+    ]);
+  });
+
   it("keeps the picture when drawing throws", async () => {
     const html = diagram("graph LR", "<svg>dark</svg>");
     expect(

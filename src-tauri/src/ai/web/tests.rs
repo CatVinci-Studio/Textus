@@ -45,7 +45,7 @@ fn a_native_search_gets_web_fetch_only_and_off_gets_nothing() {
         .iter()
         .map(|s| s.name.to_string())
         .collect();
-    assert_eq!(names, vec![WEB_FETCH_TOOL]);
+    assert_eq!(names, vec![WEB_FETCH_TOOL, SEARCH_PAPERS_TOOL]);
 
     let own = plan(service.clone());
     let names: Vec<_> = own
@@ -53,7 +53,10 @@ fn a_native_search_gets_web_fetch_only_and_off_gets_nothing() {
         .iter()
         .map(|s| s.name.to_string())
         .collect();
-    assert_eq!(names, vec![WEB_SEARCH_TOOL, WEB_FETCH_TOOL]);
+    assert_eq!(
+        names,
+        vec![WEB_SEARCH_TOOL, WEB_FETCH_TOOL, SEARCH_PAPERS_TOOL]
+    );
 
     let off = WebPlan::new(false, Some(NativeSearch::AnthropicTool), service, &[]);
     assert!(off.tool_specs().is_empty());
@@ -141,7 +144,7 @@ async fn the_search_budget_runs_out() {
         // Nothing listens there: each search fails fast, and still counts.
         endpoint: Some("http://127.0.0.1:9/search".into()),
     }));
-    for i in 0..MAX_SEARCHES {
+    for i in 0..budget::MAX_SEARCHES {
         let out = web
             .execute(
                 WEB_SEARCH_TOOL,
@@ -170,4 +173,171 @@ async fn web_fetch_refuses_this_computer() {
         )
         .await;
     assert!(out.contains("private network"), "{out}");
+}
+
+#[tokio::test]
+async fn the_paper_search_budget_runs_out_before_any_request() {
+    let web = plan(None);
+    for _ in 0..budget::MAX_PAPER_SEARCHES {
+        assert!(web.budget.take(WebUse::Papers));
+    }
+    let out = web
+        .execute(SEARCH_PAPERS_TOOL, r#"{"query":"tidal energy"}"#, "")
+        .await;
+    assert!(
+        out.contains("paper searches this request may make"),
+        "{out}"
+    );
+    let out = plan(None)
+        .execute(SEARCH_PAPERS_TOOL, r#"{"query":" "}"#, "")
+        .await;
+    assert!(out.contains("Pass `query`"), "{out}");
+}
+
+#[test]
+fn openalex_works_become_papers_with_their_abstract_in_order() {
+    let body = json!({"results": [{
+        "id": "https://openalex.org/W1",
+        "doi": "https://doi.org/10.1000/tides",
+        "title": "Tidal Power at Scale",
+        "publication_year": 2021,
+        "authorships": [
+            {"author": {"display_name": "Ada Lovelace"}},
+            {"author": {"display_name": "Charles Babbage"}},
+            {"author": {"display_name": "Mary Somerville"}}
+        ],
+        "primary_location": {"source": {"display_name": "Ocean Energy"}},
+        "abstract_inverted_index": {"turn": [1], "Tides": [0], "twice": [2]},
+        "cited_by_count": 42
+    }, {"id": "https://openalex.org/W2", "title": null}]});
+    let papers = scholar::openalex_papers(&body);
+    assert_eq!(papers.len(), 1);
+    let paper = &papers[0];
+    assert_eq!(paper.url, "https://doi.org/10.1000/tides");
+    assert_eq!(paper.doi.as_deref(), Some("10.1000/tides"));
+    assert_eq!(paper.abstract_text, "Tides turn twice");
+    assert_eq!(
+        paper.byline(),
+        "Ada Lovelace, Charles Babbage et al. (2021)"
+    );
+    let described = paper.describe(3);
+    assert!(
+        described.starts_with("[3] Tidal Power at Scale\n"),
+        "{described}"
+    );
+    assert!(
+        described.contains("Ocean Energy · cited by 42"),
+        "{described}"
+    );
+}
+
+#[test]
+fn arxiv_entries_become_papers() {
+    let atom = br#"<?xml version="1.0"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>ArXiv Query</title>
+  <entry>
+    <id>http://arxiv.org/abs/2101.00001v2</id>
+    <published>2021-01-01T00:00:00Z</published>
+    <title>Modelling   Tides
+      &amp; Currents</title>
+    <summary>  We model tides. </summary>
+    <author><name>Grace Hopper</name></author>
+    <arxiv:doi>10.1000/x</arxiv:doi>
+    <link href="http://arxiv.org/pdf/2101.00001v2" rel="related" type="application/pdf"/>
+  </entry>
+</feed>"#;
+    assert_eq!(
+        scholar::arxiv_query(" tidal  energy "),
+        "all:tidal AND all:energy"
+    );
+    let papers = scholar::arxiv_papers(atom);
+    assert_eq!(papers.len(), 1);
+    let paper = &papers[0];
+    assert_eq!(paper.title, "Modelling Tides & Currents");
+    assert_eq!(paper.url, "https://arxiv.org/abs/2101.00001v2");
+    assert_eq!(paper.year, Some(2021));
+    assert_eq!(paper.authors, vec!["Grace Hopper"]);
+    assert_eq!(paper.doi.as_deref(), Some("10.1000/x"));
+    assert_eq!(paper.abstract_text, "We model tides.");
+}
+
+#[tokio::test]
+async fn paper_searches_draw_on_the_papers_lookups() {
+    use crate::ai::paper::{BudgetCounts, ResearchBudget, SharedBudget};
+    // None left: refused before any request goes out.
+    let shared = std::sync::Arc::new(SharedBudget::new(ResearchBudget::new(
+        BudgetCounts::default(),
+    )));
+    let web = WebPlan::new(true, None, None, &[]).with_budget(shared.clone());
+    let out = web
+        .execute(SEARCH_PAPERS_TOOL, r#"{"query":"tides"}"#, "")
+        .await;
+    assert!(out.contains("That's the 0 paper searches"), "{out}");
+    assert_eq!(shared.snapshot().used.paper_lookups, 0);
+}
+
+#[test]
+fn commons_answers_become_pictures_with_their_credit_in_search_order() {
+    let body = json!({"query": {"pages": {
+        "10": {"index": 2, "imageinfo": [{
+            "thumburl": "https://upload.example/1280px-Roof.png?utm_source=commons",
+            "thumbwidth": 1280, "thumbheight": 853, "mime": "image/png",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Roof.png",
+            "extmetadata": {
+                "Artist": {"value": "<div class=\"fn value\">\nEmmanuel &amp; Co</div>"},
+                "LicenseShortName": {"value": "CC BY-SA 4.0"}
+            }
+        }]},
+        "11": {"index": 1, "imageinfo": [{
+            "thumburl": "https://upload.example/1280px-Tray.jpg", "mime": "image/jpeg",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Tray.jpg",
+            "extmetadata": {"LicenseShortName": {"value": "Public domain"}}
+        }]},
+        "12": {"index": 3, "imageinfo": [{
+            "thumburl": "https://upload.example/x.jpg", "mime": "image/jpeg",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:X.jpg",
+            "extmetadata": {}
+        }]},
+        "13": {"index": 4, "imageinfo": [{
+            "url": "https://upload.example/doc.pdf", "mime": "application/pdf",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Doc.pdf",
+            "extmetadata": {"LicenseShortName": {"value": "CC0"}}
+        }]}
+    }}});
+    let found = commons::images(&body);
+    let pages: Vec<&str> = found.iter().map(|i| i.page.as_str()).collect();
+    assert_eq!(
+        pages,
+        [
+            "https://commons.wikimedia.org/wiki/File:Tray.jpg",
+            "https://commons.wikimedia.org/wiki/File:Roof.png"
+        ]
+    );
+    assert_eq!(found[1].author, "Emmanuel & Co");
+    assert_eq!((found[1].width, found[1].height), (1280, 853));
+    assert_eq!(
+        found[1].credit(),
+        "Emmanuel & Co · CC BY-SA 4.0 · [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Roof.png)"
+    );
+    assert_eq!(
+        found[0].credit(),
+        "Public domain · [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Tray.jpg)"
+    );
+}
+
+#[test]
+fn a_fetched_picture_s_type_comes_from_the_server_or_its_address() {
+    assert_eq!(
+        commons::picture_type("image/png", "https://x/a.jpg"),
+        ("image/png", "png")
+    );
+    assert_eq!(
+        commons::picture_type("", "https://x/a.PNG?utm_source=commons"),
+        ("image/png", "png")
+    );
+    assert_eq!(
+        commons::picture_type("application/octet-stream", "https://x/a"),
+        ("image/jpeg", "jpg")
+    );
 }

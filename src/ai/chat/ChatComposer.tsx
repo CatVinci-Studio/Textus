@@ -16,7 +16,7 @@ import {
   type PickerSkill,
 } from "./skill-picker";
 import { basename } from "../../utils/path";
-import { AGENT_MODES, type AgentMode } from "../../prefs/SettingsContext";
+import { AGENT_MODES, type PanelMode } from "../../prefs/SettingsContext";
 import {
   CloseIcon,
   GenericFileIcon,
@@ -86,6 +86,8 @@ export function ChatComposer({
   onStop,
   onEscape,
   onModeChange,
+  onResearch,
+  researchControls,
   handle,
   suggestion = null,
 }: ChatComposerProps) {
@@ -120,7 +122,8 @@ export function ChatComposer({
     input,
     dismissedInput,
     lang: picker.lang,
-    mode,
+    // Research has no skills: the message is a paper's topic.
+    mode: mode === "research" ? null : mode,
   });
 
   // @-mention picker ("@", or the "＠" a CJK IME types): picking a project
@@ -223,6 +226,12 @@ export function ChatComposer({
 
   function submit() {
     const typed = input.trim();
+    if (mode === "research") {
+      if (!typed || busy || !onResearch) return;
+      setInput("");
+      onResearch(typed);
+      return;
+    }
     const message = resolveSkillMessage(typed, skills, resolveName);
     // While a reply is coming the message joins the queue.
     if (!message) return;
@@ -300,15 +309,18 @@ export function ChatComposer({
   // The suggested next message, while the box is empty.
   const offered = !busy && input === "" ? suggestion : null;
 
-  const modeLabels: Record<AgentMode, [string, string]> = {
+  const modeLabels: Record<PanelMode, [string, string]> = {
     write: [labels.modeWrite, labels.modeWriteHint],
     review: [labels.modeReview, labels.modeReviewHint],
     create: [labels.modeCreate, labels.modeCreateHint],
+    research: [labels.modeResearch, labels.modeResearchHint],
   };
   // Quick Ask works on the selection: it writes or reviews, never creates.
-  const modes: ModeChoice[] = AGENT_MODES.filter(
-    (m) => !compact || m !== "create",
-  ).map((value) => ({
+  // Research is the panel's, where its paper is followed.
+  const modes: ModeChoice[] = [
+    ...AGENT_MODES.filter((m) => !compact || m !== "create"),
+    ...(onResearch ? (["research"] as const) : []),
+  ].map((value) => ({
     value,
     label: modeLabels[value][0],
     hint: modeLabels[value][1],
@@ -411,7 +423,9 @@ export function ChatComposer({
             placeholder={
               offered
                 ? `${offered}  (${labels.suggestionTab})`
-                : labels.placeholder
+                : mode === "research"
+                  ? labels.researchPlaceholder
+                  : labels.placeholder
             }
             value={input}
             onChange={(e) => {
@@ -427,7 +441,10 @@ export function ChatComposer({
             ) : (
               <ModePicker {...pickerProps} holdFocus={phone} />
             )}
-            {!compact && (
+            {/* A paper does its own research: no files, search or Deep
+                for it, only its own choices. */}
+            {mode === "research" && researchControls}
+            {!compact && mode !== "research" && (
               <>
                 <Tooltip text={labels.attachFile} side="above">
                   <button

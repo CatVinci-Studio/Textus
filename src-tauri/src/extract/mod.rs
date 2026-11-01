@@ -8,7 +8,7 @@ mod html;
 mod markdown;
 mod pptx;
 mod rtf;
-mod xml;
+pub(crate) mod xml;
 
 use std::path::Path;
 

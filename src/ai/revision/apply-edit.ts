@@ -8,7 +8,7 @@ import {
 
 /** Models often bullet lists with "•" and the like, which Markdown keeps as
  *  text; turned into "-" so lists arrive as lists. */
-function normalizeAiMarkdown(text: string): string {
+export function normalizeAiMarkdown(text: string): string {
   return text.replace(/^(\s*)[•●◦·]\s+/gm, "$1- ");
 }
 
