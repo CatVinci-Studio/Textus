@@ -342,7 +342,7 @@ export function parseManifest(raw: string | unknown): PluginManifest {
 }
 
 /** `%key%` looked up for `lang` (its own, then its base language's, then
- *  English); anything else as written. */
+ *  English, then any language that has it); anything else as written. */
 export function localize(
   manifest: Pick<PluginManifest, "l10n">,
   value: string,
@@ -354,6 +354,7 @@ export function localize(
     manifest.l10n[lang]?.[key] ??
     manifest.l10n[lang.split("-")[0]]?.[key] ??
     manifest.l10n.en?.[key] ??
+    Object.values(manifest.l10n).find((table) => key in table)?.[key] ??
     key
   );
 }

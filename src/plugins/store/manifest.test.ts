@@ -62,6 +62,12 @@ describe("a plugin's manifest", () => {
     );
     expect(localize(m, "%hello%", "fr")).toBe("Say hello");
     expect(localize(m, "Plain", "zh")).toBe("Plain");
+    const zhOnly = parseManifest({
+      ...base,
+      l10n: { zh: { hello: "打个招呼" } },
+    });
+    expect(localize(zhOnly, "%hello%", "fr")).toBe("打个招呼");
+    expect(localize(zhOnly, "%missing%", "fr")).toBe("missing");
   });
 
   it("refuses what would let a plugin take another's place or reach more", () => {

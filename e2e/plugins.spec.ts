@@ -277,43 +277,61 @@ test("a plugin reads the document's outline, and puts a status in the window bar
   await expect(page.locator(".app-dialog")).toContainText("Hello 1");
 });
 
-test("a plugin's strings come in the UI's language, from its manifest", async ({
-  page,
-}) => {
-  await page.addInitScript(
-    ({ manifest, host }) => {
-      if (window.top !== window) return;
-      const w = window as unknown as Record<string, unknown>;
-      w.__devPlugins = [
-        {
-          id: "test.hello",
-          dir: "/plugins/test.hello",
-          manifest: JSON.stringify(manifest),
-          dev: false,
-          files: { "host.js": host },
-        },
-      ];
-      w.__devPluginState = {
-        allOn: true,
-        plugins: {
-          "test.hello": { enabled: true, granted: manifest.permissions },
-        },
-      };
-    },
-    { manifest: MANIFEST, host: HOST },
-  );
+const LANGUAGE_CASES = [
   // Traditional Chinese has its own strings, not the Simplified ones.
-  await openApp(page, { settings: { language: "zh-Hant" } });
-  await emit(page, "menu-toggle-sidebar");
-  await page
-    .locator(".sidebar-tabs")
-    .getByRole("button", { name: "哈囉" })
-    .click();
-  const panel = page.frameLocator(".plugin-webview-frame");
-  await expect(panel.locator("#page")).toHaveText("來自page的問候");
-  await panel.locator("#l10n").click();
-  await expect(panel.locator("#out")).toHaveText("來自host的問候");
-});
+  {
+    name: "in the UI's language",
+    l10n: MANIFEST.l10n,
+    language: "zh-Hant",
+    texts: ["哈囉", "來自page的問候", "來自host的問候"],
+  },
+  // With no English, another language beats showing the bare keys.
+  {
+    name: "in a language it has when it lacks the UI's and English",
+    l10n: { zh: MANIFEST.l10n.zh },
+    language: "en",
+    texts: ["你好", "来自page的问候", "来自host的问候"],
+  },
+];
+
+for (const { name, l10n, language, texts } of LANGUAGE_CASES)
+  test(`a plugin's strings come ${name}, from its manifest`, async ({
+    page,
+  }) => {
+    const [tab, fromPage, fromHost] = texts;
+    await page.addInitScript(
+      ({ manifest, host }) => {
+        if (window.top !== window) return;
+        const w = window as unknown as Record<string, unknown>;
+        w.__devPlugins = [
+          {
+            id: "test.hello",
+            dir: "/plugins/test.hello",
+            manifest: JSON.stringify(manifest),
+            dev: false,
+            files: { "host.js": host },
+          },
+        ];
+        w.__devPluginState = {
+          allOn: true,
+          plugins: {
+            "test.hello": { enabled: true, granted: manifest.permissions },
+          },
+        };
+      },
+      { manifest: { ...MANIFEST, l10n }, host: HOST },
+    );
+    await openApp(page, { settings: { language } });
+    await emit(page, "menu-toggle-sidebar");
+    await page
+      .locator(".sidebar-tabs")
+      .getByRole("button", { name: tab })
+      .click();
+    const panel = page.frameLocator(".plugin-webview-frame");
+    await expect(panel.locator("#page")).toHaveText(fromPage);
+    await panel.locator("#l10n").click();
+    await expect(panel.locator("#out")).toHaveText(fromHost);
+  });
 
 test("a plugin's rename updates links without changing code examples", async ({
   page,

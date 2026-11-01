@@ -122,13 +122,19 @@ pub(crate) fn export_to(source: &Path, publisher: &str, folder: &Path) -> Result
     manifest["publisher"] = publisher.into();
     let pretty = serde_json::to_string_pretty(&manifest).map_err(|e| e.to_string())?;
     std::fs::write(target.join("textus-plugin.json"), pretty + "\n").map_err(|e| e.to_string())?;
-    // A "%key%" value is a string of its l10n, in English.
+    // A "%key%" value is a string of its l10n: English, else any language.
     let field = |key: &str| {
         let value = manifest[key].as_str().unwrap_or_default();
+        let text = |k: &str| {
+            let tables = manifest["l10n"].as_object()?;
+            std::iter::once(&manifest["l10n"]["en"])
+                .chain(tables.values())
+                .find_map(|table| table[k].as_str())
+        };
         value
             .strip_prefix('%')
             .and_then(|v| v.strip_suffix('%'))
-            .and_then(|k| manifest["l10n"]["en"][k].as_str())
+            .and_then(text)
             .unwrap_or(value)
             .to_string()
     };
@@ -218,6 +224,21 @@ mod tests {
         assert!(target.join(".gitignore").is_file());
         // Not over a folder already there.
         assert!(export_to(&source, "jane", &out).is_err());
+    }
+
+    #[test]
+    fn names_a_plugin_without_english_in_a_language_it_has() {
+        let tmp = tempfile::tempdir().unwrap();
+        let source = tmp.path().join("src");
+        plugin(&source);
+        let manifest = std::fs::read_to_string(source.join("textus-plugin.json"))
+            .unwrap()
+            .replace(r#""l10n":{"en":"#, r#""l10n":{"zh":"#)
+            .replace("Word Count", "字数统计");
+        std::fs::write(source.join("textus-plugin.json"), manifest).unwrap();
+        let target = export_to(&source, "jane", &tmp.path().join("out")).unwrap();
+        let readme = std::fs::read_to_string(target.join("README.md")).unwrap();
+        assert!(readme.starts_with("# 字数统计\n\nCounts."));
     }
 
     #[test]

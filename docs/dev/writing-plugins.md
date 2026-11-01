@@ -104,7 +104,7 @@ again when it changes. Uninstalling it moves the file to the Trash.
   editors - starts with the plugin's own id and a dot.
 - A string the user sees may be `%key%`, looked up in `l10n` for the
   interface's language, then its base language (`zh` for `zh-Hant`), then
-  English. The code reads the same table with `textus.l10n.t(key,
+  English, then any language that has it. The code reads the same table with `textus.l10n.t(key,
 ...args)`, a webview with `api.t(key, ...args)`; `{0}`, `{1}`… are the
   arguments. Textus speaks `en`, `zh`, `zh-Hant`, `ja`, `ko`, `es`, `fr`,
   `de`, `ru` and `pt`.
