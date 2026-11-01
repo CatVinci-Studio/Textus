@@ -16,6 +16,7 @@ import { lastCaret } from "./last-carets";
 import { isWordDocument } from "./word-import";
 import { loadPlugins } from "../plugins/manager";
 import { customEditorFor } from "../plugins/store/plugin-lookup";
+import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
 
 /** Whether a plugin opens `path` in a tab of its own (a PDF). */
 async function opensInPlugin(path: string): Promise<boolean> {
@@ -50,6 +51,32 @@ export interface StartupRestoreOptions {
   stopTutorial: () => void;
 }
 
+/** A kept tab as it was, its text read again from disk unless it had
+ *  unsaved text of its own; null once its file is gone. */
+async function keptTab(
+  kept: KeptTab,
+  language: string,
+): Promise<Partial<DocTab> | null> {
+  const shape = {
+    path: kept.path,
+    helpDoc: kept.helpDoc,
+    draftTitle: kept.draftTitle,
+    sourceMode: kept.sourceMode ?? false,
+  };
+  if (kept.text) return { ...shape, ...kept.text };
+  if (kept.helpDoc) {
+    const content = await helpDocContent(kept.helpDoc, language);
+    return { ...shape, content, savedContent: content };
+  }
+  if (!kept.path) return null;
+  try {
+    const { content, diskMtime } = await readDocFromDisk(kept.path);
+    return { ...shape, content, savedContent: content, diskMtime };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Everything that can claim this window's initial blank tab at launch, in
  * priority order. Runs once per window: later option changes must not
@@ -78,6 +105,33 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       if (at) setTabJump(opts.activeTabId, { kind: "caret", at });
     };
     void (async () => {
+      // The page reloaded: the window gets back what it had. Everything
+      // below was handed out at its first start.
+      const kept = readKeptTabs();
+      if (kept) {
+        opts.stopTutorial();
+        const docs = await Promise.all(
+          kept.tabs.map((tab) => keptTab(tab, opts.language)),
+        );
+        const active = docs[kept.active];
+        if (active?.path) restoreCaret(active.path, active.diskMtime ?? null);
+        opts.setTabs((prev) => {
+          const initial = prev.find((tab) => tab.id === opts.activeTabId);
+          if (!initial) return prev;
+          return docs.flatMap((doc, i) => {
+            if (i === kept.active)
+              return [
+                {
+                  ...initial,
+                  ...(doc ?? {}),
+                  reloadKey: initial.reloadKey + 1,
+                },
+              ];
+            return doc ? [{ ...makeBlankTab(), ...doc }] : [];
+          });
+        });
+        return;
+      }
       // A tab dragged out of another window. Checked first: the draft drain
       // below would otherwise re-add it, since its source window clears its
       // snapshot asynchronously.
@@ -239,6 +293,6 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         if (!isIOSApp) opts.startTutorial(opts.activeTabId);
         opts.markOnboardingShown();
       }
-    })();
+    })().finally(keptTabsRestored);
   }, [latest]);
 }
