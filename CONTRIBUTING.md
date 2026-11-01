@@ -188,7 +188,7 @@ A few things make a pull request easy for us to say yes to:
   on purpose, and asks the maintainers for a review: we take it from there.
 
 CI has to pass before we can merge, and a maintainer reviews
-every pull request. We try to answer within a few days. If we haven't, a
+every pull request ([who can do what](docs/dev/roles.md)). We try to answer within a few days. If we haven't, a
 friendly nudge on the pull request is welcome - it usually means it slipped
 past us, not that we're ignoring you.
 
