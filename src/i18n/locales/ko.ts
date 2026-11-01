@@ -392,6 +392,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   paperSectionRevising: "수정 중",
   paperSectionFailed: "실패",
   paperOutlineRetry: "{n}번째 안: 이전 안이 검사를 통과하지 못해 다시 짜는 중…",
+  paperPapersOnly:
+    "웹 검색을 쓸 수 없어 이 논문의 조사는 학술 논문(OpenAlex, arXiv)과 자료실만 검색합니다.",
   paperProposed:
     "논문을 문서 끝에 제안했습니다. 거기서 확인한 뒤 승인하거나 거절하세요.",
   paperProposedCard: "문서 끝에 제안했습니다.",

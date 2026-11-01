@@ -265,6 +265,12 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
  */
 { type: "thinking"; text: string } | 
 /**
+ *  Whether research can search the web: false when the model has no
+ *  search of its own and Settings names no search service, so only the
+ *  scholarly indexes and the user's library are searched.
+ */
+{ type: "webSearch"; available: boolean } | 
+/**
  *  The research questions the topic was split into, in the order the
  *  helpers take them.
  */
@@ -310,6 +316,12 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
  *  it so far, sent a few times a second at most.
  */
 { type: "thinking"; text: string } | 
+/**
+ *  Whether research can search the web: false when the model has no
+ *  search of its own and Settings names no search service, so only the
+ *  scholarly indexes and the user's library are searched.
+ */
+{ type: "webSearch"; available: boolean } | 
 /**
  *  The research questions the topic was split into, in the order the
  *  helpers take them.

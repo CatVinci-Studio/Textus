@@ -73,6 +73,8 @@ export interface PaperRunState {
   } | null;
   /** The tail of what each section's writer has written so far. */
   sectionText: Record<number, string>;
+  /** False when research can't search the web; null until it says. */
+  webSearch: boolean | null;
 }
 
 const NEW_RUN: PaperRunState = {
@@ -91,6 +93,7 @@ const NEW_RUN: PaperRunState = {
   phaseSince: 0,
   outlineDraft: null,
   sectionText: {},
+  webSearch: null,
 };
 
 const runs = new Map<string, PaperRunState>();
@@ -141,6 +144,8 @@ export function applyPaperEvent(key: string, event: PaperEvent) {
         return {
           sectionText: { ...run.sectionText, [event.index]: event.text },
         };
+      case "webSearch":
+        return { webSearch: event.available };
       case "thinking":
         return { thinking: event.text };
       case "questions":

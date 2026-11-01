@@ -417,6 +417,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   paperSectionFailed: "Falhou",
   paperOutlineRetry:
     "Versão {n}: a anterior não passou nas verificações; está sendo refeita…",
+  paperPapersOnly:
+    "Não há busca na web disponível: a pesquisa só busca artigos acadêmicos (OpenAlex, arXiv) e sua biblioteca.",
   paperProposed:
     "O artigo foi proposto no fim do documento. Revise-o lá e aceite ou rejeite.",
   paperProposedCard: "Proposto no fim do documento.",

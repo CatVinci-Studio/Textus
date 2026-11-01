@@ -522,3 +522,10 @@
     animation: none;
   }
 }
+
+.paper-card-warning {
+  padding: 4px 8px;
+  border-radius: var(--shape-s);
+  background: var(--ui-subtle);
+  color: var(--ui-text);
+}

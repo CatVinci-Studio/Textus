@@ -268,6 +268,15 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
           </p>
         )
       )}
+      {run?.webSearch === false &&
+        busy &&
+        (run.phase === "starting" ||
+          run.phase === "planning" ||
+          run.phase === "researching") && (
+          <p className="paper-card-note paper-card-warning">
+            {t.paperPapersOnly} {t.webSearchNeedsService}
+          </p>
+        )}
       {run && busy && <PaperActivityView run={run} t={t} />}
       {running && (
         <div className="paper-card-actions">

@@ -201,10 +201,14 @@ pub async fn ai_paper_run(
     );
     let service =
         crate::ai::web::resolve_service(&app, search_service.as_deref(), searxng_url.as_deref());
+    let can_search = native.is_some() || service.is_some();
     let web = crate::ai::web::WebPlan::new(true, native, service, &[]).with_budget(budget.clone());
     let send = |event: PaperEvent| {
         let _ = channel.send(event);
     };
+    send(PaperEvent::WebSearch {
+        available: can_search,
+    });
     crate::ai::cancel::cancellable(request_id, async {
         let agent =
             crate::ai::route::agent_provider(&app, entry, model, Default::default(), native)
