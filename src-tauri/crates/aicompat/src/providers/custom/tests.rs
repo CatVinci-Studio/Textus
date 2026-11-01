@@ -720,3 +720,20 @@ fn gemini_thoughts_in_the_text_stream_as_thinking() {
     );
     assert!(matches!(step, StepResult::Done(text) if text == "The second."));
 }
+
+#[test]
+fn opencode_gets_a_steady_session_id_and_others_none() {
+    let client = reqwest::Client::new();
+    let request = |base: &str| {
+        with_key(client.post(chat_completions_url(base)), base, "k")
+            .build()
+            .unwrap()
+    };
+    let first = request("https://opencode.ai/zen/go/v1");
+    let again = request("https://opencode.ai/zen/go/v1");
+    let session = first.headers().get("x-opencode-session").unwrap();
+    assert!(session.to_str().unwrap().starts_with("textus-"));
+    assert_eq!(Some(session), again.headers().get("x-opencode-session"));
+    let other = request("https://api.deepseek.com/v1");
+    assert!(other.headers().get("x-opencode-session").is_none());
+}
