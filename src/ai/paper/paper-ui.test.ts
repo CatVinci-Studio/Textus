@@ -9,4 +9,10 @@ describe("a section's preview", () => {
       ),
     ).toBe("Heat\n\nRoofs cool streets [3].\n\nMore.");
   });
+
+  it("numbers citations as the paper does", () => {
+    expect(
+      previewText("A [93](https://a.example/x).", new Map([[93, 1]])),
+    ).toBe("A [1].");
+  });
 });

@@ -193,7 +193,7 @@ fn live_paper() {
             *section = finish::without_pictures(section);
         }
         let figures = finish::number_figures(&mut sections, &paper.language);
-        let mut dossier = dossier;
+        let mut dossier = finish::number_citations(&mut sections, &dossier);
         finish::title_sources(&mut dossier).await;
         let references = finish::references(&sections, &dossier, &paper.language);
         let sections: Vec<String> = sections
