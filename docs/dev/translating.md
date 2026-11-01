@@ -153,7 +153,7 @@ the things to do, one line each. Keep them that short in your language.
   `grammarApply`, `agentTabMemory`.
 - Lesson titles follow the website's names for the features
   (`site/i18n/<code>.mjs` in the
-  [website repository](https://github.com/CatVinci-Studio/levis-homepage/tree/main/site/i18n),
+  [website repository](https://github.com/CatVinci-Studio/textus-website/tree/main/site/i18n),
   its `writing` and `ai` sections).
 - `tutorialSkillsTask` names two built-in skills as the learner would type
   them, `/word` in backticks: a label or alias of `tighten` and of

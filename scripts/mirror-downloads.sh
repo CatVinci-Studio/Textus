@@ -2,7 +2,7 @@
 # Copies a release's installers from GitHub to our own R2 bucket
 # (textus-downloads), so the site's download buttons don't depend on GitHub,
 # which is slow or unreachable from some networks. The site
-# (CatVinci-Studio/levis-homepage) reads manifest.json through its
+# (CatVinci-Studio/textus-website) reads manifest.json through its
 # functions/download/[[path]].js and falls back to GitHub; the updater,
 # Homebrew and Arch keep using the GitHub release. Which file goes under
 # which of manifest.json's keys is scripts/mirror-keys.mjs.
