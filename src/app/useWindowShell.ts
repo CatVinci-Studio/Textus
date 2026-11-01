@@ -33,10 +33,8 @@ export function useWindowShell({
   const appUpdate = useAppUpdate(settings.updateChannel);
   useZoom(settings.zoom, (zoom) => setSettings({ zoom }));
   const tutorial = useTutorial(textusAi.on);
-  const evaluateTutorialDocumentChange = useTutorialDocumentEvaluation(
-    tutorial,
-    settings.language,
-  );
+  const evaluateTutorialDocumentChange =
+    useTutorialDocumentEvaluation(tutorial);
   const cancelDraftFlushes = useDraftAutosave(
     tabState.tabs,
     settings.enableDraftRecovery,

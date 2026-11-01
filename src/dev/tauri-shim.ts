@@ -571,8 +571,14 @@ export function installDevTauriShim(): void {
         return Promise.resolve([...recents.files]);
       case "list_recent_folders":
         return Promise.resolve([...recents.folders]);
+      // Files opened from outside before the window was ready: none here. The
+      // native side always answers with a list.
+      case "take_pending_open_paths":
+        return Promise.resolve([]);
     }
-    if (!files) return null;
+    // No fake folder: the folder of a document opened anyway (dropped in,
+    // `__devFiles`) lists as empty, as the native side never answers null.
+    if (!files) return cmd === "list_dir" ? Promise.resolve([]) : null;
     const path = String(args.path ?? args.root ?? "");
     switch (cmd) {
       case "read_text_file":
@@ -1354,7 +1360,11 @@ export function installDevTauriShim(): void {
       w[`_${id}`] = cb ?? (() => {});
       return id;
     },
-    unregisterCallback: () => {},
+    // As the real runtime, a callback let go is gone: kept, it held its
+    // listener's closure - a closed editor with all its document - for good.
+    unregisterCallback: (id: number) => {
+      delete w[`_${id}`];
+    },
     plugins: {},
   };
   // Without this, StrictMode's remount leaves stale handlers that one emit
@@ -1365,6 +1375,7 @@ export function installDevTauriShim(): void {
         event,
         (listeners.get(event) ?? []).filter((h) => h !== id),
       );
+      delete w[`_${id}`];
     },
   };
   // For an e2e mock that plays the model: calls named and settled as the backend would.

@@ -603,6 +603,8 @@ utiliser une.
   alertImportant: "Important",
   alertWarning: "Avertissement",
   alertCaution: "Attention",
+  tocLabel: "Table des matières",
+  tocEmpty: "Aucun titre pour l’instant",
   settingsTitle: "Réglages",
   settingsSearchPlaceholder: "Rechercher dans les réglages",
   settingsSearchResults: "Résultats de la recherche",
@@ -1176,6 +1178,13 @@ utiliser une.
   imageAlignLabel: "Images seules sur leur ligne",
   imageAlignCenter: "Centrées",
   imageAlignLeft: "À gauche",
+  docTextSizeLabel: "Taille du texte",
+  docTextSizeAuto: "Celle du thème",
+  docLineSpacingLabel: "Interligne",
+  docLineSpacingAuto: "Celui du thème",
+  docLineSpacingCompact: "Serré",
+  docLineSpacingStandard: "Standard",
+  docLineSpacingRelaxed: "Aéré",
   uiTextScaleLabel: "Taille du texte de l'interface",
   newDocumentModeLabel: "Ouvrir les documents dans",
   newDocumentModeWindow: "Une nouvelle fenêtre",
@@ -1217,38 +1226,6 @@ utiliser une.
     "Une liste : `- Monseigneur Bienvenu`, Entrée, `Mademoiselle Baptistine`",
   tutorialWysiwygNumbered: "Une liste numérotée : `1. Livre premier`",
   tutorialWysiwygTaskItem: "Une tâche : `- [ ] Finir le tome I`",
-  tutorialMarksTitle: "Gras, citations, code et liens",
-  tutorialMarksBody:
-    "Vos notes sur le livre premier sont en dessous ; tapez ces lignes à la fin.",
-  tutorialMarksEmphasis:
-    "Gras et italique : `Myriel est **bon** et *modeste*.`",
-  tutorialMarksQuote:
-    "Une citation : `> C'était un vieillard d'environ soixante-quinze ans.`",
-  tutorialMarksCode: "Du code : ``Relire le `livre I`.``",
-  tutorialMarksLink: "Un lien : `[Gutenberg](https://gutenberg.org)`",
-  tutorialTableTitle: "Tableaux",
-  tutorialTableBody:
-    "Une ligne de cellules entre des | devient un tableau quand vous appuyez sur Entrée.",
-  tutorialTableHeader: "Tapez `| Personnage | Impression |`, puis Entrée",
-  tutorialTableRow: "Remplissez une ligne : `Myriel`, Tab, `Bon`",
-  tutorialBlocksTitle: "Formules et diagrammes",
-  tutorialBlocksBody:
-    "Facultatif : quelques caractères font une formule, quelques lignes un diagramme.",
-  tutorialBlocksFormula: "Une formule : `$E=mc^2$`",
-  tutorialBlocksDiagram:
-    "Un diagramme : ```` ```mermaid ````, Entrée, puis `graph LR; A-->B`",
-  tutorialModesTitle: "Modes d'écriture et thèmes",
-  tutorialModesBody: "Écrivez autrement, changez de look.",
-  tutorialModesTask: "Activez le mode zen, puis choisissez un autre thème.",
-  tutorialSidebarTitle: "Barre latérale et export",
-  tutorialSidebarBody:
-    "La barre latérale contient vos fichiers, le plan et le presse-papiers ; pour exporter, passez par Fichier › Exporter.",
-  tutorialSidebarTask:
-    "Cliquez sur le menu ☰ en haut à gauche, choisissez Présentation › Barre latérale ({shortcut}), puis ouvrez Plan",
-  tutorialSidebarTaskMac:
-    "Dans la barre des menus, choisissez Présentation › Barre latérale ({shortcut}), puis ouvrez Plan",
-  tutorialSidebarTaskPhone:
-    "Touchez le menu ☰ en haut à gauche, puis Barre latérale, et ouvrez Plan",
   tutorialPaletteTitle: "Palette de commandes",
   tutorialPaletteBody:
     "Toutes les commandes des menus, trouvées en tapant quelques lettres.",
@@ -1276,38 +1253,15 @@ utiliser une.
     "Ouvrez le panneau IA : touchez l'icône de la plume, en haut",
   tutorialWriteSend:
     "Envoyez `Ajoute un paragraphe à mes notes`, puis cliquez sur Accepter",
-  tutorialReviewTitle: "Relecture",
-  tutorialReviewBody:
-    "En mode Relire, il commente dans la marge sans toucher à votre texte.",
-  tutorialReviewTask:
-    "Envoyez `Commente mes notes`, puis lisez les notes dans la marge",
-  tutorialRevisionTitle: "Révision",
-  tutorialRevisionBody:
-    "En mode Écrire, il réécrit aussi, et vous décidez phrase par phrase.",
-  tutorialRevisionSelect: "Sélectionnez la première phrase de vos notes",
-  tutorialRevisionSend:
-    "Envoyez `Rends-la plus concise`, puis choisissez Accepter ou Refuser",
-  tutorialGrammarTitle: "Vérification grammaticale",
-  tutorialGrammarBody: "Les fautes sont soulignées pendant que vous écrivez.",
-  tutorialGrammarType: "Sur une nouvelle ligne à la fin, tapez `{slip}`",
-  tutorialGrammarApply:
-    "Attendez le soulignement, survolez-le et cliquez sur Appliquer",
-  tutorialGrammarApplyPhone:
-    "Attendez le soulignement, touchez-le, puis Appliquer",
-  tutorialGrammarQuiet:
-    "Cette fois, l'IA n'a rien trouvé à corriger. Vous pouvez continuer.",
   tutorialContinuationTitle: "Complétion",
   tutorialContinuationBody: "Marquez une pause, il écrit la suite.",
   tutorialContinuationTask:
     "À la fin, tapez `Ce que Hugo veut montrer, c'est`, faites une pause, puis appuyez sur Tab",
   tutorialContinuationTaskPhone:
     "À la fin, tapez `Ce que Hugo veut montrer, c'est`, faites une pause, puis touchez le texte gris",
-  tutorialSkillsTitle: "Compétences",
-  tutorialSkillsBody:
-    "Tapez / dans le panneau IA pour en choisir une, ou trouvez-en d’autres dans Extensions.",
-  tutorialSkillsTask: "Sélectionnez une de vos notes, puis envoyez `/relire`",
   tutorialDoneTitle: "Terminé",
-  tutorialDoneBody: "À vous d'écrire, maintenant.",
+  tutorialDoneBody:
+    "À vous d'écrire, maintenant ; tableaux, formules, thèmes, relecture et le reste sont dans les Tutoriels vidéo.",
   tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez l'onglet Projet du panneau IA.`,
   closePromptMessage:
     "Ce document contient des modifications non enregistrées.",
@@ -1440,10 +1394,6 @@ utiliser une.
   exportFailedTitle: "Échec de l'export",
   exportFailed: "Échec de l'export\u00a0:",
   themeNameDefault: "Par défaut",
-  themeNamePaper: "Papier",
-  themeNameSlate: "Ardoise",
-  themeNameForest: "Forêt",
-  themeNameParchment: "Parchemin",
   appearanceLabel: "Apparence",
   appearanceSystem: "Selon le système",
   appearanceLight: "Clair",

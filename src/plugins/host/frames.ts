@@ -1,5 +1,16 @@
 import webviewRuntime from "./runtime/webview.js?raw";
+import componentsCss from "../../ui/components.css?raw";
+import designSystemCss from "../../ui/design-system.css?raw";
+import motionCss from "../../ui/motion.css?raw";
 import pluginUiCss from "./runtime/plugin-ui.css?raw";
+
+/** The window's own stylesheets, as one: a plugin page's controls are the
+ *  app's, from the same rules. Their @imports are inlined here. */
+const SHARED_CSS = [
+  motionCss,
+  designSystemCss.replace(/^@import [^;]+;$/gm, ""),
+  componentsCss,
+].join("\n");
 import { createEndpoint, type Endpoint, type Handlers } from "./rpc";
 
 /**
@@ -67,6 +78,7 @@ export function webviewDocument(
     `<meta http-equiv="Content-Security-Policy" content="${webviewCsp(options.frameHosts)}">`,
     `<style id="textus-theme">${inElement(options.themeCss, "style")}</style>`,
     `<style id="textus-ui">${inElement(pluginUiCss, "style")}</style>`,
+    `<style id="textus-shared">${inElement(SHARED_CSS, "style")}</style>`,
     `<script type="application/json" id="textus-locale">${inElement(locale, "script")}</script>`,
     `<script>${inElement(`${RPC_SOURCE}\n${webviewRuntime}`, "script")}</script>`,
   ].join("\n");
@@ -79,10 +91,18 @@ export function webviewDocument(
       head +
       html.slice(at.index + at[0].length)
     : `<!doctype html><html><head>${head}</head><body>${html}</body></html>`;
+  // The window's platform too, so the shared controls take the phone's
+  // sizes on a phone.
+  const { windowChrome, platform } = document.documentElement.dataset;
+  const platformAttrs = [
+    windowChrome ? ` data-window-chrome="${windowChrome}"` : "",
+    platform ? ` data-platform="${platform}"` : "",
+  ].join("");
   return page.replace(/<html(\s[^>]*)?>/i, (tag) =>
-    /data-theme=/i.test(tag)
-      ? tag
-      : tag.replace(/>$/, ` data-theme="${theme}">`),
+    tag.replace(
+      />$/,
+      `${/data-theme=/i.test(tag) ? "" : ` data-theme="${theme}"`}${platformAttrs}>`,
+    ),
   );
 }
 

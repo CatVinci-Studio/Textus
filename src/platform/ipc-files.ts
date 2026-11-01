@@ -114,12 +114,13 @@ export const fs = {
       endpoint,
       urlField,
     ),
-  /** The file an Obsidian image embed names in the document's vault, or null. */
-  resolveVaultImage: (docPath: string, link: string) =>
-    command("resolve_vault_image", docPath, link),
+  /** The file an Obsidian image embed names in the document's vault, or
+   *  null; `folder` is the one open in the window. */
+  resolveVaultImage: (docPath: string, link: string, folder: string | null) =>
+    command("resolve_vault_image", docPath, link, folder),
   /** The note an Obsidian wikilink names in the document's vault, or null. */
-  resolveVaultNote: (docPath: string, link: string) =>
-    command("resolve_vault_note", docPath, link),
+  resolveVaultNote: (docPath: string, link: string, folder: string | null) =>
+    command("resolve_vault_note", docPath, link, folder),
   /** `sourceDocPath`: the file a Save As started from, whose relative
    *  images are copied along. */
   migrateDraftImages: (

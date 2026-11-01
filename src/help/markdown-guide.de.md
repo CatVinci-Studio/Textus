@@ -25,6 +25,10 @@ Hinweise im GitHub-Stil:
 
 **Fett** (`**Text**`), *kursiv* (`*Text*`), ***fett und kursiv***, ~~durchgestrichen~~ (`~~Text~~`), ==hervorgehoben== (`==Text==`) und `Inline-Code`.
 
+Emoji-Kurzcodes wie auf GitHub erscheinen als Emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). Die Datei behält den Kurzcode; setzen Sie den Cursor darauf, um ihn zu bearbeiten.
+
+Tief- und Hochstellung wie in Typora und Pandoc: H~2~O (`H~2~O`), x^2^ (`x^2^`); ohne Leerzeichen dazwischen.
+
 Tippst du `(`, `[`, `{`, ein Anführungszeichen oder eine Klammer aus einer chinesischen oder japanischen Eingabemethode wie `（`, `【` oder `「`, kommt das schließende Gegenstück hinter den Cursor: Das getippte Schlusszeichen springt darüber, Rücktaste direkt nach dem öffnenden löscht beide, und markierter Text wird eingeschlossen. **Einstellungen → Editor & Design → (), [] und „“ schließen** schaltet das ab.
 
 Links sehen so aus: [das Textus-Repository](https://github.com/CatVinci-Studio/Textus). Mit Strg/⌘+Klick folgst du einem Link: Ein Weblink öffnet sich im Browser, ein Link auf eine andere Markdown-Datei öffnet sie in einem Tab, und ein Link auf `#eine-überschrift` scrollt dorthin. Ein einfacher Klick setzt den Cursor in den Link und zeigt sein Markdown, `[Text](URL)`, zum Bearbeiten an Ort und Stelle; verlässt der Cursor ihn, ist er wieder ein Link. Auch HTML im Text wird dargestellt, etwa Tasten wie <kbd>Cmd</kbd> + <kbd>S</kbd>. Ebenso aufklappbare `<details>`-Blöcke, HTML-Tabellen, einige Inline-Stile (Farbe, Hintergrund, Größe, Stärke, Ausrichtung, Unter- und Durchstreichung) und eingebettetes `<svg>`, das als Bild erscheint. Skripte und anderes HTML bleiben als Quelltext stehen. Ein Link auf eine Überschrift in einer anderen Datei, etwa `[siehe](notizen.md#eine-überschrift)`, öffnet diese Datei an der Überschrift. Obsidian-Wikilinks (`[[Notiz]]`, `[[Notiz|Text]]` und `[[Notiz#Überschrift]]`) öffnen sich genauso, aus dem Ordner des Dokuments oder von überall in seinem Vault; sie und `#Tags` am Zeilenanfang werden genau so gespeichert, wie sie geschrieben sind.
@@ -212,5 +216,7 @@ Fußnoten sehen so aus[^1], und darunter folgt eine horizontale Trennlinie:
 ---
 
 [^1]: Der Inhalt der Fußnoten wird am Ende des Dokuments gesammelt.
+
+Tippen Sie `[TOC]` allein in eine Zeile und drücken Sie die Eingabetaste, um ein Inhaltsverzeichnis einzufügen: Es listet die Überschriften des Dokuments auf und folgt Ihren Änderungen; ein Klick springt zur Überschrift.
 
 Viel Freude beim Schreiben.

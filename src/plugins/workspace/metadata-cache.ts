@@ -6,6 +6,7 @@ import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import { basename, dirname } from "../../utils/path";
 import {
   emitPluginEvent,
+  getWindowAccess,
   onPluginEvent,
   type PluginLocation,
 } from "../app-bridge";
@@ -48,17 +49,37 @@ interface FolderIndex {
   root: string;
   documents: MetaDocument[];
   byPath: Map<string, MetaDocument>;
+  paths: PathIndex;
 }
 
 const norm = (path: string) => path.replace(/\\/g, "/");
 const stem = (name: string) =>
   name.replace(/\.(md|markdown)$/i, "").toLowerCase();
 
+/** A folder's paths looked up by name and by path, built once per index:
+ *  a big folder's links each found in one step, not by a walk over every
+ *  file. */
+export interface PathIndex {
+  byStem: Map<string, string[]>;
+  byPath: Map<string, string>;
+}
+
+export function pathIndex(paths: readonly string[]): PathIndex {
+  const byStem = new Map<string, string[]>();
+  for (const p of paths) {
+    const key = stem(basename(p));
+    const same = byStem.get(key);
+    if (same) same.push(p);
+    else byStem.set(key, [p]);
+  }
+  return { byStem, byPath: new Map(paths.map((p) => [norm(p), p])) };
+}
+
 /** Where `link`, written in the document at `from`, goes among `paths`:
  *  a [[wiki link]] by name (the nearest when several share it), anything
  *  else as a path relative to `from`'s folder. */
 export function resolveIn(
-  paths: readonly string[],
+  paths: PathIndex,
   link: string,
   from: string,
   wiki: boolean,
@@ -74,7 +95,7 @@ export function resolveIn(
   const fromDir = norm(dirname(from));
   if (wiki || !decoded.includes("/")) {
     const want = stem(basename(decoded));
-    const matches = paths.filter((p) => stem(basename(p)) === want);
+    const matches = paths.byStem.get(want) ?? [];
     if (wiki || !/\.\w+$/.test(decoded) || matches.length) {
       if (!matches.length) return null;
       // The one nearest the linking document: its own folder first.
@@ -91,18 +112,17 @@ export function resolveIn(
     else parts.push(part);
   }
   const target = parts.join("/");
-  const known = new Map(paths.map((p) => [norm(p), p]));
   return (
-    known.get(target) ??
-    known.get(`${target}.md`) ??
-    known.get(`${target}.markdown`) ??
+    paths.byPath.get(target) ??
+    paths.byPath.get(`${target}.md`) ??
+    paths.byPath.get(`${target}.markdown`) ??
     null
   );
 }
 
 export function documentOf(
   meta: PluginDocumentMeta,
-  paths: readonly string[],
+  paths: PathIndex,
 ): MetaDocument {
   let frontmatter: Frontmatter = {};
   if (meta.frontmatter)
@@ -147,13 +167,14 @@ export async function folderIndex(
   if (pending) return pending;
   pending = (async () => {
     const { documents, changed } = await pluginsIpc.metadataAll(asker, root);
-    const paths = documents.map((d) => d.path);
+    const paths = pathIndex(documents.map((d) => d.path));
     const docs = documents.map((d) => documentOf(d, paths));
     const first = current?.root !== root;
     current = {
       root,
       documents: docs,
       byPath: new Map(docs.map((d) => [norm(d.path), d])),
+      paths,
     };
     if (!first && changed.length)
       emitPluginEvent("metadata", { paths: changed });
@@ -207,8 +228,9 @@ export function tasksIn(
 // Keeping it up to date
 // ---------------------------------------------------------------------------
 
-/** The plugins listening for changes, and the folder they asked about. */
-const watchers = new Map<string, string>();
+/** The plugins listening for changes: kept for the window's folder as it
+ *  is when something changes, so one opened or switched later counts too. */
+const watchers = new Set<string>();
 let timer: ReturnType<typeof setTimeout> | null = null;
 let stopWatching: (() => void) | null = null;
 
@@ -216,14 +238,15 @@ function soon() {
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {
     timer = null;
-    const [asker, root] = [...watchers][0] ?? [];
+    const [asker] = watchers;
+    const root = getWindowAccess()?.rootPath();
     if (asker && root) void folderIndex(asker, root).catch(() => {});
   }, 400);
 }
 
-/** A plugin listens to metadata.onDidChange for `root`. */
-export function watchMetadata(plugin: string, root: string): void {
-  watchers.set(plugin, root);
+/** A plugin listens to metadata.onDidChange, a folder open or not yet. */
+export function watchMetadata(plugin: string): void {
+  watchers.add(plugin);
   if (stopWatching) return;
   const onWritten = () => soon();
   window.addEventListener(FILE_WRITTEN_EVENT, onWritten);

@@ -149,3 +149,30 @@ test("the block cursor is there from the start, and in a tab opened later", asyn
   await page.locator(editor).click();
   await expect(page.locator(editor)).toHaveClass(/plugin-cursor-block/);
 });
+
+test("zz, zt and zb bring the caret's line to the middle, top and bottom", async ({
+  page,
+}) => {
+  const lines = Array.from({ length: 80 }, (_, i) => `Line ${i + 1}`);
+  await open(page, lines.join("\n\n"));
+  await keys(page, ["4", "0", "j"]);
+  const where = () =>
+    page.evaluate(() => {
+      const scroller = document.querySelector(
+        '[data-active-tab="true"] .editor-scroll',
+      )!;
+      const caret = document.querySelector(
+        '[data-active-tab="true"] .plugin-block-cursor',
+      )!;
+      const box = scroller.getBoundingClientRect();
+      const line = caret.getBoundingClientRect();
+      return (line.top + line.height / 2 - box.top) / box.height;
+    });
+  await keys(page, ["z", "z"]);
+  await expect.poll(where).toBeGreaterThan(0.4);
+  expect(await where()).toBeLessThan(0.6);
+  await keys(page, ["z", "t"]);
+  await expect.poll(where).toBeLessThan(0.15);
+  await keys(page, ["z", "b"]);
+  await expect.poll(where).toBeGreaterThan(0.85);
+});

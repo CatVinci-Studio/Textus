@@ -45,7 +45,6 @@ export function EditorChatPortals({
             t={t}
             settings={settings}
             filePath={filePath}
-            onSkillUsed={review.onSkillUsed}
             tourMode={tourMode}
             agentPanel={chat.agentPanel}
             conversation={chat.conversation}
@@ -89,7 +88,6 @@ export function EditorChatPortals({
             defaultMode="write"
             selectionChip={chat.quickChipHandlers}
             defaultWebSearch={settings.enableWebSearch}
-            onSkillUsed={review.onSkillUsed}
             labels={chatLabels(t, settings.language)}
             onProposals={chat.proposals.showProposals}
             proposalStatus={pendingEdits.status}

@@ -2,7 +2,8 @@
 
 Everything outside this repository that keeps Textus running: the other
 repositories, the automation, the website and downloads, and the secrets the
-workflows use. If you're a maintainer taking something over, start here. No
+workflows use. If you're a maintainer taking something over, start here;
+who can do what is in [roles.md](roles.md). No
 secret values are in this file - only what each one is for and how to replace
 it.
 
@@ -10,14 +11,16 @@ it.
 
 All under the [CatVinci-Studio](https://github.com/CatVinci-Studio) organization.
 
-| Repository                                                                | What it is                                                                                                        |
-| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| [Textus](https://github.com/CatVinci-Studio/Textus)                       | The app. `main` is the next version, `stable` the released one; older versions are tags (Levis 0.9.8 is `v0.9.8`) |
-| [textus-themes](https://github.com/CatVinci-Studio/textus-themes)         | The theme gallery: themes shared through issue #1, reviewed with `/approve`                                       |
-| [homebrew-tap](https://github.com/CatVinci-Studio/homebrew-tap)           | Retired: its `tap_migrations.json` moves old tap installs to Homebrew's official `textus` cask                    |
-| [arch-repo](https://github.com/CatVinci-Studio/arch-repo)                 | The signed `[catvinci]` pacman repository that serves `textus-bin`                                                |
-| [levis-homepage](https://github.com/CatVinci-Studio/levis-homepage)       | textus.catvinci.com (the old name stuck)                                                                          |
-| [catvinci-homepage](https://github.com/CatVinci-Studio/catvinci-homepage) | catvinci.com                                                                                                      |
+| Repository                                                                      | What it is                                                                                                        |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [Textus](https://github.com/CatVinci-Studio/Textus)                             | The app. `main` is the next version, `stable` the released one; older versions are tags (Levis 0.9.8 is `v0.9.8`) |
+| [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)             | The official plugins and the market's catalog; merging to `main` publishes them                                   |
+| [textus-plugin-sample](https://github.com/CatVinci-Studio/textus-plugin-sample) | A plugin to copy when starting one                                                                                |
+| [textus-themes](https://github.com/CatVinci-Studio/textus-themes)               | The theme gallery: themes shared through issue #1, reviewed with `/approve`                                       |
+| [homebrew-tap](https://github.com/CatVinci-Studio/homebrew-tap)                 | Retired: its `tap_migrations.json` moves old tap installs to Homebrew's official `textus` cask                    |
+| [arch-repo](https://github.com/CatVinci-Studio/arch-repo)                       | The signed `[catvinci]` pacman repository that serves `textus-bin`                                                |
+| [textus-website](https://github.com/CatVinci-Studio/textus-website)             | textus.catvinci.com                                                                                               |
+| [catvinci-homepage](https://github.com/CatVinci-Studio/catvinci-homepage)       | catvinci.com                                                                                                      |
 
 ## Automation
 
@@ -101,9 +104,10 @@ through the API leaves the DNS record behind and takes the site down.
 
 ## Secrets
 
-Stored in **Settings › Secrets and variables › Actions** of this repository.
-Losing or letting one expire stops a release, so each line says how to
-replace it.
+Stored in the repository's **release** environment (**Settings ›
+Environments › release**), which only `v*` and `ios-v*` tags - pushed by
+owners ([roles.md](roles.md)) - can run jobs in. Losing or letting one expire
+stops a release, so each line says how to replace it.
 
 | Secret                                                      | Used by                        | Where it comes from, and how to replace it                                                                                            |
 | ----------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |

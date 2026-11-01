@@ -30,6 +30,9 @@ jobs:
   mirror-downloads:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
+    # The Cloudflare token lives in the release environment, which only
+    # runs from a release tag (v*); only admins can push those.
+    environment: release
     env:
       RELEASE_TAG: ${{ inputs.tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

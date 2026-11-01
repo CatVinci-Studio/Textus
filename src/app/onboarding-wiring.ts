@@ -1,16 +1,11 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
 import { makeBlankTab, tabIsUntouchedDraft } from "../document/doc-tabs";
-import {
-  LESSON_DONE,
-  MODES_PART,
-  WRITE_PART,
-} from "../onboarding/tutorial-evaluation";
+import { WRITE_PART } from "../onboarding/tutorial-evaluation";
 import { practiceNotes, withPracticeNotes } from "../onboarding/practice-notes";
 import { stepIndexOf } from "../onboarding/tutorial-steps";
 import type { Tutorial } from "../onboarding/useTutorial";
 import type { Lang } from "../i18n/strings";
-import type { PanelMode } from "./useSidePanels";
 import type { TabState } from "./tabs/useTabState";
 
 /** How the first-run surfaces hook into this window's tabs and panels. */
@@ -68,7 +63,8 @@ export function useTutorialTabRecovery(
   }, [latest, tabsRef]);
 }
 
-const FIRST_NOTES_STEP = stepIndexOf("marks");
+// The notes come once the first lesson, typed on an empty page, is done.
+const FIRST_NOTES_STEP = stepIndexOf("wysiwyg") + 1;
 
 /**
  * The practice notes in the tour's tab from the second writing lesson on.
@@ -101,46 +97,17 @@ export function usePracticeNotes(opts: {
   }, [active, tabId, stepIndex, liveTabs, updateTab, evaluate, languageRef]);
 }
 
-/**
- * The tour's lessons about the window rather than the text. Returns whether
- * the sidebar lesson is on, for its spotlight.
- */
-export function useWindowLessons(opts: {
+/** The AI writing lesson's first line: the panel open. */
+export function useWriteLesson(opts: {
   tutorial: Tutorial;
   languageChosen: boolean;
-  panelOpen: boolean;
-  panelMode: PanelMode;
   agentPanelOpen: boolean;
-  /** Which writing mode is on, as one string. */
-  writingMode: string;
-  /** Which theme shows, as one string. */
-  look: string;
-}): boolean {
-  const { tutorial, languageChosen, panelOpen, panelMode } = opts;
-  const { agentPanelOpen, writingMode, look } = opts;
+}): void {
+  const { tutorial, languageChosen, agentPanelOpen } = opts;
   const lesson = tutorial.active && languageChosen ? tutorial.step.id : null;
   const setPhase = tutorial.setPhase;
-
-  // Against how things were when the lesson began: what changed since.
-  const before = useRef<{ writingMode: string; look: string } | null>(null);
   useEffect(() => {
-    if (lesson !== "modes-themes") {
-      before.current = null;
-      return;
-    }
-    before.current ??= { writingMode, look };
-    const parts =
-      (writingMode !== before.current.writingMode ? MODES_PART.mode : 0) |
-      (look !== before.current.look ? MODES_PART.theme : 0);
-    if (parts) setPhase((phase) => phase | parts);
-  }, [lesson, writingMode, look, setPhase]);
-
-  useEffect(() => {
-    if (lesson === "sidebar-export" && panelOpen && panelMode === "outline")
-      setPhase((phase) => phase | LESSON_DONE);
     if (lesson === "write" && agentPanelOpen)
       setPhase((phase) => phase | WRITE_PART.panel);
-  }, [lesson, panelOpen, panelMode, agentPanelOpen, setPhase]);
-
-  return lesson === "sidebar-export";
+  }, [lesson, agentPanelOpen, setPhase]);
 }

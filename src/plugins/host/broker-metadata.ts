@@ -26,20 +26,16 @@ export function metadataHandlers(p: PluginScope) {
       const target = str(path, "path");
       const meta = await pluginsIpc.metadataGet(p.id, root, target);
       if (!meta) return null;
-      const { documents } = await index();
-      return documentOf(
-        meta,
-        documents.map((d) => d.path),
-      );
+      return documentOf(meta, (await index()).paths);
     },
     "metadata.all": async () => (await index()).documents,
     "metadata.backlinks": async ({ path }: Params) =>
       backlinksIn(await index(), str(path, "path")),
     "metadata.resolveLink": async ({ link, from }: Params) => {
-      const { documents } = await index();
+      const { paths } = await index();
       const target = str(link, "link");
       return resolveIn(
-        documents.map((d) => d.path),
+        paths,
         target.replace(/^\[\[|\]\]$/g, ""),
         str(from, "from"),
         target.startsWith("[["),

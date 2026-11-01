@@ -18,6 +18,7 @@ import { cachedDocument } from "../../ai/doc-markdown";
 import { drawWhenVisible } from "../../editor/draw-when-visible";
 import { currentStrings } from "../../i18n/current";
 import {
+  codeBlockFrameless,
   codeBlockPlugin,
   hasCodeBlockLanguages,
   onCodeBlockLanguages,
@@ -102,6 +103,8 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
     ): HTMLElement {
       const el = document.createElement("div");
       el.className = BLOCK_CLASS;
+      if (codeBlockFrameless(language))
+        el.classList.add(`${BLOCK_CLASS}-plain`);
       el.dataset.language = language;
       el.contentEditable = "false";
       el.append(editButton(view, getPos));

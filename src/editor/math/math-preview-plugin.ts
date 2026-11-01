@@ -16,6 +16,7 @@ import {
 import { drawWhenVisible } from "../draw-when-visible";
 import { isLargeDoc } from "../large-doc";
 import { katexNow, mathSourceHtml, onKatexReady } from "./katex-loader";
+import { renderFormula } from "./matrix-rows";
 
 const mathPreviewKey = new PluginKey("math-preview");
 const KATEX_READY = "katex-ready";
@@ -37,7 +38,7 @@ function renderKatex(value: string, displayMode: boolean): string | null {
   if (!katex) return null;
   let html: string;
   try {
-    html = katex.renderToString(value || "\\,", {
+    html = renderFormula(katex, value || "\\,", {
       throwOnError: false,
       displayMode,
     });

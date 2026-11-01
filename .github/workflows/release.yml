@@ -122,6 +122,9 @@ jobs:
     needs: preflight
     name: build (${{ matrix.target || matrix.platform }})
     timeout-minutes: 90
+    # The signing keys live in the release environment, which only
+    # runs from a release tag (v*); only admins can push those.
+    environment: release
     strategy:
       fail-fast: false
       matrix:

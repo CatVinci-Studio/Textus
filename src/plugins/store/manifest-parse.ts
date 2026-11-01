@@ -364,9 +364,12 @@ export function parseContributes(raw: unknown, id: string): Contributes {
         throw new ManifestError(
           `${at}.language "${language}" is drawn by Textus itself.`,
         );
+      if (o.frame !== undefined && o.frame !== "none")
+        throw new ManifestError(`${at}.frame can only be "none".`);
       return {
         language,
         title: text(o.title, `${at}.title`, true) || undefined,
+        frame: o.frame === "none" ? ("none" as const) : undefined,
       };
     },
   );

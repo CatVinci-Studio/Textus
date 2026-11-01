@@ -7,22 +7,26 @@
 @layer textus-content {
   /* The document's type. The size grows from 16.5px at the 760px standard
      measure to 18px as the column widens; cqi is the column's zoomed width,
-     hence the divide. The face is inherited unless a theme sets --doc-font. */
+     hence the divide. A theme sets its own with --doc-font-size and
+     --doc-line-height; the face is inherited unless it sets --doc-font. */
   .milkdown {
     font-family: var(--doc-font, inherit);
-    font-size: clamp(
-      1.03125rem,
-      calc(0.80875rem + 0.46875cqi / var(--content-zoom, 1)),
-      1.125rem
+    font-size: var(
+      --doc-font-size,
+      clamp(
+        1.03125rem,
+        calc(0.80875rem + 0.46875cqi / var(--content-zoom, 1)),
+        1.125rem
+      )
     );
-    line-height: 1.8;
+    line-height: var(--doc-line-height, 1.8);
     color: var(--doc-text);
   }
 
   /* No column container to measure on an engine whose containers trap
      position: fixed, so the standard measure's size instead. */
   :root[data-early-containers] .milkdown {
-    font-size: 1.03125rem;
+    font-size: var(--doc-font-size, 1.03125rem);
   }
 
   /* An imported Typora theme sets the type on body or html; let it reach
@@ -52,7 +56,8 @@
     font-style: italic;
   }
 
-  .md-span[data-delim="~"] {
+  /* One tilde is a subscript, drawn by its <sub>. */
+  .md-span[data-delim="~"][data-rung="2"] {
     text-decoration: line-through;
     opacity: 0.75;
   }

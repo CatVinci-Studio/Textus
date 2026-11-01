@@ -1,7 +1,9 @@
 import {
+  memo,
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type KeyboardEvent,
@@ -95,7 +97,7 @@ function defaultSelect(item: PluginListItem) {
  * A plugin's list, drawn by Textus in a sidebar tab or a tab of its own: the
  * plugin gives the items, Textus the look, keys, filter and folding.
  */
-export function PluginListPane({
+export const PluginListPane = memo(function PluginListPane({
   plugin,
   view,
   className,
@@ -149,6 +151,7 @@ export function PluginListPane({
     walk(items ?? [], 0, "");
     return out;
   }, [items, children, open, query]);
+  const paged = usePagedRows(rows.length, active);
 
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
     if (isImeKeydown(e) || !rows.length) return;
@@ -208,7 +211,7 @@ export function PluginListPane({
             {query ? t.pluginQuickPickEmpty : (info?.emptyText ?? "")}
           </div>
         )}
-        {rows.map(({ item, key, depth }, index) => {
+        {rows.slice(0, paged.limit).map(({ item, key, depth }, index) => {
           const heading =
             depth === 0 && item.group && item.group !== lastGroup
               ? item.group
@@ -287,6 +290,9 @@ export function PluginListPane({
             </div>
           );
         })}
+        {paged.limit < rows.length && (
+          <div ref={paged.end} className="plugin-list-more" aria-hidden />
+        )}
       </div>
       {menu && (
         <ContextMenu
@@ -308,6 +314,34 @@ export function PluginListPane({
       )}
     </div>
   );
+});
+
+/** A long list draws a page of rows, and the next as its end scrolls into
+ *  view or the keys reach it: ten thousand tasks cost a page, not ten
+ *  thousand rows, each time the list is drawn. */
+const PAGE = 200;
+
+function usePagedRows(count: number, active: number) {
+  const [shown, setShown] = useState(PAGE);
+  const end = useRef<HTMLDivElement>(null);
+  const limit = Math.max(shown, active + 1 + PAGE / 4);
+  useEffect(() => {
+    const el = end.current;
+    if (!el || limit >= count || typeof IntersectionObserver === "undefined")
+      return;
+    // A screen ahead, so scrolling never meets the end of what is drawn.
+    const seen = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting))
+          setShown((n) => Math.max(n, limit) + PAGE);
+      },
+      // The rows scroll in their own box: seen there, not in the window.
+      { root: el.parentElement, rootMargin: "400px" },
+    );
+    seen.observe(el);
+    return () => seen.disconnect();
+  }, [limit, count]);
+  return { limit, end };
 }
 
 /**

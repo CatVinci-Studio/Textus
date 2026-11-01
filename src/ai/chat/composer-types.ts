@@ -153,9 +153,6 @@ export interface ChatComposerProps {
   /** Lets ChatBody put text back in the box: a queued message being
    *  edited, or the queue a Stop dropped. */
   handle?: RefObject<ChatComposerHandle | null>;
-  /** The message just sent went through a skill (`/name`) - the tour's
-   *  skills lesson waits for it. */
-  onSkillUsed?: () => void;
   onStop: () => void;
   onEscape: () => void;
   /** The mode as it is now, on the first render and on every switch. */

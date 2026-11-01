@@ -17,6 +17,7 @@ import {
   selectionText,
   verticalMove,
 } from "./editor-text";
+import { scrollCaretTo } from "./editor-scroll";
 import { findFlash, type FlashLabel } from "./editor-flash";
 import { keyName } from "./editor-keys";
 import { isImeKeydown } from "../../utils/ime";
@@ -290,6 +291,9 @@ export type EditorOp =
   | { op: "undo" }
   | { op: "redo" }
   | { op: "cursor"; style: "bar" | "block" }
+  /** The caret's line to the middle, top or bottom of what shows: Vim's
+   *  zz, zt and zb. */
+  | { op: "scroll"; to: "center" | "top" | "bottom" }
   | { op: "flash"; query: string }
   | {
       op: "flashJump";
@@ -579,6 +583,9 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
     }
     case "flashClear":
       view.dispatch(state.tr.setMeta(inputKey, NO_FLASH));
+      break;
+    case "scroll":
+      scrollCaretTo(view, action.to);
       break;
   }
   result.empty = view.state.selection.empty;

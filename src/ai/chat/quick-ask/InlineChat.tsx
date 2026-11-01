@@ -45,8 +45,6 @@ interface InlineChatProps {
   defaultWebSearch: boolean;
   /** The composer's selection chip handlers. */
   selectionChip?: SelectionChipHandlers;
-  /** A message went out through a skill. */
-  onSkillUsed?: () => void;
   labels: InlineChatLabels;
   onProposals: (
     proposals: { callId: string; proposal: EditProposal }[],
@@ -96,7 +94,6 @@ export function InlineChat({
   defaultMode,
   defaultWebSearch,
   selectionChip,
-  onSkillUsed,
   labels,
   onProposals,
   proposalStatus,
@@ -195,7 +192,6 @@ export function InlineChat({
           // Quick Ask has no Create: a default of Create starts in Write.
           defaultMode={defaultMode === "create" ? "write" : defaultMode}
           defaultWebSearch={defaultWebSearch}
-          onSkillUsed={onSkillUsed}
           labels={labels}
           proposalStatus={proposalStatus}
           pendingCount={pendingCount}

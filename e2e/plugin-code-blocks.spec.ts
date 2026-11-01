@@ -13,7 +13,7 @@ exports.activate = function () {
       webview.html =
         '<p id="out"></p><button id="set">Set</button>' +
         '<script>' +
-        'textus.onMessage(function (m) { document.getElementById("out").textContent = m.text; });' +
+        'textus.onMessage(function (m) { var out = document.getElementById("out"); out.textContent = m.text; out.style.height = m.text.indexOf("TALL") === 0 ? "600px" : ""; });' +
         'textus.onExport(function (o) { return "<svg><text>" + o.theme + ":" + document.getElementById("out").textContent + "</text></svg>"; });' +
         'document.getElementById("set").onclick = function () { textus.postMessage("set"); };' +
         '</script>';
@@ -50,19 +50,22 @@ const ENTRY = {
   files: { "host.js": HOST },
 };
 
-async function open(page: Page) {
-  await page.addInitScript((entry) => {
-    if (window.top !== window) return;
-    const w = window as unknown as Record<string, unknown>;
-    w.__devPlugins = [entry];
-    w.__devPluginState = {
-      allOn: true,
-      plugins: { [entry.id]: { enabled: true, granted: ["editor.write"] } },
-    };
-    w.__devFs = {
-      "/work/a.md": "# A\n\n```shout mark=!\nhello\n```\n\nAfter.\n",
-    };
-  }, ENTRY);
+async function open(page: Page, source = "hello") {
+  await page.addInitScript(
+    ([entry, source]) => {
+      if (window.top !== window) return;
+      const w = window as unknown as Record<string, unknown>;
+      w.__devPlugins = [entry];
+      w.__devPluginState = {
+        allOn: true,
+        plugins: { [entry.id]: { enabled: true, granted: ["editor.write"] } },
+      };
+      w.__devFs = {
+        "/work/a.md": `# A\n\n\`\`\`shout mark=!\n${source}\n\`\`\`\n\nAfter.\n`,
+      };
+    },
+    [ENTRY, source] as const,
+  );
   await openApp(page, { settings: { language: "en" } });
   await page.evaluate(() =>
     (
@@ -99,6 +102,22 @@ test("a plugin draws its code block, follows its source and can change it", asyn
   await frame.locator("#set").click();
   await expect(page.locator(`${editor} pre`)).toContainText("set by the page");
   await expect(frame.locator("#out")).toHaveText("SET BY THE PAGE!");
+});
+
+test("a block's frame fits its page as the page grows and shrinks", async ({
+  page,
+}) => {
+  await open(page, "tall");
+  const block = page.locator(`${editor} .plugin-code-block iframe`).first();
+  const height = async () => (await block.boundingBox())?.height ?? 0;
+  await expect.poll(height).toBeGreaterThan(600);
+  // The page sets a short source: the frame comes back down with it.
+  await page
+    .frameLocator(`${editor} .plugin-code-block iframe`)
+    .first()
+    .locator("#set")
+    .click();
+  await expect.poll(height).toBeLessThan(150);
 });
 
 /** Exports the document as HTML; the file's text, once it is written. */

@@ -69,10 +69,16 @@ test("a Latin face comes before the CJK ones outside Chinese, Japanese and Korea
   }
 });
 
-test("every language falls back to the Simplified Chinese faces last, and the Paper theme's serif follows the language", async ({
+test("every language falls back to the Simplified Chinese faces last, and a theme's serif follows the language", async ({
   page,
 }) => {
-  await openApp(page, { settings: { themeId: "paper" } });
+  // A theme setting a serif the way gallery themes do.
+  await openApp(page, {
+    settings: {
+      customCss:
+        ":root { --doc-font: var(--font-cjk-punct-serif), Georgia, var(--font-cjk-serif), serif; }",
+    },
+  });
   // A Linux machine with only WenQuanYi (or only Noto CJK SC) installed
   // must still find a CJK face named in the stack, in every language - and
   // after that language's own faces, never before them.
@@ -89,10 +95,7 @@ test("every language falls back to the Simplified Chinese faces last, and the Pa
     );
   }
   const editor = '[data-active-tab="true"] .ProseMirror';
-  await expect(page.locator("html")).toHaveAttribute(
-    "data-content-theme",
-    "paper",
-  );
+
   for (const [lang, last] of [
     ["ja", "MS Mincho"],
     ["zh-Hant", "PMingLiU"],
@@ -105,7 +108,7 @@ test("every language falls back to the Simplified Chinese faces last, and the Pa
     );
   }
 
-  // The Paper theme's serif follows the language too.
+  // The theme's serif follows the language too.
   expect(await firstCjkFace(page, "zh-CN", editor)).toBe("Songti SC");
   expect(await firstCjkFace(page, "ja", editor)).toBe("Hiragino Mincho ProN");
   expect(await firstCjkFace(page, "zh-HK", editor)).toBe("Songti TC");

@@ -8,6 +8,16 @@
   --doc-radius-sm: var(--shape-xs);
 }
 
+/* The reader's own text size and line spacing (Settings) win over any
+   theme's, an imported one's #write rules included: they are the reader's
+   eyes, not the theme's look. */
+:root[data-doc-size] :is(.milkdown, #write) {
+  font-size: var(--doc-font-size) !important;
+}
+:root[data-doc-leading] :is(.milkdown, #write) {
+  line-height: var(--doc-line-height) !important;
+}
+
 /* A click below the text still lands in it: the page height less the
    column's padding, divided by the zoom. flow-root keeps the last block's
    margin inside, which WebKit on macOS let collapse out into a scrollbar. */
@@ -619,6 +629,44 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 .link-source-syntax {
   color: var(--doc-muted);
+}
+
+/* `:smile:` drawn as its emoji; the caret on it shows the source. */
+.md-emoji-source {
+  display: none;
+}
+
+/* `[TOC]`: the headings as links, indented by level. */
+.md-toc {
+  margin: 0 0 var(--doc-gap-box);
+  padding: 0.5em 1em;
+  border-left: 2px solid var(--doc-border);
+  cursor: default;
+}
+
+.md-toc-item {
+  margin: 0.15em 0;
+  padding-inline-start: calc(var(--md-toc-depth, 0) * 1.25em);
+}
+
+.md-toc-item a {
+  color: var(--doc-accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.md-toc-item a:hover {
+  text-decoration: underline;
+}
+
+.md-toc-empty {
+  margin: 0;
+  color: var(--doc-muted);
+}
+
+.md-toc.ProseMirror-selectednode {
+  outline: 2px solid var(--doc-accent);
+  outline-offset: 2px;
 }
 
 /* An Obsidian wikilink: its source in the link colour. */

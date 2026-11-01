@@ -1,6 +1,7 @@
 //! Finds the file an Obsidian image embed (`![[name.png]]`) or wikilink
-//! (`[[Note]]`) points at, inside the vault (the folder holding `.obsidian/`, or
-//! the document's own folder). A link with a folder is from the vault root.
+//! (`[[Note]]`) points at, inside the vault (the folder holding `.obsidian/`,
+//! else the folder open in the window when the document is in it, else the
+//! document's own folder). A link with a folder is from the vault root.
 
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -25,8 +26,9 @@ const MISS_REBUILD_AFTER: Duration = Duration::from_secs(2);
 const MAX_VAULT_ASCENT: usize = 32;
 
 /// The vault a document belongs to: the nearest folder above it holding
-/// `.obsidian/`, or else the document's own folder.
-fn vault_root(doc_path: &Path) -> Option<PathBuf> {
+/// `.obsidian/`, else `folder` (the one open in the window) when the document
+/// is inside it, else the document's own folder.
+fn vault_root(doc_path: &Path, folder: Option<&Path>) -> Option<PathBuf> {
     let doc_dir = doc_path.parent()?;
     let mut dir = Some(doc_dir);
     for _ in 0..MAX_VAULT_ASCENT {
@@ -35,6 +37,9 @@ fn vault_root(doc_path: &Path) -> Option<PathBuf> {
             return Some(current.to_path_buf());
         }
         dir = current.parent();
+    }
+    if let Some(folder) = folder.filter(|f| doc_dir.starts_with(f)) {
+        return Some(folder.to_path_buf());
     }
     Some(doc_dir.to_path_buf())
 }
@@ -149,6 +154,7 @@ fn pick_from_index<'a>(index: &'a [String], link: &str, doc_dir: &[&str]) -> Opt
 /// vault. `index` is asked only when a direct path misses; a note may omit `.md`.
 fn resolve_with(
     doc_path: &Path,
+    folder: Option<&Path>,
     link: &str,
     kind: LinkKind,
     index: &mut dyn FnMut(&Path, bool) -> Arc<Vec<String>>,
@@ -169,7 +175,7 @@ fn resolve_with(
     if link.is_empty() || !fits {
         return None;
     }
-    let root = vault_root(doc_path)?;
+    let root = vault_root(doc_path, folder)?;
     let doc_dir = doc_path.parent()?;
     let inside = |path: PathBuf| -> Option<PathBuf> {
         // A symlink inside the vault can still point out of it.
@@ -267,11 +273,16 @@ fn cached_index(root: &Path, fresh: bool) -> Arc<Vec<String>> {
 /// protocol; None when it isn't an image or isn't in the vault.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn resolve_vault_image(doc_path: String, link: String) -> Result<Option<String>, String> {
+pub async fn resolve_vault_image(
+    doc_path: String,
+    link: String,
+    folder: Option<String>,
+) -> Result<Option<String>, String> {
     super::fs::require_non_empty(&doc_path)?;
     tauri::async_runtime::spawn_blocking(move || {
         resolve_with(
             Path::new(&doc_path),
+            folder.as_deref().map(Path::new),
             &link,
             LinkKind::Image,
             &mut cached_index,
@@ -286,11 +297,16 @@ pub async fn resolve_vault_image(doc_path: String, link: String) -> Result<Optio
 /// in the vault.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn resolve_vault_note(doc_path: String, link: String) -> Result<Option<String>, String> {
+pub async fn resolve_vault_note(
+    doc_path: String,
+    link: String,
+    folder: Option<String>,
+) -> Result<Option<String>, String> {
     super::fs::require_non_empty(&doc_path)?;
     tauri::async_runtime::spawn_blocking(move || {
         resolve_with(
             Path::new(&doc_path),
+            folder.as_deref().map(Path::new),
             &link,
             LinkKind::Note,
             &mut cached_index,

@@ -129,11 +129,11 @@ fn client() -> Result<reqwest::Client, String> {
 }
 
 fn client_with(redirects: reqwest::redirect::Policy) -> Result<reqwest::Client, String> {
-    reqwest::Client::builder()
+    use std::time::Duration;
+    // Connecting gives up soon, so an unreachable counting endpoint falls
+    // back quickly.
+    crate::net::public_client(Duration::from_secs(10), Duration::from_secs(120))?
         .user_agent(crate::app_identity::APP_NAME)
-        // Soon, so an unreachable counting endpoint falls back quickly.
-        .connect_timeout(std::time::Duration::from_secs(10))
-        .timeout(std::time::Duration::from_secs(120))
         .redirect(redirects)
         .build()
         .map_err(|e| e.to_string())
@@ -205,11 +205,12 @@ async fn fetch() -> Result<String, String> {
     if let Some(path) = url.strip_prefix("file://") {
         return std::fs::read_to_string(path).map_err(|e| e.to_string());
     }
-    let response = client()?
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| format!("Couldn't reach the plugin catalog: {e}"))?;
+    let response = client()?.get(&url).send().await.map_err(|e| {
+        format!(
+            "Couldn't reach the plugin catalog: {}",
+            crate::net::error_text(&e)
+        )
+    })?;
     if !response.status().is_success() {
         return Err(format!(
             "The plugin catalog answered {}.",
@@ -303,7 +304,7 @@ async fn download_with(client: reqwest::Client, url: &str, what: &str) -> Result
         .get(url)
         .send()
         .await
-        .map_err(|e| format!("Couldn't download {what}: {e}"))?;
+        .map_err(|e| format!("Couldn't download {what}: {}", crate::net::error_text(&e)))?;
     ext_stats::check_redirected(&response)?;
     if !response.status().is_success() {
         return Err(format!(

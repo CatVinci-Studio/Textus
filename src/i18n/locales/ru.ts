@@ -587,6 +587,8 @@ export default {
   alertImportant: "Важно",
   alertWarning: "Предупреждение",
   alertCaution: "Осторожно",
+  tocLabel: "Содержание",
+  tocEmpty: "Заголовков пока нет",
   settingsTitle: "Настройки",
   settingsSearchPlaceholder: "Поиск по настройкам",
   settingsSearchResults: "Результаты поиска",
@@ -1154,6 +1156,13 @@ export default {
   imageAlignLabel: "Изображения на отдельной строке",
   imageAlignCenter: "По центру",
   imageAlignLeft: "Слева",
+  docTextSizeLabel: "Размер текста",
+  docTextSizeAuto: "Как в теме",
+  docLineSpacingLabel: "Межстрочный интервал",
+  docLineSpacingAuto: "Как в теме",
+  docLineSpacingCompact: "Плотный",
+  docLineSpacingStandard: "Обычный",
+  docLineSpacingRelaxed: "Свободный",
   uiTextScaleLabel: "Размер текста интерфейса",
   newDocumentModeLabel: "Открывать документы",
   newDocumentModeWindow: "В новом окне",
@@ -1193,36 +1202,6 @@ export default {
   tutorialWysiwygList: "Список: `- Облонский`, Enter, `Долли`",
   tutorialWysiwygNumbered: "Нумерованный список: `1. Часть первая`",
   tutorialWysiwygTaskItem: "Задача: `- [ ] Дочитать первую часть`",
-  tutorialMarksTitle: "Жирный, цитаты, код и ссылки",
-  tutorialMarksBody:
-    "Ниже ваши заметки к первой главе; введите эти строки в конце.",
-  tutorialMarksEmphasis: "Жирный и курсив: `Долли **терпелива** и *горда*.`",
-  tutorialMarksQuote: "Цитата: `> Все смешалось в доме Облонских.`",
-  tutorialMarksCode: "Код: ``Перечитать `главу I`.``",
-  tutorialMarksLink: "Ссылка: `[Викитека](https://ru.wikisource.org)`",
-  tutorialTableTitle: "Таблицы",
-  tutorialTableBody:
-    "Строка ячеек между | по нажатию Enter становится таблицей.",
-  tutorialTableHeader: "Введите `| Герой | Впечатление |`, затем Enter",
-  tutorialTableRow: "Заполните строку: `Долли`, Tab, `Терпение`",
-  tutorialBlocksTitle: "Формулы и диаграммы",
-  tutorialBlocksBody:
-    "По желанию: несколько символов дают формулу, несколько строк - диаграмму.",
-  tutorialBlocksFormula: "Формула: `$E=mc^2$`",
-  tutorialBlocksDiagram:
-    "Диаграмма: ```` ```mermaid ````, Enter, затем `graph LR; A-->B`",
-  tutorialModesTitle: "Режимы письма и темы",
-  tutorialModesBody: "Пишите по-другому, смотрите по-другому.",
-  tutorialModesTask: "Включите режим дзен, затем выберите другую тему.",
-  tutorialSidebarTitle: "Боковая панель и экспорт",
-  tutorialSidebarBody:
-    "В боковой панели ваши файлы, оглавление и буфер обмена; экспорт - в меню Файл › Экспорт.",
-  tutorialSidebarTask:
-    "Нажмите меню ☰ слева вверху, выберите Вид › Боковая панель ({shortcut}) и откройте Оглавление",
-  tutorialSidebarTaskMac:
-    "В строке меню выберите Вид › Боковая панель ({shortcut}) и откройте Оглавление",
-  tutorialSidebarTaskPhone:
-    "Нажмите меню ☰ слева вверху, затем Боковая панель, и откройте Оглавление",
   tutorialPaletteTitle: "Палитра команд",
   tutorialPaletteBody: "Любая команда из меню — по нескольким буквам.",
   tutorialPaletteTask:
@@ -1247,38 +1226,15 @@ export default {
   tutorialWriteOpenPhone: "Откройте панель ИИ: нажмите значок пера вверху",
   tutorialWriteSend:
     "Отправьте `Продолжи мои заметки ещё одним абзацем` и нажмите «Принять»",
-  tutorialReviewTitle: "Рецензия",
-  tutorialReviewBody:
-    "В режиме «Разбор» он оставляет замечания на полях и не трогает ваш текст.",
-  tutorialReviewTask:
-    "Отправьте `Прокомментируй мои заметки` и прочитайте замечания на полях",
-  tutorialRevisionTitle: "Правка",
-  tutorialRevisionBody:
-    "В режиме «Написание» он и переписывает, а вы решаете по каждой фразе.",
-  tutorialRevisionSelect: "Выделите первую фразу ваших заметок",
-  tutorialRevisionSend:
-    "Отправьте `Сделай короче` и выберите «Принять» или «Отклонить»",
-  tutorialGrammarTitle: "Проверка грамматики",
-  tutorialGrammarBody: "Описки подчёркиваются прямо по ходу письма.",
-  tutorialGrammarType: "В конце, с новой строки, введите `{slip}`",
-  tutorialGrammarApply:
-    "Дождитесь подчёркивания, наведите на него указатель и нажмите «Применить»",
-  tutorialGrammarApplyPhone:
-    "Дождитесь подчёркивания, коснитесь его и нажмите «Применить»",
-  tutorialGrammarQuiet:
-    "На этот раз ИИ не нашёл, что исправить. Можно продолжать.",
   tutorialContinuationTitle: "Автодополнение",
   tutorialContinuationBody: "Сделайте паузу - и он продолжит за вас.",
   tutorialContinuationTask:
     "В конце введите `Главное в первой фразе то, что`, сделайте паузу и нажмите Tab",
   tutorialContinuationTaskPhone:
     "В конце введите `Главное в первой фразе то, что`, сделайте паузу и коснитесь серого текста",
-  tutorialSkillsTitle: "Навыки",
-  tutorialSkillsBody:
-    "Введите / в панели ИИ, чтобы выбрать навык, или найдите больше в «Расширениях».",
-  tutorialSkillsTask: "Выделите одну из заметок и отправьте `/вычитать`",
   tutorialDoneTitle: "Готово",
-  tutorialDoneBody: "Теперь пишите своё.",
+  tutorialDoneBody:
+    "Теперь пишите своё; таблицы, формулы, темы, рецензирование и остальное — в Видеоуроках.",
   tutorialDoneMemory: `${AI_NAME} со временем запоминает ваши требования и стиль; загляните на вкладку «Проект» в панели ИИ.`,
   closePromptMessage: "В документе есть несохранённые изменения.",
   closePromptSave: "Сохранить",
@@ -1407,10 +1363,6 @@ export default {
   exportFailedTitle: "Ошибка экспорта",
   exportFailed: "Не удалось экспортировать:",
   themeNameDefault: "Стандартная",
-  themeNamePaper: "Бумага",
-  themeNameSlate: "Грифель",
-  themeNameForest: "Лес",
-  themeNameParchment: "Пергамент",
   appearanceLabel: "Оформление",
   appearanceSystem: "Как в системе",
   appearanceLight: "Светлое",

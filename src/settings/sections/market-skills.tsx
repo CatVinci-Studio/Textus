@@ -6,6 +6,7 @@ import { errorText } from "../../utils/error-text";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { TextKey } from "../../i18n/strings";
 import { AvailableSection } from "../pages/AvailableSection";
+import { CatalogProblem } from "../pages/AvailablePlugins";
 import { installsText } from "../pages/installs-text";
 import { SKILLS_CHANGED_EVENT, announceChange } from "./skills";
 
@@ -86,15 +87,21 @@ export function AvailableSkills({
     }
     announceChange();
   };
-  const message = !ready ? (
-    <p className="plugin-empty">{t.pluginsCatalogLoading}</p>
-  ) : !catalog.skills.length ? (
-    <p className="plugin-empty">{t.marketSkillsNone}</p>
-  ) : query.trim() && !shown.length ? (
-    <p className="plugin-empty">
-      {t.pluginsSearchNone.replace("{query}", query.trim())}
-    </p>
-  ) : undefined;
+  const message =
+    catalog.status === "failed" ? (
+      <CatalogProblem
+        t={t}
+        text={t.pluginsCatalogFailed.replace("{reason}", catalog.error)}
+      />
+    ) : !ready ? (
+      <p className="plugin-empty">{t.pluginsCatalogLoading}</p>
+    ) : !catalog.skills.length ? (
+      <p className="plugin-empty">{t.marketSkillsNone}</p>
+    ) : query.trim() && !shown.length ? (
+      <p className="plugin-empty">
+        {t.pluginsSearchNone.replace("{query}", query.trim())}
+      </p>
+    ) : undefined;
   return (
     <AvailableSection
       t={t}

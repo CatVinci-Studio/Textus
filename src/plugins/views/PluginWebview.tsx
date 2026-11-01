@@ -14,6 +14,9 @@ import { trackCodeBlock, untrackCodeBlock } from "../contributions/code-blocks";
 import type { CodeBlockSeen } from "../manager";
 import { windowInfo } from "../store/plugin-records";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
+import { pageMenuEntries } from "./webview-menu";
+import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
+import { Presence } from "../../ui/usePresence";
 import {
   createWebview,
   setWebviewState,
@@ -26,8 +29,8 @@ import {
   type WebviewRecord,
 } from "./webviews";
 
-/** The tallest a frame that fits its page grows; past it, it scrolls. */
-const MAX_FIT_HEIGHT = 1200;
+/** The tallest a code block's frame grows; past it, it scrolls. */
+const MAX_CODE_BLOCK_HEIGHT = 1200;
 
 /**
  * Where a plugin's webview is drawn: a sandboxed frame rebuilt on new HTML,
@@ -40,13 +43,21 @@ export function PluginWebview({
 }: {
   id: string;
   className?: string;
-  /** The frame as tall as its page, up to a limit. */
-  fitHeight?: boolean;
+  /** The frame as tall as its page, up to this many pixels. */
+  fitHeight?: number;
 }) {
   useSyncExternalStore(subscribeWebviews, webviewsVersion);
   const record = webview(id);
   const html = record?.html ?? null;
   const boxRef = useRef<HTMLDivElement>(null);
+  const closeMenuRef = useRef<(() => void) | null>(null);
+  // A menu the page asked for, drawn by the app over the page.
+  const [menu, setMenu] = useState<{
+    x: number;
+    y: number;
+    items: ContextMenuEntry[];
+    close: () => void;
+  } | null>(null);
 
   useEffect(() => {
     const box = boxRef.current;
@@ -72,9 +83,28 @@ export function PluginWebview({
           webviewMessage(id, message),
         state: ({ state }: { state: unknown }) =>
           setWebviewState(current.key, state),
+        menu: ({ items, x, y }: { items: unknown; x: unknown; y: unknown }) =>
+          new Promise<unknown>((resolve) => {
+            let done = false;
+            const finish = (value: unknown) => {
+              if (done) return;
+              done = true;
+              setMenu(null);
+              resolve(value);
+            };
+            const box = frame.getBoundingClientRect();
+            closeMenuRef.current = () => finish(null);
+            setMenu({
+              x: box.left + (typeof x === "number" ? x : 0),
+              y: box.top + (typeof y === "number" ? y : 0),
+              items: pageMenuEntries(items, finish),
+              close: () => finish(null),
+            });
+          }),
+        menuClose: () => closeMenuRef.current?.(),
         height: ({ height }: { height: unknown }) => {
           if (fitHeight && typeof height === "number")
-            frame.style.height = `${Math.min(Math.max(height, 24), MAX_FIT_HEIGHT)}px`;
+            frame.style.height = `${Math.min(Math.max(height, 24), fitHeight)}px`;
         },
       },
       () => ({
@@ -102,11 +132,23 @@ export function PluginWebview({
   }, [id, html, fitHeight]);
 
   return (
-    <div
-      ref={boxRef}
-      className={`plugin-webview ${className ?? ""}`}
-      data-webview-id={id}
-    />
+    <>
+      <div
+        ref={boxRef}
+        className={`plugin-webview ${className ?? ""}`}
+        data-webview-id={id}
+      />
+      <Presence show={menu !== null} exitMs={120}>
+        {menu && (
+          <ContextMenu
+            x={menu.x}
+            y={menu.y}
+            items={menu.items}
+            onClose={menu.close}
+          />
+        )}
+      </Presence>
+    </>
   );
 }
 
@@ -195,11 +237,14 @@ export function PluginSettingsWebview({ plugin }: { plugin: string }) {
     `${plugin}:settings`,
     {},
   );
+  if (error) return <div className="plugin-webview-problem">{error}</div>;
+  if (!record) return null;
+  // As tall as the page: Settings scrolls, not a box inside it.
   return (
-    <WebviewOrProblem
-      record={record}
-      error={error}
+    <PluginWebview
+      id={record.id}
       className="plugin-webview-settings"
+      fitHeight={Infinity}
     />
   );
 }
@@ -324,7 +369,7 @@ export function PluginCodeBlock({
     <PluginWebview
       id={record.id}
       className="plugin-code-block-frame"
-      fitHeight
+      fitHeight={MAX_CODE_BLOCK_HEIGHT}
     />
   );
 }

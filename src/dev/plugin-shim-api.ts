@@ -1,5 +1,8 @@
 import { blockIds } from "../ai/doc-blocks";
 
+/** Each folder's documents at the last metadata look, for what changed. */
+const lastLook = new Map<string, Map<string, string>>();
+
 /**
  * The dev shim's answers to the plugin API's file and index commands, over
  * `window.__devFs`, so the browser build and e2e run the official plugins.
@@ -221,7 +224,15 @@ export function pluginApiShim(
         .filter((p) => !p.slice(root.length).includes("/."))
         .sort()
         .map((p) => shimDocumentMeta(p, p.slice(root.length + 1), c.folder[p]));
-      return Promise.resolve({ documents, changed: [] });
+      // As Rust does: what was added, edited or removed since the last look.
+      const now = new Map(documents.map((d) => [d.path, c.folder[d.path]]));
+      const before = lastLook.get(root) ?? new Map<string, string>();
+      const changed = [
+        ...[...now].filter(([p, text]) => before.get(p) !== text),
+        ...[...before].filter(([p]) => !now.has(p)),
+      ].map(([p]) => p);
+      lastLook.set(root, now);
+      return Promise.resolve({ documents, changed });
     }
     case "plugin_metadata_get": {
       const refused = needs("files.read");

@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.3.0"
+version = "1.3.2"
 description = "Textus Markdown Editor"
 authors = ["CatVinci Studio"]
 edition = "2021"
@@ -223,6 +223,7 @@ objc2-user-notifications = { version = "0.3", default-features = false, features
 objc2-web-kit = { version = "0.3", features = [
     "WKWebView",
     "WKWebViewConfiguration",
+    "WKPreferences",
     "WKNavigation",
     "WKNavigationDelegate",
     "WKPDFConfiguration",

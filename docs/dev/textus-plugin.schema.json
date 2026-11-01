@@ -439,6 +439,10 @@
               },
               "title": {
                 "type": "string"
+              },
+              "frame": {
+                "enum": ["none"],
+                "description": "\"none\": drawn on the page without the box round a figure, for a block that reads as part of the document (a table)."
               }
             }
           }

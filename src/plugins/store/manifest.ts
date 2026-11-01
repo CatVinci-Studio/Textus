@@ -126,6 +126,9 @@ export interface CodeBlockContribution {
   language: string;
   /** What the block is called where Textus names it ("Task query"). */
   title?: string;
+  /** "none": the block sits on the page without the box drawn round a
+   *  figure - for one that reads as part of the document, such as a table. */
+  frame?: "none";
 }
 
 /** A file type the plugin opens in a tab. */
@@ -342,7 +345,7 @@ export function parseManifest(raw: string | unknown): PluginManifest {
 }
 
 /** `%key%` looked up for `lang` (its own, then its base language's, then
- *  English); anything else as written. */
+ *  English, then any language that has it); anything else as written. */
 export function localize(
   manifest: Pick<PluginManifest, "l10n">,
   value: string,
@@ -354,6 +357,7 @@ export function localize(
     manifest.l10n[lang]?.[key] ??
     manifest.l10n[lang.split("-")[0]]?.[key] ??
     manifest.l10n.en?.[key] ??
+    Object.values(manifest.l10n).find((table) => key in table)?.[key] ??
     key
   );
 }

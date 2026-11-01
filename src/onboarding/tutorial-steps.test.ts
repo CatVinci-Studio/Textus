@@ -9,24 +9,15 @@ import {
 } from "./tutorial-steps";
 
 describe("the tour", () => {
-  it("writes, connects, then follows the AI from Write to the skills", () => {
+  it("is eight steps: Markdown, the palette, the store, then the AI writing and continuing", () => {
     expect(TUTORIAL_STEPS.map((step) => step.id)).toEqual([
       "welcome",
       "wysiwyg",
-      "marks",
-      "table",
-      "blocks",
-      "modes-themes",
-      "sidebar-export",
       "palette",
       "plugins",
       "connect",
       "write",
-      "review",
-      "revision",
-      "grammar",
       "continuation",
-      "skills",
       "done",
     ]);
   });
@@ -45,10 +36,10 @@ describe("the tour", () => {
     expect(chapterOf).toMatchObject({
       welcome: "start",
       wysiwyg: "writing",
-      "sidebar-export": "writing",
+      plugins: "writing",
       connect: "connect",
       write: "ai",
-      skills: "ai",
+      continuation: "ai",
       done: "done",
     });
     // A chapter's steps are next to each other.
@@ -84,18 +75,13 @@ describe("the tour", () => {
         step.agentMode,
       ]),
     );
-    expect(modes).toEqual({
-      write: "write",
-      review: "review",
-      revision: "write",
-      skills: "review",
-    });
+    expect(modes).toEqual({ write: "write" });
   });
 
-  it("locks every lesson until it is done, except formulas, diagrams, the palette and plugins", () => {
+  it("locks every lesson until it is done, except the palette and plugins tips", () => {
     expect(
       TUTORIAL_STEPS.filter((step) => step.optional).map((step) => step.id),
-    ).toEqual(["blocks", "palette", "plugins"]);
+    ).toEqual(["palette", "plugins"]);
   });
 
   it("links to the clips Rust lets it open, and only those", () => {
@@ -112,27 +98,28 @@ describe("the tour", () => {
 
 describe("resuming saved progress", () => {
   it("resumes this tour's step with its AI mode", () => {
-    expect(resolveSavedProgress({ stepId: "grammar", aiMode: "live" })).toEqual(
-      { stepIndex: stepIndexOf("grammar"), aiMode: "live" },
-    );
-    expect(resolveSavedProgress({ stepId: "skills", aiMode: "watch" })).toEqual(
-      { stepIndex: stepIndexOf("skills"), aiMode: "watch" },
-    );
-    expect(resolveSavedProgress({ stepId: "marks" })).toEqual({
-      stepIndex: stepIndexOf("marks"),
+    expect(resolveSavedProgress({ stepId: "write", aiMode: "live" })).toEqual({
+      stepIndex: stepIndexOf("write"),
+      aiMode: "live",
+    });
+    expect(
+      resolveSavedProgress({ stepId: "continuation", aiMode: "watch" }),
+    ).toEqual({ stepIndex: stepIndexOf("continuation"), aiMode: "watch" });
+    expect(resolveSavedProgress({ stepId: "palette" })).toEqual({
+      stepIndex: stepIndexOf("palette"),
       aiMode: null,
     });
   });
 
   it("asks about connecting again when an AI lesson has no mode saved", () => {
     for (const aiMode of [undefined, null, "mock", 1])
-      expect(resolveSavedProgress({ stepId: "review", aiMode })).toEqual({
+      expect(resolveSavedProgress({ stepId: "continuation", aiMode })).toEqual({
         stepIndex: stepIndexOf("connect"),
         aiMode: null,
       });
   });
 
-  it.each(["ai-panel", "markdownIntro", "gone", 3, null, undefined])(
+  it.each(["ai-panel", "markdownIntro", "grammar", "gone", 3, null, undefined])(
     "starts the tour over for a step it doesn't have (%s)",
     (stepId) => {
       expect(resolveSavedProgress({ stepId, aiMode: "live" })).toEqual({

@@ -104,7 +104,7 @@ again when it changes. Uninstalling it moves the file to the Trash.
   editors - starts with the plugin's own id and a dot.
 - A string the user sees may be `%key%`, looked up in `l10n` for the
   interface's language, then its base language (`zh` for `zh-Hant`), then
-  English. The code reads the same table with `textus.l10n.t(key,
+  English, then any language that has it. The code reads the same table with `textus.l10n.t(key,
 ...args)`, a webview with `api.t(key, ...args)`; `{0}`, `{1}`… are the
   arguments. Textus speaks `en`, `zh`, `zh-Hant`, `ja`, `ko`, `es`, `fr`,
   `de`, `ru` and `pt`.
@@ -137,7 +137,7 @@ made when they are first shown.
 | `sidebarTabs`   | `{ id, title, type: "list" \| "webview", icon }`: a sidebar tab. A list is drawn by Textus from `views.registerList`; a webview is the plugin's page. The icon is an SVG drawn in the text colour.                                                                                                                     |
 | `views`         | `{ id, title, type }`: the same, opened in a tab of its own (`textus.layout.openView`).                                                                                                                                                                                                                                |
 | `customEditors` | `{ viewType, displayName, filenamePatterns: ["*.pdf"], priority }`: a file type opened in the plugin's tab instead of as a document.                                                                                                                                                                                   |
-| `codeBlocks`    | `{ language, title }`: fenced blocks in that language drawn by the plugin (`views.registerCodeBlock`). Textus's own languages (mermaid, math…) can't be taken.                                                                                                                                                         |
+| `codeBlocks`    | `{ language, title, frame }`: fenced blocks in that language drawn by the plugin (`views.registerCodeBlock`), in a box like a figure, or on the page with `frame: "none"`. Textus's own languages (mermaid, math…) can't be taken.                                                                                     |
 | `suggestFor`    | `["wikilinks"]`: what a document can hold that the plugin works with. An official one is suggested, once, for a document that holds it while no installed plugin does.                                                                                                                                                 |
 | `completions`   | `{ id, where: "math" \| "text" \| "any", pattern }`: completions as you type when what is before the caret matches `pattern` (`editor.registerCompletion`).                                                                                                                                                            |
 | `aiTools`       | `{ name, description, parameters }`: tools Textus AI can call (`ai.registerTool`); `parameters` is a JSON schema.                                                                                                                                                                                                      |

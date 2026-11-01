@@ -75,20 +75,11 @@ interface TutorialOverlayProps {
 // The welcome step shows the app icon instead.
 const STEP_GLYPHS: Record<Exclude<TutorialStepId, "welcome">, string> = {
   wysiwyg: "M↓",
-  marks: "B",
-  table: "▦",
-  blocks: "∑",
-  "modes-themes": "◐",
-  "sidebar-export": "◧",
   palette: "❯",
   plugins: "⊞",
   connect: "⇄",
   write: "✦",
-  review: "❝",
-  revision: "✎",
-  grammar: "✓",
   continuation: "↹",
-  skills: "/",
   done: "✓",
 };
 

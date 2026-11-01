@@ -4,7 +4,6 @@ import { usePaperWriter } from "./usePaperWriter";
 import { useTourSignals } from "./useTourSignals";
 import type { EditorSetup } from "./useEditorSetup";
 import type { EditorChat } from "./useEditorChat";
-import type { EditorPopups } from "./useEditorPopups";
 import { useRevisionAnnouncements } from "../ai/revision/useRevisionAnnouncements";
 import { useReviewNotes } from "../ai/margin/useReviewNotes";
 import type { Settings } from "../prefs/SettingsContext";
@@ -13,12 +12,11 @@ import type { TourAi } from "../utils/events";
 
 /**
  * Reviewing one tab's document: the review bar, announcements, the margin's
- * notes and changes, illustrating a paragraph, and the tour's signals.
+ * notes and changes, illustrating a paragraph, and the tour's signal.
  */
 export function useEditorReview({
   setup,
   chat,
-  popups,
   filePath,
   isActive,
   phone,
@@ -28,7 +26,6 @@ export function useEditorReview({
 }: {
   setup: EditorSetup;
   chat: EditorChat;
-  popups: EditorPopups;
   filePath: string | null;
   isActive: boolean;
   phone: boolean;
@@ -72,12 +69,9 @@ export function useEditorReview({
     filePath,
   });
 
-  const { onSkillUsed } = useTourSignals({
+  useTourSignals({
     tour,
-    grammarCardOpen: popups.grammar.popover !== null,
     undecidedRevisions: pendingEdits.decidable.length,
-    reviewNotes: notes.notes.length,
-    conversations: [conversation, quickConversation],
   });
 
   const illustrateParagraph = useIllustrateParagraph({
@@ -101,7 +95,6 @@ export function useEditorReview({
     ...pane,
     ...bar,
     notes,
-    onSkillUsed,
     illustrateParagraph,
     writePaper,
   };

@@ -27,6 +27,26 @@ export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
 /// Interface Text Size, as a factor on the UI's type scale.
 export const UI_TEXT_SCALES = [0.9, 1, 1.1, 1.25] as const;
 export type UiTextScale = (typeof UI_TEXT_SCALES)[number];
+/** The document's text size in px, or "auto" for the theme's own. */
+export const DOC_TEXT_SIZES = ["auto", 14, 15, 16, 17, 18, 20, 22, 24] as const;
+export type DocTextSize = (typeof DOC_TEXT_SIZES)[number];
+/** The document's line spacing, or "auto" for the theme's own. */
+export const DOC_LINE_SPACINGS = [
+  "auto",
+  "compact",
+  "standard",
+  "relaxed",
+] as const;
+export type DocLineSpacing = (typeof DOC_LINE_SPACINGS)[number];
+/** Each spacing's line height. */
+export const DOC_LINE_HEIGHTS: Record<
+  Exclude<DocLineSpacing, "auto">,
+  number
+> = {
+  compact: 1.55,
+  standard: 1.8,
+  relaxed: 2.05,
+};
 
 /// Mermaid is the default and every diagram's fallback; Pele draws the same
 /// syntax faster, in its own layout, and only by the user's choice.
@@ -258,6 +278,10 @@ export interface Settings {
   /// The size of the app's own UI text (not the document) as a factor on the
   /// type scale, for every window.
   uiTextScale: UiTextScale;
+  /** The reader's own document text size and line spacing, over the
+   *  theme's; "auto" keeps the theme's. */
+  docTextSize: DocTextSize;
+  docLineSpacing: DocLineSpacing;
   shortcuts: Shortcuts;
   /** The keys of plugins' commands as the user set them, by command id,
    *  over their manifests' keybindings; "" for none. */
@@ -359,6 +383,8 @@ export const DEFAULT_SETTINGS: Settings = {
   customCss: "",
   zoom: 1,
   uiTextScale: 1,
+  docTextSize: "auto",
+  docLineSpacing: "auto",
   shortcuts: DEFAULT_SHORTCUTS,
   commandShortcuts: {},
   themeId: "default",

@@ -64,8 +64,8 @@ function App() {
   const { showTabBar, requestCloseTab, handleTabDetach, dragHoverPreview } =
     docs;
   const { moveTabToNewWindow, toggleReadOnly } = docs;
-  const { toggleSourceMode, zenMode, setZenMode, toggleZenMode } = docs;
-  const { menuChecks, sidebarLesson, entryMoved, skillFilesDeleted } = wiring;
+  const { toggleSourceMode, zenMode, setZenMode } = docs;
+  const { menuChecks, entryMoved, skillFilesDeleted } = wiring;
   const { documentsOpen, setDocumentsOpen, openFromDocuments } = wiring;
   const { documentRenamed, documentDeleted } = wiring;
   const { closeSaving, closeDiscarding, cancelClose, closePrompt } =
@@ -98,6 +98,17 @@ function App() {
             ...(!isIOSApp && {
               "--sidebar-width": `${sidebarWidth.width}px`,
             }),
+            // The document column is half the sidebar's width right of the
+            // window's centre, and half the AI panel's width left of it. The
+            // window bar's title follows both to stay over the column. The
+            // sidebar's half is kept apart so it can ride the sidebar's
+            // slide; the panel's takes effect at once, as the panel does.
+            "--window-bar-title-slide": `${
+              panelOpen ? sidebarWidth.width / 2 : 0
+            }px`,
+            "--window-bar-title-shift": `${
+              agentPresence.mounted ? -(agentPanel.width / 2) : 0
+            }px`,
           } as React.CSSProperties
         }
       >
@@ -120,7 +131,6 @@ function App() {
           open={panelOpen}
           presence={sidebarPresence}
           closing={sidebarClosing}
-          spotlight={sidebarLesson}
           mode={panelMode}
           onModeChange={setPanelMode}
           width={sidebarWidth}
@@ -251,7 +261,6 @@ function App() {
           tutorial={tutorial}
           settings={settings}
           setSettings={setSettings}
-          zen={{ on: zenMode, toggle: toggleZenMode }}
           t={t}
         />
       </div>

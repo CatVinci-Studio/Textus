@@ -5,6 +5,10 @@ import {
   type ImageAlign,
   UI_TEXT_SCALES,
   type UiTextScale,
+  DOC_TEXT_SIZES,
+  type DocTextSize,
+  DOC_LINE_SPACINGS,
+  type DocLineSpacing,
   type ColorSwatchMode,
   type DiagramEngine,
 } from "../../prefs/SettingsContext";
@@ -65,6 +69,57 @@ export function EditorPage({
             <option value="auto">{t.contentWidthAuto}</option>
             <option value="standard">{t.contentWidthStandard}</option>
             <option value="full">{t.contentWidthFull}</option>
+          </Select>
+        </SettingRow>
+        {/* The reader's own size and spacing for the document, over the
+            theme's. */}
+        <SettingRow label={t.docTextSizeLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.docTextSizeLabel}
+            value={String(settings.docTextSize)}
+            onChange={(e) =>
+              setSettings({
+                docTextSize: (e.target.value === "auto"
+                  ? "auto"
+                  : Number(e.target.value)) as DocTextSize,
+              })
+            }
+          >
+            {DOC_TEXT_SIZES.map((size) => (
+              <option key={size} value={String(size)}>
+                {size === "auto" ? t.docTextSizeAuto : `${size} px`}
+              </option>
+            ))}
+          </Select>
+        </SettingRow>
+        <SettingRow label={t.docLineSpacingLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.docLineSpacingLabel}
+            value={settings.docLineSpacing}
+            onChange={(e) =>
+              setSettings({
+                docLineSpacing: e.target.value as DocLineSpacing,
+              })
+            }
+          >
+            {DOC_LINE_SPACINGS.map((spacing) => (
+              <option key={spacing} value={spacing}>
+                {
+                  t[
+                    (
+                      {
+                        auto: "docLineSpacingAuto",
+                        compact: "docLineSpacingCompact",
+                        standard: "docLineSpacingStandard",
+                        relaxed: "docLineSpacingRelaxed",
+                      } as const
+                    )[spacing]
+                  ]
+                }
+              </option>
+            ))}
           </Select>
         </SettingRow>
         {/* A phone's UI is sized by iOS's own text styles instead. */}

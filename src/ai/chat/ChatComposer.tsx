@@ -83,7 +83,6 @@ export function ChatComposer({
   dockActions,
   switchModels = false,
   onSend,
-  onSkillUsed,
   onStop,
   onEscape,
   onModeChange,
@@ -259,7 +258,6 @@ export function ChatComposer({
       typed,
     );
     if (selectionPerMessage && selectedText) setDroppedSelection(selectedText);
-    if (message !== typed) onSkillUsed?.();
   }
 
   function onKeyDown(e: React.KeyboardEvent) {

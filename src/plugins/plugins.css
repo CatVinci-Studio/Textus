@@ -337,14 +337,11 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-settings-page {
   display: flex;
   flex-direction: column;
-  min-height: 240px;
-  margin: var(--space-2) var(--space-3);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  overflow: hidden;
+  margin: var(--space-2) 0 0;
+  border-top: 1px solid var(--ui-border);
 }
 .plugin-webview-settings {
-  min-height: 220px;
+  min-height: 120px;
 }
 .plugin-setting-input {
   width: 220px;
@@ -562,9 +559,9 @@ button.plugin-card-open:hover .plugin-card-name {
 .ProseMirror.plugin-cursor-block {
   caret-color: transparent;
 }
+/* A character cell, so square: a capsule here read as a pill on the text. */
 .plugin-block-cursor {
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: 1px;
   background: color-mix(in srgb, var(--ui-text) 72%, transparent);
   color: var(--ui-surface);
 }

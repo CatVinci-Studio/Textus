@@ -24,10 +24,16 @@ import {
   frontmatterSchema,
 } from "./markdown/frontmatter-schema";
 import { createGithubAlertPlugin } from "./markdown/github-alert-plugin";
+import { installProseMirrorSpeedups } from "./prosemirror-speedups";
 import {
   headingIdPlugin,
   headingIdsOnParse,
 } from "./markdown/heading-id-plugin";
+import {
+  createTocPlugin,
+  remarkTocPlugin,
+  tocSchema,
+} from "./markdown/toc-plugin";
 import { rawHtmlSchema } from "./html/raw-html-schema";
 import { remarkHtmlImages } from "./images/image-html";
 import { createRawHtmlPreviewPlugin } from "./html/raw-html-preview-plugin";
@@ -37,6 +43,7 @@ import {
 } from "./markdown/br-hardbreak-plugin";
 import {
   remarkHighlightPlugin,
+  remarkSuperscriptPlugin,
   remarkStrikethroughTildesPlugin,
   remarkEmphasisUnderscoresPlugin,
   mdSpanSchema,
@@ -45,6 +52,7 @@ import {
 } from "./marks/md-span-schema";
 import { createMdSpanAutopairPlugin } from "./marks/md-span-autopair-plugin";
 import { createColorSwatchPlugin } from "./marks/color-swatch-plugin";
+import { emojiShortcodePlugin } from "./emoji/emoji-shortcode-plugin";
 import { createBracketAutopairPlugin } from "./keys/bracket-autopair-plugin";
 import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
 import { selectAllKeyPlugin } from "./keys/select-all";
@@ -133,6 +141,9 @@ import { readOnlyPlugin } from "./read-only-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../prefs/SettingsContext";
 
+// Long documents: ProseMirror lookups that were linear made logarithmic.
+installProseMirrorSpeedups();
+
 /** Where the editor mounts and what it opens with, plus the DOM details the
  *  stylesheets rely on. `label` is read on every update, so a language
  *  switch reaches it. */
@@ -213,6 +224,15 @@ export function withEditorCore(
       .use(orderedListInputRule)
       .use(headingIdsOnParse)
       .use(headingIdPlugin)
+      // `[TOC]`: its Enter ahead of the block keys.
+      .use(remarkTocPlugin)
+      .use(tocSchema)
+      .use(
+        createTocPlugin(() => {
+          const t = resolveStrings(settings.current.language);
+          return { label: t.tocLabel, empty: t.tocEmpty };
+        }),
+      )
       // Ahead of gfm's table keys.
       .use(tableEdgeArrowPlugin)
       .use(gfmWithoutStrikethrough)
@@ -271,9 +291,10 @@ export function withEditorCore(
         ),
       )
 
-      // Bold/italic/strikethrough/highlight/inline code as nodes with
+      // Bold/italic/strikethrough/highlight/sub- and superscript/inline code as nodes with
       // synthesized, Typora-style delimiters.
       .use(remarkHighlightPlugin)
+      .use(remarkSuperscriptPlugin)
       .use(remarkStrikethroughTildesPlugin)
       .use(remarkEmphasisUnderscoresPlugin)
       .use(mdSpanSchema)
@@ -297,6 +318,8 @@ export function withEditorCore(
           mode: () => settings.current.colorSwatches,
         }),
       )
+
+      .use(emojiShortcodePlugin)
 
       .use(remarkMathPlugin)
       .use(mathInlineSchema)

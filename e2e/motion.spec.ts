@@ -100,15 +100,16 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       // Playwright retries a click on a moving target with other scroll
       // alignments, and a scroll closes a Select: let the page settle.
       await settled(page.locator(".settings-panel"));
-      await page.getByRole("combobox", { name: "编辑器主题" }).click();
+      const select = page.getByRole("combobox", { name: "图片存储位置" });
+      await select.scrollIntoViewIfNeeded();
+      await settled(page.locator(".settings-panel"));
+      await select.click();
       const list = page.getByRole("listbox");
       await expect(list).toBeVisible();
       await settled(list);
       // A choice acts at once, while the list is still on its way out.
-      await list.getByRole("option", { name: "纸张" }).click();
-      await expect(
-        page.getByRole("combobox", { name: "编辑器主题" }),
-      ).toContainText("纸张");
+      await list.getByRole("option", { name: "上传到图床" }).click();
+      await expect(select).toContainText("上传到图床");
       await expect(list).toHaveCount(0, GONE);
     });
 

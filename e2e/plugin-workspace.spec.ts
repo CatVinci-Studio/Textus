@@ -91,3 +91,72 @@ test("without files.read the folder's documents are refused", async ({
     "test.find was not granted files.read",
   );
 });
+
+const LISTENER = `
+exports.activate = function () {
+  let changes = 0;
+  textus.metadata.onDidChange(async () => {
+    changes++;
+    const tags = await textus.metadata.tags();
+    textus.ui.statusItem("seen", {
+      text: "changes " + changes + ": " + tags.map((t) => t.tag).join(","),
+    });
+  });
+  textus.ui.statusItem("seen", { text: "listening" });
+};
+`;
+
+test("a plugin listening from the start hears of a folder opened later", async ({
+  page,
+}) => {
+  await page.addInitScript((host) => {
+    if (window.top !== window) return;
+    const w = window as unknown as Record<string, unknown>;
+    w.__devPlugins = [
+      {
+        id: "test.listen",
+        dir: "/plugins/test.listen",
+        manifest: JSON.stringify({
+          id: "test.listen",
+          name: "Listen",
+          version: "1.0.0",
+          publisher: "test",
+          description: "Hears of the folder's changes.",
+          engines: { textus: "^1.3.0" },
+          main: "host.js",
+          activationEvents: ["onStartupFinished"],
+          permissions: ["files.read"],
+        }),
+        dev: false,
+        files: { "host.js": host },
+      },
+    ];
+    w.__devPluginState = {
+      allOn: true,
+      plugins: { "test.listen": { enabled: true, granted: ["files.read"] } },
+    };
+    w.__devFs = { "/work/notes/a.md": "# A\n\nBoats at dusk. #boats\n" };
+    w.__devPickFolder = "/work/notes";
+  }, LISTENER);
+  await openApp(page, { settings: { language: "en" } });
+  await expect(status(page)).toHaveText("listening");
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-open-folder"),
+  );
+  await expect(page.getByRole("tree", { name: "Files" })).toBeVisible();
+  // Coming back to the window looks the folder over: first as it is, then
+  // after a note gained a tag.
+  const lookAgain = () =>
+    page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await lookAgain();
+  await page.waitForTimeout(800);
+  await page.evaluate(() => {
+    const fs = (window as unknown as { __devFs: Record<string, string> })
+      .__devFs;
+    fs["/work/notes/a.md"] += "\nThe harbour. #harbour\n";
+  });
+  await lookAgain();
+  await expect(status(page)).toHaveText(/changes \d+: .*harbour/);
+});

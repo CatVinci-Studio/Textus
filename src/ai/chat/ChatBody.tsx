@@ -55,7 +55,6 @@ export function ChatBody({
   defaultMode,
   tourMode,
   defaultWebSearch,
-  onSkillUsed,
   labels,
   proposalStatus,
   pendingCount,
@@ -508,7 +507,6 @@ export function ChatBody({
         switchModels={variant !== "quick"}
         defaultWebSearch={defaultWebSearch}
         onSend={handleSend}
-        onSkillUsed={onSkillUsed}
         onStop={stopAll}
         onEscape={onEscape ?? (() => {})}
         onModeChange={onModeChange}
