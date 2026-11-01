@@ -170,17 +170,19 @@ test("an installed plugin starts, and its views load, only once it is needed", a
   expect(after).toContain("plugin:test.shout");
 });
 
-test("the paper agent's UI loads only when a paper is started", async ({
+test("the paper agent's UI loads only when Research is picked", async ({
   page,
 }) => {
   await openApp(page, {
     settings: { language: "en", agentDefaultMode: "write" },
     storage: { "textus-agent-panel-open": "1" },
   });
-  await expect(
-    page.getByRole("button", { name: "Write a paper…" }),
-  ).toBeVisible();
+  const panel = page.locator(".agent-panel-view");
+  await expect(panel.getByRole("combobox", { name: /^Mode/ })).toBeVisible();
   expect(await loaded(page)).not.toContain("paper");
-  await page.getByRole("button", { name: "Write a paper…" }).click();
+  // Research mode's empty panel picks the paper's length.
+  await panel.getByRole("combobox", { name: /^Mode/ }).click();
+  await page.getByRole("option", { name: "Research" }).click();
   await expect.poll(() => loaded(page)).toContain("paper");
+  await expect(page.getByLabel("Length")).toBeVisible();
 });
