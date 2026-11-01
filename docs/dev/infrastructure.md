@@ -16,7 +16,7 @@ All under the [CatVinci-Studio](https://github.com/CatVinci-Studio) organization
 | [textus-themes](https://github.com/CatVinci-Studio/textus-themes)         | The theme gallery: themes shared through issue #1, reviewed with `/approve`                                       |
 | [homebrew-tap](https://github.com/CatVinci-Studio/homebrew-tap)           | Retired: its `tap_migrations.json` moves old tap installs to Homebrew's official `textus` cask                    |
 | [arch-repo](https://github.com/CatVinci-Studio/arch-repo)                 | The signed `[catvinci]` pacman repository that serves `textus-bin`                                                |
-| [levis-homepage](https://github.com/CatVinci-Studio/levis-homepage)       | textus.catvinci.com (the old name stuck)                                                                          |
+| [textus-website](https://github.com/CatVinci-Studio/textus-website)       | textus.catvinci.com                                                                                               |
 | [catvinci-homepage](https://github.com/CatVinci-Studio/catvinci-homepage) | catvinci.com                                                                                                      |
 
 ## Automation
