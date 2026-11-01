@@ -1671,4 +1671,17 @@ fn a_section_is_shown_as_its_writer_streams_it() {
             text: "Green roofs".into()
         }]
     );
+    // A long section comes whole, for the document to show.
+    let long = "长".repeat(5000);
+    let events = std::sync::Mutex::new(Vec::new());
+    let send = |e: PaperEvent| events.lock().unwrap().push(e);
+    let watch = draft::SectionWatch::new(0, &send);
+    watch.push(Streamed::Text(&long));
+    assert_eq!(
+        events.lock().unwrap().clone(),
+        [PaperEvent::SectionText {
+            index: 0,
+            text: long.clone()
+        }]
+    );
 }

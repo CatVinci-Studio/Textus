@@ -328,6 +328,11 @@ pub async fn ai_paper_draft(
         let mut drafted = |i: usize, markdown: &str| {
             save_section(&root, &files.paper.id, i, markdown)?;
             sections.push(markdown.to_string());
+            // The stream's last words may have been held back.
+            send(PaperEvent::SectionText {
+                index: i as u32,
+                text: markdown.to_string(),
+            });
             send(PaperEvent::Section {
                 index: i as u32,
                 status: SectionStatus::Drafted,
@@ -372,6 +377,10 @@ pub async fn ai_paper_draft(
         .await;
         for i in changed {
             save_section(&root, &files.paper.id, i, &sections[i])?;
+            send(PaperEvent::SectionText {
+                index: i as u32,
+                text: sections[i].clone(),
+            });
         }
         send(PaperEvent::Phase {
             phase: PaperPhase::Finishing,
