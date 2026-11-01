@@ -256,11 +256,15 @@ async fn fetch_with(
     limit: usize,
     redirects: reqwest::redirect::Policy,
 ) -> Result<Vec<u8>, String> {
-    let client = crate::net::client(CONNECT_TIMEOUT, REQUEST_TIMEOUT)
+    let client = crate::net::public_client(CONNECT_TIMEOUT, REQUEST_TIMEOUT)?
         .redirect(redirects)
         .build()
         .map_err(|e| e.to_string())?;
-    let response = client.get(url).send().await.map_err(|e| e.to_string())?;
+    let response = client
+        .get(url)
+        .send()
+        .await
+        .map_err(|e| crate::net::error_text(&e))?;
     crate::ext_stats::check_redirected(&response)?;
     let status = response.status();
     if !status.is_success() {
