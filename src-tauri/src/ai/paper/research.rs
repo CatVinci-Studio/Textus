@@ -39,6 +39,24 @@ const LINK_UNSAFE: &percent_encoding::AsciiSet = &percent_encoding::CONTROLS
     .add(b'>')
     .add(b'%');
 
+/// What a web address can't hold inside a Markdown link, `%` aside so an
+/// escape already in it stays as it is: a DOI like 10.1061/40927(243)238
+/// cut the citation short at its `)`.
+const WEB_LINK_UNSAFE: &percent_encoding::AsciiSet = &percent_encoding::CONTROLS
+    .add(b' ')
+    .add(b'(')
+    .add(b')')
+    .add(b'<')
+    .add(b'>');
+
+/// A source's address as the paper's links carry it.
+pub(crate) fn link_safe(url: &str) -> String {
+    if reference_path(url).is_some() {
+        return url.to_string();
+    }
+    percent_encoding::utf8_percent_encode(url, WEB_LINK_UNSAFE).to_string()
+}
+
 /// Where a file of the user's reference library is, as a source's address.
 const LIBRARY: &str = "references/";
 
@@ -399,6 +417,10 @@ pub(crate) async fn research(
         .sources()
         .into_iter()
         .filter(|s| cited.contains(&s.n))
+        .map(|s| aicompat::agent::Source {
+            url: link_safe(&s.url),
+            ..s
+        })
         .collect();
     Ok(dossier)
 }

@@ -191,6 +191,8 @@ fn live_paper() {
             *section = web_figures::resolve(section, web_figures::find_on_commons).await;
         }
         let figures = finish::number_figures(&mut sections, &paper.language);
+        let mut dossier = dossier;
+        finish::title_sources(&mut dossier).await;
         let references = finish::references(&sections, &dossier, &paper.language);
         let sections: Vec<String> = sections
             .iter()
@@ -202,7 +204,7 @@ fn live_paper() {
         stats.insert("figures".into(), json!(figures));
         stats.insert(
             "length".into(),
-            json!(draft::length(&markdown, &paper.language)),
+            json!(draft::prose_length(&sections.join("\n\n"), &paper.language)),
         );
         stats.insert(
             "commons_pictures".into(),

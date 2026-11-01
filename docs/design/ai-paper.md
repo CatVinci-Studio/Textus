@@ -150,7 +150,12 @@ it, lazily loaded. Each stage and helper is one run of
   section whose last try has only soft problems (its length, a missing
   planned figure) is kept rather than lose the paper, while a wrong citation
   or a broken chart still fails it; the dossier keeps only the sources its
-  notes cite. `paper/live.rs` runs a whole paper on a real provider
+  notes cite. A third run wrote a whole paper but three times too long, so a
+  section now holds at 70-120% of its target, is kept at 50-140% only as a
+  last try, and is sent back beyond; writers are told their most. Sources
+  cited by a DOI alone get their title from OpenAlex, an untitled source is
+  listed by its address once, and addresses are stored link-safe (a DOI
+  with parentheses had cut its citation short). `paper/live.rs` runs a whole paper on a real provider
   (`cargo test --lib live_paper -- --ignored --nocapture`), printing every
   rejection.
 
