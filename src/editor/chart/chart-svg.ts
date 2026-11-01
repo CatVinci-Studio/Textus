@@ -50,15 +50,45 @@ function ink(dark: boolean) {
   };
 }
 
-// Type sizes: the caption, footnote and body-large roles of design-system.css.
-const TICK = 11;
-const LABEL = 12;
-const TITLE = 14;
+// Type sizes: the footnote, small-body and body-large roles of
+// design-system.css, read beside the document's body text.
+const TICK = 12;
+const LABEL = 13;
+const TITLE = 15;
 
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
-const textWidth = (s: string, size: number) => s.length * size * 0.58;
+// CJK characters and full-width punctuation take a whole em; the rest about
+// half of one.
+const WIDE =
+  /[\u1100-\u115f\u2e80-\ua4cf\uac00-\ud7a3\uf900-\ufaff\ufe30-\ufe4f\uff00-\uff60\uffe0-\uffe6]/;
+const textWidth = (s: string, size: number) =>
+  [...s].reduce((w, ch) => w + (WIDE.test(ch) ? 1 : 0.58), 0) * size;
+
+/** `s` broken into lines no wider than `width`: at spaces where it has
+ *  them, else anywhere, as CJK text breaks. */
+export function wrapText(s: string, size: number, width: number): string[] {
+  const lines: string[] = [];
+  let line = "";
+  for (const token of s.match(/\S+\s*|\s+/g) ?? []) {
+    if (textWidth(line + token.trimEnd(), size) <= width) {
+      line += token;
+      continue;
+    }
+    if (line.trim()) lines.push(line.trimEnd());
+    line = "";
+    for (const ch of token) {
+      if (line && textWidth(line + ch, size) > width) {
+        lines.push(line.trimEnd());
+        line = "";
+      }
+      line += ch;
+    }
+  }
+  if (line.trim()) lines.push(line.trimEnd());
+  return lines;
+}
 
 /** About `count` round steps covering [min, max]. */
 export function niceTicks(min: number, max: number, count = 5): number[] {
@@ -131,16 +161,18 @@ export function chartSvg(spec: ChartSpec, layout: ChartLayout): string {
     top += LABEL + 12;
   }
 
-  const plotH = Math.round(Math.min(W * 0.5, 320));
+  const plotH = Math.round(Math.min(W * 0.55, 360));
+  let below = 0;
   if (spec.type === "pie") drawPie(spec, out, W, top, plotH, colors, c);
-  else drawAxes(spec, out, text, W, top, plotH, colors, c);
-  let bottom = top + plotH + (spec.type === "pie" ? 8 : spec.x ? 44 : 26);
+  else below = drawAxes(spec, out, text, W, top, plotH, colors, c);
+  let bottom =
+    top + plotH + below + (spec.type === "pie" ? 8 : spec.x ? 44 : 26);
 
   const notes = [spec.caption, spec.source && `Source: ${spec.source}`].filter(
     Boolean,
   ) as string[];
-  for (const note of notes) {
-    text(0, bottom + LABEL, note, LABEL, c.muted);
+  for (const line of notes.flatMap((n) => wrapText(n, LABEL, W))) {
+    text(0, bottom + LABEL, line, LABEL, c.muted);
     bottom += LABEL + 6;
   }
 
@@ -208,7 +240,7 @@ function drawAxes(
   h: number,
   colors: string[],
   c: Ink,
-) {
+): number {
   const scatter = spec.type === "scatter";
   const ys = spec.series.flatMap((s) =>
     scatter
@@ -242,6 +274,19 @@ function drawAxes(
     );
     text(left - 6, Number(y) + 4, fmt(t), TICK, c.muted, ' text-anchor="end"');
   }
+  const n = spec.labels.length;
+  const band = plotW / n;
+  const X = (j: number) => left + band * (j + 0.5);
+  // Every label on two lines at most where that fits; else skip some along
+  // a crowded axis.
+  const wrapped = scatter
+    ? []
+    : spec.labels.map((l) => wrapText(l, TICK, band - 6));
+  const twoLines = wrapped.every((lines) => lines.length <= 2);
+  const widest = Math.max(...spec.labels.map((l) => textWidth(l, TICK))) + 6;
+  const every = twoLines ? 1 : Math.max(1, Math.ceil(widest / band));
+  const extra = twoLines && wrapped.some((lines) => lines.length > 1);
+
   if (spec.y)
     text(
       0,
@@ -254,7 +299,7 @@ function drawAxes(
   if (spec.x)
     text(
       left + plotW / 2,
-      bottom + 40,
+      bottom + 40 + (extra ? TICK + 3 : 0),
       spec.x,
       LABEL,
       c.muted,
@@ -275,25 +320,26 @@ function drawAxes(
         `<g data-id="series-${i}" style="fill:${colors[i]};stroke:${c.surface};stroke-width:2">${dots.join("")}</g>`,
       );
     });
-    return;
+    return 0;
   }
 
-  const n = spec.labels.length;
-  const band = plotW / n;
-  const X = (j: number) => left + band * (j + 0.5);
-  // Every label that fits: skip some along a crowded axis.
-  const widest = Math.max(...spec.labels.map((l) => textWidth(l, TICK))) + 6;
-  const every = Math.max(1, Math.ceil(widest / band));
   spec.labels.forEach((l, j) => {
-    if (j % every === 0)
-      text(
-        Number(X(j).toFixed(1)),
-        bottom + 18,
-        l,
-        TICK,
-        c.muted,
-        ' text-anchor="middle"',
-      );
+    if (j % every !== 0) return;
+    const x = Number(X(j).toFixed(1));
+    if (!twoLines || wrapped[j].length < 2) {
+      text(x, bottom + 18, l, TICK, c.muted, ' text-anchor="middle"');
+      return;
+    }
+    out.push(
+      `<text x="${x}" y="${bottom + 18}" font-size="${TICK}" text-anchor="middle" style="fill:${c.muted}">` +
+        wrapped[j]
+          .map(
+            (line, k) =>
+              `<tspan x="${x}" dy="${k ? TICK + 3 : 0}">${esc(line)}</tspan>`,
+          )
+          .join("") +
+        "</text>",
+    );
   });
 
   if (spec.type === "bar") {
@@ -318,7 +364,7 @@ function drawAxes(
         `<g data-id="series-${i}" style="fill:${colors[i]}">${bars.join("")}</g>`,
       );
     });
-    return;
+    return extra ? TICK + 3 : 0;
   }
 
   spec.series.forEach((s, i) => {
@@ -345,4 +391,5 @@ function drawAxes(
       );
     out.push(`<g data-id="series-${i}">${parts.join("")}</g>`);
   });
+  return extra ? TICK + 3 : 0;
 }

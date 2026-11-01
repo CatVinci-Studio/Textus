@@ -28,6 +28,10 @@ import type { DiagramEngine } from "../prefs/SettingsContext";
 
 const mermaidKey = new PluginKey("mermaid-preview");
 const DEBOUNCE_MS = 500;
+/** How far the column's width must move before drawings are laid out again,
+ *  and how long it must then hold still: a panel sliding open redraws once. */
+const RESIZE_REDRAW_PX = 24;
+const RESIZE_DEBOUNCE_MS = 250;
 /** Drawings of diagrams not in the document kept for when one is accepted;
  *  every streamed step of one lands here too. */
 const PENDING_KEPT = 30;
@@ -104,6 +108,8 @@ export function createMermaidPreviewPlugin(options: {
     const pendingDrawn = new Map<string, Drawn>();
     // The engine the last pass was started for: a change redraws every diagram.
     let drawnFor = options.engine();
+    /** The width the last pass laid drawings out at. */
+    let drawnWidth = 0;
 
     function decorate(
       node: ProseNode,
@@ -180,6 +186,7 @@ export function createMermaidPreviewPlugin(options: {
         function drawing() {
           // The preview box's inner width: the column less its padding.
           const width = editorView.dom.clientWidth - 40;
+          drawnWidth = width;
           const fontFamily = getComputedStyle(editorView.dom).fontFamily;
           const engine = options.engine();
           const dark = appearanceIsDark();
@@ -323,12 +330,29 @@ export function createMermaidPreviewPlugin(options: {
         }
 
         let waitingToBeShown = false;
+        // A wider or narrower column lays every drawing out again, once it
+        // has settled: a chart drawn while the column was narrow would
+        // otherwise stay that small.
+        let resizeTimer: ReturnType<typeof setTimeout> | undefined;
         const shown =
           typeof ResizeObserver === "undefined"
             ? null
             : new ResizeObserver(() => {
-                if (waitingToBeShown && editorView.dom.clientWidth > 0)
+                const width = editorView.dom.clientWidth;
+                if (waitingToBeShown && width > 0) {
                   void renderAll();
+                  return;
+                }
+                if (
+                  width === 0 ||
+                  Math.abs(width - 40 - drawnWidth) < RESIZE_REDRAW_PX
+                )
+                  return;
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                  if (collectMermaidBlocks(editorView.state.doc).length > 0)
+                    void renderAll();
+                }, RESIZE_DEBOUNCE_MS);
               });
         shown?.observe(editorView.dom);
         // An appearance switch redraws the diagrams in the new colours.
@@ -372,6 +396,7 @@ export function createMermaidPreviewPlugin(options: {
           destroy() {
             if (debounceTimer) clearTimeout(debounceTimer);
             clearTimeout(scrollTimer);
+            clearTimeout(resizeTimer);
             waitForScroll(false);
             registerDrawAll(editorView.dom, null);
             registerPendingDrawer(editorView.dom, null);

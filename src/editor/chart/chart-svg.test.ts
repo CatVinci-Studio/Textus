@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import { parseChartSpec } from "./chart-spec";
-import { niceTicks, renderChart } from "./chart-svg";
+import { niceTicks, renderChart, wrapText } from "./chart-svg";
 
 const BAR = JSON.stringify({
   type: "bar",
@@ -115,5 +115,49 @@ describe("renderChart", () => {
   it("is laid out within its width, and at least 320 wide", () => {
     expect(renderChart(BAR, { width: 200 })).toContain('width="320"');
     expect(renderChart(BAR, { width: 2000 })).toContain('width="760"');
+  });
+
+  it("wraps a long caption to its width, Chinese anywhere, English at spaces", () => {
+    const zh = "二〇一八年投票率百分之六十五點九五，柯文哲五十八萬票";
+    const lines = wrapText(zh, 13, 13 * 10);
+    expect(lines.join("")).toBe(zh);
+    expect(lines.every((l) => [...l].length <= 10)).toBe(true);
+    expect(wrapText("green roofs cool cities", 10, 70)).toEqual([
+      "green roofs",
+      "cool cities",
+    ]);
+  });
+
+  it("gives Chinese legend entries their full width, so they don't overlap", () => {
+    const svg = renderChart(
+      JSON.stringify({
+        type: "bar",
+        labels: ["中山", "大同"],
+        series: [
+          { name: "2018年勝選者（柯文哲／丁守中）", data: [41, 45] },
+          { name: "2022年勝選者（蔣萬安／陳時中）", data: [42, 40] },
+        ],
+      }),
+      { width: 400 },
+    );
+    const keys = [...svg.matchAll(/data-id="key-\d" x="(\d+)" y="([\d.]+)"/g)];
+    // Too wide for one row at 400: the second entry starts a row of its own.
+    expect(keys[1][1]).toBe("0");
+    expect(Number(keys[1][2])).toBeGreaterThan(Number(keys[0][2]));
+  });
+
+  it("reads categories listed as x as the categories", () => {
+    const spec = parseChartSpec(
+      JSON.stringify({
+        type: "bar",
+        x: ["市長：國民黨", "市長：民進黨"],
+        y: "百分比（%）",
+        labels: ["57.57%", "50.12%"],
+        series: [{ name: "百分比", data: [57.57, 50.12] }],
+      }),
+    );
+    expect(spec.labels).toEqual(["市長：國民黨", "市長：民進黨"]);
+    expect(spec.x).toBeUndefined();
+    expect(spec.y).toBe("百分比（%）");
   });
 });
