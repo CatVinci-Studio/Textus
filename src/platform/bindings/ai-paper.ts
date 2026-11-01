@@ -8,7 +8,7 @@ import { invoke as __TAURI_INVOKE, Channel } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	ai_paper_run: (request: PaperRequest_Deserialize, channel: Channel<PaperEvent_Deserialize>) => __TAURI_INVOKE<Paper>("ai_paper_run", { request, channel }),
+	ai_paper_run: (request: PaperRequest_Deserialize, channel: Channel<PaperEvent_Deserialize>) => __TAURI_INVOKE<Paper_Serialize>("ai_paper_run", { request, channel }),
 	/**
 	 *  The outline as the user edited it on the card, kept for drafting. Notes
 	 *  it names that the dossier doesn't have are dropped; it needs a section,
@@ -23,6 +23,8 @@ export const commands = {
 	 *  request, by `ai_cancel` with `request_id`.
 	 */
 	ai_paper_draft: (request: DraftRequest_Deserialize, channel: Channel<PaperEvent_Deserialize>) => __TAURI_INVOKE<null>("ai_paper_draft", { request, channel }),
+	/**  Paper `id` as it was kept, for its card to go on from where it stopped. */
+	ai_paper_status: (docPath: string | null, workspaceRoot: string | null, id: string) => __TAURI_INVOKE<PaperProgress_Serialize>("ai_paper_status", { docPath, workspaceRoot, id }),
 };
 
 /* Types */
@@ -229,19 +231,7 @@ export type OutlineSection = {
 };
 
 /**  One paper being written. Kept as `.textus/papers/<id>/paper.json`. */
-export type Paper = {
-	id: string,
-	topic: string,
-	/**  The language it is written in, a BCP 47 tag ("zh", "en"). */
-	language: string,
-	/**  How long the finished text should be, in characters. */
-	targetChars: number,
-	/**
-	 *  What its research may still spend; kept so a resumed paper can't
-	 *  start over with a full budget.
-	 */
-	budget: ResearchBudget,
-};
+export type Paper = Paper_Serialize | Paper_Deserialize;
 
 /**  One update from `ai_paper_run`. Display only: what is kept is on disk. */
 export type PaperEvent = PaperEvent_Serialize | PaperEvent_Deserialize;
@@ -370,6 +360,25 @@ export type PaperPhase = "planning" | "researching" | "outlining" |
 /**  Waiting for the user to approve the outline. */
 "awaitingOutline" | "drafting" | "illustrating" | "reviewing" | "finishing" | "done";
 
+/**  How far a kept paper has come: what its card offers to go on with. */
+export type PaperProgress = PaperProgress_Serialize | PaperProgress_Deserialize;
+
+/**  How far a kept paper has come: what its card offers to go on with. */
+export type PaperProgress_Deserialize = {
+	paper: Paper_Deserialize,
+	outline?: Outline | null,
+	/**  How many of the outline's sections are written. */
+	drafted: number,
+};
+
+/**  How far a kept paper has come: what its card offers to go on with. */
+export type PaperProgress_Serialize = {
+	paper: Paper_Serialize,
+	outline: Outline | null,
+	/**  How many of the outline's sections are written. */
+	drafted: number,
+};
+
 /**
  *  Writes a paper on `topic` in the document's project: for now its
  *  research - the questions planned, the helpers' notes - kept in
@@ -395,6 +404,11 @@ export type PaperRequest_Deserialize = {
 	searchService?: string | null,
 	searxngUrl?: string | null,
 	requestId: string,
+	/**
+	 *  The paper to go on with, or the id a new one is kept under; None
+	 *  for a new id.
+	 */
+	id?: string | null,
 	topic: string,
 	/**  The language it is written in, a BCP 47 tag. */
 	language: string,
@@ -422,6 +436,11 @@ export type PaperRequest_Serialize = {
 	searchService: string | null,
 	searxngUrl: string | null,
 	requestId: string,
+	/**
+	 *  The paper to go on with, or the id a new one is kept under; None
+	 *  for a new id.
+	 */
+	id: string | null,
 	topic: string,
 	/**  The language it is written in, a BCP 47 tag. */
 	language: string,
@@ -431,6 +450,57 @@ export type PaperRequest_Serialize = {
 	 *  none.
 	 */
 	imageModel: ImageModel_Serialize | null,
+};
+
+/**  How far a paper has come. */
+export type PaperStage = 
+/**  Begun: its research, if any, is not kept until it is whole. */
+"researching" | 
+/**  Researched and outlined; waiting for the outline to be approved. */
+"outlined" | 
+/**  Its outline approved: being drafted, its sections kept as written. */
+"drafting" | 
+/**  Written into its document. */
+"done";
+
+/**  One paper being written. Kept as `.textus/papers/<id>/paper.json`. */
+export type Paper_Deserialize = {
+	id: string,
+	topic: string,
+	/**  The language it is written in, a BCP 47 tag ("zh", "en"). */
+	language: string,
+	/**  How long the finished text should be, in characters. */
+	targetChars: number,
+	/**
+	 *  What its research may still spend; kept so a resumed paper can't
+	 *  start over with a full budget.
+	 */
+	budget: ResearchBudget,
+	/**
+	 *  How far it has come, so a paper stopped - or the app quit - goes on
+	 *  from there.
+	 */
+	stage?: PaperStage,
+};
+
+/**  One paper being written. Kept as `.textus/papers/<id>/paper.json`. */
+export type Paper_Serialize = {
+	id: string,
+	topic: string,
+	/**  The language it is written in, a BCP 47 tag ("zh", "en"). */
+	language: string,
+	/**  How long the finished text should be, in characters. */
+	targetChars: number,
+	/**
+	 *  What its research may still spend; kept so a resumed paper can't
+	 *  start over with a full budget.
+	 */
+	budget: ResearchBudget,
+	/**
+	 *  How far it has come, so a paper stopped - or the app quit - goes on
+	 *  from there.
+	 */
+	stage: PaperStage,
 };
 
 /**  A paper's limits and what it has used of them. */

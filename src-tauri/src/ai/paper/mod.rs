@@ -20,7 +20,9 @@ mod web_figures;
 
 pub(crate) use budget::{BudgetCounts, BudgetKind, ResearchBudget, SharedBudget};
 pub(crate) use events::{ActivityKind, PaperEvent, PaperPhase, SectionStatus, SourceEntry};
-pub(crate) use store::{load, load_section, new_id, save, save_section, PaperFiles};
+pub(crate) use store::{
+    clear_sections, load, load_section, new_id, save, save_section, PaperFiles,
+};
 
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Channel;
@@ -39,6 +41,26 @@ pub struct Paper {
     /// What its research may still spend; kept so a resumed paper can't
     /// start over with a full budget.
     pub budget: ResearchBudget,
+    /// How far it has come, so a paper stopped - or the app quit - goes on
+    /// from there.
+    #[serde(default)]
+    pub stage: PaperStage,
+}
+
+/// How far a paper has come.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub enum PaperStage {
+    /// Begun: its research, if any, is not kept until it is whole.
+    #[default]
+    Researching,
+    /// Researched and outlined; waiting for the outline to be approved.
+    Outlined,
+    /// Its outline approved: being drafted, its sections kept as written.
+    Drafting,
+    /// Written into its document.
+    Done,
 }
 
 /// What the research helpers found. Kept as `dossier.json`.
@@ -151,6 +173,9 @@ pub struct PaperRequest {
     pub search_service: Option<String>,
     pub searxng_url: Option<String>,
     pub request_id: String,
+    /// The paper to go on with, or the id a new one is kept under; None
+    /// for a new id.
+    pub id: Option<String>,
     pub topic: String,
     /// The language it is written in, a BCP 47 tag.
     pub language: String,
@@ -176,6 +201,7 @@ pub async fn ai_paper_run(
         search_service,
         searxng_url,
         request_id,
+        id,
         topic,
         language,
         target_chars,
@@ -185,9 +211,14 @@ pub async fn ai_paper_run(
         .ok_or_else(|| "NO_PROJECT".to_string())?;
     let entry = crate::ai::catalog::find(&provider)
         .ok_or_else(|| format!("unknown provider: {provider}"))?;
+    // A paper begun before goes on from what it kept: its research, its
+    // outline, what its research may still spend.
+    let kept = id.as_deref().and_then(|id| load(&root, id).ok());
     // As many pictures as one send may make, the paper's own limit aside:
     // the outline plans no more than can be drawn.
-    let mut research_budget = ResearchBudget::for_paper();
+    let mut research_budget = kept
+        .as_ref()
+        .map_or_else(ResearchBudget::for_paper, |f| f.paper.budget);
     research_budget.limits.images =
         crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), &provider)
             .map_or(0, |run| research_budget.limits.images.min(run.limit as u32));
@@ -219,38 +250,52 @@ pub async fn ai_paper_run(
                         entry.label
                     )
                 })?;
-        let mut paper = Paper {
-            id: new_id(),
-            topic,
-            language,
-            target_chars,
-            budget: budget.snapshot(),
-        };
-        let library = root
-            .join(crate::ai::project::REFERENCES_DIR)
-            .is_dir()
-            .then_some(root.as_path());
-        let dossier = research::research(&agent, &paper, &web, &budget, &send, library).await?;
-        paper.budget = budget.snapshot();
-        // Kept before the outline, so a failed outline doesn't cost the
-        // research.
-        let mut files = PaperFiles {
-            paper: paper.clone(),
-            dossier,
+        let mut files = kept.unwrap_or_else(|| PaperFiles {
+            paper: Paper {
+                id: id.unwrap_or_else(new_id),
+                topic,
+                language,
+                target_chars,
+                budget: budget.snapshot(),
+                stage: PaperStage::Researching,
+            },
+            dossier: Dossier::default(),
             outline: None,
-        };
-        save(&root, &files)?;
-        send(PaperEvent::Phase {
-            phase: PaperPhase::Outlining,
         });
-        let outline = outline::make_outline(&agent, &paper, &files.dossier, &send).await?;
+        // Kept at once, so a paper stopped while researching is found and
+        // begun again.
+        save(&root, &files)?;
+        if files.dossier.notes.is_empty() {
+            let library = root
+                .join(crate::ai::project::REFERENCES_DIR)
+                .is_dir()
+                .then_some(root.as_path());
+            files.dossier =
+                research::research(&agent, &files.paper, &web, &budget, &send, library).await?;
+            files.paper.budget = budget.snapshot();
+            // Kept before the outline, so a failed outline doesn't cost the
+            // research.
+            save(&root, &files)?;
+        }
+        let outline = match files.outline.clone() {
+            Some(outline) => outline,
+            None => {
+                send(PaperEvent::Phase {
+                    phase: PaperPhase::Outlining,
+                });
+                outline::make_outline(&agent, &files.paper, &files.dossier, &send).await?
+            }
+        };
         files.outline = Some(outline.clone());
+        if files.paper.stage == PaperStage::Researching {
+            files.paper.stage = PaperStage::Outlined;
+        }
         save(&root, &files)?;
         send(PaperEvent::OutlineReady { outline });
         send(PaperEvent::Phase {
             phase: PaperPhase::AwaitingOutline,
         });
-        Ok(paper)
+        Ok(files.paper)
     })
     .await
 }
@@ -336,6 +381,10 @@ pub async fn ai_paper_draft(
                 status: SectionStatus::Drafting,
             })
         };
+        // What an earlier run of this draft wrote stays written.
+        let written = (0..outline.sections.len())
+            .map(|i| load_section(&root, &files.paper.id, i))
+            .collect::<Result<Vec<_>, _>>()?;
         let mut sections: Vec<String> = Vec::with_capacity(outline.sections.len());
         let mut drafted = |i: usize, markdown: &str| {
             save_section(&root, &files.paper.id, i, markdown)?;
@@ -356,6 +405,7 @@ pub async fn ai_paper_draft(
             &files.paper,
             &outline,
             &files.dossier,
+            &written,
             &started,
             &mut drafted,
             &send,
@@ -427,6 +477,9 @@ pub async fn ai_paper_draft(
         send(PaperEvent::Ready {
             markdown: finish::assemble(&opening, &sections, references.as_deref()),
         });
+        let mut files = files;
+        files.paper.stage = PaperStage::Done;
+        save(&root, &files)?;
         send(PaperEvent::Phase {
             phase: PaperPhase::Done,
         });
@@ -451,8 +504,49 @@ pub async fn ai_paper_save_outline(
     let mut files = load(&root, &id)?;
     let outline = outline::as_edited(outline, &files.dossier)?;
     files.outline = Some(outline.clone());
+    files.paper.stage = PaperStage::Drafting;
+    // Sections drafted from an outline before this one aren't this one's.
+    clear_sections(&root, &id)?;
     save(&root, &files)?;
     Ok(outline)
+}
+
+/// How far a kept paper has come: what its card offers to go on with.
+#[derive(Serialize, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PaperProgress {
+    pub paper: Paper,
+    pub outline: Option<Outline>,
+    /// How many of the outline's sections are written.
+    pub drafted: u32,
+}
+
+/// Paper `id` as it was kept, for its card to go on from where it stopped.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn ai_paper_status(
+    doc_path: Option<String>,
+    workspace_root: Option<String>,
+    id: String,
+) -> Result<PaperProgress, String> {
+    let root = crate::ai::workspace::project_root(doc_path.as_deref(), workspace_root.as_deref())
+        .ok_or_else(|| "NO_PROJECT".to_string())?;
+    progress(&root, &id)
+}
+
+pub(crate) fn progress(root: &std::path::Path, id: &str) -> Result<PaperProgress, String> {
+    let files = load(root, id)?;
+    let sections = files.outline.as_ref().map_or(0, |o| o.sections.len());
+    let mut drafted = 0;
+    for i in 0..sections {
+        drafted += load_section(root, id, i)?.is_some() as u32;
+    }
+    Ok(PaperProgress {
+        paper: files.paper,
+        outline: files.outline,
+        drafted,
+    })
 }
 
 #[cfg(test)]
