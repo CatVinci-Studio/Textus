@@ -5,14 +5,13 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { CloseIcon, DetachIcon, PlusIcon } from "../../../ui/icons";
+import { DetachIcon, PlusIcon } from "../../../ui/icons";
 import { Tooltip } from "../../../ui/Tooltip";
 
 export interface AgentPanelLabels {
   title: string;
   newConversation: string;
   popOut: string;
-  close: string;
   /** The two tabs: the conversation, and what the AI keeps. */
   tabChat: string;
   tabProject: string;
@@ -29,7 +28,6 @@ export function AgentPanelView({
   labels,
   onNewConversation,
   onPopOut,
-  onClose,
   history,
   memory,
   tab,
@@ -41,9 +39,6 @@ export function AgentPanelView({
   /** Absent where the chat cannot be detached into its own window (iOS):
    *  the button is not drawn. */
   onPopOut?: () => void;
-  /** Absent on the desktop, where the window bar's button opens and closes
-   *  the panel: only the iPhone's sheet draws a close button. */
-  onClose?: () => void;
   /** The history button and its list. */
   history: ReactNode;
   /** The Memory tab's content, drawn only while it shows. */
@@ -128,18 +123,6 @@ export function AgentPanelView({
                 onClick={onPopOut}
               >
                 <DetachIcon />
-              </button>
-            </Tooltip>
-          )}
-          {onClose && (
-            <Tooltip text={labels.close}>
-              <button
-                type="button"
-                className="inline-chat-header-button"
-                aria-label={labels.close}
-                onClick={onClose}
-              >
-                <CloseIcon />
               </button>
             </Tooltip>
           )}

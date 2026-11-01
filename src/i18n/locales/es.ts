@@ -23,7 +23,9 @@ export default {
   agentPanelPopOut: "Abrir en una ventana aparte",
   agentPanelResize: "Cambiar el tamaño del panel de IA",
   sidebarResize: "Cambiar el tamaño de la barra lateral",
-  agentPanelSheet: "Expandir o contraer el panel de IA",
+  phonePages: "Página",
+  phonePageWrite: "Escribir",
+  phonePageAi: "IA",
   agentExpandWindowLabel:
     "Abrir las conversaciones completas en una ventana aparte",
   menuToggleAgentPanel: "Panel de IA",

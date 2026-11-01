@@ -1,0 +1,98 @@
+/* Textus AI on a phone: a page of its own beside the document, switched to
+   from the title row's capsule. */
+
+@media (max-width: 760px) {
+  /* The title row: the capsule on its line, the document's name under it. */
+  :root[data-window-chrome="mobile"]:has(.window-bar > .page-switch) {
+    --mobile-bar: 64px;
+  }
+
+  :root[data-window-chrome="mobile"] .window-bar > .page-switch {
+    position: absolute;
+    top: calc(var(--safe-top) + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  :root[data-window-chrome="mobile"]
+    .window-bar:has(> .page-switch)
+    .window-bar-title {
+    top: calc(var(--safe-top) + 44px);
+    max-width: 60%;
+    gap: 4px;
+    font-size: var(--text-caption);
+  }
+
+  :root[data-window-chrome="mobile"]
+    .window-bar:has(> .page-switch)
+    :is(.window-menu-button, .window-bar-status) {
+    align-self: flex-start;
+    margin-top: 1px;
+  }
+
+  :root[data-window-chrome="mobile"]
+    .window-bar:has(> .page-switch)
+    .window-bar-status {
+    height: 44px;
+    padding-right: 8px;
+  }
+
+  /* The whole screen under the title row. The desktop's dragged width means
+     nothing here, hence the !important over the inline style. */
+  :root[data-window-chrome="mobile"] .agent-panel {
+    position: fixed;
+    top: var(--mobile-top);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    width: auto !important;
+    max-width: none;
+    padding-top: 0;
+    border-left: none;
+    box-shadow: none;
+    background: var(--ui-bg);
+    flex-direction: column;
+    /* Whatever the conversation's length, the composer stays on screen:
+       the message list scrolls inside the page instead. */
+    overflow: hidden;
+    animation: motion-edge-in-end var(--dur-slow) var(--ease-spring);
+  }
+
+  :root[data-window-chrome="mobile"] .agent-panel[data-state="closing"] {
+    animation: motion-edge-out-end var(--dur-base) var(--ease-in) forwards;
+  }
+
+  :root[data-window-chrome="mobile"] .agent-panel .inline-chat-messages {
+    overscroll-behavior: contain;
+  }
+
+  :root[data-window-chrome="mobile"] .agent-panel-resizer {
+    display: none;
+  }
+
+  /* History and new conversation: finger-sized, like every other button
+     on the phone. */
+  :root[data-window-chrome="mobile"]
+    .agent-panel-actions
+    .inline-chat-header-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  :root[data-window-chrome="mobile"] .agent-panel-placeholder {
+    inset: 0;
+  }
+}
+
+/* Wider than a phone (iPad) the panel is a column beside the page. */
+@media (min-width: 761px) {
+  /* The docked column clears the taller title row. */
+  :root[data-window-chrome="mobile"] .agent-panel {
+    padding-top: var(--mobile-top);
+  }
+
+  :root[data-window-chrome="mobile"] .agent-panel-placeholder {
+    inset: var(--mobile-top) 0 0;
+  }
+}

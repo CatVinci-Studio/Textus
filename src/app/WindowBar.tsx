@@ -10,6 +10,9 @@ import { TextusAiButton } from "../ai/TextusAiSwitch";
 import { isIOSApp } from "../platform/capabilities";
 import { LockIcon, SidebarToggleIcon } from "../ui/icons";
 import { useFullscreenMark } from "./useFullscreenMark";
+import { usePhoneLayout } from "../ui/usePhoneLayout";
+import { PageSwitch } from "../mobile/PageSwitch";
+import { usePageSwipe } from "../mobile/usePageSwipe";
 import { runCommand } from "./commands";
 import {
   statusItemsSnapshot,
@@ -57,6 +60,10 @@ export function WindowBar({
   const { t, settings } = useSettings();
   useFullscreenMark();
   const menuBar = appDrawsWindowFrame && settings.menuBarShown;
+  // A phone switches between the document and Textus AI as two pages: the
+  // capsule takes the AI button's place, and the title goes under it.
+  const pages = usePhoneLayout() && settings.textusAi && showAgentToggle;
+  usePageSwipe(pages, agentOpen, onToggleAgent);
   return (
     <header className="window-bar" data-tauri-drag-region>
       {menuBar ? (
@@ -83,6 +90,14 @@ export function WindowBar({
             <SidebarToggleIcon />
           </button>
         </Tooltip>
+      )}
+      {pages && (
+        <PageSwitch
+          ai={agentOpen}
+          onChange={(ai) => {
+            if (ai !== agentOpen) onToggleAgent();
+          }}
+        />
       )}
       {/* The unsaved dot leads the title, as a native edited title does. */}
       <span className="window-bar-title">
@@ -116,18 +131,22 @@ export function WindowBar({
             {t.largeDocBadge}
           </span>
         )}
-        <span className="word-count">
-          {words > 0 && `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`}
-        </span>
+        {!(pages && agentOpen) && (
+          <span className="word-count">
+            {words > 0 && `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`}
+          </span>
+        )}
         {/* Struck through while Textus AI is off; right-click pauses or
           turns it off. */}
-        <TextusAiButton
-          className="window-bar-toggle"
-          panelOpen={agentOpen}
-          showPanel={showAgentToggle}
-          shortcut={agentShortcut}
-          onTogglePanel={onToggleAgent}
-        />
+        {!pages && (
+          <TextusAiButton
+            className="window-bar-toggle"
+            panelOpen={agentOpen}
+            showPanel={showAgentToggle}
+            shortcut={agentShortcut}
+            onTogglePanel={onToggleAgent}
+          />
+        )}
       </div>
       <WindowCaptionButtons />
     </header>

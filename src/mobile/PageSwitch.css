@@ -1,0 +1,49 @@
+/* The phone's page capsule: two equal halves and a pill that slides. */
+
+.page-switch {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-width: 132px;
+  padding: 2px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-text) 6%, transparent);
+  pointer-events: auto;
+}
+
+.page-switch-thumb {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc(50% - 2px);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-surface);
+  box-shadow: var(--shadow-raised);
+  transition: transform var(--dur-slow) var(--ease-spring-bouncy);
+}
+
+.page-switch[data-ai] .page-switch-thumb {
+  transform: translateX(100%);
+}
+
+.page-switch button {
+  position: relative;
+  min-height: 32px;
+  padding: 0 var(--space-4);
+  border: 0;
+  background: none;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+
+.page-switch button[aria-pressed="true"] {
+  color: var(--ui-text);
+  font-weight: 600;
+}

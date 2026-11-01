@@ -48,19 +48,18 @@ test("the panel has no close button; the quill and its menu close it", async ({
 test.describe("on a phone", () => {
   test.use(PHONE);
 
-  test("the title row's AI button is the same quill", async ({ page }) => {
+  test("Textus AI is the title row's capsule, and the quill again while off", async ({
+    page,
+  }) => {
     await openPhone(page);
-    const toggle = page.locator(button);
-    await expect(toggle.locator("svg path")).toHaveCount(1);
-    await toggle.tap();
+    await expect(page.locator(button)).toHaveCount(0);
+    await page.getByRole("button", { name: "AI", exact: true }).tap();
     await expect(page.locator(".agent-panel-view")).toBeVisible();
-  });
 
-  test("the sheet keeps its close button, over the page", async ({ page }) => {
-    await openPhone(page);
-    await page.locator(button).tap();
-    const panel = page.locator(".agent-panel-view");
-    await panel.getByRole("button", { name: "Close chat" }).tap();
-    await expect(panel).toBeHidden();
+    await openPhone(page, { settings: { textusAi: false } });
+    await expect(page.locator(".page-switch")).toHaveCount(0);
+    await expect(
+      page.locator(".window-bar-toggle.textus-ai-button-off"),
+    ).toBeVisible();
   });
 });

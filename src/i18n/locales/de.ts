@@ -23,7 +23,9 @@ export default {
   agentPanelPopOut: "In eigenem Fenster öffnen",
   agentPanelResize: "Breite des KI-Bereichs ändern",
   sidebarResize: "Breite der Seitenleiste ändern",
-  agentPanelSheet: "KI-Bereich auf- oder zuklappen",
+  phonePages: "Seite",
+  phonePageWrite: "Schreiben",
+  phonePageAi: "KI",
   agentExpandWindowLabel:
     "Vollständige Unterhaltungen in einem eigenen Fenster öffnen",
   menuToggleAgentPanel: "KI-Bereich",
