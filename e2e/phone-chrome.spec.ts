@@ -71,8 +71,7 @@ test("find and replace spans the screen under the title row", async ({
   await openPhone(page);
   await menuItem(page, "Find & Replace…");
   const bar = (await page.locator(".find-replace-bar").boundingBox())!;
-  // Under the title row: the page capsule and the document's name.
-  expect(bar).toMatchObject({ x: 0, y: 64, width: 430 });
+  expect(bar).toMatchObject({ x: 0, y: 44, width: 430 });
   // 44pt to hit; the replace row opens under it as on the desktop.
   const close = (await page
     .getByRole("button", { name: "Close find bar" })

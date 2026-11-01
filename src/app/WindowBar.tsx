@@ -61,9 +61,16 @@ export function WindowBar({
   useFullscreenMark();
   const menuBar = appDrawsWindowFrame && settings.menuBarShown;
   // A phone switches between the document and Textus AI as two pages: the
-  // capsule takes the AI button's place, and the title goes under it.
-  const pages = usePhoneLayout() && settings.textusAi && showAgentToggle;
-  usePageSwipe(pages, agentOpen, onToggleAgent);
+  // capsule takes the AI button's place, and the word count goes into the
+  // menu to leave the row to the title.
+  const phone = usePhoneLayout();
+  const pages = phone && settings.textusAi && showAgentToggle;
+  // An iPad keeps the docked panel, with the same edge swipes.
+  usePageSwipe(
+    isIOSApp && settings.textusAi && showAgentToggle,
+    agentOpen,
+    onToggleAgent,
+  );
   return (
     <header className="window-bar" data-tauri-drag-region>
       {menuBar ? (
@@ -75,7 +82,7 @@ export function WindowBar({
           </span>
         </>
       ) : (
-        <AppMenuButton checks={menuChecks} />
+        <AppMenuButton checks={pages ? { ...menuChecks, words } : menuChecks} />
       )}
       {/* The iPhone and the iPad open the sidebar from their own bar. */}
       {!isIOSApp && !menuBar && (
@@ -90,14 +97,6 @@ export function WindowBar({
             <SidebarToggleIcon />
           </button>
         </Tooltip>
-      )}
-      {pages && (
-        <PageSwitch
-          ai={agentOpen}
-          onChange={(ai) => {
-            if (ai !== agentOpen) onToggleAgent();
-          }}
-        />
       )}
       {/* The unsaved dot leads the title, as a native edited title does. */}
       <span className="window-bar-title">
@@ -131,14 +130,21 @@ export function WindowBar({
             {t.largeDocBadge}
           </span>
         )}
-        {!(pages && agentOpen) && (
+        {!pages && (
           <span className="word-count">
             {words > 0 && `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`}
           </span>
         )}
         {/* Struck through while Textus AI is off; right-click pauses or
           turns it off. */}
-        {!pages && (
+        {pages ? (
+          <PageSwitch
+            ai={agentOpen}
+            onChange={(ai) => {
+              if (ai !== agentOpen) onToggleAgent();
+            }}
+          />
+        ) : (
           <TextusAiButton
             className="window-bar-toggle"
             panelOpen={agentOpen}

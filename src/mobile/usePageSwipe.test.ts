@@ -27,6 +27,15 @@ describe("an edge swipe between the phone's pages", () => {
       swipeTurnsPage({ x: 420, y: 300 }, { x: 330, y: 500 }, width, false),
     ).toBe(false);
   });
+  it("closes an iPad's docked panel from the panel's own edge", () => {
+    expect(
+      swipeTurnsPage({ x: 700, y: 300 }, { x: 830, y: 300 }, 1024, true, 690),
+    ).toBe(true);
+    expect(
+      swipeTurnsPage({ x: 10, y: 300 }, { x: 140, y: 300 }, 1024, true, 690),
+    ).toBe(false);
+  });
+
   it("ignores the wrong direction for the page showing", () => {
     expect(
       swipeTurnsPage({ x: 10, y: 300 }, { x: 140, y: 300 }, width, false),

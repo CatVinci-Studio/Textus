@@ -2,39 +2,36 @@
    from the title row's capsule. */
 
 @media (max-width: 760px) {
-  /* The title row: the capsule on its line, the document's name under it. */
-  :root[data-window-chrome="mobile"]:has(.window-bar > .page-switch) {
-    --mobile-bar: 64px;
-  }
-
-  :root[data-window-chrome="mobile"] .window-bar > .page-switch {
-    position: absolute;
-    top: calc(var(--safe-top) + 4px);
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
+  /* The title row: the menu and the document's name at the left, the
+     capsule at the right, in the row's one line. */
   :root[data-window-chrome="mobile"]
-    .window-bar:has(> .page-switch)
+    .window-bar:has(.page-switch)
     .window-bar-title {
-    top: calc(var(--safe-top) + 44px);
-    max-width: 60%;
+    position: static;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+    transform: none;
     gap: 4px;
-    font-size: var(--text-caption);
+    color: var(--ui-text);
+    font-weight: 500;
   }
 
   :root[data-window-chrome="mobile"]
-    .window-bar:has(> .page-switch)
-    :is(.window-menu-button, .window-bar-status) {
-    align-self: flex-start;
-    margin-top: 1px;
-  }
-
-  :root[data-window-chrome="mobile"]
-    .window-bar:has(> .page-switch)
+    .window-bar:has(.page-switch)
     .window-bar-status {
-    height: 44px;
+    flex-shrink: 0;
+    margin-left: 8px;
     padding-right: 8px;
+  }
+
+  :root[data-window-chrome="mobile"] .window-bar .page-switch {
+    min-width: 112px;
+  }
+
+  :root[data-window-chrome="mobile"] .window-bar .page-switch button {
+    min-height: 32px;
+    padding: 0 var(--space-3);
   }
 
   /* The whole screen under the title row. The desktop's dragged width means

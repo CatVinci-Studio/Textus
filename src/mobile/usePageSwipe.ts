@@ -6,22 +6,26 @@ const EDGE = 28;
 /** The least travel, in px, that turns the page. */
 const TRAVEL = 60;
 
-/** Whether a finger from `start` to `end` turns the page: from the right
- *  edge leftwards to Textus AI, from the left edge rightwards back. */
+/** Whether a finger from `start` to `end` turns the page: from the
+ *  screen's right edge leftwards to Textus AI, and from the AI panel's left
+ *  edge (`panelLeft`: the screen's on a phone) rightwards back. */
 export function swipeTurnsPage(
   start: { x: number; y: number },
   end: { x: number; y: number },
   width: number,
   ai: boolean,
+  panelLeft = 0,
 ): boolean {
   const dx = end.x - start.x;
   const dy = end.y - start.y;
   if (Math.abs(dx) < TRAVEL || Math.abs(dx) < Math.abs(dy) * 2) return false;
-  return ai ? start.x <= EDGE && dx > 0 : start.x >= width - EDGE && dx < 0;
+  return ai
+    ? Math.abs(start.x - panelLeft) <= EDGE && dx > 0
+    : start.x >= width - EDGE && dx < 0;
 }
 
-/** Edge swipes between the phone's two pages. `enabled` false while there
- *  is only the one page. */
+/** Edge swipes between the document and Textus AI: the phone's two pages,
+ *  or an iPad's docked panel. `enabled` false while there is no AI to show. */
 export function usePageSwipe(enabled: boolean, ai: boolean, turn: () => void) {
   const state = useRef({ ai, turn });
   state.current = { ai, turn };
@@ -43,7 +47,17 @@ export function usePageSwipe(enabled: boolean, ai: boolean, turn: () => void) {
       const touch = e.changedTouches[0];
       if (!start || !touch) return;
       const end = { x: touch.clientX, y: touch.clientY };
-      if (swipeTurnsPage(start, end, window.innerWidth, state.current.ai))
+      const panel = document.querySelector(".agent-panel");
+      const panelLeft = panel?.getBoundingClientRect().left ?? 0;
+      if (
+        swipeTurnsPage(
+          start,
+          end,
+          window.innerWidth,
+          state.current.ai,
+          panelLeft,
+        )
+      )
         state.current.turn();
       start = null;
     };

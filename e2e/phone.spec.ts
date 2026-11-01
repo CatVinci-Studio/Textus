@@ -149,7 +149,7 @@ test("with the keyboard up the AI page drops what no longer fits whole", async (
   await page.getByRole("button", { name: "AI", exact: true }).tap();
   await expect(page.locator(".agent-panel-empty-mark")).toBeVisible();
   // The keyboard and a long selection chip leave about this much.
-  await page.setViewportSize({ width: 430, height: 330 });
+  await page.setViewportSize({ width: 430, height: 310 });
   // The hint stays whole; the spark gave its room up for it.
   await expect(page.locator(".agent-panel-empty-mark")).toBeHidden();
   const empty = (await page.locator(".agent-panel-empty").boundingBox())!;
