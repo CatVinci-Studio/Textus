@@ -812,11 +812,13 @@ br:is(.pending-delete, .pending-sentence-hot) {
   background: var(--doc-code-bg);
   overflow-x: auto;
   display: flex;
-  justify-content: center;
 }
 
+/* Centred by its margins, which a diagram wider than the box drops, so it
+   scrolls from its left edge instead of being cut off there. */
 .mermaid-preview svg {
   max-width: 100%;
+  margin-inline: auto;
 }
 
 /* A diagram in proposed text: a green box; its source until drawn. */

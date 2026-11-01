@@ -19,6 +19,9 @@ const WEBKIT_SPECS = [
   "stream-edge-cases.spec.ts",
   "revise-stream.spec.ts",
   "agent-image.spec.ts",
+  // A wide diagram scrolls from its left edge: WebKit lays out flex overflow
+  // on its own.
+  "diagram-fit.spec.ts",
   "drag-autoscroll.spec.ts",
   "api-key-field.spec.ts",
   "sidebar-toggle.spec.ts",
