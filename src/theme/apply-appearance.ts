@@ -11,6 +11,7 @@ import {
   useSettings,
   type Settings,
   type ThemeMode,
+  DOC_LINE_HEIGHTS,
 } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
 import { applyThemeChrome, clearThemeChrome } from "./theme-chrome";
@@ -101,6 +102,29 @@ export function useApplyAppearance(
       root.removeAttribute("data-image-align");
     else root.setAttribute("data-image-align", settings.imageAlign);
   }, [settings.imageAlign]);
+
+  // The reader's document size and spacing, over the theme's: set on the
+  // root, the attributes let them win over an imported theme too.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.docTextSize === "auto") {
+      root.style.removeProperty("--doc-font-size");
+      root.removeAttribute("data-doc-size");
+    } else {
+      root.style.setProperty("--doc-font-size", `${settings.docTextSize}px`);
+      root.setAttribute("data-doc-size", "");
+    }
+    if (settings.docLineSpacing === "auto") {
+      root.style.removeProperty("--doc-line-height");
+      root.removeAttribute("data-doc-leading");
+    } else {
+      root.style.setProperty(
+        "--doc-line-height",
+        String(DOC_LINE_HEIGHTS[settings.docLineSpacing]),
+      );
+      root.setAttribute("data-doc-leading", "");
+    }
+  }, [settings.docTextSize, settings.docLineSpacing]);
 
   // A factor on font sizes rather than CSS zoom on the panels: WebKit's zoom
   // leaves popovers and pointer coordinates in the unzoomed space.

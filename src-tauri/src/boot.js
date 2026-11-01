@@ -43,6 +43,19 @@ window.__textusBoot = function (boot, themeCss) {
     // default); theme/apply-appearance.ts sets the same property.
     if ([0.9, 1.1, 1.25].indexOf(settings.uiTextScale) >= 0)
       root.style.setProperty("--ui-text-scale", String(settings.uiTextScale));
+    // The reader's document size and spacing (DOC_TEXT_SIZES and
+    // DOC_LINE_HEIGHTS in prefs/settings-types.ts; apply-appearance.ts).
+    if (typeof settings.docTextSize === "number") {
+      root.style.setProperty("--doc-font-size", settings.docTextSize + "px");
+      root.setAttribute("data-doc-size", "");
+    }
+    var leading = { compact: 1.55, standard: 1.8, relaxed: 2.05 }[
+      settings.docLineSpacing
+    ];
+    if (leading) {
+      root.style.setProperty("--doc-line-height", String(leading));
+      root.setAttribute("data-doc-leading", "");
+    }
     // The only built-in content theme is the default, the absence of an
     // attribute; anything else is an imported theme's CSS.
     if (themeCss) root.setAttribute("data-user-theme", "");
