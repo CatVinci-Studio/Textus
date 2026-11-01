@@ -2,8 +2,9 @@ import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
 // Research mode: the message is the topic, which goes to ai_paper_run; its
-// outline waits on a card, Approve drafts it, and the paper arrives as one proposal at the end
-// of the document.
+// outline waits on a card, Approve drafts it into the document as it is
+// written, and the finished paper takes its place there, with nothing to
+// accept.
 
 const outline = {
   thesis: "Green roofs cool cities measurably.",
@@ -34,7 +35,7 @@ const paper = [
   "\\[1\\] A study. <https://example.org/study>",
 ].join("\n\n");
 
-test("a paper is researched, its outline approved, and proposed whole", async ({
+test("a paper is researched, its outline approved, and written into the document", async ({
   page,
 }) => {
   await page.addInitScript(
@@ -77,6 +78,8 @@ test("a paper is researched, its outline approved, and proposed whole", async ({
         ai_paper_draft: {
           __events: [
             { type: "phase", phase: "drafting" },
+            { type: "section", index: 0, status: "drafting" },
+            { type: "sectionText", index: 0, text: "Plants shade" },
             { type: "phase", phase: "finishing" },
             { type: "ready", markdown: paper },
             { type: "phase", phase: "done" },
@@ -100,13 +103,15 @@ test("a paper is researched, its outline approved, and proposed whole", async ({
 
   const card = page.locator(".paper-card");
   await expect(card).toContainText("Green roofs");
+  // One section opened to edit at a time.
+  await card.getByRole("button", { name: "Edit: How roofs cool" }).click();
   await expect(page.getByLabel("Section 1 title")).toHaveValue(
     "How roofs cool",
   );
   await page.getByLabel("Section 1 title").fill("How plants cool roofs");
   await page.getByRole("button", { name: "Approve and write" }).click();
 
-  await expect(card).toContainText("Proposed at the end of the document.");
+  await expect(card).toContainText("Written in the document.");
   const calls = await page.evaluate(() =>
     (
       (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
@@ -130,14 +135,18 @@ test("a paper is researched, its outline approved, and proposed whole", async ({
     "abc123",
   );
 
-  // The paper is one proposal, shown in the document until decided.
+  // The paper is in the empty document as it was, with nothing to accept
+  // and no blank line above it.
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await expect(editor).toContainText("Cooler Roofs");
-  await page
-    .getByRole("button", { name: "Accept", exact: true })
-    .first()
-    .click();
+  await expect(editor.locator("> :first-child")).toHaveText("Cooler Roofs");
   await expect(editor.locator("h1")).toHaveText("Cooler Roofs");
   await expect(editor).toContainText("Plants shade the roof [1].");
   await expect(editor.locator("h2").last()).toHaveText("References");
+  await expect(
+    page.getByRole("button", { name: "Accept", exact: true }),
+  ).toHaveCount(0);
+  // One Undo takes it out.
+  await editor.click();
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(editor).not.toContainText("Cooler Roofs");
 });

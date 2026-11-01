@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef } from "react";
 import { ai } from "../platform/ipc";
 import { errorText } from "../utils/error-text";
 import { imageModelOf } from "../ai/image-models";
-import { proposalsFromTurns } from "../ai/chat/ChatBody";
-import type { useEditorProposals } from "./useEditorProposals";
 import type { useAgentPanel } from "../ai/chat/panel/agent-panel";
+import type { AgentConversation } from "../ai/chat/useAgentConversation";
+import type { EditorRunner } from "../editor/useEditorRunner";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { Outline } from "../platform/bindings/ai-paper";
@@ -12,36 +12,40 @@ import {
   applyPaperEvent,
   paperCardTurns,
   paperLanguage,
-  paperProposalTurns,
   paperRun,
+  paperWrittenTurns,
   setPaperActions,
   updatePaperRun,
 } from "../ai/paper/paper-store";
+import { withoutPictures } from "../ai/paper/paper-document";
+import { usePaperDocument } from "./usePaperDocument";
 
 /**
- * "Write a paper": researches and outlines a paper on a topic, waits on its
- * card for the user to approve the outline, then drafts it and proposes it
- * whole at the end of the document (docs/design/ai-paper.md). Its progress
- * lives in the paper store; the conversation keeps its card and its
- * proposal.
+ * Research mode's paper: researches and outlines a paper on a topic, waits
+ * on its card for the user to approve the outline, then writes it straight
+ * into the document as it is drafted, with nothing to accept
+ * (docs/design/ai-paper.md). Its progress lives in the paper store; the
+ * conversation keeps its card.
  */
 export function usePaperWriter({
-  proposals,
+  run,
+  conversation,
   agentPanel,
   settings,
   filePath,
   t,
 }: {
-  proposals: ReturnType<typeof useEditorProposals>;
+  run: EditorRunner;
+  conversation: AgentConversation;
   agentPanel: ReturnType<typeof useAgentPanel>;
   settings: Settings;
   filePath: string | null;
   t: Strings;
 }) {
-  const { conversation, requestTargetRef, showProposals } = proposals;
+  const paperDocument = usePaperDocument(run);
   // Read when a step starts, so a run picks up the settings of its moment.
-  const latest = useRef({ settings, filePath, conversation, t });
-  latest.current = { settings, filePath, conversation, t };
+  const latest = useRef({ settings, filePath, conversation, t, paperDocument });
+  latest.current = { settings, filePath, conversation, t, paperDocument };
   // Each card's request in flight, to stop it.
   const requests = useRef(new Map<string, string>());
 
@@ -59,6 +63,8 @@ export function usePaperWriter({
 
   const fail = (key: string, err: unknown) => {
     requests.current.delete(key);
+    // What was written stays, as text of the user's own.
+    latest.current.paperDocument.settle(key);
     updatePaperRun(key, () => ({
       error: errorText(err),
       approving: false,
@@ -78,6 +84,7 @@ export function usePaperWriter({
         .paperSaveOutline(base.docPath, base.workspaceRoot, id, outline)
         .then((saved) => {
           updatePaperRun(key, () => ({ outline: saved }));
+          latest.current.paperDocument.begin(key);
           return ai.paperDraft(
             {
               provider: base.provider,
@@ -90,28 +97,31 @@ export function usePaperWriter({
             },
             (event) => {
               applyPaperEvent(key, event);
+              if (event.type === "sectionText")
+                latest.current.paperDocument.update(key);
               if (event.type !== "ready") return;
-              const turns = paperProposalTurns(
+              latest.current.paperDocument.settle(
                 key,
-                event.markdown,
-                latest.current.t.paperProposed,
+                withoutPictures(event.markdown),
               );
-              latest.current.conversation.append(turns);
-              // An append has no selection to stand by.
-              requestTargetRef.current = null;
-              showProposals(proposalsFromTurns(turns));
-              updatePaperRun(key, () => ({ proposed: true }));
+              latest.current.conversation.append(
+                paperWrittenTurns(latest.current.t.paperWritten),
+              );
+              updatePaperRun(key, () => ({ written: true }));
             },
           );
         })
         .then(() => {
           requests.current.delete(key);
+          // A run stopped while drafting ends without a paper: keep what
+          // was written of it.
+          latest.current.paperDocument.settle(key);
           updatePaperRun(key, () => ({ approving: false }));
         })
         .catch((err) => fail(key, err));
     },
     // `common` and `fail` read refs only.
-    [requestTargetRef, showProposals],
+    [],
   );
 
   const stop = useCallback((key: string) => {
@@ -131,6 +141,7 @@ export function usePaperWriter({
       const key = crypto.randomUUID();
       const language = paperLanguage(topic, s.language);
       updatePaperRun(key, () => ({
+        topic,
         unit: /^(zh|ja|ko)/.test(language)
           ? strings.paperUnitCharacters
           : strings.paperUnitWords,

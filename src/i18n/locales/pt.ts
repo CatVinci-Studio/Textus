@@ -417,9 +417,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Versão {n}: a anterior não passou nas verificações; está sendo refeita…",
   paperPapersOnly:
     "Não há busca na web disponível: a pesquisa só busca artigos acadêmicos (OpenAlex, arXiv) e sua biblioteca.",
-  paperProposed:
-    "O artigo foi proposto no fim do documento. Revise-o lá e aceite ou rejeite.",
-  paperProposedCard: "Proposto no fim do documento.",
+  paperWritten:
+    "O artigo está escrito no documento. Edite-o como qualquer texto; Desfazer o remove.",
+  paperWrittenCard: "Escrito no documento.",
   paperEnded: "A escrita deste artigo terminou.",
   paperStop: "Parar",
   paperUnitCharacters: "caracteres",

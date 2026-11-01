@@ -431,9 +431,9 @@ utiliser une.
     "Version {n} : la précédente n'a pas passé les vérifications, elle est refaite…",
   paperPapersOnly:
     "Aucune recherche web disponible : la recherche ne porte que sur les articles scientifiques (OpenAlex, arXiv) et votre bibliothèque.",
-  paperProposed:
-    "L’article est proposé à la fin du document. Relisez-le, puis acceptez-le ou rejetez-le.",
-  paperProposedCard: "Proposé à la fin du document.",
+  paperWritten:
+    "L’article est écrit dans le document. Modifiez-le comme n’importe quel texte ; Annuler le retire.",
+  paperWrittenCard: "Écrit dans le document.",
   paperEnded: "La rédaction de cet article est terminée.",
   paperStop: "Arrêter",
   paperUnitCharacters: "caractères",

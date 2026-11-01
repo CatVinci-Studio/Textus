@@ -88,7 +88,8 @@ export function useEditorReview({
   });
 
   const writePaper = usePaperWriter({
-    proposals: chat.proposals,
+    run,
+    conversation,
     agentPanel,
     settings,
     filePath,
