@@ -92,8 +92,13 @@ export function parseChartSpec(source: string): ChartSpec {
     fail("a pie's values can't be negative");
 
   const longest = Math.max(...series.map((s) => s.data.length));
+  // Models often list the categories as "x" rather than the axis' title:
+  // they are the categories then, before any "labels".
+  const xList = Array.isArray(obj.x) ? (obj.x as unknown[]) : null;
   let labels: string[];
-  if (obj.labels === undefined) {
+  if (xList && type !== "scatter" && xList.length >= longest) {
+    labels = xList.map((l) => (isNumber(l) ? String(l) : String(l ?? "")));
+  } else if (obj.labels === undefined) {
     labels = Array.from({ length: longest }, (_, i) => String(i + 1));
   } else {
     if (!Array.isArray(obj.labels)) return fail('"labels" must be a list');
@@ -105,7 +110,7 @@ export function parseChartSpec(source: string): ChartSpec {
   return {
     type: type as ChartType,
     title: optionalText(obj.title, "title"),
-    x: optionalText(obj.x ?? obj.xLabel, "x"),
+    x: optionalText(xList ? obj.xLabel : (obj.x ?? obj.xLabel), "x"),
     y: optionalText(obj.y ?? obj.yLabel, "y"),
     labels,
     series,
