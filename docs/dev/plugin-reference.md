@@ -461,6 +461,7 @@ type EditorOp =
   | { op: "undo" }
   | { op: "redo" }
   | { op: "cursor"; style: "bar" | "block" }
+  | { op: "scroll"; to: "center" | "top" | "bottom" }
   | { op: "flash"; query: string }
   | { op: "flashJump"; label: string; select?: boolean; extend?: boolean }
   | { op: "flashClear" };

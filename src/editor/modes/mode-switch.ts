@@ -74,7 +74,7 @@ export function alignPrefixOffset(prefix: string, markdown: string): number {
   return expected;
 }
 
-function scrollerOf(el: Element): HTMLElement | null {
+export function scrollerOf(el: Element): HTMLElement | null {
   return el.closest<HTMLElement>(".editor-scroll");
 }
 

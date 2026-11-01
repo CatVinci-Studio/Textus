@@ -17,6 +17,7 @@ import {
   selectionText,
   verticalMove,
 } from "./editor-text";
+import { scrollerOf } from "../../editor/modes/mode-switch";
 import { findFlash, type FlashLabel } from "./editor-flash";
 import { keyName } from "./editor-keys";
 import { isImeKeydown } from "../../utils/ime";
@@ -290,6 +291,9 @@ export type EditorOp =
   | { op: "undo" }
   | { op: "redo" }
   | { op: "cursor"; style: "bar" | "block" }
+  /** The caret's line to the middle, top or bottom of what shows: Vim's
+   *  zz, zt and zb. */
+  | { op: "scroll"; to: "center" | "top" | "bottom" }
   | { op: "flash"; query: string }
   | {
       op: "flashJump";
@@ -310,6 +314,24 @@ export interface EditorOpResult {
   letters?: string;
   /** Whether the selection is empty now. */
   empty: boolean;
+}
+
+/** Room kept above or below the caret's line at the top or the bottom. */
+const SCROLL_MARGIN = 24;
+
+function scrollCaretTo(view: EditorView, to: "center" | "top" | "bottom") {
+  const scroller = scrollerOf(view.dom);
+  if (!scroller) return;
+  const line = view.coordsAtPos(view.state.selection.head);
+  const box = scroller.getBoundingClientRect();
+  const height = line.bottom - line.top;
+  const target =
+    to === "top"
+      ? SCROLL_MARGIN
+      : to === "bottom"
+        ? box.height - height - SCROLL_MARGIN
+        : (box.height - height) / 2;
+  scroller.scrollTop += line.top - box.top - target;
 }
 
 function copyText(text: string) {
@@ -579,6 +601,9 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
     }
     case "flashClear":
       view.dispatch(state.tr.setMeta(inputKey, NO_FLASH));
+      break;
+    case "scroll":
+      scrollCaretTo(view, action.to);
       break;
   }
   result.empty = view.state.selection.empty;
