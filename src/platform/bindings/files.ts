@@ -15,6 +15,10 @@ export const commands = {
 	open_file_dialog: (textFilter: string | null, wordFilter: string | null, allFilter: string | null) => __TAURI_INVOKE<string | null>("open_file_dialog", { textFilter, wordFilter, allFilter }),
 	/**  Opens a native file picker for a CSS theme file. */
 	open_css_file_dialog: () => __TAURI_INVOKE<string | null>("open_css_file_dialog"),
+	/**  Picks a settings file to import (Settings › General). */
+	open_settings_file_dialog: () => __TAURI_INVOKE<string | null>("open_settings_file_dialog"),
+	/**  Asks where to export the settings to, as `default_name`. */
+	save_settings_file_dialog: (defaultName: string) => __TAURI_INVOKE<string | null>("save_settings_file_dialog", { defaultName }),
 	/**
 	 *  Opens a native file picker for one image, for a missing image's card. The
 	 *  frontend names the filter and lists the image types.

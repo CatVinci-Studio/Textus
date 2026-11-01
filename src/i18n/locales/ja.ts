@@ -1128,6 +1128,15 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   autosaveLabel: "自動保存",
   autosaveHint:
     "フォルダを開いているときは、名称未設定の書類もタイトルを名前にしてそのフォルダに保存します。",
+  settingsFileLabel: "設定ファイル",
+  settingsFileHint:
+    "設定をバックアップしたり、別のコンピュータに移したりできます。API キーと MCP トークンはこのコンピュータに残ります。",
+  settingsFileExport: "書き出す…",
+  settingsFileImport: "読み込む…",
+  settingsFileImportConfirm:
+    "このファイルの設定で今の設定を置き換えますか？このコンピュータの API キーと MCP トークンはそのままです。",
+  settingsFileImportReplace: "置き換える",
+  settingsFileNotSettings: "このファイルは Textus の設定ではありません。",
   untitledTab: "無題",
   markdownGuideTab: "Markdownガイド",
   agentGuideTab: "AI機能ガイド",

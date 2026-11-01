@@ -1198,6 +1198,15 @@ utiliser une.
   autosaveLabel: "Enregistrer automatiquement",
   autosaveHint:
     "Avec un dossier ouvert, les documents sans titre y sont aussi enregistrés, nommés d’après leur titre.",
+  settingsFileLabel: "Fichier de réglages",
+  settingsFileHint:
+    "Sauvegardez vos réglages ou emportez-les sur un autre ordinateur. Les clés d’API et les jetons MCP restent ici.",
+  settingsFileExport: "Exporter…",
+  settingsFileImport: "Importer…",
+  settingsFileImportConfirm:
+    "Remplacer vos réglages par ceux de ce fichier ? Les clés d’API et les jetons MCP de cet ordinateur sont conservés.",
+  settingsFileImportReplace: "Remplacer",
+  settingsFileNotSettings: "Ce fichier ne contient pas de réglages Textus.",
   untitledTab: "Sans titre",
   markdownGuideTab: "Guide Markdown",
   agentGuideTab: "Guide des fonctions IA",
