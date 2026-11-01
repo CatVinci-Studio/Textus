@@ -98,13 +98,16 @@ function App() {
             ...(!isIOSApp && {
               "--sidebar-width": `${sidebarWidth.width}px`,
             }),
-            // Half the document column's offset from the window, so the
-            // window bar's title can sit over the column rather than the
-            // window: the sidebar and the AI panel take their width from it.
+            // The document column is half the sidebar's width right of the
+            // window's centre, and half the AI panel's width left of it. The
+            // window bar's title follows both to stay over the column. The
+            // sidebar's half is kept apart so it can ride the sidebar's
+            // slide; the panel's takes effect at once, as the panel does.
+            "--window-bar-title-slide": `${
+              panelOpen ? sidebarWidth.width / 2 : 0
+            }px`,
             "--window-bar-title-shift": `${
-              ((panelOpen ? sidebarWidth.width : 0) -
-                (agentPresence.mounted ? agentPanel.width : 0)) /
-              2
+              agentPresence.mounted ? -(agentPanel.width / 2) : 0
             }px`,
           } as React.CSSProperties
         }

@@ -102,6 +102,68 @@ test("the title is centred over the document column, not the window", async ({
   );
 });
 
+test("the title slides with the sidebar, frame for frame", async ({ page }) => {
+  await openApp(page, { settings: { language: "en" }, animations: true });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.locator(toggle).click();
+  await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
+  // Its opening slide over first: one turned back at its start lasts as
+  // little as it had run.
+  await page.waitForFunction(
+    () => document.querySelector(".sidebar")!.getAnimations().length === 0,
+  );
+
+  const slide = await page.evaluate(async () => {
+    const title = document.querySelector(".window-bar-title")!;
+    const side = document.querySelector(".sidebar")!;
+    const pane = document.querySelector(".main-pane")!;
+    const button = document.querySelector<HTMLElement>(
+      ".window-bar-sidebar-toggle",
+    )!;
+    const drift: number[] = [];
+    const wanted: number[] = [];
+    // A click's state can land a frame or two later on a busy machine: wait
+    // for the sidebar itself, or the sample can miss the whole slide.
+    const waitFor = async (closed: boolean) => {
+      const until = performance.now() + 5000;
+      while (performance.now() < until) {
+        await new Promise(requestAnimationFrame);
+        if (side.classList.contains("sidebar-collapsed") === closed) return;
+      }
+    };
+    // The title's centre should be midway between the sidebar's moving edge
+    // and the column's far edge, in the frame it is drawn.
+    const sample = async (forMs: number) => {
+      const until = performance.now() + forMs;
+      while (performance.now() < until) {
+        await new Promise(requestAnimationFrame);
+        const box = title.getBoundingClientRect();
+        const want =
+          (side.getBoundingClientRect().right +
+            pane.getBoundingClientRect().right) /
+          2;
+        drift.push(Math.abs(box.left + box.width / 2 - want));
+        wanted.push(want);
+      }
+    };
+    // Out, at the exit's faster curve, then back in on the spring.
+    button.click();
+    await waitFor(true);
+    await sample(600);
+    button.click();
+    await waitFor(false);
+    await sample(700);
+    return {
+      worst: Math.max(...drift),
+      travelled: Math.max(...wanted) - Math.min(...wanted),
+    };
+  });
+  const { worst, travelled } = slide;
+  // Seen across the slide, not at either end of it.
+  expect(travelled).toBeGreaterThan(50);
+  expect(worst).toBeLessThan(1);
+});
+
 test.describe("on a Mac", () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
