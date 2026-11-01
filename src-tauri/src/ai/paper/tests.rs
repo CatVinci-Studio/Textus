@@ -1200,7 +1200,7 @@ fn a_web_picture_mark_gives_its_caption_and_search_words() {
 }
 
 #[tokio::test]
-async fn web_picture_marks_become_kept_pictures_with_credits_or_are_left_out() {
+async fn web_picture_marks_become_kept_pictures_with_credits_or_generated_ones() {
     let section = "Intro.\n\n<!-- textus-figure web: A roof in Basel | green roof Basel -->\n\nMid.\n\n<!-- textus-figure web: Nothing | no such picture -->\n\nEnd.";
     let find = |words: String| async move {
         if words == "green roof Basel" {
@@ -1223,7 +1223,15 @@ async fn web_picture_marks_become_kept_pictures_with_credits_or_are_left_out() {
         lines[2],
         "*Ann · CC BY 4.0 · [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:R.jpg)*"
     );
-    assert_eq!(&lines[3..], ["Mid.", "End."]);
+    // Commons has nothing: a picture for the image model to make instead.
+    assert_eq!(
+        &lines[3..],
+        [
+            "Mid.",
+            "![Nothing](textus-picture:16:9 Nothing (no such picture))",
+            "End."
+        ]
+    );
     assert_eq!(
         crate::ai::images::ready_bytes(id),
         Some((vec![1, 2, 3], "jpg"))

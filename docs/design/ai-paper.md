@@ -154,8 +154,11 @@ it, lazily loaded. Each stage and helper is one run of
   on Wikimedia Commons - Commons only, since a picture from any other page
   comes with no licence to use it - kept in the picture store like a
   generated one (shown in place, saved only on accept), with a credit line
-  after its caption: author, licence and a link to its Commons page. A mark
-  nothing is found for is left out.
+  after its caption: author, licence and a link to its Commons page. A real picture comes first: a mark nothing is found for
+  becomes a picture for the image model to make instead (its caption and
+  search words as the prompt), begun with the planned generated ones and
+  left out with them when there is no image model; the outline plans
+  `generated` only for what nothing real could show.
 
 - **Tuned on a real run** (MiniMax, 5,000 characters): each question's helper
   gets an even share of the research budget (the first helpers had spent it
