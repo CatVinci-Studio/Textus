@@ -1,4 +1,12 @@
 import { Channel } from "@tauri-apps/api/core";
+import type {
+  DraftRequest,
+  Outline,
+  Paper,
+  PaperEvent,
+  PaperProgress,
+  PaperRequest,
+} from "./bindings/ai-paper";
 import type { ProviderCatalogEntry } from "../ai/provider-catalog";
 import type { ImageModel, ImageProviderEntry } from "../ai/image-models";
 import type { SentBlock } from "../ai/doc-blocks";
@@ -249,6 +257,39 @@ export const ai = {
     searxngUrl: string,
   ) => command("web_search_status", provider, model, searchService, searxngUrl),
   cancelAgentMessage: (requestId: string) => command("ai_cancel", requestId),
+  /** A paper researched and outlined (src-tauri/src/ai/paper), its progress
+   *  through `onEvent`; it stops at the outline for the user to approve. */
+  paperRun: (request: PaperRequest, onEvent: (event: PaperEvent) => void) => {
+    const channel = new Channel<PaperEvent>();
+    channel.onmessage = onEvent;
+    return aiCall<Paper>("ai_paper_run", { request, channel });
+  },
+  /** The outline as the user edited it, kept for drafting. */
+  paperSaveOutline: (
+    docPath: string | null,
+    workspaceRoot: string | null,
+    id: string,
+    outline: Outline,
+  ) =>
+    aiCall<Outline>("ai_paper_save_outline", {
+      docPath,
+      workspaceRoot,
+      id,
+      outline,
+    }),
+  /** How far a kept paper came: its stage, outline and sections written. */
+  paperStatus: (
+    docPath: string | null,
+    workspaceRoot: string | null,
+    id: string,
+  ) => aiCall<PaperProgress>("ai_paper_status", { docPath, workspaceRoot, id }),
+  /** The approved paper drafted, reviewed and finished; it arrives whole
+   *  as a `ready` event. */
+  paperDraft: (request: DraftRequest, onEvent: (event: PaperEvent) => void) => {
+    const channel = new Channel<PaperEvent>();
+    channel.onmessage = onEvent;
+    return aiCall<null>("ai_paper_draft", { request, channel });
+  },
 
   loadAgentWorkspace: (docPath: string | null, rootOverride: string | null) =>
     command("load_agent_workspace", docPath, rootOverride),
@@ -294,6 +335,13 @@ export const ai = {
     template: string,
   ) => command("ensure_project_file", docPath, workspaceRoot, rel, template),
   pickTextFiles: () => command("pick_text_files"),
+  /** "Import references…": picked files, zips or (`folder`) a folder copied
+   *  into the project's references/ folder; null when nothing was picked. */
+  importReferences: (
+    docPath: string | null,
+    workspaceRoot: string | null,
+    folder: boolean,
+  ) => command("import_references_picked", docPath, workspaceRoot, folder),
   /** After an exchange: what to remember, update or forget, decided by the
    *  conversation's model. Nothing while Remember automatically is off. */
   /** After an exchange: what to remember, update or forget, decided by

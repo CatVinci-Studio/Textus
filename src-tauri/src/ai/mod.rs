@@ -12,6 +12,7 @@ pub mod kept_proposals;
 mod live_eval;
 pub mod memory;
 pub mod next_message;
+pub mod paper;
 pub mod project;
 pub mod route;
 pub mod rules;

@@ -1,6 +1,6 @@
 import { Fragment, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
-import type { AgentMode } from "../../prefs/SettingsContext";
+import type { PanelMode } from "../../prefs/SettingsContext";
 import { useMergedRef, usePresence } from "../../ui/usePresence";
 import { useFloatingList } from "../../ui/useFloatingList";
 import { useChatModels, type ChatModels } from "./chat-models";
@@ -8,7 +8,7 @@ import "./ModePicker.css";
 import { isImeKeydown } from "../../utils/ime";
 
 export interface ModeChoice {
-  value: AgentMode;
+  value: PanelMode;
   label: string;
   /** One line on what the mode does, under its name in the list. */
   hint: string;
@@ -31,9 +31,9 @@ export function ModePicker({
   labels,
   holdFocus = false,
 }: {
-  mode: AgentMode;
+  mode: PanelMode;
   modes: ModeChoice[];
-  onMode: (mode: AgentMode) => void;
+  onMode: (mode: PanelMode) => void;
   models?: ChatModels;
   labels: { mode: string; model: string; picker: string };
   /** A tap leaves focus, and the phone's keyboard, in the message. */

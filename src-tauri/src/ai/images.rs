@@ -23,6 +23,7 @@ pub(crate) use pending::*;
 
 mod inline;
 
+pub(crate) use inline::place_pictures;
 pub use inline::InlinePictures;
 
 pub const GENERATE_IMAGE_TOOL_NAME: &str = "generate_image";

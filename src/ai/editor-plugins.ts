@@ -15,6 +15,7 @@ import {
   type ReviewNote,
 } from "./margin/review-notes-plugin";
 import { ownRevisionPlugin } from "./margin/own-revision-plugin";
+import { paperRegionPlugin } from "./paper/paper-region-plugin";
 import { resolveStrings } from "../i18n/strings";
 import { sendTourSignal, type TourAi } from "../utils/events";
 import type { RevisionDisplay, Settings } from "../prefs/SettingsContext";
@@ -114,6 +115,7 @@ export function withAiPlugins(
       .use(chatSelectionPlugin)
       .use(createQuickAskWidgetPlugin(quickAskWidget))
       .use(createReviewNotesPlugin(reviewNotes))
+      .use(paperRegionPlugin)
       // Not AI: the writer's own tracked changes, which share the margin.
       .use(ownRevisionPlugin)
   );

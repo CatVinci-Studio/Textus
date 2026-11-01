@@ -1,0 +1,506 @@
+/* The paper's outline card: a card like a proposal's, its sections a
+   numbered list of small boxes. */
+.paper-outline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px 12px;
+  border: 1px solid var(--chat-hairline, var(--ui-border));
+  border-radius: var(--shape-m);
+  background: var(--chat-card-bg, transparent);
+  font-size: var(--text-secondary);
+}
+
+.paper-outline-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.paper-outline-title {
+  font-weight: 600;
+}
+
+.paper-outline-total {
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+
+.paper-outline-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--ui-muted);
+}
+
+.paper-outline-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.paper-outline-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
+}
+
+.paper-outline-section.paper-outline-editor {
+  padding: 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-s);
+  background: var(--ui-subtle);
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
+}
+
+.paper-outline-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.paper-outline input,
+.paper-outline textarea {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  color: inherit;
+  font: inherit;
+}
+
+.paper-outline input {
+  min-height: var(--control-height-sm);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+}
+
+.paper-outline textarea {
+  width: 100%;
+  border-radius: var(--shape-s);
+  resize: vertical;
+}
+
+.paper-outline-num {
+  flex: none;
+  min-width: calc(16px * var(--ui-text-scale, 1));
+  color: var(--ui-muted);
+  font-weight: 600;
+  text-align: right;
+}
+
+.paper-outline-kind {
+  flex: none;
+}
+
+.paper-outline-figure .inline-chat-action {
+  flex: none;
+}
+
+.paper-outline-section-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.paper-outline-length {
+  width: 80px;
+}
+
+.paper-outline-figure input {
+  flex: 1;
+}
+
+.paper-outline-actions {
+  flex-wrap: wrap;
+}
+
+.paper-outline-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The outline as it reads: the thesis set off, each section a title with
+   its length, a few key points and its figures as tags. */
+.paper-outline-thesis {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-left: 8px;
+  border-left: 2px solid var(--ui-accent, var(--ui-border));
+}
+
+.paper-outline-thesis p {
+  flex: 1;
+  margin: 0;
+  color: var(--ui-text);
+  line-height: 1.55;
+}
+
+.paper-outline-heading {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.paper-outline-words {
+  flex: none;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Edit, add and "n more": quiet text buttons that show on hover. */
+.paper-outline-edit,
+.paper-outline-more {
+  flex: none;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: var(--text-footnote);
+  cursor: pointer;
+}
+
+.paper-outline-edit:hover:not(:disabled),
+.paper-outline-more:hover {
+  color: var(--ui-accent, var(--ui-text));
+}
+
+.paper-outline-edit:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.paper-outline-section .paper-outline-row .paper-outline-edit,
+.paper-outline-thesis .paper-outline-edit {
+  opacity: 0;
+  transition: opacity var(--dur-fast);
+}
+
+.paper-outline-section:hover .paper-outline-edit,
+.paper-outline-thesis:hover .paper-outline-edit,
+.paper-outline-edit:focus-visible {
+  opacity: 1;
+}
+
+.paper-outline-more {
+  align-self: flex-start;
+  padding: 0 0 0 20px;
+}
+
+.paper-outline-points {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  line-height: 1.5;
+}
+
+.paper-outline-points li {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.paper-outline-points[data-open] li {
+  display: list-item;
+}
+
+.paper-outline-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-left: 20px;
+}
+
+.paper-outline-tag {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 1px 8px;
+  border-radius: var(--shape-pill);
+  background: var(--ui-subtle);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paper-outline-tag b {
+  color: var(--ui-text);
+  font-weight: 500;
+}
+
+@media (hover: none) {
+  .paper-outline-section .paper-outline-row .paper-outline-edit,
+  .paper-outline-thesis .paper-outline-edit {
+    opacity: 1;
+  }
+}
+
+/* The paper's card in the conversation, and the form that starts one. */
+.paper-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px 12px;
+  border: 1px solid var(--chat-hairline, var(--ui-border));
+  border-radius: var(--shape-m);
+  background: var(--chat-card-bg, transparent);
+  font-size: var(--text-secondary);
+}
+
+.paper-card .paper-outline {
+  padding: 0;
+  border: none;
+}
+
+.paper-card-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paper-card-title {
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+
+.paper-card-topic {
+  font-weight: 600;
+}
+
+.paper-card-progress,
+.paper-card-error {
+  margin: 0;
+}
+
+.paper-card-progress {
+  color: var(--ui-muted);
+}
+
+.paper-card-error {
+  color: var(--ui-danger);
+}
+
+.paper-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.paper-card-spacer {
+  flex: 1;
+}
+
+/* What the run is doing in detail, under its progress line. */
+.paper-card-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.paper-card-elapsed {
+  margin-left: auto;
+  font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
+}
+
+.paper-card-thinking {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  font-style: italic;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.paper-card-list,
+.paper-card-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-footnote);
+}
+
+.paper-card-item,
+.paper-card-recent li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.paper-card-item-text,
+.paper-card-recent-detail {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paper-card-item-status,
+.paper-card-recent-kind {
+  flex: none;
+  color: var(--ui-muted);
+}
+
+.paper-card-item[data-state="waiting"] .paper-card-item-text {
+  color: var(--ui-muted);
+}
+
+.paper-card-item[data-state="active"] .paper-card-item-status,
+.paper-card-item[data-state="drafting"] .paper-card-item-status,
+.paper-card-item[data-state="revising"] .paper-card-item-status {
+  color: var(--ui-accent, var(--ui-text));
+}
+
+.paper-card-item[data-state="failed"] .paper-card-item-status {
+  color: var(--ui-danger);
+}
+
+.paper-card-recent {
+  padding-top: 4px;
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
+  color: var(--ui-muted);
+}
+
+/* Motion: a spinner while the run works, a mark per item that breathes
+   while it is being worked on, and new lines that slide in. Transform and
+   opacity only. */
+.paper-card-spinner {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--ui-border);
+  border-top-color: var(--ui-accent, var(--ui-text));
+  border-radius: 50%;
+  animation: paper-spin var(--dur-spin) linear infinite;
+}
+
+.paper-card-mark {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--ui-muted);
+  border-radius: 50%;
+  transform: translateY(-1px);
+}
+
+.paper-card-mark[data-state="active"],
+.paper-card-mark[data-state="drafting"],
+.paper-card-mark[data-state="revising"] {
+  border-color: var(--ui-accent, var(--ui-text));
+  background: var(--ui-accent, var(--ui-text));
+  animation: paper-breathe var(--dur-pulse) var(--ease-in-out) infinite;
+}
+
+.paper-card-mark[data-state="done"],
+.paper-card-mark[data-state="drafted"] {
+  border-color: var(--ui-muted);
+  background: var(--ui-muted);
+}
+
+.paper-card-mark[data-state="failed"] {
+  border-color: var(--ui-danger);
+  background: var(--ui-danger);
+}
+
+.paper-card-enter {
+  animation: motion-rise-in var(--dur-medium) var(--ease-out) both;
+}
+
+.paper-card-thinking {
+  animation: motion-rise-in var(--dur-medium) var(--ease-out) both;
+}
+
+.paper-card-thesis,
+.paper-card-note {
+  margin: 0;
+  font-size: var(--text-footnote);
+}
+
+.paper-card-thesis {
+  padding-left: 8px;
+  border-left: 2px solid var(--ui-accent, var(--ui-border));
+}
+
+.paper-card-note {
+  color: var(--ui-muted);
+}
+
+.paper-card-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* The words a writer is writing: the newest at the bottom, the older ones
+   fading out at the top. */
+.paper-card-preview {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  max-height: 7.5em;
+  overflow: hidden;
+  margin-left: 16px;
+  padding: 4px 8px;
+  border-radius: var(--shape-s);
+  background: var(--ui-subtle);
+  font-size: var(--text-footnote);
+  line-height: 1.5;
+  mask-image: linear-gradient(to bottom, transparent, black 45%);
+  animation: motion-rise-in var(--dur-medium) var(--ease-out) both;
+}
+
+.paper-card-preview p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+@keyframes paper-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes paper-breathe {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paper-card-spinner,
+  .paper-card-mark,
+  .paper-card-enter,
+  .paper-card-thinking,
+  .paper-card-preview {
+    animation: none;
+  }
+}
+
+.paper-card-warning {
+  padding: 4px 8px;
+  border-radius: var(--shape-s);
+  background: var(--ui-subtle);
+  color: var(--ui-text);
+}
