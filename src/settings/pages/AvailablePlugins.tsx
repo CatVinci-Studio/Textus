@@ -104,7 +104,8 @@ export function AvailablePlugins({
   );
 }
 
-function CatalogProblem({ t, text }: { t: Strings; text: string }) {
+/** Why the catalog couldn't be read, with a button to try again. */
+export function CatalogProblem({ t, text }: { t: Strings; text: string }) {
   return (
     <div className="settings-row plugin-catalog-problem">
       <div className="settings-row-text">
