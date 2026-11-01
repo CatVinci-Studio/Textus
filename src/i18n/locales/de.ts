@@ -187,7 +187,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reviewNotesPicked: "{n} ausgewählt",
   reviewNotesAskPrefix: "Zu diesen Notizen:\n{notes}\n",
   reviewNoteAskPrefix: "Zu deiner Anmerkung „{comment}“: ",
-  agentTabChat: "Chat",
   agentTabProject: "Projekt",
   memoryStyle: "Schreibstil",
   memoryLibrary: "Lexikon",

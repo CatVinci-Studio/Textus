@@ -187,7 +187,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   reviewNotesPicked: "{n} selecionadas",
   reviewNotesAskPrefix: "Sobre estas notas:\n{notes}\n",
   reviewNoteAskPrefix: "Sobre a sua nota “{comment}”: ",
-  agentTabChat: "Conversa",
   agentTabProject: "Projeto",
   memoryStyle: "Estilo de escrita",
   memoryLibrary: "Biblioteca",
@@ -1149,7 +1148,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialDoneTitle: "Pronto",
   tutorialDoneBody:
     "Agora comece a escrever o seu; tabelas, fórmulas, temas, revisão e o resto estão nos Tutoriais em vídeo.",
-  tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja a aba Projeto no painel de IA.`,
+  tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja Projeto, o botão de pasta no painel de IA.`,
   closePromptMessage: "Este documento tem alterações não salvas.",
   closePromptSave: "Salvar",
   closePromptDiscard: "Não Salvar",

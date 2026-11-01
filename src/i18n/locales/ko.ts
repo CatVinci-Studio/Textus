@@ -173,7 +173,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   reviewNotesPicked: "{n}개 선택됨",
   reviewNotesAskPrefix: "이 메모들에 대해:\n{notes}\n",
   reviewNoteAskPrefix: "이 댓글 “{comment}”에 대해: ",
-  agentTabChat: "대화",
   agentTabProject: "프로젝트",
   memoryStyle: "문체",
   memoryLibrary: "라이브러리",

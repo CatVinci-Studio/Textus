@@ -197,7 +197,6 @@ utiliser une.
   reviewNotesPicked: "{n} sélectionnées",
   reviewNotesAskPrefix: "À propos de ces notes :\n{notes}\n",
   reviewNoteAskPrefix: "À propos de votre note «\u00a0{comment}\u00a0»\u00a0: ",
-  agentTabChat: "Discussion",
   agentTabProject: "Projet",
   memoryStyle: "Style d'écriture",
   memoryLibrary: "Bibliothèque",
@@ -1185,7 +1184,7 @@ utiliser une.
   tutorialDoneTitle: "Terminé",
   tutorialDoneBody:
     "À vous d'écrire, maintenant ; tableaux, formules, thèmes, relecture et le reste sont dans les Tutoriels vidéo.",
-  tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez l'onglet Projet du panneau IA.`,
+  tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez Projet, le bouton dossier du panneau IA.`,
   closePromptMessage:
     "Ce document contient des modifications non enregistrées.",
   closePromptSave: "Enregistrer",

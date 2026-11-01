@@ -166,7 +166,6 @@ export default {
   reviewNotesPicked: "已选 {n} 条",
   reviewNotesAskPrefix: "关于你的这几条批注：\n{notes}\n",
   reviewNoteAskPrefix: "关于这条批注“{comment}”：",
-  agentTabChat: "对话",
   agentTabProject: "项目",
   memoryStyle: "写作风格",
   memoryLibrary: "资料库",

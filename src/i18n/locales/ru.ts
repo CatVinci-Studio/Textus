@@ -192,7 +192,6 @@ export default {
   reviewNotesPicked: "Выбрано: {n}",
   reviewNotesAskPrefix: "Об этих заметках:\n{notes}\n",
   reviewNoteAskPrefix: "По поводу заметки «{comment}»: ",
-  agentTabChat: "Диалог",
   agentTabProject: "Проект",
   memoryStyle: "Стиль письма",
   memoryLibrary: "Картотека",
@@ -1159,7 +1158,7 @@ export default {
   tutorialDoneTitle: "Готово",
   tutorialDoneBody:
     "Теперь пишите своё; таблицы, формулы, темы, рецензирование и остальное — в Видеоуроках.",
-  tutorialDoneMemory: `${AI_NAME} со временем запоминает ваши требования и стиль; загляните на вкладку «Проект» в панели ИИ.`,
+  tutorialDoneMemory: `${AI_NAME} со временем запоминает ваши требования и стиль; загляните в «Проект» — кнопку с папкой в панели ИИ.`,
   closePromptMessage: "В документе есть несохранённые изменения.",
   closePromptSave: "Сохранить",
   closePromptDiscard: "Не сохранять",

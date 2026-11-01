@@ -186,7 +186,6 @@ type /name in a conversation to use one.
   reviewNotesPicked: "{n} selected",
   reviewNotesAskPrefix: "About these notes of yours:\n{notes}\n",
   reviewNoteAskPrefix: "About your note “{comment}”: ",
-  agentTabChat: "Chat",
   agentTabProject: "Project",
   memoryStyle: "Writing style",
   memoryLibrary: "Library",
@@ -1133,7 +1132,7 @@ type /name in a conversation to use one.
   tutorialDoneTitle: "All done",
   tutorialDoneBody:
     "Now start writing your own; tables, formulas, themes, review and the rest are in the Video Tutorials.",
-  tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see the Project tab in the AI panel.`,
+  tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see Project, the folder button in the AI panel.`,
   closePromptMessage: "This document has unsaved changes.",
   closePromptSave: "Save",
   closePromptDiscard: "Don't Save",

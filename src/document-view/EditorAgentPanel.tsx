@@ -88,8 +88,7 @@ export function EditorAgentPanel({
         title: t.agentPanelTitle,
         newConversation: t.chatNewConversation,
         popOut: t.agentPanelPopOut,
-        tabChat: t.agentTabChat,
-        tabProject: t.agentTabProject,
+        project: t.agentTabProject,
       }}
       onNewConversation={onNewConversation}
       onPopOut={canDetachChat ? onPopOut : undefined}

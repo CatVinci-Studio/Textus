@@ -59,54 +59,18 @@
   border-bottom: 1px solid var(--chat-hairline, var(--ui-border));
 }
 
-/* Conversation / Memory: a small segmented switch, its pill sliding to the
-   tab chosen. */
-.agent-panel-tabs {
-  position: relative;
-  display: inline-flex;
-  padding: 2px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: color-mix(in srgb, var(--ui-text) 6%, transparent);
-}
-
-.agent-panel-tabs-thumb {
-  position: absolute;
-  top: 2px;
-  bottom: 2px;
-  left: 2px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: var(--ui-surface);
-  box-shadow: var(--shadow-raised);
-  transition:
-    transform var(--dur-slow) var(--ease-spring-bouncy),
-    width var(--dur-slow) var(--ease-spring-bouncy);
-}
-
-.agent-panel-tabs button {
-  position: relative;
-  min-height: calc(var(--control-height-sm) - 4px);
-  padding: 0 var(--space-3);
-  border: 0;
-  background: none;
+/* The project's name for what the AI keeps, while its view shows. */
+.agent-panel-heading {
+  margin: 0;
   color: var(--ui-text);
-  font: inherit;
   font-size: var(--text-footnote);
-  font-weight: 500;
-  cursor: pointer;
-  transition: color var(--dur-fast) var(--ease-standard);
-}
-
-.agent-panel-tabs button[aria-selected="true"] {
   font-weight: 600;
 }
 
-.agent-panel-tabs button:focus-visible {
-  outline: 2px solid var(--ui-accent);
-  outline-offset: -2px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+/* The project button stays lit while its view shows. */
+.agent-panel-actions .inline-chat-header-button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  color: var(--ui-text);
 }
 
 .agent-panel-actions {

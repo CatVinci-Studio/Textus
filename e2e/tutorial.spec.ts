@@ -20,7 +20,7 @@ const UI = {
     tutorialDoneTitle: "All done",
     tutorialWatchNote: "Connect an AI later in",
     tutorialDoneMemory:
-      "Textus AI remembers your requirements and style over time; see the Project tab in the AI panel.",
+      "Textus AI remembers your requirements and style over time; see Project, the folder button in the AI panel.",
   },
   zh: {
     tutorialStart: "开始",

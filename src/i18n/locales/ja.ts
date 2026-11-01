@@ -175,7 +175,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   reviewNotesPicked: "{n} 件を選択",
   reviewNotesAskPrefix: "これらのコメントについて：\n{notes}\n",
   reviewNoteAskPrefix: "このコメント「{comment}」について：",
-  agentTabChat: "会話",
   agentTabProject: "プロジェクト",
   memoryStyle: "文体",
   memoryLibrary: "ライブラリ",
