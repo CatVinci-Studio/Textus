@@ -6,7 +6,9 @@ import { defineConfig, devices } from "@playwright/test";
  * only, since fonts differ. PLAYWRIGHT_PORT lets a second worktree run too.
  */
 const port = Number(process.env.PLAYWRIGHT_PORT) || 1430;
-const playgroundPort = port + 10;
+// Far from the app's port: worktrees pick ports ten apart (1430, 1440, ...),
+// and a nearer offset landed on another run's app server.
+const playgroundPort = port + 1000;
 /** The specs the opt-in WebKit project runs (projects below). */
 const WEBKIT_SPECS = [
   // How AI text lands and leaves: timing differs in WebKit. Not
