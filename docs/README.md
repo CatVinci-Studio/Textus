@@ -30,7 +30,7 @@ where the project is heading.
 
 | Document                                         | What it covers                                                                          |
 | ------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| [design-language.md](design/design-language.md)  | Interface rules: shapes, type roles, controls, colours, menus, dialogs, motion, themes  |
+| [design-language.md](design/design-language.md)  | The design standard: tokens, colour, type, layout, shape, motion, components, themes, plugins |
 | [plugins.md](design/plugins.md)                  | The plugin system and the market: what is built, and why                                |
 | [ai-agent.md](design/ai-agent.md)                | One AI request from start to end: providers, the agent loop, tools, rules for every model |
 | [ai-concepts.md](design/ai-concepts.md)          | The AI concepts: project folder, style profile, library, writing rules, skills, priority |

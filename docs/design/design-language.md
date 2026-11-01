@@ -1,100 +1,363 @@
-# Textus design language
+# Textus design standard
 
-The interface uses neutral backgrounds, light borders and a single accent color. Layout and interaction rules stay the same everywhere. Colors can change with the theme.
+The rules every surface of Textus is built to: the app, its official plugins, third-party plugins and themes. It is written to be followed by people and by AI agents without further explanation; where a rule needs a judgement, it says what to weigh.
 
-## Shared rules
+## How to read this document
 
-- `src/ui/design-system.css` defines the interface variables, focus styles, control heights and the reduced-motion settings. `src/ui/base.css` provides the fonts and the default light and dark colors. `src/app/App.css` imports the style sheets of the main window in order.
-- **Shape.** Containers are rounded rectangles in three sizes, `--shape-l` 16 (dialogs, sheets, Settings), `--shape-m` 12 (cards, Settings' groups, menus, popovers, the AI composer, code blocks) and `--shape-s` 8 (a box inside a card, a menu's or a list's highlighted row, tooltips, multi-line fields); nothing is rounder than its level, and nothing is under `--shape-xs` 4. A box inside another takes the outer radius less the padding between them (r = R − p), so both corners share a centre; boxes on one level share one radius. Controls - buttons, selects, one-line fields and search boxes, segmented controls (track and thumb), tabs, chips and switches - are capsules (`--shape-pill`); a button with only an icon is a circle. A large container keeps its own radius and keeps its capsules at least one padding from its edge (the AI composer); it never grows rounder to fit them. Radii, paddings, margins and gaps sit on a 4 px grid; 1-2 px hairlines and insets (a segmented control's) are the exception, and the document's own typography (themes, the editor's content, print) keeps its spacing. `src/ui/spacing-grid.test.ts` checks every other stylesheet. Use only the variables. Where the engine draws them (Chromium 139+, so WebView2) corners are continuous (`corner-shape: superellipse(1.25)`), capsules and circles stay `round`. Plain content groups have no shadow. Shadows are only for popovers and dialogs.
-- Controls have two heights: `--control-height` 28 (forms, dialogs, a Settings row's select) and `--control-height-sm` 24 (bars, cards, segmented controls, tags); on the phone 36 and 32, each reaching a 44 pt target on its own. A switch is 1.5 times its row's text tall (em-based), on every platform and at every Interface Text Size. When Settings is narrower than 760 px, it uses top navigation, and the content area scrolls on its own.
-- In Settings, each page's groups go from the most used to the least, with links out (Help) last. Group headings are in title case ("Fixed Shortcuts"), row labels in sentence case ("Save automatically"), except a menu item's own name ("Source Mode") and names the AI and the guides quote as they are ("Project Folder"). A switch is named by what it turns on, without "Enable", except a switch that turns on a whole AI feature. A row that only means something with another setting on is hidden while that setting is off, and comes right after it. A row's label says what the setting does, so it stands on its own ("Show page numbers in exports", not "PDF page numbers" with a line under it). A "?" after the label (`ui/InfoTip.tsx`, through `help` on `SettingRow` / `ToggleRow`) is the exception, not the default: it is for a row whose label can't be understood without it and whose explanation matters - a trade-off between choices (the diagram engine), a field that needs outside setup (an image host's address or token). It shows on hover, a click or a tap, never as grey text under the row. A caveat, a usage tip or a restated label gets no "?"; if a label needs one of those, write a better label. What is live stays visible under the row: a value (the folder in use, a fetched-on date) and a status (no tray, no room for the margin, an error).
-- Button size, corner radius, and the hover, pressed and disabled states are defined once, in `design-system.css`. Component styles only set layout and text color. The primary action uses a solid button (one per group). Secondary actions use a light-border button. The next level down uses a text button. One action appears as only one button in one place. For example, one change has only one pair of accept/reject buttons.
-- Interface text names a role, never a size: `--text-caption` (badges, counts, keycaps), `--text-footnote` (hints, group titles, empty states), `--text-secondary` (text beside the main text in a dense surface: a card, a list entry, a field in a bar), `--text-control` (a control's label), `--text-body` (the main text of a panel, menu, list or field), `--text-body-large` (main text where there is room: Settings' rows, a dialog), `--text-title` (a sheet's, panel's or navigation bar's title) and `--text-large-title` (a page's own title). `design-system.css` gives each role its desktop size (11, 12, 12, 13, 13, 14, 17, 22) and, under `:root[data-window-chrome="mobile"]`, iOS's (12, 13, 15, 15, 17, 17, 17, 34). Document text has its own type scale and is not affected. All of them follow **Interface text size** (`--ui-text-scale`, 90-125%): a size written in px instead of a role is written `calc(Npx * var(--ui-text-scale, 1))`, and a fixed box around text (a numbered disc) scales with it. Never use CSS `zoom` for this - WebKit leaves popovers and pointer coordinates unzoomed.
-- Icon buttons are circles: 24 px with no border in headers, inline and in toolbars; in the AI composer they have a border and match the height of its capsule selects and the send button. All selects use a custom-drawn arrow, in the two control heights.
-- An icon-only button is named with `aria-label` and hinted with `ui/Tooltip.tsx`, never with `title`: the tooltip shows after the mouse rests on it for 400 ms or when the keyboard moves to it, never on touch, and says what the button does - and, for a toggle that is on, how to turn it off. It never takes the focus or the pointer.
-- Menus (the app menu, context menus, the project bar menu and the Quick Ask dropdown) share the panel padding, menu item size, hover color and separators.
-- Do not use the native alert, confirm or dropdown controls. For messages and confirmations use `ui/app-dialog.tsx` (`showMessage` / `showConfirm`). For dropdowns use `ui/Select.tsx`. For checkboxes add the `ui-check` class. Only the open and save file dialogs and the macOS system menu bar stay native.
-- All popup menus and popovers use `useCloseOnOutsideClick`: a click outside or Esc closes them, and the listener is only active while they are open. Text inputs draw their focus ring on the inside, so it does not overlap neighboring controls.
-- Every interface colour is an `--ui-*` variable and every document colour a `--doc-*` one (see Theme rules).
-- Settings, the sidebar, menus, the tutorial, the AI panel and dialogs use the interface variables. Native window buttons follow the platform's interaction conventions.
+- **MUST**, **MUST NOT**: required. A change that breaks one is not merged.
+- **SHOULD**, **SHOULD NOT**: the default. Departing from it needs a reason written in the pull request.
+- **MAY**: allowed.
+- Each section is marked **In force** (the code does this today; tests check what can be checked) or **Planned** (agreed, not built yet; don't depend on it until it is marked In force). A planned item names the work that makes it real.
+- Values are given in CSS pixels at 100% Interface text size on the desktop. The phone's values follow in brackets where they differ.
+- Code references are paths in this repository.
 
-## Motion
+## 1. Principles
 
-- Durations, easing curves, offsets and scales come only from the variables in `src/ui/motion.css`. Do not write raw values.
-- Everything that moves is one of five moves. Use them rather than a keyframe of your own:
-  - **enter**: a part of the page arrives, fading in from a short way off. In a stylesheet, `animation: motion-enter …` with `--enter-x`, `--enter-y` and `--enter-scale` saying where from (a fade in place when unset); from script, `enter(el, { from, distance, scale })` (`ui/moves.ts`).
-  - **exit**: it leaves the same way: `motion-exit` with `--exit-x`, `--exit-y`, `--exit-scale`, or `exit(el)`, which resolves once it has gone.
-  - **mark**: what is about to change is tinted for a moment (`.motion-mark`, `--motion-mark-bg`), then the change comes and what it brings enters: `land(marked, change)`. A tint is set and taken off, never faded. New content with nothing it replaces just enters.
-  - **glide**: something moves to a new place or size: FLIP, `ui/flip.ts`.
-  - **beat**: the parts of one change drawn in different places - its text in the document, its card in the margin - enter as one: `startBeat(key)` where the change lands, `enterOnBeat(el, key)` for a part entering from script, `joinBeat(el, key)` for one whose stylesheet plays its entrance. A part drawn later joins the entrance as far in as it already is, so they end together.
-  - **crossfade**: a change to some blocks made in one go - a proposal accepted or rejected: `crossfade(root, [first, last], change, leaving)` cross-fades those blocks from their old look to their new one, glides the blocks after them to where the change put them and fades out `leaving` (its cards) where they stood, from copies taken before the change.
-  - **presence**: an element stays in the DOM while its exit plays: `ui/usePresence.ts`.
-  - "Working" loops (thinking dots, the caret while text is generated, a picture being made) are the only other animations, with a few colour-only marks (a strike arriving, a tint fading as it is read). These keep keyframes of their own; everything else uses the shared ones in `motion.css` (`motion-fade-in`, `motion-rise-in`, `motion-sheet-in`, `motion-enter` with its variables, …). `src/ui/motion-tokens.test.ts` fails on a new keyframe or a raw time in any other stylesheet.
-  - Durations: `--dur-instant` 80 ms (press, hover color change), `--dur-fast` 120 ms (small popover exit, arrow rotation, fades), `--dur-base` 200 ms (menu, popover, notice bar and dialog entry), `--dur-slow` 320 ms (sidebar, AI panel, Settings, Zen mode), `--dur-sheet` 450 ms (phone bottom sheets and full pages), `--dur-linger` 1600 ms (the tint on a row Settings' search led to, fading out), `--dur-stagger` 18 ms and `--dur-cascade` 700 ms (written text coming in word by word: the step from one word to the next, and the most a run of them may take - `cascade.ts`).
-  - Loops and waits: `--dur-blink` 1.1 s (a caret), `--dur-pulse` 1.2 s (thinking dots, a progress sweep), `--dur-spin` 0.7 s, `--dur-sheen` 2.4 s and `--dur-drift` 7.2 s (a picture being made), `--dur-stagger-row` 40 ms (rows of a list arriving); `--delay-soon` 400 ms (an indicator a quick answer never flashes), `--delay-pause` 1.5 s (shown once a reply pauses), `--delay-read` 3 s (a hint held long enough to read).
-  - Written text arriving: the AI's reply in the chat comes in a word at a time (`ui/cascade.ts`'s `Cascade`) - each word fades in a step after the one before, and a word still fading carries on through a redraw; text it writes into the document lands a paragraph at a time, once the paragraph is written whole: new writing rising into place (`--motion-distance-md`, `--dur-slow`), a rewritten paragraph's changes - each still decided on its own - fading in where they stand, all on one beat with their cards in the margin. While a paragraph is being rewritten it is tinted (`.pending-reading`). A paragraph held `HOLD_MS` (6 s, unit-reveal.ts) lands the sentences it has finished as one batch, and again each `HOLD_MS`; in a line of text a batch fades in as one (`Cascade.play(el, { together: true })`). A diagram being written is built up a part at a time, its nodes first, and the parts it had glide to where the new layout puts them.
-  - Curves: `--ease-standard` for changes in place, `--ease-out` for entry, `--ease-in` for exit, `--ease-in-out` for movement within the screen. The spring is `--ease-spring` (engines without `linear()` fall back to a cubic Bézier). `--ease-spring-bouncy`, with about 3% overshoot, is only for a finger release (panel snapping, a tab dropping into place, a switch).
-- Motion only tells the user three things: where something comes from, where it goes, and that a state changed. There are no looping decorations, except for "working" indicators (thinking dots, the export spinner, the cursor while text is generated).
-- Interface responses take 100–250 ms. Large panels take at most about 450 ms. An exit takes about 70% of the entry time.
-- Anything the user can toggle repeatedly (sidebar, AI panel, Zen mode, switches, arrows) uses a CSS transition, so it can reverse from its current value. Keyframes are only for the one-time entry of a newly mounted element. Animations never block input: an exiting element is `inert`, clicks pass through to what is below, and focus returns as soon as the exit starts.
-- Keep space consistent: grow from the anchor and shrink back into it. Menus scale from the corner next to their button (`--transform-origin`). The sidebar slides in from the left edge. The AI panel enters from the right on desktop and from the bottom on phones. Panels leave the way they came. Each surface uses only one direction.
-- Animate only `opacity` and `transform`. Hover and press may change color. Focus rings may change shadow. Do not animate width, height, margin, padding, position, `max-height`, shadow geometry or filters. For size changes use FLIP (`ui/flip.ts`) or a crossfade. `src/ui/motion-properties.test.ts` checks every stylesheet for this.
-- A CSS variable that changes while something moves (a dragged width, a panel opening) is never set on an element that contains the whole window: every element inherits it and has its style recalculated. Set it on the elements that use it. Don't register it with `@property { inherits: false }` for those elements to take with `inherit`: WebKit and old WebView2 don't restyle them when it changes, which stopped the sidebar's edge being dragged in 1.2.0-rc.3 (`--sidebar-width`, `app/sidebar-frame.css`).
-- On exit, `ui/usePresence.ts` keeps the element mounted and sets `data-state="closing"`. If no animation is running, it unmounts at once. It never waits for an event that will not come.
-- Nothing moves while the user types. Input, the input method, the caret, the selection, completion suggestions as they update with typing, typewriter scrolling, find highlights, the word count, tab title text, window resizing and dragged elements all change instantly. A completion suggestion fades in only the first time it appears.
-- Reduced motion means fades, not no motion at all. When the system setting is on, the offset and scale variables become zero, springs become the standard curve, slow motion becomes a 150 ms fade, loops stop, and smooth scrolling becomes instant. Script-driven motion reads `prefersReducedMotion()` / `motionAllowed()` from `ui/motion.ts`.
-- Overshoot is at most 3%, and only when the user releases a direct manipulation. Menus and dialogs never overshoot.
-- Blur materials are only for surfaces that have content scrolling underneath (menus, popovers, the find bar, the phone keyboard toolbar), and only on macOS and iOS (`<html data-platform>`). Linux stays opaque. Overlays only darken. They never blur.
+These are decision rules, used to settle cases the sections below don't cover.
 
-## Theme rules
+1. **The document gets the most visual weight.** Interface chrome (bars, panels, menus) uses the UI font, small type roles, neutral colours and at most one accent colour on screen at a time. Colour, larger type and decoration belong to the document, where a theme sets them. When a control and the text compete for attention, reduce the control.
+2. **One source for every surface.** The app, plugin pages and plugin popups read the same variables, the same component stylesheet and the same icon set. A component's look is defined once; nothing copies it.
+3. **Prefer what Textus draws.** A plugin uses the app's lists, menus, dialogs, settings rows and status items before drawing its own page, and draws its own page only from the shared components (section 17).
+4. **Themes own colour and document typography; this standard owns geometry.** Sizes, spacing, radii, elevation and motion are the same under every theme.
+5. **Other products are references, not templates.** A pattern from another app is adopted only as a principle (its density, its order of interaction) and drawn with this standard's tokens and components. If the standard lacks something, the standard is extended first.
+6. **Every rule that can be checked is checked** (section 18.3).
 
-Colours come in two sets. The document's, `--doc-*` (`--doc-bg`, `--doc-text`, `--doc-muted`, `--doc-accent`, `--doc-border`, `--doc-code-bg`, `--doc-quote-border`, `--doc-highlight-bg`, `--doc-font`, `--doc-mono-font`, `--doc-token-*`, `--doc-alert-*`, `--doc-radius`, `--doc-gap`), are what a theme sets; `src/ui/base.css` has their default light and dark values. The interface's, `--ui-*`, are drawn from them in the same file (`--ui-bg` from `--doc-bg`, `--ui-subtle`, `--ui-hover`, `--ui-selected` and `--ui-border` mixed from the text and the background, and so on), so any theme - a built-in one included - recolours the whole window: the sidebar, menus, Settings, the find bar, the AI panel, dialogs, popovers and tooltips. Default, Paper, Slate, Forest and Parchment are each checked in light and dark. System dark and explicit dark use the same variables. Tests check the contrast of body text, links and secondary text against the document and code backgrounds.
+## 2. Tokens - In force (tiers and the `--tone-*` set: Planned)
 
-A proposed AI revision is drawn with the `--revision-*` variables in `src/ui/design-system.css`: the tint, text colour and strike of the original and of the new text, and the darker hover tints that mark the pair under the pointer or under the review bar's pointer - a darker green for new text, a darker red for the original, never the accent and never an outline, as a review note's passage darkens under the pointer. They have a light and a dark value, **Settings › Theme › Export** writes them out, and a theme may set any of them. The `textus-theme` skill (`.claude/skills/textus-theme/SKILL.md`) lists them.
+### 2.1 Tiers
 
-An imported theme usually styles `#write` rather than setting variables. `src/theme/theme-chrome.ts` reads its background, text and link colours in a separate document, derives the interface colours from them with contrast correction, takes a Typora theme's own sidebar, hover and active-file colours (`--side-bar-bg-color`, `--item-hover-bg-color`, `--active-file-bg-color`) where text stays readable on them, and fills in the document variables it doesn't set. When the user switches back to a built-in theme, the derived styles are removed, and a late theme read does not overwrite the new choice. A theme or Custom CSS written with the names before 1.3 (`--editor-*`, `--md-*`, `--token-*`, `--bg`, `--chrome-*`, `--sidebar-*`, `--border-color`, …) is read under today's (`src/theme/legacy-variables.ts`).
+| Tier      | Prefix                                                                                                                                                 | Who may use it                           | Stability                                                                                     |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Reference | `--ref-*`                                                                                                                                              | The design system's own stylesheets only | Private; may change any time                                                                  |
+| Role      | `--ui-*` (interface), `--doc-*` (document), `--text-*`, `--space-*`, `--shape-*`, `--control-height*`, `--dur-*`, `--ease-*`, `--shadow-*`, `--font-*` | The app, plugins, themes                 | **Public API.** Part of the plugin API version; renaming or removing one is a breaking change |
+| Component | unprefixed or component-named custom properties inside one component's CSS (`--tag`)                                                                   | That component only                      | Private                                                                                       |
 
-A stylesheet outside `src/theme/` never writes a literal colour or shadow into a rule; it reads a token, and `src/ui/theme-reach.test.ts` fails on a literal. The only exceptions are a token's fallback inside `var()`, a mask (which reads only alpha), a token shaded towards black or white with `color-mix()`, and Windows' caption buttons (`ui/window-caption.css`), which keep the system's red close button on every theme. A new colour needs a new `--ui-*` token, with its dark value or its derivation.
+- Plugins and themes MUST use only role tokens. The list a plugin page receives is `src/plugins/views/theme-vars.ts`; a token not on that list does not exist inside a plugin page.
+- A stylesheet outside `src/theme/` MUST NOT write a literal colour or shadow (`src/ui/theme-reach.test.ts`). Exceptions: a fallback inside `var()`, a mask (alpha only), a token mixed toward black or white with `color-mix()`, and Windows' caption buttons.
 
-A theme's own `:root` may set any of these, and wins over the derived value:
+### 2.2 Naming new tokens
 
-| Variables                                                                          | What they colour                                                                                                                                  |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--ui-bg`, `--ui-surface`, `--ui-subtle`, `--ui-text`, `--ui-muted`, `--ui-border` | The window's background, raised surfaces (menus, cards, sheets), tinted surfaces (the sidebar, tracks, fills), text, secondary text and hairlines |
-| `--ui-accent`, `--ui-accent-fill`, `--ui-primary`, `--ui-on-primary`               | The accent (focus ring, links, chosen items), the accent as a fill, and the primary button and its label                                          |
-| `--ui-hover`, `--ui-selected`, `--ui-selected-text`                                | A row under the pointer, and a chosen row in every list                                                                                           |
-| `--ui-danger`, `--ui-danger-fill`, `--ui-success`, `--ui-warning`, `--ui-on-fill`  | Errors, deletions, confirmations, warnings, and the label on a strong fill                                                                        |
-| `--ui-find-match`, `--ui-find-match-active`                                        | Find's matches and the current one                                                                                                                |
-| `--ui-overlay`, `--ui-overlay-strong`, `--shadow-*`                                | The dimmed backdrop, the picture viewer's backdrop and every shadow                                                                               |
-| `--revision-*`                                                                     | A proposed AI revision (see above)                                                                                                                |
-| `--doc-*`                                                                          | The document, its code and its alerts (the `textus-theme` skill lists them)                                                                       |
+`--{scope}-{role}[-{modifier}][-{state}]`
 
-Shapes, interface text sizes and spacing are not a theme's: they are this document's rules, the same under every theme.
+- scope: `ui` (interface) or `doc` (document);
+- role: `bg`, `surface`, `subtle`, `text`, `muted`, `border`, `accent`, `primary`, `danger`, `warning`, `success`, `tone`;
+- modifier: `faint`, `strong`, `fill`, or a tone name;
+- state: `hover`, `selected`, `disabled`, `focus`.
 
-The theme's original CSS is kept. A theme with only one color scheme keeps that scheme. It is not forced into dark. Remote `@import`, image backgrounds, layouts that depend on a specific Typora DOM, and arbitrary global CSS are not part of the full compatibility promise. Check them against each real theme.
+Existing names stay as they are. A new name MUST be built from this vocabulary; a word outside it needs this section amended first.
 
-## Accessibility
+## 3. Colour - In force (3.4 tones: Planned)
 
-Textus is used with a screen reader, with the keyboard alone and with the system's high-contrast settings. `e2e/a11y.spec.ts` runs axe-core over the main screens in light and dark and fails on a serious or critical violation; `A11Y_REPORT=1 npx playwright test e2e/a11y.spec.ts` lists every violation, the moderate ones too.
+### 3.1 Inputs and derivation
 
-- Every control has a name in the interface language. A button drawn only as an icon takes `aria-label` (and a `ui/Tooltip.tsx` hint, for the pointer); a visible label is the name, not repeated in `aria-label` with other punctuation.
-- The window has landmarks: the window bar is the `header`, the document column the `main`, the sidebar and the AI panel are labelled `aside`s. The editor is a `textbox` named **Document**.
-- Status that appears without the focus moving there - Textus AI writing, a rewrite's changes, an Accept or a Reject, the review bar's position - goes through `announce()` (`src/ui/announce.ts`), one polite live region. Don't add live regions of your own; a message is a short sentence ending with a full stop.
-- A proposed change is `role="deletion"` and `role="insertion"` in the text; its margin card is a group that says what is replaced by what. Colour is never the only sign: the original is struck through.
-- Text, secondary text included, keeps a contrast of 4.5:1 against its background in the default light and dark appearance (3:1 for text of 18 px and larger). Lower the contrast of a part with a darker or lighter colour, not with `opacity` on text.
-- A hover-only affordance whose action the keyboard reaches elsewhere (a table's **+** buttons, which the context menu repeats) is `tabindex="-1"` and `aria-hidden`.
-- Every action works from the keyboard. `F6` / `Shift + F6` move between the regions (`src/app/regions.ts`: window bar, sidebar, tabs, document, review bar, AI panel), each taking the focus back where it last had it; that is the way out of the editor, where `Tab` indents in lists, code blocks and tables. A new region goes into that list.
-- A list of like items is one stop in the tab order, walked with the arrow keys: trees (`role="tree"`, `src/ui/useTreeKeys.ts`) for the file tree and the outline, a tab list for the tabs, menus (`role="menu"`) for the app menu and the context menu. A control inside a row (a tab's ✕, the outline's chevron) is for the pointer and stays out of the tab order; the row's keys do the same.
-- Escape closes the topmost surface only, and the focus goes back to what opened it. A menu opened from the keyboard (`Shift + F10`) takes the focus; one opened by the pointer leaves it in the text.
-- High contrast follows the system, with no setting of its own. `prefers-contrast: more` turns the secondary colours into the text colour, thickens the focus ring and the hairlines, and underlines new text in a revision; `forced-colors: active` (Windows' Contrast themes) gives cards and bars a `CanvasText` border where they had a shadow, and the chosen row or tab `Highlight`. Information never rests on colour alone: a deletion is struck through, an insertion has its ✓ / ✕ (and the underline with more contrast), a chosen row has `aria-selected` or `aria-current`.
-- Every animation honours reduced motion through the tokens in `src/ui/motion.css`; a keyframe that moves or scales is written with `--motion-distance-*` and `--scale-*`, never a raw distance, so it turns into a fade (`e2e/motion.spec.ts`).
-- The focus ring is the theme's accent (`--ui-accent`), 2 px, 3 px with more contrast. In a scrolling list or bar it sits inside the row (`outline-offset: -2px`), where the scroller would cut it off.
+A theme sets the document's colours; the interface's are derived from them in `src/ui/base.css`, so one theme recolours the whole window:
 
-## Acceptance checks
+| Input (theme sets) | Derived (interface)                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| `--doc-bg`         | `--ui-bg`, `--ui-surface`, and the mixes below                                                         |
+| `--doc-text`       | `--ui-text`; `--ui-border` = text 16% over bg; `--ui-subtle` = text 4% over bg; `--ui-hover` = text 7% |
+| `--doc-muted`      | `--ui-muted`                                                                                           |
+| `--doc-accent`     | `--ui-accent`; `--ui-selected` = accent 13%                                                            |
 
-- Visually check light and dark body text in all five built-in themes: Chinese, English and Japanese text, emphasis, links, quotes, lists, code and tables.
-- Check the global interface colors in Settings with a warm imported theme and a dark imported theme.
-- Check Settings and the tutorial in a small 520×620 window, keyboard focus, and switching back to the default theme.
-- Automated checks cover theme color contrast, dark variable consistency, cleanup after import, and load race conditions.
+A theme MAY also set any `--ui-*` directly; its value wins over the derived one. Imported Typora themes that set no variables are sampled by `src/theme/theme-chrome.ts`.
 
-Browser checks do not replace acceptance testing of native windows, input methods, installation and upgrades on each platform.
+### 3.2 One job per colour
+
+Each interface colour has exactly one job. A new surface MUST pick its colours from this table; "which of these is it?" replaces "which grey?".
+
+| Token                                         | Its only job                                                       |
+| --------------------------------------------- | ------------------------------------------------------------------ |
+| `--ui-bg`                                     | The window's background                                            |
+| `--ui-surface`                                | Raised surfaces: menus, popovers, cards, sheets                    |
+| `--ui-subtle`                                 | Tinted regions: the sidebar, tracks, fills                         |
+| `--ui-hover`                                  | A row or control under the pointer                                 |
+| `--ui-selected`, `--ui-selected-text`         | A chosen row, tab or chip                                          |
+| `--ui-border`                                 | Hairlines                                                          |
+| `--ui-text` / `--ui-muted`                    | Text / secondary text                                              |
+| `--ui-accent`                                 | The focus ring, links, the chosen item, a rule in force            |
+| `--ui-accent-fill`, `--ui-on-fill`            | The accent as a fill (a checked box) and the label on it           |
+| `--ui-primary`, `--ui-on-primary`             | The primary button: ink (text colour as fill, background as label) |
+| `--ui-danger`, `--ui-warning`, `--ui-success` | Status only, never decoration                                      |
+| `--doc-*`                                     | The document and anything that reads as part of it                 |
+
+- The accent MUST NOT be used as a large fill or as the primary button. A primary button is ink (`--ui-primary`), so any theme recolours it and a dark theme gets a light button.
+- Status colours MUST appear with an icon or text that says the same thing.
+
+### 3.3 Contrast
+
+- Body and secondary text MUST reach 4.5:1 against its background in every built-in theme, light and dark (3:1 for text 18 px and up). Lower emphasis is made with a lighter colour, never with `opacity` on text.
+- `prefers-contrast: more` turns secondary colours into the text colour and thickens rings and hairlines; `forced-colors: active` gives cards and bars a `CanvasText` border.
+
+### 3.4 Tones: categorical colours - Planned (work: tone tokens in `base.css`, passed to plugin pages)
+
+Tags, board columns, graph groups, chart series, timelines and mind-map branches need several distinguishable colours. They MUST come from the tone set, never from a plugin's own palette or a library's default:
+
+- `--tone-{gray|red|orange|yellow|green|teal|blue|purple|pink}`: the hue itself, for a dot, a line, a chart series;
+- `--tone-{name}-text`: text in that hue, ≥ 4.5:1 on `--ui-bg`;
+- `--tone-{name}-tint`: a background in that hue for chips and highlights.
+
+Rules:
+
+1. **The theme's palette comes first.** A theme with a signature palette (Dracula, Nord, Catppuccin, One Dark…) SHOULD set the tones from it, so everything in the window - tags, charts, the graph - speaks its colours. A theme that sets none gets tones derived from its five alert colours (`--doc-alert-note`, `-tip`, `-important`, `-warning`, `-caution`) and fixed hue angles, with lightness and chroma taken from its background and text.
+2. **Order is fixed**: blue, green, orange, purple, red, teal, yellow, pink, gray. Series 1 and 2 always differ strongly. A plugin assigns tones in that order (an option's tone is its position among the property's options), not by hashing names.
+3. Chart plugins MUST pass the tones to their library as its default palette, and the interface text, border and muted colours as its axis, grid and label colours.
+
+## 4. Typography - In force
+
+### 4.1 Two type systems, never mixed
+
+|           | Font                                          | Owned by      | Used for                                                                                                     |
+| --------- | --------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------ |
+| Interface | `--font-sans` (system UI font), `--font-mono` | This standard | Menus, settings, bars, panels, plugin controls                                                               |
+| Document  | `--doc-font`, `--doc-mono-font`               | The theme     | The user's writing, and anything a plugin draws as content in the document (a table's cells, a card's title) |
+
+- Interface text MUST NOT use the document font. Document content MUST NOT use the interface type roles for its body text.
+
+### 4.2 Interface type roles
+
+Text names a role, never a size. Sizes are set in `src/ui/design-system.css` and follow **Interface text size** (`--ui-text-scale`, 90–125%).
+
+| Role (`--text-…`) | Desktop | Phone | Line height | Weight  | Used for                                                                          |
+| ----------------- | ------- | ----- | ----------- | ------- | --------------------------------------------------------------------------------- |
+| `caption`         | 11      | 12    | 1.2         | 400/500 | Badges, counts, keycaps                                                           |
+| `footnote`        | 12      | 13    | 1.4         | 400     | Hints, group titles, empty states                                                 |
+| `secondary`       | 12      | 15    | 1.4         | 400     | Text beside the main text in a dense surface (a card, a list entry's second line) |
+| `control`         | 13      | 15    | 1.2         | 400/500 | A control's label                                                                 |
+| `body`            | 13      | 17    | 1.5         | 400     | The main text of a panel, menu, list or field                                     |
+| `body-large`      | 14      | 17    | 1.5         | 400     | Main text where there is room: Settings' rows, dialogs                            |
+| `title`           | 17      | 17    | 1.3         | 600     | A sheet's, panel's or navigation bar's title                                      |
+| `large-title`     | 22      | 34    | 1.2         | 600     | A page's own title                                                                |
+
+- Weights are 400, 500 and 600 only.
+- The line heights and weights in the table are the rule for new work; they become tokens with the shared stylesheet (Planned, 15.3). Today the base sets 1.5 for text and 1.2 for controls.
+- A size written in px instead of a role MUST be `calc(Npx * var(--ui-text-scale, 1))`, and a fixed box around text scales with it.
+- CSS `zoom` MUST NOT be used for text size (WebKit leaves popovers and pointer coordinates unzoomed).
+
+### 4.3 Document typography (theme guidance)
+
+Themes SHOULD keep: a measure of 60–75 Latin characters (about 35–40 CJK characters); body line height 1.6–1.8; paragraph spacing about 0.8 line; headings with more space above than below. Table headers (and, in new themes, headings) MUST NOT break inside a CJK word (`word-break: keep-all`); table cells keep a minimum width of 3.5em.
+
+## 5. Space, grid and layout - In force (5.4 templates: Planned for plugin pages)
+
+### 5.1 The 4 px grid
+
+Every radius, padding, margin, gap and component size MUST be a multiple of 4 px. Exceptions: 1–2 px hairlines and insets, and the document's own typography (themes, the editor's content, print). `src/ui/spacing-grid.test.ts` checks every stylesheet.
+
+### 5.2 Spacing scale and use
+
+`--space-1` 4 · `--space-2` 8 · `--space-3` 12 · `--space-4` 16 · `--space-5` 20 · `--space-6` 24 · `--space-8` 32.
+
+| Between                                          | Use   |
+| ------------------------------------------------ | ----- |
+| An icon and its label; items of a chip group     | 4     |
+| Controls in a row; rows of a dense list          | 8     |
+| A panel's edge and its content; a card's padding | 12    |
+| Groups in a panel or page                        | 16–24 |
+| A dialog's edge and its content                  | 20–24 |
+
+### 5.3 Control heights
+
+Two heights: `--control-height` 28 (36) for forms, dialogs and a Settings row's select; `--control-height-sm` 24 (32) for bars, cards, segmented controls and tags. Each reaches a 44 pt touch target on the phone. There is no density setting.
+
+### 5.4 Layout
+
+**Window** (desktop): sidebar (resizable, 240–360) | document column | AI panel (resizable, 320–480). The document column centres the text at the theme's measure; the margin for review notes takes 280 on the right when shown. A tab's toolbar is 36 high.
+
+**Surface templates.** A new surface - in the app or a plugin - MUST use one of these:
+
+| Template              | Structure                                                                                                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sidebar panel         | 32-high title row (title, up to two circle icon buttons) → optional search field (capsule) → content (list rows 28 high) → empty state                         |
+| Tab view              | 36-high toolbar (start: navigation and view switching; end: actions, the primary button last) → content on the document background                             |
+| Block in the document | _Figure_ (a chart, a diagram): framed, centred, exported as a picture. _Record_ (a database): no frame (`frame: "none"`), a 32-high bar flush with the content |
+| Settings page         | Declared settings, drawn by Textus; a custom page only with the settings group style                                                                           |
+| Popup                 | Menus, selects, tooltips and dialogs are drawn by Textus (section 17.3)                                                                                        |
+
+**Empty states** say in one sentence what will appear and how to get it, with at most one button, centred, in `footnote`.
+
+## 6. Shape - In force
+
+- **Containers** are rounded rectangles in three sizes: `--shape-l` 16 (dialogs, sheets, Settings), `--shape-m` 12 (cards, Settings' groups, menus, popovers, the AI composer, code blocks), `--shape-s` 8 (a box inside a card, a highlighted row, tooltips, multi-line fields). Nothing is rounder than its level; nothing is under `--shape-xs` 4.
+- **Nesting** is concentric: a box inside another takes the outer radius less the padding between them (r = R − p). Boxes on one level share one radius. A large container keeps its radius and keeps its capsules at least one padding from its edge.
+- **Controls** are capsules (`--shape-pill`): buttons, selects, one-line fields and search boxes, segmented controls (track and thumb), tabs, chips, tags and switches. A button with only an icon is a circle.
+- **Character-level marks are square**: the caret, Vim's block cursor, the selection, find and flash highlights - radius 0–2 px.
+- Where the engine supports it (Chromium 139+, so WebView2), container corners are continuous (`corner-shape: superellipse(1.25)`); capsules and circles stay `round`.
+
+## 7. Elevation and materials - In force
+
+| Level   | Look                                                                                      | Used for                                      |
+| ------- | ----------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Flat    | No border, no shadow                                                                      | Regions of the window                         |
+| Grouped | A `--ui-border` hairline, no shadow                                                       | Cards, board columns, tables, Settings groups |
+| Overlay | `--ui-surface` + its one shadow (`--shadow-popover`, `--shadow-dialog`, `--shadow-sheet`) | Menus, popovers, dialogs, sheets              |
+
+- Shadows MUST appear only on overlays, each paired with its surface.
+- Blur materials are only for overlays with content scrolling underneath, and only on macOS and iOS (`<html data-platform>`). Overlays only darken what is under them; they never blur it.
+
+## 8. Icons - In force (export to plugins by name: Planned)
+
+- One set (`src/ui/icons.tsx`): stroked line art on a 16-unit grid, 1.4 stroke, round caps and joins, `currentColor`.
+- Sizes follow the text role beside them: 16 with `body`, 14 with `secondary`, 12 with `caption`.
+- A new icon is added to the set on the same grid and stroke; a surface MUST NOT draw a one-off icon for something the set has.
+- Plugins name icons (`icon: "calendar"` in a list item; `<span class="tx-icon" data-icon="filter">` in a page - planned) instead of drawing their own.
+- Emoji are content, not icons; the interface MUST NOT use emoji as icons.
+
+## 9. States and focus - In force
+
+- One rule for every control: hover `--ui-hover`; pressed one step stronger; selected `--ui-selected`; disabled 50% opacity.
+- The focus ring shows only for keyboard focus (`:focus-visible`): the accent, 2 px (3 px with more contrast), drawn inside the control (`outline-offset: -1px`, `-2px` in a scrolling list).
+- A highlight in a list or menu arrives in 80 ms and leaves at once, so a pointer running down a list leaves no trail.
+
+## 10. Motion - In force
+
+- Durations, curves, offsets and scales come only from `src/ui/motion.css`. `src/ui/motion-tokens.test.ts` fails on a new keyframe or a raw time elsewhere.
+- Everything that moves is one of these moves: **enter** (`motion-enter`, `enter()`), **exit** (`motion-exit`, `exit()`), **mark** (`.motion-mark`, `land()`), **glide** (FLIP, `ui/flip.ts`), **beat** (`startBeat` / `enterOnBeat` / `joinBeat`: the parts of one change appear as one), **crossfade** (`crossfade()`), with **presence** (`ui/usePresence.ts`) keeping an element mounted while it exits.
+- Durations: `--dur-instant` 80 ms (press, hover colour), `--dur-fast` 120 ms (small exits, fades), `--dur-base` 200 ms (menus, popovers, dialogs), `--dur-medium` 250 ms, `--dur-slow` 320 ms (sidebar, AI panel, Settings, Zen mode), `--dur-sheet` 450 ms (phone sheets). An exit takes about 70% of its entry. Loops (`--dur-blink`, `--dur-pulse`, `--dur-spin`, `--dur-sheen`, `--dur-drift`) are only for "working" indicators.
+- Curves: `--ease-standard` (in place), `--ease-out` (entry), `--ease-in` (exit), `--ease-in-out` (movement), `--ease-spring-bouncy` (about 3% overshoot) only for a finger release.
+- Only `opacity` and `transform` animate (`src/ui/motion-properties.test.ts`). Size changes use FLIP or a crossfade.
+- Toggles (sidebar, panels, switches, arrows) use transitions so they can reverse; keyframes are only for one-time entries. An exiting element is `inert`; animations never block input.
+- Space is consistent: a surface grows from its anchor and shrinks back into it, enters and leaves the same way, one direction per surface.
+- Nothing moves while the user types: input, the caret, the selection, completions, typewriter scrolling, find highlights and counts change instantly.
+- Under reduced motion, offsets and scales become 0, springs become the standard curve, slow motion becomes a 150 ms fade, loops stop and smooth scrolling is instant (`ui/motion.ts`: `prefersReducedMotion()`, `motionAllowed()`).
+
+## 11. Components - In force (shared stylesheet for plugin pages: Planned)
+
+| Component                | Rule                                                                                                                                                                                                                                                                        |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Buttons                  | Solid **primary** (ink, one per group), **secondary** (light border), **text** button for the next level down. One action appears as one button in one place. Size, radius and states are defined once in `design-system.css`; a component sets only layout and text colour |
+| Icon button              | A 24 circle, no border in headers, toolbars and inline; named with `aria-label`, hinted with `ui/Tooltip.tsx`, never `title`                                                                                                                                                |
+| Fields                   | One-line fields and search boxes are capsules; multi-line fields are `--shape-s` boxes. The focus ring is inside                                                                                                                                                            |
+| Select                   | `ui/Select.tsx` with the drawn arrow, in the two control heights. Native dropdowns MUST NOT be used                                                                                                                                                                         |
+| Checkbox                 | `.ui-check`: 15 px, `--shape-xs`, accent fill when checked                                                                                                                                                                                                                  |
+| Switch                   | 1.5 times its row's text tall (em-based) on every platform and text size                                                                                                                                                                                                    |
+| Segmented control / tabs | Capsule track and thumb; the chosen one `--ui-selected`                                                                                                                                                                                                                     |
+| Tags, chips, badges      | Capsules at 20–24; tags take a tone (3.4); a chip shows a rule in force and opens it                                                                                                                                                                                        |
+| Menus                    | The app menu, context menus, the project bar menu and the Quick Ask dropdown share one panel padding (4), one item size (4×8 padding, `body`), one hover, separators (1 px, 4×8 margin)                                                                                     |
+| Dialogs                  | `ui/app-dialog.tsx` (`showMessage`, `showConfirm`); native alert and confirm MUST NOT be used                                                                                                                                                                               |
+| Popups                   | All close with `useCloseOnOutsideClick`: a click outside or Esc closes them; the listener is active only while open                                                                                                                                                         |
+| Tables                   | The document's own table look: a rounded frame (`--doc-radius`), a header tinted `--doc-code-bg`, `--doc-border` hairlines                                                                                                                                                  |
+| Cards                    | Grouped level (section 7): hairline, no shadow, `--shape-m`                                                                                                                                                                                                                 |
+
+Only the open and save file dialogs and the macOS system menu bar stay native.
+
+## 12. Words in the interface - In force
+
+- Group headings in Title Case ("Fixed Shortcuts"); row labels in sentence case ("Save automatically"); a menu item's own name as it is ("Source Mode").
+- A switch is named by what it turns on, without "Enable" (except one that turns on a whole AI feature).
+- A row's label says what the setting does on its own ("Show page numbers in exports", not "PDF page numbers" with a line under it).
+- A "?" after a label (`ui/InfoTip.tsx`) is for a label that can't be understood without it and whose explanation matters (a trade-off between choices, outside setup). It shows on hover, click or tap, never as grey text under the row.
+- What is live stays visible under the row: a value or a status.
+- In Settings, a page's groups go from the most used to the least, links out last. A row that only means something with another setting on is hidden while it is off and comes right after it.
+- Every string is localized (`src/i18n/`); interface text never hard-codes a language.
+
+## 13. Accessibility - In force
+
+- Every control has a name in the interface language; an icon-only button has `aria-label`.
+- Landmarks: the window bar is `header`, the document column `main`, the sidebar and AI panel labelled `aside`s; the editor is a `textbox` named Document.
+- Status that appears without focus moving goes through `announce()` (`src/ui/announce.ts`), one polite live region; no other live regions.
+- Every action works from the keyboard. `F6` / `Shift+F6` move between regions (`src/app/regions.ts`); a list of like items is one tab stop walked with the arrow keys (trees, tab lists, menus).
+- Esc closes the topmost surface only and returns focus to what opened it.
+- Information never rests on colour alone.
+- `e2e/a11y.spec.ts` runs axe-core over the main screens in light and dark and fails on serious or critical violations.
+
+## 14. Themes - In force (14.3–14.5: Planned)
+
+### 14.1 What a theme may change
+
+- MAY: every `--doc-*` variable (colours, fonts, the document's typography), the interface inputs through them (3.1), any `--ui-*` colour, the tones (3.4), and `--revision-*` (how a proposed AI change is drawn).
+- MUST NOT: sizes, spacing, radii, elevation, motion, or the editor's structure (the caret, the selection, revision marks, plugin block frames).
+- A theme with only one colour scheme keeps it; it is not forced into dark.
+- Remote `@import`, image backgrounds and layouts that depend on Typora's DOM are outside the compatibility promise.
+
+### 14.2 What a theme MUST provide
+
+- Light and dark appearances (one file each, or one file with `prefers-color-scheme`), unless it is single-scheme by design and says so.
+- Text, secondary text, links and code reaching section 3.3's contrast against `--doc-bg` and `--doc-code-bg`.
+- A tested look for: headings 1–6, paragraphs in Latin and CJK, emphasis, links, quotes, lists and task lists, inline code and code blocks, tables, callouts, math, footnotes, horizontal rules, highlights and images.
+
+### 14.3 Signature palettes
+
+A theme built on a known palette (Dracula, Nord, Catppuccin, Gruvbox, One Dark, Solarized, Tokyo Night, Rosé Pine, Flexoki…) SHOULD set the tones (3.4) from that palette, so plugins - tags, charts, the graph - use its colours. It MUST credit the palette and follow its license and naming policy.
+
+### 14.4 Previews
+
+Every theme's preview is drawn from one fixed sample document (Latin and CJK text, heading levels, quote, list, task list, code, table, callout), in light and dark, at 1280×800, so themes are compared on the same content.
+
+### 14.5 The official set
+
+The official gallery keeps one theme per distinct character (a calm default, warm paper for reading, academic paper, typewriter manuscript, monospace, rich heading hierarchy, card sections, compact, high contrast, and well-known palettes). A theme that differs from another mainly by its accent colour SHOULD be merged into it. A theme withdrawn from the list stays installable for those who have it.
+
+## 15. Plugins - In force (15.3–15.4: Planned)
+
+### 15.1 Tiers, most preferred first
+
+1. **Declared**: commands, menu items, `/` items, key bindings, status items, settings.
+2. **Drawn by Textus**: lists and trees (`views.registerList`), dialogs (`ui.message`, `confirm`, `input`, `pick`, `form`), hover cards, editor decorations.
+3. **A page of the plugin's, built from the shared components**, with popups drawn by Textus.
+4. **Free drawing** (a chart library, a PDF, a canvas): colours from the tones and interface tokens; the bars and buttons around it from tier 3.
+
+A plugin MUST use the lowest tier that can do the job.
+
+### 15.2 Rules for every plugin page (tiers 3–4)
+
+- Colours, sizes and fonts only from the role tokens; no literal colours, no px font sizes, no own font families.
+- The plugin follows the current theme's colours, tones included, so a Dracula window gets Dracula tags and charts. It has no brand colour of its own.
+- It fits one of the surface templates (5.4).
+- Every control has a name; the page works from the keyboard.
+- A code block page reports its content height (the runtime does this) and never sizes itself to 100% of its frame.
+
+### 15.3 Shared components for plugin pages - Planned (work: one framework-free stylesheet)
+
+One stylesheet of `tx-` classes (buttons, icon buttons, fields, select, checkbox, switch, segmented control, tabs, tags, chips, list rows, tables, cards, empty state, bars, settings rows), used by the app's own React components and injected unchanged into every plugin page. No React or other framework kit is offered to plugins.
+
+### 15.4 Popups drawn by Textus - Planned (work: plugin API)
+
+`api.menu(items, { at })` (context and dropdown menus), `api.select(...)` and `data-tooltip` let a plugin page open Textus's own menus, selects and tooltips, so they look, move and respond to keys as the app's do. A plugin page MUST NOT draw its own menu once these exist.
+
+## 16. Front-end architecture - In force (16.2 layout: Planned)
+
+### 16.1 Layers
+
+Dependencies point one way: **tokens → styles → components → patterns → features**. A layer never re-defines a value an earlier layer defines, and never imports from a later one.
+
+| Layer      | Today                                                                                   | Holds                                   |
+| ---------- | --------------------------------------------------------------------------------------- | --------------------------------------- |
+| Tokens     | `src/ui/base.css`, `design-system.css` (variables), `motion.css`                        | Role tokens and their derivation        |
+| Styles     | `src/ui/design-system.css` (controls, states), `src/plugins/host/runtime/plugin-ui.css` | Control looks and states, once          |
+| Components | `src/ui/*.tsx` (`Select`, `Tooltip`, `ContextMenu`, `app-dialog`, `InfoTip`, `icons`)   | React wrappers; no own colours or sizes |
+| Patterns   | Settings rows, the sidebar, menus, the command palette                                  | Arrangements of components              |
+| Features   | `src/editor`, `src/ai`, `src/sidebar`, `src/settings`, `src/plugins`…                   | Compose the layers above                |
+
+### 16.2 Target layout - Planned
+
+```
+src/ui/tokens/      the token source -> tokens.css, the plugin token list, the docs table
+src/ui/styles/      textus-ui.css: base, states, tx-* components, surface templates
+src/ui/icons/       the icon set and its public name list
+src/ui/components/  React components over tx-* classes
+src/ui/patterns/    sidebar panel, settings page, dialogs, menus, command palette
+src/plugins/host/   injects tokens, styles and icons into plugin pages; bridges popups
+```
+
+Files move there as they are touched, not in one rewrite.
+
+### 16.3 Enforcement
+
+- In force: `spacing-grid.test.ts`, `theme-reach.test.ts`, `motion-tokens.test.ts`, `motion-properties.test.ts`, `style-invalidation.test.ts`, `e2e/a11y.spec.ts`, the contrast tests in `src/theme/content-themes.test.ts` and `theme-chrome.test.ts`.
+- Planned: a Stylelint configuration banning literal colours, px font sizes, off-grid spacing, raw radii and raw durations, run on the app and official plugins and offered to third-party authors; the plugin listing review warns on a page that breaks it; a test that every public token resolves in every built-in theme; a component gallery page in dev mode, drawn in the current theme, that is also the visual regression target.
+
+## 17. Review checklist
+
+Before a change to the interface, a plugin page or a theme is merged:
+
+- [ ] Every colour, size, radius, space, duration and font is a token (2, 3, 4, 5, 6, 10).
+- [ ] Colours are taken by their job (3.2); categorical colours are tones (3.4); the primary button is ink.
+- [ ] Type uses roles; the interface and document fonts are not mixed (4).
+- [ ] The surface uses a template (5.4); controls use the two heights (5.3).
+- [ ] Containers are concentric; controls are capsules; character marks are square (6).
+- [ ] Only overlays have shadows (7).
+- [ ] Icons come from the set (8).
+- [ ] Hover, selected, disabled and focus follow section 9; the page works from the keyboard (13).
+- [ ] Motion uses the moves and tokens; nothing moves while typing (10).
+- [ ] Words follow section 12 and are localized.
+- [ ] Light and dark, the five built-in themes, and one imported theme were looked at; a plugin page also in one signature-palette theme.
