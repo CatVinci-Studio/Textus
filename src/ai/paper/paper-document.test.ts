@@ -33,6 +33,34 @@ describe("the paper as it is written", () => {
     );
   });
 
+  it("numbers its citations by first use and lists them below", () => {
+    const sources = {
+      heading: "参考文献",
+      sources: [
+        { n: 93, entry: "Ninety-three. <https://a.example>" },
+        { n: 248, entry: "<https://b.example>" },
+        { n: 500, entry: "Unused. <https://c.example>" },
+      ],
+    };
+    const draft = paperDraft(
+      "Green roofs",
+      outline,
+      {
+        0: "Shade [93](https://a.example)[248](https://b.example).",
+        1: 'Again [248](https://b.example).\n\n```chart\n{"source": "[93](https://a.example)"}\n```',
+      },
+      sources,
+    );
+    expect(draft).toBe(
+      "# Green roofs\n\n## How roofs cool\n\nShade [\\[1\\]](#ref-1)[\\[2\\]](#ref-2).\n\n" +
+        '## What it costs\n\nAgain [\\[2\\]](#ref-2).\n\n```chart\n{"source": "[1]"}\n```\n\n' +
+        "## 参考文献\n\n\\[1\\] Ninety-three. <https://a.example>\n\n\\[2\\] <https://b.example>",
+    );
+    expect(paperDraft("Green roofs", outline, {}, sources)).not.toContain(
+      "参考文献",
+    );
+  });
+
   it("gives a kept section the paper's heading, not its own", () => {
     expect(sectionBody("## How roofs cool\n\nPlants shade.")).toBe(
       "Plants shade.",

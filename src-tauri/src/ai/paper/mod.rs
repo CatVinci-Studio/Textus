@@ -19,7 +19,7 @@ mod store;
 mod web_figures;
 
 pub(crate) use budget::{BudgetCounts, BudgetKind, ResearchBudget, SharedBudget};
-pub(crate) use events::{ActivityKind, PaperEvent, PaperPhase, SectionStatus};
+pub(crate) use events::{ActivityKind, PaperEvent, PaperPhase, SectionStatus, SourceEntry};
 pub(crate) use store::{load, load_section, new_id, save, save_section, PaperFiles};
 
 use serde::{Deserialize, Serialize};
@@ -315,6 +315,18 @@ pub async fn ai_paper_draft(
                 entry.label
             )
         })?;
+        send(PaperEvent::Sources {
+            heading: finish::references_heading(&files.paper.language).into(),
+            sources: files
+                .dossier
+                .sources
+                .iter()
+                .map(|s| SourceEntry {
+                    n: s.n,
+                    entry: finish::entry(s),
+                })
+                .collect(),
+        });
         send(PaperEvent::Phase {
             phase: PaperPhase::Drafting,
         });
@@ -403,7 +415,8 @@ pub async fn ai_paper_draft(
             };
         }
         finish::number_figures(&mut sections, language);
-        let mut dossier = files.dossier.clone();
+        // Numbered first, so only the sources cited are looked up.
+        let mut dossier = finish::number_citations(&mut sections, &files.dossier);
         finish::title_sources(&mut dossier).await;
         let references = finish::references(&sections, &dossier, language);
         let sections: Vec<String> = sections

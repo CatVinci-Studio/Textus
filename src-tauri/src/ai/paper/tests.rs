@@ -1750,3 +1750,59 @@ fn a_section_is_shown_as_its_writer_streams_it() {
         }]
     );
 }
+
+#[test]
+fn citations_are_numbered_in_the_order_the_paper_first_cites_them() {
+    let mut d = drafting_dossier();
+    for (n, url) in [
+        (93, "https://a.example/"),
+        (248, "https://b.example/"),
+        (500, "https://unused.example/"),
+    ] {
+        d.sources.push(aicompat::agent::Source {
+            n,
+            url: url.into(),
+            title: format!("Source {n}"),
+        });
+    }
+    let mut sections = vec![
+        "Old [93](https://a.example/)[248](https://b.example/).".to_string(),
+        "Again [248](https://b.example/), [3](https://example.org/study) and [93](https://a.example/).\n\n```chart\n{\"source\": \"[248](https://b.example/)\"}\n```".to_string(),
+    ];
+    let numbered = finish::number_citations(&mut sections, &d);
+    assert_eq!(
+        sections[0],
+        "Old [1](https://a.example/)[2](https://b.example/)."
+    );
+    assert!(sections[1].starts_with("Again [2](https://b.example/), [3](https://example.org/study) and [1](https://a.example/)."), "{}", sections[1]);
+    assert!(
+        sections[1].contains("\"[2](https://b.example/)\""),
+        "{}",
+        sections[1]
+    );
+    let numbers: Vec<(u32, &str)> = numbered
+        .sources
+        .iter()
+        .map(|s| (s.n, s.url.as_str()))
+        .collect();
+    assert_eq!(
+        numbers,
+        vec![
+            (1, "https://a.example/"),
+            (2, "https://b.example/"),
+            (3, "https://example.org/study")
+        ]
+    );
+    let listed = finish::references(&sections, &numbered, "en").unwrap();
+    assert!(
+        listed.starts_with(
+            "## References\n\n\\[1\\] Source 93. <https://a.example/>\n\n\\[2\\] Source 248."
+        ),
+        "{listed}"
+    );
+    assert!(!listed.contains("unused"), "{listed}");
+    assert_eq!(
+        finish::plain_citations(&sections[0]),
+        "Old [\\[1\\]](#ref-1)[\\[2\\]](#ref-2)."
+    );
+}

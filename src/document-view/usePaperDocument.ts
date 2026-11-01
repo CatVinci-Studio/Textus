@@ -42,7 +42,12 @@ export function usePaperDocument(
     now.frame = 0;
     const state = paperRun(now.key);
     if (!state?.outline) return;
-    const markdown = paperDraft(state.topic, state.outline, state.sectionText);
+    const markdown = paperDraft(
+      state.topic,
+      state.outline,
+      state.sectionText,
+      state.sources,
+    );
     run((ctx) => writePaper(ctx.get(editorViewCtx), ctx, markdown));
   }, [run]);
 
@@ -68,7 +73,12 @@ export function usePaperDocument(
       const text =
         markdown ??
         (state?.outline
-          ? paperDraft(state.topic, state.outline, state.sectionText)
+          ? paperDraft(
+              state.topic,
+              state.outline,
+              state.sectionText,
+              state.sources,
+            )
           : null);
       run((ctx) =>
         settlePaper(ctx.get(editorViewCtx), ctx, text, now.original),

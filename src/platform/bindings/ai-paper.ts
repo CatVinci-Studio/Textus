@@ -288,10 +288,18 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
 { type: "outlineDraft"; attempt: number; thesis?: string | null; titles: string[] } | 
 /**
  *  What section `index`'s writer has written so far, as it writes it:
- *  its tail, sent a few times a second at most. A try that starts over
- *  starts the text over.
+ *  the whole of it, sent a few times a second at most. A try that starts
+ *  over starts the text over. Sent once more with the section as kept
+ *  when it is drafted or revised.
  */
 { type: "sectionText"; index: number; text: string } | 
+/**
+ *  The sources the sections may cite, each as the reference list gives
+ *  it after its number, and the list's heading: sent as drafting
+ *  starts, so the document numbers its citations and lists them while
+ *  the sections are written.
+ */
+{ type: "sources"; heading: string; sources: SourceEntry[] } | 
 /**
  *  Question `question`'s helper finished, keeping `notes` notes;
  *  `failed` when it stopped on an error.
@@ -340,10 +348,18 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
 { type: "outlineDraft"; attempt: number; thesis: string | null; titles: string[] } | 
 /**
  *  What section `index`'s writer has written so far, as it writes it:
- *  its tail, sent a few times a second at most. A try that starts over
- *  starts the text over.
+ *  the whole of it, sent a few times a second at most. A try that starts
+ *  over starts the text over. Sent once more with the section as kept
+ *  when it is drafted or revised.
  */
 { type: "sectionText"; index: number; text: string } | 
+/**
+ *  The sources the sections may cite, each as the reference list gives
+ *  it after its number, and the list's heading: sent as drafting
+ *  starts, so the document numbers its citations and lists them while
+ *  the sections are written.
+ */
+{ type: "sources"; heading: string; sources: SourceEntry[] } | 
 /**
  *  Question `question`'s helper finished, keeping `notes` notes;
  *  `failed` when it stopped on an error.
@@ -428,6 +444,15 @@ export type SectionStatus = "waiting" | "drafting" |
 "drafted" | 
 /**  Sent to the document as a proposal. */
 "proposed" | "revising" | "failed";
+
+/**
+ *  A source of the paper: its number in the research's numbering, and its
+ *  entry in the reference list.
+ */
+export type SourceEntry = {
+	n: number,
+	entry: string,
+};
 
 /**  One web page a reply cites as `[n]`. Exported as WebSource. */
 export type WebSource = {

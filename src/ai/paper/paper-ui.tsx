@@ -15,6 +15,7 @@ import {
   type QuestionState,
 } from "./paper-store";
 import { PAPER_LENGTHS } from "./paper-lengths";
+import { citationOrder } from "./paper-document";
 import "./outline-card.css";
 
 /** One line of what the run is doing now. */
@@ -116,10 +117,17 @@ function sectionStatus(status: SectionStatus, t: Strings): string {
 const PREVIEW_TAIL = 600;
 
 /** A section's text as the preview shows it: plain, its citations as
- *  bare numbers and its Markdown marks dropped. */
-export function previewText(markdown: string): string {
+ *  bare numbers - the paper's, from `order`, where it has them - and its
+ *  Markdown marks dropped. */
+export function previewText(
+  markdown: string,
+  order: ReadonlyMap<number, number> = new Map(),
+): string {
   return markdown
-    .replace(/\[(\d+)\]\([^)\s]*\)/g, "[$1]")
+    .replace(
+      /\[(\d+)\]\([^)\s]*\)/g,
+      (_, n: string) => `[${order.get(Number(n)) ?? n}]`,
+    )
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/[*_`]{1,3}/g, "")
     .replace(/\n{3,}/g, "\n\n")
@@ -203,13 +211,20 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
     );
   }
   if ((run.phase === "drafting" || run.phase === "reviewing") && run.outline) {
+    const order = citationOrder(
+      run.outline.sections.map((_, i) => run.sectionText[i] ?? ""),
+      new Set(run.sources?.sources.map((s) => s.n)),
+    );
     return (
       <ol className="paper-card-list">
         {run.outline.sections.map((section, i) => {
           const status = run.sections[i] ?? "waiting";
           const writing = status === "drafting" || status === "revising";
           const text = writing
-            ? previewText((run.sectionText[i] ?? "").slice(-PREVIEW_TAIL))
+            ? previewText(
+                (run.sectionText[i] ?? "").slice(-PREVIEW_TAIL),
+                order,
+              )
             : "";
           return (
             <li key={i} className="paper-card-section" data-state={status}>

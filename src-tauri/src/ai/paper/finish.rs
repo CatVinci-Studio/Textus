@@ -143,6 +143,69 @@ fn fence_body(out: &[String]) -> String {
     out[open + 1..close].join("\n")
 }
 
+/// A source as the reference list gives it after its number: its title
+/// and address, or a library file's path.
+pub(crate) fn entry(s: &aicompat::agent::Source) -> String {
+    if let Some(path) = super::research::reference_path(&s.url) {
+        let title = if s.title.trim().is_empty() {
+            &path
+        } else {
+            &s.title
+        };
+        return format!("{}. `{path}`", title.trim().trim_end_matches('.'));
+    }
+    let title = s.title.trim().trim_end_matches('.');
+    if title.is_empty() || title == s.url {
+        format!("<{}>", s.url)
+    } else {
+        format!("{title}. <{}>", s.url)
+    }
+}
+
+/// The reference list's heading in `language`.
+pub(crate) fn references_heading(language: &str) -> &'static str {
+    words(language).1
+}
+
+/// `sections`' citations numbered 1, 2, … in the order the paper first
+/// cites them, and the dossier's sources numbered to match: the research
+/// numbers every source it saw, so a paper citing a few of them read
+/// [93][248]. Sources it doesn't cite are left out.
+pub(crate) fn number_citations(sections: &mut [String], dossier: &Dossier) -> Dossier {
+    let mut order: Vec<u32> = Vec::new();
+    for section in sections.iter_mut() {
+        *section = cited()
+            .replace_all(section, |c: &regex::Captures| {
+                let n: u32 = c[1].parse().unwrap_or(0);
+                if !dossier.sources.iter().any(|s| s.n == n) {
+                    return c[0].to_string();
+                }
+                let k = match order.iter().position(|m| *m == n) {
+                    Some(i) => i + 1,
+                    None => {
+                        order.push(n);
+                        order.len()
+                    }
+                };
+                format!("[{k}]({})", &c[2])
+            })
+            .into_owned();
+    }
+    let sources = order
+        .iter()
+        .enumerate()
+        .filter_map(|(i, n)| {
+            let mut source = dossier.sources.iter().find(|s| s.n == *n)?.clone();
+            source.n = i as u32 + 1;
+            Some(source)
+        })
+        .collect();
+    Dossier {
+        notes: dossier.notes.clone(),
+        sources,
+    }
+}
+
 /// The sources `sections` cite, as the list that ends the paper: each by its
 /// number, in number order, with its title and address. None when nothing is
 /// cited.
@@ -161,26 +224,7 @@ pub(crate) fn references(sections: &[String], dossier: &Dossier, language: &str)
     let lines: Vec<String> = numbers
         .iter()
         .filter_map(|n| dossier.sources.iter().find(|s| s.n == *n))
-        .map(|s| {
-            if let Some(path) = super::research::reference_path(&s.url) {
-                let title = if s.title.trim().is_empty() {
-                    &path
-                } else {
-                    &s.title
-                };
-                return format!(
-                    "\\[{}\\] {}. `{path}`",
-                    s.n,
-                    title.trim().trim_end_matches('.')
-                );
-            }
-            let title = s.title.trim().trim_end_matches('.');
-            if title.is_empty() || title == s.url {
-                format!("\\[{}\\] <{}>", s.n, s.url)
-            } else {
-                format!("\\[{}\\] {title}. <{}>", s.n, s.url)
-            }
-        })
+        .map(|s| format!("\\[{}\\] {}", s.n, entry(s)))
         .collect();
     if lines.is_empty() {
         return None;

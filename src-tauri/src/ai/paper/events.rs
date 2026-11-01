@@ -79,6 +79,14 @@ pub enum PaperEvent {
         index: u32,
         text: String,
     },
+    /// The sources the sections may cite, each as the reference list gives
+    /// it after its number, and the list's heading: sent as drafting
+    /// starts, so the document numbers its citations and lists them while
+    /// the sections are written.
+    Sources {
+        heading: String,
+        sources: Vec<SourceEntry>,
+    },
     /// Question `question`'s helper finished, keeping `notes` notes;
     /// `failed` when it stopped on an error.
     QuestionDone {
@@ -86,6 +94,16 @@ pub enum PaperEvent {
         notes: u32,
         failed: bool,
     },
+}
+
+/// A source of the paper: its number in the research's numbering, and its
+/// entry in the reference list.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SourceEntry {
+    pub n: u32,
+    pub entry: String,
 }
 
 /// What a research helper's step was.

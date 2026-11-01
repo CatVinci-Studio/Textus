@@ -8,6 +8,7 @@ import type {
   PaperPhase,
   SectionStatus,
 } from "../../platform/bindings/ai-paper";
+import type { PaperSources } from "./paper-document";
 
 /** The name a paper card's turns go by in the conversation. Keep in step
  *  with Rust's `PAPER_TURN` (ai/agent/history.rs), which keeps them from
@@ -79,6 +80,8 @@ export interface PaperRunState {
   sectionText: Record<number, string>;
   /** False when research can't search the web; null until it says. */
   webSearch: boolean | null;
+  /** What the sections may cite, once drafting has begun. */
+  sources: PaperSources | null;
 }
 
 const NEW_RUN: PaperRunState = {
@@ -100,6 +103,7 @@ const NEW_RUN: PaperRunState = {
   outlineDraft: null,
   sectionText: {},
   webSearch: null,
+  sources: null,
 };
 
 const runs = new Map<string, PaperRunState>();
@@ -149,6 +153,10 @@ export function applyPaperEvent(key: string, event: PaperEvent) {
       case "sectionText":
         return {
           sectionText: { ...run.sectionText, [event.index]: event.text },
+        };
+      case "sources":
+        return {
+          sources: { heading: event.heading, sources: event.sources },
         };
       case "webSearch":
         return { webSearch: event.available };
