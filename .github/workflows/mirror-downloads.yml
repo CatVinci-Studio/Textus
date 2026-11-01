@@ -28,6 +28,9 @@ permissions:
 
 jobs:
   mirror-downloads:
+    # Its secrets are the release environment's: only a release tag
+    # (v*, ios-v*) runs it with them.
+    environment: release
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     # The Cloudflare token lives in the release environment, which only

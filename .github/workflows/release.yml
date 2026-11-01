@@ -119,6 +119,9 @@ jobs:
             $([[ "$RELEASE_TAG" == *-* ]] && echo --prerelease)
 
   build:
+    # Its secrets are the release environment's: only a release tag
+    # (v*, ios-v*) runs it with them.
+    environment: release
     needs: preflight
     name: build (${{ matrix.target || matrix.platform }})
     timeout-minutes: 90
