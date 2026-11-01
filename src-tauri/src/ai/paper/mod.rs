@@ -16,6 +16,7 @@ mod outline;
 mod research;
 mod review;
 mod store;
+mod timeline;
 mod web_figures;
 
 pub(crate) use budget::{BudgetCounts, BudgetKind, ResearchBudget, SharedBudget};

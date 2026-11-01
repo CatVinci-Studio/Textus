@@ -1942,25 +1942,41 @@ fn citations_are_numbered_in_the_order_the_paper_first_cites_them() {
 }
 
 #[test]
-fn a_long_timeline_is_drawn_top_down_and_a_short_one_across() {
+fn a_long_timeline_is_drawn_as_a_top_down_flowchart_and_a_short_one_left_across() {
     let periods: String = (1..=6)
         .map(|i| format!("        P{i} : event {i}\n"))
         .collect();
     let long = format!(
         "Text.\n\n```mermaid\ntimeline\n    title A history: told\n    section One\n{periods}```\n\nMore."
     );
-    let upright = draft::upright_timelines(&long);
+    let upright = timeline::upright_timelines(&long);
     assert!(
-        upright.contains("```mermaid\ntimeline TD\n    title"),
+        upright.starts_with(
+            "Text.\n\n```mermaid\n---\ntitle: \"A history: told\"\n---\nflowchart TB\n    subgraph s1[\"One\"]\n        p1[\"<b>P1</b><br>event 1\"]"
+        ),
         "{upright}"
     );
-    assert!(upright.ends_with("```\n\nMore."), "{upright}");
+    assert!(
+        upright.ends_with("    end\n    p1 --> p2 --> p3 --> p4 --> p5 --> p6\n```\n\nMore."),
+        "{upright}"
+    );
 
     let short = "```mermaid\ntimeline\n    A : a\n    B : b\n```";
-    assert_eq!(draft::upright_timelines(short), short);
-    // Its own direction, or another diagram, is left as it is.
-    let named = long.replace("timeline\n", "timeline LR\n");
-    assert_eq!(draft::upright_timelines(&named), named);
+    assert_eq!(timeline::upright_timelines(short), short);
+    // Laid out across by its writer, or another diagram: left as it is.
+    let across = long.replace("timeline\n", "timeline LR\n");
+    assert_eq!(timeline::upright_timelines(&across), across);
     let flow = "```mermaid\nflowchart LR\n  A : 1 --> B\n```";
-    assert_eq!(draft::upright_timelines(flow), flow);
+    assert_eq!(timeline::upright_timelines(flow), flow);
+}
+
+#[test]
+fn a_timeline_written_top_down_keeps_each_periods_events_together() {
+    // As a writer put it: `timeline TD`, a second event on a line of its
+    // own without its colon, and a quote in a label.
+    let written = "```mermaid\ntimeline TD\n    section Fish\n        2021-09 : Edited \"sea bream\" filed\n            Edible part 1.2x\n        2021-10 : Puffer approved : a second event\n```";
+    assert_eq!(
+        timeline::upright_timelines(written),
+        "```mermaid\nflowchart TB\n    subgraph s1[\"Fish\"]\n        p1[\"<b>2021-09</b><br>Edited #quot;sea bream#quot; filed<br>Edible part 1.2x\"]\n        p2[\"<b>2021-10</b><br>Puffer approved<br>a second event\"]\n    end\n    p1 --> p2\n```"
+    );
 }

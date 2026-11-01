@@ -301,7 +301,7 @@ pub(crate) fn problems(
 /// How each kind of figure is written into the section.
 fn figure_line(figure: &FigurePlan) -> String {
     let how = match figure.kind {
-        FigureKind::Mermaid => "a ```mermaid block narrow enough for a page's column: a flowchart top-down (TB) with at most four boxes side by side and short labels, a timeline as `timeline TD`",
+        FigureKind::Mermaid => "a ```mermaid block narrow enough for a page's column: a flowchart top-down (TB) with at most four boxes side by side and short labels, a timeline as `timeline`, each period's further events on lines of their own starting with `:`",
         FigureKind::Chart => "a ```chart block: JSON {\"type\": \"bar\"|\"line\"|\"area\"|\"pie\"|\"scatter\", \"title\", \"x\", \"y\", \"labels\": [...], \"series\": [{\"name\", \"data\": [numbers]}], \"caption\", \"source\"}, with the notes' own numbers only - \"x\" and \"y\" are the axes' titles, \"labels\" one category per number, \"source\" the sources cited as [n](address), never the notes' ids",
         FigureKind::Generated => "a line ![caption](textus-picture:16:9 what the picture shows, in detail)",
         FigureKind::Web => "a line <!-- textus-figure web: caption | a few English words to search Wikimedia Commons for --> where it goes; a real photograph or figure is found for it there later, so ask for something Commons would have (a place, an object, a species, a historical image), not an abstract idea",
@@ -495,55 +495,8 @@ pub(crate) async fn write_section(
     Ok(format!(
         "## {}\n\n{}",
         section.title,
-        upright_timelines(&body)
+        super::timeline::upright_timelines(&body)
     ))
-}
-
-/// The most periods a timeline is drawn across the page with: one with
-/// more, laid out side by side, was scaled down past reading.
-const ACROSS_PERIODS: usize = 4;
-
-/// `markdown` with every ```mermaid timeline of more than ACROSS_PERIODS
-/// periods drawn top-down (`timeline TD`), unless it names its direction.
-pub(crate) fn upright_timelines(markdown: &str) -> String {
-    let lines: Vec<&str> = markdown.split('\n').collect();
-    let mut out: Vec<String> = Vec::with_capacity(lines.len());
-    let mut i = 0;
-    while i < lines.len() {
-        out.push(lines[i].to_string());
-        let opens = lines[i].trim_start().starts_with("```")
-            && lines[i].trim_start().trim_start_matches('`').trim() == "mermaid";
-        i += 1;
-        if !opens {
-            continue;
-        }
-        let end = (i..lines.len())
-            .find(|&j| lines[j].trim_start().starts_with("```"))
-            .unwrap_or(lines.len());
-        let body = &lines[i..end];
-        let header = body.iter().position(|l| !l.trim().is_empty());
-        let periods = body
-            .iter()
-            .filter(|l| {
-                let line = l.trim();
-                line.split_once(':').is_some_and(|(period, _)| {
-                    !period.trim().is_empty()
-                        && !["title", "accTitle", "accDescr", "section"]
-                            .iter()
-                            .any(|k| line.starts_with(k))
-                })
-            })
-            .count();
-        for (k, line) in body.iter().enumerate() {
-            if Some(k) == header && line.trim() == "timeline" && periods > ACROSS_PERIODS {
-                out.push(line.replace("timeline", "timeline TD"));
-            } else {
-                out.push(line.to_string());
-            }
-        }
-        i = end;
-    }
-    out.join("\n")
 }
 
 /// A writer that answered with its section as its reply instead of handing
