@@ -10,6 +10,7 @@ import { useTabState } from "./tabs/useTabState";
 import { useSidePanels } from "./useSidePanels";
 import { useWordImported } from "./AppNotices";
 import type { PendingClose } from "./close-flow";
+import { useKeepTabs } from "../document/reload-tabs";
 import type { Settings, useSettings } from "../prefs/SettingsContext";
 
 /**
@@ -38,6 +39,12 @@ export function useWindowShell({
   const cancelDraftFlushes = useDraftAutosave(
     tabState.tabs,
     settings.enableDraftRecovery,
+  );
+  useKeepTabs(
+    tabState.tabs,
+    tabState.activeTabId,
+    settings.enableDraftRecovery,
+    tabState.liveTabs,
   );
   const [draftsRestoredCount, setDraftsRestoredCount] = useState(0);
   const wordImported = useWordImported();
