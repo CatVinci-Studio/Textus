@@ -386,6 +386,11 @@ pub async fn ai_paper_draft(
             phase: PaperPhase::Finishing,
         });
         let language = &files.paper.language;
+        // Web pictures first: one Commons has nothing for becomes a picture
+        // to generate, begun with the planned ones.
+        for section in &mut sections {
+            *section = web_figures::resolve(section, web_figures::find_on_commons).await;
+        }
         // Pictures begun before the figures are numbered, so one that can't
         // be made leaves no caption behind.
         let pictures =
@@ -396,9 +401,6 @@ pub async fn ai_paper_draft(
                 Some(run) => crate::ai::images::place_pictures(run, section).0,
                 None => finish::without_pictures(section),
             };
-        }
-        for section in &mut sections {
-            *section = web_figures::resolve(section, web_figures::find_on_commons).await;
         }
         finish::number_figures(&mut sections, language);
         let mut dossier = files.dossier.clone();

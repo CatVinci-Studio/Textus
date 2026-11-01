@@ -189,8 +189,8 @@ fn live_paper() {
 
         let t = Instant::now();
         for section in &mut sections {
-            *section = finish::without_pictures(section);
             *section = web_figures::resolve(section, web_figures::find_on_commons).await;
+            *section = finish::without_pictures(section);
         }
         let figures = finish::number_figures(&mut sections, &paper.language);
         let mut dossier = dossier;
