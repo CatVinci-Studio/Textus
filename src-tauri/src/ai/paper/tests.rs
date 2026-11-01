@@ -288,8 +288,18 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
             phase: PaperPhase::Planning
         }
     );
+    // The questions are shown before the helpers start on them.
     assert_eq!(
         events[1],
+        PaperEvent::Questions {
+            questions: vec![
+                "How do green roofs cool a street?".into(),
+                "What do city measurements show?".into(),
+            ]
+        }
+    );
+    assert_eq!(
+        events[2],
         PaperEvent::Phase {
             phase: PaperPhase::Researching
         }
@@ -299,6 +309,94 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
         .filter(|e| matches!(e, PaperEvent::Budget { .. }))
         .count();
     assert_eq!(budgets, 2);
+    // Each kept note is told as it is kept; the refused ones aren't.
+    let mut kept: Vec<(u32, String)> = events
+        .iter()
+        .filter_map(|e| match e {
+            PaperEvent::Activity {
+                question,
+                kind: ActivityKind::Note,
+                detail,
+            } => Some((*question, detail.clone())),
+            _ => None,
+        })
+        .collect();
+    kept.sort();
+    assert_eq!(kept.len(), 2);
+    assert_eq!(kept[0].0, 0);
+    assert!(kept[0].1.contains("green roofs"), "{}", kept[0].1);
+    let mut done: Vec<_> = events
+        .iter()
+        .filter(|e| matches!(e, PaperEvent::QuestionDone { .. }))
+        .collect();
+    done.sort_by_key(|e| match e {
+        PaperEvent::QuestionDone { question, .. } => *question,
+        _ => 0,
+    });
+    assert_eq!(
+        done,
+        [
+            &PaperEvent::QuestionDone {
+                question: 0,
+                notes: 1,
+                failed: false
+            },
+            &PaperEvent::QuestionDone {
+                question: 1,
+                notes: 1,
+                failed: false
+            },
+        ]
+    );
+}
+
+#[test]
+fn a_helper_s_tool_calls_are_told_in_one_line() {
+    let call = |name: &str, args: serde_json::Value| aicompat::agent::ToolCall {
+        call_id: "c".into(),
+        name: name.into(),
+        arguments: args.to_string(),
+    };
+    assert_eq!(
+        research::activity(&call(
+            "web_search",
+            json!({"queries": ["green roofs", "heat island"]})
+        )),
+        Some((ActivityKind::Search, "green roofs · heat island".into()))
+    );
+    assert_eq!(
+        research::activity(&call("web_fetch", json!({"url": "https://who.int/heat"}))),
+        Some((ActivityKind::Read, "https://who.int/heat".into()))
+    );
+    assert_eq!(
+        research::activity(&call("search_papers", json!({"query": "urban greening"}))),
+        Some((ActivityKind::Papers, "urban greening".into()))
+    );
+    assert_eq!(research::activity(&call("add_note", json!({}))), None);
+    let long = "城".repeat(300);
+    let clipped = research::clip(&long);
+    assert_eq!(clipped.chars().count(), 120);
+    assert!(clipped.ends_with('…'));
+}
+
+#[test]
+fn the_planner_s_stream_is_sent_as_its_tail_a_few_times_a_second() {
+    let events = std::sync::Mutex::new(Vec::new());
+    let send = |e: PaperEvent| events.lock().unwrap().push(e);
+    let tail = research::ThinkingTail::new(&send);
+    tail.push("First   the\nbackground. ");
+    // Straight after: held back, but gathered.
+    tail.push(&"x".repeat(2000));
+    let events = events.into_inner().unwrap();
+    assert_eq!(
+        events,
+        [PaperEvent::Thinking {
+            text: "First the background.".into()
+        }]
+    );
+    assert_eq!(research::tail("abcdef", 3), "def");
+    assert_eq!(research::tail("绿化城市", 2), "城市");
+    assert_eq!(research::tail("ab", 5), "ab");
 }
 
 #[tokio::test]

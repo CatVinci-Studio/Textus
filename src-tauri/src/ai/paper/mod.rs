@@ -19,7 +19,7 @@ mod store;
 mod web_figures;
 
 pub(crate) use budget::{BudgetCounts, BudgetKind, ResearchBudget, SharedBudget};
-pub(crate) use events::{PaperEvent, PaperPhase, SectionStatus};
+pub(crate) use events::{ActivityKind, PaperEvent, PaperPhase, SectionStatus};
 pub(crate) use store::{load, load_section, new_id, save, save_section, PaperFiles};
 
 use serde::{Deserialize, Serialize};

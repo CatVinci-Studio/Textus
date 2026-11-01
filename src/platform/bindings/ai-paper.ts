@@ -26,6 +26,22 @@ export const commands = {
 };
 
 /* Types */
+/**  What a research helper's step was. */
+export type ActivityKind = 
+/**  A web search; `detail` is its queries. */
+"search" | 
+/**  A page read; `detail` is its address. */
+"read" | 
+/**  A scholarly search; `detail` is its query. */
+"papers" | 
+/**
+ *  The user's reference library searched or read; `detail` is the query
+ *  or the path.
+ */
+"library" | 
+/**  A note kept; `detail` is its claim. */
+"note";
+
 /**  A count of each thing research spends. */
 export type BudgetCounts = {
 	searches: number,
@@ -242,7 +258,27 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
 /**  The outline is ready for the user to edit and approve. */
 { type: "outlineReady"; outline: Outline } | 
 /**  A stage failed; `section` when it was one section's. */
-{ type: "error"; message: string; section?: number | null };
+{ type: "error"; message: string; section?: number | null } | 
+/**
+ *  What the planner is thinking or writing, as it comes: the tail of
+ *  it so far, sent a few times a second at most.
+ */
+{ type: "thinking"; text: string } | 
+/**
+ *  The research questions the topic was split into, in the order the
+ *  helpers take them.
+ */
+{ type: "questions"; questions: string[] } | 
+/**
+ *  A research helper did something: what question `question` (its
+ *  index) searched, read or kept.
+ */
+{ type: "activity"; question: number; kind: ActivityKind; detail: string } | 
+/**
+ *  Question `question`'s helper finished, keeping `notes` notes;
+ *  `failed` when it stopped on an error.
+ */
+{ type: "questionDone"; question: number; notes: number; failed: boolean };
 
 /**  One update from `ai_paper_run`. Display only: what is kept is on disk. */
 export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } | 
@@ -256,7 +292,27 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
 /**  The outline is ready for the user to edit and approve. */
 { type: "outlineReady"; outline: Outline } | 
 /**  A stage failed; `section` when it was one section's. */
-{ type: "error"; message: string; section: number | null };
+{ type: "error"; message: string; section: number | null } | 
+/**
+ *  What the planner is thinking or writing, as it comes: the tail of
+ *  it so far, sent a few times a second at most.
+ */
+{ type: "thinking"; text: string } | 
+/**
+ *  The research questions the topic was split into, in the order the
+ *  helpers take them.
+ */
+{ type: "questions"; questions: string[] } | 
+/**
+ *  A research helper did something: what question `question` (its
+ *  index) searched, read or kept.
+ */
+{ type: "activity"; question: number; kind: ActivityKind; detail: string } | 
+/**
+ *  Question `question`'s helper finished, keeping `notes` notes;
+ *  `failed` when it stopped on an error.
+ */
+{ type: "questionDone"; question: number; notes: number; failed: boolean };
 
 export type PaperPhase = "planning" | "researching" | "outlining" | 
 /**  Waiting for the user to approve the outline. */
