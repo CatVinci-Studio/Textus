@@ -1750,3 +1750,27 @@ fn a_section_is_shown_as_its_writer_streams_it() {
         }]
     );
 }
+
+#[test]
+fn a_long_timeline_is_drawn_top_down_and_a_short_one_across() {
+    let periods: String = (1..=6)
+        .map(|i| format!("        P{i} : event {i}\n"))
+        .collect();
+    let long = format!(
+        "Text.\n\n```mermaid\ntimeline\n    title A history: told\n    section One\n{periods}```\n\nMore."
+    );
+    let upright = draft::upright_timelines(&long);
+    assert!(
+        upright.contains("```mermaid\ntimeline TD\n    title"),
+        "{upright}"
+    );
+    assert!(upright.ends_with("```\n\nMore."), "{upright}");
+
+    let short = "```mermaid\ntimeline\n    A : a\n    B : b\n```";
+    assert_eq!(draft::upright_timelines(short), short);
+    // Its own direction, or another diagram, is left as it is.
+    let named = long.replace("timeline\n", "timeline LR\n");
+    assert_eq!(draft::upright_timelines(&named), named);
+    let flow = "```mermaid\nflowchart LR\n  A : 1 --> B\n```";
+    assert_eq!(draft::upright_timelines(flow), flow);
+}
