@@ -1474,13 +1474,13 @@ fn a_section_s_length_holds_is_soft_or_is_sent_back() {
 }
 
 #[tokio::test]
-async fn a_section_far_too_long_is_never_kept() {
+async fn a_section_far_too_long_is_kept_only_as_the_last_resort() {
     let plan = outline_of(1, 100);
     let english = Paper {
         language: "en".into(),
         ..paper()
     };
-    let err = draft::write_section(
+    let kept = draft::write_section(
         &Verbose(300),
         &english,
         &plan,
@@ -1490,8 +1490,9 @@ async fn a_section_far_too_long_is_never_kept() {
         &|_| {},
     )
     .await
-    .unwrap_err();
-    assert!(err.contains("wasn't written in a form that holds"), "{err}");
+    // Every try was sent back: the last is kept, so the paper goes on.
+    .unwrap();
+    assert!(kept.starts_with("## Mechanism\n\n"), "{kept}");
 }
 
 #[test]
@@ -1748,6 +1749,72 @@ fn a_section_is_shown_as_its_writer_streams_it() {
             index: 0,
             text: long.clone()
         }]
+    );
+}
+
+#[test]
+fn a_section_that_never_holds_is_repaired_to_keep() {
+    let sources = vec![(3, "https://example.org/study".to_string())];
+    let text = "Cool [3](https://wrong.example/) and [7](https://other.example/), as [3] said.\n\n```chart\n{\"type\": \"bar\", \"series\": []}\n```\n\n```chart\n{\"series\": [{\"data\": [1]}]}\n```\n\nEnd.";
+    assert_eq!(
+        draft::repaired(text, &sources),
+        "Cool [3](https://example.org/study) and , as [3](https://example.org/study) said.\n\n```chart\n{\"series\": [{\"data\": [1]}]}\n```\n\nEnd."
+    );
+}
+
+/// Hands its section over with a citation of no source, every try.
+struct Miscites;
+
+impl research::Model for Miscites {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        turns: &'a [aicompat::agent::AgentTurn],
+        _tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        use aicompat::agent::{AgentTurn, StepResult};
+        let body = section_text(
+            97,
+            "Also [9](https://nowhere.example/).\n\n```chart\n{\"series\": [{\"data\": [1]}]}\n```",
+        );
+        let step = StepResult::ToolCalls(vec![AgentTurn::ToolCall {
+            call_id: format!("c{}", turns.len()),
+            name: draft::SUBMIT_SECTION_TOOL.into(),
+            arguments: json!({ "markdown": body }).to_string(),
+            reasoning: None,
+        }]);
+        Box::pin(async move { Ok(step) })
+    }
+}
+
+#[tokio::test]
+async fn a_section_that_never_holds_is_kept_repaired_and_the_paper_goes_on() {
+    let plan = outline_of(2, 100);
+    let english = Paper {
+        language: "en".into(),
+        ..paper()
+    };
+    let mut handed = Vec::new();
+    draft::draft(
+        &Miscites,
+        &english,
+        &plan,
+        &drafting_dossier(),
+        &|_| {},
+        &mut |i, md: &str| {
+            handed.push((i, md.to_string()));
+            Ok(())
+        },
+        &|_| {},
+    )
+    .await
+    .unwrap();
+    assert_eq!(handed.len(), 2);
+    assert!(!handed[0].1.contains("nowhere.example"), "{}", handed[0].1);
+    assert!(
+        handed[0].1.contains("[3](https://example.org/study)"),
+        "{}",
+        handed[0].1
     );
 }
 
