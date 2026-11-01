@@ -411,6 +411,8 @@ type /name in a conversation to use one.
   paperSectionFailed: "Failed",
   paperOutlineRetry:
     "Draft {n}: the last one didn't pass its checks, so it is being redone…",
+  paperPapersOnly:
+    "No web search is available, so this paper's research only searches scholarly papers (OpenAlex, arXiv) and your reference library.",
   paperProposed:
     "The paper is proposed at the end of the document. Review it there, then accept or reject it.",
   paperProposedCard: "Proposed at the end of the document.",

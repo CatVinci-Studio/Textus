@@ -376,6 +376,8 @@ export default {
   paperSectionRevising: "修改中",
   paperSectionFailed: "失败",
   paperOutlineRetry: "第 {n} 稿：上一稿没通过检查，正在重拟…",
+  paperPapersOnly:
+    "没有可用的网页搜索，这篇论文的研究只会检索学术论文（OpenAlex、arXiv）和你的资料库。",
   paperProposed:
     "论文已作为修改建议放在文档末尾。请在那里查看，再决定接受或拒绝。",
   paperProposedCard: "已放在文档末尾。",

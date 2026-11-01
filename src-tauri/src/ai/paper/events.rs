@@ -45,6 +45,12 @@ pub enum PaperEvent {
     Thinking {
         text: String,
     },
+    /// Whether research can search the web: false when the model has no
+    /// search of its own and Settings names no search service, so only the
+    /// scholarly indexes and the user's library are searched.
+    WebSearch {
+        available: bool,
+    },
     /// The research questions the topic was split into, in the order the
     /// helpers take them.
     Questions {

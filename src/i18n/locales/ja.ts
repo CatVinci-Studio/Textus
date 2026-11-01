@@ -396,6 +396,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   paperSectionFailed: "失敗",
   paperOutlineRetry:
     "第 {n} 稿：前の案がチェックを通らなかったため、作り直しています…",
+  paperPapersOnly:
+    "ウェブ検索が使えないため、この論文の調査は学術論文（OpenAlex、arXiv）と資料庫だけを検索します。",
   paperProposed:
     "論文を文書の末尾に提案しました。そこで確認して、承認するか却下してください。",
   paperProposedCard: "文書の末尾に提案しました。",

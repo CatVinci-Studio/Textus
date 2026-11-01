@@ -111,6 +111,13 @@ describe("the paper store", () => {
     expect(run.sectionText).toEqual({ 1: "So far, more" });
   });
 
+  it("knows when research can't search the web", () => {
+    applyPaperEvent("k6", { type: "phase", phase: "planning" });
+    expect(paperRun("k6")!.webSearch).toBeNull();
+    applyPaperEvent("k6", { type: "webSearch", available: false });
+    expect(paperRun("k6")!.webSearch).toBe(false);
+  });
+
   it("proposes the paper as one append", () => {
     const found = proposalsFromTurns(
       paperProposalTurns("k3", "# Title\n\nText.", "Proposed."),
