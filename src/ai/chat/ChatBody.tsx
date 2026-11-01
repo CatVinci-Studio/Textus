@@ -72,6 +72,7 @@ export function ChatBody({
   onRejectAll,
   onEscape,
   onModeChange,
+  onResearch,
   footer,
   fillHeight,
   variant = "full",
@@ -510,6 +511,7 @@ export function ChatBody({
         onStop={stopAll}
         onEscape={onEscape ?? (() => {})}
         onModeChange={onModeChange}
+        onResearch={onResearch}
       />
       {footer}
     </>

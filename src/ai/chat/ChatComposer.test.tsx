@@ -80,6 +80,9 @@ const labels = {
   modeWriteHint: "Writes and changes the document",
   modeReviewHint: "Reads and leaves notes",
   modeCreateHint: "Makes themes, plugins and skills",
+  modeResearch: "Research",
+  researchPlaceholder: "What the paper is about",
+  modeResearchHint: "Researches a topic and writes a paper into the document",
   modeLabel: "Mode",
   modelLabel: "Model",
   modeAndModelLabel: "Mode and model",
@@ -318,6 +321,42 @@ describe("ChatComposer selection chip", () => {
       },
       "research this",
     );
+  });
+
+  it("offers Research only with a paper to start, and hands it the topic", () => {
+    const onSend = vi.fn();
+    const onResearch = vi.fn();
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText={null}
+        busy={false}
+        labels={labels}
+        defaultMode="review"
+        defaultWebSearch={false}
+        onSend={onSend}
+        onResearch={onResearch}
+        onStop={() => {}}
+        onEscape={() => {}}
+      />,
+    );
+    fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
+    expect(
+      screen
+        .getAllByRole("option")
+        .map(
+          (option) =>
+            option.querySelector(".mode-picker-mode-name")?.textContent,
+        ),
+    ).toEqual(["Write", "Review", "Create", "Research"]);
+    fireEvent.click(screen.getByRole("option", { name: "Research" }));
+    const box = screen.getByPlaceholderText("What the paper is about");
+    fireEvent.change(box, { target: { value: "  Green roofs " } });
+    fireEvent.click(screen.getByText("Send"));
+    expect(onResearch).toHaveBeenCalledWith("Green roofs");
+    expect(onSend).not.toHaveBeenCalled();
+    expect(box).toHaveValue("");
   });
 });
 

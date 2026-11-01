@@ -1,7 +1,7 @@
 import type { DocumentSnapshot } from "../doc-markdown";
 import type { MessageQueueLabels } from "./MessageQueue";
 import type { AgentConversation } from "./useAgentConversation";
-import type { AgentMode } from "../../prefs/SettingsContext";
+import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import type { AgentTurn, EditProposal } from "../types";
 import type { ChatMessagesLabels, ChatMessagesProps } from "./ChatMessages";
@@ -74,7 +74,9 @@ export interface ChatBodyProps {
    *  (Escape shouldn't destroy an OS window the user placed deliberately). */
   onEscape?: () => void;
   /** The composer's mode, now and on every switch. */
-  onModeChange?: (mode: AgentMode) => void;
+  onModeChange?: (mode: PanelMode) => void;
+  /** The panel: Research is offered, its message a paper's topic. */
+  onResearch?: (topic: string) => void;
   /** Rendered above the composer - the popup's close-confirmation bar. */
   footer?: React.ReactNode;
   /** Jumps the editor to a pending edit. Absent in the detached window,

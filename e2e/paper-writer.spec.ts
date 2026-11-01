@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// "Write a paper…": the topic goes to ai_paper_run, its outline waits on a
-// card, Approve drafts it, and the paper arrives as one proposal at the end
+// Research mode: the message is the topic, which goes to ai_paper_run; its
+// outline waits on a card, Approve drafts it, and the paper arrives as one proposal at the end
 // of the document.
 
 const outline = {
@@ -92,9 +92,11 @@ test("a paper is researched, its outline approved, and proposed whole", async ({
     storage: { "textus-agent-panel-open": "1" },
   });
 
-  await page.getByRole("button", { name: "Write a paper…" }).click();
-  await page.getByLabel("Topic").fill("Green roofs");
-  await page.getByRole("button", { name: "Start" }).click();
+  const panel = page.locator(".agent-panel-view");
+  await panel.getByRole("combobox", { name: /^Mode/ }).click();
+  await page.getByRole("option", { name: "Research" }).click();
+  await panel.locator("textarea").fill("Green roofs");
+  await panel.locator("textarea").press("Enter");
 
   const card = page.locator(".paper-card");
   await expect(card).toContainText("Green roofs");

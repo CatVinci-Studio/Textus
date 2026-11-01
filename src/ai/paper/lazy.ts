@@ -6,4 +6,4 @@ import { lazyComponent } from "../../lazy/lazy-component";
 const paperUi = lazyModule("paper", () => import("./paper-ui"));
 
 export const PaperCard = lazyComponent(paperUi, (m) => m.PaperCard);
-export const PaperStart = lazyComponent(paperUi, (m) => m.PaperStart);
+export const PaperLength = lazyComponent(paperUi, (m) => m.PaperLength);
