@@ -1,11 +1,30 @@
 import { useState } from "react";
 import type { Strings } from "../../i18n/strings";
-import { fs } from "../../platform/ipc";
+import { fs, themes } from "../../platform/ipc";
 import { useSettings } from "../../prefs/SettingsContext";
-import { settingsFileText, settingsFromFile } from "../../prefs/settings-file";
+import {
+  settingsFileText,
+  settingsFromFile,
+  type ThemeCss,
+} from "../../prefs/settings-file";
+import type { UserThemeMeta } from "../../prefs/settings-types";
 import { showConfirm } from "../../ui/app-dialog";
 import { explainError } from "../../utils/error-explain";
 import { SettingRow } from "./controls";
+
+/** The CSS of the imported themes, to travel with the settings. */
+async function themeCss(list: UserThemeMeta[]): Promise<ThemeCss> {
+  const found: ThemeCss = {};
+  for (const theme of list) {
+    const light = await themes.loadThemeCss(theme.id, "light");
+    if (light === null) continue;
+    const dark = theme.hasDark
+      ? await themes.loadThemeCss(theme.id, "dark")
+      : null;
+    found[theme.id] = dark === null ? { light } : { light, dark };
+  }
+  return found;
+}
 
 /** Settings › General's export and import of the settings as a file. */
 export function SettingsFileSection({ t }: { t: Strings }) {
@@ -17,7 +36,11 @@ export function SettingsFileSection({ t }: { t: Strings }) {
     const path = await fs.saveSettingsFileDialog("Textus Settings.json");
     if (!path) return;
     try {
-      await fs.writeTextFile(path, settingsFileText(settings));
+      const text = settingsFileText(
+        settings,
+        await themeCss(settings.userThemes),
+      );
+      await fs.writeTextFile(path, text);
     } catch (err) {
       setError(explainError(err, t));
     }
@@ -37,7 +60,13 @@ export function SettingsFileSection({ t }: { t: Strings }) {
         okLabel: t.settingsFileImportReplace,
         cancelLabel: t.cancel,
       });
-      if (ok) setSettings(imported);
+      if (!ok) return;
+      for (const [id, css] of Object.entries(imported.themes)) {
+        await themes.saveThemeCss(id, "light", css.light);
+        if (css.dark !== undefined)
+          await themes.saveThemeCss(id, "dark", css.dark);
+      }
+      setSettings(imported.settings);
     } catch (err) {
       setError(explainError(err, t));
     }
