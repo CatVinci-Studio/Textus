@@ -102,6 +102,15 @@ export async function openApp(
     },
     { settings: options.settings ?? {}, storage: options.storage ?? {} },
   );
+  // A second open in the same tab starts afresh: the tabs a reload keeps
+  // (reload-tabs.ts) belong to the page the test is leaving.
+  // The app writes them as the page goes too: a listener added after its
+  // own clears them last.
+  if (page.url().startsWith("http"))
+    await page.evaluate(() => {
+      sessionStorage.clear();
+      addEventListener("pagehide", () => sessionStorage.clear());
+    });
   await page.goto("/");
   if (!options.animations)
     await page.addStyleTag({
