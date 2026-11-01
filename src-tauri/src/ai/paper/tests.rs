@@ -1060,3 +1060,60 @@ async fn helpers_search_the_user_s_library_and_cite_its_files() {
         "Barrages store energy at high tide, by the notes \\[1\\]."
     );
 }
+
+#[test]
+fn a_web_picture_mark_gives_its_caption_and_search_words() {
+    assert_eq!(
+        web_figures::read_mark("<!-- textus-figure web: 苏黎世的屋顶绿化 | green roof Zurich -->"),
+        Some((
+            "苏黎世的屋顶绿化".to_string(),
+            "green roof Zurich".to_string()
+        ))
+    );
+    assert_eq!(
+        web_figures::read_mark("  <!-- textus-figure web: Basel rooftops -->"),
+        Some(("Basel rooftops".to_string(), "Basel rooftops".to_string()))
+    );
+    assert_eq!(web_figures::read_mark("<!-- textus-figure web:  -->"), None);
+    assert_eq!(web_figures::read_mark("Plain text."), None);
+}
+
+#[tokio::test]
+async fn web_picture_marks_become_kept_pictures_with_credits_or_are_left_out() {
+    let section = "Intro.\n\n<!-- textus-figure web: A roof in Basel | green roof Basel -->\n\nMid.\n\n<!-- textus-figure web: Nothing | no such picture -->\n\nEnd.";
+    let find = |words: String| async move {
+        if words == "green roof Basel" {
+            Ok((
+                aicompat::images::GeneratedImage { bytes: vec![1, 2, 3], mime: "image/jpeg", ext: "jpg", width: 4, height: 3 },
+                "Ann · CC BY 4.0 · [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:R.jpg)".to_string(),
+            ))
+        } else {
+            Err("nothing".to_string())
+        }
+    };
+    let resolved = web_figures::resolve(section, find).await;
+    let lines: Vec<&str> = resolved.split("\n\n").collect();
+    assert_eq!(lines[0], "Intro.");
+    let id = lines[1]
+        .strip_prefix("![A roof in Basel](textus-generated:")
+        .and_then(|rest| rest.strip_suffix(')'))
+        .unwrap_or_else(|| panic!("{resolved}"));
+    assert_eq!(
+        lines[2],
+        "*Ann · CC BY 4.0 · [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:R.jpg)*"
+    );
+    assert_eq!(&lines[3..], ["Mid.", "End."]);
+    assert_eq!(
+        crate::ai::images::ready_bytes(id),
+        Some((vec![1, 2, 3], "jpg"))
+    );
+
+    // Numbered like any picture, the credit after its caption.
+    let mut sections = vec![resolved];
+    finish::number_figures(&mut sections, "en");
+    assert!(
+        sections[0].contains(")\n\n*Figure 1. A roof in Basel*\n\n*Ann · CC BY 4.0"),
+        "{}",
+        sections[0]
+    );
+}

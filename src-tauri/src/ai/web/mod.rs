@@ -3,6 +3,7 @@
 //! either. Every page cited gets one number for the whole conversation.
 
 mod budget;
+pub(crate) mod commons;
 pub(crate) mod extract;
 mod fetch;
 mod scholar;

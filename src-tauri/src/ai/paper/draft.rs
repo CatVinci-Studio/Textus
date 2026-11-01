@@ -208,7 +208,7 @@ fn figure_line(figure: &FigurePlan) -> String {
         FigureKind::Mermaid => "a ```mermaid block",
         FigureKind::Chart => "a ```chart block: JSON {\"type\": \"bar\"|\"line\"|\"area\"|\"pie\"|\"scatter\", \"title\", \"x\", \"y\", \"labels\": [...], \"series\": [{\"name\", \"data\": [numbers]}], \"caption\", \"source\"}, with the notes' own numbers only",
         FigureKind::Generated => "a line ![caption](textus-picture:16:9 what the picture shows, in detail)",
-        FigureKind::Web => "a line <!-- textus-figure web: what picture to find --> where it goes; one is found for it later",
+        FigureKind::Web => "a line <!-- textus-figure web: caption | a few English words to search Wikimedia Commons for --> where it goes; a real photograph or figure is found for it there later, so ask for something Commons would have (a place, an object, a species, a historical image), not an abstract idea",
     };
     format!("- {} - as {how}", figure.spec)
 }

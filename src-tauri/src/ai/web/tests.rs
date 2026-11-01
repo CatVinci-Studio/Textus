@@ -276,3 +276,68 @@ async fn paper_searches_draw_on_the_papers_lookups() {
     assert!(out.contains("That's the 0 paper searches"), "{out}");
     assert_eq!(shared.snapshot().used.paper_lookups, 0);
 }
+
+#[test]
+fn commons_answers_become_pictures_with_their_credit_in_search_order() {
+    let body = json!({"query": {"pages": {
+        "10": {"index": 2, "imageinfo": [{
+            "thumburl": "https://upload.example/1280px-Roof.png?utm_source=commons",
+            "thumbwidth": 1280, "thumbheight": 853, "mime": "image/png",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Roof.png",
+            "extmetadata": {
+                "Artist": {"value": "<div class=\"fn value\">\nEmmanuel &amp; Co</div>"},
+                "LicenseShortName": {"value": "CC BY-SA 4.0"}
+            }
+        }]},
+        "11": {"index": 1, "imageinfo": [{
+            "thumburl": "https://upload.example/1280px-Tray.jpg", "mime": "image/jpeg",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Tray.jpg",
+            "extmetadata": {"LicenseShortName": {"value": "Public domain"}}
+        }]},
+        "12": {"index": 3, "imageinfo": [{
+            "thumburl": "https://upload.example/x.jpg", "mime": "image/jpeg",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:X.jpg",
+            "extmetadata": {}
+        }]},
+        "13": {"index": 4, "imageinfo": [{
+            "url": "https://upload.example/doc.pdf", "mime": "application/pdf",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Doc.pdf",
+            "extmetadata": {"LicenseShortName": {"value": "CC0"}}
+        }]}
+    }}});
+    let found = commons::images(&body);
+    let pages: Vec<&str> = found.iter().map(|i| i.page.as_str()).collect();
+    assert_eq!(
+        pages,
+        [
+            "https://commons.wikimedia.org/wiki/File:Tray.jpg",
+            "https://commons.wikimedia.org/wiki/File:Roof.png"
+        ]
+    );
+    assert_eq!(found[1].author, "Emmanuel & Co");
+    assert_eq!((found[1].width, found[1].height), (1280, 853));
+    assert_eq!(
+        found[1].credit(),
+        "Emmanuel & Co · CC BY-SA 4.0 · [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Roof.png)"
+    );
+    assert_eq!(
+        found[0].credit(),
+        "Public domain · [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Tray.jpg)"
+    );
+}
+
+#[test]
+fn a_fetched_picture_s_type_comes_from_the_server_or_its_address() {
+    assert_eq!(
+        commons::picture_type("image/png", "https://x/a.jpg"),
+        ("image/png", "png")
+    );
+    assert_eq!(
+        commons::picture_type("", "https://x/a.PNG?utm_source=commons"),
+        ("image/png", "png")
+    );
+    assert_eq!(
+        commons::picture_type("application/octet-stream", "https://x/a"),
+        ("image/jpeg", "jpg")
+    );
+}

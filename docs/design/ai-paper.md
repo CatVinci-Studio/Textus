@@ -133,6 +133,15 @@ it, lazily loaded. Each stage and helper is one run of
   percent-encoded so a link holds it - cited `[n](references/…)`, accepted
   by the section checks, and listed by name and path in the references.
 
+- **Web pictures** (`paper/web_figures.rs`, `web/commons.rs`): a writer marks
+  a `web` figure as `<!-- textus-figure web: caption | English search words
+-->`. Before the figures are numbered each mark becomes the best picture
+  on Wikimedia Commons - Commons only, since a picture from any other page
+  comes with no licence to use it - kept in the picture store like a
+  generated one (shown in place, saved only on accept), with a credit line
+  after its caption: author, licence and a link to its Commons page. A mark
+  nothing is found for is left out.
+
 ### To come
 
-Web pictures for the `web` figures (`find_image`).
+A real run, to tune the prompts, the checks' tolerances and the budgets.
