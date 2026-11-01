@@ -134,9 +134,8 @@ impl Model for aicompat::providers::AgentProvider {
         use aicompat::agent::ProviderEvent;
         Box::pin(async move {
             let on_event = |event: ProviderEvent<'_>| match event {
-                ProviderEvent::Thinking(text) | ProviderEvent::Text(text) => {
-                    watch(Streamed::Thought(text))
-                }
+                ProviderEvent::Thinking(text) => watch(Streamed::Thinking(text)),
+                ProviderEvent::Text(text) => watch(Streamed::Text(text)),
                 ProviderEvent::ToolStart { .. } => watch(Streamed::ToolStart),
                 ProviderEvent::ToolArgs { delta, .. } => watch(Streamed::ToolArgs(delta)),
                 ProviderEvent::Citation { .. } => {}
@@ -151,8 +150,10 @@ impl Model for aicompat::providers::AgentProvider {
 /// A piece of what a step streams, as a stage watching it sees it.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum Streamed<'a> {
-    /// A fragment of the model's thinking or prose.
-    Thought(&'a str),
+    /// A fragment of the model's thinking.
+    Thinking(&'a str),
+    /// A fragment of the model's reply.
+    Text(&'a str),
     /// A tool call began: the arguments that follow are its own.
     ToolStart,
     /// A fragment of a tool call's JSON arguments.
@@ -537,7 +538,7 @@ pub(crate) async fn research(
     });
     let thinking = ThinkingTail::new(send);
     let questions = plan_questions(model, paper, &|streamed| {
-        if let Streamed::Thought(text) = streamed {
+        if let Streamed::Thinking(text) | Streamed::Text(text) = streamed {
             thinking.push(text)
         }
     })

@@ -7,7 +7,7 @@
 
 use super::draft::write_section;
 use super::research::Model;
-use super::{Dossier, Outline, Paper};
+use super::{Dossier, Outline, Paper, PaperEvent};
 use aicompat::agent::{run_agent_loop, AgentTurn, ToolCall, ToolOutput, ToolRun, ToolSpec};
 use futures_util::stream::{self, StreamExt};
 use serde_json::{json, Value};
@@ -158,6 +158,7 @@ pub(crate) async fn review(
 /// `sections` with each one `issues` names revised once, three at a time.
 /// `revising` hears of each as it begins; a revision that fails leaves the
 /// draft. Returns which sections changed.
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn revise(
     model: &dyn Model,
     paper: &Paper,
@@ -166,6 +167,7 @@ pub(crate) async fn revise(
     sections: &mut [String],
     issues: &[Issue],
     revising: &(dyn Fn(usize) + Sync),
+    send: &(dyn Fn(PaperEvent) + Sync),
 ) -> Vec<usize> {
     let mut named: Vec<usize> = issues.iter().map(|i| i.section).collect();
     named.sort_unstable();
@@ -183,7 +185,16 @@ pub(crate) async fn revise(
             let body = drafts[i].split_once("\n\n").map_or("", |(_, b)| b);
             (
                 i,
-                write_section(model, paper, outline, i, dossier, Some((body, &points))).await,
+                write_section(
+                    model,
+                    paper,
+                    outline,
+                    i,
+                    dossier,
+                    Some((body, &points)),
+                    send,
+                )
+                .await,
             )
         })
         .buffer_unordered(AT_ONCE)

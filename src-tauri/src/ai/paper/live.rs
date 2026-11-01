@@ -153,6 +153,7 @@ fn live_paper() {
                 sections.push(md.to_string());
                 Ok(())
             },
+            &|_| {},
         )
         .await
         .expect("drafting");
@@ -178,6 +179,7 @@ fn live_paper() {
             &dossier,
             &mut sections,
             &issues,
+            &|_| {},
             &|_| {},
         )
         .await;

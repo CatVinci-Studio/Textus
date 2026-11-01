@@ -337,6 +337,7 @@ pub async fn ai_paper_draft(
             &files.dossier,
             &started,
             &mut drafted,
+            &send,
         )
         .await?;
 
@@ -362,6 +363,7 @@ pub async fn ai_paper_draft(
             &mut sections,
             &issues,
             &revising,
+            &send,
         )
         .await;
         for i in changed {

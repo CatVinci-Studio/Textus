@@ -65,6 +65,13 @@ pub enum PaperEvent {
         thesis: Option<String>,
         titles: Vec<String>,
     },
+    /// What section `index`'s writer has written so far, as it writes it:
+    /// its tail, sent a few times a second at most. A try that starts over
+    /// starts the text over.
+    SectionText {
+        index: u32,
+        text: String,
+    },
     /// Question `question`'s helper finished, keeping `notes` notes;
     /// `failed` when it stopped on an error.
     QuestionDone {

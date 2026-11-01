@@ -281,6 +281,12 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
  */
 { type: "outlineDraft"; attempt: number; thesis?: string | null; titles: string[] } | 
 /**
+ *  What section `index`'s writer has written so far, as it writes it:
+ *  its tail, sent a few times a second at most. A try that starts over
+ *  starts the text over.
+ */
+{ type: "sectionText"; index: number; text: string } | 
+/**
  *  Question `question`'s helper finished, keeping `notes` notes;
  *  `failed` when it stopped on an error.
  */
@@ -320,6 +326,12 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
  *  a try after the first follows one that was sent back.
  */
 { type: "outlineDraft"; attempt: number; thesis: string | null; titles: string[] } | 
+/**
+ *  What section `index`'s writer has written so far, as it writes it:
+ *  its tail, sent a few times a second at most. A try that starts over
+ *  starts the text over.
+ */
+{ type: "sectionText"; index: number; text: string } | 
 /**
  *  Question `question`'s helper finished, keeping `notes` notes;
  *  `failed` when it stopped on an error.

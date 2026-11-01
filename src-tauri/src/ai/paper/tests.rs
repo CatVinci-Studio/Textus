@@ -724,6 +724,7 @@ async fn sections_are_handed_on_in_order_under_their_headings() {
             handed.push((i, md.lines().next().unwrap().to_string()));
             Ok(())
         },
+        &|_| {},
     )
     .await
     .unwrap();
@@ -851,6 +852,7 @@ async fn faulted_sections_are_revised_once_and_a_failed_revision_keeps_the_draft
         &mut sections,
         &issues,
         &|i| revising.lock().unwrap().push(i),
+        &|_| {},
     )
     .await;
     assert_eq!(changed, [0]);
@@ -1318,10 +1320,17 @@ async fn a_section_whose_only_problem_is_its_length_is_kept_after_the_tries() {
         language: "en".into(),
         ..paper()
     };
-    let written =
-        draft::write_section(&Verbose(127), &english, &plan, 0, &drafting_dossier(), None)
-            .await
-            .unwrap();
+    let written = draft::write_section(
+        &Verbose(127),
+        &english,
+        &plan,
+        0,
+        &drafting_dossier(),
+        None,
+        &|_| {},
+    )
+    .await
+    .unwrap();
     assert!(
         written.starts_with("## Mechanism\n\nGreen Green"),
         "{written}"
@@ -1353,9 +1362,17 @@ async fn a_section_written_as_the_reply_is_checked_and_kept() {
         language: "en".into(),
         ..paper()
     };
-    let written = draft::write_section(&Replier, &english, &plan, 0, &drafting_dossier(), None)
-        .await
-        .unwrap();
+    let written = draft::write_section(
+        &Replier,
+        &english,
+        &plan,
+        0,
+        &drafting_dossier(),
+        None,
+        &|_| {},
+    )
+    .await
+    .unwrap();
     // Its own heading is dropped; the outline's goes on.
     assert!(
         written.starts_with("## Mechanism\n\nGreen Green"),
@@ -1398,9 +1415,17 @@ async fn a_section_far_too_long_is_never_kept() {
         language: "en".into(),
         ..paper()
     };
-    let err = draft::write_section(&Verbose(300), &english, &plan, 0, &drafting_dossier(), None)
-        .await
-        .unwrap_err();
+    let err = draft::write_section(
+        &Verbose(300),
+        &english,
+        &plan,
+        0,
+        &drafting_dossier(),
+        None,
+        &|_| {},
+    )
+    .await
+    .unwrap_err();
     assert!(err.contains("wasn't written in a form that holds"), "{err}");
 }
 
@@ -1501,5 +1526,43 @@ fn the_outline_is_told_as_its_arguments_stream() {
             thesis: None,
             titles: vec!["A".into(), "B".into()]
         })
+    );
+}
+
+#[test]
+fn a_section_is_shown_as_its_writer_streams_it() {
+    use research::Streamed;
+    assert_eq!(
+        draft::partial_string_value(
+            r#"{"markdown": "Line one\nsays \"hi\" \u00e9"#,
+            "\"markdown\""
+        ),
+        "Line one\nsays \"hi\" é"
+    );
+    // An escape cut in half waits for the rest.
+    assert_eq!(
+        draft::partial_string_value(r#"{"markdown": "ab\u00"#, "\"markdown\""),
+        "ab"
+    );
+    assert_eq!(
+        draft::partial_string_value(r#"{"markdown": "ab\"#, "\"markdown\""),
+        "ab"
+    );
+    assert_eq!(draft::partial_string_value(r#"{"mark"#, "\"markdown\""), "");
+
+    let events = std::sync::Mutex::new(Vec::new());
+    let send = |e: PaperEvent| events.lock().unwrap().push(e);
+    let watch = draft::SectionWatch::new(2, &send);
+    watch.push(Streamed::Thinking("not shown"));
+    watch.push(Streamed::ToolStart);
+    watch.push(Streamed::ToolArgs(r#"{"markdown": "Green roofs"#));
+    // Too soon after the last: held back.
+    watch.push(Streamed::ToolArgs(" cool"));
+    assert_eq!(
+        events.lock().unwrap().clone(),
+        [PaperEvent::SectionText {
+            index: 2,
+            text: "Green roofs".into()
+        }]
     );
 }

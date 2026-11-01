@@ -367,7 +367,7 @@ impl<'a> OutlineWatch<'a> {
         let event = {
             let mut state = self.state.lock().unwrap();
             match streamed {
-                Streamed::Thought(text) => {
+                Streamed::Thinking(text) | Streamed::Text(text) => {
                     drop(state);
                     self.thinking.push(text);
                     return;

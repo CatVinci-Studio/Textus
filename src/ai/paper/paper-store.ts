@@ -90,6 +90,7 @@ export function applyPaperEvent(key: string, event: PaperEvent) {
       case "activity":
       case "questionDone":
       case "outlineDraft":
+      case "sectionText":
         return {};
     }
   });
