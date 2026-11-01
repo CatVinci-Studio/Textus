@@ -153,18 +153,59 @@
   });
 
   // The page's height, for a frame that fits what it shows (a code block
-  // drawn in the document): told when it changes.
+  // drawn in the document): told when it changes. Measured by where its
+  // content ends, not by the page's scroll height: the page is never
+  // shorter than its frame (and a first margin pushes it past), so a frame
+  // sized by that only ever grows.
   var told = -1;
+  function contentHeight() {
+    var body = document.body;
+    if (!body) return document.documentElement.scrollHeight;
+    var bottom = 0;
+    for (var i = 0; i < body.children.length; i++) {
+      var child = body.children[i];
+      var style = getComputedStyle(child);
+      if (style.display === "none" || style.position === "fixed") continue;
+      bottom = Math.max(
+        bottom,
+        child.getBoundingClientRect().bottom +
+          (parseFloat(style.marginBottom) || 0),
+      );
+    }
+    return (
+      bottom +
+      (parseFloat(getComputedStyle(body).paddingBottom) || 0) +
+      window.scrollY
+    );
+  }
   function tellHeight() {
-    var height = Math.ceil(document.documentElement.scrollHeight);
+    var height = Math.ceil(contentHeight());
     if (height === told) return;
     told = height;
     send("height", { height: height });
   }
+  var pending = false;
+  function soon() {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(function () {
+      pending = false;
+      tellHeight();
+    });
+  }
   if (typeof ResizeObserver === "function")
     window.addEventListener("DOMContentLoaded", function () {
-      new ResizeObserver(tellHeight).observe(document.documentElement);
-      if (document.body) new ResizeObserver(tellHeight).observe(document.body);
+      new ResizeObserver(soon).observe(document.documentElement);
+      if (document.body) {
+        new ResizeObserver(soon).observe(document.body);
+        // Content that shrinks leaves the body, held to the frame, as tall.
+        new MutationObserver(soon).observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          characterData: true,
+        });
+      }
     });
 
   window.textus = api;
