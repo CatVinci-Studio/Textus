@@ -28,6 +28,9 @@ jobs:
   update-arch-repo:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    # The arch-repo deploy key lives in the release environment, which only
+    # runs from a release tag (v*); only admins can push those.
+    environment: release
     env:
       TAG: ${{ inputs.tag }}
     steps:

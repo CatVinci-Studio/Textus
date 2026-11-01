@@ -31,6 +31,9 @@ jobs:
   update-beta-manifest:
     runs-on: ubuntu-22.04
     timeout-minutes: 10
+    # The Cloudflare token lives in the release environment, which only
+    # runs from a release tag (v*); only admins can push those.
+    environment: release
     # Two tags published at once each read, compare and write the manifest:
     # one at a time, so the older can't land last.
     concurrency:
