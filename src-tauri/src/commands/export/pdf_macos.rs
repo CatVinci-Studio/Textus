@@ -21,6 +21,11 @@ use objc2_web_kit::{
 const PAPER_WIDTH: f64 = 595.0;
 const PAPER_HEIGHT: f64 = 842.0;
 
+// createPDF splits anything taller than a PDF page may be (14400pt, 200 in)
+// into more pages, which can't be cut into sheets at the seams; so it is asked
+// for this many whole sheets at a time.
+const SHEETS_PER_RENDER: usize = (14400.0 / PAPER_HEIGHT) as usize;
+
 // Runs before rendering: fonts and images must settle, or the PDF captures
 // fallback glyphs. Returns the document height.
 const SETTLE_JS: &str = "await document.fonts.ready; \
@@ -128,55 +133,79 @@ impl PdfExporter {
     }
 
     fn render(&self, webview: &WKWebView, pages: usize) {
+        self.render_from(webview, pages, Vec::new());
+    }
+
+    // Renders the next SHEETS_PER_RENDER sheets after those in `rendered`,
+    // and writes the file once every sheet is rendered.
+    fn render_from(&self, webview: &WKWebView, pages: usize, rendered: Vec<Retained<NSData>>) {
+        let start = rendered.len() * SHEETS_PER_RENDER;
+        if start >= pages {
+            let result = self.write_pages(&rendered, pages);
+            self.finish(result);
+            return;
+        }
         let Some(mtm) = MainThreadMarker::new() else {
             self.finish(Err("PDF export left the main thread".to_string()));
             return;
         };
+        let sheets = SHEETS_PER_RENDER.min(pages - start);
         let config = unsafe { WKPDFConfiguration::new(mtm) };
         unsafe {
             config.setRect(CGRect {
-                origin: CGPoint::new(0.0, 0.0),
-                size: CGSize::new(PAPER_WIDTH, PAPER_HEIGHT * pages as f64),
+                origin: CGPoint::new(0.0, PAPER_HEIGHT * start as f64),
+                size: CGSize::new(PAPER_WIDTH, PAPER_HEIGHT * sheets as f64),
             });
         }
         let this = self.retain();
+        let view = webview.retain();
+        let rendered = Cell::new(Some(rendered));
         let handler = RcBlock::new(move |data: *mut NSData, error: *mut NSError| {
             // SAFETY: WebKit passes valid objects when non-null.
-            let result = match (unsafe { data.as_ref() }, unsafe { error.as_ref() }) {
-                (Some(data), _) => this.write_pages(data, pages),
-                (None, Some(error)) => Err(format!(
+            match (unsafe { data.as_ref() }, unsafe { error.as_ref() }) {
+                (Some(data), _) => {
+                    let mut rendered = rendered.take().unwrap_or_default();
+                    rendered.push(data.retain());
+                    this.render_from(&view, pages, rendered);
+                }
+                (None, Some(error)) => this.finish(Err(format!(
                     "Failed to render PDF: {}",
                     error.localizedDescription()
-                )),
-                (None, None) => Err("Failed to render PDF".to_string()),
-            };
-            this.finish(result);
+                ))),
+                (None, None) => this.finish(Err("Failed to render PDF".to_string())),
+            }
         });
         unsafe {
             webview.createPDFWithConfiguration_completionHandler(Some(&config), &handler);
         }
     }
 
-    // Cuts the single tall rendered page into A4 sheets by moving each copy's
-    // media and crop boxes (PDF space starts at the bottom left).
-    fn write_pages(&self, data: &NSData, pages: usize) -> Result<(), String> {
-        let source = unsafe { PDFDocument::initWithData(PDFDocument::alloc(), data) }
-            .ok_or("Rendered PDF could not be read")?;
-        let tall = unsafe { source.pageAtIndex(0) }.ok_or("Rendered PDF is empty")?;
-        let bounds = unsafe { tall.boundsForBox(PDFDisplayBox::MediaBox) };
-        let top = bounds.origin.y + bounds.size.height;
+    // Cuts each rendered stretch, one tall page, into A4 sheets by moving each
+    // copy's media and crop boxes (PDF space starts at the bottom left).
+    fn write_pages(&self, rendered: &[Retained<NSData>], pages: usize) -> Result<(), String> {
         let output = unsafe { PDFDocument::new() };
-        for i in 0..pages {
-            let sheet = tall.copy();
-            let rect = CGRect {
-                origin: CGPoint::new(bounds.origin.x, top - PAPER_HEIGHT * (i + 1) as f64),
-                size: CGSize::new(PAPER_WIDTH, PAPER_HEIGHT),
-            };
-            unsafe {
-                sheet.setBounds_forBox(rect, PDFDisplayBox::MediaBox);
-                sheet.setBounds_forBox(rect, PDFDisplayBox::CropBox);
-                output.insertPage_atIndex(&sheet, i);
+        // Kept until the file is written: the sheets are copies of their pages.
+        let mut sources = Vec::with_capacity(rendered.len());
+        for (chunk, data) in rendered.iter().enumerate() {
+            let source = unsafe { PDFDocument::initWithData(PDFDocument::alloc(), data) }
+                .ok_or("Rendered PDF could not be read")?;
+            let tall = unsafe { source.pageAtIndex(0) }.ok_or("Rendered PDF is empty")?;
+            let bounds = unsafe { tall.boundsForBox(PDFDisplayBox::MediaBox) };
+            let top = bounds.origin.y + bounds.size.height;
+            let first = chunk * SHEETS_PER_RENDER;
+            for i in 0..SHEETS_PER_RENDER.min(pages - first) {
+                let sheet = tall.copy();
+                let rect = CGRect {
+                    origin: CGPoint::new(bounds.origin.x, top - PAPER_HEIGHT * (i + 1) as f64),
+                    size: CGSize::new(PAPER_WIDTH, PAPER_HEIGHT),
+                };
+                unsafe {
+                    sheet.setBounds_forBox(rect, PDFDisplayBox::MediaBox);
+                    sheet.setBounds_forBox(rect, PDFDisplayBox::CropBox);
+                    output.insertPage_atIndex(&sheet, first + i);
+                }
             }
+            sources.push(source);
         }
         let path = NSString::from_str(&self.ivars().output_path);
         if unsafe { output.writeToFile(&path) } {
