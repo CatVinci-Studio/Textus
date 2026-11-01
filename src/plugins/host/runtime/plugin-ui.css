@@ -31,6 +31,11 @@ body {
   box-sizing: border-box;
 }
 
+/* Hidden is hidden, whatever display a class gives (a tx-empty, a bar). */
+[hidden] {
+  display: none !important;
+}
+
 a {
   color: var(--ui-accent);
 }
