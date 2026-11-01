@@ -319,7 +319,7 @@ export function PaperLength({
         : t.paperLengthLong;
   return (
     <Select
-      className="paper-length"
+      className="inline-chat-mode paper-length"
       aria-label={t.paperLength}
       value={String(value)}
       onChange={(e) => onChange(Number(e.target.value))}

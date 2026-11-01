@@ -88,6 +88,7 @@ export function ChatComposer({
   onEscape,
   onModeChange,
   onResearch,
+  researchControls,
   handle,
   suggestion = null,
 }: ChatComposerProps) {
@@ -442,7 +443,10 @@ export function ChatComposer({
             ) : (
               <ModePicker {...pickerProps} holdFocus={phone} />
             )}
-            {!compact && (
+            {/* A paper does its own research: no files, search or Deep
+                for it, only its own choices. */}
+            {mode === "research" && researchControls}
+            {!compact && mode !== "research" && (
               <>
                 <Tooltip text={labels.attachFile} side="above">
                   <button

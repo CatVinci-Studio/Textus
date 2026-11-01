@@ -180,7 +180,7 @@ test("the paper agent's UI loads only when Research is picked", async ({
   const panel = page.locator(".agent-panel-view");
   await expect(panel.getByRole("combobox", { name: /^Mode/ })).toBeVisible();
   expect(await loaded(page)).not.toContain("paper");
-  // Research mode's empty panel picks the paper's length.
+  // Research mode picks the paper's length beside the mode.
   await panel.getByRole("combobox", { name: /^Mode/ }).click();
   await page.getByRole("option", { name: "Research" }).click();
   await expect.poll(() => loaded(page)).toContain("paper");

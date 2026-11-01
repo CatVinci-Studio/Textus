@@ -136,11 +136,6 @@ export function EditorAgentPanel({
           <p className="agent-panel-empty-text" key={mode}>
             {emptyText}
           </p>
-          {mode === "research" && (
-            <Suspense fallback={null}>
-              <PaperLength t={t} value={paperChars} onChange={setPaperChars} />
-            </Suspense>
-          )}
         </div>
       )}
       <ChatBody
@@ -175,6 +170,11 @@ export function EditorAgentPanel({
         onRevealPending={onRevealPending}
         onModeChange={setMode}
         onResearch={(topic) => writePaper(topic, paperChars)}
+        researchControls={
+          <Suspense fallback={null}>
+            <PaperLength t={t} value={paperChars} onChange={setPaperChars} />
+          </Suspense>
+        }
         footer={
           guard && (
             <CloseConfirmBar
