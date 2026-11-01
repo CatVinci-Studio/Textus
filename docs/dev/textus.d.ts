@@ -992,6 +992,17 @@ declare global {
     // A webview's page
     // ---------------------------------------------------------------
 
+    /** An item of a page's menu (`WebviewApi.menu`); `items` makes it a
+     *  submenu (one level). */
+    interface MenuItem {
+      label: string;
+      value?: unknown;
+      checked?: boolean;
+      danger?: boolean;
+      disabled?: boolean;
+      items?: (MenuItem | "separator")[];
+    }
+
     interface WebviewApi {
       readonly language: string;
       t(key: string, ...args: unknown[]): string;
@@ -999,6 +1010,14 @@ declare global {
       onMessage(fn: (message: unknown) => void): Disposable;
       getState(): unknown;
       setState<T>(state: T): T;
+      /** Textus's own menu over the page, for a right-click or a dropdown,
+       *  under `at` (an element) or at a point of the page. Resolves to the
+       *  chosen item's value (its label without one), or null when the menu
+       *  is closed without a choice. A page draws no menu of its own. */
+      menu(
+        items: (MenuItem | "separator")[],
+        at?: Element | { x: number; y: number },
+      ): Promise<unknown>;
       /** How the page looks as a picture, asked when the document is
        *  exported (a code block's page): an SVG's markup or an image's
        *  `data:` URL, for a page of `theme`. Without it, or answering

@@ -126,6 +126,9 @@ export interface CodeBlockContribution {
   language: string;
   /** What the block is called where Textus names it ("Task query"). */
   title?: string;
+  /** "none": the block sits on the page without the box drawn round a
+   *  figure - for one that reads as part of the document, such as a table. */
+  frame?: "none";
 }
 
 /** A file type the plugin opens in a tab. */

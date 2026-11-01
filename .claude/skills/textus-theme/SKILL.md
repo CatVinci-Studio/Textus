@@ -1,6 +1,6 @@
 ---
 name: textus-theme
-description: Author or modify a Textus editor theme - the built-in content themes in src/editor/content-themes.css, or a Typora-compatible CSS file users import. Use when adding a theme, changing theme colours, touching --doc-* / --sidebar-* / --ui-bg CSS variables, debugging why a theme only half-applies or looks wrong in dark mode, or working on the theme picker in Settings.
+description: Author or modify a Textus editor theme - a Typora-compatible CSS file for the theme gallery (CatVinci-Studio/textus-themes) or that users import, or the default look. Use when adding a theme, changing theme colours, touching --doc-* / --sidebar-* / --ui-bg CSS variables, debugging why a theme only half-applies or looks wrong in dark mode, or working on the theme picker in Settings.
 ---
 
 # Authoring a Textus theme
@@ -9,10 +9,11 @@ description: Author or modify a Textus editor theme - the built-in content theme
 
 They are different mechanisms and the distinction decides everything else.
 
-**Built-in content themes** (`src/editor/content-themes.css`) set CSS custom
-properties and nothing else. They reskin the **writing area only** - never the
-app chrome. Shipping one means editing three files (see _Adding a built-in
-theme_).
+**The built-in look** is Textus's default (`src/theme/content-base.css` and the
+`--doc-*` defaults in `src/ui/base.css`); it is the only built-in theme. Every
+other look is a theme in the gallery (`textus-themes`) or a user's imported
+file. Paper, Slate, Forest and Parchment were withdrawn in 1.3.2; a setting
+naming one falls back to the default.
 
 **Imported themes** are arbitrary Typora-compatible CSS files a user picks in
 Settings. They are read, inlined, and injected into a `<style>` tag at
@@ -25,7 +26,7 @@ Two independent settings compose into what the user sees:
 
 | Setting   | Values                                                                 | Attribute on `<html>`                       |
 | --------- | ---------------------------------------------------------------------- | ------------------------------------------- |
-| `themeId` | `default`, `paper`, `slate`, `forest`, `parchment`, or a user theme id | `data-content-theme` (absent for `default`) |
+| `themeId` | `default`, or a user theme id                                          | none for `default`; `data-user-theme` for an imported theme |
 | `theme`   | `system`, `light`, `dark`                                              | `data-theme` (**absent** for `system`)      |
 
 There is no such thing as "a dark theme". Every theme must define both forms,
@@ -82,12 +83,11 @@ Everything here is scoped to the writing area.
 
 `--ui-bg`, `--ui-subtle`, `--ui-text`, `--ui-hover`,
 `--ui-selected`, `--ui-selected-text`, `--ui-border`, `--ui-danger`,
-`--font-sans`. These are the window frame. `content-themes.css` deliberately
-never touches them: picking a built-in theme reskins the writing area, not the
-whole app. `ui/base.css` and `ui/design-system.css` set them, in their
-`:root` / dark pair. An imported theme is the exception: `theme/theme-chrome.ts`
-derives them from its page, and its own `:root` may set any of them (see
-"Interface colours" in `docs/design/design-language.md`).
+`--font-sans`. These are the window frame, derived from the `--doc-*`
+colours in `ui/base.css` (`:root` / dark pair), so a theme that sets the
+document's colours recolours the window too. `theme/theme-chrome.ts` derives
+them for an imported theme that sets no variables, and a theme's own `:root`
+may set any of them (`docs/design/design-language.md`, sections 3 and 14).
 
 ### Two more families, in `milkdown-theme.css`
 
@@ -121,22 +121,15 @@ theme can set any of them.
 Built-in content themes leave them alone: the tints follow `--ui-success`
 and `--ui-danger`, which the dark palette already tunes.
 
-## Adding a built-in theme
+## Adding a theme
 
-Three files, all required - miss one and the theme is invisible or crashes the
-picker.
-
-1. **`src/editor/content-themes.css`** - the three blocks above.
-2. **`src/settings/SettingsContext.tsx`** - add the id to
-   `BuiltinContentThemeId` and an entry to `BUILTIN_CONTENT_THEMES`
-   (`{ id, name, nameKey }`).
-3. **`src/i18n/locales/en.ts`** - add the `nameKey` string, and its
-   translation to every language file that is complete (`zh.ts`, `ja.ts`,
-   ...; `npm test` names any that miss it). `nameKey` is typed `TextKey`, so
-   a key English lacks is a type error rather than a runtime surprise.
-
-Then check every combination: the new theme in light, in dark, and under
-"follow system" with the OS flipped both ways.
+New looks are gallery themes, not built-ins: one self-contained CSS file in
+`textus-themes/themes/<id>/` with light and dark, following
+`docs/design/design-language.md` section 14 - what a theme may change, what it
+must provide, and, for a theme on a known palette, the nine `--tone-*`
+variables so tags, charts and the graph use its colours. Port a famous theme by
+reading its code for ideas and writing new CSS; don't copy code, and name it as
+the original project's naming rules allow.
 
 ## Imported (Typora) themes
 

@@ -19,7 +19,6 @@ import { createImageNoticePlugin } from "./image-notice-plugin";
 import "@milkdown/kit/prose/view/style/prosemirror.css";
 import "../theme/content-base.css";
 import "../editor/milkdown-theme.css";
-import "../theme/content-themes.css";
 
 /** What the page does to the document from outside the editor. */
 export interface EditorHandle {

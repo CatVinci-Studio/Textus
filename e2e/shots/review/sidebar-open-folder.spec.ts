@@ -100,15 +100,15 @@ for (const lang of ["fr", "de", "zh"]) {
   }
 }
 
-for (const theme of ["paper", "slate"]) {
+for (const theme of ["light", "dark"]) {
   const name = `empty-en-theme-${theme}-180`;
   test(name, async ({ page }) => {
     await shoot(page, name, {
       lang: "en",
-      dark: theme === "slate",
+      dark: theme === "dark",
       width: 180,
       state: "empty",
-      settings: { themeId: theme },
+      settings: {},
     });
   });
 }

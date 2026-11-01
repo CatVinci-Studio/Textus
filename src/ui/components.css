@@ -1,0 +1,385 @@
+/* Components shared by the app and plugin pages: one stylesheet, loaded by
+   the window (through design-system.css) and put unchanged into every
+   plugin page (plugins/host/frames.ts). Each class here is the app's own
+   control - Settings' group card, row, field and segmented control under a
+   second, public name - or a part plugins draw that the app draws too.
+   The names a plugin may use are listed in docs/design/design-language.md,
+   section 15. */
+
+/* Settings' controls, by their public names as well. */
+.settings-group-title,
+.tx-group-title {
+  margin: 0 0 8px;
+  padding-left: 4px;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.settings-group-body,
+.tx-group {
+  padding: 2px 16px;
+  background: var(--ui-subtle);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-m);
+}
+
+/* The one divider: an inset hairline between adjacent rows of a card.
+   Fragments flatten sections into direct children, so this covers them all. */
+.settings-group-body > * + *,
+.provider-picker > * + *,
+.tx-group > * + * {
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
+}
+
+/* Every row: the setting's name on the left, its control on the right, one
+   height throughout. */
+.settings-row,
+.tx-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 48px;
+  padding: 8px 0;
+  box-sizing: border-box;
+  font-size: var(--text-body-large);
+}
+
+.settings-row > *:first-child,
+.tx-row > *:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-text-input,
+.tx-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-size: var(--text-body);
+}
+
+.settings-text-input:focus,
+.tx-input:focus {
+  outline: none;
+  border-color: var(--ui-accent);
+}
+
+/* Text in lines is a container, not a control. */
+textarea.settings-text-input,
+textarea.tx-input {
+  border-radius: var(--shape-s);
+  corner-shape: superellipse(1.25);
+}
+
+/* A segmented control: the segments' corners concentric with the track's,
+   its radius theirs plus the inset and the border. */
+.appearance-options,
+.tx-segmented {
+  --segment-inset: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: var(--segment-inset);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-text) 6%, transparent);
+}
+
+.appearance-option,
+.tx-segment {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: calc(var(--control-height-sm) - 2 * var(--segment-inset));
+  padding: 0 var(--space-3);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  color: var(--ui-text);
+  font-size: var(--text-footnote);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.appearance-option.is-selected,
+.tx-segment.is-selected,
+.tx-segment[aria-selected="true"] {
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: var(--shadow-raised);
+}
+
+.appearance-option:focus-within,
+.tx-segment:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}
+
+/* An icon of the app's set (16-unit grid, 1.4 stroke), in the text's
+   colour: <span class="tx-icon" data-icon="filter"></span>. */
+.tx-icon {
+  display: inline-block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+  vertical-align: -3px;
+}
+.tx-icon[data-icon="text"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 4.5h9M8 4.5v8'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="number"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.5 2.5l-1.5 11M11 2.5l-1.5 11M3 6h10.5M2.5 10h10.5'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="select"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='8' r='5.5'/%3E%3Cpath d='M5.8 7.2L8 9.4l2.2-2.2'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="multi"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 4.5h7.5M6 8h7.5M6 11.5h7.5M2.8 4.5h.4M2.8 8h.4M2.8 11.5h.4'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="date"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='3.5' width='11' height='10' rx='2'/%3E%3Cpath d='M2.5 6.8h11M5.5 2v3M10.5 2v3'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="checkbox"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='11' height='11' rx='2.5'/%3E%3Cpath d='M5.3 8.2l1.9 1.9 3.6-3.8'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="url"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.8 9.2l2.4-2.4M7.6 4.9l.9-.9a2.6 2.6 0 0 1 3.6 3.6l-.9.9M8.4 11.1l-.9.9a2.6 2.6 0 0 1-3.6-3.6l.9-.9'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="page"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 2.5h5l3 3v8H4z'/%3E%3Cpath d='M9 2.5v3h3'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="filter"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 4.5h11M4.5 8h7M6.5 11.5h3'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="sort"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 3v10M2.6 10.6L5 13l2.4-2.4M11 13V3M8.6 5.4L11 3l2.4 2.4'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="plus"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 3.5v9M3.5 8h9'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="more"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='black'%3E%3Ccircle cx='3.5' cy='8' r='1.2'/%3E%3Ccircle cx='8' cy='8' r='1.2'/%3E%3Ccircle cx='12.5' cy='8' r='1.2'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="table"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='3' width='11' height='10' rx='1.8'/%3E%3Cpath d='M2.5 6.5h11M6.5 6.5V13'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="board"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='3' width='11' height='10' rx='1.8'/%3E%3Cpath d='M6.2 3v10M9.8 3v10'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="calendar"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='3.5' width='11' height='10' rx='2'/%3E%3Cpath d='M2.5 6.8h11M5.5 2v3M10.5 2v3'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="gallery"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='4.6' height='4.6' rx='1'/%3E%3Crect x='8.9' y='2.5' width='4.6' height='4.6' rx='1'/%3E%3Crect x='2.5' y='8.9' width='4.6' height='4.6' rx='1'/%3E%3Crect x='8.9' y='8.9' width='4.6' height='4.6' rx='1'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="open"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5L8 8M11.5 9.5v3a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="chevron"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 6.5L8 10l3.5-3.5'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="left"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 4L6 8l3.5 4'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="right"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.5 4L10 8l-3.5 4'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="search"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cpath d='M10.4 10.4l3.1 3.1'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="close"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 4.5l7 7M11.5 4.5l-7 7'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="check"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.4l2.9 2.9 6.1-6.3'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="eye-off"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8s2-4 5.5-4c1.2 0 2.2.4 3 1M13.5 8s-2 4-5.5 4c-1.2 0-2.2-.4-3-1M3 13L13 3'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="trash"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5'/%3E%3C/svg%3E");
+}
+.tx-icon[data-icon="rename"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.5 3l2.5 2.5L6 12.5H3.5V10z'/%3E%3C/svg%3E");
+}
+
+/* A bar over a view: navigation and view switching first, actions last. */
+.tx-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+}
+.tx-bar > .tx-spacer {
+  flex: 1;
+}
+
+/* A rule in force - a filter, a sort - as a chosen capsule that opens it. */
+.tx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--control-height-sm);
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
+  font: inherit;
+  font-size: var(--text-control);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tx-chip:not(:disabled):hover {
+  background: color-mix(in srgb, var(--ui-selected) 80%, var(--ui-text) 6%);
+}
+
+/* A value of a few - a status, a label - in a tone (data-tone, in the
+   order plugins assign them), or neutral without one. .status adds a dot. */
+.tx-tag {
+  --tag: var(--ui-muted);
+  --tag-text: var(--ui-text);
+  --tag-tint: var(--ui-hover);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  min-height: 20px;
+  padding: 0 var(--space-2);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--tag-tint);
+  color: var(--tag-text);
+  font-size: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tx-tag.status::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tag);
+}
+.tx-tag[data-tone="blue"] {
+  --tag: var(--tone-blue);
+  --tag-text: var(--tone-blue-text);
+  --tag-tint: var(--tone-blue-tint);
+}
+.tx-tag[data-tone="green"] {
+  --tag: var(--tone-green);
+  --tag-text: var(--tone-green-text);
+  --tag-tint: var(--tone-green-tint);
+}
+.tx-tag[data-tone="orange"] {
+  --tag: var(--tone-orange);
+  --tag-text: var(--tone-orange-text);
+  --tag-tint: var(--tone-orange-tint);
+}
+.tx-tag[data-tone="purple"] {
+  --tag: var(--tone-purple);
+  --tag-text: var(--tone-purple-text);
+  --tag-tint: var(--tone-purple-tint);
+}
+.tx-tag[data-tone="red"] {
+  --tag: var(--tone-red);
+  --tag-text: var(--tone-red-text);
+  --tag-tint: var(--tone-red-tint);
+}
+.tx-tag[data-tone="teal"] {
+  --tag: var(--tone-teal);
+  --tag-text: var(--tone-teal-text);
+  --tag-tint: var(--tone-teal-tint);
+}
+.tx-tag[data-tone="yellow"] {
+  --tag: var(--tone-yellow);
+  --tag-text: var(--tone-yellow-text);
+  --tag-tint: var(--tone-yellow-tint);
+}
+.tx-tag[data-tone="pink"] {
+  --tag: var(--tone-pink);
+  --tag-text: var(--tone-pink-text);
+  --tag-tint: var(--tone-pink-tint);
+}
+.tx-tag[data-tone="gray"] {
+  --tag: var(--tone-gray);
+  --tag-text: var(--tone-gray-text);
+  --tag-tint: var(--tone-gray-tint);
+}
+
+/* A table of records drawn as the document's own tables are: a rounded
+   frame, a tinted header, hairlines between cells. */
+.tx-table-frame {
+  overflow-x: auto;
+  border: 1px solid var(--doc-border, var(--ui-border));
+  border-radius: var(--doc-radius, var(--shape-s));
+}
+.tx-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-body);
+}
+.tx-table :is(th, td) {
+  height: 36px;
+  padding: 0 var(--space-3);
+  border-right: 1px solid var(--doc-border, var(--ui-border));
+  border-bottom: 1px solid var(--doc-border, var(--ui-border));
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.tx-table tr > :last-child {
+  border-right: none;
+}
+.tx-table tbody tr:last-child > * {
+  border-bottom: none;
+}
+.tx-table th {
+  height: 32px;
+  background: var(--doc-code-bg, var(--ui-subtle));
+  color: var(--ui-muted);
+  font-size: var(--text-secondary);
+  font-weight: 500;
+  word-break: keep-all;
+}
+.tx-table th .tx-icon {
+  margin-right: var(--space-1);
+}
+.tx-table tbody tr:hover > td {
+  background: var(--ui-hover);
+}
+
+/* A card: a record on a board, a tile in a gallery. Grouped, so a hairline
+   and no shadow. */
+.tx-card {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  background: var(--ui-surface);
+}
+
+/* What will appear here and how to get it: one sentence, at most one
+   button. */
+.tx-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  text-align: center;
+}

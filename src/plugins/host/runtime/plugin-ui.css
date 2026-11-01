@@ -56,10 +56,11 @@ button:hover,
 .button:hover {
   background: var(--ui-hover);
 }
+/* The primary action is ink, as the app's: text colour as fill. */
 button.primary {
-  background: var(--ui-accent);
-  border-color: var(--ui-accent);
-  color: var(--ui-bg);
+  background: var(--ui-primary, var(--ui-text));
+  border-color: var(--ui-primary, var(--ui-text));
+  color: var(--ui-on-primary, var(--ui-bg));
 }
 button:disabled {
   opacity: 0.5;

@@ -14,6 +14,14 @@
   overflow: hidden;
 }
 
+/* A block that reads as part of the page (a database's table): no box. */
+.plugin-code-block-plain {
+  border-color: transparent;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
 .plugin-code-block .plugin-code-block-frame,
 .plugin-code-block .plugin-webview-frame {
   display: block;

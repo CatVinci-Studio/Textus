@@ -25,6 +25,26 @@
     else queue.push([method, params]);
   }
 
+  // A call that waits for the window, as send does.
+  var onConnected = null;
+  var connected = new Promise(function (resolve) {
+    onConnected = resolve;
+  });
+  function call(method, params) {
+    return connected.then(function () {
+      return app.call(method, params);
+    });
+  }
+
+  // Where a menu opens: under an element, or at a point of the page.
+  function anchor(at) {
+    if (at && typeof at.getBoundingClientRect === "function") {
+      var box = at.getBoundingClientRect();
+      return { x: box.left, y: box.bottom };
+    }
+    return { x: (at && at.x) || 0, y: (at && at.y) || 0 };
+  }
+
   // The window's theme as CSS variables, kept current: a plugin's page
   // styled with var(--ui-text), var(--ui-bg) follows Textus's theme and dark
   // mode.
@@ -105,6 +125,14 @@
       send("state", { state: value });
       return value;
     },
+    // Textus's own menu over the page - its look, keys and motion - for a
+    // right-click or a dropdown. Items: { label, value, checked, danger,
+    // disabled }, "separator", or { label, items } for a submenu. Gives
+    // the chosen item's value (its label without one), or null.
+    menu: function (items, at) {
+      var point = anchor(at);
+      return call("menu", { items: items, x: point.x, y: point.y });
+    },
     // How the page looks as a picture, asked when the document is
     // exported: an SVG's markup or an image's data: URL.
     onExport: function (provider) {
@@ -147,6 +175,7 @@
       },
       0,
     );
+    onConnected();
     queue.splice(0).forEach(function (args) {
       app.notify(args[0], args[1]);
     });

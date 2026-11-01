@@ -43,12 +43,9 @@ window.__textusBoot = function (boot, themeCss) {
     // default); theme/apply-appearance.ts sets the same property.
     if ([0.9, 1.1, 1.25].indexOf(settings.uiTextScale) >= 0)
       root.style.setProperty("--ui-text-scale", String(settings.uiTextScale));
-    // BUILTIN_CONTENT_THEMES in SettingsContext.tsx, minus "default" (which
-    // is the absence of the attribute).
-    var builtin = ["paper", "slate", "forest", "parchment"];
-    if (builtin.indexOf(settings.themeId) >= 0)
-      root.setAttribute("data-content-theme", settings.themeId);
-    else if (themeCss) root.setAttribute("data-user-theme", "");
+    // The only built-in content theme is the default, the absence of an
+    // attribute; anything else is an imported theme's CSS.
+    if (themeCss) root.setAttribute("data-user-theme", "");
     // macOS only (native_titlebar_height in lib.rs): what the window bar
     // lines its contents up with, so they sit level with the traffic lights.
     if (typeof boot.titlebarHeight === "number")
