@@ -386,7 +386,9 @@ pub async fn ai_paper_draft(
             *section = web_figures::resolve(section, web_figures::find_on_commons).await;
         }
         finish::number_figures(&mut sections, language);
-        let references = finish::references(&sections, &files.dossier, language);
+        let mut dossier = files.dossier.clone();
+        finish::title_sources(&mut dossier).await;
+        let references = finish::references(&sections, &dossier, language);
         let sections: Vec<String> = sections
             .iter()
             .map(|s| finish::plain_citations(s))

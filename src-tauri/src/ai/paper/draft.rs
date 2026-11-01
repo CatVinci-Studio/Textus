@@ -19,9 +19,28 @@ pub(crate) const SUBMIT_SECTION_TOOL: &str = "submit_section";
 const AT_ONCE: usize = 3;
 /// A writer's tries at a section that holds.
 const WRITER_STEPS: usize = 5;
-/// How far a section's length may be from its target, as fractions of it.
-const SHORTEST: f64 = 0.6;
-const LONGEST: f64 = 1.5;
+/// How far a section's length may be from its target, as fractions of it:
+/// within PASS it holds; within SOFT it is kept if nothing else is wrong
+/// (a writer's last try); beyond, it is sent back. The first real runs came
+/// back at twice their targets.
+const PASS: (f64, f64) = (0.7, 1.2);
+const SOFT: (f64, f64) = (0.5, 1.4);
+
+/// The most a section of `target` may run to, as writers are told.
+pub(crate) fn most(target: u32) -> u32 {
+    (target as f64 * PASS.1).round() as u32
+}
+
+/// Whether two addresses are one, written with or without percent-escapes
+/// ("(" or "%28").
+fn same_address(a: &str, b: &str) -> bool {
+    let plain = |s: &str| {
+        percent_encoding::percent_decode_str(s)
+            .decode_utf8_lossy()
+            .into_owned()
+    };
+    a == b || plain(a) == plain(b)
+}
 
 /// Where a web picture goes until one is found for it.
 pub(crate) const WEB_FIGURE_MARK: &str = "<!-- textus-figure web:";
@@ -94,6 +113,12 @@ pub(crate) fn length(text: &str, language: &str) -> u32 {
     }
 }
 
+/// The length of `markdown`'s prose: its text without code, figures,
+/// marks or citations' addresses - what a paper's length is measured by.
+pub(crate) fn prose_length(markdown: &str, language: &str) -> u32 {
+    length(&prose(markdown), language)
+}
+
 /// Whether a chart block's JSON has what the chart renderer needs.
 fn chart_holds(body: &str) -> Result<(), String> {
     let spec: Value =
@@ -136,9 +161,21 @@ pub(crate) fn problems(
     let mut out = Vec::new();
     let length = length(&prose(markdown), language);
     let target = section.target_words as f64;
-    if (length as f64) < target * SHORTEST || (length as f64) > target * LONGEST {
+    let ratio = length as f64 / target.max(1.0);
+    let most = most(section.target_words);
+    if ratio > SOFT.1 {
         out.push(format!(
-            "It is {length} long; the section is to be about {}.",
+            "Far too long: {length} against about {} - cut it to at most {most}, keeping the strongest evidence.",
+            section.target_words
+        ));
+    } else if ratio < SOFT.0 {
+        out.push(format!(
+            "Far too short: {length} against about {} - develop the key points with the notes' evidence.",
+            section.target_words
+        ));
+    } else if ratio < PASS.0 || ratio > PASS.1 {
+        out.push(format!(
+            "It is {length} long; the section is to be about {} (at most {most}).",
             section.target_words
         ));
     }
@@ -146,7 +183,7 @@ pub(crate) fn problems(
     for c in cited_link().captures_iter(markdown) {
         let n: u32 = c[1].parse().unwrap_or(0);
         match sources.iter().find(|(m, _)| *m == n) {
-            Some((_, url)) if *url == c[2] => cited += 1,
+            Some((_, url)) if same_address(url, &c[2]) => cited += 1,
             Some((_, url)) => {
                 out.push(format!("[{n}] links to {} but source {n} is {url}.", &c[2]))
             }
@@ -260,12 +297,13 @@ fn writer_message(paper: &Paper, outline: &Outline, index: usize, dossier: &Doss
         .collect();
     let figures: Vec<String> = section.figures.iter().map(figure_line).collect();
     format!(
-        "Paper: \"{}\"\nThesis: {}\n\nThe sections:\n{}\n\nYour section: \"{}\", about {} long.\nKey points:\n- {}\n\nYour notes:\n{}\n\nFigures to put where they belong:\n{}",
+        "Paper: \"{}\"\nThesis: {}\n\nThe sections:\n{}\n\nYour section: \"{}\", about {} long and at most {} - longer is sent back.\nKey points:\n- {}\n\nYour notes:\n{}\n\nFigures to put where they belong:\n{}",
         paper.topic,
         outline.thesis,
         others.join("\n"),
         section.title,
         section.target_words,
+        most(section.target_words),
         section.key_points.join("\n- "),
         if notes.is_empty() { "(none)".into() } else { notes.join("\n") },
         if figures.is_empty() { "(none)".into() } else { figures.join("\n") },
@@ -354,7 +392,7 @@ pub(crate) async fn write_section(
             text: match revision {
                 None => writer_message(paper, outline, index, dossier),
                 Some((earlier, points)) => format!(
-                    "{}\n\nYou wrote this section before:\n<draft>\n{earlier}\n</draft>\n\nA reviewer who read the whole paper asks for these changes:\n- {}\n\nRevise the section to meet them, keeping what works, and hand over the whole section again.",
+                    "{}\n\nYou wrote this section before:\n<draft>\n{earlier}\n</draft>\n\nA reviewer who read the whole paper asks for these changes:\n- {}\n\nRevise the section to meet them, keeping what works and no longer than before, and hand over the whole section again.",
                     writer_message(paper, outline, index, dossier),
                     points.join("\n- ")
                 ),

@@ -22,7 +22,7 @@ use std::time::{Duration, Instant};
 use tauri::AppHandle;
 
 pub(crate) use budget::{WebBudget, WebUse};
-pub(crate) use scholar::SEARCH_PAPERS_TOOL;
+pub(crate) use scholar::{doi_title, SEARCH_PAPERS_TOOL};
 pub(crate) use sources::with_sources_in_text;
 use sources::{host, SourceBook};
 

@@ -154,17 +154,12 @@ pub(crate) fn references(sections: &[String], dossier: &Dossier, language: &str)
                     title.trim().trim_end_matches('.')
                 );
             }
-            let title = if s.title.trim().is_empty() {
-                &s.url
+            let title = s.title.trim().trim_end_matches('.');
+            if title.is_empty() || title == s.url {
+                format!("\\[{}\\] <{}>", s.n, s.url)
             } else {
-                &s.title
-            };
-            format!(
-                "\\[{}\\] {}. <{}>",
-                s.n,
-                title.trim().trim_end_matches('.'),
-                s.url
-            )
+                format!("\\[{}\\] {title}. <{}>", s.n, s.url)
+            }
         })
         .collect();
     if lines.is_empty() {
@@ -261,4 +256,29 @@ pub(crate) fn without_pictures(section: &str) -> String {
         text = text.replace("\n\n\n", "\n\n");
     }
     text
+}
+
+/// The DOI an address names, for a doi.org link.
+fn doi_of(url: &str) -> Option<&str> {
+    let rest = url.split_once("doi.org/")?.1;
+    (rest.starts_with("10.")).then_some(rest)
+}
+
+/// `dossier`'s sources cited by a DOI's address alone given the work's title
+/// and authors, from OpenAlex, so the reference list names them.
+pub(crate) async fn title_sources(dossier: &mut Dossier) {
+    for source in &mut dossier.sources {
+        if !source.title.trim().is_empty() && source.title != source.url {
+            continue;
+        }
+        let Some(doi) = doi_of(&source.url) else {
+            continue;
+        };
+        let doi = percent_encoding::percent_decode_str(doi)
+            .decode_utf8_lossy()
+            .into_owned();
+        if let Some(title) = crate::ai::web::doi_title(&doi).await {
+            source.title = title;
+        }
+    }
 }

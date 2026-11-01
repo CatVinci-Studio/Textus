@@ -276,3 +276,21 @@ fn arxiv_entry(pull: &mut Pull) -> Paper {
         }
     }
 }
+
+/// The work a DOI names, as "Title - Authors (year)", from OpenAlex: for a
+/// source cited by its address alone. None when OpenAlex doesn't know it.
+pub(crate) async fn doi_title(doi: &str) -> Option<String> {
+    let response = http_client()
+        .ok()?
+        .get(format!("https://api.openalex.org/works/doi:{doi}"))
+        .query(&[("select", "id,doi,title,publication_year,authorships")])
+        .send()
+        .await
+        .ok()?;
+    if !response.status().is_success() {
+        return None;
+    }
+    let work: Value = response.json().await.ok()?;
+    let paper = openalex_papers(&serde_json::json!({ "results": [work] })).pop()?;
+    Some(format!("{} - {}", paper.title, paper.byline()))
+}

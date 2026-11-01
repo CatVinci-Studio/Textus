@@ -534,7 +534,7 @@ fn a_section_is_checked_for_length_citations_and_figures() {
     );
     let found = draft::problems(&bad, &section, &sources, "en").join("\n");
     assert!(
-        found.contains("is 25 long; the section is to be about 100"),
+        found.contains("Far too short: 25 against about 100"),
         "{found}"
     );
     assert!(
@@ -820,7 +820,7 @@ fn the_references_list_only_what_the_text_cites_in_number_order() {
     ];
     assert_eq!(
         finish::references(&sections, &d, "zh").unwrap(),
-        "## 参考文献\n\n\\[1\\] https://a.example/. <https://a.example/>\n\n\\[3\\] Study. <https://example.org/study>"
+        "## 参考文献\n\n\\[1\\] <https://a.example/>\n\n\\[3\\] Study. <https://example.org/study>"
     );
     assert!(finish::references(&sections, &d, "zh-Hant")
         .unwrap()
@@ -1193,7 +1193,7 @@ fn only_length_and_missing_figures_are_soft() {
 }
 
 /// Always hands over a section three times too long, citing its source.
-struct Verbose;
+struct Verbose(usize);
 
 impl research::Model for Verbose {
     fn step<'a>(
@@ -1206,7 +1206,7 @@ impl research::Model for Verbose {
         let step = StepResult::ToolCalls(vec![AgentTurn::ToolCall {
             call_id: format!("c{}", turns.len()),
             name: draft::SUBMIT_SECTION_TOOL.into(),
-            arguments: json!({"markdown": section_text(300, "```chart\n{\"series\": [{\"data\": [1]}]}\n```")}).to_string(),
+            arguments: json!({"markdown": section_text(self.0, "```chart\n{\"series\": [{\"data\": [1]}]}\n```")}).to_string(),
             reasoning: None,
         }]);
         Box::pin(async move { Ok(step) })
@@ -1220,9 +1220,10 @@ async fn a_section_whose_only_problem_is_its_length_is_kept_after_the_tries() {
         language: "en".into(),
         ..paper()
     };
-    let written = draft::write_section(&Verbose, &english, &plan, 0, &drafting_dossier(), None)
-        .await
-        .unwrap();
+    let written =
+        draft::write_section(&Verbose(127), &english, &plan, 0, &drafting_dossier(), None)
+            .await
+            .unwrap();
     assert!(
         written.starts_with("## Mechanism\n\nGreen Green"),
         "{written}"
@@ -1263,4 +1264,99 @@ async fn a_section_written_as_the_reply_is_checked_and_kept() {
         "{written}"
     );
     assert_eq!(written.matches("## Mechanism").count(), 1);
+}
+
+#[test]
+fn a_section_s_length_holds_is_soft_or_is_sent_back() {
+    let mut section = outline().sections.remove(0);
+    section.target_words = 100;
+    section.figures.clear();
+    let sources = vec![(3, "https://example.org/study".to_string())];
+    let found = |words: usize| {
+        draft::problems(&section_text(words, ""), &section, &sources, "en").join(" ")
+    };
+    assert_eq!(found(107), "");
+    assert!(
+        found(127).starts_with("It is 130 long; the section is to be about 100 (at most 120)"),
+        "{}",
+        found(127)
+    );
+    assert!(draft::is_soft(&found(127)));
+    assert!(
+        found(147).starts_with("Far too long: 150 against about 100 - cut it to at most 120"),
+        "{}",
+        found(147)
+    );
+    assert!(!draft::is_soft(&found(147)));
+    assert!(found(57).starts_with("It is 60 long"), "{}", found(57));
+    assert!(found(37).starts_with("Far too short"), "{}", found(37));
+    assert_eq!(draft::most(900), 1080);
+}
+
+#[tokio::test]
+async fn a_section_far_too_long_is_never_kept() {
+    let plan = outline_of(1, 100);
+    let english = Paper {
+        language: "en".into(),
+        ..paper()
+    };
+    let err = draft::write_section(&Verbose(300), &english, &plan, 0, &drafting_dossier(), None)
+        .await
+        .unwrap_err();
+    assert!(err.contains("wasn't written in a form that holds"), "{err}");
+}
+
+#[test]
+fn an_untitled_source_is_listed_by_its_address_once() {
+    let mut d = drafting_dossier();
+    d.sources = vec![
+        aicompat::agent::Source {
+            n: 3,
+            url: "https://doi.org/10.1/x".into(),
+            title: String::new(),
+        },
+        aicompat::agent::Source {
+            n: 4,
+            url: "https://b.example/".into(),
+            title: "https://b.example/".into(),
+        },
+    ];
+    let listed = finish::references(
+        &["A [3](https://doi.org/10.1/x) and [4](https://b.example/).".to_string()],
+        &d,
+        "en",
+    )
+    .unwrap();
+    assert_eq!(
+        listed,
+        "## References\n\n\\[3\\] <https://doi.org/10.1/x>\n\n\\[4\\] <https://b.example/>"
+    );
+}
+
+#[test]
+fn an_address_with_parentheses_is_cited_whole() {
+    let doi = "https://doi.org/10.1061/40927(243)238";
+    let safe = research::link_safe(doi);
+    assert_eq!(safe, "https://doi.org/10.1061/40927%28243%29238");
+    assert_eq!(
+        research::link_safe("https://a.example/%E4%B8%AD"),
+        "https://a.example/%E4%B8%AD"
+    );
+    assert_eq!(
+        research::link_safe("references/Tides%202024/a.md"),
+        "references/Tides%202024/a.md"
+    );
+    let mut section = outline().sections.remove(0);
+    section.target_words = 10;
+    section.figures.clear();
+    let cited = format!("Green roofs cool the roof surface by day, as measured [66]({safe}).");
+    // Either way of writing it is the same source.
+    assert_eq!(
+        draft::problems(&cited, &section, &[(66, safe.clone())], "en"),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        draft::problems(&cited, &section, &[(66, doi.to_string())], "en"),
+        Vec::<String>::new()
+    );
 }
