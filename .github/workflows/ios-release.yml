@@ -38,6 +38,9 @@ jobs:
     # with only changes on purpose.
     runs-on: macos-26
     timeout-minutes: 90
+    # The App Store Connect key lives in the release environment, which only
+    # runs from a release tag (ios-v*); only admins can push those.
+    environment: release
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
