@@ -396,6 +396,23 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   paperReviewing: "Revisando o artigo inteiro…",
   paperFinishing:
     "Adicionando o título, os números das figuras e as referências…",
+  paperQuestionsTitle: "Perguntas de pesquisa",
+  paperQuestionNotes: "{n} notas",
+  paperQuestionWaiting: "Aguardando",
+  paperQuestionActive: "Pesquisando",
+  paperQuestionFailed: "Falhou",
+  paperActivitySearch: "Pesquisa",
+  paperActivityRead: "Leitura",
+  paperActivityPapers: "Artigos",
+  paperActivityLibrary: "Biblioteca",
+  paperActivityNote: "Anotado",
+  paperSectionWaiting: "Aguardando",
+  paperSectionDrafting: "Escrevendo",
+  paperSectionDrafted: "Escrito",
+  paperSectionRevising: "Revisando",
+  paperSectionFailed: "Falhou",
+  paperOutlineRetry:
+    "Versão {n}: a anterior não passou nas verificações; está sendo refeita…",
   paperProposed:
     "O artigo foi proposto no fim do documento. Revise-o lá e aceite ou rejeite.",
   paperProposedCard: "Proposto no fim do documento.",

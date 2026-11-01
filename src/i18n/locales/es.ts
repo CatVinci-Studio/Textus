@@ -407,6 +407,23 @@ para usar una.
   paperReviewing: "Revisando el artículo completo…",
   paperFinishing:
     "Añadiendo el título, los números de figura y las referencias…",
+  paperQuestionsTitle: "Preguntas de investigación",
+  paperQuestionNotes: "{n} notas",
+  paperQuestionWaiting: "En espera",
+  paperQuestionActive: "Investigando",
+  paperQuestionFailed: "Falló",
+  paperActivitySearch: "Búsqueda",
+  paperActivityRead: "Lectura",
+  paperActivityPapers: "Artículos",
+  paperActivityLibrary: "Biblioteca",
+  paperActivityNote: "Anotado",
+  paperSectionWaiting: "En espera",
+  paperSectionDrafting: "Redactando",
+  paperSectionDrafted: "Redactado",
+  paperSectionRevising: "Revisando",
+  paperSectionFailed: "Falló",
+  paperOutlineRetry:
+    "Versión {n}: la anterior no pasó las comprobaciones; se está rehaciendo…",
   paperProposed:
     "El artículo está propuesto al final del documento. Revísalo allí y acéptalo o recházalo.",
   paperProposedCard: "Propuesto al final del documento.",

@@ -1,13 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Strings } from "../../i18n/strings";
 import { Select } from "../../ui/Select";
 import { useSettings } from "../../prefs/SettingsContext";
 import { OutlineCard } from "./OutlineCard";
+import type {
+  ActivityKind,
+  SectionStatus,
+} from "../../platform/bindings/ai-paper";
 import {
   paperActions,
   usePaperRun,
   type PaperCardInfo,
   type PaperRunState,
+  type QuestionState,
 } from "./paper-store";
 import "./outline-card.css";
 
@@ -47,6 +52,181 @@ function progressLine(run: PaperRunState, t: Strings): string {
   }
 }
 
+/** Seconds since `since`, as m:ss, ticking once a second while `on`. */
+function useElapsed(since: number, on: boolean): string {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!on) return;
+    setNow(Date.now());
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [on, since]);
+  const seconds = Math.max(0, Math.floor((now - since) / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+function activityLabel(kind: ActivityKind, t: Strings): string {
+  switch (kind) {
+    case "search":
+      return t.paperActivitySearch;
+    case "read":
+      return t.paperActivityRead;
+    case "papers":
+      return t.paperActivityPapers;
+    case "library":
+      return t.paperActivityLibrary;
+    case "note":
+      return t.paperActivityNote;
+  }
+}
+
+function questionStatus(q: QuestionState, t: Strings): string {
+  switch (q.state) {
+    case "waiting":
+      return t.paperQuestionWaiting;
+    case "failed":
+      return t.paperQuestionFailed;
+    case "active":
+    case "done":
+      return q.state === "active" && q.notes === 0
+        ? t.paperQuestionActive
+        : t.paperQuestionNotes.replace("{n}", String(q.notes));
+  }
+}
+
+function sectionStatus(status: SectionStatus, t: Strings): string {
+  switch (status) {
+    case "waiting":
+      return t.paperSectionWaiting;
+    case "drafting":
+      return t.paperSectionDrafting;
+    case "drafted":
+    case "proposed":
+      return t.paperSectionDrafted;
+    case "revising":
+      return t.paperSectionRevising;
+    case "failed":
+      return t.paperSectionFailed;
+  }
+}
+
+/** A section's text as the preview shows it: plain, its citations as
+ *  bare numbers and its Markdown marks dropped. */
+export function previewText(markdown: string): string {
+  return markdown
+    .replace(/\[(\d+)\]\([^)\s]*\)/g, "[$1]")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/[*_`]{1,3}/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/** A list item's state, drawn as a mark before it. */
+function Mark({ state }: { state: string }) {
+  return <span className="paper-card-mark" data-state={state} aria-hidden />;
+}
+
+/** What the run is doing in detail: the planner's thoughts, the questions
+ *  and the helpers' latest steps, the outline as it is written, or each
+ *  section with what its writer is writing. */
+function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
+  if (run.phase === "starting" || run.phase === "planning") {
+    return run.thinking ? (
+      <p className="paper-card-thinking">{run.thinking}</p>
+    ) : null;
+  }
+  if (run.phase === "researching") {
+    return (
+      <>
+        {run.questions.length > 0 && (
+          <ol className="paper-card-list" aria-label={t.paperQuestionsTitle}>
+            {run.questions.map((q, i) => (
+              <li key={i} className="paper-card-item" data-state={q.state}>
+                <Mark state={q.state} />
+                <span className="paper-card-item-text">{q.text}</span>
+                <span className="paper-card-item-status">
+                  {questionStatus(q, t)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+        {run.recent.length > 0 && (
+          <ul className="paper-card-recent">
+            {run.recent.map((a) => (
+              <li key={a.id} className="paper-card-enter">
+                <span className="paper-card-recent-kind">
+                  {activityLabel(a.kind, t)}
+                </span>
+                <span className="paper-card-recent-detail">{a.detail}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </>
+    );
+  }
+  if (run.phase === "outlining") {
+    const draft = run.outlineDraft;
+    return (
+      <>
+        {draft && draft.attempt > 1 && (
+          <p className="paper-card-note">
+            {t.paperOutlineRetry.replace("{n}", String(draft.attempt))}
+          </p>
+        )}
+        {draft?.thesis ? (
+          <p className="paper-card-thesis paper-card-enter">{draft.thesis}</p>
+        ) : (
+          run.thinking && <p className="paper-card-thinking">{run.thinking}</p>
+        )}
+        {draft && draft.titles.length > 0 && (
+          <ol className="paper-card-list">
+            {draft.titles.map((title, i) => (
+              <li
+                key={`${draft.attempt}-${i}`}
+                className="paper-card-item paper-card-enter"
+                data-state="done"
+              >
+                <Mark state="done" />
+                <span className="paper-card-item-text">{title}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </>
+    );
+  }
+  if ((run.phase === "drafting" || run.phase === "reviewing") && run.outline) {
+    return (
+      <ol className="paper-card-list">
+        {run.outline.sections.map((section, i) => {
+          const status = run.sections[i] ?? "waiting";
+          const writing = status === "drafting" || status === "revising";
+          const text = writing ? previewText(run.sectionText[i] ?? "") : "";
+          return (
+            <li key={i} className="paper-card-section" data-state={status}>
+              <div className="paper-card-item" data-state={status}>
+                <Mark state={status} />
+                <span className="paper-card-item-text">{section.title}</span>
+                <span className="paper-card-item-status">
+                  {sectionStatus(status, t)}
+                </span>
+              </div>
+              {text && (
+                <div className="paper-card-preview">
+                  <p>{text}</p>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    );
+  }
+  return null;
+}
+
 /** A paper in the conversation: its progress, its outline to approve, then
  *  where its proposal went. */
 export function PaperCard({ info }: { info: PaperCardInfo }) {
@@ -58,6 +238,8 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
     !run.proposed &&
     (run.phase !== "awaitingOutline" || run.approving);
   const line = run ? progressLine(run, t) : t.paperEnded;
+  const busy = Boolean(running) && run?.phase !== "awaitingOutline";
+  const elapsed = useElapsed(run?.phaseSince ?? 0, busy);
   return (
     <div className="paper-card">
       <div className="paper-card-head">
@@ -79,11 +261,14 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
         </p>
       ) : (
         line && (
-          <p className="paper-card-progress" aria-live="polite">
-            {line}
+          <p className="paper-card-progress">
+            {busy && <span className="paper-card-spinner" aria-hidden />}
+            <span aria-live="polite">{line}</span>
+            {busy && <span className="paper-card-elapsed">{elapsed}</span>}
           </p>
         )
       )}
+      {run && busy && <PaperActivityView run={run} t={t} />}
       {running && (
         <div className="paper-card-actions">
           <button
