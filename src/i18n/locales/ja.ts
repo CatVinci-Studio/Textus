@@ -405,6 +405,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   paperWritten:
     "論文を文書に書き込みました。ほかの文章と同じように直接編集でき、取り消すと論文全体が消えます。",
   paperWrittenCard: "文書に書き込みました。",
+  paperAddingPictures: "図を追加中、残り {n} 枚…",
   paperEnded: "この論文の執筆は終了しました。",
   paperStop: "停止",
   paperUnitCharacters: "字",

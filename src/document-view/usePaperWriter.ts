@@ -5,6 +5,7 @@ import { imageModelOf } from "../ai/image-models";
 import type { useAgentPanel } from "../ai/chat/panel/agent-panel";
 import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { EditorRunner } from "../editor/useEditorRunner";
+import type { GeneratedImageData } from "../platform/ipc";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { Outline } from "../platform/bindings/ai-paper";
@@ -30,6 +31,7 @@ import { usePaperDocument } from "./usePaperDocument";
 export function usePaperWriter({
   run,
   conversation,
+  storePicture,
   agentPanel,
   settings,
   filePath,
@@ -37,12 +39,17 @@ export function usePaperWriter({
 }: {
   run: EditorRunner;
   conversation: AgentConversation;
+  /** Saves a picture beside the document (useEditorProposals). */
+  storePicture: (
+    image: GeneratedImageData,
+    alt: string,
+  ) => Promise<string | null>;
   agentPanel: ReturnType<typeof useAgentPanel>;
   settings: Settings;
   filePath: string | null;
   t: Strings;
 }) {
-  const paperDocument = usePaperDocument(run);
+  const paperDocument = usePaperDocument(run, storePicture);
   // Read when a step starts, so a run picks up the settings of its moment.
   const latest = useRef({ settings, filePath, conversation, t, paperDocument });
   latest.current = { settings, filePath, conversation, t, paperDocument };
@@ -108,6 +115,10 @@ export function usePaperWriter({
                 paperWrittenTurns(latest.current.t.paperWritten),
               );
               updatePaperRun(key, () => ({ written: true }));
+              void latest.current.paperDocument.addPictures(
+                key,
+                event.markdown,
+              );
             },
           );
         })

@@ -420,6 +420,7 @@ type /name in a conversation to use one.
   paperWritten:
     "The paper is written in the document. Edit it there like any text; Undo takes it out.",
   paperWrittenCard: "Written in the document.",
+  paperAddingPictures: "Adding pictures, {n} to go…",
   paperEnded: "This paper's run has ended.",
   paperStop: "Stop",
   paperUnitCharacters: "characters",

@@ -48,7 +48,10 @@ function progressLine(run: PaperRunState, t: Strings): string {
     case "finishing":
       return t.paperFinishing;
     case "done":
-      return run.written ? t.paperWrittenCard : t.paperFinishing;
+      if (!run.written) return t.paperFinishing;
+      return run.picturesLeft > 0
+        ? t.paperAddingPictures.replace("{n}", String(run.picturesLeft))
+        : t.paperWrittenCard;
   }
 }
 
@@ -241,7 +244,7 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
   const running =
     run &&
     !run.error &&
-    !run.written &&
+    (!run.written || run.picturesLeft > 0) &&
     (run.phase !== "awaitingOutline" || run.approving);
   const line = run ? progressLine(run, t) : t.paperEnded;
   const busy = Boolean(running) && run?.phase !== "awaitingOutline";

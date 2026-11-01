@@ -384,6 +384,7 @@ export default {
     "没有可用的网页搜索，这篇论文的研究只会检索学术论文（OpenAlex、arXiv）和你的资料库。",
   paperWritten: "论文已写进文档，可以像普通文字一样直接修改；撤销会整篇移除。",
   paperWrittenCard: "已写进文档。",
+  paperAddingPictures: "正在加图，还剩 {n} 张…",
   paperEnded: "这篇论文的写作已结束。",
   paperStop: "停止",
   paperUnitCharacters: "字",

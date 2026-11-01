@@ -90,6 +90,7 @@ export function useEditorReview({
   const writePaper = usePaperWriter({
     run,
     conversation,
+    storePicture: chat.proposals.storePicture,
     agentPanel,
     settings,
     filePath,

@@ -424,6 +424,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   paperWritten:
     "Der Aufsatz steht im Dokument. Bearbeiten Sie ihn dort wie jeden Text; Rückgängig entfernt ihn.",
   paperWrittenCard: "Im Dokument geschrieben.",
+  paperAddingPictures: "Bilder werden eingefügt, noch {n}…",
   paperEnded: "Das Schreiben dieses Aufsatzes ist beendet.",
   paperStop: "Stoppen",
   paperUnitCharacters: "Zeichen",

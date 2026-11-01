@@ -58,6 +58,8 @@ export interface PaperRunState {
   error: string | null;
   /** The paper is written in the document for good. */
   written: boolean;
+  /** Its pictures still to come into the document. */
+  picturesLeft: number;
   /** "characters" or "words", in the UI language: the outline's lengths. */
   unit: string;
   /** The tail of what the planner is thinking, while it plans. */
@@ -89,6 +91,7 @@ const NEW_RUN: PaperRunState = {
   approving: false,
   error: null,
   written: false,
+  picturesLeft: 0,
   unit: "",
   thinking: "",
   questions: [],

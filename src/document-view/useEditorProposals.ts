@@ -24,7 +24,7 @@ import {
 import { isRefusal } from "../ai/revision/proposal-status";
 import { isProposalTool } from "../ai/chat/proposal";
 import type { EditProposal } from "../ai/types";
-import type { StreamEvent } from "../platform/ipc";
+import type { GeneratedImageData, StreamEvent } from "../platform/ipc";
 import type { Settings } from "../prefs/SettingsContext";
 import { prefersReducedMotion } from "../ui/motion";
 import { storeImage } from "../editor/images/image-plugin";
@@ -72,23 +72,26 @@ export function useEditorProposals({
   const citations = useRef<CitationStyle>({ asFootnotes: false, sources: [] });
   const citationStyle = useCallback(() => citations.current, []);
   const filePathRef = useLatest(filePath);
+  /** A generated picture saved beside the document; its src, or null when
+   *  naming it was cancelled. */
+  const storePicture = (image: GeneratedImageData, alt: string) =>
+    storeImage(
+      {
+        name: alt || "image",
+        type: image.mime,
+        base64: () => Promise.resolve(image.dataBase64),
+      },
+      {
+        docPath: () => filePathRef.current,
+        settings: () => settingsRef.current,
+        requestName: requestImageName,
+        onError: () =>
+          resolveStrings(settingsRef.current.language).imageSaveFailed,
+      },
+    );
   const pendingEdits = usePendingEdits(run, {
     onDecided,
-    storeImage: (image, alt) =>
-      storeImage(
-        {
-          name: alt || "image",
-          type: image.mime,
-          base64: () => Promise.resolve(image.dataBase64),
-        },
-        {
-          docPath: () => filePathRef.current,
-          settings: () => settingsRef.current,
-          requestName: requestImageName,
-          onError: () =>
-            resolveStrings(settingsRef.current.language).imageSaveFailed,
-        },
-      ),
+    storeImage: storePicture,
     onImageError: (err) => {
       const t = resolveStrings(settingsRef.current.language);
       void showMessage(`${t.imageSaveFailed}\n${explainError(err, t)}`, {
@@ -411,6 +414,7 @@ export function useEditorProposals({
     detachedTargetRef,
     addPreviews,
     showProposals,
+    storePicture,
   };
 }
 
