@@ -157,7 +157,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       await page.emulateMedia({ reducedMotion });
     });
 
-    test("Settings and the AI sheet open and close", async ({ page }) => {
+    test("Settings and the AI page open and close", async ({ page }) => {
       await openPhone(page, { animations: true });
       await page.locator(".window-menu-button").tap();
       await page.getByRole("menuitem", { name: "Settings…" }).tap();
@@ -169,14 +169,15 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       await page.getByRole("button", { name: "Close" }).tap();
       await expect(page.locator(".settings-backdrop")).toHaveCount(0, GONE);
 
-      await page.locator(".window-bar-toggle").tap();
-      const sheet = page.locator(".agent-panel");
-      await expect(sheet).toBeVisible();
-      await settled(sheet);
-      const box = (await sheet.boundingBox())!;
+      const pages = page.locator(".page-switch button");
+      await pages.nth(1).tap();
+      const panel = page.locator(".agent-panel");
+      await expect(panel).toBeVisible();
+      await settled(panel);
+      const box = (await panel.boundingBox())!;
       expect(Math.round(box.y + box.height)).toBe(932);
-      await page.locator(".window-bar-toggle").tap();
-      await expect(sheet).toHaveCount(0, GONE);
+      await pages.nth(0).tap();
+      await expect(panel).toHaveCount(0, GONE);
     });
   });
 }

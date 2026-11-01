@@ -68,9 +68,9 @@ test("opening Textus AI while typing puts the keyboard away", async ({
 }) => {
   await openPhone(page);
   await page.locator('[data-active-tab="true"] .milkdown p').first().click();
-  await page.locator(".window-bar-toggle").tap();
+  await page.getByRole("button", { name: "AI", exact: true }).tap();
   await expect(page.locator(".agent-panel .inline-chat-input")).toBeVisible();
-  // Neither the document nor the sheet's input holds the focus, so the
+  // Neither the document nor the AI page's input holds the focus, so the
   // keyboard goes down once rather than down and up again.
   expect(
     await page.evaluate(() => {
@@ -82,46 +82,74 @@ test("opening Textus AI while typing puts the keyboard away", async ({
   ).toBe("none");
 });
 
-test("Textus AI is a bottom sheet that leaves the document in view", async ({
+test("Textus AI is a page of its own, switched to from the title row", async ({
   page,
 }) => {
   await openPhone(page);
-  await page.locator(".window-bar-toggle").tap();
-  const half = await page.locator(".agent-panel").boundingBox();
-  expect(half).toMatchObject({ x: 0, width: 430 });
-  // Docked to the bottom, about half the screen.
-  expect(Math.round(half!.y + half!.height)).toBe(932);
-  expect(half!.height).toBeLessThan(932 * 0.6);
-
-  // The handle pulls it up to full height and back.
-  await page.locator(".agent-panel-grip").tap();
-  await expect
-    .poll(
-      async () => (await page.locator(".agent-panel").boundingBox())!.height,
-    )
-    .toBeGreaterThan(932 * 0.9);
-  await page.locator(".agent-panel-grip").tap();
-  await expect
-    .poll(
-      async () => (await page.locator(".agent-panel").boundingBox())!.height,
-    )
-    .toBeLessThan(932 * 0.6);
-
-  // The title row's toggle still closes it.
-  await page.locator(".window-bar-toggle").tap();
+  const pages = page.getByRole("group", { name: "Page" });
+  await pages.getByRole("button", { name: "AI" }).tap();
+  const bar = (await page.locator(".window-bar").boundingBox())!;
+  const panel = (await page.locator(".agent-panel").boundingBox())!;
+  // The whole screen under the title row, which keeps the capsule.
+  expect(panel).toMatchObject({ x: 0, width: 430 });
+  expect(Math.round(panel.y)).toBe(Math.round(bar.y + bar.height));
+  expect(Math.round(panel.y + panel.height)).toBe(932);
+  await expect(pages.getByRole("button", { name: "AI" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  // No close button of its own: Write is the way back.
+  await expect(
+    page.locator(".agent-panel").getByRole("button", { name: "Close" }),
+  ).toHaveCount(0);
+  await pages.getByRole("button", { name: "Write" }).tap();
   await expect(page.locator(".agent-panel")).toHaveCount(0);
 });
 
-test("with the keyboard up the AI sheet keeps its handle, and drops what no longer fits whole", async ({
+test("a swipe in from the screen's edge turns between the pages", async ({
   page,
 }) => {
   await openPhone(page);
-  await page.locator(".window-bar-toggle").tap();
+  const swipe = (from: number, to: number) =>
+    page.evaluate(
+      ([from, to]) => {
+        const target = document.elementFromPoint(from, 500)!;
+        const touch = (x: number) =>
+          new Touch({ identifier: 1, target, clientX: x, clientY: 500 });
+        target.dispatchEvent(
+          new TouchEvent("touchstart", {
+            bubbles: true,
+            touches: [touch(from)],
+            changedTouches: [touch(from)],
+          }),
+        );
+        target.dispatchEvent(
+          new TouchEvent("touchend", {
+            bubbles: true,
+            touches: [],
+            changedTouches: [touch(to)],
+          }),
+        );
+      },
+      [from, to],
+    );
+  // From inside the page it is a finger in the text, not a page turn.
+  await swipe(200, 60);
+  await expect(page.locator(".agent-panel")).toHaveCount(0);
+  await swipe(425, 280);
+  await expect(page.locator(".agent-panel")).toBeVisible();
+  await swipe(5, 160);
+  await expect(page.locator(".agent-panel")).toHaveCount(0);
+});
+
+test("with the keyboard up the AI page drops what no longer fits whole", async ({
+  page,
+}) => {
+  await openPhone(page);
+  await page.getByRole("button", { name: "AI", exact: true }).tap();
   await expect(page.locator(".agent-panel-empty-mark")).toBeVisible();
-  // The keyboard shortens the web view to about this on a small phone.
-  await page.setViewportSize({ width: 430, height: 440 });
-  const sheet = await page.locator(".agent-panel").boundingBox();
-  expect(Math.round(sheet!.y)).toBe(Math.round(440 * 0.45));
+  // The keyboard and a long selection chip leave about this much.
+  await page.setViewportSize({ width: 430, height: 310 });
   // The hint stays whole; the spark gave its room up for it.
   await expect(page.locator(".agent-panel-empty-mark")).toBeHidden();
   const empty = (await page.locator(".agent-panel-empty").boundingBox())!;
@@ -129,13 +157,13 @@ test("with the keyboard up the AI sheet keeps its handle, and drops what no long
   expect(hint.y).toBeGreaterThanOrEqual(empty.y);
   expect(hint.y + hint.height).toBeLessThanOrEqual(empty.y + empty.height);
 
-  // The / list fits under the handle instead of running up over it.
+  // The / list fits under the page's header instead of running up over it.
   await page.locator(".agent-panel .inline-chat-input").fill("/");
   const picker = page.locator(".agent-panel .composer-picker");
   await expect(picker).toBeVisible();
-  const grip = (await page.locator(".agent-panel-grip").boundingBox())!;
+  const header = (await page.locator(".agent-panel-header").boundingBox())!;
   const list = (await picker.boundingBox())!;
-  expect(list.y).toBeGreaterThanOrEqual(grip.y + grip.height);
+  expect(list.y).toBeGreaterThanOrEqual(header.y + header.height);
   await expect(page.locator(".agent-panel-empty-text")).toBeHidden();
 });
 
@@ -192,34 +220,6 @@ test("a tap on the suggestion accepts it", async ({ page }) => {
   );
 });
 
-test("a dragged AI sheet settles without replaying its entrance", async ({
-  page,
-}) => {
-  await openPhone(page, { animations: true });
-  await page.locator(".window-bar-toggle").tap();
-  const sheet = page.locator(".agent-panel");
-  await expect(sheet).toBeVisible();
-  // Up to full height with the handle, and let it land.
-  await page.locator(".agent-panel-grip").tap();
-  await expect
-    .poll(async () => (await sheet.boundingBox())!.height)
-    .toBeGreaterThan(932 * 0.9);
-  await expect(sheet).toHaveAttribute("data-settled", "");
-  // Back at its stop, no animation starts over.
-  expect(
-    await sheet.evaluate((el) => ({
-      name: getComputedStyle(el).animationName,
-      running: el.getAnimations().length,
-    })),
-  ).toEqual({ name: "none", running: 0 });
-  // Closing still plays its way out.
-  await page.locator(".window-bar-toggle").tap();
-  await expect(sheet).toHaveAttribute("data-state", "closing");
-  expect(
-    await sheet.evaluate((el) => getComputedStyle(el).animationName),
-  ).not.toBe("none");
-});
-
 test("the line being typed stays above the keyboard toolbar", async ({
   page,
 }) => {
@@ -261,18 +261,18 @@ test("the line being typed stays above the keyboard toolbar", async ({
   expect(m.caret).toBeLessThanOrEqual(m.toolbar);
 });
 
-test("with the keyboard up, the AI sheet rises once it has gone", async ({
+test("with the keyboard up, the AI page comes once it has gone", async ({
   page,
 }) => {
   await openPhone(page);
   await page.locator('[data-active-tab="true"] .milkdown p').first().click();
   await page.setViewportSize({ width: 430, height: 440 });
   await page.waitForTimeout(100);
-  await page.locator(".window-bar-toggle").tap();
+  await page.getByRole("button", { name: "AI", exact: true }).tap();
   // Not yet: the web view is still short.
   await page.waitForTimeout(100);
   await expect(page.locator(".agent-panel")).toHaveCount(0);
-  // The keyboard goes; the sheet comes, laid out at the full height.
+  // The keyboard goes; the page comes, laid out at the full height.
   await page.setViewportSize({ width: 430, height: 932 });
   await expect(page.locator(".agent-panel")).toBeVisible();
   const box = (await page.locator(".agent-panel").boundingBox())!;
@@ -363,7 +363,7 @@ test("a tap's mouse enter, as iOS WebKit sends after it, opens no tooltip", asyn
   page,
 }) => {
   await openPhone(page);
-  const button = page.locator(".window-bar-toggle").first();
+  const button = page.locator(".window-menu-button").first();
   await button.dispatchEvent("pointerover", {
     pointerType: "mouse",
     bubbles: true,

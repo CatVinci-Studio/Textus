@@ -67,6 +67,27 @@ export function FolderOpenIcon({ className }: IconProps) {
   );
 }
 
+/** The AI panel's Project: the folder outline, drawn like the bar's other
+ *  line icons. */
+export function ProjectIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d={FOLDER_PATH}
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /** File > Open Folder…: the folder outline with a plus in it. */
 export function OpenFolderIcon({ className }: IconProps) {
   return (

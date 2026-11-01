@@ -101,6 +101,9 @@ export interface MenuChecks {
   /** Not a check mark: a folder is open, so Close Folder has something to
    *  close. */
   folderOpen?: boolean;
+  /** Not a check mark: the document's word count, which the phone's menu
+   *  shows when its title row has no room for it. */
+  words?: number;
 }
 
 export type MenuNode = MenuEntry | "separator";
@@ -480,7 +483,17 @@ export function buildMobileMenu(
   /** Textus AI is offered on this install. */
   ai = true,
 ): MenuNode[] {
+  const words = checks.words;
   return [
+    ...(words
+      ? [
+          {
+            label: `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`,
+            disabled: true,
+          },
+          "separator" as const,
+        ]
+      : []),
     { label: t.menuDocuments, action: { native: "documents" } },
     { label: t.menuNewFile, action: { native: "new-file" } },
     { label: t.menuOpenFile, action: { native: "open-file" } },

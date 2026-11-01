@@ -23,7 +23,9 @@ export default {
   agentPanelPopOut: "In eigenem Fenster öffnen",
   agentPanelResize: "Breite des KI-Bereichs ändern",
   sidebarResize: "Breite der Seitenleiste ändern",
-  agentPanelSheet: "KI-Bereich auf- oder zuklappen",
+  phonePages: "Seite",
+  phonePageWrite: "Schreiben",
+  phonePageAi: "KI",
   agentExpandWindowLabel:
     "Vollständige Unterhaltungen in einem eigenen Fenster öffnen",
   menuToggleAgentPanel: "KI-Bereich",
@@ -192,7 +194,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reviewNotesPicked: "{n} ausgewählt",
   reviewNotesAskPrefix: "Zu diesen Notizen:\n{notes}\n",
   reviewNoteAskPrefix: "Zu deiner Anmerkung „{comment}“: ",
-  agentTabChat: "Chat",
   agentTabProject: "Projekt",
   memoryStyle: "Schreibstil",
   memoryLibrary: "Lexikon",

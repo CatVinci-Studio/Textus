@@ -23,7 +23,9 @@ export default {
   agentPanelPopOut: "Abrir en una ventana aparte",
   agentPanelResize: "Cambiar el tamaño del panel de IA",
   sidebarResize: "Cambiar el tamaño de la barra lateral",
-  agentPanelSheet: "Expandir o contraer el panel de IA",
+  phonePages: "Página",
+  phonePageWrite: "Escribir",
+  phonePageAi: "IA",
   agentExpandWindowLabel:
     "Abrir las conversaciones completas en una ventana aparte",
   menuToggleAgentPanel: "Panel de IA",
@@ -200,7 +202,6 @@ para usar una.
   reviewNotesPicked: "{n} seleccionadas",
   reviewNotesAskPrefix: "Sobre estas notas tuyas:\n{notes}\n",
   reviewNoteAskPrefix: "Sobre tu nota «{comment}»: ",
-  agentTabChat: "Chat",
   agentTabProject: "Proyecto",
   memoryStyle: "Estilo de escritura",
   memoryLibrary: "Biblioteca",
@@ -1258,7 +1259,7 @@ para usar una.
   tutorialDoneTitle: "¡Listo!",
   tutorialDoneBody:
     "Ahora empieza a escribir lo tuyo; tablas, fórmulas, temas, revisión y lo demás están en los Videotutoriales.",
-  tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en la pestaña Proyecto del panel de IA.`,
+  tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en Proyecto, el botón de carpeta del panel de IA.`,
   closePromptMessage: "Este documento tiene cambios sin guardar.",
   closePromptSave: "Guardar",
   closePromptDiscard: "No guardar",

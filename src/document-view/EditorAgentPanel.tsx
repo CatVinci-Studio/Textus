@@ -15,7 +15,6 @@ import { chatLabels } from "../ai/chat/chat-labels";
 import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { EditProposal } from "../ai/types";
 import { canDetachChat } from "../platform/capabilities";
-import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { Suspense, useState } from "react";
 import { PaperLength } from "../ai/paper/lazy";
 import { DEFAULT_PAPER_LENGTH } from "../ai/paper/paper-lengths";
@@ -85,9 +84,6 @@ export function EditorAgentPanel({
   const [mode, setMode] = useState<PanelMode>(settings.agentDefaultMode);
   // Research mode's paper length; the message sent is its topic.
   const [paperChars, setPaperChars] = useState(DEFAULT_PAPER_LENGTH);
-  // The window bar's button opens and closes the panel; only the iPhone's
-  // sheet keeps a close button of its own.
-  const phone = usePhoneLayout();
   const emptyText = {
     write: t.agentPanelEmptyWrite,
     review: t.agentPanelEmptyReview,
@@ -100,13 +96,10 @@ export function EditorAgentPanel({
         title: t.agentPanelTitle,
         newConversation: t.chatNewConversation,
         popOut: t.agentPanelPopOut,
-        close: t.chatClose,
-        tabChat: t.agentTabChat,
-        tabProject: t.agentTabProject,
+        project: t.agentTabProject,
       }}
       onNewConversation={onNewConversation}
       onPopOut={canDetachChat ? onPopOut : undefined}
-      onClose={phone ? () => agentPanel.setOpen(false) : undefined}
       history={
         <ChatHistoryMenu
           buttonClassName="inline-chat-header-button"
