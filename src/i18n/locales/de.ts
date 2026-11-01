@@ -287,7 +287,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   learnRemember: "Merken",
   learnNotNow: "Jetzt nicht",
   learnNever: "Nicht mehr fragen",
-  learnSaved: "Gemerkt. Im Tab Gedächtnis kannst du es ansehen oder löschen.",
+  learnSaved:
+    "Gemerkt. Unter Projekt im KI-Bereich kannst du es ansehen oder löschen.",
   learnLabel: "Aus deinen Überarbeitungen gelernt",
   suggestNextMessageLabel: "Nächste Nachricht vorschlagen",
   suggestNextMessageHint:
@@ -295,7 +296,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   composerSuggestionTab: "Tab",
   composerFollowUps: "Vorgeschlagene nächste Nachrichten",
   rememberAutomaticallyLabel: "Automatisch merken",
-  rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Im Tab Gedächtnis kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
+  rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Unter Projekt im KI-Bereich kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
   toolRemember: "Merkt sich das",
   agentGeneratingImage: "Bild wird erstellt…",
   toolGenerateImage: "Bild wird erstellt",

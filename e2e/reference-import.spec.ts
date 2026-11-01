@@ -29,7 +29,10 @@ test("Import references… imports the picked files and says how many were left 
     settings: { language: "en" },
     storage: { "textus-agent-panel-open": "1" },
   });
-  await page.getByRole("tab", { name: "Project" }).click();
+  await page
+    .locator(".agent-panel-view")
+    .getByRole("button", { name: "Project", exact: true })
+    .click();
   await page.locator(".project-bar-folder").click();
   await page.getByRole("menuitem", { name: "Import references…" }).click();
   await expect(page.locator(".project-bar")).toContainText(

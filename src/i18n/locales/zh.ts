@@ -252,7 +252,7 @@ export default {
   learnRemember: "记住",
   learnNotNow: "暂不",
   learnNever: "不再询问",
-  learnSaved: "已记住。可以在“记忆”里查看或删除。",
+  learnSaved: "已记住。可以在 AI 面板的“项目”里查看或删除。",
   learnLabel: "从修订取舍中学到的",
   suggestNextMessageLabel: "预测下一句",
   suggestNextMessageHint:
@@ -260,7 +260,7 @@ export default {
   composerSuggestionTab: "Tab 采用",
   composerFollowUps: "建议的下一句",
   rememberAutomaticallyLabel: "自动记住",
-  rememberAutomaticallyHint: `${AI_NAME} 会记下你的要求和写作习惯，供以后的对话使用；可以在“记忆”里查看、修改或撤销。每次回复后，会再向同一个模型发一次简短请求，决定记下什么。`,
+  rememberAutomaticallyHint: `${AI_NAME} 会记下你的要求和写作习惯，供以后的对话使用；可以在 AI 面板的“项目”里查看、修改或撤销。每次回复后，会再向同一个模型发一次简短请求，决定记下什么。`,
   toolRemember: "记下来",
   agentGeneratingImage: "正在生成图片…",
   toolGenerateImage: "正在生成图片",

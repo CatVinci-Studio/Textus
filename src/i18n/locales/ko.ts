@@ -263,7 +263,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   learnRemember: "기억하기",
   learnNotNow: "나중에",
   learnNever: "다시 묻지 않기",
-  learnSaved: "기억했습니다. ‘기억’ 탭에서 보거나 삭제할 수 있습니다.",
+  learnSaved:
+    "기억했습니다. AI 패널의 ‘프로젝트’에서 보거나 삭제할 수 있습니다.",
   learnLabel: "수정 선택에서 배운 것",
   suggestNextMessageLabel: "다음 메시지 예측",
   suggestNextMessageHint:
@@ -271,7 +272,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   composerSuggestionTab: "Tab으로 사용",
   composerFollowUps: "추천 다음 메시지",
   rememberAutomaticallyLabel: "자동으로 기억",
-  rememberAutomaticallyHint: `${AI_NAME}가 요청 사항과 글쓰기 방식을 이후 대화를 위해 기억합니다. ‘기억’ 탭에서 확인, 수정, 취소할 수 있습니다. 답변마다 같은 모델에 짧은 요청을 한 번 더 보내 무엇을 기억할지 정합니다.`,
+  rememberAutomaticallyHint: `${AI_NAME}가 요청 사항과 글쓰기 방식을 이후 대화를 위해 기억합니다. AI 패널의 ‘프로젝트’에서 확인, 수정, 취소할 수 있습니다. 답변마다 같은 모델에 짧은 요청을 한 번 더 보내 무엇을 기억할지 정합니다.`,
   toolRemember: "기억하는 중",
   agentGeneratingImage: "이미지를 생성하는 중…",
   toolGenerateImage: "이미지를 생성하는 중",

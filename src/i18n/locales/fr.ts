@@ -298,7 +298,7 @@ utiliser une.
   learnNotNow: "Pas maintenant",
   learnNever: "Ne plus demander",
   learnSaved:
-    "Retenu. Vous pouvez le voir ou le supprimer dans l'onglet Mémoire.",
+    "Retenu. Vous pouvez le voir ou le supprimer sous Projet, dans le panneau IA.",
   learnLabel: "Appris de vos choix de révision",
   suggestNextMessageLabel: "Suggérer le message suivant",
   suggestNextMessageHint:
@@ -306,7 +306,7 @@ utiliser une.
   composerSuggestionTab: "Tab",
   composerFollowUps: "Messages suivants suggérés",
   rememberAutomaticallyLabel: "Retenir automatiquement",
-  rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le dans l'onglet Mémoire. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
+  rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le sous Projet, dans le panneau IA. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
   toolRemember: "Mémorisation",
   agentGeneratingImage: "Création d'une image…",
   toolGenerateImage: "Création d'une image",

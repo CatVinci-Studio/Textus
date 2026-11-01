@@ -284,7 +284,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   learnRemember: "Lembrar",
   learnNotNow: "Agora não",
   learnNever: "Não perguntar mais",
-  learnSaved: "Lembrado. Veja ou apague na aba Memória.",
+  learnSaved: "Lembrado. Veja ou apague em Projeto, no painel de IA.",
   learnLabel: "Aprendido com as suas escolhas de revisão",
   suggestNextMessageLabel: "Sugerir a próxima mensagem",
   suggestNextMessageHint:
@@ -292,7 +292,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   composerSuggestionTab: "Tab",
   composerFollowUps: "Próximas mensagens sugeridas",
   rememberAutomaticallyLabel: "Lembrar automaticamente",
-  rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça na aba Memória. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
+  rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça em Projeto, no painel de IA. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
   toolRemember: "Lembrando isto",
   agentGeneratingImage: "Gerando uma imagem…",
   toolGenerateImage: "Gerando uma imagem",

@@ -111,14 +111,14 @@ const MODE_LINES: Record<
       line: "Get more suggestions",
     },
     {
-      mode: "create",
-      name: "Create",
-      line: "Make a theme, plugin or skill",
-    },
-    {
       mode: "research",
       name: "Research",
       line: "Research a topic and write a paper",
+    },
+    {
+      mode: "create",
+      name: "Create",
+      line: "Make a theme, plugin or skill",
     },
   ],
   zh: [
@@ -133,20 +133,20 @@ const MODE_LINES: Record<
       line: "提出更多建议",
     },
     {
-      mode: "create",
-      name: "创造",
-      line: "做一个主题、插件或技能",
-    },
-    {
       mode: "research",
       name: "研究",
       line: "研究一个主题，写成论文",
+    },
+    {
+      mode: "create",
+      name: "创造",
+      line: "做一个主题、插件或技能",
     },
   ],
 };
 
 for (const language of ["en", "zh"] as const)
-  test(`${language}: the composer offers Write, Review, Create and Research; the empty panel shows the mode's icon and says what it does, and follows a switch`, async ({
+  test(`${language}: the composer offers Write, Review, Research and Create; the empty panel shows the mode's icon and says what it does, and follows a switch`, async ({
     page,
   }) => {
     await openPanel(page, language);

@@ -269,7 +269,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   learnRemember: "覚えておく",
   learnNotNow: "今はしない",
   learnNever: "今後たずねない",
-  learnSaved: "覚えました。「記憶」タブで確認・削除できます。",
+  learnSaved: "覚えました。AIパネルの「プロジェクト」で確認・削除できます。",
   learnLabel: "修正の採否から学んだこと",
   suggestNextMessageLabel: "次のメッセージを予測",
   suggestNextMessageHint:
@@ -277,7 +277,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   composerSuggestionTab: "Tab で使う",
   composerFollowUps: "次のメッセージの候補",
   rememberAutomaticallyLabel: "自動で覚える",
-  rememberAutomaticallyHint: `${AI_NAME}が、あなたの指示や書き方を今後の会話のために覚えます。「記憶」タブで確認・編集・取り消しができます。返答のたびに、同じモデルへ短い依頼をもう一度送り、何を記録するか決めます。`,
+  rememberAutomaticallyHint: `${AI_NAME}が、あなたの指示や書き方を今後の会話のために覚えます。AIパネルの「プロジェクト」で確認・編集・取り消しができます。返答のたびに、同じモデルへ短い依頼をもう一度送り、何を記録するか決めます。`,
   toolRemember: "覚えています",
   agentGeneratingImage: "画像を生成しています…",
   toolGenerateImage: "画像を生成しています",

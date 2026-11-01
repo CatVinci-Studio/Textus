@@ -296,7 +296,8 @@ para usar una.
   learnRemember: "Recordar",
   learnNotNow: "Ahora no",
   learnNever: "No volver a preguntar",
-  learnSaved: "Recordado. Puedes verlo o eliminarlo en la pestaña Memoria.",
+  learnSaved:
+    "Recordado. Puedes verlo o eliminarlo en Proyecto, en el panel de IA.",
   learnLabel: "Aprendido de tus decisiones de revisión",
   suggestNextMessageLabel: "Sugerir el siguiente mensaje",
   suggestNextMessageHint:
@@ -304,7 +305,7 @@ para usar una.
   composerSuggestionTab: "Tab",
   composerFollowUps: "Siguientes mensajes sugeridos",
   rememberAutomaticallyLabel: "Recordar automáticamente",
-  rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en la pestaña Memoria. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
+  rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en Proyecto, en el panel de IA. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
   toolRemember: "Recordando esto",
   agentGeneratingImage: "Generando una imagen…",
   toolGenerateImage: "Generando una imagen",

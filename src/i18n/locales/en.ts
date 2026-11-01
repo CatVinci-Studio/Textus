@@ -283,7 +283,7 @@ type /name in a conversation to use one.
   learnRemember: "Remember",
   learnNotNow: "Not now",
   learnNever: "Never ask for this",
-  learnSaved: "Remembered. See or delete it in the Memory tab.",
+  learnSaved: "Remembered. See or delete it under Project in the AI panel.",
   learnLabel: "Learned from your revision choices",
   suggestNextMessageLabel: "Suggest your next message",
   suggestNextMessageHint:
@@ -291,7 +291,7 @@ type /name in a conversation to use one.
   composerSuggestionTab: "Tab",
   composerFollowUps: "Suggested next messages",
   rememberAutomaticallyLabel: "Remember automatically",
-  rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it in the Memory tab. After each reply it asks the same model once more, briefly, what to keep.`,
+  rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it under Project in the AI panel. After each reply it asks the same model once more, briefly, what to keep.`,
   toolRemember: "Remembering this",
   agentGeneratingImage: "Generating an image…",
   toolGenerateImage: "Generating an image",

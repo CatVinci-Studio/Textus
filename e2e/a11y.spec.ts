@@ -161,7 +161,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       await scan(page, `ai chat ${colorScheme}`);
       const project = page
         .locator(".agent-panel-view")
-        .getByRole("button", { name: "Project" });
+        .getByRole("button", { name: "Project", exact: true });
       await project.click();
       await expect(project).toHaveAttribute("aria-pressed", "true");
       await scan(page, `ai memory ${colorScheme}`);
