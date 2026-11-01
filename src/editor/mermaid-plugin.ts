@@ -23,6 +23,22 @@ import type { DiagramEngine } from "../prefs/SettingsContext";
 
 const mermaidKey = new PluginKey("mermaid-preview");
 const DEBOUNCE_MS = 500;
+/** The longest a pass waits while the text keeps changing: a paper being
+ *  written changes several times a second, and its diagrams were drawn only
+ *  once it stopped. */
+const MAX_WAIT_MS = 2000;
+/** The smallest a diagram is scaled down to fit the column; one wider than
+ *  that keeps this scale and scrolls, so a long timeline stays readable. */
+const MIN_SCALE = 0.65;
+
+/** `container`'s drawing given the least width it can be read at, from its
+ *  viewBox. One laid out for the column, as a chart is, is never held. */
+function keepReadable(container: HTMLElement) {
+  const svg = container.querySelector("svg");
+  const width = svg?.viewBox?.baseVal?.width;
+  if (!svg || !width) return;
+  svg.style.minWidth = `${Math.round(width * MIN_SCALE)}px`;
+}
 /** Drawings of diagrams not in the document kept for when one is accepted;
  *  every streamed step of one lands here too. */
 const PENDING_KEPT = 30;
@@ -77,6 +93,8 @@ export function createMermaidPreviewPlugin(options: {
 }) {
   return $prose(() => {
     let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+    /** When the edits the next pass waits for began; 0 when none wait. */
+    let waitingSince = 0;
     // Per editor instance: rendering in one open tab must not cancel a
     // render already in flight in another tab.
     let renderSeq = 0;
@@ -109,6 +127,7 @@ export function createMermaidPreviewPlugin(options: {
             const container = document.createElement("div");
             container.className = "mermaid-preview";
             container.innerHTML = svg;
+            keepReadable(container);
             container.append(zoomButton(container));
             container.addEventListener("mousedown", (event) => {
               event.preventDefault();
@@ -348,7 +367,18 @@ export function createMermaidPreviewPlugin(options: {
             // passes, the expensive part, stop.
             if (pausesFeatures(view.state.doc)) return;
             if (debounceTimer) clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => void renderAll(), DEBOUNCE_MS);
+            const now = Date.now();
+            waitingSince ||= now;
+            debounceTimer = setTimeout(
+              () => {
+                waitingSince = 0;
+                void renderAll();
+              },
+              Math.max(
+                0,
+                Math.min(DEBOUNCE_MS, waitingSince + MAX_WAIT_MS - now),
+              ),
+            );
           },
           destroy() {
             if (debounceTimer) clearTimeout(debounceTimer);
