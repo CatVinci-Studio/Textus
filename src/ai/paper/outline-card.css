@@ -37,7 +37,7 @@
 .paper-outline-sections {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -47,10 +47,16 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: 8px 0;
+  border-top: 1px solid var(--chat-hairline, var(--ui-border));
+}
+
+.paper-outline-section.paper-outline-editor {
   padding: 8px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-s);
   background: var(--ui-subtle);
+  animation: paper-enter 0.2s ease-out both;
 }
 
 .paper-outline-row {
@@ -117,7 +123,131 @@
 
 .paper-outline-foot {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The outline as it reads: the thesis set off, each section a title with
+   its length, a few key points and its figures as tags. */
+.paper-outline-thesis {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-left: 8px;
+  border-left: 2px solid var(--ui-accent, var(--ui-border));
+}
+
+.paper-outline-thesis p {
+  flex: 1;
+  margin: 0;
+  color: var(--ui-text);
+  line-height: 1.55;
+}
+
+.paper-outline-heading {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.paper-outline-words {
+  flex: none;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Edit, add and "n more": quiet text buttons that show on hover. */
+.paper-outline-edit,
+.paper-outline-more {
+  flex: none;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: var(--text-footnote);
+  cursor: pointer;
+}
+
+.paper-outline-edit:hover:not(:disabled),
+.paper-outline-more:hover {
+  color: var(--ui-accent, var(--ui-text));
+}
+
+.paper-outline-edit:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.paper-outline-section .paper-outline-row .paper-outline-edit,
+.paper-outline-thesis .paper-outline-edit {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.paper-outline-section:hover .paper-outline-edit,
+.paper-outline-thesis:hover .paper-outline-edit,
+.paper-outline-edit:focus-visible {
+  opacity: 1;
+}
+
+.paper-outline-more {
+  align-self: flex-start;
+  padding: 0 0 0 20px;
+}
+
+.paper-outline-points {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  line-height: 1.5;
+}
+
+.paper-outline-points li {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.paper-outline-points[data-open] li {
+  display: list-item;
+}
+
+.paper-outline-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-left: 20px;
+}
+
+.paper-outline-tag {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 1px 8px;
+  border-radius: var(--shape-pill);
+  background: var(--ui-subtle);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paper-outline-tag b {
+  color: var(--ui-text);
+  font-weight: 500;
+}
+
+@media (hover: none) {
+  .paper-outline-section .paper-outline-row .paper-outline-edit,
+  .paper-outline-thesis .paper-outline-edit {
+    opacity: 1;
+  }
 }
 
 /* The paper's card in the conversation, and the form that starts one. */
