@@ -5,9 +5,9 @@ use crate::ai::web::{WebBudget, WebUse};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
-/// Model calls a paper may make before it stops to ask: an ordinary paper
-/// takes 60-100.
-pub(crate) const MODEL_STEPS: u32 = 120;
+/// Model calls a paper may make: no limit - Research mode runs until the
+/// paper is done or the user pauses it. Still counted, in `used`.
+pub(crate) const MODEL_STEPS: u32 = u32::MAX;
 
 /// A paper's error when its model calls are spent; the card says so.
 pub(crate) const STEPS_SPENT: &str = "PAPER_STEPS_SPENT";
@@ -86,12 +86,10 @@ impl ResearchBudget {
         })
     }
 
-    /// A paper that spent its model calls is given as many again when it is
-    /// gone on with: going on is the user's yes to spending them.
+    /// A paper gone on with has no model call limit, a paper kept under an
+    /// older, limited budget too.
     pub(crate) fn renewed(mut self) -> Self {
-        if self.used.model_steps >= self.limits.model_steps {
-            self.limits.model_steps = self.used.model_steps + MODEL_STEPS;
-        }
+        self.limits.model_steps = MODEL_STEPS;
         self
     }
 
