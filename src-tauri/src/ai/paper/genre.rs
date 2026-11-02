@@ -236,6 +236,13 @@ impl Genre {
         }
     }
 
+    /// Its length: `chars` brought within its lengths, or with none asked
+    /// for, their middle.
+    pub(crate) fn length(self, chars: Option<u32>) -> u32 {
+        let (least, most) = self.profile().chars;
+        chars.map_or((least + most) / 2, |c| self.fit(c))
+    }
+
     /// `chars` brought within this genre's lengths.
     pub(crate) fn fit(self, chars: u32) -> u32 {
         let (least, most) = self.profile().chars;

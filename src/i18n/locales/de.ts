@@ -33,7 +33,7 @@ export default {
   agentPanelEmptyReview: "Mehr Vorschläge erhalten",
   agentPanelEmptyCreate: "Ein Theme, Plugin oder eine Fähigkeit erstellen",
   agentPanelEmptyResearch:
-    "Ein Thema recherchieren und einen Aufsatz schreiben",
+    "Ein Thema recherchieren und aufschreiben: Hintergrundbericht, Artikel, Thread, Kurzmeldung oder Fachaufsatz",
   aiWorkingCompletion: "Fortsetzung wird geschrieben…",
   aiWorkingGrammar: "Absatz wird geprüft…",
   noticeCompletionNeedsCaret:
@@ -390,13 +390,16 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   paperOutlineLess: "Weniger",
   paperOutlineApprove: "Freigeben und schreiben",
   paperOutlineApproving: "Schreiben beginnt…",
-  paperTopicPlaceholder: "Worum es geht und was der Aufsatz abdecken soll",
-  paperLength: "Länge",
-  paperLengthShort: "Kurz (etwa 5.000 Zeichen)",
-  paperLengthMedium: "Mittel (etwa 8.000 Zeichen)",
-  paperLengthLong: "Lang (etwa 10.000 Zeichen)",
-  paperAsk: "Einen Aufsatz schreiben: {topic}",
-  paperCardTitle: "Aufsatz",
+  paperTopicPlaceholder: "Worüber, für wen, und was der Text abdecken soll",
+  paperGenre: "Textart",
+  paperGenreAuto: "Automatisch wählen",
+  paperGenrePaper: "Fachaufsatz",
+  paperGenreReport: "Hintergrundbericht",
+  paperGenreArticle: "Artikel",
+  paperGenreThread: "Thread",
+  paperGenreBrief: "Kurzmeldung",
+  paperAsk: "Recherchieren und schreiben: {topic}",
+  paperCardTitle: "Recherche",
   paperPlanning: "Recherche wird geplant…",
   paperResearching:
     "Recherche: bisher {searches} Suchen, {pages} Seiten und {papers} Literatursuchen…",
@@ -422,16 +425,16 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   paperOutlineRetry:
     "Entwurf {n}: Der letzte hat die Prüfung nicht bestanden und wird neu erstellt…",
   paperPapersOnly:
-    "Keine Websuche verfügbar – die Recherche durchsucht nur Fachartikel (OpenAlex, arXiv) und deine Bibliothek.",
+    "Keine Websuche verfügbar: Die Recherche für diesen Text durchsucht nur Fachliteratur (OpenAlex, arXiv) und deine Literaturbibliothek.",
   paperWritten:
-    "Der Aufsatz steht im Dokument. Bearbeiten Sie ihn dort wie jeden Text; Rückgängig entfernt ihn.",
+    "Der Text steht im Dokument. Bearbeite ihn wie jeden Text; Rückgängig entfernt ihn ganz.",
   paperWrittenCard: "Im Dokument geschrieben.",
   paperAddingPictures: "Bilder werden eingefügt, noch {n}…",
-  paperEnded: "Das Schreiben dieses Aufsatzes ist beendet.",
+  paperEnded: "Das Schreiben dieses Texts ist beendet.",
   paperPause: "Pausieren",
   paperContinue: "Fortsetzen",
   paperStepsSpent:
-    "Dieser Aufsatz hat seine {n} Modellaufrufe verbraucht und pausiert. „Fortsetzen“ erlaubt {n} weitere.",
+    "Dieser Text hat seine {n} Modellaufrufe verbraucht und pausiert. Fortsetzen erlaubt {n} weitere.",
   paperPaused: "Pausiert – jederzeit fortsetzbar.",
   paperUnitCharacters: "Zeichen",
   paperUnitWords: "Wörter",
@@ -777,8 +780,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentModeReviewHint: "Liest es und hinterlässt Notizen; ändert nichts",
   agentModeCreateHint: "Erstellt Themes, Plugins und Skills",
   agentModeResearch: "Recherche",
-  agentModeResearchHint:
-    "Recherchiert ein Thema und schreibt einen Aufsatz ins Dokument",
+  agentModeResearchHint: "Recherchiert ein Thema und schreibt es ins Dokument",
   agentPersonalizationGroupLabel: "Schreibanweisungen & Skills",
   agentAdvancedGroupLabel: "Erweitert",
   writingModelLabel: "Assistenzmodell",

@@ -8,9 +8,9 @@ use aicompat::agent::{AgentTurn, StepResult};
 use serde_json::Value;
 
 /// The genre and length in characters `request` calls for. `asked` is the
-/// length the user picked, kept when it suits the genre; a reply that can't
-/// be read keeps the paper at that length.
-pub(crate) async fn choose(model: &dyn Model, request: &str, asked: u32) -> (Genre, u32) {
+/// length the user picked, if any, kept when it suits the genre; a reply
+/// that can't be read keeps the paper.
+pub(crate) async fn choose(model: &dyn Model, request: &str, asked: Option<u32>) -> (Genre, u32) {
     let genres: Vec<String> = Genre::ALL
         .iter()
         .map(|g| {
@@ -22,8 +22,12 @@ pub(crate) async fn choose(model: &dyn Model, request: &str, asked: u32) -> (Gen
         })
         .collect();
     let instructions = format!(
-        "You decide what kind of piece a writing request calls for, before it is researched and written. The kinds:\n{}\n\nChoose by what the user asked for and who will read it; when the request names a kind or a length, follow it. The user picked about {asked} characters: keep that if it suits the kind, else choose a length within the kind's. Reply with a JSON object {{\"genre\": …, \"chars\": …}} and nothing else.",
-        genres.join("\n")
+        "You decide what kind of piece a writing request calls for, before it is researched and written. The kinds:\n{}\n\nChoose by what the user asked for and who will read it; when the request names a kind or a length, follow it. {length} Reply with a JSON object {{\"genre\": …, \"chars\": …}} and nothing else.",
+        genres.join("\n"),
+        length = match asked {
+            Some(asked) => format!("The user picked about {asked} characters: keep that if it suits the kind, else choose a length within the kind's."),
+            None => "Choose a length within the kind's that the topic needs.".to_string(),
+        },
     );
     let reply = match model
         .step(
@@ -43,7 +47,7 @@ pub(crate) async fn choose(model: &dyn Model, request: &str, asked: u32) -> (Gen
 }
 
 /// The genre and length in `reply`, fitted to the genre's lengths.
-pub(crate) fn read(reply: &str, asked: u32) -> (Genre, u32) {
+pub(crate) fn read(reply: &str, asked: Option<u32>) -> (Genre, u32) {
     let parsed: Value = reply
         .find('{')
         .zip(reply.rfind('}'))
@@ -53,8 +57,8 @@ pub(crate) fn read(reply: &str, asked: u32) -> (Genre, u32) {
         .as_str()
         .and_then(|name| Genre::ALL.into_iter().find(|g| g.profile().name == name));
     let Some(genre) = genre else {
-        return (Genre::Paper, Genre::Paper.fit(asked));
+        return (Genre::Paper, Genre::Paper.length(asked));
     };
-    let chars = parsed["chars"].as_u64().map_or(asked, |c| c as u32);
-    (genre, genre.fit(chars))
+    let chars = parsed["chars"].as_u64().map(|c| c as u32).or(asked);
+    (genre, genre.length(chars))
 }

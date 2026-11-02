@@ -464,12 +464,16 @@ export type PaperRequest_Deserialize = {
 	topic: string,
 	/**
 	 *  What kind of piece to write; None for the model to choose from the
-	 *  topic, at about `target_chars`.
+	 *  topic.
 	 */
 	genre?: Genre | null,
 	/**  The language it is written in, a BCP 47 tag. */
 	language: string,
-	targetChars: number,
+	/**
+	 *  Its length in characters; None for the genre's, or the model's
+	 *  choice.
+	 */
+	targetChars?: number | null,
 	/**
 	 *  The image model, for the pictures the outline may plan; None for
 	 *  none.
@@ -495,12 +499,16 @@ export type PaperRequest_Serialize = {
 	topic: string,
 	/**
 	 *  What kind of piece to write; None for the model to choose from the
-	 *  topic, at about `target_chars`.
+	 *  topic.
 	 */
 	genre: Genre | null,
 	/**  The language it is written in, a BCP 47 tag. */
 	language: string,
-	targetChars: number,
+	/**
+	 *  Its length in characters; None for the genre's, or the model's
+	 *  choice.
+	 */
+	targetChars: number | null,
 	/**
 	 *  The image model, for the pictures the outline may plan; None for
 	 *  none.
