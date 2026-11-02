@@ -140,6 +140,60 @@ fn a_missing_or_unsafe_paper_id_is_an_error() {
 }
 
 #[test]
+fn a_paper_without_a_project_is_kept_in_the_scratch_folder() {
+    let scratch = tempfile::tempdir().unwrap();
+    let root = store::root_in(scratch.path(), None, Some("abc123")).unwrap();
+    assert_eq!(root, scratch.path());
+}
+
+#[test]
+fn a_scratch_paper_moves_into_the_project_once_there_is_one() {
+    let scratch = tempfile::tempdir().unwrap();
+    let project = tempfile::tempdir().unwrap();
+    let files = PaperFiles {
+        paper: paper(),
+        dossier: dossier(),
+        outline: Some(outline()),
+    };
+    save(scratch.path(), &files).unwrap();
+    store::save_section(scratch.path(), "abc123", 0, "# One").unwrap();
+    let root = store::root_in(
+        scratch.path(),
+        Some(project.path().to_path_buf()),
+        Some("abc123"),
+    )
+    .unwrap();
+    assert_eq!(root, project.path());
+    assert_eq!(load(&root, "abc123").unwrap(), files);
+    assert_eq!(
+        load_section(&root, "abc123", 0).unwrap().as_deref(),
+        Some("# One")
+    );
+    assert!(!scratch.path().join(".textus/papers/abc123").exists());
+}
+
+#[test]
+fn a_paper_already_in_the_project_is_not_replaced_by_a_scratch_one() {
+    let scratch = tempfile::tempdir().unwrap();
+    let project = tempfile::tempdir().unwrap();
+    let mut kept = PaperFiles {
+        paper: paper(),
+        dossier: dossier(),
+        outline: None,
+    };
+    save(project.path(), &kept).unwrap();
+    kept.paper.topic = "Scratch".into();
+    save(scratch.path(), &kept).unwrap();
+    let root = store::root_in(
+        scratch.path(),
+        Some(project.path().to_path_buf()),
+        Some("abc123"),
+    )
+    .unwrap();
+    assert_eq!(load(&root, "abc123").unwrap().paper, paper());
+}
+
+#[test]
 fn new_ids_are_valid_and_differ() {
     let a = new_id();
     std::thread::sleep(std::time::Duration::from_millis(1));

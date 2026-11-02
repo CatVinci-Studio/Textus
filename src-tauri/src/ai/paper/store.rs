@@ -47,6 +47,68 @@ pub(crate) fn paper_dir(root: &Path, id: &str) -> Result<PathBuf, String> {
     Ok(project_dir(root).join(PAPERS_FOLDER).join(id))
 }
 
+/// Where papers are kept while their document has no project - untitled,
+/// or in a folder too broad to be one - so research needs no folder: the
+/// system's temporary folder, out of the user's sight.
+fn scratch_root() -> PathBuf {
+    std::env::temp_dir().join("textus-research")
+}
+
+/// The folder paper `id` is kept in: the document's project, or the
+/// scratch folder while it has none. A paper begun in the scratch folder
+/// moves into the project the first time it is asked for there, once the
+/// document is saved into one.
+pub(crate) fn paper_root(
+    doc_path: Option<&str>,
+    workspace_root: Option<&str>,
+    id: Option<&str>,
+) -> Result<PathBuf, String> {
+    let project = crate::ai::workspace::project_root(doc_path, workspace_root);
+    root_in(&scratch_root(), project, id)
+}
+
+/// [`paper_root`] with the scratch folder given, for tests.
+pub(crate) fn root_in(
+    scratch: &Path,
+    project: Option<PathBuf>,
+    id: Option<&str>,
+) -> Result<PathBuf, String> {
+    let Some(root) = project else {
+        return Ok(scratch.to_path_buf());
+    };
+    if let Some(id) = id {
+        let from = paper_dir(scratch, id)?;
+        let to = paper_dir(&root, id)?;
+        if from.is_dir() && !to.exists() {
+            move_paper(&from, &to).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(root)
+}
+
+/// A paper's folder moved whole; copied file by file where it can't be
+/// renamed (the temporary folder on another volume). Its files are flat.
+fn move_paper(from: &Path, to: &Path) -> std::io::Result<()> {
+    if let Some(parent) = to.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    if std::fs::rename(from, to).is_ok() {
+        return Ok(());
+    }
+    std::fs::create_dir_all(to)?;
+    for entry in std::fs::read_dir(from)? {
+        let entry = entry?;
+        std::fs::copy(entry.path(), to.join(entry.file_name()))?;
+    }
+    // The copy is whole; what is left behind is only clutter in the
+    // temporary folder.
+    for entry in std::fs::read_dir(from)?.flatten() {
+        let _ = std::fs::remove_file(entry.path());
+    }
+    let _ = std::fs::remove_dir(from);
+    Ok(())
+}
+
 /// Writes the paper's files into `root`'s `.textus/`, each whole or not at
 /// all, so a crash mid-save leaves the previous version.
 pub(crate) fn save(root: &Path, files: &PaperFiles) -> Result<(), String> {
